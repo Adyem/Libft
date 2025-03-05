@@ -7,37 +7,18 @@
 #include <climits>
 
 template<typename ElementType>
-class deck : public ft_vector<ElementType*>
+class ft_deck : public ft_vector<ElementType*>
 {
 	public:
-    	deck();
-    
-    	ElementType *getRandomElement();
     	ElementType *popRandomElement();
+		ElementType *getRandomElement() const;
 		void shuffle();
+		ElementType *drawTopElement();
+		ElementType *peekTopElement() const;
 };
 
 template<typename ElementType>
-deck<ElementType>::deck() : ft_vector<ElementType*>()
-{
-	return ;
-}
-
-template<typename ElementType>
-ElementType *deck<ElementType>::getRandomElement()
-{
-    if (this->empty())
-	{
-		ft_errno = DECK_EMPTY;
-        this->setError(DECK_EMPTY);
-		return (ft_nullptr);
-	}
-    size_t index = static_cast<size_t>(ft_dice_roll(1, static_cast<int>(this->size())) - 1);
-    return ((*this)[index]);
-}
-
-template<typename ElementType>
-ElementType *deck<ElementType>::popRandomElement()
+ElementType *ft_deck<ElementType>::popRandomElement()
 {
     if (this->empty())
 	{
@@ -52,12 +33,62 @@ ElementType *deck<ElementType>::popRandomElement()
 }
 
 template<typename ElementType>
-void deck<ElementType>::shuffle()
+ElementType *ft_deck<ElementType>::getRandomElement() const
 {
-    for (size_t i = this->size() - 1; i > 0; --i)
+    if (this->empty())
+	{
+		ft_errno = DECK_EMPTY;
+        this->setError(DECK_EMPTY);
+		return (ft_nullptr);
+	}
+    size_t index = static_cast<size_t>(ft_dice_roll(1, static_cast<int>(this->size())) - 1);
+    return ((*this)[index]);
+}
+
+template<typename ElementType>
+ElementType *ft_deck<ElementType>::drawTopElement()
+{
+    if (this->empty())
+	{
+		ft_errno = DECK_EMPTY;
+		this->setError(DECK_EMPTY);
+		return (ft_nullptr);
+	}
+	size_t index = this->size() - 1;
+    ElementType* elem = (*this)[index];
+	this->release_at(index);
+    return (elem);
+}
+
+template<typename ElementType>
+ElementType *ft_deck<ElementType>::peekTopElement() const
+{
+    if (this->empty())
+	{
+		ft_errno = DECK_EMPTY;
+		this->setError(DECK_EMPTY);
+		return (ft_nullptr);
+	}
+	size_t index = this->size() - 1;
+    ElementType* elem = (*this)[index];
+    return (elem);
+}
+
+template<typename ElementType>
+void ft_deck<ElementType>::shuffle()
+{
+    if (this->empty())
+	{
+		ft_errno = DECK_EMPTY;
+        this->setError(DECK_EMPTY);
+		return ;
+	}
+	size_t index = this->size - 1;
+    while (index > 0)
     {
-        size_t j = static_cast<size_t>(ft_dice_roll(1, static_cast<int>(i + 1)) - 1);
-        ft_swap((*this)[i], (*this)[j]);
+        size_t randomIndex = static_cast<size_t>(ft_dice_roll(1, static_cast<int>(index + 1)) - 1);
+        ft_swap((*this)[index], (*this)[randomIndex]);
+		index--;
     }
 	return ;
 }
