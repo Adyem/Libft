@@ -58,5 +58,7 @@ int			ft_strcmp(const char *string1, const char *string2);
 FT_DIR* 	ft_opendir(const char* directoryPath);
 int 		ft_closedir(FT_DIR* directoryStream);
 ft_dirent	*ft_readdir(FT_DIR* directoryStream);
+void		ft_to_lower(char *string);
+void		ft_to_upper(char *string);
 
 #endif
