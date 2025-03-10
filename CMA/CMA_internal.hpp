@@ -16,8 +16,14 @@
 # define DEBUG 0
 #endif
 
+#if __has_include(<valgrind/memcheck.h>)
+#include <valgrind/memcheck.h>
 #define PROTECT_METADATA(ptr, size) VALGRIND_MAKE_MEM_NOACCESS(ptr, size)
 #define UNPROTECT_METADATA(ptr, size) VALGRIND_MAKE_MEM_DEFINED(ptr, size)
+#else
+#define PROTECT_METADATA(ptr, size) ((void)0)
+#define UNPROTECT_METADATA(ptr, size) ((void)0)
+#endif
 
 extern pt_mutex g_malloc_mutex;
 
