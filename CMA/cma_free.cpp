@@ -2,8 +2,6 @@
 #include <cstring>
 #include <cstdio>
 #include <cassert>
-#include <sys/mman.h>
-#include <valgrind/memcheck.h>
 #include <csignal>
 #include <pthread.h>
 #include "CMA.hpp"

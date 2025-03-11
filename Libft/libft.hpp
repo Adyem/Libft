@@ -6,7 +6,6 @@
 
 #include <cstddef>
 #include <unistd.h>
-#include <sys/syscall.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>

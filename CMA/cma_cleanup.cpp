@@ -3,7 +3,6 @@
 #include "../CPP_class/nullptr.hpp"
 #include "../Printf/printf.hpp"
 #include <cstdlib>
-#include <sys/mman.h>
 
 extern Page *page_list;
 

@@ -3,8 +3,6 @@
 #include <cstring>
 #include <cstdio>
 #include <cassert>
-#include <sys/mman.h>
-#include <valgrind/memcheck.h>
 #include <csignal>
 #include "CMA_internal.hpp"
 #include "../CPP_class/nullptr.hpp"
@@ -20,11 +18,11 @@ inline size_t align8(size_t size)
 
 static void *create_stack_block(void)
 {
-	static char	memory_block[PAGE_SIZE];
+    static char memory_block[PAGE_SIZE];
 
-	if (DEBUG == 1)
-		pf_printf("allocating stack memory for CMA\n");
-	return (memory_block);
+    if (DEBUG == 1)
+        pf_printf("allocating stack memory for CMA\n");
+    return (memory_block);
 }
 
 Block* split_block(Block* block, size_t size)
@@ -49,25 +47,25 @@ Page *create_page(size_t size)
     size_t page_size = PAGE_SIZE;
     bool use_heap = true;
 
-	if (page_list == ft_nullptr)
-	{
+    if (page_list == ft_nullptr)
+    {
         page_size = PAGE_SIZE;
         use_heap = false;
-	}
-	else
-	{
+    }
+    else
+    {
         if (size + sizeof(Block) > PAGE_SIZE)
             page_size = size + sizeof(Block);
-	}
+    }
     void* ptr;
-	if (use_heap)
-	{
+    if (use_heap)
+    {
         ptr = malloc(page_size);
-        if (ptr == MAP_FAILED)
+        if (!ptr)
             return (ft_nullptr);
-	}
-	else
-	{
+    }
+    else
+    {
         ptr = create_stack_block();
         if (!ptr)
             return (ft_nullptr);
@@ -76,7 +74,7 @@ Page *create_page(size_t size)
     if (!page)
     {
         if (use_heap)
-            munmap(ptr, page_size);
+            free(ptr);
         return (ft_nullptr);
     }
     page->heap = use_heap;
@@ -141,16 +139,16 @@ Block *merge_block(Block *block)
 
 void print_block_info(Block *block)
 {
+#ifdef _WIN32
+    (void)block;  // Avoid unused parameter warning on Windows
+    return;
+#else
     if (!block)
     {
         pf_printf_fd(2, "Block pointer is NULL.\n");
-        return ;
+        return;
     }
-    const char* free_status;
-    if (block->free)
-        free_status = "Yes";
-    else
-        free_status = "No";
+    const char* free_status = block->free ? "Yes" : "No";
     pf_printf_fd(2, "---- Block Information ----\n");
     pf_printf_fd(2, "Address of Block: %p\n", (void *)block);
     pf_printf_fd(2, "Magic Number: 0x%X\n", block->magic);
@@ -159,5 +157,5 @@ void print_block_info(Block *block)
     pf_printf_fd(2, "Next Block: %p\n", (void*)block->next);
     pf_printf_fd(2, "Previous Block: %p\n", (void*)block->prev);
     pf_printf_fd(2, "---------------------------\n");
-	return ;
+#endif
 }

@@ -4,7 +4,6 @@
 #include "../PThread/mutex.hpp"
 #include <cstdint>
 #include <cstddef>
-#include <valgrind/memcheck.h>
 
 #define PAGE_SIZE 131072
 #define BYPASS_ALLOC DEBUG

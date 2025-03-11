@@ -4,7 +4,6 @@
 #include <cstdio>
 #include <cassert>
 #include <pthread.h>
-#include <sys/mman.h>
 #include <csignal>
 #include "CMA.hpp"
 #include "CMA_internal.hpp"

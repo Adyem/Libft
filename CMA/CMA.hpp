@@ -2,7 +2,6 @@
 # define CMA_HPP
 
 #include <cstddef>
-#include <valgrind/memcheck.h>
 
 void	*cma_malloc(int size) __attribute__ ((warn_unused_result, hot));
 void	cma_free(void* ptr) __attribute__ ((hot));
