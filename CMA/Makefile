@@ -36,6 +36,10 @@ ifeq ($(ENABLE_PGO),1)
     CFLAGS += -fprofile-generate
 endif
 
+ifdef COMPILE_FLAGS
+    CFLAGS := $(COMPILE_FLAGS)
+endif
+
 CXX       := g++
 AR        := ar
 ARFLAGS   := rcs
