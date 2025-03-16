@@ -15,15 +15,6 @@ else
     RM      = rm -f
 endif
 
-ifeq ($(ENABLE_LTO),1)
-    CFLAGS += -flto
-    LDFLAGS += -flto
-endif
-
-ifeq ($(ENABLE_PGO),1)
-    CFLAGS += -fprofile-generate
-endif
-
 ifdef COMPILE_FLAGS
     CFLAGS := $(COMPILE_FLAGS)
 endif
@@ -38,7 +29,7 @@ DEBUG_OBJDIR   := objs_debug
 OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
 DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
 
-CXXFLAGS   := -Wall -Wextra -Werror -g -O0 -std=c++17
+CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17
 
 all: $(TARGET)
 
@@ -46,7 +37,7 @@ $(TARGET): $(OBJS)
 	$(AR) $(ARFLAGS) $@ $^
 
 $(OBJDIR)/%.o: %.cpp $(HEADERS) | $(OBJDIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CFLAGS) -c $< -o $@
 
 debug: CXXFLAGS += -DDEBUG=1
 debug: $(DEBUG_TARGET)
@@ -55,7 +46,7 @@ $(DEBUG_TARGET): $(DEBUG_OBJS)
 	$(AR) $(ARFLAGS) $@ $^
 
 $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR) $(DEBUG_OBJDIR):
 	$(MKDIR) $@

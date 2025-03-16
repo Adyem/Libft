@@ -8,7 +8,7 @@
 #include "../CPP_class/nullptr.hpp"
 #include "BasicEncryption.hpp"
 
-void be_encrypt(char *data, size_t data_len, const char *key)
+static void be_encrypt(char *data, size_t data_len, const char *key)
 {
     uint32_t hash = 5381;
     size_t key_len = ft_strlen(key);

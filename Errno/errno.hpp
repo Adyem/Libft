@@ -54,5 +54,6 @@ enum PTErrorCode
 };
 
 const char* ft_strerror(int error_code);
+void		ft_perror(const char *error_msg);
 
 #endif

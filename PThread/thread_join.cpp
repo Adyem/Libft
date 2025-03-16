@@ -1,6 +1,7 @@
 #include <cerrno>
 #include <pthread.h>
 #include "../Errno/errno.hpp"
+#include "PThread.hpp"
 
 int pt_thread_join(pthread_t thread, void **retval)
 {

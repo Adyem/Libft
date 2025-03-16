@@ -1,3 +1,4 @@
+#include "libft.hpp"
 #include <unistd.h>
 
 int ft_strncmp(const char *string_1, const char *string_2, size_t max_len)

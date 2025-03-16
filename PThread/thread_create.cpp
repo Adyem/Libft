@@ -1,5 +1,6 @@
 #include <cerrno>
 #include <pthread.h>
+#include "PThread.hpp"
 #include "../Errno/errno.hpp"
 
 int pt_thread_create(pthread_t *thread, const pthread_attr_t *attr,

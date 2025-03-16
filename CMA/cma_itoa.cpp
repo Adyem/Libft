@@ -1,7 +1,7 @@
 #include "CMA.hpp"
 #include "../CPP_class/nullptr.hpp"
 
-int	itoa_len(int n)
+static int	itoa_len(int n)
 {
 	int		i;
 
@@ -16,7 +16,7 @@ int	itoa_len(int n)
 	return (i);
 }
 
-char	*fill_digits(char *c, unsigned int num, int start_index)
+static char	*fill_digits(char *c, unsigned int num, int start_index)
 {
 	while (start_index >= 0)
 	{
@@ -27,7 +27,7 @@ char	*fill_digits(char *c, unsigned int num, int start_index)
 	return (c);
 }
 
-char	*convert_int(int n, int is_negative)
+static char	*convert_int(int n, int is_negative)
 {
 	int				i;
 	char			*c;

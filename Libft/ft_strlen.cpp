@@ -1,3 +1,4 @@
+#include "libft.hpp"
 #include <stddef.h>
 
 int ft_strlen(const char *string)

@@ -2,6 +2,7 @@
 # define MUTEX_HPP
 
 #include "PThread.hpp"
+#include <pthread.h>
 
 class pt_mutex
 {

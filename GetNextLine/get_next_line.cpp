@@ -42,7 +42,7 @@ char* ft_strjoin_gnl(char* string_1, char* string_2)
     return result;
 }
 
-char* leftovers(char* readed_string)
+static char* leftovers(char* readed_string)
 {
     int read_index = 0;
     int write_index = 0;
@@ -66,7 +66,7 @@ char* leftovers(char* readed_string)
     return string;
 }
 
-char* malloc_gnl(char* readed_string, size_t i)
+static char* malloc_gnl(char* readed_string, size_t i)
 {
     char* string;
 
@@ -79,7 +79,7 @@ char* malloc_gnl(char* readed_string, size_t i)
     return string;
 }
 
-char* fetch_line(char* readed_string)
+static char* fetch_line(char* readed_string)
 {
     size_t index = 0;
     char* string;
@@ -106,7 +106,7 @@ char* fetch_line(char* readed_string)
     return string;
 }
 
-char* read_fd(ft_file& file, char* readed_string)
+static char* read_fd(ft_file& file, char* readed_string)
 {
     char* buffer;
     ssize_t readed_bytes;

@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <cerrno>
 #include <cstring>
+#include "linux_file.hpp"
 
 int ft_open(const char* pathname)
 {
