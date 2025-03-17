@@ -12,11 +12,9 @@ HEADERS := string.hpp \
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
-    RMDIR   = rmdir /S /Q
     RM      = del /F /Q
 else
     MKDIR   = mkdir -p
-    RMDIR   = rm -rf
     RM      = rm -f
 endif
 
@@ -56,9 +54,10 @@ $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
 $(OBJDIR) $(DEBUG_OBJDIR):
 	$(MKDIR) $@
 
+CLEAN_OBJS := $(wildcard $(OBJDIR)/*.o) $(wildcard $(DEBUG_OBJDIR)/*.o)
+
 clean:
-	-$(RMDIR) $(OBJDIR)
-	-$(RMDIR) $(DEBUG_OBJDIR)
+	-$(RM) $(CLEAN_OBJS)
 
 fclean: clean
 	-$(RM) $(TARGET) $(DEBUG_TARGET)
