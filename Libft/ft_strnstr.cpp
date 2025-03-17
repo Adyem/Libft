@@ -5,7 +5,7 @@ char	*ft_strnstr(const char *haystack, const char *needle, size_t Length)
 	size_t	haystackIndex = 0;
 	size_t	matchIndex;
 	size_t	needleLength = ft_strlen(needle);
-	char	*haystackPointer = (char *)haystack;
+	char	*haystackPointer = const_cast<char *>(haystack);
 
 	if (needleLength == 0 || haystack == needle)
 		return (haystackPointer);

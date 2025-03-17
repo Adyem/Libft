@@ -27,7 +27,7 @@ static void ft_handle_allocation_failure(char **lines)
 static char **ft_reallocate_lines(char **lines, int new_size)
 {
     int index = 0;
-    char **new_lines = (char **)cma_calloc(new_size + 1, sizeof(char *));
+    char **new_lines = static_cast<char **>(cma_calloc(new_size + 1, sizeof(char *)));
 
     if (!new_lines)
     {

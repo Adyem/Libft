@@ -16,7 +16,8 @@ void* cma_realloc(void* ptr, size_t new_size)
         void* new_ptr = malloc(new_size);
         if (ptr && new_ptr)
         {
-            Block* old_block = (Block*)((char*)ptr - sizeof(Block));
+            Block* old_block = reinterpret_cast<Block*> ((static_cast<char*> (ptr)
+						- sizeof(Block)));
             size_t copy_size = old_block->size < new_size ? old_block->size : new_size;
             memcpy(new_ptr, ptr, copy_size);
         }
@@ -25,7 +26,7 @@ void* cma_realloc(void* ptr, size_t new_size)
     }
     if (!ptr)
         return (cma_malloc(new_size));
-    if (new_size == 0)
+    if (new_size <= 0)
     {
         cma_free(ptr);
         return (ft_nullptr);
@@ -37,7 +38,8 @@ void* cma_realloc(void* ptr, size_t new_size)
         return (ft_nullptr);
     }
 	g_malloc_mutex.lock(pthread_self());
-    Block* old_block = (Block*)((char*)ptr - sizeof(Block));
+    Block* old_block = reinterpret_cast<Block*>((static_cast<char*> (ptr)
+				- sizeof(Block)));
     if (old_block->magic != MAGIC_NUMBER)
 	{
 		g_malloc_mutex.unlock(pthread_self());

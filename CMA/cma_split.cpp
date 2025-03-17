@@ -35,7 +35,7 @@ static char	**ft_malloc_strs(char **strs, const char *s, char c)
 		if ((s[i] == c && i > 0 && s[i - 1] != c)
 			|| (s[i] != c && s[i + 1] == '\0'))
 		{
-			strs[x] = (char *)cma_malloc(sizeof(char) * (count + 1));
+			strs[x] = static_cast<char *>(cma_malloc(sizeof(char) * (count + 1)));
 			if (!strs[x])
 				return (ft_nullptr);
 			count = 0;
@@ -94,14 +94,14 @@ char	**cma_split(char const *s, char c)
 
 	if (!s)
 	{
-		strs = (char **)cma_malloc(sizeof(char) * 1);
+		strs = static_cast<char **>(cma_malloc(sizeof(char) * 1));
 		if (!strs)
 			return (ft_nullptr);
 		*strs = ft_nullptr;
 		return (strs);
 	}
 	wordcount = ft_count_words(s, c);
-	strs = (char **)cma_malloc(sizeof(*strs) * (wordcount + 1));
+	strs = static_cast<char **>(cma_malloc(sizeof(*strs) * (wordcount + 1)));
 	if (!strs)
 		return (ft_nullptr);
 	if (ft_malloc_strs(strs, s, c))

@@ -16,15 +16,15 @@ static int	itoa_len(int n)
 	return (i);
 }
 
-static char	*fill_digits(char *c, unsigned int num, int start_index)
+static char *fill_digits(char *c, unsigned int num, int start_index)
 {
-	while (start_index >= 0)
-	{
-		c[start_index] = (num % 10) + '0';
-		num /= 10;
-		start_index--;
-	}
-	return (c);
+    while (start_index >= 0)
+    {
+        c[start_index] = static_cast<char>((num % 10) + '0');
+        num /= 10;
+        start_index--;
+    }
+    return c;
 }
 
 static char	*convert_int(int n, int is_negative)
@@ -34,7 +34,7 @@ static char	*convert_int(int n, int is_negative)
 	unsigned int	num;
 
 	i = itoa_len(n);
-	c = (char *)cma_malloc(i + 1 + is_negative);
+	c = static_cast<char *>(cma_malloc(i + 1 + is_negative));
 	if (!c)
 		return (ft_nullptr);
 	if (n < 0)

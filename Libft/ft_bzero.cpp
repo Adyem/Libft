@@ -5,7 +5,7 @@ void	ft_bzero(void *pointer, size_t size)
 	size_t	i;
 	char	*string;
 
-	string = (char *)pointer;
+	string = static_cast<char *>(pointer);
 	i = 0;
 	while (i < size)
 	{

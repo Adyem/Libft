@@ -13,7 +13,7 @@ static char* allocate_new_string(char* string_1, char* string_2)
         total_len += ft_strlen(string_1);
     if (string_2)
         total_len += ft_strlen(string_2);
-    new_str = (char*)cma_malloc(total_len + 1);
+    new_str = static_cast<char*>(cma_malloc(total_len + 1));
     if (!new_str)
         return ft_nullptr;
     return new_str;
@@ -55,7 +55,7 @@ static char* leftovers(char* readed_string)
         cma_free(readed_string);
         return ft_nullptr;
     }
-    string = (char*)cma_malloc(ft_strlen(readed_string) - read_index + 1);
+    string = static_cast<char*>(cma_malloc(ft_strlen(readed_string) - read_index + 1));
     if (!string)
         return ft_nullptr;
     read_index++;
@@ -71,9 +71,9 @@ static char* malloc_gnl(char* readed_string, size_t i)
     char* string;
 
     if (readed_string && readed_string[i] == '\n')
-        string = (char*)cma_malloc(i + 2);
+        string = static_cast<char*>(cma_malloc(i + 2));
     else
-        string = (char*)cma_malloc(i + 1);
+        string = static_cast<char*>(cma_malloc(i + 1));
     if (!string)
         return ft_nullptr;
     return string;
@@ -111,7 +111,7 @@ static char* read_fd(ft_file& file, char* readed_string)
     char* buffer;
     ssize_t readed_bytes;
 
-    buffer = (char*)cma_malloc(BUFFER_SIZE + 1);
+    buffer = static_cast<char*>(cma_malloc(BUFFER_SIZE + 1));
     if (!buffer)
         return ft_nullptr;
     readed_bytes = 1;

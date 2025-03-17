@@ -12,7 +12,7 @@ static char	*allocate_new_string(const char *string_1, const char *string_2)
 		total_len += ft_strlen(string_1);
 	if (string_2)
 		total_len += ft_strlen(string_2);
-	new_str = (char *)cma_malloc(total_len + 1);
+	new_str = static_cast<char *>(cma_malloc(total_len + 1));
 	if (!new_str)
 		return (ft_nullptr);
 	return (new_str);

@@ -29,7 +29,8 @@ Block* split_block(Block* block, size_t size)
 {
     if (block->size <= size + sizeof(Block))
         return block;
-    Block* new_block = (Block*)((char*)block + sizeof(Block) + size);
+    Block* new_block = reinterpret_cast<Block*>(reinterpret_cast<char*>(block) + sizeof(Block)
+			+ size);
     new_block->magic = MAGIC_NUMBER;
     new_block->size = block->size - size - sizeof(Block);
     new_block->free = true;
@@ -70,7 +71,7 @@ Page *create_page(size_t size)
         if (!ptr)
             return (ft_nullptr);
     }
-    Page* page = (Page*)malloc(sizeof(Page));
+    Page* page = static_cast<Page*>(malloc(sizeof(Page)));
     if (!page)
     {
         if (use_heap)
@@ -82,7 +83,7 @@ Page *create_page(size_t size)
     page->size = page_size;
     page->next = ft_nullptr;
     page->prev = ft_nullptr;
-    page->blocks = (Block*)ptr;
+    page->blocks = static_cast<Block*>(ptr);
     page->blocks->magic = MAGIC_NUMBER;
     page->blocks->size = page_size - sizeof(Block);
     page->blocks->free = true;
@@ -150,12 +151,12 @@ void print_block_info(Block *block)
     }
     const char* free_status = block->free ? "Yes" : "No";
     pf_printf_fd(2, "---- Block Information ----\n");
-    pf_printf_fd(2, "Address of Block: %p\n", (void *)block);
+    pf_printf_fd(2, "Address of Block: %p\n", static_cast<void *>(block));
     pf_printf_fd(2, "Magic Number: 0x%X\n", block->magic);
     pf_printf_fd(2, "Size: %zu bytes\n", block->size);
     pf_printf_fd(2, "Free: %s\n", free_status);
-    pf_printf_fd(2, "Next Block: %p\n", (void*)block->next);
-    pf_printf_fd(2, "Previous Block: %p\n", (void*)block->prev);
+    pf_printf_fd(2, "Next Block: %p\n", static_cast<void*>(block->next));
+    pf_printf_fd(2, "Previous Block: %p\n", static_cast<void*>(block->prev));
     pf_printf_fd(2, "---------------------------\n");
 #endif
 }

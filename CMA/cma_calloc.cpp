@@ -1,13 +1,12 @@
-#include <stddef.h>
+#include <cstddef>
 #include <stdbool.h>
 #include "CMA.hpp"
 
-void	*cma_calloc(int count, int size)
+void	*cma_calloc(int count, size_t size)
 {
-	void	*ptr;
-	int		total_size;
-	int		i;
-	char	*char_ptr;
+	void			*ptr;
+	std::size_t		total_size;
+	char			*char_ptr;
 
 	if (count <= 0 || size <= 0)
 		return (NULL);
@@ -16,11 +15,11 @@ void	*cma_calloc(int count, int size)
 	if (!ptr)
 		return (NULL);
 	char_ptr = static_cast<char*>(ptr);
-	i = 0;
-	while (i < total_size)
+	std::size_t index = 0;
+	while (index < total_size)
 	{
-		char_ptr[i] = 0;
-		i++;
+		char_ptr[index] = 0;
+		index++;
 	}
 	return (ptr);
 }

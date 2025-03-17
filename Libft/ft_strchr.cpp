@@ -7,14 +7,14 @@ char	*ft_strchr(const char *string, int char_to_find)
 
 	if (!string)
 		return (ft_nullptr);
-	target_char = (char)char_to_find;
+	target_char = static_cast<char>(char_to_find);
 	while (*string)
 	{
 		if (*string == target_char)
-			return ((char *)string);
+			return (const_cast<char *>(string));
 		string++;
 	}
 	if (target_char == '\0')
-		return ((char *)string);
+		return (const_cast<char *>(string));
 	return (ft_nullptr);
 }

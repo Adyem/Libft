@@ -15,15 +15,15 @@ inline size_t align8(size_t size)
     return ((size + 7) & ~7);
 }
 
-void* cma_malloc(int size)
+void* cma_malloc(std::size_t size)
 {
 	if (OFFSWITCH == 1)
         return (malloc(size));
 	if (size <= 0)
         return (ft_nullptr);
 	g_malloc_mutex.lock(pthread_self());
-    size_t	aligned_size = align8(static_cast<int> (size));
-    Block	*block = find_free_block(aligned_size);
+    size_t aligned_size = align8(size);
+    Block *block = find_free_block(aligned_size);
     if (!block)
     {
         Page* page = create_page(aligned_size);

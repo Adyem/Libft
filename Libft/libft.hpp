@@ -41,7 +41,7 @@ char		*ft_strchr(const char *string, int char_to_find);
 int			ft_atoi(const char *string);
 void		ft_bzero(void *string, size_t size);
 void		*ft_memchr(const void *pointer, int character, size_t size);
-void		*ft_memcpy(void *destination, const void *source, size_t size);
+void		*ft_memcpy(void* destination, const void* source, size_t num);
 void		*ft_memmove(void *destination, const void *source, size_t size);
 char		*ft_strchr(const char *string, int char_to_find);
 size_t		ft_strlcat(char *destination, const char *source, size_t bufferSize);

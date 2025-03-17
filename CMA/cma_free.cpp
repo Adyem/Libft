@@ -19,7 +19,8 @@ void cma_free(void* ptr)
 	if (!ptr)
         return ;
 	g_malloc_mutex.lock(pthread_self());
-    Block* block = (Block*)((char*)ptr - sizeof(Block));
+    Block* block = reinterpret_cast<Block*>((static_cast<char*> (ptr)
+				- sizeof(Block)));
     if (block->magic != MAGIC_NUMBER)
 	{
 		pf_printf_fd(2, "Invalid block detected in cma_free. \n");
