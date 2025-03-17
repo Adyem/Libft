@@ -22,7 +22,7 @@ void* cma_malloc(int size)
 	if (size <= 0)
         return (ft_nullptr);
 	g_malloc_mutex.lock(pthread_self());
-    size_t	aligned_size = align8((size_t)size);
+    size_t	aligned_size = align8(static_cast<size_t> (size));
     Block	*block = find_free_block(aligned_size);
     if (!block)
     {
@@ -37,5 +37,5 @@ void* cma_malloc(int size)
     block = split_block(block, aligned_size);
     block->free = false;
 	g_malloc_mutex.unlock(pthread_self());
-    return ((char*)block + sizeof(Block));
+    return (reinterpret_cast<char*> (block));
 }

@@ -5,8 +5,8 @@
 void	*cma_calloc(int count, int size)
 {
 	void	*ptr;
-	size_t	total_size;
-	size_t	i;
+	int		total_size;
+	int		i;
 	char	*char_ptr;
 
 	if (count <= 0 || size <= 0)
@@ -15,7 +15,7 @@ void	*cma_calloc(int count, int size)
 	ptr = cma_malloc(total_size);
 	if (!ptr)
 		return (NULL);
-	char_ptr = (char *)ptr;
+	char_ptr = static_cast<char*>(ptr);
 	i = 0;
 	while (i < total_size)
 	{

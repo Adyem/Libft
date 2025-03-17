@@ -4,9 +4,9 @@
 
 char	*cma_strdup(const char *string)
 {
-	size_t	len;
+	int		len;
 	char	*new_string;
-	size_t	i;
+	int		i;
 
 	if (!string)
 		return (NULL);
@@ -14,7 +14,7 @@ char	*cma_strdup(const char *string)
 	while (string[len])
 		len++;
 	len++;
-	new_string = (char *)cma_malloc(len);
+	new_string = static_cast<char *>(cma_malloc(len));
 	if (!new_string)
 		return (NULL);
 	i = 0;
