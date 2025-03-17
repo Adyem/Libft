@@ -6,7 +6,7 @@
 #include "../Libft/libft.hpp"
 #include "readline_internal.hpp"
 
-int rl_handle_printable_char(readline_state_t *state, int c, const char *prompt)
+int rl_handle_printable_char(readline_state_t *state, char c, const char *prompt)
 {
     if (state->pos >= state->bufsize - 1)
 	{

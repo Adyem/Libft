@@ -43,7 +43,7 @@ char *rl_readline(const char *prompt)
     fflush(stdout);
     while (1)
     {
-        int character = rl_read_key();
+        char character = rl_read_key();
 
         if (character != '\t' && state.in_completion_mode)
         {

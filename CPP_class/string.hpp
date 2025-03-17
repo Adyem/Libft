@@ -7,10 +7,10 @@
 class ft_string
 {
     private:
-        char*    _data;
-        size_t   _length;
-        size_t   _capacity;
-        int      _errorCode;
+        char*    		_data;
+		std::size_t  	_length;
+		std::size_t  	_capacity;
+        int				_errorCode;
 
         void    resize(size_t new_capacity) noexcept;
         void    setError(int errorCode) noexcept;
@@ -45,7 +45,7 @@ class ft_string
         int         getError() const noexcept;
         const char	*errorStr() const noexcept;
         void        move(ft_string& other) noexcept;
-        void        erase(size_t index, int count) noexcept;
+        void        erase(std::size_t index, std::size_t count) noexcept;
 
         friend ft_string operator+(const ft_string &lhs, const ft_string &rhs) noexcept;
         friend ft_string operator+(const ft_string &lhs, const char *rhs) noexcept;

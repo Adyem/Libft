@@ -194,9 +194,9 @@ ft_string& ft_string::operator+=(char c) noexcept
     return (*this);
 }
 
-void ft_string::erase(size_t index, int count) noexcept
+void ft_string::erase(std::size_t index, std::size_t count) noexcept
 {
-    if (index >= this->_length || count < 0)
+    if (index >= this->_length)
     {
         this->setError(STRING_ERASE_OUT_OF_BOUNDS);
         return ;

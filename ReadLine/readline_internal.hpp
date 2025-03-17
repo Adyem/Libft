@@ -2,6 +2,7 @@
 #define READLINE_INTERNAL_HPP
 
 #include "../CPP_class/file.hpp"
+#include <random>
 #include <termios.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -58,10 +59,10 @@ char	*rl_resize_buffer(char *old_buffer, int current_size, int new_size);
 int		rl_handle_escape_sequence(readline_state_t *state, const char *prompt);
 int		rl_handle_backspace(readline_state_t *state, const char *prompt);
 int		rl_handle_tab_completion(readline_state_t *state, const char *prompt);
-int		rl_handle_printable_char(readline_state_t *state, int c, const char *prompt);
+int		rl_handle_printable_char(readline_state_t *state, char c, const char *prompt);
 
 //Utilities
-int		rl_read_key();
+char	rl_read_key();
 int		rl_get_terminal_width();
 int		rl_read_escape_sequence(char seq[2]);
 void	rl_update_history(const char *buffer);

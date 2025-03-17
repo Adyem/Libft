@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include "CMA.hpp"
 
-void	*cma_calloc(int count, size_t size)
+void	*cma_calloc(std::size_t count, std::size_t size)
 {
 	void			*ptr;
 	std::size_t		total_size;

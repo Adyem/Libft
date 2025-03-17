@@ -11,7 +11,7 @@
 
 char *rl_resize_buffer(char *old_buffer, int current_size, int new_size)
 {
-    char *new_buffer = (char *)cma_malloc(new_size);
+    char *new_buffer = static_cast<char *>(cma_malloc(new_size));
 
     if (!new_buffer)
     {
@@ -52,10 +52,10 @@ int rl_clear_line(const char *prompt, const char *buffer)
 	return (0);
 }
 
-int rl_read_key()
+char rl_read_key()
 {
-    int		bytes_read;
-    char	character;
+    ssize_t bytes_read;
+    char character;
 
     while ((bytes_read = read(STDIN_FILENO, &character, 1)) != 1)
         ;
