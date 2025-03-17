@@ -5,7 +5,7 @@
 #define ALREADDY_LOCKED 1
 #define SUCCES 0
 
-int pt_mutex::try_lock(int thread_id)
+int pt_mutex::try_lock(pthread_t thread_id)
 {
     this->set_error(ER_SUCCESS);
 	if (this->_lock && this->_thread_id == thread_id)

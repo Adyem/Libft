@@ -7,13 +7,13 @@
 class pt_mutex
 {
 	private:
-		volatile bool	_lock;
-		volatile int	_thread_id;
-		int				_wait_queue[MAX_QUEUE];
-		int				_wait_queue_start;
-		int				_wait_queue_end;
-		int				_error;
-		volatile bool	_lock_released;
+		volatile bool		_lock;
+		volatile pthread_t	_thread_id;
+		pthread_t			_wait_queue[MAX_QUEUE];
+		int					_wait_queue_start;
+		int					_wait_queue_end;
+		int					_error;
+		volatile bool		_lock_released;
 
 		void		set_error(int error);
 
@@ -28,9 +28,9 @@ class pt_mutex
 
 		const volatile bool	&lockState() const;
 
-		int			lock(int thread_id);
-		int			unlock(int thread_id);
-		int			try_lock(int thread_id);
+		int			lock(pthread_t thread_id);
+		int			unlock(pthread_t thread_id);
+		int			try_lock(pthread_t thread_id);
 };
 
 #endif

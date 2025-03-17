@@ -8,7 +8,7 @@
 #undef FAILURE
 #define FAILURE -1
 
-int pt_mutex::lock(int thread_id)
+int pt_mutex::lock(pthread_t thread_id)
 {
     int			sleep_time = SLEEP_TIME;
     const int	max_sleep = MAX_SLEEP;

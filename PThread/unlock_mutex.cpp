@@ -3,7 +3,7 @@
 
 thread_local int ft_errno = 0;
 
-int pt_mutex::unlock(int thread_id)
+int pt_mutex::unlock(pthread_t thread_id)
 {
     this->set_error(ER_SUCCESS);
     if (this->_thread_id != thread_id)
