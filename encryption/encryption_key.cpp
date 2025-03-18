@@ -37,7 +37,7 @@ static uint32_t obfuscate_seed(uint32_t seed)
 const char *be_getEncryptionKey(void)
 {
     size_t key_len = 32;
-    char *key = (char *)cma_malloc(key_len + 1);
+    char *key = static_cast<char *>(cma_malloc(key_len + 1));
     if (!key)
         return (ft_nullptr);
     uint32_t seed = 0xDEADBEEF;
@@ -46,7 +46,7 @@ const char *be_getEncryptionKey(void)
     {
         decoy_unusedFunction3(key);
         seed = seed * 1103515245 + 12345;
-        key[i] = 'A' + (seed % 26);
+        key[i] = static_cast<char>('A' + (seed % 26));
     }
     key[key_len] = '\0';
     decoy_unusedFunction1();

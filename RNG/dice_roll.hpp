@@ -15,7 +15,7 @@ inline __attribute__((always_inline)) void ft_init_srand(void)
 {
     if (g_srand_init == false)
     {
-        srand((unsigned)time(ft_nullptr));
+        srand(static_cast<unsigned>(time(ft_nullptr)));
         g_srand_init = true;
     }
 	return ;
