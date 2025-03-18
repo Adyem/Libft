@@ -29,7 +29,7 @@ class ft_socket
 
 		struct sockaddr_storage _address;
 		ft_vector<ft_socket> 	_connected;
-    	ssize_t 				_socket_fd;
+    	int		 				_socket_fd;
     	int 					_error;
 
 		ft_socket(int fd, const sockaddr_storage &addr);
@@ -45,15 +45,15 @@ class ft_socket
 		ft_socket &operator=(ft_socket &&other) noexcept;
 
 		int			initialize(const SocketConfig &config);
-    	int 		send_data(const void *data, size_t size, int flags = 0);
-    	int 		receive_data(void *buffer, size_t size, int flags = 0);
+    	ssize_t 	send_data(const void *data, size_t size, int flags = 0);
+    	ssize_t		receive_data(void *buffer, size_t size, int flags = 0);
     	bool		close_socket();
     	int 		get_error() const;
     	const char	*get_error_message() const;
-		int 		broadcast_data(const void *data, size_t size, int flags);
-		int 		broadcast_data(const void *data, size_t size, int flags, int exception);
-		int 		send_data(const void *data, size_t size, int flags, ssize_t fd);
-		ssize_t		get_fd() const;
+		ssize_t 	broadcast_data(const void *data, size_t size, int flags);
+		ssize_t 	broadcast_data(const void *data, size_t size, int flags, int exception);
+		ssize_t 	send_data(const void *data, size_t size, int flags, int fd);
+		int			get_fd() const;
 };
 
 #endif

@@ -15,14 +15,14 @@ ft_socket::ft_socket() : _socket_fd(-1), _error(ER_SUCCESS)
 	ft_bzero(&this->_address, sizeof(this->_address));
 }
 
-int ft_socket::send_data(const void *data, size_t size, int flags, ssize_t fd)
+ssize_t ft_socket::send_data(const void *data, size_t size, int flags, int fd)
 {
 	size_t index = 0;
     while (index < this->_connected.size())
     {
         if (_connected[index].get_fd() == fd)
         {
-            int bytes_sent = this->_connected[index].send_data(data, size, flags);
+            ssize_t bytes_sent = this->_connected[index].send_data(data, size, flags);
             if (bytes_sent < 0)
 			{
 				this->_error = errno + ERRNO_OFFSET;
@@ -37,14 +37,14 @@ int ft_socket::send_data(const void *data, size_t size, int flags, ssize_t fd)
     return (-1);
 }
 
-ssize_t	ft_socket::get_fd() const
+int	ft_socket::get_fd() const
 {
 	return (this->_socket_fd);
 }
 
-int ft_socket::broadcast_data(const void *data, size_t size, int flags, int exception)
+ssize_t ft_socket::broadcast_data(const void *data, size_t size, int flags, int exception)
 {
-    int total_bytes_sent = 0;
+    ssize_t total_bytes_sent = 0;
 	size_t index = 0;
 
     while (index < this->_connected.size())
@@ -54,11 +54,11 @@ int ft_socket::broadcast_data(const void *data, size_t size, int flags, int exce
 			index++;
 			continue ;
 		}
-        int bytes_sent = this->_connected[index].send_data(data, size, flags);
+        ssize_t bytes_sent = this->_connected[index].send_data(data, size, flags);
         if (bytes_sent < 0)
 		{
 			ft_errno = errno + ERRNO_OFFSET;
-			_error = ft_errno;
+			this->_error = ft_errno;
             continue ;
 		}
         total_bytes_sent += bytes_sent;
@@ -67,14 +67,14 @@ int ft_socket::broadcast_data(const void *data, size_t size, int flags, int exce
     return (total_bytes_sent);
 }
 
-int ft_socket::broadcast_data(const void *data, size_t size, int flags)
+ssize_t ft_socket::broadcast_data(const void *data, size_t size, int flags)
 {
-    int total_bytes_sent = 0;
+    ssize_t total_bytes_sent = 0;
 	size_t index = 0;
 
     while (index < this->_connected.size())
     {
-        int bytes_sent = this->_connected[index].send_data(data, size, flags);
+        ssize_t bytes_sent = this->_connected[index].send_data(data, size, flags);
         if (bytes_sent < 0)
 		{
 			ft_errno = errno + ERRNO_OFFSET;
@@ -97,7 +97,7 @@ int ft_socket::accept_connection()
     }
     struct sockaddr_storage client_addr;
     socklen_t addr_len = sizeof(client_addr);
-    ssize_t new_fd = ::accept(this->_socket_fd, reinterpret_cast<struct sockaddr*>(&client_addr),
+    int new_fd = ::accept(this->_socket_fd, reinterpret_cast<struct sockaddr*>(&client_addr),
 			&addr_len);
     if (new_fd < 0)
     {
@@ -141,7 +141,7 @@ ft_socket::~ft_socket()
 	return ;
 }
 
-int ft_socket::send_data(const void *data, size_t size, int flags)
+ssize_t ft_socket::send_data(const void *data, size_t size, int flags)
 {
     if (this->_socket_fd < 0)
 	{
@@ -149,7 +149,7 @@ int ft_socket::send_data(const void *data, size_t size, int flags)
         this->_error = ft_errno;
         return (-1);
     }
-    int bytes_sent = ::send(this->_socket_fd, data, size, flags);
+    ssize_t bytes_sent = ::send(this->_socket_fd, data, size, flags);
     if (bytes_sent < 0)
 	{
         ft_errno = errno + ERRNO_OFFSET;
@@ -160,7 +160,7 @@ int ft_socket::send_data(const void *data, size_t size, int flags)
     return (bytes_sent);
 }
 
-int ft_socket::receive_data(void *buffer, size_t size, int flags)
+ssize_t ft_socket::receive_data(void *buffer, size_t size, int flags)
 {
     if (this->_socket_fd < 0)
 	{

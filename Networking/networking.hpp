@@ -3,6 +3,7 @@
 
 #include "../CPP_class/string.hpp"
 #include <netinet/in.h>
+#include <cstdint>
 
 int nw_bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 int nw_connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
@@ -25,7 +26,7 @@ class SocketConfig
 	public:
     	SocketType type;
     	ft_string ip;
-    	int port;
+    	uint16_t port;
     	int backlog;
     	int protocol;
     	int address_family;
