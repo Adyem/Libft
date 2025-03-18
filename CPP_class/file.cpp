@@ -134,7 +134,7 @@ const char *ft_file::get_error_message() const noexcept
 	return (ft_strerror(_error_code));
 }
 
-int	ft_file::read(char *buffer, int count) noexcept
+ssize_t	ft_file::read(char *buffer, int count) noexcept
 {
 	if (buffer == NULL || count <= 0)
 	{
@@ -146,20 +146,20 @@ int	ft_file::read(char *buffer, int count) noexcept
 		this->set_error(FILE_INVALID_FD);
 		return (-1);
 	}
-	int bytes_read = ::read(this->_fd, buffer, count);
+	ssize_t bytes_read = ::read(this->_fd, buffer, count);
 	if (bytes_read == -1)
 		this->set_error(errno + ERRNO_OFFSET);
 	return (bytes_read);
 }
 
-int ft_file::write(const char *string) noexcept
+ssize_t ft_file::write(const char *string) noexcept
 {
     if (string == nullptr)
     {
         this->set_error(FT_EINVAL);
         return (-1);
     }
-    int result = ::write(this->_fd, string, ft_strlen(string));
+    ssize_t result = ::write(this->_fd, string, ft_strlen(string));
     if (result == -1)
     {
         this->set_error(errno + ERRNO_OFFSET);

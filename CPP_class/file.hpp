@@ -36,10 +36,10 @@ class ft_file
 
 	    int			open(const char* filename, int flags, mode_t mode) noexcept;
 		int			open(const char* filename, int flags) noexcept;
-		int			write(const char *string) noexcept;
+		ssize_t		write(const char *string) noexcept;
 		void		close() noexcept;
 		int			seek(off_t offset, int whence) noexcept;
-		int			read(char *buffer, int count) noexcept;
+		ssize_t		read(char *buffer, int count) noexcept;
 		int			printf(const char *format, ...)
 						__attribute__((format(printf, 2, 3), hot));
 
