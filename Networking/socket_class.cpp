@@ -5,6 +5,7 @@
 #include <cerrno>
 #include <fcntl.h>
 #include <arpa/inet.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <utility>
 #include <sys/socket.h>
@@ -14,7 +15,7 @@ ft_socket::ft_socket() : _socket_fd(-1), _error(ER_SUCCESS)
 	ft_bzero(&this->_address, sizeof(this->_address));
 }
 
-int ft_socket::send_data(const void *data, size_t size, int flags, int fd)
+int ft_socket::send_data(const void *data, size_t size, int flags, ssize_t fd)
 {
 	size_t index = 0;
     while (index < this->_connected.size())
@@ -36,7 +37,7 @@ int ft_socket::send_data(const void *data, size_t size, int flags, int fd)
     return (-1);
 }
 
-int	ft_socket::get_fd() const
+ssize_t	ft_socket::get_fd() const
 {
 	return (this->_socket_fd);
 }

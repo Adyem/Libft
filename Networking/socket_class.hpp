@@ -4,12 +4,13 @@
 #include "networking.hpp"
 #include "../Template/vector.hpp"
 #include <sys/socket.h>
+#include <sys/types.h>
 
-int nw_bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
-int nw_listen(int sockfd, int backlog);
-int nw_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+int nw_bind(ssize_t sockfd, const struct sockaddr *addr, socklen_t addrlen);
+int nw_listen(ssize_t sockfd, int backlog);
+int nw_accept(ssize_t sockfd, struct sockaddr *addr, socklen_t *addrlen);
 int nw_socket(int domain, int type, int protocol);
-int nw_connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+int nw_connect(ssize_t sockfd, const struct sockaddr *addr, socklen_t addrlen);
 
 class ft_socket
 {
@@ -28,7 +29,7 @@ class ft_socket
 
 		struct sockaddr_storage _address;
 		ft_vector<ft_socket> 	_connected;
-    	int 					_socket_fd;
+    	ssize_t 				_socket_fd;
     	int 					_error;
 
 		ft_socket(int fd, const sockaddr_storage &addr);
@@ -51,8 +52,8 @@ class ft_socket
     	const char	*get_error_message() const;
 		int 		broadcast_data(const void *data, size_t size, int flags);
 		int 		broadcast_data(const void *data, size_t size, int flags, int exception);
-		int 		send_data(const void *data, size_t size, int flags, int fd);
-		int			get_fd() const;
+		int 		send_data(const void *data, size_t size, int flags, ssize_t fd);
+		ssize_t		get_fd() const;
 };
 
 #endif
