@@ -7,6 +7,8 @@
 #include <cerrno>
 #include <cstring>
 #include "linux_file.hpp"
+#include <cstring>
+#include <ctime>
 
 int ft_open(const char* pathname)
 {
@@ -44,13 +46,6 @@ ssize_t ft_read(int fd, void *buf, size_t count)
 int ft_close(int fd)
 {
     if (close(fd) == -1)
-        return (-1);
-    return (0);
-}
-
-int ft_write(int file_descriptor, char *data, int bytes)
-{
-    if (write(file_descriptor, data, bytes) == -1)
         return (-1);
     return (0);
 }

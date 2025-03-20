@@ -5,6 +5,9 @@
 
 # if defined(__linux__) || defined(__APPLE__)
 
+# define MAX_RETRIES 10
+# define RETRY_DELAY_MS 500
+
 # include <fcntl.h>
 # include <unistd.h>
 

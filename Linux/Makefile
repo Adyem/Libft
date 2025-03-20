@@ -9,7 +9,8 @@ TARGET := Linux.a
 DEBUG_TARGET := Linux_debug.a
 
 SRCS := system_call_wrappers.cpp \
-		initialize_fd.cpp
+		initialize_fd.cpp \
+		write.cpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
