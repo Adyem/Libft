@@ -37,5 +37,5 @@ void* cma_malloc(std::size_t size)
     block = split_block(block, aligned_size);
     block->free = false;
 	g_malloc_mutex.unlock(pthread_self());
-    return (reinterpret_cast<char*> (block));
+    return (reinterpret_cast<char*>(block) + sizeof(Block));
 }

@@ -36,6 +36,7 @@ struct FT_DIR
     size_t  buffer_offset;
 };
 
+size_t 		ft_strlen_size_t(const char *string);
 int			ft_strlen(const char *string);
 char		*ft_strchr(const char *string, int char_to_find);
 int			ft_atoi(const char *string);
