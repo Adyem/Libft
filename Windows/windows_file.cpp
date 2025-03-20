@@ -78,7 +78,7 @@ int ft_open(const char *pathname, int flags, int mode)
     return (fd);
 }
 
-int ft_read(int fd, void *buf, unsigned int count)
+ssize_t ft_read(int fd, void *buf, unsigned int count)
 {
     HANDLE hFile = retrieve_handle(fd);
     if (hFile == INVALID_HANDLE_VALUE)
@@ -87,10 +87,10 @@ int ft_read(int fd, void *buf, unsigned int count)
     BOOL ok = ReadFile(hFile, buf, count, &bytesRead, NULL);
     if (!ok)
 		return (-1);
-    return ((int)bytesRead);
+    return (bytesRead);
 }
 
-int ft_write(int fd, const void *buf, unsigned int count)
+ssize_t ft_write(int fd, const void *buf, unsigned int count)
 {
     HANDLE hFile = retrieve_handle(fd);
     if (hFile == INVALID_HANDLE_VALUE)
@@ -99,7 +99,7 @@ int ft_write(int fd, const void *buf, unsigned int count)
     BOOL ok = WriteFile(hFile, buf, count, &bytesWritten, NULL);
     if (!ok)
 		return (-1);
-    return ((int)bytesWritten);
+    return (bytesWritten);
 }
 
 int ft_close(int fd)
