@@ -1,5 +1,5 @@
-#ifndef FT_VECTOR_H
-#define FT_VECTOR_H
+#ifndef FT_VECTOR_HPP
+#define FT_VECTOR_HPP
 
 #include "../CPP_class/nullptr.hpp"
 #include "../Errno/errno.hpp"
