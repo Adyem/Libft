@@ -13,7 +13,7 @@ void cma_free(void* ptr)
 {
     if (OFFSWITCH == 1)
     {
-        free(ptr);
+        ::operator delete(ptr);
         return ;
     }
 	if (!ptr)

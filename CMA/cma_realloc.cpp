@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cstdio>
 #include <cassert>
+#include <new>
 #include <pthread.h>
 #include <csignal>
 #include "CMA.hpp"
@@ -13,7 +14,7 @@ void* cma_realloc(void* ptr, size_t new_size)
 {
     if (OFFSWITCH == 1)
     {
-        void* new_ptr = malloc(new_size);
+        void* new_ptr = ::operator new(new_size, std::align_val_t(8), std::nothrow);
         if (ptr && new_ptr)
         {
             Block* old_block = reinterpret_cast<Block*> ((static_cast<char*> (ptr)
@@ -21,7 +22,7 @@ void* cma_realloc(void* ptr, size_t new_size)
             size_t copy_size = old_block->size < new_size ? old_block->size : new_size;
             memcpy(new_ptr, ptr, copy_size);
         }
-        free(ptr);
+        ::operator delete(ptr, std::align_val_t(8), std::nothrow);
         return (new_ptr);
     }
     if (!ptr)

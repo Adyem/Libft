@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <cassert>
 #include <csignal>
+#include <new>
 #include "CMA_internal.hpp"
 #include "../CPP_class/nullptr.hpp"
 #include "../Printf/printf.hpp"
@@ -61,7 +62,7 @@ Page *create_page(size_t size)
     void* ptr;
     if (use_heap)
     {
-        ptr = malloc(page_size);
+        ptr = ::operator new(page_size, std::align_val_t(8), std::nothrow);
         if (!ptr)
             return (ft_nullptr);
     }
@@ -71,11 +72,11 @@ Page *create_page(size_t size)
         if (!ptr)
             return (ft_nullptr);
     }
-    Page* page = static_cast<Page*>(malloc(sizeof(Page)));
+    Page* page = static_cast<Page*>(::operator new(page_size, std::align_val_t(8), std::nothrow));
     if (!page)
     {
         if (use_heap)
-            free(ptr);
+            ::operator delete(ptr, std::align_val_t(8), std::nothrow);
         return (ft_nullptr);
     }
     page->heap = use_heap;
