@@ -25,7 +25,7 @@ void cma_free(void* ptr)
 	{
 		pf_printf_fd(2, "Invalid block detected in cma_free. \n");
 		print_block_info(block);
-        raise(SIGSEGV);
+        raise(SIGABRT);
 	}
     block->free = true;
     merge_block(block);
