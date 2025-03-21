@@ -4,11 +4,13 @@ DEBUG_TARGET := CPP_class_debug.a
 SRCS :=  string_constructors.cpp \
 		 string_methods.cpp \
 		 nullptr.cpp \
-		 file.cpp
+		 file.cpp \
+		 data_buffer.cpp
 
 HEADERS := string.hpp \
 		   nullptr.hpp \
-		   file.hpp
+		   file.hpp \
+		   data_buffer.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
