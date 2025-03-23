@@ -152,3 +152,11 @@ void ft_string::operator delete[](void* ptr) noexcept
 	return ;
 }
 
+ft_string::ft_string(int errorCode) noexcept
+    : _data(nullptr)
+    , _length(0)
+    , _capacity(0)
+    , _errorCode(errorCode)
+{
+	return ;
+}

@@ -28,6 +28,8 @@ class ft_string
         ft_string& operator+=(char c) noexcept;
         ~ft_string();
 
+		explicit ft_string(int errorCode) noexcept;
+
 		static void* operator new(size_t size) noexcept;
     	static void operator delete(void* ptr) noexcept;
     	static void* operator new[](size_t size) noexcept;
