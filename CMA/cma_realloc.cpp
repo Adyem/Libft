@@ -10,7 +10,14 @@
 #include "CMA_internal.hpp"
 #include "../CPP_class/nullptr.hpp"
 
-void* cma_realloc(void* ptr, size_t new_size)
+static int reallocate_block(void *ptr, size_t new_size)
+{
+	(void)ptr;
+	(void)new_size;
+	return (-1);
+}
+
+void *cma_realloc(void* ptr, size_t new_size)
 {
     if (OFFSWITCH == 1)
     {
@@ -25,9 +32,12 @@ void* cma_realloc(void* ptr, size_t new_size)
         ::operator delete(ptr, std::align_val_t(8), std::nothrow);
         return (new_ptr);
     }
+	int error = reallocate_block(ptr, new_size);
+	if (error == 0)
+		return (ptr);
     if (!ptr)
         return (cma_malloc(new_size));
-    if (new_size <= 0)
+    if (new_size == 0)
     {
         cma_free(ptr);
         return (ft_nullptr);

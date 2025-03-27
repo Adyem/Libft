@@ -3,12 +3,21 @@
 
 #include "../PThread/mutex.hpp"
 #include <cstdint>
+#include <stdint.h>
 
 #define PAGE_SIZE 131072
 #define BYPASS_ALLOC DEBUG
 #define MAGIC_NUMBER 0xDEADBEEF
 
 #define OFFSWITCH 0
+
+#define SIZE 100
+#define SMALL_SIZE (SIZE)
+#define MEDIUM_SIZE (SIZE * 10)
+
+#define BASE_SIZE 1024
+#define SMALL_ALLOC (BASE_SIZE * 1)
+#define MEDIUM_ALLOC (BASE_SIZE * 10)
 
 #ifndef DEBUG
 # define DEBUG 0
@@ -42,6 +51,7 @@ struct Page
     Page		*prev;
     Block		*blocks;
 	bool		heap;
+	int8_t		alloc_size_type;	
 } __attribute__ ((aligned(8)));
 
 extern Page *page_list;
