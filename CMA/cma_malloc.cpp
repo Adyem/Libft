@@ -10,11 +10,6 @@
 #include "../PThread/mutex.hpp"
 #include "../CPP_class/nullptr.hpp"
 
-inline size_t align8(size_t size)
-{
-    return ((size + 7) & ~7);
-}
-
 void* cma_malloc(std::size_t size)
 {
 	if (OFFSWITCH == 1)

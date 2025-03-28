@@ -12,9 +12,25 @@
 
 static int reallocate_block(void *ptr, size_t new_size)
 {
-	(void)ptr;
-	(void)new_size;
-	return (-1);
+    if (!ptr)
+        return (-1);
+    Block* block = reinterpret_cast<Block*>((static_cast<char*>(ptr) - sizeof(Block)));
+    if (block->size >= new_size)
+    {
+        split_block(block, new_size);
+        return (0);
+    }
+    if (block->next && block->next->free &&
+        (block->size + sizeof(Block) + block->next->size) >= new_size)
+    {
+        block->size += sizeof(Block) + block->next->size;
+        block->next = block->next->next;
+        if (block->next)
+            block->next->prev = block;
+        split_block(block, new_size);
+        return (0);
+    }
+    return (-1);
 }
 
 void *cma_realloc(void* ptr, size_t new_size)
@@ -32,6 +48,7 @@ void *cma_realloc(void* ptr, size_t new_size)
         ::operator delete(ptr, std::align_val_t(8), std::nothrow);
         return (new_ptr);
     }
+	g_malloc_mutex.lock(pthread_self());
 	int error = reallocate_block(ptr, new_size);
 	if (error == 0)
 		return (ptr);
@@ -39,21 +56,23 @@ void *cma_realloc(void* ptr, size_t new_size)
         return (cma_malloc(new_size));
     if (new_size == 0)
     {
+		g_malloc_mutex.unlock(pthread_self());
         cma_free(ptr);
         return (ft_nullptr);
     }
     void* new_ptr = cma_malloc(new_size);
     if (!new_ptr)
     {
+		g_malloc_mutex.unlock(pthread_self());
         cma_free(ptr);
         return (ft_nullptr);
     }
-	g_malloc_mutex.lock(pthread_self());
     Block* old_block = reinterpret_cast<Block*>((static_cast<char*> (ptr)
 				- sizeof(Block)));
     if (old_block->magic != MAGIC_NUMBER)
 	{
 		g_malloc_mutex.unlock(pthread_self());
+		cma_free(ptr);
         return (ft_nullptr);
 	}
     size_t copy_size = old_block->size < new_size ? old_block->size : new_size;

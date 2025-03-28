@@ -62,7 +62,7 @@ Block	*find_free_block(std::size_t size);
 Block	*merge_block(Block *block);
 void	print_block_info(Block *block);
 
-inline __attribute__((always_inline, hot)) std::size_t align8(int size)
+inline __attribute__((always_inline, hot)) std::size_t align8(size_t size)
 {
     return (size + 7) & ~7;
 }

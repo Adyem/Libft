@@ -185,7 +185,7 @@ void print_block_info(Block *block)
         return;
     }
     const char* free_status = block->free ? "Yes" : "No";
-    pf_printf_fd(2, "---- Block Information ----\n");
+    pf_printf_fd(3, "---- Block Information ----\n");
     pf_printf_fd(2, "Address of Block: %p\n", static_cast<void *>(block));
     pf_printf_fd(2, "Magic Number: 0x%X\n", block->magic);
     pf_printf_fd(2, "Size: %zu bytes\n", block->size);
