@@ -19,23 +19,26 @@ size_t ft_strlen_printf(const char *s)
 
 void ft_putchar_fd(const char c, int fd, size_t *count)
 {
-    write(fd, &c, 1);
+    ssize_t return_value = write(fd, &c, 1);
+	(void)return_value;
     (*count)++;
-    return ;
+	return ;
 }
 
 void ft_putstr_fd(const char *s, int fd, size_t *count)
 {
+	ssize_t return_value;
     if (!s)
-	{
-        write(fd, "(null)", 6);
+    {
+        return_value = write(fd, "(null)", 6);
         *count += 6;
-        return ;
+        return;
     }
     size_t len = ft_strlen_printf(s);
-    write(fd, s, len);
+    return_value = write(fd, s, len);
     *count += len;
-    return ;
+	(void)return_value;
+	return ;
 }
 
 void ft_putnbr_fd_recursive(long n, int fd, size_t *count)
