@@ -9,5 +9,5 @@ int	ft_strcmp(const char *string1, const char *string2)
 		string1++;
 		string2++;
 	}
-	return static_cast<int>((*string1) - static_cast<int>(*string2));
+	return (*string1 - *string2);
 }

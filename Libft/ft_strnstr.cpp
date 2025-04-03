@@ -1,4 +1,5 @@
 #include "libft.hpp"
+#include "../CPP_class/nullptr.hpp"
 
 char	*ft_strnstr(const char *haystack, const char *needle, size_t Length)
 {
@@ -24,5 +25,5 @@ char	*ft_strnstr(const char *haystack, const char *needle, size_t Length)
 
 		haystackIndex++;
 	}
-	return (0);
+	return (ft_nullptr);
 }

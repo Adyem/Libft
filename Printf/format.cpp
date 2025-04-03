@@ -66,7 +66,7 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
 				else if (len_mod == LEN_Z)
 				{
                     size_t num = va_arg(args, size_t);
-                    ft_putunsigned_fd(static_cast<unsigned long>(num), fd, &count);
+                    ft_putunsigned_fd(num, fd, &count);
                 }
 				else
 				{
@@ -85,7 +85,7 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
 				else if (len_mod == LEN_Z)
 				{
                     size_t num = va_arg(args, size_t);
-					ft_puthex_fd(static_cast<unsigned long>(num), fd, uppercase, &count);
+					ft_puthex_fd(num, fd, uppercase, &count);
 				}
 				else
 				{
