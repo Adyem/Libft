@@ -15,8 +15,7 @@ SUBDIRS :=  CMA \
             Windows \
             Linux \
             encryption \
-            RNG \
-            C_style_class
+            RNG
 
 LIB_BASES := \
   CMA/CustomMemoryAllocator \
@@ -31,8 +30,7 @@ LIB_BASES := \
   Windows/Windows \
   Linux/Linux \
   encryption/encryption \
-  RNG/RNG \
-  C_style_class/C_style_class
+  RNG/RNG
 
 LIBS       := $(addsuffix .a, $(LIB_BASES))
 DEBUG_LIBS := $(addsuffix _debug.a, $(LIB_BASES))
