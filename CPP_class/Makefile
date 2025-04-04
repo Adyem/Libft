@@ -7,7 +7,7 @@ SRCS :=  string_constructors.cpp \
 		 file.cpp \
 		 data_buffer.cpp
 
-HEADERS := string.hpp \
+HEADERS := string_class.hpp \
 		   nullptr.hpp \
 		   file.hpp \
 		   data_buffer.hpp

@@ -10,6 +10,8 @@ namespace str
 		char *_data = ft_nullptr;
 		int _size = 0;
 	};
+
+	char *dereference(str::string string, int index);
 }
 
 #endif

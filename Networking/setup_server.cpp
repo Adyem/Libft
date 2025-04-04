@@ -1,7 +1,6 @@
 #include "networking.hpp"
 #include "socket_class.hpp"
 #include "../Errno/errno.hpp"
-#include "../CPP_class/string.hpp"
 #include <cstring>
 #include <cerrno>
 #include <fcntl.h>

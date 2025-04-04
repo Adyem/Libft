@@ -1,7 +1,7 @@
 #ifndef NETWORKING_HPP
 #define NETWORKING_HPP
 
-#include "../CPP_class/string.hpp"
+#include "../CPP_class/string_class.hpp"
 #include <netinet/in.h>
 #include <cstdint>
 

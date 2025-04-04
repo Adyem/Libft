@@ -1,9 +1,9 @@
 TARGET         := C_style_class.a
 DEBUG_TARGET   := C_style_class_debug.a
 
-SRCS := 
+SRCS := string_c_class.cpp 
 
-HEADERS := 
+HEADERS := string_c_class.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

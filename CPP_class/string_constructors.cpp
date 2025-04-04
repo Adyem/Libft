@@ -1,4 +1,4 @@
-#include "string.hpp"
+#include "string_class.hpp"
 #include <cstring>
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
