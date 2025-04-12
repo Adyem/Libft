@@ -54,7 +54,7 @@ ft_dirent* ft_readdir(FT_DIR* directoryStream)
     if (rawDirent->d_reclen == 0)
         return (ft_nullptr);
     static ft_dirent currentEntry;
-    memset(&currentEntry, 0, sizeof(currentEntry));
+    ft_bzero(&currentEntry, sizeof(currentEntry));
     currentEntry.d_ino = rawDirent->d_ino;
     currentEntry.d_type = rawDirent->d_type;
     strncpy(currentEntry.d_name, rawDirent->d_name, sizeof(currentEntry.d_name) - 1);
