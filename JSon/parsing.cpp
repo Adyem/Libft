@@ -3,38 +3,45 @@
 #include <cstring>
 #include <fcntl.h>
 #include <unistd.h>
-#include <new>  // for std::nothrow
+#include <cstdarg>
+#include <new>
 #include "parsing.hpp"
 #include "../Libft/libft.hpp"
 #include "../Linux/linux_file.hpp"
 #include "../CPP_class/nullptr.hpp"
 #include "../CMA/CMA.hpp"
 
+static void format_write(int fd, const char* format, ...)
+{
+    char buffer[1024];
+    va_list args;
+    va_start(args, format);
+    std::vsnprintf(buffer, sizeof(buffer), format, args);
+    va_end(args);
+    ft_write(fd, buffer, ft_strlen(buffer));
+	return ;
+}
+
 json_item* create_json_item(const char *key, const char *value)
 {
     json_item *item = new(std::nothrow) json_item;
     if (!item)
-    {
-        std::fprintf(stderr, "Error allocating memory for json_item\n");
-        std::exit(EXIT_FAILURE);
-    }
+        return (ft_nullptr);
     item->key = cma_strdup(key);
     if (!item->key)
     {
-        std::fprintf(stderr, "Error allocating memory for json_item key\n");
         delete item;
-        std::exit(EXIT_FAILURE);
+        return(ft_nullptr);
     }
     item->value = cma_strdup(value);
     if (!item->value)
     {
-        std::fprintf(stderr, "Error allocating memory for json_item value\n");
         delete[] item->key;
         delete item;
-        std::exit(EXIT_FAILURE);
+        return (ft_nullptr);
     }
-    item->next = nullptr;
-    return item;
+    item->next = ft_nullptr;
+    return (item);
 }
 
 void add_item_to_group(json_group *group, json_item *item)
@@ -48,27 +55,23 @@ void add_item_to_group(json_group *group, json_item *item)
             current_item = current_item->next;
         current_item->next = item;
     }
-    return;
+    return ;
 }
 
 json_group* create_json_group(const char *name)
 {
     json_group *group = new(std::nothrow) json_group;
     if (!group)
-    {
-        std::fprintf(stderr, "Error allocating memory for json_group\n");
-        return ft_nullptr;
-    }
+        return (ft_nullptr);
     group->name = cma_strdup(name);
     if (!group->name)
     {
-        std::fprintf(stderr, "Error allocating memory for json_group name\n");
         delete group;
-        return ft_nullptr;
+        return (ft_nullptr);
     }
     group->items = nullptr;
     group->next = nullptr;
-    return group;
+    return (group);
 }
 
 void append_group(json_group **head, json_group *new_group)
@@ -82,51 +85,38 @@ void append_group(json_group **head, json_group *new_group)
             current_group = current_group->next;
         current_group->next = new_group;
     }
-    return;
+    return ;
 }
 
 int write_json_to_file(const char *filename, json_group *groups)
 {
     int file_descriptor = ft_open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (file_descriptor < 0)
-    {
-        std::fprintf(stderr, "Error: could not open file %s for writing.\n", filename);
         return (-1);
-    }
-    char buffer[1024];
-    std::snprintf(buffer, sizeof(buffer), "{\n");
-    ft_write(file_descriptor, buffer, ft_strlen(buffer));
+    format_write(file_descriptor, "{\n");
     json_group *group_ptr = groups;
     while (group_ptr)
     {
-        std::snprintf(buffer, sizeof(buffer), "  \"%s\": {\n", group_ptr->name);
-        ft_write(file_descriptor, buffer, ft_strlen(buffer));
-        
+        format_write(file_descriptor, "  \"%s\": {\n", group_ptr->name);
         json_item *item_ptr = group_ptr->items;
         while (item_ptr)
         {
             if (item_ptr->next)
-                std::snprintf(buffer, sizeof(buffer),
-                              "    \"%s\": \"%s\",\n", item_ptr->key, item_ptr->value);
+                format_write(file_descriptor,
+						"    \"%s\": \"%s\",\n", item_ptr->key, item_ptr->value);
             else
-                std::snprintf(buffer, sizeof(buffer),
-                              "    \"%s\": \"%s\"\n", item_ptr->key, item_ptr->value);
-            ft_write(file_descriptor, buffer, ft_strlen(buffer));
+                format_write(file_descriptor,
+						"    \"%s\": \"%s\"\n", item_ptr->key, item_ptr->value);
             item_ptr = item_ptr->next;
         }
-        
         if (group_ptr->next)
-            std::snprintf(buffer, sizeof(buffer), "  },\n");
+            format_write(file_descriptor, "  },\n");
         else
-            std::snprintf(buffer, sizeof(buffer), "  }");
-        ft_write(file_descriptor, buffer, ft_strlen(buffer));
-        
-        std::snprintf(buffer, sizeof(buffer), "\n");
-        ft_write(file_descriptor, buffer, ft_strlen(buffer));
+            format_write(file_descriptor, "  }");
+        format_write(file_descriptor, "\n");
         group_ptr = group_ptr->next;
     }
-    std::snprintf(buffer, sizeof(buffer), "}\n");
-    ft_write(file_descriptor, buffer, ft_strlen(buffer));
+    format_write(file_descriptor, "}\n");
     ft_close(file_descriptor);
     return (0);
 }
@@ -143,7 +133,7 @@ void free_json_items(json_item *item)
         delete item;
         item = next_item;
     }
-    return;
+    return ;
 }
 
 void free_json_groups(json_group *group)
@@ -157,5 +147,5 @@ void free_json_groups(json_group *group)
         delete group;
         group = next_group;
     }
-    return;
+    return ;
 }
