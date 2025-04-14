@@ -11,7 +11,7 @@
 #include "../CPP_class/nullptr.hpp"
 #include "../CMA/CMA.hpp"
 
-json_item* create_json_item(const char *key, const char *value)
+json_item* json_create_item(const char *key, const char *value)
 {
     json_item *item = new(std::nothrow) json_item;
     if (!item)
@@ -33,7 +33,7 @@ json_item* create_json_item(const char *key, const char *value)
     return (item);
 }
 
-void add_item_to_group(json_group *group, json_item *item)
+void json_add_item_to_group(json_group *group, json_item *item)
 {
     if (!group->items)
         group->items = item;
@@ -47,7 +47,7 @@ void add_item_to_group(json_group *group, json_item *item)
     return ;
 }
 
-json_group* create_json_group(const char *name)
+json_group* json_create_json_group(const char *name)
 {
     json_group *group = new(std::nothrow) json_group;
     if (!group)
@@ -58,12 +58,12 @@ json_group* create_json_group(const char *name)
         delete group;
         return (ft_nullptr);
     }
-    group->items = nullptr;
-    group->next = nullptr;
+    group->items = ft_nullptr;
+    group->next = ft_nullptr;
     return (group);
 }
 
-void append_group(json_group **head, json_group *new_group)
+void json_append_group(json_group **head, json_group *new_group)
 {
     if (!(*head))
         *head = new_group;
@@ -77,7 +77,7 @@ void append_group(json_group **head, json_group *new_group)
     return ;
 }
 
-int write_json_to_file(const char *filename, json_group *groups)
+int json_write_to_file(const char *filename, json_group *groups)
 {
     int file_descriptor = ft_open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (file_descriptor < 0)
@@ -110,7 +110,7 @@ int write_json_to_file(const char *filename, json_group *groups)
     return (0);
 }
 
-void free_json_items(json_item *item)
+void json_free_items(json_item *item)
 {
     while (item)
     {
@@ -125,14 +125,14 @@ void free_json_items(json_item *item)
     return ;
 }
 
-void free_json_groups(json_group *group)
+void json_free_groups(json_group *group)
 {
     while (group)
     {
         json_group *next_group = group->next;
         if (group->name)
             delete[] group->name;
-        free_json_items(group->items);
+        json_free_items(group->items);
         delete group;
         group = next_group;
     }
