@@ -3,8 +3,7 @@ DEBUG_TARGET := Printf_debug.a
 
 SRCS := printf.cpp \
 		format.cpp \
-		print_args.cpp \
-		snprintf.cpp
+		print_args.cpp
 
 HEADERS := printf.hpp \
 		   printf_internal.hpp
