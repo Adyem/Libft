@@ -1,13 +1,9 @@
-TARGET := Printf.a
-DEBUG_TARGET := Printf_debug.a
+TARGET := JSon.a
+DEBUG_TARGET := JSon_debug.a
 
-SRCS := printf.cpp \
-		format.cpp \
-		print_args.cpp \
-		snprintf.cpp
+SRCS := json_parsing.cpp
 
-HEADERS := printf.hpp \
-		   printf_internal.hpp
+HEADERS := json_parsing.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

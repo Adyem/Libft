@@ -5,22 +5,11 @@
 #include <unistd.h>
 #include <cstdarg>
 #include <new>
-#include "parsing.hpp"
-#include "../Libft/libft.hpp"
+#include "json_parsing.hpp"
+#include "../Printf/printf.hpp"
 #include "../Linux/linux_file.hpp"
 #include "../CPP_class/nullptr.hpp"
 #include "../CMA/CMA.hpp"
-
-static void format_write(int fd, const char* format, ...)
-{
-    char buffer[1024];
-    va_list args;
-    va_start(args, format);
-    std::vsnprintf(buffer, sizeof(buffer), format, args);
-    va_end(args);
-    ft_write(fd, buffer, ft_strlen(buffer));
-	return ;
-}
 
 json_item* create_json_item(const char *key, const char *value)
 {
@@ -93,30 +82,30 @@ int write_json_to_file(const char *filename, json_group *groups)
     int file_descriptor = ft_open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (file_descriptor < 0)
         return (-1);
-    format_write(file_descriptor, "{\n");
+    pf_printf_fd(file_descriptor, "{\n");
     json_group *group_ptr = groups;
     while (group_ptr)
     {
-        format_write(file_descriptor, "  \"%s\": {\n", group_ptr->name);
+        pf_printf_fd(file_descriptor, "  \"%s\": {\n", group_ptr->name);
         json_item *item_ptr = group_ptr->items;
         while (item_ptr)
         {
             if (item_ptr->next)
-                format_write(file_descriptor,
+                pf_printf_fd(file_descriptor,
 						"    \"%s\": \"%s\",\n", item_ptr->key, item_ptr->value);
             else
-                format_write(file_descriptor,
+                pf_printf_fd(file_descriptor,
 						"    \"%s\": \"%s\"\n", item_ptr->key, item_ptr->value);
             item_ptr = item_ptr->next;
         }
         if (group_ptr->next)
-            format_write(file_descriptor, "  },\n");
+            pf_printf_fd(file_descriptor, "  },\n");
         else
-            format_write(file_descriptor, "  }");
-        format_write(file_descriptor, "\n");
+            pf_printf_fd(file_descriptor, "  }");
+        pf_printf_fd(file_descriptor, "\n");
         group_ptr = group_ptr->next;
     }
-    format_write(file_descriptor, "}\n");
+    pf_printf_fd(file_descriptor, "}\n");
     ft_close(file_descriptor);
     return (0);
 }

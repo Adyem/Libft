@@ -15,7 +15,8 @@ SUBDIRS :=  CMA \
             Windows \
             Linux \
             encryption \
-            RNG
+            RNG \
+			JSon
 
 LIB_BASES := \
   CMA/CustomMemoryAllocator \
@@ -30,7 +31,8 @@ LIB_BASES := \
   Windows/Windows \
   Linux/Linux \
   encryption/encryption \
-  RNG/RNG
+  RNG/RNG \
+  JSon/JSon
 
 LIBS       := $(addsuffix .a, $(LIB_BASES))
 DEBUG_LIBS := $(addsuffix _debug.a, $(LIB_BASES))
