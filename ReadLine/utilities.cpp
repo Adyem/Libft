@@ -1,8 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
 #include <unistd.h>
-#include <sys/ioctl.h>
+#include "../Linux/linux_file.hpp"
 #include "../CPP_class/nullptr.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Printf/printf.hpp"
@@ -21,15 +20,6 @@ char *rl_resize_buffer(char *old_buffer, int current_size, int new_size)
     memcpy(new_buffer, old_buffer, current_size);
     cma_free(old_buffer);
     return (new_buffer);
-}
-
-int rl_get_terminal_width()
-{
-    struct terminal_dimensions terminalSize;
-    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &terminalSize) == -1) {
-        return -1;
-    }
-    return terminalSize.cols;
 }
 
 int rl_clear_line(const char *prompt, const char *buffer)
@@ -57,7 +47,7 @@ char rl_read_key()
     ssize_t bytes_read;
     char character;
 
-    while ((bytes_read = read(STDIN_FILENO, &character, 1)) != 1)
+    while ((bytes_read = ft_read(0, &character, 1)) != 1)
         ;
     return (character);
 }

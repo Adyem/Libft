@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <termios.h>
 #include <unistd.h>
 #include "../CMA/CMA.hpp"
 #include "readline_internal.hpp"

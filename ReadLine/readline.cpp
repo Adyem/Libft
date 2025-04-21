@@ -1,7 +1,6 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <termios.h>
 #include <unistd.h>
 #include "../Libft/libft.hpp"
 #include "../CPP_class/nullptr.hpp"
@@ -10,7 +9,6 @@
 #include "readline_internal.hpp"
 #include "readline.hpp"
 
-termios	orig_termios;
 char	*history[MAX_HISTORY];
 int		history_count = 0;
 char	*suggestions[MAX_SUGGESTIONS];

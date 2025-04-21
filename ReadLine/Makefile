@@ -9,7 +9,8 @@ SRCS := readline.cpp \
 	tab_completion.cpp \
 	printeble_char.cpp \
 	raw_mode.cpp \
-	initialize.cpp
+	initialize.cpp \
+	get_terminal_width.cpp
 
 HEADERS := readline.hpp \
 		   readline_internal.hpp

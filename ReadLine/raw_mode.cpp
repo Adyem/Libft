@@ -12,6 +12,10 @@
 static DWORD orig_mode;
 #endif
 
+#ifndef _WIN32
+termios	orig_termios;
+#endif
+
 void rl_disable_raw_mode()
 {
 #ifdef _WIN32

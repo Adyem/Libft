@@ -2,8 +2,6 @@
 #define READLINE_INTERNAL_HPP
 
 #include "../CPP_class/file.hpp"
-#include <random>
-#include <termios.h>
 #include <unistd.h>
 #include <stdlib.h>
 
