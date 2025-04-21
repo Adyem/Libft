@@ -19,6 +19,7 @@
 # define O_EXCL      0x0200
 # define O_TRUNC     0x0400
 # define O_APPEND    0x0800
+# define O_DIRECTORY 0x1600
 #endif 
 
 struct linux_dirent64

@@ -43,35 +43,43 @@ static void clear_handle(int fd)
 
 int ft_open(const char *pathname, int flags, int mode)
 {
-    DWORD desiredAccess = 0;
+    DWORD desiredAccess       = 0;
     DWORD creationDisposition = 0;
-    DWORD fileAttributes = FILE_ATTRIBUTE_NORMAL;
-
-	(void)mode;
-	if ((flags & O_RDWR) == O_RDWR)
-        desiredAccess = GENERIC_READ | GENERIC_WRITE;
-	else if ((flags & O_WRONLY) == O_WRONLY)
-        desiredAccess = GENERIC_WRITE;
-	else
-        desiredAccess = GENERIC_READ;
-	if ((flags & O_CREAT) && (flags & O_EXCL))
-        creationDisposition = CREATE_NEW;
-	else if ((flags & O_CREAT) && (flags & O_TRUNC))
-        creationDisposition = CREATE_ALWAYS;
-	else if (flags & O_CREAT)
-        creationDisposition = OPEN_ALWAYS;
-	else if (flags & O_TRUNC)
-        creationDisposition = TRUNCATE_EXISTING;
-	else
+    DWORD flagsAndAttributes  = FILE_ATTRIBUTE_NORMAL;
+    (void)mode;
+    if (flags & O_DIRECTORY)
+	{
+        desiredAccess       = FILE_LIST_DIRECTORY;
         creationDisposition = OPEN_EXISTING;
-	if (flags & O_APPEND)
-        desiredAccess |= FILE_APPEND_DATA;
-    HANDLE hFile = CreateFileA(pathname, desiredAccess, FILE_SHARE_READ
-			| FILE_SHARE_WRITE, NULL, creationDisposition, fileAttributes, NULL);
-	if (hFile == INVALID_HANDLE_VALUE)
-		return (-1);
+        flagsAndAttributes  = FILE_FLAG_BACKUP_SEMANTICS;
+    }
+    else 
+	{
+        if ((flags & O_RDWR) == O_RDWR)
+            desiredAccess = GENERIC_READ | GENERIC_WRITE;
+        else if (flags & O_WRONLY)
+            desiredAccess = GENERIC_WRITE;
+        else
+            desiredAccess = GENERIC_READ;
+        if ((flags & O_CREAT) && (flags & O_EXCL))
+            creationDisposition = CREATE_NEW;
+        else if ((flags & O_CREAT) && (flags & O_TRUNC))
+            creationDisposition = CREATE_ALWAYS;
+        else if (flags & O_CREAT)
+            creationDisposition = OPEN_ALWAYS;
+        else if (flags & O_TRUNC)
+            creationDisposition = TRUNCATE_EXISTING;
+        else
+            creationDisposition = OPEN_EXISTING;
+        if (flags & O_APPEND)
+            desiredAccess |= FILE_APPEND_DATA;
+    }
+    HANDLE hFile = CreateFileA(pathname, desiredAccess, FILE_SHARE_READ | FILE_SHARE_WRITE,
+        ft_nullptr, creationDisposition, flagsAndAttributes, ft_nullptr);
+    if (hFile == INVALID_HANDLE_VALUE)
+        return (-1);
     int fd = store_handle(hFile);
-	if (fd < 0)
+    if (fd < 0)
 	{
         CloseHandle(hFile);
         return (-1);
@@ -83,11 +91,17 @@ ssize_t ft_read(int fd, void *buf, unsigned int count)
 {
     HANDLE hFile = retrieve_handle(fd);
     if (hFile == INVALID_HANDLE_VALUE)
-		return (-1);
+        return (-1);
+    BY_HANDLE_FILE_INFORMATION info;
+    if (GetFileInformationByHandle(hFile, &info))
+	{
+        if (info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            return (-1);
+    }
     DWORD bytesRead = 0;
     BOOL ok = ReadFile(hFile, buf, count, &bytesRead, NULL);
     if (!ok)
-		return (-1);
+        return (-1);
     return (bytesRead);
 }
 
