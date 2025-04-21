@@ -5,6 +5,10 @@
 #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
 
+#ifndef O_DIRECTORY
+# define O_DIRECTORY 0
+#endif
+
 #ifndef DEBUG
 # define DEBUG 0
 #endif
