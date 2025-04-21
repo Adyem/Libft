@@ -1,5 +1,4 @@
 #include <unistd.h>
-#include <sys/syscall.h>
 #include <fcntl.h>
 #include "libft.hpp"
 #include "../CMA/CMA.hpp"
@@ -8,6 +7,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+
+#ifndef _WIN32
+#include <sys/syscall.h>
+#endif
 
 FT_DIR* ft_opendir(const char* directoryPath)
 {
@@ -35,31 +38,51 @@ FT_DIR* ft_opendir(const char* directoryPath)
     return (directoryStream);
 }
 
-ft_dirent* ft_readdir(FT_DIR* directoryStream)
+ft_dirent* ft_readdir(FT_DIR* dir)
 {
-    if (!directoryStream)
-        return (ft_nullptr);
-    if (directoryStream->buffer_offset >= static_cast<size_t>(directoryStream->buffer_used))
-    {
-        directoryStream->buffer_offset = 0;
-        long bytesRead = syscall(SYS_getdents64, directoryStream->fd,
-                reinterpret_cast<linux_dirent64*>(directoryStream->buffer),
-				directoryStream->buffer_size);
-        if (bytesRead <= 0)
-            return (ft_nullptr);
-        directoryStream->buffer_used = bytesRead;
-    }
-    linux_dirent64* rawDirent = reinterpret_cast<linux_dirent64*>
-		(directoryStream->buffer + directoryStream->buffer_offset);
-    if (rawDirent->d_reclen == 0)
-        return (ft_nullptr);
-    static ft_dirent currentEntry;
-    ft_bzero(&currentEntry, sizeof(currentEntry));
-    currentEntry.d_ino = rawDirent->d_ino;
-    currentEntry.d_type = rawDirent->d_type;
-    strncpy(currentEntry.d_name, rawDirent->d_name, sizeof(currentEntry.d_name) - 1);
-    directoryStream->buffer_offset += rawDirent->d_reclen;
-    return (&currentEntry);
+	if (!dir)
+		return ft_nullptr;
+	#ifdef _WIN32
+	    WIN32_FIND_DATAA* fd = &dir->w_findData;
+	    if (dir->first_read)
+	        dir->first_read = false;
+	    else
+	    {
+	        if (!FindNextFileA(reinterpret_cast<HANDLE>(dir->fd), fd))
+	            return ft_nullptr;
+	    }
+	    static ft_dirent entry;
+	    ft_bzero(&entry, sizeof(entry));
+	    BY_HANDLE_FILE_INFORMATION info;
+	    if (GetFileInformationByHandle(reinterpret_cast<HANDLE>(dir->fd), &info))
+	        entry.d_ino = (static_cast<uint64_t>(info.nFileIndexHigh) << 32) |
+	                       info.nFileIndexLow;
+	    strncpy(entry.d_name, fd->cFileName, sizeof(entry.d_name) - 1);
+	    entry.d_type = (fd->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? DT_DIR : DT_REG;
+	    return &entry;	
+	#else
+    	if (dir->buffer_offset >= static_cast<size_t>(dir->buffer_used))
+    	{
+    	    dir->buffer_offset = 0;
+    	    long n = syscall(SYS_getdents64, dir->fd,
+    	                     reinterpret_cast<linux_dirent64*>(dir->buffer),
+    	                     dir->buffer_size);
+    	    if (n <= 0)
+    	        return ft_nullptr;
+    	    dir->buffer_used = n;
+    	}
+    	linux_dirent64* raw = reinterpret_cast<linux_dirent64*>
+    	                      (dir->buffer + dir->buffer_offset);
+    	if (raw->d_reclen == 0)
+    	    return ft_nullptr;
+    	static ft_dirent entry;
+    	ft_bzero(&entry, sizeof(entry));
+    	entry.d_ino  = raw->d_ino;
+    	entry.d_type = raw->d_type;
+   		strncpy(entry.d_name, raw->d_name, sizeof(entry.d_name) - 1);
+    	dir->buffer_offset += raw->d_reclen;
+    	return &entry;
+	#endif
 }
 
 int ft_closedir(FT_DIR* directoryStream)
