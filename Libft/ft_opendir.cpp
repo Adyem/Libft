@@ -14,7 +14,7 @@
 
 FT_DIR* ft_opendir(const char* directoryPath)
 {
-    int fileDescriptor = ft_open(directoryPath, O_DIRECTORY | O_RDONLY);
+    int fileDescriptor = ft_open(directoryPath, O_DIRECTORY | O_RDONLY, 0);
     if (fileDescriptor < 0)
         return (ft_nullptr);
     FT_DIR* directoryStream = reinterpret_cast<FT_DIR*>(cma_malloc(sizeof(FT_DIR)));
