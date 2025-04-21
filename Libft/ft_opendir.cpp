@@ -4,6 +4,7 @@
 #include "../CMA/CMA.hpp"
 #include "../Linux/linux_file.hpp"
 #include "../CPP_class/nullptr.hpp"
+#include "../Windows/windows_file.hpp"
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
