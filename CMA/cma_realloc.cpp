@@ -49,9 +49,6 @@ void *cma_realloc(void* ptr, size_t new_size)
         return (new_ptr);
     }
 	g_malloc_mutex.lock(pthread_self());
-	int error = reallocate_block(ptr, new_size);
-	if (error == 0)
-		return (ptr);
     if (!ptr)
         return (cma_malloc(new_size));
     if (new_size == 0)
@@ -60,6 +57,10 @@ void *cma_realloc(void* ptr, size_t new_size)
         cma_free(ptr);
         return (ft_nullptr);
     }
+	new_size = align16(new_size);
+	int error = reallocate_block(ptr, new_size);
+	if (error == 0)
+		return (ptr);
     void* new_ptr = cma_malloc(new_size);
     if (!new_ptr)
     {

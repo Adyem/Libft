@@ -41,7 +41,7 @@ struct Block
     bool		free;
     Block		*next;
     Block		*prev;
-} __attribute__ ((aligned(8)));
+} __attribute__ ((aligned(16)));
 
 struct Page
 {
@@ -52,7 +52,7 @@ struct Page
     Block		*blocks;
 	bool		heap;
 	int8_t		alloc_size_type;	
-} __attribute__ ((aligned(8)));
+} __attribute__ ((aligned(16)));
 
 extern Page *page_list;
 
@@ -62,9 +62,9 @@ Block	*find_free_block(std::size_t size);
 Block	*merge_block(Block *block);
 void	print_block_info(Block *block);
 
-inline __attribute__((always_inline, hot)) std::size_t align8(size_t size)
+inline __attribute__((always_inline, hot)) std::size_t align16(size_t size)
 {
-    return (size + 7) & ~7;
+    return (size + 15) & ~15;
 }
 
 #endif

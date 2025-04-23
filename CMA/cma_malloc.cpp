@@ -17,7 +17,7 @@ void* cma_malloc(std::size_t size)
 	if (size <= 0)
         return (ft_nullptr);
 	g_malloc_mutex.lock(pthread_self());
-    size_t aligned_size = align8(size);
+    size_t aligned_size = align16(size);
     Block *block = find_free_block(aligned_size);
     if (!block)
     {
