@@ -18,7 +18,6 @@ SRCS := ft_atoi.cpp \
 	ft_atol.cpp \
 	ft_isdigit.cpp \
 	ft_strcmp.cpp \
-	ft_opendir.cpp \
 	ft_toupper.cpp \
 	ft_tolower.cpp \
 	ft_strlen_size_t.cpp
