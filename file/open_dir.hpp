@@ -36,5 +36,6 @@ struct FT_DIR
 FT_DIR* 	ft_opendir(const char* directoryPath);
 int 		ft_closedir(FT_DIR* directoryStream);
 ft_dirent	*ft_readdir(FT_DIR* directoryStream);
+int 		dir_exists(const char *rel_path);
 
 #endif
