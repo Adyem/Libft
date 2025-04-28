@@ -31,5 +31,7 @@ long		ft_atol(const char *string);
 int			ft_strcmp(const char *string1, const char *string2);
 void		ft_to_lower(char *string);
 void		ft_to_upper(char *string);
+char 		*ft_strncpy(char *destination, const char *source, size_t number_of_characters);
+void 		*ft_memset(void *destination, int value, size_t number_of_bytes);
 
 #endif

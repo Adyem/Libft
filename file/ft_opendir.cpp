@@ -24,7 +24,7 @@ FT_DIR* ft_opendir(const char* directoryPath)
         ft_close(fileDescriptor);
         return (ft_nullptr);
     }
-    memset(directoryStream, 0, sizeof(FT_DIR));
+    ft_memset(directoryStream, 0, sizeof(FT_DIR));
     directoryStream->fd = fileDescriptor;
     directoryStream->buffer_size = 4096;
     directoryStream->buffer = reinterpret_cast<char*>(cma_malloc(directoryStream->buffer_size));
@@ -58,7 +58,7 @@ ft_dirent* ft_readdir(FT_DIR* dir)
 	    if (GetFileInformationByHandle(reinterpret_cast<HANDLE>(dir->fd), &info))
 	        entry.d_ino = (static_cast<uint64_t>(info.nFileIndexHigh) << 32) |
 	                       info.nFileIndexLow;
-	    strncpy(entry.d_name, fd->cFileName, sizeof(entry.d_name) - 1);
+	    ft_strncpy(entry.d_name, fd->cFileName, sizeof(entry.d_name) - 1);
 	    entry.d_type = (fd->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? DT_DIR : DT_REG;
 	    return &entry;	
 	#else
@@ -66,8 +66,7 @@ ft_dirent* ft_readdir(FT_DIR* dir)
     	{
     	    dir->buffer_offset = 0;
     	    long n = syscall(SYS_getdents64, dir->fd,
-    	                     reinterpret_cast<linux_dirent64*>(dir->buffer),
-    	                     dir->buffer_size);
+				reinterpret_cast<linux_dirent64*>(dir->buffer), dir->buffer_size);
     	    if (n <= 0)
     	        return ft_nullptr;
     	    dir->buffer_used = n;
@@ -80,7 +79,7 @@ ft_dirent* ft_readdir(FT_DIR* dir)
     	ft_bzero(&entry, sizeof(entry));
     	entry.d_ino  = raw->d_ino;
     	entry.d_type = raw->d_type;
-   		strncpy(entry.d_name, raw->d_name, sizeof(entry.d_name) - 1);
+   		ft_strncpy(entry.d_name, raw->d_name, sizeof(entry.d_name) - 1);
     	dir->buffer_offset += raw->d_reclen;
     	return &entry;
 	#endif
