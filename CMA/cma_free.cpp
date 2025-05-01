@@ -18,7 +18,7 @@ void cma_free(void* ptr)
     }
 	if (!ptr)
         return ;
-	g_malloc_mutex.lock(pthread_self());
+	g_malloc_mutex.lock(THREAD_ID);
     Block* block = reinterpret_cast<Block*>((static_cast<char*> (ptr)
 				- sizeof(Block)));
     if (block->magic != MAGIC_NUMBER)
@@ -29,6 +29,6 @@ void cma_free(void* ptr)
 	}
     block->free = true;
     merge_block(block);
-	g_malloc_mutex.unlock(pthread_self());
+	g_malloc_mutex.unlock(THREAD_ID);
 	return ;
 }

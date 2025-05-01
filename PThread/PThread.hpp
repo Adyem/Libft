@@ -11,4 +11,12 @@ int pt_thread_create(pthread_t *thread, const pthread_attr_t *attr,
 #define MAX_SLEEP 10000
 #define MAX_QUEUE 128
 
+#ifdef _WIN32
+    #include <windows.h>
+    #define THREAD_ID GetCurrentThreadId()
+#else
+    #include <pthread.h>
+    #define THREAD_ID pthread_self()
+#endif
+
 #endif

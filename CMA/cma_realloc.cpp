@@ -48,12 +48,12 @@ void *cma_realloc(void* ptr, size_t new_size)
         ::operator delete(ptr, std::align_val_t(8), std::nothrow);
         return (new_ptr);
     }
-	g_malloc_mutex.lock(pthread_self());
+	g_malloc_mutex.lock(THREAD_ID);
     if (!ptr)
         return (cma_malloc(new_size));
     if (new_size == 0)
     {
-		g_malloc_mutex.unlock(pthread_self());
+		g_malloc_mutex.unlock(THREAD_ID);
         cma_free(ptr);
         return (ft_nullptr);
     }
@@ -64,7 +64,7 @@ void *cma_realloc(void* ptr, size_t new_size)
     void* new_ptr = cma_malloc(new_size);
     if (!new_ptr)
     {
-		g_malloc_mutex.unlock(pthread_self());
+		g_malloc_mutex.unlock(THREAD_ID);
         cma_free(ptr);
         return (ft_nullptr);
     }
@@ -72,13 +72,13 @@ void *cma_realloc(void* ptr, size_t new_size)
 				- sizeof(Block)));
     if (old_block->magic != MAGIC_NUMBER)
 	{
-		g_malloc_mutex.unlock(pthread_self());
+		g_malloc_mutex.unlock(THREAD_ID);
 		cma_free(ptr);
         return (ft_nullptr);
 	}
     size_t copy_size = old_block->size < new_size ? old_block->size : new_size;
     memcpy(new_ptr, ptr, copy_size);
     cma_free(ptr);
-	g_malloc_mutex.unlock(pthread_self());
+	g_malloc_mutex.unlock(THREAD_ID);
     return (new_ptr);
 }
