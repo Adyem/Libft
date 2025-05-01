@@ -2,27 +2,34 @@
 
 #include "windows_file.hpp"
 #include "../CPP_class/nullptr.hpp"
+#include "../PThread/mutex.hpp"
 #include "../Libft/libft.hpp"
 #include <windows.h>
 #include <stdio.h>
 #include <io.h>
 #include <fcntl.h>
+#include <thread>
+#include <windows.h>
 #include <cstdio>
 
 static HANDLE g_handles[1024];
+static pt_mutex g_file_mutex;
 
 static int store_handle(HANDLE h)
 {
-	int index = 3;
+    int index = 3;
+    g_file_mutex.lock(GetCurrentThreadId());
     while (index < 1024)
-	{
+    {
         if (g_handles[index] == ft_nullptr)
-		{
+        {
             g_handles[index] = h;
+            g_file_mutex.unlock(GetCurrentThreadId());
             return (index);
         }
-		index++;
+        index++;
     }
+    g_file_mutex.unlock(GetCurrentThreadId());
     return (-1);
 }
 
