@@ -36,20 +36,28 @@ static int store_handle(HANDLE h)
 static HANDLE retrieve_handle(int fd)
 {
     if (fd < 0 || fd >= 1024)
+	{
+		g_file_mutex.unlock(GetCurrentThreadId());
 		return (INVALID_HANDLE_VALUE);
+	}
     return (g_handles[fd]);
 }
 
 static void clear_handle(int fd)
 {
+	g_file_mutex.lock(GetCurrentThreadId());
     if (fd < 0 || fd >= 1024)
+	{
+		g_file_mutex.unlock(GetCurrentThreadId());
 		return ;
+	}
     g_handles[fd] = ft_nullptr;
 	return ;
 }
 
 int ft_open(const char *pathname, int flags, int mode)
 {
+	g_file_mutex.lock(GetCurrentThreadId());
     DWORD desiredAccess       = 0;
     DWORD creationDisposition = 0;
     DWORD flagsAndAttributes  = FILE_ATTRIBUTE_NORMAL;
@@ -84,11 +92,15 @@ int ft_open(const char *pathname, int flags, int mode)
     HANDLE hFile = CreateFileA(pathname, desiredAccess, FILE_SHARE_READ | FILE_SHARE_WRITE,
         ft_nullptr, creationDisposition, flagsAndAttributes, ft_nullptr);
     if (hFile == INVALID_HANDLE_VALUE)
+	{
+		g_file_mutex.unlock(GetCurrentThreadId());
         return (-1);
+	}
     int fd = store_handle(hFile);
     if (fd < 0)
 	{
         CloseHandle(hFile);
+		g_file_mutex.unlock(GetCurrentThreadId());
         return (-1);
     }
     return (fd);
@@ -96,19 +108,29 @@ int ft_open(const char *pathname, int flags, int mode)
 
 ssize_t ft_read(int fd, void *buf, unsigned int count)
 {
+	g_file_mutex.lock(GetCurrentThreadId());
     HANDLE hFile = retrieve_handle(fd);
     if (hFile == INVALID_HANDLE_VALUE)
+	{
+		g_file_mutex.unlock(GetCurrentThreadId());
         return (-1);
+	}
     BY_HANDLE_FILE_INFORMATION info;
     if (GetFileInformationByHandle(hFile, &info))
 	{
         if (info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		{
+			g_file_mutex.unlock(GetCurrentThreadId());
             return (-1);
+		}
     }
     DWORD bytesRead = 0;
     BOOL ok = ReadFile(hFile, buf, count, &bytesRead, NULL);
     if (!ok)
+	{
+		g_file_mutex.unlock(GetCurrentThreadId());
         return (-1);
+	}
     return (bytesRead);
 }
 
@@ -116,11 +138,17 @@ ssize_t ft_write(int fd, const void *buf, unsigned int count)
 {
     HANDLE hFile = retrieve_handle(fd);
     if (hFile == INVALID_HANDLE_VALUE)
+	{
+		g_file_mutex.unlock(GetCurrentThreadId());
 		return (-1);
+	}
     DWORD bytesWritten = 0;
     BOOL ok = WriteFile(hFile, buf, count, &bytesWritten, NULL);
     if (!ok)
+	{
+		g_file_mutex.unlock(GetCurrentThreadId());
 		return (-1);
+	}
     return (bytesWritten);
 }
 
@@ -128,19 +156,29 @@ int ft_close(int fd)
 {
     HANDLE hFile = retrieve_handle(fd);
     if (hFile == INVALID_HANDLE_VALUE)
+	{
+		g_file_mutex.unlock(GetCurrentThreadId());
 		return (-1);
+	}
     if (!CloseHandle(hFile))
+	{
+		g_file_mutex.unlock(GetCurrentThreadId());
 		return (-1);
+	}
     clear_handle(fd);
+	g_file_mutex.unlock(GetCurrentThreadId());
     return (0);
 }
 
 void ft_initialize_standard_file_descriptors()
 {
+	static int initialized = 0;
+
+	if (initialized == 1)
+		return ;
     HANDLE hStdInput = GetStdHandle(STD_INPUT_HANDLE);
     HANDLE hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
     HANDLE hStdError = GetStdHandle(STD_ERROR_HANDLE);
-
     if (hStdInput != INVALID_HANDLE_VALUE)
 	{
         int fdInput = _open_osfhandle(reinterpret_cast<intptr_t>(hStdInput), _O_RDONLY);
@@ -162,6 +200,7 @@ void ft_initialize_standard_file_descriptors()
     _setmode(0, _O_BINARY);
     _setmode(1, _O_BINARY);
     _setmode(2, _O_BINARY);
+	initialized = 1;
 	return ;
 }
 
