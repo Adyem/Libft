@@ -51,6 +51,7 @@ enum PTErrorCode
 	DECK_ALLOC_FAIL,
 	BUTTON_ALLOC_FAIL,
 	SFML_WINDOW_CREATE_FAIL,
+	CHECK_DIR_FAIL,
 };
 
 const char* ft_strerror(int error_code);

@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include "../CPP_class/string_class.hpp"
+#include "../Errno/errno.hpp"
 #include "open_dir.hpp"
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -24,18 +25,20 @@ int dir_exists(const char *rel_path)
 {
     ft_string path = normalize_path(rel_path);
 	if (path.getError())
+	{
+		ft_errno = CHECK_DIR_FAIL;
 		return (-1);
+	}
 	#if defined(_WIN32) || defined(_WIN64)
 	    DWORD attr = GetFileAttributesA(path.c_str());
 	    if (attr != INVALID_FILE_ATTRIBUTES &&
 	        (attr & FILE_ATTRIBUTE_DIRECTORY))
-	        return 1;
+	        return (0);
 	#else
     	struct stat st;
     	if (stat(path.c_str(), &st) == 0 &&
     	    S_ISDIR(st.st_mode))
-    	    return (1);
+    	    return (0);
 	#endif
-		return (0);
+		return (1);
 }
-
