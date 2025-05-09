@@ -1,34 +1,44 @@
 #include "data_buffer.hpp"
 
-DataBuffer::DataBuffer() : readPos_(0), ok_(true) {}
-
-void DataBuffer::clear() noexcept {
-    this->buffer_.clear();
-    this->readPos_ = 0;
-    this->ok_ = true;
+DataBuffer::DataBuffer() : _readPos(0), _ok(true)
+{
+	return ;
 }
 
-size_t DataBuffer::size() const noexcept {
-    return (this->buffer_.size());
+void DataBuffer::clear() noexcept
+{
+    this->_buffer.clear();
+    this->_readPos = 0;
+    this->_ok = true;
+	return ;
 }
 
-const std::vector<uint8_t>& DataBuffer::data() const noexcept {
-    return buffer_;
+size_t DataBuffer::size() const noexcept
+{
+	return (this->_buffer.size());
 }
 
-DataBuffer& DataBuffer::operator<<(size_t len) {
+const std::vector<uint8_t>& DataBuffer::data() const noexcept
+{
+    return (this->_buffer);
+}
+
+DataBuffer& DataBuffer::operator<<(size_t len)
+{
     auto ptr = reinterpret_cast<const uint8_t*>(&len);
-    buffer_.insert(buffer_.end(), ptr, ptr + sizeof(size_t));
-    return *this;
+    this->_buffer.insert(this->_buffer.end(), ptr, ptr + sizeof(size_t));
+    return (*this);
 }
 
-DataBuffer& DataBuffer::operator>>(size_t& len) {
-    if (readPos_ + sizeof(size_t) > buffer_.size()) {
-        ok_ = false;
-        return *this;
+DataBuffer& DataBuffer::operator>>(size_t& len)
+{
+    if (this->_readPos + sizeof(size_t) > this->_buffer.size())
+	{
+        this->_ok = false;
+        return (*this);
     }
-    std::memcpy(&len, buffer_.data() + readPos_, sizeof(size_t));
-    readPos_ += sizeof(size_t);
-    ok_ = true;
-    return *this;
+    std::memcpy(&len, this->_buffer.data() + this->_readPos, sizeof(size_t));
+    this->_readPos += sizeof(size_t);
+    this->_ok = true;
+    return (*this);
 }

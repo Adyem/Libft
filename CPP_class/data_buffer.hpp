@@ -8,9 +8,9 @@
 
 class DataBuffer {
 private:
-    std::vector<uint8_t> buffer_;
-    size_t readPos_;
-    bool ok_;
+    std::vector<uint8_t> _buffer;
+    size_t _readPos;
+    bool _ok;
 
 public:
     DataBuffer();
@@ -18,9 +18,9 @@ public:
     size_t size() const noexcept;
     const std::vector<uint8_t>& data() const noexcept;
 
-    explicit operator bool() const noexcept { return ok_; }
-    bool good() const noexcept { return ok_; }
-    bool bad() const noexcept { return !ok_; }
+    explicit operator bool() const noexcept { return this->_ok; }
+    bool good() const noexcept { return this->_ok; }
+    bool bad() const noexcept { return !this->_ok; }
 
     template<typename T>
     DataBuffer& operator<<(const T& value);
@@ -38,7 +38,7 @@ DataBuffer& DataBuffer::operator<<(const T& value) {
     oss << value;
     std::string bytes = oss.str();
     *this << bytes.size();
-    buffer_.insert(buffer_.end(), bytes.begin(), bytes.end());
+    this->_buffer.insert(this->_buffer.end(), bytes.begin(), bytes.end());
     return *this;
 }
 
@@ -46,15 +46,15 @@ template<typename T>
 DataBuffer& DataBuffer::operator>>(T& value) {
     size_t len;
     *this >> len;
-    if (!ok_ || readPos_ + len > buffer_.size()) {
-        ok_ = false;
+    if (!this->_ok || this->_readPos + len > this->_buffer.size()) {
+        this->_ok = false;
         return *this;
     }
-    std::string bytes(reinterpret_cast<const char*>(buffer_.data() + readPos_), len);
+    std::string bytes(reinterpret_cast<const char*>(this->_buffer.data() + this->_readPos), len);
     std::istringstream iss(bytes);
     iss >> value;
-    ok_ = !iss.fail();
-    readPos_ += len;
+    this->_ok = !iss.fail();
+    this->_readPos += len;
     return *this;
 }
 
