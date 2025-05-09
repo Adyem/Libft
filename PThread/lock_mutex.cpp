@@ -15,9 +15,11 @@ int pt_mutex::lock(pthread_t thread_id)
 
 	if (this->_lock && this->_thread_id == thread_id)
 	{
+		ft_errno = PT_ERR_ALRDY_LOCKED;
 		this->set_error(PT_ERR_ALRDY_LOCKED);
 		return (FAILURE);
 	}
+	ft_errno = ER_SUCCESS;
 	this->set_error(ER_SUCCESS);
     while (true)
     {
@@ -46,6 +48,7 @@ int pt_mutex::lock(pthread_t thread_id)
             int next_end = (this->_wait_queue_end + 1) % 128;
             if (next_end == this->_wait_queue_start)
             {
+				ft_errno = PT_ERR_QUEUE_FULL;
                 this->set_error(PT_ERR_QUEUE_FULL);
                 return (FAILURE);
             }
