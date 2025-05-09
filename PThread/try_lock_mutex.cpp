@@ -2,7 +2,6 @@
 #include "../Errno/errno.hpp"
 
 #define FAILURE -1
-#define ALREADDY_LOCKED 1
 #define SUCCES 0
 
 int pt_mutex::try_lock(pthread_t thread_id)
@@ -20,5 +19,5 @@ int pt_mutex::try_lock(pthread_t thread_id)
         this->_thread_id = thread_id;
         return (SUCCES);
     }
-    return (ALREADDY_LOCKED);
+    return (PT_ALREADDY_LOCKED);
 }

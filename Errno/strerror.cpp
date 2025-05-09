@@ -16,6 +16,8 @@ const char* ft_strerror(int error_code)
         return ("Thread is not the owner of the mutex");
 	else if (error_code == PT_ERR_ALRDY_LOCKED)
         return ("Thread already locked the mutex");
+	else if (error_code == PT_ALREADDY_LOCKED)
+		return ("Another thread alreaddy locked the mutex");
 	else if (error_code == SHARED_PTR_NULL_PTR)
         return ("Null pointer dereference");
 	else if (error_code == SHARED_PTR_OUT_OF_BOUNDS)
