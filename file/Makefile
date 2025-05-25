@@ -1,8 +1,8 @@
 TARGET         := file.a
-DEBUG_TARGET   := file.a
+DEBUG_TARGET   := file_debug.a
 
-SRCS := ft_opendir.cpp \
-		check_directory.cpp
+SRCS := file_opendir.cpp \
+		file_check_directory.cpp
 
 HEADERS := open_dir.hpp
 
