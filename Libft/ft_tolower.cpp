@@ -4,7 +4,7 @@ void ft_to_lower(char *string)
 {
 	while (string && *string)
 	{
-		if (*string >= 'a' && *string <= 'z')
+		if (*string >= 'A' && *string <= 'Z')
 			*string += 32;
 		string++;
 	}
