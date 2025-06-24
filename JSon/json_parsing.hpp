@@ -18,6 +18,8 @@ typedef struct json_group
 json_item	*json_create_item(const char *key, const char *value);
 void 		json_add_item_to_group(json_group *group, json_item *item);
 json_group	*json_create_json_group(const char *name);
+json_item	*json_create_item(const char *key, const int value);
+json_item	*json_create_item(const char *key, const bool value);
 void 		json_append_group(json_group **head, json_group *new_group);
 int 		json_write_to_file(const char *filename, json_group *groups);
 void 		json_free_items(json_item *item);

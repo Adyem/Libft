@@ -11,28 +11,6 @@
 #include "../CPP_class/nullptr.hpp"
 #include "../CMA/CMA.hpp"
 
-json_item* json_create_item(const char *key, const char *value)
-{
-    json_item *item = new(std::nothrow) json_item;
-    if (!item)
-        return (ft_nullptr);
-    item->key = cma_strdup(key);
-    if (!item->key)
-    {
-        delete item;
-        return(ft_nullptr);
-    }
-    item->value = cma_strdup(value);
-    if (!item->value)
-    {
-        delete[] item->key;
-        delete item;
-        return (ft_nullptr);
-    }
-    item->next = ft_nullptr;
-    return (item);
-}
-
 void json_add_item_to_group(json_group *group, json_item *item)
 {
     if (!group->items)

@@ -1,7 +1,8 @@
 TARGET := JSon.a
 DEBUG_TARGET := JSon_debug.a
 
-SRCS := json_parsing.cpp
+SRCS := json_parsing.cpp \
+		json_create_item.cpp
 
 HEADERS := json_parsing.hpp
 
