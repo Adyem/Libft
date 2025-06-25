@@ -6,6 +6,7 @@
 #include <cstdarg>
 #include <new>
 #include "json_parsing.hpp"
+#include "../Errno/errno.hpp"
 #include "../Printf/printf.hpp"
 #include "../Linux/linux_file.hpp"
 #include "../CPP_class/nullptr.hpp"
@@ -34,6 +35,7 @@ json_group* json_create_json_group(const char *name)
     if (!group->name)
     {
         delete group;
+		ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     group->items = ft_nullptr;
