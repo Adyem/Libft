@@ -1,12 +1,12 @@
 #include "networking.hpp"
 #include "socket_class.hpp"
 #include "../Errno/errno.hpp"
-#include <cstring>
 #include <cerrno>
 #include <fcntl.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include "../Libft/libft.hpp"
 
 int ft_socket::create_socket(const SocketConfig &config)
 {
@@ -90,7 +90,7 @@ int ft_socket::set_timeouts(const SocketConfig &config)
 
 int ft_socket::configure_address(const SocketConfig &config)
 {
-    std::memset(&this->_address, 0, sizeof(this->_address));
+    ft_memset(&this->_address, 0, sizeof(this->_address));
 
     if (config.address_family == AF_INET)
 	{
