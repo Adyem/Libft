@@ -1,5 +1,4 @@
 #include "string_class.hpp"
-#include <cstring>
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
@@ -54,7 +53,7 @@ void ft_string::append(const ft_string& string) noexcept
         if (this->_errorCode)
             return ;
     }
-    std::memcpy(this->_data + this->_length, string._data, string._length);
+    ft_memcpy(this->_data + this->_length, string._data, string._length);
     this->_length = new_length;
     this->_data[this->_length] = '\0';
 	return ;
@@ -64,7 +63,7 @@ void ft_string::append(const char *string) noexcept
 {
     if (!string)
         return ;
-    size_t string_length = std::strlen(string);
+    size_t string_length = ft_strlen_size_t(string);
     if (this->_length + string_length >= this->_capacity)
     {
         size_t new_capacity;
@@ -78,7 +77,7 @@ void ft_string::append(const char *string) noexcept
         if (this->_errorCode)
             return ;
     }
-    std::memcpy(this->_data + this->_length, string, string_length);
+    ft_memcpy(this->_data + this->_length, string, string_length);
     this->_length += string_length;
     this->_data[this->_length] = '\0';
     return ;
