@@ -11,7 +11,7 @@ static inline bool has_zero(size_t value)
 
 int ft_strlen(const char *string)
 {
-    if (!string)
+	if (!string)
         return (0);
 
     const char *ptr = string;
