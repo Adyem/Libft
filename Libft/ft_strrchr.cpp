@@ -3,16 +3,20 @@
 
 char    *ft_strrchr(const char *string, int char_to_find)
 {
-    int     string_length;
+    char            target_char;
+    char    *last_occurrence;
 
-    string_length = ft_strlen(string);
-    while (string_length > 0)
+    if (!string)
+        return (ft_nullptr);
+    target_char = static_cast<char>(char_to_find);
+    last_occurrence = ft_nullptr;
+    while (*string)
     {
-        if (string[string_length] == static_cast<char>(char_to_find))
-            return (const_cast<char*>(string) + string_length);
-        string_length--;
+        if (*string == target_char)
+            last_occurrence = const_cast<char *>(string);
+        string++;
     }
-    if (string[string_length] == static_cast<char>(char_to_find))
-        return (const_cast<char*>(string) + string_length);
-    return (ft_nullptr);
+    if (target_char == '\0')
+        return (const_cast<char *>(string));
+    return (last_occurrence);
 }
