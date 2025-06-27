@@ -1,4 +1,5 @@
 #include "data_buffer.hpp"
+#include "../Libft/libft.hpp"
 
 DataBuffer::DataBuffer() : _readPos(0), _ok(true)
 {
@@ -37,7 +38,7 @@ DataBuffer& DataBuffer::operator>>(size_t& len)
         this->_ok = false;
         return (*this);
     }
-    std::memcpy(&len, this->_buffer.data() + this->_readPos, sizeof(size_t));
+    ft_memcpy(&len, this->_buffer.data() + this->_readPos, sizeof(size_t));
     this->_readPos += sizeof(size_t);
     this->_ok = true;
     return (*this);

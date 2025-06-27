@@ -1,6 +1,5 @@
 #include <cstdlib>
 #include <cstddef>
-#include <cstring>
 #include <cstdio>
 #include <cassert>
 #include <new>
@@ -8,6 +7,7 @@
 #include <csignal>
 #include "CMA.hpp"
 #include "CMA_internal.hpp"
+#include "../Libft/libft.hpp"
 #include "../CPP_class/nullptr.hpp"
 
 static int reallocate_block(void *ptr, size_t new_size)
@@ -43,7 +43,7 @@ void *cma_realloc(void* ptr, size_t new_size)
             Block* old_block = reinterpret_cast<Block*> ((static_cast<char*> (ptr)
 						- sizeof(Block)));
             size_t copy_size = old_block->size < new_size ? old_block->size : new_size;
-            memcpy(new_ptr, ptr, copy_size);
+            ft_memcpy(new_ptr, ptr, copy_size);
         }
         ::operator delete(ptr, std::align_val_t(8), std::nothrow);
         return (new_ptr);
@@ -77,7 +77,7 @@ void *cma_realloc(void* ptr, size_t new_size)
         return (ft_nullptr);
 	}
     size_t copy_size = old_block->size < new_size ? old_block->size : new_size;
-    memcpy(new_ptr, ptr, copy_size);
+    ft_memcpy(new_ptr, ptr, copy_size);
     cma_free(ptr);
 	g_malloc_mutex.unlock(THREAD_ID);
     return (new_ptr);

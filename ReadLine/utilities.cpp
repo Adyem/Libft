@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 #include "../Linux/linux_file.hpp"
 #include "../CPP_class/nullptr.hpp"
@@ -17,7 +16,7 @@ char *rl_resize_buffer(char *old_buffer, int current_size, int new_size)
         pf_printf_fd(2, "Allocation error\n");
         return (ft_nullptr);
     }
-    memcpy(new_buffer, old_buffer, current_size);
+    ft_memcpy(new_buffer, old_buffer, current_size);
     cma_free(old_buffer);
     return (new_buffer);
 }
@@ -59,7 +58,7 @@ void rl_update_history(const char *buffer)
     else
     {
         cma_free(history[0]);
-        memmove(&history[0], &history[1], sizeof(char *) * (MAX_HISTORY - 1));
+        ft_memmove(&history[0], &history[1], sizeof(char *) * (MAX_HISTORY - 1));
         history[MAX_HISTORY - 1] = cma_strdup(buffer);
     }
 	return ;
