@@ -4,7 +4,7 @@ DEBUG_TARGET := JSon_debug.a
 SRCS := json_parsing.cpp \
 		json_create_item.cpp
 
-HEADERS := json_parsing.hpp
+HEADERS := json.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
