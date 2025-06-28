@@ -27,6 +27,8 @@ char		*ft_strnstr(const char *haystack, const char *needle, size_t length);
 int			ft_strncmp(const char *string_1, const char *string_2, size_t max_len);
 int			ft_memcmp(const void *pointer1, const void *pointer2, size_t size);
 int			ft_isdigit(int character);
+int                     ft_isalpha(int character);
+int                     ft_isalnum(int character);
 long		ft_atol(const char *string);
 int			ft_strcmp(const char *string1, const char *string2);
 void		ft_to_lower(char *string);

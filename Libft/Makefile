@@ -16,8 +16,10 @@ SRCS := ft_atoi.cpp \
 	ft_strnstr.cpp \
 	ft_strrchr.cpp \
 	ft_atol.cpp \
-	ft_isdigit.cpp \
-	ft_strcmp.cpp \
+        ft_isdigit.cpp \
+        ft_isalpha.cpp \
+        ft_isalnum.cpp \
+        ft_strcmp.cpp \
 	ft_toupper.cpp \
 	ft_tolower.cpp \
 	ft_strncpy.cpp \
