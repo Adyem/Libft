@@ -17,7 +17,9 @@ char    *cma_strjoin_multiple(int count, ...)
                                                 __attribute__ ((warn_unused_result));
 char    *cma_substr(const char *s, unsigned int start, size_t len)
                                                 __attribute__ ((warn_unused_result));
-void	cma_free_double(char **content);
-void	cma_cleanup();
+char    *cma_strtrim(const char *s1, const char *set)
+                                                __attribute__ ((warn_unused_result));
+void    cma_free_double(char **content);
+void    cma_cleanup();
 
 #endif
