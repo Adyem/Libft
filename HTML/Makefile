@@ -1,7 +1,7 @@
 TARGET         := HTMLParser.a
 DEBUG_TARGET   := HTMLParser_debug.a
 
-SRCS := html_parser.cpp
+SRCS := html_node.cpp html_writer.cpp html_cleanup.cpp
 
 HEADERS := html_parser.hpp
 
