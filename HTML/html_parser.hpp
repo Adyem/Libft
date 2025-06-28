@@ -19,12 +19,12 @@ typedef struct html_node
     struct html_node *next;
 } html_node;
 
-html_node   *html_create_node(const char *tag, const char *text);
-void        html_add_child(html_node *parent, html_node *child);
-void        html_append_node(html_node **head, html_node *new_node);
+html_node   *html_create_node(const char *tagName, const char *textContent);
+void        html_add_child(html_node *parentNode, html_node *childNode);
+void        html_append_node(html_node **headNode, html_node *newNode);
 html_attr   *html_create_attr(const char *key, const char *value);
-void        html_add_attr(html_node *node, html_attr *attr);
-int         html_write_to_file(const char *filename, html_node *nodes);
-void        html_free_nodes(html_node *node);
+void        html_add_attr(html_node *targetNode, html_attr *newAttribute);
+int         html_write_to_file(const char *filePath, html_node *nodeList);
+void        html_free_nodes(html_node *nodeList);
 
 #endif
