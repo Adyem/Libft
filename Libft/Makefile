@@ -24,7 +24,8 @@ SRCS := ft_atoi.cpp \
 	ft_tolower.cpp \
 	ft_strncpy.cpp \
     ft_isspace.cpp \
-	ft_strlen_size_t.cpp
+	ft_strlen_size_t.cpp \
+	ft_abs.cpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
