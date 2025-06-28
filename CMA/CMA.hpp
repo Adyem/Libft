@@ -12,6 +12,8 @@ char	**cma_split(char const *s, char c) __attribute__ ((warn_unused_result));
 char	*cma_itoa(int n) __attribute__ ((warn_unused_result));
 char	*cma_strjoin(char const *string_1, char const *string_2)
 						__attribute__ ((warn_unused_result));
+char    *cma_substr(const char *s, unsigned int start, size_t len)
+                                                __attribute__ ((warn_unused_result));
 void	cma_free_double(char **content);
 void	cma_cleanup();
 
