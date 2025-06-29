@@ -3,8 +3,16 @@
 
 #include "networking.hpp"
 #include "../Template/vector.hpp"
-#include <sys/socket.h>
-#include <sys/types.h>
+#ifdef _WIN32
+# include <winsock2.h>
+# include <ws2tcpip.h>
+# define FT_CLOSE_SOCKET(fd) closesocket(fd)
+#else
+# include <sys/socket.h>
+# include <sys/types.h>
+# include <unistd.h>
+# define FT_CLOSE_SOCKET(fd) close(fd)
+#endif
 
 int nw_bind(ssize_t sockfd, const struct sockaddr *addr, socklen_t addrlen);
 int nw_listen(ssize_t sockfd, int backlog);
