@@ -326,13 +326,13 @@ ElementType ft_vector<ElementType>::release_at(size_t index)
     if (index >= this->_size)
 	{
         this->setError(VECTOR_INVALID_PTR);
-        return ElementType();
+        return (ElementType());
     }
     ElementType detached = ft_move(this->_data[index]);
     for (size_t i = index; i < this->_size - 1; i++)
         this->_data[i] = ft_move(this->_data[i + 1]);
     --this->_size;
-    return detached;
+    return (detached);
 }
 
 template <typename ElementType>

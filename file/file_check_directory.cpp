@@ -32,13 +32,13 @@ static inline int dir_exists_platform(const char *path)
 #if defined(_WIN32) || defined(_WIN64)
     DWORD attr = GetFileAttributesA(path);
     if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY))
-        return 0;
+        return (0);
 #else
     struct stat st;
     if (stat(path, &st) == 0 && S_ISDIR(st.st_mode))
-        return 0;
+        return (0);
 #endif
-    return 1;
+    return (1);
 }
 
 static ft_string normalize_path(ft_string path)
@@ -60,5 +60,5 @@ int dir_exists(const char *rel_path)
         ft_errno = CHECK_DIR_FAIL;
         return (-1);
     }
-    return dir_exists_platform(path.c_str());
+    return (dir_exists_platform(path.c_str()));
 }

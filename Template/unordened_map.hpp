@@ -149,7 +149,7 @@ bool ft_unord_map<Key, MappedType>::iterator::operator==(const iterator& other) 
 template <typename Key, typename MappedType>
 bool ft_unord_map<Key, MappedType>::iterator::operator!=(const iterator& other) const
 {
-    return !(*this == other);
+    return (!(*this == other));
 }
 
 template <typename Key, typename MappedType>
@@ -177,7 +177,7 @@ const ft_pair<Key, MappedType>& ft_unord_map<Key, MappedType>::const_iterator::o
 template <typename Key, typename MappedType>
 const ft_pair<Key, MappedType>* ft_unord_map<Key, MappedType>::const_iterator::operator->() const
 {
-    return &_data[_index];
+    return (&_data[_index]);
 }
 
 template <typename Key, typename MappedType>
@@ -185,7 +185,7 @@ typename ft_unord_map<Key, MappedType>::const_iterator& ft_unord_map<Key, Mapped
 {
     ++_index;
     skipUnoccupied();
-    return *this;
+    return (*this);
 }
 
 template <typename Key, typename MappedType>
@@ -197,7 +197,7 @@ bool ft_unord_map<Key, MappedType>::const_iterator::operator==(const const_itera
 template <typename Key, typename MappedType>
 bool ft_unord_map<Key, MappedType>::const_iterator::operator!=(const const_iterator& other) const
 {
-    return !(*this == other);
+    return (!(*this == other));
 }
 
 template <typename Key, typename MappedType>
@@ -320,7 +320,7 @@ ft_unord_map<Key, MappedType>& ft_unord_map<Key, MappedType>::operator=(const ft
                 _occupied = ft_nullptr;
                 _size = 0;
                 _capacity = 0;
-                return *this;
+                return (*this);
             }
             _data = static_cast<ft_pair<Key, MappedType>*>(rawData);
             void* rawOccupied = cma_malloc(sizeof(bool) * other._capacity);
@@ -332,7 +332,7 @@ ft_unord_map<Key, MappedType>& ft_unord_map<Key, MappedType>::operator=(const ft
                 _occupied = ft_nullptr;
                 _size = 0;
                 _capacity = 0;
-                return *this;
+                return (*this);
             }
             _occupied = static_cast<bool*>(rawOccupied);
             size_t i = 0;
@@ -360,7 +360,7 @@ ft_unord_map<Key, MappedType>& ft_unord_map<Key, MappedType>::operator=(const ft
             _occupied = ft_nullptr;
         }
     }
-    return *this;
+    return (*this);
 }
 
 template <typename Key, typename MappedType>
@@ -406,7 +406,7 @@ ft_unord_map<Key, MappedType>& ft_unord_map<Key, MappedType>::operator=(ft_unord
         other._size = 0;
         other._error = ER_SUCCESS;
     }
-    return *this;
+    return (*this);
 }
 
 template <typename Key, typename MappedType>
@@ -449,15 +449,15 @@ template <typename Key, typename MappedType>
 size_t ft_unord_map<Key, MappedType>::findIndex(const Key& key) const
 {
     if (_size == 0)
-        return _capacity;
+        return (_capacity);
     size_t start = hashKey(key);
     size_t i = start;
     while (true)
     {
         if (!_occupied[i])
-            return _capacity;
+            return (_capacity);
         if (_data[i].first == key)
-            return i;
+            return (i);
         i = (i + 1) % _capacity;
         if (i == start)
             return (_capacity);
@@ -551,8 +551,8 @@ typename ft_unord_map<Key, MappedType>::iterator ft_unord_map<Key, MappedType>::
 {
     size_t idx = findIndex(key);
     if (idx == _capacity)
-        return end();
-    return iterator(_data, _occupied, idx, _capacity);
+        return (end());
+    return (iterator(_data, _occupied, idx, _capacity));
 }
 
 template <typename Key, typename MappedType>
@@ -560,8 +560,8 @@ typename ft_unord_map<Key, MappedType>::const_iterator ft_unord_map<Key, MappedT
 {
     size_t idx = findIndex(key);
     if (idx == _capacity)
-        return end();
-    return const_iterator(_data, _occupied, idx, _capacity);
+        return (end());
+    return (const_iterator(_data, _occupied, idx, _capacity));
 }
 
 template <typename Key, typename MappedType>
@@ -616,43 +616,43 @@ void ft_unord_map<Key, MappedType>::clear()
 template <typename Key, typename MappedType>
 size_t ft_unord_map<Key, MappedType>::getSize() const
 {
-    return _size;
+    return (_size);
 }
 
 template <typename Key, typename MappedType>
 size_t ft_unord_map<Key, MappedType>::getCapacity() const
 {
-    return _capacity;
+    return (_capacity);
 }
 
 template <typename Key, typename MappedType>
 int ft_unord_map<Key, MappedType>::getError() const
 {
-    return _error;
+    return (_error);
 }
 
 template <typename Key, typename MappedType>
 typename ft_unord_map<Key, MappedType>::iterator ft_unord_map<Key, MappedType>::begin()
 {
-    return iterator(_data, _occupied, 0, _capacity);
+    return (iterator(_data, _occupied, 0, _capacity));
 }
 
 template <typename Key, typename MappedType>
 typename ft_unord_map<Key, MappedType>::iterator ft_unord_map<Key, MappedType>::end()
 {
-    return iterator(_data, _occupied, _capacity, _capacity);
+    return (iterator(_data, _occupied, _capacity, _capacity));
 }
 
 template <typename Key, typename MappedType>
 typename ft_unord_map<Key, MappedType>::const_iterator ft_unord_map<Key, MappedType>::begin() const
 {
-    return const_iterator(_data, _occupied, 0, _capacity);
+    return (const_iterator(_data, _occupied, 0, _capacity));
 }
 
 template <typename Key, typename MappedType>
 typename ft_unord_map<Key, MappedType>::const_iterator ft_unord_map<Key, MappedType>::end() const
 {
-    return const_iterator(_data, _occupied, _capacity, _capacity);
+    return (const_iterator(_data, _occupied, _capacity, _capacity));
 }
 
 template <typename Key, typename MappedType>
@@ -663,9 +663,9 @@ MappedType& ft_unord_map<Key, MappedType>::at(const Key& key)
     if (idx == _capacity)
     {
         setError(UNORD_MAP_UNKNOWN);
-        return errorMappedType;
+        return (errorMappedType);
     }
-    return _data[idx].second;
+    return (_data[idx].second);
 }
 
 template <typename Key, typename MappedType>
@@ -676,9 +676,9 @@ const MappedType& ft_unord_map<Key, MappedType>::at(const Key& key) const
     if (idx == _capacity)
     {
         setError(UNORD_MAP_UNKNOWN);
-        return errorMappedType;
+        return (errorMappedType);
     }
-    return _data[idx].second;
+    return (_data[idx].second);
 }
 
 template <typename Key, typename MappedType>
@@ -687,14 +687,14 @@ MappedType& ft_unord_map<Key, MappedType>::operator[](const Key& key)
     _error = ER_SUCCESS;
     size_t idx = findIndex(key);
     if (idx != _capacity)
-        return _data[idx].second;
+        return (_data[idx].second);
     if ((_size * 2) >= _capacity)
     {
         resize(_capacity * 2);
         if (_error != ER_SUCCESS)
         {
             static MappedType errorVal = MappedType();
-            return errorVal;
+            return (errorVal);
         }
     }
     size_t start = hashKey(key);
@@ -706,7 +706,7 @@ MappedType& ft_unord_map<Key, MappedType>::operator[](const Key& key)
             construct_at(&_data[i], ft_pair<Key, MappedType>(key, MappedType()));
             _occupied[i] = true;
             ++_size;
-            return _data[i].second;
+            return (_data[i].second);
         }
         i = (i + 1) % _capacity;
         if (i == start)
@@ -714,7 +714,7 @@ MappedType& ft_unord_map<Key, MappedType>::operator[](const Key& key)
     }
     static MappedType errorVal = MappedType();
     setError(UNORD_MAP_UNKNOWN);
-    return errorVal;
+    return (errorVal);
 }
 
 #endif

@@ -14,7 +14,7 @@ static void skip_ws(const std::string &s, size_t &i)
 static std::string parse_string(const std::string &s, size_t &i)
 {
     if (i >= s.size() || s[i] != '"')
-        return std::string();
+        return (std::string());
     i++;
     size_t start = i;
     while (i < s.size() && s[i] != '"')
@@ -22,7 +22,7 @@ static std::string parse_string(const std::string &s, size_t &i)
     std::string result = s.substr(start, i - start);
     if (i < s.size() && s[i] == '"')
         i++;
-    return result;
+    return (result);
 }
 
 static json_item *parse_items(const std::string &s, size_t &i)
@@ -31,7 +31,7 @@ static json_item *parse_items(const std::string &s, size_t &i)
     json_item *tail = ft_nullptr;
     skip_ws(s, i);
     if (i >= s.size() || s[i] != '{')
-        return ft_nullptr;
+        return (ft_nullptr);
     i++;
     while (i < s.size())
     {
@@ -52,7 +52,7 @@ static json_item *parse_items(const std::string &s, size_t &i)
         if (!item)
         {
             json_free_items(head);
-            return ft_nullptr;
+            return (ft_nullptr);
         }
         if (!head)
             head = tail = item;
@@ -68,14 +68,14 @@ static json_item *parse_items(const std::string &s, size_t &i)
             continue;
         }
     }
-    return head;
+    return (head);
 }
 
 json_group *json_read_from_file(const char *filename)
 {
     char **lines = ft_open_and_read_file(filename);
     if (!lines)
-        return ft_nullptr;
+        return (ft_nullptr);
     std::string content;
     for (int idx = 0; lines[idx]; ++idx)
     {
@@ -86,7 +86,7 @@ json_group *json_read_from_file(const char *filename)
     size_t i = 0;
     skip_ws(content, i);
     if (i >= content.size() || content[i] != '{')
-        return ft_nullptr;
+        return (ft_nullptr);
     i++;
     json_group *head = ft_nullptr;
     json_group *tail = ft_nullptr;
@@ -107,14 +107,14 @@ json_group *json_read_from_file(const char *filename)
         if (!items)
         {
             json_free_groups(head);
-            return ft_nullptr;
+            return (ft_nullptr);
         }
         json_group *group = json_create_json_group(group_name.c_str());
         if (!group)
         {
             json_free_items(items);
             json_free_groups(head);
-            return ft_nullptr;
+            return (ft_nullptr);
         }
         group->items = items;
         if (!head)
@@ -131,6 +131,6 @@ json_group *json_read_from_file(const char *filename)
             continue;
         }
     }
-    return head;
+    return (head);
 }
 

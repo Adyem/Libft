@@ -18,9 +18,9 @@ public:
     size_t size() const noexcept;
     const std::vector<uint8_t>& data() const noexcept;
 
-    explicit operator bool() const noexcept { return this->_ok; }
-    bool good() const noexcept { return this->_ok; }
-    bool bad() const noexcept { return !this->_ok; }
+    explicit operator bool() const noexcept { return (this->_ok); }
+    bool good() const noexcept { return (this->_ok); }
+    bool bad() const noexcept { return (!this->_ok); }
 
     template<typename T>
     DataBuffer& operator<<(const T& value);
@@ -39,7 +39,7 @@ DataBuffer& DataBuffer::operator<<(const T& value) {
     std::string bytes = oss.str();
     *this << bytes.size();
     this->_buffer.insert(this->_buffer.end(), bytes.begin(), bytes.end());
-    return *this;
+    return (*this);
 }
 
 template<typename T>
@@ -48,14 +48,14 @@ DataBuffer& DataBuffer::operator>>(T& value) {
     *this >> len;
     if (!this->_ok || this->_readPos + len > this->_buffer.size()) {
         this->_ok = false;
-        return *this;
+        return (*this);
     }
     std::string bytes(reinterpret_cast<const char*>(this->_buffer.data() + this->_readPos), len);
     std::istringstream iss(bytes);
     iss >> value;
     this->_ok = !iss.fail();
     this->_readPos += len;
-    return *this;
+    return (*this);
 }
 
 #endif

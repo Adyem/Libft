@@ -21,7 +21,7 @@ Pair<KeyType, ValueType>::Pair(const KeyType &k, const ValueType &v)
 template <typename KeyType, typename ValueType>
 Pair<KeyType, ValueType> ft_make_pair(KeyType key, ValueType value)
 {
-    return Pair<KeyType, ValueType>(key, value);
+    return (Pair<KeyType, ValueType>(key, value));
 }
 
 #endif

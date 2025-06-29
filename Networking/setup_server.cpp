@@ -17,39 +17,39 @@
 #ifdef _WIN32
 static inline int setsockopt_reuse(int fd, int opt)
 {
-    return setsockopt(fd, SOL_SOCKET, SO_REUSEADDR,
-                      reinterpret_cast<const char*>(&opt), sizeof(opt));
+    return (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR,
+                      reinterpret_cast<const char*>(&opt), sizeof(opt)));
 }
 
 static inline int set_nonblocking_platform(int fd)
 {
     u_long mode = 1;
-    return ioctlsocket(static_cast<SOCKET>(fd), FIONBIO, &mode);
+    return (ioctlsocket(static_cast<SOCKET>(fd), FIONBIO, &mode));
 }
 
 static inline int set_timeout_recv(int fd, int ms)
 {
-    return setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO,
-                      reinterpret_cast<const char*>(&ms), sizeof(ms));
+    return (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO,
+                      reinterpret_cast<const char*>(&ms), sizeof(ms)));
 }
 
 static inline int set_timeout_send(int fd, int ms)
 {
-    return setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO,
-                      reinterpret_cast<const char*>(&ms), sizeof(ms));
+    return (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO,
+                      reinterpret_cast<const char*>(&ms), sizeof(ms)));
 }
 #else
 static inline int setsockopt_reuse(int fd, int opt)
 {
-    return setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    return (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)));
 }
 
 static inline int set_nonblocking_platform(int fd)
 {
     int flags = fcntl(fd, F_GETFL, 0);
     if (flags == -1)
-        return -1;
-    return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+        return (-1);
+    return (fcntl(fd, F_SETFL, flags | O_NONBLOCK));
 }
 
 static inline int set_timeout_recv(int fd, int ms)
@@ -57,7 +57,7 @@ static inline int set_timeout_recv(int fd, int ms)
     struct timeval tv;
     tv.tv_sec = ms / 1000;
     tv.tv_usec = (ms % 1000) * 1000;
-    return setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+    return (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)));
 }
 
 static inline int set_timeout_send(int fd, int ms)
@@ -65,7 +65,7 @@ static inline int set_timeout_send(int fd, int ms)
     struct timeval tv;
     tv.tv_sec = ms / 1000;
     tv.tv_usec = (ms % 1000) * 1000;
-    return setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+    return (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)));
 }
 #endif
 

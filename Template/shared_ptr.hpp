@@ -240,7 +240,7 @@ ft_sharedptr<ManagedType>& ft_sharedptr<ManagedType>::operator=(ft_sharedptr<Man
         other._isArrayType = false;
         other._errorCode = ER_SUCCESS;
     }
-    return *this;
+    return (*this);
 }
 
 template <typename ManagedType>
@@ -257,7 +257,7 @@ ft_sharedptr<ManagedType>& ft_sharedptr<ManagedType>::operator=(const ft_sharedp
         if (_referenceCount && _errorCode == ER_SUCCESS)
             ++(*_referenceCount);
     }
-    return *this;
+    return (*this);
 }
 
 template <typename ManagedType>
@@ -269,16 +269,16 @@ ManagedType& ft_sharedptr<ManagedType>::operator*()
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType defaultInstance;
-            return defaultInstance;
+            return (defaultInstance);
         }
         else
         {
             this->set_error(SHARED_PTR_ALLOCATION_FAILED);
             static char dummy_buffer[sizeof(ManagedType)] = {0};
-            return *reinterpret_cast<ManagedType*>(dummy_buffer);
+            return (*reinterpret_cast<ManagedType*>(dummy_buffer));
         }
     }
-    return *_managedPointer;
+    return (*_managedPointer);
 }
 
 template <typename ManagedType>
@@ -290,16 +290,16 @@ const ManagedType& ft_sharedptr<ManagedType>::operator*() const
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType defaultInstance;
-            return defaultInstance;
+            return (defaultInstance);
         }
         else
         {
             this->set_error(SHARED_PTR_ALLOCATION_FAILED);
             static char dummy_buffer[sizeof(ManagedType)] = {0};
-            return *reinterpret_cast<const ManagedType*>(dummy_buffer);
+            return (*reinterpret_cast<const ManagedType*>(dummy_buffer));
         }
     }
-    return *_managedPointer;
+    return (*_managedPointer);
 }
 
 template <typename ManagedType>
@@ -308,9 +308,9 @@ ManagedType* ft_sharedptr<ManagedType>::operator->()
     if (!_managedPointer)
     {
         this->set_error(SHARED_PTR_NULL_PTR);
-        return ft_nullptr;
+        return (ft_nullptr);
     }
-    return _managedPointer;
+    return (_managedPointer);
 }
 
 template <typename ManagedType>
@@ -319,9 +319,9 @@ const ManagedType* ft_sharedptr<ManagedType>::operator->() const
     if (!_managedPointer)
     {
         const_cast<ft_sharedptr<ManagedType>*>(this)->set_error(SHARED_PTR_NULL_PTR);
-        return ft_nullptr;
+        return (ft_nullptr);
     }
-    return _managedPointer;
+    return (_managedPointer);
 }
 
 template <typename ManagedType>
@@ -333,7 +333,7 @@ ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index)
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType defaultInstance;
-            return defaultInstance;
+            return (defaultInstance);
         }
         else
         {
@@ -347,7 +347,7 @@ ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index)
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType defaultInstance;
-            return defaultInstance;
+            return (defaultInstance);
         }
         else
         {
@@ -361,7 +361,7 @@ ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index)
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType defaultInstance;
-            return defaultInstance;
+            return (defaultInstance);
         }
         else
         {
@@ -369,7 +369,7 @@ ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index)
 			return (ft_nullptr);
         }
     }
-    return _managedPointer[index];
+    return (_managedPointer[index]);
 }
 
 template <typename ManagedType>
@@ -381,7 +381,7 @@ const ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index) const
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType defaultInstance;
-            return defaultInstance;
+            return (defaultInstance);
         }
         else
         {
@@ -395,7 +395,7 @@ const ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index) const
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType defaultInstance;
-            return defaultInstance;
+            return (defaultInstance);
         }
         else
         {
@@ -409,7 +409,7 @@ const ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index) const
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType defaultInstance;
-            return defaultInstance;
+            return (defaultInstance);
         }
         else
         {
@@ -417,15 +417,15 @@ const ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index) const
 			return (ft_nullptr);
         }
     }
-    return _managedPointer[index];
+    return (_managedPointer[index]);
 }
 
 template <typename ManagedType>
 int ft_sharedptr<ManagedType>::use_count() const
 {
     if (_referenceCount && _errorCode == ER_SUCCESS)
-        return *_referenceCount;
-    return 0;
+        return (*_referenceCount);
+    return (0);
 }
 
 template <typename ManagedType>
@@ -437,25 +437,25 @@ bool ft_sharedptr<ManagedType>::hasError() const
 template <typename ManagedType>
 int ft_sharedptr<ManagedType>::getErrorCode() const
 {
-    return _errorCode;
+    return (_errorCode);
 }
 
 template <typename ManagedType>
 const char* ft_sharedptr<ManagedType>::errorMessage() const
 {
-    return ft_strerror(_errorCode);
+    return (ft_strerror(_errorCode));
 }
 
 template <typename ManagedType>
 ManagedType* ft_sharedptr<ManagedType>::get()
 {
-    return _managedPointer;
+    return (_managedPointer);
 }
 
 template <typename ManagedType>
 const ManagedType* ft_sharedptr<ManagedType>::get() const
 {
-    return _managedPointer;
+    return (_managedPointer);
 }
 
 template <typename ManagedType>

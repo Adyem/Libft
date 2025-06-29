@@ -11,9 +11,9 @@ void* ft_memchr(const void* pointer, int number, size_t size)
     while (index < size)
     {
         if (*string == character)
-            return const_cast<void*>(static_cast<const void*>(string));
+            return (const_cast<void*>(static_cast<const void*>(string)));
         string++;
         index++;
     }
-    return ft_nullptr;
+    return (ft_nullptr);
 }

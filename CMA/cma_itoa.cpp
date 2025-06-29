@@ -24,7 +24,7 @@ static char *fill_digits(char *c, unsigned int num, int start_index)
         num /= 10;
         start_index--;
     }
-    return c;
+    return (c);
 }
 
 static char	*convert_int(int n, int is_negative)

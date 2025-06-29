@@ -56,7 +56,7 @@ static void *create_stack_block(void)
 Block* split_block(Block* block, size_t size)
 {
     if (block->size <= size + sizeof(Block))
-        return block;
+        return (block);
     Block* new_block = reinterpret_cast<Block*>(reinterpret_cast<char*>(block) + sizeof(Block)
 			+ size);
     new_block->magic = MAGIC_NUMBER;
