@@ -59,13 +59,13 @@ LIB_BASES += encryption/encryption \
   HTML/HTMLParser
 
 ifeq ($(OS),Windows_NT)
-OS_EXTRACT := $(call EXTRACT,Windows/Windows.a)
-DEBUG_OS_EXTRACT := $(call EXTRACT,Windows/Windows_debug.a)
+OS_EXTRACT = $(call EXTRACT,Windows/Windows.a)
+DEBUG_OS_EXTRACT = $(call EXTRACT,Windows/Windows_debug.a)
 OS_CLEAN := $(MAKE) -C Windows clean
 OS_FCLEAN := $(MAKE) -C Windows fclean
 else
-OS_EXTRACT := $(call EXTRACT,Linux/Linux.a)
-DEBUG_OS_EXTRACT := $(call EXTRACT,Linux/Linux_debug.a)
+OS_EXTRACT = $(call EXTRACT,Linux/Linux.a)
+DEBUG_OS_EXTRACT = $(call EXTRACT,Linux/Linux_debug.a)
 OS_CLEAN := $(MAKE) -C Linux clean
 OS_FCLEAN := $(MAKE) -C Linux fclean
 endif
