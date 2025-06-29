@@ -5,7 +5,6 @@
 
 #if defined(_WIN32) || defined(_WIN64)
   #include <windows.h>
-  #include <algorithm>
   #define PATH_SEP '\\'
 #else
   #include <sys/stat.h>
@@ -15,10 +14,18 @@
 
 static ft_string normalize_path(ft_string path)
 {
-	#if defined(_WIN32) || defined(_WIN64)
-    	std::replace(path.begin(), path.end(), '/', PATH_SEP);
-	#endif
-    	return (path);
+#if defined(_WIN32) || defined(_WIN64)
+    char* data = path.print();
+    if (data)
+    {
+        for (size_t i = 0; data[i] != '\0'; ++i)
+        {
+            if (data[i] == '/')
+                data[i] = PATH_SEP;
+        }
+    }
+#endif
+    return (path);
 }
 
 int dir_exists(const char *rel_path)
