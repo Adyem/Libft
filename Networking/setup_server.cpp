@@ -30,7 +30,13 @@ int ft_socket::set_reuse_address(const SocketConfig &config)
     if (!config.reuse_address)
         return (ER_SUCCESS);
     int opt = 1;
-    if (setsockopt(this->_socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+#ifdef _WIN32
+    if (setsockopt(this->_socket_fd, SOL_SOCKET, SO_REUSEADDR,
+                   reinterpret_cast<const char*>(&opt), sizeof(opt)) < 0)
+#else
+    if (setsockopt(this->_socket_fd, SOL_SOCKET, SO_REUSEADDR,
+                   &opt, sizeof(opt)) < 0)
+#endif
 	{
         handle_error(errno + ERRNO_OFFSET);
         FT_CLOSE_SOCKET(this->_socket_fd);
@@ -44,9 +50,19 @@ int ft_socket::set_non_blocking(const SocketConfig &config)
 {
     if (!config.non_blocking)
         return (ER_SUCCESS);
+#ifdef _WIN32
+    u_long mode = 1;
+    if (ioctlsocket(static_cast<SOCKET>(this->_socket_fd), FIONBIO, &mode) != 0)
+    {
+        handle_error(errno + ERRNO_OFFSET);
+        FT_CLOSE_SOCKET(this->_socket_fd);
+        this->_socket_fd = -1;
+        return (this->_error);
+    }
+#else
     int flags = fcntl(this->_socket_fd, F_GETFL, 0);
     if (flags == -1)
-	{
+    {
         handle_error(errno + ERRNO_OFFSET);
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
@@ -54,25 +70,27 @@ int ft_socket::set_non_blocking(const SocketConfig &config)
     }
 
     if (fcntl(this->_socket_fd, F_SETFL, flags | O_NONBLOCK) == -1)
-	{
+    {
         handle_error(errno + ERRNO_OFFSET);
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error);
     }
+#endif
 
     return (ER_SUCCESS);
 }
 
 int ft_socket::set_timeouts(const SocketConfig &config)
 {
-    struct timeval tv;
+#ifdef _WIN32
+    int tv;
     if (config.recv_timeout > 0)
-	{
-        tv.tv_sec = config.recv_timeout / 1000;
-        tv.tv_usec = (config.recv_timeout % 1000) * 1000;
-        if (setsockopt(this->_socket_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0)
-		{
+    {
+        tv = config.recv_timeout;
+        if (setsockopt(this->_socket_fd, SOL_SOCKET, SO_RCVTIMEO,
+                       reinterpret_cast<const char*>(&tv), sizeof(tv)) < 0)
+        {
             handle_error(errno + ERRNO_OFFSET);
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
@@ -80,17 +98,46 @@ int ft_socket::set_timeouts(const SocketConfig &config)
         }
     }
     if (config.send_timeout > 0)
-	{
-        tv.tv_sec = config.send_timeout / 1000;
-        tv.tv_usec = (config.send_timeout % 1000) * 1000;
-        if (setsockopt(this->_socket_fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0)
-		{
+    {
+        tv = config.send_timeout;
+        if (setsockopt(this->_socket_fd, SOL_SOCKET, SO_SNDTIMEO,
+                       reinterpret_cast<const char*>(&tv), sizeof(tv)) < 0)
+        {
             handle_error(errno + ERRNO_OFFSET);
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error);
         }
     }
+#else
+    struct timeval tv;
+    if (config.recv_timeout > 0)
+    {
+        tv.tv_sec = config.recv_timeout / 1000;
+        tv.tv_usec = (config.recv_timeout % 1000) * 1000;
+        if (setsockopt(this->_socket_fd, SOL_SOCKET, SO_RCVTIMEO,
+                       &tv, sizeof(tv)) < 0)
+        {
+            handle_error(errno + ERRNO_OFFSET);
+            FT_CLOSE_SOCKET(this->_socket_fd);
+            this->_socket_fd = -1;
+            return (this->_error);
+        }
+    }
+    if (config.send_timeout > 0)
+    {
+        tv.tv_sec = config.send_timeout / 1000;
+        tv.tv_usec = (config.send_timeout % 1000) * 1000;
+        if (setsockopt(this->_socket_fd, SOL_SOCKET, SO_SNDTIMEO,
+                       &tv, sizeof(tv)) < 0)
+        {
+            handle_error(errno + ERRNO_OFFSET);
+            FT_CLOSE_SOCKET(this->_socket_fd);
+            this->_socket_fd = -1;
+            return (this->_error);
+        }
+    }
+#endif
     return (ER_SUCCESS);
 }
 
