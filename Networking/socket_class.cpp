@@ -155,7 +155,13 @@ ssize_t ft_socket::send_data(const void *data, size_t size, int flags)
         this->_error = ft_errno;
         return (-1);
     }
+#ifdef _WIN32
+    ssize_t bytes_sent = ::send(this->_socket_fd,
+                                static_cast<const char*>(data),
+                                static_cast<int>(size), flags);
+#else
     ssize_t bytes_sent = ::send(this->_socket_fd, data, size, flags);
+#endif
     if (bytes_sent < 0)
 	{
         ft_errno = errno + ERRNO_OFFSET;
@@ -174,7 +180,13 @@ ssize_t ft_socket::receive_data(void *buffer, size_t size, int flags)
         this->_error = ft_errno;
         return (-1);
 	} 
+#ifdef _WIN32
+    ssize_t bytes_received = ::recv(this->_socket_fd,
+                                   static_cast<char*>(buffer),
+                                   static_cast<int>(size), flags);
+#else
     ssize_t bytes_received = ::recv(this->_socket_fd, buffer, size, flags);
+#endif
     if (bytes_received < 0)
 	{
         ft_errno = errno + ERRNO_OFFSET;
