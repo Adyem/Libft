@@ -164,16 +164,16 @@ ManagedType& ft_uniqueptr<ManagedType>::operator*()
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType defaultInstance;
-            return defaultInstance;
+            return (defaultInstance);
         }
         else
         {
             this->set_error(UNIQUE_PTR_ALLOCATION_FAILED);
             static char dummy_buffer[sizeof(ManagedType)] = {0};
-            return *reinterpret_cast<ManagedType*>(dummy_buffer);
+            return (*reinterpret_cast<ManagedType*>(dummy_buffer));
         }
     }
-    return *_managedPointer;
+    return (*_managedPointer);
 }
 
 template <typename ManagedType>
@@ -185,16 +185,16 @@ const ManagedType& ft_uniqueptr<ManagedType>::operator*() const
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType defaultInstance;
-            return defaultInstance;
+            return (defaultInstance);
         }
         else
         {
             this->set_error(UNIQUE_PTR_ALLOCATION_FAILED);
             static char dummy_buffer[sizeof(ManagedType)] = {0};
-            return *reinterpret_cast<const ManagedType*>(dummy_buffer);
+            return (*reinterpret_cast<const ManagedType*>(dummy_buffer));
         }
     }
-    return *_managedPointer;
+    return (*_managedPointer);
 }
 
 template <typename ManagedType>
@@ -203,9 +203,9 @@ ManagedType* ft_uniqueptr<ManagedType>::operator->()
     if (!_managedPointer)
     {
         this->set_error(UNIQUE_PTR_NULL_PTR);
-        return ft_nullptr;
+        return (ft_nullptr);
     }
-    return _managedPointer;
+    return (_managedPointer);
 }
 
 template <typename ManagedType>
@@ -214,9 +214,9 @@ const ManagedType* ft_uniqueptr<ManagedType>::operator->() const
     if (!_managedPointer)
     {
         const_cast<ft_uniqueptr<ManagedType>*>(this)->set_error(UNIQUE_PTR_NULL_PTR);
-        return ft_nullptr;
+        return (ft_nullptr);
     }
-    return _managedPointer;
+    return (_managedPointer);
 }
 
 template <typename ManagedType>
@@ -228,13 +228,13 @@ ManagedType& ft_uniqueptr<ManagedType>::operator[](size_t index)
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType defaultInstance;
-            return defaultInstance;
+            return (defaultInstance);
         }
         else
         {
             this->set_error(UNIQUE_PTR_ALLOCATION_FAILED);
             static char dummy_buffer[sizeof(ManagedType)] = {0};
-            return *reinterpret_cast<ManagedType*>(dummy_buffer);
+            return (*reinterpret_cast<ManagedType*>(dummy_buffer));
         }
     }
     if (!_managedPointer)
@@ -243,13 +243,13 @@ ManagedType& ft_uniqueptr<ManagedType>::operator[](size_t index)
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType defaultInstance;
-            return defaultInstance;
+            return (defaultInstance);
         }
         else
         {
             this->set_error(UNIQUE_PTR_ALLOCATION_FAILED);
             static char dummy_buffer[sizeof(ManagedType)] = {0};
-            return *reinterpret_cast<ManagedType*>(dummy_buffer);
+            return (*reinterpret_cast<ManagedType*>(dummy_buffer));
         }
     }
     if (index >= _arraySize)
@@ -258,16 +258,16 @@ ManagedType& ft_uniqueptr<ManagedType>::operator[](size_t index)
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType defaultInstance;
-            return defaultInstance;
+            return (defaultInstance);
         }
         else
         {
             this->set_error(UNIQUE_PTR_ALLOCATION_FAILED);
             static char dummy_buffer[sizeof(ManagedType)] = {0};
-            return *reinterpret_cast<ManagedType*>(dummy_buffer);
+            return (*reinterpret_cast<ManagedType*>(dummy_buffer));
         }
     }
-    return _managedPointer[index];
+    return (_managedPointer[index]);
 }
 
 template <typename ManagedType>
@@ -279,13 +279,13 @@ const ManagedType& ft_uniqueptr<ManagedType>::operator[](size_t index) const
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType defaultInstance;
-            return defaultInstance;
+            return (defaultInstance);
         }
         else
         {
             this->set_error(UNIQUE_PTR_ALLOCATION_FAILED);
             static char dummy_buffer[sizeof(ManagedType)] = {0};
-            return *reinterpret_cast<const ManagedType*>(dummy_buffer);
+            return (*reinterpret_cast<const ManagedType*>(dummy_buffer));
         }
     }
     if (!_managedPointer)
@@ -294,13 +294,13 @@ const ManagedType& ft_uniqueptr<ManagedType>::operator[](size_t index) const
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType defaultInstance;
-            return defaultInstance;
+            return (defaultInstance);
         }
         else
         {
             this->set_error(UNIQUE_PTR_ALLOCATION_FAILED);
             static char dummy_buffer[sizeof(ManagedType)] = {0};
-            return *reinterpret_cast<const ManagedType*>(dummy_buffer);
+            return (*reinterpret_cast<const ManagedType*>(dummy_buffer));
         }
     }
     if (index >= _arraySize)
@@ -309,28 +309,28 @@ const ManagedType& ft_uniqueptr<ManagedType>::operator[](size_t index) const
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType defaultInstance;
-            return defaultInstance;
+            return (defaultInstance);
         }
         else
         {
             this->set_error(UNIQUE_PTR_ALLOCATION_FAILED);
             static char dummy_buffer[sizeof(ManagedType)] = {0};
-            return *reinterpret_cast<const ManagedType*>(dummy_buffer);
+            return (*reinterpret_cast<const ManagedType*>(dummy_buffer));
         }
     }
-    return _managedPointer[index];
+    return (_managedPointer[index]);
 }
 
 template <typename ManagedType>
 ManagedType* ft_uniqueptr<ManagedType>::get()
 {
-    return _managedPointer;
+    return (_managedPointer);
 }
 
 template <typename ManagedType>
 const ManagedType* ft_uniqueptr<ManagedType>::get() const
 {
-    return _managedPointer;
+    return (_managedPointer);
 }
 
 template <typename ManagedType>
@@ -341,7 +341,7 @@ ManagedType* ft_uniqueptr<ManagedType>::release_ptr()
     _arraySize = 0;
     _isArrayType = false;
     _errorCode = ER_SUCCESS;
-    return tmp;
+    return (tmp);
 }
 
 template <typename ManagedType>
@@ -363,13 +363,13 @@ bool ft_uniqueptr<ManagedType>::hasError() const
 template <typename ManagedType>
 int ft_uniqueptr<ManagedType>::getErrorCode() const
 {
-    return _errorCode;
+    return (_errorCode);
 }
 
 template <typename ManagedType>
 const char* ft_uniqueptr<ManagedType>::errorMessage() const
 {
-    return ft_strerror(_errorCode);
+    return (ft_strerror(_errorCode));
 }
 
 template <typename ManagedType>

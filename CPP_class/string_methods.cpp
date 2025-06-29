@@ -254,7 +254,7 @@ ft_string operator+(char lhs, const ft_string &rhs) noexcept
 
 ft_string::operator const char*() const noexcept
 {
-    return c_str();
+    return (c_str());
 }
 
 bool operator==(const ft_string &lhs, const ft_string &rhs) noexcept

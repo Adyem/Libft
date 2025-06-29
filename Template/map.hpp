@@ -168,7 +168,7 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(ft_map<Key, MappedTy
         other._size = 0;
         other._error = ER_SUCCESS;
     }
-    return *this;
+    return (*this);
 }
 
 template <typename Key, typename MappedType>
@@ -357,9 +357,9 @@ MappedType& ft_map<Key, MappedType>::at(const Key& key)
     if (this->_size == 0 || index == this->_size)
     {
         this->setError(UNORD_MAP_UNKNOWN);
-        return errorMappedType;
+        return (errorMappedType);
     }
-    return this->_data[index].value;
+    return (this->_data[index].value);
 }
 
 template <typename Key, typename MappedType>
@@ -370,9 +370,9 @@ const MappedType& ft_map<Key, MappedType>::at(const Key& key) const
     if (this->_size == 0 || index == this->_size)
     {
         this->setError(UNORD_MAP_UNKNOWN);
-        return errorMappedType;
+        return (errorMappedType);
     }
-    return this->_data[index].value;
+    return (this->_data[index].value);
 }
 
 #endif

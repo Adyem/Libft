@@ -17,7 +17,7 @@ size_t ft_strlen_size_t(const char *string)
     while (reinterpret_cast<uintptr_t>(ptr) & (sizeof(size_t) - 1))
     {
         if (*ptr == '\0')
-            return static_cast<size_t>(ptr - string);
+            return (static_cast<size_t>(ptr - string));
         ++ptr;
     }
     const size_t *word_ptr = reinterpret_cast<const size_t*>(ptr);
@@ -26,5 +26,5 @@ size_t ft_strlen_size_t(const char *string)
     ptr = reinterpret_cast<const char*>(word_ptr);
     while (*ptr)
         ++ptr;
-    return static_cast<size_t>(ptr - string);
+    return (static_cast<size_t>(ptr - string));
 }

@@ -7,10 +7,10 @@ static bool is_in_set(char c, const char *set)
     while (set && *set)
     {
         if (*set == c)
-            return true;
+            return (true);
         ++set;
     }
-    return false;
+    return (false);
 }
 
 char    *cma_strtrim(const char *s1, const char *set)

@@ -8,7 +8,7 @@ void *ft_memmove(void *destination, const void *source, size_t size)
 	size_t i;
 
 	if (size == 0 || destination == source)
-		return destination;
+		return (destination);
 	if (!destination || !source)
 		return (ft_nullptr);
 	if (dest_ptr < src_ptr)
