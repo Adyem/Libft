@@ -21,13 +21,18 @@ SUBDIRS :=  CMA \
             PThread \
             CPP_class \
             Errno \
-            Networking \
-            Windows \
-            Linux \
-            encryption \
+            Networking
+
+ifeq ($(OS),Windows_NT)
+SUBDIRS += Windows
+else
+SUBDIRS += Linux
+endif
+
+SUBDIRS += encryption \
             RNG \
-                        JSon \
-                        file \
+            JSon \
+            file \
             HTML
 
 LIB_BASES := \
@@ -39,14 +44,31 @@ LIB_BASES := \
   PThread/PThread \
   CPP_class/CPP_class \
   Errno/errno \
-  Networking/networking \
-  Windows/Windows \
-  Linux/Linux \
-  encryption/encryption \
+  Networking/networking
+
+ifeq ($(OS),Windows_NT)
+LIB_BASES += Windows/Windows
+else
+LIB_BASES += Linux/Linux
+endif
+
+LIB_BASES += encryption/encryption \
   RNG/RNG \
   JSon/JSon \
   file/file \
   HTML/HTMLParser
+
+ifeq ($(OS),Windows_NT)
+OS_EXTRACT := $(call EXTRACT,Windows/Windows.a)
+DEBUG_OS_EXTRACT := $(call EXTRACT,Windows/Windows_debug.a)
+OS_CLEAN := $(MAKE) -C Windows clean
+OS_FCLEAN := $(MAKE) -C Windows fclean
+else
+OS_EXTRACT := $(call EXTRACT,Linux/Linux.a)
+DEBUG_OS_EXTRACT := $(call EXTRACT,Linux/Linux_debug.a)
+OS_CLEAN := $(MAKE) -C Linux clean
+OS_FCLEAN := $(MAKE) -C Linux fclean
+endif
 
 LIBS       := $(addsuffix .a, $(LIB_BASES))
 DEBUG_LIBS := $(addsuffix _debug.a, $(LIB_BASES))
@@ -79,8 +101,7 @@ $(TARGET): $(LIBS)
 	$(call EXTRACT,CPP_class/CPP_class.a)
 	$(call EXTRACT,Errno/errno.a)
 	$(call EXTRACT,Networking/networking.a)
-	$(call EXTRACT,Windows/Windows.a)
-	$(call EXTRACT,Linux/Linux.a)
+	$(OS_EXTRACT)
 	$(call EXTRACT,encryption/encryption.a)
 	$(call EXTRACT,RNG/RNG.a)
 	$(call EXTRACT,JSon/JSon.a)
@@ -102,8 +123,7 @@ $(DEBUG_TARGET): $(DEBUG_LIBS)
 	$(call EXTRACT,CPP_class/CPP_class_debug.a)
 	$(call EXTRACT,Errno/errno_debug.a)
 	$(call EXTRACT,Networking/networking_debug.a)
-	$(call EXTRACT,Windows/Windows_debug.a)
-	$(call EXTRACT,Linux/Linux_debug.a)
+	$(DEBUG_OS_EXTRACT)
 	$(call EXTRACT,encryption/encryption_debug.a)
 	$(call EXTRACT,RNG/RNG_debug.a)
 	$(call EXTRACT,JSon/JSon_debug.a)
@@ -128,8 +148,7 @@ clean:
 	$(MAKE) -C CPP_class clean
 	$(MAKE) -C Errno clean
 	$(MAKE) -C Networking clean
-	$(MAKE) -C Windows clean
-	$(MAKE) -C Linux clean
+	$(OS_CLEAN)
 	$(MAKE) -C encryption clean
 	$(MAKE) -C RNG clean
 	$(MAKE) -C JSon clean
@@ -147,8 +166,7 @@ fclean: clean
 	$(MAKE) -C CPP_class fclean
 	$(MAKE) -C Errno fclean
 	$(MAKE) -C Networking fclean
-	$(MAKE) -C Windows fclean
-	$(MAKE) -C Linux fclean
+	$(OS_FCLEAN)
 	$(MAKE) -C encryption fclean
 	$(MAKE) -C RNG fclean
 	$(MAKE) -C JSon fclean
