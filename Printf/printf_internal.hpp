@@ -21,10 +21,10 @@ void ft_putchar_fd(const char c, int fd, size_t *count);
 void ft_putstr_fd(const char *s, int fd, size_t *count);
 void ft_putnbr_fd_recursive(long n, int fd, size_t *count);
 void ft_putnbr_fd(long n, int fd, size_t *count);
-void ft_putunsigned_fd_recursive(unsigned long n, int fd, size_t *count);
-void ft_putunsigned_fd(unsigned long n, int fd, size_t *count);
-void ft_puthex_fd_recursive(unsigned long n, int fd, bool uppercase, size_t *count);
-void ft_puthex_fd(unsigned long n, int fd, bool uppercase, size_t *count);
+void ft_putunsigned_fd_recursive(uintmax_t n, int fd, size_t *count);
+void ft_putunsigned_fd(uintmax_t n, int fd, size_t *count);
+void ft_puthex_fd_recursive(uintmax_t n, int fd, bool uppercase, size_t *count);
+void ft_puthex_fd(uintmax_t n, int fd, bool uppercase, size_t *count);
 void ft_putptr_fd(void *ptr, int fd, size_t *count);
 int pf_printf_fd_v(int fd, const char *format, va_list args);
 
