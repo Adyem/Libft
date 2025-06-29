@@ -14,6 +14,61 @@
 #endif
 #include "../Libft/libft.hpp"
 
+#ifdef _WIN32
+static inline int setsockopt_reuse(int fd, int opt)
+{
+    return setsockopt(fd, SOL_SOCKET, SO_REUSEADDR,
+                      reinterpret_cast<const char*>(&opt), sizeof(opt));
+}
+
+static inline int set_nonblocking_platform(int fd)
+{
+    u_long mode = 1;
+    return ioctlsocket(static_cast<SOCKET>(fd), FIONBIO, &mode);
+}
+
+static inline int set_timeout_recv(int fd, int ms)
+{
+    return setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO,
+                      reinterpret_cast<const char*>(&ms), sizeof(ms));
+}
+
+static inline int set_timeout_send(int fd, int ms)
+{
+    return setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO,
+                      reinterpret_cast<const char*>(&ms), sizeof(ms));
+}
+#else
+static inline int setsockopt_reuse(int fd, int opt)
+{
+    return setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+}
+
+static inline int set_nonblocking_platform(int fd)
+{
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (flags == -1)
+        return -1;
+    return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+}
+
+static inline int set_timeout_recv(int fd, int ms)
+{
+    struct timeval tv;
+    tv.tv_sec = ms / 1000;
+    tv.tv_usec = (ms % 1000) * 1000;
+    return setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+}
+
+static inline int set_timeout_send(int fd, int ms)
+{
+    struct timeval tv;
+    tv.tv_sec = ms / 1000;
+    tv.tv_usec = (ms % 1000) * 1000;
+    return setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+}
+#endif
+
 int ft_socket::create_socket(const SocketConfig &config)
 {
     this->_socket_fd = nw_socket(config.address_family, SOCK_STREAM, config.protocol);
@@ -30,14 +85,8 @@ int ft_socket::set_reuse_address(const SocketConfig &config)
     if (!config.reuse_address)
         return (ER_SUCCESS);
     int opt = 1;
-#ifdef _WIN32
-    if (setsockopt(this->_socket_fd, SOL_SOCKET, SO_REUSEADDR,
-                   reinterpret_cast<const char*>(&opt), sizeof(opt)) < 0)
-#else
-    if (setsockopt(this->_socket_fd, SOL_SOCKET, SO_REUSEADDR,
-                   &opt, sizeof(opt)) < 0)
-#endif
-	{
+    if (setsockopt_reuse(this->_socket_fd, opt) < 0)
+    {
         handle_error(errno + ERRNO_OFFSET);
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
@@ -50,46 +99,21 @@ int ft_socket::set_non_blocking(const SocketConfig &config)
 {
     if (!config.non_blocking)
         return (ER_SUCCESS);
-#ifdef _WIN32
-    u_long mode = 1;
-    if (ioctlsocket(static_cast<SOCKET>(this->_socket_fd), FIONBIO, &mode) != 0)
+    if (set_nonblocking_platform(this->_socket_fd) != 0)
     {
         handle_error(errno + ERRNO_OFFSET);
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error);
     }
-#else
-    int flags = fcntl(this->_socket_fd, F_GETFL, 0);
-    if (flags == -1)
-    {
-        handle_error(errno + ERRNO_OFFSET);
-        FT_CLOSE_SOCKET(this->_socket_fd);
-        this->_socket_fd = -1;
-        return (this->_error);
-    }
-
-    if (fcntl(this->_socket_fd, F_SETFL, flags | O_NONBLOCK) == -1)
-    {
-        handle_error(errno + ERRNO_OFFSET);
-        FT_CLOSE_SOCKET(this->_socket_fd);
-        this->_socket_fd = -1;
-        return (this->_error);
-    }
-#endif
-
     return (ER_SUCCESS);
 }
 
 int ft_socket::set_timeouts(const SocketConfig &config)
 {
-#ifdef _WIN32
-    int tv;
     if (config.recv_timeout > 0)
     {
-        tv = config.recv_timeout;
-        if (setsockopt(this->_socket_fd, SOL_SOCKET, SO_RCVTIMEO,
-                       reinterpret_cast<const char*>(&tv), sizeof(tv)) < 0)
+        if (set_timeout_recv(this->_socket_fd, config.recv_timeout) < 0)
         {
             handle_error(errno + ERRNO_OFFSET);
             FT_CLOSE_SOCKET(this->_socket_fd);
@@ -99,9 +123,7 @@ int ft_socket::set_timeouts(const SocketConfig &config)
     }
     if (config.send_timeout > 0)
     {
-        tv = config.send_timeout;
-        if (setsockopt(this->_socket_fd, SOL_SOCKET, SO_SNDTIMEO,
-                       reinterpret_cast<const char*>(&tv), sizeof(tv)) < 0)
+        if (set_timeout_send(this->_socket_fd, config.send_timeout) < 0)
         {
             handle_error(errno + ERRNO_OFFSET);
             FT_CLOSE_SOCKET(this->_socket_fd);
@@ -109,35 +131,6 @@ int ft_socket::set_timeouts(const SocketConfig &config)
             return (this->_error);
         }
     }
-#else
-    struct timeval tv;
-    if (config.recv_timeout > 0)
-    {
-        tv.tv_sec = config.recv_timeout / 1000;
-        tv.tv_usec = (config.recv_timeout % 1000) * 1000;
-        if (setsockopt(this->_socket_fd, SOL_SOCKET, SO_RCVTIMEO,
-                       &tv, sizeof(tv)) < 0)
-        {
-            handle_error(errno + ERRNO_OFFSET);
-            FT_CLOSE_SOCKET(this->_socket_fd);
-            this->_socket_fd = -1;
-            return (this->_error);
-        }
-    }
-    if (config.send_timeout > 0)
-    {
-        tv.tv_sec = config.send_timeout / 1000;
-        tv.tv_usec = (config.send_timeout % 1000) * 1000;
-        if (setsockopt(this->_socket_fd, SOL_SOCKET, SO_SNDTIMEO,
-                       &tv, sizeof(tv)) < 0)
-        {
-            handle_error(errno + ERRNO_OFFSET);
-            FT_CLOSE_SOCKET(this->_socket_fd);
-            this->_socket_fd = -1;
-            return (this->_error);
-        }
-    }
-#endif
     return (ER_SUCCESS);
 }
 

@@ -173,10 +173,10 @@ Block *merge_block(Block *block)
     return (block);
 }
 
-void print_block_info(Block *block)
+static inline void print_block_info_impl(Block *block)
 {
 #ifdef _WIN32
-    (void)block;  // Avoid unused parameter warning on Windows
+    (void)block;
     return;
 #else
     if (!block)
@@ -194,4 +194,9 @@ void print_block_info(Block *block)
     pf_printf_fd(2, "Previous Block: %p\n", static_cast<void*>(block->prev));
     pf_printf_fd(2, "---------------------------\n");
 #endif
+}
+
+void print_block_info(Block *block)
+{
+    print_block_info_impl(block);
 }
