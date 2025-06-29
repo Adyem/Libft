@@ -8,6 +8,15 @@
 #include <limits.h>
 #include <stddef.h>
 
+static inline ssize_t ft_platform_write(int fd, const char *s, size_t len)
+{
+#ifdef _WIN32
+    return ft_write(fd, s, static_cast<unsigned int>(len));
+#else
+    return ft_write(fd, s, len);
+#endif
+}
+
 size_t ft_strlen_printf(const char *s)
 {
     size_t len = 0;
@@ -36,11 +45,7 @@ void ft_putstr_fd(const char *s, int fd, size_t *count)
         return;
     }
     size_t len = ft_strlen_printf(s);
-#ifdef _WIN32
-    return_value = ft_write(fd, s, static_cast<unsigned int>(len));
-#else
-    return_value = ft_write(fd, s, len);
-#endif
+    return_value = ft_platform_write(fd, s, len);
     *count += len;
     (void)return_value;
     return ;

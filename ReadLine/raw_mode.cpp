@@ -16,7 +16,7 @@ static DWORD orig_mode;
 termios	orig_termios;
 #endif
 
-void rl_disable_raw_mode()
+static inline void disable_raw_mode_platform()
 {
 #ifdef _WIN32
     HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
@@ -27,13 +27,18 @@ void rl_disable_raw_mode()
 #endif
 }
 
-int rl_enable_raw_mode()
+void rl_disable_raw_mode()
+{
+    disable_raw_mode_platform();
+}
+
+static inline int enable_raw_mode_platform()
 {
 #ifdef _WIN32
     HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
     if (hStdin == INVALID_HANDLE_VALUE)
         return -1;
-    
+
     DWORD mode;
     if (!GetConsoleMode(hStdin, &mode))
         return -1;
@@ -46,13 +51,18 @@ int rl_enable_raw_mode()
     struct termios raw;
     if (tcgetattr(STDIN_FILENO, &raw) == -1)
         return -1;
-    
+
     orig_termios = raw;
     raw.c_lflag &= ~(ECHO | ICANON);
-    
+
     if (tcsetattr(STDIN_FILENO, TCSANOW, &raw) == -1)
         return -1;
-    
+
     return 0;
 #endif
+}
+
+int rl_enable_raw_mode()
+{
+    return enable_raw_mode_platform();
 }
