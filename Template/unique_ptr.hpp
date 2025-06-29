@@ -63,8 +63,9 @@ ft_uniqueptr<ManagedType>::ft_uniqueptr(Args&&... args)
       _isArrayType(false),
       _errorCode(ER_SUCCESS)
 {
-    if (!_managedPointer)
+	if (!_managedPointer)
         this->set_error(UNIQUE_PTR_ALLOCATION_FAILED);
+	return ;
 }
 
 template <typename ManagedType>
@@ -74,6 +75,7 @@ ft_uniqueptr<ManagedType>::ft_uniqueptr(ManagedType* pointer, bool isArray, size
       _isArrayType(isArray),
       _errorCode(ER_SUCCESS)
 {
+	return ;
 }
 
 template <typename ManagedType>
@@ -83,6 +85,7 @@ ft_uniqueptr<ManagedType>::ft_uniqueptr()
       _isArrayType(false),
       _errorCode(ER_SUCCESS)
 {
+	return ;
 }
 
 template <typename ManagedType>
@@ -92,8 +95,9 @@ ft_uniqueptr<ManagedType>::ft_uniqueptr(size_t size)
       _isArrayType(true),
       _errorCode(ER_SUCCESS)
 {
-    if (size > 0 && !_managedPointer)
+	if (size > 0 && !_managedPointer)
         this->set_error(UNIQUE_PTR_ALLOCATION_FAILED);
+	return ;
 }
 
 template <typename ManagedType>
@@ -107,6 +111,7 @@ ft_uniqueptr<ManagedType>::ft_uniqueptr(ft_uniqueptr&& other) noexcept
     other._arraySize = 0;
     other._isArrayType = false;
     other._errorCode = ER_SUCCESS;
+	return ;
 }
 
 template <typename ManagedType>
@@ -124,13 +129,14 @@ ft_uniqueptr<ManagedType>& ft_uniqueptr<ManagedType>::operator=(ft_uniqueptr&& o
         other._isArrayType = false;
         other._errorCode = ER_SUCCESS;
     }
-    return *this;
+    return (*this);
 }
 
 template <typename ManagedType>
 ft_uniqueptr<ManagedType>::~ft_uniqueptr()
 {
     release();
+	return ;
 }
 
 template <typename ManagedType>
@@ -143,9 +149,10 @@ void ft_uniqueptr<ManagedType>::release()
         else
             delete _managedPointer;
     }
-    _managedPointer = ft_nullptr;
-    _arraySize = 0;
-    _isArrayType = false;
+    this->_managedPointer = ft_nullptr;
+    this->_arraySize = 0;
+    this->_isArrayType = false;
+	return ;
 }
 
 template <typename ManagedType>
