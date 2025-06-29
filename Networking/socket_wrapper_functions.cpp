@@ -85,3 +85,33 @@ int nw_connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 #endif
     return (0);
 }
+
+ssize_t nw_send(int sockfd, const void *buf, size_t len, int flags)
+{
+#ifdef _WIN32
+    int ret = ::send((SOCKET)sockfd,
+                     static_cast<const char*>(buf),
+                     static_cast<int>(len), flags);
+    if (ret == SOCKET_ERROR)
+        return (-1);
+    return (ret);
+#else
+    ssize_t ret = ::send(sockfd, buf, len, flags);
+    return (ret);
+#endif
+}
+
+ssize_t nw_recv(int sockfd, void *buf, size_t len, int flags)
+{
+#ifdef _WIN32
+    int ret = ::recv((SOCKET)sockfd,
+                     static_cast<char*>(buf),
+                     static_cast<int>(len), flags);
+    if (ret == SOCKET_ERROR)
+        return (-1);
+    return (ret);
+#else
+    ssize_t ret = ::recv(sockfd, buf, len, flags);
+    return (ret);
+#endif
+}
