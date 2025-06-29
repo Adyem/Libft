@@ -103,6 +103,7 @@ int ft_open(const char *pathname, int flags, int mode)
 		g_file_mutex.unlock(GetCurrentThreadId());
         return (-1);
     }
+	g_file_mutex.unlock(GetCurrentThreadId());
     return (fd);
 }
 
