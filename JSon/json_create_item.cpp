@@ -23,7 +23,7 @@ json_item* json_create_item(const char *key, const char *value)
     {
         delete item;
 		ft_errno = JSON_MALLOC_FAIL;
-        return(ft_nullptr);
+        return (ft_nullptr);
     }
     item->value = cma_strdup(value);
     if (!item->value)
@@ -50,7 +50,7 @@ json_item* json_create_item(const char *key, const bool value)
     {
         delete item;
 		ft_errno = JSON_MALLOC_FAIL;
-        return(ft_nullptr);
+        return (ft_nullptr);
     }
 	if (value == true)
 		item->value = cma_strdup("true");
@@ -80,7 +80,7 @@ json_item* json_create_item(const char *key, const int value)
     {
         delete item;
 		ft_errno = JSON_MALLOC_FAIL;
-        return(ft_nullptr);
+        return (ft_nullptr);
     }
 	item->value = cma_itoa(value);
     if (!item->value)
