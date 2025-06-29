@@ -62,14 +62,30 @@ both: all debug
 
 re: fclean all
 
+define EXTRACT
+cd temp_objs && $(AR) x ../$1 && cd ..
+endef
+
 $(TARGET): $(LIBS)
 	@echo "Linking libraries into $(TARGET)..."
 	$(RM) $@
 	$(MKDIR) temp_objs
-	@for lib in $(LIBS); do \
-	  cd temp_objs && $(AR) x ../$$lib; \
-	  cd ..; \
-	done
+	$(call EXTRACT,CMA/CustomMemoryAllocator.a)
+	$(call EXTRACT,GetNextLine/GetNextLine.a)
+	$(call EXTRACT,Libft/LibFT.a)
+	$(call EXTRACT,Printf/Printf.a)
+	$(call EXTRACT,ReadLine/ReadLine.a)
+	$(call EXTRACT,PThread/PThread.a)
+	$(call EXTRACT,CPP_class/CPP_class.a)
+	$(call EXTRACT,Errno/errno.a)
+	$(call EXTRACT,Networking/networking.a)
+	$(call EXTRACT,Windows/Windows.a)
+	$(call EXTRACT,Linux/Linux.a)
+	$(call EXTRACT,encryption/encryption.a)
+	$(call EXTRACT,RNG/RNG.a)
+	$(call EXTRACT,JSon/JSon.a)
+	$(call EXTRACT,file/file.a)
+	$(call EXTRACT,HTML/HTMLParser.a)
 	$(AR) $(ARFLAGS) $@ temp_objs/*.o
 	$(RMDIR) temp_objs
 
@@ -77,10 +93,22 @@ $(DEBUG_TARGET): $(DEBUG_LIBS)
 	@echo "Linking libraries into $(DEBUG_TARGET)..."
 	$(RM) $@
 	$(MKDIR) temp_objs
-	@for lib in $(DEBUG_LIBS); do \
-	  cd temp_objs && $(AR) x ../$$lib; \
-	  cd ..; \
-	done
+	$(call EXTRACT,CMA/CustomMemoryAllocator_debug.a)
+	$(call EXTRACT,GetNextLine/GetNextLine_debug.a)
+	$(call EXTRACT,Libft/LibFT_debug.a)
+	$(call EXTRACT,Printf/Printf_debug.a)
+	$(call EXTRACT,ReadLine/ReadLine_debug.a)
+	$(call EXTRACT,PThread/PThread_debug.a)
+	$(call EXTRACT,CPP_class/CPP_class_debug.a)
+	$(call EXTRACT,Errno/errno_debug.a)
+	$(call EXTRACT,Networking/networking_debug.a)
+	$(call EXTRACT,Windows/Windows_debug.a)
+	$(call EXTRACT,Linux/Linux_debug.a)
+	$(call EXTRACT,encryption/encryption_debug.a)
+	$(call EXTRACT,RNG/RNG_debug.a)
+	$(call EXTRACT,JSon/JSon_debug.a)
+	$(call EXTRACT,file/file_debug.a)
+	$(call EXTRACT,HTML/HTMLParser_debug.a)
 	$(AR) $(ARFLAGS) $@ temp_objs/*.o
 	$(RMDIR) temp_objs
 
@@ -91,15 +119,41 @@ $(DEBUG_TARGET): $(DEBUG_LIBS)
 	$(MAKE) -C $(dir $@) debug
 
 clean:
-	@for dir in $(SUBDIRS); do \
-	  $(MAKE) -C $$dir clean; \
-	done
+	$(MAKE) -C CMA clean
+	$(MAKE) -C GetNextLine clean
+	$(MAKE) -C Libft clean
+	$(MAKE) -C Printf clean
+	$(MAKE) -C ReadLine clean
+	$(MAKE) -C PThread clean
+	$(MAKE) -C CPP_class clean
+	$(MAKE) -C Errno clean
+	$(MAKE) -C Networking clean
+	$(MAKE) -C Windows clean
+	$(MAKE) -C Linux clean
+	$(MAKE) -C encryption clean
+	$(MAKE) -C RNG clean
+	$(MAKE) -C JSon clean
+	$(MAKE) -C file clean
+	$(MAKE) -C HTML clean
 	$(RM) $(TARGET) $(DEBUG_TARGET)
 
 fclean: clean
-	@for dir in $(SUBDIRS); do \
-	  $(MAKE) -C $$dir fclean; \
-	done
+	$(MAKE) -C CMA fclean
+	$(MAKE) -C GetNextLine fclean
+	$(MAKE) -C Libft fclean
+	$(MAKE) -C Printf fclean
+	$(MAKE) -C ReadLine fclean
+	$(MAKE) -C PThread fclean
+	$(MAKE) -C CPP_class fclean
+	$(MAKE) -C Errno fclean
+	$(MAKE) -C Networking fclean
+	$(MAKE) -C Windows fclean
+	$(MAKE) -C Linux fclean
+	$(MAKE) -C encryption fclean
+	$(MAKE) -C RNG fclean
+	$(MAKE) -C JSon fclean
+	$(MAKE) -C file fclean
+	$(MAKE) -C HTML fclean
 	$(RM) $(TARGET) $(DEBUG_TARGET)
-
+	
 .PHONY: all debug both re clean fclean
