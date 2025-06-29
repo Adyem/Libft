@@ -17,6 +17,7 @@ int		ft_open(const char *pathname, int flags, int mode);
 ssize_t	ft_read(int fd, void *buf, unsigned int count);
 ssize_t	ft_write(int fd, const void *buf, unsigned int count);
 int		ft_close(int fd);
+void 	ft_initialize_standard_file_descriptors();
 
 #endif
 
