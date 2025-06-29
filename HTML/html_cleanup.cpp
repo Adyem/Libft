@@ -24,4 +24,5 @@ void html_free_nodes(html_node *nodeList)
         delete nodeList;
         nodeList = nextNode;
     }
+    return ;
 }
