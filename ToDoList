@@ -24,7 +24,7 @@ Enhancing string handling can greatly simplify many programming tasks.
     ft_strsplit: Splits a string into an array of strings based on a delimiter. (done)
     ft_strtrim: Removes leading and trailing whitespace or specified characters from a string. (done)
     ft_strjoin: Joins two strings into a new string. (done)
-    ft_substr: Extracts a substring from a given string.
+    ft_substr: Extracts a substring from a given string. (done)
     ft_strmapi: Applies a function to each character of a string, creating a new string.
     ft_striteri: Applies a function to each character of a string in place.
 
@@ -45,7 +45,7 @@ Facilitate the conversion between different data types.
 
     ft_atoi: Converts a string to an integer. (done)
     ft_strtol, ft_strtoul: Convert strings to long and unsigned long integers, respectively.
-    ft_itoa: Converts an integer to a string.
+    ft_itoa: Converts an integer to a string. (done)
 
 6. File I/O Functions
 
@@ -60,7 +60,7 @@ Enhance file handling capabilities with custom functions.
 General-purpose functions that can be widely useful.
 
     ft_min, ft_max: Determine the minimum or maximum of two values.
-    ft_abs: Calculate the absolute value.
+    ft_abs: Calculate the absolute value. (done)
     ft_swap: Swap two variables.
     ft_clamp: Restrict a value to a specified range.
 
