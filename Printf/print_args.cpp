@@ -62,7 +62,7 @@ void ft_putnbr_fd(long n, int fd, size_t *count)
     return ;
 }
 
-void ft_putunsigned_fd_recursive(unsigned long n, int fd, size_t *count)
+void ft_putunsigned_fd_recursive(uintmax_t n, int fd, size_t *count)
 {
     char c;
     if (n >= 10)
@@ -72,13 +72,13 @@ void ft_putunsigned_fd_recursive(unsigned long n, int fd, size_t *count)
     return;
 }
 
-void ft_putunsigned_fd(unsigned long n, int fd, size_t *count)
+void ft_putunsigned_fd(uintmax_t n, int fd, size_t *count)
 {
     ft_putunsigned_fd_recursive(n, fd, count);
     return ;
 }
 
-void ft_puthex_fd_recursive(unsigned long n, int fd, bool uppercase, size_t *count)
+void ft_puthex_fd_recursive(uintmax_t n, int fd, bool uppercase, size_t *count)
 {
     char c;
 
@@ -97,7 +97,7 @@ void ft_puthex_fd_recursive(unsigned long n, int fd, bool uppercase, size_t *cou
     return ;
 }
 
-void ft_puthex_fd(unsigned long n, int fd, bool uppercase, size_t *count)
+void ft_puthex_fd(uintmax_t n, int fd, bool uppercase, size_t *count)
 {
     ft_puthex_fd_recursive(n, fd, uppercase, count);
     return ;
