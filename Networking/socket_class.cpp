@@ -4,11 +4,17 @@
 #include <cstring>
 #include <cerrno>
 #include <fcntl.h>
-#include <arpa/inet.h>
-#include <sys/types.h>
-#include <unistd.h>
+#ifdef _WIN32
+# include <winsock2.h>
+# include <ws2tcpip.h>
+# include <io.h>
+#else
+# include <arpa/inet.h>
+# include <sys/types.h>
+# include <unistd.h>
+# include <sys/socket.h>
+#endif
 #include <utility>
-#include <sys/socket.h>
 
 ft_socket::ft_socket() : _socket_fd(-1), _error(ER_SUCCESS)
 {
@@ -137,7 +143,7 @@ ft_socket::ft_socket(const SocketConfig &config) : _socket_fd(-1), _error(ER_SUC
 
 ft_socket::~ft_socket()
 {
-	close(this->_socket_fd);
+	FT_CLOSE_SOCKET(this->_socket_fd);
 	return ;
 }
 
@@ -183,7 +189,7 @@ bool ft_socket::close_socket()
 {
     if (this->_socket_fd >= 0)
 	{
-        if (::close(this->_socket_fd) == 0)
+        if (FT_CLOSE_SOCKET(this->_socket_fd) == 0)
 		{
             this->_socket_fd = -1;
             this->_error = ER_SUCCESS;
