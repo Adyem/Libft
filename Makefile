@@ -3,6 +3,16 @@ AR       := ar
 ARFLAGS  := rcs
 CXXFLAGS := -Wall -Wextra -Werror -g -O0 -std=c++17
 
+ifeq ($(OS),Windows_NT)
+    MKDIR  = mkdir
+    RM     = del /F /Q
+    RMDIR  = rmdir /S /Q
+else
+    MKDIR  = mkdir -p
+    RM     = rm -f
+    RMDIR  = rm -rf
+endif
+
 SUBDIRS :=  CMA \
             GetNextLine \
             Libft \
@@ -16,8 +26,8 @@ SUBDIRS :=  CMA \
             Linux \
             encryption \
             RNG \
-			JSon \
-			file \
+                        JSon \
+                        file \
             HTML
 
 LIB_BASES := \
@@ -54,25 +64,25 @@ re: fclean all
 
 $(TARGET): $(LIBS)
 	@echo "Linking libraries into $(TARGET)..."
-	rm -f $@
-	mkdir -p temp_objs
+	$(RM) $@
+	$(MKDIR) temp_objs
 	@for lib in $(LIBS); do \
 	  cd temp_objs && $(AR) x ../$$lib; \
 	  cd ..; \
 	done
 	$(AR) $(ARFLAGS) $@ temp_objs/*.o
-	rm -rf temp_objs
+	$(RMDIR) temp_objs
 
 $(DEBUG_TARGET): $(DEBUG_LIBS)
 	@echo "Linking libraries into $(DEBUG_TARGET)..."
-	rm -f $@
-	mkdir -p temp_objs
+	$(RM) $@
+	$(MKDIR) temp_objs
 	@for lib in $(DEBUG_LIBS); do \
 	  cd temp_objs && $(AR) x ../$$lib; \
 	  cd ..; \
 	done
 	$(AR) $(ARFLAGS) $@ temp_objs/*.o
-	rm -rf temp_objs
+	$(RMDIR) temp_objs
 
 %.a:
 	$(MAKE) -C $(dir $@)
@@ -84,12 +94,12 @@ clean:
 	@for dir in $(SUBDIRS); do \
 	  $(MAKE) -C $$dir clean; \
 	done
-	rm -f $(TARGET) $(DEBUG_TARGET)
+	$(RM) $(TARGET) $(DEBUG_TARGET)
 
 fclean: clean
 	@for dir in $(SUBDIRS); do \
 	  $(MAKE) -C $$dir fclean; \
 	done
-	rm -f $(TARGET) $(DEBUG_TARGET)
+	$(RM) $(TARGET) $(DEBUG_TARGET)
 
 .PHONY: all debug both re clean fclean
