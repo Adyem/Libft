@@ -11,12 +11,14 @@
 # include <windows.h>
 #endif
 
-#ifndef DT_DIR
-# define DT_DIR 4
-#endif
+#ifdef __WIN32
+# ifndef DT_DIR
+#  define DT_DIR 4
+# endif
 
-#ifndef DT_REG
-# define DT_REG 8
+# ifndef DT_REG
+#  define DT_REG 8
+# endif
 #endif
 
 struct linux_dirent64
