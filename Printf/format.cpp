@@ -60,7 +60,7 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
 			{
 				if (len_mod == LEN_L)
 				{
-                    unsigned long num = va_arg(args, unsigned long);
+                    uintmax_t num = va_arg(args, unsigned long);
                     ft_putunsigned_fd(num, fd, &count);
                 }
 				else if (len_mod == LEN_Z)
@@ -79,13 +79,13 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
                 bool uppercase = (spec == 'X');
 				if (len_mod == LEN_L)
 				{
-                    unsigned long num = va_arg(args, unsigned long);
+                    uintmax_t num = va_arg(args, unsigned long);
                     ft_puthex_fd(num, fd, uppercase, &count);
 				}
 				else if (len_mod == LEN_Z)
 				{
                     size_t num = va_arg(args, size_t);
-					ft_puthex_fd(num, fd, uppercase, &count);
+                                        ft_puthex_fd(num, fd, uppercase, &count);
 				}
 				else
 				{

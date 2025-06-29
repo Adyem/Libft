@@ -1,6 +1,7 @@
 #include "printf_internal.hpp"
 #include <cstdarg>
 #include <unistd.h>
+#include "../Linux/linux_file.hpp"
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -19,10 +20,10 @@ size_t ft_strlen_printf(const char *s)
 
 void ft_putchar_fd(const char c, int fd, size_t *count)
 {
-    ssize_t return_value = write(fd, &c, 1);
-	(void)return_value;
+    ssize_t return_value = ft_write(fd, &c, 1);
+    (void)return_value;
     (*count)++;
-	return ;
+    return ;
 }
 
 void ft_putstr_fd(const char *s, int fd, size_t *count)
@@ -30,15 +31,19 @@ void ft_putstr_fd(const char *s, int fd, size_t *count)
 	ssize_t return_value;
     if (!s)
     {
-        return_value = write(fd, "(null)", 6);
+        return_value = ft_write(fd, "(null)", 6);
         *count += 6;
         return;
     }
     size_t len = ft_strlen_printf(s);
-    return_value = write(fd, s, len);
+#ifdef _WIN32
+    return_value = ft_write(fd, s, static_cast<unsigned int>(len));
+#else
+    return_value = ft_write(fd, s, len);
+#endif
     *count += len;
-	(void)return_value;
-	return ;
+    (void)return_value;
+    return ;
 }
 
 void ft_putnbr_fd_recursive(long n, int fd, size_t *count)
@@ -62,7 +67,7 @@ void ft_putnbr_fd(long n, int fd, size_t *count)
     return ;
 }
 
-void ft_putunsigned_fd_recursive(unsigned long n, int fd, size_t *count)
+void ft_putunsigned_fd_recursive(uintmax_t n, int fd, size_t *count)
 {
     char c;
     if (n >= 10)
@@ -72,13 +77,13 @@ void ft_putunsigned_fd_recursive(unsigned long n, int fd, size_t *count)
     return;
 }
 
-void ft_putunsigned_fd(unsigned long n, int fd, size_t *count)
+void ft_putunsigned_fd(uintmax_t n, int fd, size_t *count)
 {
     ft_putunsigned_fd_recursive(n, fd, count);
     return ;
 }
 
-void ft_puthex_fd_recursive(unsigned long n, int fd, bool uppercase, size_t *count)
+void ft_puthex_fd_recursive(uintmax_t n, int fd, bool uppercase, size_t *count)
 {
     char c;
 
@@ -97,7 +102,7 @@ void ft_puthex_fd_recursive(unsigned long n, int fd, bool uppercase, size_t *cou
     return ;
 }
 
-void ft_puthex_fd(unsigned long n, int fd, bool uppercase, size_t *count)
+void ft_puthex_fd(uintmax_t n, int fd, bool uppercase, size_t *count)
 {
     ft_puthex_fd_recursive(n, fd, uppercase, count);
     return ;
