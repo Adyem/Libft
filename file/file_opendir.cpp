@@ -15,6 +15,23 @@
 
 FT_DIR* ft_opendir(const char* directoryPath)
 {
+#ifdef _WIN32
+    char searchPath[MAX_PATH];
+    snprintf(searchPath, sizeof(searchPath), "%s\\*", directoryPath);
+    FT_DIR* directoryStream = reinterpret_cast<FT_DIR*>(cma_malloc(sizeof(FT_DIR)));
+    if (!directoryStream)
+        return ft_nullptr;
+    ft_memset(directoryStream, 0, sizeof(FT_DIR));
+    HANDLE hFind = FindFirstFileA(searchPath, &directoryStream->w_findData);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        cma_free(directoryStream);
+        return ft_nullptr;
+    }
+    directoryStream->fd = reinterpret_cast<int>(hFind);
+    directoryStream->first_read = true;
+    return directoryStream;
+#else
     int fileDescriptor = ft_open(directoryPath, O_DIRECTORY | O_RDONLY, 0);
     if (fileDescriptor < 0)
         return (ft_nullptr);
@@ -37,6 +54,7 @@ FT_DIR* ft_opendir(const char* directoryPath)
     directoryStream->buffer_used   = 0;
     directoryStream->buffer_offset = 0;
     return (directoryStream);
+#endif
 }
 
 ft_dirent* ft_readdir(FT_DIR* dir)
@@ -89,8 +107,14 @@ int ft_closedir(FT_DIR* directoryStream)
 {
     if (!directoryStream)
         return (-1);
+#ifdef _WIN32
+    FindClose(reinterpret_cast<HANDLE>(directoryStream->fd));
+    cma_free(directoryStream);
+    return (0);
+#else
     ft_close(directoryStream->fd);
     cma_free(directoryStream->buffer);
     cma_free(directoryStream);
     return (0);
+#endif
 }

@@ -7,6 +7,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#ifdef _WIN32
+# include <windows.h>
+#endif
 
 struct linux_dirent64
 {
@@ -31,6 +34,10 @@ struct FT_DIR
     size_t  buffer_size;
     ssize_t buffer_used;
     size_t  buffer_offset;
+#ifdef _WIN32
+    WIN32_FIND_DATAA w_findData;
+    bool             first_read;
+#endif
 };
 
 FT_DIR* 	ft_opendir(const char* directoryPath);
