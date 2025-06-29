@@ -16,7 +16,7 @@ static inline void normalize_slashes(char *data)
 {
 #if defined(_WIN32) || defined(_WIN64)
     if (!data)
-        return;
+        return ;
     for (size_t i = 0; data[i] != '\0'; ++i)
     {
         if (data[i] == '/')
@@ -25,6 +25,7 @@ static inline void normalize_slashes(char *data)
 #else
     (void)data;
 #endif
+    return ;
 }
 
 static inline int dir_exists_platform(const char *path)
