@@ -177,12 +177,12 @@ static inline void print_block_info_impl(Block *block)
 {
 #ifdef _WIN32
     (void)block;
-    return;
+    return ;
 #else
     if (!block)
     {
         pf_printf_fd(2, "Block pointer is NULL.\n");
-        return;
+        return ;
     }
     const char* free_status = block->free ? "Yes" : "No";
     pf_printf_fd(3, "---- Block Information ----\n");
@@ -194,9 +194,11 @@ static inline void print_block_info_impl(Block *block)
     pf_printf_fd(2, "Previous Block: %p\n", static_cast<void*>(block->prev));
     pf_printf_fd(2, "---------------------------\n");
 #endif
+    return ;
 }
 
 void print_block_info(Block *block)
 {
     print_block_info_impl(block);
+    return ;
 }

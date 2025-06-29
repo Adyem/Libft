@@ -76,6 +76,7 @@ void html_add_attr(html_node *targetNode, html_attr *newAttribute)
             currentAttribute = currentAttribute->next;
         currentAttribute->next = newAttribute;
     }
+    return ;
 }
 
 void html_add_child(html_node *parentNode, html_node *childNode)
@@ -89,6 +90,7 @@ void html_add_child(html_node *parentNode, html_node *childNode)
             lastChild = lastChild->next;
         lastChild->next = childNode;
     }
+    return ;
 }
 
 void html_append_node(html_node **headNode, html_node *newNode)
@@ -102,4 +104,5 @@ void html_append_node(html_node **headNode, html_node *newNode)
             lastNode = lastNode->next;
         lastNode->next = newNode;
     }
+    return ;
 }

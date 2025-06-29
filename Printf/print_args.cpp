@@ -42,7 +42,7 @@ void ft_putstr_fd(const char *s, int fd, size_t *count)
     {
         return_value = ft_write(fd, "(null)", 6);
         *count += 6;
-        return;
+        return ;
     }
     size_t len = ft_strlen_printf(s);
     return_value = ft_platform_write(fd, s, len);
@@ -63,7 +63,7 @@ void ft_putnbr_fd_recursive(long n, int fd, size_t *count)
         ft_putnbr_fd_recursive(n / 10, fd, count);
     c = static_cast<char>('0' + (n % 10));
     ft_putchar_fd(c, fd, count);
-    return;
+    return ;
 }
 
 void ft_putnbr_fd(long n, int fd, size_t *count)
@@ -79,7 +79,7 @@ void ft_putunsigned_fd_recursive(uintmax_t n, int fd, size_t *count)
         ft_putunsigned_fd_recursive(n / 10, fd, count);
     c = static_cast<char>('0' + (n % 10));
     ft_putchar_fd(c, fd, count);
-    return;
+    return ;
 }
 
 void ft_putunsigned_fd(uintmax_t n, int fd, size_t *count)
