@@ -103,8 +103,9 @@ int ft_socket::accept_connection()
     }
     struct sockaddr_storage client_addr;
     socklen_t addr_len = sizeof(client_addr);
-    int new_fd = ::accept(this->_socket_fd, reinterpret_cast<struct sockaddr*>(&client_addr),
-			&addr_len);
+    int new_fd = nw_accept(this->_socket_fd,
+                           reinterpret_cast<struct sockaddr*>(&client_addr),
+                           &addr_len);
     if (new_fd < 0)
     {
         ft_errno = errno + ERRNO_OFFSET;
