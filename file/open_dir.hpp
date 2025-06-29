@@ -11,6 +11,14 @@
 # include <windows.h>
 #endif
 
+#ifndef DT_DIR
+# define DT_DIR 4
+#endif
+
+#ifndef DT_REG
+# define DT_REG 8
+#endif
+
 struct linux_dirent64
 {
     uint64_t d_ino;
@@ -29,7 +37,7 @@ struct ft_dirent
 
 struct FT_DIR
 {
-    int     fd;
+    intptr_t fd;
     char*   buffer;
     size_t  buffer_size;
     ssize_t buffer_used;
