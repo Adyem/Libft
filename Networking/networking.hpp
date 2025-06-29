@@ -2,7 +2,12 @@
 #define NETWORKING_HPP
 
 #include "../CPP_class/string_class.hpp"
-#include <netinet/in.h>
+#ifdef _WIN32
+# include <winsock2.h>
+# include <ws2tcpip.h>
+#else
+# include <netinet/in.h>
+#endif
 #include <cstdint>
 
 int nw_bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);

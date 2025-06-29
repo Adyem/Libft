@@ -3,9 +3,15 @@
 #include "../Errno/errno.hpp"
 #include <cerrno>
 #include <fcntl.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <sys/socket.h>
+#ifdef _WIN32
+# include <winsock2.h>
+# include <ws2tcpip.h>
+# include <io.h>
+#else
+# include <arpa/inet.h>
+# include <unistd.h>
+# include <sys/socket.h>
+#endif
 #include "../Libft/libft.hpp"
 
 int ft_socket::create_socket(const SocketConfig &config)
@@ -27,7 +33,7 @@ int ft_socket::set_reuse_address(const SocketConfig &config)
     if (setsockopt(this->_socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
 	{
         handle_error(errno + ERRNO_OFFSET);
-        close(this->_socket_fd);
+        FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error);
     }
@@ -42,7 +48,7 @@ int ft_socket::set_non_blocking(const SocketConfig &config)
     if (flags == -1)
 	{
         handle_error(errno + ERRNO_OFFSET);
-        close(this->_socket_fd);
+        FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error);
     }
@@ -50,7 +56,7 @@ int ft_socket::set_non_blocking(const SocketConfig &config)
     if (fcntl(this->_socket_fd, F_SETFL, flags | O_NONBLOCK) == -1)
 	{
         handle_error(errno + ERRNO_OFFSET);
-        close(this->_socket_fd);
+        FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error);
     }
@@ -68,7 +74,7 @@ int ft_socket::set_timeouts(const SocketConfig &config)
         if (setsockopt(this->_socket_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0)
 		{
             handle_error(errno + ERRNO_OFFSET);
-            close(this->_socket_fd);
+            FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error);
         }
@@ -80,7 +86,7 @@ int ft_socket::set_timeouts(const SocketConfig &config)
         if (setsockopt(this->_socket_fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0)
 		{
             handle_error(errno + ERRNO_OFFSET);
-            close(this->_socket_fd);
+            FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error);
         }
@@ -100,7 +106,7 @@ int ft_socket::configure_address(const SocketConfig &config)
         if (inet_pton(AF_INET, config.ip, &addr_in->sin_addr) <= 0)
 		{
             handle_error(SOCKET_INVALID_CONFIGURATION);
-            close(this->_socket_fd);
+            FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error);
         }
@@ -113,7 +119,7 @@ int ft_socket::configure_address(const SocketConfig &config)
         if (inet_pton(AF_INET6, config.ip, &addr_in6->sin6_addr) <= 0)
 		{
             handle_error(SOCKET_INVALID_CONFIGURATION);
-            close(this->_socket_fd);
+            FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
             return (_error);
         }
@@ -121,7 +127,7 @@ int ft_socket::configure_address(const SocketConfig &config)
     else
 	{
         handle_error(SOCKET_INVALID_CONFIGURATION);
-        close(this->_socket_fd);
+        FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error);
     }
@@ -139,7 +145,7 @@ int ft_socket::bind_socket(const SocketConfig &config)
     else
     {
         handle_error(SOCKET_INVALID_CONFIGURATION);
-        close(this->_socket_fd);
+        FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error);
     }
@@ -147,7 +153,7 @@ int ft_socket::bind_socket(const SocketConfig &config)
 				addr_len) < 0)
     {
         handle_error(errno + ERRNO_OFFSET);
-        close(this->_socket_fd);
+        FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error);
     }
@@ -160,7 +166,7 @@ int ft_socket::listen_socket(const SocketConfig &config)
     if (nw_listen(this->_socket_fd, config.backlog) < 0)
 	{
         handle_error(errno + ERRNO_OFFSET);
-        close(this->_socket_fd);
+        FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error);
     }
