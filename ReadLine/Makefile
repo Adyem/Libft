@@ -61,8 +61,14 @@ $(OBJDIR) $(DEBUG_OBJDIR):
 
 CLEAN_OBJS := $(wildcard $(OBJDIR)/*.o) $(wildcard $(DEBUG_OBJDIR)/*.o)
 
+ifeq ($(OS),Windows_NT)
+    CLEAN_FILES := $(subst /,\\,$(CLEAN_OBJS))
+else
+    CLEAN_FILES := $(CLEAN_OBJS)
+endif
+
 clean:
-	-$(RM) $(CLEAN_OBJS)
+	-$(RM) $(CLEAN_FILES)
 
 fclean: clean
 	-$(RM) $(TARGET) $(DEBUG_TARGET)
