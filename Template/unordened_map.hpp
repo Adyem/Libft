@@ -210,7 +210,7 @@ ft_unord_map<Key, MappedType>::ft_unord_map(size_t initialCapacity)
         setError(UNORD_MAP_MEMORY);
         _data = ft_nullptr;
         _occupied = ft_nullptr;
-        return;
+        return ;
     }
     _data = static_cast<ft_pair<Key, MappedType>*>(rawData);
     void* rawOccupied = cma_malloc(sizeof(bool) * _capacity);
@@ -220,7 +220,7 @@ ft_unord_map<Key, MappedType>::ft_unord_map(size_t initialCapacity)
         cma_free(_data);
         _data = ft_nullptr;
         _occupied = ft_nullptr;
-        return;
+        return ;
     }
     _occupied = static_cast<bool*>(rawOccupied);
     size_t i = 0;
@@ -245,7 +245,7 @@ ft_unord_map<Key, MappedType>::ft_unord_map(const ft_unord_map<Key, MappedType>&
             _occupied = ft_nullptr;
             _size = 0;
             _capacity = 0;
-            return;
+            return ;
         }
         _data = static_cast<ft_pair<Key, MappedType>*>(rawData);
         void* rawOccupied = cma_malloc(sizeof(bool) * _capacity);
@@ -257,7 +257,7 @@ ft_unord_map<Key, MappedType>::ft_unord_map(const ft_unord_map<Key, MappedType>&
             _occupied = ft_nullptr;
             _size = 0;
             _capacity = 0;
-            return;
+            return ;
         }
         _occupied = static_cast<bool*>(rawOccupied);
         size_t i = 0;
@@ -472,7 +472,7 @@ void ft_unord_map<Key, MappedType>::resize(size_t newCapacity)
     if (!rawData)
     {
         setError(UNORD_MAP_MEMORY);
-        return;
+        return ;
     }
     ft_pair<Key, MappedType>* newData = static_cast<ft_pair<Key, MappedType>*>(rawData);
     void* rawOccupied = cma_malloc(sizeof(bool) * newCapacity);
@@ -480,7 +480,7 @@ void ft_unord_map<Key, MappedType>::resize(size_t newCapacity)
     {
         setError(UNORD_MAP_MEMORY);
         cma_free(newData);
-        return;
+        return ;
     }
     bool* newOcc = static_cast<bool*>(rawOccupied);
     size_t i = 0;
@@ -511,6 +511,7 @@ void ft_unord_map<Key, MappedType>::resize(size_t newCapacity)
     }
     cma_free(oldData);
     cma_free(oldOcc);
+    return ;
 }
 
 template <typename Key, typename MappedType>
@@ -521,13 +522,13 @@ void ft_unord_map<Key, MappedType>::insert(const Key& key, const MappedType& val
     if (idx != _capacity)
     {
         _data[idx].second = value;
-        return;
+        return ;
     }
     if ((_size * 2) >= _capacity)
     {
         resize(_capacity * 2);
         if (_error != ER_SUCCESS)
-            return;
+            return ;
     }
     size_t start = hashKey(key);
     size_t i = start;
@@ -538,12 +539,13 @@ void ft_unord_map<Key, MappedType>::insert(const Key& key, const MappedType& val
             construct_at(&_data[i], ft_pair<Key, MappedType>(key, value));
             _occupied[i] = true;
             ++_size;
-            return;
+            return ;
         }
         i = (i + 1) % _capacity;
         if (i == start)
-            return;
+            return ;
     }
+    return ;
 }
 
 template <typename Key, typename MappedType>
@@ -569,7 +571,7 @@ void ft_unord_map<Key, MappedType>::remove(const Key& key)
 {
     size_t idx = findIndex(key);
     if (idx == _capacity)
-        return;
+        return ;
     destroy_at(&_data[idx]);
     _occupied[idx] = false;
     --_size;
@@ -587,6 +589,7 @@ void ft_unord_map<Key, MappedType>::remove(const Key& key)
         }
         next = (next + 1) % _capacity;
     }
+    return ;
 }
 
 template <typename Key, typename MappedType>
@@ -611,6 +614,7 @@ void ft_unord_map<Key, MappedType>::clear()
         i++;
     }
     _size = 0;
+    return ;
 }
 
 template <typename Key, typename MappedType>

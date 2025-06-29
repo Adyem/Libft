@@ -25,11 +25,13 @@ static inline void disable_raw_mode_platform()
 #else
     tcsetattr(STDIN_FILENO, TCSANOW, &orig_termios);
 #endif
+    return ;
 }
 
 void rl_disable_raw_mode()
 {
     disable_raw_mode_platform();
+    return ;
 }
 
 static inline int enable_raw_mode_platform()
