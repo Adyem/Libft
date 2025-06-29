@@ -114,7 +114,7 @@ ft_string& ft_string::operator=(ft_string&& other) noexcept
         other._capacity = 0;
         other._errorCode = 0;
     }
-    return *this;
+    return (*this);
 }
 
 ft_string::~ft_string()

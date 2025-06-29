@@ -11,9 +11,9 @@
 static inline ssize_t ft_platform_write(int fd, const char *s, size_t len)
 {
 #ifdef _WIN32
-    return ft_write(fd, s, static_cast<unsigned int>(len));
+    return (ft_write(fd, s, static_cast<unsigned int>(len)));
 #else
-    return ft_write(fd, s, len);
+    return (ft_write(fd, s, len));
 #endif
 }
 

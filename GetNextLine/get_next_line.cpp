@@ -15,8 +15,8 @@ static char* allocate_new_string(char* string_1, char* string_2)
         total_len += ft_strlen(string_2);
     new_str = static_cast<char*>(cma_malloc(total_len + 1));
     if (!new_str)
-        return ft_nullptr;
-    return new_str;
+        return (ft_nullptr);
+    return (new_str);
 }
 
 char* ft_strjoin_gnl(char* string_1, char* string_2)
@@ -26,10 +26,10 @@ char* ft_strjoin_gnl(char* string_1, char* string_2)
     int index;
 
     if (!string_1 && !string_2)
-        return ft_nullptr;
+        return (ft_nullptr);
     result = allocate_new_string(string_1, string_2);
     if (!result)
-        return ft_nullptr;
+        return (ft_nullptr);
     index = 0;
     if (string_1)
         while (*string_1)
@@ -39,7 +39,7 @@ char* ft_strjoin_gnl(char* string_1, char* string_2)
             result[index++] = *string_2++;
     result[index] = '\0';
     cma_free(original_string);
-    return result;
+    return (result);
 }
 
 static char* leftovers(char* readed_string)
@@ -53,17 +53,17 @@ static char* leftovers(char* readed_string)
     if (!readed_string[read_index])
     {
         cma_free(readed_string);
-        return ft_nullptr;
+        return (ft_nullptr);
     }
     string = static_cast<char*>(cma_malloc(ft_strlen(readed_string) - read_index + 1));
     if (!string)
-        return ft_nullptr;
+        return (ft_nullptr);
     read_index++;
     while (readed_string[read_index])
         string[write_index++] = readed_string[read_index++];
     string[write_index] = '\0';
     cma_free(readed_string);
-    return string;
+    return (string);
 }
 
 static char* malloc_gnl(char* readed_string, size_t i)
@@ -75,8 +75,8 @@ static char* malloc_gnl(char* readed_string, size_t i)
     else
         string = static_cast<char*>(cma_malloc(i + 1));
     if (!string)
-        return ft_nullptr;
-    return string;
+        return (ft_nullptr);
+    return (string);
 }
 
 static char* fetch_line(char* readed_string)
@@ -85,12 +85,12 @@ static char* fetch_line(char* readed_string)
     char* string;
 
     if (!readed_string[index])
-        return ft_nullptr;
+        return (ft_nullptr);
     while (readed_string[index] && readed_string[index] != '\n')
         index++;
     string = malloc_gnl(readed_string, index);
     if (!string)
-        return ft_nullptr;
+        return (ft_nullptr);
     index = 0;
     while (readed_string[index] && readed_string[index] != '\n')
     {
@@ -103,7 +103,7 @@ static char* fetch_line(char* readed_string)
         index++;
     }
     string[index] = '\0';
-    return string;
+    return (string);
 }
 
 static char* read_fd(ft_file& file, char* readed_string)
@@ -113,7 +113,7 @@ static char* read_fd(ft_file& file, char* readed_string)
 
     buffer = static_cast<char*>(cma_malloc(BUFFER_SIZE + 1));
     if (!buffer)
-        return ft_nullptr;
+        return (ft_nullptr);
     readed_bytes = 1;
     while (!ft_strchr(readed_string, '\n') && readed_bytes != 0)
     {
@@ -122,18 +122,18 @@ static char* read_fd(ft_file& file, char* readed_string)
         {
             cma_free(buffer);
             cma_free(readed_string);
-            return ft_nullptr;
+            return (ft_nullptr);
         }
         buffer[readed_bytes] = '\0';
         readed_string = ft_strjoin_gnl(readed_string, buffer);
         if (!readed_string)
         {
             cma_free(buffer);
-            return ft_nullptr;
+            return (ft_nullptr);
         }
     }
     cma_free(buffer);
-    return readed_string;
+    return (readed_string);
 }
 
 char	*get_next_line(ft_file &file)
