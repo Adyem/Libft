@@ -4,9 +4,15 @@
 #include <cstring>
 #include <cerrno>
 #include <fcntl.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <sys/socket.h>
+#ifdef _WIN32
+# include <winsock2.h>
+# include <ws2tcpip.h>
+# include <io.h>
+#else
+# include <arpa/inet.h>
+# include <unistd.h>
+# include <sys/socket.h>
+#endif
 
 int ft_socket::setup_client(const SocketConfig &config)
 {
@@ -28,7 +34,7 @@ int ft_socket::setup_client(const SocketConfig &config)
     else
     {
         handle_error(SOCKET_INVALID_CONFIGURATION);
-        close(this->_socket_fd);
+        FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error);
     }
@@ -36,7 +42,7 @@ int ft_socket::setup_client(const SocketConfig &config)
 				addr_len) < 0)
     {
         handle_error(errno + ERRNO_OFFSET);
-        close(this->_socket_fd);
+        FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error);
     }
