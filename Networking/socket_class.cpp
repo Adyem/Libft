@@ -19,6 +19,7 @@
 ft_socket::ft_socket() : _socket_fd(-1), _error(ER_SUCCESS)
 {
 	ft_bzero(&this->_address, sizeof(this->_address));
+	return ;
 }
 
 ssize_t ft_socket::send_data(const void *data, size_t size, int flags, int fd)
