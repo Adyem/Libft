@@ -44,9 +44,14 @@ ssize_t ft_socket::send_data(const void *data, size_t size, int flags, int fd)
     return (-1);
 }
 
-int	ft_socket::get_fd() const
+int ft_socket::get_fd() const
 {
-	return (this->_socket_fd);
+        return (this->_socket_fd);
+}
+
+const struct sockaddr_storage &ft_socket::get_address() const
+{
+        return (this->_address);
 }
 
 ssize_t ft_socket::broadcast_data(const void *data, size_t size, int flags, int exception)
