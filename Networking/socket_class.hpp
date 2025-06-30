@@ -66,6 +66,8 @@ class ft_socket
 		ssize_t 	broadcast_data(const void *data, size_t size, int flags, int exception);
 		ssize_t 	send_data(const void *data, size_t size, int flags, int fd);
         bool        disconnect_client(int fd);
+        void        disconnect_all_clients();
+        size_t      get_client_count() const;
 		int			get_fd() const;
 };
 
