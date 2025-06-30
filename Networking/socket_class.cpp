@@ -162,6 +162,19 @@ size_t ft_socket::get_client_count() const
     return (this->_connected.size());
 }
 
+bool ft_socket::is_client_connected(int fd) const
+{
+    size_t index = 0;
+
+    while (index < this->_connected.size())
+    {
+        if (this->_connected[index].get_fd() == fd)
+            return (true);
+        index++;
+    }
+    return (false);
+}
+
 ft_socket::ft_socket(int fd, const sockaddr_storage &addr) : _address(addr), _socket_fd(fd),
 						_error(ER_SUCCESS)
 {
@@ -245,6 +258,11 @@ bool ft_socket::close_socket()
     }
     this->_error = ER_SUCCESS;
     return (true);
+}
+
+int ft_socket::get_error() const
+{
+    return (this->_error);
 }
 
 const char* ft_socket::get_error_message() const
