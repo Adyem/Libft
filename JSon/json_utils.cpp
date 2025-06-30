@@ -8,10 +8,10 @@ json_group *json_find_group(json_group *head, const char *name)
     while (current)
     {
         if (current->name && std::strcmp(current->name, name) == 0)
-            return current;
+            return (current);
         current = current->next;
     }
-    return ft_nullptr;
+    return (ft_nullptr);
 }
 
 json_item *json_find_item(json_group *group, const char *key)
@@ -22,8 +22,8 @@ json_item *json_find_item(json_group *group, const char *key)
     while (current)
     {
         if (current->key && std::strcmp(current->key, key) == 0)
-            return current;
+            return (current);
         current = current->next;
     }
-    return ft_nullptr;
+    return (ft_nullptr);
 }
