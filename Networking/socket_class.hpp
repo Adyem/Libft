@@ -70,6 +70,7 @@ class ft_socket
         size_t      get_client_count() const;
         bool        is_client_connected(int fd) const;
 		int			get_fd() const;
+		const struct sockaddr_storage &get_address() const;
 };
 
 #endif
