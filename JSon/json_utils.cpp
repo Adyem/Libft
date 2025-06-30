@@ -2,6 +2,8 @@
 #include "json.hpp"
 #include "../CPP_class/nullptr.hpp"
 #include "../Libft/libft.hpp"
+#include "../CMA/CMA.hpp"
+#include "../Errno/errno.hpp"
 
 json_group *json_find_group(json_group *head, const char *name)
 {
@@ -52,6 +54,63 @@ void json_remove_item(json_group *group, const char *key)
         }
         previous = current;
         current = current->next;
+    }
+    return ;
+}
+
+void json_update_item(json_group *group, const char *key, const char *value)
+{
+    if (!group)
+        return ;
+    json_item *item = json_find_item(group, key);
+    if (!item)
+        return ;
+    if (item->value)
+        delete[] item->value;
+    item->value = cma_strdup(value);
+    if (!item->value)
+    {
+        ft_errno = JSON_MALLOC_FAIL;
+        return ;
+    }
+    return ;
+}
+
+void json_update_item(json_group *group, const char *key, const int value)
+{
+    if (!group)
+        return ;
+    json_item *item = json_find_item(group, key);
+    if (!item)
+        return ;
+    if (item->value)
+        delete[] item->value;
+    item->value = cma_itoa(value);
+    if (!item->value)
+    {
+        ft_errno = JSON_MALLOC_FAIL;
+        return ;
+    }
+    return ;
+}
+
+void json_update_item(json_group *group, const char *key, const bool value)
+{
+    if (!group)
+        return ;
+    json_item *item = json_find_item(group, key);
+    if (!item)
+        return ;
+    if (item->value)
+        delete[] item->value;
+    if (value == true)
+        item->value = cma_strdup("true");
+    else
+        item->value = cma_strdup("false");
+    if (!item->value)
+    {
+        ft_errno = JSON_MALLOC_FAIL;
+        return ;
     }
     return ;
 }
