@@ -25,7 +25,7 @@ int 		json_write_to_file(const char *filename, json_group *groups);
 json_group  *json_read_from_file(const char *filename);
 void 		json_free_items(json_item *item);
 void 		json_free_groups(json_group *group);
-json_group      *json_find_group(json_group *head, const char *name);
-json_item       *json_find_item(json_group *group, const char *key);
+json_group  *json_find_group(json_group *head, const char *name);
+json_item   *json_find_item(json_group *group, const char *key);
 
 #endif
