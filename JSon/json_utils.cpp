@@ -114,3 +114,29 @@ void json_update_item(json_group *group, const char *key, const bool value)
     }
     return ;
 }
+
+void json_remove_group(json_group **head, const char *name)
+{
+    if (!head || !(*head))
+        return ;
+    json_group *current = *head;
+    json_group *previous = ft_nullptr;
+    while (current)
+    {
+        if (current->name && ft_strcmp(current->name, name) == 0)
+        {
+            if (previous)
+                previous->next = current->next;
+            else
+                *head = current->next;
+            if (current->name)
+                delete[] current->name;
+            json_free_items(current->items);
+            delete current;
+            return ;
+        }
+        previous = current;
+        current = current->next;
+    }
+    return ;
+}

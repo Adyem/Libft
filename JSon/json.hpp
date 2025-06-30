@@ -27,6 +27,7 @@ void 		json_free_items(json_item *item);
 void 		json_free_groups(json_group *group);
 json_group  *json_find_group(json_group *head, const char *name);
 json_item   *json_find_item(json_group *group, const char *key);
+void        json_remove_group(json_group **head, const char *name);
 void        json_remove_item(json_group *group, const char *key);
 void        json_update_item(json_group *group, const char *key, const char *value);
 void        json_update_item(json_group *group, const char *key, const int value);
