@@ -145,6 +145,23 @@ bool ft_socket::disconnect_client(int fd)
     return (false);
 }
 
+void ft_socket::disconnect_all_clients()
+{
+    size_t index = 0;
+    while (index < this->_connected.size())
+    {
+        this->_connected[index].close_socket();
+        index++;
+    }
+    this->_connected.clear();
+    return ;
+}
+
+size_t ft_socket::get_client_count() const
+{
+    return (this->_connected.size());
+}
+
 ft_socket::ft_socket(int fd, const sockaddr_storage &addr) : _address(addr), _socket_fd(fd),
 						_error(ER_SUCCESS)
 {
