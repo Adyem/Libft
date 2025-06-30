@@ -9,6 +9,7 @@ static void skip_ws(const std::string &s, size_t &i)
 {
     while (i < s.size() && std::isspace(static_cast<unsigned char>(s[i])))
         i++;
+    return ;
 }
 
 static std::string parse_string(const std::string &s, size_t &i)
