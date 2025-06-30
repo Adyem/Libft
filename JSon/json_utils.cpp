@@ -18,7 +18,7 @@ json_group *json_find_group(json_group *head, const char *name)
 json_item *json_find_item(json_group *group, const char *key)
 {
     if (!group)
-        return ft_nullptr;
+        return (ft_nullptr);
     json_item *current = group->items;
     while (current)
     {
@@ -27,4 +27,31 @@ json_item *json_find_item(json_group *group, const char *key)
         current = current->next;
     }
     return (ft_nullptr);
+}
+
+void json_remove_item(json_group *group, const char *key)
+{
+    if (!group)
+        return ;
+    json_item *current = group->items;
+    json_item *previous = ft_nullptr;
+    while (current)
+    {
+        if (current->key && ft_strcmp(current->key, key) == 0)
+        {
+            if (previous)
+                previous->next = current->next;
+            else
+                group->items = current->next;
+            if (current->key)
+                delete[] current->key;
+            if (current->value)
+                delete[] current->value;
+            delete current;
+            return ;
+        }
+        previous = current;
+        current = current->next;
+    }
+    return ;
 }
