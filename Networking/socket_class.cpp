@@ -94,7 +94,7 @@ ssize_t ft_socket::broadcast_data(const void *data, size_t size, int flags)
     return (total_bytes_sent);
 }
 
-int ft_socket::accept_connection() 
+int ft_socket::accept_connection()
 {
     if (this->_socket_fd < 0)
     {
@@ -121,6 +121,28 @@ int ft_socket::accept_connection()
 		this->_error = ft_errno;
 	}
     return (new_fd);
+}
+
+bool ft_socket::disconnect_client(int fd)
+{
+    size_t index = 0;
+
+    while (index < this->_connected.size())
+    {
+        if (this->_connected[index].get_fd() == fd)
+        {
+            size_t last = this->_connected.size() - 1;
+            if (index != last)
+                    this->_connected[index] = std::move(this->_connected[last]);
+            this->_connected.pop_back();
+            this->_error = ER_SUCCESS;
+            return (true);
+        }
+        index++;
+    }
+    ft_errno = FT_EINVAL;
+    this->_error = ft_errno;
+    return (false);
 }
 
 ft_socket::ft_socket(int fd, const sockaddr_storage &addr) : _address(addr), _socket_fd(fd),
