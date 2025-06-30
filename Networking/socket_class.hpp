@@ -68,6 +68,7 @@ class ft_socket
         bool        disconnect_client(int fd);
         void        disconnect_all_clients();
         size_t      get_client_count() const;
+        bool        is_client_connected(int fd) const;
 		int			get_fd() const;
 };
 
