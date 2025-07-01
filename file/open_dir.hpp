@@ -55,7 +55,7 @@ FT_DIR* 	ft_opendir(const char* directoryPath);
 int 		ft_closedir(FT_DIR* directoryStream);
 ft_dirent	*ft_readdir(FT_DIR* directoryStream);
 
-int             dir_exists(const char *rel_path);
-int             file_create_directory(const char* path, mode_t mode);
+int         dir_exists(const char *rel_path);
+int         file_create_directory(const char* path, mode_t mode);
 
 #endif
