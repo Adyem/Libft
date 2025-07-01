@@ -39,13 +39,16 @@ int ft_socket::setup_client(const SocketConfig &config)
         return (this->_error);
     }
     if (nw_connect(this->_socket_fd, reinterpret_cast<const struct sockaddr*>(&this->_address),
-				addr_len) < 0)
+                                addr_len) < 0)
     {
         handle_error(errno + ERRNO_OFFSET);
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error);
     }
+    if (!config.multicast_group.empty())
+        if (join_multicast_group(config) != ER_SUCCESS)
+            return (this->_error);
     this->_error = ER_SUCCESS;
     return (this->_error);
 }

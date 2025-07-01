@@ -92,12 +92,14 @@ const char* ft_strerror(int error_code)
 		return ("Deck memory allocation");
 	else if (error_code == SFML_WINDOW_CREATE_FAIL)
 		return ("Failed to create window");
-	else if (error_code == CHECK_DIR_FAIL)
-		return ("Check Directory: Invalid path");
-	else if (error_code == JSON_MALLOC_FAIL)
-		return ("JSON: Malloc failure");
-	else if (error_code > ERRNO_OFFSET)
-	{
+        else if (error_code == CHECK_DIR_FAIL)
+                return ("Check Directory: Invalid path");
+        else if (error_code == JSON_MALLOC_FAIL)
+                return ("JSON: Malloc failure");
+        else if (error_code == SOCKET_JOIN_GROUP_FAILED)
+                return ("Socket: Join multicast group failed");
+        else if (error_code > ERRNO_OFFSET)
+        {
         int standard_errno = error_code - ERRNO_OFFSET;
         const char *message = strerror(standard_errno);
         if (message)

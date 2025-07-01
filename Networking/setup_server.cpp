@@ -239,6 +239,73 @@ int ft_socket::setup_server(const SocketConfig &config)
         return (this->_error);
     if (listen_socket(config) != ER_SUCCESS)
         return (this->_error);
+    if (!config.multicast_group.empty())
+        if (join_multicast_group(config) != ER_SUCCESS)
+            return (this->_error);
     this->_error = ER_SUCCESS;
     return (this->_error);
+}
+
+int ft_socket::join_multicast_group(const SocketConfig &config)
+{
+    if (config.multicast_group.empty())
+        return (ER_SUCCESS);
+    if (config.address_family == AF_INET)
+    {
+        struct ip_mreq mreq;
+        ft_bzero(&mreq, sizeof(mreq));
+        if (inet_pton(AF_INET, config.multicast_group.c_str(), &mreq.imr_multiaddr) <= 0)
+        {
+            handle_error(SOCKET_INVALID_CONFIGURATION);
+            FT_CLOSE_SOCKET(this->_socket_fd);
+            this->_socket_fd = -1;
+            return (this->_error);
+        }
+        if (config.multicast_interface.empty())
+            mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+        else if (inet_pton(AF_INET, config.multicast_interface.c_str(), &mreq.imr_interface) <= 0)
+        {
+            handle_error(SOCKET_INVALID_CONFIGURATION);
+            FT_CLOSE_SOCKET(this->_socket_fd);
+            this->_socket_fd = -1;
+            return (this->_error);
+        }
+        if (setsockopt(this->_socket_fd, IPPROTO_IP, IP_ADD_MEMBERSHIP,
+                       reinterpret_cast<const char*>(&mreq), sizeof(mreq)) < 0)
+        {
+            handle_error(SOCKET_JOIN_GROUP_FAILED);
+            FT_CLOSE_SOCKET(this->_socket_fd);
+            this->_socket_fd = -1;
+            return (this->_error);
+        }
+    }
+    else if (config.address_family == AF_INET6)
+    {
+        struct ipv6_mreq mreq6;
+        ft_bzero(&mreq6, sizeof(mreq6));
+        if (inet_pton(AF_INET6, config.multicast_group.c_str(), &mreq6.ipv6mr_multiaddr) <= 0)
+        {
+            handle_error(SOCKET_INVALID_CONFIGURATION);
+            FT_CLOSE_SOCKET(this->_socket_fd);
+            this->_socket_fd = -1;
+            return (this->_error);
+        }
+        mreq6.ipv6mr_interface = 0;
+        if (setsockopt(this->_socket_fd, IPPROTO_IPV6, IPV6_JOIN_GROUP,
+                       reinterpret_cast<const char*>(&mreq6), sizeof(mreq6)) < 0)
+        {
+            handle_error(SOCKET_JOIN_GROUP_FAILED);
+            FT_CLOSE_SOCKET(this->_socket_fd);
+            this->_socket_fd = -1;
+            return (this->_error);
+        }
+    }
+    else
+    {
+        handle_error(SOCKET_INVALID_CONFIGURATION);
+        FT_CLOSE_SOCKET(this->_socket_fd);
+        this->_socket_fd = -1;
+        return (this->_error);
+    }
+    return (ER_SUCCESS);
 }

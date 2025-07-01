@@ -72,6 +72,7 @@ class ft_socket
         bool        is_client_connected(int fd) const;
 		int			get_fd() const;
 		const struct sockaddr_storage &get_address() const;
+		int			join_multicast_group(const SocketConfig &config);
 };
 
 #endif
