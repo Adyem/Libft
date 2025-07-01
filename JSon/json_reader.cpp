@@ -1,5 +1,5 @@
 #include <cctype>
-#include <string>
+#include "../Libft/libft.hpp"
 #include "json.hpp"
 #include "../GetNextLine/get_next_line.hpp"
 #include "../CMA/CMA.hpp"
@@ -12,63 +12,66 @@ static void skip_ws(const char *s, size_t &i)
     return ;
 }
 
-static char *parse_string(const std::string &s, size_t &i)
+static char *parse_string(const char *s, size_t &i)
 {
-    if (i >= s.size() || s[i] != '"')
+    size_t len = ft_strlen_size_t(s);
+    if (i >= len || s[i] != '"')
         return (ft_nullptr);
     i++;
     size_t start = i;
-    while (i < s.size() && s[i] != '"')
+    while (i < len && s[i] != '"')
         i++;
-    char *result = cma_substr(s.c_str(), start, i - start);
-    if (i < s.size() && s[i] == '"')
+    char *result = cma_substr(s, start, i - start);
+    if (i < len && s[i] == '"')
         i++;
     return (result);
 }
 
-static char *parse_number(const std::string &s, size_t &i)
+static char *parse_number(const char *s, size_t &i)
 {
+    size_t len = ft_strlen_size_t(s);
     size_t start = i;
-    if (i < s.size() && (s[i] == '-' || s[i] == '+'))
+    if (i < len && (s[i] == '-' || s[i] == '+'))
         i++;
     bool has_digits = false;
-    while (i < s.size() && std::isdigit(static_cast<unsigned char>(s[i])))
+    while (i < len && std::isdigit(static_cast<unsigned char>(s[i])))
     {
         i++;
         has_digits = true;
     }
-    if (i < s.size() && s[i] == '.')
+    if (i < len && s[i] == '.')
     {
         i++;
-        while (i < s.size() && std::isdigit(static_cast<unsigned char>(s[i])))
+        while (i < len && std::isdigit(static_cast<unsigned char>(s[i])))
             i++;
     }
-    if (i < s.size() && (s[i] == 'e' || s[i] == 'E'))
+    if (i < len && (s[i] == 'e' || s[i] == 'E'))
     {
         i++;
-        if (i < s.size() && (s[i] == '-' || s[i] == '+'))
+        if (i < len && (s[i] == '-' || s[i] == '+'))
             i++;
-        while (i < s.size() && std::isdigit(static_cast<unsigned char>(s[i])))
+        while (i < len && std::isdigit(static_cast<unsigned char>(s[i])))
             i++;
     }
     if (!has_digits)
         return (ft_nullptr);
-    return (cma_substr(s.c_str(), start, i - start));
+    return (cma_substr(s, start, i - start));
 }
 
-static char *parse_value(const std::string &s, size_t &i)
+static char *parse_value(const char *s, size_t &i)
 {
-    skip_ws(s.c_str(), i);
-    if (i >= s.size())
+    skip_ws(s, i);
+    size_t len = ft_strlen_size_t(s);
+    if (i >= len)
         return (ft_nullptr);
     if (s[i] == '"')
         return (parse_string(s, i));
-    if (s.compare(i, 4, "true") == 0)
+    if (len - i >= 4 && ft_strncmp(s + i, "true", 4) == 0)
     {
         i += 4;
         return (cma_strdup("true"));
     }
-    if (s.compare(i, 5, "false") == 0)
+    if (len - i >= 5 && ft_strncmp(s + i, "false", 5) == 0)
     {
         i += 5;
         return (cma_strdup("false"));
@@ -80,36 +83,36 @@ static char *parse_value(const std::string &s, size_t &i)
 
 static json_item *parse_items(const char *s, size_t &i)
 {
-    std::string str(s);
+    size_t len = ft_strlen_size_t(s);
     json_item *head = ft_nullptr;
     json_item *tail = ft_nullptr;
     skip_ws(s, i);
-    if (i >= str.size() || str[i] != '{')
+    if (i >= len || s[i] != '{')
         return (ft_nullptr);
     i++;
-    while (i < str.size())
+    while (i < len)
     {
         skip_ws(s, i);
-        if (i < str.size() && str[i] == '}')
+        if (i < len && s[i] == '}')
         {
             i++;
             break;
         }
-        char *key = parse_string(str, i);
+        char *key = parse_string(s, i);
         if (!key)
         {
             json_free_items(head);
             return (ft_nullptr);
         }
         skip_ws(s, i);
-        if (i >= str.size() || str[i] != ':')
+        if (i >= len || s[i] != ':')
         {
             cma_free(key);
             break;
         }
         i++;
         skip_ws(s, i);
-        char *value = parse_value(str, i);
+        char *value = parse_value(s, i);
         if (!value)
         {
             cma_free(key);
@@ -132,7 +135,7 @@ static json_item *parse_items(const char *s, size_t &i)
             tail = item;
         }
         skip_ws(s, i);
-        if (i < str.size() && str[i] == ',')
+        if (i < len && s[i] == ',')
         {
             i++;
             continue;
@@ -146,24 +149,44 @@ json_group *json_read_from_file(const char *filename)
     char **lines = ft_open_and_read_file(filename);
     if (!lines)
         return (ft_nullptr);
-    std::string content;
+    char *content = cma_strdup("");
+    if (!content)
+    {
+        for (int idx = 0; lines[idx]; ++idx)
+            cma_free(lines[idx]);
+        cma_free(lines);
+        return (ft_nullptr);
+    }
     for (int idx = 0; lines[idx]; ++idx)
     {
-        content += lines[idx];
+        char *tmp = cma_strjoin(content, lines[idx]);
+        cma_free(content);
         cma_free(lines[idx]);
+        if (!tmp)
+        {
+            for (int j = idx + 1; lines[j]; ++j)
+                cma_free(lines[j]);
+            cma_free(lines);
+            return (ft_nullptr);
+        }
+        content = tmp;
     }
     cma_free(lines);
     size_t i = 0;
-    skip_ws(content.c_str(), i);
-    if (i >= content.size() || content[i] != '{')
+    skip_ws(content, i);
+    size_t len = ft_strlen_size_t(content);
+    if (i >= len || content[i] != '{')
+    {
+        cma_free(content);
         return (ft_nullptr);
+    }
     i++;
     json_group *head = ft_nullptr;
     json_group *tail = ft_nullptr;
-    while (i < content.size())
+    while (i < len)
     {
-        skip_ws(content.c_str(), i);
-        if (i < content.size() && content[i] == '}')
+        skip_ws(content, i);
+        if (i < len && content[i] == '}')
         {
             i++;
             break;
@@ -172,20 +195,22 @@ json_group *json_read_from_file(const char *filename)
         if (!group_name)
         {
             json_free_groups(head);
+            cma_free(content);
             return (ft_nullptr);
         }
-        skip_ws(content.c_str(), i);
-        if (i >= content.size() || content[i] != ':')
+        skip_ws(content, i);
+        if (i >= len || content[i] != ':')
         {
             cma_free(group_name);
             break;
         }
         i++;
-        json_item *items = parse_items(content.c_str(), i);
+        json_item *items = parse_items(content, i);
         if (!items)
         {
             cma_free(group_name);
             json_free_groups(head);
+            cma_free(content);
             return (ft_nullptr);
         }
         json_group *group = json_create_json_group(group_name);
@@ -194,6 +219,7 @@ json_group *json_read_from_file(const char *filename)
         {
             json_free_items(items);
             json_free_groups(head);
+            cma_free(content);
             return (ft_nullptr);
         }
         group->items = items;
@@ -204,13 +230,14 @@ json_group *json_read_from_file(const char *filename)
             tail->next = group;
             tail = group;
         }
-        skip_ws(content.c_str(), i);
-        if (i < content.size() && content[i] == ',')
+        skip_ws(content, i);
+        if (i < len && content[i] == ',')
         {
             i++;
             continue;
         }
     }
+    cma_free(content);
     return (head);
 }
 
