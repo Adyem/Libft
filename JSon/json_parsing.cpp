@@ -90,6 +90,78 @@ int json_write_to_file(const char *filename, json_group *groups)
     return (0);
 }
 
+char *json_write_to_string(json_group *groups)
+{
+    char *result = cma_strdup("{\n");
+    if (!result)
+        return (ft_nullptr);
+    json_group *group_ptr = groups;
+    while (group_ptr)
+    {
+        char *line = cma_strjoin_multiple(4, "  \"", group_ptr->name, "\": {\n");
+        if (!line)
+        {
+            cma_free(result);
+            return (ft_nullptr);
+        }
+        char *tmp = cma_strjoin(result, line);
+        cma_free(result);
+        cma_free(line);
+        if (!tmp)
+            return (ft_nullptr);
+        result = tmp;
+        json_item *item_ptr = group_ptr->items;
+        while (item_ptr)
+        {
+            if (item_ptr->next)
+                line = cma_strjoin_multiple(6, "    \"", item_ptr->key, "\": \"", item_ptr->value, "\",\n");
+            else
+                line = cma_strjoin_multiple(5, "    \"", item_ptr->key, "\": \"", item_ptr->value, "\"\n");
+            if (!line)
+            {
+                cma_free(result);
+                return (ft_nullptr);
+            }
+            tmp = cma_strjoin(result, line);
+            cma_free(result);
+            cma_free(line);
+            if (!tmp)
+                return (ft_nullptr);
+            result = tmp;
+            item_ptr = item_ptr->next;
+        }
+        if (group_ptr->next)
+            line = cma_strdup("  },\n");
+        else
+            line = cma_strdup("  }\n");
+        if (!line)
+        {
+            cma_free(result);
+            return (ft_nullptr);
+        }
+        tmp = cma_strjoin(result, line);
+        cma_free(result);
+        cma_free(line);
+        if (!tmp)
+            return (ft_nullptr);
+        result = tmp;
+        group_ptr = group_ptr->next;
+    }
+    char *end = cma_strdup("}\n");
+    if (!end)
+    {
+        cma_free(result);
+        return (ft_nullptr);
+    }
+    char *tmp = cma_strjoin(result, end);
+    cma_free(result);
+    cma_free(end);
+    if (!tmp)
+        return (ft_nullptr);
+    result = tmp;
+    return (result);
+}
+
 void json_free_items(json_item *item)
 {
     while (item)
