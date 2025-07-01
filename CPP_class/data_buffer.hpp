@@ -4,7 +4,9 @@
 #include <vector>
 #include <cstdint>
 #include <sstream>
-#include <cstring>
+#include "../CMA/CMA.hpp"
+#include "../Libft/libft.hpp"
+#include "../Errno/errno.hpp"
 
 class DataBuffer {
 private:
@@ -36,9 +38,16 @@ template<typename T>
 DataBuffer& DataBuffer::operator<<(const T& value) {
     std::ostringstream oss;
     oss << value;
-    std::string bytes = oss.str();
-    *this << bytes.size();
-    this->_buffer.insert(this->_buffer.end(), bytes.begin(), bytes.end());
+    char *bytes = cma_strdup(oss.str().c_str());
+    if (!bytes) {
+        this->_ok = false;
+        ft_errno = CMA_BAD_ALLOC;
+        return (*this);
+    }
+    size_t len = ft_strlen_size_t(bytes);
+    *this << len;
+    this->_buffer.insert(this->_buffer.end(), bytes, bytes + len);
+    cma_free(bytes);
     return (*this);
 }
 
@@ -50,9 +59,16 @@ DataBuffer& DataBuffer::operator>>(T& value) {
         this->_ok = false;
         return (*this);
     }
-    std::string bytes(reinterpret_cast<const char*>(this->_buffer.data() + this->_readPos), len);
+    char *bytes = static_cast<char*>(cma_calloc(len + 1, sizeof(char)));
+    if (!bytes) {
+        this->_ok = false;
+        ft_errno = CMA_BAD_ALLOC;
+        return (*this);
+    }
+    ft_memcpy(bytes, this->_buffer.data() + this->_readPos, len);
     std::istringstream iss(bytes);
     iss >> value;
+    cma_free(bytes);
     this->_ok = !iss.fail();
     this->_readPos += len;
     return (*this);
