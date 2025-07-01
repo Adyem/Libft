@@ -56,8 +56,9 @@ enum PTErrorCode
 	DECK_ALLOC_FAIL,
 	BUTTON_ALLOC_FAIL,
 	SFML_WINDOW_CREATE_FAIL,
-	CHECK_DIR_FAIL,
-	JSON_MALLOC_FAIL,
+        CHECK_DIR_FAIL,
+        JSON_MALLOC_FAIL,
+        SOCKET_JOIN_GROUP_FAILED,
 };
 
 const char* ft_strerror(int error_code);
