@@ -225,6 +225,34 @@ ssize_t ft_socket::send_data(const void *data, size_t size, int flags)
     return (bytes_sent);
 }
 
+ssize_t ft_socket::send_all(const void *data, size_t size, int flags)
+{
+    if (this->_socket_fd < 0)
+    {
+        ft_errno = SOCKET_INVALID_CONFIGURATION;
+        this->_error = ft_errno;
+        return (-1);
+    }
+    size_t total_sent = 0;
+    const char *buffer = static_cast<const char *>(data);
+    while (total_sent < size)
+    {
+        ssize_t bytes_sent = nw_send(this->_socket_fd,
+                                     buffer + total_sent,
+                                     size - total_sent,
+                                     flags);
+        if (bytes_sent < 0)
+        {
+            ft_errno = errno + ERRNO_OFFSET;
+            this->_error = ft_errno;
+            return (-1);
+        }
+        total_sent += bytes_sent;
+    }
+    this->_error = ER_SUCCESS;
+    return (static_cast<ssize_t>(total_sent));
+}
+
 ssize_t ft_socket::receive_data(void *buffer, size_t size, int flags)
 {
     if (this->_socket_fd < 0)
