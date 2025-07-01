@@ -38,8 +38,8 @@ int ft_socket::setup_client(const SocketConfig &config)
         this->_socket_fd = -1;
         return (this->_error);
     }
-    if (nw_connect(this->_socket_fd, reinterpret_cast<const struct sockaddr*>(&this->_address),
-                                addr_len) < 0)
+    if (nw_connect(this->_socket_fd, reinterpret_cast<const struct sockaddr*>
+				(&this->_address), addr_len) < 0)
     {
         handle_error(errno + ERRNO_OFFSET);
         FT_CLOSE_SOCKET(this->_socket_fd);
