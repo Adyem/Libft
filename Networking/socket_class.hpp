@@ -58,6 +58,7 @@ class ft_socket
 
 		int			initialize(const SocketConfig &config);
     	ssize_t 	send_data(const void *data, size_t size, int flags = 0);
+        ssize_t         send_all(const void *data, size_t size, int flags = 0);
     	ssize_t		receive_data(void *buffer, size_t size, int flags = 0);
     	bool		close_socket();
     	int 		get_error() const;
