@@ -27,5 +27,6 @@ void        html_add_attr(html_node *targetNode, html_attr *newAttribute);
 int         html_write_to_file(const char *filePath, html_node *nodeList);
 void        html_free_nodes(html_node *nodeList);
 html_node   *html_find_by_tag(html_node *nodeList, const char *tagName);
+html_node   *html_find_by_attr(html_node *nodeList, const char *key, const char *value);
 
 #endif
