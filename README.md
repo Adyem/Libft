@@ -6,6 +6,12 @@ custom memory management, formatted output, networking helpers and more.  Each
 feature lives inside its own directory and can be built on its own or combined
 into a single static library.
 
+The goal of this repository is to provide a portable set of building blocks that
+can be dropped into a variety of projects.  Every module is self-contained with
+minimal external dependencies, making it easy to reuse just the portions you
+need.  Platform-specific code resides in dedicated folders so the same codebase
+can be compiled on Linux, macOS or Windows without modification.
+
 ## Building
 
 Run `make` in the repository root to create `Full_Libft.a`.  Use `make debug`
@@ -17,6 +23,12 @@ $ make       # build release library
 $ make debug # build debug library
 ```
 
+The top-level Makefile compiles each module as its own static archive before
+combining them into the final library.  If you only need a specific component
+you can run `make` inside that subdirectory to produce its archive in
+isolation.  The build system automatically selects the Linux or Windows sources
+depending on your platform.
+
 ## Tests
 
 A simple test suite resides in the `Test` folder.  Build and run it with:
@@ -26,11 +38,20 @@ $ make -C Test
 $ ./Test/libft_tests
 ```
 
+Running the suite will exercise a handful of standard library replacements and
+ensure the static archives were linked correctly.  You can pass extra compiler
+flags via `COMPILE_FLAGS` when invoking `make` in the `Test` directory if you
+wish to experiment with additional warnings or sanitizers.
+
 ## Using the library
 
 Link the produced `Full_Libft.a` (or the debug version) against your C++
 project and include the headers from the modules you need.  Individual
 subdirectories also provide Makefiles if you only want a specific component.
+All headers live directly inside each module's folder, so include paths should
+reference those directories when compiling your own code.  The library is
+intended for C++17 projects and uses only the standard compiler shipped with
+your platform.
 
 ## Modules
 
@@ -74,6 +95,11 @@ working with dynamically allocated memory.  The primary entry points are:
 - `cma_free_double` – frees null terminated string arrays.
 - `cma_cleanup` – releases any globally allocated resources.
 
+The allocator tracks each allocation internally so debug builds can detect
+memory leaks and invalid frees.  It aims to be small and predictable rather
+than fast, making it useful in constrained environments or educational
+projects.
+
 ### GetNextLine – Line Reading
 
 The `GetNextLine` module exposes a convenient `get_next_line` function
@@ -87,6 +113,11 @@ files:
 - `ft_open_and_read_file(const char *filename)` – utility that opens a
   path and returns all of its lines.
 
+The function maintains a small internal buffer allowing it to read from any
+file descriptor without repeatedly allocating memory.  Because it operates on
+the `ft_file` class it behaves consistently whether the underlying file is
+from a regular file, a pipe or a network socket.
+
 ### Libft – C Utility Reimplementations
 
 `Libft` contains lightweight replacements for many common C library
@@ -95,12 +126,21 @@ memory operations such as `ft_memcpy` and string search helpers like
 `ft_strchr`.  These functions mimic the behaviour of their standard
 counterparts while conforming to the project coding style.
 
+They are implemented from scratch for portability and as an educational
+exercise.  The code avoids compiler-specific extensions so it can serve as a
+drop-in replacement on systems where the C library might be missing features or
+when static linking is desired.
+
 ### Printf – Formatted Output
 
 The `Printf` folder implements a small `pf_printf` function compatible
 with the `printf` format string syntax.  It supports the most common
 format specifiers and also provides `pf_printf_fd` for writing to an
 arbitrary file descriptor.
+
+While not a complete reimplementation, `pf_printf` covers the placeholders most
+often encountered in small tools and demos.  It is tiny enough to compile
+quickly yet flexible enough for debugging output in larger applications.
 
 ### ReadLine – Interactive Input
 
@@ -113,12 +153,21 @@ public API consists of:
   completion entries.
 - `rl_clear_history()` – erase the stored input history.
 
+Despite its simplicity the editor recognises common control sequences and
+supports a pluggable completion mechanism.  History is stored in memory for the
+duration of the session, providing a comfortable interface for quick utilities
+and debugging tools.
+
 ### PThread – Threading Helpers
 
 This module wraps a few POSIX thread primitives.  Functions such as
 `pt_thread_create` and `pt_thread_join` mirror `pthread_create` and
 `pthread_join`.  A lightweight `pt_mutex` class implements a mutex with
 try-lock and error reporting features.
+
+Where possible the wrappers fall back to C++ standard threading utilities when
+POSIX threads are not available, giving the same API on Windows and other
+platforms.
 
 ### CPP_class – Helper Classes
 
@@ -131,11 +180,20 @@ library:
   direct C-string access.
 - `data_buffer` – a simple growable buffer for binary data.
 
+These helpers are intentionally lightweight so they can be embedded in small
+projects without pulling in the full C++ standard library.  They interact
+seamlessly with the other modules and provide a convenient foundation for more
+advanced abstractions.
+
 ### Errno – Error Handling
 
 Defines the `ft_errno` variable and a large set of library specific
 error codes.  Use `ft_strerror` to translate an error code into a
 message and `ft_perror` to print a formatted error string.
+
+A uniform error system keeps reporting consistent throughout the library.  Each
+module sets `ft_errno` when it encounters a failure, allowing callers to check
+for problems without relying on platform specific `errno` values.
 
 ### Networking – Cross Platform Sockets
 
@@ -148,6 +206,11 @@ helper classes:
   `nw_bind`, `nw_listen` and `nw_accept` directly expose the underlying
   system calls.
 
+Additional helpers simplify common client/server patterns such as connecting to
+a remote host or polling multiple sockets.  The abstractions hide the
+differences between Unix-like systems and Windows winsock so the same code can
+run everywhere.
+
 ### Template – Container Utilities
 
 Templates similar to those in the C++ standard library are provided
@@ -155,10 +218,18 @@ here.  Highlights include `ft_sharedptr` and `ft_uniqueptr` smart
 pointers, a `ft_vector` dynamic array and associative containers like
 `ft_map` and `ft_unord_map`.
 
+Iterator support and a small set of algorithms make these containers familiar
+to anyone used to the STL.  They are designed to be header-only so they can be
+included without separate compilation steps.
+
 ### RNG – Random Utilities
 
 Contains a pseudo random number helper `ft_dice_roll(number, faces)` as
 well as a simple playing card `deck` container.
+
+The routines use a small internal state to produce deterministic sequences
+unless seeded differently, which is handy for tests or reproducible gameplay
+mechanics.
 
 ### HTML – HTML Parsing
 
@@ -166,17 +237,28 @@ The `HTML` folder provides a tiny HTML parser capable of constructing a
 tree of `html_node` objects.  Utility functions allow searching nodes,
 serialising them to strings or files and managing attributes.
 
+It is suitable for simple configuration formats or small embedded web tools and
+is not intended to fully validate or sanitize complex documents.
+
 ### Encryption
 
 `encryption` implements a basic XOR based scheme for saving small pieces
 of data.  Functions include `be_saveGame`, `be_DecryptData` and
 `be_getEncryptionKey`.
 
+The algorithms are intentionally simple and offer only lightweight
+obfuscation.  They can deter casual tampering with configuration or save files
+but should not be used for serious security needs.
+
 ### File
 
 This directory hosts portable wrappers for directory iteration and
 creation.  `ft_opendir`, `ft_readdir` and `ft_closedir` mimic the POSIX
 API but work on both Linux and Windows.
+
+An additional `ft_mkdir` helper creates directories with appropriate
+permissions on each system.  Together these functions form a small abstraction
+layer for basic file system manipulation.
 
 Other directories such as `Linux` and `Windows` hold platform specific
 helpers used internally by some of the modules above.
