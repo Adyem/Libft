@@ -180,6 +180,14 @@ library:
   direct C-string access.
 - `data_buffer` – a simple growable buffer for binary data.
 
+Error handling is built into these classes.  Each object stores its last
+failure code and exposes accessor methods so callers can inspect what went
+wrong.  For example `ft_file` provides `get_error_code()` and
+`get_error_message()` while `ft_string` offers `getError()` and `errorStr()`.
+`DataBuffer` maintains an internal flag queried with `good()` or `bad()`.  When
+an operation fails these methods also update `ft_errno`, ensuring a consistent
+error reporting mechanism across the library.
+
 These helpers are intentionally lightweight so they can be embedded in small
 projects without pulling in the full C++ standard library.  They interact
 seamlessly with the other modules and provide a convenient foundation for more
@@ -206,6 +214,12 @@ helper classes:
   `nw_bind`, `nw_listen` and `nw_accept` directly expose the underlying
   system calls.
 
+Both classes keep track of errors internally.  Methods like
+`SocketConfig::getError()` and `ft_socket::get_error()` return the last
+error code encountered while `get_error_message()` converts it to a
+human-readable string.  Whenever a system call fails these classes also set
+`ft_errno`, allowing calling code to react uniformly across platforms.
+
 Additional helpers simplify common client/server patterns such as connecting to
 a remote host or polling multiple sockets.  The abstractions hide the
 differences between Unix-like systems and Windows winsock so the same code can
@@ -221,6 +235,14 @@ pointers, a `ft_vector` dynamic array and associative containers like
 Iterator support and a small set of algorithms make these containers familiar
 to anyone used to the STL.  They are designed to be header-only so they can be
 included without separate compilation steps.
+
+Every container stores an error flag that mirrors the global `ft_errno`.  When a
+memory allocation fails or an index is out of range the object records the
+appropriate code from `errno.hpp`.  Functions such as `ft_vector::getError()`,
+`ft_map::getError()` and the `hasError`/`errorMessage` helpers on the smart
+pointers allow applications to inspect these failures without resorting to
+exceptions.  A default value is returned when an operation cannot be completed,
+leaving the object in a valid but errored state.
 
 ### RNG – Random Utilities
 
