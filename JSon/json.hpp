@@ -24,6 +24,7 @@ void 		json_append_group(json_group **head, json_group *new_group);
 int 		json_write_to_file(const char *filename, json_group *groups);
 char        *json_write_to_string(json_group *groups);
 json_group  *json_read_from_file(const char *filename);
+json_group  *json_read_from_string(const char *content);
 void 		json_free_items(json_item *item);
 void 		json_free_groups(json_group *group);
 json_group  *json_find_group(json_group *head, const char *name);

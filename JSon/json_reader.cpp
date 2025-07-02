@@ -241,3 +241,69 @@ json_group *json_read_from_file(const char *filename)
     return (head);
 }
 
+json_group *json_read_from_string(const char *content)
+{
+    if (!content)
+        return (ft_nullptr);
+    size_t i = 0;
+    skip_ws(content, i);
+    size_t len = ft_strlen_size_t(content);
+    if (i >= len || content[i] != '{')
+        return (ft_nullptr);
+    i++;
+    json_group *head = ft_nullptr;
+    json_group *tail = ft_nullptr;
+    while (i < len)
+    {
+        skip_ws(content, i);
+        if (i < len && content[i] == '}')
+        {
+            i++;
+            break;
+        }
+        char *group_name = parse_string(content, i);
+        if (!group_name)
+        {
+            json_free_groups(head);
+            return (ft_nullptr);
+        }
+        skip_ws(content, i);
+        if (i >= len || content[i] != ':')
+        {
+            cma_free(group_name);
+            break;
+        }
+        i++;
+        json_item *items = parse_items(content, i);
+        if (!items)
+        {
+            cma_free(group_name);
+            json_free_groups(head);
+            return (ft_nullptr);
+        }
+        json_group *group = json_create_json_group(group_name);
+        cma_free(group_name);
+        if (!group)
+        {
+            json_free_items(items);
+            json_free_groups(head);
+            return (ft_nullptr);
+        }
+        group->items = items;
+        if (!head)
+            head = tail = group;
+        else
+        {
+            tail->next = group;
+            tail = group;
+        }
+        skip_ws(content, i);
+        if (i < len && content[i] == ',')
+        {
+            i++;
+            continue;
+        }
+    }
+    return (head);
+}
+
