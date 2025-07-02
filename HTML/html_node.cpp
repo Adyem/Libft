@@ -1,6 +1,7 @@
 #include <new>
 #include "html_parser.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Libft/libft.hpp"
 #include "../CPP_class/nullptr.hpp"
 #include "../Errno/errno.hpp"
 
@@ -75,6 +76,31 @@ void html_add_attr(html_node *targetNode, html_attr *newAttribute)
         while (currentAttribute->next)
             currentAttribute = currentAttribute->next;
         currentAttribute->next = newAttribute;
+    }
+    return ;
+}
+
+void html_remove_attr(html_node *targetNode, const char *key)
+{
+    html_attr *prev = ft_nullptr;
+    html_attr *current = targetNode->attributes;
+    while (current)
+    {
+        if (current->key && ft_strcmp(current->key, key) == 0)
+        {
+            if (prev)
+                prev->next = current->next;
+            else
+                targetNode->attributes = current->next;
+            if (current->key)
+                delete[] current->key;
+            if (current->value)
+                delete[] current->value;
+            delete current;
+            return ;
+        }
+        prev = current;
+        current = current->next;
     }
     return ;
 }
