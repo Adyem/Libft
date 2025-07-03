@@ -116,6 +116,143 @@ memory leaks and invalid frees.  It aims to be small and predictable rather
 than fast, making it useful in constrained environments or educational
 projects.
 
+#### Function reference
+
+- **`cma_malloc`**
+
+  ```cpp
+  char *buf = static_cast<char*>(cma_malloc(64));
+  if (buf == ft_nullptr) {
+      /* allocation failed */
+  }
+  ```
+
+  Allocates the requested number of bytes. `ft_nullptr` is returned when the
+  size is zero or memory cannot be acquired.
+
+- **`cma_calloc`**
+
+  ```cpp
+  void *mem = cma_calloc(10, sizeof(int));
+  ```
+
+  Works like the C `calloc` call by allocating and zeroing memory. Returns
+  `ft_nullptr` if either argument is zero or if allocation fails.
+
+- **`cma_realloc`**
+
+  ```cpp
+  ptr = cma_realloc(ptr, new_size);
+  ```
+
+  Attempts to resize an existing allocation. A `new_size` of zero frees the
+  block and returns `ft_nullptr`. When the allocator detects an invalid
+  pointer the program aborts in debug builds.
+
+- **`cma_free`**
+
+  ```cpp
+  cma_free(ptr);
+  ```
+
+  Releases memory obtained from CMA. Passing `nullptr` is allowed. Supplying a
+  pointer not created by CMA triggers a diagnostic message and program abort in
+  debug builds.
+
+- **`cma_strdup`**
+
+  ```cpp
+  char *copy = cma_strdup("hello");
+  ```
+
+  Duplicates a C string using the allocator. Returns `ft_nullptr` when the
+  input is `nullptr` or memory cannot be obtained.
+
+- **`cma_memdup`**
+
+  ```cpp
+  void *copy = cma_memdup(data, bytes);
+  ```
+
+  Copies an arbitrary memory range. Returns `ft_nullptr` for a `nullptr`
+  source, a size of zero or allocation failure.
+
+- **`cma_split`**
+
+  ```cpp
+  char **fields = cma_split("a,b,c", ',');
+  ```
+
+  Splits a string into an array of newly allocated tokens terminated by a
+  `ft_nullptr` entry. If `s` is `nullptr` an empty array is returned. Memory
+  errors yield `ft_nullptr`.
+
+- **`cma_strjoin`**
+
+  ```cpp
+  char *joined = cma_strjoin("foo", "bar");
+  ```
+
+  Joins two strings into a new allocation. Returns `ft_nullptr` if both inputs
+  are `nullptr` or if allocation fails.
+
+- **`cma_strjoin_multiple`**
+
+  ```cpp
+  char *line = cma_strjoin_multiple(3, "a", "b", "c");
+  ```
+
+  Concatenates multiple strings. A non-positive count or allocation failure
+  causes the function to return `ft_nullptr`.
+
+- **`cma_substr`**
+
+  ```cpp
+  char *part = cma_substr(text, start, len);
+  ```
+
+  Extracts a substring. When `start` is beyond the end of `text` an empty
+  string is returned. `ft_nullptr` signals allocation failure or a `nullptr`
+  input.
+
+- **`cma_strtrim`**
+
+  ```cpp
+  char *trimmed = cma_strtrim("  foo  ", " ");
+  ```
+
+  Removes leading and trailing characters found in `set`. Returns `ft_nullptr`
+  on allocation failure or if either parameter is `nullptr`.
+
+- **`cma_itoa`** and **`cma_itoa_base`**
+
+  ```cpp
+  char *num = cma_itoa(42);
+  char *hex = cma_itoa_base(42, 16);
+  ```
+
+  Convert integers to strings. `cma_itoa_base` accepts bases from 2 to 16.
+  Both functions return `ft_nullptr` when memory cannot be allocated or when an
+  invalid base is specified.
+
+- **`cma_free_double`**
+
+  ```cpp
+  cma_free_double(fields);
+  ```
+
+  Releases a NULL terminated array of strings along with each element. Passing
+  a `nullptr` is allowed.
+
+- **`cma_cleanup`**
+
+  ```cpp
+  cma_cleanup();
+  ```
+
+  Frees all pages created by the allocator. Call this once at program
+  termination when using CMA on its own.
+
 ### GetNextLine – Line Reading
 
 The `GetNextLine` module exposes a convenient `get_next_line` function
