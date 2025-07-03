@@ -38,7 +38,7 @@ class ft_vector
 
     	size_t size() const;
     	size_t capacity() const;
-    	int getError() const;
+    	int get_error() const;
 
     	void push_back(const ElementType &value);
     	void push_back(ElementType &&value);
@@ -146,7 +146,7 @@ void ft_vector<ElementType>::setError(int errorCode)
 }
 
 template <typename ElementType>
-int ft_vector<ElementType>::getError() const
+int ft_vector<ElementType>::get_error() const
 {
     return (this->_errorCode);
 }

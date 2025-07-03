@@ -81,8 +81,8 @@ class ft_sharedptr
         int use_count() const;
         bool hasError() const;
         void set_error(int error) const;
-        int getErrorCode() const;
-        const char* errorMessage() const;
+        int get_error() const;
+        const char* get_error_str() const;
         ManagedType* get();
         const ManagedType* get() const;
         bool unique() const;
@@ -436,13 +436,13 @@ bool ft_sharedptr<ManagedType>::hasError() const
 }
 
 template <typename ManagedType>
-int ft_sharedptr<ManagedType>::getErrorCode() const
+int ft_sharedptr<ManagedType>::get_error() const
 {
     return (_errorCode);
 }
 
 template <typename ManagedType>
-const char* ft_sharedptr<ManagedType>::errorMessage() const
+const char* ft_sharedptr<ManagedType>::get_error_str() const
 {
     return (ft_strerror(_errorCode));
 }

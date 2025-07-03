@@ -31,8 +31,8 @@ class ft_file
     	ft_file& operator=(ft_file&& other) noexcept;
 
     	int			get_fd() const;
-	    int			get_error_code() const noexcept;
-    	const char	*get_error_message() const noexcept;
+	    int			get_error() const noexcept;
+    	const char	*get_error_str() const noexcept;
 
 	    int			open(const char* filename, int flags, mode_t mode) noexcept;
 		int			open(const char* filename, int flags) noexcept;

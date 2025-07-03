@@ -23,12 +23,12 @@ SocketConfig::SocketConfig()
       multicast_group(""),
       multicast_interface("")
 {
-    if (!_error && ip.getError())
-        _error = ip.getError();
-    if (!_error && multicast_group.getError())
-        _error = multicast_group.getError();
-    if (!_error && multicast_interface.getError())
-        _error = multicast_interface.getError();
+    if (!_error && ip.get_error())
+        _error = ip.get_error();
+    if (!_error && multicast_group.get_error())
+        _error = multicast_group.get_error();
+    if (!_error && multicast_interface.get_error())
+        _error = multicast_interface.get_error();
     return ;
 }
 
@@ -47,12 +47,12 @@ SocketConfig::SocketConfig(const SocketConfig& other) noexcept
       multicast_group(other.multicast_group),
       multicast_interface(other.multicast_interface)
 {
-	if (!_error && ip.getError())
-        _error = ip.getError();
-	if (!_error && multicast_group.getError())
-        _error = multicast_group.getError();
-	if (!_error && multicast_interface.getError())
-        _error = multicast_interface.getError();
+	if (!_error && ip.get_error())
+        _error = ip.get_error();
+	if (!_error && multicast_group.get_error())
+        _error = multicast_group.get_error();
+	if (!_error && multicast_interface.get_error())
+        _error = multicast_interface.get_error();
 	return ;
 }
 
@@ -74,12 +74,12 @@ SocketConfig& SocketConfig::operator=(const SocketConfig& other) noexcept
         multicast_group = other.multicast_group;
         multicast_interface = other.multicast_interface;
     }
-    if (!_error && ip.getError())
-        _error = ip.getError();
-    if (!_error && multicast_group.getError())
-        _error = multicast_group.getError();
-    if (!_error && multicast_interface.getError())
-        _error = multicast_interface.getError();
+    if (!_error && ip.get_error())
+        _error = ip.get_error();
+    if (!_error && multicast_group.get_error())
+        _error = multicast_group.get_error();
+    if (!_error && multicast_interface.get_error())
+        _error = multicast_interface.get_error();
     return (*this);
 }
 
@@ -110,12 +110,12 @@ SocketConfig::SocketConfig(SocketConfig&& other) noexcept
     other.send_timeout = 0;
     other.multicast_group.clear();
     other.multicast_interface.clear();
-	if (!_error && ip.getError())
-        _error = ip.getError();
-	if (!_error && multicast_group.getError())
-        _error = multicast_group.getError();
-	if (!_error && multicast_interface.getError())
-        _error = multicast_interface.getError();
+	if (!_error && ip.get_error())
+        _error = ip.get_error();
+	if (!_error && multicast_group.get_error())
+        _error = multicast_group.get_error();
+	if (!_error && multicast_interface.get_error())
+        _error = multicast_interface.get_error();
 	return ;
 }
 
@@ -149,12 +149,12 @@ SocketConfig& SocketConfig::operator=(SocketConfig&& other) noexcept
         other.multicast_group.clear();
         other.multicast_interface.clear();
     }
-	if (!_error && ip.getError())
-        _error = ip.getError();
-    if (!_error && multicast_group.getError())
-        _error = multicast_group.getError();
-    if (!_error && multicast_interface.getError())
-        _error = multicast_interface.getError();
+	if (!_error && ip.get_error())
+        _error = ip.get_error();
+    if (!_error && multicast_group.get_error())
+        _error = multicast_group.get_error();
+    if (!_error && multicast_interface.get_error())
+        _error = multicast_interface.get_error();
     return (*this);
 }
 
@@ -163,12 +163,12 @@ SocketConfig::~SocketConfig()
 	return ;
 }
 
-int SocketConfig::getError()
+int SocketConfig::get_error()
 {
 	return (_error);
 }
 
-const char *SocketConfig::getStrError()
+const char *SocketConfig::get_error_str()
 {
 	return (ft_strerror(_error));
 }
