@@ -82,7 +82,7 @@ public:
     void           clear();
     size_t         getSize() const;
     size_t         getCapacity() const;
-    int            getError() const;
+    int            get_error() const;
     iterator       begin();
     iterator       end();
     const_iterator begin() const;
@@ -630,7 +630,7 @@ size_t ft_unord_map<Key, MappedType>::getCapacity() const
 }
 
 template <typename Key, typename MappedType>
-int ft_unord_map<Key, MappedType>::getError() const
+int ft_unord_map<Key, MappedType>::get_error() const
 {
     return (_error);
 }

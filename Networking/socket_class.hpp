@@ -62,7 +62,7 @@ class ft_socket
     	ssize_t		receive_data(void *buffer, size_t size, int flags = 0);
     	bool		close_socket();
     	int 		get_error() const;
-    	const char	*get_error_message() const;
+    	const char	*get_error_str() const;
 		ssize_t 	broadcast_data(const void *data, size_t size, int flags);
 		ssize_t 	broadcast_data(const void *data, size_t size, int flags, int exception);
 		ssize_t 	send_data(const void *data, size_t size, int flags, int fd);
