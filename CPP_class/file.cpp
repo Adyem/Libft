@@ -124,12 +124,12 @@ int ft_file::get_fd() const
     return (this->_fd);
 }
 
-int ft_file::get_error_code() const noexcept
+int ft_file::get_error() const noexcept
 {
 	return (this->_error_code);
 }
 
-const char *ft_file::get_error_message() const noexcept
+const char *ft_file::get_error_str() const noexcept
 {
 	return (ft_strerror(_error_code));
 }

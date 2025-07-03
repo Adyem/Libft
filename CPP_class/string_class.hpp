@@ -44,8 +44,8 @@ class ft_string
         char*       print() noexcept;
         size_t      size() const noexcept;
         bool        empty() const noexcept;
-        int         getError() const noexcept;
-        const char	*errorStr() const noexcept;
+        int         get_error() const noexcept;
+        const char	*get_error_str() const noexcept;
         void        move(ft_string& other) noexcept;
         void        erase(std::size_t index, std::size_t count) noexcept;
 

@@ -77,7 +77,7 @@ char **ft_open_and_read_file(const char *file_name)
 {
     ft_file file(file_name, O_RDONLY);
 
-    if (file.get_error_code())
+    if (file.get_error())
         return (ft_nullptr);
     return (ft_read_file_lines(file));
 }

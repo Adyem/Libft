@@ -50,8 +50,8 @@ class SocketConfig
     	SocketConfig& operator=(const SocketConfig& other) noexcept;
     	SocketConfig& operator=(SocketConfig&& other) noexcept;
 
-		int getError();
-		const char *getStrError();
+		int get_error();
+		const char *get_error_str();
 };
 
 #endif

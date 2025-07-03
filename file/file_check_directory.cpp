@@ -56,7 +56,7 @@ static ft_string normalize_path(ft_string path)
 int dir_exists(const char *rel_path)
 {
     ft_string path = normalize_path(rel_path);
-    if (path.getError())
+    if (path.get_error())
     {
         ft_errno = CHECK_DIR_FAIL;
         return (-1);
