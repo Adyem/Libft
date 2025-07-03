@@ -12,6 +12,18 @@ minimal external dependencies, making it easy to reuse just the portions you
 need.  Platform-specific code resides in dedicated folders so the same codebase
 can be compiled on Linux, macOS or Windows without modification.
 
+## Quick Start
+
+1. Clone the repository and move into it:
+```bash
+git clone https://github.com/yourname/Libft.git
+cd Libft
+```
+2. Build the library with `make` (use `make debug` for a debug version).
+3. Compile your project with the headers of the modules you require and link against `Full_Libft.a`.
+4. Optionally run the tests with `make -C Test` to verify the build.
+
+
 ## Building
 
 Run `make` in the repository root to create `Full_Libft.a`.  Use `make debug`
@@ -45,13 +57,17 @@ wish to experiment with additional warnings or sanitizers.
 
 ## Using the library
 
-Link the produced `Full_Libft.a` (or the debug version) against your C++
-project and include the headers from the modules you need.  Individual
-subdirectories also provide Makefiles if you only want a specific component.
-All headers live directly inside each module's folder, so include paths should
-reference those directories when compiling your own code.  The library is
-intended for C++17 projects and uses only the standard compiler shipped with
-your platform.
+Link the produced `Full_Libft.a` (or the debug variant) against your project
+and add the module directories to your include path.  A typical compile line
+might look like:
+
+```bash
+g++ -I/path/to/Libft/CMA -I/path/to/Libft/Libft main.cpp Full_Libft.a -o myprog
+```
+
+Each subdirectory also provides a standalone Makefile if you want just a single
+component.  The library targets C++17 and relies only on the standard compiler
+available on your platform.
 
 ## Modules
 
