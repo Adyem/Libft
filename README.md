@@ -20,7 +20,7 @@ git clone https://github.com/yourname/Libft.git
 cd Libft
 ```
 2. Build the library with `make` (use `make debug` for a debug version).
-3. Compile your project with the headers of the modules you require and link against `Full_Libft.a`.
+3. Compile your project including `FullLibft.hpp` and link against `Full_Libft.a`.
 4. Optionally run the tests with `make -C Test` to verify the build.
 
 
@@ -58,11 +58,11 @@ wish to experiment with additional warnings or sanitizers.
 ## Using the library
 
 Link the produced `Full_Libft.a` (or the debug variant) against your project
-and add the module directories to your include path.  A typical compile line
+and include the top level `FullLibft.hpp` header.  A typical compile line
 might look like:
 
 ```bash
-g++ -I/path/to/Libft/CMA -I/path/to/Libft/Libft main.cpp Full_Libft.a -o myprog
+g++ -I/path/to/Libft main.cpp Full_Libft.a -o myprog
 ```
 
 Each subdirectory also provides a standalone Makefile if you want just a single
