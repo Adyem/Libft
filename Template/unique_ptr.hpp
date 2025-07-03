@@ -48,8 +48,8 @@ class ft_uniqueptr
         ManagedType* release_ptr();
         void reset(ManagedType* pointer = ft_nullptr, size_t size = 1, bool arrayType = false);
         bool hasError() const;
-        int getErrorCode() const;
-        const char* errorMessage() const;
+        int get_error() const;
+        const char* get_error_str() const;
         explicit operator bool() const noexcept;
         void swap(ft_uniqueptr& other);
         void set_error(int error) const;
@@ -361,13 +361,13 @@ bool ft_uniqueptr<ManagedType>::hasError() const
 }
 
 template <typename ManagedType>
-int ft_uniqueptr<ManagedType>::getErrorCode() const
+int ft_uniqueptr<ManagedType>::get_error() const
 {
     return (_errorCode);
 }
 
 template <typename ManagedType>
-const char* ft_uniqueptr<ManagedType>::errorMessage() const
+const char* ft_uniqueptr<ManagedType>::get_error_str() const
 {
     return (ft_strerror(_errorCode));
 }

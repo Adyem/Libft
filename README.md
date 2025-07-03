@@ -335,8 +335,8 @@ library:
 
 Error handling is built into these classes.  Each object stores its last
 failure code and exposes accessor methods so callers can inspect what went
-wrong.  For example `ft_file` provides `get_error_code()` and
-`get_error_message()` while `ft_string` offers `getError()` and `errorStr()`.
+wrong.  For example `ft_file` provides `get_error()` and
+`get_error_str()` while `ft_string` offers `get_error()` and `get_error_str()`.
 `DataBuffer` maintains an internal flag queried with `good()` or `bad()`.  When
 an operation fails these methods also update `ft_errno`, ensuring a consistent
 error reporting mechanism across the library.
@@ -368,8 +368,8 @@ helper classes:
   system calls.
 
 Both classes keep track of errors internally.  Methods like
-`SocketConfig::getError()` and `ft_socket::get_error()` return the last
-error code encountered while `get_error_message()` converts it to a
+`SocketConfig::get_error()` and `ft_socket::get_error()` return the last
+error code encountered while `get_error_str()` converts it to a
 human-readable string.  Whenever a system call fails these classes also set
 `ft_errno`, allowing calling code to react uniformly across platforms.
 
@@ -391,8 +391,8 @@ included without separate compilation steps.
 
 Every container stores an error flag that mirrors the global `ft_errno`.  When a
 memory allocation fails or an index is out of range the object records the
-appropriate code from `errno.hpp`.  Functions such as `ft_vector::getError()`,
-`ft_map::getError()` and the `hasError`/`errorMessage` helpers on the smart
+appropriate code from `errno.hpp`.  Functions such as `ft_vector::get_error()`,
+`ft_map::get_error()` and the `hasError`/`get_error_str()` helpers on the smart
 pointers allow applications to inspect these failures without resorting to
 exceptions.  A default value is returned when an operation cannot be completed,
 leaving the object in a valid but errored state.

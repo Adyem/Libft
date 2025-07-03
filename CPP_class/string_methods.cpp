@@ -123,12 +123,12 @@ bool ft_string::empty() const noexcept
     return (this->_length == 0);
 }
 
-int ft_string::getError() const noexcept
+int ft_string::get_error() const noexcept
 {
     return (this->_errorCode);
 }
 
-const char* ft_string::errorStr() const noexcept
+const char* ft_string::get_error_str() const noexcept
 {
     return (ft_strerror(this->_errorCode));
 }

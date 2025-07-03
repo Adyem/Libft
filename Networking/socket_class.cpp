@@ -120,7 +120,7 @@ int ft_socket::accept_connection()
     }
     ft_socket new_socket(new_fd, client_addr);
     this->_connected.push_back(std::move(new_socket));
-	if (this->_connected.getError())
+	if (this->_connected.get_error())
 	{
 		ft_errno = VECTOR_ALLOC_FAIL;
 		this->_error = ft_errno;
@@ -298,7 +298,7 @@ int ft_socket::get_error() const
     return (this->_error);
 }
 
-const char* ft_socket::get_error_message() const
+const char* ft_socket::get_error_str() const
 {
     return (ft_strerror(this->_error));
 }
