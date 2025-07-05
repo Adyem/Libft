@@ -28,7 +28,7 @@ int rl_clear_line(const char *prompt, const char *buffer)
     int term_width = rl_get_terminal_width();
 	if (term_width == -1)
 		return (-1);
-    int line_count = (total_length / term_width) + 1;
+    int line_count = (total_length + term_width - 1) / term_width;
 	int index = 0;
     while (index < line_count)
     {
