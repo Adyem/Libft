@@ -29,6 +29,10 @@ int test_memset_basic(void);
 int test_toupper_basic(void);
 int test_atoi_simple(void);
 int test_atoi_negative(void);
+int test_html_create_node(void);
+int test_html_find_by_tag(void);
+int test_html_write_to_string(void);
+int test_html_find_by_attr(void);
 
 int main(void)
 {
@@ -43,7 +47,11 @@ int main(void)
         { test_memset_basic, "memset basic" },
         { test_toupper_basic, "toupper basic" },
         { test_atoi_simple, "atoi simple" },
-        { test_atoi_negative, "atoi negative" }
+        { test_atoi_negative, "atoi negative" },
+        { test_html_create_node, "html create node" },
+        { test_html_find_by_tag, "html find by tag" },
+        { test_html_write_to_string, "html write to string" },
+        { test_html_find_by_attr, "html find by attr" }
     };
     const int total = sizeof(tests) / sizeof(tests[0]);
     int index = 0;
