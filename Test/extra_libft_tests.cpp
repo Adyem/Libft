@@ -1,6 +1,8 @@
 #include "../Libft/libft.hpp"
 #include "../CPP_class/nullptr.hpp"
 #include <cstring>
+#include <climits>
+#include <string>
 
 int test_strlen_size_t_null(void)
 {
@@ -15,6 +17,15 @@ int test_strlen_size_t_basic(void)
 int test_strlen_size_t_empty(void)
 {
     return (ft_strlen_size_t("") == 0);
+}
+
+int test_strlen_size_t_long(void)
+{
+    static char buf[1025];
+    for (int i = 0; i < 1024; ++i)
+        buf[i] = 'b';
+    buf[1024] = '\0';
+    return (ft_strlen_size_t(buf) == 1024);
 }
 
 int test_bzero_basic(void)
@@ -50,6 +61,16 @@ int test_memcpy_partial(void)
     char dst[6] = "aaaaa";
     ft_memcpy(dst, src, 3);
     return (dst[0] == 'w' && dst[1] == 'o' && dst[2] == 'r' && dst[3] == 'a');
+}
+
+int test_memcpy_large(void)
+{
+    char src[1024];
+    char dst[1024];
+    for (int i = 0; i < 1024; ++i)
+        src[i] = static_cast<char>(i % 256);
+    ft_memcpy(dst, src, sizeof(src));
+    return (std::memcmp(dst, src, sizeof(src)) == 0);
 }
 
 int test_memcpy_null(void)
@@ -259,5 +280,17 @@ int test_atol_basic(void)
 int test_atol_whitespace(void)
 {
     return (ft_atol("  42") == 42);
+}
+
+int test_atol_longmax(void)
+{
+    std::string s = std::to_string(LONG_MAX);
+    return (ft_atol(s.c_str()) == LONG_MAX);
+}
+
+int test_atol_longmin(void)
+{
+    std::string s = std::to_string(LONG_MIN);
+    return (ft_atol(s.c_str()) == LONG_MIN);
 }
 

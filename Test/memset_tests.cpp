@@ -17,3 +17,15 @@ int test_memset_basic(void)
         return (1);
     return (0);
 }
+
+int test_memset_large(void)
+{
+    char buf[1024];
+    ft_memset(buf, 0xAB, sizeof(buf));
+    for (size_t i = 0; i < sizeof(buf); ++i)
+    {
+        if (static_cast<unsigned char>(buf[i]) != 0xAB)
+            return 0;
+    }
+    return 1;
+}
