@@ -98,6 +98,11 @@ int test_ft_unique_ptr_basic(void);
 int test_ft_unique_ptr_array(void);
 int test_ft_unique_ptr_release(void);
 int test_ft_unique_ptr_swap(void);
+int test_pf_printf_basic(void);
+int test_pf_printf_misc(void);
+int test_pf_printf_bool(void);
+int test_pf_printf_nullptr(void);
+int test_pf_printf_modifiers(void);
 
 int main(void)
 {
@@ -181,7 +186,12 @@ int main(void)
         { test_ft_unique_ptr_basic, "ft_uniqueptr basic" },
         { test_ft_unique_ptr_array, "ft_uniqueptr array" },
         { test_ft_unique_ptr_release, "ft_uniqueptr release" },
-        { test_ft_unique_ptr_swap, "ft_uniqueptr swap" }
+        { test_ft_unique_ptr_swap, "ft_uniqueptr swap" },
+        { test_pf_printf_basic, "pf_printf basic" },
+        { test_pf_printf_misc, "pf_printf misc" },
+        { test_pf_printf_bool, "pf_printf bool" },
+        { test_pf_printf_nullptr, "pf_printf nullptr" },
+        { test_pf_printf_modifiers, "pf_printf modifiers" }
     };
     const int total = sizeof(tests) / sizeof(tests[0]);
     int index = 0;
