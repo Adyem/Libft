@@ -36,3 +36,21 @@ int test_network_send_receive(void)
     return ft_strcmp(buf, msg) == 0;
 }
 
+int test_network_invalid_ip(void)
+{
+    SocketConfig conf;
+    conf.type = SocketType::SERVER;
+    conf.port = 54324;
+    conf.ip = "256.0.0.1";
+    ft_socket server(conf);
+    return (server.get_error() == SOCKET_INVALID_CONFIGURATION);
+}
+
+int test_network_send_uninitialized(void)
+{
+    ft_socket sock;
+    const char *msg = "fail";
+    ssize_t r = sock.send_all(msg, ft_strlen(msg), 0);
+    return (r < 0 && sock.get_error() == SOCKET_INVALID_CONFIGURATION);
+}
+
