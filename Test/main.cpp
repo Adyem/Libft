@@ -78,6 +78,10 @@ int test_abs_zero(void);
 int test_abs_positive(void);
 int test_atol_basic(void);
 int test_atol_whitespace(void);
+int test_ft_string_append(void);
+int test_ft_string_concat(void);
+int test_data_buffer_io(void);
+int test_ft_file_write_read(void);
 
 int main(void)
 {
@@ -141,7 +145,11 @@ int main(void)
         { test_isalnum_true, "isalnum true" },
         { test_isalnum_false, "isalnum false" },
         { test_isspace_true, "isspace true" },
-        { test_isspace_false, "isspace false" }
+        { test_isspace_false, "isspace false" },
+        { test_ft_string_append, "ft_string append" },
+        { test_ft_string_concat, "ft_string concat" },
+        { test_data_buffer_io, "DataBuffer io" },
+        { test_ft_file_write_read, "ft_file write/read" }
     };
     const int total = sizeof(tests) / sizeof(tests[0]);
     int index = 0;
