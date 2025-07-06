@@ -82,6 +82,22 @@ int test_ft_string_append(void);
 int test_ft_string_concat(void);
 int test_data_buffer_io(void);
 int test_ft_file_write_read(void);
+int test_ft_vector_push_back(void);
+int test_ft_vector_insert_erase(void);
+int test_ft_vector_reserve_resize(void);
+int test_ft_vector_clear(void);
+int test_ft_map_insert_find(void);
+int test_ft_map_remove(void);
+int test_ft_map_at(void);
+int test_ft_map_at_missing(void);
+int test_ft_map_clear_empty(void);
+int test_ft_shared_ptr_basic(void);
+int test_ft_shared_ptr_array(void);
+int test_ft_shared_ptr_reset(void);
+int test_ft_unique_ptr_basic(void);
+int test_ft_unique_ptr_array(void);
+int test_ft_unique_ptr_release(void);
+int test_ft_unique_ptr_swap(void);
 
 int main(void)
 {
@@ -149,7 +165,23 @@ int main(void)
         { test_ft_string_append, "ft_string append" },
         { test_ft_string_concat, "ft_string concat" },
         { test_data_buffer_io, "DataBuffer io" },
-        { test_ft_file_write_read, "ft_file write/read" }
+        { test_ft_file_write_read, "ft_file write/read" },
+        { test_ft_vector_push_back, "ft_vector push_back" },
+        { test_ft_vector_insert_erase, "ft_vector insert/erase" },
+        { test_ft_vector_reserve_resize, "ft_vector reserve/resize" },
+        { test_ft_vector_clear, "ft_vector clear" },
+        { test_ft_map_insert_find, "ft_map insert/find" },
+        { test_ft_map_remove, "ft_map remove" },
+        { test_ft_map_at, "ft_map at" },
+        { test_ft_map_at_missing, "ft_map at missing" },
+        { test_ft_map_clear_empty, "ft_map clear/empty" },
+        { test_ft_shared_ptr_basic, "ft_sharedptr basic" },
+        { test_ft_shared_ptr_array, "ft_sharedptr array" },
+        { test_ft_shared_ptr_reset, "ft_sharedptr reset" },
+        { test_ft_unique_ptr_basic, "ft_uniqueptr basic" },
+        { test_ft_unique_ptr_array, "ft_uniqueptr array" },
+        { test_ft_unique_ptr_release, "ft_uniqueptr release" },
+        { test_ft_unique_ptr_swap, "ft_uniqueptr swap" }
     };
     const int total = sizeof(tests) / sizeof(tests[0]);
     int index = 0;
