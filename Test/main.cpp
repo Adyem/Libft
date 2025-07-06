@@ -33,6 +33,7 @@ int test_html_create_node(void);
 int test_html_find_by_tag(void);
 int test_html_write_to_string(void);
 int test_html_find_by_attr(void);
+int test_network_send_receive(void);
 
 int main(void)
 {
@@ -51,7 +52,8 @@ int main(void)
         { test_html_create_node, "html create node" },
         { test_html_find_by_tag, "html find by tag" },
         { test_html_write_to_string, "html write to string" },
-        { test_html_find_by_attr, "html find by attr" }
+        { test_html_find_by_attr, "html find by attr" },
+        { test_network_send_receive, "network send/receive" }
     };
     const int total = sizeof(tests) / sizeof(tests[0]);
     int index = 0;
