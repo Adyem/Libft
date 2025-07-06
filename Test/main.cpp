@@ -34,6 +34,8 @@ int test_html_find_by_tag(void);
 int test_html_write_to_string(void);
 int test_html_find_by_attr(void);
 int test_network_send_receive(void);
+int test_network_invalid_ip(void);
+int test_network_send_uninitialized(void);
 
 int main(void)
 {
@@ -53,7 +55,9 @@ int main(void)
         { test_html_find_by_tag, "html find by tag" },
         { test_html_write_to_string, "html write to string" },
         { test_html_find_by_attr, "html find by attr" },
-        { test_network_send_receive, "network send/receive" }
+        { test_network_send_receive, "network send/receive" },
+        { test_network_invalid_ip, "network invalid ip" },
+        { test_network_send_uninitialized, "network send uninitialized" }
     };
     const int total = sizeof(tests) / sizeof(tests[0]);
     int index = 0;
