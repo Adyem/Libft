@@ -20,15 +20,19 @@ static void run_test(int index, const s_test *test, int *passed)
 
 int test_strlen_nullptr(void);
 int test_strlen_simple(void);
+int test_strlen_long(void);
 int test_strcmp_equal(void);
 int test_strcmp_null(void);
 int test_isdigit_true(void);
 int test_isdigit_false(void);
 int test_memset_null(void);
 int test_memset_basic(void);
+int test_memset_large(void);
 int test_toupper_basic(void);
 int test_atoi_simple(void);
 int test_atoi_negative(void);
+int test_atoi_intmax(void);
+int test_atoi_intmin(void);
 int test_html_create_node(void);
 int test_html_find_by_tag(void);
 int test_html_write_to_string(void);
@@ -38,12 +42,14 @@ int test_network_invalid_ip(void);
 int test_network_send_uninitialized(void);
 int test_strlen_size_t_null(void);
 int test_strlen_size_t_basic(void);
+int test_strlen_size_t_long(void);
 int test_strlen_size_t_empty(void);
 int test_bzero_basic(void);
 int test_bzero_zero(void);
 int test_memcpy_basic(void);
 int test_memcpy_null(void);
 int test_memcpy_partial(void);
+int test_memcpy_large(void);
 int test_memmove_overlap(void);
 int test_memmove_no_overlap(void);
 int test_memchr_found(void);
@@ -78,6 +84,8 @@ int test_abs_zero(void);
 int test_abs_positive(void);
 int test_atol_basic(void);
 int test_atol_whitespace(void);
+int test_atol_longmax(void);
+int test_atol_longmin(void);
 int test_ft_string_append(void);
 int test_ft_string_concat(void);
 int test_data_buffer_io(void);
@@ -109,15 +117,19 @@ int main(void)
     const s_test tests[] = {
         { test_strlen_nullptr, "strlen nullptr" },
         { test_strlen_simple, "strlen simple" },
+        { test_strlen_long, "strlen long" },
         { test_strcmp_equal, "strcmp equal" },
         { test_strcmp_null, "strcmp null" },
         { test_isdigit_true, "isdigit true" },
         { test_isdigit_false, "isdigit false" },
         { test_memset_null, "memset null" },
         { test_memset_basic, "memset basic" },
+        { test_memset_large, "memset large" },
         { test_toupper_basic, "toupper basic" },
         { test_atoi_simple, "atoi simple" },
         { test_atoi_negative, "atoi negative" },
+        { test_atoi_intmax, "atoi intmax" },
+        { test_atoi_intmin, "atoi intmin" },
         { test_html_create_node, "html create node" },
         { test_html_find_by_tag, "html find by tag" },
         { test_html_write_to_string, "html write to string" },
@@ -127,6 +139,7 @@ int main(void)
         { test_network_send_uninitialized, "network send uninitialized" },
         { test_strlen_size_t_null, "strlen_size_t null" },
         { test_strlen_size_t_basic, "strlen_size_t basic" },
+        { test_strlen_size_t_long, "strlen_size_t long" },
         { test_bzero_basic, "bzero basic" },
         { test_memcpy_basic, "memcpy basic" },
         { test_memcpy_null, "memcpy null" },
@@ -149,9 +162,12 @@ int main(void)
         { test_abs_positive, "abs positive" },
         { test_atol_basic, "atol basic" },
         { test_atol_whitespace, "atol whitespace" },
+        { test_atol_longmax, "atol longmax" },
+        { test_atol_longmin, "atol longmin" },
         { test_strlen_size_t_empty, "strlen_size_t empty" },
         { test_bzero_zero, "bzero zero" },
         { test_memcpy_partial, "memcpy partial" },
+        { test_memcpy_large, "memcpy large" },
         { test_memmove_no_overlap, "memmove no overlap" },
         { test_memchr_not_found, "memchr not found" },
         { test_memcmp_diff, "memcmp diff" },
