@@ -14,3 +14,12 @@ int test_strlen_simple(void)
         return (1);
     return (0);
 }
+
+int test_strlen_long(void)
+{
+    static char buf[1025];
+    for (int i = 0; i < 1024; ++i)
+        buf[i] = 'a';
+    buf[1024] = '\0';
+    return (ft_strlen(buf) == 1024);
+}
