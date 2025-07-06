@@ -36,6 +36,48 @@ int test_html_find_by_attr(void);
 int test_network_send_receive(void);
 int test_network_invalid_ip(void);
 int test_network_send_uninitialized(void);
+int test_strlen_size_t_null(void);
+int test_strlen_size_t_basic(void);
+int test_strlen_size_t_empty(void);
+int test_bzero_basic(void);
+int test_bzero_zero(void);
+int test_memcpy_basic(void);
+int test_memcpy_null(void);
+int test_memcpy_partial(void);
+int test_memmove_overlap(void);
+int test_memmove_no_overlap(void);
+int test_memchr_found(void);
+int test_memchr_not_found(void);
+int test_memcmp_basic(void);
+int test_memcmp_diff(void);
+int test_strchr_basic(void);
+int test_strchr_not_found(void);
+int test_strrchr_basic(void);
+int test_strrchr_not_found(void);
+int test_strnstr_basic(void);
+int test_strnstr_not_found(void);
+int test_strlcpy_basic(void);
+int test_strlcpy_truncate(void);
+int test_strlcat_basic(void);
+int test_strlcat_truncate(void);
+int test_strncmp_basic(void);
+int test_strncmp_diff(void);
+int test_strncpy_basic(void);
+int test_strncpy_padding(void);
+int test_isalpha_true(void);
+int test_isalpha_lower_true(void);
+int test_isalpha_false(void);
+int test_isalnum_true(void);
+int test_isalnum_false(void);
+int test_isspace_true(void);
+int test_isspace_false(void);
+int test_tolower_basic(void);
+int test_tolower_no_change(void);
+int test_abs_basic(void);
+int test_abs_zero(void);
+int test_abs_positive(void);
+int test_atol_basic(void);
+int test_atol_whitespace(void);
 
 int main(void)
 {
@@ -57,7 +99,49 @@ int main(void)
         { test_html_find_by_attr, "html find by attr" },
         { test_network_send_receive, "network send/receive" },
         { test_network_invalid_ip, "network invalid ip" },
-        { test_network_send_uninitialized, "network send uninitialized" }
+        { test_network_send_uninitialized, "network send uninitialized" },
+        { test_strlen_size_t_null, "strlen_size_t null" },
+        { test_strlen_size_t_basic, "strlen_size_t basic" },
+        { test_bzero_basic, "bzero basic" },
+        { test_memcpy_basic, "memcpy basic" },
+        { test_memcpy_null, "memcpy null" },
+        { test_memmove_overlap, "memmove overlap" },
+        { test_memchr_found, "memchr found" },
+        { test_memcmp_basic, "memcmp basic" },
+        { test_strchr_basic, "strchr basic" },
+        { test_strrchr_basic, "strrchr basic" },
+        { test_strnstr_basic, "strnstr basic" },
+        { test_strlcpy_basic, "strlcpy basic" },
+        { test_strlcat_basic, "strlcat basic" },
+        { test_strncmp_basic, "strncmp basic" },
+        { test_strncpy_basic, "strncpy basic" },
+        { test_isalpha_true, "isalpha true" },
+        { test_isalpha_false, "isalpha false" },
+        { test_tolower_basic, "tolower basic" },
+        { test_tolower_no_change, "tolower no change" },
+        { test_abs_basic, "abs basic" },
+        { test_abs_zero, "abs zero" },
+        { test_abs_positive, "abs positive" },
+        { test_atol_basic, "atol basic" },
+        { test_atol_whitespace, "atol whitespace" },
+        { test_strlen_size_t_empty, "strlen_size_t empty" },
+        { test_bzero_zero, "bzero zero" },
+        { test_memcpy_partial, "memcpy partial" },
+        { test_memmove_no_overlap, "memmove no overlap" },
+        { test_memchr_not_found, "memchr not found" },
+        { test_memcmp_diff, "memcmp diff" },
+        { test_strchr_not_found, "strchr not found" },
+        { test_strrchr_not_found, "strrchr not found" },
+        { test_strnstr_not_found, "strnstr not found" },
+        { test_strlcpy_truncate, "strlcpy truncate" },
+        { test_strlcat_truncate, "strlcat truncate" },
+        { test_strncmp_diff, "strncmp diff" },
+        { test_strncpy_padding, "strncpy padding" },
+        { test_isalpha_lower_true, "isalpha lower" },
+        { test_isalnum_true, "isalnum true" },
+        { test_isalnum_false, "isalnum false" },
+        { test_isspace_true, "isspace true" },
+        { test_isspace_false, "isspace false" }
     };
     const int total = sizeof(tests) / sizeof(tests[0]);
     int index = 0;
