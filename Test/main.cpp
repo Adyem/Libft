@@ -111,6 +111,9 @@ int test_pf_printf_misc(void);
 int test_pf_printf_bool(void);
 int test_pf_printf_nullptr(void);
 int test_pf_printf_modifiers(void);
+int test_get_next_line_basic(void);
+int test_get_next_line_empty(void);
+int test_ft_open_and_read_file(void);
 
 int main(void)
 {
@@ -207,7 +210,10 @@ int main(void)
         { test_pf_printf_misc, "pf_printf misc" },
         { test_pf_printf_bool, "pf_printf bool" },
         { test_pf_printf_nullptr, "pf_printf nullptr" },
-        { test_pf_printf_modifiers, "pf_printf modifiers" }
+        { test_pf_printf_modifiers, "pf_printf modifiers" },
+        { test_get_next_line_basic, "get_next_line basic" },
+        { test_get_next_line_empty, "get_next_line empty" },
+        { test_ft_open_and_read_file, "open_and_read_file" }
     };
     const int total = sizeof(tests) / sizeof(tests[0]);
     int index = 0;
