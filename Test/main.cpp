@@ -20,15 +20,19 @@ static void run_test(int index, const s_test *test, int *passed)
 
 int test_strlen_nullptr(void);
 int test_strlen_simple(void);
+int test_strlen_long(void);
 int test_strcmp_equal(void);
 int test_strcmp_null(void);
 int test_isdigit_true(void);
 int test_isdigit_false(void);
 int test_memset_null(void);
 int test_memset_basic(void);
+int test_memset_large(void);
 int test_toupper_basic(void);
 int test_atoi_simple(void);
 int test_atoi_negative(void);
+int test_atoi_intmax(void);
+int test_atoi_intmin(void);
 int test_html_create_node(void);
 int test_html_find_by_tag(void);
 int test_html_write_to_string(void);
@@ -38,12 +42,14 @@ int test_network_invalid_ip(void);
 int test_network_send_uninitialized(void);
 int test_strlen_size_t_null(void);
 int test_strlen_size_t_basic(void);
+int test_strlen_size_t_long(void);
 int test_strlen_size_t_empty(void);
 int test_bzero_basic(void);
 int test_bzero_zero(void);
 int test_memcpy_basic(void);
 int test_memcpy_null(void);
 int test_memcpy_partial(void);
+int test_memcpy_large(void);
 int test_memmove_overlap(void);
 int test_memmove_no_overlap(void);
 int test_memchr_found(void);
@@ -78,25 +84,55 @@ int test_abs_zero(void);
 int test_abs_positive(void);
 int test_atol_basic(void);
 int test_atol_whitespace(void);
+int test_atol_longmax(void);
+int test_atol_longmin(void);
 int test_ft_string_append(void);
 int test_ft_string_concat(void);
 int test_data_buffer_io(void);
 int test_ft_file_write_read(void);
+int test_ft_vector_push_back(void);
+int test_ft_vector_insert_erase(void);
+int test_ft_vector_reserve_resize(void);
+int test_ft_vector_clear(void);
+int test_ft_map_insert_find(void);
+int test_ft_map_remove(void);
+int test_ft_map_at(void);
+int test_ft_map_at_missing(void);
+int test_ft_map_clear_empty(void);
+int test_ft_shared_ptr_basic(void);
+int test_ft_shared_ptr_array(void);
+int test_ft_shared_ptr_reset(void);
+int test_ft_unique_ptr_basic(void);
+int test_ft_unique_ptr_array(void);
+int test_ft_unique_ptr_release(void);
+int test_ft_unique_ptr_swap(void);
+int test_pf_printf_basic(void);
+int test_pf_printf_misc(void);
+int test_pf_printf_bool(void);
+int test_pf_printf_nullptr(void);
+int test_pf_printf_modifiers(void);
+int test_get_next_line_basic(void);
+int test_get_next_line_empty(void);
+int test_ft_open_and_read_file(void);
 
 int main(void)
 {
     const s_test tests[] = {
         { test_strlen_nullptr, "strlen nullptr" },
         { test_strlen_simple, "strlen simple" },
+        { test_strlen_long, "strlen long" },
         { test_strcmp_equal, "strcmp equal" },
         { test_strcmp_null, "strcmp null" },
         { test_isdigit_true, "isdigit true" },
         { test_isdigit_false, "isdigit false" },
         { test_memset_null, "memset null" },
         { test_memset_basic, "memset basic" },
+        { test_memset_large, "memset large" },
         { test_toupper_basic, "toupper basic" },
         { test_atoi_simple, "atoi simple" },
         { test_atoi_negative, "atoi negative" },
+        { test_atoi_intmax, "atoi intmax" },
+        { test_atoi_intmin, "atoi intmin" },
         { test_html_create_node, "html create node" },
         { test_html_find_by_tag, "html find by tag" },
         { test_html_write_to_string, "html write to string" },
@@ -106,6 +142,7 @@ int main(void)
         { test_network_send_uninitialized, "network send uninitialized" },
         { test_strlen_size_t_null, "strlen_size_t null" },
         { test_strlen_size_t_basic, "strlen_size_t basic" },
+        { test_strlen_size_t_long, "strlen_size_t long" },
         { test_bzero_basic, "bzero basic" },
         { test_memcpy_basic, "memcpy basic" },
         { test_memcpy_null, "memcpy null" },
@@ -128,9 +165,12 @@ int main(void)
         { test_abs_positive, "abs positive" },
         { test_atol_basic, "atol basic" },
         { test_atol_whitespace, "atol whitespace" },
+        { test_atol_longmax, "atol longmax" },
+        { test_atol_longmin, "atol longmin" },
         { test_strlen_size_t_empty, "strlen_size_t empty" },
         { test_bzero_zero, "bzero zero" },
         { test_memcpy_partial, "memcpy partial" },
+        { test_memcpy_large, "memcpy large" },
         { test_memmove_no_overlap, "memmove no overlap" },
         { test_memchr_not_found, "memchr not found" },
         { test_memcmp_diff, "memcmp diff" },
@@ -149,7 +189,31 @@ int main(void)
         { test_ft_string_append, "ft_string append" },
         { test_ft_string_concat, "ft_string concat" },
         { test_data_buffer_io, "DataBuffer io" },
-        { test_ft_file_write_read, "ft_file write/read" }
+        { test_ft_file_write_read, "ft_file write/read" },
+        { test_ft_vector_push_back, "ft_vector push_back" },
+        { test_ft_vector_insert_erase, "ft_vector insert/erase" },
+        { test_ft_vector_reserve_resize, "ft_vector reserve/resize" },
+        { test_ft_vector_clear, "ft_vector clear" },
+        { test_ft_map_insert_find, "ft_map insert/find" },
+        { test_ft_map_remove, "ft_map remove" },
+        { test_ft_map_at, "ft_map at" },
+        { test_ft_map_at_missing, "ft_map at missing" },
+        { test_ft_map_clear_empty, "ft_map clear/empty" },
+        { test_ft_shared_ptr_basic, "ft_sharedptr basic" },
+        { test_ft_shared_ptr_array, "ft_sharedptr array" },
+        { test_ft_shared_ptr_reset, "ft_sharedptr reset" },
+        { test_ft_unique_ptr_basic, "ft_uniqueptr basic" },
+        { test_ft_unique_ptr_array, "ft_uniqueptr array" },
+        { test_ft_unique_ptr_release, "ft_uniqueptr release" },
+        { test_ft_unique_ptr_swap, "ft_uniqueptr swap" },
+        { test_pf_printf_basic, "pf_printf basic" },
+        { test_pf_printf_misc, "pf_printf misc" },
+        { test_pf_printf_bool, "pf_printf bool" },
+        { test_pf_printf_nullptr, "pf_printf nullptr" },
+        { test_pf_printf_modifiers, "pf_printf modifiers" },
+        { test_get_next_line_basic, "get_next_line basic" },
+        { test_get_next_line_empty, "get_next_line empty" },
+        { test_ft_open_and_read_file, "open_and_read_file" }
     };
     const int total = sizeof(tests) / sizeof(tests[0]);
     int index = 0;
