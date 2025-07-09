@@ -33,7 +33,8 @@ SUBDIRS += encryption \
             RNG \
             JSon \
             file \
-            HTML
+            HTML \
+            Game
 
 LIB_BASES := \
   CMA/CustomMemoryAllocator \
@@ -56,7 +57,8 @@ LIB_BASES += encryption/encryption \
   RNG/RNG \
   JSon/JSon \
   file/file \
-  HTML/HTMLParser
+  HTML/HTMLParser \
+  Game/Game
 
 ifeq ($(OS),Windows_NT)
 OS_EXTRACT = $(call EXTRACT,Windows/Windows.a)
@@ -107,6 +109,7 @@ $(TARGET): $(LIBS)
 	$(call EXTRACT,JSon/JSon.a)
 	$(call EXTRACT,file/file.a)
 	$(call EXTRACT,HTML/HTMLParser.a)
+	$(call EXTRACT,Game/Game.a)
 	$(AR) $(ARFLAGS) $@ temp_objs/*.o
 	$(RMDIR) temp_objs
 
@@ -129,6 +132,7 @@ $(DEBUG_TARGET): $(DEBUG_LIBS)
 	$(call EXTRACT,JSon/JSon_debug.a)
 	$(call EXTRACT,file/file_debug.a)
 	$(call EXTRACT,HTML/HTMLParser_debug.a)
+	$(call EXTRACT,Game/Game_debug.a)
 	$(AR) $(ARFLAGS) $@ temp_objs/*.o
 	$(RMDIR) temp_objs
 
@@ -154,6 +158,7 @@ clean:
 	$(MAKE) -C JSon clean
 	$(MAKE) -C file clean
 	$(MAKE) -C HTML clean
+	$(MAKE) -C Game clean
 	$(RM) $(TARGET) $(DEBUG_TARGET)
 
 fclean: clean
@@ -172,6 +177,7 @@ fclean: clean
 	$(MAKE) -C JSon fclean
 	$(MAKE) -C file fclean
 	$(MAKE) -C HTML fclean
+	$(MAKE) -C Game fclean
 	$(RM) $(TARGET) $(DEBUG_TARGET)
 	
 .PHONY: all debug both re clean fclean
