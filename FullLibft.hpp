@@ -38,5 +38,6 @@
 #include "Windows/windows_file.hpp"
 #include "encryption/BasicEncryption.hpp"
 #include "file/open_dir.hpp"
+#include "Game/map3d.hpp"
 
 #endif // FULL_LIBFT_HPP
