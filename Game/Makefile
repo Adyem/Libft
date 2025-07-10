@@ -1,9 +1,9 @@
 TARGET := Game.a
 DEBUG_TARGET := Game_debug.a
 
-SRCS := map3d.cpp character.cpp
+SRCS := map3d.cpp character.cpp item.cpp
 
-HEADERS := map3d.hpp character.hpp
+HEADERS := map3d.hpp character.hpp item.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
