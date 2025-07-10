@@ -17,6 +17,7 @@ class ft_map3d
 
         void    set_error(int err) const;
 
+
         void    allocate(size_t width, size_t height, size_t depth, int value);
         void    deallocate();
         size_t  index(size_t x, size_t y, size_t z) const;
