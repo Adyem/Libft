@@ -94,14 +94,14 @@ const char* ft_strerror(int error_code)
 		return ("Failed to create window");
 	else if (error_code == CHECK_DIR_FAIL)
 		return ("Check Directory: Invalid path");
-        else if (error_code == JSON_MALLOC_FAIL)
-                return ("JSON: Malloc failure");
-        else if (error_code == MAP3D_ALLOC_FAIL)
-                return ("Map3D allocation failure");
-        else if (error_code == MAP3D_OUT_OF_BOUNDS)
-                return ("Map3D index out of bounds");
-        else if (error_code == SOCKET_JOIN_GROUP_FAILED)
-                return ("Socket: Join multicast group failed");
+	else if (error_code == JSON_MALLOC_FAIL)
+		return ("JSON: Malloc failure");
+	else if (error_code == MAP3D_ALLOC_FAIL)
+		return ("Map3D allocation failure");
+	else if (error_code == MAP3D_OUT_OF_BOUNDS)
+		return ("Map3D index out of bounds");
+	else if (error_code == SOCKET_JOIN_GROUP_FAILED)
+		return ("Socket: Join multicast group failed");
 	else if (error_code > ERRNO_OFFSET)
         {
         int standard_errno = error_code - ERRNO_OFFSET;
