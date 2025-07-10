@@ -103,4 +103,4 @@ class ft_item
         void set_ability_2(const ft_item_ability &ability) noexcept;
 };
 
-#endif // ITEM_HPP
+#endif

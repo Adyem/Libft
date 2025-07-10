@@ -40,28 +40,36 @@ int ft_item::get_coins() const noexcept { return _coins; }
 void ft_item::set_coins(int coins) noexcept { _coins = coins; }
 
 ft_resistance ft_item::get_fire_res() const noexcept { return _fire_res; }
-void ft_item::set_fire_res(int percent, int flat) noexcept { _fire_res = {percent, flat}; }
+void ft_item::set_fire_res(int percent, int flat) noexcept { _fire_res =
+	{percent, flat}; }
 
 ft_resistance ft_item::get_frost_res() const noexcept { return _frost_res; }
-void ft_item::set_frost_res(int percent, int flat) noexcept { _frost_res = {percent, flat}; }
+void ft_item::set_frost_res(int percent, int flat) noexcept { _frost_res =
+	{percent, flat}; }
 
 ft_resistance ft_item::get_lightning_res() const noexcept { return _lightning_res; }
-void ft_item::set_lightning_res(int percent, int flat) noexcept { _lightning_res = {percent, flat}; }
+void ft_item::set_lightning_res(int percent, int flat) noexcept { _lightning_res =
+	{percent, flat}; }
 
 ft_resistance ft_item::get_air_res() const noexcept { return _air_res; }
 void ft_item::set_air_res(int percent, int flat) noexcept { _air_res = {percent, flat}; }
 
 ft_resistance ft_item::get_earth_res() const noexcept { return _earth_res; }
-void ft_item::set_earth_res(int percent, int flat) noexcept { _earth_res = {percent, flat}; }
+void ft_item::set_earth_res(int percent, int flat) noexcept { _earth_res =
+	{percent, flat}; }
 
 ft_resistance ft_item::get_chaos_res() const noexcept { return _chaos_res; }
-void ft_item::set_chaos_res(int percent, int flat) noexcept { _chaos_res = {percent, flat}; }
+void ft_item::set_chaos_res(int percent, int flat) noexcept { _chaos_res =
+	{percent, flat}; }
 
 ft_resistance ft_item::get_physical_res() const noexcept { return _physical_res; }
-void ft_item::set_physical_res(int percent, int flat) noexcept { _physical_res = {percent, flat}; }
+void ft_item::set_physical_res(int percent, int flat) noexcept { _physical_res =
+	{percent, flat}; }
 
 ft_item_ability ft_item::get_ability_1() const noexcept { return _ability_1; }
-void ft_item::set_ability_1(const ft_item_ability &ability) noexcept { _ability_1 = ability; }
+void ft_item::set_ability_1(const ft_item_ability &ability) noexcept { _ability_1 =
+	ability; }
 
 ft_item_ability ft_item::get_ability_2() const noexcept { return _ability_2; }
-void ft_item::set_ability_2(const ft_item_ability &ability) noexcept { _ability_2 = ability; }
+void ft_item::set_ability_2(const ft_item_ability &ability) noexcept { _ability_2 =
+	ability; }
