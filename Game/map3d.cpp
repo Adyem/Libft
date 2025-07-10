@@ -39,11 +39,21 @@ size_t ft_map3d::index(size_t x, size_t y, size_t z) const
 
 int ft_map3d::get(size_t x, size_t y, size_t z) const
 {
+    if (!this->_data || x >= this->_width || y >= this->_height || z >= this->_depth)
+    {
+        const_cast<ft_map3d*>(this)->set_error(MAP3D_OUT_OF_BOUNDS);
+        return (0);
+    }
     return (this->_data[z][y][x]);
 }
 
 void ft_map3d::set(size_t x, size_t y, size_t z, int value)
 {
+    if (!this->_data || x >= this->_width || y >= this->_height || z >= this->_depth)
+    {
+        this->set_error(MAP3D_OUT_OF_BOUNDS);
+        return ;
+    }
     this->_data[z][y][x] = value;
     return ;
 }
