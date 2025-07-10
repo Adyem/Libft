@@ -101,6 +101,40 @@ class ft_item
 
         ft_item_ability get_ability_2() const noexcept;
         void set_ability_2(const ft_item_ability &ability) noexcept;
-};
 
-#endif
+        uint8_t get_ability_1_stat_id() const noexcept;
+        void set_ability_1_stat_id(uint8_t id) noexcept;
+
+        int get_ability_1_main_modifier() const noexcept;
+        void set_ability_1_main_modifier(int mod) noexcept;
+
+        int get_ability_1_bonus_modifier() const noexcept;
+        void set_ability_1_bonus_modifier(int mod) noexcept;
+
+        int get_ability_1_duration() const noexcept;
+        void set_ability_1_duration(int duration) noexcept;
+
+        int get_ability_1_duration_modifier() const noexcept;
+        void set_ability_1_duration_modifier(int mod) noexcept;
+
+        int get_ability_1_stat_modifier() const noexcept;
+        void set_ability_1_stat_modifier(int mod) noexcept;
+
+        uint8_t get_ability_2_stat_id() const noexcept;
+        void set_ability_2_stat_id(uint8_t id) noexcept;
+
+        int get_ability_2_main_modifier() const noexcept;
+        void set_ability_2_main_modifier(int mod) noexcept;
+
+        int get_ability_2_bonus_modifier() const noexcept;
+        void set_ability_2_bonus_modifier(int mod) noexcept;
+
+        int get_ability_2_duration() const noexcept;
+        void set_ability_2_duration(int duration) noexcept;
+
+        int get_ability_2_duration_modifier() const noexcept;
+        void set_ability_2_duration_modifier(int mod) noexcept;
+
+        int get_ability_2_stat_modifier() const noexcept;
+        void set_ability_2_stat_modifier(int mod) noexcept;
+};
