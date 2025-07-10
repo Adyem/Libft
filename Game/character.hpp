@@ -18,6 +18,7 @@ class ft_character
         int _reason;
         int _insigh;
         int _presence;
+        int _coins;
         ft_resistance _fire_res;
         ft_resistance _frost_res;
         ft_resistance _lightning_res;
@@ -53,6 +54,9 @@ class ft_character
 
         int get_presence() const noexcept;
         void set_presence(int presence) noexcept;
+
+        int get_coins() const noexcept;
+        void set_coins(int coins) noexcept;
 
         ft_resistance get_fire_res() const noexcept;
         void set_fire_res(int percent, int flat) noexcept;
