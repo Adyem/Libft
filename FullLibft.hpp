@@ -39,5 +39,6 @@
 #include "encryption/BasicEncryption.hpp"
 #include "file/open_dir.hpp"
 #include "Game/map3d.hpp"
+#include "Game/character.hpp"
 
 #endif // FULL_LIBFT_HPP
