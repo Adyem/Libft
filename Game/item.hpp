@@ -138,3 +138,4 @@ class ft_item
         int get_ability_2_stat_modifier() const noexcept;
         void set_ability_2_stat_modifier(int mod) noexcept;
 };
+#endif // ITEM_HPP
