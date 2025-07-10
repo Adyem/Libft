@@ -4,6 +4,7 @@
 #include <cstddef>
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/nullptr.hpp"
+#include "../Errno/errno.hpp"
 
 class ft_map3d
 {
@@ -12,6 +13,10 @@ class ft_map3d
         size_t  _width;
         size_t  _height;
         size_t  _depth;
+        mutable int    _error;
+
+        void    set_error(int err) const;
+
 
         void    allocate(size_t width, size_t height, size_t depth, int value);
         void    deallocate();
@@ -30,6 +35,7 @@ class ft_map3d
         size_t  get_width() const;
         size_t  get_height() const;
         size_t  get_depth() const;
+        int     get_error() const;
 };
 
 #endif
