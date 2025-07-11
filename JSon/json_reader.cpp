@@ -21,7 +21,7 @@ static char *parse_string(const char *s, size_t &i)
     size_t start = i;
     while (i < len && s[i] != '"')
         i++;
-    char *result = cma_substr(s, start, i - start);
+    char *result = cma_substr(s, static_cast<unsigned int>(start), i - start);
     if (i < len && s[i] == '"')
         i++;
     return (result);
@@ -55,7 +55,7 @@ static char *parse_number(const char *s, size_t &i)
     }
     if (!has_digits)
         return (ft_nullptr);
-    return (cma_substr(s, start, i - start));
+    return (cma_substr(s, static_cast<unsigned int>(start), i - start));
 }
 
 static char *parse_value(const char *s, size_t &i)
