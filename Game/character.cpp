@@ -3,7 +3,7 @@
 ft_character::ft_character() noexcept
     : _hit_points(0), _armor(0), _might(0), _agility(0),
       _endurance(0), _reason(0), _insigh(0), _presence(0),
-      _coins(0),
+      _coins(0), _x(0), _y(0), _z(0),
       _fire_res{0, 0}, _frost_res{0, 0}, _lightning_res{0, 0},
       _air_res{0, 0}, _earth_res{0, 0}, _chaos_res{0, 0},
       _physical_res{0, 0}
@@ -110,6 +110,53 @@ void ft_character::set_coins(int coins) noexcept
     return ;
 }
 
+<<<<<<< HEAD
+=======
+int ft_character::get_valor() const noexcept
+{
+    return (_valor);
+}
+
+void ft_character::set_valor(int valor) noexcept
+{
+    _valor = valor;
+    return ;
+}
+
+int ft_character::get_x() const noexcept
+{
+    return (_x);
+}
+
+void ft_character::set_x(int x) noexcept
+{
+    _x = x;
+    return ;
+}
+
+int ft_character::get_y() const noexcept
+{
+    return (_y);
+}
+
+void ft_character::set_y(int y) noexcept
+{
+    _y = y;
+    return ;
+}
+
+int ft_character::get_z() const noexcept
+{
+    return (_z);
+}
+
+void ft_character::set_z(int z) noexcept
+{
+    _z = z;
+    return ;
+}
+
+>>>>>>> origin/main
 ft_resistance ft_character::get_fire_res() const noexcept
 {
     return (_fire_res);
