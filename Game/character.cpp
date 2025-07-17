@@ -6,7 +6,7 @@ ft_character::ft_character() noexcept
       _coins(0), _x(0), _y(0), _z(0),
       _fire_res{0, 0}, _frost_res{0, 0}, _lightning_res{0, 0},
       _air_res{0, 0}, _earth_res{0, 0}, _chaos_res{0, 0},
-      _physical_res{0, 0}
+      _physical_res{0, 0}, _quests()
 {
     return ;
 }
@@ -218,4 +218,14 @@ void ft_character::set_physical_res(int percent, int flat) noexcept
 {
     _physical_res = {percent, flat};
     return ;
+}
+
+ft_map<int, ft_quest> &ft_character::get_quests() noexcept
+{
+    return (_quests);
+}
+
+const ft_map<int, ft_quest> &ft_character::get_quests() const noexcept
+{
+    return (_quests);
 }

@@ -1,6 +1,9 @@
 #ifndef CHARACTER_HPP
 # define CHARACTER_HPP
 
+#include "../Template/map.hpp"
+#include "quest.hpp"
+
 struct ft_resistance
 {
     int dr_percent;
@@ -29,6 +32,7 @@ class ft_character
         ft_resistance _earth_res;
         ft_resistance _chaos_res;
         ft_resistance _physical_res;
+        ft_map<int, ft_quest> _quests;
 
     public:
         ft_character() noexcept;
@@ -93,6 +97,9 @@ class ft_character
 
         ft_resistance get_physical_res() const noexcept;
         void set_physical_res(int percent, int flat) noexcept;
+
+        ft_map<int, ft_quest>       &get_quests() noexcept;
+        const ft_map<int, ft_quest> &get_quests() const noexcept;
 };
 
 #endif
