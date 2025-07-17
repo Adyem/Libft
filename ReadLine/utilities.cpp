@@ -26,6 +26,8 @@ int rl_clear_line(const char *prompt, const char *buffer)
     int total_length = ft_strlen(prompt) + ft_strlen(buffer);
     pf_printf("\r");
     int term_width = rl_get_terminal_width();
+	if (term_width == 0)
+		term_width = 1;
 	if (term_width == -1)
 		return (-1);
     int line_count = (total_length / term_width) + 1;
