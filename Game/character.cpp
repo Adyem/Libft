@@ -110,19 +110,6 @@ void ft_character::set_coins(int coins) noexcept
     return ;
 }
 
-<<<<<<< HEAD
-=======
-int ft_character::get_valor() const noexcept
-{
-    return (_valor);
-}
-
-void ft_character::set_valor(int valor) noexcept
-{
-    _valor = valor;
-    return ;
-}
-
 int ft_character::get_x() const noexcept
 {
     return (_x);
@@ -156,7 +143,6 @@ void ft_character::set_z(int z) noexcept
     return ;
 }
 
->>>>>>> origin/main
 ft_resistance ft_character::get_fire_res() const noexcept
 {
     return (_fire_res);
