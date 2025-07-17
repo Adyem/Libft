@@ -3,6 +3,8 @@
 
 #include "../Template/map.hpp"
 #include "quest.hpp"
+#include "reputation.hpp"
+#include "../Errno/errno.hpp"
 
 struct ft_resistance
 {
@@ -33,6 +35,10 @@ class ft_character
         ft_resistance _chaos_res;
         ft_resistance _physical_res;
         ft_map<int, ft_quest> _quests;
+        ft_reputation         _reputation;
+        mutable int           _error;
+
+        void    set_error(int err) const noexcept;
 
     public:
         ft_character() noexcept;
@@ -100,6 +106,11 @@ class ft_character
 
         ft_map<int, ft_quest>       &get_quests() noexcept;
         const ft_map<int, ft_quest> &get_quests() const noexcept;
+
+        ft_reputation       &get_reputation() noexcept;
+        const ft_reputation &get_reputation() const noexcept;
+
+        int get_error() const noexcept;
 };
 
 #endif
