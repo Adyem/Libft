@@ -8,7 +8,8 @@ extern thread_local int ft_errno;
 enum PTErrorCode
 {
     ER_SUCCESS = 0,
-	CMA_BAD_ALLOC,
+        CMA_BAD_ALLOC,
+    CMA_INVALID_PTR,
     PT_ERR_QUEUE_FULL,
     PT_ERR_MUTEX_NULLPTR,
     PT_ERR_MUTEX_OWNER,
