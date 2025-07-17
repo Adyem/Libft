@@ -19,7 +19,6 @@ class ft_character
         int _insigh;
         int _presence;
         int _coins;
-        int _valor;
         int _x;
         int _y;
         int _z;
