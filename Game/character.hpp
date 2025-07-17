@@ -4,6 +4,8 @@
 #include "../Template/map.hpp"
 #include "quest.hpp"
 #include "reputation.hpp"
+#include "buff.hpp"
+#include "debuff.hpp"
 #include "../Errno/errno.hpp"
 
 struct ft_resistance
@@ -34,6 +36,8 @@ class ft_character
         ft_resistance _earth_res;
         ft_resistance _chaos_res;
         ft_resistance _physical_res;
+        ft_map<int, ft_buff>  _buffs;
+        ft_map<int, ft_debuff> _debuffs;
         ft_map<int, ft_quest> _quests;
         ft_reputation         _reputation;
         mutable int           _error;
@@ -103,6 +107,12 @@ class ft_character
 
         ft_resistance get_physical_res() const noexcept;
         void set_physical_res(int percent, int flat) noexcept;
+
+        ft_map<int, ft_buff>       &get_buffs() noexcept;
+        const ft_map<int, ft_buff> &get_buffs() const noexcept;
+
+        ft_map<int, ft_debuff>       &get_debuffs() noexcept;
+        const ft_map<int, ft_debuff> &get_debuffs() const noexcept;
 
         ft_map<int, ft_quest>       &get_quests() noexcept;
         const ft_map<int, ft_quest> &get_quests() const noexcept;

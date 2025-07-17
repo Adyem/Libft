@@ -1,9 +1,9 @@
 TARGET := Game.a
 DEBUG_TARGET := Game_debug.a
 
-SRCS := map3d.cpp character.cpp item.cpp quest.cpp reputation.cpp
+SRCS := map3d.cpp character.cpp item.cpp quest.cpp reputation.cpp buff.cpp debuff.cpp
 
-HEADERS := map3d.hpp character.hpp item.hpp quest.hpp reputation.hpp
+HEADERS := map3d.hpp character.hpp item.hpp quest.hpp reputation.hpp buff.hpp debuff.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
