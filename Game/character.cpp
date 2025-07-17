@@ -6,9 +6,14 @@ ft_character::ft_character() noexcept
       _coins(0), _x(0), _y(0), _z(0),
       _fire_res{0, 0}, _frost_res{0, 0}, _lightning_res{0, 0},
       _air_res{0, 0}, _earth_res{0, 0}, _chaos_res{0, 0},
-      _physical_res{0, 0}, _quests(), _reputation(), _error(ER_SUCCESS)
+      _physical_res{0, 0}, _buffs(), _debuffs(), _quests(), _reputation(),
+      _error(ER_SUCCESS)
 {
-    if (this->_quests.get_error() != ER_SUCCESS)
+    if (this->_buffs.get_error() != ER_SUCCESS)
+        this->set_error(this->_buffs.get_error());
+    else if (this->_debuffs.get_error() != ER_SUCCESS)
+        this->set_error(this->_debuffs.get_error());
+    else if (this->_quests.get_error() != ER_SUCCESS)
         this->set_error(this->_quests.get_error());
     else if (this->_reputation.get_error() != ER_SUCCESS)
         this->set_error(this->_reputation.get_error());
@@ -222,6 +227,26 @@ void ft_character::set_physical_res(int percent, int flat) noexcept
 {
     this->_physical_res = {percent, flat};
     return ;
+}
+
+ft_map<int, ft_buff> &ft_character::get_buffs() noexcept
+{
+    return (this->_buffs);
+}
+
+const ft_map<int, ft_buff> &ft_character::get_buffs() const noexcept
+{
+    return (this->_buffs);
+}
+
+ft_map<int, ft_debuff> &ft_character::get_debuffs() noexcept
+{
+    return (this->_debuffs);
+}
+
+const ft_map<int, ft_debuff> &ft_character::get_debuffs() const noexcept
+{
+    return (this->_debuffs);
 }
 
 ft_map<int, ft_quest> &ft_character::get_quests() noexcept
