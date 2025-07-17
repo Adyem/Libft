@@ -8,33 +8,33 @@ ft_quest::ft_quest() noexcept
 
 int ft_quest::get_id() const noexcept
 {
-    return (_id);
+    return (this->_id);
 }
 
 void ft_quest::set_id(int id) noexcept
 {
-    _id = id;
+    this->_id = id;
     return ;
 }
 
 int ft_quest::get_phases() const noexcept
 {
-    return (_phases);
+    return (this->_phases);
 }
 
 void ft_quest::set_phases(int phases) noexcept
 {
-    _phases = phases;
+    this->_phases = phases;
     return ;
 }
 
 int ft_quest::get_current_phase() const noexcept
 {
-    return (_current_phase);
+    return (this->_current_phase);
 }
 
 void ft_quest::set_current_phase(int phase) noexcept
 {
-    _current_phase = phase;
+    this->_current_phase = phase;
     return ;
 }

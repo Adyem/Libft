@@ -56,7 +56,7 @@ void ft_string::append(const ft_string& string) noexcept
     ft_memcpy(this->_data + this->_length, string._data, string._length);
     this->_length = new_length;
     this->_data[this->_length] = '\0';
-	return ;
+    return ;
 }
 
 void ft_string::append(const char *string) noexcept
@@ -144,43 +144,43 @@ void ft_string::move(ft_string& other) noexcept
 {
     if (this != &other)
     {
-        cma_free(_data);
-        _data = other._data;
-        _length = other._length;
-        _capacity = other._capacity;
-        _errorCode = other._errorCode;
+        cma_free(this->_data);
+        this->_data = other._data;
+        this->_length = other._length;
+        this->_capacity = other._capacity;
+        this->_errorCode = other._errorCode;
         other._data = nullptr;
         other._length = 0;
         other._capacity = 0;
         other._errorCode = 0;
     }
-	return ;
+    return ;
 }
 
 ft_string& ft_string::operator+=(const ft_string& other) noexcept
 {
-	size_t index = 0;
+    size_t index = 0;
 
     while (index < other._length)
-	{
+    {
         this->append(other._data[index]);
-		if (_errorCode)
-			return (*this);
-		index++;
-	}
+        if (this->_errorCode)
+            return (*this);
+        index++;
+    }
     return (*this);
 }
 
 ft_string& ft_string::operator+=(const char* cstr) noexcept
 {
     if (cstr)
-	{
+    {
         size_t i = 0;
         while (cstr[i] != '\0')
-		{
+        {
             this->append(cstr[i]);
-			if (_errorCode)
-				return (*this);
+            if (this->_errorCode)
+                return (*this);
             ++i;
         }
     }
@@ -205,7 +205,7 @@ void ft_string::erase(std::size_t index, std::size_t count) noexcept
     if (count > 0)
     {
         ft_memmove(this->_data + index, this->_data + index + count,
-				this->_length - index - count);
+                this->_length - index - count);
         this->_length -= count;
         this->_data[this->_length] = '\0';
     }

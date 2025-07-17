@@ -9,44 +9,44 @@
 
 ft_file::ft_file() noexcept
 {
-	this->_fd = -1;
-	this->_error_code = 0;
-	return ;
+    this->_fd = -1;
+    this->_error_code = 0;
+    return ;
 }
 
 ft_file::ft_file(const char* filename, int flags, mode_t mode) noexcept 
     : _fd(-1), _error_code(0)
 {
-	if (DEBUG == 1)
-		pf_printf("Opening %s\n", filename);
+    if (DEBUG == 1)
+        pf_printf("Opening %s\n", filename);
     this->_fd = ::open(filename, flags, mode);
-	if (_fd < 0)
-		this->set_error(errno + ERRNO_OFFSET);
-	return ;
+    if (this->_fd < 0)
+        this->set_error(errno + ERRNO_OFFSET);
+    return ;
 }
 
 ft_file::ft_file(const char* filename, int flags) noexcept 
     : _fd(-1), _error_code(0)
 {
     this->_fd = ::open(filename, flags);
-	if (this->_fd < 0)
-		this->set_error(errno + ERRNO_OFFSET);
-	return ;
+    if (this->_fd < 0)
+        this->set_error(errno + ERRNO_OFFSET);
+    return ;
 }
 
 ft_file::ft_file(int fd) noexcept : _fd(fd), _error_code(0)
 {
-	return ;
+    return ;
 }
 
 ft_file::~ft_file() noexcept
 {
     if (this->_fd >= 0)
-	{
+    {
         if (::close(this->_fd) == -1)
-			ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = errno + ERRNO_OFFSET;
     }
-	return ;
+    return ;
 }
 
 ft_file::ft_file(ft_file&& other) noexcept 
@@ -54,16 +54,16 @@ ft_file::ft_file(ft_file&& other) noexcept
 {
     other._fd = -1;
     other._error_code = 0;
-	return ;
+    return ;
 }
 
 ft_file& ft_file::operator=(ft_file&& other) noexcept
 {
     if (this != &other)
-	{
+    {
         if (this->_fd >= 0)
-		{
-            if (::close(_fd) == -1 && this->_error_code == 0)
+        {
+            if (::close(this->_fd) == -1 && this->_error_code == 0)
                 this->_error_code = errno;
         }
         this->_fd = other._fd;
@@ -74,49 +74,49 @@ ft_file& ft_file::operator=(ft_file&& other) noexcept
     return (*this);
 }
 
-void	ft_file::close() noexcept
+void    ft_file::close() noexcept
 {
-	if (this->_fd >= 0)
-	{
-		::close(this->_fd);
-		this->_fd = -1;
-	}
-	return ;
+    if (this->_fd >= 0)
+    {
+        ::close(this->_fd);
+        this->_fd = -1;
+    }
+    return ;
 }
 
-int	ft_file::open(const char* filename, int flags, mode_t mode) noexcept
+int ft_file::open(const char* filename, int flags, mode_t mode) noexcept
 {
-	if (DEBUG == 1)
-		pf_printf("Opening %s\n", filename);
-	if (this->_fd != -1)
-		this->close();
-	_fd = ::open(filename, flags, mode);
-	if (this->_fd < 0)
-	{
-		this->set_error(errno + ERRNO_OFFSET);
-		return (1);
-	}
-	return (0);
+    if (DEBUG == 1)
+        pf_printf("Opening %s\n", filename);
+    if (this->_fd != -1)
+        this->close();
+    this->_fd = ::open(filename, flags, mode);
+    if (this->_fd < 0)
+    {
+        this->set_error(errno + ERRNO_OFFSET);
+        return (1);
+    }
+    return (0);
 }
 
-int	ft_file::open(const char* filename, int flags) noexcept
+int ft_file::open(const char* filename, int flags) noexcept
 {
-	if (this->_fd != -1)
-		this->close();
-	_fd = ::open(filename, flags);
-	if (this->_fd < 0)
-	{
-		this->set_error(errno + ERRNO_OFFSET);
-		return (1);
-	}
-	return (0);
+    if (this->_fd != -1)
+        this->close();
+    this->_fd = ::open(filename, flags);
+    if (this->_fd < 0)
+    {
+        this->set_error(errno + ERRNO_OFFSET);
+        return (1);
+    }
+    return (0);
 }
 
-void	ft_file::set_error(int error_code)
+void    ft_file::set_error(int error_code)
 {
-	ft_errno = error_code;
-	this->_error_code = error_code;
-	return ;
+    ft_errno = error_code;
+    this->_error_code = error_code;
+    return ;
 }
 
 int ft_file::get_fd() const
@@ -126,30 +126,30 @@ int ft_file::get_fd() const
 
 int ft_file::get_error() const noexcept
 {
-	return (this->_error_code);
+    return (this->_error_code);
 }
 
 const char *ft_file::get_error_str() const noexcept
 {
-	return (ft_strerror(_error_code));
+    return (ft_strerror(this->_error_code));
 }
 
-ssize_t	ft_file::read(char *buffer, int count) noexcept
+ssize_t ft_file::read(char *buffer, int count) noexcept
 {
-	if (buffer == NULL || count <= 0)
-	{
-		this->set_error(FT_EINVAL);
-		return (-1);
-	}
-	if (this->_fd < 0)
-	{
-		this->set_error(FILE_INVALID_FD);
-		return (-1);
-	}
-	ssize_t bytes_read = ::read(this->_fd, buffer, count);
-	if (bytes_read == -1)
-		this->set_error(errno + ERRNO_OFFSET);
-	return (bytes_read);
+    if (buffer == NULL || count <= 0)
+    {
+        this->set_error(FT_EINVAL);
+        return (-1);
+    }
+    if (this->_fd < 0)
+    {
+        this->set_error(FILE_INVALID_FD);
+        return (-1);
+    }
+    ssize_t bytes_read = ::read(this->_fd, buffer, count);
+    if (bytes_read == -1)
+        this->set_error(errno + ERRNO_OFFSET);
+    return (bytes_read);
 }
 
 ssize_t ft_file::write(const char *string) noexcept
@@ -180,17 +180,17 @@ int ft_file::seek(off_t offset, int whence) noexcept
     return (0);
 }
 
-int	ft_file::printf(const char *format, ...)
+int ft_file::printf(const char *format, ...)
 {
     va_list args;
 
-	if (!format)
+    if (!format)
         return (0);
-	if (this->_fd == -1)
-	{
-		this->set_error(FILE_INVALID_FD);
-		return (0);
-	}
+    if (this->_fd == -1)
+    {
+        this->set_error(FILE_INVALID_FD);
+        return (0);
+    }
     va_start(args, format);
     int printed_chars = pf_printf_fd_v(this->_fd, format, args);
     va_end(args);
@@ -199,5 +199,5 @@ int	ft_file::printf(const char *format, ...)
 
 ft_file::operator int() const
 {
-	return (this->_fd);
+    return (this->_fd);
 }
