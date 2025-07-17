@@ -6,8 +6,12 @@ ft_character::ft_character() noexcept
       _coins(0), _x(0), _y(0), _z(0),
       _fire_res{0, 0}, _frost_res{0, 0}, _lightning_res{0, 0},
       _air_res{0, 0}, _earth_res{0, 0}, _chaos_res{0, 0},
-      _physical_res{0, 0}, _quests()
+      _physical_res{0, 0}, _quests(), _reputation(), _error(ER_SUCCESS)
 {
+    if (this->_quests.get_error() != ER_SUCCESS)
+        this->set_error(this->_quests.get_error());
+    else if (this->_reputation.get_error() != ER_SUCCESS)
+        this->set_error(this->_reputation.get_error());
     return ;
 }
 
@@ -228,4 +232,26 @@ ft_map<int, ft_quest> &ft_character::get_quests() noexcept
 const ft_map<int, ft_quest> &ft_character::get_quests() const noexcept
 {
     return (this->_quests);
+}
+
+ft_reputation &ft_character::get_reputation() noexcept
+{
+    return (this->_reputation);
+}
+
+const ft_reputation &ft_character::get_reputation() const noexcept
+{
+    return (this->_reputation);
+}
+
+int ft_character::get_error() const noexcept
+{
+    return (this->_error);
+}
+
+void ft_character::set_error(int err) const noexcept
+{
+    ft_errno = err;
+    this->_error = err;
+    return ;
 }
