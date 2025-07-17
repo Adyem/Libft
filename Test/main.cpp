@@ -1,5 +1,14 @@
 #include "../Libft/libft.hpp"
 #include "../Printf/printf.hpp"
+#include "../CMA/CMA.hpp"
+#include "../ReadLine/readline.hpp"
+
+#include <algorithm>
+#include <cctype>
+#include <cstdio>
+#include <sstream>
+#include <string>
+#include <vector>
 
 struct s_test
 {
@@ -117,6 +126,7 @@ int test_ft_open_and_read_file(void);
 int test_cma_checked_free_basic(void);
 int test_cma_checked_free_offset(void);
 int test_cma_checked_free_invalid(void);
+int test_game_simulation(void);
 
 int main(void)
 {
@@ -219,17 +229,54 @@ int main(void)
         { test_ft_open_and_read_file, "open_and_read_file" },
         { test_cma_checked_free_basic, "cma_checked_free basic" },
         { test_cma_checked_free_offset, "cma_checked_free offset" },
-        { test_cma_checked_free_invalid, "cma_checked_free invalid" }
+        { test_cma_checked_free_invalid, "cma_checked_free invalid" },
+        { test_game_simulation, "game simulation" }
     };
     const int total = sizeof(tests) / sizeof(tests[0]);
-    int index = 0;
-    int passed = 0;
 
-    while (index < total)
+    while (true)
     {
-        run_test(index + 1, &tests[index], &passed);
-        index++;
+        std::printf("Available tests:\n");
+        for (int i = 0; i < total; ++i)
+            std::printf("%2d) %s\n", i + 1, tests[i].description);
+
+        char *line = rl_readline("Select tests to run (or 'all'): ");
+        if (!line)
+            break;
+        std::string input(line);
+        cma_free(line);
+        std::transform(input.begin(), input.end(), input.begin(),
+                       [](unsigned char c){ return std::tolower(c); });
+
+        std::vector<int> to_run;
+        if (input == "all")
+        {
+            for (int i = 0; i < total; ++i)
+                to_run.push_back(i + 1);
+        }
+        else
+        {
+            std::stringstream ss(input);
+            int value;
+            while (ss >> value)
+                if (value >= 1 && value <= total)
+                    to_run.push_back(value);
+        }
+
+        int passed = 0;
+        for (int idx : to_run)
+            run_test(idx, &tests[idx - 1], &passed);
+        std::printf("%d/%zu tests passed\n", passed, to_run.size());
+
+        char *again = rl_readline("Run more tests? (y/n): ");
+        if (!again)
+            break;
+        std::string answer(again);
+        cma_free(again);
+        std::transform(answer.begin(), answer.end(), answer.begin(),
+                       [](unsigned char c){ return std::tolower(c); });
+        if (answer.empty() || answer[0] != 'y')
+            break;
     }
-    pf_printf("%d/%d tests passed\n", passed, total);
     return (0);
 }
