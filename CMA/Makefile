@@ -6,6 +6,7 @@ SRCS := cma_calloc.cpp \
         cma_memdup.cpp \
         cma_malloc.cpp \
         cma_free.cpp \
+        cma_free_checked.cpp \
         cma_realloc.cpp \
         cma_itoa.cpp \
         cma_itoa_base.cpp \

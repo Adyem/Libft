@@ -5,6 +5,7 @@
 
 void	*cma_malloc(std::size_t size) __attribute__ ((warn_unused_result, hot));
 void	cma_free(void* ptr) __attribute__ ((hot));
+int     cma_checked_free(void* ptr) __attribute__ ((warn_unused_result, hot));
 char	*cma_strdup(const char *string) __attribute__ ((warn_unused_result));
 void    *cma_memdup(const void *source, size_t size) __attribute__ ((warn_unused_result));
 void	*cma_calloc(std::size_t, std::size_t size) __attribute__ ((warn_unused_result));

@@ -114,6 +114,9 @@ int test_pf_printf_modifiers(void);
 int test_get_next_line_basic(void);
 int test_get_next_line_empty(void);
 int test_ft_open_and_read_file(void);
+int test_cma_checked_free_basic(void);
+int test_cma_checked_free_offset(void);
+int test_cma_checked_free_invalid(void);
 
 int main(void)
 {
@@ -213,7 +216,10 @@ int main(void)
         { test_pf_printf_modifiers, "pf_printf modifiers" },
         { test_get_next_line_basic, "get_next_line basic" },
         { test_get_next_line_empty, "get_next_line empty" },
-        { test_ft_open_and_read_file, "open_and_read_file" }
+        { test_ft_open_and_read_file, "open_and_read_file" },
+        { test_cma_checked_free_basic, "cma_checked_free basic" },
+        { test_cma_checked_free_offset, "cma_checked_free offset" },
+        { test_cma_checked_free_invalid, "cma_checked_free invalid" }
     };
     const int total = sizeof(tests) / sizeof(tests[0]);
     int index = 0;
