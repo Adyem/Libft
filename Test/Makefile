@@ -1,7 +1,7 @@
 TARGET := libft_tests
 DEBUG_TARGET := libft_tests_debug
 
-SRCS := main.cpp atoi_tests.cpp isdigit_tests.cpp memset_tests.cpp strcmp_tests.cpp strlen_tests.cpp toupper_tests.cpp html_tests.cpp networking_tests.cpp extra_libft_tests.cpp cpp_class_tests.cpp template_tests.cpp printf_tests.cpp get_next_line_tests.cpp
+SRCS := main.cpp atoi_tests.cpp isdigit_tests.cpp memset_tests.cpp strcmp_tests.cpp strlen_tests.cpp toupper_tests.cpp html_tests.cpp networking_tests.cpp extra_libft_tests.cpp cpp_class_tests.cpp template_tests.cpp printf_tests.cpp get_next_line_tests.cpp cma_tests.cpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR = mkdir
