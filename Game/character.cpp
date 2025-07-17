@@ -3,7 +3,7 @@
 ft_character::ft_character() noexcept
     : _hit_points(0), _armor(0), _might(0), _agility(0),
       _endurance(0), _reason(0), _insigh(0), _presence(0),
-      _coins(0), _valor(0),
+      _coins(0),
       _fire_res{0, 0}, _frost_res{0, 0}, _lightning_res{0, 0},
       _air_res{0, 0}, _earth_res{0, 0}, _chaos_res{0, 0},
       _physical_res{0, 0}
@@ -107,17 +107,6 @@ int ft_character::get_coins() const noexcept
 void ft_character::set_coins(int coins) noexcept
 {
     _coins = coins;
-    return ;
-}
-
-int ft_character::get_valor() const noexcept
-{
-    return (_valor);
-}
-
-void ft_character::set_valor(int valor) noexcept
-{
-    _valor = valor;
     return ;
 }
 
