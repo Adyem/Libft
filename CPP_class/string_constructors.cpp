@@ -104,11 +104,11 @@ ft_string& ft_string::operator=(ft_string&& other) noexcept
 {
     if (this != &other)
     {
-        delete[] _data;
-        _data = other._data;
-        _length = other._length;
-        _capacity = other._capacity;
-        _errorCode = other._errorCode;
+        delete[] this->_data;
+        this->_data = other._data;
+        this->_length = other._length;
+        this->_capacity = other._capacity;
+        this->_errorCode = other._errorCode;
         other._data = nullptr;
         other._length = 0;
         other._capacity = 0;
