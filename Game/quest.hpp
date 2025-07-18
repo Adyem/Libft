@@ -22,4 +22,4 @@ class ft_quest
         void set_current_phase(int phase) noexcept;
 };
 
-#endif // QUEST_HPP
+#endif
