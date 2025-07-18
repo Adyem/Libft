@@ -6,13 +6,15 @@ ft_character::ft_character() noexcept
       _coins(0), _x(0), _y(0), _z(0),
       _fire_res{0, 0}, _frost_res{0, 0}, _lightning_res{0, 0},
       _air_res{0, 0}, _earth_res{0, 0}, _chaos_res{0, 0},
-      _physical_res{0, 0}, _buffs(), _debuffs(), _quests(), _reputation(),
+      _physical_res{0, 0}, _buffs(), _debuffs(), _upgrades(), _quests(), _reputation(),
       _error(ER_SUCCESS)
 {
     if (this->_buffs.get_error() != ER_SUCCESS)
         this->set_error(this->_buffs.get_error());
     else if (this->_debuffs.get_error() != ER_SUCCESS)
         this->set_error(this->_debuffs.get_error());
+    else if (this->_upgrades.get_error() != ER_SUCCESS)
+        this->set_error(this->_upgrades.get_error());
     else if (this->_quests.get_error() != ER_SUCCESS)
         this->set_error(this->_quests.get_error());
     else if (this->_reputation.get_error() != ER_SUCCESS)
@@ -248,6 +250,17 @@ const ft_map<int, ft_debuff> &ft_character::get_debuffs() const noexcept
 {
     return (this->_debuffs);
 }
+
+ft_map<int, ft_upgrade> &ft_character::get_upgrades() noexcept
+{
+    return (this->_upgrades);
+}
+
+const ft_map<int, ft_upgrade> &ft_character::get_upgrades() const noexcept
+{
+    return (this->_upgrades);
+}
+
 
 ft_map<int, ft_quest> &ft_character::get_quests() noexcept
 {
