@@ -6,7 +6,7 @@
 #include "reputation.hpp"
 #include "buff.hpp"
 #include "debuff.hpp"
-#include "../Errno/errno.hpp"
+#include "inventory.hpp"
 
 struct ft_resistance
 {
@@ -29,18 +29,20 @@ class ft_character
         int _x;
         int _y;
         int _z;
-        ft_resistance _fire_res;
-        ft_resistance _frost_res;
-        ft_resistance _lightning_res;
-        ft_resistance _air_res;
-        ft_resistance _earth_res;
-        ft_resistance _chaos_res;
-        ft_resistance _physical_res;
-        ft_map<int, ft_buff>  _buffs;
-        ft_map<int, ft_debuff> _debuffs;
-        ft_map<int, ft_quest> _quests;
-        ft_reputation         _reputation;
-        mutable int           _error;
+
+        ft_resistance 			_fire_res;
+        ft_resistance 			_frost_res;
+        ft_resistance 			_lightning_res;
+        ft_resistance 			_air_res;
+        ft_resistance 			_earth_res;
+        ft_resistance 			_chaos_res;
+        ft_resistance 			_physical_res;
+        ft_map<int, ft_buff>  	_buffs;
+        ft_map<int, ft_debuff>	 _debuffs;
+        ft_map<int, ft_quest> 	_quests;
+        ft_reputation         	_reputation;
+		ft_inventory			_inventory;
+        mutable int           	_error;
 
         void    set_error(int err) const noexcept;
 
