@@ -114,3 +114,25 @@ int test_item_basic(void)
         return 0;
     return 1;
 }
+
+int test_inventory_count(void)
+{
+    ft_inventory inv(5);
+    ft_item potion;
+    potion.set_item_id(1);
+    potion.set_max_stack(10);
+    potion.set_current_stack(7);
+    inv.add_item(potion);
+
+    ft_item more;
+    more.set_item_id(1);
+    more.set_max_stack(10);
+    more.set_current_stack(4);
+    inv.add_item(more);
+
+    if (!inv.has_item(1) || inv.count_item(1) != 11)
+        return 0;
+    if (inv.has_item(2) || inv.count_item(2) != 0)
+        return 0;
+    return 1;
+}
