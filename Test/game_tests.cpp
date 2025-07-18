@@ -4,8 +4,12 @@
 #include "../Game/quest.hpp"
 #include "../Game/reputation.hpp"
 #include "../Game/map3d.hpp"
-#include "../Game/gear.hpp"
 #include "../Game/item.hpp"
+#include "../Game/upgrade.hpp"
+#include "../Game/world.hpp"
+#include "../Game/event.hpp"
+#include "../Game/inventory.hpp"
+#include "../Errno/errno.hpp"
 
 int test_game_simulation(void)
 {
@@ -14,8 +18,8 @@ int test_game_simulation(void)
     hero.set_might(10);
     hero.set_armor(5);
 
-    ft_map3d world(3, 3, 1, 0);
-    world.set(1, 1, 0, 1);
+    ft_map3d grid(3, 3, 1, 0);
+    grid.set(1, 1, 0, 1);
     hero.set_x(1);
     hero.set_y(1);
     hero.set_z(0);
@@ -36,9 +40,14 @@ int test_game_simulation(void)
     if (hero.get_armor() != 3)
         return 0;
 
-    ft_gear sword;
-    sword.set_might(3);
-    hero.set_might(hero.get_might() + sword.get_might());
+    ft_upgrade upgrade;
+    upgrade.set_id(1);
+    upgrade.set_modifier1(3);
+    hero.get_upgrades().insert(upgrade.get_id(), upgrade);
+    Pair<int, ft_upgrade>* uentry = hero.get_upgrades().find(1);
+    if (!uentry)
+        return 0;
+    hero.set_might(hero.get_might() + uentry->value.get_modifier1());
     if (hero.get_might() != 18)
         return 0;
 
@@ -59,7 +68,32 @@ int test_game_simulation(void)
         hero.get_reputation().get_total_rep() != 4)
         return 0;
 
-    if (world.get(hero.get_x(), hero.get_y(), hero.get_z()) != 1)
+    ft_world overworld;
+    ft_event meeting;
+    meeting.set_id(1);
+    meeting.set_duration(5);
+    overworld.get_events().insert(meeting.get_id(), meeting);
+    Pair<int, ft_event>* eentry = overworld.get_events().find(1);
+    if (!eentry || eentry->value.get_duration() != 5)
+        return 0;
+
+    ft_inventory pack(2);
+    ft_item potion;
+    potion.set_item_id(1);
+    potion.set_max_stack(10);
+    potion.set_current_stack(5);
+    if (pack.add_item(potion) != ER_SUCCESS)
+        return 0;
+    ft_item more;
+    more.set_item_id(1);
+    more.set_max_stack(10);
+    more.set_current_stack(3);
+    pack.add_item(more);
+    Pair<int, ft_item>* ientry = pack.get_items().find(0);
+    if (!ientry || ientry->value.get_current_stack() != 8)
+        return 0;
+
+    if (grid.get(hero.get_x(), hero.get_y(), hero.get_z()) != 1)
         return 0;
 
     return 1;
