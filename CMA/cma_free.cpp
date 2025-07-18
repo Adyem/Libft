@@ -13,7 +13,7 @@ void cma_free(void* ptr)
 {
     if (OFFSWITCH == 1)
     {
-        ::operator delete(ptr);
+        std::free(ptr);
         return ;
     }
 	if (!ptr)
