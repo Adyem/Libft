@@ -25,6 +25,7 @@ class ft_inventory
         size_t get_capacity() const noexcept;
         void   resize(size_t capacity) noexcept;
         size_t get_used() const noexcept;
+        bool   is_full() const noexcept;
 
         int get_error() const noexcept;
 
