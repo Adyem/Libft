@@ -62,6 +62,7 @@ enum PTErrorCode
     MAP3D_ALLOC_FAIL,
     MAP3D_OUT_OF_BOUNDS,
     SOCKET_JOIN_GROUP_FAILED,
+    INVENTORY_FULL,
 };
 
 const char* ft_strerror(int error_code);
