@@ -97,3 +97,22 @@ void ft_inventory::remove_item(int slot) noexcept
     return ;
 }
 
+int ft_inventory::count_item(int item_id) const noexcept
+{
+    const Pair<int, ft_item> *ptr = this->_items.end() - this->_items.getSize();
+    const Pair<int, ft_item> *end = this->_items.end();
+    int total = 0;
+    while (ptr != end)
+    {
+        if (ptr->value.get_item_id() == item_id)
+            total += ptr->value.get_current_stack();
+        ++ptr;
+    }
+    return (total);
+}
+
+bool ft_inventory::has_item(int item_id) const noexcept
+{
+    return (this->count_item(item_id) > 0);
+}
+
