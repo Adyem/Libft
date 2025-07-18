@@ -3,7 +3,6 @@
 #include "../CPP_class/nullptr.hpp"
 #include "../Printf/printf.hpp"
 #include <cstdlib>
-#include <new>
 
 extern Page *page_list;
 
@@ -21,11 +20,11 @@ void cma_cleanup()
 		{
 			if (DEBUG == 1)
 				pf_printf("freeing current page memory\n");
-            ::operator delete(current_page->start, std::align_val_t(8), std::nothrow);
+            std::free(current_page->start);
 		}
 		if (DEBUG == 1)
 			pf_printf("Freeing current page metadata\n");
-        ::operator delete(current_page, std::align_val_t(8), std::nothrow);
+        std::free(current_page);
         current_page = next_page;
     }
     page_list = ft_nullptr;
