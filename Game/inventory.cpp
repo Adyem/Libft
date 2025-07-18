@@ -34,6 +34,11 @@ size_t ft_inventory::get_used() const noexcept
     return (this->_items.getSize());
 }
 
+bool ft_inventory::is_full() const noexcept
+{
+    return (this->_items.getSize() >= this->_capacity);
+}
+
 int ft_inventory::get_error() const noexcept
 {
     return (this->_error);

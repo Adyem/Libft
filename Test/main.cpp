@@ -129,6 +129,7 @@ int test_cma_checked_free_invalid(void);
 int test_game_simulation(void);
 int test_item_basic(void);
 int test_inventory_count(void);
+int test_inventory_full(void);
 
 int main(void)
 {
@@ -234,7 +235,8 @@ int main(void)
         { test_cma_checked_free_invalid, "cma_checked_free invalid" },
         { test_game_simulation, "game simulation" },
         { test_item_basic, "item basic" },
-        { test_inventory_count, "inventory count" }
+        { test_inventory_count, "inventory count" },
+        { test_inventory_full, "inventory full" }
     };
     const int total = sizeof(tests) / sizeof(tests[0]);
 
