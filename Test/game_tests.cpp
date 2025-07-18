@@ -4,6 +4,7 @@
 #include "../Game/quest.hpp"
 #include "../Game/reputation.hpp"
 #include "../Game/map3d.hpp"
+#include "../Game/gear.hpp"
 #include "../Game/item.hpp"
 
 int test_game_simulation(void)
@@ -35,7 +36,7 @@ int test_game_simulation(void)
     if (hero.get_armor() != 3)
         return 0;
 
-    ft_item sword;
+    ft_gear sword;
     sword.set_might(3);
     hero.set_might(hero.get_might() + sword.get_might());
     if (hero.get_might() != 18)
@@ -64,3 +65,18 @@ int test_game_simulation(void)
     return 1;
 }
 
+
+int test_item_basic(void)
+{
+    ft_item item;
+    item.set_item_id(1);
+    item.set_max_stack(10);
+    item.set_current_stack(3);
+    item.set_modifier1_id(5);
+    item.set_modifier1_value(2);
+    if (item.get_item_id() != 1 || item.get_max_stack() != 10 ||
+        item.get_current_stack() != 3 || item.get_modifier1_id() != 5 ||
+        item.get_modifier1_value() != 2)
+        return 0;
+    return 1;
+}

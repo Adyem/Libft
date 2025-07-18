@@ -39,4 +39,4 @@ class ft_event
         void add_modifier4(int mod) noexcept;
 };
 
-#endif // EVENT_HPP
+#endif

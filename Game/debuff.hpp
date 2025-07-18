@@ -39,4 +39,4 @@ class ft_debuff
         void add_modifier4(int mod) noexcept;
 };
 
-#endif // DEBUFF_HPP
+#endif
