@@ -30,6 +30,9 @@ class ft_inventory
 
         int  add_item(const ft_item &item) noexcept;
         void remove_item(int slot) noexcept;
+
+        int  count_item(int item_id) const noexcept;
+        bool has_item(int item_id) const noexcept;
 };
 
 #endif
