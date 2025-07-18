@@ -6,6 +6,7 @@
 #include "reputation.hpp"
 #include "buff.hpp"
 #include "debuff.hpp"
+#include "upgrade.hpp"
 #include "inventory.hpp"
 
 struct ft_resistance
@@ -39,6 +40,7 @@ class ft_character
         ft_resistance 			_physical_res;
         ft_map<int, ft_buff>  	_buffs;
         ft_map<int, ft_debuff>	 _debuffs;
+        ft_map<int, ft_upgrade>        _upgrades;
         ft_map<int, ft_quest> 	_quests;
         ft_reputation         	_reputation;
 		ft_inventory			_inventory;
@@ -115,6 +117,8 @@ class ft_character
 
         ft_map<int, ft_debuff>       &get_debuffs() noexcept;
         const ft_map<int, ft_debuff> &get_debuffs() const noexcept;
+        ft_map<int, ft_upgrade>       &get_upgrades() noexcept;
+        const ft_map<int, ft_upgrade> &get_upgrades() const noexcept;
 
         ft_map<int, ft_quest>       &get_quests() noexcept;
         const ft_map<int, ft_quest> &get_quests() const noexcept;
