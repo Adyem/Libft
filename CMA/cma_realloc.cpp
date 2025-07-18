@@ -2,7 +2,6 @@
 #include <cstddef>
 #include <cstdio>
 #include <cassert>
-#include <new>
 #include <pthread.h>
 #include <csignal>
 #include "CMA.hpp"
@@ -37,16 +36,7 @@ void *cma_realloc(void* ptr, size_t new_size)
 {
     if (OFFSWITCH == 1)
     {
-        void* new_ptr = ::operator new(new_size, std::align_val_t(8), std::nothrow);
-        if (ptr && new_ptr)
-        {
-            Block* old_block = reinterpret_cast<Block*> ((static_cast<char*> (ptr)
-						- sizeof(Block)));
-            size_t copy_size = old_block->size < new_size ? old_block->size : new_size;
-            ft_memcpy(new_ptr, ptr, copy_size);
-        }
-        ::operator delete(ptr, std::align_val_t(8), std::nothrow);
-        return (new_ptr);
+        return std::realloc(ptr, new_size);
     }
 	g_malloc_mutex.lock(THREAD_ID);
     if (!ptr)
