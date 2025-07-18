@@ -100,13 +100,13 @@ const char* ft_strerror(int error_code)
 		return ("JSON: Malloc failure");
 	else if (error_code == MAP3D_ALLOC_FAIL)
 		return ("Map3D allocation failure");
-        else if (error_code == MAP3D_OUT_OF_BOUNDS)
-                return ("Map3D index out of bounds");
-        else if (error_code == SOCKET_JOIN_GROUP_FAILED)
-                return ("Socket: Join multicast group failed");
-        else if (error_code == INVENTORY_FULL)
-                return ("Inventory full");
-        else if (error_code > ERRNO_OFFSET)
+	else if (error_code == MAP3D_OUT_OF_BOUNDS)
+		return ("Map3D index out of bounds");
+	else if (error_code == SOCKET_JOIN_GROUP_FAILED)
+		return ("Socket: Join multicast group failed");
+	else if (error_code == INVENTORY_FULL)
+		return ("Inventory full");
+	else if (error_code > ERRNO_OFFSET)
         {
         int standard_errno = error_code - ERRNO_OFFSET;
         const char *message = strerror(standard_errno);
