@@ -43,6 +43,7 @@
 #include "Game/item.hpp"
 #include "Game/buff.hpp"
 #include "Game/debuff.hpp"
+#include "Game/upgrade.hpp"
 #include "Game/event.hpp"
 #include "Game/inventory.hpp"
 #include "Game/quest.hpp"
