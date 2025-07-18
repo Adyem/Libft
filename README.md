@@ -261,7 +261,7 @@ for the full interface of these templates.
 * **JSon** – simple JSON serialization helpers (`json_create_item`, `json_read_from_file`, etc.).
 * **File** – directory handling wrappers such as `ft_opendir` and `ft_readdir`.
 * **HTML** – minimal HTML node creation and searching utilities.
-* **Game** – basic game related classes (`ft_character`, `ft_item`, `ft_map3d`, `ft_quest`, `ft_buff`, `ft_debuff`). `ft_buff` and `ft_debuff` each store four independent modifiers and expose getters, setters, and adders (including for duration).
+* **Game** – basic game related classes (`ft_character`, `ft_gear`, `ft_item`, `ft_map3d`, `ft_quest`, `ft_buff`, `ft_debuff`). `ft_buff` and `ft_debuff` each store four independent modifiers and expose getters, setters, and adders (including for duration). `ft_item` provides a simple item container with stack counts and modifier identifiers.
 
 The project is a work in progress and not every component is documented here.
 Consult the individual header files for precise behavior and additional

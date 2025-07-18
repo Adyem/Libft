@@ -43,4 +43,4 @@ class ft_reputation
         int get_error() const noexcept;
 };
 
-#endif // REPUTATION_HPP
+#endif

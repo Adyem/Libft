@@ -1,343 +1,182 @@
 #include "item.hpp"
 
 ft_item::ft_item() noexcept
-    : _hit_points(0), _armor(0), _might(0), _agility(0),
-      _endurance(0), _reason(0), _insigh(0), _presence(0),
-      _coins(0),
-      _fire_res{0, 0}, _frost_res{0, 0}, _lightning_res{0, 0},
-      _air_res{0, 0}, _earth_res{0, 0}, _chaos_res{0, 0},
-      _physical_res{0, 0},
-      _ability_1{0, 0, 0, 0, 0, 0}, _ability_2{0, 0, 0, 0, 0, 0}
+    : _max_stack(0), _current_stack(0), _item_id(0),
+      _modifier1{0, 0}, _modifier2{0, 0}, _modifier3{0, 0}, _modifier4{0, 0}
 {
     return ;
 }
 
-int ft_item::get_hit_points() const noexcept
+int ft_item::get_max_stack() const noexcept
 {
-    return (this->_hit_points);
+    return (this->_max_stack);
 }
 
-void ft_item::set_hit_points(int hp) noexcept
+void ft_item::set_max_stack(int max) noexcept
 {
-    this->_hit_points = hp;
+    this->_max_stack = max;
     return ;
 }
 
-int ft_item::get_armor() const noexcept
+int ft_item::get_current_stack() const noexcept
 {
-    return (this->_armor);
+    return (this->_current_stack);
 }
 
-void ft_item::set_armor(int armor) noexcept
+void ft_item::set_current_stack(int amount) noexcept
 {
-    this->_armor = armor;
+    this->_current_stack = amount;
     return ;
 }
 
-int ft_item::get_might() const noexcept
+void ft_item::add_to_stack(int amount) noexcept
 {
-    return (this->_might);
-}
-
-void ft_item::set_might(int might) noexcept
-{
-    this->_might = might;
+    this->_current_stack += amount;
+    if (this->_current_stack > this->_max_stack)
+        this->_current_stack = this->_max_stack;
     return ;
 }
 
-int ft_item::get_agility() const noexcept
+int ft_item::get_item_id() const noexcept
 {
-    return (this->_agility);
+    return (this->_item_id);
 }
 
-void ft_item::set_agility(int agility) noexcept
+void ft_item::set_item_id(int id) noexcept
 {
-    this->_agility = agility;
+    this->_item_id = id;
     return ;
 }
 
-int ft_item::get_endurance() const noexcept
+ft_item_modifier ft_item::get_modifier1() const noexcept
 {
-    return (this->_endurance);
+    return (this->_modifier1);
 }
 
-void ft_item::set_endurance(int endurance) noexcept
+void ft_item::set_modifier1(const ft_item_modifier &mod) noexcept
 {
-    this->_endurance = endurance;
+    this->_modifier1 = mod;
     return ;
 }
 
-int ft_item::get_reason() const noexcept
+int ft_item::get_modifier1_id() const noexcept
 {
-    return (this->_reason);
+    return (this->_modifier1.id);
 }
 
-void ft_item::set_reason(int reason) noexcept
+void ft_item::set_modifier1_id(int id) noexcept
 {
-    this->_reason = reason;
+    this->_modifier1.id = id;
     return ;
 }
 
-int ft_item::get_insigh() const noexcept
+int ft_item::get_modifier1_value() const noexcept
 {
-    return (this->_insigh);
+    return (this->_modifier1.value);
 }
 
-void ft_item::set_insigh(int insigh) noexcept
+void ft_item::set_modifier1_value(int value) noexcept
 {
-    this->_insigh = insigh;
+    this->_modifier1.value = value;
     return ;
 }
 
-int ft_item::get_presence() const noexcept
+ft_item_modifier ft_item::get_modifier2() const noexcept
 {
-    return (this->_presence);
+    return (this->_modifier2);
 }
 
-void ft_item::set_presence(int presence) noexcept
+void ft_item::set_modifier2(const ft_item_modifier &mod) noexcept
 {
-    this->_presence = presence;
+    this->_modifier2 = mod;
     return ;
 }
 
-int ft_item::get_coins() const noexcept
+int ft_item::get_modifier2_id() const noexcept
 {
-    return (this->_coins);
+    return (this->_modifier2.id);
 }
 
-void ft_item::set_coins(int coins) noexcept
+void ft_item::set_modifier2_id(int id) noexcept
 {
-    this->_coins = coins;
+    this->_modifier2.id = id;
     return ;
 }
 
-ft_resistance ft_item::get_fire_res() const noexcept
+int ft_item::get_modifier2_value() const noexcept
 {
-    return (this->_fire_res);
+    return (this->_modifier2.value);
 }
 
-void ft_item::set_fire_res(int percent, int flat) noexcept
+void ft_item::set_modifier2_value(int value) noexcept
 {
-    this->_fire_res = {percent, flat};
+    this->_modifier2.value = value;
     return ;
 }
 
-ft_resistance ft_item::get_frost_res() const noexcept
+ft_item_modifier ft_item::get_modifier3() const noexcept
 {
-    return (this->_frost_res);
+    return (this->_modifier3);
 }
 
-void ft_item::set_frost_res(int percent, int flat) noexcept
+void ft_item::set_modifier3(const ft_item_modifier &mod) noexcept
 {
-    this->_frost_res = {percent, flat};
+    this->_modifier3 = mod;
     return ;
 }
 
-ft_resistance ft_item::get_lightning_res() const noexcept
+int ft_item::get_modifier3_id() const noexcept
 {
-    return (this->_lightning_res);
+    return (this->_modifier3.id);
 }
 
-void ft_item::set_lightning_res(int percent, int flat) noexcept
+void ft_item::set_modifier3_id(int id) noexcept
 {
-    this->_lightning_res = {percent, flat};
+    this->_modifier3.id = id;
     return ;
 }
 
-ft_resistance ft_item::get_air_res() const noexcept
+int ft_item::get_modifier3_value() const noexcept
 {
-    return (this->_air_res);
+    return (this->_modifier3.value);
 }
 
-void ft_item::set_air_res(int percent, int flat) noexcept
+void ft_item::set_modifier3_value(int value) noexcept
 {
-    this->_air_res = {percent, flat};
+    this->_modifier3.value = value;
     return ;
 }
 
-ft_resistance ft_item::get_earth_res() const noexcept
+ft_item_modifier ft_item::get_modifier4() const noexcept
 {
-    return (this->_earth_res);
+    return (this->_modifier4);
 }
 
-void ft_item::set_earth_res(int percent, int flat) noexcept
+void ft_item::set_modifier4(const ft_item_modifier &mod) noexcept
 {
-    this->_earth_res = {percent, flat};
+    this->_modifier4 = mod;
     return ;
 }
 
-ft_resistance ft_item::get_chaos_res() const noexcept
+int ft_item::get_modifier4_id() const noexcept
 {
-    return (this->_chaos_res);
+    return (this->_modifier4.id);
 }
 
-void ft_item::set_chaos_res(int percent, int flat) noexcept
+void ft_item::set_modifier4_id(int id) noexcept
 {
-    this->_chaos_res = {percent, flat};
+    this->_modifier4.id = id;
     return ;
 }
 
-ft_resistance ft_item::get_physical_res() const noexcept
+int ft_item::get_modifier4_value() const noexcept
 {
-    return (this->_physical_res);
+    return (this->_modifier4.value);
 }
 
-void ft_item::set_physical_res(int percent, int flat) noexcept
+void ft_item::set_modifier4_value(int value) noexcept
 {
-    this->_physical_res = {percent, flat};
+    this->_modifier4.value = value;
     return ;
 }
 
-ft_item_ability ft_item::get_ability_1() const noexcept
-{
-    return (this->_ability_1);
-}
-
-void ft_item::set_ability_1(const ft_item_ability &ability) noexcept
-{
-    this->_ability_1 = ability;
-    return ;
-}
-
-ft_item_ability ft_item::get_ability_2() const noexcept
-{
-    return (this->_ability_2);
-}
-
-void ft_item::set_ability_2(const ft_item_ability &ability) noexcept
-{
-    this->_ability_2 = ability;
-    return ;
-}
-
-uint8_t ft_item::get_ability_1_stat_id() const noexcept
-{
-    return (this->_ability_1.stat_id);
-}
-
-void ft_item::set_ability_1_stat_id(uint8_t id) noexcept
-{
-    this->_ability_1.stat_id = id;
-    return ;
-}
-
-int ft_item::get_ability_1_main_modifier() const noexcept
-{
-    return (this->_ability_1.main_modifier);
-}
-
-void ft_item::set_ability_1_main_modifier(int mod) noexcept
-{
-    this->_ability_1.main_modifier = mod;
-    return ;
-}
-
-int ft_item::get_ability_1_bonus_modifier() const noexcept
-{
-    return (this->_ability_1.bonus_modifier);
-}
-
-void ft_item::set_ability_1_bonus_modifier(int mod) noexcept
-{
-    this->_ability_1.bonus_modifier = mod;
-    return ;
-}
-
-int ft_item::get_ability_1_duration() const noexcept
-{
-    return (this->_ability_1.duration);
-}
-
-void ft_item::set_ability_1_duration(int duration) noexcept
-{
-    this->_ability_1.duration = duration;
-    return ;
-}
-
-int ft_item::get_ability_1_duration_modifier() const noexcept
-{
-    return (this->_ability_1.duration_modifier);
-}
-
-void ft_item::set_ability_1_duration_modifier(int mod) noexcept
-{
-    this->_ability_1.duration_modifier = mod;
-    return ;
-}
-
-int ft_item::get_ability_1_stat_modifier() const noexcept
-{
-    return (this->_ability_1.stat_modifier);
-}
-
-void ft_item::set_ability_1_stat_modifier(int mod) noexcept
-{
-    this->_ability_1.stat_modifier = mod;
-    return ;
-}
-
-uint8_t ft_item::get_ability_2_stat_id() const noexcept
-{
-    return (this->_ability_2.stat_id);
-}
-
-void ft_item::set_ability_2_stat_id(uint8_t id) noexcept
-{
-    this->_ability_2.stat_id = id;
-    return ;
-}
-
-int ft_item::get_ability_2_main_modifier() const noexcept
-{
-    return (this->_ability_2.main_modifier);
-}
-
-void ft_item::set_ability_2_main_modifier(int mod) noexcept
-{
-    this->_ability_2.main_modifier = mod;
-    return ;
-}
-
-int ft_item::get_ability_2_bonus_modifier() const noexcept
-{
-    return (this->_ability_2.bonus_modifier);
-}
-
-void ft_item::set_ability_2_bonus_modifier(int mod) noexcept
-{
-    this->_ability_2.bonus_modifier = mod;
-    return ;
-}
-
-int ft_item::get_ability_2_duration() const noexcept
-{
-    return (this->_ability_2.duration);
-}
-
-void ft_item::set_ability_2_duration(int duration) noexcept
-{
-    this->_ability_2.duration = duration;
-    return ;
-}
-
-int ft_item::get_ability_2_duration_modifier() const noexcept
-{
-    return (this->_ability_2.duration_modifier);
-}
-
-void ft_item::set_ability_2_duration_modifier(int mod) noexcept
-{
-    this->_ability_2.duration_modifier = mod;
-    return ;
-}
-
-int ft_item::get_ability_2_stat_modifier() const noexcept
-{
-    return (this->_ability_2.stat_modifier);
-}
-
-void ft_item::set_ability_2_stat_modifier(int mod) noexcept
-{
-    this->_ability_2.stat_modifier = mod;
-    return ;
-}
