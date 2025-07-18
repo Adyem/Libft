@@ -23,4 +23,4 @@ class ft_world
         int get_error() const noexcept;
 };
 
-#endif // WORLD_HPP
+#endif

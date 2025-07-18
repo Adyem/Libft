@@ -40,5 +40,6 @@
 #include "file/open_dir.hpp"
 #include "Game/map3d.hpp"
 #include "Game/character.hpp"
+#include "Game/item.hpp"
 
 #endif // FULL_LIBFT_HPP

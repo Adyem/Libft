@@ -39,4 +39,4 @@ class ft_buff
         void add_modifier4(int mod) noexcept;
 };
 
-#endif // BUFF_HPP
+#endif
