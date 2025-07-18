@@ -136,3 +136,19 @@ int test_inventory_count(void)
         return 0;
     return 1;
 }
+
+int test_inventory_full(void)
+{
+    ft_inventory inv(1);
+    ft_item item;
+    item.set_item_id(1);
+    item.set_max_stack(5);
+    item.set_current_stack(5);
+    if (inv.is_full())
+        return 0;
+    if (inv.add_item(item) != ER_SUCCESS)
+        return 0;
+    if (!inv.is_full())
+        return 0;
+    return 1;
+}
