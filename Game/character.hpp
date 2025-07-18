@@ -40,7 +40,7 @@ class ft_character
         ft_resistance 			_physical_res;
         ft_map<int, ft_buff>  	_buffs;
         ft_map<int, ft_debuff>	 _debuffs;
-        ft_map<int, ft_upgrade>        _upgrades;
+        ft_map<int, ft_upgrade> _upgrades;
         ft_map<int, ft_quest> 	_quests;
         ft_reputation         	_reputation;
 		ft_inventory			_inventory;
