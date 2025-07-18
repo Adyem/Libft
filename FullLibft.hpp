@@ -41,5 +41,12 @@
 #include "Game/map3d.hpp"
 #include "Game/character.hpp"
 #include "Game/item.hpp"
+#include "Game/buff.hpp"
+#include "Game/debuff.hpp"
+#include "Game/event.hpp"
+#include "Game/inventory.hpp"
+#include "Game/quest.hpp"
+#include "Game/reputation.hpp"
+#include "Game/world.hpp"
 
 #endif // FULL_LIBFT_HPP
