@@ -152,3 +152,117 @@ int test_inventory_full(void)
         return 0;
     return 1;
 }
+
+int test_character_valor(void)
+{
+    ft_character hero;
+    hero.set_valor(42);
+    return (hero.get_valor() == 42);
+}
+
+int test_character_add_sub_coins(void)
+{
+    ft_character hero;
+    hero.add_coins(10);
+    hero.sub_coins(3);
+    return (hero.get_coins() == 7);
+}
+
+int test_character_add_sub_valor(void)
+{
+    ft_character hero;
+    hero.add_valor(5);
+    hero.sub_valor(2);
+    return (hero.get_valor() == 3);
+}
+
+int test_buff_subtracters(void)
+{
+    ft_buff buff;
+    buff.set_duration(10);
+    buff.sub_duration(3);
+    buff.set_modifier1(5);
+    buff.sub_modifier1(2);
+    buff.set_modifier2(4);
+    buff.sub_modifier2(1);
+    buff.set_modifier3(6);
+    buff.sub_modifier3(6);
+    buff.set_modifier4(8);
+    buff.sub_modifier4(3);
+    return (buff.get_duration() == 7 && buff.get_modifier1() == 3 &&
+            buff.get_modifier2() == 3 && buff.get_modifier3() == 0 &&
+            buff.get_modifier4() == 5);
+}
+
+int test_debuff_subtracters(void)
+{
+    ft_debuff debuff;
+    debuff.set_duration(8);
+    debuff.sub_duration(2);
+    debuff.set_modifier1(-1);
+    debuff.sub_modifier1(-1);
+    debuff.set_modifier2(3);
+    debuff.sub_modifier2(1);
+    debuff.set_modifier3(2);
+    debuff.sub_modifier3(2);
+    debuff.set_modifier4(0);
+    debuff.sub_modifier4(0);
+    return (debuff.get_duration() == 6 && debuff.get_modifier1() == 0 &&
+            debuff.get_modifier2() == 2 && debuff.get_modifier3() == 0 &&
+            debuff.get_modifier4() == 0);
+}
+
+int test_event_subtracters(void)
+{
+    ft_event ev;
+    ev.set_duration(5);
+    ev.sub_duration(1);
+    ev.set_modifier1(4);
+    ev.sub_modifier1(2);
+    ev.set_modifier2(3);
+    ev.sub_modifier2(3);
+    ev.set_modifier3(0);
+    ev.sub_modifier3(0);
+    ev.set_modifier4(-2);
+    ev.sub_modifier4(-1);
+    return (ev.get_duration() == 4 && ev.get_modifier1() == 2 &&
+            ev.get_modifier2() == 0 && ev.get_modifier3() == 0 &&
+            ev.get_modifier4() == -1);
+}
+
+int test_upgrade_subtracters(void)
+{
+    ft_upgrade up;
+    up.set_current_level(5);
+    up.sub_level(2);
+    up.set_modifier1(3);
+    up.sub_modifier1(1);
+    up.set_modifier2(4);
+    up.sub_modifier2(4);
+    up.set_modifier3(-2);
+    up.sub_modifier3(-2);
+    up.set_modifier4(7);
+    up.sub_modifier4(3);
+    return (up.get_current_level() == 3 && up.get_modifier1() == 2 &&
+            up.get_modifier2() == 0 && up.get_modifier3() == 0 &&
+            up.get_modifier4() == 4);
+}
+
+int test_item_stack_subtract(void)
+{
+    ft_item item;
+    item.set_max_stack(10);
+    item.set_current_stack(7);
+    item.sub_from_stack(3);
+    return (item.get_current_stack() == 4);
+}
+
+int test_reputation_subtracters(void)
+{
+    ft_reputation rep;
+    rep.set_total_rep(20);
+    rep.sub_total_rep(5);
+    rep.set_current_rep(10);
+    rep.sub_current_rep(3);
+    return (rep.get_total_rep() == 12 && rep.get_current_rep() == 7);
+}

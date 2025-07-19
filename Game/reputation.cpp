@@ -39,6 +39,12 @@ void ft_reputation::add_total_rep(int rep) noexcept
     return ;
 }
 
+void ft_reputation::sub_total_rep(int rep) noexcept
+{
+    this->_total_rep -= rep;
+    return ;
+}
+
 int ft_reputation::get_current_rep() const noexcept
 {
     return (this->_current_rep);
@@ -54,6 +60,13 @@ void ft_reputation::add_current_rep(int rep) noexcept
 {
     this->_current_rep += rep;
     this->_total_rep += rep;
+    return ;
+}
+
+void ft_reputation::sub_current_rep(int rep) noexcept
+{
+    this->_current_rep -= rep;
+    this->_total_rep -= rep;
     return ;
 }
 
