@@ -37,6 +37,14 @@ void ft_item::add_to_stack(int amount) noexcept
     return ;
 }
 
+void ft_item::sub_from_stack(int amount) noexcept
+{
+    this->_current_stack -= amount;
+    if (this->_current_stack < 0)
+        this->_current_stack = 0;
+    return ;
+}
+
 int ft_item::get_item_id() const noexcept
 {
     return (this->_item_id);
