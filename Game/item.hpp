@@ -28,6 +28,7 @@ class ft_item
         int get_current_stack() const noexcept;
         void set_current_stack(int amount) noexcept;
         void add_to_stack(int amount) noexcept;
+        void sub_from_stack(int amount) noexcept;
 
         int get_item_id() const noexcept;
         void set_item_id(int id) noexcept;

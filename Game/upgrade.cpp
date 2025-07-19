@@ -37,6 +37,15 @@ void ft_upgrade::add_level(uint16_t level) noexcept
     return ;
 }
 
+void ft_upgrade::sub_level(uint16_t level) noexcept
+{
+    if (level > this->_current_level)
+        this->_current_level = 0;
+    else
+        this->_current_level -= level;
+    return ;
+}
+
 uint16_t ft_upgrade::get_max_level() const noexcept
 {
     return (this->_max_level);
@@ -65,6 +74,12 @@ void ft_upgrade::add_modifier1(int mod) noexcept
     return ;
 }
 
+void ft_upgrade::sub_modifier1(int mod) noexcept
+{
+    this->_modifier1 -= mod;
+    return ;
+}
+
 int ft_upgrade::get_modifier2() const noexcept
 {
     return (this->_modifier2);
@@ -79,6 +94,12 @@ void ft_upgrade::set_modifier2(int mod) noexcept
 void ft_upgrade::add_modifier2(int mod) noexcept
 {
     this->_modifier2 += mod;
+    return ;
+}
+
+void ft_upgrade::sub_modifier2(int mod) noexcept
+{
+    this->_modifier2 -= mod;
     return ;
 }
 
@@ -99,6 +120,12 @@ void ft_upgrade::add_modifier3(int mod) noexcept
     return ;
 }
 
+void ft_upgrade::sub_modifier3(int mod) noexcept
+{
+    this->_modifier3 -= mod;
+    return ;
+}
+
 int ft_upgrade::get_modifier4() const noexcept
 {
     return (this->_modifier4);
@@ -113,6 +140,12 @@ void ft_upgrade::set_modifier4(int mod) noexcept
 void ft_upgrade::add_modifier4(int mod) noexcept
 {
     this->_modifier4 += mod;
+    return ;
+}
+
+void ft_upgrade::sub_modifier4(int mod) noexcept
+{
+    this->_modifier4 -= mod;
     return ;
 }
 
