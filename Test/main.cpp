@@ -130,6 +130,15 @@ int test_game_simulation(void);
 int test_item_basic(void);
 int test_inventory_count(void);
 int test_inventory_full(void);
+int test_character_valor(void);
+int test_character_add_sub_coins(void);
+int test_character_add_sub_valor(void);
+int test_buff_subtracters(void);
+int test_debuff_subtracters(void);
+int test_event_subtracters(void);
+int test_upgrade_subtracters(void);
+int test_item_stack_subtract(void);
+int test_reputation_subtracters(void);
 
 int main(void)
 {
@@ -236,7 +245,16 @@ int main(void)
         { test_game_simulation, "game simulation" },
         { test_item_basic, "item basic" },
         { test_inventory_count, "inventory count" },
-        { test_inventory_full, "inventory full" }
+        { test_inventory_full, "inventory full" },
+        { test_character_valor, "character valor" },
+        { test_character_add_sub_coins, "character coin add/sub" },
+        { test_character_add_sub_valor, "character valor add/sub" },
+        { test_buff_subtracters, "buff subtracters" },
+        { test_debuff_subtracters, "debuff subtracters" },
+        { test_event_subtracters, "event subtracters" },
+        { test_upgrade_subtracters, "upgrade subtracters" },
+        { test_item_stack_subtract, "item stack subtract" },
+        { test_reputation_subtracters, "reputation subtracters" }
     };
     const int total = sizeof(tests) / sizeof(tests[0]);
 

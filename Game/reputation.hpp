@@ -23,10 +23,12 @@ class ft_reputation
         int get_total_rep() const noexcept;
         void set_total_rep(int rep) noexcept;
         void add_total_rep(int rep) noexcept;
+        void sub_total_rep(int rep) noexcept;
 
         int get_current_rep() const noexcept;
         void set_current_rep(int rep) noexcept;
         void add_current_rep(int rep) noexcept;
+        void sub_current_rep(int rep) noexcept;
 
         ft_map<int, int>       &get_milestones() noexcept;
         const ft_map<int, int> &get_milestones() const noexcept;

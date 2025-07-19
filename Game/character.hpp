@@ -27,6 +27,7 @@ class ft_character
         int _insigh;
         int _presence;
         int _coins;
+        int _valor;
         int _x;
         int _y;
         int _z;
@@ -78,9 +79,13 @@ class ft_character
 
         int get_coins() const noexcept;
         void set_coins(int coins) noexcept;
+        void add_coins(int coins) noexcept;
+        void sub_coins(int coins) noexcept;
 
         int get_valor() const noexcept;
         void set_valor(int valor) noexcept;
+        void add_valor(int valor) noexcept;
+        void sub_valor(int valor) noexcept;
 
         int get_x() const noexcept;
         void set_x(int x) noexcept;
