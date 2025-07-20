@@ -8,6 +8,7 @@
 #include "debuff.hpp"
 #include "upgrade.hpp"
 #include "inventory.hpp"
+#include "experience_table.hpp"
 
 struct ft_resistance
 {
@@ -33,6 +34,7 @@ class ft_character
         int _y;
         int _z;
 
+		ft_experience_table		_experience_table;
         ft_resistance 			_fire_res;
         ft_resistance 			_frost_res;
         ft_resistance 			_lightning_res;

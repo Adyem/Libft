@@ -1,4 +1,7 @@
 #include "experience_table.hpp"
+#include "../CMA/CMA.hpp"
+#include "../CPP_class/nullptr.hpp"
+#include "../Errno/errno.hpp"
 
 ft_experience_table::ft_experience_table(int count) noexcept
     : _levels(ft_nullptr), _count(0), _error(ER_SUCCESS)
@@ -121,7 +124,8 @@ int ft_experience_table::check_for_error() const noexcept
     {
         if (this->_levels[i] <= this->_levels[i - 1])
         {
-            const_cast<ft_experience_table*>(this)->set_error(CHARACTER_LEVEL_TABLE_INVALID);
+            const_cast<ft_experience_table*>(this)->set_error
+				(CHARACTER_LEVEL_TABLE_INVALID);
             return (this->_levels[i]);
         }
     }

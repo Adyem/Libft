@@ -1,10 +1,6 @@
 #ifndef EXPERIENCE_TABLE_HPP
 #define EXPERIENCE_TABLE_HPP
 
-#include "../CMA/CMA.hpp"
-#include "../CPP_class/nullptr.hpp"
-#include "../Errno/errno.hpp"
-
 class ft_experience_table
 {
     private:
