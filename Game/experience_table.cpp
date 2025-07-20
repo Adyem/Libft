@@ -192,3 +192,8 @@ int ft_experience_table::get_error() const noexcept
     return (this->_error);
 }
 
+const char *ft_experience_table::get_error_str() const noexcept
+{
+    return (ft_strerror(this->_error));
+}
+

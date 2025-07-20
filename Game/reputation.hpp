@@ -43,6 +43,7 @@ class ft_reputation
         void set_rep(int id, int value) noexcept;
 
         int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 };
 
 #endif

@@ -145,6 +145,7 @@ class ft_character
         int get_level() const noexcept;
 
         int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 };
 
 #endif
