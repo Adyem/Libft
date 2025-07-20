@@ -143,6 +143,11 @@ int ft_reputation::get_error() const noexcept
     return (this->_error);
 }
 
+const char *ft_reputation::get_error_str() const noexcept
+{
+    return (ft_strerror(this->_error));
+}
+
 void ft_reputation::set_error(int err) const noexcept
 {
     ft_errno = err;

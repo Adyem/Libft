@@ -15,7 +15,7 @@ class ft_vector
     	ElementType	*_data;
     	size_t		_size;
     	size_t		_capacity;
-    	bool		_errorCode;
+    	int             _errorCode;
 
     	void	destroy_elements(size_t from, size_t to);
 
@@ -38,7 +38,8 @@ class ft_vector
 
     	size_t size() const;
     	size_t capacity() const;
-    	int get_error() const;
+        int get_error() const;
+        const char* get_error_str() const;
 
     	void push_back(const ElementType &value);
     	void push_back(ElementType &&value);
@@ -61,7 +62,7 @@ class ft_vector
 
 template <typename ElementType>
 ft_vector<ElementType>::ft_vector(size_t initial_capacity)
-    : _data(nullptr), _size(0), _capacity(0), _errorCode(false)
+    : _data(nullptr), _size(0), _capacity(0), _errorCode(ER_SUCCESS)
 {
     if (initial_capacity > 0)
     {
@@ -94,7 +95,7 @@ ft_vector<ElementType>::ft_vector(ft_vector<ElementType>&& other) noexcept
     other._data = nullptr;
     other._size = 0;
     other._capacity = 0;
-    other._errorCode = false;
+    other._errorCode = ER_SUCCESS;
 }
 
 template <typename ElementType>
@@ -112,7 +113,7 @@ ft_vector<ElementType>& ft_vector<ElementType>::operator=(ft_vector<ElementType>
         other._data = nullptr;
         other._size = 0;
         other._capacity = 0;
-        other._errorCode = false;
+        other._errorCode = ER_SUCCESS;
     }
     return (*this);
 }
@@ -140,7 +141,7 @@ size_t ft_vector<ElementType>::capacity() const
 template <typename ElementType>
 void ft_vector<ElementType>::setError(int errorCode)
 {
-    this->_errorCode = true;
+    this->_errorCode = errorCode;
     ft_errno = errorCode;
     return ;
 }
@@ -149,6 +150,12 @@ template <typename ElementType>
 int ft_vector<ElementType>::get_error() const
 {
     return (this->_errorCode);
+}
+
+template <typename ElementType>
+const char* ft_vector<ElementType>::get_error_str() const
+{
+    return (ft_strerror(this->_errorCode));
 }
 
 template <typename ElementType>
@@ -162,7 +169,7 @@ void ft_vector<ElementType>::push_back(const ElementType &value)
         else
             newCapacity = 1;
         reserve(newCapacity);
-        if (this->_errorCode)
+        if (this->_errorCode != ER_SUCCESS)
             return ;
     }
     construct_at(&this->_data[this->_size], value);
@@ -181,7 +188,7 @@ void ft_vector<ElementType>::push_back(ElementType &&value)
         else
             newCapacity = 1;
         reserve(newCapacity);
-        if (this->_errorCode)
+        if (this->_errorCode != ER_SUCCESS)
             return ;
     }
     construct_at(&this->_data[this->_size], std::forward<ElementType>(value));
@@ -260,7 +267,7 @@ void ft_vector<ElementType>::resize(size_t new_size, const ElementType& value)
     else if (new_size > this->_size)
     {
         reserve(new_size);
-        if (this->_errorCode)
+        if (this->_errorCode != ER_SUCCESS)
             return ;
         for (size_t index = this->_size; index < new_size; index++)
             construct_at(&this->_data[index], value);
@@ -283,7 +290,7 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::insert(iterato
         else
             new_capacity = 1;
         reserve(new_capacity);
-        if (this->_errorCode)
+        if (this->_errorCode != ER_SUCCESS)
             return (end());
         pos = this->_data + index;
     }
