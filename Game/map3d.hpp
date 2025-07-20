@@ -2,9 +2,6 @@
 # define MAP3D_HPP
 
 #include <cstddef>
-#include "../CMA/CMA.hpp"
-#include "../CPP_class/nullptr.hpp"
-#include "../Errno/errno.hpp"
 
 class ft_map3d
 {
