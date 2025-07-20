@@ -350,6 +350,11 @@ const ft_experience_table &ft_character::get_experience_table() const noexcept
     return (this->_experience_table);
 }
 
+int ft_character::get_level() const noexcept
+{
+    return (this->_experience_table.get_level(this->_experience));
+}
+
 int ft_character::get_error() const noexcept
 {
     return (this->_error);

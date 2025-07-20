@@ -142,6 +142,8 @@ class ft_character
         ft_experience_table       &get_experience_table() noexcept;
         const ft_experience_table &get_experience_table() const noexcept;
 
+        int get_level() const noexcept;
+
         int get_error() const noexcept;
 };
 
