@@ -78,8 +78,8 @@ int ft_inventory::add_item(const ft_item &item) noexcept
     {
         if (this->_items.getSize() >= this->_capacity)
         {
-            this->set_error(INVENTORY_FULL);
-            return (INVENTORY_FULL);
+            this->set_error(CHARACTER_INVENTORY_FULL);
+            return (CHARACTER_INVENTORY_FULL);
         }
         ft_item new_item = item;
         int to_add = remaining < new_item.get_max_stack() ? remaining : new_item.get_max_stack();
