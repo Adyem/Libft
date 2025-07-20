@@ -38,3 +38,15 @@ void ft_quest::set_current_phase(int phase) noexcept
     this->_current_phase = phase;
     return ;
 }
+
+bool ft_quest::is_complete() const noexcept
+{
+    return (this->_current_phase >= this->_phases);
+}
+
+void ft_quest::advance_phase() noexcept
+{
+    if (this->_current_phase < this->_phases)
+        ++this->_current_phase;
+    return ;
+}
