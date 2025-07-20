@@ -266,3 +266,12 @@ int test_reputation_subtracters(void)
     rep.sub_current_rep(3);
     return (rep.get_total_rep() == 12 && rep.get_current_rep() == 7);
 }
+
+int test_character_level(void)
+{
+    ft_character hero;
+    int levels[] = {0, 100, 300};
+    hero.get_experience_table().set_levels(levels, 3);
+    hero.set_experience(150);
+    return (hero.get_level() == 2);
+}
