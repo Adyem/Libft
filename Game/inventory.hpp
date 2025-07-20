@@ -28,6 +28,7 @@ class ft_inventory
         bool   is_full() const noexcept;
 
         int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 
         int  add_item(const ft_item &item) noexcept;
         void remove_item(int slot) noexcept;

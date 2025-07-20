@@ -33,6 +33,7 @@ class ft_map3d
         size_t  get_height() const;
         size_t  get_depth() const;
         int     get_error() const;
+        const char *get_error_str() const;
 };
 
 #endif

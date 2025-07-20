@@ -23,6 +23,11 @@ int ft_world::get_error() const noexcept
     return (this->_error);
 }
 
+const char *ft_world::get_error_str() const noexcept
+{
+    return (ft_strerror(this->_error));
+}
+
 void ft_world::set_error(int err) const noexcept
 {
     ft_errno = err;

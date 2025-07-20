@@ -121,3 +121,8 @@ bool ft_inventory::has_item(int item_id) const noexcept
     return (this->count_item(item_id) > 0);
 }
 
+const char *ft_inventory::get_error_str() const noexcept
+{
+    return (ft_strerror(this->_error));
+}
+
