@@ -102,10 +102,12 @@ const char* ft_strerror(int error_code)
 		return ("Map3D allocation failure");
 	else if (error_code == MAP3D_OUT_OF_BOUNDS)
 		return ("Map3D index out of bounds");
-	else if (error_code == SOCKET_JOIN_GROUP_FAILED)
-		return ("Socket: Join multicast group failed");
-	else if (error_code == INVENTORY_FULL)
-		return ("Inventory full");
+        else if (error_code == SOCKET_JOIN_GROUP_FAILED)
+                return ("Socket: Join multicast group failed");
+        else if (error_code == CHARACTER_INVENTORY_FULL)
+                return ("Inventory full");
+        else if (error_code == CHARACTER_LEVEL_TABLE_INVALID)
+                return ("Level table invalid");
 	else if (error_code > ERRNO_OFFSET)
         {
         int standard_errno = error_code - ERRNO_OFFSET;
