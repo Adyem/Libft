@@ -28,6 +28,7 @@ class ft_character
         int _presence;
         int _coins;
         int _valor;
+        int _experience;
         int _x;
         int _y;
         int _z;
@@ -86,6 +87,11 @@ class ft_character
         void set_valor(int valor) noexcept;
         void add_valor(int valor) noexcept;
         void sub_valor(int valor) noexcept;
+
+        int get_experience() const noexcept;
+        void set_experience(int experience) noexcept;
+        void add_experience(int experience) noexcept;
+        void sub_experience(int experience) noexcept;
 
         int get_x() const noexcept;
         void set_x(int x) noexcept;
