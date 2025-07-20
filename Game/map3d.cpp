@@ -1,4 +1,7 @@
 #include "map3d.hpp"
+#include "../CMA/CMA.hpp"
+#include "../CPP_class/nullptr.hpp"
+#include "../Errno/errno.hpp"
 
 ft_map3d::ft_map3d(size_t width, size_t height, size_t depth, int value)
     : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(ER_SUCCESS)
