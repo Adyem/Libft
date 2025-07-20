@@ -275,3 +275,20 @@ int test_character_level(void)
     hero.set_experience(150);
     return (hero.get_level() == 2);
 }
+
+int test_quest_progress(void)
+{
+    ft_quest q;
+    q.set_phases(3);
+    if (q.is_complete())
+        return 0;
+    q.advance_phase();
+    if (q.get_current_phase() != 1 || q.is_complete())
+        return 0;
+    q.advance_phase();
+    q.advance_phase();
+    if (!q.is_complete() || q.get_current_phase() != 3)
+        return 0;
+    q.advance_phase();
+    return (q.get_current_phase() == 3);
+}
