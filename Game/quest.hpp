@@ -20,6 +20,9 @@ class ft_quest
 
         int get_current_phase() const noexcept;
         void set_current_phase(int phase) noexcept;
+
+        bool is_complete() const noexcept;
+        void advance_phase() noexcept;
 };
 
 #endif
