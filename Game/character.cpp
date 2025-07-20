@@ -1,4 +1,5 @@
 #include "character.hpp"
+#include "../Errno/errno.hpp"
 
 ft_character::ft_character() noexcept
     : _hit_points(0), _armor(0), _might(0), _agility(0),
@@ -358,6 +359,11 @@ int ft_character::get_level() const noexcept
 int ft_character::get_error() const noexcept
 {
     return (this->_error);
+}
+
+const char *ft_character::get_error_str() const noexcept
+{
+    return (ft_strerror(this->_error));
 }
 
 void ft_character::set_error(int err) const noexcept
