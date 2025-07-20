@@ -116,6 +116,61 @@ void ft_experience_table::set_value(int index, int value) noexcept
     return ;
 }
 
+int ft_experience_table::set_levels(const int *levels, int count) noexcept
+{
+    this->_error = ER_SUCCESS;
+    if (count <= 0 || !levels)
+        return (this->resize(0));
+    if (this->resize(count) != ER_SUCCESS)
+        return (this->_error);
+    for (int i = 0; i < count; ++i)
+        this->_levels[i] = levels[i];
+    if (!this->is_valid(this->_count, this->_levels))
+        this->set_error(CHARACTER_LEVEL_TABLE_INVALID);
+    return (this->_error);
+}
+
+int ft_experience_table::generate_levels_total(int count, int base,
+                                               double multiplier) noexcept
+{
+    this->_error = ER_SUCCESS;
+    if (count <= 0)
+        return (this->resize(0));
+    if (this->resize(count) != ER_SUCCESS)
+        return (this->_error);
+    double value = static_cast<double>(base);
+    for (int i = 0; i < count; ++i)
+    {
+        this->_levels[i] = static_cast<int>(value);
+        value *= multiplier;
+    }
+    if (!this->is_valid(this->_count, this->_levels))
+        this->set_error(CHARACTER_LEVEL_TABLE_INVALID);
+    return (this->_error);
+}
+
+int ft_experience_table::generate_levels_scaled(int count, int base,
+                                                double multiplier) noexcept
+{
+    this->_error = ER_SUCCESS;
+    if (count <= 0)
+        return (this->resize(0));
+    if (this->resize(count) != ER_SUCCESS)
+        return (this->_error);
+    double increment = static_cast<double>(base);
+    double total = static_cast<double>(base);
+    this->_levels[0] = static_cast<int>(total);
+    for (int i = 1; i < count; ++i)
+    {
+        increment *= multiplier;
+        total += increment;
+        this->_levels[i] = static_cast<int>(total);
+    }
+    if (!this->is_valid(this->_count, this->_levels))
+        this->set_error(CHARACTER_LEVEL_TABLE_INVALID);
+    return (this->_error);
+}
+
 int ft_experience_table::check_for_error() const noexcept
 {
     if (!this->_levels)

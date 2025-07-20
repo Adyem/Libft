@@ -139,6 +139,8 @@ int test_event_subtracters(void);
 int test_upgrade_subtracters(void);
 int test_item_stack_subtract(void);
 int test_reputation_subtracters(void);
+int test_character_level(void);
+int test_quest_progress(void);
 
 int main(void)
 {
@@ -254,7 +256,9 @@ int main(void)
         { test_event_subtracters, "event subtracters" },
         { test_upgrade_subtracters, "upgrade subtracters" },
         { test_item_stack_subtract, "item stack subtract" },
-        { test_reputation_subtracters, "reputation subtracters" }
+        { test_reputation_subtracters, "reputation subtracters" },
+        { test_character_level, "character level" },
+        { test_quest_progress, "quest progress" }
     };
     const int total = sizeof(tests) / sizeof(tests[0]);
 

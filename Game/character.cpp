@@ -340,6 +340,21 @@ const ft_reputation &ft_character::get_reputation() const noexcept
     return (this->_reputation);
 }
 
+ft_experience_table &ft_character::get_experience_table() noexcept
+{
+    return (this->_experience_table);
+}
+
+const ft_experience_table &ft_character::get_experience_table() const noexcept
+{
+    return (this->_experience_table);
+}
+
+int ft_character::get_level() const noexcept
+{
+    return (this->_experience_table.get_level(this->_experience));
+}
+
 int ft_character::get_error() const noexcept
 {
     return (this->_error);

@@ -19,6 +19,11 @@ class ft_experience_table
         int  get_level(int experience) const noexcept;
         int  get_value(int index) const noexcept;
         void set_value(int index, int value) noexcept;
+        int  set_levels(const int *levels, int count) noexcept;
+        int  generate_levels_total(int count, int base,
+                                   double multiplier) noexcept;
+        int  generate_levels_scaled(int count, int base,
+                                    double multiplier) noexcept;
         int  resize(int new_count) noexcept;
         int  check_for_error() const noexcept;
         int  get_error() const noexcept;

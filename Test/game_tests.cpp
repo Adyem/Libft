@@ -266,3 +266,29 @@ int test_reputation_subtracters(void)
     rep.sub_current_rep(3);
     return (rep.get_total_rep() == 12 && rep.get_current_rep() == 7);
 }
+
+int test_character_level(void)
+{
+    ft_character hero;
+    int levels[] = {0, 100, 300};
+    hero.get_experience_table().set_levels(levels, 3);
+    hero.set_experience(150);
+    return (hero.get_level() == 2);
+}
+
+int test_quest_progress(void)
+{
+    ft_quest q;
+    q.set_phases(3);
+    if (q.is_complete())
+        return 0;
+    q.advance_phase();
+    if (q.get_current_phase() != 1 || q.is_complete())
+        return 0;
+    q.advance_phase();
+    q.advance_phase();
+    if (!q.is_complete() || q.get_current_phase() != 3)
+        return 0;
+    q.advance_phase();
+    return (q.get_current_phase() == 3);
+}
