@@ -1,11 +1,11 @@
 TARGET := Game.a
 DEBUG_TARGET := Game_debug.a
 
-SRCS := map3d.cpp character.cpp quest.cpp reputation.cpp buff.cpp debuff.cpp \
+SRCS := map3d.cpp character.cpp quest.cpp achievement.cpp reputation.cpp buff.cpp debuff.cpp \
         upgrade.cpp event.cpp world.cpp item.cpp inventory.cpp \
         experience_table.cpp
 
-HEADERS := map3d.hpp character.hpp quest.hpp reputation.hpp buff.hpp debuff.hpp \
+HEADERS := map3d.hpp character.hpp quest.hpp achievement.hpp reputation.hpp buff.hpp debuff.hpp \
            upgrade.hpp event.hpp world.hpp item.hpp inventory.hpp \
            experience_table.hpp
 

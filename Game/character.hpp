@@ -3,6 +3,7 @@
 
 #include "../Template/map.hpp"
 #include "quest.hpp"
+#include "achievement.hpp"
 #include "reputation.hpp"
 #include "buff.hpp"
 #include "debuff.hpp"
@@ -46,6 +47,7 @@ class ft_character
         ft_map<int, ft_debuff>	 _debuffs;
         ft_map<int, ft_upgrade> _upgrades;
         ft_map<int, ft_quest> 	_quests;
+        ft_map<int, ft_achievement> _achievements;
         ft_reputation         	_reputation;
 		ft_inventory			_inventory;
         mutable int           	_error;
@@ -135,6 +137,9 @@ class ft_character
 
         ft_map<int, ft_quest>       &get_quests() noexcept;
         const ft_map<int, ft_quest> &get_quests() const noexcept;
+
+        ft_map<int, ft_achievement>       &get_achievements() noexcept;
+        const ft_map<int, ft_achievement> &get_achievements() const noexcept;
 
         ft_reputation       &get_reputation() noexcept;
         const ft_reputation &get_reputation() const noexcept;
