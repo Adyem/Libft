@@ -7,7 +7,7 @@ ft_character::ft_character() noexcept
       _coins(0), _valor(0), _experience(0), _x(0), _y(0), _z(0),
       _fire_res{0, 0}, _frost_res{0, 0}, _lightning_res{0, 0},
       _air_res{0, 0}, _earth_res{0, 0}, _chaos_res{0, 0},
-      _physical_res{0, 0}, _buffs(), _debuffs(), _upgrades(), _quests(), _reputation(),
+      _physical_res{0, 0}, _buffs(), _debuffs(), _upgrades(), _quests(), _achievements(), _reputation(),
       _error(ER_SUCCESS)
 {
     if (this->_buffs.get_error() != ER_SUCCESS)
@@ -18,6 +18,8 @@ ft_character::ft_character() noexcept
         this->set_error(this->_upgrades.get_error());
     else if (this->_quests.get_error() != ER_SUCCESS)
         this->set_error(this->_quests.get_error());
+    else if (this->_achievements.get_error() != ER_SUCCESS)
+        this->set_error(this->_achievements.get_error());
     else if (this->_reputation.get_error() != ER_SUCCESS)
         this->set_error(this->_reputation.get_error());
     return ;
@@ -329,6 +331,16 @@ ft_map<int, ft_quest> &ft_character::get_quests() noexcept
 const ft_map<int, ft_quest> &ft_character::get_quests() const noexcept
 {
     return (this->_quests);
+}
+
+ft_map<int, ft_achievement> &ft_character::get_achievements() noexcept
+{
+    return (this->_achievements);
+}
+
+const ft_map<int, ft_achievement> &ft_character::get_achievements() const noexcept
+{
+    return (this->_achievements);
 }
 
 ft_reputation &ft_character::get_reputation() noexcept
