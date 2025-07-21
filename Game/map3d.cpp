@@ -28,6 +28,11 @@ int ft_map3d::get_error() const
     return (this->_error);
 }
 
+const char *ft_map3d::get_error_str() const
+{
+    return (ft_strerror(this->_error));
+}
+
 void ft_map3d::set_error(int err) const
 {
     ft_errno = err;

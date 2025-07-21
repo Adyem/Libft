@@ -83,6 +83,7 @@ public:
     size_t         getSize() const;
     size_t         getCapacity() const;
     int            get_error() const;
+    const char*    get_error_str() const;
     iterator       begin();
     iterator       end();
     const_iterator begin() const;
@@ -633,6 +634,12 @@ template <typename Key, typename MappedType>
 int ft_unord_map<Key, MappedType>::get_error() const
 {
     return (_error);
+}
+
+template <typename Key, typename MappedType>
+const char* ft_unord_map<Key, MappedType>::get_error_str() const
+{
+    return (ft_strerror(_error));
 }
 
 template <typename Key, typename MappedType>

@@ -21,6 +21,7 @@ class ft_world
         const ft_map<int, ft_event> &get_events() const noexcept;
 
         int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 };
 
 #endif
