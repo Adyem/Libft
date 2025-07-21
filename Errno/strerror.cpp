@@ -108,6 +108,10 @@ const char* ft_strerror(int error_code)
 		return ("Inventory full");
 	else if (error_code == CHARACTER_LEVEL_TABLE_INVALID)
 		return ("Level table invalid");
+	else if (error_code == GAME_GENERAL_ERROR)
+		return ("General Ingame Error");
+	else if (error_code == GAME_INVALID_MOVE)
+		return ("Invalid Move");
 	else if (error_code > ERRNO_OFFSET)
         {
         int standard_errno = error_code - ERRNO_OFFSET;

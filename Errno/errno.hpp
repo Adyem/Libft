@@ -64,6 +64,8 @@ enum PTErrorCode
     SOCKET_JOIN_GROUP_FAILED,
     CHARACTER_INVENTORY_FULL,
     CHARACTER_LEVEL_TABLE_INVALID,
+	GAME_GENERAL_ERROR,
+	GAME_INVALID_MOVE,
 };
 
 const char* ft_strerror(int error_code);
