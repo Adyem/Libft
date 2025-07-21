@@ -37,6 +37,7 @@ public:
     size_t      getSize() const;
     size_t      getCapacity() const;
     int         get_error() const;
+    const char* get_error_str() const;
 
     Pair<Key, MappedType>* end();
     MappedType &at(const Key& key);
@@ -290,6 +291,12 @@ template <typename Key, typename MappedType>
 int ft_map<Key, MappedType>::get_error() const
 {
     return (this->_error);
+}
+
+template <typename Key, typename MappedType>
+const char* ft_map<Key, MappedType>::get_error_str() const
+{
+    return (ft_strerror(this->_error));
 }
 
 template<typename Key, typename MappedType>

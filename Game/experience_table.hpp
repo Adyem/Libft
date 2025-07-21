@@ -27,6 +27,7 @@ class ft_experience_table
         int  resize(int new_count) noexcept;
         int  check_for_error() const noexcept;
         int  get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 };
 
 #endif
