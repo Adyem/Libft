@@ -1,8 +1,10 @@
 #include "achievement.hpp"
 
 ft_achievement::ft_achievement() noexcept
-    : _id(0), _goal(0), _progress(0)
+    : _id(0), _goals(), _error(ER_SUCCESS)
 {
+    if (this->_goals.get_error() != ER_SUCCESS)
+        this->set_error(this->_goals.get_error());
     return ;
 }
 
@@ -17,36 +19,118 @@ void ft_achievement::set_id(int id) noexcept
     return ;
 }
 
-int ft_achievement::get_goal() const noexcept
+ft_map<int, ft_goal> &ft_achievement::get_goals() noexcept
 {
-    return (this->_goal);
+    return (this->_goals);
 }
 
-void ft_achievement::set_goal(int goal) noexcept
+const ft_map<int, ft_goal> &ft_achievement::get_goals() const noexcept
 {
-    this->_goal = goal;
+    return (this->_goals);
+}
+
+void ft_achievement::set_goals(const ft_map<int, ft_goal> &goals) noexcept
+{
+    this->_goals = goals;
     return ;
 }
 
-int ft_achievement::get_progress() const noexcept
+int ft_achievement::get_goal(int id) const noexcept
 {
-    return (this->_progress);
+    const Pair<int, ft_goal> *entry = this->_goals.find(id);
+    if (!entry)
+        return (0);
+    return (entry->value.goal);
 }
 
-void ft_achievement::set_progress(int progress) noexcept
+void ft_achievement::set_goal(int id, int goal) noexcept
 {
-    this->_progress = progress;
+    Pair<int, ft_goal> *entry = this->_goals.find(id);
+    if (!entry)
+    {
+        ft_goal new_goal{goal, 0};
+        this->_goals.insert(id, new_goal);
+        if (this->_goals.get_error() != ER_SUCCESS)
+            this->set_error(this->_goals.get_error());
+    }
+    else
+        entry->value.goal = goal;
     return ;
 }
 
-void ft_achievement::add_progress(int value) noexcept
+int ft_achievement::get_progress(int id) const noexcept
 {
-    this->_progress += value;
+    const Pair<int, ft_goal> *entry = this->_goals.find(id);
+    if (!entry)
+        return (0);
+    return (entry->value.progress);
+}
+
+void ft_achievement::set_progress(int id, int progress) noexcept
+{
+    Pair<int, ft_goal> *entry = this->_goals.find(id);
+    if (!entry)
+    {
+        ft_goal new_goal{0, progress};
+        this->_goals.insert(id, new_goal);
+        if (this->_goals.get_error() != ER_SUCCESS)
+            this->set_error(this->_goals.get_error());
+    }
+    else
+        entry->value.progress = progress;
     return ;
+}
+
+void ft_achievement::add_progress(int id, int value) noexcept
+{
+    Pair<int, ft_goal> *entry = this->_goals.find(id);
+    if (!entry)
+    {
+        ft_goal new_goal{0, value};
+        this->_goals.insert(id, new_goal);
+        if (this->_goals.get_error() != ER_SUCCESS)
+            this->set_error(this->_goals.get_error());
+    }
+    else
+        entry->value.progress += value;
+    return ;
+}
+
+bool ft_achievement::is_goal_complete(int id) const noexcept
+{
+    const Pair<int, ft_goal> *entry = this->_goals.find(id);
+    if (!entry)
+        return (false);
+    return (entry->value.progress >= entry->value.goal);
 }
 
 bool ft_achievement::is_complete() const noexcept
 {
-    return (this->_progress >= this->_goal);
+    const Pair<int, ft_goal> *ptr = this->_goals.end() - this->_goals.getSize();
+    const Pair<int, ft_goal> *end = this->_goals.end();
+    while (ptr != end)
+    {
+        if (ptr->value.progress < ptr->value.goal)
+            return (false);
+        ++ptr;
+    }
+    return (true);
+}
+
+int ft_achievement::get_error() const noexcept
+{
+    return (this->_error);
+}
+
+const char *ft_achievement::get_error_str() const noexcept
+{
+    return (ft_strerror(this->_error));
+}
+
+void ft_achievement::set_error(int err) const noexcept
+{
+    ft_errno = err;
+    this->_error = err;
+    return ;
 }
 
