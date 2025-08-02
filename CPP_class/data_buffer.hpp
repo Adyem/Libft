@@ -19,6 +19,8 @@ public:
     void clear() noexcept;
     size_t size() const noexcept;
     const std::vector<uint8_t>& data() const noexcept;
+    size_t tell() const noexcept;
+    bool seek(size_t pos) noexcept;
 
     explicit operator bool() const noexcept { return (this->_ok); }
     bool good() const noexcept { return (this->_ok); }

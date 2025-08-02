@@ -24,6 +24,23 @@ const std::vector<uint8_t>& DataBuffer::data() const noexcept
     return (this->_buffer);
 }
 
+size_t DataBuffer::tell() const noexcept
+{
+    return (this->_readPos);
+}
+
+bool DataBuffer::seek(size_t pos) noexcept
+{
+    if (pos <= this->_buffer.size())
+    {
+        this->_readPos = pos;
+        this->_ok = true;
+        return (true);
+    }
+    this->_ok = false;
+    return (false);
+}
+
 DataBuffer& DataBuffer::operator<<(size_t len)
 {
     auto ptr = reinterpret_cast<const uint8_t*>(&len);
