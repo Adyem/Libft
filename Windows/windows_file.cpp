@@ -45,14 +45,15 @@ static HANDLE retrieve_handle(int fd)
 
 static void clear_handle(int fd)
 {
-	g_file_mutex.lock(GetCurrentThreadId());
+    g_file_mutex.lock(GetCurrentThreadId());
     if (fd < 0 || fd >= 1024)
-	{
-		g_file_mutex.unlock(GetCurrentThreadId());
-		return ;
-	}
+    {
+        g_file_mutex.unlock(GetCurrentThreadId());
+        return;
+    }
     g_handles[fd] = ft_nullptr;
-	return ;
+    g_file_mutex.unlock(GetCurrentThreadId());
+    return;
 }
 
 int ft_open(const char *pathname, int flags, int mode)
@@ -137,19 +138,15 @@ ssize_t ft_read(int fd, void *buf, unsigned int count)
 
 ssize_t ft_write(int fd, const void *buf, unsigned int count)
 {
+    g_file_mutex.lock(GetCurrentThreadId());
     HANDLE hFile = retrieve_handle(fd);
     if (hFile == INVALID_HANDLE_VALUE)
-	{
-		g_file_mutex.unlock(GetCurrentThreadId());
-		return (-1);
-	}
+        return (-1);
     DWORD bytesWritten = 0;
     BOOL ok = WriteFile(hFile, buf, count, &bytesWritten, NULL);
+    g_file_mutex.unlock(GetCurrentThreadId());
     if (!ok)
-	{
-		g_file_mutex.unlock(GetCurrentThreadId());
-		return (-1);
-	}
+        return (-1);
     return (bytesWritten);
 }
 
@@ -181,23 +178,28 @@ void ft_initialize_standard_file_descriptors()
     HANDLE hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
     HANDLE hStdError = GetStdHandle(STD_ERROR_HANDLE);
     if (hStdInput != INVALID_HANDLE_VALUE)
-	{
+    {
         int fdInput = _open_osfhandle(reinterpret_cast<intptr_t>(hStdInput), _O_RDONLY);
         if (fdInput != -1)
             _dup2(fdInput, 0);
     }
     if (hStdOutput != INVALID_HANDLE_VALUE)
-	{
+    {
         int fdOutput = _open_osfhandle(reinterpret_cast<intptr_t>(hStdOutput), _O_WRONLY);
         if (fdOutput != -1)
             _dup2(fdOutput, 1);
     }
     if (hStdError != INVALID_HANDLE_VALUE)
-	{
+    {
         int fdError = _open_osfhandle(reinterpret_cast<intptr_t>(hStdError), _O_WRONLY);
         if (fdError != -1)
             _dup2(fdError, 2);
     }
+    g_file_mutex.lock(GetCurrentThreadId());
+    g_handles[0] = hStdInput;
+    g_handles[1] = hStdOutput;
+    g_handles[2] = hStdError;
+    g_file_mutex.unlock(GetCurrentThreadId());
     _setmode(0, _O_BINARY);
     _setmode(1, _O_BINARY);
     _setmode(2, _O_BINARY);
