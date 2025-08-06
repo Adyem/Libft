@@ -106,6 +106,8 @@ class ft_character
         int get_z() const noexcept;
         void set_z(int z) noexcept;
 
+        void move(int dx, int dy, int dz) noexcept;
+
         ft_resistance get_fire_res() const noexcept;
         void set_fire_res(int percent, int flat) noexcept;
 
