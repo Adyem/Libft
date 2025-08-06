@@ -61,6 +61,8 @@ class ft_character
         int get_hit_points() const noexcept;
         void set_hit_points(int hp) noexcept;
 
+        bool is_alive() const noexcept;
+
         int get_armor() const noexcept;
         void set_armor(int armor) noexcept;
 
