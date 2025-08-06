@@ -215,6 +215,14 @@ void ft_character::set_z(int z) noexcept
     return ;
 }
 
+void ft_character::move(int dx, int dy, int dz) noexcept
+{
+    this->_x += dx;
+    this->_y += dy;
+    this->_z += dz;
+    return ;
+}
+
 ft_resistance ft_character::get_fire_res() const noexcept
 {
     return (this->_fire_res);
