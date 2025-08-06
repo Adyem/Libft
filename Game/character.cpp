@@ -36,6 +36,11 @@ void ft_character::set_hit_points(int hp) noexcept
     return ;
 }
 
+bool ft_character::is_alive() const noexcept
+{
+    return (this->_hit_points > 0);
+}
+
 int ft_character::get_armor() const noexcept
 {
     return (this->_armor);
