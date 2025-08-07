@@ -21,6 +21,7 @@ inline __attribute__((always_inline)) void ft_init_srand(void)
 	return ;
 }
 
+int ft_random_int(void);
 int ft_dice_roll(int number, int faces);
 
 #endif
