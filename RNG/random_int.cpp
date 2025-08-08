@@ -1,4 +1,4 @@
-#include "dice_roll.hpp"
+#include "RNG.hpp"
 
 int ft_random_int(void)
 {
