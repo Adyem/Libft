@@ -1,5 +1,5 @@
 #include <climits>
-#include "dice_roll.hpp"
+#include "RNG.hpp"
 #include "../Printf/printf.hpp"
 
 bool g_srand_init = false;

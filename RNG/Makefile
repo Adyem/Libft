@@ -3,7 +3,7 @@ DEBUG_TARGET := RNG_debug.a
 
 SRCS := dice_roll.cpp random_int.cpp
 
-HEADERS := dice_roll.hpp
+HEADERS := RNG.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
