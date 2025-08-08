@@ -1,4 +1,5 @@
 #include "RNG.hpp"
+#include "RNG_internal.hpp"
 
 int ft_random_int(void)
 {
