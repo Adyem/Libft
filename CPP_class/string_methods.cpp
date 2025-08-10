@@ -149,7 +149,7 @@ void ft_string::move(ft_string& other) noexcept
         this->_length = other._length;
         this->_capacity = other._capacity;
         this->_errorCode = other._errorCode;
-        other._data = nullptr;
+        other._data = ft_nullptr;
         other._length = 0;
         other._capacity = 0;
         other._errorCode = 0;

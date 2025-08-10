@@ -97,7 +97,7 @@ class ft_sharedptr
 template <typename ManagedType>
 template <typename... Args, typename>
 ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args)
-    : _managedPointer(nullptr),
+    : _managedPointer(ft_nullptr),
       _referenceCount(new (std::nothrow) int),
       _arraySize(0),
       _isArrayType(false),
@@ -122,7 +122,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args)
 template <typename ManagedType>
 ft_sharedptr<ManagedType>::ft_sharedptr(ManagedType* pointer, bool isArray, size_t arraySize)
     : _managedPointer(pointer),
-      _referenceCount(pointer ? new (std::nothrow) int : nullptr),
+      _referenceCount(pointer ? new (std::nothrow) int : ft_nullptr),
       _arraySize(arraySize),
       _isArrayType(isArray),
       _errorCode(ER_SUCCESS)
@@ -135,8 +135,8 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ManagedType* pointer, bool isArray, size
 
 template <typename ManagedType>
 ft_sharedptr<ManagedType>::ft_sharedptr()
-    : _managedPointer(nullptr),
-      _referenceCount(nullptr),
+    : _managedPointer(ft_nullptr),
+      _referenceCount(ft_nullptr),
       _arraySize(0),
       _isArrayType(false),
       _errorCode(ER_SUCCESS)
@@ -145,7 +145,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr()
 
 template <typename ManagedType>
 ft_sharedptr<ManagedType>::ft_sharedptr(size_t size)
-    : _managedPointer(nullptr),
+    : _managedPointer(ft_nullptr),
       _referenceCount(new (std::nothrow) int),
       _arraySize(size),
       _isArrayType(true),
@@ -556,7 +556,7 @@ void ft_sharedptr<ManagedType>::remove(int index)
         return ;
     }
     size_t newSize = _arraySize - 1;
-    ManagedType* newArray = (newSize > 0) ? new (std::nothrow) ManagedType[newSize] : nullptr;
+    ManagedType* newArray = (newSize > 0) ? new (std::nothrow) ManagedType[newSize] : ft_nullptr;
     if (newSize > 0 && !newArray)
     {
         this->set_error(SHARED_PTR_ALLOCATION_FAILED);

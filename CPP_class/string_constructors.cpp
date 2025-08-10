@@ -51,7 +51,7 @@ ft_string::ft_string(ft_string&& other) noexcept
       _capacity(other._capacity),
       _errorCode(other._errorCode)
 {
-    other._data = nullptr;
+    other._data = ft_nullptr;
     other._length = 0;
     other._capacity = 0;
     other._errorCode = 0;
@@ -109,7 +109,7 @@ ft_string& ft_string::operator=(ft_string&& other) noexcept
         this->_length = other._length;
         this->_capacity = other._capacity;
         this->_errorCode = other._errorCode;
-        other._data = nullptr;
+        other._data = ft_nullptr;
         other._length = 0;
         other._capacity = 0;
         other._errorCode = 0;
@@ -152,7 +152,7 @@ void ft_string::operator delete[](void* ptr) noexcept
 }
 
 ft_string::ft_string(int errorCode) noexcept
-    : _data(nullptr)
+    : _data(ft_nullptr)
     , _length(0)
     , _capacity(0)
     , _errorCode(errorCode)
