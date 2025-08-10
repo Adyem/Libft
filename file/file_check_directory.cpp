@@ -12,7 +12,7 @@
   #define PATH_SEP '/'
 #endif
 
-static inline void normalize_slashes(char *data)
+[[maybe_unused]] static inline void normalize_slashes(char *data)
 {
 #if defined(_WIN32) || defined(_WIN64)
     if (!data)
