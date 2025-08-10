@@ -11,6 +11,7 @@
 
 #ifndef _WIN32
 #include <sys/syscall.h>
+#include <dirent.h>
 #endif
 
 #ifdef _WIN32
@@ -60,6 +61,7 @@ static inline int closedir_win(FT_DIR* directoryStream)
     return (0);
 }
 #else
+#ifdef __linux__
 static inline FT_DIR* opendir_unix(const char* directoryPath)
 {
     int fileDescriptor = ft_open(directoryPath, O_DIRECTORY | O_RDONLY, 0);
@@ -85,7 +87,25 @@ static inline FT_DIR* opendir_unix(const char* directoryPath)
     directoryStream->buffer_offset = 0;
     return (directoryStream);
 }
+#else
+static inline FT_DIR* opendir_unix(const char* directoryPath)
+{
+    DIR* dir = opendir(directoryPath);
+    if (!dir)
+        return (ft_nullptr);
+    FT_DIR* directoryStream = reinterpret_cast<FT_DIR*>(cma_malloc(sizeof(FT_DIR)));
+    if (!directoryStream)
+    {
+        closedir(dir);
+        return (ft_nullptr);
+    }
+    ft_memset(directoryStream, 0, sizeof(FT_DIR));
+    directoryStream->fd = reinterpret_cast<intptr_t>(dir);
+    return (directoryStream);
+}
+#endif
 
+#ifdef __linux__
 static inline ft_dirent* readdir_unix(FT_DIR* dir)
 {
     if (dir->buffer_offset >= static_cast<size_t>(dir->buffer_used))
@@ -108,7 +128,23 @@ static inline ft_dirent* readdir_unix(FT_DIR* dir)
     dir->buffer_offset += raw->d_reclen;
     return (&entry);
 }
+#else
+static inline ft_dirent* readdir_unix(FT_DIR* dir)
+{
+    DIR* d = reinterpret_cast<DIR*>(dir->fd);
+    struct dirent* entry = readdir(d);
+    if (!entry)
+        return (ft_nullptr);
+    static ft_dirent ft_entry;
+    ft_bzero(&ft_entry, sizeof(ft_entry));
+    ft_entry.d_ino = entry->d_ino;
+    ft_entry.d_type = entry->d_type;
+    ft_strncpy(ft_entry.d_name, entry->d_name, sizeof(ft_entry.d_name) - 1);
+    return (&ft_entry);
+}
+#endif
 
+#ifdef __linux__
 static inline int closedir_unix(FT_DIR* directoryStream)
 {
     ft_close(static_cast<int>(directoryStream->fd));
@@ -116,6 +152,15 @@ static inline int closedir_unix(FT_DIR* directoryStream)
     cma_free(directoryStream);
     return (0);
 }
+#else
+static inline int closedir_unix(FT_DIR* directoryStream)
+{
+    DIR* d = reinterpret_cast<DIR*>(directoryStream->fd);
+    closedir(d);
+    cma_free(directoryStream);
+    return (0);
+}
+#endif
 #endif
 
 FT_DIR* ft_opendir(const char* directoryPath)

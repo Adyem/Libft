@@ -12,7 +12,7 @@ int pt_mutex::unlock(pthread_t thread_id)
         this->set_error(PT_ERR_MUTEX_OWNER);
         return (-1);
     }
-    this->_thread_id = -1;
+    this->_thread_id = nullptr;
     this->_lock = false;
     this->_lock_released = true;
     return (0); 
