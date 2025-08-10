@@ -7,10 +7,10 @@ pt_mutex::pt_mutex()
 	int index = 0;
 
 	this->_lock = false;
-	this->_thread_id = nullptr;
+	this->_thread_id = 0;
 	while (index < MAX_QUEUE)
 	{
-		this->_wait_queue[index] = nullptr;
+		this->_wait_queue[index] = 0;
 		index++;
 	}
 	this->_wait_queue_start = 0;
