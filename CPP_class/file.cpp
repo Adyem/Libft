@@ -3,6 +3,7 @@
 #include "../Errno/errno.hpp"
 #include "../Printf/printf_internal.hpp"
 #include "../Printf/printf.hpp"
+#include "nullptr.hpp"
 #include <cerrno>
 #include <cstdarg>
 #include <unistd.h>
@@ -154,7 +155,7 @@ ssize_t ft_file::read(char *buffer, int count) noexcept
 
 ssize_t ft_file::write(const char *string) noexcept
 {
-    if (string == nullptr)
+    if (string == ft_nullptr)
     {
         this->set_error(FT_EINVAL);
         return (-1);

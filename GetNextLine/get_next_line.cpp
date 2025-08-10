@@ -145,14 +145,14 @@ char	*get_next_line(ft_file &file)
 	while (file == -1 && index < 4096)
 	{
 		cma_free(readed_string[index]);
-		readed_string[index] = nullptr;
+		readed_string[index] = ft_nullptr;
 		index++;
 	}
 	if (BUFFER_SIZE <= 0 || file < 0)
-		return (nullptr);
+		return (ft_nullptr);
 	readed_string[file] = read_fd(file, readed_string[file]);
 	if (!readed_string[file])
-		return (nullptr);
+		return (ft_nullptr);
 	string = fetch_line(readed_string[file]);
 	readed_string[file] = leftovers(readed_string[file]);
 	return (string);

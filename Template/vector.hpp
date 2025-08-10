@@ -62,7 +62,7 @@ class ft_vector
 
 template <typename ElementType>
 ft_vector<ElementType>::ft_vector(size_t initial_capacity)
-    : _data(nullptr), _size(0), _capacity(0), _errorCode(ER_SUCCESS)
+    : _data(ft_nullptr), _size(0), _capacity(0), _errorCode(ER_SUCCESS)
 {
     if (initial_capacity > 0)
     {
@@ -80,7 +80,7 @@ template <typename ElementType>
 ft_vector<ElementType>::~ft_vector()
 {
     destroy_elements(0, this->_size);
-    if (this->_data != nullptr)
+    if (this->_data != ft_nullptr)
         cma_free(this->_data);
     return ;
 }
@@ -92,7 +92,7 @@ ft_vector<ElementType>::ft_vector(ft_vector<ElementType>&& other) noexcept
       _capacity(other._capacity),
       _errorCode(other._errorCode)
 {
-    other._data = nullptr;
+    other._data = ft_nullptr;
     other._size = 0;
     other._capacity = 0;
     other._errorCode = ER_SUCCESS;
@@ -104,13 +104,13 @@ ft_vector<ElementType>& ft_vector<ElementType>::operator=(ft_vector<ElementType>
     if (this != &other)
     {
         destroy_elements(0, this->_size);
-        if (this->_data != nullptr)
+        if (this->_data != ft_nullptr)
             cma_free(this->_data);
         this->_data = other._data;
         this->_size = other._size;
         this->_capacity = other._capacity;
         this->_errorCode = other._errorCode;
-        other._data = nullptr;
+        other._data = ft_nullptr;
         other._size = 0;
         other._capacity = 0;
         other._errorCode = ER_SUCCESS;
@@ -248,7 +248,7 @@ void ft_vector<ElementType>::reserve(size_t new_capacity)
     {
         ElementType* new_data = static_cast<ElementType*>(cma_realloc(this->_data,
                     new_capacity * sizeof(ElementType)));
-        if (new_data == nullptr)
+        if (new_data == ft_nullptr)
         {
             this->setError(VECTOR_ALLOC_FAIL);
             return ;

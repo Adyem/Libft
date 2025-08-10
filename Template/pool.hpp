@@ -133,9 +133,9 @@ typename Pool<T>::Object Pool<T>::acquire(Args&&... args)
 
 template<typename T>
 Pool<T>::Object::Object() noexcept
-    : _pool(nullptr)
+    : _pool(ft_nullptr)
     , _idx(0)
-    , _ptr(nullptr)
+    , _ptr(ft_nullptr)
 {
 	return ;
 }
@@ -169,7 +169,7 @@ T* Pool<T>::Object::operator->() const noexcept
 template<typename T>
 Pool<T>::Object::operator bool() const noexcept
 {
-    return (this->_ptr != nullptr);
+    return (this->_ptr != ft_nullptr);
 }
 
 template<typename T>
@@ -178,8 +178,8 @@ Pool<T>::Object::Object(Object&& o) noexcept
     , _idx(o._idx)
     , _ptr(o._ptr)
 {
-    o._pool = nullptr;
-    o._ptr = nullptr;
+    o._pool = ft_nullptr;
+    o._ptr = ft_nullptr;
 	return ;
 }
 
@@ -191,8 +191,8 @@ typename Pool<T>::Object& Pool<T>::Object::operator=(Object&& o) noexcept
         _pool = o._pool;
         _idx = o._idx;
         _ptr = o._ptr;
-        o._pool = nullptr;
-        o._ptr = nullptr;
+        o._pool = ft_nullptr;
+        o._ptr = ft_nullptr;
     }
     return (*this);
 }

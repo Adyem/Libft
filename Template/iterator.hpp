@@ -1,5 +1,7 @@
-#ifndef ITERATOR_HPP
-# define ITERATOR_HPP
+ #ifndef ITERATOR_HPP
+ # define ITERATOR_HPP
+
+#include "../CPP_class/nullptr.hpp"
 
 template <typename ValueType>
 class Iterator
@@ -42,8 +44,8 @@ Iterator<ValueType>& Iterator<ValueType>::operator=(const Iterator& other)
 template <typename ValueType>
 Iterator<ValueType>::Iterator(Iterator&& other) noexcept : m_ptr(other.m_ptr)
 {
-    other.m_ptr = nullptr;
-	return ;
+    other.m_ptr = ft_nullptr;
+        return ;
 }
 
 template <typename ValueType>
@@ -52,7 +54,7 @@ Iterator<ValueType>& Iterator<ValueType>::operator=(Iterator&& other) noexcept
     if (this != &other)
     {
         m_ptr = other.m_ptr;
-        other.m_ptr = nullptr;
+        other.m_ptr = ft_nullptr;
     }
     return (*this);
 }
