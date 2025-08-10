@@ -142,7 +142,7 @@ int test_ft_unique_ptr_release(void)
 {
     ft_uniqueptr<int> up(new int(42));
     int* raw = up.release_ptr();
-    bool ok = (raw != nullptr && *raw == 42 && !up);
+    bool ok = (raw != ft_nullptr && *raw == 42 && !up);
     delete raw;
     return ok;
 }
