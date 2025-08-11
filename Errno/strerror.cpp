@@ -88,16 +88,16 @@ const char* ft_strerror(int error_code)
 		return ("Unordened map Key not found");
 	else if (error_code == UNORD_MAP_UNKNOWN)
 		return ("Unordened map Unknown error");
-        else if (error_code == DECK_EMPTY)
-                return ("Deck is empty");
-        else if (error_code == DECK_ALLOC_FAIL)
-                return ("Deck memory allocation");
-        else if (error_code == LOOT_TABLE_EMPTY)
-                return ("Loot table is empty");
-        else if (error_code == SFML_WINDOW_CREATE_FAIL)
-                return ("Failed to create window");
-        else if (error_code == CHECK_DIR_FAIL)
-                return ("Check Directory: Invalid path");
+	else if (error_code == DECK_EMPTY)
+        return ("Deck is empty");
+	else if (error_code == DECK_ALLOC_FAIL)
+        return ("Deck memory allocation");
+	else if (error_code == LOOT_TABLE_EMPTY)
+        return ("Loot table is empty");
+	else if (error_code == SFML_WINDOW_CREATE_FAIL)
+        return ("Failed to create window");
+	else if (error_code == CHECK_DIR_FAIL)
+        return ("Check Directory: Invalid path");
 	else if (error_code == JSON_MALLOC_FAIL)
 		return ("JSON: Malloc failure");
 	else if (error_code == MAP3D_ALLOC_FAIL)
