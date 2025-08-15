@@ -52,6 +52,11 @@ char            *ft_getenv(const char *name);
 int             ft_setenv(const char *name, const char *value, int overwrite);
 int             ft_unsetenv(const char *name);
 
+FILE            *ft_fopen(const char *filename, const char *mode);
+int             ft_fclose(FILE *stream);
+size_t          ft_fread(void *ptr, size_t size, size_t count, FILE *stream);
+size_t          ft_fwrite(const void *ptr, size_t size, size_t count, FILE *stream);
+
 long            ft_time_ms(void);
 char            *ft_time_format(char *buffer, size_t buffer_size);
 
