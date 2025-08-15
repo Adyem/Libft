@@ -294,3 +294,24 @@ int test_atol_longmin(void)
     return (ft_atol(s.c_str()) == LONG_MIN);
 }
 
+int test_setenv_getenv_basic(void)
+{
+    if (ft_setenv("LIBFT_TEST_VAR", "hello", 1) != 0)
+        return (0);
+    char *val = ft_getenv("LIBFT_TEST_VAR");
+    int ok = val != ft_nullptr && std::strcmp(val, "hello") == 0;
+    ft_unsetenv("LIBFT_TEST_VAR");
+    return (ok);
+}
+
+int test_setenv_no_overwrite(void)
+{
+    if (ft_setenv("LIBFT_TEST_VAR2", "first", 1) != 0)
+        return (0);
+    ft_setenv("LIBFT_TEST_VAR2", "second", 0);
+    char *val = ft_getenv("LIBFT_TEST_VAR2");
+    int ok = val != ft_nullptr && std::strcmp(val, "first") == 0;
+    ft_unsetenv("LIBFT_TEST_VAR2");
+    return (ok);
+}
+

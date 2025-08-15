@@ -4,7 +4,7 @@
 
 int ft_setenv(const char *name, const char *value, int overwrite)
 {
-    if (name == ft_nullptr || value == ft_nullptr)
+    if (name == ft_nullptr || value == ft_nullptr || *name == '\0' || ft_strchr(name, '=') != ft_nullptr)
         return (-1);
 #if defined(_WIN32) || defined(_WIN64)
     if (!overwrite && std::getenv(name) != ft_nullptr)
