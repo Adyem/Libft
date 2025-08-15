@@ -4,6 +4,7 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/nullptr.hpp"
 #include "math.hpp"
+#include "swap.hpp"
 #include <cstddef>
 #include <utility>
 #include <type_traits>
@@ -510,11 +511,11 @@ void ft_sharedptr<ManagedType>::reset(ManagedType* pointer, size_t size, bool ar
 template <typename ManagedType>
 void ft_sharedptr<ManagedType>::swap(ft_sharedptr<ManagedType>& other)
 {
-    std::swap(_managedPointer, other._managedPointer);
-    std::swap(_referenceCount, other._referenceCount);
-    std::swap(_arraySize, other._arraySize);
-    std::swap(_isArrayType, other._isArrayType);
-    std::swap(_errorCode, other._errorCode);
+    ft_swap(_managedPointer, other._managedPointer);
+    ft_swap(_referenceCount, other._referenceCount);
+    ft_swap(_arraySize, other._arraySize);
+    ft_swap(_isArrayType, other._isArrayType);
+    ft_swap(_errorCode, other._errorCode);
     return ;
 }
 
