@@ -15,10 +15,6 @@ This document tracks outstanding work for the library. Items are grouped by doma
 
 ## Data Structures
 
-### Queue
-FIFO container.
-Functions: ft_queue_new, ft_queue_enqueue, ft_queue_dequeue, ft_queue_front, ft_queue_size, ft_queue_clear.
-
 ### Deque
 Double-ended queue.
 Functions: ft_deque_new, ft_deque_push_front, ft_deque_push_back, ft_deque_pop_front, ft_deque_pop_back, ft_deque_size, ft_deque_clear.
