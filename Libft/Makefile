@@ -7,7 +7,7 @@ SRCS := ft_atoi.cpp \
 	ft_memcmp.cpp \
 	ft_memcpy.cpp \
 	ft_memmove.cpp \
-        ft_memdup.cpp \
+    ft_memdup.cpp \
 	ft_memset.cpp \
 	ft_strchr.cpp \
 	ft_strlcat.cpp \
@@ -22,7 +22,7 @@ SRCS := ft_atoi.cpp \
     ft_isalnum.cpp \
     ft_strcmp.cpp \
 	ft_toupper.cpp \
-        ft_tolower.cpp \
+    ft_tolower.cpp \
     ft_strncpy.cpp \
     ft_strjoin_multiple.cpp \
     ft_strmapi.cpp \
