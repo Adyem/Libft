@@ -11,7 +11,6 @@ This document tracks outstanding work for the library. Items are grouped by doma
 - ft_time: current time formatting and delta measurement.
 
 ## Conversion Functions
-- ft_strtol / ft_strtoul: string to long / unsigned long.
 
 ## File I/O
 - ft_fopen, ft_fclose, ft_fread, ft_fwrite.

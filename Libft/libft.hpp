@@ -31,6 +31,8 @@ int			ft_isdigit(int character);
 int         ft_isalpha(int character);
 int         ft_isalnum(int character);
 long		ft_atol(const char *string);
+long            ft_strtol(const char *nptr, char **endptr, int base);
+unsigned long   ft_strtoul(const char *nptr, char **endptr, int base);
 int			ft_strcmp(const char *string1, const char *string2);
 void		ft_to_lower(char *string);
 void		ft_to_upper(char *string);
