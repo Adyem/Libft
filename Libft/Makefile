@@ -39,7 +39,8 @@ SRCS := ft_atoi.cpp \
     ft_exp.cpp \
     ft_getenv.cpp \
     ft_setenv.cpp \
-    ft_unsetenv.cpp
+    ft_unsetenv.cpp \
+    ft_time.cpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
