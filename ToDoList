@@ -7,7 +7,6 @@ This document tracks outstanding work for the library. Items are grouped by doma
 ## Conversion Functions
 
 ## File I/O
-- ft_fseek, ft_ftell.
 - ft_fprintf: fprintf-like formatted output.
 
 ## General Utilities
