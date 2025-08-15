@@ -3,7 +3,6 @@
 This document tracks outstanding work for the library. Items are grouped by domain for easier planning.
 
 ## Logging, Randomness and Timing
-- ft_time: current time formatting and delta measurement.
 
 ## Conversion Functions
 
