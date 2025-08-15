@@ -36,7 +36,8 @@ SRCS := ft_atoi.cpp \
     ft_clamp.cpp \
     ft_pow.cpp \
     ft_sqrt.cpp \
-    ft_exp.cpp
+    ft_exp.cpp \
+    ft_getenv.cpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
