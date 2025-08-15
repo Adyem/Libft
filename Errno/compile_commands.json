@@ -10,11 +10,47 @@
       "-std=c++17",
       "-c",
       "-o",
-      "objs/errno.o",
-      "errno.cpp"
+      "objs/strerror.o",
+      "strerror.cpp"
     ],
-    "directory": "/home/adyem/DND_tools/libft/Errno",
-    "file": "/home/adyem/DND_tools/libft/Errno/errno.cpp",
-    "output": "/home/adyem/DND_tools/libft/Errno/objs/errno.o"
+    "directory": "/workspace/Libft/Errno",
+    "file": "/workspace/Libft/Errno/strerror.cpp",
+    "output": "/workspace/Libft/Errno/objs/strerror.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-g",
+      "-O0",
+      "-std=c++17",
+      "-c",
+      "-o",
+      "objs/perror.o",
+      "perror.cpp"
+    ],
+    "directory": "/workspace/Libft/Errno",
+    "file": "/workspace/Libft/Errno/perror.cpp",
+    "output": "/workspace/Libft/Errno/objs/perror.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-g",
+      "-O0",
+      "-std=c++17",
+      "-c",
+      "-o",
+      "objs/exit.o",
+      "exit.cpp"
+    ],
+    "directory": "/workspace/Libft/Errno",
+    "file": "/workspace/Libft/Errno/exit.cpp",
+    "output": "/workspace/Libft/Errno/objs/exit.o"
   }
 ]

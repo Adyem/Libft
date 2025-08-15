@@ -71,5 +71,6 @@ enum PTErrorCode
 
 const char* ft_strerror(int error_code);
 void		ft_perror(const char *error_msg);
+void            ft_exit(const char *error_msg, int exit_code);
 
 #endif
