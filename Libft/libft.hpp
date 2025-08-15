@@ -48,5 +48,6 @@ double      	ft_exp(double x);
 char        	*ft_strjoin_multiple(int count, ...);
 char        	*ft_strmapi(const char *string, char (*function)(unsigned int, char));
 void        	ft_striteri(char *string, void (*function)(unsigned int, char *));
+char            *ft_getenv(const char *name);
 
 #endif
