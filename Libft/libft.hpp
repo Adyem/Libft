@@ -55,4 +55,23 @@ int             ft_unsetenv(const char *name);
 long            ft_time_ms(void);
 char            *ft_time_format(char *buffer, size_t buffer_size);
 
+typedef struct s_stack_node
+{
+    void            *data;
+    s_stack_node    *next;
+}   t_stack_node;
+
+typedef struct s_stack
+{
+    t_stack_node    *top;
+    size_t          size;
+}   t_stack;
+
+t_stack         *ft_stack_new(void);
+int             ft_stack_push(t_stack *stack, void *data);
+void            *ft_stack_pop(t_stack *stack);
+void            *ft_stack_top(t_stack *stack);
+size_t          ft_stack_size(t_stack *stack);
+void            ft_stack_clear(t_stack *stack, void (*del)(void *));
+
 #endif
