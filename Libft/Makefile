@@ -22,15 +22,19 @@ SRCS := ft_atoi.cpp \
     ft_isalnum.cpp \
     ft_strcmp.cpp \
 	ft_toupper.cpp \
-    ft_tolower.cpp \
+        ft_tolower.cpp \
     ft_strncpy.cpp \
+    ft_strjoin_multiple.cpp \
     ft_strmapi.cpp \
     ft_striteri.cpp \
     ft_isspace.cpp \
     ft_strlen_size_t.cpp \
     ft_abs.cpp \
     ft_swap.cpp \
-    ft_clamp.cpp
+    ft_clamp.cpp \
+    ft_pow.cpp \
+    ft_sqrt.cpp \
+    ft_exp.cpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
