@@ -37,5 +37,6 @@ char 		*ft_strncpy(char *destination, const char *source, size_t number_of_chara
 void 		*ft_memset(void *destination, int value, size_t number_of_bytes);
 int 		ft_isspace(int character);
 int         ft_abs(int number);
+void            ft_swap(int *a, int *b);
 
 #endif

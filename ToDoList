@@ -25,7 +25,6 @@ This document tracks outstanding work for the library. Items are grouped by doma
 - ft_fprintf: fprintf-like formatted output.
 
 ## General Utilities
-- ft_swap.
 - ft_clamp.
 
 ## Mathematical Functions

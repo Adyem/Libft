@@ -4,6 +4,7 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/nullptr.hpp"
 #include "math.hpp"
+#include "swap.hpp"
 #include <cstddef>
 #include <utility>
 #include <type_traits>
@@ -381,10 +382,10 @@ ft_uniqueptr<ManagedType>::operator bool() const noexcept
 template <typename ManagedType>
 void ft_uniqueptr<ManagedType>::swap(ft_uniqueptr& other)
 {
-    std::swap(_managedPointer, other._managedPointer);
-    std::swap(_arraySize, other._arraySize);
-    std::swap(_isArrayType, other._isArrayType);
-    std::swap(_errorCode, other._errorCode);
+    ft_swap(_managedPointer, other._managedPointer);
+    ft_swap(_arraySize, other._arraySize);
+    ft_swap(_isArrayType, other._isArrayType);
+    ft_swap(_errorCode, other._errorCode);
 }
 
 template <typename ManagedType>
