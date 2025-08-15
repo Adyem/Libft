@@ -42,4 +42,4 @@ struct is_single_convertible_to_size_t : std::false_type {};
 template <typename Arg>
 struct is_single_convertible_to_size_t<Arg> : std::is_convertible<std::decay_t<Arg>, size_t> {};
 
-#endif // MATH_HPP
+#endif
