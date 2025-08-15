@@ -36,10 +36,6 @@ This document tracks outstanding work for the library. Items are grouped by doma
 
 ## Data Structures
 
-### Vector
-A dynamically-resizing array.
-Functions: ft_vector_new, ft_vector_push_back, ft_vector_pop_back, ft_vector_insert, ft_vector_remove, ft_vector_get, ft_vector_set, ft_vector_size, ft_vector_capacity, ft_vector_clear, ft_vector_destroy.
-
 ### List
 Doubly-linked list.
 Functions: ft_list_new, ft_list_push_front, ft_list_push_back, ft_list_insert, ft_list_remove, ft_list_find, ft_list_size, ft_list_clear.
@@ -70,7 +66,6 @@ Functions: ft_bitset_new, ft_bitset_set, ft_bitset_reset, ft_bitset_flip, ft_bit
 
 ### Smart Pointers
 Automatic memory management.
-- Shared pointer: ft_shared_ptr_new, ft_shared_ptr_reset, ft_shared_ptr_use_count.
 - Unique pointer: ft_unique_ptr_new, ft_unique_ptr_reset, ft_unique_ptr_release.
 
 ### Optional
