@@ -40,6 +40,10 @@ SRCS := ft_atoi.cpp \
     ft_getenv.cpp \
     ft_setenv.cpp \
     ft_unsetenv.cpp \
+    ft_fopen.cpp \
+    ft_fclose.cpp \
+    ft_fread.cpp \
+    ft_fwrite.cpp \
     ft_stack.cpp \
     ft_queue.cpp \
     ft_time.cpp
