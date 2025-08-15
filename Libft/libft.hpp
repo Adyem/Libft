@@ -38,7 +38,7 @@ void 		*ft_memset(void *destination, int value, size_t number_of_bytes);
 int 		ft_isspace(int character);
 int         ft_abs(int number);
 void        ft_swap(int *a, int *b);
-char            *ft_strmapi(const char *string, char (*function)(unsigned int, char));
-void            ft_striteri(char *string, void (*function)(unsigned int, char *));
+char        *ft_strmapi(const char *string, char (*function)(unsigned int, char));
+void        ft_striteri(char *string, void (*function)(unsigned int, char *));
 
 #endif
