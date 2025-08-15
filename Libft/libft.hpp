@@ -19,6 +19,7 @@ void		ft_bzero(void *string, size_t size);
 void		*ft_memchr(const void *pointer, int character, size_t size);
 void		*ft_memcpy(void* destination, const void* source, size_t num);
 void		*ft_memmove(void *destination, const void *source, size_t size);
+void            *ft_memdup(const void *source, size_t size);
 char		*ft_strchr(const char *string, int char_to_find);
 size_t		ft_strlcat(char *destination, const char *source, size_t bufferSize);
 size_t		ft_strlcpy(char *destination, const char *source, size_t bufferSize);
@@ -38,6 +39,7 @@ void 		*ft_memset(void *destination, int value, size_t number_of_bytes);
 int 		ft_isspace(int character);
 int         ft_abs(int number);
 void        ft_swap(int *a, int *b);
+int         ft_clamp(int value, int min, int max);
 char        *ft_strmapi(const char *string, char (*function)(unsigned int, char));
 void        ft_striteri(char *string, void (*function)(unsigned int, char *));
 
