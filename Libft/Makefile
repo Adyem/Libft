@@ -7,6 +7,7 @@ SRCS := ft_atoi.cpp \
 	ft_memcmp.cpp \
 	ft_memcpy.cpp \
 	ft_memmove.cpp \
+        ft_memdup.cpp \
 	ft_memset.cpp \
 	ft_strchr.cpp \
 	ft_strlcat.cpp \
@@ -28,7 +29,8 @@ SRCS := ft_atoi.cpp \
     ft_isspace.cpp \
     ft_strlen_size_t.cpp \
     ft_abs.cpp \
-    ft_swap.cpp
+    ft_swap.cpp \
+    ft_clamp.cpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

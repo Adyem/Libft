@@ -6,7 +6,6 @@ This document tracks outstanding work for the library. Items are grouped by doma
 - ft_strjoin_multiple: join an arbitrary number of strings.
 
 ## Memory Utilities
-- ft_memdup: duplicate a block of memory.
 - ft_array_resize: safe array resizing helper.
 
 ## Logging, Randomness and Timing
@@ -23,7 +22,6 @@ This document tracks outstanding work for the library. Items are grouped by doma
 - ft_fprintf: fprintf-like formatted output.
 
 ## General Utilities
-- ft_clamp.
 
 ## Mathematical Functions
 - ft_sqrt.
