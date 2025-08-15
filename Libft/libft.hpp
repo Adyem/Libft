@@ -74,4 +74,24 @@ void            *ft_stack_top(t_stack *stack);
 size_t          ft_stack_size(t_stack *stack);
 void            ft_stack_clear(t_stack *stack, void (*del)(void *));
 
+typedef struct s_queue_node
+{
+    void            *data;
+    s_queue_node    *next;
+}   t_queue_node;
+
+typedef struct s_queue
+{
+    t_queue_node    *front;
+    t_queue_node    *rear;
+    size_t          size;
+}   t_queue;
+
+t_queue        *ft_queue_new(void);
+int            ft_queue_enqueue(t_queue *queue, void *data);
+void           *ft_queue_dequeue(t_queue *queue);
+void           *ft_queue_front(t_queue *queue);
+size_t         ft_queue_size(t_queue *queue);
+void           ft_queue_clear(t_queue *queue, void (*del)(void *));
+
 #endif
