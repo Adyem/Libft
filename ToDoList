@@ -2,9 +2,6 @@
 
 This document tracks outstanding work for the library. Items are grouped by domain for easier planning.
 
-## Memory Utilities
-- ft_array_resize: safe array resizing helper.
-
 ## Logging, Randomness and Timing
 - ft_logger: lightweight logging with levels (info, warn, error).
 - ft_random: random number generator (integers, floats, seeding).
