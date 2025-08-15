@@ -1,9 +1,9 @@
-TARGET := RNG.a
-DEBUG_TARGET := RNG_debug.a
+TARGET := Logger.a
+DEBUG_TARGET := Logger_debug.a
 
-SRCS := dice_roll.cpp random_int.cpp random_float.cpp random_seed.cpp
+SRCS := logger.cpp
 
-HEADERS := RNG.hpp
+HEADERS := logger.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
