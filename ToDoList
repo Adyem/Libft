@@ -96,5 +96,4 @@ Asynchronous value communication.
 - Future: ft_future_get, ft_future_wait, ft_future_valid.
 
 ## Configuration & Environment
-- ft_setenv.
 - ft_config_parse.
