@@ -34,10 +34,6 @@ This document tracks outstanding work for the library. Items are grouped by doma
 
 ## Data Structures
 
-### List
-Doubly-linked list.
-Functions: ft_list_new, ft_list_push_front, ft_list_push_back, ft_list_insert, ft_list_remove, ft_list_find, ft_list_size, ft_list_clear.
-
 ### Queue
 FIFO container.
 Functions: ft_queue_new, ft_queue_enqueue, ft_queue_dequeue, ft_queue_front, ft_queue_size, ft_queue_clear.
