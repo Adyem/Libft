@@ -1,7 +1,7 @@
 TARGET := RNG.a
 DEBUG_TARGET := RNG_debug.a
 
-SRCS := dice_roll.cpp random_int.cpp
+SRCS := dice_roll.cpp random_int.cpp random_float.cpp
 
 HEADERS := RNG.hpp
 

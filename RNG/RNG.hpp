@@ -10,5 +10,6 @@
 
 int ft_random_int(void);
 int ft_dice_roll(int number, int faces);
+float ft_random_float(void);
 
 #endif
