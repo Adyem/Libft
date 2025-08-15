@@ -79,7 +79,6 @@ Fixed-size buffer that wraps around.
 Functions: ft_circular_buffer_new, ft_circular_buffer_push, ft_circular_buffer_pop, ft_circular_buffer_is_full, ft_circular_buffer_is_empty.
 
 ## Error Handling
-- ft_exit: exit with message and clean-up.
 
 ## Additional Features
 - ft_printf_fd: broaden format specifiers and allow multiple descriptors.
