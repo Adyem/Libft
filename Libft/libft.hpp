@@ -40,6 +40,10 @@ int 		ft_isspace(int character);
 int         ft_abs(int number);
 void        ft_swap(int *a, int *b);
 int         ft_clamp(int value, int min, int max);
+double      ft_pow(double base, int exponent);
+double      ft_sqrt(double number);
+double      ft_exp(double x);
+char        *ft_strjoin_multiple(int count, ...);
 char        *ft_strmapi(const char *string, char (*function)(unsigned int, char));
 void        ft_striteri(char *string, void (*function)(unsigned int, char *));
 
