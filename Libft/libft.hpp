@@ -56,6 +56,8 @@ FILE            *ft_fopen(const char *filename, const char *mode);
 int             ft_fclose(FILE *stream);
 size_t          ft_fread(void *ptr, size_t size, size_t count, FILE *stream);
 size_t          ft_fwrite(const void *ptr, size_t size, size_t count, FILE *stream);
+int             ft_fseek(FILE *stream, long offset, int origin);
+long            ft_ftell(FILE *stream);
 
 long            ft_time_ms(void);
 char            *ft_time_format(char *buffer, size_t buffer_size);
