@@ -19,6 +19,7 @@
 #include "PThread/mutex.hpp"
 #include "Printf/printf.hpp"
 #include "Printf/printf_internal.hpp"
+#include "RNG/RNG.hpp"
 #include "RNG/deck.hpp"
 #include "RNG/dice_roll.hpp"
 #include "ReadLine/readline.hpp"
