@@ -49,5 +49,7 @@ char        	*ft_strjoin_multiple(int count, ...);
 char        	*ft_strmapi(const char *string, char (*function)(unsigned int, char));
 void        	ft_striteri(char *string, void (*function)(unsigned int, char *));
 char            *ft_getenv(const char *name);
+int             ft_setenv(const char *name, const char *value, int overwrite);
+int             ft_unsetenv(const char *name);
 
 #endif
