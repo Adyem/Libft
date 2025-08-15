@@ -4,8 +4,6 @@ This document tracks outstanding work for the library. Items are grouped by doma
 
 ## String Utilities
 - ft_strjoin_multiple: join an arbitrary number of strings.
-- ft_strmapi: apply a callback to each character and return a new string.
-- ft_striteri: apply a callback to each character in place.
 
 ## Memory Utilities
 - ft_memdup: duplicate a block of memory.
