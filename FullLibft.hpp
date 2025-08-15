@@ -22,6 +22,7 @@
 #include "RNG/RNG.hpp"
 #include "RNG/deck.hpp"
 #include "RNG/dice_roll.hpp"
+#include "Logger/logger.hpp"
 #include "ReadLine/readline.hpp"
 #include "ReadLine/readline_internal.hpp"
 #include "Template/constructor.hpp"
