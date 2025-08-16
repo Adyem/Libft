@@ -4,6 +4,7 @@ FullLibft is a collection of C and C++ utilities grouped into multiple small lib
 It provides implementations of common libc functions, custom memory allocation helpers,
 basic threading helpers, containers, string utilities, simple networking and more.
 The top level `Makefile` builds every submodule and links them into `Full_Libft.a`.
+The umbrella header `FullLibft.hpp` includes every component.
 
 This document briefly lists the main headers and the interfaces they expose. The
 summaries below only outline the available functions and classes. See the header
@@ -104,6 +105,28 @@ int pf_printf_fd(int fd, const char *format, ...);
 int pt_thread_join(pthread_t thread, void **retval);
 int pt_thread_create(pthread_t *thread, const pthread_attr_t *attr,
                      void *(*start_routine)(void *), void *arg);
+```
+
+### ReadLine
+
+`ReadLine/readline.hpp` implements a minimal interactive line reader with history
+and tab completion.
+
+```
+void rl_clear_history();
+void rl_add_suggestion(const char *word);
+void rl_clear_suggestions();
+char *rl_readline(const char *prompt);
+```
+
+### Logger
+
+`Logger/logger.hpp` provides simple logging helpers.
+
+```
+void ft_log_info(int fd, const char *message);
+void ft_log_warn(int fd, const char *message);
+void ft_log_error(int fd, const char *message);
 ```
 
 ### C++ Classes (`CPP_class`)
@@ -260,7 +283,9 @@ for the full interface of these templates.
 * **RNG** – random helpers like `ft_dice_roll` and a `ft_deck` container.
 * **Encryption** – very small API (`be_saveGame`, `be_DecryptData`, `be_getEncryptionKey`).
 * **JSon** – simple JSON serialization helpers (`json_create_item`, `json_read_from_file`, etc.).
-* **File** – directory handling wrappers such as `ft_opendir` and `ft_readdir`.
+* **File** – directory handling wrappers such as `ft_opendir` and `ft_readdir`,
+  and cross-platform file helpers (`ft_open`, `ft_read`, `ft_write`,
+  `ft_close`, `ft_initialize_standard_file_descriptors`).
 * **HTML** – minimal HTML node creation and searching utilities.
 * **Game** – basic game related classes (`ft_character`, `ft_item`, `ft_inventory`, `ft_upgrade`, `ft_world`, `ft_event`, `ft_map3d`, `ft_quest`, `ft_reputation`, `ft_buff`, `ft_debuff`). `ft_buff` and `ft_debuff` each store four independent modifiers and expose getters, setters, and adders (including for duration). `ft_event`, `ft_upgrade`, `ft_item`, and `ft_reputation` also expose adders, and now each of these classes provides matching subtract helpers. `ft_inventory` manages stacked items and can query item counts with `has_item` and `count_item`. `ft_character` keeps track of coins and a `valor` attribute with helpers to add or subtract these values. The character's current level can be retrieved with `get_level()` which relies on an internal experience table.
 `ft_quest` objects can report completion with `is_complete()` and progress phases via `advance_phase()`.
