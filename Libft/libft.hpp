@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdarg.h>
 
 size_t 			ft_strlen_size_t(const char *string);
 int				ft_strlen(const char *string);
@@ -58,6 +59,8 @@ size_t          ft_fread(void *ptr, size_t size, size_t count, FILE *stream);
 size_t          ft_fwrite(const void *ptr, size_t size, size_t count, FILE *stream);
 int             ft_fseek(FILE *stream, long offset, int origin);
 long            ft_ftell(FILE *stream);
+int             ft_vfprintf(FILE *stream, const char *format, va_list args);
+int             ft_fprintf(FILE *stream, const char *format, ...) __attribute__((format(printf, 2, 3), hot));
 
 long            ft_time_ms(void);
 char            *ft_time_format(char *buffer, size_t buffer_size);
