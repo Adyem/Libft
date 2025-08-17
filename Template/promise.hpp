@@ -5,9 +5,6 @@
 #include <atomic>
 #include <utility>
 
-// Simple promise-like container for asynchronous value sharing
-// stores a value of type ValueType and an atomic flag indicating readiness
-
 template <typename ValueType>
 class ft_promise
 {
@@ -63,4 +60,4 @@ public:
     }
 };
 
-#endif // FT_PROMISE_HPP
+#endif
