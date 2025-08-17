@@ -28,6 +28,7 @@ int pt_thread_yield();
 #endif
 
 extern thread_local pt_thread_id_type pt_thread_id;
+pt_thread_id_type pt_thread_self();
 
 template <typename ValueType, typename Function>
 int pt_async(ft_promise<ValueType>& promise, Function function)
