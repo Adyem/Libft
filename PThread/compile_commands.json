@@ -52,5 +52,23 @@
     "directory": "/home/adyem/DND_tools/Other/Libft/PThread",
     "file": "/home/adyem/DND_tools/Other/Libft/PThread/try_lock_mutex.cpp",
     "output": "/home/adyem/DND_tools/Other/Libft/PThread/objs/try_lock_mutex.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-g",
+      "-O0",
+      "-std=c++17",
+      "-c",
+      "-o",
+      "objs/thread_equal.o",
+      "thread_equal.cpp"
+    ],
+    "directory": "/home/adyem/DND_tools/Other/Libft/PThread",
+    "file": "/home/adyem/DND_tools/Other/Libft/PThread/thread_equal.cpp",
+    "output": "/home/adyem/DND_tools/Other/Libft/PThread/objs/thread_equal.o"
   }
 ]
