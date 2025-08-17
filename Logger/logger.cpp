@@ -26,3 +26,8 @@ void ft_log_error(int fd, const char *message)
     ft_log_write(fd, "[ERROR] ", message);
 }
 
+void ft_log_debug(int fd, const char *message)
+{
+    ft_log_write(fd, "[DEBUG] ", message);
+}
+
