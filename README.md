@@ -105,6 +105,9 @@ int pf_printf_fd(int fd, const char *format, ...);
 int pt_thread_join(pthread_t thread, void **retval);
 int pt_thread_create(pthread_t *thread, const pthread_attr_t *attr,
                      void *(*start_routine)(void *), void *arg);
+int pt_thread_detach(pthread_t thread);
+template <typename ValueType, typename Function>
+int pt_async(ft_promise<ValueType>& promise, Function function);
 ```
 
 ### ReadLine
@@ -276,6 +279,22 @@ int         join_multicast_group(const SocketConfig &config);
 `Template/` contains several generic helpers such as `ft_vector`, `ft_map`,
 `ft_pair`, smart pointers and mathematical helpers. Refer to the header files
 for the full interface of these templates.
+
+#### `ft_promise`
+
+`Template/promise.hpp` implements a minimal promise type for passing values
+between threads. A promise stores a value set by a worker thread and reports
+errors through the shared `ft_errno` system.
+
+```
+ft_promise();
+void set_value(const ValueType& value);
+void set_value(ValueType&& value);
+ValueType get() const;
+bool is_ready() const;
+int  get_error() const;
+const char *get_error_str() const;
+```
 
 ### Additional Modules
 
