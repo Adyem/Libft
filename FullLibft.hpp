@@ -37,6 +37,7 @@
 #include "Template/unique_ptr.hpp"
 #include "Template/unordened_map.hpp"
 #include "Template/vector.hpp"
+#include "Template/stack.hpp"
 #include "Windows/windows_file.hpp"
 #include "encryption/BasicEncryption.hpp"
 #include "file/open_dir.hpp"
