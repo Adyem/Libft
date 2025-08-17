@@ -114,16 +114,16 @@ const char* ft_strerror(int error_code)
 		return ("General Ingame Error");
 	else if (error_code == GAME_INVALID_MOVE)
 		return ("Invalid Move");
-        else if (error_code == STACK_EMPTY)
-                return ("Stack is empty");
-        else if (error_code == STACK_ALLOC_FAIL)
-                return ("Stack memory allocation failed");
-        else if (error_code == QUEUE_EMPTY)
-                return ("Queue is empty");
-        else if (error_code == QUEUE_ALLOC_FAIL)
-                return ("Queue memory allocation failed");
-        else if (error_code > ERRNO_OFFSET)
-        {
+	else if (error_code == STACK_EMPTY)
+		return ("Stack is empty");
+	else if (error_code == STACK_ALLOC_FAIL)
+		return ("Stack memory allocation failed");
+	else if (error_code == QUEUE_EMPTY)
+		return ("Queue is empty");
+	else if (error_code == QUEUE_ALLOC_FAIL)
+		return ("Queue memory allocation failed");
+	else if (error_code > ERRNO_OFFSET)
+    {
         int standard_errno = error_code - ERRNO_OFFSET;
         const char *message = strerror(standard_errno);
         if (message)
