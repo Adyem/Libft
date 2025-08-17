@@ -8,54 +8,48 @@
 #include <cstddef>
 #include <utility>
 
-// A simple queue implementation using a singly linked list.
-// Provides basic queue operations with error handling similar to other
-// template classes in the project.
-
 template <typename ElementType>
 class ft_queue
 {
-private:
-    struct QueueNode
-    {
-        ElementType data;
-        QueueNode* next;
-    };
+	private:
+    	struct QueueNode
+    	{
+    	    ElementType data;
+    	    QueueNode* next;
+    	};
 
-    QueueNode*  _front;
-    QueueNode*  _rear;
-    size_t      _size;
-    mutable int _errorCode;
+    	QueueNode*  _front;
+    	QueueNode*  _rear;
+    	size_t      _size;
+    	mutable int _errorCode;
 
-    void    setError(int error) const;
+    	void    setError(int error) const;
 
-public:
-    ft_queue();
-    ~ft_queue();
+	public:
+   		ft_queue();
+    	~ft_queue();
 
-    ft_queue(const ft_queue&) = delete;
-    ft_queue& operator=(const ft_queue&) = delete;
+    	ft_queue(const ft_queue&) = delete;
+    	ft_queue& operator=(const ft_queue&) = delete;
 
-    ft_queue(ft_queue&& other) noexcept;
-    ft_queue& operator=(ft_queue&& other) noexcept;
+    	ft_queue(ft_queue&& other) noexcept;
+    	ft_queue& operator=(ft_queue&& other) noexcept;
 
-    void enqueue(const ElementType& value);
-    void enqueue(ElementType&& value);
-    ElementType dequeue();
+    	void enqueue(const ElementType& value);
+    	void enqueue(ElementType&& value);
+    	ElementType dequeue();
 
-    ElementType& front();
-    const ElementType& front() const;
+    	ElementType& front();
+    	const ElementType& front() const;
 
-    size_t size() const;
-    bool empty() const;
+    	size_t size() const;
+    	bool empty() const;
 
-    int get_error() const;
-    const char* get_error_str() const;
+    	int get_error() const;
+    	const char* get_error_str() const;
 
-    void clear();
+    	void clear();
 };
-
-// Implementation
 
 template <typename ElementType>
 ft_queue<ElementType>::ft_queue()
