@@ -10,6 +10,7 @@ int pt_thread_join(pthread_t thread, void **retval);
 int pt_thread_create(pthread_t *thread, const pthread_attr_t *attr,
                 void *(*start_routine)(void *), void *arg);
 int pt_thread_detach(pthread_t thread);
+int pt_thread_cancel(pthread_t thread);
 int pt_thread_sleep(unsigned int milliseconds);
 int pt_thread_yield();
 int pt_thread_equal(pthread_t thread1, pthread_t thread2);
