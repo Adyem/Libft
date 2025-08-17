@@ -38,6 +38,7 @@
 #include "Template/unordened_map.hpp"
 #include "Template/vector.hpp"
 #include "Template/stack.hpp"
+#include "Template/queue.hpp"
 #include "Windows/windows_file.hpp"
 #include "encryption/BasicEncryption.hpp"
 #include "file/open_dir.hpp"
