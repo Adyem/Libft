@@ -145,6 +145,9 @@ int test_character_level(void);
 int test_quest_progress(void);
 int test_queue_basic(void);
 int test_ft_queue_class_basic(void);
+int test_ft_promise_set_get(void);
+int test_ft_promise_not_ready(void);
+int test_pt_async_basic(void);
 
 int main(void)
 {
@@ -266,7 +269,10 @@ int main(void)
         { test_character_level, "character level" },
         { test_quest_progress, "quest progress" },
         { test_queue_basic, "queue basic" },
-        { test_ft_queue_class_basic, "queue class basic" }
+        { test_ft_queue_class_basic, "queue class basic" },
+        { test_ft_promise_set_get, "ft_promise set/get" },
+        { test_ft_promise_not_ready, "ft_promise not ready" },
+        { test_pt_async_basic, "pt_async basic" }
     };
     const int total = sizeof(tests) / sizeof(tests[0]);
 
