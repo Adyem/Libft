@@ -7,6 +7,7 @@ SRCS := lock_mutex.cpp \
         thread_join.cpp \
         thread_create.cpp \
         thread_detach.cpp \
+        thread_cancel.cpp \
         thread_sleep.cpp \
         thread_yield.cpp \
         thread_self.cpp \
