@@ -9,6 +9,7 @@
 int pt_thread_join(pthread_t thread, void **retval);
 int pt_thread_create(pthread_t *thread, const pthread_attr_t *attr,
                 void *(*start_routine)(void *), void *arg);
+int pt_thread_detach(pthread_t thread);
 
 #define SLEEP_TIME 100
 #define MAX_SLEEP 10000
@@ -51,7 +52,7 @@ int pt_async(ft_promise<ValueType>& promise, Function function)
         delete data;
         return ret;
     }
-    pthread_detach(thread);
+    pt_thread_detach(thread);
     return ret;
 }
 

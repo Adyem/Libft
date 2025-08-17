@@ -2,11 +2,12 @@ TARGET := PThread.a
 DEBUG_TARGET := PThread_debug.a
 
 SRCS := lock_mutex.cpp \
-	unlock_mutex.cpp \
-	try_lock_mutex.cpp \
-	thread_join.cpp \
-	thread_create.cpp \
-	mutex.cpp
+        unlock_mutex.cpp \
+        try_lock_mutex.cpp \
+        thread_join.cpp \
+        thread_create.cpp \
+        thread_detach.cpp \
+        mutex.cpp
 
 HEADERS := PThread.hpp
 
