@@ -144,6 +144,7 @@ int test_reputation_subtracters(void);
 int test_character_level(void);
 int test_quest_progress(void);
 int test_queue_basic(void);
+int test_ft_queue_class_basic(void);
 
 int main(void)
 {
@@ -264,7 +265,8 @@ int main(void)
         { test_reputation_subtracters, "reputation subtracters" },
         { test_character_level, "character level" },
         { test_quest_progress, "quest progress" },
-        { test_queue_basic, "queue basic" }
+        { test_queue_basic, "queue basic" },
+        { test_ft_queue_class_basic, "queue class basic" }
     };
     const int total = sizeof(tests) / sizeof(tests[0]);
 

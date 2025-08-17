@@ -69,6 +69,8 @@ enum PTErrorCode
     GAME_INVALID_MOVE,
     STACK_EMPTY,
     STACK_ALLOC_FAIL,
+    QUEUE_EMPTY,
+    QUEUE_ALLOC_FAIL,
 };
 
 const char* ft_strerror(int error_code);
