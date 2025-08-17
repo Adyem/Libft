@@ -1105,5 +1105,23 @@
     "directory": "/home/adyem/DND_tools/libft/Linux",
     "file": "/home/adyem/DND_tools/libft/Linux/system_call_wrappers.cpp",
     "output": "/home/adyem/DND_tools/libft/Linux/objs/system_call_wrappers.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-g",
+      "-O0",
+      "-std=c++17",
+      "-c",
+      "-o",
+      "objs/thread_equal.o",
+      "thread_equal.cpp"
+    ],
+    "directory": "/home/adyem/DND_tools/libft/PThread",
+    "file": "/home/adyem/DND_tools/libft/PThread/thread_equal.cpp",
+    "output": "/home/adyem/DND_tools/libft/PThread/objs/thread_equal.o"
   }
 ]
