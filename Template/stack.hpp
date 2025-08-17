@@ -11,43 +11,43 @@
 template <typename ElementType>
 class ft_stack
 {
-private:
-    struct StackNode
-    {
-        ElementType data;
-        StackNode* next;
-    };
+	private:
+	    struct StackNode
+	    {
+	        ElementType data;
+	        StackNode* next;
+	    };
+	
+	    StackNode*  _top;
+	    size_t      _size;
+	    mutable int _errorCode;
 
-    StackNode*  _top;
-    size_t      _size;
-    mutable int _errorCode;
+	    void    setError(int error) const;
 
-    void    setError(int error) const;
+	public:
+	    ft_stack();
+	    ~ft_stack();
 
-public:
-    ft_stack();
-    ~ft_stack();
+	    ft_stack(const ft_stack&) = delete;
+	    ft_stack& operator=(const ft_stack&) = delete;
 
-    ft_stack(const ft_stack&) = delete;
-    ft_stack& operator=(const ft_stack&) = delete;
+	    ft_stack(ft_stack&& other) noexcept;
+	    ft_stack& operator=(ft_stack&& other) noexcept;
 
-    ft_stack(ft_stack&& other) noexcept;
-    ft_stack& operator=(ft_stack&& other) noexcept;
+	    void push(const ElementType& value);
+	    void push(ElementType&& value);
+	    ElementType pop();
 
-    void push(const ElementType& value);
-    void push(ElementType&& value);
-    ElementType pop();
+	    ElementType& top();
+	    const ElementType& top() const;
 
-    ElementType& top();
-    const ElementType& top() const;
+	    size_t size() const;
+	    bool empty() const;
 
-    size_t size() const;
-    bool empty() const;
+	    int get_error() const;
+	    const char* get_error_str() const;
 
-    int get_error() const;
-    const char* get_error_str() const;
-
-    void clear();
+	    void clear();
 };
 
 template <typename ElementType>
