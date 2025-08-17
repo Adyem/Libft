@@ -26,4 +26,3 @@ char *ft_time_format(char *buffer, size_t buffer_size)
         return (NULL);
     return (buffer);
 }
-
