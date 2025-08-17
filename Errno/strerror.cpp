@@ -112,12 +112,12 @@ const char* ft_strerror(int error_code)
 		return ("Level table invalid");
 	else if (error_code == GAME_GENERAL_ERROR)
 		return ("General Ingame Error");
-        else if (error_code == GAME_INVALID_MOVE)
-                return ("Invalid Move");
-        else if (error_code == STACK_EMPTY)
-                return ("Stack is empty");
-        else if (error_code == STACK_ALLOC_FAIL)
-                return ("Stack memory allocation failed");
+	else if (error_code == GAME_INVALID_MOVE)
+		return ("Invalid Move");
+	else if (error_code == STACK_EMPTY)
+		return ("Stack is empty");
+	else if (error_code == STACK_ALLOC_FAIL)
+		return ("Stack memory allocation failed");
 	else if (error_code > ERRNO_OFFSET)
         {
         int standard_errno = error_code - ERRNO_OFFSET;
