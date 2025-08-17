@@ -3,6 +3,7 @@
 
 #include <pthread.h>
 #include "../Template/promise.hpp"
+#include "../CPP_class/nullptr.hpp"
 #include <utility>
 
 int pt_thread_join(pthread_t thread, void **retval);
@@ -39,12 +40,12 @@ int pt_async(ft_promise<ValueType>& promise, Function function)
         AsyncData* data = static_cast<AsyncData*>(arg);
         data->promise->set_value(data->function());
         delete data;
-        return nullptr;
+        return ft_nullptr;
     };
 
-    AsyncData* data = new AsyncData{&promise, std::move(function)};
+    AsyncData* data = new AsyncData{&promise, ft_move(function)};
     pthread_t thread;
-    int ret = pt_thread_create(&thread, nullptr, start_routine, data);
+    int ret = pt_thread_create(&thread, ft_nullptr, start_routine, data);
     if (ret != 0)
     {
         delete data;
