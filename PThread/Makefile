@@ -9,6 +9,7 @@ SRCS := lock_mutex.cpp \
         thread_detach.cpp \
         thread_sleep.cpp \
         thread_yield.cpp \
+        thread_self.cpp \
         mutex.cpp
 
 HEADERS := PThread.hpp
