@@ -15,12 +15,27 @@ else
     RM    = rm -f
 endif
 
-ifdef COMPILE_FLAGS
-    CFLAGS := $(COMPILE_FLAGS)
+OPT_LEVEL ?= 0
+
+ifeq ($(OPT_LEVEL),0)
+OPT_FLAGS = -O0 -g
+else ifeq ($(OPT_LEVEL),1)
+OPT_FLAGS = -O1 -flto -s -ffunction-sections -fdata-sections -Wl,--gc-sections
+else ifeq ($(OPT_LEVEL),2)
+OPT_FLAGS = -O2 -flto -s -ffunction-sections -fdata-sections -Wl,--gc-sections
+else ifeq ($(OPT_LEVEL),3)
+OPT_FLAGS = -O3 -flto -s -ffunction-sections -fdata-sections -Wl,--gc-sections
+else
+$(error Unsupported OPT_LEVEL=$(OPT_LEVEL))
 endif
 
 CXX       := g++
-CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17
+
+ifdef COMPILE_FLAGS
+CFLAGS := $(COMPILE_FLAGS) $(OPT_FLAGS)
+else
+CFLAGS ?= -Wall -Wextra -Werror -std=c++17 $(OPT_FLAGS)
+endif
 
 OBJDIR       := objs
 DEBUG_OBJDIR := objs_debug
