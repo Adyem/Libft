@@ -318,9 +318,9 @@ int main(void)
         {
             while (true)
             {
-                pf_printf("Available tests:\n");
+                printf("Available tests:\n");
                 for (int i = 0; i < total; ++i)
-                    pf_printf("%2d) %s\n", i + 1, tests[i].description);
+                    printf("%2d) %s\n", i + 1, tests[i].description);
                 char *line = rl_readline("Select tests to run ('all', 'return', 'exit'): ");
                 if (!line)
                     return (0);
@@ -352,16 +352,16 @@ int main(void)
                 int passed = 0;
                 for (int idx : to_run)
                     run_test(idx, &tests[idx - 1], &passed);
-                pf_printf("%d/%zu tests passed\n", passed, to_run.size());
+                printf("%d/%zu tests passed\n", passed, to_run.size());
             }
         }
         else if (mode == "perf")
         {
             while (true)
             {
-                pf_printf("Efficiency tests:\n");
+                printf("Efficiency tests:\n");
                 for (int i = 0; i < perf_total; ++i)
-                    pf_printf("%d) %s\n", i + 1, perf_tests[i].description);
+                    printf("%d) %s\n", i + 1, perf_tests[i].description);
                 char *line = rl_readline("Select efficiency tests ('all', 'return', 'exit'): ");
                 if (!line)
                     return (0);
