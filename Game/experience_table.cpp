@@ -64,6 +64,7 @@ int ft_experience_table::resize(int new_count) noexcept
         this->_count = 0;
         return (ER_SUCCESS);
     }
+    int old_count = this->_count;
     int *new_levels = static_cast<int*>(cma_realloc(this->_levels,
                     sizeof(int) * new_count));
     if (!new_levels)
@@ -71,14 +72,15 @@ int ft_experience_table::resize(int new_count) noexcept
         this->set_error(CMA_BAD_ALLOC);
         return (this->_error);
     }
-    if (new_count > this->_count)
+    if (new_count > old_count)
     {
-        for (int i = this->_count; i < new_count; i++)
+        for (int i = old_count; i < new_count; i++)
             new_levels[i] = 0;
     }
     this->_levels = new_levels;
     this->_count = new_count;
-    if (!this->is_valid(this->_count, this->_levels))
+    int check_count = old_count < new_count ? old_count : new_count;
+    if (!this->is_valid(check_count, this->_levels))
         this->set_error(CHARACTER_LEVEL_TABLE_INVALID);
     return (this->_error);
 }
