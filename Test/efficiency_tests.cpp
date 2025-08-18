@@ -14,7 +14,7 @@ static long long elapsed_us(clock_type::time_point start, clock_type::time_point
 
 static void print_comparison(const char *name, long long std_time, long long ft_time)
 {
-    double percent = (double)ft_time / std_time * 100.0;
+    double percent = ft_time ? (double)std_time / ft_time * 100.0 : 0.0;
     printf("%s std: %lld us (100%%)\n", name, std_time);
     printf("%s ft : %lld us (%.2f%%)\n", name, ft_time, percent);
 }
