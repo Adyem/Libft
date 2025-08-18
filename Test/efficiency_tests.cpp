@@ -13,6 +13,13 @@ static long long elapsed_us(clock_type::time_point start, clock_type::time_point
     return (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
 }
 
+static void print_comparison(const char *name, long long std_time, long long ft_time)
+{
+    double percent = (double)ft_time / std_time * 100.0;
+    pf_printf("%s std: %lld us (100%%)\n", name, std_time);
+    pf_printf("%s ft : %lld us (%.2f%%)\n", name, ft_time, percent);
+}
+
 int test_efficiency_strlen(void)
 {
     const size_t iterations = 100000;
@@ -28,8 +35,8 @@ int test_efficiency_strlen(void)
         ft_strlen(s.c_str());
     auto end_ft = clock_type::now();
 
-    pf_printf("strlen std: %lld us\n", elapsed_us(start_std, end_std));
-    pf_printf("strlen ft : %lld us\n", elapsed_us(start_ft, end_ft));
+    print_comparison("strlen", elapsed_us(start_std, end_std),
+                     elapsed_us(start_ft, end_ft));
     return (1);
 }
 
@@ -49,8 +56,8 @@ int test_efficiency_memcpy(void)
         ft_memcpy(dst.data(), src.data(), src.size());
     auto end_ft = clock_type::now();
 
-    pf_printf("memcpy std: %lld us\n", elapsed_us(start_std, end_std));
-    pf_printf("memcpy ft : %lld us\n", elapsed_us(start_ft, end_ft));
+    print_comparison("memcpy", elapsed_us(start_std, end_std),
+                     elapsed_us(start_ft, end_ft));
     return (1);
 }
 
@@ -69,8 +76,8 @@ int test_efficiency_isdigit(void)
         result += ft_isdigit('5');
     auto end_ft = clock_type::now();
 
-    pf_printf("isdigit std: %lld us\n", elapsed_us(start_std, end_std));
-    pf_printf("isdigit ft : %lld us\n", elapsed_us(start_ft, end_ft));
+    print_comparison("isdigit", elapsed_us(start_std, end_std),
+                     elapsed_us(start_ft, end_ft));
     return (result ? 1 : 0);
 }
 
