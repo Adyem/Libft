@@ -119,6 +119,9 @@ int test_ft_vector_push_back(void);
 int test_ft_vector_insert_erase(void);
 int test_ft_vector_reserve_resize(void);
 int test_ft_vector_clear(void);
+int test_ft_vector_vs_std_push_back(void);
+int test_ft_vector_vs_std_insert_erase(void);
+int test_ft_vector_vs_std_reserve_resize(void);
 int test_ft_map_insert_find(void);
 int test_ft_map_remove(void);
 int test_ft_map_at(void);
@@ -165,9 +168,12 @@ int test_pt_async_basic(void);
 
 int test_efficiency_strlen(void);
 int test_efficiency_memcpy(void);
+int test_efficiency_memmove(void);
+int test_efficiency_memset(void);
+int test_efficiency_strcmp(void);
 int test_efficiency_isdigit(void);
 
-int main(void)
+int main(int argc, char **argv)
 {
     const s_test tests[] = {
         { test_strlen_nullptr, "strlen nullptr" },
@@ -248,6 +254,9 @@ int main(void)
         { test_ft_vector_insert_erase, "ft_vector insert/erase" },
         { test_ft_vector_reserve_resize, "ft_vector reserve/resize" },
         { test_ft_vector_clear, "ft_vector clear" },
+        { test_ft_vector_vs_std_push_back, "ft_vector vs std::vector push_back" },
+        { test_ft_vector_vs_std_insert_erase, "ft_vector vs std::vector insert/erase" },
+        { test_ft_vector_vs_std_reserve_resize, "ft_vector vs std::vector reserve/resize" },
         { test_ft_map_insert_find, "ft_map insert/find" },
         { test_ft_map_remove, "ft_map remove" },
         { test_ft_map_at, "ft_map at" },
@@ -296,11 +305,33 @@ int main(void)
     const s_perf_test perf_tests[] = {
         { test_efficiency_strlen, "strlen" },
         { test_efficiency_memcpy, "memcpy" },
+        { test_efficiency_memmove, "memmove" },
+        { test_efficiency_memset, "memset" },
+        { test_efficiency_strcmp, "strcmp" },
         { test_efficiency_isdigit, "isdigit" }
     };
 
     const int total = sizeof(tests) / sizeof(tests[0]);
     const int perf_total = sizeof(perf_tests) / sizeof(perf_tests[0]);
+
+    if (argc > 1)
+    {
+        std::string arg(argv[1]);
+        if (arg == "--all")
+        {
+            int passed = 0;
+            for (int i = 0; i < total; ++i)
+                run_test(i + 1, &tests[i], &passed);
+            printf("%d/%d tests passed\n", passed, total);
+            return (0);
+        }
+        else if (arg == "--perf-all")
+        {
+            for (int i = 0; i < perf_total; ++i)
+                run_efficiency_test(i + 1, &perf_tests[i]);
+            return (0);
+        }
+    }
 
     while (true)
     {

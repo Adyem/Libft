@@ -60,6 +60,68 @@ int test_efficiency_memcpy(void)
     return (1);
 }
 
+int test_efficiency_memmove(void)
+{
+    const size_t iterations = 50000;
+    std::vector<char> buf(4096, 'a');
+
+    auto start_std = clock_type::now();
+    for (size_t i = 0; i < iterations; ++i)
+        std::memmove(buf.data() + 1, buf.data(), buf.size() - 1);
+    auto end_std = clock_type::now();
+
+    auto start_ft = clock_type::now();
+    for (size_t i = 0; i < iterations; ++i)
+        ft_memmove(buf.data() + 1, buf.data(), buf.size() - 1);
+    auto end_ft = clock_type::now();
+
+    print_comparison("memmove", elapsed_us(start_std, end_std),
+                     elapsed_us(start_ft, end_ft));
+    return (1);
+}
+
+int test_efficiency_memset(void)
+{
+    const size_t iterations = 50000;
+    std::vector<char> buf(4096);
+
+    auto start_std = clock_type::now();
+    for (size_t i = 0; i < iterations; ++i)
+        std::memset(buf.data(), 'a', buf.size());
+    auto end_std = clock_type::now();
+
+    auto start_ft = clock_type::now();
+    for (size_t i = 0; i < iterations; ++i)
+        ft_memset(buf.data(), 'a', buf.size());
+    auto end_ft = clock_type::now();
+
+    print_comparison("memset", elapsed_us(start_std, end_std),
+                     elapsed_us(start_ft, end_ft));
+    return (1);
+}
+
+int test_efficiency_strcmp(void)
+{
+    const size_t iterations = 500000;
+    const char *s1 = "abcdefghijklmnopqrstuvwxyz";
+    const char *s2 = "abcdefghijklmnopqrstuvwxyz";
+    int result = 0;
+
+    auto start_std = clock_type::now();
+    for (size_t i = 0; i < iterations; ++i)
+        result += std::strcmp(s1, s2);
+    auto end_std = clock_type::now();
+
+    auto start_ft = clock_type::now();
+    for (size_t i = 0; i < iterations; ++i)
+        result += ft_strcmp(s1, s2);
+    auto end_ft = clock_type::now();
+
+    print_comparison("strcmp", elapsed_us(start_std, end_std),
+                     elapsed_us(start_ft, end_ft));
+    return (result == 0 ? 1 : 0);
+}
+
 int test_efficiency_isdigit(void)
 {
     const size_t iterations = 1000000;
