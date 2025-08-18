@@ -25,6 +25,20 @@ static void run_test(int index, const s_test *test, int *passed)
         return ;
     }
     pf_printf("KO %d %s\n", index, test->description);
+    return ;
+}
+
+struct s_perf_test
+{
+    int (*func)(void);
+    const char *description;
+};
+
+static void run_efficiency_test(int index, const s_perf_test *test)
+{
+    pf_printf("%d) %s\n", index, test->description);
+    test->func();
+    return ;
 }
 
 int test_strlen_nullptr(void);
@@ -148,6 +162,10 @@ int test_ft_queue_class_basic(void);
 int test_ft_promise_set_get(void);
 int test_ft_promise_not_ready(void);
 int test_pt_async_basic(void);
+
+int test_efficiency_strlen(void);
+int test_efficiency_memcpy(void);
+int test_efficiency_isdigit(void);
 
 int main(void)
 {
@@ -274,51 +292,104 @@ int main(void)
         { test_ft_promise_not_ready, "ft_promise not ready" },
         { test_pt_async_basic, "pt_async basic" }
     };
+
+    const s_perf_test perf_tests[] = {
+        { test_efficiency_strlen, "strlen" },
+        { test_efficiency_memcpy, "memcpy" },
+        { test_efficiency_isdigit, "isdigit" }
+    };
+
     const int total = sizeof(tests) / sizeof(tests[0]);
+    const int perf_total = sizeof(perf_tests) / sizeof(perf_tests[0]);
 
     while (true)
     {
-        std::printf("Available tests:\n");
-        for (int i = 0; i < total; ++i)
-            std::printf("%2d) %s\n", i + 1, tests[i].description);
-
-        char *line = rl_readline("Select tests to run (or 'all'): ");
-        if (!line)
-            break;
-        std::string input(line);
-        cma_free(line);
-        std::transform(input.begin(), input.end(), input.begin(),
+        char *mode_line = rl_readline("Type 'run' to run tests, 'perf' for efficiency, or 'exit': ");
+        if (!mode_line)
+            break ;
+        std::string mode(mode_line);
+        cma_free(mode_line);
+        std::transform(mode.begin(), mode.end(), mode.begin(),
                        [](unsigned char c){ return std::tolower(c); });
 
-        std::vector<int> to_run;
-        if (input == "all")
+        if (mode == "exit")
+            break ;
+        else if (mode == "run")
         {
-            for (int i = 0; i < total; ++i)
-                to_run.push_back(i + 1);
+            while (true)
+            {
+                pf_printf("Available tests:\n");
+                for (int i = 0; i < total; ++i)
+                    pf_printf("%2d) %s\n", i + 1, tests[i].description);
+                char *line = rl_readline("Select tests to run ('all', 'return', 'exit'): ");
+                if (!line)
+                    return (0);
+                std::string input(line);
+                cma_free(line);
+                std::transform(input.begin(), input.end(), input.begin(),
+                               [](unsigned char c){ return std::tolower(c); });
+
+                if (input == "exit")
+                    return (0);
+                if (input == "return")
+                    break ;
+
+                std::vector<int> to_run;
+                if (input == "all")
+                {
+                    for (int i = 0; i < total; ++i)
+                        to_run.push_back(i + 1);
+                }
+                else
+                {
+                    std::stringstream ss(input);
+                    int value;
+                    while (ss >> value)
+                        if (value >= 1 && value <= total)
+                            to_run.push_back(value);
+                }
+
+                int passed = 0;
+                for (int idx : to_run)
+                    run_test(idx, &tests[idx - 1], &passed);
+                pf_printf("%d/%zu tests passed\n", passed, to_run.size());
+            }
         }
-        else
+        else if (mode == "perf")
         {
-            std::stringstream ss(input);
-            int value;
-            while (ss >> value)
-                if (value >= 1 && value <= total)
-                    to_run.push_back(value);
+            while (true)
+            {
+                pf_printf("Efficiency tests:\n");
+                for (int i = 0; i < perf_total; ++i)
+                    pf_printf("%2d) %s\n", i + 1, perf_tests[i].description);
+                char *line = rl_readline("Select efficiency tests ('all', 'return', 'exit'): ");
+                if (!line)
+                    return (0);
+                std::string input(line);
+                cma_free(line);
+                std::transform(input.begin(), input.end(), input.begin(),
+                               [](unsigned char c){ return std::tolower(c); });
+
+                if (input == "exit")
+                    return (0);
+                if (input == "return")
+                    break ;
+
+                if (input == "all")
+                {
+                    for (int i = 0; i < perf_total; ++i)
+                        run_efficiency_test(i + 1, &perf_tests[i]);
+                }
+                else
+                {
+                    std::stringstream ss(input);
+                    int value;
+                    while (ss >> value)
+                        if (value >= 1 && value <= perf_total)
+                            run_efficiency_test(value, &perf_tests[value - 1]);
+                }
+            }
         }
-
-        int passed = 0;
-        for (int idx : to_run)
-            run_test(idx, &tests[idx - 1], &passed);
-        std::printf("%d/%zu tests passed\n", passed, to_run.size());
-
-        char *again = rl_readline("Run more tests? (y/n): ");
-        if (!again)
-            break;
-        std::string answer(again);
-        cma_free(again);
-        std::transform(answer.begin(), answer.end(), answer.begin(),
-                       [](unsigned char c){ return std::tolower(c); });
-        if (answer.empty() || answer[0] != 'y')
-            break;
     }
     return (0);
 }
