@@ -23,17 +23,20 @@ int test_efficiency_strlen(void)
 {
     const size_t iterations = 100000;
     std::string s(1000, 'a');
+    volatile size_t sink = 0;
+    auto std_strlen = static_cast<size_t (*)(const char *)>(std::strlen);
 
     auto start_std = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
-        (void)std::strlen(s.c_str());
+        sink += std_strlen(s.c_str());
     auto end_std = clock_type::now();
 
     auto start_ft = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
-        ft_strlen(s.c_str());
+        sink += ft_strlen(s.c_str());
     auto end_ft = clock_type::now();
 
+    (void)sink;
     print_comparison("strlen", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
     return (1);
@@ -43,18 +46,22 @@ int test_efficiency_memcpy(void)
 {
     const size_t iterations = 50000;
     std::vector<char> src(4096, 'a');
-    std::vector<char> dst(4096);
+    std::vector<char> dst_std(4096);
+    std::vector<char> dst_ft(4096);
+    volatile void *sink = nullptr;
+    auto std_memcpy = static_cast<void *(*)(void *, const void *, size_t)>(std::memcpy);
 
     auto start_std = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
-        std::memcpy(dst.data(), src.data(), src.size());
+        sink = std_memcpy(dst_std.data(), src.data(), src.size());
     auto end_std = clock_type::now();
 
     auto start_ft = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
-        ft_memcpy(dst.data(), src.data(), src.size());
+        sink = ft_memcpy(dst_ft.data(), src.data(), src.size());
     auto end_ft = clock_type::now();
 
+    (void)sink;
     print_comparison("memcpy", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
     return (1);
@@ -63,18 +70,22 @@ int test_efficiency_memcpy(void)
 int test_efficiency_memmove(void)
 {
     const size_t iterations = 50000;
-    std::vector<char> buf(4096, 'a');
+    std::vector<char> buf_std(4096, 'a');
+    std::vector<char> buf_ft = buf_std;
+    volatile void *sink = nullptr;
+    auto std_memmove = static_cast<void *(*)(void *, const void *, size_t)>(std::memmove);
 
     auto start_std = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
-        std::memmove(buf.data() + 1, buf.data(), buf.size() - 1);
+        sink = std_memmove(buf_std.data() + 1, buf_std.data(), buf_std.size() - 1);
     auto end_std = clock_type::now();
 
     auto start_ft = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
-        ft_memmove(buf.data() + 1, buf.data(), buf.size() - 1);
+        sink = ft_memmove(buf_ft.data() + 1, buf_ft.data(), buf_ft.size() - 1);
     auto end_ft = clock_type::now();
 
+    (void)sink;
     print_comparison("memmove", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
     return (1);
@@ -83,18 +94,22 @@ int test_efficiency_memmove(void)
 int test_efficiency_memset(void)
 {
     const size_t iterations = 50000;
-    std::vector<char> buf(4096);
+    std::vector<char> buf_std(4096);
+    std::vector<char> buf_ft(4096);
+    volatile void *sink = nullptr;
+    auto std_memset = static_cast<void *(*)(void *, int, size_t)>(std::memset);
 
     auto start_std = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
-        std::memset(buf.data(), 'a', buf.size());
+        sink = std_memset(buf_std.data(), 'a', buf_std.size());
     auto end_std = clock_type::now();
 
     auto start_ft = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
-        ft_memset(buf.data(), 'a', buf.size());
+        sink = ft_memset(buf_ft.data(), 'a', buf_ft.size());
     auto end_ft = clock_type::now();
 
+    (void)sink;
     print_comparison("memset", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
     return (1);
@@ -105,11 +120,12 @@ int test_efficiency_strcmp(void)
     const size_t iterations = 500000;
     const char *s1 = "abcdefghijklmnopqrstuvwxyz";
     const char *s2 = "abcdefghijklmnopqrstuvwxyz";
-    int result = 0;
+    volatile int result = 0;
+    auto std_strcmp = static_cast<int (*)(const char *, const char *)>(std::strcmp);
 
     auto start_std = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
-        result += std::strcmp(s1, s2);
+        result += std_strcmp(s1, s2);
     auto end_std = clock_type::now();
 
     auto start_ft = clock_type::now();
@@ -125,11 +141,12 @@ int test_efficiency_strcmp(void)
 int test_efficiency_isdigit(void)
 {
     const size_t iterations = 1000000;
-    int result = 0;
+    volatile int result = 0;
+    auto std_isdigit = static_cast<int (*)(int)>(std::isdigit);
 
     auto start_std = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
-        result += std::isdigit('5');
+        result += std_isdigit('5');
     auto end_std = clock_type::now();
 
     auto start_ft = clock_type::now();
