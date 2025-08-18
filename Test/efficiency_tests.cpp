@@ -1,5 +1,4 @@
 #include "../Libft/libft.hpp"
-#include "../Printf/printf.hpp"
 
 #include <cstring>
 #include <chrono>
@@ -16,8 +15,8 @@ static long long elapsed_us(clock_type::time_point start, clock_type::time_point
 static void print_comparison(const char *name, long long std_time, long long ft_time)
 {
     double percent = (double)ft_time / std_time * 100.0;
-    pf_printf("%s std: %lld us (100%%)\n", name, std_time);
-    pf_printf("%s ft : %lld us (%.2f%%)\n", name, ft_time, percent);
+    printf("%s std: %lld us (100%%)\n", name, std_time);
+    printf("%s ft : %lld us (%.2f%%)\n", name, ft_time, percent);
 }
 
 int test_efficiency_strlen(void)
@@ -27,7 +26,7 @@ int test_efficiency_strlen(void)
 
     auto start_std = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
-        std::strlen(s.c_str());
+        (void)std::strlen(s.c_str());
     auto end_std = clock_type::now();
 
     auto start_ft = clock_type::now();
