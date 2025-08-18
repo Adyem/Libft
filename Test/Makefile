@@ -15,7 +15,7 @@ else
     RM    = rm -f
 endif
 
-OPT_LEVEL ?= 0
+OPT_LEVEL ?= 3
 
 ifeq ($(OPT_LEVEL),0)
 OPT_FLAGS = -O0 -g

@@ -11,7 +11,8 @@ int test_get_next_line_basic(void)
     int fd = ::open(fname, O_CREAT | O_WRONLY | O_TRUNC, 0644);
     if (fd < 0)
         return 0;
-    ::write(fd, "Hello\nWorld\n", 12);
+    int temp = ::write(fd, "Hello\nWorld\n", 12);
+	(void)temp;
     ::close(fd);
 
     ft_file file(fname, O_RDONLY);
@@ -66,7 +67,8 @@ int test_ft_open_and_read_file(void)
     int fd = ::open(fname, O_CREAT | O_WRONLY | O_TRUNC, 0644);
     if (fd < 0)
         return 0;
-    ::write(fd, "A\nB\nC\n", 6);
+    int temp = ::write(fd, "A\nB\nC\n", 6);
+	(void)temp;
     ::close(fd);
 
     char **lines = ft_open_and_read_file(fname);
