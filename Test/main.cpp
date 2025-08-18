@@ -361,7 +361,7 @@ int main(void)
             {
                 pf_printf("Efficiency tests:\n");
                 for (int i = 0; i < perf_total; ++i)
-                    pf_printf("%2d) %s\n", i + 1, perf_tests[i].description);
+                    pf_printf("%d) %s\n", i + 1, perf_tests[i].description);
                 char *line = rl_readline("Select efficiency tests ('all', 'return', 'exit'): ");
                 if (!line)
                     return (0);
