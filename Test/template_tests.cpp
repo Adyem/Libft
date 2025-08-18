@@ -4,6 +4,7 @@
 #include "../Template/unique_ptr.hpp"
 #include "../Errno/errno.hpp"
 #include <cstring>
+#include <vector>
 
 int test_ft_vector_push_back(void)
 {
@@ -72,6 +73,59 @@ int test_ft_vector_clear(void)
     v.push_back(3);
     v.clear();
     return (v.size() == 0);
+}
+int test_ft_vector_vs_std_push_back(void)
+{
+    ft_vector<int> ft;
+    std::vector<int> stdv;
+    for (int i = 0; i < 100; ++i)
+    {
+        ft.push_back(i);
+        stdv.push_back(i);
+    }
+    if (ft.size() != stdv.size())
+        return 0;
+    for (size_t i = 0; i < ft.size(); ++i)
+        if (ft[i] != stdv[i])
+            return 0;
+    return 1;
+}
+
+int test_ft_vector_vs_std_insert_erase(void)
+{
+    ft_vector<int> ft;
+    std::vector<int> stdv;
+    for (int i = 0; i < 5; ++i)
+    {
+        ft.push_back(i);
+        stdv.push_back(i);
+    }
+    ft.insert(ft.begin() + 2, 42);
+    stdv.insert(stdv.begin() + 2, 42);
+    ft.erase(ft.begin() + 1);
+    stdv.erase(stdv.begin() + 1);
+    if (ft.size() != stdv.size())
+        return 0;
+    for (size_t i = 0; i < ft.size(); ++i)
+        if (ft[i] != stdv[i])
+            return 0;
+    return 1;
+}
+
+int test_ft_vector_vs_std_reserve_resize(void)
+{
+    ft_vector<int> ft;
+    std::vector<int> stdv;
+    ft.reserve(10);
+    stdv.reserve(10);
+    ft.resize(6, 3);
+    stdv.resize(6, 3);
+    if (ft.size() != stdv.size())
+        return 0;
+    for (size_t i = 0; i < ft.size(); ++i)
+        if (ft[i] != stdv[i])
+            return 0;
+    return (ft.capacity() >= 10 && stdv.capacity() >= 10);
 }
 
 
