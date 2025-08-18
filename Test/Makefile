@@ -82,9 +82,12 @@ endif
 
 clean:
 	-$(RM) $(CLEAN_FILES)
+	$(MAKE) -C .. clean
 
-fclean: clean
+fclean:
+	-$(RM) $(CLEAN_FILES)
 	-$(RM) $(TARGET) $(DEBUG_TARGET)
+	$(MAKE) -C .. fclean
 
 re: fclean all
 
