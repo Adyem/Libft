@@ -3,6 +3,13 @@
 #include <chrono>
 #include <cstdio>
 
+inline volatile void* g_efficiency_sink;
+
+inline void prevent_optimization(void* p)
+{
+    g_efficiency_sink = p;
+}
+
 using clock_type = std::chrono::high_resolution_clock;
 
 inline long long elapsed_us(clock_type::time_point start, clock_type::time_point end)
