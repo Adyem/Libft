@@ -15,7 +15,8 @@ int test_efficiency_cma_memdup(void)
     for (size_t i = 0; i < iterations; ++i)
     {
         p = ft_memdup(data.data(), data.size());
-        std::free(p);
+        prevent_optimization(p);
+        cma_free(p);
     }
     auto end_std = clock_type::now();
 
@@ -23,6 +24,7 @@ int test_efficiency_cma_memdup(void)
     for (size_t i = 0; i < iterations; ++i)
     {
         p = cma_memdup(data.data(), data.size());
+        prevent_optimization(p);
         cma_free(p);
     }
     auto end_ft = clock_type::now();
