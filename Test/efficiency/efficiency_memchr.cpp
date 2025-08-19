@@ -1,0 +1,30 @@
+#include "../../Libft/libft.hpp"
+#include "efficiency_utils.hpp"
+
+#include <cstring>
+#include <vector>
+
+int test_efficiency_memchr(void)
+{
+    const size_t iterations = 100000;
+    std::vector<char> buf(4096, 'a');
+    buf.back() = 'b';
+    volatile const void *result = nullptr;
+    auto std_memchr = static_cast<const void *(*)(const void *, int, size_t)>(std::memchr);
+
+    auto start_std = clock_type::now();
+    for (size_t i = 0; i < iterations; ++i)
+        result = std_memchr(buf.data(), 'b', buf.size());
+    auto end_std = clock_type::now();
+
+    auto start_ft = clock_type::now();
+    for (size_t i = 0; i < iterations; ++i)
+        result = ft_memchr(buf.data(), 'b', buf.size());
+    auto end_ft = clock_type::now();
+
+    (void)result;
+    print_comparison("memchr", elapsed_us(start_std, end_std),
+                     elapsed_us(start_ft, end_ft));
+    return (1);
+}
+
