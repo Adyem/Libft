@@ -13,15 +13,21 @@ int test_efficiency_strlen(void)
 
     auto start_std = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
+    {
+        prevent_optimization(s.data());
         sink += std_strlen(s.c_str());
+        prevent_optimization((void*)&sink);
+    }
     auto end_std = clock_type::now();
 
     auto start_ft = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
+    {
+        prevent_optimization(s.data());
         sink += ft_strlen(s.c_str());
+        prevent_optimization((void*)&sink);
+    }
     auto end_ft = clock_type::now();
-
-    (void)sink;
     print_comparison("strlen", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
     return (1);
