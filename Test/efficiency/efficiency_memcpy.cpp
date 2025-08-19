@@ -15,14 +15,23 @@ int test_efficiency_memcpy(void)
 
     auto start_std = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
+    {
+        prevent_optimization(src.data());
+        prevent_optimization(dst_std.data());
         sink = std_memcpy(dst_std.data(), src.data(), src.size());
+        prevent_optimization(dst_std.data());
+    }
     auto end_std = clock_type::now();
 
     auto start_ft = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
+    {
+        prevent_optimization(src.data());
+        prevent_optimization(dst_ft.data());
         sink = ft_memcpy(dst_ft.data(), src.data(), src.size());
+        prevent_optimization(dst_ft.data());
+    }
     auto end_ft = clock_type::now();
-
     (void)sink;
     print_comparison("memcpy", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
