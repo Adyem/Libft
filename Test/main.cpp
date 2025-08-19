@@ -172,6 +172,21 @@ int test_efficiency_memmove(void);
 int test_efficiency_memset(void);
 int test_efficiency_strcmp(void);
 int test_efficiency_isdigit(void);
+int test_efficiency_bzero(void);
+int test_efficiency_memcmp(void);
+int test_efficiency_strchr(void);
+int test_efficiency_strncmp(void);
+int test_efficiency_isalpha(void);
+int test_efficiency_isalnum(void);
+int test_efficiency_memchr(void);
+int test_efficiency_strrchr(void);
+int test_efficiency_isspace(void);
+int test_efficiency_abs(void);
+int test_efficiency_cma_malloc(void);
+int test_efficiency_cma_calloc(void);
+int test_efficiency_cma_strdup(void);
+int test_efficiency_cma_memdup(void);
+int test_efficiency_cma_realloc(void);
 
 int main(int argc, char **argv)
 {
@@ -308,7 +323,22 @@ int main(int argc, char **argv)
         { test_efficiency_memmove, "memmove" },
         { test_efficiency_memset, "memset" },
         { test_efficiency_strcmp, "strcmp" },
-        { test_efficiency_isdigit, "isdigit" }
+        { test_efficiency_isdigit, "isdigit" },
+        { test_efficiency_bzero, "bzero" },
+        { test_efficiency_memcmp, "memcmp" },
+        { test_efficiency_strchr, "strchr" },
+        { test_efficiency_strncmp, "strncmp" },
+        { test_efficiency_isalpha, "isalpha" },
+        { test_efficiency_isalnum, "isalnum" },
+        { test_efficiency_memchr, "memchr" },
+        { test_efficiency_strrchr, "strrchr" },
+        { test_efficiency_isspace, "isspace" },
+        { test_efficiency_abs, "abs" },
+        { test_efficiency_cma_malloc, "cma_malloc" },
+        { test_efficiency_cma_calloc, "cma_calloc" },
+        { test_efficiency_cma_strdup, "cma_strdup" },
+        { test_efficiency_cma_memdup, "cma_memdup" },
+        { test_efficiency_cma_realloc, "cma_realloc" }
     };
 
     const int total = sizeof(tests) / sizeof(tests[0]);
