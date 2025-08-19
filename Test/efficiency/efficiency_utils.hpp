@@ -7,7 +7,11 @@ inline volatile void* g_efficiency_sink;
 
 inline void prevent_optimization(void* p)
 {
+#if defined(__GNUG__)
+    asm volatile("" : : "g"(p) : "memory");
+#else
     g_efficiency_sink = p;
+#endif
 }
 
 using clock_type = std::chrono::high_resolution_clock;

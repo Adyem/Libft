@@ -13,6 +13,7 @@ int test_efficiency_cma_malloc(void)
     for (size_t i = 0; i < iterations; ++i)
     {
         p = std::malloc(size);
+        ((volatile char*)p)[0] = 0;
         prevent_optimization(p);
         std::free(p);
     }
@@ -22,6 +23,7 @@ int test_efficiency_cma_malloc(void)
     for (size_t i = 0; i < iterations; ++i)
     {
         p = cma_malloc(size);
+        ((volatile char*)p)[0] = 0;
         prevent_optimization(p);
         cma_free(p);
     }
