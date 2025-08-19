@@ -14,17 +14,22 @@ int test_efficiency_bzero(void)
 
     auto start_std = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
+    {
+        prevent_optimization(buf_std.data());
         sink = std_bzero(buf_std.data(), 0, buf_std.size());
+        prevent_optimization(buf_std.data());
+    }
     auto end_std = clock_type::now();
 
     auto start_ft = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
     {
+        prevent_optimization(buf_ft.data());
         ft_bzero(buf_ft.data(), buf_ft.size());
         sink = buf_ft.data();
+        prevent_optimization(buf_ft.data());
     }
     auto end_ft = clock_type::now();
-
     (void)sink;
     print_comparison("bzero", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));

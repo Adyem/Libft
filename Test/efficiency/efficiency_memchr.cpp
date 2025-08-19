@@ -14,15 +14,21 @@ int test_efficiency_memchr(void)
 
     auto start_std = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
+    {
+        prevent_optimization(buf.data());
         result = std_memchr(buf.data(), 'b', buf.size());
+        prevent_optimization(const_cast<void*>(result));
+    }
     auto end_std = clock_type::now();
 
     auto start_ft = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
+    {
+        prevent_optimization(buf.data());
         result = ft_memchr(buf.data(), 'b', buf.size());
+        prevent_optimization(const_cast<void*>(result));
+    }
     auto end_ft = clock_type::now();
-
-    (void)result;
     print_comparison("memchr", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
     return (1);
