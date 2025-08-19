@@ -14,15 +14,21 @@ int test_efficiency_strchr(void)
 
     auto start_std = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
+    {
+        prevent_optimization(const_cast<char*>(s.data()));
         result = std_strchr(s.c_str(), 'b');
+        prevent_optimization(const_cast<char*>(result));
+    }
     auto end_std = clock_type::now();
 
     auto start_ft = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
+    {
+        prevent_optimization(const_cast<char*>(s.data()));
         result = ft_strchr(s.c_str(), 'b');
+        prevent_optimization(const_cast<char*>(result));
+    }
     auto end_ft = clock_type::now();
-
-    (void)result;
     print_comparison("strchr", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
     return (1);

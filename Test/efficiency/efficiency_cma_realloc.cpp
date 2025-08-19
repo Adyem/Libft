@@ -14,6 +14,7 @@ int test_efficiency_cma_realloc(void)
         void *p = std::malloc(size);
         p = std::realloc(p, size * 2);
         p = std::realloc(p, size * 4);
+        prevent_optimization(p);
         std::free(p);
     }
     auto end_std = clock_type::now();
@@ -25,6 +26,7 @@ int test_efficiency_cma_realloc(void)
         void *p = cma_malloc(size);
         p = cma_realloc(p, size * 2);
         p = cma_realloc(p, size * 4);
+        prevent_optimization(p);
         cma_free(p);
     }
     auto end_ft = clock_type::now();
