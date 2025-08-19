@@ -14,6 +14,7 @@ int test_efficiency_cma_calloc(void)
     for (size_t i = 0; i < iterations; ++i)
     {
         p = std::calloc(count, size);
+        prevent_optimization(p);
         std::free(p);
     }
     auto end_std = clock_type::now();
@@ -22,6 +23,7 @@ int test_efficiency_cma_calloc(void)
     for (size_t i = 0; i < iterations; ++i)
     {
         p = cma_calloc(count, size);
+        prevent_optimization(p);
         cma_free(p);
     }
     auto end_ft = clock_type::now();
