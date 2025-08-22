@@ -187,6 +187,9 @@ int test_efficiency_cma_calloc(void);
 int test_efficiency_cma_strdup(void);
 int test_efficiency_cma_memdup(void);
 int test_efficiency_cma_realloc(void);
+int test_efficiency_vector_push_back(void);
+int test_efficiency_vector_insert_erase(void);
+int test_efficiency_vector_reserve_resize(void);
 
 int main(int argc, char **argv)
 {
@@ -338,7 +341,10 @@ int main(int argc, char **argv)
         { test_efficiency_cma_calloc, "cma_calloc" },
         { test_efficiency_cma_strdup, "cma_strdup" },
         { test_efficiency_cma_memdup, "cma_memdup" },
-        { test_efficiency_cma_realloc, "cma_realloc" }
+        { test_efficiency_cma_realloc, "cma_realloc" },
+        { test_efficiency_vector_push_back, "ft_vector push_back" },
+        { test_efficiency_vector_insert_erase, "ft_vector insert/erase" },
+        { test_efficiency_vector_reserve_resize, "ft_vector reserve/resize" },
     };
 
     const int total = sizeof(tests) / sizeof(tests[0]);

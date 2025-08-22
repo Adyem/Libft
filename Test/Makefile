@@ -2,16 +2,16 @@ TARGET := libft_tests
 DEBUG_TARGET := libft_tests_debug
 
 EFF_SRCS := efficiency/efficiency_strlen.cpp efficiency/efficiency_memcpy.cpp \
-            efficiency/efficiency_memmove.cpp efficiency/efficiency_memset.cpp \
-            efficiency/efficiency_strcmp.cpp efficiency/efficiency_isdigit.cpp \
-            efficiency/efficiency_bzero.cpp efficiency/efficiency_memcmp.cpp \
-            efficiency/efficiency_strchr.cpp efficiency/efficiency_strncmp.cpp \
-            efficiency/efficiency_isalpha.cpp efficiency/efficiency_isalnum.cpp \
-            efficiency/efficiency_memchr.cpp efficiency/efficiency_strrchr.cpp \
-            efficiency/efficiency_isspace.cpp efficiency/efficiency_abs.cpp \
-            efficiency/efficiency_cma_malloc.cpp efficiency/efficiency_cma_calloc.cpp \
-            efficiency/efficiency_cma_strdup.cpp efficiency/efficiency_cma_memdup.cpp \
-            efficiency/efficiency_cma_realloc.cpp
+	    efficiency/efficiency_memmove.cpp efficiency/efficiency_memset.cpp \
+	    efficiency/efficiency_strcmp.cpp efficiency/efficiency_isdigit.cpp \
+	    efficiency/efficiency_bzero.cpp efficiency/efficiency_memcmp.cpp \
+	    efficiency/efficiency_strchr.cpp efficiency/efficiency_strncmp.cpp \
+	    efficiency/efficiency_isalpha.cpp efficiency/efficiency_isalnum.cpp \
+	    efficiency/efficiency_memchr.cpp efficiency/efficiency_strrchr.cpp \
+	    efficiency/efficiency_isspace.cpp efficiency/efficiency_abs.cpp \
+	    efficiency/efficiency_cma_malloc.cpp efficiency/efficiency_cma_calloc.cpp \
+	    efficiency/efficiency_cma_strdup.cpp efficiency/efficiency_cma_memdup.cpp \
+	    efficiency/efficiency_cma_realloc.cpp efficiency/efficiency_vector.cpp
 
 SRCS := main.cpp test_atoi.cpp test_isdigit.cpp test_memset.cpp test_strcmp.cpp test_strlen.cpp \
        test_toupper.cpp test_html.cpp test_networking.cpp test_extra_libft.cpp \
@@ -49,11 +49,10 @@ endif
 
 CXX       := g++
 
-ifdef COMPILE_FLAGS
-CFLAGS := $(COMPILE_FLAGS) $(OPT_FLAGS)
-else
-CFLAGS ?= -Wall -Wextra -Werror -std=c++17 $(OPT_FLAGS)
-endif
+COMPILE_FLAGS ?= -Wall -Wextra -Werror -std=c++17
+COMPILE_FLAGS += $(OPT_FLAGS)
+CFLAGS := $(COMPILE_FLAGS)
+export COMPILE_FLAGS
 
 OBJDIR       := objs
 DEBUG_OBJDIR := objs_debug
@@ -81,10 +80,10 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 ../Full_Libft.a:
-	$(MAKE) -C ..
+	$(MAKE) -C .. COMPILE_FLAGS="$(COMPILE_FLAGS)"
 
 ../Full_Libft_debug.a:
-	$(MAKE) -C .. debug
+	$(MAKE) -C .. debug COMPILE_FLAGS="$(COMPILE_FLAGS)"
 
 CLEAN_OBJS := $(shell find $(OBJDIR) $(DEBUG_OBJDIR) -type f -name '*.o' 2>/dev/null)
 
@@ -96,12 +95,12 @@ endif
 
 clean:
 	-$(RM) $(CLEAN_FILES)
-	$(MAKE) -C .. clean
+	$(MAKE) -C .. clean COMPILE_FLAGS="$(COMPILE_FLAGS)"
 
 fclean:
 	-$(RM) $(CLEAN_FILES)
 	-$(RM) $(TARGET) $(DEBUG_TARGET)
-	$(MAKE) -C .. fclean
+	$(MAKE) -C .. fclean COMPILE_FLAGS="$(COMPILE_FLAGS)"
 
 re: fclean all
 
