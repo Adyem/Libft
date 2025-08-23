@@ -10,8 +10,10 @@ EFF_SRCS := efficiency/efficiency_strlen.cpp efficiency/efficiency_memcpy.cpp \
 	    efficiency/efficiency_memchr.cpp efficiency/efficiency_strrchr.cpp \
 	    efficiency/efficiency_isspace.cpp efficiency/efficiency_abs.cpp \
 	    efficiency/efficiency_cma_malloc.cpp efficiency/efficiency_cma_calloc.cpp \
-	    efficiency/efficiency_cma_strdup.cpp efficiency/efficiency_cma_memdup.cpp \
-	    efficiency/efficiency_cma_realloc.cpp efficiency/efficiency_vector.cpp
+            efficiency/efficiency_cma_strdup.cpp efficiency/efficiency_cma_memdup.cpp \
+            efficiency/efficiency_cma_realloc.cpp efficiency/efficiency_vector.cpp \
+            efficiency/efficiency_map.cpp \
+            efficiency/efficiency_atoi.cpp efficiency/efficiency_atol.cpp
 
 SRCS := main.cpp test_atoi.cpp test_isdigit.cpp test_memset.cpp test_strcmp.cpp test_strlen.cpp \
        test_toupper.cpp test_html.cpp test_networking.cpp test_extra_libft.cpp \

@@ -182,6 +182,8 @@ int test_efficiency_memchr(void);
 int test_efficiency_strrchr(void);
 int test_efficiency_isspace(void);
 int test_efficiency_abs(void);
+int test_efficiency_atoi(void);
+int test_efficiency_atol(void);
 int test_efficiency_cma_malloc(void);
 int test_efficiency_cma_calloc(void);
 int test_efficiency_cma_strdup(void);
@@ -190,6 +192,8 @@ int test_efficiency_cma_realloc(void);
 int test_efficiency_vector_push_back(void);
 int test_efficiency_vector_insert_erase(void);
 int test_efficiency_vector_reserve_resize(void);
+int test_efficiency_map_insert_find(void);
+int test_efficiency_map_insert_remove(void);
 
 int main(int argc, char **argv)
 {
@@ -337,6 +341,8 @@ int main(int argc, char **argv)
         { test_efficiency_strrchr, "strrchr" },
         { test_efficiency_isspace, "isspace" },
         { test_efficiency_abs, "abs" },
+        { test_efficiency_atoi, "atoi" },
+        { test_efficiency_atol, "atol" },
         { test_efficiency_cma_malloc, "cma_malloc" },
         { test_efficiency_cma_calloc, "cma_calloc" },
         { test_efficiency_cma_strdup, "cma_strdup" },
@@ -345,6 +351,8 @@ int main(int argc, char **argv)
         { test_efficiency_vector_push_back, "ft_vector push_back" },
         { test_efficiency_vector_insert_erase, "ft_vector insert/erase" },
         { test_efficiency_vector_reserve_resize, "ft_vector reserve/resize" },
+        { test_efficiency_map_insert_find, "ft_map insert/find" },
+        { test_efficiency_map_insert_remove, "ft_map insert/remove" },
     };
 
     const int total = sizeof(tests) / sizeof(tests[0]);
