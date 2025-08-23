@@ -15,8 +15,9 @@ int pt_mutex::try_lock(pthread_t thread_id)
 	}
     if (__sync_bool_compare_and_swap(&this->_lock, false, true))
     {
-		ft_errno = SUCCES;
+                ft_errno = SUCCES;
         this->_thread_id = thread_id;
+        this->_lock_released = false;
         return (SUCCES);
     }
     return (PT_ALREADDY_LOCKED);
