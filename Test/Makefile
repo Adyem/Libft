@@ -20,7 +20,8 @@ EFF_SRCS := efficiency/efficiency_strlen.cpp efficiency/efficiency_memcpy.cpp \
             efficiency/efficiency_sqrt.cpp efficiency/efficiency_exp.cpp \
             efficiency/efficiency_clamp.cpp \
             efficiency/efficiency_atoi.cpp efficiency/efficiency_atol.cpp \
-            efficiency/efficiency_pool.cpp efficiency/efficiency_swap.cpp
+            efficiency/efficiency_pool.cpp efficiency/efficiency_swap.cpp \
+            efficiency/efficiency_mutex.cpp
 
 SRCS := main.cpp test_atoi.cpp test_isdigit.cpp test_memset.cpp test_strcmp.cpp test_strlen.cpp \
        test_toupper.cpp test_html.cpp test_networking.cpp test_extra_libft.cpp \
@@ -59,7 +60,7 @@ endif
 CXX       := g++
 
 COMPILE_FLAGS ?= -Wall -Wextra -Werror -std=c++17
-COMPILE_FLAGS += $(OPT_FLAGS)
+COMPILE_FLAGS += $(OPT_FLAGS) -pthread
 CFLAGS := $(COMPILE_FLAGS)
 export COMPILE_FLAGS
 
