@@ -4,14 +4,16 @@
 #include <type_traits>
 #include <utility>
 #include "vector.hpp"
+#include "../PThread/mutex.hpp"
 
 template<typename T>
 class Pool
 {
-	private:
-		using Storage = std::aligned_storage_t<sizeof(T), alignof(T)>;
-		ft_vector<Storage> _buffer;
-		ft_vector<size_t> _freeIndices;
+        private:
+                using Storage = std::aligned_storage_t<sizeof(T), alignof(T)>;
+                ft_vector<Storage> _buffer;
+                ft_vector<size_t> _freeIndices;
+                mutable pt_mutex _mutex;
 
 		void release(size_t idx) noexcept;
 		T* ptrAt(size_t idx) noexcept;
@@ -58,8 +60,11 @@ class Pool<T>::Object
 template<typename T>
 void Pool<T>::release(size_t idx) noexcept
 {
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        return ;
     this->_freeIndices.push_back(idx);
-	return ;
+    this->_mutex.unlock(THREAD_ID);
+    return ;
 }
 
 template<typename T>
@@ -104,30 +109,37 @@ Pool<T>::~Pool()
 template<typename T>
 void Pool<T>::resize(size_t new_size)
 {
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        return ;
     _buffer.resize(new_size);
     _freeIndices.clear();
     _freeIndices.reserve(new_size);
-	size_t index = 0;
+    size_t index = 0;
     while (index < new_size)
     {
         _freeIndices.push_back(index);
-		index++;
+        index++;
     }
-	return ;
+    this->_mutex.unlock(THREAD_ID);
+    return ;
 }
 
 template<typename T>
 template<typename... Args>
 typename Pool<T>::Object Pool<T>::acquire(Args&&... args)
 {
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        return (Object());
     if (_freeIndices.size() == 0)
     {
+        this->_mutex.unlock(THREAD_ID);
         return (Object());
     }
     size_t last = _freeIndices.size() - 1;
     size_t idx = _freeIndices[last];
     _freeIndices.pop_back();
     T* ptr = new (ptrAt(idx)) T(std::forward<Args>(args)...);
+    this->_mutex.unlock(THREAD_ID);
     return (Object(this, idx, ptr));
 }
 
