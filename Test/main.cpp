@@ -192,8 +192,54 @@ int test_efficiency_cma_realloc(void);
 int test_efficiency_vector_push_back(void);
 int test_efficiency_vector_insert_erase(void);
 int test_efficiency_vector_reserve_resize(void);
+int test_efficiency_vector_clear(void);
+int test_efficiency_vector_iterate(void);
+int test_efficiency_vector_move(void);
+int test_efficiency_vector_swap(void);
 int test_efficiency_map_insert_find(void);
 int test_efficiency_map_insert_remove(void);
+int test_efficiency_map_iterate(void);
+int test_efficiency_map_copy(void);
+int test_efficiency_map_move(void);
+int test_efficiency_map_swap(void);
+int test_efficiency_map_clear(void);
+int test_efficiency_shared_ptr_create(void);
+int test_efficiency_shared_ptr_copy(void);
+int test_efficiency_shared_ptr_move(void);
+int test_efficiency_shared_ptr_reset(void);
+int test_efficiency_shared_ptr_use_count(void);
+int test_efficiency_shared_ptr_swap(void);
+int test_efficiency_string_create(void);
+int test_efficiency_string_copy(void);
+int test_efficiency_string_move(void);
+int test_efficiency_string_append(void);
+int test_efficiency_unique_ptr_create(void);
+int test_efficiency_unique_ptr_move(void);
+int test_efficiency_stack_push_pop(void);
+int test_efficiency_stack_interleaved(void);
+int test_efficiency_stack_move(void);
+int test_efficiency_stack_swap(void);
+int test_efficiency_queue_enqueue_dequeue(void);
+int test_efficiency_queue_interleaved(void);
+int test_efficiency_queue_move(void);
+int test_efficiency_queue_swap(void);
+int test_efficiency_unord_map_insert_find(void);
+int test_efficiency_unord_map_insert_remove(void);
+int test_efficiency_unord_map_iterate(void);
+int test_efficiency_unord_map_copy(void);
+int test_efficiency_unord_map_move(void);
+int test_efficiency_unord_map_swap(void);
+int test_efficiency_unord_map_clear(void);
+int test_efficiency_pair_create_copy(void);
+int test_efficiency_pair_move(void);
+int test_efficiency_pair_swap(void);
+int test_efficiency_promise_set_get(void);
+int test_efficiency_pow(void);
+int test_efficiency_sqrt(void);
+int test_efficiency_exp(void);
+int test_efficiency_clamp(void);
+int test_efficiency_pool_acquire_release(void);
+int test_efficiency_swap_large(void);
 
 int main(int argc, char **argv)
 {
@@ -351,8 +397,54 @@ int main(int argc, char **argv)
         { test_efficiency_vector_push_back, "ft_vector push_back" },
         { test_efficiency_vector_insert_erase, "ft_vector insert/erase" },
         { test_efficiency_vector_reserve_resize, "ft_vector reserve/resize" },
+        { test_efficiency_vector_clear, "ft_vector clear" },
+        { test_efficiency_vector_iterate, "ft_vector iterate" },
+        { test_efficiency_vector_move, "ft_vector move" },
+        { test_efficiency_vector_swap, "ft_vector swap" },
         { test_efficiency_map_insert_find, "ft_map insert/find" },
         { test_efficiency_map_insert_remove, "ft_map insert/remove" },
+        { test_efficiency_map_iterate, "ft_map iterate" },
+        { test_efficiency_map_copy, "ft_map copy" },
+        { test_efficiency_map_move, "ft_map move" },
+        { test_efficiency_map_swap, "ft_map swap" },
+        { test_efficiency_map_clear, "ft_map clear" },
+        { test_efficiency_shared_ptr_create, "ft_sharedptr create" },
+        { test_efficiency_shared_ptr_copy, "ft_sharedptr copy" },
+        { test_efficiency_shared_ptr_move, "ft_sharedptr move" },
+        { test_efficiency_shared_ptr_reset, "ft_sharedptr reset" },
+        { test_efficiency_shared_ptr_use_count, "ft_sharedptr use_count" },
+        { test_efficiency_shared_ptr_swap, "ft_sharedptr swap" },
+        { test_efficiency_string_create, "ft_string create" },
+        { test_efficiency_string_copy, "ft_string copy" },
+        { test_efficiency_string_move, "ft_string move" },
+        { test_efficiency_string_append, "ft_string append" },
+        { test_efficiency_unique_ptr_create, "ft_uniqueptr create" },
+        { test_efficiency_unique_ptr_move, "ft_uniqueptr move" },
+        { test_efficiency_stack_push_pop, "ft_stack push/pop" },
+        { test_efficiency_stack_interleaved, "ft_stack interleaved" },
+        { test_efficiency_stack_move, "ft_stack move" },
+        { test_efficiency_stack_swap, "ft_stack swap" },
+        { test_efficiency_queue_enqueue_dequeue, "ft_queue enqueue/dequeue" },
+        { test_efficiency_queue_interleaved, "ft_queue interleaved" },
+        { test_efficiency_queue_move, "ft_queue move" },
+        { test_efficiency_queue_swap, "ft_queue swap" },
+        { test_efficiency_unord_map_insert_find, "ft_unord_map insert/find" },
+        { test_efficiency_unord_map_insert_remove, "ft_unord_map insert/remove" },
+        { test_efficiency_unord_map_iterate, "ft_unord_map iterate" },
+        { test_efficiency_unord_map_copy, "ft_unord_map copy" },
+        { test_efficiency_unord_map_move, "ft_unord_map move" },
+        { test_efficiency_unord_map_swap, "ft_unord_map swap" },
+        { test_efficiency_unord_map_clear, "ft_unord_map clear" },
+        { test_efficiency_pair_create_copy, "ft_pair create/copy" },
+        { test_efficiency_pair_move, "ft_pair move" },
+        { test_efficiency_pair_swap, "ft_pair swap" },
+        { test_efficiency_promise_set_get, "ft_promise set/get" },
+        { test_efficiency_pow, "ft_pow" },
+        { test_efficiency_sqrt, "ft_sqrt" },
+        { test_efficiency_exp, "ft_exp" },
+        { test_efficiency_clamp, "ft_clamp" },
+        { test_efficiency_pool_acquire_release, "ft_pool acquire/release" },
+        { test_efficiency_swap_large, "ft_swap large struct" },
     };
 
     const int total = sizeof(tests) / sizeof(tests[0]);
