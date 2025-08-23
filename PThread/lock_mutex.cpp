@@ -28,6 +28,7 @@ int pt_mutex::lock(pthread_t thread_id)
             if (__sync_bool_compare_and_swap(&this->_lock, false, true))
             {
                 this->_thread_id = thread_id;
+                this->_lock_released = false;
                 return (SUCCES);
             }
         }
@@ -64,6 +65,7 @@ int pt_mutex::lock(pthread_t thread_id)
             if (__sync_bool_compare_and_swap(&this->_lock, false, true))
             {
                 this->_thread_id = thread_id;
+                this->_lock_released = false;
                 return (SUCCES);
             }
         }
