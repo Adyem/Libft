@@ -9,6 +9,8 @@
 #include <utility>
 #include <type_traits>
 #include <new>
+#include "../Libft/libft.hpp"
+#include "../PThread/mutex.hpp"
 
 template <typename ManagedType>
 class ft_uniqueptr
@@ -18,6 +20,7 @@ class ft_uniqueptr
         size_t _arraySize;
         bool _isArrayType;
         mutable int _errorCode;
+        mutable pt_mutex _mutex;
 
         void release();
 
@@ -103,16 +106,23 @@ ft_uniqueptr<ManagedType>::ft_uniqueptr(size_t size)
 
 template <typename ManagedType>
 ft_uniqueptr<ManagedType>::ft_uniqueptr(ft_uniqueptr&& other) noexcept
-    : _managedPointer(other._managedPointer),
-      _arraySize(other._arraySize),
-      _isArrayType(other._isArrayType),
-      _errorCode(other._errorCode)
+    : _managedPointer(ft_nullptr),
+      _arraySize(0),
+      _isArrayType(false),
+      _errorCode(ER_SUCCESS)
 {
+    if (other._mutex.lock(THREAD_ID) != SUCCES)
+        return ;
+    _managedPointer = other._managedPointer;
+    _arraySize = other._arraySize;
+    _isArrayType = other._isArrayType;
+    _errorCode = other._errorCode;
     other._managedPointer = ft_nullptr;
     other._arraySize = 0;
     other._isArrayType = false;
     other._errorCode = ER_SUCCESS;
-	return ;
+    other._mutex.unlock(THREAD_ID);
+    return ;
 }
 
 template <typename ManagedType>
@@ -121,6 +131,8 @@ ft_uniqueptr<ManagedType>& ft_uniqueptr<ManagedType>::operator=(ft_uniqueptr&& o
     if (this != &other)
     {
         release();
+        if (other._mutex.lock(THREAD_ID) != SUCCES)
+            return (*this);
         _managedPointer = other._managedPointer;
         _arraySize = other._arraySize;
         _isArrayType = other._isArrayType;
@@ -129,6 +141,7 @@ ft_uniqueptr<ManagedType>& ft_uniqueptr<ManagedType>::operator=(ft_uniqueptr&& o
         other._arraySize = 0;
         other._isArrayType = false;
         other._errorCode = ER_SUCCESS;
+        other._mutex.unlock(THREAD_ID);
     }
     return (*this);
 }
@@ -143,6 +156,8 @@ ft_uniqueptr<ManagedType>::~ft_uniqueptr()
 template <typename ManagedType>
 void ft_uniqueptr<ManagedType>::release()
 {
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        return ;
     if (_managedPointer)
     {
         if (_isArrayType)
@@ -153,87 +168,117 @@ void ft_uniqueptr<ManagedType>::release()
     this->_managedPointer = ft_nullptr;
     this->_arraySize = 0;
     this->_isArrayType = false;
-	return ;
+    this->_mutex.unlock(THREAD_ID);
+    return ;
 }
 
 template <typename ManagedType>
 ManagedType& ft_uniqueptr<ManagedType>::operator*()
 {
+    static ManagedType defaultInstance = ManagedType();
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        set_error(PT_ERR_MUTEX_OWNER);
+        return (defaultInstance);
+    }
     if (!_managedPointer)
     {
         this->set_error(UNIQUE_PTR_NULL_PTR);
+        this->_mutex.unlock(THREAD_ID);
         if constexpr (!std::is_abstract_v<ManagedType>)
-        {
-            static ManagedType defaultInstance;
             return (defaultInstance);
-        }
         else
         {
-            this->set_error(UNIQUE_PTR_ALLOCATION_FAILED);
             static char dummy_buffer[sizeof(ManagedType)] = {0};
             return (*reinterpret_cast<ManagedType*>(dummy_buffer));
         }
     }
-    return (*_managedPointer);
+    ManagedType& ref = *_managedPointer;
+    this->_mutex.unlock(THREAD_ID);
+    return (ref);
 }
 
 template <typename ManagedType>
 const ManagedType& ft_uniqueptr<ManagedType>::operator*() const
 {
+    static ManagedType defaultInstance = ManagedType();
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        const_cast<ft_uniqueptr<ManagedType>*>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        return (defaultInstance);
+    }
     if (!_managedPointer)
     {
         const_cast<ft_uniqueptr<ManagedType>*>(this)->set_error(UNIQUE_PTR_NULL_PTR);
+        this->_mutex.unlock(THREAD_ID);
         if constexpr (!std::is_abstract_v<ManagedType>)
-        {
-            static ManagedType defaultInstance;
             return (defaultInstance);
-        }
         else
         {
-            this->set_error(UNIQUE_PTR_ALLOCATION_FAILED);
             static char dummy_buffer[sizeof(ManagedType)] = {0};
             return (*reinterpret_cast<const ManagedType*>(dummy_buffer));
         }
     }
-    return (*_managedPointer);
+    const ManagedType& ref = *_managedPointer;
+    this->_mutex.unlock(THREAD_ID);
+    return (ref);
 }
 
 template <typename ManagedType>
 ManagedType* ft_uniqueptr<ManagedType>::operator->()
 {
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        set_error(PT_ERR_MUTEX_OWNER);
+        return (ft_nullptr);
+    }
     if (!_managedPointer)
     {
         this->set_error(UNIQUE_PTR_NULL_PTR);
+        this->_mutex.unlock(THREAD_ID);
         return (ft_nullptr);
     }
-    return (_managedPointer);
+    ManagedType* ptr = _managedPointer;
+    this->_mutex.unlock(THREAD_ID);
+    return (ptr);
 }
 
 template <typename ManagedType>
 const ManagedType* ft_uniqueptr<ManagedType>::operator->() const
 {
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        const_cast<ft_uniqueptr<ManagedType>*>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        return (ft_nullptr);
+    }
     if (!_managedPointer)
     {
         const_cast<ft_uniqueptr<ManagedType>*>(this)->set_error(UNIQUE_PTR_NULL_PTR);
+        this->_mutex.unlock(THREAD_ID);
         return (ft_nullptr);
     }
-    return (_managedPointer);
+    const ManagedType* ptr = _managedPointer;
+    this->_mutex.unlock(THREAD_ID);
+    return (ptr);
 }
 
 template <typename ManagedType>
 ManagedType& ft_uniqueptr<ManagedType>::operator[](size_t index)
 {
+    static ManagedType defaultInstance = ManagedType();
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        set_error(PT_ERR_MUTEX_OWNER);
+        return (defaultInstance);
+    }
     if (!_isArrayType)
     {
         this->set_error(UNIQUE_PTR_INVALID_OPERATION);
+        this->_mutex.unlock(THREAD_ID);
         if constexpr (!std::is_abstract_v<ManagedType>)
-        {
-            static ManagedType defaultInstance;
             return (defaultInstance);
-        }
         else
         {
-            this->set_error(UNIQUE_PTR_ALLOCATION_FAILED);
             static char dummy_buffer[sizeof(ManagedType)] = {0};
             return (*reinterpret_cast<ManagedType*>(dummy_buffer));
         }
@@ -241,14 +286,11 @@ ManagedType& ft_uniqueptr<ManagedType>::operator[](size_t index)
     if (!_managedPointer)
     {
         this->set_error(UNIQUE_PTR_NULL_PTR);
+        this->_mutex.unlock(THREAD_ID);
         if constexpr (!std::is_abstract_v<ManagedType>)
-        {
-            static ManagedType defaultInstance;
             return (defaultInstance);
-        }
         else
         {
-            this->set_error(UNIQUE_PTR_ALLOCATION_FAILED);
             static char dummy_buffer[sizeof(ManagedType)] = {0};
             return (*reinterpret_cast<ManagedType*>(dummy_buffer));
         }
@@ -256,35 +298,37 @@ ManagedType& ft_uniqueptr<ManagedType>::operator[](size_t index)
     if (index >= _arraySize)
     {
         this->set_error(UNIQUE_PTR_OUT_OF_BOUNDS);
+        this->_mutex.unlock(THREAD_ID);
         if constexpr (!std::is_abstract_v<ManagedType>)
-        {
-            static ManagedType defaultInstance;
             return (defaultInstance);
-        }
         else
         {
-            this->set_error(UNIQUE_PTR_ALLOCATION_FAILED);
             static char dummy_buffer[sizeof(ManagedType)] = {0};
             return (*reinterpret_cast<ManagedType*>(dummy_buffer));
         }
     }
-    return (_managedPointer[index]);
+    ManagedType& ref = _managedPointer[index];
+    this->_mutex.unlock(THREAD_ID);
+    return (ref);
 }
 
 template <typename ManagedType>
 const ManagedType& ft_uniqueptr<ManagedType>::operator[](size_t index) const
 {
+    static ManagedType defaultInstance = ManagedType();
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        const_cast<ft_uniqueptr<ManagedType>*>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        return (defaultInstance);
+    }
     if (!_isArrayType)
     {
         const_cast<ft_uniqueptr<ManagedType>*>(this)->set_error(UNIQUE_PTR_INVALID_OPERATION);
+        this->_mutex.unlock(THREAD_ID);
         if constexpr (!std::is_abstract_v<ManagedType>)
-        {
-            static ManagedType defaultInstance;
             return (defaultInstance);
-        }
         else
         {
-            this->set_error(UNIQUE_PTR_ALLOCATION_FAILED);
             static char dummy_buffer[sizeof(ManagedType)] = {0};
             return (*reinterpret_cast<const ManagedType*>(dummy_buffer));
         }
@@ -292,14 +336,11 @@ const ManagedType& ft_uniqueptr<ManagedType>::operator[](size_t index) const
     if (!_managedPointer)
     {
         const_cast<ft_uniqueptr<ManagedType>*>(this)->set_error(UNIQUE_PTR_NULL_PTR);
+        this->_mutex.unlock(THREAD_ID);
         if constexpr (!std::is_abstract_v<ManagedType>)
-        {
-            static ManagedType defaultInstance;
             return (defaultInstance);
-        }
         else
         {
-            this->set_error(UNIQUE_PTR_ALLOCATION_FAILED);
             static char dummy_buffer[sizeof(ManagedType)] = {0};
             return (*reinterpret_cast<const ManagedType*>(dummy_buffer));
         }
@@ -307,52 +348,83 @@ const ManagedType& ft_uniqueptr<ManagedType>::operator[](size_t index) const
     if (index >= _arraySize)
     {
         const_cast<ft_uniqueptr<ManagedType>*>(this)->set_error(UNIQUE_PTR_OUT_OF_BOUNDS);
+        this->_mutex.unlock(THREAD_ID);
         if constexpr (!std::is_abstract_v<ManagedType>)
-        {
-            static ManagedType defaultInstance;
             return (defaultInstance);
-        }
         else
         {
-            this->set_error(UNIQUE_PTR_ALLOCATION_FAILED);
             static char dummy_buffer[sizeof(ManagedType)] = {0};
             return (*reinterpret_cast<const ManagedType*>(dummy_buffer));
         }
     }
-    return (_managedPointer[index]);
+    const ManagedType& ref = _managedPointer[index];
+    this->_mutex.unlock(THREAD_ID);
+    return (ref);
 }
 
 template <typename ManagedType>
 ManagedType* ft_uniqueptr<ManagedType>::get()
 {
-    return (_managedPointer);
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        set_error(PT_ERR_MUTEX_OWNER);
+        return (ft_nullptr);
+    }
+    ManagedType* ptr = _managedPointer;
+    this->_mutex.unlock(THREAD_ID);
+    return (ptr);
 }
 
 template <typename ManagedType>
 const ManagedType* ft_uniqueptr<ManagedType>::get() const
 {
-    return (_managedPointer);
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        const_cast<ft_uniqueptr<ManagedType>*>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        return (ft_nullptr);
+    }
+    const ManagedType* ptr = _managedPointer;
+    this->_mutex.unlock(THREAD_ID);
+    return (ptr);
 }
 
 template <typename ManagedType>
 ManagedType* ft_uniqueptr<ManagedType>::release_ptr()
 {
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        set_error(PT_ERR_MUTEX_OWNER);
+        return (ft_nullptr);
+    }
     ManagedType* tmp = _managedPointer;
     _managedPointer = ft_nullptr;
     _arraySize = 0;
     _isArrayType = false;
     _errorCode = ER_SUCCESS;
+    this->_mutex.unlock(THREAD_ID);
     return (tmp);
 }
 
 template <typename ManagedType>
 void ft_uniqueptr<ManagedType>::reset(ManagedType* pointer, size_t size, bool arrayType)
 {
-    release();
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        set_error(PT_ERR_MUTEX_OWNER);
+        return ;
+    }
+    if (_managedPointer)
+    {
+        if (_isArrayType)
+            delete[] _managedPointer;
+        else
+            delete _managedPointer;
+    }
     _managedPointer = pointer;
     _arraySize = size;
     _isArrayType = arrayType;
     _errorCode = ER_SUCCESS;
+    this->_mutex.unlock(THREAD_ID);
 }
 
 template <typename ManagedType>
@@ -382,10 +454,19 @@ ft_uniqueptr<ManagedType>::operator bool() const noexcept
 template <typename ManagedType>
 void ft_uniqueptr<ManagedType>::swap(ft_uniqueptr& other)
 {
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        return ;
+    if (other._mutex.lock(THREAD_ID) != SUCCES)
+    {
+        this->_mutex.unlock(THREAD_ID);
+        return ;
+    }
     ft_swap(_managedPointer, other._managedPointer);
     ft_swap(_arraySize, other._arraySize);
     ft_swap(_isArrayType, other._isArrayType);
     ft_swap(_errorCode, other._errorCode);
+    other._mutex.unlock(THREAD_ID);
+    this->_mutex.unlock(THREAD_ID);
 }
 
 template <typename ManagedType>
