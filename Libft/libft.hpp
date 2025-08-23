@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdarg.h>
+#include "../PThread/mutex.hpp"
 
 size_t 			ft_strlen_size_t(const char *string);
 int				ft_strlen(const char *string);
@@ -72,6 +73,7 @@ typedef struct s_stack
 {
     t_stack_node    *top;
     size_t          size;
+    pt_mutex        mutex;
 }   t_stack;
 
 t_stack         *ft_stack_new(void);
@@ -92,6 +94,7 @@ typedef struct s_queue
     t_queue_node    *front;
     t_queue_node    *rear;
     size_t          size;
+    pt_mutex        mutex;
 }   t_queue;
 
 t_queue        *ft_queue_new(void);

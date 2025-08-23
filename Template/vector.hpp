@@ -7,6 +7,8 @@
 #include "constructor.hpp"
 #include <cstddef>
 #include <utility>
+#include "../PThread/mutex.hpp"
+#include "../Libft/libft.hpp"
 
 template <typename ElementType>
 class ft_vector
@@ -15,12 +17,14 @@ class ft_vector
     	ElementType	*_data;
     	size_t		_size;
     	size_t		_capacity;
-    	int             _errorCode;
+    	mutable int     _errorCode;
+        mutable pt_mutex _mutex;
 
-    	void	destroy_elements(size_t from, size_t to);
+    	void    destroy_elements(size_t from, size_t to);
+        void    reserve_internal(size_t new_capacity);
 
 	protected:
-		void	setError(int errorCode);
+		void    setError(int errorCode) const;
 		ElementType release_at(size_t index);
 
 	public:
@@ -103,6 +107,13 @@ ft_vector<ElementType>& ft_vector<ElementType>::operator=(ft_vector<ElementType>
 {
     if (this != &other)
     {
+        if (this->_mutex.lock(THREAD_ID) != SUCCES)
+            return (*this);
+        if (other._mutex.lock(THREAD_ID) != SUCCES)
+        {
+            this->_mutex.unlock(THREAD_ID);
+            return (*this);
+        }
         destroy_elements(0, this->_size);
         if (this->_data != ft_nullptr)
             cma_free(this->_data);
@@ -114,6 +125,8 @@ ft_vector<ElementType>& ft_vector<ElementType>::operator=(ft_vector<ElementType>
         other._size = 0;
         other._capacity = 0;
         other._errorCode = ER_SUCCESS;
+        other._mutex.unlock(THREAD_ID);
+        this->_mutex.unlock(THREAD_ID);
     }
     return (*this);
 }
@@ -129,17 +142,25 @@ void ft_vector<ElementType>::destroy_elements(size_t from, size_t to)
 template <typename ElementType>
 size_t ft_vector<ElementType>::size() const
 {
-    return (this->_size);
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        return (0);
+    size_t s = this->_size;
+    this->_mutex.unlock(THREAD_ID);
+    return (s);
 }
 
 template <typename ElementType>
 size_t ft_vector<ElementType>::capacity() const
 {
-    return (this->_capacity);
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        return (0);
+    size_t c = this->_capacity;
+    this->_mutex.unlock(THREAD_ID);
+    return (c);
 }
 
 template <typename ElementType>
-void ft_vector<ElementType>::setError(int errorCode)
+void ft_vector<ElementType>::setError(int errorCode) const
 {
     this->_errorCode = errorCode;
     ft_errno = errorCode;
@@ -149,100 +170,146 @@ void ft_vector<ElementType>::setError(int errorCode)
 template <typename ElementType>
 int ft_vector<ElementType>::get_error() const
 {
-    return (this->_errorCode);
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        return (_errorCode);
+    int err = _errorCode;
+    this->_mutex.unlock(THREAD_ID);
+    return (err);
 }
 
 template <typename ElementType>
 const char* ft_vector<ElementType>::get_error_str() const
 {
-    return (ft_strerror(this->_errorCode));
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        return (ft_strerror(_errorCode));
+    int err = _errorCode;
+    this->_mutex.unlock(THREAD_ID);
+    return (ft_strerror(err));
 }
 
 template <typename ElementType>
 void ft_vector<ElementType>::push_back(const ElementType &value)
 {
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        setError(PT_ERR_MUTEX_OWNER);
+        return ;
+    }
     if (this->_size >= this->_capacity)
     {
-        size_t newCapacity;
-        if (this->_capacity > 0)
-            newCapacity = this->_capacity * 2;
-        else
-            newCapacity = 1;
-        reserve(newCapacity);
+        size_t newCapacity = (this->_capacity > 0) ? this->_capacity * 2 : 1;
+        reserve_internal(newCapacity);
         if (this->_errorCode != ER_SUCCESS)
+        {
+            this->_mutex.unlock(THREAD_ID);
             return ;
+        }
     }
     construct_at(&this->_data[this->_size], value);
     this->_size++;
-	return ;
+    this->_mutex.unlock(THREAD_ID);
+    return ;
 }
 
 template <typename ElementType>
 void ft_vector<ElementType>::push_back(ElementType &&value)
 {
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        setError(PT_ERR_MUTEX_OWNER);
+        return ;
+    }
     if (this->_size >= this->_capacity)
     {
-        size_t newCapacity;
-        if (this->_capacity > 0)
-            newCapacity = this->_capacity * 2;
-        else
-            newCapacity = 1;
-        reserve(newCapacity);
+        size_t newCapacity = (this->_capacity > 0) ? this->_capacity * 2 : 1;
+        reserve_internal(newCapacity);
         if (this->_errorCode != ER_SUCCESS)
+        {
+            this->_mutex.unlock(THREAD_ID);
             return ;
+        }
     }
     construct_at(&this->_data[this->_size], std::forward<ElementType>(value));
     this->_size++;
-	return ;
+    this->_mutex.unlock(THREAD_ID);
+    return ;
 }
 
 template <typename ElementType>
 void ft_vector<ElementType>::pop_back()
 {
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        setError(PT_ERR_MUTEX_OWNER);
+        return ;
+    }
     if (this->_size > 0)
     {
         destroy_at(&this->_data[this->_size - 1]);
-        this->_size--;
+        --this->_size;
     }
     else
         this->setError(VECTOR_INVALID_OPERATION);
+    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 
 template <typename ElementType>
 ElementType& ft_vector<ElementType>::operator[](size_t index)
 {
+    static ElementType defaultInstance = ElementType();
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        setError(PT_ERR_MUTEX_OWNER);
+        return (defaultInstance);
+    }
     if (index >= this->_size)
     {
         this->setError(VECTOR_OUT_OF_BOUNDS);
-        static ElementType defaultInstance = ElementType();
+        this->_mutex.unlock(THREAD_ID);
         return (defaultInstance);
     }
-    return (this->_data[index]);
+    ElementType& ref = this->_data[index];
+    this->_mutex.unlock(THREAD_ID);
+    return (ref);
 }
 
 template <typename ElementType>
 const ElementType& ft_vector<ElementType>::operator[](size_t index) const
 {
+    static ElementType defaultInstance = ElementType();
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        setError(PT_ERR_MUTEX_OWNER);
+        return (defaultInstance);
+    }
     if (index >= this->_size)
     {
         const_cast<ft_vector<ElementType>*>(this)->setError(VECTOR_OUT_OF_BOUNDS);
-        static const ElementType defaultInstance = ElementType();
+        this->_mutex.unlock(THREAD_ID);
         return (defaultInstance);
     }
-    return (this->_data[index]);
+    const ElementType& ref = this->_data[index];
+    this->_mutex.unlock(THREAD_ID);
+    return (ref);
 }
 
 template <typename ElementType>
 void ft_vector<ElementType>::clear()
 {
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        setError(PT_ERR_MUTEX_OWNER);
+        return ;
+    }
     destroy_elements(0, this->_size);
     this->_size = 0;
+    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 
 template <typename ElementType>
-void ft_vector<ElementType>::reserve(size_t new_capacity)
+void ft_vector<ElementType>::reserve_internal(size_t new_capacity)
 {
     if (new_capacity > this->_capacity)
     {
@@ -260,38 +327,69 @@ void ft_vector<ElementType>::reserve(size_t new_capacity)
 }
 
 template <typename ElementType>
+void ft_vector<ElementType>::reserve(size_t new_capacity)
+{
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        setError(PT_ERR_MUTEX_OWNER);
+        return ;
+    }
+    reserve_internal(new_capacity);
+    this->_mutex.unlock(THREAD_ID);
+    return ;
+}
+
+template <typename ElementType>
 void ft_vector<ElementType>::resize(size_t new_size, const ElementType& value)
 {
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        setError(PT_ERR_MUTEX_OWNER);
+        return ;
+    }
     if (new_size < this->_size)
         destroy_elements(new_size, this->_size);
     else if (new_size > this->_size)
     {
-        reserve(new_size);
+        reserve_internal(new_size);
         if (this->_errorCode != ER_SUCCESS)
+        {
+            this->_mutex.unlock(THREAD_ID);
             return ;
+        }
         for (size_t index = this->_size; index < new_size; index++)
             construct_at(&this->_data[index], value);
     }
     this->_size = new_size;
+    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 
 template <typename ElementType>
 typename ft_vector<ElementType>::iterator ft_vector<ElementType>::insert(iterator pos, const ElementType& value)
 {
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        setError(PT_ERR_MUTEX_OWNER);
+        return (ft_nullptr);
+    }
     size_t index = pos - this->_data;
     if (index > this->_size)
-        return (end());
+    {
+        iterator endIt = this->_data + this->_size;
+        this->_mutex.unlock(THREAD_ID);
+        return (endIt);
+    }
     if (this->_size >= this->_capacity)
     {
-        size_t new_capacity;
-        if (this->_capacity > 0)
-            new_capacity = this->_capacity * 2;
-        else
-            new_capacity = 1;
-        reserve(new_capacity);
+        size_t new_capacity = (this->_capacity > 0) ? this->_capacity * 2 : 1;
+        reserve_internal(new_capacity);
         if (this->_errorCode != ER_SUCCESS)
-            return (end());
+        {
+            iterator endIt = this->_data + this->_size;
+            this->_mutex.unlock(THREAD_ID);
+            return (endIt);
+        }
         pos = this->_data + index;
     }
     size_t i = this->_size;
@@ -303,17 +401,26 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::insert(iterato
     }
     construct_at(&this->_data[index], value);
     this->_size++;
-    return (&this->_data[index]);
+    iterator ret = &this->_data[index];
+    this->_mutex.unlock(THREAD_ID);
+    return (ret);
 }
 
 template <typename ElementType>
 typename ft_vector<ElementType>::iterator ft_vector<ElementType>::erase(iterator pos)
 {
-    size_t index = pos - this->_data; 
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        setError(PT_ERR_MUTEX_OWNER);
+        return (ft_nullptr);
+    }
+    size_t index = pos - this->_data;
     if (index >= this->_size)
     {
         this->setError(VECTOR_INVALID_PTR);
-        return (end()); 
+        iterator endIt = this->_data + this->_size;
+        this->_mutex.unlock(THREAD_ID);
+        return (endIt);
     }
     destroy_at(&this->_data[index]);
     for (size_t i = index; i < this->_size - 1; i++)
@@ -322,48 +429,75 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::erase(iterator
         destroy_at(&this->_data[i + 1]);
     }
     --this->_size;
+    iterator ret;
     if (index == this->_size)
-        return (end());
-    return (&this->_data[index]);
+        ret = this->_data + this->_size;
+    else
+        ret = &this->_data[index];
+    this->_mutex.unlock(THREAD_ID);
+    return (ret);
 }
 
 template <typename ElementType>
 ElementType ft_vector<ElementType>::release_at(size_t index)
 {
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        setError(PT_ERR_MUTEX_OWNER);
+        return (ElementType());
+    }
     if (index >= this->_size)
-	{
+    {
         this->setError(VECTOR_INVALID_PTR);
+        this->_mutex.unlock(THREAD_ID);
         return (ElementType());
     }
     ElementType detached = ft_move(this->_data[index]);
     for (size_t i = index; i < this->_size - 1; i++)
         this->_data[i] = ft_move(this->_data[i + 1]);
     --this->_size;
+    this->_mutex.unlock(THREAD_ID);
     return (detached);
 }
 
 template <typename ElementType>
 typename ft_vector<ElementType>::iterator ft_vector<ElementType>::begin()
 {
-    return (this->_data);
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        return (this->_data);
+    iterator it = this->_data;
+    this->_mutex.unlock(THREAD_ID);
+    return (it);
 }
 
 template <typename ElementType>
 typename ft_vector<ElementType>::const_iterator ft_vector<ElementType>::begin() const
 {
-    return (this->_data);
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        return (this->_data);
+    const_iterator it = this->_data;
+    this->_mutex.unlock(THREAD_ID);
+    return (it);
 }
 
 template <typename ElementType>
 typename ft_vector<ElementType>::iterator ft_vector<ElementType>::end()
 {
-    return (this->_data + this->_size);
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        return (this->_data);
+    iterator it = this->_data + this->_size;
+    this->_mutex.unlock(THREAD_ID);
+    return (it);
 }
 
 template <typename ElementType>
 typename ft_vector<ElementType>::const_iterator ft_vector<ElementType>::end() const
 {
-    return (this->_data + this->_size);
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        return (this->_data);
+    const_iterator it = this->_data + this->_size;
+    this->_mutex.unlock(THREAD_ID);
+    return (it);
 }
 
 #endif
