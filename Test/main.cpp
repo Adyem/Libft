@@ -240,6 +240,7 @@ int test_efficiency_exp(void);
 int test_efficiency_clamp(void);
 int test_efficiency_pool_acquire_release(void);
 int test_efficiency_swap_large(void);
+int test_efficiency_mutex_lock(void);
 
 int main(int argc, char **argv)
 {
@@ -445,6 +446,7 @@ int main(int argc, char **argv)
         { test_efficiency_clamp, "ft_clamp" },
         { test_efficiency_pool_acquire_release, "ft_pool acquire/release" },
         { test_efficiency_swap_large, "ft_swap large struct" },
+        { test_efficiency_mutex_lock, "ft_mutex lock/unlock" },
     };
 
     const int total = sizeof(tests) / sizeof(tests[0]);
