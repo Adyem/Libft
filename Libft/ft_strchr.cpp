@@ -1,24 +1,19 @@
 #include "libft.hpp"
 #include "../CPP_class/nullptr.hpp"
 
-char	*ft_strchr(const char *string, int char_to_find)
+char *ft_strchr(const char *string, int char_to_find)
 {
-	char	target_char;
-	char	*last_occurrence;
-
-	if (!string)
-		return (ft_nullptr);
     if (!string)
         return (ft_nullptr);
-    target_char = static_cast<char>(char_to_find);
-    last_occurrence = ft_nullptr;
-    while (*string)
-	{
-        if (*string == target_char)
-            last_occurrence = const_cast<char *>(string);
-        string++;
-	}
-    if (target_char == '\0')
-        return (const_cast<char *>(string));
-    return (last_occurrence);
+    const unsigned char *s = reinterpret_cast<const unsigned char*>(string);
+    unsigned char c = static_cast<unsigned char>(char_to_find);
+    while (*s)
+    {
+        if (*s == c)
+            return (reinterpret_cast<char*>(const_cast<unsigned char*>(s)));
+        ++s;
+    }
+    if (c == 0)
+        return (reinterpret_cast<char*>(const_cast<unsigned char*>(s)));
+    return (ft_nullptr);
 }

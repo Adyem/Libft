@@ -1,23 +1,17 @@
 #include "libft.hpp"
-#include <unistd.h>
 
 int ft_strncmp(const char *string_1, const char *string_2, size_t max_len)
 {
-    unsigned int current_index = 0;
-
-    while (string_1[current_index] != '\0' &&
-           string_2[current_index] != '\0' &&
-           current_index < max_len)
+    if (!string_1 || !string_2)
+        return (string_1 ? 1 : (string_2 ? -1 : 0));
+    size_t i = 0;
+    while (i < max_len)
     {
-        unsigned char char1 = static_cast<unsigned char>(string_1[current_index]);
-        unsigned char char2 = static_cast<unsigned char>(string_2[current_index]);
-        if (char1 != char2)
-            return (char1 - char2);
-        current_index++;
+        unsigned char c1 = static_cast<unsigned char>(string_1[i]);
+        unsigned char c2 = static_cast<unsigned char>(string_2[i]);
+        if (c1 != c2 || c1 == '\0' || c2 == '\0')
+            return (c1 - c2);
+        ++i;
     }
-    if (current_index == max_len)
-        return (0);
-
-    return (static_cast<unsigned char>(string_1[current_index]) -
-           static_cast<unsigned char>(string_2[current_index]));
+    return (0);
 }
