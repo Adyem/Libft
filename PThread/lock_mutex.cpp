@@ -2,72 +2,39 @@
 #include "mutex.hpp"
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
-#include <unistd.h>
-#include <algorithm>
 
-#undef FAILURE
-#define FAILURE -1
+static inline void cpu_relax()
+{
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386__)
+    __builtin_ia32_pause();
+#else
+    asm volatile("" ::: "memory");
+#endif
+}
 
 int pt_mutex::lock(pthread_t thread_id)
 {
-    int			sleep_time = SLEEP_TIME;
-    const int	max_sleep = MAX_SLEEP;
-
-	if (this->_lock && this->_thread_id == thread_id)
-	{
-		ft_errno = PT_ERR_ALRDY_LOCKED;
-		this->set_error(PT_ERR_ALRDY_LOCKED);
-		return (FAILURE);
-	}
-	ft_errno = ER_SUCCESS;
-	this->set_error(ER_SUCCESS);
-    while (true)
+    if (_owner.load(std::memory_order_relaxed) == thread_id)
     {
-        if (this->_wait_queue_start == this->_wait_queue_end && !this->_lock)
-        {
-            if (__sync_bool_compare_and_swap(&this->_lock, false, true))
-            {
-                this->_thread_id = thread_id;
-                this->_lock_released = false;
-                return (SUCCES);
-            }
-        }
-        bool already_waiting = false;
-        int start = this->_wait_queue_start;
-        int end = this->_wait_queue_end;
-        while (start != end)
-        {
-            if (this->_wait_queue[start] == thread_id)
-            {
-                already_waiting = true;
-                break ;
-            }
-            start = (start + 1) % 128;
-        }
-        if (!already_waiting)
-        {
-            int next_end = (this->_wait_queue_end + 1) % 128;
-            if (next_end == this->_wait_queue_start)
-            {
-				ft_errno = PT_ERR_QUEUE_FULL;
-                this->set_error(PT_ERR_QUEUE_FULL);
-                return (FAILURE);
-            }
-            this->_wait_queue[this->_wait_queue_end] = thread_id;
-            this->_wait_queue_end = next_end;
-        }
-        usleep(sleep_time);
-        sleep_time = std::min(sleep_time * 2, max_sleep);
-        if (this->_lock_released && this->_wait_queue[this->_wait_queue_start] == thread_id)
-        {
-            int next_start = (this->_wait_queue_start + 1) % 128;
-            this->_wait_queue_start = next_start;
-            if (__sync_bool_compare_and_swap(&this->_lock, false, true))
-            {
-                this->_thread_id = thread_id;
-                this->_lock_released = false;
-                return (SUCCES);
-            }
-        }
+        ft_errno = PT_ERR_ALRDY_LOCKED;
+        set_error(PT_ERR_ALRDY_LOCKED);
+        return (-1);
     }
+    set_error(ER_SUCCESS);
+    const uint32_t my = _next.fetch_add(1, std::memory_order_acq_rel);
+    uint32_t spins = 0;
+    for (;;)
+    {
+        uint32_t cur = _serving.load(std::memory_order_acquire);
+        if (cur == my)
+            break;
+        if (++spins < 64)
+            cpu_relax();
+        else
+            pt_thread_yield();
+    }
+    _owner.store(thread_id, std::memory_order_relaxed);
+    _lock = true;
+    return (SUCCES);
 }
+

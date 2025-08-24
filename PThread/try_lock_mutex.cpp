@@ -1,24 +1,32 @@
 #include "mutex.hpp"
 #include "../Errno/errno.hpp"
-
-#define FAILURE -1
-#define SUCCES 0
+#include "../Libft/libft.hpp"
 
 int pt_mutex::try_lock(pthread_t thread_id)
 {
-    this->set_error(ER_SUCCESS);
-	if (this->_lock && this->_thread_id == thread_id)
-	{
-		ft_errno = PT_ERR_ALRDY_LOCKED;
-		this->set_error(PT_ERR_ALRDY_LOCKED);
-		return (FAILURE);
-	}
-    if (__sync_bool_compare_and_swap(&this->_lock, false, true))
+    set_error(ER_SUCCESS);
+    if (_owner.load(std::memory_order_relaxed) == thread_id)
     {
-                ft_errno = SUCCES;
-        this->_thread_id = thread_id;
-        this->_lock_released = false;
-        return (SUCCES);
+        ft_errno = PT_ERR_ALRDY_LOCKED;
+        set_error(PT_ERR_ALRDY_LOCKED);
+        return (-1);
     }
-    return (PT_ALREADDY_LOCKED);
+    uint32_t cur_serving = _serving.load(std::memory_order_acquire);
+    uint32_t cur_next = _next.load(std::memory_order_relaxed);
+    if (cur_serving != cur_next)
+    {
+        ft_errno = PT_ALREADDY_LOCKED;
+        set_error(PT_ALREADDY_LOCKED);
+        return (PT_ALREADDY_LOCKED);
+    }
+    if (!_next.compare_exchange_strong(cur_next, cur_next + 1, std::memory_order_acq_rel))
+    {
+        ft_errno = PT_ALREADDY_LOCKED;
+        set_error(PT_ALREADDY_LOCKED);
+        return (PT_ALREADDY_LOCKED);
+    }
+    _owner.store(thread_id, std::memory_order_relaxed);
+    _lock = true;
+    return (SUCCES);
 }
+
