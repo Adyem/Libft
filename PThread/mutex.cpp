@@ -3,35 +3,25 @@
 #include "../Errno/errno.hpp"
 
 pt_mutex::pt_mutex()
+    : _next(0), _serving(0), _owner(0), _lock(false), _error(ER_SUCCESS)
 {
-	int index = 0;
-
-	this->_lock = false;
-	this->_thread_id = 0;
-	while (index < MAX_QUEUE)
-	{
-		this->_wait_queue[index] = 0;
-		index++;
-	}
-	this->_wait_queue_start = 0;
-	this->_wait_queue_end = 0;
-	this->_lock_released = false;
-	return ;
+    return ;
 }
 
 pt_mutex::~pt_mutex()
 {
-	return ;
+    return ;
 }
 
-void	pt_mutex::set_error(int	error)
+void    pt_mutex::set_error(int error)
 {
-	this->_error = error;
-	ft_errno = error;
-	return ;
+    _error = error;
+    ft_errno = error;
+    return ;
 }
 
-const volatile bool	&pt_mutex::lockState() const
+const volatile bool &pt_mutex::lockState() const
 {
-    return (this->_lock);
+    return (_lock);
 }
+
