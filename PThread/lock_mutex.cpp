@@ -14,18 +14,18 @@ static inline void cpu_relax()
 
 int pt_mutex::lock(pthread_t thread_id)
 {
-    if (_owner.load(std::memory_order_relaxed) == thread_id)
+    if (this->_owner.load(std::memory_order_relaxed) == thread_id)
     {
         ft_errno = PT_ERR_ALRDY_LOCKED;
         set_error(PT_ERR_ALRDY_LOCKED);
         return (-1);
     }
     set_error(ER_SUCCESS);
-    const uint32_t my = _next.fetch_add(1, std::memory_order_acq_rel);
+    const uint32_t my = this->_next.fetch_add(1, std::memory_order_acq_rel);
     uint32_t spins = 0;
-    for (;;)
+    while (1)
     {
-        uint32_t cur = _serving.load(std::memory_order_acquire);
+        uint32_t cur = this->_serving.load(std::memory_order_acquire);
         if (cur == my)
             break;
         if (++spins < 64)
@@ -33,8 +33,7 @@ int pt_mutex::lock(pthread_t thread_id)
         else
             pt_thread_yield();
     }
-    _owner.store(thread_id, std::memory_order_relaxed);
-    _lock = true;
+    this->_owner.store(thread_id, std::memory_order_relaxed);
+    this->_lock = true;
     return (SUCCES);
 }
-
