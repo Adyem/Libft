@@ -10,7 +10,18 @@ public:
     bool request(const char *ip, uint16_t port,
                  const char *method, const char *path,
                  json_group *payload = NULL,
-                 const char *headers = NULL, int *status = NULL);
+                 const char *headers = NULL, int *status = NULL,
+                 int timeout = 60000);
+};
+
+class api_string_promise : public ft_promise<char*>
+{
+public:
+    bool request(const char *ip, uint16_t port,
+                 const char *method, const char *path,
+                 json_group *payload = NULL,
+                 const char *headers = NULL, int *status = NULL,
+                 int timeout = 60000);
 };
 
 #endif
