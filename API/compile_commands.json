@@ -10,11 +10,29 @@
       "-std=c++17",
       "-c",
       "-o",
-      "objs/api_wrapper.o",
-      "api_wrapper.cpp"
+      "objs/api_request.o",
+      "api_request.cpp"
     ],
     "directory": "/workspace/Libft/API",
-    "file": "/workspace/Libft/API/api_wrapper.cpp",
-    "output": "/workspace/Libft/API/objs/api_wrapper.o"
+    "file": "/workspace/Libft/API/api_request.cpp",
+    "output": "/workspace/Libft/API/objs/api_request.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-g",
+      "-O0",
+      "-std=c++17",
+      "-c",
+      "-o",
+      "objs/api_promise.o",
+      "api_promise.cpp"
+    ],
+    "directory": "/workspace/Libft/API",
+    "file": "/workspace/Libft/API/api_promise.cpp",
+    "output": "/workspace/Libft/API/objs/api_promise.o"
   }
 ]
