@@ -15,46 +15,46 @@ class Pool
                 ft_vector<size_t> _freeIndices;
                 mutable pt_mutex _mutex;
 
-		void release(size_t idx) noexcept;
-		T* ptrAt(size_t idx) noexcept;
+        void release(size_t idx) noexcept;
+        T* ptrAt(size_t idx) noexcept;
 
-	public:
-		Pool();
-		~Pool();
-		Pool(Pool&& other);
-		Pool& operator=(Pool&& other);
+    public:
+        Pool();
+        ~Pool();
+        Pool(Pool&& other);
+        Pool& operator=(Pool&& other);
 
-		Pool(const Pool&) = delete;
-		Pool& operator=(const Pool&) = delete;
+        Pool(const Pool&) = delete;
+        Pool& operator=(const Pool&) = delete;
 
-		void resize(size_t new_size);
+        void resize(size_t new_size);
 
-		class Object;
-		template<typename... Args>
-		Object acquire(Args&&... args);
+        class Object;
+        template<typename... Args>
+        Object acquire(Args&&... args);
 };
 
 template<typename T>
 class Pool<T>::Object
 {
-	private:
-		Pool<T>* _pool;
-		size_t _idx;
-		T* _ptr;
+    private:
+        Pool<T>* _pool;
+        size_t _idx;
+        T* _ptr;
 
-	public:
-		Object() noexcept;
-		Object(Pool<T>* pool, size_t idx, T* ptr) noexcept;
-		~Object() noexcept;
+    public:
+        Object() noexcept;
+        Object(Pool<T>* pool, size_t idx, T* ptr) noexcept;
+        ~Object() noexcept;
 
-		T* operator->() const noexcept;
-		explicit operator bool() const noexcept;
+        T* operator->() const noexcept;
+        explicit operator bool() const noexcept;
 
-		Object(Object&& o) noexcept;
-		Object& operator=(Object&& o) noexcept;
+        Object(Object&& o) noexcept;
+        Object& operator=(Object&& o) noexcept;
 
-		Object(const Object&) = delete;
-		Object& operator=(const Object&) = delete;
+        Object(const Object&) = delete;
+        Object& operator=(const Object&) = delete;
 };
 
 template<typename T>
@@ -78,7 +78,7 @@ Pool<T>::Pool()
     : _buffer()
     , _freeIndices()
 {
-	return ;
+    return ;
 }
 
 template<typename T>
@@ -86,7 +86,7 @@ Pool<T>::Pool(Pool&& other)
     : _buffer(std::move(other._buffer))
     , _freeIndices(std::move(other._freeIndices))
 {
-	return ;
+    return ;
 }
 
 template<typename T>
@@ -103,7 +103,7 @@ Pool<T>& Pool<T>::operator=(Pool&& other)
 template<typename T>
 Pool<T>::~Pool()
 {
-	return ;
+    return ;
 }
 
 template<typename T>
@@ -149,7 +149,7 @@ Pool<T>::Object::Object() noexcept
     , _idx(0)
     , _ptr(ft_nullptr)
 {
-	return ;
+    return ;
 }
 
 template<typename T>
@@ -158,7 +158,7 @@ Pool<T>::Object::Object(Pool<T>* pool, size_t idx, T* ptr) noexcept
     , _idx(idx)
     , _ptr(ptr)
 {
-	return ;
+    return ;
 }
 
 template<typename T>
@@ -169,7 +169,7 @@ Pool<T>::Object::~Object() noexcept
         _ptr->~T();
         _pool->release(_idx);
     }
-	return ;
+    return ;
 }
 
 template<typename T>
@@ -192,7 +192,7 @@ Pool<T>::Object::Object(Object&& o) noexcept
 {
     o._pool = ft_nullptr;
     o._ptr = ft_nullptr;
-	return ;
+    return ;
 }
 
 template<typename T>

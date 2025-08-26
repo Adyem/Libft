@@ -13,55 +13,55 @@
 template <typename ElementType>
 class ft_vector
 {
-	private:
-    	ElementType	*_data;
-    	size_t		_size;
-    	size_t		_capacity;
-    	mutable int     _errorCode;
+    private:
+        ElementType    *_data;
+        size_t        _size;
+        size_t        _capacity;
+        mutable int     _errorCode;
         mutable pt_mutex _mutex;
 
-    	void    destroy_elements(size_t from, size_t to);
+        void    destroy_elements(size_t from, size_t to);
         void    reserve_internal(size_t new_capacity);
 
-	protected:
-		void    setError(int errorCode) const;
-		ElementType release_at(size_t index);
+    protected:
+        void    setError(int errorCode) const;
+        ElementType release_at(size_t index);
 
-	public:
-    	using iterator = ElementType*;
-    	using const_iterator = const ElementType*;
+    public:
+        using iterator = ElementType*;
+        using const_iterator = const ElementType*;
 
-    	ft_vector(size_t initial_capacity = 0);
-    	~ft_vector();
+        ft_vector(size_t initial_capacity = 0);
+        ~ft_vector();
 
-    	ft_vector(const ft_vector&) = delete;
-    	ft_vector& operator=(const ft_vector&) = delete;
+        ft_vector(const ft_vector&) = delete;
+        ft_vector& operator=(const ft_vector&) = delete;
 
-    	ft_vector(ft_vector&& other) noexcept;
-    	ft_vector& operator=(ft_vector&& other) noexcept;
+        ft_vector(ft_vector&& other) noexcept;
+        ft_vector& operator=(ft_vector&& other) noexcept;
 
-    	size_t size() const;
-    	size_t capacity() const;
+        size_t size() const;
+        size_t capacity() const;
         int get_error() const;
         const char* get_error_str() const;
 
-    	void push_back(const ElementType &value);
-    	void push_back(ElementType &&value);
-    	void pop_back();
+        void push_back(const ElementType &value);
+        void push_back(ElementType &&value);
+        void pop_back();
 
-    	ElementType& operator[](size_t index);
-    	const ElementType& operator[](size_t index) const;
+        ElementType& operator[](size_t index);
+        const ElementType& operator[](size_t index) const;
 
-    	void clear();
-    	void reserve(size_t new_capacity);
-    	void resize(size_t new_size, const ElementType& value = ElementType());
+        void clear();
+        void reserve(size_t new_capacity);
+        void resize(size_t new_size, const ElementType& value = ElementType());
 
-    	iterator insert(iterator pos, const ElementType& value);
-    	iterator erase(iterator pos);
-    	iterator begin();
-    	const_iterator begin() const;
-    	iterator end();
-    	const_iterator end() const;
+        iterator insert(iterator pos, const ElementType& value);
+        iterator erase(iterator pos);
+        iterator begin();
+        const_iterator begin() const;
+        iterator end();
+        const_iterator end() const;
 };
 
 template <typename ElementType>
@@ -71,7 +71,7 @@ ft_vector<ElementType>::ft_vector(size_t initial_capacity)
     if (initial_capacity > 0)
     {
         this->_data = static_cast<ElementType*>
-			(cma_malloc(initial_capacity * sizeof(ElementType)));
+            (cma_malloc(initial_capacity * sizeof(ElementType)));
         if (this->_data == ft_nullptr)
             this->setError(VECTOR_ALLOC_FAIL);
         else

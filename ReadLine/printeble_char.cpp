@@ -8,7 +8,7 @@
 int rl_handle_printable_char(readline_state_t *state, char c, const char *prompt)
 {
     if (state->pos >= state->bufsize - 1)
-	{
+    {
         int new_bufsize = state->bufsize * 2;
         state->buffer = rl_resize_buffer(state->buffer, state->bufsize, new_bufsize);
         if (!state->buffer)

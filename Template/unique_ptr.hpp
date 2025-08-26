@@ -51,7 +51,7 @@ class ft_uniqueptr
         const ManagedType* get() const;
         ManagedType* release_ptr();
         void reset(ManagedType* pointer = ft_nullptr, size_t size = 1,
-				bool arrayType = false);
+                bool arrayType = false);
         bool hasError() const;
         int get_error() const;
         const char* get_error_str() const;
@@ -68,20 +68,20 @@ ft_uniqueptr<ManagedType>::ft_uniqueptr(Args&&... args)
       _isArrayType(false),
       _errorCode(ER_SUCCESS)
 {
-	if (!_managedPointer)
+    if (!_managedPointer)
         this->set_error(UNIQUE_PTR_ALLOCATION_FAILED);
-	return ;
+    return ;
 }
 
 template <typename ManagedType>
 ft_uniqueptr<ManagedType>::ft_uniqueptr(ManagedType* pointer, bool isArray,
-		size_t arraySize)
+        size_t arraySize)
     : _managedPointer(pointer),
       _arraySize(arraySize),
       _isArrayType(isArray),
       _errorCode(ER_SUCCESS)
 {
-	return ;
+    return ;
 }
 
 template <typename ManagedType>
@@ -91,7 +91,7 @@ ft_uniqueptr<ManagedType>::ft_uniqueptr()
       _isArrayType(false),
       _errorCode(ER_SUCCESS)
 {
-	return ;
+    return ;
 }
 
 template <typename ManagedType>
@@ -101,9 +101,9 @@ ft_uniqueptr<ManagedType>::ft_uniqueptr(size_t size)
       _isArrayType(true),
       _errorCode(ER_SUCCESS)
 {
-	if (size > 0 && !_managedPointer)
+    if (size > 0 && !_managedPointer)
         this->set_error(UNIQUE_PTR_ALLOCATION_FAILED);
-	return ;
+    return ;
 }
 
 template <typename ManagedType>
@@ -129,7 +129,7 @@ ft_uniqueptr<ManagedType>::ft_uniqueptr(ft_uniqueptr&& other) noexcept
 
 template <typename ManagedType>
 ft_uniqueptr<ManagedType>& ft_uniqueptr<ManagedType>::operator=(ft_uniqueptr&& other)
-	noexcept
+    noexcept
 {
     if (this != &other)
     {
@@ -153,7 +153,7 @@ template <typename ManagedType>
 ft_uniqueptr<ManagedType>::~ft_uniqueptr()
 {
     release();
-	return ;
+    return ;
 }
 
 template <typename ManagedType>
@@ -327,7 +327,7 @@ const ManagedType& ft_uniqueptr<ManagedType>::operator[](size_t index) const
     if (!_isArrayType)
     {
         const_cast<ft_uniqueptr<ManagedType>*>(this)->set_error
-			(UNIQUE_PTR_INVALID_OPERATION);
+            (UNIQUE_PTR_INVALID_OPERATION);
         this->_mutex.unlock(THREAD_ID);
         if constexpr (!std::is_abstract_v<ManagedType>)
             return (defaultInstance);
@@ -352,7 +352,7 @@ const ManagedType& ft_uniqueptr<ManagedType>::operator[](size_t index) const
     if (index >= _arraySize)
     {
         const_cast<ft_uniqueptr<ManagedType>*>(this)->set_error
-			(UNIQUE_PTR_OUT_OF_BOUNDS);
+            (UNIQUE_PTR_OUT_OF_BOUNDS);
         this->_mutex.unlock(THREAD_ID);
         if constexpr (!std::is_abstract_v<ManagedType>)
             return (defaultInstance);

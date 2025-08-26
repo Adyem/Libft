@@ -19,7 +19,7 @@ long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
     int digit_value;
 
     while (*current_character == ' ' || (*current_character >= '\t'
-				&& *current_character <= '\r'))
+                && *current_character <= '\r'))
         ++current_character;
     if (*current_character == '+' || *current_character == '-')
     {
@@ -46,7 +46,7 @@ long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
              && (current_character[1] == 'x' || current_character[1] == 'X'))
         current_character += 2;
     while ((digit_value = ft_digit_value(*current_character)) >= 0
-			&& digit_value < numeric_base)
+            && digit_value < numeric_base)
     {
         accumulated_value = accumulated_value * static_cast<unsigned long>(numeric_base)
                           + static_cast<unsigned long>(digit_value);

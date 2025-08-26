@@ -25,33 +25,33 @@ enum class SocketType
 
 class SocketConfig
 {
-	private:
-		int _error;
+    private:
+        int _error;
 
-	public:
-    	SocketType type;
-    	ft_string ip;
-    	uint16_t port;
-    	int backlog;
-    	int protocol;
-    	int address_family;
-    	bool reuse_address;
-    	bool non_blocking;
-    	int recv_timeout;
-    	int send_timeout;
-    	ft_string multicast_group;
-    	ft_string multicast_interface;
+    public:
+        SocketType type;
+        ft_string ip;
+        uint16_t port;
+        int backlog;
+        int protocol;
+        int address_family;
+        bool reuse_address;
+        bool non_blocking;
+        int recv_timeout;
+        int send_timeout;
+        ft_string multicast_group;
+        ft_string multicast_interface;
 
-    	SocketConfig();
-    	~SocketConfig();
+        SocketConfig();
+        ~SocketConfig();
 
-    	SocketConfig(const SocketConfig& other) noexcept;
-    	SocketConfig(SocketConfig&& other) noexcept;
-    	SocketConfig& operator=(const SocketConfig& other) noexcept;
-    	SocketConfig& operator=(SocketConfig&& other) noexcept;
+        SocketConfig(const SocketConfig& other) noexcept;
+        SocketConfig(SocketConfig&& other) noexcept;
+        SocketConfig& operator=(const SocketConfig& other) noexcept;
+        SocketConfig& operator=(SocketConfig&& other) noexcept;
 
-		int get_error();
-		const char *get_error_str();
+        int get_error();
+        const char *get_error_str();
 };
 
 #endif

@@ -12,11 +12,11 @@ static void be_encrypt(char *data, size_t data_len, const char *key)
 {
     uint32_t hash = 5381;
     size_t key_len = ft_strlen(key);
-	for (size_t i = 0; i < key_len; ++i)
-		hash = ((hash << 5) + hash) + static_cast<uint8_t>(key[i]);
-	for (size_t i = 0; i < data_len; ++i)
+    for (size_t i = 0; i < key_len; ++i)
+        hash = ((hash << 5) + hash) + static_cast<uint8_t>(key[i]);
+    for (size_t i = 0; i < data_len; ++i)
         data[i] ^= static_cast<char>((hash >> (i % 8)) & 0xFF);
-	return ;
+    return ;
 }
 
 int be_saveGame(const char *filename, const char *data, const char *key)

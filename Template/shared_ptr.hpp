@@ -43,7 +43,7 @@ class ft_sharedptr
         ft_sharedptr<ManagedType>& operator=(const ft_sharedptr<ManagedType>& other);
 
         template <typename Other, typename = std::enable_if_t<std::is_convertible_v<Other*,
-				 ManagedType*>>>
+                 ManagedType*>>>
         ft_sharedptr(const ft_sharedptr<Other>& other)
             : _managedPointer(other._managedPointer),
               _referenceCount(other._referenceCount),
@@ -56,7 +56,7 @@ class ft_sharedptr
         }
 
         template <typename Other, typename = std::enable_if_t<std::is_convertible_v<Other*,
-				 ManagedType*>>>
+                 ManagedType*>>>
         ft_sharedptr(ft_sharedptr<Other>&& other) noexcept
             : _managedPointer(other._managedPointer),
               _referenceCount(other._referenceCount),
@@ -340,7 +340,7 @@ ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index)
         else
         {
             this->set_error(SHARED_PTR_ALLOCATION_FAILED);
-			return (ft_nullptr);
+            return (ft_nullptr);
         }
     }
     if (!_managedPointer)
@@ -354,7 +354,7 @@ ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index)
         else
         {
             this->set_error(SHARED_PTR_ALLOCATION_FAILED);
-			return (ft_nullptr);
+            return (ft_nullptr);
         }
     }
     if (index >= _arraySize)
@@ -368,7 +368,7 @@ ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index)
         else
         {
             this->set_error(SHARED_PTR_ALLOCATION_FAILED);
-			return (ft_nullptr);
+            return (ft_nullptr);
         }
     }
     return (_managedPointer[index]);
@@ -388,7 +388,7 @@ const ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index) const
         else
         {
             this->set_error(SHARED_PTR_ALLOCATION_FAILED);
-			return (ft_nullptr);
+            return (ft_nullptr);
         }
     }
     if (!_managedPointer)
@@ -402,7 +402,7 @@ const ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index) const
         else
         {
             this->set_error(SHARED_PTR_ALLOCATION_FAILED);
-			return (ft_nullptr);
+            return (ft_nullptr);
         }
     }
     if (index >= _arraySize)
@@ -416,7 +416,7 @@ const ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index) const
         else
         {
             this->set_error(SHARED_PTR_ALLOCATION_FAILED);
-			return (ft_nullptr);
+            return (ft_nullptr);
         }
     }
     return (_managedPointer[index]);

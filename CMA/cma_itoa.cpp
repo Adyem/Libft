@@ -1,19 +1,19 @@
 #include "CMA.hpp"
 #include "../CPP_class/nullptr.hpp"
 
-static int	itoa_len(int n)
+static int    itoa_len(int n)
 {
-	int		i;
+    int        i;
 
-	i = 0;
-	if (n == 0)
-		return (1);
-	while (n)
-	{
-		n /= 10;
-		i++;
-	}
-	return (i);
+    i = 0;
+    if (n == 0)
+        return (1);
+    while (n)
+    {
+        n /= 10;
+        i++;
+    }
+    return (i);
 }
 
 static char *fill_digits(char *c, unsigned int num, int start_index)
@@ -27,41 +27,41 @@ static char *fill_digits(char *c, unsigned int num, int start_index)
     return (c);
 }
 
-static char	*convert_int(int n, int is_negative)
+static char    *convert_int(int n, int is_negative)
 {
-	int				i;
-	char			*c;
-	unsigned int	num;
+    int                i;
+    char            *c;
+    unsigned int    num;
 
-	i = itoa_len(n);
-	c = static_cast<char *>(cma_malloc(i + 1 + is_negative));
-	if (!c)
-		return (ft_nullptr);
-	if (n < 0)
-		num = -n;
-	else
-		num = n;
-	c[i + is_negative] = '\0';
-	if (is_negative == 0)
-		c = fill_digits(c, num, i - 1);
-	else
-		c = fill_digits(c, num, i);
-	if (is_negative == 1)
-		c[0] = '-';
-	return (c);
+    i = itoa_len(n);
+    c = static_cast<char *>(cma_malloc(i + 1 + is_negative));
+    if (!c)
+        return (ft_nullptr);
+    if (n < 0)
+        num = -n;
+    else
+        num = n;
+    c[i + is_negative] = '\0';
+    if (is_negative == 0)
+        c = fill_digits(c, num, i - 1);
+    else
+        c = fill_digits(c, num, i);
+    if (is_negative == 1)
+        c[0] = '-';
+    return (c);
 }
 
-char	*cma_itoa(int n)
+char    *cma_itoa(int n)
 {
-	int	is_negative;
+    int    is_negative;
 
-	if (n > 0)
-		is_negative = 0;
-	else if (n == -2147483648)
-		return (cma_strdup("-2147483648"));
-	else if (n == 0)
-		return (cma_strdup("0"));
-	else
-		is_negative = 1;
-	return (convert_int(n, is_negative));
+    if (n > 0)
+        is_negative = 0;
+    else if (n == -2147483648)
+        return (cma_strdup("-2147483648"));
+    else if (n == 0)
+        return (cma_strdup("0"));
+    else
+        is_negative = 1;
+    return (convert_int(n, is_negative));
 }
