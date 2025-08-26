@@ -1,0 +1,20 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-g",
+      "-O0",
+      "-std=c++17",
+      "-c",
+      "-o",
+      "objs/api_wrapper.o",
+      "api_wrapper.cpp"
+    ],
+    "directory": "/workspace/Libft/API",
+    "file": "/workspace/Libft/API/api_wrapper.cpp",
+    "output": "/workspace/Libft/API/objs/api_wrapper.o"
+  }
+]
