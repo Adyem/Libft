@@ -26,21 +26,21 @@ int rl_clear_line(const char *prompt, const char *buffer)
     int total_length = ft_strlen(prompt) + ft_strlen(buffer);
     pf_printf("\r");
     int term_width = rl_get_terminal_width();
-	if (term_width == 0)
-		term_width = 1;
-	if (term_width == -1)
-		return (-1);
+    if (term_width == 0)
+        term_width = 1;
+    if (term_width == -1)
+        return (-1);
     int line_count = (total_length / term_width) + 1;
-	int index = 0;
+    int index = 0;
     while (index < line_count)
     {
         pf_printf("\033[2K");
         if (index < line_count - 1)
             pf_printf("\033[A");
-		index++;
+        index++;
     }
     pf_printf("\r");
-	return (0);
+    return (0);
 }
 
 char rl_read_key()
@@ -63,5 +63,5 @@ void rl_update_history(const char *buffer)
         ft_memmove(&history[0], &history[1], sizeof(char *) * (MAX_HISTORY - 1));
         history[MAX_HISTORY - 1] = cma_strdup(buffer);
     }
-	return ;
+    return ;
 }

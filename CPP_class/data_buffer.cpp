@@ -3,7 +3,7 @@
 
 DataBuffer::DataBuffer() : _readPos(0), _ok(true)
 {
-	return ;
+    return ;
 }
 
 void DataBuffer::clear() noexcept
@@ -11,12 +11,12 @@ void DataBuffer::clear() noexcept
     this->_buffer.clear();
     this->_readPos = 0;
     this->_ok = true;
-	return ;
+    return ;
 }
 
 size_t DataBuffer::size() const noexcept
 {
-	return (this->_buffer.size());
+    return (this->_buffer.size());
 }
 
 const std::vector<uint8_t>& DataBuffer::data() const noexcept
@@ -51,7 +51,7 @@ DataBuffer& DataBuffer::operator<<(size_t len)
 DataBuffer& DataBuffer::operator>>(size_t& len)
 {
     if (this->_readPos + sizeof(size_t) > this->_buffer.size())
-	{
+    {
         this->_ok = false;
         return (*this);
     }

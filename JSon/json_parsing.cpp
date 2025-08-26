@@ -35,7 +35,7 @@ json_group* json_create_json_group(const char *name)
     if (!group->name)
     {
         delete group;
-		ft_errno = JSON_MALLOC_FAIL;
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     group->items = ft_nullptr;
@@ -72,10 +72,10 @@ int json_write_to_file(const char *filename, json_group *groups)
         {
             if (item_ptr->next)
                 pf_printf_fd(file_descriptor,
-						"    \"%s\": \"%s\",\n", item_ptr->key, item_ptr->value);
+                        "    \"%s\": \"%s\",\n", item_ptr->key, item_ptr->value);
             else
                 pf_printf_fd(file_descriptor,
-						"    \"%s\": \"%s\"\n", item_ptr->key, item_ptr->value);
+                        "    \"%s\": \"%s\"\n", item_ptr->key, item_ptr->value);
             item_ptr = item_ptr->next;
         }
         if (group_ptr->next)

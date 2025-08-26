@@ -100,13 +100,13 @@ public:
 template <typename Key, typename MappedType>
 ft_pair<Key, MappedType>::ft_pair() : first(), second()
 {
-	return ;
+    return ;
 }
 
 template <typename Key, typename MappedType>
 ft_pair<Key, MappedType>::ft_pair(const Key& k, const MappedType& m) : first(k), second(m)
 {
-	return ;
+    return ;
 }
 
 template <typename Key, typename MappedType>
@@ -114,15 +114,15 @@ ft_unord_map<Key, MappedType>::iterator::iterator(ft_pair<Key, MappedType>* data
     : _data(data), _occupied(occ), _index(idx), _capacity(cap)
 {
     skipUnoccupied();
-	return ;
+    return ;
 }
 
 template <typename Key, typename MappedType>
 void ft_unord_map<Key, MappedType>::iterator::skipUnoccupied()
 {
-	while (_index < _capacity && !_occupied[_index])
+    while (_index < _capacity && !_occupied[_index])
         ++_index;
-	return ;
+    return ;
 }
 
 template <typename Key, typename MappedType>
@@ -162,15 +162,15 @@ ft_unord_map<Key, MappedType>::const_iterator::const_iterator(const ft_pair<Key,
     : _data(data), _occupied(occ), _index(idx), _capacity(cap)
 {
     skipUnoccupied();
-	return ;
+    return ;
 }
 
 template <typename Key, typename MappedType>
 void ft_unord_map<Key, MappedType>::const_iterator::skipUnoccupied()
 {
-	while (_index < _capacity && !_occupied[_index])
+    while (_index < _capacity && !_occupied[_index])
         ++_index;
-	return ;
+    return ;
 }
 
 template <typename Key, typename MappedType>
@@ -449,7 +449,7 @@ void ft_unord_map<Key, MappedType>::setError(int error) const
 {
     ft_errno = error;
     _error = error;
-	return ;
+    return ;
 }
 
 template <typename Key, typename MappedType>

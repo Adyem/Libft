@@ -36,10 +36,10 @@ static int store_handle(HANDLE h)
 static HANDLE retrieve_handle(int fd)
 {
     if (fd < 0 || fd >= 1024)
-	{
-		g_file_mutex.unlock(GetCurrentThreadId());
-		return (INVALID_HANDLE_VALUE);
-	}
+    {
+        g_file_mutex.unlock(GetCurrentThreadId());
+        return (INVALID_HANDLE_VALUE);
+    }
     return (g_handles[fd]);
 }
 
@@ -58,19 +58,19 @@ static void clear_handle(int fd)
 
 int ft_open(const char *pathname, int flags, int mode)
 {
-	g_file_mutex.lock(GetCurrentThreadId());
+    g_file_mutex.lock(GetCurrentThreadId());
     DWORD desiredAccess       = 0;
     DWORD creationDisposition = 0;
     DWORD flagsAndAttributes  = FILE_ATTRIBUTE_NORMAL;
     (void)mode;
     if (flags & O_DIRECTORY)
-	{
+    {
         desiredAccess       = FILE_LIST_DIRECTORY;
         creationDisposition = OPEN_EXISTING;
         flagsAndAttributes  = FILE_FLAG_BACKUP_SEMANTICS;
     }
     else 
-	{
+    {
         if ((flags & O_RDWR) == O_RDWR)
             desiredAccess = GENERIC_READ | GENERIC_WRITE;
         else if (flags & O_WRONLY)
@@ -93,46 +93,46 @@ int ft_open(const char *pathname, int flags, int mode)
     HANDLE hFile = CreateFileA(pathname, desiredAccess, FILE_SHARE_READ | FILE_SHARE_WRITE,
         ft_nullptr, creationDisposition, flagsAndAttributes, ft_nullptr);
     if (hFile == INVALID_HANDLE_VALUE)
-	{
-		g_file_mutex.unlock(GetCurrentThreadId());
-        return (-1);
-	}
-    int fd = store_handle(hFile);
-    if (fd < 0)
-	{
-        CloseHandle(hFile);
-		g_file_mutex.unlock(GetCurrentThreadId());
+    {
+        g_file_mutex.unlock(GetCurrentThreadId());
         return (-1);
     }
-	g_file_mutex.unlock(GetCurrentThreadId());
+    int fd = store_handle(hFile);
+    if (fd < 0)
+    {
+        CloseHandle(hFile);
+        g_file_mutex.unlock(GetCurrentThreadId());
+        return (-1);
+    }
+    g_file_mutex.unlock(GetCurrentThreadId());
     return (fd);
 }
 
 ssize_t ft_read(int fd, void *buf, unsigned int count)
 {
-	g_file_mutex.lock(GetCurrentThreadId());
+    g_file_mutex.lock(GetCurrentThreadId());
     HANDLE hFile = retrieve_handle(fd);
     if (hFile == INVALID_HANDLE_VALUE)
-	{
-		g_file_mutex.unlock(GetCurrentThreadId());
+    {
+        g_file_mutex.unlock(GetCurrentThreadId());
         return (-1);
-	}
+    }
     BY_HANDLE_FILE_INFORMATION info;
     if (GetFileInformationByHandle(hFile, &info))
-	{
+    {
         if (info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		{
-			g_file_mutex.unlock(GetCurrentThreadId());
+        {
+            g_file_mutex.unlock(GetCurrentThreadId());
             return (-1);
-		}
+        }
     }
     DWORD bytesRead = 0;
     BOOL ok = ReadFile(hFile, buf, count, &bytesRead, NULL);
     if (!ok)
-	{
-		g_file_mutex.unlock(GetCurrentThreadId());
+    {
+        g_file_mutex.unlock(GetCurrentThreadId());
         return (-1);
-	}
+    }
     return (bytesRead);
 }
 
@@ -154,26 +154,26 @@ int ft_close(int fd)
 {
     HANDLE hFile = retrieve_handle(fd);
     if (hFile == INVALID_HANDLE_VALUE)
-	{
-		g_file_mutex.unlock(GetCurrentThreadId());
-		return (-1);
-	}
+    {
+        g_file_mutex.unlock(GetCurrentThreadId());
+        return (-1);
+    }
     if (!CloseHandle(hFile))
-	{
-		g_file_mutex.unlock(GetCurrentThreadId());
-		return (-1);
-	}
+    {
+        g_file_mutex.unlock(GetCurrentThreadId());
+        return (-1);
+    }
     clear_handle(fd);
-	g_file_mutex.unlock(GetCurrentThreadId());
+    g_file_mutex.unlock(GetCurrentThreadId());
     return (0);
 }
 
 void ft_initialize_standard_file_descriptors()
 {
-	static int initialized = 0;
+    static int initialized = 0;
 
-	if (initialized == 1)
-		return ;
+    if (initialized == 1)
+        return ;
     HANDLE hStdInput = GetStdHandle(STD_INPUT_HANDLE);
     HANDLE hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
     HANDLE hStdError = GetStdHandle(STD_ERROR_HANDLE);
@@ -203,8 +203,8 @@ void ft_initialize_standard_file_descriptors()
     _setmode(0, _O_BINARY);
     _setmode(1, _O_BINARY);
     _setmode(2, _O_BINARY);
-	initialized = 1;
-	return ;
+    initialized = 1;
+    return ;
 }
 
 #endif

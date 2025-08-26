@@ -5,25 +5,25 @@
 
 static void rl_open_log_file(readline_state_t *state)
 {
-	static int file_reset;
+    static int file_reset;
 
-	if (file_reset == 0 && DEBUG == 1)
-	{
-		state->error_file.open("data/data--log", O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-		file_reset = 1;
-	}
-	else if (DEBUG == 1)
-    	state->error_file.open("data/data--log", O_WRONLY | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR);
-	if (state->error_file != -1)
-		state->error_file.printf("printing to log file\n");
-	return ;
+    if (file_reset == 0 && DEBUG == 1)
+    {
+        state->error_file.open("data/data--log", O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+        file_reset = 1;
+    }
+    else if (DEBUG == 1)
+        state->error_file.open("data/data--log", O_WRONLY | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR);
+    if (state->error_file != -1)
+        state->error_file.printf("printing to log file\n");
+    return ;
 }
 
 int rl_initialize_state(readline_state_t *state)
 {
-	if (rl_enable_raw_mode() == -1)
-		return (1);
-	state->bufsize = INITIAL_BUFFER_SIZE;
+    if (rl_enable_raw_mode() == -1)
+        return (1);
+    state->bufsize = INITIAL_BUFFER_SIZE;
     state->buffer = static_cast<char *>(cma_calloc(state->bufsize, sizeof(char)));
     if (!state->buffer)
     {
@@ -37,6 +37,6 @@ int rl_initialize_state(readline_state_t *state)
     state->current_match_count = 0;
     state->current_match_index = 0;
     state->word_start = 0;
-	rl_open_log_file(state);
-	return (0);
+    rl_open_log_file(state);
+    return (0);
 }

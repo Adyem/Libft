@@ -55,7 +55,7 @@ ft_string::ft_string(ft_string&& other) noexcept
     other._length = 0;
     other._capacity = 0;
     other._errorCode = 0;
-	return ;
+    return ;
 }
 
 ft_string& ft_string::operator=(const ft_string& other) noexcept
@@ -134,7 +134,7 @@ void *ft_string::operator new(size_t size) noexcept
 void ft_string::operator delete(void* ptr) noexcept
 {
     cma_free(ptr);
-	return ;
+    return ;
 }
 
 void *ft_string::operator new[](size_t size) noexcept
@@ -148,7 +148,7 @@ void *ft_string::operator new[](size_t size) noexcept
 void ft_string::operator delete[](void* ptr) noexcept
 {
     cma_free(ptr);
-	return ;
+    return ;
 }
 
 ft_string::ft_string(int errorCode) noexcept
@@ -157,5 +157,5 @@ ft_string::ft_string(int errorCode) noexcept
     , _capacity(0)
     , _errorCode(errorCode)
 {
-	return ;
+    return ;
 }

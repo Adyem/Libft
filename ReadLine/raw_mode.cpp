@@ -13,7 +13,7 @@ static DWORD orig_mode;
 #endif
 
 #ifndef _WIN32
-termios	orig_termios;
+termios    orig_termios;
 #endif
 
 static inline void disable_raw_mode_platform()

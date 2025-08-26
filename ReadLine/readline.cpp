@@ -9,33 +9,33 @@
 #include "readline_internal.hpp"
 #include "readline.hpp"
 
-char	*history[MAX_HISTORY];
-int		history_count = 0;
-char	*suggestions[MAX_SUGGESTIONS];
-int		suggestion_count = 0;
+char    *history[MAX_HISTORY];
+int        history_count = 0;
+char    *suggestions[MAX_SUGGESTIONS];
+int        suggestion_count = 0;
 
 static void rl_cleanup_state(readline_state_t *state)
 {
     if (state->buffer)
-	{
+    {
         cma_free(state->buffer);
         state->buffer = NULL;
     }
-	return ;
+    return ;
 }
 
 static char *rl_error(readline_state_t *state)
 {
-	rl_cleanup_state(state);
-	rl_disable_raw_mode();
-	return (ft_nullptr);
+    rl_cleanup_state(state);
+    rl_disable_raw_mode();
+    return (ft_nullptr);
 }
 
 char *rl_readline(const char *prompt)
 {
-    readline_state_t 	state;
+    readline_state_t     state;
 
-	if (rl_initialize_state(&state))
+    if (rl_initialize_state(&state))
         return (ft_nullptr);
     pf_printf("%s", prompt);
     fflush(stdout);
@@ -59,24 +59,24 @@ char *rl_readline(const char *prompt)
         else if (character == 27)
         {
             if (rl_handle_escape_sequence(&state, prompt) == -1)
-				rl_error(&state);
+                rl_error(&state);
         }
         else if (character == '\t')
-		{
+        {
             if (rl_handle_tab_completion(&state, prompt) == -1)
-				rl_error(&state);
-		}
+                rl_error(&state);
+        }
         else if (character >= 32 && character <= 126)
-		{
-			if (rl_handle_printable_char(&state, character, prompt) == -1)
-            	rl_error(&state);
-		}
+        {
+            if (rl_handle_printable_char(&state, character, prompt) == -1)
+                rl_error(&state);
+        }
     }
     int line_length = ft_strlen(state.buffer);
-	state.buffer[line_length] = '\0';
+    state.buffer[line_length] = '\0';
     rl_update_history(state.buffer);
     rl_disable_raw_mode();
-	if (DEBUG == 1)
-		pf_printf("returning %s\n", state.buffer);
+    if (DEBUG == 1)
+        pf_printf("returning %s\n", state.buffer);
     return (state.buffer);
 }
