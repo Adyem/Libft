@@ -308,9 +308,15 @@ const char *get_error_str() const;
 * **API** – simple HTTP client that sends requests and parses JSON responses
   via `api_request_json`. Custom headers can be supplied via an optional
   argument, and the HTTP status code can be retrieved through an optional
-  output parameter. The module also provides `api_promise`, a
-  `ft_promise<json_group*>` derivative with a `request` helper that fulfills
-  the promise with the response JSON.
+  output parameter. Both `api_request_json` and `api_request_string` accept an
+  optional timeout (in milliseconds) that controls send and receive timeouts,
+  defaulting to 1 minute (60,000 ms). When the raw response body is needed,
+  `api_request_string` performs the same request and returns the text content.
+  The module also provides `api_promise`, a `ft_promise<json_group*>`
+  derivative with a `request` helper that fulfills the promise with the
+  response JSON, and `api_string_promise`, which wraps `api_request_string` and
+  fulfills the promise with the raw body. Both promise helpers support the same
+  timeout parameter.
 * **HTML** – minimal HTML node creation and searching utilities.
 * **Game** – basic game related classes (`ft_character`, `ft_item`, `ft_inventory`, `ft_upgrade`, `ft_world`, `ft_event`, `ft_map3d`, `ft_quest`, `ft_reputation`, `ft_buff`, `ft_debuff`). `ft_buff` and `ft_debuff` each store four independent modifiers and expose getters, setters, and adders (including for duration). `ft_event`, `ft_upgrade`, `ft_item`, and `ft_reputation` also expose adders, and now each of these classes provides matching subtract helpers. `ft_inventory` manages stacked items and can query item counts with `has_item` and `count_item`. `ft_character` keeps track of coins and a `valor` attribute with helpers to add or subtract these values. The character's current level can be retrieved with `get_level()` which relies on an internal experience table.
 `ft_quest` objects can report completion with `is_complete()` and progress phases via `advance_phase()`.
