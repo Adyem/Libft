@@ -30,9 +30,9 @@ T* construct_default_at(T* destination)
 template <typename T>
 void destroy_at(T* object)
 {
-	if constexpr (!std::is_trivially_destructible_v<T>)
+    if constexpr (!std::is_trivially_destructible_v<T>)
         object->~T();
-	return ;
+    return ;
 }
 
 #endif

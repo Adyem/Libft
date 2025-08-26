@@ -35,22 +35,22 @@ class ft_character
         int _y;
         int _z;
 
-		ft_experience_table		_experience_table;
-        ft_resistance 			_fire_res;
-        ft_resistance 			_frost_res;
-        ft_resistance 			_lightning_res;
-        ft_resistance 			_air_res;
-        ft_resistance 			_earth_res;
-        ft_resistance 			_chaos_res;
-        ft_resistance 			_physical_res;
-        ft_map<int, ft_buff>  	_buffs;
-        ft_map<int, ft_debuff>	 _debuffs;
+        ft_experience_table        _experience_table;
+        ft_resistance             _fire_res;
+        ft_resistance             _frost_res;
+        ft_resistance             _lightning_res;
+        ft_resistance             _air_res;
+        ft_resistance             _earth_res;
+        ft_resistance             _chaos_res;
+        ft_resistance             _physical_res;
+        ft_map<int, ft_buff>      _buffs;
+        ft_map<int, ft_debuff>     _debuffs;
         ft_map<int, ft_upgrade> _upgrades;
-        ft_map<int, ft_quest> 	_quests;
+        ft_map<int, ft_quest>     _quests;
         ft_map<int, ft_achievement> _achievements;
-        ft_reputation         	_reputation;
-		ft_inventory			_inventory;
-        mutable int           	_error;
+        ft_reputation             _reputation;
+        ft_inventory            _inventory;
+        mutable int               _error;
 
         void    set_error(int err) const noexcept;
 

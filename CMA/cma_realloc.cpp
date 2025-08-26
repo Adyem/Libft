@@ -38,37 +38,37 @@ void *cma_realloc(void* ptr, size_t new_size)
     {
         return std::realloc(ptr, new_size);
     }
-	g_malloc_mutex.lock(THREAD_ID);
+    g_malloc_mutex.lock(THREAD_ID);
     if (!ptr)
         return (cma_malloc(new_size));
     if (new_size == 0)
     {
-		g_malloc_mutex.unlock(THREAD_ID);
+        g_malloc_mutex.unlock(THREAD_ID);
         cma_free(ptr);
         return (ft_nullptr);
     }
-	new_size = align16(new_size);
-	int error = reallocate_block(ptr, new_size);
-	if (error == 0)
-		return (ptr);
+    new_size = align16(new_size);
+    int error = reallocate_block(ptr, new_size);
+    if (error == 0)
+        return (ptr);
     void* new_ptr = cma_malloc(new_size);
     if (!new_ptr)
     {
-		g_malloc_mutex.unlock(THREAD_ID);
+        g_malloc_mutex.unlock(THREAD_ID);
         cma_free(ptr);
         return (ft_nullptr);
     }
     Block* old_block = reinterpret_cast<Block*>((static_cast<char*> (ptr)
-				- sizeof(Block)));
+                - sizeof(Block)));
     if (old_block->magic != MAGIC_NUMBER)
-	{
-		g_malloc_mutex.unlock(THREAD_ID);
-		cma_free(ptr);
+    {
+        g_malloc_mutex.unlock(THREAD_ID);
+        cma_free(ptr);
         return (ft_nullptr);
-	}
+    }
     size_t copy_size = old_block->size < new_size ? old_block->size : new_size;
     ft_memcpy(new_ptr, ptr, copy_size);
     cma_free(ptr);
-	g_malloc_mutex.unlock(THREAD_ID);
+    g_malloc_mutex.unlock(THREAD_ID);
     return (new_ptr);
 }

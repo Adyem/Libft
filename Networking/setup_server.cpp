@@ -73,7 +73,7 @@ int ft_socket::create_socket(const SocketConfig &config)
 {
     this->_socket_fd = nw_socket(config.address_family, SOCK_STREAM, config.protocol);
     if (this->_socket_fd < 0)
-	{
+    {
         handle_error(errno + ERRNO_OFFSET);
         return (this->_error);
     }
@@ -139,12 +139,12 @@ int ft_socket::configure_address(const SocketConfig &config)
     ft_memset(&this->_address, 0, sizeof(this->_address));
 
     if (config.address_family == AF_INET)
-	{
+    {
         struct sockaddr_in *addr_in = reinterpret_cast<struct sockaddr_in*>(&this->_address);
         addr_in->sin_family = AF_INET;
         addr_in->sin_port = htons(config.port);
         if (inet_pton(AF_INET, config.ip, &addr_in->sin_addr) <= 0)
-		{
+        {
             handle_error(SOCKET_INVALID_CONFIGURATION);
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
@@ -152,12 +152,12 @@ int ft_socket::configure_address(const SocketConfig &config)
         }
     }
     else if (config.address_family == AF_INET6)
-	{
+    {
         struct sockaddr_in6 *addr_in6 = reinterpret_cast<struct sockaddr_in6*>(&this->_address);
         addr_in6->sin6_family = AF_INET6;
         addr_in6->sin6_port = htons(config.port);
         if (inet_pton(AF_INET6, config.ip, &addr_in6->sin6_addr) <= 0)
-		{
+        {
             handle_error(SOCKET_INVALID_CONFIGURATION);
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
@@ -165,7 +165,7 @@ int ft_socket::configure_address(const SocketConfig &config)
         }
     }
     else
-	{
+    {
         handle_error(SOCKET_INVALID_CONFIGURATION);
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
@@ -190,7 +190,7 @@ int ft_socket::bind_socket(const SocketConfig &config)
         return (this->_error);
     }
     if (nw_bind(this->_socket_fd, reinterpret_cast<const struct sockaddr*>(&this->_address),
-				addr_len) < 0)
+                addr_len) < 0)
     {
         handle_error(errno + ERRNO_OFFSET);
         FT_CLOSE_SOCKET(this->_socket_fd);
@@ -204,7 +204,7 @@ int ft_socket::bind_socket(const SocketConfig &config)
 int ft_socket::listen_socket(const SocketConfig &config)
 {
     if (nw_listen(this->_socket_fd, config.backlog) < 0)
-	{
+    {
         handle_error(errno + ERRNO_OFFSET);
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
@@ -217,7 +217,7 @@ void ft_socket::handle_error(int error_code)
 {
     ft_errno = error_code;
     this->_error = ft_errno;
-	return ;
+    return ;
 }
 
 int ft_socket::setup_server(const SocketConfig &config)

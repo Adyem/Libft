@@ -1,20 +1,20 @@
 #include "libft.hpp"
 #include <unistd.h>
 
-int	ft_memcmp(const void *pointer1, const void *pointer2, size_t size)
+int    ft_memcmp(const void *pointer1, const void *pointer2, size_t size)
 {
-	const unsigned char	*string1;
-	const unsigned char	*string2;
-	size_t				i;
+    const unsigned char    *string1;
+    const unsigned char    *string2;
+    size_t                i;
 
-	i = 0;
-	string1 = static_cast<const unsigned char *>(pointer1);
-	string2 = static_cast<const unsigned char *>(pointer2);
-	while (i < size)
-	{
-		if (string1[i] != string2[i])
-			return (string1[i] - string2[i]);
-		i++;
-	}
-	return (0);
+    i = 0;
+    string1 = static_cast<const unsigned char *>(pointer1);
+    string2 = static_cast<const unsigned char *>(pointer2);
+    while (i < size)
+    {
+        if (string1[i] != string2[i])
+            return (string1[i] - string2[i]);
+        i++;
+    }
+    return (0);
 }

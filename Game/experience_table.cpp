@@ -182,7 +182,7 @@ int ft_experience_table::check_for_error() const noexcept
         if (this->_levels[i] <= this->_levels[i - 1])
         {
             const_cast<ft_experience_table*>(this)->set_error
-				(CHARACTER_LEVEL_TABLE_INVALID);
+                (CHARACTER_LEVEL_TABLE_INVALID);
             return (this->_levels[i]);
         }
     }
