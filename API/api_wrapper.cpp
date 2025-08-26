@@ -5,8 +5,7 @@
 #include <cstring>
 
 json_group *api_request_json(const char *ip, uint16_t port,
-                             const char *method, const char *path,
-                             json_group *payload)
+    const char *method, const char *path, json_group *payload)
 {
     SocketConfig config;
     config.type = SocketType::CLIENT;
@@ -61,9 +60,3 @@ json_group *api_request_json(const char *ip, uint16_t port,
     body += 4;
     return (json_read_from_string(body));
 }
-
-json_group *api_get_json(const char *ip, uint16_t port, const char *path)
-{
-    return (api_request_json(ip, port, "GET", path, NULL));
-}
-
