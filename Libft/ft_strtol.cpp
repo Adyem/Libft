@@ -1,54 +1,60 @@
 #include "libft.hpp"
 
-static int ft_get_digit(char c)
+static int ft_digit_value(char character)
 {
-    if (c >= '0' && c <= '9')
-        return (c - '0');
-    if (c >= 'a' && c <= 'z')
-        return (c - 'a' + 10);
-    if (c >= 'A' && c <= 'Z')
-        return (c - 'A' + 10);
+    if (character >= '0' && character <= '9')
+        return (character - '0');
+    if (character >= 'a' && character <= 'z')
+        return (character - 'a' + 10);
+    if (character >= 'A' && character <= 'Z')
+        return (character - 'A' + 10);
     return (-1);
 }
 
-long ft_strtol(const char *nptr, char **endptr, int base)
+long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
 {
-    const char *s = nptr;
-    long sign = 1;
-    unsigned long result = 0;
-    int digit;
+    const char *current_character = input_string;
+    long sign_value = 1;
+    unsigned long accumulated_value = 0;
+    int digit_value;
 
-    while (*s == ' ' || (*s >= '\t' && *s <= '\r'))
-        s++;
-    if (*s == '+' || *s == '-')
+    while (*current_character == ' ' || (*current_character >= '\t'
+				&& *current_character <= '\r'))
+        ++current_character;
+    if (*current_character == '+' || *current_character == '-')
     {
-        if (*s == '-')
-            sign = -1;
-        s++;
+        if (*current_character == '-')
+            sign_value = -1;
+        ++current_character;
     }
-    if (base == 0)
+    if (numeric_base == 0)
     {
-        if (*s == '0')
+        if (*current_character == '0')
         {
-            if (s[1] == 'x' || s[1] == 'X')
+            if (current_character[1] == 'x' || current_character[1] == 'X')
             {
-                base = 16;
-                s += 2;
+                numeric_base = 16;
+                current_character += 2;
             }
             else
-                base = 8;
+                numeric_base = 8;
         }
         else
-            base = 10;
+            numeric_base = 10;
     }
-    else if (base == 16 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X'))
-        s += 2;
-    while ((digit = ft_get_digit(*s)) >= 0 && digit < base)
+    else if (numeric_base == 16 && current_character[0] == '0'
+             && (current_character[1] == 'x' || current_character[1] == 'X'))
+        current_character += 2;
+    while ((digit_value = ft_digit_value(*current_character)) >= 0
+			&& digit_value < numeric_base)
     {
-        result = result * base + digit;
-        s++;
+        accumulated_value = accumulated_value * static_cast<unsigned long>(numeric_base)
+                          + static_cast<unsigned long>(digit_value);
+        ++current_character;
     }
-    if (endptr)
-        *endptr = (char *)s;
-    return ((long)(result * sign));
+    if (end_pointer)
+        *end_pointer = const_cast<char *>(current_character);
+    return ((sign_value < 0)
+        ? -static_cast<long>(accumulated_value)
+        :  static_cast<long>(accumulated_value));
 }

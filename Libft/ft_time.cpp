@@ -8,7 +8,7 @@ long ft_time_ms(void)
 
     if (gettimeofday(&tv, NULL) != 0)
         return (-1);
-    return ((long)(tv.tv_sec * 1000L + tv.tv_usec / 1000L));
+    return ((tv.tv_sec * 1000L + tv.tv_usec / 1000L));
 }
 
 char *ft_time_format(char *buffer, size_t buffer_size)
