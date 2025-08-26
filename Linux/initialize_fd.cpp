@@ -4,7 +4,7 @@
 
 void ft_initialize_standard_file_descriptors()
 {
-	return ;
+    return ;
 }
 
 #endif

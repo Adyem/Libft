@@ -9,9 +9,9 @@
 static void decoy_unusedFunction1(void)
 {
     volatile int dummy = 0;
-	for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 10; i++)
         dummy += i;
-	return ;
+    return ;
 }
 
 static uint32_t decoy_unusedFunction2(uint32_t x)
