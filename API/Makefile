@@ -1,9 +1,9 @@
 TARGET         := API.a
 DEBUG_TARGET   := API_debug.a
 
-SRCS := api_request.cpp
+SRCS := api_request.cpp api_promise.cpp
 
-HEADERS := api.hpp
+HEADERS := api.hpp api_promise.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
