@@ -77,22 +77,22 @@ CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-    $(AR) $(ARFLAGS) $@ $^
+	$(AR) $(ARFLAGS) $@ $^
 
 $(OBJDIR)/%.o: %.cpp $(HEADERS) | $(OBJDIR)
-    $(CXX) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CFLAGS) -c $< -o $@
 
 debug: CXXFLAGS += -DDEBUG=1
 debug: $(DEBUG_TARGET)
 
 $(DEBUG_TARGET): $(DEBUG_OBJS)
-    $(AR) $(ARFLAGS) $@ $^
+	$(AR) $(ARFLAGS) $@ $^
 
 $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
-    $(CXX) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR) $(DEBUG_OBJDIR):
-    $(MKDIR) $@
+	$(MKDIR) $@
 
 CLEAN_OBJS := $(wildcard $(OBJDIR)/*.o) $(wildcard $(DEBUG_OBJDIR)/*.o)
 
@@ -103,10 +103,10 @@ else
 endif
 
 clean:
-    -$(RM) $(CLEAN_FILES)
+	-$(RM) $(CLEAN_FILES)
 
 fclean: clean
-    -$(RM) $(TARGET) $(DEBUG_TARGET)
+	-$(RM) $(TARGET) $(DEBUG_TARGET)
 
 re: fclean all
 
