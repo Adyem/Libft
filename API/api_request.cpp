@@ -5,14 +5,16 @@
 #include "../Libft/libft.hpp"
 #include <cstring>
 
-json_group *api_request_json(const char *ip, uint16_t port,
+char *api_request_string(const char *ip, uint16_t port,
     const char *method, const char *path, json_group *payload,
-    const char *headers, int *status)
+    const char *headers, int *status, int timeout)
 {
     SocketConfig config;
     config.type = SocketType::CLIENT;
     config.ip = ip;
     config.port = port;
+    config.recv_timeout = timeout;
+    config.send_timeout = timeout;
 
     ft_socket sock(config);
     if (sock.get_error())
@@ -72,5 +74,18 @@ json_group *api_request_json(const char *ip, uint16_t port,
     if (!body)
         return (NULL);
     body += 4;
-    return (json_read_from_string(body));
+    return (cma_strdup(body));
+}
+
+json_group *api_request_json(const char *ip, uint16_t port,
+    const char *method, const char *path, json_group *payload,
+    const char *headers, int *status, int timeout)
+{
+    char *body = api_request_string(ip, port, method, path, payload,
+                                   headers, status, timeout);
+    if (!body)
+        return (NULL);
+    json_group *result = json_read_from_string(body);
+    cma_free(body);
+    return (result);
 }
