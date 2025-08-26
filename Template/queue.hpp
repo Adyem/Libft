@@ -13,12 +13,12 @@
 template <typename ElementType>
 class ft_queue
 {
-	private:
-    	struct QueueNode
-    	{
-    	    ElementType data;
-    	    QueueNode* next;
-    	};
+    private:
+        struct QueueNode
+        {
+            ElementType data;
+            QueueNode* next;
+        };
 
         QueueNode*  _front;
         QueueNode*  _rear;
@@ -26,17 +26,17 @@ class ft_queue
         mutable int _errorCode;
         mutable pt_mutex _mutex;
 
-    	void    setError(int error) const;
+        void    setError(int error) const;
 
-	public:
-   		ft_queue();
-    	~ft_queue();
+    public:
+           ft_queue();
+        ~ft_queue();
 
-    	ft_queue(const ft_queue&) = delete;
-    	ft_queue& operator=(const ft_queue&) = delete;
+        ft_queue(const ft_queue&) = delete;
+        ft_queue& operator=(const ft_queue&) = delete;
 
-    	ft_queue(ft_queue&& other) noexcept;
-    	ft_queue& operator=(ft_queue&& other) noexcept;
+        ft_queue(ft_queue&& other) noexcept;
+        ft_queue& operator=(ft_queue&& other) noexcept;
 
         void enqueue(const ElementType& value);
         void enqueue(ElementType&& value);

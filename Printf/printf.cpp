@@ -11,7 +11,7 @@
 int pf_printf_fd(int fd, const char *format, ...)
 {
     va_list args;
-    int		printed_chars;
+    int        printed_chars;
 
     if (!format)
         return (0);
@@ -23,8 +23,8 @@ int pf_printf_fd(int fd, const char *format, ...)
 
 int pf_printf(const char *format, ...)
 {
-    va_list	args;
-    int		printed_chars;
+    va_list    args;
+    int        printed_chars;
 
     if (!format)
         return (0);

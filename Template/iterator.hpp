@@ -24,13 +24,13 @@ class Iterator
 template <typename ValueType>
 Iterator<ValueType>::Iterator(ValueType* ptr) : m_ptr(ptr)
 {
-	return ;
+    return ;
 }
 
 template <typename ValueType>
 Iterator<ValueType>::Iterator(const Iterator& other) : m_ptr(other.m_ptr)
 {
-	return ;
+    return ;
 }
 
 template <typename ValueType>

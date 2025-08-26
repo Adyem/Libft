@@ -2,13 +2,13 @@ TARGET := networking.a
 DEBUG_TARGET := networking_debug.a
 
 SRCS := socket_class.cpp \
-		networking.cpp \
-		setup_server.cpp \
-		setup_client.cpp \
-		socket_wrapper_functions.cpp
+        networking.cpp \
+        setup_server.cpp \
+        setup_client.cpp \
+        socket_wrapper_functions.cpp
 
 HEADERS := socket_class.hpp \
-		   networking.hpp \
+           networking.hpp \
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
@@ -37,22 +37,22 @@ CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(AR) $(ARFLAGS) $@ $^
+    $(AR) $(ARFLAGS) $@ $^
 
 $(OBJDIR)/%.o: %.cpp $(HEADERS) | $(OBJDIR)
-	$(CXX) $(CFLAGS) -c $< -o $@
+    $(CXX) $(CFLAGS) -c $< -o $@
 
 debug: CXXFLAGS += -DDEBUG=1
 debug: $(DEBUG_TARGET)
 
 $(DEBUG_TARGET): $(DEBUG_OBJS)
-	$(AR) $(ARFLAGS) $@ $^
+    $(AR) $(ARFLAGS) $@ $^
 
 $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
-	$(CXX) $(CFLAGS) -c $< -o $@
+    $(CXX) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR) $(DEBUG_OBJDIR):
-	$(MKDIR) $@
+    $(MKDIR) $@
 
 CLEAN_OBJS := $(wildcard $(OBJDIR)/*.o) $(wildcard $(DEBUG_OBJDIR)/*.o)
 
@@ -63,10 +63,10 @@ else
 endif
 
 clean:
-	-$(RM) $(CLEAN_FILES)
+    -$(RM) $(CLEAN_FILES)
 
 fclean: clean
-	-$(RM) $(TARGET) $(DEBUG_TARGET)
+    -$(RM) $(TARGET) $(DEBUG_TARGET)
 
 re: fclean all
 

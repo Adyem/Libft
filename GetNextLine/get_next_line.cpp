@@ -136,24 +136,24 @@ static char* read_fd(ft_file& file, char* readed_string)
     return (readed_string);
 }
 
-char	*get_next_line(ft_file &file)
+char    *get_next_line(ft_file &file)
 {
-	char		*string = ft_nullptr;
-	static char	*readed_string[4096];
-	int			index = 0;
+    char        *string = ft_nullptr;
+    static char    *readed_string[4096];
+    int            index = 0;
 
-	while (file == -1 && index < 4096)
-	{
-		cma_free(readed_string[index]);
-		readed_string[index] = ft_nullptr;
-		index++;
-	}
-	if (BUFFER_SIZE <= 0 || file < 0)
-		return (ft_nullptr);
-	readed_string[file] = read_fd(file, readed_string[file]);
-	if (!readed_string[file])
-		return (ft_nullptr);
-	string = fetch_line(readed_string[file]);
-	readed_string[file] = leftovers(readed_string[file]);
-	return (string);
+    while (file == -1 && index < 4096)
+    {
+        cma_free(readed_string[index]);
+        readed_string[index] = ft_nullptr;
+        index++;
+    }
+    if (BUFFER_SIZE <= 0 || file < 0)
+        return (ft_nullptr);
+    readed_string[file] = read_fd(file, readed_string[file]);
+    if (!readed_string[file])
+        return (ft_nullptr);
+    string = fetch_line(readed_string[file]);
+    readed_string[file] = leftovers(readed_string[file]);
+    return (string);
 }
