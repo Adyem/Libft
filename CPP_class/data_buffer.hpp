@@ -43,7 +43,7 @@ DataBuffer& DataBuffer::operator<<(const T& value)
     oss << value;
     char *bytes = cma_strdup(oss.str().c_str());
     if (!bytes)
-	{
+    {
         this->_ok = false;
         ft_errno = CMA_BAD_ALLOC;
         return (*this);
@@ -61,13 +61,13 @@ DataBuffer& DataBuffer::operator>>(T& value)
     size_t len;
     *this >> len;
     if (!this->_ok || this->_readPos + len > this->_buffer.size())
-	{
+    {
         this->_ok = false;
         return (*this);
     }
     char *bytes = static_cast<char*>(cma_calloc(len + 1, sizeof(char)));
     if (!bytes)
-	{
+    {
         this->_ok = false;
         ft_errno = CMA_BAD_ALLOC;
         return (*this);

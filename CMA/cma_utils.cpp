@@ -14,33 +14,33 @@ pt_mutex g_malloc_mutex;
 
 static size_t determine_page_size(size_t size)
 {
-	if (size < SMALL_SIZE)
-		return (SMALL_ALLOC);
-	else if (size < MEDIUM_SIZE)
-		return (MEDIUM_ALLOC);
-	return (size);
+    if (size < SMALL_SIZE)
+        return (SMALL_ALLOC);
+    else if (size < MEDIUM_SIZE)
+        return (MEDIUM_ALLOC);
+    return (size);
 }
 
 static void determine_page_use(Page *page)
 {
-	if (page->heap == false)
-		page->alloc_size_type = 0;
-	else if (page->size == SMALL_ALLOC)
-		page->alloc_size_type = 0;
-	else if (page->size == MEDIUM_ALLOC)
-		page->alloc_size_type = 1;
-	else
-		page->alloc_size_type = 2;
-	return ;
+    if (page->heap == false)
+        page->alloc_size_type = 0;
+    else if (page->size == SMALL_ALLOC)
+        page->alloc_size_type = 0;
+    else if (page->size == MEDIUM_ALLOC)
+        page->alloc_size_type = 1;
+    else
+        page->alloc_size_type = 2;
+    return ;
 }
 
 static int8_t determine_which_block_to_use(size_t size)
 {
-	if (size < SMALL_SIZE)
-		return (0);
-	else if (size < MEDIUM_SIZE)
-		return (1);
-	return (2);
+    if (size < SMALL_SIZE)
+        return (0);
+    else if (size < MEDIUM_SIZE)
+        return (1);
+    return (2);
 }
 
 static void *create_stack_block(void)
@@ -57,7 +57,7 @@ Block* split_block(Block* block, size_t size)
     if (block->size <= size + sizeof(Block))
         return (block);
     Block* new_block = reinterpret_cast<Block*>(reinterpret_cast<char*>(block) + sizeof(Block)
-			+ size);
+            + size);
     new_block->magic = MAGIC_NUMBER;
     new_block->size = block->size - size - sizeof(Block);
     new_block->free = true;
@@ -116,7 +116,7 @@ Page *create_page(size_t size)
     page->blocks->free = true;
     page->blocks->next = ft_nullptr;
     page->blocks->prev = ft_nullptr;
-	determine_page_use(page);
+    determine_page_use(page);
     if (!page_list) {
         page_list = page;
     }
@@ -132,14 +132,14 @@ Page *create_page(size_t size)
 Block *find_free_block(size_t size)
 {
     Page* cur_page = page_list;
-	int8_t alloc_size_type = determine_which_block_to_use(size);
+    int8_t alloc_size_type = determine_which_block_to_use(size);
     while (cur_page)
     {
-		if (cur_page->alloc_size_type != alloc_size_type)
-		{
-			cur_page = cur_page->next;
-			continue ;
-		}
+        if (cur_page->alloc_size_type != alloc_size_type)
+        {
+            cur_page = cur_page->next;
+            continue ;
+        }
         Block* cur_block = cur_page->blocks;
         while (cur_block)
         {

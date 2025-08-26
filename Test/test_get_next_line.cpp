@@ -12,7 +12,7 @@ int test_get_next_line_basic(void)
     if (fd < 0)
         return 0;
     int temp = ::write(fd, "Hello\nWorld\n", 12);
-	(void)temp;
+    (void)temp;
     ::close(fd);
 
     ft_file file(fname, O_RDONLY);
@@ -68,7 +68,7 @@ int test_ft_open_and_read_file(void)
     if (fd < 0)
         return 0;
     int temp = ::write(fd, "A\nB\nC\n", 6);
-	(void)temp;
+    (void)temp;
     ::close(fd);
 
     char **lines = ft_open_and_read_file(fname);

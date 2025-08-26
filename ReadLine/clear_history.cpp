@@ -4,15 +4,15 @@
 
 void rl_clear_history()
 {
-	int	i;
+    int    i;
 
-	i = 0;
+    i = 0;
     while (i < history_count)
-	{
+    {
         cma_free(history[i]);
-		history[i] = NULL;
-		i++;
+        history[i] = NULL;
+        i++;
     }
     history_count = 0;
-	return ;
+    return ;
 }

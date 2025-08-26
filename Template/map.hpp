@@ -34,7 +34,7 @@ public:
 
     void        insert(const Key& key, const MappedType& value);
     Pair<Key, MappedType> *find(const Key& key);
-	void        remove(const Key& key);
+    void        remove(const Key& key);
     bool        empty() const;
     void        clear();
     size_t      getSize() const;
@@ -45,9 +45,9 @@ public:
     Pair<Key, MappedType>* end();
     MappedType &at(const Key& key);
 
-	const Pair<Key, MappedType> *end() const;
-	const MappedType &at(const Key& key) const;
-	const Pair<Key, MappedType> *find(const Key& key) const;
+    const Pair<Key, MappedType> *end() const;
+    const MappedType &at(const Key& key) const;
+    const Pair<Key, MappedType> *find(const Key& key) const;
 };
 
 template <typename Key, typename MappedType>
@@ -393,12 +393,12 @@ void ft_map<Key, MappedType>::resize(size_t newCapacity)
         return ;
     }
     Pair<Key, MappedType>* newData = static_cast<Pair<Key, MappedType>*>(rawMemory);
-	size_t index = 0;
+    size_t index = 0;
     while (index < this->_size)
     {
         construct_at(&newData[index], std::move(this->_data[index]));
         destroy_at(&this->_data[index]);
-		index++;
+        index++;
     }
     cma_free(this->_data);
     this->_data = newData;

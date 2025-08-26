@@ -37,7 +37,7 @@ void ft_putchar_fd(const char c, int fd, size_t *count)
 
 void ft_putstr_fd(const char *s, int fd, size_t *count)
 {
-	ssize_t return_value;
+    ssize_t return_value;
     if (!s)
     {
         return_value = ft_write(fd, "(null)", 6);

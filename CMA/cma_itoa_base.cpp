@@ -1,7 +1,7 @@
 #include "CMA.hpp"
 #include "../CPP_class/nullptr.hpp"
 
-static int	calculate_length(int n, int base)
+static int    calculate_length(int n, int base)
 {
     int len = 0;
     unsigned int num = (n < 0) ? -n : n;
