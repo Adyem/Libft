@@ -2,10 +2,12 @@
 #include "../Networking/socket_class.hpp"
 #include "../CPP_class/string_class.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Libft/libft.hpp"
 #include <cstring>
 
 json_group *api_request_json(const char *ip, uint16_t port,
-    const char *method, const char *path, json_group *payload)
+    const char *method, const char *path, json_group *payload,
+    const char *headers, int *status)
 {
     SocketConfig config;
     config.type = SocketType::CLIENT;
@@ -21,6 +23,11 @@ json_group *api_request_json(const char *ip, uint16_t port,
     request += path;
     request += " HTTP/1.1\r\nHost: ";
     request += ip;
+    if (headers && headers[0])
+    {
+        request += "\r\n";
+        request += headers;
+    }
 
     ft_string body_string;
     if (payload)
@@ -53,6 +60,13 @@ json_group *api_request_json(const char *ip, uint16_t port,
     {
         buffer[bytes] = '\0';
         response += buffer;
+    }
+    if (status)
+    {
+        *status = -1;
+        const char *space = strchr(response.c_str(), ' ');
+        if (space)
+            *status = ft_atoi(space + 1);
     }
     const char *body = strstr(response.c_str(), "\r\n\r\n");
     if (!body)

@@ -1,6 +1,8 @@
 #ifndef FULL_LIBFT_HPP
 # define FULL_LIBFT_HPP
 
+#include "API/api.hpp"
+#include "API/api_promise.hpp"
 #include "CMA/CMA.hpp"
 #include "CMA/CMA_internal.hpp"
 #include "CPP_class/data_buffer.hpp"
