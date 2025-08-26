@@ -43,16 +43,16 @@ ifeq ($(OPT_LEVEL),0)
 OPT_FLAGS = -O0 -g
 else ifeq ($(OPT_LEVEL),1)
 OPT_FLAGS = -O1 -flto -s -ffunction-sections -fdata-sections -Wl,--gc-sections \
-            -fno-builtin -fno-builtin-memcpy -fno-builtin-memmove -fno-builtin-memset \
-            -fno-builtin-strlen -fno-builtin-strcmp -fno-builtin-isdigit
+	-fno-builtin -fno-builtin-memcpy -fno-builtin-memmove -fno-builtin-memset \
+	-fno-builtin-strlen -fno-builtin-strcmp -fno-builtin-isdigit
 else ifeq ($(OPT_LEVEL),2)
 OPT_FLAGS = -O2 -flto -s -ffunction-sections -fdata-sections -Wl,--gc-sections \
-            -fno-builtin -fno-builtin-memcpy -fno-builtin-memmove -fno-builtin-memset \
-            -fno-builtin-strlen -fno-builtin-strcmp -fno-builtin-isdigit
+	-fno-builtin -fno-builtin-memcpy -fno-builtin-memmove -fno-builtin-memset \
+	-fno-builtin-strlen -fno-builtin-strcmp -fno-builtin-isdigit
 else ifeq ($(OPT_LEVEL),3)
 OPT_FLAGS = -O3 -flto -s -ffunction-sections -fdata-sections -Wl,--gc-sections \
-            -fno-builtin -fno-builtin-memcpy -fno-builtin-memmove -fno-builtin-memset \
-            -fno-builtin-strlen -fno-builtin-strcmp -fno-builtin-isdigit
+	-fno-builtin -fno-builtin-memcpy -fno-builtin-memmove -fno-builtin-memset \
+	-fno-builtin-strlen -fno-builtin-strcmp -fno-builtin-isdigit
 else
 $(error Unsupported OPT_LEVEL=$(OPT_LEVEL))
 endif
@@ -73,27 +73,27 @@ DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
 all: $(TARGET)
 
 $(TARGET): $(OBJS) ../Full_Libft.a
-    $(CXX) $(CFLAGS) -o $@ $^
+	$(CXX) $(CFLAGS) -o $@ $^
 
 $(OBJDIR)/%.o: %.cpp
-    $(MKDIR) $(dir $@)
-    $(CXX) $(CFLAGS) -c $< -o $@
+	$(MKDIR) $(dir $@)
+	$(CXX) $(CFLAGS) -c $< -o $@
 
 debug: CXXFLAGS += -DDEBUG=1
 debug: $(DEBUG_TARGET)
 
 $(DEBUG_TARGET): $(DEBUG_OBJS) ../Full_Libft_debug.a
-    $(CXX) $(CFLAGS) -o $@ $^
+	$(CXX) $(CFLAGS) -o $@ $^
 
 $(DEBUG_OBJDIR)/%.o: %.cpp
-    $(MKDIR) $(dir $@)
-    $(CXX) $(CFLAGS) -c $< -o $@
+	$(MKDIR) $(dir $@)
+	$(CXX) $(CFLAGS) -c $< -o $@
 
 ../Full_Libft.a:
-    $(MAKE) -C .. COMPILE_FLAGS="$(COMPILE_FLAGS)"
+	$(MAKE) -C .. COMPILE_FLAGS="$(COMPILE_FLAGS)"
 
 ../Full_Libft_debug.a:
-    $(MAKE) -C .. debug COMPILE_FLAGS="$(COMPILE_FLAGS)"
+	$(MAKE) -C .. debug COMPILE_FLAGS="$(COMPILE_FLAGS)"
 
 CLEAN_OBJS := $(shell find $(OBJDIR) $(DEBUG_OBJDIR) -type f -name '*.o' 2>/dev/null)
 
@@ -104,13 +104,13 @@ else
 endif
 
 clean:
-    -$(RM) $(CLEAN_FILES)
-    $(MAKE) -C .. clean COMPILE_FLAGS="$(COMPILE_FLAGS)"
+	-$(RM) $(CLEAN_FILES)
+	$(MAKE) -C .. clean COMPILE_FLAGS="$(COMPILE_FLAGS)"
 
 fclean:
-    -$(RM) $(CLEAN_FILES)
-    -$(RM) $(TARGET) $(DEBUG_TARGET)
-    $(MAKE) -C .. fclean COMPILE_FLAGS="$(COMPILE_FLAGS)"
+	-$(RM) $(CLEAN_FILES)
+	-$(RM) $(TARGET) $(DEBUG_TARGET)
+	$(MAKE) -C .. fclean COMPILE_FLAGS="$(COMPILE_FLAGS)"
 
 re: fclean all
 
