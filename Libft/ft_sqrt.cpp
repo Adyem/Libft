@@ -14,7 +14,7 @@ double ft_sqrt(double number)
 
     if (number < 0)
         return (-1.0);
-    if (number == 0)
+    if (ft_abs_double(number) < 1e-12)
         return (0.0);
     guess = number;
     while (1)
