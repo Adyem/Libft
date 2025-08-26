@@ -21,7 +21,8 @@ SUBDIRS :=  CMA \
             PThread \
             CPP_class \
             Errno \
-            Networking
+            Networking \
+            API
 
 ifeq ($(OS),Windows_NT)
 SUBDIRS += Windows
@@ -29,12 +30,7 @@ else
 SUBDIRS += Linux
 endif
 
-SUBDIRS += encryption \
-            RNG \
-            JSon \
-            file \
-            HTML \
-            Game
+SUBDIRS += encryption RNG JSon file HTML Game
 
 LIB_BASES := \
   CMA/CustomMemoryAllocator \
@@ -45,7 +41,8 @@ LIB_BASES := \
   PThread/PThread \
   CPP_class/CPP_class \
   Errno/errno \
-  Networking/networking
+    Networking/networking \
+    API/API
 
 ifeq ($(OS),Windows_NT)
 LIB_BASES += Windows/Windows
@@ -103,6 +100,7 @@ $(TARGET): $(LIBS)
 	$(call EXTRACT,CPP_class/CPP_class.a)
 	$(call EXTRACT,Errno/errno.a)
 	$(call EXTRACT,Networking/networking.a)
+	$(call EXTRACT,API/API.a)
 	$(OS_EXTRACT)
 	$(call EXTRACT,encryption/encryption.a)
 	$(call EXTRACT,RNG/RNG.a)
@@ -126,6 +124,7 @@ $(DEBUG_TARGET): $(DEBUG_LIBS)
 	$(call EXTRACT,CPP_class/CPP_class_debug.a)
 	$(call EXTRACT,Errno/errno_debug.a)
 	$(call EXTRACT,Networking/networking_debug.a)
+	$(call EXTRACT,API/API_debug.a)
 	$(DEBUG_OS_EXTRACT)
 	$(call EXTRACT,encryption/encryption_debug.a)
 	$(call EXTRACT,RNG/RNG_debug.a)
@@ -152,6 +151,7 @@ clean:
 	$(MAKE) -C CPP_class clean
 	$(MAKE) -C Errno clean
 	$(MAKE) -C Networking clean
+	$(MAKE) -C API clean
 	$(OS_CLEAN)
 	$(MAKE) -C encryption clean
 	$(MAKE) -C RNG clean
@@ -171,6 +171,7 @@ fclean: clean
 	$(MAKE) -C CPP_class fclean
 	$(MAKE) -C Errno fclean
 	$(MAKE) -C Networking fclean
+	$(MAKE) -C API fclean
 	$(OS_FCLEAN)
 	$(MAKE) -C encryption fclean
 	$(MAKE) -C RNG fclean
