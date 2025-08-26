@@ -5,10 +5,12 @@ SRCS := socket_class.cpp \
         networking.cpp \
         setup_server.cpp \
         setup_client.cpp \
-        socket_wrapper_functions.cpp
+        socket_wrapper_functions.cpp \
+        ssl_wrapper.cpp
 
 HEADERS := socket_class.hpp \
            networking.hpp \
+           ssl_wrapper.hpp \
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
