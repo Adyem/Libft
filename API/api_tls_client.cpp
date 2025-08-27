@@ -190,3 +190,15 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
     return (cma_strdup(body.c_str()));
 }
 
+json_group *api_tls_client::request_json(const char *method, const char *path,
+                                         json_group *payload,
+                                         const char *headers, int *status)
+{
+    char *body = request(method, path, payload, headers, status);
+    if (!body)
+        return (NULL);
+    json_group *result = json_read_from_string(body);
+    cma_free(body);
+    return (result);
+}
+

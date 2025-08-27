@@ -21,7 +21,7 @@ EFF_SRCS := efficiency/efficiency_strlen.cpp efficiency/efficiency_memcpy.cpp \
             efficiency/efficiency_clamp.cpp \
             efficiency/efficiency_atoi.cpp efficiency/efficiency_atol.cpp \
             efficiency/efficiency_pool.cpp efficiency/efficiency_swap.cpp \
-            efficiency/efficiency_mutex.cpp
+            efficiency/efficiency_mutex.cpp efficiency/efficiency_printf.cpp
 
 SRCS := main.cpp test_atoi.cpp test_isdigit.cpp test_memset.cpp test_strcmp.cpp test_strlen.cpp \
        test_toupper.cpp test_html.cpp test_networking.cpp test_extra_libft.cpp \
