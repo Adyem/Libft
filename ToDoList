@@ -8,10 +8,6 @@ This document tracks outstanding work for the library. Items are grouped by doma
 Double-ended queue.
 Functions: ft_deque_new, ft_deque_push_front, ft_deque_push_back, ft_deque_pop_front, ft_deque_pop_back, ft_deque_size, ft_deque_clear.
 
-### Unordered Map
-Hash map for key-value pairs.
-Functions: ft_unordered_map_new, ft_unordered_map_insert, ft_unordered_map_find, ft_unordered_map_remove, ft_unordered_map_size, ft_unordered_map_clear.
-
 ### Set
 Sorted collection of unique values.
 Functions: ft_set_new, ft_set_insert, ft_set_find, ft_set_remove, ft_set_size, ft_set_clear.
