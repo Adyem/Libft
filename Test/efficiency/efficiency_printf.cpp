@@ -2,10 +2,9 @@
 #include "efficiency_utils.hpp"
 
 #include <cstdio>
-#include <string>
 
 int test_efficiency_printf(void) {
-  const size_t iterations = 1000; // fewer iterations due to I/O cost
+  const size_t iterations = 1000;
   const char *fmt = "Hello %s %d %x";
   const char *str = "world";
   int num = 42;
