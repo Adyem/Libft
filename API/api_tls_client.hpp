@@ -26,6 +26,10 @@ public:
 
     char *request(const char *method, const char *path, json_group *payload = NULL,
                   const char *headers = NULL, int *status = NULL);
+
+    json_group *request_json(const char *method, const char *path,
+                             json_group *payload = NULL,
+                             const char *headers = NULL, int *status = NULL);
 };
 
 #endif
