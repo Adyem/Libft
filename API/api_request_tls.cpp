@@ -163,3 +163,16 @@ cleanup:
         freeaddrinfo(res);
     return (ret);
 }
+
+json_group *api_request_json_tls(const char *host, uint16_t port,
+    const char *method, const char *path, json_group *payload,
+    const char *headers, int *status, int timeout)
+{
+    char *body = api_request_string_tls(host, port, method, path, payload,
+                                        headers, status, timeout);
+    if (!body)
+        return (NULL);
+    json_group *result = json_read_from_string(body);
+    cma_free(body);
+    return (result);
+}
