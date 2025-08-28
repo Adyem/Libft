@@ -4,54 +4,6 @@ This document tracks outstanding work for the library. Items are grouped by doma
 
 ## Data Structures
 
-### Deque
-Double-ended queue.
-Functions: ft_deque_new, ft_deque_push_front, ft_deque_push_back, ft_deque_pop_front, ft_deque_pop_back, ft_deque_size, ft_deque_clear.
-
-### Set
-Sorted collection of unique values.
-Functions: ft_set_new, ft_set_insert, ft_set_find, ft_set_remove, ft_set_size, ft_set_clear.
-
-### Bitset
-Fixed-size bit sequence.
-Functions: ft_bitset_new, ft_bitset_set, ft_bitset_reset, ft_bitset_flip, ft_bitset_test, ft_bitset_size, ft_bitset_clear.
-
-### Smart Pointers
-Automatic memory management.
-- Unique pointer: ft_unique_ptr_new, ft_unique_ptr_reset, ft_unique_ptr_release.
-
-### Optional
-Represents an optional value.
-Functions: ft_optional_new, ft_optional_has_value, ft_optional_value, ft_optional_reset.
-
-### Variant
-Type-safe union supporting multiple types. Provide storage, retrieval and visitor helpers.
-
-### Tuple
-Fixed-size heterogeneous collection.
-Functions: ft_tuple_new with access helpers.
-
-### Algorithms
-Common algorithms such as ft_sort, ft_binary_search, ft_shuffle, ft_reverse.
-
-### Priority Queue
-Queue with element priority.
-Functions: ft_priority_queue_new, ft_priority_queue_push, ft_priority_queue_pop, ft_priority_queue_top, ft_priority_queue_size, ft_priority_queue_clear.
-
-### Graph
-Graph data structure (adjacency list or matrix) with traversal algorithms (BFS, DFS).
-
-### Matrix
-Matrix operations: ft_matrix_new, ft_matrix_add, ft_matrix_multiply, ft_matrix_transpose, ft_matrix_determinant.
-
-### Event Emitter
-Observer pattern utility.
-Functions: ft_event_emitter_new, ft_event_on, ft_event_emit, ft_event_remove_listener.
-
-### Circular Buffer
-Fixed-size buffer that wraps around.
-Functions: ft_circular_buffer_new, ft_circular_buffer_push, ft_circular_buffer_pop, ft_circular_buffer_is_full, ft_circular_buffer_is_empty.
-
 ## Error Handling
 
 ## Additional Features
@@ -59,14 +11,6 @@ Functions: ft_circular_buffer_new, ft_circular_buffer_push, ft_circular_buffer_p
 - ft_readline: add auto-completion.
 
 ## Threading and Concurrency
-
-### Thread Pool
-Functions: ft_thread_pool_new, ft_thread_pool_submit, ft_thread_pool_wait, ft_thread_pool_destroy.
-
-### Future & Promise
-Asynchronous value communication.
-- Promise: ft_promise_new, ft_promise_set_value, ft_promise_get_future.
-- Future: ft_future_get, ft_future_wait, ft_future_valid.
 
 ## Configuration & Environment
 - ft_config_parse.
