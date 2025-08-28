@@ -30,6 +30,14 @@ const char* ft_strerror(int error_code)
         return ("Invalid operation on shared pointer");
     else if (error_code == SHARED_PTR_ELEMENT_ALREADDY_ADDED)
         return ("Element alreaddy on the array");
+    else if (error_code == UNIQUE_PTR_NULL_PTR)
+        return ("Unique pointer null pointer dereference");
+    else if (error_code == UNIQUE_PTR_OUT_OF_BOUNDS)
+        return ("Unique pointer index out of bounds");
+    else if (error_code == UNIQUE_PTR_ALLOCATION_FAILED)
+        return ("Unique pointer allocation failed");
+    else if (error_code == UNIQUE_PTR_INVALID_OPERATION)
+        return ("Invalid operation on unique pointer");
     else if (error_code == MAP_ALLOCATION_FAILED)
         return ("Map memory allocation failed");
     else if (error_code == MAP_KEY_NOT_FOUND)
@@ -122,6 +130,60 @@ const char* ft_strerror(int error_code)
         return ("Queue is empty");
     else if (error_code == QUEUE_ALLOC_FAIL)
         return ("Queue memory allocation failed");
+    else if (error_code == DEQUE_EMPTY)
+        return ("Deque is empty");
+    else if (error_code == DEQUE_ALLOC_FAIL)
+        return ("Deque memory allocation failed");
+    else if (error_code == SET_NOT_FOUND)
+        return ("Set element not found");
+    else if (error_code == SET_ALLOC_FAIL)
+        return ("Set memory allocation failed");
+    else if (error_code == BITSET_OUT_OF_RANGE)
+        return ("Bitset index out of range");
+    else if (error_code == BITSET_ALLOC_FAIL)
+        return ("Bitset memory allocation failed");
+    else if (error_code == OPTIONAL_EMPTY)
+        return ("Optional has no value");
+    else if (error_code == OPTIONAL_ALLOC_FAIL)
+        return ("Optional memory allocation failed");
+    else if (error_code == VARIANT_BAD_ACCESS)
+        return ("Variant holds different type");
+    else if (error_code == VARIANT_ALLOC_FAIL)
+        return ("Variant memory allocation failed");
+    else if (error_code == TUPLE_BAD_ACCESS)
+        return ("Tuple bad access");
+    else if (error_code == TUPLE_ALLOC_FAIL)
+        return ("Tuple memory allocation failed");
+    else if (error_code == PRIORITY_QUEUE_EMPTY)
+        return ("Priority queue is empty");
+    else if (error_code == PRIORITY_QUEUE_ALLOC_FAIL)
+        return ("Priority queue memory allocation failed");
+    else if (error_code == GRAPH_NOT_FOUND)
+        return ("Graph vertex not found");
+    else if (error_code == GRAPH_ALLOC_FAIL)
+        return ("Graph memory allocation failed");
+    else if (error_code == MATRIX_DIM_MISMATCH)
+        return ("Matrix dimension mismatch");
+    else if (error_code == MATRIX_ALLOC_FAIL)
+        return ("Matrix memory allocation failed");
+    else if (error_code == EVENT_EMITTER_NOT_FOUND)
+        return ("Event emitter listener not found");
+    else if (error_code == EVENT_EMITTER_ALLOC_FAIL)
+        return ("Event emitter memory allocation failed");
+    else if (error_code == CIRCULAR_BUFFER_FULL)
+        return ("Circular buffer is full");
+    else if (error_code == CIRCULAR_BUFFER_EMPTY)
+        return ("Circular buffer is empty");
+    else if (error_code == CIRCULAR_BUFFER_ALLOC_FAIL)
+        return ("Circular buffer memory allocation failed");
+    else if (error_code == THREAD_POOL_FULL)
+        return ("Thread pool queue is full");
+    else if (error_code == THREAD_POOL_ALLOC_FAIL)
+        return ("Thread pool memory allocation failed");
+    else if (error_code == FUTURE_INVALID)
+        return ("Future has no associated promise");
+    else if (error_code == FUTURE_ALLOC_FAIL)
+        return ("Future memory allocation failed");
     else if (error_code > ERRNO_OFFSET)
     {
         int standard_errno = error_code - ERRNO_OFFSET;
