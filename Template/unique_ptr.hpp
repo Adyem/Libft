@@ -22,7 +22,7 @@ class ft_uniqueptr
         mutable int _errorCode;
         mutable pt_mutex _mutex;
 
-        void release();
+        void destroy();
 
     public:
         template <typename... Args, typename = std::enable_if_t<
@@ -49,7 +49,7 @@ class ft_uniqueptr
 
         ManagedType* get();
         const ManagedType* get() const;
-        ManagedType* release_ptr();
+        ManagedType* release();
         void reset(ManagedType* pointer = ft_nullptr, size_t size = 1,
                 bool arrayType = false);
         bool hasError() const;
@@ -133,7 +133,7 @@ ft_uniqueptr<ManagedType>& ft_uniqueptr<ManagedType>::operator=(ft_uniqueptr&& o
 {
     if (this != &other)
     {
-        release();
+        destroy();
         if (other._mutex.lock(THREAD_ID) != SUCCES)
             return (*this);
         _managedPointer = other._managedPointer;
@@ -152,12 +152,12 @@ ft_uniqueptr<ManagedType>& ft_uniqueptr<ManagedType>::operator=(ft_uniqueptr&& o
 template <typename ManagedType>
 ft_uniqueptr<ManagedType>::~ft_uniqueptr()
 {
-    release();
+    destroy();
     return ;
 }
 
 template <typename ManagedType>
-void ft_uniqueptr<ManagedType>::release()
+void ft_uniqueptr<ManagedType>::destroy()
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
         return ;
@@ -394,7 +394,7 @@ const ManagedType* ft_uniqueptr<ManagedType>::get() const
 }
 
 template <typename ManagedType>
-ManagedType* ft_uniqueptr<ManagedType>::release_ptr()
+ManagedType* ft_uniqueptr<ManagedType>::release()
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {

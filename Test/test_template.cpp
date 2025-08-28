@@ -195,7 +195,7 @@ int test_ft_unique_ptr_array(void)
 int test_ft_unique_ptr_release(void)
 {
     ft_uniqueptr<int> up(new int(42));
-    int* raw = up.release_ptr();
+    int* raw = up.release();
     bool ok = (raw != ft_nullptr && *raw == 42 && !up);
     delete raw;
     return ok;
