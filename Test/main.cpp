@@ -164,6 +164,8 @@ int test_queue_basic(void);
 int test_ft_queue_class_basic(void);
 int test_ft_promise_set_get(void);
 int test_ft_promise_not_ready(void);
+int test_config_basic(void);
+int test_config_missing_value(void);
 int test_pt_async_basic(void);
 
 int test_efficiency_strlen(void);
@@ -369,6 +371,8 @@ int main(int argc, char **argv)
         { test_ft_queue_class_basic, "queue class basic" },
         { test_ft_promise_set_get, "ft_promise set/get" },
         { test_ft_promise_not_ready, "ft_promise not ready" },
+        { test_config_basic, "config basic" },
+        { test_config_missing_value, "config missing value" },
         { test_pt_async_basic, "pt_async basic" }
     };
 
