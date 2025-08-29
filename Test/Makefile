@@ -27,7 +27,7 @@ SRCS := main.cpp test_atoi.cpp test_isdigit.cpp test_memset.cpp test_strcmp.cpp 
        test_toupper.cpp test_html.cpp test_networking.cpp test_extra_libft.cpp \
        test_cpp_class.cpp test_template.cpp test_printf.cpp test_get_next_line.cpp \
        test_cma.cpp test_game.cpp test_queue.cpp test_queue_class.cpp \
-       test_promise.cpp $(EFF_SRCS)
+       test_promise.cpp test_config.cpp $(EFF_SRCS)
 
 ifeq ($(OS),Windows_NT)
     MKDIR = mkdir

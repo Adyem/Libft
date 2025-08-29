@@ -21,6 +21,7 @@ SUBDIRS :=  CMA \
             PThread \
             CPP_class \
             Errno \
+            Config \
             Networking \
             API
 
@@ -41,8 +42,9 @@ LIB_BASES := \
   PThread/PThread \
   CPP_class/CPP_class \
   Errno/errno \
-    Networking/networking \
-    API/API
+  Config/config \
+  Networking/networking \
+  API/API
 
 ifeq ($(OS),Windows_NT)
 LIB_BASES += Windows/Windows
@@ -99,6 +101,7 @@ $(TARGET): $(LIBS)
 	$(call EXTRACT,PThread/PThread.a)
 	$(call EXTRACT,CPP_class/CPP_class.a)
 	$(call EXTRACT,Errno/errno.a)
+	$(call EXTRACT,Config/config.a)
 	$(call EXTRACT,Networking/networking.a)
 	$(call EXTRACT,API/API.a)
 	$(OS_EXTRACT)
@@ -123,6 +126,7 @@ $(DEBUG_TARGET): $(DEBUG_LIBS)
 	$(call EXTRACT,PThread/PThread_debug.a)
 	$(call EXTRACT,CPP_class/CPP_class_debug.a)
 	$(call EXTRACT,Errno/errno_debug.a)
+	$(call EXTRACT,Config/config_debug.a)
 	$(call EXTRACT,Networking/networking_debug.a)
 	$(call EXTRACT,API/API_debug.a)
 	$(DEBUG_OS_EXTRACT)
@@ -150,6 +154,7 @@ clean:
 	$(MAKE) -C PThread clean
 	$(MAKE) -C CPP_class clean
 	$(MAKE) -C Errno clean
+	$(MAKE) -C Config clean
 	$(MAKE) -C Networking clean
 	$(MAKE) -C API clean
 	$(OS_CLEAN)
@@ -170,6 +175,7 @@ fclean: clean
 	$(MAKE) -C PThread fclean
 	$(MAKE) -C CPP_class fclean
 	$(MAKE) -C Errno fclean
+	$(MAKE) -C Config fclean
 	$(MAKE) -C Networking fclean
 	$(MAKE) -C API fclean
 	$(OS_FCLEAN)
