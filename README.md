@@ -23,7 +23,7 @@ entering their directory and running `make`.
 
 ### Libft
 
-Standard C utilities located in `Libft/`. Header: `libft.hpp`.
+Standard C utilities located in `Libft/`. Headers: `libft.hpp` and `ft_limits.hpp`.
 
 ```
 size_t  ft_strlen_size_t(const char *string);
@@ -51,6 +51,18 @@ char   *ft_strncpy(char *dst, const char *src, size_t n);
 void   *ft_memset(void *dst, int value, size_t n);
 int     ft_isspace(int c);
 int     ft_abs(int number);
+```
+
+`ft_limits.hpp` exposes integer boundary constants:
+
+```
+FT_CHAR_BIT
+FT_INT_MAX
+FT_INT_MIN
+FT_UINT_MAX
+FT_LONG_MAX
+FT_LONG_MIN
+FT_ULONG_MAX
 ```
 
 ### Custom Memory Allocator (CMA)
@@ -108,28 +120,6 @@ int pt_thread_create(pthread_t *thread, const pthread_attr_t *attr,
 int pt_thread_detach(pthread_t thread);
 template <typename ValueType, typename Function>
 int pt_async(ft_promise<ValueType>& promise, Function function);
-```
-
-### ReadLine
-
-`ReadLine/readline.hpp` implements a minimal interactive line reader with history
-and tab completion.
-
-```
-void rl_clear_history();
-void rl_add_suggestion(const char *word);
-void rl_clear_suggestions();
-char *rl_readline(const char *prompt);
-```
-
-### Logger
-
-`Logger/logger.hpp` provides simple logging helpers.
-
-```
-void ft_log_info(int fd, const char *message);
-void ft_log_warn(int fd, const char *message);
-void ft_log_error(int fd, const char *message);
 ```
 
 ### C++ Classes (`CPP_class`)
@@ -236,6 +226,13 @@ int nw_listen(int sockfd, int backlog);
 int nw_socket(int domain, int type, int protocol);
 ```
 
+`ssl_wrapper.hpp` adds helpers for encrypted sockets:
+
+```
+ssize_t nw_ssl_write(SSL *ssl, const void *buf, size_t len);
+ssize_t nw_ssl_read(SSL *ssl, void *buf, size_t len);
+```
+
 #### `SocketConfig`
 ```
 SocketConfig();
@@ -274,6 +271,18 @@ const struct sockaddr_storage &get_address() const;
 int         join_multicast_group(const SocketConfig &config);
 ```
 
+### Logger
+
+`Logger/logger.hpp` provides simple logging helpers that write messages to a
+file descriptor with different severity levels.
+
+```
+void ft_log_info(int fd, const char *message);
+void ft_log_warn(int fd, const char *message);
+void ft_log_error(int fd, const char *message);
+void ft_log_debug(int fd, const char *message);
+```
+
 ### Template Utilities
 
 `Template/` contains several generic helpers such as `ft_vector`, `ft_map`,
@@ -298,29 +307,192 @@ const char *get_error_str() const;
 
 ### Additional Modules
 
-* **Errno** – `Errno/errno.hpp` defines error codes and functions `ft_strerror` and `ft_perror`.
-* **RNG** – random helpers like `ft_dice_roll` and a `ft_deck` container.
-* **Encryption** – very small API (`be_saveGame`, `be_DecryptData`, `be_getEncryptionKey`).
-* **JSon** – simple JSON serialization helpers (`json_create_item`, `json_read_from_file`, etc.).
-* **File** – directory handling wrappers such as `ft_opendir` and `ft_readdir`,
-  and cross-platform file helpers (`ft_open`, `ft_read`, `ft_write`,
-  `ft_close`, `ft_initialize_standard_file_descriptors`).
-* **API** – simple HTTP client that sends requests and parses JSON responses
-  via `api_request_json`. Custom headers can be supplied via an optional
-  argument, and the HTTP status code can be retrieved through an optional
-  output parameter. Both `api_request_json` and `api_request_string` accept an
-  optional timeout (in milliseconds) that controls send and receive timeouts,
-  defaulting to 1 minute (60,000 ms). When the raw response body is needed,
-  `api_request_string` performs the same request and returns the text content.
-  The module also provides `api_request_string_host` and
-  `api_request_json_host` variants that resolve a hostname before issuing the
-  request, allowing non-TLS queries to be made using domain names instead of
-  raw IP addresses. Asynchronous helpers `api_promise` and
-  `api_string_promise` wrap the string and JSON request functions and both
-  support the same timeout parameter.
-* **HTML** – minimal HTML node creation and searching utilities.
-* **Game** – basic game related classes (`ft_character`, `ft_item`, `ft_inventory`, `ft_upgrade`, `ft_world`, `ft_event`, `ft_map3d`, `ft_quest`, `ft_reputation`, `ft_buff`, `ft_debuff`). `ft_buff` and `ft_debuff` each store four independent modifiers and expose getters, setters, and adders (including for duration). `ft_event`, `ft_upgrade`, `ft_item`, and `ft_reputation` also expose adders, and now each of these classes provides matching subtract helpers. `ft_inventory` manages stacked items and can query item counts with `has_item` and `count_item`. `ft_character` keeps track of coins and a `valor` attribute with helpers to add or subtract these values. The character's current level can be retrieved with `get_level()` which relies on an internal experience table.
-`ft_quest` objects can report completion with `is_complete()` and progress phases via `advance_phase()`.
+#### Errno
+`Errno/errno.hpp` defines error codes and helpers for retrieving messages.
+
+```
+const char *ft_strerror(int err);
+void        ft_perror(const char *msg);
+```
+
+#### RNG
+Random helpers and containers in `RNG/`.
+
+```
+int   ft_random_int(void);
+int   ft_dice_roll(int number, int faces);
+float ft_random_float(void);
+int   ft_random_seed(const char *seed_str = ft_nullptr);
+```
+
+`RNG/deck.hpp` provides a simple deck container:
+
+```
+ElementType *popRandomElement();
+ElementType *getRandomElement() const;
+void         shuffle();
+ElementType *drawTopElement();
+ElementType *peekTopElement() const;
+```
+
+#### `ft_loot_table`
+```
+void addElement(ElementType *elem, int weight);
+ElementType *getRandomLoot() const;
+ElementType *popRandomLoot();
+```
+
+#### Encryption
+`BasicEncryption.hpp` exposes minimal helpers:
+
+```
+int         be_saveGame(const char *filename, const char *data, const char *key);
+char      **be_DecryptData(char **data, const char *key);
+const char *be_getEncryptionKey();
+```
+
+#### JSon
+Creation, reading and manipulation helpers in `JSon/json.hpp`:
+
+```
+json_item   *json_create_item(const char *key, const char *value);
+json_group  *json_create_json_group(const char *name);
+void         json_add_item_to_group(json_group *group, json_item *item);
+int          json_write_to_file(const char *filename, json_group *groups);
+char        *json_write_to_string(json_group *groups);
+json_group  *json_read_from_file(const char *filename);
+json_group  *json_read_from_string(const char *content);
+json_group  *json_find_group(json_group *head, const char *name);
+json_item   *json_find_item(json_group *group, const char *key);
+void         json_remove_group(json_group **head, const char *name);
+void         json_remove_item(json_group *group, const char *key);
+void         json_update_item(json_group *group, const char *key, const char *value);
+void         json_update_item(json_group *group, const char *key, const int value);
+void         json_update_item(json_group *group, const char *key, const bool value);
+```
+
+#### File
+Cross-platform file and directory utilities (`file/open_dir.hpp`):
+
+```
+FT_DIR   *ft_opendir(const char *directoryPath);
+int       ft_closedir(FT_DIR *directoryStream);
+ft_dirent *ft_readdir(FT_DIR *directoryStream);
+int       dir_exists(const char *rel_path);
+int       file_create_directory(const char *path, mode_t mode);
+```
+
+#### Config
+`Config/config.hpp` parses simple configuration files:
+
+```
+ft_config *ft_config_parse(const char *filename);
+void       ft_config_free(ft_config *config);
+```
+
+#### ReadLine
+`ReadLine/readline.hpp` implements a tiny interactive line reader:
+
+```
+void rl_clear_history();
+void rl_add_suggestion(const char *word);
+void rl_clear_suggestions();
+char *rl_readline(const char *prompt);
+```
+
+#### API
+HTTP client helpers in `API/api.hpp` and asynchronous wrappers:
+
+```
+char       *api_request_string(const char *ip, uint16_t port,
+                               const char *method, const char *path,
+                               json_group *payload = NULL,
+                               const char *headers = NULL, int *status = NULL,
+                               int timeout = 60000);
+char       *api_request_string_host(const char *host, uint16_t port,
+                                    const char *method, const char *path,
+                                    json_group *payload = NULL,
+                                    const char *headers = NULL, int *status = NULL,
+                                    int timeout = 60000);
+json_group *api_request_json(const char *ip, uint16_t port,
+                             const char *method, const char *path,
+                             json_group *payload = NULL,
+                             const char *headers = NULL, int *status = NULL,
+                             int timeout = 60000);
+json_group *api_request_json_host(const char *host, uint16_t port,
+                                  const char *method, const char *path,
+                                  json_group *payload = NULL,
+                                  const char *headers = NULL, int *status = NULL,
+                                  int timeout = 60000);
+```
+
+`api_promise.hpp` adds asynchronous versions returning `ft_promise` objects for
+string and JSON responses, and TLS variants for HTTPS.
+
+#### `api_tls_client`
+```
+api_tls_client(const char *host, uint16_t port, int timeout = 60000);
+~api_tls_client();
+bool is_valid() const;
+char *request(const char *method, const char *path, json_group *payload = NULL,
+              const char *headers = NULL, int *status = NULL);
+json_group *request_json(const char *method, const char *path,
+                         json_group *payload = NULL,
+                         const char *headers = NULL, int *status = NULL);
+```
+
+#### HTML
+Minimal node creation and searching utilities (`HTML/html_parser.hpp`):
+
+```
+html_node *html_create_node(const char *tagName, const char *textContent);
+void       html_add_child(html_node *parentNode, html_node *childNode);
+void       html_add_attr(html_node *targetNode, html_attr *newAttribute);
+html_node *html_find_by_tag(html_node *nodeList, const char *tagName);
+html_node *html_find_by_attr(html_node *nodeList, const char *key, const char *value);
+```
+
+#### Game
+Basic game related classes (`ft_character`, `ft_item`, `ft_inventory`,
+`ft_upgrade`, `ft_world`, `ft_event`, `ft_map3d`, `ft_quest`, `ft_reputation`,
+`ft_buff`, `ft_debuff`, `ft_achievement`, `ft_experience_table`). `ft_buff` and
+`ft_debuff` each store four independent modifiers and expose getters, setters,
+and adders (including for duration). `ft_event`, `ft_upgrade`, `ft_item`, and
+`ft_reputation` also expose adders, and now each of these classes provides
+matching subtract helpers. `ft_inventory` manages stacked items and can query
+item counts with `has_item` and `count_item`. `ft_character` keeps track of
+coins and a `valor` attribute with helpers to add or subtract these values.
+`ft_experience_table` maps experience points to levels and can generate level
+progressions. `ft_achievement` tracks goal progress with `add_progress`,
+`is_goal_complete`, and `is_complete`. The character's current level can be
+retrieved with `get_level()` which relies on an internal experience table.
+`ft_quest` objects can report completion with `is_complete()` and progress
+phases via `advance_phase()`.
+
+#### `ft_achievement`
+```
+int  get_id() const noexcept;
+void set_id(int id) noexcept;
+int  get_goal(int id) const noexcept;
+void set_goal(int id, int goal) noexcept;
+int  get_progress(int id) const noexcept;
+void set_progress(int id, int progress) noexcept;
+void add_progress(int id, int value) noexcept;
+bool is_goal_complete(int id) const noexcept;
+bool is_complete() const noexcept;
+```
+
+#### `ft_experience_table`
+```
+int  get_count() const noexcept;
+int  get_level(int experience) const noexcept;
+int  get_value(int index) const noexcept;
+void set_value(int index, int value) noexcept;
+int  set_levels(const int *levels, int count) noexcept;
+int  generate_levels_total(int count, int base, double multiplier) noexcept;
+int  generate_levels_scaled(int count, int base, double multiplier) noexcept;
+int  resize(int new_count) noexcept;
+```
 
 The project is a work in progress and not every component is documented here.
 Consult the individual header files for precise behavior and additional
