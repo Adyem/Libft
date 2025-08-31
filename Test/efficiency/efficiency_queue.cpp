@@ -154,6 +154,8 @@ int test_efficiency_queue_swap(void)
 
     print_comparison("queue swap", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    return (std_a.size() == ft_a.size() && std_b.size() == ft_b.size() ? 1 : 0);
+    if (std_a.size() == ft_a.size() && std_b.size() == ft_b.size())
+        return (1);
+    return (0);
 }
 

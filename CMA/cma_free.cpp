@@ -8,12 +8,15 @@
 #include "CMA_internal.hpp"
 #include "../PThread/mutex.hpp"
 #include "../Printf/printf.hpp"
+#include "../Logger/logger.hpp"
 
 void cma_free(void* ptr)
 {
     if (OFFSWITCH == 1)
     {
         std::free(ptr);
+        if (ft_log_get_alloc_logging())
+            ft_log_debug("cma_free %p", ptr);
         return ;
     }
     if (!ptr)
@@ -30,5 +33,7 @@ void cma_free(void* ptr)
     block->free = true;
     merge_block(block);
     g_malloc_mutex.unlock(THREAD_ID);
+    if (ft_log_get_alloc_logging())
+        ft_log_debug("cma_free %p", ptr);
     return ;
 }

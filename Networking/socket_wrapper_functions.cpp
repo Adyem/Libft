@@ -15,12 +15,16 @@
 #ifdef _WIN32
 static inline int bind_platform(int sockfd, const struct sockaddr *addr, socklen_t len)
 {
-    return (bind(static_cast<SOCKET>(sockfd), addr, len) == SOCKET_ERROR) ? -1 : 0;
+    if (bind(static_cast<SOCKET>(sockfd), addr, len) == SOCKET_ERROR)
+        return (-1);
+    return (0);
 }
 
 static inline int listen_platform(int sockfd, int backlog)
 {
-    return (listen(static_cast<SOCKET>(sockfd), backlog) == SOCKET_ERROR) ? -1 : 0;
+    if (listen(static_cast<SOCKET>(sockfd), backlog) == SOCKET_ERROR)
+        return (-1);
+    return (0);
 }
 
 static inline int accept_platform(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
@@ -49,7 +53,9 @@ static inline int socket_platform(int domain, int type, int protocol)
 
 static inline int connect_platform(int sockfd, const struct sockaddr *addr, socklen_t len)
 {
-    return (connect(static_cast<SOCKET>(sockfd), addr, len) == SOCKET_ERROR) ? -1 : 0;
+    if (connect(static_cast<SOCKET>(sockfd), addr, len) == SOCKET_ERROR)
+        return (-1);
+    return (0);
 }
 
 static inline ssize_t send_platform(int sockfd, const void *buf, size_t len, int flags)
@@ -70,12 +76,16 @@ static inline ssize_t recv_platform(int sockfd, void *buf, size_t len, int flags
 #else
 static inline int bind_platform(int sockfd, const struct sockaddr *addr, socklen_t len)
 {
-    return (bind(sockfd, addr, len) == -1) ? -1 : 0;
+    if (bind(sockfd, addr, len) == -1)
+        return (-1);
+    return (0);
 }
 
 static inline int listen_platform(int sockfd, int backlog)
 {
-    return (listen(sockfd, backlog) == -1) ? -1 : 0;
+    if (listen(sockfd, backlog) == -1)
+        return (-1);
+    return (0);
 }
 
 static inline int accept_platform(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
@@ -96,7 +106,9 @@ static inline int socket_platform(int domain, int type, int protocol)
 
 static inline int connect_platform(int sockfd, const struct sockaddr *addr, socklen_t len)
 {
-    return (connect(sockfd, addr, len) == -1) ? -1 : 0;
+    if (connect(sockfd, addr, len) == -1)
+        return (-1);
+    return (0);
 }
 
 static inline ssize_t send_platform(int sockfd, const void *buf, size_t len, int flags)

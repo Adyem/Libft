@@ -68,7 +68,11 @@ FT_ULONG_MAX
 ### Custom Memory Allocator (CMA)
 
 Located in `CMA/`. Header: `CMA.hpp`. Provides memory helpers such as
-`cma_malloc`, `cma_free` and string helpers.
+`cma_malloc`, `cma_free`, aligned allocations, allocation-size queries,
+and string helpers. Aligned allocations round the block size up to the
+specified power-of-two (e.g., requesting 100 bytes with alignment 32
+returns a 128-byte block) and are released with `cma_free`.
+When allocation logging is enabled via the logger, the allocator emits debug messages for each `cma_malloc` and `cma_free`.
 
 ```
 void   *cma_malloc(std::size_t size);
@@ -78,6 +82,8 @@ char   *cma_strdup(const char *string);
 void   *cma_memdup(const void *src, size_t size);
 void   *cma_calloc(std::size_t nmemb, std::size_t size);
 void   *cma_realloc(void *ptr, std::size_t new_size);
+void   *cma_aligned_alloc(std::size_t alignment, std::size_t size);
+std::size_t cma_alloc_size(const void *ptr);
 char  **cma_split(const char *s, char c);
 char   *cma_itoa(int n);
 char   *cma_itoa_base(int n, int base);
@@ -273,15 +279,47 @@ int         join_multicast_group(const SocketConfig &config);
 
 ### Logger
 
-`Logger/logger.hpp` provides simple logging helpers that write messages to a
-file descriptor with different severity levels.
+`Logger/logger.hpp` provides leveled logging with timestamps, formatted output
+and optional file rotation. Logs are written to a configurable destination and
+filtered according to the active log level.
 
 ```
-void ft_log_info(int fd, const char *message);
-void ft_log_warn(int fd, const char *message);
-void ft_log_error(int fd, const char *message);
-void ft_log_debug(int fd, const char *message);
+enum t_log_level {
+    LOG_LEVEL_DEBUG,
+    LOG_LEVEL_INFO,
+    LOG_LEVEL_WARN,
+    LOG_LEVEL_ERROR,
+    LOG_LEVEL_NONE
+};
+
+void ft_log_set_level(t_log_level level);
+int  ft_log_set_file(const char *path, size_t max_size);
+void ft_log_close();
+void ft_log_set_alloc_logging(bool enable);
+bool ft_log_get_alloc_logging();
+
+void ft_log_info(const char *fmt, ...);
+void ft_log_warn(const char *fmt, ...);
+void ft_log_error(const char *fmt, ...);
+void ft_log_debug(const char *fmt, ...);
 ```
+
+For RAII-style usage, `ft_logger` wraps the C functions and automatically
+closes the log when the object is destroyed:
+
+```
+{
+    ft_logger log("app.log", 1024 * 1024, LOG_LEVEL_DEBUG);
+    log.set_global();
+    log.info("starting up");
+}
+```
+
+A global pointer `g_logger` is provided for optional shared access. Call
+`set_global()` on an `ft_logger` instance to populate it; the pointer is reset
+to `ft_nullptr` when that instance is destroyed. Allocation logging for the
+custom memory allocator can be toggled with `set_alloc_logging` and
+`get_alloc_logging`.
 
 ### Template Utilities
 

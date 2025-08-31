@@ -28,7 +28,7 @@ void ft_string::append(char c) noexcept
             new_capacity = 16;
         else
             new_capacity *= 2;
-        resize(new_capacity);
+        this->resize(new_capacity);
         if (this->_errorCode)
             return ;
     }
@@ -49,7 +49,7 @@ void ft_string::append(const ft_string& string) noexcept
             new_capacity = 16;
         while (new_capacity <= new_length)
             new_capacity *= 2;
-        resize(new_capacity);
+        this->resize(new_capacity);
         if (this->_errorCode)
             return ;
     }
@@ -73,7 +73,7 @@ void ft_string::append(const char *string) noexcept
             new_capacity = this->_capacity;
         while (this->_length + string_length >= new_capacity)
             new_capacity *= 2;
-        resize(new_capacity);
+        this->resize(new_capacity);
         if (this->_errorCode)
             return ;
     }
@@ -254,7 +254,7 @@ ft_string operator+(char lhs, const ft_string &rhs) noexcept
 
 ft_string::operator const char*() const noexcept
 {
-    return (c_str());
+    return (this->c_str());
 }
 
 bool operator==(const ft_string &lhs, const ft_string &rhs) noexcept

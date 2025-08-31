@@ -83,7 +83,7 @@ ft_vector<ElementType>::ft_vector(size_t initial_capacity)
 template <typename ElementType>
 ft_vector<ElementType>::~ft_vector()
 {
-    destroy_elements(0, this->_size);
+    this->destroy_elements(0, this->_size);
     if (this->_data != ft_nullptr)
         cma_free(this->_data);
     return ;
@@ -114,7 +114,7 @@ ft_vector<ElementType>& ft_vector<ElementType>::operator=(ft_vector<ElementType>
             this->_mutex.unlock(THREAD_ID);
             return (*this);
         }
-        destroy_elements(0, this->_size);
+        this->destroy_elements(0, this->_size);
         if (this->_data != ft_nullptr)
             cma_free(this->_data);
         this->_data = other._data;
@@ -175,8 +175,8 @@ template <typename ElementType>
 int ft_vector<ElementType>::get_error() const
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
-        return (_errorCode);
-    int err = _errorCode;
+        return (this->_errorCode);
+    int err = this->_errorCode;
     this->_mutex.unlock(THREAD_ID);
     return (err);
 }
@@ -185,8 +185,8 @@ template <typename ElementType>
 const char* ft_vector<ElementType>::get_error_str() const
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
-        return (ft_strerror(_errorCode));
-    int err = _errorCode;
+        return (ft_strerror(this->_errorCode));
+    int err = this->_errorCode;
     this->_mutex.unlock(THREAD_ID);
     return (ft_strerror(err));
 }
@@ -196,13 +196,17 @@ void ft_vector<ElementType>::push_back(const ElementType &value)
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        setError(PT_ERR_MUTEX_OWNER);
+        this->setError(PT_ERR_MUTEX_OWNER);
         return ;
     }
     if (this->_size >= this->_capacity)
     {
-        size_t newCapacity = (this->_capacity > 0) ? this->_capacity * 2 : 1;
-        reserve_internal(newCapacity);
+        size_t newCapacity;
+        if (this->_capacity > 0)
+            newCapacity = this->_capacity * 2;
+        else
+            newCapacity = 1;
+        this->reserve_internal(newCapacity);
         if (this->_errorCode != ER_SUCCESS)
         {
             this->_mutex.unlock(THREAD_ID);
@@ -220,13 +224,17 @@ void ft_vector<ElementType>::push_back(ElementType &&value)
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        setError(PT_ERR_MUTEX_OWNER);
+        this->setError(PT_ERR_MUTEX_OWNER);
         return ;
     }
     if (this->_size >= this->_capacity)
     {
-        size_t newCapacity = (this->_capacity > 0) ? this->_capacity * 2 : 1;
-        reserve_internal(newCapacity);
+        size_t newCapacity;
+        if (this->_capacity > 0)
+            newCapacity = this->_capacity * 2;
+        else
+            newCapacity = 1;
+        this->reserve_internal(newCapacity);
         if (this->_errorCode != ER_SUCCESS)
         {
             this->_mutex.unlock(THREAD_ID);
@@ -244,7 +252,7 @@ void ft_vector<ElementType>::pop_back()
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        setError(PT_ERR_MUTEX_OWNER);
+        this->setError(PT_ERR_MUTEX_OWNER);
         return ;
     }
     if (this->_size > 0)
@@ -264,7 +272,7 @@ ElementType& ft_vector<ElementType>::operator[](size_t index)
     static ElementType defaultInstance = ElementType();
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        setError(PT_ERR_MUTEX_OWNER);
+        this->setError(PT_ERR_MUTEX_OWNER);
         return (defaultInstance);
     }
     if (index >= this->_size)
@@ -284,7 +292,7 @@ const ElementType& ft_vector<ElementType>::operator[](size_t index) const
     static ElementType defaultInstance = ElementType();
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        setError(PT_ERR_MUTEX_OWNER);
+        this->setError(PT_ERR_MUTEX_OWNER);
         return (defaultInstance);
     }
     if (index >= this->_size)
@@ -303,10 +311,10 @@ void ft_vector<ElementType>::clear()
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        setError(PT_ERR_MUTEX_OWNER);
+        this->setError(PT_ERR_MUTEX_OWNER);
         return ;
     }
-    destroy_elements(0, this->_size);
+    this->destroy_elements(0, this->_size);
     this->_size = 0;
     this->_mutex.unlock(THREAD_ID);
     return ;
@@ -335,10 +343,10 @@ void ft_vector<ElementType>::reserve(size_t new_capacity)
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        setError(PT_ERR_MUTEX_OWNER);
+        this->setError(PT_ERR_MUTEX_OWNER);
         return ;
     }
-    reserve_internal(new_capacity);
+    this->reserve_internal(new_capacity);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -348,14 +356,14 @@ void ft_vector<ElementType>::resize(size_t new_size, const ElementType& value)
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        setError(PT_ERR_MUTEX_OWNER);
+        this->setError(PT_ERR_MUTEX_OWNER);
         return ;
     }
     if (new_size < this->_size)
-        destroy_elements(new_size, this->_size);
+        this->destroy_elements(new_size, this->_size);
     else if (new_size > this->_size)
     {
-        reserve_internal(new_size);
+        this->reserve_internal(new_size);
         if (this->_errorCode != ER_SUCCESS)
         {
             this->_mutex.unlock(THREAD_ID);
@@ -378,7 +386,7 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::insert(iterato
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        setError(PT_ERR_MUTEX_OWNER);
+        this->setError(PT_ERR_MUTEX_OWNER);
         return (ft_nullptr);
     }
     size_t index = pos - this->_data;
@@ -390,8 +398,12 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::insert(iterato
     }
     if (this->_size >= this->_capacity)
     {
-        size_t new_capacity = (this->_capacity > 0) ? this->_capacity * 2 : 1;
-        reserve_internal(new_capacity);
+        size_t new_capacity;
+        if (this->_capacity > 0)
+            new_capacity = this->_capacity * 2;
+        else
+            new_capacity = 1;
+        this->reserve_internal(new_capacity);
         if (this->_errorCode != ER_SUCCESS)
         {
             iterator endIt = this->_data + this->_size;
@@ -419,7 +431,7 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::erase(iterator
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        setError(PT_ERR_MUTEX_OWNER);
+        this->setError(PT_ERR_MUTEX_OWNER);
         return (ft_nullptr);
     }
     size_t index = pos - this->_data;
@@ -453,7 +465,7 @@ ElementType ft_vector<ElementType>::release_at(size_t index)
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        setError(PT_ERR_MUTEX_OWNER);
+        this->setError(PT_ERR_MUTEX_OWNER);
         return (ElementType());
     }
     if (index >= this->_size)

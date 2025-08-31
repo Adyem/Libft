@@ -50,7 +50,10 @@ static inline ft_dirent* readdir_win(FT_DIR* dir)
     if (GetFileInformationByHandle(reinterpret_cast<HANDLE>(dir->fd), &info))
         entry.d_ino = (static_cast<uint64_t>(info.nFileIndexHigh) << 32) | info.nFileIndexLow;
     ft_strncpy(entry.d_name, fd->cFileName, sizeof(entry.d_name) - 1);
-    entry.d_type = (fd->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? DT_DIR : DT_REG;
+    if (fd->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        entry.d_type = DT_DIR;
+    else
+        entry.d_type = DT_REG;
     return (&entry);
 }
 
