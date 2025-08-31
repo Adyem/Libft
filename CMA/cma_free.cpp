@@ -31,7 +31,9 @@ void cma_free(void* ptr)
         raise(SIGABRT);
     }
     block->free = true;
-    merge_block(block);
+    block = merge_block(block);
+    Page *page = find_page_of_block(block);
+    free_page_if_empty(page);
     g_malloc_mutex.unlock(THREAD_ID);
     if (ft_log_get_alloc_logging())
         ft_log_debug("cma_free %p", ptr);
