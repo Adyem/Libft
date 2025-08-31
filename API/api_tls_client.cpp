@@ -1,6 +1,10 @@
 #include "api_tls_client.hpp"
 #include <cstring>
 #include <cstdio>
+#include "../Networking/socket_class.hpp"
+#include "../Networking/ssl_wrapper.hpp"
+#include "../Libft/libft.hpp"
+#include "../CMA/CMA.hpp"
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>
