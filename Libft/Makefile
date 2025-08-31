@@ -22,6 +22,9 @@ SRCS := ft_atoi.cpp \
     ft_isdigit.cpp \
     ft_isalpha.cpp \
     ft_isalnum.cpp \
+    ft_isprint.cpp \
+    ft_islower.cpp \
+    ft_isupper.cpp \
     ft_strcmp.cpp \
     ft_toupper.cpp \
     ft_tolower.cpp \

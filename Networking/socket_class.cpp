@@ -27,7 +27,7 @@ ssize_t ft_socket::send_data(const void *data, size_t size, int flags, int fd)
     size_t index = 0;
     while (index < this->_connected.size())
     {
-        if (_connected[index].get_fd() == fd)
+        if (this->_connected[index].get_fd() == fd)
         {
             ssize_t bytes_sent = this->_connected[index].send_data(data, size, flags);
             if (bytes_sent < 0)
@@ -90,7 +90,7 @@ ssize_t ft_socket::broadcast_data(const void *data, size_t size, int flags)
         if (bytes_sent < 0)
         {
             ft_errno = errno + ERRNO_OFFSET;
-            _error = ft_errno;
+            this->_error = ft_errno;
             continue ;
         }
         total_bytes_sent += bytes_sent;

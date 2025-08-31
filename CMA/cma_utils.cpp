@@ -183,7 +183,11 @@ static inline void print_block_info_impl(Block *block)
         pf_printf_fd(2, "Block pointer is ft_nullptr.\n");
         return ;
     }
-    const char* free_status = block->free ? "Yes" : "No";
+    const char* free_status;
+    if (block->free)
+        free_status = "Yes";
+    else
+        free_status = "No";
     pf_printf_fd(3, "---- Block Information ----\n");
     pf_printf_fd(2, "Address of Block: %p\n", static_cast<void *>(block));
     pf_printf_fd(2, "Magic Number: 0x%X\n", block->magic);

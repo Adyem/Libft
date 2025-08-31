@@ -37,7 +37,9 @@ int test_efficiency_vector_push_back(void)
 
     print_comparison("vector push_back", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    return (stdv.size() == ftv.size() ? 1 : 0);
+    if (stdv.size() == ftv.size())
+        return (1);
+    return (0);
 }
 
 int test_efficiency_vector_insert_erase(void)
@@ -73,7 +75,9 @@ int test_efficiency_vector_insert_erase(void)
 
     print_comparison("vector insert/erase", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    return (stdv.size() == ftv.size() ? 1 : 0);
+    if (stdv.size() == ftv.size())
+        return (1);
+    return (0);
 }
 
 int test_efficiency_vector_reserve_resize(void)
@@ -105,7 +109,9 @@ int test_efficiency_vector_reserve_resize(void)
 
     print_comparison("vector reserve/resize", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    return (stdv.size() == ftv.size() ? 1 : 0);
+    if (stdv.size() == ftv.size())
+        return (1);
+    return (0);
 }
 
 int test_efficiency_vector_clear(void)
@@ -132,7 +138,9 @@ int test_efficiency_vector_clear(void)
 
     print_comparison("vector clear", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    return (stdv.empty() == (ftv.size() == 0) ? 1 : 0);
+    if (stdv.empty() == (ftv.size() == 0))
+        return (1);
+    return (0);
 }
 
 int test_efficiency_vector_iterate(void)
@@ -156,7 +164,9 @@ int test_efficiency_vector_iterate(void)
     prevent_optimization((void*)&sum);
     print_comparison("vector iterate", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    return (stdv.size() == ftv.size() ? 1 : 0);
+    if (stdv.size() == ftv.size())
+        return (1);
+    return (0);
 }
 
 int test_efficiency_vector_move(void)
@@ -183,7 +193,9 @@ int test_efficiency_vector_move(void)
 
     print_comparison("vector move", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    return (std_moved.size() == ft_moved.size() ? 1 : 0);
+    if (std_moved.size() == ft_moved.size())
+        return (1);
+    return (0);
 }
 
 int test_efficiency_vector_swap(void)
@@ -220,6 +232,8 @@ int test_efficiency_vector_swap(void)
 
     print_comparison("vector swap", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    return (std_a.size() == ft_a.size() && std_b.size() == ft_b.size() ? 1 : 0);
+    if (std_a.size() == ft_a.size() && std_b.size() == ft_b.size())
+        return (1);
+    return (0);
 }
 

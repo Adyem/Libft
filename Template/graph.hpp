@@ -152,7 +152,11 @@ bool ft_graph<VertexType>::ensure_node_capacity(size_t desired)
 {
     if (desired <= this->_capacity)
         return (true);
-    size_t newCap = (this->_capacity == 0) ? 1 : this->_capacity * 2;
+    size_t newCap;
+    if (this->_capacity == 0)
+        newCap = 1;
+    else
+        newCap = this->_capacity * 2;
     while (newCap < desired)
         newCap *= 2;
     GraphNode* newNodes = static_cast<GraphNode*>(cma_malloc(sizeof(GraphNode) * newCap));
@@ -183,7 +187,11 @@ bool ft_graph<VertexType>::ensure_edge_capacity(GraphNode& node, size_t desired)
 {
     if (desired <= node._capacity)
         return (true);
-    size_t newCap = (node._capacity == 0) ? 1 : node._capacity * 2;
+    size_t newCap;
+    if (node._capacity == 0)
+        newCap = 1;
+    else
+        newCap = node._capacity * 2;
     while (newCap < desired)
         newCap *= 2;
     size_t* newEdges = static_cast<size_t*>(cma_malloc(sizeof(size_t) * newCap));

@@ -1,9 +1,23 @@
 TARGET := Logger.a
 DEBUG_TARGET := Logger_debug.a
 
-SRCS := logger.cpp
+SRCS := \
+    ft_log_state.cpp \
+    ft_log_rotate.cpp \
+    ft_log_level_to_str.cpp \
+    ft_log_vwrite.cpp \
+    ft_log_set_level.cpp \
+    ft_log_set_file.cpp \
+    ft_log_set_alloc_logging.cpp \
+    ft_log_get_alloc_logging.cpp \
+    ft_log_close.cpp \
+    ft_log_debug.cpp \
+    ft_log_info.cpp \
+    ft_log_warn.cpp \
+    ft_log_error.cpp \
+    ft_logger.cpp
 
-HEADERS := logger.hpp
+HEADERS := logger.hpp logger_internal.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

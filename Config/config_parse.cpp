@@ -130,7 +130,10 @@ ft_config *ft_config_parse(const char *filename)
             }
         }
         ft_config_entry entry;
-        entry.section = current_section ? cma_strdup(current_section) : ft_nullptr;
+        if (current_section)
+            entry.section = cma_strdup(current_section);
+        else
+            entry.section = ft_nullptr;
         entry.key = key;
         entry.value = value;
         if (current_section && !entry.section)
