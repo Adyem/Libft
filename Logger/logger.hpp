@@ -1,9 +1,53 @@
 #ifndef LOGGER_HPP
 # define LOGGER_HPP
 
-void ft_log_info(int fd, const char *message);
-void ft_log_warn(int fd, const char *message);
-void ft_log_error(int fd, const char *message);
-void ft_log_debug(int fd, const char *message);
+#include <cstddef>
+
+enum t_log_level {
+    LOG_LEVEL_DEBUG = 0,
+    LOG_LEVEL_INFO,
+    LOG_LEVEL_WARN,
+    LOG_LEVEL_ERROR,
+    LOG_LEVEL_NONE
+};
+
+void ft_log_set_level(t_log_level level);
+int  ft_log_set_file(const char *path, size_t max_size);
+void ft_log_close();
+void ft_log_set_alloc_logging(bool enable);
+bool ft_log_get_alloc_logging();
+
+void ft_log_debug(const char *fmt, ...);
+void ft_log_info(const char *fmt, ...);
+void ft_log_warn(const char *fmt, ...);
+void ft_log_error(const char *fmt, ...);
+
+class ft_logger
+{
+    public:
+        ft_logger(const char *path = nullptr, size_t max_size = 0,
+                  t_log_level level = LOG_LEVEL_INFO) noexcept;
+        ~ft_logger() noexcept;
+
+        ft_logger(const ft_logger&) = delete;
+        ft_logger &operator=(const ft_logger&) = delete;
+
+        void set_global() noexcept;
+        void set_level(t_log_level level) noexcept;
+        int  set_file(const char *path, size_t max_size) noexcept;
+        void set_alloc_logging(bool enable) noexcept;
+        bool get_alloc_logging() const noexcept;
+        void close() noexcept;
+
+        void debug(const char *fmt, ...) noexcept;
+        void info(const char *fmt, ...) noexcept;
+        void warn(const char *fmt, ...) noexcept;
+        void error(const char *fmt, ...) noexcept;
+
+    private:
+        bool m_alloc_logging;
+};
+
+extern ft_logger *g_logger;
 
 #endif

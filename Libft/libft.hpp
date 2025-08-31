@@ -32,6 +32,9 @@ int                ft_memcmp(const void *pointer1, const void *pointer2, size_t 
 int                ft_isdigit(int character);
 int             ft_isalpha(int character);
 int             ft_isalnum(int character);
+int             ft_isprint(int character);
+int             ft_islower(int character);
+int             ft_isupper(int character);
 long            ft_atol(const char *string);
 long            ft_strtol(const char *nptr, char **endptr, int base);
 unsigned long   ft_strtoul(const char *nptr, char **endptr, int base);

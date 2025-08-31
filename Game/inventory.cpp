@@ -66,7 +66,11 @@ int ft_inventory::add_item(const ft_item &item) noexcept
             int free_space = ptr->value.get_max_stack() - ptr->value.get_current_stack();
             if (free_space > 0)
             {
-                int to_add = remaining < free_space ? remaining : free_space;
+                int to_add;
+                if (remaining < free_space)
+                    to_add = remaining;
+                else
+                    to_add = free_space;
                 ptr->value.add_to_stack(to_add);
                 remaining -= to_add;
             }
@@ -82,7 +86,11 @@ int ft_inventory::add_item(const ft_item &item) noexcept
             return (CHARACTER_INVENTORY_FULL);
         }
         ft_item new_item = item;
-        int to_add = remaining < new_item.get_max_stack() ? remaining : new_item.get_max_stack();
+        int to_add;
+        if (remaining < new_item.get_max_stack())
+            to_add = remaining;
+        else
+            to_add = new_item.get_max_stack();
         new_item.set_current_stack(to_add);
         this->_items.insert(this->_next_slot, new_item);
         if (this->_items.get_error() != ER_SUCCESS)

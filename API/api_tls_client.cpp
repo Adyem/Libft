@@ -32,15 +32,19 @@ static ssize_t ssl_send_all(SSL *ssl, const void *data, size_t size)
 }
 
 api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms)
-: _ctx(ft_nullptr), _ssl(ft_nullptr), _sock(-1), _host(host_c ? host_c : ""), _timeout(timeout_ms)
+: _ctx(ft_nullptr), _ssl(ft_nullptr), _sock(-1), _host(""), _timeout(timeout_ms)
 {
+    if (host_c)
+        this->_host = host_c;
+    else
+        this->_host = "";
     if (!host_c)
         return;
     if (!OPENSSL_init_ssl(0, ft_nullptr))
         return;
 
-    _ctx = SSL_CTX_new(TLS_client_method());
-    if (!_ctx)
+    this->_ctx = SSL_CTX_new(TLS_client_method());
+    if (!this->_ctx)
         return;
 
     struct addrinfo hints;
@@ -57,71 +61,71 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
     address_info = address_results;
     while (address_info != ft_nullptr)
     {
-        _sock = nw_socket(address_info->ai_family, address_info->ai_socktype, address_info->ai_protocol);
-        if (_sock >= 0)
+        this->_sock = nw_socket(address_info->ai_family, address_info->ai_socktype, address_info->ai_protocol);
+        if (this->_sock >= 0)
         {
             if (timeout_ms > 0)
             {
                 struct timeval time_value;
                 time_value.tv_sec = timeout_ms / 1000;
                 time_value.tv_usec = (timeout_ms % 1000) * 1000;
-                setsockopt(_sock, SOL_SOCKET, SO_RCVTIMEO, &time_value, sizeof(time_value));
-                setsockopt(_sock, SOL_SOCKET, SO_SNDTIMEO, &time_value, sizeof(time_value));
+                setsockopt(this->_sock, SOL_SOCKET, SO_RCVTIMEO, &time_value, sizeof(time_value));
+                setsockopt(this->_sock, SOL_SOCKET, SO_SNDTIMEO, &time_value, sizeof(time_value));
             }
-            if (nw_connect(_sock, address_info->ai_addr, static_cast<socklen_t>(address_info->ai_addrlen)) == 0)
+            if (nw_connect(this->_sock, address_info->ai_addr, static_cast<socklen_t>(address_info->ai_addrlen)) == 0)
                 break;
-            FT_CLOSE_SOCKET(_sock);
-            _sock = -1;
+            FT_CLOSE_SOCKET(this->_sock);
+            this->_sock = -1;
         }
         address_info = address_info->ai_next;
     }
     if (address_results)
         freeaddrinfo(address_results);
-    if (_sock < 0)
+    if (this->_sock < 0)
         return;
 
-    _ssl = SSL_new(_ctx);
-    if (!_ssl)
+    this->_ssl = SSL_new(this->_ctx);
+    if (!this->_ssl)
         return;
-    if (SSL_set_fd(_ssl, _sock) != 1)
+    if (SSL_set_fd(this->_ssl, this->_sock) != 1)
         return;
-    if (SSL_connect(_ssl) <= 0)
+    if (SSL_connect(this->_ssl) <= 0)
     {
-        SSL_free(_ssl);
-        _ssl = ft_nullptr;
+        SSL_free(this->_ssl);
+        this->_ssl = ft_nullptr;
         return;
     }
 }
 
 api_tls_client::~api_tls_client()
 {
-    if (_ssl)
+    if (this->_ssl)
     {
-        SSL_shutdown(_ssl);
-        SSL_free(_ssl);
+        SSL_shutdown(this->_ssl);
+        SSL_free(this->_ssl);
     }
-    if (_sock >= 0)
-        FT_CLOSE_SOCKET(_sock);
-    if (_ctx)
-        SSL_CTX_free(_ctx);
+    if (this->_sock >= 0)
+        FT_CLOSE_SOCKET(this->_sock);
+    if (this->_ctx)
+        SSL_CTX_free(this->_ctx);
 }
 
 bool api_tls_client::is_valid() const
 {
-    return (_ssl != ft_nullptr);
+    return (this->_ssl != ft_nullptr);
 }
 
 char *api_tls_client::request(const char *method, const char *path, json_group *payload,
                               const char *headers, int *status)
 {
-    if (!_ssl || !method || !path)
+    if (!this->_ssl || !method || !path)
         return (ft_nullptr);
 
     ft_string request(method);
     request += " ";
     request += path;
     request += " HTTP/1.1\r\nHost: ";
-    request += _host.c_str();
+    request += this->_host.c_str();
     if (headers && headers[0])
     {
         request += "\r\n";
@@ -148,7 +152,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
     if (payload)
         request += body_string.c_str();
 
-    if (ssl_send_all(_ssl, request.c_str(), request.size()) < 0)
+    if (ssl_send_all(this->_ssl, request.c_str(), request.size()) < 0)
         return (ft_nullptr);
 
     ft_string response;
@@ -158,7 +162,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
 
     while (!header_end_ptr)
     {
-        bytes_received = nw_ssl_read(_ssl, buffer, sizeof(buffer) - 1);
+        bytes_received = nw_ssl_read(this->_ssl, buffer, sizeof(buffer) - 1);
         if (bytes_received <= 0)
             return (ft_nullptr);
         buffer[bytes_received] = '\0';
@@ -187,7 +191,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
     ft_string body(response.c_str() + header_len);
     while (body.size() < content_length)
     {
-        bytes_received = nw_ssl_read(_ssl, buffer, sizeof(buffer) - 1);
+        bytes_received = nw_ssl_read(this->_ssl, buffer, sizeof(buffer) - 1);
         if (bytes_received <= 0)
             return (ft_nullptr);
         buffer[bytes_received] = '\0';
@@ -201,7 +205,7 @@ json_group *api_tls_client::request_json(const char *method, const char *path,
                                          json_group *payload,
                                          const char *headers, int *status)
 {
-    char *body = request(method, path, payload, headers, status);
+    char *body = this->request(method, path, payload, headers, status);
     if (!body)
         return (ft_nullptr);
     json_group *result = json_read_from_string(body);

@@ -72,7 +72,14 @@ static void ft_puthex_stream_recursive(uintmax_t number, FILE *stream, bool uppe
     if (digit < 10)
         character = static_cast<char>('0' + digit);
     else
-        character = static_cast<char>((uppercase ? 'A' : 'a') + (digit - 10));
+    {
+        char base_char;
+        if (uppercase)
+            base_char = 'A';
+        else
+            base_char = 'a';
+        character = static_cast<char>(base_char + (digit - 10));
+    }
     ft_putchar_stream(character, stream, count);
 }
 
@@ -182,7 +189,10 @@ int ft_vfprintf(FILE *stream, const char *format, va_list args)
             else if (spec == 'b')
             {
                 int boolean_value = va_arg(args, int);
-                ft_putstr_stream(boolean_value ? "true" : "false", stream, &count);
+                if (boolean_value)
+                    ft_putstr_stream("true", stream, &count);
+                else
+                    ft_putstr_stream("false", stream, &count);
             }
             else if (spec == '%')
             {

@@ -34,6 +34,8 @@ int test_efficiency_strcmp(void)
 
     print_comparison("strcmp", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    return (result == 0 ? 1 : 0);
+    if (result == 0)
+        return (1);
+    return (0);
 }
 

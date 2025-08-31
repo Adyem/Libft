@@ -17,10 +17,10 @@ int pt_mutex::lock(pthread_t thread_id)
     if (this->_owner.load(std::memory_order_relaxed) == thread_id)
     {
         ft_errno = PT_ERR_ALRDY_LOCKED;
-        set_error(PT_ERR_ALRDY_LOCKED);
+        this->set_error(PT_ERR_ALRDY_LOCKED);
         return (-1);
     }
-    set_error(ER_SUCCESS);
+    this->set_error(ER_SUCCESS);
     const uint32_t my = this->_next.fetch_add(1, std::memory_order_acq_rel);
     uint32_t spins = 0;
     while (1)

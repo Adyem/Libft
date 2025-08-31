@@ -21,6 +21,8 @@ int test_efficiency_abs(void)
 
     print_comparison("abs", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    return (result ? 1 : 0);
+    if (result)
+        return (1);
+    return (0);
 }
 

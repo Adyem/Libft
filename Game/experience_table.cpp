@@ -85,7 +85,11 @@ int ft_experience_table::resize(int new_count) noexcept
     }
     this->_levels = new_levels;
     this->_count = new_count;
-    int check_count = old_count < new_count ? old_count : new_count;
+    int check_count;
+    if (old_count < new_count)
+        check_count = old_count;
+    else
+        check_count = new_count;
     if (!this->is_valid(check_count, this->_levels))
         this->set_error(CHARACTER_LEVEL_TABLE_INVALID);
     return (this->_error);

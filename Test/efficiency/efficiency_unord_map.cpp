@@ -42,7 +42,9 @@ int test_efficiency_unord_map_insert_find(void)
     prevent_optimization((void*)&sum);
     print_comparison("unord_map insert/find", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    return (stdm.size() == ftm.getSize() ? 1 : 0);
+    if (stdm.size() == ftm.getSize())
+        return (1);
+    return (0);
 }
 
 int test_efficiency_unord_map_insert_remove(void)
@@ -78,7 +80,9 @@ int test_efficiency_unord_map_insert_remove(void)
 
     print_comparison("unord_map insert/remove", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    return (stdm.empty() == ftm.empty() ? 1 : 0);
+    if (stdm.empty() == ftm.empty())
+        return (1);
+    return (0);
 }
 
 int test_efficiency_unord_map_iterate(void)
@@ -106,7 +110,9 @@ int test_efficiency_unord_map_iterate(void)
     prevent_optimization((void*)&sum);
     print_comparison("unord_map iterate", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    return (stdm.size() == ftm.getSize() ? 1 : 0);
+    if (stdm.size() == ftm.getSize())
+        return (1);
+    return (0);
 }
 
 int test_efficiency_unord_map_copy(void)
@@ -138,7 +144,9 @@ int test_efficiency_unord_map_copy(void)
 
     print_comparison("unord_map copy", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    return (std_copy.size() == ft_copy.getSize() ? 1 : 0);
+    if (std_copy.size() == ft_copy.getSize())
+        return (1);
+    return (0);
 }
 
 int test_efficiency_unord_map_move(void)
@@ -170,7 +178,9 @@ int test_efficiency_unord_map_move(void)
 
     print_comparison("unord_map move", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    return (std_moved.size() == ft_moved.getSize() ? 1 : 0);
+    if (std_moved.size() == ft_moved.getSize())
+        return (1);
+    return (0);
 }
 
 int test_efficiency_unord_map_swap(void)
@@ -215,7 +225,9 @@ int test_efficiency_unord_map_swap(void)
 
     print_comparison("unord_map swap", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    return (std_a.size() == ft_a.getSize() && std_b.size() == ft_b.getSize() ? 1 : 0);
+    if (std_a.size() == ft_a.getSize() && std_b.size() == ft_b.getSize())
+        return (1);
+    return (0);
 }
 
 int test_efficiency_unord_map_clear(void)
@@ -245,6 +257,8 @@ int test_efficiency_unord_map_clear(void)
 
     print_comparison("unord_map clear", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    return (stdm.empty() == ftm.empty() ? 1 : 0);
+    if (stdm.empty() == ftm.empty())
+        return (1);
+    return (0);
 }
 

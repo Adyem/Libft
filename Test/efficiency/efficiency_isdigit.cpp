@@ -21,6 +21,8 @@ int test_efficiency_isdigit(void)
 
     print_comparison("isdigit", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    return (result ? 1 : 0);
+    if (result)
+        return (1);
+    return (0);
 }
 

@@ -10,6 +10,10 @@ char    *cma_strdup(const char *string) __attribute__ ((warn_unused_result));
 void    *cma_memdup(const void *source, size_t size) __attribute__ ((warn_unused_result));
 void    *cma_calloc(std::size_t, std::size_t size) __attribute__ ((warn_unused_result));
 void    *cma_realloc(void* ptr, std::size_t new_size) __attribute__ ((warn_unused_result));
+void    *cma_aligned_alloc(std::size_t alignment, std::size_t size)
+            __attribute__ ((warn_unused_result, hot));
+std::size_t    cma_alloc_size(const void* ptr)
+            __attribute__ ((warn_unused_result, hot));
 char    **cma_split(char const *string, char delimiter) __attribute__ ((warn_unused_result));
 char    *cma_itoa(int number) __attribute__ ((warn_unused_result));
 char    *cma_itoa_base(int number, int base) __attribute__ ((warn_unused_result));
