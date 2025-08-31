@@ -1,6 +1,6 @@
 # FullLibft
 
-FullLibft is a collection of C and C++ utilities grouped into multiple small libraries.
+Libft is a collection of C and C++ utilities grouped into multiple small libraries.
 It provides implementations of common libc functions, custom memory allocation helpers,
 basic threading helpers, containers, string utilities, simple networking and more.
 The top level `Makefile` builds every submodule and links them into `Full_Libft.a`.
