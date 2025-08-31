@@ -18,17 +18,17 @@ class Iterator
         ValueType& operator*() const;
 
     private:
-        ValueType* m_ptr;
+        ValueType* _ptr;
 };
 
 template <typename ValueType>
-Iterator<ValueType>::Iterator(ValueType* ptr) : m_ptr(ptr)
+Iterator<ValueType>::Iterator(ValueType* ptr) : _ptr(ptr)
 {
     return ;
 }
 
 template <typename ValueType>
-Iterator<ValueType>::Iterator(const Iterator& other) : m_ptr(other.m_ptr)
+Iterator<ValueType>::Iterator(const Iterator& other) : _ptr(other._ptr)
 {
     return ;
 }
@@ -37,14 +37,14 @@ template <typename ValueType>
 Iterator<ValueType>& Iterator<ValueType>::operator=(const Iterator& other)
 {
     if (this != &other)
-        m_ptr = other.m_ptr;
+        _ptr = other._ptr;
     return (*this);
 }
 
 template <typename ValueType>
-Iterator<ValueType>::Iterator(Iterator&& other) noexcept : m_ptr(other.m_ptr)
+Iterator<ValueType>::Iterator(Iterator&& other) noexcept : _ptr(other._ptr)
 {
-    other.m_ptr = ft_nullptr;
+    other._ptr = ft_nullptr;
         return ;
 }
 
@@ -53,8 +53,8 @@ Iterator<ValueType>& Iterator<ValueType>::operator=(Iterator&& other) noexcept
 {
     if (this != &other)
     {
-        m_ptr = other.m_ptr;
-        other.m_ptr = ft_nullptr;
+        _ptr = other._ptr;
+        other._ptr = ft_nullptr;
     }
     return (*this);
 }
@@ -62,20 +62,20 @@ Iterator<ValueType>& Iterator<ValueType>::operator=(Iterator&& other) noexcept
 template <typename ValueType>
 Iterator<ValueType> Iterator<ValueType>::operator++()
 {
-    ++m_ptr;
+    ++_ptr;
     return (*this);
 }
 
 template <typename ValueType>
 bool Iterator<ValueType>::operator!=(const Iterator& other) const
 {
-    return (m_ptr != other.m_ptr);
+    return (_ptr != other._ptr);
 }
 
 template <typename ValueType>
 ValueType& Iterator<ValueType>::operator*() const
 {
-    return (*m_ptr);
+    return (*_ptr);
 }
 
 #endif
