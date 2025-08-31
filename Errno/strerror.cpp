@@ -184,6 +184,8 @@ const char* ft_strerror(int error_code)
         return ("Future has no associated promise");
     else if (error_code == FUTURE_ALLOC_FAIL)
         return ("Future memory allocation failed");
+    else if (error_code == FUTURE_BROKEN)
+        return ("Associated promise was destroyed");
     else if (error_code > ERRNO_OFFSET)
     {
         int standard_errno = error_code - ERRNO_OFFSET;
