@@ -16,8 +16,8 @@ class ft_queue
     private:
         struct QueueNode
         {
-            ElementType data;
-            QueueNode* next;
+            ElementType _data;
+            QueueNode* _next;
         };
 
         QueueNode*  _front;
@@ -129,8 +129,8 @@ void ft_queue<ElementType>::enqueue(const ElementType& value)
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
-    construct_at(&node->data, value);
-    node->next = ft_nullptr;
+    construct_at(&node->_data, value);
+    node->_next = ft_nullptr;
     if (this->_rear == ft_nullptr)
     {
         this->_front = node;
@@ -138,7 +138,7 @@ void ft_queue<ElementType>::enqueue(const ElementType& value)
     }
     else
     {
-        this->_rear->next = node;
+        this->_rear->_next = node;
         this->_rear = node;
     }
     ++this->_size;
@@ -161,8 +161,8 @@ void ft_queue<ElementType>::enqueue(ElementType&& value)
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
-    construct_at(&node->data, std::move(value));
-    node->next = ft_nullptr;
+    construct_at(&node->_data, std::move(value));
+    node->_next = ft_nullptr;
     if (this->_rear == ft_nullptr)
     {
         this->_front = node;
@@ -170,7 +170,7 @@ void ft_queue<ElementType>::enqueue(ElementType&& value)
     }
     else
     {
-        this->_rear->next = node;
+        this->_rear->_next = node;
         this->_rear = node;
     }
     ++this->_size;
@@ -193,11 +193,11 @@ ElementType ft_queue<ElementType>::dequeue()
         return (ElementType());
     }
     QueueNode* node = this->_front;
-    this->_front = node->next;
+    this->_front = node->_next;
     if (this->_front == ft_nullptr)
         this->_rear = ft_nullptr;
-    ElementType value = std::move(node->data);
-    destroy_at(&node->data);
+    ElementType value = std::move(node->_data);
+    destroy_at(&node->_data);
     cma_free(node);
     --this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -219,7 +219,7 @@ ElementType& ft_queue<ElementType>::front()
         this->_mutex.unlock(THREAD_ID);
         return (errorElement);
     }
-    ElementType& ref = this->_front->data;
+    ElementType& ref = this->_front->_data;
     this->_mutex.unlock(THREAD_ID);
     return (ref);
 }
@@ -239,7 +239,7 @@ const ElementType& ft_queue<ElementType>::front() const
         this->_mutex.unlock(THREAD_ID);
         return (errorElement);
     }
-    ElementType& ref = this->_front->data;
+    ElementType& ref = this->_front->_data;
     this->_mutex.unlock(THREAD_ID);
     return (ref);
 }
@@ -292,8 +292,8 @@ void ft_queue<ElementType>::clear()
     while (this->_front != ft_nullptr)
     {
         QueueNode* node = this->_front;
-        this->_front = this->_front->next;
-        destroy_at(&node->data);
+        this->_front = this->_front->_next;
+        destroy_at(&node->_data);
         cma_free(node);
     }
     this->_rear = ft_nullptr;

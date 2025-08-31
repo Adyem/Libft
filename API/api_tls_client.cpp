@@ -32,15 +32,15 @@ static ssize_t ssl_send_all(SSL *ssl, const void *data, size_t size)
 }
 
 api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms)
-: ctx(NULL), ssl(NULL), sock(-1), host(host_c ? host_c : ""), timeout(timeout_ms)
+: _ctx(NULL), _ssl(NULL), _sock(-1), _host(host_c ? host_c : ""), _timeout(timeout_ms)
 {
     if (!host_c)
         return;
     if (!OPENSSL_init_ssl(0, NULL))
         return;
 
-    ctx = SSL_CTX_new(TLS_client_method());
-    if (!ctx)
+    _ctx = SSL_CTX_new(TLS_client_method());
+    if (!_ctx)
         return;
 
     struct addrinfo hints;
@@ -56,69 +56,69 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
 
     for (p = res; p != NULL; p = p->ai_next)
     {
-        sock = nw_socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-        if (sock < 0)
+        _sock = nw_socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+        if (_sock < 0)
             continue;
         if (timeout_ms > 0)
         {
             struct timeval tv;
             tv.tv_sec = timeout_ms / 1000;
             tv.tv_usec = (timeout_ms % 1000) * 1000;
-            setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-            setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+            setsockopt(_sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+            setsockopt(_sock, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
         }
-        if (nw_connect(sock, p->ai_addr, static_cast<socklen_t>(p->ai_addrlen)) == 0)
+        if (nw_connect(_sock, p->ai_addr, static_cast<socklen_t>(p->ai_addrlen)) == 0)
             break;
-        FT_CLOSE_SOCKET(sock);
-        sock = -1;
+        FT_CLOSE_SOCKET(_sock);
+        _sock = -1;
     }
     if (res)
         freeaddrinfo(res);
-    if (sock < 0)
+    if (_sock < 0)
         return;
 
-    ssl = SSL_new(ctx);
-    if (!ssl)
+    _ssl = SSL_new(_ctx);
+    if (!_ssl)
         return;
-    if (SSL_set_fd(ssl, sock) != 1)
+    if (SSL_set_fd(_ssl, _sock) != 1)
         return;
-    if (SSL_connect(ssl) <= 0)
+    if (SSL_connect(_ssl) <= 0)
     {
-        SSL_free(ssl);
-        ssl = NULL;
+        SSL_free(_ssl);
+        _ssl = NULL;
         return;
     }
 }
 
 api_tls_client::~api_tls_client()
 {
-    if (ssl)
+    if (_ssl)
     {
-        SSL_shutdown(ssl);
-        SSL_free(ssl);
+        SSL_shutdown(_ssl);
+        SSL_free(_ssl);
     }
-    if (sock >= 0)
-        FT_CLOSE_SOCKET(sock);
-    if (ctx)
-        SSL_CTX_free(ctx);
+    if (_sock >= 0)
+        FT_CLOSE_SOCKET(_sock);
+    if (_ctx)
+        SSL_CTX_free(_ctx);
 }
 
 bool api_tls_client::is_valid() const
 {
-    return (ssl != NULL);
+    return (_ssl != NULL);
 }
 
 char *api_tls_client::request(const char *method, const char *path, json_group *payload,
                               const char *headers, int *status)
 {
-    if (!ssl || !method || !path)
+    if (!_ssl || !method || !path)
         return (NULL);
 
     ft_string request(method);
     request += " ";
     request += path;
     request += " HTTP/1.1\r\nHost: ";
-    request += host.c_str();
+    request += _host.c_str();
     if (headers && headers[0])
     {
         request += "\r\n";
@@ -145,7 +145,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
     if (payload)
         request += body_string.c_str();
 
-    if (ssl_send_all(ssl, request.c_str(), request.size()) < 0)
+    if (ssl_send_all(_ssl, request.c_str(), request.size()) < 0)
         return (NULL);
 
     ft_string resp;
@@ -155,7 +155,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
 
     while (!header_end_ptr)
     {
-        bytes = nw_ssl_read(ssl, buffer, sizeof(buffer) - 1);
+        bytes = nw_ssl_read(_ssl, buffer, sizeof(buffer) - 1);
         if (bytes <= 0)
             return (NULL);
         buffer[bytes] = '\0';
@@ -184,7 +184,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
     ft_string body(resp.c_str() + header_len);
     while (body.size() < content_length)
     {
-        bytes = nw_ssl_read(ssl, buffer, sizeof(buffer) - 1);
+        bytes = nw_ssl_read(_ssl, buffer, sizeof(buffer) - 1);
         if (bytes <= 0)
             return (NULL);
         buffer[bytes] = '\0';

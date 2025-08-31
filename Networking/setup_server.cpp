@@ -71,7 +71,7 @@ static inline int set_timeout_send(int fd, int ms)
 
 int ft_socket::create_socket(const SocketConfig &config)
 {
-    this->_socket_fd = nw_socket(config.address_family, SOCK_STREAM, config.protocol);
+    this->_socket_fd = nw_socket(config._address_family, SOCK_STREAM, config._protocol);
     if (this->_socket_fd < 0)
     {
         handle_error(errno + ERRNO_OFFSET);
@@ -82,7 +82,7 @@ int ft_socket::create_socket(const SocketConfig &config)
 
 int ft_socket::set_reuse_address(const SocketConfig &config)
 {
-    if (!config.reuse_address)
+    if (!config._reuse_address)
         return (ER_SUCCESS);
     int opt = 1;
     if (setsockopt_reuse(this->_socket_fd, opt) < 0)
@@ -97,7 +97,7 @@ int ft_socket::set_reuse_address(const SocketConfig &config)
 
 int ft_socket::set_non_blocking(const SocketConfig &config)
 {
-    if (!config.non_blocking)
+    if (!config._non_blocking)
         return (ER_SUCCESS);
     if (set_nonblocking_platform(this->_socket_fd) != 0)
     {
@@ -111,9 +111,9 @@ int ft_socket::set_non_blocking(const SocketConfig &config)
 
 int ft_socket::set_timeouts(const SocketConfig &config)
 {
-    if (config.recv_timeout > 0)
+    if (config._recv_timeout > 0)
     {
-        if (set_timeout_recv(this->_socket_fd, config.recv_timeout) < 0)
+        if (set_timeout_recv(this->_socket_fd, config._recv_timeout) < 0)
         {
             handle_error(errno + ERRNO_OFFSET);
             FT_CLOSE_SOCKET(this->_socket_fd);
@@ -121,9 +121,9 @@ int ft_socket::set_timeouts(const SocketConfig &config)
             return (this->_error);
         }
     }
-    if (config.send_timeout > 0)
+    if (config._send_timeout > 0)
     {
-        if (set_timeout_send(this->_socket_fd, config.send_timeout) < 0)
+        if (set_timeout_send(this->_socket_fd, config._send_timeout) < 0)
         {
             handle_error(errno + ERRNO_OFFSET);
             FT_CLOSE_SOCKET(this->_socket_fd);
@@ -138,12 +138,12 @@ int ft_socket::configure_address(const SocketConfig &config)
 {
     ft_memset(&this->_address, 0, sizeof(this->_address));
 
-    if (config.address_family == AF_INET)
+    if (config._address_family == AF_INET)
     {
         struct sockaddr_in *addr_in = reinterpret_cast<struct sockaddr_in*>(&this->_address);
         addr_in->sin_family = AF_INET;
-        addr_in->sin_port = htons(config.port);
-        if (inet_pton(AF_INET, config.ip, &addr_in->sin_addr) <= 0)
+        addr_in->sin_port = htons(config._port);
+        if (inet_pton(AF_INET, config._ip, &addr_in->sin_addr) <= 0)
         {
             handle_error(SOCKET_INVALID_CONFIGURATION);
             FT_CLOSE_SOCKET(this->_socket_fd);
@@ -151,12 +151,12 @@ int ft_socket::configure_address(const SocketConfig &config)
             return (this->_error);
         }
     }
-    else if (config.address_family == AF_INET6)
+    else if (config._address_family == AF_INET6)
     {
         struct sockaddr_in6 *addr_in6 = reinterpret_cast<struct sockaddr_in6*>(&this->_address);
         addr_in6->sin6_family = AF_INET6;
-        addr_in6->sin6_port = htons(config.port);
-        if (inet_pton(AF_INET6, config.ip, &addr_in6->sin6_addr) <= 0)
+        addr_in6->sin6_port = htons(config._port);
+        if (inet_pton(AF_INET6, config._ip, &addr_in6->sin6_addr) <= 0)
         {
             handle_error(SOCKET_INVALID_CONFIGURATION);
             FT_CLOSE_SOCKET(this->_socket_fd);
@@ -178,9 +178,9 @@ int ft_socket::bind_socket(const SocketConfig &config)
 {
     socklen_t addr_len;
 
-    if (config.address_family == AF_INET)
+    if (config._address_family == AF_INET)
         addr_len = sizeof(struct sockaddr_in);
-    else if (config.address_family == AF_INET6)
+    else if (config._address_family == AF_INET6)
         addr_len = sizeof(struct sockaddr_in6);
     else
     {
@@ -203,7 +203,7 @@ int ft_socket::bind_socket(const SocketConfig &config)
 
 int ft_socket::listen_socket(const SocketConfig &config)
 {
-    if (nw_listen(this->_socket_fd, config.backlog) < 0)
+    if (nw_listen(this->_socket_fd, config._backlog) < 0)
     {
         handle_error(errno + ERRNO_OFFSET);
         FT_CLOSE_SOCKET(this->_socket_fd);
@@ -224,13 +224,13 @@ int ft_socket::setup_server(const SocketConfig &config)
 {
     if (create_socket(config) != ER_SUCCESS)
         return (this->_error);
-    if (config.reuse_address)
+    if (config._reuse_address)
         if (set_reuse_address(config) != ER_SUCCESS)
             return (this->_error);
-    if (config.non_blocking)
+    if (config._non_blocking)
         if (set_non_blocking(config) != ER_SUCCESS)
             return (this->_error);
-    if (config.recv_timeout > 0 || config.send_timeout > 0)
+    if (config._recv_timeout > 0 || config._send_timeout > 0)
         if (set_timeouts(config) != ER_SUCCESS)
             return (this->_error);
     if (configure_address(config) != ER_SUCCESS)
@@ -239,7 +239,7 @@ int ft_socket::setup_server(const SocketConfig &config)
         return (this->_error);
     if (listen_socket(config) != ER_SUCCESS)
         return (this->_error);
-    if (!config.multicast_group.empty())
+    if (!config._multicast_group.empty())
         if (join_multicast_group(config) != ER_SUCCESS)
             return (this->_error);
     this->_error = ER_SUCCESS;
@@ -248,22 +248,22 @@ int ft_socket::setup_server(const SocketConfig &config)
 
 int ft_socket::join_multicast_group(const SocketConfig &config)
 {
-    if (config.multicast_group.empty())
+    if (config._multicast_group.empty())
         return (ER_SUCCESS);
-    if (config.address_family == AF_INET)
+    if (config._address_family == AF_INET)
     {
         struct ip_mreq mreq;
         ft_bzero(&mreq, sizeof(mreq));
-        if (inet_pton(AF_INET, config.multicast_group.c_str(), &mreq.imr_multiaddr) <= 0)
+        if (inet_pton(AF_INET, config._multicast_group.c_str(), &mreq.imr_multiaddr) <= 0)
         {
             handle_error(SOCKET_INVALID_CONFIGURATION);
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error);
         }
-        if (config.multicast_interface.empty())
+        if (config._multicast_interface.empty())
             mreq.imr_interface.s_addr = htonl(INADDR_ANY);
-        else if (inet_pton(AF_INET, config.multicast_interface.c_str(), &mreq.imr_interface) <= 0)
+        else if (inet_pton(AF_INET, config._multicast_interface.c_str(), &mreq.imr_interface) <= 0)
         {
             handle_error(SOCKET_INVALID_CONFIGURATION);
             FT_CLOSE_SOCKET(this->_socket_fd);
@@ -279,11 +279,11 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
             return (this->_error);
         }
     }
-    else if (config.address_family == AF_INET6)
+    else if (config._address_family == AF_INET6)
     {
         struct ipv6_mreq mreq6;
         ft_bzero(&mreq6, sizeof(mreq6));
-        if (inet_pton(AF_INET6, config.multicast_group.c_str(), &mreq6.ipv6mr_multiaddr) <= 0)
+        if (inet_pton(AF_INET6, config._multicast_group.c_str(), &mreq6.ipv6mr_multiaddr) <= 0)
         {
             handle_error(SOCKET_INVALID_CONFIGURATION);
             FT_CLOSE_SOCKET(this->_socket_fd);

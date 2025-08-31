@@ -16,9 +16,9 @@ class ft_deque
     private:
         struct DequeNode
         {
-            ElementType data;
-            DequeNode* prev;
-            DequeNode* next;
+            ElementType _data;
+            DequeNode* _prev;
+            DequeNode* _next;
         };
 
         DequeNode*   _front;
@@ -135,13 +135,13 @@ void ft_deque<ElementType>::push_front(const ElementType& value)
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
-    construct_at(&node->data, value);
-    node->prev = ft_nullptr;
-    node->next = this->_front;
+    construct_at(&node->_data, value);
+    node->_prev = ft_nullptr;
+    node->_next = this->_front;
     if (this->_front == ft_nullptr)
         this->_back = node;
     else
-        this->_front->prev = node;
+        this->_front->_prev = node;
     this->_front = node;
     ++this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -163,13 +163,13 @@ void ft_deque<ElementType>::push_front(ElementType&& value)
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
-    construct_at(&node->data, std::move(value));
-    node->prev = ft_nullptr;
-    node->next = this->_front;
+    construct_at(&node->_data, std::move(value));
+    node->_prev = ft_nullptr;
+    node->_next = this->_front;
     if (this->_front == ft_nullptr)
         this->_back = node;
     else
-        this->_front->prev = node;
+        this->_front->_prev = node;
     this->_front = node;
     ++this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -191,13 +191,13 @@ void ft_deque<ElementType>::push_back(const ElementType& value)
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
-    construct_at(&node->data, value);
-    node->next = ft_nullptr;
-    node->prev = this->_back;
+    construct_at(&node->_data, value);
+    node->_next = ft_nullptr;
+    node->_prev = this->_back;
     if (this->_back == ft_nullptr)
         this->_front = node;
     else
-        this->_back->next = node;
+        this->_back->_next = node;
     this->_back = node;
     ++this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -219,13 +219,13 @@ void ft_deque<ElementType>::push_back(ElementType&& value)
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
-    construct_at(&node->data, std::move(value));
-    node->next = ft_nullptr;
-    node->prev = this->_back;
+    construct_at(&node->_data, std::move(value));
+    node->_next = ft_nullptr;
+    node->_prev = this->_back;
     if (this->_back == ft_nullptr)
         this->_front = node;
     else
-        this->_back->next = node;
+        this->_back->_next = node;
     this->_back = node;
     ++this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -247,13 +247,13 @@ ElementType ft_deque<ElementType>::pop_front()
         return (ElementType());
     }
     DequeNode* node = this->_front;
-    this->_front = node->next;
+    this->_front = node->_next;
     if (this->_front == ft_nullptr)
         this->_back = ft_nullptr;
     else
-        this->_front->prev = ft_nullptr;
-    ElementType value = std::move(node->data);
-    destroy_at(&node->data);
+        this->_front->_prev = ft_nullptr;
+    ElementType value = std::move(node->_data);
+    destroy_at(&node->_data);
     cma_free(node);
     --this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -275,13 +275,13 @@ ElementType ft_deque<ElementType>::pop_back()
         return (ElementType());
     }
     DequeNode* node = this->_back;
-    this->_back = node->prev;
+    this->_back = node->_prev;
     if (this->_back == ft_nullptr)
         this->_front = ft_nullptr;
     else
-        this->_back->next = ft_nullptr;
-    ElementType value = std::move(node->data);
-    destroy_at(&node->data);
+        this->_back->_next = ft_nullptr;
+    ElementType value = std::move(node->_data);
+    destroy_at(&node->_data);
     cma_free(node);
     --this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -303,7 +303,7 @@ ElementType& ft_deque<ElementType>::front()
         this->_mutex.unlock(THREAD_ID);
         return (errorElement);
     }
-    ElementType& ref = this->_front->data;
+    ElementType& ref = this->_front->_data;
     this->_mutex.unlock(THREAD_ID);
     return (ref);
 }
@@ -323,7 +323,7 @@ const ElementType& ft_deque<ElementType>::front() const
         this->_mutex.unlock(THREAD_ID);
         return (errorElement);
     }
-    ElementType& ref = this->_front->data;
+    ElementType& ref = this->_front->_data;
     this->_mutex.unlock(THREAD_ID);
     return (ref);
 }
@@ -343,7 +343,7 @@ ElementType& ft_deque<ElementType>::back()
         this->_mutex.unlock(THREAD_ID);
         return (errorElement);
     }
-    ElementType& ref = this->_back->data;
+    ElementType& ref = this->_back->_data;
     this->_mutex.unlock(THREAD_ID);
     return (ref);
 }
@@ -363,7 +363,7 @@ const ElementType& ft_deque<ElementType>::back() const
         this->_mutex.unlock(THREAD_ID);
         return (errorElement);
     }
-    ElementType& ref = this->_back->data;
+    ElementType& ref = this->_back->_data;
     this->_mutex.unlock(THREAD_ID);
     return (ref);
 }
@@ -416,8 +416,8 @@ void ft_deque<ElementType>::clear()
     while (this->_front != ft_nullptr)
     {
         DequeNode* node = this->_front;
-        this->_front = this->_front->next;
-        destroy_at(&node->data);
+        this->_front = this->_front->_next;
+        destroy_at(&node->_data);
         cma_free(node);
     }
     this->_back = ft_nullptr;
