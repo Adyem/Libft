@@ -188,9 +188,9 @@ ft_socket::ft_socket(int fd, const sockaddr_storage &addr) : _address(addr), _so
 
 ft_socket::ft_socket(const SocketConfig &config) : _socket_fd(-1), _error(ER_SUCCESS)
 {
-    if (config.type == SocketType::SERVER)
+    if (config._type == SocketType::SERVER)
         setup_server(config);
-    else if (config.type == SocketType::CLIENT)
+    else if (config._type == SocketType::CLIENT)
         setup_client(config);
     else
     {
@@ -333,9 +333,9 @@ int ft_socket::initialize(const SocketConfig &config)
         ft_errno = SOCKET_ALRDY_INITIALIZED;
         return (1);
     }
-    if (config.type == SocketType::SERVER)
+    if (config._type == SocketType::SERVER)
         setup_server(config);
-    else if (config.type == SocketType::CLIENT)
+    else if (config._type == SocketType::CLIENT)
         setup_client(config);
     else
     {

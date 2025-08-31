@@ -21,11 +21,11 @@ char *api_request_string(const char *ip, uint16_t port,
     const char *headers, int *status, int timeout)
 {
     SocketConfig config;
-    config.type = SocketType::CLIENT;
-    config.ip = ip;
-    config.port = port;
-    config.recv_timeout = timeout;
-    config.send_timeout = timeout;
+    config._type = SocketType::CLIENT;
+    config._ip = ip;
+    config._port = port;
+    config._recv_timeout = timeout;
+    config._send_timeout = timeout;
 
     ft_socket sock(config);
     if (sock.get_error())

@@ -22,8 +22,8 @@ class ft_event_emitter
     private:
         struct Listener
         {
-            EventType event;
-            void (*callback)(Args...);
+            EventType _event;
+            void (*_callback)(Args...);
         };
 
         Listener*   _listeners;
@@ -181,10 +181,10 @@ void ft_event_emitter<EventType, Args...>::emit(const EventType& event, Args... 
     size_t i = 0;
     while (i < this->_size)
     {
-        if (this->_listeners[i].event == event)
+        if (this->_listeners[i]._event == event)
         {
             found = true;
-            this->_listeners[i].callback(args...);
+            this->_listeners[i]._callback(args...);
         }
         ++i;
     }
@@ -202,7 +202,7 @@ void ft_event_emitter<EventType, Args...>::remove_listener(const EventType& even
     size_t i = 0;
     while (i < this->_size)
     {
-        if (this->_listeners[i].event == event && this->_listeners[i].callback == cb)
+        if (this->_listeners[i]._event == event && this->_listeners[i]._callback == cb)
         {
             destroy_at(&this->_listeners[i]);
             size_t j = i;

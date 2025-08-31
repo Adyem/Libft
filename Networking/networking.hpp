@@ -29,18 +29,18 @@ class SocketConfig
         int _error;
 
     public:
-        SocketType type;
-        ft_string ip;
-        uint16_t port;
-        int backlog;
-        int protocol;
-        int address_family;
-        bool reuse_address;
-        bool non_blocking;
-        int recv_timeout;
-        int send_timeout;
-        ft_string multicast_group;
-        ft_string multicast_interface;
+        SocketType _type;
+        ft_string _ip;
+        uint16_t _port;
+        int _backlog;
+        int _protocol;
+        int _address_family;
+        bool _reuse_address;
+        bool _non_blocking;
+        int _recv_timeout;
+        int _send_timeout;
+        ft_string _multicast_group;
+        ft_string _multicast_interface;
 
         SocketConfig();
         ~SocketConfig();

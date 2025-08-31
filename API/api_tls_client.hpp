@@ -9,11 +9,11 @@
 class api_tls_client
 {
 private:
-    SSL_CTX *ctx;
-    SSL *ssl;
-    int sock;
-    ft_string host;
-    int timeout;
+    SSL_CTX *_ctx;
+    SSL *_ssl;
+    int _sock;
+    ft_string _host;
+    int _timeout;
 
 public:
     api_tls_client(const char *host, uint16_t port, int timeout = 60000);

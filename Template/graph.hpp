@@ -23,10 +23,10 @@ class ft_graph
     private:
         struct GraphNode
         {
-            VertexType  value;
-            size_t*     edges;
-            size_t      degree;
-            size_t      capacity;
+            VertexType  _value;
+            size_t*     _edges;
+            size_t      _degree;
+            size_t      _capacity;
         };
 
         GraphNode*   _nodes;
@@ -89,9 +89,9 @@ ft_graph<VertexType>::~ft_graph()
         size_t i = 0;
         while (i < this->_size)
         {
-            destroy_at(&this->_nodes[i].value);
-            if (this->_nodes[i].edges != ft_nullptr)
-                cma_free(this->_nodes[i].edges);
+            destroy_at(&this->_nodes[i]._value);
+            if (this->_nodes[i]._edges != ft_nullptr)
+                cma_free(this->_nodes[i]._edges);
             ++i;
         }
         cma_free(this->_nodes);
@@ -164,11 +164,11 @@ bool ft_graph<VertexType>::ensure_node_capacity(size_t desired)
     size_t i = 0;
     while (i < this->_size)
     {
-        construct_at(&newNodes[i].value, std::move(this->_nodes[i].value));
-        newNodes[i].edges = this->_nodes[i].edges;
-        newNodes[i].degree = this->_nodes[i].degree;
-        newNodes[i].capacity = this->_nodes[i].capacity;
-        destroy_at(&this->_nodes[i].value);
+        construct_at(&newNodes[i]._value, std::move(this->_nodes[i]._value));
+        newNodes[i]._edges = this->_nodes[i]._edges;
+        newNodes[i]._degree = this->_nodes[i]._degree;
+        newNodes[i]._capacity = this->_nodes[i]._capacity;
+        destroy_at(&this->_nodes[i]._value);
         ++i;
     }
     if (this->_nodes != ft_nullptr)
@@ -181,9 +181,9 @@ bool ft_graph<VertexType>::ensure_node_capacity(size_t desired)
 template <typename VertexType>
 bool ft_graph<VertexType>::ensure_edge_capacity(GraphNode& node, size_t desired)
 {
-    if (desired <= node.capacity)
+    if (desired <= node._capacity)
         return (true);
-    size_t newCap = (node.capacity == 0) ? 1 : node.capacity * 2;
+    size_t newCap = (node._capacity == 0) ? 1 : node._capacity * 2;
     while (newCap < desired)
         newCap *= 2;
     size_t* newEdges = static_cast<size_t*>(cma_malloc(sizeof(size_t) * newCap));
@@ -193,15 +193,15 @@ bool ft_graph<VertexType>::ensure_edge_capacity(GraphNode& node, size_t desired)
         return (false);
     }
     size_t i = 0;
-    while (i < node.degree)
+    while (i < node._degree)
     {
-        newEdges[i] = node.edges[i];
+        newEdges[i] = node._edges[i];
         ++i;
     }
-    if (node.edges != ft_nullptr)
-        cma_free(node.edges);
-    node.edges = newEdges;
-    node.capacity = newCap;
+    if (node._edges != ft_nullptr)
+        cma_free(node._edges);
+    node._edges = newEdges;
+    node._capacity = newCap;
     return (true);
 }
 
@@ -218,10 +218,10 @@ size_t ft_graph<VertexType>::add_vertex(const VertexType& value)
         this->_mutex.unlock(THREAD_ID);
         return (this->_size);
     }
-    construct_at(&this->_nodes[this->_size].value, value);
-    this->_nodes[this->_size].edges = ft_nullptr;
-    this->_nodes[this->_size].degree = 0;
-    this->_nodes[this->_size].capacity = 0;
+    construct_at(&this->_nodes[this->_size]._value, value);
+    this->_nodes[this->_size]._edges = ft_nullptr;
+    this->_nodes[this->_size]._degree = 0;
+    this->_nodes[this->_size]._capacity = 0;
     size_t idx = this->_size;
     ++this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -241,10 +241,10 @@ size_t ft_graph<VertexType>::add_vertex(VertexType&& value)
         this->_mutex.unlock(THREAD_ID);
         return (this->_size);
     }
-    construct_at(&this->_nodes[this->_size].value, std::move(value));
-    this->_nodes[this->_size].edges = ft_nullptr;
-    this->_nodes[this->_size].degree = 0;
-    this->_nodes[this->_size].capacity = 0;
+    construct_at(&this->_nodes[this->_size]._value, std::move(value));
+    this->_nodes[this->_size]._edges = ft_nullptr;
+    this->_nodes[this->_size]._degree = 0;
+    this->_nodes[this->_size]._capacity = 0;
     size_t idx = this->_size;
     ++this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -266,13 +266,13 @@ void ft_graph<VertexType>::add_edge(size_t from, size_t to)
         return ;
     }
     GraphNode& node = this->_nodes[from];
-    if (!ensure_edge_capacity(node, node.degree + 1))
+    if (!ensure_edge_capacity(node, node._degree + 1))
     {
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
-    node.edges[node.degree] = to;
-    ++node.degree;
+    node._edges[node._degree] = to;
+    ++node._degree;
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -311,11 +311,11 @@ void ft_graph<VertexType>::bfs(size_t start, Func visit)
     while (!q.empty())
     {
         size_t v = q.dequeue();
-        visit(this->_nodes[v].value);
+        visit(this->_nodes[v]._value);
         size_t j = 0;
-        while (j < this->_nodes[v].degree)
+        while (j < this->_nodes[v]._degree)
         {
-            size_t w = this->_nodes[v].edges[j];
+            size_t w = this->_nodes[v]._edges[j];
             if (!visited[w])
             {
                 visited[w] = true;
@@ -365,12 +365,12 @@ void ft_graph<VertexType>::dfs(size_t start, Func visit)
         if (visited[v])
             continue ;
         visited[v] = true;
-        visit(this->_nodes[v].value);
-        size_t j = this->_nodes[v].degree;
+        visit(this->_nodes[v]._value);
+        size_t j = this->_nodes[v]._degree;
         while (j > 0)
         {
             --j;
-            size_t w = this->_nodes[v].edges[j];
+            size_t w = this->_nodes[v]._edges[j];
             if (!visited[w])
                 st.push(w);
         }
@@ -428,13 +428,13 @@ void ft_graph<VertexType>::clear()
     size_t i = 0;
     while (i < this->_size)
     {
-        destroy_at(&this->_nodes[i].value);
-        if (this->_nodes[i].edges != ft_nullptr)
+        destroy_at(&this->_nodes[i]._value);
+        if (this->_nodes[i]._edges != ft_nullptr)
         {
-            cma_free(this->_nodes[i].edges);
-            this->_nodes[i].edges = ft_nullptr;
-            this->_nodes[i].degree = 0;
-            this->_nodes[i].capacity = 0;
+            cma_free(this->_nodes[i]._edges);
+            this->_nodes[i]._edges = ft_nullptr;
+            this->_nodes[i]._degree = 0;
+            this->_nodes[i]._capacity = 0;
         }
         ++i;
     }
