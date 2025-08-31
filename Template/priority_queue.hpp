@@ -141,7 +141,11 @@ bool ft_priority_queue<ElementType, Compare>::ensure_capacity(size_t desired)
 {
     if (desired <= this->_capacity)
         return (true);
-    size_t newCap = (this->_capacity == 0) ? 1 : this->_capacity * 2;
+    size_t newCap;
+    if (this->_capacity == 0)
+        newCap = 1;
+    else
+        newCap = this->_capacity * 2;
     while (newCap < desired)
         newCap *= 2;
     ElementType* newData = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * newCap));

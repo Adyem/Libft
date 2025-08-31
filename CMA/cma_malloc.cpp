@@ -9,11 +9,17 @@
 #include "CMA_internal.hpp"
 #include "../PThread/mutex.hpp"
 #include "../CPP_class/nullptr.hpp"
+#include "../Logger/logger.hpp"
 
 void* cma_malloc(std::size_t size)
 {
     if (OFFSWITCH == 1)
-        return (malloc(size));
+    {
+        void *ptr = malloc(size);
+        if (ft_log_get_alloc_logging())
+            ft_log_debug("cma_malloc %zu -> %p", size, ptr);
+        return ptr;
+    }
     if (size <= 0)
         return (ft_nullptr);
     g_malloc_mutex.lock(THREAD_ID);
@@ -31,6 +37,9 @@ void* cma_malloc(std::size_t size)
     }
     block = split_block(block, aligned_size);
     block->free = false;
+    void *result = reinterpret_cast<char*>(block) + sizeof(Block);
     g_malloc_mutex.unlock(THREAD_ID);
-    return (reinterpret_cast<char*>(block) + sizeof(Block));
+    if (ft_log_get_alloc_logging())
+        ft_log_debug("cma_malloc %zu -> %p", aligned_size, result);
+    return result;
 }

@@ -123,11 +123,15 @@ ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args)
 template <typename ManagedType>
 ft_sharedptr<ManagedType>::ft_sharedptr(ManagedType* pointer, bool isArray, size_t arraySize)
     : _managedPointer(pointer),
-      _referenceCount(pointer ? new (std::nothrow) int : ft_nullptr),
+      _referenceCount(ft_nullptr),
       _arraySize(arraySize),
       _isArrayType(isArray),
       _errorCode(ER_SUCCESS)
 {
+    if (pointer)
+        _referenceCount = new (std::nothrow) int;
+    else
+        _referenceCount = ft_nullptr;
     if (_referenceCount)
         *_referenceCount = 1;
     else if (pointer)
@@ -561,7 +565,11 @@ void ft_sharedptr<ManagedType>::remove(int index)
         return ;
     }
     size_t newSize = _arraySize - 1;
-    ManagedType* newArray = (newSize > 0) ? new (std::nothrow) ManagedType[newSize] : ft_nullptr;
+    ManagedType* newArray;
+    if (newSize > 0)
+        newArray = new (std::nothrow) ManagedType[newSize];
+    else
+        newArray = ft_nullptr;
     if (newSize > 0 && !newArray)
     {
         this->set_error(SHARED_PTR_ALLOCATION_FAILED);

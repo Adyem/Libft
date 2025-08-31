@@ -16,6 +16,7 @@ endif
 SUBDIRS :=  CMA \
             GetNextLine \
             Libft \
+            Logger \
             Printf \
             ReadLine \
             PThread \
@@ -37,6 +38,7 @@ LIB_BASES := \
   CMA/CustomMemoryAllocator \
   GetNextLine/GetNextLine \
   Libft/LibFT \
+  Logger/Logger \
   Printf/Printf \
   ReadLine/ReadLine \
   PThread/PThread \
@@ -96,6 +98,7 @@ $(TARGET): $(LIBS)
 	$(call EXTRACT,CMA/CustomMemoryAllocator.a)
 	$(call EXTRACT,GetNextLine/GetNextLine.a)
 	$(call EXTRACT,Libft/LibFT.a)
+	$(call EXTRACT,Logger/Logger.a)
 	$(call EXTRACT,Printf/Printf.a)
 	$(call EXTRACT,ReadLine/ReadLine.a)
 	$(call EXTRACT,PThread/PThread.a)
@@ -121,6 +124,7 @@ $(DEBUG_TARGET): $(DEBUG_LIBS)
 	$(call EXTRACT,CMA/CustomMemoryAllocator_debug.a)
 	$(call EXTRACT,GetNextLine/GetNextLine_debug.a)
 	$(call EXTRACT,Libft/LibFT_debug.a)
+	$(call EXTRACT,Logger/Logger_debug.a)
 	$(call EXTRACT,Printf/Printf_debug.a)
 	$(call EXTRACT,ReadLine/ReadLine_debug.a)
 	$(call EXTRACT,PThread/PThread_debug.a)

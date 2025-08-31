@@ -15,13 +15,13 @@ pt_mutex::~pt_mutex()
 
 void    pt_mutex::set_error(int error)
 {
-    _error = error;
+    this->_error = error;
     ft_errno = error;
     return ;
 }
 
 const volatile bool &pt_mutex::lockState() const
 {
-    return (_lock);
+    return (this->_lock);
 }
 

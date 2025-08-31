@@ -66,7 +66,11 @@ void *cma_realloc(void* ptr, size_t new_size)
         cma_free(ptr);
         return (ft_nullptr);
     }
-    size_t copy_size = old_block->size < new_size ? old_block->size : new_size;
+    size_t copy_size;
+    if (old_block->size < new_size)
+        copy_size = old_block->size;
+    else
+        copy_size = new_size;
     ft_memcpy(new_ptr, ptr, copy_size);
     cma_free(ptr);
     g_malloc_mutex.unlock(THREAD_ID);

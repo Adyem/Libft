@@ -4,7 +4,11 @@
 static int    calculate_length(int number, int base)
 {
     int length = 0;
-    unsigned int absolute_value = (number < 0) ? -number : number;
+    unsigned int absolute_value;
+    if (number < 0)
+        absolute_value = static_cast<unsigned int>(-number);
+    else
+        absolute_value = static_cast<unsigned int>(number);
     if (absolute_value == 0)
         return (1);
     while (absolute_value)
@@ -27,7 +31,10 @@ char    *cma_itoa_base(int number, int base)
         return (ft_nullptr);
     if (number < 0 && base == 10)
         is_negative = 1;
-    absolute_value = (number < 0) ? -number : number;
+    if (number < 0)
+        absolute_value = static_cast<unsigned int>(-number);
+    else
+        absolute_value = static_cast<unsigned int>(number);
     length = calculate_length(number, base);
     result_string = static_cast<char*>(cma_malloc(length + is_negative + 1));
     if (!result_string)
