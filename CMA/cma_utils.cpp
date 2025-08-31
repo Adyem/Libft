@@ -172,6 +172,41 @@ Block *merge_block(Block *block)
     return (block);
 }
 
+Page *find_page_of_block(Block *block)
+{
+    Page *page = page_list;
+    while (page)
+    {
+        char *start = static_cast<char*>(page->start);
+        char *end = start + page->size;
+        if (reinterpret_cast<char*>(block) >= start &&
+            reinterpret_cast<char*>(block) < end)
+            return (page);
+        page = page->next;
+    }
+    return (ft_nullptr);
+}
+
+void free_page_if_empty(Page *page)
+{
+    if (!page || page->heap == false)
+        return ;
+    if (page->blocks && page->blocks->free &&
+        page->blocks->next == ft_nullptr &&
+        page->blocks->prev == ft_nullptr)
+    {
+        if (page->prev)
+            page->prev->next = page->next;
+        if (page->next)
+            page->next->prev = page->prev;
+        if (page_list == page)
+            page_list = page->next;
+        std::free(page->start);
+        std::free(page);
+    }
+    return ;
+}
+
 static inline void print_block_info_impl(Block *block)
 {
 #ifdef _WIN32
