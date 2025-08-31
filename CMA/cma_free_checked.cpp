@@ -41,7 +41,9 @@ int cma_checked_free(void* ptr)
         return (-1);
     }
     found->free = true;
-    merge_block(found);
+    found = merge_block(found);
+    Page *pg = find_page_of_block(found);
+    free_page_if_empty(pg);
     g_malloc_mutex.unlock(THREAD_ID);
     return (0);
 }
