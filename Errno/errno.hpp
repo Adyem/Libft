@@ -98,6 +98,7 @@ enum PTErrorCode
     THREAD_POOL_ALLOC_FAIL,
     FUTURE_INVALID,
     FUTURE_ALLOC_FAIL,
+    FUTURE_BROKEN,
 };
 
 const char* ft_strerror(int error_code);
