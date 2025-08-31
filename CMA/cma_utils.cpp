@@ -180,7 +180,7 @@ static inline void print_block_info_impl(Block *block)
 #else
     if (!block)
     {
-        pf_printf_fd(2, "Block pointer is NULL.\n");
+        pf_printf_fd(2, "Block pointer is ft_nullptr.\n");
         return ;
     }
     const char* free_status = block->free ? "Yes" : "No";

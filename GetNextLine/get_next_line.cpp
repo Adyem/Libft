@@ -4,39 +4,39 @@
 #include <cstdio>
 #include "get_next_line.hpp"
 
-static char* allocate_new_string(char* string_1, char* string_2)
+static char* allocate_new_string(char* string_one, char* string_two)
 {
-    int total_len = 0;
-    char* new_str;
+    int total_length = 0;
+    char* new_string;
 
-    if (string_1)
-        total_len += ft_strlen(string_1);
-    if (string_2)
-        total_len += ft_strlen(string_2);
-    new_str = static_cast<char*>(cma_malloc(total_len + 1));
-    if (!new_str)
+    if (string_one)
+        total_length += ft_strlen(string_one);
+    if (string_two)
+        total_length += ft_strlen(string_two);
+    new_string = static_cast<char*>(cma_malloc(total_length + 1));
+    if (!new_string)
         return (ft_nullptr);
-    return (new_str);
+    return (new_string);
 }
 
-char* ft_strjoin_gnl(char* string_1, char* string_2)
+char* ft_strjoin_gnl(char* string_one, char* string_two)
 {
     char* result;
-    char* original_string = string_1;
+    char* original_string = string_one;
     int index;
 
-    if (!string_1 && !string_2)
+    if (!string_one && !string_two)
         return (ft_nullptr);
-    result = allocate_new_string(string_1, string_2);
+    result = allocate_new_string(string_one, string_two);
     if (!result)
         return (ft_nullptr);
     index = 0;
-    if (string_1)
-        while (*string_1)
-            result[index++] = *string_1++;
-    if (string_2)
-        while (*string_2)
-            result[index++] = *string_2++;
+    if (string_one)
+        while (*string_one)
+            result[index++] = *string_one++;
+    if (string_two)
+        while (*string_two)
+            result[index++] = *string_two++;
     result[index] = '\0';
     cma_free(original_string);
     return (result);
@@ -66,14 +66,14 @@ static char* leftovers(char* readed_string)
     return (string);
 }
 
-static char* malloc_gnl(char* readed_string, size_t i)
+static char* malloc_gnl(char* readed_string, size_t length)
 {
     char* string;
 
-    if (readed_string && readed_string[i] == '\n')
-        string = static_cast<char*>(cma_malloc(i + 2));
+    if (readed_string && readed_string[length] == '\n')
+        string = static_cast<char*>(cma_malloc(length + 2));
     else
-        string = static_cast<char*>(cma_malloc(i + 1));
+        string = static_cast<char*>(cma_malloc(length + 1));
     if (!string)
         return (ft_nullptr);
     return (string);

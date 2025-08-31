@@ -142,12 +142,12 @@ bool ft_event_emitter<EventType, Args...>::ensure_capacity(size_t desired)
         this->setError(EVENT_EMITTER_ALLOC_FAIL);
         return (false);
     }
-    size_t i = 0;
-    while (i < this->_size)
+    size_t listener_index = 0;
+    while (listener_index < this->_size)
     {
-        construct_at(&newData[i], std::move(this->_listeners[i]));
-        destroy_at(&this->_listeners[i]);
-        ++i;
+        construct_at(&newData[listener_index], std::move(this->_listeners[listener_index]));
+        destroy_at(&this->_listeners[listener_index]);
+        ++listener_index;
     }
     if (this->_listeners != ft_nullptr)
         cma_free(this->_listeners);
@@ -178,15 +178,15 @@ void ft_event_emitter<EventType, Args...>::emit(const EventType& event, Args... 
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
         return ;
     bool found = false;
-    size_t i = 0;
-    while (i < this->_size)
+    size_t listener_index = 0;
+    while (listener_index < this->_size)
     {
-        if (this->_listeners[i]._event == event)
+        if (this->_listeners[listener_index]._event == event)
         {
             found = true;
-            this->_listeners[i]._callback(args...);
+            this->_listeners[listener_index]._callback(args...);
         }
-        ++i;
+        ++listener_index;
     }
     if (!found)
         this->setError(EVENT_EMITTER_NOT_FOUND);
@@ -199,24 +199,24 @@ void ft_event_emitter<EventType, Args...>::remove_listener(const EventType& even
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
         return ;
-    size_t i = 0;
-    while (i < this->_size)
+    size_t listener_index = 0;
+    while (listener_index < this->_size)
     {
-        if (this->_listeners[i]._event == event && this->_listeners[i]._callback == cb)
+        if (this->_listeners[listener_index]._event == event && this->_listeners[listener_index]._callback == cb)
         {
-            destroy_at(&this->_listeners[i]);
-            size_t j = i;
-            while (j + 1 < this->_size)
+            destroy_at(&this->_listeners[listener_index]);
+            size_t shift_index = listener_index;
+            while (shift_index + 1 < this->_size)
             {
-                construct_at(&this->_listeners[j], std::move(this->_listeners[j + 1]));
-                destroy_at(&this->_listeners[j + 1]);
-                ++j;
+                construct_at(&this->_listeners[shift_index], std::move(this->_listeners[shift_index + 1]));
+                destroy_at(&this->_listeners[shift_index + 1]);
+                ++shift_index;
             }
             --this->_size;
             this->_mutex.unlock(THREAD_ID);
             return ;
         }
-        ++i;
+        ++listener_index;
     }
     this->setError(EVENT_EMITTER_NOT_FOUND);
     this->_mutex.unlock(THREAD_ID);
@@ -252,11 +252,11 @@ void ft_event_emitter<EventType, Args...>::clear()
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
         return ;
-    size_t i = 0;
-    while (i < this->_size)
+    size_t listener_index = 0;
+    while (listener_index < this->_size)
     {
-        destroy_at(&this->_listeners[i]);
-        ++i;
+        destroy_at(&this->_listeners[listener_index]);
+        ++listener_index;
     }
     this->_size = 0;
     this->_mutex.unlock(THREAD_ID);

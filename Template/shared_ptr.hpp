@@ -534,8 +534,12 @@ void ft_sharedptr<ManagedType>::add(const ManagedType& element)
         this->set_error(SHARED_PTR_ALLOCATION_FAILED);
         return ;
     }
-    for (size_t i = 0; i < _arraySize; ++i)
-        newArray[i] = _managedPointer[i];
+    size_t array_index = 0;
+    while (array_index < _arraySize)
+    {
+        newArray[array_index] = _managedPointer[array_index];
+        ++array_index;
+    }
     newArray[_arraySize] = element;
     delete[] _managedPointer;
     _managedPointer = newArray;
@@ -563,10 +567,18 @@ void ft_sharedptr<ManagedType>::remove(int index)
         this->set_error(SHARED_PTR_ALLOCATION_FAILED);
         return ;
     }
-    for (size_t i = 0; i < static_cast<size_t>(index); ++i)
-        newArray[i] = _managedPointer[i];
-    for (size_t i = index; i < newSize; ++i)
-        newArray[i] = _managedPointer[i+1];
+    size_t array_index = 0;
+    while (array_index < static_cast<size_t>(index))
+    {
+        newArray[array_index] = _managedPointer[array_index];
+        ++array_index;
+    }
+    size_t copy_index = index;
+    while (copy_index < newSize)
+    {
+        newArray[copy_index] = _managedPointer[copy_index+1];
+        ++copy_index;
+    }
     delete[] _managedPointer;
     _managedPointer = newArray;
     _arraySize = newSize;

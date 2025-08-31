@@ -132,10 +132,12 @@ inline void ft_thread_pool::destroy()
         this->_stop = true;
     }
     this->_cond.notify_all();
-    for (size_t i = 0; i < this->_workers.size(); ++i)
+    size_t i = 0;
+    while (i < this->_workers.size())
     {
         if (this->_workers[i].joinable())
             this->_workers[i].join();
+        ++i;
     }
     this->_workers.clear();
 }

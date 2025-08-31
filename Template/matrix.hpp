@@ -244,23 +244,23 @@ ft_matrix<ElementType> ft_matrix<ElementType>::multiply(const ft_matrix& other) 
         this->_mutex.unlock(THREAD_ID);
         return (result);
     }
-    size_t i = 0;
-    while (i < this->_rows)
+    size_t row_index = 0;
+    while (row_index < this->_rows)
     {
-        size_t j = 0;
-        while (j < other._cols)
+        size_t column_index = 0;
+        while (column_index < other._cols)
         {
             ElementType sum = ElementType();
-            size_t k = 0;
-            while (k < this->_cols)
+            size_t inner_index = 0;
+            while (inner_index < this->_cols)
             {
-                sum = sum + this->_data[i * this->_cols + k] * other._data[k * other._cols + j];
-                ++k;
+                sum = sum + this->_data[row_index * this->_cols + inner_index] * other._data[inner_index * other._cols + column_index];
+                ++inner_index;
             }
-            result._data[i * other._cols + j] = sum;
-            ++j;
+            result._data[row_index * other._cols + column_index] = sum;
+            ++column_index;
         }
-        ++i;
+        ++row_index;
     }
     other._mutex.unlock(THREAD_ID);
     this->_mutex.unlock(THREAD_ID);
@@ -279,16 +279,16 @@ ft_matrix<ElementType> ft_matrix<ElementType>::transpose() const
         this->_mutex.unlock(THREAD_ID);
         return (result);
     }
-    size_t i = 0;
-    while (i < this->_rows)
+    size_t row_index = 0;
+    while (row_index < this->_rows)
     {
-        size_t j = 0;
-        while (j < this->_cols)
+        size_t column_index = 0;
+        while (column_index < this->_cols)
         {
-            result._data[j * this->_rows + i] = this->_data[i * this->_cols + j];
-            ++j;
+            result._data[column_index * this->_rows + row_index] = this->_data[row_index * this->_cols + column_index];
+            ++column_index;
         }
-        ++i;
+        ++row_index;
     }
     this->_mutex.unlock(THREAD_ID);
     return (result);
@@ -315,52 +315,52 @@ ElementType ft_matrix<ElementType>::determinant() const
         this->_mutex.unlock(THREAD_ID);
         return (det);
     }
-    size_t idx = 0;
-    while (idx < size)
+    size_t index = 0;
+    while (index < size)
     {
-        temp[idx] = this->_data[idx];
-        ++idx;
+        temp[index] = this->_data[index];
+        ++index;
     }
     ElementType result = ElementType();
     result = result + 1; // initialize to 1
-    size_t i = 0;
-    while (i < n)
+    size_t pivot_row = 0;
+    while (pivot_row < n)
     {
-        size_t pivot = i;
-        while (pivot < n && temp[pivot * n + i] == ElementType())
+        size_t pivot = pivot_row;
+        while (pivot < n && temp[pivot * n + pivot_row] == ElementType())
             ++pivot;
         if (pivot == n)
         {
             result = ElementType();
             break;
         }
-        if (pivot != i)
+        if (pivot != pivot_row)
         {
-            size_t k = 0;
-            while (k < n)
+            size_t swap_index = 0;
+            while (swap_index < n)
             {
-                ElementType tmp = temp[i * n + k];
-                temp[i * n + k] = temp[pivot * n + k];
-                temp[pivot * n + k] = tmp;
-                ++k;
+                ElementType tmp = temp[pivot_row * n + swap_index];
+                temp[pivot_row * n + swap_index] = temp[pivot * n + swap_index];
+                temp[pivot * n + swap_index] = tmp;
+                ++swap_index;
             }
             result = result * static_cast<ElementType>(-1);
         }
-        ElementType pivotVal = temp[i * n + i];
+        ElementType pivotVal = temp[pivot_row * n + pivot_row];
         result = result * pivotVal;
-        size_t j = i + 1;
-        while (j < n)
+        size_t row_below = pivot_row + 1;
+        while (row_below < n)
         {
-            ElementType factor = temp[j * n + i] / pivotVal;
-            size_t k = i;
-            while (k < n)
+            ElementType factor = temp[row_below * n + pivot_row] / pivotVal;
+            size_t column = pivot_row;
+            while (column < n)
             {
-                temp[j * n + k] = temp[j * n + k] - factor * temp[i * n + k];
-                ++k;
+                temp[row_below * n + column] = temp[row_below * n + column] - factor * temp[pivot_row * n + column];
+                ++column;
             }
-            ++j;
+            ++row_below;
         }
-        ++i;
+        ++pivot_row;
     }
     cma_free(temp);
     this->_mutex.unlock(THREAD_ID);

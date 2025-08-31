@@ -3,6 +3,7 @@
 
 #include "../JSon/json.hpp"
 #include "../CPP_class/string_class.hpp"
+#include "../CPP_class/nullptr.hpp"
 #include <openssl/ssl.h>
 #include <cstdint>
 
@@ -20,12 +21,12 @@ public:
     ~api_tls_client();
     bool is_valid() const;
 
-    char *request(const char *method, const char *path, json_group *payload = NULL,
-                  const char *headers = NULL, int *status = NULL);
+    char *request(const char *method, const char *path, json_group *payload = ft_nullptr,
+                  const char *headers = ft_nullptr, int *status = ft_nullptr);
 
     json_group *request_json(const char *method, const char *path,
-                             json_group *payload = NULL,
-                             const char *headers = NULL, int *status = NULL);
+                             json_group *payload = ft_nullptr,
+                             const char *headers = ft_nullptr, int *status = ft_nullptr);
 };
 
 #endif

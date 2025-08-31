@@ -1,4 +1,5 @@
 #include "open_dir.hpp"
+#include "../CPP_class/nullptr.hpp"
 
 #ifdef _WIN32
 # include <windows.h>
@@ -8,7 +9,7 @@
 int file_create_directory(const char* path, mode_t mode)
 {
     (void)mode;
-    if (CreateDirectoryA(path, NULL))
+    if (CreateDirectoryA(path, ft_nullptr))
         return (0);
     return (-1);
 }
