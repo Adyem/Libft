@@ -8,115 +8,115 @@
 #include <limits.h>
 #include <stddef.h>
 
-static inline ssize_t ft_platform_write(int fd, const char *s, size_t len)
+static inline ssize_t ft_platform_write(int fd, const char *string, size_t length)
 {
 #ifdef _WIN32
-    return (ft_write(fd, s, static_cast<unsigned int>(len)));
+    return (ft_write(fd, string, static_cast<unsigned int>(length)));
 #else
-    return (ft_write(fd, s, len));
+    return (ft_write(fd, string, length));
 #endif
 }
 
-size_t ft_strlen_printf(const char *s)
+size_t ft_strlen_printf(const char *string)
 {
-    size_t len = 0;
-    if (!s)
+    size_t length = 0;
+    if (!string)
         return (6);
-    while (s[len])
-        len++;
-    return (len);
+    while (string[length])
+        length++;
+    return (length);
 }
 
-void ft_putchar_fd(const char c, int fd, size_t *count)
+void ft_putchar_fd(const char character, int fd, size_t *count)
 {
-    ssize_t return_value = ft_write(fd, &c, 1);
+    ssize_t return_value = ft_write(fd, &character, 1);
     (void)return_value;
     (*count)++;
     return ;
 }
 
-void ft_putstr_fd(const char *s, int fd, size_t *count)
+void ft_putstr_fd(const char *string, int fd, size_t *count)
 {
     ssize_t return_value;
-    if (!s)
+    if (!string)
     {
         return_value = ft_write(fd, "(null)", 6);
         *count += 6;
         return ;
     }
-    size_t len = ft_strlen_printf(s);
-    return_value = ft_platform_write(fd, s, len);
-    *count += len;
+    size_t length = ft_strlen_printf(string);
+    return_value = ft_platform_write(fd, string, length);
+    *count += length;
     (void)return_value;
     return ;
 }
 
-void ft_putnbr_fd_recursive(long n, int fd, size_t *count)
+void ft_putnbr_fd_recursive(long number, int fd, size_t *count)
 {
-    char c;
-    if (n < 0)
+    char character;
+    if (number < 0)
     {
         ft_putchar_fd('-', fd, count);
-        n = -n;
+        number = -number;
     }
-    if (n >= 10)
-        ft_putnbr_fd_recursive(n / 10, fd, count);
-    c = static_cast<char>('0' + (n % 10));
-    ft_putchar_fd(c, fd, count);
+    if (number >= 10)
+        ft_putnbr_fd_recursive(number / 10, fd, count);
+    character = static_cast<char>('0' + (number % 10));
+    ft_putchar_fd(character, fd, count);
     return ;
 }
 
-void ft_putnbr_fd(long n, int fd, size_t *count)
+void ft_putnbr_fd(long number, int fd, size_t *count)
 {
-    ft_putnbr_fd_recursive(n, fd, count);
+    ft_putnbr_fd_recursive(number, fd, count);
     return ;
 }
 
-void ft_putunsigned_fd_recursive(uintmax_t n, int fd, size_t *count)
+void ft_putunsigned_fd_recursive(uintmax_t number, int fd, size_t *count)
 {
-    char c;
-    if (n >= 10)
-        ft_putunsigned_fd_recursive(n / 10, fd, count);
-    c = static_cast<char>('0' + (n % 10));
-    ft_putchar_fd(c, fd, count);
+    char character;
+    if (number >= 10)
+        ft_putunsigned_fd_recursive(number / 10, fd, count);
+    character = static_cast<char>('0' + (number % 10));
+    ft_putchar_fd(character, fd, count);
     return ;
 }
 
-void ft_putunsigned_fd(uintmax_t n, int fd, size_t *count)
+void ft_putunsigned_fd(uintmax_t number, int fd, size_t *count)
 {
-    ft_putunsigned_fd_recursive(n, fd, count);
+    ft_putunsigned_fd_recursive(number, fd, count);
     return ;
 }
 
-void ft_puthex_fd_recursive(uintmax_t n, int fd, bool uppercase, size_t *count)
+void ft_puthex_fd_recursive(uintmax_t number, int fd, bool uppercase, size_t *count)
 {
-    char c;
+    char character;
 
-    if (n >= 16)
-        ft_puthex_fd_recursive(n / 16, fd, uppercase, count);
-    if ((n % 16) < 10)
-        c = '0' + (n % 16);
+    if (number >= 16)
+        ft_puthex_fd_recursive(number / 16, fd, uppercase, count);
+    if ((number % 16) < 10)
+        character = '0' + (number % 16);
     else
     {
         if (uppercase)
-            c = 'A' + ((n % 16) - 10);
+            character = 'A' + ((number % 16) - 10);
         else
-            c = 'a' + ((n % 16) - 10);
+            character = 'a' + ((number % 16) - 10);
     }
-    ft_putchar_fd(c, fd, count);
+    ft_putchar_fd(character, fd, count);
     return ;
 }
 
-void ft_puthex_fd(uintmax_t n, int fd, bool uppercase, size_t *count)
+void ft_puthex_fd(uintmax_t number, int fd, bool uppercase, size_t *count)
 {
-    ft_puthex_fd_recursive(n, fd, uppercase, count);
+    ft_puthex_fd_recursive(number, fd, uppercase, count);
     return ;
 }
 
-void ft_putptr_fd(void *ptr, int fd, size_t *count)
+void ft_putptr_fd(void *pointer, int fd, size_t *count)
 {
-    uintptr_t addr = reinterpret_cast<uintptr_t>(ptr);
+    uintptr_t address = reinterpret_cast<uintptr_t>(pointer);
     ft_putstr_fd("0x", fd, count);
-    ft_puthex_fd(addr, fd, false, count);
+    ft_puthex_fd(address, fd, false, count);
     return ;
 }

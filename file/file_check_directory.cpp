@@ -17,10 +17,12 @@
 #if defined(_WIN32) || defined(_WIN64)
     if (!data)
         return ;
-    for (size_t i = 0; data[i] != '\0'; ++i)
+    size_t index = 0;
+    while (data[index] != '\0')
     {
-        if (data[i] == '/')
-            data[i] = PATH_SEP;
+        if (data[index] == '/')
+            data[index] = PATH_SEP;
+        ++index;
     }
 #else
     (void)data;
@@ -35,8 +37,8 @@ static inline int dir_exists_platform(const char *path)
     if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY))
         return (0);
 #else
-    struct stat st;
-    if (stat(path, &st) == 0 && S_ISDIR(st.st_mode))
+    struct stat stat_buffer;
+    if (stat(path, &stat_buffer) == 0 && S_ISDIR(stat_buffer.st_mode))
         return (0);
 #endif
     return (1);

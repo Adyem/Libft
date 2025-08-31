@@ -406,23 +406,23 @@ HTTP client helpers in `API/api.hpp` and asynchronous wrappers:
 ```
 char       *api_request_string(const char *ip, uint16_t port,
                                const char *method, const char *path,
-                               json_group *payload = NULL,
-                               const char *headers = NULL, int *status = NULL,
+                               json_group *payload = ft_nullptr,
+                               const char *headers = ft_nullptr, int *status = ft_nullptr,
                                int timeout = 60000);
 char       *api_request_string_host(const char *host, uint16_t port,
                                     const char *method, const char *path,
-                                    json_group *payload = NULL,
-                                    const char *headers = NULL, int *status = NULL,
+                                    json_group *payload = ft_nullptr,
+                                    const char *headers = ft_nullptr, int *status = ft_nullptr,
                                     int timeout = 60000);
 json_group *api_request_json(const char *ip, uint16_t port,
                              const char *method, const char *path,
-                             json_group *payload = NULL,
-                             const char *headers = NULL, int *status = NULL,
+                             json_group *payload = ft_nullptr,
+                             const char *headers = ft_nullptr, int *status = ft_nullptr,
                              int timeout = 60000);
 json_group *api_request_json_host(const char *host, uint16_t port,
                                   const char *method, const char *path,
-                                  json_group *payload = NULL,
-                                  const char *headers = NULL, int *status = NULL,
+                                  json_group *payload = ft_nullptr,
+                                  const char *headers = ft_nullptr, int *status = ft_nullptr,
                                   int timeout = 60000);
 ```
 
@@ -434,11 +434,11 @@ string and JSON responses, and TLS variants for HTTPS.
 api_tls_client(const char *host, uint16_t port, int timeout = 60000);
 ~api_tls_client();
 bool is_valid() const;
-char *request(const char *method, const char *path, json_group *payload = NULL,
-              const char *headers = NULL, int *status = NULL);
+char *request(const char *method, const char *path, json_group *payload = ft_nullptr,
+              const char *headers = ft_nullptr, int *status = ft_nullptr);
 json_group *request_json(const char *method, const char *path,
-                         json_group *payload = NULL,
-                         const char *headers = NULL, int *status = NULL);
+                         json_group *payload = ft_nullptr,
+                         const char *headers = ft_nullptr, int *status = ft_nullptr);
 ```
 
 #### HTML

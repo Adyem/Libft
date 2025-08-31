@@ -127,7 +127,7 @@ ssize_t ft_read(int fd, void *buf, unsigned int count)
         }
     }
     DWORD bytesRead = 0;
-    BOOL ok = ReadFile(hFile, buf, count, &bytesRead, NULL);
+    BOOL ok = ReadFile(hFile, buf, count, &bytesRead, ft_nullptr);
     if (!ok)
     {
         g_file_mutex.unlock(GetCurrentThreadId());
@@ -143,7 +143,7 @@ ssize_t ft_write(int fd, const void *buf, unsigned int count)
     if (hFile == INVALID_HANDLE_VALUE)
         return (-1);
     DWORD bytesWritten = 0;
-    BOOL ok = WriteFile(hFile, buf, count, &bytesWritten, NULL);
+    BOOL ok = WriteFile(hFile, buf, count, &bytesWritten, ft_nullptr);
     g_file_mutex.unlock(GetCurrentThreadId());
     if (!ok)
         return (-1);

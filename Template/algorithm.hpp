@@ -10,13 +10,17 @@
 template <typename RandomIt, typename Compare>
 void ft_sort(RandomIt first, RandomIt last, Compare comp)
 {
-    for (RandomIt i = first; i != last; ++i)
+    RandomIt i = first;
+    while (i != last)
     {
-        for (RandomIt j = i + 1; j != last; ++j)
+        RandomIt j = i + 1;
+        while (j != last)
         {
             if (comp(*j, *i))
                 ft_swap(*i, *j);
+            ++j;
         }
+        ++i;
     }
     return ;
 }
@@ -59,11 +63,13 @@ void ft_shuffle(RandomIt first, RandomIt last)
 {
     if (first == last)
         return ;
-    for (RandomIt i = last - 1; i > first; --i)
+    RandomIt iterator = last - 1;
+    while (iterator > first)
     {
-        size_t j = static_cast<size_t>(ft_random_int()) %
-                    static_cast<size_t>((i - first) + 1);
-        ft_swap(*(first + j), *i);
+        size_t random_index = static_cast<size_t>(ft_random_int()) %
+                    static_cast<size_t>((iterator - first) + 1);
+        ft_swap(*(first + random_index), *iterator);
+        --iterator;
     }
     return ;
 }

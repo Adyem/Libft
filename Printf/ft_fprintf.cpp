@@ -15,76 +15,76 @@ typedef enum
     LEN_Z
 } LengthModifier;
 
-static void ft_putchar_stream(const char c, FILE *stream, size_t *count)
+static void ft_putchar_stream(const char character, FILE *stream, size_t *count)
 {
-    fputc(c, stream);
+    fputc(character, stream);
     (*count)++;
 }
 
-static void ft_putstr_stream(const char *s, FILE *stream, size_t *count)
+static void ft_putstr_stream(const char *string, FILE *stream, size_t *count)
 {
-    if (!s)
+    if (!string)
     {
         fwrite("(null)", 1, 6, stream);
         *count += 6;
         return;
     }
-    size_t len = strlen(s);
-    fwrite(s, 1, len, stream);
-    *count += len;
+    size_t length = strlen(string);
+    fwrite(string, 1, length, stream);
+    *count += length;
 }
 
-static void ft_putnbr_stream_recursive(long n, FILE *stream, size_t *count)
+static void ft_putnbr_stream_recursive(long number, FILE *stream, size_t *count)
 {
-    if (n < 0)
+    if (number < 0)
     {
         ft_putchar_stream('-', stream, count);
-        n = -n;
+        number = -number;
     }
-    if (n >= 10)
-        ft_putnbr_stream_recursive(n / 10, stream, count);
-    ft_putchar_stream(static_cast<char>('0' + (n % 10)), stream, count);
+    if (number >= 10)
+        ft_putnbr_stream_recursive(number / 10, stream, count);
+    ft_putchar_stream(static_cast<char>('0' + (number % 10)), stream, count);
 }
 
-static void ft_putnbr_stream(long n, FILE *stream, size_t *count)
+static void ft_putnbr_stream(long number, FILE *stream, size_t *count)
 {
-    ft_putnbr_stream_recursive(n, stream, count);
+    ft_putnbr_stream_recursive(number, stream, count);
 }
 
-static void ft_putunsigned_stream_recursive(uintmax_t n, FILE *stream, size_t *count)
+static void ft_putunsigned_stream_recursive(uintmax_t number, FILE *stream, size_t *count)
 {
-    if (n >= 10)
-        ft_putunsigned_stream_recursive(n / 10, stream, count);
-    ft_putchar_stream(static_cast<char>('0' + (n % 10)), stream, count);
+    if (number >= 10)
+        ft_putunsigned_stream_recursive(number / 10, stream, count);
+    ft_putchar_stream(static_cast<char>('0' + (number % 10)), stream, count);
 }
 
-static void ft_putunsigned_stream(uintmax_t n, FILE *stream, size_t *count)
+static void ft_putunsigned_stream(uintmax_t number, FILE *stream, size_t *count)
 {
-    ft_putunsigned_stream_recursive(n, stream, count);
+    ft_putunsigned_stream_recursive(number, stream, count);
 }
 
-static void ft_puthex_stream_recursive(uintmax_t n, FILE *stream, bool uppercase, size_t *count)
+static void ft_puthex_stream_recursive(uintmax_t number, FILE *stream, bool uppercase, size_t *count)
 {
-    if (n >= 16)
-        ft_puthex_stream_recursive(n / 16, stream, uppercase, count);
-    uintmax_t digit = n % 16;
-    char c;
+    if (number >= 16)
+        ft_puthex_stream_recursive(number / 16, stream, uppercase, count);
+    uintmax_t digit = number % 16;
+    char character;
     if (digit < 10)
-        c = static_cast<char>('0' + digit);
+        character = static_cast<char>('0' + digit);
     else
-        c = static_cast<char>((uppercase ? 'A' : 'a') + (digit - 10));
-    ft_putchar_stream(c, stream, count);
+        character = static_cast<char>((uppercase ? 'A' : 'a') + (digit - 10));
+    ft_putchar_stream(character, stream, count);
 }
 
-static void ft_puthex_stream(uintmax_t n, FILE *stream, bool uppercase, size_t *count)
+static void ft_puthex_stream(uintmax_t number, FILE *stream, bool uppercase, size_t *count)
 {
-    ft_puthex_stream_recursive(n, stream, uppercase, count);
+    ft_puthex_stream_recursive(number, stream, uppercase, count);
 }
 
-static void ft_putptr_stream(void *ptr, FILE *stream, size_t *count)
+static void ft_putptr_stream(void *pointer, FILE *stream, size_t *count)
 {
     ft_putstr_stream("0x", stream, count);
-    ft_puthex_stream(reinterpret_cast<uintptr_t>(ptr), stream, false, count);
+    ft_puthex_stream(reinterpret_cast<uintptr_t>(pointer), stream, false, count);
 }
 
 int ft_vfprintf(FILE *stream, const char *format, va_list args)
@@ -92,67 +92,67 @@ int ft_vfprintf(FILE *stream, const char *format, va_list args)
     if (stream == ft_nullptr || format == ft_nullptr)
         return (0);
     size_t count = 0;
-    size_t i = 0;
-    while (format[i])
+    size_t index = 0;
+    while (format[index])
     {
-        if (format[i] == '%')
+        if (format[index] == '%')
         {
-            i++;
-            if (format[i] == '\0')
+            index++;
+            if (format[index] == '\0')
                 break;
             LengthModifier len_mod = LEN_NONE;
-            if (format[i] == 'l')
+            if (format[index] == 'l')
             {
                 len_mod = LEN_L;
-                i++;
+                index++;
             }
-            else if (format[i] == 'z')
+            else if (format[index] == 'z')
             {
                 len_mod = LEN_Z;
-                i++;
+                index++;
             }
-            char spec = format[i];
+            char spec = format[index];
             if (spec == '\0')
                 break;
             if (spec == 'c')
             {
-                char c = static_cast<char>(va_arg(args, int));
-                ft_putchar_stream(c, stream, &count);
+                char character = static_cast<char>(va_arg(args, int));
+                ft_putchar_stream(character, stream, &count);
             }
             else if (spec == 's')
             {
-                char *s = va_arg(args, char *);
-                ft_putstr_stream(s, stream, &count);
+                char *string = va_arg(args, char *);
+                ft_putstr_stream(string, stream, &count);
             }
             else if (spec == 'd' || spec == 'i')
             {
                 if (len_mod == LEN_L)
                 {
-                    long num = va_arg(args, long);
-                    ft_putnbr_stream(num, stream, &count);
+                    long number = va_arg(args, long);
+                    ft_putnbr_stream(number, stream, &count);
                 }
                 else
                 {
-                    int num = va_arg(args, int);
-                    ft_putnbr_stream(num, stream, &count);
+                    int number = va_arg(args, int);
+                    ft_putnbr_stream(number, stream, &count);
                 }
             }
             else if (spec == 'u')
             {
                 if (len_mod == LEN_L)
                 {
-                    uintmax_t num = va_arg(args, unsigned long);
-                    ft_putunsigned_stream(num, stream, &count);
+                    uintmax_t number = va_arg(args, unsigned long);
+                    ft_putunsigned_stream(number, stream, &count);
                 }
                 else if (len_mod == LEN_Z)
                 {
-                    size_t num = va_arg(args, size_t);
-                    ft_putunsigned_stream(num, stream, &count);
+                    size_t number = va_arg(args, size_t);
+                    ft_putunsigned_stream(number, stream, &count);
                 }
                 else
                 {
-                    unsigned int num = va_arg(args, unsigned int);
-                    ft_putunsigned_stream(num, stream, &count);
+                    unsigned int number = va_arg(args, unsigned int);
+                    ft_putunsigned_stream(number, stream, &count);
                 }
             }
             else if (spec == 'x' || spec == 'X')
@@ -160,29 +160,29 @@ int ft_vfprintf(FILE *stream, const char *format, va_list args)
                 bool uppercase = (spec == 'X');
                 if (len_mod == LEN_L)
                 {
-                    uintmax_t num = va_arg(args, unsigned long);
-                    ft_puthex_stream(num, stream, uppercase, &count);
+                    uintmax_t number = va_arg(args, unsigned long);
+                    ft_puthex_stream(number, stream, uppercase, &count);
                 }
                 else if (len_mod == LEN_Z)
                 {
-                    size_t num = va_arg(args, size_t);
-                    ft_puthex_stream(num, stream, uppercase, &count);
+                    size_t number = va_arg(args, size_t);
+                    ft_puthex_stream(number, stream, uppercase, &count);
                 }
                 else
                 {
-                    unsigned int num = va_arg(args, unsigned int);
-                    ft_puthex_stream(num, stream, uppercase, &count);
+                    unsigned int number = va_arg(args, unsigned int);
+                    ft_puthex_stream(number, stream, uppercase, &count);
                 }
             }
             else if (spec == 'p')
             {
-                void *ptr = va_arg(args, void *);
-                ft_putptr_stream(ptr, stream, &count);
+                void *pointer = va_arg(args, void *);
+                ft_putptr_stream(pointer, stream, &count);
             }
             else if (spec == 'b')
             {
-                int b = va_arg(args, int);
-                ft_putstr_stream(b ? "true" : "false", stream, &count);
+                int boolean_value = va_arg(args, int);
+                ft_putstr_stream(boolean_value ? "true" : "false", stream, &count);
             }
             else if (spec == '%')
             {
@@ -196,9 +196,9 @@ int ft_vfprintf(FILE *stream, const char *format, va_list args)
         }
         else
         {
-            ft_putchar_stream(format[i], stream, &count);
+            ft_putchar_stream(format[index], stream, &count);
         }
-        i++;
+        index++;
     }
     return (static_cast<int>(count));
 }
