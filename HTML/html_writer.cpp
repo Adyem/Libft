@@ -14,8 +14,12 @@ static void html_write_attrs(int fd, html_attr *attribute)
 
 static void html_write_node(int fd, html_node *htmlNode, int indent)
 {
-    for (int i = 0; i < indent; ++i)
+    int indent_index = 0;
+    while (indent_index < indent)
+    {
         pf_printf_fd(fd, "  ");
+        ++indent_index;
+    }
     pf_printf_fd(fd, "<%s", htmlNode->tag);
     html_write_attrs(fd, htmlNode->attributes);
     if (!htmlNode->text && !htmlNode->children)
@@ -35,8 +39,12 @@ static void html_write_node(int fd, html_node *htmlNode, int indent)
             html_write_node(fd, childNode, indent + 1);
             childNode = childNode->next;
         }
-        for (int i = 0; i < indent; ++i)
+        int indent_index = 0;
+        while (indent_index < indent)
+        {
             pf_printf_fd(fd, "  ");
+            ++indent_index;
+        }
     }
     pf_printf_fd(fd, "</%s>\n", htmlNode->tag);
 }

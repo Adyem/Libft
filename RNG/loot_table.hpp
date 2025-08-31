@@ -43,19 +43,23 @@ ElementType *ft_loot_table<ElementType>::getRandomLoot() const
         return (ft_nullptr);
     }
     int totalWeight = 0;
-    for (size_t index = 0; index < this->size(); index++)
+    size_t index = 0;
+    while (index < this->size())
     {
         if (INT_MAX - totalWeight < (*this)[index].weight)
             return (ft_nullptr);
         totalWeight += (*this)[index].weight;
+        ++index;
     }
     int roll = ft_dice_roll(1, totalWeight);
     int accumulated = 0;
-    for (size_t index = 0; index < this->size(); index++)
+    index = 0;
+    while (index < this->size())
     {
         accumulated += (*this)[index].weight;
         if (roll <= accumulated)
             return ((*this)[index].item);
+        ++index;
     }
     return (ft_nullptr);
 }
@@ -70,15 +74,18 @@ ElementType *ft_loot_table<ElementType>::popRandomLoot()
         return (ft_nullptr);
     }
     int totalWeight = 0;
-    for (size_t index = 0; index < this->size(); index++)
+    size_t index = 0;
+    while (index < this->size())
     {
         if (INT_MAX - totalWeight < (*this)[index].weight)
             return (ft_nullptr);
         totalWeight += (*this)[index].weight;
+        ++index;
     }
     int roll = ft_dice_roll(1, totalWeight);
     int accumulated = 0;
-    for (size_t index = 0; index < this->size(); index++)
+    index = 0;
+    while (index < this->size())
     {
         accumulated += (*this)[index].weight;
         if (roll <= accumulated)
@@ -87,6 +94,7 @@ ElementType *ft_loot_table<ElementType>::popRandomLoot()
             this->release_at(index);
             return (elem);
         }
+        ++index;
     }
     return (ft_nullptr);
 }

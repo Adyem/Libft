@@ -1,45 +1,45 @@
 #include "CMA.hpp"
 #include "../CPP_class/nullptr.hpp"
 
-static int    calculate_length(int n, int base)
+static int    calculate_length(int number, int base)
 {
-    int len = 0;
-    unsigned int num = (n < 0) ? -n : n;
-    if (num == 0)
+    int length = 0;
+    unsigned int absolute_value = (number < 0) ? -number : number;
+    if (absolute_value == 0)
         return (1);
-    while (num)
+    while (absolute_value)
     {
-        num /= base;
-        len++;
+        absolute_value /= base;
+        length++;
     }
-    return (len);
+    return (length);
 }
 
-char    *cma_itoa_base(int n, int base)
+char    *cma_itoa_base(int number, int base)
 {
     const char digits[] = "0123456789ABCDEF";
-    int negative = 0;
-    int len;
-    char *str;
-    unsigned int num;
+    int is_negative = 0;
+    int length;
+    char *result_string;
+    unsigned int absolute_value;
 
     if (base < 2 || base > 16)
         return (ft_nullptr);
-    if (n < 0 && base == 10)
-        negative = 1;
-    num = (n < 0) ? -n : n;
-    len = calculate_length(n, base);
-    str = static_cast<char*>(cma_malloc(len + negative + 1));
-    if (!str)
+    if (number < 0 && base == 10)
+        is_negative = 1;
+    absolute_value = (number < 0) ? -number : number;
+    length = calculate_length(number, base);
+    result_string = static_cast<char*>(cma_malloc(length + is_negative + 1));
+    if (!result_string)
         return (ft_nullptr);
-    str[len + negative] = '\0';
-    while (len > 0)
+    result_string[length + is_negative] = '\0';
+    while (length > 0)
     {
-        str[len + negative - 1] = digits[num % base];
-        num /= base;
-        len--;
+        result_string[length + is_negative - 1] = digits[absolute_value % base];
+        absolute_value /= base;
+        length--;
     }
-    if (negative)
-        str[0] = '-';
-    return (str);
+    if (is_negative)
+        result_string[0] = '-';
+    return (result_string);
 }

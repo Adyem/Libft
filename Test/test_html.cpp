@@ -1,5 +1,6 @@
 #include "../HTML/html_parser.hpp"
 #include "../CMA/CMA.hpp"
+#include "../CPP_class/nullptr.hpp"
 #include <cstring>
 
 int test_html_create_node(void)
@@ -15,8 +16,8 @@ int test_html_create_node(void)
 
 int test_html_find_by_tag(void)
 {
-    html_node *root = html_create_node("div", NULL);
-    html_node *child = html_create_node("span", NULL);
+    html_node *root = html_create_node("div", ft_nullptr);
+    html_node *child = html_create_node("span", ft_nullptr);
     html_add_child(root, child);
     html_node *found = html_find_by_tag(root, "span");
     int ok = (found == child);
@@ -38,8 +39,8 @@ int test_html_write_to_string(void)
 
 int test_html_find_by_attr(void)
 {
-    html_node *root = html_create_node("div", NULL);
-    html_node *child = html_create_node("p", NULL);
+    html_node *root = html_create_node("div", ft_nullptr);
+    html_node *child = html_create_node("p", ft_nullptr);
     html_attr *attr = html_create_attr("id", "main");
     html_add_attr(child, attr);
     html_add_child(root, child);

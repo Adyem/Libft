@@ -3,30 +3,30 @@
 
 void *ft_memmove(void *destination, const void *source, size_t size)
 {
-    unsigned char *dest_ptr = static_cast<unsigned char *>(destination);
-    const unsigned char *src_ptr = static_cast<const unsigned char *>(source);
-    size_t i;
+    unsigned char *destination_pointer = static_cast<unsigned char *>(destination);
+    const unsigned char *source_pointer = static_cast<const unsigned char *>(source);
+    size_t index;
 
     if (size == 0 || destination == source)
         return (destination);
     if (!destination || !source)
         return (ft_nullptr);
-    if (dest_ptr < src_ptr)
+    if (destination_pointer < source_pointer)
     {
-        i = 0;
-        while (i < size)
+        index = 0;
+        while (index < size)
         {
-            dest_ptr[i] = src_ptr[i];
-            i++;
+            destination_pointer[index] = source_pointer[index];
+            index++;
         }
     }
     else
     {
-        i = size;
-        while (i > 0)
+        index = size;
+        while (index > 0)
         {
-            dest_ptr[i - 1] = src_ptr[i - 1];
-            i--;
+            destination_pointer[index - 1] = source_pointer[index - 1];
+            index--;
         }
     }
     return (destination);

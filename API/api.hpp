@@ -2,37 +2,98 @@
 #define API_WRAPPER_HPP
 
 #include "../JSon/json.hpp"
+#include "../CPP_class/nullptr.hpp"
 #include <cstdint>
 #include <cstddef>
 
 char    *api_request_string(const char *ip, uint16_t port,
-        const char *method, const char *path, json_group *payload = NULL,
-        const char *headers = NULL, int *status = NULL,
+        const char *method, const char *path, json_group *payload = ft_nullptr,
+        const char *headers = ft_nullptr, int *status = ft_nullptr,
         int timeout = 60000);
 
+char    *api_request_string_bearer(const char *ip, uint16_t port,
+        const char *method, const char *path, const char *token,
+        json_group *payload = ft_nullptr, const char *headers = ft_nullptr,
+        int *status = ft_nullptr, int timeout = 60000);
+
+char    *api_request_string_basic(const char *ip, uint16_t port,
+        const char *method, const char *path, const char *credentials,
+        json_group *payload = ft_nullptr, const char *headers = ft_nullptr,
+        int *status = ft_nullptr, int timeout = 60000);
+
 char    *api_request_string_tls(const char *host, uint16_t port,
-        const char *method, const char *path, json_group *payload = NULL,
-        const char *headers = NULL, int *status = NULL,
+        const char *method, const char *path, json_group *payload = ft_nullptr,
+        const char *headers = ft_nullptr, int *status = ft_nullptr,
         int timeout = 60000);
 
 char    *api_request_string_host(const char *host, uint16_t port,
-        const char *method, const char *path, json_group *payload = NULL,
-        const char *headers = NULL, int *status = NULL,
+        const char *method, const char *path, json_group *payload = ft_nullptr,
+        const char *headers = ft_nullptr, int *status = ft_nullptr,
         int timeout = 60000);
+
+char    *api_request_string_host_bearer(const char *host, uint16_t port,
+        const char *method, const char *path, const char *token,
+        json_group *payload = ft_nullptr, const char *headers = ft_nullptr,
+        int *status = ft_nullptr, int timeout = 60000);
+
+char    *api_request_string_host_basic(const char *host, uint16_t port,
+        const char *method, const char *path, const char *credentials,
+        json_group *payload = ft_nullptr, const char *headers = ft_nullptr,
+        int *status = ft_nullptr, int timeout = 60000);
 
 json_group *api_request_json(const char *ip, uint16_t port,
-        const char *method, const char *path, json_group *payload = NULL,
-        const char *headers = NULL, int *status = NULL,
+        const char *method, const char *path, json_group *payload = ft_nullptr,
+        const char *headers = ft_nullptr, int *status = ft_nullptr,
         int timeout = 60000);
 
+json_group *api_request_json_bearer(const char *ip, uint16_t port,
+        const char *method, const char *path, const char *token,
+        json_group *payload = ft_nullptr, const char *headers = ft_nullptr,
+        int *status = ft_nullptr, int timeout = 60000);
+
+json_group *api_request_json_basic(const char *ip, uint16_t port,
+        const char *method, const char *path, const char *credentials,
+        json_group *payload = ft_nullptr, const char *headers = ft_nullptr,
+        int *status = ft_nullptr, int timeout = 60000);
+
 json_group *api_request_json_tls(const char *host, uint16_t port,
-        const char *method, const char *path, json_group *payload = NULL,
-        const char *headers = NULL, int *status = NULL,
+        const char *method, const char *path, json_group *payload = ft_nullptr,
+        const char *headers = ft_nullptr, int *status = ft_nullptr,
         int timeout = 60000);
 
 json_group *api_request_json_host(const char *host, uint16_t port,
-        const char *method, const char *path, json_group *payload = NULL,
-        const char *headers = NULL, int *status = NULL,
+        const char *method, const char *path, json_group *payload = ft_nullptr,
+        const char *headers = ft_nullptr, int *status = ft_nullptr,
         int timeout = 60000);
+
+json_group *api_request_json_host_bearer(const char *host, uint16_t port,
+        const char *method, const char *path, const char *token,
+        json_group *payload = ft_nullptr, const char *headers = ft_nullptr,
+        int *status = ft_nullptr, int timeout = 60000);
+
+json_group *api_request_json_host_basic(const char *host, uint16_t port,
+        const char *method, const char *path, const char *credentials,
+        json_group *payload = ft_nullptr, const char *headers = ft_nullptr,
+        int *status = ft_nullptr, int timeout = 60000);
+
+char    *api_request_string_tls_bearer(const char *host, uint16_t port,
+        const char *method, const char *path, const char *token,
+        json_group *payload = ft_nullptr, const char *headers = ft_nullptr,
+        int *status = ft_nullptr, int timeout = 60000);
+
+json_group *api_request_json_tls_bearer(const char *host, uint16_t port,
+        const char *method, const char *path, const char *token,
+        json_group *payload = ft_nullptr, const char *headers = ft_nullptr,
+        int *status = ft_nullptr, int timeout = 60000);
+
+char    *api_request_string_tls_basic(const char *host, uint16_t port,
+        const char *method, const char *path, const char *credentials,
+        json_group *payload = ft_nullptr, const char *headers = ft_nullptr,
+        int *status = ft_nullptr, int timeout = 60000);
+
+json_group *api_request_json_tls_basic(const char *host, uint16_t port,
+        const char *method, const char *path, const char *credentials,
+        json_group *payload = ft_nullptr, const char *headers = ft_nullptr,
+        int *status = ft_nullptr, int timeout = 60000);
 
 #endif

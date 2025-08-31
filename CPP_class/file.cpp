@@ -137,7 +137,7 @@ const char *ft_file::get_error_str() const noexcept
 
 ssize_t ft_file::read(char *buffer, int count) noexcept
 {
-    if (buffer == NULL || count <= 0)
+    if (buffer == ft_nullptr || count <= 0)
     {
         this->set_error(FT_EINVAL);
         return (-1);

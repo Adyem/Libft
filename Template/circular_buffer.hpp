@@ -251,8 +251,12 @@ void ft_circular_buffer<ElementType>::clear()
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
         return ;
-    for (size_t i = 0; i < this->_size; ++i)
+    size_t i = 0;
+    while (i < this->_size)
+    {
         destroy_at(&this->_buffer[(this->_head + i) % this->_capacity]);
+        ++i;
+    }
     this->_head = 0;
     this->_tail = 0;
     this->_size = 0;
