@@ -6,15 +6,15 @@
 int test_network_send_receive(void)
 {
     SocketConfig server_conf;
-    server_conf.port = 54321;
-    server_conf.type = SocketType::SERVER;
+    server_conf._port = 54321;
+    server_conf._type = SocketType::SERVER;
     ft_socket server(server_conf);
     if (server.get_error() != ER_SUCCESS)
         return 0;
 
     SocketConfig client_conf;
-    client_conf.port = 54321;
-    client_conf.type = SocketType::CLIENT;
+    client_conf._port = 54321;
+    client_conf._type = SocketType::CLIENT;
     ft_socket client(client_conf);
     if (client.get_error() != ER_SUCCESS)
         return 0;
@@ -39,9 +39,9 @@ int test_network_send_receive(void)
 int test_network_invalid_ip(void)
 {
     SocketConfig conf;
-    conf.type = SocketType::SERVER;
-    conf.port = 54324;
-    conf.ip = "256.0.0.1";
+    conf._type = SocketType::SERVER;
+    conf._port = 54324;
+    conf._ip = "256.0.0.1";
     ft_socket server(conf);
     return (server.get_error() == SOCKET_INVALID_CONFIGURATION);
 }

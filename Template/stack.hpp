@@ -16,10 +16,10 @@ class ft_stack
     private:
         struct StackNode
         {
-            ElementType data;
-            StackNode* next;
+            ElementType _data;
+            StackNode* _next;
         };
-    
+
             StackNode*  _top;
             size_t      _size;
             mutable int _errorCode;
@@ -125,8 +125,8 @@ void ft_stack<ElementType>::push(const ElementType& value)
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
-    construct_at(&newNode->data, value);
-    newNode->next = this->_top;
+    construct_at(&newNode->_data, value);
+    newNode->_next = this->_top;
     this->_top = newNode;
     ++this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -148,8 +148,8 @@ void ft_stack<ElementType>::push(ElementType&& value)
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
-    construct_at(&newNode->data, std::move(value));
-    newNode->next = this->_top;
+    construct_at(&newNode->_data, std::move(value));
+    newNode->_next = this->_top;
     this->_top = newNode;
     ++this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -171,9 +171,9 @@ ElementType ft_stack<ElementType>::pop()
         return (ElementType());
     }
     StackNode* node = this->_top;
-    this->_top = node->next;
-    ElementType value = std::move(node->data);
-    destroy_at(&node->data);
+    this->_top = node->_next;
+    ElementType value = std::move(node->_data);
+    destroy_at(&node->_data);
     cma_free(node);
     --this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -195,7 +195,7 @@ ElementType& ft_stack<ElementType>::top()
         this->_mutex.unlock(THREAD_ID);
         return (errorElement);
     }
-    ElementType& ref = this->_top->data;
+    ElementType& ref = this->_top->_data;
     this->_mutex.unlock(THREAD_ID);
     return (ref);
 }
@@ -215,7 +215,7 @@ const ElementType& ft_stack<ElementType>::top() const
         this->_mutex.unlock(THREAD_ID);
         return (errorElement);
     }
-    ElementType& ref = this->_top->data;
+    ElementType& ref = this->_top->_data;
     this->_mutex.unlock(THREAD_ID);
     return (ref);
 }
@@ -268,8 +268,8 @@ void ft_stack<ElementType>::clear()
     while (this->_top != ft_nullptr)
     {
         StackNode* node = this->_top;
-        this->_top = this->_top->next;
-        destroy_at(&node->data);
+        this->_top = this->_top->_next;
+        destroy_at(&node->_data);
         cma_free(node);
     }
     this->_size = 0;
