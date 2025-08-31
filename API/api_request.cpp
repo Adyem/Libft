@@ -130,7 +130,8 @@ char *api_request_string_host(const char *host, uint16_t port,
     address_info = address_results;
     while (address_info != ft_nullptr)
     {
-        socket_fd = nw_socket(address_info->ai_family, address_info->ai_socktype, address_info->ai_protocol);
+        socket_fd = nw_socket(address_info->ai_family, address_info->ai_socktype,
+                address_info->ai_protocol);
         if (socket_fd >= 0)
         {
             if (timeout > 0)
@@ -141,7 +142,8 @@ char *api_request_string_host(const char *host, uint16_t port,
                 setsockopt(socket_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
                 setsockopt(socket_fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
             }
-            if (nw_connect(socket_fd, address_info->ai_addr, static_cast<socklen_t>(address_info->ai_addrlen)) == 0)
+            if (nw_connect(socket_fd, address_info->ai_addr,
+                        static_cast<socklen_t>(address_info->ai_addrlen)) == 0)
                 break;
             FT_CLOSE_SOCKET(socket_fd);
             socket_fd = -1;
