@@ -124,6 +124,11 @@ int pt_thread_join(pthread_t thread, void **retval);
 int pt_thread_create(pthread_t *thread, const pthread_attr_t *attr,
                      void *(*start_routine)(void *), void *arg);
 int pt_thread_detach(pthread_t thread);
+int pt_thread_cancel(pthread_t thread);
+int pt_thread_sleep(unsigned int milliseconds);
+int pt_thread_yield();
+int pt_thread_equal(pthread_t thread1, pthread_t thread2);
+pt_thread_id_type pt_thread_self();
 template <typename ValueType, typename Function>
 int pt_async(ft_promise<ValueType>& promise, Function function);
 ```
@@ -418,6 +423,19 @@ int       ft_closedir(FT_DIR *directoryStream);
 ft_dirent *ft_readdir(FT_DIR *directoryStream);
 int       dir_exists(const char *rel_path);
 int       file_create_directory(const char *path, mode_t mode);
+```
+
+Additional wrappers in `Linux/linux_file.hpp` and `Windows/windows_file.hpp` provide
+basic file descriptor utilities:
+
+```
+void    ft_initialize_standard_file_descriptors();
+int     ft_open(const char *pathname);
+int     ft_open(const char *pathname, int flags);
+int     ft_open(const char *pathname, int flags, mode_t mode);
+ssize_t ft_read(int fd, void *buf, size_t count);
+ssize_t ft_write(int fd, const void *buf, size_t count);
+int     ft_close(int fd);
 ```
 
 #### Config

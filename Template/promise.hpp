@@ -15,7 +15,7 @@ private:
 
     void setError(int error) const
     {
-        _errorCode = error;
+        this->_errorCode = error;
         ft_errno = error;
     }
 
@@ -24,39 +24,39 @@ public:
 
     void set_value(const ValueType& value)
     {
-        _value = value;
-        _ready.store(true, std::memory_order_release);
+        this->_value = value;
+        this->_ready.store(true, std::memory_order_release);
     }
 
     void set_value(ValueType&& value)
     {
-        _value = std::move(value);
-        _ready.store(true, std::memory_order_release);
+        this->_value = std::move(value);
+        this->_ready.store(true, std::memory_order_release);
     }
 
     ValueType get() const
     {
-        if (!_ready.load(std::memory_order_acquire))
+        if (!this->_ready.load(std::memory_order_acquire))
         {
-            setError(FT_EINVAL);
+            this->setError(FT_EINVAL);
             return (ValueType());
         }
-        return (_value);
+        return (this->_value);
     }
 
     bool is_ready() const
     {
-        return (_ready.load(std::memory_order_acquire));
+        return (this->_ready.load(std::memory_order_acquire));
     }
 
     int get_error() const
     {
-        return (_errorCode);
+        return (this->_errorCode);
     }
 
     const char* get_error_str() const
     {
-        return (ft_strerror(_errorCode));
+        return (ft_strerror(this->_errorCode));
     }
 };
 
