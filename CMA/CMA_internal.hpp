@@ -61,6 +61,8 @@ Page    *create_page(std::size_t size);
 Block    *find_free_block(std::size_t size);
 Block    *merge_block(Block *block);
 void    print_block_info(Block *block);
+Page    *find_page_of_block(Block *block);
+void    free_page_if_empty(Page *page);
 
 inline __attribute__((always_inline, hot)) std::size_t align16(size_t size)
 {
