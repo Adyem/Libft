@@ -3,10 +3,6 @@
 
 #include "../JSon/json.hpp"
 #include "../CPP_class/string_class.hpp"
-#include "../Networking/socket_class.hpp"
-#include "../Networking/ssl_wrapper.hpp"
-#include "../Libft/libft.hpp"
-#include "../CMA/CMA.hpp"
 #include <openssl/ssl.h>
 #include <cstdint>
 
