@@ -134,8 +134,12 @@ ft_vector<ElementType>& ft_vector<ElementType>::operator=(ft_vector<ElementType>
 template <typename ElementType>
 void ft_vector<ElementType>::destroy_elements(size_t from, size_t to)
 {
-    for (size_t index = from; index < to; index++)
+    size_t index = from;
+    while (index < to)
+    {
         destroy_at(&this->_data[index]);
+        ++index;
+    }
     return ;
 }
 
@@ -357,8 +361,12 @@ void ft_vector<ElementType>::resize(size_t new_size, const ElementType& value)
             this->_mutex.unlock(THREAD_ID);
             return ;
         }
-        for (size_t index = this->_size; index < new_size; index++)
+        size_t index = this->_size;
+        while (index < new_size)
+        {
             construct_at(&this->_data[index], value);
+            ++index;
+        }
     }
     this->_size = new_size;
     this->_mutex.unlock(THREAD_ID);
@@ -423,10 +431,12 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::erase(iterator
         return (endIt);
     }
     destroy_at(&this->_data[index]);
-    for (size_t i = index; i < this->_size - 1; i++)
+    size_t i = index;
+    while (i < this->_size - 1)
     {
         construct_at(&this->_data[i], this->_data[i + 1]);
         destroy_at(&this->_data[i + 1]);
+        ++i;
     }
     --this->_size;
     iterator ret;
@@ -453,8 +463,12 @@ ElementType ft_vector<ElementType>::release_at(size_t index)
         return (ElementType());
     }
     ElementType detached = ft_move(this->_data[index]);
-    for (size_t i = index; i < this->_size - 1; i++)
-        this->_data[i] = ft_move(this->_data[i + 1]);
+    size_t i2 = index;
+    while (i2 < this->_size - 1)
+    {
+        this->_data[i2] = ft_move(this->_data[i2 + 1]);
+        ++i2;
+    }
     --this->_size;
     this->_mutex.unlock(THREAD_ID);
     return (detached);

@@ -19,7 +19,7 @@ static void rl_cleanup_state(readline_state_t *state)
     if (state->buffer)
     {
         cma_free(state->buffer);
-        state->buffer = NULL;
+        state->buffer = ft_nullptr;
     }
     return ;
 }

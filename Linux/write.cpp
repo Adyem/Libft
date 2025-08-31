@@ -1,4 +1,5 @@
 #include "linux_file.hpp"
+#include "../CPP_class/nullptr.hpp"
 #include <cstdio>
 #include <cerrno>
 #include <ctime>
@@ -23,7 +24,7 @@ ssize_t ft_write(int fd, const void *buffer, size_t count)
                 {
                     attempts++;
                     struct timespec delay = {0, RETRY_DELAY_MS * 1000000L};
-                    nanosleep(&delay, NULL);
+                    nanosleep(&delay, ft_nullptr);
                     continue ;
                 }
                 else

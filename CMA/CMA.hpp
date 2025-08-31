@@ -10,16 +10,16 @@ char    *cma_strdup(const char *string) __attribute__ ((warn_unused_result));
 void    *cma_memdup(const void *source, size_t size) __attribute__ ((warn_unused_result));
 void    *cma_calloc(std::size_t, std::size_t size) __attribute__ ((warn_unused_result));
 void    *cma_realloc(void* ptr, std::size_t new_size) __attribute__ ((warn_unused_result));
-char    **cma_split(char const *s, char c) __attribute__ ((warn_unused_result));
-char    *cma_itoa(int n) __attribute__ ((warn_unused_result));
-char    *cma_itoa_base(int n, int base) __attribute__ ((warn_unused_result));
+char    **cma_split(char const *string, char delimiter) __attribute__ ((warn_unused_result));
+char    *cma_itoa(int number) __attribute__ ((warn_unused_result));
+char    *cma_itoa_base(int number, int base) __attribute__ ((warn_unused_result));
 char    *cma_strjoin(char const *string_1, char const *string_2)
             __attribute__ ((warn_unused_result));
 char    *cma_strjoin_multiple(int count, ...)
             __attribute__ ((warn_unused_result));
-char    *cma_substr(const char *s, unsigned int start, size_t len)
+char    *cma_substr(const char *source, unsigned int start, size_t length)
             __attribute__ ((warn_unused_result));
-char    *cma_strtrim(const char *s1, const char *set)
+char    *cma_strtrim(const char *string, const char *set)
             __attribute__ ((warn_unused_result));
 void    cma_free_double(char **content);
 void    cma_cleanup();

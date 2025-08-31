@@ -19,5 +19,7 @@ struct ft_config
 
 ft_config   *ft_config_parse(const char *filename);
 void        ft_config_free(ft_config *config);
+char       *ft_config_parse_flags(int argc, char **argv);
+char      **ft_config_parse_long_flags(int argc, char **argv);
 
 #endif

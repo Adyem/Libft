@@ -33,8 +33,12 @@ static char *html_indent(int indent)
     char *result = static_cast<char*>(cma_calloc(spaces + 1, sizeof(char)));
     if (!result)
         return (ft_nullptr);
-    for (int index = 0; index < spaces; ++index)
+    int index = 0;
+    while (index < spaces)
+    {
         result[index] = ' ';
+        ++index;
+    }
     return (result);
 }
 

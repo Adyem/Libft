@@ -1,67 +1,67 @@
 #include "CMA.hpp"
 #include "../CPP_class/nullptr.hpp"
 
-static int    itoa_len(int n)
+static int    itoa_length(int number)
 {
-    int        i;
+    int        length;
 
-    i = 0;
-    if (n == 0)
+    length = 0;
+    if (number == 0)
         return (1);
-    while (n)
+    while (number)
     {
-        n /= 10;
-        i++;
+        number /= 10;
+        length++;
     }
-    return (i);
+    return (length);
 }
 
-static char *fill_digits(char *c, unsigned int num, int start_index)
+static char *fill_digits(char *characters, unsigned int number, int start_index)
 {
     while (start_index >= 0)
     {
-        c[start_index] = static_cast<char>((num % 10) + '0');
-        num /= 10;
+        characters[start_index] = static_cast<char>((number % 10) + '0');
+        number /= 10;
         start_index--;
     }
-    return (c);
+    return (characters);
 }
 
-static char    *convert_int(int n, int is_negative)
+static char    *convert_int(int number, int is_negative)
 {
-    int                i;
-    char            *c;
-    unsigned int    num;
+    int                length;
+    char            *result;
+    unsigned int    absolute_value;
 
-    i = itoa_len(n);
-    c = static_cast<char *>(cma_malloc(i + 1 + is_negative));
-    if (!c)
+    length = itoa_length(number);
+    result = static_cast<char *>(cma_malloc(length + 1 + is_negative));
+    if (!result)
         return (ft_nullptr);
-    if (n < 0)
-        num = -n;
+    if (number < 0)
+        absolute_value = -number;
     else
-        num = n;
-    c[i + is_negative] = '\0';
+        absolute_value = number;
+    result[length + is_negative] = '\0';
     if (is_negative == 0)
-        c = fill_digits(c, num, i - 1);
+        result = fill_digits(result, absolute_value, length - 1);
     else
-        c = fill_digits(c, num, i);
+        result = fill_digits(result, absolute_value, length);
     if (is_negative == 1)
-        c[0] = '-';
-    return (c);
+        result[0] = '-';
+    return (result);
 }
 
-char    *cma_itoa(int n)
+char    *cma_itoa(int number)
 {
     int    is_negative;
 
-    if (n > 0)
+    if (number > 0)
         is_negative = 0;
-    else if (n == -2147483648)
+    else if (number == -2147483648)
         return (cma_strdup("-2147483648"));
-    else if (n == 0)
+    else if (number == 0)
         return (cma_strdup("0"));
     else
         is_negative = 1;
-    return (convert_int(n, is_negative));
+    return (convert_int(number, is_negative));
 }

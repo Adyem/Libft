@@ -36,64 +36,67 @@ char *api_request_string_tls(const char *host, uint16_t port,
     const char *method, const char *path, json_group *payload,
     const char *headers, int *status, int timeout)
 {
-    SSL_CTX *ctx = NULL;
-    SSL *ssl = NULL;
-    int sock = -1;
-    char *ret = NULL;
+    SSL_CTX *context = ft_nullptr;
+    SSL *ssl_session = ft_nullptr;
+    int socket_fd = -1;
+    char *result = ft_nullptr;
     struct addrinfo hints;
-    struct addrinfo *res = NULL;
-    struct addrinfo *p;
+    struct addrinfo *address_results = ft_nullptr;
+    struct addrinfo *address_info;
     ft_string request;
     ft_string body_string;
     ft_string response;
-    const char *body = NULL;
+    const char *body = ft_nullptr;
 
     if (!host || !method || !path)
-        return (NULL);
-    if (!OPENSSL_init_ssl(0, NULL))
-        return (NULL);
+        return (ft_nullptr);
+    if (!OPENSSL_init_ssl(0, ft_nullptr))
+        return (ft_nullptr);
 
-    ctx = SSL_CTX_new(TLS_client_method());
-    if (!ctx)
+    context = SSL_CTX_new(TLS_client_method());
+    if (!context)
         goto cleanup;
 
     ft_bzero(&hints, sizeof(hints));
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_family = AF_UNSPEC;
-    char port_str[6];
-    std::snprintf(port_str, sizeof(port_str), "%u", port);
-    if (getaddrinfo(host, port_str, &hints, &res) != 0)
+    char port_string[6];
+    std::snprintf(port_string, sizeof(port_string), "%u", port);
+    if (getaddrinfo(host, port_string, &hints, &address_results) != 0)
         goto cleanup;
 
-    for (p = res; p != NULL; p = p->ai_next)
+    address_info = address_results;
+    while (address_info != ft_nullptr)
     {
-        sock = nw_socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-        if (sock < 0)
-            continue;
-        if (timeout > 0)
+        socket_fd = nw_socket(address_info->ai_family, address_info->ai_socktype, address_info->ai_protocol);
+        if (socket_fd >= 0)
         {
-            struct timeval tv;
-            tv.tv_sec = timeout / 1000;
-            tv.tv_usec = (timeout % 1000) * 1000;
-            setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-            setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+            if (timeout > 0)
+            {
+                struct timeval tv;
+                tv.tv_sec = timeout / 1000;
+                tv.tv_usec = (timeout % 1000) * 1000;
+                setsockopt(socket_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+                setsockopt(socket_fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+            }
+            if (nw_connect(socket_fd, address_info->ai_addr, static_cast<socklen_t>(address_info->ai_addrlen)) == 0)
+                break;
+            FT_CLOSE_SOCKET(socket_fd);
+            socket_fd = -1;
         }
-        if (nw_connect(sock, p->ai_addr, static_cast<socklen_t>(p->ai_addrlen)) == 0)
-            break;
-        FT_CLOSE_SOCKET(sock);
-        sock = -1;
+        address_info = address_info->ai_next;
     }
-    freeaddrinfo(res);
-    res = NULL;
-    if (sock < 0)
+    freeaddrinfo(address_results);
+    address_results = ft_nullptr;
+    if (socket_fd < 0)
         goto cleanup;
 
-    ssl = SSL_new(ctx);
-    if (!ssl)
+    ssl_session = SSL_new(context);
+    if (!ssl_session)
         goto cleanup;
-    if (SSL_set_fd(ssl, sock) != 1)
+    if (SSL_set_fd(ssl_session, socket_fd) != 1)
         goto cleanup;
-    if (SSL_connect(ssl) <= 0)
+    if (SSL_connect(ssl_session) <= 0)
         goto cleanup;
 
     request = method;
@@ -108,31 +111,31 @@ char *api_request_string_tls(const char *host, uint16_t port,
     }
     if (payload)
     {
-        char *tmp = json_write_to_string(payload);
-        if (!tmp)
+        char *temporary_string = json_write_to_string(payload);
+        if (!temporary_string)
             goto cleanup;
-        body_string = tmp;
-        cma_free(tmp);
+        body_string = temporary_string;
+        cma_free(temporary_string);
         request += "\r\nContent-Type: application/json";
-        char *len = cma_itoa(static_cast<int>(body_string.size()));
-        if (!len)
+        char *length_string = cma_itoa(static_cast<int>(body_string.size()));
+        if (!length_string)
             goto cleanup;
         request += "\r\nContent-Length: ";
-        request += len;
-        cma_free(len);
+        request += length_string;
+        cma_free(length_string);
     }
     request += "\r\nConnection: close\r\n\r\n";
     if (payload)
         request += body_string.c_str();
 
-    if (ssl_send_all(ssl, request.c_str(), request.size()) < 0)
+    if (ssl_send_all(ssl_session, request.c_str(), request.size()) < 0)
         goto cleanup;
 
     char buffer[1024];
-    ssize_t bytes;
-    while ((bytes = nw_ssl_read(ssl, buffer, sizeof(buffer) - 1)) > 0)
+    ssize_t bytes_received;
+    while ((bytes_received = nw_ssl_read(ssl_session, buffer, sizeof(buffer) - 1)) > 0)
     {
-        buffer[bytes] = '\0';
+        buffer[bytes_received] = '\0';
         response += buffer;
     }
 
@@ -147,21 +150,21 @@ char *api_request_string_tls(const char *host, uint16_t port,
     if (!body)
         goto cleanup;
     body += 4;
-    ret = cma_strdup(body);
+    result = cma_strdup(body);
 
 cleanup:
-    if (ssl)
+    if (ssl_session)
     {
-        SSL_shutdown(ssl);
-        SSL_free(ssl);
+        SSL_shutdown(ssl_session);
+        SSL_free(ssl_session);
     }
-    if (sock >= 0)
-        FT_CLOSE_SOCKET(sock);
-    if (ctx)
-        SSL_CTX_free(ctx);
-    if (res)
-        freeaddrinfo(res);
-    return (ret);
+    if (socket_fd >= 0)
+        FT_CLOSE_SOCKET(socket_fd);
+    if (context)
+        SSL_CTX_free(context);
+    if (address_results)
+        freeaddrinfo(address_results);
+    return (result);
 }
 
 json_group *api_request_json_tls(const char *host, uint16_t port,
@@ -171,7 +174,72 @@ json_group *api_request_json_tls(const char *host, uint16_t port,
     char *body = api_request_string_tls(host, port, method, path, payload,
                                         headers, status, timeout);
     if (!body)
-        return (NULL);
+        return (ft_nullptr);
+    json_group *result = json_read_from_string(body);
+    cma_free(body);
+    return (result);
+}
+
+char *api_request_string_tls_bearer(const char *host, uint16_t port,
+    const char *method, const char *path, const char *token,
+    json_group *payload, const char *headers, int *status, int timeout)
+{
+    if (!token)
+        return (api_request_string_tls(host, port, method, path, payload,
+                                       headers, status, timeout));
+    ft_string header_string;
+    if (headers && headers[0])
+    {
+        header_string = headers;
+        header_string += "\r\n";
+    }
+    header_string += "Authorization: Bearer ";
+    header_string += token;
+    return (api_request_string_tls(host, port, method, path, payload,
+                                   header_string.c_str(), status, timeout));
+}
+
+json_group *api_request_json_tls_bearer(const char *host, uint16_t port,
+    const char *method, const char *path, const char *token,
+    json_group *payload, const char *headers, int *status, int timeout)
+{
+    char *body = api_request_string_tls_bearer(host, port, method, path, token,
+                                               payload, headers, status, timeout);
+    if (!body)
+        return (ft_nullptr);
+    json_group *result = json_read_from_string(body);
+    cma_free(body);
+    return (result);
+}
+
+char *api_request_string_tls_basic(const char *host, uint16_t port,
+    const char *method, const char *path, const char *credentials,
+    json_group *payload, const char *headers, int *status, int timeout)
+{
+    if (!credentials)
+        return (api_request_string_tls(host, port, method, path, payload,
+                                       headers, status, timeout));
+    ft_string header_string;
+    if (headers && headers[0])
+    {
+        header_string = headers;
+        header_string += "\r\n";
+    }
+    header_string += "Authorization: Basic ";
+    header_string += credentials;
+    return (api_request_string_tls(host, port, method, path, payload,
+                                   header_string.c_str(), status, timeout));
+}
+
+json_group *api_request_json_tls_basic(const char *host, uint16_t port,
+    const char *method, const char *path, const char *credentials,
+    json_group *payload, const char *headers, int *status, int timeout)
+{
+    char *body = api_request_string_tls_basic(host, port, method, path,
+                                              credentials, payload, headers,
+                                              status, timeout);
+    if (!body)
+        return (ft_nullptr);
     json_group *result = json_read_from_string(body);
     cma_free(body);
     return (result);

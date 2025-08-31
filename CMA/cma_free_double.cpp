@@ -2,15 +2,15 @@
 
 void    cma_free_double(char **content)
 {
-    int    i;
+    int    index;
 
-    i = 0;
+    index = 0;
     if (content)
     {
-        while (content[i])
+        while (content[index])
         {
-            cma_free(content[i]);
-            i++;
+            cma_free(content[index]);
+            index++;
         }
         cma_free(content);
     }

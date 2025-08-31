@@ -1,7 +1,8 @@
 TARGET := config.a
 DEBUG_TARGET := config_debug.a
 
-SRCS :=         config_parse.cpp
+SRCS :=         config_parse.cpp \
+                config_flags.cpp
 
 HEADERS := config.hpp
 

@@ -98,9 +98,14 @@ void ft_map3d::allocate(size_t width, size_t height, size_t depth, int value)
         this->set_error(MAP3D_ALLOC_FAIL);
         return ;
     }
-    for (size_t z = 0; z < depth; z++)
+    size_t z = 0;
+    while (z < depth)
+    {
         this->_data[z] = ft_nullptr;
-    for (size_t z = 0; z < depth; z++)
+        ++z;
+    }
+    z = 0;
+    while (z < depth)
     {
         this->_data[z] = static_cast<int**>(cma_malloc(sizeof(int*) * height));
         if (!this->_data[z])
@@ -109,9 +114,14 @@ void ft_map3d::allocate(size_t width, size_t height, size_t depth, int value)
             this->deallocate();
             return ;
         }
-        for (size_t y = 0; y < height; y++)
+        size_t y = 0;
+        while (y < height)
+        {
             this->_data[z][y] = ft_nullptr;
-        for (size_t y = 0; y < height; y++)
+            ++y;
+        }
+        y = 0;
+        while (y < height)
         {
             this->_data[z][y] = static_cast<int*>(cma_malloc(sizeof(int) * width));
             if (!this->_data[z][y])
@@ -120,9 +130,15 @@ void ft_map3d::allocate(size_t width, size_t height, size_t depth, int value)
                 this->deallocate();
                 return ;
             }
-            for (size_t x = 0; x < width; x++)
+            size_t x = 0;
+            while (x < width)
+            {
                 this->_data[z][y][x] = value;
+                ++x;
+            }
+            ++y;
         }
+        ++z;
     }
     return ;
 }
@@ -131,11 +147,17 @@ void ft_map3d::deallocate()
 {
     if (!this->_data)
         return ;
-    for (size_t z = 0; z < this->_depth; z++)
+    size_t z = 0;
+    while (z < this->_depth)
     {
-        for (size_t y = 0; y < this->_height; y++)
+        size_t y = 0;
+        while (y < this->_height)
+        {
             cma_free(this->_data[z][y]);
+            ++y;
+        }
         cma_free(this->_data[z]);
+        ++z;
     }
     cma_free(this->_data);
     this->_data = ft_nullptr;
