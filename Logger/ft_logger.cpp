@@ -4,7 +4,7 @@
 ft_logger *g_logger = ft_nullptr;
 
 ft_logger::ft_logger(const char *path, size_t max_size, t_log_level level) noexcept
-    : m_alloc_logging(false)
+    : _alloc_logging(false)
 {
     ft_log_set_level(level);
     if (path)
@@ -35,12 +35,12 @@ int ft_logger::set_file(const char *path, size_t max_size) noexcept
 
 void ft_logger::set_alloc_logging(bool enable) noexcept
 {
-    this->m_alloc_logging = enable;
+    this->_alloc_logging = enable;
 }
 
 bool ft_logger::get_alloc_logging() const noexcept
 {
-    return (this->m_alloc_logging);
+    return (this->_alloc_logging);
 }
 
 void ft_logger::close() noexcept
