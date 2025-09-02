@@ -4,6 +4,7 @@
 #include "promise.hpp"
 #include "../Errno/errno.hpp"
 #include <thread>
+#include <chrono>
 
 // ft_future: waits on an associated ft_promise and retrieves its value
 // Provides get, wait, and validity checks with error reporting
@@ -17,7 +18,7 @@ private:
 
     void setError(int error) const
     {
-        _errorCode = error;
+        this->_errorCode = error;
         ft_errno = error;
     }
 
@@ -27,39 +28,50 @@ public:
 
     ValueType get() const
     {
-        if (!valid())
+        if (!this->valid())
         {
-            setError(FUTURE_INVALID);
+            this->setError(FUTURE_INVALID);
             return (ValueType());
         }
-        wait();
-        return (_promise->get());
+        this->wait();
+        if (this->_errorCode != ER_SUCCESS)
+            return (ValueType());
+        return (this->_promise->get());
     }
 
     void wait() const
     {
-        if (!valid())
+        if (!this->valid())
         {
-            setError(FUTURE_INVALID);
+            this->setError(FUTURE_INVALID);
             return;
         }
-        while (!_promise->is_ready())
+        using namespace std::chrono;
+        const auto start = steady_clock::now();
+        while (!this->_promise->is_ready())
+        {
+            if (steady_clock::now() - start > seconds(1))
+            {
+                this->setError(FUTURE_BROKEN);
+                return;
+            }
             std::this_thread::yield();
+        }
     }
 
     bool valid() const
     {
-        return (_promise != nullptr);
+        return (this->_promise != nullptr);
     }
 
     int get_error() const
     {
-        return (_errorCode);
+        return (this->_errorCode);
     }
 
     const char* get_error_str() const
     {
-        return (ft_strerror(_errorCode));
+        return (ft_strerror(this->_errorCode));
     }
 };
 

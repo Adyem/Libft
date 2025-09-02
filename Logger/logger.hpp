@@ -45,7 +45,7 @@ class ft_logger
         void error(const char *fmt, ...) noexcept;
 
     private:
-        bool m_alloc_logging;
+        bool _alloc_logging;
 };
 
 extern ft_logger *g_logger;

@@ -13,6 +13,7 @@
 #include <condition_variable>
 #include <functional>
 #include <cstddef>
+#include <atomic>
 
 class ft_thread_pool
 {
@@ -22,7 +23,7 @@ class ft_thread_pool
         size_t                        _maxTasks;
         bool                          _stop;
         size_t                        _active;
-        mutable int                   _errorCode;
+        mutable std::atomic<int>      _errorCode;
         std::mutex                    _mutex;
         std::condition_variable       _cond;
 
@@ -74,7 +75,7 @@ inline void ft_thread_pool::worker()
 
 inline void ft_thread_pool::setError(int error) const
 {
-    this->_errorCode = error;
+    this->_errorCode.store(error, std::memory_order_relaxed);
     ft_errno = error;
 }
 
@@ -144,12 +145,12 @@ inline void ft_thread_pool::destroy()
 
 inline int ft_thread_pool::get_error() const
 {
-    return this->_errorCode;
+    return this->_errorCode.load(std::memory_order_relaxed);
 }
 
 inline const char* ft_thread_pool::get_error_str() const
 {
-    return ft_strerror(this->_errorCode);
+    return ft_strerror(this->_errorCode.load(std::memory_order_relaxed));
 }
 
 #endif // FT_THREAD_POOL_HPP
