@@ -8,4 +8,3 @@ int ft_strlen(const char *string)
         return (FT_INT_MAX);
     return (static_cast<int>(len));
 }
-
