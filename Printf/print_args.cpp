@@ -113,10 +113,131 @@ void ft_puthex_fd(uintmax_t number, int fd, bool uppercase, size_t *count)
     return ;
 }
 
+void ft_putoctal_fd_recursive(uintmax_t number, int fd, size_t *count)
+{
+    char character;
+
+    if (number >= 8)
+        ft_putoctal_fd_recursive(number / 8, fd, count);
+    character = static_cast<char>('0' + (number % 8));
+    ft_putchar_fd(character, fd, count);
+    return ;
+}
+
+void ft_putoctal_fd(uintmax_t number, int fd, size_t *count)
+{
+    ft_putoctal_fd_recursive(number, fd, count);
+    return ;
+}
+
 void ft_putptr_fd(void *pointer, int fd, size_t *count)
 {
     uintptr_t address = reinterpret_cast<uintptr_t>(pointer);
     ft_putstr_fd("0x", fd, count);
     ft_puthex_fd(address, fd, false, count);
+    return ;
+}
+
+void ft_putfloat_fd(double number, int fd, size_t *count)
+{
+    if (number < 0)
+    {
+        ft_putchar_fd('-', fd, count);
+        number = -number;
+    }
+    long integer_part = static_cast<long>(number);
+    ft_putnbr_fd(integer_part, fd, count);
+    ft_putchar_fd('.', fd, count);
+    double fractional = number - static_cast<double>(integer_part);
+    for (int i = 0; i < 6; ++i)
+    {
+        fractional *= 10;
+        int digit = static_cast<int>(fractional);
+        ft_putchar_fd(static_cast<char>('0' + digit), fd, count);
+        fractional -= digit;
+    }
+    return ;
+}
+
+void ft_putscientific_fd(double number, bool uppercase, int fd, size_t *count)
+{
+    if (number == 0.0)
+    {
+        if (uppercase)
+            ft_putstr_fd("0.000000E+00", fd, count);
+        else
+            ft_putstr_fd("0.000000e+00", fd, count);
+        return ;
+    }
+    if (number < 0)
+    {
+        ft_putchar_fd('-', fd, count);
+        number = -number;
+    }
+    int exponent = 0;
+    while (number >= 10.0)
+    {
+        number /= 10.0;
+        exponent++;
+    }
+    while (number < 1.0)
+    {
+        number *= 10.0;
+        exponent--;
+    }
+    long integer_part = static_cast<long>(number);
+    ft_putchar_fd(static_cast<char>('0' + integer_part), fd, count);
+    ft_putchar_fd('.', fd, count);
+    double fractional = number - static_cast<double>(integer_part);
+    for (int i = 0; i < 6; ++i)
+    {
+        fractional *= 10.0;
+        int digit = static_cast<int>(fractional);
+        ft_putchar_fd(static_cast<char>('0' + digit), fd, count);
+        fractional -= digit;
+    }
+    ft_putchar_fd(uppercase ? 'E' : 'e', fd, count);
+    if (exponent >= 0)
+        ft_putchar_fd('+', fd, count);
+    else
+    {
+        ft_putchar_fd('-', fd, count);
+        exponent = -exponent;
+    }
+    if (exponent >= 100)
+        ft_putnbr_fd(exponent, fd, count);
+    else
+    {
+        ft_putchar_fd(static_cast<char>('0' + (exponent / 10)), fd, count);
+        ft_putchar_fd(static_cast<char>('0' + (exponent % 10)), fd, count);
+    }
+    return ;
+}
+
+void ft_putgeneral_fd(double number, bool uppercase, int fd, size_t *count)
+{
+    if (number == 0.0)
+    {
+        ft_putfloat_fd(0.0, fd, count);
+        return ;
+    }
+    double temp = number;
+    if (temp < 0)
+        temp = -temp;
+    int exponent = 0;
+    while (temp >= 10.0)
+    {
+        temp /= 10.0;
+        exponent++;
+    }
+    while (temp < 1.0)
+    {
+        temp *= 10.0;
+        exponent--;
+    }
+    if (exponent < -4 || exponent >= 6)
+        ft_putscientific_fd(number, uppercase, fd, count);
+    else
+        ft_putfloat_fd(number, fd, count);
     return ;
 }
