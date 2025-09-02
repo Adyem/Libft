@@ -28,7 +28,12 @@ void        html_remove_attr(html_node *targetNode, const char *key);
 int         html_write_to_file(const char *filePath, html_node *nodeList);
 char        *html_write_to_string(html_node *nodeList);
 void        html_free_nodes(html_node *nodeList);
+void        html_remove_nodes_by_tag(html_node **nodeList, const char *tagName);
+void        html_remove_nodes_by_attr(html_node **nodeList, const char *key, const char *value);
+void        html_remove_nodes_by_text(html_node **nodeList, const char *textContent);
 html_node   *html_find_by_tag(html_node *nodeList, const char *tagName);
 html_node   *html_find_by_attr(html_node *nodeList, const char *key, const char *value);
+html_node   *html_find_by_text(html_node *nodeList, const char *textContent);
+size_t      html_count_nodes_by_tag(html_node *nodeList, const char *tagName);
 
 #endif

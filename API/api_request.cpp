@@ -5,6 +5,7 @@
 #include "../Libft/libft.hpp"
 #include <cstring>
 #include <cstdio>
+#include <string>
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>
@@ -353,4 +354,69 @@ json_group *api_request_json_host_basic(const char *host, uint16_t port,
     json_group *result = json_read_from_string(body);
     cma_free(body);
     return (result);
+}
+
+static bool parse_url(const char *url, bool &tls, std::string &host,
+                      uint16_t &port, std::string &path)
+{
+    if (!url)
+        return false;
+    const char *scheme_end = std::strstr(url, "://");
+    if (!scheme_end)
+        return false;
+    std::string scheme(url, scheme_end - url);
+    tls = (scheme == "https");
+    const char *host_start = scheme_end + 3;
+    const char *path_start = std::strchr(host_start, '/');
+    if (path_start)
+        path.assign(path_start);
+    else
+        path = "/";
+    std::string hostport;
+    if (path_start)
+        hostport.assign(host_start, path_start - host_start);
+    else
+        hostport = host_start;
+    const char *colon = std::strchr(hostport.c_str(), ':');
+    if (colon)
+    {
+        host.assign(hostport.c_str(), colon - hostport.c_str());
+        port = static_cast<uint16_t>(ft_atoi(colon + 1));
+    }
+    else
+    {
+        host = hostport;
+        port = tls ? 443 : 80;
+    }
+    return true;
+}
+
+char *api_request_string_url(const char *url, const char *method,
+    json_group *payload, const char *headers, int *status, int timeout)
+{
+    bool tls;
+    std::string host;
+    std::string path;
+    uint16_t port;
+    if (!parse_url(url, tls, host, port, path))
+        return ft_nullptr;
+    if (tls)
+        return api_request_string_tls(host.c_str(), port, method,
+                                       path.c_str(), payload, headers,
+                                       status, timeout);
+    return api_request_string_host(host.c_str(), port, method,
+                                   path.c_str(), payload, headers,
+                                   status, timeout);
+}
+
+json_group *api_request_json_url(const char *url, const char *method,
+    json_group *payload, const char *headers, int *status, int timeout)
+{
+    char *body = api_request_string_url(url, method, payload,
+                                        headers, status, timeout);
+    if (!body)
+        return ft_nullptr;
+    json_group *result = json_read_from_string(body);
+    cma_free(body);
+    return result;
 }

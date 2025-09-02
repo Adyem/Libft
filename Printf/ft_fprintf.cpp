@@ -88,10 +88,123 @@ static void ft_puthex_stream(uintmax_t number, FILE *stream, bool uppercase, siz
     ft_puthex_stream_recursive(number, stream, uppercase, count);
 }
 
+static void ft_putoctal_stream_recursive(uintmax_t number, FILE *stream, size_t *count)
+{
+    if (number >= 8)
+        ft_putoctal_stream_recursive(number / 8, stream, count);
+    ft_putchar_stream(static_cast<char>('0' + (number % 8)), stream, count);
+}
+
+static void ft_putoctal_stream(uintmax_t number, FILE *stream, size_t *count)
+{
+    ft_putoctal_stream_recursive(number, stream, count);
+}
+
 static void ft_putptr_stream(void *pointer, FILE *stream, size_t *count)
 {
     ft_putstr_stream("0x", stream, count);
     ft_puthex_stream(reinterpret_cast<uintptr_t>(pointer), stream, false, count);
+}
+
+static void ft_putfloat_stream(double number, FILE *stream, size_t *count)
+{
+    if (number < 0)
+    {
+        ft_putchar_stream('-', stream, count);
+        number = -number;
+    }
+    long integer_part = static_cast<long>(number);
+    ft_putnbr_stream(integer_part, stream, count);
+    ft_putchar_stream('.', stream, count);
+    double fractional = number - static_cast<double>(integer_part);
+    for (int i = 0; i < 6; ++i)
+    {
+        fractional *= 10;
+        int digit = static_cast<int>(fractional);
+        ft_putchar_stream(static_cast<char>('0' + digit), stream, count);
+        fractional -= digit;
+    }
+}
+
+static void ft_putscientific_stream(double number, bool uppercase, FILE *stream, size_t *count)
+{
+    if (number == 0.0)
+    {
+        if (uppercase)
+            ft_putstr_stream("0.000000E+00", stream, count);
+        else
+            ft_putstr_stream("0.000000e+00", stream, count);
+        return;
+    }
+    if (number < 0)
+    {
+        ft_putchar_stream('-', stream, count);
+        number = -number;
+    }
+    int exponent = 0;
+    while (number >= 10.0)
+    {
+        number /= 10.0;
+        exponent++;
+    }
+    while (number < 1.0)
+    {
+        number *= 10.0;
+        exponent--;
+    }
+    long integer_part = static_cast<long>(number);
+    ft_putchar_stream(static_cast<char>('0' + integer_part), stream, count);
+    ft_putchar_stream('.', stream, count);
+    double fractional = number - static_cast<double>(integer_part);
+    for (int i = 0; i < 6; ++i)
+    {
+        fractional *= 10.0;
+        int digit = static_cast<int>(fractional);
+        ft_putchar_stream(static_cast<char>('0' + digit), stream, count);
+        fractional -= digit;
+    }
+    ft_putchar_stream(uppercase ? 'E' : 'e', stream, count);
+    if (exponent >= 0)
+        ft_putchar_stream('+', stream, count);
+    else
+    {
+        ft_putchar_stream('-', stream, count);
+        exponent = -exponent;
+    }
+    if (exponent >= 100)
+        ft_putnbr_stream(exponent, stream, count);
+    else
+    {
+        ft_putchar_stream(static_cast<char>('0' + (exponent / 10)), stream, count);
+        ft_putchar_stream(static_cast<char>('0' + (exponent % 10)), stream, count);
+    }
+}
+
+static void ft_putgeneral_stream(double number, bool uppercase, FILE *stream, size_t *count)
+{
+    if (number == 0.0)
+    {
+        ft_putfloat_stream(0.0, stream, count);
+        return;
+    }
+    double temp = number;
+    if (temp < 0)
+        temp = -temp;
+    int exponent = 0;
+    while (temp >= 10.0)
+    {
+        temp /= 10.0;
+        exponent++;
+    }
+    while (temp < 1.0)
+    {
+        temp *= 10.0;
+        exponent--;
+    }
+    if (exponent < -4 || exponent >= 6)
+        ft_putscientific_stream(number, uppercase, stream, count);
+    else
+        ft_putfloat_stream(number, stream, count);
 }
 
 int ft_vfprintf(FILE *stream, const char *format, va_list args)
@@ -181,6 +294,41 @@ int ft_vfprintf(FILE *stream, const char *format, va_list args)
                     ft_puthex_stream(number, stream, uppercase, &count);
                 }
             }
+            else if (spec == 'o')
+            {
+                if (len_mod == LEN_L)
+                {
+                    uintmax_t number = va_arg(args, unsigned long);
+                    ft_putoctal_stream(number, stream, &count);
+                }
+                else if (len_mod == LEN_Z)
+                {
+                    size_t number = va_arg(args, size_t);
+                    ft_putoctal_stream(number, stream, &count);
+                }
+                else
+                {
+                    unsigned int number = va_arg(args, unsigned int);
+                    ft_putoctal_stream(number, stream, &count);
+                }
+            }
+            else if (spec == 'f')
+            {
+                double number = va_arg(args, double);
+                ft_putfloat_stream(number, stream, &count);
+            }
+            else if (spec == 'e' || spec == 'E')
+            {
+                bool uppercase = (spec == 'E');
+                double number = va_arg(args, double);
+                ft_putscientific_stream(number, uppercase, stream, &count);
+            }
+            else if (spec == 'g' || spec == 'G')
+            {
+                bool uppercase = (spec == 'G');
+                double number = va_arg(args, double);
+                ft_putgeneral_stream(number, uppercase, stream, &count);
+            }
             else if (spec == 'p')
             {
                 void *pointer = va_arg(args, void *);
@@ -193,6 +341,27 @@ int ft_vfprintf(FILE *stream, const char *format, va_list args)
                     ft_putstr_stream("true", stream, &count);
                 else
                     ft_putstr_stream("false", stream, &count);
+            }
+            else if (spec == 'n')
+            {
+                if (len_mod == LEN_L)
+                {
+                    long *out = va_arg(args, long *);
+                    if (out)
+                        *out = static_cast<long>(count);
+                }
+                else if (len_mod == LEN_Z)
+                {
+                    size_t *out = va_arg(args, size_t *);
+                    if (out)
+                        *out = count;
+                }
+                else
+                {
+                    int *out = va_arg(args, int *);
+                    if (out)
+                        *out = static_cast<int>(count);
+                }
             }
             else if (spec == '%')
             {

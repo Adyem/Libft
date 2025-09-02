@@ -25,7 +25,12 @@ void ft_putunsigned_fd_recursive(uintmax_t number, int fd, size_t *count);
 void ft_putunsigned_fd(uintmax_t number, int fd, size_t *count);
 void ft_puthex_fd_recursive(uintmax_t number, int fd, bool uppercase, size_t *count);
 void ft_puthex_fd(uintmax_t number, int fd, bool uppercase, size_t *count);
+void ft_putoctal_fd_recursive(uintmax_t number, int fd, size_t *count);
+void ft_putoctal_fd(uintmax_t number, int fd, size_t *count);
 void ft_putptr_fd(void *pointer, int fd, size_t *count);
+void ft_putfloat_fd(double number, int fd, size_t *count);
+void ft_putscientific_fd(double number, bool uppercase, int fd, size_t *count);
+void ft_putgeneral_fd(double number, bool uppercase, int fd, size_t *count);
 int pf_printf_fd_v(int fd, const char *format, va_list args);
 
 #endif
