@@ -93,6 +93,41 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
                     ft_puthex_fd(number, fd, uppercase, &count);
                 }
             }
+            else if (spec == 'o')
+            {
+                if (len_mod == LEN_L)
+                {
+                    uintmax_t number = va_arg(args, unsigned long);
+                    ft_putoctal_fd(number, fd, &count);
+                }
+                else if (len_mod == LEN_Z)
+                {
+                    size_t number = va_arg(args, size_t);
+                    ft_putoctal_fd(number, fd, &count);
+                }
+                else
+                {
+                    unsigned int number = va_arg(args, unsigned int);
+                    ft_putoctal_fd(number, fd, &count);
+                }
+            }
+            else if (spec == 'f')
+            {
+                double number = va_arg(args, double);
+                ft_putfloat_fd(number, fd, &count);
+            }
+            else if (spec == 'e' || spec == 'E')
+            {
+                bool uppercase = (spec == 'E');
+                double number = va_arg(args, double);
+                ft_putscientific_fd(number, uppercase, fd, &count);
+            }
+            else if (spec == 'g' || spec == 'G')
+            {
+                bool uppercase = (spec == 'G');
+                double number = va_arg(args, double);
+                ft_putgeneral_fd(number, uppercase, fd, &count);
+            }
             else if (spec == 'p')
             {
                 void *pointer = va_arg(args, void *);
@@ -105,6 +140,27 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
                     ft_putstr_fd("true", fd, &count);
                 else
                     ft_putstr_fd("false", fd, &count);
+            }
+            else if (spec == 'n')
+            {
+                if (len_mod == LEN_L)
+                {
+                    long *out = va_arg(args, long *);
+                    if (out)
+                        *out = static_cast<long>(count);
+                }
+                else if (len_mod == LEN_Z)
+                {
+                    size_t *out = va_arg(args, size_t *);
+                    if (out)
+                        *out = count;
+                }
+                else
+                {
+                    int *out = va_arg(args, int *);
+                    if (out)
+                        *out = static_cast<int>(count);
+                }
             }
             else if (spec == '%')
                 ft_putchar_fd('%', fd, &count);
