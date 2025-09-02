@@ -49,8 +49,6 @@ SRCS := ft_atoi.cpp \
     ft_fwrite.cpp \
     ft_fseek.cpp \
     ft_ftell.cpp \
-    ft_stack.cpp \
-    ft_queue.cpp \
     ft_time.cpp
 
 ifeq ($(OS),Windows_NT)
