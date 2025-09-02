@@ -39,3 +39,32 @@ html_node *html_find_by_attr(html_node *nodeList, const char *key, const char *v
     }
     return (ft_nullptr);
 }
+
+html_node *html_find_by_text(html_node *nodeList, const char *textContent)
+{
+    html_node *currentNode = nodeList;
+    while (currentNode)
+    {
+        if (currentNode->text && ft_strcmp(currentNode->text, textContent) == 0)
+            return (currentNode);
+        html_node *found = html_find_by_text(currentNode->children, textContent);
+        if (found)
+            return (found);
+        currentNode = currentNode->next;
+    }
+    return (ft_nullptr);
+}
+
+size_t html_count_nodes_by_tag(html_node *nodeList, const char *tagName)
+{
+    size_t count = 0;
+    html_node *currentNode = nodeList;
+    while (currentNode)
+    {
+        if (currentNode->tag && ft_strcmp(currentNode->tag, tagName) == 0)
+            ++count;
+        count += html_count_nodes_by_tag(currentNode->children, tagName);
+        currentNode = currentNode->next;
+    }
+    return (count);
+}

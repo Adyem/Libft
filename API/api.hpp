@@ -96,4 +96,12 @@ json_group *api_request_json_tls_basic(const char *host, uint16_t port,
         json_group *payload = ft_nullptr, const char *headers = ft_nullptr,
         int *status = ft_nullptr, int timeout = 60000);
 
+char    *api_request_string_url(const char *url, const char *method,
+        json_group *payload = ft_nullptr, const char *headers = ft_nullptr,
+        int *status = ft_nullptr, int timeout = 60000);
+
+json_group *api_request_json_url(const char *url, const char *method,
+        json_group *payload = ft_nullptr, const char *headers = ft_nullptr,
+        int *status = ft_nullptr, int timeout = 60000);
+
 #endif
