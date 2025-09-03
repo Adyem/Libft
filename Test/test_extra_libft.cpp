@@ -131,6 +131,12 @@ int test_strchr_not_found(void)
     return (ft_strchr(str, 'x') == ft_nullptr);
 }
 
+int test_strchr_first_occurrence(void)
+{
+    const char *str = "banana";
+    return (ft_strchr(str, 'a') == str + 1);
+}
+
 int test_strrchr_basic(void)
 {
     const char *str = "hello";
