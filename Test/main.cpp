@@ -81,6 +81,7 @@ int test_memcmp_basic(void);
 int test_memcmp_diff(void);
 int test_strchr_basic(void);
 int test_strchr_not_found(void);
+int test_strchr_first_occurrence(void);
 int test_strrchr_basic(void);
 int test_strrchr_not_found(void);
 int test_strnstr_basic(void);
@@ -280,6 +281,7 @@ int main(int argc, char **argv)
         { test_memchr_found, "memchr found" },
         { test_memcmp_basic, "memcmp basic" },
         { test_strchr_basic, "strchr basic" },
+        { test_strchr_first_occurrence, "strchr first occurrence" },
         { test_strrchr_basic, "strrchr basic" },
         { test_strnstr_basic, "strnstr basic" },
         { test_strlcpy_basic, "strlcpy basic" },
