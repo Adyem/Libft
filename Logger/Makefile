@@ -10,6 +10,8 @@ SRCS := \
     ft_log_set_file.cpp \
     ft_log_set_alloc_logging.cpp \
     ft_log_get_alloc_logging.cpp \
+    ft_log_set_api_logging.cpp \
+    ft_log_get_api_logging.cpp \
     ft_log_close.cpp \
     ft_log_debug.cpp \
     ft_log_info.cpp \
