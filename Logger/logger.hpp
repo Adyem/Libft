@@ -16,6 +16,8 @@ int  ft_log_set_file(const char *path, size_t max_size);
 void ft_log_close();
 void ft_log_set_alloc_logging(bool enable);
 bool ft_log_get_alloc_logging();
+void ft_log_set_api_logging(bool enable);
+bool ft_log_get_api_logging();
 
 void ft_log_debug(const char *fmt, ...);
 void ft_log_info(const char *fmt, ...);
@@ -37,6 +39,8 @@ class ft_logger
         int  set_file(const char *path, size_t max_size) noexcept;
         void set_alloc_logging(bool enable) noexcept;
         bool get_alloc_logging() const noexcept;
+        void set_api_logging(bool enable) noexcept;
+        bool get_api_logging() const noexcept;
         void close() noexcept;
 
         void debug(const char *fmt, ...) noexcept;
@@ -46,6 +50,7 @@ class ft_logger
 
     private:
         bool _alloc_logging;
+        bool _api_logging;
 };
 
 extern ft_logger *g_logger;
