@@ -4,6 +4,7 @@
 #include "../CPP_class/string_class.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
+#include "../Logger/logger.hpp"
 #include <cstring>
 #include <cstdio>
 #ifdef _WIN32
@@ -36,6 +37,20 @@ char *api_request_string_tls(const char *host, uint16_t port,
     const char *method, const char *path, json_group *payload,
     const char *headers, int *status, int timeout)
 {
+    if (ft_log_get_api_logging())
+    {
+        const char *log_host = "(null)";
+        const char *log_method = "(null)";
+        const char *log_path = "(null)";
+        if (host)
+            log_host = host;
+        if (method)
+            log_method = method;
+        if (path)
+            log_path = path;
+        ft_log_debug("api_request_string_tls %s:%u %s %s",
+            log_host, port, log_method, log_path);
+    }
     SSL_CTX *context = ft_nullptr;
     SSL *ssl_session = ft_nullptr;
     int socket_fd = -1;

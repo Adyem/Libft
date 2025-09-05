@@ -5,6 +5,7 @@
 #include "../Networking/ssl_wrapper.hpp"
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Logger/logger.hpp"
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>
@@ -39,13 +40,13 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
     else
         this->_host = "";
     if (!host_c)
-        return;
+        return ;
     if (!OPENSSL_init_ssl(0, ft_nullptr))
-        return;
+        return ;
 
     this->_ctx = SSL_CTX_new(TLS_client_method());
     if (!this->_ctx)
-        return;
+        return ;
 
     struct addrinfo hints;
     struct addrinfo *address_results = ft_nullptr;
@@ -56,7 +57,7 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
     char port_string[6];
     std::snprintf(port_string, sizeof(port_string), "%u", port);
     if (getaddrinfo(host_c, port_string, &hints, &address_results) != 0)
-        return;
+        return ;
 
     address_info = address_results;
     while (address_info != ft_nullptr)
@@ -82,18 +83,18 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
     if (address_results)
         freeaddrinfo(address_results);
     if (this->_sock < 0)
-        return;
+        return ;
 
     this->_ssl = SSL_new(this->_ctx);
     if (!this->_ssl)
-        return;
+        return ;
     if (SSL_set_fd(this->_ssl, this->_sock) != 1)
-        return;
+        return ;
     if (SSL_connect(this->_ssl) <= 0)
     {
         SSL_free(this->_ssl);
         this->_ssl = ft_nullptr;
-        return;
+        return ;
     }
 }
 
@@ -120,6 +121,17 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
 {
     if (!this->_ssl || !method || !path)
         return (ft_nullptr);
+    if (ft_log_get_api_logging())
+    {
+        const char *log_method = "(null)";
+        const char *log_path = "(null)";
+        if (method)
+            log_method = method;
+        if (path)
+            log_path = path;
+        ft_log_debug("api_tls_client::request %s %s",
+            log_method, log_path);
+    }
 
     ft_string request(method);
     request += " ";

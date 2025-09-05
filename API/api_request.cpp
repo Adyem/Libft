@@ -3,6 +3,7 @@
 #include "../CPP_class/string_class.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
+#include "../Logger/logger.hpp"
 #include <cstring>
 #include <cstdio>
 #include <string>
@@ -21,6 +22,20 @@ char *api_request_string(const char *ip, uint16_t port,
     const char *method, const char *path, json_group *payload,
     const char *headers, int *status, int timeout)
 {
+    if (ft_log_get_api_logging())
+    {
+        const char *log_ip = "(null)";
+        const char *log_method = "(null)";
+        const char *log_path = "(null)";
+        if (ip)
+            log_ip = ip;
+        if (method)
+            log_method = method;
+        if (path)
+            log_path = path;
+        ft_log_debug("api_request_string %s:%u %s %s",
+            log_ip, port, log_method, log_path);
+    }
     SocketConfig config;
     config._type = SocketType::CLIENT;
     config._ip = ip;
@@ -106,6 +121,20 @@ char *api_request_string_host(const char *host, uint16_t port,
     const char *method, const char *path, json_group *payload,
     const char *headers, int *status, int timeout)
 {
+    if (ft_log_get_api_logging())
+    {
+        const char *log_host = "(null)";
+        const char *log_method = "(null)";
+        const char *log_path = "(null)";
+        if (host)
+            log_host = host;
+        if (method)
+            log_method = method;
+        if (path)
+            log_path = path;
+        ft_log_debug("api_request_string_host %s:%u %s %s",
+            log_host, port, log_method, log_path);
+    }
     struct addrinfo hints;
     struct addrinfo *address_results = ft_nullptr;
     struct addrinfo *address_info;
@@ -360,10 +389,10 @@ static bool parse_url(const char *url, bool &tls, std::string &host,
                       uint16_t &port, std::string &path)
 {
     if (!url)
-        return false;
+        return (false);
     const char *scheme_end = std::strstr(url, "://");
     if (!scheme_end)
-        return false;
+        return (false);
     std::string scheme(url, scheme_end - url);
     tls = (scheme == "https");
     const char *host_start = scheme_end + 3;
@@ -386,27 +415,41 @@ static bool parse_url(const char *url, bool &tls, std::string &host,
     else
     {
         host = hostport;
-        port = tls ? 443 : 80;
+        if (tls)
+            port = 443;
+        else
+            port = 80;
     }
-    return true;
+    return (true);
 }
 
 char *api_request_string_url(const char *url, const char *method,
     json_group *payload, const char *headers, int *status, int timeout)
 {
+    if (ft_log_get_api_logging())
+    {
+        const char *log_url = "(null)";
+        const char *log_method = "(null)";
+        if (url)
+            log_url = url;
+        if (method)
+            log_method = method;
+        ft_log_debug("api_request_string_url %s %s",
+            log_url, log_method);
+    }
     bool tls;
     std::string host;
     std::string path;
     uint16_t port;
     if (!parse_url(url, tls, host, port, path))
-        return ft_nullptr;
+        return (ft_nullptr);
     if (tls)
-        return api_request_string_tls(host.c_str(), port, method,
+        return (api_request_string_tls(host.c_str(), port, method,
                                        path.c_str(), payload, headers,
-                                       status, timeout);
-    return api_request_string_host(host.c_str(), port, method,
+                                       status, timeout));
+    return (api_request_string_host(host.c_str(), port, method,
                                    path.c_str(), payload, headers,
-                                   status, timeout);
+                                   status, timeout));
 }
 
 json_group *api_request_json_url(const char *url, const char *method,
@@ -415,8 +458,8 @@ json_group *api_request_json_url(const char *url, const char *method,
     char *body = api_request_string_url(url, method, payload,
                                         headers, status, timeout);
     if (!body)
-        return ft_nullptr;
+        return (ft_nullptr);
     json_group *result = json_read_from_string(body);
     cma_free(body);
-    return result;
+    return (result);
 }
