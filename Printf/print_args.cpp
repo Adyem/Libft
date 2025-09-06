@@ -1,4 +1,5 @@
 #include "printf_internal.hpp"
+#include "../Libft/libft.hpp"
 #include <cstdarg>
 #include <unistd.h>
 #include "../Linux/linux_file.hpp"
@@ -7,7 +8,6 @@
 #include <stdint.h>
 #include <limits.h>
 #include <stddef.h>
-#include <cmath>
 #include <cfloat>
 
 static inline ssize_t ft_platform_write(int fd, const char *string, size_t length)
@@ -163,7 +163,7 @@ void ft_putfloat_fd(double number, int fd, size_t *count)
 
 void ft_putscientific_fd(double number, bool uppercase, int fd, size_t *count)
 {
-    if (std::fabs(number) <= DBL_EPSILON)
+    if (ft_fabs(number) <= DBL_EPSILON)
     {
         if (uppercase)
             ft_putstr_fd("0.000000E+00", fd, count);
@@ -218,7 +218,7 @@ void ft_putscientific_fd(double number, bool uppercase, int fd, size_t *count)
 
 void ft_putgeneral_fd(double number, bool uppercase, int fd, size_t *count)
 {
-    if (std::fabs(number) <= DBL_EPSILON)
+    if (ft_fabs(number) <= DBL_EPSILON)
     {
         ft_putfloat_fd(0.0, fd, count);
         return ;
