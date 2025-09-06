@@ -51,6 +51,9 @@ char   *ft_strncpy(char *dst, const char *src, size_t n);
 void   *ft_memset(void *dst, int value, size_t n);
 int     ft_isspace(int c);
 int     ft_abs(int number);
+long    ft_abs(long number);
+long long ft_abs(long long number);
+double  ft_fabs(double number);
 ```
 
 `ft_limits.hpp` exposes integer boundary constants:
