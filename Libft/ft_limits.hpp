@@ -11,4 +11,8 @@ static constexpr long  FT_LONG_MAX  = static_cast<long>(~0UL >> 1);
 static constexpr long  FT_LONG_MIN  = -FT_LONG_MAX - 1L;
 static constexpr unsigned long FT_ULONG_MAX = ~0UL;
 
+static constexpr long long  FT_LLONG_MAX  = static_cast<long long>(~0ULL >> 1);
+static constexpr long long  FT_LLONG_MIN  = -FT_LLONG_MAX - 1LL;
+static constexpr unsigned long long FT_ULLONG_MAX = ~0ULL;
+
 #endif
