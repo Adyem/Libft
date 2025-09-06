@@ -39,7 +39,7 @@ static void html_write_node(int fd, html_node *htmlNode, int indent)
             html_write_node(fd, childNode, indent + 1);
             childNode = childNode->next;
         }
-        int indent_index = 0;
+        indent_index = 0;
         while (indent_index < indent)
         {
             pf_printf_fd(fd, "  ");

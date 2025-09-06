@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
+#include <cmath>
+#include <cfloat>
 
 typedef enum
 {
@@ -128,13 +130,13 @@ static void ft_putfloat_stream(double number, FILE *stream, size_t *count)
 
 static void ft_putscientific_stream(double number, bool uppercase, FILE *stream, size_t *count)
 {
-    if (number == 0.0)
+    if (std::fabs(number) <= DBL_EPSILON)
     {
         if (uppercase)
             ft_putstr_stream("0.000000E+00", stream, count);
         else
             ft_putstr_stream("0.000000e+00", stream, count);
-        return;
+        return ;
     }
     if (number < 0)
     {
@@ -182,10 +184,10 @@ static void ft_putscientific_stream(double number, bool uppercase, FILE *stream,
 
 static void ft_putgeneral_stream(double number, bool uppercase, FILE *stream, size_t *count)
 {
-    if (number == 0.0)
+    if (std::fabs(number) <= DBL_EPSILON)
     {
         ft_putfloat_stream(0.0, stream, count);
-        return;
+        return ;
     }
     double temp = number;
     if (temp < 0)
