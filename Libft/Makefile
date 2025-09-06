@@ -35,6 +35,7 @@ SRCS := ft_atoi.cpp \
     ft_isspace.cpp \
     ft_strlen_size_t.cpp \
     ft_abs.cpp \
+    ft_fabs.cpp \
     ft_swap.cpp \
     ft_clamp.cpp \
     ft_pow.cpp \
