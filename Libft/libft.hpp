@@ -45,6 +45,9 @@ char             *ft_strncpy(char *destination, const char *source, size_t numbe
 void             *ft_memset(void *destination, int value, size_t number_of_bytes);
 int             ft_isspace(int character);
 int             ft_abs(int number);
+long            ft_abs(long number);
+long long       ft_abs(long long number);
+double          ft_fabs(double number);
 void            ft_swap(int *a, int *b);
 int             ft_clamp(int value, int min, int max);
 double          ft_pow(double base, int exponent);
