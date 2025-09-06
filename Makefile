@@ -52,7 +52,7 @@ else
 SUBDIRS += Linux
 endif
 
-SUBDIRS += encryption RNG JSon file HTML Game
+SUBDIRS += encryption RNG JSon file HTML Game Time
 
 LIB_BASES := \
   CMA/CustomMemoryAllocator \
@@ -72,7 +72,8 @@ LIB_BASES := \
   JSon/JSon \
   file/file \
   HTML/HTMLParser \
-  Game/Game
+  Game/Game \
+  Time/time
 
 ifeq ($(OS),Windows_NT)
 LIB_BASES += Windows/Windows
