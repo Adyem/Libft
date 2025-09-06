@@ -4,6 +4,7 @@
 #define SUCCES 0
 #define FAILURE 1
 
+
 #include <cstddef>
 #include <unistd.h>
 #include <fcntl.h>
@@ -48,6 +49,9 @@ int             ft_abs(int number);
 long            ft_abs(long number);
 long long       ft_abs(long long number);
 double          ft_fabs(double number);
+int             ft_signbit(double number);
+int             ft_isnan(double number);
+double          ft_nan(void);
 void            ft_swap(int *a, int *b);
 int             ft_clamp(int value, int min, int max);
 double          ft_pow(double base, int exponent);

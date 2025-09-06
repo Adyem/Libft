@@ -1,7 +1,7 @@
 #include "../Libft/libft.hpp"
+#include "../Libft/ft_limits.hpp"
 #include "../CPP_class/nullptr.hpp"
 #include <cstring>
-#include <climits>
 #include <string>
 
 int test_strlen_size_t_null(void)
@@ -278,6 +278,32 @@ int test_abs_positive(void)
     return (ft_abs(5) == 5);
 }
 
+int test_abs_int_min(void)
+{
+    return (ft_abs(FT_INT_MIN) == FT_INT_MAX);
+}
+
+int test_abs_llong_min(void)
+{
+    return (ft_abs(FT_LLONG_MIN) == FT_LLONG_MAX);
+}
+
+int test_fabs_negative_zero(void)
+{
+    double result;
+
+    result = ft_fabs(-0.0);
+    return (result == 0.0 && !ft_signbit(result));
+}
+
+int test_fabs_nan(void)
+{
+    double result;
+
+    result = ft_fabs(ft_nan());
+    return (ft_isnan(result));
+}
+
 int test_atol_basic(void)
 {
     return (ft_atol("-42") == -42);
@@ -290,14 +316,18 @@ int test_atol_whitespace(void)
 
 int test_atol_longmax(void)
 {
-    std::string s = std::to_string(LONG_MAX);
-    return (ft_atol(s.c_str()) == LONG_MAX);
+    std::string str;
+
+    str = std::to_string(FT_LONG_MAX);
+    return (ft_atol(str.c_str()) == FT_LONG_MAX);
 }
 
 int test_atol_longmin(void)
 {
-    std::string s = std::to_string(LONG_MIN);
-    return (ft_atol(s.c_str()) == LONG_MIN);
+    std::string str;
+
+    str = std::to_string(FT_LONG_MIN);
+    return (ft_atol(str.c_str()) == FT_LONG_MIN);
 }
 
 int test_setenv_getenv_basic(void)
