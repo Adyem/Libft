@@ -65,6 +65,7 @@
 #include "Windows/windows_file.hpp"
 #include "encryption/BasicEncryption.hpp"
 #include "file/open_dir.hpp"
+#include "Time/time.hpp"
 #include "Game/achievement.hpp"
 #include "Game/experience_table.hpp"
 #include "Game/map3d.hpp"
