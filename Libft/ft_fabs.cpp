@@ -2,7 +2,7 @@
 
 double ft_fabs(double number)
 {
-    if (number < 0.0)
+    if (ft_signbit(number))
         return (-number);
     return (number);
 }
