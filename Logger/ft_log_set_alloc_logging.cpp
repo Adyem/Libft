@@ -1,4 +1,4 @@
-#include "logger.hpp"
+#include "logger_internal.hpp"
 
 void ft_log_set_alloc_logging(bool enable)
 {

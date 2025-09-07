@@ -5,6 +5,7 @@
 #include <string>
 #include "logger.hpp"
 
+extern ft_logger *g_logger;
 extern t_log_level g_level;
 extern int g_fd;
 extern std::string g_path;
