@@ -38,5 +38,7 @@ double      math_average(double first_number, double second_number);
 double      math_pow(double base_value, int exponent);
 double      math_sqrt(double number);
 double      math_exp(double value);
+double      math_deg2rad(double degrees);
+double      math_rad2deg(double radians);
 
 #endif
