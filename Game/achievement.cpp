@@ -106,13 +106,13 @@ bool ft_achievement::is_goal_complete(int id) const noexcept
 
 bool ft_achievement::is_complete() const noexcept
 {
-    const Pair<int, ft_goal> *ptr = this->_goals.end() - this->_goals.getSize();
-    const Pair<int, ft_goal> *end = this->_goals.end();
-    while (ptr != end)
+    const Pair<int, ft_goal> *goal_ptr = this->_goals.end() - this->_goals.size();
+    const Pair<int, ft_goal> *goal_end = this->_goals.end();
+    while (goal_ptr != goal_end)
     {
-        if (ptr->value.progress < ptr->value.goal)
+        if (goal_ptr->value.progress < goal_ptr->value.goal)
             return (false);
-        ++ptr;
+        ++goal_ptr;
     }
     return (true);
 }

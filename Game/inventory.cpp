@@ -31,12 +31,12 @@ void ft_inventory::resize(size_t capacity) noexcept
 
 size_t ft_inventory::get_used() const noexcept
 {
-    return (this->_items.getSize());
+    return (this->_items.size());
 }
 
 bool ft_inventory::is_full() const noexcept
 {
-    return (this->_items.getSize() >= this->_capacity);
+    return (this->_items.size() >= this->_capacity);
 }
 
 int ft_inventory::get_error() const noexcept
@@ -57,13 +57,13 @@ int ft_inventory::add_item(const ft_item &item) noexcept
     int remaining = item.get_current_stack();
     int item_id = item.get_item_id();
 
-    Pair<int, ft_item> *ptr = this->_items.end() - this->_items.getSize();
-    Pair<int, ft_item> *end = this->_items.end();
-    while (ptr != end && remaining > 0)
+    Pair<int, ft_item> *item_ptr = this->_items.end() - this->_items.size();
+    Pair<int, ft_item> *item_end = this->_items.end();
+    while (item_ptr != item_end && remaining > 0)
     {
-        if (ptr->value.get_item_id() == item_id)
+        if (item_ptr->value.get_item_id() == item_id)
         {
-            int free_space = ptr->value.get_max_stack() - ptr->value.get_current_stack();
+            int free_space = item_ptr->value.get_max_stack() - item_ptr->value.get_current_stack();
             if (free_space > 0)
             {
                 int to_add;
@@ -71,16 +71,16 @@ int ft_inventory::add_item(const ft_item &item) noexcept
                     to_add = remaining;
                 else
                     to_add = free_space;
-                ptr->value.add_to_stack(to_add);
+                item_ptr->value.add_to_stack(to_add);
                 remaining -= to_add;
             }
         }
-        ++ptr;
+        ++item_ptr;
     }
 
     while (remaining > 0)
     {
-        if (this->_items.getSize() >= this->_capacity)
+        if (this->_items.size() >= this->_capacity)
         {
             this->set_error(CHARACTER_INVENTORY_FULL);
             return (CHARACTER_INVENTORY_FULL);
@@ -112,14 +112,14 @@ void ft_inventory::remove_item(int slot) noexcept
 
 int ft_inventory::count_item(int item_id) const noexcept
 {
-    const Pair<int, ft_item> *ptr = this->_items.end() - this->_items.getSize();
-    const Pair<int, ft_item> *end = this->_items.end();
+    const Pair<int, ft_item> *item_ptr = this->_items.end() - this->_items.size();
+    const Pair<int, ft_item> *item_end = this->_items.end();
     int total = 0;
-    while (ptr != end)
+    while (item_ptr != item_end)
     {
-        if (ptr->value.get_item_id() == item_id)
-            total += ptr->value.get_current_stack();
-        ++ptr;
+        if (item_ptr->value.get_item_id() == item_id)
+            total += item_ptr->value.get_current_stack();
+        ++item_ptr;
     }
     return (total);
 }

@@ -39,7 +39,7 @@ ElementType *ft_loot_table<ElementType>::getRandomLoot() const
     if (this->size() == 0)
     {
         ft_errno = LOOT_TABLE_EMPTY;
-        const_cast<ft_loot_table<ElementType>*>(this)->setError(LOOT_TABLE_EMPTY);
+        const_cast<ft_loot_table<ElementType>*>(this)->set_error(LOOT_TABLE_EMPTY);
         return (ft_nullptr);
     }
     int totalWeight = 0;
@@ -70,7 +70,7 @@ ElementType *ft_loot_table<ElementType>::popRandomLoot()
     if (this->size() == 0)
     {
         ft_errno = LOOT_TABLE_EMPTY;
-        this->setError(LOOT_TABLE_EMPTY);
+        this->set_error(LOOT_TABLE_EMPTY);
         return (ft_nullptr);
     }
     int totalWeight = 0;

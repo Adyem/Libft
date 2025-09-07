@@ -32,10 +32,10 @@ class ft_graph
         GraphNode*   _nodes;
         size_t       _capacity;
         size_t       _size;
-        mutable int  _errorCode;
+        mutable int  _error_code;
         mutable pt_mutex _mutex;
 
-        void    setError(int error) const;
+        void    set_error(int error) const;
         bool    ensure_node_capacity(size_t desired);
         bool    ensure_edge_capacity(GraphNode& node, size_t desired);
 
@@ -68,13 +68,13 @@ class ft_graph
 
 template <typename VertexType>
 ft_graph<VertexType>::ft_graph(size_t initialCapacity)
-    : _nodes(ft_nullptr), _capacity(0), _size(0), _errorCode(ER_SUCCESS)
+    : _nodes(ft_nullptr), _capacity(0), _size(0), _error_code(ER_SUCCESS)
 {
     if (initialCapacity > 0)
     {
         this->_nodes = static_cast<GraphNode*>(cma_malloc(sizeof(GraphNode) * initialCapacity));
         if (this->_nodes == ft_nullptr)
-            this->setError(GRAPH_ALLOC_FAIL);
+            this->set_error(GRAPH_ALLOC_FAIL);
         else
             this->_capacity = initialCapacity;
     }
@@ -101,12 +101,12 @@ ft_graph<VertexType>::~ft_graph()
 
 template <typename VertexType>
 ft_graph<VertexType>::ft_graph(ft_graph&& other) noexcept
-    : _nodes(other._nodes), _capacity(other._capacity), _size(other._size), _errorCode(other._errorCode)
+    : _nodes(other._nodes), _capacity(other._capacity), _size(other._size), _error_code(other._error_code)
 {
     other._nodes = ft_nullptr;
     other._capacity = 0;
     other._size = 0;
-    other._errorCode = ER_SUCCESS;
+    other._error_code = ER_SUCCESS;
     return ;
 }
 
@@ -128,11 +128,11 @@ ft_graph<VertexType>& ft_graph<VertexType>::operator=(ft_graph&& other) noexcept
         this->_nodes = other._nodes;
         this->_capacity = other._capacity;
         this->_size = other._size;
-        this->_errorCode = other._errorCode;
+        this->_error_code = other._error_code;
         other._nodes = ft_nullptr;
         other._capacity = 0;
         other._size = 0;
-        other._errorCode = ER_SUCCESS;
+        other._error_code = ER_SUCCESS;
         other._mutex.unlock(THREAD_ID);
         this->_mutex.unlock(THREAD_ID);
     }
@@ -140,9 +140,9 @@ ft_graph<VertexType>& ft_graph<VertexType>::operator=(ft_graph&& other) noexcept
 }
 
 template <typename VertexType>
-void ft_graph<VertexType>::setError(int error) const
+void ft_graph<VertexType>::set_error(int error) const
 {
-    this->_errorCode = error;
+    this->_error_code = error;
     ft_errno = error;
     return ;
 }
@@ -162,7 +162,7 @@ bool ft_graph<VertexType>::ensure_node_capacity(size_t desired)
     GraphNode* newNodes = static_cast<GraphNode*>(cma_malloc(sizeof(GraphNode) * newCap));
     if (newNodes == ft_nullptr)
     {
-        this->setError(GRAPH_ALLOC_FAIL);
+        this->set_error(GRAPH_ALLOC_FAIL);
         return (false);
     }
     size_t node_index = 0;
@@ -197,7 +197,7 @@ bool ft_graph<VertexType>::ensure_edge_capacity(GraphNode& node, size_t desired)
     size_t* newEdges = static_cast<size_t*>(cma_malloc(sizeof(size_t) * newCap));
     if (newEdges == ft_nullptr)
     {
-        this->setError(GRAPH_ALLOC_FAIL);
+        this->set_error(GRAPH_ALLOC_FAIL);
         return (false);
     }
     size_t edge_index = 0;
@@ -218,7 +218,7 @@ size_t ft_graph<VertexType>::add_vertex(const VertexType& value)
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return (this->_size);
     }
     if (!ensure_node_capacity(this->_size + 1))
@@ -241,7 +241,7 @@ size_t ft_graph<VertexType>::add_vertex(VertexType&& value)
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return (this->_size);
     }
     if (!ensure_node_capacity(this->_size + 1))
@@ -264,12 +264,12 @@ void ft_graph<VertexType>::add_edge(size_t from, size_t to)
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
     }
     if (from >= this->_size || to >= this->_size)
     {
-        this->setError(GRAPH_NOT_FOUND);
+        this->set_error(GRAPH_NOT_FOUND);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
@@ -291,19 +291,19 @@ void ft_graph<VertexType>::bfs(size_t start, Func visit)
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
     }
     if (start >= this->_size)
     {
-        this->setError(GRAPH_NOT_FOUND);
+        this->set_error(GRAPH_NOT_FOUND);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
     bool* visited = static_cast<bool*>(cma_malloc(sizeof(bool) * this->_size));
     if (visited == ft_nullptr)
     {
-        this->setError(GRAPH_ALLOC_FAIL);
+        this->set_error(GRAPH_ALLOC_FAIL);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
@@ -343,19 +343,19 @@ void ft_graph<VertexType>::dfs(size_t start, Func visit)
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
     }
     if (start >= this->_size)
     {
-        this->setError(GRAPH_NOT_FOUND);
+        this->set_error(GRAPH_NOT_FOUND);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
     bool* visited = static_cast<bool*>(cma_malloc(sizeof(bool) * this->_size));
     if (visited == ft_nullptr)
     {
-        this->setError(GRAPH_ALLOC_FAIL);
+        this->set_error(GRAPH_ALLOC_FAIL);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
@@ -412,8 +412,8 @@ template <typename VertexType>
 int ft_graph<VertexType>::get_error() const
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
-        return (this->_errorCode);
-    int err = this->_errorCode;
+        return (this->_error_code);
+    int err = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
     return (err);
 }
@@ -422,8 +422,8 @@ template <typename VertexType>
 const char* ft_graph<VertexType>::get_error_str() const
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
-        return (ft_strerror(this->_errorCode));
-    int err = this->_errorCode;
+        return (ft_strerror(this->_error_code));
+    int err = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
     return (ft_strerror(err));
 }

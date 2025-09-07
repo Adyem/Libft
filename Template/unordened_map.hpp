@@ -32,7 +32,7 @@ private:
 
     void    resize(size_t newCapacity);
     size_t  findIndex(const Key& key) const;
-    void    setError(int error) const;
+    void    set_error(int error) const;
     size_t  hashKey(const Key& key) const;
     void    insert_internal(const Key& key, const MappedType& value);
 
@@ -212,7 +212,7 @@ ft_unord_map<Key, MappedType>::ft_unord_map(size_t initialCapacity)
     void* rawData = cma_malloc(sizeof(ft_pair<Key, MappedType>) * _capacity);
     if (!rawData)
     {
-        setError(UNORD_MAP_MEMORY);
+        set_error(UNORD_MAP_MEMORY);
         _data = ft_nullptr;
         _occupied = ft_nullptr;
         return ;
@@ -221,7 +221,7 @@ ft_unord_map<Key, MappedType>::ft_unord_map(size_t initialCapacity)
     void* rawOccupied = cma_malloc(sizeof(bool) * _capacity);
     if (!rawOccupied)
     {
-        setError(UNORD_MAP_MEMORY);
+        set_error(UNORD_MAP_MEMORY);
         cma_free(_data);
         _data = ft_nullptr;
         _occupied = ft_nullptr;
@@ -245,7 +245,7 @@ ft_unord_map<Key, MappedType>::ft_unord_map(const ft_unord_map<Key, MappedType>&
         void* rawData = cma_malloc(sizeof(ft_pair<Key, MappedType>) * _capacity);
         if (!rawData)
         {
-            setError(UNORD_MAP_MEMORY);
+            set_error(UNORD_MAP_MEMORY);
             _data = ft_nullptr;
             _occupied = ft_nullptr;
             _size = 0;
@@ -256,7 +256,7 @@ ft_unord_map<Key, MappedType>::ft_unord_map(const ft_unord_map<Key, MappedType>&
         void* rawOccupied = cma_malloc(sizeof(bool) * _capacity);
         if (!rawOccupied)
         {
-            setError(UNORD_MAP_MEMORY);
+            set_error(UNORD_MAP_MEMORY);
             cma_free(_data);
             _data = ft_nullptr;
             _occupied = ft_nullptr;
@@ -320,7 +320,7 @@ ft_unord_map<Key, MappedType>& ft_unord_map<Key, MappedType>::operator=(const ft
             void* rawData = cma_malloc(sizeof(ft_pair<Key, MappedType>) * other._capacity);
             if (!rawData)
             {
-                setError(UNORD_MAP_MEMORY);
+                set_error(UNORD_MAP_MEMORY);
                 _data = ft_nullptr;
                 _occupied = ft_nullptr;
                 _size = 0;
@@ -331,7 +331,7 @@ ft_unord_map<Key, MappedType>& ft_unord_map<Key, MappedType>::operator=(const ft
             void* rawOccupied = cma_malloc(sizeof(bool) * other._capacity);
             if (!rawOccupied)
             {
-                setError(UNORD_MAP_MEMORY);
+                set_error(UNORD_MAP_MEMORY);
                 cma_free(_data);
                 _data = ft_nullptr;
                 _occupied = ft_nullptr;
@@ -445,7 +445,7 @@ ft_unord_map<Key, MappedType>::~ft_unord_map()
 }
 
 template<typename Key, typename MappedType>
-void ft_unord_map<Key, MappedType>::setError(int error) const
+void ft_unord_map<Key, MappedType>::set_error(int error) const
 {
     ft_errno = error;
     _error = error;
@@ -485,14 +485,14 @@ void ft_unord_map<Key, MappedType>::resize(size_t newCapacity)
     void* rawData = cma_malloc(sizeof(ft_pair<Key, MappedType>) * newCapacity);
     if (!rawData)
     {
-        setError(UNORD_MAP_MEMORY);
+        set_error(UNORD_MAP_MEMORY);
         return ;
     }
     ft_pair<Key, MappedType>* newData = static_cast<ft_pair<Key, MappedType>*>(rawData);
     void* rawOccupied = cma_malloc(sizeof(bool) * newCapacity);
     if (!rawOccupied)
     {
-        setError(UNORD_MAP_MEMORY);
+        set_error(UNORD_MAP_MEMORY);
         cma_free(newData);
         return ;
     }
@@ -566,7 +566,7 @@ void ft_unord_map<Key, MappedType>::insert(const Key& key, const MappedType& val
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        setError(PT_ERR_MUTEX_OWNER);
+        set_error(PT_ERR_MUTEX_OWNER);
         return ;
     }
     _error = ER_SUCCESS;
@@ -580,7 +580,7 @@ typename ft_unord_map<Key, MappedType>::iterator ft_unord_map<Key, MappedType>::
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        setError(PT_ERR_MUTEX_OWNER);
+        set_error(PT_ERR_MUTEX_OWNER);
         return (iterator(_data, _occupied, _capacity, _capacity));
     }
     size_t idx = findIndex(key);
@@ -600,7 +600,7 @@ typename ft_unord_map<Key, MappedType>::const_iterator ft_unord_map<Key, MappedT
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        setError(PT_ERR_MUTEX_OWNER);
+        set_error(PT_ERR_MUTEX_OWNER);
         return (const_iterator(_data, _occupied, _capacity, _capacity));
     }
     size_t idx = findIndex(key);
@@ -620,7 +620,7 @@ void ft_unord_map<Key, MappedType>::remove(const Key& key)
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        setError(PT_ERR_MUTEX_OWNER);
+        set_error(PT_ERR_MUTEX_OWNER);
         return ;
     }
     size_t idx = findIndex(key);
@@ -665,7 +665,7 @@ void ft_unord_map<Key, MappedType>::clear()
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        setError(PT_ERR_MUTEX_OWNER);
+        set_error(PT_ERR_MUTEX_OWNER);
         return ;
     }
     size_t i = 0;
@@ -771,13 +771,13 @@ MappedType& ft_unord_map<Key, MappedType>::at(const Key& key)
     static MappedType errorMappedType = MappedType();
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        setError(PT_ERR_MUTEX_OWNER);
+        set_error(PT_ERR_MUTEX_OWNER);
         return (errorMappedType);
     }
     size_t idx = findIndex(key);
     if (idx == _capacity)
     {
-        setError(UNORD_MAP_UNKNOWN);
+        set_error(UNORD_MAP_UNKNOWN);
         this->_mutex.unlock(THREAD_ID);
         return (errorMappedType);
     }
@@ -792,13 +792,13 @@ const MappedType& ft_unord_map<Key, MappedType>::at(const Key& key) const
     static MappedType errorMappedType = MappedType();
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        setError(PT_ERR_MUTEX_OWNER);
+        set_error(PT_ERR_MUTEX_OWNER);
         return (errorMappedType);
     }
     size_t idx = findIndex(key);
     if (idx == _capacity)
     {
-        setError(UNORD_MAP_UNKNOWN);
+        set_error(UNORD_MAP_UNKNOWN);
         this->_mutex.unlock(THREAD_ID);
         return (errorMappedType);
     }
@@ -813,7 +813,7 @@ MappedType& ft_unord_map<Key, MappedType>::operator[](const Key& key)
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
         static MappedType errorVal = MappedType();
-        setError(PT_ERR_MUTEX_OWNER);
+        set_error(PT_ERR_MUTEX_OWNER);
         return (errorVal);
     }
     _error = ER_SUCCESS;
@@ -852,7 +852,7 @@ MappedType& ft_unord_map<Key, MappedType>::operator[](const Key& key)
             break;
     }
     static MappedType errorVal = MappedType();
-    setError(UNORD_MAP_UNKNOWN);
+    set_error(UNORD_MAP_UNKNOWN);
     this->_mutex.unlock(THREAD_ID);
     return (errorVal);
 }

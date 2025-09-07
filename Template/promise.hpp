@@ -11,16 +11,16 @@ class ft_promise
 private:
     ValueType _value;
     std::atomic_bool _ready;
-    mutable int _errorCode;
+    mutable int _error_code;
 
-    void setError(int error) const
+    void set_error(int error) const
     {
-        this->_errorCode = error;
+        this->_error_code = error;
         ft_errno = error;
     }
 
 public:
-    ft_promise() : _value(), _ready(false), _errorCode(ER_SUCCESS) {}
+    ft_promise() : _value(), _ready(false), _error_code(ER_SUCCESS) {}
 
     void set_value(const ValueType& value)
     {
@@ -38,7 +38,7 @@ public:
     {
         if (!this->_ready.load(std::memory_order_acquire))
         {
-            this->setError(FT_EINVAL);
+            this->set_error(FT_EINVAL);
             return (ValueType());
         }
         return (this->_value);
@@ -51,12 +51,12 @@ public:
 
     int get_error() const
     {
-        return (this->_errorCode);
+        return (this->_error_code);
     }
 
     const char* get_error_str() const
     {
-        return (ft_strerror(this->_errorCode));
+        return (ft_strerror(this->_error_code));
     }
 };
 
