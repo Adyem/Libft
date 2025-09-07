@@ -56,7 +56,7 @@ inline void ft_thread_pool::worker()
         std::function<void()> task;
         {
             std::unique_lock<std::mutex> lock(this->_mutex);
-            this->_cond.wait(lock, [this]() { return this->_stop || !this->_tasks.empty(); });
+            this->_cond.wait(lock, [this]() { return (this->_stop || !this->_tasks.empty()); });
             if (this->_stop && this->_tasks.empty())
                 return ;
             task = std::move(this->_tasks.front());
@@ -123,7 +123,7 @@ inline void ft_thread_pool::submit(Func &&f)
 inline void ft_thread_pool::wait()
 {
     std::unique_lock<std::mutex> lock(this->_mutex);
-    this->_cond.wait(lock, [this]() { return this->_tasks.empty() && this->_active == 0; });
+      this->_cond.wait(lock, [this]() { return (this->_tasks.empty() && this->_active == 0); });
 }
 
 inline void ft_thread_pool::destroy()
@@ -145,12 +145,12 @@ inline void ft_thread_pool::destroy()
 
 inline int ft_thread_pool::get_error() const
 {
-    return this->_errorCode.load(std::memory_order_relaxed);
+      return (this->_errorCode.load(std::memory_order_relaxed));
 }
 
 inline const char* ft_thread_pool::get_error_str() const
 {
-    return ft_strerror(this->_errorCode.load(std::memory_order_relaxed));
+      return (ft_strerror(this->_errorCode.load(std::memory_order_relaxed)));
 }
 
 #endif // FT_THREAD_POOL_HPP

@@ -50,10 +50,6 @@ void    ft_to_upper(char *string);
 char   *ft_strncpy(char *dst, const char *src, size_t n);
 void   *ft_memset(void *dst, int value, size_t n);
 int     ft_isspace(int c);
-int     ft_abs(int number);
-long    ft_abs(long number);
-long long ft_abs(long long number);
-double  ft_fabs(double number);
 ```
 
 `ft_limits.hpp` exposes integer boundary constants:
@@ -66,6 +62,25 @@ FT_UINT_MAX
 FT_LONG_MAX
 FT_LONG_MIN
 FT_ULONG_MAX
+```
+
+### Math
+
+Located in `Math/`. Header: `math.hpp`. Provides basic math utilities:
+
+```
+int         ft_abs(int number);
+long        ft_abs(long number);
+long long   ft_abs(long long number);
+double      ft_fabs(double number);
+int         ft_signbit(double number);
+int         ft_isnan(double number);
+double      ft_nan(void);
+void        ft_swap(int *first_number, int *second_number);
+int         ft_clamp(int value, int minimum, int maximum);
+double      ft_pow(double base_value, int exponent);
+double      ft_sqrt(double number);
+double      ft_exp(double value);
 ```
 
 ### Custom Memory Allocator (CMA)

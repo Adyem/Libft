@@ -9,14 +9,14 @@
 static char *trim_whitespace(char *string)
 {
     if (!string)
-        return string;
+        return (string);
     while (*string && std::isspace(static_cast<unsigned char>(*string)))
         string++;
     char *end_pointer = string + std::strlen(string);
     while (end_pointer > string && std::isspace(static_cast<unsigned char>(end_pointer[-1])))
         end_pointer--;
     *end_pointer = '\0';
-    return string;
+    return (string);
 }
 
 void ft_config_free(ft_config *config)
@@ -39,16 +39,16 @@ void ft_config_free(ft_config *config)
 ft_config *ft_config_parse(const char *filename)
 {
     if (!filename)
-        return ft_nullptr;
+        return (ft_nullptr);
     FILE *file = ft_fopen(filename, "r");
     if (!file)
-        return ft_nullptr;
+        return (ft_nullptr);
     ft_config *config = static_cast<ft_config*>(cma_calloc(1, sizeof(ft_config)));
     if (!config)
     {
         ft_errno = FT_EALLOC;
         ft_fclose(file);
-        return ft_nullptr;
+        return (ft_nullptr);
     }
     char buffer[512];
     char *current_section = ft_nullptr;
@@ -70,7 +70,7 @@ ft_config *ft_config_parse(const char *filename)
                     ft_errno = FT_EALLOC;
                     ft_config_free(config);
                     ft_fclose(file);
-                    return ft_nullptr;
+                    return (ft_nullptr);
                 }
             }
             continue ;
@@ -94,7 +94,7 @@ ft_config *ft_config_parse(const char *filename)
                     if (current_section)
                         cma_free(current_section);
                     ft_fclose(file);
-                    return ft_nullptr;
+                    return (ft_nullptr);
                 }
             }
             if (*value_start)
@@ -108,7 +108,7 @@ ft_config *ft_config_parse(const char *filename)
                     if (current_section)
                         cma_free(current_section);
                     ft_fclose(file);
-                    return ft_nullptr;
+                    return (ft_nullptr);
                 }
             }
         }
@@ -125,7 +125,7 @@ ft_config *ft_config_parse(const char *filename)
                     if (current_section)
                         cma_free(current_section);
                     ft_fclose(file);
-                    return ft_nullptr;
+                    return (ft_nullptr);
                 }
             }
         }
@@ -145,7 +145,7 @@ ft_config *ft_config_parse(const char *filename)
             if (current_section)
                 cma_free(current_section);
             ft_fclose(file);
-            return ft_nullptr;
+            return (ft_nullptr);
         }
         ft_config_entry *new_entries = static_cast<ft_config_entry*>(cma_realloc(config->entries, sizeof(ft_config_entry) * (config->entry_count + 1)));
         if (!new_entries)
@@ -158,7 +158,7 @@ ft_config *ft_config_parse(const char *filename)
             if (current_section)
                 cma_free(current_section);
             ft_fclose(file);
-            return ft_nullptr;
+            return (ft_nullptr);
         }
         config->entries = new_entries;
         config->entries[config->entry_count] = entry;
@@ -167,6 +167,6 @@ ft_config *ft_config_parse(const char *filename)
     if (current_section)
         cma_free(current_section);
     ft_fclose(file);
-    return config;
+    return (config);
 }
 

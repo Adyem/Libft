@@ -12,8 +12,8 @@ int ft_random_seed(const char *seed_string)
             hash ^= static_cast<unsigned char>(*seed_string++);
             hash *= 16777619u;
         }
-        return static_cast<int>(hash);
+        return (static_cast<int>(hash));
     }
     std::random_device random_device;
-    return static_cast<int>(random_device());
+    return (static_cast<int>(random_device()));
 }

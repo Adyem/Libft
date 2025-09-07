@@ -10,30 +10,30 @@ int test_network_send_receive(void)
     server_conf._type = SocketType::SERVER;
     ft_socket server(server_conf);
     if (server.get_error() != ER_SUCCESS)
-        return 0;
+        return (0);
 
     SocketConfig client_conf;
     client_conf._port = 54321;
     client_conf._type = SocketType::CLIENT;
     ft_socket client(client_conf);
     if (client.get_error() != ER_SUCCESS)
-        return 0;
+        return (0);
 
     struct sockaddr_storage addr;
     socklen_t addr_len = sizeof(addr);
     int client_fd = nw_accept(server.get_fd(), (struct sockaddr*)&addr, &addr_len);
     if (client_fd < 0)
-        return 0;
+        return (0);
 
     const char *msg = "ping";
     if (client.send_all(msg, ft_strlen(msg), 0) != (ssize_t)ft_strlen(msg))
-        return 0;
+        return (0);
     char buf[16];
     ssize_t r = nw_recv(client_fd, buf, sizeof(buf) - 1, 0);
     if (r < 0)
-        return 0;
+        return (0);
     buf[r] = '\0';
-    return ft_strcmp(buf, msg) == 0;
+    return (ft_strcmp(buf, msg) == 0);
 }
 
 int test_network_invalid_ip(void)

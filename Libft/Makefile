@@ -34,13 +34,6 @@ SRCS := ft_atoi.cpp \
     ft_striteri.cpp \
     ft_isspace.cpp \
     ft_strlen_size_t.cpp \
-    ft_abs.cpp \
-    ft_fabs.cpp \
-    ft_swap.cpp \
-    ft_clamp.cpp \
-    ft_pow.cpp \
-    ft_sqrt.cpp \
-    ft_exp.cpp \
     ft_getenv.cpp \
     ft_setenv.cpp \
     ft_unsetenv.cpp \

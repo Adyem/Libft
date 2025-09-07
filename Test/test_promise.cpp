@@ -24,8 +24,8 @@ int test_ft_promise_not_ready(void)
 int test_pt_async_basic(void)
 {
     ft_promise<int> p;
-    if (pt_async(p, []() { return 7; }) != 0)
-        return 0;
+    if (pt_async(p, []() { return (7); }) != 0)
+        return (0);
     while (!p.is_ready())
         usleep(1000);
     return (p.get() == 7);

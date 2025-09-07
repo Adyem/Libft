@@ -54,7 +54,8 @@ long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
     }
     if (end_pointer)
         *end_pointer = const_cast<char *>(current_character);
-    return ((sign_value < 0)
-        ? -static_cast<long>(accumulated_value)
-        :  static_cast<long>(accumulated_value));
+    long result = static_cast<long>(accumulated_value);
+    if (sign_value < 0)
+        return (-result);
+    return (result);
 }

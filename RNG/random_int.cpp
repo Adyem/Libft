@@ -7,5 +7,5 @@ int ft_random_int(void)
     int result = 0;
     while (result == 0)
         result = rand();
-    return result;
+    return (result);
 }
