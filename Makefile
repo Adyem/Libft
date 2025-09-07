@@ -52,7 +52,7 @@ else
 SUBDIRS += Linux
 endif
 
-SUBDIRS += encryption RNG JSon file HTML Game Time
+SUBDIRS += Encryption RNG JSon File HTML Game Time
 
 LIB_BASES := \
   CMA/CustomMemoryAllocator \
@@ -67,10 +67,10 @@ LIB_BASES := \
   Config/config \
   Networking/networking \
   API/API \
-  encryption/encryption \
+  Encryption/encryption \
   RNG/RNG \
   JSon/JSon \
-  file/file \
+  File/file \
   HTML/HTMLParser \
   Game/Game \
   Time/time

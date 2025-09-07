@@ -2,6 +2,7 @@
 # define TIME_HPP
 
 #include <ctime>
+#include "timer.hpp"
 
 time_t  ft_time_now(void);
 long    ft_time_now_ms(void);
