@@ -1,16 +1,23 @@
 TARGET := Math.a
 DEBUG_TARGET := Math_debug.a
 
-SRCS := ft_abs.cpp \
-        ft_fabs.cpp \
-        ft_signbit.cpp \
-        ft_isnan.cpp \
-        ft_nan.cpp \
-        ft_swap.cpp \
-        ft_clamp.cpp \
-        ft_pow.cpp \
-        ft_sqrt.cpp \
-        ft_exp.cpp
+SRCS := math_abs.cpp \
+        math_fabs.cpp \
+        math_signbit.cpp \
+        math_isnan.cpp \
+        math_nan.cpp \
+        math_swap.cpp \
+        math_clamp.cpp \
+        math_gcd.cpp \
+        math_lcm.cpp \
+        math_max.cpp \
+        math_min.cpp \
+        math_factorial.cpp \
+        math_absdiff.cpp \
+        math_average.cpp \
+        math_pow.cpp \
+        math_sqrt.cpp \
+        math_exp.cpp
 
 HEADERS := math.hpp
 

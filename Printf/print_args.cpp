@@ -166,7 +166,7 @@ void ft_putfloat_fd(double number, int fd, size_t *count)
 
 void ft_putscientific_fd(double number, bool uppercase, int fd, size_t *count)
 {
-    if (ft_fabs(number) <= DBL_EPSILON)
+    if (math_fabs(number) <= DBL_EPSILON)
     {
         if (uppercase)
             ft_putstr_fd("0.000000E+00", fd, count);
@@ -228,7 +228,7 @@ void ft_putscientific_fd(double number, bool uppercase, int fd, size_t *count)
 
 void ft_putgeneral_fd(double number, bool uppercase, int fd, size_t *count)
 {
-    if (ft_fabs(number) <= DBL_EPSILON)
+    if (math_fabs(number) <= DBL_EPSILON)
     {
         ft_putfloat_fd(0.0, fd, count);
         return ;

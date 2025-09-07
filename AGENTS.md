@@ -14,3 +14,5 @@ Template classes may define member functions in the same file as the class decla
 other classes must split declarations into .hpp files and definitions into .cpp files.
 Do not define member function bodies inside the class declaration; place all definitions outside the class.
 Every class must declare and define a constructor and destructor, even if they simply contain return ;.
+
+Always update README.md to reflect any code changes.

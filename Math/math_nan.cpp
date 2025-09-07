@@ -1,6 +1,6 @@
 #include "math.hpp"
 
-double ft_nan(void)
+double math_nan(void)
 {
     double zero;
 

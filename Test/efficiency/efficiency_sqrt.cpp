@@ -15,7 +15,7 @@ int test_efficiency_sqrt(void)
 
     auto start_ft = clock_type::now();
     for (size_t i = 1; i <= iterations; ++i)
-        result += ft_sqrt(static_cast<double>(i));
+        result += math_sqrt(static_cast<double>(i));
     auto end_ft = clock_type::now();
 
     print_comparison("sqrt", elapsed_us(start_std, end_std),

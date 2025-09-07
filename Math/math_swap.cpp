@@ -1,6 +1,6 @@
 #include "math.hpp"
 
-void ft_swap(int *first_number, int *second_number)
+void math_swap(int *first_number, int *second_number)
 {
     int temporary;
 

@@ -15,14 +15,14 @@
 #endif
 
 #ifdef _WIN32
-static inline FT_DIR* opendir_win(const char* directoryPath)
+static inline file_dir* opendir_win(const char* directoryPath)
 {
     char searchPath[MAX_PATH];
     snprintf(searchPath, sizeof(searchPath), "%s\\*", directoryPath);
-    FT_DIR* directoryStream = reinterpret_cast<FT_DIR*>(cma_malloc(sizeof(FT_DIR)));
+    file_dir* directoryStream = reinterpret_cast<file_dir*>(cma_malloc(sizeof(file_dir)));
     if (!directoryStream)
         return (ft_nullptr);
-    ft_memset(directoryStream, 0, sizeof(FT_DIR));
+    ft_memset(directoryStream, 0, sizeof(file_dir));
     HANDLE hFind = FindFirstFileA(searchPath, &directoryStream->w_findData);
     if (hFind == INVALID_HANDLE_VALUE)
     {
@@ -34,7 +34,7 @@ static inline FT_DIR* opendir_win(const char* directoryPath)
     return (directoryStream);
 }
 
-static inline ft_dirent* readdir_win(FT_DIR* dir)
+static inline file_dirent* readdir_win(file_dir* dir)
 {
     WIN32_FIND_DATAA* fd = &dir->w_findData;
     if (dir->first_read)
@@ -44,7 +44,7 @@ static inline ft_dirent* readdir_win(FT_DIR* dir)
         if (!FindNextFileA(reinterpret_cast<HANDLE>(dir->fd), fd))
             return (ft_nullptr);
     }
-    static ft_dirent entry;
+    static file_dirent entry;
     ft_bzero(&entry, sizeof(entry));
     BY_HANDLE_FILE_INFORMATION info;
     if (GetFileInformationByHandle(reinterpret_cast<HANDLE>(dir->fd), &info))
@@ -57,7 +57,7 @@ static inline ft_dirent* readdir_win(FT_DIR* dir)
     return (&entry);
 }
 
-static inline int closedir_win(FT_DIR* directoryStream)
+static inline int closedir_win(file_dir* directoryStream)
 {
     FindClose(reinterpret_cast<HANDLE>(directoryStream->fd));
     cma_free(directoryStream);
@@ -65,18 +65,18 @@ static inline int closedir_win(FT_DIR* directoryStream)
 }
 #else
 #ifdef __linux__
-static inline FT_DIR* opendir_unix(const char* directoryPath)
+static inline file_dir* opendir_unix(const char* directoryPath)
 {
     int fileDescriptor = ft_open(directoryPath, O_DIRECTORY | O_RDONLY, 0);
     if (fileDescriptor < 0)
         return (ft_nullptr);
-    FT_DIR* directoryStream = reinterpret_cast<FT_DIR*>(cma_malloc(sizeof(FT_DIR)));
+    file_dir* directoryStream = reinterpret_cast<file_dir*>(cma_malloc(sizeof(file_dir)));
     if (!directoryStream)
     {
         ft_close(fileDescriptor);
         return (ft_nullptr);
     }
-    ft_memset(directoryStream, 0, sizeof(FT_DIR));
+    ft_memset(directoryStream, 0, sizeof(file_dir));
     directoryStream->fd = static_cast<intptr_t>(fileDescriptor);
     directoryStream->buffer_size = 4096;
     directoryStream->buffer = reinterpret_cast<char*>(cma_malloc(directoryStream->buffer_size));
@@ -91,25 +91,25 @@ static inline FT_DIR* opendir_unix(const char* directoryPath)
     return (directoryStream);
 }
 #else
-static inline FT_DIR* opendir_unix(const char* directoryPath)
+static inline file_dir* opendir_unix(const char* directoryPath)
 {
     DIR* dir = opendir(directoryPath);
     if (!dir)
         return (ft_nullptr);
-    FT_DIR* directoryStream = reinterpret_cast<FT_DIR*>(cma_malloc(sizeof(FT_DIR)));
+    file_dir* directoryStream = reinterpret_cast<file_dir*>(cma_malloc(sizeof(file_dir)));
     if (!directoryStream)
     {
         closedir(dir);
         return (ft_nullptr);
     }
-    ft_memset(directoryStream, 0, sizeof(FT_DIR));
+    ft_memset(directoryStream, 0, sizeof(file_dir));
     directoryStream->fd = reinterpret_cast<intptr_t>(dir);
     return (directoryStream);
 }
 #endif
 
 #ifdef __linux__
-static inline ft_dirent* readdir_unix(FT_DIR* dir)
+static inline file_dirent* readdir_unix(file_dir* dir)
 {
     if (dir->buffer_offset >= static_cast<size_t>(dir->buffer_used))
     {
@@ -123,7 +123,7 @@ static inline ft_dirent* readdir_unix(FT_DIR* dir)
     linux_dirent64* raw = reinterpret_cast<linux_dirent64*>(dir->buffer + dir->buffer_offset);
     if (raw->d_reclen == 0)
         return (ft_nullptr);
-    static ft_dirent entry;
+    static file_dirent entry;
     ft_bzero(&entry, sizeof(entry));
     entry.d_ino  = raw->d_ino;
     entry.d_type = raw->d_type;
@@ -132,13 +132,13 @@ static inline ft_dirent* readdir_unix(FT_DIR* dir)
     return (&entry);
 }
 #else
-static inline ft_dirent* readdir_unix(FT_DIR* dir)
+static inline file_dirent* readdir_unix(file_dir* dir)
 {
     DIR* d = reinterpret_cast<DIR*>(dir->fd);
     struct dirent* entry = readdir(d);
     if (!entry)
         return (ft_nullptr);
-    static ft_dirent ft_entry;
+    static file_dirent ft_entry;
     ft_bzero(&ft_entry, sizeof(ft_entry));
     ft_entry.d_ino = entry->d_ino;
     ft_entry.d_type = entry->d_type;
@@ -148,7 +148,7 @@ static inline ft_dirent* readdir_unix(FT_DIR* dir)
 #endif
 
 #ifdef __linux__
-static inline int closedir_unix(FT_DIR* directoryStream)
+static inline int closedir_unix(file_dir* directoryStream)
 {
     ft_close(static_cast<int>(directoryStream->fd));
     cma_free(directoryStream->buffer);
@@ -156,7 +156,7 @@ static inline int closedir_unix(FT_DIR* directoryStream)
     return (0);
 }
 #else
-static inline int closedir_unix(FT_DIR* directoryStream)
+static inline int closedir_unix(file_dir* directoryStream)
 {
     DIR* d = reinterpret_cast<DIR*>(directoryStream->fd);
     closedir(d);
@@ -166,7 +166,7 @@ static inline int closedir_unix(FT_DIR* directoryStream)
 #endif
 #endif
 
-FT_DIR* ft_opendir(const char* directoryPath)
+file_dir* file_opendir(const char* directoryPath)
 {
 #ifdef _WIN32
     return (opendir_win(directoryPath));
@@ -175,7 +175,7 @@ FT_DIR* ft_opendir(const char* directoryPath)
 #endif
 }
 
-ft_dirent* ft_readdir(FT_DIR* dir)
+file_dirent* file_readdir(file_dir* dir)
 {
     if (!dir)
         return (ft_nullptr);
@@ -186,7 +186,7 @@ ft_dirent* ft_readdir(FT_DIR* dir)
 #endif
 }
 
-int ft_closedir(FT_DIR* directoryStream)
+int file_closedir(file_dir* directoryStream)
 {
     if (!directoryStream)
         return (-1);

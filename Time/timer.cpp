@@ -2,17 +2,17 @@
 #include "timer.hpp"
 #include <chrono>
 
-ft_timer::ft_timer()
+time_timer::time_timer()
 {
     return ;
 }
 
-ft_timer::~ft_timer()
+time_timer::~time_timer()
 {
     return ;
 }
 
-void    ft_timer::start(long duration_ms)
+void    time_timer::start(long duration_ms)
 {
     if (duration_ms < 0)
     {
@@ -25,7 +25,7 @@ void    ft_timer::start(long duration_ms)
     return ;
 }
 
-long ft_timer::update()
+long time_timer::update()
 {
     if (!this->_running)
         return (-1);
@@ -39,7 +39,7 @@ long ft_timer::update()
     return (this->_duration_ms - elapsed);
 }
 
-long ft_timer::add_time(long amount_ms)
+long time_timer::add_time(long amount_ms)
 {
     if (!this->_running || amount_ms < 0)
         return (-1);
@@ -54,7 +54,7 @@ long ft_timer::add_time(long amount_ms)
     return (this->_duration_ms - elapsed);
 }
 
-long ft_timer::remove_time(long amount_ms)
+long time_timer::remove_time(long amount_ms)
 {
     if (!this->_running || amount_ms < 0)
         return (-1);
@@ -70,11 +70,13 @@ long ft_timer::remove_time(long amount_ms)
     return (this->_duration_ms - elapsed);
 }
 
-void    ft_timer::sleep_remaining()
+void    time_timer::sleep_remaining()
 {
-    long remaining = this->update();
+    long remaining;
+
+    remaining = this->update();
     if (remaining > 0)
-        ft_sleep_ms(static_cast<unsigned int>(remaining));
+        time_sleep_ms(static_cast<unsigned int>(remaining));
     return ;
 }
 

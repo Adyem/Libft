@@ -20,7 +20,7 @@ int test_efficiency_exp(void)
     for (size_t i = 0; i < iterations; ++i)
     {
         double x = (i % 100) / 50.0;
-        result += ft_exp(x);
+        result += math_exp(x);
     }
     auto end_ft = clock_type::now();
 
