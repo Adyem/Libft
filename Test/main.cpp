@@ -495,7 +495,7 @@ int main(int argc, char **argv)
         std::string mode(mode_line);
         cma_free(mode_line);
         std::transform(mode.begin(), mode.end(), mode.begin(),
-                       [](unsigned char c){ return std::tolower(c); });
+                       [](unsigned char c){ return (std::tolower(c)); });
 
         if (mode == "exit")
             break ;
@@ -512,7 +512,7 @@ int main(int argc, char **argv)
                 std::string input(line);
                 cma_free(line);
                 std::transform(input.begin(), input.end(), input.begin(),
-                               [](unsigned char c){ return std::tolower(c); });
+                               [](unsigned char c){ return (std::tolower(c)); });
 
                 if (input == "exit")
                     return (0);
@@ -553,7 +553,7 @@ int main(int argc, char **argv)
                 std::string input(line);
                 cma_free(line);
                 std::transform(input.begin(), input.end(), input.begin(),
-                               [](unsigned char c){ return std::tolower(c); });
+                               [](unsigned char c){ return (std::tolower(c)); });
 
                 if (input == "exit")
                     return (0);

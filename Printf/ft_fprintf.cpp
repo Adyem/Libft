@@ -2,6 +2,7 @@
 #include "printf.hpp"
 #include "../CPP_class/nullptr.hpp"
 #include "../Libft/libft.hpp"
+#include "../Math/math.hpp"
 #include <cstdio>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -29,7 +30,7 @@ static void ft_putstr_stream(const char *string, FILE *stream, size_t *count)
     {
         fwrite("(null)", 1, 6, stream);
         *count += 6;
-        return;
+        return ;
     }
     size_t length = strlen(string);
     fwrite(string, 1, length, stream);
@@ -119,12 +120,14 @@ static void ft_putfloat_stream(double number, FILE *stream, size_t *count)
     ft_putnbr_stream(integer_part, stream, count);
     ft_putchar_stream('.', stream, count);
     double fractional = number - static_cast<double>(integer_part);
-    for (int i = 0; i < 6; ++i)
+    int index_fraction = 0;
+    while (index_fraction < 6)
     {
         fractional *= 10;
         int digit = static_cast<int>(fractional);
         ft_putchar_stream(static_cast<char>('0' + digit), stream, count);
         fractional -= digit;
+        index_fraction++;
     }
 }
 
@@ -158,14 +161,21 @@ static void ft_putscientific_stream(double number, bool uppercase, FILE *stream,
     ft_putchar_stream(static_cast<char>('0' + integer_part), stream, count);
     ft_putchar_stream('.', stream, count);
     double fractional = number - static_cast<double>(integer_part);
-    for (int i = 0; i < 6; ++i)
+    int index_fraction = 0;
+    while (index_fraction < 6)
     {
         fractional *= 10.0;
         int digit = static_cast<int>(fractional);
         ft_putchar_stream(static_cast<char>('0' + digit), stream, count);
         fractional -= digit;
+        index_fraction++;
     }
-    ft_putchar_stream(uppercase ? 'E' : 'e', stream, count);
+    char exponent_character;
+    if (uppercase)
+        exponent_character = 'E';
+    else
+        exponent_character = 'e';
+    ft_putchar_stream(exponent_character, stream, count);
     if (exponent >= 0)
         ft_putchar_stream('+', stream, count);
     else

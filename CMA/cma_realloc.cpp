@@ -36,7 +36,7 @@ void *cma_realloc(void* ptr, size_t new_size)
 {
     if (OFFSWITCH == 1)
     {
-        return std::realloc(ptr, new_size);
+        return (std::realloc(ptr, new_size));
     }
     g_malloc_mutex.lock(THREAD_ID);
     if (!ptr)

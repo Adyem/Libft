@@ -34,9 +34,10 @@ else
 endif
 
 SUBDIRS :=  CMA \
-	    GetNextLine \
-	    Libft \
-	    Logger \
+            GetNextLine \
+            Libft \
+            Math \
+            Logger \
 	    Printf \
 	    ReadLine \
 	    PThread \
@@ -58,6 +59,7 @@ LIB_BASES := \
   CMA/CustomMemoryAllocator \
   GetNextLine/GetNextLine \
   Libft/LibFT \
+  Math/Math \
   Logger/Logger \
   Printf/Printf \
   ReadLine/ReadLine \

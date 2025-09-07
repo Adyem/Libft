@@ -4,7 +4,7 @@
 void ft_striteri(char *string, void (*function)(unsigned int, char *))
 {
     if (string == ft_nullptr || function == ft_nullptr)
-        return;
+        return ;
     unsigned int index = 0;
     while (string[index] != '\0')
     {

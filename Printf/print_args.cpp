@@ -1,5 +1,6 @@
 #include "printf_internal.hpp"
 #include "../Libft/libft.hpp"
+#include "../Math/math.hpp"
 #include <cstdarg>
 #include <unistd.h>
 #include "../Linux/linux_file.hpp"
@@ -151,12 +152,14 @@ void ft_putfloat_fd(double number, int fd, size_t *count)
     ft_putnbr_fd(integer_part, fd, count);
     ft_putchar_fd('.', fd, count);
     double fractional = number - static_cast<double>(integer_part);
-    for (int i = 0; i < 6; ++i)
+    int index_fraction = 0;
+    while (index_fraction < 6)
     {
         fractional *= 10;
         int digit = static_cast<int>(fractional);
         ft_putchar_fd(static_cast<char>('0' + digit), fd, count);
         fractional -= digit;
+        index_fraction++;
     }
     return ;
 }
@@ -191,14 +194,21 @@ void ft_putscientific_fd(double number, bool uppercase, int fd, size_t *count)
     ft_putchar_fd(static_cast<char>('0' + integer_part), fd, count);
     ft_putchar_fd('.', fd, count);
     double fractional = number - static_cast<double>(integer_part);
-    for (int i = 0; i < 6; ++i)
+    int index_fraction = 0;
+    while (index_fraction < 6)
     {
         fractional *= 10.0;
         int digit = static_cast<int>(fractional);
         ft_putchar_fd(static_cast<char>('0' + digit), fd, count);
         fractional -= digit;
+        index_fraction++;
     }
-    ft_putchar_fd(uppercase ? 'E' : 'e', fd, count);
+    char exponent_character;
+    if (uppercase)
+        exponent_character = 'E';
+    else
+        exponent_character = 'e';
+    ft_putchar_fd(exponent_character, fd, count);
     if (exponent >= 0)
         ft_putchar_fd('+', fd, count);
     else

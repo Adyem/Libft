@@ -54,5 +54,5 @@ int test_efficiency_mutex_lock(void)
 
     print_comparison("mutex lock/unlock", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    return 1;
+    return (1);
 }

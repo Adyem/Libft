@@ -30,7 +30,7 @@ int test_game_simulation(void)
     hero.get_buffs().insert(strength.get_id(), strength);
     hero.set_might(hero.get_might() + strength.get_modifier1());
     if (hero.get_might() != 15)
-        return 0;
+        return (0);
 
     ft_debuff weakness;
     weakness.set_id(2);
@@ -38,7 +38,7 @@ int test_game_simulation(void)
     hero.get_debuffs().insert(weakness.get_id(), weakness);
     hero.set_armor(hero.get_armor() + weakness.get_modifier1());
     if (hero.get_armor() != 3)
-        return 0;
+        return (0);
 
     ft_upgrade upgrade;
     upgrade.set_id(1);
@@ -46,10 +46,10 @@ int test_game_simulation(void)
     hero.get_upgrades().insert(upgrade.get_id(), upgrade);
     Pair<int, ft_upgrade>* uentry = hero.get_upgrades().find(1);
     if (!uentry)
-        return 0;
+        return (0);
     hero.set_might(hero.get_might() + uentry->value.get_modifier1());
     if (hero.get_might() != 18)
-        return 0;
+        return (0);
 
     ft_quest quest;
     quest.set_id(1);
@@ -57,16 +57,16 @@ int test_game_simulation(void)
     hero.get_quests().insert(quest.get_id(), quest);
     Pair<int, ft_quest>* qentry = hero.get_quests().find(1);
     if (!qentry)
-        return 0;
+        return (0);
     qentry->value.set_current_phase(1);
     if (qentry->value.get_current_phase() != 1)
-        return 0;
+        return (0);
 
     hero.get_reputation().set_milestone(1, 10);
     hero.get_reputation().add_current_rep(4);
     if (hero.get_reputation().get_current_rep() != 4 ||
         hero.get_reputation().get_total_rep() != 4)
-        return 0;
+        return (0);
 
     ft_world overworld;
     ft_event meeting;
@@ -75,7 +75,7 @@ int test_game_simulation(void)
     overworld.get_events().insert(meeting.get_id(), meeting);
     Pair<int, ft_event>* eentry = overworld.get_events().find(1);
     if (!eentry || eentry->value.get_duration() != 5)
-        return 0;
+        return (0);
 
     ft_inventory pack(2);
     ft_item potion;
@@ -83,7 +83,7 @@ int test_game_simulation(void)
     potion.set_max_stack(10);
     potion.set_current_stack(5);
     if (pack.add_item(potion) != ER_SUCCESS)
-        return 0;
+        return (0);
     ft_item more;
     more.set_item_id(1);
     more.set_max_stack(10);
@@ -91,12 +91,12 @@ int test_game_simulation(void)
     pack.add_item(more);
     Pair<int, ft_item>* ientry = pack.get_items().find(0);
     if (!ientry || ientry->value.get_current_stack() != 8)
-        return 0;
+        return (0);
 
     if (grid.get(hero.get_x(), hero.get_y(), hero.get_z()) != 1)
-        return 0;
+        return (0);
 
-    return 1;
+    return (1);
 }
 
 
@@ -111,8 +111,8 @@ int test_item_basic(void)
     if (item.get_item_id() != 1 || item.get_max_stack() != 10 ||
         item.get_current_stack() != 3 || item.get_modifier1_id() != 5 ||
         item.get_modifier1_value() != 2)
-        return 0;
-    return 1;
+        return (0);
+    return (1);
 }
 
 int test_inventory_count(void)
@@ -131,10 +131,10 @@ int test_inventory_count(void)
     inv.add_item(more);
 
     if (!inv.has_item(1) || inv.count_item(1) != 11)
-        return 0;
+        return (0);
     if (inv.has_item(2) || inv.count_item(2) != 0)
-        return 0;
-    return 1;
+        return (0);
+    return (1);
 }
 
 int test_inventory_full(void)
@@ -145,12 +145,12 @@ int test_inventory_full(void)
     item.set_max_stack(5);
     item.set_current_stack(5);
     if (inv.is_full())
-        return 0;
+        return (0);
     if (inv.add_item(item) != ER_SUCCESS)
-        return 0;
+        return (0);
     if (!inv.is_full())
-        return 0;
-    return 1;
+        return (0);
+    return (1);
 }
 
 int test_character_valor(void)
@@ -281,14 +281,14 @@ int test_quest_progress(void)
     ft_quest q;
     q.set_phases(3);
     if (q.is_complete())
-        return 0;
+        return (0);
     q.advance_phase();
     if (q.get_current_phase() != 1 || q.is_complete())
-        return 0;
+        return (0);
     q.advance_phase();
     q.advance_phase();
     if (!q.is_complete() || q.get_current_phase() != 3)
-        return 0;
+        return (0);
     q.advance_phase();
     return (q.get_current_phase() == 3);
 }

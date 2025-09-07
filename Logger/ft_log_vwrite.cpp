@@ -6,7 +6,7 @@
 void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
 {
     if (level < g_level || !fmt)
-        return;
+        return ;
 
     char msg_buf[1024];
     std::vsnprintf(msg_buf, sizeof(msg_buf), fmt, args);

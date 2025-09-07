@@ -25,7 +25,7 @@ int test_memset_large(void)
     for (size_t i = 0; i < sizeof(buf); ++i)
     {
         if (static_cast<unsigned char>(buf[i]) != 0xAB)
-            return 0;
+            return (0);
     }
-    return 1;
+    return (1);
 }

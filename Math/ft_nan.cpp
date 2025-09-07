@@ -1,4 +1,4 @@
-#include "libft.hpp"
+#include "math.hpp"
 
 double ft_nan(void)
 {

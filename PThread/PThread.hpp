@@ -46,7 +46,7 @@ int pt_async(ft_promise<ValueType>& promise, Function function)
         AsyncData* data = static_cast<AsyncData*>(arg);
         data->promise->set_value(data->function());
         delete data;
-        return ft_nullptr;
+        return (ft_nullptr);
     };
 
     AsyncData* data = new AsyncData{&promise, ft_move(function)};
@@ -55,10 +55,10 @@ int pt_async(ft_promise<ValueType>& promise, Function function)
     if (ret != 0)
     {
         delete data;
-        return ret;
+        return (ret);
     }
     pt_thread_detach(thread);
-    return ret;
+    return (ret);
 }
 
 #endif

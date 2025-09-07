@@ -49,11 +49,11 @@ static void clear_handle(int fd)
     if (fd < 0 || fd >= 1024)
     {
         g_file_mutex.unlock(GetCurrentThreadId());
-        return;
+        return ;
     }
     g_handles[fd] = ft_nullptr;
     g_file_mutex.unlock(GetCurrentThreadId());
-    return;
+      return ;
 }
 
 int ft_open(const char *pathname, int flags, int mode)
