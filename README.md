@@ -69,18 +69,43 @@ FT_ULONG_MAX
 Located in `Math/`. Header: `math.hpp`. Provides basic math utilities:
 
 ```
-int         ft_abs(int number);
-long        ft_abs(long number);
-long long   ft_abs(long long number);
-double      ft_fabs(double number);
-int         ft_signbit(double number);
-int         ft_isnan(double number);
-double      ft_nan(void);
-void        ft_swap(int *first_number, int *second_number);
-int         ft_clamp(int value, int minimum, int maximum);
-double      ft_pow(double base_value, int exponent);
-double      ft_sqrt(double number);
-double      ft_exp(double value);
+int         math_abs(int number);
+long        math_abs(long number);
+long long   math_abs(long long number);
+double      math_fabs(double number);
+int         math_signbit(double number);
+int         math_isnan(double number);
+double      math_nan(void);
+void        math_swap(int *first_number, int *second_number);
+int         math_clamp(int value, int minimum, int maximum);
+int         math_gcd(int first_number, int second_number);
+long        math_gcd(long first_number, long second_number);
+long long   math_gcd(long long first_number, long long second_number);
+int         math_lcm(int first_number, int second_number);
+long        math_lcm(long first_number, long second_number);
+long long   math_lcm(long long first_number, long long second_number);
+int         math_max(int first_number, int second_number);
+long        math_max(long first_number, long second_number);
+long long   math_max(long long first_number, long long second_number);
+double      math_max(double first_number, double second_number);
+int         math_min(int first_number, int second_number);
+long        math_min(long first_number, long second_number);
+long long   math_min(long long first_number, long long second_number);
+double      math_min(double first_number, double second_number);
+int         math_factorial(int number);
+long        math_factorial(long number);
+long long   math_factorial(long long number);
+int         math_absdiff(int first_number, int second_number);
+long        math_absdiff(long first_number, long second_number);
+long long   math_absdiff(long long first_number, long long second_number);
+double      math_absdiff(double first_number, double second_number);
+int         math_average(int first_number, int second_number);
+long        math_average(long first_number, long second_number);
+long long   math_average(long long first_number, long long second_number);
+double      math_average(double first_number, double second_number);
+double      math_pow(double base_value, int exponent);
+double      math_sqrt(double number);
+double      math_exp(double value);
 ```
 
 ### Custom Memory Allocator (CMA)
@@ -436,11 +461,11 @@ void         json_update_item(json_group *group, const char *key, const bool val
 Cross-platform file and directory utilities (`File/open_dir.hpp`):
 
 ```
-FT_DIR   *ft_opendir(const char *directoryPath);
-int       ft_closedir(FT_DIR *directoryStream);
-ft_dirent *ft_readdir(FT_DIR *directoryStream);
-int       dir_exists(const char *rel_path);
-int       file_create_directory(const char *path, mode_t mode);
+file_dir   *file_opendir(const char *directory_path);
+int         file_closedir(file_dir *directory_stream);
+file_dirent *file_readdir(file_dir *directory_stream);
+int         file_dir_exists(const char *rel_path);
+int         file_create_directory(const char *path, mode_t mode);
 ```
 
 Additional wrappers in `Linux/linux_file.hpp` and `Windows/windows_file.hpp` provide
@@ -460,8 +485,32 @@ int     ft_close(int fd);
 `Config/config.hpp` parses simple configuration files:
 
 ```
-ft_config *ft_config_parse(const char *filename);
-void       ft_config_free(ft_config *config);
+cnfg_config *cnfg_parse(const char *filename);
+char       *cnfg_parse_flags(int argument_count, char **argument_values);
+void       cnfg_free(cnfg_config *config);
+```
+
+#### Time
+`Time/time.hpp` exposes simple time helpers:
+
+```
+time_t  time_now(void);
+long    time_now_ms(void);
+void    time_local(time_t time_value, struct tm *out);
+void    time_sleep(unsigned int seconds);
+void    time_sleep_ms(unsigned int milliseconds);
+```
+
+`timer.hpp` defines a small timer class:
+
+```
+time_timer();
+~time_timer();
+void    start(long duration_ms);
+long    update();
+long    add_time(long amount_ms);
+long    remove_time(long amount_ms);
+void    sleep_remaining();
 ```
 
 #### ReadLine

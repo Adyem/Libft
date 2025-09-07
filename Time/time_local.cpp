@@ -1,7 +1,7 @@
 #include "time.hpp"
 #include <ctime>
 
-void    ft_time_local(time_t time_value, struct tm *out)
+void    time_local(time_t time_value, struct tm *out)
 {
     if (!out)
         return ;

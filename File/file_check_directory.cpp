@@ -30,7 +30,7 @@
     return ;
 }
 
-static inline int dir_exists_platform(const char *path)
+static inline int file_dir_exists_platform(const char *path)
 {
 #if defined(_WIN32) || defined(_WIN64)
     DWORD attr = GetFileAttributesA(path);
@@ -55,7 +55,7 @@ static ft_string normalize_path(ft_string path)
     return (path);
 }
 
-int dir_exists(const char *rel_path)
+int file_dir_exists(const char *rel_path)
 {
     ft_string path = normalize_path(rel_path);
     if (path.get_error())
@@ -63,5 +63,5 @@ int dir_exists(const char *rel_path)
         ft_errno = CHECK_DIR_FAIL;
         return (-1);
     }
-    return (dir_exists_platform(path.c_str()));
+    return (file_dir_exists_platform(path.c_str()));
 }

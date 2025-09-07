@@ -1,8 +1,8 @@
 #include "math.hpp"
 
-double ft_fabs(double number)
+double math_fabs(double number)
 {
-    if (ft_signbit(number))
+    if (math_signbit(number))
         return (-number);
     return (number);
 }
