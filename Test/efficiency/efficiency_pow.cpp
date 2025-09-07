@@ -20,7 +20,7 @@ int test_efficiency_pow(void)
     for (size_t i = 0; i < iterations; ++i)
     {
         double base = 1.0 + (i % 10) * 0.1;
-        result += ft_pow(base, 5);
+        result += math_pow(base, 5);
     }
     auto end_ft = clock_type::now();
 

@@ -31,31 +31,31 @@ struct linux_dirent64
     char           d_name[];
 };
 
-struct ft_dirent
+struct file_dirent
 {
     uint64_t       d_ino;
     char           d_name[256];
     unsigned char  d_type;
 };
 
-struct FT_DIR
+struct file_dir
 {
     intptr_t fd;
-    char*   buffer;
-    size_t  buffer_size;
-    ssize_t buffer_used;
-    size_t  buffer_offset;
+    char*    buffer;
+    size_t   buffer_size;
+    ssize_t  buffer_used;
+    size_t   buffer_offset;
 #ifdef _WIN32
     WIN32_FIND_DATAA w_findData;
     bool             first_read;
 #endif
 };
 
-FT_DIR*     ft_opendir(const char* directoryPath);
-int         ft_closedir(FT_DIR* directoryStream);
-ft_dirent    *ft_readdir(FT_DIR* directoryStream);
+file_dir    *file_opendir(const char *directory_path);
+int          file_closedir(file_dir *directory_stream);
+file_dirent *file_readdir(file_dir *directory_stream);
 
-int         dir_exists(const char *rel_path);
-int         file_create_directory(const char* path, mode_t mode);
+int          file_dir_exists(const char *rel_path);
+int          file_create_directory(const char *path, mode_t mode);
 
 #endif

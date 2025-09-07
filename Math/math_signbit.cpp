@@ -6,7 +6,7 @@ typedef union u_double_bits
     unsigned long long  unsigned_value;
 }   t_double_bits;
 
-int ft_signbit(double number)
+int math_signbit(double number)
 {
     t_double_bits bit_structure;
 
