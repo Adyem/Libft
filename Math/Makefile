@@ -17,7 +17,9 @@ SRCS := math_abs.cpp \
         math_average.cpp \
         math_pow.cpp \
         math_sqrt.cpp \
-        math_exp.cpp
+        math_exp.cpp \
+        math_deg2rad.cpp \
+        math_rad2deg.cpp
 
 HEADERS := math.hpp
 
