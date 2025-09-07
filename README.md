@@ -418,7 +418,7 @@ void         json_update_item(json_group *group, const char *key, const bool val
 ```
 
 #### File
-Cross-platform file and directory utilities (`file/open_dir.hpp`):
+Cross-platform file and directory utilities (`File/open_dir.hpp`):
 
 ```
 FT_DIR   *ft_opendir(const char *directoryPath);

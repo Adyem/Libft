@@ -5,9 +5,11 @@ SRCS := ft_time_now.cpp \
         ft_time_now_ms.cpp \
         ft_time_local.cpp \
         ft_sleep.cpp \
-        ft_sleep_ms.cpp
+        ft_sleep_ms.cpp \
+        timer.cpp
 
-HEADERS := time.hpp
+HEADERS := time.hpp \
+           timer.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
