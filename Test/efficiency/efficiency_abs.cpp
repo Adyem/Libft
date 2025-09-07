@@ -16,7 +16,7 @@ int test_efficiency_abs(void)
 
     auto start_ft = clock_type::now();
     for (size_t i = 0; i < iterations; ++i)
-        result += ft_abs(-123);
+        result += math_abs(-123);
     auto end_ft = clock_type::now();
 
     print_comparison("abs", elapsed_us(start_std, end_std),

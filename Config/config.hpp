@@ -4,22 +4,22 @@
 #include "../CPP_class/nullptr.hpp"
 #include <cstddef>
 
-struct ft_config_entry
+struct cnfg_entry
 {
     char    *section;
     char    *key;
     char    *value;
 };
 
-struct ft_config
+struct cnfg_config
 {
-    ft_config_entry *entries;
+    cnfg_entry *entries;
     size_t           entry_count;
 };
 
-ft_config   *ft_config_parse(const char *filename);
-void        ft_config_free(ft_config *config);
-char       *ft_config_parse_flags(int argument_count, char **argument_values);
-char      **ft_config_parse_long_flags(int argument_count, char **argument_values);
+cnfg_config   *cnfg_parse(const char *filename);
+void        cnfg_free(cnfg_config *config);
+char       *cnfg_parse_flags(int argument_count, char **argument_values);
+char      **cnfg_parse_long_flags(int argument_count, char **argument_values);
 
 #endif

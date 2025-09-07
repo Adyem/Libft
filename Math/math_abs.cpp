@@ -1,7 +1,7 @@
 #include "math.hpp"
 #include "../Libft/ft_limits.hpp"
 
-int ft_abs(int number)
+int math_abs(int number)
 {
     if (number < 0)
     {
@@ -12,7 +12,7 @@ int ft_abs(int number)
     return (number);
 }
 
-long ft_abs(long number)
+long math_abs(long number)
 {
     if (number < 0)
     {
@@ -23,7 +23,7 @@ long ft_abs(long number)
     return (number);
 }
 
-long long ft_abs(long long number)
+long long math_abs(long long number)
 {
     if (number < 0)
     {

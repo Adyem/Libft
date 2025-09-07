@@ -1,6 +1,6 @@
 #include "math.hpp"
 
-int ft_clamp(int value, int minimum, int maximum)
+int math_clamp(int value, int minimum, int maximum)
 {
     if (value < minimum)
         return (minimum);

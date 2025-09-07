@@ -266,43 +266,43 @@ int test_tolower_no_change(void)
 
 int test_abs_basic(void)
 {
-    return (ft_abs(-5) == 5);
+    return (math_abs(-5) == 5);
 }
 
 int test_abs_zero(void)
 {
-    return (ft_abs(0) == 0);
+    return (math_abs(0) == 0);
 }
 
 int test_abs_positive(void)
 {
-    return (ft_abs(5) == 5);
+    return (math_abs(5) == 5);
 }
 
 int test_abs_int_min(void)
 {
-    return (ft_abs(FT_INT_MIN) == FT_INT_MAX);
+    return (math_abs(FT_INT_MIN) == FT_INT_MAX);
 }
 
 int test_abs_llong_min(void)
 {
-    return (ft_abs(FT_LLONG_MIN) == FT_LLONG_MAX);
+    return (math_abs(FT_LLONG_MIN) == FT_LLONG_MAX);
 }
 
 int test_fabs_negative_zero(void)
 {
     double result;
 
-    result = ft_fabs(-0.0);
-    return (result == 0.0 && !ft_signbit(result));
+    result = math_fabs(-0.0);
+    return (result == 0.0 && !math_signbit(result));
 }
 
 int test_fabs_nan(void)
 {
     double result;
 
-    result = ft_fabs(ft_nan());
-    return (ft_isnan(result));
+    result = math_fabs(math_nan());
+    return (math_isnan(result));
 }
 
 int test_atol_basic(void)

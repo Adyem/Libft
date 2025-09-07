@@ -5,7 +5,7 @@
 #include <cstring>
 #include <cctype>
 
-char *ft_config_parse_flags(int argument_count, char **argument_values)
+char *cnfg_parse_flags(int argument_count, char **argument_values)
 {
     if (argument_count <= 1 || !argument_values)
         return (ft_nullptr);
@@ -47,7 +47,7 @@ char *ft_config_parse_flags(int argument_count, char **argument_values)
     return (flags);
 }
 
-char **ft_config_parse_long_flags(int argument_count, char **argument_values)
+char **cnfg_parse_long_flags(int argument_count, char **argument_values)
 {
     if (argument_count <= 1 || !argument_values)
         return (ft_nullptr);

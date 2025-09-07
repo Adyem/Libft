@@ -1,11 +1,11 @@
 TARGET         := time.a
 DEBUG_TARGET   := time_debug.a
 
-SRCS := ft_time_now.cpp \
-        ft_time_now_ms.cpp \
-        ft_time_local.cpp \
-        ft_sleep.cpp \
-        ft_sleep_ms.cpp \
+SRCS := time_now.cpp \
+        time_now_ms.cpp \
+        time_local.cpp \
+        time_sleep.cpp \
+        time_sleep_ms.cpp \
         timer.cpp
 
 HEADERS := time.hpp \

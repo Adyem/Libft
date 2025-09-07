@@ -133,7 +133,7 @@ static void ft_putfloat_stream(double number, FILE *stream, size_t *count)
 
 static void ft_putscientific_stream(double number, bool uppercase, FILE *stream, size_t *count)
 {
-    if (ft_fabs(number) <= DBL_EPSILON)
+    if (math_fabs(number) <= DBL_EPSILON)
     {
         if (uppercase)
             ft_putstr_stream("0.000000E+00", stream, count);
@@ -194,7 +194,7 @@ static void ft_putscientific_stream(double number, bool uppercase, FILE *stream,
 
 static void ft_putgeneral_stream(double number, bool uppercase, FILE *stream, size_t *count)
 {
-    if (ft_fabs(number) <= DBL_EPSILON)
+    if (math_fabs(number) <= DBL_EPSILON)
     {
         ft_putfloat_stream(0.0, stream, count);
         return ;

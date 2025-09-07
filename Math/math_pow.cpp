@@ -1,6 +1,6 @@
 #include "math.hpp"
 
-double ft_pow(double base_value, int exponent)
+double math_pow(double base_value, int exponent)
 {
     double result;
     int    exponent_value;

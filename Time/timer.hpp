@@ -3,7 +3,7 @@
 
 #include <chrono>
 
-class ft_timer
+class time_timer
 {
     private:
         long    _duration_ms = 0;
@@ -11,8 +11,8 @@ class ft_timer
         bool    _running = false;
 
     public:
-        ft_timer();
-        ~ft_timer();
+        time_timer();
+        ~time_timer();
         void    start(long duration_ms);
         long    update();
         long    add_time(long amount_ms);
