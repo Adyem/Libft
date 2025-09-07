@@ -22,10 +22,10 @@ class ft_stack
 
             StackNode*  _top;
             size_t      _size;
-            mutable int _errorCode;
+            mutable int _error_code;
             mutable pt_mutex _mutex;
 
-        void    setError(int error) const;
+        void    set_error(int error) const;
 
     public:
         ft_stack();
@@ -55,7 +55,7 @@ class ft_stack
 
 template <typename ElementType>
 ft_stack<ElementType>::ft_stack()
-    : _top(ft_nullptr), _size(0), _errorCode(ER_SUCCESS)
+    : _top(ft_nullptr), _size(0), _error_code(ER_SUCCESS)
 {
     return ;
 }
@@ -69,11 +69,11 @@ ft_stack<ElementType>::~ft_stack()
 
 template <typename ElementType>
 ft_stack<ElementType>::ft_stack(ft_stack&& other) noexcept
-    : _top(other._top), _size(other._size), _errorCode(other._errorCode)
+    : _top(other._top), _size(other._size), _error_code(other._error_code)
 {
     other._top = ft_nullptr;
     other._size = 0;
-    other._errorCode = ER_SUCCESS;
+    other._error_code = ER_SUCCESS;
     return ;
 }
 
@@ -92,10 +92,10 @@ ft_stack<ElementType>& ft_stack<ElementType>::operator=(ft_stack&& other) noexce
         this->clear();
         this->_top = other._top;
         this->_size = other._size;
-        this->_errorCode = other._errorCode;
+        this->_error_code = other._error_code;
         other._top = ft_nullptr;
         other._size = 0;
-        other._errorCode = ER_SUCCESS;
+        other._error_code = ER_SUCCESS;
         other._mutex.unlock(THREAD_ID);
         this->_mutex.unlock(THREAD_ID);
     }
@@ -103,9 +103,9 @@ ft_stack<ElementType>& ft_stack<ElementType>::operator=(ft_stack&& other) noexce
 }
 
 template <typename ElementType>
-void ft_stack<ElementType>::setError(int error) const
+void ft_stack<ElementType>::set_error(int error) const
 {
-    this->_errorCode = error;
+    this->_error_code = error;
     ft_errno = error;
     return ;
 }
@@ -115,19 +115,19 @@ void ft_stack<ElementType>::push(const ElementType& value)
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
     }
-    StackNode* newNode = static_cast<StackNode*>(cma_malloc(sizeof(StackNode)));
-    if (newNode == ft_nullptr)
+    StackNode* new_node = static_cast<StackNode*>(cma_malloc(sizeof(StackNode)));
+    if (new_node == ft_nullptr)
     {
-        this->setError(STACK_ALLOC_FAIL);
+        this->set_error(STACK_ALLOC_FAIL);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
-    construct_at(&newNode->_data, value);
-    newNode->_next = this->_top;
-    this->_top = newNode;
+    construct_at(&new_node->_data, value);
+    new_node->_next = this->_top;
+    this->_top = new_node;
     ++this->_size;
     this->_mutex.unlock(THREAD_ID);
     return ;
@@ -138,19 +138,19 @@ void ft_stack<ElementType>::push(ElementType&& value)
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
     }
-    StackNode* newNode = static_cast<StackNode*>(cma_malloc(sizeof(StackNode)));
-    if (newNode == ft_nullptr)
+    StackNode* new_node = static_cast<StackNode*>(cma_malloc(sizeof(StackNode)));
+    if (new_node == ft_nullptr)
     {
-        this->setError(STACK_ALLOC_FAIL);
+        this->set_error(STACK_ALLOC_FAIL);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
-    construct_at(&newNode->_data, std::move(value));
-    newNode->_next = this->_top;
-    this->_top = newNode;
+    construct_at(&new_node->_data, std::move(value));
+    new_node->_next = this->_top;
+    this->_top = new_node;
     ++this->_size;
     this->_mutex.unlock(THREAD_ID);
     return ;
@@ -161,12 +161,12 @@ ElementType ft_stack<ElementType>::pop()
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return (ElementType());
     }
     if (this->_top == ft_nullptr)
     {
-        this->setError(STACK_EMPTY);
+        this->set_error(STACK_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         return (ElementType());
     }
@@ -183,41 +183,41 @@ ElementType ft_stack<ElementType>::pop()
 template <typename ElementType>
 ElementType& ft_stack<ElementType>::top()
 {
-    static ElementType errorElement = ElementType();
+    static ElementType error_element = ElementType();
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
-        return (errorElement);
+        this->set_error(PT_ERR_MUTEX_OWNER);
+        return (error_element);
     }
     if (this->_top == ft_nullptr)
     {
-        this->setError(STACK_EMPTY);
+        this->set_error(STACK_EMPTY);
         this->_mutex.unlock(THREAD_ID);
-        return (errorElement);
+        return (error_element);
     }
-    ElementType& ref = this->_top->_data;
+    ElementType& value = this->_top->_data;
     this->_mutex.unlock(THREAD_ID);
-    return (ref);
+    return (value);
 }
 
 template <typename ElementType>
 const ElementType& ft_stack<ElementType>::top() const
 {
-    static ElementType errorElement = ElementType();
+    static ElementType error_element = ElementType();
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
-        return (errorElement);
+        this->set_error(PT_ERR_MUTEX_OWNER);
+        return (error_element);
     }
     if (this->_top == ft_nullptr)
     {
-        this->setError(STACK_EMPTY);
+        this->set_error(STACK_EMPTY);
         this->_mutex.unlock(THREAD_ID);
-        return (errorElement);
+        return (error_element);
     }
-    ElementType& ref = this->_top->_data;
+    const ElementType& value = this->_top->_data;
     this->_mutex.unlock(THREAD_ID);
-    return (ref);
+    return (value);
 }
 
 template <typename ElementType>
@@ -225,9 +225,9 @@ size_t ft_stack<ElementType>::size() const
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
         return (0);
-    size_t s = this->_size;
+    size_t current_size = this->_size;
     this->_mutex.unlock(THREAD_ID);
-    return (s);
+    return (current_size);
 }
 
 template <typename ElementType>
@@ -235,29 +235,29 @@ bool ft_stack<ElementType>::empty() const
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
         return (true);
-    bool res = (this->_size == 0);
+    bool result = (this->_size == 0);
     this->_mutex.unlock(THREAD_ID);
-    return (res);
+    return (result);
 }
 
 template <typename ElementType>
 int ft_stack<ElementType>::get_error() const
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
-        return (this->_errorCode);
-    int err = this->_errorCode;
+        return (this->_error_code);
+    int error_value = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
-    return (err);
+    return (error_value);
 }
 
 template <typename ElementType>
 const char* ft_stack<ElementType>::get_error_str() const
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
-        return (ft_strerror(this->_errorCode));
-    int err = this->_errorCode;
+        return (ft_strerror(this->_error_code));
+    int error_value = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
-    return (ft_strerror(err));
+    return (ft_strerror(error_value));
 }
 
 template <typename ElementType>

@@ -21,10 +21,10 @@ class ft_matrix
         ElementType*   _data;
         size_t         _rows;
         size_t         _cols;
-        mutable int    _errorCode;
+        mutable int    _error_code;
         mutable pt_mutex _mutex;
 
-        void    setError(int error) const;
+        void    set_error(int error) const;
 
     public:
         ft_matrix(size_t rows = 0, size_t cols = 0);
@@ -56,7 +56,7 @@ class ft_matrix
 
 template <typename ElementType>
 ft_matrix<ElementType>::ft_matrix(size_t rows, size_t cols)
-    : _data(ft_nullptr), _rows(0), _cols(0), _errorCode(ER_SUCCESS)
+    : _data(ft_nullptr), _rows(0), _cols(0), _error_code(ER_SUCCESS)
 {
     if (rows > 0 && cols > 0)
         this->init(rows, cols);
@@ -72,12 +72,12 @@ ft_matrix<ElementType>::~ft_matrix()
 
 template <typename ElementType>
 ft_matrix<ElementType>::ft_matrix(ft_matrix&& other) noexcept
-    : _data(other._data), _rows(other._rows), _cols(other._cols), _errorCode(other._errorCode)
+    : _data(other._data), _rows(other._rows), _cols(other._cols), _error_code(other._error_code)
 {
     other._data = ft_nullptr;
     other._rows = 0;
     other._cols = 0;
-    other._errorCode = ER_SUCCESS;
+    other._error_code = ER_SUCCESS;
     return ;
 }
 
@@ -97,11 +97,11 @@ ft_matrix<ElementType>& ft_matrix<ElementType>::operator=(ft_matrix&& other) noe
         this->_data = other._data;
         this->_rows = other._rows;
         this->_cols = other._cols;
-        this->_errorCode = other._errorCode;
+        this->_error_code = other._error_code;
         other._data = ft_nullptr;
         other._rows = 0;
         other._cols = 0;
-        other._errorCode = ER_SUCCESS;
+        other._error_code = ER_SUCCESS;
         other._mutex.unlock(THREAD_ID);
         this->_mutex.unlock(THREAD_ID);
     }
@@ -122,7 +122,7 @@ bool ft_matrix<ElementType>::init(size_t rows, size_t cols)
     this->_data = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * total));
     if (this->_data == ft_nullptr)
     {
-        this->setError(MATRIX_ALLOC_FAIL);
+        this->set_error(MATRIX_ALLOC_FAIL);
         return (false);
     }
     size_t i = 0;
@@ -139,35 +139,35 @@ bool ft_matrix<ElementType>::init(size_t rows, size_t cols)
 template <typename ElementType>
 ElementType& ft_matrix<ElementType>::at(size_t r, size_t c)
 {
-    static ElementType errorElement = ElementType();
+    static ElementType error_element = ElementType();
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
-        return (errorElement);
+        return (error_element);
     if (r >= this->_rows || c >= this->_cols)
     {
-        this->setError(MATRIX_DIM_MISMATCH);
+        this->set_error(MATRIX_DIM_MISMATCH);
         this->_mutex.unlock(THREAD_ID);
-        return (errorElement);
+        return (error_element);
     }
-    ElementType& ref = this->_data[r * this->_cols + c];
+    ElementType& element = this->_data[r * this->_cols + c];
     this->_mutex.unlock(THREAD_ID);
-    return (ref);
+    return (element);
 }
 
 template <typename ElementType>
 const ElementType& ft_matrix<ElementType>::at(size_t r, size_t c) const
 {
-    static ElementType errorElement = ElementType();
+    static ElementType error_element = ElementType();
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
-        return (errorElement);
+        return (error_element);
     if (r >= this->_rows || c >= this->_cols)
     {
-        this->setError(MATRIX_DIM_MISMATCH);
+        this->set_error(MATRIX_DIM_MISMATCH);
         this->_mutex.unlock(THREAD_ID);
-        return (errorElement);
+        return (error_element);
     }
-    ElementType& ref = this->_data[r * this->_cols + c];
+    const ElementType& element = this->_data[r * this->_cols + c];
     this->_mutex.unlock(THREAD_ID);
-    return (ref);
+    return (element);
 }
 
 template <typename ElementType>
@@ -195,14 +195,14 @@ ft_matrix<ElementType> ft_matrix<ElementType>::add(const ft_matrix& other) const
     }
     if (this->_rows != other._rows || this->_cols != other._cols)
     {
-        this->setError(MATRIX_DIM_MISMATCH);
+        this->set_error(MATRIX_DIM_MISMATCH);
         other._mutex.unlock(THREAD_ID);
         this->_mutex.unlock(THREAD_ID);
         return (result);
     }
     if (!result.init(this->_rows, this->_cols))
     {
-        this->setError(MATRIX_ALLOC_FAIL);
+        this->set_error(MATRIX_ALLOC_FAIL);
         other._mutex.unlock(THREAD_ID);
         this->_mutex.unlock(THREAD_ID);
         return (result);
@@ -232,14 +232,14 @@ ft_matrix<ElementType> ft_matrix<ElementType>::multiply(const ft_matrix& other) 
     }
     if (this->_cols != other._rows)
     {
-        this->setError(MATRIX_DIM_MISMATCH);
+        this->set_error(MATRIX_DIM_MISMATCH);
         other._mutex.unlock(THREAD_ID);
         this->_mutex.unlock(THREAD_ID);
         return (result);
     }
     if (!result.init(this->_rows, other._cols))
     {
-        this->setError(MATRIX_ALLOC_FAIL);
+        this->set_error(MATRIX_ALLOC_FAIL);
         other._mutex.unlock(THREAD_ID);
         this->_mutex.unlock(THREAD_ID);
         return (result);
@@ -275,7 +275,7 @@ ft_matrix<ElementType> ft_matrix<ElementType>::transpose() const
         return (result);
     if (!result.init(this->_cols, this->_rows))
     {
-        this->setError(MATRIX_ALLOC_FAIL);
+        this->set_error(MATRIX_ALLOC_FAIL);
         this->_mutex.unlock(THREAD_ID);
         return (result);
     }
@@ -302,7 +302,7 @@ ElementType ft_matrix<ElementType>::determinant() const
         return (det);
     if (this->_rows != this->_cols)
     {
-        this->setError(MATRIX_DIM_MISMATCH);
+        this->set_error(MATRIX_DIM_MISMATCH);
         this->_mutex.unlock(THREAD_ID);
         return (det);
     }
@@ -311,7 +311,7 @@ ElementType ft_matrix<ElementType>::determinant() const
     ElementType* temp = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * size));
     if (temp == ft_nullptr)
     {
-        this->setError(MATRIX_ALLOC_FAIL);
+        this->set_error(MATRIX_ALLOC_FAIL);
         this->_mutex.unlock(THREAD_ID);
         return (det);
     }
@@ -370,13 +370,13 @@ ElementType ft_matrix<ElementType>::determinant() const
 template <typename ElementType>
 int ft_matrix<ElementType>::get_error() const
 {
-    return (this->_errorCode);
+    return (this->_error_code);
 }
 
 template <typename ElementType>
 const char* ft_matrix<ElementType>::get_error_str() const
 {
-    return (ft_strerror(this->_errorCode));
+    return (ft_strerror(this->_error_code));
 }
 
 template <typename ElementType>
@@ -400,9 +400,9 @@ void ft_matrix<ElementType>::clear()
 }
 
 template <typename ElementType>
-void ft_matrix<ElementType>::setError(int error) const
+void ft_matrix<ElementType>::set_error(int error) const
 {
-    this->_errorCode = error;
+    this->_error_code = error;
     return ;
 }
 

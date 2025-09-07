@@ -23,10 +23,10 @@ class ft_tuple
     private:
         using tuple_t = std::tuple<Types...>;
         tuple_t*        _data;
-        mutable int     _errorCode;
+        mutable int     _error_code;
         mutable pt_mutex _mutex;
 
-        void setError(int error) const;
+        void set_error(int error) const;
 
     public:
         ft_tuple();
@@ -63,7 +63,7 @@ class ft_tuple
 
 template <typename... Types>
 ft_tuple<Types...>::ft_tuple()
-    : _data(ft_nullptr), _errorCode(ER_SUCCESS)
+    : _data(ft_nullptr), _error_code(ER_SUCCESS)
 {
     return ;
 }
@@ -77,10 +77,10 @@ ft_tuple<Types...>::~ft_tuple()
 
 template <typename... Types>
 ft_tuple<Types...>::ft_tuple(ft_tuple&& other) noexcept
-    : _data(other._data), _errorCode(other._errorCode)
+    : _data(other._data), _error_code(other._error_code)
 {
     other._data = ft_nullptr;
-    other._errorCode = ER_SUCCESS;
+    other._error_code = ER_SUCCESS;
     return ;
 }
 
@@ -98,21 +98,21 @@ ft_tuple<Types...>& ft_tuple<Types...>::operator=(ft_tuple&& other) noexcept
         }
         this->reset();
         this->_data = other._data;
-        this->_errorCode = other._errorCode;
+        this->_error_code = other._error_code;
         other._data = ft_nullptr;
-        other._errorCode = ER_SUCCESS;
+        other._error_code = ER_SUCCESS;
         other._mutex.unlock(THREAD_ID);
         this->_mutex.unlock(THREAD_ID);
     }
     return (*this);
 }
 
-/* setError */
+/* set_error */
 
 template <typename... Types>
-void ft_tuple<Types...>::setError(int error) const
+void ft_tuple<Types...>::set_error(int error) const
 {
-    this->_errorCode = error;
+    this->_error_code = error;
     ft_errno = error;
     return ;
 }
@@ -122,11 +122,11 @@ void ft_tuple<Types...>::setError(int error) const
 template <typename... Types>
 template <typename... Args>
 ft_tuple<Types...>::ft_tuple(Args&&... args)
-    : _data(ft_nullptr), _errorCode(ER_SUCCESS)
+    : _data(ft_nullptr), _error_code(ER_SUCCESS)
 {
     _data = static_cast<tuple_t*>(cma_malloc(sizeof(tuple_t)));
     if (_data == ft_nullptr)
-        this->setError(TUPLE_ALLOC_FAIL);
+        this->set_error(TUPLE_ALLOC_FAIL);
     else
         construct_at(_data, std::forward<Args>(args)...);
     return ;
@@ -140,18 +140,18 @@ typename std::tuple_element<I, typename ft_tuple<Types...>::tuple_t>::type&
 ft_tuple<Types...>::get()
 {
     using elem_t = typename std::tuple_element<I, tuple_t>::type;
-    static elem_t defaultInstance = elem_t();
+    static elem_t default_instance = elem_t();
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
-        return (defaultInstance);
+        this->set_error(PT_ERR_MUTEX_OWNER);
+        return (default_instance);
     }
     if (this->_data == ft_nullptr)
     {
-        this->setError(TUPLE_BAD_ACCESS);
+        this->set_error(TUPLE_BAD_ACCESS);
         this->_mutex.unlock(THREAD_ID);
         if constexpr (!std::is_abstract_v<elem_t>)
-            return (defaultInstance);
+            return (default_instance);
         else
         {
             static char dummy_buffer[sizeof(elem_t)] = {0};
@@ -169,18 +169,18 @@ const typename std::tuple_element<I, typename ft_tuple<Types...>::tuple_t>::type
 ft_tuple<Types...>::get() const
 {
     using elem_t = typename std::tuple_element<I, tuple_t>::type;
-    static elem_t defaultInstance = elem_t();
+    static elem_t default_instance = elem_t();
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        const_cast<ft_tuple*>(this)->setError(PT_ERR_MUTEX_OWNER);
-        return (defaultInstance);
+        const_cast<ft_tuple*>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        return (default_instance);
     }
     if (this->_data == ft_nullptr)
     {
-        const_cast<ft_tuple*>(this)->setError(TUPLE_BAD_ACCESS);
+        const_cast<ft_tuple*>(this)->set_error(TUPLE_BAD_ACCESS);
         this->_mutex.unlock(THREAD_ID);
         if constexpr (!std::is_abstract_v<elem_t>)
-            return (defaultInstance);
+            return (default_instance);
         else
         {
             static char dummy_buffer[sizeof(elem_t)] = {0};
@@ -198,18 +198,18 @@ template <typename... Types>
 template <typename T>
 T& ft_tuple<Types...>::get()
 {
-    static T defaultInstance = T();
+    static T default_instance = T();
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
-        return (defaultInstance);
+        this->set_error(PT_ERR_MUTEX_OWNER);
+        return (default_instance);
     }
     if (this->_data == ft_nullptr)
     {
-        this->setError(TUPLE_BAD_ACCESS);
+        this->set_error(TUPLE_BAD_ACCESS);
         this->_mutex.unlock(THREAD_ID);
         if constexpr (!std::is_abstract_v<T>)
-            return (defaultInstance);
+            return (default_instance);
         else
         {
             static char dummy_buffer[sizeof(T)] = {0};
@@ -225,18 +225,18 @@ template <typename... Types>
 template <typename T>
 const T& ft_tuple<Types...>::get() const
 {
-    static T defaultInstance = T();
+    static T default_instance = T();
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        const_cast<ft_tuple*>(this)->setError(PT_ERR_MUTEX_OWNER);
-        return (defaultInstance);
+        const_cast<ft_tuple*>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        return (default_instance);
     }
     if (this->_data == ft_nullptr)
     {
-        const_cast<ft_tuple*>(this)->setError(TUPLE_BAD_ACCESS);
+        const_cast<ft_tuple*>(this)->set_error(TUPLE_BAD_ACCESS);
         this->_mutex.unlock(THREAD_ID);
         if constexpr (!std::is_abstract_v<T>)
-            return (defaultInstance);
+            return (default_instance);
         else
         {
             static char dummy_buffer[sizeof(T)] = {0};
@@ -255,7 +255,7 @@ void ft_tuple<Types...>::reset()
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
     }
     if (this->_data != ft_nullptr)
@@ -274,8 +274,8 @@ template <typename... Types>
 int ft_tuple<Types...>::get_error() const
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
-        return (this->_errorCode);
-    int err = this->_errorCode;
+        return (this->_error_code);
+    int err = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
     return (err);
 }
@@ -284,8 +284,8 @@ template <typename... Types>
 const char* ft_tuple<Types...>::get_error_str() const
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
-        return (ft_strerror(this->_errorCode));
-    int err = this->_errorCode;
+        return (ft_strerror(this->_error_code));
+    int err = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
     return (ft_strerror(err));
 }
