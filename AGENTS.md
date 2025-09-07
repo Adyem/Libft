@@ -5,6 +5,8 @@ Use return (value); for non-void returns. Include a space before the opening par
 Do not use for loops, ternary operators, or switch statements.
 Indent code using 4 spaces per level.
 Function and variable names must use snake_case.
+Use full variable names instead of short ones or single letters, dont use s or str use string.
+
 Use Allman style braces (opening brace on a new line).
 In classes, member variable names must start with an underscore (_).
 Within class member functions, access members and other methods using the this keyword.
