@@ -459,6 +459,15 @@ void         json_update_item(json_group *group, const char *key, const int valu
 void         json_update_item(json_group *group, const char *key, const bool value);
 ```
 
+The `json_document` class wraps these helpers and manages a group list:
+
+```
+json_document();
+~json_document();
+void         append_group(json_group *group) noexcept;
+json_group   *find_group(const char *name) const noexcept;
+```
+
 #### File
 Cross-platform file and directory utilities (`File/open_dir.hpp`):
 
@@ -576,6 +585,15 @@ void       html_add_attr(html_node *targetNode, html_attr *newAttribute);
 html_node *html_find_by_tag(html_node *nodeList, const char *tagName);
 html_node *html_find_by_attr(html_node *nodeList, const char *key, const char *value);
 ```
+
+The `html_document` class wraps these helpers and manages a root node list:
+
+```
+html_document();
+~html_document();
+void        append_node(html_node *new_node) noexcept;
+html_node   *find_by_tag(const char *tag_name) const noexcept;
+``` 
 
 #### Game
 Basic game related classes (`ft_character`, `ft_item`, `ft_inventory`,
