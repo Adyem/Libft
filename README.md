@@ -365,9 +365,9 @@ closes the log when the object is destroyed:
 }
 ```
 
-A global pointer `g_logger` is provided for optional shared access. Call
-`set_global()` on an `ft_logger` instance to populate it; the pointer is reset
-to `ft_nullptr` when that instance is destroyed. Allocation logging for the
+Calling `set_global()` on an `ft_logger` instance makes it the library-wide
+logger used internally by logging helpers. The pointer is reset to
+`ft_nullptr` when that instance is destroyed. Allocation logging for the
 custom memory allocator can be toggled with `set_alloc_logging` and
 `get_alloc_logging`.
 

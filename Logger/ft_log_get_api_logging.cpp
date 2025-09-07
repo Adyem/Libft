@@ -1,4 +1,4 @@
-#include "logger.hpp"
+#include "logger_internal.hpp"
 
 bool ft_log_get_api_logging()
 {

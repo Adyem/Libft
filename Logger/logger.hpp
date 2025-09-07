@@ -53,6 +53,4 @@ class ft_logger
         bool _api_logging;
 };
 
-extern ft_logger *g_logger;
-
 #endif
