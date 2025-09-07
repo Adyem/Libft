@@ -19,7 +19,7 @@ class ft_sharedptr
         int* _referenceCount;
         size_t _arraySize;
         bool _isArrayType;
-        mutable int _errorCode;
+        mutable int _error_code;
 
         void release();
 
@@ -49,9 +49,9 @@ class ft_sharedptr
               _referenceCount(other._referenceCount),
               _arraySize(other._arraySize),
               _isArrayType(other._isArrayType),
-              _errorCode(other._errorCode)
+              _error_code(other._error_code)
         {
-            if (_referenceCount && _errorCode == ER_SUCCESS)
+            if (_referenceCount && _error_code == ER_SUCCESS)
                 ++(*_referenceCount);
         }
 
@@ -62,13 +62,13 @@ class ft_sharedptr
               _referenceCount(other._referenceCount),
               _arraySize(other._arraySize),
               _isArrayType(other._isArrayType),
-              _errorCode(other._errorCode)
+              _error_code(other._error_code)
         {
             other._managedPointer = ft_nullptr;
             other._referenceCount = ft_nullptr;
             other._arraySize = 0;
             other._isArrayType = false;
-            other._errorCode = ER_SUCCESS;
+            other._error_code = ER_SUCCESS;
         }
 
         ManagedType& operator*();
@@ -102,7 +102,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args)
       _referenceCount(new (std::nothrow) int),
       _arraySize(0),
       _isArrayType(false),
-      _errorCode(ER_SUCCESS)
+      _error_code(ER_SUCCESS)
 {
     if (!_referenceCount)
     {
@@ -126,7 +126,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ManagedType* pointer, bool isArray, size
       _referenceCount(ft_nullptr),
       _arraySize(arraySize),
       _isArrayType(isArray),
-      _errorCode(ER_SUCCESS)
+      _error_code(ER_SUCCESS)
 {
     if (pointer)
         _referenceCount = new (std::nothrow) int;
@@ -144,7 +144,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr()
       _referenceCount(ft_nullptr),
       _arraySize(0),
       _isArrayType(false),
-      _errorCode(ER_SUCCESS)
+      _error_code(ER_SUCCESS)
 {
 }
 
@@ -154,7 +154,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(size_t size)
       _referenceCount(new (std::nothrow) int),
       _arraySize(size),
       _isArrayType(true),
-      _errorCode(ER_SUCCESS)
+      _error_code(ER_SUCCESS)
 {
     if (_referenceCount)
     {
@@ -179,9 +179,9 @@ ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<ManagedType>& other)
       _referenceCount(other._referenceCount),
       _arraySize(other._arraySize),
       _isArrayType(other._isArrayType),
-      _errorCode(other._errorCode)
+      _error_code(other._error_code)
 {
-    if (_referenceCount && _errorCode == ER_SUCCESS)
+    if (_referenceCount && _error_code == ER_SUCCESS)
         ++(*_referenceCount);
 }
 
@@ -191,13 +191,13 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<ManagedType>&& other) noexc
       _referenceCount(other._referenceCount),
       _arraySize(other._arraySize),
       _isArrayType(other._isArrayType),
-      _errorCode(other._errorCode)
+      _error_code(other._error_code)
 {
     other._managedPointer = ft_nullptr;
     other._referenceCount = ft_nullptr;
     other._arraySize = 0;
     other._isArrayType = false;
-    other._errorCode = ER_SUCCESS;
+    other._error_code = ER_SUCCESS;
 }
 
 template <typename ManagedType>
@@ -239,12 +239,12 @@ ft_sharedptr<ManagedType>& ft_sharedptr<ManagedType>::operator=(ft_sharedptr<Man
         _referenceCount = other._referenceCount;
         _arraySize = other._arraySize;
         _isArrayType = other._isArrayType;
-        _errorCode = other._errorCode;
+        _error_code = other._error_code;
         other._managedPointer = ft_nullptr;
         other._referenceCount = ft_nullptr;
         other._arraySize = 0;
         other._isArrayType = false;
-        other._errorCode = ER_SUCCESS;
+        other._error_code = ER_SUCCESS;
     }
     return (*this);
 }
@@ -259,8 +259,8 @@ ft_sharedptr<ManagedType>& ft_sharedptr<ManagedType>::operator=(const ft_sharedp
         _referenceCount = other._referenceCount;
         _arraySize = other._arraySize;
         _isArrayType = other._isArrayType;
-        _errorCode = other._errorCode;
-        if (_referenceCount && _errorCode == ER_SUCCESS)
+        _error_code = other._error_code;
+        if (_referenceCount && _error_code == ER_SUCCESS)
             ++(*_referenceCount);
     }
     return (*this);
@@ -274,8 +274,8 @@ ManagedType& ft_sharedptr<ManagedType>::operator*()
         this->set_error(SHARED_PTR_NULL_PTR);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
-            static ManagedType defaultInstance;
-            return (defaultInstance);
+            static ManagedType default_instance;
+            return (default_instance);
         }
         else
         {
@@ -295,8 +295,8 @@ const ManagedType& ft_sharedptr<ManagedType>::operator*() const
         const_cast<ft_sharedptr<ManagedType>*>(this)->set_error(SHARED_PTR_NULL_PTR);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
-            static ManagedType defaultInstance;
-            return (defaultInstance);
+            static ManagedType default_instance;
+            return (default_instance);
         }
         else
         {
@@ -338,8 +338,8 @@ ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index)
         this->set_error(SHARED_PTR_INVALID_OPERATION);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
-            static ManagedType defaultInstance;
-            return (defaultInstance);
+            static ManagedType default_instance;
+            return (default_instance);
         }
         else
         {
@@ -352,8 +352,8 @@ ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index)
         this->set_error(SHARED_PTR_NULL_PTR);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
-            static ManagedType defaultInstance;
-            return (defaultInstance);
+            static ManagedType default_instance;
+            return (default_instance);
         }
         else
         {
@@ -366,8 +366,8 @@ ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index)
         this->set_error(SHARED_PTR_OUT_OF_BOUNDS);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
-            static ManagedType defaultInstance;
-            return (defaultInstance);
+            static ManagedType default_instance;
+            return (default_instance);
         }
         else
         {
@@ -386,8 +386,8 @@ const ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index) const
         const_cast<ft_sharedptr<ManagedType>*>(this)->set_error(SHARED_PTR_INVALID_OPERATION);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
-            static ManagedType defaultInstance;
-            return (defaultInstance);
+            static ManagedType default_instance;
+            return (default_instance);
         }
         else
         {
@@ -400,8 +400,8 @@ const ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index) const
         const_cast<ft_sharedptr<ManagedType>*>(this)->set_error(SHARED_PTR_NULL_PTR);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
-            static ManagedType defaultInstance;
-            return (defaultInstance);
+            static ManagedType default_instance;
+            return (default_instance);
         }
         else
         {
@@ -414,8 +414,8 @@ const ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index) const
         const_cast<ft_sharedptr<ManagedType>*>(this)->set_error(SHARED_PTR_OUT_OF_BOUNDS);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
-            static ManagedType defaultInstance;
-            return (defaultInstance);
+            static ManagedType default_instance;
+            return (default_instance);
         }
         else
         {
@@ -429,7 +429,7 @@ const ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index) const
 template <typename ManagedType>
 int ft_sharedptr<ManagedType>::use_count() const
 {
-    if (_referenceCount && _errorCode == ER_SUCCESS)
+    if (_referenceCount && _error_code == ER_SUCCESS)
         return (*_referenceCount);
     return (0);
 }
@@ -437,19 +437,19 @@ int ft_sharedptr<ManagedType>::use_count() const
 template <typename ManagedType>
 bool ft_sharedptr<ManagedType>::hasError() const
 {
-    return (_errorCode != ER_SUCCESS);
+    return (_error_code != ER_SUCCESS);
 }
 
 template <typename ManagedType>
 int ft_sharedptr<ManagedType>::get_error() const
 {
-    return (_errorCode);
+    return (_error_code);
 }
 
 template <typename ManagedType>
 const char* ft_sharedptr<ManagedType>::get_error_str() const
 {
-    return (ft_strerror(_errorCode));
+    return (ft_strerror(_error_code));
 }
 
 template <typename ManagedType>
@@ -474,7 +474,7 @@ template <typename ManagedType>
 void ft_sharedptr<ManagedType>::set_error(int error) const
 {
     ft_errno = error;
-    _errorCode = error;
+    _error_code = error;
     return ;
 }
 
@@ -491,7 +491,7 @@ void ft_sharedptr<ManagedType>::reset(ManagedType* pointer, size_t size, bool ar
     _managedPointer = pointer;
     _arraySize = size;
     _isArrayType = arrayType;
-    _errorCode = ER_SUCCESS;
+    _error_code = ER_SUCCESS;
     _referenceCount = new (std::nothrow) int;
     if (_referenceCount)
     {
@@ -519,7 +519,7 @@ void ft_sharedptr<ManagedType>::swap(ft_sharedptr<ManagedType>& other)
     ft_swap(_referenceCount, other._referenceCount);
     ft_swap(_arraySize, other._arraySize);
     ft_swap(_isArrayType, other._isArrayType);
-    ft_swap(_errorCode, other._errorCode);
+    ft_swap(_error_code, other._error_code);
     return ;
 }
 

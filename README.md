@@ -206,7 +206,7 @@ ft_string& operator+=(const ft_string& other) noexcept;
 ft_string& operator+=(const char* cstr) noexcept;
 ft_string& operator+=(char c) noexcept;
 ~ft_string();
-explicit ft_string(int errorCode) noexcept;
+explicit ft_string(int error_code) noexcept;
 static void* operator new(size_t size) noexcept;
 static void operator delete(void* ptr) noexcept;
 static void* operator new[](size_t size) noexcept;

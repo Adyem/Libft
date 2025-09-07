@@ -10,10 +10,10 @@ class ft_string
         char*            _data;
         std::size_t      _length;
         std::size_t      _capacity;
-        int                _errorCode;
+        int                _error_code;
 
         void    resize(size_t new_capacity) noexcept;
-        void    setError(int errorCode) noexcept;
+        void    set_error(int error_code) noexcept;
 
     public:
         ft_string() noexcept;
@@ -28,7 +28,7 @@ class ft_string
         ft_string& operator+=(char c) noexcept;
         ~ft_string();
 
-        explicit ft_string(int errorCode) noexcept;
+        explicit ft_string(int error_code) noexcept;
 
         static void* operator new(size_t size) noexcept;
         static void operator delete(void* ptr) noexcept;
