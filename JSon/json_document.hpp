@@ -1,0 +1,35 @@
+#ifndef JSON_DOCUMENT_HPP
+#define JSON_DOCUMENT_HPP
+
+#include "json.hpp"
+
+class json_document
+{
+    public:
+        json_document() noexcept;
+        ~json_document() noexcept;
+
+        json_group   *create_group(const char *name) noexcept;
+        json_item    *create_item(const char *key, const char *value) noexcept;
+        json_item    *create_item(const char *key, const int value) noexcept;
+        json_item    *create_item(const char *key, const bool value) noexcept;
+        void         add_item(json_group *group, json_item *item) noexcept;
+        void         append_group(json_group *group) noexcept;
+        int          write_to_file(const char *file_path) const noexcept;
+        char         *write_to_string() const noexcept;
+        int          read_from_file(const char *file_path) noexcept;
+        int          read_from_string(const char *content) noexcept;
+        json_group   *find_group(const char *name) const noexcept;
+        json_item    *find_item(json_group *group, const char *key) const noexcept;
+        void         remove_group(const char *name) noexcept;
+        void         remove_item(json_group *group, const char *key) noexcept;
+        void         update_item(json_group *group, const char *key, const char *value) noexcept;
+        void         update_item(json_group *group, const char *key, const int value) noexcept;
+        void         update_item(json_group *group, const char *key, const bool value) noexcept;
+        void         clear() noexcept;
+
+    private:
+        json_group *_groups;
+};
+
+#endif
