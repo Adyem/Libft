@@ -38,17 +38,17 @@ int test_ft_file_write_read(void)
     {
         ft_file file(fname, O_WRONLY | O_CREAT | O_TRUNC, 0644);
         if (file.get_fd() < 0)
-            return 0;
+            return (0);
         if (file.write("hello") <= 0)
-            return 0;
+            return (0);
     }
     {
         ft_file file(fname, O_RDONLY);
         if (file.get_fd() < 0)
-            return 0;
+            return (0);
         char buf[6] = {0};
         if (file.read(buf, 5) != 5)
-            return 0;
+            return (0);
         file.close();
         ::unlink(fname);
         return (std::strcmp(buf, "hello") == 0);

@@ -44,7 +44,7 @@ public:
         if (!this->valid())
         {
             this->setError(FUTURE_INVALID);
-            return;
+            return ;
         }
         using namespace std::chrono;
         const auto start = steady_clock::now();
@@ -53,7 +53,7 @@ public:
             if (steady_clock::now() - start > seconds(1))
             {
                 this->setError(FUTURE_BROKEN);
-                return;
+                return ;
             }
             std::this_thread::yield();
         }

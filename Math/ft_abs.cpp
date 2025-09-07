@@ -1,5 +1,5 @@
-#include "libft.hpp"
-#include "ft_limits.hpp"
+#include "math.hpp"
+#include "../Libft/ft_limits.hpp"
 
 int ft_abs(int number)
 {

@@ -18,7 +18,7 @@ using clock_type = std::chrono::high_resolution_clock;
 
 inline long long elapsed_us(clock_type::time_point start, clock_type::time_point end)
 {
-    return std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+    return (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
 }
 
 inline void print_comparison(const char *name, long long std_time, long long ft_time)

@@ -8,7 +8,7 @@ int test_config_basic(void)
     const char *filename = "test_config.ini";
     FILE *file = std::fopen(filename, "w");
     if (!file)
-        return 0;
+        return (0);
     std::fprintf(file, "[section]\nkey=value\n");
     std::fclose(file);
     ft_config *cfg = ft_config_parse(filename);
@@ -19,7 +19,7 @@ int test_config_basic(void)
     if (cfg)
         ft_config_free(cfg);
     std::remove(filename);
-    return ok;
+    return (ok);
 }
 
 int test_config_missing_value(void)
@@ -27,7 +27,7 @@ int test_config_missing_value(void)
     const char *filename = "test_config_missing.ini";
     FILE *file = std::fopen(filename, "w");
     if (!file)
-        return 0;
+        return (0);
     std::fprintf(file, "key_without_value=\n=value_without_key\n");
     std::fclose(file);
     ft_config *cfg = ft_config_parse(filename);
@@ -39,6 +39,6 @@ int test_config_missing_value(void)
     if (cfg)
         ft_config_free(cfg);
     std::remove(filename);
-    return ok;
+    return (ok);
 }
 

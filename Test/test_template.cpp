@@ -60,7 +60,7 @@ int test_ft_vector_reserve_resize(void)
     ft_vector<int> v;
     v.reserve(5);
     if (v.capacity() < 5)
-        return 0;
+        return (0);
     v.resize(3, 7);
     return (v.size() == 3 && v[0] == 7 && v[1] == 7 && v[2] == 7);
 }
@@ -78,38 +78,50 @@ int test_ft_vector_vs_std_push_back(void)
 {
     ft_vector<int> ft;
     std::vector<int> stdv;
-    for (int i = 0; i < 100; ++i)
+    int index_i = 0;
+    while (index_i < 100)
     {
-        ft.push_back(i);
-        stdv.push_back(i);
+        ft.push_back(index_i);
+        stdv.push_back(index_i);
+        index_i++;
     }
     if (ft.size() != stdv.size())
-        return 0;
-    for (size_t i = 0; i < ft.size(); ++i)
-        if (ft[i] != stdv[i])
-            return 0;
-    return 1;
+        return (0);
+    size_t index_ft = 0;
+    while (index_ft < ft.size())
+    {
+        if (ft[index_ft] != stdv[index_ft])
+            return (0);
+        index_ft++;
+    }
+    return (1);
 }
 
 int test_ft_vector_vs_std_insert_erase(void)
 {
     ft_vector<int> ft;
     std::vector<int> stdv;
-    for (int i = 0; i < 5; ++i)
+    int index_i = 0;
+    while (index_i < 5)
     {
-        ft.push_back(i);
-        stdv.push_back(i);
+        ft.push_back(index_i);
+        stdv.push_back(index_i);
+        index_i++;
     }
     ft.insert(ft.begin() + 2, 42);
     stdv.insert(stdv.begin() + 2, 42);
     ft.erase(ft.begin() + 1);
     stdv.erase(stdv.begin() + 1);
     if (ft.size() != stdv.size())
-        return 0;
-    for (size_t i = 0; i < ft.size(); ++i)
-        if (ft[i] != stdv[i])
-            return 0;
-    return 1;
+        return (0);
+    size_t index_ft = 0;
+    while (index_ft < ft.size())
+    {
+        if (ft[index_ft] != stdv[index_ft])
+            return (0);
+        index_ft++;
+    }
+    return (1);
 }
 
 int test_ft_vector_vs_std_reserve_resize(void)
@@ -121,10 +133,14 @@ int test_ft_vector_vs_std_reserve_resize(void)
     ft.resize(6, 3);
     stdv.resize(6, 3);
     if (ft.size() != stdv.size())
-        return 0;
-    for (size_t i = 0; i < ft.size(); ++i)
-        if (ft[i] != stdv[i])
-            return 0;
+        return (0);
+    size_t index_ft = 0;
+    while (index_ft < ft.size())
+    {
+        if (ft[index_ft] != stdv[index_ft])
+            return (0);
+        index_ft++;
+    }
     return (ft.capacity() >= 10 && stdv.capacity() >= 10);
 }
 
@@ -157,7 +173,7 @@ int test_ft_shared_ptr_array(void)
 {
     ft_sharedptr<int> sp(3);
     if (sp.hasError())
-        return 0;
+        return (0);
     sp[0] = 1;
     sp[1] = 2;
     sp[2] = 3;
@@ -185,7 +201,7 @@ int test_ft_unique_ptr_array(void)
 {
     ft_uniqueptr<int> up(3);
     if (up.hasError())
-        return 0;
+        return (0);
     up[0] = 1;
     up[1] = 2;
     up[2] = 3;
@@ -198,7 +214,7 @@ int test_ft_unique_ptr_release(void)
     int* raw = up.release();
     bool ok = (raw != ft_nullptr && *raw == 42 && !up);
     delete raw;
-    return ok;
+    return (ok);
 }
 
 int test_ft_unique_ptr_swap(void)

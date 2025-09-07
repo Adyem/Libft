@@ -1,0 +1,23 @@
+#include "math.hpp"
+
+double ft_pow(double base_value, int exponent)
+{
+    double result;
+    int    exponent_value;
+
+    result = 1.0;
+    exponent_value = exponent;
+    if (exponent_value < 0)
+    {
+        base_value = 1.0 / base_value;
+        exponent_value = -exponent_value;
+    }
+    while (exponent_value > 0)
+    {
+        if (exponent_value % 2 == 1)
+            result *= base_value;
+        base_value *= base_value;
+        exponent_value /= 2;
+    }
+    return (result);
+}

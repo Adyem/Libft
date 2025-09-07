@@ -18,7 +18,7 @@ void* cma_malloc(std::size_t size)
         void *ptr = malloc(size);
         if (ft_log_get_alloc_logging())
             ft_log_debug("cma_malloc %zu -> %p", size, ptr);
-        return ptr;
+        return (ptr);
     }
     if (size <= 0)
         return (ft_nullptr);
@@ -41,5 +41,5 @@ void* cma_malloc(std::size_t size)
     g_malloc_mutex.unlock(THREAD_ID);
     if (ft_log_get_alloc_logging())
         ft_log_debug("cma_malloc %zu -> %p", aligned_size, result);
-    return result;
+    return (result);
 }

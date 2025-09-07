@@ -5,20 +5,20 @@
 #include <cstring>
 #include <cctype>
 
-char *ft_config_parse_flags(int argc, char **argv)
+char *ft_config_parse_flags(int argument_count, char **argument_values)
 {
-    if (argc <= 1 || !argv)
-        return ft_nullptr;
+    if (argument_count <= 1 || !argument_values)
+        return (ft_nullptr);
     char   *flags = ft_nullptr;
     size_t  length = 0;
     int argument_index = 1;
-    while (argument_index < argc)
+    while (argument_index < argument_count)
     {
-        char *argument = argv[argument_index];
+        char *argument = argument_values[argument_index];
         if (!argument || argument[0] != '-' || argument[1] == '-' || argument[1] == '\0')
         {
             ++argument_index;
-            continue;
+            continue ;
         }
         int char_index = 1;
         while (argument[char_index])
@@ -33,7 +33,7 @@ char *ft_config_parse_flags(int argc, char **argv)
                     {
                         ft_errno = FT_EALLOC;
                         cma_free(flags);
-                        return ft_nullptr;
+                        return (ft_nullptr);
                     }
                     flags = new_flags;
                     flags[length++] = current_flag;
@@ -44,23 +44,23 @@ char *ft_config_parse_flags(int argc, char **argv)
         }
         ++argument_index;
     }
-    return flags;
+    return (flags);
 }
 
-char **ft_config_parse_long_flags(int argc, char **argv)
+char **ft_config_parse_long_flags(int argument_count, char **argument_values)
 {
-    if (argc <= 1 || !argv)
-        return ft_nullptr;
+    if (argument_count <= 1 || !argument_values)
+        return (ft_nullptr);
     char  **flags = ft_nullptr;
     size_t  count = 0;
     int argument_index = 1;
-    while (argument_index < argc)
+    while (argument_index < argument_count)
     {
-        char *argument = argv[argument_index];
+        char *argument = argument_values[argument_index];
         if (!argument || argument[0] != '-' || argument[1] != '-' || argument[2] == '\0')
         {
             ++argument_index;
-            continue;
+            continue ;
         }
         const char *flag_string = argument + 2;
         bool exists = false;
@@ -70,14 +70,14 @@ char **ft_config_parse_long_flags(int argc, char **argv)
             if (std::strcmp(flags[flag_index], flag_string) == 0)
             {
                 exists = true;
-                break;
+                break ;
             }
             ++flag_index;
         }
         if (exists)
         {
             ++argument_index;
-            continue;
+            continue ;
         }
         char **new_flags = static_cast<char**>(cma_realloc(flags, (count + 2) * sizeof(char*)));
         if (!new_flags)
@@ -90,7 +90,7 @@ char **ft_config_parse_long_flags(int argc, char **argv)
                 ++free_index;
             }
             cma_free(flags);
-            return ft_nullptr;
+            return (ft_nullptr);
         }
         flags = new_flags;
         flags[count] = cma_strdup(flag_string);
@@ -104,12 +104,12 @@ char **ft_config_parse_long_flags(int argc, char **argv)
                 ++free_index;
             }
             cma_free(flags);
-            return ft_nullptr;
+            return (ft_nullptr);
         }
-        count++;
+        ++count;
         flags[count] = ft_nullptr;
         ++argument_index;
     }
-    return flags;
+    return (flags);
 }
 
