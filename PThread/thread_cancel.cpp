@@ -8,14 +8,14 @@ int pt_thread_cancel(pthread_t thread)
     if (TerminateThread((HANDLE)thread, 0) == 0)
     {
         ft_errno = GetLastError() + ERRNO_OFFSET;
-        return -1;
+        return (-1);
     }
-    return 0;
+    return (0);
 #else
     int return_value = pthread_cancel(thread);
     if (return_value != 0)
         ft_errno = errno + ERRNO_OFFSET;
-    return return_value;
+    return (return_value);
 #endif
 }
 

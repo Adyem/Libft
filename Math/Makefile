@@ -1,28 +1,18 @@
-TARGET         := CustomMemoryAllocator.a
-DEBUG_TARGET   := CustomMemoryAllocator_debug.a
+TARGET := Math.a
+DEBUG_TARGET := Math_debug.a
 
-SRCS := cma_calloc.cpp \
-        cma_strdup.cpp \
-        cma_memdup.cpp \
-        cma_malloc.cpp \
-        cma_free.cpp \
-        cma_free_checked.cpp \
-        cma_realloc.cpp \
-        cma_aligned_alloc.cpp \
-        cma_alloc_size.cpp \
-        cma_itoa.cpp \
-        cma_itoa_base.cpp \
-        cma_split.cpp \
-        cma_strjoin.cpp \
-        cma_substr.cpp \
-        cma_strtrim.cpp \
-        cma_free_double.cpp \
-        cma_utils.cpp \
-        cma_cleanup.cpp \
-        cma_global_overloads.cpp
+SRCS := ft_abs.cpp \
+        ft_fabs.cpp \
+        ft_signbit.cpp \
+        ft_isnan.cpp \
+        ft_nan.cpp \
+        ft_swap.cpp \
+        ft_clamp.cpp \
+        ft_pow.cpp \
+        ft_sqrt.cpp \
+        ft_exp.cpp
 
-HEADERS := CMA.hpp \
-           CMA_internal.hpp
+HEADERS := math.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
@@ -87,3 +77,4 @@ re: fclean all
 both: all debug
 
 .PHONY: all clean fclean re debug both
+

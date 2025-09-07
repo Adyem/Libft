@@ -1,61 +1,22 @@
-#include "../Libft/libft.hpp"
-#include "../CMA/CMA.hpp"
-#include "../CPP_class/nullptr.hpp"
+#include "../Template/queue.hpp"
 
 int test_queue_basic(void)
 {
-    t_queue *queue = ft_queue_new();
-    if (!queue)
+    ft_queue<int> queue;
+    int value_a = 1;
+    int value_b = 2;
+    queue.enqueue(value_a);
+    queue.enqueue(value_b);
+    if (queue.front() != 1)
         return (0);
-    int a = 1;
-    int b = 2;
-    if (ft_queue_enqueue(queue, &a) != SUCCES)
-    {
-        ft_queue_clear(queue, ft_nullptr);
-        cma_free(queue);
+    int first = queue.dequeue();
+    if (first != 1)
         return (0);
-    }
-    if (ft_queue_enqueue(queue, &b) != SUCCES)
-    {
-        ft_queue_clear(queue, ft_nullptr);
-        cma_free(queue);
+    int second = queue.dequeue();
+    if (second != 2)
         return (0);
-    }
-    if (*(int *)ft_queue_front(queue) != 1)
-    {
-        ft_queue_clear(queue, ft_nullptr);
-        cma_free(queue);
+    if (!queue.empty())
         return (0);
-    }
-    int *first = static_cast<int *>(ft_queue_dequeue(queue));
-    if (!first || *first != 1)
-    {
-        ft_queue_clear(queue, ft_nullptr);
-        cma_free(queue);
-        return (0);
-    }
-    int *second = static_cast<int *>(ft_queue_dequeue(queue));
-    if (!second || *second != 2)
-    {
-        ft_queue_clear(queue, ft_nullptr);
-        cma_free(queue);
-        return (0);
-    }
-    int *none = static_cast<int *>(ft_queue_dequeue(queue));
-    if (none != ft_nullptr)
-    {
-        ft_queue_clear(queue, ft_nullptr);
-        cma_free(queue);
-        return (0);
-    }
-    if (ft_queue_size(queue) != 0)
-    {
-        ft_queue_clear(queue, ft_nullptr);
-        cma_free(queue);
-        return (0);
-    }
-    ft_queue_clear(queue, ft_nullptr);
-    cma_free(queue);
     return (1);
 }
 

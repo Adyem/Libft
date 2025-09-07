@@ -98,7 +98,7 @@ char *json_write_to_string(json_group *groups)
     json_group *group_ptr = groups;
     while (group_ptr)
     {
-        char *line = cma_strjoin_multiple(4, "  \"", group_ptr->name, "\": {\n");
+        char *line = cma_strjoin_multiple(3, "  \"", group_ptr->name, "\": {\n");
         if (!line)
         {
             cma_free(result);
@@ -114,7 +114,7 @@ char *json_write_to_string(json_group *groups)
         while (item_ptr)
         {
             if (item_ptr->next)
-                line = cma_strjoin_multiple(6, "    \"", item_ptr->key, "\": \"", item_ptr->value, "\",\n");
+                line = cma_strjoin_multiple(5, "    \"", item_ptr->key, "\": \"", item_ptr->value, "\",\n");
             else
                 line = cma_strjoin_multiple(5, "    \"", item_ptr->key, "\": \"", item_ptr->value, "\"\n");
             if (!line)

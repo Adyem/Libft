@@ -2,6 +2,6 @@
 
 pt_thread_id_type pt_thread_self()
 {
-    return pt_thread_id;
+    return (pt_thread_id);
 }
 

@@ -1,4 +1,5 @@
 #include "../Libft/libft.hpp"
+#include "../Math/math.hpp"
 #include "../Libft/ft_limits.hpp"
 #include "../CPP_class/nullptr.hpp"
 #include <cstring>
@@ -35,9 +36,9 @@ int test_bzero_basic(void)
     for (int i = 0; i < 4; ++i)
     {
         if (buf[i] != '\0')
-            return 0;
+            return (0);
     }
-    return 1;
+    return (1);
 }
 
 int test_bzero_zero(void)

@@ -7,11 +7,11 @@ int test_html_create_node(void)
 {
     html_node *node = html_create_node("div", "content");
     if (!node)
-        return 0;
+        return (0);
     int ok = node->tag && std::strcmp(node->tag, "div") == 0 &&
              node->text && std::strcmp(node->text, "content") == 0;
     html_free_nodes(node);
-    return ok;
+    return (ok);
 }
 
 int test_html_find_by_tag(void)
@@ -22,7 +22,7 @@ int test_html_find_by_tag(void)
     html_node *found = html_find_by_tag(root, "span");
     int ok = (found == child);
     html_free_nodes(root);
-    return ok;
+    return (ok);
 }
 
 int test_html_write_to_string(void)
@@ -34,7 +34,7 @@ int test_html_write_to_string(void)
     if (result)
         cma_free(result);
     html_free_nodes(node);
-    return ok;
+    return (ok);
 }
 
 int test_html_find_by_attr(void)
@@ -47,6 +47,6 @@ int test_html_find_by_attr(void)
     html_node *found = html_find_by_attr(root, "id", "main");
     int ok = (found == child);
     html_free_nodes(root);
-    return ok;
+    return (ok);
 }
 
