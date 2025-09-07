@@ -23,16 +23,16 @@ class ft_set
         ElementType*   _data;
         size_t         _capacity;
         size_t         _size;
-        mutable int    _errorCode;
+        mutable int    _error_code;
         mutable pt_mutex _mutex;
 
-        void    setError(int error) const;
-        bool    ensure_capacity(size_t desired);
+        void    set_error(int error) const;
+        bool    ensure_capacity(size_t desired_capacity);
         size_t  find_index(const ElementType& value) const; // caller must hold lock
         size_t  lower_bound(const ElementType& value) const; // caller must hold lock
 
     public:
-        ft_set(size_t initialCapacity = 0);
+        ft_set(size_t initial_capacity = 0);
         ~ft_set();
 
         ft_set(const ft_set&) = delete;
@@ -54,16 +54,16 @@ class ft_set
 };
 
 template <typename ElementType>
-ft_set<ElementType>::ft_set(size_t initialCapacity)
-    : _data(ft_nullptr), _capacity(0), _size(0), _errorCode(ER_SUCCESS)
+ft_set<ElementType>::ft_set(size_t initial_capacity)
+    : _data(ft_nullptr), _capacity(0), _size(0), _error_code(ER_SUCCESS)
 {
-    if (initialCapacity > 0)
+    if (initial_capacity > 0)
     {
-        this->_data = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * initialCapacity));
+        this->_data = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * initial_capacity));
         if (this->_data == ft_nullptr)
-            this->setError(SET_ALLOC_FAIL);
+            this->set_error(SET_ALLOC_FAIL);
         else
-            this->_capacity = initialCapacity;
+            this->_capacity = initial_capacity;
     }
     return ;
 }
@@ -87,12 +87,12 @@ ft_set<ElementType>::~ft_set()
 template <typename ElementType>
 ft_set<ElementType>::ft_set(ft_set&& other) noexcept
     : _data(other._data), _capacity(other._capacity), _size(other._size),
-      _errorCode(other._errorCode)
+      _error_code(other._error_code)
 {
     other._data = ft_nullptr;
     other._capacity = 0;
     other._size = 0;
-    other._errorCode = ER_SUCCESS;
+    other._error_code = ER_SUCCESS;
     return ;
 }
 
@@ -114,11 +114,11 @@ ft_set<ElementType>& ft_set<ElementType>::operator=(ft_set&& other) noexcept
         this->_data = other._data;
         this->_capacity = other._capacity;
         this->_size = other._size;
-        this->_errorCode = other._errorCode;
+        this->_error_code = other._error_code;
         other._data = ft_nullptr;
         other._capacity = 0;
         other._size = 0;
-        other._errorCode = ER_SUCCESS;
+        other._error_code = ER_SUCCESS;
         other._mutex.unlock(THREAD_ID);
         this->_mutex.unlock(THREAD_ID);
     }
@@ -126,42 +126,42 @@ ft_set<ElementType>& ft_set<ElementType>::operator=(ft_set&& other) noexcept
 }
 
 template <typename ElementType>
-void ft_set<ElementType>::setError(int error) const
+void ft_set<ElementType>::set_error(int error) const
 {
-    this->_errorCode = error;
+    this->_error_code = error;
     ft_errno = error;
     return ;
 }
 
 template <typename ElementType>
-bool ft_set<ElementType>::ensure_capacity(size_t desired)
+bool ft_set<ElementType>::ensure_capacity(size_t desired_capacity)
 {
-    if (desired <= this->_capacity)
+    if (desired_capacity <= this->_capacity)
         return (true);
-    size_t newCap;
+    size_t new_capacity;
     if (this->_capacity == 0)
-        newCap = 1;
+        new_capacity = 1;
     else
-        newCap = this->_capacity * 2;
-    while (newCap < desired)
-        newCap *= 2;
-    ElementType* newData = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * newCap));
-    if (newData == ft_nullptr)
+        new_capacity = this->_capacity * 2;
+    while (new_capacity < desired_capacity)
+        new_capacity *= 2;
+    ElementType* new_data = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * new_capacity));
+    if (new_data == ft_nullptr)
     {
-        this->setError(SET_ALLOC_FAIL);
+        this->set_error(SET_ALLOC_FAIL);
         return (false);
     }
-    size_t i = 0;
-    while (i < this->_size)
+    size_t index = 0;
+    while (index < this->_size)
     {
-        construct_at(&newData[i], std::move(this->_data[i]));
-        destroy_at(&this->_data[i]);
-        ++i;
+        construct_at(&new_data[index], std::move(this->_data[index]));
+        destroy_at(&this->_data[index]);
+        ++index;
     }
     if (this->_data != ft_nullptr)
         cma_free(this->_data);
-    this->_data = newData;
-    this->_capacity = newCap;
+    this->_data = new_data;
+    this->_capacity = new_capacity;
     return (true);
 }
 
@@ -204,11 +204,11 @@ void ft_set<ElementType>::insert(const ElementType& value)
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
     }
-    size_t pos = lower_bound(value);
-    if (pos < this->_size && !(value < this->_data[pos]) && !(this->_data[pos] < value))
+    size_t position = lower_bound(value);
+    if (position < this->_size && !(value < this->_data[position]) && !(this->_data[position] < value))
     {
         this->_mutex.unlock(THREAD_ID);
         return ;
@@ -218,14 +218,14 @@ void ft_set<ElementType>::insert(const ElementType& value)
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
-    size_t i = this->_size;
-    while (i > pos)
+    size_t index = this->_size;
+    while (index > position)
     {
-        construct_at(&this->_data[i], std::move(this->_data[i - 1]));
-        destroy_at(&this->_data[i - 1]);
-        --i;
+        construct_at(&this->_data[index], std::move(this->_data[index - 1]));
+        destroy_at(&this->_data[index - 1]);
+        --index;
     }
-    construct_at(&this->_data[pos], value);
+    construct_at(&this->_data[position], value);
     ++this->_size;
     this->_mutex.unlock(THREAD_ID);
     return ;
@@ -236,11 +236,11 @@ void ft_set<ElementType>::insert(ElementType&& value)
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
     }
-    size_t pos = lower_bound(value);
-    if (pos < this->_size && !(value < this->_data[pos]) && !(this->_data[pos] < value))
+    size_t position = lower_bound(value);
+    if (position < this->_size && !(value < this->_data[position]) && !(this->_data[position] < value))
     {
         this->_mutex.unlock(THREAD_ID);
         return ;
@@ -250,14 +250,14 @@ void ft_set<ElementType>::insert(ElementType&& value)
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
-    size_t i = this->_size;
-    while (i > pos)
+    size_t index = this->_size;
+    while (index > position)
     {
-        construct_at(&this->_data[i], std::move(this->_data[i - 1]));
-        destroy_at(&this->_data[i - 1]);
-        --i;
+        construct_at(&this->_data[index], std::move(this->_data[index - 1]));
+        destroy_at(&this->_data[index - 1]);
+        --index;
     }
-    construct_at(&this->_data[pos], std::move(value));
+    construct_at(&this->_data[position], std::move(value));
     ++this->_size;
     this->_mutex.unlock(THREAD_ID);
     return ;
@@ -268,19 +268,19 @@ ElementType* ft_set<ElementType>::find(const ElementType& value)
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return (ft_nullptr);
     }
-    size_t idx = find_index(value);
-    if (idx == this->_size)
+    size_t index = find_index(value);
+    if (index == this->_size)
     {
-        this->setError(SET_NOT_FOUND);
+        this->set_error(SET_NOT_FOUND);
         this->_mutex.unlock(THREAD_ID);
         return (ft_nullptr);
     }
-    ElementType* res = &this->_data[idx];
+    ElementType* result = &this->_data[index];
     this->_mutex.unlock(THREAD_ID);
-    return (res);
+    return (result);
 }
 
 template <typename ElementType>
@@ -288,19 +288,19 @@ const ElementType* ft_set<ElementType>::find(const ElementType& value) const
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        const_cast<ft_set*>(this)->setError(PT_ERR_MUTEX_OWNER);
+        const_cast<ft_set*>(this)->set_error(PT_ERR_MUTEX_OWNER);
         return (ft_nullptr);
     }
-    size_t idx = find_index(value);
-    if (idx == this->_size)
+    size_t index = find_index(value);
+    if (index == this->_size)
     {
-        const_cast<ft_set*>(this)->setError(SET_NOT_FOUND);
+        const_cast<ft_set*>(this)->set_error(SET_NOT_FOUND);
         this->_mutex.unlock(THREAD_ID);
         return (ft_nullptr);
     }
-    ElementType* res = &this->_data[idx];
+    ElementType* result = &this->_data[index];
     this->_mutex.unlock(THREAD_ID);
-    return (res);
+    return (result);
 }
 
 template <typename ElementType>
@@ -308,23 +308,23 @@ void ft_set<ElementType>::remove(const ElementType& value)
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
     }
-    size_t idx = find_index(value);
-    if (idx == this->_size)
+    size_t index = find_index(value);
+    if (index == this->_size)
     {
-        this->setError(SET_NOT_FOUND);
+        this->set_error(SET_NOT_FOUND);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
-    destroy_at(&this->_data[idx]);
-    size_t i = idx;
-    while (i + 1 < this->_size)
+    destroy_at(&this->_data[index]);
+    size_t current_index = index;
+    while (current_index + 1 < this->_size)
     {
-        construct_at(&this->_data[i], std::move(this->_data[i + 1]));
-        destroy_at(&this->_data[i + 1]);
-        ++i;
+        construct_at(&this->_data[current_index], std::move(this->_data[current_index + 1]));
+        destroy_at(&this->_data[current_index + 1]);
+        ++current_index;
     }
     --this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -336,9 +336,9 @@ size_t ft_set<ElementType>::size() const
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
         return (0);
-    size_t s = this->_size;
+    size_t current_size = this->_size;
     this->_mutex.unlock(THREAD_ID);
-    return (s);
+    return (current_size);
 }
 
 template <typename ElementType>
@@ -346,19 +346,19 @@ bool ft_set<ElementType>::empty() const
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
         return (true);
-    bool res = (this->_size == 0);
+    bool result = (this->_size == 0);
     this->_mutex.unlock(THREAD_ID);
-    return (res);
+    return (result);
 }
 
 template <typename ElementType>
 int ft_set<ElementType>::get_error() const
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
-        return (this->_errorCode);
-    int err = this->_errorCode;
+        return (this->_error_code);
+    int error = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
-    return (err);
+    return (error);
 }
 
 template <typename ElementType>
@@ -372,11 +372,11 @@ void ft_set<ElementType>::clear()
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
         return ;
-    size_t i = 0;
-    while (i < this->_size)
+    size_t index = 0;
+    while (index < this->_size)
     {
-        destroy_at(&this->_data[i]);
-        ++i;
+        destroy_at(&this->_data[index]);
+        ++index;
     }
     this->_size = 0;
     this->_mutex.unlock(THREAD_ID);

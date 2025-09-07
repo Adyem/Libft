@@ -17,14 +17,14 @@ class ft_vector
         ElementType    *_data;
         size_t        _size;
         size_t        _capacity;
-        mutable int     _errorCode;
+        mutable int     _error_code;
         mutable pt_mutex _mutex;
 
         void    destroy_elements(size_t from, size_t to);
         void    reserve_internal(size_t new_capacity);
 
     protected:
-        void    setError(int errorCode) const;
+        void    set_error(int error_code) const;
         ElementType release_at(size_t index);
 
     public:
@@ -66,14 +66,14 @@ class ft_vector
 
 template <typename ElementType>
 ft_vector<ElementType>::ft_vector(size_t initial_capacity)
-    : _data(ft_nullptr), _size(0), _capacity(0), _errorCode(ER_SUCCESS)
+    : _data(ft_nullptr), _size(0), _capacity(0), _error_code(ER_SUCCESS)
 {
     if (initial_capacity > 0)
     {
         this->_data = static_cast<ElementType*>
             (cma_malloc(initial_capacity * sizeof(ElementType)));
         if (this->_data == ft_nullptr)
-            this->setError(VECTOR_ALLOC_FAIL);
+            this->set_error(VECTOR_ALLOC_FAIL);
         else
             this->_capacity = initial_capacity;
     }
@@ -94,12 +94,12 @@ ft_vector<ElementType>::ft_vector(ft_vector<ElementType>&& other) noexcept
     : _data(other._data),
       _size(other._size),
       _capacity(other._capacity),
-      _errorCode(other._errorCode)
+      _error_code(other._error_code)
 {
     other._data = ft_nullptr;
     other._size = 0;
     other._capacity = 0;
-    other._errorCode = ER_SUCCESS;
+    other._error_code = ER_SUCCESS;
 }
 
 template <typename ElementType>
@@ -120,11 +120,11 @@ ft_vector<ElementType>& ft_vector<ElementType>::operator=(ft_vector<ElementType>
         this->_data = other._data;
         this->_size = other._size;
         this->_capacity = other._capacity;
-        this->_errorCode = other._errorCode;
+        this->_error_code = other._error_code;
         other._data = ft_nullptr;
         other._size = 0;
         other._capacity = 0;
-        other._errorCode = ER_SUCCESS;
+        other._error_code = ER_SUCCESS;
         other._mutex.unlock(THREAD_ID);
         this->_mutex.unlock(THREAD_ID);
     }
@@ -164,10 +164,10 @@ size_t ft_vector<ElementType>::capacity() const
 }
 
 template <typename ElementType>
-void ft_vector<ElementType>::setError(int errorCode) const
+void ft_vector<ElementType>::set_error(int error_code) const
 {
-    this->_errorCode = errorCode;
-    ft_errno = errorCode;
+    this->_error_code = error_code;
+    ft_errno = error_code;
     return ;
 }
 
@@ -175,8 +175,8 @@ template <typename ElementType>
 int ft_vector<ElementType>::get_error() const
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
-        return (this->_errorCode);
-    int err = this->_errorCode;
+        return (this->_error_code);
+    int err = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
     return (err);
 }
@@ -185,8 +185,8 @@ template <typename ElementType>
 const char* ft_vector<ElementType>::get_error_str() const
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
-        return (ft_strerror(this->_errorCode));
-    int err = this->_errorCode;
+        return (ft_strerror(this->_error_code));
+    int err = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
     return (ft_strerror(err));
 }
@@ -196,7 +196,7 @@ void ft_vector<ElementType>::push_back(const ElementType &value)
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
     }
     if (this->_size >= this->_capacity)
@@ -207,7 +207,7 @@ void ft_vector<ElementType>::push_back(const ElementType &value)
         else
             newCapacity = 1;
         this->reserve_internal(newCapacity);
-        if (this->_errorCode != ER_SUCCESS)
+        if (this->_error_code != ER_SUCCESS)
         {
             this->_mutex.unlock(THREAD_ID);
             return ;
@@ -224,7 +224,7 @@ void ft_vector<ElementType>::push_back(ElementType &&value)
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
     }
     if (this->_size >= this->_capacity)
@@ -235,7 +235,7 @@ void ft_vector<ElementType>::push_back(ElementType &&value)
         else
             newCapacity = 1;
         this->reserve_internal(newCapacity);
-        if (this->_errorCode != ER_SUCCESS)
+        if (this->_error_code != ER_SUCCESS)
         {
             this->_mutex.unlock(THREAD_ID);
             return ;
@@ -252,7 +252,7 @@ void ft_vector<ElementType>::pop_back()
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
     }
     if (this->_size > 0)
@@ -261,7 +261,7 @@ void ft_vector<ElementType>::pop_back()
         --this->_size;
     }
     else
-        this->setError(VECTOR_INVALID_OPERATION);
+        this->set_error(VECTOR_INVALID_OPERATION);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -269,17 +269,17 @@ void ft_vector<ElementType>::pop_back()
 template <typename ElementType>
 ElementType& ft_vector<ElementType>::operator[](size_t index)
 {
-    static ElementType defaultInstance = ElementType();
+    static ElementType default_instance = ElementType();
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
-        return (defaultInstance);
+        this->set_error(PT_ERR_MUTEX_OWNER);
+        return (default_instance);
     }
     if (index >= this->_size)
     {
-        this->setError(VECTOR_OUT_OF_BOUNDS);
+        this->set_error(VECTOR_OUT_OF_BOUNDS);
         this->_mutex.unlock(THREAD_ID);
-        return (defaultInstance);
+        return (default_instance);
     }
     ElementType& ref = this->_data[index];
     this->_mutex.unlock(THREAD_ID);
@@ -289,17 +289,17 @@ ElementType& ft_vector<ElementType>::operator[](size_t index)
 template <typename ElementType>
 const ElementType& ft_vector<ElementType>::operator[](size_t index) const
 {
-    static ElementType defaultInstance = ElementType();
+    static ElementType default_instance = ElementType();
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
-        return (defaultInstance);
+        this->set_error(PT_ERR_MUTEX_OWNER);
+        return (default_instance);
     }
     if (index >= this->_size)
     {
-        const_cast<ft_vector<ElementType>*>(this)->setError(VECTOR_OUT_OF_BOUNDS);
+        const_cast<ft_vector<ElementType>*>(this)->set_error(VECTOR_OUT_OF_BOUNDS);
         this->_mutex.unlock(THREAD_ID);
-        return (defaultInstance);
+        return (default_instance);
     }
     const ElementType& ref = this->_data[index];
     this->_mutex.unlock(THREAD_ID);
@@ -311,7 +311,7 @@ void ft_vector<ElementType>::clear()
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
     }
     this->destroy_elements(0, this->_size);
@@ -329,7 +329,7 @@ void ft_vector<ElementType>::reserve_internal(size_t new_capacity)
                     new_capacity * sizeof(ElementType)));
         if (new_data == ft_nullptr)
         {
-            this->setError(VECTOR_ALLOC_FAIL);
+            this->set_error(VECTOR_ALLOC_FAIL);
             return ;
         }
         this->_data = new_data;
@@ -343,7 +343,7 @@ void ft_vector<ElementType>::reserve(size_t new_capacity)
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
     }
     this->reserve_internal(new_capacity);
@@ -356,7 +356,7 @@ void ft_vector<ElementType>::resize(size_t new_size, const ElementType& value)
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
     }
     if (new_size < this->_size)
@@ -364,7 +364,7 @@ void ft_vector<ElementType>::resize(size_t new_size, const ElementType& value)
     else if (new_size > this->_size)
     {
         this->reserve_internal(new_size);
-        if (this->_errorCode != ER_SUCCESS)
+        if (this->_error_code != ER_SUCCESS)
         {
             this->_mutex.unlock(THREAD_ID);
             return ;
@@ -386,7 +386,7 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::insert(iterato
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return (ft_nullptr);
     }
     size_t index = pos - this->_data;
@@ -404,7 +404,7 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::insert(iterato
         else
             new_capacity = 1;
         this->reserve_internal(new_capacity);
-        if (this->_errorCode != ER_SUCCESS)
+        if (this->_error_code != ER_SUCCESS)
         {
             iterator endIt = this->_data + this->_size;
             this->_mutex.unlock(THREAD_ID);
@@ -431,13 +431,13 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::erase(iterator
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return (ft_nullptr);
     }
     size_t index = pos - this->_data;
     if (index >= this->_size)
     {
-        this->setError(VECTOR_INVALID_PTR);
+        this->set_error(VECTOR_INVALID_PTR);
         iterator endIt = this->_data + this->_size;
         this->_mutex.unlock(THREAD_ID);
         return (endIt);
@@ -465,12 +465,12 @@ ElementType ft_vector<ElementType>::release_at(size_t index)
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return (ElementType());
     }
     if (index >= this->_size)
     {
-        this->setError(VECTOR_INVALID_PTR);
+        this->set_error(VECTOR_INVALID_PTR);
         this->_mutex.unlock(THREAD_ID);
         return (ElementType());
     }

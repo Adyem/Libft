@@ -11,7 +11,7 @@ void ft_string::resize(size_t new_capacity) noexcept
     char* new_data = static_cast<char*>(cma_realloc(this->_data, new_capacity));
     if (!new_data)
     {
-        this->setError(STRING_MEM_ALLOC_FAIL);
+        this->set_error(STRING_MEM_ALLOC_FAIL);
         return ;
     }
     this->_data = new_data;
@@ -29,7 +29,7 @@ void ft_string::append(char c) noexcept
         else
             new_capacity *= 2;
         this->resize(new_capacity);
-        if (this->_errorCode)
+        if (this->_error_code)
             return ;
     }
     this->_data[this->_length++] = c;
@@ -50,7 +50,7 @@ void ft_string::append(const ft_string& string) noexcept
         while (new_capacity <= new_length)
             new_capacity *= 2;
         this->resize(new_capacity);
-        if (this->_errorCode)
+        if (this->_error_code)
             return ;
     }
     ft_memcpy(this->_data + this->_length, string._data, string._length);
@@ -74,7 +74,7 @@ void ft_string::append(const char *string) noexcept
         while (this->_length + string_length >= new_capacity)
             new_capacity *= 2;
         this->resize(new_capacity);
-        if (this->_errorCode)
+        if (this->_error_code)
             return ;
     }
     ft_memcpy(this->_data + this->_length, string, string_length);
@@ -88,7 +88,7 @@ void ft_string::clear() noexcept
     this->_length = 0;
     if (this->_data)
         this->_data[0] = '\0';
-    this->_errorCode = 0;
+    this->_error_code = 0;
     return ;
 }
 
@@ -125,18 +125,18 @@ bool ft_string::empty() const noexcept
 
 int ft_string::get_error() const noexcept
 {
-    return (this->_errorCode);
+    return (this->_error_code);
 }
 
 const char* ft_string::get_error_str() const noexcept
 {
-    return (ft_strerror(this->_errorCode));
+    return (ft_strerror(this->_error_code));
 }
 
-void ft_string::setError(int errorCode) noexcept
+void ft_string::set_error(int error_code) noexcept
 {
-    this->_errorCode = errorCode;
-    ft_errno = errorCode;
+    this->_error_code = error_code;
+    ft_errno = error_code;
     return ;
 }
 
@@ -148,11 +148,11 @@ void ft_string::move(ft_string& other) noexcept
         this->_data = other._data;
         this->_length = other._length;
         this->_capacity = other._capacity;
-        this->_errorCode = other._errorCode;
+        this->_error_code = other._error_code;
         other._data = ft_nullptr;
         other._length = 0;
         other._capacity = 0;
-        other._errorCode = 0;
+        other._error_code = 0;
     }
     return ;
 }
@@ -164,7 +164,7 @@ ft_string& ft_string::operator+=(const ft_string& other) noexcept
     while (index < other._length)
     {
         this->append(other._data[index]);
-        if (this->_errorCode)
+        if (this->_error_code)
             return (*this);
         index++;
     }
@@ -179,7 +179,7 @@ ft_string& ft_string::operator+=(const char* cstr) noexcept
         while (cstr[i] != '\0')
         {
             this->append(cstr[i]);
-            if (this->_errorCode)
+            if (this->_error_code)
                 return (*this);
             ++i;
         }
@@ -197,7 +197,7 @@ void ft_string::erase(std::size_t index, std::size_t count) noexcept
 {
     if (index >= this->_length)
     {
-        this->setError(STRING_ERASE_OUT_OF_BOUNDS);
+        this->set_error(STRING_ERASE_OUT_OF_BOUNDS);
         return ;
     }
     if (index + count > this->_length)

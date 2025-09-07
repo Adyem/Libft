@@ -21,10 +21,10 @@ class ft_optional
 {
     private:
         T*          _value;
-        mutable int _errorCode;
+        mutable int _error_code;
         mutable pt_mutex _mutex;
 
-        void setError(int error) const;
+        void set_error(int error) const;
 
     public:
         ft_optional();
@@ -49,18 +49,18 @@ class ft_optional
 
 template <typename T>
 ft_optional<T>::ft_optional()
-    : _value(ft_nullptr), _errorCode(ER_SUCCESS)
+    : _value(ft_nullptr), _error_code(ER_SUCCESS)
 {
     return ;
 }
 
 template <typename T>
 ft_optional<T>::ft_optional(const T& value)
-    : _value(ft_nullptr), _errorCode(ER_SUCCESS)
+    : _value(ft_nullptr), _error_code(ER_SUCCESS)
 {
     _value = static_cast<T*>(cma_malloc(sizeof(T)));
     if (_value == ft_nullptr)
-        this->setError(OPTIONAL_ALLOC_FAIL);
+        this->set_error(OPTIONAL_ALLOC_FAIL);
     else
         construct_at(_value, value);
     return ;
@@ -68,11 +68,11 @@ ft_optional<T>::ft_optional(const T& value)
 
 template <typename T>
 ft_optional<T>::ft_optional(T&& value)
-    : _value(ft_nullptr), _errorCode(ER_SUCCESS)
+    : _value(ft_nullptr), _error_code(ER_SUCCESS)
 {
     _value = static_cast<T*>(cma_malloc(sizeof(T)));
     if (_value == ft_nullptr)
-        this->setError(OPTIONAL_ALLOC_FAIL);
+        this->set_error(OPTIONAL_ALLOC_FAIL);
     else
         construct_at(_value, std::move(value));
     return ;
@@ -87,10 +87,10 @@ ft_optional<T>::~ft_optional()
 
 template <typename T>
 ft_optional<T>::ft_optional(ft_optional&& other) noexcept
-    : _value(other._value), _errorCode(other._errorCode)
+    : _value(other._value), _error_code(other._error_code)
 {
     other._value = ft_nullptr;
-    other._errorCode = ER_SUCCESS;
+    other._error_code = ER_SUCCESS;
     return ;
 }
 
@@ -108,9 +108,9 @@ ft_optional<T>& ft_optional<T>::operator=(ft_optional&& other) noexcept
         }
         this->reset();
         this->_value = other._value;
-        this->_errorCode = other._errorCode;
+        this->_error_code = other._error_code;
         other._value = ft_nullptr;
-        other._errorCode = ER_SUCCESS;
+        other._error_code = ER_SUCCESS;
         other._mutex.unlock(THREAD_ID);
         this->_mutex.unlock(THREAD_ID);
     }
@@ -118,9 +118,9 @@ ft_optional<T>& ft_optional<T>::operator=(ft_optional&& other) noexcept
 }
 
 template <typename T>
-void ft_optional<T>::setError(int error) const
+void ft_optional<T>::set_error(int error) const
 {
-    this->_errorCode = error;
+    this->_error_code = error;
     ft_errno = error;
     return ;
 }
@@ -130,7 +130,7 @@ bool ft_optional<T>::has_value() const
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        const_cast<ft_optional*>(this)->setError(PT_ERR_MUTEX_OWNER);
+        const_cast<ft_optional*>(this)->set_error(PT_ERR_MUTEX_OWNER);
         return (false);
     }
     bool result = (this->_value != ft_nullptr);
@@ -141,53 +141,53 @@ bool ft_optional<T>::has_value() const
 template <typename T>
 T& ft_optional<T>::value()
 {
-    static T defaultInstance = T();
+    static T default_instance = T();
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
-        return (defaultInstance);
+        this->set_error(PT_ERR_MUTEX_OWNER);
+        return (default_instance);
     }
     if (this->_value == ft_nullptr)
     {
-        this->setError(OPTIONAL_EMPTY);
+        this->set_error(OPTIONAL_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         if constexpr (!std::is_abstract_v<T>)
-            return (defaultInstance);
+            return (default_instance);
         else
         {
             static char dummy_buffer[sizeof(T)] = {0};
             return (*reinterpret_cast<T*>(dummy_buffer));
         }
     }
-    T& ref = *this->_value;
+    T& reference = *this->_value;
     this->_mutex.unlock(THREAD_ID);
-    return (ref);
+    return (reference);
 }
 
 template <typename T>
 const T& ft_optional<T>::value() const
 {
-    static T defaultInstance = T();
+    static T default_instance = T();
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        const_cast<ft_optional*>(this)->setError(PT_ERR_MUTEX_OWNER);
-        return (defaultInstance);
+        const_cast<ft_optional*>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        return (default_instance);
     }
     if (this->_value == ft_nullptr)
     {
-        const_cast<ft_optional*>(this)->setError(OPTIONAL_EMPTY);
+        const_cast<ft_optional*>(this)->set_error(OPTIONAL_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         if constexpr (!std::is_abstract_v<T>)
-            return (defaultInstance);
+            return (default_instance);
         else
         {
             static char dummy_buffer[sizeof(T)] = {0};
             return (*reinterpret_cast<T*>(dummy_buffer));
         }
     }
-    const T& ref = *this->_value;
+    const T& reference = *this->_value;
     this->_mutex.unlock(THREAD_ID);
-    return (ref);
+    return (reference);
 }
 
 template <typename T>
@@ -195,7 +195,7 @@ void ft_optional<T>::reset()
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->setError(PT_ERR_MUTEX_OWNER);
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
     }
     if (this->_value != ft_nullptr)
@@ -212,20 +212,20 @@ template <typename T>
 int ft_optional<T>::get_error() const
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
-        return (this->_errorCode);
-    int err = this->_errorCode;
+        return (this->_error_code);
+    int error = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
-    return (err);
+    return (error);
 }
 
 template <typename T>
 const char* ft_optional<T>::get_error_str() const
 {
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
-        return (ft_strerror(this->_errorCode));
-    int err = this->_errorCode;
+        return (ft_strerror(this->_error_code));
+    int error = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
-    return (ft_strerror(err));
+    return (ft_strerror(error));
 }
 
 #endif // FT_OPTIONAL_HPP

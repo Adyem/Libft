@@ -14,27 +14,27 @@ class ft_future
 {
 private:
     ft_promise<ValueType>* _promise;
-    mutable int _errorCode;
+    mutable int _error_code;
 
-    void setError(int error) const
+    void set_error(int error) const
     {
-        this->_errorCode = error;
+        this->_error_code = error;
         ft_errno = error;
     }
 
 public:
-    ft_future() : _promise(nullptr), _errorCode(ER_SUCCESS) {}
-    explicit ft_future(ft_promise<ValueType>& promise) : _promise(&promise), _errorCode(ER_SUCCESS) {}
+    ft_future() : _promise(nullptr), _error_code(ER_SUCCESS) {}
+    explicit ft_future(ft_promise<ValueType>& promise) : _promise(&promise), _error_code(ER_SUCCESS) {}
 
     ValueType get() const
     {
         if (!this->valid())
         {
-            this->setError(FUTURE_INVALID);
+            this->set_error(FUTURE_INVALID);
             return (ValueType());
         }
         this->wait();
-        if (this->_errorCode != ER_SUCCESS)
+        if (this->_error_code != ER_SUCCESS)
             return (ValueType());
         return (this->_promise->get());
     }
@@ -43,7 +43,7 @@ public:
     {
         if (!this->valid())
         {
-            this->setError(FUTURE_INVALID);
+            this->set_error(FUTURE_INVALID);
             return ;
         }
         using namespace std::chrono;
@@ -52,7 +52,7 @@ public:
         {
             if (steady_clock::now() - start > seconds(1))
             {
-                this->setError(FUTURE_BROKEN);
+                this->set_error(FUTURE_BROKEN);
                 return ;
             }
             std::this_thread::yield();
@@ -66,12 +66,12 @@ public:
 
     int get_error() const
     {
-        return (this->_errorCode);
+        return (this->_error_code);
     }
 
     const char* get_error_str() const
     {
-        return (ft_strerror(this->_errorCode));
+        return (ft_strerror(this->_error_code));
     }
 };
 
