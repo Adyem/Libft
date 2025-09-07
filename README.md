@@ -373,9 +373,20 @@ custom memory allocator can be toggled with `set_alloc_logging` and
 
 ### Template Utilities
 
-`Template/` contains several generic helpers such as `ft_vector`, `ft_map`,
-`ft_pair`, smart pointers and mathematical helpers. Refer to the header files
-for the full interface of these templates.
+`Template/` contains a wide range of generic helpers and containers. Key
+components include:
+
+- Containers: `ft_vector`, `ft_deque`, `ft_stack`, `ft_queue`,
+  `ft_priority_queue`, `ft_set`, `ft_map`, `ft_unordened_map`,
+  `ft_circular_buffer`, `ft_graph` and `ft_matrix`.
+- Utility types: `ft_pair`, `ft_tuple`, `ft_optional`, `ft_variant` and
+  `ft_bitset`.
+- Smart pointers: `ft_shared_ptr` and `ft_unique_ptr`.
+- Concurrency helpers: `ft_thread_pool`, `ft_future`, `ft_event_emitter` and
+  `ft_promise`.
+- Additional helpers such as `algorithm.hpp`, `iterator.hpp` and `math.hpp`.
+
+Refer to the header files for the full interface of these templates.
 
 #### `ft_promise`
 
@@ -401,6 +412,7 @@ const char *get_error_str() const;
 ```
 const char *ft_strerror(int err);
 void        ft_perror(const char *msg);
+void        ft_exit(const char *msg, int code);
 ```
 
 #### RNG
@@ -560,8 +572,34 @@ json_group *api_request_json_host(const char *host, uint16_t port,
                                   int timeout = 60000);
 ```
 
-`api_promise.hpp` adds asynchronous versions returning `ft_promise` objects for
-string and JSON responses, and TLS variants for HTTPS.
+Asynchronous helpers in `api_promise.hpp` return `ft_promise` objects:
+
+```
+class api_promise : public ft_promise<json_group*>;
+bool request(const char *ip, uint16_t port,
+             const char *method, const char *path,
+             json_group *payload = ft_nullptr,
+             const char *headers = ft_nullptr, int *status = ft_nullptr,
+             int timeout = 60000);
+class api_string_promise : public ft_promise<char*>;
+bool request(const char *ip, uint16_t port,
+             const char *method, const char *path,
+             json_group *payload = ft_nullptr,
+             const char *headers = ft_nullptr, int *status = ft_nullptr,
+             int timeout = 60000);
+class api_tls_promise : public ft_promise<json_group*>;
+bool request(const char *host, uint16_t port,
+             const char *method, const char *path,
+             json_group *payload = ft_nullptr,
+             const char *headers = ft_nullptr, int *status = ft_nullptr,
+             int timeout = 60000);
+class api_tls_string_promise : public ft_promise<char*>;
+bool request(const char *host, uint16_t port,
+             const char *method, const char *path,
+             json_group *payload = ft_nullptr,
+             const char *headers = ft_nullptr, int *status = ft_nullptr,
+             int timeout = 60000);
+```
 
 #### `api_tls_client`
 ```
@@ -596,21 +634,303 @@ html_node   *find_by_tag(const char *tag_name) const noexcept;
 ``` 
 
 #### Game
-Basic game related classes (`ft_character`, `ft_item`, `ft_inventory`,
+Basic game related classes include `ft_character`, `ft_item`, `ft_inventory`,
 `ft_upgrade`, `ft_world`, `ft_event`, `ft_map3d`, `ft_quest`, `ft_reputation`,
-`ft_buff`, `ft_debuff`, `ft_achievement`, `ft_experience_table`). `ft_buff` and
-`ft_debuff` each store four independent modifiers and expose getters, setters,
-and adders (including for duration). `ft_event`, `ft_upgrade`, `ft_item`, and
-`ft_reputation` also expose adders, and now each of these classes provides
-matching subtract helpers. `ft_inventory` manages stacked items and can query
-item counts with `has_item` and `count_item`. `ft_character` keeps track of
-coins and a `valor` attribute with helpers to add or subtract these values.
-`ft_experience_table` maps experience points to levels and can generate level
-progressions. `ft_achievement` tracks goal progress with `add_progress`,
-`is_goal_complete`, and `is_complete`. The character's current level can be
-retrieved with `get_level()` which relies on an internal experience table.
-`ft_quest` objects can report completion with `is_complete()` and progress
-phases via `advance_phase()`.
+`ft_buff`, `ft_debuff`, `ft_achievement`, and `ft_experience_table`. Each class
+is summarized below.
+
+#### `ft_character`
+```
+int get_hit_points() const noexcept;
+void set_hit_points(int hp) noexcept;
+bool is_alive() const noexcept;
+int get_armor() const noexcept;
+void set_armor(int armor) noexcept;
+int get_might() const noexcept;
+void set_might(int might) noexcept;
+int get_agility() const noexcept;
+void set_agility(int agility) noexcept;
+int get_endurance() const noexcept;
+void set_endurance(int endurance) noexcept;
+int get_reason() const noexcept;
+void set_reason(int reason) noexcept;
+int get_insigh() const noexcept;
+void set_insigh(int insigh) noexcept;
+int get_presence() const noexcept;
+void set_presence(int presence) noexcept;
+int get_coins() const noexcept;
+void set_coins(int coins) noexcept;
+void add_coins(int coins) noexcept;
+void sub_coins(int coins) noexcept;
+int get_valor() const noexcept;
+void set_valor(int valor) noexcept;
+void add_valor(int valor) noexcept;
+void sub_valor(int valor) noexcept;
+int get_experience() const noexcept;
+void set_experience(int experience) noexcept;
+void add_experience(int experience) noexcept;
+void sub_experience(int experience) noexcept;
+int get_x() const noexcept;
+void set_x(int x) noexcept;
+int get_y() const noexcept;
+void set_y(int y) noexcept;
+int get_z() const noexcept;
+void set_z(int z) noexcept;
+void move(int dx, int dy, int dz) noexcept;
+ft_resistance get_fire_res() const noexcept;
+void set_fire_res(int percent, int flat) noexcept;
+ft_resistance get_frost_res() const noexcept;
+void set_frost_res(int percent, int flat) noexcept;
+ft_resistance get_lightning_res() const noexcept;
+void set_lightning_res(int percent, int flat) noexcept;
+ft_resistance get_air_res() const noexcept;
+void set_air_res(int percent, int flat) noexcept;
+ft_resistance get_earth_res() const noexcept;
+void set_earth_res(int percent, int flat) noexcept;
+ft_resistance get_chaos_res() const noexcept;
+void set_chaos_res(int percent, int flat) noexcept;
+ft_resistance get_physical_res() const noexcept;
+void set_physical_res(int percent, int flat) noexcept;
+ft_map<int, ft_buff>       &get_buffs() noexcept;
+const ft_map<int, ft_buff> &get_buffs() const noexcept;
+ft_map<int, ft_debuff>       &get_debuffs() noexcept;
+const ft_map<int, ft_debuff> &get_debuffs() const noexcept;
+ft_map<int, ft_upgrade>       &get_upgrades() noexcept;
+const ft_map<int, ft_upgrade> &get_upgrades() const noexcept;
+ft_map<int, ft_quest>       &get_quests() noexcept;
+const ft_map<int, ft_quest> &get_quests() const noexcept;
+ft_map<int, ft_achievement>       &get_achievements() noexcept;
+const ft_map<int, ft_achievement> &get_achievements() const noexcept;
+ft_reputation       &get_reputation() noexcept;
+const ft_reputation &get_reputation() const noexcept;
+ft_experience_table       &get_experience_table() noexcept;
+const ft_experience_table &get_experience_table() const noexcept;
+int get_level() const noexcept;
+int get_error() const noexcept;
+const char *get_error_str() const noexcept;
+```
+
+#### `ft_item`
+```
+struct ft_item_modifier
+{
+    int id;
+    int value;
+};
+
+int get_max_stack() const noexcept;
+void set_max_stack(int max) noexcept;
+int get_current_stack() const noexcept;
+void set_current_stack(int amount) noexcept;
+void add_to_stack(int amount) noexcept;
+void sub_from_stack(int amount) noexcept;
+int get_item_id() const noexcept;
+void set_item_id(int id) noexcept;
+ft_item_modifier get_modifier1() const noexcept;
+void set_modifier1(const ft_item_modifier &mod) noexcept;
+int get_modifier1_id() const noexcept;
+void set_modifier1_id(int id) noexcept;
+int get_modifier1_value() const noexcept;
+void set_modifier1_value(int value) noexcept;
+ft_item_modifier get_modifier2() const noexcept;
+void set_modifier2(const ft_item_modifier &mod) noexcept;
+int get_modifier2_id() const noexcept;
+void set_modifier2_id(int id) noexcept;
+int get_modifier2_value() const noexcept;
+void set_modifier2_value(int value) noexcept;
+ft_item_modifier get_modifier3() const noexcept;
+void set_modifier3(const ft_item_modifier &mod) noexcept;
+int get_modifier3_id() const noexcept;
+void set_modifier3_id(int id) noexcept;
+int get_modifier3_value() const noexcept;
+void set_modifier3_value(int value) noexcept;
+ft_item_modifier get_modifier4() const noexcept;
+void set_modifier4(const ft_item_modifier &mod) noexcept;
+int get_modifier4_id() const noexcept;
+void set_modifier4_id(int id) noexcept;
+int get_modifier4_value() const noexcept;
+void set_modifier4_value(int value) noexcept;
+```
+
+#### `ft_inventory`
+```
+ft_map<int, ft_item>       &get_items() noexcept;
+const ft_map<int, ft_item> &get_items() const noexcept;
+size_t get_capacity() const noexcept;
+void   resize(size_t capacity) noexcept;
+size_t get_used() const noexcept;
+bool   is_full() const noexcept;
+int get_error() const noexcept;
+const char *get_error_str() const noexcept;
+int  add_item(const ft_item &item) noexcept;
+void remove_item(int slot) noexcept;
+int  count_item(int item_id) const noexcept;
+bool has_item(int item_id) const noexcept;
+```
+
+#### `ft_upgrade`
+```
+int get_id() const noexcept;
+void set_id(int id) noexcept;
+uint16_t get_current_level() const noexcept;
+void set_current_level(uint16_t level) noexcept;
+void add_level(uint16_t level) noexcept;
+void sub_level(uint16_t level) noexcept;
+uint16_t get_max_level() const noexcept;
+void set_max_level(uint16_t level) noexcept;
+int get_modifier1() const noexcept;
+void set_modifier1(int mod) noexcept;
+void add_modifier1(int mod) noexcept;
+void sub_modifier1(int mod) noexcept;
+int get_modifier2() const noexcept;
+void set_modifier2(int mod) noexcept;
+void add_modifier2(int mod) noexcept;
+void sub_modifier2(int mod) noexcept;
+int get_modifier3() const noexcept;
+void set_modifier3(int mod) noexcept;
+void add_modifier3(int mod) noexcept;
+void sub_modifier3(int mod) noexcept;
+int get_modifier4() const noexcept;
+void set_modifier4(int mod) noexcept;
+void add_modifier4(int mod) noexcept;
+void sub_modifier4(int mod) noexcept;
+```
+
+#### `ft_world`
+```
+ft_map<int, ft_event>       &get_events() noexcept;
+const ft_map<int, ft_event> &get_events() const noexcept;
+int get_error() const noexcept;
+const char *get_error_str() const noexcept;
+```
+
+#### `ft_event`
+```
+int get_id() const noexcept;
+void set_id(int id) noexcept;
+int get_duration() const noexcept;
+void set_duration(int duration) noexcept;
+void add_duration(int duration) noexcept;
+void sub_duration(int duration) noexcept;
+int get_modifier1() const noexcept;
+void set_modifier1(int mod) noexcept;
+void add_modifier1(int mod) noexcept;
+void sub_modifier1(int mod) noexcept;
+int get_modifier2() const noexcept;
+void set_modifier2(int mod) noexcept;
+void add_modifier2(int mod) noexcept;
+void sub_modifier2(int mod) noexcept;
+int get_modifier3() const noexcept;
+void set_modifier3(int mod) noexcept;
+void add_modifier3(int mod) noexcept;
+void sub_modifier3(int mod) noexcept;
+int get_modifier4() const noexcept;
+void set_modifier4(int mod) noexcept;
+void add_modifier4(int mod) noexcept;
+void sub_modifier4(int mod) noexcept;
+```
+
+#### `ft_map3d`
+```
+ft_map3d(size_t width = 0, size_t height = 0, size_t depth = 0, int value = 0);
+~ft_map3d();
+void    resize(size_t width, size_t height, size_t depth, int value = 0);
+int     get(size_t x, size_t y, size_t z) const;
+void    set(size_t x, size_t y, size_t z, int value);
+size_t  get_width() const;
+size_t  get_height() const;
+size_t  get_depth() const;
+int     get_error() const;
+const char *get_error_str() const;
+```
+
+#### `ft_quest`
+```
+int get_id() const noexcept;
+void set_id(int id) noexcept;
+int get_phases() const noexcept;
+void set_phases(int phases) noexcept;
+int get_current_phase() const noexcept;
+void set_current_phase(int phase) noexcept;
+bool is_complete() const noexcept;
+void advance_phase() noexcept;
+```
+
+#### `ft_reputation`
+```
+int get_total_rep() const noexcept;
+void set_total_rep(int rep) noexcept;
+void add_total_rep(int rep) noexcept;
+void sub_total_rep(int rep) noexcept;
+int get_current_rep() const noexcept;
+void set_current_rep(int rep) noexcept;
+void add_current_rep(int rep) noexcept;
+void sub_current_rep(int rep) noexcept;
+ft_map<int, int>       &get_milestones() noexcept;
+const ft_map<int, int> &get_milestones() const noexcept;
+void set_milestones(const ft_map<int, int> &milestones) noexcept;
+int get_milestone(int id) const noexcept;
+void set_milestone(int id, int value) noexcept;
+ft_map<int, int>       &get_reps() noexcept;
+const ft_map<int, int> &get_reps() const noexcept;
+void set_reps(const ft_map<int, int> &reps) noexcept;
+int get_rep(int id) const noexcept;
+void set_rep(int id, int value) noexcept;
+int get_error() const noexcept;
+const char *get_error_str() const noexcept;
+```
+
+#### `ft_buff`
+```
+int get_id() const noexcept;
+void set_id(int id) noexcept;
+int get_duration() const noexcept;
+void set_duration(int duration) noexcept;
+void add_duration(int duration) noexcept;
+void sub_duration(int duration) noexcept;
+int get_modifier1() const noexcept;
+void set_modifier1(int mod) noexcept;
+void add_modifier1(int mod) noexcept;
+void sub_modifier1(int mod) noexcept;
+int get_modifier2() const noexcept;
+void set_modifier2(int mod) noexcept;
+void add_modifier2(int mod) noexcept;
+void sub_modifier2(int mod) noexcept;
+int get_modifier3() const noexcept;
+void set_modifier3(int mod) noexcept;
+void add_modifier3(int mod) noexcept;
+void sub_modifier3(int mod) noexcept;
+int get_modifier4() const noexcept;
+void set_modifier4(int mod) noexcept;
+void add_modifier4(int mod) noexcept;
+void sub_modifier4(int mod) noexcept;
+```
+
+#### `ft_debuff`
+```
+int get_id() const noexcept;
+void set_id(int id) noexcept;
+int get_duration() const noexcept;
+void set_duration(int duration) noexcept;
+void add_duration(int duration) noexcept;
+void sub_duration(int duration) noexcept;
+int get_modifier1() const noexcept;
+void set_modifier1(int mod) noexcept;
+void add_modifier1(int mod) noexcept;
+void sub_modifier1(int mod) noexcept;
+int get_modifier2() const noexcept;
+void set_modifier2(int mod) noexcept;
+void add_modifier2(int mod) noexcept;
+void sub_modifier2(int mod) noexcept;
+int get_modifier3() const noexcept;
+void set_modifier3(int mod) noexcept;
+void add_modifier3(int mod) noexcept;
+void sub_modifier3(int mod) noexcept;
+int get_modifier4() const noexcept;
+void set_modifier4(int mod) noexcept;
+void add_modifier4(int mod) noexcept;
+void sub_modifier4(int mod) noexcept;
+```
 
 #### `ft_achievement`
 ```
@@ -637,6 +957,5 @@ int  generate_levels_scaled(int count, int base, double multiplier) noexcept;
 int  resize(int new_count) noexcept;
 ```
 
-The project is a work in progress and not every component is documented here.
-Consult the individual header files for precise behavior and additional
-functionality.
+This project is a work in progress, and basic functionality can heavily
+change over time, potentially breaking code that relies on the library.
