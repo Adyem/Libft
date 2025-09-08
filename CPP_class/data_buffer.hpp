@@ -8,32 +8,33 @@
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
 
-class DataBuffer {
-private:
-    std::vector<uint8_t> _buffer;
-    size_t _readPos;
-    bool _ok;
+class DataBuffer
+{
+    private:
+        std::vector<uint8_t> _buffer;
+        size_t _readPos;
+        bool _ok;
 
-public:
-    DataBuffer();
-    void clear() noexcept;
-    size_t size() const noexcept;
-    const std::vector<uint8_t>& data() const noexcept;
-    size_t tell() const noexcept;
-    bool seek(size_t pos) noexcept;
+    public:
+        DataBuffer();
+        void clear() noexcept;
+        size_t size() const noexcept;
+        const std::vector<uint8_t>& data() const noexcept;
+        size_t tell() const noexcept;
+        bool seek(size_t pos) noexcept;
 
-    explicit operator bool() const noexcept { return (this->_ok); }
-    bool good() const noexcept { return (this->_ok); }
-    bool bad() const noexcept { return (!this->_ok); }
+        explicit operator bool() const noexcept;
+        bool good() const noexcept;
+        bool bad() const noexcept;
 
-    template<typename T>
-    DataBuffer& operator<<(const T& value);
+        template<typename T>
+        DataBuffer& operator<<(const T& value);
 
-    template<typename T>
-    DataBuffer& operator>>(T& value);
+        template<typename T>
+        DataBuffer& operator>>(T& value);
 
-    DataBuffer& operator<<(size_t len);
-    DataBuffer& operator>>(size_t& len);
+        DataBuffer& operator<<(size_t len);
+        DataBuffer& operator>>(size_t& len);
 };
 
 template<typename T>

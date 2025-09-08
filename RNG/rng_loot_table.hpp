@@ -17,7 +17,7 @@ struct ft_loot_entry
 template<typename ElementType>
 class ft_loot_table : public ft_vector<ft_loot_entry<ElementType> >
 {
-        public:
+    public:
         void addElement(ElementType *elem, int weight);
         ElementType *getRandomLoot() const;
         ElementType *popRandomLoot();

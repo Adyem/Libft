@@ -2,7 +2,7 @@
 #define INVENTORY_HPP
 
 #include "item.hpp"
-#include "../Template/map.hpp"
+#include "../Template/Template_map.hpp"
 #include "../Errno/errno.hpp"
 
 class ft_inventory

@@ -9,11 +9,11 @@
 template<typename T>
 class Pool
 {
-        private:
-                using Storage = std::aligned_storage_t<sizeof(T), alignof(T)>;
-                ft_vector<Storage> _buffer;
-                ft_vector<size_t> _freeIndices;
-                mutable pt_mutex _mutex;
+    private:
+        using Storage = std::aligned_storage_t<sizeof(T), alignof(T)>;
+        ft_vector<Storage> _buffer;
+        ft_vector<size_t> _freeIndices;
+        mutable pt_mutex _mutex;
 
         void release(size_t idx) noexcept;
         T* ptrAt(size_t idx) noexcept;

@@ -4,6 +4,7 @@ Use return ; for void functions. Include a space before the semicolon.
 Use return (value); for non-void returns. Include a space before the opening parenthesis.
 Do not use for loops, ternary operators, or switch statements.
 Indent code using 4 spaces per level.
+After declaring a class, indent access specifiers (private, public, protected) by 4 spaces and indent member declarations within them by 8 spaces.
 Function and variable names must use snake_case.
 Use full variable names instead of short ones or single letters, dont use s or str use string.
 

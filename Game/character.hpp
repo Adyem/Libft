@@ -1,7 +1,7 @@
 #ifndef CHARACTER_HPP
 # define CHARACTER_HPP
 
-#include "../Template/map.hpp"
+#include "../Template/Template_map.hpp"
 #include "quest.hpp"
 #include "achievement.hpp"
 #include "reputation.hpp"
