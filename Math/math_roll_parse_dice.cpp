@@ -1,9 +1,10 @@
-#include "libft/Printf/printf.hpp"
-#include "libft/RNG/RNG.hpp"
-#include "dnd_tools.hpp"
+#include "math_roll.hpp"
+#include "math_internal.hpp"
+#include "../Printf/printf.hpp"
+#include "../RNG/rng.hpp"
 #include <climits>
 
-static int ft_handle_dice_roll(char *string, int *i, int *x, int *error)
+static int math_handle_dice_roll(char *string, int *i, int *x, int *error)
 {
     int first_number;
     int second_number;
@@ -11,10 +12,10 @@ static int ft_handle_dice_roll(char *string, int *i, int *x, int *error)
     if (DEBUG == 1)
         pf_printf("The value of x = %d\n", *x);
     if (string[*i] >= '0' && string[*i] <= '9')
-        first_number = ft_roll_convert_previous(string, i, error);
+        first_number = math_roll_convert_previous(string, i, error);
     else
         first_number = 1;
-    second_number = ft_roll_convert_next(string, *x, error);
+    second_number = math_roll_convert_next(string, *x, error);
     if (*error)
         return (1);
     if (first_number <= 0)
@@ -31,9 +32,9 @@ static int ft_handle_dice_roll(char *string, int *i, int *x, int *error)
     return ft_dice_roll(first_number, second_number);
 }
 
-static int ft_handle_result_replacement(char *string, int *i, int x, int result)
+static int math_handle_result_replacement(char *string, int *i, int x, int result)
 {
-    if (ft_roll_itoa(result, i, string))
+    if (math_roll_itoa(result, i, string))
         return (1);
     if (DEBUG == 1)
         pf_printf("1 The value of i = %d and x = %d\n", *i, x);
@@ -54,7 +55,7 @@ static int ft_handle_result_replacement(char *string, int *i, int x, int result)
     return (0);
 }
 
-int ft_roll_excecute_droll(char *string, int *i, int j)
+int math_roll_excecute_droll(char *string, int *i, int j)
 {
     int result;
     int x;
@@ -70,19 +71,19 @@ int ft_roll_excecute_droll(char *string, int *i, int j)
             if (*i > 0)
                 (*i)--;
             x++;
-            result = ft_handle_dice_roll(string, i, &x, &error);
+            result = math_handle_dice_roll(string, i, &x, &error);
             if (result == -1 || error)
                 return (1);
 
-            if (ft_handle_result_replacement(string, i, x, result))
+            if (math_handle_result_replacement(string, i, x, result))
                 return (1);
-            ft_calculate_j(string, &j);
+            math_calculate_j(string, &j);
             *i = 0;
         }
         else
             (*i)++;
     }
-    ft_calculate_j(string, &j);
+    math_calculate_j(string, &j);
     if (DEBUG == 1)
         pf_printf_fd(2, "After dice rolling result is %s\n", string);
     return (0);

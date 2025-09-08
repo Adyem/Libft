@@ -1,6 +1,7 @@
-#include "dnd_tools.hpp"
+#include "math_roll.hpp"
+#include "math_internal.hpp"
 
-int    ft_roll_check_number_next(char *string, int i)
+int    math_roll_check_number_next(char *string, int i)
 {
     if (!(string[i + 1] == '+' || string[i + 1] == '-' ||
             (string[i + 1] >= '0' && string[i + 1] <= '9')))
@@ -11,7 +12,7 @@ int    ft_roll_check_number_next(char *string, int i)
     return (0);
 }
 
-int    ft_roll_check_number_previous(char *string, int i)
+int    math_roll_check_number_previous(char *string, int i)
 {
     if (i == 1)
         if (!(string[i - 1] >= '0' && string[i - 1] <= '9'))
@@ -19,7 +20,7 @@ int    ft_roll_check_number_previous(char *string, int i)
     return (0);
 }
 
-int    ft_roll_check_character(char c)
+int    math_roll_check_character(char c)
 {
     if (c == 0)
         return (0);

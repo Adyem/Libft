@@ -68,7 +68,7 @@ FT_ULONG_MAX
 
 ### Math
 
-Located in `Math/`. Header: `math.hpp`. Provides basic math utilities:
+Located in `Math/`. Headers: `math.hpp` and `math_roll.hpp`. Provides basic math utilities:
 
 ```
 int         math_abs(int number);
@@ -111,6 +111,17 @@ double      math_exp(double value);
 double      math_deg2rad(double degrees);
 double      math_rad2deg(double radians);
 ```
+
+Additional helpers for parsing expressions are available. They allocate a
+single `int` holding the result, which the caller must release with
+`cma_free`. On failure they return `ft_nullptr` and set `ft_errno`:
+
+```
+int        *math_roll(const char *expression);
+int        *math_eval(const char *expression);
+```
+
+Internal parser helpers now use the `math_` prefix for consistency.
 
 ### Custom Memory Allocator (CMA)
 
