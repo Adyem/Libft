@@ -7,8 +7,8 @@
 #include <pthread.h>
 #include "CMA.hpp"
 #include "CMA_internal.hpp"
-#include "../PThread/mutex.hpp"
-#include "../CPP_class/nullptr.hpp"
+#include "../PThread/pthread_mutex.hpp"
+#include "../CPP_class/cpp_class_nullptr.hpp"
 #include "../Logger/logger.hpp"
 
 void* cma_malloc(std::size_t size)

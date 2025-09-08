@@ -2,8 +2,8 @@
 #define API_TLS_CLIENT_HPP
 
 #include "../JSon/json.hpp"
-#include "../CPP_class/string_class.hpp"
-#include "../CPP_class/nullptr.hpp"
+#include "../CPP_class/cpp_class_string_class.hpp"
+#include "../CPP_class/cpp_class_nullptr.hpp"
 #include <openssl/ssl.h>
 #include <cstdint>
 

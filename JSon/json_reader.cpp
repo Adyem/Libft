@@ -3,7 +3,7 @@
 #include "json.hpp"
 #include "../GetNextLine/get_next_line.hpp"
 #include "../CMA/CMA.hpp"
-#include "../CPP_class/nullptr.hpp"
+#include "../CPP_class/cpp_class_nullptr.hpp"
 
 static void skip_whitespace(const char *json_string, size_t &index)
 {

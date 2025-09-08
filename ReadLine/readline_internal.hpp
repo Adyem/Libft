@@ -1,7 +1,7 @@
 #ifndef READLINE_INTERNAL_HPP
 #define READLINE_INTERNAL_HPP
 
-#include "../CPP_class/file.hpp"
+#include "../CPP_class/cpp_class_file.hpp"
 #include <unistd.h>
 #include <stdlib.h>
 

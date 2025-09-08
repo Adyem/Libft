@@ -1,8 +1,8 @@
 #if defined(_WIN32) || defined(_WIN64)
 
 #include "windows_file.hpp"
-#include "../CPP_class/nullptr.hpp"
-#include "../PThread/mutex.hpp"
+#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "../PThread/pthread_mutex.hpp"
 #include "../Libft/libft.hpp"
 #include <windows.h>
 #include <stdio.h>

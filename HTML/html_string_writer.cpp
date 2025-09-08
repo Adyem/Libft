@@ -1,6 +1,6 @@
 #include "html_parser.hpp"
 #include "../CMA/CMA.hpp"
-#include "../CPP_class/nullptr.hpp"
+#include "../CPP_class/cpp_class_nullptr.hpp"
 #include "../Libft/libft.hpp"
 
 static char *html_attrs_to_string(html_attr *attribute)

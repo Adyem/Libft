@@ -1,13 +1,13 @@
 TARGET := Game.a
 DEBUG_TARGET := Game_debug.a
 
-SRCS := map3d.cpp character.cpp quest.cpp achievement.cpp reputation.cpp buff.cpp debuff.cpp \
-        upgrade.cpp event.cpp world.cpp item.cpp inventory.cpp \
-        experience_table.cpp
+SRCS := game_map3d.cpp game_character.cpp game_quest.cpp game_achievement.cpp game_reputation.cpp game_buff.cpp game_debuff.cpp \
+game_upgrade.cpp game_event.cpp game_world.cpp game_item.cpp game_inventory.cpp \
+game_experience_table.cpp
 
-HEADERS := map3d.hpp character.hpp quest.hpp achievement.hpp reputation.hpp buff.hpp debuff.hpp \
-           upgrade.hpp event.hpp world.hpp item.hpp inventory.hpp \
-           experience_table.hpp
+HEADERS := game_map3d.hpp game_character.hpp game_quest.hpp game_achievement.hpp game_reputation.hpp game_buff.hpp game_debuff.hpp \
+   game_upgrade.hpp game_event.hpp game_world.hpp game_item.hpp game_inventory.hpp \
+   game_experience_table.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

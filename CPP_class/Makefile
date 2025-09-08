@@ -1,16 +1,16 @@
 TARGET := CPP_class.a
 DEBUG_TARGET := CPP_class_debug.a
 
-SRCS :=  string_constructors.cpp \
-         string_methods.cpp \
-         nullptr.cpp \
-         file.cpp \
-         data_buffer.cpp
+SRCS :=  cpp_class_string_constructors.cpp \
+         cpp_class_string_methods.cpp \
+         cpp_class_nullptr.cpp \
+         cpp_class_file.cpp \
+         cpp_class_data_buffer.cpp
 
-HEADERS := string_class.hpp \
-           nullptr.hpp \
-           file.hpp \
-           data_buffer.hpp
+HEADERS := cpp_class_string_class.hpp \
+           cpp_class_nullptr.hpp \
+           cpp_class_file.hpp \
+           cpp_class_data_buffer.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

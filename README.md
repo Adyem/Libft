@@ -25,7 +25,7 @@ entering their directory and running `make`.
 
 ### Libft
 
-Standard C utilities located in `Libft/`. Headers: `libft.hpp` and `ft_limits.hpp`.
+Standard C utilities located in `Libft/`. Headers: `libft.hpp` and `libft_limits.hpp`. Source files use the `libft_` prefix.
 
 ```
 size_t  ft_strlen_size_t(const char *string);
@@ -54,7 +54,7 @@ void   *ft_memset(void *dst, int value, size_t n);
 int     ft_isspace(int c);
 ```
 
-`ft_limits.hpp` exposes integer boundary constants:
+`libft_limits.hpp` exposes integer boundary constants:
 
 ```
 FT_CHAR_BIT
@@ -68,7 +68,7 @@ FT_ULONG_MAX
 
 ### Math
 
-Located in `Math/`. Headers: `math.hpp` and `math_roll.hpp`. Provides basic math utilities:
+Located in `Math/`. Headers: `template_math.hpp` and `math_roll.hpp`. Provides basic math utilities:
 
 ```
 int         math_abs(int number);
@@ -175,7 +175,7 @@ int pf_printf_fd(int fd, const char *format, ...);
 
 ### PThread Wrappers
 
-`PThread/PThread.hpp` wraps a few `pthread` calls.
+`PThread/pthread.hpp` wraps a few `pthread` calls and provides basic atomic operations.
 
 ```
 int pt_thread_join(pthread_t thread, void **retval);
@@ -189,6 +189,10 @@ int pt_thread_equal(pthread_t thread1, pthread_t thread2);
 pt_thread_id_type pt_thread_self();
 template <typename ValueType, typename Function>
 int pt_async(ft_promise<ValueType>& promise, Function function);
+int pt_atomic_load(const std::atomic<int>& atomic_variable);
+void pt_atomic_store(std::atomic<int>& atomic_variable, int desired_value);
+int pt_atomic_fetch_add(std::atomic<int>& atomic_variable, int increment_value);
+bool pt_atomic_compare_exchange(std::atomic<int>& atomic_variable, int& expected_value, int desired_value);
 ```
 
 ### C++ Classes (`CPP_class`)
@@ -397,13 +401,13 @@ components include:
 - Smart pointers: `ft_shared_ptr` and `ft_unique_ptr`.
 - Concurrency helpers: `ft_thread_pool`, `ft_future`, `ft_event_emitter` and
   `ft_promise`.
-- Additional helpers such as `algorithm.hpp`, `iterator.hpp` and `math.hpp`.
+- Additional helpers such as `template_algorithm.hpp`, `template_iterator.hpp` and `template_math.hpp`.
 
 Refer to the header files for the full interface of these templates.
 
 #### `ft_trie`
 
-`Template/Template_trie.hpp` implements a basic trie for storing values
+`Template/template_trie.hpp` implements a basic trie for storing values
 associated with string keys.
 
 ```
@@ -416,7 +420,7 @@ int get_error() const;
 
 #### `ft_promise`
 
-`Template/Template_promise.hpp` implements a minimal promise type for passing values
+`Template/template_promise.hpp` implements a minimal promise type for passing values
 between threads. A promise stores a value set by a worker thread and reports
 errors through the shared `ft_errno` system.
 

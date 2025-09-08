@@ -1,7 +1,7 @@
 #ifndef RNG_INTERNAL_HPP
 # define RNG_INTERNAL_HPP
 
-#include "../CPP_class/nullptr.hpp"
+#include "../CPP_class/cpp_class_nullptr.hpp"
 #include <ctime>
 #include <cstdlib>
 

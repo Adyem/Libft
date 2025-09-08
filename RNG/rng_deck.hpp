@@ -1,8 +1,8 @@
 #ifndef RNG_DECK_HPP
 #define RNG_DECK_HPP
 
-#include "../Template/vector.hpp"
-#include "../Template/swap.hpp"
+#include "../Template/template_vector.hpp"
+#include "../Template/template_swap.hpp"
 #include "rng.hpp"
 #include <climits>
 

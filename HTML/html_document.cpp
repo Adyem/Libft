@@ -1,5 +1,5 @@
 #include "html_document.hpp"
-#include "../CPP_class/nullptr.hpp"
+#include "../CPP_class/cpp_class_nullptr.hpp"
 
 html_document::html_document() noexcept
     : _root(ft_nullptr)

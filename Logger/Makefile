@@ -2,22 +2,22 @@ TARGET := Logger.a
 DEBUG_TARGET := Logger_debug.a
 
 SRCS := \
-    ft_log_state.cpp \
-    ft_log_rotate.cpp \
-    ft_log_level_to_str.cpp \
-    ft_log_vwrite.cpp \
-    ft_log_set_level.cpp \
-    ft_log_set_file.cpp \
-    ft_log_set_alloc_logging.cpp \
-    ft_log_get_alloc_logging.cpp \
-    ft_log_set_api_logging.cpp \
-    ft_log_get_api_logging.cpp \
-    ft_log_close.cpp \
-    ft_log_debug.cpp \
-    ft_log_info.cpp \
-    ft_log_warn.cpp \
-    ft_log_error.cpp \
-    ft_logger.cpp
+    logger_log_state.cpp \
+    logger_log_rotate.cpp \
+    logger_log_level_to_str.cpp \
+    logger_log_vwrite.cpp \
+    logger_log_set_level.cpp \
+    logger_log_set_file.cpp \
+    logger_log_set_alloc_logging.cpp \
+    logger_log_get_alloc_logging.cpp \
+    logger_log_set_api_logging.cpp \
+    logger_log_get_api_logging.cpp \
+    logger_log_close.cpp \
+    logger_log_debug.cpp \
+    logger_log_info.cpp \
+    logger_log_warn.cpp \
+    logger_log_error.cpp \
+    logger_logger.cpp
 
 HEADERS := logger.hpp logger_internal.hpp
 

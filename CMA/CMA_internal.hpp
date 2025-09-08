@@ -1,7 +1,7 @@
 #ifndef CMA_INTERNAL_HPP
 # define CMA_INTERNAL_HPP
 
-#include "../PThread/mutex.hpp"
+#include "../PThread/pthread_mutex.hpp"
 #include <cstdint>
 #include <stdint.h>
 
