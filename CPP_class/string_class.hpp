@@ -10,7 +10,7 @@ class ft_string
         char*            _data;
         std::size_t      _length;
         std::size_t      _capacity;
-        int                _error_code;
+        mutable int       _error_code;
 
         void    resize(size_t new_capacity) noexcept;
         void    set_error(int error_code) noexcept;
