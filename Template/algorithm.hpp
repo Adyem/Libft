@@ -3,7 +3,7 @@
 
 #include <cstddef>
 #include "swap.hpp"
-#include "../RNG/RNG.hpp"
+#include "../RNG/rng.hpp"
 
 // Simple sort using comparator
 // Defaults to ascending order using operator<

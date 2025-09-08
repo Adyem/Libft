@@ -606,12 +606,12 @@
       "-Wmissing-declarations",
       "-c",
       "-o",
-      "objs/clear_history.o",
-      "clear_history.cpp"
+      "objs/readline_clear_history.o",
+      "readline_clear_history.cpp"
     ],
     "directory": "/home/adyem/DND_tools/libft/ReadLine",
-    "file": "/home/adyem/DND_tools/libft/ReadLine/clear_history.cpp",
-    "output": "/home/adyem/DND_tools/libft/ReadLine/objs/clear_history.o"
+    "file": "/home/adyem/DND_tools/libft/ReadLine/readline_clear_history.cpp",
+    "output": "/home/adyem/DND_tools/libft/ReadLine/objs/readline_clear_history.o"
   },
   {
     "arguments": [
@@ -625,12 +625,12 @@
       "-Wmissing-declarations",
       "-c",
       "-o",
-      "objs/handle_keypress.o",
-      "handle_keypress.cpp"
+      "objs/readline_handle_keypress.o",
+      "readline_handle_keypress.cpp"
     ],
     "directory": "/home/adyem/DND_tools/libft/ReadLine",
-    "file": "/home/adyem/DND_tools/libft/ReadLine/handle_keypress.cpp",
-    "output": "/home/adyem/DND_tools/libft/ReadLine/objs/handle_keypress.o"
+    "file": "/home/adyem/DND_tools/libft/ReadLine/readline_handle_keypress.cpp",
+    "output": "/home/adyem/DND_tools/libft/ReadLine/objs/readline_handle_keypress.o"
   },
   {
     "arguments": [
@@ -644,12 +644,12 @@
       "-Wmissing-declarations",
       "-c",
       "-o",
-      "objs/suggestions.o",
-      "suggestions.cpp"
+      "objs/readline_suggestions.o",
+      "readline_suggestions.cpp"
     ],
     "directory": "/home/adyem/DND_tools/libft/ReadLine",
-    "file": "/home/adyem/DND_tools/libft/ReadLine/suggestions.cpp",
-    "output": "/home/adyem/DND_tools/libft/ReadLine/objs/suggestions.o"
+    "file": "/home/adyem/DND_tools/libft/ReadLine/readline_suggestions.cpp",
+    "output": "/home/adyem/DND_tools/libft/ReadLine/objs/readline_suggestions.o"
   },
   {
     "arguments": [
@@ -663,12 +663,12 @@
       "-Wmissing-declarations",
       "-c",
       "-o",
-      "objs/utilities.o",
-      "utilities.cpp"
+      "objs/readline_utilities.o",
+      "readline_utilities.cpp"
     ],
     "directory": "/home/adyem/DND_tools/libft/ReadLine",
-    "file": "/home/adyem/DND_tools/libft/ReadLine/utilities.cpp",
-    "output": "/home/adyem/DND_tools/libft/ReadLine/objs/utilities.o"
+    "file": "/home/adyem/DND_tools/libft/ReadLine/readline_utilities.cpp",
+    "output": "/home/adyem/DND_tools/libft/ReadLine/objs/readline_utilities.o"
   },
   {
     "arguments": [
@@ -682,12 +682,12 @@
       "-Wmissing-declarations",
       "-c",
       "-o",
-      "objs/tab_completion.o",
-      "tab_completion.cpp"
+      "objs/readline_tab_completion.o",
+      "readline_tab_completion.cpp"
     ],
     "directory": "/home/adyem/DND_tools/libft/ReadLine",
-    "file": "/home/adyem/DND_tools/libft/ReadLine/tab_completion.cpp",
-    "output": "/home/adyem/DND_tools/libft/ReadLine/objs/tab_completion.o"
+    "file": "/home/adyem/DND_tools/libft/ReadLine/readline_tab_completion.cpp",
+    "output": "/home/adyem/DND_tools/libft/ReadLine/objs/readline_tab_completion.o"
   },
   {
     "arguments": [
@@ -701,12 +701,12 @@
       "-Wmissing-declarations",
       "-c",
       "-o",
-      "objs/printeble_char.o",
-      "printeble_char.cpp"
+      "objs/readline_printeble_char.o",
+      "readline_printeble_char.cpp"
     ],
     "directory": "/home/adyem/DND_tools/libft/ReadLine",
-    "file": "/home/adyem/DND_tools/libft/ReadLine/printeble_char.cpp",
-    "output": "/home/adyem/DND_tools/libft/ReadLine/objs/printeble_char.o"
+    "file": "/home/adyem/DND_tools/libft/ReadLine/readline_printeble_char.cpp",
+    "output": "/home/adyem/DND_tools/libft/ReadLine/objs/readline_printeble_char.o"
   },
   {
     "arguments": [
@@ -720,12 +720,12 @@
       "-Wmissing-declarations",
       "-c",
       "-o",
-      "objs/raw_mode.o",
-      "raw_mode.cpp"
+      "objs/readline_raw_mode.o",
+      "readline_raw_mode.cpp"
     ],
     "directory": "/home/adyem/DND_tools/libft/ReadLine",
-    "file": "/home/adyem/DND_tools/libft/ReadLine/raw_mode.cpp",
-    "output": "/home/adyem/DND_tools/libft/ReadLine/objs/raw_mode.o"
+    "file": "/home/adyem/DND_tools/libft/ReadLine/readline_raw_mode.cpp",
+    "output": "/home/adyem/DND_tools/libft/ReadLine/objs/readline_raw_mode.o"
   },
   {
     "arguments": [
@@ -739,12 +739,12 @@
       "-Wmissing-declarations",
       "-c",
       "-o",
-      "objs/initialize.o",
-      "initialize.cpp"
+      "objs/readline_initialize.o",
+      "readline_initialize.cpp"
     ],
     "directory": "/home/adyem/DND_tools/libft/ReadLine",
-    "file": "/home/adyem/DND_tools/libft/ReadLine/initialize.cpp",
-    "output": "/home/adyem/DND_tools/libft/ReadLine/objs/initialize.o"
+    "file": "/home/adyem/DND_tools/libft/ReadLine/readline_initialize.cpp",
+    "output": "/home/adyem/DND_tools/libft/ReadLine/objs/readline_initialize.o"
   },
   {
     "arguments": [
@@ -937,12 +937,12 @@
       "-std=c++17",
       "-c",
       "-o",
-      "objs/strerror.o",
-      "strerror.cpp"
+      "objs/errno_strerror.o",
+      "errno_strerror.cpp"
     ],
     "directory": "/home/adyem/DND_tools/libft/Errno",
-    "file": "/home/adyem/DND_tools/libft/Errno/strerror.cpp",
-    "output": "/home/adyem/DND_tools/libft/Errno/objs/strerror.o"
+    "file": "/home/adyem/DND_tools/libft/Errno/errno_strerror.cpp",
+    "output": "/home/adyem/DND_tools/libft/Errno/objs/errno_strerror.o"
   },
   {
     "arguments": [
@@ -955,12 +955,12 @@
       "-std=c++17",
       "-c",
       "-o",
-      "objs/perror.o",
-      "perror.cpp"
+      "objs/errno_perror.o",
+      "errno_perror.cpp"
     ],
     "directory": "/home/adyem/DND_tools/libft/Errno",
-    "file": "/home/adyem/DND_tools/libft/Errno/perror.cpp",
-    "output": "/home/adyem/DND_tools/libft/Errno/objs/perror.o"
+    "file": "/home/adyem/DND_tools/libft/Errno/errno_perror.cpp",
+    "output": "/home/adyem/DND_tools/libft/Errno/objs/errno_perror.o"
   },
   {
     "arguments": [
@@ -973,12 +973,30 @@
       "-std=c++17",
       "-c",
       "-o",
-      "objs/socket_class.o",
-      "socket_class.cpp"
+      "objs/errno_exit.o",
+      "errno_exit.cpp"
+    ],
+    "directory": "/home/adyem/DND_tools/libft/Errno",
+    "file": "/home/adyem/DND_tools/libft/Errno/errno_exit.cpp",
+    "output": "/home/adyem/DND_tools/libft/Errno/objs/errno_exit.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-g",
+      "-O0",
+      "-std=c++17",
+      "-c",
+      "-o",
+      "objs/networking_socket_class.o",
+      "networking_socket_class.cpp"
     ],
     "directory": "/home/adyem/DND_tools/libft/Networking",
-    "file": "/home/adyem/DND_tools/libft/Networking/socket_class.cpp",
-    "output": "/home/adyem/DND_tools/libft/Networking/objs/socket_class.o"
+    "file": "/home/adyem/DND_tools/libft/Networking/networking_socket_class.cpp",
+    "output": "/home/adyem/DND_tools/libft/Networking/objs/networking_socket_class.o"
   },
   {
     "arguments": [
@@ -1009,12 +1027,12 @@
       "-std=c++17",
       "-c",
       "-o",
-      "objs/setup_server.o",
-      "setup_server.cpp"
+      "objs/networking_setup_server.o",
+      "networking_setup_server.cpp"
     ],
     "directory": "/home/adyem/DND_tools/libft/Networking",
-    "file": "/home/adyem/DND_tools/libft/Networking/setup_server.cpp",
-    "output": "/home/adyem/DND_tools/libft/Networking/objs/setup_server.o"
+    "file": "/home/adyem/DND_tools/libft/Networking/networking_setup_server.cpp",
+    "output": "/home/adyem/DND_tools/libft/Networking/objs/networking_setup_server.o"
   },
   {
     "arguments": [
@@ -1027,12 +1045,12 @@
       "-std=c++17",
       "-c",
       "-o",
-      "objs/setup_client.o",
-      "setup_client.cpp"
+      "objs/networking_setup_client.o",
+      "networking_setup_client.cpp"
     ],
     "directory": "/home/adyem/DND_tools/libft/Networking",
-    "file": "/home/adyem/DND_tools/libft/Networking/setup_client.cpp",
-    "output": "/home/adyem/DND_tools/libft/Networking/objs/setup_client.o"
+    "file": "/home/adyem/DND_tools/libft/Networking/networking_setup_client.cpp",
+    "output": "/home/adyem/DND_tools/libft/Networking/objs/networking_setup_client.o"
   },
   {
     "arguments": [
@@ -1045,12 +1063,12 @@
       "-std=c++17",
       "-c",
       "-o",
-      "objs/socket_wrapper_functions.o",
-      "socket_wrapper_functions.cpp"
+      "objs/networking_socket_wrapper_functions.o",
+      "networking_socket_wrapper_functions.cpp"
     ],
     "directory": "/home/adyem/DND_tools/libft/Networking",
-    "file": "/home/adyem/DND_tools/libft/Networking/socket_wrapper_functions.cpp",
-    "output": "/home/adyem/DND_tools/libft/Networking/objs/socket_wrapper_functions.o"
+    "file": "/home/adyem/DND_tools/libft/Networking/networking_socket_wrapper_functions.cpp",
+    "output": "/home/adyem/DND_tools/libft/Networking/objs/networking_socket_wrapper_functions.o"
   },
   {
     "arguments": [
@@ -1081,12 +1099,12 @@
       "-std=c++17",
       "-c",
       "-o",
-      "objs_debug/system_call_wrappers.o",
-      "system_call_wrappers.cpp"
+      "objs_debug/linux_system_call_wrappers.o",
+      "linux_system_call_wrappers.cpp"
     ],
     "directory": "/home/adyem/DND_tools/libft/Linux",
-    "file": "/home/adyem/DND_tools/libft/Linux/system_call_wrappers.cpp",
-    "output": "/home/adyem/DND_tools/libft/Linux/objs_debug/system_call_wrappers.o"
+    "file": "/home/adyem/DND_tools/libft/Linux/linux_system_call_wrappers.cpp",
+    "output": "/home/adyem/DND_tools/libft/Linux/objs_debug/linux_system_call_wrappers.o"
   },
   {
     "arguments": [
@@ -1099,12 +1117,12 @@
       "-std=c++17",
       "-c",
       "-o",
-      "objs/system_call_wrappers.o",
-      "system_call_wrappers.cpp"
+      "objs/linux_system_call_wrappers.o",
+      "linux_system_call_wrappers.cpp"
     ],
     "directory": "/home/adyem/DND_tools/libft/Linux",
-    "file": "/home/adyem/DND_tools/libft/Linux/system_call_wrappers.cpp",
-    "output": "/home/adyem/DND_tools/libft/Linux/objs/system_call_wrappers.o"
+    "file": "/home/adyem/DND_tools/libft/Linux/linux_system_call_wrappers.cpp",
+    "output": "/home/adyem/DND_tools/libft/Linux/objs/linux_system_call_wrappers.o"
   },
   {
     "arguments": [

@@ -1,10 +1,10 @@
-#ifndef LOOT_TABLE_HPP
-#define LOOT_TABLE_HPP
+#ifndef RNG_LOOT_TABLE_HPP
+#define RNG_LOOT_TABLE_HPP
 
 #include "../Template/vector.hpp"
 #include "../CPP_class/nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "RNG.hpp"
+#include "rng.hpp"
 #include <climits>
 
 template<typename ElementType>
