@@ -39,7 +39,7 @@ int test_ft_map_remove(void)
     m.insert(1, 10);
     m.insert(2, 20);
     m.remove(1);
-    return (m.find(1) == ft_nullptr && m.getSize() == 1);
+    return (m.find(1) == ft_nullptr && m.size() == 1);
 }
 
 int test_ft_shared_ptr_basic(void)
@@ -166,7 +166,7 @@ int test_ft_map_clear_empty(void)
     m.insert(1, 10);
     m.insert(2, 20);
     m.clear();
-    return (m.empty() && m.getSize() == 0);
+    return (m.empty() && m.size() == 0);
 }
 
 int test_ft_shared_ptr_array(void)

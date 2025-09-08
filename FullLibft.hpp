@@ -21,6 +21,7 @@
 #include "Libft/libft.hpp"
 #include "Libft/ft_limits.hpp"
 #include "Math/math.hpp"
+#include "Math/math_roll.hpp"
 #include "Linux/linux_file.hpp"
 #include "Networking/networking.hpp"
 #include "Networking/networking_socket_class.hpp"

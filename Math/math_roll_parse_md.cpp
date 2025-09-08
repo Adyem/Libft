@@ -1,7 +1,8 @@
-#include "dnd_tools.hpp"
-#include "libft/Printf/printf.hpp"
+#include "math_roll.hpp"
+#include "math_internal.hpp"
+#include "../Printf/printf.hpp"
 
-int ft_roll_excecute_md(char *string, int *i, int j)
+int math_roll_excecute_md(char *string, int *i, int j)
 {
     int error = 0;
 
@@ -13,15 +14,15 @@ int ft_roll_excecute_md(char *string, int *i, int j)
             break ;
         if (string[*i] == '*' || string[*i] == '/')
         {
-            if (ft_process_sign(string, i, j, &error))
+            if (math_process_sign(string, i, j, &error))
                 return 1;
-            ft_calculate_j(string, &j);
+            math_calculate_j(string, &j);
             *i = 0;
         }
         else
             (*i)++;
     }
-    ft_calculate_j(string, &j);
+    math_calculate_j(string, &j);
     if (DEBUG == 1)
         pf_printf("The result after md is %s\n", string);
     return (0);
