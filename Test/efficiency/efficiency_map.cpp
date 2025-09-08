@@ -1,5 +1,5 @@
-#include "../../Template/Template_map.hpp"
-#include "../../Template/swap.hpp"
+#include "../../Template/template_map.hpp"
+#include "../../Template/template_swap.hpp"
 #include "efficiency_utils.hpp"
 
 #include <map>

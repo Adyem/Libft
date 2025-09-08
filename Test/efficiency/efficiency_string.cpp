@@ -1,4 +1,4 @@
-#include "../../CPP_class/string_class.hpp"
+#include "../../CPP_class/cpp_class_string_class.hpp"
 #include "efficiency_utils.hpp"
 
 #include <string>

@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <fcntl.h>
 #include "../CMA/CMA.hpp"
-#include "../CPP_class/nullptr.hpp"
+#include "../CPP_class/cpp_class_nullptr.hpp"
 #include "encryption_basic_encryption.hpp"
 
 static void decoy_unusedFunction1(void)

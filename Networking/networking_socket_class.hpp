@@ -2,7 +2,7 @@
 #define NETWORKING_SOCKET_CLASS_HPP
 
 #include "networking.hpp"
-#include "../Template/vector.hpp"
+#include "../Template/template_vector.hpp"
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>

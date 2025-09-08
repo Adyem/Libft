@@ -3,7 +3,7 @@
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Linux/linux_file.hpp"
-#include "../CPP_class/nullptr.hpp"
+#include "../CPP_class/cpp_class_nullptr.hpp"
 #include "file_open_dir.hpp"
 #include <stdio.h>
 #include <string.h>

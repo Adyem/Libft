@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <type_traits>
 #include "../Libft/libft.hpp"
-#include "../CPP_class/nullptr.hpp"
+#include "../CPP_class/cpp_class_nullptr.hpp"
 
 void    *cma_malloc(std::size_t size) __attribute__ ((warn_unused_result, hot));
 void    cma_free(void* ptr) __attribute__ ((hot));

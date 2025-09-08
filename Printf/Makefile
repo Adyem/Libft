@@ -1,10 +1,10 @@
 TARGET := Printf.a
 DEBUG_TARGET := Printf_debug.a
 
-SRCS := printf.cpp \
-                format.cpp \
-                print_args.cpp \
-                ft_fprintf.cpp
+SRCS := printf_printf.cpp \
+                printf_format.cpp \
+                printf_print_args.cpp \
+                printf_ft_fprintf.cpp
 
 HEADERS := printf.hpp \
            printf_internal.hpp

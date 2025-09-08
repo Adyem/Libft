@@ -1,6 +1,6 @@
-#include "../CPP_class/string_class.hpp"
-#include "../CPP_class/data_buffer.hpp"
-#include "../CPP_class/file.hpp"
+#include "../CPP_class/cpp_class_string_class.hpp"
+#include "../CPP_class/cpp_class_data_buffer.hpp"
+#include "../CPP_class/cpp_class_file.hpp"
 #include <fcntl.h>
 #include <unistd.h>
 #include <cstring>

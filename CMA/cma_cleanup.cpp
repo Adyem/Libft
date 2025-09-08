@@ -1,6 +1,6 @@
 #include "CMA.hpp"
 #include "CMA_internal.hpp"
-#include "../CPP_class/nullptr.hpp"
+#include "../CPP_class/cpp_class_nullptr.hpp"
 #include "../Printf/printf.hpp"
 #include <cstdlib>
 

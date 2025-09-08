@@ -9,7 +9,7 @@
 #include "../Errno/errno.hpp"
 #include "../Printf/printf.hpp"
 #include "../Linux/linux_file.hpp"
-#include "../CPP_class/nullptr.hpp"
+#include "../CPP_class/cpp_class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
 
 void json_add_item_to_group(json_group *group, json_item *item)
