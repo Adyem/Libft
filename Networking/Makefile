@@ -1,16 +1,16 @@
 TARGET := networking.a
 DEBUG_TARGET := networking_debug.a
 
-SRCS := socket_class.cpp \
+SRCS := networking_socket_class.cpp \
         networking.cpp \
-        setup_server.cpp \
-        setup_client.cpp \
-        socket_wrapper_functions.cpp \
-        ssl_wrapper.cpp
+        networking_setup_server.cpp \
+        networking_setup_client.cpp \
+        networking_socket_wrapper_functions.cpp \
+        networking_ssl_wrapper.cpp
 
-HEADERS := socket_class.hpp \
+HEADERS := networking_socket_class.hpp \
            networking.hpp \
-           ssl_wrapper.hpp \
+           networking_ssl_wrapper.hpp \
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

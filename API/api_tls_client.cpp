@@ -1,8 +1,8 @@
 #include "api_tls_client.hpp"
 #include <cstring>
 #include <cstdio>
-#include "../Networking/socket_class.hpp"
-#include "../Networking/ssl_wrapper.hpp"
+#include "../Networking/networking_socket_class.hpp"
+#include "../Networking/networking_ssl_wrapper.hpp"
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Logger/logger.hpp"

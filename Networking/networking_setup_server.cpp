@@ -1,5 +1,5 @@
 #include "networking.hpp"
-#include "socket_class.hpp"
+#include "networking_socket_class.hpp"
 #include "../Errno/errno.hpp"
 #include <cerrno>
 #include <fcntl.h>

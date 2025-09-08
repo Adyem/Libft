@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/nullptr.hpp"
-#include "BasicEncryption.hpp"
+#include "encryption_basic_encryption.hpp"
 
 static void decoy_unusedFunction1(void)
 {

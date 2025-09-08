@@ -8,9 +8,9 @@ DEBUG_OBJDIR := objs_debug
 TARGET := Linux.a
 DEBUG_TARGET := Linux_debug.a
 
-SRCS := system_call_wrappers.cpp \
-        initialize_fd.cpp \
-        write.cpp
+SRCS := linux_system_call_wrappers.cpp \
+        linux_initialize_fd.cpp \
+        linux_write.cpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
