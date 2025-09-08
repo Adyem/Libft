@@ -2,15 +2,15 @@ TARGET := ReadLine.a
 DEBUG_TARGET := ReadLine_debug.a
 
 SRCS := readline.cpp \
-    clear_history.cpp \
-    handle_keypress.cpp \
-    suggestions.cpp \
-    utilities.cpp \
-    tab_completion.cpp \
-    printeble_char.cpp \
-    raw_mode.cpp \
-    initialize.cpp \
-    get_terminal_width.cpp
+    readline_clear_history.cpp \
+    readline_handle_keypress.cpp \
+    readline_suggestions.cpp \
+    readline_utilities.cpp \
+    readline_tab_completion.cpp \
+    readline_printeble_char.cpp \
+    readline_raw_mode.cpp \
+    readline_initialize.cpp \
+    readline_get_terminal_width.cpp
 
 HEADERS := readline.hpp \
            readline_internal.hpp

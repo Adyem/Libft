@@ -28,11 +28,11 @@
       "-std=c++17",
       "-c",
       "-o",
-      "objs/clear_history.o",
-      "clear_history.cpp"
+      "objs/readline_clear_history.o",
+      "readline_clear_history.cpp"
     ],
     "directory": "/home/adyem/DND_tools/Other/Libft/ReadLine",
-    "file": "/home/adyem/DND_tools/Other/Libft/ReadLine/clear_history.cpp",
-    "output": "/home/adyem/DND_tools/Other/Libft/ReadLine/objs/clear_history.o"
+    "file": "/home/adyem/DND_tools/Other/Libft/ReadLine/readline_clear_history.cpp",
+    "output": "/home/adyem/DND_tools/Other/Libft/ReadLine/objs/readline_clear_history.o"
   }
 ]

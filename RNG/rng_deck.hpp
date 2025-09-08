@@ -1,9 +1,9 @@
-#ifndef DECK_HPP
-#define DECK_HPP
+#ifndef RNG_DECK_HPP
+#define RNG_DECK_HPP
 
 #include "../Template/vector.hpp"
 #include "../Template/swap.hpp"
-#include "dice_roll.hpp"
+#include "rng.hpp"
 #include <climits>
 
 template<typename ElementType>

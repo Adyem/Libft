@@ -1,5 +1,5 @@
-#ifndef SSL_WRAPPER_HPP
-#define SSL_WRAPPER_HPP
+#ifndef NETWORKING_SSL_WRAPPER_HPP
+#define NETWORKING_SSL_WRAPPER_HPP
 
 #include <openssl/ssl.h>
 #include <cstddef>

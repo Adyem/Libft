@@ -1,5 +1,5 @@
-#include "RNG.hpp"
-#include "RNG_internal.hpp"
+#include "rng.hpp"
+#include "rng_internal.hpp"
 
 float ft_random_float(void)
 {

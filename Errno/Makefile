@@ -1,9 +1,9 @@
 TARGET := errno.a
 DEBUG_TARGET := errno_debug.a
 
-SRCS :=        strerror.cpp \
-        perror.cpp \
-                exit.cpp
+SRCS :=        errno_strerror.cpp \
+        errno_perror.cpp \
+        errno_exit.cpp
 
 HEADERS := errno.hpp
 
