@@ -43,7 +43,7 @@ int test_efficiency_map_insert_find(void)
 
     print_comparison("map insert/find", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    if (stdm.size() == ftm.getSize())
+    if (stdm.size() == ftm.size())
         return (1);
     return (0);
 }
@@ -112,7 +112,7 @@ int test_efficiency_map_iterate(void)
     prevent_optimization((void*)&sum);
     print_comparison("map iterate", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    if (stdm.size() == ftm.getSize())
+    if (stdm.size() == ftm.size())
         return (1);
     return (0);
 }
@@ -146,7 +146,7 @@ int test_efficiency_map_copy(void)
 
     print_comparison("map copy", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    if (std_copy.size() == ft_copy.getSize())
+    if (std_copy.size() == ft_copy.size())
         return (1);
     return (0);
 }
@@ -180,7 +180,7 @@ int test_efficiency_map_move(void)
 
     print_comparison("map move", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    if (std_moved.size() == ft_moved.getSize())
+    if (std_moved.size() == ft_moved.size())
         return (1);
     return (0);
 }
@@ -227,7 +227,7 @@ int test_efficiency_map_swap(void)
 
     print_comparison("map swap", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
-    if (std_a.size() == ft_a.getSize() && std_b.size() == ft_b.getSize())
+    if (std_a.size() == ft_a.size() && std_b.size() == ft_b.size())
         return (1);
     return (0);
 }

@@ -1,7 +1,8 @@
-#include "libft/Printf/printf.hpp"
-#include "dnd_tools.hpp"
+#include "math_roll.hpp"
+#include "math_internal.hpp"
+#include "../Printf/printf.hpp"
 
-int ft_roll_parse_brackets(char *string)
+int math_roll_parse_brackets(char *string)
 {
     int x = 0;
     int y = 0;
