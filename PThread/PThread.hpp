@@ -2,7 +2,7 @@
 # define PTHREAD_HPP
 
 #include <pthread.h>
-#include "../Template/promise.hpp"
+#include "../Template/Template_promise.hpp"
 #include "../CPP_class/nullptr.hpp"
 #include <utility>
 

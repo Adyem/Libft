@@ -1,7 +1,7 @@
 #ifndef WORLD_HPP
 # define WORLD_HPP
 
-#include "../Template/map.hpp"
+#include "../Template/Template_map.hpp"
 #include "event.hpp"
 #include "../Errno/errno.hpp"
 

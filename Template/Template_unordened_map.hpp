@@ -22,79 +22,81 @@ struct ft_pair
 template <typename Key, typename MappedType>
 class ft_unord_map
 {
-private:
-    ft_pair<Key, MappedType>*  _data;
-    bool*                      _occupied;
-    size_t                     _capacity;
-    size_t                     _size;
-    mutable int                _error;
-    mutable pt_mutex           _mutex;
-
-    void    resize(size_t newCapacity);
-    size_t  findIndex(const Key& key) const;
-    void    set_error(int error) const;
-    size_t  hashKey(const Key& key) const;
-    void    insert_internal(const Key& key, const MappedType& value);
-
-public:
-    class iterator
-    {
     private:
-        ft_pair<Key, MappedType>* _data;
-        bool*                     _occupied;
-        size_t                    _index;
-        size_t                    _capacity;
-        void                      skipUnoccupied();
+        ft_pair<Key, MappedType>*  _data;
+        bool*                      _occupied;
+        size_t                     _capacity;
+        size_t                     _size;
+        mutable int                _error;
+        mutable pt_mutex           _mutex;
+
+        void    resize(size_t newCapacity);
+        size_t  findIndex(const Key& key) const;
+        void    set_error(int error) const;
+        size_t  hashKey(const Key& key) const;
+        void    insert_internal(const Key& key, const MappedType& value);
+
     public:
-        iterator(ft_pair<Key, MappedType>* data, bool* occ, size_t idx, size_t cap);
-        ft_pair<Key, MappedType>& operator*() const;
-        ft_pair<Key, MappedType>* operator->() const;
-        iterator& operator++();
-        bool operator==(const iterator& other) const;
-        bool operator!=(const iterator& other) const;
-    };
+        class iterator
+        {
+            private:
+                ft_pair<Key, MappedType>* _data;
+                bool*                     _occupied;
+                size_t                    _index;
+                size_t                    _capacity;
+                void                      skipUnoccupied();
 
-    class const_iterator
-    {
-    private:
-        const ft_pair<Key, MappedType>* _data;
-        const bool*                     _occupied;
-        size_t                          _index;
-        size_t                          _capacity;
-        void                            skipUnoccupied();
-    public:
-        const_iterator(const ft_pair<Key, MappedType>* data, const bool* occ, size_t idx, size_t cap);
-        const ft_pair<Key, MappedType>& operator*() const;
-        const ft_pair<Key, MappedType>* operator->() const;
-        const_iterator& operator++();
-        bool operator==(const const_iterator& other) const;
-        bool operator!=(const const_iterator& other) const;
-    };
+            public:
+                iterator(ft_pair<Key, MappedType>* data, bool* occ, size_t idx, size_t cap);
+                ft_pair<Key, MappedType>& operator*() const;
+                ft_pair<Key, MappedType>* operator->() const;
+                iterator& operator++();
+                bool operator==(const iterator& other) const;
+                bool operator!=(const iterator& other) const;
+        };
 
-    ft_unord_map(size_t initialCapacity = 10);
-    ft_unord_map(const ft_unord_map& other);
-    ft_unord_map& operator=(const ft_unord_map& other);
-    ft_unord_map(ft_unord_map&& other) noexcept;
-    ft_unord_map& operator=(ft_unord_map&& other) noexcept;
-    ~ft_unord_map();
+        class const_iterator
+        {
+            private:
+                const ft_pair<Key, MappedType>* _data;
+                const bool*                     _occupied;
+                size_t                          _index;
+                size_t                          _capacity;
+                void                            skipUnoccupied();
 
-    void           insert(const Key& key, const MappedType& value);
-    iterator       find(const Key& key);
-    const_iterator find(const Key& key) const;
-    void           remove(const Key& key);
-    bool           empty() const;
-    void           clear();
-    size_t         getSize() const;
-    size_t         getCapacity() const;
-    int            get_error() const;
-    const char*    get_error_str() const;
-    iterator       begin();
-    iterator       end();
-    const_iterator begin() const;
-    const_iterator end() const;
-    MappedType&    at(const Key& key);
-    const MappedType& at(const Key& key) const;
-    MappedType&    operator[](const Key& key);
+            public:
+                const_iterator(const ft_pair<Key, MappedType>* data, const bool* occ, size_t idx, size_t cap);
+                const ft_pair<Key, MappedType>& operator*() const;
+                const ft_pair<Key, MappedType>* operator->() const;
+                const_iterator& operator++();
+                bool operator==(const const_iterator& other) const;
+                bool operator!=(const const_iterator& other) const;
+        };
+
+        ft_unord_map(size_t initialCapacity = 10);
+        ft_unord_map(const ft_unord_map& other);
+        ft_unord_map& operator=(const ft_unord_map& other);
+        ft_unord_map(ft_unord_map&& other) noexcept;
+        ft_unord_map& operator=(ft_unord_map&& other) noexcept;
+        ~ft_unord_map();
+
+        void           insert(const Key& key, const MappedType& value);
+        iterator       find(const Key& key);
+        const_iterator find(const Key& key) const;
+        void           remove(const Key& key);
+        bool           empty() const;
+        void           clear();
+        size_t         getSize() const;
+        size_t         getCapacity() const;
+        int            get_error() const;
+        const char*    get_error_str() const;
+        iterator       begin();
+        iterator       end();
+        const_iterator begin() const;
+        const_iterator end() const;
+        MappedType&    at(const Key& key);
+        const MappedType& at(const Key& key) const;
+        MappedType&    operator[](const Key& key);
 };
 
 template <typename Key, typename MappedType>
