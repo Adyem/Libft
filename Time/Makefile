@@ -6,10 +6,10 @@ SRCS := time_now.cpp \
         time_local.cpp \
         time_sleep.cpp \
         time_sleep_ms.cpp \
-        timer.cpp
+        time_timer.cpp
 
 HEADERS := time.hpp \
-           timer.hpp
+           time_timer.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

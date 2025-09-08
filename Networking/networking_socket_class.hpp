@@ -1,5 +1,5 @@
-#ifndef FT_SOCKET_H
-#define FT_SOCKET_H
+#ifndef NETWORKING_SOCKET_CLASS_HPP
+#define NETWORKING_SOCKET_CLASS_HPP
 
 #include "networking.hpp"
 #include "../Template/vector.hpp"

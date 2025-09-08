@@ -1,5 +1,5 @@
-#ifndef OPEN_DIR_HPP
-# define OPEN_DIR_HPP
+#ifndef FILE_OPEN_DIR_HPP
+# define FILE_OPEN_DIR_HPP
 
 #include <cstddef>
 #include <unistd.h>

@@ -5,7 +5,7 @@ SRCS := file_opendir.cpp \
         file_check_directory.cpp \
         file_mkdir.cpp
 
-HEADERS := open_dir.hpp
+HEADERS := file_open_dir.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

@@ -10,12 +10,12 @@
       "-std=c++17",
       "-c",
       "-o",
-      "objs/strerror.o",
-      "strerror.cpp"
+      "objs/errno_strerror.o",
+      "errno_strerror.cpp"
     ],
     "directory": "/workspace/Libft/Errno",
-    "file": "/workspace/Libft/Errno/strerror.cpp",
-    "output": "/workspace/Libft/Errno/objs/strerror.o"
+    "file": "/workspace/Libft/Errno/errno_strerror.cpp",
+    "output": "/workspace/Libft/Errno/objs/errno_strerror.o"
   },
   {
     "arguments": [
@@ -28,12 +28,12 @@
       "-std=c++17",
       "-c",
       "-o",
-      "objs/perror.o",
-      "perror.cpp"
+      "objs/errno_perror.o",
+      "errno_perror.cpp"
     ],
     "directory": "/workspace/Libft/Errno",
-    "file": "/workspace/Libft/Errno/perror.cpp",
-    "output": "/workspace/Libft/Errno/objs/perror.o"
+    "file": "/workspace/Libft/Errno/errno_perror.cpp",
+    "output": "/workspace/Libft/Errno/objs/errno_perror.o"
   },
   {
     "arguments": [
@@ -46,11 +46,11 @@
       "-std=c++17",
       "-c",
       "-o",
-      "objs/exit.o",
-      "exit.cpp"
+      "objs/errno_exit.o",
+      "errno_exit.cpp"
     ],
     "directory": "/workspace/Libft/Errno",
-    "file": "/workspace/Libft/Errno/exit.cpp",
-    "output": "/workspace/Libft/Errno/objs/exit.o"
+    "file": "/workspace/Libft/Errno/errno_exit.cpp",
+    "output": "/workspace/Libft/Errno/objs/errno_exit.o"
   }
 ]

@@ -1,6 +1,6 @@
 #include <climits>
-#include "RNG.hpp"
-#include "RNG_internal.hpp"
+#include "rng.hpp"
+#include "rng_internal.hpp"
 #include "../Printf/printf.hpp"
 
 bool g_srand_init = false;

@@ -1,4 +1,4 @@
-#include "RNG.hpp"
+#include "rng.hpp"
 #include <cstdint>
 #include <random>
 

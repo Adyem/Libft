@@ -10,7 +10,7 @@
 # include <netinet/in.h>
 # include <arpa/inet.h>
 #endif
-#include "socket_class.hpp"
+#include "networking_socket_class.hpp"
 
 #ifdef _WIN32
 static inline int bind_platform(int sockfd, const struct sockaddr *addr, socklen_t len)

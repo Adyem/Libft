@@ -6,7 +6,7 @@
 #include "../CMA/CMA.hpp"
 #include "../Linux/linux_file.hpp"
 #include "../CPP_class/nullptr.hpp"
-#include "BasicEncryption.hpp"
+#include "encryption_basic_encryption.hpp"
 
 static void be_encrypt(char *data, size_t data_length, const char *key)
 {

@@ -271,7 +271,7 @@ namespace ft {
 
 ### Networking
 
-`Networking/networking.hpp` and `socket_class.hpp` implement a small
+`Networking/networking.hpp` and `networking_socket_class.hpp` implement a small
 socket wrapper.
 
 ```
@@ -425,7 +425,7 @@ float ft_random_float(void);
 int   ft_random_seed(const char *seed_str = ft_nullptr);
 ```
 
-`RNG/deck.hpp` provides a simple deck container:
+`RNG/rng_deck.hpp` provides a simple deck container:
 
 ```
 ElementType *popRandomElement();
@@ -443,7 +443,7 @@ ElementType *popRandomLoot();
 ```
 
 #### Encryption
-`BasicEncryption.hpp` exposes minimal helpers:
+`encryption_basic_encryption.hpp` exposes minimal helpers:
 
 ```
 int         be_saveGame(const char *filename, const char *data, const char *key);
@@ -481,7 +481,7 @@ json_group   *find_group(const char *name) const noexcept;
 ```
 
 #### File
-Cross-platform file and directory utilities (`File/open_dir.hpp`):
+Cross-platform file and directory utilities (`File/file_open_dir.hpp`):
 
 ```
 file_dir   *file_opendir(const char *directory_path);
@@ -524,7 +524,7 @@ void    time_sleep(unsigned int seconds);
 void    time_sleep_ms(unsigned int milliseconds);
 ```
 
-`timer.hpp` defines a small timer class:
+`time_timer.hpp` defines a small timer class:
 
 ```
 time_timer();

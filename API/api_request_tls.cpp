@@ -1,6 +1,6 @@
 #include "api.hpp"
-#include "../Networking/socket_class.hpp"
-#include "../Networking/ssl_wrapper.hpp"
+#include "../Networking/networking_socket_class.hpp"
+#include "../Networking/networking_ssl_wrapper.hpp"
 #include "../CPP_class/string_class.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"

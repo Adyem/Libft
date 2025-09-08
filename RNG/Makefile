@@ -1,9 +1,9 @@
 TARGET := RNG.a
 DEBUG_TARGET := RNG_debug.a
 
-SRCS := dice_roll.cpp random_int.cpp random_float.cpp random_seed.cpp
+SRCS := rng_dice_roll.cpp rng_random_int.cpp rng_random_float.cpp rng_random_seed.cpp
 
-HEADERS := RNG.hpp
+HEADERS := rng.hpp rng_internal.hpp rng_deck.hpp rng_loot_table.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

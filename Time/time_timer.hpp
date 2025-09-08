@@ -1,5 +1,5 @@
-#ifndef TIMER_HPP
-# define TIMER_HPP
+#ifndef TIME_TIMER_HPP
+# define TIME_TIMER_HPP
 
 #include <chrono>
 
