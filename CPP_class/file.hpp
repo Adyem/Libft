@@ -14,7 +14,7 @@ class ft_file
 {
     private:
         int _fd;
-        int _error_code;
+        mutable int _error_code;
 
         void        set_error(int error_code);
 
