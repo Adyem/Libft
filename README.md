@@ -10,6 +10,8 @@ This document briefly lists the main headers and the interfaces they expose. The
 summaries below only outline the available functions and classes. See the header
 files for detailed information.
 
+All classes report errors through a mutable `_error_code` member with `get_error` and `get_error_str` accessors so `const` methods can update the error state.
+
 ## Building
 
 ```bash
@@ -526,6 +528,19 @@ char       *cnfg_parse_flags(int argument_count, char **argument_values);
 void       cnfg_free(cnfg_config *config);
 ```
 
+`config_flag_parser.hpp` wraps flag parsing in a class:
+
+```
+cnfg_flag_parser parser(argument_count, argument_values);
+parser.has_short_flag('a');
+parser.has_long_flag("help");
+parser.get_short_flag_count();
+parser.get_long_flag_count();
+parser.get_total_flag_count();
+parser.get_error();
+parser.get_error_str();
+```
+
 #### Time
 `Time/time.hpp` exposes simple time helpers:
 
@@ -547,6 +562,18 @@ long    update();
 long    add_time(long amount_ms);
 long    remove_time(long amount_ms);
 void    sleep_remaining();
+```
+
+`time_fps.hpp` provides a frame rate limiter with an adjustable target frame rate (minimum 24 FPS):
+
+```
+time_fps(long frames_per_second);
+~time_fps();
+long    get_frames_per_second();
+int     set_frames_per_second(long frames_per_second);
+void    sleep_to_next_frame();
+int     get_error() const;
+const char  *get_error_str() const;
 ```
 
 #### ReadLine

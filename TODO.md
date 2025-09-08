@@ -10,7 +10,6 @@
     - Current time in ms, ns, epoch
     - Time formatting and parsing
     - Timers, countdowns, and sleep wrappers
-    - FPS limiter for game loops
 
 - Compression Module
     - ft_compress and ft_decompress
@@ -22,11 +21,6 @@
     - Image buffers storing width, height, RGBA
     - Drawing primitives: blit, fill, resize, grayscale
     - Audio buffer loading
-
-- CLI / Argument Parser Module
-    - Define options like --file or -v
-    - Auto-generate usage help text
-    - Store parsed options in a struct
 
 - Math Expression / Scripting Module
     - Evaluate expressions like "2 + 3 * (5 - 1)"
