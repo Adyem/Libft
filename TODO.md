@@ -23,7 +23,6 @@
     - Audio buffer loading
 
 - Math Expression / Scripting Module
-    - Evaluate expressions like "2 + 3 * (5 - 1)"
     - Replace variables (x = 10; "x * 2" = 20)
     - Extend into config scripting
 
