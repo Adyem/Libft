@@ -2,7 +2,7 @@ TARGET := GetNextLine.a
 DEBUG_TARGET := GetNextLine_debug.a
 
 SRCS := get_next_line.cpp \
-        read_file.cpp
+        get_next_line_read_file.cpp
 
 HEADERS := get_next_line.hpp
 

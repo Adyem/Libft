@@ -1,8 +1,8 @@
 #ifndef RNG_LOOT_TABLE_HPP
 #define RNG_LOOT_TABLE_HPP
 
-#include "../Template/vector.hpp"
-#include "../CPP_class/nullptr.hpp"
+#include "../Template/template_vector.hpp"
+#include "../CPP_class/cpp_class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "rng.hpp"
 #include <climits>

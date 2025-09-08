@@ -1,5 +1,5 @@
-#include "../../PThread/mutex.hpp"
-#include "../../PThread/PThread.hpp"
+#include "../../PThread/pthread_mutex.hpp"
+#include "../../PThread/pthread.hpp"
 #include "efficiency_utils.hpp"
 
 #include <mutex>

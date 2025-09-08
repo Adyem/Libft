@@ -1,5 +1,5 @@
 #include "CMA.hpp"
-#include "../CPP_class/nullptr.hpp"
+#include "../CPP_class/cpp_class_nullptr.hpp"
 
 static int    calculate_length(int number, int base)
 {

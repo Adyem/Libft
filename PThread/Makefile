@@ -1,20 +1,24 @@
 TARGET := PThread.a
 DEBUG_TARGET := PThread_debug.a
 
-SRCS := lock_mutex.cpp \
-        unlock_mutex.cpp \
-        try_lock_mutex.cpp \
-        thread_join.cpp \
-        thread_create.cpp \
-        thread_detach.cpp \
-        thread_cancel.cpp \
-        thread_sleep.cpp \
-        thread_yield.cpp \
-        thread_self.cpp \
-        thread_equal.cpp \
-        mutex.cpp
+SRCS := pthread_lock_mutex.cpp \
+        pthread_unlock_mutex.cpp \
+        pthread_try_lock_mutex.cpp \
+        pthread_thread_join.cpp \
+        pthread_thread_create.cpp \
+        pthread_thread_detach.cpp \
+        pthread_thread_cancel.cpp \
+        pthread_thread_sleep.cpp \
+        pthread_thread_yield.cpp \
+        pthread_thread_self.cpp \
+        pthread_thread_equal.cpp \
+        pthread_mutex.cpp \
+        pthread_atomic_load.cpp \
+        pthread_atomic_store.cpp \
+        pthread_atomic_fetch_add.cpp \
+        pthread_atomic_compare_exchange.cpp
 
-HEADERS := PThread.hpp
+HEADERS := pthread.hpp pthread_mutex.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
