@@ -2,9 +2,10 @@ TARGET := config.a
 DEBUG_TARGET := config_debug.a
 
 SRCS :=         config_parse.cpp \
-                config_flags.cpp
+                config_flags.cpp \
+                config_flag_parser.cpp
 
-HEADERS := config.hpp
+HEADERS := config.hpp config_flag_parser.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
