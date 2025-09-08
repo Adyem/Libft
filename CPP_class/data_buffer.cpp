@@ -41,6 +41,21 @@ bool DataBuffer::seek(size_t pos) noexcept
     return (false);
 }
 
+DataBuffer::operator bool() const noexcept
+{
+    return (this->_ok);
+}
+
+bool DataBuffer::good() const noexcept
+{
+    return (this->_ok);
+}
+
+bool DataBuffer::bad() const noexcept
+{
+    return (!this->_ok);
+}
+
 DataBuffer& DataBuffer::operator<<(size_t len)
 {
     auto ptr = reinterpret_cast<const uint8_t*>(&len);
