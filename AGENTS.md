@@ -15,4 +15,6 @@ other classes must split declarations into .hpp files and definitions into .cpp 
 Do not define member function bodies inside the class declaration; place all definitions outside the class.
 Every class must declare and define a constructor and destructor, even if they simply contain return ;.
 
+Any .hpp or .cpp file inside a submodule must have its filename prefixed with that submodule's name.
+
 Always update README.md to reflect any code changes.
