@@ -13,41 +13,41 @@
 template <typename Key, typename MappedType>
 class ft_map
 {
-private:
-    Pair<Key, MappedType>*  _data;
-    size_t                  _capacity;
-    size_t                  _size;
-    mutable int             _error;
-    mutable pt_mutex        _mutex;
+    private:
+        Pair<Key, MappedType>*  _data;
+        size_t                  _capacity;
+        size_t                  _size;
+        mutable int             _error;
+        mutable pt_mutex        _mutex;
 
-    void    resize(size_t new_capacity);
-    size_t  find_index(const Key& key) const;
-    void    set_error(int error) const;
+        void    resize(size_t new_capacity);
+        size_t  find_index(const Key& key) const;
+        void    set_error(int error) const;
 
-public:
-    ft_map(size_t initial_capacity = 10);
-    ft_map(const ft_map& other);
-    ft_map& operator=(const ft_map& other);
-    ft_map(ft_map&& other) noexcept;
-    ft_map& operator=(ft_map&& other) noexcept;
-    ~ft_map();
+    public:
+        ft_map(size_t initial_capacity = 10);
+        ft_map(const ft_map& other);
+        ft_map& operator=(const ft_map& other);
+        ft_map(ft_map&& other) noexcept;
+        ft_map& operator=(ft_map&& other) noexcept;
+        ~ft_map();
 
-    void        insert(const Key& key, const MappedType& value);
-    Pair<Key, MappedType> *find(const Key& key);
-    void        remove(const Key& key);
-    bool        empty() const;
-    void        clear();
-    size_t      size() const;
-    size_t      capacity() const;
-    int         get_error() const;
-    const char* get_error_str() const;
+        void        insert(const Key& key, const MappedType& value);
+        Pair<Key, MappedType> *find(const Key& key);
+        void        remove(const Key& key);
+        bool        empty() const;
+        void        clear();
+        size_t      size() const;
+        size_t      capacity() const;
+        int         get_error() const;
+        const char* get_error_str() const;
 
-    Pair<Key, MappedType>* end();
-    MappedType &at(const Key& key);
+        Pair<Key, MappedType>* end();
+        MappedType &at(const Key& key);
 
-    const Pair<Key, MappedType> *end() const;
-    const MappedType &at(const Key& key) const;
-    const Pair<Key, MappedType> *find(const Key& key) const;
+        const Pair<Key, MappedType> *end() const;
+        const MappedType &at(const Key& key) const;
+        const Pair<Key, MappedType> *find(const Key& key) const;
 };
 
 template <typename Key, typename MappedType>
@@ -197,6 +197,7 @@ ft_map<Key, MappedType>::~ft_map()
         }
         cma_free(this->_data);
     }
+    return ;
 }
 
 template <typename Key, typename MappedType>

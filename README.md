@@ -378,7 +378,7 @@ components include:
 
 - Containers: `ft_vector`, `ft_deque`, `ft_stack`, `ft_queue`,
   `ft_priority_queue`, `ft_set`, `ft_map`, `ft_unordened_map`,
-  `ft_circular_buffer`, `ft_graph` and `ft_matrix`.
+  `ft_trie`, `ft_circular_buffer`, `ft_graph` and `ft_matrix`.
 - Utility types: `ft_pair`, `ft_tuple`, `ft_optional`, `ft_variant` and
   `ft_bitset`.
 - Smart pointers: `ft_shared_ptr` and `ft_unique_ptr`.
@@ -388,9 +388,22 @@ components include:
 
 Refer to the header files for the full interface of these templates.
 
+#### `ft_trie`
+
+`Template/Template_trie.hpp` implements a basic trie for storing values
+associated with string keys.
+
+```
+ft_trie();
+~ft_trie();
+int insert(const char *key, ValueType *value_pointer, int unset_value = 0);
+const node_value *search(const char *key) const;
+int get_error() const;
+```
+
 #### `ft_promise`
 
-`Template/promise.hpp` implements a minimal promise type for passing values
+`Template/Template_promise.hpp` implements a minimal promise type for passing values
 between threads. A promise stores a value set by a worker thread and reports
 errors through the shared `ft_errno` system.
 

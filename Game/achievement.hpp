@@ -1,7 +1,7 @@
 #ifndef ACHIEVEMENT_HPP
 # define ACHIEVEMENT_HPP
 
-#include "../Template/map.hpp"
+#include "../Template/Template_map.hpp"
 #include "../Errno/errno.hpp"
 
 struct ft_goal
