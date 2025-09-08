@@ -5,7 +5,7 @@
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Linux/linux_file.hpp"
-#include "../CPP_class/nullptr.hpp"
+#include "../CPP_class/cpp_class_nullptr.hpp"
 #include "encryption_basic_encryption.hpp"
 
 static void be_encrypt(char *data, size_t data_length, const char *key)

@@ -1,6 +1,6 @@
 #include "../HTML/html_parser.hpp"
 #include "../CMA/CMA.hpp"
-#include "../CPP_class/nullptr.hpp"
+#include "../CPP_class/cpp_class_nullptr.hpp"
 #include <cstring>
 
 int test_html_create_node(void)

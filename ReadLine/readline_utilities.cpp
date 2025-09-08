@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "../Linux/linux_file.hpp"
-#include "../CPP_class/nullptr.hpp"
+#include "../CPP_class/cpp_class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Printf/printf.hpp"
 #include "../Libft/libft.hpp"

@@ -6,7 +6,7 @@
 #include <pthread.h>
 #include "CMA.hpp"
 #include "CMA_internal.hpp"
-#include "../PThread/mutex.hpp"
+#include "../PThread/pthread_mutex.hpp"
 #include "../Printf/printf.hpp"
 #include "../Logger/logger.hpp"
 

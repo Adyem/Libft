@@ -1,4 +1,4 @@
-#include "../Template/queue.hpp"
+#include "../Template/template_queue.hpp"
 #include "../Errno/errno.hpp"
 
 int test_ft_queue_class_basic(void)

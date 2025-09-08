@@ -2,7 +2,7 @@
 #define API_WRAPPER_HPP
 
 #include "../JSon/json.hpp"
-#include "../CPP_class/nullptr.hpp"
+#include "../CPP_class/cpp_class_nullptr.hpp"
 #include <cstdint>
 #include <cstddef>
 

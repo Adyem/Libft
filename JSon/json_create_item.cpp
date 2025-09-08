@@ -7,7 +7,7 @@
 #include <new>
 #include "json.hpp"
 #include "../Errno/errno.hpp"
-#include "../CPP_class/nullptr.hpp"
+#include "../CPP_class/cpp_class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
 
 json_item* json_create_item(const char *key, const char *value)

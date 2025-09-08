@@ -1,7 +1,7 @@
 #ifndef API_PROMISE_HPP
 #define API_PROMISE_HPP
 
-#include "../Template/Template_promise.hpp"
+#include "../Template/template_promise.hpp"
 #include "api.hpp"
 
 class api_promise : public ft_promise<json_group*>

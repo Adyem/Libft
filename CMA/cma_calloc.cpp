@@ -1,6 +1,6 @@
 #include <cstddef>
 #include <stdbool.h>
-#include "../CPP_class/nullptr.hpp"
+#include "../CPP_class/cpp_class_nullptr.hpp"
 #include "CMA.hpp"
 
 void    *cma_calloc(std::size_t count, std::size_t size)
