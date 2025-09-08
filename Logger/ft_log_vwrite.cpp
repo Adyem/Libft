@@ -24,6 +24,9 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
     char final_buf[1200];
     int len = std::snprintf(final_buf, sizeof(final_buf), "[%s] [%s] %s\n", time_buf, ft_level_to_str(level), msg_buf);
     if (len > 0)
-        write(g_fd, final_buf, static_cast<size_t>(len));
+    {
+        ssize_t write_result = write(g_fd, final_buf, static_cast<size_t>(len));
+        (void)write_result;
+    }
     ft_log_rotate();
 }

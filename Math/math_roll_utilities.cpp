@@ -1,11 +1,12 @@
-#include "dnd_tools.hpp"
+#include "math_roll.hpp"
+#include "math_internal.hpp"
 #include <climits>
 #include <cstdlib>
-#include "libft/CMA/CMA.hpp"
-#include "libft/Libft/libft.hpp"
-#include "libft/Printf/printf.hpp"
+#include "../CMA/CMA.hpp"
+#include "../Libft/libft.hpp"
+#include "../Printf/printf.hpp"
 
-static int ft_check_value_roll(const char *str)
+static int math_check_value_roll(const char *str)
 {
     int                    sign;
     unsigned long long    result;
@@ -36,7 +37,7 @@ static int ft_check_value_roll(const char *str)
     return (0);
 }
 
-int    ft_check_string_number(char *string)
+int    math_check_string_number(char *string)
 {
     int    i;
 
@@ -51,7 +52,7 @@ int    ft_check_string_number(char *string)
     return (1);
 }
 
-void    ft_free_parse(char **to_parse)
+void    math_free_parse(char **to_parse)
 {
     int    index = 0;
 
@@ -67,7 +68,7 @@ void    ft_free_parse(char **to_parse)
     return ;
 }
 
-int ft_roll_convert_previous(char *string, int *i, int *error)
+int math_roll_convert_previous(char *string, int *i, int *error)
 {
     int result;
     int    check;
@@ -78,7 +79,7 @@ int ft_roll_convert_previous(char *string, int *i, int *error)
         (*i)--;
     if (string[*i] < '0' || string[*i] > '9')
         (*i)++;
-    check = ft_check_value_roll(&string[*i]);
+    check = math_check_value_roll(&string[*i]);
     if (check != 0)
     {
         *error = 1;
@@ -91,12 +92,12 @@ int ft_roll_convert_previous(char *string, int *i, int *error)
     return (result);
 }
 
-int    ft_roll_convert_next(char *string, int i, int *error)
+int    math_roll_convert_next(char *string, int i, int *error)
 {
     int    result;
     int    check;
 
-    check = ft_check_value_roll(&string[i]);
+    check = math_check_value_roll(&string[i]);
     if (check != 0)
     {
         *error = 1;
@@ -109,7 +110,7 @@ int    ft_roll_convert_next(char *string, int i, int *error)
     return (result);
 }
 
-int    ft_roll_itoa(int result, int *i, char *string)
+int    math_roll_itoa(int result, int *i, char *string)
 {
     char    *temp;
     int        y;

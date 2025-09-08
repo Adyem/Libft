@@ -19,9 +19,19 @@ SRCS := math_abs.cpp \
         math_sqrt.cpp \
         math_exp.cpp \
         math_deg2rad.cpp \
-        math_rad2deg.cpp
+        math_rad2deg.cpp \
+        math_roll.cpp \
+        math_eval.cpp \
+        math_roll_utilities.cpp \
+        math_roll_parse_brackets.cpp \
+        math_roll_parse_dice.cpp \
+        math_roll_parse_md.cpp \
+        math_roll_parse_pm.cpp \
+        math_roll_parse_utils.cpp \
+        math_roll_validate_string.cpp \
+        math_roll_validate_utils.cpp
 
-HEADERS := math.hpp
+HEADERS := math.hpp math_roll.hpp math_internal.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
