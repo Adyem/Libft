@@ -19,7 +19,8 @@ SRCS := cma_calloc.cpp \
         cma_free_double.cpp \
         cma_utils.cpp \
         cma_cleanup.cpp \
-        cma_global_overloads.cpp
+        cma_global_overloads.cpp \
+        cma_set_alloc_limit.cpp
 
 HEADERS := CMA.hpp \
            cma_internal.hpp

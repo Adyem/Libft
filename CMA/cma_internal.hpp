@@ -33,6 +33,7 @@
 #endif
 
 extern pt_mutex g_malloc_mutex;
+extern std::size_t    g_cma_alloc_limit;
 
 struct Block
 {
