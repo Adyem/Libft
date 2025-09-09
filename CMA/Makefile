@@ -22,7 +22,7 @@ SRCS := cma_calloc.cpp \
         cma_global_overloads.cpp
 
 HEADERS := CMA.hpp \
-           CMA_internal.hpp
+           cma_internal.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

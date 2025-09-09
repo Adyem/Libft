@@ -1,6 +1,6 @@
 #include "CMA.hpp"
 #include "../Libft/libft.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 
 static char    *allocate_new_string(const char *string_1, const char *string_2)
 {

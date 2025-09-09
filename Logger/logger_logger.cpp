@@ -1,5 +1,5 @@
 #include "logger_internal.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 
 ft_logger *g_logger = ft_nullptr;
 

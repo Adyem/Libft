@@ -1,7 +1,7 @@
 #ifndef MATH_INTERNAL_HPP
 # define MATH_INTERNAL_HPP
 
-#include "math_roll.hpp"
+#include "roll.hpp"
 
 int     math_roll_check_number_next(char *string, int index);
 int     math_roll_check_number_previous(char *string, int index);

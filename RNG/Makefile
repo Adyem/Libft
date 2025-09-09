@@ -3,7 +3,7 @@ DEBUG_TARGET := RNG_debug.a
 
 SRCS := rng_dice_roll.cpp rng_random_int.cpp rng_random_float.cpp rng_random_seed.cpp
 
-HEADERS := rng.hpp rng_internal.hpp rng_deck.hpp rng_loot_table.hpp
+HEADERS := rng.hpp rng_internal.hpp deck.hpp loot_table.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

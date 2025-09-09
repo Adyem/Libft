@@ -7,10 +7,10 @@ SRCS :=  cpp_class_string_constructors.cpp \
          cpp_class_file.cpp \
          cpp_class_data_buffer.cpp
 
-HEADERS := cpp_class_string_class.hpp \
-           cpp_class_nullptr.hpp \
-           cpp_class_file.hpp \
-           cpp_class_data_buffer.hpp
+HEADERS := class_string_class.hpp \
+           class_nullptr.hpp \
+           class_file.hpp \
+           class_data_buffer.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

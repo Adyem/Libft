@@ -1,7 +1,7 @@
 #include "../Libft/libft.hpp"
 #include "../Math/math.hpp"
-#include "../Libft/libft_limits.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "../Libft/limits.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include <cstring>
 #include <string>
 

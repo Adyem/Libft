@@ -1,5 +1,5 @@
-#include "linux_file.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "file.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include <cstdio>
 #include <cerrno>
 #include <ctime>

@@ -3,7 +3,7 @@ DEBUG_TARGET := Windows_debug.a
 
 SRCS := windows_file.cpp
 
-HEADERS := windows_file.hpp
+HEADERS := file.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

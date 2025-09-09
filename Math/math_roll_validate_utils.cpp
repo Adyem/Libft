@@ -1,4 +1,4 @@
-#include "math_roll.hpp"
+#include "roll.hpp"
 #include "math_internal.hpp"
 
 int    math_roll_check_number_next(char *string, int i)

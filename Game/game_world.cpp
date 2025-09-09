@@ -1,4 +1,4 @@
-#include "game_world.hpp"
+#include "world.hpp"
 
 ft_world::ft_world() noexcept
     : _events(), _error(ER_SUCCESS)

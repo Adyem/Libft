@@ -1,8 +1,8 @@
-#include "cpp_class_string_class.hpp"
+#include "class_string_class.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
-#include "cpp_class_nullptr.hpp"
+#include "class_nullptr.hpp"
 
 ft_string::ft_string() noexcept 
     : _data(ft_nullptr), _length(0), _capacity(0), _error_code(0)

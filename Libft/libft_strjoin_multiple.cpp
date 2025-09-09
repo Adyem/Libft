@@ -1,6 +1,6 @@
 #include "libft.hpp"
 #include "../CMA/CMA.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include <stdarg.h>
 
 char *ft_strjoin_multiple(int count, ...)

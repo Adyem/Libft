@@ -1,5 +1,5 @@
-#include "file_open_dir.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "open_dir.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 
 #ifdef _WIN32
 # include <windows.h>

@@ -1,4 +1,4 @@
-#include "game_inventory.hpp"
+#include "inventory.hpp"
 
 ft_inventory::ft_inventory(size_t capacity) noexcept
     : _items(), _capacity(capacity), _next_slot(0), _error(ER_SUCCESS)

@@ -1,4 +1,4 @@
-#include "pthread_mutex.hpp"
+#include "mutex.hpp"
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
 

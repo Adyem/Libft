@@ -1,5 +1,5 @@
 #include "time.hpp"
-#include "time_fps.hpp"
+#include "fps.hpp"
 #include "../Errno/errno.hpp"
 #include <chrono>
 

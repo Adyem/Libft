@@ -2,7 +2,7 @@
 #ifndef ft_move
 # define ft_move std::move
 #endif
-#include "../Template/template_promise.hpp"
+#include "../Template/promise.hpp"
 #include "../PThread/pthread.hpp"
 #include "../Errno/errno.hpp"
 #include <unistd.h>

@@ -1,9 +1,9 @@
-#include "cpp_class_file.hpp"
+#include "class_file.hpp"
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
-#include "../Printf/printf_internal.hpp"
+#include "../Printf/internal.hpp"
 #include "../Printf/printf.hpp"
-#include "cpp_class_nullptr.hpp"
+#include "class_nullptr.hpp"
 #include <cerrno>
 #include <cstdarg>
 #include <unistd.h>

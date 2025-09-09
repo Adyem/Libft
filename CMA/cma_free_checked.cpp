@@ -1,8 +1,8 @@
 #include "CMA.hpp"
-#include "CMA_internal.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "cma_internal.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../PThread/pthread_mutex.hpp"
+#include "../PThread/mutex.hpp"
 #include <cstdlib>
 
 int cma_checked_free(void* ptr)

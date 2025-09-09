@@ -1,5 +1,5 @@
 #include "../GetNextLine/get_next_line.hpp"
-#include "../CPP_class/cpp_class_file.hpp"
+#include "../CPP_class/class_file.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
 #include <fcntl.h>

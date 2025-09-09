@@ -1,5 +1,5 @@
 #include "libft.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include <cstdint>
 
 void *ft_memset(void *destination, int value, size_t number_of_bytes)
