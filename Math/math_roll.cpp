@@ -1,9 +1,9 @@
-#include "math_roll.hpp"
+#include "roll.hpp"
 #include "math_internal.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Printf/printf.hpp"
 #include "../GetNextLine/get_next_line.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
 

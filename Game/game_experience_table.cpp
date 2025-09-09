@@ -1,6 +1,6 @@
-#include "game_experience_table.hpp"
+#include "experience_table.hpp"
 #include "../CMA/CMA.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 
 ft_experience_table::ft_experience_table(int count) noexcept

@@ -1,6 +1,6 @@
 #include <stddef.h>
 #include <stdbool.h>
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include "CMA.hpp"
 
 char    *cma_strdup(const char *string)

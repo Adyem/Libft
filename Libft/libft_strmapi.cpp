@@ -1,5 +1,5 @@
 #include "libft.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
 
 char *ft_strmapi(const char *string, char (*function)(unsigned int, char))

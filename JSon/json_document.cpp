@@ -1,5 +1,5 @@
-#include "json_document.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "document.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 
 json_document::json_document() noexcept
     : _groups(ft_nullptr)

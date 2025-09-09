@@ -1,4 +1,4 @@
-#include "config_flag_parser.hpp"
+#include "flag_parser.hpp"
 #include "config.hpp"
 #include "../Errno/errno.hpp"
 #include "../CMA/CMA.hpp"

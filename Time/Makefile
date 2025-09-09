@@ -10,8 +10,8 @@ SRCS := time_now.cpp \
         time_timer.cpp
 
 HEADERS := time.hpp \
-           time_fps.hpp \
-           time_timer.hpp
+           fps.hpp \
+           timer.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

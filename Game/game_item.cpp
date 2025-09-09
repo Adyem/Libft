@@ -1,4 +1,4 @@
-#include "game_item.hpp"
+#include "item.hpp"
 
 ft_item::ft_item() noexcept
     : _max_stack(0), _current_stack(0), _item_id(0),

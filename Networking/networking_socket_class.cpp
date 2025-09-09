@@ -1,4 +1,4 @@
-#include "networking_socket_class.hpp"
+#include "socket_class.hpp"
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
 #include <cstring>

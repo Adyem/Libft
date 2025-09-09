@@ -1,4 +1,4 @@
-#include "game_buff.hpp"
+#include "buff.hpp"
 
 ft_buff::ft_buff() noexcept
     : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0)

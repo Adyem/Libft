@@ -1,4 +1,4 @@
-#include "../Networking/networking_socket_class.hpp"
+#include "../Networking/socket_class.hpp"
 #include "../Networking/networking.hpp"
 #include "../Libft/libft.hpp"
 #include <cstring>

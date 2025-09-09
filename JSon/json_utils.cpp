@@ -1,6 +1,6 @@
 #include <cstring>
 #include "json.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"

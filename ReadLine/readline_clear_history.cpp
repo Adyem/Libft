@@ -1,6 +1,6 @@
 #include "readline.hpp"
 #include "readline_internal.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
 
 void rl_clear_history()

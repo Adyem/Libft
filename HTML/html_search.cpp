@@ -1,5 +1,5 @@
-#include "html_parser.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "parser.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
 
 html_node *html_find_by_tag(html_node *nodeList, const char *tagName)

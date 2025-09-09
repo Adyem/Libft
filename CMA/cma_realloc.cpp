@@ -5,9 +5,9 @@
 #include <pthread.h>
 #include <csignal>
 #include "CMA.hpp"
-#include "CMA_internal.hpp"
+#include "cma_internal.hpp"
 #include "../Libft/libft.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 
 static int reallocate_block(void *ptr, size_t new_size)
 {

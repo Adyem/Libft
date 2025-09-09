@@ -5,8 +5,8 @@
 #include <csignal>
 #include <pthread.h>
 #include "CMA.hpp"
-#include "CMA_internal.hpp"
-#include "../PThread/pthread_mutex.hpp"
+#include "cma_internal.hpp"
+#include "../PThread/mutex.hpp"
 #include "../Printf/printf.hpp"
 #include "../Logger/logger.hpp"
 

@@ -1,4 +1,4 @@
-#include "../Template/template_queue.hpp"
+#include "../Template/queue.hpp"
 
 int test_queue_basic(void)
 {

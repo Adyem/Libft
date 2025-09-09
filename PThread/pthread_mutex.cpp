@@ -1,5 +1,5 @@
 #include "pthread.hpp"
-#include "pthread_mutex.hpp"
+#include "mutex.hpp"
 #include "../Errno/errno.hpp"
 
 pt_mutex::pt_mutex()

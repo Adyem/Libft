@@ -5,6 +5,7 @@ It provides implementations of common libc functions, custom memory allocation h
 basic threading helpers, containers, string utilities, simple networking and more.
 The top level `Makefile` builds every submodule and links them into `Full_Libft.a`.
 The umbrella header `FullLibft.hpp` includes every component.
+Header files now use class names or concise module names instead of module prefixes, except internal headers which retain their module prefix.
 
 This document briefly lists the main headers and the interfaces they expose. The
 summaries below only outline the available functions and classes. See the header
@@ -25,7 +26,7 @@ entering their directory and running `make`.
 
 ### Libft
 
-Standard C utilities located in `Libft/`. Headers: `libft.hpp` and `libft_limits.hpp`. Source files use the `libft_` prefix.
+Standard C utilities located in `Libft/`. Headers: `libft.hpp` and `limits.hpp`. Source files use the `libft_` prefix.
 
 ```
 size_t  ft_strlen_size_t(const char *string);
@@ -54,7 +55,7 @@ void   *ft_memset(void *dst, int value, size_t n);
 int     ft_isspace(int c);
 ```
 
-`libft_limits.hpp` exposes integer boundary constants:
+`limits.hpp` exposes integer boundary constants:
 
 ```
 FT_CHAR_BIT
@@ -68,7 +69,7 @@ FT_ULONG_MAX
 
 ### Math
 
-Located in `Math/`. Headers: `template_math.hpp` and `math_roll.hpp`. Provides basic math utilities:
+Located in `Math/`. Headers: `math.hpp` and `roll.hpp`. Provides basic math utilities:
 
 ```
 int         math_abs(int number);
@@ -288,7 +289,7 @@ namespace ft {
 
 ### Networking
 
-`Networking/networking.hpp` and `networking_socket_class.hpp` implement a small
+`Networking/networking.hpp` and `socket_class.hpp` implement a small
 socket wrapper.
 
 ```
@@ -299,7 +300,7 @@ int nw_listen(int sockfd, int backlog);
 int nw_socket(int domain, int type, int protocol);
 ```
 
-`ssl_wrapper.hpp` adds helpers for encrypted sockets:
+`wrapper.hpp` adds helpers for encrypted sockets:
 
 ```
 ssize_t nw_ssl_write(SSL *ssl, const void *buf, size_t len);
@@ -401,13 +402,13 @@ components include:
 - Smart pointers: `ft_shared_ptr` and `ft_unique_ptr`.
 - Concurrency helpers: `ft_thread_pool`, `ft_future`, `ft_event_emitter` and
   `ft_promise`.
-- Additional helpers such as `template_algorithm.hpp`, `template_iterator.hpp` and `template_math.hpp`.
+- Additional helpers such as `algorithm.hpp`, `iterator.hpp` and `math.hpp`.
 
 Refer to the header files for the full interface of these templates.
 
 #### `ft_trie`
 
-`Template/template_trie.hpp` implements a basic trie for storing values
+`Template/trie.hpp` implements a basic trie for storing values
 associated with string keys.
 
 ```
@@ -420,7 +421,7 @@ int get_error() const;
 
 #### `ft_promise`
 
-`Template/template_promise.hpp` implements a minimal promise type for passing values
+`Template/promise.hpp` implements a minimal promise type for passing values
 between threads. A promise stores a value set by a worker thread and reports
 errors through the shared `ft_errno` system.
 
@@ -455,7 +456,7 @@ float ft_random_float(void);
 int   ft_random_seed(const char *seed_str = ft_nullptr);
 ```
 
-`RNG/rng_deck.hpp` provides a simple deck container:
+`RNG/deck.hpp` provides a simple deck container:
 
 ```
 ElementType *popRandomElement();
@@ -473,7 +474,7 @@ ElementType *popRandomLoot();
 ```
 
 #### Encryption
-`encryption_basic_encryption.hpp` exposes minimal helpers:
+`basic_encryption.hpp` exposes minimal helpers:
 
 ```
 int         be_saveGame(const char *filename, const char *data, const char *key);
@@ -511,7 +512,7 @@ json_group   *find_group(const char *name) const noexcept;
 ```
 
 #### File
-Cross-platform file and directory utilities (`File/file_open_dir.hpp`):
+Cross-platform file and directory utilities (`File/open_dir.hpp`):
 
 ```
 file_dir   *file_opendir(const char *directory_path);
@@ -521,7 +522,7 @@ int         file_dir_exists(const char *rel_path);
 int         file_create_directory(const char *path, mode_t mode);
 ```
 
-Additional wrappers in `Linux/linux_file.hpp` and `Windows/windows_file.hpp` provide
+Additional wrappers in `Linux/file.hpp` and `Windows/file.hpp` provide
 basic file descriptor utilities:
 
 ```
@@ -543,7 +544,7 @@ char       *cnfg_parse_flags(int argument_count, char **argument_values);
 void       cnfg_free(cnfg_config *config);
 ```
 
-`config_flag_parser.hpp` wraps flag parsing in a class:
+`flag_parser.hpp` wraps flag parsing in a class:
 
 ```
 cnfg_flag_parser parser(argument_count, argument_values);
@@ -567,7 +568,7 @@ void    time_sleep(unsigned int seconds);
 void    time_sleep_ms(unsigned int milliseconds);
 ```
 
-`time_timer.hpp` defines a small timer class:
+`timer.hpp` defines a small timer class:
 
 ```
 time_timer();
@@ -579,7 +580,7 @@ long    remove_time(long amount_ms);
 void    sleep_remaining();
 ```
 
-`time_fps.hpp` provides a frame rate limiter with an adjustable target frame rate (minimum 24 FPS):
+`fps.hpp` provides a frame rate limiter with an adjustable target frame rate (minimum 24 FPS):
 
 ```
 time_fps(long frames_per_second);
@@ -627,7 +628,7 @@ json_group *api_request_json_host(const char *host, uint16_t port,
                                   int timeout = 60000);
 ```
 
-Asynchronous helpers in `api_promise.hpp` return `ft_promise` objects:
+Asynchronous helpers in `promise.hpp` return `ft_promise` objects:
 
 ```
 class api_promise : public ft_promise<json_group*>;
@@ -669,7 +670,7 @@ json_group *request_json(const char *method, const char *path,
 ```
 
 #### HTML
-Minimal node creation and searching utilities (`HTML/html_parser.hpp`):
+Minimal node creation and searching utilities (`HTML/parser.hpp`):
 
 ```
 html_node *html_create_node(const char *tagName, const char *textContent);

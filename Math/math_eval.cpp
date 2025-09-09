@@ -1,6 +1,6 @@
-#include "math_roll.hpp"
+#include "roll.hpp"
 #include "../Printf/printf.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 
 int    *math_eval(const char *expression)

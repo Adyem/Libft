@@ -1,6 +1,6 @@
 #include "../Printf/printf.hpp"
 #include "../Libft/libft.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include <fcntl.h>
 #include <unistd.h>
 
