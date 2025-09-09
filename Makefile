@@ -38,15 +38,15 @@ SUBDIRS :=  CMA \
             Libft \
             Math \
             Logger \
-	    Printf \
-	    ReadLine \
-	    PThread \
-	    CPP_class \
-	    Errno \
-	    Config \
-	    Networking \
-	    API
-
+            System_utils \
+            Printf \
+            ReadLine \
+            PThread \
+            CPP_class \
+            Errno \
+            Config \
+            Networking \
+            API
 ifeq ($(OS),Windows_NT)
 SUBDIRS += Windows
 else
@@ -61,6 +61,7 @@ LIB_BASES := \
   Libft/LibFT \
   Math/Math \
   Logger/Logger \
+  System_utils/System_utils \
   Printf/Printf \
   ReadLine/ReadLine \
   PThread/PThread \
