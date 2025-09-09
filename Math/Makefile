@@ -20,6 +20,7 @@ SRCS := math_abs.cpp \
         math_exp.cpp \
         math_deg2rad.cpp \
         math_rad2deg.cpp \
+        math_fibonacci.cpp \
         math_roll.cpp \
         math_eval.cpp \
         math_roll_utilities.cpp \

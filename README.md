@@ -111,6 +111,9 @@ double      math_sqrt(double number);
 double      math_exp(double value);
 double      math_deg2rad(double degrees);
 double      math_rad2deg(double radians);
+int         math_fibonacci(int number);
+long        math_fibonacci(long number);
+long long   math_fibonacci(long long number);
 ```
 
 Additional helpers for parsing expressions are available. They allocate a
