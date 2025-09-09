@@ -3,7 +3,7 @@
 
 # define BUFFER_SIZE 512
 
-#include "../CPP_class/cpp_class_file.hpp"
+#include "../CPP_class/class_file.hpp"
 #include <stdlib.h>
 #include <unistd.h>
 #include <stddef.h>

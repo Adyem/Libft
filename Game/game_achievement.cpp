@@ -1,4 +1,4 @@
-#include "game_achievement.hpp"
+#include "achievement.hpp"
 
 ft_achievement::ft_achievement() noexcept
     : _id(0), _goals(), _error(ER_SUCCESS)

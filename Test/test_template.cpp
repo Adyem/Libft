@@ -1,7 +1,7 @@
-#include "../Template/template_vector.hpp"
-#include "../Template/template_map.hpp"
-#include "../Template/template_shared_ptr.hpp"
-#include "../Template/template_unique_ptr.hpp"
+#include "../Template/vector.hpp"
+#include "../Template/map.hpp"
+#include "../Template/shared_ptr.hpp"
+#include "../Template/unique_ptr.hpp"
 #include "../Errno/errno.hpp"
 #include <cstring>
 #include <vector>

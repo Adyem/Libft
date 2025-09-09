@@ -4,7 +4,7 @@ DEBUG_TARGET := encryption_debug.a
 SRCS := encryption_basic_encryption.cpp \
         encryption_key.cpp
 
-HEADERS := encryption_basic_encryption.hpp
+HEADERS := basic_encryption.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

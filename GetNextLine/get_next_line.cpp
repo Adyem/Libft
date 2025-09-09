@@ -1,6 +1,6 @@
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include <cstdio>
 #include "get_next_line.hpp"
 

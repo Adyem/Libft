@@ -1,4 +1,4 @@
-#include "game_quest.hpp"
+#include "quest.hpp"
 
 ft_quest::ft_quest() noexcept
     : _id(0), _phases(0), _current_phase(0)

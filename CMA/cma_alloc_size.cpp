@@ -1,6 +1,6 @@
 #include <cstddef>
 #include "CMA.hpp"
-#include "CMA_internal.hpp"
+#include "cma_internal.hpp"
 
 std::size_t cma_alloc_size(const void *ptr)
 {

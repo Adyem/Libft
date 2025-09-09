@@ -1,4 +1,4 @@
-#include "game_event.hpp"
+#include "event.hpp"
 
 ft_event::ft_event() noexcept
     : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0)

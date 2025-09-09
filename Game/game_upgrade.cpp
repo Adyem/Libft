@@ -1,4 +1,4 @@
-#include "game_upgrade.hpp"
+#include "upgrade.hpp"
 
 ft_upgrade::ft_upgrade() noexcept
     : _id(0), _current_level(0), _max_level(0),

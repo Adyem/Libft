@@ -7,7 +7,7 @@
 
 #include <ctime>
 #include <cstdlib>
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 
 int ft_random_int(void);
 int ft_dice_roll(int number, int faces);

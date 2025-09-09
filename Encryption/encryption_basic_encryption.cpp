@@ -4,9 +4,9 @@
 #include <fcntl.h>
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
-#include "../Linux/linux_file.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
-#include "encryption_basic_encryption.hpp"
+#include "../Linux/file.hpp"
+#include "../CPP_class/class_nullptr.hpp"
+#include "basic_encryption.hpp"
 
 static void be_encrypt(char *data, size_t data_length, const char *key)
 {

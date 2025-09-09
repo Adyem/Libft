@@ -1,7 +1,7 @@
 #ifndef NETWORKING_HPP
 #define NETWORKING_HPP
 
-#include "../CPP_class/cpp_class_string_class.hpp"
+#include "../CPP_class/class_string_class.hpp"
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>

@@ -2,8 +2,8 @@
 # define PTHREAD_HPP
 
 #include <pthread.h>
-#include "../Template/template_promise.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "../Template/promise.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include <utility>
 #include <atomic>
 
