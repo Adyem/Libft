@@ -1,5 +1,5 @@
 #include "../Libft/libft.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 
 int test_strcmp_equal(void)
 {

@@ -1,4 +1,4 @@
-#include "cpp_class_data_buffer.hpp"
+#include "class_data_buffer.hpp"
 #include "../Libft/libft.hpp"
 
 DataBuffer::DataBuffer() : _readPos(0), _ok(true)

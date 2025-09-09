@@ -1,5 +1,5 @@
 #include "libft.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include <cstdlib>
 
 int ft_setenv(const char *name, const char *value, int overwrite)

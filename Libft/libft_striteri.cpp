@@ -1,5 +1,5 @@
 #include "libft.hpp"
-#include "../CPP_class/cpp_class_nullptr.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 
 void ft_striteri(char *string, void (*function)(unsigned int, char *))
 {

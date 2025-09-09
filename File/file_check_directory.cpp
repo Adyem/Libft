@@ -1,7 +1,7 @@
 #include <cstdlib>
-#include "../CPP_class/cpp_class_string_class.hpp"
+#include "../CPP_class/class_string_class.hpp"
 #include "../Errno/errno.hpp"
-#include "file_open_dir.hpp"
+#include "open_dir.hpp"
 
 #if defined(_WIN32) || defined(_WIN64)
   #include <windows.h>

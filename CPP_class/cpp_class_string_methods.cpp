@@ -1,8 +1,8 @@
-#include "cpp_class_string_class.hpp"
+#include "class_string_class.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
-#include "cpp_class_nullptr.hpp"
+#include "class_nullptr.hpp"
 
 void ft_string::resize(size_t new_capacity) noexcept
 {

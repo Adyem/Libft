@@ -1,4 +1,4 @@
-#include "networking_ssl_wrapper.hpp"
+#include "ssl_wrapper.hpp"
 
 ssize_t nw_ssl_write(SSL *ssl, const void *buf, size_t len)
 {

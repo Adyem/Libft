@@ -1,4 +1,4 @@
-#include "game_character.hpp"
+#include "character.hpp"
 #include "../Errno/errno.hpp"
 
 ft_character::ft_character() noexcept

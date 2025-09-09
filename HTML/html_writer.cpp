@@ -1,7 +1,7 @@
 #include <fcntl.h>
-#include "html_parser.hpp"
+#include "parser.hpp"
 #include "../Printf/printf.hpp"
-#include "../Linux/linux_file.hpp"
+#include "../Linux/file.hpp"
 
 static void html_write_attrs(int fd, html_attr *attribute)
 {

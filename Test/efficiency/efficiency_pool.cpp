@@ -1,7 +1,7 @@
-#include "../../Template/template_pool.hpp"
-#include "efficiency_utils.hpp"
+#include "../../Template/pool.hpp"
+#include "utils.hpp"
 
-#include "../../Template/template_vector.hpp"
+#include "../../Template/vector.hpp"
 
 int test_efficiency_pool_acquire_release(void)
 {

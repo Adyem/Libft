@@ -12,7 +12,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdarg.h>
-#include "../PThread/pthread_mutex.hpp"
+#include "../PThread/mutex.hpp"
 
 size_t             ft_strlen_size_t(const char *string);
 int                ft_strlen(const char *string);

@@ -5,7 +5,7 @@ SRCS :=         config_parse.cpp \
                 config_flags.cpp \
                 config_flag_parser.cpp
 
-HEADERS := config.hpp config_flag_parser.hpp
+HEADERS := config.hpp flag_parser.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

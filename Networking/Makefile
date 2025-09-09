@@ -8,9 +8,9 @@ SRCS := networking_socket_class.cpp \
         networking_socket_wrapper_functions.cpp \
         networking_ssl_wrapper.cpp
 
-HEADERS := networking_socket_class.hpp \
+HEADERS := socket_class.hpp \
            networking.hpp \
-           networking_ssl_wrapper.hpp \
+           ssl_wrapper.hpp \
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
