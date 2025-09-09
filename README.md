@@ -132,6 +132,9 @@ and string helpers. Aligned allocations round the block size up to the
 specified power-of-two (e.g., requesting 100 bytes with alignment 32
 returns a 128-byte block) and are released with `cma_free`.
 When allocation logging is enabled via the logger, the allocator emits debug messages for each `cma_malloc` and `cma_free`.
+The allocator enforces an optional global allocation limit that can be
+changed at runtime with `cma_set_alloc_limit`. A limit of `0` disables the
+check. Internally, `cma_realloc` has been simplified by removing redundant braces.
 
 ```
 void   *cma_malloc(std::size_t size);
@@ -152,6 +155,7 @@ char   *cma_substr(const char *s, unsigned int start, size_t len);
 char   *cma_strtrim(const char *s1, const char *set);
 void    cma_free_double(char **content);
 void    cma_cleanup();
+void    cma_set_alloc_limit(std::size_t limit);
 ```
 
 ### GetNextLine
