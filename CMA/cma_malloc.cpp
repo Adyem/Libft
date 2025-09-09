@@ -22,6 +22,8 @@ void* cma_malloc(std::size_t size)
     }
     if (size <= 0)
         return (ft_nullptr);
+    if (g_cma_alloc_limit != 0 && size > g_cma_alloc_limit)
+        return (ft_nullptr);
     g_malloc_mutex.lock(THREAD_ID);
     size_t aligned_size = align16(size);
     Block *block = find_free_block(aligned_size);
