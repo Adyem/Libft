@@ -11,6 +11,7 @@
 
 Page *page_list = ft_nullptr;
 pt_mutex g_malloc_mutex;
+std::size_t    g_cma_alloc_limit = 0;
 
 static size_t determine_page_size(size_t size)
 {

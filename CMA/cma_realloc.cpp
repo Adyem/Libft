@@ -35,9 +35,9 @@ static int reallocate_block(void *ptr, size_t new_size)
 void *cma_realloc(void* ptr, size_t new_size)
 {
     if (OFFSWITCH == 1)
-    {
         return (std::realloc(ptr, new_size));
-    }
+    if (g_cma_alloc_limit != 0 && new_size > g_cma_alloc_limit)
+        return (ft_nullptr);
     g_malloc_mutex.lock(THREAD_ID);
     if (!ptr)
         return (cma_malloc(new_size));
