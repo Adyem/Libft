@@ -37,6 +37,7 @@
 #include "Logger/logger.hpp"
 #include "ReadLine/readline.hpp"
 #include "ReadLine/readline_internal.hpp"
+#include "System_utils/system_utils.hpp"
 #include "Template/constructor.hpp"
 #include "Template/iterator.hpp"
 #include "Template/algorithm.hpp"
