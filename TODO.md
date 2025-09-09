@@ -7,9 +7,7 @@
     - Utility functions: min, max, clamp, lerp, smoothstep
 
 - Time / Date Module
-    - Current time in ms, ns, epoch
     - Time formatting and parsing
-    - Timers, countdowns, and sleep wrappers
 
 - Compression Module
     - ft_compress and ft_decompress
