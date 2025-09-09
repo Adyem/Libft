@@ -389,6 +389,19 @@ logger used internally by logging helpers. The pointer is reset to
 custom memory allocator can be toggled with `set_alloc_logging` and
 `get_alloc_logging`.
 
+### System Utils
+
+`System_utils/system_utils.hpp` provides a simple assertion helper that logs failures using the
+global logger before terminating the process. The header also offers thread-safe wrappers around
+common environment helpers. Each call locks a global mutex before touching the process environment.
+
+```
+void    su_assert(bool condition, const char *message);
+char    *su_getenv_thread_safe(const char *name);
+int     su_setenv_thread_safe(const char *name, const char *value, int overwrite);
+int     su_putenv_thread_safe(char *string);
+```
+
 ### Template Utilities
 
 `Template/` contains a wide range of generic helpers and containers. Key
@@ -436,6 +449,7 @@ const char *get_error_str() const;
 ```
 
 ### Additional Modules
+
 
 #### Errno
 `Errno/errno.hpp` defines error codes and helpers for retrieving messages.

@@ -38,7 +38,6 @@
     - AABB, circle, sphere, OBB shapes
     - Collision detection and intersection math
 
-- Unit Testing / Assert Module
-    - ft_assert integrated with logger
+- Unit Testing / System Utils Module
     - Simple test runner framework
     - Auto-log failures with file and line
