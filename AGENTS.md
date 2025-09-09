@@ -18,6 +18,8 @@ Do not define member function bodies inside the class declaration; place all def
 Every class must declare and define a constructor and destructor, even if they simply contain return ;.
 Classes must track errors with a mutable _error_code member, a private set_error to update ft_errno, and public get_error and get_error_str helpers.
 
-Any .hpp or .cpp file inside a submodule must have its filename prefixed with that submodule's name.
+Only .cpp files must be prefixed with the name of the module they belong to.
+For .hpp files, prefix only those meant for internal use with the module name.
+Generic headers may use the module's name, while class headers should use the class name as the filename.
 
 Always update README.md to reflect any code changes.
