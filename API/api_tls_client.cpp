@@ -1,6 +1,7 @@
 #include "tls_client.hpp"
 #include <cstring>
 #include <cstdio>
+#include <thread>
 #include "../Networking/socket_class.hpp"
 #include "../Networking/ssl_wrapper.hpp"
 #include "../Libft/libft.hpp"
@@ -223,5 +224,23 @@ json_group *api_tls_client::request_json(const char *method, const char *path,
     json_group *result = json_read_from_string(body);
     cma_free(body);
     return (result);
+}
+
+bool api_tls_client::request_async(const char *method, const char *path,
+                                   json_group *payload,
+                                   const char *headers,
+                                   api_callback callback,
+                                   void *user_data)
+{
+    if (!callback)
+        return (false);
+    std::thread worker([this, method, path, payload, headers, callback, user_data]()
+    {
+        int status_local = -1;
+        char *result_body = this->request(method, path, payload, headers, &status_local);
+        callback(result_body, status_local, user_data);
+    });
+    worker.detach();
+    return (true);
 }
 
