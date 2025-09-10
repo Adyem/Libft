@@ -7,12 +7,14 @@ void ft_file_sink(const char *message, void *user_data)
 {
     s_file_sink *sink;
     size_t       length;
+    ssize_t      written;
 
     sink = static_cast<s_file_sink *>(user_data);
     if (!sink)
         return ;
     length = std::strlen(message);
-    write(sink->fd, message, length);
+    written = write(sink->fd, message, length);
+    (void)written;
     return ;
 }
 

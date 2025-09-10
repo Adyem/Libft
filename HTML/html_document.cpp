@@ -90,6 +90,11 @@ html_node *html_document::find_by_text(const char *text_content) const noexcept
     return (html_find_by_text(this->_root, text_content));
 }
 
+html_node *html_document::find_by_selector(const char *selector) const noexcept
+{
+    return (html_find_by_selector(this->_root, selector));
+}
+
 size_t html_document::count_nodes_by_tag(const char *tag_name) const noexcept
 {
     return (html_count_nodes_by_tag(this->_root, tag_name));
