@@ -396,14 +396,22 @@ custom memory allocator can be toggled with `set_alloc_logging` and
 ### System Utils
 
 `System_utils/system_utils.hpp` provides a simple assertion helper that logs failures using the
-global logger before terminating the process. The header also offers thread-safe wrappers around
-common environment helpers. Each call locks a global mutex before touching the process environment.
+global logger before terminating the process. The header also offers direct helpers to abort or
+raise common signals and wrappers around environment helpers. Each call locks a global mutex before
+touching the process environment.
 
 ```
+void    su_abort(void);
+void    su_sigabrt(void);
+void    su_sigfpe(void);
+void    su_sigill(void);
+void    su_sigint(void);
+void    su_sigsegv(void);
+void    su_sigterm(void);
 void    su_assert(bool condition, const char *message);
-char    *su_getenv_thread_safe(const char *name);
-int     su_setenv_thread_safe(const char *name, const char *value, int overwrite);
-int     su_putenv_thread_safe(char *string);
+char    *su_getenv(const char *name);
+int     su_setenv(const char *name, const char *value, int overwrite);
+int     su_putenv(char *string);
 ```
 
 ### Template Utilities
