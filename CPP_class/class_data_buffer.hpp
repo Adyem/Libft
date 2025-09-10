@@ -17,6 +17,11 @@ class DataBuffer
 
     public:
         DataBuffer();
+        DataBuffer(const DataBuffer& other);
+        DataBuffer(DataBuffer&& other) noexcept;
+        DataBuffer& operator=(const DataBuffer& other);
+        DataBuffer& operator=(DataBuffer&& other) noexcept;
+        ~DataBuffer();
         void clear() noexcept;
         size_t size() const noexcept;
         const std::vector<uint8_t>& data() const noexcept;
