@@ -522,12 +522,23 @@ ElementType *popRandomLoot();
 ```
 
 #### Encryption
-`basic_encryption.hpp` exposes minimal helpers:
+`basic_encryption.hpp` exposes minimal helpers and AES block operations:
 
 ```
 int         be_saveGame(const char *filename, const char *data, const char *key);
 char      **be_DecryptData(char **data, const char *key);
 const char *be_getEncryptionKey();
+void        aes_encrypt(uint8_t *block, const uint8_t *key);
+void        aes_decrypt(uint8_t *block, const uint8_t *key);
+```
+
+Example:
+
+```
+unsigned char block[16] = {0};
+unsigned char key[16] = {0};
+aes_encrypt(block, key);
+aes_decrypt(block, key);
 ```
 
 #### JSon
