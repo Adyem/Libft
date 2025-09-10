@@ -46,14 +46,9 @@ SUBDIRS :=  CMA \
             Errno \
             Config \
             Networking \
-            API
-ifeq ($(OS),Windows_NT)
-SUBDIRS += Windows
-else
-SUBDIRS += Linux
-endif
-
-SUBDIRS += Encryption RNG JSon File HTML Game Time
+            API \
+            Compatebility \
+            Encryption RNG JSon File HTML Game Time
 
 LIB_BASES := \
   CMA/CustomMemoryAllocator \
@@ -70,6 +65,7 @@ LIB_BASES := \
   Config/config \
   Networking/networking \
   API/API \
+  Compatebility/Compatebility \
   Encryption/encryption \
   RNG/RNG \
   JSon/JSon \
@@ -77,12 +73,6 @@ LIB_BASES := \
   HTML/HTMLParser \
   Game/Game \
   Time/time
-
-ifeq ($(OS),Windows_NT)
-LIB_BASES += Windows/Windows
-else
-LIB_BASES += Linux/Linux
-endif
 
 LIBS       := $(addsuffix .a, $(LIB_BASES))
 DEBUG_LIBS := $(addsuffix _debug.a, $(LIB_BASES))
@@ -131,5 +121,5 @@ clean:
 fclean:
 	$(foreach dir,$(SUBDIRS),$(MAKE) -C $(dir) fclean;)
 	$(RM) $(TARGET) $(DEBUG_TARGET)
-    
+
 .PHONY: all debug both re clean fclean
