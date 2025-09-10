@@ -25,8 +25,26 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
     int len = std::snprintf(final_buf, sizeof(final_buf), "[%s] [%s] %s\n", time_buf, ft_level_to_str(level), msg_buf);
     if (len > 0)
     {
-        ssize_t write_result = write(g_fd, final_buf, static_cast<size_t>(len));
-        (void)write_result;
+        if (g_sinks.empty())
+        {
+            ssize_t write_result;
+
+            write_result = write(1, final_buf, static_cast<size_t>(len));
+            (void)write_result;
+        }
+        else
+        {
+            size_t index;
+
+            index = 0;
+            while (index < g_sinks.size())
+            {
+                g_sinks[index].function(final_buf, g_sinks[index].user_data);
+                if (g_sinks[index].function == ft_file_sink)
+                    ft_log_rotate(static_cast<s_file_sink *>(g_sinks[index].user_data));
+                index++;
+            }
+        }
     }
-    ft_log_rotate();
+    return ;
 }

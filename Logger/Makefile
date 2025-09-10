@@ -8,6 +8,8 @@ SRCS := \
     logger_log_vwrite.cpp \
     logger_log_set_level.cpp \
     logger_log_set_file.cpp \
+    logger_log_add_sink.cpp \
+    logger_log_remove_sink.cpp \
     logger_log_set_alloc_logging.cpp \
     logger_log_get_alloc_logging.cpp \
     logger_log_set_api_logging.cpp \
