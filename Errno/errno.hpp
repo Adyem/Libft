@@ -1,7 +1,8 @@
 #ifndef ERRNO_HPP
 # define ERRNO_HPP
 
-extern thread_local int ft_errno;
+extern thread_local int _error_code;
+#define ft_errno _error_code
 
 #define ERRNO_OFFSET 2000
 

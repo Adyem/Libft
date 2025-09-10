@@ -150,6 +150,7 @@ int test_ft_open_and_read_file(void);
 int test_cma_checked_free_basic(void);
 int test_cma_checked_free_offset(void);
 int test_cma_checked_free_invalid(void);
+int test_cma_thread_local(void);
 int test_game_simulation(void);
 int test_item_basic(void);
 int test_inventory_count(void);
@@ -365,6 +366,7 @@ int main(int argc, char **argv)
         { test_cma_checked_free_basic, "cma_checked_free basic" },
         { test_cma_checked_free_offset, "cma_checked_free offset" },
         { test_cma_checked_free_invalid, "cma_checked_free invalid" },
+        { test_cma_thread_local, "cma thread_local" },
         { test_game_simulation, "game simulation" },
         { test_item_basic, "item basic" },
         { test_inventory_count, "inventory count" },
