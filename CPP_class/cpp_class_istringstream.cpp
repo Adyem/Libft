@@ -1,9 +1,9 @@
 #include "class_istringstream.hpp"
+#include "../Libft/libft.hpp"
 
 ft_istringstream::ft_istringstream(const std::string &string) noexcept
-: std::istream(ft_nullptr), _buffer(string), _error_code(ER_SUCCESS)
+: ft_istream(), _buffer(string)
 {
-    this->init(&_buffer);
     return ;
 }
 
@@ -12,19 +12,30 @@ ft_istringstream::~ft_istringstream() noexcept
     return ;
 }
 
-void ft_istringstream::set_error(int error_code) const
+std::size_t ft_istringstream::do_read(char *buffer, std::size_t count)
 {
-    this->_error_code = error_code;
-    ft_errno = error_code;
-    return ;
+    std::size_t result;
+
+    result = this->_buffer.read(buffer, count);
+    if (this->_buffer.is_bad())
+        this->set_error(this->_buffer.get_error());
+    return (result);
 }
 
-int ft_istringstream::get_error() const noexcept
+std::string ft_istringstream::str() const
 {
-    return (this->_error_code);
+    return (this->_buffer.str());
 }
 
-const char *ft_istringstream::get_error_str() const noexcept
+ft_istringstream &operator>>(ft_istringstream &input, int &value)
 {
-    return (ft_strerror(this->_error_code));
+    std::string content = input.str();
+    value = ft_atoi(content.c_str());
+    return (input);
+}
+
+ft_istringstream &operator>>(ft_istringstream &input, std::string &value)
+{
+    value = input.str();
+    return (input);
 }

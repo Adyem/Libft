@@ -1,10 +1,10 @@
 #include "../Printf/printf.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../CPP_class/class_fd_istream.hpp"
+#include "../System_utils/system_utils.hpp"
 #include "get_next_line.hpp"
-#include <fstream>
-#include <cerrno>
-#include <cstring>
+#include <unistd.h>
 
 static void ft_handle_allocation_failure(char **lines)
 {
@@ -45,7 +45,7 @@ static char **ft_reallocate_lines(char **lines, int new_size)
     return (new_lines);
 }
 
-char **ft_read_file_lines(std::istream &input, std::size_t buffer_size)
+char **ft_read_file_lines(ft_istream &input, std::size_t buffer_size)
 {
     char **lines = ft_nullptr;
     char *current_line = ft_nullptr;
@@ -74,9 +74,13 @@ char **ft_read_file_lines(std::istream &input, std::size_t buffer_size)
 
 char **ft_open_and_read_file(const char *file_name, std::size_t buffer_size)
 {
-    std::ifstream file(file_name);
+    int fd = su_open(file_name);
+    ft_fd_istream input(fd);
+    char **lines;
 
-    if (!file.is_open())
+    if (fd < 0)
         return (ft_nullptr);
-    return (ft_read_file_lines(file, buffer_size));
+    lines = ft_read_file_lines(input, buffer_size);
+    close(fd);
+    return (lines);
 }

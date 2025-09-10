@@ -2,18 +2,13 @@
 #define FT_ISTRINGSTREAM_HPP
 
 #include <string>
-#include <sstream>
-#include <istream>
-#include "class_nullptr.hpp"
-#include "../Errno/errno.hpp"
+#include "class_istream.hpp"
+#include "class_stringbuf.hpp"
 
-class ft_istringstream : public std::istream
+class ft_istringstream : public ft_istream
 {
     private:
-        std::stringbuf _buffer;
-        mutable int _error_code;
-
-        void set_error(int error_code) const;
+        ft_stringbuf _buffer;
 
     public:
         ft_istringstream(const std::string &string) noexcept;
@@ -22,8 +17,13 @@ class ft_istringstream : public std::istream
         ft_istringstream(const ft_istringstream &) = delete;
         ft_istringstream &operator=(const ft_istringstream &) = delete;
 
-        int get_error() const noexcept;
-        const char *get_error_str() const noexcept;
+        std::string str() const;
+
+    protected:
+        std::size_t do_read(char *buffer, std::size_t count);
 };
+
+ft_istringstream &operator>>(ft_istringstream &input, int &value);
+ft_istringstream &operator>>(ft_istringstream &input, std::string &value);
 
 #endif

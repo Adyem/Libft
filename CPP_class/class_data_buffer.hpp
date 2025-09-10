@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <cstdint>
+#include <sstream>
 #include "class_istringstream.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
@@ -82,7 +83,7 @@ DataBuffer& DataBuffer::operator>>(T& value)
     ft_istringstream iss(bytes);
     iss >> value;
     cma_free(bytes);
-    this->_ok = !iss.fail();
+    this->_ok = (iss.get_error() == ER_SUCCESS);
     this->_readPos += len;
     return (*this);
 }
