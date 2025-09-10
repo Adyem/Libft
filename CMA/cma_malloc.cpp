@@ -16,6 +16,8 @@ void* cma_malloc(std::size_t size)
     if (OFFSWITCH == 1)
     {
         void *ptr = malloc(size);
+        if (ptr)
+            g_cma_allocation_count++;
         if (ft_log_get_alloc_logging())
             ft_log_debug("cma_malloc %zu -> %p", size, ptr);
         return (ptr);
@@ -39,6 +41,7 @@ void* cma_malloc(std::size_t size)
     }
     block = split_block(block, aligned_size);
     block->free = false;
+    g_cma_allocation_count++;
     void *result = reinterpret_cast<char*>(block) + sizeof(Block);
     g_malloc_mutex.unlock(THREAD_ID);
     if (ft_log_get_alloc_logging())
