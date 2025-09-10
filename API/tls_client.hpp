@@ -7,6 +7,8 @@
 #include <openssl/ssl.h>
 #include <cstdint>
 
+typedef void (*api_callback)(char *body, int status, void *user_data);
+
 class api_tls_client
 {
     private:
@@ -27,6 +29,12 @@ class api_tls_client
         json_group *request_json(const char *method, const char *path,
                                  json_group *payload = ft_nullptr,
                                  const char *headers = ft_nullptr, int *status = ft_nullptr);
+
+        bool request_async(const char *method, const char *path,
+                           json_group *payload = ft_nullptr,
+                           const char *headers = ft_nullptr,
+                           api_callback callback = ft_nullptr,
+                           void *user_data = ft_nullptr);
 };
 
 #endif
