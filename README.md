@@ -472,7 +472,7 @@ const char *get_error_str() const;
 
 
 #### Errno
-`Errno/errno.hpp` defines error codes and helpers for retrieving messages.
+`Errno/errno.hpp` defines a thread-local `_error_code` accessed through the `ft_errno` macro and helpers for retrieving messages.
 
 ```
 const char *ft_strerror(int err);

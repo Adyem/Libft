@@ -2,7 +2,6 @@
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
 
-thread_local int ft_errno = 0;
 
 int pt_mutex::unlock(pthread_t thread_id)
 {
