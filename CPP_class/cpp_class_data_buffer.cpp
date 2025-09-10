@@ -1,7 +1,51 @@
 #include "class_data_buffer.hpp"
 #include "../Libft/libft.hpp"
+#include <utility>
 
 DataBuffer::DataBuffer() : _readPos(0), _ok(true)
+{
+    return ;
+}
+
+DataBuffer::DataBuffer(const DataBuffer& other)
+    : _buffer(other._buffer), _readPos(other._readPos), _ok(other._ok)
+{
+    return ;
+}
+
+DataBuffer::DataBuffer(DataBuffer&& other) noexcept
+    : _buffer(std::move(other._buffer)), _readPos(other._readPos), _ok(other._ok)
+{
+    other._readPos = 0;
+    other._ok = true;
+    return ;
+}
+
+DataBuffer& DataBuffer::operator=(const DataBuffer& other)
+{
+    if (this != &other)
+    {
+        this->_buffer = other._buffer;
+        this->_readPos = other._readPos;
+        this->_ok = other._ok;
+    }
+    return (*this);
+}
+
+DataBuffer& DataBuffer::operator=(DataBuffer&& other) noexcept
+{
+    if (this != &other)
+    {
+        this->_buffer = std::move(other._buffer);
+        this->_readPos = other._readPos;
+        this->_ok = other._ok;
+        other._readPos = 0;
+        other._ok = true;
+    }
+    return (*this);
+}
+
+DataBuffer::~DataBuffer()
 {
     return ;
 }
