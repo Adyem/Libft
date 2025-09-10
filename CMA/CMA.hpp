@@ -32,6 +32,7 @@ char    *cma_strtrim(const char *string, const char *set)
 void    cma_free_double(char **content);
 void    cma_cleanup();
 void    cma_set_alloc_limit(std::size_t limit);
+void    cma_get_stats(std::size_t *allocation_count, std::size_t *free_count);
 
 template <int total_argument_count, typename... argument_types>
 char    *cma_strjoin_multiple_checked(const argument_types &... strings)

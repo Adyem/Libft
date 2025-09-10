@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cassert>
 #include <csignal>
+#include "CMA.hpp"
 #include "cma_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Printf/printf.hpp"
@@ -12,6 +13,8 @@
 Page *page_list = ft_nullptr;
 pt_mutex g_malloc_mutex;
 std::size_t    g_cma_alloc_limit = 0;
+std::size_t    g_cma_allocation_count = 0;
+std::size_t    g_cma_free_count = 0;
 
 static size_t determine_page_size(size_t size)
 {
@@ -239,5 +242,14 @@ static inline void print_block_info_impl(Block *block)
 void print_block_info(Block *block)
 {
     print_block_info_impl(block);
+    return ;
+}
+
+void cma_get_stats(std::size_t *allocation_count, std::size_t *free_count)
+{
+    if (allocation_count != ft_nullptr)
+        *allocation_count = g_cma_allocation_count;
+    if (free_count != ft_nullptr)
+        *free_count = g_cma_free_count;
     return ;
 }

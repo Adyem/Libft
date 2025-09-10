@@ -34,6 +34,8 @@
 
 extern pt_mutex g_malloc_mutex;
 extern std::size_t    g_cma_alloc_limit;
+extern std::size_t    g_cma_allocation_count;
+extern std::size_t    g_cma_free_count;
 
 struct Block
 {

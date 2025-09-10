@@ -15,6 +15,7 @@ void cma_free(void* ptr)
     if (OFFSWITCH == 1)
     {
         std::free(ptr);
+        g_cma_free_count++;
         if (ft_log_get_alloc_logging())
             ft_log_debug("cma_free %p", ptr);
         return ;
@@ -35,6 +36,7 @@ void cma_free(void* ptr)
     Page *page = find_page_of_block(block);
     free_page_if_empty(page);
     g_malloc_mutex.unlock(THREAD_ID);
+    g_cma_free_count++;
     if (ft_log_get_alloc_logging())
         ft_log_debug("cma_free %p", ptr);
     return ;
