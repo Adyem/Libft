@@ -7,6 +7,12 @@
 #include <cstring>
 #include <cstdio>
 #include <string>
+#include <thread>
+#include <errno.h>
+#ifndef _WIN32
+# include <fcntl.h>
+# include <sys/select.h>
+#endif
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>
@@ -462,4 +468,222 @@ json_group *api_request_json_url(const char *url, const char *method,
     json_group *result = json_read_from_string(body);
     cma_free(body);
     return (result);
+}
+
+struct api_async_request
+{
+    char *ip;
+    uint16_t port;
+    char *method;
+    char *path;
+    json_group *payload;
+    char *headers;
+    int timeout;
+    api_callback callback;
+    void *user_data;
+};
+
+static void api_async_worker(api_async_request *data)
+{
+    int socket_fd = -1;
+    struct addrinfo hints;
+    struct addrinfo *address_results = ft_nullptr;
+    struct addrinfo *address_info;
+    ft_string request;
+    ft_string body_string;
+    ft_string response;
+    char port_string[6];
+    char *result_body = ft_nullptr;
+    int status = -1;
+    char buffer[1024];
+    fd_set read_set;
+    fd_set write_set;
+    struct timeval tv;
+    size_t total_sent;
+
+    if (!data || !data->ip || !data->method || !data->path)
+        goto cleanup;
+    ft_bzero(&hints, sizeof(hints));
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_family = AF_UNSPEC;
+    std::snprintf(port_string, sizeof(port_string), "%u", data->port);
+    if (getaddrinfo(data->ip, port_string, &hints, &address_results) != 0)
+        goto cleanup;
+    address_info = address_results;
+    while (address_info != ft_nullptr && socket_fd < 0)
+    {
+        socket_fd = nw_socket(address_info->ai_family,
+                               address_info->ai_socktype,
+                               address_info->ai_protocol);
+        if (socket_fd < 0)
+            address_info = address_info->ai_next;
+    }
+    if (socket_fd < 0)
+        goto cleanup;
+
+#ifdef _WIN32
+    u_long mode = 1;
+    ioctlsocket(socket_fd, FIONBIO, &mode);
+#else
+    fcntl(socket_fd, F_SETFL, O_NONBLOCK);
+#endif
+
+    if (nw_connect(socket_fd, address_info->ai_addr,
+                    static_cast<socklen_t>(address_info->ai_addrlen)) < 0)
+    {
+#ifdef _WIN32
+        int err = WSAGetLastError();
+        if (err != WSAEINPROGRESS && err != WSAEWOULDBLOCK)
+            goto cleanup;
+#else
+        if (errno != EINPROGRESS)
+            goto cleanup;
+#endif
+    }
+
+    FD_ZERO(&write_set);
+    FD_SET(socket_fd, &write_set);
+    tv.tv_sec = data->timeout / 1000;
+    tv.tv_usec = (data->timeout % 1000) * 1000;
+    if (select(socket_fd + 1, ft_nullptr, &write_set, ft_nullptr, &tv) <= 0)
+        goto cleanup;
+
+    request = data->method;
+    request += " ";
+    request += data->path;
+    request += " HTTP/1.1\r\nHost: ";
+    request += data->ip;
+    if (data->headers && data->headers[0])
+    {
+        request += "\r\n";
+        request += data->headers;
+    }
+    if (data->payload)
+    {
+        char *temporary_string = json_write_to_string(data->payload);
+        if (!temporary_string)
+            goto cleanup;
+        body_string = temporary_string;
+        cma_free(temporary_string);
+        request += "\r\nContent-Type: application/json";
+        char *length_string = cma_itoa(static_cast<int>(body_string.size()));
+        if (!length_string)
+            goto cleanup;
+        request += "\r\nContent-Length: ";
+        request += length_string;
+        cma_free(length_string);
+    }
+    request += "\r\nConnection: close\r\n\r\n";
+    if (data->payload)
+        request += body_string.c_str();
+
+    total_sent = 0;
+    while (total_sent < request.size())
+    {
+        ssize_t bytes_sent = nw_send(socket_fd,
+                                     request.c_str() + total_sent,
+                                     request.size() - total_sent,
+                                     0);
+        if (bytes_sent < 0)
+        {
+#ifdef _WIN32
+            int send_err = WSAGetLastError();
+            if (send_err == WSAEWOULDBLOCK)
+#else
+            if (errno == EWOULDBLOCK || errno == EAGAIN)
+#endif
+            {
+                FD_ZERO(&write_set);
+                FD_SET(socket_fd, &write_set);
+                if (select(socket_fd + 1, ft_nullptr, &write_set, ft_nullptr, &tv) <= 0)
+                    goto cleanup;
+                continue;
+            }
+            goto cleanup;
+        }
+        total_sent += static_cast<size_t>(bytes_sent);
+    }
+
+    while (true)
+    {
+        FD_ZERO(&read_set);
+        FD_SET(socket_fd, &read_set);
+        if (select(socket_fd + 1, &read_set, ft_nullptr, ft_nullptr, &tv) <= 0)
+            break;
+        ssize_t bytes_received = nw_recv(socket_fd, buffer,
+                                         sizeof(buffer) - 1, 0);
+        if (bytes_received <= 0)
+            break;
+        buffer[bytes_received] = '\0';
+        response += buffer;
+    }
+
+    if (response.size() > 0)
+    {
+        const char *space = strchr(response.c_str(), ' ');
+        if (space)
+            status = ft_atoi(space + 1);
+        const char *body = strstr(response.c_str(), "\r\n\r\n");
+        if (body)
+        {
+            body += 4;
+            result_body = cma_strdup(body);
+        }
+    }
+
+cleanup:
+    if (data->callback)
+        data->callback(result_body, status, data->user_data);
+    if (socket_fd >= 0)
+        FT_CLOSE_SOCKET(socket_fd);
+    if (address_results)
+        freeaddrinfo(address_results);
+    if (data->ip)
+        cma_free(data->ip);
+    if (data->method)
+        cma_free(data->method);
+    if (data->path)
+        cma_free(data->path);
+    if (data->headers)
+        cma_free(data->headers);
+    cma_free(data);
+    return ;
+}
+
+bool    api_request_string_async(const char *ip, uint16_t port,
+        const char *method, const char *path, api_callback callback,
+        void *user_data, json_group *payload, const char *headers, int timeout)
+{
+    if (!ip || !method || !path || !callback)
+        return (false);
+    api_async_request *data = static_cast<api_async_request*>(cma_malloc(sizeof(api_async_request)));
+    if (!data)
+        return (false);
+    ft_bzero(data, sizeof(api_async_request));
+    data->ip = cma_strdup(ip);
+    data->method = cma_strdup(method);
+    data->path = cma_strdup(path);
+    if (headers)
+        data->headers = cma_strdup(headers);
+    data->port = port;
+    data->payload = payload;
+    data->timeout = timeout;
+    data->callback = callback;
+    data->user_data = user_data;
+    if (!data->ip || !data->method || !data->path || (headers && !data->headers))
+    {
+        if (data->ip)
+            cma_free(data->ip);
+        if (data->method)
+            cma_free(data->method);
+        if (data->path)
+            cma_free(data->path);
+        if (data->headers)
+            cma_free(data->headers);
+        cma_free(data);
+        return (false);
+    }
+    std::thread thread_worker(api_async_worker, data);
+    thread_worker.detach();
+    return (true);
 }
