@@ -763,6 +763,7 @@ void       html_add_child(html_node *parentNode, html_node *childNode);
 void       html_add_attr(html_node *targetNode, html_attr *newAttribute);
 html_node *html_find_by_tag(html_node *nodeList, const char *tagName);
 html_node *html_find_by_attr(html_node *nodeList, const char *key, const char *value);
+html_node *html_find_by_selector(html_node *nodeList, const char *selector);
 ```
 
 The `html_document` class wraps these helpers and manages a root node list:
@@ -772,7 +773,18 @@ html_document();
 ~html_document();
 void        append_node(html_node *new_node) noexcept;
 html_node   *find_by_tag(const char *tag_name) const noexcept;
-``` 
+html_node   *find_by_selector(const char *selector) const noexcept;
+```
+
+Simple selectors allow searching by:
+
+```
+"tag"             - tag name
+"#id"             - attribute id equals value
+".class"          - attribute class equals value
+"[key=value]"     - attribute key equals value
+"[key]"           - presence of attribute key
+```
 
 #### Game
 Basic game related classes include `ft_character`, `ft_item`, `ft_inventory`,
