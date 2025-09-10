@@ -7,7 +7,7 @@
 
 static pt_mutex g_env_mutex;
 
-char    *su_getenv_thread_safe(const char *name)
+char    *su_getenv(const char *name)
 {
     char    *result;
 
@@ -19,7 +19,7 @@ char    *su_getenv_thread_safe(const char *name)
     return (result);
 }
 
-int su_setenv_thread_safe(const char *name, const char *value, int overwrite)
+int su_setenv(const char *name, const char *value, int overwrite)
 {
     int result;
 
@@ -31,7 +31,7 @@ int su_setenv_thread_safe(const char *name, const char *value, int overwrite)
     return (result);
 }
 
-int su_putenv_thread_safe(char *string)
+int su_putenv(char *string)
 {
     int result;
 

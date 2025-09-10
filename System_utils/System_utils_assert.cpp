@@ -1,7 +1,6 @@
 #include "../Logger/logger_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "system_utils.hpp"
-#include <cstdlib>
 
 void su_assert(bool condition, const char *message)
 {
@@ -9,5 +8,5 @@ void su_assert(bool condition, const char *message)
         return ;
     if (g_logger != ft_nullptr)
         g_logger->error("Assertion failed: %s", message);
-    abort();
+    su_abort();
 }
