@@ -306,7 +306,7 @@ ft_unord_map<Key, MappedType>& ft_unord_map<Key, MappedType>::operator=(const ft
             {
                 if (_occupied[i])
                 {
-                    destroy_at(&_data[i]);
+                    ::destroy_at(&_data[i]);
                     count++;
                 }
                 i++;
@@ -401,7 +401,7 @@ ft_unord_map<Key, MappedType>& ft_unord_map<Key, MappedType>::operator=(ft_unord
             {
                 if (_occupied[i])
                 {
-                    destroy_at(&_data[i]);
+                    ::destroy_at(&_data[i]);
                     count++;
                 }
                 i++;
@@ -436,7 +436,7 @@ ft_unord_map<Key, MappedType>::~ft_unord_map()
         {
             if (_occupied[i])
             {
-                destroy_at(&_data[i]);
+                ::destroy_at(&_data[i]);
                 count++;
             }
             i++;
@@ -520,7 +520,7 @@ void ft_unord_map<Key, MappedType>::resize(size_t newCapacity)
         if (oldOcc[i])
         {
             insert_internal(oldData[i].first, oldData[i].second);
-            destroy_at(&oldData[i]);
+            ::destroy_at(&oldData[i]);
             count++;
         }
         i++;
@@ -631,7 +631,7 @@ void ft_unord_map<Key, MappedType>::remove(const Key& key)
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
-    destroy_at(&_data[idx]);
+    ::destroy_at(&_data[idx]);
     _occupied[idx] = false;
     --_size;
     size_t next = (idx + 1) % _capacity;
@@ -641,7 +641,7 @@ void ft_unord_map<Key, MappedType>::remove(const Key& key)
         if ((next > idx && (h <= idx || h > next)) || (next < idx && (h <= idx && h > next)))
         {
             construct_at(&_data[idx], std::move(_data[next]));
-            destroy_at(&_data[next]);
+            ::destroy_at(&_data[next]);
             _occupied[idx] = true;
             _occupied[next] = false;
             idx = next;
@@ -676,7 +676,7 @@ void ft_unord_map<Key, MappedType>::clear()
     {
         if (_occupied[i])
         {
-            destroy_at(&_data[i]);
+            ::destroy_at(&_data[i]);
             _occupied[i] = false;
             count++;
         }

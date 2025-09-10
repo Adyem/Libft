@@ -1,58 +1,30 @@
 #include "../GetNextLine/get_next_line.hpp"
-#include "../CPP_class/class_file.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
-#include <fcntl.h>
+#include "../CPP_class/class_istringstream.hpp"
+#include <fstream>
 #include <unistd.h>
 
 int test_get_next_line_basic(void)
 {
-    const char *fname = "tmp_gnl_basic.txt";
-    int fd = ::open(fname, O_CREAT | O_WRONLY | O_TRUNC, 0644);
-    if (fd < 0)
-        return (0);
-    int temp = ::write(fd, "Hello\nWorld\n", 12);
-    (void)temp;
-    ::close(fd);
-
-    ft_file file(fname, O_RDONLY);
-    if (file.get_fd() < 0)
-    {
-        ::unlink(fname);
-        return (0);
-    }
-    char *line1 = get_next_line(file);
-    char *line2 = get_next_line(file);
-    char *line3 = get_next_line(file);
-    file.close();
-    ::unlink(fname);
-    int ok = line1 && line2 && !line3 &&
-             ft_strcmp(line1, "Hello\n") == 0 &&
-             ft_strcmp(line2, "World\n") == 0;
-    if (line1)
-        cma_free(line1);
-    if (line2)
-        cma_free(line2);
+    ft_istringstream input("Hello\nWorld\n");
+    char *line_one = get_next_line(input, 2);
+    char *line_two = get_next_line(input, 2);
+    char *line_three = get_next_line(input, 2);
+    int ok = line_one && line_two && !line_three &&
+             ft_strcmp(line_one, "Hello\n") == 0 &&
+             ft_strcmp(line_two, "World\n") == 0;
+    if (line_one)
+        cma_free(line_one);
+    if (line_two)
+        cma_free(line_two);
     return (ok);
 }
 
 int test_get_next_line_empty(void)
 {
-    const char *fname = "tmp_gnl_empty.txt";
-    int fd = ::open(fname, O_CREAT | O_WRONLY | O_TRUNC, 0644);
-    if (fd < 0)
-        return (0);
-    ::close(fd);
-
-    ft_file file(fname, O_RDONLY);
-    if (file.get_fd() < 0)
-    {
-        ::unlink(fname);
-        return (0);
-    }
-    char *line = get_next_line(file);
-    file.close();
-    ::unlink(fname);
+    ft_istringstream input("");
+    char *line = get_next_line(input, 4);
     if (line)
     {
         cma_free(line);
@@ -61,17 +33,25 @@ int test_get_next_line_empty(void)
     return (1);
 }
 
+int test_get_next_line_custom_buffer(void)
+{
+    ft_istringstream input("A long line without newline");
+    char *line = get_next_line(input, 3);
+    int ok = line && ft_strcmp(line, "A long line without newline") == 0;
+    if (line)
+        cma_free(line);
+    return (ok);
+}
+
 int test_ft_open_and_read_file(void)
 {
     const char *fname = "tmp_gnl_readlines.txt";
-    int fd = ::open(fname, O_CREAT | O_WRONLY | O_TRUNC, 0644);
-    if (fd < 0)
+    std::ofstream out(fname);
+    if (!out.is_open())
         return (0);
-    int temp = ::write(fd, "A\nB\nC\n", 6);
-    (void)temp;
-    ::close(fd);
-
-    char **lines = ft_open_and_read_file(fname);
+    out << "A\nB\nC\n";
+    out.close();
+    char **lines = ft_open_and_read_file(fname, 4);
     ::unlink(fname);
     if (!lines)
         return (0);

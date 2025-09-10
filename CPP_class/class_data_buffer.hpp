@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <cstdint>
-#include <sstream>
+#include "class_istringstream.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
@@ -79,7 +79,7 @@ DataBuffer& DataBuffer::operator>>(T& value)
         return (*this);
     }
     ft_memcpy(bytes, this->_buffer.data() + this->_readPos, len);
-    std::istringstream iss(bytes);
+    ft_istringstream iss(bytes);
     iss >> value;
     cma_free(bytes);
     this->_ok = !iss.fail();
