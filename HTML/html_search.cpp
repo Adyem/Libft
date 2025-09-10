@@ -1,6 +1,7 @@
 #include "parser.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
+#include "../CMA/CMA.hpp"
 
 html_node *html_find_by_tag(html_node *nodeList, const char *tagName)
 {
@@ -67,4 +68,44 @@ size_t html_count_nodes_by_tag(html_node *nodeList, const char *tagName)
         currentNode = currentNode->next;
     }
     return (count);
+}
+
+html_node *html_find_by_selector(html_node *node_list, const char *selector)
+{
+    const char *close_bracket;
+    const char *equal_sign;
+    char *key;
+    char *value;
+    html_node *result;
+
+    if (!selector)
+        return (ft_nullptr);
+    if (selector[0] == '#')
+        return (html_find_by_attr(node_list, "id", selector + 1));
+    if (selector[0] == '.')
+        return (html_find_by_attr(node_list, "class", selector + 1));
+    if (selector[0] == '[')
+    {
+        close_bracket = ft_strchr(selector + 1, ']');
+        if (!close_bracket)
+            return (ft_nullptr);
+        equal_sign = ft_strchr(selector + 1, '=');
+        if (equal_sign && equal_sign < close_bracket)
+        {
+            key = cma_substr(selector + 1, 0, static_cast<size_t>(equal_sign - selector - 1));
+            value = cma_substr(equal_sign + 1, 0, static_cast<size_t>(close_bracket - equal_sign - 1));
+            result = html_find_by_attr(node_list, key, value);
+            if (key)
+                cma_free(key);
+            if (value)
+                cma_free(value);
+            return (result);
+        }
+        key = cma_substr(selector + 1, 0, static_cast<size_t>(close_bracket - selector - 1));
+        result = html_find_by_attr(node_list, key, ft_nullptr);
+        if (key)
+            cma_free(key);
+        return (result);
+    }
+    return (html_find_by_tag(node_list, selector));
 }

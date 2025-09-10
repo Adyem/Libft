@@ -23,6 +23,7 @@ class html_document
         html_node   *find_by_tag(const char *tag_name) const noexcept;
         html_node   *find_by_attr(const char *key, const char *value) const noexcept;
         html_node   *find_by_text(const char *text_content) const noexcept;
+        html_node   *find_by_selector(const char *selector) const noexcept;
         size_t      count_nodes_by_tag(const char *tag_name) const noexcept;
         void        clear() noexcept;
 

@@ -50,3 +50,21 @@ int test_html_find_by_attr(void)
     return (ok);
 }
 
+int test_html_find_by_selector(void)
+{
+    html_node *root = html_create_node("div", ft_nullptr);
+    html_node *child_id = html_create_node("p", ft_nullptr);
+    html_attr *id_attr = html_create_attr("id", "main");
+    html_add_attr(child_id, id_attr);
+    html_add_child(root, child_id);
+    html_node *child_class = html_create_node("span", ft_nullptr);
+    html_attr *class_attr = html_create_attr("class", "highlight");
+    html_add_attr(child_class, class_attr);
+    html_add_child(root, child_class);
+    html_node *found_id = html_find_by_selector(root, "#main");
+    html_node *found_class = html_find_by_selector(root, ".highlight");
+    int ok = (found_id == child_id) && (found_class == child_class);
+    html_free_nodes(root);
+    return (ok);
+}
+

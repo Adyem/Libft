@@ -34,6 +34,7 @@ void        html_remove_nodes_by_text(html_node **nodeList, const char *textCont
 html_node   *html_find_by_tag(html_node *nodeList, const char *tagName);
 html_node   *html_find_by_attr(html_node *nodeList, const char *key, const char *value);
 html_node   *html_find_by_text(html_node *nodeList, const char *textContent);
+html_node   *html_find_by_selector(html_node *node_list, const char *selector);
 size_t      html_count_nodes_by_tag(html_node *nodeList, const char *tagName);
 
 #endif
