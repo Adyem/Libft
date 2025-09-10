@@ -1,23 +1,45 @@
 #include "logger_internal.hpp"
 #include <fcntl.h>
 #include <unistd.h>
+#include <cstring>
+
+void ft_file_sink(const char *message, void *user_data)
+{
+    s_file_sink *sink;
+    size_t       length;
+
+    sink = static_cast<s_file_sink *>(user_data);
+    if (!sink)
+        return ;
+    length = std::strlen(message);
+    write(sink->fd, message, length);
+    return ;
+}
 
 int ft_log_set_file(const char *path, size_t max_size)
 {
+    s_file_sink *sink;
+    int          fd;
+
     if (!path)
         return (-1);
-    if (!g_path.empty())
-        close(g_fd);
-    int fd = open(path, O_CREAT | O_WRONLY | O_APPEND, 0644);
+    fd = open(path, O_CREAT | O_WRONLY | O_APPEND, 0644);
     if (fd == -1)
+        return (-1);
+    sink = new s_file_sink;
+    if (!sink)
     {
-        g_fd = 1;
-        g_path.clear();
-        g_max_size = 0;
+        close(fd);
         return (-1);
     }
-    g_fd = fd;
-    g_path = path;
-    g_max_size = max_size;
+    sink->fd = fd;
+    sink->path = path;
+    sink->max_size = max_size;
+    if (ft_log_add_sink(ft_file_sink, sink) != 0)
+    {
+        close(fd);
+        delete sink;
+        return (-1);
+    }
     return (0);
 }
