@@ -94,3 +94,10 @@ int test_pf_printf_modifiers(void)
     buf[r] = '\0';
     return (ft_strcmp(buf, "2147483648 2147483648 80000000 8589934591 1ffffffff") == 0);
 }
+
+int test_pf_snprintf_basic(void)
+{
+    char buffer[64];
+    pf_snprintf(buffer, sizeof(buffer), "%s %d", "number", 7);
+    return (ft_strcmp(buffer, "number 7") == 0);
+}

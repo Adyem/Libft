@@ -4,7 +4,8 @@ DEBUG_TARGET := Printf_debug.a
 SRCS := printf_printf.cpp \
                 printf_format.cpp \
                 printf_print_args.cpp \
-                printf_ft_fprintf.cpp
+                printf_ft_fprintf.cpp \
+                printf_snprintf.cpp
 
 HEADERS := printf.hpp \
            printf_internal.hpp
