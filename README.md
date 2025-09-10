@@ -427,6 +427,11 @@ void    su_assert(bool condition, const char *message);
 char    *su_getenv(const char *name);
 int     su_setenv(const char *name, const char *value, int overwrite);
 int     su_putenv(char *string);
+int     su_open(const char *path_name);
+int     su_open(const char *path_name, int flags);
+int     su_open(const char *path_name, int flags, mode_t mode);
+ssize_t su_read(int file_descriptor, void *buffer, size_t count);
+ssize_t su_write(int file_descriptor, const void *buffer, size_t count);
 unsigned int    su_get_cpu_count(void);
 unsigned long long su_get_total_memory(void);
 ```
@@ -565,8 +570,7 @@ int         file_dir_exists(const char *rel_path);
 int         file_create_directory(const char *path, mode_t mode);
 ```
 
-Additional wrappers in `Linux/file.hpp` and `Windows/file.hpp` provide
-basic file descriptor utilities:
+`Compatebility/file.hpp` provides basic file descriptor utilities:
 
 ```
 void    ft_initialize_standard_file_descriptors();
@@ -577,7 +581,9 @@ ssize_t ft_read(int fd, void *buf, size_t count);
 ssize_t ft_write(int fd, const void *buf, size_t count);
 int     ft_close(int fd);
 ```
-
+Higher-level helpers `su_open`, `su_read`, and `su_write` in
+`System_utils/system_utils.hpp` extend these functions with additional
+portability features such as retrying interrupted writes.
 #### Config
 `Config/config.hpp` parses simple configuration files:
 
