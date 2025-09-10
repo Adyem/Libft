@@ -2,7 +2,7 @@
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include <cstdio>
-#include <istream>
+#include "../CPP_class/class_istream.hpp"
 #include "../Template/unordened_map.hpp"
 #include "../Errno/errno.hpp"
 #include "get_next_line.hpp"
@@ -109,10 +109,10 @@ static char* fetch_line(char* readed_string)
     return (string);
 }
 
-static char* read_stream(std::istream &input, char* readed_string, std::size_t buffer_size)
+static char* read_stream(ft_istream &input, char* readed_string, std::size_t buffer_size)
 {
     char* buffer;
-    std::streamsize readed_bytes;
+    std::size_t readed_bytes;
 
     buffer = static_cast<char*>(cma_malloc(buffer_size + 1));
     if (!buffer)
@@ -120,7 +120,7 @@ static char* read_stream(std::istream &input, char* readed_string, std::size_t b
     readed_bytes = 1;
     while (!ft_strchr(readed_string, '\n') && readed_bytes != 0)
     {
-        input.read(buffer, static_cast<std::streamsize>(buffer_size));
+        input.read(buffer, buffer_size);
         readed_bytes = input.gcount();
         if (input.bad())
         {
@@ -140,15 +140,15 @@ static char* read_stream(std::istream &input, char* readed_string, std::size_t b
     return (readed_string);
 }
 
-char    *get_next_line(std::istream &input, std::size_t buffer_size)
+char    *get_next_line(ft_istream &input, std::size_t buffer_size)
 {
-    static ft_unord_map<std::istream*, char*>  readed_map;
-    char                                       *string = ft_nullptr;
-    char                                       *stored_string = ft_nullptr;
+    static ft_unord_map<ft_istream*, char*> readed_map;
+    char                                   *string = ft_nullptr;
+    char                                   *stored_string = ft_nullptr;
 
     if (buffer_size == 0)
         return (ft_nullptr);
-    ft_unord_map<std::istream*, char*>::iterator map_it = readed_map.find(&input);
+    ft_unord_map<ft_istream*, char*>::iterator map_it = readed_map.find(&input);
     if (readed_map.get_error() != ER_SUCCESS)
         return (ft_nullptr);
     if (map_it != readed_map.end())

@@ -6,12 +6,18 @@ SRCS :=  cpp_class_string_constructors.cpp \
          cpp_class_nullptr.cpp \
          cpp_class_file.cpp \
          cpp_class_data_buffer.cpp \
+         cpp_class_stringbuf.cpp \
+         cpp_class_istream.cpp \
+         cpp_class_fd_istream.cpp \
          cpp_class_istringstream.cpp
 
 HEADERS := class_string_class.hpp \
           class_nullptr.hpp \
           class_file.hpp \
           class_data_buffer.hpp \
+          class_stringbuf.hpp \
+          class_istream.hpp \
+          class_fd_istream.hpp \
           class_istringstream.hpp
 
 ifeq ($(OS),Windows_NT)
