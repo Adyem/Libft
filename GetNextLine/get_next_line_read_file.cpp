@@ -1,12 +1,10 @@
-#include "../CPP_class/class_file.hpp"
 #include "../Printf/printf.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../CPP_class/class_fd_istream.hpp"
+#include "../System_utils/system_utils.hpp"
 #include "get_next_line.hpp"
-#include <fcntl.h>
 #include <unistd.h>
-#include <cerrno>
-#include <cstring>
 
 static void ft_handle_allocation_failure(char **lines)
 {
@@ -47,7 +45,7 @@ static char **ft_reallocate_lines(char **lines, int new_size)
     return (new_lines);
 }
 
-char **ft_read_file_lines(ft_file &file)
+char **ft_read_file_lines(ft_istream &input, std::size_t buffer_size)
 {
     char **lines = ft_nullptr;
     char *current_line = ft_nullptr;
@@ -55,17 +53,18 @@ char **ft_read_file_lines(ft_file &file)
 
     while (true)
     {
-        current_line = get_next_line(file);
+        current_line = get_next_line(input, buffer_size);
         if (!current_line)
             break ;
+        #ifdef DEBUG
         if (DEBUG == 1)
             pf_printf("LINE = %s", current_line);
+        #endif
         line_count++;
         lines = ft_reallocate_lines(lines, line_count);
         if (!lines)
         {
             cma_free(current_line);
-            get_next_line(file);
             return (ft_nullptr);
         }
         lines[line_count - 1] = current_line;
@@ -73,11 +72,15 @@ char **ft_read_file_lines(ft_file &file)
     return (lines);
 }
 
-char **ft_open_and_read_file(const char *file_name)
+char **ft_open_and_read_file(const char *file_name, std::size_t buffer_size)
 {
-    ft_file file(file_name, O_RDONLY);
+    int fd = su_open(file_name);
+    ft_fd_istream input(fd);
+    char **lines;
 
-    if (file.get_error())
+    if (fd < 0)
         return (ft_nullptr);
-    return (ft_read_file_lines(file));
+    lines = ft_read_file_lines(input, buffer_size);
+    close(fd);
+    return (lines);
 }

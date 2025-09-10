@@ -1,7 +1,7 @@
 #include <fcntl.h>
 #include "parser.hpp"
 #include "../Printf/printf.hpp"
-#include "../Compatebility/file.hpp"
+#include "../System_utils/system_utils.hpp"
 
 static void html_write_attrs(int fd, html_attr *attribute)
 {
@@ -51,7 +51,7 @@ static void html_write_node(int fd, html_node *htmlNode, int indent)
 
 int html_write_to_file(const char *filePath, html_node *nodeList)
 {
-    int fd = ft_open(filePath, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    int fd = su_open(filePath, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd < 0)
         return (-1);
     html_node *currentNode = nodeList;

@@ -3,7 +3,7 @@
 #include "../Math/math.hpp"
 #include <cstdarg>
 #include <unistd.h>
-#include "../Compatebility/file.hpp"
+#include "../System_utils/system_utils.hpp"
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -11,12 +11,12 @@
 #include <stddef.h>
 #include <cfloat>
 
-static inline ssize_t ft_platform_write(int fd, const char *string, size_t length)
+static inline ssize_t su_platform_write(int fd, const char *string, size_t length)
 {
 #ifdef _WIN32
-    return (ft_write(fd, string, static_cast<unsigned int>(length)));
+    return (su_write(fd, string, static_cast<unsigned int>(length)));
 #else
-    return (ft_write(fd, string, length));
+    return (su_write(fd, string, length));
 #endif
 }
 
@@ -32,7 +32,7 @@ size_t ft_strlen_printf(const char *string)
 
 void ft_putchar_fd(const char character, int fd, size_t *count)
 {
-    ssize_t return_value = ft_write(fd, &character, 1);
+    ssize_t return_value = su_write(fd, &character, 1);
     (void)return_value;
     (*count)++;
     return ;
@@ -43,12 +43,12 @@ void ft_putstr_fd(const char *string, int fd, size_t *count)
     ssize_t return_value;
     if (!string)
     {
-        return_value = ft_write(fd, "(null)", 6);
+        return_value = su_write(fd, "(null)", 6);
         *count += 6;
         return ;
     }
     size_t length = ft_strlen_printf(string);
-    return_value = ft_platform_write(fd, string, length);
+    return_value = su_platform_write(fd, string, length);
     *count += length;
     (void)return_value;
     return ;
