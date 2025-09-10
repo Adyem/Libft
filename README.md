@@ -134,7 +134,9 @@ returns a 128-byte block) and are released with `cma_free`.
 When allocation logging is enabled via the logger, the allocator emits debug messages for each `cma_malloc` and `cma_free`.
 The allocator enforces an optional global allocation limit that can be
 changed at runtime with `cma_set_alloc_limit`. A limit of `0` disables the
-check. Internally, `cma_realloc` has been simplified by removing redundant braces.
+check. The allocator also tracks allocation and free counts, accessible
+through `cma_get_stats`. Internally, `cma_realloc` has been simplified by
+removing redundant braces.
 
 ```
 void   *cma_malloc(std::size_t size);
@@ -156,6 +158,7 @@ char   *cma_strtrim(const char *s1, const char *set);
 void    cma_free_double(char **content);
 void    cma_cleanup();
 void    cma_set_alloc_limit(std::size_t limit);
+void    cma_get_stats(std::size_t *allocation_count, std::size_t *free_count);
 ```
 
 ### GetNextLine
