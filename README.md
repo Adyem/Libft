@@ -179,6 +179,7 @@ char  **ft_open_and_read_file(const char *file_name);
 ```
 int pf_printf(const char *format, ...);
 int pf_printf_fd(int fd, const char *format, ...);
+int pf_snprintf(char *string, size_t size, const char *format, ...);
 ```
 
 ### PThread Wrappers
@@ -249,6 +250,8 @@ ssize_t read(char *buffer, int count) noexcept;
 int     printf(const char *format, ...) __attribute__((format(printf,2,3),hot));
 operator int() const;
 ```
+
+The `printf` helper forwards to the Printf module's `pf_printf_fd_v` to write formatted output directly to the file descriptor.
 
 #### `ft_string`
 ```
