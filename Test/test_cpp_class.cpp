@@ -4,7 +4,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <cstring>
-#include <string>
 
 int test_ft_string_append(void)
 {
@@ -37,7 +36,7 @@ int test_ft_string_concat(void)
 int test_data_buffer_io(void)
 {
     DataBuffer source_buffer;
-    source_buffer << 42 << std::string("abc");
+    source_buffer << 42 << ft_string("abc");
     DataBuffer copy_buffer(source_buffer);
     DataBuffer assigned_buffer;
     assigned_buffer = source_buffer;
@@ -45,11 +44,11 @@ int test_data_buffer_io(void)
     DataBuffer move_assigned_buffer;
     move_assigned_buffer = std::move(assigned_buffer);
     int number_copy = 0;
-    std::string string_copy;
+    ft_string string_copy;
     int number_move = 0;
-    std::string string_move;
+    ft_string string_move;
     int number_move_assign = 0;
-    std::string string_move_assign;
+    ft_string string_move_assign;
     copy_buffer >> number_copy >> string_copy;
     moved_buffer >> number_move >> string_move;
     move_assigned_buffer >> number_move_assign >> string_move_assign;

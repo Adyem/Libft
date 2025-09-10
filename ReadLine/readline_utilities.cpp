@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <unistd.h>
-#include "../Compatebility/file.hpp"
+#include "../System_utils/system_utils.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Printf/printf.hpp"
@@ -48,7 +48,7 @@ char rl_read_key()
     ssize_t bytes_read;
     char character;
 
-    while ((bytes_read = ft_read(0, &character, 1)) != 1)
+    while ((bytes_read = su_read(0, &character, 1)) != 1)
         ;
     return (character);
 }

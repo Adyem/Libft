@@ -148,7 +148,7 @@ static json_item *parse_items(const char *json_string, size_t &index)
 
 json_group *json_read_from_file(const char *filename)
 {
-    char **lines = ft_open_and_read_file(filename);
+    char **lines = ft_open_and_read_file(filename, 512);
     if (!lines)
         return (ft_nullptr);
     char *content = cma_strdup("");

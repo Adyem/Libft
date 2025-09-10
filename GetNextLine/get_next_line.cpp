@@ -2,6 +2,9 @@
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include <cstdio>
+#include "../CPP_class/class_istream.hpp"
+#include "../Template/unordened_map.hpp"
+#include "../Errno/errno.hpp"
 #include "get_next_line.hpp"
 
 static char* allocate_new_string(char* string_one, char* string_two)
@@ -106,19 +109,20 @@ static char* fetch_line(char* readed_string)
     return (string);
 }
 
-static char* read_fd(ft_file& file, char* readed_string)
+static char* read_stream(ft_istream &input, char* readed_string, std::size_t buffer_size)
 {
     char* buffer;
-    ssize_t readed_bytes;
+    std::size_t readed_bytes;
 
-    buffer = static_cast<char*>(cma_malloc(BUFFER_SIZE + 1));
+    buffer = static_cast<char*>(cma_malloc(buffer_size + 1));
     if (!buffer)
         return (ft_nullptr);
     readed_bytes = 1;
     while (!ft_strchr(readed_string, '\n') && readed_bytes != 0)
     {
-        readed_bytes = file.read(buffer, BUFFER_SIZE);
-        if (readed_bytes == -1)
+        input.read(buffer, buffer_size);
+        readed_bytes = input.gcount();
+        if (input.bad())
         {
             cma_free(buffer);
             cma_free(readed_string);
@@ -136,24 +140,43 @@ static char* read_fd(ft_file& file, char* readed_string)
     return (readed_string);
 }
 
-char    *get_next_line(ft_file &file)
+char    *get_next_line(ft_istream &input, std::size_t buffer_size)
 {
-    char        *string = ft_nullptr;
-    static char    *readed_string[4096];
-    int            index = 0;
+    static ft_unord_map<ft_istream*, char*> readed_map;
+    char                                   *string = ft_nullptr;
+    char                                   *stored_string = ft_nullptr;
 
-    while (file == -1 && index < 4096)
+    if (buffer_size == 0)
+        return (ft_nullptr);
+    ft_unord_map<ft_istream*, char*>::iterator map_it = readed_map.find(&input);
+    if (readed_map.get_error() != ER_SUCCESS)
+        return (ft_nullptr);
+    if (map_it != readed_map.end())
+        stored_string = map_it->second;
+    stored_string = read_stream(input, stored_string, buffer_size);
+    if (!stored_string)
     {
-        cma_free(readed_string[index]);
-        readed_string[index] = ft_nullptr;
-        index++;
+        readed_map.remove(&input);
+        if (readed_map.get_error() != ER_SUCCESS)
+            return (ft_nullptr);
+        return (ft_nullptr);
     }
-    if (BUFFER_SIZE <= 0 || file < 0)
-        return (ft_nullptr);
-    readed_string[file] = read_fd(file, readed_string[file]);
-    if (!readed_string[file])
-        return (ft_nullptr);
-    string = fetch_line(readed_string[file]);
-    readed_string[file] = leftovers(readed_string[file]);
+    string = fetch_line(stored_string);
+    stored_string = leftovers(stored_string);
+    if (stored_string)
+    {
+        readed_map.insert(&input, stored_string);
+        if (readed_map.get_error() != ER_SUCCESS)
+        {
+            cma_free(stored_string);
+            return (ft_nullptr);
+        }
+    }
+    else
+    {
+        readed_map.remove(&input);
+        if (readed_map.get_error() != ER_SUCCESS)
+            return (ft_nullptr);
+    }
     return (string);
 }

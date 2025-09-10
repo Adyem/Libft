@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
-#include "../Compatebility/file.hpp"
+#include "../System_utils/system_utils.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "basic_encryption.hpp"
 
@@ -35,13 +35,13 @@ int be_saveGame(const char *filename, const char *data, const char *key)
         return (1);
     ft_memcpy(encrypted_data, data, data_length);
     be_encrypt(encrypted_data, data_length, key);
-    int file_descriptor = ft_open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    int file_descriptor = su_open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (file_descriptor < 0)
     {
         cma_free(encrypted_data);
         return (1);
     }
-    ssize_t bytes_written = ft_write(file_descriptor, encrypted_data, static_cast<int>(data_length));
+    ssize_t bytes_written = su_write(file_descriptor, encrypted_data, static_cast<int>(data_length));
     ft_close(file_descriptor);
     cma_free(encrypted_data);
     if (bytes_written == static_cast<ssize_t>(data_length))
