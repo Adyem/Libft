@@ -4,6 +4,8 @@
 char    *su_getenv(const char *name);
 int     su_setenv(const char *name, const char *value, int overwrite);
 int     su_putenv(char *string);
+unsigned int    su_get_cpu_count(void);
+unsigned long long su_get_total_memory(void);
 void    su_abort(void);
 void    su_sigabrt(void);
 void    su_sigfpe(void);

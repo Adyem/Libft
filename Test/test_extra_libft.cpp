@@ -2,6 +2,7 @@
 #include "../Math/math.hpp"
 #include "../Libft/limits.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../System_utils/system_utils.hpp"
 #include <cstring>
 #include <string>
 
@@ -350,5 +351,15 @@ int test_setenv_no_overwrite(void)
     int ok = val != ft_nullptr && std::strcmp(val, "first") == 0;
     ft_unsetenv("LIBFT_TEST_VAR2");
     return (ok);
+}
+
+int test_su_get_cpu_count(void)
+{
+    return (su_get_cpu_count() > 0);
+}
+
+int test_su_get_total_memory(void)
+{
+    return (su_get_total_memory() > 0);
 }
 
