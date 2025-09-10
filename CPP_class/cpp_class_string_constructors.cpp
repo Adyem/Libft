@@ -84,11 +84,13 @@ ft_string& ft_string::operator=(const char*& other) noexcept
 {
     cma_free(this->_data);
     this->_data = ft_nullptr;
-    this->_length = ft_strlen(other);
-    this->_capacity = ft_strlen(other);
+    this->_length = 0;
+    this->_capacity = 0;
     this->_error_code = 0;
     if (other)
     {
+        this->_length = ft_strlen_size_t(other);
+        this->_capacity = this->_length;
         this->_data = static_cast<char*>(cma_calloc(this->_capacity + 1, sizeof(char)));
         if (!this->_data)
         {
@@ -104,7 +106,7 @@ ft_string& ft_string::operator=(ft_string&& other) noexcept
 {
     if (this != &other)
     {
-        delete[] this->_data;
+        cma_free(this->_data);
         this->_data = other._data;
         this->_length = other._length;
         this->_capacity = other._capacity;
