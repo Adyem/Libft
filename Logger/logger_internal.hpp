@@ -2,8 +2,9 @@
 #define LOGGER_INTERNAL_HPP
 
 #include <cstdarg>
-#include <string>
 #include <vector>
+#include "../CPP_class/class_string_class.hpp"
+#include "../Errno/errno.hpp"
 #include "logger.hpp"
 
 extern ft_logger *g_logger;
@@ -19,9 +20,9 @@ struct s_log_sink
 
 struct s_file_sink
 {
-    int         fd;
-    std::string path;
-    size_t      max_size;
+    int       fd;
+    ft_string path;
+    size_t    max_size;
 };
 
 extern std::vector<s_log_sink> g_sinks;

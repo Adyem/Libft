@@ -1,7 +1,7 @@
 #include "class_istringstream.hpp"
 #include "../Libft/libft.hpp"
 
-ft_istringstream::ft_istringstream(const std::string &string) noexcept
+ft_istringstream::ft_istringstream(const ft_string &string) noexcept
 : ft_istream(), _buffer(string)
 {
     return ;
@@ -22,19 +22,19 @@ std::size_t ft_istringstream::do_read(char *buffer, std::size_t count)
     return (result);
 }
 
-std::string ft_istringstream::str() const
+ft_string ft_istringstream::str() const
 {
     return (this->_buffer.str());
 }
 
 ft_istringstream &operator>>(ft_istringstream &input, int &value)
 {
-    std::string content = input.str();
+    ft_string content = input.str();
     value = ft_atoi(content.c_str());
     return (input);
 }
 
-ft_istringstream &operator>>(ft_istringstream &input, std::string &value)
+ft_istringstream &operator>>(ft_istringstream &input, ft_string &value)
 {
     value = input.str();
     return (input);

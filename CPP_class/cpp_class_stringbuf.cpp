@@ -1,8 +1,10 @@
 #include "class_stringbuf.hpp"
 
-ft_stringbuf::ft_stringbuf(const std::string &string) noexcept
+ft_stringbuf::ft_stringbuf(const ft_string &string) noexcept
 : _storage(string), _position(0), _error_code(ER_SUCCESS)
 {
+    if (this->_storage.get_error() != ER_SUCCESS)
+        this->set_error(this->_storage.get_error());
     return ;
 }
 
@@ -29,7 +31,13 @@ std::size_t ft_stringbuf::read(char *buffer, std::size_t count)
     }
     while (index < count && this->_position < this->_storage.size())
     {
-        buffer[index] = this->_storage[this->_position];
+        const char *current = this->_storage.at(this->_position);
+        if (!current)
+        {
+            this->set_error(FT_EINVAL);
+            break ;
+        }
+        buffer[index] = *current;
         index++;
         this->_position++;
     }
@@ -51,7 +59,11 @@ const char *ft_stringbuf::get_error_str() const noexcept
     return (ft_strerror(this->_error_code));
 }
 
-std::string ft_stringbuf::str() const
+ft_string ft_stringbuf::str() const
 {
-    return (this->_storage.substr(this->_position));
+    const char *start = this->_storage.c_str();
+    ft_string result(start + this->_position);
+    if (result.get_error() != ER_SUCCESS)
+        this->set_error(result.get_error());
+    return (result);
 }

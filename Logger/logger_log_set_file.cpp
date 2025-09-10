@@ -37,7 +37,8 @@ int ft_log_set_file(const char *path, size_t max_size)
     sink->fd = fd;
     sink->path = path;
     sink->max_size = max_size;
-    if (ft_log_add_sink(ft_file_sink, sink) != 0)
+    if (sink->path.get_error() != ER_SUCCESS ||
+        ft_log_add_sink(ft_file_sink, sink) != 0)
     {
         close(fd);
         delete sink;
