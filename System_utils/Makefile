@@ -9,7 +9,8 @@ SRCS := System_utils_assert.cpp \
         System_utils_sigill.cpp \
         System_utils_sigint.cpp \
         System_utils_sigsegv.cpp \
-        System_utils_sigterm.cpp
+        System_utils_sigterm.cpp \
+        System_utils_sysinfo.cpp
 
 HEADERS := system_utils.hpp
 
