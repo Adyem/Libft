@@ -3,7 +3,8 @@ DEBUG_TARGET := errno_debug.a
 
 SRCS :=        errno_strerror.cpp \
         errno_perror.cpp \
-        errno_exit.cpp
+        errno_exit.cpp \
+        errno_code.cpp
 
 HEADERS := errno.hpp
 
