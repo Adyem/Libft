@@ -406,7 +406,8 @@ custom memory allocator can be toggled with `set_alloc_logging` and
 `System_utils/system_utils.hpp` provides a simple assertion helper that logs failures using the
 global logger before terminating the process. The header also offers direct helpers to abort or
 raise common signals and wrappers around environment helpers. Each call locks a global mutex before
-touching the process environment.
+touching the process environment. It also exposes portable helpers to query CPU count and total
+physical memory.
 
 ```
 void    su_abort(void);
@@ -420,6 +421,8 @@ void    su_assert(bool condition, const char *message);
 char    *su_getenv(const char *name);
 int     su_setenv(const char *name, const char *value, int overwrite);
 int     su_putenv(char *string);
+unsigned int    su_get_cpu_count(void);
+unsigned long long su_get_total_memory(void);
 ```
 
 ### Template Utilities
