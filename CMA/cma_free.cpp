@@ -2,13 +2,13 @@
 #include <cstring>
 #include <cstdio>
 #include <cassert>
-#include <csignal>
 #include <pthread.h>
 #include "CMA.hpp"
 #include "cma_internal.hpp"
 #include "../PThread/mutex.hpp"
 #include "../Printf/printf.hpp"
 #include "../Logger/logger.hpp"
+#include "../System_utils/system_utils.hpp"
 
 void cma_free(void* ptr)
 {
@@ -28,7 +28,7 @@ void cma_free(void* ptr)
     {
         pf_printf_fd(2, "Invalid block detected in cma_free. \n");
         print_block_info(block);
-        raise(SIGABRT);
+        su_sigabrt();
     }
     block->free = true;
     block = merge_block(block);
