@@ -2,7 +2,7 @@
 #include <fcntl.h>
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
-#include "../Compatebility/file.hpp"
+#include "../System_utils/system_utils.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "open_dir.hpp"
 #include <stdio.h>
@@ -67,7 +67,7 @@ static inline int closedir_win(file_dir* directoryStream)
 #ifdef __linux__
 static inline file_dir* opendir_unix(const char* directoryPath)
 {
-    int fileDescriptor = ft_open(directoryPath, O_DIRECTORY | O_RDONLY, 0);
+    int fileDescriptor = su_open(directoryPath, O_DIRECTORY | O_RDONLY, 0);
     if (fileDescriptor < 0)
         return (ft_nullptr);
     file_dir* directoryStream = reinterpret_cast<file_dir*>(cma_malloc(sizeof(file_dir)));

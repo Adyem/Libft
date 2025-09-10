@@ -163,13 +163,13 @@ void    cma_get_stats(std::size_t *allocation_count, std::size_t *free_count);
 
 ### GetNextLine
 
-`GetNextLine/get_next_line.hpp` implements a simple file reader.
+`GetNextLine/get_next_line.hpp` implements a simple file reader that works with `std::istream` and a configurable buffer size. It stores per-stream leftovers in the custom `ft_unord_map`, allowing error reporting through `ft_errno`. The `CPP_class` module provides `ft_istringstream` for supplying string data to these readers without relying on the standard library implementation.
 
 ```
-char   *ft_strjoin_gnl(char *s1, char *s2);
-char   *get_next_line(ft_file &file);
-char  **ft_read_file_lines(ft_file &file);
-char  **ft_open_and_read_file(const char *file_name);
+char   *ft_strjoin_gnl(char *string_one, char *string_two);
+char   *get_next_line(std::istream &input, std::size_t buffer_size);
+char  **ft_read_file_lines(std::istream &input, std::size_t buffer_size);
+char  **ft_open_and_read_file(const char *file_name, std::size_t buffer_size);
 ```
 
 ### Printf
@@ -252,6 +252,14 @@ operator int() const;
 ```
 
 The `printf` helper forwards to the Printf module's `pf_printf_fd_v` to write formatted output directly to the file descriptor.
+
+#### `ft_istringstream`
+```
+ft_istringstream(const std::string &string) noexcept;
+~ft_istringstream() noexcept;
+int get_error() const noexcept;
+const char *get_error_str() const noexcept;
+```
 
 #### `ft_string`
 ```
@@ -581,20 +589,17 @@ int         file_dir_exists(const char *rel_path);
 int         file_create_directory(const char *path, mode_t mode);
 ```
 
-`Compatebility/file.hpp` provides basic file descriptor utilities:
+`System_utils/system_utils.hpp` provides cross-platform file descriptor utilities:
 
 ```
 void    ft_initialize_standard_file_descriptors();
-int     ft_open(const char *pathname);
-int     ft_open(const char *pathname, int flags);
-int     ft_open(const char *pathname, int flags, mode_t mode);
-ssize_t ft_read(int fd, void *buf, size_t count);
-ssize_t ft_write(int fd, const void *buf, size_t count);
+int     su_open(const char *pathname);
+int     su_open(const char *pathname, int flags);
+int     su_open(const char *pathname, int flags, mode_t mode);
+ssize_t su_read(int fd, void *buf, size_t count);
+ssize_t su_write(int fd, const void *buf, size_t count);
 int     ft_close(int fd);
 ```
-Higher-level helpers `su_open`, `su_read`, and `su_write` in
-`System_utils/system_utils.hpp` extend these functions with additional
-portability features such as retrying interrupted writes.
 #### Config
 `Config/config.hpp` parses simple configuration files:
 

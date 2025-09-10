@@ -5,12 +5,14 @@ SRCS :=  cpp_class_string_constructors.cpp \
          cpp_class_string_methods.cpp \
          cpp_class_nullptr.cpp \
          cpp_class_file.cpp \
-         cpp_class_data_buffer.cpp
+         cpp_class_data_buffer.cpp \
+         cpp_class_istringstream.cpp
 
 HEADERS := class_string_class.hpp \
-           class_nullptr.hpp \
-           class_file.hpp \
-           class_data_buffer.hpp
+          class_nullptr.hpp \
+          class_file.hpp \
+          class_data_buffer.hpp \
+          class_istringstream.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

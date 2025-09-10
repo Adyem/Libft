@@ -150,6 +150,7 @@ int test_pf_printf_modifiers(void);
 int test_pf_snprintf_basic(void);
 int test_get_next_line_basic(void);
 int test_get_next_line_empty(void);
+int test_get_next_line_custom_buffer(void);
 int test_ft_open_and_read_file(void);
 int test_cma_checked_free_basic(void);
 int test_cma_checked_free_offset(void);
@@ -370,6 +371,7 @@ int main(int argc, char **argv)
         { test_pf_snprintf_basic, "pf_snprintf basic" },
         { test_get_next_line_basic, "get_next_line basic" },
         { test_get_next_line_empty, "get_next_line empty" },
+        { test_get_next_line_custom_buffer, "get_next_line custom buffer" },
         { test_ft_open_and_read_file, "open_and_read_file" },
         { test_cma_checked_free_basic, "cma_checked_free basic" },
         { test_cma_checked_free_offset, "cma_checked_free offset" },

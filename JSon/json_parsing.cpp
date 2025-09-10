@@ -8,7 +8,7 @@
 #include "json.hpp"
 #include "../Errno/errno.hpp"
 #include "../Printf/printf.hpp"
-#include "../Compatebility/file.hpp"
+#include "../System_utils/system_utils.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
 
@@ -59,7 +59,7 @@ void json_append_group(json_group **head, json_group *new_group)
 
 int json_write_to_file(const char *filename, json_group *groups)
 {
-    int file_descriptor = ft_open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    int file_descriptor = su_open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (file_descriptor < 0)
         return (-1);
     pf_printf_fd(file_descriptor, "{\n");
