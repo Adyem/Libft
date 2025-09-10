@@ -4,17 +4,22 @@
 #include <unistd.h>
 #include <cstdio>
 
-void ft_log_rotate()
+void ft_log_rotate(s_file_sink *sink)
 {
-    if (g_path.empty() || g_max_size == 0)
+    struct stat   st;
+    std::string   rotated;
+
+    if (!sink)
         return ;
-    struct stat st;
-    if (fstat(g_fd, &st) == -1)
+    if (sink->path.empty() || sink->max_size == 0)
         return ;
-    if (static_cast<size_t>(st.st_size) < g_max_size)
+    if (fstat(sink->fd, &st) == -1)
         return ;
-    close(g_fd);
-    std::string rotated = g_path + ".1";
-    std::rename(g_path.c_str(), rotated.c_str());
-    g_fd = open(g_path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    if (static_cast<size_t>(st.st_size) < sink->max_size)
+        return ;
+    close(sink->fd);
+    rotated = sink->path + ".1";
+    std::rename(sink->path.c_str(), rotated.c_str());
+    sink->fd = open(sink->path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    return ;
 }

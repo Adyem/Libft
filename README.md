@@ -363,8 +363,8 @@ int         join_multicast_group(const SocketConfig &config);
 ### Logger
 
 `Logger/logger.hpp` provides leveled logging with timestamps, formatted output
-and optional file rotation. Logs are written to a configurable destination and
-filtered according to the active log level.
+and optional file rotation. Logs are written to one or more configurable
+destinations (sinks) and filtered according to the active log level.
 
 ```
 enum t_log_level {
@@ -377,6 +377,9 @@ enum t_log_level {
 
 void ft_log_set_level(t_log_level level);
 int  ft_log_set_file(const char *path, size_t max_size);
+typedef void (*t_log_sink)(const char *message, void *user_data);
+int  ft_log_add_sink(t_log_sink sink, void *user_data);
+void ft_log_remove_sink(t_log_sink sink, void *user_data);
 void ft_log_close();
 void ft_log_set_alloc_logging(bool enable);
 bool ft_log_get_alloc_logging();

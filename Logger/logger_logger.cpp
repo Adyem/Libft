@@ -33,6 +33,17 @@ int ft_logger::set_file(const char *path, size_t max_size) noexcept
     return (ft_log_set_file(path, max_size));
 }
 
+int ft_logger::add_sink(t_log_sink sink, void *user_data) noexcept
+{
+    return (ft_log_add_sink(sink, user_data));
+}
+
+void ft_logger::remove_sink(t_log_sink sink, void *user_data) noexcept
+{
+    ft_log_remove_sink(sink, user_data);
+    return ;
+}
+
 void ft_logger::set_alloc_logging(bool enable) noexcept
 {
     this->_alloc_logging = enable;

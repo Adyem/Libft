@@ -3,15 +3,31 @@
 
 #include <cstdarg>
 #include <string>
+#include <vector>
 #include "logger.hpp"
 
 extern ft_logger *g_logger;
 extern t_log_level g_level;
-extern int g_fd;
-extern std::string g_path;
-extern size_t g_max_size;
 
-void ft_log_rotate();
+typedef void (*t_log_sink)(const char *message, void *user_data);
+
+struct s_log_sink
+{
+    t_log_sink function;
+    void      *user_data;
+};
+
+struct s_file_sink
+{
+    int         fd;
+    std::string path;
+    size_t      max_size;
+};
+
+extern std::vector<s_log_sink> g_sinks;
+
+void ft_log_rotate(s_file_sink *sink);
+void ft_file_sink(const char *message, void *user_data);
 const char *ft_level_to_str(t_log_level level);
 void ft_log_vwrite(t_log_level level, const char *fmt, va_list args);
 
