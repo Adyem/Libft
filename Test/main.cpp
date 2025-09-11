@@ -114,6 +114,10 @@ int test_abs_int_min(void);
 int test_abs_llong_min(void);
 int test_fabs_negative_zero(void);
 int test_fabs_nan(void);
+int test_ft_sin_zero(void);
+int test_ft_sin_ninety(void);
+int test_ft_tan_zero(void);
+int test_ft_tan_forty_five(void);
 int test_atol_basic(void);
 int test_atol_whitespace(void);
 int test_atol_longmax(void);
@@ -335,6 +339,10 @@ int main(int argc, char **argv)
         { test_abs_llong_min, "abs LLONG_MIN" },
         { test_fabs_negative_zero, "fabs negative zero" },
         { test_fabs_nan, "fabs NaN" },
+        { test_ft_sin_zero, "ft_sin zero" },
+        { test_ft_sin_ninety, "ft_sin ninety" },
+        { test_ft_tan_zero, "ft_tan zero" },
+        { test_ft_tan_forty_five, "ft_tan forty five" },
         { test_atol_basic, "atol basic" },
         { test_atol_whitespace, "atol whitespace" },
         { test_atol_longmax, "atol longmax" },

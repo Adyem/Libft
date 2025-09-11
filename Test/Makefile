@@ -28,7 +28,7 @@ SRCS := main.cpp test_atoi.cpp test_isdigit.cpp test_memset.cpp test_strcmp.cpp 
        test_cpp_class.cpp test_template.cpp test_printf.cpp test_get_next_line.cpp \
        test_cma.cpp test_game.cpp test_queue.cpp test_queue_class.cpp \
        test_promise.cpp test_config.cpp test_pthread_rwlock.cpp test_math_eval.cpp test_encryption_key.cpp \
-       test_rng.cpp test_json_validate.cpp $(EFF_SRCS)
+       test_math_trig.cpp test_rng.cpp test_json_validate.cpp $(EFF_SRCS)
 
 ifeq ($(OS),Windows_NT)
     MKDIR = mkdir
