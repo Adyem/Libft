@@ -20,6 +20,7 @@
 #include "GetNextLine/get_next_line.hpp"
 #include "HTML/parser.hpp"
 #include "HTML/document.hpp"
+#include "XML/xml.hpp"
 #include "JSon/json.hpp"
 #include "JSon/document.hpp"
 #include "Libft/libft.hpp"
