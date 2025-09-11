@@ -12,6 +12,7 @@
 
 Page *page_list = ft_nullptr;
 pt_mutex g_malloc_mutex;
+bool g_cma_thread_safe = true;
 std::size_t    g_cma_alloc_limit = 0;
 std::size_t    g_cma_allocation_count = 0;
 std::size_t    g_cma_free_count = 0;
@@ -247,9 +248,13 @@ void print_block_info(Block *block)
 
 void cma_get_stats(std::size_t *allocation_count, std::size_t *free_count)
 {
+    if (g_cma_thread_safe)
+        g_malloc_mutex.lock(THREAD_ID);
     if (allocation_count != ft_nullptr)
         *allocation_count = g_cma_allocation_count;
     if (free_count != ft_nullptr)
         *free_count = g_cma_free_count;
+    if (g_cma_thread_safe)
+        g_malloc_mutex.unlock(THREAD_ID);
     return ;
 }

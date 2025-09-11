@@ -139,6 +139,7 @@ changed at runtime with `cma_set_alloc_limit`. A limit of `0` disables the
 check. The allocator also tracks allocation and free counts, accessible
 through `cma_get_stats`. Internally, `cma_realloc` has been simplified by
 removing redundant braces.
+Thread safety can be enabled or disabled with `cma_set_thread_safety`.
 
 ```
 void   *cma_malloc(std::size_t size);
@@ -160,6 +161,7 @@ char   *cma_strtrim(const char *s1, const char *set);
 void    cma_free_double(char **content);
 void    cma_cleanup();
 void    cma_set_alloc_limit(std::size_t limit);
+void    cma_set_thread_safety(bool enable);
 void    cma_get_stats(std::size_t *allocation_count, std::size_t *free_count);
 ```
 
