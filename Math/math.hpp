@@ -40,6 +40,8 @@ double      math_sqrt(double number);
 double      math_exp(double value);
 double      math_log(double value);
 double      math_cos(double value);
+double      ft_sin(double value);
+double      ft_tan(double value);
 double      math_deg2rad(double degrees);
 double      math_rad2deg(double radians);
 

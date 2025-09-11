@@ -20,6 +20,8 @@ SRCS := math_abs.cpp \
         math_exp.cpp \
         math_log.cpp \
         math_cos.cpp \
+        math_sin.cpp \
+        math_tan.cpp \
         math_deg2rad.cpp \
         math_rad2deg.cpp \
         math_roll.cpp \
