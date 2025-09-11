@@ -8,6 +8,8 @@
 #include "../CPP_class/class_string_class.hpp"
 
 json_group *serialize_character(const ft_character &character);
+json_group *serialize_world(const ft_world &world);
+json_group *serialize_inventory(const ft_inventory &inventory);
 
 static int add_item_field(json_group *group, const ft_string &key, int value)
 {

@@ -8,6 +8,8 @@
 #include "../CPP_class/class_string_class.hpp"
 
 int deserialize_character(ft_character &character, json_group *group);
+int deserialize_world(ft_world &world, json_group *group);
+int deserialize_inventory(ft_inventory &inventory, json_group *group);
 
 static int parse_item_field(json_group *group, const ft_string &key, int &out_value)
 {

@@ -13,7 +13,7 @@ static char *trim_whitespace(char *string)
         return (string);
     while (*string && std::isspace(static_cast<unsigned char>(*string)))
         string++;
-    char *end_pointer = string + std::strlen(string);
+    char *end_pointer = string + ft_strlen(string);
     while (end_pointer > string && std::isspace(static_cast<unsigned char>(end_pointer[-1])))
         end_pointer--;
     *end_pointer = '\0';

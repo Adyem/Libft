@@ -49,7 +49,7 @@ unsigned char    *decompress_buffer(const unsigned char *input_buffer, std::size
     if (!result_buffer)
         return (ft_nullptr);
     actual_size = static_cast<uLongf>(expected_size);
-    zlib_status = uncompress(result_buffer, &actual_size, input_buffer + sizeof(uint32_t), static_cast<uLong>(input_size - sizeof(uint32_t)));
+    zlib_status = uncompress(result_buffer, &actual_size, input_buffer + sizeof(uint32_t), input_size - sizeof(uint32_t));
     if (zlib_status != Z_OK || actual_size != expected_size)
     {
         cma_free(result_buffer);
