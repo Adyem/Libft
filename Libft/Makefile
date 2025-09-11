@@ -15,6 +15,7 @@ SRCS := libft_atoi.cpp \
     libft_strlen.cpp \
     libft_strncmp.cpp \
     libft_strnstr.cpp \
+    libft_strstr.cpp \
     libft_strrchr.cpp \
     libft_atol.cpp \
     libft_strtol.cpp \

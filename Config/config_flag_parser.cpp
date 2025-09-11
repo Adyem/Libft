@@ -93,7 +93,7 @@ bool cnfg_flag_parser::has_short_flag(char flag)
 {
     if (!this->_short_flags)
         return (false);
-    if (std::strchr(this->_short_flags, flag))
+    if (ft_strchr(this->_short_flags, flag))
         return (true);
     return (false);
 }

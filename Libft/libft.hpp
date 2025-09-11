@@ -28,6 +28,7 @@ size_t            ft_strlcat(char *destination, const char *source, size_t buffe
 size_t            ft_strlcpy(char *destination, const char *source, size_t bufferSize);
 char            *ft_strrchr(const char *string, int char_to_find);
 char            *ft_strnstr(const char *haystack, const char *needle, size_t length);
+char            *ft_strstr(const char *haystack, const char *needle);
 int                ft_strncmp(const char *string_1, const char *string_2, size_t max_len);
 int                ft_memcmp(const void *pointer1, const void *pointer2, size_t size);
 int                ft_isdigit(int character);
