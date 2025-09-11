@@ -626,6 +626,16 @@ aes_encrypt(block, key);
 aes_decrypt(block, key);
 ```
 
+#### Compression
+`compression.hpp` offers zlib-based buffer compression:
+
+```
+unsigned char *compress_buffer(const unsigned char *input_buffer, std::size_t input_size, std::size_t *compressed_size);
+unsigned char *decompress_buffer(const unsigned char *input_buffer, std::size_t input_size, std::size_t *decompressed_size);
+```
+
+The returned buffers are allocated with CMA and must be freed using `cma_free`.
+
 #### JSon
 Creation, reading and manipulation helpers in `JSon/json.hpp`:
 
