@@ -151,6 +151,9 @@ int test_pf_printf_misc(void);
 int test_pf_printf_bool(void);
 int test_pf_printf_nullptr(void);
 int test_pf_printf_modifiers(void);
+int test_pf_printf_float_positive(void);
+int test_pf_printf_float_negative(void);
+int test_pf_printf_float_zero(void);
 int test_pf_snprintf_basic(void);
 int test_get_next_line_basic(void);
 int test_get_next_line_empty(void);
@@ -388,6 +391,9 @@ int main(int argc, char **argv)
         { test_pf_printf_bool, "pf_printf bool" },
         { test_pf_printf_nullptr, "pf_printf nullptr" },
         { test_pf_printf_modifiers, "pf_printf modifiers" },
+        { test_pf_printf_float_positive, "pf_printf float positive" },
+        { test_pf_printf_float_negative, "pf_printf float negative" },
+        { test_pf_printf_float_zero, "pf_printf float zero" },
         { test_pf_snprintf_basic, "pf_snprintf basic" },
         { test_get_next_line_basic, "get_next_line basic" },
         { test_get_next_line_empty, "get_next_line empty" },
