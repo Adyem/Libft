@@ -15,6 +15,8 @@ typedef struct json_group
     struct json_group *next;
 } json_group;
 
+class json_document;
+
 json_item    *json_create_item(const char *key, const char *value);
 void         json_add_item_to_group(json_group *group, json_item *item);
 json_group    *json_create_json_group(const char *name);
@@ -23,6 +25,8 @@ json_item    *json_create_item(const char *key, const bool value);
 void         json_append_group(json_group **head, json_group *new_group);
 int         json_write_to_file(const char *filename, json_group *groups);
 char        *json_write_to_string(json_group *groups);
+int         json_document_write_to_file(const char *file_path, const json_document &document);
+char        *json_document_write_to_string(const json_document &document);
 json_group  *json_read_from_file(const char *filename);
 json_group  *json_read_from_string(const char *content);
 void         json_free_items(json_item *item);

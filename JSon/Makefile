@@ -4,6 +4,7 @@ DEBUG_TARGET := JSon_debug.a
 SRCS :=         json_parsing.cpp \
                 json_create_item.cpp \
                 json_reader.cpp \
+                json_writer.cpp \
                 json_utils.cpp \
                 json_document.cpp
 

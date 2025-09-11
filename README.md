@@ -586,6 +586,8 @@ json_group  *json_create_json_group(const char *name);
 void         json_add_item_to_group(json_group *group, json_item *item);
 int          json_write_to_file(const char *filename, json_group *groups);
 char        *json_write_to_string(json_group *groups);
+int          json_document_write_to_file(const char *file_path, const json_document &document);
+char        *json_document_write_to_string(const json_document &document);
 json_group  *json_read_from_file(const char *filename);
 json_group  *json_read_from_string(const char *content);
 json_group  *json_find_group(json_group *head, const char *name);
