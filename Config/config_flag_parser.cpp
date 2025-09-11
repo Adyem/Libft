@@ -143,3 +143,199 @@ const char  *cnfg_flag_parser::get_error_str() const
 {
     return (ft_strerror(this->_error_code));
 }
+
+static cnfg_config *merge_configs(cnfg_config *base_config,
+                                  cnfg_config *override_config)
+{
+    if (!override_config)
+        return (base_config);
+    size_t override_index = 0;
+    while (override_index < override_config->entry_count)
+    {
+        cnfg_entry *override_entry = &override_config->entries[override_index];
+        bool replaced = false;
+        size_t base_index = 0;
+        if (base_config)
+        {
+            while (base_index < base_config->entry_count)
+            {
+                cnfg_entry *base_entry = &base_config->entries[base_index];
+                bool same_section = (base_entry->section == ft_nullptr
+                    && override_entry->section == ft_nullptr)
+                    || (base_entry->section && override_entry->section
+                    && std::strcmp(base_entry->section,
+                    override_entry->section) == 0);
+                bool same_key = (base_entry->key == ft_nullptr
+                    && override_entry->key == ft_nullptr)
+                    || (base_entry->key && override_entry->key
+                    && std::strcmp(base_entry->key,
+                    override_entry->key) == 0);
+                if (same_section && same_key)
+                {
+                    cma_free(base_entry->value);
+                    if (override_entry->value)
+                    {
+                        base_entry->value = cma_strdup(override_entry->value);
+                        if (!base_entry->value)
+                        {
+                            ft_errno = FT_EALLOC;
+                            cnfg_free(base_config);
+                            return (ft_nullptr);
+                        }
+                    }
+                    else
+                        base_entry->value = ft_nullptr;
+                    replaced = true;
+                    break;
+                }
+                ++base_index;
+            }
+        }
+        if (!replaced)
+        {
+            if (!base_config)
+            {
+                base_config = static_cast<cnfg_config*>(cma_calloc(1,
+                    sizeof(cnfg_config)));
+                if (!base_config)
+                {
+                    ft_errno = FT_EALLOC;
+                    return (ft_nullptr);
+                }
+            }
+            cnfg_entry *new_entries = static_cast<cnfg_entry*>(cma_realloc(
+                base_config->entries, sizeof(cnfg_entry)
+                * (base_config->entry_count + 1)));
+            if (!new_entries)
+            {
+                ft_errno = FT_EALLOC;
+                cnfg_free(base_config);
+                return (ft_nullptr);
+            }
+            base_config->entries = new_entries;
+            cnfg_entry *new_entry = &base_config->entries[base_config->entry_count];
+            if (override_entry->section)
+            {
+                new_entry->section = cma_strdup(override_entry->section);
+                if (!new_entry->section)
+                {
+                    ft_errno = FT_EALLOC;
+                    cnfg_free(base_config);
+                    return (ft_nullptr);
+                }
+            }
+            else
+                new_entry->section = ft_nullptr;
+            if (override_entry->key)
+            {
+                new_entry->key = cma_strdup(override_entry->key);
+                if (!new_entry->key)
+                {
+                    ft_errno = FT_EALLOC;
+                    cnfg_free(base_config);
+                    return (ft_nullptr);
+                }
+            }
+            else
+                new_entry->key = ft_nullptr;
+            if (override_entry->value)
+            {
+                new_entry->value = cma_strdup(override_entry->value);
+                if (!new_entry->value)
+                {
+                    ft_errno = FT_EALLOC;
+                    cnfg_free(base_config);
+                    return (ft_nullptr);
+                }
+            }
+            else
+                new_entry->value = ft_nullptr;
+            base_config->entry_count++;
+        }
+        ++override_index;
+    }
+    return (base_config);
+}
+
+static cnfg_config *append_flag_entry(cnfg_config *config, const char *flag)
+{
+    cnfg_entry entry;
+    entry.section = ft_nullptr;
+    entry.key = cma_strdup(flag);
+    entry.value = ft_nullptr;
+    if (!entry.key)
+    {
+        ft_errno = FT_EALLOC;
+        cnfg_free(config);
+        return (ft_nullptr);
+    }
+    cnfg_config temp;
+    temp.entries = &entry;
+    temp.entry_count = 1;
+    config = merge_configs(config, &temp);
+    cma_free(entry.key);
+    return (config);
+}
+
+cnfg_config *config_merge_sources(int argument_count,
+                                  char **argument_values,
+                                  const char *filename)
+{
+    cnfg_config *result = config_load_file(filename);
+    cnfg_config *env_config = config_load_env();
+    result = merge_configs(result, env_config);
+    if (env_config && result != env_config)
+        cnfg_free(env_config);
+    char *short_flags = cnfg_parse_flags(argument_count, argument_values);
+    if (short_flags)
+    {
+        size_t flag_index = 0;
+        while (short_flags[flag_index])
+        {
+            char key[2];
+            key[0] = short_flags[flag_index];
+            key[1] = '\0';
+            result = append_flag_entry(result, key);
+            if (!result)
+            {
+                cma_free(short_flags);
+                return (ft_nullptr);
+            }
+            ++flag_index;
+        }
+        cma_free(short_flags);
+    }
+    char **long_flags = cnfg_parse_long_flags(argument_count, argument_values);
+    if (long_flags)
+    {
+        size_t flag_index = 0;
+        while (long_flags[flag_index])
+        {
+            result = append_flag_entry(result, long_flags[flag_index]);
+            cma_free(long_flags[flag_index]);
+            if (!result)
+            {
+                size_t cleanup_index = flag_index + 1;
+                while (long_flags[cleanup_index])
+                {
+                    cma_free(long_flags[cleanup_index]);
+                    ++cleanup_index;
+                }
+                cma_free(long_flags);
+                return (ft_nullptr);
+            }
+            ++flag_index;
+        }
+        cma_free(long_flags);
+    }
+    if (!result)
+    {
+        result = static_cast<cnfg_config*>(cma_calloc(1, sizeof(cnfg_config)));
+        if (!result)
+        {
+            ft_errno = FT_EALLOC;
+            return (ft_nullptr);
+        }
+    }
+    return (result);
+}
