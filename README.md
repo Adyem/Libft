@@ -186,7 +186,7 @@ int pf_snprintf(char *string, size_t size, const char *format, ...);
 
 ### PThread Wrappers
 
-`PThread/pthread.hpp` wraps a few `pthread` calls and provides basic atomic operations.
+`PThread/pthread.hpp` wraps a few `pthread` calls, condition variables, and provides basic atomic operations.
 
 ```
 int pt_thread_join(pthread_t thread, void **retval);
@@ -204,6 +204,11 @@ int pt_atomic_load(const std::atomic<int>& atomic_variable);
 void pt_atomic_store(std::atomic<int>& atomic_variable, int desired_value);
 int pt_atomic_fetch_add(std::atomic<int>& atomic_variable, int increment_value);
 bool pt_atomic_compare_exchange(std::atomic<int>& atomic_variable, int& expected_value, int desired_value);
+int pt_cond_init(pthread_cond_t *condition, const pthread_condattr_t *attributes);
+int pt_cond_destroy(pthread_cond_t *condition);
+int pt_cond_wait(pthread_cond_t *condition, pthread_mutex_t *mutex);
+int pt_cond_signal(pthread_cond_t *condition);
+int pt_cond_broadcast(pthread_cond_t *condition);
 ```
 
 ### C++ Classes (`CPP_class`)
