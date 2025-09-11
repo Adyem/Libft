@@ -4,9 +4,8 @@
 #include "../CMA/CMA.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Printf/printf.hpp"
 #include "open_dir.hpp"
-#include <stdio.h>
-#include <string.h>
 #include <stdint.h>
 
 #ifndef _WIN32
@@ -18,7 +17,7 @@
 static inline file_dir* opendir_win(const char* directoryPath)
 {
     char searchPath[MAX_PATH];
-    snprintf(searchPath, sizeof(searchPath), "%s\\*", directoryPath);
+    pf_snprintf(searchPath, sizeof(searchPath), "%s\\*", directoryPath);
     file_dir* directoryStream = reinterpret_cast<file_dir*>(cma_malloc(sizeof(file_dir)));
     if (!directoryStream)
         return (ft_nullptr);

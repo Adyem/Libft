@@ -5,6 +5,7 @@ It provides implementations of common libc functions, custom memory allocation h
 basic threading helpers, containers, string utilities, simple networking and more.
 The top level `Makefile` builds every submodule and links them into `Full_Libft.a`.
 The umbrella header `FullLibft.hpp` includes every component.
+Internal code uses custom replacements such as `ft_strlen`, `ft_strchr`, `ft_strstr`, and `pf_snprintf` instead of the standard library equivalents.
 Header files now use class names or concise module names instead of module prefixes, except internal headers which retain their module prefix.
 
 This document briefly lists the main headers and the interfaces they expose. The
