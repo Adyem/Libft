@@ -628,6 +628,10 @@ char       *cnfg_parse_flags(int argument_count, char **argument_values);
 void       cnfg_free(cnfg_config *config);
 ```
 
+`cnfg_parse` gives precedence to environment variables. Before using a
+value from the file, the parser checks `getenv` with the key name and
+uses the environment value if it exists.
+
 `flag_parser.hpp` wraps flag parsing in a class:
 
 ```
