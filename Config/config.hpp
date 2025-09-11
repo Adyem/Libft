@@ -27,5 +27,7 @@ cnfg_config   *cnfg_parse(const char *filename);
 void        cnfg_free(cnfg_config *config);
 char       *cnfg_parse_flags(int argument_count, char **argument_values);
 char      **cnfg_parse_long_flags(int argument_count, char **argument_values);
+cnfg_config   *config_load_env();
+cnfg_config   *config_load_file(const char *filename);
 
 #endif
