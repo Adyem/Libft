@@ -95,6 +95,60 @@ int test_pf_printf_modifiers(void)
     return (ft_strcmp(buf, "2147483648 2147483648 80000000 8589934591 1ffffffff") == 0);
 }
 
+int test_pf_printf_float_positive(void)
+{
+    const char *file_name = "tmp_pf_printf_float_positive.txt";
+    int file_descriptor = ::open(file_name, O_CREAT | O_RDWR | O_TRUNC, 0644);
+    if (file_descriptor < 0)
+        return (0);
+    pf_printf_fd(file_descriptor, "%.2f", 3.14159);
+    ::lseek(file_descriptor, 0, SEEK_SET);
+    char buffer[64];
+    ssize_t read_bytes = ::read(file_descriptor, buffer, sizeof(buffer) - 1);
+    ::close(file_descriptor);
+    ::unlink(file_name);
+    if (read_bytes < 0)
+        return (0);
+    buffer[read_bytes] = '\0';
+    return (ft_strcmp(buffer, "3.14") == 0);
+}
+
+int test_pf_printf_float_negative(void)
+{
+    const char *file_name = "tmp_pf_printf_float_negative.txt";
+    int file_descriptor = ::open(file_name, O_CREAT | O_RDWR | O_TRUNC, 0644);
+    if (file_descriptor < 0)
+        return (0);
+    pf_printf_fd(file_descriptor, "%.3f", -2.71828);
+    ::lseek(file_descriptor, 0, SEEK_SET);
+    char buffer[64];
+    ssize_t read_bytes = ::read(file_descriptor, buffer, sizeof(buffer) - 1);
+    ::close(file_descriptor);
+    ::unlink(file_name);
+    if (read_bytes < 0)
+        return (0);
+    buffer[read_bytes] = '\0';
+    return (ft_strcmp(buffer, "-2.718") == 0);
+}
+
+int test_pf_printf_float_zero(void)
+{
+    const char *file_name = "tmp_pf_printf_float_zero.txt";
+    int file_descriptor = ::open(file_name, O_CREAT | O_RDWR | O_TRUNC, 0644);
+    if (file_descriptor < 0)
+        return (0);
+    pf_printf_fd(file_descriptor, "%.4f", 0.0);
+    ::lseek(file_descriptor, 0, SEEK_SET);
+    char buffer[64];
+    ssize_t read_bytes = ::read(file_descriptor, buffer, sizeof(buffer) - 1);
+    ::close(file_descriptor);
+    ::unlink(file_name);
+    if (read_bytes < 0)
+        return (0);
+    buffer[read_bytes] = '\0';
+    return (ft_strcmp(buffer, "0.0000") == 0);
+}
+
 int test_pf_snprintf_basic(void)
 {
     char buffer[64];

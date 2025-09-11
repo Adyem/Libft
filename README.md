@@ -187,6 +187,8 @@ int pf_snprintf(char *string, size_t size, const char *format, ...);
 int pf_vsnprintf(char *string, size_t size, const char *format, va_list args);
 ```
 
+`%f` supports precision using the `%.Nf` syntax.
+
 ### PThread Wrappers
 
 `PThread/pthread.hpp` wraps a few `pthread` calls, condition variables, read-write locks, and provides basic atomic operations.
