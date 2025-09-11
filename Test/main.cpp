@@ -127,6 +127,8 @@ int test_setenv_no_overwrite(void);
 int test_su_get_cpu_count(void);
 int test_su_get_total_memory(void);
 int test_time_monotonic_increases(void);
+int test_time_format_iso8601_epoch(void);
+int test_time_format_iso8601_20210101(void);
 int test_ft_string_append(void);
 int test_ft_string_concat(void);
 int test_data_buffer_io(void);
@@ -352,6 +354,8 @@ int main(int argc, char **argv)
         { test_su_get_cpu_count, "su get cpu count" },
         { test_su_get_total_memory, "su get total memory" },
         { test_time_monotonic_increases, "time_monotonic increases" },
+        { test_time_format_iso8601_epoch, "time_format_iso8601 epoch" },
+        { test_time_format_iso8601_20210101, "time_format_iso8601 2021-01-01" },
         { test_strlen_size_t_empty, "strlen_size_t empty" },
         { test_bzero_zero, "bzero zero" },
         { test_memcpy_partial, "memcpy partial" },
