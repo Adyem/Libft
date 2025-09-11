@@ -163,6 +163,7 @@ int test_inventory_full(void);
 int test_character_valor(void);
 int test_character_add_sub_coins(void);
 int test_character_add_sub_valor(void);
+int test_game_save_load(void);
 int test_buff_subtracters(void);
 int test_debuff_subtracters(void);
 int test_event_subtracters(void);
@@ -385,6 +386,7 @@ int main(int argc, char **argv)
         { test_character_valor, "character valor" },
         { test_character_add_sub_coins, "character coin add/sub" },
         { test_character_add_sub_valor, "character valor add/sub" },
+        { test_game_save_load, "game save/load" },
         { test_buff_subtracters, "buff subtracters" },
         { test_debuff_subtracters, "debuff subtracters" },
         { test_event_subtracters, "event subtracters" },
