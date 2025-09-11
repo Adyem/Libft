@@ -2,7 +2,8 @@ TARGET := RNG.a
 DEBUG_TARGET := RNG_debug.a
 
 SRCS := rng_dice_roll.cpp rng_random_int.cpp rng_random_float.cpp \
-       rng_random_normal.cpp rng_random_exponential.cpp rng_random_seed.cpp
+       rng_random_normal.cpp rng_random_exponential.cpp rng_random_poisson.cpp \
+       rng_random_seed.cpp
 
 HEADERS := rng.hpp rng_internal.hpp deck.hpp loot_table.hpp
 

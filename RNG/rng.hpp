@@ -14,6 +14,7 @@ int ft_dice_roll(int number, int faces);
 float ft_random_float(void);
 float ft_random_normal(void);
 float ft_random_exponential(float lambda_value);
+int ft_random_poisson(double lambda_value);
 int ft_random_seed(const char *seed_str = ft_nullptr);
 
 #endif
