@@ -109,3 +109,14 @@ html_node *html_find_by_selector(html_node *node_list, const char *selector)
     }
     return (html_find_by_tag(node_list, selector));
 }
+
+html_node *html_query_selector(html_node *node_list, const char *selector)
+{
+    if (!selector)
+        return (ft_nullptr);
+    if (selector[0] == '#')
+        return (html_find_by_attr(node_list, "id", selector + 1));
+    if (selector[0] == '.')
+        return (html_find_by_attr(node_list, "class", selector + 1));
+    return (html_find_by_tag(node_list, selector));
+}
