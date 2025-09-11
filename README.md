@@ -627,7 +627,9 @@ aes_decrypt(block, key);
 ```
 
 #### Compression
-`compression.hpp` offers zlib-based buffer compression:
+Provides zlib-based compression helpers using the Custom Memory Allocator (CMA).
+
+`compression.hpp` offers buffer compression functions:
 
 ```
 unsigned char *compress_buffer(const unsigned char *input_buffer, std::size_t input_size, std::size_t *compressed_size);
@@ -949,6 +951,30 @@ html_node *highlight = html_query_selector(root, ".highlight");
 
 `html_query_selector` supports only tag names, `.class`, and `#id` selectors.
 Combinators like descendant or child selectors are not implemented.
+
+#### XML
+Basic XML parsing and writing utilities (`XML/xml.hpp`):
+
+```
+xml_document doc;
+doc.load_from_string("<root><child>value</child></root>");
+xml_node *root = doc.get_root();
+char *xml = doc.write_to_string();
+if (xml)
+    cma_free(xml);
+```
+
+`xml_document` exposes methods:
+
+```
+xml_document() noexcept;
+~xml_document() noexcept;
+int load_from_string(const char *xml) noexcept;
+int load_from_file(const char *file_path) noexcept;
+char *write_to_string() const noexcept;
+int write_to_file(const char *file_path) const noexcept;
+xml_node *get_root() const noexcept;
+```
 
 #### Game
 Basic game related classes include `ft_character`, `ft_item`, `ft_inventory`,
