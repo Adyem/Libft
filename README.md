@@ -729,11 +729,14 @@ json_group *api_request_json_host(const char *host, uint16_t port,
 ```
 
 Callback based helpers run the request on a background thread and invoke
-the user supplied callback with the body and status code. The response body
-is allocated with `cma_malloc` and must be freed by the caller.
+the user supplied callback with the body and status code. For string
+responses the body is allocated with `cma_malloc` and must be freed by the
+caller. For JSON responses the parsed `json_group*` must be freed by the
+caller.
 
 ```
 typedef void (*api_callback)(char *body, int status, void *user_data);
+typedef void (*api_json_callback)(json_group *body, int status, void *user_data);
 
 bool api_request_string_async(const char *ip, uint16_t port,
                               const char *method, const char *path,
@@ -745,6 +748,16 @@ bool api_request_string_tls_async(const char *host, uint16_t port,
                                   api_callback callback, void *user_data,
                                   json_group *payload = ft_nullptr,
                                   const char *headers = ft_nullptr, int timeout = 60000);
+bool api_request_json_async(const char *ip, uint16_t port,
+                            const char *method, const char *path,
+                            api_json_callback callback, void *user_data,
+                            json_group *payload = ft_nullptr,
+                            const char *headers = ft_nullptr, int timeout = 60000);
+bool api_request_json_tls_async(const char *host, uint16_t port,
+                                const char *method, const char *path,
+                                api_json_callback callback, void *user_data,
+                                json_group *payload = ft_nullptr,
+                                const char *headers = ft_nullptr, int timeout = 60000);
 ```
 
 Asynchronous helpers in `promise.hpp` return `ft_promise` objects:
