@@ -16,6 +16,10 @@ int nw_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 int nw_listen(int sockfd, int backlog);
 int nw_socket(int domain, int type, int protocol);
 int nw_inet_pton(int family, const char *ip_address, void *destination);
+int nw_set_nonblocking(int socket_fd);
+int nw_poll(int *read_file_descriptors, int read_count,
+            int *write_file_descriptors, int write_count,
+            int timeout_milliseconds);
 
 enum class SocketType
 {
