@@ -1,7 +1,7 @@
 #include "logger_internal.hpp"
 #include <fcntl.h>
 #include <unistd.h>
-#include <cstring>
+#include "../Libft/libft.hpp"
 
 void ft_file_sink(const char *message, void *user_data)
 {
@@ -12,7 +12,7 @@ void ft_file_sink(const char *message, void *user_data)
     sink = static_cast<s_file_sink *>(user_data);
     if (!sink)
         return ;
-    length = std::strlen(message);
+    length = ft_strlen(message);
     written = write(sink->fd, message, length);
     (void)written;
     return ;
@@ -21,26 +21,26 @@ void ft_file_sink(const char *message, void *user_data)
 int ft_log_set_file(const char *path, size_t max_size)
 {
     s_file_sink *sink;
-    int          fd;
+    int          file_descriptor;
 
     if (!path)
         return (-1);
-    fd = open(path, O_CREAT | O_WRONLY | O_APPEND, 0644);
-    if (fd == -1)
+    file_descriptor = open(path, O_CREAT | O_WRONLY | O_APPEND, 0644);
+    if (file_descriptor == -1)
         return (-1);
     sink = new s_file_sink;
     if (!sink)
     {
-        close(fd);
+        close(file_descriptor);
         return (-1);
     }
-    sink->fd = fd;
+    sink->fd = file_descriptor;
     sink->path = path;
     sink->max_size = max_size;
     if (sink->path.get_error() != ER_SUCCESS ||
         ft_log_add_sink(ft_file_sink, sink) != 0)
     {
-        close(fd);
+        close(file_descriptor);
         delete sink;
         return (-1);
     }

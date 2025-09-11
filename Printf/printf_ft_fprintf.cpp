@@ -8,7 +8,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
-#include <string.h>
 #include <cfloat>
 
 typedef enum
@@ -32,7 +31,7 @@ static void ft_putstr_stream(const char *string, FILE *stream, size_t *count)
         *count += 6;
         return ;
     }
-    size_t length = strlen(string);
+    size_t length = ft_strlen(string);
     fwrite(string, 1, length, stream);
     *count += length;
 }
