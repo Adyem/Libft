@@ -6,7 +6,8 @@ SRCS := networking_socket_class.cpp \
         networking_setup_server.cpp \
         networking_setup_client.cpp \
         networking_socket_wrapper_functions.cpp \
-        networking_ssl_wrapper.cpp
+        networking_ssl_wrapper.cpp \
+        networking_nonblocking.cpp
 
 HEADERS := socket_class.hpp \
            networking.hpp \
