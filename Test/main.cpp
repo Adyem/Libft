@@ -194,6 +194,8 @@ int test_rng_random_normal(void);
 int test_rng_random_exponential(void);
 int test_json_roundtrip_string(void);
 int test_json_roundtrip_file(void);
+int test_json_validate_success(void);
+int test_json_validate_missing_field(void);
 
 int test_efficiency_strlen(void);
 int test_efficiency_memcpy(void);
@@ -427,7 +429,9 @@ int main(int argc, char **argv)
         { test_rng_random_normal, "rng random normal" },
         { test_rng_random_exponential, "rng random exponential" },
         { test_json_roundtrip_string, "json roundtrip string" },
-        { test_json_roundtrip_file, "json roundtrip file" }
+        { test_json_roundtrip_file, "json roundtrip file" },
+        { test_json_validate_success, "json validate success" },
+        { test_json_validate_missing_field, "json validate missing field" }
     };
 
     const s_perf_test perf_tests[] = {
