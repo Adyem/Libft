@@ -189,7 +189,7 @@ int pf_vsnprintf(char *string, size_t size, const char *format, va_list args);
 
 ### PThread Wrappers
 
-`PThread/pthread.hpp` wraps a few `pthread` calls, condition variables, and provides basic atomic operations.
+`PThread/pthread.hpp` wraps a few `pthread` calls, condition variables, read-write locks, and provides basic atomic operations.
 
 ```
 int pt_thread_join(pthread_t thread, void **retval);
@@ -212,6 +212,11 @@ int pt_cond_destroy(pthread_cond_t *condition);
 int pt_cond_wait(pthread_cond_t *condition, pthread_mutex_t *mutex);
 int pt_cond_signal(pthread_cond_t *condition);
 int pt_cond_broadcast(pthread_cond_t *condition);
+int pt_rwlock_init(pthread_rwlock_t *rwlock, const pthread_rwlockattr_t *attributes);
+int pt_rwlock_rdlock(pthread_rwlock_t *rwlock);
+int pt_rwlock_wrlock(pthread_rwlock_t *rwlock);
+int pt_rwlock_unlock(pthread_rwlock_t *rwlock);
+int pt_rwlock_destroy(pthread_rwlock_t *rwlock);
 ```
 
 ### C++ Classes (`CPP_class`)
