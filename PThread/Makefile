@@ -16,9 +16,10 @@ SRCS := pthread_lock_mutex.cpp \
         pthread_atomic_load.cpp \
         pthread_atomic_store.cpp \
         pthread_atomic_fetch_add.cpp \
-        pthread_atomic_compare_exchange.cpp
+        pthread_atomic_compare_exchange.cpp \
+        pthread_condition.cpp
 
-HEADERS := pthread.hpp mutex.hpp
+HEADERS := pthread.hpp mutex.hpp condition.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

@@ -30,3 +30,44 @@ int test_pt_async_basic(void)
         usleep(1000);
     return (p.get() == 7);
 }
+
+int test_pt_cond_wait_signal(void)
+{
+    pthread_mutex_t mutex;
+    pthread_cond_t condition;
+    pthread_mutex_init(&mutex, ft_nullptr);
+    pt_cond_init(&condition, ft_nullptr);
+    int ready = 0;
+    struct condition_data
+    {
+        pthread_mutex_t *mutex;
+        pthread_cond_t *condition;
+        int *ready;
+    };
+    condition_data data = { &mutex, &condition, &ready };
+    auto start_routine = [](void *arg) -> void*
+    {
+        condition_data *data = static_cast<condition_data*>(arg);
+        pthread_mutex_lock(data->mutex);
+        while (*(data->ready) == 0)
+            pt_cond_wait(data->condition, data->mutex);
+        pthread_mutex_unlock(data->mutex);
+        return (ft_nullptr);
+    };
+    pthread_t thread;
+    if (pt_thread_create(&thread, ft_nullptr, start_routine, &data) != 0)
+    {
+        pt_cond_destroy(&condition);
+        pthread_mutex_destroy(&mutex);
+        return (0);
+    }
+    pt_thread_sleep(100);
+    pthread_mutex_lock(&mutex);
+    ready = 1;
+    pt_cond_signal(&condition);
+    pthread_mutex_unlock(&mutex);
+    int join_result = pt_thread_join(thread, ft_nullptr);
+    pt_cond_destroy(&condition);
+    pthread_mutex_destroy(&mutex);
+    return (join_result == 0 && ready == 1);
+}
