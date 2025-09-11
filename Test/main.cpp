@@ -188,6 +188,7 @@ int test_pt_cond_wait_signal(void);
 int test_math_eval_basic(void);
 int test_math_eval_parentheses(void);
 int test_math_eval_dice_rejected(void);
+int test_encryption_key_random(void);
 int test_rng_random_normal(void);
 int test_rng_random_exponential(void);
 int test_json_roundtrip_string(void);
@@ -420,6 +421,7 @@ int main(int argc, char **argv)
         { test_math_eval_basic, "math_eval basic" },
         { test_math_eval_parentheses, "math_eval parentheses" },
         { test_math_eval_dice_rejected, "math_eval dice rejected" },
+        { test_encryption_key_random, "encryption key random" },
         { test_rng_random_normal, "rng random normal" },
         { test_rng_random_exponential, "rng random exponential" },
         { test_json_roundtrip_string, "json roundtrip string" },

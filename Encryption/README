@@ -1,0 +1,11 @@
+# Encryption
+
+## Security Rationale
+
+`be_getEncryptionKey` reads entropy from the operating system to avoid
+predictable keys. On Unix systems the function pulls random bytes from
+`/dev/urandom`; on Windows it uses `CryptGenRandom`. If these sources are
+unavailable, it falls back to `ft_random_seed` to preserve variability.
+Mapping bytes to alphabetic characters maintains compatibility with the
+existing interface while ensuring keys differ across runs.
+
