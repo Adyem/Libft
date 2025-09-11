@@ -10,6 +10,7 @@
 #include "../Game/event.hpp"
 #include "../Game/inventory.hpp"
 #include "../Errno/errno.hpp"
+#include <cstdio>
 
 int test_game_simulation(void)
 {
@@ -174,6 +175,32 @@ int test_character_add_sub_valor(void)
     hero.add_valor(5);
     hero.sub_valor(2);
     return (hero.get_valor() == 3);
+}
+
+int test_game_save_load(void)
+{
+    ft_character hero;
+    hero.set_hit_points(42);
+    ft_world world;
+    ft_event event;
+    event.set_id(1);
+    event.set_duration(5);
+    world.get_events().insert(event.get_id(), event);
+    if (world.save_game("test_save.json", hero) != ER_SUCCESS)
+        return (0);
+    ft_character loaded_hero;
+    ft_world loaded_world;
+    if (loaded_world.load_game("test_save.json", loaded_hero) != ER_SUCCESS)
+        return (0);
+    Pair<int, ft_event> *event_entry = loaded_world.get_events().find(1);
+    remove("test_save.json");
+    if (!event_entry)
+        return (0);
+    if (event_entry->value.get_duration() != 5)
+        return (0);
+    if (loaded_hero.get_hit_points() != 42)
+        return (0);
+    return (1);
 }
 
 int test_buff_subtracters(void)
