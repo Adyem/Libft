@@ -1,4 +1,5 @@
 #include "networking.hpp"
+#include "../CMA/CMA.hpp"
 #ifdef _WIN32
 # include <winsock2.h>
 #else
@@ -7,7 +8,6 @@
 # include <sys/select.h>
 # ifdef __linux__
 #  include <sys/epoll.h>
-#  include <stdlib.h>
 # endif
 #endif
 
@@ -131,7 +131,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
         close(epoll_descriptor);
         return (0);
     }
-    events = static_cast<epoll_event *>(malloc(sizeof(epoll_event) * maximum_events));
+    events = static_cast<epoll_event *>(cma_malloc(sizeof(epoll_event) * maximum_events));
     if (!events)
     {
         close(epoll_descriptor);
@@ -140,7 +140,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
     ready_descriptors = epoll_wait(epoll_descriptor, events, maximum_events, timeout_milliseconds);
     if (ready_descriptors <= 0)
     {
-        free(events);
+        cma_free(events);
         close(epoll_descriptor);
         return (ready_descriptors);
     }
@@ -168,7 +168,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
             write_file_descriptors[search_index] = descriptor;
         ready_index++;
     }
-    free(events);
+    cma_free(events);
     close(epoll_descriptor);
     return (ready_descriptors);
 #else

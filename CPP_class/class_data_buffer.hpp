@@ -1,7 +1,7 @@
 #ifndef DATA_BUFFER
 # define DATA_BUFFER
 
-#include <vector>
+#include "../Template/vector.hpp"
 #include <cstdint>
 #include <sstream>
 #include "class_istringstream.hpp"
@@ -12,8 +12,8 @@
 class DataBuffer
 {
     private:
-        std::vector<uint8_t> _buffer;
-        size_t _readPos;
+        ft_vector<uint8_t> _buffer;
+        size_t _read_pos;
         bool _ok;
 
     public:
@@ -25,7 +25,7 @@ class DataBuffer
         ~DataBuffer();
         void clear() noexcept;
         size_t size() const noexcept;
-        const std::vector<uint8_t>& data() const noexcept;
+        const ft_vector<uint8_t>& data() const noexcept;
         size_t tell() const noexcept;
         bool seek(size_t pos) noexcept;
 
@@ -57,7 +57,18 @@ DataBuffer& DataBuffer::operator<<(const T& value)
     }
     size_t len = ft_strlen_size_t(bytes);
     *this << len;
-    this->_buffer.insert(this->_buffer.end(), bytes, bytes + len);
+    size_t index = 0;
+    while (index < len)
+    {
+        this->_buffer.push_back(static_cast<uint8_t>(bytes[index]));
+        if (this->_buffer.get_error() != ER_SUCCESS)
+        {
+            this->_ok = false;
+            cma_free(bytes);
+            return (*this);
+        }
+        ++index;
+    }
     cma_free(bytes);
     return (*this);
 }
@@ -67,7 +78,7 @@ DataBuffer& DataBuffer::operator>>(T& value)
 {
     size_t len;
     *this >> len;
-    if (!this->_ok || this->_readPos + len > this->_buffer.size())
+    if (!this->_ok || this->_read_pos + len > this->_buffer.size())
     {
         this->_ok = false;
         return (*this);
@@ -79,12 +90,12 @@ DataBuffer& DataBuffer::operator>>(T& value)
         ft_errno = CMA_BAD_ALLOC;
         return (*this);
     }
-    ft_memcpy(bytes, this->_buffer.data() + this->_readPos, len);
+    ft_memcpy(bytes, this->_buffer.begin() + this->_read_pos, len);
     ft_istringstream iss(bytes);
     iss >> value;
     cma_free(bytes);
     this->_ok = (iss.get_error() == ER_SUCCESS);
-    this->_readPos += len;
+    this->_read_pos += len;
     return (*this);
 }
 
