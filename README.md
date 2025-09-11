@@ -111,8 +111,17 @@ double      math_sqrt(double number);
 double      math_exp(double value);
 double      math_log(double value);
 double      math_cos(double value);
+double      ft_sin(double value);
+double      ft_tan(double value);
 double      math_deg2rad(double degrees);
 double      math_rad2deg(double radians);
+```
+
+Example usage:
+
+```
+double sine = ft_sin(math_deg2rad(90.0));
+double tangent = ft_tan(math_deg2rad(45.0));
 ```
 
 Additional helpers for parsing expressions are available. They allocate a
