@@ -135,12 +135,36 @@ cnfg_config *cnfg_parse(const char *filename)
         else
             entry.section = ft_nullptr;
         entry.key = key;
-        entry.value = value;
+        char *environment_value = ft_nullptr;
+        if (key)
+            environment_value = ft_getenv(key);
+        if (environment_value)
+        {
+            if (value)
+            {
+                cma_free(value);
+                value = ft_nullptr;
+            }
+            entry.value = cma_strdup(environment_value);
+            if (!entry.value)
+            {
+                ft_errno = FT_EALLOC;
+                cma_free(entry.section);
+                cma_free(entry.key);
+                cnfg_free(config);
+                if (current_section)
+                    cma_free(current_section);
+                ft_fclose(file);
+                return (ft_nullptr);
+            }
+        }
+        else
+            entry.value = value;
         if (current_section && !entry.section)
         {
             ft_errno = FT_EALLOC;
             cma_free(key);
-            cma_free(value);
+            cma_free(entry.value);
             cnfg_free(config);
             if (current_section)
                 cma_free(current_section);
