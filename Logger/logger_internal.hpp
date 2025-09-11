@@ -2,7 +2,7 @@
 #define LOGGER_INTERNAL_HPP
 
 #include <cstdarg>
-#include <vector>
+#include "../Template/vector.hpp"
 #include "../CPP_class/class_string_class.hpp"
 #include "../Errno/errno.hpp"
 #include "logger.hpp"
@@ -26,7 +26,7 @@ struct s_file_sink
     size_t    max_size;
 };
 
-extern std::vector<s_log_sink> g_sinks;
+extern ft_vector<s_log_sink> g_sinks;
 
 void ft_log_rotate(s_file_sink *sink);
 void ft_file_sink(const char *message, void *user_data);

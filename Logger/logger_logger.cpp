@@ -1,24 +1,25 @@
 #include "logger_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include <queue>
-#include <mutex>
-#include <condition_variable>
-#include <thread>
-#include <string>
-#include <ctime>
-#include <cstdio>
+#include "../Template/queue.hpp"
+#include "../PThread/pthread.hpp"
+#include "../Time/time.hpp"
+#include "../Printf/printf.hpp"
 #include <unistd.h>
+#include <cerrno>
 
 ft_logger *g_logger = ft_nullptr;
 bool g_async_running = false;
-static std::queue<std::string> g_log_queue;
-static std::mutex g_queue_mutex;
-static std::condition_variable g_queue_cv;
-static std::thread g_log_thread;
+static ft_queue<ft_string> g_log_queue;
+static pthread_mutex_t g_condition_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t g_queue_condition = PTHREAD_COND_INITIALIZER;
+static pthread_t g_log_thread;
 
-static void ft_log_process_message(const std::string &message)
+static void ft_log_process_message(const ft_string &message)
 {
-    if (g_sinks.empty())
+    size_t sink_count;
+
+    sink_count = g_sinks.size();
+    if (sink_count == 0)
     {
         ssize_t write_result;
 
@@ -30,7 +31,7 @@ static void ft_log_process_message(const std::string &message)
         size_t index;
 
         index = 0;
-        while (index < g_sinks.size())
+        while (index < sink_count)
         {
             g_sinks[index].function(message.c_str(), g_sinks[index].user_data);
             if (g_sinks[index].function == ft_file_sink)
@@ -41,47 +42,91 @@ static void ft_log_process_message(const std::string &message)
     return ;
 }
 
-static void ft_log_worker()
+static void *ft_log_worker(void *argument)
 {
-    std::unique_lock<std::mutex> queue_lock(g_queue_mutex);
-    while (g_async_running || !g_log_queue.empty())
+    bool queue_is_empty;
+    ft_string message;
+
+    (void)argument;
+    if (pthread_mutex_lock(&g_condition_mutex) != 0)
     {
-        if (g_log_queue.empty())
-            g_queue_cv.wait(queue_lock);
+        ft_errno = errno + ERRNO_OFFSET;
+        return (ft_nullptr);
+    }
+    while (1)
+    {
+        queue_is_empty = g_log_queue.empty();
+        if (g_log_queue.get_error() != ER_SUCCESS)
+            break;
+        if (!g_async_running && queue_is_empty)
+            break;
+        if (queue_is_empty)
+        {
+            if (pt_cond_wait(&g_queue_condition, &g_condition_mutex) != 0)
+                break;
+        }
         else
         {
-            std::string message;
-
-            message = g_log_queue.front();
-            g_log_queue.pop();
-            queue_lock.unlock();
-            ft_log_process_message(message);
-            queue_lock.lock();
+            message = g_log_queue.dequeue();
+            pthread_mutex_unlock(&g_condition_mutex);
+            if (g_log_queue.get_error() == ER_SUCCESS)
+                ft_log_process_message(message);
+            if (pthread_mutex_lock(&g_condition_mutex) != 0)
+            {
+                ft_errno = errno + ERRNO_OFFSET;
+                return (ft_nullptr);
+            }
         }
     }
-    return ;
+    pthread_mutex_unlock(&g_condition_mutex);
+    return (ft_nullptr);
 }
 
 void ft_log_start_async()
 {
-    if (g_async_running)
+    if (pthread_mutex_lock(&g_condition_mutex) != 0)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
         return ;
+    }
+    if (g_async_running)
+    {
+        pthread_mutex_unlock(&g_condition_mutex);
+        return ;
+    }
     g_async_running = true;
-    g_log_thread = std::thread(ft_log_worker);
+    pthread_mutex_unlock(&g_condition_mutex);
+    if (pt_thread_create(&g_log_thread, ft_nullptr, ft_log_worker, ft_nullptr) != 0)
+    {
+        if (pthread_mutex_lock(&g_condition_mutex) != 0)
+        {
+            ft_errno = errno + ERRNO_OFFSET;
+            return ;
+        }
+        g_async_running = false;
+        pthread_mutex_unlock(&g_condition_mutex);
+    }
     return ;
 }
 
 void ft_log_stop_async()
 {
-    if (!g_async_running)
-        return ;
+    if (pthread_mutex_lock(&g_condition_mutex) != 0)
     {
-        std::lock_guard<std::mutex> lock_guard(g_queue_mutex);
-        g_async_running = false;
+        ft_errno = errno + ERRNO_OFFSET;
+        return ;
     }
-    g_queue_cv.notify_one();
-    if (g_log_thread.joinable())
-        g_log_thread.join();
+    if (!g_async_running)
+    {
+        pthread_mutex_unlock(&g_condition_mutex);
+        return ;
+    }
+    g_async_running = false;
+    pthread_mutex_unlock(&g_condition_mutex);
+    if (pt_cond_broadcast(&g_queue_condition) != 0)
+        return ;
+    if (pt_thread_join(g_log_thread, ft_nullptr) != 0)
+        return ;
     return ;
 }
 
@@ -90,28 +135,31 @@ void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
     if (level < g_level || !fmt)
         return ;
     char message_buffer[1024];
-    std::vsnprintf(message_buffer, sizeof(message_buffer), fmt, args);
+    pf_vsnprintf(message_buffer, sizeof(message_buffer), fmt, args);
 
     char time_buffer[32];
-    std::time_t current_time;
-    std::tm time_info;
+    t_time current_time;
+    t_time_info time_info;
 
-    current_time = std::time(NULL);
-#if defined(_WIN32) || defined(_WIN64)
-    localtime_s(&time_info, &current_time);
-#else
-    localtime_r(&current_time, &time_info);
-#endif
-    std::strftime(time_buffer, sizeof(time_buffer), "%Y-%m-%d %H:%M:%S", &time_info);
+    current_time = time_now();
+    time_local(current_time, &time_info);
+    time_strftime(time_buffer, sizeof(time_buffer), "%Y-%m-%d %H:%M:%S", &time_info);
 
     char final_buffer[1200];
-    std::snprintf(final_buffer, sizeof(final_buffer), "[%s] [%s] %s\n", time_buffer, ft_level_to_str(level), message_buffer);
+    int length;
 
+    length = pf_snprintf(final_buffer, sizeof(final_buffer), "[%s] [%s] %s\n", time_buffer, ft_level_to_str(level), message_buffer);
+    if (length <= 0)
+        return ;
+    if (pthread_mutex_lock(&g_condition_mutex) != 0)
     {
-        std::lock_guard<std::mutex> lock_guard(g_queue_mutex);
-        g_log_queue.push(final_buffer);
+        ft_errno = errno + ERRNO_OFFSET;
+        return ;
     }
-    g_queue_cv.notify_one();
+    g_log_queue.enqueue(ft_string(final_buffer));
+    if (g_log_queue.get_error() == ER_SUCCESS)
+        pt_cond_signal(&g_queue_condition);
+    pthread_mutex_unlock(&g_condition_mutex);
     return ;
 }
 

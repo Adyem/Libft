@@ -22,5 +22,7 @@ void ft_log_close()
         index++;
     }
     g_sinks.clear();
+    if (g_sinks.get_error() != ER_SUCCESS)
+        return ;
     return ;
 }
