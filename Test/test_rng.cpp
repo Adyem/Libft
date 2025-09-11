@@ -41,3 +41,25 @@ int test_rng_random_exponential(void)
         return (0);
     return (1);
 }
+
+int test_rng_random_poisson(void)
+{
+    g_srand_init = true;
+    srand(123);
+    int sample_count = 10000;
+    int index = 0;
+    int sum_values = 0;
+    double lambda_value = 4.0;
+    while (index < sample_count)
+    {
+        sum_values += ft_random_poisson(lambda_value);
+        index++;
+    }
+    double mean_value = static_cast<double>(sum_values) /
+                         static_cast<double>(sample_count);
+    if (mean_value < lambda_value - 0.1)
+        return (0);
+    if (mean_value > lambda_value + 0.1)
+        return (0);
+    return (1);
+}
