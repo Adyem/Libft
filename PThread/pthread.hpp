@@ -22,6 +22,12 @@ void pt_atomic_store(std::atomic<int>& atomic_variable, int desired_value);
 int pt_atomic_fetch_add(std::atomic<int>& atomic_variable, int increment_value);
 bool pt_atomic_compare_exchange(std::atomic<int>& atomic_variable, int& expected_value, int desired_value);
 
+int pt_rwlock_init(pthread_rwlock_t *rwlock, const pthread_rwlockattr_t *attributes);
+int pt_rwlock_rdlock(pthread_rwlock_t *rwlock);
+int pt_rwlock_wrlock(pthread_rwlock_t *rwlock);
+int pt_rwlock_unlock(pthread_rwlock_t *rwlock);
+int pt_rwlock_destroy(pthread_rwlock_t *rwlock);
+
 #define SLEEP_TIME 100
 #define MAX_SLEEP 10000
 #define MAX_QUEUE 128
