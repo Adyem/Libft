@@ -22,20 +22,24 @@ void cma_free(void* ptr)
     }
     if (!ptr)
         return ;
-    g_malloc_mutex.lock(THREAD_ID);
+    if (g_cma_thread_safe)
+        g_malloc_mutex.lock(THREAD_ID);
     Block* block = reinterpret_cast<Block*>((static_cast<char*> (ptr)
                 - sizeof(Block)));
     if (block->magic != MAGIC_NUMBER)
     {
         pf_printf_fd(2, "Invalid block detected in cma_free. \n");
         print_block_info(block);
+        if (g_cma_thread_safe)
+            g_malloc_mutex.unlock(THREAD_ID);
         su_sigabrt();
     }
     block->free = true;
     block = merge_block(block);
     Page *page = find_page_of_block(block);
     free_page_if_empty(page);
-    g_malloc_mutex.unlock(THREAD_ID);
+    if (g_cma_thread_safe)
+        g_malloc_mutex.unlock(THREAD_ID);
     g_cma_free_count++;
     if (ft_log_get_alloc_logging())
         ft_log_debug("cma_free %p", ptr);

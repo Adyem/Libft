@@ -68,3 +68,54 @@ int test_cma_thread_local(void)
     failure_thread.join();
     return (success_result && failure_result);
 }
+
+static void allocation_thread(bool *thread_result)
+{
+    int allocation_index;
+
+    allocation_index = 0;
+    while (allocation_index < 100)
+    {
+        void *memory_pointer = cma_malloc(64);
+        if (!memory_pointer)
+        {
+            *thread_result = false;
+            return ;
+        }
+        cma_free(memory_pointer);
+        allocation_index++;
+    }
+    *thread_result = true;
+    return ;
+}
+
+int test_cma_thread_alloc(void)
+{
+    static const int thread_count = 4;
+    bool thread_results[thread_count];
+    std::thread threads[thread_count];
+    int thread_index;
+
+    cma_set_thread_safety(true);
+    thread_index = 0;
+    while (thread_index < thread_count)
+    {
+        thread_results[thread_index] = false;
+        threads[thread_index] = std::thread(allocation_thread, &thread_results[thread_index]);
+        thread_index++;
+    }
+    thread_index = 0;
+    while (thread_index < thread_count)
+    {
+        threads[thread_index].join();
+        thread_index++;
+    }
+    thread_index = 0;
+    while (thread_index < thread_count)
+    {
+        if (thread_results[thread_index] == false)
+            return (0);
+        thread_index++;
+    }
+    return (1);
+}

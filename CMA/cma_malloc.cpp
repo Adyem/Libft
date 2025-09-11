@@ -26,7 +26,8 @@ void* cma_malloc(std::size_t size)
         return (ft_nullptr);
     if (g_cma_alloc_limit != 0 && size > g_cma_alloc_limit)
         return (ft_nullptr);
-    g_malloc_mutex.lock(THREAD_ID);
+    if (g_cma_thread_safe)
+        g_malloc_mutex.lock(THREAD_ID);
     size_t aligned_size = align16(size);
     Block *block = find_free_block(aligned_size);
     if (!block)
@@ -34,7 +35,8 @@ void* cma_malloc(std::size_t size)
         Page* page = create_page(aligned_size);
         if (!page)
         {
-            g_malloc_mutex.unlock(THREAD_ID);
+            if (g_cma_thread_safe)
+                g_malloc_mutex.unlock(THREAD_ID);
             return (ft_nullptr);
         }
         block = page->blocks;
@@ -43,7 +45,8 @@ void* cma_malloc(std::size_t size)
     block->free = false;
     g_cma_allocation_count++;
     void *result = reinterpret_cast<char*>(block) + sizeof(Block);
-    g_malloc_mutex.unlock(THREAD_ID);
+    if (g_cma_thread_safe)
+        g_malloc_mutex.unlock(THREAD_ID);
     if (ft_log_get_alloc_logging())
         ft_log_debug("cma_malloc %zu -> %p", aligned_size, result);
     return (result);
