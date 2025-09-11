@@ -6,6 +6,7 @@
 char    *su_getenv(const char *name);
 int     su_setenv(const char *name, const char *value, int overwrite);
 int     su_putenv(char *string);
+char    *su_get_home_directory(void);
 int     su_open(const char *path_name);
 int     su_open(const char *path_name, int flags);
 int     su_open(const char *path_name, int flags, mode_t mode);
