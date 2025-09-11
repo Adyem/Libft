@@ -17,7 +17,8 @@ SRCS := pthread_lock_mutex.cpp \
         pthread_atomic_store.cpp \
         pthread_atomic_fetch_add.cpp \
         pthread_atomic_compare_exchange.cpp \
-        pthread_condition.cpp
+        pthread_condition.cpp \
+        pthread_rwlock.cpp
 
 HEADERS := pthread.hpp mutex.hpp condition.hpp
 
