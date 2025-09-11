@@ -20,15 +20,31 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
             if (format[index] == '\0')
                 break ;
             LengthModifier len_mod = LEN_NONE;
-            if (format[index] == 'l')
+            int precision = 6;
+            while (true)
             {
-                len_mod = LEN_L;
-                index++;
-            }
-            else if (format[index] == 'z')
-            {
-                len_mod = LEN_Z;
-                index++;
+                if (format[index] == '.')
+                {
+                    index++;
+                    precision = 0;
+                    while (format[index] >= '0' && format[index] <= '9')
+                    {
+                        precision = precision * 10 + (format[index] - '0');
+                        index++;
+                    }
+                }
+                else if (format[index] == 'l')
+                {
+                    len_mod = LEN_L;
+                    index++;
+                }
+                else if (format[index] == 'z')
+                {
+                    len_mod = LEN_Z;
+                    index++;
+                }
+                else
+                    break ;
             }
             char spec = format[index];
             if (spec == '\0')
@@ -114,7 +130,7 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
             else if (spec == 'f')
             {
                 double number = va_arg(args, double);
-                ft_putfloat_fd(number, fd, &count);
+                ft_putfloat_fd(number, fd, &count, precision);
             }
             else if (spec == 'e' || spec == 'E')
             {

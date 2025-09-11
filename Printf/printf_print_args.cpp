@@ -141,7 +141,7 @@ void ft_putptr_fd(void *pointer, int fd, size_t *count)
     return ;
 }
 
-void ft_putfloat_fd(double number, int fd, size_t *count)
+void ft_putfloat_fd(double number, int fd, size_t *count, int precision)
 {
     if (number < 0)
     {
@@ -150,16 +150,19 @@ void ft_putfloat_fd(double number, int fd, size_t *count)
     }
     long integer_part = static_cast<long>(number);
     ft_putnbr_fd(integer_part, fd, count);
-    ft_putchar_fd('.', fd, count);
-    double fractional = number - static_cast<double>(integer_part);
-    int index_fraction = 0;
-    while (index_fraction < 6)
+    if (precision > 0)
     {
-        fractional *= 10;
-        int digit = static_cast<int>(fractional);
-        ft_putchar_fd(static_cast<char>('0' + digit), fd, count);
-        fractional -= digit;
-        index_fraction++;
+        ft_putchar_fd('.', fd, count);
+        double fractional = number - static_cast<double>(integer_part);
+        int index_fraction = 0;
+        while (index_fraction < precision)
+        {
+            fractional *= 10;
+            int digit = static_cast<int>(fractional);
+            ft_putchar_fd(static_cast<char>('0' + digit), fd, count);
+            fractional -= digit;
+            index_fraction++;
+        }
     }
     return ;
 }
@@ -230,7 +233,7 @@ void ft_putgeneral_fd(double number, bool uppercase, int fd, size_t *count)
 {
     if (math_fabs(number) <= DBL_EPSILON)
     {
-        ft_putfloat_fd(0.0, fd, count);
+        ft_putfloat_fd(0.0, fd, count, 6);
         return ;
     }
     double temp = number;
@@ -250,6 +253,6 @@ void ft_putgeneral_fd(double number, bool uppercase, int fd, size_t *count)
     if (exponent < -4 || exponent >= 6)
         ft_putscientific_fd(number, uppercase, fd, count);
     else
-        ft_putfloat_fd(number, fd, count);
+        ft_putfloat_fd(number, fd, count, 6);
     return ;
 }
