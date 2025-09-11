@@ -3,7 +3,10 @@
 #include "../Template/shared_ptr.hpp"
 #include "../Template/unique_ptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../JSon/document.hpp"
+#include "../CMA/CMA.hpp"
 #include <cstring>
+#include <cstdio>
 #include <vector>
 
 int test_ft_vector_push_back(void)
@@ -223,6 +226,55 @@ int test_ft_unique_ptr_swap(void)
     ft_uniqueptr<int> b(new int(2));
     a.swap(b);
     return (*a == 2 && *b == 1);
+}
+
+int test_json_roundtrip_string(void)
+{
+    json_document document_one;
+    json_group *group = document_one.create_group("group");
+    json_item *item = document_one.create_item("key", "value");
+    document_one.add_item(group, item);
+    document_one.append_group(group);
+    char *output = document_one.write_to_string();
+    if (!output)
+        return (0);
+    json_document document_two;
+    if (document_two.read_from_string(output) != 0)
+    {
+        cma_free(output);
+        return (0);
+    }
+    cma_free(output);
+    json_group *group_two = document_two.find_group("group");
+    if (!group_two)
+        return (0);
+    json_item *item_two = document_two.find_item(group_two, "key");
+    if (!item_two)
+        return (0);
+    return (std::strcmp(item_two->value, "value") == 0);
+}
+
+int test_json_roundtrip_file(void)
+{
+    const char *file_path = "Test_roundtrip.json";
+    json_document document_one;
+    json_group *group = document_one.create_group("group");
+    json_item *item = document_one.create_item("key", "value");
+    document_one.add_item(group, item);
+    document_one.append_group(group);
+    if (document_one.write_to_file(file_path) != 0)
+        return (0);
+    json_document document_two;
+    if (document_two.read_from_file(file_path) != 0)
+        return (0);
+    std::remove(file_path);
+    json_group *group_two = document_two.find_group("group");
+    if (!group_two)
+        return (0);
+    json_item *item_two = document_two.find_item(group_two, "key");
+    if (!item_two)
+        return (0);
+    return (std::strcmp(item_two->value, "value") == 0);
 }
 
 

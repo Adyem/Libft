@@ -1,14 +1,6 @@
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <fcntl.h>
-#include <unistd.h>
-#include <cstdarg>
 #include <new>
 #include "json.hpp"
 #include "../Errno/errno.hpp"
-#include "../Printf/printf.hpp"
-#include "../System_utils/system_utils.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
 
@@ -55,111 +47,6 @@ void json_append_group(json_group **head, json_group *new_group)
         current_group->next = new_group;
     }
     return ;
-}
-
-int json_write_to_file(const char *filename, json_group *groups)
-{
-    int file_descriptor = su_open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if (file_descriptor < 0)
-        return (-1);
-    pf_printf_fd(file_descriptor, "{\n");
-    json_group *group_ptr = groups;
-    while (group_ptr)
-    {
-        pf_printf_fd(file_descriptor, "  \"%s\": {\n", group_ptr->name);
-        json_item *item_ptr = group_ptr->items;
-        while (item_ptr)
-        {
-            if (item_ptr->next)
-                pf_printf_fd(file_descriptor,
-                        "    \"%s\": \"%s\",\n", item_ptr->key, item_ptr->value);
-            else
-                pf_printf_fd(file_descriptor,
-                        "    \"%s\": \"%s\"\n", item_ptr->key, item_ptr->value);
-            item_ptr = item_ptr->next;
-        }
-        if (group_ptr->next)
-            pf_printf_fd(file_descriptor, "  },\n");
-        else
-            pf_printf_fd(file_descriptor, "  }");
-        pf_printf_fd(file_descriptor, "\n");
-        group_ptr = group_ptr->next;
-    }
-    pf_printf_fd(file_descriptor, "}\n");
-    ft_close(file_descriptor);
-    return (0);
-}
-
-char *json_write_to_string(json_group *groups)
-{
-    char *result = cma_strdup("{\n");
-    if (!result)
-        return (ft_nullptr);
-    json_group *group_ptr = groups;
-    while (group_ptr)
-    {
-        char *line = cma_strjoin_multiple(3, "  \"", group_ptr->name, "\": {\n");
-        if (!line)
-        {
-            cma_free(result);
-            return (ft_nullptr);
-        }
-        char *tmp = cma_strjoin(result, line);
-        cma_free(result);
-        cma_free(line);
-        if (!tmp)
-            return (ft_nullptr);
-        result = tmp;
-        json_item *item_ptr = group_ptr->items;
-        while (item_ptr)
-        {
-            if (item_ptr->next)
-                line = cma_strjoin_multiple(5, "    \"", item_ptr->key, "\": \"", item_ptr->value, "\",\n");
-            else
-                line = cma_strjoin_multiple(5, "    \"", item_ptr->key, "\": \"", item_ptr->value, "\"\n");
-            if (!line)
-            {
-                cma_free(result);
-                return (ft_nullptr);
-            }
-            tmp = cma_strjoin(result, line);
-            cma_free(result);
-            cma_free(line);
-            if (!tmp)
-                return (ft_nullptr);
-            result = tmp;
-            item_ptr = item_ptr->next;
-        }
-        if (group_ptr->next)
-            line = cma_strdup("  },\n");
-        else
-            line = cma_strdup("  }\n");
-        if (!line)
-        {
-            cma_free(result);
-            return (ft_nullptr);
-        }
-        tmp = cma_strjoin(result, line);
-        cma_free(result);
-        cma_free(line);
-        if (!tmp)
-            return (ft_nullptr);
-        result = tmp;
-        group_ptr = group_ptr->next;
-    }
-    char *end = cma_strdup("}\n");
-    if (!end)
-    {
-        cma_free(result);
-        return (ft_nullptr);
-    }
-    char *tmp = cma_strjoin(result, end);
-    cma_free(result);
-    cma_free(end);
-    if (!tmp)
-        return (ft_nullptr);
-    result = tmp;
-    return (result);
 }
 
 void json_free_items(json_item *item)
