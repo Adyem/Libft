@@ -48,7 +48,7 @@ SUBDIRS :=  CMA \
             Networking \
             API \
             Compatebility \
-            Encryption RNG JSon File HTML Game Time
+            Compression Encryption RNG JSon File HTML Game Time
 
 LIB_BASES := \
   CMA/CustomMemoryAllocator \
@@ -66,6 +66,7 @@ LIB_BASES := \
   Networking/networking \
   API/API \
   Compatebility/Compatebility \
+  Compression/compression \
   Encryption/encryption \
   RNG/RNG \
   JSon/JSon \

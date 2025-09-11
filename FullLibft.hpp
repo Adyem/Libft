@@ -72,6 +72,7 @@
 #include "Template/future.hpp"
 #include "Template/promise.hpp"
 #include "System_utils/system_utils.hpp"
+#include "Compression/compression.hpp"
 #include "Encryption/basic_encryption.hpp"
 #include "File/open_dir.hpp"
 #include "Time/time.hpp"
