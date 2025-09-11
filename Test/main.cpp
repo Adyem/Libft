@@ -126,6 +126,8 @@ int test_setenv_getenv_basic(void);
 int test_setenv_no_overwrite(void);
 int test_su_get_cpu_count(void);
 int test_su_get_total_memory(void);
+int test_su_get_home_directory_posix(void);
+int test_su_get_home_directory_windows(void);
 int test_time_monotonic_increases(void);
 int test_time_format_iso8601_epoch(void);
 int test_time_format_iso8601_20210101(void);
@@ -353,6 +355,8 @@ int main(int argc, char **argv)
         { test_setenv_no_overwrite, "setenv no overwrite" },
         { test_su_get_cpu_count, "su get cpu count" },
         { test_su_get_total_memory, "su get total memory" },
+        { test_su_get_home_directory_posix, "su get home directory posix" },
+        { test_su_get_home_directory_windows, "su get home directory windows" },
         { test_time_monotonic_increases, "time_monotonic increases" },
         { test_time_format_iso8601_epoch, "time_format_iso8601 epoch" },
         { test_time_format_iso8601_20210101, "time_format_iso8601 2021-01-01" },
