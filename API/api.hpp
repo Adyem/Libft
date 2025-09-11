@@ -7,6 +7,7 @@
 #include <cstddef>
 
 typedef void (*api_callback)(char *body, int status, void *user_data);
+typedef void (*api_json_callback)(json_group *body, int status, void *user_data);
 
 bool    api_request_string_async(const char *ip, uint16_t port,
         const char *method, const char *path, api_callback callback,
@@ -15,6 +16,16 @@ bool    api_request_string_async(const char *ip, uint16_t port,
 
 bool    api_request_string_tls_async(const char *host, uint16_t port,
         const char *method, const char *path, api_callback callback,
+        void *user_data, json_group *payload = ft_nullptr,
+        const char *headers = ft_nullptr, int timeout = 60000);
+
+bool    api_request_json_async(const char *ip, uint16_t port,
+        const char *method, const char *path, api_json_callback callback,
+        void *user_data, json_group *payload = ft_nullptr,
+        const char *headers = ft_nullptr, int timeout = 60000);
+
+bool    api_request_json_tls_async(const char *host, uint16_t port,
+        const char *method, const char *path, api_json_callback callback,
         void *user_data, json_group *payload = ft_nullptr,
         const char *headers = ft_nullptr, int timeout = 60000);
 
