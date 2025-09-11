@@ -9,3 +9,25 @@ unavailable, it falls back to `ft_random_seed` to preserve variability.
 Mapping bytes to alphabetic characters maintains compatibility with the
 existing interface while ensuring keys differ across runs.
 
+## RSA
+
+Basic RSA helpers generate a key pair and perform modular exponentiation for
+encrypting and decrypting small integers.
+
+### Usage
+
+```
+uint64_t public_key;
+uint64_t private_key;
+uint64_t modulus;
+rsa_generate_key_pair(&public_key, &private_key, &modulus, 32);
+uint64_t encrypted = rsa_encrypt(42, public_key, modulus);
+uint64_t decrypted = rsa_decrypt(encrypted, private_key, modulus);
+```
+
+### Warning
+
+This implementation uses small primes for demonstration and relies on 64-bit
+arithmetic. Large key sizes drastically slow down operations and may exceed
+the limits of this module. For real-world security, use keys of at least 2048
+bits and a vetted cryptographic library.
