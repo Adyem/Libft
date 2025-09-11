@@ -4,6 +4,7 @@
 #include "../Errno/errno.hpp"
 #include <atomic>
 #include <utility>
+#include "move.hpp"
 
 template <typename ValueType>
 class ft_promise
@@ -52,7 +53,7 @@ void ft_promise<ValueType>::set_value(const ValueType& value)
 template <typename ValueType>
 void ft_promise<ValueType>::set_value(ValueType&& value)
 {
-    this->_value = std::move(value);
+    this->_value = ft_move(value);
     this->_ready.store(true, std::memory_order_release);
     return ;
 }

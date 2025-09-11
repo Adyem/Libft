@@ -9,6 +9,7 @@
 #include "../PThread/mutex.hpp"
 #include <cstddef>
 #include <utility>
+#include "move.hpp"
 
 template <typename ElementType>
 class ft_stack
@@ -148,7 +149,7 @@ void ft_stack<ElementType>::push(ElementType&& value)
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
-    construct_at(&new_node->_data, std::move(value));
+    construct_at(&new_node->_data, ft_move(value));
     new_node->_next = this->_top;
     this->_top = new_node;
     ++this->_size;
@@ -172,7 +173,7 @@ ElementType ft_stack<ElementType>::pop()
     }
     StackNode* node = this->_top;
     this->_top = node->_next;
-    ElementType value = std::move(node->_data);
+    ElementType value = ft_move(node->_data);
     destroy_at(&node->_data);
     cma_free(node);
     --this->_size;

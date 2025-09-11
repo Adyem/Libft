@@ -1,6 +1,7 @@
 #include "socket_class.hpp"
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
+#include "../Template/move.hpp"
 #include <cstring>
 #include <cerrno>
 #include <fcntl.h>
@@ -14,7 +15,6 @@
 # include <unistd.h>
 # include <sys/socket.h>
 #endif
-#include <utility>
 
 ft_socket::ft_socket() : _socket_fd(-1), _error(ER_SUCCESS)
 {
@@ -119,7 +119,7 @@ int ft_socket::accept_connection()
         return (-1);
     }
     ft_socket new_socket(new_fd, client_addr);
-    this->_connected.push_back(std::move(new_socket));
+    this->_connected.push_back(ft_move(new_socket));
     if (this->_connected.get_error())
     {
         ft_errno = VECTOR_ALLOC_FAIL;
@@ -138,7 +138,7 @@ bool ft_socket::disconnect_client(int fd)
         {
             size_t last = this->_connected.size() - 1;
             if (index != last)
-                    this->_connected[index] = std::move(this->_connected[last]);
+                    this->_connected[index] = ft_move(this->_connected[last]);
             this->_connected.pop_back();
             this->_error = ER_SUCCESS;
             return (true);
@@ -304,7 +304,7 @@ const char* ft_socket::get_error_str() const
 }
 
 ft_socket::ft_socket(ft_socket &&other) noexcept
-    : _address(other._address), _connected(std::move(other._connected)),
+    : _address(other._address), _connected(ft_move(other._connected)),
     _socket_fd(other._socket_fd), _error(other._error)
 {
     other._socket_fd = -1;
@@ -319,7 +319,7 @@ ft_socket &ft_socket::operator=(ft_socket &&other) noexcept
         this->_address = other._address;
         this->_socket_fd = other._socket_fd;
         this->_error = other._error;
-        this->_connected = std::move(other._connected);
+        this->_connected = ft_move(other._connected);
         other._socket_fd = -1;
     }
     return (*this);

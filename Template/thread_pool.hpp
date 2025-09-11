@@ -6,26 +6,30 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
 
-#include <vector>
-#include <queue>
+#include "vector.hpp"
+#include "queue.hpp"
 #include <thread>
-#include <mutex>
-#include <condition_variable>
 #include <functional>
 #include <cstddef>
 #include <atomic>
+#include <cerrno>
+#include <pthread.h>
+#include "../PThread/pthread.hpp"
+#include "move.hpp"
 
 class ft_thread_pool
 {
     private:
-        std::vector<std::thread>      _workers;
-        std::queue<std::function<void()> > _tasks;
+        ft_vector<std::thread>        _workers;
+        ft_queue<std::function<void()> > _tasks;
         size_t                        _max_tasks;
         bool                          _stop;
         size_t                        _active;
         mutable std::atomic<int>      _error_code;
-        std::mutex                    _mutex;
-        std::condition_variable       _cond;
+        pthread_mutex_t               _mutex;
+        pthread_cond_t                _cond;
+        bool                          _mutex_initialized;
+        bool                          _cond_initialized;
 
         void set_error(int error) const;
         void worker();
@@ -54,22 +58,66 @@ inline void ft_thread_pool::worker()
     while (true)
     {
         std::function<void()> task;
+        if (pthread_mutex_lock(&this->_mutex) != 0)
         {
-            std::unique_lock<std::mutex> lock(this->_mutex);
-            this->_cond.wait(lock, [this]() { return (this->_stop || !this->_tasks.empty()); });
-            if (this->_stop && this->_tasks.empty())
+            this->set_error(errno + ERRNO_OFFSET);
+            return ;
+        }
+        bool queue_empty;
+        queue_empty = this->_tasks.empty();
+        if (this->_tasks.get_error() != ER_SUCCESS)
+        {
+            pthread_mutex_unlock(&this->_mutex);
+            this->set_error(this->_tasks.get_error());
+            continue;
+        }
+        while (queue_empty && !this->_stop)
+        {
+            if (pt_cond_wait(&this->_cond, &this->_mutex) != 0)
+            {
+                pthread_mutex_unlock(&this->_mutex);
+                this->set_error(ft_errno);
                 return ;
-            task = std::move(this->_tasks.front());
-            this->_tasks.pop();
-            ++this->_active;
+            }
+            queue_empty = this->_tasks.empty();
+            if (this->_tasks.get_error() != ER_SUCCESS)
+            {
+                pthread_mutex_unlock(&this->_mutex);
+                this->set_error(this->_tasks.get_error());
+                return ;
+            }
         }
-        task();
+        if (this->_stop && queue_empty)
         {
-            std::unique_lock<std::mutex> lock(this->_mutex);
-            --this->_active;
-            if (this->_tasks.empty() && this->_active == 0)
-                this->_cond.notify_all();
+            pthread_mutex_unlock(&this->_mutex);
+            return ;
         }
+        task = this->_tasks.dequeue();
+        if (this->_tasks.get_error() != ER_SUCCESS)
+        {
+            pthread_mutex_unlock(&this->_mutex);
+            this->set_error(this->_tasks.get_error());
+            continue;
+        }
+        ++this->_active;
+        pthread_mutex_unlock(&this->_mutex);
+        task();
+        if (pthread_mutex_lock(&this->_mutex) != 0)
+        {
+            this->set_error(errno + ERRNO_OFFSET);
+            return ;
+        }
+        --this->_active;
+        queue_empty = this->_tasks.empty();
+        if (this->_tasks.get_error() != ER_SUCCESS)
+        {
+            pthread_mutex_unlock(&this->_mutex);
+            this->set_error(this->_tasks.get_error());
+            return ;
+        }
+        if (queue_empty && this->_active == 0)
+            pt_cond_broadcast(&this->_cond);
+        pthread_mutex_unlock(&this->_mutex);
     }
 }
 
@@ -80,59 +128,128 @@ inline void ft_thread_pool::set_error(int error) const
 }
 
 inline ft_thread_pool::ft_thread_pool(size_t thread_count, size_t max_tasks)
-    : _workers(), _tasks(), _max_tasks(max_tasks), _stop(false), _active(0), _error_code(ER_SUCCESS)
+    : _workers(), _tasks(), _max_tasks(max_tasks), _stop(false), _active(0), _error_code(ER_SUCCESS),
+      _mutex(), _cond(), _mutex_initialized(false), _cond_initialized(false)
 {
-    try
+    if (pthread_mutex_init(&this->_mutex, ft_nullptr) != 0)
     {
-        this->_workers.reserve(thread_count);
-        size_t worker_index = 0;
-        while (worker_index < thread_count)
-        {
-            this->_workers.emplace_back(&ft_thread_pool::worker, this);
-            ++worker_index;
-        }
+        this->set_error(errno + ERRNO_OFFSET);
+        this->_stop = true;
+        return ;
     }
-    catch (...)
+    this->_mutex_initialized = true;
+    if (pt_cond_init(&this->_cond, ft_nullptr) != 0)
+    {
+        this->set_error(ft_errno);
+        return ;
+    }
+    this->_cond_initialized = true;
+    this->_workers.reserve(thread_count);
+    if (this->_workers.get_error() != ER_SUCCESS)
     {
         this->set_error(THREAD_POOL_ALLOC_FAIL);
         this->_stop = true;
+        return ;
+    }
+    size_t worker_index = 0;
+    while (worker_index < thread_count)
+    {
+        std::thread worker(&ft_thread_pool::worker, this);
+        this->_workers.push_back(ft_move(worker));
+        if (this->_workers.get_error() != ER_SUCCESS)
+        {
+            this->set_error(THREAD_POOL_ALLOC_FAIL);
+            this->_stop = true;
+            break;
+        }
+        ++worker_index;
     }
 }
 
 inline ft_thread_pool::~ft_thread_pool()
 {
     this->destroy();
+    if (this->_cond_initialized)
+        pt_cond_destroy(&this->_cond);
+    if (this->_mutex_initialized)
+        pthread_mutex_destroy(&this->_mutex);
 }
 
 template <typename Function>
 inline void ft_thread_pool::submit(Function &&function)
 {
-    std::unique_lock<std::mutex> lock(this->_mutex);
-    if (this->_stop)
+    if (pthread_mutex_lock(&this->_mutex) != 0)
+    {
+        this->set_error(errno + ERRNO_OFFSET);
         return ;
+    }
+    if (this->_stop)
+    {
+        pthread_mutex_unlock(&this->_mutex);
+        return ;
+    }
     if (this->_max_tasks != 0 && this->_tasks.size() >= this->_max_tasks)
     {
         this->set_error(THREAD_POOL_FULL);
+        pthread_mutex_unlock(&this->_mutex);
         return ;
     }
-    this->_tasks.emplace(std::forward<Function>(function));
-    lock.unlock();
-    this->_cond.notify_one();
+    std::function<void()> wrapper(ft_move(function));
+    this->_tasks.enqueue(ft_move(wrapper));
+    if (this->_tasks.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_tasks.get_error());
+        pthread_mutex_unlock(&this->_mutex);
+        return ;
+    }
+    pthread_mutex_unlock(&this->_mutex);
+    pt_cond_signal(&this->_cond);
 }
 
 inline void ft_thread_pool::wait()
 {
-    std::unique_lock<std::mutex> lock(this->_mutex);
-      this->_cond.wait(lock, [this]() { return (this->_tasks.empty() && this->_active == 0); });
+    if (pthread_mutex_lock(&this->_mutex) != 0)
+    {
+        this->set_error(errno + ERRNO_OFFSET);
+        return ;
+    }
+    bool tasks_empty;
+    tasks_empty = this->_tasks.empty();
+    if (this->_tasks.get_error() != ER_SUCCESS)
+    {
+        pthread_mutex_unlock(&this->_mutex);
+        this->set_error(this->_tasks.get_error());
+        return ;
+    }
+    while (!tasks_empty || this->_active != 0)
+    {
+        if (pt_cond_wait(&this->_cond, &this->_mutex) != 0)
+        {
+            pthread_mutex_unlock(&this->_mutex);
+            this->set_error(ft_errno);
+            return ;
+        }
+        tasks_empty = this->_tasks.empty();
+        if (this->_tasks.get_error() != ER_SUCCESS)
+        {
+            pthread_mutex_unlock(&this->_mutex);
+            this->set_error(this->_tasks.get_error());
+            return ;
+        }
+    }
+    pthread_mutex_unlock(&this->_mutex);
 }
 
 inline void ft_thread_pool::destroy()
 {
+    if (pthread_mutex_lock(&this->_mutex) != 0)
     {
-        std::unique_lock<std::mutex> lock(this->_mutex);
-        this->_stop = true;
+        this->set_error(errno + ERRNO_OFFSET);
+        return ;
     }
-    this->_cond.notify_all();
+    this->_stop = true;
+    pthread_mutex_unlock(&this->_mutex);
+    pt_cond_broadcast(&this->_cond);
     size_t worker_index = 0;
     while (worker_index < this->_workers.size())
     {

@@ -5,7 +5,7 @@ It provides implementations of common libc functions, custom memory allocation h
 basic threading helpers, containers, string utilities, simple networking and more.
 The top level `Makefile` builds every submodule and links them into `Full_Libft.a`.
 The umbrella header `FullLibft.hpp` includes every component.
-Internal code uses custom replacements such as `ft_strlen`, `ft_strchr`, `ft_strstr`, and `pf_snprintf` instead of the standard library equivalents.
+Internal code uses custom replacements such as `ft_strlen`, `ft_strchr`, `ft_strstr`, and `pf_snprintf` instead of the standard library equivalents. It also provides `ft_move` as a drop-in replacement for `std::move`.
 Header files now use class names or concise module names instead of module prefixes, except internal headers which retain their module prefix.
 
 This document briefly lists the main headers and the interfaces they expose. The
@@ -238,6 +238,8 @@ Header files in `CPP_class/` define several helper classes.
 Below is a brief list of the main classes and selected members.
 
 #### `DataBuffer`
+Uses the `ft_vector` container for internal byte storage, allowing allocation
+failures to surface through `ft_errno`.
 ```
 DataBuffer();
 DataBuffer(const DataBuffer& other);
@@ -247,7 +249,7 @@ DataBuffer& operator=(DataBuffer&& other) noexcept;
 ~DataBuffer();
 void clear() noexcept;
 size_t size() const noexcept;
-const std::vector<uint8_t>& data() const noexcept;
+const ft_vector<uint8_t>& data() const noexcept;
 explicit operator bool() const noexcept;
 bool good() const noexcept;
 bool bad() const noexcept;
@@ -384,6 +386,9 @@ int nw_poll(int *read_file_descriptors, int read_count,
             int *write_file_descriptors, int write_count,
             int timeout_milliseconds);
 ```
+
+The Linux `epoll` path allocates its event buffer with `cma_malloc` and
+releases it with `cma_free` to stay within the custom allocator.
 
 `wrapper.hpp` adds helpers for encrypted sockets:
 
@@ -560,6 +565,8 @@ components include:
 - Smart pointers: `ft_shared_ptr` and `ft_unique_ptr`.
 - Concurrency helpers: `ft_thread_pool`, `ft_future`, `ft_event_emitter` and
   `ft_promise`.
+- `ft_thread_pool` stores workers in `ft_vector` and pending tasks in
+  `ft_queue`, synchronizing via POSIX mutexes and condition variables.
 - Additional helpers such as `algorithm.hpp`, `iterator.hpp` and `math.hpp`.
 
 Refer to the header files for the full interface of these templates.
@@ -864,7 +871,9 @@ char *rl_readline(const char *prompt);
 ```
 
 #### API
-HTTP client helpers in `API/api.hpp` and asynchronous wrappers:
+HTTP client helpers in `API/api.hpp` and asynchronous wrappers. URL parsing
+relies on the `ft_string` class instead of `std::string`, so any allocation
+errors must be checked via `get_error`.
 
 ```
 char       *api_request_string(const char *ip, uint16_t port,
