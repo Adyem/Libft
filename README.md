@@ -834,6 +834,7 @@ void       html_add_attr(html_node *targetNode, html_attr *newAttribute);
 html_node *html_find_by_tag(html_node *nodeList, const char *tagName);
 html_node *html_find_by_attr(html_node *nodeList, const char *key, const char *value);
 html_node *html_find_by_selector(html_node *nodeList, const char *selector);
+html_node *html_query_selector(html_node *nodeList, const char *selector);
 ```
 
 The `html_document` class wraps these helpers and manages a root node list:
@@ -855,6 +856,15 @@ Simple selectors allow searching by:
 "[key=value]"     - attribute key equals value
 "[key]"           - presence of attribute key
 ```
+
+Example:
+
+```
+html_node *highlight = html_query_selector(root, ".highlight");
+```
+
+`html_query_selector` supports only tag names, `.class`, and `#id` selectors.
+Combinators like descendant or child selectors are not implemented.
 
 #### Game
 Basic game related classes include `ft_character`, `ft_item`, `ft_inventory`,

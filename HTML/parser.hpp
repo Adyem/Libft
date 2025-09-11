@@ -35,6 +35,12 @@ html_node   *html_find_by_tag(html_node *nodeList, const char *tagName);
 html_node   *html_find_by_attr(html_node *nodeList, const char *key, const char *value);
 html_node   *html_find_by_text(html_node *nodeList, const char *textContent);
 html_node   *html_find_by_selector(html_node *node_list, const char *selector);
+/*
+ * Search node_list for the first element that matches a simple selector.
+ * Supports tag names, .class, and #id selectors. Combinators are not
+ * implemented.
+ */
+html_node   *html_query_selector(html_node *node_list, const char *selector);
 size_t      html_count_nodes_by_tag(html_node *nodeList, const char *tagName);
 
 #endif
