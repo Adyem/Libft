@@ -6,6 +6,7 @@
 #include "../Time/time.hpp"
 #include "../CPP_class/class_string_class.hpp"
 #include <cstring>
+#include <cstdlib>
 #include <string>
 
 int test_strlen_size_t_null(void)
@@ -363,6 +364,51 @@ int test_su_get_cpu_count(void)
 int test_su_get_total_memory(void)
 {
     return (su_get_total_memory() > 0);
+}
+
+int test_su_get_home_directory_posix(void)
+{
+#if defined(_WIN32) || defined(_WIN64)
+    return (1);
+#else
+    char    *expected;
+    char    *result;
+
+    expected = ft_getenv("HOME");
+    result = su_get_home_directory();
+    if (expected == ft_nullptr || result == ft_nullptr)
+        return (0);
+    return (std::strcmp(result, expected) == 0);
+#endif
+}
+
+int test_su_get_home_directory_windows(void)
+{
+#if defined(_WIN32) || defined(_WIN64)
+    char    *expected;
+    char    *result;
+    char    *home_drive;
+    char    *home_path;
+    char    *combined;
+    int     test_ok;
+
+    expected = ft_getenv("USERPROFILE");
+    result = su_get_home_directory();
+    if (expected != ft_nullptr)
+        return (result != ft_nullptr && std::strcmp(result, expected) == 0);
+    home_drive = ft_getenv("HOMEDRIVE");
+    home_path = ft_getenv("HOMEPATH");
+    if (home_drive == ft_nullptr || home_path == ft_nullptr)
+        return (result == ft_nullptr);
+    combined = ft_strjoin_multiple(2, home_drive, home_path);
+    if (combined == ft_nullptr)
+        return (0);
+    test_ok = (result != ft_nullptr && std::strcmp(result, combined) == 0);
+    std::free(combined);
+    return (test_ok);
+#else
+    return (1);
+#endif
 }
 
 int test_time_monotonic_increases(void)
