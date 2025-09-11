@@ -581,6 +581,10 @@ void        aes_encrypt(uint8_t *block, const uint8_t *key);
 void        aes_decrypt(uint8_t *block, const uint8_t *key);
 ```
 
+`be_getEncryptionKey` sources entropy from `/dev/urandom` on Unix or
+`CryptGenRandom` on Windows with a fallback to `ft_random_seed`, ensuring
+that generated keys vary across runs.
+
 Example:
 
 ```
