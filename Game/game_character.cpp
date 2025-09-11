@@ -1,5 +1,160 @@
 #include "character.hpp"
 #include "../Errno/errno.hpp"
+#include "../JSon/json.hpp"
+#include "../Libft/libft.hpp"
+
+json_group *serialize_character(const ft_character &character)
+{
+    json_group *group = json_create_json_group("character");
+    if (!group)
+        return (ft_nullptr);
+    json_item *item = json_create_item("hit_points", character.get_hit_points());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    item = json_create_item("armor", character.get_armor());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    item = json_create_item("might", character.get_might());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    item = json_create_item("agility", character.get_agility());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    item = json_create_item("endurance", character.get_endurance());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    item = json_create_item("reason", character.get_reason());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    item = json_create_item("insigh", character.get_insigh());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    item = json_create_item("presence", character.get_presence());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    item = json_create_item("coins", character.get_coins());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    item = json_create_item("valor", character.get_valor());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    item = json_create_item("experience", character.get_experience());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    item = json_create_item("x", character.get_x());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    item = json_create_item("y", character.get_y());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    item = json_create_item("z", character.get_z());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    return (group);
+}
+
+int deserialize_character(ft_character &character, json_group *group)
+{
+    json_item *item = json_find_item(group, "hit_points");
+    if (item)
+        character.set_hit_points(ft_atoi(item->value));
+    item = json_find_item(group, "armor");
+    if (item)
+        character.set_armor(ft_atoi(item->value));
+    item = json_find_item(group, "might");
+    if (item)
+        character.set_might(ft_atoi(item->value));
+    item = json_find_item(group, "agility");
+    if (item)
+        character.set_agility(ft_atoi(item->value));
+    item = json_find_item(group, "endurance");
+    if (item)
+        character.set_endurance(ft_atoi(item->value));
+    item = json_find_item(group, "reason");
+    if (item)
+        character.set_reason(ft_atoi(item->value));
+    item = json_find_item(group, "insigh");
+    if (item)
+        character.set_insigh(ft_atoi(item->value));
+    item = json_find_item(group, "presence");
+    if (item)
+        character.set_presence(ft_atoi(item->value));
+    item = json_find_item(group, "coins");
+    if (item)
+        character.set_coins(ft_atoi(item->value));
+    item = json_find_item(group, "valor");
+    if (item)
+        character.set_valor(ft_atoi(item->value));
+    item = json_find_item(group, "experience");
+    if (item)
+        character.set_experience(ft_atoi(item->value));
+    item = json_find_item(group, "x");
+    if (item)
+        character.set_x(ft_atoi(item->value));
+    item = json_find_item(group, "y");
+    if (item)
+        character.set_y(ft_atoi(item->value));
+    item = json_find_item(group, "z");
+    if (item)
+        character.set_z(ft_atoi(item->value));
+    return (ER_SUCCESS);
+}
 
 ft_character::ft_character() noexcept
     : _hit_points(0), _armor(0), _might(0), _agility(0),

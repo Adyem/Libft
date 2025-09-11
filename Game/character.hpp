@@ -11,6 +11,8 @@
 #include "inventory.hpp"
 #include "experience_table.hpp"
 
+struct json_group;
+
 struct ft_resistance
 {
     int dr_percent;
@@ -156,5 +158,8 @@ class ft_character
         int get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
+
+json_group *serialize_character(const ft_character &character);
+int deserialize_character(ft_character &character, json_group *group);
 
 #endif
