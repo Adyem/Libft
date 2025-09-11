@@ -181,6 +181,7 @@ int test_config_basic(void);
 int test_config_missing_value(void);
 int test_config_env_override(void);
 int test_pt_async_basic(void);
+int test_pt_cond_wait_signal(void);
 int test_math_eval_basic(void);
 int test_math_eval_parentheses(void);
 int test_math_eval_dice_rejected(void);
@@ -407,6 +408,7 @@ int main(int argc, char **argv)
         { test_config_missing_value, "config missing value" },
         { test_config_env_override, "config env override" },
         { test_pt_async_basic, "pt_async basic" },
+        { test_pt_cond_wait_signal, "pt_cond_wait and pt_cond_signal" },
         { test_math_eval_basic, "math_eval basic" },
         { test_math_eval_parentheses, "math_eval parentheses" },
         { test_math_eval_dice_rejected, "math_eval dice rejected" },
