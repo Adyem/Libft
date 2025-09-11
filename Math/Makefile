@@ -18,6 +18,8 @@ SRCS := math_abs.cpp \
         math_pow.cpp \
         math_sqrt.cpp \
         math_exp.cpp \
+        math_log.cpp \
+        math_cos.cpp \
         math_deg2rad.cpp \
         math_rad2deg.cpp \
         math_roll.cpp \
