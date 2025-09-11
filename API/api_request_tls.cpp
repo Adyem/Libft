@@ -543,3 +543,50 @@ bool    api_request_string_tls_async(const char *host, uint16_t port,
     thread_worker.detach();
     return (true);
 }
+
+struct api_json_async_data
+{
+    api_json_callback callback;
+    void *user_data;
+};
+
+static void api_json_async_wrapper(char *body, int status, void *user_data)
+{
+    api_json_async_data *data;
+    json_group *json_body;
+
+    data = static_cast<api_json_async_data*>(user_data);
+    json_body = ft_nullptr;
+    if (body)
+    {
+        json_body = json_read_from_string(body);
+        cma_free(body);
+    }
+    if (data && data->callback)
+        data->callback(json_body, status, data->user_data);
+    if (data)
+        cma_free(data);
+    return ;
+}
+
+bool    api_request_json_tls_async(const char *host, uint16_t port,
+        const char *method, const char *path, api_json_callback callback,
+        void *user_data, json_group *payload, const char *headers, int timeout)
+{
+    api_json_async_data *data;
+
+    if (!host || !method || !path || !callback)
+        return (false);
+    data = static_cast<api_json_async_data*>(cma_malloc(sizeof(api_json_async_data)));
+    if (!data)
+        return (false);
+    data->callback = callback;
+    data->user_data = user_data;
+    if (!api_request_string_tls_async(host, port, method, path, api_json_async_wrapper,
+            data, payload, headers, timeout))
+    {
+        cma_free(data);
+        return (false);
+    }
+    return (true);
+}
