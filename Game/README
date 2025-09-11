@@ -1,0 +1,13 @@
+# Game Module
+
+The `ft_world` class can persist game state using JSON files.
+
+```
+ft_world world;
+ft_character character;
+ft_inventory inventory;
+world.save_to_file("save.json", character, inventory);
+world.load_from_file("save.json", character, inventory);
+```
+
+Both helpers use the JSon module to read and write the `world`, `character`, and `inventory` groups.

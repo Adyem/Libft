@@ -186,11 +186,13 @@ int test_game_save_load(void)
     event.set_id(1);
     event.set_duration(5);
     world.get_events().insert(event.get_id(), event);
-    if (world.save_game("test_save.json", hero) != ER_SUCCESS)
+    ft_inventory inventory;
+    if (world.save_to_file("test_save.json", hero, inventory) != ER_SUCCESS)
         return (0);
     ft_character loaded_hero;
     ft_world loaded_world;
-    if (loaded_world.load_game("test_save.json", loaded_hero) != ER_SUCCESS)
+    ft_inventory loaded_inventory;
+    if (loaded_world.load_from_file("test_save.json", loaded_hero, loaded_inventory) != ER_SUCCESS)
         return (0);
     Pair<int, ft_event> *event_entry = loaded_world.get_events().find(1);
     remove("test_save.json");
