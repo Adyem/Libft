@@ -4,8 +4,7 @@
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
 #include "../Logger/logger.hpp"
-#include <cstring>
-#include <cstdio>
+#include "../Printf/printf.hpp"
 #include <string>
 #include <thread>
 #include <errno.h>
@@ -99,11 +98,11 @@ char *api_request_string(const char *ip, uint16_t port,
     if (status)
     {
         *status = -1;
-        const char *space = strchr(response.c_str(), ' ');
+        const char *space = ft_strchr(response.c_str(), ' ');
         if (space)
             *status = ft_atoi(space + 1);
     }
-    const char *body = strstr(response.c_str(), "\r\n\r\n");
+    const char *body = ft_strstr(response.c_str(), "\r\n\r\n");
     if (!body)
         return (ft_nullptr);
     body += 4;
@@ -159,7 +158,7 @@ char *api_request_string_host(const char *host, uint16_t port,
     ft_bzero(&hints, sizeof(hints));
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_family = AF_UNSPEC;
-    std::snprintf(port_string, sizeof(port_string), "%u", port);
+    pf_snprintf(port_string, sizeof(port_string), "%u", port);
     if (getaddrinfo(host, port_string, &hints, &address_results) != 0)
         goto cleanup;
 
@@ -231,11 +230,11 @@ char *api_request_string_host(const char *host, uint16_t port,
     if (status)
     {
         *status = -1;
-        const char *space = strchr(response.c_str(), ' ');
+        const char *space = ft_strchr(response.c_str(), ' ');
         if (space)
             *status = ft_atoi(space + 1);
     }
-    body = strstr(response.c_str(), "\r\n\r\n");
+    body = ft_strstr(response.c_str(), "\r\n\r\n");
     if (!body)
         goto cleanup;
     body += 4;
@@ -396,13 +395,13 @@ static bool parse_url(const char *url, bool &tls, std::string &host,
 {
     if (!url)
         return (false);
-    const char *scheme_end = std::strstr(url, "://");
+    const char *scheme_end = ft_strstr(url, "://");
     if (!scheme_end)
         return (false);
     std::string scheme(url, scheme_end - url);
     tls = (scheme == "https");
     const char *host_start = scheme_end + 3;
-    const char *path_start = std::strchr(host_start, '/');
+    const char *path_start = ft_strchr(host_start, '/');
     if (path_start)
         path.assign(path_start);
     else
@@ -412,7 +411,7 @@ static bool parse_url(const char *url, bool &tls, std::string &host,
         hostport.assign(host_start, path_start - host_start);
     else
         hostport = host_start;
-    const char *colon = std::strchr(hostport.c_str(), ':');
+    const char *colon = ft_strchr(hostport.c_str(), ':');
     if (colon)
     {
         host.assign(hostport.c_str(), colon - hostport.c_str());
@@ -506,7 +505,7 @@ static void api_async_worker(api_async_request *data)
     ft_bzero(&hints, sizeof(hints));
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_family = AF_UNSPEC;
-    std::snprintf(port_string, sizeof(port_string), "%u", data->port);
+    pf_snprintf(port_string, sizeof(port_string), "%u", data->port);
     if (getaddrinfo(data->ip, port_string, &hints, &address_results) != 0)
         goto cleanup;
     address_info = address_results;
@@ -620,10 +619,10 @@ static void api_async_worker(api_async_request *data)
 
     if (response.size() > 0)
     {
-        const char *space = strchr(response.c_str(), ' ');
+        const char *space = ft_strchr(response.c_str(), ' ');
         if (space)
             status = ft_atoi(space + 1);
-        const char *body = strstr(response.c_str(), "\r\n\r\n");
+        const char *body = ft_strstr(response.c_str(), "\r\n\r\n");
         if (body)
         {
             body += 4;

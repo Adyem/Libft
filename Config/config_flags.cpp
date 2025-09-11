@@ -26,7 +26,7 @@ char *cnfg_parse_flags(int argument_count, char **argument_values)
             char current_flag = argument[char_index];
             if (std::isalpha(static_cast<unsigned char>(current_flag)))
             {
-                if (!flags || !std::strchr(flags, current_flag))
+                if (!flags || !ft_strchr(flags, current_flag))
                 {
                     char *new_flags = static_cast<char*>(cma_realloc(flags, length + 2));
                     if (!new_flags)
