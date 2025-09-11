@@ -9,6 +9,7 @@
 
 extern ft_logger *g_logger;
 extern t_log_level g_level;
+extern bool g_async_running;
 
 typedef void (*t_log_sink)(const char *message, void *user_data);
 
@@ -31,5 +32,6 @@ void ft_log_rotate(s_file_sink *sink);
 void ft_file_sink(const char *message, void *user_data);
 const char *ft_level_to_str(t_log_level level);
 void ft_log_vwrite(t_log_level level, const char *fmt, va_list args);
+void ft_log_enqueue(t_log_level level, const char *fmt, va_list args);
 
 #endif
