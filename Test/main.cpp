@@ -64,6 +64,8 @@ int test_html_find_by_selector(void);
 int test_network_send_receive(void);
 int test_network_invalid_ip(void);
 int test_network_send_uninitialized(void);
+int test_network_ipv6_send_receive(void);
+int test_network_ipv6_invalid_ip(void);
 int test_strlen_size_t_null(void);
 int test_strlen_size_t_basic(void);
 int test_strlen_size_t_long(void);
@@ -293,6 +295,8 @@ int main(int argc, char **argv)
         { test_network_send_receive, "network send/receive" },
         { test_network_invalid_ip, "network invalid ip" },
         { test_network_send_uninitialized, "network send uninitialized" },
+        { test_network_ipv6_send_receive, "network ipv6 send/receive" },
+        { test_network_ipv6_invalid_ip, "network ipv6 invalid ip" },
         { test_strlen_size_t_null, "strlen_size_t null" },
         { test_strlen_size_t_basic, "strlen_size_t basic" },
         { test_strlen_size_t_long, "strlen_size_t long" },

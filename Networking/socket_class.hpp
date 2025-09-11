@@ -23,6 +23,7 @@ ssize_t nw_send(ssize_t sockfd, const void *buf, size_t len, int flags);
 ssize_t nw_recv(ssize_t sockfd, void *buf, size_t len, int flags);
 ssize_t nw_send(int sockfd, const void *buf, size_t len, int flags);
 ssize_t nw_recv(int sockfd, void *buf, size_t len, int flags);
+int nw_inet_pton(int family, const char *ip_address, void *destination);
 
 class ft_socket
 {

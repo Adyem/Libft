@@ -339,7 +339,7 @@ namespace ft {
 ### Networking
 
 `Networking/networking.hpp` and `socket_class.hpp` implement a small
-socket wrapper.
+socket wrapper with IPv4 and IPv6 support.
 
 ```
 int nw_bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
