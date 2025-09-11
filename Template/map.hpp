@@ -9,6 +9,7 @@
 #include <cstddef>
 #include "../PThread/mutex.hpp"
 #include "../Libft/libft.hpp"
+#include "move.hpp"
 
 template <typename Key, typename MappedType>
 class ft_map
@@ -293,7 +294,7 @@ void ft_map<Key, MappedType>::remove(const Key& key)
             destroy_at(&this->_data[index]);
             if (index != this->_size - 1)
             {
-                construct_at(&this->_data[index], std::move(this->_data[this->_size - 1]));
+                construct_at(&this->_data[index], ft_move(this->_data[this->_size - 1]));
                 destroy_at(&this->_data[this->_size - 1]);
             }
             --this->_size;
@@ -397,7 +398,7 @@ void ft_map<Key, MappedType>::resize(size_t new_capacity)
     size_t index = 0;
     while (index < this->_size)
     {
-        construct_at(&new_data[index], std::move(this->_data[index]));
+        construct_at(&new_data[index], ft_move(this->_data[index]));
         destroy_at(&this->_data[index]);
         index++;
     }

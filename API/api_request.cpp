@@ -5,7 +5,6 @@
 #include "../Libft/libft.hpp"
 #include "../Logger/logger.hpp"
 #include "../Printf/printf.hpp"
-#include <string>
 #include <thread>
 #include <errno.h>
 #ifndef _WIN32
@@ -390,36 +389,86 @@ json_group *api_request_json_host_basic(const char *host, uint16_t port,
     return (result);
 }
 
-static bool parse_url(const char *url, bool &tls, std::string &host,
-                      uint16_t &port, std::string &path)
+static bool parse_url(const char *url, bool &tls, ft_string &host,
+                      uint16_t &port, ft_string &path)
 {
+    const char *scheme_end;
+    const char *host_start;
+    const char *path_start;
+    const char *walker;
+    const char *colon;
+    ft_string       scheme;
+    ft_string       hostport;
+    const char      *slash;
+
     if (!url)
         return (false);
-    const char *scheme_end = ft_strstr(url, "://");
+    scheme_end = ft_strstr(url, "://");
     if (!scheme_end)
         return (false);
-    std::string scheme(url, scheme_end - url);
+    walker = url;
+    while (walker < scheme_end)
+    {
+        scheme.append(*walker);
+        if (scheme.get_error())
+            return (false);
+        walker++;
+    }
     tls = (scheme == "https");
-    const char *host_start = scheme_end + 3;
-    const char *path_start = ft_strchr(host_start, '/');
+    host_start = scheme_end + 3;
+    path_start = ft_strchr(host_start, '/');
+    path.clear();
     if (path_start)
-        path.assign(path_start);
+    {
+        path.append(path_start);
+        if (path.get_error())
+            return (false);
+    }
     else
-        path = "/";
-    std::string hostport;
+    {
+        slash = "/";
+        path = slash;
+        if (path.get_error())
+            return (false);
+    }
     if (path_start)
-        hostport.assign(host_start, path_start - host_start);
+    {
+        hostport.clear();
+        walker = host_start;
+        while (walker < path_start)
+        {
+            hostport.append(*walker);
+            if (hostport.get_error())
+                return (false);
+            walker++;
+        }
+    }
     else
-        hostport = host_start;
-    const char *colon = ft_strchr(hostport.c_str(), ':');
+    {
+        hostport.clear();
+        hostport.append(host_start);
+        if (hostport.get_error())
+            return (false);
+    }
+    colon = ft_strchr(hostport.c_str(), ':');
     if (colon)
     {
-        host.assign(hostport.c_str(), colon - hostport.c_str());
+        host.clear();
+        walker = hostport.c_str();
+        while (walker < colon)
+        {
+            host.append(*walker);
+            if (host.get_error())
+                return (false);
+            walker++;
+        }
         port = static_cast<uint16_t>(ft_atoi(colon + 1));
     }
     else
     {
         host = hostport;
+        if (host.get_error())
+            return (false);
         if (tls)
             port = 443;
         else
@@ -443,8 +492,8 @@ char *api_request_string_url(const char *url, const char *method,
             log_url, log_method);
     }
     bool tls;
-    std::string host;
-    std::string path;
+    ft_string host;
+    ft_string path;
     uint16_t port;
     if (!parse_url(url, tls, host, port, path))
         return (ft_nullptr);

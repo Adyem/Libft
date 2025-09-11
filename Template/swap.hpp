@@ -1,14 +1,14 @@
 #ifndef FT_SWAP_HPP
 # define FT_SWAP_HPP
 
-#include <utility>
+#include "move.hpp"
 
 template<typename T>
 void ft_swap(T& a, T& b)
 {
-    T temp = std::move(a);
-    a = std::move(b);
-    b = std::move(temp);
+    T temp = ft_move(a);
+    a = ft_move(b);
+    b = ft_move(temp);
 }
 
 #endif
