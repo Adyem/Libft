@@ -205,6 +205,7 @@ int test_math_eval_dice_rejected(void);
 int test_encryption_key_random(void);
 int test_rng_random_normal(void);
 int test_rng_random_exponential(void);
+int test_rng_random_poisson(void);
 int test_json_roundtrip_string(void);
 int test_json_roundtrip_file(void);
 int test_json_validate_success(void);
@@ -455,6 +456,7 @@ int main(int argc, char **argv)
         { test_encryption_key_random, "encryption key random" },
         { test_rng_random_normal, "rng random normal" },
         { test_rng_random_exponential, "rng random exponential" },
+        { test_rng_random_poisson, "rng random poisson" },
         { test_json_roundtrip_string, "json roundtrip string" },
         { test_json_roundtrip_file, "json roundtrip file" },
         { test_json_validate_success, "json validate success" },
