@@ -60,7 +60,7 @@ cnfg_config *cnfg_parse(const char *filename)
             continue ;
         if (*line_string == '[')
         {
-            char *closing_bracket = std::strchr(line_string, ']');
+            char *closing_bracket = ft_strchr(line_string, ']');
             if (closing_bracket)
             {
                 *closing_bracket = '\0';
@@ -76,7 +76,7 @@ cnfg_config *cnfg_parse(const char *filename)
             }
             continue ;
         }
-        char *equals_sign = std::strchr(line_string, '=');
+        char *equals_sign = ft_strchr(line_string, '=');
         char *key = ft_nullptr;
         char *value = ft_nullptr;
         if (equals_sign)
@@ -316,7 +316,7 @@ cnfg_config *config_load_env()
         char *pair = environ[index];
         char *equals_sign = ft_nullptr;
         if (pair)
-            equals_sign = std::strchr(pair, '=');
+            equals_sign = ft_strchr(pair, '=');
         cnfg_entry *entry = &config->entries[index];
         if (equals_sign)
         {

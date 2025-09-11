@@ -1,7 +1,6 @@
 #include "tls_client.hpp"
-#include <cstring>
-#include <cstdio>
 #include <thread>
+#include "../Printf/printf.hpp"
 #include "../Networking/socket_class.hpp"
 #include "../Networking/ssl_wrapper.hpp"
 #include "../Libft/libft.hpp"
@@ -56,7 +55,7 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_family = AF_UNSPEC;
     char port_string[6];
-    std::snprintf(port_string, sizeof(port_string), "%u", port);
+    pf_snprintf(port_string, sizeof(port_string), "%u", port);
     if (getaddrinfo(host_c, port_string, &hints, &address_results) != 0)
         return ;
 
@@ -180,23 +179,23 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
             return (ft_nullptr);
         buffer[bytes_received] = '\0';
         response += buffer;
-        header_end_ptr = strstr(response.c_str(), "\r\n\r\n");
+        header_end_ptr = ft_strstr(response.c_str(), "\r\n\r\n");
     }
 
     if (status)
     {
         *status = -1;
-        const char *space = strchr(response.c_str(), ' ');
+        const char *space = ft_strchr(response.c_str(), ' ');
         if (space)
             *status = ft_atoi(space + 1);
     }
 
     size_t header_len = static_cast<size_t>(header_end_ptr - response.c_str()) + 4;
     size_t content_length = 0;
-    const char *content_length_ptr = strstr(response.c_str(), "Content-Length:");
+    const char *content_length_ptr = ft_strstr(response.c_str(), "Content-Length:");
     if (content_length_ptr)
     {
-        content_length_ptr += strlen("Content-Length:");
+        content_length_ptr += ft_strlen("Content-Length:");
         while (*content_length_ptr == ' ') content_length_ptr++;
         content_length = static_cast<size_t>(ft_atoi(content_length_ptr));
     }

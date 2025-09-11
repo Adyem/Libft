@@ -5,8 +5,7 @@
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
 #include "../Logger/logger.hpp"
-#include <cstring>
-#include <cstdio>
+#include "../Printf/printf.hpp"
 #include <thread>
 #include <errno.h>
 #ifdef _WIN32
@@ -80,7 +79,7 @@ char *api_request_string_tls(const char *host, uint16_t port,
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_family = AF_UNSPEC;
     char port_string[6];
-    std::snprintf(port_string, sizeof(port_string), "%u", port);
+    pf_snprintf(port_string, sizeof(port_string), "%u", port);
     if (getaddrinfo(host, port_string, &hints, &address_results) != 0)
         goto cleanup;
 
@@ -161,11 +160,11 @@ char *api_request_string_tls(const char *host, uint16_t port,
     if (status)
     {
         *status = -1;
-        const char *space = strchr(response.c_str(), ' ');
+        const char *space = ft_strchr(response.c_str(), ' ');
         if (space)
             *status = ft_atoi(space + 1);
     }
-    body = strstr(response.c_str(), "\r\n\r\n");
+    body = ft_strstr(response.c_str(), "\r\n\r\n");
     if (!body)
         goto cleanup;
     body += 4;
@@ -309,7 +308,7 @@ static void api_tls_async_worker(api_tls_async_request *data)
     ft_bzero(&hints, sizeof(hints));
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_family = AF_UNSPEC;
-    std::snprintf(port_string, sizeof(port_string), "%u", data->port);
+    pf_snprintf(port_string, sizeof(port_string), "%u", data->port);
     if (getaddrinfo(data->host, port_string, &hints, &address_results) != 0)
         goto cleanup;
     address_info = address_results;
@@ -469,10 +468,10 @@ static void api_tls_async_worker(api_tls_async_request *data)
 
     if (response.size() > 0)
     {
-        const char *space = strchr(response.c_str(), ' ');
+        const char *space = ft_strchr(response.c_str(), ' ');
         if (space)
             status = ft_atoi(space + 1);
-        const char *body = strstr(response.c_str(), "\r\n\r\n");
+        const char *body = ft_strstr(response.c_str(), "\r\n\r\n");
         if (body)
         {
             body += 4;
