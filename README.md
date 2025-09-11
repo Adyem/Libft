@@ -746,9 +746,17 @@ void    time_local(t_time time_value, t_time_info *out);
 void    time_sleep(unsigned int seconds);
 void    time_sleep_ms(unsigned int milliseconds);
 size_t  time_strftime(char *buffer, size_t size, const char *format, const t_time_info *time_info);
+ft_string    time_format_iso8601(t_time time_value);
 ```
 
 `t_time` stores seconds since the Unix epoch and `t_time_info` holds the broken-down components.
+
+Example:
+
+```
+ft_string timestamp = time_format_iso8601(0);
+// timestamp == "1970-01-01T00:00:00Z"
+```
 
 `timer.hpp` defines a small timer class:
 

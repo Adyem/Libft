@@ -4,6 +4,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../Time/time.hpp"
+#include "../CPP_class/class_string_class.hpp"
 #include <cstring>
 #include <string>
 
@@ -373,5 +374,21 @@ int test_time_monotonic_increases(void)
     time_sleep_ms(1);
     second_time = time_monotonic();
     return (second_time >= first_time);
+}
+
+int test_time_format_iso8601_epoch(void)
+{
+    ft_string formatted;
+
+    formatted = time_format_iso8601(0);
+    return (std::strcmp(formatted.c_str(), "1970-01-01T00:00:00Z") == 0);
+}
+
+int test_time_format_iso8601_20210101(void)
+{
+    ft_string formatted;
+
+    formatted = time_format_iso8601(1609459200);
+    return (std::strcmp(formatted.c_str(), "2021-01-01T00:00:00Z") == 0);
 }
 

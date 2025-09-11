@@ -2,6 +2,7 @@
 # define TIME_HPP
 
 #include <cstddef>
+#include "../CPP_class/class_string_class.hpp"
 
 typedef long t_time;
 
@@ -25,5 +26,6 @@ void    time_local(t_time time_value, t_time_info *out);
 void    time_sleep(unsigned int seconds);
 void    time_sleep_ms(unsigned int milliseconds);
 size_t  time_strftime(char *buffer, size_t size, const char *format, const t_time_info *time_info);
+ft_string    time_format_iso8601(t_time time_value);
 
 #endif
