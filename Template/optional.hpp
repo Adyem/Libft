@@ -8,6 +8,7 @@
 #include "../Libft/libft.hpp"
 #include "../PThread/mutex.hpp"
 #include <utility>
+#include "move.hpp"
 #include <type_traits>
 #include <new>
 
@@ -74,7 +75,7 @@ ft_optional<T>::ft_optional(T&& value)
     if (_value == ft_nullptr)
         this->set_error(OPTIONAL_ALLOC_FAIL);
     else
-        construct_at(_value, std::move(value));
+        construct_at(_value, ft_move(value));
     return ;
 }
 

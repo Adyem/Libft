@@ -3,6 +3,7 @@
 
 #include <type_traits>
 #include <utility>
+#include "move.hpp"
 #include "vector.hpp"
 #include "../PThread/mutex.hpp"
 
@@ -83,8 +84,8 @@ Pool<T>::Pool()
 
 template<typename T>
 Pool<T>::Pool(Pool&& other)
-    : _buffer(std::move(other._buffer))
-    , _freeIndices(std::move(other._freeIndices))
+    : _buffer(ft_move(other._buffer))
+    , _freeIndices(ft_move(other._freeIndices))
 {
     return ;
 }
@@ -94,8 +95,8 @@ Pool<T>& Pool<T>::operator=(Pool&& other)
 {
     if (this != &other)
     {
-        _buffer = std::move(other._buffer);
-        _freeIndices = std::move(other._freeIndices);
+        _buffer = ft_move(other._buffer);
+        _freeIndices = ft_move(other._freeIndices);
     }
     return (*this);
 }

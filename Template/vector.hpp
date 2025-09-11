@@ -7,6 +7,7 @@
 #include "constructor.hpp"
 #include <cstddef>
 #include <utility>
+#include "move.hpp"
 #include "../PThread/mutex.hpp"
 #include "../Libft/libft.hpp"
 

@@ -9,6 +9,7 @@
 #include <functional>
 #include "../PThread/mutex.hpp"
 #include "../Libft/libft.hpp"
+#include "move.hpp"
 
 template <typename Key, typename MappedType>
 struct ft_pair
@@ -640,7 +641,7 @@ void ft_unord_map<Key, MappedType>::remove(const Key& key)
         size_t h = hashKey(_data[next].first);
         if ((next > idx && (h <= idx || h > next)) || (next < idx && (h <= idx && h > next)))
         {
-            construct_at(&_data[idx], std::move(_data[next]));
+            construct_at(&_data[idx], ft_move(_data[next]));
             ::destroy_at(&_data[next]);
             _occupied[idx] = true;
             _occupied[next] = false;
