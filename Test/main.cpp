@@ -177,6 +177,7 @@ int test_ft_promise_set_get(void);
 int test_ft_promise_not_ready(void);
 int test_config_basic(void);
 int test_config_missing_value(void);
+int test_config_env_override(void);
 int test_pt_async_basic(void);
 int test_math_eval_basic(void);
 int test_math_eval_parentheses(void);
@@ -398,6 +399,7 @@ int main(int argc, char **argv)
         { test_ft_promise_not_ready, "ft_promise not ready" },
         { test_config_basic, "config basic" },
         { test_config_missing_value, "config missing value" },
+        { test_config_env_override, "config env override" },
         { test_pt_async_basic, "pt_async basic" },
         { test_math_eval_basic, "math_eval basic" },
         { test_math_eval_parentheses, "math_eval parentheses" },
