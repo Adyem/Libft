@@ -11,7 +11,7 @@ This document briefly lists the main headers and the interfaces they expose. The
 summaries below only outline the available functions and classes. See the header
 files for detailed information.
 
-All classes report errors through a mutable `_error_code` member with `get_error` and `get_error_str` accessors so `const` methods can update the error state.
+All classes report errors through a mutable `_error_code` member with `get_error` and `get_error_str` accessors so `const` methods can update the error state. A thread-local `ft_errno` variable mirrors the last error for cross-module access.
 
 ## Building
 
@@ -517,7 +517,7 @@ int get_error() const;
 
 `Template/promise.hpp` implements a minimal promise type for passing values
 between threads. A promise stores a value set by a worker thread and reports
-errors through the shared `ft_errno` system.
+errors through the thread-local `ft_errno` system.
 
 ```
 ft_promise();
@@ -533,7 +533,7 @@ const char *get_error_str() const;
 
 
 #### Errno
-`Errno/errno.hpp` defines a thread-local `_error_code` accessed through the `ft_errno` macro and helpers for retrieving messages.
+`Errno/errno.hpp` defines a thread-local `ft_errno` variable and helpers for retrieving messages.
 
 ```
 const char *ft_strerror(int err);
