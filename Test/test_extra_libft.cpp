@@ -3,6 +3,7 @@
 #include "../Libft/limits.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../System_utils/system_utils.hpp"
+#include "../Time/time.hpp"
 #include <cstring>
 #include <string>
 
@@ -361,5 +362,16 @@ int test_su_get_cpu_count(void)
 int test_su_get_total_memory(void)
 {
     return (su_get_total_memory() > 0);
+}
+
+int test_time_monotonic_increases(void)
+{
+    long first_time;
+    long second_time;
+
+    first_time = time_monotonic();
+    time_sleep_ms(1);
+    second_time = time_monotonic();
+    return (second_time >= first_time);
 }
 
