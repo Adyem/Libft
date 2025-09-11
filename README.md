@@ -377,6 +377,10 @@ int nw_connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 int nw_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 int nw_listen(int sockfd, int backlog);
 int nw_socket(int domain, int type, int protocol);
+int nw_set_nonblocking(int socket_fd);
+int nw_poll(int *read_file_descriptors, int read_count,
+            int *write_file_descriptors, int write_count,
+            int timeout_milliseconds);
 ```
 
 `wrapper.hpp` adds helpers for encrypted sockets:
@@ -384,6 +388,32 @@ int nw_socket(int domain, int type, int protocol);
 ```
 ssize_t nw_ssl_write(SSL *ssl, const void *buf, size_t len);
 ssize_t nw_ssl_read(SSL *ssl, void *buf, size_t len);
+```
+
+Simple event loop example:
+
+```
+#include "Networking/networking.hpp"
+
+int main()
+{
+    int server_socket;
+    int read_descriptors[1];
+    int result;
+
+    server_socket = nw_socket(AF_INET, SOCK_STREAM, 0);
+    nw_set_nonblocking(server_socket);
+    read_descriptors[0] = server_socket;
+    while (true)
+    {
+        result = nw_poll(read_descriptors, 1, NULL, 0, 1000);
+        if (result > 0 && read_descriptors[0] != -1)
+        {
+            /* handle events */
+        }
+    }
+    return (0);
+}
 ```
 
 #### `SocketConfig`
