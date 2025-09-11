@@ -413,6 +413,12 @@ int         join_multicast_group(const SocketConfig &config);
 and optional file rotation. Logs are written to one or more configurable
 destinations (sinks) and filtered according to the active log level.
 
+An asynchronous mode is available via `ft_log_start_async()` and
+`ft_log_stop_async()`. This uses a background thread that pulls messages from a
+thread-safe queue. While it can reduce latency in performance-critical paths,
+it introduces synchronization overhead and requires a stop call to flush
+pending messages.
+
 ```
 enum t_log_level {
     LOG_LEVEL_DEBUG,
