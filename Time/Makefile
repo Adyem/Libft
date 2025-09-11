@@ -3,6 +3,7 @@ DEBUG_TARGET   := time_debug.a
 
 SRCS := time_now.cpp \
         time_now_ms.cpp \
+        time_monotonic.cpp \
         time_local.cpp \
         time_sleep.cpp \
         time_sleep_ms.cpp \
