@@ -61,6 +61,7 @@ int test_html_find_by_tag(void);
 int test_html_write_to_string(void);
 int test_html_find_by_attr(void);
 int test_html_find_by_selector(void);
+int test_html_query_selector(void);
 int test_network_send_receive(void);
 int test_network_invalid_ip(void);
 int test_network_send_uninitialized(void);
@@ -294,6 +295,7 @@ int main(int argc, char **argv)
         { test_html_write_to_string, "html write to string" },
         { test_html_find_by_attr, "html find by attr" },
         { test_html_find_by_selector, "html find by selector" },
+        { test_html_query_selector, "html query selector" },
         { test_network_send_receive, "network send/receive" },
         { test_network_invalid_ip, "network invalid ip" },
         { test_network_send_uninitialized, "network send uninitialized" },
