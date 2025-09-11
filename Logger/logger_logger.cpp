@@ -10,8 +10,11 @@
 ft_logger *g_logger = ft_nullptr;
 bool g_async_running = false;
 static ft_queue<ft_string> g_log_queue;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
 static pthread_mutex_t g_condition_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t g_queue_condition = PTHREAD_COND_INITIALIZER;
+#pragma GCC diagnostic pop
 static pthread_t g_log_thread;
 
 static void ft_log_process_message(const ft_string &message)
