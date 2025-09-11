@@ -183,6 +183,8 @@ int test_pt_async_basic(void);
 int test_math_eval_basic(void);
 int test_math_eval_parentheses(void);
 int test_math_eval_dice_rejected(void);
+int test_rng_random_normal(void);
+int test_rng_random_exponential(void);
 
 int test_efficiency_strlen(void);
 int test_efficiency_memcpy(void);
@@ -405,7 +407,9 @@ int main(int argc, char **argv)
         { test_pt_async_basic, "pt_async basic" },
         { test_math_eval_basic, "math_eval basic" },
         { test_math_eval_parentheses, "math_eval parentheses" },
-        { test_math_eval_dice_rejected, "math_eval dice rejected" }
+        { test_math_eval_dice_rejected, "math_eval dice rejected" },
+        { test_rng_random_normal, "rng random normal" },
+        { test_rng_random_exponential, "rng random exponential" }
     };
 
     const s_perf_test perf_tests[] = {

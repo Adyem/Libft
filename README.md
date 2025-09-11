@@ -528,6 +528,8 @@ Random helpers and containers in `RNG/`.
 int   ft_random_int(void);
 int   ft_dice_roll(int number, int faces);
 float ft_random_float(void);
+float ft_random_normal(void);
+float ft_random_exponential(float lambda_value);
 int   ft_random_seed(const char *seed_str = ft_nullptr);
 ```
 
