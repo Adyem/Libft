@@ -14,7 +14,8 @@ int cma_checked_free(void* ptr)
     }
     if (!ptr)
         return (0);
-    g_malloc_mutex.lock(THREAD_ID);
+    if (g_cma_thread_safe)
+        g_malloc_mutex.lock(THREAD_ID);
     Page* page = page_list;
     Block* found = ft_nullptr;
     while (page && !found)
@@ -36,7 +37,8 @@ int cma_checked_free(void* ptr)
     }
     if (!found)
     {
-        g_malloc_mutex.unlock(THREAD_ID);
+        if (g_cma_thread_safe)
+            g_malloc_mutex.unlock(THREAD_ID);
         ft_errno = CMA_INVALID_PTR;
         return (-1);
     }
@@ -44,6 +46,7 @@ int cma_checked_free(void* ptr)
     found = merge_block(found);
     Page *pg = find_page_of_block(found);
     free_page_if_empty(pg);
-    g_malloc_mutex.unlock(THREAD_ID);
+    if (g_cma_thread_safe)
+        g_malloc_mutex.unlock(THREAD_ID);
     return (0);
 }

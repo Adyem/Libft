@@ -12,6 +12,8 @@ void cma_cleanup()
         pf_printf("calling cleanup\n");
     if (OFFSWITCH)
         return ;
+    if (g_cma_thread_safe)
+        g_malloc_mutex.lock(THREAD_ID);
     Page* current_page = page_list;
     while (current_page)
     {
@@ -28,5 +30,7 @@ void cma_cleanup()
         current_page = next_page;
     }
     page_list = ft_nullptr;
+    if (g_cma_thread_safe)
+        g_malloc_mutex.unlock(THREAD_ID);
     return ;
 }

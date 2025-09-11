@@ -45,23 +45,34 @@ void *cma_realloc(void* ptr, size_t new_size)
     }
     if (g_cma_alloc_limit != 0 && new_size > g_cma_alloc_limit)
         return (ft_nullptr);
-    g_malloc_mutex.lock(THREAD_ID);
+    if (g_cma_thread_safe)
+        g_malloc_mutex.lock(THREAD_ID);
     if (!ptr)
+    {
+        if (g_cma_thread_safe)
+            g_malloc_mutex.unlock(THREAD_ID);
         return (cma_malloc(new_size));
+    }
     if (new_size == 0)
     {
-        g_malloc_mutex.unlock(THREAD_ID);
+        if (g_cma_thread_safe)
+            g_malloc_mutex.unlock(THREAD_ID);
         cma_free(ptr);
         return (ft_nullptr);
     }
     new_size = align16(new_size);
     int error = reallocate_block(ptr, new_size);
     if (error == 0)
+    {
+        if (g_cma_thread_safe)
+            g_malloc_mutex.unlock(THREAD_ID);
         return (ptr);
+    }
     void* new_ptr = cma_malloc(new_size);
     if (!new_ptr)
     {
-        g_malloc_mutex.unlock(THREAD_ID);
+        if (g_cma_thread_safe)
+            g_malloc_mutex.unlock(THREAD_ID);
         cma_free(ptr);
         return (ft_nullptr);
     }
@@ -69,7 +80,8 @@ void *cma_realloc(void* ptr, size_t new_size)
                 - sizeof(Block)));
     if (old_block->magic != MAGIC_NUMBER)
     {
-        g_malloc_mutex.unlock(THREAD_ID);
+        if (g_cma_thread_safe)
+            g_malloc_mutex.unlock(THREAD_ID);
         cma_free(ptr);
         return (ft_nullptr);
     }
@@ -79,7 +91,8 @@ void *cma_realloc(void* ptr, size_t new_size)
     else
         copy_size = new_size;
     ft_memcpy(new_ptr, ptr, copy_size);
+    if (g_cma_thread_safe)
+        g_malloc_mutex.unlock(THREAD_ID);
     cma_free(ptr);
-    g_malloc_mutex.unlock(THREAD_ID);
     return (new_ptr);
 }
