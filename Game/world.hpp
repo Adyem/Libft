@@ -6,6 +6,7 @@
 #include "../Errno/errno.hpp"
 
 class ft_character;
+class ft_inventory;
 
 class ft_world
 {
@@ -22,8 +23,8 @@ class ft_world
         ft_map<int, ft_event>       &get_events() noexcept;
         const ft_map<int, ft_event> &get_events() const noexcept;
 
-        int save_game(const char *file_path, const ft_character &character) const noexcept;
-        int load_game(const char *file_path, ft_character &character) noexcept;
+        int save_to_file(const char *file_path, const ft_character &character, const ft_inventory &inventory) const noexcept;
+        int load_from_file(const char *file_path, ft_character &character, ft_inventory &inventory) noexcept;
 
         int get_error() const noexcept;
         const char *get_error_str() const noexcept;
