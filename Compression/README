@@ -1,0 +1,3 @@
+# Compression
+
+Provides zlib-based compression helpers using the Custom Memory Allocator (CMA).
