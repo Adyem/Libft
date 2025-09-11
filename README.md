@@ -184,6 +184,7 @@ char  **ft_open_and_read_file(const char *file_name, std::size_t buffer_size);
 int pf_printf(const char *format, ...);
 int pf_printf_fd(int fd, const char *format, ...);
 int pf_snprintf(char *string, size_t size, const char *format, ...);
+int pf_vsnprintf(char *string, size_t size, const char *format, va_list args);
 ```
 
 ### PThread Wrappers
@@ -412,6 +413,14 @@ int         join_multicast_group(const SocketConfig &config);
 `Logger/logger.hpp` provides leveled logging with timestamps, formatted output
 and optional file rotation. Logs are written to one or more configurable
 destinations (sinks) and filtered according to the active log level.
+Sink management relies on the thread-safe `ft_vector` container from the
+Template module for internal storage.
+
+An asynchronous mode is available via `ft_log_start_async()` and
+`ft_log_stop_async()`. This uses a background thread that pulls messages from a
+thread-safe queue. While it can reduce latency in performance-critical paths,
+it introduces synchronization overhead and requires a stop call to flush
+pending messages.
 
 ```
 enum t_log_level {
@@ -708,13 +717,16 @@ parser.get_error_str();
 `Time/time.hpp` exposes simple time helpers:
 
 ```
-time_t  time_now(void);
+t_time  time_now(void);
 long    time_now_ms(void);
 long    time_monotonic(void);
-void    time_local(time_t time_value, struct tm *out);
+void    time_local(t_time time_value, t_time_info *out);
 void    time_sleep(unsigned int seconds);
 void    time_sleep_ms(unsigned int milliseconds);
+size_t  time_strftime(char *buffer, size_t size, const char *format, const t_time_info *time_info);
 ```
+
+`t_time` stores seconds since the Unix epoch and `t_time_info` holds the broken-down components.
 
 `timer.hpp` defines a small timer class:
 
