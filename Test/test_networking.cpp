@@ -54,3 +54,54 @@ int test_network_send_uninitialized(void)
     return (r < 0 && sock.get_error() == SOCKET_INVALID_CONFIGURATION);
 }
 
+int test_network_ipv6_send_receive(void)
+{
+    SocketConfig server_configuration;
+    server_configuration._port = 54325;
+    server_configuration._type = SocketType::SERVER;
+    server_configuration._address_family = AF_INET6;
+    server_configuration._ip = "::1";
+    ft_socket server(server_configuration);
+    if (server.get_error() != ER_SUCCESS)
+        return (0);
+
+    SocketConfig client_configuration;
+    client_configuration._port = 54325;
+    client_configuration._type = SocketType::CLIENT;
+    client_configuration._address_family = AF_INET6;
+    client_configuration._ip = "::1";
+    ft_socket client(client_configuration);
+    if (client.get_error() != ER_SUCCESS)
+        return (0);
+
+    struct sockaddr_storage address;
+    socklen_t address_length = sizeof(address);
+    int client_file_descriptor = nw_accept(server.get_fd(),
+                                           reinterpret_cast<struct sockaddr*>(&address),
+                                           &address_length);
+    if (client_file_descriptor < 0)
+        return (0);
+
+    const char *message = "pong";
+    if (client.send_all(message, ft_strlen(message), 0)
+            != static_cast<ssize_t>(ft_strlen(message)))
+        return (0);
+    char buffer[16];
+    ssize_t bytes_received = nw_recv(client_file_descriptor, buffer, sizeof(buffer) - 1, 0);
+    if (bytes_received < 0)
+        return (0);
+    buffer[bytes_received] = '\0';
+    return (ft_strcmp(buffer, message) == 0);
+}
+
+int test_network_ipv6_invalid_ip(void)
+{
+    SocketConfig configuration;
+    configuration._type = SocketType::SERVER;
+    configuration._address_family = AF_INET6;
+    configuration._port = 54326;
+    configuration._ip = "gggg::1";
+    ft_socket server(configuration);
+    return (server.get_error() == SOCKET_INVALID_CONFIGURATION);
+}
+

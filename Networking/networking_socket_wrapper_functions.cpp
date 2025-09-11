@@ -156,3 +156,8 @@ ssize_t nw_recv(int sockfd, void *buf, size_t len, int flags)
 {
     return (recv_platform(sockfd, buf, len, flags));
 }
+
+int nw_inet_pton(int family, const char *ip_address, void *destination)
+{
+    return (inet_pton(family, ip_address, destination));
+}

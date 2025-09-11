@@ -9,6 +9,7 @@
 # include <io.h>
 #else
 # include <arpa/inet.h>
+# include <netinet/in.h>
 # include <unistd.h>
 # include <sys/socket.h>
 #endif
@@ -143,7 +144,7 @@ int ft_socket::configure_address(const SocketConfig &config)
         struct sockaddr_in *addr_in = reinterpret_cast<struct sockaddr_in*>(&this->_address);
         addr_in->sin_family = AF_INET;
         addr_in->sin_port = htons(config._port);
-        if (inet_pton(AF_INET, config._ip, &addr_in->sin_addr) <= 0)
+        if (nw_inet_pton(AF_INET, config._ip, &addr_in->sin_addr) <= 0)
         {
             handle_error(SOCKET_INVALID_CONFIGURATION);
             FT_CLOSE_SOCKET(this->_socket_fd);
@@ -156,12 +157,12 @@ int ft_socket::configure_address(const SocketConfig &config)
         struct sockaddr_in6 *addr_in6 = reinterpret_cast<struct sockaddr_in6*>(&this->_address);
         addr_in6->sin6_family = AF_INET6;
         addr_in6->sin6_port = htons(config._port);
-        if (inet_pton(AF_INET6, config._ip, &addr_in6->sin6_addr) <= 0)
+        if (nw_inet_pton(AF_INET6, config._ip, &addr_in6->sin6_addr) <= 0)
         {
             handle_error(SOCKET_INVALID_CONFIGURATION);
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
-            return (_error);
+            return (this->_error);
         }
     }
     else
@@ -254,7 +255,7 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
     {
         struct ip_mreq mreq;
         ft_bzero(&mreq, sizeof(mreq));
-        if (inet_pton(AF_INET, config._multicast_group.c_str(), &mreq.imr_multiaddr) <= 0)
+        if (nw_inet_pton(AF_INET, config._multicast_group.c_str(), &mreq.imr_multiaddr) <= 0)
         {
             handle_error(SOCKET_INVALID_CONFIGURATION);
             FT_CLOSE_SOCKET(this->_socket_fd);
@@ -263,7 +264,7 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
         }
         if (config._multicast_interface.empty())
             mreq.imr_interface.s_addr = htonl(INADDR_ANY);
-        else if (inet_pton(AF_INET, config._multicast_interface.c_str(), &mreq.imr_interface) <= 0)
+        else if (nw_inet_pton(AF_INET, config._multicast_interface.c_str(), &mreq.imr_interface) <= 0)
         {
             handle_error(SOCKET_INVALID_CONFIGURATION);
             FT_CLOSE_SOCKET(this->_socket_fd);
@@ -283,7 +284,7 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
     {
         struct ipv6_mreq mreq6;
         ft_bzero(&mreq6, sizeof(mreq6));
-        if (inet_pton(AF_INET6, config._multicast_group.c_str(), &mreq6.ipv6mr_multiaddr) <= 0)
+        if (nw_inet_pton(AF_INET6, config._multicast_group.c_str(), &mreq6.ipv6mr_multiaddr) <= 0)
         {
             handle_error(SOCKET_INVALID_CONFIGURATION);
             FT_CLOSE_SOCKET(this->_socket_fd);
