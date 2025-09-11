@@ -68,3 +68,24 @@ int test_html_find_by_selector(void)
     return (ok);
 }
 
+int test_html_query_selector(void)
+{
+    html_node *root = html_create_node("div", ft_nullptr);
+    html_node *child_tag = html_create_node("p", ft_nullptr);
+    html_node *child_class = html_create_node("span", ft_nullptr);
+    html_attr *class_attr = html_create_attr("class", "note");
+    html_add_attr(child_class, class_attr);
+    html_node *child_id = html_create_node("a", ft_nullptr);
+    html_attr *id_attr = html_create_attr("id", "link");
+    html_add_attr(child_id, id_attr);
+    html_add_child(root, child_tag);
+    html_add_child(root, child_class);
+    html_add_child(root, child_id);
+    html_node *found_tag = html_query_selector(root, "p");
+    html_node *found_class = html_query_selector(root, ".note");
+    html_node *found_id = html_query_selector(root, "#link");
+    int is_ok = (found_tag == child_tag) && (found_class == child_class) && (found_id == child_id);
+    html_free_nodes(root);
+    return (is_ok);
+}
+
