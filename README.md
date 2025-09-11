@@ -766,13 +766,20 @@ int     ft_close(int fd);
 cnfg_config *cnfg_parse(const char *filename);
 char       *cnfg_parse_flags(int argument_count, char **argument_values);
 void       cnfg_free(cnfg_config *config);
+cnfg_config *config_load_env();
+cnfg_config *config_load_file(const char *filename);
+cnfg_config *config_merge_sources(int argument_count,
+                                  char **argument_values,
+                                  const char *filename);
 ```
 
 `cnfg_parse` gives precedence to environment variables. Before using a
 value from the file, the parser checks `getenv` with the key name and
 uses the environment value if it exists.
 
-`flag_parser.hpp` wraps flag parsing in a class:
+`flag_parser.hpp` wraps flag parsing in a class and `config_merge_sources`
+combines command-line flags with environment variables and configuration
+files:
 
 ```
 cnfg_flag_parser parser(argument_count, argument_values);
@@ -783,6 +790,7 @@ parser.get_long_flag_count();
 parser.get_total_flag_count();
 parser.get_error();
 parser.get_error_str();
+config_merge_sources(argument_count, argument_values, "config.ini");
 ```
 
 #### Time

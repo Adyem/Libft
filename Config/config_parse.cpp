@@ -2,6 +2,7 @@
 #include "../Errno/errno.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
+#include "../JSon/json.hpp"
 #include <cstdio>
 #include <cstring>
 #include <cctype>
@@ -193,4 +194,180 @@ cnfg_config *cnfg_parse(const char *filename)
     ft_fclose(file);
     return (config);
 }
+
+static cnfg_config *cnfg_parse_json(const char *filename)
+{
+    if (!filename)
+        return (ft_nullptr);
+    json_group *groups = json_read_from_file(filename);
+    if (!groups)
+        return (ft_nullptr);
+    size_t count = 0;
+    json_group *group_pointer = groups;
+    while (group_pointer)
+    {
+        json_item *item_pointer = group_pointer->items;
+        while (item_pointer)
+        {
+            ++count;
+            item_pointer = item_pointer->next;
+        }
+        group_pointer = group_pointer->next;
+    }
+    cnfg_config *config = static_cast<cnfg_config*>(cma_calloc(1, sizeof(cnfg_config)));
+    if (!config)
+    {
+        ft_errno = FT_EALLOC;
+        json_free_groups(groups);
+        return (ft_nullptr);
+    }
+    if (count)
+    {
+        config->entries = static_cast<cnfg_entry*>(cma_calloc(count, sizeof(cnfg_entry)));
+        if (!config->entries)
+        {
+            ft_errno = FT_EALLOC;
+            cma_free(config);
+            json_free_groups(groups);
+            return (ft_nullptr);
+        }
+    }
+    size_t index = 0;
+    group_pointer = groups;
+    while (group_pointer)
+    {
+        json_item *item_pointer = group_pointer->items;
+        while (item_pointer)
+        {
+            cnfg_entry *entry = &config->entries[index];
+            if (group_pointer->name)
+            {
+                entry->section = cma_strdup(group_pointer->name);
+                if (!entry->section)
+                {
+                    ft_errno = FT_EALLOC;
+                    config->entry_count = index;
+                    cnfg_free(config);
+                    json_free_groups(groups);
+                    return (ft_nullptr);
+                }
+            }
+            if (item_pointer->key)
+            {
+                entry->key = cma_strdup(item_pointer->key);
+                if (!entry->key)
+                {
+                    ft_errno = FT_EALLOC;
+                    config->entry_count = index + 1;
+                    cnfg_free(config);
+                    json_free_groups(groups);
+                    return (ft_nullptr);
+                }
+            }
+            if (item_pointer->value)
+            {
+                entry->value = cma_strdup(item_pointer->value);
+                if (!entry->value)
+                {
+                    ft_errno = FT_EALLOC;
+                    config->entry_count = index + 1;
+                    cnfg_free(config);
+                    json_free_groups(groups);
+                    return (ft_nullptr);
+                }
+            }
+            ++index;
+            item_pointer = item_pointer->next;
+        }
+        group_pointer = group_pointer->next;
+    }
+    config->entry_count = count;
+    json_free_groups(groups);
+    return (config);
+}
+
+cnfg_config *config_load_env()
+{
+    extern char **environ;
+    cnfg_config *config = static_cast<cnfg_config*>(cma_calloc(1, sizeof(cnfg_config)));
+    if (!config)
+    {
+        ft_errno = FT_EALLOC;
+        return (ft_nullptr);
+    }
+    size_t count = 0;
+    if (environ)
+    {
+        while (environ[count])
+            ++count;
+    }
+    if (!count)
+        return (config);
+    config->entries = static_cast<cnfg_entry*>(cma_calloc(count, sizeof(cnfg_entry)));
+    if (!config->entries)
+    {
+        ft_errno = FT_EALLOC;
+        cma_free(config);
+        return (ft_nullptr);
+    }
+    size_t index = 0;
+    while (index < count)
+    {
+        char *pair = environ[index];
+        char *equals_sign = ft_nullptr;
+        if (pair)
+            equals_sign = std::strchr(pair, '=');
+        cnfg_entry *entry = &config->entries[index];
+        if (equals_sign)
+        {
+            size_t key_length = static_cast<size_t>(equals_sign - pair);
+            entry->key = static_cast<char*>(cma_calloc(key_length + 1, sizeof(char)));
+            if (!entry->key)
+            {
+                ft_errno = FT_EALLOC;
+                config->entry_count = index;
+                cnfg_free(config);
+                return (ft_nullptr);
+            }
+            std::memcpy(entry->key, pair, key_length);
+            if (equals_sign[1])
+            {
+                entry->value = cma_strdup(equals_sign + 1);
+                if (!entry->value)
+                {
+                    ft_errno = FT_EALLOC;
+                    config->entry_count = index + 1;
+                    cnfg_free(config);
+                    return (ft_nullptr);
+                }
+            }
+        }
+        else if (pair)
+        {
+            entry->key = cma_strdup(pair);
+            if (!entry->key)
+            {
+                ft_errno = FT_EALLOC;
+                config->entry_count = index;
+                cnfg_free(config);
+                return (ft_nullptr);
+            }
+        }
+        entry->section = ft_nullptr;
+        ++index;
+    }
+    config->entry_count = count;
+    return (config);
+}
+
+cnfg_config *config_load_file(const char *filename)
+{
+    if (!filename)
+        return (ft_nullptr);
+    const char *dot = std::strrchr(filename, '.');
+    if (dot && std::strcmp(dot, ".json") == 0)
+        return (cnfg_parse_json(filename));
+    return (cnfg_parse(filename));
+}
+
 
