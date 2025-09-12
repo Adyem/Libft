@@ -1,5 +1,5 @@
-#ifndef COMPATEBILITY_FILE_HPP
-# define COMPATEBILITY_FILE_HPP
+#ifndef COMPATEBILITY_FILE_INTERNAL_HPP
+# define COMPATEBILITY_FILE_INTERNAL_HPP
 
 #if defined(_WIN32) || defined(_WIN64)
 # include <BaseTsd.h>
