@@ -69,7 +69,12 @@ void ft_task_scheduler::timer_loop()
         {
             if (now >= this->_scheduled[index]._time)
             {
-                this->_queue.push(ft_move(this->_scheduled[index]._function));
+                if (this->_scheduled[index]._function)
+                {
+                    std::function<void()> function_copy;
+                    function_copy = this->_scheduled[index]._function;
+                    this->_queue.push(ft_move(function_copy));
+                }
                 if (this->_scheduled[index]._interval.count() > 0)
                 {
                     this->_scheduled[index]._time = now + this->_scheduled[index]._interval;
