@@ -74,6 +74,47 @@ class vector4
         const char  *get_error_str() const;
 };
 
+class matrix2
+{
+    private:
+        double _m[2][2];
+        mutable int _error_code;
+
+        void    set_error(int error_code) const;
+
+    public:
+        matrix2();
+        matrix2(double m00, double m01,
+                double m10, double m11);
+        ~matrix2();
+        vector2 transform(const vector2 &vector) const;
+        matrix2 multiply(const matrix2 &other) const;
+        matrix2 invert() const;
+        int     get_error() const;
+        const char  *get_error_str() const;
+};
+
+class matrix3
+{
+    private:
+        double _m[3][3];
+        mutable int _error_code;
+
+        void    set_error(int error_code) const;
+
+    public:
+        matrix3();
+        matrix3(double m00, double m01, double m02,
+                double m10, double m11, double m12,
+                double m20, double m21, double m22);
+        ~matrix3();
+        vector3 transform(const vector3 &vector) const;
+        matrix3 multiply(const matrix3 &other) const;
+        matrix3 invert() const;
+        int     get_error() const;
+        const char  *get_error_str() const;
+};
+
 class matrix4
 {
     private:

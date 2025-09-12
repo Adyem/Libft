@@ -37,6 +37,42 @@ FT_TEST(test_matrix4_identity_transform, "matrix4 identity transform")
     return (1);
 }
 
+FT_TEST(test_matrix2_operations, "matrix2 transform, multiply and invert")
+{
+    matrix2 matrix(4.0, 7.0,
+                   2.0, 6.0);
+    matrix2 inverse;
+    matrix2 identity;
+    vector2 vector_value(3.0, 5.0);
+    vector2 transformed;
+
+    inverse = matrix.invert();
+    identity = matrix.multiply(inverse);
+    transformed = identity.transform(vector_value);
+    FT_ASSERT(math_fabs(transformed.get_x() - 3.0) < 0.000001);
+    FT_ASSERT(math_fabs(transformed.get_y() - 5.0) < 0.000001);
+    return (1);
+}
+
+FT_TEST(test_matrix3_operations, "matrix3 transform, multiply and invert")
+{
+    matrix3 matrix(1.0, 2.0, 3.0,
+                   0.0, 1.0, 4.0,
+                   5.0, 6.0, 0.0);
+    matrix3 inverse;
+    matrix3 identity;
+    vector3 vector_value(1.0, 2.0, 3.0);
+    vector3 transformed;
+
+    inverse = matrix.invert();
+    identity = matrix.multiply(inverse);
+    transformed = identity.transform(vector_value);
+    FT_ASSERT(math_fabs(transformed.get_x() - 1.0) < 0.000001);
+    FT_ASSERT(math_fabs(transformed.get_y() - 2.0) < 0.000001);
+    FT_ASSERT(math_fabs(transformed.get_z() - 3.0) < 0.000001);
+    return (1);
+}
+
 FT_TEST(test_quaternion_rotate_z, "quaternion rotate around z")
 {
     double angle;

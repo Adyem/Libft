@@ -148,7 +148,9 @@ double sine = ft_sin(math_deg2rad(90.0));
 double tangent = ft_tan(math_deg2rad(45.0));
 ```
 
-Basic linear algebra types are provided in `linear_algebra.hpp`:
+Basic linear algebra types are provided in `linear_algebra.hpp`.
+Implementations live in dedicated source files for each vector type with
+shared constructors and destructors for clarity:
 
 ```
 vector2(double x, double y);
@@ -166,6 +168,21 @@ vector4(double x, double y, double z, double w);
 double dot(const vector4 &other) const;
 double length() const;
 vector4 normalize() const;
+
+matrix2();
+matrix2(double m00, double m01,
+        double m10, double m11);
+matrix2 multiply(const matrix2 &other) const;
+matrix2 invert() const;
+vector2 transform(const vector2 &vector) const;
+
+matrix3();
+matrix3(double m00, double m01, double m02,
+        double m10, double m11, double m12,
+        double m20, double m21, double m22);
+matrix3 multiply(const matrix3 &other) const;
+matrix3 invert() const;
+vector3 transform(const vector3 &vector) const;
 
 matrix4();
 matrix4(double m00, double m01, double m02, double m03,
