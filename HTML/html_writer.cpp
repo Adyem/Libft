@@ -2,6 +2,7 @@
 #include "parser.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
+#include "../Compatebility/compatebility_file_internal.hpp"
 
 static void html_write_attrs(int fd, html_attr *attribute)
 {

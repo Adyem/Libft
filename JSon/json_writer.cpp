@@ -7,6 +7,7 @@
 #include "document.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
+#include "../Compatebility/compatebility_file_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
 

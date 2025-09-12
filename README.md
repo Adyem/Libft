@@ -20,6 +20,24 @@ All classes report errors through a mutable `_error_code` member with `get_error
 make
 ```
 
+## Testing
+
+```bash
+make tests
+./Test/libft_tests
+```
+
+The test runner prints `OK` or `KO` for each registered case and
+summarizes the total. Detailed assertion failures are written to
+`test_failures.log` with the source file and line number of the failing
+check.
+
+Each test uses the `FT_TEST` macro, which registers the case at program
+startup so all linked test files run automatically.
+
+The current suite exercises core routines such as `ft_atoi`, `ft_isdigit`,
+`ft_memset`, `ft_strcmp`, `ft_strlen`, and basic promise utilities.
+
 To build the debug version use `make debug`. Individual sub-modules can be built by
 entering their directory and running `make`.
 
