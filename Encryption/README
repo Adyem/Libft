@@ -9,6 +9,25 @@ unavailable, it falls back to `ft_random_seed` to preserve variability.
 Mapping bytes to alphabetic characters maintains compatibility with the
 existing interface while ensuring keys differ across runs.
 
+## SHA-256
+
+`sha256_hash` computes the SHA-256 digest of arbitrary data. The function
+accepts a pointer to the data, its length in bytes and a 32 byte output buffer.
+
+### Usage
+
+```
+const char *message = "hello";
+unsigned char digest[32];
+sha256_hash(message, 5, digest);
+```
+
+### Warning
+
+SHA-256 provides collision resistance for modern systems, but hashing alone
+does not secure passwords or sensitive data. Apply a keyed construction such as
+HMAC or use dedicated password hashing algorithms for authentication.
+
 ## RSA
 
 Basic RSA helpers generate a key pair and perform modular exponentiation for
