@@ -10,6 +10,7 @@ SRCS := cma_calloc.cpp \
         cma_realloc.cpp \
         cma_aligned_alloc.cpp \
         cma_alloc_size.cpp \
+        cma_atoi.cpp \
         cma_itoa.cpp \
         cma_itoa_base.cpp \
         cma_split.cpp \

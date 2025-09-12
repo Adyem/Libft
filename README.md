@@ -52,6 +52,7 @@ size_t  ft_strlen_size_t(const char *string);
 int     ft_strlen(const char *string);
 char   *ft_strchr(const char *string, int char_to_find);
 int     ft_atoi(const char *string);
+int     ft_validate_int(const char *input);
 void    ft_bzero(void *string, size_t size);
 void   *ft_memchr(const void *ptr, int c, size_t size);
 void   *ft_memcpy(void *dst, const void *src, size_t n);
@@ -136,6 +137,7 @@ double      math_cos(double value);
 double      ft_sin(double value);
 double      ft_tan(double value);
 double      math_deg2rad(double degrees);
+int         math_validate_int(const char *input);
 double      math_rad2deg(double radians);
 ```
 
@@ -144,6 +146,42 @@ Example usage:
 ```
 double sine = ft_sin(math_deg2rad(90.0));
 double tangent = ft_tan(math_deg2rad(45.0));
+```
+
+Basic linear algebra types are provided in `linear_algebra.hpp`:
+
+```
+vector2(double x, double y);
+double dot(const vector2 &other) const;
+double length() const;
+vector2 normalize() const;
+
+vector3(double x, double y, double z);
+vector3 cross(const vector3 &other) const;
+double dot(const vector3 &other) const;
+double length() const;
+vector3 normalize() const;
+
+vector4(double x, double y, double z, double w);
+double dot(const vector4 &other) const;
+double length() const;
+vector4 normalize() const;
+
+matrix4();
+matrix4(double m00, double m01, double m02, double m03,
+        double m10, double m11, double m12, double m13,
+        double m20, double m21, double m22, double m23,
+        double m30, double m31, double m32, double m33);
+matrix4 multiply(const matrix4 &other) const;
+matrix4 invert() const;
+vector4 transform(const vector4 &vector) const;
+
+quaternion(double w, double x, double y, double z);
+quaternion multiply(const quaternion &other) const;
+double length() const;
+quaternion normalize() const;
+quaternion invert() const;
+vector3 transform(const vector3 &vector) const;
 ```
 
 Additional helpers for parsing expressions are available. They allocate a
@@ -163,7 +201,9 @@ Located in `CMA/`. Header: `CMA.hpp`. Provides memory helpers such as
 `cma_malloc`, `cma_free`, aligned allocations, allocation-size queries,
 and string helpers. Aligned allocations round the block size up to the
 specified power-of-two (e.g., requesting 100 bytes with alignment 32
-returns a 128-byte block) and are released with `cma_free`.
+returns a 128-byte block) and are released with `cma_free`. A safe
+`atoi` helper first validates the input and returns an allocated integer
+or `ft_nullptr` on failure.
 When allocation logging is enabled via the logger, the allocator emits debug messages for each `cma_malloc` and `cma_free`.
 The allocator enforces an optional global allocation limit that can be
 changed at runtime with `cma_set_alloc_limit`. A limit of `0` disables the
@@ -182,6 +222,7 @@ void   *cma_calloc(std::size_t nmemb, std::size_t size);
 void   *cma_realloc(void *ptr, std::size_t new_size);
 void   *cma_aligned_alloc(std::size_t alignment, std::size_t size);
 std::size_t cma_alloc_size(const void *ptr);
+int   *cma_atoi(const char *string);
 char  **cma_split(const char *s, char c);
 char   *cma_itoa(int n);
 char   *cma_itoa_base(int n, int base);
