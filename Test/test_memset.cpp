@@ -1,31 +1,35 @@
 #include "../Libft/libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../System_utils/test_runner.hpp"
 
-int test_memset_null(void)
+FT_TEST(test_memset_null, "ft_memset nullptr")
 {
-    if (ft_memset(ft_nullptr, 'A', 3) == ft_nullptr)
-        return (1);
-    return (0);
+    FT_ASSERT_EQ(ft_nullptr, ft_memset(ft_nullptr, 'A', 3));
+    return (1);
 }
 
-int test_memset_basic(void)
+FT_TEST(test_memset_basic, "ft_memset basic")
 {
-    char buf[4];
-    ft_memset(buf, 'x', 3);
-    buf[3] = '\0';
-    if (ft_strcmp(buf, "xxx") == 0)
-        return (1);
-    return (0);
+    char buffer[4];
+
+    ft_memset(buffer, 'x', 3);
+    buffer[3] = '\0';
+    FT_ASSERT_EQ(0, ft_strcmp(buffer, "xxx"));
+    return (1);
 }
 
-int test_memset_large(void)
+FT_TEST(test_memset_large, "ft_memset large buffer")
 {
-    char buf[1024];
-    ft_memset(buf, 0xAB, sizeof(buf));
-    for (size_t i = 0; i < sizeof(buf); ++i)
+    char buffer[1024];
+    size_t index;
+
+    ft_memset(buffer, 0xAB, sizeof(buffer));
+    index = 0;
+    while (index < sizeof(buffer))
     {
-        if (static_cast<unsigned char>(buf[i]) != 0xAB)
-            return (0);
+        if (static_cast<unsigned char>(buffer[index]) != 0xAB)
+            FT_ASSERT(0);
+        index++;
     }
     return (1);
 }
