@@ -1016,9 +1016,20 @@ int         file_copy(const char *source_path, const char *destination_path);
 int         file_move(const char *source_path, const char *destination_path);
 int         file_exists(const char *path);
 int         file_delete(const char *path);
+ft_string   file_path_join(const char *path_left, const char *path_right);
+ft_string   file_path_normalize(const char *path);
 ```
 
 The `file_copy` and `file_move` helpers return (-1) on failure to allow error handling. `file_copy` uses `CopyFile` on Windows and `std::filesystem::copy_file` on POSIX systems. `file_move` wraps `MoveFile` or `rename` to provide portable file operations. `file_exists` returns (1) if the file exists and (0) otherwise. `file_delete` wraps `remove` or `unlink` to delete a file and returns (-1) on failure.
+
+`file_path_join` combines two path fragments using the platform's separator, removing redundant separators. `file_path_normalize` converts mixed separators to the current platform and collapses duplicates:
+
+```
+ft_string joined = file_path_join("dir", "file.txt");
+ft_string normalized = file_path_normalize("dir//sub\\file.txt");
+```
+
+On POSIX systems these evaluate to `dir/file.txt` and `dir/sub/file.txt` respectively.
 
 `System_utils/system_utils.hpp` provides cross-platform file descriptor utilities:
 
