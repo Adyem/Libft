@@ -4,7 +4,7 @@
 #include "promise.hpp"
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include <thread>
+#include "../PThread/pthread.hpp"
 #include <chrono>
 
 // ft_future: waits on an associated ft_promise and retrieves its value
@@ -82,7 +82,7 @@ void ft_future<ValueType>::wait() const
             this->set_error(FUTURE_BROKEN);
             return ;
         }
-        std::this_thread::yield();
+        pt_thread_yield();
     }
     return ;
 }
