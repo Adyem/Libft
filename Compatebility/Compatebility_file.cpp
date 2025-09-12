@@ -8,7 +8,6 @@
 # include <stdio.h>
 # include <io.h>
 # include <fcntl.h>
-# include <thread>
 # include <cstdio>
 
 static HANDLE g_file_handles[1024];

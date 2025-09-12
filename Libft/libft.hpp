@@ -55,6 +55,7 @@ int             ft_unsetenv(const char *name);
 
 FILE            *ft_fopen(const char *filename, const char *mode);
 int             ft_fclose(FILE *stream);
+char            *ft_fgets(char *string, int size, FILE *stream);
 size_t          ft_fread(void *ptr, size_t size, size_t count, FILE *stream);
 size_t          ft_fwrite(const void *ptr, size_t size, size_t count, FILE *stream);
 int             ft_fseek(FILE *stream, long offset, int origin);

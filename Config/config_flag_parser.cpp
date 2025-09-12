@@ -3,7 +3,6 @@
 #include "../Errno/errno.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
-#include <cstring>
 
 cnfg_flag_parser::cnfg_flag_parser()
 {
@@ -105,7 +104,7 @@ bool cnfg_flag_parser::has_long_flag(const char *flag)
     size_t flag_index = 0;
     while (this->_long_flags[flag_index])
     {
-        if (std::strcmp(this->_long_flags[flag_index], flag) == 0)
+        if (ft_strcmp(this->_long_flags[flag_index], flag) == 0)
             return (true);
         ++flag_index;
     }
@@ -163,12 +162,12 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
                 bool same_section = (base_entry->section == ft_nullptr
                     && override_entry->section == ft_nullptr)
                     || (base_entry->section && override_entry->section
-                    && std::strcmp(base_entry->section,
+                    && ft_strcmp(base_entry->section,
                     override_entry->section) == 0);
                 bool same_key = (base_entry->key == ft_nullptr
                     && override_entry->key == ft_nullptr)
                     || (base_entry->key && override_entry->key
-                    && std::strcmp(base_entry->key,
+                    && ft_strcmp(base_entry->key,
                     override_entry->key) == 0);
                 if (same_section && same_key)
                 {

@@ -1,5 +1,5 @@
 #include "tls_client.hpp"
-#include <thread>
+#include "../PThread/thread.hpp"
 #include "../Printf/printf.hpp"
 #include "../Networking/socket_class.hpp"
 #include "../Networking/ssl_wrapper.hpp"
@@ -233,7 +233,7 @@ bool api_tls_client::request_async(const char *method, const char *path,
 {
     if (!callback)
         return (false);
-    std::thread worker([this, method, path, payload, headers, callback, user_data]()
+    ft_thread worker([this, method, path, payload, headers, callback, user_data]()
     {
         int status_local = -1;
         char *result_body = this->request(method, path, payload, headers, &status_local);

@@ -1,10 +1,9 @@
 #include "time.hpp"
-#include <thread>
-#include <chrono>
+#include "../PThread/pthread.hpp"
 
 void    time_sleep(unsigned int seconds)
 {
-    std::this_thread::sleep_for(std::chrono::seconds(seconds));
+    pt_thread_sleep(seconds * 1000);
     return ;
 }
 
