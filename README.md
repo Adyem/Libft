@@ -53,6 +53,7 @@ int     ft_strcmp(const char *s1, const char *s2);
 void    ft_to_lower(char *string);
 void    ft_to_upper(char *string);
 char   *ft_strncpy(char *dst, const char *src, size_t n);
+char   *ft_strtok(char *string, const char *delimiters);
 void   *ft_memset(void *dst, int value, size_t n);
 int     ft_isspace(int c);
 char   *ft_fgets(char *string, int size, FILE *stream);
