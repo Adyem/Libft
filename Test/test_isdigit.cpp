@@ -1,15 +1,14 @@
 #include "../Libft/libft.hpp"
+#include "../System_utils/test_runner.hpp"
 
-int test_isdigit_true(void)
+FT_TEST(test_isdigit_true, "ft_isdigit true")
 {
-    if (ft_isdigit('5') == 1)
-        return (1);
-    return (0);
+    FT_ASSERT_EQ(1, ft_isdigit('5'));
+    return (1);
 }
 
-int test_isdigit_false(void)
+FT_TEST(test_isdigit_false, "ft_isdigit false")
 {
-    if (ft_isdigit('a') == 0)
-        return (1);
-    return (0);
+    FT_ASSERT_EQ(0, ft_isdigit('a'));
+    return (1);
 }
