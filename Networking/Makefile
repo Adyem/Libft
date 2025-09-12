@@ -8,7 +8,8 @@ SRCS := networking_socket_class.cpp \
         networking_socket_wrapper_functions.cpp \
         networking_ssl_wrapper.cpp \
         networking_nonblocking.cpp \
-        http_client.cpp
+        http_client.cpp \
+        http_server.cpp
 
 ifeq ($(OS),Windows_NT)
     SRCS += networking_select.cpp
@@ -33,6 +34,7 @@ HEADERS := socket_class.hpp \
            networking.hpp \
            ssl_wrapper.hpp \
            http_client.hpp \
+           http_server.hpp \
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
