@@ -614,6 +614,42 @@ int main()
 }
 ```
 
+#### WebSocket client and server
+
+`Networking/websocket_client.hpp` and `websocket_server.hpp` add helpers for
+the WebSocket protocol including the opening handshake, frame parsing and
+basic ping/pong handling.
+
+```c++
+#include "Networking/websocket_client.hpp"
+
+int main()
+{
+    ft_websocket_client client;
+    ft_string message;
+
+    client.connect("example.com", 80, "/chat");
+    client.send_text("hello");
+    client.receive_text(message);
+    client.close();
+    return (0);
+}
+```
+
+```c++
+#include "Networking/websocket_server.hpp"
+
+int main()
+{
+    ft_websocket_server server;
+    ft_string message;
+
+    server.start("127.0.0.1", 8080);
+    server.run_once(message);
+    return (0);
+}
+```
+
 ### Logger
 
 `Logger/logger.hpp` provides leveled logging with timestamps, formatted output
