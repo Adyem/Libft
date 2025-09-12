@@ -942,9 +942,11 @@ int         file_dir_exists(const char *rel_path);
 int         file_create_directory(const char *path, mode_t mode);
 int         file_copy(const char *source_path, const char *destination_path);
 int         file_move(const char *source_path, const char *destination_path);
+int         file_exists(const char *path);
+int         file_delete(const char *path);
 ```
 
-The `file_copy` and `file_move` helpers return (-1) on failure to allow error handling. `file_copy` uses `CopyFile` on Windows and `std::filesystem::copy_file` on POSIX systems. `file_move` wraps `MoveFile` or `rename` to provide portable file operations.
+The `file_copy` and `file_move` helpers return (-1) on failure to allow error handling. `file_copy` uses `CopyFile` on Windows and `std::filesystem::copy_file` on POSIX systems. `file_move` wraps `MoveFile` or `rename` to provide portable file operations. `file_exists` returns (1) if the file exists and (0) otherwise. `file_delete` wraps `remove` or `unlink` to delete a file and returns (-1) on failure.
 
 `System_utils/system_utils.hpp` provides cross-platform file descriptor utilities:
 
