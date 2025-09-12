@@ -17,6 +17,7 @@ void    *cma_aligned_alloc(std::size_t alignment, std::size_t size)
             __attribute__ ((warn_unused_result, hot));
 std::size_t    cma_alloc_size(const void* ptr)
             __attribute__ ((warn_unused_result, hot));
+int    *cma_atoi(const char *string) __attribute__ ((warn_unused_result));
 char    **cma_split(char const *string, char delimiter) __attribute__ ((warn_unused_result));
 char    *cma_itoa(int number) __attribute__ ((warn_unused_result));
 char    *cma_itoa_base(int number, int base) __attribute__ ((warn_unused_result));

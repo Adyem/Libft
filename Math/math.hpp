@@ -43,6 +43,9 @@ double      math_cos(double value);
 double      ft_sin(double value);
 double      ft_tan(double value);
 double      math_deg2rad(double degrees);
+int         math_validate_int(const char *input);
 double      math_rad2deg(double radians);
+
+# include "linear_algebra.hpp"
 
 #endif
