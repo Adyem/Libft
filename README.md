@@ -712,6 +712,9 @@ void schedule_every(std::chrono::duration<Rep, Period> interval,
                     FunctionType function, Args... args);
 ```
 
+Recurring tasks preserve their callbacks across intervals, preventing
+empty function executions when rescheduled.
+
 Worker threads fetch jobs from a lock-free queue so producers and consumers do
 not block each other. The scheduler thread manages delayed and recurring jobs.
 
@@ -725,7 +728,9 @@ void        ft_exit(const char *msg, int code);
 ```
 
 #### RNG
-Random helpers and containers in `RNG/`.
+Random helpers and containers in `RNG/`. `rng_secure_bytes` obtains
+cryptographically secure random data from the operating system, and
+`ft_random_uint32` wraps it to produce a single 32-bit value.
 
 ```
 int   ft_random_int(void);
@@ -735,13 +740,26 @@ float ft_random_normal(void);
 float ft_random_exponential(float lambda_value);
 int   ft_random_poisson(double lambda_value);
 int   ft_random_seed(const char *seed_str = ft_nullptr);
+int   rng_secure_bytes(unsigned char *buffer, size_t length);
+uint32_t ft_random_uint32(void);
 ```
 
 Example:
 
 ```
+unsigned char buffer[16];
+if (rng_secure_bytes(buffer, 16) == 0)
+{
+    /* use buffer */
+}
+uint32_t secure_value = ft_random_uint32();
 int occurrences = ft_random_poisson(4.0);
 ```
+
+Secure randomness is required for secrets such as tokens, keys, and
+identifiers that must not be predictable. For simulations or gameplay
+where predictability is less critical, functions like `ft_random_int`
+or `ft_random_float` are sufficient.
 
 `RNG/deck.hpp` provides a simple deck container:
 
