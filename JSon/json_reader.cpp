@@ -1,4 +1,3 @@
-#include <cctype>
 #include "../Libft/libft.hpp"
 #include "json.hpp"
 #include "../GetNextLine/get_next_line.hpp"
@@ -8,7 +7,7 @@
 static void skip_whitespace(const char *json_string, size_t &index)
 {
     while (json_string[index]
-        && std::isspace(static_cast<unsigned char>(json_string[index])))
+        && ft_isspace(static_cast<unsigned char>(json_string[index])))
         index++;
     return ;
 }
@@ -38,7 +37,7 @@ static char *parse_number(const char *json_string, size_t &index)
         index++;
     bool has_digits = false;
     while (index < length
-        && std::isdigit(static_cast<unsigned char>(json_string[index])))
+        && ft_isdigit(static_cast<unsigned char>(json_string[index])))
     {
         index++;
         has_digits = true;
@@ -47,7 +46,7 @@ static char *parse_number(const char *json_string, size_t &index)
     {
         index++;
         while (index < length
-            && std::isdigit(static_cast<unsigned char>(json_string[index])))
+            && ft_isdigit(static_cast<unsigned char>(json_string[index])))
             index++;
     }
     if (index < length && (json_string[index] == 'e' || json_string[index] == 'E'))
@@ -56,7 +55,7 @@ static char *parse_number(const char *json_string, size_t &index)
         if (index < length && (json_string[index] == '-' || json_string[index] == '+'))
             index++;
         while (index < length
-            && std::isdigit(static_cast<unsigned char>(json_string[index])))
+            && ft_isdigit(static_cast<unsigned char>(json_string[index])))
             index++;
     }
     if (!has_digits)
@@ -83,7 +82,7 @@ static char *parse_value(const char *json_string, size_t &index)
         index += 5;
         return (cma_strdup("false"));
     }
-    if (std::isdigit(static_cast<unsigned char>(json_string[index]))
+    if (ft_isdigit(static_cast<unsigned char>(json_string[index]))
         || json_string[index] == '-' || json_string[index] == '+')
         return (parse_number(json_string, index));
     return (ft_nullptr);

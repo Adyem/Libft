@@ -734,7 +734,6 @@ void         json_update_item(json_group *group, const char *key, const int valu
 void         json_update_item(json_group *group, const char *key, const bool value);
 bool         json_validate(json_group *group, const json_schema &schema);
 ```
-
 The `json_document` class wraps these helpers and manages a group list:
 
 ```
