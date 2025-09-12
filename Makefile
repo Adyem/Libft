@@ -47,7 +47,7 @@ SUBDIRS :=  CMA \
             Networking \
             API \
              Compatebility \
-             Compression Encryption RNG JSon File HTML Game Time XML Concurrency
+             Compression Encryption RNG JSon YAML File HTML Game Time XML Concurrency
 
 LIB_BASES := \
   CMA/CustomMemoryAllocator \
@@ -69,6 +69,7 @@ LIB_BASES := \
   Encryption/encryption \
   RNG/RNG \
   JSon/JSon \
+    YAML/YAML  \
   File/file \
   HTML/HTMLParser \
   Game/Game \

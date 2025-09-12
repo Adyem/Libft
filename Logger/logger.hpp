@@ -24,6 +24,9 @@ void    ft_log_set_alloc_logging(bool enable);
 bool    ft_log_get_alloc_logging();
 void    ft_log_set_api_logging(bool enable);
 bool    ft_log_get_api_logging();
+void    ft_log_set_color(bool enable);
+bool    ft_log_get_color();
+void    ft_json_sink(const char *message, void *user_data);
 
 void ft_log_debug(const char *fmt, ...);
 void ft_log_info(const char *fmt, ...);
@@ -55,6 +58,8 @@ class ft_logger
         bool get_alloc_logging() const noexcept;
         void set_api_logging(bool enable) noexcept;
         bool get_api_logging() const noexcept;
+        void set_color(bool enable) noexcept;
+        bool get_color() const noexcept;
         void close() noexcept;
 
         void debug(const char *fmt, ...) noexcept;

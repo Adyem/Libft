@@ -5,7 +5,7 @@ EFF_SRCS :=
 
 SRCS := main.cpp test_atoi.cpp test_isdigit.cpp test_memset.cpp test_strcmp.cpp \
        test_strlen.cpp test_promise.cpp test_networking.cpp test_linear_algebra.cpp test_validate_int.cpp \
-       test_task_scheduler.cpp test_json_validate.cpp test_rng.cpp test_http_server.cpp
+       test_task_scheduler.cpp test_json_validate.cpp test_rng.cpp test_http_server.cpp test_logger.cpp test_yaml.cpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR = mkdir
