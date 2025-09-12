@@ -879,7 +879,7 @@ void         json_remove_item(json_group *group, const char *key);
 void         json_update_item(json_group *group, const char *key, const char *value);
 void         json_update_item(json_group *group, const char *key, const int value);
 void         json_update_item(json_group *group, const char *key, const bool value);
-bool         json_validate(json_group *group, const json_schema &schema);
+bool         json_validate_schema(json_group *group, const json_schema &schema);
 ```
 The `json_document` class wraps these helpers and manages a group list:
 
@@ -890,7 +890,7 @@ void         append_group(json_group *group) noexcept;
 json_group   *find_group(const char *name) const noexcept;
 ```
 
-Schemas describe expected fields and types:
+Schemas describe expected fields and types using a minimal subset of the JSON Schema draft-07 specification:
 
 ```
 typedef enum json_type
@@ -917,7 +917,7 @@ json_schema_field name_field = { "name", JSON_STRING, true, ft_nullptr };
 json_schema_field age_field = { "age", JSON_NUMBER, true, ft_nullptr };
 name_field.next = &age_field;
 json_schema schema = { &name_field };
-bool valid = json_validate(group, schema);
+bool valid = json_validate_schema(group, schema);
 ```
 
 #### File

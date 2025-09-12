@@ -1,6 +1,8 @@
 #ifndef PARSING_HPP
 # define PARSING_HPP
 
+#include "json_schema.hpp"
+
 typedef struct json_item
 {
     char *key;
@@ -38,27 +40,5 @@ void        json_remove_item(json_group *group, const char *key);
 void        json_update_item(json_group *group, const char *key, const char *value);
 void        json_update_item(json_group *group, const char *key, const int value);
 void        json_update_item(json_group *group, const char *key, const bool value);
-
-typedef enum json_type
-{
-    JSON_STRING,
-    JSON_NUMBER,
-    JSON_BOOL
-} json_type;
-
-typedef struct json_schema_field
-{
-    const char *key;
-    json_type   type;
-    bool        required;
-    struct json_schema_field *next;
-} json_schema_field;
-
-typedef struct json_schema
-{
-    json_schema_field *fields;
-} json_schema;
-
-bool        json_validate(json_group *group, const json_schema &schema);
 
 #endif
