@@ -17,6 +17,8 @@ float ft_random_float(void);
 float ft_random_normal(void);
 float ft_random_exponential(float lambda_value);
 int ft_random_poisson(double lambda_value);
+int ft_random_binomial(int trial_count, double success_probability);
+int ft_random_geometric(double success_probability);
 int ft_random_seed(const char *seed_str = ft_nullptr);
 int rng_secure_bytes(unsigned char *buffer, size_t length);
 uint32_t ft_random_uint32(void);
