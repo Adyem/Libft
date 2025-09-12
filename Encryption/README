@@ -28,6 +28,20 @@ SHA-256 provides collision resistance for modern systems, but hashing alone
 does not secure passwords or sensitive data. Apply a keyed construction such as
 HMAC or use dedicated password hashing algorithms for authentication.
 
+## HMAC-SHA-256
+
+`hmac_sha256` computes a keyed hash using SHA-256. The function accepts a key,
+its length, a pointer to the data, the data length and a 32 byte output buffer.
+
+### Usage
+
+```
+const char *message = "hello";
+const unsigned char key[] = "secret";
+unsigned char digest[32];
+hmac_sha256(key, 6, message, 5, digest);
+```
+
 ## RSA
 
 Basic RSA helpers generate a key pair and perform modular exponentiation for
