@@ -569,6 +569,11 @@ unsigned int    su_get_cpu_count(void);
 unsigned long long su_get_total_memory(void);
 ```
 
+Internally these helpers rely on compatibility wrappers that are not part of the
+public API. The low level `ft_open`, `ft_read` and `ft_write` functions are now
+declared in `Compatebility/compatebility_file_internal.hpp` and are used only
+within the library.
+
 ### Template Utilities
 
 `Template/` contains a wide range of generic helpers and containers. Key

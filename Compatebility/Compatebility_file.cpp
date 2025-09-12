@@ -1,4 +1,4 @@
-#include "file.hpp"
+#include "compatebility_file_internal.hpp"
 
 #if defined(_WIN32) || defined(_WIN64)
 # include "../CPP_class/class_nullptr.hpp"

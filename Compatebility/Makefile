@@ -5,7 +5,7 @@ DEBUG_TARGET := Compatebility_debug.a
 
 SRCS := Compatebility_file.cpp
 
-HEADERS := file.hpp
+HEADERS := compatebility_file_internal.hpp
 
 ifeq ($(OS),Windows_NT)
 MKDIR   = mkdir
