@@ -746,8 +746,9 @@ void        ft_exit(const char *msg, int code);
 
 #### RNG
 Random helpers and containers in `RNG/`. `rng_secure_bytes` obtains
-cryptographically secure random data from the operating system, and
-`ft_random_uint32` wraps it to produce a single 32-bit value.
+cryptographically secure random data from the operating system,
+`ft_random_uint32` wraps it to produce a single 32-bit value,
+and `ft_generate_uuid` formats secure bytes as a version 4 UUID string.
 
 ```
 int   ft_random_int(void);
@@ -761,6 +762,7 @@ int   ft_random_geometric(double success_probability);
 int   ft_random_seed(const char *seed_str = ft_nullptr);
 int   rng_secure_bytes(unsigned char *buffer, size_t length);
 uint32_t ft_random_uint32(void);
+void   ft_generate_uuid(char out[37]);
 ```
 
 Example:
@@ -772,6 +774,8 @@ if (rng_secure_bytes(buffer, 16) == 0)
     /* use buffer */
 }
 uint32_t secure_value = ft_random_uint32();
+char uuid[37];
+ft_generate_uuid(uuid);
 int occurrences = ft_random_poisson(4.0);
 int successes = ft_random_binomial(10, 0.5);
 int attempts = ft_random_geometric(0.25);
