@@ -3,5 +3,7 @@
 
 int file_copy(const char *source_path, const char *destination_path);
 int file_move(const char *source_path, const char *destination_path);
+int file_exists(const char *path);
+int file_delete(const char *path);
 
 #endif

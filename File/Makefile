@@ -5,7 +5,9 @@ SRCS := file_opendir.cpp \
         file_check_directory.cpp \
         file_mkdir.cpp \
         file_copy.cpp \
-        file_move.cpp
+        file_move.cpp \
+        file_exists.cpp \
+        file_delete.cpp
 
 HEADERS := open_dir.hpp \
            file_utils.hpp
