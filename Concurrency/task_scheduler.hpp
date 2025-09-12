@@ -15,7 +15,7 @@
 #include <chrono>
 #include <new>
 
-// Lock-free queue using Michael and Scott algorithm
+
 
 template <typename ElementType>
 class ft_lock_free_queue
@@ -95,7 +95,7 @@ class ft_task_scheduler
         const char *get_error_str() const;
 };
 
-// ---------------- lock_free_queue implementation ----------------
+
 
 template <typename ElementType>
 ft_lock_free_queue<ElementType>::ft_lock_free_queue()
@@ -216,7 +216,7 @@ const char *ft_lock_free_queue<ElementType>::get_error_str() const
     return (ft_strerror(this->_error_code));
 }
 
-// ---------------- task_scheduler template methods ----------------
+
 
 template <typename FunctionType, typename... Args>
 auto ft_task_scheduler::submit(FunctionType function, Args... args)

@@ -9,10 +9,7 @@
 #include "../PThread/mutex.hpp"
 #include <cstddef>
 
-/*
- * ft_matrix
- * Basic matrix operations with thread-safe error reporting.
- */
+
 
 template <typename ElementType>
 class ft_matrix
@@ -52,7 +49,7 @@ class ft_matrix
         void clear();
 };
 
-// Implementation
+
 
 template <typename ElementType>
 ft_matrix<ElementType>::ft_matrix(size_t rows, size_t cols)
@@ -322,7 +319,7 @@ ElementType ft_matrix<ElementType>::determinant() const
         ++index;
     }
     ElementType result = ElementType();
-    result = result + 1; // initialize to 1
+    result = result + 1; 
     size_t pivot_row = 0;
     while (pivot_row < n)
     {
@@ -406,4 +403,4 @@ void ft_matrix<ElementType>::set_error(int error) const
     return ;
 }
 
-#endif // FT_MATRIX_HPP
+#endif 

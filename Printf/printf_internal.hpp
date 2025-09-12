@@ -28,7 +28,7 @@ void ft_puthex_fd(uintmax_t number, int fd, bool uppercase, size_t *count);
 void ft_putoctal_fd_recursive(uintmax_t number, int fd, size_t *count);
 void ft_putoctal_fd(uintmax_t number, int fd, size_t *count);
 void ft_putptr_fd(void *pointer, int fd, size_t *count);
-// writes floating point number with the given precision
+
 void ft_putfloat_fd(double number, int fd, size_t *count, int precision);
 void ft_putscientific_fd(double number, bool uppercase, int fd, size_t *count);
 void ft_putgeneral_fd(double number, bool uppercase, int fd, size_t *count);

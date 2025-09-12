@@ -5,8 +5,8 @@
 #include "swap.hpp"
 #include "../RNG/rng.hpp"
 
-// Simple sort using comparator
-// Defaults to ascending order using operator<
+
+
 template <typename RandomIt, typename Compare>
 void ft_sort(RandomIt first, RandomIt last, Compare comp)
 {
@@ -32,8 +32,8 @@ void ft_sort(RandomIt first, RandomIt last)
     return ;
 }
 
-// Binary search in sorted range
-// Returns true if value is found
+
+
 template <typename RandomIt, typename T, typename Compare>
 bool ft_binary_search(RandomIt first, RandomIt last, const T& value, Compare comp)
 {
@@ -57,7 +57,7 @@ bool ft_binary_search(RandomIt first, RandomIt last, const T& value)
           [](const auto& a, const auto& b){ return (a < b); }));
 }
 
-// Fisher-Yates shuffle
+
 template <typename RandomIt>
 void ft_shuffle(RandomIt first, RandomIt last)
 {
@@ -74,7 +74,7 @@ void ft_shuffle(RandomIt first, RandomIt last)
     return ;
 }
 
-// Reverse elements in range
+
 template <typename BidirectionalIt>
 void ft_reverse(BidirectionalIt first, BidirectionalIt last)
 {
@@ -86,4 +86,4 @@ void ft_reverse(BidirectionalIt first, BidirectionalIt last)
     return ;
 }
 
-#endif // FT_ALGORITHM_HPP
+#endif 

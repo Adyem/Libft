@@ -11,11 +11,7 @@
 #include <utility>
 #include "move.hpp"
 
-/*
- * ft_set
- * Sorted collection of unique values. Provides basic insertion,
- * lookup and removal with thread-safe error reporting.
- */
+
 
 template <typename ElementType>
 class ft_set
@@ -29,8 +25,8 @@ class ft_set
 
         void    set_error(int error) const;
         bool    ensure_capacity(size_t desired_capacity);
-        size_t  find_index(const ElementType& value) const; // caller must hold lock
-        size_t  lower_bound(const ElementType& value) const; // caller must hold lock
+        size_t  find_index(const ElementType& value) const; 
+        size_t  lower_bound(const ElementType& value) const; 
 
     public:
         ft_set(size_t initial_capacity = 0);

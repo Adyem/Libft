@@ -1,4 +1,4 @@
-// Custom implementation of vfprintf-style formatting for FILE streams
+
 #include "printf.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
