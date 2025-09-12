@@ -1,25 +1,8 @@
 #include "system_utils.hpp"
 #include "../Compatebility/compatebility_file_internal.hpp"
-#if defined(__linux__) || defined(__APPLE__)
-# include <cerrno>
-# include <ctime>
-# include "../CPP_class/class_nullptr.hpp"
-#endif
-
-int su_open(const char *path_name)
-{
-    return (ft_open(path_name));
-}
-
-int su_open(const char *path_name, int flags)
-{
-    return (ft_open(path_name, flags));
-}
-
-int su_open(const char *path_name, int flags, mode_t mode)
-{
-    return (ft_open(path_name, flags, mode));
-}
+#include "../CPP_class/class_nullptr.hpp"
+#include <cerrno>
+#include <ctime>
 
 ssize_t su_read(int file_descriptor, void *buffer, size_t count)
 {
