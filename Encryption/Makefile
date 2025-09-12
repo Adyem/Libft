@@ -4,11 +4,13 @@ DEBUG_TARGET := encryption_debug.a
 SRCS := encryption_basic_encryption.cpp \
         encryption_key.cpp \
         encryption_aes.cpp \
-        encryption_rsa.cpp
+        encryption_rsa.cpp \
+        encryption_sha256.cpp
 
 HEADERS := basic_encryption.hpp \
         aes.hpp \
-        rsa.hpp
+        rsa.hpp \
+        encryption_sha256.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
