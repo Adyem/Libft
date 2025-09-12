@@ -1,7 +1,16 @@
 #ifndef SYSTEM_UTILS_HPP
 # define SYSTEM_UTILS_HPP
 
-# include "../Compatebility/file.hpp"
+#if defined(_WIN32) || defined(_WIN64)
+# include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+# ifndef O_DIRECTORY
+#  define O_DIRECTORY 0
+# endif
+#else
+# include <fcntl.h>
+# include <unistd.h>
+#endif
 
 char    *su_getenv(const char *name);
 int     su_setenv(const char *name, const char *value, int overwrite);
