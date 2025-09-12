@@ -36,6 +36,135 @@ static ssize_t ssl_send_all(SSL *ssl, const void *data, size_t size)
     return (static_cast<ssize_t>(total));
 }
 
+char *api_request_https(const char *ip, uint16_t port,
+    const char *method, const char *path, json_group *payload,
+    const char *headers, int *status, int timeout,
+    const char *ca_certificate, bool verify_peer)
+{
+    if (ft_log_get_api_logging())
+    {
+        const char *log_ip = "(null)";
+        const char *log_method = "(null)";
+        const char *log_path = "(null)";
+        if (ip)
+            log_ip = ip;
+        if (method)
+            log_method = method;
+        if (path)
+            log_path = path;
+        ft_log_debug("api_request_https %s:%u %s %s",
+            log_ip, port, log_method, log_path);
+    }
+    SocketConfig config;
+    config._type = SocketType::CLIENT;
+    config._ip = ip;
+    config._port = port;
+    config._recv_timeout = timeout;
+    config._send_timeout = timeout;
+
+    ft_socket socket_wrapper(config);
+    if (socket_wrapper.get_error())
+        return (ft_nullptr);
+    if (!OPENSSL_init_ssl(0, ft_nullptr))
+        return (ft_nullptr);
+    SSL_CTX *context = ft_nullptr;
+    SSL *ssl_session = ft_nullptr;
+    char *result = ft_nullptr;
+    ft_string request;
+    ft_string body_string;
+    ft_string response;
+    const char *body = ft_nullptr;
+
+    context = SSL_CTX_new(TLS_client_method());
+    if (!context)
+        goto cleanup;
+    if (verify_peer)
+    {
+        if (ca_certificate)
+        {
+            if (SSL_CTX_load_verify_locations(context, ca_certificate, ft_nullptr) != 1)
+                goto cleanup;
+        }
+        else
+        {
+            if (SSL_CTX_set_default_verify_paths(context) != 1)
+                goto cleanup;
+        }
+        SSL_CTX_set_verify(context, SSL_VERIFY_PEER, ft_nullptr);
+    }
+    else
+        SSL_CTX_set_verify(context, SSL_VERIFY_NONE, ft_nullptr);
+    ssl_session = SSL_new(context);
+    if (!ssl_session)
+        goto cleanup;
+    if (SSL_set_fd(ssl_session, socket_wrapper.get_fd()) != 1)
+        goto cleanup;
+    if (SSL_connect(ssl_session) <= 0)
+        goto cleanup;
+
+    request = method;
+    request += " ";
+    request += path;
+    request += " HTTP/1.1\r\nHost: ";
+    request += ip;
+    if (headers && headers[0])
+    {
+        request += "\r\n";
+        request += headers;
+    }
+    if (payload)
+    {
+        char *temporary_string = json_write_to_string(payload);
+        if (!temporary_string)
+            goto cleanup;
+        body_string = temporary_string;
+        cma_free(temporary_string);
+        request += "\r\nContent-Type: application/json";
+        char *length_string = cma_itoa(static_cast<int>(body_string.size()));
+        if (!length_string)
+            goto cleanup;
+        request += "\r\nContent-Length: ";
+        request += length_string;
+        cma_free(length_string);
+    }
+    request += "\r\nConnection: close\r\n\r\n";
+    if (payload)
+        request += body_string.c_str();
+
+    if (ssl_send_all(ssl_session, request.c_str(), request.size()) < 0)
+        goto cleanup;
+
+    char buffer[1024];
+    ssize_t bytes_received;
+    while ((bytes_received = nw_ssl_read(ssl_session, buffer, sizeof(buffer) - 1)) > 0)
+    {
+        buffer[bytes_received] = '\0';
+        response += buffer;
+    }
+    if (status)
+    {
+        *status = -1;
+        const char *space = ft_strchr(response.c_str(), ' ');
+        if (space)
+            *status = ft_atoi(space + 1);
+    }
+    body = ft_strstr(response.c_str(), "\r\n\r\n");
+    if (!body)
+        goto cleanup;
+    body += 4;
+    result = cma_strdup(body);
+
+cleanup:
+    if (ssl_session)
+    {
+        SSL_shutdown(ssl_session);
+        SSL_free(ssl_session);
+    }
+    if (context)
+        SSL_CTX_free(context);
+    return (result);
+}
+
 char *api_request_string_tls(const char *host, uint16_t port,
     const char *method, const char *path, json_group *payload,
     const char *headers, int *status, int timeout)
