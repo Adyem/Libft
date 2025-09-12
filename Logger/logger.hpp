@@ -11,8 +11,8 @@ enum t_log_level {
     LOG_LEVEL_NONE
 };
 
-// Sink management. A sink receives a formatted message and an opaque
-// user pointer. Multiple sinks may be registered at once.
+
+
 typedef void (*t_log_sink)(const char *message, void *user_data);
 int     ft_log_add_sink(t_log_sink sink, void *user_data);
 void    ft_log_remove_sink(t_log_sink sink, void *user_data);

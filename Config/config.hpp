@@ -17,12 +17,7 @@ struct cnfg_config
     size_t           entry_count;
 };
 
-/*
-** cnfg_parse reads a configuration file and fills a cnfg_config
-** structure. For each key, the parser first checks the environment
-** using ft_getenv. If an environment variable with the same key is
-** found, its value overrides the one from the file.
-*/
+
 cnfg_config   *cnfg_parse(const char *filename);
 void        cnfg_free(cnfg_config *config);
 char       *cnfg_parse_flags(int argument_count, char **argument_values);

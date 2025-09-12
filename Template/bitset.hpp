@@ -10,11 +10,7 @@
 #include <cstddef>
 #include <climits>
 
-/*
- * ft_bitset
- * Fixed-size sequence of bits with basic operations and thread-safe
- * error reporting. Size is determined at construction and cannot change.
- */
+
 class ft_bitset
 {
     private:
