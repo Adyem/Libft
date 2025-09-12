@@ -9,6 +9,25 @@ SRCS := networking_socket_class.cpp \
         networking_ssl_wrapper.cpp \
         networking_nonblocking.cpp
 
+ifeq ($(OS),Windows_NT)
+    SRCS += networking_select.cpp
+else
+    UNAME_S := $(shell uname -s)
+    ifeq ($(UNAME_S),Linux)
+        SRCS += networking_epoll.cpp
+    else ifeq ($(UNAME_S),Darwin)
+        SRCS += networking_kqueue.cpp
+    else ifeq ($(UNAME_S),FreeBSD)
+        SRCS += networking_kqueue.cpp
+    else ifeq ($(UNAME_S),NetBSD)
+        SRCS += networking_kqueue.cpp
+    else ifeq ($(UNAME_S),OpenBSD)
+        SRCS += networking_kqueue.cpp
+    else
+        SRCS += networking_select.cpp
+    endif
+endif
+
 HEADERS := socket_class.hpp \
            networking.hpp \
            ssl_wrapper.hpp \

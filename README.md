@@ -423,8 +423,12 @@ int nw_poll(int *read_file_descriptors, int read_count,
             int timeout_milliseconds);
 ```
 
-The Linux `epoll` path allocates its event buffer with `cma_malloc` and
-releases it with `cma_free` to stay within the custom allocator.
+The polling backend is chosen at compile time. Linux builds use `epoll`,
+BSD and macOS use `kqueue`, and other systems including Windows fall back
+to `select`. The `epoll` and `kqueue` implementations allocate their event
+buffers with `cma_malloc` and release them with `cma_free` to stay within
+the custom allocator. The `select` backend is intended only for small
+numbers of sockets and lacks the scalability of the other backends.
 
 `wrapper.hpp` adds helpers for encrypted sockets:
 
