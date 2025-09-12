@@ -3,7 +3,8 @@
 #include "../Libft/libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../System_utils/test_runner.hpp"
-#include <cstdio>
+#include "../System_utils/system_utils.hpp"
+#include <unistd.h>
 
 FT_TEST(test_ft_compress_round_trip, "ft_compress round trip")
 {
@@ -39,81 +40,113 @@ FT_TEST(test_ft_compress_round_trip, "ft_compress round trip")
 FT_TEST(test_compression_stream_round_trip, "stream compression round trip")
 {
     const char      *input_string;
-    char            *input_copy;
-    FILE            *input_stream;
-    char            *compressed_data;
-    std::size_t     compressed_size;
-    FILE            *compressed_stream;
-    char            *decompressed_data;
-    std::size_t     decompressed_size;
-    FILE            *decompressed_stream;
+    int             input_pipe_descriptors[2];
+    int             compressed_pipe_descriptors[2];
+    unsigned char   *compressed_buffer;
+    ssize_t         compressed_size;
+    int             decompress_input_pipe_descriptors[2];
+    int             decompress_output_pipe_descriptors[2];
+    unsigned char   *decompressed_buffer;
+    ssize_t         decompressed_size;
     int             comparison_result;
 
     input_string = "Streaming API example";
-    input_copy = cma_strdup(input_string);
-    if (!input_copy)
+    if (pipe(input_pipe_descriptors) != 0)
         return (0);
-    input_stream = fmemopen(input_copy, ft_strlen_size_t(input_copy), "r");
-    if (!input_stream)
+    if (pipe(compressed_pipe_descriptors) != 0)
     {
-        cma_free(input_copy);
-        return (0);
-    }
-    compressed_data = ft_nullptr;
-    compressed_size = 0;
-    compressed_stream = open_memstream(&compressed_data, &compressed_size);
-    if (!compressed_stream)
-    {
-        fclose(input_stream);
-        cma_free(input_copy);
+        close(input_pipe_descriptors[0]);
+        close(input_pipe_descriptors[1]);
         return (0);
     }
-    if (ft_compress_stream(input_stream, compressed_stream) != 0)
+    if (su_write(input_pipe_descriptors[1], input_string, ft_strlen_size_t(input_string)) < 0)
     {
-        fclose(input_stream);
-        fclose(compressed_stream);
-        cma_free(input_copy);
-        if (compressed_data)
-            cma_free(compressed_data);
+        close(input_pipe_descriptors[0]);
+        close(input_pipe_descriptors[1]);
+        close(compressed_pipe_descriptors[0]);
+        close(compressed_pipe_descriptors[1]);
         return (0);
     }
-    fclose(input_stream);
-    fclose(compressed_stream);
-    cma_free(input_copy);
-    decompressed_data = ft_nullptr;
-    decompressed_size = 0;
-    compressed_stream = fmemopen(compressed_data, compressed_size, "r");
-    if (!compressed_stream)
+    close(input_pipe_descriptors[1]);
+    if (ft_compress_stream(input_pipe_descriptors[0], compressed_pipe_descriptors[1]) != 0)
     {
-        cma_free(compressed_data);
+        close(input_pipe_descriptors[0]);
+        close(compressed_pipe_descriptors[0]);
+        close(compressed_pipe_descriptors[1]);
         return (0);
     }
-    decompressed_stream = open_memstream(&decompressed_data, &decompressed_size);
-    if (!decompressed_stream)
+    close(input_pipe_descriptors[0]);
+    close(compressed_pipe_descriptors[1]);
+    compressed_buffer = static_cast<unsigned char*>(cma_malloc(4096));
+    if (!compressed_buffer)
     {
-        fclose(compressed_stream);
-        cma_free(compressed_data);
+        close(compressed_pipe_descriptors[0]);
         return (0);
     }
-    if (ft_decompress_stream(compressed_stream, decompressed_stream) != 0)
+    compressed_size = su_read(compressed_pipe_descriptors[0], compressed_buffer, 4096);
+    close(compressed_pipe_descriptors[0]);
+    if (compressed_size <= 0)
     {
-        fclose(compressed_stream);
-        fclose(decompressed_stream);
-        cma_free(compressed_data);
-        if (decompressed_data)
-            cma_free(decompressed_data);
+        cma_free(compressed_buffer);
         return (0);
     }
-    fclose(compressed_stream);
-    fclose(decompressed_stream);
-    cma_free(compressed_data);
-    comparison_result = ft_memcmp(decompressed_data, input_string, decompressed_size);
-    if (comparison_result == 0 && decompressed_size == ft_strlen_size_t(input_string))
+    if (pipe(decompress_input_pipe_descriptors) != 0)
     {
-        cma_free(decompressed_data);
+        cma_free(compressed_buffer);
+        return (0);
+    }
+    if (pipe(decompress_output_pipe_descriptors) != 0)
+    {
+        close(decompress_input_pipe_descriptors[0]);
+        close(decompress_input_pipe_descriptors[1]);
+        cma_free(compressed_buffer);
+        return (0);
+    }
+    if (su_write(decompress_input_pipe_descriptors[1], compressed_buffer,
+            static_cast<std::size_t>(compressed_size)) < 0)
+    {
+        close(decompress_input_pipe_descriptors[0]);
+        close(decompress_input_pipe_descriptors[1]);
+        close(decompress_output_pipe_descriptors[0]);
+        close(decompress_output_pipe_descriptors[1]);
+        cma_free(compressed_buffer);
+        return (0);
+    }
+    close(decompress_input_pipe_descriptors[1]);
+    cma_free(compressed_buffer);
+    if (ft_decompress_stream(decompress_input_pipe_descriptors[0],
+            decompress_output_pipe_descriptors[1]) != 0)
+    {
+        close(decompress_input_pipe_descriptors[0]);
+        close(decompress_output_pipe_descriptors[0]);
+        close(decompress_output_pipe_descriptors[1]);
+        return (0);
+    }
+    close(decompress_input_pipe_descriptors[0]);
+    close(decompress_output_pipe_descriptors[1]);
+    decompressed_buffer = static_cast<unsigned char*>(cma_malloc(4096));
+    if (!decompressed_buffer)
+    {
+        close(decompress_output_pipe_descriptors[0]);
+        return (0);
+    }
+    decompressed_size = su_read(decompress_output_pipe_descriptors[0],
+        decompressed_buffer, 4096);
+    close(decompress_output_pipe_descriptors[0]);
+    if (decompressed_size <= 0)
+    {
+        cma_free(decompressed_buffer);
+        return (0);
+    }
+    comparison_result = ft_memcmp(decompressed_buffer, input_string,
+        static_cast<std::size_t>(decompressed_size));
+    if (comparison_result == 0 && decompressed_size ==
+        static_cast<ssize_t>(ft_strlen_size_t(input_string)))
+    {
+        cma_free(decompressed_buffer);
         return (1);
     }
-    cma_free(decompressed_data);
+    cma_free(decompressed_buffer);
     return (0);
 }
 

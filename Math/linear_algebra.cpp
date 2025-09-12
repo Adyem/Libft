@@ -51,10 +51,12 @@ double  vector2::length() const
 vector2 vector2::normalize() const
 {
     double len;
+    double epsilon;
     vector2 result;
 
     len = this->length();
-    if (len == 0.0)
+    epsilon = 0.0000001;
+    if (math_absdiff(len, 0.0) <= epsilon)
     {
         result.set_error(FT_EINVAL);
         return (result);
@@ -150,10 +152,12 @@ double  vector3::length() const
 vector3 vector3::normalize() const
 {
     double len;
+    double epsilon;
     vector3 result;
 
     len = this->length();
-    if (len == 0.0)
+    epsilon = 0.0000001;
+    if (math_absdiff(len, 0.0) <= epsilon)
     {
         result.set_error(FT_EINVAL);
         return (result);
@@ -245,10 +249,12 @@ double  vector4::length() const
 vector4 vector4::normalize() const
 {
     double len;
+    double epsilon;
     vector4 result;
 
     len = this->length();
-    if (len == 0.0)
+    epsilon = 0.0000001;
+    if (math_absdiff(len, 0.0) <= epsilon)
     {
         result.set_error(FT_EINVAL);
         return (result);
@@ -534,10 +540,12 @@ double      quaternion::length() const
 quaternion  quaternion::normalize() const
 {
     double len;
+    double epsilon;
     quaternion result;
 
     len = this->length();
-    if (len == 0.0)
+    epsilon = 0.0000001;
+    if (math_absdiff(len, 0.0) <= epsilon)
     {
         result.set_error(FT_EINVAL);
         return (result);
@@ -553,10 +561,12 @@ quaternion  quaternion::normalize() const
 quaternion  quaternion::invert() const
 {
     double len_sq;
+    double epsilon;
     quaternion result;
 
     len_sq = this->_w * this->_w + this->_x * this->_x + this->_y * this->_y + this->_z * this->_z;
-    if (len_sq == 0.0)
+    epsilon = 0.0000001;
+    if (math_absdiff(len_sq, 0.0) <= epsilon)
     {
         result.set_error(FT_EINVAL);
         return (result);

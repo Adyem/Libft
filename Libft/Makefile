@@ -42,10 +42,6 @@ SRCS := libft_atoi.cpp \
     libft_fopen.cpp \
     libft_fclose.cpp \
     libft_fgets.cpp \
-    libft_fread.cpp \
-    libft_fwrite.cpp \
-    libft_fseek.cpp \
-    libft_ftell.cpp \
     libft_time.cpp \
     libft_validate_int.cpp
 

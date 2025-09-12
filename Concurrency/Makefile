@@ -1,23 +1,9 @@
-TARGET := System_utils.a
-DEBUG_TARGET := System_utils_debug.a
+TARGET := Concurrency.a
+DEBUG_TARGET := Concurrency_debug.a
 
-SRCS := System_utils_assert.cpp \
-        System_utils_env.cpp \
-        System_utils_abort.cpp \
-        System_utils_sigabrt.cpp \
-        System_utils_sigfpe.cpp \
-        System_utils_sigill.cpp \
-        System_utils_sigint.cpp \
-        System_utils_sigsegv.cpp \
-        System_utils_sigterm.cpp \
-        System_utils_sysinfo.cpp \
-        System_utils_file_open.cpp \
-        System_utils_file_io.cpp \
-        System_utils_file_stream.cpp \
-        System_utils_home.cpp \
-        test_runner.cpp
+SRCS := Concurrency_task_scheduler.cpp
 
-HEADERS := system_utils.hpp test_runner.hpp
+HEADERS := task_scheduler.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
