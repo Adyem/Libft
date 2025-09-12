@@ -4,7 +4,7 @@ DEBUG_TARGET := libft_tests_debug
 EFF_SRCS :=
 
 SRCS := main.cpp test_atoi.cpp test_isdigit.cpp test_memset.cpp test_strcmp.cpp \
-       test_strlen.cpp test_promise.cpp
+       test_strlen.cpp test_promise.cpp test_networking.cpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR = mkdir
