@@ -44,6 +44,7 @@ int                ft_strcmp(const char *string1, const char *string2);
 void            ft_to_lower(char *string);
 void            ft_to_upper(char *string);
 char             *ft_strncpy(char *destination, const char *source, size_t number_of_characters);
+char            *ft_strtok(char *string, const char *delimiters);
 void             *ft_memset(void *destination, int value, size_t number_of_bytes);
 int             ft_isspace(int character);
 char            *ft_strjoin_multiple(int count, ...);
