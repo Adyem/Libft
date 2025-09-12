@@ -726,7 +726,7 @@ components include:
   `ft_priority_queue`, `ft_set`, `ft_map`, `ft_unordened_map`,
   `ft_trie`, `ft_circular_buffer`, `ft_graph` and `ft_matrix`.
  - Utility types: `ft_pair`, `ft_tuple`, `ft_optional`, `ft_variant`,
-   `ft_bitset` and `ft_function`.
+   `ft_bitset`, `ft_function` and `ft_string_view`.
 - Smart pointers: `ft_shared_ptr` and `ft_unique_ptr`.
 - Concurrency helpers: `ft_thread_pool`, `ft_future`, `ft_event_emitter` and
   `ft_promise`.
