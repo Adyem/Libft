@@ -1017,7 +1017,9 @@ char *rl_readline(const char *prompt);
 #### API
 HTTP client helpers in `API/api.hpp` and asynchronous wrappers. URL parsing
 relies on the `ft_string` class instead of `std::string`, so any allocation
-errors must be checked via `get_error`.
+errors must be checked via `get_error`. The implementation is split across
+multiple source files like `api_request.cpp` and `api_request_async.cpp` for
+maintainability.
 
 ```
 char       *api_request_string(const char *ip, uint16_t port,
@@ -1025,6 +1027,12 @@ char       *api_request_string(const char *ip, uint16_t port,
                                json_group *payload = ft_nullptr,
                                const char *headers = ft_nullptr, int *status = ft_nullptr,
                                int timeout = 60000);
+char       *api_request_https(const char *ip, uint16_t port,
+                               const char *method, const char *path,
+                               json_group *payload = ft_nullptr,
+                               const char *headers = ft_nullptr, int *status = ft_nullptr,
+                               int timeout = 60000, const char *ca_certificate = ft_nullptr,
+                               bool verify_peer = true);
 char       *api_request_string_host(const char *host, uint16_t port,
                                     const char *method, const char *path,
                                     json_group *payload = ft_nullptr,
@@ -1040,6 +1048,20 @@ json_group *api_request_json_host(const char *host, uint16_t port,
                                   json_group *payload = ft_nullptr,
                                   const char *headers = ft_nullptr, int *status = ft_nullptr,
                                   int timeout = 60000);
+```
+
+Example HTTPS requests:
+
+```
+char *secure_body = api_request_https("93.184.216.34", 443, "GET", "/",
+        ft_nullptr, ft_nullptr, ft_nullptr, 60000,
+        "/etc/ssl/certs/ca.pem", true);
+cma_free(secure_body);
+
+char *insecure_body = api_request_https("127.0.0.1", 8443, "GET", "/",
+        ft_nullptr, ft_nullptr, ft_nullptr, 60000,
+        ft_nullptr, false);
+cma_free(insecure_body);
 ```
 
 Callback based helpers run the request on a background thread and invoke
