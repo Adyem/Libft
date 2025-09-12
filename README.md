@@ -921,7 +921,7 @@ bool valid = json_validate(group, schema);
 ```
 
 #### File
-Cross-platform file and directory utilities (`File/open_dir.hpp`):
+Cross-platform file and directory utilities (`File/open_dir.hpp` and `File/file_utils.hpp`):
 
 ```
 file_dir   *file_opendir(const char *directory_path);
@@ -929,7 +929,11 @@ int         file_closedir(file_dir *directory_stream);
 file_dirent *file_readdir(file_dir *directory_stream);
 int         file_dir_exists(const char *rel_path);
 int         file_create_directory(const char *path, mode_t mode);
+int         file_copy(const char *source_path, const char *destination_path);
+int         file_move(const char *source_path, const char *destination_path);
 ```
+
+The `file_copy` and `file_move` helpers return (-1) on failure to allow error handling. `file_copy` uses `CopyFile` on Windows and `std::filesystem::copy_file` on POSIX systems. `file_move` wraps `MoveFile` or `rename` to provide portable file operations.
 
 `System_utils/system_utils.hpp` provides cross-platform file descriptor utilities:
 
