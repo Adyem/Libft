@@ -39,9 +39,10 @@ SRCS := math_abs.cpp \
         linear_algebra_constructors.cpp \
         linear_algebra_vector2.cpp \
         linear_algebra_vector3.cpp \
-        linear_algebra_vector4.cpp
+        linear_algebra_vector4.cpp \
+        linear_algebra_quaternion.cpp
 
-HEADERS := math.hpp roll.hpp math_internal.hpp linear_algebra.hpp
+HEADERS := math.hpp roll.hpp math_internal.hpp linear_algebra.hpp linear_algebra_quaternion.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
