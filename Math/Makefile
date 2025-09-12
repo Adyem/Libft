@@ -35,7 +35,11 @@ SRCS := math_abs.cpp \
         math_roll_validate_string.cpp \
         math_roll_validate_utils.cpp \
         math_validate_int.cpp \
-        linear_algebra.cpp
+        linear_algebra.cpp \
+        linear_algebra_constructors.cpp \
+        linear_algebra_vector2.cpp \
+        linear_algebra_vector3.cpp \
+        linear_algebra_vector4.cpp
 
 HEADERS := math.hpp roll.hpp math_internal.hpp linear_algebra.hpp
 
