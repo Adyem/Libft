@@ -207,29 +207,3 @@ matrix4::~matrix4()
 {
     return ;
 }
-
-quaternion::quaternion()
-{
-    this->_w = 1.0;
-    this->_x = 0.0;
-    this->_y = 0.0;
-    this->_z = 0.0;
-    this->set_error(ER_SUCCESS);
-    return ;
-}
-
-quaternion::quaternion(double w, double x, double y, double z)
-{
-    this->_w = w;
-    this->_x = x;
-    this->_y = y;
-    this->_z = z;
-    this->set_error(ER_SUCCESS);
-    return ;
-}
-
-quaternion::~quaternion()
-{
-    return ;
-}
-
