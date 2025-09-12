@@ -594,6 +594,26 @@ int main()
 }
 ```
 
+#### HTTP server
+
+`Networking/http_server.hpp` implements a minimal synchronous server that uses
+`ft_socket` for IPv4 and IPv6 support, optional non-blocking operation and
+configurable timeouts. The server accepts a single connection and parses basic
+GET or POST requests.
+
+```c++
+#include "Networking/http_server.hpp"
+
+int main()
+{
+    ft_http_server server;
+
+    server.start("127.0.0.1", 8080);
+    server.run_once();
+    return (0);
+}
+```
+
 ### Logger
 
 `Logger/logger.hpp` provides leveled logging with timestamps, formatted output
