@@ -58,3 +58,13 @@ unsigned char    *decompress_buffer(const unsigned char *input_buffer, std::size
     *decompressed_size = actual_size;
     return (result_buffer);
 }
+
+unsigned char    *ft_compress(const unsigned char *input_buffer, std::size_t input_size, std::size_t *compressed_size)
+{
+    return (compress_buffer(input_buffer, input_size, compressed_size));
+}
+
+unsigned char    *ft_decompress(const unsigned char *input_buffer, std::size_t input_size, std::size_t *decompressed_size)
+{
+    return (decompress_buffer(input_buffer, input_size, decompressed_size));
+}
