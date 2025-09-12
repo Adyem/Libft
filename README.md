@@ -662,17 +662,11 @@ Colorized terminal output can be toggled with `ft_log_set_color`, and a
 predefined `ft_json_sink` helper emits each entry as a JSON object for
 downstream processing.
 
-An asynchronous mode is available via `ft_log_start_async()` and
-`ft_log_stop_async()`. This uses a background thread that pulls messages from a
-thread-safe queue. While it can reduce latency in performance-critical paths,
-it introduces synchronization overhead and requires a stop call to flush
-pending messages.
-
-An asynchronous mode is available via `ft_log_start_async()` and
-`ft_log_stop_async()`. This uses a background thread that pulls messages from a
-thread-safe queue. While it can reduce latency in performance-critical paths,
-it introduces synchronization overhead and requires a stop call to flush
-pending messages.
+Asynchronous logging is enabled with `ft_log_enable_async(true)` and later
+disabled with `ft_log_enable_async(false)` to flush pending messages. This
+spawns a background thread that pulls messages from a thread-safe queue,
+reducing latency in performance-critical paths at the cost of synchronization
+overhead.
 
 ```
 enum t_log_level {
