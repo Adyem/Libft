@@ -622,6 +622,10 @@ destinations (sinks) and filtered according to the active log level.
 Sink management relies on the thread-safe `ft_vector` container from the
 Template module for internal storage.
 
+Colorized terminal output can be toggled with `ft_log_set_color`, and a
+predefined `ft_json_sink` helper emits each entry as a JSON object for
+downstream processing.
+
 An asynchronous mode is available via `ft_log_start_async()` and
 `ft_log_stop_async()`. This uses a background thread that pulls messages from a
 thread-safe queue. While it can reduce latency in performance-critical paths,
@@ -651,6 +655,9 @@ void ft_log_remove_sink(t_log_sink sink, void *user_data);
 void ft_log_close();
 void ft_log_set_alloc_logging(bool enable);
 bool ft_log_get_alloc_logging();
+void ft_log_set_color(bool enable);
+bool ft_log_get_color();
+void ft_json_sink(const char *message, void *user_data);
 
 void ft_log_info(const char *fmt, ...);
 void ft_log_warn(const char *fmt, ...);
@@ -980,6 +987,21 @@ name_field.next = &age_field;
 json_schema schema = { &name_field };
 bool valid = json_validate_schema(group, schema);
 ```
+
+#### YAML
+Basic YAML handling in `YAML/yaml.hpp` provides minimal parsing and serialization for scalars, lists and maps:
+
+```
+yaml_value    *yaml_read_from_string(const ft_string &content);
+yaml_value    *yaml_read_from_file(const char *file_path);
+ft_string      yaml_write_to_string(const yaml_value *value);
+int           yaml_write_to_file(const char *file_path, const yaml_value *value);
+void          yaml_free(yaml_value *value);
+```
+
+`yaml_value` tracks internal errors from `ft_string`, `ft_vector`, and `ft_map` and exposes `get_error` and `get_error_str` helpers for diagnostics.
+
+The reader implementation is organized across `yaml_value.cpp`, `yaml_reader.cpp`, and supporting utility files for clarity.
 
 #### File
 Cross-platform file and directory utilities (`File/open_dir.hpp` and `File/file_utils.hpp`):

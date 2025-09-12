@@ -10,6 +10,7 @@
 extern ft_logger *g_logger;
 extern t_log_level g_level;
 extern bool g_async_running;
+extern bool g_use_color;
 
 typedef void (*t_log_sink)(const char *message, void *user_data);
 
