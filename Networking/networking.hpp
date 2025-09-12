@@ -67,4 +67,7 @@ class SocketConfig
         const char *get_error_str();
 };
 
+#include "websocket_client.hpp"
+#include "websocket_server.hpp"
+
 #endif
