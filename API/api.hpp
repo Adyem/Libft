@@ -44,6 +44,12 @@ char    *api_request_string_basic(const char *ip, uint16_t port,
         json_group *payload = ft_nullptr, const char *headers = ft_nullptr,
         int *status = ft_nullptr, int timeout = 60000);
 
+char    *api_request_https(const char *ip, uint16_t port,
+        const char *method, const char *path, json_group *payload = ft_nullptr,
+        const char *headers = ft_nullptr, int *status = ft_nullptr,
+        int timeout = 60000, const char *ca_certificate = ft_nullptr,
+        bool verify_peer = true);
+
 char    *api_request_string_tls(const char *host, uint16_t port,
         const char *method, const char *path, json_group *payload = ft_nullptr,
         const char *headers = ft_nullptr, int *status = ft_nullptr,
