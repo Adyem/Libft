@@ -72,21 +72,3 @@ FT_TEST(test_matrix3_operations, "matrix3 transform, multiply and invert")
     FT_ASSERT(math_fabs(transformed.get_z() - 3.0) < 0.000001);
     return (1);
 }
-
-FT_TEST(test_quaternion_rotate_z, "quaternion rotate around z")
-{
-    double angle;
-    double half;
-    quaternion q;
-    vector3 v(1.0, 0.0, 0.0);
-    vector3 r;
-
-    angle = math_deg2rad(90.0);
-    half = angle / 2.0;
-    q = quaternion(math_cos(half), 0.0, 0.0, ft_sin(half));
-    r = q.transform(v);
-    FT_ASSERT(math_fabs(r.get_x()) < 0.000001);
-    FT_ASSERT(math_fabs(r.get_y() - 1.0) < 0.000001);
-    FT_ASSERT(math_fabs(r.get_z()) < 0.000001);
-    return (1);
-}

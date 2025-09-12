@@ -194,14 +194,14 @@ matrix4 invert() const;
 vector4 transform(const vector4 &vector) const;
 
 quaternion(double w, double x, double y, double z);
+quaternion add(const quaternion &other) const;
 quaternion multiply(const quaternion &other) const;
+quaternion conjugate() const;
 double length() const;
 quaternion normalize() const;
-quaternion invert() const;
-vector3 transform(const vector3 &vector) const;
 ```
 
-Normalization and inversion routines treat near-zero lengths as invalid using an epsilon check.
+Normalization routines treat near-zero lengths as invalid using an epsilon check.
 
 Additional helpers for parsing expressions are available. They allocate a
 single `int` holding the result, which the caller must release with
