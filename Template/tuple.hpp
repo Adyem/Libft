@@ -12,10 +12,7 @@
 #include <new>
 #include <type_traits>
 
-/*
- * ft_tuple
- * Fixed-size heterogeneous collection with thread-safe access helpers.
- */
+
 
 template <typename... Types>
 class ft_tuple
@@ -59,7 +56,7 @@ class ft_tuple
         const char* get_error_str() const;
 };
 
-/* Constructors & Destructor */
+
 
 template <typename... Types>
 ft_tuple<Types...>::ft_tuple()
@@ -107,7 +104,7 @@ ft_tuple<Types...>& ft_tuple<Types...>::operator=(ft_tuple&& other) noexcept
     return (*this);
 }
 
-/* set_error */
+
 
 template <typename... Types>
 void ft_tuple<Types...>::set_error(int error) const
@@ -117,7 +114,7 @@ void ft_tuple<Types...>::set_error(int error) const
     return ;
 }
 
-/* construction */
+
 
 template <typename... Types>
 template <typename... Args>
@@ -132,7 +129,7 @@ ft_tuple<Types...>::ft_tuple(Args&&... args)
     return ;
 }
 
-/* get by index */
+
 
 template <typename... Types>
 template <std::size_t I>
@@ -192,7 +189,7 @@ ft_tuple<Types...>::get() const
     return (ref);
 }
 
-/* get by type */
+
 
 template <typename... Types>
 template <typename T>
@@ -248,7 +245,7 @@ const T& ft_tuple<Types...>::get() const
     return (ref);
 }
 
-/* reset */
+
 
 template <typename... Types>
 void ft_tuple<Types...>::reset()
@@ -268,7 +265,7 @@ void ft_tuple<Types...>::reset()
     return ;
 }
 
-/* error accessors */
+
 
 template <typename... Types>
 int ft_tuple<Types...>::get_error() const
@@ -290,4 +287,4 @@ const char* ft_tuple<Types...>::get_error_str() const
     return (ft_strerror(err));
 }
 
-#endif // FT_TUPLE_HPP
+#endif 

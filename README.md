@@ -564,6 +564,36 @@ const struct sockaddr_storage &get_address() const;
 int         join_multicast_group(const SocketConfig &config);
 ```
 
+#### HTTP client
+
+`Networking/http_client.hpp` adds helpers for basic HTTP requests built on the socket layer.
+
+```c++
+#include "Networking/http_client.hpp"
+
+int main()
+{
+    ft_string response;
+
+    http_get("example.com", "/", response, true);
+    return (0);
+}
+```
+
+```c++
+#include "Networking/http_client.hpp"
+
+int main()
+{
+    ft_string body;
+    ft_string response;
+
+    body.append("name=libft");
+    http_post("example.com", "/submit", body, response, false);
+    return (0);
+}
+```
+
 ### Logger
 
 `Logger/logger.hpp` provides leveled logging with timestamps, formatted output

@@ -17,15 +17,7 @@ struct xml_node
     ~xml_node() noexcept;
 };
 
-/*
-Example usage:
-xml_document doc;
-doc.load_from_string("<root><child>value</child></root>");
-xml_node *root = doc.get_root();
-char *output = doc.write_to_string();
-if (output)
-    cma_free(output);
-*/
+
 
 class xml_document
 {

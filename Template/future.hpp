@@ -7,8 +7,8 @@
 #include "../PThread/pthread.hpp"
 #include <chrono>
 
-// ft_future: waits on an associated ft_promise and retrieves its value
-// Provides get, wait, and validity checks with error reporting
+
+
 
 template <typename ValueType>
 class ft_future

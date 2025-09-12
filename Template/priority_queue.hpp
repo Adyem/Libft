@@ -13,12 +13,7 @@
 #include "move.hpp"
 #include <functional>
 
-/*
- * ft_priority_queue
- * A thread-safe priority queue implemented as a binary heap.
- * Provides push, pop, top, size, empty, and clear operations
- * with error reporting.
- */
+
 
 template <typename ElementType, typename Compare = std::less<ElementType> >
 class ft_priority_queue
@@ -62,7 +57,7 @@ class ft_priority_queue
         void clear();
 };
 
-// Implementation
+
 
 template <typename ElementType, typename Compare>
 ft_priority_queue<ElementType, Compare>::ft_priority_queue(size_t initialCapacity, const Compare& comp)

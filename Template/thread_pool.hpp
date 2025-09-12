@@ -270,4 +270,4 @@ inline const char* ft_thread_pool::get_error_str() const
       return (ft_strerror(this->_error_code.load(std::memory_order_relaxed)));
 }
 
-#endif // FT_THREAD_POOL_HPP
+#endif 

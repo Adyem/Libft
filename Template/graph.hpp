@@ -13,10 +13,7 @@
 #include <utility>
 #include "move.hpp"
 
-/*
- * ft_graph
- * Graph data structure using adjacency lists with BFS and DFS traversal.
- */
+
 
 template <typename VertexType>
 class ft_graph

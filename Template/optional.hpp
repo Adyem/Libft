@@ -12,10 +12,7 @@
 #include <type_traits>
 #include <new>
 
-/*
- * ft_optional
- * Represents an optional value with thread-safe access and error reporting.
- */
+
 
 template <typename T>
 class ft_optional
@@ -229,4 +226,4 @@ const char* ft_optional<T>::get_error_str() const
     return (ft_strerror(error));
 }
 
-#endif // FT_OPTIONAL_HPP
+#endif 

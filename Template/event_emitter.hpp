@@ -11,11 +11,7 @@
 #include <utility>
 #include "move.hpp"
 
-/*
- * ft_event_emitter
- * Observer pattern utility allowing registration of callbacks
- * for specific events and emitting those events with arguments.
- */
+
 
 template <typename EventType, typename... Args>
 class ft_event_emitter
