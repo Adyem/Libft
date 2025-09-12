@@ -7,9 +7,9 @@ SRCS :=         json_parsing.cpp \
                 json_writer.cpp \
                 json_utils.cpp \
                 json_document.cpp \
-                json_validate.cpp
+                json_schema.cpp
 
-HEADERS := json.hpp document.hpp
+HEADERS := json.hpp document.hpp json_schema.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

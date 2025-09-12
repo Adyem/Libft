@@ -1,4 +1,5 @@
 #include "json.hpp"
+#include "json_schema.hpp"
 #include "../Libft/libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
@@ -24,7 +25,7 @@ static bool json_is_bool(const char *string)
     return (false);
 }
 
-bool json_validate(json_group *group, const json_schema &schema)
+bool json_validate_schema(json_group *group, const json_schema &schema)
 {
     if (!group)
         return (false);
