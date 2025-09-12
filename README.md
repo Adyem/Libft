@@ -816,6 +816,7 @@ int         rsa_generate_key_pair(uint64_t *public_key, uint64_t *private_key, u
 uint64_t    rsa_encrypt(uint64_t message, uint64_t public_key, uint64_t modulus);
 uint64_t    rsa_decrypt(uint64_t cipher, uint64_t private_key, uint64_t modulus);
 void        sha256_hash(const void *data, size_t length, unsigned char *digest);
+void        hmac_sha256(const unsigned char *key, size_t key_len, const void *data, size_t len, unsigned char *digest);
 ```
 
 RSA helpers operate on 64-bit integers and are intended for small demonstrations. Key generation with large sizes significantly impacts performance.
@@ -840,6 +841,8 @@ uint64_t decrypted = rsa_decrypt(encrypted, private_key, modulus);
 unsigned char digest[32];
 const char *message = "hello";
 sha256_hash(message, 5, digest);
+const unsigned char key[] = "secret";
+hmac_sha256(key, 6, message, 5, digest);
 ```
 
 #### Compression
