@@ -1,7 +1,9 @@
 TARGET := compression.a
 DEBUG_TARGET := compression_debug.a
 
-SRCS := compression_zlib.cpp
+SRCS := compression_zlib.cpp \
+        compression_stream.cpp \
+        compression_base64.cpp
 
 HEADERS := compression.hpp
 
