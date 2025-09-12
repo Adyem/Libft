@@ -10,6 +10,14 @@
 #endif
 #include <cstdint>
 
+#if defined(__linux__)
+# define NETWORKING_USE_EPOLL 1
+#elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+# define NETWORKING_USE_KQUEUE 1
+#else
+# define NETWORKING_USE_SELECT 1
+#endif
+
 int nw_bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 int nw_connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 int nw_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
