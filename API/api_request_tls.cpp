@@ -6,7 +6,7 @@
 #include "../Libft/libft.hpp"
 #include "../Logger/logger.hpp"
 #include "../Printf/printf.hpp"
-#include <thread>
+#include "../PThread/thread.hpp"
 #include <errno.h>
 #ifdef _WIN32
 # include <winsock2.h>
@@ -538,7 +538,7 @@ bool    api_request_string_tls_async(const char *host, uint16_t port,
         cma_free(data);
         return (false);
     }
-    std::thread thread_worker(api_tls_async_worker, data);
+    ft_thread thread_worker(api_tls_async_worker, data);
     thread_worker.detach();
     return (true);
 }

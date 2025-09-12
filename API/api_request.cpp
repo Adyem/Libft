@@ -5,7 +5,7 @@
 #include "../Libft/libft.hpp"
 #include "../Logger/logger.hpp"
 #include "../Printf/printf.hpp"
-#include <thread>
+#include "../PThread/thread.hpp"
 #include <errno.h>
 #ifndef _WIN32
 # include <fcntl.h>
@@ -731,7 +731,7 @@ bool    api_request_string_async(const char *ip, uint16_t port,
         cma_free(data);
         return (false);
     }
-    std::thread thread_worker(api_async_worker, data);
+    ft_thread thread_worker(api_async_worker, data);
     thread_worker.detach();
     return (true);
 }

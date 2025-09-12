@@ -8,8 +8,8 @@
 
 #include "vector.hpp"
 #include "queue.hpp"
-#include <thread>
-#include <functional>
+#include "../PThread/thread.hpp"
+#include "function.hpp"
 #include <cstddef>
 #include <atomic>
 #include <cerrno>
@@ -20,8 +20,8 @@
 class ft_thread_pool
 {
     private:
-        ft_vector<std::thread>        _workers;
-        ft_queue<std::function<void()> > _tasks;
+        ft_vector<ft_thread>          _workers;
+        ft_queue<ft_function<void()> > _tasks;
         size_t                        _max_tasks;
         bool                          _stop;
         size_t                        _active;
@@ -57,7 +57,7 @@ inline void ft_thread_pool::worker()
 {
     while (true)
     {
-        std::function<void()> task;
+        ft_function<void()> task;
         if (pthread_mutex_lock(&this->_mutex) != 0)
         {
             this->set_error(errno + ERRNO_OFFSET);
@@ -154,7 +154,7 @@ inline ft_thread_pool::ft_thread_pool(size_t thread_count, size_t max_tasks)
     size_t worker_index = 0;
     while (worker_index < thread_count)
     {
-        std::thread worker(&ft_thread_pool::worker, this);
+        ft_thread worker(&ft_thread_pool::worker, this);
         this->_workers.push_back(ft_move(worker));
         if (this->_workers.get_error() != ER_SUCCESS)
         {
@@ -194,7 +194,7 @@ inline void ft_thread_pool::submit(Function &&function)
         pthread_mutex_unlock(&this->_mutex);
         return ;
     }
-    std::function<void()> wrapper(ft_move(function));
+    ft_function<void()> wrapper(ft_move(function));
     this->_tasks.enqueue(ft_move(wrapper));
     if (this->_tasks.get_error() != ER_SUCCESS)
     {

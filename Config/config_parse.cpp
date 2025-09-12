@@ -4,17 +4,15 @@
 #include "../Libft/libft.hpp"
 #include "../JSon/json.hpp"
 #include <cstdio>
-#include <cstring>
-#include <cctype>
 
 static char *trim_whitespace(char *string)
 {
     if (!string)
         return (string);
-    while (*string && std::isspace(static_cast<unsigned char>(*string)))
+    while (*string && ft_isspace(static_cast<unsigned char>(*string)))
         string++;
     char *end_pointer = string + ft_strlen(string);
-    while (end_pointer > string && std::isspace(static_cast<unsigned char>(end_pointer[-1])))
+    while (end_pointer > string && ft_isspace(static_cast<unsigned char>(end_pointer[-1])))
         end_pointer--;
     *end_pointer = '\0';
     return (string);
@@ -53,7 +51,7 @@ cnfg_config *cnfg_parse(const char *filename)
     }
     char buffer[512];
     char *current_section = ft_nullptr;
-    while (std::fgets(buffer, sizeof(buffer), file))
+    while (ft_fgets(buffer, sizeof(buffer), file))
     {
         char *line_string = trim_whitespace(buffer);
         if (*line_string == '\0' || *line_string == ';' || *line_string == '#')
@@ -329,7 +327,7 @@ cnfg_config *config_load_env()
                 cnfg_free(config);
                 return (ft_nullptr);
             }
-            std::memcpy(entry->key, pair, key_length);
+            ft_memcpy(entry->key, pair, key_length);
             if (equals_sign[1])
             {
                 entry->value = cma_strdup(equals_sign + 1);
@@ -364,8 +362,8 @@ cnfg_config *config_load_file(const char *filename)
 {
     if (!filename)
         return (ft_nullptr);
-    const char *dot = std::strrchr(filename, '.');
-    if (dot && std::strcmp(dot, ".json") == 0)
+    const char *dot = ft_strrchr(filename, '.');
+    if (dot && ft_strcmp(dot, ".json") == 0)
         return (cnfg_parse_json(filename));
     return (cnfg_parse(filename));
 }
