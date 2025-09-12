@@ -14,9 +14,7 @@
 #include <new>
 #include <tuple>
 
-/*
- * Helper to get the index of a type within a parameter pack.
- */
+
 
 template <typename T, typename... Ts>
 struct variant_index;
@@ -28,9 +26,7 @@ template <typename T, typename U, typename... Ts>
 struct variant_index<T, U, Ts...>
     : std::integral_constant<size_t, 1 + variant_index<T, Ts...>::value> {};
 
-/*
- * Helper to destroy the active type based on index.
- */
+
 
 template <size_t I, typename... Ts>
 struct variant_destroyer;
@@ -53,9 +49,7 @@ struct variant_destroyer<I, T, Ts...>
     }
 };
 
-/*
- * Helper to apply a visitor based on index.
- */
+
 
 template <size_t I, typename... Ts>
 struct variant_visitor;
@@ -80,10 +74,7 @@ struct variant_visitor<I, T, Ts...>
     }
 };
 
-/*
- * ft_variant
- * Type-safe union supporting multiple types with thread-safe access.
- */
+
 
 template <typename... Types>
 class ft_variant
@@ -365,4 +356,4 @@ const char* ft_variant<Types...>::get_error_str() const
     return (ft_strerror(err));
 }
 
-#endif // FT_VARIANT_HPP
+#endif 

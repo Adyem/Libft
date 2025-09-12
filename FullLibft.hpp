@@ -96,4 +96,4 @@
 #include "Game/reputation.hpp"
 #include "Game/world.hpp"
 
-#endif // FULL_LIBFT_HPP
+#endif 
