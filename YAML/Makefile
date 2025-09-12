@@ -1,29 +1,12 @@
-TARGET := Logger.a
-DEBUG_TARGET := Logger_debug.a
+TARGET := YAML.a
+DEBUG_TARGET := YAML_debug.a
 
-SRCS := \
-    logger_log_state.cpp \
-    logger_log_rotate.cpp \
-    logger_log_level_to_str.cpp \
-    logger_log_vwrite.cpp \
-    logger_log_set_level.cpp \
-    logger_log_set_file.cpp \
-    logger_log_add_sink.cpp \
-    logger_log_remove_sink.cpp \
-    logger_log_set_alloc_logging.cpp \
-    logger_log_get_alloc_logging.cpp \
-    logger_log_set_api_logging.cpp \
-    logger_log_get_api_logging.cpp \
-    logger_log_set_color.cpp \
-    logger_log_get_color.cpp \
-    logger_log_close.cpp \
-    logger_log_debug.cpp \
-    logger_log_info.cpp \
-    logger_log_warn.cpp \
-    logger_log_error.cpp \
-    logger_logger.cpp
+SRCS := yaml_reader.cpp \
+        yaml_value.cpp \
+        yaml_reader_utils.cpp \
+        yaml_writer.cpp
 
-HEADERS := logger.hpp logger_internal.hpp
+HEADERS := yaml.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
@@ -41,13 +24,13 @@ CXX       := g++
 AR        := ar
 ARFLAGS   := rcs
 
-OBJDIR         := objs
-DEBUG_OBJDIR   := objs_debug
+OBJDIR       := objs
+DEBUG_OBJDIR := objs_debug
 
 OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
 DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
 
-CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17 -pthread
+CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17
 
 all: $(TARGET)
 

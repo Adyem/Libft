@@ -227,6 +227,17 @@ bool ft_logger::get_api_logging() const noexcept
     return (this->_api_logging);
 }
 
+void ft_logger::set_color(bool enable) noexcept
+{
+    ft_log_set_color(enable);
+    return ;
+}
+
+bool ft_logger::get_color() const noexcept
+{
+    return (ft_log_get_color());
+}
+
 void ft_logger::close() noexcept
 {
     ft_log_close();
