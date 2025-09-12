@@ -1,43 +1,50 @@
-#include <utility>
-#ifndef ft_move
-# define ft_move std::move
-#endif
 #include "../Template/promise.hpp"
 #include "../PThread/pthread.hpp"
 #include "../Errno/errno.hpp"
+#include "../System_utils/test_runner.hpp"
 #include <unistd.h>
 
-int test_ft_promise_set_get(void)
+FT_TEST(test_ft_promise_set_get, "ft_promise set and get")
 {
-    ft_promise<int> p;
-    p.set_value(42);
-    return (p.is_ready() && p.get() == 42 && p.get_error() == ER_SUCCESS);
+    ft_promise<int> promise_instance;
+
+    promise_instance.set_value(42);
+    FT_ASSERT(promise_instance.is_ready());
+    FT_ASSERT_EQ(42, promise_instance.get());
+    FT_ASSERT_EQ(ER_SUCCESS, promise_instance.get_error());
+    return (1);
 }
 
-int test_ft_promise_not_ready(void)
+FT_TEST(test_ft_promise_not_ready, "ft_promise not ready")
 {
-    ft_promise<int> p;
-    p.get();
-    return (p.get_error() == FT_EINVAL);
+    ft_promise<int> promise_instance;
+
+    promise_instance.get();
+    FT_ASSERT_EQ(FT_EINVAL, promise_instance.get_error());
+    return (1);
 }
 
-int test_pt_async_basic(void)
+FT_TEST(test_pt_async_basic, "pt_async basic")
 {
-    ft_promise<int> p;
-    if (pt_async(p, []() { return (7); }) != 0)
+    ft_promise<int> promise_instance;
+
+    if (pt_async(promise_instance, []() { return (7); }) != 0)
         return (0);
-    while (!p.is_ready())
+    while (!promise_instance.is_ready())
         usleep(1000);
-    return (p.get() == 7);
+    FT_ASSERT_EQ(7, promise_instance.get());
+    return (1);
 }
 
-int test_pt_cond_wait_signal(void)
+FT_TEST(test_pt_cond_wait_signal, "pt_cond wait signal")
 {
     pthread_mutex_t mutex;
     pthread_cond_t condition;
+    int ready;
+
     pthread_mutex_init(&mutex, ft_nullptr);
     pt_cond_init(&condition, ft_nullptr);
-    int ready = 0;
+    ready = 0;
     struct condition_data
     {
         pthread_mutex_t *mutex;
@@ -45,13 +52,15 @@ int test_pt_cond_wait_signal(void)
         int *ready;
     };
     condition_data data = { &mutex, &condition, &ready };
-    auto start_routine = [](void *arg) -> void*
+    auto start_routine = [](void *argument) -> void*
     {
-        condition_data *data = static_cast<condition_data*>(arg);
-        pthread_mutex_lock(data->mutex);
-        while (*(data->ready) == 0)
-            pt_cond_wait(data->condition, data->mutex);
-        pthread_mutex_unlock(data->mutex);
+        condition_data *condition_info;
+
+        condition_info = static_cast<condition_data*>(argument);
+        pthread_mutex_lock(condition_info->mutex);
+        while (*(condition_info->ready) == 0)
+            pt_cond_wait(condition_info->condition, condition_info->mutex);
+        pthread_mutex_unlock(condition_info->mutex);
         return (ft_nullptr);
     };
     pthread_t thread;
@@ -66,8 +75,12 @@ int test_pt_cond_wait_signal(void)
     ready = 1;
     pt_cond_signal(&condition);
     pthread_mutex_unlock(&mutex);
-    int join_result = pt_thread_join(thread, ft_nullptr);
+    int join_result;
+
+    join_result = pt_thread_join(thread, ft_nullptr);
     pt_cond_destroy(&condition);
     pthread_mutex_destroy(&mutex);
-    return (join_result == 0 && ready == 1);
+    FT_ASSERT_EQ(0, join_result);
+    FT_ASSERT_EQ(1, ready);
+    return (1);
 }

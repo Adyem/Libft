@@ -12,7 +12,7 @@ static const char *skip_whitespace(const char *string)
 
 static char *duplicate_range(const char *start, size_t length)
 {
-    char *copy = (char *)cma_malloc(length + 1);
+    char *copy = static_cast<char *>(cma_malloc(length + 1));
     if (!copy)
         return (ft_nullptr);
     size_t index = 0;
@@ -68,7 +68,7 @@ static const char *parse_node(const char *string, xml_node **out_node)
     const char *name_start = string;
     while (*string && *string != '>' && *string != ' ' && *string != '/')
         string++;
-    size_t name_length = (size_t)(string - name_start);
+    size_t name_length = static_cast<size_t>(string - name_start);
     char *name = duplicate_range(name_start, name_length);
     xml_node *node = new xml_node();
     if (!node || !name)
@@ -111,7 +111,7 @@ static const char *parse_node(const char *string, xml_node **out_node)
     {
         while (*string && !(*string == '<' && string[1] == '/'))
             string++;
-        size_t text_length = (size_t)(string - text_start);
+        size_t text_length = static_cast<size_t>(string - text_start);
         node->text = duplicate_range(text_start, text_length);
     }
     if (*string != '<' || string[1] != '/')
@@ -196,15 +196,15 @@ static int read_file_content(const char *file_path, char **out_content)
         std::fclose(file);
         return (FT_EINVAL);
     }
-    char *buffer = (char *)cma_malloc((size_t)size + 1);
+    char *buffer = static_cast<char *>(cma_malloc(static_cast<size_t>(size) + 1));
     if (!buffer)
     {
         std::fclose(file);
         return (CMA_BAD_ALLOC);
     }
-    size_t read_size = std::fread(buffer, 1, (size_t)size, file);
+    size_t read_size = std::fread(buffer, 1, static_cast<size_t>(size), file);
     std::fclose(file);
-    if (read_size != (size_t)size)
+    if (read_size != static_cast<size_t>(size))
     {
         cma_free(buffer);
         return (FT_EINVAL);
@@ -272,7 +272,7 @@ char *xml_document::write_to_string() const noexcept
     buffer.push_back('\n');
     buffer.push_back('\0');
     size_t length = buffer.size();
-    char *result = (char *)cma_malloc(length);
+    char *result = static_cast<char *>(cma_malloc(length));
     if (!result)
         return (ft_nullptr);
     size_t index = 0;

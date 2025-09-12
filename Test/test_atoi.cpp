@@ -1,29 +1,34 @@
 #include "../Libft/libft.hpp"
+#include "../System_utils/test_runner.hpp"
 #include <climits>
 #include <string>
 
-int test_atoi_simple(void)
+FT_TEST(test_atoi_simple, "ft_atoi simple")
 {
-    if (ft_atoi("42") == 42)
-        return (1);
-    return (0);
+    FT_ASSERT_EQ(42, ft_atoi("42"));
+    return (1);
 }
 
-int test_atoi_negative(void)
+FT_TEST(test_atoi_negative, "ft_atoi negative")
 {
-    if (ft_atoi("-13") == -13)
-        return (1);
-    return (0);
+    FT_ASSERT_EQ(-13, ft_atoi("-13"));
+    return (1);
 }
 
-int test_atoi_intmax(void)
+FT_TEST(test_atoi_intmax, "ft_atoi INT_MAX")
 {
-    std::string str = std::to_string(INT_MAX);
-    return (ft_atoi(str.c_str()) == INT_MAX);
+    std::string integer_string;
+
+    integer_string = std::to_string(INT_MAX);
+    FT_ASSERT_EQ(INT_MAX, ft_atoi(integer_string.c_str()));
+    return (1);
 }
 
-int test_atoi_intmin(void)
+FT_TEST(test_atoi_intmin, "ft_atoi INT_MIN")
 {
-    std::string str = std::to_string(INT_MIN);
-    return (ft_atoi(str.c_str()) == INT_MIN);
+    std::string integer_string;
+
+    integer_string = std::to_string(INT_MIN);
+    FT_ASSERT_EQ(INT_MIN, ft_atoi(integer_string.c_str()));
+    return (1);
 }

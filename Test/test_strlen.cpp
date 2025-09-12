@@ -1,25 +1,31 @@
 #include "../Libft/libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../System_utils/test_runner.hpp"
 
-int test_strlen_nullptr(void)
+FT_TEST(test_strlen_nullptr, "ft_strlen nullptr")
 {
-    if (ft_strlen(ft_nullptr) == 0)
-        return (1);
-    return (0);
+    FT_ASSERT_EQ(0, ft_strlen(ft_nullptr));
+    return (1);
 }
 
-int test_strlen_simple(void)
+FT_TEST(test_strlen_simple, "ft_strlen basic")
 {
-    if (ft_strlen("test") == 4)
-        return (1);
-    return (0);
+    FT_ASSERT_EQ(4, ft_strlen("test"));
+    return (1);
 }
 
-int test_strlen_long(void)
+FT_TEST(test_strlen_long, "ft_strlen long string")
 {
-    static char buf[1025];
-    for (int i = 0; i < 1024; ++i)
-        buf[i] = 'a';
-    buf[1024] = '\0';
-    return (ft_strlen(buf) == 1024);
+    static char buffer[1025];
+    int index;
+
+    index = 0;
+    while (index < 1024)
+    {
+        buffer[index] = 'a';
+        index++;
+    }
+    buffer[1024] = '\0';
+    FT_ASSERT_EQ(1024, ft_strlen(buffer));
+    return (1);
 }

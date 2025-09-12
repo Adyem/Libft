@@ -46,8 +46,8 @@ SUBDIRS :=  CMA \
             Config \
             Networking \
             API \
-            Compatebility \
-            Compression Encryption RNG JSon File HTML Game Time XML
+             Compatebility \
+             Compression Encryption RNG JSon File HTML Game Time XML
 
 LIB_BASES := \
   CMA/CustomMemoryAllocator \
@@ -87,6 +87,9 @@ debug: $(DEBUG_TARGET)
 
 both: all debug
 
+tests: $(TARGET)
+	$(MAKE) -C Test
+
 re: fclean all
 
 define EXTRACT
@@ -123,4 +126,4 @@ fclean:
 	$(foreach dir,$(SUBDIRS),$(MAKE) -C $(dir) fclean;)
 	$(RM) $(TARGET) $(DEBUG_TARGET)
 
-.PHONY: all debug both re clean fclean
+.PHONY: all debug both re clean fclean tests

@@ -5,6 +5,7 @@
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
 #include "../System_utils/system_utils.hpp"
+#include "../Compatebility/compatebility_file_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "basic_encryption.hpp"
 

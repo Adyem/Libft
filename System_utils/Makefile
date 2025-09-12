@@ -12,9 +12,10 @@ SRCS := System_utils_assert.cpp \
         System_utils_sigterm.cpp \
         System_utils_sysinfo.cpp \
         System_utils_file.cpp \
-        System_utils_home.cpp
+        System_utils_home.cpp \
+        test_runner.cpp
 
-HEADERS := system_utils.hpp
+HEADERS := system_utils.hpp test_runner.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
