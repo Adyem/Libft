@@ -22,5 +22,6 @@ int ft_random_geometric(double success_probability);
 int ft_random_seed(const char *seed_str = ft_nullptr);
 int rng_secure_bytes(unsigned char *buffer, size_t length);
 uint32_t ft_random_uint32(void);
+void ft_generate_uuid(char out[37]);
 
 #endif
