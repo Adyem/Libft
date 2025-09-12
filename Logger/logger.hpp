@@ -32,8 +32,7 @@ void ft_log_debug(const char *fmt, ...);
 void ft_log_info(const char *fmt, ...);
 void ft_log_warn(const char *fmt, ...);
 void ft_log_error(const char *fmt, ...);
-void ft_log_start_async();
-void ft_log_stop_async();
+void ft_log_enable_async(bool enable);
 
 class ft_logger
 {
