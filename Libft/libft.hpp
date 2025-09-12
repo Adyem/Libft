@@ -18,6 +18,7 @@ size_t             ft_strlen_size_t(const char *string);
 int                ft_strlen(const char *string);
 char            *ft_strchr(const char *string, int char_to_find);
 int                ft_atoi(const char *string);
+int             ft_validate_int(const char *input);
 void            ft_bzero(void *string, size_t size);
 void            *ft_memchr(const void *pointer, int character, size_t size);
 void            *ft_memcpy(void* destination, const void* source, size_t num);

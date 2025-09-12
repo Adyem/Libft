@@ -33,9 +33,11 @@ SRCS := math_abs.cpp \
         math_roll_parse_pm.cpp \
         math_roll_parse_utils.cpp \
         math_roll_validate_string.cpp \
-        math_roll_validate_utils.cpp
+        math_roll_validate_utils.cpp \
+        math_validate_int.cpp \
+        linear_algebra.cpp
 
-HEADERS := math.hpp roll.hpp math_internal.hpp
+HEADERS := math.hpp roll.hpp math_internal.hpp linear_algebra.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
