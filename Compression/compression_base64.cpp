@@ -44,6 +44,8 @@ unsigned char    *ft_base64_encode(const unsigned char *input_buffer, std::size_
     {
         byte_one = input_buffer[input_index];
         input_index++;
+        byte_two = 0;
+        byte_three = 0;
         has_byte_two = 0;
         has_byte_three = 0;
         if (input_index < input_size)
