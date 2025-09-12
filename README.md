@@ -756,6 +756,8 @@ float ft_random_float(void);
 float ft_random_normal(void);
 float ft_random_exponential(float lambda_value);
 int   ft_random_poisson(double lambda_value);
+int   ft_random_binomial(int trial_count, double success_probability);
+int   ft_random_geometric(double success_probability);
 int   ft_random_seed(const char *seed_str = ft_nullptr);
 int   rng_secure_bytes(unsigned char *buffer, size_t length);
 uint32_t ft_random_uint32(void);
@@ -771,6 +773,8 @@ if (rng_secure_bytes(buffer, 16) == 0)
 }
 uint32_t secure_value = ft_random_uint32();
 int occurrences = ft_random_poisson(4.0);
+int successes = ft_random_binomial(10, 0.5);
+int attempts = ft_random_geometric(0.25);
 ```
 
 Secure randomness is required for secrets such as tokens, keys, and
