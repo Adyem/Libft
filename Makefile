@@ -1,5 +1,4 @@
 OPT_LEVEL ?= 0
-
 ifeq ($(OPT_LEVEL),0)
     OPT_FLAGS = -O0 -g
 else ifeq ($(OPT_LEVEL),1)

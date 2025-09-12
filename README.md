@@ -55,6 +55,7 @@ void    ft_to_upper(char *string);
 char   *ft_strncpy(char *dst, const char *src, size_t n);
 void   *ft_memset(void *dst, int value, size_t n);
 int     ft_isspace(int c);
+char   *ft_fgets(char *string, int size, FILE *stream);
 ```
 
 `limits.hpp` exposes integer boundary constants:
@@ -230,6 +231,22 @@ int pt_rwlock_rdlock(pthread_rwlock_t *rwlock);
 int pt_rwlock_wrlock(pthread_rwlock_t *rwlock);
 int pt_rwlock_unlock(pthread_rwlock_t *rwlock);
 int pt_rwlock_destroy(pthread_rwlock_t *rwlock);
+```
+
+### Thread
+
+`PThread/thread.hpp` provides a lightweight `ft_thread` class built on POSIX threads:
+
+```
+ft_thread();
+template <typename FunctionType, typename... Args>
+ft_thread(FunctionType function, Args... args);
+~ft_thread();
+bool joinable() const;
+void join();
+void detach();
+int get_error() const;
+const char *get_error_str() const;
 ```
 
 ### C++ Classes (`CPP_class`)
@@ -560,8 +577,8 @@ components include:
 - Containers: `ft_vector`, `ft_deque`, `ft_stack`, `ft_queue`,
   `ft_priority_queue`, `ft_set`, `ft_map`, `ft_unordened_map`,
   `ft_trie`, `ft_circular_buffer`, `ft_graph` and `ft_matrix`.
-- Utility types: `ft_pair`, `ft_tuple`, `ft_optional`, `ft_variant` and
-  `ft_bitset`.
+ - Utility types: `ft_pair`, `ft_tuple`, `ft_optional`, `ft_variant`,
+   `ft_bitset` and `ft_function`.
 - Smart pointers: `ft_shared_ptr` and `ft_unique_ptr`.
 - Concurrency helpers: `ft_thread_pool`, `ft_future`, `ft_event_emitter` and
   `ft_promise`.

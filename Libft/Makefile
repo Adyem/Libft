@@ -40,6 +40,7 @@ SRCS := libft_atoi.cpp \
     libft_unsetenv.cpp \
     libft_fopen.cpp \
     libft_fclose.cpp \
+    libft_fgets.cpp \
     libft_fread.cpp \
     libft_fwrite.cpp \
     libft_fseek.cpp \

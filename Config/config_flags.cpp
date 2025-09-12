@@ -2,8 +2,6 @@
 #include "../Errno/errno.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
-#include <cstring>
-#include <cctype>
 
 char *cnfg_parse_flags(int argument_count, char **argument_values)
 {
@@ -24,7 +22,7 @@ char *cnfg_parse_flags(int argument_count, char **argument_values)
         while (argument[char_index])
         {
             char current_flag = argument[char_index];
-            if (std::isalpha(static_cast<unsigned char>(current_flag)))
+            if (ft_isalpha(static_cast<unsigned char>(current_flag)))
             {
                 if (!flags || !ft_strchr(flags, current_flag))
                 {
@@ -67,7 +65,7 @@ char **cnfg_parse_long_flags(int argument_count, char **argument_values)
         size_t flag_index = 0;
         while (flag_index < count)
         {
-            if (std::strcmp(flags[flag_index], flag_string) == 0)
+            if (ft_strcmp(flags[flag_index], flag_string) == 0)
             {
                 exists = true;
                 break ;
