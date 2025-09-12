@@ -2,18 +2,19 @@
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../System_utils/system_utils.hpp"
 #include "compression.hpp"
 
-int ft_compress_stream(FILE *input_stream, FILE *output_stream)
+int ft_compress_stream(int input_fd, int output_fd)
 {
     z_stream        stream;
     unsigned char   input_buffer[4096];
     unsigned char   output_buffer[4096];
     int             flush_mode;
     int             deflate_status;
-    std::size_t     read_bytes;
+    ssize_t         read_bytes;
 
-    if (!input_stream || !output_stream)
+    if (input_fd < 0 || output_fd < 0)
         return (1);
     ft_bzero(&stream, sizeof(stream));
     if (deflateInit(&stream, Z_BEST_COMPRESSION) != Z_OK)
@@ -21,10 +22,15 @@ int ft_compress_stream(FILE *input_stream, FILE *output_stream)
     flush_mode = Z_NO_FLUSH;
     while (flush_mode != Z_FINISH)
     {
-        read_bytes = ft_fread(input_buffer, 1, sizeof(input_buffer), input_stream);
+        read_bytes = su_read(input_fd, input_buffer, sizeof(input_buffer));
+        if (read_bytes < 0)
+        {
+            deflateEnd(&stream);
+            return (1);
+        }
         stream.next_in = input_buffer;
         stream.avail_in = static_cast<unsigned int>(read_bytes);
-        if (read_bytes < sizeof(input_buffer))
+        if (static_cast<std::size_t>(read_bytes) < sizeof(input_buffer))
             flush_mode = Z_FINISH;
         else
             flush_mode = Z_NO_FLUSH;
@@ -39,7 +45,7 @@ int ft_compress_stream(FILE *input_stream, FILE *output_stream)
                 return (1);
             }
             std::size_t produced_bytes = sizeof(output_buffer) - stream.avail_out;
-            if (ft_fwrite(output_buffer, 1, produced_bytes, output_stream) != produced_bytes)
+            if (su_write(output_fd, output_buffer, produced_bytes) != static_cast<ssize_t>(produced_bytes))
             {
                 deflateEnd(&stream);
                 return (1);
@@ -51,16 +57,16 @@ int ft_compress_stream(FILE *input_stream, FILE *output_stream)
     return (0);
 }
 
-int ft_decompress_stream(FILE *input_stream, FILE *output_stream)
+int ft_decompress_stream(int input_fd, int output_fd)
 {
     z_stream        stream;
     unsigned char   input_buffer[4096];
     unsigned char   output_buffer[4096];
     int             inflate_status;
-    std::size_t     read_bytes;
+    ssize_t         read_bytes;
     int             flush_mode;
 
-    if (!input_stream || !output_stream)
+    if (input_fd < 0 || output_fd < 0)
         return (1);
     ft_bzero(&stream, sizeof(stream));
     if (inflateInit(&stream) != Z_OK)
@@ -68,7 +74,12 @@ int ft_decompress_stream(FILE *input_stream, FILE *output_stream)
     flush_mode = Z_NO_FLUSH;
     while (flush_mode != Z_FINISH)
     {
-        read_bytes = ft_fread(input_buffer, 1, sizeof(input_buffer), input_stream);
+        read_bytes = su_read(input_fd, input_buffer, sizeof(input_buffer));
+        if (read_bytes < 0)
+        {
+            inflateEnd(&stream);
+            return (1);
+        }
         stream.next_in = input_buffer;
         stream.avail_in = static_cast<unsigned int>(read_bytes);
         if (read_bytes == 0)
@@ -86,7 +97,7 @@ int ft_decompress_stream(FILE *input_stream, FILE *output_stream)
                 return (1);
             }
             std::size_t produced_bytes = sizeof(output_buffer) - stream.avail_out;
-            if (ft_fwrite(output_buffer, 1, produced_bytes, output_stream) != produced_bytes)
+            if (su_write(output_fd, output_buffer, produced_bytes) != static_cast<ssize_t>(produced_bytes))
             {
                 inflateEnd(&stream);
                 return (1);
