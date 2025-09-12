@@ -781,6 +781,19 @@ unsigned char *decompress_buffer(const unsigned char *input_buffer, std::size_t 
 
 The returned buffers are allocated with CMA and must be freed using `cma_free`.
 
+High level helpers are also available:
+
+```
+unsigned char *ft_compress(const unsigned char *input_buffer, std::size_t input_size, std::size_t *compressed_size);
+unsigned char *ft_decompress(const unsigned char *input_buffer, std::size_t input_size, std::size_t *decompressed_size);
+int ft_compress_stream(FILE *input_stream, FILE *output_stream);
+int ft_decompress_stream(FILE *input_stream, FILE *output_stream);
+unsigned char *ft_base64_encode(const unsigned char *input_buffer, std::size_t input_size, std::size_t *encoded_size);
+unsigned char *ft_base64_decode(const unsigned char *input_buffer, std::size_t input_size, std::size_t *decoded_size);
+```
+
+The streaming functions operate on `FILE*` streams, and the Base64 helpers encode or decode buffers.
+
 #### JSon
 Creation, reading and manipulation helpers in `JSon/json.hpp`:
 
