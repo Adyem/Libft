@@ -184,6 +184,8 @@ quaternion invert() const;
 vector3 transform(const vector3 &vector) const;
 ```
 
+Normalization and inversion routines treat near-zero lengths as invalid using an epsilon check.
+
 Additional helpers for parsing expressions are available. They allocate a
 single `int` holding the result, which the caller must release with
 `cma_free`. On failure they return `ft_nullptr` and set `ft_errno`:
@@ -452,6 +454,9 @@ namespace ft {
 `Networking/networking.hpp` and `socket_class.hpp` implement a small
 socket wrapper with IPv4 and IPv6 support.
 
+The accompanying tests exercise basic send and receive paths and invalid
+configurations for both address families in `Test/test_networking.cpp`.
+
 ```
 int nw_bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 int nw_connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
@@ -689,6 +694,27 @@ const char *get_error_str() const;
 ### Additional Modules
 
 
+#### Concurrency
+`Concurrency/task_scheduler.hpp` offers `ft_task_scheduler`, combining a
+lock-free queue, thread pool and scheduler. Tasks may be submitted for
+immediate execution, delayed execution or recurring intervals and each
+submission returns a future when applicable.
+
+```
+ft_task_scheduler(size_t thread_count = 0);
+template <typename FunctionType, typename... Args>
+auto submit(FunctionType function, Args... args) -> std::future<ReturnType>;
+template <typename Rep, typename Period, typename FunctionType, typename... Args>
+auto schedule_after(std::chrono::duration<Rep, Period> delay,
+                    FunctionType function, Args... args) -> std::future<ReturnType>;
+template <typename Rep, typename Period, typename FunctionType, typename... Args>
+void schedule_every(std::chrono::duration<Rep, Period> interval,
+                    FunctionType function, Args... args);
+```
+
+Worker threads fetch jobs from a lock-free queue so producers and consumers do
+not block each other. The scheduler thread manages delayed and recurring jobs.
+
 #### Errno
 `Errno/errno.hpp` defines a thread-local `ft_errno` variable and helpers for retrieving messages.
 
@@ -786,13 +812,13 @@ High level helpers are also available:
 ```
 unsigned char *ft_compress(const unsigned char *input_buffer, std::size_t input_size, std::size_t *compressed_size);
 unsigned char *ft_decompress(const unsigned char *input_buffer, std::size_t input_size, std::size_t *decompressed_size);
-int ft_compress_stream(FILE *input_stream, FILE *output_stream);
-int ft_decompress_stream(FILE *input_stream, FILE *output_stream);
+int ft_compress_stream(int input_fd, int output_fd);
+int ft_decompress_stream(int input_fd, int output_fd);
 unsigned char *ft_base64_encode(const unsigned char *input_buffer, std::size_t input_size, std::size_t *encoded_size);
 unsigned char *ft_base64_decode(const unsigned char *input_buffer, std::size_t input_size, std::size_t *decoded_size);
 ```
 
-The streaming functions operate on `FILE*` streams, and the Base64 helpers encode or decode buffers.
+The streaming functions operate on file descriptors using `su_read` and `su_write`, and the Base64 helpers encode or decode buffers.
 
 #### JSon
 Creation, reading and manipulation helpers in `JSon/json.hpp`:
@@ -877,6 +903,26 @@ ssize_t su_read(int fd, void *buf, size_t count);
 ssize_t su_write(int fd, const void *buf, size_t count);
 int     ft_close(int fd);
 ```
+A simple `su_file` struct wraps a file descriptor for stream-style I/O:
+
+```
+typedef struct su_file
+{
+    int _descriptor;
+} su_file;
+
+su_file *su_fopen(const char *path_name);
+su_file *su_fopen(const char *path_name, int flags);
+su_file *su_fopen(const char *path_name, int flags, mode_t mode);
+int     su_fclose(su_file *stream);
+size_t  su_fread(void *buffer, size_t size, size_t count, su_file *stream);
+size_t  su_fwrite(const void *buffer, size_t size, size_t count, su_file *stream);
+int     su_fseek(su_file *stream, long offset, int origin);
+long    su_ftell(su_file *stream);
+```
+`System_utils_file_open.cpp`, `System_utils_file_io.cpp` and
+`System_utils_file_stream.cpp` contain the implementations, keeping each source
+file focused and small.
 #### Config
 `Config/config.hpp` parses simple configuration files:
 

@@ -47,7 +47,7 @@ SUBDIRS :=  CMA \
             Networking \
             API \
              Compatebility \
-             Compression Encryption RNG JSon File HTML Game Time XML
+             Compression Encryption RNG JSon File HTML Game Time XML Concurrency
 
 LIB_BASES := \
   CMA/CustomMemoryAllocator \
@@ -73,7 +73,8 @@ LIB_BASES := \
   HTML/HTMLParser \
   Game/Game \
   Time/time \
-  XML/XMLParser
+  XML/XMLParser \
+  Concurrency/Concurrency
 
 LIBS       := $(addsuffix .a, $(LIB_BASES))
 DEBUG_LIBS := $(addsuffix _debug.a, $(LIB_BASES))

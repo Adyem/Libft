@@ -32,4 +32,18 @@ void    su_sigsegv(void);
 void    su_sigterm(void);
 void    su_assert(bool condition, const char *message);
 
+typedef struct su_file
+{
+    int _descriptor;
+} su_file;
+
+su_file *su_fopen(const char *path_name);
+su_file *su_fopen(const char *path_name, int flags);
+su_file *su_fopen(const char *path_name, int flags, mode_t mode);
+int     su_fclose(su_file *stream);
+size_t  su_fread(void *buffer, size_t size, size_t count, su_file *stream);
+size_t  su_fwrite(const void *buffer, size_t size, size_t count, su_file *stream);
+int     su_fseek(su_file *stream, long offset, int origin);
+long    su_ftell(su_file *stream);
+
 #endif
