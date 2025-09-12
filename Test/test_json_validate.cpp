@@ -1,8 +1,9 @@
 #include "../JSon/json.hpp"
 #include "../JSon/document.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../System_utils/test_runner.hpp"
 
-int test_json_validate_success(void)
+FT_TEST(test_json_validate_schema_success, "json schema validation success")
 {
     json_document document;
     json_group *group = document.create_group("user");
@@ -24,12 +25,12 @@ int test_json_validate_success(void)
     name_field.next = &age_field;
     json_schema schema;
     schema.fields = &name_field;
-    if (json_validate(group, schema) == true)
-        return (1);
-    return (0);
+    bool result = json_validate_schema(group, schema);
+    FT_ASSERT_EQ(true, result);
+    return (1);
 }
 
-int test_json_validate_missing_field(void)
+FT_TEST(test_json_validate_schema_missing_field, "json schema validation missing field")
 {
     json_document document;
     json_group *group = document.create_group("user");
@@ -49,7 +50,7 @@ int test_json_validate_missing_field(void)
     name_field.next = &age_field;
     json_schema schema;
     schema.fields = &name_field;
-    if (json_validate(group, schema) == false)
-        return (1);
-    return (0);
+    bool result = json_validate_schema(group, schema);
+    FT_ASSERT_EQ(false, result);
+    return (1);
 }
