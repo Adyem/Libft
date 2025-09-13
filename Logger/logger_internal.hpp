@@ -7,6 +7,7 @@
 #include "../Errno/errno.hpp"
 #include "logger.hpp"
 #include "logger_log_async.hpp"
+#include "logger_syslog.hpp"
 
 extern ft_logger *g_logger;
 extern t_log_level g_level;
@@ -28,10 +29,16 @@ struct s_file_sink
     size_t    max_size;
 };
 
+struct s_network_sink
+{
+    int socket_fd;
+};
+
 extern ft_vector<s_log_sink> g_sinks;
 
 void ft_log_rotate(s_file_sink *sink);
 void ft_file_sink(const char *message, void *user_data);
+void ft_network_sink(const char *message, void *user_data);
 const char *ft_level_to_str(t_log_level level);
 void ft_log_vwrite(t_log_level level, const char *fmt, va_list args);
 

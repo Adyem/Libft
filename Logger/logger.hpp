@@ -27,6 +27,9 @@ bool    ft_log_get_api_logging();
 void    ft_log_set_color(bool enable);
 bool    ft_log_get_color();
 void    ft_json_sink(const char *message, void *user_data);
+int     ft_log_set_syslog(const char *identifier);
+int     ft_log_set_remote_sink(const char *host, unsigned short port,
+                               bool use_tcp);
 
 void ft_log_debug(const char *fmt, ...);
 void ft_log_info(const char *fmt, ...);
@@ -60,6 +63,9 @@ class ft_logger
         void set_color(bool enable) noexcept;
         bool get_color() const noexcept;
         void close() noexcept;
+        int  set_syslog(const char *identifier) noexcept;
+        int  set_remote_sink(const char *host, unsigned short port,
+                             bool use_tcp) noexcept;
 
         void debug(const char *fmt, ...) noexcept;
         void info(const char *fmt, ...) noexcept;
