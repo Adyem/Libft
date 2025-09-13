@@ -51,7 +51,7 @@ The current suite exercises components across multiple modules:
 - **String**: `ft_string_view`
 - **JSon**: schema validation
 - **YAML**: round-trip parsing
-- **Game**: `ft_world::process_events`, `ft_world::plan_route` and `ft_pathfinding`
+- **Game**: `ft_world` persistence, `ft_world::process_events`, `ft_world::plan_route`, `ft_pathfinding`, and `ft_crafting`
 - **Encryption**: key generation utilities
 
 Additional cases verify whitespace parsing, overlapping ranges, truncating copies, partial zeroing, empty needles,
@@ -1430,10 +1430,75 @@ xml_node *get_root() const noexcept;
 ```
 
 #### Game
-Basic game related classes include `ft_character`, `ft_item`, `ft_inventory`,
-`ft_equipment`, `ft_upgrade`, `ft_world`, `ft_event`, `ft_map3d`, `ft_quest`, `ft_reputation`,
-`ft_buff`, `ft_debuff`, `ft_achievement`, `ft_experience_table`, and `ft_crafting`. Each class
-is summarized below.
+The Game module provides small building blocks for RPG-style mechanics. It includes world persistence, event queues, pathfinding helpers, equipment management, and crafting.
+
+Core classes include `ft_character`, `ft_item`, `ft_inventory`, `ft_equipment`, `ft_upgrade`, `ft_world`, `ft_event`, `ft_map3d`, `ft_quest`, `ft_reputation`, `ft_buff`, `ft_debuff`, `ft_achievement`, `ft_experience_table`, and `ft_crafting`. Each class is summarized below.
+
+The `ft_world` class can persist game state using JSON files and track timed events.
+
+```
+ft_world world;
+ft_character character;
+ft_inventory inventory;
+world.save_to_file("save.json", character, inventory);
+world.load_from_file("save.json", character, inventory);
+```
+
+Events are stored in a simple map and can expire over time.
+
+```
+ft_event spawn;
+spawn.set_duration(3);
+world.get_events().insert(1, spawn);
+world.process_events();
+```
+
+Call `ft_world::process_events` each tick to decrement durations and remove expired entries. `ft_world::plan_route` exposes grid pathfinding through the world object.
+
+Both helpers use the JSon module to read and write the `world`, `character`, `inventory`, and `equipment` groups.
+
+Characters manage gear through an `ft_equipment` container. Slots such as head, chest, and weapon can be equipped or unequipped and the appropriate stat modifiers are applied automatically.
+
+```
+ft_item sword;
+sword.set_modifier1_id(2);
+sword.set_modifier1_value(5);
+hero.equip_item(EQUIP_WEAPON, sword);
+hero.unequip_item(EQUIP_WEAPON);
+```
+
+`ft_equipment` applies and removes modifiers as items are equipped or unequipped.
+
+##### Pathfinding
+
+`ft_pathfinding` computes routes on grids and graphs using an A* search where nonzero grid values block movement.
+
+```
+ft_map3d grid(3, 3, 1, 0);
+ft_pathfinding finder;
+ft_vector<ft_path_step> path;
+finder.astar_grid(grid, 0, 0, 0, 2, 2, 0, path);
+```
+
+`ft_world::plan_route` wraps grid pathfinding for convenience.
+
+```
+ft_world world;
+world.plan_route(grid, 0, 0, 0, 2, 2, 0, path);
+```
+
+##### Crafting
+
+`ft_crafting` stores crafting recipes and converts ingredients into new items. `craft_item` verifies ingredients, removes them from the inventory, and adds the crafted result.
+
+```
+ft_crafting crafting;
+ft_vector<int> ingredients;
+ingredients.push_back(1);
+ingredients.push_back(2);
+crafting.register_recipe(1, ft_move(ingredients));
+crafting.craft_item(inventory, 1, sword);
+```
 
 #### `ft_character`
 ```

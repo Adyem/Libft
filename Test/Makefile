@@ -35,8 +35,7 @@ endif
 
 CXX       := g++
 
-COMPILE_FLAGS ?= -Wall -Wextra -Werror -std=c++17
-COMPILE_FLAGS += $(OPT_FLAGS) -pthread
+COMPILE_FLAGS := -Wall -Wextra -Werror -std=c++17 $(OPT_FLAGS) -pthread -Wno-missing-declarations
 CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Libft\"
 LDFLAGS := -lz
 export COMPILE_FLAGS
