@@ -8,6 +8,7 @@ SRCS := networking_socket_class.cpp \
         networking_socket_wrapper_functions.cpp \
         networking_ssl_wrapper.cpp \
         networking_nonblocking.cpp \
+        networking_event_loop.cpp \
         http_client.cpp \
         http_server.cpp \
         websocket_client.cpp \

@@ -26,7 +26,7 @@ SRCS := \
     logger_syslog.cpp \
     logger_network.cpp
 
-HEADERS := logger.hpp logger_internal.hpp logger_log_async.hpp logger_syslog.hpp
+HEADERS := logger.hpp logger_internal.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

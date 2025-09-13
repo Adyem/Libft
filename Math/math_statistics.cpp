@@ -85,6 +85,7 @@ double ft_mode(const double *values, int array_size)
     int current_count;
     int best_count;
     double mode_value;
+    double epsilon;
 
     if (array_size <= 0)
         return (0.0);
@@ -95,9 +96,11 @@ double ft_mode(const double *values, int array_size)
     current_count = 1;
     best_count = 1;
     mode_value = sorted_values[0];
+    epsilon = 0.000001;
     while (array_index < array_size)
     {
-        if (sorted_values[array_index] == sorted_values[array_index - 1])
+        if (math_absdiff(sorted_values[array_index],
+                          sorted_values[array_index - 1]) <= epsilon)
         {
             current_count++;
             if (current_count > best_count)
