@@ -10,6 +10,8 @@ world.save_to_file("save.json", character, inventory);
 world.load_from_file("save.json", character, inventory);
 ```
 
+Call `ft_world::process_events` each tick to decrement event durations and remove expired entries.
+
 Both helpers use the JSon module to read and write the `world`, `character`, `inventory`, and `equipment` groups.
 
 Characters manage gear through an `ft_equipment` container. Slots such as head, chest, and weapon can be equipped or unequipped and the appropriate stat modifiers are applied automatically.
