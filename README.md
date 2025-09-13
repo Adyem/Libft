@@ -171,6 +171,11 @@ double      ft_tan(double value);
 double      math_deg2rad(double degrees);
 int         math_validate_int(const char *input);
 double      math_rad2deg(double radians);
+double      ft_mean(const double *values, int array_size);
+double      ft_median(const double *values, int array_size);
+double      ft_mode(const double *values, int array_size);
+double      ft_variance(const double *values, int array_size);
+double      ft_stddev(const double *values, int array_size);
 ```
 
 Example usage:
@@ -178,6 +183,12 @@ Example usage:
 ```
 double sine = ft_sin(math_deg2rad(90.0));
 double tangent = ft_tan(math_deg2rad(45.0));
+double numbers[] = {1.0, 2.0, 2.0, 3.0};
+double mean = ft_mean(numbers, 4);
+double median = ft_median(numbers, 4);
+double mode = ft_mode(numbers, 4);
+double variance = ft_variance(numbers, 4);
+double standard_deviation = ft_stddev(numbers, 4);
 ```
 
 Basic linear algebra types are provided in `linear_algebra.hpp`.
