@@ -135,7 +135,7 @@ void ft_file_watch::event_loop()
     char buffer[4096];
     while (this->_running)
     {
-        int length;
+        ssize_t length;
         char *pointer;
         struct inotify_event *event;
 
@@ -143,9 +143,9 @@ void ft_file_watch::event_loop()
         if (length <= 0)
             continue;
         pointer = buffer;
-        while (pointer < buffer + length)
+        while (pointer < buffer + static_cast<size_t>(length))
         {
-            event = (struct inotify_event*)pointer;
+            event = reinterpret_cast<struct inotify_event *>(pointer);
             if (this->_callback != ft_nullptr)
             {
                 if (event->mask & IN_CREATE)
@@ -155,7 +155,7 @@ void ft_file_watch::event_loop()
                 else if (event->mask & IN_DELETE)
                     this->_callback(event->name, FILE_WATCH_EVENT_DELETE, this->_user_data);
             }
-            pointer += sizeof(struct inotify_event) + event->len;
+            pointer += sizeof(struct inotify_event) + static_cast<size_t>(event->len);
         }
     }
 #elif defined(__APPLE__) || defined(__FreeBSD__)
@@ -184,7 +184,7 @@ void ft_file_watch::event_loop()
             FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_LAST_WRITE,
             &bytes_transferred, ft_nullptr, ft_nullptr))
         {
-            notification = (FILE_NOTIFY_INFORMATION*)buffer;
+            notification = reinterpret_cast<FILE_NOTIFY_INFORMATION *>(buffer);
             if (this->_callback != ft_nullptr)
             {
                 if (notification->Action == FILE_ACTION_ADDED)
