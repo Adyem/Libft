@@ -2,6 +2,7 @@
 # define LOGGER_HPP
 
 #include <cstddef>
+#include <cstdarg>
 
 enum t_log_level {
     LOG_LEVEL_DEBUG = 0,
@@ -27,6 +28,7 @@ bool    ft_log_get_api_logging();
 void    ft_log_set_color(bool enable);
 bool    ft_log_get_color();
 void    ft_json_sink(const char *message, void *user_data);
+void    ft_syslog_sink(const char *message, void *user_data);
 int     ft_log_set_syslog(const char *identifier);
 int     ft_log_set_remote_sink(const char *host, unsigned short port,
                                bool use_tcp);
@@ -36,6 +38,7 @@ void ft_log_info(const char *fmt, ...);
 void ft_log_warn(const char *fmt, ...);
 void ft_log_error(const char *fmt, ...);
 void ft_log_enable_async(bool enable);
+void ft_log_enqueue(t_log_level level, const char *fmt, va_list args);
 
 class ft_logger
 {

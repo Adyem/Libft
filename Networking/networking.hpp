@@ -29,6 +29,20 @@ int nw_poll(int *read_file_descriptors, int read_count,
             int *write_file_descriptors, int write_count,
             int timeout_milliseconds);
 
+struct event_loop
+{
+    int *read_file_descriptors;
+    int read_count;
+    int *write_file_descriptors;
+    int write_count;
+};
+
+void event_loop_init(event_loop *loop);
+void event_loop_clear(event_loop *loop);
+int event_loop_add_socket(event_loop *loop, int socket_fd, bool is_write);
+int event_loop_remove_socket(event_loop *loop, int socket_fd, bool is_write);
+int event_loop_run(event_loop *loop, int timeout_milliseconds);
+
 enum class SocketType
 {
     SERVER,

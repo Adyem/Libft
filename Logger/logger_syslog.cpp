@@ -1,7 +1,6 @@
 #include "logger_internal.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "logger_syslog.hpp"
 
 int ft_log_set_syslog(const char *identifier)
 {
