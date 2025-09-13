@@ -33,6 +33,22 @@ const ft_map<int, ft_event> &ft_world::get_events() const noexcept
     return (this->_events);
 }
 
+void ft_world::process_events(int ticks) noexcept
+{
+    Pair<int, ft_event> *pair_pointer = this->_events.end();
+    size_t current_index = this->_events.size();
+    while (current_index > 0)
+    {
+        --current_index;
+        --pair_pointer;
+        ft_event &current_event = pair_pointer->value;
+        current_event.sub_duration(ticks);
+        if (current_event.get_duration() <= 0)
+            this->_events.remove(pair_pointer->key);
+    }
+    return ;
+}
+
 int ft_world::save_to_file(const char *file_path, const ft_character &character, const ft_inventory &inventory) const noexcept
 {
     json_group *groups = ft_nullptr;
