@@ -154,11 +154,19 @@ ft_string_view<CharType> ft_string_view<CharType>::substr(size_t position, size_
         result.set_error(FT_EINVAL);
         return (result);
     }
-    size_t available;
-    available = this->_size - position;
-    if (count == npos || count > available)
-        count = available;
-    return (ft_string_view<CharType>(this->_data + position, count));
+    else
+    {
+        size_t available;
+        available = this->_size - position;
+        if (count == npos || count > available)
+            count = available;
+        const unsigned char* byte_ptr;
+        byte_ptr = reinterpret_cast<const unsigned char*>(this->_data);
+        byte_ptr += position * sizeof(CharType);
+        const CharType* new_data;
+        new_data = reinterpret_cast<const CharType*>(byte_ptr);
+        return (ft_string_view<CharType>(new_data, count));
+    }
 }
 
 template <typename CharType>
