@@ -1165,6 +1165,30 @@ long    su_ftell(su_file *stream);
 `System_utils_file_open.cpp`, `System_utils_file_io.cpp` and
 `System_utils_file_stream.cpp` contain the implementations, keeping each source
 file focused and small.
+#### Storage
+`Storage/kv_store.hpp` offers a lightweight JSON-backed key-value database:
+
+```
+int kv_set(const char *key_string, const char *value_string);
+const char *kv_get(const char *key_string) const;
+int kv_delete(const char *key_string);
+int kv_flush() const;
+```
+
+Create an instance with the path to a JSON file. Values are kept in memory
+until `kv_flush` writes them to disk.
+
+```
+kv_store store("data.json");
+store.kv_set("theme", "dark");
+const char *theme = store.kv_get("theme");
+store.kv_delete("unused");
+store.kv_flush();
+```
+
+Errors set the thread-local `ft_errno` and are accessible through `get_error`
+and `get_error_str`.
+
 #### Config
 `Config/config.hpp` parses simple configuration files:
 
