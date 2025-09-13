@@ -74,8 +74,9 @@ int test_game_simulation(void)
     meeting.set_id(1);
     meeting.set_duration(5);
     overworld.get_events().insert(meeting.get_id(), meeting);
+    overworld.process_events(1);
     Pair<int, ft_event>* eentry = overworld.get_events().find(1);
-    if (!eentry || eentry->value.get_duration() != 5)
+    if (!eentry || eentry->value.get_duration() != 4)
         return (0);
 
     ft_inventory pack(2);

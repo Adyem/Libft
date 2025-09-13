@@ -51,7 +51,7 @@ The current suite exercises components across multiple modules:
 - **String**: `ft_string_view`
 - **JSon**: schema validation
 - **YAML**: round-trip parsing
-- **Game**: `ft_world::plan_route` and `ft_pathfinding`
+- **Game**: `ft_world::process_events`, `ft_world::plan_route` and `ft_pathfinding`
 - **Encryption**: key generation utilities
 
 Additional cases verify whitespace parsing, overlapping ranges, truncating copies, partial zeroing, empty needles,
@@ -1600,6 +1600,7 @@ void sub_modifier4(int mod) noexcept;
 ```
 ft_map<int, ft_event>       &get_events() noexcept;
 const ft_map<int, ft_event> &get_events() const noexcept;
+void process_events(int ticks) noexcept;
 int save_to_file(const char *file_path, const ft_character &character, const ft_inventory &inventory) const noexcept;
 int load_from_file(const char *file_path, ft_character &character, ft_inventory &inventory) noexcept;
 int plan_route(const ft_map3d &grid, size_t start_x, size_t start_y, size_t start_z, size_t goal_x, size_t goal_y, size_t goal_z, ft_vector<ft_path_step> &path) const noexcept;
