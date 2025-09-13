@@ -40,3 +40,16 @@ finder.astar_grid(grid, 0, 0, 0, 2, 2, 0, path);
 ft_world world;
 world.plan_route(grid, 0, 0, 0, 2, 2, 0, path);
 ```
+
+## Crafting
+
+`ft_crafting` stores crafting recipes and converts ingredients into new items.
+
+```
+ft_crafting crafting;
+ft_vector<int> ingredients;
+ingredients.push_back(1);
+ingredients.push_back(2);
+crafting.register_recipe(1, ft_move(ingredients));
+crafting.craft_item(inventory, 1, sword);
+```
