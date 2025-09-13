@@ -1056,6 +1056,23 @@ ft_string normalized = file_path_normalize("dir//sub\\file.txt");
 
 On POSIX systems these evaluate to `dir/file.txt` and `dir/sub/file.txt` respectively.
 
+`File/file_watch.hpp` offers a simple `ft_file_watch` class for monitoring
+directories. It invokes a user supplied callback whenever files are created,
+modified or deleted in the watched directory:
+
+```
+void on_file_event(const char *name, int event, void *data);
+
+ft_file_watch watcher;
+watcher.watch_directory("dir", on_file_event, ft_nullptr);
+/* ... */
+watcher.stop();
+```
+
+The implementation uses inotify on Linux, kqueue on BSD and macOS and
+`ReadDirectoryChangesW` on Windows. These platform APIs must be available when
+building the library.
+
 `System_utils/system_utils.hpp` provides cross-platform file descriptor utilities:
 
 ```
