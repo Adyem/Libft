@@ -11,3 +11,21 @@ world.load_from_file("save.json", character, inventory);
 ```
 
 Both helpers use the JSon module to read and write the `world`, `character`, and `inventory` groups.
+
+## Pathfinding
+
+`ft_pathfinding` computes routes on grids and graphs.
+
+```
+ft_map3d grid(3, 3, 1, 0);
+ft_pathfinding finder;
+ft_vector<ft_path_step> path;
+finder.astar_grid(grid, 0, 0, 0, 2, 2, 0, path);
+```
+
+`ft_world::plan_route` wraps grid pathfinding for convenience.
+
+```
+ft_world world;
+world.plan_route(grid, 0, 0, 0, 2, 2, 0, path);
+```
