@@ -1432,7 +1432,7 @@ xml_node *get_root() const noexcept;
 #### Game
 Basic game related classes include `ft_character`, `ft_item`, `ft_inventory`,
 `ft_equipment`, `ft_upgrade`, `ft_world`, `ft_event`, `ft_map3d`, `ft_quest`, `ft_reputation`,
-`ft_buff`, `ft_debuff`, `ft_achievement`, and `ft_experience_table`. Each class
+`ft_buff`, `ft_debuff`, `ft_achievement`, `ft_experience_table`, and `ft_crafting`. Each class
 is summarized below.
 
 #### `ft_character`
@@ -1757,6 +1757,16 @@ void set_progress(int id, int progress) noexcept;
 void add_progress(int id, int value) noexcept;
 bool is_goal_complete(int id) const noexcept;
 bool is_complete() const noexcept;
+```
+
+#### `ft_crafting`
+```
+ft_map<int, ft_vector<int>>       &get_recipes() noexcept;
+const ft_map<int, ft_vector<int>> &get_recipes() const noexcept;
+int register_recipe(int recipe_id, ft_vector<int> &&ingredients) noexcept;
+int craft_item(ft_inventory &inventory, int recipe_id, const ft_item &result) noexcept;
+int get_error() const noexcept;
+const char *get_error_str() const noexcept;
 ```
 
 #### `ft_experience_table`
