@@ -12,6 +12,8 @@ json_group *serialize_world(const ft_world &world);
 int deserialize_world(ft_world &world, json_group *group);
 json_group *serialize_inventory(const ft_inventory &inventory);
 int deserialize_inventory(ft_inventory &inventory, json_group *group);
+json_group *serialize_equipment(const ft_character &character);
+int deserialize_equipment(ft_character &character, json_group *group);
 
 ft_world::ft_world() noexcept
     : _events(), _error(ER_SUCCESS)
@@ -57,6 +59,14 @@ int ft_world::save_to_file(const char *file_path, const ft_character &character,
         return (this->_error);
     }
     json_append_group(&groups, inventory_group);
+    json_group *equipment_group = serialize_equipment(character);
+    if (!equipment_group)
+    {
+        json_free_groups(groups);
+        this->set_error(ft_errno);
+        return (this->_error);
+    }
+    json_append_group(&groups, equipment_group);
     if (json_write_to_file(file_path, groups) != 0)
     {
         json_free_groups(groups);
@@ -79,7 +89,8 @@ int ft_world::load_from_file(const char *file_path, ft_character &character, ft_
     json_group *world_group = json_find_group(groups, "world");
     json_group *character_group = json_find_group(groups, "character");
     json_group *inventory_group = json_find_group(groups, "inventory");
-    if (!world_group || !character_group || !inventory_group)
+    json_group *equipment_group = json_find_group(groups, "equipment");
+    if (!world_group || !character_group || !inventory_group || !equipment_group)
     {
         json_free_groups(groups);
         this->set_error(GAME_GENERAL_ERROR);
@@ -89,7 +100,8 @@ int ft_world::load_from_file(const char *file_path, ft_character &character, ft_
     inventory.get_items().clear();
     if (deserialize_world(*this, world_group) != ER_SUCCESS ||
         deserialize_character(character, character_group) != ER_SUCCESS ||
-        deserialize_inventory(inventory, inventory_group) != ER_SUCCESS)
+        deserialize_inventory(inventory, inventory_group) != ER_SUCCESS ||
+        deserialize_equipment(character, equipment_group) != ER_SUCCESS)
     {
         json_free_groups(groups);
         this->set_error(ft_errno);

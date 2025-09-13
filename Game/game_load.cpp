@@ -10,6 +10,7 @@
 int deserialize_character(ft_character &character, json_group *group);
 int deserialize_world(ft_world &world, json_group *group);
 int deserialize_inventory(ft_inventory &inventory, json_group *group);
+int deserialize_equipment(ft_character &character, json_group *group);
 
 static int parse_item_field(json_group *group, const ft_string &key, int &out_value)
 {
@@ -155,6 +156,44 @@ int deserialize_inventory(ft_inventory &inventory, json_group *group)
             return (inventory.get_error());
         item_index++;
     }
+    return (ER_SUCCESS);
+}
+
+int deserialize_equipment(ft_character &character, json_group *group)
+{
+    json_item *present = json_find_item(group, "head_present");
+    if (present && ft_atoi(present->value) == 1)
+    {
+        ft_item item;
+        if (build_item_from_group(item, group, "head") != ER_SUCCESS)
+            return (GAME_GENERAL_ERROR);
+        if (character.equip_item(EQUIP_HEAD, item) != ER_SUCCESS)
+            return (character.get_error());
+    }
+    else
+        character.unequip_item(EQUIP_HEAD);
+    present = json_find_item(group, "chest_present");
+    if (present && ft_atoi(present->value) == 1)
+    {
+        ft_item item;
+        if (build_item_from_group(item, group, "chest") != ER_SUCCESS)
+            return (GAME_GENERAL_ERROR);
+        if (character.equip_item(EQUIP_CHEST, item) != ER_SUCCESS)
+            return (character.get_error());
+    }
+    else
+        character.unequip_item(EQUIP_CHEST);
+    present = json_find_item(group, "weapon_present");
+    if (present && ft_atoi(present->value) == 1)
+    {
+        ft_item item;
+        if (build_item_from_group(item, group, "weapon") != ER_SUCCESS)
+            return (GAME_GENERAL_ERROR);
+        if (character.equip_item(EQUIP_WEAPON, item) != ER_SUCCESS)
+            return (character.get_error());
+    }
+    else
+        character.unequip_item(EQUIP_WEAPON);
     return (ER_SUCCESS);
 }
 

@@ -162,7 +162,7 @@ ft_character::ft_character() noexcept
       _coins(0), _valor(0), _experience(0), _x(0), _y(0), _z(0),
       _fire_res{0, 0}, _frost_res{0, 0}, _lightning_res{0, 0},
       _air_res{0, 0}, _earth_res{0, 0}, _chaos_res{0, 0},
-      _physical_res{0, 0}, _buffs(), _debuffs(), _upgrades(), _quests(), _achievements(), _reputation(),
+      _physical_res{0, 0}, _buffs(), _debuffs(), _upgrades(), _quests(), _achievements(), _reputation(), _inventory(), _equipment(),
       _error(ER_SUCCESS)
 {
     if (this->_buffs.get_error() != ER_SUCCESS)
@@ -534,6 +534,73 @@ const ft_experience_table &ft_character::get_experience_table() const noexcept
 int ft_character::get_level() const noexcept
 {
     return (this->_experience_table.get_level(this->_experience));
+}
+
+void ft_character::apply_modifier(const ft_item_modifier &mod, int sign) noexcept
+{
+    if (mod.id == 1)
+        this->_armor += mod.value * sign;
+    else if (mod.id == 2)
+        this->_might += mod.value * sign;
+    else if (mod.id == 3)
+        this->_agility += mod.value * sign;
+    else if (mod.id == 4)
+        this->_endurance += mod.value * sign;
+    else if (mod.id == 5)
+        this->_reason += mod.value * sign;
+    else if (mod.id == 6)
+        this->_insigh += mod.value * sign;
+    else if (mod.id == 7)
+        this->_presence += mod.value * sign;
+    else if (mod.id == 8)
+        this->_hit_points += mod.value * sign;
+    return ;
+}
+
+int ft_character::equip_item(int slot, const ft_item &item) noexcept
+{
+    ft_item *current = this->_equipment.get_item(slot);
+    if (current)
+    {
+        this->apply_modifier(current->get_modifier1(), -1);
+        this->apply_modifier(current->get_modifier2(), -1);
+        this->apply_modifier(current->get_modifier3(), -1);
+        this->apply_modifier(current->get_modifier4(), -1);
+    }
+    if (this->_equipment.equip(slot, item) != ER_SUCCESS)
+    {
+        this->set_error(this->_equipment.get_error());
+        return (this->_error);
+    }
+    this->apply_modifier(item.get_modifier1(), 1);
+    this->apply_modifier(item.get_modifier2(), 1);
+    this->apply_modifier(item.get_modifier3(), 1);
+    this->apply_modifier(item.get_modifier4(), 1);
+    return (ER_SUCCESS);
+}
+
+void ft_character::unequip_item(int slot) noexcept
+{
+    ft_item *item = this->_equipment.get_item(slot);
+    if (item)
+    {
+        this->apply_modifier(item->get_modifier1(), -1);
+        this->apply_modifier(item->get_modifier2(), -1);
+        this->apply_modifier(item->get_modifier3(), -1);
+        this->apply_modifier(item->get_modifier4(), -1);
+    }
+    this->_equipment.unequip(slot);
+    return ;
+}
+
+ft_item *ft_character::get_equipped_item(int slot) noexcept
+{
+    return (this->_equipment.get_item(slot));
+}
+
+const ft_item *ft_character::get_equipped_item(int slot) const noexcept
+{
+    return (this->_equipment.get_item(slot));
 }
 
 int ft_character::get_error() const noexcept

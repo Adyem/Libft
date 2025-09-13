@@ -2,11 +2,11 @@ TARGET := Game.a
 DEBUG_TARGET := Game_debug.a
 
 SRCS := game_map3d.cpp game_character.cpp game_quest.cpp game_achievement.cpp game_reputation.cpp game_buff.cpp game_debuff.cpp \
-game_upgrade.cpp game_event.cpp game_world.cpp game_item.cpp game_inventory.cpp game_save.cpp game_load.cpp \
+game_upgrade.cpp game_event.cpp game_world.cpp game_item.cpp game_inventory.cpp game_equipment.cpp game_save.cpp game_load.cpp \
 game_experience_table.cpp game_pathfinding.cpp
 
 HEADERS := map3d.hpp character.hpp quest.hpp achievement.hpp reputation.hpp buff.hpp debuff.hpp \
-   upgrade.hpp event.hpp world.hpp item.hpp inventory.hpp \
+   upgrade.hpp event.hpp world.hpp item.hpp inventory.hpp equipment.hpp \
    experience_table.hpp pathfinding.hpp
 
 ifeq ($(OS),Windows_NT)
