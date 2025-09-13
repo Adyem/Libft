@@ -10,6 +10,7 @@
 #include "../../Game/event.hpp"
 #include "../../Game/inventory.hpp"
 #include "../../Errno/errno.hpp"
+#include "../../JSon/json.hpp"
 #include <cstdio>
 
 int test_game_simulation(void)
@@ -17,7 +18,7 @@ int test_game_simulation(void)
     ft_character hero;
     hero.set_hit_points(50);
     hero.set_might(10);
-    hero.set_armor(5);
+    hero.set_physical_armor(5);
 
     ft_map3d grid(3, 3, 1, 0);
     grid.set(1, 1, 0, 1);
@@ -37,8 +38,8 @@ int test_game_simulation(void)
     weakness.set_id(2);
     weakness.set_modifier1(-2);
     hero.get_debuffs().insert(weakness.get_id(), weakness);
-    hero.set_armor(hero.get_armor() + weakness.get_modifier1());
-    if (hero.get_armor() != 3)
+    hero.set_physical_armor(hero.get_physical_armor() + weakness.get_modifier1());
+    if (hero.get_physical_armor() != 3)
         return (0);
 
     ft_upgrade upgrade;
@@ -321,4 +322,47 @@ int test_quest_progress(void)
         return (0);
     q.advance_phase();
     return (q.get_current_phase() == 3);
+}
+
+int test_restore_individual_armor(void)
+{
+    ft_character hero;
+    hero.set_physical_armor(10);
+    hero.set_magic_armor(8);
+    hero.set_damage_rule(FT_DAMAGE_RULE_BUFFER);
+    hero.take_damage(5, FT_DAMAGE_PHYSICAL);
+    hero.take_damage(3, FT_DAMAGE_MAGICAL);
+    if (hero.get_current_physical_armor() != 5 || hero.get_current_magic_armor() != 5)
+        return (0);
+    hero.restore_physical_armor();
+    if (hero.get_current_physical_armor() != 10 || hero.get_current_magic_armor() != 5)
+        return (0);
+    hero.restore_magic_armor();
+    if (hero.get_current_magic_armor() != 8)
+        return (0);
+    return (1);
+}
+
+int test_character_serialization_damage(void)
+{
+    ft_character hero;
+    hero.set_hit_points(50);
+    hero.set_physical_armor(10);
+    hero.set_magic_armor(8);
+    hero.set_damage_rule(FT_DAMAGE_RULE_BUFFER);
+    hero.take_damage(4, FT_DAMAGE_PHYSICAL);
+    hero.take_damage(2, FT_DAMAGE_MAGICAL);
+    json_group *group = serialize_character(hero);
+    if (!group)
+        return (0);
+    ft_character clone;
+    deserialize_character(clone, group);
+    json_free_groups(group);
+    if (clone.get_current_physical_armor() != 6)
+        return (0);
+    if (clone.get_current_magic_armor() != 6)
+        return (0);
+    if (clone.get_damage_rule() != FT_DAMAGE_RULE_BUFFER)
+        return (0);
+    return (1);
 }
