@@ -1,0 +1,29 @@
+#include "../../Libft/libft.hpp"
+#include "../../CPP_class/class_nullptr.hpp"
+#include "../../System_utils/test_runner.hpp"
+
+FT_TEST(test_strchr_basic, "ft_strchr basic")
+{
+    const char *string = "hello";
+    FT_ASSERT_EQ(string + 1, ft_strchr(string, 'e'));
+    return (1);
+}
+
+FT_TEST(test_strchr_not_found, "ft_strchr not found")
+{
+    FT_ASSERT_EQ(ft_nullptr, ft_strchr("hello", 'x'));
+    return (1);
+}
+
+FT_TEST(test_strchr_null, "ft_strchr nullptr")
+{
+    FT_ASSERT_EQ(ft_nullptr, ft_strchr(ft_nullptr, 'a'));
+    return (1);
+}
+
+FT_TEST(test_strchr_terminator, "ft_strchr terminator")
+{
+    const char *string = "hello";
+    FT_ASSERT_EQ(string + 5, ft_strchr(string, '\0'));
+    return (1);
+}

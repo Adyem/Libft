@@ -65,32 +65,3 @@ arithmetic. Large key sizes drastically slow down operations and may exceed
 the limits of this module. For real-world security, use keys of at least 2048
 bits and a vetted cryptographic library.
 
-## ECC
-
-`ecc.hpp` exposes helpers for generating Curve25519 key pairs, deriving shared
-secrets and signing messages.
-
-### Usage
-
-```
-unsigned char public_key[ECT_PUBLIC_KEY_SIZE];
-unsigned char private_key[ECT_PRIVATE_KEY_SIZE];
-unsigned char peer_public[ECT_PUBLIC_KEY_SIZE];
-unsigned char peer_private[ECT_PRIVATE_KEY_SIZE];
-unsigned char shared_secret[ECT_SHARED_SECRET_SIZE];
-unsigned char signature[ECT_SIGNATURE_SIZE];
-const unsigned char message[] = "hello";
-
-ect_generate_keypair(public_key, private_key);
-ect_generate_keypair(peer_public, peer_private);
-ect_compute_shared_secret(shared_secret, private_key, peer_public);
-ect_sign(private_key, message, 5, signature);
-if (ect_verify(public_key, message, 5, signature) == 0)
-    ;
-```
-
-### Warning
-
-Curve25519 offers strong security with small key sizes, but signature and
-shared secret helpers in this module are thin wrappers around `libsodium`.
-Always validate inputs and keep private keys confidential.

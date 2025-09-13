@@ -1,12 +1,9 @@
 TARGET := libft_tests
 DEBUG_TARGET := libft_tests_debug
 
-EFF_SRCS :=
+EFF_SRCS := $(wildcard Efficiency/*.cpp)
 
-SRCS := main.cpp test_atoi.cpp test_isdigit.cpp test_memset.cpp test_strcmp.cpp \
-       test_strlen.cpp test_promise.cpp test_networking.cpp test_linear_algebra.cpp test_validate_int.cpp \
-       test_task_scheduler.cpp test_json_validate.cpp test_rng.cpp test_http_server.cpp test_logger.cpp test_logger_async.cpp test_yaml.cpp \
-       test_quaternion.cpp test_string_view.cpp test_encryption_ecc.cpp
+SRCS := main.cpp $(wildcard Test/*.cpp)
 
 ifeq ($(OS),Windows_NT)
     MKDIR = mkdir
@@ -40,8 +37,8 @@ CXX       := g++
 
 COMPILE_FLAGS ?= -Wall -Wextra -Werror -std=c++17
 COMPILE_FLAGS += $(OPT_FLAGS) -pthread
-CFLAGS := $(COMPILE_FLAGS)
-LDFLAGS := -lz -lsodium
+CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Libft\"
+LDFLAGS := -lz
 export COMPILE_FLAGS
 
 OBJDIR       := objs
@@ -58,6 +55,17 @@ $(TARGET): $(OBJS) ../Full_Libft.a
 $(OBJDIR)/%.o: %.cpp
 	$(MKDIR) $(dir $@)
 	$(CXX) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/Test/test_promise.o $(OBJDIR)/Test/test_task_scheduler.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Concurrency\"
+$(OBJDIR)/Test/test_networking.o $(OBJDIR)/Test/test_http_server.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Networking\"
+$(OBJDIR)/Test/test_logger.o $(OBJDIR)/Test/test_logger_async.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Logger\"
+$(OBJDIR)/Test/test_json_validate.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"JSon\"
+$(OBJDIR)/Test/test_yaml.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"YAML\"
+$(OBJDIR)/Test/test_rng.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"RNG\"
+$(OBJDIR)/Test/test_linear_algebra.o $(OBJDIR)/Test/test_quaternion.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Math\"
+$(OBJDIR)/Test/test_string_view.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"String\"
+$(OBJDIR)/Test/test_pathfinding.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Game\"
+$(OBJDIR)/Test/test_encryption_key.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Encryption\"
 
 debug: CXXFLAGS += -DDEBUG=1
 debug: $(DEBUG_TARGET)

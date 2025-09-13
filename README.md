@@ -27,16 +27,38 @@ make tests
 ./Test/libft_tests
 ```
 
+Functional tests reside in `Test/Test` and performance benchmarks in `Test/Efficiency`.
+
 The test runner prints `OK` or `KO` for each registered case and
 summarizes the total. Detailed assertion failures are written to
 `test_failures.log` with the source file and line number of the failing
-check.
+check. Output is grouped by module so related tests appear together.
 
 Each test uses the `FT_TEST` macro, which registers the case at program
 startup so all linked test files run automatically.
 
-The current suite exercises core routines such as `ft_atoi`, `ft_isdigit`,
-`ft_memset`, `ft_strcmp`, `ft_strlen`, and basic promise utilities.
+The current suite exercises components across multiple modules:
+
+- **Libft**: `ft_atoi`, `ft_atol`, `ft_bzero`, `ft_isdigit`, `ft_isalpha`, `ft_isalnum`, `ft_islower`, `ft_isupper`, `ft_isprint`, `ft_isspace`, `ft_memchr`,
+  `ft_memcmp`, `ft_memcpy`, `ft_memdup`, `ft_memmove`, `ft_memset`, `ft_strchr`, `ft_strcmp`, `ft_strjoin_multiple`, `ft_strlcat`, `ft_strlcpy`, `ft_strncpy`, `ft_strlen`, `ft_strncmp`,
+  `ft_strnstr`, `ft_strstr`, `ft_strrchr`, `ft_strmapi`, `ft_striteri`, `ft_strtok`, `ft_strtol`, `ft_strtoul`, `ft_setenv`, `ft_unsetenv`, `ft_getenv`, `ft_to_lower`, `ft_to_upper`,
+  `ft_fopen`, `ft_fclose`, `ft_fgets`, `ft_time_ms`, `ft_time_format`
+- **Concurrency**: `ft_promise`, `ft_task_scheduler`
+- **Networking**: IPv4 and IPv6 send/receive paths and a simple HTTP server
+- **Logger**: color toggling, JSON sink, asynchronous logging
+- **Math**: vector, matrix, and quaternion helpers
+- **RNG**: normal, exponential, Poisson, binomial, and geometric distributions
+- **String**: `ft_string_view`
+- **JSon**: schema validation
+- **YAML**: round-trip parsing
+- **Game**: `ft_world::plan_route` and `ft_pathfinding`
+- **Encryption**: key generation utilities
+
+Additional cases verify whitespace parsing, overlapping ranges, truncating copies, partial zeroing, empty needles,
+zero-length operations, null pointers, zero-size buffers, searches for the terminating character,
+prefix comparisons, boundary digits, non-letter characters, embedded null bytes,
+unsigned-byte comparisons, empty strings, repeated delimiters, index-based mapping, zero padding, empty haystacks,
+negative fill values, overflow bytes and both-null comparisons.
 
 To build the debug version use `make debug`. Individual sub-modules can be built by
 entering their directory and running `make`.
@@ -73,9 +95,19 @@ void    ft_to_lower(char *string);
 void    ft_to_upper(char *string);
 char   *ft_strncpy(char *dst, const char *src, size_t n);
 char   *ft_strtok(char *string, const char *delimiters);
+char   *ft_strjoin_multiple(int count, ...);
+long    ft_strtol(const char *input_string, char **end_pointer, int numeric_base);
+unsigned long ft_strtoul(const char *nptr, char **endptr, int base);
+int     ft_setenv(const char *name, const char *value, int overwrite);
+int     ft_unsetenv(const char *name);
+char   *ft_getenv(const char *name);
 void   *ft_memset(void *dst, int value, size_t n);
 int     ft_isspace(int c);
 char   *ft_fgets(char *string, int size, FILE *stream);
+FILE   *ft_fopen(const char *filename, const char *mode);
+int     ft_fclose(FILE *stream);
+long    ft_time_ms(void);
+char   *ft_time_format(char *buffer, size_t buffer_size);
 ```
 
 `limits.hpp` exposes integer boundary constants:
@@ -906,10 +938,6 @@ uint64_t    rsa_encrypt(uint64_t message, uint64_t public_key, uint64_t modulus)
 uint64_t    rsa_decrypt(uint64_t cipher, uint64_t private_key, uint64_t modulus);
 void        sha256_hash(const void *data, size_t length, unsigned char *digest);
 void        hmac_sha256(const unsigned char *key, size_t key_len, const void *data, size_t len, unsigned char *digest);
-int         ect_generate_keypair(unsigned char *public_key, unsigned char *private_key);
-int         ect_compute_shared_secret(unsigned char *shared_secret, const unsigned char *private_key, const unsigned char *peer_public_key);
-int         ect_sign(const unsigned char *private_key, const unsigned char *message, unsigned long long message_length, unsigned char *signature);
-int         ect_verify(const unsigned char *public_key, const unsigned char *message, unsigned long long message_length, const unsigned char *signature);
 ```
 
 RSA helpers operate on 64-bit integers and are intended for small demonstrations. Key generation with large sizes significantly impacts performance.
@@ -1570,6 +1598,7 @@ ft_map<int, ft_event>       &get_events() noexcept;
 const ft_map<int, ft_event> &get_events() const noexcept;
 int save_to_file(const char *file_path, const ft_character &character, const ft_inventory &inventory) const noexcept;
 int load_from_file(const char *file_path, ft_character &character, ft_inventory &inventory) noexcept;
+int plan_route(const ft_map3d &grid, size_t start_x, size_t start_y, size_t start_z, size_t goal_x, size_t goal_y, size_t goal_z, ft_vector<ft_path_step> &path) const noexcept;
 int get_error() const noexcept;
 const char *get_error_str() const noexcept;
 ```
@@ -1613,6 +1642,16 @@ size_t  get_depth() const;
 int     get_error() const;
 const char *get_error_str() const;
 ```
+
+#### `ft_pathfinding`
+```
+ft_pathfinding();
+int astar_grid(const ft_map3d &grid, size_t start_x, size_t start_y, size_t start_z, size_t goal_x, size_t goal_y, size_t goal_z, ft_vector<ft_path_step> &out_path) const noexcept;
+int dijkstra_graph(const ft_graph<int> &graph, size_t start_vertex, size_t goal_vertex, ft_vector<size_t> &out_path) const noexcept;
+int get_error() const noexcept;
+const char *get_error_str() const noexcept;
+```
+Included via `FullLibft.hpp`.
 
 #### `ft_quest`
 ```
