@@ -100,6 +100,22 @@ int ft_world::load_from_file(const char *file_path, ft_character &character, ft_
     return (ER_SUCCESS);
 }
 
+int ft_world::plan_route(const ft_map3d &grid,
+    size_t start_x, size_t start_y, size_t start_z,
+    size_t goal_x, size_t goal_y, size_t goal_z,
+    ft_vector<ft_path_step> &path) const noexcept
+{
+    ft_pathfinding finder;
+    if (finder.astar_grid(grid, start_x, start_y, start_z,
+            goal_x, goal_y, goal_z, path) != ER_SUCCESS)
+    {
+        this->set_error(finder.get_error());
+        return (this->_error);
+    }
+    this->set_error(ER_SUCCESS);
+    return (ER_SUCCESS);
+}
+
 int ft_world::get_error() const noexcept
 {
     return (this->_error);

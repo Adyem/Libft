@@ -12,6 +12,7 @@
 #include <cstddef>
 #include <utility>
 #include "move.hpp"
+#include "vector.hpp"
 
 
 
@@ -56,6 +57,8 @@ class ft_graph
 
         template <typename Func>
         void dfs(size_t start, Func visit);
+
+        void neighbors(size_t index, ft_vector<size_t> &out) const;
 
         size_t size() const;
         bool   empty() const;
@@ -382,6 +385,27 @@ void ft_graph<VertexType>::dfs(size_t start, Func visit)
         }
     }
     cma_free(visited);
+    this->_mutex.unlock(THREAD_ID);
+    return ;
+}
+
+template <typename VertexType>
+void ft_graph<VertexType>::neighbors(size_t index, ft_vector<size_t> &out) const
+{
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        return ;
+    if (index >= this->_size)
+    {
+        this->set_error(GRAPH_NOT_FOUND);
+        this->_mutex.unlock(THREAD_ID);
+        return ;
+    }
+    size_t neighbor_index = 0;
+    while (neighbor_index < this->_nodes[index]._degree)
+    {
+        out.push_back(this->_nodes[index]._edges[neighbor_index]);
+        ++neighbor_index;
+    }
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
