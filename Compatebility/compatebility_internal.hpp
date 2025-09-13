@@ -78,4 +78,8 @@ unsigned long long cmp_get_total_memory(void);
 
 ssize_t cmp_su_write(int file_descriptor, const char *buffer, size_t length);
 
+int cmp_syslog_open(const char *identifier);
+void cmp_syslog_write(const char *message);
+void cmp_syslog_close(void);
+
 #endif
