@@ -69,7 +69,7 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
     size_t dx = distance_component(start_x, goal_x);
     size_t dy = distance_component(start_y, goal_y);
     size_t dz = distance_component(start_z, goal_z);
-    start.f = dx + dy + dz;
+    start.f = static_cast<int>(dx + dy + dz);
     start.parent = -1;
     nodes.push_back(start);
     open_set.push_back(0);
@@ -161,7 +161,7 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
                         size_t ndx = distance_component(neighbor_x, goal_x);
                         size_t ndy = distance_component(neighbor_y, goal_y);
                         size_t ndz = distance_component(neighbor_z, goal_z);
-                        nodes[search_index].f = tentative_g + ndx + ndy + ndz;
+                        nodes[search_index].f = tentative_g + static_cast<int>(ndx + ndy + ndz);
                         nodes[search_index].parent = static_cast<int>(current_index);
                         size_t check_index = 0;
                         bool in_open = false;
@@ -185,7 +185,7 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
                     size_t ndx = distance_component(neighbor_x, goal_x);
                     size_t ndy = distance_component(neighbor_y, goal_y);
                     size_t ndz = distance_component(neighbor_z, goal_z);
-                    new_node.f = tentative_g + ndx + ndy + ndz;
+                    new_node.f = tentative_g + static_cast<int>(ndx + ndy + ndz);
                     new_node.parent = static_cast<int>(current_index);
                     nodes.push_back(new_node);
                     open_set.push_back(nodes.size() - 1);
