@@ -1200,6 +1200,8 @@ void    time_sleep(unsigned int seconds);
 void    time_sleep_ms(unsigned int milliseconds);
 size_t  time_strftime(char *buffer, size_t size, const char *format, const t_time_info *time_info);
 ft_string    time_format_iso8601(t_time time_value);
+bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_time *timestamp_output);
+bool    time_parse_custom(const char *string_input, const char *format, std::tm *time_output, t_time *timestamp_output);
 ```
 
 `t_time` stores seconds since the Unix epoch and `t_time_info` holds the broken-down components.
@@ -1209,6 +1211,15 @@ Example:
 ```
 ft_string timestamp = time_format_iso8601(0);
 // timestamp == "1970-01-01T00:00:00Z"
+
+t_time parsed_epoch;
+if (time_parse_iso8601("1970-01-01T00:00:00Z", NULL, &parsed_epoch))
+{
+    // parsed_epoch == 0
+}
+
+std::tm time_data;
+time_parse_custom("1970/01/01", "%Y/%m/%d", &time_data, NULL);
 ```
 
 `timer.hpp` defines a small timer class:

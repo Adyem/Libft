@@ -10,7 +10,8 @@ SRCS := time_now.cpp \
         time_fps.cpp \
         time_timer.cpp \
         time_strftime.cpp \
-        time_format.cpp
+        time_format.cpp \
+        time_parse.cpp
 
 HEADERS := time.hpp \
            fps.hpp \
