@@ -742,11 +742,6 @@ unsigned int    su_get_cpu_count(void);
 unsigned long long su_get_total_memory(void);
 ```
 
-Internally these helpers rely on compatibility wrappers that are not part of the
-public API. The low level `ft_open`, `ft_read` and `ft_write` functions are now
-declared in `Compatebility/compatebility_file_internal.hpp` and are used only
-within the library.
-
 ### Template Utilities
 
 `Template/` contains a wide range of generic helpers and containers. Key
@@ -1064,13 +1059,13 @@ On POSIX systems these evaluate to `dir/file.txt` and `dir/sub/file.txt` respect
 `System_utils/system_utils.hpp` provides cross-platform file descriptor utilities:
 
 ```
-void    ft_initialize_standard_file_descriptors();
+void    cmp_initialize_standard_file_descriptors();
 int     su_open(const char *pathname);
 int     su_open(const char *pathname, int flags);
 int     su_open(const char *pathname, int flags, mode_t mode);
 ssize_t su_read(int fd, void *buf, size_t count);
 ssize_t su_write(int fd, const void *buf, size_t count);
-int     ft_close(int fd);
+int     cmp_close(int fd);
 ```
 A simple `su_file` struct wraps a file descriptor for stream-style I/O:
 
