@@ -11,6 +11,14 @@
 #include "inventory.hpp"
 #include "equipment.hpp"
 #include "experience_table.hpp"
+#include <cstdint>
+
+#define FT_DAMAGE_PHYSICAL 0
+#define FT_DAMAGE_MAGICAL 1
+#define FT_ARMOR_POINT_REDUCTION 0.95
+#define FT_DAMAGE_RULE_FLAT 0
+#define FT_DAMAGE_RULE_SCALED 1
+#define FT_DAMAGE_RULE_BUFFER 2
 
 struct json_group;
 
@@ -24,7 +32,13 @@ class ft_character
 {
     protected:
         int _hit_points;
-        int _armor;
+        int _physical_armor;
+        int _magic_armor;
+        int _current_physical_armor;
+        int _current_magic_armor;
+        double _physical_damage_multiplier;
+        double _magic_damage_multiplier;
+        uint8_t _damage_rule;
         int _might;
         int _agility;
         int _endurance;
@@ -68,8 +82,23 @@ class ft_character
 
         bool is_alive() const noexcept;
 
-        int get_armor() const noexcept;
-        void set_armor(int armor) noexcept;
+        int get_physical_armor() const noexcept;
+        void set_physical_armor(int armor) noexcept;
+        int get_magic_armor() const noexcept;
+        void set_magic_armor(int armor) noexcept;
+        int get_current_physical_armor() const noexcept;
+        void set_current_physical_armor(int armor) noexcept;
+        int get_current_magic_armor() const noexcept;
+        void set_current_magic_armor(int armor) noexcept;
+        void restore_physical_armor() noexcept;
+        void restore_magic_armor() noexcept;
+        void restore_armor() noexcept;
+        void set_damage_rule(uint8_t rule) noexcept;
+        uint8_t get_damage_rule() const noexcept;
+        void take_damage(long long damage, uint8_t type) noexcept;
+        void take_damage_flat(long long damage, uint8_t type) noexcept;
+        void take_damage_scaled(long long damage, uint8_t type) noexcept;
+        void take_damage_buffer(long long damage, uint8_t type) noexcept;
 
         int get_might() const noexcept;
         void set_might(int might) noexcept;

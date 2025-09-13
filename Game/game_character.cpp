@@ -15,7 +15,35 @@ json_group *serialize_character(const ft_character &character)
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
-    item = json_create_item("armor", character.get_armor());
+    item = json_create_item("physical_armor", character.get_physical_armor());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    item = json_create_item("magic_armor", character.get_magic_armor());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    item = json_create_item("current_physical_armor", character.get_current_physical_armor());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    item = json_create_item("current_magic_armor", character.get_current_magic_armor());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    item = json_create_item("damage_rule", character.get_damage_rule());
     if (!item)
     {
         json_free_groups(group);
@@ -114,9 +142,21 @@ int deserialize_character(ft_character &character, json_group *group)
     json_item *item = json_find_item(group, "hit_points");
     if (item)
         character.set_hit_points(ft_atoi(item->value));
-    item = json_find_item(group, "armor");
+    item = json_find_item(group, "physical_armor");
     if (item)
-        character.set_armor(ft_atoi(item->value));
+        character.set_physical_armor(ft_atoi(item->value));
+    item = json_find_item(group, "magic_armor");
+    if (item)
+        character.set_magic_armor(ft_atoi(item->value));
+    item = json_find_item(group, "current_physical_armor");
+    if (item)
+        character.set_current_physical_armor(ft_atoi(item->value));
+    item = json_find_item(group, "current_magic_armor");
+    if (item)
+        character.set_current_magic_armor(ft_atoi(item->value));
+    item = json_find_item(group, "damage_rule");
+    if (item)
+        character.set_damage_rule(static_cast<uint8_t>(ft_atoi(item->value)));
     item = json_find_item(group, "might");
     if (item)
         character.set_might(ft_atoi(item->value));
@@ -157,8 +197,11 @@ int deserialize_character(ft_character &character, json_group *group)
 }
 
 ft_character::ft_character() noexcept
-    : _hit_points(0), _armor(0), _might(0), _agility(0),
-      _endurance(0), _reason(0), _insigh(0), _presence(0),
+    : _hit_points(0), _physical_armor(0), _magic_armor(0),
+      _current_physical_armor(0), _current_magic_armor(0),
+      _physical_damage_multiplier(1.0), _magic_damage_multiplier(1.0),
+      _damage_rule(FT_DAMAGE_RULE_FLAT),
+      _might(0), _agility(0), _endurance(0), _reason(0), _insigh(0), _presence(0),
       _coins(0), _valor(0), _experience(0), _x(0), _y(0), _z(0),
       _fire_res{0, 0}, _frost_res{0, 0}, _lightning_res{0, 0},
       _air_res{0, 0}, _earth_res{0, 0}, _chaos_res{0, 0},
@@ -196,14 +239,186 @@ bool ft_character::is_alive() const noexcept
     return (this->_hit_points > 0);
 }
 
-int ft_character::get_armor() const noexcept
+int ft_character::get_physical_armor() const noexcept
 {
-    return (this->_armor);
+    return (this->_physical_armor);
 }
 
-void ft_character::set_armor(int armor) noexcept
+void ft_character::set_physical_armor(int armor) noexcept
 {
-    this->_armor = armor;
+    this->_physical_armor = armor;
+    this->_current_physical_armor = armor;
+    this->_physical_damage_multiplier = 1.0;
+    int i = 0;
+    while (i < armor)
+    {
+        this->_physical_damage_multiplier = this->_physical_damage_multiplier * FT_ARMOR_POINT_REDUCTION;
+        i++;
+    }
+    return ;
+}
+
+int ft_character::get_magic_armor() const noexcept
+{
+    return (this->_magic_armor);
+}
+
+void ft_character::set_magic_armor(int armor) noexcept
+{
+    this->_magic_armor = armor;
+    this->_current_magic_armor = armor;
+    this->_magic_damage_multiplier = 1.0;
+    int i = 0;
+    while (i < armor)
+    {
+        this->_magic_damage_multiplier = this->_magic_damage_multiplier * FT_ARMOR_POINT_REDUCTION;
+        i++;
+    }
+    return ;
+}
+
+int ft_character::get_current_physical_armor() const noexcept
+{
+    return (this->_current_physical_armor);
+}
+
+void ft_character::set_current_physical_armor(int armor) noexcept
+{
+    this->_current_physical_armor = armor;
+    return ;
+}
+
+int ft_character::get_current_magic_armor() const noexcept
+{
+    return (this->_current_magic_armor);
+}
+
+void ft_character::set_current_magic_armor(int armor) noexcept
+{
+    this->_current_magic_armor = armor;
+    return ;
+}
+
+void ft_character::restore_physical_armor() noexcept
+{
+    this->_current_physical_armor = this->_physical_armor;
+    return ;
+}
+
+void ft_character::restore_magic_armor() noexcept
+{
+    this->_current_magic_armor = this->_magic_armor;
+    return ;
+}
+
+void ft_character::restore_armor() noexcept
+{
+    this->restore_physical_armor();
+    this->restore_magic_armor();
+    return ;
+}
+
+void ft_character::set_damage_rule(uint8_t rule) noexcept
+{
+    this->_damage_rule = rule;
+    return ;
+}
+
+uint8_t ft_character::get_damage_rule() const noexcept
+{
+    return (this->_damage_rule);
+}
+
+void ft_character::take_damage(long long damage, uint8_t type) noexcept
+{
+    if (this->_damage_rule == FT_DAMAGE_RULE_FLAT)
+        this->take_damage_flat(damage, type);
+    else if (this->_damage_rule == FT_DAMAGE_RULE_SCALED)
+        this->take_damage_scaled(damage, type);
+    else if (this->_damage_rule == FT_DAMAGE_RULE_BUFFER)
+        this->take_damage_buffer(damage, type);
+    return ;
+}
+
+void ft_character::take_damage_flat(long long damage, uint8_t type) noexcept
+{
+    if (damage < 0)
+        damage = 0;
+    if (type == FT_DAMAGE_PHYSICAL)
+        damage = damage - this->_physical_armor;
+    else if (type == FT_DAMAGE_MAGICAL)
+        damage = damage - this->_magic_armor;
+    if (damage < 0)
+        damage = 0;
+    this->_hit_points = this->_hit_points - static_cast<int>(damage);
+    if (this->_hit_points < 0)
+        this->_hit_points = 0;
+    return ;
+}
+
+void ft_character::take_damage_scaled(long long damage, uint8_t type) noexcept
+{
+    if (damage < 0)
+        damage = 0;
+    if (type == FT_DAMAGE_PHYSICAL)
+    {
+        double scaled = static_cast<double>(damage) * this->_physical_damage_multiplier;
+        damage = static_cast<long long>(scaled);
+    }
+    else if (type == FT_DAMAGE_MAGICAL)
+    {
+        double scaled = static_cast<double>(damage) * this->_magic_damage_multiplier;
+        damage = static_cast<long long>(scaled);
+    }
+    if (damage < 0)
+        damage = 0;
+    this->_hit_points = this->_hit_points - static_cast<int>(damage);
+    if (this->_hit_points < 0)
+        this->_hit_points = 0;
+    return ;
+}
+
+void ft_character::take_damage_buffer(long long damage, uint8_t type) noexcept
+{
+    if (damage < 0)
+        damage = 0;
+    if (type == FT_DAMAGE_PHYSICAL)
+    {
+        if (this->_current_physical_armor > 0)
+        {
+            if (damage <= this->_current_physical_armor)
+            {
+                this->_current_physical_armor = this->_current_physical_armor - static_cast<int>(damage);
+                damage = 0;
+            }
+            else
+            {
+                damage = damage - this->_current_physical_armor;
+                this->_current_physical_armor = 0;
+            }
+        }
+    }
+    else if (type == FT_DAMAGE_MAGICAL)
+    {
+        if (this->_current_magic_armor > 0)
+        {
+            if (damage <= this->_current_magic_armor)
+            {
+                this->_current_magic_armor = this->_current_magic_armor - static_cast<int>(damage);
+                damage = 0;
+            }
+            else
+            {
+                damage = damage - this->_current_magic_armor;
+                this->_current_magic_armor = 0;
+            }
+        }
+    }
+    if (damage < 0)
+        damage = 0;
+    this->_hit_points = this->_hit_points - static_cast<int>(damage);
+    if (this->_hit_points < 0)
+        this->_hit_points = 0;
     return ;
 }
 
@@ -539,7 +754,9 @@ int ft_character::get_level() const noexcept
 void ft_character::apply_modifier(const ft_item_modifier &mod, int sign) noexcept
 {
     if (mod.id == 1)
-        this->_armor += mod.value * sign;
+        this->set_physical_armor(this->_physical_armor + mod.value * sign);
+    else if (mod.id == 9)
+        this->set_magic_armor(this->_magic_armor + mod.value * sign);
     else if (mod.id == 2)
         this->_might += mod.value * sign;
     else if (mod.id == 3)
