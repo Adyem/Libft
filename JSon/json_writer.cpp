@@ -7,7 +7,7 @@
 #include "document.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
-#include "../Compatebility/compatebility_file_internal.hpp"
+#include "../Compatebility/compatebility_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
 
@@ -39,7 +39,7 @@ int json_write_to_file(const char *file_path, json_group *groups)
         group_iterator = group_iterator->next;
     }
     pf_printf_fd(file_descriptor, "}\n");
-    ft_close(file_descriptor);
+    cmp_close(file_descriptor);
     return (0);
 }
 

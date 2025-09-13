@@ -1,5 +1,5 @@
 #include "system_utils.hpp"
-#include "../Compatebility/compatebility_file_internal.hpp"
+#include "../Compatebility/compatebility_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include <cstdlib>
 
@@ -52,7 +52,7 @@ int su_fclose(su_file *stream)
 
     if (stream == ft_nullptr)
         return (-1);
-    result = ft_close(stream->_descriptor);
+    result = cmp_close(stream->_descriptor);
     std::free(stream);
     return (result);
 }

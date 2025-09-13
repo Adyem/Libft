@@ -3,6 +3,7 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Compatebility/compatebility_internal.hpp"
 #include <cstdlib>
 
 static pt_mutex g_env_mutex;
@@ -39,11 +40,7 @@ int su_putenv(char *string)
         return (-1);
     if (g_env_mutex.lock(THREAD_ID) != SUCCES)
         return (-1);
-#if defined(_WIN32) || defined(_WIN64)
-    result = _putenv(string);
-#else
-    result = putenv(string);
-#endif
+    result = cmp_putenv(string);
     if (g_env_mutex.unlock(THREAD_ID) != SUCCES)
         return (-1);
     return (result);

@@ -23,3 +23,5 @@ For .hpp files, prefix only those meant for internal use with the module name.
 Generic headers may use the module's name, while class headers should use the class name as the filename.
 
 Always update README.md to reflect any code changes.
+
+Code that relies on platform-specific features must place only the platform-dependent portions into helper functions in the Compatebility module.
