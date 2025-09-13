@@ -1,6 +1,8 @@
 #ifndef PAIR_HPP
 # define PAIR_HPP
 
+#include "move.hpp"
+
 template <typename KeyType, typename ValueType>
 struct Pair
 {
@@ -9,11 +11,19 @@ struct Pair
 
     Pair() = default;
     Pair(const KeyType &k, const ValueType &v);
+    Pair(const KeyType &k, ValueType &&v);
 };
 
 template <typename KeyType, typename ValueType>
 Pair<KeyType, ValueType>::Pair(const KeyType &k, const ValueType &v)
         : key(k), value(v)
+{
+    return ;
+}
+
+template <typename KeyType, typename ValueType>
+Pair<KeyType, ValueType>::Pair(const KeyType &k, ValueType &&v)
+        : key(k), value(ft_move(v))
 {
     return ;
 }

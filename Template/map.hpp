@@ -34,6 +34,7 @@ class ft_map
         ~ft_map();
 
         void        insert(const Key& key, const MappedType& value);
+        void        insert(const Key& key, MappedType&& value);
         Pair<Key, MappedType> *find(const Key& key);
         void        remove(const Key& key);
         bool        empty() const;
@@ -227,6 +228,37 @@ void ft_map<Key, MappedType>::insert(const Key& key, const MappedType& value)
         }
     }
     construct_at(&this->_data[this->_size], Pair<Key, MappedType>(key, value));
+    ++this->_size;
+    this->_mutex.unlock(THREAD_ID);
+    return ;
+}
+
+template <typename Key, typename MappedType>
+void ft_map<Key, MappedType>::insert(const Key& key, MappedType&& value)
+{
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        set_error(PT_ERR_MUTEX_OWNER);
+        return ;
+    }
+    this->_error = ER_SUCCESS;
+    size_t index = find_index(key);
+    if (index != this->_size)
+    {
+        this->_data[index].value = ft_move(value);
+        this->_mutex.unlock(THREAD_ID);
+        return ;
+    }
+    if (this->_size == this->_capacity)
+    {
+        resize(this->_capacity * 2);
+        if (this->_error != ER_SUCCESS)
+        {
+            this->_mutex.unlock(THREAD_ID);
+            return ;
+        }
+    }
+    construct_at(&this->_data[this->_size], Pair<Key, MappedType>(key, ft_move(value)));
     ++this->_size;
     this->_mutex.unlock(THREAD_ID);
     return ;
