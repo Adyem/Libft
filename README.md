@@ -527,11 +527,17 @@ int nw_set_nonblocking(int socket_fd);
 int nw_poll(int *read_file_descriptors, int read_count,
             int *write_file_descriptors, int write_count,
             int timeout_milliseconds);
+void event_loop_init(event_loop *loop);
+void event_loop_clear(event_loop *loop);
+int  event_loop_add_socket(event_loop *loop, int socket_fd, bool is_write);
+int  event_loop_remove_socket(event_loop *loop, int socket_fd, bool is_write);
+int  event_loop_run(event_loop *loop, int timeout_milliseconds);
 ```
 
 The polling backend is chosen at compile time. Linux builds use `epoll`,
 BSD and macOS use `kqueue`, and other systems including Windows fall back
-to `select`. The `epoll` and `kqueue` implementations allocate their event
+to `select`. The event loop helpers call the appropriate backend through
+`nw_poll`. The `epoll` and `kqueue` implementations allocate their event
 buffers with `cma_malloc` and release them with `cma_free` to stay within
 the custom allocator. The `select` backend is intended only for small
 numbers of sockets and lacks the scalability of the other backends.
@@ -551,20 +557,22 @@ Simple event loop example:
 int main()
 {
     int server_socket;
-    int read_descriptors[1];
+    event_loop loop;
     int result;
 
+    event_loop_init(&loop);
     server_socket = nw_socket(AF_INET, SOCK_STREAM, 0);
     nw_set_nonblocking(server_socket);
-    read_descriptors[0] = server_socket;
+    event_loop_add_socket(&loop, server_socket, false);
     while (true)
     {
-        result = nw_poll(read_descriptors, 1, NULL, 0, 1000);
-        if (result > 0 && read_descriptors[0] != -1)
+        result = event_loop_run(&loop, 1000);
+        if (result > 0 && loop.read_file_descriptors[0] != -1)
         {
             /* handle events */
         }
     }
+    event_loop_clear(&loop);
     return (0);
 }
 ```
@@ -706,6 +714,9 @@ predefined `ft_json_sink` helper emits each entry as a JSON object for
 downstream processing. A syslog sink writes entries to the host's system
 logger and `ft_log_set_remote_sink` forwards messages to a remote server over
 UDP or TCP.
+
+Syslog and asynchronous helpers are exposed directly from the single
+`logger.hpp` header, removing the need for dedicated includes.
 
 Asynchronous logging is enabled with `ft_log_enable_async(true)` and later
 disabled with `ft_log_enable_async(false)` to flush pending messages. This
@@ -1076,7 +1087,7 @@ void          yaml_free(yaml_value *value);
 
 `yaml_value` tracks internal errors from `ft_string`, `ft_vector`, and `ft_map` and exposes `get_error` and `get_error_str` helpers for diagnostics.
 
-The reader implementation is organized across `yaml_value.cpp`, `yaml_reader.cpp`, and supporting utility files for clarity.
+The reader implementation is organized across `yaml_value.cpp`, `yaml_reader.cpp`, and helper functions declared directly in `yaml.hpp`.
 
 #### File
 Cross-platform file and directory utilities (`File/open_dir.hpp` and `File/file_utils.hpp`):

@@ -6,8 +6,6 @@
 #include "../CPP_class/class_string_class.hpp"
 #include "../Errno/errno.hpp"
 #include "logger.hpp"
-#include "logger_log_async.hpp"
-#include "logger_syslog.hpp"
 
 extern ft_logger *g_logger;
 extern t_log_level g_level;
