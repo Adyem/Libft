@@ -22,9 +22,11 @@ SRCS := \
     logger_log_warn.cpp \
     logger_log_error.cpp \
     logger_log_async.cpp \
-    logger_logger.cpp
+    logger_logger.cpp \
+    logger_syslog.cpp \
+    logger_network.cpp
 
-HEADERS := logger.hpp logger_internal.hpp logger_log_async.hpp
+HEADERS := logger.hpp logger_internal.hpp logger_log_async.hpp logger_syslog.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

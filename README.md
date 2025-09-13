@@ -660,7 +660,9 @@ Template module for internal storage.
 
 Colorized terminal output can be toggled with `ft_log_set_color`, and a
 predefined `ft_json_sink` helper emits each entry as a JSON object for
-downstream processing.
+downstream processing. A syslog sink writes entries to the host's system
+logger and `ft_log_set_remote_sink` forwards messages to a remote server over
+UDP or TCP.
 
 Asynchronous logging is enabled with `ft_log_enable_async(true)` and later
 disabled with `ft_log_enable_async(false)` to flush pending messages. This
@@ -688,6 +690,9 @@ bool ft_log_get_alloc_logging();
 void ft_log_set_color(bool enable);
 bool ft_log_get_color();
 void ft_json_sink(const char *message, void *user_data);
+int  ft_log_set_syslog(const char *identifier);
+int  ft_log_set_remote_sink(const char *host, unsigned short port,
+                            bool use_tcp);
 
 void ft_log_info(const char *fmt, ...);
 void ft_log_warn(const char *fmt, ...);
@@ -703,6 +708,8 @@ closes the log when the object is destroyed:
     ft_logger log("app.log", 1024 * 1024, LOG_LEVEL_DEBUG);
     log.set_global();
     log.info("starting up");
+    log.set_syslog("myapp");
+    log.set_remote_sink("203.0.113.5", 9000, true);
 }
 ```
 

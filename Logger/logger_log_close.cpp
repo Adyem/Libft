@@ -1,4 +1,5 @@
 #include "logger_internal.hpp"
+#include "../Compatebility/compatebility_internal.hpp"
 #include <unistd.h>
 
 void ft_log_close()
@@ -16,6 +17,21 @@ void ft_log_close()
             if (sink)
             {
                 close(sink->fd);
+                delete sink;
+            }
+        }
+        else if (g_sinks[index].function == ft_syslog_sink)
+        {
+            cmp_syslog_close();
+        }
+        else if (g_sinks[index].function == ft_network_sink)
+        {
+            s_network_sink *sink;
+
+            sink = static_cast<s_network_sink *>(g_sinks[index].user_data);
+            if (sink)
+            {
+                cmp_close(sink->socket_fd);
                 delete sink;
             }
         }
