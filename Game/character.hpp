@@ -9,6 +9,7 @@
 #include "debuff.hpp"
 #include "upgrade.hpp"
 #include "inventory.hpp"
+#include "equipment.hpp"
 #include "experience_table.hpp"
 
 struct json_group;
@@ -52,9 +53,11 @@ class ft_character
         ft_map<int, ft_achievement> _achievements;
         ft_reputation             _reputation;
         ft_inventory            _inventory;
+        ft_equipment            _equipment;
         mutable int               _error;
 
         void    set_error(int err) const noexcept;
+        void    apply_modifier(const ft_item_modifier &mod, int sign) noexcept;
 
     public:
         ft_character() noexcept;
@@ -152,6 +155,11 @@ class ft_character
 
         ft_experience_table       &get_experience_table() noexcept;
         const ft_experience_table &get_experience_table() const noexcept;
+
+        int equip_item(int slot, const ft_item &item) noexcept;
+        void unequip_item(int slot) noexcept;
+        ft_item *get_equipped_item(int slot) noexcept;
+        const ft_item *get_equipped_item(int slot) const noexcept;
 
         int get_level() const noexcept;
 
