@@ -6,13 +6,15 @@ SRCS := encryption_basic_encryption.cpp \
         encryption_aes.cpp \
         encryption_rsa.cpp \
         encryption_sha256.cpp \
-        encryption_hmac_sha256.cpp
+        encryption_hmac_sha256.cpp \
+        encryption_ecc.cpp
 
 HEADERS := basic_encryption.hpp \
         aes.hpp \
         rsa.hpp \
         encryption_sha256.hpp \
-        encryption_hmac_sha256.hpp
+        encryption_hmac_sha256.hpp \
+        ecc.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
