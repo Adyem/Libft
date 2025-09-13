@@ -6,7 +6,7 @@ EFF_SRCS :=
 SRCS := main.cpp test_atoi.cpp test_isdigit.cpp test_memset.cpp test_strcmp.cpp \
        test_strlen.cpp test_promise.cpp test_networking.cpp test_linear_algebra.cpp test_validate_int.cpp \
        test_task_scheduler.cpp test_json_validate.cpp test_rng.cpp test_http_server.cpp test_logger.cpp test_logger_async.cpp test_yaml.cpp \
-       test_quaternion.cpp test_string_view.cpp
+       test_quaternion.cpp test_string_view.cpp test_encryption_ecc.cpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR = mkdir
@@ -41,7 +41,7 @@ CXX       := g++
 COMPILE_FLAGS ?= -Wall -Wextra -Werror -std=c++17
 COMPILE_FLAGS += $(OPT_FLAGS) -pthread
 CFLAGS := $(COMPILE_FLAGS)
-LDFLAGS := -lz
+LDFLAGS := -lz -lsodium
 export COMPILE_FLAGS
 
 OBJDIR       := objs
