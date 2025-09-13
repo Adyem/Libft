@@ -80,6 +80,17 @@ void ft_logger::close() noexcept
     ft_log_close();
 }
 
+int ft_logger::set_syslog(const char *identifier) noexcept
+{
+    return (ft_log_set_syslog(identifier));
+}
+
+int ft_logger::set_remote_sink(const char *host, unsigned short port,
+                               bool use_tcp) noexcept
+{
+    return (ft_log_set_remote_sink(host, port, use_tcp));
+}
+
 void ft_logger::debug(const char *fmt, ...) noexcept
 {
     va_list args;
