@@ -72,7 +72,10 @@ void ft_json_sink(const char *message, void *user_data)
         time_buffer, level_buffer, text_buffer);
     if (length > 0)
     {
-        write(fd, json_buffer, static_cast<size_t>(length));
+        ssize_t write_result;
+
+        write_result = write(fd, json_buffer, static_cast<size_t>(length));
+        (void)write_result;
     }
     return ;
 }

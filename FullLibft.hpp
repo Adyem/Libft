@@ -94,6 +94,7 @@
 #include "Game/inventory.hpp"
 #include "Game/quest.hpp"
 #include "Game/reputation.hpp"
+#include "Game/pathfinding.hpp"
 #include "Game/world.hpp"
 
-#endif 
+#endif
