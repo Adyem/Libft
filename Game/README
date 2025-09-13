@@ -10,7 +10,16 @@ world.save_to_file("save.json", character, inventory);
 world.load_from_file("save.json", character, inventory);
 ```
 
-Both helpers use the JSon module to read and write the `world`, `character`, and `inventory` groups.
+Both helpers use the JSon module to read and write the `world`, `character`, `inventory`, and `equipment` groups.
+
+Characters manage gear through an `ft_equipment` container. Slots such as head, chest, and weapon can be equipped or unequipped and the appropriate stat modifiers are applied automatically.
+
+```
+ft_item sword;
+sword.set_modifier1_id(2);
+sword.set_modifier1_value(5);
+hero.equip_item(EQUIP_WEAPON, sword);
+```
 
 ## Pathfinding
 

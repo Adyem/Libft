@@ -10,6 +10,7 @@
 json_group *serialize_character(const ft_character &character);
 json_group *serialize_world(const ft_world &world);
 json_group *serialize_inventory(const ft_inventory &inventory);
+json_group *serialize_equipment(const ft_character &character);
 
 static int add_item_field(json_group *group, const ft_string &key, int value)
 {
@@ -146,6 +147,53 @@ json_group *serialize_inventory(const ft_inventory &inventory)
         if (serialize_item_fields(group, item_start[item_index].value, item_prefix) != ER_SUCCESS)
             return (ft_nullptr);
         item_index++;
+    }
+    return (group);
+}
+
+json_group *serialize_equipment(const ft_character &character)
+{
+    json_group *group = json_create_json_group("equipment");
+    if (!group)
+        return (ft_nullptr);
+    const ft_item *head = character.get_equipped_item(EQUIP_HEAD);
+    json_item *present = json_create_item("head_present", head ? 1 : 0);
+    if (!present)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, present);
+    if (head && serialize_item_fields(group, *head, "head") != ER_SUCCESS)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    const ft_item *chest = character.get_equipped_item(EQUIP_CHEST);
+    present = json_create_item("chest_present", chest ? 1 : 0);
+    if (!present)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, present);
+    if (chest && serialize_item_fields(group, *chest, "chest") != ER_SUCCESS)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    const ft_item *weapon = character.get_equipped_item(EQUIP_WEAPON);
+    present = json_create_item("weapon_present", weapon ? 1 : 0);
+    if (!present)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, present);
+    if (weapon && serialize_item_fields(group, *weapon, "weapon") != ER_SUCCESS)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
     }
     return (group);
 }
