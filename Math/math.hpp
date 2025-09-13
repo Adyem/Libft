@@ -45,6 +45,11 @@ double      ft_tan(double value);
 double      math_deg2rad(double degrees);
 int         math_validate_int(const char *input);
 double      math_rad2deg(double radians);
+double      ft_mean(const double *values, int array_size);
+double      ft_median(const double *values, int array_size);
+double      ft_mode(const double *values, int array_size);
+double      ft_variance(const double *values, int array_size);
+double      ft_stddev(const double *values, int array_size);
 
 # include "linear_algebra.hpp"
 
