@@ -1501,12 +1501,30 @@ crafting.craft_item(inventory, 1, sword);
 ```
 
 #### `ft_character`
+Use `FT_DAMAGE_PHYSICAL` or `FT_DAMAGE_MAGICAL` to tag incoming damage and
+select the handling method with `FT_DAMAGE_RULE_FLAT`,
+`FT_DAMAGE_RULE_SCALED`, or `FT_DAMAGE_RULE_BUFFER`.
 ```
 int get_hit_points() const noexcept;
 void set_hit_points(int hp) noexcept;
 bool is_alive() const noexcept;
-int get_armor() const noexcept;
-void set_armor(int armor) noexcept;
+int get_physical_armor() const noexcept;
+void set_physical_armor(int armor) noexcept;
+int get_magic_armor() const noexcept;
+void set_magic_armor(int armor) noexcept;
+int get_current_physical_armor() const noexcept;
+void set_current_physical_armor(int armor) noexcept;
+int get_current_magic_armor() const noexcept;
+void set_current_magic_armor(int armor) noexcept;
+void restore_physical_armor() noexcept;
+void restore_magic_armor() noexcept;
+void restore_armor() noexcept;
+void set_damage_rule(uint8_t rule) noexcept;
+uint8_t get_damage_rule() const noexcept;
+void take_damage(long long damage, uint8_t type) noexcept;
+void take_damage_flat(long long damage, uint8_t type) noexcept;
+void take_damage_scaled(long long damage, uint8_t type) noexcept;
+void take_damage_buffer(long long damage, uint8_t type) noexcept;
 int get_might() const noexcept;
 void set_might(int might) noexcept;
 int get_agility() const noexcept;
