@@ -2,7 +2,7 @@
 #include "parser.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
-#include "../Compatebility/compatebility_file_internal.hpp"
+#include "../Compatebility/compatebility_internal.hpp"
 
 static void html_write_attrs(int fd, html_attr *attribute)
 {
@@ -61,6 +61,6 @@ int html_write_to_file(const char *filePath, html_node *nodeList)
         html_write_node(fd, currentNode, 0);
         currentNode = currentNode->next;
     }
-    ft_close(fd);
+    cmp_close(fd);
     return (0);
 }

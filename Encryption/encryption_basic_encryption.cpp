@@ -5,7 +5,7 @@
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
 #include "../System_utils/system_utils.hpp"
-#include "../Compatebility/compatebility_file_internal.hpp"
+#include "../Compatebility/compatebility_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "basic_encryption.hpp"
 
@@ -43,7 +43,7 @@ int be_saveGame(const char *filename, const char *data, const char *key)
         return (1);
     }
     ssize_t bytes_written = su_write(file_descriptor, encrypted_data, static_cast<int>(data_length));
-    ft_close(file_descriptor);
+    cmp_close(file_descriptor);
     cma_free(encrypted_data);
     if (bytes_written == static_cast<ssize_t>(data_length))
         return (0);

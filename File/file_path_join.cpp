@@ -1,11 +1,6 @@
 #include "../CPP_class/class_string_class.hpp"
+#include "../Compatebility/compatebility_internal.hpp"
 #include "file_utils.hpp"
-
-#if defined(_WIN32) || defined(_WIN64)
-# define PATH_SEP '\\'
-#else
-# define PATH_SEP '/'
-#endif
 
 ft_string file_path_join(const char *path_left, const char *path_right)
 {
@@ -18,15 +13,16 @@ ft_string file_path_join(const char *path_left, const char *path_right)
     ft_string result(left);
     if (result.get_error())
         return (result);
+    char path_sep = cmp_path_separator();
     if (result.size() != 0)
     {
         const char *data = result.c_str();
-        if (data[result.size() - 1] != PATH_SEP)
-            result.append(PATH_SEP);
+        if (data[result.size() - 1] != path_sep)
+            result.append(path_sep);
     }
     const char *right_data = right.c_str();
     size_t index = 0;
-    while (right_data[index] == PATH_SEP)
+    while (right_data[index] == path_sep)
     {
         ++index;
     }

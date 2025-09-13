@@ -1,12 +1,12 @@
 #include "system_utils.hpp"
-#include "../Compatebility/compatebility_file_internal.hpp"
+#include "../Compatebility/compatebility_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include <cerrno>
 #include <ctime>
 
 ssize_t su_read(int file_descriptor, void *buffer, size_t count)
 {
-    return (ft_read(file_descriptor, buffer, count));
+    return (cmp_read(file_descriptor, buffer, count));
 }
 
 ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
@@ -16,7 +16,7 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
     const char *byte_buffer = static_cast<const char*>(buffer);
     while (total_written < count)
     {
-        ssize_t bytes_written = ft_write(file_descriptor,
+        ssize_t bytes_written = cmp_write(file_descriptor,
             byte_buffer + total_written, count - total_written);
         if (bytes_written >= 0)
         {

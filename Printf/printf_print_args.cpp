@@ -11,14 +11,6 @@
 #include <stddef.h>
 #include <cfloat>
 
-static inline ssize_t su_platform_write(int fd, const char *string, size_t length)
-{
-#ifdef _WIN32
-    return (su_write(fd, string, static_cast<unsigned int>(length)));
-#else
-    return (su_write(fd, string, length));
-#endif
-}
 
 size_t ft_strlen_printf(const char *string)
 {
@@ -44,11 +36,12 @@ void ft_putstr_fd(const char *string, int fd, size_t *count)
     if (!string)
     {
         return_value = su_write(fd, "(null)", 6);
+        (void)return_value;
         *count += 6;
         return ;
     }
     size_t length = ft_strlen_printf(string);
-    return_value = su_platform_write(fd, string, length);
+    return_value = su_write(fd, string, length);
     *count += length;
     (void)return_value;
     return ;

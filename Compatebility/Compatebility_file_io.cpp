@@ -1,4 +1,5 @@
-#include "compatebility_file_internal.hpp"
+#include "compatebility_internal.hpp"
+#include "../CMA/CMA.hpp"
 
 #if defined(_WIN32) || defined(_WIN64)
 # include "../CPP_class/class_nullptr.hpp"
@@ -8,12 +9,11 @@
 # include <stdio.h>
 # include <io.h>
 # include <fcntl.h>
-# include <cstdio>
 
 static HANDLE g_file_handles[1024];
 static pt_mutex g_file_mutex;
 
-static int store_handle(HANDLE file_handle)
+static int cmp_store_handle(HANDLE file_handle)
 {
     int handle_index = 3;
     while (handle_index < 1024)
@@ -28,14 +28,14 @@ static int store_handle(HANDLE file_handle)
     return (-1);
 }
 
-static HANDLE retrieve_handle(int file_descriptor)
+static HANDLE cmp_retrieve_handle(int file_descriptor)
 {
     if (file_descriptor < 0 || file_descriptor >= 1024)
         return (INVALID_HANDLE_VALUE);
     return (g_file_handles[file_descriptor]);
 }
 
-static void clear_handle(int file_descriptor)
+static void cmp_clear_handle(int file_descriptor)
 {
     if (file_descriptor < 0 || file_descriptor >= 1024)
         return ;
@@ -43,7 +43,7 @@ static void clear_handle(int file_descriptor)
     return ;
 }
 
-static int open_internal(const char *path_name, int flags, int mode)
+static int cmp_open_internal(const char *path_name, int flags, int mode)
 {
     g_file_mutex.lock(GetCurrentThreadId());
     DWORD desired_access = 0;
@@ -85,7 +85,7 @@ static int open_internal(const char *path_name, int flags, int mode)
         g_file_mutex.unlock(GetCurrentThreadId());
         return (-1);
     }
-    int file_descriptor = store_handle(file_handle);
+    int file_descriptor = cmp_store_handle(file_handle);
     if (file_descriptor < 0)
     {
         CloseHandle(file_handle);
@@ -96,25 +96,25 @@ static int open_internal(const char *path_name, int flags, int mode)
     return (file_descriptor);
 }
 
-int ft_open(const char *path_name)
+int cmp_open(const char *path_name)
 {
-    return (open_internal(path_name, O_RDONLY, 0));
+    return (cmp_open_internal(path_name, O_RDONLY, 0));
 }
 
-int ft_open(const char *path_name, int flags)
+int cmp_open(const char *path_name, int flags)
 {
-    return (open_internal(path_name, flags, 0));
+    return (cmp_open_internal(path_name, flags, 0));
 }
 
-int ft_open(const char *path_name, int flags, int mode)
+int cmp_open(const char *path_name, int flags, int mode)
 {
-    return (open_internal(path_name, flags, mode));
+    return (cmp_open_internal(path_name, flags, mode));
 }
 
-ssize_t ft_read(int file_descriptor, void *buffer, unsigned int count)
+ssize_t cmp_read(int file_descriptor, void *buffer, unsigned int count)
 {
     g_file_mutex.lock(GetCurrentThreadId());
-    HANDLE file_handle = retrieve_handle(file_descriptor);
+    HANDLE file_handle = cmp_retrieve_handle(file_descriptor);
     if (file_handle == INVALID_HANDLE_VALUE)
     {
         g_file_mutex.unlock(GetCurrentThreadId());
@@ -137,10 +137,10 @@ ssize_t ft_read(int file_descriptor, void *buffer, unsigned int count)
     return (bytes_read);
 }
 
-ssize_t ft_write(int file_descriptor, const void *buffer, unsigned int count)
+ssize_t cmp_write(int file_descriptor, const void *buffer, unsigned int count)
 {
     g_file_mutex.lock(GetCurrentThreadId());
-    HANDLE file_handle = retrieve_handle(file_descriptor);
+    HANDLE file_handle = cmp_retrieve_handle(file_descriptor);
     if (file_handle == INVALID_HANDLE_VALUE)
     {
         g_file_mutex.unlock(GetCurrentThreadId());
@@ -154,10 +154,10 @@ ssize_t ft_write(int file_descriptor, const void *buffer, unsigned int count)
     return (bytes_written);
 }
 
-int ft_close(int file_descriptor)
+int cmp_close(int file_descriptor)
 {
     g_file_mutex.lock(GetCurrentThreadId());
-    HANDLE file_handle = retrieve_handle(file_descriptor);
+    HANDLE file_handle = cmp_retrieve_handle(file_descriptor);
     if (file_handle == INVALID_HANDLE_VALUE)
     {
         g_file_mutex.unlock(GetCurrentThreadId());
@@ -168,15 +168,14 @@ int ft_close(int file_descriptor)
         g_file_mutex.unlock(GetCurrentThreadId());
         return (-1);
     }
-    clear_handle(file_descriptor);
+    cmp_clear_handle(file_descriptor);
     g_file_mutex.unlock(GetCurrentThreadId());
     return (0);
 }
 
-void ft_initialize_standard_file_descriptors()
+void cmp_initialize_standard_file_descriptors()
 {
     static int initialized = 0;
-
     if (initialized == 1)
         return ;
     HANDLE standard_input = GetStdHandle(STD_INPUT_HANDLE);
@@ -216,10 +215,13 @@ void ft_initialize_standard_file_descriptors()
 }
 
 #else
+# include "../CPP_class/class_nullptr.hpp"
+# include "../Libft/libft.hpp"
 # include <fcntl.h>
 # include <unistd.h>
+# include <sys/stat.h>
 
-int ft_open(const char *path_name)
+int cmp_open(const char *path_name)
 {
     int file_descriptor = open(path_name, O_RDONLY);
     if (file_descriptor == -1)
@@ -227,7 +229,7 @@ int ft_open(const char *path_name)
     return (file_descriptor);
 }
 
-int ft_open(const char *path_name, int flags)
+int cmp_open(const char *path_name, int flags)
 {
     int file_descriptor = open(path_name, flags);
     if (file_descriptor == -1)
@@ -235,7 +237,7 @@ int ft_open(const char *path_name, int flags)
     return (file_descriptor);
 }
 
-int ft_open(const char *path_name, int flags, mode_t mode)
+int cmp_open(const char *path_name, int flags, mode_t mode)
 {
     int file_descriptor = open(path_name, flags, mode);
     if (file_descriptor == -1)
@@ -243,7 +245,7 @@ int ft_open(const char *path_name, int flags, mode_t mode)
     return (file_descriptor);
 }
 
-ssize_t ft_read(int file_descriptor, void *buffer, size_t count)
+ssize_t cmp_read(int file_descriptor, void *buffer, size_t count)
 {
     ssize_t bytes_read = read(file_descriptor, buffer, count);
     if (bytes_read == -1)
@@ -251,7 +253,7 @@ ssize_t ft_read(int file_descriptor, void *buffer, size_t count)
     return (bytes_read);
 }
 
-ssize_t ft_write(int file_descriptor, const void *buffer, size_t count)
+ssize_t cmp_write(int file_descriptor, const void *buffer, size_t count)
 {
     ssize_t bytes_written = write(file_descriptor, buffer, count);
     if (bytes_written == -1)
@@ -259,14 +261,14 @@ ssize_t ft_write(int file_descriptor, const void *buffer, size_t count)
     return (bytes_written);
 }
 
-int ft_close(int file_descriptor)
+int cmp_close(int file_descriptor)
 {
     if (close(file_descriptor) == -1)
         return (-1);
     return (0);
 }
 
-void ft_initialize_standard_file_descriptors()
+void cmp_initialize_standard_file_descriptors()
 {
     return ;
 }

@@ -1,6 +1,7 @@
 #include "../Template/string_view.hpp"
 #include "../Errno/errno.hpp"
 #include "../System_utils/test_runner.hpp"
+#include "../CMA/CMA.hpp"
 
 FT_TEST(test_string_view_basic, "ft_string_view basic")
 {
@@ -23,10 +24,19 @@ FT_TEST(test_string_view_compare_substr, "ft_string_view compare and substr")
 
 FT_TEST(test_string_view_substr_oob, "ft_string_view substr out of bounds")
 {
-    ft_string_view<char> view("world");
+    char    *buffer;
+    buffer = static_cast<char*>(cma_malloc(6));
+    buffer[0] = 'w';
+    buffer[1] = 'o';
+    buffer[2] = 'r';
+    buffer[3] = 'l';
+    buffer[4] = 'd';
+    buffer[5] = '\0';
+    ft_string_view<char> view(buffer);
     ft_string_view<char> substring = view.substr(10, 2);
     FT_ASSERT_EQ(FT_EINVAL, view.get_error());
     FT_ASSERT_EQ(FT_EINVAL, substring.get_error());
     FT_ASSERT_EQ(0u, substring.size());
+    cma_free(buffer);
     return (1);
 }
