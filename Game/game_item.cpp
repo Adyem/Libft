@@ -8,6 +8,84 @@ ft_item::ft_item() noexcept
     return ;
 }
 
+ft_item::ft_item(const ft_item &other) noexcept
+    : _max_stack(other._max_stack), _stack_size(other._stack_size), _item_id(other._item_id), _rarity(other._rarity),
+      _width(other._width), _height(other._height), _modifier1(other._modifier1), _modifier2(other._modifier2), _modifier3(other._modifier3), _modifier4(other._modifier4)
+{
+    return ;
+}
+
+ft_item &ft_item::operator=(const ft_item &other) noexcept
+{
+    if (this != &other)
+    {
+        this->_max_stack = other._max_stack;
+        this->_stack_size = other._stack_size;
+        this->_item_id = other._item_id;
+        this->_rarity = other._rarity;
+        this->_width = other._width;
+        this->_height = other._height;
+        this->_modifier1 = other._modifier1;
+        this->_modifier2 = other._modifier2;
+        this->_modifier3 = other._modifier3;
+        this->_modifier4 = other._modifier4;
+    }
+    return (*this);
+}
+
+ft_item::ft_item(ft_item &&other) noexcept
+    : _max_stack(other._max_stack), _stack_size(other._stack_size), _item_id(other._item_id), _rarity(other._rarity),
+      _width(other._width), _height(other._height), _modifier1(other._modifier1), _modifier2(other._modifier2), _modifier3(other._modifier3), _modifier4(other._modifier4)
+{
+    other._max_stack = 0;
+    other._stack_size = 0;
+    other._item_id = 0;
+    other._rarity = 0;
+    other._width = 1;
+    other._height = 1;
+    other._modifier1.id = 0;
+    other._modifier1.value = 0;
+    other._modifier2.id = 0;
+    other._modifier2.value = 0;
+    other._modifier3.id = 0;
+    other._modifier3.value = 0;
+    other._modifier4.id = 0;
+    other._modifier4.value = 0;
+    return ;
+}
+
+ft_item &ft_item::operator=(ft_item &&other) noexcept
+{
+    if (this != &other)
+    {
+        this->_max_stack = other._max_stack;
+        this->_stack_size = other._stack_size;
+        this->_item_id = other._item_id;
+        this->_rarity = other._rarity;
+        this->_width = other._width;
+        this->_height = other._height;
+        this->_modifier1 = other._modifier1;
+        this->_modifier2 = other._modifier2;
+        this->_modifier3 = other._modifier3;
+        this->_modifier4 = other._modifier4;
+        other._max_stack = 0;
+        other._stack_size = 0;
+        other._item_id = 0;
+        other._rarity = 0;
+        other._width = 1;
+        other._height = 1;
+        other._modifier1.id = 0;
+        other._modifier1.value = 0;
+        other._modifier2.id = 0;
+        other._modifier2.value = 0;
+        other._modifier3.id = 0;
+        other._modifier3.value = 0;
+        other._modifier4.id = 0;
+        other._modifier4.value = 0;
+    }
+    return (*this);
+}
+
 int ft_item::get_max_stack() const noexcept
 {
     return (this->_max_stack);

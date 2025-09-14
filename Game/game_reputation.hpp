@@ -19,6 +19,10 @@ class ft_reputation
         ft_reputation() noexcept;
         ft_reputation(const ft_map<int, int> &milestones, int total = 0) noexcept;
         virtual ~ft_reputation() = default;
+        ft_reputation(const ft_reputation &other) noexcept;
+        ft_reputation &operator=(const ft_reputation &other) noexcept;
+        ft_reputation(ft_reputation &&other) noexcept;
+        ft_reputation &operator=(ft_reputation &&other) noexcept;
 
         int get_total_rep() const noexcept;
         void set_total_rep(int rep) noexcept;

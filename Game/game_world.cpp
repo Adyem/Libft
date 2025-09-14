@@ -42,6 +42,48 @@ ft_world::ft_world() noexcept
     return ;
 }
 
+ft_world::ft_world(const ft_world &other) noexcept
+    : _event_scheduler(other._event_scheduler), _error(other._error)
+{
+    if (this->_event_scheduler.get_error() != ER_SUCCESS)
+        this->set_error(this->_event_scheduler.get_error());
+    return ;
+}
+
+ft_world &ft_world::operator=(const ft_world &other) noexcept
+{
+    if (this != &other)
+    {
+        this->_event_scheduler = other._event_scheduler;
+        this->_error = other._error;
+        if (this->_event_scheduler.get_error() != ER_SUCCESS)
+            this->set_error(this->_event_scheduler.get_error());
+    }
+    return (*this);
+}
+
+ft_world::ft_world(ft_world &&other) noexcept
+    : _event_scheduler(ft_move(other._event_scheduler)), _error(other._error)
+{
+    if (this->_event_scheduler.get_error() != ER_SUCCESS)
+        this->set_error(this->_event_scheduler.get_error());
+    other._error = ER_SUCCESS;
+    return ;
+}
+
+ft_world &ft_world::operator=(ft_world &&other) noexcept
+{
+    if (this != &other)
+    {
+        this->_event_scheduler = ft_move(other._event_scheduler);
+        this->_error = other._error;
+        if (this->_event_scheduler.get_error() != ER_SUCCESS)
+            this->set_error(this->_event_scheduler.get_error());
+        other._error = ER_SUCCESS;
+    }
+    return (*this);
+}
+
 void ft_world::schedule_event(const ft_event &event) noexcept
 {
     this->_event_scheduler.schedule_event(event);

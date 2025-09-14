@@ -6,6 +6,58 @@ ft_buff::ft_buff() noexcept
     return ;
 }
 
+ft_buff::ft_buff(const ft_buff &other) noexcept
+    : _id(other._id), _duration(other._duration), _modifier1(other._modifier1), _modifier2(other._modifier2), _modifier3(other._modifier3), _modifier4(other._modifier4)
+{
+    return ;
+}
+
+ft_buff &ft_buff::operator=(const ft_buff &other) noexcept
+{
+    if (this != &other)
+    {
+        this->_id = other._id;
+        this->_duration = other._duration;
+        this->_modifier1 = other._modifier1;
+        this->_modifier2 = other._modifier2;
+        this->_modifier3 = other._modifier3;
+        this->_modifier4 = other._modifier4;
+    }
+    return (*this);
+}
+
+ft_buff::ft_buff(ft_buff &&other) noexcept
+    : _id(other._id), _duration(other._duration), _modifier1(other._modifier1), _modifier2(other._modifier2), _modifier3(other._modifier3), _modifier4(other._modifier4)
+{
+    other._id = 0;
+    other._duration = 0;
+    other._modifier1 = 0;
+    other._modifier2 = 0;
+    other._modifier3 = 0;
+    other._modifier4 = 0;
+    return ;
+}
+
+ft_buff &ft_buff::operator=(ft_buff &&other) noexcept
+{
+    if (this != &other)
+    {
+        this->_id = other._id;
+        this->_duration = other._duration;
+        this->_modifier1 = other._modifier1;
+        this->_modifier2 = other._modifier2;
+        this->_modifier3 = other._modifier3;
+        this->_modifier4 = other._modifier4;
+        other._id = 0;
+        other._duration = 0;
+        other._modifier1 = 0;
+        other._modifier2 = 0;
+        other._modifier3 = 0;
+        other._modifier4 = 0;
+    }
+    return (*this);
+}
+
 int ft_buff::get_id() const noexcept
 {
     return (this->_id);

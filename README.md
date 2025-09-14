@@ -51,7 +51,7 @@ The current suite exercises components across multiple modules:
 - **String**: `ft_string_view`
 - **JSon**: schema validation
 - **YAML**: round-trip parsing
-- **Game**: `ft_world` persistence, event scheduling via `ft_world::schedule_event` and `ft_world::update_events`, `ft_world::plan_route`, `ft_pathfinding`, and `ft_crafting`
+- **Game**: `ft_world` persistence, event scheduling via `ft_world::schedule_event` and `ft_world::update_events`, `ft_world::plan_route`, `ft_pathfinding`, `ft_crafting`, and copy/move constructors across game classes
 - **Encryption**: key generation utilities
 
 Additional cases verify whitespace parsing, overlapping ranges, truncating copies, partial zeroing, empty needles,
@@ -1500,6 +1500,8 @@ The Game module provides small building blocks for RPG-style mechanics. It inclu
 
 Game headers are prefixed with `game_` to align with their source filenames.
 
+All core classes define explicit copy and move constructors and assignments to manage resources safely.
+
 Core classes include `ft_character`, `ft_item`, `ft_inventory`, `ft_equipment`, `ft_upgrade`, `ft_world`, `ft_event`, `ft_event_scheduler`, `ft_map3d`, `ft_quest`, `ft_reputation`, `ft_buff`, `ft_debuff`, `ft_skill`, `ft_achievement`, `ft_experience_table`, and `ft_crafting`. Each class is summarized below. The `ft_character` implementation is divided across dedicated source files for constructors, accessors, mutation helpers, save/load logic, and other behavior.
 
 The `ft_world` class can persist game state using JSON files and track timed events.
@@ -1892,6 +1894,15 @@ int get_phases() const noexcept;
 void set_phases(int phases) noexcept;
 int get_current_phase() const noexcept;
 void set_current_phase(int phase) noexcept;
+const ft_string &get_description() const noexcept;
+void set_description(const ft_string &description) noexcept;
+const ft_string &get_objective() const noexcept;
+void set_objective(const ft_string &objective) noexcept;
+int get_reward_experience() const noexcept;
+void set_reward_experience(int experience) noexcept;
+ft_vector<ft_item>       &get_reward_items() noexcept;
+const ft_vector<ft_item> &get_reward_items() const noexcept;
+void set_reward_items(const ft_vector<ft_item> &items) noexcept;
 bool is_complete() const noexcept;
 void advance_phase() noexcept;
 ```

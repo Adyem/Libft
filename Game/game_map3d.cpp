@@ -17,6 +17,93 @@ ft_map3d::~ft_map3d()
     return ;
 }
 
+ft_map3d::ft_map3d(const ft_map3d &other)
+    : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(ER_SUCCESS)
+{
+    this->allocate(other._width, other._height, other._depth, 0);
+    if (this->_data)
+    {
+        size_t z = 0;
+        while (z < this->_depth)
+        {
+            size_t y = 0;
+            while (y < this->_height)
+            {
+                size_t x = 0;
+                while (x < this->_width)
+                {
+                    this->_data[z][y][x] = other._data[z][y][x];
+                    ++x;
+                }
+                ++y;
+            }
+            ++z;
+        }
+    }
+    this->_error = other._error;
+    return ;
+}
+
+ft_map3d &ft_map3d::operator=(const ft_map3d &other)
+{
+    if (this != &other)
+    {
+        this->deallocate();
+        this->allocate(other._width, other._height, other._depth, 0);
+        if (this->_data)
+        {
+            size_t z = 0;
+            while (z < this->_depth)
+            {
+                size_t y = 0;
+                while (y < this->_height)
+                {
+                    size_t x = 0;
+                    while (x < this->_width)
+                    {
+                        this->_data[z][y][x] = other._data[z][y][x];
+                        ++x;
+                    }
+                    ++y;
+                }
+                ++z;
+            }
+        }
+        this->_error = other._error;
+    }
+    return (*this);
+}
+
+ft_map3d::ft_map3d(ft_map3d &&other) noexcept
+    : _data(other._data), _width(other._width), _height(other._height), _depth(other._depth), _error(other._error)
+{
+    other._data = ft_nullptr;
+    other._width = 0;
+    other._height = 0;
+    other._depth = 0;
+    other._error = ER_SUCCESS;
+    return ;
+}
+
+ft_map3d &ft_map3d::operator=(ft_map3d &&other) noexcept
+{
+    if (this != &other)
+    {
+        this->deallocate();
+        this->_data = other._data;
+        this->_width = other._width;
+        this->_height = other._height;
+        this->_depth = other._depth;
+        this->_error = other._error;
+        other._data = ft_nullptr;
+        other._width = 0;
+        other._height = 0;
+        other._depth = 0;
+        other._error = ER_SUCCESS;
+    }
+    return (*this);
+}
+
 void ft_map3d::resize(size_t width, size_t height, size_t depth, int value)
 {
     this->deallocate();

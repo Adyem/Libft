@@ -20,6 +20,10 @@ class ft_skill
     public:
         ft_skill() noexcept;
         virtual ~ft_skill() noexcept;
+        ft_skill(const ft_skill &other) noexcept;
+        ft_skill &operator=(const ft_skill &other) noexcept;
+        ft_skill(ft_skill &&other) noexcept;
+        ft_skill &operator=(ft_skill &&other) noexcept;
 
         int get_id() const noexcept;
         void set_id(int id) noexcept;

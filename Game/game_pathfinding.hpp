@@ -25,6 +25,10 @@ class ft_pathfinding
     public:
         ft_pathfinding() noexcept;
         ~ft_pathfinding();
+        ft_pathfinding(const ft_pathfinding &other) noexcept;
+        ft_pathfinding &operator=(const ft_pathfinding &other) noexcept;
+        ft_pathfinding(ft_pathfinding &&other) noexcept;
+        ft_pathfinding &operator=(ft_pathfinding &&other) noexcept;
 
         int astar_grid(const ft_map3d &grid,
             size_t start_x, size_t start_y, size_t start_z,

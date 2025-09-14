@@ -22,6 +22,10 @@ class ft_achievement
     public:
         ft_achievement() noexcept;
         virtual ~ft_achievement() = default;
+        ft_achievement(const ft_achievement &other) noexcept;
+        ft_achievement &operator=(const ft_achievement &other) noexcept;
+        ft_achievement(ft_achievement &&other) noexcept;
+        ft_achievement &operator=(ft_achievement &&other) noexcept;
 
         int get_id() const noexcept;
         void set_id(int id) noexcept;

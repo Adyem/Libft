@@ -14,6 +14,10 @@ class ft_buff
     public:
         ft_buff() noexcept;
         virtual ~ft_buff() = default;
+        ft_buff(const ft_buff &other) noexcept;
+        ft_buff &operator=(const ft_buff &other) noexcept;
+        ft_buff(ft_buff &&other) noexcept;
+        ft_buff &operator=(ft_buff &&other) noexcept;
 
         int get_id() const noexcept;
         void set_id(int id) noexcept;

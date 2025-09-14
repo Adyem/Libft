@@ -1,6 +1,7 @@
 #include "game_character.hpp"
 #include "game_inventory.hpp"
 #include "game_item.hpp"
+#include "game_quest.hpp"
 #include "../JSon/json.hpp"
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
@@ -10,6 +11,7 @@
 json_group *serialize_character(const ft_character &character);
 json_group *serialize_inventory(const ft_inventory &inventory);
 json_group *serialize_equipment(const ft_character &character);
+json_group *serialize_quest(const ft_quest &quest);
 
 static int add_item_field(json_group *group, const ft_string &key, int value)
 {
@@ -184,6 +186,81 @@ json_group *serialize_equipment(const ft_character &character)
     {
         json_free_groups(group);
         return (ft_nullptr);
+    }
+    return (group);
+}
+
+json_group *serialize_quest(const ft_quest &quest)
+{
+    json_group *group = json_create_json_group("quest");
+    if (!group)
+        return (ft_nullptr);
+    json_item *item = json_create_item("id", quest.get_id());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    item = json_create_item("phases", quest.get_phases());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    item = json_create_item("current_phase", quest.get_current_phase());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    item = json_create_item("description", quest.get_description().c_str());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    item = json_create_item("objective", quest.get_objective().c_str());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    item = json_create_item("reward_experience", quest.get_reward_experience());
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    size_t item_count = quest.get_reward_items().size();
+    item = json_create_item("reward_item_count", static_cast<int>(item_count));
+    if (!item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, item);
+    size_t item_index = 0;
+    const ft_item *item_start = quest.get_reward_items().begin();
+    while (item_index < item_count)
+    {
+        char *item_index_string = cma_itoa(static_cast<int>(item_index));
+        if (!item_index_string)
+        {
+            json_free_groups(group);
+            return (ft_nullptr);
+        }
+        ft_string item_prefix = "reward_item_";
+        item_prefix += item_index_string;
+        cma_free(item_index_string);
+        if (serialize_item_fields(group, item_start[item_index], item_prefix) != ER_SUCCESS)
+            return (ft_nullptr);
+        item_index++;
     }
     return (group);
 }

@@ -22,6 +22,70 @@ ft_event_scheduler::~ft_event_scheduler()
     return ;
 }
 
+ft_event_scheduler::ft_event_scheduler(const ft_event_scheduler &other) noexcept
+    : _events(), _error_code(other._error_code)
+{
+    ft_vector<ft_event> events;
+    other.dump_events(events);
+    size_t index = 0;
+    while (index < events.size())
+    {
+        this->_events.push(events[index]);
+        if (this->_events.get_error() != ER_SUCCESS)
+        {
+            this->set_error(this->_events.get_error());
+            return ;
+        }
+        ++index;
+    }
+    return ;
+}
+
+ft_event_scheduler &ft_event_scheduler::operator=(const ft_event_scheduler &other) noexcept
+{
+    if (this != &other)
+    {
+        this->_events.clear();
+        ft_vector<ft_event> events;
+        other.dump_events(events);
+        size_t index = 0;
+        while (index < events.size())
+        {
+            this->_events.push(events[index]);
+            if (this->_events.get_error() != ER_SUCCESS)
+            {
+                this->set_error(this->_events.get_error());
+                return (*this);
+            }
+            ++index;
+        }
+        this->_error_code = other._error_code;
+    }
+    return (*this);
+}
+
+ft_event_scheduler::ft_event_scheduler(ft_event_scheduler &&other) noexcept
+    : _events(ft_move(other._events)), _error_code(other._error_code)
+{
+    if (this->_events.get_error() != ER_SUCCESS)
+        this->set_error(this->_events.get_error());
+    other._error_code = ER_SUCCESS;
+    return ;
+}
+
+ft_event_scheduler &ft_event_scheduler::operator=(ft_event_scheduler &&other) noexcept
+{
+    if (this != &other)
+    {
+        this->_events = ft_move(other._events);
+        this->_error_code = other._error_code;
+        if (this->_events.get_error() != ER_SUCCESS)
+            this->set_error(this->_events.get_error());
+        other._error_code = ER_SUCCESS;
+    }
+    return (*this);
+}
+
 void ft_event_scheduler::set_error(int error) const noexcept
 {
     this->_error_code = error;

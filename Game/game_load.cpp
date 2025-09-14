@@ -1,6 +1,7 @@
 #include "game_character.hpp"
 #include "game_inventory.hpp"
 #include "game_item.hpp"
+#include "game_quest.hpp"
 #include "../JSon/json.hpp"
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
@@ -9,6 +10,7 @@
 int deserialize_character(ft_character &character, json_group *group);
 int deserialize_inventory(ft_inventory &inventory, json_group *group);
 int deserialize_equipment(ft_character &character, json_group *group);
+int deserialize_quest(ft_quest &quest, json_group *group);
 
 static int parse_item_field(json_group *group, const ft_string &key, int &out_value)
 {
@@ -189,6 +191,56 @@ int deserialize_equipment(ft_character &character, json_group *group)
     }
     else
         character.unequip_item(EQUIP_WEAPON);
+    return (ER_SUCCESS);
+}
+
+int deserialize_quest(ft_quest &quest, json_group *group)
+{
+    json_item *item = json_find_item(group, "id");
+    if (item)
+        quest.set_id(ft_atoi(item->value));
+    item = json_find_item(group, "phases");
+    if (item)
+        quest.set_phases(ft_atoi(item->value));
+    item = json_find_item(group, "current_phase");
+    if (item)
+        quest.set_current_phase(ft_atoi(item->value));
+    item = json_find_item(group, "description");
+    if (item)
+    {
+        ft_string description = item->value;
+        quest.set_description(description);
+    }
+    item = json_find_item(group, "objective");
+    if (item)
+    {
+        ft_string objective = item->value;
+        quest.set_objective(objective);
+    }
+    item = json_find_item(group, "reward_experience");
+    if (item)
+        quest.set_reward_experience(ft_atoi(item->value));
+    json_item *count_item = json_find_item(group, "reward_item_count");
+    if (count_item)
+    {
+        int reward_count = ft_atoi(count_item->value);
+        int reward_index = 0;
+        quest.get_reward_items().clear();
+        while (reward_index < reward_count)
+        {
+            char *index_string = cma_itoa(reward_index);
+            if (!index_string)
+                return (JSON_MALLOC_FAIL);
+            ft_string prefix = "reward_item_";
+            prefix += index_string;
+            cma_free(index_string);
+            ft_item reward;
+            if (build_item_from_group(reward, group, prefix) != ER_SUCCESS)
+                return (GAME_GENERAL_ERROR);
+            quest.get_reward_items().push_back(reward);
+            reward_index++;
+        }
+    }
     return (ER_SUCCESS);
 }
 

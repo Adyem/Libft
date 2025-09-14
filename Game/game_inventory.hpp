@@ -22,6 +22,10 @@ class ft_inventory
     public:
         ft_inventory(size_t capacity = 0, int weight_limit = 0) noexcept;
         virtual ~ft_inventory() = default;
+        ft_inventory(const ft_inventory &other) noexcept;
+        ft_inventory &operator=(const ft_inventory &other) noexcept;
+        ft_inventory(ft_inventory &&other) noexcept;
+        ft_inventory &operator=(ft_inventory &&other) noexcept;
 
         ft_map<int, ft_item>       &get_items() noexcept;
         const ft_map<int, ft_item> &get_items() const noexcept;

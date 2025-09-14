@@ -10,6 +10,74 @@ ft_inventory::ft_inventory(size_t capacity, int weight_limit) noexcept
     return ;
 }
 
+ft_inventory::ft_inventory(const ft_inventory &other) noexcept
+    : _items(other._items), _capacity(other._capacity), _used_slots(other._used_slots),
+      _weight_limit(other._weight_limit), _current_weight(other._current_weight),
+      _next_slot(other._next_slot), _error(other._error)
+{
+    if (this->_items.get_error() != ER_SUCCESS)
+        this->set_error(this->_items.get_error());
+    return ;
+}
+
+ft_inventory &ft_inventory::operator=(const ft_inventory &other) noexcept
+{
+    if (this != &other)
+    {
+        this->_items = other._items;
+        this->_capacity = other._capacity;
+        this->_used_slots = other._used_slots;
+        this->_weight_limit = other._weight_limit;
+        this->_current_weight = other._current_weight;
+        this->_next_slot = other._next_slot;
+        this->_error = other._error;
+        if (this->_items.get_error() != ER_SUCCESS)
+            this->set_error(this->_items.get_error());
+    }
+    return (*this);
+}
+
+ft_inventory::ft_inventory(ft_inventory &&other) noexcept
+    : _items(ft_move(other._items)), _capacity(other._capacity), _used_slots(other._used_slots),
+      _weight_limit(other._weight_limit), _current_weight(other._current_weight),
+      _next_slot(other._next_slot), _error(other._error)
+{
+    if (this->_items.get_error() != ER_SUCCESS)
+        this->set_error(this->_items.get_error());
+    other._capacity = 0;
+    other._used_slots = 0;
+    other._weight_limit = 0;
+    other._current_weight = 0;
+    other._next_slot = 0;
+    other._error = ER_SUCCESS;
+    other._items.clear();
+    return ;
+}
+
+ft_inventory &ft_inventory::operator=(ft_inventory &&other) noexcept
+{
+    if (this != &other)
+    {
+        this->_items = ft_move(other._items);
+        this->_capacity = other._capacity;
+        this->_used_slots = other._used_slots;
+        this->_weight_limit = other._weight_limit;
+        this->_current_weight = other._current_weight;
+        this->_next_slot = other._next_slot;
+        this->_error = other._error;
+        if (this->_items.get_error() != ER_SUCCESS)
+            this->set_error(this->_items.get_error());
+        other._capacity = 0;
+        other._used_slots = 0;
+        other._weight_limit = 0;
+        other._current_weight = 0;
+        other._next_slot = 0;
+        other._error = ER_SUCCESS;
+        other._items.clear();
+    }
+    return (*this);
+}
+
 ft_map<int, ft_item> &ft_inventory::get_items() noexcept
 {
     return (this->_items);

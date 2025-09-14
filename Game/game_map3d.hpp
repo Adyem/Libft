@@ -25,9 +25,10 @@ class ft_map3d
     public:
         ft_map3d(size_t width = 0, size_t height = 0, size_t depth = 0, int value = 0);
         ~ft_map3d();
-
-        ft_map3d(const ft_map3d&) = delete;
-        ft_map3d &operator=(const ft_map3d&) = delete;
+        ft_map3d(const ft_map3d &other);
+        ft_map3d &operator=(const ft_map3d &other);
+        ft_map3d(ft_map3d &&other) noexcept;
+        ft_map3d &operator=(ft_map3d &&other) noexcept;
 
         void    resize(size_t width, size_t height, size_t depth, int value = 0);
         int     get(size_t x, size_t y, size_t z) const;
