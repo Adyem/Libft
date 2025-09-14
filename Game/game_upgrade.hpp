@@ -17,6 +17,10 @@ class ft_upgrade
     public:
         ft_upgrade() noexcept;
         virtual ~ft_upgrade() = default;
+        ft_upgrade(const ft_upgrade &other) noexcept;
+        ft_upgrade &operator=(const ft_upgrade &other) noexcept;
+        ft_upgrade(ft_upgrade &&other) noexcept;
+        ft_upgrade &operator=(ft_upgrade &&other) noexcept;
 
         int get_id() const noexcept;
         void set_id(int id) noexcept;

@@ -9,6 +9,60 @@ ft_equipment::ft_equipment() noexcept
     return ;
 }
 
+ft_equipment::ft_equipment(const ft_equipment &other) noexcept
+    : _head(other._head), _chest(other._chest), _weapon(other._weapon),
+      _has_head(other._has_head), _has_chest(other._has_chest), _has_weapon(other._has_weapon),
+      _error(other._error)
+{
+    return ;
+}
+
+ft_equipment &ft_equipment::operator=(const ft_equipment &other) noexcept
+{
+    if (this != &other)
+    {
+        this->_head = other._head;
+        this->_chest = other._chest;
+        this->_weapon = other._weapon;
+        this->_has_head = other._has_head;
+        this->_has_chest = other._has_chest;
+        this->_has_weapon = other._has_weapon;
+        this->_error = other._error;
+    }
+    return (*this);
+}
+
+ft_equipment::ft_equipment(ft_equipment &&other) noexcept
+    : _head(ft_move(other._head)), _chest(ft_move(other._chest)), _weapon(ft_move(other._weapon)),
+      _has_head(other._has_head), _has_chest(other._has_chest), _has_weapon(other._has_weapon),
+      _error(other._error)
+{
+    other._has_head = false;
+    other._has_chest = false;
+    other._has_weapon = false;
+    other._error = ER_SUCCESS;
+    return ;
+}
+
+ft_equipment &ft_equipment::operator=(ft_equipment &&other) noexcept
+{
+    if (this != &other)
+    {
+        this->_head = ft_move(other._head);
+        this->_chest = ft_move(other._chest);
+        this->_weapon = ft_move(other._weapon);
+        this->_has_head = other._has_head;
+        this->_has_chest = other._has_chest;
+        this->_has_weapon = other._has_weapon;
+        this->_error = other._error;
+        other._has_head = false;
+        other._has_chest = false;
+        other._has_weapon = false;
+        other._error = ER_SUCCESS;
+    }
+    return (*this);
+}
+
 void ft_equipment::set_error(int err) const noexcept
 {
     ft_errno = err;

@@ -25,6 +25,10 @@ class ft_crafting
     public:
         ft_crafting() noexcept;
         virtual ~ft_crafting() = default;
+        ft_crafting(const ft_crafting &other) noexcept;
+        ft_crafting &operator=(const ft_crafting &other) noexcept;
+        ft_crafting(ft_crafting &&other) noexcept;
+        ft_crafting &operator=(ft_crafting &&other) noexcept;
 
         ft_map<int, ft_vector<ft_crafting_ingredient>>       &get_recipes() noexcept;
         const ft_map<int, ft_vector<ft_crafting_ingredient>> &get_recipes() const noexcept;

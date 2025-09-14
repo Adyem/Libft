@@ -24,6 +24,10 @@ class ft_game_server
     public:
         ft_game_server(ft_world &world) noexcept;
         ~ft_game_server();
+        ft_game_server(const ft_game_server &other) noexcept;
+        ft_game_server &operator=(const ft_game_server &other) noexcept;
+        ft_game_server(ft_game_server &&other) noexcept;
+        ft_game_server &operator=(ft_game_server &&other) noexcept;
 
         int start(const char *ip, uint16_t port) noexcept;
         void run_once() noexcept;

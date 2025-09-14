@@ -20,6 +20,10 @@ class ft_world
     public:
         ft_world() noexcept;
         virtual ~ft_world() = default;
+        ft_world(const ft_world &other) noexcept;
+        ft_world &operator=(const ft_world &other) noexcept;
+        ft_world(ft_world &&other) noexcept;
+        ft_world &operator=(ft_world &&other) noexcept;
 
         void schedule_event(const ft_event &event) noexcept;
         void update_events(int ticks, const char *log_file_path = ft_nullptr, ft_string *log_buffer = ft_nullptr) noexcept;

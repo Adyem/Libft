@@ -14,6 +14,10 @@ class ft_experience_table
     public:
         ft_experience_table(int count = 0) noexcept;
         ~ft_experience_table();
+        ft_experience_table(const ft_experience_table &other) noexcept;
+        ft_experience_table &operator=(const ft_experience_table &other) noexcept;
+        ft_experience_table(ft_experience_table &&other) noexcept;
+        ft_experience_table &operator=(ft_experience_table &&other) noexcept;
 
         int  get_count() const noexcept;
         int  get_level(int experience) const noexcept;

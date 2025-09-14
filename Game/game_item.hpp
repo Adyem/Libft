@@ -24,6 +24,10 @@ class ft_item
     public:
         ft_item() noexcept;
         virtual ~ft_item() = default;
+        ft_item(const ft_item &other) noexcept;
+        ft_item &operator=(const ft_item &other) noexcept;
+        ft_item(ft_item &&other) noexcept;
+        ft_item &operator=(ft_item &&other) noexcept;
 
         int get_max_stack() const noexcept;
         void set_max_stack(int max) noexcept;
