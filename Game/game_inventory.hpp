@@ -4,12 +4,13 @@
 #include "game_rules.hpp"
 #include "game_item.hpp"
 #include "../Template/map.hpp"
+#include "../Template/shared_ptr.hpp"
 #include "../Errno/errno.hpp"
 
 class ft_inventory
 {
     private:
-        ft_map<int, ft_item> _items;
+        ft_map<int, ft_sharedptr<ft_item> > _items;
         size_t              _capacity;
         size_t              _used_slots;
         int                 _weight_limit;
@@ -27,8 +28,8 @@ class ft_inventory
         ft_inventory(ft_inventory &&other) noexcept;
         ft_inventory &operator=(ft_inventory &&other) noexcept;
 
-        ft_map<int, ft_item>       &get_items() noexcept;
-        const ft_map<int, ft_item> &get_items() const noexcept;
+        ft_map<int, ft_sharedptr<ft_item> >       &get_items() noexcept;
+        const ft_map<int, ft_sharedptr<ft_item> > &get_items() const noexcept;
 
         size_t get_capacity() const noexcept;
         void   resize(size_t capacity) noexcept;
@@ -43,7 +44,7 @@ class ft_inventory
         int get_error() const noexcept;
         const char *get_error_str() const noexcept;
 
-        int  add_item(const ft_item &item) noexcept;
+        int  add_item(const ft_sharedptr<ft_item> &item) noexcept;
         void remove_item(int slot) noexcept;
 
         int  count_item(int item_id) const noexcept;

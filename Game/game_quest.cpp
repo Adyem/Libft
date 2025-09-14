@@ -123,17 +123,17 @@ void ft_quest::set_reward_experience(int experience) noexcept
     return ;
 }
 
-ft_vector<ft_item> &ft_quest::get_reward_items() noexcept
+ft_vector<ft_sharedptr<ft_item> > &ft_quest::get_reward_items() noexcept
 {
     return (this->_reward_items);
 }
 
-const ft_vector<ft_item> &ft_quest::get_reward_items() const noexcept
+const ft_vector<ft_sharedptr<ft_item> > &ft_quest::get_reward_items() const noexcept
 {
     return (this->_reward_items);
 }
 
-void ft_quest::set_reward_items(const ft_vector<ft_item> &items) noexcept
+void ft_quest::set_reward_items(const ft_vector<ft_sharedptr<ft_item> > &items) noexcept
 {
     this->_reward_items.clear();
     size_t index = 0;

@@ -133,9 +133,24 @@ int ft_crafting::register_recipe(int recipe_id, ft_vector<ft_crafting_ingredient
     return (ER_SUCCESS);
 }
 
-int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id, const ft_item &result) noexcept
+int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id, const ft_sharedptr<ft_item> &result) noexcept
 {
     this->_error_code = ER_SUCCESS;
+    if (!result)
+    {
+        this->set_error(GAME_GENERAL_ERROR);
+        return (GAME_GENERAL_ERROR);
+    }
+    if (result.get_error() != ER_SUCCESS)
+    {
+        this->set_error(result.get_error());
+        return (this->_error_code);
+    }
+    if (result->get_error() != ER_SUCCESS)
+    {
+        this->set_error(result->get_error());
+        return (this->_error_code);
+    }
     Pair<int, ft_vector<ft_crafting_ingredient>> *recipe_entry = this->_recipes.find(recipe_id);
     if (!recipe_entry)
     {
@@ -149,15 +164,28 @@ int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id, const ft_ite
     {
         ft_crafting_ingredient &ingredient = ingredients[index];
         int have_count = 0;
-        const ft_map<int, ft_item> &items = inventory.get_items();
-        const Pair<int, ft_item> *item_ptr = items.end() - items.size();
-        const Pair<int, ft_item> *item_end = items.end();
+        const ft_map<int, ft_sharedptr<ft_item> > &items = inventory.get_items();
+        const Pair<int, ft_sharedptr<ft_item> > *item_ptr = items.end() - items.size();
+        const Pair<int, ft_sharedptr<ft_item> > *item_end = items.end();
         while (item_ptr != item_end)
         {
-            if (item_ptr->value.get_item_id() == ingredient.item_id)
+            if (item_ptr->value)
             {
-                if (ingredient.rarity == -1 || item_ptr->value.get_rarity() == ingredient.rarity)
-                    have_count += item_ptr->value.get_stack_size();
+                if (item_ptr->value.get_error() != ER_SUCCESS)
+                {
+                    this->set_error(item_ptr->value.get_error());
+                    return (this->_error_code);
+                }
+                if (item_ptr->value->get_error() != ER_SUCCESS)
+                {
+                    this->set_error(item_ptr->value->get_error());
+                    return (this->_error_code);
+                }
+                if (item_ptr->value->get_item_id() == ingredient.item_id)
+                {
+                    if (ingredient.rarity == -1 || item_ptr->value->get_rarity() == ingredient.rarity)
+                        have_count += item_ptr->value->get_stack_size();
+                }
             }
             ++item_ptr;
         }
@@ -174,22 +202,35 @@ int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id, const ft_ite
     {
         ft_crafting_ingredient &ingredient = ingredients[index];
         int remaining = ingredient.count;
-        ft_map<int, ft_item> &items = inventory.get_items();
-        Pair<int, ft_item> *item_ptr = items.end() - items.size();
-        Pair<int, ft_item> *item_end = items.end();
+        ft_map<int, ft_sharedptr<ft_item> > &items = inventory.get_items();
+        Pair<int, ft_sharedptr<ft_item> > *item_ptr = items.end() - items.size();
+        Pair<int, ft_sharedptr<ft_item> > *item_end = items.end();
         while (item_ptr != item_end && remaining > 0)
         {
-            if (item_ptr->value.get_item_id() == ingredient.item_id)
+            if (item_ptr->value)
             {
-                if (ingredient.rarity == -1 || item_ptr->value.get_rarity() == ingredient.rarity)
+                if (item_ptr->value.get_error() != ER_SUCCESS)
                 {
-                    int remove = item_ptr->value.get_stack_size();
-                    if (remove > remaining)
-                        remove = remaining;
-                    item_ptr->value.sub_from_stack(remove);
-                    remaining -= remove;
-                    if (item_ptr->value.get_stack_size() == 0)
-                        items.remove(item_ptr->key);
+                    this->set_error(item_ptr->value.get_error());
+                    return (this->_error_code);
+                }
+                if (item_ptr->value->get_error() != ER_SUCCESS)
+                {
+                    this->set_error(item_ptr->value->get_error());
+                    return (this->_error_code);
+                }
+                if (item_ptr->value->get_item_id() == ingredient.item_id)
+                {
+                    if (ingredient.rarity == -1 || item_ptr->value->get_rarity() == ingredient.rarity)
+                    {
+                        int remove = item_ptr->value->get_stack_size();
+                        if (remove > remaining)
+                            remove = remaining;
+                        item_ptr->value->sub_from_stack(remove);
+                        remaining -= remove;
+                        if (item_ptr->value->get_stack_size() == 0)
+                            items.remove(item_ptr->key);
+                    }
                 }
             }
             ++item_ptr;
