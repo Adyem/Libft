@@ -1,6 +1,6 @@
-#include "world.hpp"
+#include "game_world.hpp"
 #include "game_character.hpp"
-#include "inventory.hpp"
+#include "game_inventory.hpp"
 #include "../JSon/json.hpp"
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"

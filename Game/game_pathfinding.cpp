@@ -1,4 +1,4 @@
-#include "pathfinding.hpp"
+#include "game_pathfinding.hpp"
 
 static size_t distance_component(size_t a, size_t b)
 {

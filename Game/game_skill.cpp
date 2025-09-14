@@ -1,4 +1,4 @@
-#include "skill.hpp"
+#include "game_skill.hpp"
 #include "../Libft/libft.hpp"
 
 ft_skill::ft_skill() noexcept

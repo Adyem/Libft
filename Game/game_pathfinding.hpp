@@ -1,7 +1,7 @@
-#ifndef PATHFINDING_HPP
-# define PATHFINDING_HPP
+#ifndef GAME_PATHFINDING_HPP
+# define GAME_PATHFINDING_HPP
 
-#include "map3d.hpp"
+#include "game_map3d.hpp"
 #include "../Template/vector.hpp"
 #include "../Template/graph.hpp"
 #include "../Errno/errno.hpp"

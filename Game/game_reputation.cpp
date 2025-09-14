@@ -1,4 +1,4 @@
-#include "reputation.hpp"
+#include "game_reputation.hpp"
 
 ft_reputation::ft_reputation() noexcept
     : _milestones(), _reps(), _total_rep(0),

@@ -1,7 +1,7 @@
-#include "item.hpp"
+#include "game_item.hpp"
 
 ft_item::ft_item() noexcept
-    : _max_stack(0), _current_stack(0), _item_id(0),
+    : _max_stack(0), _current_stack(0), _item_id(0), _rarity(0),
       _modifier1{0, 0}, _modifier2{0, 0}, _modifier3{0, 0}, _modifier4{0, 0}
 {
     return ;
@@ -53,6 +53,17 @@ int ft_item::get_item_id() const noexcept
 void ft_item::set_item_id(int id) noexcept
 {
     this->_item_id = id;
+    return ;
+}
+
+int ft_item::get_rarity() const noexcept
+{
+    return (this->_rarity);
+}
+
+void ft_item::set_rarity(int rarity) noexcept
+{
+    this->_rarity = rarity;
     return ;
 }
 

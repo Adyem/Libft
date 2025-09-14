@@ -1,4 +1,4 @@
-#include "inventory.hpp"
+#include "game_inventory.hpp"
 
 ft_inventory::ft_inventory(size_t capacity) noexcept
     : _items(), _capacity(capacity), _next_slot(0), _error(ER_SUCCESS)
@@ -127,6 +127,25 @@ int ft_inventory::count_item(int item_id) const noexcept
 bool ft_inventory::has_item(int item_id) const noexcept
 {
     return (this->count_item(item_id) > 0);
+}
+
+int ft_inventory::count_rarity(int rarity) const noexcept
+{
+    const Pair<int, ft_item> *item_ptr = this->_items.end() - this->_items.size();
+    const Pair<int, ft_item> *item_end = this->_items.end();
+    int total = 0;
+    while (item_ptr != item_end)
+    {
+        if (item_ptr->value.get_rarity() == rarity)
+            total += item_ptr->value.get_current_stack();
+        ++item_ptr;
+    }
+    return (total);
+}
+
+bool ft_inventory::has_rarity(int rarity) const noexcept
+{
+    return (this->count_rarity(rarity) > 0);
 }
 
 const char *ft_inventory::get_error_str() const noexcept

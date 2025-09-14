@@ -1,6 +1,6 @@
-#include "../../Game/pathfinding.hpp"
-#include "../../Game/world.hpp"
-#include "../../Game/map3d.hpp"
+#include "../../Game/game_pathfinding.hpp"
+#include "../../Game/game_world.hpp"
+#include "../../Game/game_map3d.hpp"
 #include "../../Template/graph.hpp"
 #include "../../System_utils/test_runner.hpp"
 

@@ -1,5 +1,5 @@
-#ifndef EXPERIENCE_TABLE_HPP
-#define EXPERIENCE_TABLE_HPP
+#ifndef GAME_EXPERIENCE_TABLE_HPP
+# define GAME_EXPERIENCE_TABLE_HPP
 
 class ft_experience_table
 {
