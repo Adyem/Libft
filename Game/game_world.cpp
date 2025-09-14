@@ -1,5 +1,5 @@
 #include "world.hpp"
-#include "character.hpp"
+#include "game_character.hpp"
 #include "inventory.hpp"
 #include "../JSon/json.hpp"
 #include "../Libft/libft.hpp"
@@ -8,57 +8,57 @@
 
 json_group *serialize_character(const ft_character &character);
 int deserialize_character(ft_character &character, json_group *group);
-json_group *serialize_world(const ft_world &world);
-int deserialize_world(ft_world &world, json_group *group);
+json_group *serialize_event_scheduler(const ft_event_scheduler &scheduler);
+int deserialize_event_scheduler(ft_event_scheduler &scheduler, json_group *group);
 json_group *serialize_inventory(const ft_inventory &inventory);
 int deserialize_inventory(ft_inventory &inventory, json_group *group);
 json_group *serialize_equipment(const ft_character &character);
 int deserialize_equipment(ft_character &character, json_group *group);
 
 ft_world::ft_world() noexcept
-    : _events(), _error(ER_SUCCESS)
+    : _event_scheduler(), _error(ER_SUCCESS)
 {
-    if (this->_events.get_error() != ER_SUCCESS)
-        this->set_error(this->_events.get_error());
+    if (this->_event_scheduler.get_error() != ER_SUCCESS)
+        this->set_error(this->_event_scheduler.get_error());
     return ;
 }
 
-ft_map<int, ft_event> &ft_world::get_events() noexcept
+void ft_world::schedule_event(const ft_event &event) noexcept
 {
-    return (this->_events);
-}
-
-const ft_map<int, ft_event> &ft_world::get_events() const noexcept
-{
-    return (this->_events);
-}
-
-void ft_world::process_events(int ticks) noexcept
-{
-    Pair<int, ft_event> *pair_pointer = this->_events.end();
-    size_t current_index = this->_events.size();
-    while (current_index > 0)
-    {
-        --current_index;
-        --pair_pointer;
-        ft_event &current_event = pair_pointer->value;
-        current_event.sub_duration(ticks);
-        if (current_event.get_duration() <= 0)
-            this->_events.remove(pair_pointer->key);
-    }
+    this->_event_scheduler.schedule_event(event);
+    if (this->_event_scheduler.get_error() != ER_SUCCESS)
+        this->set_error(this->_event_scheduler.get_error());
     return ;
+}
+
+void ft_world::update_events(int ticks, const char *log_file_path, ft_string *log_buffer) noexcept
+{
+    this->_event_scheduler.update_events(ticks, log_file_path, log_buffer);
+    if (this->_event_scheduler.get_error() != ER_SUCCESS)
+        this->set_error(this->_event_scheduler.get_error());
+    return ;
+}
+
+ft_event_scheduler &ft_world::get_event_scheduler() noexcept
+{
+    return (this->_event_scheduler);
+}
+
+const ft_event_scheduler &ft_world::get_event_scheduler() const noexcept
+{
+    return (this->_event_scheduler);
 }
 
 int ft_world::save_to_file(const char *file_path, const ft_character &character, const ft_inventory &inventory) const noexcept
 {
     json_group *groups = ft_nullptr;
-    json_group *world_group = serialize_world(*this);
-    if (!world_group)
+    json_group *event_group = serialize_event_scheduler(this->_event_scheduler);
+    if (!event_group)
     {
         this->set_error(ft_errno);
         return (this->_error);
     }
-    json_append_group(&groups, world_group);
+    json_append_group(&groups, event_group);
     json_group *character_group = serialize_character(character);
     if (!character_group)
     {
@@ -102,19 +102,25 @@ int ft_world::load_from_file(const char *file_path, ft_character &character, ft_
         this->set_error(GAME_GENERAL_ERROR);
         return (this->_error);
     }
-    json_group *world_group = json_find_group(groups, "world");
+    json_group *event_group = json_find_group(groups, "world");
     json_group *character_group = json_find_group(groups, "character");
     json_group *inventory_group = json_find_group(groups, "inventory");
     json_group *equipment_group = json_find_group(groups, "equipment");
-    if (!world_group || !character_group || !inventory_group || !equipment_group)
+    if (!event_group || !character_group || !inventory_group || !equipment_group)
     {
         json_free_groups(groups);
         this->set_error(GAME_GENERAL_ERROR);
         return (this->_error);
     }
-    this->_events.clear();
+    this->_event_scheduler.clear();
+    if (this->_event_scheduler.get_error() != ER_SUCCESS)
+    {
+        json_free_groups(groups);
+        this->set_error(this->_event_scheduler.get_error());
+        return (this->_error);
+    }
     inventory.get_items().clear();
-    if (deserialize_world(*this, world_group) != ER_SUCCESS ||
+    if (deserialize_event_scheduler(this->_event_scheduler, event_group) != ER_SUCCESS ||
         deserialize_character(character, character_group) != ER_SUCCESS ||
         deserialize_inventory(inventory, inventory_group) != ER_SUCCESS ||
         deserialize_equipment(character, equipment_group) != ER_SUCCESS)
