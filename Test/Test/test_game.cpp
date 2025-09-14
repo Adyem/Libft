@@ -9,6 +9,7 @@
 #include "../../Game/world.hpp"
 #include "../../Game/event.hpp"
 #include "../../Game/inventory.hpp"
+#include "../../Template/vector.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../JSon/json.hpp"
 #include <cstdio>
@@ -74,10 +75,11 @@ int test_game_simulation(void)
     ft_event meeting;
     meeting.set_id(1);
     meeting.set_duration(5);
-    overworld.get_events().insert(meeting.get_id(), meeting);
-    overworld.process_events(1);
-    Pair<int, ft_event>* eentry = overworld.get_events().find(1);
-    if (!eentry || eentry->value.get_duration() != 4)
+    overworld.schedule_event(meeting);
+    overworld.update_events(1);
+    ft_vector<ft_event> events;
+    overworld.get_event_scheduler().dump_events(events);
+    if (events.size() != 1 || events[0].get_duration() != 4)
         return (0);
 
     ft_inventory pack(2);
@@ -187,7 +189,7 @@ int test_game_save_load(void)
     ft_event event;
     event.set_id(1);
     event.set_duration(5);
-    world.get_events().insert(event.get_id(), event);
+    world.schedule_event(event);
     ft_inventory inventory;
     if (world.save_to_file("test_save.json", hero, inventory) != ER_SUCCESS)
         return (0);
@@ -196,11 +198,12 @@ int test_game_save_load(void)
     ft_inventory loaded_inventory;
     if (loaded_world.load_from_file("test_save.json", loaded_hero, loaded_inventory) != ER_SUCCESS)
         return (0);
-    Pair<int, ft_event> *event_entry = loaded_world.get_events().find(1);
+    ft_vector<ft_event> loaded_events;
+    loaded_world.get_event_scheduler().dump_events(loaded_events);
     remove("test_save.json");
-    if (!event_entry)
+    if (loaded_events.size() != 1)
         return (0);
-    if (event_entry->value.get_duration() != 5)
+    if (loaded_events[0].get_duration() != 5)
         return (0);
     if (loaded_hero.get_hit_points() != 42)
         return (0);

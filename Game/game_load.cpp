@@ -56,7 +56,7 @@ int deserialize_world(ft_world &world, json_group *group)
         ft_event event;
         event.set_id(ft_atoi(id_item->value));
         event.set_duration(ft_atoi(duration_item->value));
-        world.get_events().insert(event.get_id(), event);
+        world.schedule_event(event);
         event_index++;
     }
     return (ER_SUCCESS);

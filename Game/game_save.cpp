@@ -6,6 +6,7 @@
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_string_class.hpp"
+#include "../Template/vector.hpp"
 
 json_group *serialize_character(const ft_character &character);
 json_group *serialize_world(const ft_world &world);
@@ -29,16 +30,17 @@ json_group *serialize_world(const ft_world &world)
     json_group *group = json_create_json_group("world");
     if (!group)
         return (ft_nullptr);
-    json_item *count_item = json_create_item("event_count", static_cast<int>(world.get_events().size()));
+    json_item *count_item = json_create_item("event_count", static_cast<int>(world.get_event_scheduler().size()));
     if (!count_item)
     {
         json_free_groups(group);
         return (ft_nullptr);
     }
     json_add_item_to_group(group, count_item);
+    ft_vector<ft_event> events;
+    world.get_event_scheduler().dump_events(events);
     size_t event_index = 0;
-    size_t event_count = world.get_events().size();
-    const Pair<int, ft_event> *event_start = world.get_events().end() - event_count;
+    size_t event_count = events.size();
     while (event_index < event_count)
     {
         char *event_index_string = cma_itoa(static_cast<int>(event_index));
@@ -54,8 +56,8 @@ json_group *serialize_world(const ft_world &world)
         key_duration += event_index_string;
         key_duration += "_duration";
         cma_free(event_index_string);
-        if (add_item_field(group, key_id, event_start[event_index].value.get_id()) != ER_SUCCESS ||
-            add_item_field(group, key_duration, event_start[event_index].value.get_duration()) != ER_SUCCESS)
+        if (add_item_field(group, key_id, events[event_index].get_id()) != ER_SUCCESS ||
+            add_item_field(group, key_duration, events[event_index].get_duration()) != ER_SUCCESS)
             return (ft_nullptr);
         event_index++;
     }

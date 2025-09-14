@@ -1,10 +1,10 @@
 #ifndef WORLD_HPP
 # define WORLD_HPP
 
-#include "../Template/map.hpp"
-#include "event.hpp"
+#include "event_scheduler.hpp"
 #include "../Errno/errno.hpp"
 #include "pathfinding.hpp"
+#include "../CPP_class/class_string_class.hpp"
 
 class ft_character;
 class ft_inventory;
@@ -12,8 +12,8 @@ class ft_inventory;
 class ft_world
 {
     private:
-        ft_map<int, ft_event> _events;
-        mutable int           _error;
+        ft_event_scheduler _event_scheduler;
+        mutable int        _error;
 
         void set_error(int err) const noexcept;
 
@@ -21,10 +21,11 @@ class ft_world
         ft_world() noexcept;
         virtual ~ft_world() = default;
 
-        ft_map<int, ft_event>       &get_events() noexcept;
-        const ft_map<int, ft_event> &get_events() const noexcept;
+        void schedule_event(const ft_event &event) noexcept;
+        void update_events(int ticks, const char *log_file_path = ft_nullptr, ft_string *log_buffer = ft_nullptr) noexcept;
 
-        void process_events(int ticks) noexcept;
+        ft_event_scheduler       &get_event_scheduler() noexcept;
+        const ft_event_scheduler &get_event_scheduler() const noexcept;
 
         int save_to_file(const char *file_path, const ft_character &character, const ft_inventory &inventory) const noexcept;
         int load_from_file(const char *file_path, ft_character &character, ft_inventory &inventory) noexcept;
