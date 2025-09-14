@@ -8,7 +8,7 @@ static size_t distance_component(size_t a, size_t b)
 }
 
 ft_pathfinding::ft_pathfinding() noexcept
-    : _error_code(ER_SUCCESS)
+    : _error_code(ER_SUCCESS), _current_path(), _needs_replan(false)
 {
     return ;
 }
@@ -33,6 +33,53 @@ int ft_pathfinding::get_error() const noexcept
 const char *ft_pathfinding::get_error_str() const noexcept
 {
     return (ft_strerror(this->_error_code));
+}
+
+void ft_pathfinding::update_obstacle(size_t x, size_t y, size_t z, int value) noexcept
+{
+    (void)value;
+    size_t index = 0;
+    while (index < this->_current_path.size())
+    {
+        ft_path_step step = this->_current_path[index];
+        if (step._x == x && step._y == y && step._z == z)
+            this->_needs_replan = true;
+        ++index;
+    }
+    return ;
+}
+
+int ft_pathfinding::recalculate_path(const ft_map3d &grid,
+    size_t start_x, size_t start_y, size_t start_z,
+    size_t goal_x, size_t goal_y, size_t goal_z,
+    ft_vector<ft_path_step> &out_path) noexcept
+{
+    if (!this->_needs_replan && this->_current_path.size() > 0)
+    {
+        out_path.clear();
+        size_t copy_index = 0;
+        while (copy_index < this->_current_path.size())
+        {
+            out_path.push_back(this->_current_path[copy_index]);
+            ++copy_index;
+        }
+        this->set_error(ER_SUCCESS);
+        return (ER_SUCCESS);
+    }
+    int result = this->astar_grid(grid, start_x, start_y, start_z,
+        goal_x, goal_y, goal_z, out_path);
+    if (result == ER_SUCCESS)
+    {
+        this->_current_path.clear();
+        size_t index = 0;
+        while (index < out_path.size())
+        {
+            this->_current_path.push_back(out_path[index]);
+            ++index;
+        }
+        this->_needs_replan = false;
+    }
+    return (result);
 }
 
 int ft_pathfinding::astar_grid(const ft_map3d &grid,

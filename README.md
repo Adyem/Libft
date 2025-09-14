@@ -1533,6 +1533,28 @@ Queued events can be saved and reloaded through `serialize_event_scheduler` and
 `deserialize_event_scheduler`, which `ft_world::save_to_file` and
 `ft_world::load_from_file` invoke to persist pending actions.
 
+#### Game Server
+`ft_game_server` exposes a small WebSocket endpoint that forwards client
+messages into the world's event queue and broadcasts the updated schedule. A
+server is created with a reference to an `ft_world` instance and started on a
+host and port:
+
+```
+ft_world world;
+ft_game_server server(world);
+server.start("0.0.0.0", 8080);
+server.run_once();
+```
+
+Clients connect over WebSockets and send JSON messages describing an event:
+
+```
+{ "event": { "id": 1, "duration": 3 } }
+```
+
+Each message schedules an event in the world. The server replies by emitting
+the current event queue as JSON so every client observes the same state.
+
 Both helpers use the JSon module to read and write the `world`, `character`, `inventory`, and `equipment` groups. Skills stored on a character are serialized alongside these fields and restored on load.
 
 Characters manage gear through an `ft_equipment` container. Slots such as head, chest, and weapon can be equipped or unequipped and the appropriate stat modifiers are applied automatically.
@@ -1563,6 +1585,20 @@ finder.astar_grid(grid, 0, 0, 0, 2, 2, 0, path);
 ```
 ft_world world;
 world.plan_route(grid, 0, 0, 0, 2, 2, 0, path);
+```
+
+Obstacles may change at runtime. `ft_map3d::toggle_obstacle` switches a cell
+between free and blocked and notifies a listener. `ft_pathfinding` listens for
+these updates with `update_obstacle` and re-plans the route on demand using
+`recalculate_path`:
+
+```
+ft_map3d grid(3, 3, 1, 0);
+ft_pathfinding finder;
+ft_vector<ft_path_step> path;
+finder.recalculate_path(grid, 0, 0, 0, 2, 2, 0, path);
+grid.toggle_obstacle(1, 0, 0, &finder);
+finder.recalculate_path(grid, 0, 0, 0, 2, 2, 0, path);
 ```
 
 ##### Crafting

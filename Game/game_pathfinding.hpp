@@ -17,6 +17,8 @@ class ft_pathfinding
 {
     private:
         mutable int _error_code;
+        ft_vector<ft_path_step> _current_path;
+        bool _needs_replan;
 
         void    set_error(int error) const noexcept;
 
@@ -32,6 +34,12 @@ class ft_pathfinding
         int dijkstra_graph(const ft_graph<int> &graph,
             size_t start_vertex, size_t goal_vertex,
             ft_vector<size_t> &out_path) const noexcept;
+
+        void    update_obstacle(size_t x, size_t y, size_t z, int value) noexcept;
+        int     recalculate_path(const ft_map3d &grid,
+            size_t start_x, size_t start_y, size_t start_z,
+            size_t goal_x, size_t goal_y, size_t goal_z,
+            ft_vector<ft_path_step> &out_path) noexcept;
 
         int get_error() const noexcept;
         const char *get_error_str() const noexcept;

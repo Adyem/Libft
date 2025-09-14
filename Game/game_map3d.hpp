@@ -2,6 +2,9 @@
 # define GAME_MAP3D_HPP
 
 #include <cstddef>
+#include "../CPP_class/class_nullptr.hpp"
+
+class ft_pathfinding;
 
 class ft_map3d
 {
@@ -29,6 +32,8 @@ class ft_map3d
         void    resize(size_t width, size_t height, size_t depth, int value = 0);
         int     get(size_t x, size_t y, size_t z) const;
         void    set(size_t x, size_t y, size_t z, int value);
+        int     is_obstacle(size_t x, size_t y, size_t z) const;
+        void    toggle_obstacle(size_t x, size_t y, size_t z, ft_pathfinding *listener = ft_nullptr);
         size_t  get_width() const;
         size_t  get_height() const;
         size_t  get_depth() const;
