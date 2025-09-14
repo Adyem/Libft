@@ -1,4 +1,5 @@
 #include "game_map3d.hpp"
+#include "game_pathfinding.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
@@ -63,6 +64,29 @@ void ft_map3d::set(size_t x, size_t y, size_t z, int value)
         return ;
     }
     this->_data[z][y][x] = value;
+    return ;
+}
+
+int ft_map3d::is_obstacle(size_t x, size_t y, size_t z) const
+{
+    if (this->get(x, y, z) != 0)
+        return (1);
+    return (0);
+}
+
+void ft_map3d::toggle_obstacle(size_t x, size_t y, size_t z, ft_pathfinding *listener)
+{
+    if (!this->_data || x >= this->_width || y >= this->_height || z >= this->_depth)
+    {
+        this->set_error(MAP3D_OUT_OF_BOUNDS);
+        return ;
+    }
+    if (this->_data[z][y][x] == 0)
+        this->_data[z][y][x] = 1;
+    else
+        this->_data[z][y][x] = 0;
+    if (listener)
+        listener->update_obstacle(x, y, z, this->_data[z][y][x]);
     return ;
 }
 
