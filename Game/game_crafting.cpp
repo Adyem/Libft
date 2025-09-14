@@ -1,4 +1,4 @@
-#include "crafting.hpp"
+#include "game_crafting.hpp"
 
 ft_crafting::ft_crafting() noexcept
     : _recipes(), _error_code(ER_SUCCESS)
@@ -6,12 +6,12 @@ ft_crafting::ft_crafting() noexcept
     return ;
 }
 
-ft_map<int, ft_vector<int>> &ft_crafting::get_recipes() noexcept
+ft_map<int, ft_vector<ft_crafting_ingredient>> &ft_crafting::get_recipes() noexcept
 {
     return (this->_recipes);
 }
 
-const ft_map<int, ft_vector<int>> &ft_crafting::get_recipes() const noexcept
+const ft_map<int, ft_vector<ft_crafting_ingredient>> &ft_crafting::get_recipes() const noexcept
 {
     return (this->_recipes);
 }
@@ -33,7 +33,7 @@ void ft_crafting::set_error(int error_code) const noexcept
     return ;
 }
 
-int ft_crafting::register_recipe(int recipe_id, ft_vector<int> &&ingredients) noexcept
+int ft_crafting::register_recipe(int recipe_id, ft_vector<ft_crafting_ingredient> &&ingredients) noexcept
 {
     this->_error_code = ER_SUCCESS;
     this->_recipes.insert(recipe_id, ft_move(ingredients));
@@ -48,18 +48,32 @@ int ft_crafting::register_recipe(int recipe_id, ft_vector<int> &&ingredients) no
 int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id, const ft_item &result) noexcept
 {
     this->_error_code = ER_SUCCESS;
-    Pair<int, ft_vector<int>> *recipe_entry = this->_recipes.find(recipe_id);
+    Pair<int, ft_vector<ft_crafting_ingredient>> *recipe_entry = this->_recipes.find(recipe_id);
     if (!recipe_entry)
     {
         this->set_error(GAME_GENERAL_ERROR);
         return (GAME_GENERAL_ERROR);
     }
 
-    ft_vector<int> &ingredients = recipe_entry->value;
+    ft_vector<ft_crafting_ingredient> &ingredients = recipe_entry->value;
     size_t index = 0;
     while (index < ingredients.size())
     {
-        if (!inventory.has_item(ingredients[index]))
+        ft_crafting_ingredient &ingredient = ingredients[index];
+        int have_count = 0;
+        const ft_map<int, ft_item> &items = inventory.get_items();
+        const Pair<int, ft_item> *item_ptr = items.end() - items.size();
+        const Pair<int, ft_item> *item_end = items.end();
+        while (item_ptr != item_end)
+        {
+            if (item_ptr->value.get_item_id() == ingredient.item_id)
+            {
+                if (ingredient.rarity == -1 || item_ptr->value.get_rarity() == ingredient.rarity)
+                    have_count += item_ptr->value.get_current_stack();
+            }
+            ++item_ptr;
+        }
+        if (have_count < ingredient.count)
         {
             this->set_error(GAME_GENERAL_ERROR);
             return (GAME_GENERAL_ERROR);
@@ -70,19 +84,25 @@ int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id, const ft_ite
     index = 0;
     while (index < ingredients.size())
     {
-        int ingredient_id = ingredients[index];
+        ft_crafting_ingredient &ingredient = ingredients[index];
+        int remaining = ingredient.count;
         ft_map<int, ft_item> &items = inventory.get_items();
         Pair<int, ft_item> *item_ptr = items.end() - items.size();
         Pair<int, ft_item> *item_end = items.end();
-        bool ingredient_removed = false;
-        while (item_ptr != item_end && ingredient_removed == false)
+        while (item_ptr != item_end && remaining > 0)
         {
-            if (item_ptr->value.get_item_id() == ingredient_id)
+            if (item_ptr->value.get_item_id() == ingredient.item_id)
             {
-                item_ptr->value.sub_from_stack(1);
-                if (item_ptr->value.get_current_stack() == 0)
-                    items.remove(item_ptr->key);
-                ingredient_removed = true;
+                if (ingredient.rarity == -1 || item_ptr->value.get_rarity() == ingredient.rarity)
+                {
+                    int remove = item_ptr->value.get_current_stack();
+                    if (remove > remaining)
+                        remove = remaining;
+                    item_ptr->value.sub_from_stack(remove);
+                    remaining -= remove;
+                    if (item_ptr->value.get_current_stack() == 0)
+                        items.remove(item_ptr->key);
+                }
             }
             ++item_ptr;
         }

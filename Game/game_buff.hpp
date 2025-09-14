@@ -1,33 +1,27 @@
-#ifndef UPGRADE_HPP
-# define UPGRADE_HPP
+#ifndef GAME_BUFF_HPP
+# define GAME_BUFF_HPP
 
-#include <cstdint>
-
-class ft_upgrade
+class ft_buff
 {
     private:
-        int      _id;
-        uint16_t _current_level;
-        uint16_t _max_level;
-        int      _modifier1;
-        int      _modifier2;
-        int      _modifier3;
-        int      _modifier4;
+        int _id;
+        int _duration;
+        int _modifier1;
+        int _modifier2;
+        int _modifier3;
+        int _modifier4;
 
     public:
-        ft_upgrade() noexcept;
-        virtual ~ft_upgrade() = default;
+        ft_buff() noexcept;
+        virtual ~ft_buff() = default;
 
         int get_id() const noexcept;
         void set_id(int id) noexcept;
 
-        uint16_t get_current_level() const noexcept;
-        void set_current_level(uint16_t level) noexcept;
-        void add_level(uint16_t level) noexcept;
-        void sub_level(uint16_t level) noexcept;
-
-        uint16_t get_max_level() const noexcept;
-        void set_max_level(uint16_t level) noexcept;
+        int get_duration() const noexcept;
+        void set_duration(int duration) noexcept;
+        void add_duration(int duration) noexcept;
+        void sub_duration(int duration) noexcept;
 
         int get_modifier1() const noexcept;
         void set_modifier1(int mod) noexcept;

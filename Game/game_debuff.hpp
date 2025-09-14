@@ -1,7 +1,7 @@
-#ifndef EVENT_HPP
-# define EVENT_HPP
+#ifndef GAME_DEBUFF_HPP
+# define GAME_DEBUFF_HPP
 
-class ft_event
+class ft_debuff
 {
     private:
         int _id;
@@ -12,8 +12,8 @@ class ft_event
         int _modifier4;
 
     public:
-        ft_event() noexcept;
-        virtual ~ft_event() = default;
+        ft_debuff() noexcept;
+        virtual ~ft_debuff() = default;
 
         int get_id() const noexcept;
         void set_id(int id) noexcept;

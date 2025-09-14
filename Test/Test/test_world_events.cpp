@@ -1,5 +1,5 @@
-#include "../../Game/world.hpp"
-#include "../../Game/event.hpp"
+#include "../../Game/game_world.hpp"
+#include "../../Game/game_event.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Template/vector.hpp"
 

@@ -1,5 +1,5 @@
-#ifndef MAP3D_HPP
-# define MAP3D_HPP
+#ifndef GAME_MAP3D_HPP
+# define GAME_MAP3D_HPP
 
 #include <cstddef>
 

@@ -1,5 +1,5 @@
-#ifndef QUEST_HPP
-# define QUEST_HPP
+#ifndef GAME_QUEST_HPP
+# define GAME_QUEST_HPP
 
 class ft_quest
 {

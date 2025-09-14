@@ -1,7 +1,7 @@
 #ifndef GAME_EVENT_SCHEDULER_HPP
 # define GAME_EVENT_SCHEDULER_HPP
 
-#include "event.hpp"
+#include "game_event.hpp"
 #include "../Template/priority_queue.hpp"
 #include "../Template/vector.hpp"
 #include "../CPP_class/class_string_class.hpp"
