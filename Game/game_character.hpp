@@ -2,16 +2,16 @@
 # define GAME_CHARACTER_HPP
 
 #include "../Template/map.hpp"
-#include "quest.hpp"
-#include "achievement.hpp"
-#include "reputation.hpp"
-#include "buff.hpp"
-#include "debuff.hpp"
-#include "skill.hpp"
-#include "upgrade.hpp"
-#include "inventory.hpp"
-#include "equipment.hpp"
-#include "experience_table.hpp"
+#include "game_quest.hpp"
+#include "game_achievement.hpp"
+#include "game_reputation.hpp"
+#include "game_buff.hpp"
+#include "game_debuff.hpp"
+#include "game_skill.hpp"
+#include "game_upgrade.hpp"
+#include "game_inventory.hpp"
+#include "game_equipment.hpp"
+#include "game_experience_table.hpp"
 #include <cstdint>
 
 #define FT_DAMAGE_PHYSICAL 0

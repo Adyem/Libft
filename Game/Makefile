@@ -26,24 +26,24 @@ SRCS := game_map3d.cpp \
 		game_pathfinding.cpp \
 		game_crafting.cpp
 
-HEADERS := map3d.hpp \
+HEADERS := game_map3d.hpp \
 		   game_character.hpp \
-		   quest.hpp \
-		   achievement.hpp \
-		   reputation.hpp \
-		   buff.hpp \
-		   debuff.hpp \
-		   skill.hpp \
-		   upgrade.hpp \
-		   event.hpp \
+		   game_quest.hpp \
+		   game_achievement.hpp \
+		   game_reputation.hpp \
+		   game_buff.hpp \
+		   game_debuff.hpp \
+		   game_skill.hpp \
+		   game_upgrade.hpp \
+		   game_event.hpp \
 		   game_event_scheduler.hpp \
-		   world.hpp \
-		   item.hpp \
-		   inventory.hpp \
-		   equipment.hpp \
-		   experience_table.hpp \
-		   pathfinding.hpp \
-		   crafting.hpp
+		   game_world.hpp \
+		   game_item.hpp \
+		   game_inventory.hpp \
+		   game_equipment.hpp \
+		   game_experience_table.hpp \
+		   game_pathfinding.hpp \
+		   game_crafting.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

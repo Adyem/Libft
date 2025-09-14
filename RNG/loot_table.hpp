@@ -12,23 +12,26 @@ struct ft_loot_entry
 {
     ElementType *item;
     int weight;
+    int rarity;
 };
 
 template<typename ElementType>
 class ft_loot_table : public ft_vector<ft_loot_entry<ElementType> >
 {
     public:
-        void addElement(ElementType *elem, int weight);
+        void addElement(ElementType *elem, int weight, int rarity);
         ElementType *getRandomLoot() const;
         ElementType *popRandomLoot();
 };
 
 template<typename ElementType>
-void ft_loot_table<ElementType>::addElement(ElementType *elem, int weight)
+void ft_loot_table<ElementType>::addElement(ElementType *elem, int weight, int rarity)
 {
     if (weight <= 0)
         return ;
-    ft_loot_entry<ElementType> entry = {elem, weight};
+    if (rarity < 0)
+        rarity = 0;
+    ft_loot_entry<ElementType> entry = {elem, weight, rarity};
     this->push_back(entry);
     return ;
 }
@@ -42,21 +45,27 @@ ElementType *ft_loot_table<ElementType>::getRandomLoot() const
         const_cast<ft_loot_table<ElementType>*>(this)->set_error(LOOT_TABLE_EMPTY);
         return (ft_nullptr);
     }
-    int totalWeight = 0;
+    int total_weight = 0;
     size_t index = 0;
     while (index < this->size())
     {
-        if (INT_MAX - totalWeight < (*this)[index].weight)
+        int effective = (*this)[index].weight / ((*this)[index].rarity + 1);
+        if (effective < 1)
+            effective = 1;
+        if (INT_MAX - total_weight < effective)
             return (ft_nullptr);
-        totalWeight += (*this)[index].weight;
+        total_weight += effective;
         ++index;
     }
-    int roll = ft_dice_roll(1, totalWeight);
+    int roll = ft_dice_roll(1, total_weight);
     int accumulated = 0;
     index = 0;
     while (index < this->size())
     {
-        accumulated += (*this)[index].weight;
+        int effective = (*this)[index].weight / ((*this)[index].rarity + 1);
+        if (effective < 1)
+            effective = 1;
+        accumulated += effective;
         if (roll <= accumulated)
             return ((*this)[index].item);
         ++index;
@@ -73,21 +82,27 @@ ElementType *ft_loot_table<ElementType>::popRandomLoot()
         this->set_error(LOOT_TABLE_EMPTY);
         return (ft_nullptr);
     }
-    int totalWeight = 0;
+    int total_weight = 0;
     size_t index = 0;
     while (index < this->size())
     {
-        if (INT_MAX - totalWeight < (*this)[index].weight)
+        int effective = (*this)[index].weight / ((*this)[index].rarity + 1);
+        if (effective < 1)
+            effective = 1;
+        if (INT_MAX - total_weight < effective)
             return (ft_nullptr);
-        totalWeight += (*this)[index].weight;
+        total_weight += effective;
         ++index;
     }
-    int roll = ft_dice_roll(1, totalWeight);
+    int roll = ft_dice_roll(1, total_weight);
     int accumulated = 0;
     index = 0;
     while (index < this->size())
     {
-        accumulated += (*this)[index].weight;
+        int effective = (*this)[index].weight / ((*this)[index].rarity + 1);
+        if (effective < 1)
+            effective = 1;
+        accumulated += effective;
         if (roll <= accumulated)
         {
             ElementType *elem = (*this)[index].item;

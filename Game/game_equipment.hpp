@@ -1,7 +1,7 @@
-#ifndef EQUIPMENT_HPP
-#define EQUIPMENT_HPP
+#ifndef GAME_EQUIPMENT_HPP
+# define GAME_EQUIPMENT_HPP
 
-#include "item.hpp"
+#include "game_item.hpp"
 #include "../Errno/errno.hpp"
 
 enum ft_equipment_slot

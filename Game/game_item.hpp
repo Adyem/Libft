@@ -1,5 +1,5 @@
-#ifndef ITEM_HPP
-#define ITEM_HPP
+#ifndef GAME_ITEM_HPP
+# define GAME_ITEM_HPP
 
 struct ft_item_modifier
 {
@@ -13,6 +13,7 @@ class ft_item
         int _max_stack;
         int _current_stack;
         int _item_id;
+        int _rarity;
         ft_item_modifier _modifier1;
         ft_item_modifier _modifier2;
         ft_item_modifier _modifier3;
@@ -32,6 +33,9 @@ class ft_item
 
         int get_item_id() const noexcept;
         void set_item_id(int id) noexcept;
+
+        int get_rarity() const noexcept;
+        void set_rarity(int rarity) noexcept;
 
         ft_item_modifier get_modifier1() const noexcept;
         void set_modifier1(const ft_item_modifier &mod) noexcept;

@@ -1,5 +1,5 @@
-#ifndef SKILL_HPP
-# define SKILL_HPP
+#ifndef GAME_SKILL_HPP
+# define GAME_SKILL_HPP
 
 #include "../Errno/errno.hpp"
 

@@ -1,9 +1,9 @@
-#ifndef WORLD_HPP
-# define WORLD_HPP
+#ifndef GAME_WORLD_HPP
+# define GAME_WORLD_HPP
 
 #include "game_event_scheduler.hpp"
 #include "../Errno/errno.hpp"
-#include "pathfinding.hpp"
+#include "game_pathfinding.hpp"
 #include "../CPP_class/class_string_class.hpp"
 
 class ft_character;

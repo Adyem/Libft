@@ -1,4 +1,4 @@
-#include "equipment.hpp"
+#include "game_equipment.hpp"
 #include "../Libft/libft.hpp"
 
 ft_equipment::ft_equipment() noexcept
