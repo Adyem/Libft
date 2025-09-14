@@ -37,7 +37,7 @@ void ft_event_scheduler::schedule_event(const ft_event &event) noexcept
     return ;
 }
 
-void ft_event_scheduler::update_events(int ticks, const char *log_file_path, ft_string *log_buffer) noexcept
+void ft_event_scheduler::update_events(ft_world &world, int ticks, const char *log_file_path, ft_string *log_buffer) noexcept
 {
     ft_priority_queue<ft_event, ft_event_compare> temp;
     ft_event current_event;
@@ -52,6 +52,9 @@ void ft_event_scheduler::update_events(int ticks, const char *log_file_path, ft_
         current_event.sub_duration(ticks);
         if (current_event.get_duration() <= 0)
         {
+            const ft_function<void(ft_world&, ft_event&)> &callback = current_event.get_callback();
+            if (callback)
+                callback(world, current_event);
             if (log_file_path)
                 log_event_to_file(current_event, log_file_path);
             if (log_buffer)

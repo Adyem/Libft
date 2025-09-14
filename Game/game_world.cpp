@@ -5,6 +5,8 @@
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_string_class.hpp"
+#include "../Template/vector.hpp"
+#include "../Template/function.hpp"
 
 json_group *serialize_character(const ft_character &character);
 int deserialize_character(ft_character &character, json_group *group);
@@ -14,6 +16,23 @@ json_group *serialize_inventory(const ft_inventory &inventory);
 int deserialize_inventory(ft_inventory &inventory, json_group *group);
 json_group *serialize_equipment(const ft_character &character);
 int deserialize_equipment(ft_character &character, json_group *group);
+
+static void default_event_callback(ft_world &world, ft_event &event) noexcept;
+static ft_function<void(ft_world&, ft_event&)> get_callback_by_id(int type_id) noexcept;
+
+static void default_event_callback(ft_world &world, ft_event &event) noexcept
+{
+    (void)world;
+    (void)event;
+    return ;
+}
+
+static ft_function<void(ft_world&, ft_event&)> get_callback_by_id(int type_id) noexcept
+{
+    if (type_id == 1)
+        return (ft_function<void(ft_world&, ft_event&)>(default_event_callback));
+    return (ft_function<void(ft_world&, ft_event&)>());
+}
 
 ft_world::ft_world() noexcept
     : _event_scheduler(), _error(ER_SUCCESS)
@@ -33,7 +52,7 @@ void ft_world::schedule_event(const ft_event &event) noexcept
 
 void ft_world::update_events(int ticks, const char *log_file_path, ft_string *log_buffer) noexcept
 {
-    this->_event_scheduler.update_events(ticks, log_file_path, log_buffer);
+    this->_event_scheduler.update_events(*this, ticks, log_file_path, log_buffer);
     if (this->_event_scheduler.get_error() != ER_SUCCESS)
         this->set_error(this->_event_scheduler.get_error());
     return ;
@@ -128,6 +147,29 @@ int ft_world::load_from_file(const char *file_path, ft_character &character, ft_
         json_free_groups(groups);
         this->set_error(ft_errno);
         return (this->_error);
+    }
+    ft_vector<ft_event> scheduled_events;
+    this->_event_scheduler.dump_events(scheduled_events);
+    this->_event_scheduler.clear();
+    if (this->_event_scheduler.get_error() != ER_SUCCESS)
+    {
+        json_free_groups(groups);
+        this->set_error(this->_event_scheduler.get_error());
+        return (this->_error);
+    }
+    size_t event_index = 0;
+    size_t event_count = scheduled_events.size();
+    while (event_index < event_count)
+    {
+        scheduled_events[event_index].set_callback(get_callback_by_id(scheduled_events[event_index].get_id()));
+        this->_event_scheduler.schedule_event(scheduled_events[event_index]);
+        if (this->_event_scheduler.get_error() != ER_SUCCESS)
+        {
+            json_free_groups(groups);
+            this->set_error(this->_event_scheduler.get_error());
+            return (this->_error);
+        }
+        event_index++;
     }
     json_free_groups(groups);
     this->set_error(ER_SUCCESS);

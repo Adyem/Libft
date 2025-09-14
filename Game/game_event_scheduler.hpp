@@ -9,6 +9,7 @@
 #include "../Errno/errno.hpp"
 
 struct json_group;
+class ft_world;
 
 struct ft_event_compare
 {
@@ -28,7 +29,7 @@ class ft_event_scheduler
         ~ft_event_scheduler();
 
         void schedule_event(const ft_event &event) noexcept;
-        void update_events(int ticks, const char *log_file_path = ft_nullptr, ft_string *log_buffer = ft_nullptr) noexcept;
+        void update_events(ft_world &world, int ticks, const char *log_file_path = ft_nullptr, ft_string *log_buffer = ft_nullptr) noexcept;
 
         void dump_events(ft_vector<ft_event> &out) const noexcept;
         size_t size() const noexcept;
