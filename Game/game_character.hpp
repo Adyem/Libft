@@ -79,6 +79,10 @@ class ft_character
     public:
         ft_character() noexcept;
         virtual ~ft_character() noexcept;
+        ft_character(const ft_character &other) noexcept;
+        ft_character &operator=(const ft_character &other) noexcept;
+        ft_character(ft_character &&other) noexcept;
+        ft_character &operator=(ft_character &&other) noexcept;
 
         int get_hit_points() const noexcept;
         void set_hit_points(int hp) noexcept;

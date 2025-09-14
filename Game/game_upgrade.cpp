@@ -7,6 +7,64 @@ ft_upgrade::ft_upgrade() noexcept
     return ;
 }
 
+ft_upgrade::ft_upgrade(const ft_upgrade &other) noexcept
+    : _id(other._id), _current_level(other._current_level), _max_level(other._max_level),
+      _modifier1(other._modifier1), _modifier2(other._modifier2), _modifier3(other._modifier3), _modifier4(other._modifier4)
+{
+    return ;
+}
+
+ft_upgrade &ft_upgrade::operator=(const ft_upgrade &other) noexcept
+{
+    if (this != &other)
+    {
+        this->_id = other._id;
+        this->_current_level = other._current_level;
+        this->_max_level = other._max_level;
+        this->_modifier1 = other._modifier1;
+        this->_modifier2 = other._modifier2;
+        this->_modifier3 = other._modifier3;
+        this->_modifier4 = other._modifier4;
+    }
+    return (*this);
+}
+
+ft_upgrade::ft_upgrade(ft_upgrade &&other) noexcept
+    : _id(other._id), _current_level(other._current_level), _max_level(other._max_level),
+      _modifier1(other._modifier1), _modifier2(other._modifier2), _modifier3(other._modifier3), _modifier4(other._modifier4)
+{
+    other._id = 0;
+    other._current_level = 0;
+    other._max_level = 0;
+    other._modifier1 = 0;
+    other._modifier2 = 0;
+    other._modifier3 = 0;
+    other._modifier4 = 0;
+    return ;
+}
+
+ft_upgrade &ft_upgrade::operator=(ft_upgrade &&other) noexcept
+{
+    if (this != &other)
+    {
+        this->_id = other._id;
+        this->_current_level = other._current_level;
+        this->_max_level = other._max_level;
+        this->_modifier1 = other._modifier1;
+        this->_modifier2 = other._modifier2;
+        this->_modifier3 = other._modifier3;
+        this->_modifier4 = other._modifier4;
+        other._id = 0;
+        other._current_level = 0;
+        other._max_level = 0;
+        other._modifier1 = 0;
+        other._modifier2 = 0;
+        other._modifier3 = 0;
+        other._modifier4 = 0;
+    }
+    return (*this);
+}
+
 int ft_upgrade::get_id() const noexcept
 {
     return (this->_id);

@@ -27,6 +27,10 @@ class ft_equipment
     public:
         ft_equipment() noexcept;
         virtual ~ft_equipment() = default;
+        ft_equipment(const ft_equipment &other) noexcept;
+        ft_equipment &operator=(const ft_equipment &other) noexcept;
+        ft_equipment(ft_equipment &&other) noexcept;
+        ft_equipment &operator=(ft_equipment &&other) noexcept;
 
         int equip(int slot, const ft_item &item) noexcept;
         void unequip(int slot) noexcept;
