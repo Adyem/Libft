@@ -16,6 +16,7 @@ class ft_function<ReturnType(Args...)>
         void *_callable;
         ReturnType (*_invoke)(void *, Args...);
         void (*_destroy)(void *);
+        void *(*_clone)(void *);
         mutable int _error_code;
 
         template <typename FunctionType>
@@ -36,6 +37,17 @@ class ft_function<ReturnType(Args...)>
             delete function;
         }
 
+        template <typename FunctionType>
+        static void *clone(void *callable)
+        {
+            FunctionType *function;
+            FunctionType *copy;
+
+            function = static_cast<FunctionType *>(callable);
+            copy = new (std::nothrow) FunctionType(*function);
+            return (copy);
+        }
+
         void set_error(int error) const
         {
             this->_error_code = error;
@@ -45,7 +57,7 @@ class ft_function<ReturnType(Args...)>
     public:
         ft_function()
             : _callable(ft_nullptr), _invoke(ft_nullptr), _destroy(ft_nullptr),
-              _error_code(ER_SUCCESS)
+              _clone(ft_nullptr), _error_code(ER_SUCCESS)
         {
             return ;
         }
@@ -53,7 +65,7 @@ class ft_function<ReturnType(Args...)>
         template <typename FunctionType>
         ft_function(FunctionType function)
             : _callable(ft_nullptr), _invoke(ft_nullptr), _destroy(ft_nullptr),
-              _error_code(ER_SUCCESS)
+              _clone(ft_nullptr), _error_code(ER_SUCCESS)
         {
             FunctionType *copy;
 
@@ -66,18 +78,56 @@ class ft_function<ReturnType(Args...)>
             this->_callable = copy;
             this->_invoke = &ft_function::invoke<FunctionType>;
             this->_destroy = &ft_function::destroy<FunctionType>;
+            this->_clone = &ft_function::clone<FunctionType>;
+            return ;
+        }
+
+        ft_function(const ft_function &other)
+            : _callable(ft_nullptr), _invoke(other._invoke),
+              _destroy(other._destroy), _clone(other._clone),
+              _error_code(other._error_code)
+        {
+            if (other._callable)
+            {
+                this->_callable = other._clone(other._callable);
+                if (!this->_callable)
+                    this->set_error(FT_EALLOC);
+            }
             return ;
         }
 
         ft_function(ft_function &&other)
             : _callable(other._callable), _invoke(other._invoke),
-              _destroy(other._destroy), _error_code(other._error_code)
+              _destroy(other._destroy), _clone(other._clone),
+              _error_code(other._error_code)
         {
             other._callable = ft_nullptr;
             other._invoke = ft_nullptr;
             other._destroy = ft_nullptr;
+            other._clone = ft_nullptr;
             other._error_code = ER_SUCCESS;
             return ;
+        }
+
+        ft_function &operator=(const ft_function &other)
+        {
+            if (this != &other)
+            {
+                if (this->_destroy)
+                    this->_destroy(this->_callable);
+                this->_callable = ft_nullptr;
+                this->_invoke = other._invoke;
+                this->_destroy = other._destroy;
+                this->_clone = other._clone;
+                this->_error_code = other._error_code;
+                if (other._callable)
+                {
+                    this->_callable = other._clone(other._callable);
+                    if (!this->_callable)
+                        this->set_error(FT_EALLOC);
+                }
+            }
+            return (*this);
         }
 
         ft_function &operator=(ft_function &&other)
@@ -89,10 +139,12 @@ class ft_function<ReturnType(Args...)>
                 this->_callable = other._callable;
                 this->_invoke = other._invoke;
                 this->_destroy = other._destroy;
+                this->_clone = other._clone;
                 this->_error_code = other._error_code;
                 other._callable = ft_nullptr;
                 other._invoke = ft_nullptr;
                 other._destroy = ft_nullptr;
+                other._clone = ft_nullptr;
                 other._error_code = ER_SUCCESS;
             }
             return (*this);

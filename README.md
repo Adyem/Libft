@@ -1532,6 +1532,8 @@ world.update_events(1, "combat.log", &log_buffer);
 Queued events can be saved and reloaded through `serialize_event_scheduler` and
 `deserialize_event_scheduler`, which `ft_world::save_to_file` and
 `ft_world::load_from_file` invoke to persist pending actions.
+Callbacks attached to events are executed when their durations expire and are
+reconstructed on load using the event's type identifier.
 
 #### Game Server
 `ft_game_server` exposes a small WebSocket endpoint that forwards client
@@ -1803,6 +1805,8 @@ int get_modifier4() const noexcept;
 void set_modifier4(int mod) noexcept;
 void add_modifier4(int mod) noexcept;
 void sub_modifier4(int mod) noexcept;
+const ft_function<void(ft_world&, ft_event&)> &get_callback() const noexcept;
+void set_callback(ft_function<void(ft_world&, ft_event&)> &&callback) noexcept;
 ```
 
 #### `ft_world`
