@@ -7,6 +7,7 @@
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_string_class.hpp"
 #include "../Template/vector.hpp"
+#include "../Template/shared_ptr.hpp"
 
 json_group *serialize_character(const ft_character &character);
 json_group *serialize_inventory(const ft_inventory &inventory);
@@ -124,7 +125,7 @@ json_group *serialize_inventory(const ft_inventory &inventory)
     }
     json_add_item_to_group(group, count_item);
     size_t item_index = 0;
-    const Pair<int, ft_item> *item_start = inventory.get_items().end() - item_count;
+    const Pair<int, ft_sharedptr<ft_item> > *item_start = inventory.get_items().end() - item_count;
     while (item_index < item_count)
     {
         char *item_index_string = cma_itoa(static_cast<int>(item_index));
@@ -136,7 +137,12 @@ json_group *serialize_inventory(const ft_inventory &inventory)
         ft_string item_prefix = "item_";
         item_prefix += item_index_string;
         cma_free(item_index_string);
-        if (serialize_item_fields(group, item_start[item_index].value, item_prefix) != ER_SUCCESS)
+        if (!item_start[item_index].value)
+        {
+            json_free_groups(group);
+            return (ft_nullptr);
+        }
+        if (serialize_item_fields(group, *item_start[item_index].value, item_prefix) != ER_SUCCESS)
             return (ft_nullptr);
         item_index++;
     }
@@ -148,7 +154,7 @@ json_group *serialize_equipment(const ft_character &character)
     json_group *group = json_create_json_group("equipment");
     if (!group)
         return (ft_nullptr);
-    const ft_item *head = character.get_equipped_item(EQUIP_HEAD);
+    ft_sharedptr<ft_item> head = character.get_equipped_item(EQUIP_HEAD);
     json_item *present = json_create_item("head_present", head ? 1 : 0);
     if (!present)
     {
@@ -161,7 +167,7 @@ json_group *serialize_equipment(const ft_character &character)
         json_free_groups(group);
         return (ft_nullptr);
     }
-    const ft_item *chest = character.get_equipped_item(EQUIP_CHEST);
+    ft_sharedptr<ft_item> chest = character.get_equipped_item(EQUIP_CHEST);
     present = json_create_item("chest_present", chest ? 1 : 0);
     if (!present)
     {
@@ -174,7 +180,7 @@ json_group *serialize_equipment(const ft_character &character)
         json_free_groups(group);
         return (ft_nullptr);
     }
-    const ft_item *weapon = character.get_equipped_item(EQUIP_WEAPON);
+    ft_sharedptr<ft_item> weapon = character.get_equipped_item(EQUIP_WEAPON);
     present = json_create_item("weapon_present", weapon ? 1 : 0);
     if (!present)
     {
@@ -246,7 +252,7 @@ json_group *serialize_quest(const ft_quest &quest)
     }
     json_add_item_to_group(group, item);
     size_t item_index = 0;
-    const ft_item *item_start = quest.get_reward_items().begin();
+    const ft_sharedptr<ft_item> *item_start = quest.get_reward_items().begin();
     while (item_index < item_count)
     {
         char *item_index_string = cma_itoa(static_cast<int>(item_index));
@@ -258,7 +264,7 @@ json_group *serialize_quest(const ft_quest &quest)
         ft_string item_prefix = "reward_item_";
         item_prefix += item_index_string;
         cma_free(item_index_string);
-        if (serialize_item_fields(group, item_start[item_index], item_prefix) != ER_SUCCESS)
+        if (serialize_item_fields(group, *item_start[item_index], item_prefix) != ER_SUCCESS)
             return (ft_nullptr);
         item_index++;
     }
