@@ -15,12 +15,12 @@ FT_TEST(test_crafting_success, "crafting succeeds")
     ft_item ingredient_one;
     ingredient_one.set_item_id(1);
     ingredient_one.set_max_stack(1);
-    ingredient_one.set_current_stack(1);
+    ingredient_one.set_stack_size(1);
     ingredient_one.set_rarity(0);
     ft_item ingredient_two;
     ingredient_two.set_item_id(2);
     ingredient_two.set_max_stack(1);
-    ingredient_two.set_current_stack(1);
+    ingredient_two.set_stack_size(1);
     ingredient_two.set_rarity(0);
     inventory.add_item(ingredient_one);
     inventory.add_item(ingredient_two);
@@ -28,7 +28,7 @@ FT_TEST(test_crafting_success, "crafting succeeds")
     ft_item crafted;
     crafted.set_item_id(3);
     crafted.set_max_stack(1);
-    crafted.set_current_stack(1);
+    crafted.set_stack_size(1);
     crafted.set_rarity(0);
 
     FT_ASSERT_EQ(ER_SUCCESS, crafting.craft_item(inventory, 1, crafted));
@@ -52,14 +52,14 @@ FT_TEST(test_crafting_missing_ingredient, "crafting fails with missing ingredien
     ft_item ingredient_one;
     ingredient_one.set_item_id(1);
     ingredient_one.set_max_stack(1);
-    ingredient_one.set_current_stack(1);
+    ingredient_one.set_stack_size(1);
     ingredient_one.set_rarity(0);
     inventory.add_item(ingredient_one);
 
     ft_item crafted;
     crafted.set_item_id(3);
     crafted.set_max_stack(1);
-    crafted.set_current_stack(1);
+    crafted.set_stack_size(1);
     crafted.set_rarity(0);
 
     FT_ASSERT_EQ(GAME_GENERAL_ERROR, crafting.craft_item(inventory, 1, crafted));
@@ -74,12 +74,12 @@ FT_TEST(test_inventory_rarity, "inventory queries rarity")
     ft_item item_one;
     item_one.set_item_id(1);
     item_one.set_max_stack(1);
-    item_one.set_current_stack(1);
+    item_one.set_stack_size(1);
     item_one.set_rarity(0);
     ft_item item_two;
     item_two.set_item_id(2);
     item_two.set_max_stack(1);
-    item_two.set_current_stack(1);
+    item_two.set_stack_size(1);
     item_two.set_rarity(1);
     inventory.add_item(item_one);
     inventory.add_item(item_two);

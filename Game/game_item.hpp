@@ -11,9 +11,11 @@ class ft_item
 {
     private:
         int _max_stack;
-        int _current_stack;
+        int _stack_size;
         int _item_id;
         int _rarity;
+        int _width;
+        int _height;
         ft_item_modifier _modifier1;
         ft_item_modifier _modifier2;
         ft_item_modifier _modifier3;
@@ -26,13 +28,19 @@ class ft_item
         int get_max_stack() const noexcept;
         void set_max_stack(int max) noexcept;
 
-        int get_current_stack() const noexcept;
-        void set_current_stack(int amount) noexcept;
+        int get_stack_size() const noexcept;
+        void set_stack_size(int amount) noexcept;
         void add_to_stack(int amount) noexcept;
         void sub_from_stack(int amount) noexcept;
 
         int get_item_id() const noexcept;
         void set_item_id(int id) noexcept;
+
+        int get_width() const noexcept;
+        void set_width(int width) noexcept;
+
+        int get_height() const noexcept;
+        void set_height(int height) noexcept;
 
         int get_rarity() const noexcept;
         void set_rarity(int rarity) noexcept;

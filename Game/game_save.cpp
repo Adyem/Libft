@@ -30,12 +30,20 @@ static int serialize_item_fields(json_group *group, const ft_item &item, const f
     if (add_item_field(group, key_max, item.get_max_stack()) != ER_SUCCESS)
         return (JSON_MALLOC_FAIL);
     ft_string key_current = item_prefix;
-    key_current += "_current_stack";
-    if (add_item_field(group, key_current, item.get_current_stack()) != ER_SUCCESS)
+    key_current += "_stack_size";
+    if (add_item_field(group, key_current, item.get_stack_size()) != ER_SUCCESS)
         return (JSON_MALLOC_FAIL);
     ft_string key_id = item_prefix;
     key_id += "_id";
     if (add_item_field(group, key_id, item.get_item_id()) != ER_SUCCESS)
+        return (JSON_MALLOC_FAIL);
+    ft_string key_width = item_prefix;
+    key_width += "_width";
+    if (add_item_field(group, key_width, item.get_width()) != ER_SUCCESS)
+        return (JSON_MALLOC_FAIL);
+    ft_string key_height = item_prefix;
+    key_height += "_height";
+    if (add_item_field(group, key_height, item.get_height()) != ER_SUCCESS)
         return (JSON_MALLOC_FAIL);
     ft_string key_mod1_id = item_prefix;
     key_mod1_id += "_mod1_id";
@@ -84,6 +92,27 @@ json_group *serialize_inventory(const ft_inventory &inventory)
         return (ft_nullptr);
     }
     json_add_item_to_group(group, capacity_item);
+    json_item *weight_limit_item = json_create_item("weight_limit", inventory.get_weight_limit());
+    if (!weight_limit_item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, weight_limit_item);
+    json_item *current_weight_item = json_create_item("current_weight", inventory.get_current_weight());
+    if (!current_weight_item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, current_weight_item);
+    json_item *used_slots_item = json_create_item("used_slots", static_cast<int>(inventory.get_used()));
+    if (!used_slots_item)
+    {
+        json_free_groups(group);
+        return (ft_nullptr);
+    }
+    json_add_item_to_group(group, used_slots_item);
     size_t item_count = inventory.get_items().size();
     json_item *count_item = json_create_item("item_count", static_cast<int>(item_count));
     if (!count_item)

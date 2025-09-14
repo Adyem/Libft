@@ -69,7 +69,7 @@ int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id, const ft_ite
             if (item_ptr->value.get_item_id() == ingredient.item_id)
             {
                 if (ingredient.rarity == -1 || item_ptr->value.get_rarity() == ingredient.rarity)
-                    have_count += item_ptr->value.get_current_stack();
+                    have_count += item_ptr->value.get_stack_size();
             }
             ++item_ptr;
         }
@@ -95,12 +95,12 @@ int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id, const ft_ite
             {
                 if (ingredient.rarity == -1 || item_ptr->value.get_rarity() == ingredient.rarity)
                 {
-                    int remove = item_ptr->value.get_current_stack();
+                    int remove = item_ptr->value.get_stack_size();
                     if (remove > remaining)
                         remove = remaining;
                     item_ptr->value.sub_from_stack(remove);
                     remaining -= remove;
-                    if (item_ptr->value.get_current_stack() == 0)
+                    if (item_ptr->value.get_stack_size() == 0)
                         items.remove(item_ptr->key);
                 }
             }

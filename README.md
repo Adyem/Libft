@@ -1727,12 +1727,16 @@ struct ft_item_modifier
 
 int get_max_stack() const noexcept;
 void set_max_stack(int max) noexcept;
-int get_current_stack() const noexcept;
-void set_current_stack(int amount) noexcept;
+int get_stack_size() const noexcept;
+void set_stack_size(int amount) noexcept;
 void add_to_stack(int amount) noexcept;
 void sub_from_stack(int amount) noexcept;
 int get_item_id() const noexcept;
 void set_item_id(int id) noexcept;
+int get_width() const noexcept;
+void set_width(int width) noexcept;
+int get_height() const noexcept;
+void set_height(int height) noexcept;
 int get_rarity() const noexcept;
 void set_rarity(int rarity) noexcept;
 ft_item_modifier get_modifier1() const noexcept;
@@ -1768,7 +1772,12 @@ const ft_map<int, ft_item> &get_items() const noexcept;
 size_t get_capacity() const noexcept;
 void   resize(size_t capacity) noexcept;
 size_t get_used() const noexcept;
+void   set_used_slots(size_t used) noexcept;
 bool   is_full() const noexcept;
+int    get_weight_limit() const noexcept;
+void   set_weight_limit(int limit) noexcept;
+int    get_current_weight() const noexcept;
+void   set_current_weight(int weight) noexcept;
 int get_error() const noexcept;
 const char *get_error_str() const noexcept;
 int  add_item(const ft_item &item) noexcept;
@@ -1778,6 +1787,10 @@ bool has_item(int item_id) const noexcept;
 int  count_rarity(int rarity) const noexcept;
 bool has_rarity(int rarity) const noexcept;
 ```
+
+Inventory behavior can be toggled with macros in `Game/game_rules.hpp`.
+Define `USE_INVENTORY_WEIGHT` or `USE_INVENTORY_SLOTS` to enable weight
+limits or slot limits as desired.
 
 #### `ft_upgrade`
 ```
