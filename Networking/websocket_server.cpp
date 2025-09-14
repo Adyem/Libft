@@ -290,11 +290,10 @@ int ft_websocket_server::receive_frame(int client_fd, ft_string &message)
     }
 }
 
-int ft_websocket_server::run_once(ft_string &message)
+int ft_websocket_server::run_once(int &client_fd, ft_string &message)
 {
     struct sockaddr_storage client_address;
     socklen_t address_length;
-    int client_fd;
     int result;
 
     address_length = sizeof(client_address);
@@ -310,9 +309,59 @@ int ft_websocket_server::run_once(ft_string &message)
         return (1);
     }
     result = this->receive_frame(client_fd, message);
-    FT_CLOSE_SOCKET(client_fd);
     if (result != 0)
+    {
+        FT_CLOSE_SOCKET(client_fd);
         return (1);
+    }
+    this->_error_code = ER_SUCCESS;
+    return (0);
+}
+
+int ft_websocket_server::send_text(int client_fd, const ft_string &message)
+{
+    ft_string frame;
+    std::size_t length;
+    std::size_t index_value;
+
+    if (client_fd < 0)
+    {
+        this->set_error(FT_EINVAL);
+        return (1);
+    }
+    frame.append(static_cast<char>(0x81));
+    length = message.size();
+    if (length <= 125)
+    {
+        frame.append(static_cast<char>(length));
+    }
+    else if (length <= 65535)
+    {
+        frame.append(static_cast<char>(126));
+        frame.append(static_cast<char>((length >> 8) & 0xFF));
+        frame.append(static_cast<char>(length & 0xFF));
+    }
+    else
+    {
+        frame.append(static_cast<char>(127));
+        index_value = 0;
+        while (index_value < 8)
+        {
+            frame.append(static_cast<char>((length >> ((7 - index_value) * 8)) & 0xFF));
+            index_value++;
+        }
+    }
+    index_value = 0;
+    while (index_value < length)
+    {
+        frame.append(message.c_str()[index_value]);
+        index_value++;
+    }
+    if (nw_send(client_fd, frame.c_str(), frame.size(), 0) < 0)
+    {
+        this->set_error(errno + ERRNO_OFFSET);
+        return (1);
+    }
     this->_error_code = ER_SUCCESS;
     return (0);
 }

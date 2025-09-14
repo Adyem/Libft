@@ -694,9 +694,10 @@ int main()
 {
     ft_websocket_server server;
     ft_string message;
+    int client_fd;
 
     server.start("127.0.0.1", 8080);
-    server.run_once(message);
+    server.run_once(client_fd, message);
     return (0);
 }
 ```
@@ -1539,25 +1540,31 @@ reconstructed on load using the event's type identifier.
 
 #### Game Server
 `ft_game_server` exposes a small WebSocket endpoint that forwards client
-messages into the world's event queue and broadcasts the updated schedule. A
-server is created with a reference to an `ft_world` instance and started on a
-host and port:
+messages into the world's event queue and broadcasts the serialized world to
+all connected clients. A server is created with a reference to an `ft_world`
+instance and can optionally validate a shared token:
 
 ```
 ft_world world;
-ft_game_server server(world);
+ft_game_server server(world, "secret");
 server.start("0.0.0.0", 8080);
 server.run_once();
 ```
 
-Clients connect over WebSockets and send JSON messages describing an event:
+Clients join with a JSON message that includes their identifier and optional
+token, and may later leave with a separate message:
+
+```
+{ "join": { "id": 1, "token": "secret" } }
+{ "leave": { "id": 1 } }
+```
+
+Event messages schedule actions in the world. After each update the server
+broadcasts the current state to every connected client:
 
 ```
 { "event": { "id": 1, "duration": 3 } }
 ```
-
-Each message schedules an event in the world. The server replies by emitting
-the current event queue as JSON so every client observes the same state.
 
 Both helpers use the JSon module to read and write the `world`, `character`, `inventory`, and `equipment` groups. Skills stored on a character are serialized alongside these fields and restored on load.
 
