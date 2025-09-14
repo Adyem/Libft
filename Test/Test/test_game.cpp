@@ -86,16 +86,16 @@ int test_game_simulation(void)
     ft_item potion;
     potion.set_item_id(1);
     potion.set_max_stack(10);
-    potion.set_current_stack(5);
+    potion.set_stack_size(5);
     if (pack.add_item(potion) != ER_SUCCESS)
         return (0);
     ft_item more;
     more.set_item_id(1);
     more.set_max_stack(10);
-    more.set_current_stack(3);
+    more.set_stack_size(3);
     pack.add_item(more);
     Pair<int, ft_item>* ientry = pack.get_items().find(0);
-    if (!ientry || ientry->value.get_current_stack() != 8)
+    if (!ientry || ientry->value.get_stack_size() != 8)
         return (0);
 
     if (grid.get(hero.get_x(), hero.get_y(), hero.get_z()) != 1)
@@ -110,12 +110,37 @@ int test_item_basic(void)
     ft_item item;
     item.set_item_id(1);
     item.set_max_stack(10);
-    item.set_current_stack(3);
+    item.set_stack_size(3);
     item.set_modifier1_id(5);
     item.set_modifier1_value(2);
+    item.set_width(2);
+    item.set_height(3);
     if (item.get_item_id() != 1 || item.get_max_stack() != 10 ||
-        item.get_current_stack() != 3 || item.get_modifier1_id() != 5 ||
-        item.get_modifier1_value() != 2)
+        item.get_stack_size() != 3 || item.get_modifier1_id() != 5 ||
+        item.get_modifier1_value() != 2 || item.get_width() != 2 ||
+        item.get_height() != 3)
+        return (0);
+    return (1);
+}
+
+int test_inventory_slots(void)
+{
+    ft_inventory inventory(4);
+    ft_item bulky;
+    bulky.set_item_id(1);
+    bulky.set_max_stack(1);
+    bulky.set_stack_size(1);
+    bulky.set_width(2);
+    bulky.set_height(2);
+    if (inventory.add_item(bulky) != ER_SUCCESS)
+        return (0);
+    if (inventory.get_used() != 4)
+        return (0);
+    ft_item small;
+    small.set_item_id(2);
+    small.set_max_stack(1);
+    small.set_stack_size(1);
+    if (inventory.add_item(small) != CHARACTER_INVENTORY_FULL)
         return (0);
     return (1);
 }
@@ -126,13 +151,13 @@ int test_inventory_count(void)
     ft_item potion;
     potion.set_item_id(1);
     potion.set_max_stack(10);
-    potion.set_current_stack(7);
+    potion.set_stack_size(7);
     inv.add_item(potion);
 
     ft_item more;
     more.set_item_id(1);
     more.set_max_stack(10);
-    more.set_current_stack(4);
+    more.set_stack_size(4);
     inv.add_item(more);
 
     if (!inv.has_item(1) || inv.count_item(1) != 11)
@@ -148,7 +173,7 @@ int test_inventory_full(void)
     ft_item item;
     item.set_item_id(1);
     item.set_max_stack(5);
-    item.set_current_stack(5);
+    item.set_stack_size(5);
     if (inv.is_full())
         return (0);
     if (inv.add_item(item) != ER_SUCCESS)
@@ -286,9 +311,9 @@ int test_item_stack_subtract(void)
 {
     ft_item item;
     item.set_max_stack(10);
-    item.set_current_stack(7);
+    item.set_stack_size(7);
     item.sub_from_stack(3);
-    return (item.get_current_stack() == 4);
+    return (item.get_stack_size() == 4);
 }
 
 int test_reputation_subtracters(void)
