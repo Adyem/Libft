@@ -1,7 +1,7 @@
-#ifndef INVENTORY_HPP
-#define INVENTORY_HPP
+#ifndef GAME_INVENTORY_HPP
+# define GAME_INVENTORY_HPP
 
-#include "item.hpp"
+#include "game_item.hpp"
 #include "../Template/map.hpp"
 #include "../Errno/errno.hpp"
 
@@ -35,6 +35,9 @@ class ft_inventory
 
         int  count_item(int item_id) const noexcept;
         bool has_item(int item_id) const noexcept;
+
+        int  count_rarity(int rarity) const noexcept;
+        bool has_rarity(int rarity) const noexcept;
 };
 
 #endif

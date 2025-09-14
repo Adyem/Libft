@@ -941,9 +941,18 @@ ElementType *peekTopElement() const;
 
 #### `ft_loot_table`
 ```
-void addElement(ElementType *elem, int weight);
+void addElement(ElementType *elem, int weight, int rarity);
 ElementType *getRandomLoot() const;
 ElementType *popRandomLoot();
+```
+
+Example:
+
+```
+ft_loot_table<ft_item> table;
+table.addElement(&common_item, 80, 0);
+table.addElement(&rare_item, 20, 1);
+ft_item *drop = table.getRandomLoot();
 ```
 
 #### Encryption
@@ -1489,6 +1498,8 @@ xml_node *get_root() const noexcept;
 #### Game
 The Game module provides small building blocks for RPG-style mechanics. It includes world persistence, event queues, pathfinding helpers, equipment management, and crafting.
 
+Game headers are prefixed with `game_` to align with their source filenames.
+
 Core classes include `ft_character`, `ft_item`, `ft_inventory`, `ft_equipment`, `ft_upgrade`, `ft_world`, `ft_event`, `ft_event_scheduler`, `ft_map3d`, `ft_quest`, `ft_reputation`, `ft_buff`, `ft_debuff`, `ft_skill`, `ft_achievement`, `ft_experience_table`, and `ft_crafting`. Each class is summarized below. The `ft_character` implementation is divided across dedicated source files for constructors, accessors, mutation helpers, save/load logic, and other behavior.
 
 The `ft_world` class can persist game state using JSON files and track timed events.
@@ -1560,9 +1571,11 @@ world.plan_route(grid, 0, 0, 0, 2, 2, 0, path);
 
 ```
 ft_crafting crafting;
-ft_vector<int> ingredients;
-ingredients.push_back(1);
-ingredients.push_back(2);
+ft_vector<ft_crafting_ingredient> ingredients;
+ft_crafting_ingredient ingredient_a = {1, 2, -1};
+ft_crafting_ingredient ingredient_b = {2, 1, 1};
+ingredients.push_back(ingredient_a);
+ingredients.push_back(ingredient_b);
 crafting.register_recipe(1, ft_move(ingredients));
 crafting.craft_item(inventory, 1, sword);
 ```
@@ -1682,6 +1695,8 @@ void add_to_stack(int amount) noexcept;
 void sub_from_stack(int amount) noexcept;
 int get_item_id() const noexcept;
 void set_item_id(int id) noexcept;
+int get_rarity() const noexcept;
+void set_rarity(int rarity) noexcept;
 ft_item_modifier get_modifier1() const noexcept;
 void set_modifier1(const ft_item_modifier &mod) noexcept;
 int get_modifier1_id() const noexcept;
@@ -1722,6 +1737,8 @@ int  add_item(const ft_item &item) noexcept;
 void remove_item(int slot) noexcept;
 int  count_item(int item_id) const noexcept;
 bool has_item(int item_id) const noexcept;
+int  count_rarity(int rarity) const noexcept;
+bool has_rarity(int rarity) const noexcept;
 ```
 
 #### `ft_upgrade`
@@ -1947,9 +1964,9 @@ bool is_complete() const noexcept;
 
 #### `ft_crafting`
 ```
-ft_map<int, ft_vector<int>>       &get_recipes() noexcept;
-const ft_map<int, ft_vector<int>> &get_recipes() const noexcept;
-int register_recipe(int recipe_id, ft_vector<int> &&ingredients) noexcept;
+ft_map<int, ft_vector<ft_crafting_ingredient>>       &get_recipes() noexcept;
+const ft_map<int, ft_vector<ft_crafting_ingredient>> &get_recipes() const noexcept;
+int register_recipe(int recipe_id, ft_vector<ft_crafting_ingredient> &&ingredients) noexcept;
 int craft_item(ft_inventory &inventory, int recipe_id, const ft_item &result) noexcept;
 int get_error() const noexcept;
 const char *get_error_str() const noexcept;

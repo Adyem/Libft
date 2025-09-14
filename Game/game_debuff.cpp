@@ -1,4 +1,4 @@
-#include "debuff.hpp"
+#include "game_debuff.hpp"
 
 ft_debuff::ft_debuff() noexcept
     : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0)

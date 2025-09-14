@@ -1,6 +1,6 @@
 #include "game_character.hpp"
-#include "inventory.hpp"
-#include "item.hpp"
+#include "game_inventory.hpp"
+#include "game_item.hpp"
 #include "../JSon/json.hpp"
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"

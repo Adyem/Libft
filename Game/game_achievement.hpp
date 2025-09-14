@@ -1,5 +1,5 @@
-#ifndef ACHIEVEMENT_HPP
-# define ACHIEVEMENT_HPP
+#ifndef GAME_ACHIEVEMENT_HPP
+# define GAME_ACHIEVEMENT_HPP
 
 #include "../Template/map.hpp"
 #include "../Errno/errno.hpp"

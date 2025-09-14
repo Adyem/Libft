@@ -1,5 +1,5 @@
-#ifndef REPUTATION_HPP
-# define REPUTATION_HPP
+#ifndef GAME_REPUTATION_HPP
+# define GAME_REPUTATION_HPP
 
 #include "../Template/map.hpp"
 #include "../Errno/errno.hpp"
