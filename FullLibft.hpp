@@ -85,7 +85,7 @@
 #include "Game/achievement.hpp"
 #include "Game/experience_table.hpp"
 #include "Game/map3d.hpp"
-#include "Game/character.hpp"
+#include "Game/game_character.hpp"
 #include "Game/item.hpp"
 #include "Game/buff.hpp"
 #include "Game/debuff.hpp"

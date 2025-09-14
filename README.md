@@ -51,7 +51,7 @@ The current suite exercises components across multiple modules:
 - **String**: `ft_string_view`
 - **JSon**: schema validation
 - **YAML**: round-trip parsing
-- **Game**: `ft_world` persistence, `ft_world::process_events`, `ft_world::plan_route`, `ft_pathfinding`, and `ft_crafting`
+- **Game**: `ft_world` persistence, event scheduling via `ft_world::schedule_event` and `ft_world::update_events`, `ft_world::plan_route`, `ft_pathfinding`, and `ft_crafting`
 - **Encryption**: key generation utilities
 
 Additional cases verify whitespace parsing, overlapping ranges, truncating copies, partial zeroing, empty needles,
@@ -1489,7 +1489,7 @@ xml_node *get_root() const noexcept;
 #### Game
 The Game module provides small building blocks for RPG-style mechanics. It includes world persistence, event queues, pathfinding helpers, equipment management, and crafting.
 
-Core classes include `ft_character`, `ft_item`, `ft_inventory`, `ft_equipment`, `ft_upgrade`, `ft_world`, `ft_event`, `ft_map3d`, `ft_quest`, `ft_reputation`, `ft_buff`, `ft_debuff`, `ft_achievement`, `ft_experience_table`, and `ft_crafting`. Each class is summarized below.
+Core classes include `ft_character`, `ft_item`, `ft_inventory`, `ft_equipment`, `ft_upgrade`, `ft_world`, `ft_event`, `ft_event_scheduler`, `ft_map3d`, `ft_quest`, `ft_reputation`, `ft_buff`, `ft_debuff`, `ft_skill`, `ft_achievement`, `ft_experience_table`, and `ft_crafting`. Each class is summarized below. The `ft_character` implementation is divided across dedicated source files for constructors, accessors, mutation helpers, save/load logic, and other behavior.
 
 The `ft_world` class can persist game state using JSON files and track timed events.
 
@@ -1501,18 +1501,28 @@ world.save_to_file("save.json", character, inventory);
 world.load_from_file("save.json", character, inventory);
 ```
 
-Events are stored in a simple map and can expire over time.
+Timed events are scheduled through a priority queue.
 
 ```
 ft_event spawn;
+spawn.set_id(1);
 spawn.set_duration(3);
-world.get_events().insert(1, spawn);
-world.process_events();
+world.schedule_event(spawn);
+world.update_events(1);
 ```
 
-Call `ft_world::process_events` each tick to decrement durations and remove expired entries. `ft_world::plan_route` exposes grid pathfinding through the world object.
+`ft_world::update_events` decrements durations and removes expired entries. `ft_world::plan_route` exposes grid pathfinding through the world object. Logging to a file or buffer is optional:
 
-Both helpers use the JSon module to read and write the `world`, `character`, `inventory`, and `equipment` groups.
+```
+ft_string log_buffer;
+world.update_events(1, "combat.log", &log_buffer);
+```
+
+Queued events can be saved and reloaded through `serialize_event_scheduler` and
+`deserialize_event_scheduler`, which `ft_world::save_to_file` and
+`ft_world::load_from_file` invoke to persist pending actions.
+
+Both helpers use the JSon module to read and write the `world`, `character`, `inventory`, and `equipment` groups. Skills stored on a character are serialized alongside these fields and restored on load.
 
 Characters manage gear through an `ft_equipment` container. Slots such as head, chest, and weapon can be equipped or unequipped and the appropriate stat modifiers are applied automatically.
 
@@ -1627,6 +1637,12 @@ ft_resistance get_chaos_res() const noexcept;
 void set_chaos_res(int percent, int flat) noexcept;
 ft_resistance get_physical_res() const noexcept;
 void set_physical_res(int percent, int flat) noexcept;
+ft_map<int, ft_skill>       &get_skills() noexcept;
+const ft_map<int, ft_skill> &get_skills() const noexcept;
+ft_skill *get_skill(int id) noexcept;
+const ft_skill *get_skill(int id) const noexcept;
+int add_skill(const ft_skill &skill) noexcept;
+void remove_skill(int id) noexcept;
 ft_map<int, ft_buff>       &get_buffs() noexcept;
 const ft_map<int, ft_buff> &get_buffs() const noexcept;
 ft_map<int, ft_debuff>       &get_debuffs() noexcept;
@@ -1885,6 +1901,36 @@ void set_modifier4(int mod) noexcept;
 void add_modifier4(int mod) noexcept;
 void sub_modifier4(int mod) noexcept;
 ```
+#### `ft_skill`
+```
+int get_id() const noexcept;
+void set_id(int id) noexcept;
+int get_level() const noexcept;
+void set_level(int level) noexcept;
+int get_cooldown() const noexcept;
+void set_cooldown(int cooldown) noexcept;
+void add_cooldown(int cooldown) noexcept;
+void sub_cooldown(int cooldown) noexcept;
+int get_modifier1() const noexcept;
+void set_modifier1(int mod) noexcept;
+void add_modifier1(int mod) noexcept;
+void sub_modifier1(int mod) noexcept;
+int get_modifier2() const noexcept;
+void set_modifier2(int mod) noexcept;
+void add_modifier2(int mod) noexcept;
+void sub_modifier2(int mod) noexcept;
+int get_modifier3() const noexcept;
+void set_modifier3(int mod) noexcept;
+void add_modifier3(int mod) noexcept;
+void sub_modifier3(int mod) noexcept;
+int get_modifier4() const noexcept;
+void set_modifier4(int mod) noexcept;
+void add_modifier4(int mod) noexcept;
+void sub_modifier4(int mod) noexcept;
+int get_error() const noexcept;
+const char *get_error_str() const noexcept;
+```
+
 
 #### `ft_achievement`
 ```

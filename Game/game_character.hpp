@@ -1,5 +1,5 @@
-#ifndef CHARACTER_HPP
-# define CHARACTER_HPP
+#ifndef GAME_CHARACTER_HPP
+# define GAME_CHARACTER_HPP
 
 #include "../Template/map.hpp"
 #include "quest.hpp"
@@ -7,6 +7,7 @@
 #include "reputation.hpp"
 #include "buff.hpp"
 #include "debuff.hpp"
+#include "skill.hpp"
 #include "upgrade.hpp"
 #include "inventory.hpp"
 #include "equipment.hpp"
@@ -60,6 +61,7 @@ class ft_character
         ft_resistance             _earth_res;
         ft_resistance             _chaos_res;
         ft_resistance             _physical_res;
+        ft_map<int, ft_skill>     _skills;
         ft_map<int, ft_buff>      _buffs;
         ft_map<int, ft_debuff>     _debuffs;
         ft_map<int, ft_upgrade> _upgrades;
@@ -72,10 +74,11 @@ class ft_character
 
         void    set_error(int err) const noexcept;
         void    apply_modifier(const ft_item_modifier &mod, int sign) noexcept;
+        long long apply_skill_modifiers(long long damage) const noexcept;
 
     public:
         ft_character() noexcept;
-        virtual ~ft_character() = default;
+        virtual ~ft_character() noexcept;
 
         int get_hit_points() const noexcept;
         void set_hit_points(int hp) noexcept;
@@ -164,6 +167,12 @@ class ft_character
 
         ft_resistance get_physical_res() const noexcept;
         void set_physical_res(int percent, int flat) noexcept;
+        ft_map<int, ft_skill>       &get_skills() noexcept;
+        const ft_map<int, ft_skill> &get_skills() const noexcept;
+        ft_skill *get_skill(int id) noexcept;
+        const ft_skill *get_skill(int id) const noexcept;
+        int add_skill(const ft_skill &skill) noexcept;
+        void remove_skill(int id) noexcept;
 
         ft_map<int, ft_buff>       &get_buffs() noexcept;
         const ft_map<int, ft_buff> &get_buffs() const noexcept;

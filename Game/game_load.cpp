@@ -1,5 +1,4 @@
-#include "world.hpp"
-#include "character.hpp"
+#include "game_character.hpp"
 #include "inventory.hpp"
 #include "item.hpp"
 #include "../JSon/json.hpp"
@@ -8,7 +7,6 @@
 #include "../CPP_class/class_string_class.hpp"
 
 int deserialize_character(ft_character &character, json_group *group);
-int deserialize_world(ft_world &world, json_group *group);
 int deserialize_inventory(ft_inventory &inventory, json_group *group);
 int deserialize_equipment(ft_character &character, json_group *group);
 
@@ -21,44 +19,6 @@ static int parse_item_field(json_group *group, const ft_string &key, int &out_va
         return (GAME_GENERAL_ERROR);
     }
     out_value = ft_atoi(json_item_ptr->value);
-    return (ER_SUCCESS);
-}
-
-int deserialize_world(ft_world &world, json_group *group)
-{
-    json_item *count_item = json_find_item(group, "event_count");
-    if (!count_item)
-    {
-        ft_errno = GAME_GENERAL_ERROR;
-        return (GAME_GENERAL_ERROR);
-    }
-    int event_count = ft_atoi(count_item->value);
-    int event_index = 0;
-    while (event_index < event_count)
-    {
-        char *event_index_string = cma_itoa(event_index);
-        if (!event_index_string)
-            return (JSON_MALLOC_FAIL);
-        ft_string key_id = "event_";
-        key_id += event_index_string;
-        key_id += "_id";
-        ft_string key_duration = "event_";
-        key_duration += event_index_string;
-        key_duration += "_duration";
-        cma_free(event_index_string);
-        json_item *id_item = json_find_item(group, key_id.c_str());
-        json_item *duration_item = json_find_item(group, key_duration.c_str());
-        if (!id_item || !duration_item)
-        {
-            ft_errno = GAME_GENERAL_ERROR;
-            return (GAME_GENERAL_ERROR);
-        }
-        ft_event event;
-        event.set_id(ft_atoi(id_item->value));
-        event.set_duration(ft_atoi(duration_item->value));
-        world.get_events().insert(event.get_id(), event);
-        event_index++;
-    }
     return (ER_SUCCESS);
 }
 

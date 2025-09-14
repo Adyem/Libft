@@ -1,4 +1,4 @@
-#include "../../Game/character.hpp"
+#include "../../Game/game_character.hpp"
 #include "../../Game/item.hpp"
 #include "../../Libft/libft.hpp"
 #include "../../Errno/errno.hpp"
