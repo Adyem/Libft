@@ -1,5 +1,5 @@
-#ifndef CHARACTER_HPP
-# define CHARACTER_HPP
+#ifndef GAME_CHARACTER_HPP
+# define GAME_CHARACTER_HPP
 
 #include "../Template/map.hpp"
 #include "quest.hpp"
@@ -78,7 +78,7 @@ class ft_character
 
     public:
         ft_character() noexcept;
-        virtual ~ft_character() = default;
+        virtual ~ft_character() noexcept;
 
         int get_hit_points() const noexcept;
         void set_hit_points(int hp) noexcept;
