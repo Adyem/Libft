@@ -2,6 +2,7 @@
 # define GAME_EQUIPMENT_HPP
 
 #include "game_item.hpp"
+#include "../Template/shared_ptr.hpp"
 #include "../Errno/errno.hpp"
 
 enum ft_equipment_slot
@@ -14,13 +15,10 @@ enum ft_equipment_slot
 class ft_equipment
 {
     private:
-        ft_item _head;
-        ft_item _chest;
-        ft_item _weapon;
-        bool _has_head;
-        bool _has_chest;
-        bool _has_weapon;
-        mutable int _error;
+        ft_sharedptr<ft_item> _head;
+        ft_sharedptr<ft_item> _chest;
+        ft_sharedptr<ft_item> _weapon;
+        mutable int           _error_code;
 
         void set_error(int err) const noexcept;
 
@@ -32,12 +30,12 @@ class ft_equipment
         ft_equipment(ft_equipment &&other) noexcept;
         ft_equipment &operator=(ft_equipment &&other) noexcept;
 
-        int equip(int slot, const ft_item &item) noexcept;
+        int equip(int slot, const ft_sharedptr<ft_item> &item) noexcept;
         void unequip(int slot) noexcept;
-        ft_item *get_item(int slot) noexcept;
-        const ft_item *get_item(int slot) const noexcept;
+        ft_sharedptr<ft_item> get_item(int slot) noexcept;
+        ft_sharedptr<ft_item> get_item(int slot) const noexcept;
 
-        int get_error() const noexcept;
+        int         get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };
 

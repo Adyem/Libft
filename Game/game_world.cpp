@@ -35,10 +35,12 @@ static ft_function<void(ft_world&, ft_event&)> get_callback_by_id(int type_id) n
 }
 
 ft_world::ft_world() noexcept
-    : _event_scheduler(), _error(ER_SUCCESS)
+    : _event_scheduler(new ft_event_scheduler()), _error(ER_SUCCESS)
 {
     if (this->_event_scheduler.get_error() != ER_SUCCESS)
         this->set_error(this->_event_scheduler.get_error());
+    if (this->_event_scheduler->get_error() != ER_SUCCESS)
+        this->set_error(this->_event_scheduler->get_error());
     return ;
 }
 
@@ -47,6 +49,8 @@ ft_world::ft_world(const ft_world &other) noexcept
 {
     if (this->_event_scheduler.get_error() != ER_SUCCESS)
         this->set_error(this->_event_scheduler.get_error());
+    if (this->_event_scheduler->get_error() != ER_SUCCESS)
+        this->set_error(this->_event_scheduler->get_error());
     return ;
 }
 
@@ -58,6 +62,8 @@ ft_world &ft_world::operator=(const ft_world &other) noexcept
         this->_error = other._error;
         if (this->_event_scheduler.get_error() != ER_SUCCESS)
             this->set_error(this->_event_scheduler.get_error());
+        if (this->_event_scheduler->get_error() != ER_SUCCESS)
+            this->set_error(this->_event_scheduler->get_error());
     }
     return (*this);
 }
@@ -67,6 +73,8 @@ ft_world::ft_world(ft_world &&other) noexcept
 {
     if (this->_event_scheduler.get_error() != ER_SUCCESS)
         this->set_error(this->_event_scheduler.get_error());
+    if (this->_event_scheduler->get_error() != ER_SUCCESS)
+        this->set_error(this->_event_scheduler->get_error());
     other._error = ER_SUCCESS;
     return ;
 }
@@ -79,33 +87,59 @@ ft_world &ft_world::operator=(ft_world &&other) noexcept
         this->_error = other._error;
         if (this->_event_scheduler.get_error() != ER_SUCCESS)
             this->set_error(this->_event_scheduler.get_error());
+        if (this->_event_scheduler->get_error() != ER_SUCCESS)
+            this->set_error(this->_event_scheduler->get_error());
         other._error = ER_SUCCESS;
     }
     return (*this);
 }
 
-void ft_world::schedule_event(const ft_event &event) noexcept
+void ft_world::schedule_event(const ft_sharedptr<ft_event> &event) noexcept
 {
-    this->_event_scheduler.schedule_event(event);
+    if (!event)
+    {
+        this->set_error(GAME_GENERAL_ERROR);
+        return ;
+    }
+    if (event.get_error() != ER_SUCCESS)
+    {
+        this->set_error(event.get_error());
+        return ;
+    }
+    if (this->_event_scheduler.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_event_scheduler.get_error());
+        return ;
+    }
+    this->_event_scheduler->schedule_event(event);
     if (this->_event_scheduler.get_error() != ER_SUCCESS)
         this->set_error(this->_event_scheduler.get_error());
+    if (this->_event_scheduler->get_error() != ER_SUCCESS)
+        this->set_error(this->_event_scheduler->get_error());
     return ;
 }
 
 void ft_world::update_events(int ticks, const char *log_file_path, ft_string *log_buffer) noexcept
 {
-    this->_event_scheduler.update_events(*this, ticks, log_file_path, log_buffer);
+    if (this->_event_scheduler.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_event_scheduler.get_error());
+        return ;
+    }
+    this->_event_scheduler->update_events(*this, ticks, log_file_path, log_buffer);
     if (this->_event_scheduler.get_error() != ER_SUCCESS)
         this->set_error(this->_event_scheduler.get_error());
+    if (this->_event_scheduler->get_error() != ER_SUCCESS)
+        this->set_error(this->_event_scheduler->get_error());
     return ;
 }
 
-ft_event_scheduler &ft_world::get_event_scheduler() noexcept
+ft_sharedptr<ft_event_scheduler> &ft_world::get_event_scheduler() noexcept
 {
     return (this->_event_scheduler);
 }
 
-const ft_event_scheduler &ft_world::get_event_scheduler() const noexcept
+const ft_sharedptr<ft_event_scheduler> &ft_world::get_event_scheduler() const noexcept
 {
     return (this->_event_scheduler);
 }
@@ -113,7 +147,17 @@ const ft_event_scheduler &ft_world::get_event_scheduler() const noexcept
 int ft_world::save_to_file(const char *file_path, const ft_character &character, const ft_inventory &inventory) const noexcept
 {
     json_group *groups = ft_nullptr;
-    json_group *event_group = serialize_event_scheduler(this->_event_scheduler);
+    if (this->_event_scheduler.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_event_scheduler.get_error());
+        return (this->_error);
+    }
+    if (this->_event_scheduler->get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_event_scheduler->get_error());
+        return (this->_error);
+    }
+    json_group *event_group = serialize_event_scheduler(*this->_event_scheduler);
     if (!event_group)
     {
         this->set_error(ft_errno);
@@ -173,15 +217,27 @@ int ft_world::load_from_file(const char *file_path, ft_character &character, ft_
         this->set_error(GAME_GENERAL_ERROR);
         return (this->_error);
     }
-    this->_event_scheduler.clear();
     if (this->_event_scheduler.get_error() != ER_SUCCESS)
     {
         json_free_groups(groups);
         this->set_error(this->_event_scheduler.get_error());
         return (this->_error);
     }
+    this->_event_scheduler->clear();
+    if (this->_event_scheduler.get_error() != ER_SUCCESS)
+    {
+        json_free_groups(groups);
+        this->set_error(this->_event_scheduler.get_error());
+        return (this->_error);
+    }
+    if (this->_event_scheduler->get_error() != ER_SUCCESS)
+    {
+        json_free_groups(groups);
+        this->set_error(this->_event_scheduler->get_error());
+        return (this->_error);
+    }
     inventory.get_items().clear();
-    if (deserialize_event_scheduler(this->_event_scheduler, event_group) != ER_SUCCESS ||
+    if (deserialize_event_scheduler(*this->_event_scheduler, event_group) != ER_SUCCESS ||
         deserialize_character(character, character_group) != ER_SUCCESS ||
         deserialize_inventory(inventory, inventory_group) != ER_SUCCESS ||
         deserialize_equipment(character, equipment_group) != ER_SUCCESS)
@@ -190,25 +246,61 @@ int ft_world::load_from_file(const char *file_path, ft_character &character, ft_
         this->set_error(ft_errno);
         return (this->_error);
     }
-    ft_vector<ft_event> scheduled_events;
-    this->_event_scheduler.dump_events(scheduled_events);
-    this->_event_scheduler.clear();
+    ft_vector<ft_sharedptr<ft_event> > scheduled_events;
     if (this->_event_scheduler.get_error() != ER_SUCCESS)
     {
         json_free_groups(groups);
         this->set_error(this->_event_scheduler.get_error());
         return (this->_error);
     }
+    this->_event_scheduler->dump_events(scheduled_events);
+    if (this->_event_scheduler.get_error() != ER_SUCCESS)
+    {
+        json_free_groups(groups);
+        this->set_error(this->_event_scheduler.get_error());
+        return (this->_error);
+    }
+    if (this->_event_scheduler->get_error() != ER_SUCCESS)
+    {
+        json_free_groups(groups);
+        this->set_error(this->_event_scheduler->get_error());
+        return (this->_error);
+    }
+    this->_event_scheduler->clear();
+    if (this->_event_scheduler.get_error() != ER_SUCCESS)
+    {
+        json_free_groups(groups);
+        this->set_error(this->_event_scheduler.get_error());
+        return (this->_error);
+    }
+    if (this->_event_scheduler->get_error() != ER_SUCCESS)
+    {
+        json_free_groups(groups);
+        this->set_error(this->_event_scheduler->get_error());
+        return (this->_error);
+    }
     size_t event_index = 0;
     size_t event_count = scheduled_events.size();
     while (event_index < event_count)
     {
-        scheduled_events[event_index].set_callback(get_callback_by_id(scheduled_events[event_index].get_id()));
-        this->_event_scheduler.schedule_event(scheduled_events[event_index]);
+        scheduled_events[event_index]->set_callback(get_callback_by_id(scheduled_events[event_index]->get_id()));
         if (this->_event_scheduler.get_error() != ER_SUCCESS)
         {
             json_free_groups(groups);
             this->set_error(this->_event_scheduler.get_error());
+            return (this->_error);
+        }
+        this->_event_scheduler->schedule_event(scheduled_events[event_index]);
+        if (this->_event_scheduler.get_error() != ER_SUCCESS)
+        {
+            json_free_groups(groups);
+            this->set_error(this->_event_scheduler.get_error());
+            return (this->_error);
+        }
+        if (this->_event_scheduler->get_error() != ER_SUCCESS)
+        {
+            json_free_groups(groups);
+            this->set_error(this->_event_scheduler->get_error());
             return (this->_error);
         }
         event_index++;

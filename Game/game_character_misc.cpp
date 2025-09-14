@@ -166,33 +166,78 @@ void ft_character::apply_modifier(const ft_item_modifier &mod, int sign) noexcep
     return ;
 }
 
-int ft_character::equip_item(int slot, const ft_item &item) noexcept
+int ft_character::equip_item(int slot, const ft_sharedptr<ft_item> &item) noexcept
 {
-    ft_item *current = this->_equipment.get_item(slot);
+    ft_sharedptr<ft_item> current = this->_equipment.get_item(slot);
+    if (this->_equipment.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_equipment.get_error());
+        return (this->_error);
+    }
+    if (current.get_error() != ER_SUCCESS)
+    {
+        this->set_error(current.get_error());
+        return (this->_error);
+    }
     if (current)
     {
+        if (current->get_error() != ER_SUCCESS)
+        {
+            this->set_error(current->get_error());
+            return (this->_error);
+        }
         this->apply_modifier(current->get_modifier1(), -1);
         this->apply_modifier(current->get_modifier2(), -1);
         this->apply_modifier(current->get_modifier3(), -1);
         this->apply_modifier(current->get_modifier4(), -1);
+    }
+    if (!item)
+    {
+        this->set_error(GAME_GENERAL_ERROR);
+        return (this->_error);
+    }
+    if (item.get_error() != ER_SUCCESS)
+    {
+        this->set_error(item.get_error());
+        return (this->_error);
+    }
+    if (item->get_error() != ER_SUCCESS)
+    {
+        this->set_error(item->get_error());
+        return (this->_error);
     }
     if (this->_equipment.equip(slot, item) != ER_SUCCESS)
     {
         this->set_error(this->_equipment.get_error());
         return (this->_error);
     }
-    this->apply_modifier(item.get_modifier1(), 1);
-    this->apply_modifier(item.get_modifier2(), 1);
-    this->apply_modifier(item.get_modifier3(), 1);
-    this->apply_modifier(item.get_modifier4(), 1);
+    this->apply_modifier(item->get_modifier1(), 1);
+    this->apply_modifier(item->get_modifier2(), 1);
+    this->apply_modifier(item->get_modifier3(), 1);
+    this->apply_modifier(item->get_modifier4(), 1);
     return (ER_SUCCESS);
 }
 
 void ft_character::unequip_item(int slot) noexcept
 {
-    ft_item *item = this->_equipment.get_item(slot);
+    ft_sharedptr<ft_item> item = this->_equipment.get_item(slot);
+    if (this->_equipment.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_equipment.get_error());
+        return ;
+    }
+    if (item.get_error() != ER_SUCCESS)
+    {
+        this->set_error(item.get_error());
+        return ;
+    }
     if (item)
     {
+        if (item->get_error() != ER_SUCCESS)
+        {
+            this->set_error(item->get_error());
+            return ;
+        }
         this->apply_modifier(item->get_modifier1(), -1);
         this->apply_modifier(item->get_modifier2(), -1);
         this->apply_modifier(item->get_modifier3(), -1);

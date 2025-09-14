@@ -25,7 +25,8 @@ SRCS := game_map3d.cpp \
 	game_load.cpp \
 	game_experience_table.cpp \
 	game_pathfinding.cpp \
-	game_crafting.cpp
+	game_crafting.cpp \
+        game_state.cpp
 
 HEADERS := game_map3d.hpp \
 	game_character.hpp \
@@ -45,7 +46,8 @@ HEADERS := game_map3d.hpp \
 	game_equipment.hpp \
 	game_experience_table.hpp \
 	game_pathfinding.hpp \
-	game_crafting.hpp
+	game_crafting.hpp \
+        game_state.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

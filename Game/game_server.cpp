@@ -2,9 +2,10 @@
 #include "../JSon/document.hpp"
 #include "../Networking/socket_class.hpp"
 #include "../Template/pair.hpp"
+#include "../Template/shared_ptr.hpp"
 
-ft_game_server::ft_game_server(ft_world &world, const char *auth_token) noexcept
-    : _server(), _world(&world), _clients(), _auth_token(), _on_join(ft_nullptr), _on_leave(ft_nullptr), _error_code(ER_SUCCESS)
+ft_game_server::ft_game_server(const ft_sharedptr<ft_world> &world, const char *auth_token) noexcept
+    : _server(), _world(world), _clients(), _auth_token(), _on_join(ft_nullptr), _on_leave(ft_nullptr), _error_code(ER_SUCCESS)
 {
     if (auth_token)
         this->_auth_token = auth_token;
@@ -38,9 +39,8 @@ ft_game_server &ft_game_server::operator=(const ft_game_server &other) noexcept
 }
 
 ft_game_server::ft_game_server(ft_game_server &&other) noexcept
-    : _server(ft_move(other._server)), _world(other._world), _clients(ft_move(other._clients)), _auth_token(ft_move(other._auth_token)), _on_join(other._on_join), _on_leave(other._on_leave), _error_code(other._error_code)
+    : _server(ft_move(other._server)), _world(ft_move(other._world)), _clients(ft_move(other._clients)), _auth_token(ft_move(other._auth_token)), _on_join(other._on_join), _on_leave(other._on_leave), _error_code(other._error_code)
 {
-    other._world = ft_nullptr;
     other._on_join = ft_nullptr;
     other._on_leave = ft_nullptr;
     other._error_code = ER_SUCCESS;
@@ -52,13 +52,12 @@ ft_game_server &ft_game_server::operator=(ft_game_server &&other) noexcept
     if (this != &other)
     {
         this->_server = ft_move(other._server);
-        this->_world = other._world;
+        this->_world = ft_move(other._world);
         this->_clients = ft_move(other._clients);
         this->_auth_token = ft_move(other._auth_token);
         this->_on_join = other._on_join;
         this->_on_leave = other._on_leave;
         this->_error_code = other._error_code;
-        other._world = ft_nullptr;
         other._on_join = ft_nullptr;
         other._on_leave = ft_nullptr;
         other._error_code = ER_SUCCESS;
@@ -161,14 +160,38 @@ int ft_game_server::handle_message(int client_handle, const ft_string &message) 
         this->set_error(GAME_GENERAL_ERROR);
         return (1);
     }
-    ft_event event;
-    event.set_id(ft_atoi(id_item->value));
-    event.set_duration(ft_atoi(duration_item->value));
+    ft_sharedptr<ft_event> event(new ft_event());
+    if (event.get_error() != ER_SUCCESS)
+    {
+        json_free_groups(groups);
+        this->set_error(event.get_error());
+        return (1);
+    }
+    event->set_id(ft_atoi(id_item->value));
+    event->set_duration(ft_atoi(duration_item->value));
+    if (this->_world.get_error() != ER_SUCCESS)
+    {
+        json_free_groups(groups);
+        this->set_error(this->_world.get_error());
+        return (1);
+    }
+    else if (this->_world && this->_world->get_error() != ER_SUCCESS)
+    {
+        json_free_groups(groups);
+        this->set_error(this->_world->get_error());
+        return (1);
+    }
     this->_world->schedule_event(event);
     json_free_groups(groups);
-    if (this->_world->get_event_scheduler().get_error() != ER_SUCCESS)
+    ft_sharedptr<ft_event_scheduler> scheduler = this->_world->get_event_scheduler();
+    if (scheduler.get_error() != ER_SUCCESS)
     {
-        this->set_error(this->_world->get_event_scheduler().get_error());
+        this->set_error(scheduler.get_error());
+        return (1);
+    }
+    else if (scheduler && scheduler->get_error() != ER_SUCCESS)
+    {
+        this->set_error(scheduler->get_error());
         return (1);
     }
     this->_error_code = ER_SUCCESS;
@@ -177,8 +200,29 @@ int ft_game_server::handle_message(int client_handle, const ft_string &message) 
 
 int ft_game_server::serialize_world(ft_string &out) const noexcept
 {
+    if (this->_world.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_world.get_error());
+        return (1);
+    }
+    else if (this->_world && this->_world->get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_world->get_error());
+        return (1);
+    }
+    ft_sharedptr<ft_event_scheduler> scheduler = this->_world->get_event_scheduler();
+    if (scheduler.get_error() != ER_SUCCESS)
+    {
+        this->set_error(scheduler.get_error());
+        return (1);
+    }
+    else if (scheduler && scheduler->get_error() != ER_SUCCESS)
+    {
+        this->set_error(scheduler->get_error());
+        return (1);
+    }
     json_document document;
-    json_group *group = serialize_event_scheduler(this->_world->get_event_scheduler());
+    json_group *group = serialize_event_scheduler(*scheduler);
     if (!group)
     {
         this->set_error(ft_errno);

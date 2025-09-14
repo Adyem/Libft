@@ -78,12 +78,12 @@ ft_inventory &ft_inventory::operator=(ft_inventory &&other) noexcept
     return (*this);
 }
 
-ft_map<int, ft_item> &ft_inventory::get_items() noexcept
+ft_map<int, ft_sharedptr<ft_item> > &ft_inventory::get_items() noexcept
 {
     return (this->_items);
 }
 
-const ft_map<int, ft_item> &ft_inventory::get_items() const noexcept
+const ft_map<int, ft_sharedptr<ft_item> > &ft_inventory::get_items() const noexcept
 {
     return (this->_items);
 }
@@ -157,10 +157,25 @@ void ft_inventory::set_error(int err) const noexcept
     return ;
 }
 
-int ft_inventory::add_item(const ft_item &item) noexcept
+int ft_inventory::add_item(const ft_sharedptr<ft_item> &item) noexcept
 {
     this->_error = ER_SUCCESS;
-    int remaining = item.get_stack_size();
+    if (!item)
+    {
+        this->set_error(GAME_GENERAL_ERROR);
+        return (GAME_GENERAL_ERROR);
+    }
+    if (item.get_error() != ER_SUCCESS)
+    {
+        this->set_error(item.get_error());
+        return (this->_error);
+    }
+    if (item->get_error() != ER_SUCCESS)
+    {
+        this->set_error(item->get_error());
+        return (this->_error);
+    }
+    int remaining = item->get_stack_size();
 #if USE_INVENTORY_WEIGHT
     if (this->_weight_limit != 0 && this->_current_weight + remaining > this->_weight_limit)
     {
@@ -168,25 +183,38 @@ int ft_inventory::add_item(const ft_item &item) noexcept
         return (CHARACTER_INVENTORY_FULL);
     }
 #endif
-    int item_id = item.get_item_id();
+    int item_id = item->get_item_id();
 
-    Pair<int, ft_item> *item_ptr = this->_items.end() - this->_items.size();
-    Pair<int, ft_item> *item_end = this->_items.end();
+    Pair<int, ft_sharedptr<ft_item> > *item_ptr = this->_items.end() - this->_items.size();
+    Pair<int, ft_sharedptr<ft_item> > *item_end = this->_items.end();
     while (item_ptr != item_end && remaining > 0)
     {
-        if (item_ptr->value.get_item_id() == item_id)
+        if (item_ptr->value)
         {
-            int free_space = item_ptr->value.get_max_stack() - item_ptr->value.get_stack_size();
-            if (free_space > 0)
+            if (item_ptr->value.get_error() != ER_SUCCESS)
             {
-                int to_add;
-                if (remaining < free_space)
-                    to_add = remaining;
-                else
-                    to_add = free_space;
-                item_ptr->value.add_to_stack(to_add);
-                this->_current_weight += to_add;
-                remaining -= to_add;
+                this->set_error(item_ptr->value.get_error());
+                return (this->_error);
+            }
+            if (item_ptr->value->get_error() != ER_SUCCESS)
+            {
+                this->set_error(item_ptr->value->get_error());
+                return (this->_error);
+            }
+            if (item_ptr->value->get_item_id() == item_id)
+            {
+                int free_space = item_ptr->value->get_max_stack() - item_ptr->value->get_stack_size();
+                if (free_space > 0)
+                {
+                    int to_add;
+                    if (remaining < free_space)
+                        to_add = remaining;
+                    else
+                        to_add = free_space;
+                    item_ptr->value->add_to_stack(to_add);
+                    this->_current_weight += to_add;
+                    remaining -= to_add;
+                }
             }
         }
         ++item_ptr;
@@ -195,20 +223,30 @@ int ft_inventory::add_item(const ft_item &item) noexcept
     while (remaining > 0)
     {
 #if USE_INVENTORY_SLOTS
-        int slot_usage = item.get_width() * item.get_height();
+        int slot_usage = item->get_width() * item->get_height();
         if (this->_capacity != 0 && this->_used_slots + slot_usage > this->_capacity)
         {
             this->set_error(CHARACTER_INVENTORY_FULL);
             return (CHARACTER_INVENTORY_FULL);
         }
 #endif
-        ft_item new_item = item;
+        ft_sharedptr<ft_item> new_item(new ft_item(*item));
+        if (new_item.get_error() != ER_SUCCESS)
+        {
+            this->set_error(new_item.get_error());
+            return (this->_error);
+        }
+        if (new_item->get_error() != ER_SUCCESS)
+        {
+            this->set_error(new_item->get_error());
+            return (this->_error);
+        }
         int to_add;
-        if (remaining < new_item.get_max_stack())
+        if (remaining < new_item->get_max_stack())
             to_add = remaining;
         else
-            to_add = new_item.get_max_stack();
-        new_item.set_stack_size(to_add);
+            to_add = new_item->get_max_stack();
+        new_item->set_stack_size(to_add);
         this->_items.insert(this->_next_slot, new_item);
         if (this->_items.get_error() != ER_SUCCESS)
         {
@@ -227,13 +265,21 @@ int ft_inventory::add_item(const ft_item &item) noexcept
 
 void ft_inventory::remove_item(int slot) noexcept
 {
-    Pair<int, ft_item> *entry = this->_items.find(slot);
-    if (entry)
+    Pair<int, ft_sharedptr<ft_item> > *entry = this->_items.find(slot);
+    if (entry && entry->value)
     {
-        this->_current_weight -= entry->value.get_stack_size();
+        if (entry->value.get_error() != ER_SUCCESS)
+        {
+            this->set_error(entry->value.get_error());
+            return ;
+        }
+        if (entry->value->get_error() == ER_SUCCESS)
+        {
+            this->_current_weight -= entry->value->get_stack_size();
 #if USE_INVENTORY_SLOTS
-        this->_used_slots -= entry->value.get_width() * entry->value.get_height();
+            this->_used_slots -= entry->value->get_width() * entry->value->get_height();
 #endif
+        }
     }
     this->_items.remove(slot);
     return ;
@@ -241,13 +287,26 @@ void ft_inventory::remove_item(int slot) noexcept
 
 int ft_inventory::count_item(int item_id) const noexcept
 {
-    const Pair<int, ft_item> *item_ptr = this->_items.end() - this->_items.size();
-    const Pair<int, ft_item> *item_end = this->_items.end();
+    const Pair<int, ft_sharedptr<ft_item> > *item_ptr = this->_items.end() - this->_items.size();
+    const Pair<int, ft_sharedptr<ft_item> > *item_end = this->_items.end();
     int total = 0;
     while (item_ptr != item_end)
     {
-        if (item_ptr->value.get_item_id() == item_id)
-            total += item_ptr->value.get_stack_size();
+        if (item_ptr->value)
+        {
+            if (item_ptr->value.get_error() != ER_SUCCESS)
+            {
+                this->set_error(item_ptr->value.get_error());
+                return (0);
+            }
+            if (item_ptr->value->get_error() != ER_SUCCESS)
+            {
+                this->set_error(item_ptr->value->get_error());
+                return (0);
+            }
+            if (item_ptr->value->get_item_id() == item_id)
+                total += item_ptr->value->get_stack_size();
+        }
         ++item_ptr;
     }
     return (total);
@@ -260,13 +319,26 @@ bool ft_inventory::has_item(int item_id) const noexcept
 
 int ft_inventory::count_rarity(int rarity) const noexcept
 {
-    const Pair<int, ft_item> *item_ptr = this->_items.end() - this->_items.size();
-    const Pair<int, ft_item> *item_end = this->_items.end();
+    const Pair<int, ft_sharedptr<ft_item> > *item_ptr = this->_items.end() - this->_items.size();
+    const Pair<int, ft_sharedptr<ft_item> > *item_end = this->_items.end();
     int total = 0;
     while (item_ptr != item_end)
     {
-        if (item_ptr->value.get_rarity() == rarity)
-            total += item_ptr->value.get_stack_size();
+        if (item_ptr->value)
+        {
+            if (item_ptr->value.get_error() != ER_SUCCESS)
+            {
+                this->set_error(item_ptr->value.get_error());
+                return (0);
+            }
+            if (item_ptr->value->get_error() != ER_SUCCESS)
+            {
+                this->set_error(item_ptr->value->get_error());
+                return (0);
+            }
+            if (item_ptr->value->get_rarity() == rarity)
+                total += item_ptr->value->get_stack_size();
+        }
         ++item_ptr;
     }
     return (total);

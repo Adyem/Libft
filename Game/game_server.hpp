@@ -6,6 +6,7 @@
 #include "../Networking/websocket_server.hpp"
 #include "../JSon/json.hpp"
 #include "../Template/map.hpp"
+#include "../Template/shared_ptr.hpp"
 #include "../CPP_class/class_string_class.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
@@ -15,7 +16,7 @@ class ft_game_server
 {
     private:
         ft_websocket_server _server;
-        ft_world           *_world;
+        ft_sharedptr<ft_world> _world;
         ft_map<int, int>   _clients;
         ft_string          _auth_token;
         void              (*_on_join)(int);
@@ -29,7 +30,7 @@ class ft_game_server
         void leave_client(int client_id) noexcept;
 
     public:
-        ft_game_server(ft_world &world, const char *auth_token = ft_nullptr) noexcept;
+        ft_game_server(const ft_sharedptr<ft_world> &world, const char *auth_token = ft_nullptr) noexcept;
         ~ft_game_server();
         ft_game_server(const ft_game_server &other) noexcept;
         ft_game_server &operator=(const ft_game_server &other) noexcept;

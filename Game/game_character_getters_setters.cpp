@@ -399,12 +399,12 @@ int ft_character::get_level() const noexcept
     return (this->_experience_table.get_level(this->_experience));
 }
 
-ft_item *ft_character::get_equipped_item(int slot) noexcept
+ft_sharedptr<ft_item> ft_character::get_equipped_item(int slot) noexcept
 {
     return (this->_equipment.get_item(slot));
 }
 
-const ft_item *ft_character::get_equipped_item(int slot) const noexcept
+ft_sharedptr<ft_item> ft_character::get_equipped_item(int slot) const noexcept
 {
     return (this->_equipment.get_item(slot));
 }

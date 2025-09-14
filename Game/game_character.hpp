@@ -198,10 +198,10 @@ class ft_character
         ft_experience_table       &get_experience_table() noexcept;
         const ft_experience_table &get_experience_table() const noexcept;
 
-        int equip_item(int slot, const ft_item &item) noexcept;
+        int equip_item(int slot, const ft_sharedptr<ft_item> &item) noexcept;
         void unequip_item(int slot) noexcept;
-        ft_item *get_equipped_item(int slot) noexcept;
-        const ft_item *get_equipped_item(int slot) const noexcept;
+        ft_sharedptr<ft_item> get_equipped_item(int slot) noexcept;
+        ft_sharedptr<ft_item> get_equipped_item(int slot) const noexcept;
 
         int get_level() const noexcept;
 
