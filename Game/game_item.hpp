@@ -1,6 +1,8 @@
 #ifndef GAME_ITEM_HPP
 # define GAME_ITEM_HPP
 
+#include "../Errno/errno.hpp"
+
 struct ft_item_modifier
 {
     int id;
@@ -10,16 +12,19 @@ struct ft_item_modifier
 class ft_item
 {
     private:
-        int _max_stack;
-        int _stack_size;
-        int _item_id;
-        int _rarity;
-        int _width;
-        int _height;
+        int             _max_stack;
+        int             _stack_size;
+        int             _item_id;
+        int             _rarity;
+        int             _width;
+        int             _height;
         ft_item_modifier _modifier1;
         ft_item_modifier _modifier2;
         ft_item_modifier _modifier3;
         ft_item_modifier _modifier4;
+        mutable int     _error_code;
+
+        void set_error(int err) const noexcept;
 
     public:
         ft_item() noexcept;
@@ -76,6 +81,9 @@ class ft_item
         void set_modifier4_id(int id) noexcept;
         int get_modifier4_value() const noexcept;
         void set_modifier4_value(int value) noexcept;
+
+        int         get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 };
 
 #endif

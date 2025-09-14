@@ -51,7 +51,10 @@ The current suite exercises components across multiple modules:
 - **String**: `ft_string_view`
 - **JSon**: schema validation
 - **YAML**: round-trip parsing
-- **Game**: `ft_world` persistence, event scheduling via `ft_world::schedule_event` and `ft_world::update_events`, `ft_world::plan_route`, `ft_pathfinding`, `ft_crafting`, and copy/move constructors across game classes
+- **Game**: `ft_game_state` centralizes world and character data with shared pointers for RAII cleanup, `ft_world` persistence and a shared-pointer-based `ft_event_scheduler` for timed actions via `ft_world::schedule_event` and `ft_world::update_events`, `ft_equipment`, `ft_inventory`, and `ft_quest` store items through shared pointers, `ft_crafting` consumes and produces shared items, `ft_world::plan_route`, `ft_pathfinding`, and copy/move constructors across game classes
+- Shared pointers expose their own `get_error` while managed objects may define their own; call `shared_ptr.get_error()` for allocation issues and `shared_ptr->get_error()` for object-specific errors.
+- Game classes validate both the shared pointer and its managed object for errors before use so failures surface consistently.
+- `ft_item` tracks its own error code so equipment, inventory, and crafting verify both the item pointer and the item itself before applying modifiers or stacking quantities.
 - **Encryption**: key generation utilities
 
 Additional cases verify whitespace parsing, overlapping ranges, truncating copies, partial zeroing, empty needles,
@@ -1499,13 +1502,16 @@ xml_node *get_root() const noexcept;
 #### Game
 The Game module provides small building blocks for RPG-style mechanics. It includes world persistence, event queues, pathfinding helpers, equipment management, and crafting.
 
+Equipment slots and quest rewards manage their items through `ft_sharedptr` for automatic cleanup.
+
 Game headers are prefixed with `game_` to align with their source filenames.
 
 All core classes define explicit copy and move constructors and assignments to manage resources safely.
 
-Core classes include `ft_character`, `ft_item`, `ft_inventory`, `ft_equipment`, `ft_upgrade`, `ft_world`, `ft_event`, `ft_event_scheduler`, `ft_map3d`, `ft_quest`, `ft_reputation`, `ft_buff`, `ft_debuff`, `ft_skill`, `ft_achievement`, `ft_experience_table`, and `ft_crafting`. Each class is summarized below. The `ft_character` implementation is divided across dedicated source files for constructors, accessors, mutation helpers, save/load logic, and other behavior.
+Core classes include `ft_character`, `ft_item`, `ft_inventory`, `ft_equipment`, `ft_upgrade`, `ft_world`, `ft_game_state`, `ft_event`, `ft_event_scheduler`, `ft_map3d`, `ft_quest`, `ft_reputation`, `ft_buff`, `ft_debuff`, `ft_skill`, `ft_achievement`, `ft_experience_table`, and `ft_crafting`. Each class is summarized below. The `ft_character` implementation is divided across dedicated source files for constructors, accessors, mutation helpers, save/load logic, and other behavior.
 
-The `ft_world` class can persist game state using JSON files and track timed events.
+The `ft_world` class can persist game state using JSON files and track timed events through a shared-pointer-owned scheduler.
+Methods interacting with the scheduler verify the shared pointer and the scheduler itself for errors before proceeding.
 
 ```
 ft_world world;
@@ -1515,12 +1521,12 @@ world.save_to_file("save.json", character, inventory);
 world.load_from_file("save.json", character, inventory);
 ```
 
-Timed events are scheduled through a priority queue.
+Timed events are scheduled through a priority queue of shared pointers.
 
 ```
-ft_event spawn;
-spawn.set_id(1);
-spawn.set_duration(3);
+ft_sharedptr<ft_event> spawn(new ft_event());
+spawn->set_id(1);
+spawn->set_duration(3);
 world.schedule_event(spawn);
 world.update_events(1);
 ```
@@ -1541,11 +1547,11 @@ reconstructed on load using the event's type identifier.
 #### Game Server
 `ft_game_server` exposes a small WebSocket endpoint that forwards client
 messages into the world's event queue and broadcasts the serialized world to
-all connected clients. A server is created with a reference to an `ft_world`
-instance and can optionally validate a shared token:
+all connected clients. A server is created with a shared pointer to an
+`ft_world` instance and can optionally validate a shared token:
 
 ```
-ft_world world;
+ft_sharedptr<ft_world> world(new ft_world());
 ft_game_server server(world, "secret");
 server.start("0.0.0.0", 8080);
 server.run_once();
@@ -1614,7 +1620,7 @@ finder.recalculate_path(grid, 0, 0, 0, 2, 2, 0, path);
 
 ##### Crafting
 
-`ft_crafting` stores crafting recipes and converts ingredients into new items. `craft_item` verifies ingredients, removes them from the inventory, and adds the crafted result.
+`ft_crafting` stores crafting recipes and converts ingredients into new items. `craft_item` verifies ingredients, removes them from the inventory, and adds the crafted result through shared pointers.
 
 ```
 ft_crafting crafting;
@@ -1624,7 +1630,19 @@ ft_crafting_ingredient ingredient_b = {2, 1, 1};
 ingredients.push_back(ingredient_a);
 ingredients.push_back(ingredient_b);
 crafting.register_recipe(1, ft_move(ingredients));
+ft_sharedptr<ft_item> sword(new ft_item());
 crafting.craft_item(inventory, 1, sword);
+```
+
+#### `ft_game_state`
+
+```
+ft_sharedptr<ft_world> &get_world() noexcept;
+ft_vector<ft_sharedptr<ft_character> > &get_characters() noexcept;
+int add_character(const ft_sharedptr<ft_character> &character) noexcept;
+void remove_character(size_t index) noexcept;
+int get_error() const noexcept;
+const char *get_error_str() const noexcept;
 ```
 
 #### `ft_character`
@@ -1776,8 +1794,8 @@ void set_modifier4_value(int value) noexcept;
 
 #### `ft_inventory`
 ```
-ft_map<int, ft_item>       &get_items() noexcept;
-const ft_map<int, ft_item> &get_items() const noexcept;
+ft_map<int, ft_sharedptr<ft_item> >       &get_items() noexcept;
+const ft_map<int, ft_sharedptr<ft_item> > &get_items() const noexcept;
 size_t get_capacity() const noexcept;
 void   resize(size_t capacity) noexcept;
 size_t get_used() const noexcept;
@@ -1789,7 +1807,7 @@ int    get_current_weight() const noexcept;
 void   set_current_weight(int weight) noexcept;
 int get_error() const noexcept;
 const char *get_error_str() const noexcept;
-int  add_item(const ft_item &item) noexcept;
+int  add_item(const ft_sharedptr<ft_item> &item) noexcept;
 void remove_item(int slot) noexcept;
 int  count_item(int item_id) const noexcept;
 bool has_item(int item_id) const noexcept;
@@ -2038,7 +2056,7 @@ bool is_complete() const noexcept;
 ft_map<int, ft_vector<ft_crafting_ingredient>>       &get_recipes() noexcept;
 const ft_map<int, ft_vector<ft_crafting_ingredient>> &get_recipes() const noexcept;
 int register_recipe(int recipe_id, ft_vector<ft_crafting_ingredient> &&ingredients) noexcept;
-int craft_item(ft_inventory &inventory, int recipe_id, const ft_item &result) noexcept;
+int craft_item(ft_inventory &inventory, int recipe_id, const ft_sharedptr<ft_item> &result) noexcept;
 int get_error() const noexcept;
 const char *get_error_str() const noexcept;
 ```

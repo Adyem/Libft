@@ -5,6 +5,7 @@
 #include "../Template/vector.hpp"
 #include "game_inventory.hpp"
 #include "game_item.hpp"
+#include "../Template/shared_ptr.hpp"
 #include "../Errno/errno.hpp"
 
 struct ft_crafting_ingredient
@@ -37,7 +38,7 @@ class ft_crafting
         const char *get_error_str() const noexcept;
 
         int register_recipe(int recipe_id, ft_vector<ft_crafting_ingredient> &&ingredients) noexcept;
-        int craft_item(ft_inventory &inventory, int recipe_id, const ft_item &result) noexcept;
+        int craft_item(ft_inventory &inventory, int recipe_id, const ft_sharedptr<ft_item> &result) noexcept;
 };
 
 #endif

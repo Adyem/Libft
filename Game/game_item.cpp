@@ -3,14 +3,14 @@
 ft_item::ft_item() noexcept
     : _max_stack(0), _stack_size(0), _item_id(0), _rarity(0),
       _width(1), _height(1), _modifier1{0, 0}, _modifier2{0, 0},
-      _modifier3{0, 0}, _modifier4{0, 0}
+      _modifier3{0, 0}, _modifier4{0, 0}, _error_code(ER_SUCCESS)
 {
     return ;
 }
 
 ft_item::ft_item(const ft_item &other) noexcept
     : _max_stack(other._max_stack), _stack_size(other._stack_size), _item_id(other._item_id), _rarity(other._rarity),
-      _width(other._width), _height(other._height), _modifier1(other._modifier1), _modifier2(other._modifier2), _modifier3(other._modifier3), _modifier4(other._modifier4)
+      _width(other._width), _height(other._height), _modifier1(other._modifier1), _modifier2(other._modifier2), _modifier3(other._modifier3), _modifier4(other._modifier4), _error_code(other._error_code)
 {
     return ;
 }
@@ -29,13 +29,14 @@ ft_item &ft_item::operator=(const ft_item &other) noexcept
         this->_modifier2 = other._modifier2;
         this->_modifier3 = other._modifier3;
         this->_modifier4 = other._modifier4;
+        this->_error_code = other._error_code;
     }
     return (*this);
 }
 
 ft_item::ft_item(ft_item &&other) noexcept
     : _max_stack(other._max_stack), _stack_size(other._stack_size), _item_id(other._item_id), _rarity(other._rarity),
-      _width(other._width), _height(other._height), _modifier1(other._modifier1), _modifier2(other._modifier2), _modifier3(other._modifier3), _modifier4(other._modifier4)
+      _width(other._width), _height(other._height), _modifier1(other._modifier1), _modifier2(other._modifier2), _modifier3(other._modifier3), _modifier4(other._modifier4), _error_code(other._error_code)
 {
     other._max_stack = 0;
     other._stack_size = 0;
@@ -51,6 +52,7 @@ ft_item::ft_item(ft_item &&other) noexcept
     other._modifier3.value = 0;
     other._modifier4.id = 0;
     other._modifier4.value = 0;
+    other._error_code = ER_SUCCESS;
     return ;
 }
 
@@ -68,6 +70,7 @@ ft_item &ft_item::operator=(ft_item &&other) noexcept
         this->_modifier2 = other._modifier2;
         this->_modifier3 = other._modifier3;
         this->_modifier4 = other._modifier4;
+        this->_error_code = other._error_code;
         other._max_stack = 0;
         other._stack_size = 0;
         other._item_id = 0;
@@ -82,6 +85,7 @@ ft_item &ft_item::operator=(ft_item &&other) noexcept
         other._modifier3.value = 0;
         other._modifier4.id = 0;
         other._modifier4.value = 0;
+        other._error_code = ER_SUCCESS;
     }
     return (*this);
 }
@@ -298,5 +302,22 @@ void ft_item::set_modifier4_value(int value) noexcept
 {
     this->_modifier4.value = value;
     return ;
+}
+
+void ft_item::set_error(int err) const noexcept
+{
+    ft_errno = err;
+    this->_error_code = err;
+    return ;
+}
+
+int ft_item::get_error() const noexcept
+{
+    return (this->_error_code);
+}
+
+const char *ft_item::get_error_str() const noexcept
+{
+    return (ft_strerror(this->_error_code));
 }
 
