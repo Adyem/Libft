@@ -205,11 +205,13 @@ ft_character::ft_character() noexcept
       _coins(0), _valor(0), _experience(0), _x(0), _y(0), _z(0),
       _fire_res{0, 0}, _frost_res{0, 0}, _lightning_res{0, 0},
       _air_res{0, 0}, _earth_res{0, 0}, _chaos_res{0, 0},
-      _physical_res{0, 0}, _buffs(), _debuffs(), _upgrades(), _quests(), _achievements(), _reputation(), _inventory(), _equipment(),
+      _physical_res{0, 0}, _skills(), _buffs(), _debuffs(), _upgrades(), _quests(), _achievements(), _reputation(), _inventory(), _equipment(),
       _error(ER_SUCCESS)
 {
     if (this->_buffs.get_error() != ER_SUCCESS)
         this->set_error(this->_buffs.get_error());
+    else if (this->_skills.get_error() != ER_SUCCESS)
+        this->set_error(this->_skills.get_error());
     else if (this->_debuffs.get_error() != ER_SUCCESS)
         this->set_error(this->_debuffs.get_error());
     else if (this->_upgrades.get_error() != ER_SUCCESS)
@@ -342,6 +344,7 @@ void ft_character::take_damage(long long damage, uint8_t type) noexcept
 
 void ft_character::take_damage_flat(long long damage, uint8_t type) noexcept
 {
+    damage = this->apply_skill_modifiers(damage);
     if (damage < 0)
         damage = 0;
     if (type == FT_DAMAGE_PHYSICAL)
@@ -358,6 +361,7 @@ void ft_character::take_damage_flat(long long damage, uint8_t type) noexcept
 
 void ft_character::take_damage_scaled(long long damage, uint8_t type) noexcept
 {
+    damage = this->apply_skill_modifiers(damage);
     if (damage < 0)
         damage = 0;
     if (type == FT_DAMAGE_PHYSICAL)
@@ -380,6 +384,7 @@ void ft_character::take_damage_scaled(long long damage, uint8_t type) noexcept
 
 void ft_character::take_damage_buffer(long long damage, uint8_t type) noexcept
 {
+    damage = this->apply_skill_modifiers(damage);
     if (damage < 0)
         damage = 0;
     if (type == FT_DAMAGE_PHYSICAL)
@@ -675,6 +680,49 @@ void ft_character::set_physical_res(int percent, int flat) noexcept
     return ;
 }
 
+ft_map<int, ft_skill> &ft_character::get_skills() noexcept
+{
+    return (this->_skills);
+}
+
+const ft_map<int, ft_skill> &ft_character::get_skills() const noexcept
+{
+    return (this->_skills);
+}
+
+ft_skill *ft_character::get_skill(int id) noexcept
+{
+    Pair<int, ft_skill> *found = this->_skills.find(id);
+    if (found == ft_nullptr)
+        return (ft_nullptr);
+    return (&found->value);
+}
+
+const ft_skill *ft_character::get_skill(int id) const noexcept
+{
+    const Pair<int, ft_skill> *found = this->_skills.find(id);
+    if (found == ft_nullptr)
+        return (ft_nullptr);
+    return (&found->value);
+}
+
+int ft_character::add_skill(const ft_skill &skill) noexcept
+{
+    this->_skills.insert(skill.get_id(), skill);
+    if (this->_skills.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_skills.get_error());
+        return (this->_error);
+    }
+    return (ER_SUCCESS);
+}
+
+void ft_character::remove_skill(int id) noexcept
+{
+    this->_skills.remove(id);
+    return ;
+}
+
 ft_map<int, ft_buff> &ft_character::get_buffs() noexcept
 {
     return (this->_buffs);
@@ -749,6 +797,29 @@ const ft_experience_table &ft_character::get_experience_table() const noexcept
 int ft_character::get_level() const noexcept
 {
     return (this->_experience_table.get_level(this->_experience));
+}
+
+long long ft_character::apply_skill_modifiers(long long damage) const noexcept
+{
+    const Pair<int, ft_skill> *skill_ptr = this->_skills.end() - this->_skills.size();
+    const Pair<int, ft_skill> *skill_end = this->_skills.end();
+    while (skill_ptr != skill_end)
+    {
+        if (skill_ptr->value.get_cooldown() == 0)
+        {
+            damage += skill_ptr->value.get_modifier1();
+            int percent = skill_ptr->value.get_modifier2();
+            if (percent != 0)
+            {
+                long long delta = damage * percent;
+                damage += delta / 100;
+            }
+        }
+        ++skill_ptr;
+    }
+    if (damage < 0)
+        damage = 0;
+    return (damage);
 }
 
 void ft_character::apply_modifier(const ft_item_modifier &mod, int sign) noexcept

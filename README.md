@@ -1489,7 +1489,7 @@ xml_node *get_root() const noexcept;
 #### Game
 The Game module provides small building blocks for RPG-style mechanics. It includes world persistence, event queues, pathfinding helpers, equipment management, and crafting.
 
-Core classes include `ft_character`, `ft_item`, `ft_inventory`, `ft_equipment`, `ft_upgrade`, `ft_world`, `ft_event`, `ft_map3d`, `ft_quest`, `ft_reputation`, `ft_buff`, `ft_debuff`, `ft_achievement`, `ft_experience_table`, and `ft_crafting`. Each class is summarized below.
+Core classes include `ft_character`, `ft_item`, `ft_inventory`, `ft_equipment`, `ft_upgrade`, `ft_world`, `ft_event`, `ft_map3d`, `ft_quest`, `ft_reputation`, `ft_buff`, `ft_debuff`, `ft_skill`, `ft_achievement`, `ft_experience_table`, and `ft_crafting`. Each class is summarized below.
 
 The `ft_world` class can persist game state using JSON files and track timed events.
 
@@ -1627,6 +1627,12 @@ ft_resistance get_chaos_res() const noexcept;
 void set_chaos_res(int percent, int flat) noexcept;
 ft_resistance get_physical_res() const noexcept;
 void set_physical_res(int percent, int flat) noexcept;
+ft_map<int, ft_skill>       &get_skills() noexcept;
+const ft_map<int, ft_skill> &get_skills() const noexcept;
+ft_skill *get_skill(int id) noexcept;
+const ft_skill *get_skill(int id) const noexcept;
+int add_skill(const ft_skill &skill) noexcept;
+void remove_skill(int id) noexcept;
 ft_map<int, ft_buff>       &get_buffs() noexcept;
 const ft_map<int, ft_buff> &get_buffs() const noexcept;
 ft_map<int, ft_debuff>       &get_debuffs() noexcept;
@@ -1885,6 +1891,36 @@ void set_modifier4(int mod) noexcept;
 void add_modifier4(int mod) noexcept;
 void sub_modifier4(int mod) noexcept;
 ```
+#### `ft_skill`
+```
+int get_id() const noexcept;
+void set_id(int id) noexcept;
+int get_level() const noexcept;
+void set_level(int level) noexcept;
+int get_cooldown() const noexcept;
+void set_cooldown(int cooldown) noexcept;
+void add_cooldown(int cooldown) noexcept;
+void sub_cooldown(int cooldown) noexcept;
+int get_modifier1() const noexcept;
+void set_modifier1(int mod) noexcept;
+void add_modifier1(int mod) noexcept;
+void sub_modifier1(int mod) noexcept;
+int get_modifier2() const noexcept;
+void set_modifier2(int mod) noexcept;
+void add_modifier2(int mod) noexcept;
+void sub_modifier2(int mod) noexcept;
+int get_modifier3() const noexcept;
+void set_modifier3(int mod) noexcept;
+void add_modifier3(int mod) noexcept;
+void sub_modifier3(int mod) noexcept;
+int get_modifier4() const noexcept;
+void set_modifier4(int mod) noexcept;
+void add_modifier4(int mod) noexcept;
+void sub_modifier4(int mod) noexcept;
+int get_error() const noexcept;
+const char *get_error_str() const noexcept;
+```
+
 
 #### `ft_achievement`
 ```
