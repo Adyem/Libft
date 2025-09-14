@@ -1,7 +1,9 @@
 #include "game_inventory.hpp"
 
-ft_inventory::ft_inventory(size_t capacity) noexcept
-    : _items(), _capacity(capacity), _next_slot(0), _error(ER_SUCCESS)
+ft_inventory::ft_inventory(size_t capacity, int weight_limit) noexcept
+    : _items(), _capacity(capacity), _used_slots(0),
+      _weight_limit(weight_limit), _current_weight(0),
+      _next_slot(0), _error(ER_SUCCESS)
 {
     if (this->_items.get_error() != ER_SUCCESS)
         this->set_error(this->_items.get_error());
@@ -31,12 +33,48 @@ void ft_inventory::resize(size_t capacity) noexcept
 
 size_t ft_inventory::get_used() const noexcept
 {
-    return (this->_items.size());
+    return (this->_used_slots);
+}
+
+void ft_inventory::set_used_slots(size_t used) noexcept
+{
+    this->_used_slots = used;
+    return ;
 }
 
 bool ft_inventory::is_full() const noexcept
 {
-    return (this->_items.size() >= this->_capacity);
+#if USE_INVENTORY_SLOTS
+    if (this->_capacity != 0 && this->_used_slots >= this->_capacity)
+        return (true);
+#endif
+#if USE_INVENTORY_WEIGHT
+    if (this->_weight_limit != 0 && this->_current_weight >= this->_weight_limit)
+        return (true);
+#endif
+    return (false);
+}
+
+int ft_inventory::get_weight_limit() const noexcept
+{
+    return (this->_weight_limit);
+}
+
+void ft_inventory::set_weight_limit(int limit) noexcept
+{
+    this->_weight_limit = limit;
+    return ;
+}
+
+int ft_inventory::get_current_weight() const noexcept
+{
+    return (this->_current_weight);
+}
+
+void ft_inventory::set_current_weight(int weight) noexcept
+{
+    this->_current_weight = weight;
+    return ;
 }
 
 int ft_inventory::get_error() const noexcept
@@ -54,7 +92,14 @@ void ft_inventory::set_error(int err) const noexcept
 int ft_inventory::add_item(const ft_item &item) noexcept
 {
     this->_error = ER_SUCCESS;
-    int remaining = item.get_current_stack();
+    int remaining = item.get_stack_size();
+#if USE_INVENTORY_WEIGHT
+    if (this->_weight_limit != 0 && this->_current_weight + remaining > this->_weight_limit)
+    {
+        this->set_error(CHARACTER_INVENTORY_FULL);
+        return (CHARACTER_INVENTORY_FULL);
+    }
+#endif
     int item_id = item.get_item_id();
 
     Pair<int, ft_item> *item_ptr = this->_items.end() - this->_items.size();
@@ -63,7 +108,7 @@ int ft_inventory::add_item(const ft_item &item) noexcept
     {
         if (item_ptr->value.get_item_id() == item_id)
         {
-            int free_space = item_ptr->value.get_max_stack() - item_ptr->value.get_current_stack();
+            int free_space = item_ptr->value.get_max_stack() - item_ptr->value.get_stack_size();
             if (free_space > 0)
             {
                 int to_add;
@@ -72,6 +117,7 @@ int ft_inventory::add_item(const ft_item &item) noexcept
                 else
                     to_add = free_space;
                 item_ptr->value.add_to_stack(to_add);
+                this->_current_weight += to_add;
                 remaining -= to_add;
             }
         }
@@ -80,18 +126,21 @@ int ft_inventory::add_item(const ft_item &item) noexcept
 
     while (remaining > 0)
     {
-        if (this->_items.size() >= this->_capacity)
+#if USE_INVENTORY_SLOTS
+        int slot_usage = item.get_width() * item.get_height();
+        if (this->_capacity != 0 && this->_used_slots + slot_usage > this->_capacity)
         {
             this->set_error(CHARACTER_INVENTORY_FULL);
             return (CHARACTER_INVENTORY_FULL);
         }
+#endif
         ft_item new_item = item;
         int to_add;
         if (remaining < new_item.get_max_stack())
             to_add = remaining;
         else
             to_add = new_item.get_max_stack();
-        new_item.set_current_stack(to_add);
+        new_item.set_stack_size(to_add);
         this->_items.insert(this->_next_slot, new_item);
         if (this->_items.get_error() != ER_SUCCESS)
         {
@@ -99,6 +148,10 @@ int ft_inventory::add_item(const ft_item &item) noexcept
             return (this->_error);
         }
         ++this->_next_slot;
+        this->_current_weight += to_add;
+#if USE_INVENTORY_SLOTS
+        this->_used_slots += slot_usage;
+#endif
         remaining -= to_add;
     }
     return (ER_SUCCESS);
@@ -106,6 +159,14 @@ int ft_inventory::add_item(const ft_item &item) noexcept
 
 void ft_inventory::remove_item(int slot) noexcept
 {
+    Pair<int, ft_item> *entry = this->_items.find(slot);
+    if (entry)
+    {
+        this->_current_weight -= entry->value.get_stack_size();
+#if USE_INVENTORY_SLOTS
+        this->_used_slots -= entry->value.get_width() * entry->value.get_height();
+#endif
+    }
     this->_items.remove(slot);
     return ;
 }
@@ -118,7 +179,7 @@ int ft_inventory::count_item(int item_id) const noexcept
     while (item_ptr != item_end)
     {
         if (item_ptr->value.get_item_id() == item_id)
-            total += item_ptr->value.get_current_stack();
+            total += item_ptr->value.get_stack_size();
         ++item_ptr;
     }
     return (total);
@@ -137,7 +198,7 @@ int ft_inventory::count_rarity(int rarity) const noexcept
     while (item_ptr != item_end)
     {
         if (item_ptr->value.get_rarity() == rarity)
-            total += item_ptr->value.get_current_stack();
+            total += item_ptr->value.get_stack_size();
         ++item_ptr;
     }
     return (total);

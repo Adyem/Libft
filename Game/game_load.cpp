@@ -31,15 +31,25 @@ static int build_item_from_group(ft_item &item, json_group *group, const ft_stri
         return (GAME_GENERAL_ERROR);
     item.set_max_stack(value);
     ft_string key_current = item_prefix;
-    key_current += "_current_stack";
+    key_current += "_stack_size";
     if (parse_item_field(group, key_current, value) != ER_SUCCESS)
         return (GAME_GENERAL_ERROR);
-    item.set_current_stack(value);
+    item.set_stack_size(value);
     ft_string key_id = item_prefix;
     key_id += "_id";
     if (parse_item_field(group, key_id, value) != ER_SUCCESS)
         return (GAME_GENERAL_ERROR);
     item.set_item_id(value);
+    ft_string key_width = item_prefix;
+    key_width += "_width";
+    if (parse_item_field(group, key_width, value) != ER_SUCCESS)
+        return (GAME_GENERAL_ERROR);
+    item.set_width(value);
+    ft_string key_height = item_prefix;
+    key_height += "_height";
+    if (parse_item_field(group, key_height, value) != ER_SUCCESS)
+        return (GAME_GENERAL_ERROR);
+    item.set_height(value);
     ft_string key_mod1_id = item_prefix;
     key_mod1_id += "_mod1_id";
     if (parse_item_field(group, key_mod1_id, value) != ER_SUCCESS)
@@ -92,6 +102,29 @@ int deserialize_inventory(ft_inventory &inventory, json_group *group)
         return (GAME_GENERAL_ERROR);
     }
     inventory.resize(ft_atoi(capacity_item->value));
+    json_item *weight_item = json_find_item(group, "weight_limit");
+    if (!weight_item)
+    {
+        ft_errno = GAME_GENERAL_ERROR;
+        return (GAME_GENERAL_ERROR);
+    }
+    inventory.set_weight_limit(ft_atoi(weight_item->value));
+    json_item *cur_weight_item = json_find_item(group, "current_weight");
+    if (!cur_weight_item)
+    {
+        ft_errno = GAME_GENERAL_ERROR;
+        return (GAME_GENERAL_ERROR);
+    }
+    int serialized_weight = ft_atoi(cur_weight_item->value);
+    json_item *used_slots_item = json_find_item(group, "used_slots");
+    if (!used_slots_item)
+    {
+        ft_errno = GAME_GENERAL_ERROR;
+        return (GAME_GENERAL_ERROR);
+    }
+    int serialized_slots = ft_atoi(used_slots_item->value);
+    inventory.set_current_weight(0);
+    inventory.set_used_slots(0);
     inventory.get_items().clear();
     json_item *count_item = json_find_item(group, "item_count");
     if (!count_item)
@@ -116,6 +149,8 @@ int deserialize_inventory(ft_inventory &inventory, json_group *group)
             return (inventory.get_error());
         item_index++;
     }
+    inventory.set_current_weight(serialized_weight);
+    inventory.set_used_slots(serialized_slots);
     return (ER_SUCCESS);
 }
 

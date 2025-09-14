@@ -1,8 +1,9 @@
 #include "game_item.hpp"
 
 ft_item::ft_item() noexcept
-    : _max_stack(0), _current_stack(0), _item_id(0), _rarity(0),
-      _modifier1{0, 0}, _modifier2{0, 0}, _modifier3{0, 0}, _modifier4{0, 0}
+    : _max_stack(0), _stack_size(0), _item_id(0), _rarity(0),
+      _width(1), _height(1), _modifier1{0, 0}, _modifier2{0, 0},
+      _modifier3{0, 0}, _modifier4{0, 0}
 {
     return ;
 }
@@ -18,30 +19,30 @@ void ft_item::set_max_stack(int max) noexcept
     return ;
 }
 
-int ft_item::get_current_stack() const noexcept
+int ft_item::get_stack_size() const noexcept
 {
-    return (this->_current_stack);
+    return (this->_stack_size);
 }
 
-void ft_item::set_current_stack(int amount) noexcept
+void ft_item::set_stack_size(int amount) noexcept
 {
-    this->_current_stack = amount;
+    this->_stack_size = amount;
     return ;
 }
 
 void ft_item::add_to_stack(int amount) noexcept
 {
-    this->_current_stack += amount;
-    if (this->_current_stack > this->_max_stack)
-        this->_current_stack = this->_max_stack;
+    this->_stack_size += amount;
+    if (this->_stack_size > this->_max_stack)
+        this->_stack_size = this->_max_stack;
     return ;
 }
 
 void ft_item::sub_from_stack(int amount) noexcept
 {
-    this->_current_stack -= amount;
-    if (this->_current_stack < 0)
-        this->_current_stack = 0;
+    this->_stack_size -= amount;
+    if (this->_stack_size < 0)
+        this->_stack_size = 0;
     return ;
 }
 
@@ -53,6 +54,28 @@ int ft_item::get_item_id() const noexcept
 void ft_item::set_item_id(int id) noexcept
 {
     this->_item_id = id;
+    return ;
+}
+
+int ft_item::get_width() const noexcept
+{
+    return (this->_width);
+}
+
+void ft_item::set_width(int width) noexcept
+{
+    this->_width = width;
+    return ;
+}
+
+int ft_item::get_height() const noexcept
+{
+    return (this->_height);
+}
+
+void ft_item::set_height(int height) noexcept
+{
+    this->_height = height;
     return ;
 }
 
