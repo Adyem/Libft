@@ -6,6 +6,94 @@ ft_crafting::ft_crafting() noexcept
     return ;
 }
 
+ft_crafting::ft_crafting(const ft_crafting &other) noexcept
+    : _recipes(), _error_code(other._error_code)
+{
+    const Pair<int, ft_vector<ft_crafting_ingredient>> *entry = other._recipes.end() - other._recipes.size();
+    const Pair<int, ft_vector<ft_crafting_ingredient>> *end = other._recipes.end();
+    while (entry != end)
+    {
+        ft_vector<ft_crafting_ingredient> ingredients;
+        size_t index = 0;
+        while (index < entry->value.size())
+        {
+            ingredients.push_back(entry->value[index]);
+            if (ingredients.get_error() != ER_SUCCESS)
+            {
+                this->set_error(ingredients.get_error());
+                return ;
+            }
+            ++index;
+        }
+        this->_recipes.insert(entry->key, ft_move(ingredients));
+        if (this->_recipes.get_error() != ER_SUCCESS)
+        {
+            this->set_error(this->_recipes.get_error());
+            return ;
+        }
+        ++entry;
+    }
+    return ;
+}
+
+ft_crafting &ft_crafting::operator=(const ft_crafting &other) noexcept
+{
+    if (this != &other)
+    {
+        this->_recipes.clear();
+        const Pair<int, ft_vector<ft_crafting_ingredient>> *entry = other._recipes.end() - other._recipes.size();
+        const Pair<int, ft_vector<ft_crafting_ingredient>> *end = other._recipes.end();
+        while (entry != end)
+        {
+            ft_vector<ft_crafting_ingredient> ingredients;
+            size_t index = 0;
+            while (index < entry->value.size())
+            {
+                ingredients.push_back(entry->value[index]);
+                if (ingredients.get_error() != ER_SUCCESS)
+                {
+                    this->set_error(ingredients.get_error());
+                    break;
+                }
+                ++index;
+            }
+            this->_recipes.insert(entry->key, ft_move(ingredients));
+            if (this->_recipes.get_error() != ER_SUCCESS)
+            {
+                this->set_error(this->_recipes.get_error());
+                break;
+            }
+            ++entry;
+        }
+        this->_error_code = other._error_code;
+    }
+    return (*this);
+}
+
+ft_crafting::ft_crafting(ft_crafting &&other) noexcept
+    : _recipes(ft_move(other._recipes)), _error_code(other._error_code)
+{
+    if (this->_recipes.get_error() != ER_SUCCESS)
+        this->set_error(this->_recipes.get_error());
+    other._error_code = ER_SUCCESS;
+    other._recipes.clear();
+    return ;
+}
+
+ft_crafting &ft_crafting::operator=(ft_crafting &&other) noexcept
+{
+    if (this != &other)
+    {
+        this->_recipes = ft_move(other._recipes);
+        this->_error_code = other._error_code;
+        if (this->_recipes.get_error() != ER_SUCCESS)
+            this->set_error(this->_recipes.get_error());
+        other._error_code = ER_SUCCESS;
+        other._recipes.clear();
+    }
+    return (*this);
+}
+
 ft_map<int, ft_vector<ft_crafting_ingredient>> &ft_crafting::get_recipes() noexcept
 {
     return (this->_recipes);

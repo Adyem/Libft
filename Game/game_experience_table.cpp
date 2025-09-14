@@ -29,6 +29,80 @@ ft_experience_table::~ft_experience_table()
     return ;
 }
 
+ft_experience_table::ft_experience_table(const ft_experience_table &other) noexcept
+    : _levels(ft_nullptr), _count(other._count), _error(other._error)
+{
+    if (this->_count > 0)
+    {
+        this->_levels = static_cast<int*>(cma_calloc(this->_count, sizeof(int)));
+        if (!this->_levels)
+        {
+            this->set_error(CMA_BAD_ALLOC);
+            return ;
+        }
+        int index = 0;
+        while (index < this->_count)
+        {
+            this->_levels[index] = other._levels[index];
+            ++index;
+        }
+    }
+    return ;
+}
+
+ft_experience_table &ft_experience_table::operator=(const ft_experience_table &other) noexcept
+{
+    if (this != &other)
+    {
+        if (this->_levels)
+            cma_free(this->_levels);
+        this->_levels = ft_nullptr;
+        this->_count = other._count;
+        this->_error = other._error;
+        if (this->_count > 0)
+        {
+            this->_levels = static_cast<int*>(cma_calloc(this->_count, sizeof(int)));
+            if (!this->_levels)
+            {
+                this->set_error(CMA_BAD_ALLOC);
+                return (*this);
+            }
+            int index = 0;
+            while (index < this->_count)
+            {
+                this->_levels[index] = other._levels[index];
+                ++index;
+            }
+        }
+    }
+    return (*this);
+}
+
+ft_experience_table::ft_experience_table(ft_experience_table &&other) noexcept
+    : _levels(other._levels), _count(other._count), _error(other._error)
+{
+    other._levels = ft_nullptr;
+    other._count = 0;
+    other._error = ER_SUCCESS;
+    return ;
+}
+
+ft_experience_table &ft_experience_table::operator=(ft_experience_table &&other) noexcept
+{
+    if (this != &other)
+    {
+        if (this->_levels)
+            cma_free(this->_levels);
+        this->_levels = other._levels;
+        this->_count = other._count;
+        this->_error = other._error;
+        other._levels = ft_nullptr;
+        other._count = 0;
+        other._error = ER_SUCCESS;
+    }
+    return (*this);
+}
+
 void ft_experience_table::set_error(int err) const noexcept
 {
     ft_errno = err;

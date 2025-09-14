@@ -12,6 +12,66 @@ ft_skill::~ft_skill() noexcept
     return ;
 }
 
+ft_skill::ft_skill(const ft_skill &other) noexcept
+    : _id(other._id), _level(other._level), _cooldown(other._cooldown), _modifier1(other._modifier1), _modifier2(other._modifier2), _modifier3(other._modifier3), _modifier4(other._modifier4), _error(other._error)
+{
+    return ;
+}
+
+ft_skill &ft_skill::operator=(const ft_skill &other) noexcept
+{
+    if (this != &other)
+    {
+        this->_id = other._id;
+        this->_level = other._level;
+        this->_cooldown = other._cooldown;
+        this->_modifier1 = other._modifier1;
+        this->_modifier2 = other._modifier2;
+        this->_modifier3 = other._modifier3;
+        this->_modifier4 = other._modifier4;
+        this->_error = other._error;
+    }
+    return (*this);
+}
+
+ft_skill::ft_skill(ft_skill &&other) noexcept
+    : _id(other._id), _level(other._level), _cooldown(other._cooldown), _modifier1(other._modifier1), _modifier2(other._modifier2), _modifier3(other._modifier3), _modifier4(other._modifier4), _error(other._error)
+{
+    other._id = 0;
+    other._level = 0;
+    other._cooldown = 0;
+    other._modifier1 = 0;
+    other._modifier2 = 0;
+    other._modifier3 = 0;
+    other._modifier4 = 0;
+    other._error = ER_SUCCESS;
+    return ;
+}
+
+ft_skill &ft_skill::operator=(ft_skill &&other) noexcept
+{
+    if (this != &other)
+    {
+        this->_id = other._id;
+        this->_level = other._level;
+        this->_cooldown = other._cooldown;
+        this->_modifier1 = other._modifier1;
+        this->_modifier2 = other._modifier2;
+        this->_modifier3 = other._modifier3;
+        this->_modifier4 = other._modifier4;
+        this->_error = other._error;
+        other._id = 0;
+        other._level = 0;
+        other._cooldown = 0;
+        other._modifier1 = 0;
+        other._modifier2 = 0;
+        other._modifier3 = 0;
+        other._modifier4 = 0;
+        other._error = ER_SUCCESS;
+    }
+    return (*this);
+}
+
 void ft_skill::set_error(int err) const noexcept
 {
     ft_errno = err;

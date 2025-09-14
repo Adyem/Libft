@@ -27,6 +27,10 @@ class ft_event_scheduler
     public:
         ft_event_scheduler() noexcept;
         ~ft_event_scheduler();
+        ft_event_scheduler(const ft_event_scheduler &other) noexcept;
+        ft_event_scheduler &operator=(const ft_event_scheduler &other) noexcept;
+        ft_event_scheduler(ft_event_scheduler &&other) noexcept;
+        ft_event_scheduler &operator=(ft_event_scheduler &&other) noexcept;
 
         void schedule_event(const ft_event &event) noexcept;
         void update_events(ft_world &world, int ticks, const char *log_file_path = ft_nullptr, ft_string *log_buffer = ft_nullptr) noexcept;

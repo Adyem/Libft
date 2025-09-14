@@ -13,6 +13,44 @@ ft_game_server::~ft_game_server()
     return ;
 }
 
+ft_game_server::ft_game_server(const ft_game_server &other) noexcept
+    : _server(other._server), _world(other._world), _error_code(other._error_code)
+{
+    return ;
+}
+
+ft_game_server &ft_game_server::operator=(const ft_game_server &other) noexcept
+{
+    if (this != &other)
+    {
+        this->_server = other._server;
+        this->_world = other._world;
+        this->_error_code = other._error_code;
+    }
+    return (*this);
+}
+
+ft_game_server::ft_game_server(ft_game_server &&other) noexcept
+    : _server(ft_move(other._server)), _world(other._world), _error_code(other._error_code)
+{
+    other._world = ft_nullptr;
+    other._error_code = ER_SUCCESS;
+    return ;
+}
+
+ft_game_server &ft_game_server::operator=(ft_game_server &&other) noexcept
+{
+    if (this != &other)
+    {
+        this->_server = ft_move(other._server);
+        this->_world = other._world;
+        this->_error_code = other._error_code;
+        other._world = ft_nullptr;
+        other._error_code = ER_SUCCESS;
+    }
+    return (*this);
+}
+
 void ft_game_server::set_error(int error) const noexcept
 {
     ft_errno = error;

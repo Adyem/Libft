@@ -14,6 +14,10 @@ class ft_debuff
     public:
         ft_debuff() noexcept;
         virtual ~ft_debuff() = default;
+        ft_debuff(const ft_debuff &other) noexcept;
+        ft_debuff &operator=(const ft_debuff &other) noexcept;
+        ft_debuff(ft_debuff &&other) noexcept;
+        ft_debuff &operator=(ft_debuff &&other) noexcept;
 
         int get_id() const noexcept;
         void set_id(int id) noexcept;

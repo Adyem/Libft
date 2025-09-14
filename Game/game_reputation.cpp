@@ -22,6 +22,72 @@ ft_reputation::ft_reputation(const ft_map<int, int> &milestones, int total) noex
     return ;
 }
 
+ft_reputation::ft_reputation(const ft_reputation &other) noexcept
+    : _milestones(other._milestones), _reps(other._reps), _total_rep(other._total_rep),
+      _current_rep(other._current_rep), _error(other._error)
+{
+    if (this->_milestones.get_error() != ER_SUCCESS)
+        this->set_error(this->_milestones.get_error());
+    else if (this->_reps.get_error() != ER_SUCCESS)
+        this->set_error(this->_reps.get_error());
+    return ;
+}
+
+ft_reputation &ft_reputation::operator=(const ft_reputation &other) noexcept
+{
+    if (this != &other)
+    {
+        this->_milestones = other._milestones;
+        this->_reps = other._reps;
+        this->_total_rep = other._total_rep;
+        this->_current_rep = other._current_rep;
+        this->_error = other._error;
+        if (this->_milestones.get_error() != ER_SUCCESS)
+            this->set_error(this->_milestones.get_error());
+        else if (this->_reps.get_error() != ER_SUCCESS)
+            this->set_error(this->_reps.get_error());
+    }
+    return (*this);
+}
+
+ft_reputation::ft_reputation(ft_reputation &&other) noexcept
+    : _milestones(ft_move(other._milestones)), _reps(ft_move(other._reps)), _total_rep(other._total_rep),
+      _current_rep(other._current_rep), _error(other._error)
+{
+    if (this->_milestones.get_error() != ER_SUCCESS)
+        this->set_error(this->_milestones.get_error());
+    else if (this->_reps.get_error() != ER_SUCCESS)
+        this->set_error(this->_reps.get_error());
+    other._total_rep = 0;
+    other._current_rep = 0;
+    other._error = ER_SUCCESS;
+    other._milestones.clear();
+    other._reps.clear();
+    return ;
+}
+
+ft_reputation &ft_reputation::operator=(ft_reputation &&other) noexcept
+{
+    if (this != &other)
+    {
+        this->_milestones = ft_move(other._milestones);
+        this->_reps = ft_move(other._reps);
+        this->_total_rep = other._total_rep;
+        this->_current_rep = other._current_rep;
+        this->_error = other._error;
+        if (this->_milestones.get_error() != ER_SUCCESS)
+            this->set_error(this->_milestones.get_error());
+        else if (this->_reps.get_error() != ER_SUCCESS)
+            this->set_error(this->_reps.get_error());
+        other._total_rep = 0;
+        other._current_rep = 0;
+        other._error = ER_SUCCESS;
+        other._milestones.clear();
+        other._reps.clear();
+    }
+    return (*this);
+}
+
 int ft_reputation::get_total_rep() const noexcept
 {
     return (this->_total_rep);
