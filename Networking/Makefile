@@ -5,6 +5,7 @@ SRCS := networking_socket_class.cpp \
         networking.cpp \
         networking_setup_server.cpp \
         networking_setup_client.cpp \
+        networking_setup_udp.cpp \
         networking_socket_wrapper_functions.cpp \
         networking_ssl_wrapper.cpp \
         networking_nonblocking.cpp \
@@ -35,6 +36,7 @@ endif
 
 HEADERS := socket_class.hpp \
            networking.hpp \
+           udp_socket.hpp \
            ssl_wrapper.hpp \
            http_client.hpp \
            http_server.hpp \

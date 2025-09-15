@@ -23,6 +23,10 @@ int nw_connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 int nw_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 int nw_listen(int sockfd, int backlog);
 int nw_socket(int domain, int type, int protocol);
+ssize_t nw_sendto(int sockfd, const void *buf, size_t len, int flags,
+                  const struct sockaddr *dest_addr, socklen_t addrlen);
+ssize_t nw_recvfrom(int sockfd, void *buf, size_t len, int flags,
+                    struct sockaddr *src_addr, socklen_t *addrlen);
 int nw_inet_pton(int family, const char *ip_address, void *destination);
 int nw_set_nonblocking(int socket_fd);
 int nw_poll(int *read_file_descriptors, int read_count,
