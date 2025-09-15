@@ -20,6 +20,14 @@
 #define FT_DAMAGE_RULE_FLAT 0
 #define FT_DAMAGE_RULE_SCALED 1
 #define FT_DAMAGE_RULE_BUFFER 2
+#define FT_DAMAGE_RULE_MAGIC_SHIELD 3
+
+#ifndef FT_PHYSICAL_DAMAGE_REDUCTION
+# define FT_PHYSICAL_DAMAGE_REDUCTION FT_DAMAGE_RULE_FLAT
+#endif
+#ifndef FT_MAGIC_DAMAGE_REDUCTION
+# define FT_MAGIC_DAMAGE_REDUCTION FT_DAMAGE_RULE_FLAT
+#endif
 
 struct json_group;
 
@@ -106,6 +114,7 @@ class ft_character
         void take_damage_flat(long long damage, uint8_t type) noexcept;
         void take_damage_scaled(long long damage, uint8_t type) noexcept;
         void take_damage_buffer(long long damage, uint8_t type) noexcept;
+        void take_damage_magic_shield(long long damage, uint8_t type) noexcept;
 
         int get_might() const noexcept;
         void set_might(int might) noexcept;
