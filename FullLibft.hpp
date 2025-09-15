@@ -9,6 +9,7 @@
 #include "CPP_class/class_data_buffer.hpp"
 #include "CPP_class/class_file.hpp"
 #include "CPP_class/class_nullptr.hpp"
+#include "CPP_class/class_big_number.hpp"
 #include "CPP_class/class_string_class.hpp"
 #include "CPP_class/class_stringbuf.hpp"
 #include "CPP_class/class_istream.hpp"

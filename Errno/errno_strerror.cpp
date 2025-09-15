@@ -50,6 +50,14 @@ const char* ft_strerror(int error_code)
         return ("String memory allocation failed");
     else if (error_code == STRING_ERASE_OUT_OF_BOUNDS)
         return ("String acces out of bounds");
+    else if (error_code == BIG_NUMBER_ALLOC_FAIL)
+        return ("Big number memory allocation failed");
+    else if (error_code == BIG_NUMBER_INVALID_DIGIT)
+        return ("Big number digit must be numeric");
+    else if (error_code == BIG_NUMBER_NEGATIVE_RESULT)
+        return ("Big number result would be negative");
+    else if (error_code == BIG_NUMBER_DIVIDE_BY_ZERO)
+        return ("Big number division by zero");
     else if (error_code == VECTOR_ALLOC_FAIL)
         return ("Vector memory allocation failed");
     else if (error_code == VECTOR_OUT_OF_BOUNDS)

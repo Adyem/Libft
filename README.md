@@ -6,6 +6,8 @@ basic threading helpers, containers, string utilities, simple networking and mor
 The top level `Makefile` builds every submodule and links them into `Full_Libft.a`.
 The umbrella header `FullLibft.hpp` includes every component.
 Internal code uses custom replacements such as `ft_strlen`, `ft_strchr`, `ft_strstr`, and `pf_snprintf` instead of the standard library equivalents. It also provides `ft_move` as a drop-in replacement for `std::move`.
+All size counters rely on the `ft_size_t` typedef (aliasing `unsigned long long`) so modules share a consistent width for
+buffer lengths and digit counts.
 Header files now use class names or concise module names instead of module prefixes, except internal headers which retain their module prefix.
 
 This document briefly lists the main headers and the interfaces they expose. The
@@ -531,6 +533,41 @@ const char *get_error_str() const noexcept;
 void        move(ft_string& other) noexcept;
 void        erase(std::size_t index, std::size_t count) noexcept;
 operator const char*() const noexcept;
+```
+
+#### `ft_big_number`
+Provides a decimal big-integer type that validates input digits, expands its
+internal buffer as digits are appended, releases excess memory when the number
+shrinks, and offers arithmetic helpers and comparisons that surface error
+states for unsupported operations.
+```
+ft_big_number() noexcept;
+ft_big_number(const ft_big_number& other) noexcept;
+ft_big_number(ft_big_number&& other) noexcept;
+ft_big_number& operator=(const ft_big_number& other) noexcept;
+ft_big_number& operator=(ft_big_number&& other) noexcept;
+ft_big_number operator+(const ft_big_number& other) const noexcept;
+ft_big_number operator-(const ft_big_number& other) const noexcept;
+ft_big_number operator*(const ft_big_number& other) const noexcept;
+ft_big_number operator/(const ft_big_number& other) const noexcept;
+bool          operator==(const ft_big_number& other) const noexcept;
+bool          operator!=(const ft_big_number& other) const noexcept;
+bool          operator<(const ft_big_number& other) const noexcept;
+bool          operator<=(const ft_big_number& other) const noexcept;
+bool          operator>(const ft_big_number& other) const noexcept;
+bool          operator>=(const ft_big_number& other) const noexcept;
+void        assign(const char* number) noexcept;
+void        append_digit(char digit) noexcept;
+void        append(const char* digits) noexcept;
+void        append_unsigned(unsigned long value) noexcept;
+void        trim_leading_zeros() noexcept;
+void        reduce_to(ft_size_t new_size) noexcept;
+void        clear() noexcept;
+const char *c_str() const noexcept;
+ft_size_t   size() const noexcept;
+bool        empty() const noexcept;
+int         get_error() const noexcept;
+const char *get_error_str() const noexcept;
 ```
 
 #### `ft_nullptr`
