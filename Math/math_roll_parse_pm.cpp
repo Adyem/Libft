@@ -16,6 +16,11 @@ int math_roll_excecute_pm(char *string, int *i, int j)
             break ;
         if (string[*i] == '+' || string[*i] == '-')
         {
+            if (math_is_unary_sign(string, *i))
+            {
+                (*i)++;
+                continue ;
+            }
             if (math_process_sign(string, i, j, &error))
                 return (1);
             math_calculate_j(string, &j);

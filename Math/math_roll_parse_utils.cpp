@@ -10,6 +10,27 @@ static void math_print_overflow_error(int error_code)
     return ;
 }
 
+int math_is_unary_sign(const char *string, int index)
+{
+    int scan;
+
+    if (index == 0)
+        return (1);
+    scan = index;
+    while (scan > 0)
+    {
+        scan--;
+        if (string[scan] >= '0' && string[scan] <= '9')
+            return (0);
+        if (string[scan] == ')')
+            return (0);
+        if (string[scan] == '(' || string[scan] == '+' || string[scan] == '-' ||
+            string[scan] == '*' || string[scan] == '/')
+            return (1);
+    }
+    return (1);
+}
+
 static int math_check_add_sub_overflow(int first_number, int second_number,
                                       int error_code, int is_addition)
 {
@@ -118,7 +139,10 @@ static void math_update_string(char *string, int *i, int x)
 int math_process_sign(char *string, int *i, int j, int *error)
 {
     char sign;
-    int result, first_number, second_number, x;
+    int result;
+    int first_number;
+    int second_number;
+    int x;
 
     sign = string[*i];
     x = *i;

@@ -12,6 +12,7 @@ void    math_free_parse(char **parsed_strings);
 int     math_roll_convert_previous(char *string, int *index, int *error);
 int     math_roll_convert_next(char *string, int index, int *error);
 int     math_roll_itoa(int result, int *index, char *string);
+int     math_is_unary_sign(const char *string, int index);
 
 void    math_calculate_j(char *string, int *string_boundary);
 int     math_roll_validate(char *string);
