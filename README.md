@@ -51,7 +51,7 @@ The current suite exercises components across multiple modules:
 - **String**: `ft_string_view`
 - **JSon**: schema validation
 - **YAML**: round-trip parsing
-- **Game**: `ft_game_state` centralizes world and character data with shared pointers for RAII cleanup, `ft_world` persistence and a shared-pointer-based `ft_event_scheduler` for timed actions via `ft_world::schedule_event` and `ft_world::update_events`, `ft_equipment`, `ft_inventory`, and `ft_quest` store items through shared pointers, `ft_crafting` consumes and produces shared items, `ft_world::plan_route`, `ft_pathfinding`, and copy/move constructors across game classes
+- **Game**: `ft_game_state` centralizes worlds and character data with vectors of shared pointers for RAII cleanup, `ft_world` persistence and a shared-pointer-based `ft_event_scheduler` for timed actions via `ft_world::schedule_event` and `ft_world::update_events`, `ft_equipment`, `ft_inventory`, and `ft_quest` store items through shared pointers, `ft_crafting` consumes and produces shared items, `ft_world::plan_route`, `ft_pathfinding`, and copy/move constructors across game classes
 - Shared pointers expose their own `get_error` while managed objects may define their own; call `shared_ptr.get_error()` for allocation issues and `shared_ptr->get_error()` for object-specific errors.
 - Game classes validate both the shared pointer and its managed object for errors before use so failures surface consistently.
 - `ft_item` tracks its own error code so equipment, inventory, and crafting verify both the item pointer and the item itself before applying modifiers or stacking quantities.
@@ -1724,7 +1724,7 @@ crafting.craft_item(inventory, 1, sword);
 #### `ft_game_state`
 
 ```
-ft_sharedptr<ft_world> &get_world() noexcept;
+ft_vector<ft_sharedptr<ft_world> > &get_worlds() noexcept;
 ft_vector<ft_sharedptr<ft_character> > &get_characters() noexcept;
 int add_character(const ft_sharedptr<ft_character> &character) noexcept;
 void remove_character(size_t index) noexcept;
