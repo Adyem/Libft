@@ -47,7 +47,7 @@ The current suite exercises components across multiple modules:
 - **Concurrency**: `ft_promise`, `ft_task_scheduler`, `ft_this_thread`
 - **Networking**: IPv4 and IPv6 send/receive paths, UDP datagrams, and a simple HTTP server
 - **Logger**: color toggling, JSON sink, asynchronous logging
-- **Math**: vector, matrix, and quaternion helpers
+- **Math**: vector, matrix, and quaternion helpers plus expression evaluation via `math_roll` (arithmetic, precedence, dice, negative values, lengthy expressions, and error handling)
 - **RNG**: normal, exponential, Poisson, binomial, and geometric distributions
 - **String**: `ft_string_view`
 - **JSon**: schema validation
