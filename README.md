@@ -42,8 +42,8 @@ The current suite exercises components across multiple modules:
 - **Libft**: `ft_atoi`, `ft_atol`, `ft_bzero`, `ft_isdigit`, `ft_isalpha`, `ft_isalnum`, `ft_islower`, `ft_isupper`, `ft_isprint`, `ft_isspace`, `ft_memchr`,
   `ft_memcmp`, `ft_memcpy`, `ft_memdup`, `ft_memmove`, `ft_memset`, `ft_strchr`, `ft_strcmp`, `ft_strjoin_multiple`, `ft_strlcat`, `ft_strlcpy`, `ft_strncpy`, `ft_strlen`, `ft_strncmp`,
   `ft_strnstr`, `ft_strstr`, `ft_strrchr`, `ft_strmapi`, `ft_striteri`, `ft_strtok`, `ft_strtol`, `ft_strtoul`, `ft_setenv`, `ft_unsetenv`, `ft_getenv`, `ft_to_lower`, `ft_to_upper`,
-  `ft_fopen`, `ft_fclose`, `ft_fgets`, `ft_time_ms`, `ft_time_format`
-- **Concurrency**: `ft_promise`, `ft_task_scheduler`
+`ft_fopen`, `ft_fclose`, `ft_fgets`, `ft_time_ms`, `ft_time_format`, `ft_to_string`
+- **Concurrency**: `ft_promise`, `ft_task_scheduler`, `ft_this_thread`
 - **Networking**: IPv4 and IPv6 send/receive paths, UDP datagrams, and a simple HTTP server
 - **Logger**: color toggling, JSON sink, asynchronous logging
 - **Math**: vector, matrix, and quaternion helpers
@@ -111,6 +111,7 @@ FILE   *ft_fopen(const char *filename, const char *mode);
 int     ft_fclose(FILE *stream);
 long    ft_time_ms(void);
 char   *ft_time_format(char *buffer, size_t buffer_size);
+ft_string ft_to_string(long number);
 ```
 
 `limits.hpp` exposes integer boundary constants:
@@ -926,6 +927,15 @@ const char *get_error_str() const;
 
 
 #### Concurrency
+`Concurrency/this_thread.hpp` provides helpers for the current thread:
+
+```
+std::thread::id ft_this_thread_get_id();
+void ft_this_thread_sleep_for(std::chrono::milliseconds duration);
+void ft_this_thread_sleep_until(std::chrono::steady_clock::time_point time_point);
+void ft_this_thread_yield();
+```
+
 `Concurrency/task_scheduler.hpp` offers `ft_task_scheduler`, combining a
 lock-free queue, thread pool and scheduler. Tasks may be submitted for
 immediate execution, delayed execution or recurring intervals and each
