@@ -73,6 +73,26 @@ static inline ssize_t recv_platform(int sockfd, void *buf, size_t len, int flags
         return (-1);
     return (ret);
 }
+
+static inline ssize_t sendto_platform(int sockfd, const void *buf, size_t len, int flags,
+                                      const struct sockaddr *dest_addr, socklen_t addrlen)
+{
+    int ret = ::sendto(static_cast<SOCKET>(sockfd), static_cast<const char*>(buf),
+                       static_cast<int>(len), flags, dest_addr, addrlen);
+    if (ret == SOCKET_ERROR)
+        return (-1);
+    return (ret);
+}
+
+static inline ssize_t recvfrom_platform(int sockfd, void *buf, size_t len, int flags,
+                                        struct sockaddr *src_addr, socklen_t *addrlen)
+{
+    int ret = ::recvfrom(static_cast<SOCKET>(sockfd), static_cast<char*>(buf),
+                         static_cast<int>(len), flags, src_addr, addrlen);
+    if (ret == SOCKET_ERROR)
+        return (-1);
+    return (ret);
+}
 #else
 static inline int bind_platform(int sockfd, const struct sockaddr *addr, socklen_t len)
 {
@@ -120,6 +140,18 @@ static inline ssize_t recv_platform(int sockfd, void *buf, size_t len, int flags
 {
     return (::recv(sockfd, buf, len, flags));
 }
+
+static inline ssize_t sendto_platform(int sockfd, const void *buf, size_t len, int flags,
+                                      const struct sockaddr *dest_addr, socklen_t addrlen)
+{
+    return (::sendto(sockfd, buf, len, flags, dest_addr, addrlen));
+}
+
+static inline ssize_t recvfrom_platform(int sockfd, void *buf, size_t len, int flags,
+                                        struct sockaddr *src_addr, socklen_t *addrlen)
+{
+    return (::recvfrom(sockfd, buf, len, flags, src_addr, addrlen));
+}
 #endif
 
 int nw_bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
@@ -155,6 +187,18 @@ ssize_t nw_send(int sockfd, const void *buf, size_t len, int flags)
 ssize_t nw_recv(int sockfd, void *buf, size_t len, int flags)
 {
     return (recv_platform(sockfd, buf, len, flags));
+}
+
+ssize_t nw_sendto(int sockfd, const void *buf, size_t len, int flags,
+                  const struct sockaddr *dest_addr, socklen_t addrlen)
+{
+    return (sendto_platform(sockfd, buf, len, flags, dest_addr, addrlen));
+}
+
+ssize_t nw_recvfrom(int sockfd, void *buf, size_t len, int flags,
+                    struct sockaddr *src_addr, socklen_t *addrlen)
+{
+    return (recvfrom_platform(sockfd, buf, len, flags, src_addr, addrlen));
 }
 
 int nw_inet_pton(int family, const char *ip_address, void *destination)
