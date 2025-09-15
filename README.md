@@ -1537,11 +1537,11 @@ The `ft_world` class can persist game state using JSON files and track timed eve
 Methods interacting with the scheduler verify the shared pointer and the scheduler itself for errors before proceeding.
 
 ```
-ft_world world;
+ft_sharedptr<ft_world> world(new ft_world());
 ft_character character;
 ft_inventory inventory;
-world.save_to_file("save.json", character, inventory);
-world.load_from_file("save.json", character, inventory);
+world->save_to_file("save.json", character, inventory);
+world->load_from_file("save.json", character, inventory);
 ```
 
 Timed events are scheduled through a priority queue of shared pointers.
@@ -1550,16 +1550,26 @@ Timed events are scheduled through a priority queue of shared pointers.
 ft_sharedptr<ft_event> spawn(new ft_event());
 spawn->set_id(1);
 spawn->set_duration(3);
-world.schedule_event(spawn);
-world.update_events(1);
+world->schedule_event(spawn);
+world->update_events(world, 1);
 ```
 
 `ft_world::update_events` decrements durations and removes expired entries. `ft_world::plan_route` exposes grid pathfinding through the world object. Logging to a file or buffer is optional:
 
 ```
 ft_string log_buffer;
-world.update_events(1, "combat.log", &log_buffer);
+world->update_events(world, 1, "combat.log", &log_buffer);
 ```
+
+Events can be cancelled or rescheduled by identifier:
+
+```
+ft_sharedptr<ft_event_scheduler> scheduler = world->get_event_scheduler();
+scheduler->reschedule_event(1, 5);
+scheduler->cancel_event(1);
+```
+
+Both helpers search the scheduler's queue and set `GAME_GENERAL_ERROR` if the event is not found.
 
 Queued events can be saved and reloaded through `serialize_event_scheduler` and
 `deserialize_event_scheduler`, which `ft_world::save_to_file` and
@@ -1623,8 +1633,8 @@ finder.astar_grid(grid, 0, 0, 0, 2, 2, 0, path);
 `ft_world::plan_route` wraps grid pathfinding for convenience.
 
 ```
-ft_world world;
-world.plan_route(grid, 0, 0, 0, 2, 2, 0, path);
+ft_sharedptr<ft_world> world(new ft_world());
+world->plan_route(grid, 0, 0, 0, 2, 2, 0, path);
 ```
 
 Obstacles may change at runtime. `ft_map3d::toggle_obstacle` switches a cell
