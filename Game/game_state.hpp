@@ -5,14 +5,13 @@
 #include "game_character.hpp"
 #include "../Template/vector.hpp"
 #include "../Template/shared_ptr.hpp"
-#include "../Errno/errno.hpp"
 
 class ft_game_state
 {
     private:
-        ft_sharedptr<ft_world>                _world;
+        ft_vector<ft_sharedptr<ft_world> >     _worlds;
         ft_vector<ft_sharedptr<ft_character> > _characters;
-        mutable int             _error_code;
+        mutable int                            _error_code;
 
         void set_error(int error) const noexcept;
 
@@ -24,7 +23,7 @@ class ft_game_state
         ft_game_state(ft_game_state &&other) noexcept;
         ft_game_state &operator=(ft_game_state &&other) noexcept;
 
-        ft_sharedptr<ft_world> &get_world() noexcept;
+        ft_vector<ft_sharedptr<ft_world> > &get_worlds() noexcept;
 
         ft_vector<ft_sharedptr<ft_character> > &get_characters() noexcept;
 

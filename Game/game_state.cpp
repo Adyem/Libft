@@ -1,15 +1,23 @@
 #include "game_state.hpp"
 #include "../Template/move.hpp"
+#include "../Errno/errno.hpp"
 
 ft_game_state::ft_game_state() noexcept
-    : _world(new (std::nothrow) ft_world()), _characters(), _error_code(ER_SUCCESS)
+    : _worlds(), _characters(), _error_code(ER_SUCCESS)
 {
-    if (!this->_world)
+    ft_sharedptr<ft_world> world(new (std::nothrow) ft_world());
+    if (!world)
         this->set_error(GAME_GENERAL_ERROR);
-    else if (this->_world.get_error() != ER_SUCCESS)
-        this->set_error(this->_world.get_error());
-    else if (this->_world->get_error() != ER_SUCCESS)
-        this->set_error(this->_world->get_error());
+    else if (world.get_error() != ER_SUCCESS)
+        this->set_error(world.get_error());
+    else if (world->get_error() != ER_SUCCESS)
+        this->set_error(world->get_error());
+    else
+    {
+        this->_worlds.push_back(world);
+        if (this->_worlds.get_error() != ER_SUCCESS)
+            this->set_error(this->_worlds.get_error());
+    }
     return ;
 }
 
@@ -19,8 +27,31 @@ ft_game_state::~ft_game_state() noexcept
 }
 
 ft_game_state::ft_game_state(const ft_game_state &other) noexcept
-    : _world(other._world), _characters(), _error_code(other._error_code)
+    : _worlds(), _characters(), _error_code(other._error_code)
 {
+    size_t world_index = 0;
+    size_t world_count = other._worlds.size();
+    while (world_index < world_count)
+    {
+        ft_sharedptr<ft_world> temp_world = other._worlds[world_index];
+        if (temp_world.get_error() != ER_SUCCESS)
+        {
+            this->set_error(temp_world.get_error());
+            return ;
+        }
+        if (temp_world && temp_world->get_error() != ER_SUCCESS)
+        {
+            this->set_error(temp_world->get_error());
+            return ;
+        }
+        this->_worlds.push_back(temp_world);
+        if (this->_worlds.get_error() != ER_SUCCESS)
+        {
+            this->set_error(this->_worlds.get_error());
+            return ;
+        }
+        world_index++;
+    }
     size_t character_index = 0;
     size_t character_count = other._characters.size();
     while (character_index < character_count)
@@ -44,12 +75,6 @@ ft_game_state::ft_game_state(const ft_game_state &other) noexcept
         }
         character_index++;
     }
-    if (!this->_world)
-        this->set_error(GAME_GENERAL_ERROR);
-    else if (this->_world.get_error() != ER_SUCCESS)
-        this->set_error(this->_world.get_error());
-    else if (this->_world->get_error() != ER_SUCCESS)
-        this->set_error(this->_world->get_error());
     return ;
 }
 
@@ -57,7 +82,30 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
 {
     if (this != &other)
     {
-        this->_world = other._world;
+        this->_worlds.clear();
+        size_t world_index = 0;
+        size_t world_count = other._worlds.size();
+        while (world_index < world_count)
+        {
+            ft_sharedptr<ft_world> temp_world = other._worlds[world_index];
+            if (temp_world.get_error() != ER_SUCCESS)
+            {
+                this->set_error(temp_world.get_error());
+                return (*this);
+            }
+            if (temp_world && temp_world->get_error() != ER_SUCCESS)
+            {
+                this->set_error(temp_world->get_error());
+                return (*this);
+            }
+            this->_worlds.push_back(temp_world);
+            if (this->_worlds.get_error() != ER_SUCCESS)
+            {
+                this->set_error(this->_worlds.get_error());
+                return (*this);
+            }
+            world_index++;
+        }
         this->_characters.clear();
         size_t character_index = 0;
         size_t character_count = other._characters.size();
@@ -83,27 +131,28 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
             character_index++;
         }
         this->_error_code = other._error_code;
-        if (!this->_world)
-            this->set_error(GAME_GENERAL_ERROR);
-        else if (this->_world.get_error() != ER_SUCCESS)
-            this->set_error(this->_world.get_error());
-        else if (this->_world->get_error() != ER_SUCCESS)
-            this->set_error(this->_world->get_error());
     }
     return (*this);
 }
 
 ft_game_state::ft_game_state(ft_game_state &&other) noexcept
-    : _world(ft_move(other._world)),
+    : _worlds(ft_move(other._worlds)),
     _characters(ft_move(other._characters)),
     _error_code(other._error_code)
 {
-    if (!this->_world)
-        this->set_error(GAME_GENERAL_ERROR);
-    else if (this->_world.get_error() != ER_SUCCESS)
-        this->set_error(this->_world.get_error());
-    else if (this->_world->get_error() != ER_SUCCESS)
-        this->set_error(this->_world->get_error());
+    size_t world_index = 0;
+    size_t world_count = this->_worlds.size();
+    while (world_index < world_count)
+    {
+        ft_sharedptr<ft_world> temp_world = this->_worlds[world_index];
+        if (temp_world.get_error() != ER_SUCCESS)
+            this->set_error(temp_world.get_error());
+        else if (temp_world && temp_world->get_error() != ER_SUCCESS)
+            this->set_error(temp_world->get_error());
+        world_index++;
+    }
+    if (this->_worlds.get_error() != ER_SUCCESS)
+        this->set_error(this->_worlds.get_error());
     if (this->_characters.get_error() != ER_SUCCESS)
         this->set_error(this->_characters.get_error());
     other._error_code = ER_SUCCESS;
@@ -114,15 +163,22 @@ ft_game_state &ft_game_state::operator=(ft_game_state &&other) noexcept
 {
     if (this != &other)
     {
-        this->_world = ft_move(other._world);
+        this->_worlds = ft_move(other._worlds);
         this->_characters = ft_move(other._characters);
         this->_error_code = other._error_code;
-        if (!this->_world)
-            this->set_error(GAME_GENERAL_ERROR);
-        else if (this->_world.get_error() != ER_SUCCESS)
-            this->set_error(this->_world.get_error());
-        else if (this->_world->get_error() != ER_SUCCESS)
-            this->set_error(this->_world->get_error());
+        size_t world_index = 0;
+        size_t world_count = this->_worlds.size();
+        while (world_index < world_count)
+        {
+            ft_sharedptr<ft_world> temp_world = this->_worlds[world_index];
+            if (temp_world.get_error() != ER_SUCCESS)
+                this->set_error(temp_world.get_error());
+            else if (temp_world && temp_world->get_error() != ER_SUCCESS)
+                this->set_error(temp_world->get_error());
+            world_index++;
+        }
+        if (this->_worlds.get_error() != ER_SUCCESS)
+            this->set_error(this->_worlds.get_error());
         if (this->_characters.get_error() != ER_SUCCESS)
             this->set_error(this->_characters.get_error());
         other._error_code = ER_SUCCESS;
@@ -130,9 +186,9 @@ ft_game_state &ft_game_state::operator=(ft_game_state &&other) noexcept
     return (*this);
 }
 
-ft_sharedptr<ft_world> &ft_game_state::get_world() noexcept
+ft_vector<ft_sharedptr<ft_world> > &ft_game_state::get_worlds() noexcept
 {
-    return (this->_world);
+    return (this->_worlds);
 }
 
 ft_vector<ft_sharedptr<ft_character> > &ft_game_state::get_characters() noexcept
