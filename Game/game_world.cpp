@@ -10,8 +10,8 @@
 
 json_group *serialize_character(const ft_character &character);
 int deserialize_character(ft_character &character, json_group *group);
-json_group *serialize_event_scheduler(const ft_event_scheduler &scheduler);
-int deserialize_event_scheduler(ft_event_scheduler &scheduler, json_group *group);
+json_group *serialize_event_scheduler(const ft_sharedptr<ft_event_scheduler> &scheduler);
+int deserialize_event_scheduler(ft_sharedptr<ft_event_scheduler> &scheduler, json_group *group);
 json_group *serialize_inventory(const ft_inventory &inventory);
 int deserialize_inventory(ft_inventory &inventory, json_group *group);
 json_group *serialize_equipment(const ft_character &character);
@@ -119,14 +119,19 @@ void ft_world::schedule_event(const ft_sharedptr<ft_event> &event) noexcept
     return ;
 }
 
-void ft_world::update_events(int ticks, const char *log_file_path, ft_string *log_buffer) noexcept
+void ft_world::update_events(ft_sharedptr<ft_world> &self, int ticks, const char *log_file_path, ft_string *log_buffer) noexcept
 {
+    if (!self)
+    {
+        this->set_error(GAME_GENERAL_ERROR);
+        return ;
+    }
     if (this->_event_scheduler.get_error() != ER_SUCCESS)
     {
         this->set_error(this->_event_scheduler.get_error());
         return ;
     }
-    this->_event_scheduler->update_events(*this, ticks, log_file_path, log_buffer);
+    this->_event_scheduler->update_events(self, ticks, log_file_path, log_buffer);
     if (this->_event_scheduler.get_error() != ER_SUCCESS)
         this->set_error(this->_event_scheduler.get_error());
     if (this->_event_scheduler->get_error() != ER_SUCCESS)
@@ -157,7 +162,7 @@ int ft_world::save_to_file(const char *file_path, const ft_character &character,
         this->set_error(this->_event_scheduler->get_error());
         return (this->_error);
     }
-    json_group *event_group = serialize_event_scheduler(*this->_event_scheduler);
+    json_group *event_group = serialize_event_scheduler(this->_event_scheduler);
     if (!event_group)
     {
         this->set_error(ft_errno);
@@ -237,7 +242,7 @@ int ft_world::load_from_file(const char *file_path, ft_character &character, ft_
         return (this->_error);
     }
     inventory.get_items().clear();
-    if (deserialize_event_scheduler(*this->_event_scheduler, event_group) != ER_SUCCESS ||
+    if (deserialize_event_scheduler(this->_event_scheduler, event_group) != ER_SUCCESS ||
         deserialize_character(character, character_group) != ER_SUCCESS ||
         deserialize_inventory(inventory, inventory_group) != ER_SUCCESS ||
         deserialize_equipment(character, equipment_group) != ER_SUCCESS)
