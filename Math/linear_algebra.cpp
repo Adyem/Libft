@@ -254,6 +254,76 @@ matrix4 matrix4::invert() const
     return (result);
 }
 
+matrix4 matrix4::make_translation(double x, double y, double z)
+{
+    matrix4 result;
+
+    result._m[0][3] = x;
+    result._m[1][3] = y;
+    result._m[2][3] = z;
+    result.set_error(ER_SUCCESS);
+    return (result);
+}
+
+matrix4 matrix4::make_scale(double x, double y, double z)
+{
+    matrix4 result;
+
+    result._m[0][0] = x;
+    result._m[1][1] = y;
+    result._m[2][2] = z;
+    result.set_error(ER_SUCCESS);
+    return (result);
+}
+
+matrix4 matrix4::make_rotation_x(double angle)
+{
+    double cos_angle;
+    double sin_angle;
+    matrix4 result;
+
+    cos_angle = math_cos(angle);
+    sin_angle = ft_sin(angle);
+    result._m[1][1] = cos_angle;
+    result._m[1][2] = -sin_angle;
+    result._m[2][1] = sin_angle;
+    result._m[2][2] = cos_angle;
+    result.set_error(ER_SUCCESS);
+    return (result);
+}
+
+matrix4 matrix4::make_rotation_y(double angle)
+{
+    double cos_angle;
+    double sin_angle;
+    matrix4 result;
+
+    cos_angle = math_cos(angle);
+    sin_angle = ft_sin(angle);
+    result._m[0][0] = cos_angle;
+    result._m[0][2] = sin_angle;
+    result._m[2][0] = -sin_angle;
+    result._m[2][2] = cos_angle;
+    result.set_error(ER_SUCCESS);
+    return (result);
+}
+
+matrix4 matrix4::make_rotation_z(double angle)
+{
+    double cos_angle;
+    double sin_angle;
+    matrix4 result;
+
+    cos_angle = math_cos(angle);
+    sin_angle = ft_sin(angle);
+    result._m[0][0] = cos_angle;
+    result._m[0][1] = -sin_angle;
+    result._m[1][0] = sin_angle;
+    result._m[1][1] = cos_angle;
+    result.set_error(ER_SUCCESS);
+    return (result);
+}
+
 void    matrix4::set_error(int error_code) const
 {
     ft_errno = error_code;
