@@ -17,6 +17,30 @@ double  vector3::get_z() const
     return (this->_z);
 }
 
+vector3 vector3::add(const vector3 &other) const
+{
+    vector3 result;
+
+    result._x = this->_x + other._x;
+    result._y = this->_y + other._y;
+    result._z = this->_z + other._z;
+    result.set_error(ER_SUCCESS);
+    this->set_error(ER_SUCCESS);
+    return (result);
+}
+
+vector3 vector3::subtract(const vector3 &other) const
+{
+    vector3 result;
+
+    result._x = this->_x - other._x;
+    result._y = this->_y - other._y;
+    result._z = this->_z - other._z;
+    result.set_error(ER_SUCCESS);
+    this->set_error(ER_SUCCESS);
+    return (result);
+}
+
 double  vector3::dot(const vector3 &other) const
 {
     this->set_error(ER_SUCCESS);

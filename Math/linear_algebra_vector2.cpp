@@ -12,6 +12,28 @@ double  vector2::get_y() const
     return (this->_y);
 }
 
+vector2 vector2::add(const vector2 &other) const
+{
+    vector2 result;
+
+    result._x = this->_x + other._x;
+    result._y = this->_y + other._y;
+    result.set_error(ER_SUCCESS);
+    this->set_error(ER_SUCCESS);
+    return (result);
+}
+
+vector2 vector2::subtract(const vector2 &other) const
+{
+    vector2 result;
+
+    result._x = this->_x - other._x;
+    result._y = this->_y - other._y;
+    result.set_error(ER_SUCCESS);
+    this->set_error(ER_SUCCESS);
+    return (result);
+}
+
 double  vector2::dot(const vector2 &other) const
 {
     this->set_error(ER_SUCCESS);

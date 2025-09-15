@@ -16,6 +16,8 @@ class vector2
         ~vector2();
         double  get_x() const;
         double  get_y() const;
+        vector2 add(const vector2 &other) const;
+        vector2 subtract(const vector2 &other) const;
         double  dot(const vector2 &other) const;
         double  length() const;
         vector2 normalize() const;
@@ -40,6 +42,8 @@ class vector3
         double  get_x() const;
         double  get_y() const;
         double  get_z() const;
+        vector3 add(const vector3 &other) const;
+        vector3 subtract(const vector3 &other) const;
         double  dot(const vector3 &other) const;
         vector3 cross(const vector3 &other) const;
         double  length() const;
@@ -67,6 +71,8 @@ class vector4
         double  get_y() const;
         double  get_z() const;
         double  get_w() const;
+        vector4 add(const vector4 &other) const;
+        vector4 subtract(const vector4 &other) const;
         double  dot(const vector4 &other) const;
         double  length() const;
         vector4 normalize() const;
@@ -130,6 +136,11 @@ class matrix4
                 double m20, double m21, double m22, double m23,
                 double m30, double m31, double m32, double m33);
         ~matrix4();
+        static matrix4 make_translation(double x, double y, double z);
+        static matrix4 make_scale(double x, double y, double z);
+        static matrix4 make_rotation_x(double angle);
+        static matrix4 make_rotation_y(double angle);
+        static matrix4 make_rotation_z(double angle);
         vector4 transform(const vector4 &vector) const;
         matrix4 multiply(const matrix4 &other) const;
         matrix4 invert() const;
