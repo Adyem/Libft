@@ -1,0 +1,48 @@
+#ifndef NETWORKING_UDP_SOCKET_HPP
+#define NETWORKING_UDP_SOCKET_HPP
+
+#include "networking.hpp"
+#include "../Errno/errno.hpp"
+#ifdef _WIN32
+# include <winsock2.h>
+# include <ws2tcpip.h>
+# define FT_CLOSE_SOCKET(fd) closesocket(fd)
+#else
+# include <sys/socket.h>
+# include <unistd.h>
+# include <arpa/inet.h>
+# define FT_CLOSE_SOCKET(fd) close(fd)
+#endif
+
+class udp_socket
+{
+    private:
+        int     create_socket(const SocketConfig &config);
+        int     set_non_blocking(const SocketConfig &config);
+        int     set_timeouts(const SocketConfig &config);
+        int     configure_address(const SocketConfig &config);
+        int     bind_socket(const SocketConfig &config);
+        int     connect_socket(const SocketConfig &config);
+        void    handle_error(int error_code);
+
+        struct sockaddr_storage _address;
+        int     _socket_fd;
+        int     _error;
+
+    public:
+        udp_socket();
+        ~udp_socket();
+
+        int     initialize(const SocketConfig &config);
+        ssize_t send_to(const void *data, size_t size, int flags,
+                        const struct sockaddr *dest_addr, socklen_t addr_len);
+        ssize_t receive_from(void *buffer, size_t size, int flags,
+                             struct sockaddr *src_addr, socklen_t *addr_len);
+        bool    close_socket();
+        int     get_error() const;
+        const char  *get_error_str() const;
+        int     get_fd() const;
+        const struct sockaddr_storage &get_address() const;
+};
+
+#endif

@@ -44,7 +44,7 @@ The current suite exercises components across multiple modules:
   `ft_strnstr`, `ft_strstr`, `ft_strrchr`, `ft_strmapi`, `ft_striteri`, `ft_strtok`, `ft_strtol`, `ft_strtoul`, `ft_setenv`, `ft_unsetenv`, `ft_getenv`, `ft_to_lower`, `ft_to_upper`,
   `ft_fopen`, `ft_fclose`, `ft_fgets`, `ft_time_ms`, `ft_time_format`
 - **Concurrency**: `ft_promise`, `ft_task_scheduler`
-- **Networking**: IPv4 and IPv6 send/receive paths and a simple HTTP server
+- **Networking**: IPv4 and IPv6 send/receive paths, UDP datagrams, and a simple HTTP server
 - **Logger**: color toggling, JSON sink, asynchronous logging
 - **Math**: vector, matrix, and quaternion helpers
 - **RNG**: normal, exponential, Poisson, binomial, and geometric distributions
@@ -549,6 +549,10 @@ int nw_connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 int nw_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 int nw_listen(int sockfd, int backlog);
 int nw_socket(int domain, int type, int protocol);
+ssize_t nw_sendto(int sockfd, const void *buf, size_t len, int flags,
+                  const struct sockaddr *dest_addr, socklen_t addrlen);
+ssize_t nw_recvfrom(int sockfd, void *buf, size_t len, int flags,
+                    struct sockaddr *src_addr, socklen_t *addrlen);
 int nw_set_nonblocking(int socket_fd);
 int nw_poll(int *read_file_descriptors, int read_count,
             int *write_file_descriptors, int write_count,
@@ -639,6 +643,36 @@ bool        is_client_connected(int fd) const;
 int         get_fd() const;
 const struct sockaddr_storage &get_address() const;
 int         join_multicast_group(const SocketConfig &config);
+```
+
+#### `udp_socket`
+```c++
+#include "Networking/udp_socket.hpp"
+
+int main()
+{
+    SocketConfig server_configuration;
+    server_configuration._type = SocketType::SERVER;
+    server_configuration._protocol = IPPROTO_UDP;
+    udp_socket server(server_configuration);
+
+    SocketConfig client_configuration;
+    client_configuration._type = SocketType::CLIENT;
+    client_configuration._protocol = IPPROTO_UDP;
+    udp_socket client(client_configuration);
+
+    struct sockaddr_storage destination = server.get_address();
+    const char *message = "hello";
+    client.send_to(message, ft_strlen(message), 0,
+                   reinterpret_cast<const struct sockaddr*>(&destination),
+                   sizeof(struct sockaddr_in));
+    char buffer[16];
+    socklen_t addr_len = sizeof(destination);
+    server.receive_from(buffer, sizeof(buffer) - 1, 0,
+                        reinterpret_cast<struct sockaddr*>(&destination),
+                        &addr_len);
+    return (0);
+}
 ```
 
 #### HTTP client

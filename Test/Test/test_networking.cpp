@@ -1,5 +1,6 @@
 #include "../../Networking/socket_class.hpp"
 #include "../../Networking/networking.hpp"
+#include "../../Networking/udp_socket.hpp"
 #include "../../Libft/libft.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <cstring>
@@ -37,6 +38,43 @@ FT_TEST(test_network_send_receive, "nw_send/nw_recv IPv4")
     if (bytes_received < 0)
         return (0);
     buffer[bytes_received] = '\0';
+    return (ft_strcmp(buffer, message) == 0);
+}
+
+FT_TEST(test_udp_send_receive, "nw_sendto/nw_recvfrom IPv4")
+{
+    SocketConfig server_configuration;
+    server_configuration._port = 54329;
+    server_configuration._type = SocketType::SERVER;
+    server_configuration._protocol = IPPROTO_UDP;
+    udp_socket server(server_configuration);
+    if (server.get_error() != ER_SUCCESS)
+        return (0);
+
+    SocketConfig client_configuration;
+    client_configuration._port = 54329;
+    client_configuration._type = SocketType::CLIENT;
+    client_configuration._protocol = IPPROTO_UDP;
+    udp_socket client(client_configuration);
+    if (client.get_error() != ER_SUCCESS)
+        return (0);
+
+    struct sockaddr_storage dest;
+    dest = server.get_address();
+    const char *message = "data";
+    ssize_t sent = client.send_to(message, ft_strlen(message), 0,
+                                  reinterpret_cast<const struct sockaddr*>(&dest),
+                                  sizeof(struct sockaddr_in));
+    if (sent != static_cast<ssize_t>(ft_strlen(message)))
+        return (0);
+    char buffer[16];
+    socklen_t addr_len = sizeof(dest);
+    ssize_t received = server.receive_from(buffer, sizeof(buffer) - 1, 0,
+                                          reinterpret_cast<struct sockaddr*>(&dest),
+                                          &addr_len);
+    if (received < 0)
+        return (0);
+    buffer[received] = '\0';
     return (ft_strcmp(buffer, message) == 0);
 }
 

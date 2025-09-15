@@ -29,6 +29,7 @@
 #include "Math/roll.hpp"
 #include "Networking/networking.hpp"
 #include "Networking/socket_class.hpp"
+#include "Networking/udp_socket.hpp"
 #include "Networking/ssl_wrapper.hpp"
 #include "PThread/pthread.hpp"
 #include "PThread/thread.hpp"
