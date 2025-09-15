@@ -121,6 +121,19 @@ void ft_character::take_damage_magic_shield(long long damage, uint8_t type) noex
     damage = this->apply_skill_modifiers(damage);
     if (damage < 0)
         damage = 0;
+    if (this->_current_magic_armor > 0)
+    {
+        if (damage <= this->_current_magic_armor)
+        {
+            this->_current_magic_armor = this->_current_magic_armor - static_cast<int>(damage);
+            damage = 0;
+        }
+        else
+        {
+            damage = damage - this->_current_magic_armor;
+            this->_current_magic_armor = 0;
+        }
+    }
     if (type == FT_DAMAGE_PHYSICAL)
     {
 #if FT_PHYSICAL_DAMAGE_REDUCTION == FT_DAMAGE_RULE_FLAT
@@ -132,19 +145,6 @@ void ft_character::take_damage_magic_shield(long long damage, uint8_t type) noex
     }
     else if (type == FT_DAMAGE_MAGICAL)
     {
-        if (this->_current_magic_armor > 0)
-        {
-            if (damage <= this->_current_magic_armor)
-            {
-                this->_current_magic_armor = this->_current_magic_armor - static_cast<int>(damage);
-                damage = 0;
-            }
-            else
-            {
-                damage = damage - this->_current_magic_armor;
-                this->_current_magic_armor = 0;
-            }
-        }
 #if FT_MAGIC_DAMAGE_REDUCTION == FT_DAMAGE_RULE_FLAT
         damage = damage - this->_magic_armor;
 #elif FT_MAGIC_DAMAGE_REDUCTION == FT_DAMAGE_RULE_SCALED
