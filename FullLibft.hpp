@@ -27,6 +27,7 @@
 #include "Libft/limits.hpp"
 #include "Math/math.hpp"
 #include "Math/roll.hpp"
+#include "Geometry/geometry.hpp"
 #include "Networking/networking.hpp"
 #include "Networking/socket_class.hpp"
 #include "Networking/udp_socket.hpp"
