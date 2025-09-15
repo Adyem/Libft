@@ -22,6 +22,32 @@ double  vector4::get_w() const
     return (this->_w);
 }
 
+vector4 vector4::add(const vector4 &other) const
+{
+    vector4 result;
+
+    result._x = this->_x + other._x;
+    result._y = this->_y + other._y;
+    result._z = this->_z + other._z;
+    result._w = this->_w + other._w;
+    result.set_error(ER_SUCCESS);
+    this->set_error(ER_SUCCESS);
+    return (result);
+}
+
+vector4 vector4::subtract(const vector4 &other) const
+{
+    vector4 result;
+
+    result._x = this->_x - other._x;
+    result._y = this->_y - other._y;
+    result._z = this->_z - other._z;
+    result._w = this->_w - other._w;
+    result.set_error(ER_SUCCESS);
+    this->set_error(ER_SUCCESS);
+    return (result);
+}
+
 double  vector4::dot(const vector4 &other) const
 {
     this->set_error(ER_SUCCESS);
