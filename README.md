@@ -27,7 +27,8 @@ make tests
 ./Test/libft_tests
 ```
 
-Functional tests reside in `Test/Test` and performance benchmarks in `Test/Efficiency`.
+Functional tests reside in `Test/Test` and performance benchmarks in `Test/Efficiency`. The test suite is currently incomplete
+and some files may fail to compile until they are updated for recent interface changes.
 
 The test runner prints `OK` or `KO` for each registered case and
 summarizes the total. Detailed assertion failures are written to
@@ -1825,8 +1826,8 @@ ft_experience_table       &get_experience_table() noexcept;
 const ft_experience_table &get_experience_table() const noexcept;
 int equip_item(int slot, const ft_item &item) noexcept;
 void unequip_item(int slot) noexcept;
-ft_item *get_equipped_item(int slot) noexcept;
-const ft_item *get_equipped_item(int slot) const noexcept;
+ft_sharedptr<ft_item> get_equipped_item(int slot) noexcept;
+ft_sharedptr<ft_item> get_equipped_item(int slot) const noexcept;
 int get_level() const noexcept;
 int get_error() const noexcept;
 const char *get_error_str() const noexcept;
