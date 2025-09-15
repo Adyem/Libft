@@ -283,6 +283,16 @@ int        *math_eval(const char *expression);
 
 Internal parser helpers now use the `math_` prefix for consistency.
 
+### Geometry
+
+Located in `Geometry/`. Header: `geometry.hpp`. Provides basic collision helpers:
+
+```
+bool    intersect_aabb(const aabb &first, const aabb &second);
+bool    intersect_circle(const circle &first, const circle &second);
+bool    intersect_sphere(const sphere &first, const sphere &second);
+```
+
 ### Custom Memory Allocator (CMA)
 
 Located in `CMA/`. Header: `CMA.hpp`. Provides memory helpers such as

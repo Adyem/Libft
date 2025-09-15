@@ -36,6 +36,7 @@ SUBDIRS :=  CMA \
             GetNextLine \
             Libft \
             Math \
+            Geometry \
             Logger \
             System_utils \
             Printf \
@@ -54,6 +55,7 @@ LIB_BASES := \
   GetNextLine/GetNextLine \
   Libft/LibFT \
   Math/Math \
+  Geometry/geometry \
   Logger/Logger \
   System_utils/System_utils \
   Printf/Printf \
