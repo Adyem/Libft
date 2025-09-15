@@ -47,16 +47,16 @@ FT_TEST(test_udp_send_receive, "nw_sendto/nw_recvfrom IPv4")
     server_configuration._port = 54329;
     server_configuration._type = SocketType::SERVER;
     server_configuration._protocol = IPPROTO_UDP;
-    udp_socket server(server_configuration);
-    if (server.get_error() != ER_SUCCESS)
+    udp_socket server;
+    if (server.initialize(server_configuration) != ER_SUCCESS)
         return (0);
 
     SocketConfig client_configuration;
     client_configuration._port = 54329;
     client_configuration._type = SocketType::CLIENT;
     client_configuration._protocol = IPPROTO_UDP;
-    udp_socket client(client_configuration);
-    if (client.get_error() != ER_SUCCESS)
+    udp_socket client;
+    if (client.initialize(client_configuration) != ER_SUCCESS)
         return (0);
 
     struct sockaddr_storage dest;

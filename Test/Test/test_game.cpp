@@ -10,6 +10,7 @@
 #include "../../Game/game_event.hpp"
 #include "../../Game/game_inventory.hpp"
 #include "../../Template/vector.hpp"
+#include "../../Template/shared_ptr.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../JSon/json.hpp"
 #include <cstdio>
@@ -71,31 +72,31 @@ int test_game_simulation(void)
         hero.get_reputation().get_total_rep() != 4)
         return (0);
 
-    ft_world overworld;
-    ft_event meeting;
-    meeting.set_id(1);
-    meeting.set_duration(5);
-    overworld.schedule_event(meeting);
-    overworld.update_events(1);
-    ft_vector<ft_event> events;
-    overworld.get_event_scheduler().dump_events(events);
-    if (events.size() != 1 || events[0].get_duration() != 4)
+    ft_sharedptr<ft_world> overworld(new ft_world());
+    ft_sharedptr<ft_event> meeting(new ft_event());
+    meeting->set_id(1);
+    meeting->set_duration(5);
+    overworld->schedule_event(meeting);
+    overworld->update_events(overworld, 1);
+    ft_vector<ft_sharedptr<ft_event> > events;
+    overworld->get_event_scheduler()->dump_events(events);
+    if (events.size() != 1 || events[0]->get_duration() != 4)
         return (0);
 
     ft_inventory pack(2);
-    ft_item potion;
-    potion.set_item_id(1);
-    potion.set_max_stack(10);
-    potion.set_stack_size(5);
+    ft_sharedptr<ft_item> potion(new ft_item());
+    potion->set_item_id(1);
+    potion->set_max_stack(10);
+    potion->set_stack_size(5);
     if (pack.add_item(potion) != ER_SUCCESS)
         return (0);
-    ft_item more;
-    more.set_item_id(1);
-    more.set_max_stack(10);
-    more.set_stack_size(3);
+    ft_sharedptr<ft_item> more(new ft_item());
+    more->set_item_id(1);
+    more->set_max_stack(10);
+    more->set_stack_size(3);
     pack.add_item(more);
-    Pair<int, ft_item>* ientry = pack.get_items().find(0);
-    if (!ientry || ientry->value.get_stack_size() != 8)
+    Pair<int, ft_sharedptr<ft_item> > *ientry = pack.get_items().find(0);
+    if (!ientry || ientry->value->get_stack_size() != 8)
         return (0);
 
     if (grid.get(hero.get_x(), hero.get_y(), hero.get_z()) != 1)
@@ -126,20 +127,20 @@ int test_item_basic(void)
 int test_inventory_slots(void)
 {
     ft_inventory inventory(4);
-    ft_item bulky;
-    bulky.set_item_id(1);
-    bulky.set_max_stack(1);
-    bulky.set_stack_size(1);
-    bulky.set_width(2);
-    bulky.set_height(2);
+    ft_sharedptr<ft_item> bulky(new ft_item());
+    bulky->set_item_id(1);
+    bulky->set_max_stack(1);
+    bulky->set_stack_size(1);
+    bulky->set_width(2);
+    bulky->set_height(2);
     if (inventory.add_item(bulky) != ER_SUCCESS)
         return (0);
     if (inventory.get_used() != 4)
         return (0);
-    ft_item small;
-    small.set_item_id(2);
-    small.set_max_stack(1);
-    small.set_stack_size(1);
+    ft_sharedptr<ft_item> small(new ft_item());
+    small->set_item_id(2);
+    small->set_max_stack(1);
+    small->set_stack_size(1);
     if (inventory.add_item(small) != CHARACTER_INVENTORY_FULL)
         return (0);
     return (1);
@@ -148,16 +149,16 @@ int test_inventory_slots(void)
 int test_inventory_count(void)
 {
     ft_inventory inv(5);
-    ft_item potion;
-    potion.set_item_id(1);
-    potion.set_max_stack(10);
-    potion.set_stack_size(7);
+    ft_sharedptr<ft_item> potion(new ft_item());
+    potion->set_item_id(1);
+    potion->set_max_stack(10);
+    potion->set_stack_size(7);
     inv.add_item(potion);
 
-    ft_item more;
-    more.set_item_id(1);
-    more.set_max_stack(10);
-    more.set_stack_size(4);
+    ft_sharedptr<ft_item> more(new ft_item());
+    more->set_item_id(1);
+    more->set_max_stack(10);
+    more->set_stack_size(4);
     inv.add_item(more);
 
     if (!inv.has_item(1) || inv.count_item(1) != 11)
@@ -170,10 +171,10 @@ int test_inventory_count(void)
 int test_inventory_full(void)
 {
     ft_inventory inv(1);
-    ft_item item;
-    item.set_item_id(1);
-    item.set_max_stack(5);
-    item.set_stack_size(5);
+    ft_sharedptr<ft_item> item(new ft_item());
+    item->set_item_id(1);
+    item->set_max_stack(5);
+    item->set_stack_size(5);
     if (inv.is_full())
         return (0);
     if (inv.add_item(item) != ER_SUCCESS)
@@ -211,9 +212,9 @@ int test_game_save_load(void)
     ft_character hero;
     hero.set_hit_points(42);
     ft_world world;
-    ft_event event;
-    event.set_id(1);
-    event.set_duration(5);
+    ft_sharedptr<ft_event> event(new ft_event());
+    event->set_id(1);
+    event->set_duration(5);
     world.schedule_event(event);
     ft_inventory inventory;
     if (world.save_to_file("test_save.json", hero, inventory) != ER_SUCCESS)
@@ -223,12 +224,12 @@ int test_game_save_load(void)
     ft_inventory loaded_inventory;
     if (loaded_world.load_from_file("test_save.json", loaded_hero, loaded_inventory) != ER_SUCCESS)
         return (0);
-    ft_vector<ft_event> loaded_events;
-    loaded_world.get_event_scheduler().dump_events(loaded_events);
+    ft_vector<ft_sharedptr<ft_event> > loaded_events;
+    loaded_world.get_event_scheduler()->dump_events(loaded_events);
     remove("test_save.json");
     if (loaded_events.size() != 1)
         return (0);
-    if (loaded_events[0].get_duration() != 5)
+    if (loaded_events[0]->get_duration() != 5)
         return (0);
     if (loaded_hero.get_hit_points() != 42)
         return (0);
