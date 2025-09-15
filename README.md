@@ -49,9 +49,10 @@ The current suite exercises components across multiple modules:
 - **Concurrency**: `ft_promise`, `ft_task_scheduler`, `ft_this_thread`
 - **Networking**: IPv4 and IPv6 send/receive paths, UDP datagrams, and a simple HTTP server
 - **Logger**: color toggling, JSON sink, asynchronous logging
-- **Math**: vector, matrix, and quaternion helpers plus expression evaluation via `math_roll` (arithmetic, precedence, dice, negative values, lengthy expressions, and error handling)
+- **Math**: vector, matrix, and quaternion helpers plus expression evaluation via `math_roll` (arithmetic, unary negatives, precedence, dice, lengthy expressions, and error handling)
 - **RNG**: normal, exponential, Poisson, binomial, and geometric distributions
 - **String**: `ft_string_view`
+- **CPP_class**: `ft_big_number` assignment, arithmetic, comparisons, and error handling
 - **JSon**: schema validation
 - **YAML**: round-trip parsing
 - **Game**: `ft_game_state` centralizes worlds and character data with vectors of shared pointers for RAII cleanup, `ft_world` persistence and a shared-pointer-based `ft_event_scheduler` for timed actions via `ft_world::schedule_event` and `ft_world::update_events`, `ft_equipment`, `ft_inventory`, and `ft_quest` store items through shared pointers, `ft_crafting` consumes and produces shared items, `ft_world::plan_route`, `ft_pathfinding`, and copy/move constructors across game classes

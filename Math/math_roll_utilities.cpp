@@ -42,6 +42,10 @@ int    math_check_string_number(char *string)
     int    i;
 
     i = 0;
+    if (string[i] == '+' || string[i] == '-')
+        i++;
+    if (!string[i])
+        return (0);
     while (string[i])
     {
         if (string[i] >= '0' && string[i] <= '9')
@@ -75,9 +79,15 @@ int math_roll_convert_previous(char *string, int *i, int *error)
 
     while (*i > 0 && (string[*i] >= '0' && string[*i] <= '9'))
         (*i)--;
-    if (*i > 0 && (string[*i - 1] == '+' || string[*i - 1] == '-'))
-        (*i)--;
-    if (string[*i] < '0' || string[*i] > '9')
+    if (string[*i] == '-' || string[*i] == '+')
+    {
+        if (*i > 0)
+        {
+            if ((string[*i - 1] >= '0' && string[*i - 1] <= '9') || string[*i - 1] == ')')
+                (*i)++;
+        }
+    }
+    else if (string[*i] < '0' || string[*i] > '9')
         (*i)++;
     check = math_check_value_roll(&string[*i]);
     if (check != 0)
