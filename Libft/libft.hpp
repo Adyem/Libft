@@ -4,6 +4,8 @@
 #define SUCCES 0
 #define FAILURE 1
 
+typedef unsigned long long ft_size_t;
+
 
 #include <cstddef>
 #include <unistd.h>

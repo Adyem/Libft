@@ -10,7 +10,8 @@ SRCS :=  cpp_class_string_constructors.cpp \
          cpp_class_istream.cpp \
          cpp_class_fd_istream.cpp \
          cpp_class_istringstream.cpp \
-         cpp_class_ofstream.cpp
+         cpp_class_ofstream.cpp \
+         cpp_class_big_number.cpp
 
 HEADERS := class_string_class.hpp \
           class_nullptr.hpp \
@@ -20,7 +21,8 @@ HEADERS := class_string_class.hpp \
           class_istream.hpp \
           class_fd_istream.hpp \
           class_istringstream.hpp \
-          class_ofstream.hpp
+          class_ofstream.hpp \
+          class_big_number.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
