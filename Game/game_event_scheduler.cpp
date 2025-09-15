@@ -2,6 +2,7 @@
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
 #include "../JSon/json.hpp"
+#include "game_world.hpp"
 #include <cstdio>
 
 bool ft_event_compare_ptr::operator()(const ft_sharedptr<ft_event> &left, const ft_sharedptr<ft_event> &right) const noexcept
@@ -111,8 +112,103 @@ void ft_event_scheduler::schedule_event(const ft_sharedptr<ft_event> &event) noe
     return ;
 }
 
-void ft_event_scheduler::update_events(ft_world &world, int ticks, const char *log_file_path, ft_string *log_buffer) noexcept
+void ft_event_scheduler::cancel_event(int id) noexcept
 {
+    ft_priority_queue<ft_sharedptr<ft_event>, ft_event_compare_ptr> temporary_queue;
+    ft_sharedptr<ft_event> current_event;
+    bool event_found = false;
+    while (!this->_events.empty())
+    {
+        current_event = this->_events.pop();
+        if (this->_events.get_error() != ER_SUCCESS)
+        {
+            this->set_error(this->_events.get_error());
+            return ;
+        }
+        if (current_event->get_id() != id)
+        {
+            temporary_queue.push(current_event);
+            if (temporary_queue.get_error() != ER_SUCCESS)
+            {
+                this->set_error(temporary_queue.get_error());
+                return ;
+            }
+        }
+        else
+            event_found = true;
+    }
+    while (!temporary_queue.empty())
+    {
+        ft_sharedptr<ft_event> temporary_event = temporary_queue.pop();
+        if (temporary_queue.get_error() != ER_SUCCESS)
+        {
+            this->set_error(temporary_queue.get_error());
+            return ;
+        }
+        this->_events.push(temporary_event);
+        if (this->_events.get_error() != ER_SUCCESS)
+        {
+            this->set_error(this->_events.get_error());
+            return ;
+        }
+    }
+    if (!event_found)
+        this->set_error(GAME_GENERAL_ERROR);
+    return ;
+}
+
+void ft_event_scheduler::reschedule_event(int id, int new_duration) noexcept
+{
+    ft_priority_queue<ft_sharedptr<ft_event>, ft_event_compare_ptr> temporary_queue;
+    ft_sharedptr<ft_event> current_event;
+    bool event_found = false;
+    while (!this->_events.empty())
+    {
+        current_event = this->_events.pop();
+        if (this->_events.get_error() != ER_SUCCESS)
+        {
+            this->set_error(this->_events.get_error());
+            return ;
+        }
+        if (current_event->get_id() == id)
+        {
+            current_event->set_duration(new_duration);
+            event_found = true;
+        }
+        temporary_queue.push(current_event);
+        if (temporary_queue.get_error() != ER_SUCCESS)
+        {
+            this->set_error(temporary_queue.get_error());
+            return ;
+        }
+    }
+    while (!temporary_queue.empty())
+    {
+        ft_sharedptr<ft_event> temporary_event = temporary_queue.pop();
+        if (temporary_queue.get_error() != ER_SUCCESS)
+        {
+            this->set_error(temporary_queue.get_error());
+            return ;
+        }
+        this->_events.push(temporary_event);
+        if (this->_events.get_error() != ER_SUCCESS)
+        {
+            this->set_error(this->_events.get_error());
+            return ;
+        }
+    }
+    if (!event_found)
+        this->set_error(GAME_GENERAL_ERROR);
+    return ;
+}
+
+void ft_event_scheduler::update_events(ft_sharedptr<ft_world> &world, int ticks, const char *log_file_path, ft_string *log_buffer) noexcept
+{
+    if (!world)
+    {
+        this->set_error(GAME_GENERAL_ERROR);
+        return ;
+    }
     ft_priority_queue<ft_sharedptr<ft_event>, ft_event_compare_ptr> temp;
     ft_sharedptr<ft_event> current_event;
     while (!this->_events.empty())
@@ -133,7 +229,7 @@ void ft_event_scheduler::update_events(ft_world &world, int ticks, const char *l
         {
             const ft_function<void(ft_world&, ft_event&)> &callback = current_event->get_callback();
             if (callback)
-                callback(world, *current_event);
+                callback(*world, *current_event);
             if (log_file_path)
                 log_event_to_file(*current_event, log_file_path);
             if (log_buffer)
@@ -238,12 +334,14 @@ static int add_item_field(json_group *group, const ft_string &key, int value)
     return (ER_SUCCESS);
 }
 
-json_group *serialize_event_scheduler(const ft_event_scheduler &scheduler)
+json_group *serialize_event_scheduler(const ft_sharedptr<ft_event_scheduler> &scheduler)
 {
+    if (!scheduler)
+        return (ft_nullptr);
     json_group *group = json_create_json_group("world");
     if (!group)
         return (ft_nullptr);
-    json_item *count_item = json_create_item("event_count", static_cast<int>(scheduler.size()));
+    json_item *count_item = json_create_item("event_count", static_cast<int>(scheduler->size()));
     if (!count_item)
     {
         json_free_groups(group);
@@ -251,7 +349,7 @@ json_group *serialize_event_scheduler(const ft_event_scheduler &scheduler)
     }
     json_add_item_to_group(group, count_item);
     ft_vector<ft_sharedptr<ft_event> > events;
-    scheduler.dump_events(events);
+    scheduler->dump_events(events);
     size_t event_index = 0;
     size_t event_count = events.size();
     while (event_index < event_count)
@@ -277,8 +375,13 @@ json_group *serialize_event_scheduler(const ft_event_scheduler &scheduler)
     return (group);
 }
 
-int deserialize_event_scheduler(ft_event_scheduler &scheduler, json_group *group)
+int deserialize_event_scheduler(ft_sharedptr<ft_event_scheduler> &scheduler, json_group *group)
 {
+    if (!scheduler)
+    {
+        ft_errno = GAME_GENERAL_ERROR;
+        return (GAME_GENERAL_ERROR);
+    }
     json_item *count_item = json_find_item(group, "event_count");
     if (!count_item)
     {
@@ -309,9 +412,9 @@ int deserialize_event_scheduler(ft_event_scheduler &scheduler, json_group *group
         ft_sharedptr<ft_event> event(new ft_event());
         event->set_id(ft_atoi(id_item->value));
         event->set_duration(ft_atoi(duration_item->value));
-        scheduler.schedule_event(event);
-        if (scheduler.get_error() != ER_SUCCESS)
-            return (scheduler.get_error());
+        scheduler->schedule_event(event);
+        if (scheduler->get_error() != ER_SUCCESS)
+            return (scheduler->get_error());
         event_index++;
     }
     return (ER_SUCCESS);

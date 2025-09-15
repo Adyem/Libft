@@ -27,7 +27,7 @@ class ft_world
         ft_world &operator=(ft_world &&other) noexcept;
 
         void schedule_event(const ft_sharedptr<ft_event> &event) noexcept;
-        void update_events(int ticks, const char *log_file_path = ft_nullptr, ft_string *log_buffer = ft_nullptr) noexcept;
+        void update_events(ft_sharedptr<ft_world> &self, int ticks, const char *log_file_path = ft_nullptr, ft_string *log_buffer = ft_nullptr) noexcept;
 
         ft_sharedptr<ft_event_scheduler>       &get_event_scheduler() noexcept;
         const ft_sharedptr<ft_event_scheduler> &get_event_scheduler() const noexcept;
