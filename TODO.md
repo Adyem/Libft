@@ -34,10 +34,6 @@
     - JSON-backed storage with CRUD helpers
     - Cache system with load and save
 
-- Geometry / Collision Module
-    - AABB, circle, sphere, OBB shapes
-    - Collision detection and intersection math
-
 - Unit Testing / System Utils Module
     - Simple test runner framework
     - Auto-log failures with file and line
