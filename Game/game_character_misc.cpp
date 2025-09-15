@@ -26,6 +26,8 @@ void ft_character::take_damage(long long damage, uint8_t type) noexcept
         this->take_damage_scaled(damage, type);
     else if (this->_damage_rule == FT_DAMAGE_RULE_BUFFER)
         this->take_damage_buffer(damage, type);
+    else if (this->_damage_rule == FT_DAMAGE_RULE_MAGIC_SHIELD)
+        this->take_damage_magic_shield(damage, type);
     return ;
 }
 
@@ -105,6 +107,50 @@ void ft_character::take_damage_buffer(long long damage, uint8_t type) noexcept
                 this->_current_magic_armor = 0;
             }
         }
+    }
+    if (damage < 0)
+        damage = 0;
+    this->_hit_points = this->_hit_points - static_cast<int>(damage);
+    if (this->_hit_points < 0)
+        this->_hit_points = 0;
+    return ;
+}
+
+void ft_character::take_damage_magic_shield(long long damage, uint8_t type) noexcept
+{
+    damage = this->apply_skill_modifiers(damage);
+    if (damage < 0)
+        damage = 0;
+    if (type == FT_DAMAGE_PHYSICAL)
+    {
+#if FT_PHYSICAL_DAMAGE_REDUCTION == FT_DAMAGE_RULE_FLAT
+        damage = damage - this->_physical_armor;
+#elif FT_PHYSICAL_DAMAGE_REDUCTION == FT_DAMAGE_RULE_SCALED
+        double scaled = static_cast<double>(damage) * this->_physical_damage_multiplier;
+        damage = static_cast<long long>(scaled);
+#endif
+    }
+    else if (type == FT_DAMAGE_MAGICAL)
+    {
+        if (this->_current_magic_armor > 0)
+        {
+            if (damage <= this->_current_magic_armor)
+            {
+                this->_current_magic_armor = this->_current_magic_armor - static_cast<int>(damage);
+                damage = 0;
+            }
+            else
+            {
+                damage = damage - this->_current_magic_armor;
+                this->_current_magic_armor = 0;
+            }
+        }
+#if FT_MAGIC_DAMAGE_REDUCTION == FT_DAMAGE_RULE_FLAT
+        damage = damage - this->_magic_armor;
+#elif FT_MAGIC_DAMAGE_REDUCTION == FT_DAMAGE_RULE_SCALED
+        double scaled = static_cast<double>(damage) * this->_magic_damage_multiplier;
+        damage = static_cast<long long>(scaled);
+#endif
     }
     if (damage < 0)
         damage = 0;

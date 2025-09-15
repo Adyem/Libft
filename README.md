@@ -52,6 +52,7 @@ The current suite exercises components across multiple modules:
 - **JSon**: schema validation
 - **YAML**: round-trip parsing
 - **Game**: `ft_game_state` centralizes worlds and character data with vectors of shared pointers for RAII cleanup, `ft_world` persistence and a shared-pointer-based `ft_event_scheduler` for timed actions via `ft_world::schedule_event` and `ft_world::update_events`, `ft_equipment`, `ft_inventory`, and `ft_quest` store items through shared pointers, `ft_crafting` consumes and produces shared items, `ft_world::plan_route`, `ft_pathfinding`, and copy/move constructors across game classes
+- The combat system introduces `FT_DAMAGE_RULE_MAGIC_SHIELD`, which treats magic armor as a shield and applies flat or percentage reduction through the `FT_PHYSICAL_DAMAGE_REDUCTION` and `FT_MAGIC_DAMAGE_REDUCTION` macros.
 - Shared pointers expose their own `get_error` while managed objects may define their own; call `shared_ptr.get_error()` for allocation issues and `shared_ptr->get_error()` for object-specific errors.
 - Game classes validate both the shared pointer and its managed object for errors before use so failures surface consistently.
 - `ft_item` tracks its own error code so equipment, inventory, and crafting verify both the item pointer and the item itself before applying modifiers or stacking quantities.
