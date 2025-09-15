@@ -1,9 +1,10 @@
 TARGET := Concurrency.a
 DEBUG_TARGET := Concurrency_debug.a
 
-SRCS := Concurrency_task_scheduler.cpp
+SRCS := Concurrency_task_scheduler.cpp \
+    Concurrency_this_thread.cpp
 
-HEADERS := task_scheduler.hpp
+HEADERS := task_scheduler.hpp this_thread.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

@@ -77,6 +77,7 @@
 #include "Template/future.hpp"
 #include "Template/promise.hpp"
 #include "Concurrency/task_scheduler.hpp"
+#include "Concurrency/this_thread.hpp"
 #include "System_utils/system_utils.hpp"
 #include "Compression/compression.hpp"
 #include "Encryption/basic_encryption.hpp"
