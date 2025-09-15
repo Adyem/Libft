@@ -43,7 +43,8 @@ SRCS := libft_atoi.cpp \
     libft_fclose.cpp \
     libft_fgets.cpp \
     libft_time.cpp \
-    libft_validate_int.cpp
+    libft_validate_int.cpp \
+    libft_to_string.cpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

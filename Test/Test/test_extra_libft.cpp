@@ -8,7 +8,6 @@
 #include "../../CMA/CMA.hpp"
 #include <cstring>
 #include <cstdlib>
-#include <string>
 
 int test_strlen_size_t_null(void)
 {
@@ -322,18 +321,18 @@ int test_atol_whitespace(void)
 
 int test_atol_longmax(void)
 {
-    std::string str;
+    ft_string number_string;
 
-    str = std::to_string(FT_LONG_MAX);
-    return (ft_atol(str.c_str()) == FT_LONG_MAX);
+    number_string = ft_to_string(FT_LONG_MAX);
+    return (ft_atol(number_string.c_str()) == FT_LONG_MAX);
 }
 
 int test_atol_longmin(void)
 {
-    std::string str;
+    ft_string number_string;
 
-    str = std::to_string(FT_LONG_MIN);
-    return (ft_atol(str.c_str()) == FT_LONG_MIN);
+    number_string = ft_to_string(FT_LONG_MIN);
+    return (ft_atol(number_string.c_str()) == FT_LONG_MIN);
 }
 
 int test_atol_plus_sign(void)

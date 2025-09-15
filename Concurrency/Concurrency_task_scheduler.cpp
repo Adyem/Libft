@@ -1,4 +1,5 @@
 #include "task_scheduler.hpp"
+#include "this_thread.hpp"
 
 ft_task_scheduler::ft_task_scheduler(size_t thread_count)
     : _queue(), _workers(), _timer_thread(), _scheduled(), _scheduled_mutex(), _running(true), _error_code(ER_SUCCESS)
@@ -50,7 +51,7 @@ void ft_task_scheduler::worker_loop()
         if (this->_queue.pop(task))
             task();
         else
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            ft_this_thread_sleep_for(std::chrono::milliseconds(1));
     }
     return ;
 }
@@ -59,7 +60,7 @@ void ft_task_scheduler::timer_loop()
 {
     while (this->_running)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        ft_this_thread_sleep_for(std::chrono::milliseconds(1));
         std::unique_lock<std::mutex> lock(this->_scheduled_mutex);
         size_t index;
         auto now = std::chrono::steady_clock::now();

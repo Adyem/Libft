@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include "../PThread/mutex.hpp"
+#include "../CPP_class/class_string_class.hpp"
 
 size_t             ft_strlen_size_t(const char *string);
 int                ft_strlen(const char *string);
@@ -60,5 +61,6 @@ int             ft_fclose(FILE *stream);
 char            *ft_fgets(char *string, int size, FILE *stream);
 long            ft_time_ms(void);
 char            *ft_time_format(char *buffer, size_t buffer_size);
+ft_string        ft_to_string(long number);
 
 #endif
