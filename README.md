@@ -544,18 +544,56 @@ operator const char*() const noexcept;
 ```
 
 #### `ft_big_number`
-Provides a decimal big-integer type that validates input digits (including an
-optional leading minus sign), expands its internal buffer as digits are
-appended, releases excess memory when the number shrinks, and offers arithmetic
-helpers and comparisons that surface error states for unsupported operations.
-The class tracks the sign separately so arithmetic can produce negative
-results. Use `is_negative()` or `is_positive()` to inspect the sign while
-`c_str()` returns the magnitude digits. `assign_base()` and
-`to_string_base()` convert to and from bases up to hexadecimal so callers can
-work with binary, octal, decimal, or hexadecimal representations without
-changing the internal decimal storage. `operator%()` and `mod_pow()` provide
-modular arithmetic primitives so the class can participate in cryptographic
-workflows such as key exchange and signature verification.
+
+**Feature summary**
+
+- Stores arbitrarily large integers in a dynamically sized decimal buffer that
+  grows and shrinks as digits are appended or trimmed.
+- Tracks the sign separately from the digit storage so negative results are
+  preserved and can be queried with `is_negative()`/`is_positive()` without
+  altering the magnitude returned by `c_str()`.
+- Accepts digits in any base from binary through hexadecimal via
+  `assign_base()` and serializes back out with `to_string_base()` and the
+  helper conversion functions.
+- Supports modular arithmetic through `operator%()` and `mod_pow()` so the type
+  fits cryptographic and number-theory workflows.
+- Surfaces failures through `get_error()`/`get_error_str()` and mirrors the
+  state in `ft_errno` so callers can propagate issues across module
+  boundaries.
+
+**Constructors and assignment**
+
+- `ft_big_number()` – default-constructs zero with no sign.
+- Copy/move construction and assignment operators clone or transfer the managed
+  digit buffer while preserving the current sign and error state.
+- `assign()`, `append_digit()`, `append()` and `append_unsigned()` accept
+  decimal digits, while `assign_base()` parses alternate bases before normal
+  form storage.
+
+**Arithmetic operators**
+
+- Addition, subtraction, multiplication, division, and modulo are available via
+  the overloaded operators, each respecting the stored sign.
+- Comparison operators mirror standard integer semantics for use in ordered
+  containers or validation code paths.
+- `mod_pow()` exposes an efficient modular exponentiation helper that reuses
+  the existing arithmetic operators and error propagation.
+
+**Error reporting**
+
+- `BIG_NUMBER_ALLOC_FAIL` – memory allocation failed while growing or
+  shrinking the digit buffer.
+- `BIG_NUMBER_INVALID_DIGIT` – parsing encountered a non-numeric digit for the
+  requested base.
+- `BIG_NUMBER_NEGATIVE_RESULT` – a magnitude-only subtraction detected the
+  right operand was larger than the left, which would otherwise yield a
+  negative magnitude.
+- `BIG_NUMBER_DIVIDE_BY_ZERO` – division or modulo detected a zero divisor.
+- Query errors with `get_error()`/`get_error_str()` after each operation to
+  guard against silent failures.
+
+**API reference**
+
 ```
 ft_big_number() noexcept;
 ft_big_number(const ft_big_number& other) noexcept;
@@ -602,16 +640,31 @@ ft_string   big_number_to_hex_string(const ft_big_number& number) noexcept;
 ft_big_number   big_number_from_hex_string(const char* hex_digits) noexcept;
 ```
 
-Example usage:
+**Usage examples**
+
+```
+ft_big_number balance;
+balance.assign("2500");
+ft_big_number withdrawal;
+withdrawal.assign("2750");
+ft_big_number delta = balance - withdrawal;
+if (delta.is_negative())
+{
+    // delta.c_str() == "250" (magnitude) while the sign tracks the overdraft
+}
+```
 
 ```
 ft_big_number value;
-value.assign("3735928559");
-ft_string hex_value = big_number_to_hex_string(value); // "DEADBEEF"
-
-ft_big_number parsed = big_number_from_hex_string("-0x1234");
-// parsed.is_negative() == true and parsed.c_str() == "4660"
+value.assign_base("FF", 16);      // 255 in decimal storage
+ft_big_number modulus;
+modulus.assign("97");             // prime modulus
+ft_big_number remainder = value % modulus;
+ft_string binary = value.to_string_base(2); // "11111111"
 ```
+
+For additional scenarios, edge cases, and regression coverage, explore the
+dedicated tests in [`Test/Test/test_big_number.cpp`](Test/Test/test_big_number.cpp).
 
 #### `ft_nullptr`
 ```
