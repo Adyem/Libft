@@ -294,7 +294,10 @@ int        *math_roll(const char *expression);
 int        *math_eval(const char *expression);
 ```
 
-Internal parser helpers now use the `math_` prefix for consistency.
+Internal parser helpers now use the `math_` prefix for consistency. Error
+diagnostics set `ft_errno` but remain silent unless you compile with
+`DEBUG` defined to `1` before including `roll.hpp`, which re-enables the
+legacy debug logging.
 
 ### Geometry
 
@@ -824,6 +827,10 @@ int main()
 #### HTTP client
 
 `Networking/http_client.hpp` adds helpers for basic HTTP requests built on the socket layer.
+Both `http_get` and `http_post` attempt connections against every address returned by the
+system resolver, closing sockets between attempts until a connection succeeds. The
+optional `custom_port` parameter lets callers override the default `80` or `443` values so
+tests can bind ephemeral ports without elevated privileges.
 
 ```c++
 #include "Networking/http_client.hpp"
@@ -847,6 +854,18 @@ int main()
 
     body.append("name=libft");
     http_post("example.com", "/submit", body, response, false);
+    return (0);
+}
+```
+
+```c++
+#include "Networking/http_client.hpp"
+
+int main()
+{
+    ft_string response;
+
+    http_get("localhost", "/status", response, false, "8080");
     return (0);
 }
 ```

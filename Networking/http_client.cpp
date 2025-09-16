@@ -12,10 +12,11 @@
 # include <unistd.h>
 #endif
 
-int http_get(const char *host, const char *path, ft_string &response, bool use_ssl)
+int http_get(const char *host, const char *path, ft_string &response, bool use_ssl, const char *custom_port)
 {
     struct addrinfo address_hints;
     struct addrinfo *address_info;
+    struct addrinfo *current_info;
     const char *port_string;
     int socket_fd;
     ft_string request;
@@ -29,25 +30,33 @@ int http_get(const char *host, const char *path, ft_string &response, bool use_s
     std::memset(&address_hints, 0, sizeof(address_hints));
     address_hints.ai_family = AF_UNSPEC;
     address_hints.ai_socktype = SOCK_STREAM;
-    if (use_ssl)
+    if (custom_port != NULL && custom_port[0] != '\0')
+        port_string = custom_port;
+    else if (use_ssl)
         port_string = "443";
     else
         port_string = "80";
     if (getaddrinfo(host, port_string, &address_hints, &address_info) != 0)
         return (-1);
-    socket_fd = nw_socket(address_info->ai_family, address_info->ai_socktype, address_info->ai_protocol);
-    if (socket_fd < 0)
+    socket_fd = -1;
+    result = -1;
+    current_info = address_info;
+    while (current_info != NULL)
     {
-        freeaddrinfo(address_info);
-        return (-1);
+        socket_fd = nw_socket(current_info->ai_family, current_info->ai_socktype, current_info->ai_protocol);
+        if (socket_fd >= 0)
+        {
+            result = nw_connect(socket_fd, current_info->ai_addr, current_info->ai_addrlen);
+            if (result >= 0)
+                break;
+            FT_CLOSE_SOCKET(socket_fd);
+            socket_fd = -1;
+        }
+        current_info = current_info->ai_next;
     }
-    result = nw_connect(socket_fd, address_info->ai_addr, address_info->ai_addrlen);
     freeaddrinfo(address_info);
-    if (result < 0)
-    {
-        FT_CLOSE_SOCKET(socket_fd);
+    if (socket_fd < 0 || result < 0)
         return (-1);
-    }
     request.append("GET ");
     request.append(path);
     request.append(" HTTP/1.1\r\nHost: ");
@@ -105,10 +114,11 @@ int http_get(const char *host, const char *path, ft_string &response, bool use_s
     return (0);
 }
 
-int http_post(const char *host, const char *path, const ft_string &body, ft_string &response, bool use_ssl)
+int http_post(const char *host, const char *path, const ft_string &body, ft_string &response, bool use_ssl, const char *custom_port)
 {
     struct addrinfo address_hints;
     struct addrinfo *address_info;
+    struct addrinfo *current_info;
     const char *port_string;
     int socket_fd;
     ft_string request;
@@ -123,25 +133,33 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
     std::memset(&address_hints, 0, sizeof(address_hints));
     address_hints.ai_family = AF_UNSPEC;
     address_hints.ai_socktype = SOCK_STREAM;
-    if (use_ssl)
+    if (custom_port != NULL && custom_port[0] != '\0')
+        port_string = custom_port;
+    else if (use_ssl)
         port_string = "443";
     else
         port_string = "80";
     if (getaddrinfo(host, port_string, &address_hints, &address_info) != 0)
         return (-1);
-    socket_fd = nw_socket(address_info->ai_family, address_info->ai_socktype, address_info->ai_protocol);
-    if (socket_fd < 0)
+    socket_fd = -1;
+    result = -1;
+    current_info = address_info;
+    while (current_info != NULL)
     {
-        freeaddrinfo(address_info);
-        return (-1);
+        socket_fd = nw_socket(current_info->ai_family, current_info->ai_socktype, current_info->ai_protocol);
+        if (socket_fd >= 0)
+        {
+            result = nw_connect(socket_fd, current_info->ai_addr, current_info->ai_addrlen);
+            if (result >= 0)
+                break;
+            FT_CLOSE_SOCKET(socket_fd);
+            socket_fd = -1;
+        }
+        current_info = current_info->ai_next;
     }
-    result = nw_connect(socket_fd, address_info->ai_addr, address_info->ai_addrlen);
     freeaddrinfo(address_info);
-    if (result < 0)
-    {
-        FT_CLOSE_SOCKET(socket_fd);
+    if (socket_fd < 0 || result < 0)
         return (-1);
-    }
     std::snprintf(length_string, sizeof(length_string), "%zu", body.size());
     request.append("POST ");
     request.append(path);

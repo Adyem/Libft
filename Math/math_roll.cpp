@@ -85,13 +85,19 @@ int *math_roll(const char *expression)
     if (!result)
     {
         ft_errno = FT_EALLOC;
-        pf_printf_fd(2, "168-Error: Malloc failed in cma_strdup\n");
+        if (DEBUG == 1)
+        {
+            pf_printf_fd(2, "168-Error: Malloc failed in cma_strdup\n");
+        }
         return (ft_nullptr);
     }
     if (math_roll_validate(result))
     {
         ft_errno = FT_EINVAL;
-        pf_printf_fd(2, "169-Command Roll Error with the string: %s\n", result);
+        if (DEBUG == 1)
+        {
+            pf_printf_fd(2, "169-Command Roll Error with the string: %s\n", result);
+        }
         cma_free(result);
         return (ft_nullptr);
     }
