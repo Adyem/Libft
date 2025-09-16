@@ -1,9 +1,17 @@
 #include "../../Networking/socket_class.hpp"
 #include "../../Networking/networking.hpp"
 #include "../../Networking/udp_socket.hpp"
+#include "../../Networking/http_client.hpp"
 #include "../../Libft/libft.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <cstring>
+#include <cstdio>
+#include <thread>
+#include <chrono>
+#include <cerrno>
+#ifndef _WIN32
+# include <netdb.h>
+#endif
 
 FT_TEST(test_network_send_receive, "nw_send/nw_recv IPv4")
 {
@@ -235,5 +243,174 @@ FT_TEST(test_network_poll_ipv6, "nw_poll IPv6")
         return (0);
     buffer[bytes_received] = '\0';
     return (ft_strcmp(buffer, message) == 0);
+}
+
+struct http_test_server_context
+{
+    int server_fd;
+    bool success;
+};
+
+static void http_test_server_run(http_test_server_context *context)
+{
+    struct sockaddr_storage client_address;
+    socklen_t address_length;
+    int client_socket;
+    char buffer[1024];
+    ssize_t bytes_received;
+    const char *response_message;
+    ssize_t send_result;
+    int attempt;
+
+    context->success = false;
+    attempt = 0;
+    client_socket = -1;
+    while (attempt < 200)
+    {
+        address_length = sizeof(client_address);
+        client_socket = nw_accept(context->server_fd,
+                                  reinterpret_cast<struct sockaddr*>(&client_address),
+                                  &address_length);
+        if (client_socket >= 0)
+            break;
+#ifdef _WIN32
+        int error_code = WSAGetLastError();
+        if (error_code != WSAEWOULDBLOCK && error_code != WSAEINPROGRESS)
+            return ;
+#else
+        if (errno != EWOULDBLOCK && errno != EAGAIN)
+            return ;
+#endif
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        attempt++;
+    }
+    if (client_socket < 0)
+        return ;
+    bytes_received = nw_recv(client_socket, buffer, sizeof(buffer) - 1, 0);
+    if (bytes_received <= 0)
+    {
+        FT_CLOSE_SOCKET(client_socket);
+        return ;
+    }
+    buffer[bytes_received] = '\0';
+    response_message = "HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\nPASS";
+    send_result = nw_send(client_socket, response_message, ft_strlen(response_message), 0);
+    FT_CLOSE_SOCKET(client_socket);
+    if (send_result <= 0)
+        return ;
+    context->success = true;
+    return ;
+}
+
+FT_TEST(test_http_client_address_fallback, "http client retries multiple addresses")
+{
+    struct addrinfo address_hints;
+    struct addrinfo *address_info;
+    struct addrinfo *current_info;
+    bool has_ipv4;
+    bool has_ipv6;
+    int first_family;
+    int server_family;
+    const char *server_ip;
+    SocketConfig server_configuration;
+    http_test_server_context server_context;
+    ft_string response;
+    const struct sockaddr_in *ipv4_address;
+    const struct sockaddr_in6 *ipv6_address;
+    struct sockaddr_storage local_address;
+    socklen_t local_length;
+    int formatted_port;
+    char port_string[16];
+    int client_result;
+
+    std::memset(&address_hints, 0, sizeof(address_hints));
+    address_hints.ai_family = AF_UNSPEC;
+    address_hints.ai_socktype = SOCK_STREAM;
+    if (getaddrinfo("localhost", "80", &address_hints, &address_info) != 0)
+        return (0);
+    has_ipv4 = false;
+    has_ipv6 = false;
+    first_family = address_info->ai_family;
+    current_info = address_info;
+    while (current_info != NULL)
+    {
+        if (current_info->ai_family == AF_INET)
+            has_ipv4 = true;
+        else if (current_info->ai_family == AF_INET6)
+            has_ipv6 = true;
+        current_info = current_info->ai_next;
+    }
+    freeaddrinfo(address_info);
+    if (!has_ipv4 || !has_ipv6)
+        return (1);
+    if (first_family == AF_INET6 && has_ipv4)
+    {
+        server_family = AF_INET;
+        server_ip = "127.0.0.1";
+    }
+    else if (first_family == AF_INET && has_ipv6)
+    {
+        server_family = AF_INET6;
+        server_ip = "::1";
+    }
+    else
+        return (1);
+    server_configuration._type = SocketType::SERVER;
+    server_configuration._ip = server_ip;
+    server_configuration._port = 0;
+    server_configuration._address_family = server_family;
+    ft_socket server(server_configuration);
+    if (server.get_error() != ER_SUCCESS)
+        return (0);
+    std::memset(&local_address, 0, sizeof(local_address));
+    local_length = sizeof(local_address);
+    if (getsockname(server.get_fd(), reinterpret_cast<struct sockaddr*>(&local_address), &local_length) != 0)
+    {
+        server.close_socket();
+        return (0);
+    }
+    std::memset(port_string, 0, sizeof(port_string));
+    if (local_address.ss_family == AF_INET)
+    {
+        ipv4_address = reinterpret_cast<const struct sockaddr_in*>(&local_address);
+        formatted_port = std::snprintf(port_string, sizeof(port_string), "%u", static_cast<unsigned int>(ntohs(ipv4_address->sin_port)));
+        if (formatted_port <= 0)
+        {
+            server.close_socket();
+            return (0);
+        }
+    }
+    else if (local_address.ss_family == AF_INET6)
+    {
+        ipv6_address = reinterpret_cast<const struct sockaddr_in6*>(&local_address);
+        formatted_port = std::snprintf(port_string, sizeof(port_string), "%u", static_cast<unsigned int>(ntohs(ipv6_address->sin6_port)));
+        if (formatted_port <= 0)
+        {
+            server.close_socket();
+            return (0);
+        }
+    }
+    else
+    {
+        server.close_socket();
+        return (0);
+    }
+    if (nw_set_nonblocking(server.get_fd()) != 0)
+    {
+        server.close_socket();
+        return (0);
+    }
+    server_context.server_fd = server.get_fd();
+    server_context.success = false;
+    std::thread server_thread(http_test_server_run, &server_context);
+    response.clear();
+    client_result = http_get("localhost", "/", response, false, port_string);
+    server_thread.join();
+    server.close_socket();
+    if (!server_context.success)
+        return (0);
+    if (client_result != 0)
+        return (0);
+    return (response == "HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\nPASS");
 }
 
