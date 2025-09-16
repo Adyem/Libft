@@ -11,6 +11,7 @@ class json_document
 
         json_group   *create_group(const char *name) noexcept;
         json_item    *create_item(const char *key, const char *value) noexcept;
+        json_item    *create_item(const char *key, const ft_big_number &value) noexcept;
         json_item    *create_item(const char *key, const int value) noexcept;
         json_item    *create_item(const char *key, const bool value) noexcept;
         void         add_item(json_group *group, json_item *item) noexcept;
@@ -26,6 +27,7 @@ class json_document
         void         update_item(json_group *group, const char *key, const char *value) noexcept;
         void         update_item(json_group *group, const char *key, const int value) noexcept;
         void         update_item(json_group *group, const char *key, const bool value) noexcept;
+        void         update_item(json_group *group, const char *key, const ft_big_number &value) noexcept;
         void         clear() noexcept;
 
     private:

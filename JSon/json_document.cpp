@@ -23,6 +23,11 @@ json_item *json_document::create_item(const char *key, const char *value) noexce
     return (json_create_item(key, value));
 }
 
+json_item *json_document::create_item(const char *key, const ft_big_number &value) noexcept
+{
+    return (json_create_item(key, value));
+}
+
 json_item *json_document::create_item(const char *key, const int value) noexcept
 {
     return (json_create_item(key, value));
@@ -108,6 +113,12 @@ void json_document::update_item(json_group *group, const char *key, const int va
 }
 
 void json_document::update_item(json_group *group, const char *key, const bool value) noexcept
+{
+    json_update_item(group, key, value);
+    return ;
+}
+
+void json_document::update_item(json_group *group, const char *key, const ft_big_number &value) noexcept
 {
     json_update_item(group, key, value);
     return ;

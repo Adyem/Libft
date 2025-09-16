@@ -1,6 +1,7 @@
 #include <cstring>
 #include "json.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../CPP_class/class_big_number.hpp"
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
@@ -49,6 +50,8 @@ void json_remove_item(json_group *group, const char *key)
                 delete[] current->key;
             if (current->value)
                 delete[] current->value;
+            if (current->big_number)
+                delete current->big_number;
             delete current;
             return ;
         }
@@ -65,6 +68,12 @@ void json_update_item(json_group *group, const char *key, const char *value)
     json_item *item = json_find_item(group, key);
     if (!item)
         return ;
+    if (item->big_number)
+    {
+        delete item->big_number;
+        item->big_number = ft_nullptr;
+    }
+    item->is_big_number = false;
     if (item->value)
         delete[] item->value;
     item->value = cma_strdup(value);
@@ -73,6 +82,7 @@ void json_update_item(json_group *group, const char *key, const char *value)
         ft_errno = JSON_MALLOC_FAIL;
         return ;
     }
+    json_item_refresh_numeric_state(item);
     return ;
 }
 
@@ -83,6 +93,12 @@ void json_update_item(json_group *group, const char *key, const int value)
     json_item *item = json_find_item(group, key);
     if (!item)
         return ;
+    if (item->big_number)
+    {
+        delete item->big_number;
+        item->big_number = ft_nullptr;
+    }
+    item->is_big_number = false;
     if (item->value)
         delete[] item->value;
     item->value = cma_itoa(value);
@@ -91,6 +107,7 @@ void json_update_item(json_group *group, const char *key, const int value)
         ft_errno = JSON_MALLOC_FAIL;
         return ;
     }
+    json_item_refresh_numeric_state(item);
     return ;
 }
 
@@ -101,6 +118,12 @@ void json_update_item(json_group *group, const char *key, const bool value)
     json_item *item = json_find_item(group, key);
     if (!item)
         return ;
+    if (item->big_number)
+    {
+        delete item->big_number;
+        item->big_number = ft_nullptr;
+    }
+    item->is_big_number = false;
     if (item->value)
         delete[] item->value;
     if (value == true)
@@ -112,6 +135,32 @@ void json_update_item(json_group *group, const char *key, const bool value)
         ft_errno = JSON_MALLOC_FAIL;
         return ;
     }
+    json_item_refresh_numeric_state(item);
+    return ;
+}
+
+void json_update_item(json_group *group, const char *key, const ft_big_number &value)
+{
+    if (!group)
+        return ;
+    json_item *item = json_find_item(group, key);
+    if (!item)
+        return ;
+    if (item->big_number)
+    {
+        delete item->big_number;
+        item->big_number = ft_nullptr;
+    }
+    item->is_big_number = false;
+    if (item->value)
+        delete[] item->value;
+    item->value = cma_strdup(value.c_str());
+    if (!item->value)
+    {
+        ft_errno = JSON_MALLOC_FAIL;
+        return ;
+    }
+    json_item_refresh_numeric_state(item);
     return ;
 }
 
