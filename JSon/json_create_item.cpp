@@ -8,6 +8,7 @@
 #include "json.hpp"
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../CPP_class/class_big_number.hpp"
 #include "../CMA/CMA.hpp"
 
 json_item* json_create_item(const char *key, const char *value)
@@ -18,6 +19,11 @@ json_item* json_create_item(const char *key, const char *value)
         ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
+    item->key = ft_nullptr;
+    item->value = ft_nullptr;
+    item->is_big_number = false;
+    item->big_number = ft_nullptr;
+    item->next = ft_nullptr;
     item->key = cma_strdup(key);
     if (!item->key)
     {
@@ -33,7 +39,7 @@ json_item* json_create_item(const char *key, const char *value)
         ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
-    item->next = ft_nullptr;
+    json_item_refresh_numeric_state(item);
     return (item);
 }
 
@@ -45,6 +51,11 @@ json_item* json_create_item(const char *key, const bool value)
         ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
+    item->key = ft_nullptr;
+    item->value = ft_nullptr;
+    item->is_big_number = false;
+    item->big_number = ft_nullptr;
+    item->next = ft_nullptr;
     item->key = cma_strdup(key);
     if (!item->key)
     {
@@ -63,7 +74,7 @@ json_item* json_create_item(const char *key, const bool value)
         ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
-    item->next = ft_nullptr;
+    json_item_refresh_numeric_state(item);
     return (item);
 }
 
@@ -75,6 +86,11 @@ json_item* json_create_item(const char *key, const int value)
         ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
+    item->key = ft_nullptr;
+    item->value = ft_nullptr;
+    item->is_big_number = false;
+    item->big_number = ft_nullptr;
+    item->next = ft_nullptr;
     item->key = cma_strdup(key);
     if (!item->key)
     {
@@ -90,6 +106,11 @@ json_item* json_create_item(const char *key, const int value)
         ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
-    item->next = ft_nullptr;
+    json_item_refresh_numeric_state(item);
     return (item);
+}
+
+json_item* json_create_item(const char *key, const ft_big_number &value)
+{
+    return (json_create_item(key, value.c_str()));
 }

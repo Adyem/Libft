@@ -9,6 +9,7 @@
 #include "../System_utils/system_utils.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../CPP_class/class_big_number.hpp"
 #include "../CMA/CMA.hpp"
 
 int json_write_to_file(const char *file_path, json_group *groups)
@@ -24,12 +25,31 @@ int json_write_to_file(const char *file_path, json_group *groups)
         json_item *item_iterator = group_iterator->items;
         while (item_iterator)
         {
+            const char *value_text = item_iterator->value;
+            bool is_big_number_value = false;
+            if (item_iterator->is_big_number == true && item_iterator->big_number)
+            {
+                value_text = item_iterator->big_number->c_str();
+                is_big_number_value = true;
+            }
             if (item_iterator->next)
-                pf_printf_fd(file_descriptor,
-                        "    \"%s\": \"%s\",\n", item_iterator->key, item_iterator->value);
+            {
+                if (is_big_number_value == true)
+                    pf_printf_fd(file_descriptor,
+                        "    \"%s\": %s,\n", item_iterator->key, value_text);
+                else
+                    pf_printf_fd(file_descriptor,
+                        "    \"%s\": \"%s\",\n", item_iterator->key, value_text);
+            }
             else
-                pf_printf_fd(file_descriptor,
-                        "    \"%s\": \"%s\"\n", item_iterator->key, item_iterator->value);
+            {
+                if (is_big_number_value == true)
+                    pf_printf_fd(file_descriptor,
+                        "    \"%s\": %s\n", item_iterator->key, value_text);
+                else
+                    pf_printf_fd(file_descriptor,
+                        "    \"%s\": \"%s\"\n", item_iterator->key, value_text);
+            }
             item_iterator = item_iterator->next;
         }
         if (group_iterator->next)
@@ -66,10 +86,27 @@ char *json_write_to_string(json_group *groups)
         json_item *item_iterator = group_iterator->items;
         while (item_iterator)
         {
+            const char *value_text = item_iterator->value;
+            bool is_big_number_value = false;
+            if (item_iterator->is_big_number == true && item_iterator->big_number)
+            {
+                value_text = item_iterator->big_number->c_str();
+                is_big_number_value = true;
+            }
             if (item_iterator->next)
-                line = cma_strjoin_multiple(5, "    \"", item_iterator->key, "\": \"", item_iterator->value, "\",\n");
+            {
+                if (is_big_number_value == true)
+                    line = cma_strjoin_multiple(5, "    \"", item_iterator->key, "\": ", value_text, ",\n");
+                else
+                    line = cma_strjoin_multiple(5, "    \"", item_iterator->key, "\": \"", value_text, "\",\n");
+            }
             else
-                line = cma_strjoin_multiple(5, "    \"", item_iterator->key, "\": \"", item_iterator->value, "\"\n");
+            {
+                if (is_big_number_value == true)
+                    line = cma_strjoin_multiple(5, "    \"", item_iterator->key, "\": ", value_text, "\n");
+                else
+                    line = cma_strjoin_multiple(5, "    \"", item_iterator->key, "\": \"", value_text, "\"\n");
+            }
             if (!line)
             {
                 cma_free(result);
