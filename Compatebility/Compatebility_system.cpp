@@ -2,6 +2,7 @@
 #include "../Libft/libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include <cstdlib>
+#include <ctime>
 
 #if defined(_WIN32) || defined(_WIN64)
 # include <windows.h>
@@ -104,5 +105,16 @@ unsigned long long cmp_get_total_memory(void)
         return (0);
     return (static_cast<unsigned long long>(pages) *
             static_cast<unsigned long long>(page_size));
+#endif
+}
+
+std::time_t cmp_timegm(std::tm *time_pointer)
+{
+    if (time_pointer == ft_nullptr)
+        return (static_cast<std::time_t>(-1));
+#if defined(_WIN32) || defined(_WIN64)
+    return (_mkgmtime(time_pointer));
+#else
+    return (::timegm(time_pointer));
 #endif
 }
