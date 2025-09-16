@@ -148,9 +148,11 @@ int         math_clamp(int value, int minimum, int maximum);
 int         math_gcd(int first_number, int second_number);
 long        math_gcd(long first_number, long second_number);
 long long   math_gcd(long long first_number, long long second_number);
+ft_big_number    math_big_gcd(const ft_big_number& first_number, const ft_big_number& second_number);
 int         math_lcm(int first_number, int second_number);
 long        math_lcm(long first_number, long second_number);
 long long   math_lcm(long long first_number, long long second_number);
+ft_big_number    math_big_lcm(const ft_big_number& first_number, const ft_big_number& second_number);
 int         math_max(int first_number, int second_number);
 long        math_max(long first_number, long second_number);
 long long   math_max(long long first_number, long long second_number);
@@ -186,6 +188,11 @@ double      ft_mode(const double *values, int array_size);
 double      ft_variance(const double *values, int array_size);
 double      ft_stddev(const double *values, int array_size);
 ```
+
+`math_big_gcd` and `math_big_lcm` bridge the `Math` helpers with the
+`ft_big_number` class so applications can compute number theory operations on
+operands that exceed native integer ranges while retaining the existing big
+integer error propagation.
 
 Example usage:
 

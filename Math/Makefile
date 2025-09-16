@@ -9,6 +9,7 @@ SRCS := math_abs.cpp \
         math_swap.cpp \
         math_clamp.cpp \
         math_gcd.cpp \
+        math_big_number.cpp \
         math_lcm.cpp \
         math_max.cpp \
         math_min.cpp \
