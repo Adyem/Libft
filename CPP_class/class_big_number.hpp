@@ -60,4 +60,7 @@ class ft_big_number
         const char* get_error_str() const noexcept;
 };
 
+ft_string   big_number_to_hex_string(const ft_big_number& number) noexcept;
+ft_big_number   big_number_from_hex_string(const char* hex_digits) noexcept;
+
 #endif

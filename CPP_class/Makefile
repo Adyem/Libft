@@ -11,7 +11,8 @@ SRCS :=  cpp_class_string_constructors.cpp \
          cpp_class_fd_istream.cpp \
          cpp_class_istringstream.cpp \
          cpp_class_ofstream.cpp \
-         cpp_class_big_number.cpp
+         cpp_class_big_number.cpp \
+         cpp_class_big_number_serialization.cpp
 
 HEADERS := class_string_class.hpp \
           class_nullptr.hpp \
