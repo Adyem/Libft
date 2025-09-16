@@ -1493,6 +1493,10 @@ std::tm time_data;
 time_parse_custom("1970/01/01", "%Y/%m/%d", &time_data, NULL);
 ```
 
+`time_parse_iso8601` relies on the `cmp_timegm` compatibility helper, which wraps
+`timegm` on POSIX platforms and `_mkgmtime` on Windows so `'Z'` timestamps are
+translated using UTC even when the current timezone has a non-zero offset.
+
 `timer.hpp` defines a small timer class:
 
 ```

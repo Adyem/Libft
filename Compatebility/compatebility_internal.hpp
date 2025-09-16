@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <pthread.h>
 #include <sys/types.h>
+#include <ctime>
 
 #if defined(_WIN32) || defined(_WIN64)
 # include <BaseTsd.h>
@@ -75,6 +76,7 @@ int cmp_putenv(char *string);
 char *cmp_get_home_directory(void);
 unsigned int cmp_get_cpu_count(void);
 unsigned long long cmp_get_total_memory(void);
+std::time_t cmp_timegm(std::tm *time_pointer);
 
 ssize_t cmp_su_write(int file_descriptor, const char *buffer, size_t length);
 
