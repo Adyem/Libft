@@ -537,10 +537,18 @@ operator const char*() const noexcept;
 ```
 
 #### `ft_big_number`
-Provides a decimal big-integer type that validates input digits, expands its
-internal buffer as digits are appended, releases excess memory when the number
-shrinks, and offers arithmetic helpers and comparisons that surface error
-states for unsupported operations.
+Provides a decimal big-integer type that validates input digits (including an
+optional leading minus sign), expands its internal buffer as digits are
+appended, releases excess memory when the number shrinks, and offers arithmetic
+helpers and comparisons that surface error states for unsupported operations.
+The class tracks the sign separately so arithmetic can produce negative
+results. Use `is_negative()` or `is_positive()` to inspect the sign while
+`c_str()` returns the magnitude digits. `assign_base()` and
+`to_string_base()` convert to and from bases up to hexadecimal so callers can
+work with binary, octal, decimal, or hexadecimal representations without
+changing the internal decimal storage. `operator%()` and `mod_pow()` provide
+modular arithmetic primitives so the class can participate in cryptographic
+workflows such as key exchange and signature verification.
 ```
 ft_big_number() noexcept;
 ft_big_number(const ft_big_number& other) noexcept;
@@ -551,6 +559,7 @@ ft_big_number operator+(const ft_big_number& other) const noexcept;
 ft_big_number operator-(const ft_big_number& other) const noexcept;
 ft_big_number operator*(const ft_big_number& other) const noexcept;
 ft_big_number operator/(const ft_big_number& other) const noexcept;
+ft_big_number operator%(const ft_big_number& other) const noexcept;
 bool          operator==(const ft_big_number& other) const noexcept;
 bool          operator!=(const ft_big_number& other) const noexcept;
 bool          operator<(const ft_big_number& other) const noexcept;
@@ -558,6 +567,7 @@ bool          operator<=(const ft_big_number& other) const noexcept;
 bool          operator>(const ft_big_number& other) const noexcept;
 bool          operator>=(const ft_big_number& other) const noexcept;
 void        assign(const char* number) noexcept;
+void        assign_base(const char* digits, int base) noexcept;
 void        append_digit(char digit) noexcept;
 void        append(const char* digits) noexcept;
 void        append_unsigned(unsigned long value) noexcept;
@@ -567,6 +577,10 @@ void        clear() noexcept;
 const char *c_str() const noexcept;
 ft_size_t   size() const noexcept;
 bool        empty() const noexcept;
+bool        is_negative() const noexcept;
+bool        is_positive() const noexcept;
+ft_string   to_string_base(int base) noexcept;
+ft_big_number mod_pow(const ft_big_number& exponent, const ft_big_number& modulus) const noexcept;
 int         get_error() const noexcept;
 const char *get_error_str() const noexcept;
 ```
