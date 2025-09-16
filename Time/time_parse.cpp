@@ -1,4 +1,5 @@
 #include "time.hpp"
+#include "../Compatebility/compatebility_internal.hpp"
 #include <ctime>
 #include <cstdio>
 #include <cstring>
@@ -35,7 +36,7 @@ bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_tim
         *time_output = parsed_time;
     if (timestamp_output)
     {
-        epoch_time = std::mktime(&parsed_time);
+        epoch_time = cmp_timegm(&parsed_time);
         if (epoch_time == static_cast<std::time_t>(-1))
             return (false);
         *timestamp_output = static_cast<t_time>(epoch_time);
