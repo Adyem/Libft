@@ -3,10 +3,14 @@
 
 #include "json_schema.hpp"
 
+class ft_big_number;
+
 typedef struct json_item
 {
     char *key;
     char *value;
+    bool is_big_number;
+    ft_big_number *big_number;
     struct json_item *next;
 } json_item;
 
@@ -20,10 +24,12 @@ typedef struct json_group
 class json_document;
 
 json_item    *json_create_item(const char *key, const char *value);
+json_item    *json_create_item(const char *key, const ft_big_number &value);
 void         json_add_item_to_group(json_group *group, json_item *item);
 json_group    *json_create_json_group(const char *name);
 json_item    *json_create_item(const char *key, const int value);
 json_item    *json_create_item(const char *key, const bool value);
+void         json_item_refresh_numeric_state(json_item *item);
 void         json_append_group(json_group **head, json_group *new_group);
 int         json_write_to_file(const char *filename, json_group *groups);
 char        *json_write_to_string(json_group *groups);
@@ -40,5 +46,6 @@ void        json_remove_item(json_group *group, const char *key);
 void        json_update_item(json_group *group, const char *key, const char *value);
 void        json_update_item(json_group *group, const char *key, const int value);
 void        json_update_item(json_group *group, const char *key, const bool value);
+void        json_update_item(json_group *group, const char *key, const ft_big_number &value);
 
 #endif

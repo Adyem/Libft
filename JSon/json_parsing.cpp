@@ -3,6 +3,92 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Libft/libft.hpp"
+#include "../CPP_class/class_big_number.hpp"
+
+static bool json_string_is_integral(const char *value)
+{
+    if (!value)
+        return (false);
+    if (!(*value))
+        return (false);
+    size_t index = 0;
+    if (value[index] == '+' || value[index] == '-')
+        index++;
+    if (!value[index])
+        return (false);
+    while (value[index])
+    {
+        if (ft_isdigit(static_cast<unsigned char>(value[index])) == 0)
+            return (false);
+        index++;
+    }
+    return (true);
+}
+
+static bool json_string_exceeds_signed_long_long(const char *value)
+{
+    if (json_string_is_integral(value) == false)
+        return (false);
+    size_t index = 0;
+    bool is_negative = false;
+    if (value[index] == '+' || value[index] == '-')
+    {
+        if (value[index] == '-')
+            is_negative = true;
+        index++;
+    }
+    while (value[index] == '0' && value[index + 1] != '\0')
+        index++;
+    const char *digits = value + index;
+    size_t digits_length = ft_strlen_size_t(digits);
+    if (digits_length == 0)
+        return (false);
+    if (digits_length > 19)
+        return (true);
+    if (digits_length < 19)
+        return (false);
+    if (is_negative)
+    {
+        if (ft_strcmp(digits, "9223372036854775808") > 0)
+            return (true);
+        return (false);
+    }
+    if (ft_strcmp(digits, "9223372036854775807") > 0)
+        return (true);
+    return (false);
+}
+
+void json_item_refresh_numeric_state(json_item *item)
+{
+    if (!item)
+        return ;
+    if (item->big_number)
+    {
+        delete item->big_number;
+        item->big_number = ft_nullptr;
+    }
+    item->is_big_number = false;
+    if (!item->value)
+        return ;
+    if (json_string_exceeds_signed_long_long(item->value) == false)
+        return ;
+    ft_big_number *allocated_number = new(std::nothrow) ft_big_number;
+    if (!allocated_number)
+    {
+        ft_errno = JSON_MALLOC_FAIL;
+        return ;
+    }
+    allocated_number->assign(item->value);
+    if (allocated_number->get_error() != ER_SUCCESS)
+    {
+        delete allocated_number;
+        return ;
+    }
+    item->big_number = allocated_number;
+    item->is_big_number = true;
+    return ;
+}
 
 void json_add_item_to_group(json_group *group, json_item *item)
 {
@@ -58,6 +144,8 @@ void json_free_items(json_item *item)
             delete[] item->key;
         if (item->value)
             delete[] item->value;
+        if (item->big_number)
+            delete item->big_number;
         delete item;
         item = next_item;
     }
