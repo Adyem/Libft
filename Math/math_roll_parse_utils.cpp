@@ -6,7 +6,10 @@
 
 static void math_print_overflow_error(int error_code)
 {
-    pf_printf("%d-Error: Result is higher than %d or lower than %d\n", error_code, INT_MAX, INT_MIN);
+    if (DEBUG == 1)
+    {
+        pf_printf("%d-Error: Result is higher than %d or lower than %d\n", error_code, INT_MAX, INT_MIN);
+    }
     return ;
 }
 
@@ -73,7 +76,10 @@ static int math_check_div_overflow(int first_number, int second_number)
 {
     if (second_number == 0)
     {
-        pf_printf("176-Error: Division by zero is undefined\n");
+        if (DEBUG == 1)
+        {
+            pf_printf("176-Error: Division by zero is undefined\n");
+        }
         return (1);
     }
     if (first_number == INT_MIN && second_number == -1)

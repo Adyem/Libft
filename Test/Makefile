@@ -37,7 +37,7 @@ CXX       := g++
 
 COMPILE_FLAGS := -Wall -Wextra -Werror -std=c++17 $(OPT_FLAGS) -pthread -Wno-missing-declarations
 CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Libft\"
-LDFLAGS := -lz
+LDFLAGS := -lz -lssl -lcrypto
 export COMPILE_FLAGS
 
 OBJDIR       := objs

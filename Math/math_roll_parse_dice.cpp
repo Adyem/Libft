@@ -20,13 +20,19 @@ static int math_handle_dice_roll(char *string, int *i, int *x, int *error)
         return (1);
     if (first_number <= 0)
     {
-        pf_printf_fd(2, "178-Error: The number of dice must be greater than 0. Current value: %d\n", first_number);
+        if (DEBUG == 1)
+        {
+            pf_printf_fd(2, "178-Error: The number of dice must be greater than 0. Current value: %d\n", first_number);
+        }
         return (1);
     }
     if (second_number <= 0)
     {
-        pf_printf_fd(2, "179-Error: The number of faces on a die must be greater than 0. Current value: %d, "
+        if (DEBUG == 1)
+        {
+            pf_printf_fd(2, "179-Error: The number of faces on a die must be greater than 0. Current value: %d, "
                           "the result can't be higher than %d\n", second_number, INT_MAX);
+        }
         return (1);
     }
     return ft_dice_roll(first_number, second_number);

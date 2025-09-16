@@ -93,7 +93,10 @@ int math_roll_convert_previous(char *string, int *i, int *error)
     if (check != 0)
     {
         *error = 1;
-        pf_printf("171-Error: numbers cant be higher then %d or lower than %d\n", INT_MAX, INT_MIN);
+        if (DEBUG == 1)
+        {
+            pf_printf("171-Error: numbers cant be higher then %d or lower than %d\n", INT_MAX, INT_MIN);
+        }
         return (0);
     }
     result = ft_atoi(&string[*i]);
@@ -111,7 +114,10 @@ int    math_roll_convert_next(char *string, int i, int *error)
     if (check != 0)
     {
         *error = 1;
-        pf_printf("170-Error: numbers cant be higher then %d or lower than %d\n", INT_MAX, INT_MIN);
+        if (DEBUG == 1)
+        {
+            pf_printf("170-Error: numbers cant be higher then %d or lower than %d\n", INT_MAX, INT_MIN);
+        }
         return (0);
     }
     result = ft_atoi(&string[i]);
