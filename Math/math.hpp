@@ -1,6 +1,8 @@
 #ifndef MATH_HPP
 # define MATH_HPP
 
+# include "../CPP_class/class_big_number.hpp"
+
 int         math_abs(int number);
 long        math_abs(long number);
 long long   math_abs(long long number);
@@ -13,9 +15,11 @@ int         math_clamp(int value, int minimum, int maximum);
 int         math_gcd(int first_number, int second_number);
 long        math_gcd(long first_number, long second_number);
 long long   math_gcd(long long first_number, long long second_number);
+ft_big_number    math_big_gcd(const ft_big_number &first_number, const ft_big_number &second_number);
 int         math_lcm(int first_number, int second_number);
 long        math_lcm(long first_number, long second_number);
 long long   math_lcm(long long first_number, long long second_number);
+ft_big_number    math_big_lcm(const ft_big_number &first_number, const ft_big_number &second_number);
 int         math_max(int first_number, int second_number);
 long        math_max(long first_number, long second_number);
 long long   math_max(long long first_number, long long second_number);
