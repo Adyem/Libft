@@ -1162,8 +1162,10 @@ Creation, reading and manipulation helpers in `JSon/json.hpp`:
 
 ```
 json_item   *json_create_item(const char *key, const char *value);
+json_item   *json_create_item(const char *key, const ft_big_number &value);
 json_group  *json_create_json_group(const char *name);
 void         json_add_item_to_group(json_group *group, json_item *item);
+void         json_item_refresh_numeric_state(json_item *item);
 int          json_write_to_file(const char *filename, json_group *groups);
 char        *json_write_to_string(json_group *groups);
 int          json_document_write_to_file(const char *file_path, const json_document &document);
@@ -1177,6 +1179,7 @@ void         json_remove_item(json_group *group, const char *key);
 void         json_update_item(json_group *group, const char *key, const char *value);
 void         json_update_item(json_group *group, const char *key, const int value);
 void         json_update_item(json_group *group, const char *key, const bool value);
+void         json_update_item(json_group *group, const char *key, const ft_big_number &value);
 bool         json_validate_schema(json_group *group, const json_schema &schema);
 ```
 The `json_document` class wraps these helpers and manages a group list:
@@ -1187,6 +1190,14 @@ json_document();
 void         append_group(json_group *group) noexcept;
 json_group   *find_group(const char *name) const noexcept;
 ```
+
+`json_item` now exposes an `is_big_number` flag and an `ft_big_number *big_number`
+pointer so callers can detect when a numeric token overflowed a signed
+64-bit range. `json_item_refresh_numeric_state` inspects the item's string
+value, frees any previous big-number allocation, and attaches a fresh
+`ft_big_number` when the digits exceed the 64-bit limit. Parsing and update
+helpers call it automatically, and `json_write_to_file`/`json_write_to_string`
+emit such values without quotes so round trips preserve large integers.
 
 Schemas describe expected fields and types using a minimal subset of the JSON Schema draft-07 specification:
 
