@@ -592,6 +592,27 @@ int         get_error() const noexcept;
 const char *get_error_str() const noexcept;
 ```
 
+The standalone helpers below expose common serialization flows so callers can
+emit uppercase hexadecimal digits or parse them (optionally prefixed with
+`0x`/`0X` and an optional leading sign) without manually juggling intermediate
+base conversions:
+
+```
+ft_string   big_number_to_hex_string(const ft_big_number& number) noexcept;
+ft_big_number   big_number_from_hex_string(const char* hex_digits) noexcept;
+```
+
+Example usage:
+
+```
+ft_big_number value;
+value.assign("3735928559");
+ft_string hex_value = big_number_to_hex_string(value); // "DEADBEEF"
+
+ft_big_number parsed = big_number_from_hex_string("-0x1234");
+// parsed.is_negative() == true and parsed.c_str() == "4660"
+```
+
 #### `ft_nullptr`
 ```
 namespace ft {
