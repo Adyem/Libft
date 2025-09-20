@@ -14,19 +14,41 @@ ft_character::ft_character() noexcept
       _error(ER_SUCCESS)
 {
     if (this->_buffs.get_error() != ER_SUCCESS)
+    {
         this->set_error(this->_buffs.get_error());
-    else if (this->_skills.get_error() != ER_SUCCESS)
+        return ;
+    }
+    if (this->_skills.get_error() != ER_SUCCESS)
+    {
         this->set_error(this->_skills.get_error());
-    else if (this->_debuffs.get_error() != ER_SUCCESS)
+        return ;
+    }
+    if (this->_debuffs.get_error() != ER_SUCCESS)
+    {
         this->set_error(this->_debuffs.get_error());
-    else if (this->_upgrades.get_error() != ER_SUCCESS)
+        return ;
+    }
+    if (this->_upgrades.get_error() != ER_SUCCESS)
+    {
         this->set_error(this->_upgrades.get_error());
-    else if (this->_quests.get_error() != ER_SUCCESS)
+        return ;
+    }
+    if (this->_quests.get_error() != ER_SUCCESS)
+    {
         this->set_error(this->_quests.get_error());
-    else if (this->_achievements.get_error() != ER_SUCCESS)
+        return ;
+    }
+    if (this->_achievements.get_error() != ER_SUCCESS)
+    {
         this->set_error(this->_achievements.get_error());
-    else if (this->_reputation.get_error() != ER_SUCCESS)
+        return ;
+    }
+    if (this->_reputation.get_error() != ER_SUCCESS)
+    {
         this->set_error(this->_reputation.get_error());
+        return ;
+    }
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -46,6 +68,7 @@ ft_character &ft_character::operator=(const ft_character &other) noexcept
 {
     if (this != &other)
     {
+        int other_error = other._error;
         this->_hit_points = other._hit_points;
         this->_physical_armor = other._physical_armor;
         this->_magic_armor = other._magic_armor;
@@ -83,21 +106,42 @@ ft_character &ft_character::operator=(const ft_character &other) noexcept
         this->_reputation = other._reputation;
         this->_inventory = other._inventory;
         this->_equipment = other._equipment;
-        this->_error = other._error;
         if (this->_buffs.get_error() != ER_SUCCESS)
+        {
             this->set_error(this->_buffs.get_error());
-        else if (this->_skills.get_error() != ER_SUCCESS)
+            return (*this);
+        }
+        if (this->_skills.get_error() != ER_SUCCESS)
+        {
             this->set_error(this->_skills.get_error());
-        else if (this->_debuffs.get_error() != ER_SUCCESS)
+            return (*this);
+        }
+        if (this->_debuffs.get_error() != ER_SUCCESS)
+        {
             this->set_error(this->_debuffs.get_error());
-        else if (this->_upgrades.get_error() != ER_SUCCESS)
+            return (*this);
+        }
+        if (this->_upgrades.get_error() != ER_SUCCESS)
+        {
             this->set_error(this->_upgrades.get_error());
-        else if (this->_quests.get_error() != ER_SUCCESS)
+            return (*this);
+        }
+        if (this->_quests.get_error() != ER_SUCCESS)
+        {
             this->set_error(this->_quests.get_error());
-        else if (this->_achievements.get_error() != ER_SUCCESS)
+            return (*this);
+        }
+        if (this->_achievements.get_error() != ER_SUCCESS)
+        {
             this->set_error(this->_achievements.get_error());
-        else if (this->_reputation.get_error() != ER_SUCCESS)
+            return (*this);
+        }
+        if (this->_reputation.get_error() != ER_SUCCESS)
+        {
             this->set_error(this->_reputation.get_error());
+            return (*this);
+        }
+        this->set_error(other_error);
     }
     return (*this);
 }
@@ -150,21 +194,42 @@ ft_character &ft_character::operator=(ft_character &&other) noexcept
         this->_reputation = ft_move(other._reputation);
         this->_inventory = ft_move(other._inventory);
         this->_equipment = ft_move(other._equipment);
-        this->_error = other._error;
         if (this->_buffs.get_error() != ER_SUCCESS)
+        {
             this->set_error(this->_buffs.get_error());
-        else if (this->_skills.get_error() != ER_SUCCESS)
+            return (*this);
+        }
+        if (this->_skills.get_error() != ER_SUCCESS)
+        {
             this->set_error(this->_skills.get_error());
-        else if (this->_debuffs.get_error() != ER_SUCCESS)
+            return (*this);
+        }
+        if (this->_debuffs.get_error() != ER_SUCCESS)
+        {
             this->set_error(this->_debuffs.get_error());
-        else if (this->_upgrades.get_error() != ER_SUCCESS)
+            return (*this);
+        }
+        if (this->_upgrades.get_error() != ER_SUCCESS)
+        {
             this->set_error(this->_upgrades.get_error());
-        else if (this->_quests.get_error() != ER_SUCCESS)
+            return (*this);
+        }
+        if (this->_quests.get_error() != ER_SUCCESS)
+        {
             this->set_error(this->_quests.get_error());
-        else if (this->_achievements.get_error() != ER_SUCCESS)
+            return (*this);
+        }
+        if (this->_achievements.get_error() != ER_SUCCESS)
+        {
             this->set_error(this->_achievements.get_error());
-        else if (this->_reputation.get_error() != ER_SUCCESS)
+            return (*this);
+        }
+        if (this->_reputation.get_error() != ER_SUCCESS)
+        {
             this->set_error(this->_reputation.get_error());
+            return (*this);
+        }
+        this->set_error(other._error);
         other._hit_points = 0;
         other._physical_armor = 0;
         other._magic_armor = 0;
@@ -209,7 +274,7 @@ ft_character &ft_character::operator=(ft_character &&other) noexcept
         other._reputation = ft_reputation();
         other._inventory = ft_inventory();
         other._equipment = ft_equipment();
-        other._error = ER_SUCCESS;
+        other.set_error(ER_SUCCESS);
     }
     return (*this);
 }

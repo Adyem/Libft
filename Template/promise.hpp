@@ -14,6 +14,7 @@ class ft_promise
         std::atomic_bool _ready;
         mutable int _error_code;
 
+    protected:
         void set_error(int error) const;
 
     public:
@@ -47,6 +48,7 @@ void ft_promise<ValueType>::set_value(const ValueType& value)
 {
     this->_value = value;
     this->_ready.store(true, std::memory_order_release);
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -55,6 +57,7 @@ void ft_promise<ValueType>::set_value(ValueType&& value)
 {
     this->_value = ft_move(value);
     this->_ready.store(true, std::memory_order_release);
+    this->set_error(ER_SUCCESS);
     return ;
 }
 

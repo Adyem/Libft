@@ -39,6 +39,10 @@ void ft_log_close()
     }
     g_sinks.clear();
     if (g_sinks.get_error() != ER_SUCCESS)
+    {
+        ft_errno = g_sinks.get_error();
         return ;
+    }
+    ft_errno = ER_SUCCESS;
     return ;
 }

@@ -18,15 +18,15 @@
 int ft_socket::setup_client(const SocketConfig &config)
 {
     if (create_socket(config) != ER_SUCCESS)
-        return (this->_error);
+        return (this->_error_code);
     if (config._non_blocking)
         if (set_non_blocking(config) != ER_SUCCESS)
-            return (this->_error);
+            return (this->_error_code);
     if (config._recv_timeout > 0 || config._send_timeout > 0)
         if (set_timeouts(config) != ER_SUCCESS)
-            return (this->_error);
+            return (this->_error_code);
     if (configure_address(config) != ER_SUCCESS)
-        return (this->_error);
+        return (this->_error_code);
     socklen_t addr_len;
     if (config._address_family == AF_INET)
         addr_len = sizeof(struct sockaddr_in);
@@ -34,22 +34,22 @@ int ft_socket::setup_client(const SocketConfig &config)
         addr_len = sizeof(struct sockaddr_in6);
     else
     {
-        handle_error(SOCKET_INVALID_CONFIGURATION);
+        this->set_error(SOCKET_INVALID_CONFIGURATION);
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
-        return (this->_error);
+        return (this->_error_code);
     }
     if (nw_connect(this->_socket_fd, reinterpret_cast<const struct sockaddr*>
                 (&this->_address), addr_len) < 0)
     {
-        handle_error(errno + ERRNO_OFFSET);
+        this->set_error(errno + ERRNO_OFFSET);
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
-        return (this->_error);
+        return (this->_error_code);
     }
     if (!config._multicast_group.empty())
         if (join_multicast_group(config) != ER_SUCCESS)
-            return (this->_error);
-    this->_error = ER_SUCCESS;
-    return (this->_error);
+            return (this->_error_code);
+    this->set_error(ER_SUCCESS);
+    return (this->_error_code);
 }

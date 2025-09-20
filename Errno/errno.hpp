@@ -103,6 +103,8 @@ enum PTErrorCode
     FUTURE_INVALID,
     FUTURE_ALLOC_FAIL,
     FUTURE_BROKEN,
+    POOL_EMPTY,
+    POOL_INVALID_OBJECT,
 };
 
 const char* ft_strerror(int error_code);
