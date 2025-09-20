@@ -3,6 +3,7 @@ DEBUG_TARGET := Math_debug.a
 
 SRCS := math_abs.cpp \
         math_fabs.cpp \
+        math_fmod.cpp \
         math_signbit.cpp \
         math_isnan.cpp \
         math_nan.cpp \
@@ -20,6 +21,7 @@ SRCS := math_abs.cpp \
         math_sqrt.cpp \
         math_exp.cpp \
         math_log.cpp \
+        math_acos.cpp \
         math_cos.cpp \
         math_sin.cpp \
         math_tan.cpp \
