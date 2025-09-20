@@ -52,3 +52,8 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
     return (total_written);
 }
 
+int su_close(int file_descriptor)
+{
+    return (cmp_close(file_descriptor));
+}
+

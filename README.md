@@ -52,7 +52,7 @@ The current suite exercises components across multiple modules:
 - **Math**: vector, matrix, and quaternion helpers plus expression evaluation via `math_roll` (arithmetic, unary negatives, precedence, dice, lengthy expressions, and error handling)
 - **RNG**: normal, exponential, Poisson, binomial, and geometric distributions
 - **String**: `ft_string_view`
-- **CPP_class**: `ft_big_number` assignment, arithmetic, comparisons, error handling, and the `DataBuffer` utility now propagates allocator and stream failures through `_error_code` while clearing successful reads and writes.
+- **CPP_class**: `ft_big_number` assignment, arithmetic, comparisons, error handling, and the `DataBuffer` utility now propagates allocator and stream failures through `_error_code` while clearing successful reads and writes. The `ft_file` wrapper routes all descriptor I/O through the `System_utils` helpers (`su_open`, `su_read`, `su_write`, `su_close`), defers closing the active descriptor until a new open succeeds, and reports failures through `_error_code` while leaving the previous handle untouched when replacements fail.
 - **Template**: Iterators, pools, and object handles surface invalid dereferences, pool exhaustion, and container failures through `_error_code` so range helpers and pooled resources synchronize `ft_errno` after every operation.
 - **JSon**: schema validation
 - **HTML**: the `html_document` helper validates node, attribute, and selector inputs, mirrors allocation and serialization failures into `_error_code`, and clears successes before returning so DOM operations leave `ft_errno` authoritative.
@@ -483,6 +483,7 @@ operator int() const;
 ```
 
 The `printf` helper forwards to the Printf module's `pf_printf_fd_v` to write formatted output directly to the file descriptor.
+All descriptor operations delegate to `System_utils`'s `su_open`, `su_read`, `su_write`, and `su_close` wrappers so the class uses the same cross-platform behaviour as the rest of the library while surfacing failures through `_error_code`.
 
 #### `ft_istream`
 ```
@@ -1413,7 +1414,7 @@ int     su_open(const char *pathname, int flags);
 int     su_open(const char *pathname, int flags, mode_t mode);
 ssize_t su_read(int fd, void *buf, size_t count);
 ssize_t su_write(int fd, const void *buf, size_t count);
-int     cmp_close(int fd);
+int     su_close(int fd);
 ```
 A simple `su_file` struct wraps a file descriptor for stream-style I/O:
 

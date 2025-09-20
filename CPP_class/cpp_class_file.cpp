@@ -3,6 +3,7 @@
 #include "../Errno/errno.hpp"
 #include "../Printf/printf_internal.hpp"
 #include "../Printf/printf.hpp"
+#include "../System_utils/system_utils.hpp"
 #include "class_nullptr.hpp"
 #include <cerrno>
 #include <cstdarg>
@@ -20,16 +21,16 @@ ft_file::ft_file(const char* filename, int flags, mode_t mode) noexcept
 {
     if (DEBUG == 1)
         pf_printf("Opening %s\n", filename);
-    this->_fd = ::open(filename, flags, mode);
+    this->_fd = su_open(filename, flags, mode);
     if (this->_fd < 0)
         this->set_error(errno + ERRNO_OFFSET);
     return ;
 }
 
-ft_file::ft_file(const char* filename, int flags) noexcept 
+ft_file::ft_file(const char* filename, int flags) noexcept
     : _fd(-1), _error_code(0)
 {
-    this->_fd = ::open(filename, flags);
+    this->_fd = su_open(filename, flags);
     if (this->_fd < 0)
         this->set_error(errno + ERRNO_OFFSET);
     return ;
@@ -44,7 +45,7 @@ ft_file::~ft_file() noexcept
 {
     if (this->_fd >= 0)
     {
-        if (::close(this->_fd) == -1)
+        if (su_close(this->_fd) == -1)
             ft_errno = errno + ERRNO_OFFSET;
     }
     return ;
@@ -64,7 +65,7 @@ ft_file& ft_file::operator=(ft_file&& other) noexcept
     {
         if (this->_fd >= 0)
         {
-            if (::close(this->_fd) == -1 && this->_error_code == 0)
+            if (su_close(this->_fd) == -1 && this->_error_code == 0)
                 this->_error_code = errno;
         }
         this->_fd = other._fd;
@@ -79,7 +80,11 @@ void    ft_file::close() noexcept
 {
     if (this->_fd >= 0)
     {
-        ::close(this->_fd);
+        if (su_close(this->_fd) == -1)
+        {
+            this->set_error(errno + ERRNO_OFFSET);
+            return ;
+        }
         this->_fd = -1;
     }
     return ;
@@ -89,27 +94,45 @@ int ft_file::open(const char* filename, int flags, mode_t mode) noexcept
 {
     if (DEBUG == 1)
         pf_printf("Opening %s\n", filename);
-    if (this->_fd != -1)
-        this->close();
-    this->_fd = ::open(filename, flags, mode);
-    if (this->_fd < 0)
+    int new_fd = su_open(filename, flags, mode);
+    if (new_fd < 0)
     {
         this->set_error(errno + ERRNO_OFFSET);
         return (1);
     }
+    if (this->_fd != -1)
+    {
+        if (su_close(this->_fd) == -1)
+        {
+            int close_error = errno + ERRNO_OFFSET;
+            su_close(new_fd);
+            this->set_error(close_error);
+            return (1);
+        }
+    }
+    this->_fd = new_fd;
     return (0);
 }
 
 int ft_file::open(const char* filename, int flags) noexcept
 {
-    if (this->_fd != -1)
-        this->close();
-    this->_fd = ::open(filename, flags);
-    if (this->_fd < 0)
+    int new_fd = su_open(filename, flags);
+    if (new_fd < 0)
     {
         this->set_error(errno + ERRNO_OFFSET);
         return (1);
     }
+    if (this->_fd != -1)
+    {
+        if (su_close(this->_fd) == -1)
+        {
+            int close_error = errno + ERRNO_OFFSET;
+            su_close(new_fd);
+            this->set_error(close_error);
+            return (1);
+        }
+    }
+    this->_fd = new_fd;
     return (0);
 }
 
@@ -147,7 +170,7 @@ ssize_t ft_file::read(char *buffer, int count) noexcept
         this->set_error(FILE_INVALID_FD);
         return (-1);
     }
-    ssize_t bytes_read = ::read(this->_fd, buffer, count);
+    ssize_t bytes_read = su_read(this->_fd, buffer, static_cast<size_t>(count));
     if (bytes_read == -1)
         this->set_error(errno + ERRNO_OFFSET);
     return (bytes_read);
@@ -160,7 +183,7 @@ ssize_t ft_file::write(const char *string) noexcept
         this->set_error(FT_EINVAL);
         return (-1);
     }
-    ssize_t result = ::write(this->_fd, string, ft_strlen(string));
+    ssize_t result = su_write(this->_fd, string, ft_strlen(string));
     if (result == -1)
     {
         this->set_error(errno + ERRNO_OFFSET);
