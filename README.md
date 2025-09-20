@@ -133,7 +133,8 @@ FT_ULONG_MAX
 
 ### Math
 
-Located in `Math/`. Headers: `math.hpp` and `roll.hpp`. Provides basic math utilities:
+Located in `Math/`. Headers: `math.hpp` and `roll.hpp`. Provides basic math utilities.
+`math.hpp` now uses the `MATH_MATH_HPP` include guard to avoid colliding with the template helper in `Template/math.hpp`, which switched to `FT_TEMPLATE_MATH_HPP`.
 
 ```
 int         math_abs(int number);

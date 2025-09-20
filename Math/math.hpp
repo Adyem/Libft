@@ -1,5 +1,5 @@
-#ifndef MATH_HPP
-# define MATH_HPP
+#ifndef MATH_MATH_HPP
+# define MATH_MATH_HPP
 
 # include "../CPP_class/class_big_number.hpp"
 

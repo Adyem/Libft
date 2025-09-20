@@ -1,5 +1,5 @@
-#ifndef MATH_HPP
-#define MATH_HPP
+#ifndef FT_TEMPLATE_MATH_HPP
+#define FT_TEMPLATE_MATH_HPP
 
 #include <cstddef>
 #include <type_traits>
