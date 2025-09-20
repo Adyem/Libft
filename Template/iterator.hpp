@@ -2,50 +2,70 @@
  # define ITERATOR_HPP
 
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
 
 template <typename ValueType>
 class Iterator
 {
+    private:
+        ValueType* _ptr;
+        mutable int _error_code;
+
+        void set_error(int error_code) const noexcept;
+
     public:
-        Iterator(ValueType* ptr);
-        Iterator(const Iterator& other);
-        Iterator& operator=(const Iterator& other);
+        Iterator(ValueType* ptr) noexcept;
+        Iterator(const Iterator& other) noexcept;
+        Iterator& operator=(const Iterator& other) noexcept;
         Iterator(Iterator&& other) noexcept;
         Iterator& operator=(Iterator&& other) noexcept;
         ~Iterator() = default;
-        Iterator operator++();
-        bool operator!=(const Iterator& other) const;
-        ValueType& operator*() const;
-
-    private:
-        ValueType* _ptr;
+        Iterator operator++() noexcept;
+        bool operator!=(const Iterator& other) const noexcept;
+        ValueType& operator*() const noexcept;
+        int get_error() const noexcept;
+        const char* get_error_str() const noexcept;
 };
 
 template <typename ValueType>
-Iterator<ValueType>::Iterator(ValueType* ptr) : _ptr(ptr)
+Iterator<ValueType>::Iterator(ValueType* ptr) noexcept
+    : _ptr(ptr), _error_code(ER_SUCCESS)
 {
+    if (this->_ptr == ft_nullptr)
+        this->set_error(FT_EINVAL);
+    else
+        this->set_error(ER_SUCCESS);
     return ;
 }
 
 template <typename ValueType>
-Iterator<ValueType>::Iterator(const Iterator& other) : _ptr(other._ptr)
+Iterator<ValueType>::Iterator(const Iterator& other) noexcept
+    : _ptr(other._ptr), _error_code(other._error_code)
 {
+    this->set_error(this->_error_code);
     return ;
 }
 
 template <typename ValueType>
-Iterator<ValueType>& Iterator<ValueType>::operator=(const Iterator& other)
+Iterator<ValueType>& Iterator<ValueType>::operator=(const Iterator& other) noexcept
 {
     if (this != &other)
-        _ptr = other._ptr;
+    {
+        this->_ptr = other._ptr;
+        this->_error_code = other._error_code;
+    }
+    this->set_error(this->_error_code);
     return (*this);
 }
 
 template <typename ValueType>
-Iterator<ValueType>::Iterator(Iterator&& other) noexcept : _ptr(other._ptr)
+Iterator<ValueType>::Iterator(Iterator&& other) noexcept
+    : _ptr(other._ptr), _error_code(other._error_code)
 {
     other._ptr = ft_nullptr;
-        return ;
+    other._error_code = ER_SUCCESS;
+    this->set_error(this->_error_code);
+    return ;
 }
 
 template <typename ValueType>
@@ -53,29 +73,67 @@ Iterator<ValueType>& Iterator<ValueType>::operator=(Iterator&& other) noexcept
 {
     if (this != &other)
     {
-        _ptr = other._ptr;
+        this->_ptr = other._ptr;
+        this->_error_code = other._error_code;
         other._ptr = ft_nullptr;
+        other._error_code = ER_SUCCESS;
     }
+    this->set_error(this->_error_code);
     return (*this);
 }
 
 template <typename ValueType>
-Iterator<ValueType> Iterator<ValueType>::operator++()
+Iterator<ValueType> Iterator<ValueType>::operator++() noexcept
 {
-    ++_ptr;
+    if (this->_ptr == ft_nullptr)
+    {
+        this->set_error(FT_EINVAL);
+        return (*this);
+    }
+    ++this->_ptr;
+    this->set_error(ER_SUCCESS);
     return (*this);
 }
 
 template <typename ValueType>
-bool Iterator<ValueType>::operator!=(const Iterator& other) const
+bool Iterator<ValueType>::operator!=(const Iterator& other) const noexcept
 {
-    return (_ptr != other._ptr);
+    bool result = (this->_ptr != other._ptr);
+    this->set_error(ER_SUCCESS);
+    return (result);
 }
 
 template <typename ValueType>
-ValueType& Iterator<ValueType>::operator*() const
+ValueType& Iterator<ValueType>::operator*() const noexcept
 {
-    return (*_ptr);
+    if (this->_ptr == ft_nullptr)
+    {
+        this->set_error(FT_EINVAL);
+        static ValueType default_value = ValueType();
+        return (default_value);
+    }
+    this->set_error(ER_SUCCESS);
+    return (*this->_ptr);
+}
+
+template <typename ValueType>
+int Iterator<ValueType>::get_error() const noexcept
+{
+    return (this->_error_code);
+}
+
+template <typename ValueType>
+const char* Iterator<ValueType>::get_error_str() const noexcept
+{
+    return (ft_strerror(this->_error_code));
+}
+
+template <typename ValueType>
+void Iterator<ValueType>::set_error(int error_code) const noexcept
+{
+    this->_error_code = error_code;
+    ft_errno = error_code;
+    return ;
 }
 
 #endif

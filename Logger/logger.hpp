@@ -45,6 +45,9 @@ class ft_logger
     private:
         bool _alloc_logging;
         bool _api_logging;
+        mutable int _error_code;
+
+        void set_error(int error_code) const noexcept;
 
     public:
         ft_logger(const char *path = nullptr, size_t max_size = 0,
@@ -69,6 +72,8 @@ class ft_logger
         int  set_syslog(const char *identifier) noexcept;
         int  set_remote_sink(const char *host, unsigned short port,
                              bool use_tcp) noexcept;
+        int  get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 
         void debug(const char *fmt, ...) noexcept;
         void info(const char *fmt, ...) noexcept;

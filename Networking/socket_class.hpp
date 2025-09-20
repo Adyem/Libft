@@ -38,12 +38,12 @@ class ft_socket
         int     bind_socket(const SocketConfig &config);
         int     listen_socket(const SocketConfig &config);
         int        accept_connection();
-        void     handle_error(int error_code);
+        void     set_error(int error_code) const noexcept;
 
         struct sockaddr_storage _address;
         ft_vector<ft_socket>     _connected;
         int                         _socket_fd;
-        int                     _error;
+        mutable int             _error_code;
 
         ft_socket(int fd, const sockaddr_storage &addr);
         ft_socket(const ft_socket &other) = delete;

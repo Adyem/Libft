@@ -2,6 +2,7 @@
 # define GAME_EVENT_HPP
 
 #include "../Template/function.hpp"
+#include "../Errno/errno.hpp"
 
 class ft_world;
 
@@ -15,6 +16,9 @@ class ft_event
         int _modifier3;
         int _modifier4;
         ft_function<void(ft_world&, ft_event&)> _callback;
+        mutable int _error;
+
+        void set_error(int err) const noexcept;
 
     public:
         ft_event() noexcept;
@@ -54,6 +58,9 @@ class ft_event
 
         const ft_function<void(ft_world&, ft_event&)> &get_callback() const noexcept;
         void set_callback(ft_function<void(ft_world&, ft_event&)> &&callback) noexcept;
+
+        int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 };
 
 #endif

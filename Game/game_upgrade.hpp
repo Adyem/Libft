@@ -2,6 +2,7 @@
 # define GAME_UPGRADE_HPP
 
 #include <cstdint>
+#include "../Errno/errno.hpp"
 
 class ft_upgrade
 {
@@ -13,6 +14,9 @@ class ft_upgrade
         int      _modifier2;
         int      _modifier3;
         int      _modifier4;
+        mutable int _error;
+
+        void set_error(int err) const noexcept;
 
     public:
         ft_upgrade() noexcept;
@@ -52,6 +56,9 @@ class ft_upgrade
         void set_modifier4(int mod) noexcept;
         void add_modifier4(int mod) noexcept;
         void sub_modifier4(int mod) noexcept;
+
+        int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 };
 
 #endif

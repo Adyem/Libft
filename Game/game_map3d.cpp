@@ -8,6 +8,8 @@ ft_map3d::ft_map3d(size_t width, size_t height, size_t depth, int value)
     : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(ER_SUCCESS)
 {
     this->allocate(width, height, depth, value);
+    if (this->_error == ER_SUCCESS)
+        this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -21,6 +23,8 @@ ft_map3d::ft_map3d(const ft_map3d &other)
     : _data(ft_nullptr), _width(0), _height(0), _depth(0), _error(ER_SUCCESS)
 {
     this->allocate(other._width, other._height, other._depth, 0);
+    if (this->_error != ER_SUCCESS)
+        return ;
     if (this->_data)
     {
         size_t z = 0;
@@ -40,7 +44,7 @@ ft_map3d::ft_map3d(const ft_map3d &other)
             ++z;
         }
     }
-    this->_error = other._error;
+    this->set_error(other._error);
     return ;
 }
 
@@ -50,6 +54,8 @@ ft_map3d &ft_map3d::operator=(const ft_map3d &other)
     {
         this->deallocate();
         this->allocate(other._width, other._height, other._depth, 0);
+        if (this->_error != ER_SUCCESS)
+            return (*this);
         if (this->_data)
         {
             size_t z = 0;
@@ -69,7 +75,7 @@ ft_map3d &ft_map3d::operator=(const ft_map3d &other)
                 ++z;
             }
         }
-        this->_error = other._error;
+        this->set_error(other._error);
     }
     return (*this);
 }
@@ -81,7 +87,8 @@ ft_map3d::ft_map3d(ft_map3d &&other) noexcept
     other._width = 0;
     other._height = 0;
     other._depth = 0;
-    other._error = ER_SUCCESS;
+    this->set_error(this->_error);
+    other.set_error(ER_SUCCESS);
     return ;
 }
 
@@ -94,12 +101,12 @@ ft_map3d &ft_map3d::operator=(ft_map3d &&other) noexcept
         this->_width = other._width;
         this->_height = other._height;
         this->_depth = other._depth;
-        this->_error = other._error;
+        this->set_error(other._error);
         other._data = ft_nullptr;
         other._width = 0;
         other._height = 0;
         other._depth = 0;
-        other._error = ER_SUCCESS;
+        other.set_error(ER_SUCCESS);
     }
     return (*this);
 }
@@ -108,6 +115,8 @@ void ft_map3d::resize(size_t width, size_t height, size_t depth, int value)
 {
     this->deallocate();
     this->allocate(width, height, depth, value);
+    if (this->_error == ER_SUCCESS)
+        this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -140,6 +149,7 @@ int ft_map3d::get(size_t x, size_t y, size_t z) const
         const_cast<ft_map3d*>(this)->set_error(MAP3D_OUT_OF_BOUNDS);
         return (0);
     }
+    const_cast<ft_map3d*>(this)->set_error(ER_SUCCESS);
     return (this->_data[z][y][x]);
 }
 
@@ -151,13 +161,18 @@ void ft_map3d::set(size_t x, size_t y, size_t z, int value)
         return ;
     }
     this->_data[z][y][x] = value;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 int ft_map3d::is_obstacle(size_t x, size_t y, size_t z) const
 {
-    if (this->get(x, y, z) != 0)
+    int value = this->get(x, y, z);
+    if (this->_error != ER_SUCCESS)
+        return (0);
+    if (value != 0)
         return (1);
+    this->set_error(ER_SUCCESS);
     return (0);
 }
 
@@ -174,27 +189,31 @@ void ft_map3d::toggle_obstacle(size_t x, size_t y, size_t z, ft_pathfinding *lis
         this->_data[z][y][x] = 0;
     if (listener)
         listener->update_obstacle(x, y, z, this->_data[z][y][x]);
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 size_t ft_map3d::get_width() const
 {
+    const_cast<ft_map3d*>(this)->set_error(ER_SUCCESS);
     return (this->_width);
 }
 
 size_t ft_map3d::get_height() const
 {
+    const_cast<ft_map3d*>(this)->set_error(ER_SUCCESS);
     return (this->_height);
 }
 
 size_t ft_map3d::get_depth() const
 {
+    const_cast<ft_map3d*>(this)->set_error(ER_SUCCESS);
     return (this->_depth);
 }
 
 void ft_map3d::allocate(size_t width, size_t height, size_t depth, int value)
 {
-    this->_error = ER_SUCCESS;
+    this->set_error(ER_SUCCESS);
     this->_width = width;
     this->_height = height;
     this->_depth = depth;
@@ -251,13 +270,21 @@ void ft_map3d::allocate(size_t width, size_t height, size_t depth, int value)
         }
         ++z;
     }
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 void ft_map3d::deallocate()
 {
     if (!this->_data)
+    {
+        this->_width = 0;
+        this->_height = 0;
+        this->_depth = 0;
+        if (this->_error == ER_SUCCESS)
+            this->set_error(ER_SUCCESS);
         return ;
+    }
     size_t z = 0;
     while (z < this->_depth)
     {
@@ -275,6 +302,7 @@ void ft_map3d::deallocate()
     this->_width = 0;
     this->_height = 0;
     this->_depth = 0;
-    this->_error = ER_SUCCESS;
+    if (this->_error == ER_SUCCESS)
+        this->set_error(ER_SUCCESS);
     return ;
 }
