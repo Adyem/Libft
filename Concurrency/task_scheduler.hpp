@@ -112,6 +112,7 @@ ft_lock_free_queue<ElementType>::ft_lock_free_queue()
     dummy->_next.store(ft_nullptr);
     this->_head.store(dummy);
     this->_tail.store(dummy);
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -173,6 +174,7 @@ void ft_lock_free_queue<ElementType>::push(ElementType &&value)
             this->_tail.compare_exchange_weak(tail_node, next_node);
         }
     }
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -189,7 +191,10 @@ bool ft_lock_free_queue<ElementType>::pop(ElementType &result)
         tail_node = this->_tail.load(std::memory_order_acquire);
         next_node = head_node->_next.load(std::memory_order_acquire);
         if (next_node == ft_nullptr)
+        {
+            this->set_error(QUEUE_EMPTY);
             return (false);
+        }
         if (head_node == tail_node)
         {
             this->_tail.compare_exchange_weak(tail_node, next_node);
@@ -199,6 +204,7 @@ bool ft_lock_free_queue<ElementType>::pop(ElementType &result)
         {
             result = ft_move(next_node->_value);
             delete head_node;
+            this->set_error(ER_SUCCESS);
             return (true);
         }
     }
@@ -245,6 +251,13 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
         return ;
     };
     this->_queue.push(ft_move(wrapper));
+    if (this->_queue.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_queue.get_error());
+        (*task_pointer)();
+        return (ft_move(future_value));
+    }
+    this->set_error(ER_SUCCESS);
     return (ft_move(future_value));
 }
 
@@ -281,6 +294,7 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
         std::lock_guard<std::mutex> lock(this->_scheduled_mutex);
         this->_scheduled.push_back(task_entry);
     }
+    this->set_error(ER_SUCCESS);
     return (ft_move(future_value));
 }
 
@@ -301,6 +315,7 @@ void ft_task_scheduler::schedule_every(std::chrono::duration<Rep, Period> interv
         std::lock_guard<std::mutex> lock(this->_scheduled_mutex);
         this->_scheduled.push_back(task_entry);
     }
+    this->set_error(ER_SUCCESS);
     return ;
 }
 

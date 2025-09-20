@@ -4,11 +4,24 @@
 ft_logger *g_logger = ft_nullptr;
 
 ft_logger::ft_logger(const char *path, size_t max_size, t_log_level level) noexcept
-    : _alloc_logging(false), _api_logging(false)
+    : _alloc_logging(false), _api_logging(false), _error_code(ER_SUCCESS)
 {
+    this->set_error(ER_SUCCESS);
     ft_log_set_level(level);
     if (path)
-        ft_log_set_file(path, max_size);
+    {
+        if (ft_log_set_file(path, max_size) != 0)
+        {
+            int error_code;
+
+            error_code = ft_errno;
+            if (error_code == ER_SUCCESS)
+                error_code = FT_EINVAL;
+            this->set_error(error_code);
+            return ;
+        }
+    }
+    return ;
 }
 
 ft_logger::~ft_logger() noexcept
@@ -16,121 +29,262 @@ ft_logger::~ft_logger() noexcept
     ft_log_close();
     if (g_logger == this)
         g_logger = ft_nullptr;
+    this->set_error(ft_errno);
+    return ;
 }
 
 void ft_logger::set_global() noexcept
 {
     g_logger = this;
+    this->set_error(ER_SUCCESS);
+    return ;
 }
 
 void ft_logger::set_level(t_log_level level) noexcept
 {
     ft_log_set_level(level);
+    this->set_error(ER_SUCCESS);
+    return ;
 }
 
 int ft_logger::set_file(const char *path, size_t max_size) noexcept
 {
-    return (ft_log_set_file(path, max_size));
+    int result;
+
+    result = ft_log_set_file(path, max_size);
+    if (result != 0)
+    {
+        int error_code;
+
+        error_code = ft_errno;
+        if (error_code == ER_SUCCESS)
+            error_code = FT_EINVAL;
+        this->set_error(error_code);
+        return (-1);
+    }
+    this->set_error(ER_SUCCESS);
+    return (0);
 }
 
 int ft_logger::add_sink(t_log_sink sink, void *user_data) noexcept
 {
-    return (ft_log_add_sink(sink, user_data));
+    int result;
+
+    result = ft_log_add_sink(sink, user_data);
+    if (result != 0)
+    {
+        int error_code;
+
+        error_code = ft_errno;
+        if (error_code == ER_SUCCESS)
+            error_code = FT_EINVAL;
+        this->set_error(error_code);
+        return (-1);
+    }
+    this->set_error(ER_SUCCESS);
+    return (0);
 }
 
 void ft_logger::remove_sink(t_log_sink sink, void *user_data) noexcept
 {
     ft_log_remove_sink(sink, user_data);
+    this->set_error(ft_errno);
     return ;
 }
 
 void ft_logger::set_alloc_logging(bool enable) noexcept
 {
     this->_alloc_logging = enable;
+    this->set_error(ER_SUCCESS);
+    return ;
 }
 
 bool ft_logger::get_alloc_logging() const noexcept
 {
+    const_cast<ft_logger *>(this)->set_error(ER_SUCCESS);
     return (this->_alloc_logging);
 }
 
 void ft_logger::set_api_logging(bool enable) noexcept
 {
     this->_api_logging = enable;
+    this->set_error(ER_SUCCESS);
+    return ;
 }
 
 bool ft_logger::get_api_logging() const noexcept
 {
+    const_cast<ft_logger *>(this)->set_error(ER_SUCCESS);
     return (this->_api_logging);
 }
 
 void ft_logger::set_color(bool enable) noexcept
 {
     ft_log_set_color(enable);
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 bool ft_logger::get_color() const noexcept
 {
-    return (ft_log_get_color());
+    bool color_enabled;
+
+    color_enabled = ft_log_get_color();
+    const_cast<ft_logger *>(this)->set_error(ER_SUCCESS);
+    return (color_enabled);
 }
 
 void ft_logger::close() noexcept
 {
     ft_log_close();
+    this->set_error(ft_errno);
+    return ;
 }
 
 int ft_logger::set_syslog(const char *identifier) noexcept
 {
-    return (ft_log_set_syslog(identifier));
+    int result;
+
+    result = ft_log_set_syslog(identifier);
+    if (result != 0)
+    {
+        int error_code;
+
+        error_code = ft_errno;
+        if (error_code == ER_SUCCESS)
+            error_code = FT_EINVAL;
+        this->set_error(error_code);
+        return (-1);
+    }
+    this->set_error(ER_SUCCESS);
+    return (0);
 }
 
 int ft_logger::set_remote_sink(const char *host, unsigned short port,
                                bool use_tcp) noexcept
 {
-    return (ft_log_set_remote_sink(host, port, use_tcp));
+    int result;
+
+    result = ft_log_set_remote_sink(host, port, use_tcp);
+    if (result != 0)
+    {
+        int error_code;
+
+        error_code = ft_errno;
+        if (error_code == ER_SUCCESS)
+            error_code = FT_EINVAL;
+        this->set_error(error_code);
+        return (-1);
+    }
+    this->set_error(ER_SUCCESS);
+    return (0);
+}
+
+int ft_logger::get_error() const noexcept
+{
+    return (this->_error_code);
+}
+
+const char *ft_logger::get_error_str() const noexcept
+{
+    return (ft_strerror(this->_error_code));
 }
 
 void ft_logger::debug(const char *fmt, ...) noexcept
 {
     va_list args;
+
+    if (!fmt)
+    {
+        this->set_error(FT_EINVAL);
+        return ;
+    }
+    ft_errno = ER_SUCCESS;
     va_start(args, fmt);
     if (g_async_running)
         ft_log_enqueue(LOG_LEVEL_DEBUG, fmt, args);
     else
         ft_log_vwrite(LOG_LEVEL_DEBUG, fmt, args);
     va_end(args);
+    if (ft_errno != ER_SUCCESS)
+        this->set_error(ft_errno);
+    else
+        this->set_error(ER_SUCCESS);
+    return ;
 }
 
 void ft_logger::info(const char *fmt, ...) noexcept
 {
     va_list args;
+
+    if (!fmt)
+    {
+        this->set_error(FT_EINVAL);
+        return ;
+    }
+    ft_errno = ER_SUCCESS;
     va_start(args, fmt);
     if (g_async_running)
         ft_log_enqueue(LOG_LEVEL_INFO, fmt, args);
     else
         ft_log_vwrite(LOG_LEVEL_INFO, fmt, args);
     va_end(args);
+    if (ft_errno != ER_SUCCESS)
+        this->set_error(ft_errno);
+    else
+        this->set_error(ER_SUCCESS);
+    return ;
 }
 
 void ft_logger::warn(const char *fmt, ...) noexcept
 {
     va_list args;
+
+    if (!fmt)
+    {
+        this->set_error(FT_EINVAL);
+        return ;
+    }
+    ft_errno = ER_SUCCESS;
     va_start(args, fmt);
     if (g_async_running)
         ft_log_enqueue(LOG_LEVEL_WARN, fmt, args);
     else
         ft_log_vwrite(LOG_LEVEL_WARN, fmt, args);
     va_end(args);
+    if (ft_errno != ER_SUCCESS)
+        this->set_error(ft_errno);
+    else
+        this->set_error(ER_SUCCESS);
+    return ;
 }
 
 void ft_logger::error(const char *fmt, ...) noexcept
 {
     va_list args;
+
+    if (!fmt)
+    {
+        this->set_error(FT_EINVAL);
+        return ;
+    }
+    ft_errno = ER_SUCCESS;
     va_start(args, fmt);
     if (g_async_running)
         ft_log_enqueue(LOG_LEVEL_ERROR, fmt, args);
     else
         ft_log_vwrite(LOG_LEVEL_ERROR, fmt, args);
     va_end(args);
+    if (ft_errno != ER_SUCCESS)
+        this->set_error(ft_errno);
+    else
+        this->set_error(ER_SUCCESS);
+    return ;
+}
+
+void ft_logger::set_error(int error_code) const noexcept
+{
+    this->_error_code = error_code;
+    ft_errno = error_code;
+    return ;
 }

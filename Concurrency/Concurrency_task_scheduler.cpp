@@ -8,6 +8,8 @@ ft_task_scheduler::ft_task_scheduler(size_t thread_count)
 
     if (thread_count == 0)
         thread_count = std::thread::hardware_concurrency();
+    if (thread_count == 0)
+        thread_count = 1;
     index = 0;
     while (index < thread_count)
     {
@@ -15,6 +17,7 @@ ft_task_scheduler::ft_task_scheduler(size_t thread_count)
         index++;
     }
     this->_timer_thread = std::thread(&ft_task_scheduler::timer_loop, this);
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -32,6 +35,7 @@ ft_task_scheduler::~ft_task_scheduler()
     }
     if (this->_timer_thread.joinable())
         this->_timer_thread.join();
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -49,9 +53,15 @@ void ft_task_scheduler::worker_loop()
         std::function<void()> task;
 
         if (this->_queue.pop(task))
+        {
+            this->set_error(ER_SUCCESS);
             task();
+        }
         else
+        {
+            this->set_error(this->_queue.get_error());
             ft_this_thread_sleep_for(std::chrono::milliseconds(1));
+        }
     }
     return ;
 }
@@ -73,8 +83,19 @@ void ft_task_scheduler::timer_loop()
                 if (this->_scheduled[index]._function)
                 {
                     std::function<void()> function_copy;
+                    std::function<void()> queue_function;
+
                     function_copy = this->_scheduled[index]._function;
-                    this->_queue.push(ft_move(function_copy));
+                    queue_function = function_copy;
+                    this->_queue.push(ft_move(queue_function));
+                    if (this->_queue.get_error() != ER_SUCCESS)
+                    {
+                        this->set_error(this->_queue.get_error());
+                        if (function_copy)
+                            function_copy();
+                    }
+                    else
+                        this->set_error(ER_SUCCESS);
                 }
                 if (this->_scheduled[index]._interval.count() > 0)
                 {

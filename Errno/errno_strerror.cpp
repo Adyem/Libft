@@ -194,6 +194,10 @@ const char* ft_strerror(int error_code)
         return ("Future memory allocation failed");
     else if (error_code == FUTURE_BROKEN)
         return ("Associated promise was destroyed");
+    else if (error_code == POOL_EMPTY)
+        return ("Object pool has no available entries");
+    else if (error_code == POOL_INVALID_OBJECT)
+        return ("Object pool handle is invalid");
     else if (error_code > ERRNO_OFFSET)
     {
         int standard_errno = error_code - ERRNO_OFFSET;

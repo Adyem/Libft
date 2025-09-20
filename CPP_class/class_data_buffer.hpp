@@ -15,6 +15,9 @@ class DataBuffer
         ft_vector<uint8_t> _buffer;
         size_t _read_pos;
         bool _ok;
+        mutable int _error_code;
+
+        void set_error(int error_code) const noexcept;
 
     public:
         DataBuffer();
@@ -41,6 +44,8 @@ class DataBuffer
 
         DataBuffer& operator<<(size_t len);
         DataBuffer& operator>>(size_t& len);
+        int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 };
 
 template<typename T>
@@ -52,11 +57,16 @@ DataBuffer& DataBuffer::operator<<(const T& value)
     if (!bytes)
     {
         this->_ok = false;
-        ft_errno = CMA_BAD_ALLOC;
+        this->set_error(CMA_BAD_ALLOC);
         return (*this);
     }
     size_t len = ft_strlen_size_t(bytes);
     *this << len;
+    if (!this->_ok)
+    {
+        cma_free(bytes);
+        return (*this);
+    }
     size_t index = 0;
     while (index < len)
     {
@@ -64,12 +74,15 @@ DataBuffer& DataBuffer::operator<<(const T& value)
         if (this->_buffer.get_error() != ER_SUCCESS)
         {
             this->_ok = false;
+            this->set_error(this->_buffer.get_error());
             cma_free(bytes);
             return (*this);
         }
         ++index;
     }
     cma_free(bytes);
+    this->_ok = true;
+    this->set_error(ER_SUCCESS);
     return (*this);
 }
 
@@ -78,16 +91,19 @@ DataBuffer& DataBuffer::operator>>(T& value)
 {
     size_t len;
     *this >> len;
+    if (!this->_ok)
+        return (*this);
     if (!this->_ok || this->_read_pos + len > this->_buffer.size())
     {
         this->_ok = false;
+        this->set_error(FT_EINVAL);
         return (*this);
     }
     char *bytes = static_cast<char*>(cma_calloc(len + 1, sizeof(char)));
     if (!bytes)
     {
         this->_ok = false;
-        ft_errno = CMA_BAD_ALLOC;
+        this->set_error(CMA_BAD_ALLOC);
         return (*this);
     }
     ft_memcpy(bytes, this->_buffer.begin() + this->_read_pos, len);
@@ -95,6 +111,10 @@ DataBuffer& DataBuffer::operator>>(T& value)
     iss >> value;
     cma_free(bytes);
     this->_ok = (iss.get_error() == ER_SUCCESS);
+    if (this->_ok)
+        this->set_error(ER_SUCCESS);
+    else
+        this->set_error(iss.get_error());
     this->_read_pos += len;
     return (*this);
 }

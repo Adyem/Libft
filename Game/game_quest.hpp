@@ -5,6 +5,7 @@
 #include "../Template/vector.hpp"
 #include "game_item.hpp"
 #include "../Template/shared_ptr.hpp"
+#include "../Errno/errno.hpp"
 
 class ft_quest
 {
@@ -16,6 +17,9 @@ class ft_quest
         ft_string _objective;
         int _reward_experience;
         ft_vector<ft_sharedptr<ft_item> > _reward_items;
+        mutable int _error;
+
+        void set_error(int err) const noexcept;
 
     public:
         ft_quest() noexcept;
@@ -49,6 +53,9 @@ class ft_quest
 
         bool is_complete() const noexcept;
         void advance_phase() noexcept;
+
+        int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 };
 
 #endif

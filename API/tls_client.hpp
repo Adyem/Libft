@@ -4,6 +4,7 @@
 #include "../JSon/json.hpp"
 #include "../CPP_class/class_string_class.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
 #include <openssl/ssl.h>
 #include <cstdint>
 
@@ -17,6 +18,9 @@ class api_tls_client
         int _sock;
         ft_string _host;
         int _timeout;
+        mutable int _error_code;
+
+        void set_error(int error_code) const noexcept;
 
     public:
         api_tls_client(const char *host, uint16_t port, int timeout = 60000);
@@ -35,6 +39,9 @@ class api_tls_client
                            const char *headers = ft_nullptr,
                            api_callback callback = ft_nullptr,
                            void *user_data = ft_nullptr);
+
+        int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 };
 
 #endif
