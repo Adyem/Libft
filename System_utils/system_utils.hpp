@@ -21,6 +21,7 @@ int     su_open(const char *path_name, int flags);
 int     su_open(const char *path_name, int flags, mode_t mode);
 ssize_t su_read(int file_descriptor, void *buffer, size_t count);
 ssize_t su_write(int file_descriptor, const void *buffer, size_t count);
+int     su_close(int file_descriptor);
 unsigned int    su_get_cpu_count(void);
 unsigned long long su_get_total_memory(void);
 void    su_abort(void);
