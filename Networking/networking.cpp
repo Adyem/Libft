@@ -10,7 +10,8 @@
 #endif
 
 SocketConfig::SocketConfig()
-    : _type(SocketType::SERVER),
+    : _error_code(ER_SUCCESS),
+      _type(SocketType::SERVER),
       _ip("127.0.0.1"),
       _port(8080),
       _backlog(10),
@@ -23,17 +24,18 @@ SocketConfig::SocketConfig()
       _multicast_group(""),
       _multicast_interface("")
 {
-    if (!_error && _ip.get_error())
-        _error = _ip.get_error();
-    if (!_error && _multicast_group.get_error())
-        _error = _multicast_group.get_error();
-    if (!_error && _multicast_interface.get_error())
-        _error = _multicast_interface.get_error();
+    this->set_error(ER_SUCCESS);
+    if (this->_error_code == ER_SUCCESS && _ip.get_error())
+        this->set_error(_ip.get_error());
+    if (this->_error_code == ER_SUCCESS && _multicast_group.get_error())
+        this->set_error(_multicast_group.get_error());
+    if (this->_error_code == ER_SUCCESS && _multicast_interface.get_error())
+        this->set_error(_multicast_interface.get_error());
     return ;
 }
 
 SocketConfig::SocketConfig(const SocketConfig& other) noexcept
-    : _error(other._error),
+    : _error_code(other._error_code),
       _type(other._type),
       _ip(other._ip),
       _port(other._port),
@@ -47,12 +49,13 @@ SocketConfig::SocketConfig(const SocketConfig& other) noexcept
       _multicast_group(other._multicast_group),
       _multicast_interface(other._multicast_interface)
 {
-    if (!_error && _ip.get_error())
-        _error = _ip.get_error();
-    if (!_error && _multicast_group.get_error())
-        _error = _multicast_group.get_error();
-    if (!_error && _multicast_interface.get_error())
-        _error = _multicast_interface.get_error();
+    this->set_error(other._error_code);
+    if (this->_error_code == ER_SUCCESS && _ip.get_error())
+        this->set_error(_ip.get_error());
+    if (this->_error_code == ER_SUCCESS && _multicast_group.get_error())
+        this->set_error(_multicast_group.get_error());
+    if (this->_error_code == ER_SUCCESS && _multicast_interface.get_error())
+        this->set_error(_multicast_interface.get_error());
     return ;
 }
 
@@ -60,7 +63,7 @@ SocketConfig& SocketConfig::operator=(const SocketConfig& other) noexcept
 {
     if (this != &other)
     {
-        _error = other._error;
+        this->set_error(other._error_code);
         _type = other._type;
         _ip = other._ip;
         _port = other._port;
@@ -74,17 +77,17 @@ SocketConfig& SocketConfig::operator=(const SocketConfig& other) noexcept
         _multicast_group = other._multicast_group;
         _multicast_interface = other._multicast_interface;
     }
-    if (!_error && _ip.get_error())
-        _error = _ip.get_error();
-    if (!_error && _multicast_group.get_error())
-        _error = _multicast_group.get_error();
-    if (!_error && _multicast_interface.get_error())
-        _error = _multicast_interface.get_error();
+    if (this->_error_code == ER_SUCCESS && _ip.get_error())
+        this->set_error(_ip.get_error());
+    if (this->_error_code == ER_SUCCESS && _multicast_group.get_error())
+        this->set_error(_multicast_group.get_error());
+    if (this->_error_code == ER_SUCCESS && _multicast_interface.get_error())
+        this->set_error(_multicast_interface.get_error());
     return (*this);
 }
 
 SocketConfig::SocketConfig(SocketConfig&& other) noexcept
-    : _error(other._error),
+    : _error_code(other._error_code),
       _type(other._type),
       _ip(other._ip),
       _port(other._port),
@@ -98,7 +101,7 @@ SocketConfig::SocketConfig(SocketConfig&& other) noexcept
       _multicast_group(other._multicast_group),
       _multicast_interface(other._multicast_interface)
 {
-    other._error = 0;
+    other.set_error(ER_SUCCESS);
     other._type = SocketType::CLIENT;
     other._port = 0;
     other._backlog = 0;
@@ -110,12 +113,12 @@ SocketConfig::SocketConfig(SocketConfig&& other) noexcept
     other._send_timeout = 0;
     other._multicast_group.clear();
     other._multicast_interface.clear();
-    if (!_error && _ip.get_error())
-        _error = _ip.get_error();
-    if (!_error && _multicast_group.get_error())
-        _error = _multicast_group.get_error();
-    if (!_error && _multicast_interface.get_error())
-        _error = _multicast_interface.get_error();
+    if (this->_error_code == ER_SUCCESS && _ip.get_error())
+        this->set_error(_ip.get_error());
+    if (this->_error_code == ER_SUCCESS && _multicast_group.get_error())
+        this->set_error(_multicast_group.get_error());
+    if (this->_error_code == ER_SUCCESS && _multicast_interface.get_error())
+        this->set_error(_multicast_interface.get_error());
     return ;
 }
 
@@ -123,7 +126,7 @@ SocketConfig& SocketConfig::operator=(SocketConfig&& other) noexcept
 {
     if (this != &other)
     {
-        _error = other._error;
+        this->set_error(other._error_code);
         _type = other._type;
         other._ip = this->_ip;
         _port = other._port;
@@ -136,7 +139,6 @@ SocketConfig& SocketConfig::operator=(SocketConfig&& other) noexcept
         _send_timeout = other._send_timeout;
         other._multicast_group = this->_multicast_group;
         other._multicast_interface = this->_multicast_interface;
-        other._error = 0;
         other._type = SocketType::CLIENT;
         other._port = 0;
         other._backlog = 0;
@@ -148,13 +150,14 @@ SocketConfig& SocketConfig::operator=(SocketConfig&& other) noexcept
         other._send_timeout = 0;
         other._multicast_group.clear();
         other._multicast_interface.clear();
+        other.set_error(ER_SUCCESS);
     }
-    if (!_error && _ip.get_error())
-        _error = _ip.get_error();
-    if (!_error && _multicast_group.get_error())
-        _error = _multicast_group.get_error();
-    if (!_error && _multicast_interface.get_error())
-        _error = _multicast_interface.get_error();
+    if (this->_error_code == ER_SUCCESS && _ip.get_error())
+        this->set_error(_ip.get_error());
+    if (this->_error_code == ER_SUCCESS && _multicast_group.get_error())
+        this->set_error(_multicast_group.get_error());
+    if (this->_error_code == ER_SUCCESS && _multicast_interface.get_error())
+        this->set_error(_multicast_interface.get_error());
     return (*this);
 }
 
@@ -165,10 +168,17 @@ SocketConfig::~SocketConfig()
 
 int SocketConfig::get_error()
 {
-    return (_error);
+    return (this->_error_code);
 }
 
 const char *SocketConfig::get_error_str()
 {
-    return (ft_strerror(_error));
+    return (ft_strerror(this->_error_code));
+}
+
+void SocketConfig::set_error(int error_code) noexcept
+{
+    ft_errno = error_code;
+    this->_error_code = ft_errno;
+    return ;
 }

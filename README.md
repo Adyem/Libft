@@ -46,20 +46,27 @@ The current suite exercises components across multiple modules:
   `ft_memcmp`, `ft_memcpy`, `ft_memdup`, `ft_memmove`, `ft_memset`, `ft_strchr`, `ft_strcmp`, `ft_strjoin_multiple`, `ft_strlcat`, `ft_strlcpy`, `ft_strncpy`, `ft_strlen`, `ft_strncmp`,
   `ft_strnstr`, `ft_strstr`, `ft_strrchr`, `ft_strmapi`, `ft_striteri`, `ft_strtok`, `ft_strtol`, `ft_strtoul`, `ft_setenv`, `ft_unsetenv`, `ft_getenv`, `ft_to_lower`, `ft_to_upper`,
 `ft_fopen`, `ft_fclose`, `ft_fgets`, `ft_time_ms`, `ft_time_format`, `ft_to_string`
-- **Concurrency**: `ft_promise`, `ft_task_scheduler`, `ft_this_thread`
+- **Concurrency**: `ft_promise`, `ft_task_scheduler`, `ft_this_thread`, with the scheduler clearing success paths and surfacing queue allocation or empty-pop failures through its `_error_code` mirror.
 - **Networking**: IPv4 and IPv6 send/receive paths, UDP datagrams, and a simple HTTP server
-- **Logger**: color toggling, JSON sink, asynchronous logging
+- **Logger**: color toggling, JSON sink, asynchronous logging, and the `ft_logger` façade propagates sink, file, syslog, and remote target failures through its `_error_code` mirror so configuration helpers always synchronize `ft_errno`.
 - **Math**: vector, matrix, and quaternion helpers plus expression evaluation via `math_roll` (arithmetic, unary negatives, precedence, dice, lengthy expressions, and error handling)
 - **RNG**: normal, exponential, Poisson, binomial, and geometric distributions
 - **String**: `ft_string_view`
-- **CPP_class**: `ft_big_number` assignment, arithmetic, comparisons, and error handling
+- **CPP_class**: `ft_big_number` assignment, arithmetic, comparisons, error handling, and the `DataBuffer` utility now propagates allocator and stream failures through `_error_code` while clearing successful reads and writes.
+- **Template**: Iterators, pools, and object handles surface invalid dereferences, pool exhaustion, and container failures through `_error_code` so range helpers and pooled resources synchronize `ft_errno` after every operation.
 - **JSon**: schema validation
+- **HTML**: the `html_document` helper validates node, attribute, and selector inputs, mirrors allocation and serialization failures into `_error_code`, and clears successes before returning so DOM operations leave `ft_errno` authoritative.
+- **API**: TLS clients and promise adapters validate inputs, propagate socket, allocation, and JSON parsing failures through `_error_code`, and clear success paths so synchronous and asynchronous requests leave `ft_errno` authoritative.
 - **YAML**: round-trip parsing
 - **Game**: `ft_game_state` centralizes worlds and character data with vectors of shared pointers for RAII cleanup, `ft_world` persistence and a shared-pointer-based `ft_event_scheduler` for timed actions via `ft_world::schedule_event` and `ft_world::update_events`, `ft_equipment`, `ft_inventory`, and `ft_quest` store items through shared pointers, `ft_crafting` consumes and produces shared items, `ft_world::plan_route`, `ft_pathfinding`, and copy/move constructors across game classes
 - The combat system introduces `FT_DAMAGE_RULE_MAGIC_SHIELD`, which treats magic armor as a shield. Armor-based reduction is applied only to the damage that reaches health after the shield is exhausted and uses the `FT_PHYSICAL_DAMAGE_REDUCTION` and `FT_MAGIC_DAMAGE_REDUCTION` macros.
 - Shared pointers expose their own `get_error` while managed objects may define their own; call `shared_ptr.get_error()` for allocation issues and `shared_ptr->get_error()` for object-specific errors.
 - Game classes validate both the shared pointer and its managed object for errors before use so failures surface consistently.
 - `ft_item` tracks its own error code so equipment, inventory, and crafting verify both the item pointer and the item itself before applying modifiers or stacking quantities.
+- Buffs, debuffs, upgrades, events, and quests expose explicit `get_error` / `get_error_str` helpers, clear their state on success through their setters, and translate invalid inputs or container failures into `ft_errno` updates so callers can detect misconfiguration without stale success paths leaving the errno mirror untouched.
+- Inventory, experience tables, map grids, reputations, skills, achievements, and world orchestration share the same error-clearing discipline, validating identifiers and container mutations before synchronizing `ft_errno` so downstream systems see authoritative status codes after each operation.
+- JSON document helpers validate group and item mutations before committing them, surface parser and allocation failures through `_error_code`, and clear successful read/write operations so file serialization keeps `ft_errno` synchronized with the latest result.
+- The `time_timer` utility now tracks `_error_code` as it starts, updates, and adjusts running timers, rejecting negative durations or paused states and mirroring the resulting status codes to `ft_errno` for callers.
 - **Encryption**: key generation utilities
 
 Additional cases verify whitespace parsing, overlapping ranges, truncating copies, partial zeroing, empty needles,
@@ -691,6 +698,11 @@ namespace ft {
 
 `Networking/networking.hpp` and `socket_class.hpp` implement a small
 socket wrapper with IPv4 and IPv6 support.
+
+`SocketConfig`, `ft_socket`, and `udp_socket` each maintain a mutable
+`_error_code` and a private `set_error` helper so every configuration,
+connection, or datagram operation clears successes and forwards system
+errors through `ft_errno`.
 
 The accompanying tests exercise basic send and receive paths and invalid
 configurations for both address families in `Test/test_networking.cpp`.

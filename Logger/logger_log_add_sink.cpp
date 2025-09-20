@@ -5,13 +5,20 @@
 int ft_log_add_sink(t_log_sink sink, void *user_data)
 {
     if (!sink)
+    {
+        ft_errno = FT_EINVAL;
         return (-1);
+    }
     s_log_sink entry;
     entry.function = sink;
     entry.user_data = user_data;
     g_sinks.push_back(entry);
     if (g_sinks.get_error() != ER_SUCCESS)
+    {
+        ft_errno = g_sinks.get_error();
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 

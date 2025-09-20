@@ -5,6 +5,12 @@
 
 class json_document
 {
+    private:
+        json_group *_groups;
+        mutable int _error_code;
+
+        void set_error(int error_code) const noexcept;
+
     public:
         json_document() noexcept;
         ~json_document() noexcept;
@@ -29,9 +35,8 @@ class json_document
         void         update_item(json_group *group, const char *key, const bool value) noexcept;
         void         update_item(json_group *group, const char *key, const ft_big_number &value) noexcept;
         void         clear() noexcept;
-
-    private:
-        json_group *_groups;
+        int          get_error() const noexcept;
+        const char   *get_error_str() const noexcept;
 };
 
 #endif

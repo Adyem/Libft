@@ -5,6 +5,12 @@
 
 class html_document
 {
+    private:
+        html_node *_root;
+        mutable int _error_code;
+
+        void set_error(int error_code) const noexcept;
+
     public:
         html_document() noexcept;
         ~html_document() noexcept;
@@ -25,10 +31,10 @@ class html_document
         html_node   *find_by_text(const char *text_content) const noexcept;
         html_node   *find_by_selector(const char *selector) const noexcept;
         size_t      count_nodes_by_tag(const char *tag_name) const noexcept;
+        html_node   *get_root() const noexcept;
+        int         get_error() const noexcept;
+        const char  *get_error_str() const noexcept;
         void        clear() noexcept;
-
-    private:
-        html_node *_root;
 };
 
 #endif

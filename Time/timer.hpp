@@ -9,15 +9,20 @@ class time_timer
         long    _duration_ms = 0;
         std::chrono::steady_clock::time_point _start_time = std::chrono::steady_clock::time_point();
         bool    _running = false;
+        mutable int _error_code;
+
+        void    set_error(int error_code) const noexcept;
 
     public:
-        time_timer();
-        ~time_timer();
-        void    start(long duration_ms);
-        long    update();
-        long    add_time(long amount_ms);
-        long    remove_time(long amount_ms);
-        void    sleep_remaining();
+        time_timer() noexcept;
+        ~time_timer() noexcept;
+        void    start(long duration_ms) noexcept;
+        long    update() noexcept;
+        long    add_time(long amount_ms) noexcept;
+        long    remove_time(long amount_ms) noexcept;
+        void    sleep_remaining() noexcept;
+        int     get_error() const noexcept;
+        const char  *get_error_str() const noexcept;
 };
 
 #endif

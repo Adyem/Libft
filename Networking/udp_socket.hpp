@@ -23,11 +23,11 @@ class udp_socket
         int     configure_address(const SocketConfig &config);
         int     bind_socket(const SocketConfig &config);
         int     connect_socket(const SocketConfig &config);
-        void    handle_error(int error_code);
+        void    set_error(int error_code) const noexcept;
 
         struct sockaddr_storage _address;
         int     _socket_fd;
-        int     _error;
+        mutable int _error_code;
 
     public:
         udp_socket();

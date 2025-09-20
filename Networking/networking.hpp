@@ -57,7 +57,8 @@ enum class SocketType
 class SocketConfig
 {
     private:
-        int _error;
+        mutable int _error_code;
+        void set_error(int error_code) noexcept;
 
     public:
         SocketType _type;

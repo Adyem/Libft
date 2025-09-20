@@ -38,9 +38,16 @@ ft_world::ft_world() noexcept
     : _event_scheduler(new ft_event_scheduler()), _error(ER_SUCCESS)
 {
     if (this->_event_scheduler.get_error() != ER_SUCCESS)
+    {
         this->set_error(this->_event_scheduler.get_error());
+        return ;
+    }
     if (this->_event_scheduler->get_error() != ER_SUCCESS)
+    {
         this->set_error(this->_event_scheduler->get_error());
+        return ;
+    }
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -48,9 +55,16 @@ ft_world::ft_world(const ft_world &other) noexcept
     : _event_scheduler(other._event_scheduler), _error(other._error)
 {
     if (this->_event_scheduler.get_error() != ER_SUCCESS)
+    {
         this->set_error(this->_event_scheduler.get_error());
+        return ;
+    }
     if (this->_event_scheduler->get_error() != ER_SUCCESS)
+    {
         this->set_error(this->_event_scheduler->get_error());
+        return ;
+    }
+    this->set_error(other._error);
     return ;
 }
 
@@ -59,11 +73,17 @@ ft_world &ft_world::operator=(const ft_world &other) noexcept
     if (this != &other)
     {
         this->_event_scheduler = other._event_scheduler;
-        this->_error = other._error;
         if (this->_event_scheduler.get_error() != ER_SUCCESS)
+        {
             this->set_error(this->_event_scheduler.get_error());
+            return (*this);
+        }
         if (this->_event_scheduler->get_error() != ER_SUCCESS)
+        {
             this->set_error(this->_event_scheduler->get_error());
+            return (*this);
+        }
+        this->set_error(other._error);
     }
     return (*this);
 }
@@ -72,10 +92,17 @@ ft_world::ft_world(ft_world &&other) noexcept
     : _event_scheduler(ft_move(other._event_scheduler)), _error(other._error)
 {
     if (this->_event_scheduler.get_error() != ER_SUCCESS)
+    {
         this->set_error(this->_event_scheduler.get_error());
+        return ;
+    }
     if (this->_event_scheduler->get_error() != ER_SUCCESS)
+    {
         this->set_error(this->_event_scheduler->get_error());
-    other._error = ER_SUCCESS;
+        return ;
+    }
+    this->set_error(this->_error);
+    other.set_error(ER_SUCCESS);
     return ;
 }
 
@@ -84,12 +111,18 @@ ft_world &ft_world::operator=(ft_world &&other) noexcept
     if (this != &other)
     {
         this->_event_scheduler = ft_move(other._event_scheduler);
-        this->_error = other._error;
         if (this->_event_scheduler.get_error() != ER_SUCCESS)
+        {
             this->set_error(this->_event_scheduler.get_error());
+            return (*this);
+        }
         if (this->_event_scheduler->get_error() != ER_SUCCESS)
+        {
             this->set_error(this->_event_scheduler->get_error());
-        other._error = ER_SUCCESS;
+            return (*this);
+        }
+        this->set_error(other._error);
+        other.set_error(ER_SUCCESS);
     }
     return (*this);
 }
@@ -113,9 +146,16 @@ void ft_world::schedule_event(const ft_sharedptr<ft_event> &event) noexcept
     }
     this->_event_scheduler->schedule_event(event);
     if (this->_event_scheduler.get_error() != ER_SUCCESS)
+    {
         this->set_error(this->_event_scheduler.get_error());
+        return ;
+    }
     if (this->_event_scheduler->get_error() != ER_SUCCESS)
+    {
         this->set_error(this->_event_scheduler->get_error());
+        return ;
+    }
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -133,19 +173,28 @@ void ft_world::update_events(ft_sharedptr<ft_world> &self, int ticks, const char
     }
     this->_event_scheduler->update_events(self, ticks, log_file_path, log_buffer);
     if (this->_event_scheduler.get_error() != ER_SUCCESS)
+    {
         this->set_error(this->_event_scheduler.get_error());
+        return ;
+    }
     if (this->_event_scheduler->get_error() != ER_SUCCESS)
+    {
         this->set_error(this->_event_scheduler->get_error());
+        return ;
+    }
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 ft_sharedptr<ft_event_scheduler> &ft_world::get_event_scheduler() noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_event_scheduler);
 }
 
 const ft_sharedptr<ft_event_scheduler> &ft_world::get_event_scheduler() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_event_scheduler);
 }
 

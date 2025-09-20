@@ -5,12 +5,18 @@
 int ft_log_set_syslog(const char *identifier)
 {
     if (cmp_syslog_open(identifier) != 0)
+    {
+        ft_errno = FT_EINVAL;
         return (-1);
+    }
     if (ft_log_add_sink(ft_syslog_sink, ft_nullptr) != 0)
     {
         cmp_syslog_close();
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = FT_EINVAL;
         return (-1);
     }
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 
