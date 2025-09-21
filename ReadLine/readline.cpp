@@ -55,21 +55,24 @@ char *rl_readline(const char *prompt)
             break ;
         }
         else if (character == 127 || character == '\b')
-            rl_handle_backspace(&state, prompt);
+        {
+            if (rl_handle_backspace(&state, prompt) == -1)
+                return (rl_error(&state));
+        }
         else if (character == 27)
         {
             if (rl_handle_escape_sequence(&state, prompt) == -1)
-                rl_error(&state);
+                return (rl_error(&state));
         }
         else if (character == '\t')
         {
             if (rl_handle_tab_completion(&state, prompt) == -1)
-                rl_error(&state);
+                return (rl_error(&state));
         }
         else if (character >= 32 && character <= 126)
         {
             if (rl_handle_printable_char(&state, character, prompt) == -1)
-                rl_error(&state);
+                return (rl_error(&state));
         }
     }
     int line_length = ft_strlen(state.buffer);
