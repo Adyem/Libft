@@ -56,6 +56,8 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
     this->_watch = inotify_add_watch(this->_fd, path, IN_CREATE | IN_MODIFY | IN_DELETE);
     if (this->_watch < 0)
     {
+        close(this->_fd);
+        this->_fd = -1;
         this->set_error(FILE_INVALID_FD);
         return (-1);
     }
