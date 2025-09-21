@@ -46,6 +46,8 @@ const char* ft_strerror(int error_code)
         return ("Bad file descriptor");
     else if (error_code == FT_EINVAL)
         return ("Invalid argument");
+    else if (error_code == FT_ERANGE)
+        return ("Result out of range");
     else if (error_code == STRING_MEM_ALLOC_FAIL)
         return ("String memory allocation failed");
     else if (error_code == STRING_ERASE_OUT_OF_BOUNDS)
