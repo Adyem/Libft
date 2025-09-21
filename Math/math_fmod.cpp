@@ -27,23 +27,25 @@ double math_fmod(double value, double modulus)
     double current_multiple;
     double tolerance;
     double result_sign;
+    double zero_tolerance;
 
     if (math_isnan(value) || math_isnan(modulus))
         return (math_nan());
     if (math_is_infinite_internal(value) != 0)
         return (math_nan());
-    if (modulus == 0.0)
+    zero_tolerance = 0.0000000000001;
+    if (math_fabs(modulus) < zero_tolerance)
         return (math_nan());
     if (math_is_infinite_internal(modulus) != 0)
         return (value);
     absolute_value = math_fabs(value);
     absolute_modulus = math_fabs(modulus);
-    if (absolute_modulus == 0.0)
+    if (absolute_modulus < zero_tolerance)
         return (math_nan());
     if (absolute_value < absolute_modulus)
         return (value);
     remainder_value = absolute_value;
-    tolerance = 0.0000000000001;
+    tolerance = zero_tolerance;
     while (remainder_value >= absolute_modulus)
     {
         current_multiple = absolute_modulus;
