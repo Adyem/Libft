@@ -81,6 +81,12 @@ int ft_http_server::run_once()
     bool is_post;
     int parse_error;
     char length_string[32];
+    bool header_complete;
+    bool request_complete;
+    bool has_content_length;
+    size_t expected_body_length;
+    size_t header_length;
+    const size_t max_request_size = 65536;
 
     address_length = sizeof(client_address);
     client_socket = nw_accept(this->_server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&client_address), &address_length);
@@ -89,15 +95,130 @@ int ft_http_server::run_once()
         this->set_error(errno + ERRNO_OFFSET);
         return (1);
     }
-    bytes_received = nw_recv(client_socket, buffer, sizeof(buffer) - 1, 0);
-    if (bytes_received <= 0)
+    header_complete = false;
+    request_complete = false;
+    has_content_length = false;
+    expected_body_length = 0;
+    header_length = 0;
+    while (request_complete == false)
     {
-        FT_CLOSE_SOCKET(client_socket);
-        this->set_error(errno + ERRNO_OFFSET);
-        return (1);
+        bytes_received = nw_recv(client_socket, buffer, sizeof(buffer) - 1, 0);
+        if (bytes_received < 0)
+        {
+            FT_CLOSE_SOCKET(client_socket);
+            this->set_error(errno + ERRNO_OFFSET);
+            return (1);
+        }
+        if (bytes_received == 0)
+        {
+            FT_CLOSE_SOCKET(client_socket);
+            this->set_error(SOCKET_RECEIVE_FAILED);
+            return (1);
+        }
+        buffer[bytes_received] = '\0';
+        request.append(buffer);
+        if (request.size() > max_request_size)
+        {
+            FT_CLOSE_SOCKET(client_socket);
+            this->set_error(FT_EINVAL);
+            return (1);
+        }
+        if (header_complete == false)
+        {
+            const char *full_request;
+            const char *header_end_pointer;
+
+            full_request = request.c_str();
+            header_end_pointer = ft_strstr(full_request, "\r\n\r\n");
+            if (header_end_pointer != ft_nullptr)
+            {
+                const char *content_length_header;
+                const char *content_length_key;
+                size_t content_length_key_length;
+
+                header_end_pointer += 4;
+                header_length = static_cast<size_t>(header_end_pointer - full_request);
+                header_complete = true;
+                content_length_key = "Content-Length:";
+                content_length_key_length = sizeof("Content-Length:") - 1;
+                content_length_header = ft_strnstr(full_request, content_length_key, header_length);
+                if (content_length_header != ft_nullptr)
+                {
+                    const char *length_value_pointer;
+                    bool has_length_digits;
+
+                    length_value_pointer = content_length_header + content_length_key_length;
+                    while (*length_value_pointer != '\0'
+                        && ft_isspace(static_cast<unsigned char>(*length_value_pointer)) != 0)
+                    {
+                        length_value_pointer++;
+                    }
+                    if (*length_value_pointer == '\0'
+                        || ft_isdigit(static_cast<unsigned char>(*length_value_pointer)) == 0)
+                    {
+                        FT_CLOSE_SOCKET(client_socket);
+                        this->set_error(FT_EINVAL);
+                        return (1);
+                    }
+                    has_length_digits = false;
+                    expected_body_length = 0;
+                    while (*length_value_pointer != '\0'
+                        && ft_isdigit(static_cast<unsigned char>(*length_value_pointer)) != 0)
+                    {
+                        size_t digit_value;
+
+                        has_length_digits = true;
+                        digit_value = static_cast<size_t>(*length_value_pointer - '0');
+                        if (expected_body_length > (max_request_size - digit_value) / 10)
+                        {
+                            FT_CLOSE_SOCKET(client_socket);
+                            this->set_error(FT_EINVAL);
+                            return (1);
+                        }
+                        expected_body_length = expected_body_length * 10 + digit_value;
+                        length_value_pointer++;
+                    }
+                    if (has_length_digits == false)
+                    {
+                        FT_CLOSE_SOCKET(client_socket);
+                        this->set_error(FT_EINVAL);
+                        return (1);
+                    }
+                    if (expected_body_length > max_request_size)
+                    {
+                        FT_CLOSE_SOCKET(client_socket);
+                        this->set_error(FT_EINVAL);
+                        return (1);
+                    }
+                    has_content_length = true;
+                }
+            }
+        }
+        if (header_complete != false)
+        {
+            size_t current_body_size;
+
+            if (request.size() >= header_length)
+                current_body_size = request.size() - header_length;
+            else
+                current_body_size = 0;
+            if (has_content_length != false)
+            {
+                if (current_body_size >= expected_body_length)
+                    request_complete = true;
+            }
+            else
+                request_complete = true;
+        }
     }
-    buffer[bytes_received] = '\0';
-    request = buffer;
+    if (has_content_length != false)
+    {
+        size_t total_expected_size;
+
+        total_expected_size = header_length + expected_body_length;
+        if (request.size() > total_expected_size)
+            request.erase(total_expected_size, request.size() - total_expected_size);
+    }
     parse_error = parse_request(request, body, is_post);
     if (parse_error != ER_SUCCESS)
     {

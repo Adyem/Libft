@@ -901,8 +901,11 @@ int main()
 
 `Networking/http_server.hpp` implements a minimal synchronous server that uses
 `ft_socket` for IPv4 and IPv6 support, optional non-blocking operation and
-configurable timeouts. The server accepts a single connection and parses basic
-GET or POST requests.
+configurable timeouts. The server accepts a single connection, buffers data
+until the headers and any declared body are fully received, and enforces a
+64 KiB request limit to guard against oversized payloads. Basic GET or POST
+requests, including POST bodies delivered across multiple TCP receives, are
+parsed and echoed back in the response body.
 
 ```c++
 #include "Networking/http_server.hpp"
