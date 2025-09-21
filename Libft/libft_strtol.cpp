@@ -1,4 +1,6 @@
 #include "libft.hpp"
+#include "limits.hpp"
+#include "../Errno/errno.hpp"
 
 static int ft_digit_value(char character)
 {
@@ -17,7 +19,12 @@ long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
     long sign_value = 1;
     unsigned long accumulated_value = 0;
     int digit_value;
+    bool overflow_detected = false;
+    unsigned long positive_limit;
+    unsigned long negative_limit;
+    unsigned long base_value;
 
+    ft_errno = ER_SUCCESS;
     while (*current_character == ' ' || (*current_character >= '\t'
                 && *current_character <= '\r'))
         ++current_character;
@@ -45,17 +52,48 @@ long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
     else if (numeric_base == 16 && current_character[0] == '0'
              && (current_character[1] == 'x' || current_character[1] == 'X'))
         current_character += 2;
+    base_value = static_cast<unsigned long>(numeric_base);
+    positive_limit = static_cast<unsigned long>(FT_LONG_MAX);
+    negative_limit = positive_limit + 1UL;
     while ((digit_value = ft_digit_value(*current_character)) >= 0
             && digit_value < numeric_base)
     {
-        accumulated_value = accumulated_value * static_cast<unsigned long>(numeric_base)
-                          + static_cast<unsigned long>(digit_value);
+        unsigned long limit_value;
+        unsigned long limit_division;
+        unsigned long limit_remainder;
+        unsigned long digit_as_unsigned;
+
+        digit_as_unsigned = static_cast<unsigned long>(digit_value);
+        limit_value = positive_limit;
+        if (sign_value < 0)
+            limit_value = negative_limit;
+        if (base_value == 0)
+            break;
+        limit_division = limit_value / base_value;
+        limit_remainder = limit_value % base_value;
+        if (accumulated_value > limit_division
+                || (accumulated_value == limit_division
+                    && digit_as_unsigned > limit_remainder))
+        {
+            overflow_detected = true;
+            accumulated_value = limit_value;
+            break;
+        }
+        accumulated_value = accumulated_value * base_value
+                          + digit_as_unsigned;
         ++current_character;
     }
     if (end_pointer)
         *end_pointer = const_cast<char *>(current_character);
-    long result = static_cast<long>(accumulated_value);
+    if (overflow_detected)
+        ft_errno = FT_ERANGE;
     if (sign_value < 0)
+    {
+        if (accumulated_value > positive_limit)
+            return (FT_LONG_MIN);
+        long result = static_cast<long>(accumulated_value);
         return (-result);
+    }
+    long result = static_cast<long>(accumulated_value);
     return (result);
 }

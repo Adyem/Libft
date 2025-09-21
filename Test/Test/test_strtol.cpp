@@ -1,5 +1,7 @@
 #include "../../Libft/libft.hpp"
+#include "../../Libft/limits.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
+#include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 
 FT_TEST(test_strtol_decimal, "ft_strtol decimal with end pointer")
@@ -45,5 +47,45 @@ FT_TEST(test_strtol_invalid, "ft_strtol invalid string")
     char *end;
     FT_ASSERT_EQ(0, ft_strtol("xyz", &end, 10));
     FT_ASSERT_EQ('x', *end);
+    return (1);
+}
+
+FT_TEST(test_strtol_maximum_in_range, "ft_strtol handles FT_LONG_MAX without overflow")
+{
+    char *end;
+    ft_string max_string = ft_to_string(FT_LONG_MAX);
+
+    ft_errno = FT_ERANGE;
+    FT_ASSERT_EQ(FT_LONG_MAX, ft_strtol(max_string.c_str(), &end, 10));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ('\0', *end);
+    return (1);
+}
+
+FT_TEST(test_strtol_positive_overflow, "ft_strtol clamps positive overflow and reports error")
+{
+    char *end;
+    ft_string max_string = ft_to_string(FT_LONG_MAX);
+    ft_string overflow_string = max_string;
+
+    overflow_string.append('9');
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(FT_LONG_MAX, ft_strtol(overflow_string.c_str(), &end, 10));
+    FT_ASSERT_EQ(FT_ERANGE, ft_errno);
+    FT_ASSERT_EQ('9', *end);
+    return (1);
+}
+
+FT_TEST(test_strtol_negative_overflow, "ft_strtol clamps negative overflow and reports error")
+{
+    char *end;
+    ft_string min_string = ft_to_string(FT_LONG_MIN);
+    ft_string underflow_string = min_string;
+
+    underflow_string.append('9');
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(FT_LONG_MIN, ft_strtol(underflow_string.c_str(), &end, 10));
+    FT_ASSERT_EQ(FT_ERANGE, ft_errno);
+    FT_ASSERT_EQ('9', *end);
     return (1);
 }
