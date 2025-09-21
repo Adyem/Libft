@@ -2,6 +2,7 @@
 #include "../../Networking/networking.hpp"
 #include "../../Networking/udp_socket.hpp"
 #include "../../Networking/http_client.hpp"
+#include "../../Compatebility/compatebility_internal.hpp"
 #include "../../Libft/libft.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <cstring>
@@ -12,6 +13,26 @@
 #ifndef _WIN32
 # include <netdb.h>
 #endif
+
+static int g_send_stub_call_count = 0;
+
+static ssize_t send_returns_zero_then_error(int socket_fd, const void *buffer,
+                                            size_t length, int flags)
+{
+    (void)socket_fd;
+    (void)buffer;
+    (void)length;
+    (void)flags;
+    g_send_stub_call_count++;
+    if (g_send_stub_call_count < 3)
+        return (0);
+#ifdef EPIPE
+    errno = EPIPE;
+#else
+    errno = ECONNRESET;
+#endif
+    return (-1);
+}
 
 FT_TEST(test_network_send_receive, "nw_send/nw_recv IPv4")
 {
@@ -196,6 +217,47 @@ FT_TEST(test_network_poll_ipv4, "nw_poll IPv4")
         return (0);
     buffer[bytes_received] = '\0';
     return (ft_strcmp(buffer, message) == 0);
+}
+
+FT_TEST(test_network_send_all_peer_close, "send_all handles zero-byte send")
+{
+    g_send_stub_call_count = 0;
+    SocketConfig server_configuration;
+    server_configuration._port = 54328;
+    server_configuration._type = SocketType::SERVER;
+    ft_socket server(server_configuration);
+    if (server.get_error() != ER_SUCCESS)
+        return (0);
+
+    SocketConfig client_configuration;
+    client_configuration._port = 54328;
+    client_configuration._type = SocketType::CLIENT;
+    ft_socket client(client_configuration);
+    if (client.get_error() != ER_SUCCESS)
+        return (0);
+
+    struct sockaddr_storage address;
+    socklen_t address_length = sizeof(address);
+    int client_file_descriptor = nw_accept(server.get_fd(),
+                                           reinterpret_cast<struct sockaddr*>(&address),
+                                           &address_length);
+    if (client_file_descriptor < 0)
+        return (0);
+
+    nw_set_send_stub(&send_returns_zero_then_error);
+    const char *message = "halt";
+    errno = 0;
+    ssize_t result = cmp_socket_send_all(&client, message, ft_strlen(message), 0);
+    nw_set_send_stub(NULL);
+    FT_CLOSE_SOCKET(client_file_descriptor);
+
+    if (result >= 0)
+        return (0);
+    if (client.get_error() != SOCKET_SEND_FAILED)
+        return (0);
+    if (g_send_stub_call_count != 1)
+        return (0);
+    return (1);
 }
 
 FT_TEST(test_network_poll_ipv6, "nw_poll IPv6")
