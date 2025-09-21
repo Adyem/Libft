@@ -1416,6 +1416,11 @@ The implementation uses inotify on Linux, kqueue on BSD and macOS and
 `ReadDirectoryChangesW` on Windows. These platform APIs must be available when
 building the library.
 
+`ft_file_watch::stop` closes the active watch handles before joining the worker
+thread so the blocking read calls terminate cleanly. The event loop on each
+platform now exits when its descriptor or handle is closed, preventing the
+watcher from spinning on invalid resources during shutdown.
+
 `System_utils/system_utils.hpp` provides cross-platform file descriptor utilities:
 
 ```
