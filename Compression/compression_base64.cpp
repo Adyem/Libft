@@ -121,18 +121,46 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
     while (input_index < input_size)
     {
         value_one = base64_char_value(input_buffer[input_index]);
+        if (value_one == -1)
+        {
+            cma_free(output_buffer);
+            *decoded_size = 0;
+            return (ft_nullptr);
+        }
         input_index++;
         value_two = base64_char_value(input_buffer[input_index]);
+        if (value_two == -1)
+        {
+            cma_free(output_buffer);
+            *decoded_size = 0;
+            return (ft_nullptr);
+        }
         input_index++;
         char_three = input_buffer[input_index];
         if (char_three != '=')
+        {
             value_three = base64_char_value(char_three);
+            if (value_three == -1)
+            {
+                cma_free(output_buffer);
+                *decoded_size = 0;
+                return (ft_nullptr);
+            }
+        }
         else
             value_three = 0;
         input_index++;
         char_four = input_buffer[input_index];
         if (char_four != '=')
+        {
             value_four = base64_char_value(char_four);
+            if (value_four == -1)
+            {
+                cma_free(output_buffer);
+                *decoded_size = 0;
+                return (ft_nullptr);
+            }
+        }
         else
             value_four = 0;
         input_index++;
