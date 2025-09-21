@@ -249,6 +249,11 @@ ssize_t ft_socket::send_all(const void *data, size_t size, int flags)
             this->set_error(errno + ERRNO_OFFSET);
             return (-1);
         }
+        if (bytes_sent == 0)
+        {
+            this->set_error(SOCKET_SEND_FAILED);
+            return (-1);
+        }
         total_sent += bytes_sent;
     }
     this->set_error(ER_SUCCESS);
