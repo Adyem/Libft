@@ -2,9 +2,63 @@
 #include "../../CMA/CMA.hpp"
 #include "../../Libft/libft.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
+#include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../System_utils/system_utils.hpp"
 #include <unistd.h>
+
+FT_TEST(test_compress_rejects_oversize_input, "compress rejects oversize input")
+{
+    unsigned char   input_byte;
+    unsigned char   *compressed_buffer;
+    std::size_t     oversize_length;
+    std::size_t     compressed_length;
+
+    if (compression_max_size == SIZE_MAX)
+        return (1);
+    input_byte = 0;
+    oversize_length = compression_max_size;
+    oversize_length++;
+    compressed_length = 42;
+    ft_errno = ER_SUCCESS;
+    compressed_buffer = compress_buffer(&input_byte, oversize_length, &compressed_length);
+    if (compressed_buffer)
+    {
+        cma_free(compressed_buffer);
+        return (0);
+    }
+    if (compressed_length != 0)
+        return (0);
+    if (ft_errno != FT_EINVAL)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_decompress_rejects_oversize_payload, "decompress rejects oversize payload")
+{
+    unsigned char   header[sizeof(uint32_t)];
+    unsigned char   *decompressed_buffer;
+    std::size_t     fake_input_size;
+    std::size_t     decompressed_length;
+
+    if (compression_max_size > SIZE_MAX - sizeof(uint32_t) - 1)
+        return (1);
+    ft_memset(header, 0, sizeof(uint32_t));
+    fake_input_size = compression_max_size + sizeof(uint32_t) + 1;
+    decompressed_length = 99;
+    ft_errno = ER_SUCCESS;
+    decompressed_buffer = decompress_buffer(header, fake_input_size, &decompressed_length);
+    if (decompressed_buffer)
+    {
+        cma_free(decompressed_buffer);
+        return (0);
+    }
+    if (decompressed_length != 0)
+        return (0);
+    if (ft_errno != FT_EINVAL)
+        return (0);
+    return (1);
+}
 
 FT_TEST(test_ft_compress_round_trip, "ft_compress round trip")
 {

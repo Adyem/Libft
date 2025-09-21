@@ -1269,6 +1269,11 @@ unsigned char *compress_buffer(const unsigned char *input_buffer, std::size_t in
 unsigned char *decompress_buffer(const unsigned char *input_buffer, std::size_t input_size, std::size_t *decompressed_size);
 ```
 
+The helpers prefix each payload with its uncompressed size stored as an
+unsigned 32-bit value. As a result, any request whose buffer exceeds
+`compression_max_size` (`UINT32_MAX` bytes) is rejected before reaching zlib and
+sets `ft_errno` to `FT_EINVAL`.
+
 The returned buffers are allocated with CMA and must be freed using `cma_free`.
 
 High level helpers are also available:

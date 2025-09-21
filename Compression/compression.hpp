@@ -4,6 +4,13 @@
 #include <cstddef>
 #include <cstdint>
 
+/*
+** Maximum number of bytes supported by the compression helpers. The original
+** size is stored alongside the payload using a 32-bit prefix, so values
+** greater than UINT32_MAX cannot be represented.
+*/
+static const std::size_t   compression_max_size = static_cast<std::size_t>(UINT32_MAX);
+
 unsigned char    *compress_buffer(const unsigned char *input_buffer, std::size_t input_size, std::size_t *compressed_size);
 unsigned char    *decompress_buffer(const unsigned char *input_buffer, std::size_t input_size, std::size_t *decompressed_size);
 
