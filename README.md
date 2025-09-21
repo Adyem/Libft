@@ -1421,6 +1421,9 @@ thread so the blocking read calls terminate cleanly. The event loop on each
 platform now exits when its descriptor or handle is closed, preventing the
 watcher from spinning on invalid resources during shutdown.
 
+On Linux, `ft_file_watch::watch_directory` now closes the inotify descriptor if
+`inotify_add_watch` fails so the setup path does not leak file descriptors.
+
 `System_utils/system_utils.hpp` provides cross-platform file descriptor utilities:
 
 ```
