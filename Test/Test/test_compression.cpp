@@ -180,3 +180,23 @@ FT_TEST(test_base64_round_trip, "base64 round trip")
     cma_free(decoded_buffer);
     return (0);
 }
+
+FT_TEST(test_base64_invalid_character, "base64 invalid character")
+{
+    const char      *invalid_input;
+    unsigned char   *decoded_buffer;
+    std::size_t     decoded_length;
+
+    invalid_input = "AAA!";
+    decoded_length = 42;
+    decoded_buffer = ft_base64_decode(reinterpret_cast<const unsigned char *>(invalid_input),
+        ft_strlen_size_t(invalid_input), &decoded_length);
+    if (decoded_buffer)
+    {
+        cma_free(decoded_buffer);
+        return (0);
+    }
+    if (decoded_length != 0)
+        return (0);
+    return (1);
+}
