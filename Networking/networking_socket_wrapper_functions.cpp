@@ -66,6 +66,9 @@ static inline ssize_t send_platform(int sockfd, const void *buf, size_t len, int
     return (ret);
 }
 
+static ssize_t (*g_send_function)(int socket_fd, const void *buffer,
+                                  size_t length, int flags) = &send_platform;
+
 static inline ssize_t recv_platform(int sockfd, void *buf, size_t len, int flags)
 {
     int ret = ::recv(static_cast<SOCKET>(sockfd), static_cast<char*>(buf), static_cast<int>(len), flags);
@@ -136,6 +139,9 @@ static inline ssize_t send_platform(int sockfd, const void *buf, size_t len, int
     return (::send(sockfd, buf, len, flags));
 }
 
+static ssize_t (*g_send_function)(int socket_fd, const void *buffer,
+                                  size_t length, int flags) = &send_platform;
+
 static inline ssize_t recv_platform(int sockfd, void *buf, size_t len, int flags)
 {
     return (::recv(sockfd, buf, len, flags));
@@ -157,6 +163,18 @@ static inline ssize_t recvfrom_platform(int sockfd, void *buf, size_t len, int f
 int nw_bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 {
     return (bind_platform(sockfd, addr, addrlen));
+}
+
+void nw_set_send_stub(ssize_t (*send_stub)(int socket_fd, const void *buffer,
+                                           size_t length, int flags))
+{
+    if (send_stub == NULL)
+    {
+        g_send_function = &send_platform;
+        return ;
+    }
+    g_send_function = send_stub;
+    return ;
 }
 
 int nw_listen(int sockfd, int backlog)
@@ -181,7 +199,7 @@ int nw_connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 
 ssize_t nw_send(int sockfd, const void *buf, size_t len, int flags)
 {
-    return (send_platform(sockfd, buf, len, flags));
+    return (g_send_function(sockfd, buf, len, flags));
 }
 
 ssize_t nw_recv(int sockfd, void *buf, size_t len, int flags)

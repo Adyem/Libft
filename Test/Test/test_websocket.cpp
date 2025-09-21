@@ -62,7 +62,7 @@ FT_TEST(test_websocket_sha1_handshake, "websocket handshake computes SHA-1 accep
     }
     if (client_result != 0 || server_result != 0)
         return (0);
-    if (received_message != message_to_send)
+    if (!(received_message == message_to_send))
         return (0);
     ft_string magic;
     magic = known_key;
@@ -87,7 +87,7 @@ FT_TEST(test_websocket_sha1_handshake, "websocket handshake computes SHA-1 accep
     ft_string known_accept;
 
     known_accept = "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=";
-    if (expected_accept != known_accept)
+    if (!(expected_accept == known_accept))
         return (0);
     return (1);
 }

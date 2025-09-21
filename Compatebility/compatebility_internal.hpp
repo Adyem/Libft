@@ -7,6 +7,8 @@
 #include <sys/types.h>
 #include <ctime>
 
+class ft_socket;
+
 #if defined(_WIN32) || defined(_WIN64)
 # include <BaseTsd.h>
 # include <sys/stat.h>
@@ -79,6 +81,8 @@ unsigned long long cmp_get_total_memory(void);
 std::time_t cmp_timegm(std::tm *time_pointer);
 
 ssize_t cmp_su_write(int file_descriptor, const char *buffer, size_t length);
+ssize_t cmp_socket_send_all(ft_socket *socket_object, const void *buffer,
+                            size_t length, int flags);
 
 int cmp_syslog_open(const char *identifier);
 void cmp_syslog_write(const char *message);
