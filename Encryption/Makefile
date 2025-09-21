@@ -6,12 +6,14 @@ SRCS := encryption_basic_encryption.cpp \
         encryption_aes.cpp \
         encryption_rsa.cpp \
         encryption_sha256.cpp \
+        encryption_sha1.cpp \
         encryption_hmac_sha256.cpp
 
 HEADERS := basic_encryption.hpp \
         aes.hpp \
         rsa.hpp \
         encryption_sha256.hpp \
+        encryption_sha1.hpp \
         encryption_hmac_sha256.hpp
 
 ifeq ($(OS),Windows_NT)

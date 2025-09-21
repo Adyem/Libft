@@ -47,9 +47,10 @@ The current suite exercises components across multiple modules:
   `ft_strnstr`, `ft_strstr`, `ft_strrchr`, `ft_strmapi`, `ft_striteri`, `ft_strtok`, `ft_strtol`, `ft_strtoul`, `ft_setenv`, `ft_unsetenv`, `ft_getenv`, `ft_to_lower`, `ft_to_upper`,
 `ft_fopen`, `ft_fclose`, `ft_fgets`, `ft_time_ms`, `ft_time_format`, `ft_to_string`
 - **Concurrency**: `ft_promise`, `ft_task_scheduler`, `ft_this_thread`, with the scheduler clearing success paths and surfacing queue allocation or empty-pop failures through its `_error_code` mirror.
-- **Networking**: IPv4 and IPv6 send/receive paths, UDP datagrams, and a simple HTTP server
+- **Networking**: IPv4 and IPv6 send/receive paths, UDP datagrams, a simple HTTP server, and WebSocket client/server handshake
+  coverage using the RFC 6455 GUID
 - **Logger**: color toggling, JSON sink, asynchronous logging, and the `ft_logger` façade propagates sink, file, syslog, and remote target failures through its `_error_code` mirror so configuration helpers always synchronize `ft_errno`.
-- **Math**: vector, matrix, and quaternion helpers plus expression evaluation via `math_roll` (arithmetic, unary negatives, precedence, dice, lengthy expressions, and error handling)
+- **Math**: vector, matrix, and quaternion helpers plus expression evaluation via `math_roll` (arithmetic, unary negatives, precedence, dice, lengthy expressions, and error handling) and tolerance-based floating-point helpers that avoid exact equality comparisons when validating modulus and cosine inputs
 - **RNG**: normal, exponential, Poisson, binomial, and geometric distributions
 - **String**: `ft_string_view`
 - **CPP_class**: `ft_big_number` assignment, arithmetic, comparisons, error handling, and the `DataBuffer` utility now propagates allocator and stream failures through `_error_code` while clearing successful reads and writes. The `ft_file` wrapper routes all descriptor I/O through the `System_utils` helpers (`su_open`, `su_read`, `su_write`, `su_close`), defers closing the active descriptor until a new open succeeds, and reports failures through `_error_code` while leaving the previous handle untouched when replacements fail.
@@ -67,7 +68,7 @@ The current suite exercises components across multiple modules:
 - Inventory, experience tables, map grids, reputations, skills, achievements, and world orchestration share the same error-clearing discipline, validating identifiers and container mutations before synchronizing `ft_errno` so downstream systems see authoritative status codes after each operation.
 - JSON document helpers validate group and item mutations before committing them, surface parser and allocation failures through `_error_code`, and clear successful read/write operations so file serialization keeps `ft_errno` synchronized with the latest result.
 - The `time_timer` utility now tracks `_error_code` as it starts, updates, and adjusts running timers, rejecting negative durations or paused states and mirroring the resulting status codes to `ft_errno` for callers.
-- **Encryption**: key generation utilities
+- **Encryption**: key generation utilities and a SHA-1 hashing helper used to compute WebSocket accept keys
 
 Additional cases verify whitespace parsing, overlapping ranges, truncating copies, partial zeroing, empty needles,
 zero-length operations, null pointers, zero-size buffers, searches for the terminating character,

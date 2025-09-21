@@ -296,9 +296,15 @@ int test_abs_llong_min(void)
 int test_fabs_negative_zero(void)
 {
     double result;
+    double tolerance;
 
     result = math_fabs(-0.0);
-    return (result == 0.0 && !math_signbit(result));
+    tolerance = 0.0000000000001;
+    if (math_fabs(result) > tolerance)
+        return (0);
+    if (math_signbit(result) != 0)
+        return (0);
+    return (1);
 }
 
 int test_fabs_nan(void)
