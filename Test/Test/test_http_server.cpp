@@ -3,6 +3,7 @@
 #include "../../Libft/libft.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../PThread/thread.hpp"
+#include <unistd.h>
 
 static void server_worker(ft_http_server *server)
 {
@@ -56,8 +57,14 @@ FT_TEST(test_http_server_post, "HTTP server POST")
         server_thread_object.join();
         return (0);
     }
-    const char *request_string = "POST / HTTP/1.1\r\nHost: localhost\r\nContent-Length: 5\r\nConnection: close\r\n\r\nHello";
-    client_socket.send_all(request_string, ft_strlen(request_string), 0);
+    const char *request_headers = "POST / HTTP/1.1\r\nHost: localhost\r\nContent-Length: 5\r\nConnection: close\r\n\r\n";
+    const char *body_prefix = "He";
+    const char *body_suffix = "llo";
+    client_socket.send_all(request_headers, ft_strlen(request_headers), 0);
+    usleep(50000);
+    client_socket.send_all(body_prefix, ft_strlen(body_prefix), 0);
+    usleep(50000);
+    client_socket.send_all(body_suffix, ft_strlen(body_suffix), 0);
     char buffer[256];
     ssize_t bytes_received = client_socket.receive_data(buffer, sizeof(buffer) - 1, 0);
     if (bytes_received <= 0)
