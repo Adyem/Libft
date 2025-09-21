@@ -811,6 +811,16 @@ const struct sockaddr_storage &get_address() const;
 int         join_multicast_group(const SocketConfig &config);
 ```
 
+Calling `send_all` now treats a zero-byte transmission as a peer disconnect and
+returns `-1` with the `SOCKET_SEND_FAILED` error code instead of retrying
+indefinitely. This ensures callers can react promptly to closed connections.
+Tests can inject custom behavior into the network shim through
+`nw_set_send_stub`, passing `NULL` after the check to restore the default
+`nw_send` implementation.
+The compatibility layer exposes `cmp_socket_send_all`, letting C callers invoke
+`ft_socket::send_all` while preserving the same error propagation and return
+values as the C++ method.
+
 #### `udp_socket`
 ```c++
 #include "Networking/udp_socket.hpp"

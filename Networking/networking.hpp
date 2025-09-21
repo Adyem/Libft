@@ -27,6 +27,8 @@ ssize_t nw_sendto(int sockfd, const void *buf, size_t len, int flags,
                   const struct sockaddr *dest_addr, socklen_t addrlen);
 ssize_t nw_recvfrom(int sockfd, void *buf, size_t len, int flags,
                     struct sockaddr *src_addr, socklen_t *addrlen);
+void nw_set_send_stub(ssize_t (*send_stub)(int socket_fd, const void *buffer,
+                                           size_t length, int flags));
 int nw_inet_pton(int family, const char *ip_address, void *destination);
 int nw_set_nonblocking(int socket_fd);
 int nw_poll(int *read_file_descriptors, int read_count,

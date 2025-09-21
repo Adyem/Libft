@@ -182,7 +182,7 @@ int ft_websocket_client::perform_handshake(const char *host, const char *path)
         }
     }
     compute_accept_key(key_string, expected);
-    if (accept_key != expected)
+    if (!(accept_key == expected))
     {
         this->set_error(FT_EINVAL);
         return (1);
