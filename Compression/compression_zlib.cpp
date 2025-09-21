@@ -2,6 +2,7 @@
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
 #include "compression.hpp"
 
 unsigned char    *compress_buffer(const unsigned char *input_buffer, std::size_t input_size, std::size_t *compressed_size)
@@ -15,6 +16,12 @@ unsigned char    *compress_buffer(const unsigned char *input_buffer, std::size_t
 
     if (!input_buffer || !compressed_size)
         return (ft_nullptr);
+    if (input_size > compression_max_size)
+    {
+        ft_errno = FT_EINVAL;
+        *compressed_size = 0;
+        return (ft_nullptr);
+    }
     zlib_bound = compressBound(static_cast<uLong>(input_size));
     result_buffer = static_cast<unsigned char *>(cma_malloc(zlib_bound + sizeof(uint32_t)));
     if (!result_buffer)
@@ -45,6 +52,18 @@ unsigned char    *decompress_buffer(const unsigned char *input_buffer, std::size
     if (!input_buffer || input_size < sizeof(uint32_t) || !decompressed_size)
         return (ft_nullptr);
     ft_memcpy(&expected_size, input_buffer, sizeof(uint32_t));
+    if (static_cast<std::size_t>(expected_size) > compression_max_size)
+    {
+        ft_errno = FT_EINVAL;
+        *decompressed_size = 0;
+        return (ft_nullptr);
+    }
+    if (input_size - sizeof(uint32_t) > compression_max_size)
+    {
+        ft_errno = FT_EINVAL;
+        *decompressed_size = 0;
+        return (ft_nullptr);
+    }
     result_buffer = static_cast<unsigned char *>(cma_malloc(expected_size));
     if (!result_buffer)
         return (ft_nullptr);
