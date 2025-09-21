@@ -1591,6 +1591,11 @@ void rl_clear_suggestions();
 char *rl_readline(const char *prompt);
 ```
 
+Helper failures now short-circuit the input loop so `rl_readline` immediately
+cleans up its buffer, restores terminal state, and returns `ft_nullptr`. The
+regression exercise in `Test/Test/test_readline.cpp` simulates a backspace
+error to ensure no code touches the released buffer after `rl_error` runs.
+
 #### API
 HTTP client helpers in `API/api.hpp` and asynchronous wrappers. URL parsing
 relies on the `ft_string` class instead of `std::string`, so any allocation
