@@ -4,7 +4,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Compression/compression.hpp"
 #include "../CMA/CMA.hpp"
-#include "../Encryption/encryption_sha256.hpp"
+#include "../Encryption/encryption_sha1.hpp"
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
 #include <cstring>
@@ -13,16 +13,16 @@
 
 static void compute_accept_key(const ft_string &key, ft_string &accept)
 {
-    unsigned char digest[32];
+    unsigned char digest[20];
     unsigned char *encoded;
     std::size_t encoded_size;
     ft_string magic;
 
     magic = key;
     magic.append("258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
-    sha256_hash(magic.c_str(), magic.size(), digest);
+    sha1_hash(magic.c_str(), magic.size(), digest);
     accept.clear();
-    encoded = ft_base64_encode(digest, 32, &encoded_size);
+    encoded = ft_base64_encode(digest, 20, &encoded_size);
     if (encoded)
     {
         std::size_t index_value = 0;

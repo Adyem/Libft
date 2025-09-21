@@ -49,11 +49,11 @@ double math_acos(double dot)
             return (math_nan());
     }
     pi_value = 3.14159265358979323846;
-    if (dot == 1.0)
+    if (math_fabs(dot - 1.0) <= tolerance)
         return (0.0);
-    if (dot == -1.0)
+    if (math_fabs(dot + 1.0) <= tolerance)
         return (pi_value);
-    if (dot == 0.0)
+    if (math_fabs(dot) <= tolerance)
         return (pi_value * 0.5);
     lower_bound = 0.0;
     upper_bound = pi_value;
