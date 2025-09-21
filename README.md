@@ -706,6 +706,12 @@ socket wrapper with IPv4 and IPv6 support.
 connection, or datagram operation clears successes and forwards system
 errors through `ft_errno`.
 
+Non-blocking client sockets leave the descriptor open when `connect`
+returns `EINPROGRESS`, `EWOULDBLOCK`, or `WSAEWOULDBLOCK`. Callers must
+wait for the socket to become writable using `nw_poll`, `select`, or the
+event loop helpers before checking the connection result (for example by
+querying `get_error` or `SO_ERROR`).
+
 The accompanying tests exercise basic send and receive paths and invalid
 configurations for both address families in `Test/test_networking.cpp`.
 
