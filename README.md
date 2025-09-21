@@ -127,6 +127,9 @@ char   *ft_time_format(char *buffer, size_t buffer_size);
 ft_string ft_to_string(long number);
 ```
 
+`ft_strtol` clamps values that exceed `FT_LONG_MAX` or `FT_LONG_MIN` and sets
+`ft_errno` to `FT_ERANGE` when overflow is detected.
+
 `limits.hpp` exposes integer boundary constants:
 
 ```
