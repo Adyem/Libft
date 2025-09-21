@@ -1283,6 +1283,7 @@ unsigned char *ft_base64_decode(const unsigned char *input_buffer, std::size_t i
 ```
 
 The streaming functions operate on file descriptors using `su_read` and `su_write`, and the Base64 helpers encode or decode buffers.
+`ft_base64_decode` validates every character; when an invalid character is detected it frees any allocated memory, sets the decoded size to `0`, and returns `ft_nullptr` to signal the error.
 
 #### JSon
 Creation, reading and manipulation helpers in `JSon/json.hpp`:
