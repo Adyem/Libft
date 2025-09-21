@@ -42,10 +42,30 @@ int ft_socket::setup_client(const SocketConfig &config)
     if (nw_connect(this->_socket_fd, reinterpret_cast<const struct sockaddr*>
                 (&this->_address), addr_len) < 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
-        FT_CLOSE_SOCKET(this->_socket_fd);
-        this->_socket_fd = -1;
-        return (this->_error_code);
+#ifdef _WIN32
+        int last_error;
+
+        last_error = WSAGetLastError();
+        if (!(config._non_blocking && last_error == WSAEWOULDBLOCK))
+        {
+            this->set_error(last_error + ERRNO_OFFSET);
+            FT_CLOSE_SOCKET(this->_socket_fd);
+            this->_socket_fd = -1;
+            return (this->_error_code);
+        }
+#else
+        int last_error;
+
+        last_error = errno;
+        if (!(config._non_blocking && (last_error == EINPROGRESS
+            || last_error == EWOULDBLOCK)))
+        {
+            this->set_error(last_error + ERRNO_OFFSET);
+            FT_CLOSE_SOCKET(this->_socket_fd);
+            this->_socket_fd = -1;
+            return (this->_error_code);
+        }
+#endif
     }
     if (!config._multicast_group.empty())
         if (join_multicast_group(config) != ER_SUCCESS)
