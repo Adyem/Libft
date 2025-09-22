@@ -48,7 +48,8 @@ The current suite exercises components across multiple modules:
 `ft_fopen`, `ft_fclose`, `ft_fgets`, `ft_time_ms`, `ft_time_format`, `ft_to_string`
 - **Concurrency**: `ft_promise`, `ft_task_scheduler`, `ft_this_thread`, with the scheduler clearing success paths and surfacing queue allocation or empty-pop failures through its `_error_code` mirror.
 - **Networking**: IPv4 and IPv6 send/receive paths, UDP datagrams, a simple HTTP server, and WebSocket client/server handshake
-  coverage using the RFC 6455 GUID
+  coverage using the RFC 6455 GUID alongside a regression that splits the client handshake response across multiple receives to
+  validate incremental parsing
 - **Logger**: color toggling, JSON sink, asynchronous logging, and the `ft_logger` façade propagates sink, file, syslog, and remote target failures through its `_error_code` mirror so configuration helpers always synchronize `ft_errno`.
 - **Math**: vector, matrix, and quaternion helpers plus expression evaluation via `math_roll` (arithmetic, unary negatives, precedence, dice, lengthy expressions, and error handling) and tolerance-based floating-point helpers that avoid exact equality comparisons when validating modulus and cosine inputs
 - **RNG**: normal, exponential, Poisson, binomial, and geometric distributions
