@@ -12,19 +12,6 @@
 #include <chrono>
 #include <cstring>
 
-static ssize_t websocket_handshake_short_write_stub(int socket_fd, const void *buffer,
-                                                    size_t length, int flags)
-{
-    const char *char_buffer;
-
-    (void)socket_fd;
-    (void)flags;
-    char_buffer = static_cast<const char *>(buffer);
-    if (length >= 3 && ft_strncmp(char_buffer, "GET", 3) == 0)
-        return (0);
-    return (static_cast<ssize_t>(length));
-}
-
 static void websocket_split_handshake_server(uint16_t port, int *result)
 {
     int listen_socket;
@@ -199,6 +186,70 @@ static void websocket_split_handshake_server(uint16_t port, int *result)
     }
     FT_CLOSE_SOCKET(client_socket);
     *result = 1;
+    return ;
+}
+
+static void websocket_handshake_close_server(uint16_t port, int *result)
+{
+    int listen_socket;
+    struct sockaddr_in server_address;
+    struct sockaddr_storage client_address;
+    socklen_t client_length;
+    int client_socket;
+    int reuse_value;
+    int option_result;
+
+    if (result != ft_nullptr)
+        *result = 0;
+    listen_socket = nw_socket(AF_INET, SOCK_STREAM, 0);
+    if (listen_socket < 0)
+        return ;
+    reuse_value = 1;
+#ifdef _WIN32
+    option_result = setsockopt(static_cast<SOCKET>(listen_socket), SOL_SOCKET, SO_REUSEADDR,
+                               reinterpret_cast<const char *>(&reuse_value), sizeof(reuse_value));
+    if (option_result == SOCKET_ERROR)
+#else
+    option_result = setsockopt(listen_socket, SOL_SOCKET, SO_REUSEADDR, &reuse_value, sizeof(reuse_value));
+    if (option_result != 0)
+#endif
+    {
+        FT_CLOSE_SOCKET(listen_socket);
+        return ;
+    }
+    std::memset(&server_address, 0, sizeof(server_address));
+    server_address.sin_family = AF_INET;
+    server_address.sin_port = htons(port);
+    if (nw_inet_pton(AF_INET, "127.0.0.1", &server_address.sin_addr) != 1)
+    {
+        FT_CLOSE_SOCKET(listen_socket);
+        return ;
+    }
+    if (nw_bind(listen_socket, reinterpret_cast<struct sockaddr *>(&server_address), sizeof(server_address)) != 0)
+    {
+        FT_CLOSE_SOCKET(listen_socket);
+        return ;
+    }
+    if (nw_listen(listen_socket, 1) != 0)
+    {
+        FT_CLOSE_SOCKET(listen_socket);
+        return ;
+    }
+    client_length = sizeof(client_address);
+    client_socket = nw_accept(listen_socket, reinterpret_cast<struct sockaddr *>(&client_address), &client_length);
+    if (client_socket >= 0)
+    {
+#ifdef _WIN32
+        shutdown(static_cast<SOCKET>(client_socket), SD_RECEIVE);
+        closesocket(static_cast<SOCKET>(client_socket));
+#else
+        shutdown(client_socket, SHUT_RD);
+        close(client_socket);
+#endif
+        if (result != ft_nullptr)
+            *result = 1;
+    }
+    FT_CLOSE_SOCKET(listen_socket);
     return ;
 }
 
@@ -534,23 +585,42 @@ FT_TEST(test_websocket_handshake_split_response, "websocket handshake handles sp
 
 FT_TEST(test_websocket_handshake_short_write_sets_error, "websocket handshake detects short write")
 {
-    ft_websocket_server server;
     ft_websocket_client client;
     uint16_t port;
     int connect_result;
     int error_code;
+    int server_result;
+    std::thread server_thread;
 
     port = 54874;
-    if (server.start("127.0.0.1", port) != 0)
-        return (0);
-    nw_set_send_stub(&websocket_handshake_short_write_stub);
+    server_result = 0;
+    server_thread = std::thread(websocket_handshake_close_server, port, &server_result);
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
     connect_result = client.connect("127.0.0.1", port, "/");
     error_code = client.get_error();
-    nw_set_send_stub(NULL);
     client.close();
+    if (server_thread.joinable())
+        server_thread.join();
+    if (server_result == 0)
+        return (0);
     if (connect_result == 0)
         return (0);
-    return (error_code == SOCKET_SEND_FAILED);
+    if (error_code == SOCKET_SEND_FAILED)
+        return (1);
+#ifdef _WIN32
+    if (error_code == (WSAECONNRESET + ERRNO_OFFSET)
+        || error_code == (WSAENOTCONN + ERRNO_OFFSET)
+        || error_code == (WSAECONNABORTED + ERRNO_OFFSET))
+        return (1);
+#else
+    if (error_code == (ECONNRESET + ERRNO_OFFSET))
+        return (1);
+#ifdef EPIPE
+    if (error_code == (EPIPE + ERRNO_OFFSET))
+        return (1);
+#endif
+#endif
+    return (0);
 }
 
 FT_TEST(test_websocket_client_receives_masked_frame, "websocket client handles masked server frames")
