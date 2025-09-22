@@ -66,9 +66,6 @@ static inline ssize_t send_platform(int sockfd, const void *buf, size_t len, int
     return (ret);
 }
 
-static ssize_t (*g_send_function)(int socket_fd, const void *buffer,
-                                  size_t length, int flags) = &send_platform;
-
 static inline ssize_t recv_platform(int sockfd, void *buf, size_t len, int flags)
 {
     int ret = ::recv(static_cast<SOCKET>(sockfd), static_cast<char*>(buf), static_cast<int>(len), flags);
@@ -76,6 +73,9 @@ static inline ssize_t recv_platform(int sockfd, void *buf, size_t len, int flags
         return (-1);
     return (ret);
 }
+
+static ssize_t (*g_send_function)(int socket_fd, const void *buffer,
+                                  size_t length, int flags) = &send_platform;
 
 static inline ssize_t sendto_platform(int sockfd, const void *buf, size_t len, int flags,
                                       const struct sockaddr *dest_addr, socklen_t addrlen)
@@ -139,13 +139,13 @@ static inline ssize_t send_platform(int sockfd, const void *buf, size_t len, int
     return (::send(sockfd, buf, len, flags));
 }
 
-static ssize_t (*g_send_function)(int socket_fd, const void *buffer,
-                                  size_t length, int flags) = &send_platform;
-
 static inline ssize_t recv_platform(int sockfd, void *buf, size_t len, int flags)
 {
     return (::recv(sockfd, buf, len, flags));
 }
+
+static ssize_t (*g_send_function)(int socket_fd, const void *buffer,
+                                  size_t length, int flags) = &send_platform;
 
 static inline ssize_t sendto_platform(int sockfd, const void *buf, size_t len, int flags,
                                       const struct sockaddr *dest_addr, socklen_t addrlen)
