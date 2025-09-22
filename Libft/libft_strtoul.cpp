@@ -1,7 +1,92 @@
 #include "libft.hpp"
+#include "limits.hpp"
+#include "../Errno/errno.hpp"
 
-unsigned long ft_strtoul(const char *nptr, char **endptr, int base)
+static int ft_digit_value(char character)
 {
-    long value = ft_strtol(nptr, endptr, base);
-    return (static_cast<unsigned long>(value));
+    if (character >= '0' && character <= '9')
+        return (character - '0');
+    if (character >= 'a' && character <= 'z')
+        return (character - 'a' + 10);
+    if (character >= 'A' && character <= 'Z')
+        return (character - 'A' + 10);
+    return (-1);
+}
+
+unsigned long ft_strtoul(const char *input_string, char **end_pointer, int numeric_base)
+{
+    const char *current_character = input_string;
+    int sign_value = 1;
+    unsigned long accumulated_value = 0;
+    int digit_value;
+    bool overflow_detected = false;
+    unsigned long base_value;
+    unsigned long limit_value;
+
+    ft_errno = ER_SUCCESS;
+    while (*current_character == ' ' || (*current_character >= '\t'
+                && *current_character <= '\r'))
+        ++current_character;
+    if (*current_character == '+' || *current_character == '-')
+    {
+        if (*current_character == '-')
+            sign_value = -1;
+        ++current_character;
+    }
+    if (numeric_base == 0)
+    {
+        if (*current_character == '0')
+        {
+            if (current_character[1] == 'x' || current_character[1] == 'X')
+            {
+                numeric_base = 16;
+                current_character += 2;
+            }
+            else
+                numeric_base = 8;
+        }
+        else
+            numeric_base = 10;
+    }
+    else if (numeric_base == 16 && current_character[0] == '0'
+             && (current_character[1] == 'x' || current_character[1] == 'X'))
+        current_character += 2;
+    base_value = static_cast<unsigned long>(numeric_base);
+    limit_value = FT_ULONG_MAX;
+    while ((digit_value = ft_digit_value(*current_character)) >= 0
+            && digit_value < numeric_base)
+    {
+        unsigned long digit_as_unsigned;
+        unsigned long limit_division;
+        unsigned long limit_remainder;
+
+        digit_as_unsigned = static_cast<unsigned long>(digit_value);
+        if (base_value == 0)
+            break;
+        limit_division = limit_value / base_value;
+        limit_remainder = limit_value % base_value;
+        if (accumulated_value > limit_division
+                || (accumulated_value == limit_division
+                    && digit_as_unsigned > limit_remainder))
+        {
+            overflow_detected = true;
+            accumulated_value = limit_value;
+            break;
+        }
+        accumulated_value = accumulated_value * base_value
+                          + digit_as_unsigned;
+        ++current_character;
+    }
+    if (end_pointer)
+        *end_pointer = const_cast<char *>(current_character);
+    if (overflow_detected)
+        ft_errno = FT_ERANGE;
+    if (sign_value < 0)
+    {
+        if (overflow_detected)
+            return (limit_value);
+        unsigned long negated_value = 0UL - accumulated_value;
+        return (negated_value);
+    }
+    return (accumulated_value);
 }
