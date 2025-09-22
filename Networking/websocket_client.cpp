@@ -379,6 +379,7 @@ int ft_websocket_client::receive_text(ft_string &message)
 {
     unsigned char header[2];
     unsigned char mask_key[4];
+    bool mask_bit_set;
     std::size_t payload_length;
     ssize_t bytes_received;
     unsigned char *payload;
@@ -400,6 +401,7 @@ int ft_websocket_client::receive_text(ft_string &message)
             return (1);
         }
         opcode = header[0] & 0x0F;
+        mask_bit_set = (header[1] & 0x80) != 0;
         payload_length = static_cast<std::size_t>(header[1] & 0x7F);
         if (payload_length == 126)
         {
@@ -430,11 +432,14 @@ int ft_websocket_client::receive_text(ft_string &message)
                 shift_index++;
             }
         }
-        bytes_received = nw_recv(this->_socket_fd, mask_key, 4, 0);
-        if (bytes_received <= 0)
+        if (mask_bit_set)
         {
-            this->set_error(errno + ERRNO_OFFSET);
-            return (1);
+            bytes_received = nw_recv(this->_socket_fd, mask_key, 4, 0);
+            if (bytes_received <= 0)
+            {
+                this->set_error(errno + ERRNO_OFFSET);
+                return (1);
+            }
         }
         payload = static_cast<unsigned char *>(cma_malloc(payload_length));
         if (!payload)
@@ -454,11 +459,14 @@ int ft_websocket_client::receive_text(ft_string &message)
             }
             index_value += static_cast<std::size_t>(bytes_received);
         }
-        index_value = 0;
-        while (index_value < payload_length)
+        if (mask_bit_set)
         {
-            payload[index_value] = static_cast<unsigned char>(payload[index_value] ^ mask_key[index_value % 4]);
-            index_value++;
+            index_value = 0;
+            while (index_value < payload_length)
+            {
+                payload[index_value] = static_cast<unsigned char>(payload[index_value] ^ mask_key[index_value % 4]);
+                index_value++;
+            }
         }
         if (opcode == 0x9)
         {
