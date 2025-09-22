@@ -7,7 +7,21 @@
 #include "../../CMA/CMA.hpp"
 #include "../../Libft/libft.hpp"
 #include "../../System_utils/test_runner.hpp"
+#include "../../Errno/errno.hpp"
 #include <thread>
+
+static ssize_t websocket_handshake_short_write_stub(int socket_fd, const void *buffer,
+                                                    size_t length, int flags)
+{
+    const char *char_buffer;
+
+    (void)socket_fd;
+    (void)flags;
+    char_buffer = static_cast<const char *>(buffer);
+    if (length >= 3 && ft_strncmp(char_buffer, "GET", 3) == 0)
+        return (0);
+    return (static_cast<ssize_t>(length));
+}
 
 static void websocket_client_worker(uint16_t port, ft_string *message, ft_string *key, int *result)
 {
@@ -90,4 +104,25 @@ FT_TEST(test_websocket_sha1_handshake, "websocket handshake computes SHA-1 accep
     if (!(expected_accept == known_accept))
         return (0);
     return (1);
+}
+
+FT_TEST(test_websocket_handshake_short_write_sets_error, "websocket handshake detects short write")
+{
+    ft_websocket_server server;
+    ft_websocket_client client;
+    uint16_t port;
+    int connect_result;
+    int error_code;
+
+    port = 54874;
+    if (server.start("127.0.0.1", port) != 0)
+        return (0);
+    nw_set_send_stub(&websocket_handshake_short_write_stub);
+    connect_result = client.connect("127.0.0.1", port, "/");
+    error_code = client.get_error();
+    nw_set_send_stub(NULL);
+    client.close();
+    if (connect_result == 0)
+        return (0);
+    return (error_code == SOCKET_SEND_FAILED);
 }
