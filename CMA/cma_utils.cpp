@@ -246,14 +246,14 @@ void print_block_info(Block *block)
     return ;
 }
 
-void cma_get_stats(std::size_t *allocation_count, std::size_t *free_count)
+void cma_get_stats(ft_size_t *allocation_count, ft_size_t *free_count)
 {
     if (g_cma_thread_safe)
         g_malloc_mutex.lock(THREAD_ID);
     if (allocation_count != ft_nullptr)
-        *allocation_count = g_cma_allocation_count;
+        *allocation_count = static_cast<ft_size_t>(g_cma_allocation_count);
     if (free_count != ft_nullptr)
-        *free_count = g_cma_free_count;
+        *free_count = static_cast<ft_size_t>(g_cma_free_count);
     if (g_cma_thread_safe)
         g_malloc_mutex.unlock(THREAD_ID);
     return ;

@@ -164,9 +164,6 @@ void ft_task_scheduler::timer_loop()
                     expired_task = this->_scheduled[index];
                     if (expired_task._function.get_error() != ER_SUCCESS)
                     {
-                        bool lock_released;
-                        bool fallback_executed;
-
                         this->set_error(expired_task._function.get_error());
                         lock_released = false;
                         fallback_executed = false;
