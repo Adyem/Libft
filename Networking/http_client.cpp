@@ -3,6 +3,8 @@
 #include "ssl_wrapper.hpp"
 #include <cstring>
 #include <cstdio>
+#include <cerrno>
+#include "../Errno/errno.hpp"
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>
@@ -11,6 +13,47 @@
 # include <arpa/inet.h>
 # include <unistd.h>
 #endif
+
+int http_client_send_plain_request(int socket_fd, const char *buffer, size_t length)
+{
+    size_t total_sent;
+    ssize_t send_result;
+
+    total_sent = 0;
+    while (total_sent < length)
+    {
+        send_result = nw_send(socket_fd, buffer + total_sent, length - total_sent, 0);
+        if (send_result <= 0)
+        {
+            if (send_result < 0)
+                ft_errno = errno + ERRNO_OFFSET;
+            else
+                ft_errno = SOCKET_SEND_FAILED;
+            return (-1);
+        }
+        total_sent += static_cast<size_t>(send_result);
+    }
+    return (0);
+}
+
+int http_client_send_ssl_request(SSL *ssl_connection, const char *buffer, size_t length)
+{
+    size_t total_sent;
+    ssize_t send_result;
+
+    total_sent = 0;
+    while (total_sent < length)
+    {
+        send_result = nw_ssl_write(ssl_connection, buffer + total_sent, length - total_sent);
+        if (send_result <= 0)
+        {
+            ft_errno = SOCKET_SEND_FAILED;
+            return (-1);
+        }
+        total_sent += static_cast<size_t>(send_result);
+    }
+    return (0);
+}
 
 int http_get(const char *host, const char *path, ft_string &response, bool use_ssl, const char *custom_port)
 {
@@ -87,7 +130,13 @@ int http_get(const char *host, const char *path, ft_string &response, bool use_s
             FT_CLOSE_SOCKET(socket_fd);
             return (-1);
         }
-        nw_ssl_write(ssl_connection, request.c_str(), request.size());
+        if (http_client_send_ssl_request(ssl_connection, request.c_str(), request.size()) != 0)
+        {
+            SSL_free(ssl_connection);
+            SSL_CTX_free(ssl_context);
+            FT_CLOSE_SOCKET(socket_fd);
+            return (-1);
+        }
         bytes_received = nw_ssl_read(ssl_connection, buffer, sizeof(buffer) - 1);
         while (bytes_received > 0)
         {
@@ -101,7 +150,11 @@ int http_get(const char *host, const char *path, ft_string &response, bool use_s
     }
     else
     {
-        nw_send(socket_fd, request.c_str(), request.size(), 0);
+        if (http_client_send_plain_request(socket_fd, request.c_str(), request.size()) != 0)
+        {
+            FT_CLOSE_SOCKET(socket_fd);
+            return (-1);
+        }
         bytes_received = nw_recv(socket_fd, buffer, sizeof(buffer) - 1, 0);
         while (bytes_received > 0)
         {
@@ -194,7 +247,13 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
             FT_CLOSE_SOCKET(socket_fd);
             return (-1);
         }
-        nw_ssl_write(ssl_connection, request.c_str(), request.size());
+        if (http_client_send_ssl_request(ssl_connection, request.c_str(), request.size()) != 0)
+        {
+            SSL_free(ssl_connection);
+            SSL_CTX_free(ssl_context);
+            FT_CLOSE_SOCKET(socket_fd);
+            return (-1);
+        }
         bytes_received = nw_ssl_read(ssl_connection, buffer, sizeof(buffer) - 1);
         while (bytes_received > 0)
         {
@@ -208,7 +267,11 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
     }
     else
     {
-        nw_send(socket_fd, request.c_str(), request.size(), 0);
+        if (http_client_send_plain_request(socket_fd, request.c_str(), request.size()) != 0)
+        {
+            FT_CLOSE_SOCKET(socket_fd);
+            return (-1);
+        }
         bytes_received = nw_recv(socket_fd, buffer, sizeof(buffer) - 1, 0);
         while (bytes_received > 0)
         {

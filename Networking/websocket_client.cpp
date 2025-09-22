@@ -145,7 +145,25 @@ int ft_websocket_client::perform_handshake(const char *host, const char *path)
     request.append("\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: ");
     request.append(key_string);
     request.append("\r\n\r\n");
-    nw_send(this->_socket_fd, request.c_str(), request.size(), 0);
+    const char *request_data;
+    size_t total_sent;
+    ssize_t send_result;
+
+    request_data = request.c_str();
+    total_sent = 0;
+    while (total_sent < request.size())
+    {
+        send_result = nw_send(this->_socket_fd, request_data + total_sent, request.size() - total_sent, 0);
+        if (send_result <= 0)
+        {
+            if (send_result < 0)
+                this->set_error(errno + ERRNO_OFFSET);
+            else
+                this->set_error(SOCKET_SEND_FAILED);
+            return (1);
+        }
+        total_sent += static_cast<size_t>(send_result);
+    }
     bytes_received = nw_recv(this->_socket_fd, buffer, sizeof(buffer) - 1, 0);
     if (bytes_received <= 0)
     {
@@ -224,7 +242,11 @@ int ft_websocket_client::connect(const char *host, uint16_t port, const char *pa
     }
     if (this->perform_handshake(host, path) != 0)
     {
+        int handshake_error;
+
+        handshake_error = this->_error_code;
         this->close();
+        this->set_error(handshake_error);
         return (1);
     }
     this->_error_code = ER_SUCCESS;

@@ -238,7 +238,26 @@ int ft_http_server::run_once()
         response.append("HTTP/1.1 200 OK\r\nContent-Length: 3\r\n\r\nGET");
     else
         response.append("HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n");
-    nw_send(client_socket, response.c_str(), response.size(), 0);
+    const char *response_data;
+    size_t total_sent;
+    ssize_t send_result;
+
+    response_data = response.c_str();
+    total_sent = 0;
+    while (total_sent < response.size())
+    {
+        send_result = nw_send(client_socket, response_data + total_sent, response.size() - total_sent, 0);
+        if (send_result <= 0)
+        {
+            FT_CLOSE_SOCKET(client_socket);
+            if (send_result < 0)
+                this->set_error(errno + ERRNO_OFFSET);
+            else
+                this->set_error(SOCKET_SEND_FAILED);
+            return (1);
+        }
+        total_sent += static_cast<size_t>(send_result);
+    }
     FT_CLOSE_SOCKET(client_socket);
     this->_error_code = ER_SUCCESS;
     return (0);
