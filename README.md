@@ -339,6 +339,11 @@ changed at runtime with `cma_set_alloc_limit`. A limit of `0` disables the
 check. The allocator also tracks allocation and free counts, accessible
 through `cma_get_stats`. Internally, `cma_realloc` has been simplified by
 removing redundant braces.
+`cma_calloc` now validates multiplication overflow by ensuring the element
+count is zero or the product of `count` and `size` stays within `SIZE_MAX`.
+Overflowing requests return `ft_nullptr` without incrementing the allocation
+counter, and a regression test exercises the guard to ensure the allocator
+never zero-initializes past the allocated buffer.
 Thread safety can be enabled or disabled with `cma_set_thread_safety`.
 
 ```
@@ -347,7 +352,7 @@ void    cma_free(void *ptr);
 int     cma_checked_free(void *ptr);
 char   *cma_strdup(const char *string);
 void   *cma_memdup(const void *src, size_t size);
-void   *cma_calloc(std::size_t nmemb, std::size_t size);
+void   *cma_calloc(ft_size_t nmemb, ft_size_t size);
 void   *cma_realloc(void *ptr, std::size_t new_size);
 void   *cma_aligned_alloc(std::size_t alignment, std::size_t size);
 std::size_t cma_alloc_size(const void *ptr);
@@ -363,7 +368,7 @@ void    cma_free_double(char **content);
 void    cma_cleanup();
 void    cma_set_alloc_limit(std::size_t limit);
 void    cma_set_thread_safety(bool enable);
-void    cma_get_stats(std::size_t *allocation_count, std::size_t *free_count);
+void    cma_get_stats(ft_size_t *allocation_count, ft_size_t *free_count);
 ```
 
 ### GetNextLine
@@ -1605,7 +1610,7 @@ bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_tim
 bool    time_parse_custom(const char *string_input, const char *format, std::tm *time_output, t_time *timestamp_output);
 ```
 
-`t_time` stores seconds since the Unix epoch, `t_monotonic_time_point` wraps a monotonic millisecond counter derived from `std::chrono::steady_clock`, `t_duration_milliseconds` represents millisecond durations without pulling in `<chrono>`, and `t_time_info` holds the broken-down components.
+`t_time` stores seconds since the Unix epoch, `t_monotonic_time_point` wraps a monotonic millisecond counter derived from `std::chrono::steady_clock`, `t_duration_milliseconds` represents millisecond durations without pulling in `<chrono>`, and `t_time_info` holds the broken-down components. `time_monotonic` now forwards that millisecond counter through `static_cast<long>` so the helper satisfies the project's `-Wold-style-cast` policy without changing its return value semantics.
 
 Example:
 

@@ -1,5 +1,7 @@
 #include "../../CMA/CMA.hpp"
 #include "../../Errno/errno.hpp"
+#include "../../System_utils/test_runner.hpp"
+#include <cstdint>
 #include <thread>
 
 int test_cma_checked_free_basic(void)
@@ -28,6 +30,20 @@ int test_cma_checked_free_invalid(void)
     ft_errno = 0;
     int r = cma_checked_free(&local);
     return (r == -1 && ft_errno == CMA_INVALID_PTR);
+}
+
+FT_TEST(test_cma_calloc_overflow_guard, "cma_calloc rejects overflowed sizes")
+{
+    ft_size_t allocation_count_before;
+    ft_size_t allocation_count_after;
+    void *allocated_pointer;
+
+    cma_get_stats(&allocation_count_before, ft_nullptr);
+    allocated_pointer = cma_calloc(SIZE_MAX, 2);
+    cma_get_stats(&allocation_count_after, ft_nullptr);
+    FT_ASSERT(allocated_pointer == ft_nullptr);
+    FT_ASSERT_EQ(allocation_count_before, allocation_count_after);
+    return (1);
 }
 
 static void cma_thread_success(bool *thread_result)
