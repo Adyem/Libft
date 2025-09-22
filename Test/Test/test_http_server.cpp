@@ -5,67 +5,52 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../PThread/thread.hpp"
 #include "../../Errno/errno.hpp"
+#include "network_io_harness.hpp"
 #include <unistd.h>
+#include <thread>
+#include <chrono>
 
-static size_t g_http_server_partial_calls = 0;
-static size_t g_http_server_partial_total = 0;
-static size_t g_http_server_expected_total = 0;
-static int g_http_server_error_stub_called = 0;
-static int g_http_server_partial_active = 0;
-
-static ssize_t http_server_partial_send_stub(int socket_fd, const void *buffer,
-                                            size_t length, int flags)
+struct http_client_read_result
 {
-    const char *char_buffer;
-    size_t chunk_size;
-    ssize_t send_result;
+    ft_string data;
+    size_t read_iterations;
+    int status;
+};
 
-    (void)socket_fd;
-    (void)flags;
-    char_buffer = static_cast<const char *>(buffer);
-    if (length >= 4 && ft_strncmp(char_buffer, "HTTP", 4) == 0)
-        g_http_server_partial_active = 1;
-    if (g_http_server_partial_active != 0)
+static void slow_client_read(int descriptor, size_t expected_length, int delay_milliseconds,
+                             http_client_read_result *result)
+{
+    char buffer[32];
+
+    if (result == ft_nullptr)
+        return ;
+    result->data.clear();
+    result->read_iterations = 0;
+    result->status = 0;
+    while (result->data.size() < expected_length)
     {
-        g_http_server_partial_calls++;
-        if (length > 7)
-            chunk_size = 7;
+        size_t remaining_length;
+        size_t bytes_to_read;
+        ssize_t read_result;
+
+        remaining_length = expected_length - result->data.size();
+        if (remaining_length < sizeof(buffer))
+            bytes_to_read = remaining_length;
         else
-            chunk_size = length;
-        nw_set_send_stub(NULL);
-        send_result = nw_send(socket_fd, buffer, chunk_size, flags);
-        nw_set_send_stub(&http_server_partial_send_stub);
-        if (send_result > 0)
-            g_http_server_partial_total += static_cast<size_t>(send_result);
-        if (length <= 7)
-            g_http_server_partial_active = 0;
-        return (send_result);
+            bytes_to_read = sizeof(buffer);
+        read_result = nw_recv(descriptor, buffer, bytes_to_read, 0);
+        if (read_result <= 0)
+        {
+            if (read_result < 0)
+                result->status = -1;
+            return ;
+        }
+        result->data.append(buffer, static_cast<size_t>(read_result));
+        result->read_iterations++;
+        if (delay_milliseconds > 0)
+            std::this_thread::sleep_for(std::chrono::milliseconds(delay_milliseconds));
     }
-    nw_set_send_stub(NULL);
-    send_result = nw_send(socket_fd, buffer, length, flags);
-    nw_set_send_stub(&http_server_partial_send_stub);
-    return (send_result);
-}
-
-static ssize_t http_server_short_write_stub(int socket_fd, const void *buffer,
-                                            size_t length, int flags)
-{
-    const char *char_buffer;
-    ssize_t send_result;
-
-    (void)socket_fd;
-    (void)flags;
-    char_buffer = static_cast<const char *>(buffer);
-    if (length >= 4 && ft_strncmp(char_buffer, "HTTP", 4) == 0)
-    {
-        g_http_server_error_stub_called = 1;
-        nw_set_send_stub(NULL);
-        return (0);
-    }
-    nw_set_send_stub(NULL);
-    send_result = nw_send(socket_fd, buffer, length, flags);
-    nw_set_send_stub(&http_server_short_write_stub);
-    return (send_result);
+    return ;
 }
 
 static void server_worker(ft_http_server *server)
@@ -144,63 +129,99 @@ FT_TEST(test_http_server_partial_send_retries, "HTTP server retries partial nw_s
 {
     ft_http_server server;
     const char *expected_response;
+    network_io_harness harness;
+    ft_thread server_thread_object;
+    size_t expected_length;
+    http_client_read_result read_result;
+    std::thread reader_thread;
+    const char *request_string;
+    ssize_t send_result;
 
     if (server.start("127.0.0.1", 54332) != 0)
         return (0);
     expected_response = "HTTP/1.1 200 OK\r\nContent-Length: 3\r\n\r\nGET";
-    g_http_server_partial_calls = 0;
-    g_http_server_partial_total = 0;
-    g_http_server_expected_total = ft_strlen(expected_response);
-    g_http_server_partial_active = 0;
-    nw_set_send_stub(&http_server_partial_send_stub);
-    ft_thread server_thread_object(server_worker, &server);
-    SocketConfig client_configuration;
-    client_configuration._type = SocketType::CLIENT;
-    client_configuration._port = 54332;
-    ft_socket client_socket(client_configuration);
-    if (client_socket.get_error() != ER_SUCCESS)
+    server_thread_object = ft_thread(server_worker, &server);
+    if (harness.connect_remote("127.0.0.1", 54332) != ER_SUCCESS)
     {
         server_thread_object.join();
-        nw_set_send_stub(NULL);
         return (0);
     }
-    const char *request_string = "GET / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
-    client_socket.send_all(request_string, ft_strlen(request_string), 0);
+    if (harness.set_client_receive_buffer(32) != ER_SUCCESS)
+    {
+        server_thread_object.join();
+        return (0);
+    }
+    expected_length = ft_strlen(expected_response);
+    reader_thread = std::thread([&harness, expected_length, &read_result]()
+    {
+        slow_client_read(harness.get_client_fd(), expected_length, 10, &read_result);
+    });
+    request_string = "GET / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
+    send_result = harness.get_client_socket().send_all(request_string, ft_strlen(request_string), 0);
+    if (send_result < 0)
+    {
+        if (reader_thread.joinable())
+            reader_thread.join();
+        server_thread_object.join();
+        return (0);
+    }
     server_thread_object.join();
-    nw_set_send_stub(NULL);
+    if (reader_thread.joinable())
+        reader_thread.join();
     if (server.get_error() != ER_SUCCESS)
         return (0);
-    if (g_http_server_partial_calls < 2)
+    if (read_result.status != 0)
         return (0);
-    if (g_http_server_partial_total != g_http_server_expected_total)
+    if (read_result.data != expected_response)
         return (0);
-    return (1);
+    return (read_result.read_iterations > 1);
 }
 
 FT_TEST(test_http_server_short_write_sets_error, "HTTP server detects short write")
 {
     ft_http_server server;
+    network_io_harness harness;
+    ft_thread server_thread_object;
+    const char *request_string;
+    std::thread closer_thread;
+    ssize_t send_result;
+    int error_code;
 
     if (server.start("127.0.0.1", 54333) != 0)
         return (0);
-    g_http_server_error_stub_called = 0;
-    nw_set_send_stub(&http_server_short_write_stub);
-    ft_thread server_thread_object(server_worker, &server);
-    SocketConfig client_configuration;
-    client_configuration._type = SocketType::CLIENT;
-    client_configuration._port = 54333;
-    ft_socket client_socket(client_configuration);
-    if (client_socket.get_error() != ER_SUCCESS)
+    server_thread_object = ft_thread(server_worker, &server);
+    if (harness.connect_remote("127.0.0.1", 54333) != ER_SUCCESS)
     {
         server_thread_object.join();
-        nw_set_send_stub(NULL);
         return (0);
     }
-    const char *request_string = "GET / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
-    client_socket.send_all(request_string, ft_strlen(request_string), 0);
+    closer_thread = std::thread([&harness]()
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        harness.close_client();
+    });
+    request_string = "GET / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
+    send_result = harness.get_client_socket().send_all(request_string, ft_strlen(request_string), 0);
+    if (closer_thread.joinable())
+        closer_thread.join();
     server_thread_object.join();
-    nw_set_send_stub(NULL);
-    if (g_http_server_error_stub_called == 0)
+    if (send_result < 0)
         return (0);
-    return (server.get_error() == SOCKET_SEND_FAILED);
+    error_code = server.get_error();
+    if (error_code == SOCKET_SEND_FAILED)
+        return (1);
+#ifdef _WIN32
+    if (error_code == (WSAECONNRESET + ERRNO_OFFSET)
+        || error_code == (WSAENOTCONN + ERRNO_OFFSET)
+        || error_code == (WSAECONNABORTED + ERRNO_OFFSET))
+        return (1);
+#else
+    if (error_code == (ECONNRESET + ERRNO_OFFSET))
+        return (1);
+#ifdef EPIPE
+    if (error_code == (EPIPE + ERRNO_OFFSET))
+        return (1);
+#endif
+#endif
+    return (0);
 }
