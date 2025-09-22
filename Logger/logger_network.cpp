@@ -73,12 +73,39 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
 void ft_network_sink(const char *message, void *user_data)
 {
     s_network_sink *sink;
-    size_t length;
+    const char    *char_message;
+    size_t         message_length;
+    size_t         total_bytes_sent;
+    ssize_t        send_result;
 
     sink = static_cast<s_network_sink *>(user_data);
     if (!sink)
         return ;
-    length = ft_strlen(message);
-    nw_send(sink->socket_fd, message, length, 0);
+    if (!message)
+        return ;
+    char_message = message;
+    message_length = ft_strlen(message);
+    total_bytes_sent = 0;
+    while (total_bytes_sent < message_length)
+    {
+        send_result = nw_send(sink->socket_fd,
+                              char_message + total_bytes_sent,
+                              message_length - total_bytes_sent,
+                              0);
+        if (send_result < 0)
+        {
+            if (ft_errno == ER_SUCCESS)
+                ft_errno = SOCKET_SEND_FAILED;
+            return ;
+        }
+        if (send_result == 0)
+        {
+            if (ft_errno == ER_SUCCESS)
+                ft_errno = SOCKET_SEND_FAILED;
+            return ;
+        }
+        total_bytes_sent += static_cast<size_t>(send_result);
+    }
+    ft_errno = ER_SUCCESS;
     return ;
 }
