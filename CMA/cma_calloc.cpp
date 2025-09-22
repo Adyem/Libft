@@ -1,26 +1,30 @@
-#include <cstddef>
+#include <cstdint>
 #include <stdbool.h>
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Libft/libft.hpp"
 #include "CMA.hpp"
 
-void    *cma_calloc(std::size_t count, std::size_t size)
+void    *cma_calloc(ft_size_t count, ft_size_t size)
 {
-    void            *ptr;
-    std::size_t        total_size;
-    char            *char_ptr;
+    void            *memory_pointer;
+    ft_size_t        total_size;
+    char            *character_pointer;
+    ft_size_t        index;
 
-    if (count <= 0 || size <= 0)
+    if (count == 0 || size == 0)
+        return (ft_nullptr);
+    if (count != 0 && size > SIZE_MAX / count)
         return (ft_nullptr);
     total_size = count * size;
-    ptr = cma_malloc(total_size);
-    if (!ptr)
+    memory_pointer = cma_malloc(total_size);
+    if (!memory_pointer)
         return (ft_nullptr);
-    char_ptr = static_cast<char*>(ptr);
-    std::size_t index = 0;
+    character_pointer = static_cast<char*>(memory_pointer);
+    index = 0;
     while (index < total_size)
     {
-        char_ptr[index] = 0;
+        character_pointer[index] = 0;
         index++;
     }
-    return (ptr);
+    return (memory_pointer);
 }

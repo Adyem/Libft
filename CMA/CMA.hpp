@@ -11,7 +11,7 @@ void    cma_free(void* ptr) __attribute__ ((hot));
 int     cma_checked_free(void* ptr) __attribute__ ((warn_unused_result, hot));
 char    *cma_strdup(const char *string) __attribute__ ((warn_unused_result));
 void    *cma_memdup(const void *source, size_t size) __attribute__ ((warn_unused_result));
-void    *cma_calloc(std::size_t, std::size_t size) __attribute__ ((warn_unused_result));
+void    *cma_calloc(ft_size_t count, ft_size_t size) __attribute__ ((warn_unused_result));
 void    *cma_realloc(void* ptr, std::size_t new_size) __attribute__ ((warn_unused_result));
 void    *cma_aligned_alloc(std::size_t alignment, std::size_t size)
             __attribute__ ((warn_unused_result, hot));
@@ -34,7 +34,7 @@ void    cma_free_double(char **content);
 void    cma_cleanup();
 void    cma_set_alloc_limit(std::size_t limit);
 void    cma_set_thread_safety(bool enable);
-void    cma_get_stats(std::size_t *allocation_count, std::size_t *free_count);
+void    cma_get_stats(ft_size_t *allocation_count, ft_size_t *free_count);
 
 template <int total_argument_count, typename... argument_types>
 char    *cma_strjoin_multiple_checked(const argument_types &... strings)
