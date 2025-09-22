@@ -4,6 +4,7 @@
 #include <cerrno>
 #include <cstring>
 #include <new>
+#include <climits>
 #ifdef _WIN32
 # include <windows.h>
 # include <winsock2.h>
@@ -148,19 +149,12 @@ int network_io_harness::initialize(uint16_t port)
 
 void network_io_harness::shutdown()
 {
-    if (this->_reader_thread != ft_nullptr)
-    {
+    int client_fd;
+
+    client_fd = this->_client_socket.get_fd();
+    this->close_server();
+    if (this->_reader_fd == client_fd)
         this->stop_throttled_reads();
-    }
-    if (this->_accepted_fd >= 0)
-    {
-#ifdef _WIN32
-        closesocket(static_cast<SOCKET>(this->_accepted_fd));
-#else
-        close(this->_accepted_fd);
-#endif
-        this->_accepted_fd = -1;
-    }
     this->_client_socket.close_socket();
     this->_listener_socket.close_socket();
     this->set_error(ER_SUCCESS);
@@ -226,6 +220,42 @@ int network_io_harness::set_blocking_flag(int file_descriptor, bool should_block
     return (ER_SUCCESS);
 }
 
+int network_io_harness::set_socket_buffer(int file_descriptor, int option_name, size_t size)
+{
+    int buffer_size;
+    int result;
+
+    if (file_descriptor < 0)
+    {
+        this->set_error(FT_EINVAL);
+        return (this->_error_code);
+    }
+    if (size > static_cast<size_t>(INT_MAX))
+    {
+        this->set_error(FT_EINVAL);
+        return (this->_error_code);
+    }
+    buffer_size = static_cast<int>(size);
+#ifdef _WIN32
+    result = setsockopt(static_cast<SOCKET>(file_descriptor), SOL_SOCKET, option_name,
+        reinterpret_cast<const char *>(&buffer_size), sizeof(buffer_size));
+    if (result != 0)
+    {
+        this->set_error(WSAGetLastError() + ERRNO_OFFSET);
+        return (this->_error_code);
+    }
+#else
+    result = setsockopt(file_descriptor, SOL_SOCKET, option_name, &buffer_size, sizeof(buffer_size));
+    if (result != 0)
+    {
+        this->set_error(errno + ERRNO_OFFSET);
+        return (this->_error_code);
+    }
+#endif
+    this->set_error(ER_SUCCESS);
+    return (ER_SUCCESS);
+}
+
 int network_io_harness::set_blocking(bool should_block)
 {
     int client_fd;
@@ -246,6 +276,38 @@ int network_io_harness::set_blocking(bool should_block)
     return (ER_SUCCESS);
 }
 
+int network_io_harness::set_client_blocking(bool should_block)
+{
+    int client_fd;
+
+    client_fd = this->_client_socket.get_fd();
+    if (client_fd < 0)
+    {
+        this->set_error(FT_EINVAL);
+        return (this->_error_code);
+    }
+    if (this->set_blocking_flag(client_fd, should_block) != ER_SUCCESS)
+        return (this->_error_code);
+    this->set_error(ER_SUCCESS);
+    return (ER_SUCCESS);
+}
+
+int network_io_harness::set_server_blocking(bool should_block)
+{
+    int server_fd;
+
+    server_fd = this->_accepted_fd;
+    if (server_fd < 0)
+    {
+        this->set_error(FT_EINVAL);
+        return (this->_error_code);
+    }
+    if (this->set_blocking_flag(server_fd, should_block) != ER_SUCCESS)
+        return (this->_error_code);
+    this->set_error(ER_SUCCESS);
+    return (ER_SUCCESS);
+}
+
 int network_io_harness::enable_non_blocking()
 {
     return (this->set_blocking(false));
@@ -254,6 +316,26 @@ int network_io_harness::enable_non_blocking()
 int network_io_harness::enable_blocking()
 {
     return (this->set_blocking(true));
+}
+
+int network_io_harness::set_client_send_buffer(size_t buffer_size)
+{
+    return (this->set_socket_buffer(this->_client_socket.get_fd(), SO_SNDBUF, buffer_size));
+}
+
+int network_io_harness::set_server_send_buffer(size_t buffer_size)
+{
+    return (this->set_socket_buffer(this->_accepted_fd, SO_SNDBUF, buffer_size));
+}
+
+int network_io_harness::set_client_receive_buffer(size_t buffer_size)
+{
+    return (this->set_socket_buffer(this->_client_socket.get_fd(), SO_RCVBUF, buffer_size));
+}
+
+int network_io_harness::set_server_receive_buffer(size_t buffer_size)
+{
+    return (this->set_socket_buffer(this->_accepted_fd, SO_RCVBUF, buffer_size));
 }
 
 void network_io_harness::cleanup_reader()
@@ -269,22 +351,19 @@ void network_io_harness::cleanup_reader()
     return ;
 }
 
-int network_io_harness::start_throttled_reads(size_t throttle_bytes, size_t delay_microseconds)
+int network_io_harness::start_reader_on_descriptor(int descriptor, size_t throttle_bytes, size_t delay_microseconds)
 {
-    int reader_fd;
-
     this->stop_throttled_reads();
-    reader_fd = this->_client_socket.get_fd();
-    if (reader_fd < 0)
+    if (descriptor < 0)
     {
         this->set_error(FT_EINVAL);
         return (this->_error_code);
     }
     this->_throttle_bytes = throttle_bytes;
     this->_throttle_delay_us = delay_microseconds;
-    this->_reader_fd = reader_fd;
+    this->_reader_fd = descriptor;
     this->_stop_reader = 0;
-    if (this->set_blocking_flag(reader_fd, false) != ER_SUCCESS)
+    if (this->set_blocking_flag(descriptor, false) != ER_SUCCESS)
         return (this->_error_code);
     this->_reader_thread = new (std::nothrow) ft_thread(&network_io_harness::reader_entry, this);
     if (this->_reader_thread == ft_nullptr)
@@ -301,6 +380,16 @@ int network_io_harness::start_throttled_reads(size_t throttle_bytes, size_t dela
     }
     this->set_error(ER_SUCCESS);
     return (ER_SUCCESS);
+}
+
+int network_io_harness::start_throttled_reads(size_t throttle_bytes, size_t delay_microseconds)
+{
+    return (this->start_reader_on_descriptor(this->_client_socket.get_fd(), throttle_bytes, delay_microseconds));
+}
+
+int network_io_harness::start_throttled_reads_on_server(size_t throttle_bytes, size_t delay_microseconds)
+{
+    return (this->start_reader_on_descriptor(this->_accepted_fd, throttle_bytes, delay_microseconds));
 }
 
 void network_io_harness::reader_entry(network_io_harness *harness)
@@ -383,8 +472,29 @@ void network_io_harness::stop_throttled_reads()
 
 void network_io_harness::close_client()
 {
-    this->stop_throttled_reads();
+    int client_fd;
+
+    client_fd = this->_client_socket.get_fd();
+    if (this->_reader_fd == client_fd)
+        this->stop_throttled_reads();
     this->_client_socket.close_socket();
+    this->set_error(ER_SUCCESS);
+    return ;
+}
+
+void network_io_harness::close_server()
+{
+    if (this->_reader_fd == this->_accepted_fd)
+        this->stop_throttled_reads();
+    if (this->_accepted_fd >= 0)
+    {
+#ifdef _WIN32
+        closesocket(static_cast<SOCKET>(this->_accepted_fd));
+#else
+        close(this->_accepted_fd);
+#endif
+        this->_accepted_fd = -1;
+    }
     this->set_error(ER_SUCCESS);
     return ;
 }

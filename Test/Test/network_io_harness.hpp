@@ -27,8 +27,10 @@ class network_io_harness
         int connect_client(uint16_t port);
         int accept_client();
         int set_blocking_flag(int file_descriptor, bool should_block);
+        int set_socket_buffer(int file_descriptor, int option_name, size_t size);
         void cleanup_reader();
         void reader_loop();
+        int start_reader_on_descriptor(int descriptor, size_t throttle_bytes, size_t delay_microseconds);
         static void reader_entry(network_io_harness *harness);
 
     public:
@@ -43,12 +45,21 @@ class network_io_harness
         ft_socket &get_client_socket();
 
         int set_blocking(bool should_block);
+        int set_client_blocking(bool should_block);
+        int set_server_blocking(bool should_block);
         int enable_non_blocking();
         int enable_blocking();
 
+        int set_client_send_buffer(size_t buffer_size);
+        int set_server_send_buffer(size_t buffer_size);
+        int set_client_receive_buffer(size_t buffer_size);
+        int set_server_receive_buffer(size_t buffer_size);
+
         int start_throttled_reads(size_t throttle_bytes, size_t delay_microseconds);
+        int start_throttled_reads_on_server(size_t throttle_bytes, size_t delay_microseconds);
         void stop_throttled_reads();
         void close_client();
+        void close_server();
 
         int get_error() const;
         const char *get_error_str() const;
