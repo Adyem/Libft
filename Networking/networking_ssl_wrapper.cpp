@@ -15,22 +15,9 @@ static ssize_t ssl_write_platform(SSL *ssl, const void *buf, size_t len)
     return (ret);
 }
 
-static ssize_t (*g_ssl_write_function)(SSL *ssl, const void *buffer, size_t length) = &ssl_write_platform;
-
-void nw_set_ssl_write_stub(ssize_t (*ssl_write_stub)(SSL *ssl, const void *buffer, size_t length))
-{
-    if (ssl_write_stub == NULL)
-    {
-        g_ssl_write_function = &ssl_write_platform;
-        return ;
-    }
-    g_ssl_write_function = ssl_write_stub;
-    return ;
-}
-
 ssize_t nw_ssl_write(SSL *ssl, const void *buf, size_t len)
 {
-    return (g_ssl_write_function(ssl, buf, len));
+    return (ssl_write_platform(ssl, buf, len));
 }
 
 ssize_t nw_ssl_read(SSL *ssl, void *buf, size_t len)
