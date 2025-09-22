@@ -202,6 +202,231 @@ static void websocket_split_handshake_server(uint16_t port, int *result)
     return ;
 }
 
+static void websocket_response_server(uint16_t port, const ft_string *message,
+                                      bool use_mask, int *result)
+{
+    int listen_socket;
+    struct sockaddr_in server_address;
+    struct sockaddr_storage client_address;
+    socklen_t client_length;
+    int client_socket;
+    char buffer[1024];
+    ssize_t bytes_received;
+    ft_string request;
+    const char *header_terminator;
+    const char *key_line;
+    const char *key_end;
+    ft_string key_value;
+    ft_string magic;
+    unsigned char digest[20];
+    unsigned char *encoded_accept;
+    std::size_t encoded_size;
+    ft_string accept_value;
+    ft_string response;
+    const char *response_data;
+    size_t response_length;
+    size_t sent_total;
+    ssize_t send_result;
+    int reuse_value;
+    int option_result;
+    const char *message_data;
+    std::size_t message_length;
+    ft_string frame;
+    unsigned char mask_key[4];
+
+    *result = 0;
+    listen_socket = nw_socket(AF_INET, SOCK_STREAM, 0);
+    if (listen_socket < 0)
+        return ;
+    reuse_value = 1;
+#ifdef _WIN32
+    option_result = setsockopt(static_cast<SOCKET>(listen_socket), SOL_SOCKET, SO_REUSEADDR,
+                               reinterpret_cast<const char *>(&reuse_value), sizeof(reuse_value));
+    if (option_result == SOCKET_ERROR)
+#else
+    option_result = setsockopt(listen_socket, SOL_SOCKET, SO_REUSEADDR, &reuse_value, sizeof(reuse_value));
+    if (option_result != 0)
+#endif
+    {
+        FT_CLOSE_SOCKET(listen_socket);
+        return ;
+    }
+    std::memset(&server_address, 0, sizeof(server_address));
+    server_address.sin_family = AF_INET;
+    server_address.sin_port = htons(port);
+    if (nw_inet_pton(AF_INET, "127.0.0.1", &server_address.sin_addr) != 1)
+    {
+        FT_CLOSE_SOCKET(listen_socket);
+        return ;
+    }
+    if (nw_bind(listen_socket, reinterpret_cast<struct sockaddr *>(&server_address), sizeof(server_address)) != 0)
+    {
+        FT_CLOSE_SOCKET(listen_socket);
+        return ;
+    }
+    if (nw_listen(listen_socket, 1) != 0)
+    {
+        FT_CLOSE_SOCKET(listen_socket);
+        return ;
+    }
+    client_length = sizeof(client_address);
+    client_socket = nw_accept(listen_socket, reinterpret_cast<struct sockaddr *>(&client_address), &client_length);
+    FT_CLOSE_SOCKET(listen_socket);
+    if (client_socket < 0)
+        return ;
+    request.clear();
+    while (true)
+    {
+        bytes_received = nw_recv(client_socket, buffer, sizeof(buffer) - 1, 0);
+        if (bytes_received <= 0)
+        {
+            FT_CLOSE_SOCKET(client_socket);
+            return ;
+        }
+        buffer[bytes_received] = '\0';
+        request.append(buffer);
+        header_terminator = ft_strstr(request.c_str(), "\r\n\r\n");
+        if (header_terminator)
+            break;
+    }
+    key_line = ft_strstr(request.c_str(), "Sec-WebSocket-Key: ");
+    if (!key_line)
+    {
+        FT_CLOSE_SOCKET(client_socket);
+        return ;
+    }
+    key_line += ft_strlen("Sec-WebSocket-Key: ");
+    key_end = ft_strstr(key_line, "\r\n");
+    key_value.clear();
+    if (key_end)
+    {
+        size_t key_index;
+
+        key_index = 0;
+        while (key_line + key_index < key_end)
+        {
+            key_value.append(key_line[key_index]);
+            key_index++;
+        }
+    }
+    else
+    {
+        size_t key_index;
+
+        key_index = 0;
+        while (key_line[key_index] != '\0')
+        {
+            key_value.append(key_line[key_index]);
+            key_index++;
+        }
+    }
+    magic = key_value;
+    magic.append("258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
+    sha1_hash(magic.c_str(), magic.size(), digest);
+    encoded_accept = ft_base64_encode(digest, 20, &encoded_size);
+    if (!encoded_accept)
+    {
+        FT_CLOSE_SOCKET(client_socket);
+        return ;
+    }
+    accept_value.clear();
+    size_t accept_index;
+
+    accept_index = 0;
+    while (accept_index < encoded_size)
+    {
+        accept_value.append(reinterpret_cast<char *>(encoded_accept)[accept_index]);
+        accept_index++;
+    }
+    cma_free(encoded_accept);
+    response.clear();
+    response.append("HTTP/1.1 101 Switching Protocols\r\n");
+    response.append("Upgrade: websocket\r\n");
+    response.append("Connection: Upgrade\r\n");
+    response.append("Sec-WebSocket-Accept: ");
+    response.append(accept_value);
+    response.append("\r\n\r\n");
+    response_data = response.c_str();
+    response_length = response.size();
+    sent_total = 0;
+    while (sent_total < response_length)
+    {
+        send_result = nw_send(client_socket, response_data + sent_total, response_length - sent_total, 0);
+        if (send_result <= 0)
+        {
+            FT_CLOSE_SOCKET(client_socket);
+            return ;
+        }
+        sent_total += static_cast<size_t>(send_result);
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    message_data = message->c_str();
+    message_length = message->size();
+    if (message_length > 125)
+    {
+        FT_CLOSE_SOCKET(client_socket);
+        return ;
+    }
+    frame.clear();
+    frame.append(static_cast<char>(0x81));
+    unsigned char length_byte;
+
+    length_byte = static_cast<unsigned char>(message_length);
+    if (use_mask)
+        frame.append(static_cast<char>(0x80 | length_byte));
+    else
+        frame.append(static_cast<char>(length_byte));
+    if (use_mask)
+    {
+        mask_key[0] = 0x12;
+        mask_key[1] = 0x34;
+        mask_key[2] = 0x56;
+        mask_key[3] = 0x78;
+        std::size_t mask_index;
+
+        mask_index = 0;
+        while (mask_index < 4)
+        {
+            frame.append(static_cast<char>(mask_key[mask_index]));
+            mask_index++;
+        }
+    }
+    std::size_t payload_index;
+
+    payload_index = 0;
+    while (payload_index < message_length)
+    {
+        char frame_char;
+
+        if (use_mask)
+            frame_char = static_cast<char>(message_data[payload_index] ^ mask_key[payload_index % 4]);
+        else
+            frame_char = message_data[payload_index];
+        frame.append(frame_char);
+        payload_index++;
+    }
+    const char *frame_data;
+    size_t frame_length;
+
+    frame_data = frame.c_str();
+    frame_length = frame.size();
+    sent_total = 0;
+    while (sent_total < frame_length)
+    {
+        send_result = nw_send(client_socket, frame_data + sent_total, frame_length - sent_total, 0);
+        if (send_result <= 0)
+        {
+            FT_CLOSE_SOCKET(client_socket);
+            return ;
+        }
+        sent_total += static_cast<size_t>(send_result);
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    FT_CLOSE_SOCKET(client_socket);
+    *result = 1;
+    return ;
+}
+
 static void websocket_client_worker(uint16_t port, ft_string *message, ft_string *key, int *result)
 {
     ft_websocket_client client;
@@ -326,4 +551,84 @@ FT_TEST(test_websocket_handshake_short_write_sets_error, "websocket handshake de
     if (connect_result == 0)
         return (0);
     return (error_code == SOCKET_SEND_FAILED);
+}
+
+FT_TEST(test_websocket_client_receives_masked_frame, "websocket client handles masked server frames")
+{
+    uint16_t port;
+    ft_string expected_message;
+    ft_string received_message;
+    ft_websocket_client client;
+    int connect_result;
+    int receive_result;
+    int server_result;
+    int error_code;
+
+    port = 54876;
+    expected_message = "masked reply";
+    server_result = 0;
+    std::thread server_thread(websocket_response_server, port, &expected_message, true, &server_result);
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    connect_result = client.connect("127.0.0.1", port, "/");
+    if (connect_result != 0)
+    {
+        client.close();
+        if (server_thread.joinable())
+        {
+            server_thread.join();
+        }
+        FT_ASSERT(connect_result == 0);
+    }
+    receive_result = client.receive_text(received_message);
+    error_code = client.get_error();
+    client.close();
+    if (server_thread.joinable())
+    {
+        server_thread.join();
+    }
+    FT_ASSERT(server_result == 1);
+    FT_ASSERT(receive_result == 0);
+    FT_ASSERT(error_code == ER_SUCCESS);
+    FT_ASSERT(received_message == expected_message);
+    return (1);
+}
+
+FT_TEST(test_websocket_client_receives_unmasked_frame, "websocket client handles unmasked server frames")
+{
+    uint16_t port;
+    ft_string expected_message;
+    ft_string received_message;
+    ft_websocket_client client;
+    int connect_result;
+    int receive_result;
+    int server_result;
+    int error_code;
+
+    port = 54877;
+    expected_message = "plain reply";
+    server_result = 0;
+    std::thread server_thread(websocket_response_server, port, &expected_message, false, &server_result);
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    connect_result = client.connect("127.0.0.1", port, "/");
+    if (connect_result != 0)
+    {
+        client.close();
+        if (server_thread.joinable())
+        {
+            server_thread.join();
+        }
+        FT_ASSERT(connect_result == 0);
+    }
+    receive_result = client.receive_text(received_message);
+    error_code = client.get_error();
+    client.close();
+    if (server_thread.joinable())
+    {
+        server_thread.join();
+    }
+    FT_ASSERT(server_result == 1);
+    FT_ASSERT(receive_result == 0);
+    FT_ASSERT(error_code == ER_SUCCESS);
+    FT_ASSERT(received_message == expected_message);
+    return (1);
 }
