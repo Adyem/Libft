@@ -46,7 +46,7 @@ The current suite exercises components across multiple modules:
   `ft_memcmp`, `ft_memcpy`, `ft_memdup`, `ft_memmove`, `ft_memset`, `ft_strchr`, `ft_strcmp`, `ft_strjoin_multiple`, `ft_strlcat`, `ft_strlcpy`, `ft_strncpy`, `ft_strlen`, `ft_strncmp`,
   `ft_strnstr`, `ft_strstr`, `ft_strrchr`, `ft_strmapi`, `ft_striteri`, `ft_strtok`, `ft_strtol`, `ft_strtoul`, `ft_setenv`, `ft_unsetenv`, `ft_getenv`, `ft_to_lower`, `ft_to_upper`,
 `ft_fopen`, `ft_fclose`, `ft_fgets`, `ft_time_ms`, `ft_time_format`, `ft_to_string`
-- **Concurrency**: `ft_promise`, `ft_task_scheduler`, `ft_this_thread`, with the scheduler clearing success paths and surfacing queue allocation or empty-pop failures through its `_error_code` mirror.
+- **PThread**: `ft_task_scheduler` joins the existing `ft_thread` and `ft_this_thread` helpers. The scheduler clears success paths, surfaces queue allocation or empty-pop failures through its `_error_code` mirror, routes timed callbacks through the Time module's `time_monotonic_point_*` helpers instead of constructing `std::chrono::steady_clock` points directly, stores worker state in `ft_vector<ft_thread>` so thread management and futures stay on the library's error-reporting abstractions, and releases the scheduled-task mutex before executing fallbacks when cloning scheduled callbacks or pushing them into the work queue fails so recursive scheduling never deadlocks.
 - **Networking**: IPv4 and IPv6 send/receive paths, UDP datagrams, a simple HTTP server, and WebSocket client/server handshake
   coverage using the RFC 6455 GUID alongside a regression that splits the client handshake response across multiple receives to
   validate incremental parsing
@@ -406,10 +406,10 @@ int pt_thread_equal(pthread_t thread1, pthread_t thread2);
 pt_thread_id_type pt_thread_self();
 template <typename ValueType, typename Function>
 int pt_async(ft_promise<ValueType>& promise, Function function);
-int pt_atomic_load(const std::atomic<int>& atomic_variable);
-void pt_atomic_store(std::atomic<int>& atomic_variable, int desired_value);
-int pt_atomic_fetch_add(std::atomic<int>& atomic_variable, int increment_value);
-bool pt_atomic_compare_exchange(std::atomic<int>& atomic_variable, int& expected_value, int desired_value);
+int pt_atomic_load(const ft_atomic<int>& atomic_variable);
+void pt_atomic_store(ft_atomic<int>& atomic_variable, int desired_value);
+int pt_atomic_fetch_add(ft_atomic<int>& atomic_variable, int increment_value);
+bool pt_atomic_compare_exchange(ft_atomic<int>& atomic_variable, int& expected_value, int desired_value);
 int pt_cond_init(pthread_cond_t *condition, const pthread_condattr_t *attributes);
 int pt_cond_destroy(pthread_cond_t *condition);
 int pt_cond_wait(pthread_cond_t *condition, pthread_mutex_t *mutex);
@@ -1089,8 +1089,8 @@ components include:
  - Utility types: `ft_pair`, `ft_tuple`, `ft_optional`, `ft_variant`,
    `ft_bitset`, `ft_function` and `ft_string_view`.
 - Smart pointers: `ft_shared_ptr` and `ft_unique_ptr`.
-- Concurrency helpers: `ft_thread_pool`, `ft_future`, `ft_event_emitter` and
-  `ft_promise`.
+- Concurrency helpers: `ft_thread_pool`, `ft_future`, `ft_event_emitter`,
+  `ft_promise` and `ft_atomic`.
 - `ft_thread_pool` stores workers in `ft_vector` and pending tasks in
   `ft_queue`, synchronizing via POSIX mutexes and condition variables.
 - Additional helpers such as `algorithm.hpp`, `iterator.hpp` and `math.hpp`.
@@ -1126,20 +1126,48 @@ int  get_error() const;
 const char *get_error_str() const;
 ```
 
+#### `ft_atomic`
+
+`Template/atomic.hpp` wraps the standard atomic primitives in the
+library's error model so callers can check `_error_code` after each
+operation.
+
+```
+ft_atomic();
+explicit ft_atomic(ValueType desired_value);
+void store(ValueType desired_value, std::memory_order order = std::memory_order_seq_cst);
+ValueType load(std::memory_order order = std::memory_order_seq_cst) const;
+bool compare_exchange_weak(ValueType &expected_value, ValueType desired_value,
+    std::memory_order success_order = std::memory_order_seq_cst,
+    std::memory_order failure_order = std::memory_order_seq_cst);
+bool compare_exchange_strong(ValueType &expected_value, ValueType desired_value,
+    std::memory_order success_order = std::memory_order_seq_cst,
+    std::memory_order failure_order = std::memory_order_seq_cst);
+ValueType fetch_add(ValueType value, std::memory_order order = std::memory_order_seq_cst);
+int get_error() const;
+const char *get_error_str() const;
+```
+
 ### Additional Modules
 
 
-#### Concurrency
-`Concurrency/this_thread.hpp` provides helpers for the current thread:
+#### PThread Scheduler
+`PThread/pthread.hpp` provides helpers for the current thread using the
+custom `t_thread_id` and `t_duration_milliseconds` wrappers:
 
 ```
-std::thread::id ft_this_thread_get_id();
-void ft_this_thread_sleep_for(std::chrono::milliseconds duration);
-void ft_this_thread_sleep_until(std::chrono::steady_clock::time_point time_point);
+typedef struct s_thread_id
+{
+    pt_thread_id_type native_id;
+}   t_thread_id;
+
+t_thread_id ft_this_thread_get_id();
+void ft_this_thread_sleep_for(t_duration_milliseconds duration);
+void ft_this_thread_sleep_until(t_monotonic_time_point time_point);
 void ft_this_thread_yield();
 ```
 
-`Concurrency/task_scheduler.hpp` offers `ft_task_scheduler`, combining a
+`PThread/task_scheduler.hpp` offers `ft_task_scheduler`, combining a
 lock-free queue, thread pool and scheduler. Tasks may be submitted for
 immediate execution, delayed execution or recurring intervals and each
 submission returns a future when applicable.
@@ -1147,10 +1175,10 @@ submission returns a future when applicable.
 ```
 ft_task_scheduler(size_t thread_count = 0);
 template <typename FunctionType, typename... Args>
-auto submit(FunctionType function, Args... args) -> std::future<ReturnType>;
+auto submit(FunctionType function, Args... args) -> ft_future<ReturnType>;
 template <typename Rep, typename Period, typename FunctionType, typename... Args>
 auto schedule_after(std::chrono::duration<Rep, Period> delay,
-                    FunctionType function, Args... args) -> std::future<ReturnType>;
+                    FunctionType function, Args... args) -> ft_future<ReturnType>;
 template <typename Rep, typename Period, typename FunctionType, typename... Args>
 void schedule_every(std::chrono::duration<Rep, Period> interval,
                     FunctionType function, Args... args);
@@ -1159,8 +1187,23 @@ void schedule_every(std::chrono::duration<Rep, Period> interval,
 Recurring tasks preserve their callbacks across intervals, preventing
 empty function executions when rescheduled.
 
+Worker threads live in an `ft_vector<ft_thread>` and task submissions wrap
+results in `ft_promise`/`ft_future` pairs so the scheduler exposes the
+library's error reporting across thread management and futures instead of
+falling back to the standard types.
+
 Worker threads fetch jobs from a lock-free queue so producers and consumers do
 not block each other. The scheduler thread manages delayed and recurring jobs.
+When the queue reports an allocation failure, the scheduler releases its
+internal mutex before running the callback, ensuring that tasks can reschedule
+themselves without deadlocking, and then reschedules or removes the entry based
+on its interval. `pt_mutex` and the templated `ft_unique_lock` keep the
+scheduler on the pthread primitives without depending on `std::unique_lock`,
+and callbacks are stored in `ft_function` instances to keep error reporting
+within the library's conventions. The `ft_unique_lock` template keeps its
+member definitions after the class declaration inside `PThread/unique_lock.hpp`
+so including translation units see a consistent layout without relying on
+in-class implementations.
 
 #### Errno
 `Errno/errno.hpp` defines a thread-local `ft_errno` variable and helpers for retrieving messages.
@@ -1548,6 +1591,11 @@ config_merge_sources(argument_count, argument_values, "config.ini");
 t_time  time_now(void);
 long    time_now_ms(void);
 long    time_monotonic(void);
+t_monotonic_time_point   time_monotonic_point_now(void);
+t_monotonic_time_point   time_monotonic_point_add_ms(t_monotonic_time_point time_point, long long milliseconds);
+long long   time_monotonic_point_diff_ms(t_monotonic_time_point start_point, t_monotonic_time_point end_point);
+int     time_monotonic_point_compare(t_monotonic_time_point first_point, t_monotonic_time_point second_point);
+t_duration_milliseconds  time_duration_ms_create(long long milliseconds);
 void    time_local(t_time time_value, t_time_info *out);
 void    time_sleep(unsigned int seconds);
 void    time_sleep_ms(unsigned int milliseconds);
@@ -1557,7 +1605,7 @@ bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_tim
 bool    time_parse_custom(const char *string_input, const char *format, std::tm *time_output, t_time *timestamp_output);
 ```
 
-`t_time` stores seconds since the Unix epoch and `t_time_info` holds the broken-down components.
+`t_time` stores seconds since the Unix epoch, `t_monotonic_time_point` wraps a monotonic millisecond counter derived from `std::chrono::steady_clock`, `t_duration_milliseconds` represents millisecond durations without pulling in `<chrono>`, and `t_time_info` holds the broken-down components.
 
 Example:
 
