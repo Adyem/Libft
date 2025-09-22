@@ -12,11 +12,72 @@
 #include <thread>
 #include <chrono>
 #include <cerrno>
+#include <climits>
 #ifndef _WIN32
 # include <netdb.h>
 #endif
 
+static int g_mock_ssl_write_call_count = 0;
+static int g_mock_ssl_write_last_length = 0;
+static int g_mock_ssl_read_call_count = 0;
+static int g_mock_ssl_read_last_length = 0;
 static int g_send_stub_call_count = 0;
+
+extern "C"
+{
+    int SSL_write(SSL *ssl, const void *buffer, int length)
+    {
+        (void)ssl;
+        (void)buffer;
+        g_mock_ssl_write_call_count++;
+        g_mock_ssl_write_last_length = length;
+        return (length);
+    }
+
+    int SSL_read(SSL *ssl, void *buffer, int length)
+    {
+        (void)ssl;
+        (void)buffer;
+        g_mock_ssl_read_call_count++;
+        g_mock_ssl_read_last_length = length;
+        return (length);
+    }
+}
+
+FT_TEST(test_ssl_write_rejects_oversize_length, "nw_ssl_write rejects oversize length")
+{
+    size_t oversize_length;
+    ssize_t result;
+
+    g_mock_ssl_write_call_count = 0;
+    g_mock_ssl_write_last_length = 0;
+    oversize_length = static_cast<size_t>(INT_MAX);
+    oversize_length = oversize_length + 1;
+    result = nw_ssl_write(reinterpret_cast<SSL *>(0x1), "data", oversize_length);
+    if (result >= 0)
+        return (0);
+    if (g_mock_ssl_write_call_count != 0)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_ssl_read_rejects_oversize_length, "nw_ssl_read rejects oversize length")
+{
+    size_t oversize_length;
+    ssize_t result;
+    char buffer[4];
+
+    g_mock_ssl_read_call_count = 0;
+    g_mock_ssl_read_last_length = 0;
+    oversize_length = static_cast<size_t>(INT_MAX);
+    oversize_length = oversize_length + 1;
+    result = nw_ssl_read(reinterpret_cast<SSL *>(0x1), buffer, oversize_length);
+    if (result >= 0)
+        return (0);
+    if (g_mock_ssl_read_call_count != 0)
+        return (0);
+    return (1);
+}
 
 static ssize_t send_returns_zero_then_error(int socket_fd, const void *buffer,
                                             size_t length, int flags)

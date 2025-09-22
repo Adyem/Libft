@@ -22,6 +22,6 @@ Only .cpp files must be prefixed with the name of the module they belong to.
 For .hpp files, prefix only those meant for internal use with the module name.
 Generic headers may use the module's name, while class headers should use the class name as the filename.
 
-Always update README.md to reflect any code changes.
+Update README.md only when the change is important for the end user, such as improved functionality or unavoidable undefined behavior. Bug fixes alone do not require README updates.
 
 Code that relies on platform-specific features must place only the platform-dependent portions into helper functions in the Compatebility module.
