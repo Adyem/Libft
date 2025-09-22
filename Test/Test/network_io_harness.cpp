@@ -20,7 +20,7 @@
 network_io_harness::network_io_harness()
     : _error_code(ER_SUCCESS), _listener_socket(), _client_socket(), _accepted_fd(-1),
     _accepted_address(), _reader_thread(ft_nullptr), _stop_reader(0),
-    _throttle_bytes(0), _throttle_delay_us(0), _reader_fd(-1)
+    _throttle_bytes(0), _throttle_delay_us(0), _reader_fd(-1), _mode(HARNESS_MODE_IDLE)
 {
     ft_bzero(&this->_accepted_address, sizeof(this->_accepted_address));
     this->set_error(ER_SUCCESS);
@@ -63,6 +63,7 @@ int network_io_harness::configure_listener(uint16_t port)
     }
     this->_listener_socket = ft_move(listener);
     this->set_error(ER_SUCCESS);
+    this->_mode = HARNESS_MODE_LOOPBACK;
     return (ER_SUCCESS);
 }
 
@@ -90,6 +91,40 @@ int network_io_harness::connect_client(uint16_t port)
     return (ER_SUCCESS);
 }
 
+int network_io_harness::connect_remote_client(const char *ip_address, uint16_t port, int address_family)
+{
+    SocketConfig client_configuration;
+
+    this->stop_throttled_reads();
+    this->shutdown();
+    if (ip_address == ft_nullptr || ip_address[0] == '\0')
+    {
+        this->set_error(FT_EINVAL);
+        return (this->_error_code);
+    }
+    client_configuration._type = SocketType::CLIENT;
+    client_configuration._ip = ip_address;
+    client_configuration._port = port;
+    client_configuration._protocol = 0;
+    client_configuration._address_family = address_family;
+    client_configuration._reuse_address = false;
+    client_configuration._non_blocking = false;
+    client_configuration._recv_timeout = 0;
+    client_configuration._send_timeout = 0;
+    ft_socket client(client_configuration);
+    if (client.get_error() != ER_SUCCESS)
+    {
+        this->set_error(client.get_error());
+        return (this->_error_code);
+    }
+    this->_client_socket = ft_move(client);
+    this->_accepted_fd = -1;
+    ft_bzero(&this->_accepted_address, sizeof(this->_accepted_address));
+    this->_mode = HARNESS_MODE_REMOTE;
+    this->set_error(ER_SUCCESS);
+    return (ER_SUCCESS);
+}
+
 int network_io_harness::accept_client()
 {
     socklen_t address_length;
@@ -106,6 +141,7 @@ int network_io_harness::accept_client()
     }
     this->_accepted_fd = accepted_fd;
     this->set_error(ER_SUCCESS);
+    this->_mode = HARNESS_MODE_LOOPBACK;
     return (ER_SUCCESS);
 }
 
@@ -147,6 +183,16 @@ int network_io_harness::initialize(uint16_t port)
     return (ER_SUCCESS);
 }
 
+int network_io_harness::connect_remote(const char *ip_address, uint16_t port)
+{
+    return (this->connect_remote_client(ip_address, port, AF_INET));
+}
+
+int network_io_harness::connect_remote(const char *ip_address, uint16_t port, int address_family)
+{
+    return (this->connect_remote_client(ip_address, port, address_family));
+}
+
 void network_io_harness::shutdown()
 {
     int client_fd;
@@ -157,6 +203,7 @@ void network_io_harness::shutdown()
         this->stop_throttled_reads();
     this->_client_socket.close_socket();
     this->_listener_socket.close_socket();
+    this->_mode = HARNESS_MODE_IDLE;
     this->set_error(ER_SUCCESS);
     return ;
 }
@@ -175,6 +222,47 @@ int network_io_harness::get_server_fd() const
     }
     this->set_error(ER_SUCCESS);
     return (this->_accepted_fd);
+}
+
+int network_io_harness::get_listener_fd() const
+{
+    return (this->_listener_socket.get_fd());
+}
+
+const struct sockaddr_storage &network_io_harness::get_server_address() const
+{
+    return (this->_accepted_address);
+}
+
+uint16_t network_io_harness::get_listener_port() const
+{
+    const struct sockaddr_storage &address = this->_listener_socket.get_address();
+
+    if (this->_listener_socket.get_fd() < 0)
+    {
+        this->set_error(FT_EINVAL);
+        return (0);
+    }
+    if (address.ss_family == AF_INET)
+    {
+        const struct sockaddr_in *ipv4_address;
+
+        ipv4_address = reinterpret_cast<const struct sockaddr_in *>(&address);
+        this->set_error(ER_SUCCESS);
+        return (ntohs(ipv4_address->sin_port));
+    }
+#ifdef AF_INET6
+    if (address.ss_family == AF_INET6)
+    {
+        const struct sockaddr_in6 *ipv6_address;
+
+        ipv6_address = reinterpret_cast<const struct sockaddr_in6 *>(&address);
+        this->set_error(ER_SUCCESS);
+        return (ntohs(ipv6_address->sin6_port));
+    }
+#endif
+    this->set_error(FT_EINVAL);
+    return (0);
 }
 
 ft_socket &network_io_harness::get_client_socket()
@@ -364,11 +452,15 @@ int network_io_harness::start_reader_on_descriptor(int descriptor, size_t thrott
     this->_reader_fd = descriptor;
     this->_stop_reader = 0;
     if (this->set_blocking_flag(descriptor, false) != ER_SUCCESS)
+    {
+        this->_reader_fd = -1;
         return (this->_error_code);
+    }
     this->_reader_thread = new (std::nothrow) ft_thread(&network_io_harness::reader_entry, this);
     if (this->_reader_thread == ft_nullptr)
     {
         this->set_error(FT_EALLOC);
+        this->_reader_fd = -1;
         return (this->_error_code);
     }
     if (this->_reader_thread->get_error() != ER_SUCCESS)
@@ -376,6 +468,7 @@ int network_io_harness::start_reader_on_descriptor(int descriptor, size_t thrott
         this->set_error(this->_reader_thread->get_error());
         delete this->_reader_thread;
         this->_reader_thread = ft_nullptr;
+        this->_reader_fd = -1;
         return (this->_error_code);
     }
     this->set_error(ER_SUCCESS);
@@ -462,9 +555,9 @@ void network_io_harness::stop_throttled_reads()
         int descriptor;
 
         descriptor = this->_reader_fd;
+        this->_reader_fd = -1;
         if (this->set_blocking_flag(descriptor, true) != ER_SUCCESS)
             return ;
-        this->_reader_fd = -1;
     }
     this->set_error(ER_SUCCESS);
     return ;
@@ -494,9 +587,93 @@ void network_io_harness::close_server()
         close(this->_accepted_fd);
 #endif
         this->_accepted_fd = -1;
+        if (this->_mode == HARNESS_MODE_LOOPBACK)
+            this->_mode = HARNESS_MODE_IDLE;
     }
     this->set_error(ER_SUCCESS);
     return ;
+}
+
+int network_io_harness::shutdown_descriptor(int descriptor, int how)
+{
+    int result;
+
+    if (descriptor < 0)
+    {
+        this->set_error(FT_EINVAL);
+        return (this->_error_code);
+    }
+#ifdef _WIN32
+    result = shutdown(static_cast<SOCKET>(descriptor), how);
+    if (result != 0)
+    {
+        this->set_error(WSAGetLastError() + ERRNO_OFFSET);
+        return (this->_error_code);
+    }
+#else
+    result = shutdown(descriptor, how);
+    if (result != 0)
+    {
+        this->set_error(errno + ERRNO_OFFSET);
+        return (this->_error_code);
+    }
+#endif
+    this->set_error(ER_SUCCESS);
+    return (ER_SUCCESS);
+}
+
+int network_io_harness::shutdown_client_read()
+{
+#ifdef _WIN32
+    return (this->shutdown_descriptor(this->_client_socket.get_fd(), SD_RECEIVE));
+#else
+    return (this->shutdown_descriptor(this->_client_socket.get_fd(), SHUT_RD));
+#endif
+}
+
+int network_io_harness::shutdown_client_write()
+{
+#ifdef _WIN32
+    return (this->shutdown_descriptor(this->_client_socket.get_fd(), SD_SEND));
+#else
+    return (this->shutdown_descriptor(this->_client_socket.get_fd(), SHUT_WR));
+#endif
+}
+
+int network_io_harness::shutdown_client_both()
+{
+#ifdef _WIN32
+    return (this->shutdown_descriptor(this->_client_socket.get_fd(), SD_BOTH));
+#else
+    return (this->shutdown_descriptor(this->_client_socket.get_fd(), SHUT_RDWR));
+#endif
+}
+
+int network_io_harness::shutdown_server_read()
+{
+#ifdef _WIN32
+    return (this->shutdown_descriptor(this->_accepted_fd, SD_RECEIVE));
+#else
+    return (this->shutdown_descriptor(this->_accepted_fd, SHUT_RD));
+#endif
+}
+
+int network_io_harness::shutdown_server_write()
+{
+#ifdef _WIN32
+    return (this->shutdown_descriptor(this->_accepted_fd, SD_SEND));
+#else
+    return (this->shutdown_descriptor(this->_accepted_fd, SHUT_WR));
+#endif
+}
+
+int network_io_harness::shutdown_server_both()
+{
+#ifdef _WIN32
+    return (this->shutdown_descriptor(this->_accepted_fd, SD_BOTH));
+#else
+    return (this->shutdown_descriptor(this->_accepted_fd, SHUT_RDWR));
+#endif
 }
 
 int network_io_harness::get_error() const
