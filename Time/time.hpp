@@ -7,6 +7,16 @@
 
 typedef long t_time;
 
+typedef struct s_monotonic_time_point
+{
+    long long milliseconds;
+}   t_monotonic_time_point;
+
+typedef struct s_duration_milliseconds
+{
+    long long milliseconds;
+}   t_duration_milliseconds;
+
 typedef struct s_time_info
 {
     int seconds;
@@ -23,6 +33,11 @@ typedef struct s_time_info
 t_time  time_now(void);
 long    time_now_ms(void);
 long    time_monotonic(void);
+t_monotonic_time_point   time_monotonic_point_now(void);
+t_monotonic_time_point   time_monotonic_point_add_ms(t_monotonic_time_point time_point, long long milliseconds);
+long long   time_monotonic_point_diff_ms(t_monotonic_time_point start_point, t_monotonic_time_point end_point);
+int     time_monotonic_point_compare(t_monotonic_time_point first_point, t_monotonic_time_point second_point);
+t_duration_milliseconds  time_duration_ms_create(long long milliseconds);
 void    time_local(t_time time_value, t_time_info *out);
 void    time_sleep(unsigned int seconds);
 void    time_sleep_ms(unsigned int milliseconds);

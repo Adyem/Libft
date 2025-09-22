@@ -55,7 +55,8 @@ $(OBJDIR)/%.o: %.cpp
 	$(MKDIR) $(dir $@)
 	$(CXX) $(CFLAGS) -c $< -o $@
 
-$(OBJDIR)/Test/test_promise.o $(OBJDIR)/Test/test_task_scheduler.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Concurrency\"
+$(OBJDIR)/Test/test_promise.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Template\"
+$(OBJDIR)/Test/test_task_scheduler.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"PThread\"
 $(OBJDIR)/Test/test_networking.o $(OBJDIR)/Test/test_http_server.o $(OBJDIR)/Test/test_websocket.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Networking\"
 $(OBJDIR)/Test/test_logger.o $(OBJDIR)/Test/test_logger_async.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Logger\"
 $(OBJDIR)/Test/test_json_validate.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"JSon\"
