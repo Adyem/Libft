@@ -941,7 +941,9 @@ int main()
 
 `Networking/websocket_client.hpp` and `websocket_server.hpp` add helpers for
 the WebSocket protocol including the opening handshake, frame parsing and
-basic ping/pong handling.
+basic ping/pong handling. The client now accepts both masked and unmasked
+server frames so responses from minimal implementations are decoded without
+extra configuration.
 
 ```c++
 #include "Networking/websocket_client.hpp"
