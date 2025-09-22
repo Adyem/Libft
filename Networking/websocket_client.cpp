@@ -164,14 +164,27 @@ int ft_websocket_client::perform_handshake(const char *host, const char *path)
         }
         total_sent += static_cast<size_t>(send_result);
     }
-    bytes_received = nw_recv(this->_socket_fd, buffer, sizeof(buffer) - 1, 0);
-    if (bytes_received <= 0)
+    response.clear();
+    while (true)
     {
-        this->set_error(errno + ERRNO_OFFSET);
-        return (1);
+        bytes_received = nw_recv(this->_socket_fd, buffer, sizeof(buffer) - 1, 0);
+        if (bytes_received < 0)
+        {
+            this->set_error(errno + ERRNO_OFFSET);
+            return (1);
+        }
+        if (bytes_received == 0)
+        {
+            this->set_error(SOCKET_RECEIVE_FAILED);
+            return (1);
+        }
+        buffer[bytes_received] = '\0';
+        response.append(buffer);
+        if (ft_strstr(response.c_str(), "\r\n\r\n"))
+        {
+            break;
+        }
     }
-    buffer[bytes_received] = '\0';
-    response = buffer;
     accept_line = ft_strstr(response.c_str(), "Sec-WebSocket-Accept: ");
     if (!accept_line)
     {
