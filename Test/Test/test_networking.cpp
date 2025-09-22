@@ -2,9 +2,11 @@
 #include "../../Networking/networking.hpp"
 #include "../../Networking/udp_socket.hpp"
 #include "../../Networking/http_client.hpp"
+#include "../../Networking/ssl_wrapper.hpp"
 #include "../../Compatebility/compatebility_internal.hpp"
 #include "../../Libft/libft.hpp"
 #include "../../System_utils/test_runner.hpp"
+#include "../../Errno/errno.hpp"
 #include <cstring>
 #include <cstdio>
 #include <thread>
@@ -32,6 +34,76 @@ static ssize_t send_returns_zero_then_error(int socket_fd, const void *buffer,
     errno = ECONNRESET;
 #endif
     return (-1);
+}
+
+static size_t g_http_client_plain_partial_calls = 0;
+static int g_http_client_plain_partial_active = 0;
+
+static ssize_t send_partial_http_request_stub(int socket_fd, const void *buffer,
+                                             size_t length, int flags)
+{
+    const char *char_buffer;
+
+    (void)socket_fd;
+    (void)flags;
+    char_buffer = static_cast<const char *>(buffer);
+    if (length >= 4 && ft_strncmp(char_buffer, "GET ", 4) == 0)
+        g_http_client_plain_partial_active = 1;
+    if (g_http_client_plain_partial_active != 0)
+    {
+        g_http_client_plain_partial_calls++;
+        if (length > 6)
+            return (6);
+        g_http_client_plain_partial_active = 0;
+        return (static_cast<ssize_t>(length));
+    }
+    return (static_cast<ssize_t>(length));
+}
+
+static ssize_t send_plain_short_write_stub(int socket_fd, const void *buffer,
+                                           size_t length, int flags)
+{
+    const char *char_buffer;
+
+    (void)socket_fd;
+    (void)flags;
+    char_buffer = static_cast<const char *>(buffer);
+    if (length >= 4 && ft_strncmp(char_buffer, "GET ", 4) == 0)
+        return (0);
+    return (static_cast<ssize_t>(length));
+}
+
+static size_t g_http_client_ssl_partial_calls = 0;
+static int g_http_client_ssl_partial_active = 0;
+
+static ssize_t ssl_partial_write_stub(SSL *ssl, const void *buffer, size_t length)
+{
+    const char *char_buffer;
+
+    (void)ssl;
+    char_buffer = static_cast<const char *>(buffer);
+    if (length >= 3 && ft_strncmp(char_buffer, "GET", 3) == 0)
+        g_http_client_ssl_partial_active = 1;
+    if (g_http_client_ssl_partial_active != 0)
+    {
+        g_http_client_ssl_partial_calls++;
+        if (length > 7)
+            return (7);
+        g_http_client_ssl_partial_active = 0;
+        return (static_cast<ssize_t>(length));
+    }
+    return (static_cast<ssize_t>(length));
+}
+
+static ssize_t ssl_short_write_stub(SSL *ssl, const void *buffer, size_t length)
+{
+    const char *char_buffer;
+
+    (void)ssl;
+    char_buffer = static_cast<const char *>(buffer);
+    if (length >= 3 && ft_strncmp(char_buffer, "GET", 3) == 0)
+        return (0);
+    return (static_cast<ssize_t>(length));
 }
 
 FT_TEST(test_network_send_receive, "nw_send/nw_recv IPv4")
@@ -474,5 +546,69 @@ FT_TEST(test_http_client_address_fallback, "http client retries multiple address
     if (client_result != 0)
         return (0);
     return (response == "HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\nPASS");
+}
+
+FT_TEST(test_http_client_plain_partial_retry, "http client retries partial nw_send")
+{
+    const char *request_string;
+
+    request_string = "GET / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
+    g_http_client_plain_partial_calls = 0;
+    g_http_client_plain_partial_active = 0;
+    nw_set_send_stub(&send_partial_http_request_stub);
+    if (http_client_send_plain_request(0, request_string, ft_strlen(request_string)) != 0)
+    {
+        nw_set_send_stub(NULL);
+        return (0);
+    }
+    nw_set_send_stub(NULL);
+    return (g_http_client_plain_partial_calls >= 2);
+}
+
+FT_TEST(test_http_client_plain_short_write_sets_errno, "http client detects short write")
+{
+    const char *request_string;
+    int result;
+
+    request_string = "GET / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
+    ft_errno = ER_SUCCESS;
+    nw_set_send_stub(&send_plain_short_write_stub);
+    result = http_client_send_plain_request(0, request_string, ft_strlen(request_string));
+    nw_set_send_stub(NULL);
+    if (result != -1)
+        return (0);
+    return (ft_errno == SOCKET_SEND_FAILED);
+}
+
+FT_TEST(test_http_client_ssl_partial_retry, "http client retries partial SSL write")
+{
+    const char *request_string;
+
+    request_string = "GET / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
+    g_http_client_ssl_partial_calls = 0;
+    g_http_client_ssl_partial_active = 0;
+    nw_set_ssl_write_stub(&ssl_partial_write_stub);
+    if (http_client_send_ssl_request(reinterpret_cast<SSL *>(0x1), request_string, ft_strlen(request_string)) != 0)
+    {
+        nw_set_ssl_write_stub(NULL);
+        return (0);
+    }
+    nw_set_ssl_write_stub(NULL);
+    return (g_http_client_ssl_partial_calls >= 2);
+}
+
+FT_TEST(test_http_client_ssl_short_write_sets_errno, "http client SSL detects short write")
+{
+    const char *request_string;
+    int result;
+
+    request_string = "GET / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
+    ft_errno = ER_SUCCESS;
+    nw_set_ssl_write_stub(&ssl_short_write_stub);
+    result = http_client_send_ssl_request(reinterpret_cast<SSL *>(0x1), request_string, ft_strlen(request_string));
+    nw_set_ssl_write_stub(NULL);
+    if (result != -1)
+        return (0);
+    return (ft_errno == SOCKET_SEND_FAILED);
 }
 
