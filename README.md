@@ -760,6 +760,10 @@ ssize_t nw_ssl_write(SSL *ssl, const void *buf, size_t len);
 ssize_t nw_ssl_read(SSL *ssl, void *buf, size_t len);
 ```
 
+Both helpers validate the requested length against `INT_MAX` before handing the
+operation to OpenSSL. Calls that exceed the library limit return `-1` without
+invoking `SSL_write` or `SSL_read` to avoid truncating the request size.
+
 Simple event loop example:
 
 ```
