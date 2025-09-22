@@ -24,7 +24,7 @@
     - Replace variables (x = 10; "x * 2" = 20)
     - Extend into config scripting
 
-- Concurrency / Task Module
+- PThread / Task Module
     - Thread pool and futures
     - Job scheduling for delayed or recurring tasks
     - Lock-free queues for producer and consumer

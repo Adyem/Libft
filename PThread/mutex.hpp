@@ -3,14 +3,14 @@
 
 #include "pthread.hpp"
 #include <pthread.h>
-#include <atomic>
+#include "../Template/atomic.hpp"
 
 class pt_mutex
 {
     private:
-        std::atomic<uint32_t>   _next;
-        std::atomic<uint32_t>   _serving;
-        std::atomic<pthread_t>  _owner;
+        ft_atomic<uint32_t>     _next;
+        ft_atomic<uint32_t>     _serving;
+        ft_atomic<pthread_t>    _owner;
         volatile bool           _lock;
         int                     _error;
 
@@ -30,6 +30,9 @@ class pt_mutex
         int     lock(pthread_t thread_id);
         int     unlock(pthread_t thread_id);
         int     try_lock(pthread_t thread_id);
+
+        int     get_error() const;
+        const char *get_error_str() const;
 };
 
 #endif

@@ -11,11 +11,11 @@
 #include "../PThread/thread.hpp"
 #include "function.hpp"
 #include <cstddef>
-#include <atomic>
 #include <cerrno>
 #include <pthread.h>
 #include "../PThread/pthread.hpp"
 #include "move.hpp"
+#include "atomic.hpp"
 
 class ft_thread_pool
 {
@@ -25,7 +25,7 @@ class ft_thread_pool
         size_t                        _max_tasks;
         bool                          _stop;
         size_t                        _active;
-        mutable std::atomic<int>      _error_code;
+        mutable ft_atomic<int>        _error_code;
         pthread_mutex_t               _mutex;
         pthread_cond_t                _cond;
         bool                          _mutex_initialized;

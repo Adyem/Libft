@@ -10,6 +10,7 @@ SRCS := pthread_lock_mutex.cpp \
         pthread_thread_cancel.cpp \
         pthread_thread_sleep.cpp \
         pthread_thread_yield.cpp \
+        pthread_this_thread.cpp \
         pthread_thread_self.cpp \
         pthread_thread_equal.cpp \
         pthread_thread.cpp \
@@ -19,9 +20,10 @@ SRCS := pthread_lock_mutex.cpp \
         pthread_atomic_fetch_add.cpp \
         pthread_atomic_compare_exchange.cpp \
         pthread_condition.cpp \
-        pthread_rwlock.cpp
+        pthread_rwlock.cpp \
+        pthread_task_scheduler.cpp
 
-HEADERS := pthread.hpp mutex.hpp condition.hpp thread.hpp
+HEADERS := pthread.hpp mutex.hpp condition.hpp thread.hpp task_scheduler.hpp unique_lock.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

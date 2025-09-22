@@ -25,3 +25,13 @@ const volatile bool &pt_mutex::lockState() const
     return (this->_lock);
 }
 
+int pt_mutex::get_error() const
+{
+    return (this->_error);
+}
+
+const char *pt_mutex::get_error_str() const
+{
+    return (ft_strerror(this->_error));
+}
+
