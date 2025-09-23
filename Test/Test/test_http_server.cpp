@@ -45,7 +45,14 @@ static void slow_client_read(int descriptor, size_t expected_length, int delay_m
                 result->status = -1;
             return ;
         }
-        result->data.append(buffer, static_cast<size_t>(read_result));
+        size_t buffer_index;
+
+        buffer_index = 0;
+        while (buffer_index < static_cast<size_t>(read_result))
+        {
+            result->data.append(buffer[buffer_index]);
+            buffer_index++;
+        }
         result->read_iterations++;
         if (delay_milliseconds > 0)
             std::this_thread::sleep_for(std::chrono::milliseconds(delay_milliseconds));
