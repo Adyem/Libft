@@ -1,5 +1,6 @@
 #include "websocket_client.hpp"
 #include "networking.hpp"
+#include "networking_send_utils.hpp"
 #include "socket_class.hpp"
 #include "../Compression/compression.hpp"
 #include "../CMA/CMA.hpp"
@@ -163,6 +164,11 @@ int ft_websocket_client::perform_handshake(const char *host, const char *path)
             return (1);
         }
         total_sent += static_cast<size_t>(send_result);
+    }
+    if (networking_check_socket_after_send(this->_socket_fd) != 0)
+    {
+        this->set_error(ft_errno);
+        return (1);
     }
     response.clear();
     while (true)

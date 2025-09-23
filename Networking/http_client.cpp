@@ -1,5 +1,6 @@
 #include "http_client.hpp"
 #include "socket_class.hpp"
+#include "networking_send_utils.hpp"
 #include "ssl_wrapper.hpp"
 #include <cstring>
 #include <cstdio>
@@ -33,6 +34,9 @@ int http_client_send_plain_request(int socket_fd, const char *buffer, size_t len
         }
         total_sent += static_cast<size_t>(send_result);
     }
+    if (networking_check_socket_after_send(socket_fd) != 0)
+        return (-1);
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 
@@ -52,6 +56,9 @@ int http_client_send_ssl_request(SSL *ssl_connection, const char *buffer, size_t
         }
         total_sent += static_cast<size_t>(send_result);
     }
+    if (networking_check_ssl_after_send(ssl_connection) != 0)
+        return (-1);
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 
