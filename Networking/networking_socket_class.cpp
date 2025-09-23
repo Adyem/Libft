@@ -1,4 +1,5 @@
 #include "socket_class.hpp"
+#include "networking_send_utils.hpp"
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
 #include "../Template/move.hpp"
@@ -255,6 +256,11 @@ ssize_t ft_socket::send_all(const void *data, size_t size, int flags)
             return (-1);
         }
         total_sent += bytes_sent;
+    }
+    if (networking_check_socket_after_send(this->_socket_fd) != 0)
+    {
+        this->set_error(ft_errno);
+        return (-1);
     }
     this->set_error(ER_SUCCESS);
     return (static_cast<ssize_t>(total_sent));

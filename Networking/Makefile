@@ -2,6 +2,7 @@ TARGET := networking.a
 DEBUG_TARGET := networking_debug.a
 
 SRCS := networking_socket_class.cpp \
+        networking_send_utils.cpp \
         networking.cpp \
         networking_setup_server.cpp \
         networking_setup_client.cpp \
@@ -35,6 +36,7 @@ else
 endif
 
 HEADERS := socket_class.hpp \
+           networking_send_utils.hpp \
            networking.hpp \
            udp_socket.hpp \
            ssl_wrapper.hpp \
