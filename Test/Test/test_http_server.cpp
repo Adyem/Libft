@@ -179,7 +179,7 @@ FT_TEST(test_http_server_partial_send_retries, "HTTP server retries partial nw_s
         return (0);
     if (read_result.status != 0)
         return (0);
-    if (read_result.data != expected_response)
+    if (!(read_result.data == expected_response))
         return (0);
     return (read_result.read_iterations > 1);
 }

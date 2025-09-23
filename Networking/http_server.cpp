@@ -1,4 +1,5 @@
 #include "http_server.hpp"
+#include "networking_send_utils.hpp"
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
 #include <cstring>
@@ -257,6 +258,12 @@ int ft_http_server::run_once()
             return (1);
         }
         total_sent += static_cast<size_t>(send_result);
+    }
+    if (networking_check_socket_after_send(client_socket) != 0)
+    {
+        FT_CLOSE_SOCKET(client_socket);
+        this->set_error(ft_errno);
+        return (1);
     }
     FT_CLOSE_SOCKET(client_socket);
     this->_error_code = ER_SUCCESS;
