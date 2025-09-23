@@ -611,7 +611,7 @@ int network_io_harness::shutdown_descriptor(int descriptor, int how)
         return (this->_error_code);
     }
 #else
-    result = shutdown(descriptor, how);
+    result = ::shutdown(descriptor, how);
     if (result != 0)
     {
         this->set_error(errno + ERRNO_OFFSET);
