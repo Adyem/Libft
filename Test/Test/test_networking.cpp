@@ -823,7 +823,7 @@ FT_TEST(test_http_client_plain_partial_retry, "http client retries partial nw_se
         return (0);
     if (read_result.status != 0)
         return (0);
-    if (read_result.data != request_string)
+    if (!(read_result.data == request_string))
         return (0);
     return (read_result.read_iterations > 1);
 }
@@ -922,7 +922,7 @@ FT_TEST(test_http_client_ssl_partial_retry, "http client retries partial SSL wri
         return (0);
     if (read_result.status != 0)
         return (0);
-    if (read_result.data != request_string)
+    if (!(read_result.data == request_string))
         return (0);
     return (read_result.read_iterations > 1);
 }
