@@ -88,7 +88,14 @@ static void throttled_read_loop(int descriptor, size_t expected_length, size_t c
             result->status = -1;
             return ;
         }
-        result->data.append(buffer, static_cast<size_t>(read_result));
+        size_t buffer_index;
+
+        buffer_index = 0;
+        while (buffer_index < static_cast<size_t>(read_result))
+        {
+            result->data.append(buffer[buffer_index]);
+            buffer_index++;
+        }
         result->read_iterations++;
         if (delay_milliseconds > 0)
             std::this_thread::sleep_for(std::chrono::milliseconds(delay_milliseconds));
@@ -274,6 +281,7 @@ static void throttled_ssl_read_loop(SSL *ssl, size_t expected_length, size_t chu
                                     int delay_milliseconds, throttled_transfer_result *result)
 {
     unsigned char buffer[64];
+    ft_bzero(buffer, sizeof(buffer));
     size_t limited_chunk_size;
 
     if (result == ft_nullptr)
@@ -304,7 +312,14 @@ static void throttled_ssl_read_loop(SSL *ssl, size_t expected_length, size_t chu
             result->status = -1;
             return ;
         }
-        result->data.append(reinterpret_cast<const char *>(buffer), static_cast<size_t>(read_result));
+        size_t buffer_index;
+
+        buffer_index = 0;
+        while (buffer_index < static_cast<size_t>(read_result))
+        {
+            result->data.append(static_cast<char>(buffer[buffer_index]));
+            buffer_index++;
+        }
         result->read_iterations++;
         if (delay_milliseconds > 0)
             std::this_thread::sleep_for(std::chrono::milliseconds(delay_milliseconds));
@@ -345,24 +360,6 @@ FT_TEST(test_ssl_read_rejects_oversize_length, "nw_ssl_read rejects oversize len
     if (g_mock_ssl_read_call_count != 0)
         return (0);
     return (1);
-}
-
-static ssize_t send_returns_zero_then_error(int socket_fd, const void *buffer,
-                                            size_t length, int flags)
-{
-    (void)socket_fd;
-    (void)buffer;
-    (void)length;
-    (void)flags;
-    g_send_stub_call_count++;
-    if (g_send_stub_call_count < 3)
-        return (0);
-#ifdef EPIPE
-    errno = EPIPE;
-#else
-    errno = ECONNRESET;
-#endif
-    return (-1);
 }
 
 FT_TEST(test_network_send_receive, "nw_send/nw_recv IPv4")
