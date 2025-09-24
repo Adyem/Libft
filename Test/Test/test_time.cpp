@@ -3,18 +3,76 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../CPP_class/class_string_class.hpp"
 #include "../../Time/time.hpp"
+#include <chrono>
+#include <cstdint>
 #include <ctime>
 #include <cstring>
+#include <sys/time.h>
+#if defined(__unix__) || defined(__APPLE__)
+# include <sys/syscall.h>
+# include <unistd.h>
+#endif
+
+static bool g_time_override_enabled = false;
+static timeval g_time_override_value = {0, 0};
+
+static int fallback_gettimeofday(struct timeval *time_value)
+{
+    std::chrono::system_clock::time_point current_time = std::chrono::system_clock::now();
+    std::chrono::microseconds microseconds_since_epoch = std::chrono::duration_cast<std::chrono::microseconds>(current_time.time_since_epoch());
+    time_value->tv_sec = static_cast<time_t>(microseconds_since_epoch.count() / 1000000);
+    time_value->tv_usec = static_cast<suseconds_t>(microseconds_since_epoch.count() % 1000000);
+    return (0);
+}
+
+extern "C" int gettimeofday(struct timeval *time_value, void *timezone_pointer)
+{
+    if (g_time_override_enabled)
+    {
+        *time_value = g_time_override_value;
+        return (0);
+    }
+#if defined(__unix__) || defined(__APPLE__)
+# if defined(SYS_gettimeofday)
+    long syscall_result = syscall(SYS_gettimeofday, time_value, timezone_pointer);
+    if (syscall_result == 0)
+        return (0);
+    return (fallback_gettimeofday(time_value));
+# else
+    (void)timezone_pointer;
+    return (fallback_gettimeofday(time_value));
+# endif
+#else
+    (void)timezone_pointer;
+    return (fallback_gettimeofday(time_value));
+#endif
+}
 
 FT_TEST(test_time_ms_basic, "ft_time_ms increasing")
 {
-    long first;
-    long second;
+    int64_t first;
+    int64_t second;
 
     first = ft_time_ms();
     second = ft_time_ms();
     FT_ASSERT(first >= 0);
     FT_ASSERT(second >= first);
+    return (1);
+}
+
+FT_TEST(test_time_ms_large_values, "ft_time_ms handles large timeval values without overflow")
+{
+    int64_t milliseconds_result;
+    int64_t expected_result;
+
+    g_time_override_enabled = true;
+    g_time_override_value.tv_sec = static_cast<time_t>(INT64_C(1) << 40);
+    g_time_override_value.tv_usec = 567000;
+    expected_result = static_cast<int64_t>(g_time_override_value.tv_sec) * 1000;
+    expected_result += static_cast<int64_t>(g_time_override_value.tv_usec) / 1000;
+    milliseconds_result = ft_time_ms();
+    g_time_override_enabled = false;
+    FT_ASSERT_EQ(expected_result, milliseconds_result);
     return (1);
 }
 

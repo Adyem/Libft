@@ -3,13 +3,16 @@
 #include "../Time/time.hpp"
 #include <sys/time.h>
 
-long ft_time_ms(void)
+int64_t ft_time_ms(void)
 {
     struct timeval time_value;
+    int64_t milliseconds;
 
     if (gettimeofday(&time_value, ft_nullptr) != 0)
         return (-1);
-    return (time_value.tv_sec * 1000L + time_value.tv_usec / 1000L);
+    milliseconds = static_cast<int64_t>(time_value.tv_sec) * 1000;
+    milliseconds += static_cast<int64_t>(time_value.tv_usec) / 1000;
+    return (milliseconds);
 }
 
 char *ft_time_format(char *buffer, size_t buffer_size)

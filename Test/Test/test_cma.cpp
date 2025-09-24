@@ -1,5 +1,7 @@
 #include "../../CMA/CMA.hpp"
 #include "../../Errno/errno.hpp"
+#include "../../Libft/libft.hpp"
+#include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <cstdint>
 #include <thread>
@@ -43,6 +45,53 @@ FT_TEST(test_cma_calloc_overflow_guard, "cma_calloc rejects overflowed sizes")
     cma_get_stats(&allocation_count_after, ft_nullptr);
     FT_ASSERT(allocated_pointer == ft_nullptr);
     FT_ASSERT_EQ(allocation_count_before, allocation_count_after);
+    return (1);
+}
+
+FT_TEST(test_cma_malloc_zero_size_allocates, "cma_malloc returns a block for zero-size requests")
+{
+    ft_size_t allocation_count_before;
+    ft_size_t allocation_count_after;
+    void *allocation_pointer;
+
+    cma_set_alloc_limit(0);
+    cma_get_stats(&allocation_count_before, ft_nullptr);
+    allocation_pointer = cma_malloc(0);
+    if (!allocation_pointer)
+        return (0);
+    cma_get_stats(&allocation_count_after, ft_nullptr);
+    cma_free(allocation_pointer);
+    ft_size_t expected_allocation_count = allocation_count_before + 1;
+    FT_ASSERT_EQ(expected_allocation_count, allocation_count_after);
+    return (1);
+}
+
+FT_TEST(test_cma_realloc_failure_preserves_original_buffer, "cma_realloc keeps the original buffer when growth fails")
+{
+    char *original_buffer;
+    void *realloc_result;
+    int byte_index;
+
+    cma_set_alloc_limit(0);
+    original_buffer = static_cast<char*>(cma_malloc(16));
+    if (!original_buffer)
+        return (0);
+    ft_memset(original_buffer, 'X', 16);
+    cma_set_alloc_limit(8);
+    realloc_result = cma_realloc(original_buffer, 32);
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(ft_nullptr, realloc_result);
+    byte_index = 0;
+    while (byte_index < 16)
+    {
+        if (original_buffer[byte_index] != 'X')
+        {
+            cma_free(original_buffer);
+            return (0);
+        }
+        byte_index++;
+    }
+    cma_free(original_buffer);
     return (1);
 }
 

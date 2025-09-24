@@ -1,4 +1,5 @@
 #include "../../Libft/libft.hpp"
+#include "../../Errno/errno.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../CMA/CMA.hpp"
@@ -43,4 +44,18 @@ FT_TEST(test_strjoin_multiple_single, "ft_strjoin_multiple single string")
     int ok = ft_strcmp(joined, "solo") == 0;
     cma_free(joined);
     return (ok);
+}
+
+FT_TEST(test_strjoin_multiple_resets_errno_before_joining, "ft_strjoin_multiple clears ft_errno before processing")
+{
+    char *joined_string;
+    int result;
+
+    ft_errno = FT_ERANGE;
+    joined_string = ft_strjoin_multiple(2, "foo", "bar");
+    if (joined_string == ft_nullptr)
+        return (0);
+    result = (ft_errno == ER_SUCCESS && ft_strcmp(joined_string, "foobar") == 0);
+    cma_free(joined_string);
+    return (result);
 }

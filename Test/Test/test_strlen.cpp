@@ -1,4 +1,5 @@
 #include "../../Libft/libft.hpp"
+#include "../../Errno/errno.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_runner.hpp"
 
@@ -47,5 +48,13 @@ FT_TEST(test_strlen_embedded_null, "ft_strlen embedded null")
     string[4] = 'd';
     string[5] = '\0';
     FT_ASSERT_EQ(2, ft_strlen(string));
+    return (1);
+}
+
+FT_TEST(test_strlen_resets_errno_on_success, "ft_strlen clears ft_errno before measuring")
+{
+    ft_errno = FT_ERANGE;
+    FT_ASSERT_EQ(3, ft_strlen("abc"));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
