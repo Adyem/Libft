@@ -2,13 +2,70 @@
 #include "printf.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
-#include "../Math/math.hpp"
 #include <cstdio>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
-#include <cfloat>
+#include <limits.h>
+#include <string>
+
+static bool count_has_error(size_t *count)
+{
+    if (!count)
+        return (true);
+    if (*count == SIZE_MAX)
+        return (true);
+    return (false);
+}
+
+static void mark_count_error(size_t *count)
+{
+    if (!count)
+        return ;
+    *count = SIZE_MAX;
+    return ;
+}
+
+static void write_buffer_stream(const char *buffer, size_t length, FILE *stream, size_t *count)
+{
+    if (count_has_error(count))
+        return ;
+    if (length == 0)
+        return ;
+    size_t written = fwrite(buffer, 1, length, stream);
+    if (written != length)
+    {
+        mark_count_error(count);
+        return ;
+    }
+    *count += written;
+    return ;
+}
+
+static int format_double_output(char specifier, int precision, double number, std::string &output)
+{
+    if (precision < 0)
+        precision = 6;
+    if ((specifier == 'g' || specifier == 'G') && precision == 0)
+        precision = 1;
+    char format_string[5];
+    format_string[0] = '%';
+    format_string[1] = '.';
+    format_string[2] = '*';
+    format_string[3] = specifier;
+    format_string[4] = '\0';
+    int required_length = std::snprintf(nullptr, 0, format_string, precision, number);
+    if (required_length < 0)
+        return (-1);
+    output.clear();
+    output.resize(static_cast<size_t>(required_length) + 1);
+    int written_length = std::snprintf(&output[0], output.size(), format_string, precision, number);
+    if (written_length < 0)
+        return (-1);
+    output.resize(static_cast<size_t>(written_length));
+    return (0);
+}
 
 typedef enum
 {
@@ -19,32 +76,44 @@ typedef enum
 
 static void ft_putchar_stream(const char character, FILE *stream, size_t *count)
 {
-    fputc(character, stream);
+    if (count_has_error(count))
+        return ;
+    if (fputc(static_cast<unsigned char>(character), stream) == EOF)
+    {
+        mark_count_error(count);
+        return ;
+    }
     (*count)++;
 }
 
 static void ft_putstr_stream(const char *string, FILE *stream, size_t *count)
 {
+    if (count_has_error(count))
+        return ;
     if (!string)
     {
-        fwrite("(null)", 1, 6, stream);
-        *count += 6;
+        write_buffer_stream("(null)", 6, stream, count);
         return ;
     }
     size_t length = ft_strlen(string);
-    fwrite(string, 1, length, stream);
-    *count += length;
+    write_buffer_stream(string, length, stream, count);
 }
 
 static void ft_putnbr_stream_recursive(long number, FILE *stream, size_t *count)
 {
+    if (count_has_error(count))
+        return ;
     if (number < 0)
     {
         ft_putchar_stream('-', stream, count);
+        if (count_has_error(count))
+            return ;
         number = -number;
     }
     if (number >= 10)
         ft_putnbr_stream_recursive(number / 10, stream, count);
+    if (count_has_error(count))
+        return ;
     ft_putchar_stream(static_cast<char>('0' + (number % 10)), stream, count);
 }
 
@@ -55,8 +124,12 @@ static void ft_putnbr_stream(long number, FILE *stream, size_t *count)
 
 static void ft_putunsigned_stream_recursive(uintmax_t number, FILE *stream, size_t *count)
 {
+    if (count_has_error(count))
+        return ;
     if (number >= 10)
         ft_putunsigned_stream_recursive(number / 10, stream, count);
+    if (count_has_error(count))
+        return ;
     ft_putchar_stream(static_cast<char>('0' + (number % 10)), stream, count);
 }
 
@@ -67,8 +140,12 @@ static void ft_putunsigned_stream(uintmax_t number, FILE *stream, size_t *count)
 
 static void ft_puthex_stream_recursive(uintmax_t number, FILE *stream, bool uppercase, size_t *count)
 {
+    if (count_has_error(count))
+        return ;
     if (number >= 16)
         ft_puthex_stream_recursive(number / 16, stream, uppercase, count);
+    if (count_has_error(count))
+        return ;
     uintmax_t digit = number % 16;
     char character;
     if (digit < 10)
@@ -92,8 +169,12 @@ static void ft_puthex_stream(uintmax_t number, FILE *stream, bool uppercase, siz
 
 static void ft_putoctal_stream_recursive(uintmax_t number, FILE *stream, size_t *count)
 {
+    if (count_has_error(count))
+        return ;
     if (number >= 8)
         ft_putoctal_stream_recursive(number / 8, stream, count);
+    if (count_has_error(count))
+        return ;
     ft_putchar_stream(static_cast<char>('0' + (number % 8)), stream, count);
 }
 
@@ -104,118 +185,72 @@ static void ft_putoctal_stream(uintmax_t number, FILE *stream, size_t *count)
 
 static void ft_putptr_stream(void *pointer, FILE *stream, size_t *count)
 {
+    if (count_has_error(count))
+        return ;
     ft_putstr_stream("0x", stream, count);
+    if (count_has_error(count))
+        return ;
     ft_puthex_stream(reinterpret_cast<uintptr_t>(pointer), stream, false, count);
 }
 
-static void ft_putfloat_stream(double number, FILE *stream, size_t *count)
+static void ft_putfloat_stream(double number, FILE *stream, size_t *count, int precision)
 {
-    if (number < 0)
+    if (count_has_error(count))
+        return ;
+    std::string formatted_output;
+    if (format_double_output('f', precision, number, formatted_output) != 0)
     {
-        ft_putchar_stream('-', stream, count);
-        number = -number;
-    }
-    long integer_part = static_cast<long>(number);
-    ft_putnbr_stream(integer_part, stream, count);
-    ft_putchar_stream('.', stream, count);
-    double fractional = number - static_cast<double>(integer_part);
-    int index_fraction = 0;
-    while (index_fraction < 6)
-    {
-        fractional *= 10;
-        int digit = static_cast<int>(fractional);
-        ft_putchar_stream(static_cast<char>('0' + digit), stream, count);
-        fractional -= digit;
-        index_fraction++;
-    }
-}
-
-static void ft_putscientific_stream(double number, bool uppercase, FILE *stream, size_t *count)
-{
-    if (math_fabs(number) <= DBL_EPSILON)
-    {
-        if (uppercase)
-            ft_putstr_stream("0.000000E+00", stream, count);
-        else
-            ft_putstr_stream("0.000000e+00", stream, count);
+        mark_count_error(count);
         return ;
     }
-    if (number < 0)
-    {
-        ft_putchar_stream('-', stream, count);
-        number = -number;
-    }
-    int exponent = 0;
-    while (number >= 10.0)
-    {
-        number /= 10.0;
-        exponent++;
-    }
-    while (number < 1.0)
-    {
-        number *= 10.0;
-        exponent--;
-    }
-    long integer_part = static_cast<long>(number);
-    ft_putchar_stream(static_cast<char>('0' + integer_part), stream, count);
-    ft_putchar_stream('.', stream, count);
-    double fractional = number - static_cast<double>(integer_part);
-    int index_fraction = 0;
-    while (index_fraction < 6)
-    {
-        fractional *= 10.0;
-        int digit = static_cast<int>(fractional);
-        ft_putchar_stream(static_cast<char>('0' + digit), stream, count);
-        fractional -= digit;
-        index_fraction++;
-    }
-    char exponent_character;
+    size_t output_length = formatted_output.length();
+    if (output_length == 0)
+        return ;
+    write_buffer_stream(formatted_output.c_str(), output_length, stream, count);
+}
+
+static void ft_putscientific_stream(double number, bool uppercase, FILE *stream, size_t *count, int precision)
+{
+    if (count_has_error(count))
+        return ;
+    char specifier;
+
     if (uppercase)
-        exponent_character = 'E';
+        specifier = 'E';
     else
-        exponent_character = 'e';
-    ft_putchar_stream(exponent_character, stream, count);
-    if (exponent >= 0)
-        ft_putchar_stream('+', stream, count);
-    else
+        specifier = 'e';
+    std::string formatted_output;
+    if (format_double_output(specifier, precision, number, formatted_output) != 0)
     {
-        ft_putchar_stream('-', stream, count);
-        exponent = -exponent;
-    }
-    if (exponent >= 100)
-        ft_putnbr_stream(exponent, stream, count);
-    else
-    {
-        ft_putchar_stream(static_cast<char>('0' + (exponent / 10)), stream, count);
-        ft_putchar_stream(static_cast<char>('0' + (exponent % 10)), stream, count);
-    }
-}
-
-static void ft_putgeneral_stream(double number, bool uppercase, FILE *stream, size_t *count)
-{
-    if (math_fabs(number) <= DBL_EPSILON)
-    {
-        ft_putfloat_stream(0.0, stream, count);
+        mark_count_error(count);
         return ;
     }
-    double temp = number;
-    if (temp < 0)
-        temp = -temp;
-    int exponent = 0;
-    while (temp >= 10.0)
-    {
-        temp /= 10.0;
-        exponent++;
-    }
-    while (temp < 1.0)
-    {
-        temp *= 10.0;
-        exponent--;
-    }
-    if (exponent < -4 || exponent >= 6)
-        ft_putscientific_stream(number, uppercase, stream, count);
+    size_t output_length = formatted_output.length();
+    if (output_length == 0)
+        return ;
+    write_buffer_stream(formatted_output.c_str(), output_length, stream, count);
+}
+
+static void ft_putgeneral_stream(double number, bool uppercase, FILE *stream, size_t *count, int precision)
+{
+    if (count_has_error(count))
+        return ;
+    char specifier;
+
+    if (uppercase)
+        specifier = 'G';
     else
-        ft_putfloat_stream(number, stream, count);
+        specifier = 'g';
+    std::string formatted_output;
+    if (format_double_output(specifier, precision, number, formatted_output) != 0)
+    {
+        mark_count_error(count);
+        return ;
+    }
+    size_t output_length = formatted_output.length();
+    if (output_length == 0)
+        return ;
+    write_buffer_stream(formatted_output.c_str(), output_length, stream, count);
 }
 
 int ft_vfprintf(FILE *stream, const char *format, va_list args)
@@ -226,6 +261,8 @@ int ft_vfprintf(FILE *stream, const char *format, va_list args)
     size_t index = 0;
     while (format[index])
     {
+        if (count == SIZE_MAX)
+            break ;
         if (format[index] == '%')
         {
             index++;
@@ -326,19 +363,19 @@ int ft_vfprintf(FILE *stream, const char *format, va_list args)
             else if (spec == 'f')
             {
                 double number = va_arg(args, double);
-                ft_putfloat_stream(number, stream, &count);
+                ft_putfloat_stream(number, stream, &count, 6);
             }
             else if (spec == 'e' || spec == 'E')
             {
                 bool uppercase = (spec == 'E');
                 double number = va_arg(args, double);
-                ft_putscientific_stream(number, uppercase, stream, &count);
+                ft_putscientific_stream(number, uppercase, stream, &count, 6);
             }
             else if (spec == 'g' || spec == 'G')
             {
                 bool uppercase = (spec == 'G');
                 double number = va_arg(args, double);
-                ft_putgeneral_stream(number, uppercase, stream, &count);
+                ft_putgeneral_stream(number, uppercase, stream, &count, 6);
             }
             else if (spec == 'p')
             {
@@ -355,23 +392,26 @@ int ft_vfprintf(FILE *stream, const char *format, va_list args)
             }
             else if (spec == 'n')
             {
-                if (len_mod == LEN_L)
+                if (count != SIZE_MAX)
                 {
-                    long *out = va_arg(args, long *);
-                    if (out)
-                        *out = static_cast<long>(count);
-                }
-                else if (len_mod == LEN_Z)
-                {
-                    size_t *out = va_arg(args, size_t *);
-                    if (out)
-                        *out = count;
-                }
-                else
-                {
-                    int *out = va_arg(args, int *);
-                    if (out)
-                        *out = static_cast<int>(count);
+                    if (len_mod == LEN_L)
+                    {
+                        long *out = va_arg(args, long *);
+                        if (out)
+                            *out = static_cast<long>(count);
+                    }
+                    else if (len_mod == LEN_Z)
+                    {
+                        size_t *out = va_arg(args, size_t *);
+                        if (out)
+                            *out = count;
+                    }
+                    else
+                    {
+                        int *out = va_arg(args, int *);
+                        if (out)
+                            *out = static_cast<int>(count);
+                    }
                 }
             }
             else if (spec == '%')
@@ -390,6 +430,10 @@ int ft_vfprintf(FILE *stream, const char *format, va_list args)
         }
         index++;
     }
+    if (count == SIZE_MAX)
+        return (-1);
+    if (count > static_cast<size_t>(INT_MAX))
+        return (-1);
     return (static_cast<int>(count));
 }
 

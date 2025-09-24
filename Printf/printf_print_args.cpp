@@ -1,6 +1,5 @@
 #include "printf_internal.hpp"
 #include "../Libft/libft.hpp"
-#include "../Math/math.hpp"
 #include <cstdarg>
 #include <unistd.h>
 #include "../System_utils/system_utils.hpp"
@@ -9,7 +8,65 @@
 #include <stdint.h>
 #include <limits.h>
 #include <stddef.h>
-#include <cfloat>
+#include <string>
+#include <cstdio>
+
+static bool count_has_error(size_t *count)
+{
+    if (!count)
+        return (true);
+    if (*count == SIZE_MAX)
+        return (true);
+    return (false);
+}
+
+static void mark_count_error(size_t *count)
+{
+    if (!count)
+        return ;
+    *count = SIZE_MAX;
+    return ;
+}
+
+static void write_buffer_fd(const char *buffer, size_t length, int fd, size_t *count)
+{
+    if (count_has_error(count))
+        return ;
+    if (length == 0)
+        return ;
+    ssize_t return_value = su_write(fd, buffer, length);
+    if (return_value != static_cast<ssize_t>(length))
+    {
+        mark_count_error(count);
+        return ;
+    }
+    *count += length;
+    return ;
+}
+
+static int format_double_output(char specifier, int precision, double number, std::string &output)
+{
+    if (precision < 0)
+        precision = 6;
+    if ((specifier == 'g' || specifier == 'G') && precision == 0)
+        precision = 1;
+    char format_string[5];
+    format_string[0] = '%';
+    format_string[1] = '.';
+    format_string[2] = '*';
+    format_string[3] = specifier;
+    format_string[4] = '\0';
+    int required_length = std::snprintf(nullptr, 0, format_string, precision, number);
+    if (required_length < 0)
+        return (-1);
+    output.clear();
+    output.resize(static_cast<size_t>(required_length) + 1);
+    int written_length = std::snprintf(&output[0], output.size(), format_string, precision, number);
+    if (written_length < 0)
+        return (-1);
+    output.resize(static_cast<size_t>(written_length));
+    return (0);
+}
 
 
 size_t ft_strlen_printf(const char *string)
@@ -24,39 +81,41 @@ size_t ft_strlen_printf(const char *string)
 
 void ft_putchar_fd(const char character, int fd, size_t *count)
 {
-    ssize_t return_value = su_write(fd, &character, 1);
-    (void)return_value;
-    (*count)++;
+    write_buffer_fd(&character, 1, fd, count);
     return ;
 }
 
 void ft_putstr_fd(const char *string, int fd, size_t *count)
 {
-    ssize_t return_value;
+    if (count_has_error(count))
+        return ;
     if (!string)
     {
-        return_value = su_write(fd, "(null)", 6);
-        (void)return_value;
-        *count += 6;
+        write_buffer_fd("(null)", 6, fd, count);
         return ;
     }
     size_t length = ft_strlen_printf(string);
-    return_value = su_write(fd, string, length);
-    *count += length;
-    (void)return_value;
+    write_buffer_fd(string, length, fd, count);
     return ;
 }
 
 void ft_putnbr_fd_recursive(long number, int fd, size_t *count)
 {
     char character;
+
+    if (count_has_error(count))
+        return ;
     if (number < 0)
     {
         ft_putchar_fd('-', fd, count);
+        if (count_has_error(count))
+            return ;
         number = -number;
     }
     if (number >= 10)
         ft_putnbr_fd_recursive(number / 10, fd, count);
+    if (count_has_error(count))
+        return ;
     character = static_cast<char>('0' + (number % 10));
     ft_putchar_fd(character, fd, count);
     return ;
@@ -71,8 +130,13 @@ void ft_putnbr_fd(long number, int fd, size_t *count)
 void ft_putunsigned_fd_recursive(uintmax_t number, int fd, size_t *count)
 {
     char character;
+
+    if (count_has_error(count))
+        return ;
     if (number >= 10)
         ft_putunsigned_fd_recursive(number / 10, fd, count);
+    if (count_has_error(count))
+        return ;
     character = static_cast<char>('0' + (number % 10));
     ft_putchar_fd(character, fd, count);
     return ;
@@ -88,8 +152,12 @@ void ft_puthex_fd_recursive(uintmax_t number, int fd, bool uppercase, size_t *co
 {
     char character;
 
+    if (count_has_error(count))
+        return ;
     if (number >= 16)
         ft_puthex_fd_recursive(number / 16, fd, uppercase, count);
+    if (count_has_error(count))
+        return ;
     if ((number % 16) < 10)
         character = '0' + (number % 16);
     else
@@ -113,8 +181,12 @@ void ft_putoctal_fd_recursive(uintmax_t number, int fd, size_t *count)
 {
     char character;
 
+    if (count_has_error(count))
+        return ;
     if (number >= 8)
         ft_putoctal_fd_recursive(number / 8, fd, count);
+    if (count_has_error(count))
+        return ;
     character = static_cast<char>('0' + (number % 8));
     ft_putchar_fd(character, fd, count);
     return ;
@@ -128,124 +200,75 @@ void ft_putoctal_fd(uintmax_t number, int fd, size_t *count)
 
 void ft_putptr_fd(void *pointer, int fd, size_t *count)
 {
+    if (count_has_error(count))
+        return ;
     uintptr_t address = reinterpret_cast<uintptr_t>(pointer);
     ft_putstr_fd("0x", fd, count);
+    if (count_has_error(count))
+        return ;
     ft_puthex_fd(address, fd, false, count);
     return ;
 }
 
 void ft_putfloat_fd(double number, int fd, size_t *count, int precision)
 {
-    if (number < 0)
+    if (count_has_error(count))
+        return ;
+    std::string formatted_output;
+    if (format_double_output('f', precision, number, formatted_output) != 0)
     {
-        ft_putchar_fd('-', fd, count);
-        number = -number;
+        mark_count_error(count);
+        return ;
     }
-    long integer_part = static_cast<long>(number);
-    ft_putnbr_fd(integer_part, fd, count);
-    if (precision > 0)
-    {
-        ft_putchar_fd('.', fd, count);
-        double fractional = number - static_cast<double>(integer_part);
-        int index_fraction = 0;
-        while (index_fraction < precision)
-        {
-            fractional *= 10;
-            int digit = static_cast<int>(fractional);
-            ft_putchar_fd(static_cast<char>('0' + digit), fd, count);
-            fractional -= digit;
-            index_fraction++;
-        }
-    }
+    size_t output_length = formatted_output.length();
+    if (output_length == 0)
+        return ;
+    write_buffer_fd(formatted_output.c_str(), output_length, fd, count);
     return ;
 }
 
-void ft_putscientific_fd(double number, bool uppercase, int fd, size_t *count)
+void ft_putscientific_fd(double number, bool uppercase, int fd, size_t *count, int precision)
 {
-    if (math_fabs(number) <= DBL_EPSILON)
-    {
-        if (uppercase)
-            ft_putstr_fd("0.000000E+00", fd, count);
-        else
-            ft_putstr_fd("0.000000e+00", fd, count);
+    if (count_has_error(count))
         return ;
-    }
-    if (number < 0)
-    {
-        ft_putchar_fd('-', fd, count);
-        number = -number;
-    }
-    int exponent = 0;
-    while (number >= 10.0)
-    {
-        number /= 10.0;
-        exponent++;
-    }
-    while (number < 1.0)
-    {
-        number *= 10.0;
-        exponent--;
-    }
-    long integer_part = static_cast<long>(number);
-    ft_putchar_fd(static_cast<char>('0' + integer_part), fd, count);
-    ft_putchar_fd('.', fd, count);
-    double fractional = number - static_cast<double>(integer_part);
-    int index_fraction = 0;
-    while (index_fraction < 6)
-    {
-        fractional *= 10.0;
-        int digit = static_cast<int>(fractional);
-        ft_putchar_fd(static_cast<char>('0' + digit), fd, count);
-        fractional -= digit;
-        index_fraction++;
-    }
-    char exponent_character;
+    char specifier;
+
     if (uppercase)
-        exponent_character = 'E';
+        specifier = 'E';
     else
-        exponent_character = 'e';
-    ft_putchar_fd(exponent_character, fd, count);
-    if (exponent >= 0)
-        ft_putchar_fd('+', fd, count);
-    else
+        specifier = 'e';
+    std::string formatted_output;
+    if (format_double_output(specifier, precision, number, formatted_output) != 0)
     {
-        ft_putchar_fd('-', fd, count);
-        exponent = -exponent;
+        mark_count_error(count);
+        return ;
     }
-    if (exponent >= 100)
-        ft_putnbr_fd(exponent, fd, count);
-    else
-    {
-        ft_putchar_fd(static_cast<char>('0' + (exponent / 10)), fd, count);
-        ft_putchar_fd(static_cast<char>('0' + (exponent % 10)), fd, count);
-    }
+    size_t output_length = formatted_output.length();
+    if (output_length == 0)
+        return ;
+    write_buffer_fd(formatted_output.c_str(), output_length, fd, count);
     return ;
 }
 
-void ft_putgeneral_fd(double number, bool uppercase, int fd, size_t *count)
+void ft_putgeneral_fd(double number, bool uppercase, int fd, size_t *count, int precision)
 {
-    if (math_fabs(number) <= DBL_EPSILON)
+    if (count_has_error(count))
+        return ;
+    char specifier;
+
+    if (uppercase)
+        specifier = 'G';
+    else
+        specifier = 'g';
+    std::string formatted_output;
+    if (format_double_output(specifier, precision, number, formatted_output) != 0)
     {
-        ft_putfloat_fd(0.0, fd, count, 6);
+        mark_count_error(count);
         return ;
     }
-    double temp = number;
-    if (temp < 0)
-        temp = -temp;
-    int exponent = 0;
-    while (temp >= 10.0)
-    {
-        temp /= 10.0;
-        exponent++;
-    }
-    while (temp < 1.0)
-    {
-        temp *= 10.0;
-        exponent--;
-    }
-    if (exponent < -4 || exponent >= 6)
-        ft_putscientific_fd(number, uppercase, fd, count);
-    else
-        ft_putfloat_fd(number, fd, count, 6);
+    size_t output_length = formatted_output.length();
+    if (output_length == 0)
+        return ;
+    write_buffer_fd(formatted_output.c_str(), output_length, fd, count);
     return ;
 }
