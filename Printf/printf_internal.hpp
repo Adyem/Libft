@@ -30,8 +30,8 @@ void ft_putoctal_fd(uintmax_t number, int fd, size_t *count);
 void ft_putptr_fd(void *pointer, int fd, size_t *count);
 
 void ft_putfloat_fd(double number, int fd, size_t *count, int precision);
-void ft_putscientific_fd(double number, bool uppercase, int fd, size_t *count);
-void ft_putgeneral_fd(double number, bool uppercase, int fd, size_t *count);
+void ft_putscientific_fd(double number, bool uppercase, int fd, size_t *count, int precision);
+void ft_putgeneral_fd(double number, bool uppercase, int fd, size_t *count, int precision);
 int pf_printf_fd_v(int fd, const char *format, va_list args);
 
 #endif

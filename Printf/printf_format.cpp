@@ -14,6 +14,8 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
 
     while (format[index])
     {
+        if (count == SIZE_MAX)
+            break ;
         if (format[index] == '%')
         {
             index++;
@@ -136,13 +138,13 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
             {
                 bool uppercase = (spec == 'E');
                 double number = va_arg(args, double);
-                ft_putscientific_fd(number, uppercase, fd, &count);
+                ft_putscientific_fd(number, uppercase, fd, &count, precision);
             }
             else if (spec == 'g' || spec == 'G')
             {
                 bool uppercase = (spec == 'G');
                 double number = va_arg(args, double);
-                ft_putgeneral_fd(number, uppercase, fd, &count);
+                ft_putgeneral_fd(number, uppercase, fd, &count, precision);
             }
             else if (spec == 'p')
             {
@@ -159,23 +161,26 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
             }
             else if (spec == 'n')
             {
-                if (len_mod == LEN_L)
+                if (count != SIZE_MAX)
                 {
-                    long *out = va_arg(args, long *);
-                    if (out)
-                        *out = static_cast<long>(count);
-                }
-                else if (len_mod == LEN_Z)
-                {
-                    size_t *out = va_arg(args, size_t *);
-                    if (out)
-                        *out = count;
-                }
-                else
-                {
-                    int *out = va_arg(args, int *);
-                    if (out)
-                        *out = static_cast<int>(count);
+                    if (len_mod == LEN_L)
+                    {
+                        long *out = va_arg(args, long *);
+                        if (out)
+                            *out = static_cast<long>(count);
+                    }
+                    else if (len_mod == LEN_Z)
+                    {
+                        size_t *out = va_arg(args, size_t *);
+                        if (out)
+                            *out = count;
+                    }
+                    else
+                    {
+                        int *out = va_arg(args, int *);
+                        if (out)
+                            *out = static_cast<int>(count);
+                    }
                 }
             }
             else if (spec == '%')
@@ -190,5 +195,9 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
             ft_putchar_fd(format[index], fd, &count);
         index++;
     }
+    if (count == SIZE_MAX)
+        return (-1);
+    if (count > static_cast<size_t>(INT_MAX))
+        return (-1);
     return (static_cast<int>(count));
 }

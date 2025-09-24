@@ -1,13 +1,18 @@
 #include "libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
 #include <cstdint>
 
 void* ft_memcpy(void* destination, const void* source, size_t size)
 {
+    ft_errno = ER_SUCCESS;
     if (size == 0)
         return (destination);
     if (destination == ft_nullptr || source == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
+    }
 
     unsigned char*       dest = static_cast<unsigned char*>(destination);
     const unsigned char* src = static_cast<const unsigned char*>(source);
