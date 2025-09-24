@@ -14,17 +14,6 @@
 # define FT_CLOSE_SOCKET(fd) close(fd)
 #endif
 
-int nw_bind(ssize_t sockfd, const struct sockaddr *addr, socklen_t addrlen);
-int nw_listen(ssize_t sockfd, int backlog);
-int nw_accept(ssize_t sockfd, struct sockaddr *addr, socklen_t *addrlen);
-int nw_socket(int domain, int type, int protocol);
-int nw_connect(ssize_t sockfd, const struct sockaddr *addr, socklen_t addrlen);
-ssize_t nw_send(ssize_t sockfd, const void *buf, size_t len, int flags);
-ssize_t nw_recv(ssize_t sockfd, void *buf, size_t len, int flags);
-ssize_t nw_send(int sockfd, const void *buf, size_t len, int flags);
-ssize_t nw_recv(int sockfd, void *buf, size_t len, int flags);
-int nw_inet_pton(int family, const char *ip_address, void *destination);
-
 class ft_socket
 {
     private:

@@ -2,6 +2,7 @@
 #define NETWORKING_HPP
 
 #include "../CPP_class/class_string_class.hpp"
+#include "ssl_wrapper.hpp"
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>
@@ -23,6 +24,8 @@ int nw_connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 int nw_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 int nw_listen(int sockfd, int backlog);
 int nw_socket(int domain, int type, int protocol);
+ssize_t nw_send(int sockfd, const void *buf, size_t len, int flags);
+ssize_t nw_recv(int sockfd, void *buf, size_t len, int flags);
 ssize_t nw_sendto(int sockfd, const void *buf, size_t len, int flags,
                   const struct sockaddr *dest_addr, socklen_t addrlen);
 ssize_t nw_recvfrom(int sockfd, void *buf, size_t len, int flags,
@@ -46,6 +49,9 @@ void event_loop_clear(event_loop *loop);
 int event_loop_add_socket(event_loop *loop, int socket_fd, bool is_write);
 int event_loop_remove_socket(event_loop *loop, int socket_fd, bool is_write);
 int event_loop_run(event_loop *loop, int timeout_milliseconds);
+
+int networking_check_socket_after_send(int socket_fd);
+int networking_check_ssl_after_send(SSL *ssl_connection);
 
 enum class SocketType
 {
