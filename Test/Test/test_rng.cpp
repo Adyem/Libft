@@ -1,45 +1,114 @@
 #include "../../RNG/rng.hpp"
 #include "../../RNG/rng_internal.hpp"
 #include "../../System_utils/test_runner.hpp"
-#include <cstdlib>
 
-FT_TEST(test_rng_random_int_matches_stdlib, "ft_random_int matches rand output")
+FT_TEST(test_rng_random_int_reproducible, "ft_random_int reproducible sequences")
 {
-    g_srand_init = true;
-    srand(246);
-    int expected_value = rand();
-
-    g_srand_init = true;
-    srand(246);
-    int random_value = ft_random_int();
-
-    FT_ASSERT_EQ(expected_value, random_value);
+    ft_seed_random_engine(246u);
+    int first_sequence[3];
+    int index = 0;
+    while (index < 3)
+    {
+        first_sequence[index] = ft_random_int();
+        index = index + 1;
+    }
+    ft_seed_random_engine(246u);
+    int second_sequence[3];
+    index = 0;
+    while (index < 3)
+    {
+        second_sequence[index] = ft_random_int();
+        index = index + 1;
+    }
+    index = 0;
+    while (index < 3)
+    {
+        FT_ASSERT_EQ(first_sequence[index], second_sequence[index]);
+        index = index + 1;
+    }
+    ft_seed_random_engine(135u);
+    int third_sequence[3];
+    index = 0;
+    while (index < 3)
+    {
+        third_sequence[index] = ft_random_int();
+        index = index + 1;
+    }
+    bool difference_found = false;
+    index = 0;
+    while (index < 3)
+    {
+        if (third_sequence[index] != first_sequence[index])
+            difference_found = true;
+        index = index + 1;
+    }
+    if (difference_found == false)
+        return (0);
     return (1);
 }
 
-FT_TEST(test_rng_random_float_matches_stdlib, "ft_random_float matches normalized rand")
+FT_TEST(test_rng_random_float_reproducible, "ft_random_float reproducible sequences")
 {
-    g_srand_init = true;
-    srand(97531);
-    int raw_random_value = rand();
-    float expected_value = static_cast<float>(raw_random_value)
-        / static_cast<float>(RAND_MAX);
-
-    g_srand_init = true;
-    srand(97531);
-    float random_value = ft_random_float();
-    float difference_value = random_value - expected_value;
-
-    if (difference_value < 0.0f)
-        difference_value = -difference_value;
-    FT_ASSERT(difference_value <= 0.000001f);
+    ft_seed_random_engine(97531u);
+    float first_sequence[3];
+    int index = 0;
+    while (index < 3)
+    {
+        first_sequence[index] = ft_random_float();
+        if (first_sequence[index] < 0.0f)
+            return (0);
+        if (first_sequence[index] >= 1.0f)
+            return (0);
+        index = index + 1;
+    }
+    ft_seed_random_engine(97531u);
+    float second_sequence[3];
+    index = 0;
+    while (index < 3)
+    {
+        second_sequence[index] = ft_random_float();
+        float difference_value = second_sequence[index] - first_sequence[index];
+        if (difference_value < 0.0f)
+            difference_value = -difference_value;
+        if (difference_value > 0.0000001f)
+            return (0);
+        if (second_sequence[index] < 0.0f)
+            return (0);
+        if (second_sequence[index] >= 1.0f)
+            return (0);
+        index = index + 1;
+    }
+    ft_seed_random_engine(123u);
+    float third_sequence[3];
+    index = 0;
+    while (index < 3)
+    {
+        third_sequence[index] = ft_random_float();
+        if (third_sequence[index] < 0.0f)
+            return (0);
+        if (third_sequence[index] >= 1.0f)
+            return (0);
+        index = index + 1;
+    }
+    bool difference_found = false;
+    index = 0;
+    while (index < 3)
+    {
+        float difference_value = third_sequence[index] - first_sequence[index];
+        if (difference_value < 0.0f)
+            difference_value = -difference_value;
+        if (difference_value > 0.0000001f)
+            difference_found = true;
+        index = index + 1;
+    }
+    if (difference_found == false)
+        return (0);
     return (1);
 }
 
 FT_TEST(test_rng_random_normal, "ft_random_normal mean")
 {
-    g_srand_init = true;
-    srand(123);
+    ft_seed_random_engine(123u);
     int sample_count = 10000;
     int index = 0;
     float sum_values = 0.0f;
@@ -58,8 +127,7 @@ FT_TEST(test_rng_random_normal, "ft_random_normal mean")
 
 FT_TEST(test_rng_random_exponential, "ft_random_exponential mean")
 {
-    g_srand_init = true;
-    srand(123);
+    ft_seed_random_engine(123u);
     int sample_count = 10000;
     int index = 0;
     float sum_values = 0.0f;
@@ -78,8 +146,7 @@ FT_TEST(test_rng_random_exponential, "ft_random_exponential mean")
 
 FT_TEST(test_rng_random_poisson, "ft_random_poisson mean")
 {
-    g_srand_init = true;
-    srand(123);
+    ft_seed_random_engine(123u);
     int sample_count = 10000;
     int index = 0;
     int sum_values = 0;
@@ -100,8 +167,7 @@ FT_TEST(test_rng_random_poisson, "ft_random_poisson mean")
 
 FT_TEST(test_rng_random_binomial, "ft_random_binomial typical and edge cases")
 {
-    g_srand_init = true;
-    srand(123);
+    ft_seed_random_engine(123u);
     int sample_count = 10000;
     int index = 0;
     int sum_values = 0;
@@ -130,8 +196,7 @@ FT_TEST(test_rng_random_binomial, "ft_random_binomial typical and edge cases")
 
 FT_TEST(test_rng_random_geometric, "ft_random_geometric typical and edge cases")
 {
-    g_srand_init = true;
-    srand(123);
+    ft_seed_random_engine(123u);
     int sample_count = 10000;
     int index = 0;
     int sum_values = 0;
