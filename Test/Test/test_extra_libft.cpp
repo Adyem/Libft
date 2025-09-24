@@ -195,6 +195,23 @@ int test_strlcat_truncate(void)
     return (r == 7 && std::strcmp(dst, "hiwor") == 0);
 }
 
+int test_strlcat_null_destination(void)
+{
+    size_t result;
+
+    result = ft_strlcat(ft_nullptr, "abc", 5);
+    return (result == 0);
+}
+
+int test_strlcat_null_source(void)
+{
+    char dst[8] = "hi";
+    size_t result;
+
+    result = ft_strlcat(dst, ft_nullptr, sizeof(dst));
+    return (result == 0 && std::strcmp(dst, "hi") == 0);
+}
+
 int test_strncmp_basic(void)
 {
     return (ft_strncmp("abc", "abd", 2) == 0);
