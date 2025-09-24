@@ -36,7 +36,6 @@ else
 endif
 
 HEADERS := socket_class.hpp \
-           networking_send_utils.hpp \
            networking.hpp \
            udp_socket.hpp \
            ssl_wrapper.hpp \

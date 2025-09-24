@@ -1,7 +1,14 @@
 #ifndef GAME_INVENTORY_HPP
 # define GAME_INVENTORY_HPP
 
-#include "game_rules.hpp"
+#ifndef USE_INVENTORY_WEIGHT
+# define USE_INVENTORY_WEIGHT 1
+#endif
+
+#ifndef USE_INVENTORY_SLOTS
+# define USE_INVENTORY_SLOTS 1
+#endif
+
 #include "game_item.hpp"
 #include "../Template/map.hpp"
 #include "../Template/shared_ptr.hpp"

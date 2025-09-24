@@ -2191,7 +2191,8 @@ int  count_rarity(int rarity) const noexcept;
 bool has_rarity(int rarity) const noexcept;
 ```
 
-Inventory behavior can be toggled with macros in `Game/game_rules.hpp`.
+Inventory behavior can be toggled with macros defined at the top of
+`Game/game_inventory.hpp`.
 Define `USE_INVENTORY_WEIGHT` or `USE_INVENTORY_SLOTS` to enable weight
 limits or slot limits as desired.
 
