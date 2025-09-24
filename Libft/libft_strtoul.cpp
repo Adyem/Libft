@@ -1,5 +1,6 @@
 #include "libft.hpp"
 #include "limits.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 
 static int ft_digit_value(char character)
@@ -23,6 +24,13 @@ unsigned long ft_strtoul(const char *input_string, char **end_pointer, int numer
     unsigned long base_value;
     unsigned long limit_value;
 
+    if (current_character == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
+        if (end_pointer != ft_nullptr)
+            *end_pointer = ft_nullptr;
+        return (0UL);
+    }
     ft_errno = ER_SUCCESS;
     while (*current_character == ' ' || (*current_character >= '\t'
                 && *current_character <= '\r'))

@@ -35,3 +35,10 @@ FT_TEST(test_strnstr_zero_size, "ft_strnstr zero size")
     FT_ASSERT_EQ(ft_nullptr, ft_strnstr("hello", "he", 0));
     return (1);
 }
+
+FT_TEST(test_strnstr_null_arguments, "ft_strnstr null arguments return nullptr")
+{
+    FT_ASSERT_EQ(ft_nullptr, ft_strnstr(ft_nullptr, "abc", 3));
+    FT_ASSERT_EQ(ft_nullptr, ft_strnstr("abc", ft_nullptr, 3));
+    return (1);
+}

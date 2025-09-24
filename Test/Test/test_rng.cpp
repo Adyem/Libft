@@ -3,6 +3,39 @@
 #include "../../System_utils/test_runner.hpp"
 #include <cstdlib>
 
+FT_TEST(test_rng_random_int_matches_stdlib, "ft_random_int matches rand output")
+{
+    g_srand_init = true;
+    srand(246);
+    int expected_value = rand();
+
+    g_srand_init = true;
+    srand(246);
+    int random_value = ft_random_int();
+
+    FT_ASSERT_EQ(expected_value, random_value);
+    return (1);
+}
+
+FT_TEST(test_rng_random_float_matches_stdlib, "ft_random_float matches normalized rand")
+{
+    g_srand_init = true;
+    srand(97531);
+    int raw_random_value = rand();
+    float expected_value = static_cast<float>(raw_random_value)
+        / static_cast<float>(RAND_MAX);
+
+    g_srand_init = true;
+    srand(97531);
+    float random_value = ft_random_float();
+    float difference_value = random_value - expected_value;
+
+    if (difference_value < 0.0f)
+        difference_value = -difference_value;
+    FT_ASSERT(difference_value <= 0.000001f);
+    return (1);
+}
+
 FT_TEST(test_rng_random_normal, "ft_random_normal mean")
 {
     g_srand_init = true;
