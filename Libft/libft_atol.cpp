@@ -1,10 +1,15 @@
 #include "libft.hpp"
+#include "limits.hpp"
 
 long ft_atol(const char *string)
 {
     long index = 0;
     long sign = 1;
-    unsigned long result = 0;
+    long result = 0;
+    const long positive_limit_divider = FT_LONG_MAX / 10;
+    const long positive_limit_remainder = FT_LONG_MAX % 10;
+    const long negative_limit_divider = FT_LONG_MIN / 10;
+    const long negative_limit_remainder = -(FT_LONG_MIN % 10);
 
     while (string[index] == ' ' || (string[index] >= '\t' && string[index] <= '\r'))
         index++;
@@ -16,8 +21,25 @@ long ft_atol(const char *string)
     }
     while (string[index] >= '0' && string[index] <= '9')
     {
-        result = (result * 10) + (string[index] - '0');
+        int digit = string[index] - '0';
+
+        if (sign == 1)
+        {
+            if (result > positive_limit_divider)
+                return (FT_LONG_MAX);
+            if (result == positive_limit_divider && digit > positive_limit_remainder)
+                return (FT_LONG_MAX);
+            result = result * 10 + digit;
+        }
+        else
+        {
+            if (result < negative_limit_divider)
+                return (FT_LONG_MIN);
+            if (result == negative_limit_divider && digit > negative_limit_remainder)
+                return (FT_LONG_MIN);
+            result = result * 10 - digit;
+        }
         index++;
     }
-    return (result * sign);
+    return (result);
 }
