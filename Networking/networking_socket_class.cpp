@@ -1,5 +1,5 @@
 #include "socket_class.hpp"
-#include "networking_send_utils.hpp"
+#include "networking.hpp"
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
 #include "../Template/move.hpp"
