@@ -1,5 +1,6 @@
 #include "../../Libft/libft.hpp"
 #include "../../System_utils/test_runner.hpp"
+#include <thread>
 
 FT_TEST(test_strtok_basic, "ft_strtok basic")
 {
@@ -40,5 +41,44 @@ FT_TEST(test_strtok_reinitialize, "ft_strtok resets when given a new string")
     token = ft_strtok(ft_nullptr, " ");
     FT_ASSERT_EQ(0, ft_strcmp("delta", token));
     FT_ASSERT_EQ(ft_nullptr, ft_strtok(ft_nullptr, " "));
+    return (1);
+}
+
+FT_TEST(test_strtok_thread_local_state, "ft_strtok maintains thread local state")
+{
+    char first_thread_buffer[32] = "red blue";
+    char second_thread_buffer[32] = "green yellow";
+    char *first_thread_token_one = ft_nullptr;
+    char *first_thread_token_two = ft_nullptr;
+    char *second_thread_token_one = ft_nullptr;
+    char *second_thread_token_two = ft_nullptr;
+
+    std::thread first_thread([
+    &first_thread_buffer,
+    &first_thread_token_one,
+    &first_thread_token_two
+    ]()
+    {
+        first_thread_token_one = ft_strtok(first_thread_buffer, " ");
+        first_thread_token_two = ft_strtok(ft_nullptr, " ");
+        return ;
+    });
+    std::thread second_thread([
+    &second_thread_buffer,
+    &second_thread_token_one,
+    &second_thread_token_two
+    ]()
+    {
+        second_thread_token_one = ft_strtok(second_thread_buffer, " ");
+        second_thread_token_two = ft_strtok(ft_nullptr, " ");
+        return ;
+    });
+
+    first_thread.join();
+    second_thread.join();
+    FT_ASSERT_EQ(0, ft_strcmp("red", first_thread_token_one));
+    FT_ASSERT_EQ(0, ft_strcmp("blue", first_thread_token_two));
+    FT_ASSERT_EQ(0, ft_strcmp("green", second_thread_token_one));
+    FT_ASSERT_EQ(0, ft_strcmp("yellow", second_thread_token_two));
     return (1);
 }
