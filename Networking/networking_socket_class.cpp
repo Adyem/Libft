@@ -46,7 +46,6 @@ ssize_t ft_socket::send_data(const void *data, size_t size, int flags, int fd)
 
 int ft_socket::get_fd() const
 {
-        this->set_error(ER_SUCCESS);
         return (this->_socket_fd);
 }
 
