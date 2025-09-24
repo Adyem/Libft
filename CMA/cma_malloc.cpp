@@ -10,25 +10,30 @@
 #include "../PThread/mutex.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Logger/logger.hpp"
+#include "../Libft/limits.hpp"
 
-void* cma_malloc(std::size_t size)
+void* cma_malloc(ft_size_t size)
 {
+    if (size > FT_SYSTEM_SIZE_MAX)
+        return (ft_nullptr);
     if (OFFSWITCH == 1)
     {
-        void *ptr = malloc(size);
+        void *ptr = malloc(static_cast<size_t>(size));
         if (ptr)
             g_cma_allocation_count++;
         if (ft_log_get_alloc_logging())
-            ft_log_debug("cma_malloc %zu -> %p", size, ptr);
+            ft_log_debug("cma_malloc %llu -> %p",
+                static_cast<unsigned long long>(size), ptr);
         return (ptr);
     }
-    if (size <= 0)
-        return (ft_nullptr);
+    ft_size_t request_size = size;
+    if (size == 0)
+        size = 1;
     if (g_cma_alloc_limit != 0 && size > g_cma_alloc_limit)
         return (ft_nullptr);
     if (g_cma_thread_safe)
         g_malloc_mutex.lock(THREAD_ID);
-    size_t aligned_size = align16(size);
+    ft_size_t aligned_size = align16(size);
     Block *block = find_free_block(aligned_size);
     if (!block)
     {
@@ -48,6 +53,14 @@ void* cma_malloc(std::size_t size)
     if (g_cma_thread_safe)
         g_malloc_mutex.unlock(THREAD_ID);
     if (ft_log_get_alloc_logging())
-        ft_log_debug("cma_malloc %zu -> %p", aligned_size, result);
+    {
+        if (request_size == size)
+            ft_log_debug("cma_malloc %llu -> %p",
+                static_cast<unsigned long long>(aligned_size), result);
+        else
+            ft_log_debug("cma_malloc %llu (rounded to %llu) -> %p",
+                static_cast<unsigned long long>(request_size),
+                static_cast<unsigned long long>(aligned_size), result);
+    }
     return (result);
 }

@@ -123,7 +123,7 @@ int     ft_isspace(int c);
 char   *ft_fgets(char *string, int size, FILE *stream);
 FILE   *ft_fopen(const char *filename, const char *mode);
 int     ft_fclose(FILE *stream);
-long    ft_time_ms(void);
+int64_t ft_time_ms(void);
 char   *ft_time_format(char *buffer, size_t buffer_size);
 ft_string ft_to_string(long number);
 ```
@@ -347,15 +347,15 @@ never zero-initializes past the allocated buffer.
 Thread safety can be enabled or disabled with `cma_set_thread_safety`.
 
 ```
-void   *cma_malloc(std::size_t size);
+void   *cma_malloc(ft_size_t size);
 void    cma_free(void *ptr);
 int     cma_checked_free(void *ptr);
 char   *cma_strdup(const char *string);
 void   *cma_memdup(const void *src, size_t size);
 void   *cma_calloc(ft_size_t nmemb, ft_size_t size);
-void   *cma_realloc(void *ptr, std::size_t new_size);
-void   *cma_aligned_alloc(std::size_t alignment, std::size_t size);
-std::size_t cma_alloc_size(const void *ptr);
+void   *cma_realloc(void *ptr, ft_size_t new_size);
+void   *cma_aligned_alloc(ft_size_t alignment, ft_size_t size);
+ft_size_t cma_alloc_size(const void *ptr);
 int   *cma_atoi(const char *string);
 char  **cma_split(const char *s, char c);
 char   *cma_itoa(int n);
@@ -366,7 +366,7 @@ char   *cma_substr(const char *s, unsigned int start, size_t len);
 char   *cma_strtrim(const char *s1, const char *set);
 void    cma_free_double(char **content);
 void    cma_cleanup();
-void    cma_set_alloc_limit(std::size_t limit);
+void    cma_set_alloc_limit(ft_size_t limit);
 void    cma_set_thread_safety(bool enable);
 void    cma_get_stats(ft_size_t *allocation_count, ft_size_t *free_count);
 ```

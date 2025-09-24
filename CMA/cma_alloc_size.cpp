@@ -2,7 +2,7 @@
 #include "CMA.hpp"
 #include "cma_internal.hpp"
 
-std::size_t cma_alloc_size(const void *ptr)
+ft_size_t cma_alloc_size(const void *ptr)
 {
     if (!ptr)
         return (0);
@@ -16,7 +16,7 @@ std::size_t cma_alloc_size(const void *ptr)
             g_malloc_mutex.unlock(THREAD_ID);
         return (0);
     }
-    std::size_t result = block->size;
+    ft_size_t result = block->size;
     if (g_cma_thread_safe)
         g_malloc_mutex.unlock(THREAD_ID);
     return (result);
