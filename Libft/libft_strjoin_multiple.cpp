@@ -7,7 +7,10 @@
 char *ft_strjoin_multiple(int count, ...)
 {
     if (count <= 0)
+    {
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
+    }
     va_list args;
     va_start(args, count);
     size_t total_length = 0;
@@ -43,7 +46,10 @@ char *ft_strjoin_multiple(int count, ...)
     }
     char *result = static_cast<char*>(cma_malloc(total_length + 1));
     if (!result)
+    {
+        ft_errno = FT_EALLOC;
         return (ft_nullptr);
+    }
     va_start(args, count);
     size_t result_index = 0;
     argument_index = 0;

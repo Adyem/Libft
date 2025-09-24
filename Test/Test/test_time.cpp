@@ -3,10 +3,12 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../CPP_class/class_string_class.hpp"
 #include "../../Time/time.hpp"
+#include "../../Errno/errno.hpp"
 #include <chrono>
 #include <cstdint>
 #include <ctime>
 #include <cstring>
+#include <cerrno>
 #include <sys/time.h>
 #if defined(__unix__) || defined(__APPLE__)
 # include <sys/syscall.h>
@@ -15,6 +17,8 @@
 
 static bool g_time_override_enabled = false;
 static timeval g_time_override_value = {0, 0};
+static bool g_time_force_failure = false;
+static int g_time_failure_errno = EINVAL;
 
 static int fallback_gettimeofday(struct timeval *time_value)
 {
@@ -27,6 +31,11 @@ static int fallback_gettimeofday(struct timeval *time_value)
 
 extern "C" int gettimeofday(struct timeval *time_value, void *timezone_pointer)
 {
+    if (g_time_force_failure)
+    {
+        errno = g_time_failure_errno;
+        return (-1);
+    }
     if (g_time_override_enabled)
     {
         *time_value = g_time_override_value;
@@ -88,8 +97,36 @@ FT_TEST(test_time_format_errors, "ft_time_format edge cases")
 {
     char buffer[32];
 
+    ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_time_format(ft_nullptr, sizeof(buffer)));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_time_format(buffer, 0));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_time_format_small_buffer, "ft_time_format detects insufficient space")
+{
+    char buffer[1];
+
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(ft_nullptr, ft_time_format(buffer, sizeof(buffer)));
+    FT_ASSERT_EQ(FT_ERANGE, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_time_ms_failure, "ft_time_ms reports gettimeofday failure")
+{
+    int64_t result;
+
+    g_time_force_failure = true;
+    g_time_failure_errno = EINVAL;
+    ft_errno = ER_SUCCESS;
+    result = ft_time_ms();
+    g_time_force_failure = false;
+    FT_ASSERT_EQ(-1, result);
+    FT_ASSERT_EQ(EINVAL + ERRNO_OFFSET, ft_errno);
     return (1);
 }
 

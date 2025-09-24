@@ -5,10 +5,10 @@
 
 int ft_validate_int(const char *input)
 {
-    long number;
+    long result;
     int index;
     int sign;
-    long signed_number;
+    int digit;
 
     if (input == ft_nullptr)
     {
@@ -16,7 +16,7 @@ int ft_validate_int(const char *input)
         return (FT_FAILURE);
     }
     ft_errno = ER_SUCCESS;
-    number = 0;
+    result = 0;
     index = 0;
     sign = 1;
     if (input[index] == '+' || input[index] == '-')
@@ -34,12 +34,24 @@ int ft_validate_int(const char *input)
     {
         if (input[index] >= '0' && input[index] <= '9')
         {
-            number = (number * 10) + input[index] - '0';
-            signed_number = sign * number;
-            if (signed_number < FT_INT_MIN || signed_number > FT_INT_MAX)
+            digit = input[index] - '0';
+            if (sign == 1)
             {
-                ft_errno = FT_ERANGE;
-                return (FT_FAILURE);
+                if (result > ((long)FT_INT_MAX - digit) / 10)
+                {
+                    ft_errno = FT_ERANGE;
+                    return (FT_FAILURE);
+                }
+                result = (result * 10) + digit;
+            }
+            else
+            {
+                if (result < ((long)FT_INT_MIN + digit) / 10)
+                {
+                    ft_errno = FT_ERANGE;
+                    return (FT_FAILURE);
+                }
+                result = (result * 10) - digit;
             }
             index++;
         }
