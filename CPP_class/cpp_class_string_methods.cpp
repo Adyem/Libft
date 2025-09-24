@@ -159,15 +159,7 @@ void ft_string::move(ft_string& other) noexcept
 
 ft_string& ft_string::operator+=(const ft_string& other) noexcept
 {
-    size_t index = 0;
-
-    while (index < other._length)
-    {
-        this->append(other._data[index]);
-        if (this->_error_code)
-            return (*this);
-        index++;
-    }
+    this->append(other);
     return (*this);
 }
 
