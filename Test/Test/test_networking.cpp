@@ -10,6 +10,8 @@
 #include <cerrno>
 #include <climits>
 #include <unistd.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 
 static int g_mock_ssl_write_call_count = 0;
 static int g_mock_ssl_write_last_length = 0;
@@ -240,6 +242,146 @@ FT_TEST(test_network_poll_ipv6_ready, "nw_poll detects IPv6 readiness")
     buffer[bytes_received] = '\0';
     FT_CLOSE_SOCKET(client_fd);
     return (ft_strcmp(buffer, message) == 0);
+}
+
+FT_TEST(test_server_config_ipv4_any_address, "server accepts empty IPv4 address as any")
+{
+    SocketConfig configuration;
+    ft_socket server_socket;
+    const struct sockaddr_storage *address;
+    const struct sockaddr_in *address_ipv4;
+
+    configuration._type = SocketType::SERVER;
+    configuration._address_family = AF_INET;
+    configuration._port = 54350;
+    configuration._ip = "";
+    server_socket = ft_socket(configuration);
+    if (server_socket.get_error() != ER_SUCCESS)
+        return (0);
+    address = &server_socket.get_address();
+    address_ipv4 = reinterpret_cast<const struct sockaddr_in*>(address);
+    if (address_ipv4->sin_addr.s_addr != htonl(INADDR_ANY))
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_server_config_ipv6_any_address, "server accepts empty IPv6 address as any")
+{
+    SocketConfig configuration;
+    ft_socket server_socket;
+    const struct sockaddr_storage *address;
+    const struct sockaddr_in6 *address_ipv6;
+
+    configuration._type = SocketType::SERVER;
+    configuration._address_family = AF_INET6;
+    configuration._port = 54351;
+    configuration._ip = "";
+    server_socket = ft_socket(configuration);
+    if (server_socket.get_error() != ER_SUCCESS)
+        return (0);
+    address = &server_socket.get_address();
+    address_ipv6 = reinterpret_cast<const struct sockaddr_in6*>(address);
+    if (ft_memcmp(&address_ipv6->sin6_addr, &in6addr_any, sizeof(in6addr_any)) != 0)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_nw_poll_skips_negative_descriptors, "nw_poll ignores negative entries")
+{
+    int pipe_descriptors[2];
+    const char *message;
+    ssize_t write_result;
+    int read_descriptors[3];
+    int poll_result;
+    char buffer[2];
+    ssize_t read_result;
+
+    if (pipe(pipe_descriptors) != 0)
+        return (0);
+    message = "x";
+    write_result = write(pipe_descriptors[1], message, 1);
+    if (write_result != 1)
+    {
+        close(pipe_descriptors[0]);
+        close(pipe_descriptors[1]);
+        return (0);
+    }
+    read_descriptors[0] = -1;
+    read_descriptors[1] = pipe_descriptors[0];
+    read_descriptors[2] = -1;
+    poll_result = nw_poll(read_descriptors, 3, ft_nullptr, 0, 100);
+    if (poll_result != 1)
+    {
+        close(pipe_descriptors[0]);
+        close(pipe_descriptors[1]);
+        return (0);
+    }
+    if (read_descriptors[0] != -1)
+    {
+        close(pipe_descriptors[0]);
+        close(pipe_descriptors[1]);
+        return (0);
+    }
+    if (read_descriptors[1] != pipe_descriptors[0])
+    {
+        close(pipe_descriptors[0]);
+        close(pipe_descriptors[1]);
+        return (0);
+    }
+    if (read_descriptors[2] != -1)
+    {
+        close(pipe_descriptors[0]);
+        close(pipe_descriptors[1]);
+        return (0);
+    }
+    read_result = read(pipe_descriptors[0], buffer, 1);
+    close(pipe_descriptors[0]);
+    close(pipe_descriptors[1]);
+    if (read_result != 1)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_nw_poll_negative_timeout_is_infinite, "nw_poll treats negative timeout as infinite")
+{
+    int pipe_descriptors[2];
+    const char *message;
+    ssize_t write_result;
+    int read_descriptors[1];
+    int poll_result;
+    char buffer[2];
+    ssize_t read_result;
+
+    if (pipe(pipe_descriptors) != 0)
+        return (0);
+    message = "y";
+    write_result = write(pipe_descriptors[1], message, 1);
+    if (write_result != 1)
+    {
+        close(pipe_descriptors[0]);
+        close(pipe_descriptors[1]);
+        return (0);
+    }
+    read_descriptors[0] = pipe_descriptors[0];
+    poll_result = nw_poll(read_descriptors, 1, ft_nullptr, 0, -1);
+    if (poll_result != 1)
+    {
+        close(pipe_descriptors[0]);
+        close(pipe_descriptors[1]);
+        return (0);
+    }
+    if (read_descriptors[0] != pipe_descriptors[0])
+    {
+        close(pipe_descriptors[0]);
+        close(pipe_descriptors[1]);
+        return (0);
+    }
+    read_result = read(pipe_descriptors[0], buffer, 1);
+    close(pipe_descriptors[0]);
+    close(pipe_descriptors[1]);
+    if (read_result != 1)
+        return (0);
+    return (1);
 }
 
 FT_TEST(test_networking_check_socket_after_send_detects_disconnect, "networking_check_socket_after_send detects close")
