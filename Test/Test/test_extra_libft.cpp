@@ -6,12 +6,18 @@
 #include "../../Time/time.hpp"
 #include "../../CPP_class/class_string_class.hpp"
 #include "../../CMA/CMA.hpp"
+#include "../../Errno/errno.hpp"
 #include <cstring>
 #include <cstdlib>
 
 int test_strlen_size_t_null(void)
 {
-    return (ft_strlen_size_t(ft_nullptr) == 0);
+    ft_errno = ER_SUCCESS;
+    if (ft_strlen_size_t(ft_nullptr) != 0)
+    {
+        return (0);
+    }
+    return (ft_errno == FT_EINVAL);
 }
 
 int test_strlen_size_t_basic(void)
