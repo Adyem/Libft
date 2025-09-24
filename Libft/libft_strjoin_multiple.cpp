@@ -33,7 +33,7 @@ char *ft_strjoin_multiple(int count, ...)
         size_t current_length = 0;
         if (current_string)
         {
-            int string_length = ft_strlen(current_string);
+            size_t measured_length = ft_strlen_size_t(current_string);
             if (ft_errno != ER_SUCCESS)
             {
                 ft_errno = FT_ERANGE;
@@ -41,7 +41,7 @@ char *ft_strjoin_multiple(int count, ...)
                 cma_free(cached_lengths);
                 return (ft_nullptr);
             }
-            current_length = static_cast<size_t>(string_length);
+            current_length = measured_length;
             if (total_length > SIZE_MAX - current_length)
             {
                 ft_errno = FT_ERANGE;

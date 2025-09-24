@@ -6,6 +6,8 @@
 int ft_validate_int(const char *input)
 {
     long result;
+    long maximum_value;
+    long minimum_value;
     int index;
     int sign;
     int digit;
@@ -17,6 +19,8 @@ int ft_validate_int(const char *input)
     }
     ft_errno = ER_SUCCESS;
     result = 0;
+    maximum_value = static_cast<long>(FT_INT_MAX);
+    minimum_value = static_cast<long>(FT_INT_MIN);
     index = 0;
     sign = 1;
     if (input[index] == '+' || input[index] == '-')
@@ -37,7 +41,7 @@ int ft_validate_int(const char *input)
             digit = input[index] - '0';
             if (sign == 1)
             {
-                if (result > ((long)FT_INT_MAX - digit) / 10)
+                if (result > (maximum_value - digit) / 10)
                 {
                     ft_errno = FT_ERANGE;
                     return (FT_FAILURE);
@@ -46,7 +50,7 @@ int ft_validate_int(const char *input)
             }
             else
             {
-                if (result < ((long)FT_INT_MIN + digit) / 10)
+                if (result < (minimum_value + digit) / 10)
                 {
                     ft_errno = FT_ERANGE;
                     return (FT_FAILURE);

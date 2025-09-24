@@ -6,7 +6,19 @@
 void *ft_memdup(const void *source, size_t size)
 {
     ft_errno = ER_SUCCESS;
-    if (source == ft_nullptr || size == 0)
+    if (size == 0)
+    {
+        void *duplicate_zero;
+
+        duplicate_zero = cma_malloc(0);
+        if (duplicate_zero == ft_nullptr)
+        {
+            ft_errno = FT_EALLOC;
+            return (ft_nullptr);
+        }
+        return (duplicate_zero);
+    }
+    if (source == ft_nullptr)
     {
         ft_errno = FT_EINVAL;
         return (ft_nullptr);
