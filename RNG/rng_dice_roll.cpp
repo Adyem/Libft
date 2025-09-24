@@ -3,8 +3,6 @@
 #include "rng_internal.hpp"
 #include "../Printf/printf.hpp"
 
-bool g_srand_init = false;
-
 int ft_dice_roll(int number, int faces)
 {
     ft_init_srand();
@@ -19,7 +17,7 @@ int ft_dice_roll(int number, int faces)
     int roll = 0;
     while (index < number)
     {
-        roll = rand();
+        roll = ft_random_int();
         if (result > INT_MAX - ((roll % faces) + 1))
             return (-1);
         result += (roll % faces) + 1;

@@ -36,6 +36,11 @@ char *ft_strjoin_multiple(int count, ...)
         ++argument_index;
     }
     va_end(args);
+    if (total_length == SIZE_MAX)
+    {
+        ft_errno = FT_ERANGE;
+        return (ft_nullptr);
+    }
     char *result = static_cast<char*>(cma_malloc(total_length + 1));
     if (!result)
         return (ft_nullptr);

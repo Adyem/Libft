@@ -36,6 +36,8 @@ class ft_unord_map
         void    set_error(int error) const;
         size_t  hashKey(const Key& key) const;
         void    insert_internal(const Key& key, const MappedType& value);
+        bool    has_storage() const;
+        void    flag_storage_error() const;
 
     public:
         class iterator
@@ -456,6 +458,26 @@ void ft_unord_map<Key, MappedType>::set_error(int error) const
 }
 
 template <typename Key, typename MappedType>
+bool ft_unord_map<Key, MappedType>::has_storage() const
+{
+    if (_capacity == 0)
+        return (false);
+    if (_data == ft_nullptr)
+        return (false);
+    if (_occupied == ft_nullptr)
+        return (false);
+    return (true);
+}
+
+template <typename Key, typename MappedType>
+void ft_unord_map<Key, MappedType>::flag_storage_error() const
+{
+    if (_error == ER_SUCCESS)
+        set_error(UNORD_MAP_MEMORY);
+    return ;
+}
+
+template <typename Key, typename MappedType>
 size_t ft_unord_map<Key, MappedType>::hashKey(const Key& key) const
 {
     static std::hash<Key> hf;
@@ -465,6 +487,12 @@ size_t ft_unord_map<Key, MappedType>::hashKey(const Key& key) const
 template <typename Key, typename MappedType>
 size_t ft_unord_map<Key, MappedType>::findIndex(const Key& key) const
 {
+    if (_capacity == 0)
+        return (_capacity);
+    if (_data == ft_nullptr)
+        return (_capacity);
+    if (_occupied == ft_nullptr)
+        return (_capacity);
     if (_size == 0)
         return (_capacity);
     size_t start = hashKey(key);
@@ -484,6 +512,11 @@ size_t ft_unord_map<Key, MappedType>::findIndex(const Key& key) const
 template <typename Key, typename MappedType>
 void ft_unord_map<Key, MappedType>::resize(size_t newCapacity)
 {
+    if (newCapacity == 0)
+    {
+        set_error(UNORD_MAP_MEMORY);
+        return ;
+    }
     _error = ER_SUCCESS;
     void* rawData = cma_malloc(sizeof(ft_pair<Key, MappedType>) * newCapacity);
     if (!rawData)
@@ -534,6 +567,21 @@ void ft_unord_map<Key, MappedType>::resize(size_t newCapacity)
 template <typename Key, typename MappedType>
 void ft_unord_map<Key, MappedType>::insert_internal(const Key& key, const MappedType& value)
 {
+    if (_capacity == 0)
+    {
+        flag_storage_error();
+        return ;
+    }
+    if (_data == ft_nullptr)
+    {
+        flag_storage_error();
+        return ;
+    }
+    if (_occupied == ft_nullptr)
+    {
+        flag_storage_error();
+        return ;
+    }
     size_t idx = findIndex(key);
     if (idx != _capacity)
     {
@@ -572,6 +620,12 @@ void ft_unord_map<Key, MappedType>::insert(const Key& key, const MappedType& val
         set_error(PT_ERR_MUTEX_OWNER);
         return ;
     }
+    if (!has_storage())
+    {
+        flag_storage_error();
+        this->_mutex.unlock(THREAD_ID);
+        return ;
+    }
     _error = ER_SUCCESS;
     insert_internal(key, value);
     this->_mutex.unlock(THREAD_ID);
@@ -585,6 +639,13 @@ typename ft_unord_map<Key, MappedType>::iterator ft_unord_map<Key, MappedType>::
     {
         set_error(PT_ERR_MUTEX_OWNER);
         return (iterator(_data, _occupied, _capacity, _capacity));
+    }
+    if (!has_storage())
+    {
+        flag_storage_error();
+        iterator res(_data, _occupied, _capacity, _capacity);
+        this->_mutex.unlock(THREAD_ID);
+        return (res);
     }
     size_t idx = findIndex(key);
     if (idx == _capacity)
@@ -606,6 +667,13 @@ typename ft_unord_map<Key, MappedType>::const_iterator ft_unord_map<Key, MappedT
         set_error(PT_ERR_MUTEX_OWNER);
         return (const_iterator(_data, _occupied, _capacity, _capacity));
     }
+    if (!has_storage())
+    {
+        flag_storage_error();
+        const_iterator res(_data, _occupied, _capacity, _capacity);
+        this->_mutex.unlock(THREAD_ID);
+        return (res);
+    }
     size_t idx = findIndex(key);
     if (idx == _capacity)
     {
@@ -624,6 +692,12 @@ void ft_unord_map<Key, MappedType>::remove(const Key& key)
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         set_error(PT_ERR_MUTEX_OWNER);
+        return ;
+    }
+    if (!has_storage())
+    {
+        flag_storage_error();
+        this->_mutex.unlock(THREAD_ID);
         return ;
     }
     size_t idx = findIndex(key);
@@ -669,6 +743,12 @@ void ft_unord_map<Key, MappedType>::clear()
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         set_error(PT_ERR_MUTEX_OWNER);
+        return ;
+    }
+    if (!has_storage())
+    {
+        flag_storage_error();
+        this->_mutex.unlock(THREAD_ID);
         return ;
     }
     size_t i = 0;
@@ -733,6 +813,13 @@ typename ft_unord_map<Key, MappedType>::iterator ft_unord_map<Key, MappedType>::
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (iterator(_data, _occupied, 0, _capacity));
+    if (!has_storage())
+    {
+        flag_storage_error();
+        iterator res(_data, _occupied, _capacity, _capacity);
+        this->_mutex.unlock(THREAD_ID);
+        return (res);
+    }
     iterator res(_data, _occupied, 0, _capacity);
     this->_mutex.unlock(THREAD_ID);
     return (res);
@@ -753,6 +840,13 @@ typename ft_unord_map<Key, MappedType>::const_iterator ft_unord_map<Key, MappedT
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (const_iterator(_data, _occupied, 0, _capacity));
+    if (!has_storage())
+    {
+        flag_storage_error();
+        const_iterator res(_data, _occupied, _capacity, _capacity);
+        this->_mutex.unlock(THREAD_ID);
+        return (res);
+    }
     const_iterator res(_data, _occupied, 0, _capacity);
     this->_mutex.unlock(THREAD_ID);
     return (res);
@@ -777,6 +871,12 @@ MappedType& ft_unord_map<Key, MappedType>::at(const Key& key)
         set_error(PT_ERR_MUTEX_OWNER);
         return (errorMappedType);
     }
+    if (!has_storage())
+    {
+        flag_storage_error();
+        this->_mutex.unlock(THREAD_ID);
+        return (errorMappedType);
+    }
     size_t idx = findIndex(key);
     if (idx == _capacity)
     {
@@ -798,6 +898,12 @@ const MappedType& ft_unord_map<Key, MappedType>::at(const Key& key) const
         set_error(PT_ERR_MUTEX_OWNER);
         return (errorMappedType);
     }
+    if (!has_storage())
+    {
+        flag_storage_error();
+        this->_mutex.unlock(THREAD_ID);
+        return (errorMappedType);
+    }
     size_t idx = findIndex(key);
     if (idx == _capacity)
     {
@@ -817,6 +923,13 @@ MappedType& ft_unord_map<Key, MappedType>::operator[](const Key& key)
     {
         static MappedType errorVal = MappedType();
         set_error(PT_ERR_MUTEX_OWNER);
+        return (errorVal);
+    }
+    if (!has_storage())
+    {
+        static MappedType errorVal = MappedType();
+        flag_storage_error();
+        this->_mutex.unlock(THREAD_ID);
         return (errorVal);
     }
     _error = ER_SUCCESS;
