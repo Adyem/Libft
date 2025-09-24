@@ -98,9 +98,9 @@ ft_set<ElementType>& ft_set<ElementType>::operator=(ft_set&& other) noexcept
 {
     if (this != &other)
     {
-        if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
             return (*this);
-        if (other._mutex.lock(THREAD_ID) != SUCCES)
+        if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
             this->_mutex.unlock(THREAD_ID);
             return (*this);
@@ -199,7 +199,7 @@ size_t ft_set<ElementType>::lower_bound(const ElementType& value) const
 template <typename ElementType>
 void ft_set<ElementType>::insert(const ElementType& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -231,7 +231,7 @@ void ft_set<ElementType>::insert(const ElementType& value)
 template <typename ElementType>
 void ft_set<ElementType>::insert(ElementType&& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -263,7 +263,7 @@ void ft_set<ElementType>::insert(ElementType&& value)
 template <typename ElementType>
 ElementType* ft_set<ElementType>::find(const ElementType& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return (ft_nullptr);
@@ -283,7 +283,7 @@ ElementType* ft_set<ElementType>::find(const ElementType& value)
 template <typename ElementType>
 const ElementType* ft_set<ElementType>::find(const ElementType& value) const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         const_cast<ft_set*>(this)->set_error(PT_ERR_MUTEX_OWNER);
         return (ft_nullptr);
@@ -303,7 +303,7 @@ const ElementType* ft_set<ElementType>::find(const ElementType& value) const
 template <typename ElementType>
 void ft_set<ElementType>::remove(const ElementType& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -331,7 +331,7 @@ void ft_set<ElementType>::remove(const ElementType& value)
 template <typename ElementType>
 size_t ft_set<ElementType>::size() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (0);
     size_t current_size = this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -341,7 +341,7 @@ size_t ft_set<ElementType>::size() const
 template <typename ElementType>
 bool ft_set<ElementType>::empty() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (true);
     bool result = (this->_size == 0);
     this->_mutex.unlock(THREAD_ID);
@@ -351,7 +351,7 @@ bool ft_set<ElementType>::empty() const
 template <typename ElementType>
 int ft_set<ElementType>::get_error() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (this->_error_code);
     int error = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
@@ -367,7 +367,7 @@ const char* ft_set<ElementType>::get_error_str() const
 template <typename ElementType>
 void ft_set<ElementType>::clear()
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return ;
     size_t index = 0;
     while (index < this->_size)

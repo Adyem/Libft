@@ -58,7 +58,7 @@ int pt_condition_variable::wait(pt_mutex &mutex)
         this->set_error(errno + ERRNO_OFFSET);
         return (-1);
     }
-    if (mutex.unlock(THREAD_ID) != SUCCES)
+    if (mutex.unlock(THREAD_ID) != FT_SUCCESS)
     {
         int unlock_error;
 
@@ -73,7 +73,7 @@ int pt_condition_variable::wait(pt_mutex &mutex)
 
         wait_error = ft_errno;
         pthread_mutex_unlock(&this->_mutex);
-        if (mutex.lock(THREAD_ID) != SUCCES)
+        if (mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
             int relock_error;
 
@@ -89,7 +89,7 @@ int pt_condition_variable::wait(pt_mutex &mutex)
         int unlock_error;
 
         unlock_error = errno + ERRNO_OFFSET;
-        if (mutex.lock(THREAD_ID) != SUCCES)
+        if (mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
             int relock_error;
 
@@ -100,7 +100,7 @@ int pt_condition_variable::wait(pt_mutex &mutex)
         this->set_error(unlock_error);
         return (-1);
     }
-    if (mutex.lock(THREAD_ID) != SUCCES)
+    if (mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         int relock_error;
 
@@ -131,7 +131,7 @@ int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &ab
         this->set_error(errno + ERRNO_OFFSET);
         return (-1);
     }
-    if (mutex.unlock(THREAD_ID) != SUCCES)
+    if (mutex.unlock(THREAD_ID) != FT_SUCCESS)
     {
         int unlock_error;
 
@@ -146,7 +146,7 @@ int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &ab
         int unlock_error;
 
         unlock_error = errno + ERRNO_OFFSET;
-        if (mutex.lock(THREAD_ID) != SUCCES)
+        if (mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
             int relock_error;
 
@@ -157,7 +157,7 @@ int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &ab
         this->set_error(unlock_error);
         return (-1);
     }
-    if (mutex.lock(THREAD_ID) != SUCCES)
+    if (mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         int relock_error;
 

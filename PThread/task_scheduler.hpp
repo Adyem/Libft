@@ -139,7 +139,7 @@ void ft_lock_free_queue<ElementType>::push(ElementType &&value)
 {
     bool was_empty;
 
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(this->_mutex.get_error());
         return ;
@@ -158,7 +158,7 @@ void ft_lock_free_queue<ElementType>::push(ElementType &&value)
         this->set_error(this->_storage.get_error());
         return ;
     }
-    if (this->_mutex.unlock(THREAD_ID) != SUCCES)
+    if (this->_mutex.unlock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(this->_mutex.get_error());
         return ;
@@ -181,7 +181,7 @@ bool ft_lock_free_queue<ElementType>::pop(ElementType &result)
     bool is_empty;
     ElementType value;
 
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(this->_mutex.get_error());
         return (false);
@@ -189,7 +189,7 @@ bool ft_lock_free_queue<ElementType>::pop(ElementType &result)
     is_empty = this->_storage.empty();
     if (this->_storage.get_error() != ER_SUCCESS)
     {
-        if (this->_mutex.unlock(THREAD_ID) != SUCCES)
+        if (this->_mutex.unlock(THREAD_ID) != FT_SUCCESS)
         {
             this->set_error(this->_mutex.get_error());
             return (false);
@@ -199,7 +199,7 @@ bool ft_lock_free_queue<ElementType>::pop(ElementType &result)
     }
     if (is_empty)
     {
-        if (this->_mutex.unlock(THREAD_ID) != SUCCES)
+        if (this->_mutex.unlock(THREAD_ID) != FT_SUCCESS)
         {
             this->set_error(this->_mutex.get_error());
             return (false);
@@ -210,7 +210,7 @@ bool ft_lock_free_queue<ElementType>::pop(ElementType &result)
     value = this->_storage.dequeue();
     if (this->_storage.get_error() != ER_SUCCESS)
     {
-        if (this->_mutex.unlock(THREAD_ID) != SUCCES)
+        if (this->_mutex.unlock(THREAD_ID) != FT_SUCCESS)
         {
             this->set_error(this->_mutex.get_error());
             return (false);
@@ -218,7 +218,7 @@ bool ft_lock_free_queue<ElementType>::pop(ElementType &result)
         this->set_error(this->_storage.get_error());
         return (false);
     }
-    if (this->_mutex.unlock(THREAD_ID) != SUCCES)
+    if (this->_mutex.unlock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(this->_mutex.get_error());
         return (false);
@@ -234,7 +234,7 @@ bool ft_lock_free_queue<ElementType>::wait_pop(ElementType &result, const ft_ato
     bool is_empty;
     ElementType value;
 
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(this->_mutex.get_error());
         return (false);
@@ -244,7 +244,7 @@ bool ft_lock_free_queue<ElementType>::wait_pop(ElementType &result, const ft_ato
         is_empty = this->_storage.empty();
         if (this->_storage.get_error() != ER_SUCCESS)
         {
-            if (this->_mutex.unlock(THREAD_ID) != SUCCES)
+            if (this->_mutex.unlock(THREAD_ID) != FT_SUCCESS)
             {
                 this->set_error(this->_mutex.get_error());
                 return (false);
@@ -256,7 +256,7 @@ bool ft_lock_free_queue<ElementType>::wait_pop(ElementType &result, const ft_ato
             break;
         if (!running_flag.load() || this->_shutdown)
         {
-            if (this->_mutex.unlock(THREAD_ID) != SUCCES)
+            if (this->_mutex.unlock(THREAD_ID) != FT_SUCCESS)
             {
                 this->set_error(this->_mutex.get_error());
                 return (false);
@@ -269,7 +269,7 @@ bool ft_lock_free_queue<ElementType>::wait_pop(ElementType &result, const ft_ato
             int condition_error;
 
             condition_error = this->_condition.get_error();
-            if (this->_mutex.unlock(THREAD_ID) != SUCCES)
+            if (this->_mutex.unlock(THREAD_ID) != FT_SUCCESS)
             {
                 this->set_error(this->_mutex.get_error());
                 return (false);
@@ -281,7 +281,7 @@ bool ft_lock_free_queue<ElementType>::wait_pop(ElementType &result, const ft_ato
     value = this->_storage.dequeue();
     if (this->_storage.get_error() != ER_SUCCESS)
     {
-        if (this->_mutex.unlock(THREAD_ID) != SUCCES)
+        if (this->_mutex.unlock(THREAD_ID) != FT_SUCCESS)
         {
             this->set_error(this->_mutex.get_error());
             return (false);
@@ -289,7 +289,7 @@ bool ft_lock_free_queue<ElementType>::wait_pop(ElementType &result, const ft_ato
         this->set_error(this->_storage.get_error());
         return (false);
     }
-    if (this->_mutex.unlock(THREAD_ID) != SUCCES)
+    if (this->_mutex.unlock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(this->_mutex.get_error());
         return (false);
@@ -302,13 +302,13 @@ bool ft_lock_free_queue<ElementType>::wait_pop(ElementType &result, const ft_ato
 template <typename ElementType>
 void ft_lock_free_queue<ElementType>::shutdown()
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(this->_mutex.get_error());
         return ;
     }
     this->_shutdown = true;
-    if (this->_mutex.unlock(THREAD_ID) != SUCCES)
+    if (this->_mutex.unlock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(this->_mutex.get_error());
         return ;
@@ -479,7 +479,7 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
         task_body();
         return (future_value);
     }
-    if (this->_scheduled_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_scheduled_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(this->_scheduled_mutex.get_error());
         task_body();
@@ -488,14 +488,14 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     this->_scheduled.push_back(ft_move(task_entry));
     if (this->_scheduled.get_error() != ER_SUCCESS)
     {
-        if (this->_scheduled_mutex.unlock(THREAD_ID) != SUCCES)
+        if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
             this->set_error(this->_scheduled_mutex.get_error());
         else
             this->set_error(this->_scheduled.get_error());
         task_body();
         return (future_value);
     }
-    if (this->_scheduled_mutex.unlock(THREAD_ID) != SUCCES)
+    if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(this->_scheduled_mutex.get_error());
         task_body();
@@ -534,7 +534,7 @@ void ft_task_scheduler::schedule_every(std::chrono::duration<Rep, Period> interv
         this->set_error(task_entry._function.get_error());
         return ;
     }
-    if (this->_scheduled_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_scheduled_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(this->_scheduled_mutex.get_error());
         task_entry._function();
@@ -543,14 +543,14 @@ void ft_task_scheduler::schedule_every(std::chrono::duration<Rep, Period> interv
     this->_scheduled.push_back(ft_move(task_entry));
     if (this->_scheduled.get_error() != ER_SUCCESS)
     {
-        if (this->_scheduled_mutex.unlock(THREAD_ID) != SUCCES)
+        if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
             this->set_error(this->_scheduled_mutex.get_error());
         else
             this->set_error(this->_scheduled.get_error());
         task_entry._function();
         return ;
     }
-    if (this->_scheduled_mutex.unlock(THREAD_ID) != SUCCES)
+    if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(this->_scheduled_mutex.get_error());
         task_entry._function();

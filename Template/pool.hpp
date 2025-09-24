@@ -71,7 +71,7 @@ class Pool<T>::Object
 template<typename T>
 void Pool<T>::release(size_t idx) noexcept
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -144,7 +144,7 @@ Pool<T>::~Pool()
 template<typename T>
 void Pool<T>::resize(size_t new_size)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -195,7 +195,7 @@ template<typename T>
 template<typename... Args>
 typename Pool<T>::Object Pool<T>::acquire(Args&&... args)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         Object error_object;

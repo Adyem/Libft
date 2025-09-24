@@ -91,9 +91,9 @@ ft_deque<ElementType>& ft_deque<ElementType>::operator=(ft_deque&& other) noexce
 {
     if (this != &other)
     {
-        if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
             return (*this);
-        if (other._mutex.lock(THREAD_ID) != SUCCES)
+        if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
             this->_mutex.unlock(THREAD_ID);
             return (*this);
@@ -124,7 +124,7 @@ void ft_deque<ElementType>::set_error(int error) const
 template <typename ElementType>
 void ft_deque<ElementType>::push_front(const ElementType& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -152,7 +152,7 @@ void ft_deque<ElementType>::push_front(const ElementType& value)
 template <typename ElementType>
 void ft_deque<ElementType>::push_front(ElementType&& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -180,7 +180,7 @@ void ft_deque<ElementType>::push_front(ElementType&& value)
 template <typename ElementType>
 void ft_deque<ElementType>::push_back(const ElementType& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -208,7 +208,7 @@ void ft_deque<ElementType>::push_back(const ElementType& value)
 template <typename ElementType>
 void ft_deque<ElementType>::push_back(ElementType&& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -236,7 +236,7 @@ void ft_deque<ElementType>::push_back(ElementType&& value)
 template <typename ElementType>
 ElementType ft_deque<ElementType>::pop_front()
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return (ElementType());
@@ -264,7 +264,7 @@ ElementType ft_deque<ElementType>::pop_front()
 template <typename ElementType>
 ElementType ft_deque<ElementType>::pop_back()
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return (ElementType());
@@ -293,7 +293,7 @@ template <typename ElementType>
 ElementType& ft_deque<ElementType>::front()
 {
     static ElementType error_element = ElementType();
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return (error_element);
@@ -313,7 +313,7 @@ template <typename ElementType>
 const ElementType& ft_deque<ElementType>::front() const
 {
     static ElementType error_element = ElementType();
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return (error_element);
@@ -333,7 +333,7 @@ template <typename ElementType>
 ElementType& ft_deque<ElementType>::back()
 {
     static ElementType error_element = ElementType();
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return (error_element);
@@ -353,7 +353,7 @@ template <typename ElementType>
 const ElementType& ft_deque<ElementType>::back() const
 {
     static ElementType error_element = ElementType();
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return (error_element);
@@ -372,7 +372,7 @@ const ElementType& ft_deque<ElementType>::back() const
 template <typename ElementType>
 size_t ft_deque<ElementType>::size() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (0);
     size_t current_size = this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -382,7 +382,7 @@ size_t ft_deque<ElementType>::size() const
 template <typename ElementType>
 bool ft_deque<ElementType>::empty() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (true);
     bool result = (this->_size == 0);
     this->_mutex.unlock(THREAD_ID);
@@ -392,7 +392,7 @@ bool ft_deque<ElementType>::empty() const
 template <typename ElementType>
 int ft_deque<ElementType>::get_error() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (this->_error_code);
     int error = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
@@ -402,7 +402,7 @@ int ft_deque<ElementType>::get_error() const
 template <typename ElementType>
 const char* ft_deque<ElementType>::get_error_str() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (ft_strerror(this->_error_code));
     int error = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
@@ -412,7 +412,7 @@ const char* ft_deque<ElementType>::get_error_str() const
 template <typename ElementType>
 void ft_deque<ElementType>::clear()
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return ;
     while (this->_front != ft_nullptr)
     {

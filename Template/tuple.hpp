@@ -86,9 +86,9 @@ ft_tuple<Types...>& ft_tuple<Types...>::operator=(ft_tuple&& other) noexcept
 {
     if (this != &other)
     {
-        if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
             return (*this);
-        if (other._mutex.lock(THREAD_ID) != SUCCES)
+        if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
             this->_mutex.unlock(THREAD_ID);
             return (*this);
@@ -138,7 +138,7 @@ ft_tuple<Types...>::get()
 {
     using elem_t = typename std::tuple_element<I, tuple_t>::type;
     static elem_t default_instance = elem_t();
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return (default_instance);
@@ -167,7 +167,7 @@ ft_tuple<Types...>::get() const
 {
     using elem_t = typename std::tuple_element<I, tuple_t>::type;
     static elem_t default_instance = elem_t();
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         const_cast<ft_tuple*>(this)->set_error(PT_ERR_MUTEX_OWNER);
         return (default_instance);
@@ -196,7 +196,7 @@ template <typename T>
 T& ft_tuple<Types...>::get()
 {
     static T default_instance = T();
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return (default_instance);
@@ -223,7 +223,7 @@ template <typename T>
 const T& ft_tuple<Types...>::get() const
 {
     static T default_instance = T();
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         const_cast<ft_tuple*>(this)->set_error(PT_ERR_MUTEX_OWNER);
         return (default_instance);
@@ -250,7 +250,7 @@ const T& ft_tuple<Types...>::get() const
 template <typename... Types>
 void ft_tuple<Types...>::reset()
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -270,7 +270,7 @@ void ft_tuple<Types...>::reset()
 template <typename... Types>
 int ft_tuple<Types...>::get_error() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (this->_error_code);
     int err = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
@@ -280,7 +280,7 @@ int ft_tuple<Types...>::get_error() const
 template <typename... Types>
 const char* ft_tuple<Types...>::get_error_str() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (ft_strerror(this->_error_code));
     int err = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
