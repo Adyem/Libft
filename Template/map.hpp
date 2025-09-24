@@ -155,9 +155,9 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(ft_map<Key, MappedTy
 {
     if (this != &other)
     {
-        if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
             return (*this);
-        if (other._mutex.lock(THREAD_ID) != SUCCES)
+        if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
             this->_mutex.unlock(THREAD_ID);
             return (*this);
@@ -205,7 +205,7 @@ ft_map<Key, MappedType>::~ft_map()
 template <typename Key, typename MappedType>
 void ft_map<Key, MappedType>::insert(const Key& key, const MappedType& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -236,7 +236,7 @@ void ft_map<Key, MappedType>::insert(const Key& key, const MappedType& value)
 template <typename Key, typename MappedType>
 void ft_map<Key, MappedType>::insert(const Key& key, MappedType&& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -267,7 +267,7 @@ void ft_map<Key, MappedType>::insert(const Key& key, MappedType&& value)
 template <typename Key, typename MappedType>
 Pair<Key, MappedType> *ft_map<Key, MappedType>::find(const Key& key)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         set_error(PT_ERR_MUTEX_OWNER);
         return (ft_nullptr);
@@ -290,7 +290,7 @@ Pair<Key, MappedType> *ft_map<Key, MappedType>::find(const Key& key)
 template <typename Key, typename MappedType>
 const Pair<Key, MappedType> *ft_map<Key, MappedType>::find(const Key& key) const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         set_error(PT_ERR_MUTEX_OWNER);
         return (ft_nullptr);
@@ -313,7 +313,7 @@ const Pair<Key, MappedType> *ft_map<Key, MappedType>::find(const Key& key) const
 template <typename Key, typename MappedType>
 void ft_map<Key, MappedType>::remove(const Key& key)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -342,7 +342,7 @@ void ft_map<Key, MappedType>::remove(const Key& key)
 template <typename Key, typename MappedType>
 bool ft_map<Key, MappedType>::empty() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (true);
     bool result = (this->_size == 0);
     this->_mutex.unlock(THREAD_ID);
@@ -352,7 +352,7 @@ bool ft_map<Key, MappedType>::empty() const
 template <typename Key, typename MappedType>
 void ft_map<Key, MappedType>::clear()
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -371,7 +371,7 @@ void ft_map<Key, MappedType>::clear()
 template <typename Key, typename MappedType>
 size_t ft_map<Key, MappedType>::size() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (0);
     size_t current_size = this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -381,7 +381,7 @@ size_t ft_map<Key, MappedType>::size() const
 template <typename Key, typename MappedType>
 size_t ft_map<Key, MappedType>::capacity() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (0);
     size_t current_capacity = this->_capacity;
     this->_mutex.unlock(THREAD_ID);
@@ -391,7 +391,7 @@ size_t ft_map<Key, MappedType>::capacity() const
 template <typename Key, typename MappedType>
 int ft_map<Key, MappedType>::get_error() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (_error);
     int error_value = this->_error;
     this->_mutex.unlock(THREAD_ID);
@@ -401,7 +401,7 @@ int ft_map<Key, MappedType>::get_error() const
 template <typename Key, typename MappedType>
 const char* ft_map<Key, MappedType>::get_error_str() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (ft_strerror(_error));
     int error_value = this->_error;
     this->_mutex.unlock(THREAD_ID);
@@ -456,7 +456,7 @@ size_t ft_map<Key, MappedType>::find_index(const Key& key) const
 template <typename Key, typename MappedType>
 Pair<Key, MappedType>* ft_map<Key, MappedType>::end()
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (this->_data + this->_size);
     Pair<Key, MappedType>* result = this->_data + this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -466,7 +466,7 @@ Pair<Key, MappedType>* ft_map<Key, MappedType>::end()
 template <typename Key, typename MappedType>
 const Pair<Key, MappedType>* ft_map<Key, MappedType>::end() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (this->_data + this->_size);
     const Pair<Key, MappedType>* result = this->_data + this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -477,7 +477,7 @@ template <typename Key, typename MappedType>
 MappedType& ft_map<Key, MappedType>::at(const Key& key)
 {
     static MappedType error_mapped_type = MappedType();
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         set_error(PT_ERR_MUTEX_OWNER);
         return (error_mapped_type);
@@ -498,7 +498,7 @@ template <typename Key, typename MappedType>
 const MappedType& ft_map<Key, MappedType>::at(const Key& key) const
 {
     static MappedType error_mapped_type = MappedType();
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         set_error(PT_ERR_MUTEX_OWNER);
         return (error_mapped_type);

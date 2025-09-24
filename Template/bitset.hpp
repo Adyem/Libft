@@ -109,9 +109,9 @@ inline ft_bitset& ft_bitset::operator=(ft_bitset&& other) noexcept
 {
     if (this != &other)
     {
-        if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
             return (*this);
-        if (other._mutex.lock(THREAD_ID) != SUCCES)
+        if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
             this->_mutex.unlock(THREAD_ID);
             return (*this);
@@ -134,7 +134,7 @@ inline ft_bitset& ft_bitset::operator=(ft_bitset&& other) noexcept
 
 inline void ft_bitset::set(size_t pos)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -152,7 +152,7 @@ inline void ft_bitset::set(size_t pos)
 
 inline void ft_bitset::reset(size_t pos)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -170,7 +170,7 @@ inline void ft_bitset::reset(size_t pos)
 
 inline void ft_bitset::flip(size_t pos)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -188,7 +188,7 @@ inline void ft_bitset::flip(size_t pos)
 
 inline bool ft_bitset::test(size_t pos) const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         const_cast<ft_bitset*>(this)->set_error(PT_ERR_MUTEX_OWNER);
         return (false);
@@ -206,7 +206,7 @@ inline bool ft_bitset::test(size_t pos) const
 
 inline size_t ft_bitset::size() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (0);
     size_t s = this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -215,7 +215,7 @@ inline size_t ft_bitset::size() const
 
 inline void ft_bitset::clear()
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return ;
     size_t i = 0;
     while (i < this->_blockCount)
@@ -226,7 +226,7 @@ inline void ft_bitset::clear()
 
 inline int ft_bitset::get_error() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (this->_error_code);
     int err = this->_error_code;
     this->_mutex.unlock(THREAD_ID);

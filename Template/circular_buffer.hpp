@@ -90,9 +90,9 @@ ft_circular_buffer<ElementType>& ft_circular_buffer<ElementType>::operator=(ft_c
 {
     if (this != &other)
     {
-        if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
             return (*this);
-        if (other._mutex.lock(THREAD_ID) != SUCCES)
+        if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
             this->_mutex.unlock(THREAD_ID);
             return (*this);
@@ -128,7 +128,7 @@ void ft_circular_buffer<ElementType>::set_error(int error) const
 template <typename ElementType>
 void ft_circular_buffer<ElementType>::push(const ElementType& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -148,7 +148,7 @@ void ft_circular_buffer<ElementType>::push(const ElementType& value)
 template <typename ElementType>
 void ft_circular_buffer<ElementType>::push(ElementType&& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -168,7 +168,7 @@ void ft_circular_buffer<ElementType>::push(ElementType&& value)
 template <typename ElementType>
 ElementType ft_circular_buffer<ElementType>::pop()
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return (ElementType());
@@ -190,7 +190,7 @@ ElementType ft_circular_buffer<ElementType>::pop()
 template <typename ElementType>
 bool ft_circular_buffer<ElementType>::is_full() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (false);
     bool res = (this->_size == this->_capacity);
     this->_mutex.unlock(THREAD_ID);
@@ -200,7 +200,7 @@ bool ft_circular_buffer<ElementType>::is_full() const
 template <typename ElementType>
 bool ft_circular_buffer<ElementType>::is_empty() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (true);
     bool res = (this->_size == 0);
     this->_mutex.unlock(THREAD_ID);
@@ -210,7 +210,7 @@ bool ft_circular_buffer<ElementType>::is_empty() const
 template <typename ElementType>
 size_t ft_circular_buffer<ElementType>::size() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (0);
     size_t s = this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -220,7 +220,7 @@ size_t ft_circular_buffer<ElementType>::size() const
 template <typename ElementType>
 size_t ft_circular_buffer<ElementType>::capacity() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (0);
     size_t c = this->_capacity;
     this->_mutex.unlock(THREAD_ID);
@@ -230,7 +230,7 @@ size_t ft_circular_buffer<ElementType>::capacity() const
 template <typename ElementType>
 int ft_circular_buffer<ElementType>::get_error() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (this->_error_code);
     int err = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
@@ -240,7 +240,7 @@ int ft_circular_buffer<ElementType>::get_error() const
 template <typename ElementType>
 const char* ft_circular_buffer<ElementType>::get_error_str() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (ft_strerror(this->_error_code));
     int err = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
@@ -250,7 +250,7 @@ const char* ft_circular_buffer<ElementType>::get_error_str() const
 template <typename ElementType>
 void ft_circular_buffer<ElementType>::clear()
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return ;
     size_t i = 0;
     while (i < this->_size)

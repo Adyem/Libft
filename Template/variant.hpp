@@ -186,9 +186,9 @@ ft_variant<Types...>& ft_variant<Types...>::operator=(ft_variant&& other) noexce
 {
     if (this != &other)
     {
-        if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
             return (*this);
-        if (other._mutex.lock(THREAD_ID) != SUCCES)
+        if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
             this->_mutex.unlock(THREAD_ID);
             return (*this);
@@ -222,7 +222,7 @@ template <typename... Types>
 template <typename T>
 void ft_variant<Types...>::emplace(T&& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -248,7 +248,7 @@ template <typename... Types>
 template <typename T>
 bool ft_variant<Types...>::holds_alternative() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         const_cast<ft_variant*>(this)->set_error(PT_ERR_MUTEX_OWNER);
         return (false);
@@ -264,7 +264,7 @@ template <typename T>
 T& ft_variant<Types...>::get()
 {
     static T default_instance = T();
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return (default_instance);
@@ -286,7 +286,7 @@ template <typename T>
 const T& ft_variant<Types...>::get() const
 {
     static T default_instance = T();
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         const_cast<ft_variant*>(this)->set_error(PT_ERR_MUTEX_OWNER);
         return (default_instance);
@@ -307,7 +307,7 @@ template <typename... Types>
 template <typename Visitor>
 void ft_variant<Types...>::visit(Visitor&& vis)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -326,7 +326,7 @@ void ft_variant<Types...>::visit(Visitor&& vis)
 template <typename... Types>
 void ft_variant<Types...>::reset()
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -339,7 +339,7 @@ void ft_variant<Types...>::reset()
 template <typename... Types>
 int ft_variant<Types...>::get_error() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (this->_error_code);
     int err = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
@@ -349,7 +349,7 @@ int ft_variant<Types...>::get_error() const
 template <typename... Types>
 const char* ft_variant<Types...>::get_error_str() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (ft_strerror(this->_error_code));
     int err = this->_error_code;
     this->_mutex.unlock(THREAD_ID);

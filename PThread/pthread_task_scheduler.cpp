@@ -100,7 +100,7 @@ ft_task_scheduler::~ft_task_scheduler()
 {
     this->_running.store(false);
     this->_queue.shutdown();
-    if (this->_scheduled_mutex.lock(THREAD_ID) == SUCCES)
+    if (this->_scheduled_mutex.lock(THREAD_ID) == FT_SUCCESS)
     {
         if (this->_scheduled_condition.broadcast() != 0)
         {
@@ -166,7 +166,7 @@ void ft_task_scheduler::timer_loop()
 
         if (!this->_running.load())
             break;
-        if (this->_scheduled_mutex.lock(THREAD_ID) != SUCCES)
+        if (this->_scheduled_mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
             this->set_error(this->_scheduled_mutex.get_error());
             return ;
@@ -279,7 +279,7 @@ void ft_task_scheduler::timer_loop()
                 function_error = expired_task._function.get_error();
                 this->set_error(function_error);
                 original_function = ft_move(this->_scheduled[index]._function);
-                if (this->_scheduled_mutex.unlock(THREAD_ID) != SUCCES)
+                if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
                 {
                     this->set_error(this->_scheduled_mutex.get_error());
                     return ;
@@ -288,7 +288,7 @@ void ft_task_scheduler::timer_loop()
                     original_function();
                 if (!this->_running.load())
                     return ;
-                if (this->_scheduled_mutex.lock(THREAD_ID) != SUCCES)
+                if (this->_scheduled_mutex.lock(THREAD_ID) != FT_SUCCESS)
                 {
                     this->set_error(this->_scheduled_mutex.get_error());
                     return ;
@@ -323,7 +323,7 @@ void ft_task_scheduler::timer_loop()
                 copy_error = queue_function.get_error();
                 this->set_error(copy_error);
                 original_function = ft_move(this->_scheduled[index]._function);
-                if (this->_scheduled_mutex.unlock(THREAD_ID) != SUCCES)
+                if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
                 {
                     this->set_error(this->_scheduled_mutex.get_error());
                     return ;
@@ -332,7 +332,7 @@ void ft_task_scheduler::timer_loop()
                     original_function();
                 if (!this->_running.load())
                     return ;
-                if (this->_scheduled_mutex.lock(THREAD_ID) != SUCCES)
+                if (this->_scheduled_mutex.lock(THREAD_ID) != FT_SUCCESS)
                 {
                     this->set_error(this->_scheduled_mutex.get_error());
                     return ;
@@ -358,7 +358,7 @@ void ft_task_scheduler::timer_loop()
                 }
                 continue;
             }
-                if (this->_scheduled_mutex.unlock(THREAD_ID) != SUCCES)
+                if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
                 {
                     this->set_error(this->_scheduled_mutex.get_error());
                     return ;
@@ -374,7 +374,7 @@ void ft_task_scheduler::timer_loop()
                     this->set_error(ER_SUCCESS);
                 if (!this->_running.load())
                     return ;
-                if (this->_scheduled_mutex.lock(THREAD_ID) != SUCCES)
+                if (this->_scheduled_mutex.lock(THREAD_ID) != FT_SUCCESS)
                 {
                     this->set_error(this->_scheduled_mutex.get_error());
                     return ;
@@ -398,7 +398,7 @@ void ft_task_scheduler::timer_loop()
             }
             index++;
         }
-        if (this->_scheduled_mutex.unlock(THREAD_ID) != SUCCES)
+        if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
         {
             this->set_error(this->_scheduled_mutex.get_error());
             return ;
