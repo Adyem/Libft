@@ -13,11 +13,11 @@
 Page *page_list = ft_nullptr;
 pt_mutex g_malloc_mutex;
 bool g_cma_thread_safe = true;
-std::size_t    g_cma_alloc_limit = 0;
-std::size_t    g_cma_allocation_count = 0;
-std::size_t    g_cma_free_count = 0;
+ft_size_t    g_cma_alloc_limit = 0;
+ft_size_t    g_cma_allocation_count = 0;
+ft_size_t    g_cma_free_count = 0;
 
-static size_t determine_page_size(size_t size)
+static ft_size_t determine_page_size(ft_size_t size)
 {
     if (size < SMALL_SIZE)
         return (SMALL_ALLOC);
@@ -39,7 +39,7 @@ static void determine_page_use(Page *page)
     return ;
 }
 
-static int8_t determine_which_block_to_use(size_t size)
+static int8_t determine_which_block_to_use(ft_size_t size)
 {
     if (size < SMALL_SIZE)
         return (0);
@@ -57,7 +57,7 @@ static void *create_stack_block(void)
     return (memory_block);
 }
 
-Block* split_block(Block* block, size_t size)
+Block* split_block(Block* block, ft_size_t size)
 {
     if (block->size <= size + sizeof(Block))
         return (block);
@@ -75,9 +75,9 @@ Block* split_block(Block* block, size_t size)
     return (block);
 }
 
-Page *create_page(size_t size)
+Page *create_page(ft_size_t size)
 {
-    size_t page_size = determine_page_size(size);
+    ft_size_t page_size = determine_page_size(size);
     bool use_heap = true;
 
     if (page_list == ft_nullptr)
@@ -93,7 +93,7 @@ Page *create_page(size_t size)
     void* ptr;
     if (use_heap)
     {
-        ptr = std::malloc(page_size);
+        ptr = std::malloc(static_cast<size_t>(page_size));
         if (!ptr)
             return (ft_nullptr);
     }
@@ -134,7 +134,7 @@ Page *create_page(size_t size)
     return (page);
 }
 
-Block *find_free_block(size_t size)
+Block *find_free_block(ft_size_t size)
 {
     Page* cur_page = page_list;
     int8_t alloc_size_type = determine_which_block_to_use(size);
@@ -183,7 +183,7 @@ Page *find_page_of_block(Block *block)
     while (page)
     {
         char *start = static_cast<char*>(page->start);
-        char *end = start + page->size;
+        char *end = start + static_cast<size_t>(page->size);
         if (reinterpret_cast<char*>(block) >= start &&
             reinterpret_cast<char*>(block) < end)
             return (page);
@@ -231,7 +231,8 @@ static inline void print_block_info_impl(Block *block)
     pf_printf_fd(3, "---- Block Information ----\n");
     pf_printf_fd(2, "Address of Block: %p\n", static_cast<void *>(block));
     pf_printf_fd(2, "Magic Number: 0x%X\n", block->magic);
-    pf_printf_fd(2, "Size: %zu bytes\n", block->size);
+    pf_printf_fd(2, "Size: %llu bytes\n",
+        static_cast<unsigned long long>(block->size));
     pf_printf_fd(2, "Free: %s\n", free_status);
     pf_printf_fd(2, "Next Block: %p\n", static_cast<void*>(block->next));
     pf_printf_fd(2, "Previous Block: %p\n", static_cast<void*>(block->prev));

@@ -1,6 +1,7 @@
 #include "libft.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
 #include <stdarg.h>
 
 char *ft_strjoin_multiple(int count, ...)
@@ -11,11 +12,27 @@ char *ft_strjoin_multiple(int count, ...)
     va_start(args, count);
     size_t total_length = 0;
     int argument_index = 0;
+    ft_errno = ER_SUCCESS;
     while (argument_index < count)
     {
         const char *current_string = va_arg(args, const char *);
         if (current_string)
-            total_length += ft_strlen(current_string);
+        {
+            int string_length = ft_strlen(current_string);
+            if (ft_errno != ER_SUCCESS)
+            {
+                ft_errno = FT_ERANGE;
+                va_end(args);
+                return (ft_nullptr);
+            }
+            if (total_length > SIZE_MAX - static_cast<size_t>(string_length))
+            {
+                ft_errno = FT_ERANGE;
+                va_end(args);
+                return (ft_nullptr);
+            }
+            total_length += static_cast<size_t>(string_length);
+        }
         ++argument_index;
     }
     va_end(args);
@@ -30,9 +47,17 @@ char *ft_strjoin_multiple(int count, ...)
         const char *current_string = va_arg(args, const char *);
         if (current_string)
         {
-            size_t string_length = ft_strlen(current_string);
-            ft_memcpy(result + result_index, current_string, string_length);
-            result_index += string_length;
+            int string_length = ft_strlen(current_string);
+            if (ft_errno != ER_SUCCESS)
+            {
+                ft_errno = FT_ERANGE;
+                va_end(args);
+                cma_free(result);
+                return (ft_nullptr);
+            }
+            ft_memcpy(result + result_index, current_string,
+                static_cast<size_t>(string_length));
+            result_index += static_cast<size_t>(string_length);
         }
         ++argument_index;
     }
