@@ -4,7 +4,14 @@
 
 void* cma_memdup(const void* src, size_t size)
 {
-        if (!src || size == 0)
+        if (size == 0)
+        {
+                void *duplicate_zero;
+
+                duplicate_zero = cma_malloc(0);
+                return (duplicate_zero);
+        }
+        if (!src)
                 return (ft_nullptr);
         void* new_mem = cma_malloc(size);
         if (!new_mem)

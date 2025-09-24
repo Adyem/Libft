@@ -50,22 +50,29 @@ static int format_double_output(char specifier, int precision, double number, st
         precision = 6;
     if ((specifier == 'g' || specifier == 'G') && precision == 0)
         precision = 1;
-    char format_string[5];
-    format_string[0] = '%';
-    format_string[1] = '.';
-    format_string[2] = '*';
-    format_string[3] = specifier;
-    format_string[4] = '\0';
-    int required_length = std::snprintf(nullptr, 0, format_string, precision, number);
-    if (required_length < 0)
-        return (-1);
-    output.clear();
-    output.resize(static_cast<size_t>(required_length) + 1);
-    int written_length = std::snprintf(&output[0], output.size(), format_string, precision, number);
-    if (written_length < 0)
-        return (-1);
-    output.resize(static_cast<size_t>(written_length));
-    return (0);
+#define FORMAT_DOUBLE_CASE(character, literal) \
+    if (specifier == character) \
+    { \
+        int required_length = std::snprintf(ft_nullptr, 0, literal, precision, number); \
+        if (required_length < 0) \
+            return (-1); \
+        output.clear(); \
+        output.resize(static_cast<size_t>(required_length) + 1); \
+        int written_length = std::snprintf(&output[0], output.size(), literal, precision, number); \
+        if (written_length < 0) \
+            return (-1); \
+        output.resize(static_cast<size_t>(written_length)); \
+        return (0); \
+    }
+
+    FORMAT_DOUBLE_CASE('f', "%.*f");
+    FORMAT_DOUBLE_CASE('F', "%.*F");
+    FORMAT_DOUBLE_CASE('e', "%.*e");
+    FORMAT_DOUBLE_CASE('E', "%.*E");
+    FORMAT_DOUBLE_CASE('g', "%.*g");
+    FORMAT_DOUBLE_CASE('G', "%.*G");
+#undef FORMAT_DOUBLE_CASE
+    return (-1);
 }
 
 
