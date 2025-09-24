@@ -94,10 +94,10 @@ char    **cma_split(char const *string, char delimiter)
 
     if (!string)
     {
-        strings = static_cast<char **>(cma_malloc(sizeof(char) * 1));
+        strings = static_cast<char **>(cma_malloc(sizeof(*strings)));
         if (!strings)
             return (ft_nullptr);
-        *strings = ft_nullptr;
+        strings[0] = ft_nullptr;
         return (strings);
     }
     word_count = ft_count_words(string, delimiter);
