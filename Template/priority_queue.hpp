@@ -99,9 +99,9 @@ ft_priority_queue<ElementType, Compare>& ft_priority_queue<ElementType, Compare>
 {
     if (this != &other)
     {
-        if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
             return (*this);
-        if (other._mutex.lock(THREAD_ID) != SUCCES)
+        if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
             this->_mutex.unlock(THREAD_ID);
             return (*this);
@@ -201,7 +201,7 @@ void ft_priority_queue<ElementType, Compare>::heapify_down(size_t index)
 template <typename ElementType, typename Compare>
 void ft_priority_queue<ElementType, Compare>::push(const ElementType& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -221,7 +221,7 @@ void ft_priority_queue<ElementType, Compare>::push(const ElementType& value)
 template <typename ElementType, typename Compare>
 void ft_priority_queue<ElementType, Compare>::push(ElementType&& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -241,7 +241,7 @@ void ft_priority_queue<ElementType, Compare>::push(ElementType&& value)
 template <typename ElementType, typename Compare>
 ElementType ft_priority_queue<ElementType, Compare>::pop()
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return (ElementType());
@@ -269,7 +269,7 @@ template <typename ElementType, typename Compare>
 ElementType& ft_priority_queue<ElementType, Compare>::top()
 {
     static ElementType error_element = ElementType();
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return (error_element);
@@ -289,7 +289,7 @@ template <typename ElementType, typename Compare>
 const ElementType& ft_priority_queue<ElementType, Compare>::top() const
 {
     static ElementType error_element = ElementType();
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return (error_element);
@@ -308,7 +308,7 @@ const ElementType& ft_priority_queue<ElementType, Compare>::top() const
 template <typename ElementType, typename Compare>
 size_t ft_priority_queue<ElementType, Compare>::size() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (0);
     size_t current_size = this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -318,7 +318,7 @@ size_t ft_priority_queue<ElementType, Compare>::size() const
 template <typename ElementType, typename Compare>
 bool ft_priority_queue<ElementType, Compare>::empty() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (true);
     bool result = (this->_size == 0);
     this->_mutex.unlock(THREAD_ID);
@@ -328,7 +328,7 @@ bool ft_priority_queue<ElementType, Compare>::empty() const
 template <typename ElementType, typename Compare>
 int ft_priority_queue<ElementType, Compare>::get_error() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (this->_error_code);
     int err = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
@@ -338,7 +338,7 @@ int ft_priority_queue<ElementType, Compare>::get_error() const
 template <typename ElementType, typename Compare>
 const char* ft_priority_queue<ElementType, Compare>::get_error_str() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (ft_strerror(this->_error_code));
     int err = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
@@ -348,7 +348,7 @@ const char* ft_priority_queue<ElementType, Compare>::get_error_str() const
 template <typename ElementType, typename Compare>
 void ft_priority_queue<ElementType, Compare>::clear()
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return ;
     size_t i = 0;
     while (i < this->_size)

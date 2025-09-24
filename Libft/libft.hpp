@@ -1,8 +1,8 @@
 #ifndef LIBFT_HPP
 # define LIBFT_HPP
 
-#define SUCCES 0
-#define FAILURE 1
+#define FT_SUCCESS 0
+#define FT_FAILURE 1
 
 typedef unsigned long long ft_size_t;
 
@@ -27,7 +27,6 @@ void            *ft_memchr(const void *pointer, int character, size_t size);
 void            *ft_memcpy(void* destination, const void* source, size_t num);
 void            *ft_memmove(void *destination, const void *source, size_t size);
 void            *ft_memdup(const void *source, size_t size);
-char            *ft_strchr(const char *string, int char_to_find);
 size_t            ft_strlcat(char *destination, const char *source, size_t bufferSize);
 size_t            ft_strlcpy(char *destination, const char *source, size_t bufferSize);
 char            *ft_strrchr(const char *string, int char_to_find);

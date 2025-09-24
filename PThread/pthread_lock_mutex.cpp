@@ -35,5 +35,5 @@ int pt_mutex::lock(pthread_t thread_id)
     }
     this->_owner.store(thread_id, std::memory_order_relaxed);
     this->_lock = true;
-    return (SUCCES);
+    return (FT_SUCCESS);
 }

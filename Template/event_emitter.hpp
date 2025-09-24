@@ -93,9 +93,9 @@ ft_event_emitter<EventType, Args...>& ft_event_emitter<EventType, Args...>::oper
 {
     if (this != &other)
     {
-        if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
             return (*this);
-        if (other._mutex.lock(THREAD_ID) != SUCCES)
+        if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
             this->_mutex.unlock(THREAD_ID);
             return (*this);
@@ -160,7 +160,7 @@ bool ft_event_emitter<EventType, Args...>::ensure_capacity(size_t desired)
 template <typename EventType, typename... Args>
 void ft_event_emitter<EventType, Args...>::on(const EventType& event, void (*callback)(Args...))
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return ;
     if (!this->ensure_capacity(this->_size + 1))
     {
@@ -176,7 +176,7 @@ void ft_event_emitter<EventType, Args...>::on(const EventType& event, void (*cal
 template <typename EventType, typename... Args>
 void ft_event_emitter<EventType, Args...>::emit(const EventType& event, Args... args)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return ;
     bool found = false;
     size_t listener_index = 0;
@@ -198,7 +198,7 @@ void ft_event_emitter<EventType, Args...>::emit(const EventType& event, Args... 
 template <typename EventType, typename... Args>
 void ft_event_emitter<EventType, Args...>::remove_listener(const EventType& event, void (*callback)(Args...))
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return ;
     size_t listener_index = 0;
     while (listener_index < this->_size)
@@ -251,7 +251,7 @@ const char* ft_event_emitter<EventType, Args...>::get_error_str() const
 template <typename EventType, typename... Args>
 void ft_event_emitter<EventType, Args...>::clear()
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return ;
     size_t listener_index = 0;
     while (listener_index < this->_size)

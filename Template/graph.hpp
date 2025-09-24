@@ -116,9 +116,9 @@ ft_graph<VertexType>& ft_graph<VertexType>::operator=(ft_graph&& other) noexcept
 {
     if (this != &other)
     {
-        if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
             return (*this);
-        if (other._mutex.lock(THREAD_ID) != SUCCES)
+        if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
             this->_mutex.unlock(THREAD_ID);
             return (*this);
@@ -217,7 +217,7 @@ bool ft_graph<VertexType>::ensure_edge_capacity(GraphNode& node, size_t desired)
 template <typename VertexType>
 size_t ft_graph<VertexType>::add_vertex(const VertexType& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return (this->_size);
@@ -240,7 +240,7 @@ size_t ft_graph<VertexType>::add_vertex(const VertexType& value)
 template <typename VertexType>
 size_t ft_graph<VertexType>::add_vertex(VertexType&& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return (this->_size);
@@ -263,7 +263,7 @@ size_t ft_graph<VertexType>::add_vertex(VertexType&& value)
 template <typename VertexType>
 void ft_graph<VertexType>::add_edge(size_t from, size_t to)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -290,7 +290,7 @@ template <typename VertexType>
 template <typename Func>
 void ft_graph<VertexType>::bfs(size_t start, Func visit)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -342,7 +342,7 @@ template <typename VertexType>
 template <typename Func>
 void ft_graph<VertexType>::dfs(size_t start, Func visit)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -392,7 +392,7 @@ void ft_graph<VertexType>::dfs(size_t start, Func visit)
 template <typename VertexType>
 void ft_graph<VertexType>::neighbors(size_t index, ft_vector<size_t> &out) const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return ;
     if (index >= this->_size)
     {
@@ -413,7 +413,7 @@ void ft_graph<VertexType>::neighbors(size_t index, ft_vector<size_t> &out) const
 template <typename VertexType>
 size_t ft_graph<VertexType>::size() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (0);
     size_t s = this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -423,7 +423,7 @@ size_t ft_graph<VertexType>::size() const
 template <typename VertexType>
 bool ft_graph<VertexType>::empty() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (true);
     bool res = (this->_size == 0);
     this->_mutex.unlock(THREAD_ID);
@@ -433,7 +433,7 @@ bool ft_graph<VertexType>::empty() const
 template <typename VertexType>
 int ft_graph<VertexType>::get_error() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (this->_error_code);
     int err = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
@@ -443,7 +443,7 @@ int ft_graph<VertexType>::get_error() const
 template <typename VertexType>
 const char* ft_graph<VertexType>::get_error_str() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (ft_strerror(this->_error_code));
     int err = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
@@ -453,7 +453,7 @@ const char* ft_graph<VertexType>::get_error_str() const
 template <typename VertexType>
 void ft_graph<VertexType>::clear()
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return ;
     size_t node_index_clear = 0;
     while (node_index_clear < this->_size)

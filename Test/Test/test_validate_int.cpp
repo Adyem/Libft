@@ -1,33 +1,58 @@
 #include "../../Libft/libft.hpp"
 #include "../../Math/math.hpp"
 #include "../../CMA/CMA.hpp"
+#include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 
 FT_TEST(test_validate_int_ok, "validate int ok")
 {
-    FT_ASSERT_EQ(0, ft_validate_int("123"));
-    FT_ASSERT_EQ(0, math_validate_int("456"));
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(FT_SUCCESS, ft_validate_int("123"));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(FT_SUCCESS, math_validate_int("456"));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
 FT_TEST(test_validate_int_empty, "validate int empty")
 {
-    FT_ASSERT_EQ(1, ft_validate_int("+"));
-    FT_ASSERT_EQ(1, math_validate_int("-"));
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(FT_FAILURE, ft_validate_int("+"));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(FT_FAILURE, math_validate_int("-"));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
     return (1);
 }
 
 FT_TEST(test_validate_int_range, "validate int range")
 {
-    FT_ASSERT_EQ(2, ft_validate_int("2147483648"));
-    FT_ASSERT_EQ(2, math_validate_int("-2147483649"));
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(FT_FAILURE, ft_validate_int("2147483648"));
+    FT_ASSERT_EQ(FT_ERANGE, ft_errno);
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(FT_FAILURE, math_validate_int("-2147483649"));
+    FT_ASSERT_EQ(FT_ERANGE, ft_errno);
     return (1);
 }
 
 FT_TEST(test_validate_int_invalid, "validate int invalid")
 {
-    FT_ASSERT_EQ(3, ft_validate_int("12a3"));
-    FT_ASSERT_EQ(3, math_validate_int("123b"));
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(FT_FAILURE, ft_validate_int("12a3"));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(FT_FAILURE, math_validate_int("123b"));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_validate_int_nullptr, "validate int nullptr")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(FT_FAILURE, ft_validate_int(ft_nullptr));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
     return (1);
 }
 

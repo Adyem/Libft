@@ -97,9 +97,9 @@ ft_optional<T>& ft_optional<T>::operator=(ft_optional&& other) noexcept
 {
     if (this != &other)
     {
-        if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
             return (*this);
-        if (other._mutex.lock(THREAD_ID) != SUCCES)
+        if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
             this->_mutex.unlock(THREAD_ID);
             return (*this);
@@ -126,7 +126,7 @@ void ft_optional<T>::set_error(int error) const
 template <typename T>
 bool ft_optional<T>::has_value() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         const_cast<ft_optional*>(this)->set_error(PT_ERR_MUTEX_OWNER);
         return (false);
@@ -140,7 +140,7 @@ template <typename T>
 T& ft_optional<T>::value()
 {
     static T default_instance = T();
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return (default_instance);
@@ -166,7 +166,7 @@ template <typename T>
 const T& ft_optional<T>::value() const
 {
     static T default_instance = T();
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         const_cast<ft_optional*>(this)->set_error(PT_ERR_MUTEX_OWNER);
         return (default_instance);
@@ -191,7 +191,7 @@ const T& ft_optional<T>::value() const
 template <typename T>
 void ft_optional<T>::reset()
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -209,7 +209,7 @@ void ft_optional<T>::reset()
 template <typename T>
 int ft_optional<T>::get_error() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (this->_error_code);
     int error = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
@@ -219,7 +219,7 @@ int ft_optional<T>::get_error() const
 template <typename T>
 const char* ft_optional<T>::get_error_str() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (ft_strerror(this->_error_code));
     int error = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
