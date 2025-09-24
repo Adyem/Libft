@@ -2,6 +2,7 @@
 # define CMA_INTERNAL_HPP
 
 #include "../PThread/mutex.hpp"
+#include "../Libft/libft.hpp"
 #include <cstdint>
 #include <stdint.h>
 
@@ -34,14 +35,14 @@
 
 extern pt_mutex g_malloc_mutex;
 extern bool g_cma_thread_safe;
-extern std::size_t    g_cma_alloc_limit;
-extern std::size_t    g_cma_allocation_count;
-extern std::size_t    g_cma_free_count;
+extern ft_size_t    g_cma_alloc_limit;
+extern ft_size_t    g_cma_allocation_count;
+extern ft_size_t    g_cma_free_count;
 
 struct Block
 {
     uint32_t    magic;
-    std::size_t    size;
+    ft_size_t    size;
     bool        free;
     Block        *next;
     Block        *prev;
@@ -50,7 +51,7 @@ struct Block
 struct Page
 {
     void        *start;
-    std::size_t    size;
+    ft_size_t    size;
     Page        *next;
     Page        *prev;
     Block        *blocks;
@@ -60,17 +61,17 @@ struct Page
 
 extern Page *page_list;
 
-Block    *split_block(Block *block, std::size_t size);
-Page    *create_page(std::size_t size);
-Block    *find_free_block(std::size_t size);
+Block    *split_block(Block *block, ft_size_t size);
+Page    *create_page(ft_size_t size);
+Block    *find_free_block(ft_size_t size);
 Block    *merge_block(Block *block);
 void    print_block_info(Block *block);
 Page    *find_page_of_block(Block *block);
 void    free_page_if_empty(Page *page);
 
-inline __attribute__((always_inline, hot)) std::size_t align16(size_t size)
+inline __attribute__((always_inline, hot)) ft_size_t align16(ft_size_t size)
 {
-    return (size + 15) & ~15;
+    return ((size + 15) & ~static_cast<ft_size_t>(15));
 }
 
 #endif

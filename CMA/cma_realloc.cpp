@@ -7,9 +7,10 @@
 #include "CMA.hpp"
 #include "cma_internal.hpp"
 #include "../Libft/libft.hpp"
+#include "../Libft/limits.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
-static int reallocate_block(void *ptr, size_t new_size)
+static int reallocate_block(void *ptr, ft_size_t new_size)
 {
     if (!ptr)
         return (-1);
@@ -32,11 +33,13 @@ static int reallocate_block(void *ptr, size_t new_size)
     return (-1);
 }
 
-void *cma_realloc(void* ptr, size_t new_size)
+void *cma_realloc(void* ptr, ft_size_t new_size)
 {
+    if (new_size > FT_SYSTEM_SIZE_MAX)
+        return (ft_nullptr);
     if (OFFSWITCH == 1)
     {
-        void *result = std::realloc(ptr, new_size);
+        void *result = std::realloc(ptr, static_cast<size_t>(new_size));
         if (!ptr && result)
             g_cma_allocation_count++;
         else if (ptr && new_size == 0)
@@ -73,7 +76,6 @@ void *cma_realloc(void* ptr, size_t new_size)
     {
         if (g_cma_thread_safe)
             g_malloc_mutex.unlock(THREAD_ID);
-        cma_free(ptr);
         return (ft_nullptr);
     }
     Block* old_block = reinterpret_cast<Block*>((static_cast<char*> (ptr)
@@ -85,12 +87,12 @@ void *cma_realloc(void* ptr, size_t new_size)
         cma_free(ptr);
         return (ft_nullptr);
     }
-    size_t copy_size;
+    ft_size_t copy_size;
     if (old_block->size < new_size)
         copy_size = old_block->size;
     else
         copy_size = new_size;
-    ft_memcpy(new_ptr, ptr, copy_size);
+    ft_memcpy(new_ptr, ptr, static_cast<size_t>(copy_size));
     if (g_cma_thread_safe)
         g_malloc_mutex.unlock(THREAD_ID);
     cma_free(ptr);

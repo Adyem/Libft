@@ -2,10 +2,11 @@
 #include "CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
-void *cma_aligned_alloc(std::size_t alignment, std::size_t size)
+void *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
 {
-    if ((alignment & (alignment - 1)) != 0 || alignment < sizeof(void *))
+    if ((alignment & (alignment - 1)) != 0
+        || alignment < static_cast<ft_size_t>(sizeof(void *)))
         return (ft_nullptr);
-    std::size_t aligned_size = (size + alignment - 1) & ~(alignment - 1);
+    ft_size_t aligned_size = (size + alignment - 1) & ~(alignment - 1);
     return (cma_malloc(aligned_size));
 }

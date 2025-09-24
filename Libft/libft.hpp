@@ -61,7 +61,7 @@ int             ft_unsetenv(const char *name);
 FILE            *ft_fopen(const char *filename, const char *mode);
 int             ft_fclose(FILE *stream);
 char            *ft_fgets(char *string, int size, FILE *stream);
-long            ft_time_ms(void);
+int64_t        ft_time_ms(void);
 char            *ft_time_format(char *buffer, size_t buffer_size);
 ft_string        ft_to_string(long number);
 
