@@ -6,7 +6,39 @@
 
 ssize_t su_read(int file_descriptor, void *buffer, size_t count)
 {
-    return (cmp_read(file_descriptor, buffer, count));
+    int retry_attempts = 0;
+    while (true)
+    {
+        ssize_t bytes_read = cmp_read(file_descriptor, buffer, count);
+        if (bytes_read >= 0)
+            return (bytes_read);
+#if defined(__linux__) || defined(__APPLE__)
+        else
+        {
+            const int max_retries = 10;
+            const int retry_delay_ms = 500;
+            if (errno == EINTR)
+                continue ;
+            else if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                if (retry_attempts < max_retries)
+                {
+                    retry_attempts++;
+                    struct timespec delay = {0, retry_delay_ms * 1000000L};
+                    nanosleep(&delay, ft_nullptr);
+                    continue ;
+                }
+                else
+                    return (-1);
+            }
+            else
+                return (-1);
+        }
+#else
+        else
+            return (-1);
+#endif
+    }
 }
 
 ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
