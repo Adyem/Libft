@@ -127,19 +127,20 @@ SocketConfig& SocketConfig::operator=(SocketConfig&& other) noexcept
     if (this != &other)
     {
         this->set_error(other._error_code);
-        _type = other._type;
-        other._ip = this->_ip;
-        _port = other._port;
-        _backlog = other._backlog;
-        _protocol = other._protocol;
-        _address_family = other._address_family;
-        _reuse_address = other._reuse_address;
-        _non_blocking = other._non_blocking;
-        _recv_timeout = other._recv_timeout;
-        _send_timeout = other._send_timeout;
-        other._multicast_group = this->_multicast_group;
-        other._multicast_interface = this->_multicast_interface;
+        this->_type = other._type;
+        this->_ip.move(other._ip);
+        this->_port = other._port;
+        this->_backlog = other._backlog;
+        this->_protocol = other._protocol;
+        this->_address_family = other._address_family;
+        this->_reuse_address = other._reuse_address;
+        this->_non_blocking = other._non_blocking;
+        this->_recv_timeout = other._recv_timeout;
+        this->_send_timeout = other._send_timeout;
+        this->_multicast_group.move(other._multicast_group);
+        this->_multicast_interface.move(other._multicast_interface);
         other._type = SocketType::CLIENT;
+        other._ip.clear();
         other._port = 0;
         other._backlog = 0;
         other._protocol = 0;

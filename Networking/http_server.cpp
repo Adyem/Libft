@@ -7,7 +7,7 @@
 #include <cerrno>
 
 ft_http_server::ft_http_server()
-    : _server_socket(), _error_code(ER_SUCCESS)
+    : _server_socket(), _error_code(ER_SUCCESS), _non_blocking(false)
 {
     return ;
 }
@@ -43,6 +43,7 @@ int ft_http_server::start(const char *ip, uint16_t port, int address_family, boo
         return (1);
     }
     this->_error_code = ER_SUCCESS;
+    this->_non_blocking = non_blocking;
     return (0);
 }
 
@@ -93,7 +94,27 @@ int ft_http_server::run_once()
     client_socket = nw_accept(this->_server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&client_address), &address_length);
     if (client_socket < 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+#ifdef _WIN32
+        int last_error;
+
+        last_error = WSAGetLastError();
+        if (this->_non_blocking != false && last_error == WSAEWOULDBLOCK)
+        {
+            this->_error_code = ER_SUCCESS;
+            return (0);
+        }
+        this->set_error(last_error + ERRNO_OFFSET);
+#else
+        int last_error;
+
+        last_error = errno;
+        if (this->_non_blocking != false && (last_error == EAGAIN || last_error == EWOULDBLOCK))
+        {
+            this->_error_code = ER_SUCCESS;
+            return (0);
+        }
+        this->set_error(last_error + ERRNO_OFFSET);
+#endif
         return (1);
     }
     header_complete = false;

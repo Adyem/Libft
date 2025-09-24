@@ -10,6 +10,7 @@ class ft_http_server
     private:
         ft_socket _server_socket;
         mutable int _error_code;
+        bool _non_blocking;
 
         void set_error(int error_code) const;
 
