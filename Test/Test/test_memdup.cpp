@@ -28,7 +28,12 @@ FT_TEST(test_memdup_zero_size, "ft_memdup zero size")
     buffer[0] = 'a';
     buffer[1] = 'b';
     buffer[2] = 'c';
-    FT_ASSERT_EQ(ft_nullptr, ft_memdup(buffer, 0));
+    void *duplicate;
+
+    duplicate = ft_memdup(buffer, 0);
+    FT_ASSERT(duplicate != ft_nullptr);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    cma_free(duplicate);
     return (1);
 }
 
