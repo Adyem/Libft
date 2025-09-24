@@ -1,5 +1,6 @@
 #include "libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
 
 void *ft_memmove(void *destination, const void *source, size_t size)
 {
@@ -7,10 +8,14 @@ void *ft_memmove(void *destination, const void *source, size_t size)
     const unsigned char *source_pointer = static_cast<const unsigned char *>(source);
     size_t index;
 
+    ft_errno = ER_SUCCESS;
     if (size == 0 || destination == source)
         return (destination);
-    if (!destination || !source)
+    if (destination == ft_nullptr || source == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
+    }
     if (destination_pointer < source_pointer)
     {
         index = 0;
