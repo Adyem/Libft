@@ -1,6 +1,7 @@
 #include "../../Libft/libft.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Libft/limits.hpp"
+#include "../../CPP_class/class_nullptr.hpp"
 
 FT_TEST(test_atoi_simple, "ft_atoi simple")
 {
@@ -72,5 +73,11 @@ FT_TEST(test_atoi_plus_sign, "ft_atoi plus sign")
 FT_TEST(test_atoi_zero, "ft_atoi zero")
 {
     FT_ASSERT_EQ(0, ft_atoi("0"));
+    return (1);
+}
+
+FT_TEST(test_atoi_null_input, "ft_atoi null input returns zero")
+{
+    FT_ASSERT_EQ(0, ft_atoi(ft_nullptr));
     return (1);
 }

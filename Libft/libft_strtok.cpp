@@ -1,26 +1,18 @@
 #include "libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../PThread/pthread.hpp"
 
 char    *ft_strtok(char *string, const char *delimiters)
 {
-    static char *saved_string = ft_nullptr;
-    static pt_mutex g_strtok_mutex;
+    static thread_local char *saved_string = ft_nullptr;
     char    *token_start;
     char    *current_pointer;
     int     is_delimiter;
     size_t  delimiter_index;
 
-    if (g_strtok_mutex.lock(THREAD_ID) != SUCCES)
-        return (ft_nullptr);
     if (string != ft_nullptr)
         saved_string = string;
     if (saved_string == ft_nullptr || delimiters == ft_nullptr)
-    {
-        if (g_strtok_mutex.unlock(THREAD_ID) != SUCCES)
-            return (ft_nullptr);
         return (ft_nullptr);
-    }
     current_pointer = saved_string;
     while (*current_pointer != '\0')
     {
@@ -42,8 +34,6 @@ char    *ft_strtok(char *string, const char *delimiters)
     if (*current_pointer == '\0')
     {
         saved_string = ft_nullptr;
-        if (g_strtok_mutex.unlock(THREAD_ID) != SUCCES)
-            return (ft_nullptr);
         return (ft_nullptr);
     }
     token_start = current_pointer;
@@ -73,8 +63,6 @@ char    *ft_strtok(char *string, const char *delimiters)
         *current_pointer = '\0';
         saved_string = current_pointer + 1;
     }
-    if (g_strtok_mutex.unlock(THREAD_ID) != SUCCES)
-        return (ft_nullptr);
     return (token_start);
 }
 

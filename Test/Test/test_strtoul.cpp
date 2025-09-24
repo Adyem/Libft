@@ -75,3 +75,14 @@ FT_TEST(test_strtoul_overflow, "ft_strtoul clamps overflow and reports error")
     FT_ASSERT_EQ('9', *end);
     return (1);
 }
+
+FT_TEST(test_strtoul_null_input, "ft_strtoul null input sets errno and end pointer")
+{
+    char *end_pointer = reinterpret_cast<char *>(0x1);
+
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(0UL, ft_strtoul(ft_nullptr, &end_pointer, 10));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(ft_nullptr, end_pointer);
+    return (1);
+}

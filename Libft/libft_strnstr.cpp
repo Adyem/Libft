@@ -5,9 +5,13 @@ char    *ft_strnstr(const char *haystack, const char *needle, size_t Length)
 {
     size_t    haystackIndex = 0;
     size_t    matchIndex;
-    size_t    needleLength = ft_strlen(needle);
-    char    *haystackPointer = const_cast<char *>(haystack);
+    char    *haystackPointer;
+    size_t    needleLength;
 
+    if (haystack == ft_nullptr || needle == ft_nullptr)
+        return (ft_nullptr);
+    haystackPointer = const_cast<char *>(haystack);
+    needleLength = ft_strlen(needle);
     if (needleLength == 0 || haystack == needle)
         return (haystackPointer);
     while (haystackPointer[haystackIndex] != '\0' && haystackIndex < Length)
