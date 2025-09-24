@@ -143,6 +143,7 @@ void ft_queue<ElementType>::enqueue(const ElementType& value)
         this->_rear = node;
     }
     ++this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -175,6 +176,7 @@ void ft_queue<ElementType>::enqueue(ElementType&& value)
         this->_rear = node;
     }
     ++this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -201,6 +203,7 @@ ElementType ft_queue<ElementType>::dequeue()
     destroy_at(&node->_data);
     cma_free(node);
     --this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (value);
 }
@@ -221,6 +224,7 @@ ElementType& ft_queue<ElementType>::front()
         return (error_element);
     }
     ElementType& value = this->_front->_data;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (value);
 }
@@ -241,6 +245,7 @@ const ElementType& ft_queue<ElementType>::front() const
         return (error_element);
     }
     const ElementType& value = this->_front->_data;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (value);
 }
@@ -248,9 +253,15 @@ const ElementType& ft_queue<ElementType>::front() const
 template <typename ElementType>
 size_t ft_queue<ElementType>::size() const
 {
+    size_t current_size;
+
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        this->set_error(this->_mutex.get_error());
         return (0);
-    size_t current_size = this->_size;
+    }
+    current_size = this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (current_size);
 }
@@ -258,9 +269,15 @@ size_t ft_queue<ElementType>::size() const
 template <typename ElementType>
 bool ft_queue<ElementType>::empty() const
 {
+    bool result;
+
     if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        this->set_error(this->_mutex.get_error());
         return (true);
-    bool result = (this->_size == 0);
+    }
+    result = (this->_size == 0);
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (result);
 }
@@ -299,6 +316,7 @@ void ft_queue<ElementType>::clear()
     }
     this->_rear = ft_nullptr;
     this->_size = 0;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
