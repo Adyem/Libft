@@ -108,9 +108,9 @@ ft_vector<ElementType>& ft_vector<ElementType>::operator=(ft_vector<ElementType>
 {
     if (this != &other)
     {
-        if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
             return (*this);
-        if (other._mutex.lock(THREAD_ID) != SUCCES)
+        if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
             this->_mutex.unlock(THREAD_ID);
             return (*this);
@@ -147,7 +147,7 @@ void ft_vector<ElementType>::destroy_elements(size_t from, size_t to)
 template <typename ElementType>
 size_t ft_vector<ElementType>::size() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (0);
     size_t s = this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -157,7 +157,7 @@ size_t ft_vector<ElementType>::size() const
 template <typename ElementType>
 size_t ft_vector<ElementType>::capacity() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (0);
     size_t c = this->_capacity;
     this->_mutex.unlock(THREAD_ID);
@@ -175,7 +175,7 @@ void ft_vector<ElementType>::set_error(int error_code) const
 template <typename ElementType>
 int ft_vector<ElementType>::get_error() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (this->_error_code);
     int err = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
@@ -185,7 +185,7 @@ int ft_vector<ElementType>::get_error() const
 template <typename ElementType>
 const char* ft_vector<ElementType>::get_error_str() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (ft_strerror(this->_error_code));
     int err = this->_error_code;
     this->_mutex.unlock(THREAD_ID);
@@ -195,7 +195,7 @@ const char* ft_vector<ElementType>::get_error_str() const
 template <typename ElementType>
 void ft_vector<ElementType>::push_back(const ElementType &value)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -223,7 +223,7 @@ void ft_vector<ElementType>::push_back(const ElementType &value)
 template <typename ElementType>
 void ft_vector<ElementType>::push_back(ElementType &&value)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -251,7 +251,7 @@ void ft_vector<ElementType>::push_back(ElementType &&value)
 template <typename ElementType>
 void ft_vector<ElementType>::pop_back()
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -271,7 +271,7 @@ template <typename ElementType>
 ElementType& ft_vector<ElementType>::operator[](size_t index)
 {
     static ElementType default_instance = ElementType();
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return (default_instance);
@@ -291,7 +291,7 @@ template <typename ElementType>
 const ElementType& ft_vector<ElementType>::operator[](size_t index) const
 {
     static ElementType default_instance = ElementType();
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return (default_instance);
@@ -310,7 +310,7 @@ const ElementType& ft_vector<ElementType>::operator[](size_t index) const
 template <typename ElementType>
 void ft_vector<ElementType>::clear()
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -342,7 +342,7 @@ void ft_vector<ElementType>::reserve_internal(size_t new_capacity)
 template <typename ElementType>
 void ft_vector<ElementType>::reserve(size_t new_capacity)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -355,7 +355,7 @@ void ft_vector<ElementType>::reserve(size_t new_capacity)
 template <typename ElementType>
 void ft_vector<ElementType>::resize(size_t new_size, const ElementType& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
@@ -385,7 +385,7 @@ void ft_vector<ElementType>::resize(size_t new_size, const ElementType& value)
 template <typename ElementType>
 typename ft_vector<ElementType>::iterator ft_vector<ElementType>::insert(iterator pos, const ElementType& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return (ft_nullptr);
@@ -430,7 +430,7 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::insert(iterato
 template <typename ElementType>
 typename ft_vector<ElementType>::iterator ft_vector<ElementType>::erase(iterator pos)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return (ft_nullptr);
@@ -464,7 +464,7 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::erase(iterator
 template <typename ElementType>
 ElementType ft_vector<ElementType>::release_at(size_t index)
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
         return (ElementType());
@@ -490,7 +490,7 @@ ElementType ft_vector<ElementType>::release_at(size_t index)
 template <typename ElementType>
 typename ft_vector<ElementType>::iterator ft_vector<ElementType>::begin()
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (this->_data);
     iterator it = this->_data;
     this->_mutex.unlock(THREAD_ID);
@@ -500,7 +500,7 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::begin()
 template <typename ElementType>
 typename ft_vector<ElementType>::const_iterator ft_vector<ElementType>::begin() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (this->_data);
     const_iterator it = this->_data;
     this->_mutex.unlock(THREAD_ID);
@@ -510,7 +510,7 @@ typename ft_vector<ElementType>::const_iterator ft_vector<ElementType>::begin() 
 template <typename ElementType>
 typename ft_vector<ElementType>::iterator ft_vector<ElementType>::end()
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (this->_data);
     iterator it = this->_data + this->_size;
     this->_mutex.unlock(THREAD_ID);
@@ -520,7 +520,7 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::end()
 template <typename ElementType>
 typename ft_vector<ElementType>::const_iterator ft_vector<ElementType>::end() const
 {
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (this->_data);
     const_iterator it = this->_data + this->_size;
     this->_mutex.unlock(THREAD_ID);

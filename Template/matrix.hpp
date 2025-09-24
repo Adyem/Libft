@@ -83,9 +83,9 @@ ft_matrix<ElementType>& ft_matrix<ElementType>::operator=(ft_matrix&& other) noe
 {
     if (this != &other)
     {
-        if (this->_mutex.lock(THREAD_ID) != SUCCES)
+        if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
             return (*this);
-        if (other._mutex.lock(THREAD_ID) != SUCCES)
+        if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
             this->_mutex.unlock(THREAD_ID);
             return (*this);
@@ -137,7 +137,7 @@ template <typename ElementType>
 ElementType& ft_matrix<ElementType>::at(size_t r, size_t c)
 {
     static ElementType error_element = ElementType();
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (error_element);
     if (r >= this->_rows || c >= this->_cols)
     {
@@ -154,7 +154,7 @@ template <typename ElementType>
 const ElementType& ft_matrix<ElementType>::at(size_t r, size_t c) const
 {
     static ElementType error_element = ElementType();
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (error_element);
     if (r >= this->_rows || c >= this->_cols)
     {
@@ -183,9 +183,9 @@ template <typename ElementType>
 ft_matrix<ElementType> ft_matrix<ElementType>::add(const ft_matrix& other) const
 {
     ft_matrix<ElementType> result;
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (result);
-    if (other._mutex.lock(THREAD_ID) != SUCCES)
+    if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->_mutex.unlock(THREAD_ID);
         return (result);
@@ -220,9 +220,9 @@ template <typename ElementType>
 ft_matrix<ElementType> ft_matrix<ElementType>::multiply(const ft_matrix& other) const
 {
     ft_matrix<ElementType> result;
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (result);
-    if (other._mutex.lock(THREAD_ID) != SUCCES)
+    if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->_mutex.unlock(THREAD_ID);
         return (result);
@@ -268,7 +268,7 @@ template <typename ElementType>
 ft_matrix<ElementType> ft_matrix<ElementType>::transpose() const
 {
     ft_matrix<ElementType> result;
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (result);
     if (!result.init(this->_cols, this->_rows))
     {
@@ -295,7 +295,7 @@ template <typename ElementType>
 ElementType ft_matrix<ElementType>::determinant() const
 {
     ElementType det = ElementType();
-    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (det);
     if (this->_rows != this->_cols)
     {

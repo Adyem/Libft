@@ -15,6 +15,6 @@ int pt_mutex::unlock(pthread_t thread_id)
     this->_owner.store(0, std::memory_order_relaxed);
     this->_lock = false;
     this->_serving.fetch_add(1, std::memory_order_release);
-    return (SUCCES);
+    return (FT_SUCCESS);
 }
 

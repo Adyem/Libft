@@ -12,10 +12,10 @@ char    *su_getenv(const char *name)
 {
     char    *result;
 
-    if (g_env_mutex.lock(THREAD_ID) != SUCCES)
+    if (g_env_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (ft_nullptr);
     result = ft_getenv(name);
-    if (g_env_mutex.unlock(THREAD_ID) != SUCCES)
+    if (g_env_mutex.unlock(THREAD_ID) != FT_SUCCESS)
         return (ft_nullptr);
     return (result);
 }
@@ -24,10 +24,10 @@ int su_setenv(const char *name, const char *value, int overwrite)
 {
     int result;
 
-    if (g_env_mutex.lock(THREAD_ID) != SUCCES)
+    if (g_env_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (-1);
     result = ft_setenv(name, value, overwrite);
-    if (g_env_mutex.unlock(THREAD_ID) != SUCCES)
+    if (g_env_mutex.unlock(THREAD_ID) != FT_SUCCESS)
         return (-1);
     return (result);
 }
@@ -38,10 +38,10 @@ int su_putenv(char *string)
 
     if (string == ft_nullptr)
         return (-1);
-    if (g_env_mutex.lock(THREAD_ID) != SUCCES)
+    if (g_env_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (-1);
     result = cmp_putenv(string);
-    if (g_env_mutex.unlock(THREAD_ID) != SUCCES)
+    if (g_env_mutex.unlock(THREAD_ID) != FT_SUCCESS)
         return (-1);
     return (result);
 }
