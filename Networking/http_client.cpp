@@ -1,6 +1,6 @@
 #include "http_client.hpp"
 #include "socket_class.hpp"
-#include "networking_send_utils.hpp"
+#include "networking.hpp"
 #include "ssl_wrapper.hpp"
 #include <cstring>
 #include <cstdio>

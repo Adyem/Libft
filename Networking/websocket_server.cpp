@@ -4,6 +4,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Compression/compression.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Encryption/basic_encryption.hpp"
 #include "../Encryption/encryption_sha1.hpp"
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
