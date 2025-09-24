@@ -80,7 +80,7 @@ ft_string& ft_string::operator=(const ft_string& other) noexcept
     return (*this);
 }
 
-ft_string& ft_string::operator=(const char*& other) noexcept
+ft_string& ft_string::operator=(const char* other) noexcept
 {
     cma_free(this->_data);
     this->_data = ft_nullptr;

@@ -1,6 +1,6 @@
 #include "../../Libft/libft.hpp"
 #include "../../System_utils/test_runner.hpp"
-#include <climits>
+#include "../../Libft/limits.hpp"
 
 FT_TEST(test_atoi_simple, "ft_atoi simple")
 {
@@ -18,8 +18,8 @@ FT_TEST(test_atoi_intmax, "ft_atoi INT_MAX")
 {
     ft_string integer_string;
 
-    integer_string = ft_to_string(INT_MAX);
-    FT_ASSERT_EQ(INT_MAX, ft_atoi(integer_string.c_str()));
+    integer_string = ft_to_string(FT_INT_MAX);
+    FT_ASSERT_EQ(FT_INT_MAX, ft_atoi(integer_string.c_str()));
     return (1);
 }
 
@@ -27,8 +27,28 @@ FT_TEST(test_atoi_intmin, "ft_atoi INT_MIN")
 {
     ft_string integer_string;
 
-    integer_string = ft_to_string(INT_MIN);
-    FT_ASSERT_EQ(INT_MIN, ft_atoi(integer_string.c_str()));
+    integer_string = ft_to_string(FT_INT_MIN);
+    FT_ASSERT_EQ(FT_INT_MIN, ft_atoi(integer_string.c_str()));
+    return (1);
+}
+
+FT_TEST(test_atoi_overflow_clamps_to_int_max, "ft_atoi clamps overflow to INT_MAX")
+{
+    ft_string overflow_string;
+
+    overflow_string = ft_to_string(FT_INT_MAX);
+    overflow_string += "9";
+    FT_ASSERT_EQ(FT_INT_MAX, ft_atoi(overflow_string.c_str()));
+    return (1);
+}
+
+FT_TEST(test_atoi_underflow_clamps_to_int_min, "ft_atoi clamps underflow to INT_MIN")
+{
+    ft_string underflow_string;
+
+    underflow_string = ft_to_string(FT_INT_MIN);
+    underflow_string += "9";
+    FT_ASSERT_EQ(FT_INT_MIN, ft_atoi(underflow_string.c_str()));
     return (1);
 }
 FT_TEST(test_atoi_whitespace, "ft_atoi leading and trailing whitespace")

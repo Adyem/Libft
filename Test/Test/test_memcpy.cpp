@@ -36,6 +36,12 @@ FT_TEST(test_memcpy_zero_length, "ft_memcpy zero length")
     return (1);
 }
 
+FT_TEST(test_memcpy_zero_length_nullptr, "ft_memcpy zero length with nullptr")
+{
+    FT_ASSERT_EQ(ft_nullptr, ft_memcpy(ft_nullptr, ft_nullptr, 0));
+    return (1);
+}
+
 FT_TEST(test_memcpy_null, "ft_memcpy with nullptr")
 {
     char source[1];
