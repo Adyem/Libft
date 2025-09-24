@@ -1,5 +1,6 @@
 #include "libft.hpp"
 #include "limits.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 
 int    ft_atoi(const char *string)
 {
@@ -9,6 +10,8 @@ int    ft_atoi(const char *string)
     const unsigned long long positive_limit = static_cast<unsigned long long>(FT_INT_MAX);
     const unsigned long long negative_limit = static_cast<unsigned long long>(FT_INT_MAX) + 1ULL;
 
+    if (string == ft_nullptr)
+        return (0);
     while (string[index] == ' ' || ((string[index] >= '\t')
                 && (string[index] <= '\r')))
         index++;

@@ -1,5 +1,6 @@
 #include "libft.hpp"
 #include "limits.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 
 long ft_atol(const char *string)
 {
@@ -11,6 +12,8 @@ long ft_atol(const char *string)
     const long negative_limit_divider = FT_LONG_MIN / 10;
     const long negative_limit_remainder = -(FT_LONG_MIN % 10);
 
+    if (string == ft_nullptr)
+        return (0);
     while (string[index] == ' ' || (string[index] >= '\t' && string[index] <= '\r'))
         index++;
     if (string[index] == '+' || string[index] == '-')
