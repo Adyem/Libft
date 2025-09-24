@@ -10,10 +10,14 @@
 #include "../Template/promise.hpp"
 #include "../Template/future.hpp"
 #include "../Template/atomic.hpp"
+#include "../Template/queue.hpp"
 #include "thread.hpp"
 #include "../Time/time.hpp"
-#include "mutex.hpp"
-#include "unique_lock.hpp"
+#include "condition.hpp"
+
+#include <pthread.h>
+#include <cerrno>
+#include <ctime>
 
 #include <atomic>
 #include <chrono>
@@ -26,14 +30,10 @@ template <typename ElementType>
 class ft_lock_free_queue
 {
     private:
-        struct node
-        {
-            ElementType _value;
-            ft_atomic<node*> _next;
-        };
-
-        ft_atomic<node*> _head;
-        ft_atomic<node*> _tail;
+        pt_mutex _mutex;
+        pt_condition_variable _condition;
+        bool _shutdown;
+        ft_queue<ElementType> _storage;
         mutable int _error_code;
 
         void set_error(int error) const;
@@ -47,6 +47,8 @@ class ft_lock_free_queue
 
         void push(ElementType &&value);
         bool pop(ElementType &result);
+        bool wait_pop(ElementType &result, const ft_atomic<bool> &running_flag);
+        void shutdown();
 
         int get_error() const;
         const char *get_error_str() const;
@@ -67,6 +69,7 @@ class ft_task_scheduler
         ft_thread _timer_thread;
         ft_vector<scheduled_task> _scheduled;
         pt_mutex _scheduled_mutex;
+        pt_condition_variable _scheduled_condition;
         ft_atomic<bool> _running;
         mutable int _error_code;
 
@@ -104,19 +107,13 @@ class ft_task_scheduler
 
 template <typename ElementType>
 ft_lock_free_queue<ElementType>::ft_lock_free_queue()
-    : _head(ft_nullptr), _tail(ft_nullptr), _error_code(ER_SUCCESS)
+    : _mutex(), _condition(), _shutdown(false), _storage(), _error_code(ER_SUCCESS)
 {
-    node *dummy;
-
-    dummy = new (std::nothrow) node;
-    if (!dummy)
+    if (this->_condition.get_error() != ER_SUCCESS)
     {
-        this->set_error(FT_EALLOC);
+        this->set_error(this->_condition.get_error());
         return ;
     }
-    dummy->_next.store(ft_nullptr);
-    this->_head.store(dummy);
-    this->_tail.store(dummy);
     this->set_error(ER_SUCCESS);
     return ;
 }
@@ -124,17 +121,8 @@ ft_lock_free_queue<ElementType>::ft_lock_free_queue()
 template <typename ElementType>
 ft_lock_free_queue<ElementType>::~ft_lock_free_queue()
 {
-    node *current;
-
-    current = this->_head.load();
-    while (current)
-    {
-        node *next_node;
-
-        next_node = current->_next.load();
-        delete current;
-        current = next_node;
-    }
+    this->shutdown();
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -149,34 +137,38 @@ void ft_lock_free_queue<ElementType>::set_error(int error) const
 template <typename ElementType>
 void ft_lock_free_queue<ElementType>::push(ElementType &&value)
 {
-    node *new_node;
+    bool was_empty;
 
-    new_node = new (std::nothrow) node;
-    if (!new_node)
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
     {
-        this->set_error(FT_EALLOC);
+        this->set_error(this->_mutex.get_error());
         return ;
     }
-    new_node->_value = ft_move(value);
-    new_node->_next.store(ft_nullptr);
-    while (true)
+    was_empty = this->_storage.empty();
+    if (this->_storage.get_error() != ER_SUCCESS)
     {
-        node *tail_node;
-        node *next_node;
-
-        tail_node = this->_tail.load(std::memory_order_acquire);
-        next_node = tail_node->_next.load(std::memory_order_acquire);
-        if (next_node == ft_nullptr)
+        this->_mutex.unlock(THREAD_ID);
+        this->set_error(this->_storage.get_error());
+        return ;
+    }
+    this->_storage.enqueue(ft_move(value));
+    if (this->_storage.get_error() != ER_SUCCESS)
+    {
+        this->_mutex.unlock(THREAD_ID);
+        this->set_error(this->_storage.get_error());
+        return ;
+    }
+    if (this->_mutex.unlock(THREAD_ID) != SUCCES)
+    {
+        this->set_error(this->_mutex.get_error());
+        return ;
+    }
+    if (was_empty)
+    {
+        if (this->_condition.signal() != 0)
         {
-            if (tail_node->_next.compare_exchange_weak(next_node, new_node))
-            {
-                this->_tail.compare_exchange_weak(tail_node, new_node);
-                break;
-            }
-        }
-        else
-        {
-            this->_tail.compare_exchange_weak(tail_node, next_node);
+            this->set_error(this->_condition.get_error());
+            return ;
         }
     }
     this->set_error(ER_SUCCESS);
@@ -186,33 +178,148 @@ void ft_lock_free_queue<ElementType>::push(ElementType &&value)
 template <typename ElementType>
 bool ft_lock_free_queue<ElementType>::pop(ElementType &result)
 {
+    bool is_empty;
+    ElementType value;
+
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        this->set_error(this->_mutex.get_error());
+        return (false);
+    }
+    is_empty = this->_storage.empty();
+    if (this->_storage.get_error() != ER_SUCCESS)
+    {
+        if (this->_mutex.unlock(THREAD_ID) != SUCCES)
+        {
+            this->set_error(this->_mutex.get_error());
+            return (false);
+        }
+        this->set_error(this->_storage.get_error());
+        return (false);
+    }
+    if (is_empty)
+    {
+        if (this->_mutex.unlock(THREAD_ID) != SUCCES)
+        {
+            this->set_error(this->_mutex.get_error());
+            return (false);
+        }
+        this->set_error(QUEUE_EMPTY);
+        return (false);
+    }
+    value = this->_storage.dequeue();
+    if (this->_storage.get_error() != ER_SUCCESS)
+    {
+        if (this->_mutex.unlock(THREAD_ID) != SUCCES)
+        {
+            this->set_error(this->_mutex.get_error());
+            return (false);
+        }
+        this->set_error(this->_storage.get_error());
+        return (false);
+    }
+    if (this->_mutex.unlock(THREAD_ID) != SUCCES)
+    {
+        this->set_error(this->_mutex.get_error());
+        return (false);
+    }
+    result = ft_move(value);
+    this->set_error(ER_SUCCESS);
+    return (true);
+}
+
+template <typename ElementType>
+bool ft_lock_free_queue<ElementType>::wait_pop(ElementType &result, const ft_atomic<bool> &running_flag)
+{
+    bool is_empty;
+    ElementType value;
+
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        this->set_error(this->_mutex.get_error());
+        return (false);
+    }
     while (true)
     {
-        node *head_node;
-        node *tail_node;
-        node *next_node;
-
-        head_node = this->_head.load(std::memory_order_acquire);
-        tail_node = this->_tail.load(std::memory_order_acquire);
-        next_node = head_node->_next.load(std::memory_order_acquire);
-        if (next_node == ft_nullptr)
+        is_empty = this->_storage.empty();
+        if (this->_storage.get_error() != ER_SUCCESS)
         {
+            if (this->_mutex.unlock(THREAD_ID) != SUCCES)
+            {
+                this->set_error(this->_mutex.get_error());
+                return (false);
+            }
+            this->set_error(this->_storage.get_error());
+            return (false);
+        }
+        if (!is_empty)
+            break;
+        if (!running_flag.load() || this->_shutdown)
+        {
+            if (this->_mutex.unlock(THREAD_ID) != SUCCES)
+            {
+                this->set_error(this->_mutex.get_error());
+                return (false);
+            }
             this->set_error(QUEUE_EMPTY);
             return (false);
         }
-        if (head_node == tail_node)
+        if (this->_condition.wait(this->_mutex) != 0)
         {
-            this->_tail.compare_exchange_weak(tail_node, next_node);
-            continue;
-        }
-        if (this->_head.compare_exchange_weak(head_node, next_node))
-        {
-            result = ft_move(next_node->_value);
-            delete head_node;
-            this->set_error(ER_SUCCESS);
-            return (true);
+            int condition_error;
+
+            condition_error = this->_condition.get_error();
+            if (this->_mutex.unlock(THREAD_ID) != SUCCES)
+            {
+                this->set_error(this->_mutex.get_error());
+                return (false);
+            }
+            this->set_error(condition_error);
+            return (false);
         }
     }
+    value = this->_storage.dequeue();
+    if (this->_storage.get_error() != ER_SUCCESS)
+    {
+        if (this->_mutex.unlock(THREAD_ID) != SUCCES)
+        {
+            this->set_error(this->_mutex.get_error());
+            return (false);
+        }
+        this->set_error(this->_storage.get_error());
+        return (false);
+    }
+    if (this->_mutex.unlock(THREAD_ID) != SUCCES)
+    {
+        this->set_error(this->_mutex.get_error());
+        return (false);
+    }
+    result = ft_move(value);
+    this->set_error(ER_SUCCESS);
+    return (true);
+}
+
+template <typename ElementType>
+void ft_lock_free_queue<ElementType>::shutdown()
+{
+    if (this->_mutex.lock(THREAD_ID) != SUCCES)
+    {
+        this->set_error(this->_mutex.get_error());
+        return ;
+    }
+    this->_shutdown = true;
+    if (this->_mutex.unlock(THREAD_ID) != SUCCES)
+    {
+        this->set_error(this->_mutex.get_error());
+        return ;
+    }
+    if (this->_condition.broadcast() != 0)
+    {
+        this->set_error(this->_condition.get_error());
+        return ;
+    }
+    this->set_error(ER_SUCCESS);
+    return ;
 }
 
 template <typename ElementType>
@@ -372,30 +479,32 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
         task_body();
         return (future_value);
     }
+    if (this->_scheduled_mutex.lock(THREAD_ID) != SUCCES)
     {
-        ft_unique_lock<pt_mutex> lock(this->_scheduled_mutex);
-        if (lock.get_error() != ER_SUCCESS)
-        {
-            this->set_error(lock.get_error());
-            task_body();
-            return (future_value);
-        }
-        this->_scheduled.push_back(ft_move(task_entry));
-        if (this->_scheduled.get_error() != ER_SUCCESS)
-        {
+        this->set_error(this->_scheduled_mutex.get_error());
+        task_body();
+        return (future_value);
+    }
+    this->_scheduled.push_back(ft_move(task_entry));
+    if (this->_scheduled.get_error() != ER_SUCCESS)
+    {
+        if (this->_scheduled_mutex.unlock(THREAD_ID) != SUCCES)
+            this->set_error(this->_scheduled_mutex.get_error());
+        else
             this->set_error(this->_scheduled.get_error());
-            if (lock.owns_lock())
-            {
-                lock.unlock();
-                if (lock.get_error() != ER_SUCCESS)
-                {
-                    this->set_error(lock.get_error());
-                    return (future_value);
-                }
-            }
-            task_body();
-            return (future_value);
-        }
+        task_body();
+        return (future_value);
+    }
+    if (this->_scheduled_mutex.unlock(THREAD_ID) != SUCCES)
+    {
+        this->set_error(this->_scheduled_mutex.get_error());
+        task_body();
+        return (future_value);
+    }
+    if (this->_scheduled_condition.signal() != 0)
+    {
+        this->set_error(this->_scheduled_condition.get_error());
+        return (future_value);
     }
     this->set_error(ER_SUCCESS);
     return (future_value);
@@ -425,29 +534,32 @@ void ft_task_scheduler::schedule_every(std::chrono::duration<Rep, Period> interv
         this->set_error(task_entry._function.get_error());
         return ;
     }
+    if (this->_scheduled_mutex.lock(THREAD_ID) != SUCCES)
     {
-        ft_unique_lock<pt_mutex> lock(this->_scheduled_mutex);
-        if (lock.get_error() != ER_SUCCESS)
-        {
-            this->set_error(lock.get_error());
-            return ;
-        }
-        this->_scheduled.push_back(ft_move(task_entry));
-        if (this->_scheduled.get_error() != ER_SUCCESS)
-        {
+        this->set_error(this->_scheduled_mutex.get_error());
+        task_entry._function();
+        return ;
+    }
+    this->_scheduled.push_back(ft_move(task_entry));
+    if (this->_scheduled.get_error() != ER_SUCCESS)
+    {
+        if (this->_scheduled_mutex.unlock(THREAD_ID) != SUCCES)
+            this->set_error(this->_scheduled_mutex.get_error());
+        else
             this->set_error(this->_scheduled.get_error());
-            if (lock.owns_lock())
-            {
-                lock.unlock();
-                if (lock.get_error() != ER_SUCCESS)
-                {
-                    this->set_error(lock.get_error());
-                    return ;
-                }
-            }
-            task_entry._function();
-            return ;
-        }
+        task_entry._function();
+        return ;
+    }
+    if (this->_scheduled_mutex.unlock(THREAD_ID) != SUCCES)
+    {
+        this->set_error(this->_scheduled_mutex.get_error());
+        task_entry._function();
+        return ;
+    }
+    if (this->_scheduled_condition.signal() != 0)
+    {
+        this->set_error(this->_scheduled_condition.get_error());
+        return ;
     }
     this->set_error(ER_SUCCESS);
     return ;

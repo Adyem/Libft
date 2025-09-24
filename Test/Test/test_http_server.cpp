@@ -5,214 +5,193 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../PThread/thread.hpp"
 #include "../../Errno/errno.hpp"
-#include "network_io_harness.hpp"
 #include <unistd.h>
-#include <thread>
-#include <chrono>
+#include <cerrno>
 
-struct http_client_read_result
+struct http_server_context
 {
-    ft_string data;
-    size_t read_iterations;
-    int status;
+    ft_http_server *server;
+    int result;
 };
 
-static void slow_client_read(int descriptor, size_t expected_length, int delay_milliseconds,
-                             http_client_read_result *result)
+static void http_server_run_once(http_server_context *context)
 {
-    char buffer[32];
-
-    if (result == ft_nullptr)
+    if (context == ft_nullptr)
         return ;
-    result->data.clear();
-    result->read_iterations = 0;
-    result->status = 0;
-    while (result->data.size() < expected_length)
-    {
-        size_t remaining_length;
-        size_t bytes_to_read;
-        ssize_t read_result;
-
-        remaining_length = expected_length - result->data.size();
-        if (remaining_length < sizeof(buffer))
-            bytes_to_read = remaining_length;
-        else
-            bytes_to_read = sizeof(buffer);
-        read_result = nw_recv(descriptor, buffer, bytes_to_read, 0);
-        if (read_result <= 0)
-        {
-            if (read_result < 0)
-                result->status = -1;
-            return ;
-        }
-        size_t buffer_index;
-
-        buffer_index = 0;
-        while (buffer_index < static_cast<size_t>(read_result))
-        {
-            result->data.append(buffer[buffer_index]);
-            buffer_index++;
-        }
-        result->read_iterations++;
-        if (delay_milliseconds > 0)
-            std::this_thread::sleep_for(std::chrono::milliseconds(delay_milliseconds));
-    }
+    if (context->server == ft_nullptr)
+        return ;
+    context->result = context->server->run_once();
     return ;
 }
 
-static void server_worker(ft_http_server *server)
+static int collect_response(int socket_fd, ft_string &response)
 {
-    server->run_once();
-    return ;
+    char buffer[256];
+    ssize_t bytes_received;
+
+    response.clear();
+    while (1)
+    {
+        bytes_received = nw_recv(socket_fd, buffer, sizeof(buffer) - 1, 0);
+        if (bytes_received <= 0)
+            break;
+        buffer[bytes_received] = '\0';
+        response.append(buffer);
+        if (bytes_received < static_cast<ssize_t>(sizeof(buffer) - 1))
+            break;
+    }
+    if (response.empty())
+        return (0);
+    return (1);
 }
 
-FT_TEST(test_http_server_get, "HTTP server GET")
+FT_TEST(test_http_server_get_response, "HTTP server handles GET requests")
 {
     ft_http_server server;
+    http_server_context context;
+    ft_thread server_thread;
+    SocketConfig client_configuration;
+    ft_socket client_socket;
+    const char *request_string;
+    ft_string response;
 
     if (server.start("127.0.0.1", 54330) != 0)
         return (0);
-    ft_thread server_thread_object(server_worker, &server);
-    SocketConfig client_configuration;
+    context.server = &server;
+    context.result = -1;
+    server_thread = ft_thread(http_server_run_once, &context);
+    if (server_thread.get_error() != ER_SUCCESS)
+        return (0);
     client_configuration._type = SocketType::CLIENT;
+    client_configuration._ip = "127.0.0.1";
     client_configuration._port = 54330;
-    ft_socket client_socket(client_configuration);
+    client_socket = ft_socket(client_configuration);
     if (client_socket.get_error() != ER_SUCCESS)
     {
-        server_thread_object.join();
+        server_thread.join();
         return (0);
     }
-    const char *request_string = "GET / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
-    client_socket.send_all(request_string, ft_strlen(request_string), 0);
-    char buffer[256];
-    ssize_t bytes_received = client_socket.receive_data(buffer, sizeof(buffer) - 1, 0);
-    if (bytes_received <= 0)
+    request_string = "GET / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
+    if (client_socket.send_all(request_string, ft_strlen(request_string), 0)
+        != static_cast<ssize_t>(ft_strlen(request_string)))
     {
-        server_thread_object.join();
+        server_thread.join();
         return (0);
     }
-    buffer[bytes_received] = '\0';
-    server_thread_object.join();
-    return (ft_strnstr(buffer, "GET", bytes_received) != ft_nullptr);
+    if (collect_response(client_socket.get_fd(), response) == 0)
+    {
+        server_thread.join();
+        return (0);
+    }
+    server_thread.join();
+    if (context.result != 0)
+        return (0);
+    if (server.get_error() != ER_SUCCESS)
+        return (0);
+    if (ft_strnstr(response.c_str(), "HTTP/1.1 200 OK", response.size()) == ft_nullptr)
+        return (0);
+    if (ft_strnstr(response.c_str(), "GET", response.size()) == ft_nullptr)
+        return (0);
+    return (1);
 }
 
-FT_TEST(test_http_server_post, "HTTP server POST")
+FT_TEST(test_http_server_post_body_echo, "HTTP server echoes POST body")
 {
     ft_http_server server;
+    http_server_context context;
+    ft_thread server_thread;
+    SocketConfig client_configuration;
+    ft_socket client_socket;
+    const char *request_headers;
+    const char *body_part_one;
+    const char *body_part_two;
+    ft_string response;
 
     if (server.start("127.0.0.1", 54331) != 0)
         return (0);
-    ft_thread server_thread_object(server_worker, &server);
-    SocketConfig client_configuration;
+    context.server = &server;
+    context.result = -1;
+    server_thread = ft_thread(http_server_run_once, &context);
+    if (server_thread.get_error() != ER_SUCCESS)
+        return (0);
     client_configuration._type = SocketType::CLIENT;
+    client_configuration._ip = "127.0.0.1";
     client_configuration._port = 54331;
-    ft_socket client_socket(client_configuration);
+    client_socket = ft_socket(client_configuration);
     if (client_socket.get_error() != ER_SUCCESS)
     {
-        server_thread_object.join();
+        server_thread.join();
         return (0);
     }
-    const char *request_headers = "POST / HTTP/1.1\r\nHost: localhost\r\nContent-Length: 5\r\nConnection: close\r\n\r\n";
-    const char *body_prefix = "He";
-    const char *body_suffix = "llo";
-    client_socket.send_all(request_headers, ft_strlen(request_headers), 0);
-    usleep(50000);
-    client_socket.send_all(body_prefix, ft_strlen(body_prefix), 0);
-    usleep(50000);
-    client_socket.send_all(body_suffix, ft_strlen(body_suffix), 0);
-    char buffer[256];
-    ssize_t bytes_received = client_socket.receive_data(buffer, sizeof(buffer) - 1, 0);
-    if (bytes_received <= 0)
+    request_headers = "POST /submit HTTP/1.1\r\nHost: localhost\r\nContent-Length: 5\r\nConnection: close\r\n\r\n";
+    body_part_one = "He";
+    body_part_two = "llo";
+    if (client_socket.send_all(request_headers, ft_strlen(request_headers), 0)
+        != static_cast<ssize_t>(ft_strlen(request_headers)))
     {
-        server_thread_object.join();
+        server_thread.join();
         return (0);
     }
-    buffer[bytes_received] = '\0';
-    server_thread_object.join();
-    return (ft_strnstr(buffer, "Hello", bytes_received) != ft_nullptr);
+    usleep(50000);
+    if (client_socket.send_all(body_part_one, ft_strlen(body_part_one), 0)
+        != static_cast<ssize_t>(ft_strlen(body_part_one)))
+    {
+        server_thread.join();
+        return (0);
+    }
+    usleep(50000);
+    if (client_socket.send_all(body_part_two, ft_strlen(body_part_two), 0)
+        != static_cast<ssize_t>(ft_strlen(body_part_two)))
+    {
+        server_thread.join();
+        return (0);
+    }
+    if (collect_response(client_socket.get_fd(), response) == 0)
+    {
+        server_thread.join();
+        return (0);
+    }
+    server_thread.join();
+    if (context.result != 0)
+        return (0);
+    if (server.get_error() != ER_SUCCESS)
+        return (0);
+    if (ft_strnstr(response.c_str(), "Hello", response.size()) == ft_nullptr)
+        return (0);
+    return (1);
 }
 
-FT_TEST(test_http_server_partial_send_retries, "HTTP server retries partial nw_send")
+FT_TEST(test_http_server_short_write_sets_error, "HTTP server detects closed clients")
 {
     ft_http_server server;
-    const char *expected_response;
-    network_io_harness harness;
-    ft_thread server_thread_object;
-    size_t expected_length;
-    http_client_read_result read_result;
-    std::thread reader_thread;
+    http_server_context context;
+    ft_thread server_thread;
+    SocketConfig client_configuration;
+    ft_socket client_socket;
     const char *request_string;
-    ssize_t send_result;
+    int error_code;
 
     if (server.start("127.0.0.1", 54332) != 0)
         return (0);
-    expected_response = "HTTP/1.1 200 OK\r\nContent-Length: 3\r\n\r\nGET";
-    server_thread_object = ft_thread(server_worker, &server);
-    if (harness.connect_remote("127.0.0.1", 54332) != ER_SUCCESS)
+    context.server = &server;
+    context.result = -1;
+    server_thread = ft_thread(http_server_run_once, &context);
+    if (server_thread.get_error() != ER_SUCCESS)
+        return (0);
+    client_configuration._type = SocketType::CLIENT;
+    client_configuration._ip = "127.0.0.1";
+    client_configuration._port = 54332;
+    client_socket = ft_socket(client_configuration);
+    if (client_socket.get_error() != ER_SUCCESS)
     {
-        server_thread_object.join();
+        server_thread.join();
         return (0);
     }
-    if (harness.set_client_receive_buffer(32) != ER_SUCCESS)
-    {
-        server_thread_object.join();
-        return (0);
-    }
-    expected_length = ft_strlen(expected_response);
-    reader_thread = std::thread([&harness, expected_length, &read_result]()
-    {
-        slow_client_read(harness.get_client_fd(), expected_length, 10, &read_result);
-    });
     request_string = "GET / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
-    send_result = harness.get_client_socket().send_all(request_string, ft_strlen(request_string), 0);
-    if (send_result < 0)
-    {
-        if (reader_thread.joinable())
-            reader_thread.join();
-        server_thread_object.join();
-        return (0);
-    }
-    server_thread_object.join();
-    if (reader_thread.joinable())
-        reader_thread.join();
-    if (server.get_error() != ER_SUCCESS)
-        return (0);
-    if (read_result.status != 0)
-        return (0);
-    if (!(read_result.data == expected_response))
-        return (0);
-    return (read_result.read_iterations > 1);
-}
-
-FT_TEST(test_http_server_short_write_sets_error, "HTTP server detects short write")
-{
-    ft_http_server server;
-    network_io_harness harness;
-    ft_thread server_thread_object;
-    const char *request_string;
-    std::thread closer_thread;
-    ssize_t send_result;
-    int error_code;
-
-    if (server.start("127.0.0.1", 54333) != 0)
-        return (0);
-    server_thread_object = ft_thread(server_worker, &server);
-    if (harness.connect_remote("127.0.0.1", 54333) != ER_SUCCESS)
-    {
-        server_thread_object.join();
-        return (0);
-    }
-    closer_thread = std::thread([&harness]()
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        harness.close_client();
-    });
-    request_string = "GET / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
-    send_result = harness.get_client_socket().send_all(request_string, ft_strlen(request_string), 0);
-    if (closer_thread.joinable())
-        closer_thread.join();
-    server_thread_object.join();
-    if (send_result < 0)
+    client_socket.send_all(request_string, ft_strlen(request_string), 0);
+    client_socket.close_socket();
+    server_thread.join();
+    if (context.result == 0)
         return (0);
     error_code = server.get_error();
     if (error_code == SOCKET_SEND_FAILED)

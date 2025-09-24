@@ -75,7 +75,6 @@ void ft_websocket_client::close()
     }
     this->_handshake_key_override.clear();
     this->_use_handshake_key_override = false;
-    this->_error_code = ER_SUCCESS;
     return ;
 }
 
