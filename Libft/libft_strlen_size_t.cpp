@@ -1,14 +1,19 @@
 #include "libft.hpp"
 #include <cstddef>
 #include <cstdint>
+#include "../Errno/errno.hpp"
 
 #define FT_REPEAT_BYTE(x) (~static_cast<size_t>(0) / 0xFF * (x))
 #define FT_HAS_ZERO(x) (((x) - FT_REPEAT_BYTE(0x01)) & ~(x) & FT_REPEAT_BYTE(0x80))
 
 size_t ft_strlen_size_t(const char *string)
 {
+    ft_errno = ER_SUCCESS;
     if (!string)
+    {
+        ft_errno = FT_EINVAL;
         return (0);
+    }
     const char *ptr = string;
     while (reinterpret_cast<uintptr_t>(ptr) & (sizeof(size_t) - 1))
     {
