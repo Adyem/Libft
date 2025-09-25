@@ -1,11 +1,11 @@
 #include "tls_client.hpp"
-#include "../PThread/thread.hpp"
 #include "../Printf/printf.hpp"
 #include "../Networking/socket_class.hpp"
 #include "../Networking/ssl_wrapper.hpp"
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Logger/logger.hpp"
+#include "../Template/move.hpp"
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>
@@ -17,6 +17,7 @@
 # include <unistd.h>
 #endif
 #include <openssl/err.h>
+#include <openssl/x509v3.h>
 
 static ssize_t ssl_send_all(SSL *ssl, const void *data, size_t size)
 {
@@ -54,6 +55,14 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
         this->set_error(FT_EALLOC);
         return ;
     }
+    if (SSL_CTX_set_default_verify_paths(this->_ctx) != 1)
+    {
+        SSL_CTX_free(this->_ctx);
+        this->_ctx = ft_nullptr;
+        this->set_error(SOCKET_INVALID_CONFIGURATION);
+        return ;
+    }
+    SSL_CTX_set_verify(this->_ctx, SSL_VERIFY_PEER, ft_nullptr);
 
     struct addrinfo hints;
     struct addrinfo *address_results = ft_nullptr;
@@ -104,6 +113,25 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
         this->set_error(FT_EALLOC);
         return ;
     }
+    if (SSL_set1_host(this->_ssl, this->_host.c_str()) != 1)
+    {
+        SSL_free(this->_ssl);
+        this->_ssl = ft_nullptr;
+        FT_CLOSE_SOCKET(this->_sock);
+        this->_sock = -1;
+        this->set_error(SOCKET_INVALID_CONFIGURATION);
+        return ;
+    }
+    SSL_set_hostflags(this->_ssl, X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
+    if (SSL_set_tlsext_host_name(this->_ssl, this->_host.c_str()) != 1)
+    {
+        SSL_free(this->_ssl);
+        this->_ssl = ft_nullptr;
+        FT_CLOSE_SOCKET(this->_sock);
+        this->_sock = -1;
+        this->set_error(SOCKET_INVALID_CONFIGURATION);
+        return ;
+    }
     if (SSL_set_fd(this->_ssl, this->_sock) != 1)
     {
         SSL_free(this->_ssl);
@@ -127,6 +155,16 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
 
 api_tls_client::~api_tls_client()
 {
+    size_t worker_index;
+
+    worker_index = 0;
+    while (worker_index < this->_async_workers.size())
+    {
+        if (this->_async_workers[worker_index].joinable())
+            this->_async_workers[worker_index].join();
+        worker_index += 1;
+    }
+    this->_async_workers.clear();
     if (this->_ssl)
     {
         SSL_shutdown(this->_ssl);
@@ -249,25 +287,217 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
 
     size_t header_len = static_cast<size_t>(header_end_ptr - response.c_str()) + 4;
     size_t content_length = 0;
+    bool has_content_length = false;
     const char *content_length_ptr = ft_strstr(response.c_str(), "Content-Length:");
     if (content_length_ptr)
     {
         content_length_ptr += ft_strlen("Content-Length:");
-        while (*content_length_ptr == ' ') content_length_ptr++;
-        content_length = static_cast<size_t>(ft_atoi(content_length_ptr));
+        while (*content_length_ptr == ' ')
+        {
+            content_length_ptr++;
+        }
+        ft_errno = ER_SUCCESS;
+        unsigned long parsed_length = ft_strtoul(content_length_ptr, ft_nullptr, 10);
+        if (ft_errno == ER_SUCCESS)
+        {
+            content_length = static_cast<size_t>(parsed_length);
+            has_content_length = true;
+        }
     }
 
-    ft_string body(response.c_str() + header_len);
-    while (body.size() < content_length)
+    ft_string transfer_encoding_value;
+    const char *transfer_encoding_ptr = ft_strstr(response.c_str(), "Transfer-Encoding:");
+    if (transfer_encoding_ptr)
     {
-        bytes_received = nw_ssl_read(this->_ssl, buffer, sizeof(buffer) - 1);
-        if (bytes_received <= 0)
+        transfer_encoding_ptr += ft_strlen("Transfer-Encoding:");
+        while (*transfer_encoding_ptr == ' ' || *transfer_encoding_ptr == '\t')
+        {
+            transfer_encoding_ptr++;
+        }
+        while (*transfer_encoding_ptr && *transfer_encoding_ptr != '\r' && *transfer_encoding_ptr != '\n')
+        {
+            char lowered = *transfer_encoding_ptr;
+            if (lowered >= 'A' && lowered <= 'Z')
+                lowered = static_cast<char>(lowered + 32);
+            transfer_encoding_value.append(lowered);
+            transfer_encoding_ptr++;
+        }
+        const char *encoding_cstr = transfer_encoding_value.c_str();
+        size_t comma_index = 0;
+        while (encoding_cstr[comma_index] != '\0')
+        {
+            if (encoding_cstr[comma_index] == ',')
+            {
+                transfer_encoding_value.erase(comma_index, transfer_encoding_value.size() - comma_index);
+                break;
+            }
+            comma_index++;
+        }
+        size_t trim_index = transfer_encoding_value.size();
+        while (trim_index > 0)
+        {
+            const char *trim_cstr = transfer_encoding_value.c_str();
+            if (trim_cstr[trim_index - 1] != ' ' && trim_cstr[trim_index - 1] != '\t')
+                break;
+            transfer_encoding_value.erase(trim_index - 1, 1);
+            trim_index--;
+        }
+    }
+
+    bool is_chunked = false;
+    if (!transfer_encoding_value.empty())
+    {
+        if (ft_strcmp(transfer_encoding_value.c_str(), "chunked") == 0)
+            is_chunked = true;
+    }
+
+    ft_string body;
+    body += response.c_str() + header_len;
+
+    if (is_chunked)
+    {
+        ft_string chunk_buffer;
+        chunk_buffer += body.c_str();
+        body.clear();
+        size_t parse_offset = 0;
+        while (true)
+        {
+            const char *chunk_start = chunk_buffer.c_str() + parse_offset;
+            const char *line_end = ft_strstr(chunk_start, "\r\n");
+            while (!line_end)
+            {
+                bytes_received = nw_ssl_read(this->_ssl, buffer, sizeof(buffer) - 1);
+                if (bytes_received <= 0)
+                {
+                    this->set_error(SOCKET_RECEIVE_FAILED);
+                    return (ft_nullptr);
+                }
+                buffer[bytes_received] = '\0';
+                chunk_buffer += buffer;
+                chunk_start = chunk_buffer.c_str() + parse_offset;
+                line_end = ft_strstr(chunk_start, "\r\n");
+            }
+            size_t line_length = static_cast<size_t>(line_end - chunk_start);
+            size_t index = 0;
+            while (index < line_length && (chunk_start[index] == ' ' || chunk_start[index] == '\t'))
+            {
+                index++;
+            }
+            ft_string size_string;
+            while (index < line_length && chunk_start[index] != ';')
+            {
+                size_string.append(chunk_start[index]);
+                index++;
+            }
+            size_t size_trim = size_string.size();
+            while (size_trim > 0)
+            {
+                const char *size_cstr = size_string.c_str();
+                if (size_cstr[size_trim - 1] != ' ' && size_cstr[size_trim - 1] != '\t')
+                    break;
+                size_string.erase(size_trim - 1, 1);
+                size_trim--;
+            }
+            ft_errno = ER_SUCCESS;
+            unsigned long chunk_length = ft_strtoul(size_string.c_str(), ft_nullptr, 16);
+            int chunk_error = ft_errno;
+            if (chunk_error != ER_SUCCESS)
+            {
+                this->set_error(chunk_error);
+                return (ft_nullptr);
+            }
+            parse_offset += line_length + 2;
+            while (chunk_buffer.size() < parse_offset + chunk_length + 2)
+            {
+                bytes_received = nw_ssl_read(this->_ssl, buffer, sizeof(buffer) - 1);
+                if (bytes_received <= 0)
+                {
+                    this->set_error(SOCKET_RECEIVE_FAILED);
+                    return (ft_nullptr);
+                }
+                buffer[bytes_received] = '\0';
+                chunk_buffer += buffer;
+            }
+            const char *data_ptr = chunk_buffer.c_str() + parse_offset;
+            size_t copy_index = 0;
+            while (copy_index < chunk_length)
+            {
+                body.append(data_ptr[copy_index]);
+                copy_index++;
+            }
+            parse_offset += chunk_length;
+            if (chunk_buffer.size() < parse_offset + 2)
+            {
+                while (chunk_buffer.size() < parse_offset + 2)
+                {
+                    bytes_received = nw_ssl_read(this->_ssl, buffer, sizeof(buffer) - 1);
+                    if (bytes_received <= 0)
+                    {
+                        this->set_error(SOCKET_RECEIVE_FAILED);
+                        return (ft_nullptr);
+                    }
+                    buffer[bytes_received] = '\0';
+                    chunk_buffer += buffer;
+                }
+            }
+            if (chunk_length == 0)
+            {
+                bool trailers_complete = false;
+                while (!trailers_complete)
+                {
+                    const char *trailer_ptr = chunk_buffer.c_str() + parse_offset;
+                    const char *trailer_end = ft_strstr(trailer_ptr, "\r\n");
+                    while (!trailer_end)
+                    {
+                        bytes_received = nw_ssl_read(this->_ssl, buffer, sizeof(buffer) - 1);
+                        if (bytes_received <= 0)
+                        {
+                            this->set_error(SOCKET_RECEIVE_FAILED);
+                            return (ft_nullptr);
+                        }
+                        buffer[bytes_received] = '\0';
+                        chunk_buffer += buffer;
+                        trailer_ptr = chunk_buffer.c_str() + parse_offset;
+                        trailer_end = ft_strstr(trailer_ptr, "\r\n");
+                    }
+                    size_t trailer_length = static_cast<size_t>(trailer_end - trailer_ptr);
+                    parse_offset += trailer_length + 2;
+                    if (trailer_length == 0)
+                        trailers_complete = true;
+                }
+                break;
+            }
+            parse_offset += 2;
+        }
+    }
+    else if (has_content_length)
+    {
+        while (body.size() < content_length)
+        {
+            bytes_received = nw_ssl_read(this->_ssl, buffer, sizeof(buffer) - 1);
+            if (bytes_received <= 0)
+            {
+                this->set_error(SOCKET_RECEIVE_FAILED);
+                return (ft_nullptr);
+            }
+            buffer[bytes_received] = '\0';
+            body += buffer;
+        }
+        if (body.size() > content_length)
+            body.erase(content_length, body.size() - content_length);
+    }
+    else
+    {
+        while ((bytes_received = nw_ssl_read(this->_ssl, buffer, sizeof(buffer) - 1)) > 0)
+        {
+            buffer[bytes_received] = '\0';
+            body += buffer;
+        }
+        if (bytes_received < 0)
         {
             this->set_error(SOCKET_RECEIVE_FAILED);
             return (ft_nullptr);
         }
-        buffer[bytes_received] = '\0';
-        body += buffer;
     }
 
     char *result_body = cma_strdup(body.c_str());
@@ -323,7 +553,23 @@ bool api_tls_client::request_async(const char *method, const char *path,
         this->set_error(worker.get_error());
         return (false);
     }
-    worker.detach();
+    size_t worker_count_before;
+    size_t worker_count_after;
+    int vector_error;
+
+    worker_count_before = this->_async_workers.size();
+    this->_async_workers.push_back(ft_move(worker));
+    worker_count_after = this->_async_workers.size();
+    if (worker_count_after < worker_count_before + 1)
+    {
+        if (worker.joinable())
+            worker.join();
+        vector_error = this->_async_workers.get_error();
+        if (vector_error == ER_SUCCESS)
+            vector_error = VECTOR_ALLOC_FAIL;
+        this->set_error(vector_error);
+        return (false);
+    }
     this->set_error(ER_SUCCESS);
     return (true);
 }
