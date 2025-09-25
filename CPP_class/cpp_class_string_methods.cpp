@@ -8,7 +8,7 @@ void ft_string::resize(size_t new_capacity) noexcept
 {
     if (new_capacity <= this->_capacity)
         return ;
-    char* new_data = static_cast<char*>(cma_realloc(this->_data, new_capacity));
+    char* new_data = static_cast<char*>(cma_realloc(this->_data, new_capacity + 1));
     if (!new_data)
     {
         this->set_error(STRING_MEM_ALLOC_FAIL);

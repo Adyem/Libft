@@ -16,7 +16,7 @@ ft_string::ft_string(const char* init_str) noexcept
     if (init_str)
     {
         this->_length = ft_strlen_size_t(init_str);
-        this->_capacity = this->_length + 1;
+        this->_capacity = this->_length;
         this->_data = static_cast<char*>(cma_calloc(this->_capacity + 1, sizeof(char)));
         if (!this->_data)
         {
