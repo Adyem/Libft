@@ -104,7 +104,7 @@ void ft_unique_lock<MutexType>::lock()
     }
     if (this->_owns_lock)
     {
-        this->set_error(PT_ERR_ALRDY_LOCKED);
+        this->set_error(PT_ERR_ALREADY_LOCKED);
         return ;
     }
     this->_mutex->lock(THREAD_ID);
