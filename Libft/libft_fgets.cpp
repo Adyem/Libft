@@ -16,9 +16,16 @@ char *ft_fgets(char *string, int size, FILE *stream)
     if (result_string == ft_nullptr)
     {
         if (std::ferror(stream) != 0)
+        {
             ft_errno = FILE_INVALID_FD;
-        else
-            ft_errno = ER_SUCCESS;
+            return (ft_nullptr);
+        }
+        if (std::feof(stream) != 0)
+        {
+            ft_errno = FILE_END_OF_FILE;
+            return (ft_nullptr);
+        }
+        ft_errno = ER_SUCCESS;
         return (ft_nullptr);
     }
     ft_errno = ER_SUCCESS;
