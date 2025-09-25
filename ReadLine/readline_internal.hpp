@@ -60,7 +60,7 @@ int        rl_handle_tab_completion(readline_state_t *state, const char *prompt)
 int        rl_handle_printable_char(readline_state_t *state, char c, const char *prompt);
 
 
-char    rl_read_key();
+int        rl_read_key(void);
 int        rl_get_terminal_width(void);
 int        rl_read_escape_sequence(char seq[2]);
 void    rl_update_history(const char *buffer);
