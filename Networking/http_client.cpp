@@ -177,7 +177,11 @@ static int http_client_initialize_ssl(int socket_fd, const char *host, SSL_CTX *
     }
     if (host != NULL && host[0] != '\0')
     {
-        if (SSL_set_tlsext_host_name(local_connection, host) != 1)
+        long control_result;
+
+        control_result = SSL_ctrl(local_connection, SSL_CTRL_SET_TLSEXT_HOSTNAME,
+            TLSEXT_NAMETYPE_host_name, const_cast<char *>(host));
+        if (control_result != 1)
         {
             SSL_free(local_connection);
             SSL_CTX_free(local_context);
