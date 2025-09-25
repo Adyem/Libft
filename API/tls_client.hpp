@@ -5,8 +5,10 @@
 #include "../CPP_class/class_string_class.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/thread.hpp"
 #include <openssl/ssl.h>
 #include <cstdint>
+#include "../Template/vector.hpp"
 
 typedef void (*api_callback)(char *body, int status, void *user_data);
 
@@ -19,6 +21,7 @@ class api_tls_client
         ft_string _host;
         int _timeout;
         mutable int _error_code;
+        ft_vector<ft_thread> _async_workers;
 
         void set_error(int error_code) const noexcept;
 
