@@ -285,7 +285,21 @@ cnfg_config *config_merge_sources(int argument_count,
     result = merge_configs(result, env_config);
     if (env_config && result != env_config)
         cnfg_free(env_config);
+    int previous_errno = ft_errno;
+    ft_errno = ER_SUCCESS;
     char *short_flags = cnfg_parse_flags(argument_count, argument_values);
+    int short_flags_errno = ft_errno;
+    if (!short_flags && short_flags_errno != ER_SUCCESS)
+    {
+        if (result)
+            cnfg_free(result);
+        ft_errno = short_flags_errno;
+        return (ft_nullptr);
+    }
+    if (short_flags_errno == ER_SUCCESS)
+        ft_errno = previous_errno;
+    else
+        ft_errno = short_flags_errno;
     if (short_flags)
     {
         size_t flag_index = 0;
@@ -304,7 +318,21 @@ cnfg_config *config_merge_sources(int argument_count,
         }
         cma_free(short_flags);
     }
+    previous_errno = ft_errno;
+    ft_errno = ER_SUCCESS;
     char **long_flags = cnfg_parse_long_flags(argument_count, argument_values);
+    int long_flags_errno = ft_errno;
+    if (!long_flags && long_flags_errno != ER_SUCCESS)
+    {
+        if (result)
+            cnfg_free(result);
+        ft_errno = long_flags_errno;
+        return (ft_nullptr);
+    }
+    if (long_flags_errno == ER_SUCCESS)
+        ft_errno = previous_errno;
+    else
+        ft_errno = long_flags_errno;
     if (long_flags)
     {
         size_t flag_index = 0;
