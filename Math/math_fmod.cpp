@@ -1,4 +1,6 @@
 #include "math.hpp"
+#include <cmath>
+#include <limits>
 
 static int math_is_infinite_internal(double number)
 {
@@ -21,46 +23,19 @@ static int math_is_infinite_internal(double number)
 
 double math_fmod(double value, double modulus)
 {
-    double absolute_value;
-    double absolute_modulus;
     double remainder_value;
-    double current_multiple;
-    double tolerance;
-    double result_sign;
-    double zero_tolerance;
 
     if (math_isnan(value) || math_isnan(modulus))
         return (math_nan());
     if (math_is_infinite_internal(value) != 0)
         return (math_nan());
-    zero_tolerance = 0.0000000000001;
-    if (math_fabs(modulus) < zero_tolerance)
+    if (math_fabs(modulus) <= std::numeric_limits<double>::denorm_min())
         return (math_nan());
     if (math_is_infinite_internal(modulus) != 0)
         return (value);
-    absolute_value = math_fabs(value);
-    absolute_modulus = math_fabs(modulus);
-    if (absolute_modulus < zero_tolerance)
-        return (math_nan());
-    if (absolute_value < absolute_modulus)
-        return (value);
-    remainder_value = absolute_value;
-    tolerance = zero_tolerance;
-    while (remainder_value >= absolute_modulus)
-    {
-        current_multiple = absolute_modulus;
-        while ((current_multiple + current_multiple) <= remainder_value)
-            current_multiple = current_multiple + current_multiple;
-        remainder_value = remainder_value - current_multiple;
-    }
-    if (remainder_value < tolerance)
-        remainder_value = 0.0;
-    if (math_fabs(absolute_modulus - remainder_value) < tolerance)
-        remainder_value = 0.0;
-    result_sign = 1.0;
-    if (value < 0.0)
-        result_sign = -1.0;
-    remainder_value = remainder_value * result_sign;
+    remainder_value = std::fmod(value, modulus);
+    if (math_fabs(remainder_value) <= std::numeric_limits<double>::denorm_min())
+        remainder_value = value * 0.0;
     return (remainder_value);
 }
 
