@@ -233,6 +233,79 @@ cleanup:
     return (success);
 }
 
+FT_TEST(test_time_parse_iso8601_numeric_offset, "time_parse_iso8601 supports numeric timezone offsets")
+{
+    std::tm base_time;
+    std::tm parsed_time;
+    std::time_t base_epoch;
+    std::time_t expected_epoch;
+    std::time_t epoch_copy;
+    std::tm *utc_time;
+    t_time parsed_epoch;
+
+    std::memset(&base_time, 0, sizeof(base_time));
+    base_time.tm_year = 120;
+    base_time.tm_mon = 4;
+    base_time.tm_mday = 10;
+    base_time.tm_hour = 12;
+    base_time.tm_min = 30;
+    base_time.tm_sec = 45;
+    base_time.tm_isdst = 0;
+    base_epoch = cmp_timegm(&base_time);
+    FT_ASSERT(base_epoch != static_cast<std::time_t>(-1));
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT(time_parse_iso8601("2020-05-10T12:30:45+02:30", &parsed_time, &parsed_epoch));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    expected_epoch = base_epoch - static_cast<std::time_t>((2 * 60 + 30) * 60);
+    FT_ASSERT_EQ(static_cast<t_time>(expected_epoch), parsed_epoch);
+    epoch_copy = static_cast<std::time_t>(parsed_epoch);
+    utc_time = std::gmtime(&epoch_copy);
+    FT_ASSERT(utc_time != ft_nullptr);
+    FT_ASSERT_EQ(utc_time->tm_year, parsed_time.tm_year);
+    FT_ASSERT_EQ(utc_time->tm_mon, parsed_time.tm_mon);
+    FT_ASSERT_EQ(utc_time->tm_mday, parsed_time.tm_mday);
+    FT_ASSERT_EQ(utc_time->tm_hour, parsed_time.tm_hour);
+    FT_ASSERT_EQ(utc_time->tm_min, parsed_time.tm_min);
+    FT_ASSERT_EQ(utc_time->tm_sec, parsed_time.tm_sec);
+    return (1);
+}
+
+FT_TEST(test_time_parse_iso8601_rejects_invalid_offset_minutes, "time_parse_iso8601 validates timezone offsets")
+{
+    bool parse_result;
+
+    ft_errno = ER_SUCCESS;
+    parse_result = time_parse_iso8601("2020-05-10T12:30:45+02:99", ft_nullptr, ft_nullptr);
+    FT_ASSERT_EQ(false, parse_result);
+    FT_ASSERT_EQ(FT_ERANGE, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_time_parse_custom_interpret_as_utc, "time_parse_custom converts parsed values from UTC")
+{
+    std::tm parsed_time;
+    t_time parsed_epoch;
+    std::time_t epoch_copy;
+    std::tm *utc_time;
+    bool parse_result;
+
+    ft_errno = ER_SUCCESS;
+    parse_result = time_parse_custom("1970-01-01 00:00:00", "%Y-%m-%d %H:%M:%S", &parsed_time, &parsed_epoch, true);
+    FT_ASSERT(parse_result);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(static_cast<t_time>(0), parsed_epoch);
+    epoch_copy = static_cast<std::time_t>(parsed_epoch);
+    utc_time = std::gmtime(&epoch_copy);
+    FT_ASSERT(utc_time != ft_nullptr);
+    FT_ASSERT_EQ(utc_time->tm_year, parsed_time.tm_year);
+    FT_ASSERT_EQ(utc_time->tm_mon, parsed_time.tm_mon);
+    FT_ASSERT_EQ(utc_time->tm_mday, parsed_time.tm_mday);
+    FT_ASSERT_EQ(utc_time->tm_hour, parsed_time.tm_hour);
+    FT_ASSERT_EQ(utc_time->tm_min, parsed_time.tm_min);
+    FT_ASSERT_EQ(utc_time->tm_sec, parsed_time.tm_sec);
+    return (1);
+}
+
 FT_TEST(test_time_local_null_output, "time_local rejects null destination")
 {
     ft_errno = ER_SUCCESS;

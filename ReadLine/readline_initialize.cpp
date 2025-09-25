@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "../CMA/CMA.hpp"
+#include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
 #include "readline_internal.hpp"
 
 static void rl_open_log_file(readline_state_t *state)
@@ -21,6 +23,11 @@ static void rl_open_log_file(readline_state_t *state)
 
 int rl_initialize_state(readline_state_t *state)
 {
+    if (state == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
+        return (1);
+    }
     if (rl_enable_raw_mode() == -1)
         return (1);
     state->bufsize = INITIAL_BUFFER_SIZE;
