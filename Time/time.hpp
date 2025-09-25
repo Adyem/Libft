@@ -44,6 +44,7 @@ void    time_sleep_ms(unsigned int milliseconds);
 size_t  time_strftime(char *buffer, size_t size, const char *format, const t_time_info *time_info);
 ft_string    time_format_iso8601(t_time time_value);
 bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_time *timestamp_output);
+bool    time_parse_custom(const char *string_input, const char *format, std::tm *time_output, t_time *timestamp_output, bool interpret_as_utc);
 bool    time_parse_custom(const char *string_input, const char *format, std::tm *time_output, t_time *timestamp_output);
 
 #endif

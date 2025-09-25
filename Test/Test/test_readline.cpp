@@ -1,8 +1,11 @@
 #include <unistd.h>
+#include <cstring>
 #include "../../ReadLine/readline.hpp"
 #include "../../ReadLine/readline_internal.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_runner.hpp"
+#include "../../Errno/errno.hpp"
+#include "../../CMA/CMA.hpp"
 
 static int g_terminal_width_call_count;
 static int g_terminal_width_failure_call;
@@ -77,6 +80,112 @@ FT_TEST(test_readline_backspace_failure, "ReadLine handles helper failures")
     }
     g_terminal_width_failure_call = 0;
     g_terminal_width_call_count = 0;
+    if (result == 0)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_readline_initialize_state_null_pointer, "rl_initialize_state rejects null state pointers")
+{
+    int init_result;
+
+    ft_errno = ER_SUCCESS;
+    init_result = rl_initialize_state(ft_nullptr);
+    FT_ASSERT_EQ(1, init_result);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_readline_history_recall_resizes_buffer, "history recall grows the active buffer")
+{
+    readline_state_t state;
+    const char *prompt = "> ";
+    char *history_entry;
+    ssize_t written;
+    int stdin_backup;
+    int pipe_descriptors[2];
+    int result;
+    char sequence[2];
+
+    result = 1;
+    pipe_descriptors[0] = -1;
+    pipe_descriptors[1] = -1;
+    stdin_backup = -1;
+    sequence[0] = '[';
+    sequence[1] = 'A';
+    history_entry = cma_strdup("this is a history entry that exceeds the initial buffer size");
+    if (!history_entry)
+        return (0);
+    history[0] = history_entry;
+    history_count = 1;
+    state.buffer = static_cast<char *>(cma_calloc(4, sizeof(char)));
+    if (!state.buffer)
+    {
+        result = 0;
+        goto cleanup;
+    }
+    state.bufsize = 4;
+    state.pos = 0;
+    state.prev_buffer_length = 0;
+    state.history_index = history_count;
+    state.in_completion_mode = 0;
+    state.current_match_count = 0;
+    state.current_match_index = 0;
+    state.word_start = 0;
+    std::memset(state.current_matches, 0, sizeof(state.current_matches));
+    stdin_backup = dup(STDIN_FILENO);
+    if (stdin_backup < 0)
+    {
+        result = 0;
+        goto cleanup;
+    }
+    if (pipe(pipe_descriptors) != 0)
+    {
+        result = 0;
+        goto cleanup;
+    }
+    if (dup2(pipe_descriptors[0], STDIN_FILENO) == -1)
+    {
+        result = 0;
+        goto cleanup;
+    }
+    written = write(pipe_descriptors[1], sequence, sizeof(sequence));
+    if (written != static_cast<ssize_t>(sizeof(sequence)))
+    {
+        result = 0;
+        goto cleanup;
+    }
+    if (rl_handle_escape_sequence(&state, prompt) == -1)
+    {
+        result = 0;
+        goto cleanup;
+    }
+    if (std::strcmp(state.buffer, history_entry) != 0)
+    {
+        result = 0;
+        goto cleanup;
+    }
+    if (state.bufsize < static_cast<int>(std::strlen(history_entry) + 1))
+    {
+        result = 0;
+        goto cleanup;
+    }
+cleanup:
+    if (pipe_descriptors[0] != -1)
+        close(pipe_descriptors[0]);
+    if (pipe_descriptors[1] != -1)
+        close(pipe_descriptors[1]);
+    if (stdin_backup != -1)
+    {
+        dup2(stdin_backup, STDIN_FILENO);
+        close(stdin_backup);
+    }
+    if (state.buffer)
+        cma_free(state.buffer);
+    if (history_entry)
+        cma_free(history_entry);
+    history[0] = ft_nullptr;
+    history_count = 0;
     if (result == 0)
         return (0);
     return (1);
