@@ -6,6 +6,8 @@
 #include <cstring>
 #include <cerrno>
 #include <fcntl.h>
+#include <thread>
+#include <chrono>
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>
@@ -120,13 +122,24 @@ int ft_socket::accept_connection()
         return (-1);
     }
     ft_socket new_socket(new_fd, client_addr);
+    size_t previous_size = this->_connected.size();
     this->_connected.push_back(ft_move(new_socket));
-    if (this->_connected.get_error())
+    size_t current_size = this->_connected.size();
+    if (current_size != previous_size + 1)
     {
-        this->set_error(VECTOR_ALLOC_FAIL);
+        int push_error = this->_connected.get_error();
+        if (new_socket.get_fd() >= 0)
+        {
+            new_socket.close_socket();
+        }
+        if (push_error == ER_SUCCESS)
+        {
+            push_error = VECTOR_ALLOC_FAIL;
+        }
+        this->set_error(push_error);
+        return (-1);
     }
-    else
-        this->set_error(ER_SUCCESS);
+    this->set_error(ER_SUCCESS);
     return (new_fd);
 }
 
@@ -210,7 +223,10 @@ ft_socket::ft_socket(const SocketConfig &config) : _socket_fd(-1), _error_code(E
 
 ft_socket::~ft_socket()
 {
-    FT_CLOSE_SOCKET(this->_socket_fd);
+    if (this->_socket_fd >= 0)
+    {
+        FT_CLOSE_SOCKET(this->_socket_fd);
+    }
     return ;
 }
 
@@ -246,11 +262,43 @@ ssize_t ft_socket::send_all(const void *data, size_t size, int flags)
                                      flags);
         if (bytes_sent < 0)
         {
+#ifdef _WIN32
+            int last_error;
+
+            last_error = WSAGetLastError();
+            if (last_error == WSAEWOULDBLOCK || last_error == WSAEINTR)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                if (networking_check_socket_after_send(this->_socket_fd) != 0)
+                {
+                    this->set_error(ft_errno);
+                    return (-1);
+                }
+                continue ;
+            }
+            this->set_error(last_error + ERRNO_OFFSET);
+#else
+            if (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                if (networking_check_socket_after_send(this->_socket_fd) != 0)
+                {
+                    this->set_error(ft_errno);
+                    return (-1);
+                }
+                continue ;
+            }
             this->set_error(errno + ERRNO_OFFSET);
+#endif
             return (-1);
         }
         if (bytes_sent == 0)
         {
+            if (networking_check_socket_after_send(this->_socket_fd) != 0)
+            {
+                this->set_error(ft_errno);
+                return (-1);
+            }
             this->set_error(SOCKET_SEND_FAILED);
             return (-1);
         }
