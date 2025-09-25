@@ -79,6 +79,7 @@ char *cmp_get_home_directory(void);
 unsigned int cmp_get_cpu_count(void);
 unsigned long long cmp_get_total_memory(void);
 std::time_t cmp_timegm(std::tm *time_pointer);
+int cmp_localtime(const std::time_t *time_value, std::tm *output);
 
 ssize_t cmp_su_write(int file_descriptor, const char *buffer, size_t length);
 ssize_t cmp_socket_send_all(ft_socket *socket_object, const void *buffer,
