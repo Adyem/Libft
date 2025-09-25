@@ -158,12 +158,114 @@ void ft_task_scheduler::worker_loop()
     return ;
 }
 
+void ft_task_scheduler::scheduled_heap_sift_up(size_t index)
+{
+    while (index > 0)
+    {
+        size_t parent_index;
+        int comparison;
+        scheduled_task temp_task;
+
+        parent_index = (index - 1) / 2;
+        comparison = time_monotonic_point_compare(this->_scheduled[index]._time,
+                this->_scheduled[parent_index]._time);
+        if (comparison >= 0)
+            break;
+        temp_task = ft_move(this->_scheduled[index]);
+        this->_scheduled[index] = ft_move(this->_scheduled[parent_index]);
+        this->_scheduled[parent_index] = ft_move(temp_task);
+        index = parent_index;
+    }
+    return ;
+}
+
+void ft_task_scheduler::scheduled_heap_sift_down(size_t index)
+{
+    while (true)
+    {
+        size_t size;
+        size_t left_child;
+        size_t right_child;
+        size_t smallest;
+        int comparison_left;
+        int comparison_right;
+        scheduled_task temp_task;
+
+        size = this->_scheduled.size();
+        if (index >= size)
+            break;
+        left_child = index * 2 + 1;
+        if (left_child >= size)
+            break;
+        smallest = left_child;
+        right_child = left_child + 1;
+        if (right_child < size)
+        {
+            comparison_right = time_monotonic_point_compare(
+                    this->_scheduled[right_child]._time,
+                    this->_scheduled[smallest]._time);
+            if (comparison_right < 0)
+                smallest = right_child;
+        }
+        comparison_left = time_monotonic_point_compare(
+                this->_scheduled[index]._time,
+                this->_scheduled[smallest]._time);
+        if (comparison_left <= 0)
+            break;
+        temp_task = ft_move(this->_scheduled[index]);
+        this->_scheduled[index] = ft_move(this->_scheduled[smallest]);
+        this->_scheduled[smallest] = ft_move(temp_task);
+        index = smallest;
+    }
+    return ;
+}
+
+bool ft_task_scheduler::scheduled_heap_push(scheduled_task &&task)
+{
+    size_t size;
+
+    this->_scheduled.push_back(ft_move(task));
+    if (this->_scheduled.get_error() != ER_SUCCESS)
+        return (false);
+    size = this->_scheduled.size();
+    if (size == 0)
+        return (true);
+    this->scheduled_heap_sift_up(size - 1);
+    return (true);
+}
+
+bool ft_task_scheduler::scheduled_heap_pop(scheduled_task &task)
+{
+    size_t size;
+
+    size = this->_scheduled.size();
+    if (this->_scheduled.get_error() != ER_SUCCESS)
+        return (false);
+    if (size == 0)
+        return (false);
+    task = ft_move(this->_scheduled[0]);
+    if (size == 1)
+    {
+        this->_scheduled.pop_back();
+        if (this->_scheduled.get_error() != ER_SUCCESS)
+            return (false);
+        return (true);
+    }
+    scheduled_task last_task;
+
+    last_task = ft_move(this->_scheduled[size - 1]);
+    this->_scheduled.pop_back();
+    if (this->_scheduled.get_error() != ER_SUCCESS)
+        return (false);
+    this->_scheduled[0] = ft_move(last_task);
+    this->scheduled_heap_sift_down(0);
+    return (true);
+}
+
 void ft_task_scheduler::timer_loop()
 {
     while (true)
     {
-        size_t index;
-
         if (!this->_running.load())
             break;
         if (this->_scheduled_mutex.lock(THREAD_ID) != FT_SUCCESS)
@@ -173,6 +275,7 @@ void ft_task_scheduler::timer_loop()
         }
         while (true)
         {
+            size_t scheduled_count;
             bool has_entries;
 
             if (!this->_running.load())
@@ -180,13 +283,14 @@ void ft_task_scheduler::timer_loop()
                 this->_scheduled_mutex.unlock(THREAD_ID);
                 return ;
             }
-            has_entries = this->_scheduled.size() > 0;
+            scheduled_count = this->_scheduled.size();
             if (this->_scheduled.get_error() != ER_SUCCESS)
             {
                 this->_scheduled_mutex.unlock(THREAD_ID);
                 this->set_error(this->_scheduled.get_error());
                 return ;
             }
+            has_entries = scheduled_count > 0;
             if (!has_entries)
             {
                 if (this->_scheduled_condition.wait(this->_scheduled_mutex) != 0)
@@ -201,19 +305,10 @@ void ft_task_scheduler::timer_loop()
                 continue;
             }
             t_monotonic_time_point earliest_time;
-            size_t scan_index;
-
-            earliest_time = this->_scheduled[0]._time;
-            scan_index = 1;
-            while (scan_index < this->_scheduled.size())
-            {
-                if (time_monotonic_point_compare(this->_scheduled[scan_index]._time, earliest_time) < 0)
-                    earliest_time = this->_scheduled[scan_index]._time;
-                scan_index++;
-            }
             t_monotonic_time_point current_time;
             long long wait_milliseconds;
 
+            earliest_time = this->_scheduled[0]._time;
             current_time = time_monotonic_point_now();
             wait_milliseconds = time_monotonic_point_diff_ms(current_time, earliest_time);
             if (wait_milliseconds > 0)
@@ -223,7 +318,11 @@ void ft_task_scheduler::timer_loop()
                 long long nanoseconds;
                 int wait_result;
 
+#if defined(CLOCK_MONOTONIC)
+                if (clock_gettime(CLOCK_MONOTONIC, &wake_time) != 0)
+#else
                 if (clock_gettime(CLOCK_REALTIME, &wake_time) != 0)
+#endif
                 {
                     int clock_error;
 
@@ -259,18 +358,39 @@ void ft_task_scheduler::timer_loop()
             }
             break;
         }
-        index = 0;
-        while (index < this->_scheduled.size())
+        while (true)
         {
+            size_t scheduled_count;
+            int time_comparison;
             t_monotonic_time_point now;
+            scheduled_task expired_task;
+            bool pop_success;
 
-            now = time_monotonic_point_now();
-            if (time_monotonic_point_compare(now, this->_scheduled[index]._time) >= 0)
+            scheduled_count = this->_scheduled.size();
+            if (this->_scheduled.get_error() != ER_SUCCESS)
             {
-                scheduled_task expired_task;
-                ft_function<void()> queue_function;
+                this->_scheduled_mutex.unlock(THREAD_ID);
+                this->set_error(this->_scheduled.get_error());
+                return ;
+            }
+            if (scheduled_count == 0)
+                break;
+            now = time_monotonic_point_now();
+            time_comparison = time_monotonic_point_compare(now, this->_scheduled[0]._time);
+            if (time_comparison < 0)
+                break;
+            pop_success = this->scheduled_heap_pop(expired_task);
+            if (!pop_success)
+            {
+                int scheduled_error;
 
-            expired_task = this->_scheduled[index];
+                scheduled_error = this->_scheduled.get_error();
+                if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+                    this->set_error(this->_scheduled_mutex.get_error());
+                else
+                    this->set_error(scheduled_error);
+                return ;
+            }
             if (expired_task._function.get_error() != ER_SUCCESS)
             {
                 int function_error;
@@ -278,7 +398,7 @@ void ft_task_scheduler::timer_loop()
 
                 function_error = expired_task._function.get_error();
                 this->set_error(function_error);
-                original_function = ft_move(this->_scheduled[index]._function);
+                original_function = ft_move(expired_task._function);
                 if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
                 {
                     this->set_error(this->_scheduled_mutex.get_error());
@@ -293,27 +413,21 @@ void ft_task_scheduler::timer_loop()
                     this->set_error(this->_scheduled_mutex.get_error());
                     return ;
                 }
-                if (index >= this->_scheduled.size())
-                {
-                    index = 0;
-                    continue;
-                }
                 if (expired_task._interval_ms > 0)
                 {
                     t_monotonic_time_point updated_time;
 
                     updated_time = time_monotonic_point_add_ms(time_monotonic_point_now(),
                             expired_task._interval_ms);
-                    this->_scheduled[index]._time = updated_time;
-                    this->_scheduled[index]._function = ft_move(original_function);
-                    index++;
-                }
-                else
-                {
-                    this->_scheduled.erase(this->_scheduled.begin() + index);
+                    expired_task._time = updated_time;
+                    expired_task._function = ft_move(original_function);
+                    if (!this->scheduled_heap_push(ft_move(expired_task)))
+                        this->set_error(this->_scheduled.get_error());
                 }
                 continue;
             }
+            ft_function<void()> queue_function;
+
             queue_function = expired_task._function;
             if (queue_function.get_error() != ER_SUCCESS)
             {
@@ -322,7 +436,7 @@ void ft_task_scheduler::timer_loop()
 
                 copy_error = queue_function.get_error();
                 this->set_error(copy_error);
-                original_function = ft_move(this->_scheduled[index]._function);
+                original_function = ft_move(expired_task._function);
                 if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
                 {
                     this->set_error(this->_scheduled_mutex.get_error());
@@ -337,66 +451,51 @@ void ft_task_scheduler::timer_loop()
                     this->set_error(this->_scheduled_mutex.get_error());
                     return ;
                 }
-                if (index >= this->_scheduled.size())
-                {
-                    index = 0;
-                    continue;
-                }
                 if (expired_task._interval_ms > 0)
                 {
                     t_monotonic_time_point updated_time;
 
                     updated_time = time_monotonic_point_add_ms(time_monotonic_point_now(),
                             expired_task._interval_ms);
-                    this->_scheduled[index]._time = updated_time;
-                    this->_scheduled[index]._function = ft_move(original_function);
-                    index++;
-                }
-                else
-                {
-                    this->_scheduled.erase(this->_scheduled.begin() + index);
+                    expired_task._time = updated_time;
+                    expired_task._function = ft_move(original_function);
+                    if (!this->scheduled_heap_push(ft_move(expired_task)))
+                        this->set_error(this->_scheduled.get_error());
                 }
                 continue;
             }
-                if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
-                {
-                    this->set_error(this->_scheduled_mutex.get_error());
-                    return ;
-                }
-                this->_queue.push(ft_move(queue_function));
-                if (this->_queue.get_error() != ER_SUCCESS)
-                {
-                    this->set_error(this->_queue.get_error());
-                    if (expired_task._function)
-                        expired_task._function();
-                }
-                else
-                    this->set_error(ER_SUCCESS);
-                if (!this->_running.load())
-                    return ;
-                if (this->_scheduled_mutex.lock(THREAD_ID) != FT_SUCCESS)
-                {
-                    this->set_error(this->_scheduled_mutex.get_error());
-                    return ;
-                }
-                if (index >= this->_scheduled.size())
-                {
-                    index = 0;
-                    continue;
-                }
-                if (expired_task._interval_ms > 0)
-                {
-                    t_monotonic_time_point updated_time;
+            if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+            {
+                this->set_error(this->_scheduled_mutex.get_error());
+                return ;
+            }
+            this->_queue.push(ft_move(queue_function));
+            if (this->_queue.get_error() != ER_SUCCESS)
+            {
+                this->set_error(this->_queue.get_error());
+                if (expired_task._function)
+                    expired_task._function();
+            }
+            else
+                this->set_error(ER_SUCCESS);
+            if (!this->_running.load())
+                return ;
+            if (this->_scheduled_mutex.lock(THREAD_ID) != FT_SUCCESS)
+            {
+                this->set_error(this->_scheduled_mutex.get_error());
+                return ;
+            }
+            if (expired_task._interval_ms > 0)
+            {
+                t_monotonic_time_point updated_time;
 
-                    updated_time = time_monotonic_point_add_ms(time_monotonic_point_now(), expired_task._interval_ms);
-                    this->_scheduled[index]._time = updated_time;
-                    index++;
-                }
-                else
-                    this->_scheduled.erase(this->_scheduled.begin() + index);
-                continue;
+                updated_time = time_monotonic_point_add_ms(time_monotonic_point_now(),
+                        expired_task._interval_ms);
+                expired_task._time = updated_time;
+                if (!this->scheduled_heap_push(ft_move(expired_task)))
+                    this->set_error(this->_scheduled.get_error());
             }
-            index++;
+            continue;
         }
         if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
         {

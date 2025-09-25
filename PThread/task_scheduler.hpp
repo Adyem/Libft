@@ -27,7 +27,7 @@
 
 
 template <typename ElementType>
-class ft_lock_free_queue
+class ft_blocking_queue
 {
     private:
         pt_mutex _mutex;
@@ -39,11 +39,11 @@ class ft_lock_free_queue
         void set_error(int error) const;
 
     public:
-        ft_lock_free_queue();
-        ~ft_lock_free_queue();
+        ft_blocking_queue();
+        ~ft_blocking_queue();
 
-        ft_lock_free_queue(const ft_lock_free_queue&) = delete;
-        ft_lock_free_queue &operator=(const ft_lock_free_queue&) = delete;
+        ft_blocking_queue(const ft_blocking_queue&) = delete;
+        ft_blocking_queue &operator=(const ft_blocking_queue&) = delete;
 
         void push(ElementType &&value);
         bool pop(ElementType &result);
@@ -64,7 +64,7 @@ class ft_task_scheduler
             ft_function<void()> _function;
         };
 
-        ft_lock_free_queue<ft_function<void()> > _queue;
+        ft_blocking_queue<ft_function<void()> > _queue;
         ft_vector<ft_thread> _workers;
         ft_thread _timer_thread;
         ft_vector<scheduled_task> _scheduled;
@@ -76,6 +76,10 @@ class ft_task_scheduler
         void set_error(int error) const;
         void worker_loop();
         void timer_loop();
+        bool scheduled_heap_push(scheduled_task &&task);
+        bool scheduled_heap_pop(scheduled_task &task);
+        void scheduled_heap_sift_up(size_t index);
+        void scheduled_heap_sift_down(size_t index);
 
     public:
         ft_task_scheduler(size_t thread_count = 0);
@@ -106,7 +110,7 @@ class ft_task_scheduler
 
 
 template <typename ElementType>
-ft_lock_free_queue<ElementType>::ft_lock_free_queue()
+ft_blocking_queue<ElementType>::ft_blocking_queue()
     : _mutex(), _condition(), _shutdown(false), _storage(), _error_code(ER_SUCCESS)
 {
     if (this->_condition.get_error() != ER_SUCCESS)
@@ -119,7 +123,7 @@ ft_lock_free_queue<ElementType>::ft_lock_free_queue()
 }
 
 template <typename ElementType>
-ft_lock_free_queue<ElementType>::~ft_lock_free_queue()
+ft_blocking_queue<ElementType>::~ft_blocking_queue()
 {
     this->shutdown();
     this->set_error(ER_SUCCESS);
@@ -127,7 +131,7 @@ ft_lock_free_queue<ElementType>::~ft_lock_free_queue()
 }
 
 template <typename ElementType>
-void ft_lock_free_queue<ElementType>::set_error(int error) const
+void ft_blocking_queue<ElementType>::set_error(int error) const
 {
     this->_error_code = error;
     ft_errno = error;
@@ -135,7 +139,7 @@ void ft_lock_free_queue<ElementType>::set_error(int error) const
 }
 
 template <typename ElementType>
-void ft_lock_free_queue<ElementType>::push(ElementType &&value)
+void ft_blocking_queue<ElementType>::push(ElementType &&value)
 {
     bool was_empty;
 
@@ -176,7 +180,7 @@ void ft_lock_free_queue<ElementType>::push(ElementType &&value)
 }
 
 template <typename ElementType>
-bool ft_lock_free_queue<ElementType>::pop(ElementType &result)
+bool ft_blocking_queue<ElementType>::pop(ElementType &result)
 {
     bool is_empty;
     ElementType value;
@@ -229,7 +233,7 @@ bool ft_lock_free_queue<ElementType>::pop(ElementType &result)
 }
 
 template <typename ElementType>
-bool ft_lock_free_queue<ElementType>::wait_pop(ElementType &result, const ft_atomic<bool> &running_flag)
+bool ft_blocking_queue<ElementType>::wait_pop(ElementType &result, const ft_atomic<bool> &running_flag)
 {
     bool is_empty;
     ElementType value;
@@ -300,7 +304,7 @@ bool ft_lock_free_queue<ElementType>::wait_pop(ElementType &result, const ft_ato
 }
 
 template <typename ElementType>
-void ft_lock_free_queue<ElementType>::shutdown()
+void ft_blocking_queue<ElementType>::shutdown()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
@@ -323,13 +327,13 @@ void ft_lock_free_queue<ElementType>::shutdown()
 }
 
 template <typename ElementType>
-int ft_lock_free_queue<ElementType>::get_error() const
+int ft_blocking_queue<ElementType>::get_error() const
 {
     return (this->_error_code);
 }
 
 template <typename ElementType>
-const char *ft_lock_free_queue<ElementType>::get_error_str() const
+const char *ft_blocking_queue<ElementType>::get_error_str() const
 {
     return (ft_strerror(this->_error_code));
 }
@@ -485,13 +489,17 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
         task_body();
         return (future_value);
     }
-    this->_scheduled.push_back(ft_move(task_entry));
-    if (this->_scheduled.get_error() != ER_SUCCESS)
+    bool push_success;
+    int scheduled_error;
+
+    push_success = this->scheduled_heap_push(ft_move(task_entry));
+    if (!push_success)
     {
+        scheduled_error = this->_scheduled.get_error();
         if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
             this->set_error(this->_scheduled_mutex.get_error());
         else
-            this->set_error(this->_scheduled.get_error());
+            this->set_error(scheduled_error);
         task_body();
         return (future_value);
     }
@@ -540,13 +548,17 @@ void ft_task_scheduler::schedule_every(std::chrono::duration<Rep, Period> interv
         task_entry._function();
         return ;
     }
-    this->_scheduled.push_back(ft_move(task_entry));
-    if (this->_scheduled.get_error() != ER_SUCCESS)
+    bool push_success;
+    int scheduled_error;
+
+    push_success = this->scheduled_heap_push(ft_move(task_entry));
+    if (!push_success)
     {
+        scheduled_error = this->_scheduled.get_error();
         if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
             this->set_error(this->_scheduled_mutex.get_error());
         else
-            this->set_error(this->_scheduled.get_error());
+            this->set_error(scheduled_error);
         task_entry._function();
         return ;
     }

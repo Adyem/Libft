@@ -16,7 +16,17 @@ void* ft_memcpy(void* destination, const void* source, size_t size)
 
     unsigned char*       dest = static_cast<unsigned char*>(destination);
     const unsigned char* src = static_cast<const unsigned char*>(source);
+    const unsigned char* dest_end;
+    const unsigned char* src_end;
     uintptr_t            alignment_mask = sizeof(size_t) - 1;
+
+    dest_end = dest + size;
+    src_end = src + size;
+    if (dest < src_end && src < dest_end)
+    {
+        ft_errno = FT_EOVERLAP;
+        return (destination);
+    }
 
     if ((reinterpret_cast<uintptr_t>(dest) & alignment_mask) != (reinterpret_cast<uintptr_t>(src) & alignment_mask))
     {
