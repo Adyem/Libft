@@ -1,27 +1,47 @@
 #include "kv_store.hpp"
 
 kv_store::kv_store(const char *file_path)
-    : _data(), _file_path(file_path), _error_code(ER_SUCCESS)
+    : _data(), _file_path(), _error_code(ER_SUCCESS)
 {
     json_group *group_head;
     json_group *store_group;
     json_item *item_pointer;
+    int current_error;
+
+    if (file_path != ft_nullptr)
+        this->_file_path = file_path;
+    else
+        this->_file_path = "";
+    if (file_path == ft_nullptr)
+    {
+        this->set_error(FT_EINVAL);
+        return ;
+    }
 
     group_head = json_read_from_file(file_path);
-    if (group_head != ft_nullptr)
+    if (group_head == ft_nullptr)
     {
-        store_group = json_find_group(group_head, "kv_store");
-        if (store_group != ft_nullptr)
-        {
-            item_pointer = store_group->items;
-            while (item_pointer != ft_nullptr)
-            {
-                this->_data[item_pointer->key] = item_pointer->value;
-                item_pointer = item_pointer->next;
-            }
-        }
-        json_free_groups(group_head);
+        current_error = ft_errno;
+        if (current_error == ER_SUCCESS)
+            current_error = FT_EINVAL;
+        this->set_error(current_error);
+        return ;
     }
+    store_group = json_find_group(group_head, "kv_store");
+    if (store_group == ft_nullptr)
+    {
+        json_free_groups(group_head);
+        this->set_error(FT_EINVAL);
+        return ;
+    }
+    item_pointer = store_group->items;
+    while (item_pointer != ft_nullptr)
+    {
+        this->_data[item_pointer->key] = item_pointer->value;
+        item_pointer = item_pointer->next;
+    }
+    json_free_groups(group_head);
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -45,6 +65,7 @@ int kv_store::kv_set(const char *key_string, const char *value_string)
         return (-1);
     }
     this->_data[key_string] = value_string;
+    this->set_error(ER_SUCCESS);
     return (0);
 }
 
@@ -63,6 +84,7 @@ const char *kv_store::kv_get(const char *key_string) const
         this->set_error(MAP_KEY_NOT_FOUND);
         return (ft_nullptr);
     }
+    this->set_error(ER_SUCCESS);
     return (map_iterator->second.c_str());
 }
 
@@ -82,6 +104,7 @@ int kv_store::kv_delete(const char *key_string)
         return (-1);
     }
     this->_data.erase(map_iterator);
+    this->set_error(ER_SUCCESS);
     return (0);
 }
 
@@ -121,6 +144,7 @@ int kv_store::kv_flush() const
         this->set_error(result);
         return (-1);
     }
+    this->set_error(ER_SUCCESS);
     return (0);
 }
 
