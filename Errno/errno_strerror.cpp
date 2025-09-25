@@ -30,6 +30,7 @@ static const t_ft_error_string g_error_strings[] =
     {MAP_ALLOCATION_FAILED, "Map memory allocation failed"},
     {MAP_KEY_NOT_FOUND, "Map key not found"},
     {FILE_INVALID_FD, "Bad file descriptor"},
+    {FILE_END_OF_FILE, "End of file reached"},
     {FT_EINVAL, "Invalid argument"},
     {FT_EOVERLAP, "Memory regions overlap"},
     {FT_ERANGE, "Result out of range"},

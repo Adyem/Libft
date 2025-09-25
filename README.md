@@ -131,6 +131,10 @@ ft_string ft_to_string(long number);
 `ft_strtol` clamps values that exceed `FT_LONG_MAX` or `FT_LONG_MIN` and sets
 `ft_errno` to `FT_ERANGE` when overflow is detected.
 
+`ft_fgets` sets `ft_errno` to `FILE_END_OF_FILE` when the stream reaches end of
+file without an input error, allowing callers to differentiate EOF from other
+failures.
+
 `limits.hpp` exposes integer boundary constants:
 
 ```
