@@ -14,23 +14,35 @@ unsigned char    *compress_buffer(const unsigned char *input_buffer, std::size_t
     uint32_t        original_size;
     int             zlib_status;
 
-    if (!input_buffer || !compressed_size)
+    if (!compressed_size)
+    {
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
+    }
+    *compressed_size = 0;
+    if (!input_buffer)
+    {
+        ft_errno = FT_EINVAL;
+        return (ft_nullptr);
+    }
     if (input_size > compression_max_size)
     {
         ft_errno = FT_EINVAL;
-        *compressed_size = 0;
         return (ft_nullptr);
     }
     zlib_bound = compressBound(static_cast<uLong>(input_size));
     result_buffer = static_cast<unsigned char *>(cma_malloc(zlib_bound + sizeof(uint32_t)));
     if (!result_buffer)
+    {
+        ft_errno = FT_EALLOC;
         return (ft_nullptr);
+    }
     actual_size = zlib_bound;
     zlib_status = compress2(result_buffer + sizeof(uint32_t), &actual_size, input_buffer, static_cast<uLong>(input_size), Z_BEST_COMPRESSION);
     if (zlib_status != Z_OK)
     {
         cma_free(result_buffer);
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
     }
     original_size = static_cast<uint32_t>(input_size);
@@ -49,29 +61,40 @@ unsigned char    *decompress_buffer(const unsigned char *input_buffer, std::size
     unsigned char   *result_buffer;
     int             zlib_status;
 
-    if (!input_buffer || input_size < sizeof(uint32_t) || !decompressed_size)
+    if (!decompressed_size)
+    {
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
+    }
+    *decompressed_size = 0;
+    if (!input_buffer || input_size < sizeof(uint32_t))
+    {
+        ft_errno = FT_EINVAL;
+        return (ft_nullptr);
+    }
     ft_memcpy(&expected_size, input_buffer, sizeof(uint32_t));
     if (static_cast<std::size_t>(expected_size) > compression_max_size)
     {
         ft_errno = FT_EINVAL;
-        *decompressed_size = 0;
         return (ft_nullptr);
     }
     if (input_size - sizeof(uint32_t) > compression_max_size)
     {
         ft_errno = FT_EINVAL;
-        *decompressed_size = 0;
         return (ft_nullptr);
     }
     result_buffer = static_cast<unsigned char *>(cma_malloc(expected_size));
     if (!result_buffer)
+    {
+        ft_errno = FT_EALLOC;
         return (ft_nullptr);
+    }
     actual_size = static_cast<uLongf>(expected_size);
     zlib_status = uncompress(result_buffer, &actual_size, input_buffer + sizeof(uint32_t), input_size - sizeof(uint32_t));
     if (zlib_status != Z_OK || actual_size != expected_size)
     {
         cma_free(result_buffer);
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
     }
     *decompressed_size = actual_size;
