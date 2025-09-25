@@ -6,6 +6,7 @@ size_t    ft_strlcat(char *destination, const char *source, size_t bufferSize)
 {
     size_t    destLength = 0;
     size_t    sourceIndex = 0;
+    size_t    sourceLength = 0;
 
     ft_errno = ER_SUCCESS;
     if (destination == ft_nullptr || source == ft_nullptr)
@@ -22,5 +23,6 @@ size_t    ft_strlcat(char *destination, const char *source, size_t bufferSize)
     }
     if (destLength < bufferSize)
         destination[destLength + sourceIndex] = '\0';
-    return (destLength + ft_strlen(source));
+    sourceLength = ft_strlen_size_t(source);
+    return (destLength + sourceLength);
 }
