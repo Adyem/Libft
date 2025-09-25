@@ -5,7 +5,7 @@
 
 int ft_strncmp(const char *string_1, const char *string_2, size_t max_len)
 {
-    unsigned int current_index = 0;
+    ft_size_t current_index = 0;
 
     ft_errno = ER_SUCCESS;
     if (string_1 == ft_nullptr || string_2 == ft_nullptr)
@@ -17,10 +17,10 @@ int ft_strncmp(const char *string_1, const char *string_2, size_t max_len)
            string_2[current_index] != '\0' &&
            current_index < max_len)
     {
-        unsigned char char1 = static_cast<unsigned char>(string_1[current_index]);
-        unsigned char char2 = static_cast<unsigned char>(string_2[current_index]);
-        if (char1 != char2)
-            return (char1 - char2);
+        unsigned char string_1_char = static_cast<unsigned char>(string_1[current_index]);
+        unsigned char string_2_char = static_cast<unsigned char>(string_2[current_index]);
+        if (string_1_char != string_2_char)
+            return (string_1_char - string_2_char);
         current_index++;
     }
     if (current_index == max_len)
