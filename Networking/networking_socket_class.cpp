@@ -338,7 +338,7 @@ int ft_socket::initialize(const SocketConfig &config)
 {
     if (this->_socket_fd != -1)
     {
-        this->set_error(SOCKET_ALRDY_INITIALIZED);
+        this->set_error(SOCKET_ALREADY_INITIALIZED);
         return (1);
     }
     if (config._type == SocketType::SERVER)

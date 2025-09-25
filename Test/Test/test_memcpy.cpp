@@ -1,5 +1,6 @@
 #include "../../Libft/libft.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
+#include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 
 FT_TEST(test_memcpy_basic, "ft_memcpy basic")
@@ -59,8 +60,28 @@ FT_TEST(test_memcpy_same_pointer, "ft_memcpy same pointer")
     buffer[1] = 'b';
     buffer[2] = 'c';
     buffer[3] = 'd';
+    ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(buffer, ft_memcpy(buffer, buffer, 4));
     FT_ASSERT_EQ('a', buffer[0]);
     FT_ASSERT_EQ('d', buffer[3]);
+    FT_ASSERT_EQ(FT_EOVERLAP, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_memcpy_overlapping_regions, "ft_memcpy overlapping regions")
+{
+    char buffer[6];
+
+    buffer[0] = '1';
+    buffer[1] = '2';
+    buffer[2] = '3';
+    buffer[3] = '4';
+    buffer[4] = '5';
+    buffer[5] = '\0';
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(buffer + 1, ft_memcpy(buffer + 1, buffer, 4));
+    FT_ASSERT_EQ('2', buffer[1]);
+    FT_ASSERT_EQ('4', buffer[3]);
+    FT_ASSERT_EQ(FT_EOVERLAP, ft_errno);
     return (1);
 }
