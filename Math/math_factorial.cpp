@@ -1,29 +1,82 @@
 #include "math.hpp"
+#include "../Errno/errno.hpp"
+#include <climits>
 
 int math_factorial(int number)
 {
+    int result;
+    int current_number;
+
+    ft_errno = ER_SUCCESS;
     if (number < 0)
+    {
+        ft_errno = FT_EINVAL;
         return (0);
-    if (number == 0 || number == 1)
-        return (1);
-    return (number * math_factorial(number - 1));
+    }
+    result = 1;
+    current_number = 2;
+    while (current_number <= number)
+    {
+        if (result > INT_MAX / current_number)
+        {
+            ft_errno = FT_ERANGE;
+            return (0);
+        }
+        result *= current_number;
+        current_number += 1;
+    }
+    return (result);
 }
 
 long math_factorial(long number)
 {
+    long result;
+    long current_number;
+
+    ft_errno = ER_SUCCESS;
     if (number < 0)
+    {
+        ft_errno = FT_EINVAL;
         return (0);
-    if (number == 0 || number == 1)
-        return (1);
-    return (number * math_factorial(number - 1));
+    }
+    result = 1;
+    current_number = 2;
+    while (current_number <= number)
+    {
+        if (result > LONG_MAX / current_number)
+        {
+            ft_errno = FT_ERANGE;
+            return (0);
+        }
+        result *= current_number;
+        current_number += 1;
+    }
+    return (result);
 }
 
 long long math_factorial(long long number)
 {
+    long long result;
+    long long current_number;
+
+    ft_errno = ER_SUCCESS;
     if (number < 0)
+    {
+        ft_errno = FT_EINVAL;
         return (0);
-    if (number == 0 || number == 1)
-        return (1);
-    return (number * math_factorial(number - 1));
+    }
+    result = 1;
+    current_number = 2;
+    while (current_number <= number)
+    {
+        if (result > LLONG_MAX / current_number)
+        {
+            ft_errno = FT_ERANGE;
+            return (0);
+        }
+        result *= current_number;
+        current_number += 1;
+    }
+    return (result);
 }
 
