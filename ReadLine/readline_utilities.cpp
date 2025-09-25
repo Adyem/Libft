@@ -5,6 +5,7 @@
 #include "../CMA/CMA.hpp"
 #include "../Printf/printf.hpp"
 #include "../Libft/libft.hpp"
+#include "../Errno/errno.hpp"
 #include "readline_internal.hpp"
 
 char *rl_resize_buffer(char *old_buffer, int current_size, int new_size)
@@ -43,25 +44,47 @@ int rl_clear_line(const char *prompt, const char *buffer)
     return (0);
 }
 
-char rl_read_key()
+int rl_read_key(void)
 {
     ssize_t bytes_read;
     char character;
 
-    while ((bytes_read = su_read(0, &character, 1)) != 1)
-        ;
-    return (character);
+    while (1)
+    {
+        bytes_read = su_read(0, &character, 1);
+        if (bytes_read == 1)
+            return (character);
+        if (bytes_read == 0)
+        {
+            ft_errno = FT_ETERM;
+            return (-1);
+        }
+        if (bytes_read < 0)
+        {
+            ft_errno = FT_ETERM;
+            return (-1);
+        }
+    }
 }
 
 void rl_update_history(const char *buffer)
 {
+    char *duplicated_entry;
+
     if (history_count < MAX_HISTORY)
-        history[history_count++] = cma_strdup(buffer);
-    else
     {
-        cma_free(history[0]);
-        ft_memmove(&history[0], &history[1], sizeof(char *) * (MAX_HISTORY - 1));
-        history[MAX_HISTORY - 1] = cma_strdup(buffer);
+        duplicated_entry = cma_strdup(buffer);
+        if (duplicated_entry == ft_nullptr)
+            return ;
+        history[history_count] = duplicated_entry;
+        history_count++;
+        return ;
     }
+    duplicated_entry = cma_strdup(buffer);
+    if (duplicated_entry == ft_nullptr)
+        return ;
+    cma_free(history[0]);
+    ft_memmove(&history[0], &history[1], sizeof(char *) * (MAX_HISTORY - 1));
+    history[MAX_HISTORY - 1] = duplicated_entry;
     return ;
 }
