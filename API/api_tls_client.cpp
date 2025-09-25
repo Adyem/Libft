@@ -123,7 +123,10 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
         return ;
     }
     SSL_set_hostflags(this->_ssl, X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
-    if (SSL_set_tlsext_host_name(this->_ssl, this->_host.c_str()) != 1)
+    void *host_name_argument;
+
+    host_name_argument = static_cast<void*>(const_cast<char*>(this->_host.c_str()));
+    if (SSL_ctrl(this->_ssl, SSL_CTRL_SET_TLSEXT_HOSTNAME, TLSEXT_NAMETYPE_host_name, host_name_argument) != 1)
     {
         SSL_free(this->_ssl);
         this->_ssl = ft_nullptr;
