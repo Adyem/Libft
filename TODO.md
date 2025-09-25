@@ -10,9 +10,9 @@
     - Time formatting and parsing
 
 - Compression Module
-    - ft_compress and ft_decompress
-    - Stream compression
-    - Base64 encode and decode
+    - Expand automated tests for block and streaming helpers
+    - Document compression usage patterns and error reporting
+    - Evaluate adding alternative algorithms (e.g., LZ4, Brotli)
 
 - Image / Media Module
     - Load and save PNG or BMP

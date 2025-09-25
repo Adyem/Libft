@@ -235,6 +235,102 @@ FT_TEST(test_base64_round_trip, "base64 round trip")
     return (0);
 }
 
+FT_TEST(test_base64_encode_null_terminator, "base64 encode appends null terminator")
+{
+    const char      *input_string;
+    const char      *expected_encoding;
+    unsigned char   *encoded_buffer;
+    std::size_t     input_length;
+    std::size_t     encoded_length;
+    std::size_t     expected_length;
+
+    input_string = "hi";
+    expected_encoding = "aGk=";
+    input_length = 2;
+    encoded_length = 0;
+    encoded_buffer = ft_base64_encode(reinterpret_cast<const unsigned char *>(input_string), input_length, &encoded_length);
+    if (!encoded_buffer)
+        return (0);
+    expected_length = ft_strlen_size_t(expected_encoding);
+    if (encoded_length != expected_length)
+    {
+        cma_free(encoded_buffer);
+        return (0);
+    }
+    if (ft_strncmp(reinterpret_cast<const char *>(encoded_buffer), expected_encoding, expected_length) != 0)
+    {
+        cma_free(encoded_buffer);
+        return (0);
+    }
+    if (encoded_buffer[encoded_length] != '\0')
+    {
+        cma_free(encoded_buffer);
+        return (0);
+    }
+    cma_free(encoded_buffer);
+    return (1);
+}
+
+FT_TEST(test_base64_decode_ignores_whitespace, "base64 decode ignores whitespace")
+{
+    const char      *input_string;
+    const char      *expected_output;
+    unsigned char   *decoded_buffer;
+    std::size_t     decoded_length;
+    std::size_t     expected_length;
+
+    input_string = "SGVs bG8s\nIHdvcmxkIQ==\r\n";
+    expected_output = "Hello, world!";
+    decoded_length = 0;
+    decoded_buffer = ft_base64_decode(reinterpret_cast<const unsigned char *>(input_string),
+        ft_strlen_size_t(input_string), &decoded_length);
+    if (!decoded_buffer)
+        return (0);
+    expected_length = ft_strlen_size_t(expected_output);
+    if (decoded_length != expected_length)
+    {
+        cma_free(decoded_buffer);
+        return (0);
+    }
+    if (ft_memcmp(decoded_buffer, expected_output, expected_length) != 0)
+    {
+        cma_free(decoded_buffer);
+        return (0);
+    }
+    cma_free(decoded_buffer);
+    return (1);
+}
+
+FT_TEST(test_base64_decode_paddingless_tail, "base64 decode paddingless tail")
+{
+    const char      *input_string;
+    const char      *expected_output;
+    unsigned char   *decoded_buffer;
+    std::size_t     decoded_length;
+    std::size_t     expected_length;
+
+    input_string = "YW55IGNhcm5hbCBwbGVhc3Vy";
+    expected_output = "any carnal pleasur";
+    decoded_length = 0;
+    decoded_buffer = ft_base64_decode(reinterpret_cast<const unsigned char *>(input_string),
+        ft_strlen_size_t(input_string), &decoded_length);
+    if (!decoded_buffer)
+        return (0);
+    expected_length = ft_strlen_size_t(expected_output);
+    if (decoded_length != expected_length)
+    {
+        cma_free(decoded_buffer);
+        return (0);
+    }
+    if (ft_memcmp(decoded_buffer, expected_output, expected_length) != 0)
+    {
+        cma_free(decoded_buffer);
+        return (0);
+    }
+    cma_free(decoded_buffer);
+    return (1);
+}
+
 FT_TEST(test_base64_invalid_character, "base64 invalid character")
 {
     const char      *invalid_input;
