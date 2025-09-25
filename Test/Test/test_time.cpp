@@ -1,6 +1,7 @@
 #include "../../Libft/libft.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_runner.hpp"
+#include "../../Compatebility/compatebility_internal.hpp"
 #include "../../CPP_class/class_string_class.hpp"
 #include "../../Time/time.hpp"
 #include "../../Errno/errno.hpp"
@@ -9,6 +10,8 @@
 #include <ctime>
 #include <cstring>
 #include <cerrno>
+#include <climits>
+#include <vector>
 #include <sys/time.h>
 #if defined(__unix__) || defined(__APPLE__)
 # include <sys/syscall.h>
@@ -19,6 +22,18 @@ static bool g_time_override_enabled = false;
 static timeval g_time_override_value = {0, 0};
 static bool g_time_force_failure = false;
 static int g_time_failure_errno = EINVAL;
+static bool g_time_sleep_capture_enabled = false;
+static std::vector<unsigned int> g_time_sleep_calls;
+
+int pt_thread_sleep(unsigned int milliseconds)
+{
+    if (g_time_sleep_capture_enabled)
+    {
+        g_time_sleep_calls.push_back(milliseconds);
+        return (0);
+    }
+    return (cmp_thread_sleep(milliseconds));
+}
 
 static int fallback_gettimeofday(struct timeval *time_value)
 {
@@ -216,4 +231,54 @@ cleanup:
     tzset();
 #endif
     return (success);
+}
+
+FT_TEST(test_time_local_null_output, "time_local rejects null destination")
+{
+    ft_errno = ER_SUCCESS;
+    time_local(0, ft_nullptr);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_time_local_matches_cmp_localtime, "time_local mirrors cmp_localtime output")
+{
+    std::time_t current_time;
+    std::tm expected;
+    t_time_info actual;
+
+    current_time = std::time(ft_nullptr);
+    if (cmp_localtime(&current_time, &expected) != 0)
+    {
+        ft_test_fail("cmp_localtime(&current_time, &expected) == 0", __FILE__, __LINE__);
+        return (0);
+    }
+    ft_errno = FT_EINVAL;
+    time_local(static_cast<t_time>(current_time), &actual);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(expected.tm_sec, actual.seconds);
+    FT_ASSERT_EQ(expected.tm_min, actual.minutes);
+    FT_ASSERT_EQ(expected.tm_hour, actual.hours);
+    FT_ASSERT_EQ(expected.tm_mday, actual.month_day);
+    FT_ASSERT_EQ(expected.tm_mon, actual.month);
+    FT_ASSERT_EQ(expected.tm_year, actual.year);
+    FT_ASSERT_EQ(expected.tm_wday, actual.week_day);
+    FT_ASSERT_EQ(expected.tm_yday, actual.year_day);
+    FT_ASSERT_EQ(expected.tm_isdst, actual.is_daylight_saving);
+    return (1);
+}
+
+FT_TEST(test_time_sleep_handles_large_second_values, "time_sleep splits long delays into safe chunks")
+{
+    size_t call_count;
+
+    g_time_sleep_calls.clear();
+    g_time_sleep_capture_enabled = true;
+    time_sleep(4294968U);
+    g_time_sleep_capture_enabled = false;
+    call_count = g_time_sleep_calls.size();
+    FT_ASSERT_EQ(static_cast<size_t>(2), call_count);
+    FT_ASSERT_EQ(static_cast<unsigned int>(UINT_MAX), g_time_sleep_calls[0]);
+    FT_ASSERT_EQ(static_cast<unsigned int>(705), g_time_sleep_calls[1]);
+    return (1);
 }
