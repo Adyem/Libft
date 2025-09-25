@@ -78,7 +78,7 @@ FT_TEST(test_fgets_basic, "ft_fgets basic")
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     ft_errno = FILE_INVALID_FD;
     FT_ASSERT_EQ(ft_nullptr, ft_fgets(buffer, 16, file));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FILE_END_OF_FILE, ft_errno);
     FT_ASSERT_EQ(FT_SUCCESS, ft_fclose(file));
     return (1);
 }
