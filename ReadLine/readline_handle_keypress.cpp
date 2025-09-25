@@ -60,6 +60,30 @@ static void rl_handle_right_arrow(readline_state_t *state, const char *prompt)
     return ;
 }
 
+static int rl_copy_history_entry_to_buffer(readline_state_t *state, const char *history_entry)
+{
+    size_t entry_length = ft_strlen(history_entry);
+    int required_size = static_cast<int>(entry_length) + 1;
+
+    if (required_size > state->bufsize)
+    {
+        int new_bufsize = state->bufsize;
+
+        if (new_bufsize == 0)
+            new_bufsize = 1;
+        while (new_bufsize < required_size)
+            new_bufsize *= 2;
+        char *resized_buffer = rl_resize_buffer(state->buffer, state->bufsize, new_bufsize);
+
+        if (!resized_buffer)
+            return (-1);
+        state->buffer = resized_buffer;
+        state->bufsize = new_bufsize;
+    }
+    ft_strlcpy(state->buffer, history_entry, state->bufsize);
+    return (0);
+}
+
 void rl_reset_completion_mode(readline_state_t *state)
 {
     state->in_completion_mode = 0;
@@ -85,8 +109,8 @@ static int rl_handle_up_arrow(readline_state_t *state, const char *prompt)
         if (rl_clear_line(prompt, state->buffer) == -1)
             return (-1);
         state->pos = 0;
-        strncpy(state->buffer, history[state->history_index], state->bufsize - 1);
-        state->buffer[state->bufsize - 1] = '\0';
+        if (rl_copy_history_entry_to_buffer(state, history[state->history_index]) == -1)
+            return (-1);
         pf_printf("%s%s", prompt, state->buffer);
         state->pos = ft_strlen(state->buffer);
         state->prev_buffer_length = state->pos;
@@ -103,8 +127,8 @@ static int rl_handle_down_arrow(readline_state_t *state, const char *prompt)
         if (rl_clear_line(prompt, state->buffer) == -1)
             return (-1);
         state->pos = 0;
-        strncpy(state->buffer, history[state->history_index], state->bufsize - 1);
-        state->buffer[state->bufsize - 1] = '\0';
+        if (rl_copy_history_entry_to_buffer(state, history[state->history_index]) == -1)
+            return (-1);
         pf_printf("%s%s", prompt, state->buffer);
         state->pos = ft_strlen(state->buffer);
         state->prev_buffer_length = state->pos;
