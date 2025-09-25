@@ -7,6 +7,9 @@
 #include <ctime>
 #if !defined(_WIN32) && !defined(_WIN64)
 # include <unistd.h>
+# include <sys/time.h>
+#else
+# include <sysinfoapi.h>
 #endif
 
 #if !defined(_WIN32) && !defined(_WIN64) && !defined(_POSIX_VERSION)
@@ -76,5 +79,36 @@ int cmp_localtime(const std::time_t *time_value, std::tm *output)
     return (-1);
 #  endif
 # endif
+#endif
+}
+
+int cmp_time_get_time_of_day(struct timeval *time_value)
+{
+    if (!time_value)
+    {
+        ft_errno = FT_EINVAL;
+        return (-1);
+    }
+#if defined(_WIN32) || defined(_WIN64)
+    FILETIME file_time;
+    ULARGE_INTEGER file_time_value;
+    unsigned long long microseconds_since_epoch;
+
+    GetSystemTimeAsFileTime(&file_time);
+    file_time_value.LowPart = file_time.dwLowDateTime;
+    file_time_value.HighPart = file_time.dwHighDateTime;
+    microseconds_since_epoch = (file_time_value.QuadPart - 116444736000000000ULL) / 10ULL;
+    time_value->tv_sec = static_cast<long>(microseconds_since_epoch / 1000000ULL);
+    time_value->tv_usec = static_cast<long>(microseconds_since_epoch % 1000000ULL);
+    ft_errno = ER_SUCCESS;
+    return (0);
+#else
+    if (gettimeofday(time_value, ft_nullptr) == 0)
+    {
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    ft_errno = errno + ERRNO_OFFSET;
+    return (-1);
 #endif
 }

@@ -2,6 +2,7 @@
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
+#include <cerrno>
 #include <cstdio>
 
 static void create_test_file(void)
@@ -34,7 +35,7 @@ FT_TEST(test_fopen_invalid, "ft_fopen invalid path")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_fopen("missing_file.txt", "r"));
-    FT_ASSERT_EQ(FILE_INVALID_FD, ft_errno);
+    FT_ASSERT_EQ(ENOENT + ERRNO_OFFSET, ft_errno);
     return (1);
 }
 

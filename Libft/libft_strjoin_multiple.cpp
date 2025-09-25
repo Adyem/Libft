@@ -58,6 +58,7 @@ char *ft_strjoin_multiple(int count, ...)
     if (total_length == SIZE_MAX)
     {
         ft_errno = FT_ERANGE;
+        cma_free(cached_lengths);
         return (ft_nullptr);
     }
     char *result = static_cast<char*>(cma_malloc(total_length + 1));

@@ -1,21 +1,17 @@
 #include "libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "../Time/time.hpp"
 #include <cerrno>
-#include <sys/time.h>
 
 int64_t ft_time_ms(void)
 {
     struct timeval time_value;
     int64_t milliseconds;
 
-    if (gettimeofday(&time_value, ft_nullptr) != 0)
-    {
-        ft_errno = errno + ERRNO_OFFSET;
+    if (cmp_time_get_time_of_day(&time_value) != 0)
         return (-1);
-    }
-    ft_errno = ER_SUCCESS;
     milliseconds = static_cast<int64_t>(time_value.tv_sec) * 1000;
     milliseconds += static_cast<int64_t>(time_value.tv_usec) / 1000;
     return (milliseconds);

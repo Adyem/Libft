@@ -13,6 +13,11 @@ class ft_socket;
 # include <BaseTsd.h>
 # include <sys/stat.h>
 # include <windows.h>
+struct timeval
+{
+    long tv_sec;
+    long tv_usec;
+};
 typedef SSIZE_T ssize_t;
 # ifndef O_DIRECTORY
 #  define O_DIRECTORY 0
@@ -32,6 +37,7 @@ ssize_t cmp_write(int file_descriptor, const void *buffer, unsigned int count);
 # include <fcntl.h>
 # include <unistd.h>
 # include <sys/stat.h>
+# include <sys/time.h>
 struct file_dir
 {
     intptr_t fd;
@@ -80,6 +86,7 @@ unsigned int cmp_get_cpu_count(void);
 unsigned long long cmp_get_total_memory(void);
 std::time_t cmp_timegm(std::tm *time_pointer);
 int cmp_localtime(const std::time_t *time_value, std::tm *output);
+int cmp_time_get_time_of_day(struct timeval *time_value);
 
 ssize_t cmp_su_write(int file_descriptor, const char *buffer, size_t length);
 ssize_t cmp_socket_send_all(ft_socket *socket_object, const void *buffer,
