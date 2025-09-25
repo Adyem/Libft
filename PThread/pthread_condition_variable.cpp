@@ -4,6 +4,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
 #include <cerrno>
+#include <time.h>
 
 pt_condition_variable::pt_condition_variable()
     : _condition(), _mutex(), _condition_initialized(false), _mutex_initialized(false), _error_code(ER_SUCCESS)
@@ -14,11 +15,34 @@ pt_condition_variable::pt_condition_variable()
         return ;
     }
     this->_mutex_initialized = true;
+#if defined(CLOCK_MONOTONIC)
+    pthread_condattr_t condition_attributes;
+
+    if (pthread_condattr_init(&condition_attributes) != 0)
+    {
+        this->set_error(errno + ERRNO_OFFSET);
+        return ;
+    }
+    if (pthread_condattr_setclock(&condition_attributes, CLOCK_MONOTONIC) != 0)
+    {
+        this->set_error(errno + ERRNO_OFFSET);
+        pthread_condattr_destroy(&condition_attributes);
+        return ;
+    }
+    if (pt_cond_init(&this->_condition, &condition_attributes) != 0)
+    {
+        this->set_error(ft_errno);
+        pthread_condattr_destroy(&condition_attributes);
+        return ;
+    }
+    pthread_condattr_destroy(&condition_attributes);
+#else
     if (pt_cond_init(&this->_condition, ft_nullptr) != 0)
     {
         this->set_error(ft_errno);
         return ;
     }
+#endif
     this->_condition_initialized = true;
     this->set_error(ER_SUCCESS);
     return ;
