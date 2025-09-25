@@ -25,7 +25,7 @@ const char *be_getEncryptionKey(void)
         key[key_length] = '\0';
         return (key);
     }
-    unsigned int seed_value = static_cast<unsigned int>(ft_random_seed(ft_nullptr));
+    uint32_t seed_value = ft_random_seed(ft_nullptr);
     size_t index = 0;
     while (index < key_length)
     {

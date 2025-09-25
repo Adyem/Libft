@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <random>
 
-int ft_random_seed(const char *seed_string)
+uint32_t ft_random_seed(const char *seed_string)
 {
     if (seed_string != ft_nullptr)
     {
@@ -12,8 +12,9 @@ int ft_random_seed(const char *seed_string)
             hash ^= static_cast<unsigned char>(*seed_string++);
             hash *= 16777619u;
         }
-        return (static_cast<int>(hash));
+        return (hash);
     }
     std::random_device random_device;
-    return (static_cast<int>(random_device()));
+    std::uniform_int_distribution<uint32_t> distribution;
+    return (distribution(random_device));
 }
