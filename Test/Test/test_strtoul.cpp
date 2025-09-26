@@ -33,6 +33,25 @@ FT_TEST(test_strtoul_base0, "ft_strtoul base 0 hex prefix")
     return (1);
 }
 
+FT_TEST(test_strtoul_invalid_base, "ft_strtoul invalid base returns error and input pointer")
+{
+    const char *input_string = "456";
+    char *end_pointer;
+
+    end_pointer = reinterpret_cast<char *>(0x1);
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(0UL, ft_strtoul(input_string, &end_pointer, 1));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(const_cast<char *>(input_string), end_pointer);
+
+    end_pointer = reinterpret_cast<char *>(0x1);
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(0UL, ft_strtoul(input_string, &end_pointer, 37));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(const_cast<char *>(input_string), end_pointer);
+    return (1);
+}
+
 FT_TEST(test_strtoul_above_long_max, "ft_strtoul parses values above FT_LONG_MAX")
 {
     char value_buffer[64];
