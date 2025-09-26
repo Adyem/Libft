@@ -2,6 +2,8 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
+#include "../../Compatebility/compatebility_internal.hpp"
+#include <cerrno>
 
 FT_TEST(test_ft_unsetenv_rejects_empty_name, "ft_unsetenv rejects empty names")
 {
@@ -31,4 +33,94 @@ FT_TEST(test_ft_unsetenv_success_resets_errno, "ft_unsetenv clears ft_errno on s
     FT_ASSERT_EQ(ft_nullptr, ft_getenv(variable_name));
     return (1);
 }
+
+FT_TEST(test_ft_unsetenv_failure_propagates_errno, "ft_unsetenv propagates errno on failure")
+{
+    const char *variable_name;
+    int function_result;
+
+    variable_name = "LIBFT_TEST_UNSET_FAIL";
+    FT_ASSERT_EQ(0, ft_setenv(variable_name, "value", 1));
+    cmp_set_force_unsetenv_result(-1, ENOMEM);
+    ft_errno = ER_SUCCESS;
+    function_result = ft_unsetenv(variable_name);
+    cmp_clear_force_unsetenv_result();
+    FT_ASSERT_EQ(-1, function_result);
+    FT_ASSERT_EQ(ENOMEM + ERRNO_OFFSET, ft_errno);
+    ft_unsetenv(variable_name);
+    return (1);
+}
+
+FT_TEST(test_ft_unsetenv_failure_without_errno, "ft_unsetenv falls back when errno missing")
+{
+    const char *variable_name;
+    int function_result;
+
+    variable_name = "LIBFT_TEST_UNSET_NO_ERRNO";
+    FT_ASSERT_EQ(0, ft_setenv(variable_name, "value", 1));
+    cmp_set_force_unsetenv_result(-1, 0);
+    ft_errno = ER_SUCCESS;
+    function_result = ft_unsetenv(variable_name);
+    cmp_clear_force_unsetenv_result();
+    FT_ASSERT_EQ(-1, function_result);
+    FT_ASSERT_EQ(FT_ETERM, ft_errno);
+    ft_unsetenv(variable_name);
+    return (1);
+}
+
+#if defined(_WIN32) || defined(_WIN64)
+FT_TEST(test_ft_unsetenv_failure_uses_return_value, "ft_unsetenv uses return value on Windows")
+{
+    const char *variable_name;
+    int function_result;
+
+    variable_name = "LIBFT_TEST_UNSET_WIN_RETURN";
+    FT_ASSERT_EQ(0, ft_setenv(variable_name, "value", 1));
+    cmp_set_force_unsetenv_result(42, 0);
+    cmp_set_force_unsetenv_windows_errors(0, 0);
+    ft_errno = ER_SUCCESS;
+    function_result = ft_unsetenv(variable_name);
+    cmp_clear_force_unsetenv_result();
+    FT_ASSERT_EQ(42, function_result);
+    FT_ASSERT_EQ(42 + ERRNO_OFFSET, ft_errno);
+    ft_unsetenv(variable_name);
+    return (1);
+}
+
+FT_TEST(test_ft_unsetenv_failure_uses_windows_errors, "ft_unsetenv falls back to Windows errors")
+{
+    const char *variable_name;
+    int function_result;
+
+    variable_name = "LIBFT_TEST_UNSET_WIN_ERRORS";
+    FT_ASSERT_EQ(0, ft_setenv(variable_name, "value", 1));
+    cmp_set_force_unsetenv_result(-1, 0);
+    cmp_set_force_unsetenv_windows_errors(123, 456);
+    ft_errno = ER_SUCCESS;
+    function_result = ft_unsetenv(variable_name);
+    cmp_clear_force_unsetenv_result();
+    FT_ASSERT_EQ(-1, function_result);
+    FT_ASSERT_EQ(123 + ERRNO_OFFSET, ft_errno);
+    ft_unsetenv(variable_name);
+    return (1);
+}
+
+FT_TEST(test_ft_unsetenv_failure_uses_wsa_error, "ft_unsetenv uses WSA error when needed")
+{
+    const char *variable_name;
+    int function_result;
+
+    variable_name = "LIBFT_TEST_UNSET_WIN_WSA";
+    FT_ASSERT_EQ(0, ft_setenv(variable_name, "value", 1));
+    cmp_set_force_unsetenv_result(-1, 0);
+    cmp_set_force_unsetenv_windows_errors(0, 321);
+    ft_errno = ER_SUCCESS;
+    function_result = ft_unsetenv(variable_name);
+    cmp_clear_force_unsetenv_result();
+    FT_ASSERT_EQ(-1, function_result);
+    FT_ASSERT_EQ(321 + ERRNO_OFFSET, ft_errno);
+    ft_unsetenv(variable_name);
+    return (1);
+}
+#endif
 

@@ -3,8 +3,10 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include <cstdlib>
 #include <ctime>
+#include <cerrno>
 
 #if defined(_WIN32) || defined(_WIN64)
+# include <winsock2.h>
 # include <windows.h>
 # include <sysinfoapi.h>
 #else
@@ -14,6 +16,44 @@
 #  include <sys/sysctl.h>
 # endif
 #endif
+
+static int global_force_unsetenv_enabled = 0;
+static int global_force_unsetenv_result = 0;
+static int global_force_unsetenv_errno_value = 0;
+#if defined(_WIN32) || defined(_WIN64)
+static int global_force_unsetenv_last_error = 0;
+static int global_force_unsetenv_socket_error = 0;
+#endif
+
+void cmp_set_force_unsetenv_result(int result, int errno_value)
+{
+    global_force_unsetenv_enabled = 1;
+    global_force_unsetenv_result = result;
+    global_force_unsetenv_errno_value = errno_value;
+#if defined(_WIN32) || defined(_WIN64)
+    global_force_unsetenv_last_error = 0;
+    global_force_unsetenv_socket_error = 0;
+#endif
+    return ;
+}
+
+void cmp_clear_force_unsetenv_result(void)
+{
+    global_force_unsetenv_enabled = 0;
+    return ;
+}
+
+void cmp_set_force_unsetenv_windows_errors(int last_error, int socket_error)
+{
+#if defined(_WIN32) || defined(_WIN64)
+    global_force_unsetenv_last_error = last_error;
+    global_force_unsetenv_socket_error = socket_error;
+#else
+    (void)last_error;
+    (void)socket_error;
+#endif
+    return ;
+}
 
 int cmp_setenv(const char *name, const char *value, int overwrite)
 {
@@ -29,8 +69,20 @@ int cmp_setenv(const char *name, const char *value, int overwrite)
 int cmp_unsetenv(const char *name)
 {
 #if defined(_WIN32) || defined(_WIN64)
+    if (global_force_unsetenv_enabled != 0)
+    {
+        errno = global_force_unsetenv_errno_value;
+        SetLastError(global_force_unsetenv_last_error);
+        WSASetLastError(global_force_unsetenv_socket_error);
+        return (global_force_unsetenv_result);
+    }
     return (_putenv_s(name, ""));
 #else
+    if (global_force_unsetenv_enabled != 0)
+    {
+        errno = global_force_unsetenv_errno_value;
+        return (global_force_unsetenv_result);
+    }
     return (unsetenv(name));
 #endif
 }
