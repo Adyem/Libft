@@ -1,9 +1,27 @@
 #include "../../File/file_utils.hpp"
+#include "../../File/open_dir.hpp"
 #include "../../Libft/libft.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Compatebility/compatebility_internal.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include <cstdio>
+#if defined(_WIN32) || defined(_WIN64)
+# include <windows.h>
+#else
+# include <unistd.h>
+#endif
+
+static void remove_directory_if_present(const char *directory_path)
+{
+    if (cmp_directory_exists(directory_path) != 1)
+        return ;
+#if defined(_WIN32) || defined(_WIN64)
+    RemoveDirectoryA(directory_path);
+#else
+    rmdir(directory_path);
+#endif
+    return ;
+}
 
 static void create_cross_device_test_file(const char *path)
 {
@@ -59,5 +77,18 @@ FT_TEST(test_file_move_cross_device_fallback, "file_move falls back to copy and 
     FT_ASSERT_EQ(0, ft_strcmp(destination_buffer, "cross-device move payload"));
     FT_ASSERT_EQ(FT_SUCCESS, ft_fclose(destination_file));
     FT_ASSERT_EQ(0, file_delete(destination_path));
+    return (1);
+}
+
+FT_TEST(test_file_dir_exists_matches_file_exists_semantics, "file_dir_exists returns 1 when directory exists")
+{
+    const char *directory_path = "test_file_dir_exists_matches_file_exists_semantics";
+
+    remove_directory_if_present(directory_path);
+    FT_ASSERT_EQ(0, file_dir_exists(directory_path));
+    FT_ASSERT_EQ(0, file_create_directory(directory_path, 0777));
+    FT_ASSERT_EQ(1, file_dir_exists(directory_path));
+    remove_directory_if_present(directory_path);
+    FT_ASSERT_EQ(0, file_dir_exists(directory_path));
     return (1);
 }
