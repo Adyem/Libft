@@ -13,11 +13,8 @@ int64_t ft_time_ms(void)
     ft_errno = ER_SUCCESS;
     if (cmp_time_get_time_of_day(&time_value) != 0)
     {
-        int system_error;
-
-        system_error = errno;
-        if (system_error != 0)
-            ft_errno = system_error + ERRNO_OFFSET;
+        if (errno != 0)
+            ft_errno = errno + ERRNO_OFFSET;
         else
             ft_errno = FT_ETERM;
         return (-1);
