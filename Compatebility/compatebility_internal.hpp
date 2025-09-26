@@ -66,6 +66,7 @@ int cmp_file_delete(const char *path);
 int cmp_file_move(const char *source_path, const char *destination_path);
 int cmp_file_copy(const char *source_path, const char *destination_path);
 int cmp_file_create_directory(const char *path, mode_t mode);
+void cmp_set_force_cross_device_move(int force_cross_device_move);
 
 int cmp_thread_equal(pthread_t thread1, pthread_t thread2);
 int cmp_thread_cancel(pthread_t thread);
