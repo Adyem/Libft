@@ -1,5 +1,6 @@
 #include "../../Libft/libft.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
+#include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 
 FT_TEST(test_strnstr_basic, "ft_strnstr basic")
@@ -39,6 +40,18 @@ FT_TEST(test_strnstr_zero_size, "ft_strnstr zero size")
 FT_TEST(test_strnstr_null_arguments, "ft_strnstr null arguments return nullptr")
 {
     FT_ASSERT_EQ(ft_nullptr, ft_strnstr(ft_nullptr, "abc", 3));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
     FT_ASSERT_EQ(ft_nullptr, ft_strnstr("abc", ft_nullptr, 3));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strnstr_errno_resets_on_success, "ft_strnstr resets errno on success")
+{
+    const char *haystack = "prefix";
+
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(haystack + 3, ft_strnstr(haystack, "fix", 6));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
