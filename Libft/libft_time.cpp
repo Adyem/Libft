@@ -38,6 +38,10 @@ char *ft_time_format(char *buffer, size_t buffer_size)
     ft_errno = ER_SUCCESS;
     current_time = time_now();
     time_local(current_time, &time_info);
+    if (ft_errno != ER_SUCCESS)
+    {
+        return (ft_nullptr);
+    }
     formatted_length = time_strftime(buffer, buffer_size, "%Y-%m-%d %H:%M:%S", &time_info);
     if (formatted_length == 0)
     {
