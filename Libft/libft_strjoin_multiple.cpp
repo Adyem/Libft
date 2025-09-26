@@ -36,7 +36,6 @@ char *ft_strjoin_multiple(int count, ...)
             size_t measured_length = ft_strlen_size_t(current_string);
             if (ft_errno != ER_SUCCESS)
             {
-                ft_errno = FT_ERANGE;
                 va_end(args);
                 cma_free(cached_lengths);
                 return (ft_nullptr);
