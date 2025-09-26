@@ -28,6 +28,24 @@ FT_TEST(test_strtok_edge, "ft_strtok edge")
     return (1);
 }
 
+FT_TEST(test_strtok_switch_delimiters_same_pointer, "ft_strtok rebuilds when delimiters mutate")
+{
+    char buffer[32] = "alpha,beta.gamma";
+    char delimiter_buffer[3] = {0};
+    char *token;
+
+    delimiter_buffer[0] = ',';
+    token = ft_strtok(buffer, delimiter_buffer);
+    FT_ASSERT_EQ(0, ft_strcmp("alpha", token));
+    delimiter_buffer[0] = '.';
+    token = ft_strtok(ft_nullptr, delimiter_buffer);
+    FT_ASSERT_EQ(0, ft_strcmp("beta", token));
+    token = ft_strtok(ft_nullptr, delimiter_buffer);
+    FT_ASSERT_EQ(0, ft_strcmp("gamma", token));
+    FT_ASSERT_EQ(ft_nullptr, ft_strtok(ft_nullptr, delimiter_buffer));
+    return (1);
+}
+
 FT_TEST(test_strtok_reinitialize, "ft_strtok resets when given a new string")
 {
     char first_string[16] = "alpha beta";
