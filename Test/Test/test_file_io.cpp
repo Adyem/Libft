@@ -1,6 +1,7 @@
 #include "../../Libft/libft.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
+#include "../../File/open_dir.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <cerrno>
 #include <cstdio>
@@ -109,5 +110,18 @@ FT_TEST(test_fgets_edge_cases, "ft_fgets edge cases")
     FT_ASSERT_EQ(ft_nullptr, ft_fgets(buffer, 5, ft_nullptr));
     FT_ASSERT_EQ(FT_EINVAL, ft_errno);
     FT_ASSERT_EQ(FT_SUCCESS, ft_fclose(file));
+    return (1);
+}
+
+FT_TEST(test_file_readdir_returns_entries, "file_readdir yields directory entries")
+{
+    file_dir *directory_stream;
+    file_dirent *directory_entry;
+
+    directory_stream = file_opendir(".");
+    FT_ASSERT(directory_stream != ft_nullptr);
+    directory_entry = file_readdir(directory_stream);
+    FT_ASSERT(directory_entry != ft_nullptr);
+    FT_ASSERT_EQ(0, file_closedir(directory_stream));
     return (1);
 }
