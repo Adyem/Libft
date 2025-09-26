@@ -2,11 +2,11 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 
-size_t    ft_strlcat(char *destination, const char *source, size_t bufferSize)
+size_t ft_strlcat(char *destination, const char *source, size_t buffer_size)
 {
-    size_t    destLength = 0;
-    size_t    sourceIndex = 0;
-    size_t    sourceLength = 0;
+    size_t destination_length;
+    size_t source_length;
+    size_t copy_index;
 
     ft_errno = ER_SUCCESS;
     if (destination == ft_nullptr || source == ft_nullptr)
@@ -14,15 +14,20 @@ size_t    ft_strlcat(char *destination, const char *source, size_t bufferSize)
         ft_errno = FT_EINVAL;
         return (0);
     }
-    while (destination[destLength] && destLength < bufferSize)
-        destLength++;
-    while (source[sourceIndex] && (destLength + sourceIndex + 1) < bufferSize)
+    destination_length = ft_strlen_size_t(destination);
+    if (ft_errno != ER_SUCCESS)
+        return (0);
+    source_length = ft_strlen_size_t(source);
+    if (ft_errno != ER_SUCCESS)
+        return (0);
+    if (buffer_size <= destination_length)
+        return (buffer_size + source_length);
+    copy_index = 0;
+    while ((destination_length + copy_index + 1) < buffer_size && source[copy_index])
     {
-        destination[destLength + sourceIndex] = source[sourceIndex];
-        sourceIndex++;
+        destination[destination_length + copy_index] = source[copy_index];
+        copy_index++;
     }
-    if (destLength < bufferSize)
-        destination[destLength + sourceIndex] = '\0';
-    sourceLength = ft_strlen_size_t(source);
-    return (destLength + sourceLength);
+    destination[destination_length + copy_index] = '\0';
+    return (destination_length + source_length);
 }
