@@ -63,8 +63,8 @@ int cmp_directory_exists(const char *path)
 {
     DWORD attr = GetFileAttributesA(path);
     if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY))
-        return (0);
-    return (1);
+        return (1);
+    return (0);
 }
 
 #else
@@ -180,8 +180,8 @@ int cmp_directory_exists(const char *path)
 {
     struct stat stat_buffer;
     if (stat(path, &stat_buffer) == 0 && S_ISDIR(stat_buffer.st_mode))
-        return (0);
-    return (1);
+        return (1);
+    return (0);
 }
 
 #endif
