@@ -24,6 +24,8 @@ static bool g_time_force_failure = false;
 static int g_time_failure_errno = EINVAL;
 static bool g_time_sleep_capture_enabled = false;
 static std::vector<unsigned int> g_time_sleep_calls;
+static bool g_time_local_force_failure = false;
+static int g_time_local_failure_errno = EINVAL;
 
 int pt_thread_sleep(unsigned int milliseconds)
 {
@@ -71,6 +73,45 @@ extern "C" int gettimeofday(struct timeval *time_value, void *timezone_pointer)
     return (fallback_gettimeofday(time_value));
 #endif
 }
+
+#if defined(_WIN32) || defined(_WIN64)
+extern "C" errno_t localtime_s(std::tm *output, const std::time_t *time_value)
+{
+    std::tm *temporary;
+
+    if (g_time_local_force_failure)
+    {
+        errno = g_time_local_failure_errno;
+        return (g_time_local_failure_errno);
+    }
+    temporary = std::localtime(time_value);
+    if (!temporary)
+    {
+        errno = EINVAL;
+        return (EINVAL);
+    }
+    *output = *temporary;
+    return (0);
+}
+#elif defined(_POSIX_VERSION)
+extern "C" std::tm *localtime_r(const std::time_t *time_value, std::tm *output)
+{
+    std::tm *temporary;
+
+    if (g_time_local_force_failure)
+    {
+        errno = g_time_local_failure_errno;
+        return (ft_nullptr);
+    }
+    temporary = std::localtime(time_value);
+    if (!temporary)
+    {
+        return (ft_nullptr);
+    }
+    *output = *temporary;
+    return (output);
+}
+#endif
 
 FT_TEST(test_time_ms_basic, "ft_time_ms increasing")
 {
@@ -128,6 +169,21 @@ FT_TEST(test_time_format_small_buffer, "ft_time_format detects insufficient spac
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_time_format(buffer, sizeof(buffer)));
     FT_ASSERT_EQ(FT_ERANGE, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_time_format_time_local_failure, "ft_time_format propagates time_local errors")
+{
+    char buffer[32];
+
+    std::memset(buffer, 'Z', sizeof(buffer));
+    g_time_local_force_failure = true;
+    g_time_local_failure_errno = EOVERFLOW;
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(ft_nullptr, ft_time_format(buffer, sizeof(buffer)));
+    FT_ASSERT_EQ(EOVERFLOW + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ('Z', buffer[0]);
+    g_time_local_force_failure = false;
     return (1);
 }
 
