@@ -26,6 +26,8 @@ class ft_inventory
         mutable int         _error;
 
         void set_error(int err) const noexcept;
+        bool handle_items_error() noexcept;
+        bool check_item_errors(const ft_sharedptr<ft_item> &item) const noexcept;
 
     public:
         ft_inventory(size_t capacity = 0, int weight_limit = 0) noexcept;

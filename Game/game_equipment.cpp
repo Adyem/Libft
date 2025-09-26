@@ -55,24 +55,31 @@ void ft_equipment::set_error(int err) const noexcept
     return ;
 }
 
-int ft_equipment::equip(int slot, const ft_sharedptr<ft_item> &item) noexcept
+bool ft_equipment::validate_item(const ft_sharedptr<ft_item> &item) noexcept
 {
-    this->_error_code = ER_SUCCESS;
     if (!item)
     {
         this->set_error(GAME_GENERAL_ERROR);
-        return (this->_error_code);
+        return (true);
     }
     if (item.get_error() != ER_SUCCESS)
     {
         this->set_error(item.get_error());
-        return (this->_error_code);
+        return (true);
     }
     if (item->get_error() != ER_SUCCESS)
     {
         this->set_error(item->get_error());
-        return (this->_error_code);
+        return (true);
     }
+    return (false);
+}
+
+int ft_equipment::equip(int slot, const ft_sharedptr<ft_item> &item) noexcept
+{
+    this->set_error(ER_SUCCESS);
+    if (this->validate_item(item) == true)
+        return (this->_error_code);
     if (slot == EQUIP_HEAD)
         this->_head = item;
     else if (slot == EQUIP_CHEST)
@@ -89,6 +96,7 @@ int ft_equipment::equip(int slot, const ft_sharedptr<ft_item> &item) noexcept
 
 void ft_equipment::unequip(int slot) noexcept
 {
+    this->set_error(ER_SUCCESS);
     if (slot == EQUIP_HEAD)
         this->_head = ft_sharedptr<ft_item>();
     else if (slot == EQUIP_CHEST)
