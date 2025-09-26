@@ -32,6 +32,13 @@ long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
             *end_pointer = ft_nullptr;
         return (0L);
     }
+    if (numeric_base != 0 && (numeric_base < 2 || numeric_base > 36))
+    {
+        ft_errno = FT_EINVAL;
+        if (end_pointer != ft_nullptr)
+            *end_pointer = const_cast<char *>(input_string);
+        return (0L);
+    }
     ft_errno = ER_SUCCESS;
     while (*current_character == ' ' || (*current_character >= '\t'
                 && *current_character <= '\r'))

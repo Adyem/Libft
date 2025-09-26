@@ -50,6 +50,25 @@ FT_TEST(test_strtol_invalid, "ft_strtol invalid string")
     return (1);
 }
 
+FT_TEST(test_strtol_invalid_base, "ft_strtol invalid base returns error and input pointer")
+{
+    const char *input_string = "123";
+    char *end_pointer;
+
+    end_pointer = reinterpret_cast<char *>(0x1);
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(0, ft_strtol(input_string, &end_pointer, 1));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(const_cast<char *>(input_string), end_pointer);
+
+    end_pointer = reinterpret_cast<char *>(0x1);
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(0, ft_strtol(input_string, &end_pointer, 37));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(const_cast<char *>(input_string), end_pointer);
+    return (1);
+}
+
 FT_TEST(test_strtol_maximum_in_range, "ft_strtol handles FT_LONG_MAX without overflow")
 {
     char *end;
