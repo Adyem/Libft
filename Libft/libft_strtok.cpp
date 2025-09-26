@@ -6,6 +6,8 @@ char    *ft_strtok(char *string, const char *delimiters)
     static thread_local char *saved_string = ft_nullptr;
     static thread_local bool delimiter_lookup[256];
     static thread_local const char *cached_delimiters = ft_nullptr;
+    static thread_local size_t cached_delimiters_length = 0;
+    static thread_local size_t cached_delimiters_hash = 0;
     static thread_local bool delimiter_lookup_initialized = false;
     bool            delimiter_table_rebuild_required;
     char            *token_start;
@@ -13,15 +15,35 @@ char    *ft_strtok(char *string, const char *delimiters)
     size_t          delimiter_index;
     size_t          delimiter_table_index;
     unsigned char   current_character_value;
+    size_t          new_delimiters_length;
+    size_t          new_delimiters_hash;
+    unsigned char   delimiter_character_value;
 
     if (string != ft_nullptr)
+    {
         saved_string = string;
+        delimiter_lookup_initialized = false;
+        cached_delimiters = ft_nullptr;
+        cached_delimiters_length = 0;
+        cached_delimiters_hash = 0;
+    }
     if (saved_string == ft_nullptr || delimiters == ft_nullptr)
         return (ft_nullptr);
+    new_delimiters_hash = 5381;
+    delimiter_index = 0;
+    while (delimiters[delimiter_index] != '\0')
+    {
+        delimiter_character_value = static_cast<unsigned char>(delimiters[delimiter_index]);
+        new_delimiters_hash = ((new_delimiters_hash << 5) + new_delimiters_hash) + delimiter_character_value;
+        delimiter_index++;
+    }
+    new_delimiters_length = delimiter_index;
     delimiter_table_rebuild_required = true;
     if (delimiter_lookup_initialized == true)
         if (cached_delimiters == delimiters)
-            delimiter_table_rebuild_required = false;
+            if (cached_delimiters_length == new_delimiters_length)
+                if (cached_delimiters_hash == new_delimiters_hash)
+                    delimiter_table_rebuild_required = false;
     if (delimiter_table_rebuild_required == true)
     {
         delimiter_table_index = 0;
@@ -38,6 +60,8 @@ char    *ft_strtok(char *string, const char *delimiters)
             delimiter_index++;
         }
         cached_delimiters = delimiters;
+        cached_delimiters_length = new_delimiters_length;
+        cached_delimiters_hash = new_delimiters_hash;
         delimiter_lookup_initialized = true;
     }
     current_pointer = saved_string;
