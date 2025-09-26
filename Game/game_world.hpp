@@ -17,6 +17,7 @@ class ft_world
         mutable int        _error;
 
         void set_error(int err) const noexcept;
+        bool propagate_scheduler_state_error() const noexcept;
 
     public:
         ft_world() noexcept;
