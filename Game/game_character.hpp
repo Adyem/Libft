@@ -83,6 +83,8 @@ class ft_character
         void    set_error(int err) const noexcept;
         void    apply_modifier(const ft_item_modifier &mod, int sign) noexcept;
         long long apply_skill_modifiers(long long damage) const noexcept;
+        bool    handle_component_error(int error) noexcept;
+        bool    check_internal_errors() noexcept;
 
     public:
         ft_character() noexcept;

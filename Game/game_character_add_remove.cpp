@@ -40,11 +40,8 @@ void ft_character::sub_experience(int experience) noexcept
 int ft_character::add_skill(const ft_skill &skill) noexcept
 {
     this->_skills.insert(skill.get_id(), skill);
-    if (this->_skills.get_error() != ER_SUCCESS)
-    {
-        this->set_error(this->_skills.get_error());
+    if (this->handle_component_error(this->_skills.get_error()) == true)
         return (this->_error);
-    }
     return (ER_SUCCESS);
 }
 

@@ -5,11 +5,8 @@ ft_inventory::ft_inventory(size_t capacity, int weight_limit) noexcept
       _weight_limit(weight_limit), _current_weight(0),
       _next_slot(0), _error(ER_SUCCESS)
 {
-    if (this->_items.get_error() != ER_SUCCESS)
-    {
-        this->set_error(this->_items.get_error());
+    if (this->handle_items_error() == true)
         return ;
-    }
     this->set_error(ER_SUCCESS);
     return ;
 }
@@ -19,11 +16,8 @@ ft_inventory::ft_inventory(const ft_inventory &other) noexcept
       _weight_limit(other._weight_limit), _current_weight(other._current_weight),
       _next_slot(other._next_slot), _error(other._error)
 {
-    if (this->_items.get_error() != ER_SUCCESS)
-    {
-        this->set_error(this->_items.get_error());
+    if (this->handle_items_error() == true)
         return ;
-    }
     this->set_error(other._error);
     return ;
 }
@@ -38,11 +32,8 @@ ft_inventory &ft_inventory::operator=(const ft_inventory &other) noexcept
         this->_weight_limit = other._weight_limit;
         this->_current_weight = other._current_weight;
         this->_next_slot = other._next_slot;
-        if (this->_items.get_error() != ER_SUCCESS)
-        {
-            this->set_error(this->_items.get_error());
+        if (this->handle_items_error() == true)
             return (*this);
-        }
         this->set_error(other._error);
     }
     return (*this);
@@ -53,11 +44,8 @@ ft_inventory::ft_inventory(ft_inventory &&other) noexcept
       _weight_limit(other._weight_limit), _current_weight(other._current_weight),
       _next_slot(other._next_slot), _error(other._error)
 {
-    if (this->_items.get_error() != ER_SUCCESS)
-    {
-        this->set_error(this->_items.get_error());
+    if (this->handle_items_error() == true)
         return ;
-    }
     this->set_error(this->_error);
     other._capacity = 0;
     other._used_slots = 0;
@@ -79,11 +67,8 @@ ft_inventory &ft_inventory::operator=(ft_inventory &&other) noexcept
         this->_weight_limit = other._weight_limit;
         this->_current_weight = other._current_weight;
         this->_next_slot = other._next_slot;
-        if (this->_items.get_error() != ER_SUCCESS)
-        {
-            this->set_error(this->_items.get_error());
+        if (this->handle_items_error() == true)
             return (*this);
-        }
         this->set_error(other._error);
         other._capacity = 0;
         other._used_slots = 0;
@@ -186,24 +171,40 @@ void ft_inventory::set_error(int err) const noexcept
     return ;
 }
 
-int ft_inventory::add_item(const ft_sharedptr<ft_item> &item) noexcept
+bool ft_inventory::handle_items_error() noexcept
 {
-    this->set_error(ER_SUCCESS);
+    int items_error = this->_items.get_error();
+    if (items_error == ER_SUCCESS)
+        return (false);
+    this->set_error(items_error);
+    return (true);
+}
+
+bool ft_inventory::check_item_errors(const ft_sharedptr<ft_item> &item) const noexcept
+{
     if (!item)
     {
         this->set_error(GAME_GENERAL_ERROR);
-        return (GAME_GENERAL_ERROR);
+        return (true);
     }
     if (item.get_error() != ER_SUCCESS)
     {
         this->set_error(item.get_error());
-        return (this->_error);
+        return (true);
     }
     if (item->get_error() != ER_SUCCESS)
     {
         this->set_error(item->get_error());
-        return (this->_error);
+        return (true);
     }
+    return (false);
+}
+
+int ft_inventory::add_item(const ft_sharedptr<ft_item> &item) noexcept
+{
+    this->set_error(ER_SUCCESS);
+    if (this->check_item_errors(item) == true)
+        return (this->_error);
     int remaining = item->get_stack_size();
 #if USE_INVENTORY_WEIGHT
     if (this->_weight_limit != 0 && this->_current_weight + remaining > this->_weight_limit)
@@ -220,16 +221,6 @@ int ft_inventory::add_item(const ft_sharedptr<ft_item> &item) noexcept
     {
         if (item_ptr->value)
         {
-            if (item_ptr->value.get_error() != ER_SUCCESS)
-            {
-                this->set_error(item_ptr->value.get_error());
-                return (this->_error);
-            }
-            if (item_ptr->value->get_error() != ER_SUCCESS)
-            {
-                this->set_error(item_ptr->value->get_error());
-                return (this->_error);
-            }
             if (item_ptr->value->get_item_id() == item_id)
             {
                 int free_space = item_ptr->value->get_max_stack() - item_ptr->value->get_stack_size();
@@ -260,14 +251,13 @@ int ft_inventory::add_item(const ft_sharedptr<ft_item> &item) noexcept
         }
 #endif
         ft_sharedptr<ft_item> new_item(new ft_item(*item));
-        if (new_item.get_error() != ER_SUCCESS)
+        int new_item_error = new_item.get_error();
+        if (!new_item || new_item_error != ER_SUCCESS)
         {
-            this->set_error(new_item.get_error());
-            return (this->_error);
-        }
-        if (new_item->get_error() != ER_SUCCESS)
-        {
-            this->set_error(new_item->get_error());
+            if (new_item_error == ER_SUCCESS)
+                this->set_error(GAME_GENERAL_ERROR);
+            else
+                this->set_error(new_item_error);
             return (this->_error);
         }
         int to_add;
@@ -277,9 +267,8 @@ int ft_inventory::add_item(const ft_sharedptr<ft_item> &item) noexcept
             to_add = new_item->get_max_stack();
         new_item->set_stack_size(to_add);
         this->_items.insert(this->_next_slot, new_item);
-        if (this->_items.get_error() != ER_SUCCESS)
+        if (this->handle_items_error() == true)
         {
-            this->set_error(this->_items.get_error());
             return (this->_error);
         }
         ++this->_next_slot;
@@ -298,23 +287,14 @@ void ft_inventory::remove_item(int slot) noexcept
     Pair<int, ft_sharedptr<ft_item> > *entry = this->_items.find(slot);
     if (entry && entry->value)
     {
-        if (entry->value.get_error() != ER_SUCCESS)
-        {
-            this->set_error(entry->value.get_error());
-            return ;
-        }
-        if (entry->value->get_error() == ER_SUCCESS)
-        {
-            this->_current_weight -= entry->value->get_stack_size();
+        this->_current_weight -= entry->value->get_stack_size();
 #if USE_INVENTORY_SLOTS
-            this->_used_slots -= entry->value->get_width() * entry->value->get_height();
+        this->_used_slots -= entry->value->get_width() * entry->value->get_height();
 #endif
-        }
     }
     this->_items.remove(slot);
-    if (this->_items.get_error() != ER_SUCCESS)
+    if (this->handle_items_error() == true)
     {
-        this->set_error(this->_items.get_error());
         return ;
     }
     this->set_error(ER_SUCCESS);
@@ -331,16 +311,6 @@ int ft_inventory::count_item(int item_id) const noexcept
     {
         if (item_ptr->value)
         {
-            if (item_ptr->value.get_error() != ER_SUCCESS)
-            {
-                this->set_error(item_ptr->value.get_error());
-                return (0);
-            }
-            if (item_ptr->value->get_error() != ER_SUCCESS)
-            {
-                this->set_error(item_ptr->value->get_error());
-                return (0);
-            }
             if (item_ptr->value->get_item_id() == item_id)
                 total += item_ptr->value->get_stack_size();
         }
@@ -365,16 +335,6 @@ int ft_inventory::count_rarity(int rarity) const noexcept
     {
         if (item_ptr->value)
         {
-            if (item_ptr->value.get_error() != ER_SUCCESS)
-            {
-                this->set_error(item_ptr->value.get_error());
-                return (0);
-            }
-            if (item_ptr->value->get_error() != ER_SUCCESS)
-            {
-                this->set_error(item_ptr->value->get_error());
-                return (0);
-            }
             if (item_ptr->value->get_rarity() == rarity)
                 total += item_ptr->value->get_stack_size();
         }
