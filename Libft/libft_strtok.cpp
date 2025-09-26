@@ -4,9 +4,12 @@
 char    *ft_strtok(char *string, const char *delimiters)
 {
     static thread_local char *saved_string = ft_nullptr;
+    static thread_local bool delimiter_lookup[256];
+    static thread_local const char *cached_delimiters = ft_nullptr;
+    static thread_local bool delimiter_lookup_initialized = false;
+    bool            delimiter_table_rebuild_required;
     char            *token_start;
     char            *current_pointer;
-    bool            delimiter_lookup[256];
     size_t          delimiter_index;
     size_t          delimiter_table_index;
     unsigned char   current_character_value;
@@ -15,18 +18,27 @@ char    *ft_strtok(char *string, const char *delimiters)
         saved_string = string;
     if (saved_string == ft_nullptr || delimiters == ft_nullptr)
         return (ft_nullptr);
-    delimiter_table_index = 0;
-    while (delimiter_table_index < 256)
+    delimiter_table_rebuild_required = true;
+    if (delimiter_lookup_initialized == true)
+        if (cached_delimiters == delimiters)
+            delimiter_table_rebuild_required = false;
+    if (delimiter_table_rebuild_required == true)
     {
-        delimiter_lookup[delimiter_table_index] = false;
-        delimiter_table_index++;
-    }
-    delimiter_index = 0;
-    while (delimiters[delimiter_index] != '\0')
-    {
-        current_character_value = static_cast<unsigned char>(delimiters[delimiter_index]);
-        delimiter_lookup[current_character_value] = true;
-        delimiter_index++;
+        delimiter_table_index = 0;
+        while (delimiter_table_index < 256)
+        {
+            delimiter_lookup[delimiter_table_index] = false;
+            delimiter_table_index++;
+        }
+        delimiter_index = 0;
+        while (delimiters[delimiter_index] != '\0')
+        {
+            current_character_value = static_cast<unsigned char>(delimiters[delimiter_index]);
+            delimiter_lookup[current_character_value] = true;
+            delimiter_index++;
+        }
+        cached_delimiters = delimiters;
+        delimiter_lookup_initialized = true;
     }
     current_pointer = saved_string;
     while (*current_pointer != '\0')
