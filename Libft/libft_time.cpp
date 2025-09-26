@@ -10,18 +10,16 @@ int64_t ft_time_ms(void)
     struct timeval time_value;
     int64_t milliseconds;
 
+    ft_errno = ER_SUCCESS;
     if (cmp_time_get_time_of_day(&time_value) != 0)
     {
         int system_error;
 
         system_error = errno;
-        if (ft_errno == ER_SUCCESS)
-        {
-            if (system_error != 0)
-                ft_errno = system_error + ERRNO_OFFSET;
-            else
-                ft_errno = FT_ETERM;
-        }
+        if (system_error != 0)
+            ft_errno = system_error + ERRNO_OFFSET;
+        else
+            ft_errno = FT_ETERM;
         return (-1);
     }
     milliseconds = static_cast<int64_t>(time_value.tv_sec) * 1000;
