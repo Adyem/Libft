@@ -15,7 +15,30 @@
 file_dir *cmp_dir_open(const char *directory_path)
 {
     WIN32_FIND_DATAA find_data;
-    HANDLE handle = FindFirstFileA(directory_path, &find_data);
+    if (directory_path == ft_nullptr)
+        return (ft_nullptr);
+    size_t directory_path_length = ft_strlen(directory_path);
+    size_t allocation_size = directory_path_length + 3;
+    char *search_path = reinterpret_cast<char*>(cma_malloc(allocation_size));
+    if (!search_path)
+        return (ft_nullptr);
+    ft_strlcpy(search_path, directory_path, allocation_size);
+    size_t search_path_length = ft_strlen(search_path);
+    if (search_path_length > 0
+        && (search_path[search_path_length - 1] == '\\'
+            || search_path[search_path_length - 1] == '/'))
+    {
+        search_path[search_path_length] = '*';
+        search_path[search_path_length + 1] = '\0';
+    }
+    else
+    {
+        search_path[search_path_length] = '\\';
+        search_path[search_path_length + 1] = '*';
+        search_path[search_path_length + 2] = '\0';
+    }
+    HANDLE handle = FindFirstFileA(search_path, &find_data);
+    cma_free(search_path);
     if (handle == INVALID_HANDLE_VALUE)
         return (ft_nullptr);
     file_dir *directory_stream = reinterpret_cast<file_dir*>(cma_malloc(sizeof(file_dir)));
