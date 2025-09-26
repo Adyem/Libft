@@ -21,6 +21,7 @@ class ft_equipment
         mutable int           _error_code;
 
         void set_error(int err) const noexcept;
+        bool validate_item(const ft_sharedptr<ft_item> &item) noexcept;
 
     public:
         ft_equipment() noexcept;
