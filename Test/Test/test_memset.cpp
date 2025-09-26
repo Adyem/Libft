@@ -1,10 +1,13 @@
 #include "../../Libft/libft.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
+#include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 
 FT_TEST(test_memset_null, "ft_memset nullptr")
 {
+    ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_memset(ft_nullptr, 'A', 3));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
     return (1);
 }
 
@@ -42,8 +45,10 @@ FT_TEST(test_memset_zero_length, "ft_memset zero length")
     buffer[1] = 'b';
     buffer[2] = 'c';
     buffer[3] = '\0';
+    ft_errno = FT_EINVAL;
     FT_ASSERT_EQ(buffer, ft_memset(buffer, 'x', 0));
     FT_ASSERT_EQ(0, ft_strcmp(buffer, "abc"));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
