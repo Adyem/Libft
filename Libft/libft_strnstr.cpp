@@ -1,33 +1,40 @@
 #include "libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
 
-char    *ft_strnstr(const char *haystack, const char *needle, size_t Length)
+char *ft_strnstr(const char *haystack, const char *needle, size_t max_length)
 {
-    size_t    haystackIndex = 0;
-    size_t    matchIndex;
-    char    *haystackPointer;
-    size_t    needleLength;
+    size_t haystack_index;
+    size_t match_index;
+    char *haystack_pointer;
+    size_t needle_length;
 
+    ft_errno = ER_SUCCESS;
     if (haystack == ft_nullptr || needle == ft_nullptr)
-        return (ft_nullptr);
-    haystackPointer = const_cast<char *>(haystack);
-    needleLength = ft_strlen(needle);
-    if (needleLength == 0 || haystack == needle)
-        return (haystackPointer);
-    while (haystackPointer[haystackIndex] != '\0' && haystackIndex < Length)
     {
-        matchIndex = 0;
-        while (haystackPointer[haystackIndex + matchIndex] != '\0'
-            && needle[matchIndex] != '\0'
-            && haystackPointer[haystackIndex + matchIndex] == needle[matchIndex]
-            && haystackIndex + matchIndex < Length)
+        ft_errno = FT_EINVAL;
+        return (ft_nullptr);
+    }
+    needle_length = ft_strlen_size_t(needle);
+    if (ft_errno != ER_SUCCESS)
+        return (ft_nullptr);
+    haystack_pointer = const_cast<char *>(haystack);
+    if (needle_length == 0 || haystack == needle)
+        return (haystack_pointer);
+    haystack_index = 0;
+    while (haystack_pointer[haystack_index] != '\0' && haystack_index < max_length)
+    {
+        match_index = 0;
+        while (haystack_pointer[haystack_index + match_index] != '\0'
+            && match_index < needle_length
+            && haystack_index + match_index < max_length
+            && haystack_pointer[haystack_index + match_index] == needle[match_index])
         {
-            matchIndex++;
+            match_index++;
         }
-        if (matchIndex == needleLength)
-            return (haystackPointer + haystackIndex);
-
-        haystackIndex++;
+        if (match_index == needle_length)
+            return (haystack_pointer + haystack_index);
+        haystack_index++;
     }
     return (ft_nullptr);
 }
