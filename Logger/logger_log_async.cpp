@@ -96,6 +96,7 @@ void ft_log_enable_async(bool enable)
         if (g_async_running)
         {
             pthread_mutex_unlock(&g_condition_mutex);
+            ft_errno = ER_SUCCESS;
             return ;
         }
         g_async_running = true;
@@ -110,12 +111,15 @@ void ft_log_enable_async(bool enable)
             g_async_running = false;
             pthread_mutex_unlock(&g_condition_mutex);
         }
+        else
+            ft_errno = ER_SUCCESS;
     }
     else
     {
         if (!g_async_running)
         {
             pthread_mutex_unlock(&g_condition_mutex);
+            ft_errno = ER_SUCCESS;
             return ;
         }
         g_async_running = false;
@@ -124,6 +128,7 @@ void ft_log_enable_async(bool enable)
             return ;
         if (pt_thread_join(g_log_thread, ft_nullptr) != 0)
             return ;
+        ft_errno = ER_SUCCESS;
     }
     return ;
 }
