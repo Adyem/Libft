@@ -80,13 +80,9 @@ int ft_websocket_server::start(const char *ip, uint16_t port, int address_family
     if (!this->_server_socket || this->_server_socket->get_error() != ER_SUCCESS)
     {
         if (this->_server_socket)
-        {
             this->set_error(this->_server_socket->get_error());
-        }
         else
-        {
             this->set_error(FT_EINVAL);
-        }
         return (1);
     }
     this->_error_code = ER_SUCCESS;
@@ -95,6 +91,7 @@ int ft_websocket_server::start(const char *ip, uint16_t port, int address_family
 
 int ft_websocket_server::perform_handshake(int client_fd)
 {
+    static const std::size_t MAX_HANDSHAKE_SIZE = 8192; // maximum accepted HTTP handshake size
     char buffer[1024];
     ssize_t bytes_received;
     ft_string request;
@@ -103,15 +100,38 @@ int ft_websocket_server::perform_handshake(int client_fd)
     ft_string key;
     ft_string accept;
     ft_string response;
+    std::size_t request_size;
 
-    bytes_received = nw_recv(client_fd, buffer, sizeof(buffer) - 1, 0);
-    if (bytes_received <= 0)
+    request.clear();
+    while (true)
     {
-        this->set_error(errno + ERRNO_OFFSET);
-        return (1);
+        if (request.size() >= MAX_HANDSHAKE_SIZE)
+        {
+            this->set_error(FT_EINVAL);
+            return (1);
+        }
+        bytes_received = nw_recv(client_fd, buffer, sizeof(buffer) - 1, 0);
+        if (bytes_received < 0)
+        {
+            this->set_error(errno + ERRNO_OFFSET);
+            return (1);
+        }
+        if (bytes_received == 0)
+        {
+            this->set_error(SOCKET_RECEIVE_FAILED);
+            return (1);
+        }
+        buffer[bytes_received] = '\0';
+        request_size = request.size();
+        if (request_size + static_cast<std::size_t>(bytes_received) > MAX_HANDSHAKE_SIZE)
+        {
+            this->set_error(FT_EINVAL);
+            return (1);
+        }
+        request.append(buffer);
+        if (ft_strstr(request.c_str(), "\r\n\r\n"))
+            break;
     }
-    buffer[bytes_received] = '\0';
-    request = buffer;
     key_line = ft_strstr(request.c_str(), "Sec-WebSocket-Key: ");
     if (!key_line)
     {
