@@ -1,6 +1,6 @@
 #include "logger_internal.hpp"
 #include "../Networking/socket_class.hpp"
-#include "../Compatebility/compatebility_internal.hpp"
+#include "../System_utils/system_utils.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
 #include <new>
@@ -32,7 +32,7 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
     address.sin_port = htons(port);
     if (nw_inet_pton(AF_INET, host, &address.sin_addr) != 1)
     {
-        cmp_close(socket_fd);
+        su_close(socket_fd);
         ft_errno = INVALID_IP_FORMAT;
         return (-1);
     }
@@ -40,7 +40,7 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
     {
         if (nw_connect(socket_fd, reinterpret_cast<struct sockaddr *>(&address), sizeof(address)) != 0)
         {
-            cmp_close(socket_fd);
+            su_close(socket_fd);
             if (ft_errno == ER_SUCCESS)
                 ft_errno = SOCKET_CONNECT_FAILED;
             return (-1);
@@ -53,14 +53,15 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
     sink = new(std::nothrow) s_network_sink;
     if (!sink)
     {
-        cmp_close(socket_fd);
+        su_close(socket_fd);
         ft_errno = FT_EALLOC;
         return (-1);
     }
     sink->socket_fd = socket_fd;
+    sink->send_function = nw_send;
     if (ft_log_add_sink(ft_network_sink, sink) != 0)
     {
-        cmp_close(socket_fd);
+        su_close(socket_fd);
         delete sink;
         if (ft_errno == ER_SUCCESS)
             ft_errno = FT_EINVAL;
@@ -73,12 +74,34 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
 void ft_network_sink(const char *message, void *user_data)
 {
     s_network_sink *sink;
-    size_t length;
+    size_t message_length;
+    size_t total_bytes_sent;
 
     sink = static_cast<s_network_sink *>(user_data);
-    if (!sink)
+    if (!sink || !message)
         return ;
-    length = ft_strlen(message);
-    nw_send(sink->socket_fd, message, length, 0);
+    if (sink->socket_fd < 0)
+        return ;
+    if (!sink->send_function)
+        sink->send_function = nw_send;
+    message_length = ft_strlen(message);
+    total_bytes_sent = 0;
+    while (total_bytes_sent < message_length)
+    {
+        ssize_t send_result;
+
+        send_result = sink->send_function(sink->socket_fd, message + total_bytes_sent, message_length - total_bytes_sent, 0);
+        if (send_result <= 0)
+        {
+            if (sink->socket_fd >= 0)
+                su_close(sink->socket_fd);
+            sink->socket_fd = -1;
+            sink->send_function = ft_nullptr;
+            ft_errno = SOCKET_SEND_FAILED;
+            return ;
+        }
+        total_bytes_sent += static_cast<size_t>(send_result);
+    }
+    ft_errno = ER_SUCCESS;
     return ;
 }
