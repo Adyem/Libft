@@ -37,6 +37,14 @@ FT_TEST(test_strnstr_zero_size, "ft_strnstr zero size")
     return (1);
 }
 
+FT_TEST(test_strnstr_empty_needle_zero_size, "ft_strnstr empty needle ignores size limit")
+{
+    const char *haystack = "hello";
+
+    FT_ASSERT_EQ(haystack, ft_strnstr(haystack, "", 0));
+    return (1);
+}
+
 FT_TEST(test_strnstr_null_arguments, "ft_strnstr null arguments return nullptr")
 {
     FT_ASSERT_EQ(ft_nullptr, ft_strnstr(ft_nullptr, "abc", 3));
@@ -53,5 +61,13 @@ FT_TEST(test_strnstr_errno_resets_on_success, "ft_strnstr resets errno on succes
     ft_errno = FT_EINVAL;
     FT_ASSERT_EQ(haystack + 3, ft_strnstr(haystack, "fix", 6));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strnstr_restart_within_limit, "ft_strnstr restarts search within limit")
+{
+    const char *haystack = "abcabcd";
+
+    FT_ASSERT_EQ(haystack + 3, ft_strnstr(haystack, "abcd", 7));
     return (1);
 }

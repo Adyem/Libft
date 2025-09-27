@@ -13,6 +13,34 @@ FT_TEST(test_ft_unsetenv_rejects_empty_name, "ft_unsetenv rejects empty names")
     return (1);
 }
 
+FT_TEST(test_ft_getenv_empty_name_sets_errno, "ft_getenv rejects empty names")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(ft_nullptr, ft_getenv(""));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_ft_getenv_missing_clears_errno, "ft_getenv clears errno when variable absent")
+{
+    const char *variable_name;
+
+    variable_name = "LIBFT_TEST_GETENV_MISSING";
+    ft_unsetenv(variable_name);
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(ft_nullptr, ft_getenv(variable_name));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_ft_setenv_null_value_sets_errno, "ft_setenv null value sets FT_EINVAL")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(-1, ft_setenv("LIBFT_TEST_NULL_VALUE", ft_nullptr, 1));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_ft_unsetenv_rejects_equals_sign, "ft_unsetenv rejects names containing equals")
 {
     ft_errno = ER_SUCCESS;

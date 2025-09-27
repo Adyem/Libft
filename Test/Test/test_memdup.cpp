@@ -1,5 +1,6 @@
 #include "../../Libft/libft.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
+#include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../CMA/CMA.hpp"
 
@@ -40,5 +41,30 @@ FT_TEST(test_memdup_zero_size, "ft_memdup zero size")
 FT_TEST(test_memdup_null_source, "ft_memdup null source")
 {
     FT_ASSERT_EQ(ft_nullptr, ft_memdup(ft_nullptr, 5));
+    return (1);
+}
+
+FT_TEST(test_memdup_independent_copy, "ft_memdup duplicates without sharing storage")
+{
+    char source[4];
+    unsigned char *duplicate;
+
+    source[0] = 'f';
+    source[1] = 'o';
+    source[2] = 'o';
+    source[3] = '!';
+    ft_errno = FT_EINVAL;
+    duplicate = static_cast<unsigned char *>(ft_memdup(source, sizeof(source)));
+    FT_ASSERT(duplicate != ft_nullptr);
+    duplicate[0] = 'b';
+    duplicate[1] = 'a';
+    duplicate[2] = 'r';
+    duplicate[3] = '?';
+    FT_ASSERT_EQ('f', source[0]);
+    FT_ASSERT_EQ('o', source[1]);
+    FT_ASSERT_EQ('o', source[2]);
+    FT_ASSERT_EQ('!', source[3]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    cma_free(duplicate);
     return (1);
 }

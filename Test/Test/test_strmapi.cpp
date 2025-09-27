@@ -1,5 +1,6 @@
 #include "../../Libft/libft.hpp"
 #include "../../CMA/CMA.hpp"
+#include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 
 static char to_upper_map(unsigned int index, char character)
@@ -8,6 +9,20 @@ static char to_upper_map(unsigned int index, char character)
     if (character >= 'a' && character <= 'z')
         return (character - 32);
     return (character);
+}
+
+static char g_strmapi_index_capture[8];
+static unsigned int g_strmapi_call_count = 0;
+
+static char index_to_digit_map(unsigned int index, char character)
+{
+    (void)character;
+    if (g_strmapi_call_count < 8)
+    {
+        g_strmapi_index_capture[g_strmapi_call_count] = static_cast<char>('0' + index);
+        g_strmapi_call_count++;
+    }
+    return (static_cast<char>('0' + index));
 }
 
 FT_TEST(test_strmapi_basic, "ft_strmapi basic")
@@ -28,5 +43,36 @@ FT_TEST(test_strmapi_basic, "ft_strmapi basic")
 
     FT_ASSERT_EQ(ft_nullptr, ft_strmapi(ft_nullptr, to_upper_map));
     FT_ASSERT_EQ(ft_nullptr, ft_strmapi("ab", ft_nullptr));
+    return (1);
+}
+
+FT_TEST(test_strmapi_uses_index_values, "ft_strmapi forwards index values to callback")
+{
+    char *result;
+
+    g_strmapi_call_count = 0;
+    g_strmapi_index_capture[0] = '\0';
+    g_strmapi_index_capture[1] = '\0';
+    g_strmapi_index_capture[2] = '\0';
+    g_strmapi_index_capture[3] = '\0';
+    result = ft_strmapi("qrst", index_to_digit_map);
+    if (result == ft_nullptr)
+        return (0);
+    g_strmapi_index_capture[g_strmapi_call_count] = '\0';
+    FT_ASSERT_EQ(0, ft_strcmp("0123", result));
+    FT_ASSERT_EQ(4u, g_strmapi_call_count);
+    FT_ASSERT_EQ(0, ft_strcmp("0123", g_strmapi_index_capture));
+    cma_free(result);
+    return (1);
+}
+
+FT_TEST(test_strmapi_null_arguments_set_errno, "ft_strmapi null inputs set FT_EINVAL")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(ft_nullptr, ft_strmapi(ft_nullptr, to_upper_map));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(ft_nullptr, ft_strmapi("sample", ft_nullptr));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
     return (1);
 }

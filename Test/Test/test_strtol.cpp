@@ -109,6 +109,17 @@ FT_TEST(test_strtol_negative_overflow, "ft_strtol clamps negative overflow and r
     return (1);
 }
 
+FT_TEST(test_strtol_uppercase_hex_prefix, "ft_strtol accepts uppercase hex prefix")
+{
+    char *end_pointer;
+
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(255, ft_strtol("0Xff", &end_pointer, 0));
+    FT_ASSERT_EQ('\0', *end_pointer);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_strtol_null_input, "ft_strtol null input sets errno and end pointer")
 {
     char *end_pointer = reinterpret_cast<char *>(0x1);

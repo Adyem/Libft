@@ -59,3 +59,16 @@ FT_TEST(test_strjoin_multiple_resets_errno_before_joining, "cma_strjoin_multiple
     cma_free(joined_string);
     return (result);
 }
+
+FT_TEST(test_strjoin_multiple_retains_empty_segments, "cma_strjoin_multiple preserves empty strings")
+{
+    char *joined;
+    int result;
+
+    joined = cma_strjoin_multiple(4, "", "alpha", "", "beta");
+    if (joined == ft_nullptr)
+        return (0);
+    result = (ft_strcmp(joined, "alphabeta") == 0);
+    cma_free(joined);
+    return (result);
+}

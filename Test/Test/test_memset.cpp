@@ -52,6 +52,14 @@ FT_TEST(test_memset_zero_length, "ft_memset zero length")
     return (1);
 }
 
+FT_TEST(test_memset_null_zero_length_recovers_errno, "ft_memset nullptr zero length clears errno")
+{
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(ft_nullptr, ft_memset(ft_nullptr, 'a', 0));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_memset_negative, "ft_memset negative value")
 {
     char buffer[4];

@@ -114,6 +114,14 @@ FT_TEST(test_atoi_no_digits_sets_einval, "ft_atoi no digits sets FT_EINVAL")
     return (1);
 }
 
+FT_TEST(test_atoi_whitespace_only_sets_einval, "ft_atoi whitespace only sets FT_EINVAL")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(0, ft_atoi(" \t\r\n\v\f"));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_atoi_digits_only_clears_errno, "ft_atoi digits clear ft_errno")
 {
     ft_errno = FT_ERANGE;
