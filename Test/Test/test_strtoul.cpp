@@ -95,6 +95,17 @@ FT_TEST(test_strtoul_overflow, "ft_strtoul clamps overflow and reports error")
     return (1);
 }
 
+FT_TEST(test_strtoul_skips_leading_whitespace, "ft_strtoul ignores leading whitespace")
+{
+    char *end_pointer;
+
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(static_cast<unsigned long>(987), ft_strtoul("\r\n\t 987", &end_pointer, 10));
+    FT_ASSERT_EQ('\0', *end_pointer);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_strtoul_null_input, "ft_strtoul null input sets errno and end pointer")
 {
     char *end_pointer = reinterpret_cast<char *>(0x1);

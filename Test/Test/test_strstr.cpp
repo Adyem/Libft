@@ -52,3 +52,12 @@ FT_TEST(test_strstr_null, "ft_strstr with nullptr")
     FT_ASSERT_EQ(FT_EINVAL, ft_errno);
     return (1);
 }
+
+FT_TEST(test_strstr_overlapping_partial_match, "ft_strstr restarts after overlapping failure")
+{
+    const char *haystack = "ababac";
+    const char *needle = "abac";
+
+    FT_ASSERT_EQ(haystack + 2, ft_strstr(haystack, needle));
+    return (1);
+}

@@ -80,3 +80,22 @@ FT_TEST(test_strlcat_errno_resets_on_success, "ft_strlcat resets errno on succes
     return (1);
 }
 
+FT_TEST(test_strlcat_truncated_destination, "ft_strlcat handles unterminated destination within limit")
+{
+    char destination[7];
+
+    destination[0] = 'A';
+    destination[1] = 'B';
+    destination[2] = 'C';
+    destination[3] = 'D';
+    destination[4] = 'Y';
+    destination[5] = 'Z';
+    destination[6] = '\0';
+    FT_ASSERT_EQ(6u, ft_strlcat(destination, "pq", 4));
+    FT_ASSERT_EQ('A', destination[0]);
+    FT_ASSERT_EQ('D', destination[3]);
+    FT_ASSERT_EQ('Y', destination[4]);
+    FT_ASSERT_EQ('Z', destination[5]);
+    return (1);
+}
+

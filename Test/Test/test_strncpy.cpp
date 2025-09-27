@@ -1,5 +1,6 @@
 #include "../../Libft/libft.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
+#include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 
 FT_TEST(test_strncpy_full_copy, "ft_strncpy full copy with padding")
@@ -74,5 +75,59 @@ FT_TEST(test_strncpy_null, "ft_strncpy with nullptr")
     buffer[3] = '\0';
     FT_ASSERT_EQ(ft_nullptr, ft_strncpy(ft_nullptr, buffer, 3));
     FT_ASSERT_EQ(ft_nullptr, ft_strncpy(buffer, ft_nullptr, 3));
+    return (1);
+}
+
+FT_TEST(test_strncpy_null_sets_errno, "ft_strncpy null arguments set FT_EINVAL")
+{
+    char buffer[4];
+
+    buffer[0] = 'z';
+    buffer[1] = '\0';
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(ft_nullptr, ft_strncpy(ft_nullptr, buffer, 2));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(ft_nullptr, ft_strncpy(buffer, ft_nullptr, 2));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strncpy_zero_length_clears_errno, "ft_strncpy zero length clears errno")
+{
+    char destination[3];
+
+    destination[0] = 'x';
+    destination[1] = 'y';
+    destination[2] = '\0';
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(destination, ft_strncpy(destination, "hi", 0));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ('x', destination[0]);
+    FT_ASSERT_EQ('y', destination[1]);
+    return (1);
+}
+
+FT_TEST(test_strncpy_pads_with_null_bytes, "ft_strncpy pads destination when source shorter")
+{
+    char source[3];
+    char destination[5];
+
+    source[0] = 'o';
+    source[1] = 'k';
+    source[2] = '\0';
+    destination[0] = 'a';
+    destination[1] = 'a';
+    destination[2] = 'a';
+    destination[3] = 'a';
+    destination[4] = 'z';
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(destination, ft_strncpy(destination, source, 4));
+    FT_ASSERT_EQ('o', destination[0]);
+    FT_ASSERT_EQ('k', destination[1]);
+    FT_ASSERT_EQ('\0', destination[2]);
+    FT_ASSERT_EQ('\0', destination[3]);
+    FT_ASSERT_EQ('z', destination[4]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }

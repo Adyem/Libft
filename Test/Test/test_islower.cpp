@@ -10,3 +10,12 @@ FT_TEST(test_islower, "ft_islower")
     FT_ASSERT_EQ(0, ft_islower(-1));
     return (1);
 }
+
+FT_TEST(test_islower_rejects_adjacent_ascii, "ft_islower rejects punctuation and extended ASCII")
+{
+    FT_ASSERT_EQ(0, ft_islower('`'));
+    FT_ASSERT_EQ(0, ft_islower('{'));
+    FT_ASSERT_EQ(0, ft_islower(0xE1));
+    FT_ASSERT_EQ(0, ft_islower(0x5F));
+    return (1);
+}
