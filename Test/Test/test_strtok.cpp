@@ -62,6 +62,18 @@ FT_TEST(test_strtok_reinitialize, "ft_strtok resets when given a new string")
     return (1);
 }
 
+FT_TEST(test_strtok_skips_leading_delimiters, "ft_strtok skips leading separators")
+{
+    char buffer[16] = ",,token";
+    char *token;
+
+    token = ft_strtok(buffer, ",");
+    FT_ASSERT(token != ft_nullptr);
+    FT_ASSERT_EQ(0, ft_strcmp("token", token));
+    FT_ASSERT_EQ(ft_nullptr, ft_strtok(ft_nullptr, ","));
+    return (1);
+}
+
 FT_TEST(test_strtok_thread_local_state, "ft_strtok maintains thread local state")
 {
     char first_thread_buffer[32] = "red blue";
@@ -98,5 +110,17 @@ FT_TEST(test_strtok_thread_local_state, "ft_strtok maintains thread local state"
     FT_ASSERT_EQ(0, ft_strcmp("blue", first_thread_token_two));
     FT_ASSERT_EQ(0, ft_strcmp("green", second_thread_token_one));
     FT_ASSERT_EQ(0, ft_strcmp("yellow", second_thread_token_two));
+    return (1);
+}
+
+FT_TEST(test_strtok_empty_delimiter_returns_full_string, "ft_strtok treats empty delimiters as whole token")
+{
+    char buffer[16] = "token";
+    char *token;
+
+    token = ft_strtok(buffer, "");
+    FT_ASSERT(token != ft_nullptr);
+    FT_ASSERT_EQ(0, ft_strcmp("token", token));
+    FT_ASSERT_EQ(ft_nullptr, ft_strtok(ft_nullptr, ""));
     return (1);
 }

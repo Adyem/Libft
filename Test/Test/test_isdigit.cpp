@@ -16,3 +16,10 @@ FT_TEST(test_isdigit_false, "ft_isdigit false")
     FT_ASSERT_EQ(0, ft_isdigit(-1));
     return (1);
 }
+
+FT_TEST(test_isdigit_extended_ascii, "ft_isdigit rejects extended ASCII")
+{
+    FT_ASSERT_EQ(0, ft_isdigit(0xC8));
+    FT_ASSERT_EQ(0, ft_isdigit(0xFF));
+    return (1);
+}

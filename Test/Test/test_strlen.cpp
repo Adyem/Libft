@@ -9,6 +9,14 @@ FT_TEST(test_strlen_nullptr, "ft_strlen nullptr")
     return (1);
 }
 
+FT_TEST(test_strlen_nullptr_sets_errno, "ft_strlen nullptr sets FT_EINVAL")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(0, ft_strlen(ft_nullptr));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_strlen_simple, "ft_strlen basic")
 {
     FT_ASSERT_EQ(4, ft_strlen("test"));
@@ -56,5 +64,44 @@ FT_TEST(test_strlen_resets_errno_on_success, "ft_strlen clears ft_errno before m
     ft_errno = FT_ERANGE;
     FT_ASSERT_EQ(3, ft_strlen("abc"));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strlen_counts_non_ascii_bytes, "ft_strlen counts bytes beyond ascii")
+{
+    char string[3];
+
+    string[0] = static_cast<char>(0xFF);
+    string[1] = static_cast<char>(0x80);
+    string[2] = '\0';
+    ft_errno = FT_ERANGE;
+    FT_ASSERT_EQ(2, ft_strlen(string));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strlen_size_t_large_buffer, "ft_strlen_size_t handles wide buffers")
+{
+    static char buffer[2049];
+    size_t index;
+
+    index = 0;
+    while (index < 2048)
+    {
+        buffer[index] = 'x';
+        index++;
+    }
+    buffer[2048] = '\0';
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(static_cast<size_t>(2048), ft_strlen_size_t(buffer));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strlen_size_t_nullptr_sets_errno, "ft_strlen_size_t nullptr sets FT_EINVAL")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(static_cast<size_t>(0), ft_strlen_size_t(ft_nullptr));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
     return (1);
 }

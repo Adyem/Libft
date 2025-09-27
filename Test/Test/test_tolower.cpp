@@ -44,3 +44,20 @@ FT_TEST(test_tolower_nullptr, "ft_to_lower nullptr")
     FT_ASSERT_EQ(1, 1);
     return (1);
 }
+
+FT_TEST(test_tolower_non_ascii_preserved, "ft_to_lower leaves non-ASCII bytes unchanged")
+{
+    char string[5];
+
+    string[0] = static_cast<char>(0xC7);
+    string[1] = 'A';
+    string[2] = static_cast<char>(0x80);
+    string[3] = 'Z';
+    string[4] = '\0';
+    ft_to_lower(string);
+    FT_ASSERT_EQ(static_cast<char>(0xC7), string[0]);
+    FT_ASSERT_EQ('a', string[1]);
+    FT_ASSERT_EQ(static_cast<char>(0x80), string[2]);
+    FT_ASSERT_EQ('z', string[3]);
+    return (1);
+}

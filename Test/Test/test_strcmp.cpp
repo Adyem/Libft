@@ -52,3 +52,17 @@ FT_TEST(test_strcmp_both_null, "ft_strcmp both nullptr")
     FT_ASSERT_EQ(-1, ft_strcmp(ft_nullptr, ft_nullptr));
     return (1);
 }
+
+FT_TEST(test_strcmp_high_bit_ordering, "ft_strcmp treats bytes as unsigned")
+{
+    char left[2];
+    char right[2];
+
+    left[0] = static_cast<char>(0x90);
+    left[1] = '\0';
+    right[0] = static_cast<char>(0x7F);
+    right[1] = '\0';
+    FT_ASSERT(ft_strcmp(left, right) > 0);
+    FT_ASSERT(ft_strcmp(right, left) < 0);
+    return (1);
+}
