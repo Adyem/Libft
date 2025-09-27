@@ -1,5 +1,6 @@
 #include "compatebility_internal.hpp"
 #include "../Libft/libft.hpp"
+#include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include <cstdlib>
 #include <ctime>
@@ -108,7 +109,7 @@ char *cmp_get_home_directory(void)
     char *home_path = ft_getenv("HOMEPATH");
     if (home_drive == ft_nullptr || home_path == ft_nullptr)
         return (ft_nullptr);
-    return (ft_strjoin_multiple(2, home_drive, home_path));
+    return (cma_strjoin_multiple(2, home_drive, home_path));
 #else
     return (ft_getenv("HOME"));
 #endif
