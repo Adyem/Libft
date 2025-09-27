@@ -4,6 +4,7 @@
 #include <cstdarg>
 #include "../Template/vector.hpp"
 #include "../CPP_class/class_string_class.hpp"
+#include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "logger.hpp"
 
@@ -13,6 +14,8 @@ extern bool g_async_running;
 extern bool g_use_color;
 
 typedef void (*t_log_sink)(const char *message, void *user_data);
+
+typedef ssize_t (*t_network_send_function)(int socket_fd, const void *buffer, size_t length, int flags);
 
 struct s_log_sink
 {
@@ -29,7 +32,8 @@ struct s_file_sink
 
 struct s_network_sink
 {
-    int socket_fd;
+    int                         socket_fd;
+    t_network_send_function     send_function;
 };
 
 extern ft_vector<s_log_sink> g_sinks;
