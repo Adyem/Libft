@@ -15,10 +15,12 @@ char *rl_resize_buffer(char *old_buffer, int current_size, int new_size)
     if (!new_buffer)
     {
         pf_printf_fd(2, "Allocation error\n");
+        ft_errno = FT_EALLOC;
         return (ft_nullptr);
     }
     ft_memcpy(new_buffer, old_buffer, current_size);
     cma_free(old_buffer);
+    ft_errno = ER_SUCCESS;
     return (new_buffer);
 }
 
