@@ -47,3 +47,22 @@ FT_TEST(test_toupper_nullptr, "ft_to_upper nullptr")
     FT_ASSERT_EQ(1, 1);
     return (1);
 }
+
+FT_TEST(test_toupper_stops_at_terminator, "ft_to_upper stops at first null byte")
+{
+    char string[6];
+
+    string[0] = 'a';
+    string[1] = static_cast<char>(0xE1);
+    string[2] = '\0';
+    string[3] = 'x';
+    string[4] = 'y';
+    string[5] = '\0';
+    ft_to_upper(string);
+    FT_ASSERT_EQ('A', string[0]);
+    FT_ASSERT_EQ(static_cast<char>(0xE1), string[1]);
+    FT_ASSERT_EQ('\0', string[2]);
+    FT_ASSERT_EQ('x', string[3]);
+    FT_ASSERT_EQ('y', string[4]);
+    return (1);
+}

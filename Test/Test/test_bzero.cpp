@@ -1,5 +1,6 @@
 #include "../../Libft/libft.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
+#include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 
 FT_TEST(test_bzero_basic, "ft_bzero basic")
@@ -53,6 +54,32 @@ FT_TEST(test_bzero_zero_length, "ft_bzero zero length")
 FT_TEST(test_bzero_null_zero, "ft_bzero nullptr zero")
 {
     ft_bzero(ft_nullptr, 0);
+    return (1);
+}
+
+FT_TEST(test_bzero_null_sets_errno, "ft_bzero null pointer with length sets errno")
+{
+    ft_errno = ER_SUCCESS;
+    ft_bzero(ft_nullptr, 4);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_bzero_recovers_errno_after_error, "ft_bzero clears errno after recovering from error")
+{
+    char buffer[3];
+
+    buffer[0] = 'x';
+    buffer[1] = 'y';
+    buffer[2] = 'z';
+    ft_errno = ER_SUCCESS;
+    ft_bzero(ft_nullptr, 2);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    ft_bzero(buffer, 2);
+    FT_ASSERT_EQ(0, buffer[0]);
+    FT_ASSERT_EQ(0, buffer[1]);
+    FT_ASSERT_EQ('z', buffer[2]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 

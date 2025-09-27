@@ -60,6 +60,14 @@ FT_TEST(test_memmove_zero_length, "ft_memmove zero length")
     return (1);
 }
 
+FT_TEST(test_memmove_null_zero_length_clears_errno, "ft_memmove zero length nullptr clears errno")
+{
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(ft_nullptr, ft_memmove(ft_nullptr, ft_nullptr, 0));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_memmove_null, "ft_memmove with nullptr")
 {
     char source[1];
@@ -80,5 +88,33 @@ FT_TEST(test_memmove_same_pointer, "ft_memmove same pointer")
     FT_ASSERT_EQ(buffer, ft_memmove(buffer, buffer, 4));
     FT_ASSERT_EQ('h', buffer[0]);
     FT_ASSERT_EQ('k', buffer[3]);
+    return (1);
+}
+
+FT_TEST(test_memmove_errno_recovers_after_failure, "ft_memmove resets errno after null failure")
+{
+    char source[5];
+    char destination[5];
+
+    source[0] = 'a';
+    source[1] = 'b';
+    source[2] = 'c';
+    source[3] = 'd';
+    source[4] = '\0';
+    destination[0] = 'x';
+    destination[1] = 'x';
+    destination[2] = 'x';
+    destination[3] = 'x';
+    destination[4] = '\0';
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(ft_nullptr, ft_memmove(ft_nullptr, source, 3));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(destination, ft_memmove(destination, source, 4));
+    FT_ASSERT_EQ('a', destination[0]);
+    FT_ASSERT_EQ('b', destination[1]);
+    FT_ASSERT_EQ('c', destination[2]);
+    FT_ASSERT_EQ('d', destination[3]);
+    FT_ASSERT_EQ('\0', destination[4]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }

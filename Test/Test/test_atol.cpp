@@ -81,3 +81,13 @@ FT_TEST(test_atol_long_max_exact_success, "ft_atol FT_LONG_MAX exact")
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_atol_skips_leading_whitespace_and_sign, "ft_atol trims whitespace before sign")
+{
+    const char *input_string = " \t\n +0042";
+
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(42L, ft_atol(input_string));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
