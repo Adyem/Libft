@@ -932,6 +932,10 @@ until the headers and any declared body are fully received, and enforces a
 requests, including POST bodies delivered across multiple TCP receives, are
 parsed and echoed back in the response body.
 
+Windows builds translate socket receive failures reported by `run_once` using
+`WSAGetLastError()` into the library error namespace before exposing the value
+through `get_error`, while POSIX platforms continue to rely on `errno`.
+
 ```c++
 #include "Networking/http_server.hpp"
 

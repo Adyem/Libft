@@ -128,7 +128,16 @@ int ft_http_server::run_once()
         if (bytes_received < 0)
         {
             FT_CLOSE_SOCKET(client_socket);
+#ifdef _WIN32
+            int last_error;
+            int library_error_code;
+
+            last_error = WSAGetLastError();
+            library_error_code = last_error + ERRNO_OFFSET;
+            this->set_error(library_error_code);
+#else
             this->set_error(errno + ERRNO_OFFSET);
+#endif
             return (1);
         }
         if (bytes_received == 0)
