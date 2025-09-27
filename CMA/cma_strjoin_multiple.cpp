@@ -1,10 +1,9 @@
-#include "libft.hpp"
-#include "../CMA/CMA.hpp"
+#include "CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include <stdarg.h>
 
-char *ft_strjoin_multiple(int count, ...)
+char *cma_strjoin_multiple(int count, ...)
 {
     if (count <= 0)
     {

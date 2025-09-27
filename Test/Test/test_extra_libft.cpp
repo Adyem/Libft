@@ -476,7 +476,7 @@ int test_su_get_home_directory_windows(void)
     home_path = ft_getenv("HOMEPATH");
     if (home_drive == ft_nullptr || home_path == ft_nullptr)
         return (result == ft_nullptr);
-    combined = ft_strjoin_multiple(2, home_drive, home_path);
+    combined = cma_strjoin_multiple(2, home_drive, home_path);
     if (combined == ft_nullptr)
         return (0);
     test_ok = (result != ft_nullptr && std::strcmp(result, combined) == 0);

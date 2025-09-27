@@ -50,7 +50,6 @@ char             *ft_strncpy(char *destination, const char *source, size_t numbe
 char            *ft_strtok(char *string, const char *delimiters);
 void             *ft_memset(void *destination, int value, size_t number_of_bytes);
 int             ft_isspace(int character);
-char            *ft_strjoin_multiple(int count, ...);
 char            *ft_strmapi(const char *string, char (*function)(unsigned int, char));
 void            ft_striteri(char *string, void (*function)(unsigned int, char *));
 char            *ft_getenv(const char *name);
