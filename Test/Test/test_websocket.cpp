@@ -193,6 +193,138 @@ FT_TEST(test_websocket_handshake_and_echo, "websocket server echoes message")
     return (received == reply);
 }
 
+FT_TEST(test_websocket_server_handles_fragmented_handshake, "websocket server handles fragmented handshake")
+{
+    ft_websocket_server server;
+    websocket_server_context context;
+    int client_socket;
+    struct sockaddr_in server_address;
+    ft_thread server_thread;
+    ft_string handshake_request;
+    const char *handshake_data;
+    size_t handshake_length;
+    size_t total_sent;
+    size_t send_length;
+    ssize_t send_result;
+    char response_buffer[512];
+    ft_string handshake_response;
+    ssize_t bytes_received;
+    const char *terminator;
+    ft_string expected_message;
+    unsigned char frame[64];
+    size_t payload_length;
+    size_t index_value;
+    size_t mask_index;
+    size_t frame_length;
+
+    if (server.start("127.0.0.1", 54355) != 0)
+        return (0);
+    client_socket = nw_socket(AF_INET, SOCK_STREAM, 0);
+    if (client_socket < 0)
+        return (0);
+    std::memset(&server_address, 0, sizeof(server_address));
+    server_address.sin_family = AF_INET;
+    server_address.sin_port = htons(54355);
+    if (nw_inet_pton(AF_INET, "127.0.0.1", &server_address.sin_addr) != 1)
+    {
+        FT_CLOSE_SOCKET(client_socket);
+        return (0);
+    }
+    if (nw_connect(client_socket, reinterpret_cast<struct sockaddr*>(&server_address), sizeof(server_address)) != 0)
+    {
+        FT_CLOSE_SOCKET(client_socket);
+        return (0);
+    }
+    context.server = &server;
+    context.result = -1;
+    context.client_fd = -1;
+    server_thread = ft_thread(websocket_server_worker, &context);
+    if (server_thread.get_error() != ER_SUCCESS)
+    {
+        FT_CLOSE_SOCKET(client_socket);
+        return (0);
+    }
+    handshake_request = "GET / HTTP/1.1\r\n";
+    handshake_request.append("Host: 127.0.0.1\r\n");
+    handshake_request.append("Upgrade: websocket\r\n");
+    handshake_request.append("Connection: Upgrade\r\n");
+    handshake_request.append("Sec-WebSocket-Version: 13\r\n");
+    handshake_request.append("Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n");
+    handshake_data = handshake_request.c_str();
+    handshake_length = handshake_request.size();
+    total_sent = 0;
+    while (total_sent < handshake_length)
+    {
+        if (total_sent == 0)
+            send_length = 8;
+        else if (total_sent < 20)
+            send_length = 7;
+        else
+            send_length = handshake_length - total_sent;
+        if (send_length > handshake_length - total_sent)
+            send_length = handshake_length - total_sent;
+        send_result = nw_send(client_socket, handshake_data + total_sent, send_length, 0);
+        if (send_result <= 0)
+        {
+            FT_CLOSE_SOCKET(client_socket);
+            server_thread.join();
+            return (0);
+        }
+        total_sent += static_cast<size_t>(send_result);
+        if (total_sent < handshake_length)
+            usleep(50000);
+    }
+    handshake_response.clear();
+    while (1)
+    {
+        bytes_received = nw_recv(client_socket, response_buffer, sizeof(response_buffer) - 1, 0);
+        if (bytes_received <= 0)
+        {
+            FT_CLOSE_SOCKET(client_socket);
+            server_thread.join();
+            return (0);
+        }
+        response_buffer[bytes_received] = '\0';
+        handshake_response.append(response_buffer);
+        terminator = ft_strstr(handshake_response.c_str(), "\r\n\r\n");
+        if (terminator != ft_nullptr)
+            break;
+    }
+    expected_message = "split";
+    payload_length = expected_message.size();
+    frame[0] = 0x81;
+    frame[1] = static_cast<unsigned char>(0x80 | payload_length);
+    frame[2] = 0x12;
+    frame[3] = 0x34;
+    frame[4] = 0x56;
+    frame[5] = 0x78;
+    index_value = 0;
+    while (index_value < payload_length)
+    {
+        mask_index = index_value % 4;
+        frame[6 + index_value] = static_cast<unsigned char>(expected_message.c_str()[index_value] ^ frame[2 + mask_index]);
+        index_value++;
+    }
+    frame_length = 6 + payload_length;
+    total_sent = 0;
+    while (total_sent < frame_length)
+    {
+        send_result = nw_send(client_socket, frame + total_sent, frame_length - total_sent, 0);
+        if (send_result <= 0)
+        {
+            FT_CLOSE_SOCKET(client_socket);
+            server_thread.join();
+            return (0);
+        }
+        total_sent += static_cast<size_t>(send_result);
+    }
+    server_thread.join();
+    FT_CLOSE_SOCKET(client_socket);
+    if (context.client_fd >= 0)
+        FT_CLOSE_SOCKET(context.client_fd);
+    return (context.result == 0 && context.message == expected_message);
+}
+
 FT_TEST(test_websocket_client_rejects_invalid_handshake, "websocket client detects invalid handshake")
 {
     websocket_invalid_server_context server_context;
