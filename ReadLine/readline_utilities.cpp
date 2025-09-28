@@ -8,6 +8,21 @@
 #include "../Errno/errno.hpp"
 #include "readline_internal.hpp"
 
+static int (*g_rl_strlen_override)(const char *string) = ft_nullptr;
+
+static int rl_invoke_strlen(const char *string)
+{
+    if (g_rl_strlen_override != ft_nullptr)
+        return (g_rl_strlen_override(string));
+    return (ft_strlen(string));
+}
+
+void rl_set_strlen_override(int (*override_function)(const char *string))
+{
+    g_rl_strlen_override = override_function;
+    return ;
+}
+
 char *rl_resize_buffer(char *old_buffer, int current_size, int new_size)
 {
     char *new_buffer = static_cast<char *>(cma_malloc(new_size));
@@ -26,7 +41,22 @@ char *rl_resize_buffer(char *old_buffer, int current_size, int new_size)
 
 int rl_clear_line(const char *prompt, const char *buffer)
 {
-    int total_length = ft_strlen(prompt) + ft_strlen(buffer);
+    int prompt_length;
+    int buffer_length;
+    int total_length;
+
+    if (prompt == ft_nullptr || buffer == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
+        return (-1);
+    }
+    prompt_length = rl_invoke_strlen(prompt);
+    if (ft_errno != ER_SUCCESS)
+        return (-1);
+    buffer_length = rl_invoke_strlen(buffer);
+    if (ft_errno != ER_SUCCESS)
+        return (-1);
+    total_length = prompt_length + buffer_length;
     pf_printf("\r");
     int term_width = rl_get_terminal_width();
     if (term_width == 0)
@@ -43,6 +73,7 @@ int rl_clear_line(const char *prompt, const char *buffer)
         index++;
     }
     pf_printf("\r");
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 

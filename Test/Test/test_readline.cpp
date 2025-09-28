@@ -6,9 +6,24 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../CMA/CMA.hpp"
+#include "../../Libft/limits.hpp"
+#include "../../Libft/libft.hpp"
 
 static int g_terminal_width_call_count;
 static int g_terminal_width_failure_call;
+static int g_force_strlen_overflow;
+static const char *g_strlen_overflow_target;
+
+static int rl_test_strlen_override(const char *string)
+{
+    if (g_force_strlen_overflow == 1 && string == g_strlen_overflow_target)
+    {
+        ft_errno = FT_ERANGE;
+        g_force_strlen_overflow = 0;
+        return (FT_INT_MAX);
+    }
+    return (ft_strlen(string));
+}
 
 int cmp_readline_enable_raw_mode(void)
 {
@@ -82,6 +97,58 @@ FT_TEST(test_readline_backspace_failure, "ReadLine handles helper failures")
     g_terminal_width_call_count = 0;
     if (result == 0)
         return (0);
+    return (1);
+}
+
+FT_TEST(test_readline_clear_line_null_prompt, "rl_clear_line rejects null prompts")
+{
+    int clear_result;
+    const char *buffer;
+
+    buffer = "";
+    ft_errno = ER_SUCCESS;
+    g_force_strlen_overflow = 0;
+    g_strlen_overflow_target = ft_nullptr;
+    rl_set_strlen_override(ft_nullptr);
+    clear_result = rl_clear_line(ft_nullptr, buffer);
+    FT_ASSERT_EQ(-1, clear_result);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_readline_clear_line_null_buffer, "rl_clear_line rejects null buffers")
+{
+    int clear_result;
+    const char *prompt;
+
+    prompt = "> ";
+    ft_errno = ER_SUCCESS;
+    g_force_strlen_overflow = 0;
+    g_strlen_overflow_target = ft_nullptr;
+    rl_set_strlen_override(ft_nullptr);
+    clear_result = rl_clear_line(prompt, ft_nullptr);
+    FT_ASSERT_EQ(-1, clear_result);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_readline_clear_line_strlen_overflow, "rl_clear_line preserves ft_errno on length overflow")
+{
+    int clear_result;
+    const char *prompt;
+    const char *buffer;
+
+    prompt = "overflow";
+    buffer = "";
+    ft_errno = ER_SUCCESS;
+    g_force_strlen_overflow = 1;
+    g_strlen_overflow_target = prompt;
+    rl_set_strlen_override(rl_test_strlen_override);
+    clear_result = rl_clear_line(prompt, buffer);
+    FT_ASSERT_EQ(-1, clear_result);
+    FT_ASSERT_EQ(FT_ERANGE, ft_errno);
+    g_strlen_overflow_target = ft_nullptr;
+    rl_set_strlen_override(ft_nullptr);
     return (1);
 }
 
