@@ -77,6 +77,14 @@ FT_TEST(test_memmove_null, "ft_memmove with nullptr")
     return (1);
 }
 
+FT_TEST(test_memmove_null_both_pointers, "ft_memmove with both pointers nullptr and size greater than zero")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(ft_nullptr, ft_memmove(ft_nullptr, ft_nullptr, 1));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_memmove_same_pointer, "ft_memmove same pointer")
 {
     char buffer[4];
