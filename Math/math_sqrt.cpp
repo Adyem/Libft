@@ -10,7 +10,10 @@ double math_sqrt(double number)
     int    max_iterations;
 
     if (math_isnan(number))
+    {
+        ft_errno = FT_EINVAL;
         return (math_nan());
+    }
     if (number < 0)
     {
         ft_errno = FT_EINVAL;

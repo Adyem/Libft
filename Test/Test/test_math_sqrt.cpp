@@ -23,3 +23,14 @@ FT_TEST(test_math_sqrt_zero_clears_errno, "math_sqrt zero clears errno")
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_math_sqrt_nan_sets_errno, "math_sqrt sets errno for nan input")
+{
+    double result;
+
+    ft_errno = ER_SUCCESS;
+    result = math_sqrt(math_nan());
+    FT_ASSERT(math_isnan(result));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
