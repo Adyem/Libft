@@ -208,7 +208,7 @@ void ft_vector<ElementType>::push_back(const ElementType &value)
         else
             newCapacity = 1;
         this->reserve_internal(newCapacity);
-        if (this->_error_code != ER_SUCCESS)
+        if (this->_capacity < newCapacity)
         {
             this->_mutex.unlock(THREAD_ID);
             return ;
@@ -216,6 +216,7 @@ void ft_vector<ElementType>::push_back(const ElementType &value)
     }
     construct_at(&this->_data[this->_size], value);
     this->_size++;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -236,7 +237,7 @@ void ft_vector<ElementType>::push_back(ElementType &&value)
         else
             newCapacity = 1;
         this->reserve_internal(newCapacity);
-        if (this->_error_code != ER_SUCCESS)
+        if (this->_capacity < newCapacity)
         {
             this->_mutex.unlock(THREAD_ID);
             return ;
@@ -244,6 +245,7 @@ void ft_vector<ElementType>::push_back(ElementType &&value)
     }
     construct_at(&this->_data[this->_size], std::forward<ElementType>(value));
     this->_size++;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -260,6 +262,7 @@ void ft_vector<ElementType>::pop_back()
     {
         destroy_at(&this->_data[this->_size - 1]);
         --this->_size;
+        this->set_error(ER_SUCCESS);
     }
     else
         this->set_error(VECTOR_INVALID_OPERATION);
@@ -283,6 +286,7 @@ ElementType& ft_vector<ElementType>::operator[](size_t index)
         return (default_instance);
     }
     ElementType& ref = this->_data[index];
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (ref);
 }
@@ -303,6 +307,7 @@ const ElementType& ft_vector<ElementType>::operator[](size_t index) const
         return (default_instance);
     }
     const ElementType& ref = this->_data[index];
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (ref);
 }
@@ -317,6 +322,7 @@ void ft_vector<ElementType>::clear()
     }
     this->destroy_elements(0, this->_size);
     this->_size = 0;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -348,6 +354,8 @@ void ft_vector<ElementType>::reserve(size_t new_capacity)
         return ;
     }
     this->reserve_internal(new_capacity);
+    if (this->_capacity >= new_capacity)
+        this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -365,7 +373,7 @@ void ft_vector<ElementType>::resize(size_t new_size, const ElementType& value)
     else if (new_size > this->_size)
     {
         this->reserve_internal(new_size);
-        if (this->_error_code != ER_SUCCESS)
+        if (this->_capacity < new_size)
         {
             this->_mutex.unlock(THREAD_ID);
             return ;
@@ -378,6 +386,7 @@ void ft_vector<ElementType>::resize(size_t new_size, const ElementType& value)
         }
     }
     this->_size = new_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -405,7 +414,7 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::insert(iterato
         else
             new_capacity = 1;
         this->reserve_internal(new_capacity);
-        if (this->_error_code != ER_SUCCESS)
+        if (this->_capacity < new_capacity)
         {
             iterator endIt = this->_data + this->_size;
             this->_mutex.unlock(THREAD_ID);
@@ -423,6 +432,7 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::insert(iterato
     construct_at(&this->_data[index], value);
     this->_size++;
     iterator ret = &this->_data[index];
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (ret);
 }
@@ -457,6 +467,7 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::erase(iterator
         ret = this->_data + this->_size;
     else
         ret = &this->_data[index];
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (ret);
 }
@@ -483,6 +494,7 @@ ElementType ft_vector<ElementType>::release_at(size_t index)
         ++i2;
     }
     --this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (detached);
 }
@@ -493,6 +505,7 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::begin()
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (this->_data);
     iterator it = this->_data;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (it);
 }
@@ -503,6 +516,7 @@ typename ft_vector<ElementType>::const_iterator ft_vector<ElementType>::begin() 
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (this->_data);
     const_iterator it = this->_data;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (it);
 }
@@ -513,6 +527,7 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::end()
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (this->_data);
     iterator it = this->_data + this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (it);
 }
@@ -523,6 +538,7 @@ typename ft_vector<ElementType>::const_iterator ft_vector<ElementType>::end() co
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (this->_data);
     const_iterator it = this->_data + this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (it);
 }
