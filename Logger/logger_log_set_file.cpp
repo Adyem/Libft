@@ -1,4 +1,5 @@
 #include "logger_internal.hpp"
+#include <cerrno>
 #include <fcntl.h>
 #include <unistd.h>
 #include <new>
@@ -32,7 +33,13 @@ int ft_log_set_file(const char *path, size_t max_size)
     file_descriptor = open(path, O_CREAT | O_WRONLY | O_APPEND, 0644);
     if (file_descriptor == -1)
     {
-        ft_errno = FILE_INVALID_FD;
+        int saved_errno;
+
+        saved_errno = errno;
+        if (saved_errno != 0)
+            ft_errno = saved_errno + ERRNO_OFFSET;
+        else
+            ft_errno = FILE_INVALID_FD;
         return (-1);
     }
     sink = new(std::nothrow) s_file_sink;
