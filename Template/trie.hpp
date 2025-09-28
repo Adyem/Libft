@@ -3,6 +3,7 @@
 
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
 #include "unordened_map.hpp"
 #include <cstddef>
@@ -60,7 +61,18 @@ int ft_trie<ValueType>::insert_helper(const char *key, int unset_value, ValueTyp
 {
     if (this->_error)
         return (1);
+    if (key == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
+        this->_error = 1;
+        return (1);
+    }
     size_t key_length = ft_strlen_size_t(key);
+    if (ft_errno != ER_SUCCESS)
+    {
+        this->_error = 1;
+        return (1);
+    }
     ft_trie<ValueType> *current_node = this;
     const char *key_iterator = key;
     while (*key_iterator)
