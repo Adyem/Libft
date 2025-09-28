@@ -1,4 +1,5 @@
 #include "math.hpp"
+#include "../Errno/errno.hpp"
 
 double math_log(double value)
 {
@@ -16,7 +17,10 @@ double math_log(double value)
     int    iteration;
 
     if (value <= 0.0)
-        return (-1.0);
+    {
+        ft_errno = FT_EINVAL;
+        return (math_nan());
+    }
     converter.double_value = value;
     exponent = static_cast<int>((converter.bit_pattern >> 52) & 0x7ff) - 1023;
     converter.bit_pattern = (converter.bit_pattern & 0x000fffffffffffffULL) | 0x3ff0000000000000ULL;
