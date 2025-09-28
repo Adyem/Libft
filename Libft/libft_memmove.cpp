@@ -9,13 +9,17 @@ void *ft_memmove(void *destination, const void *source, size_t size)
     size_t index;
 
     ft_errno = ER_SUCCESS;
-    if (size == 0 || destination == source)
-        return (destination);
     if (destination == ft_nullptr || source == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
-        return (ft_nullptr);
+        if (size > 0)
+        {
+            ft_errno = FT_EINVAL;
+            return (ft_nullptr);
+        }
+        return (destination);
     }
+    if (size == 0 || destination == source)
+        return (destination);
     if (destination_pointer < source_pointer)
     {
         index = 0;
