@@ -130,6 +130,7 @@ void ft_stack<ElementType>::push(const ElementType& value)
     new_node->_next = this->_top;
     this->_top = new_node;
     ++this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -153,6 +154,7 @@ void ft_stack<ElementType>::push(ElementType&& value)
     new_node->_next = this->_top;
     this->_top = new_node;
     ++this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -177,6 +179,7 @@ ElementType ft_stack<ElementType>::pop()
     destroy_at(&node->_data);
     cma_free(node);
     --this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (value);
 }
@@ -197,6 +200,7 @@ ElementType& ft_stack<ElementType>::top()
         return (error_element);
     }
     ElementType& value = this->_top->_data;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (value);
 }
@@ -217,6 +221,7 @@ const ElementType& ft_stack<ElementType>::top() const
         return (error_element);
     }
     const ElementType& value = this->_top->_data;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (value);
 }
@@ -274,6 +279,7 @@ void ft_stack<ElementType>::clear()
         cma_free(node);
     }
     this->_size = 0;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }

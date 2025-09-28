@@ -207,6 +207,7 @@ void ft_set<ElementType>::insert(const ElementType& value)
     size_t position = lower_bound(value);
     if (position < this->_size && !(value < this->_data[position]) && !(this->_data[position] < value))
     {
+        this->set_error(ER_SUCCESS);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
@@ -224,6 +225,7 @@ void ft_set<ElementType>::insert(const ElementType& value)
     }
     construct_at(&this->_data[position], value);
     ++this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -239,6 +241,7 @@ void ft_set<ElementType>::insert(ElementType&& value)
     size_t position = lower_bound(value);
     if (position < this->_size && !(value < this->_data[position]) && !(this->_data[position] < value))
     {
+        this->set_error(ER_SUCCESS);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
@@ -256,6 +259,7 @@ void ft_set<ElementType>::insert(ElementType&& value)
     }
     construct_at(&this->_data[position], ft_move(value));
     ++this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -276,6 +280,7 @@ ElementType* ft_set<ElementType>::find(const ElementType& value)
         return (ft_nullptr);
     }
     ElementType* result = &this->_data[index];
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (result);
 }
@@ -296,6 +301,7 @@ const ElementType* ft_set<ElementType>::find(const ElementType& value) const
         return (ft_nullptr);
     }
     ElementType* result = &this->_data[index];
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (result);
 }
@@ -324,6 +330,7 @@ void ft_set<ElementType>::remove(const ElementType& value)
         ++current_index;
     }
     --this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -376,6 +383,7 @@ void ft_set<ElementType>::clear()
         ++index;
     }
     this->_size = 0;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
