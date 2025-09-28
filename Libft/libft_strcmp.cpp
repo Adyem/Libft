@@ -10,10 +10,12 @@ int    ft_strcmp(const char *string1, const char *string2)
         ft_errno = FT_EINVAL;
         return (-1);
     }
-    while (*string1 && (*string1) == (*string2))
+    while (*string1 != '\0' && (unsigned char)(*string1) == (unsigned char)(*string2))
     {
         string1++;
         string2++;
     }
-    return (*string1 - *string2);
+    unsigned char left_character = (unsigned char)(*string1);
+    unsigned char right_character = (unsigned char)(*string2);
+    return ((int)(left_character - right_character));
 }
