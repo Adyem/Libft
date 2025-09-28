@@ -1,10 +1,14 @@
 #include "../../Template/vector.hpp"
 #include "../../Template/map.hpp"
+#include "../../Template/set.hpp"
+#include "../../Template/stack.hpp"
 #include "../../Template/shared_ptr.hpp"
 #include "../../Template/unique_ptr.hpp"
+#include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../JSon/document.hpp"
 #include "../../CMA/CMA.hpp"
+#include "../../System_utils/test_runner.hpp"
 #include <cstring>
 #include <cstdio>
 #include <vector>
@@ -275,6 +279,55 @@ int test_json_roundtrip_file(void)
     if (!item_two)
         return (0);
     return (std::strcmp(item_two->value, "value") == 0);
+}
+
+FT_TEST(test_ft_vector_resets_errno_after_successful_push, "ft_vector clears errno after successful push_back")
+{
+    ft_vector<int> vector_instance;
+
+    ft_errno = ER_SUCCESS;
+    vector_instance[0];
+    FT_ASSERT_EQ(VECTOR_OUT_OF_BOUNDS, vector_instance.get_error());
+    vector_instance.push_back(5);
+    FT_ASSERT_EQ(ER_SUCCESS, vector_instance.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(5, vector_instance[0]);
+    FT_ASSERT_EQ(ER_SUCCESS, vector_instance.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_ft_set_resets_errno_after_successful_insert, "ft_set clears errno after successful insert")
+{
+    ft_set<int> set_instance;
+
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(ft_nullptr, set_instance.find(42));
+    FT_ASSERT_EQ(SET_NOT_FOUND, set_instance.get_error());
+    set_instance.insert(42);
+    FT_ASSERT_EQ(ER_SUCCESS, set_instance.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    int *found = set_instance.find(42);
+    FT_ASSERT(found != ft_nullptr);
+    FT_ASSERT_EQ(ER_SUCCESS, set_instance.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_ft_stack_resets_errno_after_successful_push, "ft_stack clears errno after successful push")
+{
+    ft_stack<int> stack_instance;
+
+    ft_errno = ER_SUCCESS;
+    stack_instance.pop();
+    FT_ASSERT_EQ(STACK_EMPTY, stack_instance.get_error());
+    stack_instance.push(7);
+    FT_ASSERT_EQ(ER_SUCCESS, stack_instance.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(7, stack_instance.top());
+    FT_ASSERT_EQ(ER_SUCCESS, stack_instance.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
 }
 
 
