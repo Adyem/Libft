@@ -2,6 +2,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include <cstdio>
+#include <cerrno>
 
 char *ft_fgets(char *string, int size, FILE *stream)
 {
@@ -17,7 +18,10 @@ char *ft_fgets(char *string, int size, FILE *stream)
     {
         if (std::ferror(stream) != 0)
         {
-            ft_errno = FILE_INVALID_FD;
+            int saved_errno;
+
+            saved_errno = errno;
+            ft_errno = saved_errno != 0 ? saved_errno + ERRNO_OFFSET : FILE_INVALID_FD;
             return (ft_nullptr);
         }
         if (std::feof(stream) != 0)
