@@ -17,7 +17,11 @@ double math_sqrt(double number)
         return (-1.0);
     }
     if (math_fabs(number) < 1e-12)
+    {
+        ft_errno = ER_SUCCESS;
         return (0.0);
+    }
+    ft_errno = ER_SUCCESS;
     guess = number;
     iteration_count = 0;
     max_iterations = 1000;
