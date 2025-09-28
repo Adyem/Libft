@@ -1,17 +1,20 @@
 #include "../../Libft/libft.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
+#include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 
 FT_TEST(test_toupper_basic, "ft_to_upper basic")
 {
     char string[4];
 
+    ft_errno = FT_EINVAL;
     string[0] = 'a';
     string[1] = 'b';
     string[2] = 'c';
     string[3] = '\0';
     ft_to_upper(string);
     FT_ASSERT_EQ(0, ft_strcmp(string, "ABC"));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -43,8 +46,9 @@ FT_TEST(test_toupper_empty, "ft_to_upper empty string")
 
 FT_TEST(test_toupper_nullptr, "ft_to_upper nullptr")
 {
+    ft_errno = ER_SUCCESS;
     ft_to_upper(ft_nullptr);
-    FT_ASSERT_EQ(1, 1);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
     return (1);
 }
 
