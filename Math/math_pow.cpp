@@ -9,6 +9,7 @@ double math_pow(double base_value, int exponent)
 
     result = 1.0;
     exponent_value = exponent;
+    ft_errno = ER_SUCCESS;
     if (exponent_value < 0)
     {
         if (math_fabs(base_value) <= DBL_MIN)
