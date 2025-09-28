@@ -11,6 +11,11 @@
 
 static int g_terminal_width_call_count;
 static int g_terminal_width_failure_call;
+static int g_terminal_width_should_set_errno;
+static int g_terminal_width_errno_value;
+static int g_raw_mode_override_result;
+static int g_raw_mode_should_set_errno;
+static int g_raw_mode_errno_value;
 static int g_force_strlen_overflow;
 static const char *g_strlen_overflow_target;
 
@@ -27,7 +32,11 @@ static int rl_test_strlen_override(const char *string)
 
 int cmp_readline_enable_raw_mode(void)
 {
-    return (0);
+    if (g_raw_mode_override_result == 0)
+        return (0);
+    if (g_raw_mode_should_set_errno == 1)
+        ft_errno = g_raw_mode_errno_value;
+    return (g_raw_mode_override_result);
 }
 
 void cmp_readline_disable_raw_mode(void)
@@ -40,8 +49,84 @@ int cmp_readline_terminal_width(void)
     g_terminal_width_call_count++;
     if (g_terminal_width_failure_call != 0
         && g_terminal_width_call_count == g_terminal_width_failure_call)
+    {
+        if (g_terminal_width_should_set_errno == 1)
+            ft_errno = g_terminal_width_errno_value;
         return (-1);
+    }
     return (80);
+}
+
+FT_TEST(test_readline_enable_raw_mode_propagates_errno, "rl_enable_raw_mode forwards helper error codes")
+{
+    int result;
+
+    ft_errno = ER_SUCCESS;
+    g_raw_mode_override_result = -1;
+    g_raw_mode_should_set_errno = 1;
+    g_raw_mode_errno_value = ERRNO_OFFSET + 123;
+    result = rl_enable_raw_mode();
+    FT_ASSERT_EQ(-1, result);
+    FT_ASSERT_EQ(g_raw_mode_errno_value, ft_errno);
+    g_raw_mode_override_result = 0;
+    g_raw_mode_should_set_errno = 0;
+    g_raw_mode_errno_value = 0;
+    return (1);
+}
+
+FT_TEST(test_readline_enable_raw_mode_sets_default_errno, "rl_enable_raw_mode assigns fallback error when helper is silent")
+{
+    int result;
+
+    ft_errno = ER_SUCCESS;
+    g_raw_mode_override_result = -1;
+    g_raw_mode_should_set_errno = 0;
+    g_raw_mode_errno_value = 0;
+    result = rl_enable_raw_mode();
+    FT_ASSERT_EQ(-1, result);
+    FT_ASSERT_EQ(FT_ETERM, ft_errno);
+    g_raw_mode_override_result = 0;
+    g_raw_mode_should_set_errno = 0;
+    g_raw_mode_errno_value = 0;
+    return (1);
+}
+
+FT_TEST(test_readline_terminal_width_propagates_errno, "rl_get_terminal_width forwards helper error codes")
+{
+    int width;
+
+    ft_errno = ER_SUCCESS;
+    g_terminal_width_call_count = 0;
+    g_terminal_width_failure_call = 1;
+    g_terminal_width_should_set_errno = 1;
+    g_terminal_width_errno_value = ERRNO_OFFSET + 456;
+    width = rl_get_terminal_width();
+    FT_ASSERT_EQ(-1, width);
+    FT_ASSERT_EQ(g_terminal_width_errno_value, ft_errno);
+    g_terminal_width_failure_call = 0;
+    g_terminal_width_call_count = 0;
+    g_terminal_width_should_set_errno = 0;
+    g_terminal_width_errno_value = 0;
+    return (1);
+}
+
+FT_TEST(test_readline_terminal_width_sets_default_errno, "rl_get_terminal_width assigns fallback error when helper is silent")
+{
+    int width;
+
+    ft_errno = ER_SUCCESS;
+    g_terminal_width_call_count = 0;
+    g_terminal_width_failure_call = 1;
+    g_terminal_width_should_set_errno = 0;
+    g_terminal_width_errno_value = 0;
+    width = rl_get_terminal_width();
+    FT_ASSERT_EQ(-1, width);
+    FT_ASSERT_EQ(FT_ETERM, ft_errno);
+    g_terminal_width_failure_call = 0;
+    g_terminal_width_call_count = 0;
+    g_terminal_width_should_set_errno = 0;
+    g_terminal_width_errno_value = 0;
+    return (1);
 }
 
 FT_TEST(test_readline_backspace_failure, "ReadLine handles helper failures")
