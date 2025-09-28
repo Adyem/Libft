@@ -1,5 +1,6 @@
 #include "libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
 
 char    *ft_strtok(char *string, const char *delimiters)
 {
@@ -19,6 +20,7 @@ char    *ft_strtok(char *string, const char *delimiters)
     size_t          new_delimiters_hash;
     unsigned char   delimiter_character_value;
 
+    ft_errno = ER_SUCCESS;
     if (string != ft_nullptr)
     {
         saved_string = string;
@@ -28,7 +30,10 @@ char    *ft_strtok(char *string, const char *delimiters)
         cached_delimiters_hash = 0;
     }
     if (saved_string == ft_nullptr || delimiters == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
+    }
     new_delimiters_hash = 5381;
     delimiter_index = 0;
     while (delimiters[delimiter_index] != '\0')
@@ -75,6 +80,7 @@ char    *ft_strtok(char *string, const char *delimiters)
     if (*current_pointer == '\0')
     {
         saved_string = ft_nullptr;
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
     }
     token_start = current_pointer;
