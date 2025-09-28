@@ -1,4 +1,5 @@
 #include "math.hpp"
+#include "../Errno/errno.hpp"
 #include <cmath>
 #include <limits>
 
@@ -26,16 +27,26 @@ double math_fmod(double value, double modulus)
     double remainder_value;
 
     if (math_isnan(value) || math_isnan(modulus))
+    {
+        ft_errno = FT_EINVAL;
         return (math_nan());
+    }
     if (math_is_infinite_internal(value) != 0)
+    {
+        ft_errno = FT_EINVAL;
         return (math_nan());
+    }
     if (math_fabs(modulus) <= std::numeric_limits<double>::denorm_min())
+    {
+        ft_errno = FT_ERANGE;
         return (math_nan());
+    }
     if (math_is_infinite_internal(modulus) != 0)
         return (value);
     remainder_value = std::fmod(value, modulus);
     if (math_fabs(remainder_value) <= std::numeric_limits<double>::denorm_min())
         remainder_value = value * 0.0;
+    ft_errno = ER_SUCCESS;
     return (remainder_value);
 }
 

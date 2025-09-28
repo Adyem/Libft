@@ -1,4 +1,5 @@
 #include "math.hpp"
+#include "../Errno/errno.hpp"
 
 static int math_is_infinite_internal(double number)
 {
@@ -30,31 +31,52 @@ double math_acos(double dot)
     int    iteration_count;
 
     if (math_isnan(dot))
+    {
+        ft_errno = FT_EINVAL;
         return (math_nan());
+    }
     if (math_is_infinite_internal(dot) != 0)
+    {
+        ft_errno = FT_EINVAL;
         return (math_nan());
+    }
     tolerance = 0.0000000000001;
     if (dot > 1.0)
     {
         if (math_fabs(dot - 1.0) <= tolerance)
             dot = 1.0;
         else
+        {
+            ft_errno = FT_EINVAL;
             return (math_nan());
+        }
     }
     if (dot < -1.0)
     {
         if (math_fabs(dot + 1.0) <= tolerance)
             dot = -1.0;
         else
+        {
+            ft_errno = FT_EINVAL;
             return (math_nan());
+        }
     }
     pi_value = 3.14159265358979323846;
     if (math_fabs(dot - 1.0) <= tolerance)
+    {
+        ft_errno = ER_SUCCESS;
         return (0.0);
+    }
     if (math_fabs(dot + 1.0) <= tolerance)
+    {
+        ft_errno = ER_SUCCESS;
         return (pi_value);
+    }
     if (math_fabs(dot) <= tolerance)
+    {
+        ft_errno = ER_SUCCESS;
         return (pi_value * 0.5);
+    }
     lower_bound = 0.0;
     upper_bound = pi_value;
     iteration_count = 0;
@@ -63,13 +85,17 @@ double math_acos(double dot)
         middle_value = (lower_bound + upper_bound) * 0.5;
         cosine_middle = math_cos(middle_value);
         if (math_fabs(cosine_middle - dot) <= tolerance)
+        {
+            ft_errno = ER_SUCCESS;
             return (middle_value);
+        }
         if (cosine_middle > dot)
             lower_bound = middle_value;
         else
             upper_bound = middle_value;
         iteration_count = iteration_count + 1;
     }
+    ft_errno = ER_SUCCESS;
     return ((lower_bound + upper_bound) * 0.5);
 }
 
