@@ -4,6 +4,7 @@
 
 char    *ft_strrchr(const char *string, int char_to_find)
 {
+    ft_errno = ER_SUCCESS;
     if (!string)
     {
         ft_errno = FT_EINVAL;
