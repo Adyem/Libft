@@ -53,7 +53,11 @@ ElementType *ft_loot_table<ElementType>::getRandomLoot() const
         if (effective < 1)
             effective = 1;
         if (INT_MAX - total_weight < effective)
+        {
+            ft_errno = FT_ERANGE;
+            const_cast<ft_loot_table<ElementType>*>(this)->set_error(FT_ERANGE);
             return (ft_nullptr);
+        }
         total_weight += effective;
         ++index;
     }
@@ -67,11 +71,18 @@ ElementType *ft_loot_table<ElementType>::getRandomLoot() const
             effective = 1;
         accumulated += effective;
         if (roll <= accumulated)
+        {
+            ft_errno = ER_SUCCESS;
+            const_cast<ft_loot_table<ElementType>*>(this)->set_error(ER_SUCCESS);
             return ((*this)[index].item);
+        }
         ++index;
     }
+    ft_errno = FT_ERANGE;
+    const_cast<ft_loot_table<ElementType>*>(this)->set_error(FT_ERANGE);
     return (ft_nullptr);
 }
+
 
 template<typename ElementType>
 ElementType *ft_loot_table<ElementType>::popRandomLoot()
@@ -90,7 +101,11 @@ ElementType *ft_loot_table<ElementType>::popRandomLoot()
         if (effective < 1)
             effective = 1;
         if (INT_MAX - total_weight < effective)
+        {
+            ft_errno = FT_ERANGE;
+            this->set_error(FT_ERANGE);
             return (ft_nullptr);
+        }
         total_weight += effective;
         ++index;
     }
@@ -107,10 +122,14 @@ ElementType *ft_loot_table<ElementType>::popRandomLoot()
         {
             ElementType *elem = (*this)[index].item;
             this->release_at(index);
+            ft_errno = ER_SUCCESS;
+            this->set_error(ER_SUCCESS);
             return (elem);
         }
         ++index;
     }
+    ft_errno = FT_ERANGE;
+    this->set_error(FT_ERANGE);
     return (ft_nullptr);
 }
 
