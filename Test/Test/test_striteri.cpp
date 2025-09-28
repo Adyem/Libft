@@ -1,5 +1,6 @@
 #include "../../Libft/libft.hpp"
 #include "../../System_utils/test_runner.hpp"
+#include "../../Errno/errno.hpp"
 
 static void to_upper_iter(unsigned int index, char *character)
 {
@@ -88,5 +89,39 @@ FT_TEST(test_striteri_null_callback_no_modification, "ft_striteri ignores null c
     FT_ASSERT_EQ(0, ft_strcmp(snapshot, buffer));
     ft_striteri(ft_nullptr, record_index_iter);
     FT_ASSERT_EQ(42u, g_striteri_call_count);
+    return (1);
+}
+
+FT_TEST(test_striteri_valid_arguments_reset_errno, "ft_striteri clears ft_errno on valid input")
+{
+    char buffer[4];
+
+    buffer[0] = 'a';
+    buffer[1] = 'b';
+    buffer[2] = 'c';
+    buffer[3] = '\0';
+    ft_errno = FT_EINVAL;
+    ft_striteri(buffer, to_upper_iter);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_striteri_null_string_sets_errno, "ft_striteri sets FT_EINVAL when string is null")
+{
+    ft_errno = ER_SUCCESS;
+    ft_striteri(ft_nullptr, to_upper_iter);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_striteri_null_function_sets_errno, "ft_striteri sets FT_EINVAL when callback is null")
+{
+    char buffer[2];
+
+    buffer[0] = 'x';
+    buffer[1] = '\0';
+    ft_errno = ER_SUCCESS;
+    ft_striteri(buffer, ft_nullptr);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
     return (1);
 }
