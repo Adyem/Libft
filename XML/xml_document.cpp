@@ -26,6 +26,15 @@ static char *duplicate_range(const char *start, size_t length)
     return (copy);
 }
 
+static int translate_vector_error(int error_code)
+{
+    if (error_code == ER_SUCCESS)
+        return (ER_SUCCESS);
+    if (error_code == VECTOR_ALLOC_FAIL)
+        return (FT_EALLOC);
+    return (error_code);
+}
+
 xml_node::xml_node() noexcept
     : name(ft_nullptr), text(ft_nullptr), children(), attributes()
 {
@@ -88,7 +97,29 @@ static const char *parse_node(const char *string, xml_node **out_node)
         delete node;
         return (ft_nullptr);
     }
+    const char *tag_end = string;
+    int self_closing = 0;
+    if (tag_end > name_start)
+    {
+        const char *before_close = tag_end - 1;
+        while (before_close >= name_start)
+        {
+            if (*before_close == '/')
+            {
+                self_closing = 1;
+                break;
+            }
+            if (*before_close != ' ' && *before_close != '\n' && *before_close != '\t' && *before_close != '\r')
+                break;
+            before_close--;
+        }
+    }
     string++;
+    if (self_closing)
+    {
+        *out_node = node;
+        return (string);
+    }
     const char *text_start = string;
     if (*string == '<' && string[1] == '/');
     else if (*string == '<')
@@ -271,22 +302,51 @@ char *xml_document::write_to_string() const noexcept
         this->set_error(FT_EINVAL);
         return (ft_nullptr);
     }
-    ft_vector<char> buffer;
-    write_node(this->_root, buffer);
-    buffer.push_back('\n');
-    buffer.push_back('\0');
-    size_t length = buffer.size();
-    char *result = static_cast<char *>(cma_malloc(length));
-    if (!result)
+    char *result = ft_nullptr;
+    int error_code = ER_SUCCESS;
     {
-        this->set_error(FT_EALLOC);
-        return (ft_nullptr);
+        ft_vector<char> buffer;
+        write_node(this->_root, buffer);
+        int buffer_error = buffer.get_error();
+        if (buffer_error != ER_SUCCESS)
+            error_code = translate_vector_error(buffer_error);
+        if (error_code == ER_SUCCESS)
+        {
+            buffer.push_back('\n');
+            buffer_error = buffer.get_error();
+            if (buffer_error != ER_SUCCESS)
+                error_code = translate_vector_error(buffer_error);
+        }
+        if (error_code == ER_SUCCESS)
+        {
+            buffer.push_back('\0');
+            buffer_error = buffer.get_error();
+            if (buffer_error != ER_SUCCESS)
+                error_code = translate_vector_error(buffer_error);
+        }
+        if (error_code == ER_SUCCESS)
+        {
+            size_t length = buffer.size();
+            result = static_cast<char *>(cma_malloc(length));
+            if (!result)
+                error_code = FT_EALLOC;
+            else
+            {
+                size_t index = 0;
+                while (index < length)
+                {
+                    result[index] = buffer[index];
+                    index++;
+                }
+            }
+        }
     }
-    size_t index = 0;
-    while (index < length)
+    if (error_code != ER_SUCCESS)
     {
-        result[index] = buffer[index];
-        index++;
+        if (result)
+            cma_free(result);
+        this->set_error(error_code);
+        return (ft_nullptr);
     }
     this->set_error(ER_SUCCESS);
     return (result);
@@ -310,8 +370,8 @@ int xml_document::write_to_file(const char *file_path) const noexcept
     if (!file)
     {
         int error_code = errno ? errno + ERRNO_OFFSET : FT_EINVAL;
-        this->set_error(error_code);
         cma_free(content);
+        this->set_error(error_code);
         return (error_code);
     }
     size_t length = ft_strlen(content);
@@ -325,7 +385,14 @@ int xml_document::write_to_file(const char *file_path) const noexcept
         this->set_error(error_code);
         return (error_code);
     }
-    std::fclose(file);
+    errno = 0;
+    if (std::fclose(file) != 0)
+    {
+        int error_code = errno ? errno + ERRNO_OFFSET : FT_EINVAL;
+        cma_free(content);
+        this->set_error(error_code);
+        return (error_code);
+    }
     cma_free(content);
     this->set_error(ER_SUCCESS);
     return (ER_SUCCESS);

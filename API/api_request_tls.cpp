@@ -3,6 +3,7 @@
 #include "../Networking/ssl_wrapper.hpp"
 #include "../CPP_class/class_string_class.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
 #include "../Logger/logger.hpp"
 #include "../Printf/printf.hpp"
@@ -21,6 +22,145 @@
 # include <sys/select.h>
 #endif
 #include <openssl/err.h>
+#include <climits>
+
+static void api_request_set_resolve_error(int resolver_status)
+{
+#ifdef EAI_BADFLAGS
+    if (resolver_status == EAI_BADFLAGS)
+    {
+        ft_errno = SOCKET_RESOLVE_BAD_FLAGS;
+        return ;
+    }
+#endif
+#ifdef EAI_AGAIN
+    if (resolver_status == EAI_AGAIN)
+    {
+        ft_errno = SOCKET_RESOLVE_AGAIN;
+        return ;
+    }
+#endif
+#ifdef EAI_FAIL
+    if (resolver_status == EAI_FAIL)
+    {
+        ft_errno = SOCKET_RESOLVE_FAIL;
+        return ;
+    }
+#endif
+#ifdef EAI_FAMILY
+    if (resolver_status == EAI_FAMILY)
+    {
+        ft_errno = SOCKET_RESOLVE_FAMILY;
+        return ;
+    }
+#endif
+#ifdef EAI_ADDRFAMILY
+    if (resolver_status == EAI_ADDRFAMILY)
+    {
+        ft_errno = SOCKET_RESOLVE_FAMILY;
+        return ;
+    }
+#endif
+#ifdef EAI_SOCKTYPE
+    if (resolver_status == EAI_SOCKTYPE)
+    {
+        ft_errno = SOCKET_RESOLVE_SOCKTYPE;
+        return ;
+    }
+#endif
+#ifdef EAI_SERVICE
+    if (resolver_status == EAI_SERVICE)
+    {
+        ft_errno = SOCKET_RESOLVE_SERVICE;
+        return ;
+    }
+#endif
+#ifdef EAI_MEMORY
+    if (resolver_status == EAI_MEMORY)
+    {
+        ft_errno = SOCKET_RESOLVE_MEMORY;
+        return ;
+    }
+#endif
+#ifdef EAI_NONAME
+    if (resolver_status == EAI_NONAME)
+    {
+        ft_errno = SOCKET_RESOLVE_NO_NAME;
+        return ;
+    }
+#endif
+#ifdef EAI_NODATA
+    if (resolver_status == EAI_NODATA)
+    {
+        ft_errno = SOCKET_RESOLVE_NO_NAME;
+        return ;
+    }
+#endif
+#ifdef EAI_OVERFLOW
+    if (resolver_status == EAI_OVERFLOW)
+    {
+        ft_errno = SOCKET_RESOLVE_OVERFLOW;
+        return ;
+    }
+#endif
+#ifdef EAI_SYSTEM
+    if (resolver_status == EAI_SYSTEM)
+    {
+#ifdef _WIN32
+        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
+#else
+        if (errno != 0)
+            ft_errno = errno + ERRNO_OFFSET;
+        else
+            ft_errno = SOCKET_RESOLVE_FAIL;
+#endif
+        return ;
+    }
+#endif
+    ft_errno = SOCKET_RESOLVE_FAILED;
+    return ;
+}
+
+static void api_request_set_ssl_error(SSL *ssl_session, int operation_result)
+{
+    unsigned long library_error;
+
+    library_error = ERR_get_error();
+    if (library_error != 0)
+    {
+        if (library_error > static_cast<unsigned long>(INT_MAX))
+            ft_errno = INT_MAX;
+        else
+            ft_errno = static_cast<int>(library_error);
+        return ;
+    }
+    if (ssl_session)
+    {
+        int ssl_error = SSL_get_error(ssl_session, operation_result);
+        if (ssl_error == SSL_ERROR_SYSCALL)
+        {
+#ifdef _WIN32
+            int last_error = WSAGetLastError();
+            if (last_error != 0)
+            {
+                ft_errno = last_error + ERRNO_OFFSET;
+                return ;
+            }
+#endif
+            if (errno != 0)
+            {
+                ft_errno = errno + ERRNO_OFFSET;
+                return ;
+            }
+            ft_errno = SSL_ERROR_SYSCALL + ERRNO_OFFSET;
+            return ;
+        }
+        ft_errno = ssl_error;
+        return ;
+    }
+    ft_errno = FT_EIO;
+    return ;
+}
 
 static ssize_t ssl_send_all(SSL *ssl, const void *data, size_t size)
 {
@@ -55,6 +195,22 @@ char *api_request_https(const char *ip, uint16_t port,
         ft_log_debug("api_request_https %s:%u %s %s",
             log_ip, port, log_method, log_path);
     }
+    int error_code = ER_SUCCESS;
+    struct api_request_errno_guard
+    {
+        int *code;
+        api_request_errno_guard(int *value)
+            : code(value)
+        {
+            return ;
+        }
+        ~api_request_errno_guard()
+        {
+            ft_errno = *code;
+            return ;
+        }
+    } guard(&error_code);
+
     SocketConfig config;
     config._type = SocketType::CLIENT;
     config._ip = ip;
@@ -64,9 +220,16 @@ char *api_request_https(const char *ip, uint16_t port,
 
     ft_socket socket_wrapper(config);
     if (socket_wrapper.get_error())
+    {
+        error_code = socket_wrapper.get_error();
         return (ft_nullptr);
+    }
     if (!OPENSSL_init_ssl(0, ft_nullptr))
+    {
+        api_request_set_ssl_error(ft_nullptr, 0);
+        error_code = ft_errno;
         return (ft_nullptr);
+    }
     SSL_CTX *context = ft_nullptr;
     SSL *ssl_session = ft_nullptr;
     char *result = ft_nullptr;
@@ -74,21 +237,34 @@ char *api_request_https(const char *ip, uint16_t port,
     ft_string body_string;
     ft_string response;
     const char *body = ft_nullptr;
+    int ssl_connect_result;
 
     context = SSL_CTX_new(TLS_client_method());
     if (!context)
+    {
+        api_request_set_ssl_error(ft_nullptr, 0);
+        error_code = ft_errno;
         goto cleanup;
+    }
     if (verify_peer)
     {
         if (ca_certificate)
         {
             if (SSL_CTX_load_verify_locations(context, ca_certificate, ft_nullptr) != 1)
+            {
+                api_request_set_ssl_error(ft_nullptr, 0);
+                error_code = ft_errno;
                 goto cleanup;
+            }
         }
         else
         {
             if (SSL_CTX_set_default_verify_paths(context) != 1)
+            {
+                api_request_set_ssl_error(ft_nullptr, 0);
+                error_code = ft_errno;
                 goto cleanup;
+            }
         }
         SSL_CTX_set_verify(context, SSL_VERIFY_PEER, ft_nullptr);
     }
@@ -96,11 +272,24 @@ char *api_request_https(const char *ip, uint16_t port,
         SSL_CTX_set_verify(context, SSL_VERIFY_NONE, ft_nullptr);
     ssl_session = SSL_new(context);
     if (!ssl_session)
+    {
+        api_request_set_ssl_error(ft_nullptr, 0);
+        error_code = ft_errno;
         goto cleanup;
+    }
     if (SSL_set_fd(ssl_session, socket_wrapper.get_fd()) != 1)
+    {
+        api_request_set_ssl_error(ssl_session, 0);
+        error_code = ft_errno;
         goto cleanup;
-    if (SSL_connect(ssl_session) <= 0)
+    }
+    ssl_connect_result = SSL_connect(ssl_session);
+    if (ssl_connect_result <= 0)
+    {
+        api_request_set_ssl_error(ssl_session, ssl_connect_result);
+        error_code = ft_errno;
         goto cleanup;
+    }
 
     request = method;
     request += " ";
@@ -116,13 +305,22 @@ char *api_request_https(const char *ip, uint16_t port,
     {
         char *temporary_string = json_write_to_string(payload);
         if (!temporary_string)
+        {
+            if (ft_errno == ER_SUCCESS)
+                error_code = FT_EALLOC;
+            else
+                error_code = ft_errno;
             goto cleanup;
+        }
         body_string = temporary_string;
         cma_free(temporary_string);
         request += "\r\nContent-Type: application/json";
         char *length_string = cma_itoa(static_cast<int>(body_string.size()));
         if (!length_string)
+        {
+            error_code = FT_EALLOC;
             goto cleanup;
+        }
         request += "\r\nContent-Length: ";
         request += length_string;
         cma_free(length_string);
@@ -132,7 +330,16 @@ char *api_request_https(const char *ip, uint16_t port,
         request += body_string.c_str();
 
     if (ssl_send_all(ssl_session, request.c_str(), request.size()) < 0)
+    {
+        if (ft_errno == ER_SUCCESS)
+        {
+            api_request_set_ssl_error(ssl_session, -1);
+            error_code = ft_errno;
+        }
+        else
+            error_code = ft_errno;
         goto cleanup;
+    }
 
     char buffer[1024];
     ssize_t bytes_received;
@@ -150,9 +357,24 @@ char *api_request_https(const char *ip, uint16_t port,
     }
     body = ft_strstr(response.c_str(), "\r\n\r\n");
     if (!body)
+    {
+        if (ft_errno == ER_SUCCESS)
+            error_code = FT_EIO;
+        else
+            error_code = ft_errno;
         goto cleanup;
+    }
     body += 4;
     result = cma_strdup(body);
+    if (!result)
+    {
+        if (ft_errno == ER_SUCCESS)
+            error_code = FT_EALLOC;
+        else
+            error_code = ft_errno;
+        goto cleanup;
+    }
+    error_code = ER_SUCCESS;
 
 cleanup:
     if (ssl_session)
@@ -194,23 +416,38 @@ char *api_request_string_tls(const char *host, uint16_t port,
     ft_string body_string;
     ft_string response;
     const char *body = ft_nullptr;
+    int resolver_status;
+    int ssl_handshake_result;
 
     if (!host || !method || !path)
+    {
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
+    }
     if (!OPENSSL_init_ssl(0, ft_nullptr))
+    {
+        api_request_set_ssl_error(ft_nullptr, 0);
         return (ft_nullptr);
+    }
 
     context = SSL_CTX_new(TLS_client_method());
     if (!context)
+    {
+        api_request_set_ssl_error(ft_nullptr, 0);
         goto cleanup;
+    }
 
     ft_bzero(&hints, sizeof(hints));
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_family = AF_UNSPEC;
     char port_string[6];
     pf_snprintf(port_string, sizeof(port_string), "%u", port);
-    if (getaddrinfo(host, port_string, &hints, &address_results) != 0)
+    resolver_status = getaddrinfo(host, port_string, &hints, &address_results);
+    if (resolver_status != 0)
+    {
+        api_request_set_resolve_error(resolver_status);
         goto cleanup;
+    }
 
     address_info = address_results;
     while (address_info != ft_nullptr)
@@ -236,15 +473,29 @@ char *api_request_string_tls(const char *host, uint16_t port,
     freeaddrinfo(address_results);
     address_results = ft_nullptr;
     if (socket_fd < 0)
+    {
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = SOCKET_CONNECT_FAILED;
         goto cleanup;
+    }
 
     ssl_session = SSL_new(context);
     if (!ssl_session)
+    {
+        api_request_set_ssl_error(ft_nullptr, 0);
         goto cleanup;
+    }
     if (SSL_set_fd(ssl_session, socket_fd) != 1)
+    {
+        api_request_set_ssl_error(ssl_session, 0);
         goto cleanup;
-    if (SSL_connect(ssl_session) <= 0)
+    }
+    ssl_handshake_result = SSL_connect(ssl_session);
+    if (ssl_handshake_result <= 0)
+    {
+        api_request_set_ssl_error(ssl_session, ssl_handshake_result);
         goto cleanup;
+    }
 
     request = method;
     request += " ";
@@ -260,13 +511,20 @@ char *api_request_string_tls(const char *host, uint16_t port,
     {
         char *temporary_string = json_write_to_string(payload);
         if (!temporary_string)
+        {
+            if (ft_errno == ER_SUCCESS)
+                ft_errno = FT_EALLOC;
             goto cleanup;
+        }
         body_string = temporary_string;
         cma_free(temporary_string);
         request += "\r\nContent-Type: application/json";
         char *length_string = cma_itoa(static_cast<int>(body_string.size()));
         if (!length_string)
+        {
+            ft_errno = FT_EALLOC;
             goto cleanup;
+        }
         request += "\r\nContent-Length: ";
         request += length_string;
         cma_free(length_string);
@@ -295,7 +553,11 @@ char *api_request_string_tls(const char *host, uint16_t port,
     }
     body = ft_strstr(response.c_str(), "\r\n\r\n");
     if (!body)
+    {
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = FT_EIO;
         goto cleanup;
+    }
     body += 4;
     result = cma_strdup(body);
 
@@ -321,9 +583,15 @@ json_group *api_request_json_tls(const char *host, uint16_t port,
     char *body = api_request_string_tls(host, port, method, path, payload,
                                         headers, status, timeout);
     if (!body)
+    {
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = FT_EIO;
         return (ft_nullptr);
+    }
     json_group *result = json_read_from_string(body);
     cma_free(body);
+    if (result)
+        ft_errno = ER_SUCCESS;
     return (result);
 }
 
@@ -353,9 +621,15 @@ json_group *api_request_json_tls_bearer(const char *host, uint16_t port,
     char *body = api_request_string_tls_bearer(host, port, method, path, token,
                                                payload, headers, status, timeout);
     if (!body)
+    {
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = FT_EIO;
         return (ft_nullptr);
+    }
     json_group *result = json_read_from_string(body);
     cma_free(body);
+    if (result)
+        ft_errno = ER_SUCCESS;
     return (result);
 }
 
@@ -386,9 +660,15 @@ json_group *api_request_json_tls_basic(const char *host, uint16_t port,
                                               credentials, payload, headers,
                                               status, timeout);
     if (!body)
+    {
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = FT_EIO;
         return (ft_nullptr);
+    }
     json_group *result = json_read_from_string(body);
     cma_free(body);
+    if (result)
+        ft_errno = ER_SUCCESS;
     return (result);
 }
 
@@ -425,21 +705,35 @@ static void api_tls_async_worker(api_tls_async_request *data)
     struct timeval tv;
     size_t total_sent;
     int ssl_ret;
+    int async_resolver_status;
 
     if (!data || !data->host || !data->method || !data->path)
+    {
+        ft_errno = FT_EINVAL;
         goto cleanup;
+    }
     if (!OPENSSL_init_ssl(0, ft_nullptr))
+    {
+        api_request_set_ssl_error(ft_nullptr, 0);
         goto cleanup;
+    }
     context = SSL_CTX_new(TLS_client_method());
     if (!context)
+    {
+        api_request_set_ssl_error(ft_nullptr, 0);
         goto cleanup;
+    }
 
     ft_bzero(&hints, sizeof(hints));
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_family = AF_UNSPEC;
     pf_snprintf(port_string, sizeof(port_string), "%u", data->port);
-    if (getaddrinfo(data->host, port_string, &hints, &address_results) != 0)
+    async_resolver_status = getaddrinfo(data->host, port_string, &hints, &address_results);
+    if (async_resolver_status != 0)
+    {
+        api_request_set_resolve_error(async_resolver_status);
         goto cleanup;
+    }
     address_info = address_results;
     while (address_info != ft_nullptr && socket_fd < 0)
     {
@@ -450,7 +744,11 @@ static void api_tls_async_worker(api_tls_async_request *data)
             address_info = address_info->ai_next;
     }
     if (socket_fd < 0)
+    {
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = SOCKET_CONNECT_FAILED;
         goto cleanup;
+    }
 
 #ifdef _WIN32
     u_long mode = 1;
@@ -477,13 +775,25 @@ static void api_tls_async_worker(api_tls_async_request *data)
     tv.tv_sec = data->timeout / 1000;
     tv.tv_usec = (data->timeout % 1000) * 1000;
     if (select(socket_fd + 1, ft_nullptr, &write_set, ft_nullptr, &tv) <= 0)
+    {
+        if (errno != 0)
+            ft_errno = errno + ERRNO_OFFSET;
+        else if (ft_errno == ER_SUCCESS)
+            ft_errno = SOCKET_CONNECT_FAILED;
         goto cleanup;
+    }
 
     ssl_session = SSL_new(context);
     if (!ssl_session)
+    {
+        api_request_set_ssl_error(ft_nullptr, 0);
         goto cleanup;
+    }
     if (SSL_set_fd(ssl_session, socket_fd) != 1)
+    {
+        api_request_set_ssl_error(ssl_session, 0);
         goto cleanup;
+    }
 
     ssl_ret = SSL_connect(ssl_session);
     while (ssl_ret <= 0)
@@ -494,14 +804,26 @@ static void api_tls_async_worker(api_tls_async_request *data)
             FD_ZERO(&read_set);
             FD_SET(socket_fd, &read_set);
             if (select(socket_fd + 1, &read_set, ft_nullptr, ft_nullptr, &tv) <= 0)
+            {
+                if (errno != 0)
+                    ft_errno = errno + ERRNO_OFFSET;
+                else if (ft_errno == ER_SUCCESS)
+                    ft_errno = SOCKET_CONNECT_FAILED;
                 goto cleanup;
+            }
         }
         else if (ssl_err == SSL_ERROR_WANT_WRITE)
         {
             FD_ZERO(&write_set);
             FD_SET(socket_fd, &write_set);
             if (select(socket_fd + 1, ft_nullptr, &write_set, ft_nullptr, &tv) <= 0)
+            {
+                if (errno != 0)
+                    ft_errno = errno + ERRNO_OFFSET;
+                else if (ft_errno == ER_SUCCESS)
+                    ft_errno = SOCKET_CONNECT_FAILED;
                 goto cleanup;
+            }
         }
         else
             goto cleanup;
@@ -522,13 +844,20 @@ static void api_tls_async_worker(api_tls_async_request *data)
     {
         char *temporary_string = json_write_to_string(data->payload);
         if (!temporary_string)
+        {
+            if (ft_errno == ER_SUCCESS)
+                ft_errno = FT_EALLOC;
             goto cleanup;
+        }
         body_string = temporary_string;
         cma_free(temporary_string);
         request += "\r\nContent-Type: application/json";
         char *length_string = cma_itoa(static_cast<int>(body_string.size()));
         if (!length_string)
+        {
+            ft_errno = FT_EALLOC;
             goto cleanup;
+        }
         request += "\r\nContent-Length: ";
         request += length_string;
         cma_free(length_string);
@@ -550,7 +879,13 @@ static void api_tls_async_worker(api_tls_async_request *data)
                 FD_ZERO(&read_set);
                 FD_SET(socket_fd, &read_set);
                 if (select(socket_fd + 1, &read_set, ft_nullptr, ft_nullptr, &tv) <= 0)
+                {
+                    if (errno != 0)
+                        ft_errno = errno + ERRNO_OFFSET;
+                    else if (ft_errno == ER_SUCCESS)
+                        ft_errno = SOCKET_SEND_FAILED;
                     goto cleanup;
+                }
                 continue;
             }
             else if (ssl_err == SSL_ERROR_WANT_WRITE)
@@ -558,7 +893,13 @@ static void api_tls_async_worker(api_tls_async_request *data)
                 FD_ZERO(&write_set);
                 FD_SET(socket_fd, &write_set);
                 if (select(socket_fd + 1, ft_nullptr, &write_set, ft_nullptr, &tv) <= 0)
+                {
+                    if (errno != 0)
+                        ft_errno = errno + ERRNO_OFFSET;
+                    else if (ft_errno == ER_SUCCESS)
+                        ft_errno = SOCKET_SEND_FAILED;
                     goto cleanup;
+                }
                 continue;
             }
             goto cleanup;
@@ -581,7 +922,13 @@ static void api_tls_async_worker(api_tls_async_request *data)
             FD_ZERO(&read_set);
             FD_SET(socket_fd, &read_set);
             if (select(socket_fd + 1, &read_set, ft_nullptr, ft_nullptr, &tv) <= 0)
+            {
+                if (errno != 0)
+                    ft_errno = errno + ERRNO_OFFSET;
+                else if (ft_errno == ER_SUCCESS)
+                    ft_errno = SOCKET_RECEIVE_FAILED;
                 break;
+            }
             continue;
         }
         if (ssl_err == SSL_ERROR_WANT_WRITE)
@@ -589,7 +936,13 @@ static void api_tls_async_worker(api_tls_async_request *data)
             FD_ZERO(&write_set);
             FD_SET(socket_fd, &write_set);
             if (select(socket_fd + 1, ft_nullptr, &write_set, ft_nullptr, &tv) <= 0)
+            {
+                if (errno != 0)
+                    ft_errno = errno + ERRNO_OFFSET;
+                else if (ft_errno == ER_SUCCESS)
+                    ft_errno = SOCKET_RECEIVE_FAILED;
                 break;
+            }
             continue;
         }
         break;
@@ -605,6 +958,10 @@ static void api_tls_async_worker(api_tls_async_request *data)
         {
             body += 4;
             result_body = cma_strdup(body);
+            if (!result_body && ft_errno == ER_SUCCESS)
+                ft_errno = FT_EALLOC;
+            if (result_body)
+                ft_errno = ER_SUCCESS;
         }
     }
 
@@ -639,10 +996,16 @@ bool    api_request_string_tls_async(const char *host, uint16_t port,
         void *user_data, json_group *payload, const char *headers, int timeout)
 {
     if (!host || !method || !path || !callback)
+    {
+        ft_errno = FT_EINVAL;
         return (false);
+    }
     api_tls_async_request *data = static_cast<api_tls_async_request*>(cma_malloc(sizeof(api_tls_async_request)));
     if (!data)
+    {
+        ft_errno = FT_EALLOC;
         return (false);
+    }
     ft_bzero(data, sizeof(api_tls_async_request));
     data->host = cma_strdup(host);
     data->method = cma_strdup(method);
@@ -665,10 +1028,12 @@ bool    api_request_string_tls_async(const char *host, uint16_t port,
         if (data->headers)
             cma_free(data->headers);
         cma_free(data);
+        ft_errno = FT_EALLOC;
         return (false);
     }
     ft_thread thread_worker(api_tls_async_worker, data);
     thread_worker.detach();
+    ft_errno = ER_SUCCESS;
     return (true);
 }
 
@@ -704,17 +1069,25 @@ bool    api_request_json_tls_async(const char *host, uint16_t port,
     api_json_async_data *data;
 
     if (!host || !method || !path || !callback)
+    {
+        ft_errno = FT_EINVAL;
         return (false);
+    }
     data = static_cast<api_json_async_data*>(cma_malloc(sizeof(api_json_async_data)));
     if (!data)
+    {
+        ft_errno = FT_EALLOC;
         return (false);
+    }
     data->callback = callback;
     data->user_data = user_data;
     if (!api_request_string_tls_async(host, port, method, path, api_json_async_wrapper,
             data, payload, headers, timeout))
     {
         cma_free(data);
+        ft_errno = ft_errno == ER_SUCCESS ? FT_EALLOC : ft_errno;
         return (false);
     }
+    ft_errno = ER_SUCCESS;
     return (true);
 }

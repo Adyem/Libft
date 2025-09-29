@@ -7,6 +7,23 @@
 #include "../Errno/errno.hpp"
 #include "get_next_line.hpp"
 
+static bool map_has_new_error(ft_unord_map<ft_istream*, char*> &map, int previous_error, int *current_error)
+{
+    int updated_error;
+
+    updated_error = map.get_error();
+    if (current_error)
+        *current_error = updated_error;
+    if (updated_error != ER_SUCCESS)
+    {
+        if (previous_error == ER_SUCCESS)
+            return (true);
+        if (updated_error != previous_error)
+            return (true);
+    }
+    return (false);
+}
+
 static char* allocate_new_string(char* string_one, char* string_two)
 {
     int total_length = 0;
@@ -174,16 +191,19 @@ char    *get_next_line(ft_istream &input, std::size_t buffer_size)
     static ft_unord_map<ft_istream*, char*> readed_map;
     char                                   *string = ft_nullptr;
     char                                   *stored_string = ft_nullptr;
+    int                                     map_error_before;
+    int                                     map_error_after;
 
     if (buffer_size == 0)
     {
         ft_errno = FT_EINVAL;
         return (ft_nullptr);
     }
+    map_error_before = readed_map.get_error();
     ft_unord_map<ft_istream*, char*>::iterator map_it = readed_map.find(&input);
-    if (readed_map.get_error() != ER_SUCCESS)
+    if (map_has_new_error(readed_map, map_error_before, &map_error_after))
     {
-        ft_errno = readed_map.get_error();
+        ft_errno = map_error_after;
         return (ft_nullptr);
     }
     if (map_it != readed_map.end())
@@ -191,36 +211,80 @@ char    *get_next_line(ft_istream &input, std::size_t buffer_size)
     stored_string = read_stream(input, stored_string, buffer_size);
     if (!stored_string)
     {
+        int failure_errno;
+
+        failure_errno = ft_errno;
+        map_error_before = readed_map.get_error();
         readed_map.remove(&input);
-        if (readed_map.get_error() != ER_SUCCESS)
+        if (map_has_new_error(readed_map, map_error_before, &map_error_after))
         {
-            ft_errno = readed_map.get_error();
+            ft_errno = map_error_after;
             return (ft_nullptr);
         }
+        if (failure_errno != ER_SUCCESS)
+            ft_errno = failure_errno;
         return (ft_nullptr);
     }
     string = fetch_line(stored_string);
+    int line_error = ft_errno;
     stored_string = leftovers(stored_string);
-    if (stored_string)
+    int leftovers_error = ft_errno;
+    if (!string)
     {
-        readed_map.insert(&input, stored_string);
-        if (readed_map.get_error() != ER_SUCCESS)
+        if (stored_string)
         {
-            cma_free(stored_string);
-            ft_errno = readed_map.get_error();
+            map_error_before = readed_map.get_error();
+            readed_map.insert(&input, stored_string);
+            if (map_has_new_error(readed_map, map_error_before, &map_error_after))
+            {
+                cma_free(stored_string);
+                ft_errno = map_error_after;
+                return (ft_nullptr);
+            }
+        }
+        else
+        {
+            map_error_before = readed_map.get_error();
+            readed_map.remove(&input);
+            if (map_has_new_error(readed_map, map_error_before, &map_error_after))
+            {
+                ft_errno = map_error_after;
+                return (ft_nullptr);
+            }
+        }
+        if (line_error != ER_SUCCESS)
+            ft_errno = line_error;
+        return (ft_nullptr);
+    }
+    if (!stored_string)
+    {
+        map_error_before = readed_map.get_error();
+        readed_map.remove(&input);
+        if (map_has_new_error(readed_map, map_error_before, &map_error_after))
+        {
+            ft_errno = map_error_after;
+            cma_free(string);
+            return (ft_nullptr);
+        }
+        if (leftovers_error != ER_SUCCESS)
+        {
+            cma_free(string);
+            ft_errno = leftovers_error;
             return (ft_nullptr);
         }
     }
     else
     {
-        readed_map.remove(&input);
-        if (readed_map.get_error() != ER_SUCCESS)
+        map_error_before = readed_map.get_error();
+        readed_map.insert(&input, stored_string);
+        if (map_has_new_error(readed_map, map_error_before, &map_error_after))
         {
-            ft_errno = readed_map.get_error();
+            cma_free(stored_string);
+            cma_free(string);
+            ft_errno = map_error_after;
             return (ft_nullptr);
         }
     }
-    if (string)
-        ft_errno = ER_SUCCESS;
+    ft_errno = ER_SUCCESS;
     return (string);
 }
