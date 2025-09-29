@@ -1,18 +1,77 @@
 #include "printf.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
 #include <stdarg.h>
 #include <stdio.h>
+#include <errno.h>
+
+typedef FILE *(*t_pf_tmpfile_function)(void);
+typedef int (*t_pf_fflush_function)(FILE *);
+typedef long (*t_pf_ftell_function)(FILE *);
+
+static t_pf_tmpfile_function g_pf_tmpfile_function = tmpfile;
+static t_pf_fflush_function g_pf_fflush_function = fflush;
+static t_pf_ftell_function g_pf_ftell_function = ftell;
+
+void pf_set_tmpfile_function(t_pf_tmpfile_function function)
+{
+    if (function == ft_nullptr)
+        g_pf_tmpfile_function = tmpfile;
+    else
+        g_pf_tmpfile_function = function;
+    return ;
+}
+
+void pf_reset_tmpfile_function(void)
+{
+    g_pf_tmpfile_function = tmpfile;
+    return ;
+}
+
+void pf_set_fflush_function(t_pf_fflush_function function)
+{
+    if (function == ft_nullptr)
+        g_pf_fflush_function = fflush;
+    else
+        g_pf_fflush_function = function;
+    return ;
+}
+
+void pf_reset_fflush_function(void)
+{
+    g_pf_fflush_function = fflush;
+    return ;
+}
+
+void pf_set_ftell_function(t_pf_ftell_function function)
+{
+    if (function == ft_nullptr)
+        g_pf_ftell_function = ftell;
+    else
+        g_pf_ftell_function = function;
+    return ;
+}
+
+void pf_reset_ftell_function(void)
+{
+    g_pf_ftell_function = ftell;
+    return ;
+}
 
 int pf_vsnprintf(char *string, size_t size, const char *format, va_list args)
 {
     if (string == ft_nullptr || format == ft_nullptr)
-        return (0);
-    FILE *stream = tmpfile();
+    {
+        ft_errno = FT_EINVAL;
+        return (-1);
+    }
+    FILE *stream = g_pf_tmpfile_function();
     if (stream == ft_nullptr)
     {
+        ft_errno = FT_EALLOC;
         if (size > 0)
             string[0] = '\0';
-        return (0);
+        return (-1);
     }
     va_list copy;
     va_copy(copy, args);
@@ -20,26 +79,30 @@ int pf_vsnprintf(char *string, size_t size, const char *format, va_list args)
     va_end(copy);
     if (printed < 0)
     {
-        fclose(stream);
         if (size > 0)
             string[0] = '\0';
+        fclose(stream);
         return (printed);
     }
-    int flush_status = fflush(stream);
+    int flush_status = g_pf_fflush_function(stream);
     if (flush_status != 0)
     {
+        int saved_errno = errno;
+        ft_errno = saved_errno + ERRNO_OFFSET;
         fclose(stream);
         if (size > 0)
             string[0] = '\0';
-        return (0);
+        return (-1);
     }
-    long position = ftell(stream);
+    long position = g_pf_ftell_function(stream);
     if (position < 0)
     {
+        int saved_errno = errno;
+        ft_errno = saved_errno + ERRNO_OFFSET;
         fclose(stream);
         if (size > 0)
             string[0] = '\0';
-        return (0);
+        return (-1);
     }
     rewind(stream);
     if (size > 0)
@@ -53,6 +116,7 @@ int pf_vsnprintf(char *string, size_t size, const char *format, va_list args)
         string[read_bytes] = '\0';
     }
     fclose(stream);
+    ft_errno = ER_SUCCESS;
     return (printed);
 }
 
