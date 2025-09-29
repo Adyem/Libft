@@ -1,5 +1,6 @@
 #include "compatebility_internal.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Errno/errno.hpp"
 
 #if defined(_WIN32) || defined(_WIN64)
 # include "../CPP_class/class_nullptr.hpp"
@@ -82,6 +83,8 @@ static int cmp_open_internal(const char *path_name, int flags, int mode)
         flags_and_attributes, ft_nullptr);
     if (file_handle == INVALID_HANDLE_VALUE)
     {
+        DWORD last_error = GetLastError();
+        ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
         g_file_mutex.unlock(GetCurrentThreadId());
         return (-1);
     }
@@ -89,10 +92,12 @@ static int cmp_open_internal(const char *path_name, int flags, int mode)
     if (file_descriptor < 0)
     {
         CloseHandle(file_handle);
+        ft_errno = FT_EALLOC;
         g_file_mutex.unlock(GetCurrentThreadId());
         return (-1);
     }
     g_file_mutex.unlock(GetCurrentThreadId());
+    ft_errno = ER_SUCCESS;
     return (file_descriptor);
 }
 
@@ -117,6 +122,7 @@ ssize_t cmp_read(int file_descriptor, void *buffer, unsigned int count)
     HANDLE file_handle = cmp_retrieve_handle(file_descriptor);
     if (file_handle == INVALID_HANDLE_VALUE)
     {
+        ft_errno = FT_EINVAL;
         g_file_mutex.unlock(GetCurrentThreadId());
         return (-1);
     }
@@ -125,6 +131,7 @@ ssize_t cmp_read(int file_descriptor, void *buffer, unsigned int count)
     {
         if (file_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
+            ft_errno = FT_EINVAL;
             g_file_mutex.unlock(GetCurrentThreadId());
             return (-1);
         }
@@ -133,7 +140,12 @@ ssize_t cmp_read(int file_descriptor, void *buffer, unsigned int count)
     BOOL ok = ReadFile(file_handle, buffer, count, &bytes_read, ft_nullptr);
     g_file_mutex.unlock(GetCurrentThreadId());
     if (!ok)
+    {
+        DWORD last_error = GetLastError();
+        ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (bytes_read);
 }
 
@@ -143,6 +155,7 @@ ssize_t cmp_write(int file_descriptor, const void *buffer, unsigned int count)
     HANDLE file_handle = cmp_retrieve_handle(file_descriptor);
     if (file_handle == INVALID_HANDLE_VALUE)
     {
+        ft_errno = FT_EINVAL;
         g_file_mutex.unlock(GetCurrentThreadId());
         return (-1);
     }
@@ -150,7 +163,12 @@ ssize_t cmp_write(int file_descriptor, const void *buffer, unsigned int count)
     BOOL ok = WriteFile(file_handle, buffer, count, &bytes_written, ft_nullptr);
     g_file_mutex.unlock(GetCurrentThreadId());
     if (!ok)
+    {
+        DWORD last_error = GetLastError();
+        ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (bytes_written);
 }
 
@@ -160,16 +178,20 @@ int cmp_close(int file_descriptor)
     HANDLE file_handle = cmp_retrieve_handle(file_descriptor);
     if (file_handle == INVALID_HANDLE_VALUE)
     {
+        ft_errno = FT_EINVAL;
         g_file_mutex.unlock(GetCurrentThreadId());
         return (-1);
     }
     if (!CloseHandle(file_handle))
     {
+        DWORD last_error = GetLastError();
+        ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
         g_file_mutex.unlock(GetCurrentThreadId());
         return (-1);
     }
     cmp_clear_handle(file_descriptor);
     g_file_mutex.unlock(GetCurrentThreadId());
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 
@@ -220,12 +242,17 @@ void cmp_initialize_standard_file_descriptors()
 # include <fcntl.h>
 # include <unistd.h>
 # include <sys/stat.h>
+# include <cerrno>
 
 int cmp_open(const char *path_name)
 {
     int file_descriptor = open(path_name, O_RDONLY);
     if (file_descriptor == -1)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (file_descriptor);
 }
 
@@ -233,7 +260,11 @@ int cmp_open(const char *path_name, int flags)
 {
     int file_descriptor = open(path_name, flags);
     if (file_descriptor == -1)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (file_descriptor);
 }
 
@@ -241,30 +272,61 @@ int cmp_open(const char *path_name, int flags, mode_t mode)
 {
     int file_descriptor = open(path_name, flags, mode);
     if (file_descriptor == -1)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (file_descriptor);
 }
 
 ssize_t cmp_read(int file_descriptor, void *buffer, size_t count)
 {
+    if (file_descriptor < 0)
+    {
+        ft_errno = FT_EINVAL;
+        return (-1);
+    }
     ssize_t bytes_read = read(file_descriptor, buffer, count);
     if (bytes_read == -1)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (bytes_read);
 }
 
 ssize_t cmp_write(int file_descriptor, const void *buffer, size_t count)
 {
+    if (file_descriptor < 0)
+    {
+        ft_errno = FT_EINVAL;
+        return (-1);
+    }
     ssize_t bytes_written = write(file_descriptor, buffer, count);
     if (bytes_written == -1)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (bytes_written);
 }
 
 int cmp_close(int file_descriptor)
 {
-    if (close(file_descriptor) == -1)
+    if (file_descriptor < 0)
+    {
+        ft_errno = FT_EINVAL;
         return (-1);
+    }
+    if (close(file_descriptor) == -1)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
+        return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 
