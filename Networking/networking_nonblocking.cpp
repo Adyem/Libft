@@ -4,7 +4,9 @@
 #else
 # include <fcntl.h>
 # include <unistd.h>
+# include <errno.h>
 #endif
+#include "../Errno/errno.hpp"
 
 int nw_set_nonblocking(int socket_fd)
 {
@@ -12,15 +14,26 @@ int nw_set_nonblocking(int socket_fd)
     u_long mode;
     mode = 1;
     if (ioctlsocket(static_cast<SOCKET>(socket_fd), FIONBIO, &mode) != 0)
+    {
+        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (0);
 #else
     int flags;
     flags = fcntl(socket_fd, F_GETFL, 0);
     if (flags == -1)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
         return (-1);
+    }
     if (fcntl(socket_fd, F_SETFL, flags | O_NONBLOCK) == -1)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (0);
 #endif
 }
