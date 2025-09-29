@@ -1,6 +1,8 @@
 #include "../../HTML/parser.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
+#include "../../Errno/errno.hpp"
+#include "../../System_utils/test_runner.hpp"
 #include <cstring>
 
 int test_html_create_node(void)
@@ -35,6 +37,34 @@ int test_html_write_to_string(void)
         cma_free(result);
     html_free_nodes(node);
     return (ok);
+}
+
+FT_TEST(test_html_write_to_string_allocation_failure_sets_errno, "html_write_to_string sets errno on allocation failures")
+{
+    html_node *node = html_create_node("div", "Hello");
+    FT_ASSERT(node != ft_nullptr);
+    ft_errno = ER_SUCCESS;
+    cma_set_alloc_limit(1);
+    char *result = html_write_to_string(node);
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(ft_nullptr, result);
+    FT_ASSERT_EQ(FT_EALLOC, ft_errno);
+    html_free_nodes(node);
+    return (1);
+}
+
+FT_TEST(test_html_write_to_string_success_clears_errno, "html_write_to_string clears errno after successful serialization")
+{
+    html_node *node = html_create_node("div", "Hello");
+    FT_ASSERT(node != ft_nullptr);
+    ft_errno = FT_EINVAL;
+    char *result = html_write_to_string(node);
+    FT_ASSERT(result != ft_nullptr);
+    FT_ASSERT_EQ(0, std::strcmp(result, "<div>Hello</div>\n"));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    cma_free(result);
+    html_free_nodes(node);
+    return (1);
 }
 
 int test_html_find_by_attr(void)
