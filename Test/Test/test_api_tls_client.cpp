@@ -45,13 +45,20 @@ extern "C"
         const char *source;
 
         if (len > static_cast<size_t>(INT_MAX))
+        {
+            ft_errno = FT_EINVAL;
             return (-1);
+        }
         if (!g_mock_tls_io_enabled)
         {
             write_length = static_cast<int>(len);
             write_result = ::SSL_write(ssl, buf, write_length);
             if (write_result <= 0)
+            {
+                ft_errno = SSL_ERROR_SYSCALL + ERRNO_OFFSET;
                 return (-1);
+            }
+            ft_errno = ER_SUCCESS;
             return (write_result);
         }
         source = static_cast<const char *>(buf);
@@ -61,6 +68,7 @@ extern "C"
             (void)source[copy_index];
             copy_index += 1;
         }
+        ft_errno = ER_SUCCESS;
         return (static_cast<ssize_t>(len));
     }
 
@@ -75,13 +83,20 @@ extern "C"
         const char *source;
 
         if (len > static_cast<size_t>(INT_MAX))
+        {
+            ft_errno = FT_EINVAL;
             return (-1);
+        }
         if (!g_mock_tls_io_enabled)
         {
             read_length = static_cast<int>(len);
             read_result = ::SSL_read(ssl, buf, read_length);
             if (read_result <= 0)
+            {
+                ft_errno = SSL_ERROR_SYSCALL + ERRNO_OFFSET;
                 return (-1);
+            }
+            ft_errno = ER_SUCCESS;
             return (read_result);
         }
         (void)ssl;
@@ -94,7 +109,10 @@ extern "C"
             g_mock_read_offset = 0;
         }
         if (g_mock_read_index >= g_mock_read_count)
+        {
+            ft_errno = ER_SUCCESS;
             return (0);
+        }
         remaining = g_mock_read_sizes[g_mock_read_index] - g_mock_read_offset;
         copy_length = len;
         if (copy_length > remaining)
@@ -113,6 +131,7 @@ extern "C"
             g_mock_read_index += 1;
             g_mock_read_offset = 0;
         }
+        ft_errno = ER_SUCCESS;
         return (static_cast<ssize_t>(copy_length));
     }
 }

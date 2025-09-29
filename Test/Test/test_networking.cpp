@@ -13,6 +13,8 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
+int g_mock_ssl_write_should_fail = 0;
+int g_mock_ssl_read_should_fail = 0;
 static int g_mock_ssl_write_call_count = 0;
 static int g_mock_ssl_write_last_length = 0;
 static int g_mock_ssl_read_call_count = 0;
@@ -24,6 +26,11 @@ extern "C"
     {
         (void)ssl;
         (void)buffer;
+        if (g_mock_ssl_write_should_fail)
+        {
+            g_mock_ssl_write_should_fail = 0;
+            return (-1);
+        }
         g_mock_ssl_write_call_count++;
         g_mock_ssl_write_last_length = length;
         return (length);
@@ -33,6 +40,11 @@ extern "C"
     {
         (void)ssl;
         (void)buffer;
+        if (g_mock_ssl_read_should_fail)
+        {
+            g_mock_ssl_read_should_fail = 0;
+            return (-1);
+        }
         g_mock_ssl_read_call_count++;
         g_mock_ssl_read_last_length = length;
         return (length);
