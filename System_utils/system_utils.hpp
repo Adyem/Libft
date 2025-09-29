@@ -38,6 +38,7 @@ typedef struct su_file
     int _descriptor;
 } su_file;
 
+void    su_force_file_stream_allocation_failure(bool should_fail);
 su_file *su_fopen(const char *path_name);
 su_file *su_fopen(const char *path_name, int flags);
 su_file *su_fopen(const char *path_name, int flags, mode_t mode);
