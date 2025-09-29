@@ -1,6 +1,7 @@
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
 #include "compression.hpp"
 
 static int base64_char_value(unsigned char character)
@@ -49,12 +50,19 @@ unsigned char    *ft_base64_encode(const unsigned char *input_buffer, std::size_
     int             has_byte_three;
 
     if (!input_buffer || !encoded_size)
+    {
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
+    }
     base64_table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     output_length = ((input_size + 2) / 3) * 4;
     output_buffer = static_cast<unsigned char *>(cma_malloc(output_length + 1));
     if (!output_buffer)
+    {
+        ft_errno = FT_EALLOC;
+        *encoded_size = 0;
         return (ft_nullptr);
+    }
     input_index = 0;
     output_index = 0;
     while (input_index < input_size)
@@ -104,6 +112,7 @@ unsigned char    *ft_base64_encode(const unsigned char *input_buffer, std::size_
     }
     output_buffer[output_index] = '\0';
     *encoded_size = output_index;
+    ft_errno = ER_SUCCESS;
     return (output_buffer);
 }
 
@@ -128,7 +137,10 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
     int             has_char_four;
 
     if (!input_buffer || !decoded_size)
+    {
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
+    }
     *decoded_size = 0;
     sanitized_length = 0;
     input_index = 0;
@@ -142,15 +154,28 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
     {
         output_buffer = static_cast<unsigned char *>(cma_malloc(1));
         if (!output_buffer)
+        {
+            ft_errno = FT_EALLOC;
+            *decoded_size = 0;
             return (ft_nullptr);
+        }
+        output_buffer[0] = '\0';
+        ft_errno = ER_SUCCESS;
         return (output_buffer);
     }
     if (sanitized_length % 4 == 1)
+    {
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
+    }
     output_length = ((sanitized_length + 3) / 4) * 3;
     output_buffer = static_cast<unsigned char *>(cma_malloc(output_length));
     if (!output_buffer)
+    {
+        ft_errno = FT_EALLOC;
+        *decoded_size = 0;
         return (ft_nullptr);
+    }
     input_index = 0;
     sanitized_index = 0;
     output_index = 0;
@@ -172,18 +197,24 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
         if (chunk_count < 2)
         {
             cma_free(output_buffer);
+            *decoded_size = 0;
+            ft_errno = FT_EINVAL;
             return (ft_nullptr);
         }
         value_one = base64_char_value(chunk[0]);
         if (value_one == -1)
         {
             cma_free(output_buffer);
+            *decoded_size = 0;
+            ft_errno = FT_EINVAL;
             return (ft_nullptr);
         }
         value_two = base64_char_value(chunk[1]);
         if (value_two == -1)
         {
             cma_free(output_buffer);
+            *decoded_size = 0;
+            ft_errno = FT_EINVAL;
             return (ft_nullptr);
         }
         has_char_three = 0;
@@ -214,6 +245,8 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
             if (value_three == -1)
             {
                 cma_free(output_buffer);
+                *decoded_size = 0;
+                ft_errno = FT_EINVAL;
                 return (ft_nullptr);
             }
         }
@@ -225,12 +258,16 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
             if (value_four == -1)
             {
                 cma_free(output_buffer);
+                *decoded_size = 0;
+                ft_errno = FT_EINVAL;
                 return (ft_nullptr);
             }
         }
         if (has_char_three && char_three == '=' && has_char_four && char_four != '=')
         {
             cma_free(output_buffer);
+            *decoded_size = 0;
+            ft_errno = FT_EINVAL;
             return (ft_nullptr);
         }
         if ((has_char_three && char_three == '=') || (has_char_four && char_four == '='))
@@ -238,6 +275,8 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
             if (sanitized_index < sanitized_length)
             {
                 cma_free(output_buffer);
+                *decoded_size = 0;
+                ft_errno = FT_EINVAL;
                 return (ft_nullptr);
             }
         }
@@ -255,5 +294,6 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
         }
     }
     *decoded_size = output_index;
+    ft_errno = ER_SUCCESS;
     return (output_buffer);
 }
