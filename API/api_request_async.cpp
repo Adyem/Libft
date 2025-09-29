@@ -2,6 +2,7 @@
 #include "../Networking/socket_class.hpp"
 #include "../CPP_class/class_string_class.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
 #include "../Printf/printf.hpp"
 #include "../PThread/thread.hpp"
@@ -18,6 +19,103 @@
 # include <fcntl.h>
 # include <sys/select.h>
 #endif
+
+static void api_request_set_resolve_error(int resolver_status)
+{
+#ifdef EAI_BADFLAGS
+    if (resolver_status == EAI_BADFLAGS)
+    {
+        ft_errno = SOCKET_RESOLVE_BAD_FLAGS;
+        return ;
+    }
+#endif
+#ifdef EAI_AGAIN
+    if (resolver_status == EAI_AGAIN)
+    {
+        ft_errno = SOCKET_RESOLVE_AGAIN;
+        return ;
+    }
+#endif
+#ifdef EAI_FAIL
+    if (resolver_status == EAI_FAIL)
+    {
+        ft_errno = SOCKET_RESOLVE_FAIL;
+        return ;
+    }
+#endif
+#ifdef EAI_FAMILY
+    if (resolver_status == EAI_FAMILY)
+    {
+        ft_errno = SOCKET_RESOLVE_FAMILY;
+        return ;
+    }
+#endif
+#ifdef EAI_ADDRFAMILY
+    if (resolver_status == EAI_ADDRFAMILY)
+    {
+        ft_errno = SOCKET_RESOLVE_FAMILY;
+        return ;
+    }
+#endif
+#ifdef EAI_SOCKTYPE
+    if (resolver_status == EAI_SOCKTYPE)
+    {
+        ft_errno = SOCKET_RESOLVE_SOCKTYPE;
+        return ;
+    }
+#endif
+#ifdef EAI_SERVICE
+    if (resolver_status == EAI_SERVICE)
+    {
+        ft_errno = SOCKET_RESOLVE_SERVICE;
+        return ;
+    }
+#endif
+#ifdef EAI_MEMORY
+    if (resolver_status == EAI_MEMORY)
+    {
+        ft_errno = SOCKET_RESOLVE_MEMORY;
+        return ;
+    }
+#endif
+#ifdef EAI_NONAME
+    if (resolver_status == EAI_NONAME)
+    {
+        ft_errno = SOCKET_RESOLVE_NO_NAME;
+        return ;
+    }
+#endif
+#ifdef EAI_NODATA
+    if (resolver_status == EAI_NODATA)
+    {
+        ft_errno = SOCKET_RESOLVE_NO_NAME;
+        return ;
+    }
+#endif
+#ifdef EAI_OVERFLOW
+    if (resolver_status == EAI_OVERFLOW)
+    {
+        ft_errno = SOCKET_RESOLVE_OVERFLOW;
+        return ;
+    }
+#endif
+#ifdef EAI_SYSTEM
+    if (resolver_status == EAI_SYSTEM)
+    {
+#ifdef _WIN32
+        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
+#else
+        if (errno != 0)
+            ft_errno = errno + ERRNO_OFFSET;
+        else
+            ft_errno = SOCKET_RESOLVE_FAIL;
+#endif
+        return ;
+    }
+#endif
+    ft_errno = SOCKET_RESOLVE_FAILED;
+    return ;
+}
 
 struct api_async_request
 {
@@ -49,15 +147,23 @@ static void api_async_worker(api_async_request *data)
     fd_set write_set;
     struct timeval tv;
     size_t total_sent;
+    int resolver_status;
 
     if (!data || !data->ip || !data->method || !data->path)
+    {
+        ft_errno = FT_EINVAL;
         goto cleanup;
+    }
     ft_bzero(&hints, sizeof(hints));
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_family = AF_UNSPEC;
     pf_snprintf(port_string, sizeof(port_string), "%u", data->port);
-    if (getaddrinfo(data->ip, port_string, &hints, &address_results) != 0)
+    resolver_status = getaddrinfo(data->ip, port_string, &hints, &address_results);
+    if (resolver_status != 0)
+    {
+        api_request_set_resolve_error(resolver_status);
         goto cleanup;
+    }
     address_info = address_results;
     while (address_info != ft_nullptr && socket_fd < 0)
     {
@@ -68,7 +174,11 @@ static void api_async_worker(api_async_request *data)
             address_info = address_info->ai_next;
     }
     if (socket_fd < 0)
+    {
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = SOCKET_CONNECT_FAILED;
         goto cleanup;
+    }
 
 #ifdef _WIN32
     u_long mode = 1;
@@ -95,7 +205,13 @@ static void api_async_worker(api_async_request *data)
     tv.tv_sec = data->timeout / 1000;
     tv.tv_usec = (data->timeout % 1000) * 1000;
     if (select(socket_fd + 1, ft_nullptr, &write_set, ft_nullptr, &tv) <= 0)
+    {
+        if (errno != 0)
+            ft_errno = errno + ERRNO_OFFSET;
+        else if (ft_errno == ER_SUCCESS)
+            ft_errno = SOCKET_CONNECT_FAILED;
         goto cleanup;
+    }
 
     request = data->method;
     request += " ";
@@ -111,13 +227,20 @@ static void api_async_worker(api_async_request *data)
     {
         char *temporary_string = json_write_to_string(data->payload);
         if (!temporary_string)
+        {
+            if (ft_errno == ER_SUCCESS)
+                ft_errno = FT_EALLOC;
             goto cleanup;
+        }
         body_string = temporary_string;
         cma_free(temporary_string);
         request += "\r\nContent-Type: application/json";
         char *length_string = cma_itoa(static_cast<int>(body_string.size()));
         if (!length_string)
+        {
+            ft_errno = FT_EALLOC;
             goto cleanup;
+        }
         request += "\r\nContent-Length: ";
         request += length_string;
         cma_free(length_string);
@@ -145,7 +268,13 @@ static void api_async_worker(api_async_request *data)
                 FD_ZERO(&write_set);
                 FD_SET(socket_fd, &write_set);
                 if (select(socket_fd + 1, ft_nullptr, &write_set, ft_nullptr, &tv) <= 0)
+                {
+                    if (errno != 0)
+                        ft_errno = errno + ERRNO_OFFSET;
+                    else if (ft_errno == ER_SUCCESS)
+                        ft_errno = SOCKET_SEND_FAILED;
                     goto cleanup;
+                }
                 continue;
             }
             goto cleanup;
@@ -158,7 +287,13 @@ static void api_async_worker(api_async_request *data)
         FD_ZERO(&read_set);
         FD_SET(socket_fd, &read_set);
         if (select(socket_fd + 1, &read_set, ft_nullptr, ft_nullptr, &tv) <= 0)
+        {
+            if (errno != 0)
+                ft_errno = errno + ERRNO_OFFSET;
+            else if (ft_errno == ER_SUCCESS)
+                ft_errno = SOCKET_RECEIVE_FAILED;
             break;
+        }
         ssize_t bytes_received = nw_recv(socket_fd, buffer,
                                          sizeof(buffer) - 1, 0);
         if (bytes_received <= 0)
@@ -177,6 +312,10 @@ static void api_async_worker(api_async_request *data)
         {
             body += 4;
             result_body = cma_strdup(body);
+            if (!result_body && ft_errno == ER_SUCCESS)
+                ft_errno = FT_EALLOC;
+            if (result_body)
+                ft_errno = ER_SUCCESS;
         }
     }
 
@@ -207,10 +346,16 @@ bool    api_request_string_async(const char *ip, uint16_t port,
         void *user_data, json_group *payload, const char *headers, int timeout)
 {
     if (!ip || !method || !path || !callback)
+    {
+        ft_errno = FT_EINVAL;
         return (false);
+    }
     api_async_request *data = static_cast<api_async_request*>(cma_malloc(sizeof(api_async_request)));
     if (!data)
+    {
+        ft_errno = FT_EALLOC;
         return (false);
+    }
     ft_bzero(data, sizeof(api_async_request));
     data->ip = cma_strdup(ip);
     data->method = cma_strdup(method);
@@ -233,10 +378,12 @@ bool    api_request_string_async(const char *ip, uint16_t port,
         if (data->headers)
             cma_free(data->headers);
         cma_free(data);
+        ft_errno = FT_EALLOC;
         return (false);
     }
     ft_thread thread_worker(api_async_worker, data);
     thread_worker.detach();
+    ft_errno = ER_SUCCESS;
     return (true);
 }
 
@@ -272,17 +419,25 @@ bool    api_request_json_async(const char *ip, uint16_t port,
     api_json_async_data *data;
 
     if (!ip || !method || !path || !callback)
+    {
+        ft_errno = FT_EINVAL;
         return (false);
+    }
     data = static_cast<api_json_async_data*>(cma_malloc(sizeof(api_json_async_data)));
     if (!data)
+    {
+        ft_errno = FT_EALLOC;
         return (false);
+    }
     data->callback = callback;
     data->user_data = user_data;
     if (!api_request_string_async(ip, port, method, path, api_json_async_wrapper,
             data, payload, headers, timeout))
     {
         cma_free(data);
+        ft_errno = ft_errno == ER_SUCCESS ? FT_EALLOC : ft_errno;
         return (false);
     }
+    ft_errno = ER_SUCCESS;
     return (true);
 }
