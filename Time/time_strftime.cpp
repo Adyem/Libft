@@ -1,13 +1,75 @@
 #include "time.hpp"
 #include "../Libft/libft.hpp"
-#include "../Printf/printf.hpp"
 #include "../Errno/errno.hpp"
+
+static size_t   format_time_component(char *destination, size_t destination_size, int value, int minimum_width)
+{
+    char        reversed_digits[32];
+    size_t      digit_count;
+    bool        is_negative;
+    size_t      required_length;
+    size_t      pad_length;
+    size_t      index;
+    size_t      copy_index;
+
+    if (destination_size == 0)
+        return (0);
+    digit_count = 0;
+    is_negative = false;
+    if (value < 0)
+    {
+        is_negative = true;
+        value = -value;
+    }
+    if (value == 0)
+    {
+        reversed_digits[digit_count] = '0';
+        digit_count++;
+    }
+    while (value > 0)
+    {
+        reversed_digits[digit_count] = static_cast<char>('0' + (value % 10));
+        value /= 10;
+        digit_count++;
+    }
+    if (is_negative)
+    {
+        reversed_digits[digit_count] = '-';
+        digit_count++;
+    }
+    required_length = digit_count;
+    if (minimum_width > static_cast<int>(required_length))
+        required_length = static_cast<size_t>(minimum_width);
+    if (required_length + 1 > destination_size)
+    {
+        ft_errno = FT_ERANGE;
+        return (0);
+    }
+    pad_length = 0;
+    if (required_length > digit_count)
+        pad_length = required_length - digit_count;
+    index = 0;
+    while (index < pad_length)
+    {
+        destination[index] = '0';
+        index++;
+    }
+    copy_index = 0;
+    while (copy_index < digit_count)
+    {
+        destination[pad_length + copy_index] = reversed_digits[digit_count - copy_index - 1];
+        copy_index++;
+    }
+    destination[required_length] = '\0';
+    ft_errno = ER_SUCCESS;
+    return (required_length);
+}
 
 size_t  time_strftime(char *buffer, size_t size, const char *format, const t_time_info *time_info)
 {
     size_t  format_index;
     size_t  output_index;
-    char    number_buffer[5];
+    char    number_buffer[16];
     size_t  length;
     int     value;
 
@@ -47,13 +109,14 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
                     format_index++;
                     continue;
                 }
-                int snprintf_result;
+                int minimum_width;
 
                 if (format[format_index + 1] == 'Y')
-                    snprintf_result = pf_snprintf(number_buffer, sizeof(number_buffer), "%04d", value);
+                    minimum_width = 4;
                 else
-                    snprintf_result = pf_snprintf(number_buffer, sizeof(number_buffer), "%02d", value);
-                if (snprintf_result < 0 || ft_errno != ER_SUCCESS)
+                    minimum_width = 2;
+                length = format_time_component(number_buffer, sizeof(number_buffer), value, minimum_width);
+                if (length == 0 && ft_errno != ER_SUCCESS)
                 {
                     if (output_index < size)
                         buffer[output_index] = '\0';
@@ -61,7 +124,6 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
                         buffer[size - 1] = '\0';
                     return (0);
                 }
-                length = ft_strlen(number_buffer);
                 size_t number_index;
 
                 number_index = 0;

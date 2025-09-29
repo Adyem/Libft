@@ -69,7 +69,12 @@ int be_saveGame(const char *filename, const char *data, const char *key)
     int file_descriptor = g_be_open_function(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (file_descriptor < 0)
     {
+        int open_errno;
+
+        open_errno = ft_errno;
         cma_free(encrypted_data);
+        if (open_errno != ER_SUCCESS)
+            ft_errno = open_errno;
         return (1);
     }
     ssize_t bytes_written = g_be_write_function(file_descriptor, encrypted_data, static_cast<int>(data_length));
