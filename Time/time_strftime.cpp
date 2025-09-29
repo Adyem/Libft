@@ -4,63 +4,79 @@
 
 static size_t   format_time_component(char *destination, size_t destination_size, int value, int minimum_width)
 {
-    char        reversed_digits[32];
-    size_t      digit_count;
-    bool        is_negative;
-    size_t      required_length;
-    size_t      pad_length;
-    size_t      index;
-    size_t      copy_index;
+    char                    reversed_digits[32];
+    size_t                  digit_count;
+    bool                    is_negative;
+    size_t                  required_length;
+    size_t                  index;
+    size_t                  copy_index;
+    long long               signed_value;
+    unsigned long long      magnitude;
 
     if (destination_size == 0)
         return (0);
     digit_count = 0;
     is_negative = false;
-    if (value < 0)
+    signed_value = value;
+    magnitude = static_cast<unsigned long long>(signed_value);
+    if (signed_value < 0)
     {
         is_negative = true;
-        value = -value;
+        magnitude = static_cast<unsigned long long>(-signed_value);
     }
-    if (value == 0)
+    if (magnitude == 0)
     {
+        if (digit_count >= sizeof(reversed_digits))
+        {
+            ft_errno = FT_ERANGE;
+            return (0);
+        }
         reversed_digits[digit_count] = '0';
         digit_count++;
     }
-    while (value > 0)
+    while (magnitude > 0)
     {
-        reversed_digits[digit_count] = static_cast<char>('0' + (value % 10));
-        value /= 10;
+        if (digit_count >= sizeof(reversed_digits))
+        {
+            ft_errno = FT_ERANGE;
+            return (0);
+        }
+        reversed_digits[digit_count] = static_cast<char>('0' + (magnitude % 10));
+        magnitude /= 10;
         digit_count++;
     }
     if (is_negative)
     {
+        if (digit_count >= sizeof(reversed_digits))
+        {
+            ft_errno = FT_ERANGE;
+            return (0);
+        }
         reversed_digits[digit_count] = '-';
         digit_count++;
     }
     required_length = digit_count;
     if (minimum_width > static_cast<int>(required_length))
         required_length = static_cast<size_t>(minimum_width);
-    if (required_length + 1 > destination_size)
+    if (required_length >= destination_size)
     {
         ft_errno = FT_ERANGE;
         return (0);
     }
-    pad_length = 0;
-    if (required_length > digit_count)
-        pad_length = required_length - digit_count;
-    index = 0;
-    while (index < pad_length)
-    {
-        destination[index] = '0';
-        index++;
-    }
+    destination[required_length] = '\0';
+    index = required_length;
     copy_index = 0;
     while (copy_index < digit_count)
     {
-        destination[pad_length + copy_index] = reversed_digits[digit_count - copy_index - 1];
+        index--;
+        destination[index] = reversed_digits[copy_index];
         copy_index++;
     }
-    destination[required_length] = '\0';
+    while (index > 0)
+    {
+        index--;
+        destination[index] = '0';
+    }
     ft_errno = ER_SUCCESS;
     return (required_length);
 }
