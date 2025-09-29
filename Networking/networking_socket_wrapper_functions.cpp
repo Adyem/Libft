@@ -9,21 +9,31 @@
 # include <sys/socket.h>
 # include <netinet/in.h>
 # include <arpa/inet.h>
+# include <errno.h>
 #endif
 #include "socket_class.hpp"
+#include "../Errno/errno.hpp"
 
 #ifdef _WIN32
 static inline int bind_platform(int sockfd, const struct sockaddr *addr, socklen_t len)
 {
     if (bind(static_cast<SOCKET>(sockfd), addr, len) == SOCKET_ERROR)
+    {
+        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 
 static inline int listen_platform(int sockfd, int backlog)
 {
     if (listen(static_cast<SOCKET>(sockfd), backlog) == SOCKET_ERROR)
+    {
+        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 
@@ -31,7 +41,11 @@ static inline int accept_platform(int sockfd, struct sockaddr *addr, socklen_t *
 {
     SOCKET new_fd = accept(static_cast<SOCKET>(sockfd), addr, addrlen);
     if (new_fd == INVALID_SOCKET)
+    {
+        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (static_cast<int>(new_fd));
 }
 
@@ -42,19 +56,30 @@ static inline int socket_platform(int domain, int type, int protocol)
     {
         WSADATA data;
         if (WSAStartup(MAKEWORD(2,2), &data) != 0)
+        {
+            ft_errno = WSAGetLastError() + ERRNO_OFFSET;
             return (-1);
+        }
         initialized = 1;
     }
     SOCKET sockfd = socket(domain, type, protocol);
     if (sockfd == INVALID_SOCKET)
+    {
+        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (static_cast<int>(sockfd));
 }
 
 static inline int connect_platform(int sockfd, const struct sockaddr *addr, socklen_t len)
 {
     if (connect(static_cast<SOCKET>(sockfd), addr, len) == SOCKET_ERROR)
+    {
+        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 
@@ -62,7 +87,11 @@ static inline ssize_t send_platform(int sockfd, const void *buf, size_t len, int
 {
     int ret = ::send(static_cast<SOCKET>(sockfd), static_cast<const char*>(buf), static_cast<int>(len), flags);
     if (ret == SOCKET_ERROR)
+    {
+        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (ret);
 }
 
@@ -70,7 +99,11 @@ static inline ssize_t recv_platform(int sockfd, void *buf, size_t len, int flags
 {
     int ret = ::recv(static_cast<SOCKET>(sockfd), static_cast<char*>(buf), static_cast<int>(len), flags);
     if (ret == SOCKET_ERROR)
+    {
+        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (ret);
 }
 
@@ -80,7 +113,11 @@ static inline ssize_t sendto_platform(int sockfd, const void *buf, size_t len, i
     int ret = ::sendto(static_cast<SOCKET>(sockfd), static_cast<const char*>(buf),
                        static_cast<int>(len), flags, dest_addr, addrlen);
     if (ret == SOCKET_ERROR)
+    {
+        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (ret);
 }
 
@@ -90,21 +127,33 @@ static inline ssize_t recvfrom_platform(int sockfd, void *buf, size_t len, int f
     int ret = ::recvfrom(static_cast<SOCKET>(sockfd), static_cast<char*>(buf),
                          static_cast<int>(len), flags, src_addr, addrlen);
     if (ret == SOCKET_ERROR)
+    {
+        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (ret);
 }
 #else
 static inline int bind_platform(int sockfd, const struct sockaddr *addr, socklen_t len)
 {
     if (bind(sockfd, addr, len) == -1)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 
 static inline int listen_platform(int sockfd, int backlog)
 {
     if (listen(sockfd, backlog) == -1)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 
@@ -112,7 +161,11 @@ static inline int accept_platform(int sockfd, struct sockaddr *addr, socklen_t *
 {
     int new_fd = accept(sockfd, addr, addrlen);
     if (new_fd == -1)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (new_fd);
 }
 
@@ -120,37 +173,81 @@ static inline int socket_platform(int domain, int type, int protocol)
 {
     int sockfd = socket(domain, type, protocol);
     if (sockfd == -1)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (sockfd);
 }
 
 static inline int connect_platform(int sockfd, const struct sockaddr *addr, socklen_t len)
 {
     if (connect(sockfd, addr, len) == -1)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 
 static inline ssize_t send_platform(int sockfd, const void *buf, size_t len, int flags)
 {
-    return (::send(sockfd, buf, len, flags));
+    ssize_t result;
+
+    result = ::send(sockfd, buf, len, flags);
+    if (result == -1)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
+        return (-1);
+    }
+    ft_errno = ER_SUCCESS;
+    return (result);
 }
 
 static inline ssize_t recv_platform(int sockfd, void *buf, size_t len, int flags)
 {
-    return (::recv(sockfd, buf, len, flags));
+    ssize_t result;
+
+    result = ::recv(sockfd, buf, len, flags);
+    if (result == -1)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
+        return (-1);
+    }
+    ft_errno = ER_SUCCESS;
+    return (result);
 }
 
 static inline ssize_t sendto_platform(int sockfd, const void *buf, size_t len, int flags,
                                       const struct sockaddr *dest_addr, socklen_t addrlen)
 {
-    return (::sendto(sockfd, buf, len, flags, dest_addr, addrlen));
+    ssize_t result;
+
+    result = ::sendto(sockfd, buf, len, flags, dest_addr, addrlen);
+    if (result == -1)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
+        return (-1);
+    }
+    ft_errno = ER_SUCCESS;
+    return (result);
 }
 
 static inline ssize_t recvfrom_platform(int sockfd, void *buf, size_t len, int flags,
                                         struct sockaddr *src_addr, socklen_t *addrlen)
 {
-    return (::recvfrom(sockfd, buf, len, flags, src_addr, addrlen));
+    ssize_t result;
+
+    result = ::recvfrom(sockfd, buf, len, flags, src_addr, addrlen);
+    if (result == -1)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
+        return (-1);
+    }
+    ft_errno = ER_SUCCESS;
+    return (result);
 }
 #endif
 

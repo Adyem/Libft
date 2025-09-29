@@ -1,5 +1,6 @@
 #include "ssl_wrapper.hpp"
 #include <climits>
+#include "../Errno/errno.hpp"
 
 static ssize_t ssl_write_platform(SSL *ssl, const void *buf, size_t len)
 {
@@ -7,11 +8,18 @@ static ssize_t ssl_write_platform(SSL *ssl, const void *buf, size_t len)
     int ret;
 
     if (len > static_cast<size_t>(INT_MAX))
+    {
+        ft_errno = FT_EINVAL;
         return (-1);
+    }
     write_length = static_cast<int>(len);
     ret = SSL_write(ssl, buf, write_length);
     if (ret <= 0)
+    {
+        ft_errno = SSL_ERROR_SYSCALL + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (ret);
 }
 
@@ -28,11 +36,18 @@ extern "C"
         int ret;
 
         if (len > static_cast<size_t>(INT_MAX))
+        {
+            ft_errno = FT_EINVAL;
             return (-1);
+        }
         read_length = static_cast<int>(len);
         ret = SSL_read(ssl, buf, read_length);
         if (ret <= 0)
+        {
+            ft_errno = SSL_ERROR_SYSCALL + ERRNO_OFFSET;
             return (-1);
+        }
+        ft_errno = ER_SUCCESS;
         return (ret);
     }
 }
