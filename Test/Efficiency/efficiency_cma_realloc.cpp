@@ -12,8 +12,24 @@ int test_efficiency_cma_realloc(void)
     {
         size_t size = 32;
         void *p = std::malloc(size);
-        p = std::realloc(p, size * 2);
-        p = std::realloc(p, size * 4);
+        if (!p)
+        {
+            return (0);
+        }
+        void *std_temp = std::realloc(p, size * 2);
+        if (!std_temp)
+        {
+            std::free(p);
+            return (0);
+        }
+        p = std_temp;
+        std_temp = std::realloc(p, size * 4);
+        if (!std_temp)
+        {
+            std::free(p);
+            return (0);
+        }
+        p = std_temp;
         prevent_optimization(p);
         std::free(p);
     }
@@ -24,8 +40,24 @@ int test_efficiency_cma_realloc(void)
     {
         size_t size = 32;
         void *p = cma_malloc(size);
-        p = cma_realloc(p, size * 2);
-        p = cma_realloc(p, size * 4);
+        if (!p)
+        {
+            return (0);
+        }
+        void *ft_temp = cma_realloc(p, size * 2);
+        if (!ft_temp)
+        {
+            cma_free(p);
+            return (0);
+        }
+        p = ft_temp;
+        ft_temp = cma_realloc(p, size * 4);
+        if (!ft_temp)
+        {
+            cma_free(p);
+            return (0);
+        }
+        p = ft_temp;
         prevent_optimization(p);
         cma_free(p);
     }
