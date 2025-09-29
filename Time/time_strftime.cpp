@@ -1,6 +1,7 @@
 #include "time.hpp"
 #include "../Libft/libft.hpp"
 #include "../Printf/printf.hpp"
+#include "../Errno/errno.hpp"
 
 size_t  time_strftime(char *buffer, size_t size, const char *format, const t_time_info *time_info)
 {
@@ -11,7 +12,10 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
     int     value;
 
     if (!buffer || size == 0 || !format || !time_info)
+    {
+        ft_errno = FT_EINVAL;
         return (0);
+    }
     format_index = 0;
     output_index = 0;
     while (format[format_index] && output_index + 1 < size)
@@ -43,10 +47,20 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
                     format_index++;
                     continue;
                 }
+                int snprintf_result;
+
                 if (format[format_index + 1] == 'Y')
-                    pf_snprintf(number_buffer, sizeof(number_buffer), "%04d", value);
+                    snprintf_result = pf_snprintf(number_buffer, sizeof(number_buffer), "%04d", value);
                 else
-                    pf_snprintf(number_buffer, sizeof(number_buffer), "%02d", value);
+                    snprintf_result = pf_snprintf(number_buffer, sizeof(number_buffer), "%02d", value);
+                if (snprintf_result < 0 || ft_errno != ER_SUCCESS)
+                {
+                    if (output_index < size)
+                        buffer[output_index] = '\0';
+                    else if (size > 0)
+                        buffer[size - 1] = '\0';
+                    return (0);
+                }
                 length = ft_strlen(number_buffer);
                 size_t number_index;
 
@@ -68,6 +82,7 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
         }
     }
     buffer[output_index] = '\0';
+    ft_errno = ER_SUCCESS;
     return (output_index);
 }
 
