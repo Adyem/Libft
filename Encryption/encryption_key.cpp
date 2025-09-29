@@ -4,6 +4,7 @@
 #include "../RNG/rng.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
 #include "basic_encryption.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 
@@ -11,8 +12,11 @@ const char *be_getEncryptionKey(void)
 {
     size_t key_length = 32;
     char *key = static_cast<char *>(cma_malloc(key_length + 1));
-    if (!key)
+    if (key == ft_nullptr)
+    {
+        ft_errno = FT_EALLOC;
         return (ft_nullptr);
+    }
     if (cmp_rng_secure_bytes(reinterpret_cast<unsigned char *>(key), key_length) == 0)
     {
         size_t index = 0;
@@ -23,8 +27,10 @@ const char *be_getEncryptionKey(void)
             index++;
         }
         key[key_length] = '\0';
+        ft_errno = ER_SUCCESS;
         return (key);
     }
+    int secure_error = ft_errno;
     uint32_t seed_value = ft_random_seed(ft_nullptr);
     size_t index = 0;
     while (index < key_length)
@@ -34,5 +40,7 @@ const char *be_getEncryptionKey(void)
         index++;
     }
     key[key_length] = '\0';
+    ft_errno = secure_error;
+    ft_errno = ER_SUCCESS;
     return (key);
 }
