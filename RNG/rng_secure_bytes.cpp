@@ -1,11 +1,21 @@
 #include "rng.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
+#include "../Errno/errno.hpp"
 
 int rng_secure_bytes(unsigned char *buffer, size_t length)
 {
     if (buffer == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
         return (-1);
-    return (cmp_rng_secure_bytes(buffer, length));
+    }
+    int result = cmp_rng_secure_bytes(buffer, length);
+    if (result == 0)
+    {
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    return (result);
 }
 
 uint32_t ft_random_uint32(void)

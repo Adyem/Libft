@@ -78,6 +78,12 @@ void cmp_readline_disable_raw_mode(void);
 int cmp_readline_terminal_width(void);
 
 int cmp_rng_secure_bytes(unsigned char *buffer, size_t length);
+#if !defined(_WIN32) && !defined(_WIN64)
+void cmp_force_rng_open_failure(int error_code);
+void cmp_force_rng_read_failure(int error_code);
+void cmp_force_rng_close_failure(int error_code);
+void cmp_clear_force_rng_failures(void);
+#endif
 
 int cmp_setenv(const char *name, const char *value, int overwrite);
 int cmp_unsetenv(const char *name);
