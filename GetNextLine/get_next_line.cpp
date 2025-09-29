@@ -18,7 +18,10 @@ static char* allocate_new_string(char* string_one, char* string_two)
         total_length += ft_strlen(string_two);
     new_string = static_cast<char*>(cma_malloc(total_length + 1));
     if (!new_string)
+    {
+        ft_errno = FT_EALLOC;
         return (ft_nullptr);
+    }
     return (new_string);
 }
 
@@ -29,7 +32,10 @@ char* ft_strjoin_gnl(char* string_one, char* string_two)
     int index;
 
     if (!string_one && !string_two)
+    {
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
+    }
     result = allocate_new_string(string_one, string_two);
     if (!result)
         return (ft_nullptr);
@@ -60,7 +66,10 @@ static char* leftovers(char* readed_string)
     }
     string = static_cast<char*>(cma_malloc(ft_strlen(readed_string) - read_index + 1));
     if (!string)
+    {
+        ft_errno = FT_EALLOC;
         return (ft_nullptr);
+    }
     read_index++;
     while (readed_string[read_index])
         string[write_index++] = readed_string[read_index++];
@@ -78,7 +87,10 @@ static char* malloc_gnl(char* readed_string, size_t length)
     else
         string = static_cast<char*>(cma_malloc(length + 1));
     if (!string)
+    {
+        ft_errno = FT_EALLOC;
         return (ft_nullptr);
+    }
     return (string);
 }
 
@@ -88,7 +100,10 @@ static char* fetch_line(char* readed_string)
     char* string;
 
     if (!readed_string[index])
+    {
+        ft_errno = FILE_END_OF_FILE;
         return (ft_nullptr);
+    }
     while (readed_string[index] && readed_string[index] != '\n')
         index++;
     string = malloc_gnl(readed_string, index);
@@ -113,19 +128,31 @@ static char* read_stream(ft_istream &input, char* readed_string, std::size_t buf
 {
     char* buffer;
     std::size_t readed_bytes;
+    bool has_read_bytes;
 
     buffer = static_cast<char*>(cma_malloc(buffer_size + 1));
     if (!buffer)
+    {
+        ft_errno = FT_EALLOC;
         return (ft_nullptr);
+    }
     readed_bytes = 1;
+    has_read_bytes = false;
     while (!ft_strchr(readed_string, '\n') && readed_bytes != 0)
     {
         input.read(buffer, buffer_size);
         readed_bytes = input.gcount();
+        if (readed_bytes > 0)
+            has_read_bytes = true;
         if (input.bad())
         {
             cma_free(buffer);
             cma_free(readed_string);
+            int stream_error = input.get_error();
+            if (stream_error == ER_SUCCESS)
+                ft_errno = FT_EIO;
+            else
+                ft_errno = stream_error;
             return (ft_nullptr);
         }
         buffer[readed_bytes] = '\0';
@@ -137,6 +164,8 @@ static char* read_stream(ft_istream &input, char* readed_string, std::size_t buf
         }
     }
     cma_free(buffer);
+    if (!has_read_bytes && !readed_string)
+        ft_errno = FILE_END_OF_FILE;
     return (readed_string);
 }
 
@@ -147,10 +176,16 @@ char    *get_next_line(ft_istream &input, std::size_t buffer_size)
     char                                   *stored_string = ft_nullptr;
 
     if (buffer_size == 0)
+    {
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
+    }
     ft_unord_map<ft_istream*, char*>::iterator map_it = readed_map.find(&input);
     if (readed_map.get_error() != ER_SUCCESS)
+    {
+        ft_errno = readed_map.get_error();
         return (ft_nullptr);
+    }
     if (map_it != readed_map.end())
         stored_string = map_it->second;
     stored_string = read_stream(input, stored_string, buffer_size);
@@ -158,7 +193,10 @@ char    *get_next_line(ft_istream &input, std::size_t buffer_size)
     {
         readed_map.remove(&input);
         if (readed_map.get_error() != ER_SUCCESS)
+        {
+            ft_errno = readed_map.get_error();
             return (ft_nullptr);
+        }
         return (ft_nullptr);
     }
     string = fetch_line(stored_string);
@@ -169,6 +207,7 @@ char    *get_next_line(ft_istream &input, std::size_t buffer_size)
         if (readed_map.get_error() != ER_SUCCESS)
         {
             cma_free(stored_string);
+            ft_errno = readed_map.get_error();
             return (ft_nullptr);
         }
     }
@@ -176,7 +215,12 @@ char    *get_next_line(ft_istream &input, std::size_t buffer_size)
     {
         readed_map.remove(&input);
         if (readed_map.get_error() != ER_SUCCESS)
+        {
+            ft_errno = readed_map.get_error();
             return (ft_nullptr);
+        }
     }
+    if (string)
+        ft_errno = ER_SUCCESS;
     return (string);
 }

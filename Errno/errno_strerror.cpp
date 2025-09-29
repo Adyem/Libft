@@ -33,6 +33,7 @@ static const t_ft_error_string g_error_strings[] =
     {FT_EINVAL, "Invalid argument"},
     {FT_EOVERLAP, "Memory regions overlap"},
     {FT_ERANGE, "Result out of range"},
+    {FT_EIO, "I/O error"},
     {STRING_MEM_ALLOC_FAIL, "String memory allocation failed"},
     {STRING_ERASE_OUT_OF_BOUNDS, "String acces out of bounds"},
     {BIG_NUMBER_ALLOC_FAIL, "Big number memory allocation failed"},
