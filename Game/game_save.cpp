@@ -2,6 +2,7 @@
 #include "game_inventory.hpp"
 #include "game_item.hpp"
 #include "game_quest.hpp"
+#include "../Errno/errno.hpp"
 #include "../JSon/json.hpp"
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
@@ -87,11 +88,15 @@ json_group *serialize_inventory(const ft_inventory &inventory)
 {
     json_group *group = json_create_json_group("inventory");
     if (!group)
+    {
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
+    }
     json_item *capacity_item = json_create_item("capacity", static_cast<int>(inventory.get_capacity()));
     if (!capacity_item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, capacity_item);
@@ -99,6 +104,7 @@ json_group *serialize_inventory(const ft_inventory &inventory)
     if (!weight_limit_item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, weight_limit_item);
@@ -106,6 +112,7 @@ json_group *serialize_inventory(const ft_inventory &inventory)
     if (!current_weight_item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, current_weight_item);
@@ -113,6 +120,7 @@ json_group *serialize_inventory(const ft_inventory &inventory)
     if (!used_slots_item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, used_slots_item);
@@ -121,17 +129,30 @@ json_group *serialize_inventory(const ft_inventory &inventory)
     if (!count_item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, count_item);
     size_t item_index = 0;
-    const Pair<int, ft_sharedptr<ft_item> > *item_start = inventory.get_items().end() - item_count;
+    const Pair<int, ft_sharedptr<ft_item> > *items_end = inventory.get_items().end();
+    const Pair<int, ft_sharedptr<ft_item> > *item_start = items_end;
+    if (item_count > 0)
+    {
+        if (!items_end)
+        {
+            json_free_groups(group);
+            ft_errno = GAME_GENERAL_ERROR;
+            return (ft_nullptr);
+        }
+        item_start = items_end - item_count;
+    }
     while (item_index < item_count)
     {
         char *item_index_string = cma_itoa(static_cast<int>(item_index));
         if (!item_index_string)
         {
             json_free_groups(group);
+            ft_errno = JSON_MALLOC_FAIL;
             return (ft_nullptr);
         }
         ft_string item_prefix = "item_";
@@ -140,12 +161,18 @@ json_group *serialize_inventory(const ft_inventory &inventory)
         if (!item_start[item_index].value)
         {
             json_free_groups(group);
+            ft_errno = GAME_GENERAL_ERROR;
             return (ft_nullptr);
         }
         if (serialize_item_fields(group, *item_start[item_index].value, item_prefix) != ER_SUCCESS)
+        {
+            json_free_groups(group);
+            ft_errno = JSON_MALLOC_FAIL;
             return (ft_nullptr);
+        }
         item_index++;
     }
+    ft_errno = ER_SUCCESS;
     return (group);
 }
 
@@ -153,18 +180,23 @@ json_group *serialize_equipment(const ft_character &character)
 {
     json_group *group = json_create_json_group("equipment");
     if (!group)
+    {
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
+    }
     ft_sharedptr<ft_item> head = character.get_equipped_item(EQUIP_HEAD);
     json_item *present = json_create_item("head_present", head ? 1 : 0);
     if (!present)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, present);
     if (head && serialize_item_fields(group, *head, "head") != ER_SUCCESS)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     ft_sharedptr<ft_item> chest = character.get_equipped_item(EQUIP_CHEST);
@@ -172,12 +204,14 @@ json_group *serialize_equipment(const ft_character &character)
     if (!present)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, present);
     if (chest && serialize_item_fields(group, *chest, "chest") != ER_SUCCESS)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     ft_sharedptr<ft_item> weapon = character.get_equipped_item(EQUIP_WEAPON);
@@ -185,14 +219,17 @@ json_group *serialize_equipment(const ft_character &character)
     if (!present)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, present);
     if (weapon && serialize_item_fields(group, *weapon, "weapon") != ER_SUCCESS)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
+    ft_errno = ER_SUCCESS;
     return (group);
 }
 
@@ -200,11 +237,15 @@ json_group *serialize_quest(const ft_quest &quest)
 {
     json_group *group = json_create_json_group("quest");
     if (!group)
+    {
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
+    }
     json_item *item = json_create_item("id", quest.get_id());
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -212,6 +253,7 @@ json_group *serialize_quest(const ft_quest &quest)
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -219,6 +261,7 @@ json_group *serialize_quest(const ft_quest &quest)
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -226,6 +269,7 @@ json_group *serialize_quest(const ft_quest &quest)
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -233,6 +277,7 @@ json_group *serialize_quest(const ft_quest &quest)
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -240,6 +285,7 @@ json_group *serialize_quest(const ft_quest &quest)
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -248,26 +294,46 @@ json_group *serialize_quest(const ft_quest &quest)
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
     size_t item_index = 0;
-    const ft_sharedptr<ft_item> *item_start = quest.get_reward_items().begin();
+    const ft_vector<ft_sharedptr<ft_item> > &reward_items = quest.get_reward_items();
+    const ft_sharedptr<ft_item> *item_start = reward_items.begin();
+    if (item_count > 0 && !item_start)
+    {
+        json_free_groups(group);
+        ft_errno = GAME_GENERAL_ERROR;
+        return (ft_nullptr);
+    }
     while (item_index < item_count)
     {
         char *item_index_string = cma_itoa(static_cast<int>(item_index));
         if (!item_index_string)
         {
             json_free_groups(group);
+            ft_errno = JSON_MALLOC_FAIL;
             return (ft_nullptr);
         }
         ft_string item_prefix = "reward_item_";
         item_prefix += item_index_string;
         cma_free(item_index_string);
-        if (serialize_item_fields(group, *item_start[item_index], item_prefix) != ER_SUCCESS)
+        if (!item_start[item_index])
+        {
+            json_free_groups(group);
+            ft_errno = GAME_GENERAL_ERROR;
             return (ft_nullptr);
+        }
+        if (serialize_item_fields(group, *item_start[item_index], item_prefix) != ER_SUCCESS)
+        {
+            json_free_groups(group);
+            ft_errno = JSON_MALLOC_FAIL;
+            return (ft_nullptr);
+        }
         item_index++;
     }
+    ft_errno = ER_SUCCESS;
     return (group);
 }
 
