@@ -1,5 +1,6 @@
 #include "networking.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Errno/errno.hpp"
 
 void event_loop_init(event_loop *loop)
 {
@@ -32,7 +33,10 @@ int event_loop_add_socket(event_loop *loop, int socket_fd, bool is_write)
         new_array = static_cast<int *>(cma_realloc(loop->write_file_descriptors,
                                                    sizeof(int) * (loop->write_count + 1)));
         if (!new_array)
+        {
+            ft_errno = FT_EALLOC;
             return (-1);
+        }
         loop->write_file_descriptors = new_array;
         loop->write_file_descriptors[loop->write_count] = socket_fd;
         loop->write_count++;
@@ -42,11 +46,15 @@ int event_loop_add_socket(event_loop *loop, int socket_fd, bool is_write)
         new_array = static_cast<int *>(cma_realloc(loop->read_file_descriptors,
                                                    sizeof(int) * (loop->read_count + 1)));
         if (!new_array)
+        {
+            ft_errno = FT_EALLOC;
             return (-1);
+        }
         loop->read_file_descriptors = new_array;
         loop->read_file_descriptors[loop->read_count] = socket_fd;
         loop->read_count++;
     }
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 
@@ -64,7 +72,10 @@ int event_loop_remove_socket(event_loop *loop, int socket_fd, bool is_write)
             index++;
         }
         if (index == loop->write_count)
+        {
+            ft_errno = FT_EINVAL;
             return (-1);
+        }
         while (index + 1 < loop->write_count)
         {
             loop->write_file_descriptors[index] =
@@ -83,7 +94,10 @@ int event_loop_remove_socket(event_loop *loop, int socket_fd, bool is_write)
             index++;
         }
         if (index == loop->read_count)
+        {
+            ft_errno = FT_EINVAL;
             return (-1);
+        }
         while (index + 1 < loop->read_count)
         {
             loop->read_file_descriptors[index] =
@@ -92,6 +106,7 @@ int event_loop_remove_socket(event_loop *loop, int socket_fd, bool is_write)
         }
         loop->read_count--;
     }
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 
