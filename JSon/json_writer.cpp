@@ -11,6 +11,14 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../CPP_class/class_big_number.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Errno/errno.hpp"
+
+static char *json_writer_return_failure(void)
+{
+    if (ft_errno == ER_SUCCESS)
+        ft_errno = FT_EALLOC;
+    return (ft_nullptr);
+}
 
 int json_write_to_file(const char *file_path, json_group *groups)
 {
@@ -67,7 +75,7 @@ char *json_write_to_string(json_group *groups)
 {
     char *result = cma_strdup("{\n");
     if (!result)
-        return (ft_nullptr);
+        return (json_writer_return_failure());
     json_group *group_iterator = groups;
     while (group_iterator)
     {
@@ -75,13 +83,13 @@ char *json_write_to_string(json_group *groups)
         if (!line)
         {
             cma_free(result);
-            return (ft_nullptr);
+            return (json_writer_return_failure());
         }
         char *temporary = cma_strjoin(result, line);
         cma_free(result);
         cma_free(line);
         if (!temporary)
-            return (ft_nullptr);
+            return (json_writer_return_failure());
         result = temporary;
         json_item *item_iterator = group_iterator->items;
         while (item_iterator)
@@ -110,13 +118,13 @@ char *json_write_to_string(json_group *groups)
             if (!line)
             {
                 cma_free(result);
-                return (ft_nullptr);
+                return (json_writer_return_failure());
             }
             temporary = cma_strjoin(result, line);
             cma_free(result);
             cma_free(line);
             if (!temporary)
-                return (ft_nullptr);
+                return (json_writer_return_failure());
             result = temporary;
             item_iterator = item_iterator->next;
         }
@@ -127,13 +135,13 @@ char *json_write_to_string(json_group *groups)
         if (!line)
         {
             cma_free(result);
-            return (ft_nullptr);
+            return (json_writer_return_failure());
         }
         temporary = cma_strjoin(result, line);
         cma_free(result);
         cma_free(line);
         if (!temporary)
-            return (ft_nullptr);
+            return (json_writer_return_failure());
         result = temporary;
         group_iterator = group_iterator->next;
     }
@@ -141,14 +149,15 @@ char *json_write_to_string(json_group *groups)
     if (!end_line)
     {
         cma_free(result);
-        return (ft_nullptr);
+        return (json_writer_return_failure());
     }
     char *temporary = cma_strjoin(result, end_line);
     cma_free(result);
     cma_free(end_line);
     if (!temporary)
-        return (ft_nullptr);
+        return (json_writer_return_failure());
     result = temporary;
+    ft_errno = ER_SUCCESS;
     return (result);
 }
 
