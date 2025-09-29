@@ -9,11 +9,15 @@ json_group *serialize_character(const ft_character &character)
 {
     json_group *group = json_create_json_group("character");
     if (!group)
+    {
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
+    }
     json_item *item = json_create_item("hit_points", character.get_hit_points());
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -21,6 +25,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -28,6 +33,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -35,6 +41,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -42,6 +49,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -49,6 +57,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -56,6 +65,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -63,6 +73,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -70,6 +81,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -77,6 +89,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -84,6 +97,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -91,6 +105,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -98,6 +113,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -105,6 +121,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -112,6 +129,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -119,6 +137,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -126,6 +145,7 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
@@ -133,25 +153,44 @@ json_group *serialize_character(const ft_character &character)
     if (!item)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, item);
-    json_item *count = json_create_item("skill_count", static_cast<int>(character.get_skills().size()));
+    const ft_map<int, ft_skill> &skills = character.get_skills();
+    if (skills.get_error() != ER_SUCCESS)
+    {
+        json_free_groups(group);
+        ft_errno = GAME_GENERAL_ERROR;
+        return (ft_nullptr);
+    }
+    json_item *count = json_create_item("skill_count", static_cast<int>(skills.size()));
     if (!count)
     {
         json_free_groups(group);
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, count);
     size_t skill_index = 0;
-    size_t skill_count = character.get_skills().size();
-    const Pair<int, ft_skill> *skill_start = character.get_skills().end() - skill_count;
+    size_t skill_count = skills.size();
+    const Pair<int, ft_skill> *skills_end = skills.end();
+    if (skill_count > 0 && !skills_end)
+    {
+        json_free_groups(group);
+        ft_errno = GAME_GENERAL_ERROR;
+        return (ft_nullptr);
+    }
+    const Pair<int, ft_skill> *skill_start = skills_end;
+    if (skill_count > 0)
+        skill_start = skills_end - skill_count;
     while (skill_index < skill_count)
     {
         char *skill_index_string = cma_itoa(static_cast<int>(skill_index));
         if (!skill_index_string)
         {
             json_free_groups(group);
+            ft_errno = JSON_MALLOC_FAIL;
             return (ft_nullptr);
         }
         ft_string prefix = "skill_";
@@ -163,6 +202,7 @@ json_group *serialize_character(const ft_character &character)
         if (!item)
         {
             json_free_groups(group);
+            ft_errno = JSON_MALLOC_FAIL;
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
@@ -172,6 +212,7 @@ json_group *serialize_character(const ft_character &character)
         if (!item)
         {
             json_free_groups(group);
+            ft_errno = JSON_MALLOC_FAIL;
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
@@ -181,6 +222,7 @@ json_group *serialize_character(const ft_character &character)
         if (!item)
         {
             json_free_groups(group);
+            ft_errno = JSON_MALLOC_FAIL;
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
@@ -190,6 +232,7 @@ json_group *serialize_character(const ft_character &character)
         if (!item)
         {
             json_free_groups(group);
+            ft_errno = JSON_MALLOC_FAIL;
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
@@ -199,6 +242,7 @@ json_group *serialize_character(const ft_character &character)
         if (!item)
         {
             json_free_groups(group);
+            ft_errno = JSON_MALLOC_FAIL;
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
@@ -208,6 +252,7 @@ json_group *serialize_character(const ft_character &character)
         if (!item)
         {
             json_free_groups(group);
+            ft_errno = JSON_MALLOC_FAIL;
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
@@ -217,11 +262,13 @@ json_group *serialize_character(const ft_character &character)
         if (!item)
         {
             json_free_groups(group);
+            ft_errno = JSON_MALLOC_FAIL;
             return (ft_nullptr);
         }
         json_add_item_to_group(group, item);
         skill_index++;
     }
+    ft_errno = ER_SUCCESS;
     return (group);
 }
 
