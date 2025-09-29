@@ -2,6 +2,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
 #include <cstdio>
+#include <cerrno>
 
 static const char *skip_whitespace(const char *string)
 {
@@ -266,7 +267,10 @@ static void write_node(const xml_node *node, ft_vector<char> &buffer)
 char *xml_document::write_to_string() const noexcept
 {
     if (!this->_root)
+    {
+        this->set_error(FT_EINVAL);
         return (ft_nullptr);
+    }
     ft_vector<char> buffer;
     write_node(this->_root, buffer);
     buffer.push_back('\n');
@@ -274,13 +278,17 @@ char *xml_document::write_to_string() const noexcept
     size_t length = buffer.size();
     char *result = static_cast<char *>(cma_malloc(length));
     if (!result)
+    {
+        this->set_error(FT_EALLOC);
         return (ft_nullptr);
+    }
     size_t index = 0;
     while (index < length)
     {
         result[index] = buffer[index];
         index++;
     }
+    this->set_error(ER_SUCCESS);
     return (result);
 }
 
@@ -288,19 +296,38 @@ int xml_document::write_to_file(const char *file_path) const noexcept
 {
     char *content = this->write_to_string();
     if (!content)
-        return (FT_EINVAL);
+    {
+        int error_code = this->get_error();
+        if (error_code == ER_SUCCESS)
+        {
+            this->set_error(FT_EINVAL);
+            error_code = FT_EINVAL;
+        }
+        return (error_code);
+    }
+    errno = 0;
     FILE *file = std::fopen(file_path, "wb");
     if (!file)
     {
+        int error_code = errno ? errno + ERRNO_OFFSET : FT_EINVAL;
+        this->set_error(error_code);
         cma_free(content);
-        return (FT_EINVAL);
+        return (error_code);
     }
     size_t length = ft_strlen(content);
+    errno = 0;
     size_t written = std::fwrite(content, 1, length, file);
+    if (written != length)
+    {
+        int error_code = errno ? errno + ERRNO_OFFSET : FT_EINVAL;
+        std::fclose(file);
+        cma_free(content);
+        this->set_error(error_code);
+        return (error_code);
+    }
     std::fclose(file);
     cma_free(content);
-    if (written != length)
-        return (FT_EINVAL);
+    this->set_error(ER_SUCCESS);
     return (ER_SUCCESS);
 }
 
