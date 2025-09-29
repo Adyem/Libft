@@ -2,8 +2,42 @@
 #include "../../CMA/CMA.hpp"
 #include "../../Libft/libft.hpp"
 #include "../../CPP_class/class_istringstream.hpp"
+#include "../../Errno/errno.hpp"
+#include "../../System_utils/test_runner.hpp"
 #include <fstream>
 #include <unistd.h>
+
+class ft_failing_istream : public ft_istream
+{
+    private:
+        bool _triggered;
+
+    public:
+        ft_failing_istream(void)
+        : ft_istream(), _triggered(false)
+        {
+            return ;
+        }
+
+        ~ft_failing_istream(void)
+        {
+            return ;
+        }
+
+    protected:
+        std::size_t do_read(char *buffer, std::size_t count)
+        {
+            (void)buffer;
+            (void)count;
+            if (!this->_triggered)
+            {
+                this->_triggered = true;
+                this->set_error(FT_EIO);
+                return (0);
+            }
+            return (0);
+        }
+};
 
 int test_get_next_line_basic(void)
 {
@@ -61,4 +95,101 @@ int test_ft_open_and_read_file(void)
              ft_strcmp(lines[2], "C\n") == 0;
     cma_free_double(lines);
     return (ok);
+}
+
+FT_TEST(test_get_next_line_zero_buffer_sets_errno, "get_next_line reports FT_EINVAL when buffer size is zero")
+{
+    ft_istringstream input("Hello\n");
+    char *line;
+
+    ft_errno = ER_SUCCESS;
+    line = get_next_line(input, 0);
+    FT_ASSERT(line == ft_nullptr);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_get_next_line_stream_error_sets_errno, "get_next_line propagates stream errors via ft_errno")
+{
+    ft_failing_istream input;
+    char *line;
+
+    ft_errno = ER_SUCCESS;
+    line = get_next_line(input, 4);
+    FT_ASSERT(line == ft_nullptr);
+    FT_ASSERT_EQ(FT_EIO, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_get_next_line_allocator_failure_sets_errno, "get_next_line reports FT_EALLOC when allocations fail")
+{
+    ft_istringstream input("data\n");
+    char *line;
+
+    ft_errno = ER_SUCCESS;
+    cma_set_alloc_limit(4);
+    line = get_next_line(input, 4);
+    cma_set_alloc_limit(0);
+    if (line)
+    {
+        cma_free(line);
+        return (0);
+    }
+    FT_ASSERT_EQ(FT_EALLOC, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_get_next_line_map_failure_sets_errno, "get_next_line surfaces hash map allocation failures")
+{
+    ft_istringstream stream_one("A\nB\n");
+    ft_istringstream stream_two("C\nD\n");
+    ft_istringstream stream_three("E\nF\n");
+    ft_istringstream stream_four("G\nH\n");
+    ft_istringstream stream_five("I\nJ\n");
+    ft_istringstream stream_six("K\nL\n");
+    char *line;
+
+    ft_errno = ER_SUCCESS;
+    cma_set_alloc_limit(0);
+    line = get_next_line(stream_one, 2);
+    if (!line)
+    {
+        cma_set_alloc_limit(0);
+        return (0);
+    }
+    cma_free(line);
+    line = get_next_line(stream_two, 2);
+    if (!line)
+    {
+        cma_set_alloc_limit(0);
+        return (0);
+    }
+    cma_free(line);
+    line = get_next_line(stream_three, 2);
+    if (!line)
+    {
+        cma_set_alloc_limit(0);
+        return (0);
+    }
+    cma_free(line);
+    line = get_next_line(stream_four, 2);
+    if (!line)
+    {
+        cma_set_alloc_limit(0);
+        return (0);
+    }
+    cma_free(line);
+    line = get_next_line(stream_five, 2);
+    if (!line)
+    {
+        cma_set_alloc_limit(0);
+        return (0);
+    }
+    cma_free(line);
+    cma_set_alloc_limit(64);
+    line = get_next_line(stream_six, 2);
+    cma_set_alloc_limit(0);
+    FT_ASSERT(line == ft_nullptr);
+    FT_ASSERT_EQ(UNORD_MAP_MEMORY, ft_errno);
+    return (1);
 }
