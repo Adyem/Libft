@@ -1,6 +1,7 @@
 #include <pthread.h>
 #include "condition.hpp"
 #include "../Errno/errno.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 
 int pt_cond_init(pthread_cond_t *condition, const pthread_condattr_t *attributes)
 {
@@ -28,7 +29,14 @@ int pt_cond_destroy(pthread_cond_t *condition)
 
 int pt_cond_wait(pthread_cond_t *condition, pthread_mutex_t *mutex)
 {
-    int return_value = pthread_cond_wait(condition, mutex);
+    int return_value;
+
+    if (condition == ft_nullptr || mutex == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
+        return (-1);
+    }
+    return_value = pthread_cond_wait(condition, mutex);
     if (return_value != 0)
     {
         ft_errno = return_value + ERRNO_OFFSET;
