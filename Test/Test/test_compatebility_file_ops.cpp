@@ -2,6 +2,7 @@
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
+#include "../Compatebility/compatebility_system_test_hooks.hpp"
 #include <cerrno>
 #include <cstdio>
 #if defined(_WIN32) || defined(_WIN64)

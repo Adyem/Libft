@@ -1,7 +1,7 @@
 #include "../../RNG/rng.hpp"
-#include "../../Compatebility/compatebility_internal.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
+#include "../Compatebility/compatebility_system_test_hooks.hpp"
 
 #include <cerrno>
 
