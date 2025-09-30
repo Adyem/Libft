@@ -6,6 +6,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Printf/printf.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Errno/errno.hpp"
 #include "readline_internal.hpp"
 #include "readline.hpp"
 
@@ -85,5 +86,6 @@ char *rl_readline(const char *prompt)
     rl_disable_raw_mode();
     if (DEBUG == 1)
         pf_printf("returning %s\n", state.buffer);
+    ft_errno = ER_SUCCESS;
     return (state.buffer);
 }
