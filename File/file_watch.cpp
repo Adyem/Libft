@@ -89,6 +89,7 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
 #endif
     this->_running = true;
     this->_thread = std::thread(&ft_file_watch::event_loop, this);
+    this->set_error(ER_SUCCESS);
     return (0);
 }
 
