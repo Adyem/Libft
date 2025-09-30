@@ -510,11 +510,19 @@ unsigned long long cmp_get_total_memory(void)
 
 std::time_t cmp_timegm(std::tm *time_pointer)
 {
+    std::time_t conversion_result;
+
     if (time_pointer == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
         return (static_cast<std::time_t>(-1));
+    }
 #if defined(_WIN32) || defined(_WIN64)
-    return (_mkgmtime(time_pointer));
+    conversion_result = _mkgmtime(time_pointer);
 #else
-    return (::timegm(time_pointer));
+    conversion_result = ::timegm(time_pointer);
 #endif
+    if (conversion_result != static_cast<std::time_t>(-1))
+        ft_errno = ER_SUCCESS;
+    return (conversion_result);
 }
