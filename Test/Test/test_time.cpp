@@ -162,6 +162,17 @@ FT_TEST(test_time_format_errors, "ft_time_format edge cases")
     return (1);
 }
 
+FT_TEST(test_cmp_timegm_null_pointer_sets_errno, "cmp_timegm validates null pointers")
+{
+    std::time_t conversion_result;
+
+    ft_errno = ER_SUCCESS;
+    conversion_result = cmp_timegm(ft_nullptr);
+    FT_ASSERT_EQ(static_cast<std::time_t>(-1), conversion_result);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_time_format_small_buffer, "ft_time_format detects insufficient space")
 {
     char buffer[1];
