@@ -1,4 +1,7 @@
 #include "printf_internal.hpp"
+#include "printf_test_hooks.hpp"
+#include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
 #include <cstdarg>
 #include <unistd.h>
 #include <stdarg.h>
@@ -6,6 +9,14 @@
 #include <stdint.h>
 #include <limits.h>
 #include <stddef.h>
+
+static t_pf_printf_count_override_hook g_pf_printf_count_override_hook = ft_nullptr;
+
+void pf_printf_set_count_override_hook(t_pf_printf_count_override_hook hook)
+{
+    g_pf_printf_count_override_hook = hook;
+    return ;
+}
 
 int pf_printf_fd_v(int fd, const char *format, va_list args)
 {
@@ -195,9 +206,18 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
             ft_putchar_fd(format[index], fd, &count);
         index++;
     }
+    if (g_pf_printf_count_override_hook != ft_nullptr)
+    {
+        size_t override_value = g_pf_printf_count_override_hook();
+        count = override_value;
+    }
     if (count == SIZE_MAX)
         return (-1);
     if (count > static_cast<size_t>(INT_MAX))
+    {
+        ft_errno = FT_ERANGE;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (static_cast<int>(count));
 }
