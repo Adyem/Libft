@@ -14,11 +14,97 @@ typedef unsigned long long ft_size_t;
 #include <string.h>
 #include <stdint.h>
 #include <stdarg.h>
+#include <type_traits>
+#include "limits.hpp"
+#include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
 #include "../CPP_class/class_string_class.hpp"
 
-size_t             ft_strlen_size_t(const char *string);
-int                ft_strlen(const char *string);
+constexpr bool ft_is_constant_evaluated()
+{
+#if defined(__cpp_lib_is_constant_evaluated)
+    return (std::is_constant_evaluated());
+#elif defined(__has_builtin)
+# if __has_builtin(__builtin_is_constant_evaluated)
+    return (__builtin_is_constant_evaluated());
+# else
+    return (false);
+# endif
+#elif defined(__GNUC__) || defined(__clang__)
+    return (__builtin_is_constant_evaluated());
+#else
+    return (false);
+#endif
+}
+
+namespace ft_detail
+{
+    constexpr size_t repeat_byte(size_t value)
+    {
+        return (~static_cast<size_t>(0) / 0xFF * value);
+    }
+
+    constexpr bool has_zero(size_t value)
+    {
+        return (((value) - repeat_byte(0x01)) & ~(value) & repeat_byte(0x80)) != 0;
+    }
+}
+
+constexpr size_t ft_strlen_size_t(const char *string)
+{
+    if (!ft_is_constant_evaluated())
+    {
+        ft_errno = ER_SUCCESS;
+    }
+    if (!string)
+    {
+        if (!ft_is_constant_evaluated())
+        {
+            ft_errno = FT_EINVAL;
+        }
+        return (0);
+    }
+    const char *string_pointer = string;
+    while (reinterpret_cast<uintptr_t>(string_pointer) & (sizeof(size_t) - 1))
+    {
+        if (*string_pointer == '\0')
+        {
+            return (static_cast<size_t>(string_pointer - string));
+        }
+        ++string_pointer;
+    }
+    const size_t *word_pointer = reinterpret_cast<const size_t*>(string_pointer);
+    while (!ft_detail::has_zero(*word_pointer))
+    {
+        ++word_pointer;
+    }
+    string_pointer = reinterpret_cast<const char*>(word_pointer);
+    while (*string_pointer)
+    {
+        ++string_pointer;
+    }
+    return (static_cast<size_t>(string_pointer - string));
+}
+
+constexpr int ft_strlen(const char *string)
+{
+    size_t length = 0;
+
+    if (!ft_is_constant_evaluated())
+    {
+        ft_errno = ER_SUCCESS;
+    }
+    length = ft_strlen_size_t(string);
+    if (length > static_cast<size_t>(FT_INT_MAX))
+    {
+        if (!ft_is_constant_evaluated())
+        {
+            ft_errno = FT_ERANGE;
+        }
+        return (FT_INT_MAX);
+    }
+    return (static_cast<int>(length));
+}
 char            *ft_strchr(const char *string, int char_to_find);
 int                ft_atoi(const char *string);
 int             ft_validate_int(const char *input);
