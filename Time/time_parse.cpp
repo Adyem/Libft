@@ -196,7 +196,8 @@ bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_tim
         epoch_time = cmp_timegm(&parsed_time);
         if (epoch_time == static_cast<std::time_t>(-1))
         {
-            ft_errno = FT_ERANGE;
+            if (ft_errno == ER_SUCCESS)
+                ft_errno = FT_ERANGE;
             return (false);
         }
         adjusted_epoch = epoch_time - static_cast<std::time_t>(offset_seconds);
@@ -207,7 +208,8 @@ bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_tim
         epoch_time = cmp_timegm(&parsed_time);
         if (epoch_time == static_cast<std::time_t>(-1))
         {
-            ft_errno = FT_ERANGE;
+            if (ft_errno == ER_SUCCESS)
+                ft_errno = FT_ERANGE;
             return (false);
         }
         adjusted_epoch = epoch_time - static_cast<std::time_t>(offset_seconds);
@@ -254,7 +256,8 @@ bool    time_parse_custom(const char *string_input, const char *format, std::tm 
         epoch_time = cmp_timegm(&parsed_time);
         if (epoch_time == static_cast<std::time_t>(-1))
         {
-            ft_errno = FT_ERANGE;
+            if (ft_errno == ER_SUCCESS)
+                ft_errno = FT_ERANGE;
             return (false);
         }
     }
