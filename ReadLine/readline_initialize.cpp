@@ -35,6 +35,7 @@ int rl_initialize_state(readline_state_t *state)
     if (!state->buffer)
     {
         rl_disable_raw_mode();
+        ft_errno = FT_EALLOC;
         return (1);
     }
     state->pos = 0;
@@ -45,5 +46,6 @@ int rl_initialize_state(readline_state_t *state)
     state->current_match_index = 0;
     state->word_start = 0;
     rl_open_log_file(state);
+    ft_errno = ER_SUCCESS;
     return (0);
 }
