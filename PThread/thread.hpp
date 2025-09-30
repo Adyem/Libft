@@ -5,6 +5,7 @@
 #include "pthread.hpp"
 #include "../Template/move.hpp"
 #include "../Template/function.hpp"
+#include "../Template/invoke.hpp"
 #include "../Errno/errno.hpp"
 
 class ft_thread
@@ -53,9 +54,9 @@ ft_thread::ft_thread(FunctionType function, Args... args)
         this->set_error(FT_EALLOC);
         return ;
     }
-    data->function = ft_function<void()>([function, args...]()
+    data->function = ft_function<void()>([function, args...]() mutable
     {
-        function(args...);
+        ft_invoke(function, args...);
         return ;
     });
     if (data->function.get_error() != ER_SUCCESS)
