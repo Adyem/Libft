@@ -248,6 +248,75 @@ FT_TEST(test_readline_initialize_state_null_pointer, "rl_initialize_state reject
     return (1);
 }
 
+FT_TEST(test_readline_initialize_state_raw_mode_failure, "rl_initialize_state propagates raw mode errno")
+{
+    readline_state_t state;
+    int init_result;
+    int expected_errno;
+
+    ft_errno = ER_SUCCESS;
+    expected_errno = ERRNO_OFFSET + 789;
+    g_raw_mode_override_result = -1;
+    g_raw_mode_should_set_errno = 1;
+    g_raw_mode_errno_value = expected_errno;
+    init_result = rl_initialize_state(&state);
+    g_raw_mode_override_result = 0;
+    g_raw_mode_should_set_errno = 0;
+    g_raw_mode_errno_value = 0;
+    FT_ASSERT_EQ(1, init_result);
+    FT_ASSERT_EQ(expected_errno, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_readline_initialize_state_allocation_failure, "rl_initialize_state reports allocation failures")
+{
+    readline_state_t state;
+    int init_result;
+
+    ft_errno = ER_SUCCESS;
+    g_raw_mode_override_result = 0;
+    g_raw_mode_should_set_errno = 0;
+    g_raw_mode_errno_value = 0;
+    cma_set_alloc_limit(1);
+    init_result = rl_initialize_state(&state);
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(1, init_result);
+    FT_ASSERT_EQ(FT_EALLOC, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_readline_initialize_state_success, "rl_initialize_state sets up the state on success")
+{
+    readline_state_t state;
+    int init_result;
+    char *allocated_buffer;
+    int buffer_size;
+    int buffer_position;
+    int buffer_history_index;
+    int initialize_errno;
+
+    ft_errno = ER_SUCCESS;
+    g_raw_mode_override_result = 0;
+    g_raw_mode_should_set_errno = 0;
+    g_raw_mode_errno_value = 0;
+    init_result = rl_initialize_state(&state);
+    allocated_buffer = state.buffer;
+    buffer_size = state.bufsize;
+    buffer_position = state.pos;
+    buffer_history_index = state.history_index;
+    initialize_errno = ft_errno;
+    rl_disable_raw_mode();
+    if (allocated_buffer != ft_nullptr)
+        cma_free(allocated_buffer);
+    FT_ASSERT_EQ(0, init_result);
+    FT_ASSERT_EQ(ER_SUCCESS, initialize_errno);
+    FT_ASSERT(allocated_buffer != ft_nullptr);
+    FT_ASSERT_EQ(INITIAL_BUFFER_SIZE, buffer_size);
+    FT_ASSERT_EQ(0, buffer_position);
+    FT_ASSERT_EQ(history_count, buffer_history_index);
+    return (1);
+}
+
 FT_TEST(test_readline_history_recall_resizes_buffer, "history recall grows the active buffer")
 {
     readline_state_t state;
