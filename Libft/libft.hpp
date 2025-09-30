@@ -53,24 +53,18 @@ namespace ft_detail
 constexpr size_t ft_strlen_size_t(const char *string)
 {
     if (!ft_is_constant_evaluated())
-    {
         ft_errno = ER_SUCCESS;
-    }
     if (!string)
     {
         if (!ft_is_constant_evaluated())
-        {
             ft_errno = FT_EINVAL;
-        }
         return (0);
     }
     const char *string_pointer = string;
     while (reinterpret_cast<uintptr_t>(string_pointer) & (sizeof(size_t) - 1))
     {
         if (*string_pointer == '\0')
-        {
             return (static_cast<size_t>(string_pointer - string));
-        }
         ++string_pointer;
     }
     const size_t *word_pointer = reinterpret_cast<const size_t*>(string_pointer);
@@ -91,16 +85,12 @@ constexpr int ft_strlen(const char *string)
     size_t length = 0;
 
     if (!ft_is_constant_evaluated())
-    {
         ft_errno = ER_SUCCESS;
-    }
     length = ft_strlen_size_t(string);
     if (length > static_cast<size_t>(FT_INT_MAX))
     {
         if (!ft_is_constant_evaluated())
-        {
             ft_errno = FT_ERANGE;
-        }
         return (FT_INT_MAX);
     }
     return (static_cast<int>(length));

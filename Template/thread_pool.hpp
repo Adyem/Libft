@@ -194,14 +194,29 @@ inline void ft_thread_pool::submit(Function &&function)
         pthread_mutex_unlock(&this->_mutex);
         return ;
     }
-    ft_function<void()> wrapper(ft_move(function));
-    this->_tasks.enqueue(ft_move(wrapper));
-    if (this->_tasks.get_error() != ER_SUCCESS)
+    int queue_error;
+    bool enqueue_failed;
+
+    enqueue_failed = false;
     {
-        this->set_error(this->_tasks.get_error());
+        ft_function<void()> wrapper(ft_move(function));
+
+        this->_tasks.enqueue(ft_move(wrapper));
+        queue_error = this->_tasks.get_error();
+        if (queue_error != ER_SUCCESS)
+        {
+            wrapper = ft_function<void()>();
+            enqueue_failed = true;
+        }
+    }
+    if (enqueue_failed)
+    {
+        this->set_error(queue_error);
         pthread_mutex_unlock(&this->_mutex);
+        ft_errno = queue_error;
         return ;
     }
+    this->set_error(ER_SUCCESS);
     pthread_mutex_unlock(&this->_mutex);
     pt_cond_signal(&this->_cond);
 }
@@ -238,6 +253,7 @@ inline void ft_thread_pool::wait()
         }
     }
     pthread_mutex_unlock(&this->_mutex);
+    this->set_error(ER_SUCCESS);
 }
 
 inline void ft_thread_pool::destroy()
@@ -258,11 +274,16 @@ inline void ft_thread_pool::destroy()
         ++worker_index;
     }
     this->_workers.clear();
+    this->set_error(ER_SUCCESS);
 }
 
 inline int ft_thread_pool::get_error() const
 {
-      return (this->_error_code.load(std::memory_order_relaxed));
+    int error_value;
+
+    error_value = this->_error_code.load(std::memory_order_relaxed);
+    ft_errno = error_value;
+    return (error_value);
 }
 
 inline const char* ft_thread_pool::get_error_str() const
