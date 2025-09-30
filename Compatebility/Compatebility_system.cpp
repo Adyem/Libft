@@ -240,16 +240,43 @@ const char *cmp_system_strerror(int error_code)
 char *cmp_get_home_directory(void)
 {
 #if defined(_WIN32) || defined(_WIN64)
-    char *home = ft_getenv("USERPROFILE");
+    char *home;
+    char *home_drive;
+    char *home_path;
+    char *combined_home;
+
+    home = ft_getenv("USERPROFILE");
     if (home != ft_nullptr)
+    {
+        ft_errno = ER_SUCCESS;
         return (home);
-    char *home_drive = ft_getenv("HOMEDRIVE");
-    char *home_path = ft_getenv("HOMEPATH");
+    }
+    home_drive = ft_getenv("HOMEDRIVE");
+    home_path = ft_getenv("HOMEPATH");
     if (home_drive == ft_nullptr || home_path == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
-    return (cma_strjoin_multiple(2, home_drive, home_path));
+    }
+    combined_home = cma_strjoin_multiple(2, home_drive, home_path);
+    if (combined_home == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
+        return (ft_nullptr);
+    }
+    ft_errno = ER_SUCCESS;
+    return (combined_home);
 #else
-    return (ft_getenv("HOME"));
+    char *home;
+
+    home = ft_getenv("HOME");
+    if (home == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
+        return (ft_nullptr);
+    }
+    ft_errno = ER_SUCCESS;
+    return (home);
 #endif
 }
 
