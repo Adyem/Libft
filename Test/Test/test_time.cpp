@@ -5,6 +5,7 @@
 #include "../../CPP_class/class_string_class.hpp"
 #include "../../Time/time.hpp"
 #include "../../Errno/errno.hpp"
+#include "../../PThread/mutex.hpp"
 #include <chrono>
 #include <cstdint>
 #include <ctime>
@@ -26,6 +27,71 @@ static bool g_time_sleep_capture_enabled = false;
 static std::vector<unsigned int> g_time_sleep_calls;
 static bool g_time_local_force_failure = false;
 static int g_time_local_failure_errno = EINVAL;
+
+extern t_time_format_gmtime_override_function g_time_format_gmtime_override;
+extern t_time_format_strftime_override_function g_time_format_strftime_override;
+extern t_time_format_mutex_override_function g_time_format_lock_override;
+extern t_time_format_mutex_override_function g_time_format_unlock_override;
+
+static void time_format_set_mutex_overrides(t_time_format_mutex_override_function lock_override, t_time_format_mutex_override_function unlock_override)
+{
+    g_time_format_lock_override = lock_override;
+    g_time_format_unlock_override = unlock_override;
+    return ;
+}
+
+static void time_format_set_time_overrides(t_time_format_gmtime_override_function gmtime_override, t_time_format_strftime_override_function strftime_override)
+{
+    g_time_format_gmtime_override = gmtime_override;
+    g_time_format_strftime_override = strftime_override;
+    return ;
+}
+
+static void time_format_reset_overrides(void)
+{
+    g_time_format_lock_override = ft_nullptr;
+    g_time_format_unlock_override = ft_nullptr;
+    g_time_format_gmtime_override = ft_nullptr;
+    g_time_format_strftime_override = ft_nullptr;
+    return ;
+}
+
+static int time_format_test_force_lock_failure(pt_mutex *mutex, pthread_t thread_id)
+{
+    (void)mutex;
+    (void)thread_id;
+    ft_errno = PT_ERR_ALREADY_LOCKED;
+    return (PT_ERR_ALREADY_LOCKED);
+}
+
+static std::tm *time_format_test_force_gmtime_failure(const std::time_t *time_value)
+{
+    (void)time_value;
+    return (ft_nullptr);
+}
+
+static int time_format_test_force_unlock_failure(pt_mutex *mutex, pthread_t thread_id)
+{
+    int unlock_result;
+
+    time_format_set_mutex_overrides(ft_nullptr, ft_nullptr);
+    unlock_result = mutex->unlock(thread_id);
+    if (unlock_result != FT_SUCCESS && ft_errno == ER_SUCCESS)
+        ft_errno = PT_ERR_MUTEX_OWNER;
+    if (unlock_result == FT_SUCCESS)
+        ft_errno = PT_ERR_MUTEX_OWNER;
+    return (PT_ERR_MUTEX_OWNER);
+}
+
+static size_t time_format_test_force_strftime_failure(char *buffer, size_t size, const char *format, const std::tm *time_value)
+{
+    (void)buffer;
+    (void)size;
+    (void)format;
+    (void)time_value;
+    ft_errno = FT_EINVAL;
+    return (0);
+}
 
 int pt_thread_sleep(unsigned int milliseconds)
 {
@@ -195,6 +261,89 @@ FT_TEST(test_time_format_time_local_failure, "ft_time_format propagates time_loc
     FT_ASSERT_EQ(EOVERFLOW + ERRNO_OFFSET, ft_errno);
     FT_ASSERT_EQ('Z', buffer[0]);
     g_time_local_force_failure = false;
+    return (1);
+}
+
+FT_TEST(test_time_format_iso8601_success_sets_errno, "time_format_iso8601 reports success in errno")
+{
+    ft_string formatted;
+
+    time_format_reset_overrides();
+    ft_errno = FT_EINVAL;
+    formatted = time_format_iso8601(0);
+    FT_ASSERT_EQ(0, std::strcmp(formatted.c_str(), "1970-01-01T00:00:00Z"));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_time_format_iso8601_mutex_lock_failure_sets_errno, "time_format_iso8601 propagates mutex lock errors")
+{
+    ft_string formatted;
+
+    time_format_reset_overrides();
+    time_format_set_mutex_overrides(time_format_test_force_lock_failure, ft_nullptr);
+    ft_errno = ER_SUCCESS;
+    formatted = time_format_iso8601(0);
+    time_format_reset_overrides();
+    FT_ASSERT(formatted.empty());
+    FT_ASSERT_EQ(PT_ERR_ALREADY_LOCKED, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_time_format_iso8601_gmtime_failure_sets_errno, "time_format_iso8601 sets errno when gmtime fails")
+{
+    ft_string formatted;
+
+    time_format_reset_overrides();
+    time_format_set_time_overrides(time_format_test_force_gmtime_failure, ft_nullptr);
+    ft_errno = ER_SUCCESS;
+    formatted = time_format_iso8601(0);
+    time_format_reset_overrides();
+    FT_ASSERT(formatted.empty());
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_time_format_iso8601_gmtime_unlock_failure_sets_errno, "time_format_iso8601 propagates mutex unlock errors after gmtime failure")
+{
+    ft_string formatted;
+
+    time_format_reset_overrides();
+    time_format_set_mutex_overrides(ft_nullptr, time_format_test_force_unlock_failure);
+    time_format_set_time_overrides(time_format_test_force_gmtime_failure, ft_nullptr);
+    ft_errno = ER_SUCCESS;
+    formatted = time_format_iso8601(0);
+    time_format_reset_overrides();
+    FT_ASSERT(formatted.empty());
+    FT_ASSERT_EQ(PT_ERR_MUTEX_OWNER, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_time_format_iso8601_unlock_failure_sets_errno, "time_format_iso8601 propagates mutex unlock errors")
+{
+    ft_string formatted;
+
+    time_format_reset_overrides();
+    time_format_set_mutex_overrides(ft_nullptr, time_format_test_force_unlock_failure);
+    ft_errno = ER_SUCCESS;
+    formatted = time_format_iso8601(0);
+    time_format_reset_overrides();
+    FT_ASSERT(formatted.empty());
+    FT_ASSERT_EQ(PT_ERR_MUTEX_OWNER, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_time_format_iso8601_strftime_failure_sets_errno, "time_format_iso8601 sets errno when strftime fails")
+{
+    ft_string formatted;
+
+    time_format_reset_overrides();
+    time_format_set_time_overrides(ft_nullptr, time_format_test_force_strftime_failure);
+    ft_errno = ER_SUCCESS;
+    formatted = time_format_iso8601(0);
+    time_format_reset_overrides();
+    FT_ASSERT(formatted.empty());
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
     return (1);
 }
 

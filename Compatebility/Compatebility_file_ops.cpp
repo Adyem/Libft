@@ -6,6 +6,8 @@
 # include <windows.h>
 # include <stdio.h>
 
+void cmp_set_force_cross_device_move(int force_cross_device_move);
+
 static bool global_force_cross_device_move = false;
 
 void cmp_set_force_cross_device_move(int force_cross_device_move)
@@ -160,6 +162,8 @@ int cmp_file_create_directory(const char *path, mode_t mode)
 # include <filesystem>
 # include <cstdio>
 # include <cerrno>
+
+void cmp_set_force_cross_device_move(int force_cross_device_move);
 
 static bool global_force_cross_device_move = false;
 
