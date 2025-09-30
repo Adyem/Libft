@@ -14,6 +14,7 @@ json_group *serialize_inventory(const ft_inventory &inventory);
 json_group *serialize_equipment(const ft_character &character);
 json_group *serialize_quest(const ft_quest &quest);
 json_group *serialize_character(const ft_character &character);
+int deserialize_inventory(ft_inventory &inventory, json_group *group);
 
 FT_TEST(test_serialize_inventory_allocation_failure_sets_errno, "serialize_inventory reports allocation failure")
 {
@@ -172,6 +173,77 @@ FT_TEST(test_serialize_character_success_clears_errno, "serialize_character clea
     ft_errno = GAME_GENERAL_ERROR;
     json_group *group = serialize_character(character);
     FT_ASSERT(group != ft_nullptr);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    json_free_groups(group);
+    return (1);
+}
+
+FT_TEST(test_deserialize_inventory_failure_then_success_updates_errno, "deserialize_inventory updates errno after failure and success")
+{
+    ft_inventory inventory;
+    json_group *group = json_create_json_group("inventory");
+
+    FT_ASSERT(group != ft_nullptr);
+    json_item *item = json_create_item("capacity", 2);
+
+    FT_ASSERT(item != ft_nullptr);
+    json_add_item_to_group(group, item);
+    item = json_create_item("weight_limit", 50);
+    FT_ASSERT(item != ft_nullptr);
+    json_add_item_to_group(group, item);
+    item = json_create_item("current_weight", 10);
+    FT_ASSERT(item != ft_nullptr);
+    json_add_item_to_group(group, item);
+    item = json_create_item("used_slots", 1);
+    FT_ASSERT(item != ft_nullptr);
+    json_add_item_to_group(group, item);
+    item = json_create_item("item_count", 1);
+    FT_ASSERT(item != ft_nullptr);
+    json_add_item_to_group(group, item);
+    item = json_create_item("item_0_stack_size", 1);
+    FT_ASSERT(item != ft_nullptr);
+    json_add_item_to_group(group, item);
+    item = json_create_item("item_0_id", 7);
+    FT_ASSERT(item != ft_nullptr);
+    json_add_item_to_group(group, item);
+    item = json_create_item("item_0_width", 1);
+    FT_ASSERT(item != ft_nullptr);
+    json_add_item_to_group(group, item);
+    item = json_create_item("item_0_height", 1);
+    FT_ASSERT(item != ft_nullptr);
+    json_add_item_to_group(group, item);
+    item = json_create_item("item_0_mod1_id", 0);
+    FT_ASSERT(item != ft_nullptr);
+    json_add_item_to_group(group, item);
+    item = json_create_item("item_0_mod1_value", 0);
+    FT_ASSERT(item != ft_nullptr);
+    json_add_item_to_group(group, item);
+    item = json_create_item("item_0_mod2_id", 0);
+    FT_ASSERT(item != ft_nullptr);
+    json_add_item_to_group(group, item);
+    item = json_create_item("item_0_mod2_value", 0);
+    FT_ASSERT(item != ft_nullptr);
+    json_add_item_to_group(group, item);
+    item = json_create_item("item_0_mod3_id", 0);
+    FT_ASSERT(item != ft_nullptr);
+    json_add_item_to_group(group, item);
+    item = json_create_item("item_0_mod3_value", 0);
+    FT_ASSERT(item != ft_nullptr);
+    json_add_item_to_group(group, item);
+    item = json_create_item("item_0_mod4_id", 0);
+    FT_ASSERT(item != ft_nullptr);
+    json_add_item_to_group(group, item);
+    item = json_create_item("item_0_mod4_value", 0);
+    FT_ASSERT(item != ft_nullptr);
+    json_add_item_to_group(group, item);
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(GAME_GENERAL_ERROR, deserialize_inventory(inventory, group));
+    FT_ASSERT_EQ(GAME_GENERAL_ERROR, ft_errno);
+    item = json_create_item("item_0_max_stack", 5);
+    FT_ASSERT(item != ft_nullptr);
+    json_add_item_to_group(group, item);
+    ft_errno = GAME_GENERAL_ERROR;
+    FT_ASSERT_EQ(ER_SUCCESS, deserialize_inventory(inventory, group));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     json_free_groups(group);
     return (1);

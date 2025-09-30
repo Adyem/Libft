@@ -337,7 +337,10 @@ int deserialize_character(ft_character &character, json_group *group)
         {
             char *skill_index_string = cma_itoa(skill_index);
             if (!skill_index_string)
+            {
+                ft_errno = JSON_MALLOC_FAIL;
                 return (JSON_MALLOC_FAIL);
+            }
             ft_string prefix = "skill_";
             prefix += skill_index_string;
             cma_free(skill_index_string);
@@ -380,6 +383,7 @@ int deserialize_character(ft_character &character, json_group *group)
             skill_index++;
         }
     }
+    ft_errno = ER_SUCCESS;
     return (ER_SUCCESS);
 }
 
