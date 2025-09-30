@@ -185,6 +185,100 @@ FT_TEST(test_readline_backspace_failure, "ReadLine handles helper failures")
     return (1);
 }
 
+FT_TEST(test_readline_success_clears_errno, "rl_readline resets ft_errno after a preceding failure")
+{
+    int result;
+    int stdin_backup;
+    int pipe_descriptors[2];
+    int expected_errno;
+    const char *prompt;
+    ssize_t written;
+    char *success_line;
+    int original_history;
+    const char input_sequence[3] = {'o', 'k', '\n'};
+
+    result = 1;
+    stdin_backup = -1;
+    pipe_descriptors[0] = -1;
+    pipe_descriptors[1] = -1;
+    success_line = ft_nullptr;
+    prompt = "> ";
+    expected_errno = ERRNO_OFFSET + 321;
+    original_history = history_count;
+    ft_errno = ER_SUCCESS;
+    g_raw_mode_override_result = -1;
+    g_raw_mode_should_set_errno = 1;
+    g_raw_mode_errno_value = expected_errno;
+    if (rl_readline(prompt) != ft_nullptr)
+        result = 0;
+    else if (ft_errno != expected_errno)
+        result = 0;
+    g_raw_mode_override_result = 0;
+    g_raw_mode_should_set_errno = 0;
+    g_raw_mode_errno_value = 0;
+    if (result == 0)
+        goto cleanup;
+    stdin_backup = dup(STDIN_FILENO);
+    if (stdin_backup < 0)
+    {
+        result = 0;
+        goto cleanup;
+    }
+    if (pipe(pipe_descriptors) != 0)
+    {
+        result = 0;
+        goto cleanup;
+    }
+    if (dup2(pipe_descriptors[0], STDIN_FILENO) == -1)
+    {
+        result = 0;
+        goto cleanup;
+    }
+    written = write(pipe_descriptors[1], input_sequence, sizeof(input_sequence));
+    if (written != static_cast<ssize_t>(sizeof(input_sequence)))
+    {
+        result = 0;
+        goto cleanup;
+    }
+    close(pipe_descriptors[1]);
+    pipe_descriptors[1] = -1;
+    success_line = rl_readline(prompt);
+    if (success_line == ft_nullptr)
+        result = 0;
+    else if (std::strcmp(success_line, "ok") != 0)
+        result = 0;
+    else if (ft_errno != ER_SUCCESS)
+        result = 0;
+cleanup:
+    if (success_line != ft_nullptr)
+    {
+        cma_free(success_line);
+        success_line = ft_nullptr;
+    }
+    if (history_count > original_history)
+    {
+        if (history[history_count - 1] != ft_nullptr)
+            cma_free(history[history_count - 1]);
+        history[history_count - 1] = ft_nullptr;
+        history_count = original_history;
+    }
+    if (pipe_descriptors[0] != -1)
+        close(pipe_descriptors[0]);
+    if (pipe_descriptors[1] != -1)
+        close(pipe_descriptors[1]);
+    if (stdin_backup != -1)
+    {
+        dup2(stdin_backup, STDIN_FILENO);
+        close(stdin_backup);
+    }
+    g_raw_mode_override_result = 0;
+    g_raw_mode_should_set_errno = 0;
+    g_raw_mode_errno_value = 0;
+    if (result == 0)
+        return (0);
+    return (1);
+}
+
 FT_TEST(test_readline_clear_line_null_prompt, "rl_clear_line rejects null prompts")
 {
     int clear_result;
