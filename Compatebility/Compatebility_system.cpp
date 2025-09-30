@@ -31,6 +31,17 @@ static int global_force_unsetenv_last_error = 0;
 static int global_force_unsetenv_socket_error = 0;
 static int global_force_putenv_last_error = 0;
 #endif
+static int global_force_cpu_count_enabled = 0;
+static int global_force_cpu_count_should_fail = 0;
+static unsigned int global_force_cpu_count_value = 0;
+static int global_force_cpu_count_errno_value = 0;
+static int global_force_total_memory_enabled = 0;
+static int global_force_total_memory_should_fail = 0;
+static unsigned long long global_force_total_memory_value = 0;
+static int global_force_total_memory_errno_value = 0;
+#if defined(_WIN32) || defined(_WIN64)
+static unsigned long global_force_total_memory_last_error = 0;
+#endif
 
 void cmp_set_force_unsetenv_result(int result, int errno_value)
 {
@@ -85,6 +96,81 @@ void cmp_set_force_putenv_windows_error(int last_error)
     global_force_putenv_last_error = last_error;
 #else
     (void)last_error;
+#endif
+    return ;
+}
+
+void cmp_set_force_cpu_count_success(unsigned int cpu_count)
+{
+    global_force_cpu_count_enabled = 1;
+    global_force_cpu_count_should_fail = 0;
+    global_force_cpu_count_value = cpu_count;
+    global_force_cpu_count_errno_value = 0;
+    return ;
+}
+
+void cmp_set_force_cpu_count_failure(int errno_value)
+{
+    global_force_cpu_count_enabled = 1;
+    global_force_cpu_count_should_fail = 1;
+    global_force_cpu_count_errno_value = errno_value;
+    global_force_cpu_count_value = 0;
+    return ;
+}
+
+void cmp_clear_force_cpu_count_result(void)
+{
+    global_force_cpu_count_enabled = 0;
+    global_force_cpu_count_should_fail = 0;
+    global_force_cpu_count_value = 0;
+    global_force_cpu_count_errno_value = 0;
+    return ;
+}
+
+void cmp_set_force_total_memory_success(unsigned long long memory_size)
+{
+    global_force_total_memory_enabled = 1;
+    global_force_total_memory_should_fail = 0;
+    global_force_total_memory_value = memory_size;
+    global_force_total_memory_errno_value = 0;
+#if defined(_WIN32) || defined(_WIN64)
+    global_force_total_memory_last_error = 0;
+#endif
+    return ;
+}
+
+void cmp_set_force_total_memory_failure(int errno_value)
+{
+    global_force_total_memory_enabled = 1;
+    global_force_total_memory_should_fail = 1;
+    global_force_total_memory_errno_value = errno_value;
+    global_force_total_memory_value = 0;
+#if defined(_WIN32) || defined(_WIN64)
+    global_force_total_memory_last_error = 0;
+#endif
+    return ;
+}
+
+#if defined(_WIN32) || defined(_WIN64)
+void cmp_set_force_total_memory_windows_failure(unsigned long last_error)
+{
+    global_force_total_memory_enabled = 1;
+    global_force_total_memory_should_fail = 1;
+    global_force_total_memory_last_error = last_error;
+    global_force_total_memory_errno_value = 0;
+    global_force_total_memory_value = 0;
+    return ;
+}
+#endif
+
+void cmp_clear_force_total_memory_result(void)
+{
+    global_force_total_memory_enabled = 0;
+    global_force_total_memory_should_fail = 0;
+    global_force_total_memory_value = 0;
+    global_force_total_memory_errno_value = 0;
+#if defined(_WIN32) || defined(_WIN64)
+    global_force_total_memory_last_error = 0;
 #endif
     return ;
 }
@@ -282,45 +368,141 @@ char *cmp_get_home_directory(void)
 
 unsigned int cmp_get_cpu_count(void)
 {
+    if (global_force_cpu_count_enabled != 0)
+    {
+        if (global_force_cpu_count_should_fail != 0)
+        {
+            if (global_force_cpu_count_errno_value != 0)
+                ft_errno = global_force_cpu_count_errno_value + ERRNO_OFFSET;
+            else
+                ft_errno = FT_ETERM;
+            return (0);
+        }
+        ft_errno = ER_SUCCESS;
+        return (global_force_cpu_count_value);
+    }
 #if defined(_WIN32) || defined(_WIN64)
     SYSTEM_INFO system_info;
+
     GetSystemInfo(&system_info);
+    ft_errno = ER_SUCCESS;
     return (system_info.dwNumberOfProcessors);
 #elif defined(__APPLE__) && defined(__MACH__)
     int cpu_count;
     size_t size;
+
     size = sizeof(cpu_count);
+    errno = 0;
     if (sysctlbyname("hw.ncpu", &cpu_count, &size, ft_nullptr, 0) != 0)
+    {
+        if (errno != 0)
+            ft_errno = errno + ERRNO_OFFSET;
+        else
+            ft_errno = FT_ETERM;
         return (0);
+    }
+    ft_errno = ER_SUCCESS;
     return (static_cast<unsigned int>(cpu_count));
 #else
-    long cpu_count = sysconf(_SC_NPROCESSORS_ONLN);
+    long cpu_count;
+
+    errno = 0;
+    cpu_count = sysconf(_SC_NPROCESSORS_ONLN);
     if (cpu_count < 0)
+    {
+        if (errno != 0)
+            ft_errno = errno + ERRNO_OFFSET;
+        else
+            ft_errno = FT_ETERM;
         return (0);
+    }
+    ft_errno = ER_SUCCESS;
     return (static_cast<unsigned int>(cpu_count));
 #endif
 }
 
 unsigned long long cmp_get_total_memory(void)
 {
+    if (global_force_total_memory_enabled != 0)
+    {
+        if (global_force_total_memory_should_fail != 0)
+        {
+#if defined(_WIN32) || defined(_WIN64)
+            if (global_force_total_memory_last_error != 0)
+                ft_errno = static_cast<int>(global_force_total_memory_last_error) + ERRNO_OFFSET;
+            else if (global_force_total_memory_errno_value != 0)
+                ft_errno = global_force_total_memory_errno_value + ERRNO_OFFSET;
+            else
+                ft_errno = FT_ETERM;
+#else
+            if (global_force_total_memory_errno_value != 0)
+                ft_errno = global_force_total_memory_errno_value + ERRNO_OFFSET;
+            else
+                ft_errno = FT_ETERM;
+#endif
+            return (0);
+        }
+        ft_errno = ER_SUCCESS;
+        return (global_force_total_memory_value);
+    }
 #if defined(_WIN32) || defined(_WIN64)
     MEMORYSTATUSEX memory_status;
+
     memory_status.dwLength = sizeof(memory_status);
     if (GlobalMemoryStatusEx(&memory_status) == 0)
+    {
+        DWORD last_error;
+
+        last_error = GetLastError();
+        if (last_error != 0)
+            ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
+        else
+            ft_errno = FT_ETERM;
         return (0);
+    }
+    ft_errno = ER_SUCCESS;
     return (memory_status.ullTotalPhys);
 #elif defined(__APPLE__) && defined(__MACH__)
     unsigned long long memory_size;
     size_t size;
+
     size = sizeof(memory_size);
+    errno = 0;
     if (sysctlbyname("hw.memsize", &memory_size, &size, ft_nullptr, 0) != 0)
+    {
+        if (errno != 0)
+            ft_errno = errno + ERRNO_OFFSET;
+        else
+            ft_errno = FT_ETERM;
         return (0);
+    }
+    ft_errno = ER_SUCCESS;
     return (memory_size);
 #else
-    long pages = sysconf(_SC_PHYS_PAGES);
-    long page_size = sysconf(_SC_PAGE_SIZE);
-    if (pages < 0 || page_size < 0)
+    long pages;
+    long page_size;
+
+    errno = 0;
+    pages = sysconf(_SC_PHYS_PAGES);
+    if (pages < 0)
+    {
+        if (errno != 0)
+            ft_errno = errno + ERRNO_OFFSET;
+        else
+            ft_errno = FT_ETERM;
         return (0);
+    }
+    errno = 0;
+    page_size = sysconf(_SC_PAGE_SIZE);
+    if (page_size < 0)
+    {
+        if (errno != 0)
+            ft_errno = errno + ERRNO_OFFSET;
+        else
+            ft_errno = FT_ETERM;
+        return (0);
+    }
+    ft_errno = ER_SUCCESS;
     return (static_cast<unsigned long long>(pages) *
             static_cast<unsigned long long>(page_size));
 #endif
