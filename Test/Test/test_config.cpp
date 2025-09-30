@@ -1,10 +1,38 @@
 #include "../../Config/config.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
+#include "../../Errno/errno.hpp"
 #include "../../Libft/libft.hpp"
+#include "../../System_utils/test_runner.hpp"
 #include <cstdio>
 #include <cstring>
 
-int test_config_basic(void)
+static void cleanup_file(const char *filename)
+{
+    if (!filename)
+        return ;
+    std::remove(filename);
+    return ;
+}
+
+FT_TEST(test_cnfg_parse_null_filename_sets_errno, "cnfg_parse rejects null filename")
+{
+    ft_errno = ER_SUCCESS;
+    cnfg_config *config = cnfg_parse(ft_nullptr);
+    FT_ASSERT(config == ft_nullptr);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_config_load_file_null_filename_sets_errno, "config_load_file rejects null filename")
+{
+    ft_errno = ER_SUCCESS;
+    cnfg_config *config = config_load_file(ft_nullptr);
+    FT_ASSERT(config == ft_nullptr);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_cnfg_parse_success_sets_errno_success, "cnfg_parse loads ini files and clears errno")
 {
     const char *filename = "test_config.ini";
     FILE *file = std::fopen(filename, "w");
@@ -12,18 +40,24 @@ int test_config_basic(void)
         return (0);
     std::fprintf(file, "[section]\nkey=value\n");
     std::fclose(file);
-    cnfg_config *cfg = cnfg_parse(filename);
-    int ok = cfg && cfg->entry_count == 1 &&
-             cfg->entries[0].section && std::strcmp(cfg->entries[0].section, "section") == 0 &&
-             cfg->entries[0].key && std::strcmp(cfg->entries[0].key, "key") == 0 &&
-             cfg->entries[0].value && std::strcmp(cfg->entries[0].value, "value") == 0;
-    if (cfg)
-        cnfg_free(cfg);
-    std::remove(filename);
-    return (ok);
+    ft_errno = FT_EINVAL;
+    cnfg_config *config = cnfg_parse(filename);
+    FT_ASSERT(config != ft_nullptr);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT(config->entry_count == 1);
+    FT_ASSERT(config->entries[0].section != ft_nullptr);
+    FT_ASSERT(std::strcmp(config->entries[0].section, "section") == 0);
+    FT_ASSERT(config->entries[0].key != ft_nullptr);
+    FT_ASSERT(std::strcmp(config->entries[0].key, "key") == 0);
+    FT_ASSERT(config->entries[0].value != ft_nullptr);
+    FT_ASSERT(std::strcmp(config->entries[0].value, "value") == 0);
+    if (config)
+        cnfg_free(config);
+    cleanup_file(filename);
+    return (1);
 }
 
-int test_config_missing_value(void)
+FT_TEST(test_cnfg_parse_missing_value_handles_entries, "cnfg_parse accepts missing keys and values")
 {
     const char *filename = "test_config_missing.ini";
     FILE *file = std::fopen(filename, "w");
@@ -31,19 +65,24 @@ int test_config_missing_value(void)
         return (0);
     std::fprintf(file, "key_without_value=\n=value_without_key\n");
     std::fclose(file);
-    cnfg_config *cfg = cnfg_parse(filename);
-    int ok = cfg && cfg->entry_count == 2 &&
-             cfg->entries[0].key && std::strcmp(cfg->entries[0].key, "key_without_value") == 0 &&
-             cfg->entries[0].value == ft_nullptr &&
-             cfg->entries[1].key == ft_nullptr &&
-             cfg->entries[1].value && std::strcmp(cfg->entries[1].value, "value_without_key") == 0;
-    if (cfg)
-        cnfg_free(cfg);
-    std::remove(filename);
-    return (ok);
+    ft_errno = FT_EALLOC;
+    cnfg_config *config = cnfg_parse(filename);
+    FT_ASSERT(config != ft_nullptr);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT(config->entry_count == 2);
+    FT_ASSERT(config->entries[0].key != ft_nullptr);
+    FT_ASSERT(std::strcmp(config->entries[0].key, "key_without_value") == 0);
+    FT_ASSERT(config->entries[0].value == ft_nullptr);
+    FT_ASSERT(config->entries[1].key == ft_nullptr);
+    FT_ASSERT(config->entries[1].value != ft_nullptr);
+    FT_ASSERT(std::strcmp(config->entries[1].value, "value_without_key") == 0);
+    if (config)
+        cnfg_free(config);
+    cleanup_file(filename);
+    return (1);
 }
 
-int test_config_env_override(void)
+FT_TEST(test_cnfg_parse_env_override_sets_errno_success, "cnfg_parse allows environment overrides")
 {
     const char *filename = "test_config_env.ini";
     FILE *file = std::fopen(filename, "w");
@@ -53,15 +92,20 @@ int test_config_env_override(void)
     std::fclose(file);
     if (ft_setenv("key", "env", 1) != 0)
     {
-        std::remove(filename);
+        cleanup_file(filename);
         return (0);
     }
+    ft_errno = FT_EALLOC;
     cnfg_config *config = cnfg_parse(filename);
-    int is_ok = config && config->entry_count == 1 &&
-                config->entries[0].value && std::strcmp(config->entries[0].value, "env") == 0;
+    FT_ASSERT(config != ft_nullptr);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT(config->entry_count == 1);
+    FT_ASSERT(config->entries[0].value != ft_nullptr);
+    FT_ASSERT(std::strcmp(config->entries[0].value, "env") == 0);
     if (config)
         cnfg_free(config);
-    std::remove(filename);
-    return (is_ok);
+    cleanup_file(filename);
+    ft_unsetenv("key");
+    return (1);
 }
 
