@@ -12,7 +12,6 @@ SRCS := libft_atoi.cpp \
     libft_strchr.cpp \
     libft_strlcat.cpp \
     libft_strlcpy.cpp \
-    libft_strlen.cpp \
     libft_strncmp.cpp \
     libft_strnstr.cpp \
     libft_strstr.cpp \
@@ -34,7 +33,6 @@ SRCS := libft_atoi.cpp \
     libft_strmapi.cpp \
     libft_striteri.cpp \
     libft_isspace.cpp \
-    libft_strlen_size_t.cpp \
     libft_getenv.cpp \
     libft_setenv.cpp \
     libft_unsetenv.cpp \
