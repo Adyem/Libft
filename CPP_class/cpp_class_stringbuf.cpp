@@ -23,6 +23,7 @@ void ft_stringbuf::set_error(int error_code) const
 std::size_t ft_stringbuf::read(char *buffer, std::size_t count)
 {
     std::size_t index = 0;
+    bool failure_occurred = false;
 
     if (!buffer)
     {
@@ -35,12 +36,15 @@ std::size_t ft_stringbuf::read(char *buffer, std::size_t count)
         if (!current)
         {
             this->set_error(FT_EINVAL);
+            failure_occurred = true;
             break ;
         }
         buffer[index] = *current;
         index++;
         this->_position++;
     }
+    if (!failure_occurred && index > 0)
+        this->set_error(ER_SUCCESS);
     return (index);
 }
 
@@ -65,5 +69,7 @@ ft_string ft_stringbuf::str() const
     ft_string result(start + this->_position);
     if (result.get_error() != ER_SUCCESS)
         this->set_error(result.get_error());
+    else
+        this->set_error(ER_SUCCESS);
     return (result);
 }
