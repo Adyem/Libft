@@ -51,6 +51,7 @@ unsigned char    *compress_buffer(const unsigned char *input_buffer, std::size_t
     resized_buffer = static_cast<unsigned char *>(cma_realloc(result_buffer, *compressed_size));
     if (resized_buffer)
         result_buffer = resized_buffer;
+    ft_errno = ER_SUCCESS;
     return (result_buffer);
 }
 
@@ -98,6 +99,7 @@ unsigned char    *decompress_buffer(const unsigned char *input_buffer, std::size
         return (ft_nullptr);
     }
     *decompressed_size = actual_size;
+    ft_errno = ER_SUCCESS;
     return (result_buffer);
 }
 
