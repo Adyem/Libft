@@ -111,6 +111,7 @@ int ft_file::open(const char* filename, int flags, mode_t mode) noexcept
         }
     }
     this->_fd = new_fd;
+    this->set_error(ER_SUCCESS);
     return (0);
 }
 
@@ -133,6 +134,7 @@ int ft_file::open(const char* filename, int flags) noexcept
         }
     }
     this->_fd = new_fd;
+    this->set_error(ER_SUCCESS);
     return (0);
 }
 
@@ -172,7 +174,11 @@ ssize_t ft_file::read(char *buffer, int count) noexcept
     }
     ssize_t bytes_read = su_read(this->_fd, buffer, static_cast<size_t>(count));
     if (bytes_read == -1)
+    {
         this->set_error(errno + ERRNO_OFFSET);
+        return (-1);
+    }
+    this->set_error(ER_SUCCESS);
     return (bytes_read);
 }
 
@@ -189,7 +195,7 @@ ssize_t ft_file::write(const char *string) noexcept
         this->set_error(errno + ERRNO_OFFSET);
         return (-1);
     }
-
+    this->set_error(ER_SUCCESS);
     return (result);
 }
 
@@ -201,6 +207,7 @@ int ft_file::seek(off_t offset, int whence) noexcept
         this->set_error(errno + ERRNO_OFFSET);
         return (-1);
     }
+    this->set_error(ER_SUCCESS);
     return (0);
 }
 
@@ -208,8 +215,11 @@ int ft_file::printf(const char *format, ...)
 {
     va_list args;
 
-    if (!format)
+    if (format == ft_nullptr)
+    {
+        this->set_error(FT_EINVAL);
         return (0);
+    }
     if (this->_fd == -1)
     {
         this->set_error(FILE_INVALID_FD);
@@ -218,6 +228,9 @@ int ft_file::printf(const char *format, ...)
     va_start(args, format);
     int printed_chars = pf_printf_fd_v(this->_fd, format, args);
     va_end(args);
+    if (printed_chars < 0)
+        return (printed_chars);
+    this->set_error(ER_SUCCESS);
     return (printed_chars);
 }
 
