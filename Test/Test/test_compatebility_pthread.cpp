@@ -62,6 +62,46 @@ static void clear_force_sched_yield_failure(void)
 static bool g_force_usleep_failure = false;
 static int g_force_usleep_errno = EINTR;
 
+static bool g_force_pthread_cancel_failure = false;
+static int g_force_pthread_cancel_errno = ESRCH;
+
+static int call_real_pthread_cancel(pthread_t thread)
+{
+    typedef int (*pthread_cancel_function)(pthread_t);
+    static pthread_cancel_function real_pthread_cancel_pointer = ft_nullptr;
+    if (real_pthread_cancel_pointer == ft_nullptr)
+    {
+        void *symbol_pointer = dlsym(RTLD_NEXT, "pthread_cancel");
+        real_pthread_cancel_pointer = reinterpret_cast<pthread_cancel_function>(symbol_pointer);
+    }
+    if (real_pthread_cancel_pointer == ft_nullptr)
+        return (ESRCH);
+    return (real_pthread_cancel_pointer(thread));
+}
+
+extern "C" int pthread_cancel(pthread_t thread)
+{
+    if (g_force_pthread_cancel_failure != false)
+    {
+        return (g_force_pthread_cancel_errno);
+    }
+    return (call_real_pthread_cancel(thread));
+}
+
+static void set_force_pthread_cancel_failure(int error_value)
+{
+    g_force_pthread_cancel_failure = true;
+    g_force_pthread_cancel_errno = error_value;
+    return ;
+}
+
+static void clear_force_pthread_cancel_failure(void)
+{
+    g_force_pthread_cancel_failure = false;
+    g_force_pthread_cancel_errno = ESRCH;
+    return ;
+}
+
 static int call_real_usleep(useconds_t microseconds)
 {
     typedef int (*usleep_function)(useconds_t);
@@ -128,8 +168,10 @@ FT_TEST(test_cmp_thread_cancel_failure_sets_ft_errno, "cmp_thread_cancel failure
 
     FT_ASSERT_EQ(0, pthread_create(&thread_identifier, ft_nullptr, completed_thread_function, ft_nullptr));
     FT_ASSERT_EQ(0, pthread_join(thread_identifier, ft_nullptr));
+    set_force_pthread_cancel_failure(ESRCH);
     ft_errno = ER_SUCCESS;
     int cancel_result = cmp_thread_cancel(thread_identifier);
+    clear_force_pthread_cancel_failure();
     FT_ASSERT_EQ(ESRCH, cancel_result);
     FT_ASSERT_EQ(ESRCH + ERRNO_OFFSET, ft_errno);
     return (1);

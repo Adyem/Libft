@@ -218,12 +218,14 @@ char *api_request_string(const char *ip, uint16_t port,
             send_failure_code = socket_wrapper.get_error();
             if (send_failure_code == ER_SUCCESS)
                 send_failure_code = SOCKET_SEND_FAILED;
+            error_code = send_failure_code;
             break;
         }
         if (chunk_bytes_sent == 0)
         {
             send_failed = true;
             send_failure_code = SOCKET_SEND_FAILED;
+            error_code = send_failure_code;
             break;
         }
         total_bytes_sent += static_cast<size_t>(chunk_bytes_sent);
