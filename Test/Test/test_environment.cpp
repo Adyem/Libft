@@ -2,7 +2,7 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
-#include "../../Compatebility/compatebility_internal.hpp"
+#include "../Compatebility/compatebility_system_test_hooks.hpp"
 #include <cerrno>
 
 FT_TEST(test_ft_unsetenv_rejects_empty_name, "ft_unsetenv rejects empty names")

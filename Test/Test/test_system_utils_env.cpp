@@ -1,8 +1,9 @@
-#include "../../Compatebility/compatebility_internal.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/system_utils.hpp"
 #include "../../System_utils/test_runner.hpp"
+#include "../../Compatebility/compatebility_internal.hpp"
+#include "../Compatebility/compatebility_system_test_hooks.hpp"
 #include <cerrno>
 
 FT_TEST(test_su_putenv_null_sets_ft_einval, "su_putenv null argument assigns FT_EINVAL")
