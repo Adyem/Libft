@@ -365,7 +365,14 @@ json_group *json_read_from_string(const char *content)
         char *group_name = parse_string(content, index);
         if (!group_name)
         {
+            int error_code;
+
+            error_code = ft_errno;
             json_free_groups(head);
+            if (error_code == ER_SUCCESS)
+                ft_errno = FT_EINVAL;
+            else
+                ft_errno = error_code;
             return (ft_nullptr);
         }
         skip_whitespace(content, index);
@@ -380,8 +387,15 @@ json_group *json_read_from_string(const char *content)
         json_item *items = parse_items(content, index);
         if (!items)
         {
+            int error_code;
+
+            error_code = ft_errno;
             cma_free(group_name);
             json_free_groups(head);
+            if (error_code == ER_SUCCESS)
+                ft_errno = FT_EINVAL;
+            else
+                ft_errno = error_code;
             return (ft_nullptr);
         }
         json_group *group = json_create_json_group(group_name);
@@ -409,8 +423,14 @@ json_group *json_read_from_string(const char *content)
     }
     if (!object_closed)
     {
+        int error_code;
+
+        error_code = ft_errno;
         json_free_groups(head);
-        ft_errno = FT_EINVAL;
+        if (error_code == ER_SUCCESS)
+            ft_errno = FT_EINVAL;
+        else
+            ft_errno = error_code;
         return (ft_nullptr);
     }
     ft_errno = ER_SUCCESS;
