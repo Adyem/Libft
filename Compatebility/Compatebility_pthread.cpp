@@ -16,18 +16,21 @@ int cmp_thread_cancel(pthread_t thread)
         ft_errno = GetLastError() + ERRNO_OFFSET;
         return (-1);
     }
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 
 int cmp_thread_yield()
 {
     SwitchToThread();
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 
 int cmp_thread_sleep(unsigned int milliseconds)
 {
     Sleep(milliseconds);
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 #else
@@ -42,7 +45,11 @@ int cmp_thread_cancel(pthread_t thread)
 {
     int return_value = pthread_cancel(thread);
     if (return_value != 0)
-        ft_errno = errno + ERRNO_OFFSET;
+    {
+        ft_errno = return_value + ERRNO_OFFSET;
+        return (return_value);
+    }
+    ft_errno = ER_SUCCESS;
     return (return_value);
 }
 
@@ -53,6 +60,7 @@ int cmp_thread_yield()
         ft_errno = errno + ERRNO_OFFSET;
         return (-1);
     }
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 
@@ -63,6 +71,7 @@ int cmp_thread_sleep(unsigned int milliseconds)
         ft_errno = errno + ERRNO_OFFSET;
         return (-1);
     }
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 #endif
