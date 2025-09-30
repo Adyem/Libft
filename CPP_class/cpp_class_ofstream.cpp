@@ -28,9 +28,10 @@ int ft_ofstream::open(const char *filename) noexcept
     }
     if (this->_file.open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644) != 0)
     {
-        this->set_error(this->_file.get_error());
+        this->_error_code = this->_file.get_error();
         return (1);
     }
+    this->set_error(ER_SUCCESS);
     return (0);
 }
 
@@ -43,13 +44,26 @@ ssize_t ft_ofstream::write(const char *string) noexcept
     }
     ssize_t result = this->_file.write(string);
     if (result < 0)
-        this->set_error(this->_file.get_error());
+    {
+        this->_error_code = this->_file.get_error();
+        return (-1);
+    }
+    this->set_error(ER_SUCCESS);
     return (result);
 }
 
 void ft_ofstream::close() noexcept
 {
+    int previous_fd = this->_file.get_fd();
+
     this->_file.close();
+    if (previous_fd >= 0 && this->_file.get_fd() == previous_fd &&
+        this->_file.get_error() != ER_SUCCESS)
+    {
+        this->_error_code = this->_file.get_error();
+        return ;
+    }
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
