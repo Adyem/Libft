@@ -22,6 +22,7 @@ static int parse_item_field(json_group *group, const ft_string &key, int &out_va
         return (GAME_GENERAL_ERROR);
     }
     out_value = ft_atoi(json_item_ptr->value);
+    ft_errno = ER_SUCCESS;
     return (ER_SUCCESS);
 }
 
@@ -93,6 +94,7 @@ static int build_item_from_group(ft_item &item, json_group *group, const ft_stri
     if (parse_item_field(group, key_mod4_value, value) != ER_SUCCESS)
         return (GAME_GENERAL_ERROR);
     item.set_modifier4_value(value);
+    ft_errno = ER_SUCCESS;
     return (ER_SUCCESS);
 }
 
@@ -141,7 +143,10 @@ int deserialize_inventory(ft_inventory &inventory, json_group *group)
     {
         char *item_index_string = cma_itoa(item_index);
         if (!item_index_string)
+        {
+            ft_errno = JSON_MALLOC_FAIL;
             return (JSON_MALLOC_FAIL);
+        }
         ft_string item_prefix = "item_";
         item_prefix += item_index_string;
         cma_free(item_index_string);
@@ -150,13 +155,17 @@ int deserialize_inventory(ft_inventory &inventory, json_group *group)
             return (GAME_GENERAL_ERROR);
         ft_sharedptr<ft_item> item(new ft_item(item_temp));
         if (!item)
+        {
+            ft_errno = JSON_MALLOC_FAIL;
             return (JSON_MALLOC_FAIL);
+        }
         if (inventory.add_item(item) != ER_SUCCESS)
             return (inventory.get_error());
         item_index++;
     }
     inventory.set_current_weight(serialized_weight);
     inventory.set_used_slots(serialized_slots);
+    ft_errno = ER_SUCCESS;
     return (ER_SUCCESS);
 }
 
@@ -198,6 +207,7 @@ int deserialize_equipment(ft_character &character, json_group *group)
     }
     else
         character.unequip_item(EQUIP_WEAPON);
+    ft_errno = ER_SUCCESS;
     return (ER_SUCCESS);
 }
 
@@ -237,7 +247,10 @@ int deserialize_quest(ft_quest &quest, json_group *group)
         {
             char *index_string = cma_itoa(reward_index);
             if (!index_string)
+            {
+                ft_errno = JSON_MALLOC_FAIL;
                 return (JSON_MALLOC_FAIL);
+            }
             ft_string prefix = "reward_item_";
             prefix += index_string;
             cma_free(index_string);
@@ -245,10 +258,16 @@ int deserialize_quest(ft_quest &quest, json_group *group)
             if (build_item_from_group(reward_temp, group, prefix) != ER_SUCCESS)
                 return (GAME_GENERAL_ERROR);
             ft_sharedptr<ft_item> reward(new ft_item(reward_temp));
+            if (!reward)
+            {
+                ft_errno = JSON_MALLOC_FAIL;
+                return (JSON_MALLOC_FAIL);
+            }
             quest.get_reward_items().push_back(reward);
             reward_index++;
         }
     }
+    ft_errno = ER_SUCCESS;
     return (ER_SUCCESS);
 }
 
