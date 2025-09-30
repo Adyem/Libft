@@ -1,9 +1,13 @@
 #include "rng.hpp"
+#include "../Errno/errno.hpp"
 
 void ft_generate_uuid(char out[37])
 {
     if (out == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
         return ;
+    }
     unsigned char uuid_bytes[16];
     if (rng_secure_bytes(uuid_bytes, 16) != 0)
     {
@@ -29,6 +33,7 @@ void ft_generate_uuid(char out[37])
         byte_index++;
     }
     out[output_index] = '\0';
+    ft_errno = ER_SUCCESS;
     return ;
 }
 
