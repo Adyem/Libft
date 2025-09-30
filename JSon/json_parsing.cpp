@@ -108,7 +108,10 @@ json_group* json_create_json_group(const char *name)
 {
     json_group *group = new(std::nothrow) json_group;
     if (!group)
+    {
+        ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
+    }
     group->name = cma_strdup(name);
     if (!group->name)
     {
@@ -118,6 +121,7 @@ json_group* json_create_json_group(const char *name)
     }
     group->items = ft_nullptr;
     group->next = ft_nullptr;
+    ft_errno = ER_SUCCESS;
     return (group);
 }
 
