@@ -4,6 +4,7 @@
 #include <cassert>
 #include <pthread.h>
 #include <csignal>
+#include "../Errno/errno.hpp"
 #include "CMA.hpp"
 #include "cma_internal.hpp"
 #include "../Libft/libft.hpp"
@@ -36,18 +37,34 @@ static int reallocate_block(void *ptr, ft_size_t new_size)
 void *cma_realloc(void* ptr, ft_size_t new_size)
 {
     if (new_size > FT_SYSTEM_SIZE_MAX)
+    {
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
+    }
     if (OFFSWITCH == 1)
     {
         void *result = std::realloc(ptr, static_cast<size_t>(new_size));
         if (!ptr && result)
+        {
             g_cma_allocation_count++;
+            ft_errno = ER_SUCCESS;
+        }
         else if (ptr && new_size == 0)
+        {
             g_cma_free_count++;
+            ft_errno = ER_SUCCESS;
+        }
+        else if (!result && new_size != 0)
+            ft_errno = FT_EALLOC;
+        else
+            ft_errno = ER_SUCCESS;
         return (result);
     }
     if (g_cma_alloc_limit != 0 && new_size > g_cma_alloc_limit)
+    {
+        ft_errno = FT_EALLOC;
         return (ft_nullptr);
+    }
     if (g_cma_thread_safe)
         g_malloc_mutex.lock(THREAD_ID);
     if (!ptr)
@@ -61,6 +78,7 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         if (g_cma_thread_safe)
             g_malloc_mutex.unlock(THREAD_ID);
         cma_free(ptr);
+        ft_errno = ER_SUCCESS;
         return (ft_nullptr);
     }
     new_size = align16(new_size);
@@ -69,13 +87,18 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
     {
         if (g_cma_thread_safe)
             g_malloc_mutex.unlock(THREAD_ID);
+        ft_errno = ER_SUCCESS;
         return (ptr);
     }
     void* new_ptr = cma_malloc(new_size);
     if (!new_ptr)
     {
+        int error_code;
+
+        error_code = ft_errno;
         if (g_cma_thread_safe)
             g_malloc_mutex.unlock(THREAD_ID);
+        ft_errno = error_code;
         return (ft_nullptr);
     }
     Block* old_block = reinterpret_cast<Block*>((static_cast<char*> (ptr)
@@ -85,6 +108,7 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         if (g_cma_thread_safe)
             g_malloc_mutex.unlock(THREAD_ID);
         cma_free(ptr);
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
     }
     ft_size_t copy_size;
@@ -96,5 +120,6 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
     if (g_cma_thread_safe)
         g_malloc_mutex.unlock(THREAD_ID);
     cma_free(ptr);
+    ft_errno = ER_SUCCESS;
     return (new_ptr);
 }

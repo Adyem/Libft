@@ -132,11 +132,15 @@ FT_TEST(test_api_request_send_failure_sets_errno, "api_request_string send failu
         return (0);
     api_request_small_delay();
     result = api_request_string("127.0.0.1", 54337, "GET", "/", ft_nullptr, ft_nullptr, ft_nullptr, 1000);
+    int request_errno = ft_errno;
     server_thread.join();
     if (result != ft_nullptr)
         return (0);
-    if (ft_errno != SOCKET_SEND_FAILED && ft_errno != (EPIPE + ERRNO_OFFSET))
+    if (request_errno != SOCKET_SEND_FAILED && request_errno != (EPIPE + ERRNO_OFFSET))
         return (0);
+    if (ft_errno != ER_SUCCESS)
+        return (0);
+    ft_errno = request_errno;
     return (1);
 }
 
