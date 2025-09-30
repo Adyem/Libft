@@ -38,7 +38,10 @@ void cnfg_free(cnfg_config *config)
 cnfg_config *cnfg_parse(const char *filename)
 {
     if (!filename)
+    {
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
+    }
     FILE *file = ft_fopen(filename, "r");
     if (!file)
         return (ft_nullptr);
@@ -190,13 +193,17 @@ cnfg_config *cnfg_parse(const char *filename)
     if (current_section)
         cma_free(current_section);
     ft_fclose(file);
+    ft_errno = ER_SUCCESS;
     return (config);
 }
 
 static cnfg_config *cnfg_parse_json(const char *filename)
 {
     if (!filename)
+    {
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
+    }
     json_group *groups = json_read_from_file(filename);
     if (!groups)
         return (ft_nullptr);
@@ -281,6 +288,7 @@ static cnfg_config *cnfg_parse_json(const char *filename)
     }
     config->entry_count = count;
     json_free_groups(groups);
+    ft_errno = ER_SUCCESS;
     return (config);
 }
 
@@ -300,7 +308,10 @@ cnfg_config *config_load_env()
             ++count;
     }
     if (!count)
+    {
+        ft_errno = ER_SUCCESS;
         return (config);
+    }
     config->entries = static_cast<cnfg_entry*>(cma_calloc(count, sizeof(cnfg_entry)));
     if (!config->entries)
     {
@@ -355,17 +366,29 @@ cnfg_config *config_load_env()
         ++index;
     }
     config->entry_count = count;
+    ft_errno = ER_SUCCESS;
     return (config);
 }
 
 cnfg_config *config_load_file(const char *filename)
 {
     if (!filename)
+    {
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
+    }
     const char *dot = ft_strrchr(filename, '.');
     if (dot && ft_strcmp(dot, ".json") == 0)
-        return (cnfg_parse_json(filename));
-    return (cnfg_parse(filename));
+    {
+        cnfg_config *config = cnfg_parse_json(filename);
+        if (config)
+            ft_errno = ER_SUCCESS;
+        return (config);
+    }
+    cnfg_config *config = cnfg_parse(filename);
+    if (config)
+        ft_errno = ER_SUCCESS;
+    return (config);
 }
 
 
