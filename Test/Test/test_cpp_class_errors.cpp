@@ -1,5 +1,6 @@
 #include "../../CPP_class/class_file.hpp"
 #include "../../CPP_class/class_fd_istream.hpp"
+#include "../../CPP_class/class_istringstream.hpp"
 #include "../../CPP_class/class_ofstream.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
@@ -89,5 +90,30 @@ FT_TEST(test_ft_fd_istream_error_resets, "ft_fd_istream preserves su_read errno 
     FT_ASSERT_EQ('g', read_buffer[0]);
     FT_ASSERT_EQ('o', read_buffer[1]);
     FT_ASSERT_EQ(0, ::close(target_descriptor));
+    return (1);
+}
+
+FT_TEST(test_ft_istringstream_error_resets, "ft_istringstream resets error state after invalid read")
+{
+    ft_istringstream stream("reset");
+    char read_buffer[6] = {0};
+
+    ft_errno = ER_SUCCESS;
+    stream.read(ft_nullptr, 1);
+    FT_ASSERT_EQ(FT_EINVAL, stream.get_error());
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT(stream.bad());
+
+    stream.read(read_buffer, 5);
+    FT_ASSERT_EQ(ER_SUCCESS, stream.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(false, stream.bad());
+    FT_ASSERT_EQ(static_cast<std::size_t>(5), stream.gcount());
+    FT_ASSERT_EQ('r', read_buffer[0]);
+    FT_ASSERT_EQ('e', read_buffer[1]);
+    FT_ASSERT_EQ('s', read_buffer[2]);
+    FT_ASSERT_EQ('e', read_buffer[3]);
+    FT_ASSERT_EQ('t', read_buffer[4]);
+    FT_ASSERT_EQ(0, read_buffer[5]);
     return (1);
 }
