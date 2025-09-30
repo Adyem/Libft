@@ -45,6 +45,11 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
 # include <fcntl.h>
 # include <cerrno>
 
+void cmp_force_rng_open_failure(int error_code);
+void cmp_force_rng_read_failure(int error_code);
+void cmp_force_rng_close_failure(int error_code);
+void cmp_clear_force_rng_failures(void);
+
 static int g_force_rng_open_errno = 0;
 static int g_force_rng_read_errno = 0;
 static int g_force_rng_close_errno = 0;

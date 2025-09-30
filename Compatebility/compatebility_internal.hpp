@@ -66,7 +66,6 @@ int cmp_file_delete(const char *path);
 int cmp_file_move(const char *source_path, const char *destination_path);
 int cmp_file_copy(const char *source_path, const char *destination_path);
 int cmp_file_create_directory(const char *path, mode_t mode);
-void cmp_set_force_cross_device_move(int force_cross_device_move);
 
 int cmp_thread_equal(pthread_t thread1, pthread_t thread2);
 int cmp_thread_cancel(pthread_t thread);
@@ -78,22 +77,10 @@ void cmp_readline_disable_raw_mode(void);
 int cmp_readline_terminal_width(void);
 
 int cmp_rng_secure_bytes(unsigned char *buffer, size_t length);
-#if !defined(_WIN32) && !defined(_WIN64)
-void cmp_force_rng_open_failure(int error_code);
-void cmp_force_rng_read_failure(int error_code);
-void cmp_force_rng_close_failure(int error_code);
-void cmp_clear_force_rng_failures(void);
-#endif
 
 int cmp_setenv(const char *name, const char *value, int overwrite);
 int cmp_unsetenv(const char *name);
 int cmp_putenv(char *string);
-void cmp_set_force_unsetenv_result(int result, int errno_value);
-void cmp_clear_force_unsetenv_result(void);
-void cmp_set_force_unsetenv_windows_errors(int last_error, int socket_error);
-void cmp_set_force_putenv_result(int result, int errno_value);
-void cmp_clear_force_putenv_result(void);
-void cmp_set_force_putenv_windows_error(int last_error);
 const char *cmp_system_strerror(int error_code);
 char *cmp_get_home_directory(void);
 unsigned int cmp_get_cpu_count(void);

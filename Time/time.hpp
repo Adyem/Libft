@@ -3,7 +3,14 @@
 
 #include <cstddef>
 #include <ctime>
+#include <pthread.h>
 #include "../CPP_class/class_string_class.hpp"
+
+class pt_mutex;
+
+typedef std::tm *(*t_time_format_gmtime_override_function)(const std::time_t *);
+typedef size_t (*t_time_format_strftime_override_function)(char *, size_t, const char *, const std::tm *);
+typedef int (*t_time_format_mutex_override_function)(pt_mutex *, pthread_t);
 
 typedef long t_time;
 
@@ -46,5 +53,4 @@ ft_string    time_format_iso8601(t_time time_value);
 bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_time *timestamp_output);
 bool    time_parse_custom(const char *string_input, const char *format, std::tm *time_output, t_time *timestamp_output, bool interpret_as_utc);
 bool    time_parse_custom(const char *string_input, const char *format, std::tm *time_output, t_time *timestamp_output);
-
 #endif
