@@ -1,6 +1,7 @@
 #include <pthread.h>
 #include "pthread.hpp"
 #include "../Errno/errno.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 
 int pt_rwlock_init(pthread_rwlock_t *rwlock, const pthread_rwlockattr_t *attributes)
 {
@@ -40,7 +41,14 @@ int pt_rwlock_wrlock(pthread_rwlock_t *rwlock)
 
 int pt_rwlock_unlock(pthread_rwlock_t *rwlock)
 {
-    int return_value = pthread_rwlock_unlock(rwlock);
+    int return_value;
+
+    if (rwlock == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
+        return (-1);
+    }
+    return_value = pthread_rwlock_unlock(rwlock);
     if (return_value != 0)
     {
         ft_errno = return_value + ERRNO_OFFSET;

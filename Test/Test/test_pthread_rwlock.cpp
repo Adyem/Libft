@@ -85,9 +85,9 @@ FT_TEST(test_pt_rwlock_unlock_updates_errno, "pt_rwlock_unlock updates ft_errno 
     int failure_result;
 
     FT_ASSERT_EQ(0, pt_rwlock_init(&rwlock, ft_nullptr));
-    failure_result = pt_rwlock_unlock(&rwlock);
-    FT_ASSERT(failure_result != 0);
-    FT_ASSERT_EQ(failure_result + ERRNO_OFFSET, ft_errno);
+    failure_result = pt_rwlock_unlock(ft_nullptr);
+    FT_ASSERT_EQ(-1, failure_result);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
     FT_ASSERT_EQ(0, pthread_rwlock_wrlock(&rwlock));
     FT_ASSERT_EQ(0, pt_rwlock_unlock(&rwlock));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
