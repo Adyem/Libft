@@ -86,7 +86,10 @@ int rl_read_key(void)
     {
         bytes_read = su_read(0, &character, 1);
         if (bytes_read == 1)
+        {
+            ft_errno = ER_SUCCESS;
             return (character);
+        }
         if (bytes_read == 0)
         {
             ft_errno = FT_ETERM;

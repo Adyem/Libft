@@ -42,7 +42,10 @@ double math_fmod(double value, double modulus)
         return (math_nan());
     }
     if (math_is_infinite_internal(modulus) != 0)
+    {
+        ft_errno = ER_SUCCESS;
         return (value);
+    }
     remainder_value = std::fmod(value, modulus);
     if (math_fabs(remainder_value) <= std::numeric_limits<double>::denorm_min())
         remainder_value = value * 0.0;

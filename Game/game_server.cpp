@@ -79,7 +79,7 @@ int ft_game_server::start(const char *ip, uint16_t port) noexcept
         this->set_error(this->_server.get_error());
         return (1);
     }
-    this->_error_code = ER_SUCCESS;
+    this->set_error(ER_SUCCESS);
     return (0);
 }
 
@@ -126,7 +126,7 @@ int ft_game_server::handle_message(int client_handle, const ft_string &message) 
         }
         this->join_client(ft_atoi(id_item->value), client_handle);
         json_free_groups(groups);
-        this->_error_code = ER_SUCCESS;
+        this->set_error(ER_SUCCESS);
         return (0);
     }
     json_group *leave_group = json_find_group(groups, "leave");
@@ -142,7 +142,7 @@ int ft_game_server::handle_message(int client_handle, const ft_string &message) 
         this->leave_client(ft_atoi(id_item->value));
         FT_CLOSE_SOCKET(client_handle);
         json_free_groups(groups);
-        this->_error_code = ER_SUCCESS;
+        this->set_error(ER_SUCCESS);
         return (0);
     }
     json_group *event_group = json_find_group(groups, "event");
@@ -194,7 +194,7 @@ int ft_game_server::handle_message(int client_handle, const ft_string &message) 
         this->set_error(scheduler->get_error());
         return (1);
     }
-    this->_error_code = ER_SUCCESS;
+    this->set_error(ER_SUCCESS);
     return (0);
 }
 
@@ -237,7 +237,7 @@ int ft_game_server::serialize_world(ft_string &out) const noexcept
     }
     out = content;
     cma_free(content);
-    this->_error_code = ER_SUCCESS;
+    this->set_error(ER_SUCCESS);
     return (0);
 }
 
@@ -262,6 +262,7 @@ void ft_game_server::run_once() noexcept
         this->_server.send_text(client_ptr->value, update);
         client_ptr++;
     }
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -270,6 +271,7 @@ void ft_game_server::join_client(int client_id, int client_handle) noexcept
     this->_clients.insert(client_id, client_handle);
     if (this->_on_join)
         this->_on_join(client_id);
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -278,6 +280,7 @@ void ft_game_server::leave_client(int client_id) noexcept
     this->_clients.remove(client_id);
     if (this->_on_leave)
         this->_on_leave(client_id);
+    this->set_error(ER_SUCCESS);
     return ;
 }
 

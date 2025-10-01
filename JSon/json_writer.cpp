@@ -22,6 +22,11 @@ static char *json_writer_return_failure(void)
 
 int json_write_to_file(const char *file_path, json_group *groups)
 {
+    if (!file_path)
+    {
+        ft_errno = FT_EINVAL;
+        return (-1);
+    }
     int file_descriptor = su_open(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (file_descriptor < 0)
         return (-1);
@@ -67,7 +72,9 @@ int json_write_to_file(const char *file_path, json_group *groups)
         group_iterator = group_iterator->next;
     }
     pf_printf_fd(file_descriptor, "}\n");
-    cmp_close(file_descriptor);
+    if (cmp_close(file_descriptor) != 0)
+        return (-1);
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 

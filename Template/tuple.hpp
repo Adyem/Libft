@@ -156,6 +156,7 @@ ft_tuple<Types...>::get()
         }
     }
     elem_t& ref = std::get<I>(*this->_data);
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (ref);
 }
@@ -185,6 +186,7 @@ ft_tuple<Types...>::get() const
         }
     }
     const elem_t& ref = std::get<I>(*this->_data);
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (ref);
 }
@@ -214,6 +216,7 @@ T& ft_tuple<Types...>::get()
         }
     }
     T& ref = std::get<T>(*this->_data);
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (ref);
 }
@@ -241,6 +244,7 @@ const T& ft_tuple<Types...>::get() const
         }
     }
     const T& ref = std::get<T>(*this->_data);
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (ref);
 }
@@ -261,6 +265,7 @@ void ft_tuple<Types...>::reset()
         cma_free(this->_data);
         this->_data = ft_nullptr;
     }
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }

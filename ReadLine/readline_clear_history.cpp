@@ -2,6 +2,7 @@
 #include "readline_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Errno/errno.hpp"
 
 void rl_clear_history()
 {
@@ -15,5 +16,6 @@ void rl_clear_history()
         index++;
     }
     history_count = 0;
+    ft_errno = ER_SUCCESS;
     return ;
 }

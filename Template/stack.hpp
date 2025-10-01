@@ -230,8 +230,12 @@ template <typename ElementType>
 size_t ft_stack<ElementType>::size() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(this->_mutex.get_error());
         return (0);
+    }
     size_t current_size = this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (current_size);
 }
@@ -240,8 +244,12 @@ template <typename ElementType>
 bool ft_stack<ElementType>::empty() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(this->_mutex.get_error());
         return (true);
+    }
     bool result = (this->_size == 0);
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (result);
 }

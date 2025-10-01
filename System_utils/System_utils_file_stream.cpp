@@ -3,6 +3,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include <cstdlib>
+#include <cerrno>
 
 static bool g_force_file_stream_allocation_failure = false;
 
@@ -88,8 +89,11 @@ int su_fclose(su_file *stream)
     if (result == 0)
     {
         std::free(stream);
+        ft_errno = ER_SUCCESS;
         return (0);
     }
+    if (ft_errno == ER_SUCCESS && errno != 0)
+        ft_errno = errno + ERRNO_OFFSET;
     return (result);
 }
 
@@ -147,7 +151,12 @@ int su_fseek(su_file *stream, long offset, int origin)
     }
     result = lseek(stream->_descriptor, offset, origin);
     if (result < 0)
+    {
+        if (ft_errno == ER_SUCCESS && errno != 0)
+            ft_errno = errno + ERRNO_OFFSET;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 
@@ -162,7 +171,12 @@ long su_ftell(su_file *stream)
     }
     position = lseek(stream->_descriptor, 0, SEEK_CUR);
     if (position < 0)
+    {
+        if (ft_errno == ER_SUCCESS && errno != 0)
+            ft_errno = errno + ERRNO_OFFSET;
         return (-1L);
+    }
+    ft_errno = ER_SUCCESS;
     return (position);
 }
 

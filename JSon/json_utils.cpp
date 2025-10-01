@@ -8,34 +8,53 @@
 
 json_group *json_find_group(json_group *head, const char *name)
 {
+    if (!name)
+    {
+        ft_errno = FT_EINVAL;
+        return (ft_nullptr);
+    }
     json_group *current = head;
     while (current)
     {
         if (current->name && ft_strcmp(current->name, name) == 0)
+        {
+            ft_errno = ER_SUCCESS;
             return (current);
+        }
         current = current->next;
     }
+    ft_errno = ER_SUCCESS;
     return (ft_nullptr);
 }
 
 json_item *json_find_item(json_group *group, const char *key)
 {
-    if (!group)
+    if (!group || !key)
+    {
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
+    }
     json_item *current = group->items;
     while (current)
     {
         if (current->key && ft_strcmp(current->key, key) == 0)
+        {
+            ft_errno = ER_SUCCESS;
             return (current);
+        }
         current = current->next;
     }
+    ft_errno = ER_SUCCESS;
     return (ft_nullptr);
 }
 
 void json_remove_item(json_group *group, const char *key)
 {
-    if (!group)
+    if (!group || !key)
+    {
+        ft_errno = FT_EINVAL;
         return ;
+    }
     json_item *current = group->items;
     json_item *previous = ft_nullptr;
     while (current)
@@ -53,21 +72,29 @@ void json_remove_item(json_group *group, const char *key)
             if (current->big_number)
                 delete current->big_number;
             delete current;
+            ft_errno = ER_SUCCESS;
             return ;
         }
         previous = current;
         current = current->next;
     }
+    ft_errno = ER_SUCCESS;
     return ;
 }
 
 void json_update_item(json_group *group, const char *key, const char *value)
 {
-    if (!group)
+    if (!group || !key || !value)
+    {
+        ft_errno = FT_EINVAL;
         return ;
+    }
     json_item *item = json_find_item(group, key);
     if (!item)
+    {
+        ft_errno = FT_EINVAL;
         return ;
+    }
     if (item->big_number)
     {
         delete item->big_number;
@@ -82,17 +109,24 @@ void json_update_item(json_group *group, const char *key, const char *value)
         ft_errno = JSON_MALLOC_FAIL;
         return ;
     }
+    ft_errno = ER_SUCCESS;
     json_item_refresh_numeric_state(item);
     return ;
 }
 
 void json_update_item(json_group *group, const char *key, const int value)
 {
-    if (!group)
+    if (!group || !key)
+    {
+        ft_errno = FT_EINVAL;
         return ;
+    }
     json_item *item = json_find_item(group, key);
     if (!item)
+    {
+        ft_errno = FT_EINVAL;
         return ;
+    }
     if (item->big_number)
     {
         delete item->big_number;
@@ -107,17 +141,24 @@ void json_update_item(json_group *group, const char *key, const int value)
         ft_errno = JSON_MALLOC_FAIL;
         return ;
     }
+    ft_errno = ER_SUCCESS;
     json_item_refresh_numeric_state(item);
     return ;
 }
 
 void json_update_item(json_group *group, const char *key, const bool value)
 {
-    if (!group)
+    if (!group || !key)
+    {
+        ft_errno = FT_EINVAL;
         return ;
+    }
     json_item *item = json_find_item(group, key);
     if (!item)
+    {
+        ft_errno = FT_EINVAL;
         return ;
+    }
     if (item->big_number)
     {
         delete item->big_number;
@@ -135,17 +176,24 @@ void json_update_item(json_group *group, const char *key, const bool value)
         ft_errno = JSON_MALLOC_FAIL;
         return ;
     }
+    ft_errno = ER_SUCCESS;
     json_item_refresh_numeric_state(item);
     return ;
 }
 
 void json_update_item(json_group *group, const char *key, const ft_big_number &value)
 {
-    if (!group)
+    if (!group || !key)
+    {
+        ft_errno = FT_EINVAL;
         return ;
+    }
     json_item *item = json_find_item(group, key);
     if (!item)
+    {
+        ft_errno = FT_EINVAL;
         return ;
+    }
     if (item->big_number)
     {
         delete item->big_number;
@@ -160,14 +208,18 @@ void json_update_item(json_group *group, const char *key, const ft_big_number &v
         ft_errno = JSON_MALLOC_FAIL;
         return ;
     }
+    ft_errno = ER_SUCCESS;
     json_item_refresh_numeric_state(item);
     return ;
 }
 
 void json_remove_group(json_group **head, const char *name)
 {
-    if (!head || !(*head))
+    if (!head || !(*head) || !name)
+    {
+        ft_errno = FT_EINVAL;
         return ;
+    }
     json_group *current = *head;
     json_group *previous = ft_nullptr;
     while (current)
@@ -182,10 +234,12 @@ void json_remove_group(json_group **head, const char *name)
                 delete[] current->name;
             json_free_items(current->items);
             delete current;
+            ft_errno = ER_SUCCESS;
             return ;
         }
         previous = current;
         current = current->next;
     }
+    ft_errno = ER_SUCCESS;
     return ;
 }

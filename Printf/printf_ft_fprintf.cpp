@@ -1,6 +1,7 @@
 
 #include "printf.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
 #include <cstdio>
 #include <stdarg.h>
@@ -9,6 +10,7 @@
 #include <stddef.h>
 #include <limits.h>
 #include <string>
+#include <errno.h>
 
 static bool count_has_error(size_t *count)
 {
@@ -27,6 +29,20 @@ static void mark_count_error(size_t *count)
     return ;
 }
 
+static void set_stream_error(void)
+{
+    int saved_errno;
+
+    saved_errno = errno;
+    if (saved_errno != 0)
+    {
+        ft_errno = saved_errno + ERRNO_OFFSET;
+        return ;
+    }
+    ft_errno = FT_EIO;
+    return ;
+}
+
 static void write_buffer_stream(const char *buffer, size_t length, FILE *stream, size_t *count)
 {
     if (count_has_error(count))
@@ -37,6 +53,7 @@ static void write_buffer_stream(const char *buffer, size_t length, FILE *stream,
     if (written != length)
     {
         mark_count_error(count);
+        set_stream_error();
         return ;
     }
     *count += written;
@@ -54,12 +71,18 @@ static int format_double_output(char specifier, int precision, double number, st
     { \
         int required_length = std::snprintf(ft_nullptr, 0, literal, precision, number); \
         if (required_length < 0) \
+        { \
+            ft_errno = FT_EIO; \
             return (-1); \
+        } \
         output.clear(); \
         output.resize(static_cast<size_t>(required_length) + 1); \
         int written_length = std::snprintf(&output[0], output.size(), literal, precision, number); \
         if (written_length < 0) \
+        { \
+            ft_errno = FT_EIO; \
             return (-1); \
+        } \
         output.resize(static_cast<size_t>(written_length)); \
         return (0); \
     }
@@ -88,6 +111,7 @@ static void ft_putchar_stream(const char character, FILE *stream, size_t *count)
     if (fputc(static_cast<unsigned char>(character), stream) == EOF)
     {
         mark_count_error(count);
+        set_stream_error();
         return ;
     }
     (*count)++;
@@ -208,6 +232,7 @@ static void ft_putfloat_stream(double number, FILE *stream, size_t *count, int p
     if (format_double_output('f', precision, number, formatted_output) != 0)
     {
         mark_count_error(count);
+        set_stream_error();
         return ;
     }
     size_t output_length = formatted_output.length();
@@ -230,6 +255,7 @@ static void ft_putscientific_stream(double number, bool uppercase, FILE *stream,
     if (format_double_output(specifier, precision, number, formatted_output) != 0)
     {
         mark_count_error(count);
+        set_stream_error();
         return ;
     }
     size_t output_length = formatted_output.length();
@@ -252,6 +278,7 @@ static void ft_putgeneral_stream(double number, bool uppercase, FILE *stream, si
     if (format_double_output(specifier, precision, number, formatted_output) != 0)
     {
         mark_count_error(count);
+        set_stream_error();
         return ;
     }
     size_t output_length = formatted_output.length();
@@ -263,7 +290,10 @@ static void ft_putgeneral_stream(double number, bool uppercase, FILE *stream, si
 int ft_vfprintf(FILE *stream, const char *format, va_list args)
 {
     if (stream == ft_nullptr || format == ft_nullptr)
-        return (0);
+    {
+        ft_errno = FT_EINVAL;
+        return (-1);
+    }
     size_t count = 0;
     size_t index = 0;
     while (format[index])
@@ -440,14 +470,21 @@ int ft_vfprintf(FILE *stream, const char *format, va_list args)
     if (count == SIZE_MAX)
         return (-1);
     if (count > static_cast<size_t>(INT_MAX))
+    {
+        ft_errno = FT_ERANGE;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (static_cast<int>(count));
 }
 
 int ft_fprintf(FILE *stream, const char *format, ...)
 {
     if (stream == ft_nullptr || format == ft_nullptr)
-        return (0);
+    {
+        ft_errno = FT_EINVAL;
+        return (-1);
+    }
     va_list args;
     va_start(args, format);
     int printed = ft_vfprintf(stream, format, args);

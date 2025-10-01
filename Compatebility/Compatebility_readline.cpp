@@ -38,6 +38,7 @@ int cmp_readline_enable_raw_mode()
         cmp_set_errno_from_last_error();
         return (-1);
     }
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 
@@ -50,7 +51,11 @@ void cmp_readline_disable_raw_mode()
         return ;
     }
     if (!SetConsoleMode(handle, g_orig_mode))
+    {
         cmp_set_errno_from_last_error();
+        return ;
+    }
+    ft_errno = ER_SUCCESS;
     return ;
 }
 
@@ -68,7 +73,9 @@ int cmp_readline_terminal_width()
         cmp_set_errno_from_last_error();
         return (-1);
     }
-    return (info.srWindow.Right - info.srWindow.Left + 1);
+    int terminal_width = info.srWindow.Right - info.srWindow.Left + 1;
+    ft_errno = ER_SUCCESS;
+    return (terminal_width);
 }
 #else
 # include <termios.h>
@@ -101,13 +108,18 @@ int cmp_readline_enable_raw_mode()
         cmp_set_errno_from_errno();
         return (-1);
     }
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 
 void cmp_readline_disable_raw_mode()
 {
     if (tcsetattr(STDIN_FILENO, TCSANOW, &g_orig_termios) == -1)
+    {
         cmp_set_errno_from_errno();
+        return ;
+    }
+    ft_errno = ER_SUCCESS;
     return ;
 }
 
@@ -119,6 +131,8 @@ int cmp_readline_terminal_width()
         cmp_set_errno_from_errno();
         return (-1);
     }
-    return (ws.ws_col);
+    int terminal_width = ws.ws_col;
+    ft_errno = ER_SUCCESS;
+    return (terminal_width);
 }
 #endif
