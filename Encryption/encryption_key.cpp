@@ -40,7 +40,11 @@ const char *be_getEncryptionKey(void)
         index++;
     }
     key[key_length] = '\0';
-    ft_errno = secure_error;
+    if (secure_error != ER_SUCCESS)
+    {
+        ft_errno = secure_error;
+        return (key);
+    }
     ft_errno = ER_SUCCESS;
     return (key);
 }

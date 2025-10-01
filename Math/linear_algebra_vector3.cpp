@@ -79,12 +79,14 @@ vector3 vector3::normalize() const
     if (math_absdiff(len, 0.0) <= epsilon)
     {
         result.set_error(FT_EINVAL);
+        this->set_error(FT_EINVAL);
         return (result);
     }
     result._x = this->_x / len;
     result._y = this->_y / len;
     result._z = this->_z / len;
     result.set_error(ER_SUCCESS);
+    this->set_error(ER_SUCCESS);
     return (result);
 }
 

@@ -193,33 +193,124 @@ void cmp_clear_force_total_memory_result(void)
 
 int cmp_setenv(const char *name, const char *value, int overwrite)
 {
+    if (name == ft_nullptr || value == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
+        return (-1);
+    }
 #if defined(_WIN32) || defined(_WIN64)
     if (!overwrite && std::getenv(name) != ft_nullptr)
+    {
+        ft_errno = ER_SUCCESS;
         return (0);
-    return (_putenv_s(name, value));
+    }
+    errno = 0;
+    int result = _putenv_s(name, value);
+    if (result != 0)
+    {
+        DWORD last_error;
+
+        last_error = GetLastError();
+        if (last_error != 0)
+            ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
+        else if (errno != 0)
+            ft_errno = errno + ERRNO_OFFSET;
+        else
+            ft_errno = FT_EINVAL;
+        return (result);
+    }
+    ft_errno = ER_SUCCESS;
+    return (result);
 #else
-    return (setenv(name, value, overwrite));
+    errno = 0;
+    int result = setenv(name, value, overwrite);
+    if (result != 0)
+    {
+        if (errno != 0)
+            ft_errno = errno + ERRNO_OFFSET;
+        else
+            ft_errno = FT_EINVAL;
+        return (result);
+    }
+    ft_errno = ER_SUCCESS;
+    return (result);
 #endif
 }
 
 int cmp_unsetenv(const char *name)
 {
+    if (name == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
+        return (-1);
+    }
 #if defined(_WIN32) || defined(_WIN64)
     if (global_force_unsetenv_enabled != 0)
     {
         errno = global_force_unsetenv_errno_value;
         SetLastError(global_force_unsetenv_last_error);
         WSASetLastError(global_force_unsetenv_socket_error);
-        return (global_force_unsetenv_result);
+        int forced_result = global_force_unsetenv_result;
+        if (forced_result != 0)
+        {
+            if (global_force_unsetenv_last_error != 0)
+                ft_errno = global_force_unsetenv_last_error + ERRNO_OFFSET;
+            else if (global_force_unsetenv_socket_error != 0)
+                ft_errno = global_force_unsetenv_socket_error + ERRNO_OFFSET;
+            else if (global_force_unsetenv_errno_value != 0)
+                ft_errno = global_force_unsetenv_errno_value + ERRNO_OFFSET;
+            else
+                ft_errno = FT_EINVAL;
+        }
+        else
+            ft_errno = ER_SUCCESS;
+        return (forced_result);
     }
-    return (_putenv_s(name, ""));
+    errno = 0;
+    int result = _putenv_s(name, "");
+    if (result != 0)
+    {
+        DWORD last_error;
+
+        last_error = GetLastError();
+        if (last_error != 0)
+            ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
+        else if (errno != 0)
+            ft_errno = errno + ERRNO_OFFSET;
+        else
+            ft_errno = FT_EINVAL;
+        return (result);
+    }
+    ft_errno = ER_SUCCESS;
+    return (result);
 #else
     if (global_force_unsetenv_enabled != 0)
     {
         errno = global_force_unsetenv_errno_value;
-        return (global_force_unsetenv_result);
+        int forced_result = global_force_unsetenv_result;
+        if (forced_result != 0)
+        {
+            if (global_force_unsetenv_errno_value != 0)
+                ft_errno = global_force_unsetenv_errno_value + ERRNO_OFFSET;
+            else
+                ft_errno = FT_EINVAL;
+        }
+        else
+            ft_errno = ER_SUCCESS;
+        return (forced_result);
     }
-    return (unsetenv(name));
+    errno = 0;
+    int result = unsetenv(name);
+    if (result != 0)
+    {
+        if (errno != 0)
+            ft_errno = errno + ERRNO_OFFSET;
+        else
+            ft_errno = FT_EINVAL;
+        return (result);
+    }
+    ft_errno = ER_SUCCESS;
+    return (result);
 #endif
 }
 

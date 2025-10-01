@@ -35,7 +35,7 @@ ssize_t ft_socket::send_data(const void *data, size_t size, int flags, int fd)
         {
             ssize_t bytes_sent = this->_connected[index].send_data(data, size, flags);
             if (bytes_sent < 0)
-                this->set_error(errno + ERRNO_OFFSET);
+                this->set_error(ft_errno);
             else
                 this->set_error(ER_SUCCESS);
             return (bytes_sent);
@@ -48,20 +48,25 @@ ssize_t ft_socket::send_data(const void *data, size_t size, int flags, int fd)
 
 int ft_socket::get_fd() const
 {
-        return (this->_socket_fd);
+    this->set_error(ER_SUCCESS);
+    return (this->_socket_fd);
 }
 
 const struct sockaddr_storage &ft_socket::get_address() const
 {
-        this->set_error(ER_SUCCESS);
-        return (this->_address);
+    this->set_error(ER_SUCCESS);
+    return (this->_address);
 }
 
 ssize_t ft_socket::broadcast_data(const void *data, size_t size, int flags, int exception)
 {
-    ssize_t total_bytes_sent = 0;
-    size_t index = 0;
+    bool send_failed;
+    ssize_t total_bytes_sent;
+    size_t index;
 
+    send_failed = false;
+    total_bytes_sent = 0;
+    index = 0;
     while (index < this->_connected.size())
     {
         if (exception == this->_connected[index].get_fd())
@@ -72,34 +77,42 @@ ssize_t ft_socket::broadcast_data(const void *data, size_t size, int flags, int 
         ssize_t bytes_sent = this->_connected[index].send_data(data, size, flags);
         if (bytes_sent < 0)
         {
-            this->set_error(errno + ERRNO_OFFSET);
+            this->set_error(ft_errno);
+            send_failed = true;
+            index++;
             continue ;
         }
         total_bytes_sent += bytes_sent;
         index++;
     }
-    if (total_bytes_sent >= 0)
+    if (!send_failed)
         this->set_error(ER_SUCCESS);
     return (total_bytes_sent);
 }
 
 ssize_t ft_socket::broadcast_data(const void *data, size_t size, int flags)
 {
-    ssize_t total_bytes_sent = 0;
-    size_t index = 0;
+    bool send_failed;
+    ssize_t total_bytes_sent;
+    size_t index;
 
+    send_failed = false;
+    total_bytes_sent = 0;
+    index = 0;
     while (index < this->_connected.size())
     {
         ssize_t bytes_sent = this->_connected[index].send_data(data, size, flags);
         if (bytes_sent < 0)
         {
-            this->set_error(errno + ERRNO_OFFSET);
+            this->set_error(ft_errno);
+            send_failed = true;
+            index++;
             continue ;
         }
         total_bytes_sent += bytes_sent;
         index++;
     }
-    if (total_bytes_sent >= 0)
+    if (!send_failed)
         this->set_error(ER_SUCCESS);
     return (total_bytes_sent);
 }
@@ -118,7 +131,7 @@ int ft_socket::accept_connection()
                            &addr_len);
     if (new_fd < 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_errno);
         return (-1);
     }
     ft_socket new_socket(new_fd, client_addr);
@@ -239,7 +252,7 @@ ssize_t ft_socket::send_data(const void *data, size_t size, int flags)
     }
     ssize_t bytes_sent = nw_send(this->_socket_fd, data, size, flags);
     if (bytes_sent < 0)
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_errno);
     else
         this->set_error(ER_SUCCESS);
     return (bytes_sent);
@@ -288,7 +301,7 @@ ssize_t ft_socket::send_all(const void *data, size_t size, int flags)
                 }
                 continue ;
             }
-            this->set_error(errno + ERRNO_OFFSET);
+            this->set_error(ft_errno);
 #endif
             return (-1);
         }
@@ -322,7 +335,7 @@ ssize_t ft_socket::receive_data(void *buffer, size_t size, int flags)
     }
     ssize_t bytes_received = nw_recv(this->_socket_fd, buffer, size, flags);
     if (bytes_received < 0)
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_errno);
     else
         this->set_error(ER_SUCCESS);
     return (bytes_received);
@@ -340,7 +353,11 @@ bool ft_socket::close_socket()
         }
         else
         {
+#ifdef _WIN32
+            this->set_error(WSAGetLastError() + ERRNO_OFFSET);
+#else
             this->set_error(errno + ERRNO_OFFSET);
+#endif
             return (false);
         }
     }

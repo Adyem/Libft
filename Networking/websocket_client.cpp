@@ -157,7 +157,7 @@ int ft_websocket_client::perform_handshake(const char *host, const char *path)
         if (send_result <= 0)
         {
             if (send_result < 0)
-                this->set_error(errno + ERRNO_OFFSET);
+                this->set_error(ft_errno);
             else
                 this->set_error(SOCKET_SEND_FAILED);
             return (1);
@@ -175,7 +175,7 @@ int ft_websocket_client::perform_handshake(const char *host, const char *path)
         bytes_received = nw_recv(this->_socket_fd, buffer, sizeof(buffer) - 1, 0);
         if (bytes_received < 0)
         {
-            this->set_error(errno + ERRNO_OFFSET);
+            this->set_error(ft_errno);
             return (1);
         }
         if (bytes_received == 0)
@@ -223,7 +223,7 @@ int ft_websocket_client::perform_handshake(const char *host, const char *path)
         this->set_error(FT_EINVAL);
         return (1);
     }
-    this->_error_code = ER_SUCCESS;
+    this->set_error(ER_SUCCESS);
     return (0);
 }
 
@@ -240,21 +240,21 @@ int ft_websocket_client::connect(const char *host, uint16_t port, const char *pa
     std::snprintf(port_string, sizeof(port_string), "%u", port);
     if (getaddrinfo(host, port_string, &address_hints, &address_info) != 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(FT_EINVAL);
         return (1);
     }
     this->_socket_fd = nw_socket(address_info->ai_family, address_info->ai_socktype, address_info->ai_protocol);
     if (this->_socket_fd < 0)
     {
         freeaddrinfo(address_info);
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_errno);
         return (1);
     }
     result = nw_connect(this->_socket_fd, address_info->ai_addr, address_info->ai_addrlen);
     freeaddrinfo(address_info);
     if (result < 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_errno);
         this->close();
         return (1);
     }
@@ -267,7 +267,7 @@ int ft_websocket_client::connect(const char *host, uint16_t port, const char *pa
         this->set_error(handshake_error);
         return (1);
     }
-    this->_error_code = ER_SUCCESS;
+    this->set_error(ER_SUCCESS);
     return (0);
 }
 
@@ -317,7 +317,12 @@ int ft_websocket_client::send_pong(const unsigned char *payload, std::size_t len
         frame.append(masked_char);
         index_value++;
     }
-    nw_send(this->_socket_fd, frame.c_str(), frame.size(), 0);
+    if (nw_send(this->_socket_fd, frame.c_str(), frame.size(), 0) < 0)
+    {
+        this->set_error(ft_errno);
+        return (1);
+    }
+    this->set_error(ER_SUCCESS);
     return (0);
 }
 
@@ -375,8 +380,12 @@ int ft_websocket_client::send_text(const ft_string &message)
         frame.append(masked_char);
         index_value++;
     }
-    nw_send(this->_socket_fd, frame.c_str(), frame.size(), 0);
-    this->_error_code = ER_SUCCESS;
+    if (nw_send(this->_socket_fd, frame.c_str(), frame.size(), 0) < 0)
+    {
+        this->set_error(ft_errno);
+        return (1);
+    }
+    this->set_error(ER_SUCCESS);
     return (0);
 }
 
@@ -402,7 +411,7 @@ int ft_websocket_client::receive_text(ft_string &message)
         bytes_received = nw_recv(this->_socket_fd, header, 2, 0);
         if (bytes_received <= 0)
         {
-            this->set_error(errno + ERRNO_OFFSET);
+            this->set_error(ft_errno);
             return (1);
         }
         opcode = header[0] & 0x0F;
@@ -414,7 +423,7 @@ int ft_websocket_client::receive_text(ft_string &message)
             bytes_received = nw_recv(this->_socket_fd, extended, 2, 0);
             if (bytes_received <= 0)
             {
-                this->set_error(errno + ERRNO_OFFSET);
+                this->set_error(ft_errno);
                 return (1);
             }
             payload_length = static_cast<std::size_t>((extended[0] << 8) | extended[1]);
@@ -426,7 +435,7 @@ int ft_websocket_client::receive_text(ft_string &message)
             bytes_received = nw_recv(this->_socket_fd, extended, 8, 0);
             if (bytes_received <= 0)
             {
-                this->set_error(errno + ERRNO_OFFSET);
+                this->set_error(ft_errno);
                 return (1);
             }
             payload_length = 0;
@@ -442,7 +451,7 @@ int ft_websocket_client::receive_text(ft_string &message)
             bytes_received = nw_recv(this->_socket_fd, mask_key, 4, 0);
             if (bytes_received <= 0)
             {
-                this->set_error(errno + ERRNO_OFFSET);
+                this->set_error(ft_errno);
                 return (1);
             }
         }
@@ -459,7 +468,7 @@ int ft_websocket_client::receive_text(ft_string &message)
             if (bytes_received <= 0)
             {
                 cma_free(payload);
-                this->set_error(errno + ERRNO_OFFSET);
+                this->set_error(ft_errno);
                 return (1);
             }
             index_value += static_cast<std::size_t>(bytes_received);
@@ -494,7 +503,7 @@ int ft_websocket_client::receive_text(ft_string &message)
                 index_value++;
             }
             cma_free(payload);
-            this->_error_code = ER_SUCCESS;
+            this->set_error(ER_SUCCESS);
             return (0);
         }
         cma_free(payload);

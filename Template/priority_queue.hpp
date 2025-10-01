@@ -67,10 +67,13 @@ ft_priority_queue<ElementType, Compare>::ft_priority_queue(size_t initialCapacit
     {
         this->_data = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * initialCapacity));
         if (this->_data == ft_nullptr)
+        {
             this->set_error(PRIORITY_QUEUE_ALLOC_FAIL);
-        else
-            this->_capacity = initialCapacity;
+            return ;
+        }
+        this->_capacity = initialCapacity;
     }
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -91,6 +94,7 @@ ft_priority_queue<ElementType, Compare>::ft_priority_queue(ft_priority_queue&& o
     other._capacity = 0;
     other._size = 0;
     other._error_code = ER_SUCCESS;
+    this->set_error(this->_error_code);
     return ;
 }
 
@@ -100,9 +104,13 @@ ft_priority_queue<ElementType, Compare>& ft_priority_queue<ElementType, Compare>
     if (this != &other)
     {
         if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+        {
+            this->set_error(PT_ERR_MUTEX_OWNER);
             return (*this);
+        }
         if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
+            this->set_error(PT_ERR_MUTEX_OWNER);
             this->_mutex.unlock(THREAD_ID);
             return (*this);
         }
@@ -121,6 +129,7 @@ ft_priority_queue<ElementType, Compare>& ft_priority_queue<ElementType, Compare>
         other._mutex.unlock(THREAD_ID);
         this->_mutex.unlock(THREAD_ID);
     }
+    this->set_error(this->_error_code);
     return (*this);
 }
 
@@ -136,7 +145,10 @@ template <typename ElementType, typename Compare>
 bool ft_priority_queue<ElementType, Compare>::ensure_capacity(size_t desired)
 {
     if (desired <= this->_capacity)
+    {
+        this->set_error(ER_SUCCESS);
         return (true);
+    }
     size_t newCap;
     if (this->_capacity == 0)
         newCap = 1;
@@ -161,6 +173,7 @@ bool ft_priority_queue<ElementType, Compare>::ensure_capacity(size_t desired)
         cma_free(this->_data);
     this->_data = newData;
     this->_capacity = newCap;
+    this->set_error(ER_SUCCESS);
     return (true);
 }
 
@@ -214,6 +227,7 @@ void ft_priority_queue<ElementType, Compare>::push(const ElementType& value)
     construct_at(&this->_data[this->_size], value);
     this->heapify_up(this->_size);
     ++this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -234,6 +248,7 @@ void ft_priority_queue<ElementType, Compare>::push(ElementType&& value)
     construct_at(&this->_data[this->_size], ft_move(value));
     this->heapify_up(this->_size);
     ++this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -261,6 +276,7 @@ ElementType ft_priority_queue<ElementType, Compare>::pop()
         destroy_at(&this->_data[this->_size]);
         this->heapify_down(0);
     }
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (topValue);
 }
@@ -281,6 +297,7 @@ ElementType& ft_priority_queue<ElementType, Compare>::top()
         return (error_element);
     }
     ElementType& value = this->_data[0];
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (value);
 }
@@ -301,6 +318,7 @@ const ElementType& ft_priority_queue<ElementType, Compare>::top() const
         return (error_element);
     }
     const ElementType& value = this->_data[0];
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (value);
 }
@@ -309,8 +327,12 @@ template <typename ElementType, typename Compare>
 size_t ft_priority_queue<ElementType, Compare>::size() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return (0);
+    }
     size_t current_size = this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (current_size);
 }
@@ -319,8 +341,12 @@ template <typename ElementType, typename Compare>
 bool ft_priority_queue<ElementType, Compare>::empty() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return (true);
+    }
     bool result = (this->_size == 0);
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (result);
 }
@@ -329,8 +355,12 @@ template <typename ElementType, typename Compare>
 int ft_priority_queue<ElementType, Compare>::get_error() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return (this->_error_code);
+    }
     int err = this->_error_code;
+    this->set_error(err);
     this->_mutex.unlock(THREAD_ID);
     return (err);
 }
@@ -339,8 +369,12 @@ template <typename ElementType, typename Compare>
 const char* ft_priority_queue<ElementType, Compare>::get_error_str() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return (ft_strerror(this->_error_code));
+    }
     int err = this->_error_code;
+    this->set_error(err);
     this->_mutex.unlock(THREAD_ID);
     return (ft_strerror(err));
 }
@@ -349,7 +383,10 @@ template <typename ElementType, typename Compare>
 void ft_priority_queue<ElementType, Compare>::clear()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
+    }
     size_t i = 0;
     while (i < this->_size)
     {
@@ -357,6 +394,7 @@ void ft_priority_queue<ElementType, Compare>::clear()
         ++i;
     }
     this->_size = 0;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }

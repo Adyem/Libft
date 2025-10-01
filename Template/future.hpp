@@ -65,6 +65,7 @@ template <typename ValueType>
 ft_future<ValueType>::ft_future()
     : _promise(ft_nullptr), _shared_promise(), _error_code(ER_SUCCESS)
 {
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -72,6 +73,7 @@ template <typename ValueType>
 ft_future<ValueType>::ft_future(ft_promise<ValueType>& promise)
     : _promise(&promise), _shared_promise(), _error_code(ER_SUCCESS)
 {
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -80,9 +82,16 @@ ft_future<ValueType>::ft_future(ft_sharedptr<ft_promise<ValueType> > promise_poi
     : _promise(promise_pointer.get()), _shared_promise(promise_pointer), _error_code(ER_SUCCESS)
 {
     if (!this->_promise)
+    {
         this->set_error(FUTURE_INVALID);
-    else if (this->_shared_promise.hasError())
+        return ;
+    }
+    if (this->_shared_promise.hasError())
+    {
         this->set_error(this->_shared_promise.get_error());
+        return ;
+    }
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -97,7 +106,11 @@ ValueType ft_future<ValueType>::get() const
     this->wait();
     if (this->_error_code != ER_SUCCESS)
         return (ValueType());
-    return (this->_promise->get());
+    ValueType value;
+
+    value = this->_promise->get();
+    this->set_error(ER_SUCCESS);
+    return (value);
 }
 
 template <typename ValueType>
@@ -119,12 +132,14 @@ void ft_future<ValueType>::wait() const
         }
         pt_thread_yield();
     }
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 template <typename ValueType>
 bool ft_future<ValueType>::valid() const
 {
+    const_cast<ft_future<ValueType> *>(this)->set_error(ER_SUCCESS);
     return (this->_promise != ft_nullptr);
 }
 
@@ -150,12 +165,14 @@ inline void ft_future<void>::set_error(int error) const
 inline ft_future<void>::ft_future()
     : _promise(ft_nullptr), _shared_promise(), _error_code(ER_SUCCESS)
 {
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 inline ft_future<void>::ft_future(ft_promise<void>& promise)
     : _promise(&promise), _shared_promise(), _error_code(ER_SUCCESS)
 {
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -163,9 +180,16 @@ inline ft_future<void>::ft_future(ft_sharedptr<ft_promise<void> > promise_pointe
     : _promise(promise_pointer.get()), _shared_promise(promise_pointer), _error_code(ER_SUCCESS)
 {
     if (!this->_promise)
+    {
         this->set_error(FUTURE_INVALID);
-    else if (this->_shared_promise.hasError())
+        return ;
+    }
+    if (this->_shared_promise.hasError())
+    {
         this->set_error(this->_shared_promise.get_error());
+        return ;
+    }
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -177,6 +201,9 @@ inline void ft_future<void>::get() const
         return ;
     }
     this->wait();
+    if (this->_error_code != ER_SUCCESS)
+        return ;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -198,11 +225,13 @@ inline void ft_future<void>::wait() const
         }
         pt_thread_yield();
     }
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 inline bool ft_future<void>::valid() const
 {
+    const_cast<ft_future<void> *>(this)->set_error(ER_SUCCESS);
     return (this->_promise != ft_nullptr);
 }
 

@@ -9,16 +9,23 @@ static void write_indent(ft_string &output, int indent) noexcept
     {
         output.append(' ');
         if (output.get_error() != ER_SUCCESS)
+        {
+            ft_errno = output.get_error();
             return ;
+        }
         indent_index++;
     }
+    ft_errno = ER_SUCCESS;
     return ;
 }
 
 static void write_node(const yaml_value *value, ft_string &output, int indent) noexcept
 {
     if (!value)
+    {
+        ft_errno = ER_SUCCESS;
         return ;
+    }
     if (value->get_error() != ER_SUCCESS)
     {
         ft_errno = value->get_error();
@@ -28,11 +35,23 @@ static void write_node(const yaml_value *value, ft_string &output, int indent) n
     {
         write_indent(output, indent);
         if (output.get_error() != ER_SUCCESS)
+        {
+            ft_errno = output.get_error();
             return ;
+        }
         output.append(value->get_scalar());
         if (output.get_error() != ER_SUCCESS)
+        {
+            ft_errno = output.get_error();
             return ;
+        }
         output.append('\n');
+        if (output.get_error() != ER_SUCCESS)
+        {
+            ft_errno = output.get_error();
+            return ;
+        }
+        ft_errno = ER_SUCCESS;
         return ;
     }
     if (value->get_type() == YAML_LIST)
@@ -57,31 +76,50 @@ static void write_node(const yaml_value *value, ft_string &output, int indent) n
             {
                 write_indent(output, indent);
                 if (output.get_error() != ER_SUCCESS)
+                {
+                    ft_errno = output.get_error();
                     return ;
+                }
                 output.append("- ");
                 if (output.get_error() != ER_SUCCESS)
+                {
+                    ft_errno = output.get_error();
                     return ;
+                }
                 output.append(item->get_scalar());
                 if (output.get_error() != ER_SUCCESS)
+                {
+                    ft_errno = output.get_error();
                     return ;
+                }
                 output.append('\n');
                 if (output.get_error() != ER_SUCCESS)
+                {
+                    ft_errno = output.get_error();
                     return ;
+                }
             }
             else
             {
                 write_indent(output, indent);
                 if (output.get_error() != ER_SUCCESS)
+                {
+                    ft_errno = output.get_error();
                     return ;
+                }
                 output.append("-\n");
                 if (output.get_error() != ER_SUCCESS)
+                {
+                    ft_errno = output.get_error();
                     return ;
+                }
                 write_node(item, output, indent + 2);
-                if (output.get_error() != ER_SUCCESS)
+                if (ft_errno != ER_SUCCESS)
                     return ;
             }
             index++;
         }
+        ft_errno = ER_SUCCESS;
         return ;
     }
     if (value->get_type() == YAML_MAP)
@@ -108,39 +146,65 @@ static void write_node(const yaml_value *value, ft_string &output, int indent) n
             {
                 write_indent(output, indent);
                 if (output.get_error() != ER_SUCCESS)
+                {
+                    ft_errno = output.get_error();
                     return ;
+                }
                 output.append(key);
                 if (output.get_error() != ER_SUCCESS)
+                {
+                    ft_errno = output.get_error();
                     return ;
+                }
                 output.append(": ");
                 if (output.get_error() != ER_SUCCESS)
+                {
+                    ft_errno = output.get_error();
                     return ;
+                }
                 output.append(child->get_scalar());
                 if (output.get_error() != ER_SUCCESS)
+                {
+                    ft_errno = output.get_error();
                     return ;
+                }
                 output.append('\n');
                 if (output.get_error() != ER_SUCCESS)
+                {
+                    ft_errno = output.get_error();
                     return ;
+                }
             }
             else
             {
                 write_indent(output, indent);
                 if (output.get_error() != ER_SUCCESS)
+                {
+                    ft_errno = output.get_error();
                     return ;
+                }
                 output.append(key);
                 if (output.get_error() != ER_SUCCESS)
+                {
+                    ft_errno = output.get_error();
                     return ;
+                }
                 output.append(":\n");
                 if (output.get_error() != ER_SUCCESS)
+                {
+                    ft_errno = output.get_error();
                     return ;
+                }
                 write_node(child, output, indent + 2);
-                if (output.get_error() != ER_SUCCESS)
+                if (ft_errno != ER_SUCCESS)
                     return ;
             }
             key_index++;
         }
+        ft_errno = ER_SUCCESS;
         return ;
     }
+    ft_errno = ER_SUCCESS;
     return ;
 }
 
@@ -149,7 +213,11 @@ ft_string yaml_write_to_string(const yaml_value *value) noexcept
     ft_string output;
     write_node(value, output, 0);
     if (output.get_error() != ER_SUCCESS)
+    {
+        ft_errno = output.get_error();
         return (ft_string(output.get_error()));
+    }
+    ft_errno = ER_SUCCESS;
     return (output);
 }
 
@@ -157,12 +225,20 @@ int yaml_write_to_file(const char *file_path, const yaml_value *value) noexcept
 {
     ft_string output = yaml_write_to_string(value);
     if (output.get_error() != ER_SUCCESS)
+    {
+        ft_errno = output.get_error();
         return (-1);
+    }
     su_file *file = su_fopen(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (file == ft_nullptr)
+    {
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = FT_EINVAL;
         return (-1);
+    }
     const char *data = output.c_str();
     su_fwrite(data, 1, output.size(), file);
     su_fclose(file);
+    ft_errno = ER_SUCCESS;
     return (0);
 }

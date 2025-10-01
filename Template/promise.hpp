@@ -66,12 +66,14 @@ template <typename ValueType>
 ft_promise<ValueType>::ft_promise()
     : _value(), _ready(false), _error_code(ER_SUCCESS)
 {
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 inline ft_promise<void>::ft_promise()
     : _ready(false), _error_code(ER_SUCCESS)
 {
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -108,6 +110,7 @@ ValueType ft_promise<ValueType>::get() const
         this->set_error(FT_EINVAL);
         return (ValueType());
     }
+    this->set_error(ER_SUCCESS);
     return (this->_value);
 }
 
@@ -118,39 +121,48 @@ inline void ft_promise<void>::get() const
         const_cast<ft_promise<void> *>(this)->set_error(FT_EINVAL);
         return ;
     }
+    const_cast<ft_promise<void> *>(this)->set_error(ER_SUCCESS);
     return ;
 }
 
 template <typename ValueType>
 bool ft_promise<ValueType>::is_ready() const
 {
-    return (this->_ready.load(std::memory_order_acquire));
+    bool ready = this->_ready.load(std::memory_order_acquire);
+    this->set_error(ER_SUCCESS);
+    return (ready);
 }
 
 inline bool ft_promise<void>::is_ready() const
 {
-    return (this->_ready.load(std::memory_order_acquire));
+    bool ready = this->_ready.load(std::memory_order_acquire);
+    const_cast<ft_promise<void> *>(this)->set_error(ER_SUCCESS);
+    return (ready);
 }
 
 template <typename ValueType>
 int ft_promise<ValueType>::get_error() const
 {
+    const_cast<ft_promise<ValueType> *>(this)->set_error(this->_error_code);
     return (this->_error_code);
 }
 
 inline int ft_promise<void>::get_error() const
 {
+    const_cast<ft_promise<void> *>(this)->set_error(this->_error_code);
     return (this->_error_code);
 }
 
 template <typename ValueType>
 const char* ft_promise<ValueType>::get_error_str() const
 {
+    const_cast<ft_promise<ValueType> *>(this)->set_error(this->_error_code);
     return (ft_strerror(this->_error_code));
 }
 
 inline const char *ft_promise<void>::get_error_str() const
 {
+    const_cast<ft_promise<void> *>(this)->set_error(this->_error_code);
     return (ft_strerror(this->_error_code));
 }
 

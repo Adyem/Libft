@@ -1,5 +1,6 @@
 #include "printf.hpp"
 #include "printf_internal.hpp"
+#include "../Errno/errno.hpp"
 #include <cstdarg>
 #include <unistd.h>
 #include <stdarg.h>
@@ -14,7 +15,10 @@ int pf_printf_fd(int fd, const char *format, ...)
     int        printed_chars;
 
     if (!format)
-        return (0);
+    {
+        ft_errno = FT_EINVAL;
+        return (-1);
+    }
     va_start(args, format);
     printed_chars = pf_printf_fd_v(fd, format, args);
     va_end(args);
@@ -27,7 +31,10 @@ int pf_printf(const char *format, ...)
     int        printed_chars;
 
     if (!format)
-        return (0);
+    {
+        ft_errno = FT_EINVAL;
+        return (-1);
+    }
     va_start(args, format);
     printed_chars = pf_printf_fd_v(1, format, args);
     va_end(args);

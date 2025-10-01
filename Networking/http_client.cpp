@@ -471,6 +471,14 @@ int http_get(const char *host, const char *path, ft_string &response, bool use_s
             response.append(buffer);
             bytes_received = nw_ssl_read(ssl_connection, buffer, sizeof(buffer) - 1);
         }
+        if (bytes_received < 0)
+        {
+            SSL_shutdown(ssl_connection);
+            SSL_free(ssl_connection);
+            SSL_CTX_free(ssl_context);
+            FT_CLOSE_SOCKET(socket_fd);
+            return (-1);
+        }
         SSL_shutdown(ssl_connection);
         SSL_free(ssl_connection);
         SSL_CTX_free(ssl_context);
@@ -488,6 +496,29 @@ int http_get(const char *host, const char *path, ft_string &response, bool use_s
             buffer[bytes_received] = '\0';
             response.append(buffer);
             bytes_received = nw_recv(socket_fd, buffer, sizeof(buffer) - 1, 0);
+        }
+        if (bytes_received < 0)
+        {
+#ifdef _WIN32
+            int last_error;
+
+            last_error = WSAGetLastError();
+            FT_CLOSE_SOCKET(socket_fd);
+            if (last_error != 0)
+                ft_errno = last_error + ERRNO_OFFSET;
+            else
+                ft_errno = SOCKET_RECEIVE_FAILED;
+#else
+            int last_error;
+
+            last_error = errno;
+            FT_CLOSE_SOCKET(socket_fd);
+            if (last_error != 0)
+                ft_errno = last_error + ERRNO_OFFSET;
+            else
+                ft_errno = SOCKET_RECEIVE_FAILED;
+#endif
+            return (-1);
         }
     }
     FT_CLOSE_SOCKET(socket_fd);
@@ -619,6 +650,14 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
             response.append(buffer);
             bytes_received = nw_ssl_read(ssl_connection, buffer, sizeof(buffer) - 1);
         }
+        if (bytes_received < 0)
+        {
+            SSL_shutdown(ssl_connection);
+            SSL_free(ssl_connection);
+            SSL_CTX_free(ssl_context);
+            FT_CLOSE_SOCKET(socket_fd);
+            return (-1);
+        }
         SSL_shutdown(ssl_connection);
         SSL_free(ssl_connection);
         SSL_CTX_free(ssl_context);
@@ -636,6 +675,29 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
             buffer[bytes_received] = '\0';
             response.append(buffer);
             bytes_received = nw_recv(socket_fd, buffer, sizeof(buffer) - 1, 0);
+        }
+        if (bytes_received < 0)
+        {
+#ifdef _WIN32
+            int last_error;
+
+            last_error = WSAGetLastError();
+            FT_CLOSE_SOCKET(socket_fd);
+            if (last_error != 0)
+                ft_errno = last_error + ERRNO_OFFSET;
+            else
+                ft_errno = SOCKET_RECEIVE_FAILED;
+#else
+            int last_error;
+
+            last_error = errno;
+            FT_CLOSE_SOCKET(socket_fd);
+            if (last_error != 0)
+                ft_errno = last_error + ERRNO_OFFSET;
+            else
+                ft_errno = SOCKET_RECEIVE_FAILED;
+#endif
+            return (-1);
         }
     }
     FT_CLOSE_SOCKET(socket_fd);

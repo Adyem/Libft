@@ -2,9 +2,9 @@
 
 yaml_value::yaml_value() noexcept
 {
+    this->set_error(ER_SUCCESS);
     this->_type = YAML_SCALAR;
     this->_scalar = "";
-    this->_error_code = ER_SUCCESS;
     if (this->_scalar.get_error() != ER_SUCCESS)
         this->set_error(this->_scalar.get_error());
     return ;
@@ -68,6 +68,7 @@ const char *yaml_value::get_error_str() const noexcept
 void yaml_value::set_type(yaml_type type) noexcept
 {
     this->_type = type;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -81,7 +82,11 @@ void yaml_value::set_scalar(const ft_string &value) noexcept
     this->_type = YAML_SCALAR;
     this->_scalar = value;
     if (this->_scalar.get_error() != ER_SUCCESS)
+    {
         this->set_error(this->_scalar.get_error());
+        return ;
+    }
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -95,7 +100,11 @@ void yaml_value::add_list_item(yaml_value *item) noexcept
     this->_type = YAML_LIST;
     this->_list.push_back(item);
     if (this->_list.get_error() != ER_SUCCESS)
+    {
         this->set_error(this->_list.get_error());
+        return ;
+    }
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -109,10 +118,17 @@ void yaml_value::add_map_item(const ft_string &key, yaml_value *value) noexcept
     this->_type = YAML_MAP;
     this->_map.insert(key, value);
     if (this->_map.get_error() != ER_SUCCESS)
+    {
         this->set_error(this->_map.get_error());
+        return ;
+    }
     this->_map_keys.push_back(key);
     if (this->_map_keys.get_error() != ER_SUCCESS)
+    {
         this->set_error(this->_map_keys.get_error());
+        return ;
+    }
+    this->set_error(ER_SUCCESS);
     return ;
 }
 

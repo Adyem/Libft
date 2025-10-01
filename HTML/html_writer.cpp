@@ -1,5 +1,6 @@
 #include <fcntl.h>
 #include "parser.hpp"
+#include "../Errno/errno.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
@@ -50,17 +51,27 @@ static void html_write_node(int fd, html_node *htmlNode, int indent)
     pf_printf_fd(fd, "</%s>\n", htmlNode->tag);
 }
 
-int html_write_to_file(const char *filePath, html_node *nodeList)
+int html_write_to_file(const char *file_path, html_node *node_list)
 {
-    int fd = su_open(filePath, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if (fd < 0)
-        return (-1);
-    html_node *currentNode = nodeList;
-    while (currentNode)
+    int file_descriptor;
+    html_node *current_node;
+
+    if (!file_path)
     {
-        html_write_node(fd, currentNode, 0);
-        currentNode = currentNode->next;
+        ft_errno = FT_EINVAL;
+        return (-1);
     }
-    cmp_close(fd);
+    file_descriptor = su_open(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (file_descriptor < 0)
+        return (-1);
+    current_node = node_list;
+    while (current_node)
+    {
+        html_write_node(file_descriptor, current_node, 0);
+        current_node = current_node->next;
+    }
+    if (cmp_close(file_descriptor) != 0)
+        return (-1);
+    ft_errno = ER_SUCCESS;
     return (0);
 }

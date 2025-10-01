@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Errno/errno.hpp"
 #include "encryption_sha256.hpp"
 
 static uint32_t rotate_right(uint32_t value, uint32_t bits)
@@ -34,7 +35,10 @@ void sha256_hash(const void *data, size_t length, unsigned char *digest)
     }
     unsigned char *message = static_cast<unsigned char *>(cma_malloc(padded_length + 8));
     if (!message)
+    {
+        ft_errno = FT_EALLOC;
         return ;
+    }
     size_t copy_index = 0;
     const unsigned char *byte_data = static_cast<const unsigned char *>(data);
     while (copy_index < length)
@@ -125,5 +129,6 @@ void sha256_hash(const void *data, size_t length, unsigned char *digest)
         ++digest_index;
     }
     cma_free(message);
+    ft_errno = ER_SUCCESS;
     return ;
 }

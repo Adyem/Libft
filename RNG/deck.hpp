@@ -3,6 +3,7 @@
 
 #include "../Template/vector.hpp"
 #include "../Template/swap.hpp"
+#include "../Errno/errno.hpp"
 #include "rng.hpp"
 #include <climits>
 
@@ -29,6 +30,7 @@ ElementType *ft_deck<ElementType>::popRandomElement()
     size_t index = static_cast<size_t>(ft_dice_roll(1, static_cast<int>(this->size())) - 1);
     ElementType* elem = (*this)[index];
     this->release_at(index);
+    this->set_error(ER_SUCCESS);
     return (elem);
 }
 
@@ -42,6 +44,7 @@ ElementType *ft_deck<ElementType>::getRandomElement() const
         return (ft_nullptr);
     }
     size_t index = static_cast<size_t>(ft_dice_roll(1, static_cast<int>(this->size())) - 1);
+    this->set_error(ER_SUCCESS);
     return ((*this)[index]);
 }
 
@@ -57,6 +60,7 @@ ElementType *ft_deck<ElementType>::drawTopElement()
     size_t index = this->size() - 1;
     ElementType* elem = (*this)[index];
     this->release_at(index);
+    this->set_error(ER_SUCCESS);
     return (elem);
 }
 
@@ -71,6 +75,7 @@ ElementType *ft_deck<ElementType>::peekTopElement() const
     }
     size_t index = this->size() - 1;
     ElementType* elem = (*this)[index];
+    this->set_error(ER_SUCCESS);
     return (elem);
 }
 
@@ -83,13 +88,14 @@ void ft_deck<ElementType>::shuffle()
         this->set_error(DECK_EMPTY);
         return ;
     }
-    size_t index = this->size - 1;
+    size_t index = this->size() - 1;
     while (index > 0)
     {
         size_t randomIndex = static_cast<size_t>(ft_dice_roll(1, static_cast<int>(index + 1)) - 1);
         ft_swap((*this)[index], (*this)[randomIndex]);
         index--;
     }
+    this->set_error(ER_SUCCESS);
     return ;
 }
 

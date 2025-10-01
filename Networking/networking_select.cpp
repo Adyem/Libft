@@ -1,9 +1,11 @@
 #include "networking.hpp"
+#include "../Errno/errno.hpp"
 #ifdef _WIN32
 # include <winsock2.h>
 #else
 # include <sys/select.h>
 # include <unistd.h>
+# include <cerrno>
 #endif
 
 int nw_poll(int *read_file_descriptors, int read_count,
@@ -54,7 +56,16 @@ int nw_poll(int *read_file_descriptors, int read_count,
     }
     ready_descriptors = select(max_descriptor + 1, &read_set, &write_set, NULL, timeout_pointer);
     if (ready_descriptors <= 0)
+    {
+        int select_error;
+
+        select_error = WSAGetLastError();
+        if (ready_descriptors == 0)
+            ft_errno = ER_SUCCESS;
+        else
+            ft_errno = select_error + ERRNO_OFFSET;
         return (ready_descriptors);
+    }
     index = 0;
     total_ready = 0;
     while (read_file_descriptors && index < read_count)
@@ -76,6 +87,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
             total_ready++;
         index++;
     }
+    ft_errno = ER_SUCCESS;
     return (total_ready);
 #else
     fd_set read_set;
@@ -121,7 +133,16 @@ int nw_poll(int *read_file_descriptors, int read_count,
     }
     ready_descriptors = select(max_descriptor + 1, &read_set, &write_set, NULL, timeout_pointer);
     if (ready_descriptors <= 0)
+    {
+        int select_error;
+
+        select_error = errno;
+        if (ready_descriptors == 0)
+            ft_errno = ER_SUCCESS;
+        else
+            ft_errno = select_error + ERRNO_OFFSET;
         return (ready_descriptors);
+    }
     index = 0;
     total_ready = 0;
     while (read_file_descriptors && index < read_count)
@@ -143,6 +164,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
             total_ready++;
         index++;
     }
+    ft_errno = ER_SUCCESS;
     return (total_ready);
 #endif
 }

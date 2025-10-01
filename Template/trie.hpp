@@ -104,13 +104,17 @@ int ft_trie<ValueType>::insert_helper(const char *key, int unset_value, ValueTyp
     current_node->_data->_unset_value = unset_value;
     current_node->_data->_key_length = key_length;
     current_node->_data->_value_pointer = value_pointer;
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 
 template <typename ValueType>
 int ft_trie<ValueType>::insert(const char *key, ValueType *value_pointer, int unset_value)
 {
-    return (this->insert_helper(key, unset_value, value_pointer));
+    int result = this->insert_helper(key, unset_value, value_pointer);
+    if (result == 0)
+        ft_errno = ER_SUCCESS;
+    return (result);
 }
 
 template <typename ValueType>
@@ -120,14 +124,23 @@ const typename ft_trie<ValueType>::node_value *ft_trie<ValueType>::search(const 
         return (ft_nullptr);
     const ft_trie<ValueType> *current_node = this;
     const char *key_iterator = key;
+    if (key == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
+        return (ft_nullptr);
+    }
     while (*key_iterator)
     {
         typename ft_unord_map<char, ft_trie<ValueType>*>::const_iterator child_iterator = current_node->_children.find(*key_iterator);
         if (child_iterator == current_node->_children.end())
+        {
+            ft_errno = ER_SUCCESS;
             return (ft_nullptr);
+        }
         current_node = child_iterator->second;
         key_iterator++;
     }
+    ft_errno = ER_SUCCESS;
     return (current_node->_data);
 }
 

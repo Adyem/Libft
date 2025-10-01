@@ -1,8 +1,10 @@
 #include "networking.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Errno/errno.hpp"
 #include <unistd.h>
 #include <sys/event.h>
 #include <sys/time.h>
+#include <cerrno>
 
 int nw_poll(int *read_file_descriptors, int read_count,
             int *write_file_descriptors, int write_count,
@@ -21,14 +23,21 @@ int nw_poll(int *read_file_descriptors, int read_count,
 
     kqueue_descriptor = kqueue();
     if (kqueue_descriptor == -1)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
         return (-1);
+    }
     index = 0;
     while (read_file_descriptors && index < read_count)
     {
         EV_SET(&change_event, read_file_descriptors[index], EVFILT_READ, EV_ADD, 0, 0, NULL);
         if (kevent(kqueue_descriptor, &change_event, 1, NULL, 0, NULL) == -1)
         {
+            int last_error;
+
+            last_error = errno;
             close(kqueue_descriptor);
+            ft_errno = last_error + ERRNO_OFFSET;
             return (-1);
         }
         index++;
@@ -39,7 +48,11 @@ int nw_poll(int *read_file_descriptors, int read_count,
         EV_SET(&change_event, write_file_descriptors[index], EVFILT_WRITE, EV_ADD, 0, 0, NULL);
         if (kevent(kqueue_descriptor, &change_event, 1, NULL, 0, NULL) == -1)
         {
+            int last_error;
+
+            last_error = errno;
             close(kqueue_descriptor);
+            ft_errno = last_error + ERRNO_OFFSET;
             return (-1);
         }
         index++;
@@ -48,12 +61,15 @@ int nw_poll(int *read_file_descriptors, int read_count,
     if (maximum_events == 0)
     {
         close(kqueue_descriptor);
+        ft_errno = ER_SUCCESS;
         return (0);
     }
     event_list = static_cast<struct kevent *>(cma_malloc(sizeof(struct kevent) * maximum_events));
     if (!event_list)
     {
         close(kqueue_descriptor);
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = FT_EALLOC;
         return (-1);
     }
     timeout.tv_sec = timeout_milliseconds / 1000;
@@ -61,8 +77,15 @@ int nw_poll(int *read_file_descriptors, int read_count,
     ready_descriptors = kevent(kqueue_descriptor, NULL, 0, event_list, maximum_events, &timeout);
     if (ready_descriptors <= 0)
     {
+        int wait_error;
+
+        wait_error = errno;
         cma_free(event_list);
         close(kqueue_descriptor);
+        if (ready_descriptors == 0)
+            ft_errno = ER_SUCCESS;
+        else
+            ft_errno = wait_error + ERRNO_OFFSET;
         return (ready_descriptors);
     }
     ready_index = 0;
@@ -91,5 +114,6 @@ int nw_poll(int *read_file_descriptors, int read_count,
     }
     cma_free(event_list);
     close(kqueue_descriptor);
+    ft_errno = ER_SUCCESS;
     return (ready_descriptors);
 }

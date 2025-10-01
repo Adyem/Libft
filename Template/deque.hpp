@@ -65,6 +65,7 @@ template <typename ElementType>
 ft_deque<ElementType>::ft_deque()
     : _front(ft_nullptr), _back(ft_nullptr), _size(0), _error_code(ER_SUCCESS)
 {
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -145,6 +146,7 @@ void ft_deque<ElementType>::push_front(const ElementType& value)
         this->_front->_prev = node;
     this->_front = node;
     ++this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -173,6 +175,7 @@ void ft_deque<ElementType>::push_front(ElementType&& value)
         this->_front->_prev = node;
     this->_front = node;
     ++this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -201,6 +204,7 @@ void ft_deque<ElementType>::push_back(const ElementType& value)
         this->_back->_next = node;
     this->_back = node;
     ++this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -229,6 +233,7 @@ void ft_deque<ElementType>::push_back(ElementType&& value)
         this->_back->_next = node;
     this->_back = node;
     ++this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -257,6 +262,7 @@ ElementType ft_deque<ElementType>::pop_front()
     destroy_at(&node->_data);
     cma_free(node);
     --this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (value);
 }
@@ -285,6 +291,7 @@ ElementType ft_deque<ElementType>::pop_back()
     destroy_at(&node->_data);
     cma_free(node);
     --this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (value);
 }
@@ -305,6 +312,7 @@ ElementType& ft_deque<ElementType>::front()
         return (error_element);
     }
     ElementType& reference = this->_front->_data;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (reference);
 }
@@ -325,6 +333,7 @@ const ElementType& ft_deque<ElementType>::front() const
         return (error_element);
     }
     const ElementType& reference = this->_front->_data;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (reference);
 }
@@ -345,6 +354,7 @@ ElementType& ft_deque<ElementType>::back()
         return (error_element);
     }
     ElementType& reference = this->_back->_data;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (reference);
 }
@@ -365,6 +375,7 @@ const ElementType& ft_deque<ElementType>::back() const
         return (error_element);
     }
     const ElementType& reference = this->_back->_data;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (reference);
 }
@@ -373,8 +384,12 @@ template <typename ElementType>
 size_t ft_deque<ElementType>::size() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        const_cast<ft_deque<ElementType> *>(this)->set_error(PT_ERR_MUTEX_OWNER);
         return (0);
+    }
     size_t current_size = this->_size;
+    const_cast<ft_deque<ElementType> *>(this)->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (current_size);
 }
@@ -383,8 +398,12 @@ template <typename ElementType>
 bool ft_deque<ElementType>::empty() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        const_cast<ft_deque<ElementType> *>(this)->set_error(PT_ERR_MUTEX_OWNER);
         return (true);
+    }
     bool result = (this->_size == 0);
+    const_cast<ft_deque<ElementType> *>(this)->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (result);
 }
@@ -413,7 +432,10 @@ template <typename ElementType>
 void ft_deque<ElementType>::clear()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
+    }
     while (this->_front != ft_nullptr)
     {
         DequeNode* node = this->_front;
@@ -423,6 +445,7 @@ void ft_deque<ElementType>::clear()
     }
     this->_back = ft_nullptr;
     this->_size = 0;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }

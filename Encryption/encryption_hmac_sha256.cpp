@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include "../CMA/CMA.hpp"
+#include "../Errno/errno.hpp"
 #include "encryption_hmac_sha256.hpp"
 #include "encryption_sha256.hpp"
 
@@ -30,7 +31,10 @@ void hmac_sha256(const unsigned char *key, size_t key_len, const void *data, siz
     }
     unsigned char *inner_data = static_cast<unsigned char *>(cma_malloc(64 + len));
     if (!inner_data)
+    {
+        ft_errno = FT_EALLOC;
         return ;
+    }
     current_index = 0;
     while (current_index < 64)
     {
@@ -49,7 +53,10 @@ void hmac_sha256(const unsigned char *key, size_t key_len, const void *data, siz
     cma_free(inner_data);
     unsigned char *outer_data = static_cast<unsigned char *>(cma_malloc(64 + 32));
     if (!outer_data)
+    {
+        ft_errno = FT_EALLOC;
         return ;
+    }
     current_index = 0;
     while (current_index < 64)
     {
@@ -64,5 +71,6 @@ void hmac_sha256(const unsigned char *key, size_t key_len, const void *data, siz
     }
     sha256_hash(outer_data, 96, digest);
     cma_free(outer_data);
+    ft_errno = ER_SUCCESS;
     return ;
 }

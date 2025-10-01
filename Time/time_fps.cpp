@@ -30,6 +30,7 @@ long    time_fps::get_frames_per_second()
         this->set_error(FT_EINVAL);
         return (0);
     }
+    this->set_error(ER_SUCCESS);
     return (1000 / this->_frame_duration_ms);
 }
 
@@ -63,6 +64,7 @@ void    time_fps::sleep_to_next_frame()
     if (elapsed < this->_frame_duration_ms)
         time_sleep_ms(static_cast<unsigned int>(this->_frame_duration_ms - elapsed));
     this->_last_frame_time = std::chrono::steady_clock::now();
+    this->set_error(ER_SUCCESS);
     return ;
 }
 

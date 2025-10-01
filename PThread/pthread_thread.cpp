@@ -14,6 +14,7 @@ void ft_thread::set_error(int error) const
 {
     this->_error_code = error;
     ft_errno = error;
+    return ;
 }
 
 ft_thread::ft_thread()
@@ -61,20 +62,36 @@ bool ft_thread::joinable() const
 void ft_thread::join()
 {
     if (!this->_joinable)
+    {
+        this->set_error(ER_SUCCESS);
         return ;
+    }
     if (pt_thread_join(this->_thread, ft_nullptr) != 0)
+    {
         this->set_error(ft_errno);
+        this->_joinable = false;
+        return ;
+    }
     this->_joinable = false;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 void ft_thread::detach()
 {
     if (!this->_joinable)
+    {
+        this->set_error(ER_SUCCESS);
         return ;
+    }
     if (pt_thread_detach(this->_thread) != 0)
+    {
         this->set_error(ft_errno);
+        this->_joinable = false;
+        return ;
+    }
     this->_joinable = false;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 

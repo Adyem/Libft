@@ -55,13 +55,19 @@ ft_circular_buffer<ElementType>::ft_circular_buffer(size_t capacity)
     : _buffer(ft_nullptr), _capacity(capacity), _head(0), _tail(0), _size(0), _error_code(ER_SUCCESS)
 {
     if (capacity == 0)
+    {
+        this->set_error(ER_SUCCESS);
         return ;
+    }
     _buffer = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * capacity));
     if (_buffer == ft_nullptr)
     {
         this->set_error(CIRCULAR_BUFFER_ALLOC_FAIL);
         _capacity = 0;
+        return ;
     }
+    this->set_error(ER_SUCCESS);
+    return ;
 }
 
 template <typename ElementType>
@@ -70,6 +76,8 @@ ft_circular_buffer<ElementType>::~ft_circular_buffer()
     this->clear();
     if (_buffer != ft_nullptr)
         cma_free(_buffer);
+    this->set_error(ER_SUCCESS);
+    return ;
 }
 
 template <typename ElementType>
@@ -142,7 +150,9 @@ void ft_circular_buffer<ElementType>::push(const ElementType& value)
     construct_at(&this->_buffer[this->_tail], value);
     this->_tail = (this->_tail + 1) % this->_capacity;
     ++this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
+    return ;
 }
 
 template <typename ElementType>
@@ -162,7 +172,9 @@ void ft_circular_buffer<ElementType>::push(ElementType&& value)
     construct_at(&this->_buffer[this->_tail], ft_move(value));
     this->_tail = (this->_tail + 1) % this->_capacity;
     ++this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
+    return ;
 }
 
 template <typename ElementType>
@@ -183,6 +195,7 @@ ElementType ft_circular_buffer<ElementType>::pop()
     destroy_at(&this->_buffer[this->_head]);
     this->_head = (this->_head + 1) % this->_capacity;
     --this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (value);
 }
@@ -191,8 +204,12 @@ template <typename ElementType>
 bool ft_circular_buffer<ElementType>::is_full() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        const_cast<ft_circular_buffer<ElementType> *>(this)->set_error(PT_ERR_MUTEX_OWNER);
         return (false);
+    }
     bool res = (this->_size == this->_capacity);
+    const_cast<ft_circular_buffer<ElementType> *>(this)->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (res);
 }
@@ -201,8 +218,12 @@ template <typename ElementType>
 bool ft_circular_buffer<ElementType>::is_empty() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        const_cast<ft_circular_buffer<ElementType> *>(this)->set_error(PT_ERR_MUTEX_OWNER);
         return (true);
+    }
     bool res = (this->_size == 0);
+    const_cast<ft_circular_buffer<ElementType> *>(this)->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (res);
 }
@@ -211,8 +232,12 @@ template <typename ElementType>
 size_t ft_circular_buffer<ElementType>::size() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        const_cast<ft_circular_buffer<ElementType> *>(this)->set_error(PT_ERR_MUTEX_OWNER);
         return (0);
+    }
     size_t s = this->_size;
+    const_cast<ft_circular_buffer<ElementType> *>(this)->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (s);
 }
@@ -221,8 +246,12 @@ template <typename ElementType>
 size_t ft_circular_buffer<ElementType>::capacity() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        const_cast<ft_circular_buffer<ElementType> *>(this)->set_error(PT_ERR_MUTEX_OWNER);
         return (0);
+    }
     size_t c = this->_capacity;
+    const_cast<ft_circular_buffer<ElementType> *>(this)->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (c);
 }
@@ -251,7 +280,10 @@ template <typename ElementType>
 void ft_circular_buffer<ElementType>::clear()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
+    }
     size_t i = 0;
     while (i < this->_size)
     {
@@ -261,7 +293,9 @@ void ft_circular_buffer<ElementType>::clear()
     this->_head = 0;
     this->_tail = 0;
     this->_size = 0;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
+    return ;
 }
 
 #endif
