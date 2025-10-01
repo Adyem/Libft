@@ -91,6 +91,7 @@ constexpr int ft_strlen(const char *string)
     }
     return (static_cast<int>(length));
 }
+
 char            *ft_strchr(const char *string, int char_to_find);
 int                ft_atoi(const char *string);
 int             ft_validate_int(const char *input);
