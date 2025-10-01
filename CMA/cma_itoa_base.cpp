@@ -1,4 +1,5 @@
 #include "CMA.hpp"
+#include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
 static int    calculate_length(int number, int base)
@@ -28,7 +29,10 @@ char    *cma_itoa_base(int number, int base)
     unsigned int absolute_value;
 
     if (base < 2 || base > 16)
+    {
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
+    }
     if (number < 0 && base == 10)
         is_negative = 1;
     if (number < 0)

@@ -383,7 +383,8 @@ void ft_big_number::assign(const char* number) noexcept
         this->clear();
         return ;
     }
-    this->_error_code = 0;
+    this->_error_code = ER_SUCCESS;
+    ft_errno = ER_SUCCESS;
     bool parsed_negative = false;
     ft_size_t start_index = 0;
     if (number[start_index] == '-')
@@ -438,7 +439,8 @@ void ft_big_number::assign_base(const char* digits, int base) noexcept
         this->clear();
         return ;
     }
-    this->_error_code = 0;
+    this->_error_code = ER_SUCCESS;
+    ft_errno = ER_SUCCESS;
     int local_error = 0;
     bool parsed_negative = false;
     ft_size_t index = 0;
@@ -653,7 +655,8 @@ void ft_big_number::clear() noexcept
     if (this->_digits)
         this->_digits[0] = '\0';
     this->_is_negative = false;
-    this->_error_code = 0;
+    this->_error_code = ER_SUCCESS;
+    ft_errno = ER_SUCCESS;
     this->shrink_capacity();
     return ;
 }

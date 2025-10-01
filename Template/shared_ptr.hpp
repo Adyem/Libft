@@ -284,6 +284,7 @@ ManagedType& ft_sharedptr<ManagedType>::operator*()
             return (*reinterpret_cast<ManagedType*>(dummy_buffer));
         }
     }
+    this->set_error(ER_SUCCESS);
     return (*_managedPointer);
 }
 
@@ -305,6 +306,7 @@ const ManagedType& ft_sharedptr<ManagedType>::operator*() const
             return (*reinterpret_cast<const ManagedType*>(dummy_buffer));
         }
     }
+    this->set_error(ER_SUCCESS);
     return (*_managedPointer);
 }
 
@@ -316,6 +318,7 @@ ManagedType* ft_sharedptr<ManagedType>::operator->()
         this->set_error(SHARED_PTR_NULL_PTR);
         return (ft_nullptr);
     }
+    this->set_error(ER_SUCCESS);
     return (_managedPointer);
 }
 
@@ -327,6 +330,7 @@ const ManagedType* ft_sharedptr<ManagedType>::operator->() const
         const_cast<ft_sharedptr<ManagedType>*>(this)->set_error(SHARED_PTR_NULL_PTR);
         return (ft_nullptr);
     }
+    this->set_error(ER_SUCCESS);
     return (_managedPointer);
 }
 
@@ -375,6 +379,7 @@ ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index)
             return (ft_nullptr);
         }
     }
+    this->set_error(ER_SUCCESS);
     return (_managedPointer[index]);
 }
 
@@ -423,14 +428,19 @@ const ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index) const
             return (ft_nullptr);
         }
     }
+    this->set_error(ER_SUCCESS);
     return (_managedPointer[index]);
 }
 
 template <typename ManagedType>
 int ft_sharedptr<ManagedType>::use_count() const
 {
-    if (_referenceCount && _error_code == ER_SUCCESS)
+    if (_referenceCount != ft_nullptr)
+    {
+        this->set_error(ER_SUCCESS);
         return (*_referenceCount);
+    }
+    this->set_error(ER_SUCCESS);
     return (0);
 }
 
@@ -455,12 +465,14 @@ const char* ft_sharedptr<ManagedType>::get_error_str() const
 template <typename ManagedType>
 ManagedType* ft_sharedptr<ManagedType>::get()
 {
+    this->set_error(ER_SUCCESS);
     return (_managedPointer);
 }
 
 template <typename ManagedType>
 const ManagedType* ft_sharedptr<ManagedType>::get() const
 {
+    this->set_error(ER_SUCCESS);
     return (_managedPointer);
 }
 
@@ -509,6 +521,8 @@ void ft_sharedptr<ManagedType>::reset(ManagedType* pointer, size_t size, bool ar
         }
         _managedPointer = ft_nullptr;
     }
+    if (this->_referenceCount != ft_nullptr)
+        this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -520,6 +534,8 @@ void ft_sharedptr<ManagedType>::swap(ft_sharedptr<ManagedType>& other)
     ft_swap(_arraySize, other._arraySize);
     ft_swap(_isArrayType, other._isArrayType);
     ft_swap(_error_code, other._error_code);
+    this->set_error(ER_SUCCESS);
+    other.set_error(ER_SUCCESS);
     return ;
 }
 
@@ -548,6 +564,7 @@ void ft_sharedptr<ManagedType>::add(const ManagedType& element)
     delete[] _managedPointer;
     _managedPointer = newArray;
     _arraySize = newSize;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -590,6 +607,7 @@ void ft_sharedptr<ManagedType>::remove(int index)
     delete[] _managedPointer;
     _managedPointer = newArray;
     _arraySize = newSize;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 

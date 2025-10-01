@@ -3,10 +3,18 @@
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
 
-char *cnfg_parse_flags(int argument_count, char **argument_values)
+char    *cnfg_parse_flags(int argument_count, char **argument_values)
 {
-    if (argument_count <= 1 || !argument_values)
+    if (argument_count <= 1)
+    {
+        ft_errno = ER_SUCCESS;
         return (ft_nullptr);
+    }
+    if (!argument_values)
+    {
+        ft_errno = FT_EINVAL;
+        return (ft_nullptr);
+    }
     char   *flags = ft_nullptr;
     size_t  length = 0;
     int argument_index = 1;
@@ -42,13 +50,22 @@ char *cnfg_parse_flags(int argument_count, char **argument_values)
         }
         ++argument_index;
     }
+    ft_errno = ER_SUCCESS;
     return (flags);
 }
 
-char **cnfg_parse_long_flags(int argument_count, char **argument_values)
+char    **cnfg_parse_long_flags(int argument_count, char **argument_values)
 {
-    if (argument_count <= 1 || !argument_values)
+    if (argument_count <= 1)
+    {
+        ft_errno = ER_SUCCESS;
         return (ft_nullptr);
+    }
+    if (!argument_values)
+    {
+        ft_errno = FT_EINVAL;
+        return (ft_nullptr);
+    }
     char  **flags = ft_nullptr;
     size_t  count = 0;
     int argument_index = 1;
@@ -108,6 +125,7 @@ char **cnfg_parse_long_flags(int argument_count, char **argument_values)
         flags[count] = ft_nullptr;
         ++argument_index;
     }
+    ft_errno = ER_SUCCESS;
     return (flags);
 }
 

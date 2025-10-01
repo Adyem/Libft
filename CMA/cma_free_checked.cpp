@@ -10,10 +10,14 @@ int cma_checked_free(void* ptr)
     if (OFFSWITCH == 1)
     {
         std::free(ptr);
+        ft_errno = ER_SUCCESS;
         return (0);
     }
     if (!ptr)
+    {
+        ft_errno = ER_SUCCESS;
         return (0);
+    }
     if (g_cma_thread_safe)
         g_malloc_mutex.lock(THREAD_ID);
     Page* page = page_list;
@@ -48,5 +52,6 @@ int cma_checked_free(void* ptr)
     free_page_if_empty(pg);
     if (g_cma_thread_safe)
         g_malloc_mutex.unlock(THREAD_ID);
+    ft_errno = ER_SUCCESS;
     return (0);
 }

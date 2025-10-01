@@ -144,6 +144,7 @@ ft_quest &ft_quest::operator=(ft_quest &&other) noexcept
 
 int ft_quest::get_id() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_id);
 }
 
@@ -161,6 +162,7 @@ void ft_quest::set_id(int id) noexcept
 
 int ft_quest::get_phases() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_phases);
 }
 
@@ -180,6 +182,7 @@ void ft_quest::set_phases(int phases) noexcept
 
 int ft_quest::get_current_phase() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_current_phase);
 }
 
@@ -197,6 +200,7 @@ void ft_quest::set_current_phase(int phase) noexcept
 
 const ft_string &ft_quest::get_description() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_description);
 }
 
@@ -219,6 +223,7 @@ void ft_quest::set_description(const ft_string &description) noexcept
 
 const ft_string &ft_quest::get_objective() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_objective);
 }
 
@@ -241,6 +246,7 @@ void ft_quest::set_objective(const ft_string &objective) noexcept
 
 int ft_quest::get_reward_experience() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_reward_experience);
 }
 
@@ -326,6 +332,7 @@ void ft_quest::set_reward_items(const ft_vector<ft_sharedptr<ft_item> > &items) 
 
 bool ft_quest::is_complete() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_current_phase >= this->_phases);
 }
 

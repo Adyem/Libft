@@ -1,4 +1,5 @@
 #include "printf_internal.hpp"
+#include "../Errno/errno.hpp"
 #include <cstdarg>
 #include <unistd.h>
 #include <stdarg.h>
@@ -198,6 +199,10 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
     if (count == SIZE_MAX)
         return (-1);
     if (count > static_cast<size_t>(INT_MAX))
+    {
+        ft_errno = FT_ERANGE;
         return (-1);
+    }
+    ft_errno = ER_SUCCESS;
     return (static_cast<int>(count));
 }

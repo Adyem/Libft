@@ -92,23 +92,27 @@ ft_item &ft_item::operator=(ft_item &&other) noexcept
 
 int ft_item::get_max_stack() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_max_stack);
 }
 
 void ft_item::set_max_stack(int max) noexcept
 {
     this->_max_stack = max;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 int ft_item::get_stack_size() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_stack_size);
 }
 
 void ft_item::set_stack_size(int amount) noexcept
 {
     this->_stack_size = amount;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -117,6 +121,7 @@ void ft_item::add_to_stack(int amount) noexcept
     this->_stack_size += amount;
     if (this->_stack_size > this->_max_stack)
         this->_stack_size = this->_max_stack;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -125,182 +130,215 @@ void ft_item::sub_from_stack(int amount) noexcept
     this->_stack_size -= amount;
     if (this->_stack_size < 0)
         this->_stack_size = 0;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 int ft_item::get_item_id() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_item_id);
 }
 
 void ft_item::set_item_id(int id) noexcept
 {
     this->_item_id = id;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 int ft_item::get_width() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_width);
 }
 
 void ft_item::set_width(int width) noexcept
 {
     this->_width = width;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 int ft_item::get_height() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_height);
 }
 
 void ft_item::set_height(int height) noexcept
 {
     this->_height = height;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 int ft_item::get_rarity() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_rarity);
 }
 
 void ft_item::set_rarity(int rarity) noexcept
 {
     this->_rarity = rarity;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 ft_item_modifier ft_item::get_modifier1() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_modifier1);
 }
 
 void ft_item::set_modifier1(const ft_item_modifier &mod) noexcept
 {
     this->_modifier1 = mod;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 int ft_item::get_modifier1_id() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_modifier1.id);
 }
 
 void ft_item::set_modifier1_id(int id) noexcept
 {
     this->_modifier1.id = id;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 int ft_item::get_modifier1_value() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_modifier1.value);
 }
 
 void ft_item::set_modifier1_value(int value) noexcept
 {
     this->_modifier1.value = value;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 ft_item_modifier ft_item::get_modifier2() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_modifier2);
 }
 
 void ft_item::set_modifier2(const ft_item_modifier &mod) noexcept
 {
     this->_modifier2 = mod;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 int ft_item::get_modifier2_id() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_modifier2.id);
 }
 
 void ft_item::set_modifier2_id(int id) noexcept
 {
     this->_modifier2.id = id;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 int ft_item::get_modifier2_value() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_modifier2.value);
 }
 
 void ft_item::set_modifier2_value(int value) noexcept
 {
     this->_modifier2.value = value;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 ft_item_modifier ft_item::get_modifier3() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_modifier3);
 }
 
 void ft_item::set_modifier3(const ft_item_modifier &mod) noexcept
 {
     this->_modifier3 = mod;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 int ft_item::get_modifier3_id() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_modifier3.id);
 }
 
 void ft_item::set_modifier3_id(int id) noexcept
 {
     this->_modifier3.id = id;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 int ft_item::get_modifier3_value() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_modifier3.value);
 }
 
 void ft_item::set_modifier3_value(int value) noexcept
 {
     this->_modifier3.value = value;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 ft_item_modifier ft_item::get_modifier4() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_modifier4);
 }
 
 void ft_item::set_modifier4(const ft_item_modifier &mod) noexcept
 {
     this->_modifier4 = mod;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 int ft_item::get_modifier4_id() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_modifier4.id);
 }
 
 void ft_item::set_modifier4_id(int id) noexcept
 {
     this->_modifier4.id = id;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 int ft_item::get_modifier4_value() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_modifier4.value);
 }
 
 void ft_item::set_modifier4_value(int value) noexcept
 {
     this->_modifier4.value = value;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 

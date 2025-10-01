@@ -18,6 +18,7 @@ ft_game_state::ft_game_state() noexcept
         if (this->_worlds.get_error() != ER_SUCCESS)
             this->set_error(this->_worlds.get_error());
     }
+    this->set_error(this->_error_code);
     return ;
 }
 
@@ -75,6 +76,7 @@ ft_game_state::ft_game_state(const ft_game_state &other) noexcept
         }
         character_index++;
     }
+    this->set_error(this->_error_code);
     return ;
 }
 
@@ -132,6 +134,7 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
         }
         this->_error_code = other._error_code;
     }
+    this->set_error(this->_error_code);
     return (*this);
 }
 
@@ -156,6 +159,7 @@ ft_game_state::ft_game_state(ft_game_state &&other) noexcept
     if (this->_characters.get_error() != ER_SUCCESS)
         this->set_error(this->_characters.get_error());
     other._error_code = ER_SUCCESS;
+    this->set_error(this->_error_code);
     return ;
 }
 
@@ -183,16 +187,19 @@ ft_game_state &ft_game_state::operator=(ft_game_state &&other) noexcept
             this->set_error(this->_characters.get_error());
         other._error_code = ER_SUCCESS;
     }
+    this->set_error(this->_error_code);
     return (*this);
 }
 
 ft_vector<ft_sharedptr<ft_world> > &ft_game_state::get_worlds() noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_worlds);
 }
 
 ft_vector<ft_sharedptr<ft_character> > &ft_game_state::get_characters() noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_characters);
 }
 

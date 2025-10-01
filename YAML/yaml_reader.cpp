@@ -219,19 +219,22 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
             map_value = ft_nullptr;
             goto success;
         }
-        yaml_value *scalar_value = new (std::nothrow) yaml_value();
-        if (scalar_value == ft_nullptr)
-        {
-            error_code = FT_EALLOC;
-            goto error;
-        }
-        scalar_value->set_scalar(line);
-        if (scalar_value->get_error() != ER_SUCCESS)
-            return (scalar_value);
-        index++;
-        return (scalar_value);
+    yaml_value *scalar_value = new (std::nothrow) yaml_value();
+    if (scalar_value == ft_nullptr)
+    {
+        error_code = FT_EALLOC;
+        goto error;
     }
+    scalar_value->set_scalar(line);
+    if (scalar_value->get_error() != ER_SUCCESS)
+        return (scalar_value);
+    index++;
+    result = scalar_value;
+    scalar_value = ft_nullptr;
+    goto success;
+}
 success:
+    ft_errno = ER_SUCCESS;
     return (result);
 list_cleanup:
     if (list_value != ft_nullptr)

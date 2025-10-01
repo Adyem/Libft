@@ -82,6 +82,7 @@ inline ft_bitset::ft_bitset(size_t bits)
         while (i < this->_blockCount)
             this->_data[i++] = 0;
     }
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -146,6 +147,7 @@ inline void ft_bitset::set(size_t pos)
         return ;
     }
     this->_data[block_index(pos)] |= bit_mask(pos);
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -164,6 +166,7 @@ inline void ft_bitset::reset(size_t pos)
         return ;
     }
     this->_data[block_index(pos)] &= ~bit_mask(pos);
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -182,6 +185,7 @@ inline void ft_bitset::flip(size_t pos)
         return ;
     }
     this->_data[block_index(pos)] ^= bit_mask(pos);
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -200,6 +204,7 @@ inline bool ft_bitset::test(size_t pos) const
         return (false);
     }
     bool res = (this->_data[block_index(pos)] & bit_mask(pos)) != 0;
+    const_cast<ft_bitset*>(this)->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (res);
 }
@@ -207,8 +212,12 @@ inline bool ft_bitset::test(size_t pos) const
 inline size_t ft_bitset::size() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        const_cast<ft_bitset*>(this)->set_error(PT_ERR_MUTEX_OWNER);
         return (0);
+    }
     size_t s = this->_size;
+    const_cast<ft_bitset*>(this)->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (s);
 }
@@ -216,10 +225,14 @@ inline size_t ft_bitset::size() const
 inline void ft_bitset::clear()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
+    }
     size_t i = 0;
     while (i < this->_blockCount)
         this->_data[i++] = 0;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }

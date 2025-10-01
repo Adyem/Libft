@@ -123,7 +123,7 @@ void ft_crafting::set_error(int error_code) const noexcept
 
 int ft_crafting::register_recipe(int recipe_id, ft_vector<ft_crafting_ingredient> &&ingredients) noexcept
 {
-    this->_error_code = ER_SUCCESS;
+    this->set_error(ER_SUCCESS);
     this->_recipes.insert(recipe_id, ft_move(ingredients));
     if (this->_recipes.get_error() != ER_SUCCESS)
     {
@@ -135,7 +135,7 @@ int ft_crafting::register_recipe(int recipe_id, ft_vector<ft_crafting_ingredient
 
 int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id, const ft_sharedptr<ft_item> &result) noexcept
 {
-    this->_error_code = ER_SUCCESS;
+    this->set_error(ER_SUCCESS);
     if (!result)
     {
         this->set_error(GAME_GENERAL_ERROR);
@@ -244,6 +244,7 @@ int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id, const ft_sha
         this->set_error(inventory.get_error());
         return (this->_error_code);
     }
+    this->set_error(ER_SUCCESS);
     return (ER_SUCCESS);
 }
 

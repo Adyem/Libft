@@ -171,6 +171,7 @@ void ft_uniqueptr<ManagedType>::destroy()
     this->_managedPointer = ft_nullptr;
     this->_arraySize = 0;
     this->_isArrayType = false;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -197,6 +198,7 @@ ManagedType& ft_uniqueptr<ManagedType>::operator*()
         }
     }
     ManagedType& ref = *_managedPointer;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (ref);
 }
@@ -223,6 +225,7 @@ const ManagedType& ft_uniqueptr<ManagedType>::operator*() const
         }
     }
     const ManagedType& ref = *_managedPointer;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (ref);
 }
@@ -242,6 +245,7 @@ ManagedType* ft_uniqueptr<ManagedType>::operator->()
         return (ft_nullptr);
     }
     ManagedType* ptr = _managedPointer;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (ptr);
 }
@@ -261,6 +265,7 @@ const ManagedType* ft_uniqueptr<ManagedType>::operator->() const
         return (ft_nullptr);
     }
     const ManagedType* ptr = _managedPointer;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (ptr);
 }
@@ -311,6 +316,7 @@ ManagedType& ft_uniqueptr<ManagedType>::operator[](size_t index)
         }
     }
     ManagedType& ref = _managedPointer[index];
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (ref);
 }
@@ -363,6 +369,7 @@ const ManagedType& ft_uniqueptr<ManagedType>::operator[](size_t index) const
         }
     }
     const ManagedType& ref = _managedPointer[index];
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (ref);
 }
@@ -377,6 +384,7 @@ ManagedType* ft_uniqueptr<ManagedType>::get()
     }
     ManagedType* ptr = _managedPointer;
     this->_mutex.unlock(THREAD_ID);
+    this->set_error(ER_SUCCESS);
     return (ptr);
 }
 
@@ -390,6 +398,7 @@ const ManagedType* ft_uniqueptr<ManagedType>::get() const
     }
     const ManagedType* ptr = _managedPointer;
     this->_mutex.unlock(THREAD_ID);
+    this->set_error(ER_SUCCESS);
     return (ptr);
 }
 
@@ -406,6 +415,7 @@ ManagedType* ft_uniqueptr<ManagedType>::release()
     _arraySize = 0;
     _isArrayType = false;
     _error_code = ER_SUCCESS;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (tmp);
 }
@@ -429,6 +439,7 @@ void ft_uniqueptr<ManagedType>::reset(ManagedType* pointer, size_t size, bool ar
     _arraySize = size;
     _isArrayType = arrayType;
     _error_code = ER_SUCCESS;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
 }
 
@@ -470,6 +481,8 @@ void ft_uniqueptr<ManagedType>::swap(ft_uniqueptr& other)
     ft_swap(_arraySize, other._arraySize);
     ft_swap(_isArrayType, other._isArrayType);
     ft_swap(_error_code, other._error_code);
+    this->set_error(ER_SUCCESS);
+    other.set_error(ER_SUCCESS);
     other._mutex.unlock(THREAD_ID);
     this->_mutex.unlock(THREAD_ID);
 }

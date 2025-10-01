@@ -59,6 +59,7 @@ class ft_function<ReturnType(Args...)>
             : _callable(ft_nullptr), _invoke(ft_nullptr), _destroy(ft_nullptr),
               _clone(ft_nullptr), _error_code(ER_SUCCESS)
         {
+            this->set_error(ER_SUCCESS);
             return ;
         }
 
@@ -79,6 +80,7 @@ class ft_function<ReturnType(Args...)>
             this->_invoke = &ft_function::invoke<FunctionType>;
             this->_destroy = &ft_function::destroy<FunctionType>;
             this->_clone = &ft_function::clone<FunctionType>;
+            this->set_error(ER_SUCCESS);
             return ;
         }
 
@@ -91,8 +93,12 @@ class ft_function<ReturnType(Args...)>
             {
                 this->_callable = other._clone(other._callable);
                 if (!this->_callable)
+                {
                     this->set_error(FT_EALLOC);
+                    return ;
+                }
             }
+            this->set_error(ER_SUCCESS);
             return ;
         }
 
@@ -106,6 +112,7 @@ class ft_function<ReturnType(Args...)>
             other._destroy = ft_nullptr;
             other._clone = ft_nullptr;
             other._error_code = ER_SUCCESS;
+            this->set_error(ER_SUCCESS);
             return ;
         }
 
@@ -124,8 +131,12 @@ class ft_function<ReturnType(Args...)>
                 {
                     this->_callable = other._clone(other._callable);
                     if (!this->_callable)
+                    {
                         this->set_error(FT_EALLOC);
+                        return (*this);
+                    }
                 }
+                this->set_error(ER_SUCCESS);
             }
             return (*this);
         }
@@ -146,6 +157,7 @@ class ft_function<ReturnType(Args...)>
                 other._destroy = ft_nullptr;
                 other._clone = ft_nullptr;
                 other._error_code = ER_SUCCESS;
+                this->set_error(ER_SUCCESS);
             }
             return (*this);
         }
@@ -154,6 +166,7 @@ class ft_function<ReturnType(Args...)>
         {
             if (this->_destroy)
                 this->_destroy(this->_callable);
+            this->set_error(ER_SUCCESS);
             return ;
         }
 

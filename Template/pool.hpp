@@ -243,12 +243,14 @@ typename Pool<T>::Object Pool<T>::acquire(Args&&... args)
 template<typename T>
 int Pool<T>::get_error() const noexcept
 {
+    this->set_error(this->_error_code);
     return (this->_error_code);
 }
 
 template<typename T>
 const char* Pool<T>::get_error_str() const noexcept
 {
+    this->set_error(this->_error_code);
     return (ft_strerror(this->_error_code));
 }
 
@@ -358,12 +360,14 @@ typename Pool<T>::Object& Pool<T>::Object::operator=(Object&& o) noexcept
 template<typename T>
 int Pool<T>::Object::get_error() const noexcept
 {
+    this->set_error(this->_error_code);
     return (this->_error_code);
 }
 
 template<typename T>
 const char* Pool<T>::Object::get_error_str() const noexcept
 {
+    this->set_error(this->_error_code);
     return (ft_strerror(this->_error_code));
 }
 

@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "../CMA/CMA.hpp"
+#include "../Errno/errno.hpp"
 #include "encryption_sha1.hpp"
 
 static uint32_t left_rotate(uint32_t value, uint32_t bits)
@@ -32,7 +33,10 @@ void sha1_hash(const void *data, size_t length, unsigned char *digest)
     }
     message = static_cast<unsigned char *>(cma_malloc(padded_length + 8));
     if (!message)
+    {
+        ft_errno = FT_EALLOC;
         return ;
+    }
     byte_data = static_cast<const unsigned char *>(data);
     copy_index = 0;
     while (copy_index < length)
@@ -142,5 +146,6 @@ void sha1_hash(const void *data, size_t length, unsigned char *digest)
         length_index++;
     }
     cma_free(message);
+    ft_errno = ER_SUCCESS;
     return ;
 }

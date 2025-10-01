@@ -1,4 +1,5 @@
 #include "math.hpp"
+#include "../Errno/errno.hpp"
 
 int math_lcm(int first_number, int second_number)
 {
@@ -6,7 +7,11 @@ int math_lcm(int first_number, int second_number)
 
     greatest_common_divisor = math_gcd(first_number, second_number);
     if (greatest_common_divisor == 0)
+    {
+        ft_errno = ER_SUCCESS;
         return (0);
+    }
+    ft_errno = ER_SUCCESS;
     return (math_abs(first_number / greatest_common_divisor * second_number));
 }
 
@@ -16,7 +21,11 @@ long math_lcm(long first_number, long second_number)
 
     greatest_common_divisor = math_gcd(first_number, second_number);
     if (greatest_common_divisor == 0)
+    {
+        ft_errno = ER_SUCCESS;
         return (0);
+    }
+    ft_errno = ER_SUCCESS;
     return (math_abs(first_number / greatest_common_divisor * second_number));
 }
 
@@ -26,7 +35,11 @@ long long math_lcm(long long first_number, long long second_number)
 
     greatest_common_divisor = math_gcd(first_number, second_number);
     if (greatest_common_divisor == 0)
+    {
+        ft_errno = ER_SUCCESS;
         return (0);
+    }
+    ft_errno = ER_SUCCESS;
     return (math_abs(first_number / greatest_common_divisor * second_number));
 }
 

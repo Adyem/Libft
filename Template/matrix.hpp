@@ -56,7 +56,11 @@ ft_matrix<ElementType>::ft_matrix(size_t rows, size_t cols)
     : _data(ft_nullptr), _rows(0), _cols(0), _error_code(ER_SUCCESS)
 {
     if (rows > 0 && cols > 0)
-        this->init(rows, cols);
+    {
+        if (!this->init(rows, cols))
+            return ;
+    }
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -75,6 +79,7 @@ ft_matrix<ElementType>::ft_matrix(ft_matrix&& other) noexcept
     other._rows = 0;
     other._cols = 0;
     other._error_code = ER_SUCCESS;
+    this->set_error(this->_error_code);
     return ;
 }
 
@@ -84,9 +89,13 @@ ft_matrix<ElementType>& ft_matrix<ElementType>::operator=(ft_matrix&& other) noe
     if (this != &other)
     {
         if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+        {
+            this->set_error(PT_ERR_MUTEX_OWNER);
             return (*this);
+        }
         if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
+            this->set_error(PT_ERR_MUTEX_OWNER);
             this->_mutex.unlock(THREAD_ID);
             return (*this);
         }
@@ -102,6 +111,7 @@ ft_matrix<ElementType>& ft_matrix<ElementType>::operator=(ft_matrix&& other) noe
         other._mutex.unlock(THREAD_ID);
         this->_mutex.unlock(THREAD_ID);
     }
+    this->set_error(this->_error_code);
     return (*this);
 }
 
@@ -114,6 +124,7 @@ bool ft_matrix<ElementType>::init(size_t rows, size_t cols)
     {
         this->_rows = rows;
         this->_cols = cols;
+        this->set_error(ER_SUCCESS);
         return (true);
     }
     this->_data = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * total));
@@ -130,6 +141,7 @@ bool ft_matrix<ElementType>::init(size_t rows, size_t cols)
     }
     this->_rows = rows;
     this->_cols = cols;
+    this->set_error(ER_SUCCESS);
     return (true);
 }
 
@@ -138,7 +150,10 @@ ElementType& ft_matrix<ElementType>::at(size_t r, size_t c)
 {
     static ElementType error_element = ElementType();
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return (error_element);
+    }
     if (r >= this->_rows || c >= this->_cols)
     {
         this->set_error(MATRIX_DIM_MISMATCH);
@@ -146,6 +161,7 @@ ElementType& ft_matrix<ElementType>::at(size_t r, size_t c)
         return (error_element);
     }
     ElementType& element = this->_data[r * this->_cols + c];
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (element);
 }
@@ -155,7 +171,10 @@ const ElementType& ft_matrix<ElementType>::at(size_t r, size_t c) const
 {
     static ElementType error_element = ElementType();
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return (error_element);
+    }
     if (r >= this->_rows || c >= this->_cols)
     {
         this->set_error(MATRIX_DIM_MISMATCH);
@@ -163,6 +182,7 @@ const ElementType& ft_matrix<ElementType>::at(size_t r, size_t c) const
         return (error_element);
     }
     const ElementType& element = this->_data[r * this->_cols + c];
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (element);
 }
@@ -170,12 +190,14 @@ const ElementType& ft_matrix<ElementType>::at(size_t r, size_t c) const
 template <typename ElementType>
 size_t ft_matrix<ElementType>::rows() const
 {
+    this->set_error(ER_SUCCESS);
     return (this->_rows);
 }
 
 template <typename ElementType>
 size_t ft_matrix<ElementType>::cols() const
 {
+    this->set_error(ER_SUCCESS);
     return (this->_cols);
 }
 
@@ -184,9 +206,13 @@ ft_matrix<ElementType> ft_matrix<ElementType>::add(const ft_matrix& other) const
 {
     ft_matrix<ElementType> result;
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return (result);
+    }
     if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
+        this->set_error(PT_ERR_MUTEX_OWNER);
         this->_mutex.unlock(THREAD_ID);
         return (result);
     }
@@ -211,6 +237,7 @@ ft_matrix<ElementType> ft_matrix<ElementType>::add(const ft_matrix& other) const
         result._data[i] = this->_data[i] + other._data[i];
         ++i;
     }
+    this->set_error(ER_SUCCESS);
     other._mutex.unlock(THREAD_ID);
     this->_mutex.unlock(THREAD_ID);
     return (result);
@@ -221,9 +248,13 @@ ft_matrix<ElementType> ft_matrix<ElementType>::multiply(const ft_matrix& other) 
 {
     ft_matrix<ElementType> result;
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return (result);
+    }
     if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
+        this->set_error(PT_ERR_MUTEX_OWNER);
         this->_mutex.unlock(THREAD_ID);
         return (result);
     }
@@ -259,6 +290,7 @@ ft_matrix<ElementType> ft_matrix<ElementType>::multiply(const ft_matrix& other) 
         }
         ++row_index;
     }
+    this->set_error(ER_SUCCESS);
     other._mutex.unlock(THREAD_ID);
     this->_mutex.unlock(THREAD_ID);
     return (result);
@@ -269,7 +301,10 @@ ft_matrix<ElementType> ft_matrix<ElementType>::transpose() const
 {
     ft_matrix<ElementType> result;
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return (result);
+    }
     if (!result.init(this->_cols, this->_rows))
     {
         this->set_error(MATRIX_ALLOC_FAIL);
@@ -287,6 +322,7 @@ ft_matrix<ElementType> ft_matrix<ElementType>::transpose() const
         }
         ++row_index;
     }
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (result);
 }
@@ -296,7 +332,10 @@ ElementType ft_matrix<ElementType>::determinant() const
 {
     ElementType det = ElementType();
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return (det);
+    }
     if (this->_rows != this->_cols)
     {
         this->set_error(MATRIX_DIM_MISMATCH);
@@ -360,6 +399,7 @@ ElementType ft_matrix<ElementType>::determinant() const
         ++pivot_row;
     }
     cma_free(temp);
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (result);
 }
@@ -367,12 +407,14 @@ ElementType ft_matrix<ElementType>::determinant() const
 template <typename ElementType>
 int ft_matrix<ElementType>::get_error() const
 {
+    this->set_error(this->_error_code);
     return (this->_error_code);
 }
 
 template <typename ElementType>
 const char* ft_matrix<ElementType>::get_error_str() const
 {
+    this->set_error(this->_error_code);
     return (ft_strerror(this->_error_code));
 }
 
@@ -393,6 +435,7 @@ void ft_matrix<ElementType>::clear()
     }
     this->_rows = 0;
     this->_cols = 0;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -400,6 +443,7 @@ template <typename ElementType>
 void ft_matrix<ElementType>::set_error(int error) const
 {
     this->_error_code = error;
+    ft_errno = error;
     return ;
 }
 
