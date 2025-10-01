@@ -1,4 +1,5 @@
 #include "math.hpp"
+#include "../Errno/errno.hpp"
 
 double math_exp(double value)
 {
@@ -6,6 +7,7 @@ double math_exp(double value)
     double result;
     int    iteration;
 
+    ft_errno = ER_SUCCESS;
     current_term = 1.0;
     result = 1.0;
     iteration = 1;
