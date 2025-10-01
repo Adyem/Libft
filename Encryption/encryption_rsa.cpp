@@ -1,6 +1,9 @@
 #include <stdint.h>
+#include "../Errno/errno.hpp"
 #include "../RNG/rng.hpp"
 #include "rsa.hpp"
+
+static bool g_force_mod_inverse_failure = false;
 
 static uint64_t rsa_gcd(uint64_t first_value, uint64_t second_value)
 {
@@ -79,7 +82,10 @@ static uint64_t rsa_mod_pow(uint64_t base_value, uint64_t exponent_value, uint64
 int rsa_generate_key_pair(uint64_t *public_key, uint64_t *private_key, uint64_t *modulus, int bit_size)
 {
     if (!public_key || !private_key || !modulus)
+    {
+        ft_errno = FT_EINVAL;
         return (1);
+    }
     uint64_t limit_value = 1ULL << (bit_size / 2);
     uint64_t prime_one = rsa_generate_prime(limit_value);
     uint64_t prime_two = rsa_generate_prime(limit_value);
@@ -94,12 +100,26 @@ int rsa_generate_key_pair(uint64_t *public_key, uint64_t *private_key, uint64_t 
         while (rsa_gcd(public_exponent, phi_value) != 1)
             public_exponent = public_exponent + 2;
     }
-    uint64_t private_exponent = rsa_mod_inverse(public_exponent, phi_value);
+    uint64_t private_exponent;
+    if (g_force_mod_inverse_failure == true)
+        private_exponent = 0;
+    else
+        private_exponent = rsa_mod_inverse(public_exponent, phi_value);
     if (private_exponent == 0)
+    {
+        ft_errno = FT_ETERM;
         return (1);
+    }
     *public_key = public_exponent;
     *private_key = private_exponent;
+    ft_errno = ER_SUCCESS;
     return (0);
+}
+
+void rsa_set_force_mod_inverse_failure(bool enable)
+{
+    g_force_mod_inverse_failure = enable;
+    return ;
 }
 
 uint64_t rsa_encrypt(uint64_t message, uint64_t public_key, uint64_t modulus)
