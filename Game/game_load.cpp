@@ -139,6 +139,7 @@ int deserialize_inventory(ft_inventory &inventory, json_group *group)
     }
     int item_count = ft_atoi(count_item->value);
     int item_index = 0;
+    int loop_error = ER_SUCCESS;
     while (item_index < item_count)
     {
         char *item_index_string = cma_itoa(item_index);
@@ -152,7 +153,10 @@ int deserialize_inventory(ft_inventory &inventory, json_group *group)
         cma_free(item_index_string);
         ft_item item_temp;
         if (build_item_from_group(item_temp, group, item_prefix) != ER_SUCCESS)
-            return (GAME_GENERAL_ERROR);
+        {
+            loop_error = GAME_GENERAL_ERROR;
+            break ;
+        }
         ft_sharedptr<ft_item> item(new ft_item(item_temp));
         if (!item)
         {
@@ -160,8 +164,16 @@ int deserialize_inventory(ft_inventory &inventory, json_group *group)
             return (JSON_MALLOC_FAIL);
         }
         if (inventory.add_item(item) != ER_SUCCESS)
-            return (inventory.get_error());
+        {
+            loop_error = inventory.get_error();
+            break ;
+        }
         item_index++;
+    }
+    if (loop_error != ER_SUCCESS)
+    {
+        ft_errno = loop_error;
+        return (loop_error);
     }
     inventory.set_current_weight(serialized_weight);
     inventory.set_used_slots(serialized_slots);
