@@ -433,3 +433,55 @@ FT_TEST(test_networking_check_socket_after_send_detects_disconnect, "networking_
         return (0);
     return (1);
 }
+
+FT_TEST(test_networking_check_socket_after_send_handles_invalid_descriptor, "networking_check_socket_after_send invalid descriptor")
+{
+    int check_result;
+
+    ft_errno = ER_SUCCESS;
+    check_result = networking_check_socket_after_send(-1);
+    if (check_result != 0)
+        return (0);
+    if (ft_errno != FT_EINVAL)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_networking_check_socket_after_send_reports_success, "networking_check_socket_after_send success")
+{
+    SocketConfig server_configuration;
+    ft_socket server_socket;
+    SocketConfig client_configuration;
+    ft_socket client_socket;
+    struct sockaddr_storage address_storage;
+    socklen_t address_length;
+    int accepted_fd;
+    int check_result;
+
+    server_configuration._type = SocketType::SERVER;
+    server_configuration._port = 54345;
+    server_configuration._ip = "127.0.0.1";
+    server_socket = ft_socket(server_configuration);
+    if (server_socket.get_error() != ER_SUCCESS)
+        return (0);
+    client_configuration._type = SocketType::CLIENT;
+    client_configuration._port = 54345;
+    client_configuration._ip = "127.0.0.1";
+    client_socket = ft_socket(client_configuration);
+    if (client_socket.get_error() != ER_SUCCESS)
+        return (0);
+    address_length = sizeof(address_storage);
+    accepted_fd = nw_accept(server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
+    if (accepted_fd < 0)
+        return (0);
+    ft_errno = SOCKET_SEND_FAILED;
+    check_result = networking_check_socket_after_send(accepted_fd);
+    FT_CLOSE_SOCKET(accepted_fd);
+    client_socket.close_socket();
+    server_socket.close_socket();
+    if (check_result != 0)
+        return (0);
+    if (ft_errno != ER_SUCCESS)
+        return (0);
+    return (1);
+}
