@@ -115,6 +115,7 @@ int kv_store::kv_flush() const
     json_item *item_pointer;
     std::map<std::string, std::string>::const_iterator map_iterator;
     int result;
+    int error_code;
 
     store_group = json_create_json_group("kv_store");
     if (store_group == ft_nullptr)
@@ -138,10 +139,14 @@ int kv_store::kv_flush() const
     head_group = ft_nullptr;
     json_append_group(&head_group, store_group);
     result = json_write_to_file(this->_file_path.c_str(), head_group);
+    error_code = ft_errno;
     json_free_groups(head_group);
     if (result != 0)
     {
-        this->set_error(result);
+        if (error_code != ER_SUCCESS)
+            this->set_error(error_code);
+        else
+            this->set_error(FT_EINVAL);
         return (-1);
     }
     this->set_error(ER_SUCCESS);
