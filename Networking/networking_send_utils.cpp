@@ -18,7 +18,10 @@ int networking_check_socket_after_send(int socket_fd)
     bool disconnect_detected;
 
     if (socket_fd < 0)
+    {
+        ft_errno = FT_EINVAL;
         return (0);
+    }
     attempt_limit = 3;
     attempt_count = 0;
     disconnect_detected = false;
@@ -130,6 +133,7 @@ int networking_check_socket_after_send(int socket_fd)
         ft_errno = SOCKET_SEND_FAILED;
         return (-1);
     }
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 
