@@ -70,6 +70,7 @@ ft_buff &ft_buff::operator=(ft_buff &&other) noexcept
 
 int ft_buff::get_id() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_id);
 }
 
@@ -87,6 +88,7 @@ void ft_buff::set_id(int id) noexcept
 
 int ft_buff::get_duration() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_duration);
 }
 
@@ -128,6 +130,7 @@ void ft_buff::sub_duration(int duration) noexcept
 
 int ft_buff::get_modifier1() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_modifier1);
 }
 
@@ -154,6 +157,7 @@ void ft_buff::sub_modifier1(int mod) noexcept
 
 int ft_buff::get_modifier2() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_modifier2);
 }
 
@@ -180,6 +184,7 @@ void ft_buff::sub_modifier2(int mod) noexcept
 
 int ft_buff::get_modifier3() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_modifier3);
 }
 
@@ -206,6 +211,7 @@ void ft_buff::sub_modifier3(int mod) noexcept
 
 int ft_buff::get_modifier4() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_modifier4);
 }
 

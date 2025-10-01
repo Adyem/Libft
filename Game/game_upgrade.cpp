@@ -76,6 +76,7 @@ ft_upgrade &ft_upgrade::operator=(ft_upgrade &&other) noexcept
 
 int ft_upgrade::get_id() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_id);
 }
 
@@ -93,6 +94,7 @@ void ft_upgrade::set_id(int id) noexcept
 
 uint16_t ft_upgrade::get_current_level() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_current_level);
 }
 
@@ -129,6 +131,7 @@ void ft_upgrade::sub_level(uint16_t level) noexcept
 
 uint16_t ft_upgrade::get_max_level() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_max_level);
 }
 
@@ -143,6 +146,7 @@ void ft_upgrade::set_max_level(uint16_t level) noexcept
 
 int ft_upgrade::get_modifier1() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_modifier1);
 }
 
@@ -169,6 +173,7 @@ void ft_upgrade::sub_modifier1(int mod) noexcept
 
 int ft_upgrade::get_modifier2() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_modifier2);
 }
 
@@ -195,6 +200,7 @@ void ft_upgrade::sub_modifier2(int mod) noexcept
 
 int ft_upgrade::get_modifier3() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_modifier3);
 }
 
@@ -221,6 +227,7 @@ void ft_upgrade::sub_modifier3(int mod) noexcept
 
 int ft_upgrade::get_modifier4() const noexcept
 {
+    this->set_error(ER_SUCCESS);
     return (this->_modifier4);
 }
 

@@ -26,7 +26,7 @@ class cnfg_flag_parser
         size_t  get_long_flag_count();
         size_t  get_total_flag_count();
         int     get_error() const;
-const char  *get_error_str() const;
+        const char  *get_error_str() const;
 };
 
 cnfg_config   *config_merge_sources(int argument_count,

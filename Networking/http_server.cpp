@@ -42,6 +42,7 @@ int ft_http_server::start(const char *ip, uint16_t port, int address_family, boo
         this->set_error(this->_server_socket.get_error());
         return (1);
     }
+    ft_errno = ER_SUCCESS;
     this->_error_code = ER_SUCCESS;
     this->_non_blocking = non_blocking;
     return (0);
@@ -100,6 +101,7 @@ int ft_http_server::run_once()
         last_error = WSAGetLastError();
         if (this->_non_blocking != false && last_error == WSAEWOULDBLOCK)
         {
+            ft_errno = ER_SUCCESS;
             this->_error_code = ER_SUCCESS;
             return (0);
         }
@@ -110,6 +112,7 @@ int ft_http_server::run_once()
         last_error = errno;
         if (this->_non_blocking != false && (last_error == EAGAIN || last_error == EWOULDBLOCK))
         {
+            ft_errno = ER_SUCCESS;
             this->_error_code = ER_SUCCESS;
             return (0);
         }
@@ -296,6 +299,7 @@ int ft_http_server::run_once()
         return (1);
     }
     FT_CLOSE_SOCKET(client_socket);
+    ft_errno = ER_SUCCESS;
     this->_error_code = ER_SUCCESS;
     return (0);
 }

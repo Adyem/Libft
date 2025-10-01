@@ -148,8 +148,12 @@ template <typename ElementType>
 size_t ft_vector<ElementType>::size() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(this->_mutex.get_error());
         return (0);
+    }
     size_t s = this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (s);
 }
@@ -158,8 +162,12 @@ template <typename ElementType>
 size_t ft_vector<ElementType>::capacity() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(this->_mutex.get_error());
         return (0);
+    }
     size_t c = this->_capacity;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (c);
 }

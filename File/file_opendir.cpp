@@ -17,7 +17,8 @@ file_dirent *file_readdir(file_dir *directory_stream)
         return (ft_nullptr);
     }
     directory_entry = cmp_dir_read(directory_stream);
-    ft_errno = ER_SUCCESS;
+    if (directory_entry != ft_nullptr)
+        ft_errno = ER_SUCCESS;
     return (directory_entry);
 }
 
@@ -31,7 +32,8 @@ int file_closedir(file_dir *directory_stream)
         return (-1);
     }
     close_result = cmp_dir_close(directory_stream);
-    ft_errno = ER_SUCCESS;
+    if (close_result == 0)
+        ft_errno = ER_SUCCESS;
     return (close_result);
 }
 

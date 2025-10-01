@@ -110,6 +110,7 @@ quaternion  quaternion::normalize() const
     if (math_absdiff(length_value, 0.0) <= epsilon)
     {
         result.set_error(FT_EINVAL);
+        this->set_error(FT_EINVAL);
         return (result);
     }
     result._w = this->_w / length_value;
@@ -117,6 +118,7 @@ quaternion  quaternion::normalize() const
     result._y = this->_y / length_value;
     result._z = this->_z / length_value;
     result.set_error(ER_SUCCESS);
+    this->set_error(ER_SUCCESS);
     return (result);
 }
 

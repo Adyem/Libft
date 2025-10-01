@@ -240,6 +240,7 @@ void ft_variant<Types...>::emplace(T&& value)
     this->destroy();
     construct_at(reinterpret_cast<std::decay_t<T>*>(this->_data), std::forward<T>(value));
     this->_index = variant_index<std::decay_t<T>, Types...>::value;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -255,6 +256,7 @@ bool ft_variant<Types...>::holds_alternative() const
     }
     size_t idx = variant_index<T, Types...>::value;
     bool result = (this->_index == idx);
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (result);
 }
@@ -277,6 +279,7 @@ T& ft_variant<Types...>::get()
         return (default_instance);
     }
     T& ref = *reinterpret_cast<T*>(this->_data);
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (ref);
 }
@@ -299,6 +302,7 @@ const T& ft_variant<Types...>::get() const
         return (default_instance);
     }
     const T& ref = *reinterpret_cast<const T*>(this->_data);
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (ref);
 }
@@ -319,6 +323,7 @@ void ft_variant<Types...>::visit(Visitor&& vis)
         return ;
     }
     variant_visitor<0, Types...>::apply(this->_index, this->_data, std::forward<Visitor>(vis));
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -328,10 +333,11 @@ void ft_variant<Types...>::reset()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(this->_mutex.get_error());
         return ;
     }
     this->destroy();
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }

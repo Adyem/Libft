@@ -62,7 +62,10 @@ static bool json_string_exceeds_signed_long_long(const char *value)
 void json_item_refresh_numeric_state(json_item *item)
 {
     if (!item)
+    {
+        ft_errno = FT_EINVAL;
         return ;
+    }
     if (item->big_number)
     {
         delete item->big_number;
@@ -70,9 +73,15 @@ void json_item_refresh_numeric_state(json_item *item)
     }
     item->is_big_number = false;
     if (!item->value)
+    {
+        ft_errno = ER_SUCCESS;
         return ;
+    }
     if (json_string_exceeds_signed_long_long(item->value) == false)
+    {
+        ft_errno = ER_SUCCESS;
         return ;
+    }
     ft_big_number *allocated_number = new(std::nothrow) ft_big_number;
     if (!allocated_number)
     {
@@ -82,11 +91,15 @@ void json_item_refresh_numeric_state(json_item *item)
     allocated_number->assign(item->value);
     if (allocated_number->get_error() != ER_SUCCESS)
     {
+        int error_code = allocated_number->get_error();
+
         delete allocated_number;
+        ft_errno = error_code;
         return ;
     }
     item->big_number = allocated_number;
     item->is_big_number = true;
+    ft_errno = ER_SUCCESS;
     return ;
 }
 

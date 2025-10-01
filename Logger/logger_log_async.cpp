@@ -135,33 +135,65 @@ void ft_log_enable_async(bool enable)
 
 void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
 {
-    if (level < g_level || !fmt)
-        return ;
     char message_buffer[1024];
-    pf_vsnprintf(message_buffer, sizeof(message_buffer), fmt, args);
-
     char time_buffer[32];
+    char final_buffer[1200];
     t_time current_time;
     t_time_info time_info;
+    int length;
+    int queue_error;
+    int signal_result;
+    int unlock_result;
 
+    if (!fmt)
+    {
+        ft_errno = FT_EINVAL;
+        return ;
+    }
+    if (level < g_level)
+    {
+        ft_errno = ER_SUCCESS;
+        return ;
+    }
+    pf_vsnprintf(message_buffer, sizeof(message_buffer), fmt, args);
     current_time = time_now();
     time_local(current_time, &time_info);
     time_strftime(time_buffer, sizeof(time_buffer), "%Y-%m-%d %H:%M:%S", &time_info);
-
-    char final_buffer[1200];
-    int length;
-
     length = pf_snprintf(final_buffer, sizeof(final_buffer), "[%s] [%s] %s\n", time_buffer, ft_level_to_str(level), message_buffer);
     if (length <= 0)
+    {
+        ft_errno = FT_EINVAL;
         return ;
+    }
+    ft_string message(final_buffer);
+    if (message.get_error() != ER_SUCCESS)
+    {
+        ft_errno = message.get_error();
+        return ;
+    }
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
     {
         ft_errno = errno + ERRNO_OFFSET;
         return ;
     }
-    g_log_queue.enqueue(ft_string(final_buffer));
-    if (g_log_queue.get_error() == ER_SUCCESS)
-        pt_cond_signal(&g_queue_condition);
-    pthread_mutex_unlock(&g_condition_mutex);
+    g_log_queue.enqueue(message);
+    queue_error = g_log_queue.get_error();
+    signal_result = 0;
+    if (queue_error == ER_SUCCESS)
+        signal_result = pt_cond_signal(&g_queue_condition);
+    unlock_result = pthread_mutex_unlock(&g_condition_mutex);
+    if (unlock_result != 0)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
+        return ;
+    }
+    if (queue_error != ER_SUCCESS)
+    {
+        ft_errno = queue_error;
+        return ;
+    }
+    if (signal_result != 0)
+        return ;
+    ft_errno = ER_SUCCESS;
     return ;
 }

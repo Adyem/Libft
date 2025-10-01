@@ -60,10 +60,13 @@ ft_event_emitter<EventType, Args...>::ft_event_emitter(size_t initial_capacity)
     {
         this->_listeners = static_cast<Listener*>(cma_malloc(sizeof(Listener) * initial_capacity));
         if (this->_listeners == ft_nullptr)
+        {
             this->set_error(EVENT_EMITTER_ALLOC_FAIL);
-        else
-            this->_capacity = initial_capacity;
+            return ;
+        }
+        this->_capacity = initial_capacity;
     }
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -73,6 +76,7 @@ ft_event_emitter<EventType, Args...>::~ft_event_emitter()
     this->clear();
     if (this->_listeners != ft_nullptr)
         cma_free(this->_listeners);
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -154,6 +158,7 @@ bool ft_event_emitter<EventType, Args...>::ensure_capacity(size_t desired)
         cma_free(this->_listeners);
     this->_listeners = new_data;
     this->_capacity = new_capacity;
+    this->set_error(ER_SUCCESS);
     return (true);
 }
 
@@ -161,7 +166,10 @@ template <typename EventType, typename... Args>
 void ft_event_emitter<EventType, Args...>::on(const EventType& event, void (*callback)(Args...))
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
+    }
     if (!this->ensure_capacity(this->_size + 1))
     {
         this->_mutex.unlock(THREAD_ID);
@@ -169,6 +177,7 @@ void ft_event_emitter<EventType, Args...>::on(const EventType& event, void (*cal
     }
     construct_at(&this->_listeners[this->_size], Listener{event, callback});
     ++this->_size;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -177,7 +186,10 @@ template <typename EventType, typename... Args>
 void ft_event_emitter<EventType, Args...>::emit(const EventType& event, Args... args)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
+    }
     bool found = false;
     size_t listener_index = 0;
     while (listener_index < this->_size)
@@ -190,7 +202,12 @@ void ft_event_emitter<EventType, Args...>::emit(const EventType& event, Args... 
         ++listener_index;
     }
     if (!found)
+    {
         this->set_error(EVENT_EMITTER_NOT_FOUND);
+        this->_mutex.unlock(THREAD_ID);
+        return ;
+    }
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -199,7 +216,10 @@ template <typename EventType, typename... Args>
 void ft_event_emitter<EventType, Args...>::remove_listener(const EventType& event, void (*callback)(Args...))
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
+    }
     size_t listener_index = 0;
     while (listener_index < this->_size)
     {
@@ -214,6 +234,7 @@ void ft_event_emitter<EventType, Args...>::remove_listener(const EventType& even
                 ++shift_index;
             }
             --this->_size;
+            this->set_error(ER_SUCCESS);
             this->_mutex.unlock(THREAD_ID);
             return ;
         }
@@ -227,12 +248,14 @@ void ft_event_emitter<EventType, Args...>::remove_listener(const EventType& even
 template <typename EventType, typename... Args>
 size_t ft_event_emitter<EventType, Args...>::size() const
 {
+    const_cast<ft_event_emitter<EventType, Args...> *>(this)->set_error(ER_SUCCESS);
     return (this->_size);
 }
 
 template <typename EventType, typename... Args>
 bool ft_event_emitter<EventType, Args...>::empty() const
 {
+    const_cast<ft_event_emitter<EventType, Args...> *>(this)->set_error(ER_SUCCESS);
     return (this->_size == 0);
 }
 
@@ -252,7 +275,10 @@ template <typename EventType, typename... Args>
 void ft_event_emitter<EventType, Args...>::clear()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(PT_ERR_MUTEX_OWNER);
         return ;
+    }
     size_t listener_index = 0;
     while (listener_index < this->_size)
     {
@@ -260,6 +286,7 @@ void ft_event_emitter<EventType, Args...>::clear()
         ++listener_index;
     }
     this->_size = 0;
+    this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }

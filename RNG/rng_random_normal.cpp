@@ -1,5 +1,6 @@
 #include "rng.hpp"
 #include "rng_internal.hpp"
+#include "../Errno/errno.hpp"
 #include "../Math/math.hpp"
 
 float ft_random_normal(void)
@@ -13,11 +14,20 @@ float ft_random_normal(void)
 
     ft_init_srand();
     uniform_one = ft_random_float();
+    if (ft_errno != ER_SUCCESS)
+        return (0.0f);
     if (uniform_one < 0.0000000001f)
         uniform_one = 0.0000000001f;
     uniform_two = ft_random_float();
+    if (ft_errno != ER_SUCCESS)
+        return (0.0f);
     radius = static_cast<float>(math_sqrt(-2.0 * math_log(uniform_one)));
+    if (ft_errno != ER_SUCCESS)
+        return (0.0f);
     angle = 2.0f * pi_value * uniform_two;
     result = radius * static_cast<float>(math_cos(angle));
+    if (ft_errno != ER_SUCCESS)
+        return (0.0f);
+    ft_errno = ER_SUCCESS;
     return (result);
 }

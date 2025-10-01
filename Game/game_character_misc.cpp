@@ -1,14 +1,17 @@
 #include "game_character.hpp"
+#include "../Errno/errno.hpp"
 
 void ft_character::restore_physical_armor() noexcept
 {
     this->_current_physical_armor = this->_physical_armor;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 void ft_character::restore_magic_armor() noexcept
 {
     this->_current_magic_armor = this->_magic_armor;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -16,6 +19,7 @@ void ft_character::restore_armor() noexcept
 {
     this->restore_physical_armor();
     this->restore_magic_armor();
+    this->set_error(ER_SUCCESS);
     return ;
 }
 void ft_character::take_damage(long long damage, uint8_t type) noexcept
@@ -28,6 +32,7 @@ void ft_character::take_damage(long long damage, uint8_t type) noexcept
         this->take_damage_buffer(damage, type);
     else if (this->_damage_rule == FT_DAMAGE_RULE_MAGIC_SHIELD)
         this->take_damage_magic_shield(damage, type);
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -45,6 +50,7 @@ void ft_character::take_damage_flat(long long damage, uint8_t type) noexcept
     this->_hit_points = this->_hit_points - static_cast<int>(damage);
     if (this->_hit_points < 0)
         this->_hit_points = 0;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -68,6 +74,7 @@ void ft_character::take_damage_scaled(long long damage, uint8_t type) noexcept
     this->_hit_points = this->_hit_points - static_cast<int>(damage);
     if (this->_hit_points < 0)
         this->_hit_points = 0;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -113,6 +120,7 @@ void ft_character::take_damage_buffer(long long damage, uint8_t type) noexcept
     this->_hit_points = this->_hit_points - static_cast<int>(damage);
     if (this->_hit_points < 0)
         this->_hit_points = 0;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -157,6 +165,7 @@ void ft_character::take_damage_magic_shield(long long damage, uint8_t type) noex
     this->_hit_points = this->_hit_points - static_cast<int>(damage);
     if (this->_hit_points < 0)
         this->_hit_points = 0;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 void ft_character::move(int dx, int dy, int dz) noexcept
@@ -164,6 +173,7 @@ void ft_character::move(int dx, int dy, int dz) noexcept
     this->_x += dx;
     this->_y += dy;
     this->_z += dz;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 long long ft_character::apply_skill_modifiers(long long damage) const noexcept
@@ -186,6 +196,7 @@ long long ft_character::apply_skill_modifiers(long long damage) const noexcept
     }
     if (damage < 0)
         damage = 0;
+    this->set_error(ER_SUCCESS);
     return (damage);
 }
 
@@ -209,6 +220,7 @@ void ft_character::apply_modifier(const ft_item_modifier &mod, int sign) noexcep
         this->_presence += mod.value * sign;
     else if (mod.id == 8)
         this->_hit_points += mod.value * sign;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 

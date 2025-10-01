@@ -253,6 +253,7 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
         }
         ++override_index;
     }
+    ft_errno = ER_SUCCESS;
     return (base_config);
 }
 
