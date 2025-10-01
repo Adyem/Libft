@@ -1,4 +1,5 @@
 #include "math.hpp"
+#include "../Errno/errno.hpp"
 
 double math_cos(double value)
 {
@@ -24,5 +25,6 @@ double math_cos(double value)
         sign = -sign;
         iteration = iteration + 1;
     }
+    ft_errno = ER_SUCCESS;
     return (result);
 }
