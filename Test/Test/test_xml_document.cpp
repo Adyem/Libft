@@ -89,3 +89,44 @@ FT_TEST(test_xml_document_write_to_file_fwrite_failure_sets_errno_offset, "xml_d
     return (1);
 }
 
+FT_TEST(test_xml_document_load_from_string_malformed_sets_errno, "xml_document::load_from_string reports FT_EINVAL on malformed input")
+{
+    xml_document document;
+    int result;
+
+    ft_errno = ER_SUCCESS;
+    result = document.load_from_string("<root>");
+    FT_ASSERT_EQ(FT_EINVAL, result);
+    FT_ASSERT_EQ(FT_EINVAL, document.get_error());
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_xml_document_load_from_string_allocation_failure_sets_errno, "xml_document::load_from_string reports FT_EALLOC on allocation failure")
+{
+    xml_document document;
+    int result;
+
+    cma_set_alloc_limit(1);
+    ft_errno = ER_SUCCESS;
+    result = document.load_from_string("<root><child/></root>");
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_EALLOC, result);
+    FT_ASSERT_EQ(FT_EALLOC, document.get_error());
+    FT_ASSERT_EQ(FT_EALLOC, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_xml_document_load_from_string_success_clears_errno, "xml_document::load_from_string clears ft_errno on success")
+{
+    xml_document document;
+    int result;
+
+    ft_errno = FT_EINVAL;
+    result = document.load_from_string("<root/>");
+    FT_ASSERT_EQ(ER_SUCCESS, result);
+    FT_ASSERT_EQ(ER_SUCCESS, document.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
