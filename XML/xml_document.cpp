@@ -3,6 +3,7 @@
 #include "../Libft/libft.hpp"
 #include <cstdio>
 #include <cerrno>
+#include <new>
 
 static const char *skip_whitespace(const char *string)
 {
@@ -15,7 +16,10 @@ static char *duplicate_range(const char *start, size_t length)
 {
     char *copy = static_cast<char *>(cma_malloc(length + 1));
     if (!copy)
+    {
+        ft_errno = FT_EALLOC;
         return (ft_nullptr);
+    }
     size_t index = 0;
     while (index < length)
     {
@@ -73,20 +77,23 @@ static const char *parse_node(const char *string, xml_node **out_node)
 {
     string = skip_whitespace(string);
     if (!string || *string != '<')
+    {
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
+    }
     string++;
     const char *name_start = string;
     while (*string && *string != '>' && *string != ' ' && *string != '/')
         string++;
     size_t name_length = static_cast<size_t>(string - name_start);
     char *name = duplicate_range(name_start, name_length);
-    xml_node *node = new xml_node();
-    if (!node || !name)
+    if (!name)
+        return (ft_nullptr);
+    xml_node *node = new (std::nothrow) xml_node();
+    if (!node)
     {
-        if (node)
-            delete node;
-        if (name)
-            cma_free(name);
+        cma_free(name);
+        ft_errno = FT_EALLOC;
         return (ft_nullptr);
     }
     node->name = name;
@@ -95,6 +102,7 @@ static const char *parse_node(const char *string, xml_node **out_node)
     if (*string != '>')
     {
         delete node;
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
     }
     const char *tag_end = string;
@@ -118,6 +126,7 @@ static const char *parse_node(const char *string, xml_node **out_node)
     if (self_closing)
     {
         *out_node = node;
+        ft_errno = ER_SUCCESS;
         return (string);
     }
     const char *text_start = string;
@@ -145,10 +154,17 @@ static const char *parse_node(const char *string, xml_node **out_node)
             string++;
         size_t text_length = static_cast<size_t>(string - text_start);
         node->text = duplicate_range(text_start, text_length);
+        if (!node->text && text_length > 0)
+        {
+            delete node;
+            ft_errno = FT_EALLOC;
+            return (ft_nullptr);
+        }
     }
     if (*string != '<' || string[1] != '/')
     {
         delete node;
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
     }
     string += 2;
@@ -157,10 +173,12 @@ static const char *parse_node(const char *string, xml_node **out_node)
     if (*string != '>')
     {
         delete node;
+        ft_errno = FT_EINVAL;
         return (ft_nullptr);
     }
     string++;
     *out_node = node;
+    ft_errno = ER_SUCCESS;
     return (string);
 }
 
@@ -200,49 +218,68 @@ int xml_document::load_from_string(const char *xml) noexcept
     const char *end = parse_node(xml, &node);
     if (!end)
     {
-        this->set_error(FT_EINVAL);
-        return (FT_EINVAL);
+        int error_code = ft_errno ? ft_errno : FT_EINVAL;
+        this->set_error(error_code);
+        return (error_code);
     }
     this->_root = node;
+    this->set_error(ER_SUCCESS);
     return (ER_SUCCESS);
 }
 
 static int read_file_content(const char *file_path, char **out_content)
 {
+    errno = 0;
     FILE *file = std::fopen(file_path, "rb");
     if (!file)
-        return (FT_EINVAL);
+    {
+        int error_code = errno ? errno + ERRNO_OFFSET : FT_EINVAL;
+        ft_errno = error_code;
+        return (error_code);
+    }
+    errno = 0;
     if (std::fseek(file, 0, SEEK_END) != 0)
     {
+        int error_code = errno ? errno + ERRNO_OFFSET : FT_EINVAL;
         std::fclose(file);
-        return (FT_EINVAL);
+        ft_errno = error_code;
+        return (error_code);
     }
     long size = std::ftell(file);
     if (size <= 0)
     {
         std::fclose(file);
+        ft_errno = FT_EINVAL;
         return (FT_EINVAL);
     }
+    errno = 0;
     if (std::fseek(file, 0, SEEK_SET) != 0)
     {
+        int error_code = errno ? errno + ERRNO_OFFSET : FT_EINVAL;
         std::fclose(file);
-        return (FT_EINVAL);
+        ft_errno = error_code;
+        return (error_code);
     }
     char *buffer = static_cast<char *>(cma_malloc(static_cast<size_t>(size) + 1));
     if (!buffer)
     {
         std::fclose(file);
-        return (CMA_BAD_ALLOC);
+        ft_errno = FT_EALLOC;
+        return (FT_EALLOC);
     }
+    errno = 0;
     size_t read_size = std::fread(buffer, 1, static_cast<size_t>(size), file);
     std::fclose(file);
     if (read_size != static_cast<size_t>(size))
     {
         cma_free(buffer);
-        return (FT_EINVAL);
+        int error_code = errno ? errno + ERRNO_OFFSET : FT_EINVAL;
+        ft_errno = error_code;
+        return (error_code);
     }
     buffer[size] = '\0';
     *out_content = buffer;
+    ft_errno = ER_SUCCESS;
     return (ER_SUCCESS);
 }
 
@@ -257,6 +294,8 @@ int xml_document::load_from_file(const char *file_path) noexcept
     }
     result = this->load_from_string(content);
     cma_free(content);
+    if (result == ER_SUCCESS)
+        this->set_error(ER_SUCCESS);
     return (result);
 }
 
