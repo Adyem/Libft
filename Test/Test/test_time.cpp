@@ -362,6 +362,21 @@ FT_TEST(test_time_ms_failure, "ft_time_ms reports gettimeofday failure")
     return (1);
 }
 
+FT_TEST(test_time_ms_failure_without_errno, "ft_time_ms falls back to FT_ETERM when errno missing")
+{
+    int64_t result;
+
+    g_time_force_failure = true;
+    g_time_failure_errno = 0;
+    errno = 0;
+    ft_errno = ER_SUCCESS;
+    result = ft_time_ms();
+    g_time_force_failure = false;
+    FT_ASSERT_EQ(-1, result);
+    FT_ASSERT_EQ(FT_ETERM, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_time_parse_iso8601_timezone_independent, "time_parse_iso8601 handles UTC Z regardless of TZ")
 {
     char *original_timezone;

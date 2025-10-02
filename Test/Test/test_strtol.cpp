@@ -180,3 +180,31 @@ FT_TEST(test_strtol_mixed_case_digits_custom_base,
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_strtol_rejects_at_symbol_in_high_base,
+        "ft_strtol rejects characters preceding '0' even in high bases")
+{
+    char *end_pointer;
+    long parsed_value;
+
+    ft_errno = FT_EINVAL;
+    parsed_value = ft_strtol("@123", &end_pointer, 36);
+    FT_ASSERT_EQ(0L, parsed_value);
+    FT_ASSERT_EQ('@', *end_pointer);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strtol_stops_before_brace_character,
+        "ft_strtol stops parsing when encountering characters beyond 'z'")
+{
+    char *end_pointer;
+    long parsed_value;
+
+    ft_errno = FT_EINVAL;
+    parsed_value = ft_strtol("Zz{", &end_pointer, 36);
+    FT_ASSERT_EQ(1295L, parsed_value);
+    FT_ASSERT_EQ('{', *end_pointer);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
