@@ -5,6 +5,7 @@
 #include "../../Compatebility/compatebility_internal.hpp"
 #include "../Compatebility/compatebility_system_test_hooks.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
+#include <cstddef>
 #include <cstdio>
 #if defined(_WIN32) || defined(_WIN64)
 # include <windows.h>
@@ -37,6 +38,43 @@ static void create_cross_device_test_file(const char *path)
     return ;
 }
 
+static void build_path_from_template(char *destination, const char *path_template, char separator)
+{
+    size_t index;
+
+    index = 0;
+    while (path_template[index] != '\0')
+    {
+        if (path_template[index] == '/')
+            destination[index] = separator;
+        else
+            destination[index] = path_template[index];
+        ++index;
+    }
+    destination[index] = '\0';
+    return ;
+}
+
+static void build_native_path(char *destination, const char *path_template)
+{
+    build_path_from_template(destination, path_template, cmp_path_separator());
+    return ;
+}
+
+static void build_alternate_separator_path(char *destination, const char *path_template)
+{
+    char path_separator;
+    char alternate_separator;
+
+    path_separator = cmp_path_separator();
+    if (path_separator == '/')
+        alternate_separator = '\\';
+    else
+        alternate_separator = '/';
+    build_path_from_template(destination, path_template, alternate_separator);
+    return ;
+}
+
 FT_TEST(test_file_path_join_prefers_absolute_right, "file_path_join returns absolute right operand")
 {
     ft_string result = file_path_join("/etc", "/var/log");
@@ -52,6 +90,64 @@ FT_TEST(test_file_path_join_keeps_drive_letter, "file_path_join keeps Windows dr
 
     FT_ASSERT_EQ(ER_SUCCESS, result.get_error());
     FT_ASSERT_EQ(0, ft_strcmp(result.c_str(), "C:/temp"));
+    return (1);
+}
+
+FT_TEST(test_file_path_normalize_collapses_duplicates, "file_path_normalize collapses duplicate separators")
+{
+    char path_buffer[64];
+    char expected_buffer[64];
+    ft_string normalized;
+
+    build_alternate_separator_path(path_buffer, "/folder///sub///file.txt");
+    normalized = file_path_normalize(path_buffer);
+    FT_ASSERT_EQ(ER_SUCCESS, normalized.get_error());
+    build_native_path(expected_buffer, "/folder/sub/file.txt");
+    FT_ASSERT_EQ(0, ft_strcmp(normalized.c_str(), expected_buffer));
+    return (1);
+}
+
+FT_TEST(test_file_path_normalize_preserves_trailing_separator, "file_path_normalize preserves trailing separators")
+{
+    char path_buffer[64];
+    char expected_buffer[64];
+    ft_string normalized;
+
+    build_alternate_separator_path(path_buffer, "/folder/subdir///");
+    normalized = file_path_normalize(path_buffer);
+    FT_ASSERT_EQ(ER_SUCCESS, normalized.get_error());
+    build_native_path(expected_buffer, "/folder/subdir/");
+    FT_ASSERT_EQ(0, ft_strcmp(normalized.c_str(), expected_buffer));
+    return (1);
+}
+
+FT_TEST(test_file_path_join_appends_missing_separator, "file_path_join inserts missing separator between components")
+{
+    char left_buffer[64];
+    char right_buffer[64];
+    char expected_buffer[128];
+    ft_string result;
+
+    build_alternate_separator_path(left_buffer, "/var//log");
+    build_alternate_separator_path(right_buffer, "nginx///access.log");
+    result = file_path_join(left_buffer, right_buffer);
+    FT_ASSERT_EQ(ER_SUCCESS, result.get_error());
+    build_native_path(expected_buffer, "/var/log/nginx/access.log");
+    FT_ASSERT_EQ(0, ft_strcmp(result.c_str(), expected_buffer));
+    return (1);
+}
+
+FT_TEST(test_file_path_join_with_empty_left, "file_path_join handles empty left operand")
+{
+    char right_buffer[64];
+    char expected_buffer[64];
+    ft_string result;
+
+    build_alternate_separator_path(right_buffer, "folder//file.txt");
+    result = file_path_join("", right_buffer);
+    FT_ASSERT_EQ(ER_SUCCESS, result.get_error());
+    build_native_path(expected_buffer, "folder/file.txt");
+    FT_ASSERT_EQ(0, ft_strcmp(result.c_str(), expected_buffer));
     return (1);
 }
 
