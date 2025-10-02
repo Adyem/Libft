@@ -19,27 +19,92 @@ static pthread_t g_log_thread;
 static void ft_log_process_message(const ft_string &message)
 {
     size_t sink_count;
+    ft_vector<s_log_sink> sinks_snapshot;
+    int    final_error;
 
+    g_sinks_mutex.lock(THREAD_ID);
+    if (g_sinks_mutex.get_error() != ER_SUCCESS)
+    {
+        return ;
+    }
     sink_count = g_sinks.size();
+    if (g_sinks.get_error() != ER_SUCCESS)
+    {
+        final_error = g_sinks.get_error();
+        g_sinks_mutex.unlock(THREAD_ID);
+        if (g_sinks_mutex.get_error() != ER_SUCCESS)
+        {
+            return ;
+        }
+        ft_errno = final_error;
+        return ;
+    }
     if (sink_count == 0)
     {
+        g_sinks_mutex.unlock(THREAD_ID);
+        if (g_sinks_mutex.get_error() != ER_SUCCESS)
+        {
+            return ;
+        }
         ssize_t write_result;
 
         write_result = write(1, message.c_str(), message.size());
         (void)write_result;
+        return ;
     }
-    else
-    {
-        size_t index;
+    size_t index;
 
-        index = 0;
-        while (index < sink_count)
+    index = 0;
+    while (index < sink_count)
+    {
+        s_log_sink entry;
+
+        entry = g_sinks[index];
+        if (g_sinks.get_error() != ER_SUCCESS)
         {
-            g_sinks[index].function(message.c_str(), g_sinks[index].user_data);
-            if (g_sinks[index].function == ft_file_sink)
-                ft_log_rotate(static_cast<s_file_sink *>(g_sinks[index].user_data));
-            index++;
+            final_error = g_sinks.get_error();
+            g_sinks_mutex.unlock(THREAD_ID);
+            if (g_sinks_mutex.get_error() != ER_SUCCESS)
+            {
+                return ;
+            }
+            ft_errno = final_error;
+            return ;
         }
+        sinks_snapshot.push_back(entry);
+        if (sinks_snapshot.get_error() != ER_SUCCESS)
+        {
+            final_error = sinks_snapshot.get_error();
+            g_sinks_mutex.unlock(THREAD_ID);
+            if (g_sinks_mutex.get_error() != ER_SUCCESS)
+            {
+                return ;
+            }
+            ft_errno = final_error;
+            return ;
+        }
+        index++;
+    }
+    g_sinks_mutex.unlock(THREAD_ID);
+    if (g_sinks_mutex.get_error() != ER_SUCCESS)
+    {
+        return ;
+    }
+    index = 0;
+    while (index < sink_count)
+    {
+        s_log_sink entry;
+
+        entry = sinks_snapshot[index];
+        if (sinks_snapshot.get_error() != ER_SUCCESS)
+        {
+            ft_errno = sinks_snapshot.get_error();
+            return ;
+        }
+        entry.function(message.c_str(), entry.user_data);
+        if (entry.function == ft_file_sink)
+            ft_log_rotate(static_cast<s_file_sink *>(entry.user_data));
+        index++;
     }
     return ;
 }
