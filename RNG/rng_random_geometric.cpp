@@ -1,3 +1,5 @@
+#include <limits>
+
 #include "rng.hpp"
 #include "rng_internal.hpp"
 #include "../Errno/errno.hpp"
@@ -18,7 +20,8 @@ int ft_random_geometric(double success_probability)
         ft_errno = FT_EINVAL;
         return (0);
     }
-    if (success_probability == 1.0)
+    const double probability_epsilon = std::numeric_limits<double>::epsilon();
+    if ((1.0 - success_probability) <= probability_epsilon)
     {
         ft_errno = ER_SUCCESS;
         return (1);
