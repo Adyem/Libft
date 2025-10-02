@@ -22,6 +22,14 @@ FT_TEST(test_ft_getenv_empty_name_sets_errno, "ft_getenv rejects empty names")
     return (1);
 }
 
+FT_TEST(test_ft_getenv_null_name_sets_errno, "ft_getenv rejects null names")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(ft_nullptr, ft_getenv(ft_nullptr));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_ft_getenv_missing_clears_errno, "ft_getenv clears errno when variable absent")
 {
     const char *variable_name;
@@ -136,6 +144,14 @@ FT_TEST(test_ft_unsetenv_rejects_equals_sign, "ft_unsetenv rejects names contain
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, ft_unsetenv("INVALID=NAME"));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_ft_unsetenv_null_name_sets_errno, "ft_unsetenv rejects null names")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(-1, ft_unsetenv(ft_nullptr));
     FT_ASSERT_EQ(FT_EINVAL, ft_errno);
     return (1);
 }

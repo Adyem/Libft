@@ -155,3 +155,31 @@ FT_TEST(test_strtoul_mixed_case_digits_custom_base,
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_strtoul_rejects_at_symbol_in_high_base,
+        "ft_strtoul rejects characters that precede '0' in the digit table")
+{
+    char *end_pointer;
+    unsigned long parsed_value;
+
+    ft_errno = FT_EINVAL;
+    parsed_value = ft_strtoul("@777", &end_pointer, 36);
+    FT_ASSERT_EQ(0UL, parsed_value);
+    FT_ASSERT_EQ('@', *end_pointer);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strtoul_stops_before_brace_character,
+        "ft_strtoul stops parsing when encountering characters beyond 'z'")
+{
+    char *end_pointer;
+    unsigned long parsed_value;
+
+    ft_errno = FT_EINVAL;
+    parsed_value = ft_strtoul("Zz{", &end_pointer, 36);
+    FT_ASSERT_EQ(static_cast<unsigned long>(1295), parsed_value);
+    FT_ASSERT_EQ('{', *end_pointer);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
