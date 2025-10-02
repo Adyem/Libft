@@ -19,6 +19,8 @@ static int g_mock_ssl_write_call_count = 0;
 static int g_mock_ssl_write_last_length = 0;
 static int g_mock_ssl_read_call_count = 0;
 static int g_mock_ssl_read_last_length = 0;
+static int g_mock_ssl_get_error_override_active = 0;
+static int g_mock_ssl_get_error_value = SSL_ERROR_SYSCALL;
 
 extern "C"
 {
@@ -26,10 +28,15 @@ extern "C"
     {
         (void)ssl;
         (void)buffer;
-        if (g_mock_ssl_write_should_fail)
+        if (g_mock_ssl_write_should_fail == 1)
         {
             g_mock_ssl_write_should_fail = 0;
             return (-1);
+        }
+        if (g_mock_ssl_write_should_fail == 2)
+        {
+            g_mock_ssl_write_should_fail = 0;
+            return (0);
         }
         g_mock_ssl_write_call_count++;
         g_mock_ssl_write_last_length = length;
@@ -40,14 +47,28 @@ extern "C"
     {
         (void)ssl;
         (void)buffer;
-        if (g_mock_ssl_read_should_fail)
+        if (g_mock_ssl_read_should_fail == 1)
         {
             g_mock_ssl_read_should_fail = 0;
             return (-1);
         }
+        if (g_mock_ssl_read_should_fail == 2)
+        {
+            g_mock_ssl_read_should_fail = 0;
+            return (0);
+        }
         g_mock_ssl_read_call_count++;
         g_mock_ssl_read_last_length = length;
         return (length);
+    }
+
+    int SSL_get_error(const SSL *ssl, int return_code)
+    {
+        (void)ssl;
+        (void)return_code;
+        if (g_mock_ssl_get_error_override_active)
+            return (g_mock_ssl_get_error_value);
+        return (SSL_ERROR_SYSCALL);
     }
 }
 
@@ -80,6 +101,109 @@ FT_TEST(test_ssl_read_rejects_oversize_length, "nw_ssl_read rejects oversize len
     oversize_length = oversize_length + 1;
     result = nw_ssl_read(reinterpret_cast<SSL *>(0x1), buffer, oversize_length);
     if (result >= 0)
+        return (0);
+    if (g_mock_ssl_read_call_count != 0)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_ssl_write_handles_want_read, "nw_ssl_write handles SSL_ERROR_WANT_READ")
+{
+    ssize_t result;
+
+    g_mock_ssl_write_call_count = 0;
+    g_mock_ssl_write_should_fail = 1;
+    g_mock_ssl_get_error_override_active = 1;
+    g_mock_ssl_get_error_value = SSL_ERROR_WANT_READ;
+    ft_errno = ER_SUCCESS;
+    result = nw_ssl_write(reinterpret_cast<SSL *>(0x1), "data", 4);
+    g_mock_ssl_get_error_override_active = 0;
+    if (result != 0)
+        return (0);
+    if (ft_errno != SSL_WANT_READ)
+        return (0);
+    if (g_mock_ssl_write_call_count != 0)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_ssl_write_handles_want_write, "nw_ssl_write handles SSL_ERROR_WANT_WRITE")
+{
+    ssize_t result;
+
+    g_mock_ssl_write_call_count = 0;
+    g_mock_ssl_write_should_fail = 1;
+    g_mock_ssl_get_error_override_active = 1;
+    g_mock_ssl_get_error_value = SSL_ERROR_WANT_WRITE;
+    ft_errno = ER_SUCCESS;
+    result = nw_ssl_write(reinterpret_cast<SSL *>(0x1), "data", 4);
+    g_mock_ssl_get_error_override_active = 0;
+    if (result != 0)
+        return (0);
+    if (ft_errno != SSL_WANT_WRITE)
+        return (0);
+    if (g_mock_ssl_write_call_count != 0)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_ssl_read_handles_want_read, "nw_ssl_read handles SSL_ERROR_WANT_READ")
+{
+    ssize_t result;
+    char buffer[8];
+
+    g_mock_ssl_read_call_count = 0;
+    g_mock_ssl_read_should_fail = 1;
+    g_mock_ssl_get_error_override_active = 1;
+    g_mock_ssl_get_error_value = SSL_ERROR_WANT_READ;
+    ft_errno = ER_SUCCESS;
+    result = nw_ssl_read(reinterpret_cast<SSL *>(0x1), buffer, sizeof(buffer));
+    g_mock_ssl_get_error_override_active = 0;
+    if (result != 0)
+        return (0);
+    if (ft_errno != SSL_WANT_READ)
+        return (0);
+    if (g_mock_ssl_read_call_count != 0)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_ssl_read_handles_zero_return, "nw_ssl_read handles SSL_ERROR_ZERO_RETURN")
+{
+    ssize_t result;
+    char buffer[8];
+
+    g_mock_ssl_read_call_count = 0;
+    g_mock_ssl_read_should_fail = 2;
+    g_mock_ssl_get_error_override_active = 1;
+    g_mock_ssl_get_error_value = SSL_ERROR_ZERO_RETURN;
+    ft_errno = ER_SUCCESS;
+    result = nw_ssl_read(reinterpret_cast<SSL *>(0x1), buffer, sizeof(buffer));
+    g_mock_ssl_get_error_override_active = 0;
+    if (result != 0)
+        return (0);
+    if (ft_errno != SSL_ZERO_RETURN)
+        return (0);
+    if (g_mock_ssl_read_call_count != 0)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_ssl_read_handles_syscall_error, "nw_ssl_read handles SSL_ERROR_SYSCALL")
+{
+    ssize_t result;
+    char buffer[8];
+
+    g_mock_ssl_read_call_count = 0;
+    g_mock_ssl_read_should_fail = 1;
+    g_mock_ssl_get_error_override_active = 1;
+    g_mock_ssl_get_error_value = SSL_ERROR_SYSCALL;
+    ft_errno = ER_SUCCESS;
+    result = nw_ssl_read(reinterpret_cast<SSL *>(0x1), buffer, sizeof(buffer));
+    g_mock_ssl_get_error_override_active = 0;
+    if (result >= 0)
+        return (0);
+    if (ft_errno != SSL_SYSCALL_ERROR)
         return (0);
     if (g_mock_ssl_read_call_count != 0)
         return (0);
