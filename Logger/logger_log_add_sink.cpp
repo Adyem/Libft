@@ -1,5 +1,6 @@
 #include "logger_internal.hpp"
 #include <unistd.h>
+#include <cerrno>
 #include "../Printf/printf.hpp"
 
 int ft_log_add_sink(t_log_sink sink, void *user_data)
@@ -10,15 +11,34 @@ int ft_log_add_sink(t_log_sink sink, void *user_data)
         return (-1);
     }
     s_log_sink entry;
+    int final_error;
+
+    g_sinks_mutex.lock(THREAD_ID);
+    if (g_sinks_mutex.get_error() != ER_SUCCESS)
+    {
+        return (-1);
+    }
     entry.function = sink;
     entry.user_data = user_data;
     g_sinks.push_back(entry);
     if (g_sinks.get_error() != ER_SUCCESS)
     {
-        ft_errno = g_sinks.get_error();
+        final_error = g_sinks.get_error();
+        g_sinks_mutex.unlock(THREAD_ID);
+        if (g_sinks_mutex.get_error() != ER_SUCCESS)
+        {
+            return (-1);
+        }
+        ft_errno = final_error;
         return (-1);
     }
-    ft_errno = ER_SUCCESS;
+    final_error = ER_SUCCESS;
+    g_sinks_mutex.unlock(THREAD_ID);
+    if (g_sinks_mutex.get_error() != ER_SUCCESS)
+    {
+        return (-1);
+    }
+    ft_errno = final_error;
     return (0);
 }
 
