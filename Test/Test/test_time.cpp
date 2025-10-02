@@ -4,6 +4,7 @@
 #include "../../Compatebility/compatebility_internal.hpp"
 #include "../../CPP_class/class_string_class.hpp"
 #include "../../Time/time.hpp"
+#include "../../Time/fps.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../PThread/mutex.hpp"
 #include <chrono>
@@ -569,5 +570,105 @@ FT_TEST(test_time_sleep_handles_large_second_values, "time_sleep splits long del
     FT_ASSERT_EQ(static_cast<size_t>(2), call_count);
     FT_ASSERT_EQ(static_cast<unsigned int>(UINT_MAX), g_time_sleep_calls[0]);
     FT_ASSERT_EQ(static_cast<unsigned int>(705), g_time_sleep_calls[1]);
+    return (1);
+}
+
+FT_TEST(test_time_duration_ms_create_preserves_value, "time_duration_ms_create stores the provided milliseconds")
+{
+    t_duration_milliseconds duration;
+
+    duration = time_duration_ms_create(123456789LL);
+    FT_ASSERT_EQ(123456789LL, duration.milliseconds);
+    return (1);
+}
+
+FT_TEST(test_time_duration_ms_create_accepts_negative_values, "time_duration_ms_create keeps negative inputs unchanged")
+{
+    t_duration_milliseconds duration;
+
+    duration = time_duration_ms_create(-3500LL);
+    FT_ASSERT_EQ(-3500LL, duration.milliseconds);
+    return (1);
+}
+
+FT_TEST(test_time_fps_constructor_rejects_low_rates, "time_fps constructor enforces the minimum frame rate")
+{
+    time_fps controller(10);
+
+    FT_ASSERT_EQ(FT_EINVAL, controller.get_error());
+    FT_ASSERT_EQ(0L, controller.get_frames_per_second());
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_EINVAL, controller.get_error());
+    return (1);
+}
+
+FT_TEST(test_time_fps_constructor_accepts_valid_rate, "time_fps stores valid frame rates and clears errno")
+{
+    time_fps controller(60);
+    long frames_per_second;
+
+    frames_per_second = controller.get_frames_per_second();
+    FT_ASSERT_EQ(60L, frames_per_second);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, controller.get_error());
+    return (1);
+}
+
+FT_TEST(test_time_fps_set_frames_per_second_updates_rate, "time_fps set_frames_per_second updates pacing state")
+{
+    time_fps controller(30);
+    int update_result;
+
+    update_result = controller.set_frames_per_second(48);
+    FT_ASSERT_EQ(0, update_result);
+    FT_ASSERT_EQ(48L, controller.get_frames_per_second());
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, controller.get_error());
+    return (1);
+}
+
+FT_TEST(test_time_fps_set_frames_per_second_rejects_low_value, "time_fps set_frames_per_second validates inputs")
+{
+    time_fps controller(30);
+    int update_result;
+
+    update_result = controller.set_frames_per_second(15);
+    FT_ASSERT_EQ(1, update_result);
+    FT_ASSERT_EQ(FT_EINVAL, controller.get_error());
+    FT_ASSERT_EQ(0L, controller.get_frames_per_second());
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_EINVAL, controller.get_error());
+    return (1);
+}
+
+FT_TEST(test_time_fps_sleep_to_next_frame_uses_sleep_ms, "time_fps sleep_to_next_frame waits for the remaining frame time")
+{
+    time_fps controller(40);
+    unsigned int sleep_duration;
+
+    g_time_sleep_calls.clear();
+    g_time_sleep_capture_enabled = true;
+    controller.sleep_to_next_frame();
+    controller.sleep_to_next_frame();
+    g_time_sleep_capture_enabled = false;
+    FT_ASSERT(!g_time_sleep_calls.empty());
+    sleep_duration = g_time_sleep_calls.back();
+    FT_ASSERT(sleep_duration > 0U);
+    FT_ASSERT(sleep_duration <= 25U);
+    FT_ASSERT_EQ(ER_SUCCESS, controller.get_error());
+    return (1);
+}
+
+FT_TEST(test_time_fps_sleep_to_next_frame_handles_invalid_state, "time_fps sleep_to_next_frame reports errors when pacing is invalid")
+{
+    time_fps controller(10);
+
+    g_time_sleep_calls.clear();
+    g_time_sleep_capture_enabled = true;
+    controller.sleep_to_next_frame();
+    g_time_sleep_capture_enabled = false;
+    FT_ASSERT(g_time_sleep_calls.empty());
+    FT_ASSERT_EQ(FT_EINVAL, controller.get_error());
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
     return (1);
 }
