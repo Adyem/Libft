@@ -1,3 +1,8 @@
 #include "errno.hpp"
 
-thread_local int ft_errno = ER_SUCCESS;
+int &ft_errno_reference(void)
+{
+    static thread_local int thread_errno = ER_SUCCESS;
+
+    return (thread_errno);
+}
