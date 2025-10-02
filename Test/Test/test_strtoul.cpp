@@ -127,3 +127,31 @@ FT_TEST(test_strtoul_null_input, "ft_strtoul null input sets errno and end point
     FT_ASSERT_EQ(ft_nullptr, end_pointer);
     return (1);
 }
+
+FT_TEST(test_strtoul_base_eight_rejects_invalid_digit,
+        "ft_strtoul stops consuming digits outside the specified base")
+{
+    char *end_pointer;
+    unsigned long parsed_value;
+
+    ft_errno = FT_EINVAL;
+    parsed_value = ft_strtoul("0778", &end_pointer, 8);
+    FT_ASSERT_EQ(static_cast<unsigned long>(63), parsed_value);
+    FT_ASSERT_EQ('8', *end_pointer);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strtoul_mixed_case_digits_custom_base,
+        "ft_strtoul accepts mixed-case alphabetic digits within range")
+{
+    char *end_pointer;
+    unsigned long parsed_value;
+
+    ft_errno = FT_EINVAL;
+    parsed_value = ft_strtoul("gF0", &end_pointer, 17);
+    FT_ASSERT_EQ(static_cast<unsigned long>(4879), parsed_value);
+    FT_ASSERT_EQ('\0', *end_pointer);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

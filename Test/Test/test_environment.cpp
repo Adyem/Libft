@@ -98,6 +98,40 @@ FT_TEST(test_ft_setenv_success_resets_errno, "ft_setenv stores value and clears 
     return (1);
 }
 
+FT_TEST(test_ft_setenv_overwrite_disabled_preserves_existing, "ft_setenv leaves value unchanged when overwrite is zero")
+{
+    const char *variable_name;
+    char *value;
+
+    variable_name = "LIBFT_TEST_SETENV_NO_OVERWRITE";
+    FT_ASSERT_EQ(0, ft_setenv(variable_name, "initial", 1));
+    ft_errno = FT_ETERM;
+    FT_ASSERT_EQ(0, ft_setenv(variable_name, "replacement", 0));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    value = ft_getenv(variable_name);
+    FT_ASSERT(value != ft_nullptr);
+    FT_ASSERT_EQ(0, std::strcmp(value, "initial"));
+    FT_ASSERT_EQ(0, ft_unsetenv(variable_name));
+    return (1);
+}
+
+FT_TEST(test_ft_setenv_overwrite_disabled_creates_variable, "ft_setenv creates variable when overwrite is zero and missing")
+{
+    const char *variable_name;
+    char *value;
+
+    variable_name = "LIBFT_TEST_SETENV_CREATE_NO_OVERWRITE";
+    ft_unsetenv(variable_name);
+    ft_errno = FT_ETERM;
+    FT_ASSERT_EQ(0, ft_setenv(variable_name, "created", 0));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    value = ft_getenv(variable_name);
+    FT_ASSERT(value != ft_nullptr);
+    FT_ASSERT_EQ(0, std::strcmp(value, "created"));
+    FT_ASSERT_EQ(0, ft_unsetenv(variable_name));
+    return (1);
+}
+
 FT_TEST(test_ft_unsetenv_rejects_equals_sign, "ft_unsetenv rejects names containing equals")
 {
     ft_errno = ER_SUCCESS;
