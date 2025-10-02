@@ -152,3 +152,31 @@ FT_TEST(test_strtol_null_input, "ft_strtol null input sets errno and end pointer
     FT_ASSERT_EQ(ft_nullptr, end_pointer);
     return (1);
 }
+
+FT_TEST(test_strtol_base_two_rejects_invalid_digit,
+        "ft_strtol stops parsing when encountering digits beyond the base")
+{
+    char *end_pointer;
+    long parsed_value;
+
+    ft_errno = FT_EINVAL;
+    parsed_value = ft_strtol("10102", &end_pointer, 2);
+    FT_ASSERT_EQ(10L, parsed_value);
+    FT_ASSERT_EQ('2', *end_pointer);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strtol_mixed_case_digits_custom_base,
+        "ft_strtol accepts mixed-case digits for bases above ten")
+{
+    char *end_pointer;
+    long parsed_value;
+
+    ft_errno = FT_EINVAL;
+    parsed_value = ft_strtol("aB19", &end_pointer, 20);
+    FT_ASSERT_EQ(84429L, parsed_value);
+    FT_ASSERT_EQ('\0', *end_pointer);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

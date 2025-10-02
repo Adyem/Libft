@@ -3,6 +3,7 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../Libft/libft.hpp"
 #include "../../Errno/errno.hpp"
+#include "../../CPP_class/class_nullptr.hpp"
 #include <cerrno>
 #include <cstdlib>
 #include <fcntl.h>
@@ -99,6 +100,83 @@ FT_TEST(test_logger_rotate_success_clears_errno, "ft_log_rotate clears errno aft
     close(sink.fd);
     unlink(template_path);
     unlink(rotated_path.c_str());
+    return (1);
+}
+
+FT_TEST(test_ft_log_set_level_updates_global_threshold, "ft_log_set_level updates g_level and clears errno")
+{
+    t_log_level previous_level;
+    int         previous_errno_value;
+
+    previous_level = g_level;
+    previous_errno_value = ft_errno;
+    ft_errno = FT_EINVAL;
+    ft_log_set_level(LOG_LEVEL_ERROR);
+    FT_ASSERT_EQ(LOG_LEVEL_ERROR, g_level);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    g_level = previous_level;
+    ft_errno = previous_errno_value;
+    return (1);
+}
+
+FT_TEST(test_ft_log_alloc_logging_without_global_logger, "ft_log_set_alloc_logging handles missing global logger")
+{
+    ft_logger *previous_logger;
+    int         previous_errno_value;
+
+    previous_logger = g_logger;
+    FT_ASSERT(previous_logger == ft_nullptr);
+    g_logger = ft_nullptr;
+    previous_errno_value = ft_errno;
+    ft_errno = FT_EINVAL;
+    ft_log_set_alloc_logging(true);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(false, ft_log_get_alloc_logging());
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    g_logger = previous_logger;
+    ft_errno = previous_errno_value;
+    return (1);
+}
+
+FT_TEST(test_ft_log_global_helpers_forward_to_logger, "ft_log_* helpers forward to the active logger instance")
+{
+    ft_logger  *previous_logger;
+    int         previous_errno_value;
+
+    previous_logger = g_logger;
+    FT_ASSERT(previous_logger == ft_nullptr);
+    previous_errno_value = ft_errno;
+    {
+        ft_logger logger_instance;
+
+        logger_instance.set_global();
+        ft_errno = FT_EINVAL;
+        ft_log_set_alloc_logging(true);
+        FT_ASSERT_EQ(true, logger_instance.get_alloc_logging());
+        FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+
+        ft_errno = FT_EINVAL;
+        FT_ASSERT_EQ(true, ft_log_get_alloc_logging());
+        FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+
+        ft_errno = FT_EINVAL;
+        ft_log_set_api_logging(true);
+        FT_ASSERT_EQ(true, logger_instance.get_api_logging());
+        FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+
+        ft_errno = FT_EINVAL;
+        FT_ASSERT_EQ(true, ft_log_get_api_logging());
+        FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+
+        ft_log_set_alloc_logging(false);
+        FT_ASSERT_EQ(false, logger_instance.get_alloc_logging());
+        ft_log_set_api_logging(false);
+        FT_ASSERT_EQ(false, logger_instance.get_api_logging());
+
+        g_logger = previous_logger;
+    }
+    ft_errno = previous_errno_value;
     return (1);
 }
 
