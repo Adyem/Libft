@@ -14,7 +14,9 @@ FT_TEST(test_strchr_basic, "ft_strchr basic")
 
 FT_TEST(test_strchr_not_found, "ft_strchr not found")
 {
+    ft_errno = FT_EINVAL;
     FT_ASSERT_EQ(ft_nullptr, ft_strchr("hello", 'x'));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -29,7 +31,9 @@ FT_TEST(test_strchr_null, "ft_strchr nullptr")
 FT_TEST(test_strchr_terminator, "ft_strchr terminator")
 {
     const char *string = "hello";
+    ft_errno = FT_EINVAL;
     FT_ASSERT_EQ(string + 5, ft_strchr(string, '\0'));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 

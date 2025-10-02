@@ -19,7 +19,9 @@ FT_TEST(test_strstr_not_found, "ft_strstr not found")
     const char *haystack = "hello";
     const char *needle = "world";
 
+    ft_errno = FT_EINVAL;
     FT_ASSERT_EQ(ft_nullptr, ft_strstr(haystack, needle));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -27,7 +29,9 @@ FT_TEST(test_strstr_empty_needle, "ft_strstr empty needle")
 {
     const char *haystack = "abc";
 
+    ft_errno = FT_ERANGE;
     FT_ASSERT_EQ(haystack, ft_strstr(haystack, ""));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -36,7 +40,9 @@ FT_TEST(test_strstr_empty_haystack, "ft_strstr empty haystack")
     const char *haystack = "";
     const char *needle = "a";
 
+    ft_errno = FT_ERANGE;
     FT_ASSERT_EQ(ft_nullptr, ft_strstr(haystack, needle));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -58,6 +64,8 @@ FT_TEST(test_strstr_overlapping_partial_match, "ft_strstr restarts after overlap
     const char *haystack = "ababac";
     const char *needle = "abac";
 
+    ft_errno = FT_ERANGE;
     FT_ASSERT_EQ(haystack + 2, ft_strstr(haystack, needle));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
