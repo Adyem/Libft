@@ -35,8 +35,26 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
     const char *color_code;
     int length;
     char final_buffer[1200];
+    ft_vector<s_log_sink> sinks_snapshot;
+    int final_error;
 
+    g_sinks_mutex.lock(THREAD_ID);
+    if (g_sinks_mutex.get_error() != ER_SUCCESS)
+    {
+        return ;
+    }
     sink_count = g_sinks.size();
+    if (g_sinks.get_error() != ER_SUCCESS)
+    {
+        final_error = g_sinks.get_error();
+        g_sinks_mutex.unlock(THREAD_ID);
+        if (g_sinks_mutex.get_error() != ER_SUCCESS)
+        {
+            return ;
+        }
+        ft_errno = final_error;
+        return ;
+    }
     use_color = false;
     if (g_use_color && sink_count == 0 && isatty(1))
         use_color = true;
@@ -60,6 +78,47 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
         ft_errno = FT_EINVAL;
         return ;
     }
+    if (sink_count != 0)
+    {
+        size_t index;
+
+        index = 0;
+        while (index < sink_count)
+        {
+            s_log_sink entry;
+
+            entry = g_sinks[index];
+            if (g_sinks.get_error() != ER_SUCCESS)
+            {
+                final_error = g_sinks.get_error();
+                g_sinks_mutex.unlock(THREAD_ID);
+                if (g_sinks_mutex.get_error() != ER_SUCCESS)
+                {
+                    return ;
+                }
+                ft_errno = final_error;
+                return ;
+            }
+            sinks_snapshot.push_back(entry);
+            if (sinks_snapshot.get_error() != ER_SUCCESS)
+            {
+                final_error = sinks_snapshot.get_error();
+                g_sinks_mutex.unlock(THREAD_ID);
+                if (g_sinks_mutex.get_error() != ER_SUCCESS)
+                {
+                    return ;
+                }
+                ft_errno = final_error;
+                return ;
+            }
+            index++;
+        }
+    }
+    g_sinks_mutex.unlock(THREAD_ID);
+    if (g_sinks_mutex.get_error() != ER_SUCCESS)
+    {
+        return ;
+    }
     if (sink_count == 0)
     {
         ssize_t write_result;
@@ -78,12 +137,20 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
     index = 0;
     while (index < sink_count)
     {
-        g_sinks[index].function(final_buffer, g_sinks[index].user_data);
+        s_log_sink entry;
+
+        entry = sinks_snapshot[index];
+        if (sinks_snapshot.get_error() != ER_SUCCESS)
+        {
+            ft_errno = sinks_snapshot.get_error();
+            return ;
+        }
+        entry.function(final_buffer, entry.user_data);
         if (ft_errno != ER_SUCCESS)
             return ;
-        if (g_sinks[index].function == ft_file_sink)
+        if (entry.function == ft_file_sink)
         {
-            ft_log_rotate(static_cast<s_file_sink *>(g_sinks[index].user_data));
+            ft_log_rotate(static_cast<s_file_sink *>(entry.user_data));
             if (ft_errno != ER_SUCCESS)
                 return ;
         }
