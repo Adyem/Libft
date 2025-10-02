@@ -28,8 +28,10 @@ FT_TEST(test_tolower_mixed, "ft_to_lower mixed characters")
     string[4] = 'C';
     string[5] = '?';
     string[6] = '\0';
+    ft_errno = FT_EINVAL;
     ft_to_lower(string);
     FT_ASSERT_EQ(0, ft_strcmp(string, "a1b!c?"));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -37,8 +39,10 @@ FT_TEST(test_tolower_empty, "ft_to_lower empty string")
 {
     char string[1];
     string[0] = '\0';
+    ft_errno = FT_EINVAL;
     ft_to_lower(string);
     FT_ASSERT_EQ(0, ft_strcmp(string, ""));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -59,10 +63,12 @@ FT_TEST(test_tolower_non_ascii_preserved, "ft_to_lower leaves non-ASCII bytes un
     string[2] = static_cast<char>(0x80);
     string[3] = 'Z';
     string[4] = '\0';
+    ft_errno = FT_EINVAL;
     ft_to_lower(string);
     FT_ASSERT_EQ(static_cast<char>(0xC7), string[0]);
     FT_ASSERT_EQ('a', string[1]);
     FT_ASSERT_EQ(static_cast<char>(0x80), string[2]);
     FT_ASSERT_EQ('z', string[3]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }

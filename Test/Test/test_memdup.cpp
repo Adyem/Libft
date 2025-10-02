@@ -14,10 +14,12 @@ FT_TEST(test_memdup_basic, "ft_memdup basic")
     source[2] = 'l';
     source[3] = 'l';
     source[4] = 'o';
+    ft_errno = FT_EINVAL;
     duplicate = ft_memdup(source, 5);
     FT_ASSERT(duplicate != ft_nullptr);
     FT_ASSERT(duplicate != source);
     FT_ASSERT_EQ(0, ft_memcmp(source, duplicate, 5));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     cma_free(duplicate);
     return (1);
 }
@@ -31,6 +33,7 @@ FT_TEST(test_memdup_zero_size, "ft_memdup zero size")
     buffer[2] = 'c';
     void *duplicate;
 
+    ft_errno = FT_EINVAL;
     duplicate = ft_memdup(buffer, 0);
     FT_ASSERT(duplicate != ft_nullptr);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -40,7 +43,9 @@ FT_TEST(test_memdup_zero_size, "ft_memdup zero size")
 
 FT_TEST(test_memdup_null_source, "ft_memdup null source")
 {
+    ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_memdup(ft_nullptr, 5));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
     return (1);
 }
 

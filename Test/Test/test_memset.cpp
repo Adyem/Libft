@@ -15,9 +15,11 @@ FT_TEST(test_memset_basic, "ft_memset basic")
 {
     char buffer[4];
 
+    ft_errno = FT_EINVAL;
     ft_memset(buffer, 'x', 3);
     buffer[3] = '\0';
     FT_ASSERT_EQ(0, ft_strcmp(buffer, "xxx"));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -26,6 +28,7 @@ FT_TEST(test_memset_large, "ft_memset large buffer")
     char buffer[1024];
     size_t index;
 
+    ft_errno = FT_EINVAL;
     ft_memset(buffer, 0xAB, sizeof(buffer));
     index = 0;
     while (index < sizeof(buffer))
@@ -34,6 +37,7 @@ FT_TEST(test_memset_large, "ft_memset large buffer")
             FT_ASSERT(0);
         index++;
     }
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -65,6 +69,7 @@ FT_TEST(test_memset_negative, "ft_memset negative value")
     char buffer[4];
     size_t index;
 
+    ft_errno = FT_EINVAL;
     ft_memset(buffer, -1, 3);
     index = 0;
     while (index < 3)
@@ -73,6 +78,7 @@ FT_TEST(test_memset_negative, "ft_memset negative value")
             FT_ASSERT(0);
         index++;
     }
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -81,6 +87,7 @@ FT_TEST(test_memset_overflow, "ft_memset overflow value")
     char buffer[4];
     size_t index;
 
+    ft_errno = FT_EINVAL;
     ft_memset(buffer, 256, 3);
     index = 0;
     while (index < 3)
@@ -89,5 +96,6 @@ FT_TEST(test_memset_overflow, "ft_memset overflow value")
             FT_ASSERT(0);
         index++;
     }
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }

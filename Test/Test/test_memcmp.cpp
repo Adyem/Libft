@@ -13,7 +13,9 @@ FT_TEST(test_memcmp_equal, "ft_memcmp equal buffers")
     b[0] = 'a';
     b[1] = 'b';
     b[2] = 'c';
+    ft_errno = FT_EINVAL;
     FT_ASSERT_EQ(0, ft_memcmp(a, b, 3));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -27,7 +29,9 @@ FT_TEST(test_memcmp_less, "ft_memcmp less than")
     b[0] = 'a';
     b[1] = 'b';
     b[2] = 'd';
+    ft_errno = FT_EINVAL;
     FT_ASSERT(ft_memcmp(a, b, 3) < 0);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -41,7 +45,9 @@ FT_TEST(test_memcmp_greater, "ft_memcmp greater than")
     b[0] = 'a';
     b[1] = 'b';
     b[2] = 'c';
+    ft_errno = FT_EINVAL;
     FT_ASSERT(ft_memcmp(a, b, 3) > 0);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -51,7 +57,9 @@ FT_TEST(test_memcmp_zero_length, "ft_memcmp zero length")
     char b[1];
     a[0] = 'x';
     b[0] = 'y';
+    ft_errno = FT_EINVAL;
     FT_ASSERT_EQ(0, ft_memcmp(a, b, 0));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -69,7 +77,9 @@ FT_TEST(test_memcmp_high_bit, "ft_memcmp high-bit comparison")
     char b[1];
     a[0] = (char)0x80;
     b[0] = 0;
+    ft_errno = FT_EINVAL;
     FT_ASSERT(ft_memcmp(a, b, 1) > 0);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -86,7 +96,9 @@ FT_TEST(test_memcmp_limit_hides_late_difference, "ft_memcmp stops comparing afte
     second[1] = 'b';
     second[2] = 'x';
     second[3] = '\0';
+    ft_errno = FT_EINVAL;
     FT_ASSERT_EQ(0, ft_memcmp(first, second, 2));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
