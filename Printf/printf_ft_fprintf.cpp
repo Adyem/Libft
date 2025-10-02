@@ -467,6 +467,14 @@ int ft_vfprintf(FILE *stream, const char *format, va_list args)
         }
         index++;
     }
+    if (count != SIZE_MAX)
+    {
+        if (fflush(stream) == EOF)
+        {
+            mark_count_error(&count);
+            set_stream_error();
+        }
+    }
     if (count == SIZE_MAX)
         return (-1);
     if (count > static_cast<size_t>(INT_MAX))

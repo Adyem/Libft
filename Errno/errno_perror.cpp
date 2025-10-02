@@ -3,9 +3,13 @@
 
 void    ft_perror(const char *error_msg)
 {
+    int saved_errno;
+
+    saved_errno = ft_errno;
     if (!error_msg)
-        pf_printf_fd(2, "%s", ft_strerror(ft_errno));
+        pf_printf_fd(2, "%s\n", ft_strerror(saved_errno));
     else
-        pf_printf_fd(2, "%s: %s", error_msg, ft_strerror(ft_errno));
+        pf_printf_fd(2, "%s: %s\n", error_msg, ft_strerror(saved_errno));
+    ft_errno = saved_errno;
     return ;
 }
