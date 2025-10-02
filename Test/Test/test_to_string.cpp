@@ -55,3 +55,24 @@ FT_TEST(test_ft_to_string_extreme_values,
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_ft_to_string_independent_instances,
+        "ft_to_string returns independent ft_string buffers")
+{
+    ft_string first_result;
+    ft_string second_result;
+    const char *first_pointer;
+    const char *second_pointer;
+
+    ft_errno = FT_EINVAL;
+    first_result = ft_to_string(42);
+    second_result = ft_to_string(42);
+    first_pointer = first_result.c_str();
+    second_pointer = second_result.c_str();
+    FT_ASSERT(first_pointer != second_pointer);
+    first_result.append('7');
+    FT_ASSERT(std::string(first_result.c_str()) == "427");
+    FT_ASSERT(std::string(second_result.c_str()) == "42");
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

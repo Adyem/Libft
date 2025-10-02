@@ -63,6 +63,19 @@ FT_TEST(test_fopen_invalid, "ft_fopen invalid path")
     return (1);
 }
 
+FT_TEST(test_fopen_invalid_mode_sets_errno, "ft_fopen invalid mode reports EINVAL")
+{
+    FILE *file;
+
+    create_test_file();
+    errno = 0;
+    ft_errno = ER_SUCCESS;
+    file = ft_fopen("test_file_io.txt", "invalid");
+    FT_ASSERT_EQ(ft_nullptr, file);
+    FT_ASSERT_EQ(EINVAL + ERRNO_OFFSET, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_fopen_null, "ft_fopen with null")
 {
     ft_errno = ER_SUCCESS;
@@ -147,6 +160,30 @@ FT_TEST(test_fgets_edge_cases, "ft_fgets edge cases")
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_fgets(buffer, 5, ft_nullptr));
     FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_SUCCESS, ft_fclose(file));
+    return (1);
+}
+
+FT_TEST(test_fgets_negative_size_sets_errno, "ft_fgets rejects negative sizes and recovers")
+{
+    char buffer[16];
+    FILE *file;
+
+    buffer[0] = 'X';
+    buffer[1] = '\0';
+    create_test_file();
+    file = ft_fopen("test_file_io.txt", "r");
+    if (file == ft_nullptr)
+        return (0);
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(ft_nullptr, ft_fgets(buffer, -1, file));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ('X', buffer[0]);
+    FT_ASSERT_EQ('\0', buffer[1]);
+    ft_errno = FILE_INVALID_FD;
+    FT_ASSERT_EQ(buffer, ft_fgets(buffer, sizeof(buffer), file));
+    FT_ASSERT_EQ(0, ft_strcmp(buffer, "Line1\n"));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(FT_SUCCESS, ft_fclose(file));
     return (1);
 }
