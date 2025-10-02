@@ -10,8 +10,10 @@ FT_TEST(test_strlcat_basic, "ft_strlcat basic")
     destination[0] = 'h';
     destination[1] = 'i';
     destination[2] = '\0';
+    ft_errno = FT_EINVAL;
     FT_ASSERT_EQ(6u, ft_strlcat(destination, "1234", 10));
     FT_ASSERT_EQ(0, ft_strcmp(destination, "hi1234"));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -22,8 +24,10 @@ FT_TEST(test_strlcat_truncate, "ft_strlcat truncate")
     destination[0] = 'h';
     destination[1] = 'i';
     destination[2] = '\0';
+    ft_errno = FT_EINVAL;
     FT_ASSERT_EQ(7u, ft_strlcat(destination, "world", 6));
     FT_ASSERT_EQ(0, ft_strcmp(destination, "hiwor"));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -34,10 +38,12 @@ FT_TEST(test_strlcat_zero_size, "ft_strlcat zero size")
     destination[0] = 'h';
     destination[1] = 'i';
     destination[2] = '\0';
+    ft_errno = FT_EINVAL;
     FT_ASSERT_EQ(5u, ft_strlcat(destination, "hello", 0));
     FT_ASSERT_EQ('h', destination[0]);
     FT_ASSERT_EQ('i', destination[1]);
     FT_ASSERT_EQ('\0', destination[2]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -51,8 +57,10 @@ FT_TEST(test_strlcat_insufficient_dest, "ft_strlcat size less than dest length")
     destination[3] = 'l';
     destination[4] = 'o';
     destination[5] = '\0';
+    ft_errno = FT_EINVAL;
     FT_ASSERT_EQ(8u, ft_strlcat(destination, "world", 3));
     FT_ASSERT_EQ(0, ft_strcmp(destination, "hello"));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -61,8 +69,10 @@ FT_TEST(test_strlcat_null_arguments_errno, "ft_strlcat null arguments set errno"
     char destination_buffer[4];
 
     destination_buffer[0] = '\0';
+    ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(0u, ft_strlcat(ft_nullptr, "abc", 3));
     FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(0u, ft_strlcat(destination_buffer, ft_nullptr, 3));
     FT_ASSERT_EQ(FT_EINVAL, ft_errno);
     return (1);
@@ -91,11 +101,13 @@ FT_TEST(test_strlcat_truncated_destination, "ft_strlcat handles unterminated des
     destination[4] = 'Y';
     destination[5] = 'Z';
     destination[6] = '\0';
+    ft_errno = FT_EINVAL;
     FT_ASSERT_EQ(6u, ft_strlcat(destination, "pq", 4));
     FT_ASSERT_EQ('A', destination[0]);
     FT_ASSERT_EQ('D', destination[3]);
     FT_ASSERT_EQ('Y', destination[4]);
     FT_ASSERT_EQ('Z', destination[5]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 

@@ -17,6 +17,7 @@ FT_TEST(test_strncpy_full_copy, "ft_strncpy full copy with padding")
     destination[3] = 'x';
     destination[4] = 'x';
     destination[5] = '\0';
+    ft_errno = FT_ERANGE;
     FT_ASSERT_EQ(destination, ft_strncpy(destination, source, 5));
     FT_ASSERT_EQ('h', destination[0]);
     FT_ASSERT_EQ('i', destination[1]);
@@ -24,6 +25,7 @@ FT_TEST(test_strncpy_full_copy, "ft_strncpy full copy with padding")
     FT_ASSERT_EQ('\0', destination[3]);
     FT_ASSERT_EQ('\0', destination[4]);
     FT_ASSERT_EQ('\0', destination[5]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -44,11 +46,13 @@ FT_TEST(test_strncpy_truncate, "ft_strncpy truncates without null")
     destination[3] = 'X';
     destination[4] = 'X';
     destination[5] = '\0';
+    ft_errno = FT_ERANGE;
     FT_ASSERT_EQ(destination, ft_strncpy(destination, source, 3));
     FT_ASSERT_EQ('h', destination[0]);
     FT_ASSERT_EQ('e', destination[1]);
     FT_ASSERT_EQ('l', destination[2]);
     FT_ASSERT_EQ('X', destination[3]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -60,8 +64,10 @@ FT_TEST(test_strncpy_zero_length, "ft_strncpy zero length")
     destination[1] = 'b';
     destination[2] = 'c';
     destination[3] = '\0';
+    ft_errno = FT_ERANGE;
     FT_ASSERT_EQ(destination, ft_strncpy(destination, "xyz", 0));
     FT_ASSERT_EQ('a', destination[0]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -73,8 +79,12 @@ FT_TEST(test_strncpy_null, "ft_strncpy with nullptr")
     buffer[1] = 'b';
     buffer[2] = 'c';
     buffer[3] = '\0';
+    ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_strncpy(ft_nullptr, buffer, 3));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_strncpy(buffer, ft_nullptr, 3));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
     return (1);
 }
 

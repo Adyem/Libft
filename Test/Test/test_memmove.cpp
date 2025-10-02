@@ -15,11 +15,13 @@ FT_TEST(test_memmove_overlap_forward, "ft_memmove overlap forward")
     buffer[5] = 'f';
     buffer[6] = 'g';
     buffer[7] = '\0';
+    ft_errno = FT_EINVAL;
     FT_ASSERT_EQ(buffer + 2, ft_memmove(buffer + 2, buffer, 5));
     FT_ASSERT_EQ('a', buffer[0]);
     FT_ASSERT_EQ('a', buffer[2]);
     FT_ASSERT_EQ('e', buffer[6]);
     FT_ASSERT_EQ('\0', buffer[7]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -35,10 +37,12 @@ FT_TEST(test_memmove_overlap_backward, "ft_memmove overlap backward")
     buffer[5] = 'f';
     buffer[6] = 'g';
     buffer[7] = '\0';
+    ft_errno = FT_EINVAL;
     FT_ASSERT_EQ(buffer, ft_memmove(buffer, buffer + 2, 5));
     FT_ASSERT_EQ('c', buffer[0]);
     FT_ASSERT_EQ('g', buffer[4]);
     FT_ASSERT_EQ('\0', buffer[7]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -55,9 +59,11 @@ FT_TEST(test_memmove_zero_length, "ft_memmove zero length")
     destination[1] = 'b';
     destination[2] = 'c';
     destination[3] = '\0';
+    ft_errno = FT_EINVAL;
     FT_ASSERT_EQ(destination, ft_memmove(destination, source, 0));
     FT_ASSERT_EQ('a', destination[0]);
     FT_ASSERT_EQ('c', destination[2]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -73,8 +79,12 @@ FT_TEST(test_memmove_null, "ft_memmove with nullptr")
 {
     char source[1];
     source[0] = 'a';
+    ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_memmove(ft_nullptr, source, 1));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_memmove(source, ft_nullptr, 1));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
     return (1);
 }
 
@@ -94,9 +104,11 @@ FT_TEST(test_memmove_same_pointer, "ft_memmove same pointer")
     buffer[1] = 'i';
     buffer[2] = 'j';
     buffer[3] = 'k';
+    ft_errno = FT_EINVAL;
     FT_ASSERT_EQ(buffer, ft_memmove(buffer, buffer, 4));
     FT_ASSERT_EQ('h', buffer[0]);
     FT_ASSERT_EQ('k', buffer[3]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
