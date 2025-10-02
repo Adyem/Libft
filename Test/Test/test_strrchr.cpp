@@ -15,7 +15,9 @@ FT_TEST(test_strrchr_last, "ft_strrchr last occurrence")
 
 FT_TEST(test_strrchr_not_found, "ft_strrchr not found")
 {
+    ft_errno = FT_EINVAL;
     FT_ASSERT_EQ(ft_nullptr, ft_strrchr("hello", 'x'));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -31,7 +33,9 @@ FT_TEST(test_strrchr_terminator, "ft_strrchr terminator")
 {
     const char *string = "world";
 
+    ft_errno = FT_EINVAL;
     FT_ASSERT_EQ(string + 5, ft_strrchr(string, '\0'));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
