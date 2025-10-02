@@ -72,3 +72,24 @@ FT_TEST(test_tolower_non_ascii_preserved, "ft_to_lower leaves non-ASCII bytes un
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_tolower_stops_at_terminator, "ft_to_lower stops when encountering the null terminator")
+{
+    char string[6];
+
+    string[0] = 'H';
+    string[1] = 'I';
+    string[2] = '\0';
+    string[3] = 'X';
+    string[4] = 'Y';
+    string[5] = '\0';
+    ft_errno = FT_EINVAL;
+    ft_to_lower(string);
+    FT_ASSERT_EQ('h', string[0]);
+    FT_ASSERT_EQ('i', string[1]);
+    FT_ASSERT_EQ('\0', string[2]);
+    FT_ASSERT_EQ('X', string[3]);
+    FT_ASSERT_EQ('Y', string[4]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

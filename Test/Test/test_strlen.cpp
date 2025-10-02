@@ -105,3 +105,26 @@ FT_TEST(test_strlen_size_t_nullptr_sets_errno, "ft_strlen_size_t nullptr sets FT
     FT_ASSERT_EQ(FT_EINVAL, ft_errno);
     return (1);
 }
+
+FT_TEST(test_strlen_size_t_handles_unaligned_pointers,
+        "ft_strlen_size_t measures strings that begin at unaligned addresses")
+{
+    char buffer[7];
+    size_t index;
+    char *start_pointer;
+    size_t measured_length;
+
+    index = 0;
+    while (index < 6)
+    {
+        buffer[index] = 'a';
+        index++;
+    }
+    buffer[6] = '\0';
+    start_pointer = buffer + 1;
+    ft_errno = FT_EINVAL;
+    measured_length = ft_strlen_size_t(start_pointer);
+    FT_ASSERT_EQ(static_cast<size_t>(5), measured_length);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
