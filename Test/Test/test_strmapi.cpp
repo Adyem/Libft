@@ -76,3 +76,19 @@ FT_TEST(test_strmapi_null_arguments_set_errno, "ft_strmapi null inputs set FT_EI
     FT_ASSERT_EQ(FT_EINVAL, ft_errno);
     return (1);
 }
+
+FT_TEST(test_strmapi_success_after_failure_resets_errno, "ft_strmapi clears errno after a prior failure")
+{
+    char *result;
+
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(ft_nullptr, ft_strmapi(ft_nullptr, to_upper_map));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    result = ft_strmapi("abc", to_upper_map);
+    if (result == ft_nullptr)
+        return (0);
+    FT_ASSERT_EQ(0, ft_strcmp("ABC", result));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    cma_free(result);
+    return (1);
+}
