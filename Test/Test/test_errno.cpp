@@ -156,7 +156,7 @@ FT_TEST(test_ft_perror_null_message_outputs_errno, "ft_perror prints strerror wh
     FT_ASSERT_EQ(0, pipe(pipe_fds));
     saved_stderr = dup(2);
     FT_ASSERT(saved_stderr >= 0);
-    FT_ASSERT_EQ(0, dup2(pipe_fds[1], 2));
+    FT_ASSERT(dup2(pipe_fds[1], 2) >= 0);
     close(pipe_fds[1]);
 
     ft_perror(ft_nullptr);
@@ -164,10 +164,10 @@ FT_TEST(test_ft_perror_null_message_outputs_errno, "ft_perror prints strerror wh
     read_count = read(pipe_fds[0], buffer, sizeof(buffer) - 1);
     FT_ASSERT(read_count > 0);
     buffer[read_count] = '\0';
-    FT_ASSERT(ft_strstr(buffer, expected_message) != ft_nullptr);
+    FT_ASSERT(std::strstr(buffer, expected_message) != ft_nullptr);
     FT_ASSERT_EQ(FT_EINVAL, ft_errno);
 
-    FT_ASSERT_EQ(0, dup2(saved_stderr, 2));
+    FT_ASSERT(dup2(saved_stderr, 2) >= 0);
     close(saved_stderr);
     close(pipe_fds[0]);
     ft_errno = original_errno_value;
@@ -189,7 +189,7 @@ FT_TEST(test_ft_perror_prefixes_custom_message, "ft_perror prefixes custom text 
     FT_ASSERT_EQ(0, pipe(pipe_fds));
     saved_stderr = dup(2);
     FT_ASSERT(saved_stderr >= 0);
-    FT_ASSERT_EQ(0, dup2(pipe_fds[1], 2));
+    FT_ASSERT(dup2(pipe_fds[1], 2) >= 0);
     close(pipe_fds[1]);
 
     ft_perror("custom context");
@@ -197,11 +197,11 @@ FT_TEST(test_ft_perror_prefixes_custom_message, "ft_perror prefixes custom text 
     read_count = read(pipe_fds[0], buffer, sizeof(buffer) - 1);
     FT_ASSERT(read_count > 0);
     buffer[read_count] = '\0';
-    FT_ASSERT(ft_strstr(buffer, "custom context: ") != ft_nullptr);
-    FT_ASSERT(ft_strstr(buffer, expected_message) != ft_nullptr);
+    FT_ASSERT(std::strstr(buffer, "custom context: ") != ft_nullptr);
+    FT_ASSERT(std::strstr(buffer, expected_message) != ft_nullptr);
     FT_ASSERT_EQ(FT_EIO, ft_errno);
 
-    FT_ASSERT_EQ(0, dup2(saved_stderr, 2));
+    FT_ASSERT(dup2(saved_stderr, 2) >= 0);
     close(saved_stderr);
     close(pipe_fds[0]);
     ft_errno = original_errno_value;

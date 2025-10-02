@@ -68,17 +68,24 @@ int ft_run_registered_tests(void)
         {
             current_module = get_tests()[index].module;
             printf("== %s ==\n", current_module);
+            fflush(stdout);
         }
+        fflush(stdout);
         if (get_tests()[index].func())
         {
             printf("OK %d %s\n", index + 1, get_tests()[index].description);
+            fflush(stdout);
             passed++;
         }
         else
+        {
             printf("KO %d %s\n", index + 1, get_tests()[index].description);
+            fflush(stdout);
+        }
         index++;
     }
     printf("%d/%zu tests passed\n", passed, get_tests().size());
+    fflush(stdout);
     if (passed != static_cast<int>(get_tests().size()))
         return (1);
     return (0);
