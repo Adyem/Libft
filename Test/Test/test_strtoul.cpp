@@ -33,6 +33,17 @@ FT_TEST(test_strtoul_base0, "ft_strtoul base 0 hex prefix")
     return (1);
 }
 
+FT_TEST(test_strtoul_base36_mixed_case, "ft_strtoul parses base 36 digits in mixed case")
+{
+    char *end_pointer;
+
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(static_cast<unsigned long>(1295), ft_strtoul("Zz", &end_pointer, 36));
+    FT_ASSERT_EQ('\0', *end_pointer);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_strtoul_invalid_base, "ft_strtoul invalid base returns error and input pointer")
 {
     const char *input_string = "456";

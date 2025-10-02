@@ -43,6 +43,7 @@ class ft_vector
 
         size_t size() const;
         size_t capacity() const;
+        bool empty() const;
         int get_error() const;
         const char* get_error_str() const;
 
@@ -170,6 +171,20 @@ size_t ft_vector<ElementType>::capacity() const
     this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (c);
+}
+
+template <typename ElementType>
+bool ft_vector<ElementType>::empty() const
+{
+    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(this->_mutex.get_error());
+        return (true);
+    }
+    bool is_vector_empty = (this->_size == 0);
+    this->set_error(ER_SUCCESS);
+    this->_mutex.unlock(THREAD_ID);
+    return (is_vector_empty);
 }
 
 template <typename ElementType>

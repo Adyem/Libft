@@ -56,6 +56,28 @@ FT_TEST(test_validate_int_nullptr, "validate int nullptr")
     return (1);
 }
 
+FT_TEST(test_validate_int_leading_whitespace_fails, "validate int rejects leading whitespace")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(FT_FAILURE, ft_validate_int(" 123"));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(FT_FAILURE, ft_validate_int("\t456"));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_validate_int_trailing_whitespace_fails, "validate int rejects trailing whitespace")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(FT_FAILURE, ft_validate_int("789 "));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(FT_FAILURE, ft_validate_int("321\n"));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_cma_atoi_ok, "cma atoi ok")
 {
     int *number;
