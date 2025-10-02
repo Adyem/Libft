@@ -4,6 +4,7 @@
 #include "../../Errno/errno.hpp"
 #include "../Compatebility/compatebility_system_test_hooks.hpp"
 #include <cerrno>
+#include <cstring>
 
 FT_TEST(test_ft_unsetenv_rejects_empty_name, "ft_unsetenv rejects empty names")
 {
@@ -33,11 +34,67 @@ FT_TEST(test_ft_getenv_missing_clears_errno, "ft_getenv clears errno when variab
     return (1);
 }
 
+FT_TEST(test_ft_getenv_returns_value, "ft_getenv returns stored value")
+{
+    const char *variable_name;
+    char *value;
+
+    variable_name = "LIBFT_TEST_GETENV_PRESENT";
+    FT_ASSERT_EQ(0, ft_setenv(variable_name, "present", 1));
+    ft_errno = FT_EINVAL;
+    value = ft_getenv(variable_name);
+    FT_ASSERT(value != ft_nullptr);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(0, std::strcmp(value, "present"));
+    ft_unsetenv(variable_name);
+    return (1);
+}
+
 FT_TEST(test_ft_setenv_null_value_sets_errno, "ft_setenv null value sets FT_EINVAL")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, ft_setenv("LIBFT_TEST_NULL_VALUE", ft_nullptr, 1));
     FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_ft_setenv_null_name_sets_errno, "ft_setenv rejects null name")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(-1, ft_setenv(ft_nullptr, "value", 1));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_ft_setenv_empty_name_sets_errno, "ft_setenv rejects empty name")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(-1, ft_setenv("", "value", 1));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_ft_setenv_equals_sign_sets_errno, "ft_setenv rejects names with equals")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(-1, ft_setenv("INVALID=NAME", "value", 1));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_ft_setenv_success_resets_errno, "ft_setenv stores value and clears errno")
+{
+    const char *variable_name;
+    char *value;
+
+    variable_name = "LIBFT_TEST_SETENV_SUCCESS";
+    ft_errno = FT_ETERM;
+    FT_ASSERT_EQ(0, ft_setenv(variable_name, "stored", 1));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    value = ft_getenv(variable_name);
+    FT_ASSERT(value != ft_nullptr);
+    FT_ASSERT_EQ(0, std::strcmp(value, "stored"));
+    ft_unsetenv(variable_name);
     return (1);
 }
 
