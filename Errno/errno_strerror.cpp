@@ -119,7 +119,11 @@ static const t_ft_error_string g_error_strings[] =
     {FUTURE_ALLOC_FAIL, "Future memory allocation failed"},
     {FUTURE_BROKEN, "Associated promise was destroyed"},
     {POOL_EMPTY, "Object pool has no available entries"},
-    {POOL_INVALID_OBJECT, "Object pool handle is invalid"}
+    {POOL_INVALID_OBJECT, "Object pool handle is invalid"},
+    {SSL_WANT_READ, "SSL wants to read"},
+    {SSL_WANT_WRITE, "SSL wants to write"},
+    {SSL_ZERO_RETURN, "SSL connection closed"},
+    {SSL_SYSCALL_ERROR, "SSL system call error"}
 };
 
 static const char *ft_find_custom_error(int error_code)

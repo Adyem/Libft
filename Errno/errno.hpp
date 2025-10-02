@@ -120,6 +120,10 @@ enum PTErrorCode
     FUTURE_BROKEN,
     POOL_EMPTY,
     POOL_INVALID_OBJECT,
+    SSL_WANT_READ,
+    SSL_WANT_WRITE,
+    SSL_ZERO_RETURN,
+    SSL_SYSCALL_ERROR,
 };
 
 const char* ft_strerror(int error_code);
