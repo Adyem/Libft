@@ -120,6 +120,28 @@ FT_TEST(test_strtol_uppercase_hex_prefix, "ft_strtol accepts uppercase hex prefi
     return (1);
 }
 
+FT_TEST(test_strtol_base36_mixed_case, "ft_strtol parses base 36 digits in any case")
+{
+    char *end_pointer;
+
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(1294L, ft_strtol("Zy", &end_pointer, 36));
+    FT_ASSERT_EQ('\0', *end_pointer);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strtol_skips_leading_whitespace, "ft_strtol ignores leading whitespace before digits")
+{
+    char *end_pointer;
+
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(678L, ft_strtol("\t  678xyz", &end_pointer, 10));
+    FT_ASSERT_EQ('x', *end_pointer);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_strtol_null_input, "ft_strtol null input sets errno and end pointer")
 {
     char *end_pointer = reinterpret_cast<char *>(0x1);
