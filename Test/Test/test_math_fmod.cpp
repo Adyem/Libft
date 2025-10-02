@@ -38,7 +38,7 @@ FT_TEST(test_math_fmod_zero_modulus_sets_errno, "math_fmod returns nan and sets 
     return (1);
 }
 
-FT_TEST(test_math_fmod_infinite_modulus_preserves_errno, "math_fmod preserves errno when modulus is infinite")
+FT_TEST(test_math_fmod_infinite_modulus_clears_errno, "math_fmod clears errno when modulus is infinite")
 {
     double result;
     double infinite_value;
@@ -47,7 +47,7 @@ FT_TEST(test_math_fmod_infinite_modulus_preserves_errno, "math_fmod preserves er
     ft_errno = FT_EINVAL;
     result = math_fmod(7.0, infinite_value);
     FT_ASSERT_EQ(7.0, result);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
