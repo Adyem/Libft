@@ -174,6 +174,55 @@ FT_TEST(test_api_tls_client_chunked_response, "api_tls_client handles chunked bo
     return (result);
 }
 
+FT_TEST(test_api_tls_client_case_insensitive_headers, "api_tls_client matches header names case insensitively")
+{
+    api_tls_client client(ft_nullptr, 0, 0);
+
+    prepare_mock_client(client);
+    mock_tls_reset_reads();
+    mock_tls_add_read("HTTP/1.1 200 OK\r\ncontent-length: 5\r\n\r\nHello");
+    g_mock_tls_io_enabled = true;
+    int status_value;
+    char *body;
+    int result;
+
+    status_value = -1;
+    body = client.request("GET", "/lower", ft_nullptr, ft_nullptr, &status_value);
+    g_mock_tls_io_enabled = false;
+    result = 1;
+    if (!body)
+        result = 0;
+    if (body && ft_strcmp(body, "Hello") != 0)
+        result = 0;
+    if (status_value != 200)
+        result = 0;
+    if (client.get_error() != ER_SUCCESS)
+        result = 0;
+    if (body)
+        cma_free(body);
+    client._ssl = ft_nullptr;
+
+    prepare_mock_client(client);
+    mock_tls_reset_reads();
+    mock_tls_add_read("HTTP/1.1 200 OK\r\ntransfer-encoding: gzip, Chunked  \r\n\r\n4\r\nWiki\r\n5\r\npedia\r\n0\r\n\r\n");
+    g_mock_tls_io_enabled = true;
+    status_value = -1;
+    body = client.request("GET", "/mixed", ft_nullptr, ft_nullptr, &status_value);
+    g_mock_tls_io_enabled = false;
+    if (!body)
+        result = 0;
+    if (body && ft_strcmp(body, "Wikipedia") != 0)
+        result = 0;
+    if (status_value != 200)
+        result = 0;
+    if (client.get_error() != ER_SUCCESS)
+        result = 0;
+    if (body)
+        cma_free(body);
+    client._ssl = ft_nullptr;
+    return (result);
+}
+
 FT_TEST(test_api_tls_client_connection_close_response, "api_tls_client reads connection close bodies")
 {
     api_tls_client client(ft_nullptr, 0, 0);
