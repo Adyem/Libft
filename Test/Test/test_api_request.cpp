@@ -1,12 +1,16 @@
 #include "../../API/api.hpp"
+#include "../../API/api_internal.hpp"
 #include "../../Networking/socket_class.hpp"
 #include "../../Networking/networking.hpp"
 #include "../../PThread/thread.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
+#include "../../Printf/printf.hpp"
+#include "../../Libft/libft.hpp"
 #include <cerrno>
 #include <csignal>
+#include <climits>
 #ifdef _WIN32
 # include <windows.h>
 #else
@@ -245,6 +249,34 @@ FT_TEST(test_api_request_async_success_resets_errno, "api_request_string_async s
     if (!result)
         return (0);
     if (ft_errno != ER_SUCCESS)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_api_request_formats_large_content_length, "api_request formats content length for large payloads")
+{
+    ft_string request;
+    size_t payload_size;
+    bool append_result;
+    char expected_buffer[64];
+    int expected_length;
+    ft_string expected_header;
+    const char *header_pointer;
+
+    payload_size = static_cast<size_t>(static_cast<unsigned long long>(INT_MAX)) + 42;
+    request = "POST /resource HTTP/1.1";
+    append_result = api_append_content_length_header(request, payload_size);
+    if (!append_result)
+        return (0);
+    expected_length = pf_snprintf(expected_buffer, sizeof(expected_buffer), "%zu", payload_size);
+    if (expected_length < 0)
+        return (0);
+    if (static_cast<size_t>(expected_length) >= sizeof(expected_buffer))
+        return (0);
+    expected_header = "\r\nContent-Length: ";
+    expected_header += expected_buffer;
+    header_pointer = ft_strstr(request.c_str(), expected_header.c_str());
+    if (header_pointer == ft_nullptr)
         return (0);
     return (1);
 }
