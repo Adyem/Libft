@@ -10,9 +10,7 @@ void ft_log_remove_sink(t_log_sink sink, void *user_data)
 
     g_sinks_mutex.lock(THREAD_ID);
     if (g_sinks_mutex.get_error() != ER_SUCCESS)
-    {
         return ;
-    }
     index = 0;
     removed = false;
     sink_count = g_sinks.size();
@@ -21,9 +19,7 @@ void ft_log_remove_sink(t_log_sink sink, void *user_data)
         final_error = g_sinks.get_error();
         g_sinks_mutex.unlock(THREAD_ID);
         if (g_sinks_mutex.get_error() != ER_SUCCESS)
-        {
             return ;
-        }
         ft_errno = final_error;
         return ;
     }
@@ -37,9 +33,7 @@ void ft_log_remove_sink(t_log_sink sink, void *user_data)
             final_error = g_sinks.get_error();
             g_sinks_mutex.unlock(THREAD_ID);
             if (g_sinks_mutex.get_error() != ER_SUCCESS)
-            {
                 return ;
-            }
             ft_errno = final_error;
             return ;
         }
@@ -51,9 +45,7 @@ void ft_log_remove_sink(t_log_sink sink, void *user_data)
                 final_error = g_sinks.get_error();
                 g_sinks_mutex.unlock(THREAD_ID);
                 if (g_sinks_mutex.get_error() != ER_SUCCESS)
-                {
                     return ;
-                }
                 ft_errno = final_error;
                 return ;
             }
@@ -68,9 +60,7 @@ void ft_log_remove_sink(t_log_sink sink, void *user_data)
         final_error = ER_SUCCESS;
     g_sinks_mutex.unlock(THREAD_ID);
     if (g_sinks_mutex.get_error() != ER_SUCCESS)
-    {
         return ;
-    }
     ft_errno = final_error;
     return ;
 }
