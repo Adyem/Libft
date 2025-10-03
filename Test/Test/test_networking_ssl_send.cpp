@@ -25,6 +25,8 @@ static int g_mock_ssl_errno_sequence[8];
 static int g_mock_ssl_peek_length = 0;
 static int g_mock_ssl_peek_index = 0;
 static int g_mock_ssl_error_index = 0;
+static bool g_mock_ssl_error_override_active = false;
+static int g_mock_ssl_error_override_value = SSL_ERROR_SYSCALL;
 
 static void mock_ssl_reset(void)
 {
@@ -33,12 +35,15 @@ static void mock_ssl_reset(void)
     g_mock_ssl_peek_length = 0;
     g_mock_ssl_peek_index = 0;
     g_mock_ssl_error_index = 0;
+    g_mock_ssl_error_override_active = false;
+    g_mock_ssl_error_override_value = SSL_ERROR_SYSCALL;
     return ;
 }
 
 static void mock_ssl_disable(void)
 {
     g_mock_ssl_active = false;
+    g_mock_ssl_error_override_active = false;
     return ;
 }
 
@@ -61,6 +66,13 @@ static void mock_ssl_add_peek_result(int peek_result, int error_code, int error_
     g_mock_ssl_error_sequence[g_mock_ssl_peek_length] = error_code;
     g_mock_ssl_errno_sequence[g_mock_ssl_peek_length] = error_number;
     g_mock_ssl_peek_length++;
+    return ;
+}
+
+void mock_ssl_set_error_override(bool is_active, int error_value)
+{
+    g_mock_ssl_error_override_active = is_active;
+    g_mock_ssl_error_override_value = error_value;
     return ;
 }
 
@@ -105,6 +117,8 @@ extern "C" int SSL_peek(SSL *ssl_connection, void *buffer, int buffer_length)
 extern "C" int SSL_get_error(const SSL *ssl_connection, int return_code)
 {
     (void)return_code;
+    if (g_mock_ssl_error_override_active)
+        return (g_mock_ssl_error_override_value);
     if (g_mock_ssl_active && ssl_connection == reinterpret_cast<const SSL *>(&g_mock_ssl_state))
     {
         if (g_mock_ssl_peek_length <= 0)

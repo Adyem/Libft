@@ -3,6 +3,7 @@
 #include "../Printf/printf.hpp"
 #include "../Networking/socket_class.hpp"
 #include "../Networking/ssl_wrapper.hpp"
+#include "../Networking/networking.hpp"
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Logger/logger.hpp"
@@ -20,6 +21,76 @@
 #include <openssl/err.h>
 #include <openssl/x509v3.h>
 
+static const size_t TLS_STRING_NPOS = static_cast<size_t>(-1);
+
+static char tls_string_char_at(const ft_string &value, size_t index)
+{
+    const char *data;
+
+    if (index >= value.size())
+        return ('\0');
+    data = value.c_str();
+    return (data[index]);
+}
+
+static ft_string tls_string_substr(const ft_string &value, size_t start_index, size_t length)
+{
+    ft_string result;
+    size_t total_length;
+    size_t copy_length;
+    const char *data;
+    size_t index;
+
+    total_length = value.size();
+    if (start_index >= total_length)
+        return (result);
+    data = value.c_str();
+    copy_length = length;
+    if (start_index + copy_length > total_length)
+        copy_length = total_length - start_index;
+    index = 0;
+    while (index < copy_length)
+    {
+        result.append(data[start_index + index]);
+        index++;
+    }
+    return (result);
+}
+
+static size_t tls_string_find_substring(const ft_string &value, const char *needle, size_t start_index)
+{
+    const char *haystack;
+    const char *search_start;
+    const char *found;
+
+    if (needle == ft_nullptr)
+        return (TLS_STRING_NPOS);
+    if (start_index > value.size())
+        return (TLS_STRING_NPOS);
+    haystack = value.c_str();
+    search_start = haystack + start_index;
+    found = ft_strstr(search_start, needle);
+    if (found == ft_nullptr)
+        return (TLS_STRING_NPOS);
+    return (static_cast<size_t>(found - haystack));
+}
+
+static size_t tls_string_find_char(const ft_string &value, char needle, size_t start_index)
+{
+    const char *haystack;
+    const char *search_start;
+    const char *found;
+
+    if (start_index > value.size())
+        return (TLS_STRING_NPOS);
+    haystack = value.c_str();
+    search_start = haystack + start_index;
+    found = ft_strchr(search_start, needle);
+    if (found == ft_nullptr)
+        return (TLS_STRING_NPOS);
+    return (static_cast<size_t>(found - haystack));
+}
+
 static char tls_ascii_to_lower(char character)
 {
     if (character >= 'A' && character <= 'Z')
@@ -36,7 +107,7 @@ static void tls_trim_whitespace(ft_string &value)
     {
         char current_char;
 
-        current_char = value[start_index];
+        current_char = tls_string_char_at(value, start_index);
         if (current_char != ' ' && current_char != '\t')
             break;
         value.erase(start_index, 1);
@@ -48,7 +119,7 @@ static void tls_trim_whitespace(ft_string &value)
     {
         char current_char;
 
-        current_char = value[end_index - 1];
+        current_char = tls_string_char_at(value, end_index - 1);
         if (current_char != ' ' && current_char != '\t')
             break;
         value.erase(end_index - 1, 1);
@@ -59,14 +130,21 @@ static void tls_trim_whitespace(ft_string &value)
 
 static void tls_string_to_lower(ft_string &value)
 {
+    ft_string lowered_value;
     size_t index;
+    size_t length;
 
+    length = value.size();
     index = 0;
-    while (index < value.size())
+    while (index < length)
     {
-        value[index] = tls_ascii_to_lower(value[index]);
+        char current_char;
+
+        current_char = tls_string_char_at(value, index);
+        lowered_value.append(tls_ascii_to_lower(current_char));
         index++;
     }
+    value = lowered_value;
     return ;
 }
 
@@ -82,7 +160,7 @@ static bool tls_header_equals(const ft_string &header_name, const char *target_n
         char left_character;
         char right_character;
 
-        left_character = tls_ascii_to_lower(header_name[index]);
+        left_character = tls_ascii_to_lower(tls_string_char_at(header_name, index));
         right_character = tls_ascii_to_lower(target_name[index]);
         if (left_character != right_character)
             return (false);
@@ -100,9 +178,20 @@ static ssize_t ssl_send_all(SSL *ssl, const void *data, size_t size)
     while (total < size)
     {
         ssize_t sent = nw_ssl_write(ssl, ptr + total, size - total);
-        if (sent <= 0)
+        if (sent > 0)
+        {
+            total += sent;
+            continue ;
+        }
+        if (sent < 0)
             return (-1);
-        total += sent;
+        if (ft_errno == SSL_WANT_READ || ft_errno == SSL_WANT_WRITE)
+        {
+            if (networking_check_ssl_after_send(ssl) != 0)
+                return (-1);
+            continue ;
+        }
+        return (-1);
     }
     return (static_cast<ssize_t>(total));
 }
@@ -363,28 +452,28 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
     bool has_content_length = false;
     bool is_chunked = false;
     ft_string headers_section;
-    headers_section = response.substr(0, header_len);
+    headers_section = tls_string_substr(response, 0, header_len);
     size_t line_offset = 0;
     while (line_offset < headers_section.size())
     {
-        size_t line_end = headers_section.find("\r\n", line_offset);
-        if (line_end == ft_string::npos)
+        size_t line_end = tls_string_find_substring(headers_section, "\r\n", line_offset);
+        if (line_end == TLS_STRING_NPOS)
             break;
         ft_string header_line;
-        header_line = headers_section.substr(line_offset, line_end - line_offset);
+        header_line = tls_string_substr(headers_section, line_offset, line_end - line_offset);
         line_offset = line_end + 2;
         if (header_line.empty())
             continue;
-        size_t colon_index = header_line.find(':');
-        if (colon_index == ft_string::npos)
+        size_t colon_index = tls_string_find_char(header_line, ':', 0);
+        if (colon_index == TLS_STRING_NPOS)
             continue;
         ft_string header_name;
-        header_name = header_line.substr(0, colon_index);
+        header_name = tls_string_substr(header_line, 0, colon_index);
         tls_trim_whitespace(header_name);
         if (header_name.empty())
             continue;
         ft_string header_value;
-        header_value = header_line.substr(colon_index + 1);
+        header_value = tls_string_substr(header_line, colon_index + 1, header_line.size());
         tls_trim_whitespace(header_value);
         if (tls_header_equals(header_name, "Content-Length") && !has_content_length)
         {
@@ -418,10 +507,11 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
             while (token_start <= lowered_value.size())
             {
                 size_t token_end = token_start;
-                while (token_end < lowered_value.size() && lowered_value[token_end] != ',')
+                while (token_end < lowered_value.size()
+                    && tls_string_char_at(lowered_value, token_end) != ',')
                     token_end++;
                 ft_string token_value;
-                token_value = lowered_value.substr(token_start, token_end - token_start);
+                token_value = tls_string_substr(lowered_value, token_start, token_end - token_start);
                 tls_trim_whitespace(token_value);
                 if (token_value == "chunked")
                     is_chunked = true;
