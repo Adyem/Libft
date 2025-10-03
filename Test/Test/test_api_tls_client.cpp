@@ -10,6 +10,8 @@
 #include <climits>
 
 static bool g_mock_tls_io_enabled = false;
+static size_t g_mock_tls_want_write_limit = 0;
+static size_t g_mock_tls_want_write_attempts = 0;
 
 static const char *g_mock_read_buffers[8];
 static size_t g_mock_read_sizes[8];
@@ -68,6 +70,12 @@ extern "C"
         {
             (void)source[copy_index];
             copy_index += 1;
+        }
+        if (g_mock_tls_want_write_attempts < g_mock_tls_want_write_limit)
+        {
+            g_mock_tls_want_write_attempts += 1;
+            ft_errno = SSL_WANT_WRITE;
+            return (0);
         }
         ft_errno = ER_SUCCESS;
         return (static_cast<ssize_t>(len));
@@ -221,6 +229,43 @@ FT_TEST(test_api_tls_client_case_insensitive_headers, "api_tls_client matches he
     if (body)
         cma_free(body);
     client._ssl = ft_nullptr;
+    return (result);
+}
+
+FT_TEST(test_api_tls_client_retries_want_write,
+    "api_tls_client retries nw_ssl_write SSL_WANT_WRITE results")
+{
+    api_tls_client client(ft_nullptr, 0, 0);
+
+    prepare_mock_client(client);
+    mock_tls_reset_reads();
+    mock_tls_add_read("HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK");
+    g_mock_tls_io_enabled = true;
+    g_mock_tls_want_write_limit = 2;
+    g_mock_tls_want_write_attempts = 0;
+    int status_value;
+    char *body;
+    int result;
+
+    status_value = -1;
+    body = client.request("GET", "/retry", ft_nullptr, ft_nullptr, &status_value);
+    g_mock_tls_io_enabled = false;
+    result = 1;
+    if (!body)
+        result = 0;
+    if (body && ft_strcmp(body, "OK") != 0)
+        result = 0;
+    if (status_value != 200)
+        result = 0;
+    if (client.get_error() != ER_SUCCESS)
+        result = 0;
+    if (g_mock_tls_want_write_attempts != g_mock_tls_want_write_limit)
+        result = 0;
+    if (body)
+        cma_free(body);
+    client._ssl = ft_nullptr;
+    g_mock_tls_want_write_limit = 0;
+    g_mock_tls_want_write_attempts = 0;
     return (result);
 }
 

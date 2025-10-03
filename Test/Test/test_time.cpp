@@ -31,6 +31,13 @@ static int g_time_local_failure_errno = EINVAL;
 static bool g_time_now_force_failure = false;
 static int g_time_now_failure_errno = EINVAL;
 
+void time_now_set_force_failure(bool enable_failure, int error_code)
+{
+    g_time_now_force_failure = enable_failure;
+    g_time_now_failure_errno = error_code;
+    return ;
+}
+
 extern t_time_format_gmtime_override_function g_time_format_gmtime_override;
 extern t_time_format_strftime_override_function g_time_format_strftime_override;
 extern t_time_format_mutex_override_function g_time_format_lock_override;

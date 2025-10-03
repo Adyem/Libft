@@ -2,6 +2,7 @@
 #include "api_internal.hpp"
 #include "../Networking/socket_class.hpp"
 #include "../Networking/ssl_wrapper.hpp"
+#include "../Networking/networking.hpp"
 #include "../CPP_class/class_string_class.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
@@ -170,9 +171,20 @@ static ssize_t ssl_send_all(SSL *ssl, const void *data, size_t size)
     while (total < size)
     {
         ssize_t sent = nw_ssl_write(ssl, ptr + total, size - total);
-        if (sent <= 0)
+        if (sent > 0)
+        {
+            total += sent;
+            continue ;
+        }
+        if (sent < 0)
             return (-1);
-        total += sent;
+        if (ft_errno == SSL_WANT_READ || ft_errno == SSL_WANT_WRITE)
+        {
+            if (networking_check_ssl_after_send(ssl) != 0)
+                return (-1);
+            continue ;
+        }
+        return (-1);
     }
     return (static_cast<ssize_t>(total));
 }
