@@ -4,6 +4,40 @@
 #include "../Time/time.hpp"
 #include "../Printf/printf.hpp"
 
+static bool logger_sink_equals(const s_log_sink &left, const s_log_sink &right)
+{
+    if (left.function != right.function)
+        return (false);
+    if (left.user_data != right.user_data)
+        return (false);
+    return (true);
+}
+
+static bool logger_sink_snapshot_contains(const ft_vector<s_log_sink> &snapshot, const s_log_sink &entry, int &error_code)
+{
+    size_t snapshot_count;
+    size_t snapshot_index;
+
+    snapshot_count = snapshot.size();
+    error_code = snapshot.get_error();
+    if (error_code != ER_SUCCESS)
+        return (false);
+    snapshot_index = 0;
+    while (snapshot_index < snapshot_count)
+    {
+        s_log_sink snapshot_entry;
+
+        snapshot_entry = snapshot[snapshot_index];
+        error_code = snapshot.get_error();
+        if (error_code != ER_SUCCESS)
+            return (false);
+        if (logger_sink_equals(snapshot_entry, entry))
+            return (true);
+        snapshot_index += 1;
+    }
+    return (false);
+}
+
 void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
 {
     if (!fmt)
@@ -99,6 +133,27 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
                 ft_errno = final_error;
                 return ;
             }
+            int contains_error;
+            bool is_duplicate;
+
+            contains_error = ER_SUCCESS;
+            is_duplicate = logger_sink_snapshot_contains(sinks_snapshot, entry, contains_error);
+            if (contains_error != ER_SUCCESS)
+            {
+                final_error = contains_error;
+                g_sinks_mutex.unlock(THREAD_ID);
+                if (g_sinks_mutex.get_error() != ER_SUCCESS)
+                {
+                    return ;
+                }
+                ft_errno = final_error;
+                return ;
+            }
+            if (is_duplicate)
+            {
+                index += 1;
+                continue ;
+            }
             sinks_snapshot.push_back(entry);
             if (sinks_snapshot.get_error() != ER_SUCCESS)
             {
@@ -132,10 +187,18 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
         ft_errno = ER_SUCCESS;
         return ;
     }
+    size_t snapshot_count;
     size_t index;
 
+    snapshot_count = sinks_snapshot.size();
+    if (sinks_snapshot.get_error() != ER_SUCCESS)
+    {
+        ft_errno = sinks_snapshot.get_error();
+        return ;
+    }
+
     index = 0;
-    while (index < sink_count)
+    while (index < snapshot_count)
     {
         s_log_sink entry;
 

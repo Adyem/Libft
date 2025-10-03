@@ -24,10 +24,8 @@ static Block    *cma_find_block_for_pointer(const void *memory_pointer)
         while (current_block)
         {
             char *data_start = reinterpret_cast<char*>(current_block) + sizeof(Block);
-            char *data_end = data_start + current_block->size;
 
-            if (reinterpret_cast<const char*>(memory_pointer) >= data_start &&
-                reinterpret_cast<const char*>(memory_pointer) < data_end)
+            if (reinterpret_cast<const char*>(memory_pointer) == data_start)
                 return (current_block);
             current_block = current_block->next;
         }

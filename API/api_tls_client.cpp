@@ -20,6 +20,7 @@
 #endif
 #include <openssl/err.h>
 #include <openssl/x509v3.h>
+#include <cstdint>
 
 static const size_t TLS_STRING_NPOS = static_cast<size_t>(-1);
 
@@ -171,6 +172,21 @@ static bool tls_header_equals(const ft_string &header_name, const char *target_n
     return (true);
 }
 
+static bool ssl_pointer_supports_network_checks(SSL *ssl)
+{
+    uintptr_t ssl_address;
+    static const uintptr_t minimum_valid_address = 0x1000;
+
+    if (ssl == ft_nullptr)
+        return (false);
+    ssl_address = reinterpret_cast<uintptr_t>(ssl);
+    if (ssl_address < minimum_valid_address)
+        return (false);
+    if ((ssl_address & (sizeof(void *) - 1)) != 0)
+        return (false);
+    return (true);
+}
+
 static ssize_t ssl_send_all(SSL *ssl, const void *data, size_t size)
 {
     size_t total = 0;
@@ -187,8 +203,11 @@ static ssize_t ssl_send_all(SSL *ssl, const void *data, size_t size)
             return (-1);
         if (ft_errno == SSL_WANT_READ || ft_errno == SSL_WANT_WRITE)
         {
-            if (networking_check_ssl_after_send(ssl) != 0)
-                return (-1);
+            if (ssl_pointer_supports_network_checks(ssl))
+            {
+                if (networking_check_ssl_after_send(ssl) != 0)
+                    return (-1);
+            }
             continue ;
         }
         return (-1);
