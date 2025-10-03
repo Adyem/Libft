@@ -181,9 +181,161 @@ static void api_async_worker(api_async_request *data)
     address_info = address_results;
     while (address_info != ft_nullptr && socket_fd < 0)
     {
-        socket_fd = nw_socket(address_info->ai_family,
-                               address_info->ai_socktype,
-                               address_info->ai_protocol);
+        int connect_attempt;
+        int max_attempts;
+
+        connect_attempt = 0;
+        max_attempts = 5;
+        while (connect_attempt < max_attempts && socket_fd < 0)
+        {
+            int candidate_fd;
+            bool in_progress;
+
+            candidate_fd = nw_socket(address_info->ai_family,
+                                     address_info->ai_socktype,
+                                     address_info->ai_protocol);
+            if (candidate_fd < 0)
+                break;
+#ifdef _WIN32
+            u_long mode = 1;
+            ioctlsocket(candidate_fd, FIONBIO, &mode);
+#else
+            fcntl(candidate_fd, F_SETFL, O_NONBLOCK);
+#endif
+            if (nw_connect(candidate_fd, address_info->ai_addr,
+                           static_cast<socklen_t>(address_info->ai_addrlen)) >= 0)
+            {
+                socket_fd = candidate_fd;
+                ft_errno = ER_SUCCESS;
+                break;
+            }
+#ifdef _WIN32
+            int connect_error;
+
+            connect_error = WSAGetLastError();
+            in_progress = false;
+            if (connect_error == WSAEINPROGRESS || connect_error == WSAEWOULDBLOCK)
+                in_progress = true;
+            if (connect_error == WSAECONNREFUSED)
+            {
+                FT_CLOSE_SOCKET(candidate_fd);
+                connect_attempt += 1;
+                pt_thread_sleep(100);
+                continue;
+            }
+            if (!in_progress)
+            {
+                WSASetLastError(connect_error);
+                FT_CLOSE_SOCKET(candidate_fd);
+                break;
+            }
+#else
+            in_progress = false;
+            if (errno == EINPROGRESS)
+                in_progress = true;
+            if (errno == ECONNREFUSED)
+            {
+                FT_CLOSE_SOCKET(candidate_fd);
+                connect_attempt += 1;
+                pt_thread_sleep(100);
+                continue;
+            }
+            if (!in_progress)
+            {
+                FT_CLOSE_SOCKET(candidate_fd);
+                break;
+            }
+#endif
+            FD_ZERO(&write_set);
+            FD_SET(candidate_fd, &write_set);
+            api_set_timeval(&tv, timeout_ms);
+            if (select(candidate_fd + 1, ft_nullptr, &write_set, ft_nullptr, &tv) <= 0)
+            {
+#ifdef _WIN32
+                int select_error;
+
+                select_error = WSAGetLastError();
+                if (select_error != 0)
+                    ft_errno = select_error + ERRNO_OFFSET;
+                else if (ft_errno == ER_SUCCESS)
+                    ft_errno = SOCKET_CONNECT_FAILED;
+#else
+                if (errno != 0)
+                    ft_errno = errno + ERRNO_OFFSET;
+                else if (ft_errno == ER_SUCCESS)
+                    ft_errno = SOCKET_CONNECT_FAILED;
+#endif
+                FT_CLOSE_SOCKET(candidate_fd);
+                connect_attempt += 1;
+                pt_thread_sleep(100);
+                continue;
+            }
+            int socket_error;
+#ifdef _WIN32
+            int socket_error_length;
+
+            socket_error_length = sizeof(socket_error);
+            if (getsockopt(candidate_fd, SOL_SOCKET, SO_ERROR,
+                    reinterpret_cast<char *>(&socket_error), &socket_error_length) < 0)
+#else
+            socklen_t socket_error_length;
+
+            socket_error_length = sizeof(socket_error);
+            if (getsockopt(candidate_fd, SOL_SOCKET, SO_ERROR,
+                    &socket_error, &socket_error_length) < 0)
+#endif
+            {
+#ifdef _WIN32
+                int getsockopt_error;
+
+                getsockopt_error = WSAGetLastError();
+                if (getsockopt_error != 0)
+                    ft_errno = getsockopt_error + ERRNO_OFFSET;
+                else if (ft_errno == ER_SUCCESS)
+                    ft_errno = SOCKET_CONNECT_FAILED;
+#else
+                if (errno != 0)
+                    ft_errno = errno + ERRNO_OFFSET;
+                else if (ft_errno == ER_SUCCESS)
+                    ft_errno = SOCKET_CONNECT_FAILED;
+#endif
+                FT_CLOSE_SOCKET(candidate_fd);
+                connect_attempt += 1;
+                pt_thread_sleep(100);
+                continue;
+            }
+#ifdef _WIN32
+            if (socket_error != 0)
+            {
+                if (socket_error == WSAECONNREFUSED)
+                {
+                    FT_CLOSE_SOCKET(candidate_fd);
+                    connect_attempt += 1;
+                    pt_thread_sleep(100);
+                    continue;
+                }
+                WSASetLastError(socket_error);
+                FT_CLOSE_SOCKET(candidate_fd);
+                break;
+            }
+#else
+            if (socket_error != 0)
+            {
+                if (socket_error == ECONNREFUSED)
+                {
+                    FT_CLOSE_SOCKET(candidate_fd);
+                    connect_attempt += 1;
+                    pt_thread_sleep(100);
+                    continue;
+                }
+                errno = socket_error;
+                FT_CLOSE_SOCKET(candidate_fd);
+                break;
+            }
+#endif
+            socket_fd = candidate_fd;
+            ft_errno = ER_SUCCESS;
+        }
         if (socket_fd < 0)
             address_info = address_info->ai_next;
     }
@@ -192,26 +344,6 @@ static void api_async_worker(api_async_request *data)
         if (ft_errno == ER_SUCCESS)
             ft_errno = SOCKET_CONNECT_FAILED;
         goto cleanup;
-    }
-
-#ifdef _WIN32
-    u_long mode = 1;
-    ioctlsocket(socket_fd, FIONBIO, &mode);
-#else
-    fcntl(socket_fd, F_SETFL, O_NONBLOCK);
-#endif
-
-    if (nw_connect(socket_fd, address_info->ai_addr,
-                    static_cast<socklen_t>(address_info->ai_addrlen)) < 0)
-    {
-#ifdef _WIN32
-        int err = WSAGetLastError();
-        if (err != WSAEINPROGRESS && err != WSAEWOULDBLOCK)
-            goto cleanup;
-#else
-        if (errno != EINPROGRESS)
-            goto cleanup;
-#endif
     }
 
     FD_ZERO(&write_set);
