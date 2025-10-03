@@ -40,8 +40,8 @@ ft_size_t cma_block_size(const void *memory_pointer)
 {
     if (memory_pointer == ft_nullptr)
     {
-        pf_printf_fd(2, "Null pointer passed to cma_block_size.\n");
-        su_sigabrt();
+        ft_errno = FT_EINVAL;
+        return (0);
     }
     if (g_cma_thread_safe)
         g_malloc_mutex.lock(THREAD_ID);
