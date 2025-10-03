@@ -24,18 +24,14 @@ static void ft_log_process_message(const ft_string &message)
 
     g_sinks_mutex.lock(THREAD_ID);
     if (g_sinks_mutex.get_error() != ER_SUCCESS)
-    {
         return ;
-    }
     sink_count = g_sinks.size();
     if (g_sinks.get_error() != ER_SUCCESS)
     {
         final_error = g_sinks.get_error();
         g_sinks_mutex.unlock(THREAD_ID);
         if (g_sinks_mutex.get_error() != ER_SUCCESS)
-        {
             return ;
-        }
         ft_errno = final_error;
         return ;
     }
@@ -43,22 +39,17 @@ static void ft_log_process_message(const ft_string &message)
     {
         g_sinks_mutex.unlock(THREAD_ID);
         if (g_sinks_mutex.get_error() != ER_SUCCESS)
-        {
             return ;
-        }
         ssize_t write_result;
-
         write_result = write(1, message.c_str(), message.size());
         (void)write_result;
         return ;
     }
     size_t index;
-
     index = 0;
     while (index < sink_count)
     {
         s_log_sink entry;
-
         entry = g_sinks[index];
         if (g_sinks.get_error() != ER_SUCCESS)
         {
@@ -77,9 +68,7 @@ static void ft_log_process_message(const ft_string &message)
             final_error = sinks_snapshot.get_error();
             g_sinks_mutex.unlock(THREAD_ID);
             if (g_sinks_mutex.get_error() != ER_SUCCESS)
-            {
                 return ;
-            }
             ft_errno = final_error;
             return ;
         }
@@ -87,9 +76,7 @@ static void ft_log_process_message(const ft_string &message)
     }
     g_sinks_mutex.unlock(THREAD_ID);
     if (g_sinks_mutex.get_error() != ER_SUCCESS)
-    {
         return ;
-    }
     index = 0;
     while (index < sink_count)
     {
