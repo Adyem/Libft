@@ -34,7 +34,7 @@ json_item* json_create_item(const char *key, const char *value)
     item->value = cma_strdup(value);
     if (!item->value)
     {
-        delete[] item->key;
+        cma_free(item->key);
         delete item;
         ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
@@ -70,7 +70,7 @@ json_item* json_create_item(const char *key, const bool value)
         item->value = cma_strdup("false");
     if (!item->value)
     {
-        delete[] item->key;
+        cma_free(item->key);
         delete item;
         ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
@@ -103,7 +103,7 @@ json_item* json_create_item(const char *key, const int value)
     item->value = cma_itoa(value);
     if (!item->value)
     {
-        delete[] item->key;
+        cma_free(item->key);
         delete item;
         ft_errno = JSON_MALLOC_FAIL;
         return (ft_nullptr);
