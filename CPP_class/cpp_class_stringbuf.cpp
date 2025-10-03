@@ -43,7 +43,7 @@ std::size_t ft_stringbuf::read(char *buffer, std::size_t count)
         index++;
         this->_position++;
     }
-    if (!failure_occurred && index > 0)
+    if (!failure_occurred)
         this->set_error(ER_SUCCESS);
     return (index);
 }

@@ -58,7 +58,30 @@ extern "C"
             write_result = ::SSL_write(ssl, buf, write_length);
             if (write_result <= 0)
             {
-                ft_errno = SSL_ERROR_SYSCALL + ERRNO_OFFSET;
+                int ssl_error;
+
+                ssl_error = SSL_get_error(ssl, write_result);
+                if (ssl_error == SSL_ERROR_WANT_READ)
+                {
+                    ft_errno = SSL_WANT_READ;
+                    return (0);
+                }
+                if (ssl_error == SSL_ERROR_WANT_WRITE)
+                {
+                    ft_errno = SSL_WANT_WRITE;
+                    return (0);
+                }
+                if (ssl_error == SSL_ERROR_ZERO_RETURN)
+                {
+                    ft_errno = SSL_ZERO_RETURN;
+                    return (0);
+                }
+                if (ssl_error == SSL_ERROR_SYSCALL)
+                {
+                    ft_errno = SSL_ERROR_SYSCALL + ERRNO_OFFSET;
+                    return (-1);
+                }
+                ft_errno = FT_EIO;
                 return (-1);
             }
             ft_errno = ER_SUCCESS;
@@ -102,7 +125,30 @@ extern "C"
             read_result = ::SSL_read(ssl, buf, read_length);
             if (read_result <= 0)
             {
-                ft_errno = SSL_ERROR_SYSCALL + ERRNO_OFFSET;
+                int ssl_error;
+
+                ssl_error = SSL_get_error(ssl, read_result);
+                if (ssl_error == SSL_ERROR_WANT_READ)
+                {
+                    ft_errno = SSL_WANT_READ;
+                    return (0);
+                }
+                if (ssl_error == SSL_ERROR_WANT_WRITE)
+                {
+                    ft_errno = SSL_WANT_WRITE;
+                    return (0);
+                }
+                if (ssl_error == SSL_ERROR_ZERO_RETURN)
+                {
+                    ft_errno = SSL_ZERO_RETURN;
+                    return (0);
+                }
+                if (ssl_error == SSL_ERROR_SYSCALL)
+                {
+                    ft_errno = SSL_ERROR_SYSCALL + ERRNO_OFFSET;
+                    return (-1);
+                }
+                ft_errno = FT_EIO;
                 return (-1);
             }
             ft_errno = ER_SUCCESS;

@@ -5,6 +5,7 @@
 #include "../../System_utils/test_runner.hpp"
 #include <openssl/ssl.h>
 #include <cerrno>
+#include <cstdint>
 #ifndef _WIN32
 #include <dlfcn.h>
 #include <sys/socket.h>
@@ -134,6 +135,9 @@ extern "C" int SSL_get_error(const SSL *ssl_connection, int return_code)
     if (!real_ssl_get_error)
         real_ssl_get_error = reinterpret_cast<ssl_get_error_type>(dlsym(RTLD_NEXT, "SSL_get_error"));
     if (!real_ssl_get_error)
+        return (SSL_ERROR_SYSCALL);
+    uintptr_t ssl_address = reinterpret_cast<uintptr_t>(ssl_connection);
+    if (ssl_address < 0x1000)
         return (SSL_ERROR_SYSCALL);
     return (real_ssl_get_error(ssl_connection, return_code));
 }
