@@ -20,6 +20,79 @@
 #include <openssl/err.h>
 #include <openssl/x509v3.h>
 
+static char tls_ascii_to_lower(char character)
+{
+    if (character >= 'A' && character <= 'Z')
+        character = static_cast<char>(character + 32);
+    return (character);
+}
+
+static void tls_trim_whitespace(ft_string &value)
+{
+    size_t start_index;
+
+    start_index = 0;
+    while (start_index < value.size())
+    {
+        char current_char;
+
+        current_char = value[start_index];
+        if (current_char != ' ' && current_char != '\t')
+            break;
+        value.erase(start_index, 1);
+    }
+    size_t end_index;
+
+    end_index = value.size();
+    while (end_index > 0)
+    {
+        char current_char;
+
+        current_char = value[end_index - 1];
+        if (current_char != ' ' && current_char != '\t')
+            break;
+        value.erase(end_index - 1, 1);
+        end_index--;
+    }
+    return ;
+}
+
+static void tls_string_to_lower(ft_string &value)
+{
+    size_t index;
+
+    index = 0;
+    while (index < value.size())
+    {
+        value[index] = tls_ascii_to_lower(value[index]);
+        index++;
+    }
+    return ;
+}
+
+static bool tls_header_equals(const ft_string &header_name, const char *target_name)
+{
+    size_t index;
+
+    if (target_name == ft_nullptr)
+        return (false);
+    index = 0;
+    while (index < header_name.size() && target_name[index] != '\0')
+    {
+        char left_character;
+        char right_character;
+
+        left_character = tls_ascii_to_lower(header_name[index]);
+        right_character = tls_ascii_to_lower(target_name[index]);
+        if (left_character != right_character)
+            return (false);
+        index++;
+    }
+    if (index != header_name.size() || target_name[index] != '\0')
+        return (false);
+    return (true);
+}
+
 static ssize_t ssl_send_all(SSL *ssl, const void *data, size_t size)
 {
     size_t total = 0;
@@ -307,65 +380,40 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
             continue;
         ft_string header_name;
         header_name = header_line.substr(0, colon_index);
-        while (!header_name.empty())
-        {
-            char last_char;
-            last_char = header_name[header_name.size() - 1];
-            if (last_char != ' ' && last_char != '\t')
-                break;
-            header_name.erase(header_name.size() - 1, 1);
-        }
+        tls_trim_whitespace(header_name);
+        if (header_name.empty())
+            continue;
         ft_string header_value;
         header_value = header_line.substr(colon_index + 1);
-        size_t value_trim_index = 0;
-        while (value_trim_index < header_value.size() &&
-               (header_value[value_trim_index] == ' ' || header_value[value_trim_index] == '\t'))
+        tls_trim_whitespace(header_value);
+        if (tls_header_equals(header_name, "Content-Length") && !has_content_length)
         {
-            header_value.erase(value_trim_index, 1);
-        }
-        size_t value_end_index = header_value.size();
-        while (value_end_index > 0)
-        {
-            char trim_char;
-            trim_char = header_value[value_end_index - 1];
-            if (trim_char != ' ' && trim_char != '\t')
-                break;
-            header_value.erase(value_end_index - 1, 1);
-            value_end_index--;
-        }
-        size_t name_index = 0;
-        while (name_index < header_name.size())
-        {
-            char current_char;
-            current_char = header_name[name_index];
-            if (current_char >= 'A' && current_char <= 'Z')
-                header_name[name_index] = static_cast<char>(current_char + 32);
-            name_index++;
-        }
-        if (header_name == "content-length" && !has_content_length)
-        {
-            ft_errno = ER_SUCCESS;
             unsigned long parsed_length;
+            int parse_error;
+            unsigned long long parsed_length_ull;
+
+            ft_errno = ER_SUCCESS;
             parsed_length = ft_strtoul(header_value.c_str(), ft_nullptr, 10);
-            if (ft_errno == ER_SUCCESS)
+            parse_error = ft_errno;
+            if (parse_error != ER_SUCCESS)
             {
-                content_length = static_cast<size_t>(parsed_length);
-                has_content_length = true;
+                this->set_error(parse_error);
+                return (ft_nullptr);
             }
+            parsed_length_ull = static_cast<unsigned long long>(parsed_length);
+            if (parsed_length_ull > FT_SYSTEM_SIZE_MAX)
+            {
+                this->set_error(FT_ERANGE);
+                return (ft_nullptr);
+            }
+            content_length = static_cast<size_t>(parsed_length);
+            has_content_length = true;
         }
-        if (header_name == "transfer-encoding")
+        if (tls_header_equals(header_name, "Transfer-Encoding"))
         {
             ft_string lowered_value;
             lowered_value = header_value;
-            size_t lower_index = 0;
-            while (lower_index < lowered_value.size())
-            {
-                char lowered_char;
-                lowered_char = lowered_value[lower_index];
-                if (lowered_char >= 'A' && lowered_char <= 'Z')
-                    lowered_value[lower_index] = static_cast<char>(lowered_char + 32);
-                lower_index++;
-            }
+            tls_string_to_lower(lowered_value);
             size_t token_start = 0;
             while (token_start <= lowered_value.size())
             {
@@ -374,20 +422,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
                     token_end++;
                 ft_string token_value;
                 token_value = lowered_value.substr(token_start, token_end - token_start);
-                while (!token_value.empty() && (token_value[0] == ' ' || token_value[0] == '\t'))
-                {
-                    token_value.erase(0, 1);
-                }
-                size_t token_trim = token_value.size();
-                while (token_trim > 0)
-                {
-                    char token_char;
-                    token_char = token_value[token_trim - 1];
-                    if (token_char != ' ' && token_char != '\t')
-                        break;
-                    token_value.erase(token_trim - 1, 1);
-                    token_trim--;
-                }
+                tls_trim_whitespace(token_value);
                 if (token_value == "chunked")
                     is_chunked = true;
                 if (token_end == lowered_value.size())

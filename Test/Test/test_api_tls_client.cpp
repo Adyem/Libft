@@ -3,6 +3,7 @@
 #undef private
 #include "../../System_utils/test_runner.hpp"
 #include "../../CMA/CMA.hpp"
+#include "../../Printf/printf.hpp"
 #include "../../Libft/libft.hpp"
 #include "../../Errno/errno.hpp"
 #include <openssl/ssl.h>
@@ -223,6 +224,57 @@ FT_TEST(test_api_tls_client_case_insensitive_headers, "api_tls_client matches he
     return (result);
 }
 
+FT_TEST(test_api_tls_client_mixed_case_header_names, "api_tls_client handles mixed-case header names")
+{
+    api_tls_client client(ft_nullptr, 0, 0);
+
+    int result;
+    int status_value;
+    char *body;
+
+    result = 1;
+
+    prepare_mock_client(client);
+    mock_tls_reset_reads();
+    mock_tls_add_read("HTTP/1.1 200 OK\r\nCoNtEnT-LeNgTh: 11\r\n\r\nHello World");
+    g_mock_tls_io_enabled = true;
+    status_value = -1;
+    body = client.request("GET", "/mixed-length", ft_nullptr, ft_nullptr, &status_value);
+    g_mock_tls_io_enabled = false;
+    if (!body)
+        result = 0;
+    if (body && ft_strcmp(body, "Hello World") != 0)
+        result = 0;
+    if (status_value != 200)
+        result = 0;
+    if (client.get_error() != ER_SUCCESS)
+        result = 0;
+    if (body)
+        cma_free(body);
+    client._ssl = ft_nullptr;
+
+    prepare_mock_client(client);
+    mock_tls_reset_reads();
+    mock_tls_add_read("HTTP/1.1 200 OK\r\nTRanSFeR-EnCODing: gzip, cHuNkEd\r\n\r\n4\r\nWiki\r\n5\r\npedia\r\n0\r\n\r\n");
+    g_mock_tls_io_enabled = true;
+    status_value = -1;
+    body = client.request("GET", "/mixed-transfer", ft_nullptr, ft_nullptr, &status_value);
+    g_mock_tls_io_enabled = false;
+    if (!body)
+        result = 0;
+    if (body && ft_strcmp(body, "Wikipedia") != 0)
+        result = 0;
+    if (status_value != 200)
+        result = 0;
+    if (client.get_error() != ER_SUCCESS)
+        result = 0;
+    if (body)
+        cma_free(body);
+    client._ssl = ft_nullptr;
+
+    return (result);
+}
+
 FT_TEST(test_api_tls_client_connection_close_response, "api_tls_client reads connection close bodies")
 {
     api_tls_client client(ft_nullptr, 0, 0);
@@ -246,6 +298,43 @@ FT_TEST(test_api_tls_client_connection_close_response, "api_tls_client reads con
     if (status_value != 204)
         result = 0;
     if (client.get_error() != ER_SUCCESS)
+        result = 0;
+    if (body)
+        cma_free(body);
+    client._ssl = ft_nullptr;
+    return (result);
+}
+
+FT_TEST(test_api_tls_client_content_length_overflow, "api_tls_client rejects oversized Content-Length headers")
+{
+    api_tls_client client(ft_nullptr, 0, 0);
+
+    prepare_mock_client(client);
+    mock_tls_reset_reads();
+    static char oversized_length_buffer[64];
+    static char oversized_response_buffer[256];
+    pf_snprintf(oversized_length_buffer, sizeof(oversized_length_buffer), "%llu0",
+            static_cast<unsigned long long>(FT_SYSTEM_SIZE_MAX));
+    pf_snprintf(oversized_response_buffer, sizeof(oversized_response_buffer),
+            "HTTP/1.1 200 OK\r\nContent-Length: %s\r\n\r\n",
+            oversized_length_buffer);
+    mock_tls_add_read(oversized_response_buffer);
+    g_mock_tls_io_enabled = true;
+    int status_value;
+    char *body;
+    int result;
+
+    status_value = -1;
+    body = client.request("GET", "/overflow", ft_nullptr, ft_nullptr, &status_value);
+    g_mock_tls_io_enabled = false;
+    result = 1;
+    if (body)
+        result = 0;
+    if (client.get_error() != FT_ERANGE)
+        result = 0;
+    if (ft_errno != FT_ERANGE)
+        result = 0;
+    if (status_value != 200)
         result = 0;
     if (body)
         cma_free(body);
