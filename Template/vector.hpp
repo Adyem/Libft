@@ -353,18 +353,45 @@ void ft_vector<ElementType>::clear()
 template <typename ElementType>
 void ft_vector<ElementType>::reserve_internal(size_t new_capacity)
 {
-    if (new_capacity > this->_capacity)
+    if (new_capacity <= this->_capacity)
+        return ;
+    ElementType* new_data = static_cast<ElementType*>(cma_malloc(new_capacity * sizeof(ElementType)));
+    if (new_data == ft_nullptr)
     {
-        ElementType* new_data = static_cast<ElementType*>(cma_realloc(this->_data,
-                    new_capacity * sizeof(ElementType)));
-        if (new_data == ft_nullptr)
-        {
-            this->set_error(VECTOR_ALLOC_FAIL);
-            return ;
-        }
-        this->_data = new_data;
-        this->_capacity = new_capacity;
+        this->set_error(VECTOR_ALLOC_FAIL);
+        return ;
     }
+    ElementType* old_data = this->_data;
+    size_t current_size = this->_size;
+    size_t index = 0;
+    try
+    {
+        while (index < current_size)
+        {
+            construct_at(&new_data[index], ft_move(old_data[index]));
+            ++index;
+        }
+    }
+    catch (...)
+    {
+        while (index > 0)
+        {
+            --index;
+            destroy_at(&new_data[index]);
+        }
+        cma_free(new_data);
+        throw;
+    }
+    size_t destroy_index = 0;
+    while (destroy_index < current_size)
+    {
+        destroy_at(&old_data[destroy_index]);
+        ++destroy_index;
+    }
+    if (old_data != ft_nullptr)
+        cma_free(old_data);
+    this->_data = new_data;
+    this->_capacity = new_capacity;
     return ;
 }
 
