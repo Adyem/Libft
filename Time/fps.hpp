@@ -6,8 +6,9 @@
 class time_fps
 {
     private:
-        long    _frame_duration_ms = 0;
-        std::chrono::steady_clock::time_point _last_frame_time = std::chrono::steady_clock::time_point();
+        double  _frame_duration_ms;
+        long    _frames_per_second;
+        std::chrono::steady_clock::time_point _last_frame_time;
         mutable int _error_code;
 
         void    set_error(int error_code);

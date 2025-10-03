@@ -9,12 +9,12 @@ t_time  time_now(void)
     std::time_t standard_time;
     int saved_errno;
 
-    standard_time = std::time(ft_nullptr);
+    standard_time = ::time(ft_nullptr);
     if (standard_time == static_cast<std::time_t>(-1))
     {
         saved_errno = errno;
         if (saved_errno != 0)
-            ft_errno = saved_errno + ERRNO_OFFSET;
+            ft_errno = saved_errno;
         else
             ft_errno = FT_ETERM;
         return (static_cast<t_time>(-1));
