@@ -158,9 +158,9 @@ void json_free_items(json_item *item)
     {
         json_item *next_item = item->next;
         if (item->key)
-            delete[] item->key;
+            cma_free(item->key);
         if (item->value)
-            delete[] item->value;
+            cma_free(item->value);
         if (item->big_number)
             delete item->big_number;
         delete item;
@@ -175,7 +175,7 @@ void json_free_groups(json_group *group)
     {
         json_group *next_group = group->next;
         if (group->name)
-            delete[] group->name;
+            cma_free(group->name);
         json_free_items(group->items);
         delete group;
         group = next_group;
