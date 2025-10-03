@@ -131,6 +131,17 @@ struct api_async_request
     void *user_data;
 };
 
+static void api_set_timeval(struct timeval *time_value, int timeout_ms)
+{
+    if (!time_value)
+        return ;
+    if (timeout_ms < 0)
+        timeout_ms = 0;
+    time_value->tv_sec = timeout_ms / 1000;
+    time_value->tv_usec = (timeout_ms % 1000) * 1000;
+    return ;
+}
+
 static void api_async_worker(api_async_request *data)
 {
     int socket_fd = -1;
@@ -147,6 +158,7 @@ static void api_async_worker(api_async_request *data)
     fd_set read_set;
     fd_set write_set;
     struct timeval tv;
+    int timeout_ms;
     size_t total_sent;
     int resolver_status;
 
@@ -155,6 +167,7 @@ static void api_async_worker(api_async_request *data)
         ft_errno = FT_EINVAL;
         goto cleanup;
     }
+    timeout_ms = data->timeout;
     ft_bzero(&hints, sizeof(hints));
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_family = AF_UNSPEC;
@@ -203,8 +216,7 @@ static void api_async_worker(api_async_request *data)
 
     FD_ZERO(&write_set);
     FD_SET(socket_fd, &write_set);
-    tv.tv_sec = data->timeout / 1000;
-    tv.tv_usec = (data->timeout % 1000) * 1000;
+    api_set_timeval(&tv, timeout_ms);
     if (select(socket_fd + 1, ft_nullptr, &write_set, ft_nullptr, &tv) <= 0)
     {
         if (errno != 0)
@@ -264,6 +276,7 @@ static void api_async_worker(api_async_request *data)
             {
                 FD_ZERO(&write_set);
                 FD_SET(socket_fd, &write_set);
+                api_set_timeval(&tv, timeout_ms);
                 if (select(socket_fd + 1, ft_nullptr, &write_set, ft_nullptr, &tv) <= 0)
                 {
                     if (errno != 0)
@@ -283,6 +296,7 @@ static void api_async_worker(api_async_request *data)
     {
         FD_ZERO(&read_set);
         FD_SET(socket_fd, &read_set);
+        api_set_timeval(&tv, timeout_ms);
         if (select(socket_fd + 1, &read_set, ft_nullptr, ft_nullptr, &tv) <= 0)
         {
             if (errno != 0)
