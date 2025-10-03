@@ -11,6 +11,7 @@
 #include <cerrno>
 #include <csignal>
 #include <climits>
+#include <atomic>
 #ifdef _WIN32
 # include <windows.h>
 #else
@@ -92,6 +93,96 @@ static void api_request_success_server(void)
             break;
         total_sent += static_cast<size_t>(bytes_sent);
     }
+    FT_CLOSE_SOCKET(client_fd);
+    return ;
+}
+
+struct api_async_retry_callback_data
+{
+    std::atomic<bool> *completed;
+    std::atomic<int> *status;
+    std::atomic<char*> *body;
+};
+
+static char *api_request_build_large_header(void)
+{
+    const char *header_prefix;
+    size_t header_prefix_length;
+    size_t filler_length;
+    size_t total_length;
+    char *header_buffer;
+
+    header_prefix = "X-Test: ";
+    header_prefix_length = ft_strlen(header_prefix);
+    filler_length = 4 * 1024 * 1024;
+    total_length = header_prefix_length + filler_length + 2;
+    header_buffer = static_cast<char*>(cma_malloc(total_length + 1));
+    if (!header_buffer)
+        return (ft_nullptr);
+    ft_memcpy(header_buffer, header_prefix, header_prefix_length);
+    ft_memset(header_buffer + header_prefix_length, 'A', filler_length);
+    header_buffer[header_prefix_length + filler_length] = '\r';
+    header_buffer[header_prefix_length + filler_length + 1] = '\n';
+    header_buffer[header_prefix_length + filler_length + 2] = '\0';
+    return (header_buffer);
+}
+
+static void api_request_async_retry_callback(char *body, int status, void *user_data)
+{
+    api_async_retry_callback_data *data;
+
+    data = static_cast<api_async_retry_callback_data*>(user_data);
+    if (!data || !data->completed || !data->status || !data->body)
+    {
+        if (body)
+            cma_free(body);
+        return ;
+    }
+    data->status->store(status);
+    data->body->store(body);
+    data->completed->store(true);
+    return ;
+}
+
+static void api_request_async_retry_server(void)
+{
+    SocketConfig server_configuration;
+    ft_socket server_socket;
+    struct sockaddr_storage address_storage;
+    socklen_t address_length;
+    int client_fd;
+    const char *response;
+    ft_string request_data;
+    char buffer[4096];
+
+    server_configuration._type = SocketType::SERVER;
+    server_configuration._ip = "127.0.0.1";
+    server_configuration._port = 54339;
+    server_socket = ft_socket(server_configuration);
+    if (server_socket.get_error() != ER_SUCCESS)
+        return ;
+    address_length = sizeof(address_storage);
+    client_fd = nw_accept(server_socket.get_fd(),
+                          reinterpret_cast<struct sockaddr*>(&address_storage),
+                          &address_length);
+    if (client_fd < 0)
+        return ;
+    api_request_small_delay();
+    api_request_small_delay();
+    while (true)
+    {
+        ssize_t bytes_received;
+
+        bytes_received = nw_recv(client_fd, buffer, sizeof(buffer) - 1, 0);
+        if (bytes_received <= 0)
+            break;
+        buffer[bytes_received] = '\0';
+        request_data += buffer;
+        if (ft_strstr(request_data.c_str(), "\r\n\r\n"))
+            break;
+    }
+    response = "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK";
+    nw_send(client_fd, response, ft_strlen(response), 0);
     FT_CLOSE_SOCKET(client_fd);
     return ;
 }
@@ -197,6 +288,68 @@ FT_TEST(test_api_request_success_resets_errno, "api_request_string success reset
     if (ft_errno != ER_SUCCESS)
         return (0);
     cma_free(body);
+    return (1);
+}
+
+FT_TEST(test_api_request_async_large_send_retries_do_not_timeout, "api_request_string_async large send retries complete")
+{
+    std::atomic<bool> callback_completed(false);
+    std::atomic<int> callback_status(0);
+    std::atomic<char*> callback_body(ft_nullptr);
+    api_async_retry_callback_data callback_data;
+    ft_thread server_thread;
+    char *headers;
+    bool async_result;
+    size_t wait_iterations;
+    char *body_result;
+
+#ifndef _WIN32
+    signal(SIGPIPE, SIG_IGN);
+#endif
+    headers = api_request_build_large_header();
+    if (!headers)
+        return (0);
+    server_thread = ft_thread(api_request_async_retry_server);
+    if (server_thread.get_error() != ER_SUCCESS)
+    {
+        cma_free(headers);
+        return (0);
+    }
+    api_request_small_delay();
+    callback_data.completed = &callback_completed;
+    callback_data.status = &callback_status;
+    callback_data.body = &callback_body;
+    async_result = api_request_string_async("127.0.0.1", 54339, "POST", "/", api_request_async_retry_callback,
+                                            &callback_data, ft_nullptr, headers, 1000);
+    cma_free(headers);
+    if (!async_result)
+    {
+        server_thread.join();
+        return (0);
+    }
+    wait_iterations = 0;
+    while (!callback_completed.load() && wait_iterations < 20)
+    {
+        api_request_small_delay();
+        wait_iterations += 1;
+    }
+    if (!callback_completed.load())
+    {
+        server_thread.join();
+        return (0);
+    }
+    server_thread.join();
+    if (callback_status.load() != 200)
+        return (0);
+    body_result = callback_body.load();
+    if (!body_result)
+        return (0);
+    if (ft_strncmp(body_result, "OK", 2) != 0)
+    {
+        cma_free(body_result);
+        return (0);
+    }
+    cma_free(body_result);
     return (1);
 }
 
