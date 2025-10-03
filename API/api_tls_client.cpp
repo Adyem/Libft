@@ -291,67 +291,82 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
     size_t header_len = static_cast<size_t>(header_end_ptr - response.c_str()) + 4;
     size_t content_length = 0;
     bool has_content_length = false;
-    const char *content_length_ptr = ft_strstr(response.c_str(), "Content-Length:");
-    if (content_length_ptr)
-    {
-        content_length_ptr += ft_strlen("Content-Length:");
-        while (*content_length_ptr == ' ')
-        {
-            content_length_ptr++;
-        }
-        ft_errno = ER_SUCCESS;
-        unsigned long parsed_length = ft_strtoul(content_length_ptr, ft_nullptr, 10);
-        if (ft_errno == ER_SUCCESS)
-        {
-            content_length = static_cast<size_t>(parsed_length);
-            has_content_length = true;
-        }
-    }
-
-    ft_string transfer_encoding_value;
-    const char *transfer_encoding_ptr = ft_strstr(response.c_str(), "Transfer-Encoding:");
-    if (transfer_encoding_ptr)
-    {
-        transfer_encoding_ptr += ft_strlen("Transfer-Encoding:");
-        while (*transfer_encoding_ptr == ' ' || *transfer_encoding_ptr == '\t')
-        {
-            transfer_encoding_ptr++;
-        }
-        while (*transfer_encoding_ptr && *transfer_encoding_ptr != '\r' && *transfer_encoding_ptr != '\n')
-        {
-            char lowered = *transfer_encoding_ptr;
-            if (lowered >= 'A' && lowered <= 'Z')
-                lowered = static_cast<char>(lowered + 32);
-            transfer_encoding_value.append(lowered);
-            transfer_encoding_ptr++;
-        }
-        const char *encoding_cstr = transfer_encoding_value.c_str();
-        size_t comma_index = 0;
-        while (encoding_cstr[comma_index] != '\0')
-        {
-            if (encoding_cstr[comma_index] == ',')
-            {
-                transfer_encoding_value.erase(comma_index, transfer_encoding_value.size() - comma_index);
-                break;
-            }
-            comma_index++;
-        }
-        size_t trim_index = transfer_encoding_value.size();
-        while (trim_index > 0)
-        {
-            const char *trim_cstr = transfer_encoding_value.c_str();
-            if (trim_cstr[trim_index - 1] != ' ' && trim_cstr[trim_index - 1] != '\t')
-                break;
-            transfer_encoding_value.erase(trim_index - 1, 1);
-            trim_index--;
-        }
-    }
-
     bool is_chunked = false;
-    if (!transfer_encoding_value.empty())
+    ft_string headers_section;
+
+    headers_section = response.substr(0, header_len);
+    size_t line_start_index = 0;
+    while (line_start_index < headers_section.size())
     {
-        if (ft_strcmp(transfer_encoding_value.c_str(), "chunked") == 0)
-            is_chunked = true;
+        size_t line_end_index = headers_section.find("\r\n", line_start_index);
+        if (line_end_index == ft_string::npos)
+            break;
+        if (line_end_index == line_start_index)
+            break;
+        ft_string header_line = headers_section.substr(line_start_index, line_end_index - line_start_index);
+        line_start_index = line_end_index + 2;
+        size_t colon_index = header_line.find(':');
+        if (colon_index == ft_string::npos)
+            continue;
+        ft_string header_name = header_line.substr(0, colon_index);
+        while (!header_name.empty() && (header_name[0] == ' ' || header_name[0] == '\t'))
+            header_name.erase(0, 1);
+        while (!header_name.empty() && (header_name[header_name.size() - 1] == ' ' || header_name[header_name.size() - 1] == '\t'))
+            header_name.erase(header_name.size() - 1, 1);
+        size_t name_index = 0;
+        while (name_index < header_name.size())
+        {
+            if (header_name[name_index] >= 'A' && header_name[name_index] <= 'Z')
+                header_name[name_index] = static_cast<char>(header_name[name_index] + 32);
+            name_index += 1;
+        }
+        ft_string header_value = header_line.substr(colon_index + 1);
+        while (!header_value.empty() && (header_value[0] == ' ' || header_value[0] == '\t'))
+            header_value.erase(0, 1);
+        while (!header_value.empty() && (header_value[header_value.size() - 1] == ' ' || header_value[header_value.size() - 1] == '\t'))
+            header_value.erase(header_value.size() - 1, 1);
+        if (ft_strcmp(header_name.c_str(), "content-length") == 0)
+        {
+            if (!has_content_length)
+            {
+                ft_errno = ER_SUCCESS;
+                unsigned long parsed_length = ft_strtoul(header_value.c_str(), ft_nullptr, 10);
+                if (ft_errno == ER_SUCCESS)
+                {
+                    content_length = static_cast<size_t>(parsed_length);
+                    has_content_length = true;
+                }
+            }
+            continue;
+        }
+        if (ft_strcmp(header_name.c_str(), "transfer-encoding") == 0)
+        {
+            ft_string lowered_value = header_value;
+            size_t value_index = 0;
+            while (value_index < lowered_value.size())
+            {
+                if (lowered_value[value_index] >= 'A' && lowered_value[value_index] <= 'Z')
+                    lowered_value[value_index] = static_cast<char>(lowered_value[value_index] + 32);
+                value_index += 1;
+            }
+            size_t parse_index = 0;
+            while (parse_index < lowered_value.size())
+            {
+                while (parse_index < lowered_value.size() && (lowered_value[parse_index] == ' ' || lowered_value[parse_index] == '\t' || lowered_value[parse_index] == ','))
+                    parse_index += 1;
+                if (parse_index >= lowered_value.size())
+                    break;
+                size_t token_end = parse_index;
+                while (token_end < lowered_value.size() && lowered_value[token_end] != ',')
+                    token_end += 1;
+                ft_string token = lowered_value.substr(parse_index, token_end - parse_index);
+                while (!token.empty() && (token[token.size() - 1] == ' ' || token[token.size() - 1] == '\t'))
+                    token.erase(token.size() - 1, 1);
+                if (ft_strcmp(token.c_str(), "chunked") == 0)
+                    is_chunked = true;
+                parse_index = token_end;
+            }
+        }
     }
 
     ft_string body;
