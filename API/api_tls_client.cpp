@@ -1,4 +1,5 @@
 #include "tls_client.hpp"
+#include "api_internal.hpp"
 #include "../Printf/printf.hpp"
 #include "../Networking/socket_class.hpp"
 #include "../Networking/ssl_wrapper.hpp"
@@ -242,15 +243,11 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
         body_string = temporary_string;
         cma_free(temporary_string);
         request += "\r\nContent-Type: application/json";
-        char *length_string = cma_itoa(static_cast<int>(body_string.size()));
-        if (!length_string)
+        if (!api_append_content_length_header(request, body_string.size()))
         {
-            this->set_error(CMA_BAD_ALLOC);
+            this->set_error(FT_EIO);
             return (ft_nullptr);
         }
-        request += "\r\nContent-Length: ";
-        request += length_string;
-        cma_free(length_string);
     }
     request += "\r\nConnection: keep-alive\r\n\r\n";
     if (payload)
