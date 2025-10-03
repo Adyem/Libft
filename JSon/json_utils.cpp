@@ -66,9 +66,9 @@ void json_remove_item(json_group *group, const char *key)
             else
                 group->items = current->next;
             if (current->key)
-                delete[] current->key;
+                cma_free(current->key);
             if (current->value)
-                delete[] current->value;
+                cma_free(current->value);
             if (current->big_number)
                 delete current->big_number;
             delete current;
@@ -102,7 +102,7 @@ void json_update_item(json_group *group, const char *key, const char *value)
     }
     item->is_big_number = false;
     if (item->value)
-        delete[] item->value;
+        cma_free(item->value);
     item->value = cma_strdup(value);
     if (!item->value)
     {
@@ -134,7 +134,7 @@ void json_update_item(json_group *group, const char *key, const int value)
     }
     item->is_big_number = false;
     if (item->value)
-        delete[] item->value;
+        cma_free(item->value);
     item->value = cma_itoa(value);
     if (!item->value)
     {
@@ -166,7 +166,7 @@ void json_update_item(json_group *group, const char *key, const bool value)
     }
     item->is_big_number = false;
     if (item->value)
-        delete[] item->value;
+        cma_free(item->value);
     if (value == true)
         item->value = cma_strdup("true");
     else
@@ -201,7 +201,7 @@ void json_update_item(json_group *group, const char *key, const ft_big_number &v
     }
     item->is_big_number = false;
     if (item->value)
-        delete[] item->value;
+        cma_free(item->value);
     item->value = cma_strdup(value.c_str());
     if (!item->value)
     {
@@ -231,7 +231,7 @@ void json_remove_group(json_group **head, const char *name)
             else
                 *head = current->next;
             if (current->name)
-                delete[] current->name;
+                cma_free(current->name);
             json_free_items(current->items);
             delete current;
             ft_errno = ER_SUCCESS;
