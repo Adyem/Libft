@@ -16,6 +16,10 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
             __attribute__ ((warn_unused_result, hot));
 ft_size_t    cma_alloc_size(const void* ptr)
             __attribute__ ((warn_unused_result, hot));
+ft_size_t    cma_block_size(const void *memory_pointer)
+            __attribute__ ((warn_unused_result, hot));
+int    cma_checked_block_size(const void *memory_pointer, ft_size_t *block_size)
+            __attribute__ ((warn_unused_result, hot));
 int    *cma_atoi(const char *string) __attribute__ ((warn_unused_result));
 char    **cma_split(char const *string, char delimiter) __attribute__ ((warn_unused_result));
 char    *cma_itoa(int number) __attribute__ ((warn_unused_result));
