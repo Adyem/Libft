@@ -1,4 +1,5 @@
 #include "api.hpp"
+#include "api_internal.hpp"
 #include "../Networking/socket_class.hpp"
 #include "../CPP_class/class_string_class.hpp"
 #include "../CMA/CMA.hpp"
@@ -235,15 +236,11 @@ static void api_async_worker(api_async_request *data)
         body_string = temporary_string;
         cma_free(temporary_string);
         request += "\r\nContent-Type: application/json";
-        char *length_string = cma_itoa(static_cast<int>(body_string.size()));
-        if (!length_string)
+        if (!api_append_content_length_header(request, body_string.size()))
         {
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_EIO;
             goto cleanup;
         }
-        request += "\r\nContent-Length: ";
-        request += length_string;
-        cma_free(length_string);
     }
     request += "\r\nConnection: close\r\n\r\n";
     if (data->payload)
