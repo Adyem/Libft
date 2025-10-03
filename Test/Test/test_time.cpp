@@ -28,6 +28,8 @@ static bool g_time_sleep_capture_enabled = false;
 static std::vector<unsigned int> g_time_sleep_calls;
 static bool g_time_local_force_failure = false;
 static int g_time_local_failure_errno = EINVAL;
+static bool g_time_now_force_failure = false;
+static int g_time_now_failure_errno = EINVAL;
 
 extern t_time_format_gmtime_override_function g_time_format_gmtime_override;
 extern t_time_format_strftime_override_function g_time_format_strftime_override;
@@ -139,6 +141,23 @@ extern "C" int gettimeofday(struct timeval *time_value, void *timezone_pointer)
     (void)timezone_pointer;
     return (fallback_gettimeofday(time_value));
 #endif
+}
+
+extern "C" std::time_t time(std::time_t *time_pointer)
+{
+    std::time_t current_time;
+
+    if (g_time_now_force_failure)
+    {
+        errno = g_time_now_failure_errno;
+        if (time_pointer)
+            *time_pointer = static_cast<std::time_t>(-1);
+        return (static_cast<std::time_t>(-1));
+    }
+    current_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    if (time_pointer)
+        *time_pointer = current_time;
+    return (current_time);
 }
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -374,6 +393,21 @@ FT_TEST(test_time_ms_failure_without_errno, "ft_time_ms falls back to FT_ETERM w
     g_time_force_failure = false;
     FT_ASSERT_EQ(-1, result);
     FT_ASSERT_EQ(FT_ETERM, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_time_now_failure_sets_errno_offset, "time_now reports errno offset on failure")
+{
+    t_time time_result;
+
+    g_time_now_force_failure = true;
+    g_time_now_failure_errno = EINVAL;
+    errno = 0;
+    ft_errno = ER_SUCCESS;
+    time_result = time_now();
+    g_time_now_force_failure = false;
+    FT_ASSERT_EQ(static_cast<t_time>(-1), time_result);
+    FT_ASSERT_EQ(EINVAL + ERRNO_OFFSET, ft_errno);
     return (1);
 }
 
