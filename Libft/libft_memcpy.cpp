@@ -22,7 +22,7 @@ void* ft_memcpy(void* destination, const void* source, size_t size)
 
     dest_end = dest + size;
     src_end = src + size;
-    if (dest < src_end && src < dest_end)
+    if (dest != src && dest < src_end && src < dest_end)
     {
         ft_errno = FT_EOVERLAP;
         return (destination);
