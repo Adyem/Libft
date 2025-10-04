@@ -34,6 +34,9 @@ class ft_atomic
                 std::memory_order failure_order = std::memory_order_seq_cst);
         ValueType fetch_add(ValueType value, std::memory_order order = std::memory_order_seq_cst);
 
+        std::atomic<ValueType> *native_handle();
+        const std::atomic<ValueType> *native_handle() const;
+
         int get_error() const;
         const char *get_error_str() const;
 };
@@ -126,6 +129,22 @@ ValueType ft_atomic<ValueType>::fetch_add(ValueType value, std::memory_order ord
     previous_value = this->_value.fetch_add(value, order);
     this->set_error(ER_SUCCESS);
     return (previous_value);
+}
+
+
+template <typename ValueType>
+std::atomic<ValueType> *ft_atomic<ValueType>::native_handle()
+{
+    this->set_error(ER_SUCCESS);
+    return (&this->_value);
+}
+
+
+template <typename ValueType>
+const std::atomic<ValueType> *ft_atomic<ValueType>::native_handle() const
+{
+    const_cast<ft_atomic<ValueType> *>(this)->set_error(ER_SUCCESS);
+    return (&this->_value);
 }
 
 

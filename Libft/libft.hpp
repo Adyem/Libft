@@ -16,6 +16,7 @@ typedef unsigned long long ft_size_t;
 #include <stdarg.h>
 #include <type_traits>
 #include "limits.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
 #include "../CPP_class/class_string_class.hpp"
