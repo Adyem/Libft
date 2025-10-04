@@ -37,6 +37,10 @@ char *ft_time_format(char *buffer, size_t buffer_size)
     }
     ft_errno = ER_SUCCESS;
     current_time = time_now();
+    if (current_time == static_cast<t_time>(-1) && ft_errno != ER_SUCCESS)
+    {
+        return (ft_nullptr);
+    }
     time_local(current_time, &time_info);
     if (ft_errno != ER_SUCCESS)
     {
