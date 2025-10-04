@@ -386,12 +386,12 @@ ReturnType ft_function<ReturnType(Args...)>::operator()(Args... args) const
         }
         return (ReturnType());
     }
-    ReturnType (*invoke)(void *, Args...);
+    ReturnType (*invoke_target)(void *, Args...);
     void *callable;
 
-    invoke = this->_invoke;
+    invoke_target = this->_invoke;
     callable = this->_callable;
-    if (!invoke || !callable)
+    if (!invoke_target || !callable)
     {
         this->set_error(FT_EINVAL);
         guard.unlock();
@@ -418,10 +418,10 @@ ReturnType ft_function<ReturnType(Args...)>::operator()(Args... args) const
     }
     if constexpr (std::is_void<ReturnType>::value)
     {
-        invoke(callable, args...);
+        invoke_target(callable, args...);
         return ;
     }
-    return (invoke(callable, args...));
+    return (invoke_target(callable, args...));
 }
 
 template <typename ReturnType, typename... Args>

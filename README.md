@@ -87,6 +87,7 @@ entering their directory and running `make`.
 Standard C utilities located in `Libft/`. Headers: `libft.hpp` and `limits.hpp`. Source files use the `libft_` prefix.
 
 ```
+typedef uint32_t (*ft_utf8_case_hook)(uint32_t code_point);
 size_t  ft_strlen_size_t(const char *string);
 int     ft_strlen(const char *string);
 char   *ft_strchr(const char *string, int char_to_find);
@@ -125,10 +126,34 @@ int     ft_fclose(FILE *stream);
 int64_t ft_time_ms(void);
 char   *ft_time_format(char *buffer, size_t buffer_size);
 ft_string ft_to_string(long number);
+int     ft_utf8_next(const char *string, size_t string_length, size_t *index_pointer,
+            uint32_t *code_point_pointer, size_t *sequence_length_pointer);
+int     ft_utf8_count(const char *string, size_t *code_point_count_pointer);
+int     ft_utf8_encode(uint32_t code_point, char *buffer, size_t buffer_size,
+            size_t *encoded_length_pointer);
+int     ft_utf8_transform(const char *input, size_t input_length, char *output_buffer,
+            size_t output_buffer_size, ft_utf8_case_hook case_hook);
+int     ft_utf8_transform_alloc(const char *input, char **output_pointer,
+            ft_utf8_case_hook case_hook);
+uint32_t ft_utf8_case_ascii_lower(uint32_t code_point);
+uint32_t ft_utf8_case_ascii_upper(uint32_t code_point);
+int     ft_utf8_is_combining_code_point(uint32_t code_point);
+int     ft_utf8_next_grapheme(const char *string, size_t string_length,
+            size_t *index_pointer, size_t *grapheme_length_pointer);
+int     ft_utf8_duplicate_grapheme(const char *string, size_t string_length,
+            size_t *index_pointer, char **grapheme_pointer);
 ```
 
 `ft_strtol` clamps values that exceed `FT_LONG_MAX` or `FT_LONG_MIN` and sets
 `ft_errno` to `FT_ERANGE` when overflow is detected.
+
+`ft_utf8_next` and `ft_utf8_count` decode UTF-8 sequences while mirroring invalid
+byte sequences through `FT_EINVAL`. The transformation helpers keep ASCII case
+conversion on the existing hooks, set `FT_ERANGE` if the destination buffer is
+too small, and surface allocation failures as `FT_EALLOC`. Optional grapheme
+wrappers reuse the CMA allocation utilities to duplicate composed characters
+while leaving successful iterations with `ER_SUCCESS` so callers can detect the
+end of input without spurious errors.
 
 `ft_fgets` sets `ft_errno` to `FILE_END_OF_FILE` when the stream reaches end of
 file without an input error, allowing callers to differentiate EOF from other
