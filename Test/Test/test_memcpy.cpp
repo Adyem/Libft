@@ -81,8 +81,10 @@ FT_TEST(test_memcpy_same_pointer, "ft_memcpy same pointer")
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(buffer, ft_memcpy(buffer, buffer, 4));
     FT_ASSERT_EQ('a', buffer[0]);
+    FT_ASSERT_EQ('b', buffer[1]);
+    FT_ASSERT_EQ('c', buffer[2]);
     FT_ASSERT_EQ('d', buffer[3]);
-    FT_ASSERT_EQ(FT_EOVERLAP, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
