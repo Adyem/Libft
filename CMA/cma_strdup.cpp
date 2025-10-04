@@ -1,21 +1,33 @@
 #include <stddef.h>
-#include <stdbool.h>
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
 #include "CMA.hpp"
 
 char    *cma_strdup(const char *string)
 {
-    int        length;
-    char    *new_string;
-    int        index;
+    size_t      measured_length_raw;
+    ft_size_t   length;
+    char        *new_string;
+    ft_size_t   index;
+    ft_size_t   allocation_size;
 
     if (!string)
         return (ft_nullptr);
-    length = 0;
-    while (string[length])
-        length++;
-    length++;
-    new_string = static_cast<char *>(cma_malloc(length));
+    ft_errno = ER_SUCCESS;
+    measured_length_raw = ft_strlen_size_t(string);
+    if (ft_errno != ER_SUCCESS)
+    {
+        ft_errno = FT_ERANGE;
+        return (ft_nullptr);
+    }
+    if (measured_length_raw >= static_cast<size_t>(FT_SYSTEM_SIZE_MAX))
+    {
+        ft_errno = FT_ERANGE;
+        return (ft_nullptr);
+    }
+    length = static_cast<ft_size_t>(measured_length_raw);
+    allocation_size = length + static_cast<ft_size_t>(1);
+    new_string = static_cast<char *>(cma_malloc(allocation_size));
     if (!new_string)
         return (ft_nullptr);
     index = 0;
@@ -24,5 +36,6 @@ char    *cma_strdup(const char *string)
         new_string[index] = string[index];
         index++;
     }
+    new_string[index] = '\0';
     return (new_string);
 }
