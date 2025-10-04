@@ -23,6 +23,7 @@
 #include "HTML/document.hpp"
 #include "XML/xml.hpp"
 #include "JSon/json.hpp"
+#include "JSon/json_stream_reader.hpp"
 #include "JSon/document.hpp"
 #include "Libft/libft.hpp"
 #include "Libft/libft_utf8.hpp"

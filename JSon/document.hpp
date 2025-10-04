@@ -25,6 +25,7 @@ class json_document
         int          write_to_file(const char *file_path) const noexcept;
         char         *write_to_string() const noexcept;
         int          read_from_file(const char *file_path) noexcept;
+        int          read_from_file_streaming(const char *file_path, size_t buffer_capacity) noexcept;
         int          read_from_string(const char *content) noexcept;
         json_group   *find_group(const char *name) const noexcept;
         json_item    *find_item(json_group *group, const char *key) const noexcept;
