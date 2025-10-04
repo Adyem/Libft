@@ -1,6 +1,7 @@
 #include "../../Logger/logger.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Libft/libft.hpp"
+#include "../../CPP_class/class_nullptr.hpp"
 #include <unistd.h>
 
 FT_TEST(test_logger_async, "logger async logging")

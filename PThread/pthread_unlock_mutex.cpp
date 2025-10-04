@@ -1,3 +1,4 @@
+#include "pthread.hpp"
 #include "mutex.hpp"
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
@@ -15,6 +16,11 @@ int pt_mutex::unlock(pthread_t thread_id)
     this->_owner.store(0, std::memory_order_relaxed);
     this->_lock = false;
     this->_serving.fetch_add(1, std::memory_order_release);
+    if (pt_thread_wake_one_uint32(this->_serving.native_handle()) != 0)
+    {
+        this->set_error(ft_errno);
+        return (-1);
+    }
     return (FT_SUCCESS);
 }
 

@@ -1,5 +1,6 @@
 #include "condition.hpp"
 #include "mutex.hpp"
+#include "pthread.hpp"
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"

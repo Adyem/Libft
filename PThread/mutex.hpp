@@ -1,7 +1,6 @@
 #ifndef PTHREAD_MUTEX_HPP
 # define PTHREAD_MUTEX_HPP
 
-#include "pthread.hpp"
 #include <pthread.h>
 #include "../Template/atomic.hpp"
 
@@ -36,4 +35,3 @@ class pt_mutex
 };
 
 #endif
-
