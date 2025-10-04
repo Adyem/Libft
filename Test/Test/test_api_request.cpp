@@ -8,6 +8,7 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../Printf/printf.hpp"
 #include "../../Libft/libft.hpp"
+#include "../../Time/time.hpp"
 #include <cerrno>
 #include <csignal>
 #include <climits>
@@ -23,6 +24,46 @@ static void api_request_noop_callback(char *body, int status, void *user_data)
     (void)body;
     (void)status;
     (void)user_data;
+    return ;
+}
+
+static std::atomic<size_t> g_api_async_retry_server_bytes_received(0);
+static std::atomic<bool> g_api_async_retry_server_header_complete(false);
+static std::atomic<int> g_api_async_retry_server_last_recv_result(0);
+static std::atomic<int> g_api_async_retry_server_last_errno(0);
+
+static void api_request_log_async_transfer_stats(void)
+{
+    size_t request_size;
+    size_t bytes_sent;
+    size_t bytes_received;
+    int send_state;
+    int send_timeout;
+    int receive_state;
+    int receive_timeout;
+    size_t server_bytes_received;
+    bool server_header_complete;
+    const char *server_header_status;
+    int server_last_recv_result;
+    int server_last_errno;
+
+    request_size = api_debug_get_last_async_request_size();
+    bytes_sent = api_debug_get_last_async_bytes_sent();
+    bytes_received = api_debug_get_last_async_bytes_received();
+    send_state = api_debug_get_last_async_send_state();
+    send_timeout = api_debug_get_last_async_send_timeout();
+    receive_state = api_debug_get_last_async_receive_state();
+    receive_timeout = api_debug_get_last_async_receive_timeout();
+    server_bytes_received = g_api_async_retry_server_bytes_received.load();
+    server_header_complete = g_api_async_retry_server_header_complete.load();
+    server_last_recv_result = g_api_async_retry_server_last_recv_result.load();
+    server_last_errno = g_api_async_retry_server_last_errno.load();
+    server_header_status = "incomplete";
+    if (server_header_complete)
+        server_header_status = "complete";
+    pf_printf("[test639-debug] request_size=%zu bytes_sent=%zu send_state=%d send_timeout=%d bytes_received=%zu receive_state=%d receive_timeout=%d ft_errno=%d server_bytes=%zu server_header=%s server_recv_result=%d server_errno=%d\n",
+              request_size, bytes_sent, send_state, send_timeout, bytes_received, receive_state, receive_timeout, ft_errno, server_bytes_received,
+              server_header_status, server_last_recv_result, server_last_errno);
     return ;
 }
 
@@ -152,8 +193,11 @@ static void api_request_async_retry_server(void)
     socklen_t address_length;
     int client_fd;
     const char *response;
-    ft_string request_data;
     char buffer[4096];
+    size_t total_bytes_received;
+    bool header_complete;
+    int last_recv_result;
+    int last_recv_errno;
 
     server_configuration._type = SocketType::SERVER;
     server_configuration._ip = "127.0.0.1";
@@ -167,20 +211,70 @@ static void api_request_async_retry_server(void)
                           &address_length);
     if (client_fd < 0)
         return ;
+    g_api_async_retry_server_bytes_received.store(0);
+    g_api_async_retry_server_header_complete.store(false);
+    g_api_async_retry_server_last_recv_result.store(0);
+    g_api_async_retry_server_last_errno.store(0);
     api_request_small_delay();
     api_request_small_delay();
+    total_bytes_received = 0;
+    header_complete = false;
+    last_recv_result = 0;
+    last_recv_errno = 0;
+    t_monotonic_time_point receive_start;
+    t_monotonic_time_point receive_end;
+    int terminator_state;
+
+    receive_start = time_monotonic_point_now();
+    terminator_state = 0;
     while (true)
     {
         ssize_t bytes_received;
 
         bytes_received = nw_recv(client_fd, buffer, sizeof(buffer) - 1, 0);
         if (bytes_received <= 0)
+        {
+            last_recv_result = static_cast<int>(bytes_received);
+            last_recv_errno = errno;
             break;
+        }
+        total_bytes_received += static_cast<size_t>(bytes_received);
         buffer[bytes_received] = '\0';
-        request_data += buffer;
-        if (ft_strstr(request_data.c_str(), "\r\n\r\n"))
+        size_t buffer_index;
+
+        buffer_index = 0;
+        while (buffer_index < static_cast<size_t>(bytes_received))
+        {
+            char current_char;
+
+            current_char = buffer[buffer_index];
+            if ((terminator_state == 0 || terminator_state == 2) && current_char == '\r')
+                terminator_state += 1;
+            else if ((terminator_state == 1 || terminator_state == 3) && current_char == '\n')
+            {
+                terminator_state += 1;
+                if (terminator_state == 4)
+                {
+                    header_complete = true;
+                    break;
+                }
+            }
+            else if (current_char == '\r')
+                terminator_state = 1;
+            else
+                terminator_state = 0;
+            buffer_index += 1;
+        }
+        if (header_complete)
             break;
     }
+    receive_end = time_monotonic_point_now();
+    g_api_async_retry_server_bytes_received.store(total_bytes_received);
+    g_api_async_retry_server_header_complete.store(header_complete);
+    g_api_async_retry_server_last_recv_result.store(last_recv_result);
+    g_api_async_retry_server_last_errno.store(last_recv_errno);
+    long long receive_duration_ms = time_monotonic_point_diff_ms(receive_start, receive_end);
+    (void)receive_duration_ms;
     response = "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK";
     nw_send(client_fd, response, ft_strlen(response), 0);
     FT_CLOSE_SOCKET(client_fd);
@@ -324,6 +418,7 @@ FT_TEST(test_api_request_async_large_send_retries_do_not_timeout, "api_request_s
     cma_free(headers);
     if (!async_result)
     {
+        api_request_log_async_transfer_stats();
         server_thread.join();
         return (0);
     }
@@ -335,18 +430,27 @@ FT_TEST(test_api_request_async_large_send_retries_do_not_timeout, "api_request_s
     }
     if (!callback_completed.load())
     {
+        api_request_log_async_transfer_stats();
         server_thread.join();
         return (0);
     }
     server_thread.join();
+    api_request_log_async_transfer_stats();
     if (callback_status.load() != 200)
+    {
+        api_request_log_async_transfer_stats();
         return (0);
+    }
     body_result = callback_body.load();
     if (!body_result)
+    {
+        api_request_log_async_transfer_stats();
         return (0);
+    }
     if (ft_strncmp(body_result, "OK", 2) != 0)
     {
         cma_free(body_result);
+        api_request_log_async_transfer_stats();
         return (0);
     }
     cma_free(body_result);

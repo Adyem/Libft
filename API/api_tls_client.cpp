@@ -499,14 +499,32 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
             unsigned long parsed_length;
             int parse_error;
             unsigned long long parsed_length_ull;
+            const char *header_value_cstr;
+            char *header_parse_end;
 
+            header_value_cstr = header_value.c_str();
+            header_parse_end = ft_nullptr;
             ft_errno = ER_SUCCESS;
-            parsed_length = ft_strtoul(header_value.c_str(), ft_nullptr, 10);
+            parsed_length = ft_strtoul(header_value_cstr, &header_parse_end, 10);
             parse_error = ft_errno;
             if (parse_error != ER_SUCCESS)
             {
                 this->set_error(parse_error);
                 return (ft_nullptr);
+            }
+            if (!header_parse_end || header_parse_end == header_value_cstr)
+            {
+                this->set_error(FT_ERANGE);
+                return (ft_nullptr);
+            }
+            while (*header_parse_end != '\0')
+            {
+                if (*header_parse_end != ' ' && *header_parse_end != '\t')
+                {
+                    this->set_error(FT_ERANGE);
+                    return (ft_nullptr);
+                }
+                header_parse_end += 1;
             }
             parsed_length_ull = static_cast<unsigned long long>(parsed_length);
             if (parsed_length_ull > FT_SYSTEM_SIZE_MAX)
@@ -766,6 +784,7 @@ bool api_tls_client::request_async(const char *method, const char *path,
 
 int api_tls_client::get_error() const noexcept
 {
+    ft_errno = this->_error_code;
     return (this->_error_code);
 }
 
