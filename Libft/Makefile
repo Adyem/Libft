@@ -41,7 +41,11 @@ SRCS := libft_atoi.cpp \
     libft_fgets.cpp \
     libft_time.cpp \
     libft_validate_int.cpp \
-    libft_to_string.cpp
+    libft_to_string.cpp \
+    libft_utf8_case.cpp \
+    libft_utf8_decode.cpp \
+    libft_utf8_grapheme.cpp \
+    libft_utf8_length.cpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

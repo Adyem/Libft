@@ -20,8 +20,8 @@ class Pair
         KeyType key;
         ValueType value;
         Pair();
-        Pair(const KeyType &key, const ValueType &value);
-        Pair(const KeyType &key, ValueType &&value);
+        Pair(const KeyType &input_key, const ValueType &input_value);
+        Pair(const KeyType &input_key, ValueType &&input_value);
         Pair(const Pair &other);
         Pair(Pair &&other);
         ~Pair();
@@ -31,10 +31,10 @@ class Pair
 
         KeyType get_key() const;
         ValueType get_value() const;
-        void set_key(const KeyType &key);
-        void set_key(KeyType &&key);
-        void set_value(const ValueType &value);
-        void set_value(ValueType &&value);
+        void set_key(const KeyType &input_key);
+        void set_key(KeyType &&input_key);
+        void set_value(const ValueType &input_value);
+        void set_value(ValueType &&input_value);
         int get_error() const;
         const char *get_error_str() const;
 };
@@ -56,16 +56,16 @@ Pair<KeyType, ValueType>::Pair()
 }
 
 template <typename KeyType, typename ValueType>
-Pair<KeyType, ValueType>::Pair(const KeyType &key, const ValueType &value)
-        : _mutex(), _error_code(ER_SUCCESS), key(key), value(value)
+Pair<KeyType, ValueType>::Pair(const KeyType &input_key, const ValueType &input_value)
+        : _mutex(), _error_code(ER_SUCCESS), key(input_key), value(input_value)
 {
     this->set_error(ER_SUCCESS);
     return ;
 }
 
 template <typename KeyType, typename ValueType>
-Pair<KeyType, ValueType>::Pair(const KeyType &key, ValueType &&value)
-        : _mutex(), _error_code(ER_SUCCESS), key(key), value(ft_move(value))
+Pair<KeyType, ValueType>::Pair(const KeyType &input_key, ValueType &&input_value)
+        : _mutex(), _error_code(ER_SUCCESS), key(input_key), value(ft_move(input_value))
 {
     this->set_error(ER_SUCCESS);
     return ;
@@ -227,7 +227,7 @@ ValueType Pair<KeyType, ValueType>::get_value() const
 }
 
 template <typename KeyType, typename ValueType>
-void Pair<KeyType, ValueType>::set_key(const KeyType &key)
+void Pair<KeyType, ValueType>::set_key(const KeyType &input_key)
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
@@ -235,13 +235,13 @@ void Pair<KeyType, ValueType>::set_key(const KeyType &key)
         this->set_error(guard.get_error());
         return ;
     }
-    this->key = key;
+    this->key = input_key;
     this->set_error(ER_SUCCESS);
     return ;
 }
 
 template <typename KeyType, typename ValueType>
-void Pair<KeyType, ValueType>::set_key(KeyType &&key)
+void Pair<KeyType, ValueType>::set_key(KeyType &&input_key)
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
@@ -249,13 +249,13 @@ void Pair<KeyType, ValueType>::set_key(KeyType &&key)
         this->set_error(guard.get_error());
         return ;
     }
-    this->key = ft_move(key);
+    this->key = ft_move(input_key);
     this->set_error(ER_SUCCESS);
     return ;
 }
 
 template <typename KeyType, typename ValueType>
-void Pair<KeyType, ValueType>::set_value(const ValueType &value)
+void Pair<KeyType, ValueType>::set_value(const ValueType &input_value)
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
@@ -263,13 +263,13 @@ void Pair<KeyType, ValueType>::set_value(const ValueType &value)
         this->set_error(guard.get_error());
         return ;
     }
-    this->value = value;
+    this->value = input_value;
     this->set_error(ER_SUCCESS);
     return ;
 }
 
 template <typename KeyType, typename ValueType>
-void Pair<KeyType, ValueType>::set_value(ValueType &&value)
+void Pair<KeyType, ValueType>::set_value(ValueType &&input_value)
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
@@ -277,7 +277,7 @@ void Pair<KeyType, ValueType>::set_value(ValueType &&value)
         this->set_error(guard.get_error());
         return ;
     }
-    this->value = ft_move(value);
+    this->value = ft_move(input_value);
     this->set_error(ER_SUCCESS);
     return ;
 }
