@@ -19,7 +19,9 @@ char *ft_strnstr(const char *haystack, const char *needle, size_t max_length)
     if (ft_errno != ER_SUCCESS)
         return (ft_nullptr);
     haystack_pointer = const_cast<char *>(haystack);
-    if (needle_length == 0 || haystack == needle)
+    if (needle_length > max_length)
+        return (ft_nullptr);
+    if (needle_length == 0)
         return (haystack_pointer);
     haystack_index = 0;
     while (haystack_pointer[haystack_index] != '\0' && haystack_index < max_length)

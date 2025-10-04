@@ -87,3 +87,13 @@ FT_TEST(test_strnstr_restart_within_limit, "ft_strnstr restarts search within li
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_strnstr_same_buffer_with_length_limit, "ft_strnstr same buffer respects length limit")
+{
+    char buffer[] = "abcdef";
+
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(ft_nullptr, ft_strnstr(buffer, buffer, 3));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
