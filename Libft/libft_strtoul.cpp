@@ -21,6 +21,7 @@ unsigned long ft_strtoul(const char *input_string, char **end_pointer, int numer
     unsigned long accumulated_value = 0;
     int digit_value;
     bool overflow_detected = false;
+    bool digit_processed = false;
     unsigned long base_value;
     unsigned long limit_value;
 
@@ -76,6 +77,7 @@ unsigned long ft_strtoul(const char *input_string, char **end_pointer, int numer
         unsigned long limit_remainder;
 
         digit_as_unsigned = static_cast<unsigned long>(digit_value);
+        digit_processed = true;
         if (base_value == 0)
             break;
         limit_division = limit_value / base_value;
@@ -91,6 +93,13 @@ unsigned long ft_strtoul(const char *input_string, char **end_pointer, int numer
         accumulated_value = accumulated_value * base_value
                           + digit_as_unsigned;
         ++current_character;
+    }
+    if (!digit_processed)
+    {
+        ft_errno = FT_EINVAL;
+        if (end_pointer != ft_nullptr)
+            *end_pointer = const_cast<char *>(input_string);
+        return (0UL);
     }
     if (end_pointer)
         *end_pointer = const_cast<char *>(current_character);
