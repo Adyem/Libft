@@ -333,9 +333,11 @@ Located in `CMA/`. Header: `CMA.hpp`. Provides memory helpers such as
 `cma_malloc`, `cma_free`, aligned allocations, allocation-size queries,
 and string helpers. Aligned allocations round the block size up to the
 specified power-of-two (e.g., requesting 100 bytes with alignment 32
-returns a 128-byte block) and are released with `cma_free`. A safe
-`atoi` helper first validates the input and returns an allocated integer
-or `ft_nullptr` on failure.
+returns a 128-byte block) and are released with `cma_free`. Allocation
+sizes can be inspected directly through `cma_block_size`, or safely with
+`cma_checked_block_size`, which reports invalid pointers via `ft_errno`.
+The `cma_atoi` helper validates its input before conversion and returns a
+CMA-allocated integer on success or `ft_nullptr` on failure.
 When allocation logging is enabled via the logger, the allocator emits debug messages for each `cma_malloc` and `cma_free`.
 The allocator enforces an optional global allocation limit that can be
 changed at runtime with `cma_set_alloc_limit`. A limit of `0` disables the
@@ -359,6 +361,8 @@ void   *cma_calloc(ft_size_t nmemb, ft_size_t size);
 void   *cma_realloc(void *ptr, ft_size_t new_size);
 void   *cma_aligned_alloc(ft_size_t alignment, ft_size_t size);
 ft_size_t cma_alloc_size(const void *ptr);
+ft_size_t cma_block_size(const void *memory_pointer);
+int    cma_checked_block_size(const void *memory_pointer, ft_size_t *block_size);
 int   *cma_atoi(const char *string);
 char  **cma_split(const char *s, char c);
 char   *cma_itoa(int n);
