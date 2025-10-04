@@ -64,7 +64,6 @@ void* cma_malloc(ft_size_t size)
     }
     block = split_block(block, aligned_size);
     block->free = false;
-    block->requested_size = request_size;
     g_cma_allocation_count++;
     void *result = reinterpret_cast<char*>(block) + sizeof(Block);
     if (g_cma_thread_safe)
