@@ -10,6 +10,7 @@ SRCS := pthread_lock_mutex.cpp \
         pthread_thread_cancel.cpp \
         pthread_thread_sleep.cpp \
         pthread_thread_yield.cpp \
+        pthread_thread_wait.cpp \
         pthread_this_thread.cpp \
         pthread_thread_self.cpp \
         pthread_thread_equal.cpp \

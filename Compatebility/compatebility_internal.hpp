@@ -2,7 +2,9 @@
 #define COMPATEBILITY_INTERNAL_HPP
 
 #include "../File/open_dir.hpp"
+#include <atomic>
 #include <cstddef>
+#include <cstdint>
 #include <pthread.h>
 #include <sys/types.h>
 #include <ctime>
@@ -71,6 +73,8 @@ int cmp_thread_equal(pthread_t thread1, pthread_t thread2);
 int cmp_thread_cancel(pthread_t thread);
 int cmp_thread_yield(void);
 int cmp_thread_sleep(unsigned int milliseconds);
+int cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_value);
+int cmp_thread_wake_one_uint32(std::atomic<uint32_t> *address);
 
 int cmp_readline_enable_raw_mode(void);
 void cmp_readline_disable_raw_mode(void);
