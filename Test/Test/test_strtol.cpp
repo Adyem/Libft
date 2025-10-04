@@ -50,6 +50,27 @@ FT_TEST(test_strtol_invalid, "ft_strtol invalid string")
     return (1);
 }
 
+FT_TEST(test_strtol_sign_only_sets_error_and_input_pointer,
+        "ft_strtol sign-only inputs set errno and reset end pointer")
+{
+    const char *plus_input = "+";
+    const char *minus_input = "-";
+    char *end_pointer;
+
+    end_pointer = reinterpret_cast<char *>(0x1);
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(0L, ft_strtol(plus_input, &end_pointer, 10));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(const_cast<char *>(plus_input), end_pointer);
+
+    end_pointer = reinterpret_cast<char *>(0x1);
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(0L, ft_strtol(minus_input, &end_pointer, 10));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(const_cast<char *>(minus_input), end_pointer);
+    return (1);
+}
+
 FT_TEST(test_strtol_invalid_base, "ft_strtol invalid base returns error and input pointer")
 {
     const char *input_string = "123";
@@ -187,11 +208,11 @@ FT_TEST(test_strtol_rejects_at_symbol_in_high_base,
     char *end_pointer;
     long parsed_value;
 
-    ft_errno = FT_EINVAL;
+    ft_errno = ER_SUCCESS;
     parsed_value = ft_strtol("@123", &end_pointer, 36);
     FT_ASSERT_EQ(0L, parsed_value);
     FT_ASSERT_EQ('@', *end_pointer);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
     return (1);
 }
 
