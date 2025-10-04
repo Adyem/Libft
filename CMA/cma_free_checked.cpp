@@ -46,7 +46,6 @@ int cma_checked_free(void* ptr)
         ft_errno = CMA_INVALID_PTR;
         return (-1);
     }
-    found->requested_size = 0;
     found->free = true;
     found = merge_block(found);
     Page *pg = find_page_of_block(found);

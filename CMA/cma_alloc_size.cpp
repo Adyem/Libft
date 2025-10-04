@@ -84,7 +84,7 @@ int cma_checked_block_size(const void *memory_pointer, ft_size_t *block_size)
         ft_errno = CMA_INVALID_PTR;
         return (-1);
     }
-    *block_size = block->requested_size;
+    *block_size = block->size;
     if (g_cma_thread_safe)
         g_malloc_mutex.unlock(THREAD_ID);
     ft_errno = ER_SUCCESS;

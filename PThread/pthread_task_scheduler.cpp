@@ -2,6 +2,172 @@
 #include "pthread.hpp"
 #include "../System_utils/system_utils.hpp"
 
+ft_scheduled_task_state::ft_scheduled_task_state()
+    : _cancelled(false), _error_code(ER_SUCCESS)
+{
+    this->set_error(ER_SUCCESS);
+    return ;
+}
+
+ft_scheduled_task_state::~ft_scheduled_task_state()
+{
+    this->set_error(ER_SUCCESS);
+    return ;
+}
+
+void ft_scheduled_task_state::set_error(int error) const
+{
+    this->_error_code = error;
+    ft_errno = error;
+    return ;
+}
+
+void ft_scheduled_task_state::cancel()
+{
+    this->_cancelled.store(true);
+    this->set_error(ER_SUCCESS);
+    return ;
+}
+
+bool ft_scheduled_task_state::is_cancelled() const
+{
+    bool cancelled_value;
+
+    cancelled_value = this->_cancelled.load();
+    this->set_error(ER_SUCCESS);
+    return (cancelled_value);
+}
+
+int ft_scheduled_task_state::get_error() const
+{
+    return (this->_error_code);
+}
+
+const char *ft_scheduled_task_state::get_error_str() const
+{
+    return (ft_strerror(this->_error_code));
+}
+
+ft_scheduled_task_handle::ft_scheduled_task_handle()
+    : _state(), _scheduler(ft_nullptr), _error_code(ER_SUCCESS)
+{
+    this->set_error(ER_SUCCESS);
+    return ;
+}
+
+ft_scheduled_task_handle::ft_scheduled_task_handle(ft_task_scheduler *scheduler,
+        const ft_sharedptr<ft_scheduled_task_state> &state)
+    : _state(state), _scheduler(scheduler), _error_code(ER_SUCCESS)
+{
+    if (!scheduler || !state)
+    {
+        this->_scheduler = ft_nullptr;
+        this->set_error(FT_EINVAL);
+        return ;
+    }
+    if (state.hasError())
+    {
+        this->_scheduler = ft_nullptr;
+        this->set_error(state.get_error());
+        return ;
+    }
+    this->set_error(ER_SUCCESS);
+    return ;
+}
+
+ft_scheduled_task_handle::ft_scheduled_task_handle(const ft_scheduled_task_handle &other)
+    : _state(other._state), _scheduler(other._scheduler), _error_code(ER_SUCCESS)
+{
+    if (this->_state.hasError())
+    {
+        this->set_error(this->_state.get_error());
+        return ;
+    }
+    this->set_error(other._error_code);
+    return ;
+}
+
+ft_scheduled_task_handle &ft_scheduled_task_handle::operator=(const ft_scheduled_task_handle &other)
+{
+    if (this == &other)
+    {
+        this->set_error(ER_SUCCESS);
+        return (*this);
+    }
+    this->_state = other._state;
+    this->_scheduler = other._scheduler;
+    if (this->_state.hasError())
+    {
+        this->_scheduler = ft_nullptr;
+        this->set_error(this->_state.get_error());
+        return (*this);
+    }
+    this->set_error(other._error_code);
+    return (*this);
+}
+
+ft_scheduled_task_handle::~ft_scheduled_task_handle()
+{
+    this->_scheduler = ft_nullptr;
+    this->set_error(ER_SUCCESS);
+    return ;
+}
+
+void ft_scheduled_task_handle::set_error(int error) const
+{
+    this->_error_code = error;
+    ft_errno = error;
+    return ;
+}
+
+bool ft_scheduled_task_handle::cancel()
+{
+    bool cancel_result;
+
+    if (!this->_scheduler || !this->_state)
+    {
+        this->set_error(FT_EINVAL);
+        return (false);
+    }
+    cancel_result = this->_scheduler->cancel_task_state(this->_state);
+    if (!cancel_result)
+    {
+        this->set_error(this->_scheduler->get_error());
+        return (false);
+    }
+    this->set_error(ER_SUCCESS);
+    return (true);
+}
+
+bool ft_scheduled_task_handle::valid() const
+{
+    bool state_valid;
+
+    state_valid = static_cast<bool>(this->_state);
+    if (!this->_scheduler || !state_valid)
+    {
+        this->set_error(FT_EINVAL);
+        return (false);
+    }
+    this->set_error(ER_SUCCESS);
+    return (true);
+}
+
+ft_sharedptr<ft_scheduled_task_state> ft_scheduled_task_handle::get_state() const
+{
+    return (this->_state);
+}
+
+int ft_scheduled_task_handle::get_error() const
+{
+    return (this->_error_code);
+}
+
+const char *ft_scheduled_task_handle::get_error_str() const
+{
+    return (ft_strerror(this->_error_code));
+}
+
 ft_task_scheduler::ft_task_scheduler(size_t thread_count)
     : _queue(), _workers(), _timer_thread(), _scheduled(), _scheduled_mutex(),
       _scheduled_condition(), _running(true), _error_code(ER_SUCCESS)
@@ -262,6 +428,122 @@ bool ft_task_scheduler::scheduled_heap_pop(scheduled_task &task)
     return (true);
 }
 
+bool ft_task_scheduler::scheduled_remove_index(size_t index)
+{
+    size_t size;
+
+    size = this->_scheduled.size();
+    if (this->_scheduled.get_error() != ER_SUCCESS)
+        return (false);
+    if (size == 0)
+        return (false);
+    if (index >= size)
+        return (false);
+    if (index == size - 1)
+    {
+        this->_scheduled.pop_back();
+        if (this->_scheduled.get_error() != ER_SUCCESS)
+            return (false);
+        return (true);
+    }
+    scheduled_task last_task;
+
+    last_task = ft_move(this->_scheduled[size - 1]);
+    this->_scheduled.pop_back();
+    if (this->_scheduled.get_error() != ER_SUCCESS)
+        return (false);
+    this->_scheduled[index] = ft_move(last_task);
+    this->scheduled_heap_sift_down(index);
+    this->scheduled_heap_sift_up(index);
+    return (true);
+}
+
+bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_state> &state)
+{
+    bool removed_entry;
+    size_t index;
+    ft_sharedptr<ft_scheduled_task_state> state_copy;
+    ft_scheduled_task_state *state_pointer;
+
+    if (!state)
+    {
+        this->set_error(FT_EINVAL);
+        return (false);
+    }
+    state_copy = state;
+    if (state_copy.hasError())
+    {
+        this->set_error(state_copy.get_error());
+        return (false);
+    }
+    state_pointer = state_copy.get();
+    if (!state_pointer)
+    {
+        this->set_error(FT_EINVAL);
+        return (false);
+    }
+    state_pointer->cancel();
+    if (state_pointer->get_error() != ER_SUCCESS)
+    {
+        this->set_error(state_pointer->get_error());
+        return (false);
+    }
+    if (this->_scheduled_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(this->_scheduled_mutex.get_error());
+        return (false);
+    }
+    index = 0;
+    removed_entry = false;
+    while (true)
+    {
+        size_t size;
+
+        size = this->_scheduled.size();
+        if (this->_scheduled.get_error() != ER_SUCCESS)
+        {
+            if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+                this->set_error(this->_scheduled_mutex.get_error());
+            else
+                this->set_error(this->_scheduled.get_error());
+            return (false);
+        }
+        if (index >= size)
+            break;
+        if (this->_scheduled[index]._state.get() == state_pointer)
+        {
+            if (!this->scheduled_remove_index(index))
+            {
+                if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+                    this->set_error(this->_scheduled_mutex.get_error());
+                else
+                    this->set_error(this->_scheduled.get_error());
+                return (false);
+            }
+            removed_entry = true;
+            break;
+        }
+        index++;
+    }
+    if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(this->_scheduled_mutex.get_error());
+        return (false);
+    }
+    if (this->_scheduled_condition.broadcast() != 0)
+    {
+        this->set_error(this->_scheduled_condition.get_error());
+        return (false);
+    }
+    if (!removed_entry)
+    {
+        this->set_error(ER_SUCCESS);
+        return (true);
+    }
+    this->set_error(ER_SUCCESS);
+    return (true);
+}
+
 void ft_task_scheduler::timer_loop()
 {
     while (true)
@@ -391,6 +673,26 @@ void ft_task_scheduler::timer_loop()
                     this->set_error(scheduled_error);
                 return ;
             }
+            bool task_cancelled;
+
+            task_cancelled = false;
+            if (expired_task._state)
+            {
+                task_cancelled = expired_task._state->is_cancelled();
+                if (expired_task._state->get_error() != ER_SUCCESS)
+                {
+                    int state_error;
+
+                    state_error = expired_task._state->get_error();
+                    if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+                        this->set_error(this->_scheduled_mutex.get_error());
+                    else
+                        this->set_error(state_error);
+                    return ;
+                }
+            }
+            if (task_cancelled)
+                continue;
             if (expired_task._function.get_error() != ER_SUCCESS)
             {
                 int function_error;
@@ -415,14 +717,39 @@ void ft_task_scheduler::timer_loop()
                 }
                 if (expired_task._interval_ms > 0)
                 {
-                    t_monotonic_time_point updated_time;
+                    bool should_reschedule;
 
-                    updated_time = time_monotonic_point_add_ms(time_monotonic_point_now(),
-                            expired_task._interval_ms);
-                    expired_task._time = updated_time;
-                    expired_task._function = ft_move(original_function);
-                    if (!this->scheduled_heap_push(ft_move(expired_task)))
-                        this->set_error(this->_scheduled.get_error());
+                    should_reschedule = true;
+                    if (expired_task._state)
+                    {
+                        bool cancelled_now;
+
+                        cancelled_now = expired_task._state->is_cancelled();
+                        if (expired_task._state->get_error() != ER_SUCCESS)
+                        {
+                            int state_error;
+
+                            state_error = expired_task._state->get_error();
+                            if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+                                this->set_error(this->_scheduled_mutex.get_error());
+                            else
+                                this->set_error(state_error);
+                            return ;
+                        }
+                        if (cancelled_now)
+                            should_reschedule = false;
+                    }
+                    if (should_reschedule)
+                    {
+                        t_monotonic_time_point updated_time;
+
+                        updated_time = time_monotonic_point_add_ms(time_monotonic_point_now(),
+                                expired_task._interval_ms);
+                        expired_task._time = updated_time;
+                        expired_task._function = ft_move(original_function);
+                        if (!this->scheduled_heap_push(ft_move(expired_task)))
+                            this->set_error(this->_scheduled.get_error());
+                    }
                 }
                 continue;
             }
@@ -453,14 +780,39 @@ void ft_task_scheduler::timer_loop()
                 }
                 if (expired_task._interval_ms > 0)
                 {
-                    t_monotonic_time_point updated_time;
+                    bool should_reschedule;
 
-                    updated_time = time_monotonic_point_add_ms(time_monotonic_point_now(),
-                            expired_task._interval_ms);
-                    expired_task._time = updated_time;
-                    expired_task._function = ft_move(original_function);
-                    if (!this->scheduled_heap_push(ft_move(expired_task)))
-                        this->set_error(this->_scheduled.get_error());
+                    should_reschedule = true;
+                    if (expired_task._state)
+                    {
+                        bool cancelled_now;
+
+                        cancelled_now = expired_task._state->is_cancelled();
+                        if (expired_task._state->get_error() != ER_SUCCESS)
+                        {
+                            int state_error;
+
+                            state_error = expired_task._state->get_error();
+                            if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+                                this->set_error(this->_scheduled_mutex.get_error());
+                            else
+                                this->set_error(state_error);
+                            return ;
+                        }
+                        if (cancelled_now)
+                            should_reschedule = false;
+                    }
+                    if (should_reschedule)
+                    {
+                        t_monotonic_time_point updated_time;
+
+                        updated_time = time_monotonic_point_add_ms(time_monotonic_point_now(),
+                                expired_task._interval_ms);
+                        expired_task._time = updated_time;
+                        expired_task._function = ft_move(original_function);
+                        if (!this->scheduled_heap_push(ft_move(expired_task)))
+                            this->set_error(this->_scheduled.get_error());
+                    }
                 }
                 continue;
             }
@@ -487,13 +839,38 @@ void ft_task_scheduler::timer_loop()
             }
             if (expired_task._interval_ms > 0)
             {
-                t_monotonic_time_point updated_time;
+                bool should_reschedule;
 
-                updated_time = time_monotonic_point_add_ms(time_monotonic_point_now(),
-                        expired_task._interval_ms);
-                expired_task._time = updated_time;
-                if (!this->scheduled_heap_push(ft_move(expired_task)))
-                    this->set_error(this->_scheduled.get_error());
+                should_reschedule = true;
+                if (expired_task._state)
+                {
+                    bool cancelled_now;
+
+                    cancelled_now = expired_task._state->is_cancelled();
+                    if (expired_task._state->get_error() != ER_SUCCESS)
+                    {
+                        int state_error;
+
+                        state_error = expired_task._state->get_error();
+                        if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+                            this->set_error(this->_scheduled_mutex.get_error());
+                        else
+                            this->set_error(state_error);
+                        return ;
+                    }
+                    if (cancelled_now)
+                        should_reschedule = false;
+                }
+                if (should_reschedule)
+                {
+                    t_monotonic_time_point updated_time;
+
+                    updated_time = time_monotonic_point_add_ms(time_monotonic_point_now(),
+                            expired_task._interval_ms);
+                    expired_task._time = updated_time;
+                    if (!this->scheduled_heap_push(ft_move(expired_task)))
+                        this->set_error(this->_scheduled.get_error());
+                }
             }
             continue;
         }
