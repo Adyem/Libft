@@ -25,6 +25,7 @@
 #include "JSon/json.hpp"
 #include "JSon/document.hpp"
 #include "Libft/libft.hpp"
+#include "Libft/libft_utf8.hpp"
 #include "Libft/limits.hpp"
 #include "Math/math.hpp"
 #include "Math/roll.hpp"
