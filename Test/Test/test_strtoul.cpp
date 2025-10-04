@@ -25,6 +25,27 @@ FT_TEST(test_strtoul_negative, "ft_strtoul negative input")
     return (1);
 }
 
+FT_TEST(test_strtoul_sign_only_sets_error_and_input_pointer,
+        "ft_strtoul sign-only inputs set errno and reset end pointer")
+{
+    const char *plus_input = "+";
+    const char *minus_input = "-";
+    char *end_pointer;
+
+    end_pointer = reinterpret_cast<char *>(0x1);
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(0UL, ft_strtoul(plus_input, &end_pointer, 10));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(const_cast<char *>(plus_input), end_pointer);
+
+    end_pointer = reinterpret_cast<char *>(0x1);
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(0UL, ft_strtoul(minus_input, &end_pointer, 10));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(const_cast<char *>(minus_input), end_pointer);
+    return (1);
+}
+
 FT_TEST(test_strtoul_base0, "ft_strtoul base 0 hex prefix")
 {
     char *end;
@@ -162,11 +183,11 @@ FT_TEST(test_strtoul_rejects_at_symbol_in_high_base,
     char *end_pointer;
     unsigned long parsed_value;
 
-    ft_errno = FT_EINVAL;
+    ft_errno = ER_SUCCESS;
     parsed_value = ft_strtoul("@777", &end_pointer, 36);
     FT_ASSERT_EQ(0UL, parsed_value);
     FT_ASSERT_EQ('@', *end_pointer);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
     return (1);
 }
 
