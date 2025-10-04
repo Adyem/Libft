@@ -46,6 +46,6 @@ FT_TEST(test_time_now_failure_sets_errno, "time_now failure propagates errno")
     time_value = time_now();
     time_now_set_force_failure(false, 0);
     FT_ASSERT_EQ(static_cast<t_time>(-1), time_value);
-    FT_ASSERT_EQ(error_code, ft_errno);
+    FT_ASSERT_EQ(error_code + ERRNO_OFFSET, ft_errno);
     return (1);
 }
