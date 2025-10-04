@@ -3,6 +3,7 @@
 
 #include "../Errno/errno.hpp"
 #include "atomic.hpp"
+#include "../PThread/pthread.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 #include <utility>

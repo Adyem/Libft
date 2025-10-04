@@ -1,13 +1,26 @@
 #ifndef PTHREAD_HPP
 # define PTHREAD_HPP
 
+#ifdef _WIN32
+    #include <windows.h>
+#endif
 #include <pthread.h>
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Template/atomic.hpp"
 #include "condition.hpp"
 #include "../Template/move.hpp"
 #include "../Time/time.hpp"
-#include "thread_id.hpp"
+
+#ifdef _WIN32
+    using pt_thread_id_type = DWORD;
+    #define THREAD_ID GetCurrentThreadId()
+#else
+    using pt_thread_id_type = pthread_t;
+    #define THREAD_ID pthread_self()
+#endif
+
+extern thread_local pt_thread_id_type pt_thread_id;
+pt_thread_id_type pt_thread_self();
 
 int pt_thread_join(pthread_t thread, void **retval);
 int pt_thread_create(pthread_t *thread, const pthread_attr_t *attr,
@@ -45,6 +58,13 @@ void    ft_this_thread_sleep_for(t_duration_milliseconds duration);
 void    ft_this_thread_sleep_until(t_monotonic_time_point time_point);
 void    ft_this_thread_yield();
 
+#ifndef PTHREAD_NO_PROMISE
+template <typename ValueType>
+class ft_promise;
+
+template <>
+class ft_promise<void>;
+
 #include "../Template/promise.hpp"
 
 template <typename ValueType, typename Function>
@@ -75,5 +95,7 @@ int pt_async(ft_promise<ValueType>& promise, Function function)
     pt_thread_detach(thread);
     return (ret);
 }
+
+#endif
 
 #endif
