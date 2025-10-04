@@ -93,9 +93,7 @@ char    *ft_strtok(char *string, const char *delimiters)
         current_pointer++;
     }
     if (*current_pointer == '\0')
-    {
         saved_string = ft_nullptr;
-    }
     else
     {
         *current_pointer = '\0';
