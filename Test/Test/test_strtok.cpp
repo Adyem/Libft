@@ -18,7 +18,7 @@ FT_TEST(test_strtok_basic, "ft_strtok basic")
     FT_ASSERT_EQ(0, ft_strcmp("three", token));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(ft_nullptr, ft_strtok(ft_nullptr, " "));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -26,9 +26,9 @@ FT_TEST(test_strtok_edge, "ft_strtok edge")
 {
     char buffer[4] = ",,,";
     FT_ASSERT_EQ(ft_nullptr, ft_strtok(buffer, ","));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(ft_nullptr, ft_strtok(ft_nullptr, ","));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
 
     char second[4] = "abc";
     FT_ASSERT_EQ(ft_nullptr, ft_strtok(second, ft_nullptr));
@@ -70,7 +70,7 @@ FT_TEST(test_strtok_reinitialize, "ft_strtok resets when given a new string")
     FT_ASSERT_EQ(0, ft_strcmp("delta", token));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(ft_nullptr, ft_strtok(ft_nullptr, " "));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -84,7 +84,7 @@ FT_TEST(test_strtok_skips_leading_delimiters, "ft_strtok skips leading separator
     FT_ASSERT_EQ(0, ft_strcmp("token", token));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(ft_nullptr, ft_strtok(ft_nullptr, ","));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -137,6 +137,6 @@ FT_TEST(test_strtok_empty_delimiter_returns_full_string, "ft_strtok treats empty
     FT_ASSERT_EQ(0, ft_strcmp("token", token));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(ft_nullptr, ft_strtok(ft_nullptr, ""));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }

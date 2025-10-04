@@ -29,11 +29,13 @@ char    *ft_strtok(char *string, const char *delimiters)
         cached_delimiters_length = 0;
         cached_delimiters_hash = 0;
     }
-    if (saved_string == ft_nullptr || delimiters == ft_nullptr)
+    if (delimiters == ft_nullptr)
     {
         ft_errno = FT_EINVAL;
         return (ft_nullptr);
     }
+    if (saved_string == ft_nullptr)
+        return (ft_nullptr);
     new_delimiters_hash = 5381;
     delimiter_index = 0;
     while (delimiters[delimiter_index] != '\0')
@@ -80,7 +82,6 @@ char    *ft_strtok(char *string, const char *delimiters)
     if (*current_pointer == '\0')
     {
         saved_string = ft_nullptr;
-        ft_errno = FT_EINVAL;
         return (ft_nullptr);
     }
     token_start = current_pointer;
