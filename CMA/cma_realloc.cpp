@@ -81,20 +81,16 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         ft_errno = ER_SUCCESS;
         return (ft_nullptr);
     }
-    ft_size_t requested_size = new_size;
     ft_size_t aligned_size = align16(new_size);
     int error = reallocate_block(ptr, aligned_size);
     if (error == 0)
     {
-        Block* resized_block = reinterpret_cast<Block*>(
-            static_cast<char*>(ptr) - sizeof(Block));
-        resized_block->requested_size = requested_size;
         if (g_cma_thread_safe)
             g_malloc_mutex.unlock(THREAD_ID);
         ft_errno = ER_SUCCESS;
         return (ptr);
     }
-    void* new_ptr = cma_malloc(requested_size);
+    void* new_ptr = cma_malloc(new_size);
     if (!new_ptr)
     {
         int error_code;
