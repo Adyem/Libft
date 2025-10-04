@@ -43,6 +43,7 @@ struct Block
 {
     uint32_t    magic;
     ft_size_t    size;
+    ft_size_t    requested_size;
     bool        free;
     Block        *next;
     Block        *prev;
