@@ -114,7 +114,7 @@ int cmp_thread_sleep(unsigned int milliseconds)
 
 int cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_value)
 {
-    int syscall_result;
+    long syscall_result;
 
     while (1)
     {
@@ -144,7 +144,7 @@ int cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_val
 
 int cmp_thread_wake_one_uint32(std::atomic<uint32_t> *address)
 {
-    int syscall_result;
+    long syscall_result;
 
     syscall_result = syscall(SYS_futex, reinterpret_cast<uint32_t *>(address),
 # ifdef FUTEX_WAKE_PRIVATE
