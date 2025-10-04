@@ -111,3 +111,27 @@ FT_TEST(test_strlcat_truncated_destination, "ft_strlcat handles unterminated des
     return (1);
 }
 
+FT_TEST(test_strlcat_unterminated_buffer_exact_size, "ft_strlcat avoids writing when destination lacks terminator within size")
+{
+    char destination[5];
+    const char *source;
+    size_t result;
+
+    destination[0] = '1';
+    destination[1] = '2';
+    destination[2] = '3';
+    destination[3] = '4';
+    destination[4] = '5';
+    source = "abc";
+    ft_errno = FT_EINVAL;
+    result = ft_strlcat(destination, source, 5);
+    FT_ASSERT_EQ(8u, result);
+    FT_ASSERT_EQ('1', destination[0]);
+    FT_ASSERT_EQ('2', destination[1]);
+    FT_ASSERT_EQ('3', destination[2]);
+    FT_ASSERT_EQ('4', destination[3]);
+    FT_ASSERT_EQ('5', destination[4]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
