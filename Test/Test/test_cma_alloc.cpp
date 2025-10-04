@@ -2,6 +2,8 @@
 #include "../../Errno/errno.hpp"
 #include "../../Libft/libft.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
+#include "../../RNG/rng.hpp"
+#include "../../RNG/rng_internal.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <climits>
 
@@ -194,5 +196,102 @@ FT_TEST(test_cma_memdup_allocation_failure_sets_errno, "cma_memdup propagates al
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(ft_nullptr, duplicate);
     FT_ASSERT_EQ(FT_EALLOC, ft_errno);
+    return (1);
+}
+
+static void release_allocation_range(void **allocation_pointers, ft_size_t start_index, ft_size_t end_index)
+{
+    ft_size_t current_index;
+
+    if (start_index > end_index)
+        return ;
+    current_index = start_index;
+    while (current_index <= end_index)
+    {
+        if (allocation_pointers[current_index] != ft_nullptr)
+        {
+            cma_free(allocation_pointers[current_index]);
+            allocation_pointers[current_index] = ft_nullptr;
+        }
+        if (current_index == end_index)
+            break ;
+        current_index = current_index + 1;
+    }
+    return ;
+}
+
+FT_TEST(test_cma_randomized_stress_allocations, "cma handles randomized allocation stress")
+{
+    static const ft_size_t allocation_total_count = 1024u;
+    void *allocation_pointers[allocation_total_count];
+    ft_size_t allocation_sizes[allocation_total_count];
+    unsigned char allocation_patterns[allocation_total_count];
+    ft_size_t allocation_count_before;
+    ft_size_t free_count_before;
+    ft_size_t allocation_count_after;
+    ft_size_t free_count_after;
+    ft_size_t allocation_index;
+
+    ft_seed_random_engine(8472u);
+    allocation_index = 0;
+    while (allocation_index < allocation_total_count)
+    {
+        allocation_pointers[allocation_index] = ft_nullptr;
+        allocation_sizes[allocation_index] = 0;
+        allocation_patterns[allocation_index] = 0;
+        allocation_index = allocation_index + 1;
+    }
+    cma_set_alloc_limit(0);
+    cma_get_stats(&allocation_count_before, &free_count_before);
+    allocation_index = 0;
+    while (allocation_index < allocation_total_count)
+    {
+        unsigned int random_value;
+        ft_size_t requested_size;
+        unsigned char pattern_value;
+
+        random_value = static_cast<unsigned int>(ft_random_int());
+        requested_size = static_cast<ft_size_t>((random_value % 4096u) + 1u);
+        pattern_value = static_cast<unsigned char>((random_value % 251u) + 1u);
+        allocation_sizes[allocation_index] = requested_size;
+        allocation_patterns[allocation_index] = pattern_value;
+        allocation_pointers[allocation_index] = cma_malloc(requested_size);
+        if (!allocation_pointers[allocation_index])
+        {
+            if (allocation_index > 0)
+                release_allocation_range(allocation_pointers, 0, allocation_index - 1);
+            return (0);
+        }
+        ft_memset(allocation_pointers[allocation_index], pattern_value, requested_size);
+        allocation_index = allocation_index + 1;
+    }
+    allocation_index = 0;
+    while (allocation_index < allocation_total_count)
+    {
+        unsigned char *current_block;
+        ft_size_t block_size;
+        unsigned char pattern_value;
+        ft_size_t offset;
+
+        current_block = static_cast<unsigned char *>(allocation_pointers[allocation_index]);
+        block_size = allocation_sizes[allocation_index];
+        pattern_value = allocation_patterns[allocation_index];
+        offset = 0;
+        while (offset < block_size)
+        {
+            if (current_block[offset] != pattern_value)
+            {
+                release_allocation_range(allocation_pointers, allocation_index, allocation_total_count - 1);
+                return (0);
+            }
+            offset = offset + 1;
+        }
+        cma_free(current_block);
+        allocation_pointers[allocation_index] = ft_nullptr;
+        allocation_index = allocation_index + 1;
+    }
+    cma_get_stats(&allocation_count_after, &free_count_after);
+    FT_ASSERT_EQ(allocation_count_before + allocation_total_count, allocation_count_after);
+    FT_ASSERT_EQ(free_count_before + allocation_total_count, free_count_after);
     return (1);
 }
