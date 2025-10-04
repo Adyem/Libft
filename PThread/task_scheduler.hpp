@@ -11,6 +11,7 @@
 #include "../Template/future.hpp"
 #include "../Template/atomic.hpp"
 #include "../Template/queue.hpp"
+#include "../Template/pair.hpp"
 #include "thread.hpp"
 #include "../Time/time.hpp"
 #include "condition.hpp"
@@ -54,6 +55,52 @@ class ft_blocking_queue
         const char *get_error_str() const;
 };
 
+class ft_task_scheduler;
+
+class ft_scheduled_task_state
+{
+    private:
+        ft_atomic<bool> _cancelled;
+        mutable int _error_code;
+
+        void set_error(int error) const;
+
+    public:
+        ft_scheduled_task_state();
+        ~ft_scheduled_task_state();
+
+        void cancel();
+        bool is_cancelled() const;
+
+        int get_error() const;
+        const char *get_error_str() const;
+};
+
+class ft_scheduled_task_handle
+{
+    private:
+        ft_sharedptr<ft_scheduled_task_state> _state;
+        ft_task_scheduler *_scheduler;
+        mutable int _error_code;
+
+        void set_error(int error) const;
+
+    public:
+        ft_scheduled_task_handle();
+        ft_scheduled_task_handle(ft_task_scheduler *scheduler,
+                const ft_sharedptr<ft_scheduled_task_state> &state);
+        ft_scheduled_task_handle(const ft_scheduled_task_handle &other);
+        ft_scheduled_task_handle &operator=(const ft_scheduled_task_handle &other);
+        ~ft_scheduled_task_handle();
+
+        bool cancel();
+        bool valid() const;
+        ft_sharedptr<ft_scheduled_task_state> get_state() const;
+
+        int get_error() const;
+        const char *get_error_str() const;
+};
+
 class ft_task_scheduler
 {
     private:
@@ -62,6 +109,7 @@ class ft_task_scheduler
             t_monotonic_time_point _time;
             long long _interval_ms;
             ft_function<void()> _function;
+            ft_sharedptr<ft_scheduled_task_state> _state;
         };
 
         ft_blocking_queue<ft_function<void()> > _queue;
@@ -73,6 +121,8 @@ class ft_task_scheduler
         ft_atomic<bool> _running;
         mutable int _error_code;
 
+        bool cancel_task_state(const ft_sharedptr<ft_scheduled_task_state> &state);
+        bool scheduled_remove_index(size_t index);
         void set_error(int error) const;
         void worker_loop();
         void timer_loop();
@@ -82,6 +132,8 @@ class ft_task_scheduler
         void scheduled_heap_sift_down(size_t index);
 
     public:
+        friend class ft_scheduled_task_handle;
+
         ft_task_scheduler(size_t thread_count = 0);
         ~ft_task_scheduler();
 
@@ -97,10 +149,11 @@ class ft_task_scheduler
         template <typename Rep, typename Period, typename FunctionType, typename... Args>
         auto schedule_after(std::chrono::duration<Rep, Period> delay,
                 FunctionType function, Args... args)
-            -> ft_future<typename std::invoke_result<FunctionType, Args...>::type>;
+            -> Pair<ft_future<typename std::invoke_result<FunctionType, Args...>::type>,
+                    ft_scheduled_task_handle>;
 
         template <typename Rep, typename Period, typename FunctionType, typename... Args>
-        void schedule_every(std::chrono::duration<Rep, Period> interval,
+        ft_scheduled_task_handle schedule_every(std::chrono::duration<Rep, Period> interval,
                 FunctionType function, Args... args);
 
         int get_error() const;
@@ -415,32 +468,55 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
 template <typename Rep, typename Period, typename FunctionType, typename... Args>
 auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
         FunctionType function, Args... args)
-    -> ft_future<typename std::invoke_result<FunctionType, Args...>::type>
+    -> Pair<ft_future<typename std::invoke_result<FunctionType, Args...>::type>,
+            ft_scheduled_task_handle>
 {
     using return_type = typename std::invoke_result<FunctionType, Args...>::type;
     using promise_type = ft_promise<return_type>;
 
+    Pair<ft_future<return_type>, ft_scheduled_task_handle> result_pair;
     promise_type *promise_raw;
     ft_sharedptr<promise_type> promise_shared;
     ft_future<return_type> future_value;
+    ft_scheduled_task_state *state_raw;
+    ft_sharedptr<ft_scheduled_task_state> state_shared;
+    ft_scheduled_task_handle handle_instance;
 
     promise_raw = new (std::nothrow) promise_type();
     if (!promise_raw)
     {
         this->set_error(FT_EALLOC);
-        return (future_value);
+        return (result_pair);
     }
     promise_shared.reset(promise_raw, 1, false);
     if (promise_shared.hasError())
     {
         this->set_error(promise_shared.get_error());
-        return (future_value);
+        return (result_pair);
     }
     future_value = ft_future<return_type>(promise_shared);
     if (future_value.get_error() != ER_SUCCESS)
     {
         this->set_error(future_value.get_error());
-        return (future_value);
+        return (result_pair);
+    }
+    state_raw = new (std::nothrow) ft_scheduled_task_state();
+    if (!state_raw)
+    {
+        this->set_error(FT_EALLOC);
+        return (result_pair);
+    }
+    state_shared.reset(state_raw, 1, false);
+    if (state_shared.hasError())
+    {
+        this->set_error(state_shared.get_error());
+        return (result_pair);
+    }
+    handle_instance = ft_scheduled_task_handle(this, state_shared);
+    if (handle_instance.get_error() != ER_SUCCESS)
+    {
+        this->set_error(handle_instance.get_error());
+        return (result_pair);
     }
     scheduled_task task_entry;
     std::chrono::milliseconds delay_duration;
@@ -452,6 +528,7 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     start_point = time_monotonic_point_now();
     task_entry._time = time_monotonic_point_add_ms(start_point, delay_milliseconds);
     task_entry._interval_ms = 0;
+    task_entry._state = state_shared;
     auto task_body = [promise_shared, function, args...]() mutable
     {
         if (!promise_shared)
@@ -481,13 +558,13 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     {
         this->set_error(task_entry._function.get_error());
         task_body();
-        return (future_value);
+        return (result_pair);
     }
     if (this->_scheduled_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(this->_scheduled_mutex.get_error());
         task_body();
-        return (future_value);
+        return (result_pair);
     }
     bool push_success;
     int scheduled_error;
@@ -501,37 +578,59 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
         else
             this->set_error(scheduled_error);
         task_body();
-        return (future_value);
+        return (result_pair);
     }
     if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(this->_scheduled_mutex.get_error());
         task_body();
-        return (future_value);
+        return (result_pair);
     }
     if (this->_scheduled_condition.signal() != 0)
     {
         this->set_error(this->_scheduled_condition.get_error());
-        return (future_value);
+        return (result_pair);
     }
     this->set_error(ER_SUCCESS);
-    return (future_value);
+    return (Pair<ft_future<return_type>, ft_scheduled_task_handle>(future_value, handle_instance));
 }
 
 template <typename Rep, typename Period, typename FunctionType, typename... Args>
-void ft_task_scheduler::schedule_every(std::chrono::duration<Rep, Period> interval,
+ft_scheduled_task_handle ft_task_scheduler::schedule_every(std::chrono::duration<Rep, Period> interval,
         FunctionType function, Args... args)
 {
+    ft_scheduled_task_handle handle_result;
     scheduled_task task_entry;
     std::chrono::milliseconds interval_duration;
     long long interval_milliseconds;
     t_monotonic_time_point start_point;
+    ft_scheduled_task_state *state_raw;
+    ft_sharedptr<ft_scheduled_task_state> state_shared;
 
     interval_duration = std::chrono::duration_cast<std::chrono::milliseconds>(interval);
     interval_milliseconds = interval_duration.count();
     start_point = time_monotonic_point_now();
     task_entry._time = time_monotonic_point_add_ms(start_point, interval_milliseconds);
     task_entry._interval_ms = interval_milliseconds;
+    state_raw = new (std::nothrow) ft_scheduled_task_state();
+    if (!state_raw)
+    {
+        this->set_error(FT_EALLOC);
+        return (handle_result);
+    }
+    state_shared.reset(state_raw, 1, false);
+    if (state_shared.hasError())
+    {
+        this->set_error(state_shared.get_error());
+        return (handle_result);
+    }
+    handle_result = ft_scheduled_task_handle(this, state_shared);
+    if (handle_result.get_error() != ER_SUCCESS)
+    {
+        this->set_error(handle_result.get_error());
+        return (handle_result);
+    }
+    task_entry._state = state_shared;
     task_entry._function = ft_function<void()>([function, args...]()
     {
         function(args...);
@@ -540,13 +639,13 @@ void ft_task_scheduler::schedule_every(std::chrono::duration<Rep, Period> interv
     if (task_entry._function.get_error() != ER_SUCCESS)
     {
         this->set_error(task_entry._function.get_error());
-        return ;
+        return (handle_result);
     }
     if (this->_scheduled_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(this->_scheduled_mutex.get_error());
         task_entry._function();
-        return ;
+        return (handle_result);
     }
     bool push_success;
     int scheduled_error;
@@ -560,21 +659,21 @@ void ft_task_scheduler::schedule_every(std::chrono::duration<Rep, Period> interv
         else
             this->set_error(scheduled_error);
         task_entry._function();
-        return ;
+        return (handle_result);
     }
     if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(this->_scheduled_mutex.get_error());
         task_entry._function();
-        return ;
+        return (handle_result);
     }
     if (this->_scheduled_condition.signal() != 0)
     {
         this->set_error(this->_scheduled_condition.get_error());
-        return ;
+        return (handle_result);
     }
     this->set_error(ER_SUCCESS);
-    return ;
+    return (handle_result);
 }
 
 #endif

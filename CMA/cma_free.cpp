@@ -34,7 +34,6 @@ void cma_free(void* ptr)
             g_malloc_mutex.unlock(THREAD_ID);
         su_sigabrt();
     }
-    block->requested_size = 0;
     block->free = true;
     block = merge_block(block);
     Page *page = find_page_of_block(block);

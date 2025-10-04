@@ -25,7 +25,10 @@ FT_TEST(test_task_scheduler_schedule_after, "ft_task_scheduler schedule_after")
     long long elapsed_milliseconds;
 
     start_time = time_monotonic_point_now();
-    auto future_value = scheduler_instance.schedule_after(std::chrono::milliseconds(50), []() { return (3); });
+    auto schedule_result = scheduler_instance.schedule_after(std::chrono::milliseconds(50), []() { return (3); });
+    ft_future<int> future_value = schedule_result.get_key();
+    ft_scheduled_task_handle handle_value = schedule_result.get_value();
+    FT_ASSERT(handle_value.valid());
     int result_value = future_value.get();
     end_time = time_monotonic_point_now();
     elapsed_milliseconds = time_monotonic_point_diff_ms(start_time, end_time);
@@ -39,11 +42,12 @@ FT_TEST(test_task_scheduler_schedule_every, "ft_task_scheduler schedule_every")
     ft_task_scheduler scheduler_instance(1);
     ft_atomic<int> call_counter;
     call_counter.store(0);
-    scheduler_instance.schedule_every(std::chrono::milliseconds(10), [&call_counter]()
+    ft_scheduled_task_handle periodic_handle = scheduler_instance.schedule_every(std::chrono::milliseconds(10), [&call_counter]()
     {
         call_counter.fetch_add(1);
         return ;
     });
+    FT_ASSERT(periodic_handle.valid());
     usleep(50000);
     int count_value = call_counter.load();
     FT_ASSERT(count_value > 1);

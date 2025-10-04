@@ -46,7 +46,7 @@ The current suite exercises components across multiple modules:
   `ft_memcmp`, `ft_memcpy`, `ft_memdup`, `ft_memmove`, `ft_memset`, `ft_strchr`, `ft_strcmp`, `ft_strlcat`, `ft_strlcpy`, `ft_strncpy`, `ft_strlen`, `ft_strncmp`,
   `ft_strnstr`, `ft_strstr`, `ft_strrchr`, `ft_strmapi`, `ft_striteri`, `ft_strtok`, `ft_strtol`, `ft_strtoul`, `ft_setenv`, `ft_unsetenv`, `ft_getenv`, `ft_to_lower`, `ft_to_upper`,
 `ft_fopen`, `ft_fclose`, `ft_fgets`, `ft_time_ms`, `ft_time_format`, `ft_to_string`
-- **PThread**: `ft_task_scheduler` joins the existing `ft_thread` and `ft_this_thread` helpers. The scheduler clears success paths, surfaces queue allocation or empty-pop failures through its `_error_code` mirror, routes timed callbacks through the Time module's `time_monotonic_point_*` helpers instead of constructing `std::chrono::steady_clock` points directly, stores worker state in `ft_vector<ft_thread>` so thread management and futures stay on the library's error-reporting abstractions, and releases the scheduled-task mutex before executing fallbacks when cloning scheduled callbacks or pushing them into the work queue fails so recursive scheduling never deadlocks.
+- **PThread**: `ft_task_scheduler` joins the existing `ft_thread` and `ft_this_thread` helpers. The scheduler clears success paths, surfaces queue allocation or empty-pop failures through its `_error_code` mirror, routes timed callbacks through the Time module's `time_monotonic_point_*` helpers instead of constructing `std::chrono::steady_clock` points directly, stores worker state in `ft_vector<ft_thread>` so thread management and futures stay on the library's error-reporting abstractions, and releases the scheduled-task mutex before executing fallbacks when cloning scheduled callbacks or pushing them into the work queue fails so recursive scheduling never deadlocks. Delayed and periodic submissions return cancellation handles that broadcast the scheduler condition variable and mirror `_error_code` into `ft_errno` when tasks are removed.
 - **Networking**: IPv4 and IPv6 send/receive paths, UDP datagrams, a simple HTTP server, and WebSocket client/server handshake
   coverage using the RFC 6455 GUID alongside a regression that splits the client handshake response across multiple receives to
   validate incremental parsing
@@ -1218,14 +1218,23 @@ template <typename FunctionType, typename... Args>
 auto submit(FunctionType function, Args... args) -> ft_future<ReturnType>;
 template <typename Rep, typename Period, typename FunctionType, typename... Args>
 auto schedule_after(std::chrono::duration<Rep, Period> delay,
-                    FunctionType function, Args... args) -> ft_future<ReturnType>;
+                    FunctionType function, Args... args)
+    -> Pair<ft_future<ReturnType>, ft_scheduled_task_handle>;
 template <typename Rep, typename Period, typename FunctionType, typename... Args>
-void schedule_every(std::chrono::duration<Rep, Period> interval,
+ft_scheduled_task_handle schedule_every(std::chrono::duration<Rep, Period> interval,
                     FunctionType function, Args... args);
 ```
 
 Recurring tasks preserve their callbacks across intervals, preventing
 empty function executions when rescheduled.
+
+Both delayed and recurring submissions now surface an `ft_scheduled_task_handle`.
+Handles expose `cancel()` so callers can remove future runs from the scheduler’s
+heap without racing the timer thread. Cancellation acquires the internal
+mutex, removes the pending entry, updates `_error_code` (mirroring `ft_errno`)
+and broadcasts the scheduler condition variable so sleeping threads re-check
+their wake-up deadlines. Already queued callbacks are allowed to finish, so
+callers should assume in-flight work may still run once.
 
 Worker threads live in an `ft_vector<ft_thread>` and task submissions wrap
 results in `ft_promise`/`ft_future` pairs so the scheduler exposes the
