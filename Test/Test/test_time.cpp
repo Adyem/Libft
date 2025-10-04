@@ -291,6 +291,26 @@ FT_TEST(test_time_format_time_local_failure, "ft_time_format propagates time_loc
     return (1);
 }
 
+FT_TEST(test_time_format_time_now_failure, "ft_time_format propagates time_now failure")
+{
+    char buffer[32];
+    char *format_result;
+    int failure_errno;
+
+    std::memset(buffer, 'X', sizeof(buffer));
+    failure_errno = EBUSY;
+    g_time_now_force_failure = true;
+    g_time_now_failure_errno = failure_errno;
+    errno = 0;
+    ft_errno = ER_SUCCESS;
+    format_result = ft_time_format(buffer, sizeof(buffer));
+    g_time_now_force_failure = false;
+    FT_ASSERT_EQ(ft_nullptr, format_result);
+    FT_ASSERT_EQ('X', buffer[0]);
+    FT_ASSERT_EQ(failure_errno + ERRNO_OFFSET, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_time_format_iso8601_success_sets_errno, "time_format_iso8601 reports success in errno")
 {
     ft_string formatted;
