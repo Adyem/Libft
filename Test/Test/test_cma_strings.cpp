@@ -214,6 +214,51 @@ FT_TEST(test_cma_substr_truncates_when_length_exceeds,
     return (1);
 }
 
+FT_TEST(test_cma_substr_large_buffer_tail_segment,
+        "cma_substr returns the tail segment of a large buffer")
+{
+    size_t  buffer_size;
+    char    *buffer;
+    const char    *tail_segment;
+    size_t  tail_length;
+    size_t  index;
+    unsigned int    start_index;
+    char    *substring;
+
+    buffer_size = static_cast<size_t>(1) << 20;
+    tail_segment = "tail-substring";
+    tail_length = ft_strlen_size_t(tail_segment);
+    buffer = static_cast<char *>(cma_malloc(buffer_size + 1));
+    if (!buffer)
+        return (0);
+    index = 0;
+    while (index < buffer_size - tail_length)
+    {
+        buffer[index] = 'a';
+        index++;
+    }
+    index = 0;
+    while (index < tail_length)
+    {
+        buffer[(buffer_size - tail_length) + index] = tail_segment[index];
+        index++;
+    }
+    buffer[buffer_size] = '\0';
+    start_index = static_cast<unsigned int>(buffer_size - tail_length);
+    ft_errno = FT_EALLOC;
+    substring = cma_substr(buffer, start_index, tail_length);
+    if (!substring)
+    {
+        cma_free(buffer);
+        return (0);
+    }
+    FT_ASSERT_EQ(0, ft_strcmp(substring, tail_segment));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    cma_free(substring);
+    cma_free(buffer);
+    return (1);
+}
+
 FT_TEST(test_cma_substr_handles_out_of_range_start,
         "cma_substr returns an empty string when start is outside the source")
 {
