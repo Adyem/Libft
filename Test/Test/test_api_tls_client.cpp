@@ -404,8 +404,16 @@ FT_TEST(test_api_tls_client_content_length_overflow, "api_tls_client rejects ove
     mock_tls_reset_reads();
     static char oversized_length_buffer[64];
     static char oversized_response_buffer[256];
-    pf_snprintf(oversized_length_buffer, sizeof(oversized_length_buffer), "%llu0",
-            static_cast<unsigned long long>(FT_SYSTEM_SIZE_MAX));
+    pf_snprintf(oversized_length_buffer, sizeof(oversized_length_buffer), "%zu",
+            static_cast<size_t>(FT_SYSTEM_SIZE_MAX));
+    size_t oversized_length_length;
+
+    oversized_length_length = ft_strlen(oversized_length_buffer);
+    if (oversized_length_length + 1 < sizeof(oversized_length_buffer))
+    {
+        oversized_length_buffer[oversized_length_length] = '0';
+        oversized_length_buffer[oversized_length_length + 1] = '\0';
+    }
     pf_snprintf(oversized_response_buffer, sizeof(oversized_response_buffer),
             "HTTP/1.1 200 OK\r\nContent-Length: %s\r\n\r\n",
             oversized_length_buffer);
