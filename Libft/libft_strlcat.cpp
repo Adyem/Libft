@@ -14,13 +14,13 @@ size_t ft_strlcat(char *destination, const char *source, size_t buffer_size)
         ft_errno = FT_EINVAL;
         return (0);
     }
-    destination_length = ft_strlen_size_t(destination);
-    if (ft_errno != ER_SUCCESS)
-        return (0);
     source_length = ft_strlen_size_t(source);
     if (ft_errno != ER_SUCCESS)
         return (0);
-    if (buffer_size <= destination_length)
+    destination_length = 0;
+    while (destination_length < buffer_size && destination[destination_length] != '\0')
+        destination_length++;
+    if (destination_length == buffer_size)
         return (buffer_size + source_length);
     copy_index = 0;
     while ((destination_length + copy_index + 1) < buffer_size && source[copy_index])
