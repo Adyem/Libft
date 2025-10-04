@@ -21,6 +21,7 @@ long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
     unsigned long accumulated_value = 0;
     int digit_value;
     bool overflow_detected = false;
+    bool digit_processed = false;
     unsigned long positive_limit;
     unsigned long negative_limit;
     unsigned long base_value;
@@ -79,6 +80,7 @@ long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
         unsigned long digit_as_unsigned;
 
         digit_as_unsigned = static_cast<unsigned long>(digit_value);
+        digit_processed = true;
         limit_value = positive_limit;
         if (sign_value < 0)
             limit_value = negative_limit;
@@ -97,6 +99,13 @@ long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
         accumulated_value = accumulated_value * base_value
                           + digit_as_unsigned;
         ++current_character;
+    }
+    if (!digit_processed)
+    {
+        ft_errno = FT_EINVAL;
+        if (end_pointer != ft_nullptr)
+            *end_pointer = const_cast<char *>(input_string);
+        return (0L);
     }
     if (end_pointer)
         *end_pointer = const_cast<char *>(current_character);
