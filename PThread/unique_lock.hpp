@@ -3,7 +3,16 @@
 
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "thread_id.hpp"
+
+#ifndef PTHREAD_NO_PROMISE
+#define UNIQUE_LOCK_DEFINED_PTHREAD_NO_PROMISE
+#define PTHREAD_NO_PROMISE
+#endif
+#include "pthread.hpp"
+#ifdef UNIQUE_LOCK_DEFINED_PTHREAD_NO_PROMISE
+#undef PTHREAD_NO_PROMISE
+#undef UNIQUE_LOCK_DEFINED_PTHREAD_NO_PROMISE
+#endif
 
 template <typename MutexType>
 class ft_unique_lock
@@ -168,4 +177,3 @@ const char *ft_unique_lock<MutexType>::get_error_str() const
 }
 
 #endif
-
