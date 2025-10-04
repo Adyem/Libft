@@ -2,6 +2,7 @@
 # define PARSING_HPP
 
 #include "json_schema.hpp"
+#include "json_stream_reader.hpp"
 
 class ft_big_number;
 
@@ -37,6 +38,8 @@ int         json_document_write_to_file(const char *file_path, const json_docume
 char        *json_document_write_to_string(const json_document &document);
 json_group  *json_read_from_file(const char *filename);
 json_group  *json_read_from_string(const char *content);
+json_group  *json_read_from_file_stream(FILE *file, size_t buffer_capacity);
+json_group  *json_read_from_stream(json_stream_read_callback callback, void *user_data, size_t buffer_capacity);
 void         json_free_items(json_item *item);
 void         json_free_groups(json_group *group);
 json_group  *json_find_group(json_group *head, const char *name);

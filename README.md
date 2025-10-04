@@ -1410,6 +1410,8 @@ int          json_document_write_to_file(const char *file_path, const json_docum
 char        *json_document_write_to_string(const json_document &document);
 json_group  *json_read_from_file(const char *filename);
 json_group  *json_read_from_string(const char *content);
+json_group  *json_read_from_file_stream(FILE *file, size_t buffer_capacity);
+json_group  *json_read_from_stream(json_stream_read_callback callback, void *user_data, size_t buffer_capacity);
 json_group  *json_find_group(json_group *head, const char *name);
 json_item   *json_find_item(json_group *group, const char *key);
 void         json_remove_group(json_group **head, const char *name);
@@ -1436,6 +1438,23 @@ value, frees any previous big-number allocation, and attaches a fresh
 `ft_big_number` when the digits exceed the 64-bit limit. Parsing and update
 helpers call it automatically, and `json_write_to_file`/`json_write_to_string`
 emit such values without quotes so round trips preserve large integers.
+
+For large payloads the streaming helpers avoid building the entire document in
+memory. `json_read_from_file_stream` accepts a `FILE *` alongside a
+caller-provided buffer capacity (for example, 8 or 16 bytes) and tokenizes the
+input incrementally while allocating only the keys and values that become part
+of the resulting `json_group` list. When data arrives from sockets or other
+chunked transports, `json_read_from_stream` reads from a
+`json_stream_read_callback`, allowing callers to pipe received blocks directly
+into the parser without concatenation. Choosing a buffer size that matches the
+expected I/O chunk (such as the size used by `fread` or a network receive) keeps
+memory growth bounded.
+
+`json_document::read_from_file_streaming` wraps the same backend so existing
+code that relies on the high-level document class can enable streaming parsing
+by passing the desired buffer size. Prefer the streaming entry points when
+processing multi-megabyte configuration files or continuous feeds that would be
+expensive to duplicate into a single string before parsing.
 
 Schemas describe expected fields and types using a minimal subset of the JSON Schema draft-07 specification:
 

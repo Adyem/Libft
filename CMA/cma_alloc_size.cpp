@@ -77,14 +77,14 @@ int cma_checked_block_size(const void *memory_pointer, ft_size_t *block_size)
         g_malloc_mutex.lock(THREAD_ID);
     Block *block = cma_find_block_for_pointer(memory_pointer);
 
-    if (block == ft_nullptr || block->magic != MAGIC_NUMBER)
+    if (block == ft_nullptr || block->magic != MAGIC_NUMBER || block->free)
     {
         if (g_cma_thread_safe)
             g_malloc_mutex.unlock(THREAD_ID);
         ft_errno = CMA_INVALID_PTR;
         return (-1);
     }
-    *block_size = block->size;
+    *block_size = block->requested_size;
     if (g_cma_thread_safe)
         g_malloc_mutex.unlock(THREAD_ID);
     ft_errno = ER_SUCCESS;

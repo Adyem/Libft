@@ -4,12 +4,13 @@ DEBUG_TARGET := JSon_debug.a
 SRCS :=         json_parsing.cpp \
                 json_create_item.cpp \
                 json_reader.cpp \
+                json_stream_reader.cpp \
                 json_writer.cpp \
                 json_utils.cpp \
                 json_document.cpp \
                 json_schema.cpp
 
-HEADERS := json.hpp document.hpp json_schema.hpp
+HEADERS := json.hpp document.hpp json_schema.hpp json_stream_reader.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

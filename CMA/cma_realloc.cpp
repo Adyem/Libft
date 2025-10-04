@@ -81,16 +81,20 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         ft_errno = ER_SUCCESS;
         return (ft_nullptr);
     }
-    new_size = align16(new_size);
-    int error = reallocate_block(ptr, new_size);
+    ft_size_t requested_size = new_size;
+    ft_size_t aligned_size = align16(new_size);
+    int error = reallocate_block(ptr, aligned_size);
     if (error == 0)
     {
+        Block* resized_block = reinterpret_cast<Block*>(
+            static_cast<char*>(ptr) - sizeof(Block));
+        resized_block->requested_size = requested_size;
         if (g_cma_thread_safe)
             g_malloc_mutex.unlock(THREAD_ID);
         ft_errno = ER_SUCCESS;
         return (ptr);
     }
-    void* new_ptr = cma_malloc(new_size);
+    void* new_ptr = cma_malloc(requested_size);
     if (!new_ptr)
     {
         int error_code;
@@ -112,10 +116,10 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         return (ft_nullptr);
     }
     ft_size_t copy_size;
-    if (old_block->size < new_size)
+    if (old_block->size < aligned_size)
         copy_size = old_block->size;
     else
-        copy_size = new_size;
+        copy_size = aligned_size;
     ft_memcpy(new_ptr, ptr, static_cast<size_t>(copy_size));
     if (g_cma_thread_safe)
         g_malloc_mutex.unlock(THREAD_ID);

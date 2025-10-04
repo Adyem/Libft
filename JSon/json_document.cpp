@@ -2,6 +2,8 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 
+#include <cstdio>
+
 json_document::json_document() noexcept
     : _groups(ft_nullptr), _error_code(ER_SUCCESS)
 {
@@ -184,6 +186,37 @@ int json_document::read_from_file(const char *file_path) noexcept
     }
     this->clear();
     json_group *groups = json_read_from_file(file_path);
+    if (!groups)
+    {
+        int current_error = ft_errno;
+        if (current_error == ER_SUCCESS)
+            current_error = FT_EINVAL;
+        this->set_error(current_error);
+        return (-1);
+    }
+    this->_groups = groups;
+    this->set_error(ER_SUCCESS);
+    return (0);
+}
+
+int json_document::read_from_file_streaming(const char *file_path, size_t buffer_capacity) noexcept
+{
+    if (!file_path || buffer_capacity == 0)
+    {
+        this->clear();
+        this->set_error(FT_EINVAL);
+        return (-1);
+    }
+    FILE *file = fopen(file_path, "rb");
+    if (!file)
+    {
+        this->clear();
+        this->set_error(FT_EIO);
+        return (-1);
+    }
+    this->clear();
+    json_group *groups = json_read_from_file_stream(file, buffer_capacity);
+    fclose(file);
     if (!groups)
     {
         int current_error = ft_errno;

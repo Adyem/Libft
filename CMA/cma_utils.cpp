@@ -65,6 +65,7 @@ Block* split_block(Block* block, ft_size_t size)
             + size);
     new_block->magic = MAGIC_NUMBER;
     new_block->size = block->size - size - sizeof(Block);
+    new_block->requested_size = 0;
     new_block->free = true;
     new_block->next = block->next;
     new_block->prev = block;
@@ -118,6 +119,7 @@ Page *create_page(ft_size_t size)
     page->blocks = static_cast<Block*>(ptr);
     page->blocks->magic = MAGIC_NUMBER;
     page->blocks->size = page_size - sizeof(Block);
+    page->blocks->requested_size = 0;
     page->blocks->free = true;
     page->blocks->next = ft_nullptr;
     page->blocks->prev = ft_nullptr;
@@ -233,6 +235,8 @@ static inline void print_block_info_impl(Block *block)
     pf_printf_fd(2, "Magic Number: 0x%X\n", block->magic);
     pf_printf_fd(2, "Size: %llu bytes\n",
         static_cast<unsigned long long>(block->size));
+    pf_printf_fd(2, "Requested Size: %llu bytes\n",
+        static_cast<unsigned long long>(block->requested_size));
     pf_printf_fd(2, "Free: %s\n", free_status);
     pf_printf_fd(2, "Next Block: %p\n", static_cast<void*>(block->next));
     pf_printf_fd(2, "Previous Block: %p\n", static_cast<void*>(block->prev));
