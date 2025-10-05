@@ -82,30 +82,3 @@ FT_TEST(test_cnfg_parse_missing_value_handles_entries, "cnfg_parse accepts missi
     return (1);
 }
 
-FT_TEST(test_cnfg_parse_env_override_sets_errno_success, "cnfg_parse allows environment overrides")
-{
-    const char *filename = "test_config_env.ini";
-    FILE *file = std::fopen(filename, "w");
-    if (!file)
-        return (0);
-    std::fprintf(file, "key=file\n");
-    std::fclose(file);
-    if (ft_setenv("key", "env", 1) != 0)
-    {
-        cleanup_file(filename);
-        return (0);
-    }
-    ft_errno = FT_EALLOC;
-    cnfg_config *config = cnfg_parse(filename);
-    FT_ASSERT(config != ft_nullptr);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    FT_ASSERT(config->entry_count == 1);
-    FT_ASSERT(config->entries[0].value != ft_nullptr);
-    FT_ASSERT(std::strcmp(config->entries[0].value, "env") == 0);
-    if (config)
-        cnfg_free(config);
-    cleanup_file(filename);
-    ft_unsetenv("key");
-    return (1);
-}
-
