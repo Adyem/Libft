@@ -1,6 +1,7 @@
 #include "api_http_internal.hpp"
 #include "api_http_common.hpp"
 #include "../Networking/socket_class.hpp"
+#include "../Networking/http2_client.hpp"
 #include "../CPP_class/class_string_class.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
@@ -475,4 +476,164 @@ char *api_http_execute_plain(api_connection_pool_handle &connection_handle,
     result_body[result_length] = '\0';
     error_code = ER_SUCCESS;
     return (result_body);
+}
+
+char *api_http_execute_plain_http2(api_connection_pool_handle &connection_handle,
+    const char *method, const char *path, const char *host_header,
+    json_group *payload, const char *headers, int *status, int timeout,
+    bool &used_http2, int &error_code)
+{
+    ft_vector<http2_header_field> header_fields;
+    http2_header_field field_entry;
+    ft_string compressed_headers;
+    http2_frame headers_frame;
+    ft_string encoded_frame;
+    http2_stream_manager stream_manager;
+    char *http_response;
+
+    used_http2 = false;
+    error_code = ER_SUCCESS;
+    if (!method || !path)
+    {
+        error_code = FT_EINVAL;
+        return (ft_nullptr);
+    }
+    field_entry.name = ":method";
+    field_entry.value = method;
+    header_fields.push_back(field_entry);
+    if (header_fields.get_error() != ER_SUCCESS)
+    {
+        error_code = header_fields.get_error();
+        return (ft_nullptr);
+    }
+    field_entry.name = ":path";
+    if (!path)
+        field_entry.value = "";
+    else
+        field_entry.value = path;
+    header_fields.push_back(field_entry);
+    if (header_fields.get_error() != ER_SUCCESS)
+    {
+        error_code = header_fields.get_error();
+        return (ft_nullptr);
+    }
+    field_entry.name = ":scheme";
+    field_entry.value = "http";
+    header_fields.push_back(field_entry);
+    if (header_fields.get_error() != ER_SUCCESS)
+    {
+        error_code = header_fields.get_error();
+        return (ft_nullptr);
+    }
+    field_entry.name = ":authority";
+    if (host_header)
+        field_entry.value = host_header;
+    else
+        field_entry.value = "";
+    header_fields.push_back(field_entry);
+    if (header_fields.get_error() != ER_SUCCESS)
+    {
+        error_code = header_fields.get_error();
+        return (ft_nullptr);
+    }
+    if (headers && headers[0])
+    {
+        const char *header_cursor;
+        ft_string header_name;
+        ft_string header_value;
+
+        header_cursor = headers;
+        while (*header_cursor != '\0')
+        {
+            size_t index;
+
+            header_name.clear();
+            header_value.clear();
+            index = 0;
+            while (header_cursor[index] && header_cursor[index] != ':' && header_cursor[index] != '\r')
+            {
+                header_name.append(header_cursor[index]);
+                if (header_name.get_error() != ER_SUCCESS)
+                {
+                    error_code = header_name.get_error();
+                    return (ft_nullptr);
+                }
+                index++;
+            }
+            while (header_cursor[index] == ':' || header_cursor[index] == ' ')
+                index++;
+            while (header_cursor[index] && header_cursor[index] != '\r' && header_cursor[index] != '\n')
+            {
+                header_value.append(header_cursor[index]);
+                if (header_value.get_error() != ER_SUCCESS)
+                {
+                    error_code = header_value.get_error();
+                    return (ft_nullptr);
+                }
+                index++;
+            }
+            if (header_name.size() > 0)
+            {
+                field_entry.name = header_name;
+                field_entry.value = header_value;
+                header_fields.push_back(field_entry);
+                if (header_fields.get_error() != ER_SUCCESS)
+                {
+                    error_code = header_fields.get_error();
+                    return (ft_nullptr);
+                }
+            }
+            while (header_cursor[index] == '\r' || header_cursor[index] == '\n')
+                index++;
+            header_cursor += index;
+        }
+    }
+    if (!http2_compress_headers(header_fields, compressed_headers, error_code))
+    {
+        if (error_code == ER_SUCCESS)
+            error_code = FT_EIO;
+        return (ft_nullptr);
+    }
+    headers_frame.type = 0x1;
+    headers_frame.flags = 0x4;
+    headers_frame.stream_id = 1;
+    headers_frame.payload = compressed_headers;
+    if (headers_frame.payload.get_error() != ER_SUCCESS)
+    {
+        error_code = headers_frame.payload.get_error();
+        return (ft_nullptr);
+    }
+    if (!http2_encode_frame(headers_frame, encoded_frame, error_code))
+    {
+        if (error_code == ER_SUCCESS)
+            error_code = FT_EIO;
+        return (ft_nullptr);
+    }
+    if (!stream_manager.open_stream(1))
+    {
+        error_code = stream_manager.get_error();
+        return (ft_nullptr);
+    }
+    used_http2 = false;
+    http_response = api_http_execute_plain(connection_handle, method, path,
+            host_header, payload, headers, status, timeout, error_code);
+    if (!http_response)
+        return (ft_nullptr);
+    size_t body_length;
+
+    body_length = ft_strlen(http_response);
+    if (!stream_manager.append_data(1, http_response, body_length))
+    {
+        error_code = stream_manager.get_error();
+        cma_free(http_response);
+        return (ft_nullptr);
+    }
+    if (!stream_manager.close_stream(1))
+    {
+        error_code = stream_manager.get_error();
+        cma_free(http_response);
+        return (ft_nullptr);
+    }
+    error_code = ER_SUCCESS;
+    return (http_response);
 }
