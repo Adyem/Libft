@@ -1,4 +1,5 @@
 #include "http_client.hpp"
+#include "http2_client.hpp"
 #include "socket_class.hpp"
 #include "networking.hpp"
 #include "ssl_wrapper.hpp"
@@ -193,6 +194,13 @@ static int http_client_initialize_ssl(int socket_fd, const char *host, SSL_CTX *
         ft_errno = SOCKET_CONNECT_FAILED;
         return (-1);
     }
+    bool selected_http2;
+    int alpn_error;
+
+    if (!http2_select_alpn_protocol(local_connection, selected_http2, alpn_error))
+        ft_errno = ER_SUCCESS;
+    (void)selected_http2;
+    (void)alpn_error;
     if (host != NULL && host[0] != '\0')
     {
         long control_result;

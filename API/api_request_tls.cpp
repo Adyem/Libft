@@ -151,6 +151,142 @@ char *api_request_https(const char *ip, uint16_t port,
     return (result_body);
 }
 
+char *api_request_https_http2(const char *ip, uint16_t port,
+    const char *method, const char *path, json_group *payload,
+    const char *headers, int *status, int timeout,
+    const char *ca_certificate, bool verify_peer, bool *used_http2)
+{
+    if (used_http2)
+        *used_http2 = false;
+    if (ft_log_get_api_logging())
+    {
+        const char *log_ip = "(null)";
+        const char *log_method = "(null)";
+        const char *log_path = "(null)";
+        if (ip)
+            log_ip = ip;
+        if (method)
+            log_method = method;
+        if (path)
+            log_path = path;
+        ft_log_debug("api_request_https_http2 %s:%u %s %s",
+            log_ip, port, log_method, log_path);
+    }
+    int error_code = ER_SUCCESS;
+    struct api_request_errno_guard
+    {
+        int *code;
+        api_request_errno_guard(int *value)
+            : code(value)
+        {
+            return ;
+        }
+        ~api_request_errno_guard()
+        {
+            ft_errno = *code;
+            return ;
+        }
+    } guard(&error_code);
+
+    SocketConfig config;
+    config._type = SocketType::CLIENT;
+    config._ip = ip;
+    config._port = port;
+    config._recv_timeout = timeout;
+    config._send_timeout = timeout;
+
+    ft_string security_identity;
+    const char *security_identity_pointer;
+
+    security_identity_pointer = ft_nullptr;
+    if (verify_peer)
+    {
+        security_identity = "verify:1";
+        if (ca_certificate && ca_certificate[0] != '\0')
+        {
+            security_identity += ":";
+            security_identity += ca_certificate;
+        }
+    }
+    else
+        security_identity = "verify:0";
+    if (!security_identity.empty())
+        security_identity_pointer = security_identity.c_str();
+
+    api_connection_pool_handle connection_handle;
+    bool pooled_connection;
+
+    pooled_connection = api_connection_pool_acquire(connection_handle, ip, port,
+            api_connection_security_mode::TLS, security_identity_pointer);
+    if (!pooled_connection)
+    {
+        ft_socket new_socket(config);
+
+        if (new_socket.get_error())
+        {
+            error_code = new_socket.get_error();
+            return (ft_nullptr);
+        }
+        connection_handle.socket = std::move(new_socket);
+        connection_handle.has_socket = true;
+    }
+    struct api_connection_return_guard
+    {
+        api_connection_pool_handle *handle;
+        bool success;
+        api_connection_return_guard(api_connection_pool_handle &value)
+        {
+            handle = &value;
+            success = false;
+            return ;
+        }
+        ~api_connection_return_guard()
+        {
+            if (!handle)
+                return ;
+            if (success)
+            {
+                api_connection_pool_mark_idle(*handle);
+                return ;
+            }
+            api_connection_pool_evict(*handle);
+            return ;
+        }
+        void set_success(void)
+        {
+            success = true;
+            return ;
+        }
+    } connection_guard(connection_handle);
+    if (!connection_handle.has_socket)
+    {
+        error_code = FT_EIO;
+        return (ft_nullptr);
+    }
+
+    bool http2_used_local;
+    char *result_body;
+
+    http2_used_local = false;
+    result_body = api_https_execute_http2(connection_handle, method, path, ip,
+            payload, headers, status, timeout, ca_certificate,
+            verify_peer, http2_used_local, error_code);
+    if (!result_body)
+    {
+        error_code = ER_SUCCESS;
+        result_body = api_https_execute(connection_handle, method, path, ip,
+                payload, headers, status, timeout, ca_certificate,
+                verify_peer, error_code);
+        if (!result_body)
+            return (ft_nullptr);
+        http2_used_local = false;
+    }
+    connection_guard.set_success();
+    if (used_http2)
+        *used_http2 = http2_used_local;
+    return (result_body);
+}
+
 char *api_request_string_tls(const char *host, uint16_t port,
     const char *method, const char *path, json_group *payload,
     const char *headers, int *status, int timeout)
@@ -259,12 +395,159 @@ char *api_request_string_tls(const char *host, uint16_t port,
     return (result_body);
 }
 
+char *api_request_string_tls_http2(const char *host, uint16_t port,
+    const char *method, const char *path, json_group *payload,
+    const char *headers, int *status, int timeout, bool *used_http2)
+{
+    if (used_http2)
+        *used_http2 = false;
+    if (ft_log_get_api_logging())
+    {
+        const char *log_host = "(null)";
+        const char *log_method = "(null)";
+        const char *log_path = "(null)";
+        if (host)
+            log_host = host;
+        if (method)
+            log_method = method;
+        if (path)
+            log_path = path;
+        ft_log_debug("api_request_string_tls_http2 %s:%u %s %s",
+            log_host, port, log_method, log_path);
+    }
+    int error_code = ER_SUCCESS;
+    struct api_request_errno_guard
+    {
+        int *code;
+        api_request_errno_guard(int *value)
+            : code(value)
+        {
+            return ;
+        }
+        ~api_request_errno_guard()
+        {
+            ft_errno = *code;
+            return ;
+        }
+    } guard(&error_code);
+
+    if (!host || !method || !path)
+    {
+        error_code = FT_EINVAL;
+        return (ft_nullptr);
+    }
+
+    SocketConfig config;
+    config._type = SocketType::CLIENT;
+    config._ip = host;
+    config._port = port;
+    config._recv_timeout = timeout;
+    config._send_timeout = timeout;
+
+    api_connection_pool_handle connection_handle;
+    bool pooled_connection;
+
+    pooled_connection = api_connection_pool_acquire(connection_handle, host, port,
+            api_connection_security_mode::TLS, host);
+    if (!pooled_connection)
+    {
+        ft_socket new_socket(config);
+
+        if (new_socket.get_error())
+        {
+            error_code = new_socket.get_error();
+            return (ft_nullptr);
+        }
+        connection_handle.socket = std::move(new_socket);
+        connection_handle.has_socket = true;
+    }
+    struct api_connection_return_guard
+    {
+        api_connection_pool_handle *handle;
+        bool success;
+        api_connection_return_guard(api_connection_pool_handle &value)
+        {
+            handle = &value;
+            success = false;
+            return ;
+        }
+        ~api_connection_return_guard()
+        {
+            if (!handle)
+                return ;
+            if (success)
+            {
+                api_connection_pool_mark_idle(*handle);
+                return ;
+            }
+            api_connection_pool_evict(*handle);
+            return ;
+        }
+        void set_success(void)
+        {
+            success = true;
+            return ;
+        }
+    } connection_guard(connection_handle);
+    if (!connection_handle.has_socket)
+    {
+        error_code = FT_EIO;
+        return (ft_nullptr);
+    }
+    bool http2_used_local;
+    char *result_body;
+
+    http2_used_local = false;
+    result_body = api_https_execute_http2(connection_handle, method, path, host,
+            payload, headers, status, timeout, ft_nullptr, true,
+            http2_used_local, error_code);
+    if (!result_body)
+    {
+        error_code = ER_SUCCESS;
+        result_body = api_https_execute(connection_handle, method, path, host,
+                payload, headers, status, timeout, ft_nullptr, true,
+                error_code);
+        if (!result_body)
+            return (ft_nullptr);
+        http2_used_local = false;
+    }
+    connection_guard.set_success();
+    if (used_http2)
+        *used_http2 = http2_used_local;
+    return (result_body);
+}
+
 json_group *api_request_json_tls(const char *host, uint16_t port,
     const char *method, const char *path, json_group *payload,
     const char *headers, int *status, int timeout)
 {
     char *body = api_request_string_tls(host, port, method, path, payload,
-                                        headers, status, timeout);
+                                       headers, status, timeout);
+    if (!body)
+    {
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = FT_EIO;
+        return (ft_nullptr);
+    }
+    json_group *result = json_read_from_string(body);
+    cma_free(body);
+    if (result)
+        ft_errno = ER_SUCCESS;
+    return (result);
+}
+
+json_group *api_request_json_tls_http2(const char *host, uint16_t port,
+    const char *method, const char *path, json_group *payload,
+    const char *headers, int *status, int timeout, bool *used_http2)
+{
+    bool http2_used_local;
+    char *body;
+
+    http2_used_local = false;
+    body = api_request_string_tls_http2(host, port, method, path, payload,
+            headers, status, timeout, &http2_used_local);
+    if (used_http2)
+        *used_http2 = http2_used_local;
     if (!body)
     {
         if (ft_errno == ER_SUCCESS)

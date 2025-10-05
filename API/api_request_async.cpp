@@ -512,3 +512,47 @@ bool    api_request_json_async(const char *ip, uint16_t port,
     ft_errno = ER_SUCCESS;
     return (true);
 }
+
+bool    api_request_string_http2_async(const char *ip, uint16_t port,
+        const char *method, const char *path, api_callback callback,
+        void *user_data, json_group *payload, const char *headers, int timeout,
+        bool *used_http2)
+{
+    if (used_http2)
+        *used_http2 = false;
+    return (api_request_string_async(ip, port, method, path, callback,
+            user_data, payload, headers, timeout));
+}
+
+bool    api_request_string_tls_http2_async(const char *host, uint16_t port,
+        const char *method, const char *path, api_callback callback,
+        void *user_data, json_group *payload, const char *headers, int timeout,
+        bool *used_http2)
+{
+    if (used_http2)
+        *used_http2 = false;
+    return (api_request_string_tls_async(host, port, method, path, callback,
+            user_data, payload, headers, timeout));
+}
+
+bool    api_request_json_http2_async(const char *ip, uint16_t port,
+        const char *method, const char *path, api_json_callback callback,
+        void *user_data, json_group *payload, const char *headers, int timeout,
+        bool *used_http2)
+{
+    if (used_http2)
+        *used_http2 = false;
+    return (api_request_json_async(ip, port, method, path, callback,
+            user_data, payload, headers, timeout));
+}
+
+bool    api_request_json_tls_http2_async(const char *host, uint16_t port,
+        const char *method, const char *path, api_json_callback callback,
+        void *user_data, json_group *payload, const char *headers, int timeout,
+        bool *used_http2)
+{
+    if (used_http2)
+        *used_http2 = false;
+    return (api_request_json_tls_async(host, port, method, path, callback,
+            user_data, payload, headers, timeout));
+}
