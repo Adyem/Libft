@@ -3,7 +3,9 @@ DEBUG_TARGET := config_debug.a
 
 SRCS :=         config_parse.cpp \
                 config_flags.cpp \
-                config_flag_parser.cpp
+                config_flag_parser.cpp \
+                config_write.cpp \
+                config_merge.cpp
 
 HEADERS := config.hpp flag_parser.hpp
 
