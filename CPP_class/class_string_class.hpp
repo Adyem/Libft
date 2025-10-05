@@ -62,4 +62,12 @@ bool operator==(const ft_string &lhs, const ft_string &rhs) noexcept;
 bool operator==(const ft_string &lhs, const char* rhs) noexcept;
 bool operator==(const char* lhs, const ft_string &rhs) noexcept;
 
+bool operator<(const ft_string &lhs, const ft_string &rhs) noexcept;
+bool operator<(const ft_string &lhs, const char* rhs) noexcept;
+bool operator<(const char* lhs, const ft_string &rhs) noexcept;
+
+bool operator>(const ft_string &lhs, const ft_string &rhs) noexcept;
+bool operator>(const ft_string &lhs, const char* rhs) noexcept;
+bool operator>(const char* lhs, const ft_string &rhs) noexcept;
+
 #endif

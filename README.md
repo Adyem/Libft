@@ -1743,6 +1743,14 @@ errors must be checked via `get_error`. The implementation is split across
 multiple source files like `api_request.cpp` and `api_request_async.cpp` for
 maintainability.
 
+All HTTP helpers reuse connections through an internal pool keyed by host,
+port, and transport security. Successful requests return sockets to the pool so
+subsequent calls avoid a new TCP or TLS handshake, while protocol or I/O
+failures automatically evict the underlying connection. Idle sockets are
+pruned according to the configured timeout, and error states are surfaced
+through `ft_socket::get_error()` so callers can detect failures without losing
+context.
+
 ```
 char       *api_request_string(const char *ip, uint16_t port,
                                const char *method, const char *path,
@@ -1817,6 +1825,21 @@ bool api_request_json_tls_async(const char *host, uint16_t port,
                                 json_group *payload = ft_nullptr,
                                 const char *headers = ft_nullptr, int timeout = 60000);
 ```
+
+Connection pooling can be tuned or flushed via the following helpers:
+
+```
+void        api_connection_pool_flush();
+void        api_connection_pool_set_max_idle(size_t max_idle);
+size_t      api_connection_pool_get_max_idle();
+void        api_connection_pool_set_idle_timeout(long long idle_timeout_ms);
+long long   api_connection_pool_get_idle_timeout();
+```
+
+Reducing the idle limit forces older connections to close once the pool reaches
+capacity, while lowering the timeout frees sockets that have been inactive for
+too long. Call `api_connection_pool_flush` to close every cached connection—for
+example before application shutdown or when rotating credentials.
 
 Asynchronous helpers in `promise.hpp` return `ft_promise` objects:
 
