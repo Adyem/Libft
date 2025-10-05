@@ -678,7 +678,7 @@ int http_get_stream(const char *host, const char *path, http_response_handler ha
         ft_errno = FT_EINVAL;
         return (-1);
     }
-    std::memset(&address_hints, 0, sizeof(address_hints));
+    ft_memset(&address_hints, 0, sizeof(address_hints));
     address_hints.ai_family = AF_UNSPEC;
     address_hints.ai_socktype = SOCK_STREAM;
     if (custom_port != NULL && custom_port[0] != '\0')
@@ -833,7 +833,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
     response.clear();
     g_http_buffer_adapter_state.response = &response;
     g_http_buffer_adapter_state.header_appended = false;
-    std::memset(&address_hints, 0, sizeof(address_hints));
+    ft_memset(&address_hints, 0, sizeof(address_hints));
     address_hints.ai_family = AF_UNSPEC;
     address_hints.ai_socktype = SOCK_STREAM;
     if (custom_port != NULL && custom_port[0] != '\0')

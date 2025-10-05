@@ -170,7 +170,9 @@ const char *ft_scheduled_task_handle::get_error_str() const
 
 ft_task_scheduler::ft_task_scheduler(size_t thread_count)
     : _queue(), _workers(), _timer_thread(), _scheduled(), _scheduled_mutex(),
-      _scheduled_condition(), _running(true), _error_code(ER_SUCCESS)
+      _scheduled_condition(), _running(true), _queue_size_counter(0),
+      _scheduled_size_counter(0), _worker_active_counter(0),
+      _worker_idle_counter(0), _worker_total_count(0), _error_code(ER_SUCCESS)
 {
     size_t index;
     unsigned int cpu_count;
@@ -226,6 +228,7 @@ ft_task_scheduler::ft_task_scheduler(size_t thread_count)
             worker_failure = true;
             break;
         }
+        this->_worker_total_count++;
         index++;
     }
     if (worker_failure)
@@ -302,6 +305,7 @@ void ft_task_scheduler::set_error(int error) const
 
 void ft_task_scheduler::worker_loop()
 {
+    this->_worker_idle_counter.fetch_add(1);
     while (true)
     {
         ft_function<void()> task;
@@ -317,10 +321,16 @@ void ft_task_scheduler::worker_loop()
             this->set_error(this->_queue.get_error());
             continue;
         }
+        this->_worker_idle_counter.fetch_add(-1);
+        this->_worker_active_counter.fetch_add(1);
+        this->_queue_size_counter.fetch_add(-1);
         this->set_error(ER_SUCCESS);
         if (task)
             task();
+        this->_worker_active_counter.fetch_add(-1);
+        this->_worker_idle_counter.fetch_add(1);
     }
+    this->_worker_idle_counter.fetch_add(-1);
     return ;
 }
 
@@ -395,8 +405,12 @@ bool ft_task_scheduler::scheduled_heap_push(scheduled_task &&task)
         return (false);
     size = this->_scheduled.size();
     if (size == 0)
+    {
+        this->_scheduled_size_counter.store(0);
         return (true);
+    }
     this->scheduled_heap_sift_up(size - 1);
+    this->_scheduled_size_counter.store(static_cast<long long>(this->_scheduled.size()));
     return (true);
 }
 
@@ -415,6 +429,7 @@ bool ft_task_scheduler::scheduled_heap_pop(scheduled_task &task)
         this->_scheduled.pop_back();
         if (this->_scheduled.get_error() != ER_SUCCESS)
             return (false);
+        this->_scheduled_size_counter.store(0);
         return (true);
     }
     scheduled_task last_task;
@@ -425,6 +440,7 @@ bool ft_task_scheduler::scheduled_heap_pop(scheduled_task &task)
         return (false);
     this->_scheduled[0] = ft_move(last_task);
     this->scheduled_heap_sift_down(0);
+    this->_scheduled_size_counter.store(static_cast<long long>(this->_scheduled.size()));
     return (true);
 }
 
@@ -444,6 +460,7 @@ bool ft_task_scheduler::scheduled_remove_index(size_t index)
         this->_scheduled.pop_back();
         if (this->_scheduled.get_error() != ER_SUCCESS)
             return (false);
+        this->_scheduled_size_counter.store(static_cast<long long>(this->_scheduled.size()));
         return (true);
     }
     scheduled_task last_task;
@@ -455,6 +472,7 @@ bool ft_task_scheduler::scheduled_remove_index(size_t index)
     this->_scheduled[index] = ft_move(last_task);
     this->scheduled_heap_sift_down(index);
     this->scheduled_heap_sift_up(index);
+    this->_scheduled_size_counter.store(static_cast<long long>(this->_scheduled.size()));
     return (true);
 }
 
@@ -829,7 +847,10 @@ void ft_task_scheduler::timer_loop()
                     expired_task._function();
             }
             else
+            {
+                this->_queue_size_counter.fetch_add(1);
                 this->set_error(ER_SUCCESS);
+            }
             if (!this->_running.load())
                 return ;
             if (this->_scheduled_mutex.lock(THREAD_ID) != FT_SUCCESS)
@@ -891,5 +912,47 @@ int ft_task_scheduler::get_error() const
 const char *ft_task_scheduler::get_error_str() const
 {
     return (ft_strerror(this->_error_code));
+}
+
+long long ft_task_scheduler::get_queue_size() const
+{
+    long long queue_size;
+
+    queue_size = this->_queue_size_counter.load();
+    this->set_error(ER_SUCCESS);
+    return (queue_size);
+}
+
+long long ft_task_scheduler::get_scheduled_task_count() const
+{
+    long long scheduled_count;
+
+    scheduled_count = this->_scheduled_size_counter.load();
+    this->set_error(ER_SUCCESS);
+    return (scheduled_count);
+}
+
+long long ft_task_scheduler::get_worker_active_count() const
+{
+    long long active_count;
+
+    active_count = this->_worker_active_counter.load();
+    this->set_error(ER_SUCCESS);
+    return (active_count);
+}
+
+long long ft_task_scheduler::get_worker_idle_count() const
+{
+    long long idle_count;
+
+    idle_count = this->_worker_idle_counter.load();
+    this->set_error(ER_SUCCESS);
+    return (idle_count);
+}
+
+size_t ft_task_scheduler::get_worker_total_count() const
+{
+    this->set_error(ER_SUCCESS);
+    return (this->_worker_total_count);
 }
 
