@@ -1,15 +1,122 @@
 #include "../../Networking/socket_class.hpp"
 #include "../../Networking/networking.hpp"
 #include "../../Networking/udp_socket.hpp"
+#include "../../Networking/http_client.hpp"
 #include "../../Libft/libft.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+#include "../../PThread/thread.hpp"
 #include <cstring>
 #include <cerrno>
 #include <climits>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+
+struct http_stream_test_server_context
+{
+    ft_socket   *server_socket;
+};
+
+struct http_stream_handler_state
+{
+    int         status_code;
+    bool        finished;
+    int         chunk_count;
+    ft_string   headers;
+    ft_string   chunks[3];
+};
+
+static http_stream_handler_state *g_http_stream_handler_state = NULL;
+
+static void http_stream_test_server(http_stream_test_server_context *context)
+{
+    struct sockaddr_storage address_storage;
+    socklen_t address_length;
+    int client_fd;
+    const char *header_block;
+    size_t header_length;
+    ssize_t send_result;
+    const char *chunk_one;
+    const char *chunk_two;
+    const char *chunk_three;
+    size_t chunk_one_length;
+    size_t chunk_two_length;
+    size_t chunk_three_length;
+
+    if (context == NULL)
+        return ;
+    if (context->server_socket == NULL)
+        return ;
+    address_length = sizeof(address_storage);
+    client_fd = nw_accept(context->server_socket->get_fd(),
+        reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
+    if (client_fd < 0)
+        return ;
+    header_block = "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n";
+    header_length = ft_strlen(header_block);
+    send_result = nw_send(client_fd, header_block, header_length, 0);
+    if (send_result != static_cast<ssize_t>(header_length))
+    {
+        FT_CLOSE_SOCKET(client_fd);
+        return ;
+    }
+    usleep(50000);
+    chunk_one = "4\r\nWiki\r\n";
+    chunk_one_length = ft_strlen(chunk_one);
+    send_result = nw_send(client_fd, chunk_one, chunk_one_length, 0);
+    if (send_result != static_cast<ssize_t>(chunk_one_length))
+    {
+        FT_CLOSE_SOCKET(client_fd);
+        return ;
+    }
+    usleep(50000);
+    chunk_two = "5\r\npedia\r\n";
+    chunk_two_length = ft_strlen(chunk_two);
+    send_result = nw_send(client_fd, chunk_two, chunk_two_length, 0);
+    if (send_result != static_cast<ssize_t>(chunk_two_length))
+    {
+        FT_CLOSE_SOCKET(client_fd);
+        return ;
+    }
+    usleep(50000);
+    chunk_three = "0\r\n\r\n";
+    chunk_three_length = ft_strlen(chunk_three);
+    send_result = nw_send(client_fd, chunk_three, chunk_three_length, 0);
+    if (send_result != static_cast<ssize_t>(chunk_three_length))
+    {
+        FT_CLOSE_SOCKET(client_fd);
+        return ;
+    }
+    FT_CLOSE_SOCKET(client_fd);
+    return ;
+}
+
+static void test_http_streaming_handler(int status_code, const ft_string &headers,
+    const char *body_chunk, size_t chunk_size, bool finished)
+{
+    http_stream_handler_state *state;
+
+    state = g_http_stream_handler_state;
+    if (state == NULL)
+        return ;
+    if (finished != false)
+    {
+        state->finished = true;
+        return ;
+    }
+    if (state->status_code == 0)
+        state->status_code = status_code;
+    if (state->headers.empty())
+        state->headers = headers;
+    if (chunk_size > 0)
+    {
+        if (state->chunk_count < 3)
+            state->chunks[state->chunk_count] = body_chunk;
+        state->chunk_count++;
+    }
+    return ;
+}
 
 FT_TEST(test_network_send_receive_ipv4, "nw_send/nw_recv IPv4")
 {
@@ -179,6 +286,56 @@ FT_TEST(test_network_poll_ipv6_ready, "nw_poll detects IPv6 readiness")
     buffer[bytes_received] = '\0';
     FT_CLOSE_SOCKET(client_fd);
     return (ft_strcmp(buffer, message) == 0);
+}
+
+FT_TEST(test_http_client_streaming_chunks, "http_get_stream handles chunked responses")
+{
+    SocketConfig server_configuration;
+    ft_socket server_socket;
+    http_stream_test_server_context server_context;
+    ft_thread server_thread;
+    http_stream_handler_state handler_state;
+    int client_result;
+
+    server_configuration._type = SocketType::SERVER;
+    server_configuration._ip = "127.0.0.1";
+    server_configuration._port = 54360;
+    server_socket = ft_socket(server_configuration);
+    if (server_socket.get_error() != ER_SUCCESS)
+        return (0);
+    server_context.server_socket = &server_socket;
+    server_thread = ft_thread(http_stream_test_server, &server_context);
+    if (server_thread.get_error() != ER_SUCCESS)
+        return (0);
+    usleep(50000);
+    handler_state.status_code = 0;
+    handler_state.finished = false;
+    handler_state.chunk_count = 0;
+    handler_state.headers.clear();
+    handler_state.chunks[0].clear();
+    handler_state.chunks[1].clear();
+    handler_state.chunks[2].clear();
+    g_http_stream_handler_state = &handler_state;
+    client_result = http_get_stream("127.0.0.1", "/", test_http_streaming_handler, false, "54360");
+    g_http_stream_handler_state = NULL;
+    server_thread.join();
+    if (client_result != 0)
+        return (0);
+    if (handler_state.status_code != 200)
+        return (0);
+    if (handler_state.finished == false)
+        return (0);
+    if (handler_state.chunk_count != 3)
+        return (0);
+    if (ft_strcmp(handler_state.headers.c_str(), "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n") != 0)
+        return (0);
+    if (ft_strcmp(handler_state.chunks[0].c_str(), "4\r\nWiki\r\n") != 0)
+        return (0);
+    if (ft_strcmp(handler_state.chunks[1].c_str(), "5\r\npedia\r\n") != 0)
+        return (0);
+    if (ft_strcmp(handler_state.chunks[2].c_str(), "0\r\n\r\n") != 0)
+        return (0);
+    return (1);
 }
 
 FT_TEST(test_server_config_ipv4_any_address, "server accepts empty IPv4 address as any")
