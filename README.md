@@ -1607,7 +1607,8 @@ int kv_flush() const;
 ```
 
 Create an instance with the path to a JSON file. Values are kept in memory
-until `kv_flush` writes them to disk.
+until `kv_flush` writes them to disk. An optional AES-128 key enables
+transparent encryption:
 
 ```
 kv_store store("data.json");
@@ -1617,8 +1618,28 @@ store.kv_delete("unused");
 store.kv_flush();
 ```
 
+``` 
+kv_store encrypted("secrets.json", "sixteen-byte-key", true);
+encrypted.kv_set("token", "value");
+encrypted.kv_flush();
+```
+
+Use `configure_encryption` to toggle or update the key at runtime:
+
+```
+store.configure_encryption("sixteen-byte-key", true);
+store.kv_flush();
+```
+
 Errors set the thread-local `ft_errno` and are accessible through `get_error`
 and `get_error_str`.
+
+When encryption is enabled values are padded, AES-128 encrypted, Base64
+encoded, and stored alongside a `__encryption__` metadata flag. The key must
+be exactly 16 bytes. Loading encrypted data without a key, with a wrong key,
+or with unsupported metadata fails with `FT_EINVAL`. Existing plaintext files
+can be encrypted by configuring a key and calling `kv_flush`, but mixing
+encrypted and plaintext entries in the same file is not supported.
 
 #### Config
 `Config/config.hpp` parses simple configuration files:
