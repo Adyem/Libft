@@ -216,7 +216,7 @@ int ft_websocket_client::connect(const char *host, uint16_t port, const char *pa
     char port_string[8];
     int result;
 
-    std::memset(&address_hints, 0, sizeof(address_hints));
+    ft_memset(&address_hints, 0, sizeof(address_hints));
     address_hints.ai_family = AF_UNSPEC;
     address_hints.ai_socktype = SOCK_STREAM;
     std::snprintf(port_string, sizeof(port_string), "%u", port);
