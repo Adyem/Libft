@@ -1632,6 +1632,9 @@ cnfg_config *config_load_file(const char *filename);
 cnfg_config *config_merge_sources(int argument_count,
                                   char **argument_values,
                                   const char *filename);
+int         config_write_file(const cnfg_config *config, const char *filename);
+cnfg_config *config_merge(const cnfg_config *base_config,
+                          const cnfg_config *override_config);
 ```
 
 `cnfg_parse` gives precedence to environment variables. Before using a
@@ -1640,7 +1643,9 @@ uses the environment value if it exists.
 
 `flag_parser.hpp` wraps flag parsing in a class and `config_merge_sources`
 combines command-line flags with environment variables and configuration
-files:
+files. `config_write_file` serializes parsed data back to disk as INI or JSON
+depending on the filename extension, and `config_merge` produces a new
+configuration by layering an override set on top of a base:
 
 ```
 cnfg_flag_parser parser(argument_count, argument_values);
@@ -1651,7 +1656,9 @@ parser.get_long_flag_count();
 parser.get_total_flag_count();
 parser.get_error();
 parser.get_error_str();
-config_merge_sources(argument_count, argument_values, "config.ini");
+cnfg_config *config = config_merge_sources(argument_count, argument_values, "config.ini");
+config_write_file(config, "config.json");
+cnfg_config *combined = config_merge(default_config, override_config);
 ```
 
 #### Time
