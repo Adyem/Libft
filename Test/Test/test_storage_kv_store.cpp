@@ -8,6 +8,7 @@
 #include "../../Libft/libft.hpp"
 #include <cstdio>
 #include <cerrno>
+#include <string>
 #if defined(_WIN32) || defined(_WIN64)
 # include <windows.h>
 #else
@@ -49,6 +50,45 @@ static void create_kv_store_file(const char *file_path)
     return ;
 }
 
+static std::string read_file_contents(const char *file_path)
+{
+    FILE *file_pointer;
+    long file_size;
+    std::string file_content;
+    std::size_t bytes_read;
+
+    file_pointer = ft_fopen(file_path, "rb");
+    if (file_pointer == ft_nullptr)
+        return (std::string());
+    if (std::fseek(file_pointer, 0, SEEK_END) != 0)
+    {
+        ft_fclose(file_pointer);
+        return (std::string());
+    }
+    file_size = std::ftell(file_pointer);
+    if (file_size < 0)
+    {
+        ft_fclose(file_pointer);
+        return (std::string());
+    }
+    if (std::fseek(file_pointer, 0, SEEK_SET) != 0)
+    {
+        ft_fclose(file_pointer);
+        return (std::string());
+    }
+    file_content.assign(static_cast<std::size_t>(file_size), '\0');
+    if (file_size == 0)
+    {
+        ft_fclose(file_pointer);
+        return (file_content);
+    }
+    bytes_read = std::fread(&file_content[0], 1, file_content.size(), file_pointer);
+    ft_fclose(file_pointer);
+    if (bytes_read != file_content.size())
+        return (std::string());
+    return (file_content);
+}
+
 FT_TEST(test_kv_store_flush_propagates_json_writer_errno, "kv_store flush propagates json writer errno")
 {
     const char *directory_path;
@@ -79,6 +119,87 @@ FT_TEST(test_kv_store_flush_propagates_json_writer_errno, "kv_store flush propag
 #endif
     FT_ASSERT_EQ(expected_error, ft_errno);
     FT_ASSERT_EQ(expected_error, store.get_error());
+    cleanup_paths(directory_path, file_path);
+    return (1);
+}
+
+FT_TEST(test_kv_store_encrypted_round_trip, "kv_store encrypted round trip")
+{
+    const char      *directory_path;
+    const char      *file_path;
+    const char      *encryption_key;
+
+    directory_path = "kv_store_encrypted_directory";
+    file_path = "kv_store_encrypted_directory/kv_store.json";
+    encryption_key = "sixteen-byte-key";
+    cleanup_paths(directory_path, file_path);
+    FT_ASSERT_EQ(0, file_create_directory(directory_path, 0700));
+    create_kv_store_file(file_path);
+    kv_store encrypted_store(file_path, encryption_key, true);
+    FT_ASSERT_EQ(ER_SUCCESS, encrypted_store.get_error());
+    FT_ASSERT_EQ(0, encrypted_store.kv_delete("__placeholder__"));
+    FT_ASSERT_EQ(ER_SUCCESS, encrypted_store.get_error());
+    FT_ASSERT_EQ(0, encrypted_store.kv_set("secret", "value"));
+    FT_ASSERT_EQ(ER_SUCCESS, encrypted_store.get_error());
+    FT_ASSERT_EQ(0, encrypted_store.kv_flush());
+    FT_ASSERT_EQ(ER_SUCCESS, encrypted_store.get_error());
+    kv_store reloaded_store(file_path, encryption_key, true);
+    FT_ASSERT_EQ(ER_SUCCESS, reloaded_store.get_error());
+    FT_ASSERT(reloaded_store.kv_get("secret") != ft_nullptr);
+    FT_ASSERT_EQ(0, ft_strcmp(reloaded_store.kv_get("secret"), "value"));
+    std::string file_content = read_file_contents(file_path);
+    FT_ASSERT(file_content.find("__encryption__") != std::string::npos);
+    FT_ASSERT(file_content.find("value") == std::string::npos);
+    cleanup_paths(directory_path, file_path);
+    return (1);
+}
+
+FT_TEST(test_kv_store_wrong_key_fails_to_decrypt, "kv_store wrong key fails to decrypt")
+{
+    const char  *directory_path;
+    const char  *file_path;
+    const char  *encryption_key;
+    const char  *wrong_key;
+
+    directory_path = "kv_store_wrong_key_directory";
+    file_path = "kv_store_wrong_key_directory/kv_store.json";
+    encryption_key = "sixteen-byte-key";
+    wrong_key = "sixteen-byte-zzz";
+    cleanup_paths(directory_path, file_path);
+    FT_ASSERT_EQ(0, file_create_directory(directory_path, 0700));
+    create_kv_store_file(file_path);
+    kv_store encrypted_store(file_path, encryption_key, true);
+    FT_ASSERT_EQ(ER_SUCCESS, encrypted_store.get_error());
+    FT_ASSERT_EQ(0, encrypted_store.kv_delete("__placeholder__"));
+    FT_ASSERT_EQ(0, encrypted_store.kv_set("secret", "value"));
+    FT_ASSERT_EQ(0, encrypted_store.kv_flush());
+    FT_ASSERT_EQ(ER_SUCCESS, encrypted_store.get_error());
+    kv_store failing_store(file_path, wrong_key, true);
+    FT_ASSERT_EQ(FT_EINVAL, failing_store.get_error());
+    cleanup_paths(directory_path, file_path);
+    return (1);
+}
+
+FT_TEST(test_kv_store_configure_encryption_validates_key, "kv_store configure encryption validates key")
+{
+    const char  *directory_path;
+    const char  *file_path;
+
+    directory_path = "kv_store_configure_directory";
+    file_path = "kv_store_configure_directory/kv_store.json";
+    cleanup_paths(directory_path, file_path);
+    FT_ASSERT_EQ(0, file_create_directory(directory_path, 0700));
+    create_kv_store_file(file_path);
+    kv_store configurable_store(file_path);
+    FT_ASSERT_EQ(ER_SUCCESS, configurable_store.get_error());
+    FT_ASSERT_EQ(-1, configurable_store.configure_encryption(ft_nullptr, true));
+    FT_ASSERT_EQ(FT_EINVAL, configurable_store.get_error());
+    FT_ASSERT_EQ(-1, configurable_store.configure_encryption("short", true));
+    FT_ASSERT_EQ(FT_EINVAL, configurable_store.get_error());
+    FT_ASSERT_EQ(0, configurable_store.configure_encryption("sixteen-byte-key", true));
+    FT_ASSERT_EQ(ER_SUCCESS, configurable_store.get_error());
+    FT_ASSERT_EQ(0, configurable_store.configure_encryption(ft_nullptr, false));
+    FT_ASSERT_EQ(ER_SUCCESS, configurable_store.get_error());
     cleanup_paths(directory_path, file_path);
     return (1);
 }
