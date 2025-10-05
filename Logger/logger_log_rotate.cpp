@@ -43,7 +43,11 @@ void ft_log_rotate(s_file_sink *sink)
         ft_errno = rotated.get_error();
         return ;
     }
-    std::rename(sink->path.c_str(), rotated.c_str());
+    if (rename(sink->path.c_str(), rotated.c_str()) != 0)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
+        return ;
+    }
     sink->fd = open(sink->path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
     if (sink->fd == -1)
     {

@@ -199,7 +199,7 @@ int cmp_setenv(const char *name, const char *value, int overwrite)
         return (-1);
     }
 #if defined(_WIN32) || defined(_WIN64)
-    if (!overwrite && std::getenv(name) != ft_nullptr)
+    if (!overwrite && getenv(name) != ft_nullptr)
     {
         ft_errno = ER_SUCCESS;
         return (0);
