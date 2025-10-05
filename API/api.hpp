@@ -13,26 +13,50 @@ bool    api_request_string_async(const char *ip, uint16_t port,
         const char *method, const char *path, api_callback callback,
         void *user_data, json_group *payload = ft_nullptr,
         const char *headers = ft_nullptr, int timeout = 60000);
+bool    api_request_string_http2_async(const char *ip, uint16_t port,
+        const char *method, const char *path, api_callback callback,
+        void *user_data, json_group *payload = ft_nullptr,
+        const char *headers = ft_nullptr, int timeout = 60000,
+        bool *used_http2 = ft_nullptr);
 
 bool    api_request_string_tls_async(const char *host, uint16_t port,
         const char *method, const char *path, api_callback callback,
         void *user_data, json_group *payload = ft_nullptr,
         const char *headers = ft_nullptr, int timeout = 60000);
+bool    api_request_string_tls_http2_async(const char *host, uint16_t port,
+        const char *method, const char *path, api_callback callback,
+        void *user_data, json_group *payload = ft_nullptr,
+        const char *headers = ft_nullptr, int timeout = 60000,
+        bool *used_http2 = ft_nullptr);
 
 bool    api_request_json_async(const char *ip, uint16_t port,
         const char *method, const char *path, api_json_callback callback,
         void *user_data, json_group *payload = ft_nullptr,
         const char *headers = ft_nullptr, int timeout = 60000);
+bool    api_request_json_http2_async(const char *ip, uint16_t port,
+        const char *method, const char *path, api_json_callback callback,
+        void *user_data, json_group *payload = ft_nullptr,
+        const char *headers = ft_nullptr, int timeout = 60000,
+        bool *used_http2 = ft_nullptr);
 
 bool    api_request_json_tls_async(const char *host, uint16_t port,
         const char *method, const char *path, api_json_callback callback,
         void *user_data, json_group *payload = ft_nullptr,
         const char *headers = ft_nullptr, int timeout = 60000);
+bool    api_request_json_tls_http2_async(const char *host, uint16_t port,
+        const char *method, const char *path, api_json_callback callback,
+        void *user_data, json_group *payload = ft_nullptr,
+        const char *headers = ft_nullptr, int timeout = 60000,
+        bool *used_http2 = ft_nullptr);
 
 char    *api_request_string(const char *ip, uint16_t port,
         const char *method, const char *path, json_group *payload = ft_nullptr,
         const char *headers = ft_nullptr, int *status = ft_nullptr,
         int timeout = 60000);
+char    *api_request_string_http2(const char *ip, uint16_t port,
+        const char *method, const char *path, json_group *payload = ft_nullptr,
+        const char *headers = ft_nullptr, int *status = ft_nullptr,
+        int timeout = 60000, bool *used_http2 = ft_nullptr);
 
 char    *api_request_string_bearer(const char *ip, uint16_t port,
         const char *method, const char *path, const char *token,
@@ -49,11 +73,20 @@ char    *api_request_https(const char *ip, uint16_t port,
         const char *headers = ft_nullptr, int *status = ft_nullptr,
         int timeout = 60000, const char *ca_certificate = ft_nullptr,
         bool verify_peer = true);
+char    *api_request_https_http2(const char *ip, uint16_t port,
+        const char *method, const char *path, json_group *payload = ft_nullptr,
+        const char *headers = ft_nullptr, int *status = ft_nullptr,
+        int timeout = 60000, const char *ca_certificate = ft_nullptr,
+        bool verify_peer = true, bool *used_http2 = ft_nullptr);
 
 char    *api_request_string_tls(const char *host, uint16_t port,
         const char *method, const char *path, json_group *payload = ft_nullptr,
         const char *headers = ft_nullptr, int *status = ft_nullptr,
         int timeout = 60000);
+char    *api_request_string_tls_http2(const char *host, uint16_t port,
+        const char *method, const char *path, json_group *payload = ft_nullptr,
+        const char *headers = ft_nullptr, int *status = ft_nullptr,
+        int timeout = 60000, bool *used_http2 = ft_nullptr);
 
 char    *api_request_string_host(const char *host, uint16_t port,
         const char *method, const char *path, json_group *payload = ft_nullptr,
@@ -74,6 +107,10 @@ json_group *api_request_json(const char *ip, uint16_t port,
         const char *method, const char *path, json_group *payload = ft_nullptr,
         const char *headers = ft_nullptr, int *status = ft_nullptr,
         int timeout = 60000);
+json_group *api_request_json_http2(const char *ip, uint16_t port,
+        const char *method, const char *path, json_group *payload = ft_nullptr,
+        const char *headers = ft_nullptr, int *status = ft_nullptr,
+        int timeout = 60000, bool *used_http2 = ft_nullptr);
 
 json_group *api_request_json_bearer(const char *ip, uint16_t port,
         const char *method, const char *path, const char *token,
@@ -89,6 +126,10 @@ json_group *api_request_json_tls(const char *host, uint16_t port,
         const char *method, const char *path, json_group *payload = ft_nullptr,
         const char *headers = ft_nullptr, int *status = ft_nullptr,
         int timeout = 60000);
+json_group *api_request_json_tls_http2(const char *host, uint16_t port,
+        const char *method, const char *path, json_group *payload = ft_nullptr,
+        const char *headers = ft_nullptr, int *status = ft_nullptr,
+        int timeout = 60000, bool *used_http2 = ft_nullptr);
 
 json_group *api_request_json_host(const char *host, uint16_t port,
         const char *method, const char *path, json_group *payload = ft_nullptr,

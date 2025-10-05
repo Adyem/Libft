@@ -12,6 +12,7 @@ SRCS := networking_socket_class.cpp \
         networking_nonblocking.cpp \
         networking_event_loop.cpp \
         http_client.cpp \
+        http2_client.cpp \
         http_server.cpp \
         websocket_client.cpp \
         websocket_server.cpp
@@ -40,6 +41,7 @@ HEADERS := socket_class.hpp \
            udp_socket.hpp \
            ssl_wrapper.hpp \
            http_client.hpp \
+           http2_client.hpp \
            http_server.hpp \
            websocket_client.hpp \
            websocket_server.hpp \
