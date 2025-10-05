@@ -523,6 +523,11 @@ char *api_request_string_url(const char *url, const char *method,
         ft_log_debug("api_request_string_url %s %s",
             log_url, log_method);
     }
+    if (!method)
+    {
+        ft_errno = FT_EINVAL;
+        return (ft_nullptr);
+    }
     bool tls;
     ft_string host;
     ft_string path;
