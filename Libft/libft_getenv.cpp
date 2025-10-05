@@ -13,7 +13,7 @@ char    *ft_getenv(const char *name)
         ft_errno = FT_EINVAL;
         return (ft_nullptr);
     }
-    value = std::getenv(name);
+    value = getenv(name);
     return (value);
 }
 

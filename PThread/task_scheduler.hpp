@@ -119,6 +119,11 @@ class ft_task_scheduler
         pt_mutex _scheduled_mutex;
         pt_condition_variable _scheduled_condition;
         ft_atomic<bool> _running;
+        ft_atomic<long long> _queue_size_counter;
+        ft_atomic<long long> _scheduled_size_counter;
+        ft_atomic<long long> _worker_active_counter;
+        ft_atomic<long long> _worker_idle_counter;
+        size_t _worker_total_count;
         mutable int _error_code;
 
         bool cancel_task_state(const ft_sharedptr<ft_scheduled_task_state> &state);
@@ -158,6 +163,11 @@ class ft_task_scheduler
 
         int get_error() const;
         const char *get_error_str() const;
+        long long get_queue_size() const;
+        long long get_scheduled_task_count() const;
+        long long get_worker_active_count() const;
+        long long get_worker_idle_count() const;
+        size_t get_worker_total_count() const;
 };
 
 
@@ -461,6 +471,7 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
         task_body();
         return (future_value);
     }
+    this->_queue_size_counter.fetch_add(1);
     this->set_error(ER_SUCCESS);
     return (future_value);
 }

@@ -1,9 +1,9 @@
 #include "time.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
+#include "../Libft/libft.hpp"
 #include <ctime>
 #include <cstdio>
-#include <cstring>
 #include <sstream>
 #include <iomanip>
 
@@ -78,7 +78,7 @@ static bool parse_timezone_offset(const char *timezone_buffer, int *offset_secon
     if (timezone_buffer[0] == '-')
         sign_multiplier = -1;
     offset_part = timezone_buffer + 1;
-    offset_length = std::strlen(offset_part);
+    offset_length = ft_strlen(offset_part);
     if (offset_length == 0)
     {
         ft_errno = FT_EINVAL;
@@ -86,7 +86,7 @@ static bool parse_timezone_offset(const char *timezone_buffer, int *offset_secon
     }
     offset_hours = 0;
     offset_minutes = 0;
-    if (std::strchr(offset_part, ':'))
+    if (ft_strchr(offset_part, ':'))
     {
         if (std::sscanf(offset_part, "%d:%d", &offset_hours, &offset_minutes) != 2)
         {
@@ -150,8 +150,8 @@ bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_tim
         ft_errno = FT_EINVAL;
         return (false);
     }
-    std::memset(&parsed_time, 0, sizeof(parsed_time));
-    std::memset(timezone_buffer, 0, sizeof(timezone_buffer));
+    ft_memset(&parsed_time, 0, sizeof(parsed_time));
+    ft_memset(timezone_buffer, 0, sizeof(timezone_buffer));
     if (std::sscanf(string_input, "%d-%d-%dT%d:%d:%d%6s", &year, &month, &day, &hours, &minutes, &seconds, timezone_buffer) != 7)
     {
         ft_errno = FT_EINVAL;
@@ -242,7 +242,7 @@ bool    time_parse_custom(const char *string_input, const char *format, std::tm 
         ft_errno = FT_EINVAL;
         return (false);
     }
-    std::memset(&parsed_time, 0, sizeof(parsed_time));
+    ft_memset(&parsed_time, 0, sizeof(parsed_time));
     input_stream.str(string_input);
     input_stream >> std::get_time(&parsed_time, format);
     if (input_stream.fail())

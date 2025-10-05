@@ -1,5 +1,6 @@
 #include "printf_internal.hpp"
 #include "../Libft/libft.hpp"
+#include "../CPP_class/class_string_class.hpp"
 #include <cstdarg>
 #include <unistd.h>
 #include "../System_utils/system_utils.hpp"
@@ -8,7 +9,6 @@
 #include <stdint.h>
 #include <limits.h>
 #include <stddef.h>
-#include <string>
 #include <cstdio>
 
 static bool count_has_error(size_t *count)
@@ -44,7 +44,7 @@ static void write_buffer_fd(const char *buffer, size_t length, int fd, size_t *c
     return ;
 }
 
-static int format_double_output(char specifier, int precision, double number, std::string &output)
+static int format_double_output(char specifier, int precision, double number, ft_string &output)
 {
     if (precision < 0)
         precision = 6;
@@ -57,11 +57,13 @@ static int format_double_output(char specifier, int precision, double number, st
         if (required_length < 0) \
             return (-1); \
         output.clear(); \
-        output.resize(static_cast<size_t>(required_length) + 1); \
-        int written_length = std::snprintf(&output[0], output.size(), literal, precision, number); \
+        output.resize_length(static_cast<size_t>(required_length)); \
+        if (output.get_error() != ER_SUCCESS) \
+            return (-1); \
+        int written_length = std::snprintf(output.print(), static_cast<size_t>(required_length) + 1, literal, precision, number); \
         if (written_length < 0) \
             return (-1); \
-        output.resize(static_cast<size_t>(written_length)); \
+        output.resize_length(static_cast<size_t>(written_length)); \
         return (0); \
     }
 
@@ -221,13 +223,13 @@ void ft_putfloat_fd(double number, int fd, size_t *count, int precision)
 {
     if (count_has_error(count))
         return ;
-    std::string formatted_output;
+    ft_string formatted_output;
     if (format_double_output('f', precision, number, formatted_output) != 0)
     {
         mark_count_error(count);
         return ;
     }
-    size_t output_length = formatted_output.length();
+    size_t output_length = formatted_output.size();
     if (output_length == 0)
         return ;
     write_buffer_fd(formatted_output.c_str(), output_length, fd, count);
@@ -244,13 +246,13 @@ void ft_putscientific_fd(double number, bool uppercase, int fd, size_t *count, i
         specifier = 'E';
     else
         specifier = 'e';
-    std::string formatted_output;
+    ft_string formatted_output;
     if (format_double_output(specifier, precision, number, formatted_output) != 0)
     {
         mark_count_error(count);
         return ;
     }
-    size_t output_length = formatted_output.length();
+    size_t output_length = formatted_output.size();
     if (output_length == 0)
         return ;
     write_buffer_fd(formatted_output.c_str(), output_length, fd, count);
@@ -267,13 +269,13 @@ void ft_putgeneral_fd(double number, bool uppercase, int fd, size_t *count, int 
         specifier = 'G';
     else
         specifier = 'g';
-    std::string formatted_output;
+    ft_string formatted_output;
     if (format_double_output(specifier, precision, number, formatted_output) != 0)
     {
         mark_count_error(count);
         return ;
     }
-    size_t output_length = formatted_output.length();
+    size_t output_length = formatted_output.size();
     if (output_length == 0)
         return ;
     write_buffer_fd(formatted_output.c_str(), output_length, fd, count);
