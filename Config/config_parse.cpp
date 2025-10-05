@@ -66,13 +66,17 @@ cnfg_config *cnfg_parse(const char *filename)
             {
                 *closing_bracket = '\0';
                 cma_free(current_section);
-                current_section = cma_strdup(line_string + 1);
-                if (!current_section)
+                current_section = ft_nullptr;
+                if (*(line_string + 1))
                 {
-                    ft_errno = FT_EALLOC;
-                    cnfg_free(config);
-                    ft_fclose(file);
-                    return (ft_nullptr);
+                    current_section = cma_strdup(line_string + 1);
+                    if (!current_section)
+                    {
+                        ft_errno = FT_EALLOC;
+                        cnfg_free(config);
+                        ft_fclose(file);
+                        return (ft_nullptr);
+                    }
                 }
             }
             continue ;

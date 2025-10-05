@@ -24,5 +24,7 @@ char       *cnfg_parse_flags(int argument_count, char **argument_values);
 char      **cnfg_parse_long_flags(int argument_count, char **argument_values);
 cnfg_config   *config_load_env();
 cnfg_config   *config_load_file(const char *filename);
+int         config_write_file(const cnfg_config *config, const char *filename);
+cnfg_config   *config_merge(const cnfg_config *base_config, const cnfg_config *override_config);
 
 #endif
