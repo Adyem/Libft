@@ -3,7 +3,7 @@ DEBUG_TARGET := libft_tests_debug
 
 EFF_SRCS := $(wildcard Efficiency/*.cpp)
 
-SRCS := main.cpp $(wildcard Test/*.cpp)
+SRCS := main.cpp $(wildcard Test/*.cpp) $(wildcard API/*.cpp)
 
 ifeq ($(OS),Windows_NT)
     MKDIR = mkdir

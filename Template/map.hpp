@@ -107,7 +107,7 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(const ft_map<Key, Ma
             size_t index = 0;
             while (index < this->_size)
             {
-                destroy_at(&this->_data[index]);
+                ::destroy_at(&this->_data[index]);
                 index++;
             }
             cma_free(this->_data);
@@ -176,7 +176,7 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(ft_map<Key, MappedTy
             size_t index = 0;
             while (index < this->_size)
             {
-                destroy_at(&this->_data[index]);
+                ::destroy_at(&this->_data[index]);
                 index++;
             }
             cma_free(this->_data);
@@ -204,7 +204,7 @@ ft_map<Key, MappedType>::~ft_map()
         size_t index = 0;
         while (index < this->_size)
         {
-            destroy_at(&this->_data[index]);
+            ::destroy_at(&this->_data[index]);
             index++;
         }
         cma_free(this->_data);
@@ -341,11 +341,11 @@ void ft_map<Key, MappedType>::remove(const Key& key)
     {
         if (this->_data[index].key == key)
         {
-            destroy_at(&this->_data[index]);
+            ::destroy_at(&this->_data[index]);
             if (index != this->_size - 1)
             {
                 construct_at(&this->_data[index], ft_move(this->_data[this->_size - 1]));
-                destroy_at(&this->_data[this->_size - 1]);
+                ::destroy_at(&this->_data[this->_size - 1]);
             }
             --this->_size;
             this->set_error(ER_SUCCESS);
@@ -384,7 +384,7 @@ void ft_map<Key, MappedType>::clear()
     size_t index = 0;
     while (index < this->_size)
     {
-        destroy_at(&this->_data[index]);
+        ::destroy_at(&this->_data[index]);
         index++;
     }
     this->_size = 0;
@@ -472,7 +472,7 @@ void ft_map<Key, MappedType>::resize(size_t new_capacity)
     while (index < this->_size)
     {
         construct_at(&new_data[index], ft_move(this->_data[index]));
-        destroy_at(&this->_data[index]);
+        ::destroy_at(&this->_data[index]);
         index++;
     }
     cma_free(this->_data);

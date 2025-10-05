@@ -1,5 +1,6 @@
 #include "api.hpp"
 #include "api_internal.hpp"
+#include "api_http_internal.hpp"
 #include "../Networking/socket_class.hpp"
 #include "../Networking/ssl_wrapper.hpp"
 #include "../Networking/networking.hpp"
@@ -26,187 +27,7 @@
 #include <openssl/err.h>
 #include <cstdint>
 #include <climits>
-
-static void api_request_set_resolve_error(int resolver_status)
-{
-#ifdef EAI_BADFLAGS
-    if (resolver_status == EAI_BADFLAGS)
-    {
-        ft_errno = SOCKET_RESOLVE_BAD_FLAGS;
-        return ;
-    }
-#endif
-#ifdef EAI_AGAIN
-    if (resolver_status == EAI_AGAIN)
-    {
-        ft_errno = SOCKET_RESOLVE_AGAIN;
-        return ;
-    }
-#endif
-#ifdef EAI_FAIL
-    if (resolver_status == EAI_FAIL)
-    {
-        ft_errno = SOCKET_RESOLVE_FAIL;
-        return ;
-    }
-#endif
-#ifdef EAI_FAMILY
-    if (resolver_status == EAI_FAMILY)
-    {
-        ft_errno = SOCKET_RESOLVE_FAMILY;
-        return ;
-    }
-#endif
-#ifdef EAI_ADDRFAMILY
-    if (resolver_status == EAI_ADDRFAMILY)
-    {
-        ft_errno = SOCKET_RESOLVE_FAMILY;
-        return ;
-    }
-#endif
-#ifdef EAI_SOCKTYPE
-    if (resolver_status == EAI_SOCKTYPE)
-    {
-        ft_errno = SOCKET_RESOLVE_SOCKTYPE;
-        return ;
-    }
-#endif
-#ifdef EAI_SERVICE
-    if (resolver_status == EAI_SERVICE)
-    {
-        ft_errno = SOCKET_RESOLVE_SERVICE;
-        return ;
-    }
-#endif
-#ifdef EAI_MEMORY
-    if (resolver_status == EAI_MEMORY)
-    {
-        ft_errno = SOCKET_RESOLVE_MEMORY;
-        return ;
-    }
-#endif
-#ifdef EAI_NONAME
-    if (resolver_status == EAI_NONAME)
-    {
-        ft_errno = SOCKET_RESOLVE_NO_NAME;
-        return ;
-    }
-#endif
-#ifdef EAI_NODATA
-    if (resolver_status == EAI_NODATA)
-    {
-        ft_errno = SOCKET_RESOLVE_NO_NAME;
-        return ;
-    }
-#endif
-#ifdef EAI_OVERFLOW
-    if (resolver_status == EAI_OVERFLOW)
-    {
-        ft_errno = SOCKET_RESOLVE_OVERFLOW;
-        return ;
-    }
-#endif
-#ifdef EAI_SYSTEM
-    if (resolver_status == EAI_SYSTEM)
-    {
-#ifdef _WIN32
-        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
-#else
-        if (errno != 0)
-            ft_errno = errno + ERRNO_OFFSET;
-        else
-            ft_errno = SOCKET_RESOLVE_FAIL;
-#endif
-        return ;
-    }
-#endif
-    ft_errno = SOCKET_RESOLVE_FAILED;
-    return ;
-}
-
-static void api_request_set_ssl_error(SSL *ssl_session, int operation_result)
-{
-    unsigned long library_error;
-
-    library_error = ERR_get_error();
-    if (library_error != 0)
-    {
-        if (library_error > static_cast<unsigned long>(INT_MAX))
-            ft_errno = INT_MAX;
-        else
-            ft_errno = static_cast<int>(library_error);
-        return ;
-    }
-    if (ssl_session)
-    {
-        int ssl_error = SSL_get_error(ssl_session, operation_result);
-        if (ssl_error == SSL_ERROR_SYSCALL)
-        {
-#ifdef _WIN32
-            int last_error = WSAGetLastError();
-            if (last_error != 0)
-            {
-                ft_errno = last_error + ERRNO_OFFSET;
-                return ;
-            }
-#endif
-            if (errno != 0)
-            {
-                ft_errno = errno + ERRNO_OFFSET;
-                return ;
-            }
-            ft_errno = SSL_ERROR_SYSCALL + ERRNO_OFFSET;
-            return ;
-        }
-        ft_errno = ssl_error;
-        return ;
-    }
-    ft_errno = FT_EIO;
-    return ;
-}
-
-static bool ssl_pointer_supports_network_checks(SSL *ssl)
-{
-    uintptr_t ssl_address;
-    static const uintptr_t minimum_valid_address = 0x1000;
-
-    if (ssl == ft_nullptr)
-        return (false);
-    ssl_address = reinterpret_cast<uintptr_t>(ssl);
-    if (ssl_address < minimum_valid_address)
-        return (false);
-    if ((ssl_address & (sizeof(void *) - 1)) != 0)
-        return (false);
-    return (true);
-}
-
-static ssize_t ssl_send_all(SSL *ssl, const void *data, size_t size)
-{
-    size_t total = 0;
-    const char *ptr = static_cast<const char*>(data);
-    while (total < size)
-    {
-        ssize_t sent = nw_ssl_write(ssl, ptr + total, size - total);
-        if (sent > 0)
-        {
-            total += sent;
-            continue ;
-        }
-        if (sent < 0)
-            return (-1);
-        if (ft_errno == SSL_WANT_READ || ft_errno == SSL_WANT_WRITE)
-        {
-            if (ssl_pointer_supports_network_checks(ssl))
-            {
-                if (networking_check_ssl_after_send(ssl) != 0)
-                    return (-1);
-            }
-            continue ;
-        }
-        return (-1);
-    }
-    return (static_cast<ssize_t>(total));
-}
+#include <utility>
 
 char *api_request_https(const char *ip, uint16_t port,
     const char *method, const char *path, json_group *payload,
@@ -250,169 +71,84 @@ char *api_request_https(const char *ip, uint16_t port,
     config._recv_timeout = timeout;
     config._send_timeout = timeout;
 
-    ft_socket socket_wrapper(config);
-    if (socket_wrapper.get_error())
-    {
-        error_code = socket_wrapper.get_error();
-        return (ft_nullptr);
-    }
-    if (!OPENSSL_init_ssl(0, ft_nullptr))
-    {
-        api_request_set_ssl_error(ft_nullptr, 0);
-        error_code = ft_errno;
-        return (ft_nullptr);
-    }
-    SSL_CTX *context = ft_nullptr;
-    SSL *ssl_session = ft_nullptr;
-    char *result = ft_nullptr;
-    ft_string request;
-    ft_string body_string;
-    ft_string response;
-    const char *body = ft_nullptr;
-    int ssl_connect_result;
+    ft_string security_identity;
+    const char *security_identity_pointer;
 
-    context = SSL_CTX_new(TLS_client_method());
-    if (!context)
-    {
-        api_request_set_ssl_error(ft_nullptr, 0);
-        error_code = ft_errno;
-        goto cleanup;
-    }
+    security_identity_pointer = ft_nullptr;
     if (verify_peer)
     {
-        if (ca_certificate)
+        security_identity = "verify:1";
+        if (ca_certificate && ca_certificate[0] != '\0')
         {
-            if (SSL_CTX_load_verify_locations(context, ca_certificate, ft_nullptr) != 1)
-            {
-                api_request_set_ssl_error(ft_nullptr, 0);
-                error_code = ft_errno;
-                goto cleanup;
-            }
+            security_identity += ":";
+            security_identity += ca_certificate;
         }
-        else
-        {
-            if (SSL_CTX_set_default_verify_paths(context) != 1)
-            {
-                api_request_set_ssl_error(ft_nullptr, 0);
-                error_code = ft_errno;
-                goto cleanup;
-            }
-        }
-        SSL_CTX_set_verify(context, SSL_VERIFY_PEER, ft_nullptr);
     }
     else
-        SSL_CTX_set_verify(context, SSL_VERIFY_NONE, ft_nullptr);
-    ssl_session = SSL_new(context);
-    if (!ssl_session)
-    {
-        api_request_set_ssl_error(ft_nullptr, 0);
-        error_code = ft_errno;
-        goto cleanup;
-    }
-    if (SSL_set_fd(ssl_session, socket_wrapper.get_fd()) != 1)
-    {
-        api_request_set_ssl_error(ssl_session, 0);
-        error_code = ft_errno;
-        goto cleanup;
-    }
-    ssl_connect_result = SSL_connect(ssl_session);
-    if (ssl_connect_result <= 0)
-    {
-        api_request_set_ssl_error(ssl_session, ssl_connect_result);
-        error_code = ft_errno;
-        goto cleanup;
-    }
+        security_identity = "verify:0";
+    if (!security_identity.empty())
+        security_identity_pointer = security_identity.c_str();
 
-    request = method;
-    request += " ";
-    request += path;
-    request += " HTTP/1.1\r\nHost: ";
-    request += ip;
-    if (headers && headers[0])
+    api_connection_pool_handle connection_handle;
+    bool pooled_connection;
+
+    pooled_connection = api_connection_pool_acquire(connection_handle, ip, port,
+            api_connection_security_mode::TLS, security_identity_pointer);
+    if (!pooled_connection)
     {
-        request += "\r\n";
-        request += headers;
-    }
-    if (payload)
-    {
-        char *temporary_string = json_write_to_string(payload);
-        if (!temporary_string)
+        ft_socket new_socket(config);
+
+        if (new_socket.get_error())
         {
-            if (ft_errno == ER_SUCCESS)
-                error_code = FT_EALLOC;
-            else
-                error_code = ft_errno;
-            goto cleanup;
+            error_code = new_socket.get_error();
+            return (ft_nullptr);
         }
-        body_string = temporary_string;
-        cma_free(temporary_string);
-        request += "\r\nContent-Type: application/json";
-        if (!api_append_content_length_header(request, body_string.size()))
+        connection_handle.socket = std::move(new_socket);
+        connection_handle.has_socket = true;
+    }
+    struct api_connection_return_guard
+    {
+        api_connection_pool_handle *handle;
+        bool success;
+        api_connection_return_guard(api_connection_pool_handle &value)
         {
-            error_code = FT_EIO;
-            goto cleanup;
+            handle = &value;
+            success = false;
+            return ;
         }
-    }
-    request += "\r\nConnection: close\r\n\r\n";
-    if (payload)
-        request += body_string.c_str();
-
-    if (ssl_send_all(ssl_session, request.c_str(), request.size()) < 0)
-    {
-        if (ft_errno == ER_SUCCESS)
+        ~api_connection_return_guard()
         {
-            api_request_set_ssl_error(ssl_session, -1);
-            error_code = ft_errno;
+            if (!handle)
+                return ;
+            if (success)
+            {
+                api_connection_pool_mark_idle(*handle);
+                return ;
+            }
+            api_connection_pool_evict(*handle);
+            return ;
         }
-        else
-            error_code = ft_errno;
-        goto cleanup;
+        void set_success(void)
+        {
+            success = true;
+            return ;
+        }
+    } connection_guard(connection_handle);
+    if (!connection_handle.has_socket)
+    {
+        error_code = FT_EIO;
+        return (ft_nullptr);
     }
 
-    char buffer[1024];
-    ssize_t bytes_received;
-    while ((bytes_received = nw_ssl_read(ssl_session, buffer, sizeof(buffer) - 1)) > 0)
-    {
-        buffer[bytes_received] = '\0';
-        response += buffer;
-    }
-    if (status)
-    {
-        *status = -1;
-        const char *space = ft_strchr(response.c_str(), ' ');
-        if (space)
-            *status = ft_atoi(space + 1);
-    }
-    body = ft_strstr(response.c_str(), "\r\n\r\n");
-    if (!body)
-    {
-        if (ft_errno == ER_SUCCESS)
-            error_code = FT_EIO;
-        else
-            error_code = ft_errno;
-        goto cleanup;
-    }
-    body += 4;
-    result = cma_strdup(body);
-    if (!result)
-    {
-        if (ft_errno == ER_SUCCESS)
-            error_code = FT_EALLOC;
-        else
-            error_code = ft_errno;
-        goto cleanup;
-    }
-    error_code = ER_SUCCESS;
+    char *result_body;
 
-cleanup:
-    if (ssl_session)
-    {
-        SSL_shutdown(ssl_session);
-        SSL_free(ssl_session);
-    }
-    if (context)
-        SSL_CTX_free(context);
-    return (result);
+    result_body = api_https_execute(connection_handle, method, path, ip,
+            payload, headers, status, timeout, ca_certificate,
+            verify_peer, error_code);
+    if (!result_body)
+        return (ft_nullptr);
+    connection_guard.set_success();
+    return (result_body);
 }
 
 char *api_request_string_tls(const char *host, uint16_t port,
@@ -433,171 +169,94 @@ char *api_request_string_tls(const char *host, uint16_t port,
         ft_log_debug("api_request_string_tls %s:%u %s %s",
             log_host, port, log_method, log_path);
     }
-    SSL_CTX *context = ft_nullptr;
-    SSL *ssl_session = ft_nullptr;
-    int socket_fd = -1;
-    char *result = ft_nullptr;
-    struct addrinfo hints;
-    struct addrinfo *address_results = ft_nullptr;
-    struct addrinfo *address_info;
-    ft_string request;
-    ft_string body_string;
-    ft_string response;
-    const char *body = ft_nullptr;
-    int resolver_status;
-    int ssl_handshake_result;
+    int error_code = ER_SUCCESS;
+    struct api_request_errno_guard
+    {
+        int *code;
+        api_request_errno_guard(int *value)
+            : code(value)
+        {
+            return ;
+        }
+        ~api_request_errno_guard()
+        {
+            ft_errno = *code;
+            return ;
+        }
+    } guard(&error_code);
 
     if (!host || !method || !path)
     {
-        ft_errno = FT_EINVAL;
-        return (ft_nullptr);
-    }
-    if (!OPENSSL_init_ssl(0, ft_nullptr))
-    {
-        api_request_set_ssl_error(ft_nullptr, 0);
+        error_code = FT_EINVAL;
         return (ft_nullptr);
     }
 
-    context = SSL_CTX_new(TLS_client_method());
-    if (!context)
-    {
-        api_request_set_ssl_error(ft_nullptr, 0);
-        goto cleanup;
-    }
+    SocketConfig config;
+    config._type = SocketType::CLIENT;
+    config._ip = host;
+    config._port = port;
+    config._recv_timeout = timeout;
+    config._send_timeout = timeout;
 
-    ft_bzero(&hints, sizeof(hints));
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_family = AF_UNSPEC;
-    char port_string[6];
-    pf_snprintf(port_string, sizeof(port_string), "%u", port);
-    resolver_status = getaddrinfo(host, port_string, &hints, &address_results);
-    if (resolver_status != 0)
-    {
-        api_request_set_resolve_error(resolver_status);
-        goto cleanup;
-    }
+    api_connection_pool_handle connection_handle;
+    bool pooled_connection;
 
-    address_info = address_results;
-    while (address_info != ft_nullptr)
+    pooled_connection = api_connection_pool_acquire(connection_handle, host,
+            port, api_connection_security_mode::TLS, ft_nullptr);
+    if (!pooled_connection)
     {
-        socket_fd = nw_socket(address_info->ai_family, address_info->ai_socktype, address_info->ai_protocol);
-        if (socket_fd >= 0)
+        ft_socket new_socket(config);
+
+        if (new_socket.get_error())
         {
-            if (timeout > 0)
+            error_code = new_socket.get_error();
+            return (ft_nullptr);
+        }
+        connection_handle.socket = std::move(new_socket);
+        connection_handle.has_socket = true;
+    }
+    struct api_connection_return_guard
+    {
+        api_connection_pool_handle *handle;
+        bool success;
+        api_connection_return_guard(api_connection_pool_handle &value)
+        {
+            handle = &value;
+            success = false;
+            return ;
+        }
+        ~api_connection_return_guard()
+        {
+            if (!handle)
+                return ;
+            if (success)
             {
-                struct timeval tv;
-                tv.tv_sec = timeout / 1000;
-                tv.tv_usec = (timeout % 1000) * 1000;
-                setsockopt(socket_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-                setsockopt(socket_fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+                api_connection_pool_mark_idle(*handle);
+                return ;
             }
-            if (nw_connect(socket_fd, address_info->ai_addr, static_cast<socklen_t>(address_info->ai_addrlen)) == 0)
-                break;
-            FT_CLOSE_SOCKET(socket_fd);
-            socket_fd = -1;
+            api_connection_pool_evict(*handle);
+            return ;
         }
-        address_info = address_info->ai_next;
-    }
-    freeaddrinfo(address_results);
-    address_results = ft_nullptr;
-    if (socket_fd < 0)
-    {
-        if (ft_errno == ER_SUCCESS)
-            ft_errno = SOCKET_CONNECT_FAILED;
-        goto cleanup;
-    }
-
-    ssl_session = SSL_new(context);
-    if (!ssl_session)
-    {
-        api_request_set_ssl_error(ft_nullptr, 0);
-        goto cleanup;
-    }
-    if (SSL_set_fd(ssl_session, socket_fd) != 1)
-    {
-        api_request_set_ssl_error(ssl_session, 0);
-        goto cleanup;
-    }
-    ssl_handshake_result = SSL_connect(ssl_session);
-    if (ssl_handshake_result <= 0)
-    {
-        api_request_set_ssl_error(ssl_session, ssl_handshake_result);
-        goto cleanup;
-    }
-
-    request = method;
-    request += " ";
-    request += path;
-    request += " HTTP/1.1\r\nHost: ";
-    request += host;
-    if (headers && headers[0])
-    {
-        request += "\r\n";
-        request += headers;
-    }
-    if (payload)
-    {
-        char *temporary_string = json_write_to_string(payload);
-        if (!temporary_string)
+        void set_success(void)
         {
-            if (ft_errno == ER_SUCCESS)
-                ft_errno = FT_EALLOC;
-            goto cleanup;
+            success = true;
+            return ;
         }
-        body_string = temporary_string;
-        cma_free(temporary_string);
-        request += "\r\nContent-Type: application/json";
-        if (!api_append_content_length_header(request, body_string.size()))
-        {
-            ft_errno = FT_EIO;
-            goto cleanup;
-        }
-    }
-    request += "\r\nConnection: close\r\n\r\n";
-    if (payload)
-        request += body_string.c_str();
-
-    if (ssl_send_all(ssl_session, request.c_str(), request.size()) < 0)
-        goto cleanup;
-
-    char buffer[1024];
-    ssize_t bytes_received;
-    while ((bytes_received = nw_ssl_read(ssl_session, buffer, sizeof(buffer) - 1)) > 0)
+    } connection_guard(connection_handle);
+    if (!connection_handle.has_socket)
     {
-        buffer[bytes_received] = '\0';
-        response += buffer;
+        error_code = FT_EIO;
+        return (ft_nullptr);
     }
 
-    if (status)
-    {
-        *status = -1;
-        const char *space = ft_strchr(response.c_str(), ' ');
-        if (space)
-            *status = ft_atoi(space + 1);
-    }
-    body = ft_strstr(response.c_str(), "\r\n\r\n");
-    if (!body)
-    {
-        if (ft_errno == ER_SUCCESS)
-            ft_errno = FT_EIO;
-        goto cleanup;
-    }
-    body += 4;
-    result = cma_strdup(body);
+    char *result_body;
 
-cleanup:
-    if (ssl_session)
-    {
-        SSL_shutdown(ssl_session);
-        SSL_free(ssl_session);
-    }
-    if (socket_fd >= 0)
-        FT_CLOSE_SOCKET(socket_fd);
-    if (context)
-        SSL_CTX_free(context);
-    if (address_results)
-        freeaddrinfo(address_results);
-    return (result);
+    result_body = api_https_execute(connection_handle, method, path, host,
+            payload, headers, status, timeout, ft_nullptr, false, error_code);
+    if (!result_body)
+        return (ft_nullptr);
+    connection_guard.set_success();
+    return (result_body);
 }
 
 json_group *api_request_json_tls(const char *host, uint16_t port,

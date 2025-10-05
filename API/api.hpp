@@ -133,4 +133,22 @@ json_group *api_request_json_url(const char *url, const char *method,
         json_group *payload = ft_nullptr, const char *headers = ft_nullptr,
         int *status = ft_nullptr, int timeout = 60000);
 
+void    api_connection_pool_flush(void);
+void    api_connection_pool_set_max_idle(size_t max_idle);
+size_t  api_connection_pool_get_max_idle(void);
+void    api_connection_pool_set_idle_timeout(long long idle_timeout_ms);
+long long   api_connection_pool_get_idle_timeout(void);
+void    api_debug_reset_connection_pool_counters(void);
+size_t  api_debug_get_connection_pool_acquires(void);
+size_t  api_debug_get_connection_pool_reuses(void);
+size_t  api_debug_get_connection_pool_misses(void);
+
+size_t  api_debug_get_last_async_request_size(void);
+size_t  api_debug_get_last_async_bytes_sent(void);
+int     api_debug_get_last_async_send_state(void);
+int     api_debug_get_last_async_send_timeout(void);
+size_t  api_debug_get_last_async_bytes_received(void);
+int     api_debug_get_last_async_receive_state(void);
+int     api_debug_get_last_async_receive_timeout(void);
+
 #endif

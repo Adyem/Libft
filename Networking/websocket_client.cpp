@@ -44,7 +44,7 @@ static void compute_accept_key(const ft_string &key, ft_string &accept)
     return ;
 }
 
-ft_websocket_client::ft_websocket_client() : _socket_fd(-1), _handshake_key_override(), _use_handshake_key_override(false), _error_code(ER_SUCCESS)
+ft_websocket_client::ft_websocket_client() : _socket_fd(-1), _error_code(ER_SUCCESS)
 {
     return ;
 }
@@ -73,15 +73,6 @@ void ft_websocket_client::close()
         #endif
         this->_socket_fd = -1;
     }
-    this->_handshake_key_override.clear();
-    this->_use_handshake_key_override = false;
-    return ;
-}
-
-void ft_websocket_client::set_handshake_key_override(const ft_string &key)
-{
-    this->_handshake_key_override = key;
-    this->_use_handshake_key_override = true;
     return ;
 }
 
@@ -99,45 +90,36 @@ int ft_websocket_client::perform_handshake(const char *host, const char *path)
     ft_string accept_key;
     ft_string expected;
 
-    if (this->_use_handshake_key_override)
-    {
-        key_string = this->_handshake_key_override;
-        this->_handshake_key_override.clear();
-        this->_use_handshake_key_override = false;
-    }
-    else
-    {
-        unsigned char random_key[16];
-        std::size_t encoded_size;
-        unsigned char *encoded_key;
+    unsigned char random_key[16];
+    std::size_t encoded_size;
+    unsigned char *encoded_key;
 
-        byte_index = 0;
-        while (byte_index < 16)
+    byte_index = 0;
+    while (byte_index < 16)
+    {
+        uint32_t random_value = ft_random_uint32();
+        shift_index = 0;
+        while (shift_index < 4 && byte_index < 16)
         {
-            uint32_t random_value = ft_random_uint32();
-            shift_index = 0;
-            while (shift_index < 4 && byte_index < 16)
-            {
-                random_key[byte_index] = static_cast<unsigned char>(random_value >> (shift_index * 8));
-                byte_index++;
-                shift_index++;
-            }
-        }
-        encoded_key = ft_base64_encode(random_key, 16, &encoded_size);
-        if (!encoded_key)
-        {
-            this->set_error(FT_EINVAL);
-            return (1);
-        }
-        key_string.clear();
-        byte_index = 0;
-        while (byte_index < encoded_size)
-        {
-            key_string.append(reinterpret_cast<char *>(encoded_key)[byte_index]);
+            random_key[byte_index] = static_cast<unsigned char>(random_value >> (shift_index * 8));
             byte_index++;
+            shift_index++;
         }
-        cma_free(encoded_key);
     }
+    encoded_key = ft_base64_encode(random_key, 16, &encoded_size);
+    if (!encoded_key)
+    {
+        this->set_error(FT_EINVAL);
+        return (1);
+    }
+    key_string.clear();
+    byte_index = 0;
+    while (byte_index < encoded_size)
+    {
+        key_string.append(reinterpret_cast<char *>(encoded_key)[byte_index]);
+        byte_index++;
+    }
+    cma_free(encoded_key);
     request.append("GET ");
     request.append(path);
     request.append(" HTTP/1.1\r\nHost: ");
