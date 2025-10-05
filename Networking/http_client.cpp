@@ -457,14 +457,86 @@ static int http_client_receive_stream(int socket_fd, SSL *ssl_connection, bool u
         }
         else
         {
-            if (bytes_received < 0)
+            if (use_ssl != false)
             {
-                if (use_ssl == false)
+                if (bytes_received == 0)
+                {
+                    if (ft_errno == SSL_WANT_READ || ft_errno == SSL_WANT_WRITE)
+                    {
+                        int wait_result;
+                        bool wait_for_write;
+
+                        wait_for_write = (ft_errno == SSL_WANT_WRITE);
+                        wait_result = http_client_wait_for_socket_ready(socket_fd, wait_for_write);
+                        if (wait_result < 0)
+                            return (-1);
+                        continue ;
+                    }
+                    if (ft_errno == SSL_ZERO_RETURN)
+                        break;
+                    if (ft_errno == SSL_SYSCALL_ERROR)
+                    {
+#ifdef _WIN32
+                        int last_error;
+
+                        last_error = WSAGetLastError();
+                        if (last_error == WSAEINTR)
+                            continue ;
+                        if (last_error == WSAEWOULDBLOCK)
+                        {
+                            int wait_result;
+
+                            wait_result = http_client_wait_for_socket_ready(socket_fd, false);
+                            if (wait_result < 0)
+                                return (-1);
+                            continue ;
+                        }
+                        if (last_error != 0)
+                            ft_errno = last_error + ERRNO_OFFSET;
+                        else
+                            ft_errno = SOCKET_RECEIVE_FAILED;
+#else
+                        int last_error;
+
+                        last_error = errno;
+                        if (last_error == EINTR)
+                            continue ;
+                        if (last_error == EWOULDBLOCK || last_error == EAGAIN)
+                        {
+                            int wait_result;
+
+                            wait_result = http_client_wait_for_socket_ready(socket_fd, false);
+                            if (wait_result < 0)
+                                return (-1);
+                            continue ;
+                        }
+                        if (last_error != 0)
+                            ft_errno = last_error + ERRNO_OFFSET;
+                        else
+                            ft_errno = SOCKET_RECEIVE_FAILED;
+#endif
+                        return (-1);
+                    }
+                    ft_errno = SOCKET_RECEIVE_FAILED;
+                    return (-1);
+                }
+                if (ft_errno == SSL_SYSCALL_ERROR)
                 {
 #ifdef _WIN32
                     int last_error;
 
                     last_error = WSAGetLastError();
+                    if (last_error == WSAEINTR)
+                        continue ;
+                    if (last_error == WSAEWOULDBLOCK)
+                    {
+                        int wait_result;
+
+                        wait_result = http_client_wait_for_socket_ready(socket_fd, false);
+                        if (wait_result < 0)
+                            return (-1);
+                        continue ;
+                    }
                     if (last_error != 0)
                         ft_errno = last_error + ERRNO_OFFSET;
                     else
@@ -473,12 +545,70 @@ static int http_client_receive_stream(int socket_fd, SSL *ssl_connection, bool u
                     int last_error;
 
                     last_error = errno;
+                    if (last_error == EINTR)
+                        continue ;
+                    if (last_error == EWOULDBLOCK || last_error == EAGAIN)
+                    {
+                        int wait_result;
+
+                        wait_result = http_client_wait_for_socket_ready(socket_fd, false);
+                        if (wait_result < 0)
+                            return (-1);
+                        continue ;
+                    }
                     if (last_error != 0)
                         ft_errno = last_error + ERRNO_OFFSET;
                     else
                         ft_errno = SOCKET_RECEIVE_FAILED;
 #endif
                 }
+                return (-1);
+            }
+            if (bytes_received < 0)
+            {
+#ifdef _WIN32
+                int last_error;
+
+                last_error = WSAGetLastError();
+                if (last_error == WSAEINTR)
+                    continue ;
+                if (last_error == WSAEWOULDBLOCK)
+                {
+                    int wait_result;
+
+                    wait_result = http_client_wait_for_socket_ready(socket_fd, false);
+                    if (wait_result < 0)
+                        return (-1);
+                    continue ;
+                }
+                if (last_error == WSAECONNRESET)
+                    break;
+                if (last_error != 0)
+                    ft_errno = last_error + ERRNO_OFFSET;
+                else
+                    ft_errno = SOCKET_RECEIVE_FAILED;
+#else
+                int last_error;
+
+                last_error = errno;
+                if (last_error == EINTR)
+                    continue ;
+                if (last_error == EWOULDBLOCK || last_error == EAGAIN)
+                {
+                    int wait_result;
+
+                    wait_result = http_client_wait_for_socket_ready(socket_fd, false);
+                    if (wait_result < 0)
+                        return (-1);
+                    continue ;
+                }
+                if (last_error == ECONNRESET)
+                    break;
+                if (last_error != 0)
+                    ft_errno = last_error + ERRNO_OFFSET;
+                else
+                    ft_errno = SOCKET_RECEIVE_FAILED;
+#endif
                 return (-1);
             }
             break;
