@@ -29,6 +29,8 @@ class json_document
         int          read_from_string(const char *content) noexcept;
         json_group   *find_group(const char *name) const noexcept;
         json_item    *find_item(json_group *group, const char *key) const noexcept;
+        json_item    *find_item_by_pointer(const char *pointer) const noexcept;
+        const char   *get_value_by_pointer(const char *pointer) const noexcept;
         void         remove_group(const char *name) noexcept;
         void         remove_item(json_group *group, const char *key) noexcept;
         void         update_item(json_group *group, const char *key, const char *value) noexcept;

@@ -3,6 +3,61 @@
 #include "../Errno/errno.hpp"
 
 #include <cstdio>
+#include <cstddef>
+
+#include "../CMA/CMA.hpp"
+#include "../Libft/libft.hpp"
+
+static char *json_document_unescape_pointer_token(const char *start, size_t length) noexcept
+{
+    if (!start && length != 0)
+    {
+        ft_errno = FT_EINVAL;
+        return (ft_nullptr);
+    }
+    size_t allocation_size = length + 1;
+    char *token = static_cast<char *>(cma_malloc(allocation_size));
+    if (!token)
+    {
+        ft_errno = JSON_MALLOC_FAIL;
+        return (ft_nullptr);
+    }
+    size_t input_index = 0;
+    size_t output_index = 0;
+    while (input_index < length)
+    {
+        char current_character = start[input_index];
+        if (current_character == '~')
+        {
+            if (input_index + 1 >= length)
+            {
+                cma_free(token);
+                ft_errno = FT_EINVAL;
+                return (ft_nullptr);
+            }
+            char escape_character = start[input_index + 1];
+            if (escape_character == '0')
+                token[output_index] = '~';
+            else if (escape_character == '1')
+                token[output_index] = '/';
+            else
+            {
+                cma_free(token);
+                ft_errno = FT_EINVAL;
+                return (ft_nullptr);
+            }
+            input_index += 2;
+            output_index += 1;
+            continue;
+        }
+        token[output_index] = current_character;
+        output_index += 1;
+        input_index += 1;
+    }
+    token[output_index] = '\0';
+    ft_errno = ER_SUCCESS;
+    return (token);
+}
 
 json_document::json_document() noexcept
     : _groups(ft_nullptr), _error_code(ER_SUCCESS)
@@ -275,6 +330,119 @@ json_item *json_document::find_item(json_group *group, const char *key) const no
     json_item *item = json_find_item(group, key);
     this->set_error(ER_SUCCESS);
     return (item);
+}
+
+json_item *json_document::find_item_by_pointer(const char *pointer) const noexcept
+{
+    if (!pointer)
+    {
+        this->set_error(FT_EINVAL);
+        return (ft_nullptr);
+    }
+    if (pointer[0] == '\0' || pointer[0] != '/')
+    {
+        this->set_error(FT_EINVAL);
+        return (ft_nullptr);
+    }
+    const char *cursor = pointer;
+    json_group *current_group = ft_nullptr;
+    bool expecting_group = true;
+    while (*cursor)
+    {
+        if (*cursor != '/')
+        {
+            this->set_error(FT_EINVAL);
+            return (ft_nullptr);
+        }
+        cursor += 1;
+        const char *segment_start = cursor;
+        while (*cursor && *cursor != '/')
+            cursor += 1;
+        size_t segment_length = static_cast<size_t>(cursor - segment_start);
+        if (segment_length == 0)
+        {
+            this->set_error(FT_EINVAL);
+            return (ft_nullptr);
+        }
+        char *token = json_document_unescape_pointer_token(segment_start, segment_length);
+        if (!token)
+        {
+            this->set_error(ft_errno);
+            return (ft_nullptr);
+        }
+        if (expecting_group)
+        {
+            json_group *group_iterator = this->_groups;
+            bool found_group = false;
+            while (group_iterator)
+            {
+                const char *group_name = group_iterator->name;
+                if (!group_name)
+                    group_name = "";
+                if (ft_strcmp(group_name, token) == 0)
+                {
+                    found_group = true;
+                    break;
+                }
+                group_iterator = group_iterator->next;
+            }
+            cma_free(token);
+            if (!found_group)
+            {
+                this->set_error(MAP_KEY_NOT_FOUND);
+                return (ft_nullptr);
+            }
+            current_group = group_iterator;
+            expecting_group = false;
+            if (*cursor == '\0')
+            {
+                this->set_error(FT_EINVAL);
+                return (ft_nullptr);
+            }
+            continue;
+        }
+        json_item *item_iterator = ft_nullptr;
+        if (current_group)
+            item_iterator = current_group->items;
+        while (item_iterator)
+        {
+            const char *item_key = item_iterator->key;
+            if (!item_key)
+                item_key = "";
+            if (ft_strcmp(item_key, token) == 0)
+                break;
+            item_iterator = item_iterator->next;
+        }
+        cma_free(token);
+        if (!item_iterator)
+        {
+            this->set_error(MAP_KEY_NOT_FOUND);
+            return (ft_nullptr);
+        }
+        if (*cursor != '\0')
+        {
+            this->set_error(FT_EINVAL);
+            return (ft_nullptr);
+        }
+        this->set_error(ER_SUCCESS);
+        return (item_iterator);
+    }
+    this->set_error(FT_EINVAL);
+    return (ft_nullptr);
+}
+
+const char *json_document::get_value_by_pointer(const char *pointer) const noexcept
+{
+    json_item *item = this->find_item_by_pointer(pointer);
+    if (!item)
+        return (ft_nullptr);
+    if (!item->value)
+    {
+        this->set_error(FT_EINVAL);
+        return (ft_nullptr);
+    }
+    this->set_error(ER_SUCCESS);
+    return (item->value);
 }
 
 void json_document::remove_group(const char *name) noexcept
