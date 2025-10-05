@@ -2,9 +2,10 @@ TARGET         := API.a
 DEBUG_TARGET   := API_debug.a
 
 SRCS := api_request.cpp api_request_tls.cpp api_request_async.cpp api_promise.cpp api_tls_client.cpp \
-        api_content_length.cpp
+        api_content_length.cpp api_connection_pool.cpp api_http_common.cpp api_http_plain.cpp \
+        api_http_tls.cpp api_request_error.cpp
 
-HEADERS := api.hpp promise.hpp tls_client.hpp api_internal.hpp
+HEADERS := api.hpp promise.hpp tls_client.hpp api_internal.hpp api_http_internal.hpp api_http_common.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

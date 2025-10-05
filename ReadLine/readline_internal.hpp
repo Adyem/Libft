@@ -52,9 +52,6 @@ int        rl_enable_raw_mode();
 
 int        rl_clear_line(const char *prompt, const char *buffer);
 char    *rl_resize_buffer(char *old_buffer, int current_size, int new_size);
-void    rl_set_strlen_override(int (*override_function)(const char *string));
-
-
 int        rl_handle_escape_sequence(readline_state_t *state, const char *prompt);
 int        rl_handle_backspace(readline_state_t *state, const char *prompt);
 int        rl_handle_tab_completion(readline_state_t *state, const char *prompt);

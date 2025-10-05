@@ -8,8 +8,6 @@ class ft_websocket_client
 {
     private:
         int _socket_fd;
-        ft_string _handshake_key_override;
-        bool _use_handshake_key_override;
         mutable int _error_code;
 
         int perform_handshake(const char *host, const char *path);
@@ -24,7 +22,6 @@ class ft_websocket_client
         int send_text(const ft_string &message);
         int receive_text(ft_string &message);
         void close();
-        void set_handshake_key_override(const ft_string &key);
         int get_error() const;
         const char *get_error_str() const;
 };
