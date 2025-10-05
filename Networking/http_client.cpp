@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <cerrno>
 #include <openssl/x509v3.h>
+#include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
 #ifdef _WIN32
 # include <winsock2.h>
@@ -15,6 +16,23 @@
 # include <arpa/inet.h>
 # include <unistd.h>
 #endif
+
+struct http_stream_state
+{
+    ft_string       header_buffer;
+    ft_string       headers;
+    int             status_code;
+    bool            headers_ready;
+    http_response_handler handler;
+};
+
+struct http_buffer_adapter_state
+{
+    ft_string   *response;
+    bool        header_appended;
+};
+
+static http_buffer_adapter_state g_http_buffer_adapter_state = { NULL, false };
 
 static int http_client_wait_for_socket_ready(int socket_fd, bool wait_for_write)
 {
@@ -352,7 +370,288 @@ int http_client_send_ssl_request(SSL *ssl_connection, const char *buffer, size_t
     return (0);
 }
 
-int http_get(const char *host, const char *path, ft_string &response, bool use_ssl, const char *custom_port)
+static void http_client_stream_state_init(http_stream_state &state, http_response_handler handler)
+{
+    state.header_buffer.clear();
+    state.headers.clear();
+    state.status_code = 0;
+    state.headers_ready = false;
+    state.handler = handler;
+    return ;
+}
+
+static int http_client_parse_status(const ft_string &headers)
+{
+    const char  *header_cstr;
+    size_t      index;
+
+    header_cstr = headers.c_str();
+    index = 0;
+    while (header_cstr[index] != '\0' && header_cstr[index] != ' ')
+        index++;
+    while (header_cstr[index] == ' ')
+        index++;
+    if (header_cstr[index] == '\0')
+        return (0);
+    return (ft_atoi(header_cstr + index));
+}
+
+static int http_client_stream_handle_header(http_stream_state &state)
+{
+    const char  *terminator;
+    size_t      header_length;
+    size_t      body_length;
+
+    terminator = ft_strstr(state.header_buffer.c_str(), "\r\n\r\n");
+    if (terminator == NULL)
+        return (0);
+    header_length = static_cast<size_t>(terminator - state.header_buffer.c_str()) + 4;
+    state.headers = state.header_buffer;
+    if (state.headers.size() > header_length)
+        state.headers.erase(header_length, state.headers.size() - header_length);
+    state.status_code = http_client_parse_status(state.headers);
+    body_length = state.header_buffer.size() - header_length;
+    if (body_length > 0 && state.handler != NULL)
+    {
+        const char *body_ptr;
+
+        body_ptr = state.header_buffer.c_str() + header_length;
+        state.handler(state.status_code, state.headers, body_ptr, body_length, false);
+    }
+    state.header_buffer.clear();
+    state.headers_ready = true;
+    return (1);
+}
+
+static int http_client_receive_stream(int socket_fd, SSL *ssl_connection, bool use_ssl,
+    http_response_handler handler)
+{
+    char                buffer[1024];
+    ssize_t             bytes_received;
+    http_stream_state   state;
+
+    if (handler == NULL)
+    {
+        ft_errno = FT_EINVAL;
+        return (-1);
+    }
+    http_client_stream_state_init(state, handler);
+    while (1)
+    {
+        if (use_ssl != false)
+            bytes_received = nw_ssl_read(ssl_connection, buffer, sizeof(buffer) - 1);
+        else
+            bytes_received = nw_recv(socket_fd, buffer, sizeof(buffer) - 1, 0);
+        if (bytes_received > 0)
+        {
+            buffer[bytes_received] = '\0';
+            if (state.headers_ready == false)
+            {
+                state.header_buffer.append(buffer);
+                if (http_client_stream_handle_header(state) != 0)
+                    continue ;
+            }
+            else
+                state.handler(state.status_code, state.headers, buffer,
+                    static_cast<size_t>(bytes_received), false);
+        }
+        else
+        {
+            if (use_ssl != false)
+            {
+                if (bytes_received == 0)
+                {
+                    if (ft_errno == SSL_WANT_READ || ft_errno == SSL_WANT_WRITE)
+                    {
+                        int wait_result;
+                        bool wait_for_write;
+
+                        wait_for_write = (ft_errno == SSL_WANT_WRITE);
+                        wait_result = http_client_wait_for_socket_ready(socket_fd, wait_for_write);
+                        if (wait_result < 0)
+                            return (-1);
+                        continue ;
+                    }
+                    if (ft_errno == SSL_ZERO_RETURN)
+                        break;
+                    if (ft_errno == SSL_SYSCALL_ERROR)
+                    {
+#ifdef _WIN32
+                        int last_error;
+
+                        last_error = WSAGetLastError();
+                        if (last_error == WSAEINTR)
+                            continue ;
+                        if (last_error == WSAEWOULDBLOCK)
+                        {
+                            int wait_result;
+
+                            wait_result = http_client_wait_for_socket_ready(socket_fd, false);
+                            if (wait_result < 0)
+                                return (-1);
+                            continue ;
+                        }
+                        if (last_error != 0)
+                            ft_errno = last_error + ERRNO_OFFSET;
+                        else
+                            ft_errno = SOCKET_RECEIVE_FAILED;
+#else
+                        int last_error;
+
+                        last_error = errno;
+                        if (last_error == EINTR)
+                            continue ;
+                        if (last_error == EWOULDBLOCK || last_error == EAGAIN)
+                        {
+                            int wait_result;
+
+                            wait_result = http_client_wait_for_socket_ready(socket_fd, false);
+                            if (wait_result < 0)
+                                return (-1);
+                            continue ;
+                        }
+                        if (last_error != 0)
+                            ft_errno = last_error + ERRNO_OFFSET;
+                        else
+                            ft_errno = SOCKET_RECEIVE_FAILED;
+#endif
+                        return (-1);
+                    }
+                    ft_errno = SOCKET_RECEIVE_FAILED;
+                    return (-1);
+                }
+                if (ft_errno == SSL_SYSCALL_ERROR)
+                {
+#ifdef _WIN32
+                    int last_error;
+
+                    last_error = WSAGetLastError();
+                    if (last_error == WSAEINTR)
+                        continue ;
+                    if (last_error == WSAEWOULDBLOCK)
+                    {
+                        int wait_result;
+
+                        wait_result = http_client_wait_for_socket_ready(socket_fd, false);
+                        if (wait_result < 0)
+                            return (-1);
+                        continue ;
+                    }
+                    if (last_error != 0)
+                        ft_errno = last_error + ERRNO_OFFSET;
+                    else
+                        ft_errno = SOCKET_RECEIVE_FAILED;
+#else
+                    int last_error;
+
+                    last_error = errno;
+                    if (last_error == EINTR)
+                        continue ;
+                    if (last_error == EWOULDBLOCK || last_error == EAGAIN)
+                    {
+                        int wait_result;
+
+                        wait_result = http_client_wait_for_socket_ready(socket_fd, false);
+                        if (wait_result < 0)
+                            return (-1);
+                        continue ;
+                    }
+                    if (last_error != 0)
+                        ft_errno = last_error + ERRNO_OFFSET;
+                    else
+                        ft_errno = SOCKET_RECEIVE_FAILED;
+#endif
+                }
+                return (-1);
+            }
+            if (bytes_received < 0)
+            {
+#ifdef _WIN32
+                int last_error;
+
+                last_error = WSAGetLastError();
+                if (last_error == WSAEINTR)
+                    continue ;
+                if (last_error == WSAEWOULDBLOCK)
+                {
+                    int wait_result;
+
+                    wait_result = http_client_wait_for_socket_ready(socket_fd, false);
+                    if (wait_result < 0)
+                        return (-1);
+                    continue ;
+                }
+                if (last_error == WSAECONNRESET)
+                    break;
+                if (last_error != 0)
+                    ft_errno = last_error + ERRNO_OFFSET;
+                else
+                    ft_errno = SOCKET_RECEIVE_FAILED;
+#else
+                int last_error;
+
+                last_error = errno;
+                if (last_error == EINTR)
+                    continue ;
+                if (last_error == EWOULDBLOCK || last_error == EAGAIN)
+                {
+                    int wait_result;
+
+                    wait_result = http_client_wait_for_socket_ready(socket_fd, false);
+                    if (wait_result < 0)
+                        return (-1);
+                    continue ;
+                }
+                if (last_error == ECONNRESET)
+                    break;
+                if (last_error != 0)
+                    ft_errno = last_error + ERRNO_OFFSET;
+                else
+                    ft_errno = SOCKET_RECEIVE_FAILED;
+#endif
+                return (-1);
+            }
+            break;
+        }
+    }
+    if (state.headers_ready == false && state.header_buffer.empty() == false)
+    {
+        const char *body_ptr;
+
+        body_ptr = state.header_buffer.c_str();
+        state.handler(state.status_code, state.headers, body_ptr,
+            state.header_buffer.size(), false);
+    }
+    state.handler(state.status_code, state.headers, "", 0, true);
+    return (0);
+}
+
+static void http_client_buffering_adapter(int status_code, const ft_string &headers,
+    const char *body_chunk, size_t chunk_size, bool finished)
+{
+    (void)status_code;
+    (void)finished;
+    if (g_http_buffer_adapter_state.response == NULL)
+        return ;
+    if (g_http_buffer_adapter_state.header_appended == false && headers.empty() == false)
+    {
+        g_http_buffer_adapter_state.response->append(headers);
+        g_http_buffer_adapter_state.header_appended = true;
+    }
+    if (chunk_size > 0)
+        g_http_buffer_adapter_state.response->append(body_chunk);
+    return ;
+}
+
+static void http_client_reset_buffer_adapter_state(void)
+{
+    g_http_buffer_adapter_state.response = NULL;
+    g_http_buffer_adapter_state.header_appended = false;
+    return ;
+}
+
+int http_get_stream(const char *host, const char *path, http_response_handler handler,
+    bool use_ssl, const char *custom_port)
 {
     struct addrinfo address_hints;
     struct addrinfo *address_info;
@@ -360,15 +659,17 @@ int http_get(const char *host, const char *path, ft_string &response, bool use_s
     const char *port_string;
     int socket_fd;
     ft_string request;
-    char buffer[1024];
-    ssize_t bytes_received;
     SSL_CTX *ssl_context;
     SSL *ssl_connection;
     int result;
     int resolver_status;
     int last_socket_error;
 
-    response.clear();
+    if (handler == NULL)
+    {
+        ft_errno = FT_EINVAL;
+        return (-1);
+    }
     std::memset(&address_hints, 0, sizeof(address_hints));
     address_hints.ai_family = AF_UNSPEC;
     address_hints.ai_socktype = SOCK_STREAM;
@@ -464,14 +765,7 @@ int http_get(const char *host, const char *path, ft_string &response, bool use_s
             FT_CLOSE_SOCKET(socket_fd);
             return (-1);
         }
-        bytes_received = nw_ssl_read(ssl_connection, buffer, sizeof(buffer) - 1);
-        while (bytes_received > 0)
-        {
-            buffer[bytes_received] = '\0';
-            response.append(buffer);
-            bytes_received = nw_ssl_read(ssl_connection, buffer, sizeof(buffer) - 1);
-        }
-        if (bytes_received < 0)
+        if (http_client_receive_stream(socket_fd, ssl_connection, true, handler) != 0)
         {
             SSL_shutdown(ssl_connection);
             SSL_free(ssl_connection);
@@ -490,40 +784,27 @@ int http_get(const char *host, const char *path, ft_string &response, bool use_s
             FT_CLOSE_SOCKET(socket_fd);
             return (-1);
         }
-        bytes_received = nw_recv(socket_fd, buffer, sizeof(buffer) - 1, 0);
-        while (bytes_received > 0)
+        if (http_client_receive_stream(socket_fd, NULL, false, handler) != 0)
         {
-            buffer[bytes_received] = '\0';
-            response.append(buffer);
-            bytes_received = nw_recv(socket_fd, buffer, sizeof(buffer) - 1, 0);
-        }
-        if (bytes_received < 0)
-        {
-#ifdef _WIN32
-            int last_error;
-
-            last_error = WSAGetLastError();
             FT_CLOSE_SOCKET(socket_fd);
-            if (last_error != 0)
-                ft_errno = last_error + ERRNO_OFFSET;
-            else
-                ft_errno = SOCKET_RECEIVE_FAILED;
-#else
-            int last_error;
-
-            last_error = errno;
-            FT_CLOSE_SOCKET(socket_fd);
-            if (last_error != 0)
-                ft_errno = last_error + ERRNO_OFFSET;
-            else
-                ft_errno = SOCKET_RECEIVE_FAILED;
-#endif
             return (-1);
         }
     }
     FT_CLOSE_SOCKET(socket_fd);
     ft_errno = ER_SUCCESS;
     return (0);
+}
+
+int http_get(const char *host, const char *path, ft_string &response, bool use_ssl, const char *custom_port)
+{
+    int result;
+
+    response.clear();
+    g_http_buffer_adapter_state.response = &response;
+    g_http_buffer_adapter_state.header_appended = false;
+    result = http_get_stream(host, path, http_client_buffering_adapter, use_ssl, custom_port);
+    http_client_reset_buffer_adapter_state();
+    return (result);
 }
 
 int http_post(const char *host, const char *path, const ft_string &body, ft_string &response, bool use_ssl, const char *custom_port)
@@ -534,9 +815,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
     const char *port_string;
     int socket_fd;
     ft_string request;
-    char buffer[1024];
     char length_string[32];
-    ssize_t bytes_received;
     SSL_CTX *ssl_context;
     SSL *ssl_connection;
     int result;
@@ -544,6 +823,8 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
     int last_socket_error;
 
     response.clear();
+    g_http_buffer_adapter_state.response = &response;
+    g_http_buffer_adapter_state.header_appended = false;
     std::memset(&address_hints, 0, sizeof(address_hints));
     address_hints.ai_family = AF_UNSPEC;
     address_hints.ai_socktype = SOCK_STREAM;
@@ -557,6 +838,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
     if (resolver_status != 0)
     {
         http_client_set_resolve_error(resolver_status);
+        http_client_reset_buffer_adapter_state();
         return (-1);
     }
     socket_fd = -1;
@@ -598,6 +880,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
             ft_errno = last_socket_error + ERRNO_OFFSET;
         else
             ft_errno = SOCKET_CONNECT_FAILED;
+        http_client_reset_buffer_adapter_state();
         return (-1);
     }
     std::snprintf(length_string, sizeof(length_string), "%zu", body.size());
@@ -614,6 +897,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
         if (http_client_initialize_ssl(socket_fd, host, &ssl_context, &ssl_connection) != 0)
         {
             FT_CLOSE_SOCKET(socket_fd);
+            http_client_reset_buffer_adapter_state();
             return (-1);
         }
         result = SSL_connect(ssl_connection);
@@ -623,6 +907,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
             SSL_free(ssl_connection);
             SSL_CTX_free(ssl_context);
             FT_CLOSE_SOCKET(socket_fd);
+            http_client_reset_buffer_adapter_state();
             return (-1);
         }
 #if OPENSSL_VERSION_NUMBER >= 0x10002000L
@@ -633,6 +918,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
             SSL_free(ssl_connection);
             SSL_CTX_free(ssl_context);
             FT_CLOSE_SOCKET(socket_fd);
+            http_client_reset_buffer_adapter_state();
             return (-1);
         }
 #endif
@@ -641,21 +927,16 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
             SSL_free(ssl_connection);
             SSL_CTX_free(ssl_context);
             FT_CLOSE_SOCKET(socket_fd);
+            http_client_reset_buffer_adapter_state();
             return (-1);
         }
-        bytes_received = nw_ssl_read(ssl_connection, buffer, sizeof(buffer) - 1);
-        while (bytes_received > 0)
-        {
-            buffer[bytes_received] = '\0';
-            response.append(buffer);
-            bytes_received = nw_ssl_read(ssl_connection, buffer, sizeof(buffer) - 1);
-        }
-        if (bytes_received < 0)
+        if (http_client_receive_stream(socket_fd, ssl_connection, true, http_client_buffering_adapter) != 0)
         {
             SSL_shutdown(ssl_connection);
             SSL_free(ssl_connection);
             SSL_CTX_free(ssl_context);
             FT_CLOSE_SOCKET(socket_fd);
+            http_client_reset_buffer_adapter_state();
             return (-1);
         }
         SSL_shutdown(ssl_connection);
@@ -667,40 +948,18 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
         if (http_client_send_plain_request(socket_fd, request.c_str(), request.size()) != 0)
         {
             FT_CLOSE_SOCKET(socket_fd);
+            http_client_reset_buffer_adapter_state();
             return (-1);
         }
-        bytes_received = nw_recv(socket_fd, buffer, sizeof(buffer) - 1, 0);
-        while (bytes_received > 0)
+        if (http_client_receive_stream(socket_fd, NULL, false, http_client_buffering_adapter) != 0)
         {
-            buffer[bytes_received] = '\0';
-            response.append(buffer);
-            bytes_received = nw_recv(socket_fd, buffer, sizeof(buffer) - 1, 0);
-        }
-        if (bytes_received < 0)
-        {
-#ifdef _WIN32
-            int last_error;
-
-            last_error = WSAGetLastError();
             FT_CLOSE_SOCKET(socket_fd);
-            if (last_error != 0)
-                ft_errno = last_error + ERRNO_OFFSET;
-            else
-                ft_errno = SOCKET_RECEIVE_FAILED;
-#else
-            int last_error;
-
-            last_error = errno;
-            FT_CLOSE_SOCKET(socket_fd);
-            if (last_error != 0)
-                ft_errno = last_error + ERRNO_OFFSET;
-            else
-                ft_errno = SOCKET_RECEIVE_FAILED;
-#endif
+            http_client_reset_buffer_adapter_state();
             return (-1);
         }
     }
     FT_CLOSE_SOCKET(socket_fd);
+    http_client_reset_buffer_adapter_state();
     ft_errno = ER_SUCCESS;
     return (0);
 }
