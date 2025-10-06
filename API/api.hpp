@@ -9,6 +9,28 @@
 typedef void (*api_callback)(char *body, int status, void *user_data);
 typedef void (*api_json_callback)(json_group *body, int status, void *user_data);
 
+typedef void (*api_stream_headers_callback)(int status_code,
+        const char *headers, void *user_data);
+typedef bool (*api_stream_body_callback)(const char *chunk_data,
+        size_t chunk_size, bool is_final_chunk, void *user_data);
+
+struct api_streaming_handler
+{
+    api_stream_headers_callback headers_callback;
+    api_stream_body_callback body_callback;
+    void *user_data;
+};
+
+/*
+** When used with api_request_stream or api_request_stream_host, the
+** body_callback receives sequential segments of the response body. The
+** handler is invoked one final time with is_final_chunk set to true. If the
+** response body length is zero, the final callback is invoked with a zero
+** chunk_size and chunk_data equal to ft_nullptr. Chunked transfer encoding is
+** supported and chunk payload segments are delivered in order before the final
+** callback.
+*/
+
 struct api_retry_policy
 {
     int max_attempts;
@@ -56,6 +78,39 @@ bool    api_request_json_tls_http2_async(const char *host, uint16_t port,
         void *user_data, json_group *payload = ft_nullptr,
         const char *headers = ft_nullptr, int timeout = 60000,
         bool *used_http2 = ft_nullptr);
+
+bool    api_request_stream(const char *ip, uint16_t port,
+        const char *method, const char *path,
+        const api_streaming_handler *streaming_handler,
+        json_group *payload = ft_nullptr, const char *headers = ft_nullptr,
+        int timeout = 60000,
+        const api_retry_policy *retry_policy = ft_nullptr);
+bool    api_request_stream_http2(const char *ip, uint16_t port,
+        const char *method, const char *path,
+        const api_streaming_handler *streaming_handler,
+        json_group *payload = ft_nullptr, const char *headers = ft_nullptr,
+        int timeout = 60000, bool *used_http2 = ft_nullptr,
+        const api_retry_policy *retry_policy = ft_nullptr);
+bool    api_request_stream_host(const char *host, uint16_t port,
+        const char *method, const char *path,
+        const api_streaming_handler *streaming_handler,
+        json_group *payload = ft_nullptr, const char *headers = ft_nullptr,
+        int timeout = 60000,
+        const api_retry_policy *retry_policy = ft_nullptr);
+bool    api_request_stream_tls(const char *host, uint16_t port,
+        const char *method, const char *path,
+        const api_streaming_handler *streaming_handler,
+        json_group *payload = ft_nullptr, const char *headers = ft_nullptr,
+        int timeout = 60000, const char *ca_certificate = ft_nullptr,
+        bool verify_peer = true,
+        const api_retry_policy *retry_policy = ft_nullptr);
+bool    api_request_stream_tls_http2(const char *host, uint16_t port,
+        const char *method, const char *path,
+        const api_streaming_handler *streaming_handler,
+        json_group *payload = ft_nullptr, const char *headers = ft_nullptr,
+        int timeout = 60000, const char *ca_certificate = ft_nullptr,
+        bool verify_peer = true, bool *used_http2 = ft_nullptr,
+        const api_retry_policy *retry_policy = ft_nullptr);
 
 char    *api_request_string(const char *ip, uint16_t port,
         const char *method, const char *path, json_group *payload = ft_nullptr,
