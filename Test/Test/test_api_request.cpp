@@ -203,6 +203,45 @@ static void api_request_stream_large_response_server(void)
             &address_length);
     if (client_fd < 0)
         return ;
+    char drain_buffer[512];
+    const char *header_terminator;
+    size_t header_match_index;
+    bool header_complete;
+
+    header_terminator = "\r\n\r\n";
+    header_match_index = 0;
+    header_complete = false;
+    while (header_complete == false)
+    {
+        ssize_t bytes_received;
+        size_t byte_index;
+
+        bytes_received = nw_recv(client_fd, drain_buffer, sizeof(drain_buffer), 0);
+        if (bytes_received <= 0)
+            break ;
+        byte_index = 0;
+        while (byte_index < static_cast<size_t>(bytes_received)
+            && header_complete == false)
+        {
+            if (drain_buffer[byte_index] == header_terminator[header_match_index])
+            {
+                header_match_index += 1;
+                if (header_match_index == 4)
+                    header_complete = true;
+            }
+            else if (drain_buffer[byte_index] == header_terminator[0])
+            {
+                header_match_index = 1;
+            }
+            else
+            {
+                header_match_index = 0;
+            }
+            byte_index += 1;
+        }
+        if (header_complete == true)
+            break ;
+    }
     body_size = 2 * 1024 * 1024;
     body_buffer = static_cast<char*>(cma_malloc(body_size));
     if (!body_buffer)
