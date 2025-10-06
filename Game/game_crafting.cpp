@@ -1,4 +1,5 @@
 #include "game_crafting.hpp"
+#include <utility>
 
 ft_crafting::ft_crafting() noexcept
     : _recipes(), _error_code(ER_SUCCESS)
@@ -25,7 +26,7 @@ ft_crafting::ft_crafting(const ft_crafting &other) noexcept
             }
             ++index;
         }
-        this->_recipes.insert(entry->key, ft_move(ingredients));
+        this->_recipes.insert(entry->key, std::move(ingredients));
         if (this->_recipes.get_error() != ER_SUCCESS)
         {
             this->set_error(this->_recipes.get_error());
@@ -57,7 +58,7 @@ ft_crafting &ft_crafting::operator=(const ft_crafting &other) noexcept
                 }
                 ++index;
             }
-            this->_recipes.insert(entry->key, ft_move(ingredients));
+            this->_recipes.insert(entry->key, std::move(ingredients));
             if (this->_recipes.get_error() != ER_SUCCESS)
             {
                 this->set_error(this->_recipes.get_error());
@@ -71,7 +72,7 @@ ft_crafting &ft_crafting::operator=(const ft_crafting &other) noexcept
 }
 
 ft_crafting::ft_crafting(ft_crafting &&other) noexcept
-    : _recipes(ft_move(other._recipes)), _error_code(other._error_code)
+    : _recipes(std::move(other._recipes)), _error_code(other._error_code)
 {
     if (this->_recipes.get_error() != ER_SUCCESS)
         this->set_error(this->_recipes.get_error());
@@ -84,7 +85,7 @@ ft_crafting &ft_crafting::operator=(ft_crafting &&other) noexcept
 {
     if (this != &other)
     {
-        this->_recipes = ft_move(other._recipes);
+        this->_recipes = std::move(other._recipes);
         this->_error_code = other._error_code;
         if (this->_recipes.get_error() != ER_SUCCESS)
             this->set_error(this->_recipes.get_error());
@@ -124,7 +125,7 @@ void ft_crafting::set_error(int error_code) const noexcept
 int ft_crafting::register_recipe(int recipe_id, ft_vector<ft_crafting_ingredient> &&ingredients) noexcept
 {
     this->set_error(ER_SUCCESS);
-    this->_recipes.insert(recipe_id, ft_move(ingredients));
+    this->_recipes.insert(recipe_id, std::move(ingredients));
     if (this->_recipes.get_error() != ER_SUCCESS)
     {
         this->set_error(this->_recipes.get_error());

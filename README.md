@@ -5,7 +5,7 @@ It provides implementations of common libc functions, custom memory allocation h
 basic threading helpers, containers, string utilities, simple networking and more.
 The top level `Makefile` builds every submodule and links them into `Full_Libft.a`.
 The umbrella header `FullLibft.hpp` includes every component.
-Internal code uses custom replacements such as `ft_strlen`, `ft_strchr`, `ft_strstr`, and `pf_snprintf` instead of the standard library equivalents. It also provides `ft_move` as a drop-in replacement for `std::move`.
+Internal code uses custom replacements such as `ft_strlen`, `ft_strchr`, `ft_strstr`, and `pf_snprintf` instead of the standard library equivalents. Move semantics now rely directly on the standard `std::move` helper.
 All size counters rely on the `ft_size_t` typedef (aliasing `unsigned long long`) so modules share a consistent width for
 buffer lengths and digit counts.
 Header files now use class names or concise module names instead of module prefixes, except internal headers which retain their module prefix.
@@ -443,10 +443,10 @@ int pt_thread_equal(pthread_t thread1, pthread_t thread2);
 pt_thread_id_type pt_thread_self();
 template <typename ValueType, typename Function>
 int pt_async(ft_promise<ValueType>& promise, Function function);
-int pt_atomic_load(const ft_atomic<int>& atomic_variable);
-void pt_atomic_store(ft_atomic<int>& atomic_variable, int desired_value);
-int pt_atomic_fetch_add(ft_atomic<int>& atomic_variable, int increment_value);
-bool pt_atomic_compare_exchange(ft_atomic<int>& atomic_variable, int& expected_value, int desired_value);
+int pt_atomic_load(const std::atomic<int>& atomic_variable);
+void pt_atomic_store(std::atomic<int>& atomic_variable, int desired_value);
+int pt_atomic_fetch_add(std::atomic<int>& atomic_variable, int increment_value);
+bool pt_atomic_compare_exchange(std::atomic<int>& atomic_variable, int& expected_value, int desired_value);
 int pt_cond_init(pthread_cond_t *condition, const pthread_condattr_t *attributes);
 int pt_cond_destroy(pthread_cond_t *condition);
 int pt_cond_wait(pthread_cond_t *condition, pthread_mutex_t *mutex);
@@ -1130,7 +1130,7 @@ components include:
    `ft_bitset`, `ft_function` and `ft_string_view`.
 - Smart pointers: `ft_shared_ptr` and `ft_unique_ptr`.
 - Concurrency helpers: `ft_thread_pool`, `ft_future`, `ft_event_emitter`,
-  `ft_promise` and `ft_atomic`.
+  `ft_promise`, plus direct use of `std::atomic`.
 - `ft_thread_pool` stores workers in `ft_vector` and pending tasks in
   `ft_queue`, synchronizing via POSIX mutexes and condition variables.
 - Additional helpers such as `algorithm.hpp`, `iterator.hpp` and `math.hpp`.
@@ -1166,27 +1166,12 @@ int  get_error() const;
 const char *get_error_str() const;
 ```
 
-#### `ft_atomic`
+#### Atomics
 
-`Template/atomic.hpp` wraps the standard atomic primitives in the
-library's error model so callers can check `_error_code` after each
-operation.
-
-```
-ft_atomic();
-explicit ft_atomic(ValueType desired_value);
-void store(ValueType desired_value, std::memory_order order = std::memory_order_seq_cst);
-ValueType load(std::memory_order order = std::memory_order_seq_cst) const;
-bool compare_exchange_weak(ValueType &expected_value, ValueType desired_value,
-    std::memory_order success_order = std::memory_order_seq_cst,
-    std::memory_order failure_order = std::memory_order_seq_cst);
-bool compare_exchange_strong(ValueType &expected_value, ValueType desired_value,
-    std::memory_order success_order = std::memory_order_seq_cst,
-    std::memory_order failure_order = std::memory_order_seq_cst);
-ValueType fetch_add(ValueType value, std::memory_order order = std::memory_order_seq_cst);
-int get_error() const;
-const char *get_error_str() const;
-```
+Standard `<atomic>` facilities are used throughout the threading helpers.
+`PThread/pthread.hpp` exposes small wrappers such as `pt_atomic_load` and
+`pt_atomic_compare_exchange` so the helper APIs continue to integrate with
+the project's error handling strategy.
 
 ### Additional Modules
 
@@ -2122,7 +2107,7 @@ ft_crafting_ingredient ingredient_a = {1, 2, -1};
 ft_crafting_ingredient ingredient_b = {2, 1, 1};
 ingredients.push_back(ingredient_a);
 ingredients.push_back(ingredient_b);
-crafting.register_recipe(1, ft_move(ingredients));
+crafting.register_recipe(1, std::move(ingredients));
 ft_sharedptr<ft_item> sword(new ft_item());
 crafting.craft_item(inventory, 1, sword);
 ```

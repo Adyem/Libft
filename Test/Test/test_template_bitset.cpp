@@ -1,7 +1,7 @@
 #include "../../Template/bitset.hpp"
-#include "../../Template/move.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
+#include <utility>
 
 FT_TEST(test_ft_bitset_basic_operations, "ft_bitset set, reset, flip, and test manage bit states")
 {
@@ -62,7 +62,7 @@ FT_TEST(test_ft_bitset_move_transfers_storage, "ft_bitset move operations transf
     FT_ASSERT(source_bitset.test(1));
     FT_ASSERT(source_bitset.test(8));
 
-    ft_bitset moved_bitset(ft_move(source_bitset));
+    ft_bitset moved_bitset(std::move(source_bitset));
 
     FT_ASSERT_EQ(12UL, moved_bitset.size());
     FT_ASSERT(moved_bitset.test(1));
@@ -73,7 +73,7 @@ FT_TEST(test_ft_bitset_move_transfers_storage, "ft_bitset move operations transf
     FT_ASSERT_EQ(ER_SUCCESS, source_bitset.get_error());
 
     ft_bitset assigned_bitset(3);
-    assigned_bitset = ft_move(moved_bitset);
+    assigned_bitset = std::move(moved_bitset);
 
     FT_ASSERT_EQ(12UL, assigned_bitset.size());
     FT_ASSERT(assigned_bitset.test(1));

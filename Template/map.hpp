@@ -9,7 +9,7 @@
 #include <cstddef>
 #include "../PThread/mutex.hpp"
 #include "../Libft/libft.hpp"
-#include "move.hpp"
+#include <utility>
 
 template <typename Key, typename MappedType>
 class ft_map
@@ -257,7 +257,7 @@ void ft_map<Key, MappedType>::insert(const Key& key, MappedType&& value)
     size_t index = find_index(key);
     if (index != this->_size)
     {
-        this->_data[index].value = ft_move(value);
+        this->_data[index].value = std::move(value);
         this->set_error(ER_SUCCESS);
         this->_mutex.unlock(THREAD_ID);
         return ;
@@ -271,7 +271,7 @@ void ft_map<Key, MappedType>::insert(const Key& key, MappedType&& value)
             return ;
         }
     }
-    construct_at(&this->_data[this->_size], Pair<Key, MappedType>(key, ft_move(value)));
+    construct_at(&this->_data[this->_size], Pair<Key, MappedType>(key, std::move(value)));
     ++this->_size;
     this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
@@ -344,7 +344,7 @@ void ft_map<Key, MappedType>::remove(const Key& key)
             ::destroy_at(&this->_data[index]);
             if (index != this->_size - 1)
             {
-                construct_at(&this->_data[index], ft_move(this->_data[this->_size - 1]));
+                construct_at(&this->_data[index], std::move(this->_data[this->_size - 1]));
                 ::destroy_at(&this->_data[this->_size - 1]);
             }
             --this->_size;
@@ -471,7 +471,7 @@ void ft_map<Key, MappedType>::resize(size_t new_capacity)
     size_t index = 0;
     while (index < this->_size)
     {
-        construct_at(&new_data[index], ft_move(this->_data[index]));
+        construct_at(&new_data[index], std::move(this->_data[index]));
         ::destroy_at(&this->_data[index]);
         index++;
     }

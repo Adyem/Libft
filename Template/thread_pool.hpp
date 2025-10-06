@@ -14,8 +14,8 @@
 #include <cerrno>
 #include <pthread.h>
 #include "../PThread/pthread.hpp"
-#include "move.hpp"
-#include "atomic.hpp"
+#include <utility>
+#include <atomic>
 
 class ft_thread_pool
 {
@@ -25,7 +25,7 @@ class ft_thread_pool
         size_t                        _max_tasks;
         bool                          _stop;
         size_t                        _active;
-        mutable ft_atomic<int>        _error_code;
+        mutable std::atomic<int>        _error_code;
         pthread_mutex_t               _mutex;
         pthread_cond_t                _cond;
         bool                          _mutex_initialized;
@@ -155,7 +155,7 @@ inline ft_thread_pool::ft_thread_pool(size_t thread_count, size_t max_tasks)
     while (worker_index < thread_count)
     {
         ft_thread worker(&ft_thread_pool::worker, this);
-        this->_workers.push_back(ft_move(worker));
+        this->_workers.push_back(std::move(worker));
         if (this->_workers.get_error() != ER_SUCCESS)
         {
             this->set_error(THREAD_POOL_ALLOC_FAIL);
@@ -199,9 +199,9 @@ inline void ft_thread_pool::submit(Function &&function)
 
     enqueue_failed = false;
     {
-        ft_function<void()> wrapper(ft_move(function));
+        ft_function<void()> wrapper(std::move(function));
 
-        this->_tasks.enqueue(ft_move(wrapper));
+        this->_tasks.enqueue(std::move(wrapper));
         queue_error = this->_tasks.get_error();
         if (queue_error != ER_SUCCESS)
         {

@@ -1,6 +1,7 @@
 #include "task_scheduler.hpp"
 #include "pthread.hpp"
 #include "../System_utils/system_utils.hpp"
+#include <utility>
 
 ft_scheduled_task_state::ft_scheduled_task_state()
     : _cancelled(false), _error_code(ER_SUCCESS)
@@ -221,7 +222,7 @@ ft_task_scheduler::ft_task_scheduler(size_t thread_count)
             worker_failure = true;
             break;
         }
-        this->_workers.push_back(ft_move(worker));
+        this->_workers.push_back(std::move(worker));
         if (this->_workers.get_error() != ER_SUCCESS)
         {
             this->set_error(this->_workers.get_error());
@@ -260,7 +261,7 @@ ft_task_scheduler::ft_task_scheduler(size_t thread_count)
         this->_running.store(false);
         return ;
     }
-    this->_timer_thread = ft_move(timer_worker);
+    this->_timer_thread = std::move(timer_worker);
     this->set_error(ER_SUCCESS);
     return ;
 }
@@ -347,9 +348,9 @@ void ft_task_scheduler::scheduled_heap_sift_up(size_t index)
                 this->_scheduled[parent_index]._time);
         if (comparison >= 0)
             break;
-        temp_task = ft_move(this->_scheduled[index]);
-        this->_scheduled[index] = ft_move(this->_scheduled[parent_index]);
-        this->_scheduled[parent_index] = ft_move(temp_task);
+        temp_task = std::move(this->_scheduled[index]);
+        this->_scheduled[index] = std::move(this->_scheduled[parent_index]);
+        this->_scheduled[parent_index] = std::move(temp_task);
         index = parent_index;
     }
     return ;
@@ -388,9 +389,9 @@ void ft_task_scheduler::scheduled_heap_sift_down(size_t index)
                 this->_scheduled[smallest]._time);
         if (comparison_left <= 0)
             break;
-        temp_task = ft_move(this->_scheduled[index]);
-        this->_scheduled[index] = ft_move(this->_scheduled[smallest]);
-        this->_scheduled[smallest] = ft_move(temp_task);
+        temp_task = std::move(this->_scheduled[index]);
+        this->_scheduled[index] = std::move(this->_scheduled[smallest]);
+        this->_scheduled[smallest] = std::move(temp_task);
         index = smallest;
     }
     return ;
@@ -400,7 +401,7 @@ bool ft_task_scheduler::scheduled_heap_push(scheduled_task &&task)
 {
     size_t size;
 
-    this->_scheduled.push_back(ft_move(task));
+    this->_scheduled.push_back(std::move(task));
     if (this->_scheduled.get_error() != ER_SUCCESS)
         return (false);
     size = this->_scheduled.size();
@@ -423,7 +424,7 @@ bool ft_task_scheduler::scheduled_heap_pop(scheduled_task &task)
         return (false);
     if (size == 0)
         return (false);
-    task = ft_move(this->_scheduled[0]);
+    task = std::move(this->_scheduled[0]);
     if (size == 1)
     {
         this->_scheduled.pop_back();
@@ -434,11 +435,11 @@ bool ft_task_scheduler::scheduled_heap_pop(scheduled_task &task)
     }
     scheduled_task last_task;
 
-    last_task = ft_move(this->_scheduled[size - 1]);
+    last_task = std::move(this->_scheduled[size - 1]);
     this->_scheduled.pop_back();
     if (this->_scheduled.get_error() != ER_SUCCESS)
         return (false);
-    this->_scheduled[0] = ft_move(last_task);
+    this->_scheduled[0] = std::move(last_task);
     this->scheduled_heap_sift_down(0);
     this->_scheduled_size_counter.store(static_cast<long long>(this->_scheduled.size()));
     return (true);
@@ -465,11 +466,11 @@ bool ft_task_scheduler::scheduled_remove_index(size_t index)
     }
     scheduled_task last_task;
 
-    last_task = ft_move(this->_scheduled[size - 1]);
+    last_task = std::move(this->_scheduled[size - 1]);
     this->_scheduled.pop_back();
     if (this->_scheduled.get_error() != ER_SUCCESS)
         return (false);
-    this->_scheduled[index] = ft_move(last_task);
+    this->_scheduled[index] = std::move(last_task);
     this->scheduled_heap_sift_down(index);
     this->scheduled_heap_sift_up(index);
     this->_scheduled_size_counter.store(static_cast<long long>(this->_scheduled.size()));
@@ -718,7 +719,7 @@ void ft_task_scheduler::timer_loop()
 
                 function_error = expired_task._function.get_error();
                 this->set_error(function_error);
-                original_function = ft_move(expired_task._function);
+                original_function = std::move(expired_task._function);
                 if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
                 {
                     this->set_error(this->_scheduled_mutex.get_error());
@@ -764,8 +765,8 @@ void ft_task_scheduler::timer_loop()
                         updated_time = time_monotonic_point_add_ms(time_monotonic_point_now(),
                                 expired_task._interval_ms);
                         expired_task._time = updated_time;
-                        expired_task._function = ft_move(original_function);
-                        if (!this->scheduled_heap_push(ft_move(expired_task)))
+                        expired_task._function = std::move(original_function);
+                        if (!this->scheduled_heap_push(std::move(expired_task)))
                             this->set_error(this->_scheduled.get_error());
                     }
                 }
@@ -781,7 +782,7 @@ void ft_task_scheduler::timer_loop()
 
                 copy_error = queue_function.get_error();
                 this->set_error(copy_error);
-                original_function = ft_move(expired_task._function);
+                original_function = std::move(expired_task._function);
                 if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
                 {
                     this->set_error(this->_scheduled_mutex.get_error());
@@ -827,8 +828,8 @@ void ft_task_scheduler::timer_loop()
                         updated_time = time_monotonic_point_add_ms(time_monotonic_point_now(),
                                 expired_task._interval_ms);
                         expired_task._time = updated_time;
-                        expired_task._function = ft_move(original_function);
-                        if (!this->scheduled_heap_push(ft_move(expired_task)))
+                        expired_task._function = std::move(original_function);
+                        if (!this->scheduled_heap_push(std::move(expired_task)))
                             this->set_error(this->_scheduled.get_error());
                     }
                 }
@@ -839,7 +840,7 @@ void ft_task_scheduler::timer_loop()
                 this->set_error(this->_scheduled_mutex.get_error());
                 return ;
             }
-            this->_queue.push(ft_move(queue_function));
+            this->_queue.push(std::move(queue_function));
             if (this->_queue.get_error() != ER_SUCCESS)
             {
                 this->set_error(this->_queue.get_error());
@@ -889,7 +890,7 @@ void ft_task_scheduler::timer_loop()
                     updated_time = time_monotonic_point_add_ms(time_monotonic_point_now(),
                             expired_task._interval_ms);
                     expired_task._time = updated_time;
-                    if (!this->scheduled_heap_push(ft_move(expired_task)))
+                    if (!this->scheduled_heap_push(std::move(expired_task)))
                         this->set_error(this->_scheduled.get_error());
                 }
             }

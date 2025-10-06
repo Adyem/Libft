@@ -5,7 +5,7 @@
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
-#include "move.hpp"
+#include <utility>
 #include <new>
 #include <type_traits>
 #include <stdint.h>
@@ -128,7 +128,7 @@ ft_function<ReturnType(Args...)>::ft_function(FunctionType function)
 {
     FunctionType *copy;
 
-    copy = new (std::nothrow) FunctionType(ft_move(function));
+    copy = new (std::nothrow) FunctionType(std::move(function));
     if (!copy)
     {
         this->set_error(FT_EALLOC);

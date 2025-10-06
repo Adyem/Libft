@@ -1,5 +1,5 @@
 #include "../../Template/promise.hpp"
-#include "../../Template/atomic.hpp"
+#include <atomic>
 #include "../../PThread/pthread.hpp"
 #include "../../PThread/thread.hpp"
 #include "../../System_utils/test_runner.hpp"
@@ -8,7 +8,7 @@
 FT_TEST(test_template_promise_thread_safe_set_and_get, "ft_promise synchronizes concurrent setters and getters")
 {
     ft_promise<int> promise_instance;
-    ft_atomic<int> successful_gets(0);
+    std::atomic<int> successful_gets(0);
 
     auto setter = [&promise_instance]()
     {
@@ -58,7 +58,7 @@ FT_TEST(test_template_promise_thread_safe_set_and_get, "ft_promise synchronizes 
 FT_TEST(test_template_promise_thread_safe_ordered_writes, "ft_promise handles ordered updates from multiple threads")
 {
     ft_promise<int> promise_instance;
-    ft_atomic<int> stage(0);
+    std::atomic<int> stage(0);
 
     auto first_setter = [&promise_instance, &stage]()
     {
@@ -98,7 +98,7 @@ FT_TEST(test_template_promise_thread_safe_ordered_writes, "ft_promise handles or
 FT_TEST(test_template_promise_void_thread_safety, "ft_promise<void> synchronizes readiness checks")
 {
     ft_promise<void> promise_instance;
-    ft_atomic<int> ready_checks(0);
+    std::atomic<int> ready_checks(0);
 
     auto setter = [&promise_instance]()
     {

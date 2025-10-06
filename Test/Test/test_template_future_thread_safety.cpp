@@ -1,6 +1,6 @@
 #include "../../Template/future.hpp"
 #include "../../Template/promise.hpp"
-#include "../../Template/atomic.hpp"
+#include <atomic>
 #include "../../PThread/thread.hpp"
 #include "../../PThread/pthread.hpp"
 #include "../../System_utils/test_runner.hpp"
@@ -10,7 +10,7 @@ FT_TEST(test_template_future_thread_safe_wait_and_get, "ft_future coordinates wa
 {
     ft_promise<int> promise_instance;
     ft_future<int> future_instance(promise_instance);
-    ft_atomic<int> success_counter(0);
+    std::atomic<int> success_counter(0);
 
     auto wait_routine = [&future_instance, &success_counter]()
     {
@@ -53,7 +53,7 @@ FT_TEST(test_template_future_thread_safe_multiple_gets, "ft_future allows simult
 {
     ft_promise<int> promise_instance;
     ft_future<int> future_instance(promise_instance);
-    ft_atomic<int> sum_values(0);
+    std::atomic<int> sum_values(0);
 
     auto getter = [&future_instance, &sum_values]()
     {
@@ -93,7 +93,7 @@ FT_TEST(test_template_future_void_thread_safety, "ft_future<void> synchronizes w
 {
     ft_promise<void> promise_instance;
     ft_future<void> future_instance(promise_instance);
-    ft_atomic<int> completion_counter(0);
+    std::atomic<int> completion_counter(0);
 
     auto waiter = [&future_instance, &completion_counter]()
     {

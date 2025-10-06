@@ -1,5 +1,5 @@
 #include "../../Template/shared_ptr.hpp"
-#include "../../Template/atomic.hpp"
+#include <atomic>
 #include "../../PThread/thread.hpp"
 #include "../../PThread/pthread.hpp"
 #include "../../System_utils/test_runner.hpp"
@@ -13,7 +13,7 @@ FT_TEST(test_template_shared_ptr_thread_safe_reference_counting, "ft_sharedptr r
     raw_pointer = new (std::nothrow) int(0);
     FT_ASSERT(raw_pointer != ft_nullptr);
     ft_sharedptr<int> shared_pointer(raw_pointer);
-    ft_atomic<int> copy_count(0);
+    std::atomic<int> copy_count(0);
 
     auto copier = [&shared_pointer, &copy_count]()
     {
@@ -54,7 +54,7 @@ FT_TEST(test_template_shared_ptr_thread_safe_reset_during_copy, "ft_sharedptr re
     replacement_pointer = new (std::nothrow) int(9);
     FT_ASSERT(initial_pointer != ft_nullptr && replacement_pointer != ft_nullptr);
     ft_sharedptr<int> shared_pointer(initial_pointer);
-    ft_atomic<int> copy_successes(0);
+    std::atomic<int> copy_successes(0);
 
     auto copier = [&shared_pointer, &copy_successes]()
     {

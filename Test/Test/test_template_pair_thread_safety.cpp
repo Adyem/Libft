@@ -1,5 +1,5 @@
 #include "../../Template/pair.hpp"
-#include "../../Template/atomic.hpp"
+#include <atomic>
 #include "../../PThread/thread.hpp"
 #include "../../PThread/pthread.hpp"
 #include "../../System_utils/test_runner.hpp"
@@ -93,7 +93,7 @@ FT_TEST(test_template_pair_thread_safe_cross_assignment, "Pair avoids deadlock w
 FT_TEST(test_template_pair_thread_safe_get_during_updates, "Pair getters remain consistent during concurrent writes")
 {
     Pair<int, int> monitored_pair(5, 50);
-    ft_atomic<int> successful_reads(0);
+    std::atomic<int> successful_reads(0);
 
     auto reader = [&monitored_pair, &successful_reads]()
     {

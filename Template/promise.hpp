@@ -2,12 +2,11 @@
 #define FT_PROMISE_HPP
 
 #include "../Errno/errno.hpp"
-#include "atomic.hpp"
+#include <atomic>
 #include "../PThread/pthread.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 #include <utility>
-#include "move.hpp"
 
 int pt_thread_yield();
 
@@ -16,7 +15,7 @@ class ft_promise
 {
     private:
         ValueType _value;
-        ft_atomic<bool> _ready;
+        std::atomic<bool> _ready;
         mutable pt_mutex _mutex;
         mutable int _error_code;
 
@@ -39,7 +38,7 @@ template <>
 class ft_promise<void>
 {
     private:
-        ft_atomic<bool> _ready;
+        std::atomic<bool> _ready;
         mutable pt_mutex _mutex;
         mutable int _error_code;
 
@@ -136,7 +135,7 @@ void ft_promise<ValueType>::set_value(ValueType&& value)
         this->set_error(guard.get_error());
         return ;
     }
-    this->_value = ft_move(value);
+    this->_value = std::move(value);
     this->_ready.store(true, std::memory_order_release);
     this->set_error(ER_SUCCESS);
     return ;

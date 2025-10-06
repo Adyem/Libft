@@ -3,13 +3,11 @@
 
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../Template/move.hpp"
 #include "../Template/function.hpp"
 #include "../Template/vector.hpp"
 #include "../Template/shared_ptr.hpp"
 #include "../Template/promise.hpp"
 #include "../Template/future.hpp"
-#include "../Template/atomic.hpp"
 #include "../Template/queue.hpp"
 #include "../Template/pair.hpp"
 #include "thread.hpp"
@@ -24,6 +22,7 @@
 #include <chrono>
 #include <new>
 #include <type_traits>
+#include <utility>
 
 
 
@@ -48,7 +47,7 @@ class ft_blocking_queue
 
         void push(ElementType &&value);
         bool pop(ElementType &result);
-        bool wait_pop(ElementType &result, const ft_atomic<bool> &running_flag);
+        bool wait_pop(ElementType &result, const std::atomic<bool> &running_flag);
         void shutdown();
 
         int get_error() const;
@@ -60,7 +59,7 @@ class ft_task_scheduler;
 class ft_scheduled_task_state
 {
     private:
-        ft_atomic<bool> _cancelled;
+        std::atomic<bool> _cancelled;
         mutable int _error_code;
 
         void set_error(int error) const;
@@ -118,11 +117,11 @@ class ft_task_scheduler
         ft_vector<scheduled_task> _scheduled;
         pt_mutex _scheduled_mutex;
         pt_condition_variable _scheduled_condition;
-        ft_atomic<bool> _running;
-        ft_atomic<long long> _queue_size_counter;
-        ft_atomic<long long> _scheduled_size_counter;
-        ft_atomic<long long> _worker_active_counter;
-        ft_atomic<long long> _worker_idle_counter;
+        std::atomic<bool> _running;
+        std::atomic<long long> _queue_size_counter;
+        std::atomic<long long> _scheduled_size_counter;
+        std::atomic<long long> _worker_active_counter;
+        std::atomic<long long> _worker_idle_counter;
         size_t _worker_total_count;
         mutable int _error_code;
 
@@ -218,7 +217,7 @@ void ft_blocking_queue<ElementType>::push(ElementType &&value)
         this->set_error(this->_storage.get_error());
         return ;
     }
-    this->_storage.enqueue(ft_move(value));
+    this->_storage.enqueue(std::move(value));
     if (this->_storage.get_error() != ER_SUCCESS)
     {
         this->_mutex.unlock(THREAD_ID);
@@ -290,13 +289,13 @@ bool ft_blocking_queue<ElementType>::pop(ElementType &result)
         this->set_error(this->_mutex.get_error());
         return (false);
     }
-    result = ft_move(value);
+    result = std::move(value);
     this->set_error(ER_SUCCESS);
     return (true);
 }
 
 template <typename ElementType>
-bool ft_blocking_queue<ElementType>::wait_pop(ElementType &result, const ft_atomic<bool> &running_flag)
+bool ft_blocking_queue<ElementType>::wait_pop(ElementType &result, const std::atomic<bool> &running_flag)
 {
     bool is_empty;
     ElementType value;
@@ -361,7 +360,7 @@ bool ft_blocking_queue<ElementType>::wait_pop(ElementType &result, const ft_atom
         this->set_error(this->_mutex.get_error());
         return (false);
     }
-    result = ft_move(value);
+    result = std::move(value);
     this->set_error(ER_SUCCESS);
     return (true);
 }
@@ -453,7 +452,7 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
             return_type result_value;
 
             result_value = function(args...);
-            promise_shared->set_value(ft_move(result_value));
+            promise_shared->set_value(std::move(result_value));
         }
         return ;
     };
@@ -464,7 +463,7 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
         task_body();
         return (future_value);
     }
-    this->_queue.push(ft_move(wrapper));
+    this->_queue.push(std::move(wrapper));
     if (this->_queue.get_error() != ER_SUCCESS)
     {
         this->set_error(this->_queue.get_error());
@@ -560,7 +559,7 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
             return_type result_value;
 
             result_value = function(args...);
-            promise_shared->set_value(ft_move(result_value));
+            promise_shared->set_value(std::move(result_value));
         }
         return ;
     };
@@ -580,7 +579,7 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     bool push_success;
     int scheduled_error;
 
-    push_success = this->scheduled_heap_push(ft_move(task_entry));
+    push_success = this->scheduled_heap_push(std::move(task_entry));
     if (!push_success)
     {
         scheduled_error = this->_scheduled.get_error();
@@ -661,7 +660,7 @@ ft_scheduled_task_handle ft_task_scheduler::schedule_every(std::chrono::duration
     bool push_success;
     int scheduled_error;
 
-    push_success = this->scheduled_heap_push(ft_move(task_entry));
+    push_success = this->scheduled_heap_push(std::move(task_entry));
     if (!push_success)
     {
         scheduled_error = this->_scheduled.get_error();

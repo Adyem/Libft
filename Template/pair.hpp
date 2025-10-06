@@ -1,7 +1,7 @@
 #ifndef PAIR_HPP
 # define PAIR_HPP
 
-#include "move.hpp"
+#include <utility>
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
@@ -65,7 +65,7 @@ Pair<KeyType, ValueType>::Pair(const KeyType &input_key, const ValueType &input_
 
 template <typename KeyType, typename ValueType>
 Pair<KeyType, ValueType>::Pair(const KeyType &input_key, ValueType &&input_value)
-        : _mutex(), _error_code(ER_SUCCESS), key(input_key), value(ft_move(input_value))
+        : _mutex(), _error_code(ER_SUCCESS), key(input_key), value(std::move(input_value))
 {
     this->set_error(ER_SUCCESS);
     return ;
@@ -97,8 +97,8 @@ Pair<KeyType, ValueType>::Pair(Pair &&other)
         this->set_error(guard.get_error());
         return ;
     }
-    this->key = ft_move(other.key);
-    this->value = ft_move(other.value);
+    this->key = std::move(other.key);
+    this->value = std::move(other.value);
     other.set_error(ER_SUCCESS);
     this->set_error(ER_SUCCESS);
     return ;
@@ -191,8 +191,8 @@ Pair<KeyType, ValueType> &Pair<KeyType, ValueType>::operator=(Pair &&other)
         this->set_error(second_guard.get_error());
         return (*this);
     }
-    this->key = ft_move(other.key);
-    this->value = ft_move(other.value);
+    this->key = std::move(other.key);
+    this->value = std::move(other.value);
     other.set_error(ER_SUCCESS);
     this->set_error(ER_SUCCESS);
     return (*this);
@@ -249,7 +249,7 @@ void Pair<KeyType, ValueType>::set_key(KeyType &&input_key)
         this->set_error(guard.get_error());
         return ;
     }
-    this->key = ft_move(input_key);
+    this->key = std::move(input_key);
     this->set_error(ER_SUCCESS);
     return ;
 }
@@ -277,7 +277,7 @@ void Pair<KeyType, ValueType>::set_value(ValueType &&input_value)
         this->set_error(guard.get_error());
         return ;
     }
-    this->value = ft_move(input_value);
+    this->value = std::move(input_value);
     this->set_error(ER_SUCCESS);
     return ;
 }

@@ -3,6 +3,7 @@
 #include "utils.hpp"
 
 #include <queue>
+#include <utility>
 
 int test_efficiency_queue_enqueue_dequeue(void)
 {
