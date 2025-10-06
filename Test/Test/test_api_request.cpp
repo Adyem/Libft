@@ -1189,7 +1189,11 @@ FT_TEST(test_api_request_retry_policy_timeout, "api_request_string retries until
     status_value = -45;
     body = api_request_string("127.0.0.1", 54341, "GET", "/", ft_nullptr,
             ft_nullptr, &status_value, 50, &retry_policy);
+    int request_errno;
+
+    request_errno = ft_errno;
     server_thread.join();
+    ft_errno = request_errno;
     if (body)
     {
         cma_free(body);
@@ -1197,7 +1201,7 @@ FT_TEST(test_api_request_retry_policy_timeout, "api_request_string retries until
     }
     if (status_value != -45)
         return (0);
-    if (ft_errno != SOCKET_RECEIVE_FAILED && ft_errno != FT_EIO)
+    if (request_errno != SOCKET_RECEIVE_FAILED && request_errno != FT_EIO)
         return (0);
     return (1);
 }
