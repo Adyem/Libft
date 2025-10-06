@@ -6,6 +6,8 @@
 #include "../JSon/json.hpp"
 #include <limits.h>
 
+class ft_string;
+
 char *api_http_execute_plain(api_connection_pool_handle &connection_handle,
     const char *method, const char *path, const char *host_header,
     json_group *payload, const char *headers, int *status, int timeout,
@@ -22,6 +24,19 @@ char *api_http_execute_plain_http2(api_connection_pool_handle &connection_handle
     json_group *payload, const char *headers, int *status, int timeout,
     const char *host, uint16_t port,
     const api_retry_policy *retry_policy, bool &used_http2, int &error_code);
+bool api_http_execute_plain_streaming(api_connection_pool_handle &connection_handle,
+    const char *method, const char *path, const char *host_header,
+    json_group *payload, const char *headers, int timeout,
+    const char *host, uint16_t port,
+    const api_retry_policy *retry_policy,
+    const api_streaming_handler *streaming_handler, int &error_code);
+bool api_http_execute_plain_http2_streaming(
+    api_connection_pool_handle &connection_handle, const char *method,
+    const char *path, const char *host_header, json_group *payload,
+    const char *headers, int timeout, const char *host, uint16_t port,
+    const api_retry_policy *retry_policy,
+    const api_streaming_handler *streaming_handler, bool &used_http2,
+    int &error_code);
 char *api_https_execute_http2(api_connection_pool_handle &connection_handle,
     const char *method, const char *path, const char *host_header,
     json_group *payload, const char *headers, int *status, int timeout,
@@ -29,6 +44,31 @@ char *api_https_execute_http2(api_connection_pool_handle &connection_handle,
     uint16_t port, const char *security_identity,
     const api_retry_policy *retry_policy, bool &used_http2,
     int &error_code);
+bool api_https_execute_http2_streaming(
+    api_connection_pool_handle &connection_handle, const char *method,
+    const char *path, const char *host_header, json_group *payload,
+    const char *headers, int timeout, const char *ca_certificate,
+    bool verify_peer, const char *host, uint16_t port,
+    const char *security_identity, const api_retry_policy *retry_policy,
+    const api_streaming_handler *streaming_handler, bool &used_http2,
+    int &error_code);
+bool api_https_execute_streaming(api_connection_pool_handle &connection_handle,
+    const char *method, const char *path, const char *host_header,
+    json_group *payload, const char *headers, int timeout,
+    const char *ca_certificate, bool verify_peer, const char *host,
+    uint16_t port, const char *security_identity,
+    const api_retry_policy *retry_policy,
+    const api_streaming_handler *streaming_handler, int &error_code);
+bool api_http_stream_invoke_body(const api_streaming_handler *streaming_handler,
+    const char *chunk_data, size_t chunk_size, bool is_final_chunk,
+    int &error_code);
+void api_http_stream_invoke_headers(
+    const api_streaming_handler *streaming_handler, int status_code,
+    const char *headers);
+bool api_http_stream_process_chunked_buffer(ft_string &buffer,
+    long long &chunk_remaining, bool &trailers_pending,
+    bool &final_chunk_sent,
+    const api_streaming_handler *streaming_handler, int &error_code);
 void api_request_set_resolve_error(int resolver_status);
 void api_request_set_ssl_error(SSL *ssl_session, int operation_result);
 

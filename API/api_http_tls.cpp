@@ -28,6 +28,10 @@
 #include <climits>
 #include <utility>
 
+static bool api_https_prepare_request(const char *method, const char *path,
+    const char *host_header, json_group *payload, const char *headers,
+    ft_string &request, ft_string &body_string, int &error_code);
+
 void api_request_set_ssl_error(SSL *ssl_session, int operation_result)
 {
     unsigned long library_error;
@@ -240,20 +244,208 @@ static bool api_https_send_request(SSL *ssl_session, const ft_string &request,
     return (true);
 }
 
+static bool api_https_ensure_session(
+    api_connection_pool_handle &connection_handle, int timeout,
+    const char *ca_certificate, bool verify_peer, int &error_code)
+{
+    ft_socket &socket_wrapper = connection_handle.socket;
+
+    if (socket_wrapper.get_error())
+    {
+        error_code = socket_wrapper.get_error();
+        return (false);
+    }
+    if (!api_http_apply_timeouts(socket_wrapper, timeout))
+    {
+#ifdef _WIN32
+        int last_error;
+
+        last_error = WSAGetLastError();
+        if (last_error != 0)
+            error_code = last_error + ERRNO_OFFSET;
+        else
+            error_code = SOCKET_INVALID_CONFIGURATION;
+#else
+        if (errno != 0)
+            error_code = errno + ERRNO_OFFSET;
+        else
+            error_code = SOCKET_INVALID_CONFIGURATION;
+#endif
+        return (false);
+    }
+    if (connection_handle.tls_session)
+        return (true);
+    if (!OPENSSL_init_ssl(0, ft_nullptr))
+    {
+        api_request_set_ssl_error(ft_nullptr, 0);
+        error_code = ft_errno;
+        return (false);
+    }
+    SSL_CTX *context;
+
+    context = SSL_CTX_new(TLS_client_method());
+    if (!context)
+    {
+        api_request_set_ssl_error(ft_nullptr, 0);
+        error_code = ft_errno;
+        return (false);
+    }
+    if (verify_peer)
+    {
+        if (ca_certificate && ca_certificate[0] != '\0')
+        {
+            if (SSL_CTX_load_verify_locations(context, ca_certificate,
+                    ft_nullptr) != 1)
+            {
+                api_request_set_ssl_error(ft_nullptr, 0);
+                error_code = ft_errno;
+                SSL_CTX_free(context);
+                return (false);
+            }
+        }
+        else
+        {
+            if (SSL_CTX_set_default_verify_paths(context) != 1)
+            {
+                api_request_set_ssl_error(ft_nullptr, 0);
+                error_code = ft_errno;
+                SSL_CTX_free(context);
+                return (false);
+            }
+        }
+        SSL_CTX_set_verify(context, SSL_VERIFY_PEER, ft_nullptr);
+    }
+    else
+        SSL_CTX_set_verify(context, SSL_VERIFY_NONE, ft_nullptr);
+    SSL *ssl_session;
+
+    ssl_session = SSL_new(context);
+    if (!ssl_session)
+    {
+        api_request_set_ssl_error(ft_nullptr, 0);
+        error_code = ft_errno;
+        SSL_CTX_free(context);
+        return (false);
+    }
+    if (SSL_set_fd(ssl_session, socket_wrapper.get_fd()) != 1)
+    {
+        api_request_set_ssl_error(ssl_session, 0);
+        error_code = ft_errno;
+        SSL_shutdown(ssl_session);
+        SSL_free(ssl_session);
+        SSL_CTX_free(context);
+        return (false);
+    }
+    int ssl_connect_result;
+
+    ssl_connect_result = SSL_connect(ssl_session);
+    if (ssl_connect_result <= 0)
+    {
+        api_request_set_ssl_error(ssl_session, ssl_connect_result);
+        error_code = ft_errno;
+        SSL_shutdown(ssl_session);
+        SSL_free(ssl_session);
+        SSL_CTX_free(context);
+        return (false);
+    }
+    connection_handle.tls_context = context;
+    connection_handle.tls_session = ssl_session;
+    return (true);
+}
+
+static bool api_https_streaming_flush_buffer(ft_string &streaming_body_buffer,
+    bool has_length, long long content_length, size_t &streaming_delivered,
+    bool &final_chunk_sent, bool chunked_encoding,
+    long long &chunk_stream_remaining, bool &chunk_stream_trailers,
+    const api_streaming_handler *streaming_handler, int &error_code)
+{
+    if (streaming_body_buffer.size() == 0)
+        return (true);
+    if (has_length)
+    {
+        while (streaming_body_buffer.size() > 0
+            && streaming_delivered < static_cast<size_t>(content_length))
+        {
+            size_t remaining_length;
+            size_t chunk_size;
+            bool final_chunk;
+
+            remaining_length = static_cast<size_t>(content_length)
+                - streaming_delivered;
+            chunk_size = streaming_body_buffer.size();
+            if (chunk_size > remaining_length)
+                chunk_size = remaining_length;
+            final_chunk = (streaming_delivered + chunk_size)
+                == static_cast<size_t>(content_length);
+            if (!api_http_stream_invoke_body(streaming_handler,
+                    streaming_body_buffer.c_str(), chunk_size,
+                    final_chunk, error_code))
+                return (false);
+            streaming_body_buffer.erase(0, chunk_size);
+            streaming_delivered += chunk_size;
+            if (final_chunk)
+            {
+                final_chunk_sent = true;
+                break ;
+            }
+        }
+        if (final_chunk_sent && streaming_body_buffer.size() > 0)
+        {
+            error_code = FT_EIO;
+            return (false);
+        }
+        return (true);
+    }
+    if (chunked_encoding)
+    {
+        if (!api_http_stream_process_chunked_buffer(streaming_body_buffer,
+                chunk_stream_remaining, chunk_stream_trailers,
+                final_chunk_sent, streaming_handler, error_code))
+            return (false);
+        if (final_chunk_sent && streaming_body_buffer.size() > 0)
+        {
+            error_code = FT_EIO;
+            return (false);
+        }
+        return (true);
+    }
+    if (!api_http_stream_invoke_body(streaming_handler,
+            streaming_body_buffer.c_str(), streaming_body_buffer.size(),
+            false, error_code))
+        return (false);
+    streaming_body_buffer.clear();
+    return (true);
+}
+
 static bool api_https_receive_response(SSL *ssl_session, ft_string &response,
     size_t &header_length, bool &connection_close, bool &chunked_encoding,
-    bool &has_length, long long &content_length, int &error_code)
+    bool &has_length, long long &content_length, int &error_code,
+    const api_streaming_handler *streaming_handler)
 {
+    bool streaming_enabled;
     bool headers_complete;
+    ft_string header_storage;
+    ft_string streaming_body_buffer;
+    size_t streaming_delivered;
+    bool final_chunk_sent;
+    int header_status_code;
+    long long chunk_stream_remaining;
+    bool chunk_stream_trailers;
     char buffer[2048];
 
-    header_length = 0;
+    streaming_enabled = (streaming_handler != ft_nullptr);
     headers_complete = false;
+    streaming_delivered = 0;
+    final_chunk_sent = false;
+    header_status_code = -1;
+    chunk_stream_remaining = -1;
+    chunk_stream_trailers = false;
     response.clear();
+    header_length = 0;
     connection_close = false;
     chunked_encoding = false;
     has_length = false;
-    content_length = -1;
+    content_length = 0;
     while (true)
     {
         ssize_t bytes_received;
@@ -278,83 +470,254 @@ static bool api_https_receive_response(SSL *ssl_session, ft_string &response,
                 error_code = SOCKET_RECEIVE_FAILED;
                 return (false);
             }
-            if (!chunked_encoding && has_length)
+            if (!streaming_enabled)
             {
-                size_t expected_size;
-
-                expected_size = static_cast<size_t>(content_length);
-                if (response.size() < header_length + expected_size)
+                if (!chunked_encoding && has_length)
                 {
-                    error_code = SOCKET_RECEIVE_FAILED;
-                    return (false);
+                    size_t expected_size;
+
+                    expected_size = static_cast<size_t>(content_length);
+                    if (response.size() < header_length + expected_size)
+                    {
+                        error_code = SOCKET_RECEIVE_FAILED;
+                        return (false);
+                    }
                 }
+                if (chunked_encoding)
+                {
+                    size_t consumed_length;
+
+                    if (!api_http_chunked_body_complete(
+                            response.c_str() + header_length,
+                            response.size() - header_length,
+                            consumed_length))
+                    {
+                        error_code = SOCKET_RECEIVE_FAILED;
+                        return (false);
+                    }
+                }
+                break ;
             }
+            if (!api_https_streaming_flush_buffer(streaming_body_buffer,
+                    has_length, content_length, streaming_delivered,
+                    final_chunk_sent, chunked_encoding,
+                    chunk_stream_remaining, chunk_stream_trailers,
+                    streaming_handler, error_code))
+                return (false);
             if (chunked_encoding)
             {
-                size_t consumed_length;
-
-                if (!api_http_chunked_body_complete(response.c_str() +
-                        header_length, response.size() - header_length,
-                        consumed_length))
+                if (!final_chunk_sent || chunk_stream_trailers
+                    || chunk_stream_remaining >= 0
+                    || streaming_body_buffer.size() > 0)
                 {
                     error_code = SOCKET_RECEIVE_FAILED;
                     return (false);
                 }
+                break ;
             }
-            break;
+            if (has_length)
+            {
+                if (static_cast<long long>(streaming_delivered)
+                    != content_length)
+                {
+                    error_code = SOCKET_RECEIVE_FAILED;
+                    return (false);
+                }
+                if (!final_chunk_sent)
+                {
+                    if (!api_http_stream_invoke_body(streaming_handler,
+                            ft_nullptr, 0, true, error_code))
+                        return (false);
+                    final_chunk_sent = true;
+                }
+                break ;
+            }
+            if (!api_http_stream_invoke_body(streaming_handler,
+                    ft_nullptr, 0, true, error_code))
+                return (false);
+            final_chunk_sent = true;
+            break ;
         }
         buffer[bytes_received] = '\0';
-        response.append(buffer);
-        if (response.get_error())
-        {
-            error_code = response.get_error();
-            return (false);
-        }
         if (!headers_complete)
         {
-            const char *headers_end_pointer;
-
-            headers_end_pointer = ft_strstr(response.c_str(), "\r\n\r\n");
-            if (headers_end_pointer)
+            response.append(buffer, static_cast<size_t>(bytes_received));
+            if (response.get_error())
             {
-                size_t headers_length;
-                const char *headers_end;
-
-                headers_complete = true;
-                headers_length = static_cast<size_t>(headers_end_pointer -
-                        response.c_str());
-                header_length = headers_length + 4;
-                headers_end = response.c_str() + headers_length;
-                api_http_parse_headers(response.c_str(), headers_end,
-                    connection_close, chunked_encoding, has_length,
-                    content_length);
-                if (!chunked_encoding && !has_length)
-                    connection_close = true;
+                error_code = response.get_error();
+                return (false);
             }
-        }
-        if (headers_complete)
-        {
-            size_t body_length;
+            const char *headers_start;
+            const char *headers_end;
 
-            body_length = response.size() - header_length;
+            headers_start = response.c_str();
+            headers_end = ft_strstr(response.c_str(), "\r\n\r\n");
+            if (!headers_end)
+            {
+                if (!streaming_enabled && response.size() >= sizeof(buffer))
+                {
+                    error_code = SOCKET_RECEIVE_FAILED;
+                    return (false);
+                }
+                continue ;
+            }
+            headers_end += 2;
+            header_length = static_cast<size_t>(headers_end - headers_start)
+                + 2;
+            api_http_parse_headers(headers_start, headers_end,
+                connection_close, chunked_encoding, has_length,
+                content_length);
+            if (!chunked_encoding && !has_length)
+                connection_close = true;
+            header_storage.assign(response.c_str(), header_length);
+            if (header_storage.get_error())
+            {
+                error_code = header_storage.get_error();
+                return (false);
+            }
+            if (streaming_enabled)
+            {
+                const char *status_space;
+                size_t body_length;
+
+                status_space = ft_strchr(header_storage.c_str(), ' ');
+                if (status_space)
+                    header_status_code = ft_atoi(status_space + 1);
+                api_http_stream_invoke_headers(streaming_handler,
+                    header_status_code, header_storage.c_str());
+                body_length = response.size() - header_length;
+                if (body_length > 0)
+                {
+                    streaming_body_buffer.append(
+                        response.c_str() + header_length, body_length);
+                    if (streaming_body_buffer.get_error())
+                    {
+                        error_code = streaming_body_buffer.get_error();
+                        return (false);
+                    }
+                    if (!api_https_streaming_flush_buffer(
+                            streaming_body_buffer, has_length,
+                            content_length, streaming_delivered,
+                            final_chunk_sent, chunked_encoding,
+                            chunk_stream_remaining, chunk_stream_trailers,
+                            streaming_handler, error_code))
+                        return (false);
+                    if (final_chunk_sent)
+                        return (true);
+                }
+                response = header_storage;
+            }
+            headers_complete = true;
+            continue ;
+        }
+        if (!streaming_enabled)
+        {
+            response.append(buffer, static_cast<size_t>(bytes_received));
+            if (response.get_error())
+            {
+                error_code = response.get_error();
+                return (false);
+            }
             if (chunked_encoding)
             {
+                size_t body_size;
                 size_t consumed_length;
 
-                if (api_http_chunked_body_complete(response.c_str() +
-                        header_length, body_length, consumed_length))
-                    break;
+                body_size = response.size() - header_length;
+                if (api_http_chunked_body_complete(
+                        response.c_str() + header_length, body_size,
+                        consumed_length))
+                {
+                    if (consumed_length <= body_size)
+                        return (true);
+                }
             }
             else if (has_length)
             {
-                size_t expected_size;
+                size_t body_size;
 
-                expected_size = static_cast<size_t>(content_length);
-                if (body_length >= expected_size)
-                    break;
+                body_size = response.size() - header_length;
+                if (body_size >= static_cast<size_t>(content_length))
+                    return (true);
             }
+            continue ;
         }
+        streaming_body_buffer.append(buffer,
+            static_cast<size_t>(bytes_received));
+        if (streaming_body_buffer.get_error())
+        {
+            error_code = streaming_body_buffer.get_error();
+            return (false);
+        }
+        if (!api_https_streaming_flush_buffer(streaming_body_buffer,
+                has_length, content_length, streaming_delivered,
+                final_chunk_sent, chunked_encoding, chunk_stream_remaining,
+                chunk_stream_trailers, streaming_handler, error_code))
+            return (false);
+        if (final_chunk_sent)
+            return (true);
     }
+    if (response.size() == 0)
+    {
+        error_code = SOCKET_RECEIVE_FAILED;
+        return (false);
+    }
+    if (streaming_enabled)
+        return (true);
+    const char *headers_start;
+    const char *headers_end;
+
+    headers_start = response.c_str();
+    headers_end = ft_strstr(response.c_str(), "\r\n\r\n");
+    if (!headers_end)
+    {
+        error_code = SOCKET_RECEIVE_FAILED;
+        return (false);
+    }
+    headers_end += 2;
+    header_length = static_cast<size_t>(headers_end - headers_start) + 2;
+    api_http_parse_headers(headers_start, headers_end, connection_close,
+        chunked_encoding, has_length, content_length);
+    return (true);
+}
+
+static bool api_https_execute_streaming_once(
+    api_connection_pool_handle &connection_handle,
+    const char *method, const char *path, const char *host_header,
+    json_group *payload, const char *headers, int timeout,
+    const char *ca_certificate, bool verify_peer,
+    const api_streaming_handler *streaming_handler, bool &connection_close,
+    int &error_code)
+{
+    connection_close = false;
+    if (!api_https_ensure_session(connection_handle, timeout,
+            ca_certificate, verify_peer, error_code))
+        return (false);
+    SSL *ssl_session = connection_handle.tls_session;
+
+    ft_string request;
+    ft_string body_string;
+
+    if (!api_https_prepare_request(method, path, host_header, payload,
+            headers, request, body_string, error_code))
+        return (false);
+    if (!api_https_send_request(ssl_session, request, error_code))
+        return (false);
+
+    ft_string response;
+    size_t header_length;
+    bool chunked_encoding;
+    bool has_length;
+    long long content_length;
+
+    chunked_encoding = false;
+    has_length = false;
+    content_length = 0;
+    if (!api_https_receive_response(ssl_session, response, header_length,
+            connection_close, chunked_encoding, has_length, content_length,
+            error_code, streaming_handler))
+        return (false);
+    error_code = ER_SUCCESS;
     return (true);
 }
 
@@ -448,109 +811,10 @@ static char *api_https_execute_once(
     json_group *payload, const char *headers, int *status, int timeout,
     const char *ca_certificate, bool verify_peer, int &error_code)
 {
-    ft_socket &socket_wrapper = connection_handle.socket;
-
-    if (socket_wrapper.get_error())
-    {
-        error_code = socket_wrapper.get_error();
+    if (!api_https_ensure_session(connection_handle, timeout,
+            ca_certificate, verify_peer, error_code))
         return (ft_nullptr);
-    }
-    if (!api_http_apply_timeouts(socket_wrapper, timeout))
-    {
-#ifdef _WIN32
-        int last_error;
-
-        last_error = WSAGetLastError();
-        if (last_error != 0)
-            error_code = last_error + ERRNO_OFFSET;
-        else
-            error_code = SOCKET_INVALID_CONFIGURATION;
-#else
-        if (errno != 0)
-            error_code = errno + ERRNO_OFFSET;
-        else
-            error_code = SOCKET_INVALID_CONFIGURATION;
-#endif
-        return (ft_nullptr);
-    }
-
-    SSL_CTX *context = connection_handle.tls_context;
     SSL *ssl_session = connection_handle.tls_session;
-
-    if (!ssl_session)
-    {
-        if (!OPENSSL_init_ssl(0, ft_nullptr))
-        {
-            api_request_set_ssl_error(ft_nullptr, 0);
-            error_code = ft_errno;
-            return (ft_nullptr);
-        }
-        context = SSL_CTX_new(TLS_client_method());
-        if (!context)
-        {
-            api_request_set_ssl_error(ft_nullptr, 0);
-            error_code = ft_errno;
-            return (ft_nullptr);
-        }
-        if (verify_peer)
-        {
-            if (ca_certificate && ca_certificate[0] != '\0')
-            {
-                if (SSL_CTX_load_verify_locations(context, ca_certificate,
-                        ft_nullptr) != 1)
-                {
-                    api_request_set_ssl_error(ft_nullptr, 0);
-                    error_code = ft_errno;
-                    SSL_CTX_free(context);
-                    return (ft_nullptr);
-                }
-            }
-            else
-            {
-                if (SSL_CTX_set_default_verify_paths(context) != 1)
-                {
-                    api_request_set_ssl_error(ft_nullptr, 0);
-                    error_code = ft_errno;
-                    SSL_CTX_free(context);
-                    return (ft_nullptr);
-                }
-            }
-            SSL_CTX_set_verify(context, SSL_VERIFY_PEER, ft_nullptr);
-        }
-        else
-            SSL_CTX_set_verify(context, SSL_VERIFY_NONE, ft_nullptr);
-        ssl_session = SSL_new(context);
-        if (!ssl_session)
-        {
-            api_request_set_ssl_error(ft_nullptr, 0);
-            error_code = ft_errno;
-            SSL_CTX_free(context);
-            return (ft_nullptr);
-        }
-        if (SSL_set_fd(ssl_session, socket_wrapper.get_fd()) != 1)
-        {
-            api_request_set_ssl_error(ssl_session, 0);
-            error_code = ft_errno;
-            SSL_shutdown(ssl_session);
-            SSL_free(ssl_session);
-            SSL_CTX_free(context);
-            return (ft_nullptr);
-        }
-        int ssl_connect_result;
-
-        ssl_connect_result = SSL_connect(ssl_session);
-        if (ssl_connect_result <= 0)
-        {
-            api_request_set_ssl_error(ssl_session, ssl_connect_result);
-            error_code = ft_errno;
-            SSL_shutdown(ssl_session);
-            SSL_free(ssl_session);
-            SSL_CTX_free(context);
-            return (ft_nullptr);
-        }
-        connection_handle.tls_context = context;
-        connection_handle.tls_session = ssl_session;
-    }
 
     ft_string request;
     ft_string body_string;
@@ -570,7 +834,7 @@ static char *api_https_execute_once(
 
     if (!api_https_receive_response(ssl_session, response, header_length,
             connection_close, chunked_encoding, has_length, content_length,
-            error_code))
+            error_code, ft_nullptr))
         return (ft_nullptr);
     if (status)
     {
@@ -789,6 +1053,92 @@ char *api_https_execute(api_connection_pool_handle &connection_handle,
     if (error_code == ER_SUCCESS)
         error_code = FT_EIO;
     return (ft_nullptr);
+}
+
+bool api_https_execute_streaming(api_connection_pool_handle &connection_handle,
+    const char *method, const char *path, const char *host_header,
+    json_group *payload, const char *headers, int timeout,
+    const char *ca_certificate, bool verify_peer, const char *host,
+    uint16_t port, const char *security_identity,
+    const api_retry_policy *retry_policy,
+    const api_streaming_handler *streaming_handler, int &error_code)
+{
+    int max_attempts;
+    int attempt_index;
+    int initial_delay;
+    int current_delay;
+    int max_delay;
+    int multiplier;
+
+    max_attempts = api_retry_get_max_attempts(retry_policy);
+    initial_delay = api_retry_get_initial_delay(retry_policy);
+    max_delay = api_retry_get_max_delay(retry_policy);
+    multiplier = api_retry_get_multiplier(retry_policy);
+    current_delay = api_retry_prepare_delay(initial_delay, max_delay);
+    attempt_index = 0;
+    while (attempt_index < max_attempts)
+    {
+        bool socket_ready;
+        bool should_retry;
+
+        socket_ready = api_https_prepare_socket(connection_handle, host, port,
+                timeout, security_identity, error_code);
+        if (socket_ready)
+        {
+            bool connection_close;
+            bool success;
+
+            connection_close = false;
+            success = api_https_execute_streaming_once(connection_handle,
+                    method, path, host_header, payload, headers, timeout,
+                    ca_certificate, verify_peer, streaming_handler,
+                    connection_close, error_code);
+            if (success)
+            {
+                if (connection_close)
+                    api_connection_pool_disable_store(connection_handle);
+                return (true);
+            }
+        }
+        should_retry = api_https_should_retry(error_code);
+        if (!should_retry)
+            return (false);
+        api_connection_pool_evict(connection_handle);
+        attempt_index++;
+        if (attempt_index >= max_attempts)
+            break ;
+        if (current_delay > 0)
+        {
+            int sleep_delay;
+
+            sleep_delay = api_retry_prepare_delay(current_delay, max_delay);
+            if (sleep_delay > 0)
+                time_sleep_ms(static_cast<unsigned int>(sleep_delay));
+        }
+        current_delay = api_retry_next_delay(current_delay, max_delay,
+                multiplier);
+        if (current_delay <= 0)
+            current_delay = api_retry_prepare_delay(initial_delay, max_delay);
+    }
+    if (error_code == ER_SUCCESS)
+        error_code = FT_EIO;
+    return (false);
+}
+
+bool api_https_execute_http2_streaming(
+    api_connection_pool_handle &connection_handle, const char *method,
+    const char *path, const char *host_header, json_group *payload,
+    const char *headers, int timeout, const char *ca_certificate,
+    bool verify_peer, const char *host, uint16_t port,
+    const char *security_identity, const api_retry_policy *retry_policy,
+    const api_streaming_handler *streaming_handler, bool &used_http2,
+    int &error_code)
+{
+    used_http2 = false;
+    return (api_https_execute_streaming(connection_handle, method, path,
+            host_header, payload, headers, timeout, ca_certificate,
+            verify_peer, host, port, security_identity, retry_policy,
+            streaming_handler, error_code));
 }
 
 static char *api_https_execute_http2_once(
