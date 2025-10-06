@@ -3,7 +3,6 @@
 
 #include <type_traits>
 #include <utility>
-#include "move.hpp"
 #include "vector.hpp"
 #include "../PThread/mutex.hpp"
 #include "../Errno/errno.hpp"
@@ -111,8 +110,8 @@ Pool<T>::Pool()
 
 template<typename T>
 Pool<T>::Pool(Pool&& other)
-    : _buffer(ft_move(other._buffer))
-    , _freeIndices(ft_move(other._freeIndices))
+    : _buffer(std::move(other._buffer))
+    , _freeIndices(std::move(other._freeIndices))
     , _error_code(other._error_code)
 {
     other._error_code = ER_SUCCESS;
@@ -125,8 +124,8 @@ Pool<T>& Pool<T>::operator=(Pool&& other)
 {
     if (this != &other)
     {
-        this->_buffer = ft_move(other._buffer);
-        this->_freeIndices = ft_move(other._freeIndices);
+        this->_buffer = std::move(other._buffer);
+        this->_freeIndices = std::move(other._freeIndices);
         this->_error_code = other._error_code;
         other._error_code = ER_SUCCESS;
     }

@@ -1,5 +1,5 @@
 #include "../../Template/string_view.hpp"
-#include "../../Template/atomic.hpp"
+#include <atomic>
 #include "../../PThread/thread.hpp"
 #include "../../PThread/pthread.hpp"
 #include "../../System_utils/test_runner.hpp"
@@ -10,7 +10,7 @@ FT_TEST(test_template_string_view_thread_safe_copy_assignment, "ft_string_view c
     const char sample_text[] = "concurrency";
     ft_string_view<char> original_view(sample_text);
     ft_string_view<char> secondary_view(sample_text);
-    ft_atomic<int> completed_assignments(0);
+    std::atomic<int> completed_assignments(0);
 
     auto assigner = [&original_view, &secondary_view, &completed_assignments]()
     {
@@ -63,7 +63,7 @@ FT_TEST(test_template_string_view_thread_safe_concurrent_access, "ft_string_view
     const char alternate_text[] = "safety";
     ft_string_view<char> main_view(initial_text);
     ft_string_view<char> other_view(alternate_text);
-    ft_atomic<int> size_sum(0);
+    std::atomic<int> size_sum(0);
 
     auto accessor = [&main_view, &size_sum]()
     {
@@ -118,7 +118,7 @@ FT_TEST(test_template_string_view_thread_safe_substring_operations, "ft_string_v
 {
     const char base_text[] = "synchronized";
     ft_string_view<char> base_view(base_text);
-    ft_atomic<int> successful_operations(0);
+    std::atomic<int> successful_operations(0);
 
     auto substring_worker = [&base_view, &successful_operations]()
     {

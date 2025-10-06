@@ -9,6 +9,7 @@
 #include "../PThread/pthread.hpp"
 #include "../PThread/unique_lock.hpp"
 #include <chrono>
+#include <utility>
 
 
 
@@ -131,7 +132,7 @@ ft_future<ValueType>::ft_future(ft_future<ValueType> &&other)
         return ;
     }
     this->_promise = other._promise;
-    this->_shared_promise = ft_move(other._shared_promise);
+    this->_shared_promise = std::move(other._shared_promise);
     this->set_error(other._error_code);
     other._promise = ft_nullptr;
     other.set_error(ER_SUCCESS);
@@ -308,7 +309,7 @@ ft_future<ValueType> &ft_future<ValueType>::operator=(ft_future<ValueType> &&oth
         return (*this);
     }
     this->_promise = other._promise;
-    this->_shared_promise = ft_move(other._shared_promise);
+    this->_shared_promise = std::move(other._shared_promise);
     this->set_error(other._error_code);
     other._promise = ft_nullptr;
     other.set_error(ER_SUCCESS);
@@ -561,7 +562,7 @@ inline ft_future<void>::ft_future(ft_future<void> &&other)
         return ;
     }
     this->_promise = other._promise;
-    this->_shared_promise = ft_move(other._shared_promise);
+    this->_shared_promise = std::move(other._shared_promise);
     this->set_error(other._error_code);
     other._promise = ft_nullptr;
     other.set_error(ER_SUCCESS);
@@ -733,7 +734,7 @@ inline ft_future<void> &ft_future<void>::operator=(ft_future<void> &&other)
         return (*this);
     }
     this->_promise = other._promise;
-    this->_shared_promise = ft_move(other._shared_promise);
+    this->_shared_promise = std::move(other._shared_promise);
     this->set_error(other._error_code);
     other._promise = ft_nullptr;
     other.set_error(ER_SUCCESS);

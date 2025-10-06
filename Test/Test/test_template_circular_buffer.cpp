@@ -1,7 +1,7 @@
 #include "../../Template/circular_buffer.hpp"
-#include "../../Template/move.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
+#include <utility>
 
 FT_TEST(test_ft_circular_buffer_push_pop_cycle, "ft_circular_buffer preserves order across wrap around")
 {
@@ -83,7 +83,7 @@ FT_TEST(test_ft_circular_buffer_move_semantics, "ft_circular_buffer move constru
     original_buffer.push(5);
     original_buffer.push(7);
 
-    ft_circular_buffer<int> moved_buffer(ft_move(original_buffer));
+    ft_circular_buffer<int> moved_buffer(std::move(original_buffer));
 
     FT_ASSERT(original_buffer.is_empty());
     FT_ASSERT_EQ(ER_SUCCESS, original_buffer.get_error());
@@ -94,7 +94,7 @@ FT_TEST(test_ft_circular_buffer_move_semantics, "ft_circular_buffer move constru
     FT_ASSERT_EQ(ER_SUCCESS, moved_buffer.get_error());
 
     ft_circular_buffer<int> assigned_buffer(3);
-    assigned_buffer = ft_move(moved_buffer);
+    assigned_buffer = std::move(moved_buffer);
 
     FT_ASSERT(moved_buffer.is_empty());
     FT_ASSERT_EQ(ER_SUCCESS, moved_buffer.get_error());

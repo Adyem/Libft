@@ -1,5 +1,6 @@
 #include "game_character.hpp"
 #include "../Errno/errno.hpp"
+#include <utility>
 
 bool ft_character::handle_component_error(int error) noexcept
 {
@@ -114,7 +115,7 @@ ft_character &ft_character::operator=(const ft_character &other) noexcept
 ft_character::ft_character(ft_character &&other) noexcept
     : ft_character()
 {
-    *this = ft_move(other);
+    *this = std::move(other);
     return ;
 }
 
@@ -142,7 +143,7 @@ ft_character &ft_character::operator=(ft_character &&other) noexcept
         this->_x = other._x;
         this->_y = other._y;
         this->_z = other._z;
-        this->_experience_table = ft_move(other._experience_table);
+        this->_experience_table = std::move(other._experience_table);
         this->_fire_res = other._fire_res;
         this->_frost_res = other._frost_res;
         this->_lightning_res = other._lightning_res;
@@ -150,15 +151,15 @@ ft_character &ft_character::operator=(ft_character &&other) noexcept
         this->_earth_res = other._earth_res;
         this->_chaos_res = other._chaos_res;
         this->_physical_res = other._physical_res;
-        this->_skills = ft_move(other._skills);
-        this->_buffs = ft_move(other._buffs);
-        this->_debuffs = ft_move(other._debuffs);
-        this->_upgrades = ft_move(other._upgrades);
-        this->_quests = ft_move(other._quests);
-        this->_achievements = ft_move(other._achievements);
-        this->_reputation = ft_move(other._reputation);
-        this->_inventory = ft_move(other._inventory);
-        this->_equipment = ft_move(other._equipment);
+        this->_skills = std::move(other._skills);
+        this->_buffs = std::move(other._buffs);
+        this->_debuffs = std::move(other._debuffs);
+        this->_upgrades = std::move(other._upgrades);
+        this->_quests = std::move(other._quests);
+        this->_achievements = std::move(other._achievements);
+        this->_reputation = std::move(other._reputation);
+        this->_inventory = std::move(other._inventory);
+        this->_equipment = std::move(other._equipment);
         if (this->check_internal_errors() == true)
             return (*this);
         this->set_error(other._error);

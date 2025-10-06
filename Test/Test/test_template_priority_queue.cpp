@@ -1,8 +1,8 @@
 #include "../../Template/priority_queue.hpp"
-#include "../../Template/move.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <functional>
+#include <utility>
 
 FT_TEST(test_ft_priority_queue_push_pop_order, "ft_priority_queue pop returns elements in comparator order")
 {
@@ -78,7 +78,7 @@ FT_TEST(test_ft_priority_queue_error_handling_and_moves, "ft_priority_queue repo
     queue_instance.push(3);
     FT_ASSERT_EQ(ER_SUCCESS, queue_instance.get_error());
 
-    ft_priority_queue<int> moved_queue(ft_move(queue_instance));
+    ft_priority_queue<int> moved_queue(std::move(queue_instance));
 
     FT_ASSERT(queue_instance.empty());
     int moved_from_pop = queue_instance.pop();

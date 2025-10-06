@@ -18,7 +18,7 @@ int pt_mutex::lock(pthread_t thread_id)
         uint32_t cur = this->_serving.load(std::memory_order_acquire);
         if (cur == my)
             break;
-        if (pt_thread_wait_uint32(this->_serving.native_handle(), cur) != 0)
+        if (pt_thread_wait_uint32(&this->_serving, cur) != 0)
         {
             this->set_error(ft_errno);
             return (-1);

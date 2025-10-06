@@ -2,7 +2,7 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../Time/time.hpp"
-#include "../../Template/atomic.hpp"
+#include <atomic>
 #include <chrono>
 #include "../../Errno/errno.hpp"
 #include "../../Template/promise.hpp"
@@ -40,7 +40,7 @@ FT_TEST(test_task_scheduler_schedule_after, "ft_task_scheduler schedule_after")
 FT_TEST(test_task_scheduler_schedule_every, "ft_task_scheduler schedule_every")
 {
     ft_task_scheduler scheduler_instance(1);
-    ft_atomic<int> call_counter;
+    std::atomic<int> call_counter;
     call_counter.store(0);
     ft_scheduled_task_handle periodic_handle = scheduler_instance.schedule_every(std::chrono::milliseconds(10), [&call_counter]()
     {
@@ -60,7 +60,7 @@ FT_TEST(test_task_scheduler_queue_failure_releases_mutex,
     ft_task_scheduler scheduler_instance(1);
     ft_promise<int> completion_promise;
     ft_future<int> completion_future(completion_promise);
-    ft_atomic<int> execution_count;
+    std::atomic<int> execution_count;
 
     execution_count.store(0);
     scheduler_instance.schedule_after(std::chrono::milliseconds(20),

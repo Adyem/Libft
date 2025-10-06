@@ -3,6 +3,7 @@
 #include "../Networking/socket_class.hpp"
 #include "../Template/pair.hpp"
 #include "../Template/shared_ptr.hpp"
+#include <utility>
 
 ft_game_server::ft_game_server(const ft_sharedptr<ft_world> &world, const char *auth_token) noexcept
     : _server(), _world(world), _clients(), _auth_token(), _on_join(ft_nullptr), _on_leave(ft_nullptr), _error_code(ER_SUCCESS)
@@ -39,7 +40,7 @@ ft_game_server &ft_game_server::operator=(const ft_game_server &other) noexcept
 }
 
 ft_game_server::ft_game_server(ft_game_server &&other) noexcept
-    : _server(ft_move(other._server)), _world(ft_move(other._world)), _clients(ft_move(other._clients)), _auth_token(ft_move(other._auth_token)), _on_join(other._on_join), _on_leave(other._on_leave), _error_code(other._error_code)
+    : _server(std::move(other._server)), _world(std::move(other._world)), _clients(std::move(other._clients)), _auth_token(std::move(other._auth_token)), _on_join(other._on_join), _on_leave(other._on_leave), _error_code(other._error_code)
 {
     other._on_join = ft_nullptr;
     other._on_leave = ft_nullptr;
@@ -51,10 +52,10 @@ ft_game_server &ft_game_server::operator=(ft_game_server &&other) noexcept
 {
     if (this != &other)
     {
-        this->_server = ft_move(other._server);
-        this->_world = ft_move(other._world);
-        this->_clients = ft_move(other._clients);
-        this->_auth_token = ft_move(other._auth_token);
+        this->_server = std::move(other._server);
+        this->_world = std::move(other._world);
+        this->_clients = std::move(other._clients);
+        this->_auth_token = std::move(other._auth_token);
         this->_on_join = other._on_join;
         this->_on_leave = other._on_leave;
         this->_error_code = other._error_code;
