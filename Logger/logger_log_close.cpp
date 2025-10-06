@@ -11,15 +11,13 @@ void ft_log_close()
     int    clear_error;
     int    final_error;
 
-    g_sinks_mutex.lock(THREAD_ID);
-    if (g_sinks_mutex.get_error() != ER_SUCCESS)
+    if (logger_lock_sinks() != 0)
         return ;
     sink_count = g_sinks.size();
     if (g_sinks.get_error() != ER_SUCCESS)
     {
         final_error = g_sinks.get_error();
-        g_sinks_mutex.unlock(THREAD_ID);
-        if (g_sinks_mutex.get_error() != ER_SUCCESS)
+        if (logger_unlock_sinks() != 0)
             return ;
         ft_errno = final_error;
         return ;
@@ -33,8 +31,7 @@ void ft_log_close()
         if (g_sinks.get_error() != ER_SUCCESS)
         {
             final_error = g_sinks.get_error();
-            g_sinks_mutex.unlock(THREAD_ID);
-            if (g_sinks_mutex.get_error() != ER_SUCCESS)
+            if (logger_unlock_sinks() != 0)
                 return ;
             ft_errno = final_error;
             return ;
@@ -43,8 +40,7 @@ void ft_log_close()
         if (sinks_snapshot.get_error() != ER_SUCCESS)
         {
             final_error = sinks_snapshot.get_error();
-            g_sinks_mutex.unlock(THREAD_ID);
-            if (g_sinks_mutex.get_error() != ER_SUCCESS)
+            if (logger_unlock_sinks() != 0)
                 return ;
             ft_errno = final_error;
             return ;
@@ -53,8 +49,7 @@ void ft_log_close()
     }
     g_sinks.clear();
     clear_error = g_sinks.get_error();
-    g_sinks_mutex.unlock(THREAD_ID);
-    if (g_sinks_mutex.get_error() != ER_SUCCESS)
+    if (logger_unlock_sinks() != 0)
         return ;
     if (clear_error != ER_SUCCESS)
     {

@@ -13,8 +13,7 @@ int ft_log_add_sink(t_log_sink sink, void *user_data)
     s_log_sink entry;
     int final_error;
 
-    g_sinks_mutex.lock(THREAD_ID);
-    if (g_sinks_mutex.get_error() != ER_SUCCESS)
+    if (logger_lock_sinks() != 0)
     {
         return (-1);
     }
@@ -24,8 +23,7 @@ int ft_log_add_sink(t_log_sink sink, void *user_data)
     if (g_sinks.get_error() != ER_SUCCESS)
     {
         final_error = g_sinks.get_error();
-        g_sinks_mutex.unlock(THREAD_ID);
-        if (g_sinks_mutex.get_error() != ER_SUCCESS)
+        if (logger_unlock_sinks() != 0)
         {
             return (-1);
         }
@@ -33,8 +31,7 @@ int ft_log_add_sink(t_log_sink sink, void *user_data)
         return (-1);
     }
     final_error = ER_SUCCESS;
-    g_sinks_mutex.unlock(THREAD_ID);
-    if (g_sinks_mutex.get_error() != ER_SUCCESS)
+    if (logger_unlock_sinks() != 0)
     {
         return (-1);
     }

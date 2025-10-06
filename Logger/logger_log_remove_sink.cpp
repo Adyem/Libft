@@ -8,8 +8,7 @@ void ft_log_remove_sink(t_log_sink sink, void *user_data)
     size_t sink_count;
     int    final_error;
 
-    g_sinks_mutex.lock(THREAD_ID);
-    if (g_sinks_mutex.get_error() != ER_SUCCESS)
+    if (logger_lock_sinks() != 0)
         return ;
     index = 0;
     removed = false;
@@ -17,8 +16,7 @@ void ft_log_remove_sink(t_log_sink sink, void *user_data)
     if (g_sinks.get_error() != ER_SUCCESS)
     {
         final_error = g_sinks.get_error();
-        g_sinks_mutex.unlock(THREAD_ID);
-        if (g_sinks_mutex.get_error() != ER_SUCCESS)
+        if (logger_unlock_sinks() != 0)
             return ;
         ft_errno = final_error;
         return ;
@@ -31,8 +29,7 @@ void ft_log_remove_sink(t_log_sink sink, void *user_data)
         if (g_sinks.get_error() != ER_SUCCESS)
         {
             final_error = g_sinks.get_error();
-            g_sinks_mutex.unlock(THREAD_ID);
-            if (g_sinks_mutex.get_error() != ER_SUCCESS)
+            if (logger_unlock_sinks() != 0)
                 return ;
             ft_errno = final_error;
             return ;
@@ -43,8 +40,7 @@ void ft_log_remove_sink(t_log_sink sink, void *user_data)
             if (g_sinks.get_error() != ER_SUCCESS)
             {
                 final_error = g_sinks.get_error();
-                g_sinks_mutex.unlock(THREAD_ID);
-                if (g_sinks_mutex.get_error() != ER_SUCCESS)
+                if (logger_unlock_sinks() != 0)
                     return ;
                 ft_errno = final_error;
                 return ;
@@ -58,8 +54,7 @@ void ft_log_remove_sink(t_log_sink sink, void *user_data)
         final_error = FT_EINVAL;
     else
         final_error = ER_SUCCESS;
-    g_sinks_mutex.unlock(THREAD_ID);
-    if (g_sinks_mutex.get_error() != ER_SUCCESS)
+    if (logger_unlock_sinks() != 0)
         return ;
     ft_errno = final_error;
     return ;

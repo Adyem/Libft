@@ -72,8 +72,7 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
     ft_vector<s_log_sink> sinks_snapshot;
     int final_error;
 
-    g_sinks_mutex.lock(THREAD_ID);
-    if (g_sinks_mutex.get_error() != ER_SUCCESS)
+    if (logger_lock_sinks() != 0)
     {
         return ;
     }
@@ -81,8 +80,7 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
     if (g_sinks.get_error() != ER_SUCCESS)
     {
         final_error = g_sinks.get_error();
-        g_sinks_mutex.unlock(THREAD_ID);
-        if (g_sinks_mutex.get_error() != ER_SUCCESS)
+        if (logger_unlock_sinks() != 0)
         {
             return ;
         }
@@ -109,6 +107,10 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
     length = pf_snprintf(final_buffer, sizeof(final_buffer), "[%s] [%s] %s\n", time_buffer, ft_level_to_str(level), message_buffer);
     if (length <= 0)
     {
+        if (logger_unlock_sinks() != 0)
+        {
+            return ;
+        }
         ft_errno = FT_EINVAL;
         return ;
     }
@@ -125,8 +127,7 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
             if (g_sinks.get_error() != ER_SUCCESS)
             {
                 final_error = g_sinks.get_error();
-                g_sinks_mutex.unlock(THREAD_ID);
-                if (g_sinks_mutex.get_error() != ER_SUCCESS)
+                if (logger_unlock_sinks() != 0)
                 {
                     return ;
                 }
@@ -141,8 +142,7 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
             if (contains_error != ER_SUCCESS)
             {
                 final_error = contains_error;
-                g_sinks_mutex.unlock(THREAD_ID);
-                if (g_sinks_mutex.get_error() != ER_SUCCESS)
+                if (logger_unlock_sinks() != 0)
                 {
                     return ;
                 }
@@ -158,8 +158,7 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
             if (sinks_snapshot.get_error() != ER_SUCCESS)
             {
                 final_error = sinks_snapshot.get_error();
-                g_sinks_mutex.unlock(THREAD_ID);
-                if (g_sinks_mutex.get_error() != ER_SUCCESS)
+                if (logger_unlock_sinks() != 0)
                 {
                     return ;
                 }
@@ -169,8 +168,7 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
             index++;
         }
     }
-    g_sinks_mutex.unlock(THREAD_ID);
-    if (g_sinks_mutex.get_error() != ER_SUCCESS)
+    if (logger_unlock_sinks() != 0)
     {
         return ;
     }
