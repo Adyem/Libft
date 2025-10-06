@@ -2,7 +2,7 @@
 #include "../../Errno/errno.hpp"
 #include "../../Libft/libft.hpp"
 #include "../../System_utils/test_runner.hpp"
-#include "../../Template/move.hpp"
+#include <utility>
 
 FT_TEST(test_socket_config_copy_detects_string_error,
     "SocketConfig copy constructor captures ft_string error state")
@@ -39,7 +39,7 @@ FT_TEST(test_socket_config_move_resets_source_fields,
     original._multicast_group = "239.0.0.1";
     original._multicast_interface = "eth0";
     ft_errno = ER_SUCCESS;
-    SocketConfig moved(ft_move(original));
+    SocketConfig moved(std::move(original));
     FT_ASSERT_EQ(SocketType::CLIENT, moved._type);
     FT_ASSERT_EQ(0, ft_strcmp(moved._ip.c_str(), "10.1.2.3"));
     FT_ASSERT_EQ(4242, moved._port);

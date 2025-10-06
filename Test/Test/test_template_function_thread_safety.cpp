@@ -1,5 +1,5 @@
 #include "../../Template/function.hpp"
-#include "../../Template/atomic.hpp"
+#include <atomic>
 #include "../../PThread/thread.hpp"
 #include "../../PThread/pthread.hpp"
 #include "../../PThread/mutex.hpp"
@@ -9,7 +9,7 @@
 
 FT_TEST(test_template_function_thread_safe_concurrent_invocation, "ft_function handles concurrent invocations")
 {
-    ft_atomic<int> call_count(0);
+    std::atomic<int> call_count(0);
     pt_mutex counter_mutex;
 
     ft_function<void()> function_instance([&call_count, &counter_mutex]()
@@ -53,7 +53,7 @@ FT_TEST(test_template_function_thread_safe_assignment_during_calls, "ft_function
     {
         return (1);
     });
-    ft_atomic<int> invocation_sum(0);
+    std::atomic<int> invocation_sum(0);
 
     auto invoking_thread = [&function_instance, &invocation_sum]()
     {
@@ -116,7 +116,7 @@ FT_TEST(test_template_function_thread_safe_assignment_during_calls, "ft_function
 
 FT_TEST(test_template_function_thread_safe_copy_during_use, "ft_function copy operations synchronize with use")
 {
-    ft_atomic<int> total_calls(0);
+    std::atomic<int> total_calls(0);
 
     ft_function<void()> function_instance([&total_calls]()
     {

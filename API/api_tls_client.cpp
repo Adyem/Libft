@@ -7,7 +7,6 @@
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Logger/logger.hpp"
-#include "../Template/move.hpp"
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>
@@ -21,6 +20,7 @@
 #include <openssl/err.h>
 #include <openssl/x509v3.h>
 #include <cstdint>
+#include <utility>
 
 static const size_t TLS_STRING_NPOS = static_cast<size_t>(-1);
 
@@ -766,7 +766,7 @@ bool api_tls_client::request_async(const char *method, const char *path,
     int vector_error;
 
     worker_count_before = this->_async_workers.size();
-    this->_async_workers.push_back(ft_move(worker));
+    this->_async_workers.push_back(std::move(worker));
     worker_count_after = this->_async_workers.size();
     if (worker_count_after < worker_count_before + 1)
     {

@@ -9,7 +9,6 @@
 #include "../PThread/mutex.hpp"
 #include <cstddef>
 #include <utility>
-#include "move.hpp"
 
 template <typename ElementType>
 class ft_circular_buffer
@@ -169,7 +168,7 @@ void ft_circular_buffer<ElementType>::push(ElementType&& value)
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
-    construct_at(&this->_buffer[this->_tail], ft_move(value));
+    construct_at(&this->_buffer[this->_tail], std::move(value));
     this->_tail = (this->_tail + 1) % this->_capacity;
     ++this->_size;
     this->set_error(ER_SUCCESS);
@@ -191,7 +190,7 @@ ElementType ft_circular_buffer<ElementType>::pop()
         this->_mutex.unlock(THREAD_ID);
         return (ElementType());
     }
-    ElementType value = ft_move(this->_buffer[this->_head]);
+    ElementType value = std::move(this->_buffer[this->_head]);
     destroy_at(&this->_buffer[this->_head]);
     this->_head = (this->_head + 1) % this->_capacity;
     --this->_size;

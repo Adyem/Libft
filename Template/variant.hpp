@@ -9,7 +9,6 @@
 #include "../PThread/mutex.hpp"
 #include <type_traits>
 #include <utility>
-#include "move.hpp"
 #include <cstddef>
 #include <new>
 #include <tuple>
@@ -158,7 +157,7 @@ template <typename T>
 ft_variant<Types...>::ft_variant(T&& value)
     : ft_variant()
 {
-    this->emplace<T>(ft_move(value));
+    this->emplace<T>(std::move(value));
     return ;
 }
 

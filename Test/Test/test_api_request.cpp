@@ -139,6 +139,123 @@ static void api_request_success_server(void)
     return ;
 }
 
+static void api_request_retry_success_server(void)
+{
+    SocketConfig server_configuration;
+    ft_socket server_socket;
+    struct sockaddr_storage address_storage;
+    socklen_t address_length;
+    int client_fd;
+    int accepted_count;
+
+    server_configuration._type = SocketType::SERVER;
+    server_configuration._ip = "127.0.0.1";
+    server_configuration._port = 54339;
+    server_socket = ft_socket(server_configuration);
+    if (server_socket.get_error() != ER_SUCCESS)
+        return ;
+    accepted_count = 0;
+    while (accepted_count < 2)
+    {
+        address_length = sizeof(address_storage);
+        client_fd = nw_accept(server_socket.get_fd(),
+                reinterpret_cast<struct sockaddr*>(&address_storage),
+                &address_length);
+        if (client_fd < 0)
+            continue ;
+        accepted_count++;
+        if (accepted_count == 1)
+        {
+            FT_CLOSE_SOCKET(client_fd);
+            continue ;
+        }
+        const char *response;
+        size_t response_length;
+        size_t total_sent;
+
+        response = "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\nHello";
+        response_length = ft_strlen(response);
+        total_sent = 0;
+        while (total_sent < response_length)
+        {
+            ssize_t bytes_sent;
+
+            bytes_sent = nw_send(client_fd, response + total_sent,
+                    response_length - total_sent, 0);
+            if (bytes_sent <= 0)
+                break ;
+            total_sent += static_cast<size_t>(bytes_sent);
+        }
+        FT_CLOSE_SOCKET(client_fd);
+    }
+    return ;
+}
+
+static void api_request_retry_failure_server(void)
+{
+    SocketConfig server_configuration;
+    ft_socket server_socket;
+    struct sockaddr_storage address_storage;
+    socklen_t address_length;
+    int client_fd;
+    int accepted_count;
+
+    server_configuration._type = SocketType::SERVER;
+    server_configuration._ip = "127.0.0.1";
+    server_configuration._port = 54340;
+    server_socket = ft_socket(server_configuration);
+    if (server_socket.get_error() != ER_SUCCESS)
+        return ;
+    accepted_count = 0;
+    while (accepted_count < 3)
+    {
+        address_length = sizeof(address_storage);
+        client_fd = nw_accept(server_socket.get_fd(),
+                reinterpret_cast<struct sockaddr*>(&address_storage),
+                &address_length);
+        if (client_fd < 0)
+            continue ;
+        accepted_count++;
+        FT_CLOSE_SOCKET(client_fd);
+    }
+    return ;
+}
+
+static void api_request_retry_timeout_server(void)
+{
+    SocketConfig server_configuration;
+    ft_socket server_socket;
+    struct sockaddr_storage address_storage;
+    socklen_t address_length;
+    int client_fd;
+    int accepted_count;
+
+    server_configuration._type = SocketType::SERVER;
+    server_configuration._ip = "127.0.0.1";
+    server_configuration._port = 54341;
+    server_socket = ft_socket(server_configuration);
+    if (server_socket.get_error() != ER_SUCCESS)
+        return ;
+    accepted_count = 0;
+    while (accepted_count < 3)
+    {
+        address_length = sizeof(address_storage);
+        client_fd = nw_accept(server_socket.get_fd(),
+                reinterpret_cast<struct sockaddr*>(&address_storage),
+                &address_length);
+        if (client_fd < 0)
+            continue ;
+        accepted_count++;
+#ifdef _WIN32
+        Sleep(200);
+#else
+        usleep(200000);
+#endif
+        FT_CLOSE_SOCKET(client_fd);
+    }
+    return ;
+}
+
 struct api_async_retry_callback_data
 {
     std::atomic<bool> *completed;
@@ -689,6 +806,99 @@ FT_TEST(test_api_request_http2_plain_fallback, "api_request_string_http2 falls b
         return (0);
     }
     cma_free(body);
+    return (1);
+}
+
+FT_TEST(test_api_request_retry_policy_success, "api_request_string retries recoverable failures")
+{
+    ft_thread server_thread;
+    api_retry_policy retry_policy;
+    char *body;
+
+#ifndef _WIN32
+    signal(SIGPIPE, SIG_IGN);
+#endif
+    server_thread = ft_thread(api_request_retry_success_server);
+    if (server_thread.get_error() != ER_SUCCESS)
+        return (0);
+    api_request_small_delay();
+    retry_policy.max_attempts = 3;
+    retry_policy.initial_delay_ms = 10;
+    retry_policy.max_delay_ms = 0;
+    retry_policy.backoff_multiplier = 1;
+    body = api_request_string("127.0.0.1", 54339, "GET", "/", ft_nullptr,
+            ft_nullptr, ft_nullptr, 100, &retry_policy);
+    server_thread.join();
+    if (!body)
+        return (0);
+    if (ft_strcmp(body, "Hello") != 0)
+    {
+        cma_free(body);
+        return (0);
+    }
+    cma_free(body);
+    if (ft_errno != ER_SUCCESS)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_api_request_retry_policy_exhaustion, "api_request_string stops after retry exhaustion")
+{
+    ft_thread server_thread;
+    api_retry_policy retry_policy;
+    char *body;
+
+#ifndef _WIN32
+    signal(SIGPIPE, SIG_IGN);
+#endif
+    server_thread = ft_thread(api_request_retry_failure_server);
+    if (server_thread.get_error() != ER_SUCCESS)
+        return (0);
+    api_request_small_delay();
+    retry_policy.max_attempts = 2;
+    retry_policy.initial_delay_ms = 5;
+    retry_policy.max_delay_ms = 0;
+    retry_policy.backoff_multiplier = 1;
+    body = api_request_string("127.0.0.1", 54340, "GET", "/", ft_nullptr,
+            ft_nullptr, ft_nullptr, 100, &retry_policy);
+    server_thread.join();
+    if (body)
+    {
+        cma_free(body);
+        return (0);
+    }
+    if (ft_errno != SOCKET_RECEIVE_FAILED && ft_errno != FT_EIO)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_api_request_retry_policy_timeout, "api_request_string retries until timeout exhaustion")
+{
+    ft_thread server_thread;
+    api_retry_policy retry_policy;
+    char *body;
+
+#ifndef _WIN32
+    signal(SIGPIPE, SIG_IGN);
+#endif
+    server_thread = ft_thread(api_request_retry_timeout_server);
+    if (server_thread.get_error() != ER_SUCCESS)
+        return (0);
+    api_request_small_delay();
+    retry_policy.max_attempts = 3;
+    retry_policy.initial_delay_ms = 5;
+    retry_policy.max_delay_ms = 10;
+    retry_policy.backoff_multiplier = 2;
+    body = api_request_string("127.0.0.1", 54341, "GET", "/", ft_nullptr,
+            ft_nullptr, ft_nullptr, 50, &retry_policy);
+    server_thread.join();
+    if (body)
+    {
+        cma_free(body);
+        return (0);
+    }
+    if (ft_errno != SOCKET_RECEIVE_FAILED && ft_errno != FT_EIO)
+        return (0);
     return (1);
 }
 

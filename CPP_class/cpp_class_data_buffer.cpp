@@ -1,6 +1,6 @@
 #include "class_data_buffer.hpp"
 #include "../Libft/libft.hpp"
-#include "../Template/move.hpp"
+#include <utility>
 
 DataBuffer::DataBuffer()
     : _buffer(), _read_pos(0), _ok(true), _error_code(ER_SUCCESS)
@@ -29,7 +29,7 @@ DataBuffer::DataBuffer(const DataBuffer& other)
 }
 
 DataBuffer::DataBuffer(DataBuffer&& other) noexcept
-    : _buffer(ft_move(other._buffer)), _read_pos(other._read_pos), _ok(other._ok), _error_code(other._error_code)
+    : _buffer(std::move(other._buffer)), _read_pos(other._read_pos), _ok(other._ok), _error_code(other._error_code)
 {
     other._read_pos = 0;
     other._ok = true;
@@ -68,7 +68,7 @@ DataBuffer& DataBuffer::operator=(DataBuffer&& other) noexcept
 {
     if (this != &other)
     {
-        this->_buffer = ft_move(other._buffer);
+        this->_buffer = std::move(other._buffer);
         this->_read_pos = other._read_pos;
         this->_ok = other._ok;
         this->_error_code = other._error_code;

@@ -2,6 +2,7 @@
 #include "utils.hpp"
 
 #include <string>
+#include <utility>
 
 int test_efficiency_string_create(void)
 {

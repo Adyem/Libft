@@ -1,8 +1,8 @@
 #include "../../Template/deque.hpp"
-#include "../../Template/move.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
+#include <utility>
 
 FT_TEST(test_ft_deque_push_pop_order, "ft_deque preserves order across push and pop operations")
 {
@@ -88,7 +88,7 @@ FT_TEST(test_ft_deque_move_transfers_ownership, "ft_deque move operations transf
     source_deque.push_back(3);
     FT_ASSERT_EQ(ER_SUCCESS, source_deque.get_error());
 
-    ft_deque<int> moved_deque(ft_move(source_deque));
+    ft_deque<int> moved_deque(std::move(source_deque));
 
     FT_ASSERT(source_deque.empty());
     FT_ASSERT_EQ(ER_SUCCESS, source_deque.get_error());
@@ -103,7 +103,7 @@ FT_TEST(test_ft_deque_move_transfers_ownership, "ft_deque move operations transf
     target_deque.push_back(99);
     FT_ASSERT_EQ(ER_SUCCESS, target_deque.get_error());
 
-    target_deque = ft_move(moved_deque);
+    target_deque = std::move(moved_deque);
 
     FT_ASSERT(moved_deque.empty());
     FT_ASSERT_EQ(ER_SUCCESS, moved_deque.get_error());

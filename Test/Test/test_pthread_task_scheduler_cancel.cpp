@@ -1,6 +1,6 @@
 #include "../../PThread/task_scheduler.hpp"
 #include "../../System_utils/test_runner.hpp"
-#include "../../Template/atomic.hpp"
+#include <atomic>
 #include "../../Errno/errno.hpp"
 #include <chrono>
 #include <unistd.h>
@@ -8,7 +8,7 @@
 FT_TEST(test_task_scheduler_cancel_after_handle, "ft_task_scheduler cancels delayed task")
 {
     ft_task_scheduler scheduler_instance(1);
-    ft_atomic<int> execution_count;
+    std::atomic<int> execution_count;
 
     execution_count.store(0);
     auto schedule_result = scheduler_instance.schedule_after(std::chrono::milliseconds(100),
@@ -46,7 +46,7 @@ FT_TEST(test_task_scheduler_cancel_after_handle, "ft_task_scheduler cancels dela
 FT_TEST(test_task_scheduler_cancel_periodic_handle, "ft_task_scheduler cancels periodic task")
 {
     ft_task_scheduler scheduler_instance(1);
-    ft_atomic<int> execution_count;
+    std::atomic<int> execution_count;
 
     execution_count.store(0);
     ft_scheduled_task_handle periodic_handle = scheduler_instance.schedule_every(std::chrono::milliseconds(120),

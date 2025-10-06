@@ -1,6 +1,6 @@
 #include "game_state.hpp"
-#include "../Template/move.hpp"
 #include "../Errno/errno.hpp"
+#include <utility>
 
 ft_game_state::ft_game_state() noexcept
     : _worlds(), _characters(), _error_code(ER_SUCCESS)
@@ -139,8 +139,8 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
 }
 
 ft_game_state::ft_game_state(ft_game_state &&other) noexcept
-    : _worlds(ft_move(other._worlds)),
-    _characters(ft_move(other._characters)),
+    : _worlds(std::move(other._worlds)),
+    _characters(std::move(other._characters)),
     _error_code(other._error_code)
 {
     size_t world_index = 0;
@@ -167,8 +167,8 @@ ft_game_state &ft_game_state::operator=(ft_game_state &&other) noexcept
 {
     if (this != &other)
     {
-        this->_worlds = ft_move(other._worlds);
-        this->_characters = ft_move(other._characters);
+        this->_worlds = std::move(other._worlds);
+        this->_characters = std::move(other._characters);
         this->_error_code = other._error_code;
         size_t world_index = 0;
         size_t world_count = this->_worlds.size();

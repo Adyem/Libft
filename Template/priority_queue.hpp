@@ -10,7 +10,6 @@
 #include "swap.hpp"
 #include <cstddef>
 #include <utility>
-#include "move.hpp"
 #include <functional>
 
 
@@ -165,7 +164,7 @@ bool ft_priority_queue<ElementType, Compare>::ensure_capacity(size_t desired)
     size_t i = 0;
     while (i < this->_size)
     {
-        construct_at(&newData[i], ft_move(this->_data[i]));
+        construct_at(&newData[i], std::move(this->_data[i]));
         destroy_at(&this->_data[i]);
         ++i;
     }
@@ -245,7 +244,7 @@ void ft_priority_queue<ElementType, Compare>::push(ElementType&& value)
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
-    construct_at(&this->_data[this->_size], ft_move(value));
+    construct_at(&this->_data[this->_size], std::move(value));
     this->heapify_up(this->_size);
     ++this->_size;
     this->set_error(ER_SUCCESS);
@@ -267,12 +266,12 @@ ElementType ft_priority_queue<ElementType, Compare>::pop()
         this->_mutex.unlock(THREAD_ID);
         return (ElementType());
     }
-    ElementType topValue = ft_move(this->_data[0]);
+    ElementType topValue = std::move(this->_data[0]);
     destroy_at(&this->_data[0]);
     --this->_size;
     if (this->_size > 0)
     {
-        construct_at(&this->_data[0], ft_move(this->_data[this->_size]));
+        construct_at(&this->_data[0], std::move(this->_data[this->_size]));
         destroy_at(&this->_data[this->_size]);
         this->heapify_down(0);
     }

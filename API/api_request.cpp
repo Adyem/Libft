@@ -23,7 +23,8 @@
 
 char *api_request_string(const char *ip, uint16_t port,
     const char *method, const char *path, json_group *payload,
-    const char *headers, int *status, int timeout)
+    const char *headers, int *status, int timeout,
+    const api_retry_policy *retry_policy)
 {
     if (ft_log_get_api_logging())
     {
@@ -121,7 +122,8 @@ char *api_request_string(const char *ip, uint16_t port,
     char *result_body;
 
     result_body = api_http_execute_plain(connection_handle, method, path, ip,
-            payload, headers, status, timeout, error_code);
+            payload, headers, status, timeout, ip, port, retry_policy,
+            error_code);
     if (!result_body)
         return (ft_nullptr);
     connection_guard.set_success();
@@ -130,7 +132,8 @@ char *api_request_string(const char *ip, uint16_t port,
 
 char *api_request_string_http2(const char *ip, uint16_t port,
     const char *method, const char *path, json_group *payload,
-    const char *headers, int *status, int timeout, bool *used_http2)
+    const char *headers, int *status, int timeout, bool *used_http2,
+    const api_retry_policy *retry_policy)
 {
     if (used_http2)
         *used_http2 = false;
@@ -231,13 +234,15 @@ char *api_request_string_http2(const char *ip, uint16_t port,
     char *result_body;
 
     http2_used_local = false;
-    result_body = api_http_execute_plain_http2(connection_handle, method, path, ip,
-            payload, headers, status, timeout, http2_used_local, error_code);
+    result_body = api_http_execute_plain_http2(connection_handle, method, path,
+            ip, payload, headers, status, timeout, ip, port, retry_policy,
+            http2_used_local, error_code);
     if (!result_body)
     {
         error_code = ER_SUCCESS;
         result_body = api_http_execute_plain(connection_handle, method, path, ip,
-                payload, headers, status, timeout, error_code);
+                payload, headers, status, timeout, ip, port, retry_policy,
+                error_code);
         if (!result_body)
             return (ft_nullptr);
         http2_used_local = false;
@@ -250,10 +255,11 @@ char *api_request_string_http2(const char *ip, uint16_t port,
 
 json_group *api_request_json(const char *ip, uint16_t port,
     const char *method, const char *path, json_group *payload,
-    const char *headers, int *status, int timeout)
+    const char *headers, int *status, int timeout,
+    const api_retry_policy *retry_policy)
 {
     char *body = api_request_string(ip, port, method, path, payload,
-                                   headers, status, timeout);
+                                   headers, status, timeout, retry_policy);
     if (!body)
     {
         if (ft_errno == ER_SUCCESS)
@@ -269,14 +275,15 @@ json_group *api_request_json(const char *ip, uint16_t port,
 
 json_group *api_request_json_http2(const char *ip, uint16_t port,
     const char *method, const char *path, json_group *payload,
-    const char *headers, int *status, int timeout, bool *used_http2)
+    const char *headers, int *status, int timeout, bool *used_http2,
+    const api_retry_policy *retry_policy)
 {
     bool http2_used_local;
     char *body;
 
     http2_used_local = false;
     body = api_request_string_http2(ip, port, method, path, payload,
-            headers, status, timeout, &http2_used_local);
+            headers, status, timeout, &http2_used_local, retry_policy);
     if (used_http2)
         *used_http2 = http2_used_local;
     if (!body)
@@ -294,7 +301,8 @@ json_group *api_request_json_http2(const char *ip, uint16_t port,
 
 char *api_request_string_host(const char *host, uint16_t port,
     const char *method, const char *path, json_group *payload,
-    const char *headers, int *status, int timeout)
+    const char *headers, int *status, int timeout,
+    const api_retry_policy *retry_policy)
 {
     if (ft_log_get_api_logging())
     {
@@ -381,15 +389,17 @@ char *api_request_string_host(const char *host, uint16_t port,
     }
     freeaddrinfo(address_results);
     return (api_request_string(ip_buffer, port, method, path, payload,
-        headers, status, timeout));
+        headers, status, timeout, retry_policy));
 }
 
 json_group *api_request_json_host(const char *host, uint16_t port,
     const char *method, const char *path, json_group *payload,
-    const char *headers, int *status, int timeout)
+    const char *headers, int *status, int timeout,
+    const api_retry_policy *retry_policy)
 {
     char *body = api_request_string_host(host, port, method, path, payload,
-                                         headers, status, timeout);
+                                         headers, status, timeout,
+                                         retry_policy);
     if (!body)
     {
         if (ft_errno == ER_SUCCESS)
@@ -405,11 +415,12 @@ json_group *api_request_json_host(const char *host, uint16_t port,
 
 char *api_request_string_bearer(const char *ip, uint16_t port,
     const char *method, const char *path, const char *token,
-    json_group *payload, const char *headers, int *status, int timeout)
+    json_group *payload, const char *headers, int *status, int timeout,
+    const api_retry_policy *retry_policy)
 {
     if (!token)
         return (api_request_string(ip, port, method, path, payload,
-                                   headers, status, timeout));
+                                   headers, status, timeout, retry_policy));
     ft_string header_string;
 
     if (headers && headers[0])
@@ -420,15 +431,18 @@ char *api_request_string_bearer(const char *ip, uint16_t port,
     header_string += "Authorization: Bearer ";
     header_string += token;
     return (api_request_string(ip, port, method, path, payload,
-                               header_string.c_str(), status, timeout));
+                               header_string.c_str(), status, timeout,
+                               retry_policy));
 }
 
 json_group *api_request_json_bearer(const char *ip, uint16_t port,
     const char *method, const char *path, const char *token,
-    json_group *payload, const char *headers, int *status, int timeout)
+    json_group *payload, const char *headers, int *status, int timeout,
+    const api_retry_policy *retry_policy)
 {
     char *body = api_request_string_bearer(ip, port, method, path, token,
-                                           payload, headers, status, timeout);
+                                           payload, headers, status, timeout,
+                                           retry_policy);
     if (!body)
     {
         if (ft_errno == ER_SUCCESS)
@@ -444,11 +458,12 @@ json_group *api_request_json_bearer(const char *ip, uint16_t port,
 
 char *api_request_string_basic(const char *ip, uint16_t port,
     const char *method, const char *path, const char *credentials,
-    json_group *payload, const char *headers, int *status, int timeout)
+    json_group *payload, const char *headers, int *status, int timeout,
+    const api_retry_policy *retry_policy)
 {
     if (!credentials)
         return (api_request_string(ip, port, method, path, payload,
-                                   headers, status, timeout));
+                                   headers, status, timeout, retry_policy));
     ft_string header_string;
 
     if (headers && headers[0])
@@ -459,15 +474,18 @@ char *api_request_string_basic(const char *ip, uint16_t port,
     header_string += "Authorization: Basic ";
     header_string += credentials;
     return (api_request_string(ip, port, method, path, payload,
-                               header_string.c_str(), status, timeout));
+                               header_string.c_str(), status, timeout,
+                               retry_policy));
 }
 
 json_group *api_request_json_basic(const char *ip, uint16_t port,
     const char *method, const char *path, const char *credentials,
-    json_group *payload, const char *headers, int *status, int timeout)
+    json_group *payload, const char *headers, int *status, int timeout,
+    const api_retry_policy *retry_policy)
 {
     char *body = api_request_string_basic(ip, port, method, path, credentials,
-                                          payload, headers, status, timeout);
+                                          payload, headers, status, timeout,
+                                          retry_policy);
     if (!body)
     {
         if (ft_errno == ER_SUCCESS)
@@ -483,11 +501,13 @@ json_group *api_request_json_basic(const char *ip, uint16_t port,
 
 char *api_request_string_host_bearer(const char *host, uint16_t port,
     const char *method, const char *path, const char *token,
-    json_group *payload, const char *headers, int *status, int timeout)
+    json_group *payload, const char *headers, int *status, int timeout,
+    const api_retry_policy *retry_policy)
 {
     if (!token)
         return (api_request_string_host(host, port, method, path, payload,
-                                        headers, status, timeout));
+                                        headers, status, timeout,
+                                        retry_policy));
     ft_string header_string;
 
     if (headers && headers[0])
@@ -498,15 +518,18 @@ char *api_request_string_host_bearer(const char *host, uint16_t port,
     header_string += "Authorization: Bearer ";
     header_string += token;
     return (api_request_string_host(host, port, method, path, payload,
-                                    header_string.c_str(), status, timeout));
+                                    header_string.c_str(), status, timeout,
+                                    retry_policy));
 }
 
 json_group *api_request_json_host_bearer(const char *host, uint16_t port,
     const char *method, const char *path, const char *token,
-    json_group *payload, const char *headers, int *status, int timeout)
+    json_group *payload, const char *headers, int *status, int timeout,
+    const api_retry_policy *retry_policy)
 {
     char *body = api_request_string_host_bearer(host, port, method, path, token,
-                                                payload, headers, status, timeout);
+                                                payload, headers, status, timeout,
+                                                retry_policy);
     if (!body)
     {
         if (ft_errno == ER_SUCCESS)
@@ -522,11 +545,13 @@ json_group *api_request_json_host_bearer(const char *host, uint16_t port,
 
 char *api_request_string_host_basic(const char *host, uint16_t port,
     const char *method, const char *path, const char *credentials,
-    json_group *payload, const char *headers, int *status, int timeout)
+    json_group *payload, const char *headers, int *status, int timeout,
+    const api_retry_policy *retry_policy)
 {
     if (!credentials)
         return (api_request_string_host(host, port, method, path, payload,
-                                        headers, status, timeout));
+                                        headers, status, timeout,
+                                        retry_policy));
     ft_string header_string;
 
     if (headers && headers[0])
@@ -537,16 +562,19 @@ char *api_request_string_host_basic(const char *host, uint16_t port,
     header_string += "Authorization: Basic ";
     header_string += credentials;
     return (api_request_string_host(host, port, method, path, payload,
-                                    header_string.c_str(), status, timeout));
+                                    header_string.c_str(), status, timeout,
+                                    retry_policy));
 }
 
 json_group *api_request_json_host_basic(const char *host, uint16_t port,
     const char *method, const char *path, const char *credentials,
-    json_group *payload, const char *headers, int *status, int timeout)
+    json_group *payload, const char *headers, int *status, int timeout,
+    const api_retry_policy *retry_policy)
 {
     char *body = api_request_string_host_basic(host, port, method, path,
                                                credentials, payload,
-                                               headers, status, timeout);
+                                               headers, status, timeout,
+                                               retry_policy);
     if (!body)
     {
         if (ft_errno == ER_SUCCESS)
@@ -655,7 +683,8 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
 }
 
 char *api_request_string_url(const char *url, const char *method,
-    json_group *payload, const char *headers, int *status, int timeout)
+    json_group *payload, const char *headers, int *status, int timeout,
+    const api_retry_policy *retry_policy)
 {
     if (ft_log_get_api_logging())
     {
@@ -682,17 +711,18 @@ char *api_request_string_url(const char *url, const char *method,
     if (tls)
         return (api_request_string_tls(host.c_str(), port, method,
                                        path.c_str(), payload, headers,
-                                       status, timeout));
+                                       status, timeout, retry_policy));
     return (api_request_string_host(host.c_str(), port, method,
                                    path.c_str(), payload, headers,
-                                   status, timeout));
+                                   status, timeout, retry_policy));
 }
 
 json_group *api_request_json_url(const char *url, const char *method,
-    json_group *payload, const char *headers, int *status, int timeout)
+    json_group *payload, const char *headers, int *status, int timeout,
+    const api_retry_policy *retry_policy)
 {
     char *body = api_request_string_url(url, method, payload,
-                                        headers, status, timeout);
+                                        headers, status, timeout, retry_policy);
     if (!body)
     {
         if (ft_errno == ER_SUCCESS)

@@ -1,9 +1,9 @@
 #include "../../Template/optional.hpp"
 #include "../../Template/variant.hpp"
-#include "../../Template/move.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <cstring>
+#include <utility>
 
 FT_TEST(test_ft_optional_reports_empty_state, "ft_optional reports empty state when no value is stored")
 {
@@ -35,7 +35,7 @@ FT_TEST(test_ft_optional_move_transfers_state, "ft_optional move assignment tran
     ft_optional<int> source_optional(99);
     ft_optional<int> destination_optional;
 
-    destination_optional = ft_move(source_optional);
+    destination_optional = std::move(source_optional);
     FT_ASSERT(destination_optional.has_value());
     FT_ASSERT_EQ(99, destination_optional.value());
     FT_ASSERT_EQ(false, source_optional.has_value());

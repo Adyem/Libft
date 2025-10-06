@@ -9,7 +9,6 @@
 #include "../PThread/mutex.hpp"
 #include <cstddef>
 #include <utility>
-#include "move.hpp"
 
 template <typename ElementType>
 class ft_queue
@@ -163,7 +162,7 @@ void ft_queue<ElementType>::enqueue(ElementType&& value)
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
-    construct_at(&node->_data, ft_move(value));
+    construct_at(&node->_data, std::move(value));
     node->_next = ft_nullptr;
     if (this->_rear == ft_nullptr)
     {
@@ -199,7 +198,7 @@ ElementType ft_queue<ElementType>::dequeue()
     this->_front = node->_next;
     if (this->_front == ft_nullptr)
         this->_rear = ft_nullptr;
-    ElementType value = ft_move(node->_data);
+    ElementType value = std::move(node->_data);
     destroy_at(&node->_data);
     cma_free(node);
     --this->_size;

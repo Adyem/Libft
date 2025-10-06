@@ -1,6 +1,6 @@
 #include "../../PThread/task_scheduler.hpp"
 #include "../../System_utils/test_runner.hpp"
-#include "../../Template/atomic.hpp"
+#include <atomic>
 #include "../../Errno/errno.hpp"
 #include <chrono>
 #include <unistd.h>
@@ -31,7 +31,7 @@ FT_TEST(test_task_scheduler_metrics_flow, "ft_task_scheduler tracks queue and wo
     FT_ASSERT_EQ(1, worker_total);
     FT_ASSERT_EQ(ER_SUCCESS, scheduler_instance.get_error());
 
-    ft_atomic<bool> release_flag;
+    std::atomic<bool> release_flag;
     release_flag.store(false);
     ft_future<void> blocking_future = scheduler_instance.submit([&release_flag]() mutable
     {

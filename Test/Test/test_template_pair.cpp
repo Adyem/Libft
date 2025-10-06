@@ -2,6 +2,7 @@
 #include "../../CPP_class/class_string_class.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <type_traits>
+#include <utility>
 
 static_assert(std::is_same<Pair<int, ft_string>, decltype(ft_make_pair(1, ft_string("value")))>::value,
         "ft_make_pair deduces Pair<int, ft_string>");
@@ -22,7 +23,7 @@ FT_TEST(test_template_pair_constructs_from_lvalue, "Pair copies values from lval
 FT_TEST(test_template_pair_constructs_from_rvalue, "Pair move-constructs value from rvalues")
 {
     ft_string value("moved");
-    Pair<int, ft_string> pair(7, ft_move(value));
+    Pair<int, ft_string> pair(7, std::move(value));
 
     FT_ASSERT_EQ(7, pair.key);
     FT_ASSERT(pair.value == ft_string("moved"));

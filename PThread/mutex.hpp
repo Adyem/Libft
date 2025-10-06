@@ -2,14 +2,14 @@
 # define PTHREAD_MUTEX_HPP
 
 #include <pthread.h>
-#include "../Template/atomic.hpp"
+#include <atomic>
 
 class pt_mutex
 {
     private:
-        ft_atomic<uint32_t>     _next;
-        ft_atomic<uint32_t>     _serving;
-        ft_atomic<pthread_t>    _owner;
+        std::atomic<uint32_t>     _next;
+        std::atomic<uint32_t>     _serving;
+        std::atomic<pthread_t>    _owner;
         volatile bool           _lock;
         int                     _error;
 
