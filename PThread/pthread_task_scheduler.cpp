@@ -235,6 +235,11 @@ ft_task_scheduler::ft_task_scheduler(size_t thread_count)
             worker_failure = true;
             break;
         }
+        if (!this->update_worker_counters(0, 1))
+        {
+            worker_failure = true;
+            break;
+        }
         index++;
     }
     if (worker_failure)
@@ -311,8 +316,6 @@ void ft_task_scheduler::set_error(int error) const
 
 void ft_task_scheduler::worker_loop()
 {
-    if (!this->update_worker_counters(0, 1))
-        return ;
     while (true)
     {
         ft_function<void()> task;

@@ -204,3 +204,114 @@ FT_TEST(test_kv_store_configure_encryption_validates_key, "kv_store configure en
     return (1);
 }
 
+FT_TEST(test_kv_store_ttl_persistence, "kv_store ttl persistence")
+{
+    const char  *directory_path;
+    const char  *file_path;
+
+    directory_path = "kv_store_ttl_directory";
+    file_path = "kv_store_ttl_directory/kv_store.json";
+    cleanup_paths(directory_path, file_path);
+    FT_ASSERT_EQ(0, file_create_directory(directory_path, 0700));
+    create_kv_store_file(file_path);
+    kv_store store(file_path);
+    FT_ASSERT_EQ(ER_SUCCESS, store.get_error());
+    FT_ASSERT_EQ(0, store.kv_delete("__placeholder__"));
+    FT_ASSERT_EQ(ER_SUCCESS, store.get_error());
+    FT_ASSERT_EQ(0, store.kv_set("session", "token", 120));
+    FT_ASSERT_EQ(ER_SUCCESS, store.get_error());
+    FT_ASSERT_EQ(0, store.kv_flush());
+    FT_ASSERT_EQ(ER_SUCCESS, store.get_error());
+    std::string file_content = read_file_contents(file_path);
+    FT_ASSERT(file_content.find("__ttl__session") != std::string::npos);
+    kv_store reloaded_store(file_path);
+    FT_ASSERT_EQ(ER_SUCCESS, reloaded_store.get_error());
+    FT_ASSERT(reloaded_store.kv_get("session") != ft_nullptr);
+    FT_ASSERT_EQ(0, ft_strcmp(reloaded_store.kv_get("session"), "token"));
+    cleanup_paths(directory_path, file_path);
+    return (1);
+}
+
+FT_TEST(test_kv_store_encrypted_ttl_persistence, "kv_store encrypted ttl persistence")
+{
+    const char  *directory_path;
+    const char  *file_path;
+    const char  *encryption_key;
+
+    directory_path = "kv_store_encrypted_ttl_directory";
+    file_path = "kv_store_encrypted_ttl_directory/kv_store.json";
+    encryption_key = "sixteen-byte-key";
+    cleanup_paths(directory_path, file_path);
+    FT_ASSERT_EQ(0, file_create_directory(directory_path, 0700));
+    create_kv_store_file(file_path);
+    kv_store encrypted_store(file_path, encryption_key, true);
+    FT_ASSERT_EQ(ER_SUCCESS, encrypted_store.get_error());
+    FT_ASSERT_EQ(0, encrypted_store.kv_delete("__placeholder__"));
+    FT_ASSERT_EQ(ER_SUCCESS, encrypted_store.get_error());
+    FT_ASSERT_EQ(0, encrypted_store.kv_set("session", "token", 90));
+    FT_ASSERT_EQ(ER_SUCCESS, encrypted_store.get_error());
+    FT_ASSERT_EQ(0, encrypted_store.kv_flush());
+    FT_ASSERT_EQ(ER_SUCCESS, encrypted_store.get_error());
+    std::string file_content = read_file_contents(file_path);
+    FT_ASSERT(file_content.find("__ttl__session") != std::string::npos);
+    kv_store reloaded_store(file_path, encryption_key, true);
+    FT_ASSERT_EQ(ER_SUCCESS, reloaded_store.get_error());
+    FT_ASSERT(reloaded_store.kv_get("session") != ft_nullptr);
+    FT_ASSERT_EQ(0, ft_strcmp(reloaded_store.kv_get("session"), "token"));
+    cleanup_paths(directory_path, file_path);
+    return (1);
+}
+
+FT_TEST(test_kv_store_expired_entries_are_evicted, "kv_store expired entries are evicted")
+{
+    const char  *directory_path;
+    const char  *file_path;
+
+    directory_path = "kv_store_expiration_directory";
+    file_path = "kv_store_expiration_directory/kv_store.json";
+    cleanup_paths(directory_path, file_path);
+    FT_ASSERT_EQ(0, file_create_directory(directory_path, 0700));
+    create_kv_store_file(file_path);
+    kv_store store(file_path);
+    FT_ASSERT_EQ(ER_SUCCESS, store.get_error());
+    FT_ASSERT_EQ(0, store.kv_delete("__placeholder__"));
+    FT_ASSERT_EQ(ER_SUCCESS, store.get_error());
+    FT_ASSERT_EQ(0, store.kv_set("temporary", "value", 1));
+    FT_ASSERT_EQ(ER_SUCCESS, store.get_error());
+#if defined(_WIN32) || defined(_WIN64)
+    Sleep(1500);
+#else
+    sleep(2);
+#endif
+    FT_ASSERT(store.kv_get("temporary") == ft_nullptr);
+    FT_ASSERT_EQ(MAP_KEY_NOT_FOUND, store.get_error());
+    cleanup_paths(directory_path, file_path);
+    return (1);
+}
+
+FT_TEST(test_kv_store_loads_legacy_format, "kv_store loads legacy format")
+{
+    const char  *directory_path;
+    const char  *file_path;
+    FILE        *file_pointer;
+
+    directory_path = "kv_store_legacy_directory";
+    file_path = "kv_store_legacy_directory/kv_store.json";
+    cleanup_paths(directory_path, file_path);
+    FT_ASSERT_EQ(0, file_create_directory(directory_path, 0700));
+    file_pointer = ft_fopen(file_path, "w");
+    FT_ASSERT(file_pointer != ft_nullptr);
+    std::fputs("{\n  \"kv_store\": {\n    \"legacy\": \"data\"\n  }\n}\n", file_pointer);
+    ft_fclose(file_pointer);
+    kv_store store(file_path);
+    FT_ASSERT_EQ(ER_SUCCESS, store.get_error());
+    FT_ASSERT(store.kv_get("legacy") != ft_nullptr);
+    FT_ASSERT_EQ(0, ft_strcmp(store.kv_get("legacy"), "data"));
+    FT_ASSERT_EQ(0, store.kv_flush());
+    FT_ASSERT_EQ(ER_SUCCESS, store.get_error());
+    std::string file_content = read_file_contents(file_path);
+    FT_ASSERT(file_content.find("__ttl__legacy") == std::string::npos);
+    cleanup_paths(directory_path, file_path);
+    return (1);
+}
+
