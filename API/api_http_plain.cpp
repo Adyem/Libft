@@ -561,6 +561,7 @@ char *api_http_execute_plain_http2(api_connection_pool_handle &connection_handle
     while (attempt_index < max_attempts)
     {
         bool socket_ready;
+        bool should_retry;
 
         socket_ready = api_http_prepare_plain_socket(connection_handle, host,
                 port, timeout, error_code);
@@ -578,9 +579,8 @@ char *api_http_execute_plain_http2(api_connection_pool_handle &connection_handle
                 return (result_body);
             }
         }
-        if (!socket_ready && !api_http_should_retry_plain(error_code))
-            break ;
-        if (socket_ready && !api_http_should_retry_plain(error_code))
+        should_retry = api_http_should_retry_plain(error_code);
+        if (!should_retry)
             break ;
         api_connection_pool_evict(connection_handle);
         attempt_index++;
@@ -601,6 +601,8 @@ char *api_http_execute_plain_http2(api_connection_pool_handle &connection_handle
                     max_delay);
     }
     used_http2 = false;
+    if (error_code == ER_SUCCESS)
+        error_code = FT_EIO;
     return (ft_nullptr);
 }
 
@@ -626,6 +628,7 @@ char *api_http_execute_plain(api_connection_pool_handle &connection_handle,
     while (attempt_index < max_attempts)
     {
         bool socket_ready;
+        bool should_retry;
 
         socket_ready = api_http_prepare_plain_socket(connection_handle, host,
                 port, timeout, error_code);
@@ -639,9 +642,8 @@ char *api_http_execute_plain(api_connection_pool_handle &connection_handle,
             if (result_body)
                 return (result_body);
         }
-        if (!socket_ready && !api_http_should_retry_plain(error_code))
-            return (ft_nullptr);
-        if (socket_ready && !api_http_should_retry_plain(error_code))
+        should_retry = api_http_should_retry_plain(error_code);
+        if (!should_retry)
             return (ft_nullptr);
         api_connection_pool_evict(connection_handle);
         attempt_index++;
@@ -661,6 +663,8 @@ char *api_http_execute_plain(api_connection_pool_handle &connection_handle,
             current_delay = api_retry_prepare_delay(initial_delay,
                     max_delay);
     }
+    if (error_code == ER_SUCCESS)
+        error_code = FT_EIO;
     return (ft_nullptr);
 }
 
