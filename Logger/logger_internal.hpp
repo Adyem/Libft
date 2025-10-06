@@ -2,12 +2,12 @@
 #define LOGGER_INTERNAL_HPP
 
 #include <cstdarg>
+#include <pthread.h>
 #include "../Template/vector.hpp"
 #include "../CPP_class/class_string_class.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "logger.hpp"
-#include "../PThread/mutex.hpp"
 
 extern ft_logger *g_logger;
 extern t_log_level g_level;
@@ -38,7 +38,10 @@ struct s_network_sink
 };
 
 extern ft_vector<s_log_sink> g_sinks;
-extern pt_mutex g_sinks_mutex;
+extern pthread_mutex_t g_sinks_mutex;
+
+int logger_lock_sinks();
+int logger_unlock_sinks();
 
 void ft_log_rotate(s_file_sink *sink);
 void ft_file_sink(const char *message, void *user_data);

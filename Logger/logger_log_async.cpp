@@ -22,23 +22,20 @@ static void ft_log_process_message(const ft_string &message)
     ft_vector<s_log_sink> sinks_snapshot;
     int    final_error;
 
-    g_sinks_mutex.lock(THREAD_ID);
-    if (g_sinks_mutex.get_error() != ER_SUCCESS)
+    if (logger_lock_sinks() != 0)
         return ;
     sink_count = g_sinks.size();
     if (g_sinks.get_error() != ER_SUCCESS)
     {
         final_error = g_sinks.get_error();
-        g_sinks_mutex.unlock(THREAD_ID);
-        if (g_sinks_mutex.get_error() != ER_SUCCESS)
+        if (logger_unlock_sinks() != 0)
             return ;
         ft_errno = final_error;
         return ;
     }
     if (sink_count == 0)
     {
-        g_sinks_mutex.unlock(THREAD_ID);
-        if (g_sinks_mutex.get_error() != ER_SUCCESS)
+        if (logger_unlock_sinks() != 0)
             return ;
         ssize_t write_result;
         write_result = write(1, message.c_str(), message.size());
@@ -54,8 +51,7 @@ static void ft_log_process_message(const ft_string &message)
         if (g_sinks.get_error() != ER_SUCCESS)
         {
             final_error = g_sinks.get_error();
-            g_sinks_mutex.unlock(THREAD_ID);
-            if (g_sinks_mutex.get_error() != ER_SUCCESS)
+            if (logger_unlock_sinks() != 0)
             {
                 return ;
             }
@@ -66,16 +62,14 @@ static void ft_log_process_message(const ft_string &message)
         if (sinks_snapshot.get_error() != ER_SUCCESS)
         {
             final_error = sinks_snapshot.get_error();
-            g_sinks_mutex.unlock(THREAD_ID);
-            if (g_sinks_mutex.get_error() != ER_SUCCESS)
+            if (logger_unlock_sinks() != 0)
                 return ;
             ft_errno = final_error;
             return ;
         }
         index++;
     }
-    g_sinks_mutex.unlock(THREAD_ID);
-    if (g_sinks_mutex.get_error() != ER_SUCCESS)
+    if (logger_unlock_sinks() != 0)
         return ;
     index = 0;
     while (index < sink_count)

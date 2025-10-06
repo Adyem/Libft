@@ -501,12 +501,28 @@ static bool api_http_receive_response(ft_socket &socket_wrapper,
         received = socket_wrapper.receive_data(buffer, sizeof(buffer) - 1);
         if (received < 0)
         {
-            if (socket_wrapper.get_error())
-                error_code = socket_wrapper.get_error();
+            int socket_error_code;
+
+            socket_error_code = socket_wrapper.get_error();
+            if (socket_error_code != ER_SUCCESS)
+                error_code = socket_error_code;
             else if (ft_errno != ER_SUCCESS)
                 error_code = ft_errno;
             else
                 error_code = FT_EIO;
+#ifdef _WIN32
+            if (error_code == (WSAEWOULDBLOCK + ERRNO_OFFSET)
+                || error_code == (WSAETIMEDOUT + ERRNO_OFFSET))
+                error_code = SOCKET_RECEIVE_FAILED;
+#else
+            if (error_code == (EAGAIN + ERRNO_OFFSET)
+                || error_code == (EWOULDBLOCK + ERRNO_OFFSET)
+                || error_code == (ETIMEDOUT + ERRNO_OFFSET))
+                error_code = SOCKET_RECEIVE_FAILED;
+#endif
+            if (error_code == FT_EIO && socket_error_code == ER_SUCCESS
+                && ft_errno == ER_SUCCESS)
+                error_code = SOCKET_RECEIVE_FAILED;
             return (false);
         }
         if (received == 0)
