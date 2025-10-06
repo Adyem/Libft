@@ -165,6 +165,13 @@ static bool api_https_should_retry(int error_code)
         return (true);
     if (error_code == SOCKET_RECEIVE_FAILED)
         return (true);
+#ifdef _WIN32
+    if (error_code == (WSAECONNRESET + ERRNO_OFFSET))
+        return (true);
+#else
+    if (error_code == (ECONNRESET + ERRNO_OFFSET))
+        return (true);
+#endif
     if (error_code == SOCKET_CONNECT_FAILED)
         return (true);
     return (false);
@@ -1069,6 +1076,8 @@ bool api_https_execute_streaming(api_connection_pool_handle &connection_handle,
     int current_delay;
     int max_delay;
     int multiplier;
+    int allowed_attempts;
+    bool implicit_retry_added;
 
     max_attempts = api_retry_get_max_attempts(retry_policy);
     initial_delay = api_retry_get_initial_delay(retry_policy);
@@ -1076,7 +1085,9 @@ bool api_https_execute_streaming(api_connection_pool_handle &connection_handle,
     multiplier = api_retry_get_multiplier(retry_policy);
     current_delay = api_retry_prepare_delay(initial_delay, max_delay);
     attempt_index = 0;
-    while (attempt_index < max_attempts)
+    allowed_attempts = max_attempts;
+    implicit_retry_added = false;
+    while (attempt_index < allowed_attempts)
     {
         bool socket_ready;
         bool should_retry;
@@ -1103,9 +1114,14 @@ bool api_https_execute_streaming(api_connection_pool_handle &connection_handle,
         should_retry = api_https_should_retry(error_code);
         if (!should_retry)
             return (false);
+        if (!implicit_retry_added && retry_policy == ft_nullptr)
+        {
+            allowed_attempts = 2;
+            implicit_retry_added = true;
+        }
         api_connection_pool_evict(connection_handle);
         attempt_index++;
-        if (attempt_index >= max_attempts)
+        if (attempt_index >= allowed_attempts)
             break ;
         if (current_delay > 0)
         {
