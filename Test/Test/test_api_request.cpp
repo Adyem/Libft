@@ -814,6 +814,7 @@ FT_TEST(test_api_request_retry_policy_success, "api_request_string retries recov
     ft_thread server_thread;
     api_retry_policy retry_policy;
     char *body;
+    int status_value;
 
 #ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
@@ -826,12 +827,18 @@ FT_TEST(test_api_request_retry_policy_success, "api_request_string retries recov
     retry_policy.initial_delay_ms = 10;
     retry_policy.max_delay_ms = 0;
     retry_policy.backoff_multiplier = 1;
+    status_value = -123;
     body = api_request_string("127.0.0.1", 54339, "GET", "/", ft_nullptr,
-            ft_nullptr, ft_nullptr, 100, &retry_policy);
+            ft_nullptr, &status_value, 100, &retry_policy);
     server_thread.join();
     if (!body)
         return (0);
     if (ft_strcmp(body, "Hello") != 0)
+    {
+        cma_free(body);
+        return (0);
+    }
+    if (status_value != 200)
     {
         cma_free(body);
         return (0);
@@ -847,6 +854,7 @@ FT_TEST(test_api_request_retry_policy_exhaustion, "api_request_string stops afte
     ft_thread server_thread;
     api_retry_policy retry_policy;
     char *body;
+    int status_value;
 
 #ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
@@ -859,14 +867,17 @@ FT_TEST(test_api_request_retry_policy_exhaustion, "api_request_string stops afte
     retry_policy.initial_delay_ms = 5;
     retry_policy.max_delay_ms = 0;
     retry_policy.backoff_multiplier = 1;
+    status_value = 777;
     body = api_request_string("127.0.0.1", 54340, "GET", "/", ft_nullptr,
-            ft_nullptr, ft_nullptr, 100, &retry_policy);
+            ft_nullptr, &status_value, 100, &retry_policy);
     server_thread.join();
     if (body)
     {
         cma_free(body);
         return (0);
     }
+    if (status_value != 777)
+        return (0);
     if (ft_errno != SOCKET_RECEIVE_FAILED && ft_errno != FT_EIO)
         return (0);
     return (1);
@@ -877,6 +888,7 @@ FT_TEST(test_api_request_retry_policy_timeout, "api_request_string retries until
     ft_thread server_thread;
     api_retry_policy retry_policy;
     char *body;
+    int status_value;
 
 #ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
@@ -889,14 +901,17 @@ FT_TEST(test_api_request_retry_policy_timeout, "api_request_string retries until
     retry_policy.initial_delay_ms = 5;
     retry_policy.max_delay_ms = 10;
     retry_policy.backoff_multiplier = 2;
+    status_value = -45;
     body = api_request_string("127.0.0.1", 54341, "GET", "/", ft_nullptr,
-            ft_nullptr, ft_nullptr, 50, &retry_policy);
+            ft_nullptr, &status_value, 50, &retry_policy);
     server_thread.join();
     if (body)
     {
         cma_free(body);
         return (0);
     }
+    if (status_value != -45)
+        return (0);
     if (ft_errno != SOCKET_RECEIVE_FAILED && ft_errno != FT_EIO)
         return (0);
     return (1);
