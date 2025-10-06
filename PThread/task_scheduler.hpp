@@ -118,10 +118,12 @@ class ft_task_scheduler
         pt_mutex _scheduled_mutex;
         pt_condition_variable _scheduled_condition;
         std::atomic<bool> _running;
-        std::atomic<long long> _queue_size_counter;
-        std::atomic<long long> _scheduled_size_counter;
-        std::atomic<long long> _worker_active_counter;
-        std::atomic<long long> _worker_idle_counter;
+        mutable pt_mutex _queue_metrics_mutex;
+        mutable pt_mutex _worker_metrics_mutex;
+        long long _queue_size_counter;
+        long long _scheduled_size_counter;
+        long long _worker_active_counter;
+        long long _worker_idle_counter;
         size_t _worker_total_count;
         mutable int _error_code;
 
@@ -134,6 +136,9 @@ class ft_task_scheduler
         bool scheduled_heap_pop(scheduled_task &task);
         void scheduled_heap_sift_up(size_t index);
         void scheduled_heap_sift_down(size_t index);
+        bool update_queue_size(long long delta);
+        bool update_worker_counters(long long active_delta, long long idle_delta);
+        bool update_worker_total(long long delta);
 
     public:
         friend class ft_scheduled_task_handle;
@@ -470,7 +475,8 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
         task_body();
         return (future_value);
     }
-    this->_queue_size_counter.fetch_add(1);
+    if (!this->update_queue_size(1))
+        return (future_value);
     this->set_error(ER_SUCCESS);
     return (future_value);
 }
