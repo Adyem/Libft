@@ -683,6 +683,7 @@ char *api_https_execute_http2(api_connection_pool_handle &connection_handle,
     while (attempt_index < max_attempts)
     {
         bool socket_ready;
+        bool should_retry;
 
         socket_ready = api_https_prepare_socket(connection_handle, host, port,
                 timeout, security_identity, error_code);
@@ -700,9 +701,8 @@ char *api_https_execute_http2(api_connection_pool_handle &connection_handle,
                 return (result_body);
             }
         }
-        if (!socket_ready && !api_https_should_retry(error_code))
-            break ;
-        if (socket_ready && !api_https_should_retry(error_code))
+        should_retry = api_https_should_retry(error_code);
+        if (!should_retry)
             break ;
         api_connection_pool_evict(connection_handle);
         attempt_index++;
@@ -723,6 +723,8 @@ char *api_https_execute_http2(api_connection_pool_handle &connection_handle,
                     max_delay);
     }
     used_http2 = false;
+    if (error_code == ER_SUCCESS)
+        error_code = FT_EIO;
     return (ft_nullptr);
 }
 
@@ -749,6 +751,7 @@ char *api_https_execute(api_connection_pool_handle &connection_handle,
     while (attempt_index < max_attempts)
     {
         bool socket_ready;
+        bool should_retry;
 
         socket_ready = api_https_prepare_socket(connection_handle, host, port,
                 timeout, security_identity, error_code);
@@ -762,9 +765,8 @@ char *api_https_execute(api_connection_pool_handle &connection_handle,
             if (result_body)
                 return (result_body);
         }
-        if (!socket_ready && !api_https_should_retry(error_code))
-            return (ft_nullptr);
-        if (socket_ready && !api_https_should_retry(error_code))
+        should_retry = api_https_should_retry(error_code);
+        if (!should_retry)
             return (ft_nullptr);
         api_connection_pool_evict(connection_handle);
         attempt_index++;
@@ -784,6 +786,8 @@ char *api_https_execute(api_connection_pool_handle &connection_handle,
             current_delay = api_retry_prepare_delay(initial_delay,
                     max_delay);
     }
+    if (error_code == ER_SUCCESS)
+        error_code = FT_EIO;
     return (ft_nullptr);
 }
 
