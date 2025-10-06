@@ -1,4 +1,5 @@
 #include "game_pathfinding.hpp"
+#include <utility>
 
 static size_t distance_component(size_t a, size_t b)
 {
@@ -58,7 +59,7 @@ ft_pathfinding &ft_pathfinding::operator=(const ft_pathfinding &other) noexcept
 }
 
 ft_pathfinding::ft_pathfinding(ft_pathfinding &&other) noexcept
-    : _error_code(other._error_code), _current_path(ft_move(other._current_path)), _needs_replan(other._needs_replan)
+    : _error_code(other._error_code), _current_path(std::move(other._current_path)), _needs_replan(other._needs_replan)
 {
     if (this->_current_path.get_error() != ER_SUCCESS)
         this->set_error(this->_current_path.get_error());
@@ -71,7 +72,7 @@ ft_pathfinding &ft_pathfinding::operator=(ft_pathfinding &&other) noexcept
 {
     if (this != &other)
     {
-        this->_current_path = ft_move(other._current_path);
+        this->_current_path = std::move(other._current_path);
         this->_error_code = other._error_code;
         this->_needs_replan = other._needs_replan;
         if (this->_current_path.get_error() != ER_SUCCESS)

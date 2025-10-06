@@ -3,6 +3,7 @@
 #include "utils.hpp"
 
 #include <stack>
+#include <utility>
 
 int test_efficiency_stack_push_pop(void)
 {

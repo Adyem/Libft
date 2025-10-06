@@ -1,5 +1,5 @@
 #include "../../Template/trie.hpp"
-#include "../../Template/atomic.hpp"
+#include <atomic>
 #include "../../PThread/thread.hpp"
 #include "../../PThread/pthread.hpp"
 #include "../../System_utils/test_runner.hpp"
@@ -10,7 +10,7 @@ FT_TEST(test_template_trie_thread_safe_concurrent_insert, "ft_trie handles concu
     ft_trie<int> trie_instance;
     int value_alpha = 10;
     int value_beta = 20;
-    ft_atomic<int> insert_success(0);
+    std::atomic<int> insert_success(0);
 
     auto insert_alpha = [&trie_instance, &value_alpha, &insert_success]()
     {
@@ -64,7 +64,7 @@ FT_TEST(test_template_trie_thread_safe_insert_and_search, "ft_trie search sees i
 {
     ft_trie<int> trie_instance;
     int value_gamma = 30;
-    ft_atomic<int> found_count(0);
+    std::atomic<int> found_count(0);
 
     auto inserter = [&trie_instance, &value_gamma]()
     {
@@ -113,7 +113,7 @@ FT_TEST(test_template_trie_thread_safe_repeated_searches, "ft_trie search remain
     int value_delta = 40;
     trie_instance.insert("delta", &value_delta);
     FT_ASSERT_EQ(ER_SUCCESS, trie_instance.get_error());
-    ft_atomic<int> successful_searches(0);
+    std::atomic<int> successful_searches(0);
 
     auto search_worker = [&trie_instance, &successful_searches]()
     {

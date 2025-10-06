@@ -1,5 +1,6 @@
 #include "game_equipment.hpp"
 #include "../Libft/libft.hpp"
+#include <utility>
 
 ft_equipment::ft_equipment() noexcept
     : _head(ft_nullptr), _chest(ft_nullptr), _weapon(ft_nullptr),
@@ -28,7 +29,7 @@ ft_equipment &ft_equipment::operator=(const ft_equipment &other) noexcept
 }
 
 ft_equipment::ft_equipment(ft_equipment &&other) noexcept
-    : _head(ft_move(other._head)), _chest(ft_move(other._chest)), _weapon(ft_move(other._weapon)),
+    : _head(std::move(other._head)), _chest(std::move(other._chest)), _weapon(std::move(other._weapon)),
       _error_code(other._error_code)
 {
     other._error_code = ER_SUCCESS;
@@ -39,9 +40,9 @@ ft_equipment &ft_equipment::operator=(ft_equipment &&other) noexcept
 {
     if (this != &other)
     {
-        this->_head = ft_move(other._head);
-        this->_chest = ft_move(other._chest);
-        this->_weapon = ft_move(other._weapon);
+        this->_head = std::move(other._head);
+        this->_chest = std::move(other._chest);
+        this->_weapon = std::move(other._weapon);
         this->_error_code = other._error_code;
         other._error_code = ER_SUCCESS;
     }

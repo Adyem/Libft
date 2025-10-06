@@ -9,7 +9,6 @@
 #include "../PThread/mutex.hpp"
 #include <cstddef>
 #include <utility>
-#include "move.hpp"
 
 
 
@@ -151,7 +150,7 @@ bool ft_set<ElementType>::ensure_capacity(size_t desired_capacity)
     size_t index = 0;
     while (index < this->_size)
     {
-        construct_at(&new_data[index], ft_move(this->_data[index]));
+        construct_at(&new_data[index], std::move(this->_data[index]));
         destroy_at(&this->_data[index]);
         ++index;
     }
@@ -219,7 +218,7 @@ void ft_set<ElementType>::insert(const ElementType& value)
     size_t index = this->_size;
     while (index > position)
     {
-        construct_at(&this->_data[index], ft_move(this->_data[index - 1]));
+        construct_at(&this->_data[index], std::move(this->_data[index - 1]));
         destroy_at(&this->_data[index - 1]);
         --index;
     }
@@ -253,11 +252,11 @@ void ft_set<ElementType>::insert(ElementType&& value)
     size_t index = this->_size;
     while (index > position)
     {
-        construct_at(&this->_data[index], ft_move(this->_data[index - 1]));
+        construct_at(&this->_data[index], std::move(this->_data[index - 1]));
         destroy_at(&this->_data[index - 1]);
         --index;
     }
-    construct_at(&this->_data[position], ft_move(value));
+    construct_at(&this->_data[position], std::move(value));
     ++this->_size;
     this->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
@@ -325,7 +324,7 @@ void ft_set<ElementType>::remove(const ElementType& value)
     size_t current_index = index;
     while (current_index + 1 < this->_size)
     {
-        construct_at(&this->_data[current_index], ft_move(this->_data[current_index + 1]));
+        construct_at(&this->_data[current_index], std::move(this->_data[current_index + 1]));
         destroy_at(&this->_data[current_index + 1]);
         ++current_index;
     }

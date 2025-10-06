@@ -9,7 +9,6 @@
 #include "../PThread/mutex.hpp"
 #include <cstddef>
 #include <utility>
-#include "move.hpp"
 
 template <typename ElementType>
 class ft_deque
@@ -166,7 +165,7 @@ void ft_deque<ElementType>::push_front(ElementType&& value)
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
-    construct_at(&node->_data, ft_move(value));
+    construct_at(&node->_data, std::move(value));
     node->_prev = ft_nullptr;
     node->_next = this->_front;
     if (this->_front == ft_nullptr)
@@ -224,7 +223,7 @@ void ft_deque<ElementType>::push_back(ElementType&& value)
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
-    construct_at(&node->_data, ft_move(value));
+    construct_at(&node->_data, std::move(value));
     node->_next = ft_nullptr;
     node->_prev = this->_back;
     if (this->_back == ft_nullptr)
@@ -258,7 +257,7 @@ ElementType ft_deque<ElementType>::pop_front()
         this->_back = ft_nullptr;
     else
         this->_front->_prev = ft_nullptr;
-    ElementType value = ft_move(node->_data);
+    ElementType value = std::move(node->_data);
     destroy_at(&node->_data);
     cma_free(node);
     --this->_size;
@@ -287,7 +286,7 @@ ElementType ft_deque<ElementType>::pop_back()
         this->_front = ft_nullptr;
     else
         this->_back->_next = ft_nullptr;
-    ElementType value = ft_move(node->_data);
+    ElementType value = std::move(node->_data);
     destroy_at(&node->_data);
     cma_free(node);
     --this->_size;

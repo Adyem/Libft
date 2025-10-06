@@ -1,5 +1,6 @@
 #include "../../Game/game_crafting.hpp"
 #include "../../System_utils/test_runner.hpp"
+#include <utility>
 
 FT_TEST(test_crafting_success, "crafting succeeds")
 {
@@ -9,7 +10,7 @@ FT_TEST(test_crafting_success, "crafting succeeds")
     ft_crafting_ingredient ingredient_b = {2, 1, -1};
     ingredients.push_back(ingredient_a);
     ingredients.push_back(ingredient_b);
-    crafting.register_recipe(1, ft_move(ingredients));
+    crafting.register_recipe(1, std::move(ingredients));
 
     ft_inventory inventory(5);
     ft_item ingredient_one;
@@ -46,7 +47,7 @@ FT_TEST(test_crafting_missing_ingredient, "crafting fails with missing ingredien
     ft_crafting_ingredient ingredient_b = {2, 1, -1};
     ingredients.push_back(ingredient_a);
     ingredients.push_back(ingredient_b);
-    crafting.register_recipe(1, ft_move(ingredients));
+    crafting.register_recipe(1, std::move(ingredients));
 
     ft_inventory inventory(5);
     ft_item ingredient_one;

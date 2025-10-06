@@ -7,7 +7,6 @@
 #include "constructor.hpp"
 #include <cstddef>
 #include <utility>
-#include "move.hpp"
 #include "../PThread/mutex.hpp"
 #include "../Libft/libft.hpp"
 
@@ -368,7 +367,7 @@ void ft_vector<ElementType>::reserve_internal(size_t new_capacity)
     {
         while (index < current_size)
         {
-            construct_at(&new_data[index], ft_move(old_data[index]));
+            construct_at(&new_data[index], std::move(old_data[index]));
             ++index;
         }
     }
@@ -536,11 +535,11 @@ ElementType ft_vector<ElementType>::release_at(size_t index)
         this->_mutex.unlock(THREAD_ID);
         return (ElementType());
     }
-    ElementType detached = ft_move(this->_data[index]);
+    ElementType detached = std::move(this->_data[index]);
     size_t i2 = index;
     while (i2 < this->_size - 1)
     {
-        this->_data[i2] = ft_move(this->_data[i2 + 1]);
+        this->_data[i2] = std::move(this->_data[i2 + 1]);
         ++i2;
     }
     --this->_size;

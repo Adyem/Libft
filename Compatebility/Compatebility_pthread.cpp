@@ -1,6 +1,7 @@
 #include "compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
 #include <cerrno>
+#include <atomic>
 
 #if defined(_WIN32) || defined(_WIN64)
 # include <windows.h>

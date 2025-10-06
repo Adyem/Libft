@@ -186,7 +186,7 @@ static void api_request_authorization_server_wake(uint16_t port)
 typedef char *(*api_host_authorization_function)(const char *host,
         uint16_t port, const char *method, const char *path,
         const char *credential, json_group *payload, const char *headers,
-        int *status, int timeout);
+        int *status, int timeout, const api_retry_policy *retry_policy);
 
 static int api_request_run_authorization_header_test(
     api_host_authorization_function function, const char *credential,
@@ -222,7 +222,7 @@ static int api_request_run_authorization_header_test(
     status_value = 0;
     ft_errno = ER_SUCCESS;
     body = function("127.0.0.1", port, "GET", "/auth", credential,
-            ft_nullptr, existing_header, &status_value, 2000);
+            ft_nullptr, existing_header, &status_value, 2000, ft_nullptr);
     if (!body)
     {
         api_request_authorization_server_wake(port);

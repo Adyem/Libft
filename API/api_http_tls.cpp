@@ -1,4 +1,5 @@
 #include "api_http_internal.hpp"
+#include "api.hpp"
 #include "api_http_common.hpp"
 #include "../Networking/socket_class.hpp"
 #include "../Networking/ssl_wrapper.hpp"
@@ -10,6 +11,7 @@
 #include "../Libft/libft.hpp"
 #include "../Logger/logger.hpp"
 #include "../Printf/printf.hpp"
+#include "../Time/time.hpp"
 #include <errno.h>
 #ifdef _WIN32
 # include <winsock2.h>
@@ -24,6 +26,7 @@
 #include <openssl/err.h>
 #include <cstdint>
 #include <climits>
+#include <utility>
 
 void api_request_set_ssl_error(SSL *ssl_session, int operation_result)
 {
@@ -151,6 +154,65 @@ static bool api_http_apply_timeouts(ft_socket &socket_wrapper, int timeout)
 #endif
     return (true);
 }
+
+static bool api_https_should_retry(int error_code)
+{
+    if (error_code == SOCKET_SEND_FAILED)
+        return (true);
+    if (error_code == SOCKET_RECEIVE_FAILED)
+        return (true);
+    if (error_code == SOCKET_CONNECT_FAILED)
+        return (true);
+    return (false);
+}
+
+static bool api_https_prepare_socket(api_connection_pool_handle &connection_handle,
+    const char *host, uint16_t port, int timeout,
+    const char *security_identity, int &error_code)
+{
+    bool pooled_connection;
+
+    if (connection_handle.has_socket)
+        return (true);
+    pooled_connection = api_connection_pool_acquire(connection_handle, host, port,
+            api_connection_security_mode::TLS, security_identity);
+    if (pooled_connection)
+        return (true);
+    SocketConfig config;
+
+    config._type = SocketType::CLIENT;
+    config._ip = host;
+    config._port = port;
+    config._recv_timeout = timeout;
+    config._send_timeout = timeout;
+    ft_socket new_socket(config);
+    if (new_socket.get_error())
+    {
+        int socket_error_code;
+
+        socket_error_code = new_socket.get_error();
+        if (socket_error_code == SOCKET_INVALID_CONFIGURATION)
+            error_code = SOCKET_INVALID_CONFIGURATION;
+        else
+            error_code = SOCKET_CONNECT_FAILED;
+        return (false);
+    }
+    connection_handle.socket = std::move(new_socket);
+    connection_handle.has_socket = true;
+    connection_handle.from_pool = false;
+    connection_handle.should_store = true;
+    connection_handle.security_mode = api_connection_security_mode::TLS;
+    connection_handle.tls_session = ft_nullptr;
+    connection_handle.tls_context = ft_nullptr;
+    return (true);
+}
+
+static char *api_https_execute_http2_once(
+    api_connection_pool_handle &connection_handle,
+    const char *method, const char *path, const char *host_header,
+    json_group *payload, const char *headers, int *status, int timeout,
+    const char *ca_certificate, bool verify_peer, bool &used_http2,
+    int &error_code);
 
 static bool api_https_send_request(SSL *ssl_session, const ft_string &request,
     int &error_code)
@@ -380,7 +442,8 @@ static bool api_https_prepare_request(const char *method, const char *path,
     return (true);
 }
 
-char *api_https_execute(api_connection_pool_handle &connection_handle,
+static char *api_https_execute_once(
+    api_connection_pool_handle &connection_handle,
     const char *method, const char *path, const char *host_header,
     json_group *payload, const char *headers, int *status, int timeout,
     const char *ca_certificate, bool verify_peer, int &error_code)
@@ -598,6 +661,136 @@ char *api_https_execute(api_connection_pool_handle &connection_handle,
 char *api_https_execute_http2(api_connection_pool_handle &connection_handle,
     const char *method, const char *path, const char *host_header,
     json_group *payload, const char *headers, int *status, int timeout,
+    const char *ca_certificate, bool verify_peer, const char *host,
+    uint16_t port, const char *security_identity,
+    const api_retry_policy *retry_policy, bool &used_http2, int &error_code)
+{
+    int max_attempts;
+    int attempt_index;
+    int initial_delay;
+    int current_delay;
+    int max_delay;
+    int multiplier;
+    bool http2_used_local;
+
+    max_attempts = api_retry_get_max_attempts(retry_policy);
+    initial_delay = api_retry_get_initial_delay(retry_policy);
+    max_delay = api_retry_get_max_delay(retry_policy);
+    multiplier = api_retry_get_multiplier(retry_policy);
+    current_delay = api_retry_prepare_delay(initial_delay, max_delay);
+    attempt_index = 0;
+    http2_used_local = false;
+    while (attempt_index < max_attempts)
+    {
+        bool socket_ready;
+
+        socket_ready = api_https_prepare_socket(connection_handle, host, port,
+                timeout, security_identity, error_code);
+        if (socket_ready)
+        {
+            http2_used_local = false;
+            char *result_body;
+
+            result_body = api_https_execute_http2_once(connection_handle, method,
+                    path, host_header, payload, headers, status, timeout,
+                    ca_certificate, verify_peer, http2_used_local, error_code);
+            if (result_body)
+            {
+                used_http2 = http2_used_local;
+                return (result_body);
+            }
+        }
+        if (!socket_ready && !api_https_should_retry(error_code))
+            break ;
+        if (socket_ready && !api_https_should_retry(error_code))
+            break ;
+        api_connection_pool_evict(connection_handle);
+        attempt_index++;
+        if (attempt_index >= max_attempts)
+            break;
+        if (current_delay > 0)
+        {
+            int sleep_delay;
+
+            sleep_delay = api_retry_prepare_delay(current_delay, max_delay);
+            if (sleep_delay > 0)
+                time_sleep_ms(static_cast<unsigned int>(sleep_delay));
+        }
+        current_delay = api_retry_next_delay(current_delay, max_delay,
+                multiplier);
+        if (current_delay <= 0)
+            current_delay = api_retry_prepare_delay(initial_delay,
+                    max_delay);
+    }
+    used_http2 = false;
+    return (ft_nullptr);
+}
+
+char *api_https_execute(api_connection_pool_handle &connection_handle,
+    const char *method, const char *path, const char *host_header,
+    json_group *payload, const char *headers, int *status, int timeout,
+    const char *ca_certificate, bool verify_peer, const char *host,
+    uint16_t port, const char *security_identity,
+    const api_retry_policy *retry_policy, int &error_code)
+{
+    int max_attempts;
+    int attempt_index;
+    int initial_delay;
+    int current_delay;
+    int max_delay;
+    int multiplier;
+
+    max_attempts = api_retry_get_max_attempts(retry_policy);
+    initial_delay = api_retry_get_initial_delay(retry_policy);
+    max_delay = api_retry_get_max_delay(retry_policy);
+    multiplier = api_retry_get_multiplier(retry_policy);
+    current_delay = api_retry_prepare_delay(initial_delay, max_delay);
+    attempt_index = 0;
+    while (attempt_index < max_attempts)
+    {
+        bool socket_ready;
+
+        socket_ready = api_https_prepare_socket(connection_handle, host, port,
+                timeout, security_identity, error_code);
+        if (socket_ready)
+        {
+            char *result_body;
+
+            result_body = api_https_execute_once(connection_handle, method, path,
+                    host_header, payload, headers, status, timeout,
+                    ca_certificate, verify_peer, error_code);
+            if (result_body)
+                return (result_body);
+        }
+        if (!socket_ready && !api_https_should_retry(error_code))
+            return (ft_nullptr);
+        if (socket_ready && !api_https_should_retry(error_code))
+            return (ft_nullptr);
+        api_connection_pool_evict(connection_handle);
+        attempt_index++;
+        if (attempt_index >= max_attempts)
+            break;
+        if (current_delay > 0)
+        {
+            int sleep_delay;
+
+            sleep_delay = api_retry_prepare_delay(current_delay, max_delay);
+            if (sleep_delay > 0)
+                time_sleep_ms(static_cast<unsigned int>(sleep_delay));
+        }
+        current_delay = api_retry_next_delay(current_delay, max_delay,
+                multiplier);
+        if (current_delay <= 0)
+            current_delay = api_retry_prepare_delay(initial_delay,
+                    max_delay);
+    }
+    return (ft_nullptr);
+}
+
+static char *api_https_execute_http2_once(
+    api_connection_pool_handle &connection_handle,
+    const char *method, const char *path, const char *host_header,
+    json_group *payload, const char *headers, int *status, int timeout,
     const char *ca_certificate, bool verify_peer, bool &used_http2,
     int &error_code)
 {
@@ -744,7 +937,7 @@ char *api_https_execute_http2(api_connection_pool_handle &connection_handle,
                 used_http2 = true;
         }
     }
-    http_response = api_https_execute(connection_handle, method, path,
+    http_response = api_https_execute_once(connection_handle, method, path,
             host_header, payload, headers, status, timeout,
             ca_certificate, verify_peer, error_code);
     if (!http_response)

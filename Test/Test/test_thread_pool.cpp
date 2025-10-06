@@ -2,13 +2,13 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../Errno/errno.hpp"
-#include "../../Template/atomic.hpp"
+#include <atomic>
 
 FT_TEST(test_thread_pool_resets_error_status,
     "ft_thread_pool resets error status after recovery")
 {
     ft_thread_pool pool_instance(1, 0);
-    ft_atomic<int> execution_count;
+    std::atomic<int> execution_count;
 
     execution_count.store(0);
     cma_set_alloc_limit(sizeof(ft_function<void()>));

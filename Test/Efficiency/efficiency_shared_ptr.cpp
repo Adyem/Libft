@@ -2,6 +2,7 @@
 #include "utils.hpp"
 
 #include <memory>
+#include <utility>
 
 int test_efficiency_shared_ptr_create(void)
 {

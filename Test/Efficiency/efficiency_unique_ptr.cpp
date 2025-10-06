@@ -2,6 +2,7 @@
 #include "utils.hpp"
 
 #include <memory>
+#include <utility>
 
 int test_efficiency_unique_ptr_create(void)
 {

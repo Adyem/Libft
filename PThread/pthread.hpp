@@ -6,9 +6,8 @@
 #endif
 #include <pthread.h>
 #include "../CPP_class/class_nullptr.hpp"
-#include "../Template/atomic.hpp"
+#include <atomic>
 #include "condition.hpp"
-#include "../Template/move.hpp"
 #include "../Time/time.hpp"
 
 #ifdef _WIN32
@@ -33,10 +32,10 @@ int pt_thread_equal(pthread_t thread1, pthread_t thread2);
 int pt_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_value);
 int pt_thread_wake_one_uint32(std::atomic<uint32_t> *address);
 
-int pt_atomic_load(const ft_atomic<int>& atomic_variable);
-void pt_atomic_store(ft_atomic<int>& atomic_variable, int desired_value);
-int pt_atomic_fetch_add(ft_atomic<int>& atomic_variable, int increment_value);
-bool pt_atomic_compare_exchange(ft_atomic<int>& atomic_variable, int& expected_value, int desired_value);
+int pt_atomic_load(const std::atomic<int>& atomic_variable);
+void pt_atomic_store(std::atomic<int>& atomic_variable, int desired_value);
+int pt_atomic_fetch_add(std::atomic<int>& atomic_variable, int increment_value);
+bool pt_atomic_compare_exchange(std::atomic<int>& atomic_variable, int& expected_value, int desired_value);
 
 int pt_rwlock_init(pthread_rwlock_t *rwlock, const pthread_rwlockattr_t *attributes);
 int pt_rwlock_rdlock(pthread_rwlock_t *rwlock);
@@ -66,6 +65,7 @@ template <>
 class ft_promise<void>;
 
 #include "../Template/promise.hpp"
+#include <utility>
 
 template <typename ValueType, typename Function>
 int pt_async(ft_promise<ValueType>& promise, Function function)
@@ -84,7 +84,7 @@ int pt_async(ft_promise<ValueType>& promise, Function function)
         return (ft_nullptr);
     };
 
-    AsyncData* data = new AsyncData{&promise, ft_move(function)};
+    AsyncData* data = new AsyncData{&promise, std::move(function)};
     pthread_t thread;
     int ret = pt_thread_create(&thread, ft_nullptr, start_routine, data);
     if (ret != 0)
