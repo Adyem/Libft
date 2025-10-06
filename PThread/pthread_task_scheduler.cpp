@@ -171,7 +171,8 @@ const char *ft_scheduled_task_handle::get_error_str() const
 
 ft_task_scheduler::ft_task_scheduler(size_t thread_count)
     : _queue(), _workers(), _timer_thread(), _scheduled(), _scheduled_mutex(),
-      _scheduled_condition(), _running(true), _queue_size_counter(0),
+      _scheduled_condition(), _running(true), _queue_metrics_mutex(),
+      _worker_metrics_mutex(), _queue_size_counter(0),
       _scheduled_size_counter(0), _worker_active_counter(0),
       _worker_idle_counter(0), _worker_total_count(0), _error_code(ER_SUCCESS)
 {
@@ -229,7 +230,11 @@ ft_task_scheduler::ft_task_scheduler(size_t thread_count)
             worker_failure = true;
             break;
         }
-        this->_worker_total_count++;
+        if (!this->update_worker_total(1))
+        {
+            worker_failure = true;
+            break;
+        }
         index++;
     }
     if (worker_failure)
@@ -306,7 +311,8 @@ void ft_task_scheduler::set_error(int error) const
 
 void ft_task_scheduler::worker_loop()
 {
-    this->_worker_idle_counter.fetch_add(1);
+    if (!this->update_worker_counters(0, 1))
+        return ;
     while (true)
     {
         ft_function<void()> task;
@@ -322,16 +328,17 @@ void ft_task_scheduler::worker_loop()
             this->set_error(this->_queue.get_error());
             continue;
         }
-        this->_worker_idle_counter.fetch_add(-1);
-        this->_worker_active_counter.fetch_add(1);
-        this->_queue_size_counter.fetch_add(-1);
+        if (!this->update_worker_counters(1, -1))
+            return ;
+        if (!this->update_queue_size(-1))
+            return ;
         this->set_error(ER_SUCCESS);
         if (task)
             task();
-        this->_worker_active_counter.fetch_add(-1);
-        this->_worker_idle_counter.fetch_add(1);
+        if (!this->update_worker_counters(-1, 1))
+            return ;
     }
-    this->_worker_idle_counter.fetch_add(-1);
+    (void)this->update_worker_counters(0, -1);
     return ;
 }
 
@@ -397,6 +404,66 @@ void ft_task_scheduler::scheduled_heap_sift_down(size_t index)
     return ;
 }
 
+bool ft_task_scheduler::update_queue_size(long long delta)
+{
+    if (this->_queue_metrics_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(this->_queue_metrics_mutex.get_error());
+        return (false);
+    }
+    this->_queue_size_counter += delta;
+    if (this->_queue_metrics_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(this->_queue_metrics_mutex.get_error());
+        return (false);
+    }
+    return (true);
+}
+
+bool ft_task_scheduler::update_worker_counters(long long active_delta, long long idle_delta)
+{
+    if (this->_worker_metrics_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(this->_worker_metrics_mutex.get_error());
+        return (false);
+    }
+    this->_worker_active_counter += active_delta;
+    this->_worker_idle_counter += idle_delta;
+    if (this->_worker_metrics_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(this->_worker_metrics_mutex.get_error());
+        return (false);
+    }
+    return (true);
+}
+
+bool ft_task_scheduler::update_worker_total(long long delta)
+{
+    if (this->_worker_metrics_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(this->_worker_metrics_mutex.get_error());
+        return (false);
+    }
+    if (delta >= 0)
+        this->_worker_total_count += static_cast<size_t>(delta);
+    else
+    {
+        size_t decrement;
+
+        decrement = static_cast<size_t>(-delta);
+        if (decrement > this->_worker_total_count)
+            this->_worker_total_count = 0;
+        else
+            this->_worker_total_count -= decrement;
+    }
+    if (this->_worker_metrics_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(this->_worker_metrics_mutex.get_error());
+        return (false);
+    }
+    return (true);
+}
+
 bool ft_task_scheduler::scheduled_heap_push(scheduled_task &&task)
 {
     size_t size;
@@ -407,11 +474,11 @@ bool ft_task_scheduler::scheduled_heap_push(scheduled_task &&task)
     size = this->_scheduled.size();
     if (size == 0)
     {
-        this->_scheduled_size_counter.store(0);
+        this->_scheduled_size_counter = 0;
         return (true);
     }
     this->scheduled_heap_sift_up(size - 1);
-    this->_scheduled_size_counter.store(static_cast<long long>(this->_scheduled.size()));
+    this->_scheduled_size_counter = static_cast<long long>(this->_scheduled.size());
     return (true);
 }
 
@@ -430,7 +497,7 @@ bool ft_task_scheduler::scheduled_heap_pop(scheduled_task &task)
         this->_scheduled.pop_back();
         if (this->_scheduled.get_error() != ER_SUCCESS)
             return (false);
-        this->_scheduled_size_counter.store(0);
+        this->_scheduled_size_counter = 0;
         return (true);
     }
     scheduled_task last_task;
@@ -441,7 +508,7 @@ bool ft_task_scheduler::scheduled_heap_pop(scheduled_task &task)
         return (false);
     this->_scheduled[0] = std::move(last_task);
     this->scheduled_heap_sift_down(0);
-    this->_scheduled_size_counter.store(static_cast<long long>(this->_scheduled.size()));
+    this->_scheduled_size_counter = static_cast<long long>(this->_scheduled.size());
     return (true);
 }
 
@@ -461,7 +528,7 @@ bool ft_task_scheduler::scheduled_remove_index(size_t index)
         this->_scheduled.pop_back();
         if (this->_scheduled.get_error() != ER_SUCCESS)
             return (false);
-        this->_scheduled_size_counter.store(static_cast<long long>(this->_scheduled.size()));
+        this->_scheduled_size_counter = static_cast<long long>(this->_scheduled.size());
         return (true);
     }
     scheduled_task last_task;
@@ -473,7 +540,7 @@ bool ft_task_scheduler::scheduled_remove_index(size_t index)
     this->_scheduled[index] = std::move(last_task);
     this->scheduled_heap_sift_down(index);
     this->scheduled_heap_sift_up(index);
-    this->_scheduled_size_counter.store(static_cast<long long>(this->_scheduled.size()));
+    this->_scheduled_size_counter = static_cast<long long>(this->_scheduled.size());
     return (true);
 }
 
@@ -849,7 +916,8 @@ void ft_task_scheduler::timer_loop()
             }
             else
             {
-                this->_queue_size_counter.fetch_add(1);
+                if (!this->update_queue_size(1))
+                    return ;
                 this->set_error(ER_SUCCESS);
             }
             if (!this->_running.load())
@@ -919,7 +987,17 @@ long long ft_task_scheduler::get_queue_size() const
 {
     long long queue_size;
 
-    queue_size = this->_queue_size_counter.load();
+    if (this->_queue_metrics_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(this->_queue_metrics_mutex.get_error());
+        return (0);
+    }
+    queue_size = this->_queue_size_counter;
+    if (this->_queue_metrics_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(this->_queue_metrics_mutex.get_error());
+        return (0);
+    }
     this->set_error(ER_SUCCESS);
     return (queue_size);
 }
@@ -928,7 +1006,17 @@ long long ft_task_scheduler::get_scheduled_task_count() const
 {
     long long scheduled_count;
 
-    scheduled_count = this->_scheduled_size_counter.load();
+    if (this->_scheduled_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(this->_scheduled_mutex.get_error());
+        return (0);
+    }
+    scheduled_count = this->_scheduled_size_counter;
+    if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(this->_scheduled_mutex.get_error());
+        return (0);
+    }
     this->set_error(ER_SUCCESS);
     return (scheduled_count);
 }
@@ -937,7 +1025,17 @@ long long ft_task_scheduler::get_worker_active_count() const
 {
     long long active_count;
 
-    active_count = this->_worker_active_counter.load();
+    if (this->_worker_metrics_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(this->_worker_metrics_mutex.get_error());
+        return (0);
+    }
+    active_count = this->_worker_active_counter;
+    if (this->_worker_metrics_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(this->_worker_metrics_mutex.get_error());
+        return (0);
+    }
     this->set_error(ER_SUCCESS);
     return (active_count);
 }
@@ -946,14 +1044,37 @@ long long ft_task_scheduler::get_worker_idle_count() const
 {
     long long idle_count;
 
-    idle_count = this->_worker_idle_counter.load();
+    if (this->_worker_metrics_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(this->_worker_metrics_mutex.get_error());
+        return (0);
+    }
+    idle_count = this->_worker_idle_counter;
+    if (this->_worker_metrics_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(this->_worker_metrics_mutex.get_error());
+        return (0);
+    }
     this->set_error(ER_SUCCESS);
     return (idle_count);
 }
 
 size_t ft_task_scheduler::get_worker_total_count() const
 {
+    size_t total_count;
+
+    if (this->_worker_metrics_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(this->_worker_metrics_mutex.get_error());
+        return (0);
+    }
+    total_count = this->_worker_total_count;
+    if (this->_worker_metrics_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    {
+        this->set_error(this->_worker_metrics_mutex.get_error());
+        return (0);
+    }
     this->set_error(ER_SUCCESS);
-    return (this->_worker_total_count);
+    return (total_count);
 }
 
