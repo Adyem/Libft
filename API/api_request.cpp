@@ -21,6 +21,252 @@
 # include <unistd.h>
 #endif
 
+bool api_request_stream(const char *ip, uint16_t port,
+    const char *method, const char *path,
+    const api_streaming_handler *streaming_handler, json_group *payload,
+    const char *headers, int timeout,
+    const api_retry_policy *retry_policy)
+{
+    if (ft_log_get_api_logging())
+    {
+        const char *log_ip = "(null)";
+        const char *log_method = "(null)";
+        const char *log_path = "(null)";
+
+        if (ip)
+            log_ip = ip;
+        if (method)
+            log_method = method;
+        if (path)
+            log_path = path;
+        ft_log_debug("api_request_stream %s:%u %s %s", log_ip, port,
+            log_method, log_path);
+    }
+    if (!streaming_handler)
+    {
+        ft_errno = FT_EINVAL;
+        return (false);
+    }
+    int error_code = ER_SUCCESS;
+    struct api_request_errno_guard
+    {
+        int *code;
+        api_request_errno_guard(int *value)
+            : code(value)
+        {
+            return ;
+        }
+        ~api_request_errno_guard()
+        {
+            ft_errno = *code;
+            return ;
+        }
+    } guard(&error_code);
+
+    SocketConfig config;
+    config._type = SocketType::CLIENT;
+    config._ip = ip;
+    config._port = port;
+    config._recv_timeout = timeout;
+    config._send_timeout = timeout;
+
+    api_connection_pool_handle connection_handle;
+    bool pooled_connection;
+
+    pooled_connection = api_connection_pool_acquire(connection_handle, ip, port,
+            api_connection_security_mode::PLAIN, ft_nullptr);
+    if (!pooled_connection)
+    {
+        ft_socket new_socket(config);
+
+        if (new_socket.get_error())
+        {
+            int socket_error_code;
+
+            socket_error_code = new_socket.get_error();
+            if (socket_error_code == SOCKET_INVALID_CONFIGURATION)
+                error_code = SOCKET_INVALID_CONFIGURATION;
+            else
+                error_code = SOCKET_CONNECT_FAILED;
+            return (false);
+        }
+        connection_handle.socket = std::move(new_socket);
+        connection_handle.has_socket = true;
+    }
+    struct api_connection_return_guard
+    {
+        api_connection_pool_handle *handle;
+        bool success;
+        api_connection_return_guard(api_connection_pool_handle &value)
+        {
+            handle = &value;
+            success = false;
+            return ;
+        }
+        ~api_connection_return_guard()
+        {
+            if (!handle)
+                return ;
+            if (success)
+            {
+                api_connection_pool_mark_idle(*handle);
+                return ;
+            }
+            api_connection_pool_evict(*handle);
+            return ;
+        }
+        void set_success(void)
+        {
+            success = true;
+            return ;
+        }
+    } connection_guard(connection_handle);
+    if (!connection_handle.has_socket)
+    {
+        error_code = FT_EIO;
+        return (false);
+    }
+    bool result;
+
+    result = api_http_execute_plain_streaming(connection_handle, method, path,
+            ip, payload, headers, timeout, ip, port, retry_policy,
+            streaming_handler, error_code);
+    if (!result)
+        return (false);
+    connection_guard.set_success();
+    return (true);
+}
+
+bool api_request_stream_http2(const char *ip, uint16_t port,
+    const char *method, const char *path,
+    const api_streaming_handler *streaming_handler, json_group *payload,
+    const char *headers, int timeout, bool *used_http2,
+    const api_retry_policy *retry_policy)
+{
+    if (used_http2)
+        *used_http2 = false;
+    if (ft_log_get_api_logging())
+    {
+        const char *log_ip = "(null)";
+        const char *log_method = "(null)";
+        const char *log_path = "(null)";
+
+        if (ip)
+            log_ip = ip;
+        if (method)
+            log_method = method;
+        if (path)
+            log_path = path;
+        ft_log_debug("api_request_stream_http2 %s:%u %s %s", log_ip, port,
+            log_method, log_path);
+    }
+    if (!streaming_handler)
+    {
+        ft_errno = FT_EINVAL;
+        return (false);
+    }
+    int error_code = ER_SUCCESS;
+    struct api_request_errno_guard
+    {
+        int *code;
+        api_request_errno_guard(int *value)
+            : code(value)
+        {
+            return ;
+        }
+        ~api_request_errno_guard()
+        {
+            ft_errno = *code;
+            return ;
+        }
+    } guard(&error_code);
+
+    SocketConfig config;
+    config._type = SocketType::CLIENT;
+    config._ip = ip;
+    config._port = port;
+    config._recv_timeout = timeout;
+    config._send_timeout = timeout;
+
+    api_connection_pool_handle connection_handle;
+    bool pooled_connection;
+
+    pooled_connection = api_connection_pool_acquire(connection_handle, ip, port,
+            api_connection_security_mode::PLAIN, ft_nullptr);
+    if (!pooled_connection)
+    {
+        ft_socket new_socket(config);
+
+        if (new_socket.get_error())
+        {
+            int socket_error_code;
+
+            socket_error_code = new_socket.get_error();
+            if (socket_error_code == SOCKET_INVALID_CONFIGURATION)
+                error_code = SOCKET_INVALID_CONFIGURATION;
+            else
+                error_code = SOCKET_CONNECT_FAILED;
+            return (false);
+        }
+        connection_handle.socket = std::move(new_socket);
+        connection_handle.has_socket = true;
+    }
+    struct api_connection_return_guard
+    {
+        api_connection_pool_handle *handle;
+        bool success;
+        api_connection_return_guard(api_connection_pool_handle &value)
+        {
+            handle = &value;
+            success = false;
+            return ;
+        }
+        ~api_connection_return_guard()
+        {
+            if (!handle)
+                return ;
+            if (success)
+            {
+                api_connection_pool_mark_idle(*handle);
+                return ;
+            }
+            api_connection_pool_evict(*handle);
+            return ;
+        }
+        void set_success(void)
+        {
+            success = true;
+            return ;
+        }
+    } connection_guard(connection_handle);
+    if (!connection_handle.has_socket)
+    {
+        error_code = FT_EIO;
+        return (false);
+    }
+    bool http2_used_local;
+    bool result;
+
+    http2_used_local = false;
+    result = api_http_execute_plain_http2_streaming(connection_handle, method,
+            path, ip, payload, headers, timeout, ip, port, retry_policy,
+            streaming_handler, http2_used_local, error_code);
+    if (!result)
+    {
+        error_code = ER_SUCCESS;
+        result = api_http_execute_plain_streaming(connection_handle, method,
+                path, ip, payload, headers, timeout, ip, port, retry_policy,
+                streaming_handler, error_code);
+        if (!result)
+            return (false);
+        http2_used_local = false;
+    }
+    connection_guard.set_success();
+    if (used_http2)
+        *used_http2 = http2_used_local;
+    return (true);
+}
+
 char *api_request_string(const char *ip, uint16_t port,
     const char *method, const char *path, json_group *payload,
     const char *headers, int *status, int timeout,
@@ -297,6 +543,100 @@ json_group *api_request_json_http2(const char *ip, uint16_t port,
     if (result)
         ft_errno = ER_SUCCESS;
     return (result);
+}
+
+bool api_request_stream_host(const char *host, uint16_t port,
+    const char *method, const char *path,
+    const api_streaming_handler *streaming_handler, json_group *payload,
+    const char *headers, int timeout,
+    const api_retry_policy *retry_policy)
+{
+    if (ft_log_get_api_logging())
+    {
+        const char *log_host = "(null)";
+        const char *log_method = "(null)";
+        const char *log_path = "(null)";
+
+        if (host)
+            log_host = host;
+        if (method)
+            log_method = method;
+        if (path)
+            log_path = path;
+        ft_log_debug("api_request_stream_host %s:%u %s %s", log_host, port,
+            log_method, log_path);
+    }
+    if (!host || !method || !path || !streaming_handler)
+    {
+        ft_errno = FT_EINVAL;
+        return (false);
+    }
+    char port_string[6];
+    struct addrinfo hints;
+    struct addrinfo *address_results;
+    struct addrinfo *address_info;
+    int resolver_status;
+
+    ft_bzero(&hints, sizeof(hints));
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_family = AF_UNSPEC;
+    pf_snprintf(port_string, sizeof(port_string), "%u", port);
+    resolver_status = getaddrinfo(host, port_string, &hints, &address_results);
+    if (resolver_status != 0)
+    {
+        api_request_set_resolve_error(resolver_status);
+        return (false);
+    }
+    address_info = address_results;
+    while (address_info && address_info->ai_socktype != SOCK_STREAM)
+        address_info = address_info->ai_next;
+    if (!address_info)
+    {
+        freeaddrinfo(address_results);
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = SOCKET_RESOLVE_FAILED;
+        return (false);
+    }
+    char ip_buffer[INET6_ADDRSTRLEN];
+    void *source_address;
+    int family;
+
+    family = address_info->ai_family;
+    if (family == AF_INET)
+    {
+        source_address = &reinterpret_cast<sockaddr_in*>(address_info->ai_addr)->sin_addr;
+        if (!inet_ntop(family, source_address, ip_buffer, sizeof(ip_buffer)))
+        {
+            freeaddrinfo(address_results);
+            if (errno != 0)
+                ft_errno = errno + ERRNO_OFFSET;
+            else if (ft_errno == ER_SUCCESS)
+                ft_errno = SOCKET_RESOLVE_FAILED;
+            return (false);
+        }
+    }
+    else if (family == AF_INET6)
+    {
+        source_address = &reinterpret_cast<sockaddr_in6*>(address_info->ai_addr)->sin6_addr;
+        if (!inet_ntop(family, source_address, ip_buffer, sizeof(ip_buffer)))
+        {
+            freeaddrinfo(address_results);
+            if (errno != 0)
+                ft_errno = errno + ERRNO_OFFSET;
+            else if (ft_errno == ER_SUCCESS)
+                ft_errno = SOCKET_RESOLVE_FAILED;
+            return (false);
+        }
+    }
+    else
+    {
+        freeaddrinfo(address_results);
+        ft_errno = SOCKET_RESOLVE_FAMILY;
+        return (false);
+    }
+    freeaddrinfo(address_results);
+    return (api_request_stream(ip_buffer, port, method, path,
+        streaming_handler, payload, headers, timeout, retry_policy));
 }
 
 char *api_request_string_host(const char *host, uint16_t port,

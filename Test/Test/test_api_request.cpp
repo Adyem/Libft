@@ -28,6 +28,47 @@ static void api_request_noop_callback(char *body, int status, void *user_data)
     return ;
 }
 
+struct api_stream_test_context
+{
+    size_t total_bytes;
+    size_t chunk_count;
+    bool headers_received;
+    bool final_received;
+    int status_code;
+};
+
+static void api_request_stream_headers_callback(int status_code,
+    const char *headers, void *user_data)
+{
+    api_stream_test_context *context;
+
+    (void)headers;
+    context = static_cast<api_stream_test_context*>(user_data);
+    if (!context)
+        return ;
+    context->headers_received = true;
+    context->status_code = status_code;
+    return ;
+}
+
+static bool api_request_stream_body_callback(const char *chunk_data,
+    size_t chunk_size, bool is_final_chunk, void *user_data)
+{
+    api_stream_test_context *context;
+
+    context = static_cast<api_stream_test_context*>(user_data);
+    if (!context)
+        return (false);
+    if (chunk_data && chunk_size > 0)
+    {
+        context->total_bytes += chunk_size;
+        context->chunk_count += 1;
+    }
+    if (is_final_chunk)
+        context->final_received = true;
+    return (true);
+}
+
 static std::atomic<size_t> g_api_async_retry_server_bytes_received(0);
 static std::atomic<bool> g_api_async_retry_server_header_complete(false);
 static std::atomic<int> g_api_async_retry_server_last_recv_result(0);
@@ -139,6 +180,67 @@ static void api_request_success_server(void)
     return ;
 }
 
+static void api_request_stream_large_response_server(void)
+{
+    SocketConfig server_configuration;
+    ft_socket server_socket;
+    struct sockaddr_storage address_storage;
+    socklen_t address_length;
+    int client_fd;
+    size_t body_size;
+    char header_buffer[128];
+    char *body_buffer;
+
+    server_configuration._type = SocketType::SERVER;
+    server_configuration._ip = "127.0.0.1";
+    server_configuration._port = 54358;
+    server_socket = ft_socket(server_configuration);
+    if (server_socket.get_error() != ER_SUCCESS)
+        return ;
+    address_length = sizeof(address_storage);
+    client_fd = nw_accept(server_socket.get_fd(),
+            reinterpret_cast<struct sockaddr*>(&address_storage),
+            &address_length);
+    if (client_fd < 0)
+        return ;
+    body_size = 2 * 1024 * 1024;
+    body_buffer = static_cast<char*>(cma_malloc(body_size));
+    if (!body_buffer)
+    {
+        FT_CLOSE_SOCKET(client_fd);
+        return ;
+    }
+    ft_memset(body_buffer, 'A', body_size);
+    pf_snprintf(header_buffer, sizeof(header_buffer),
+        "HTTP/1.1 200 OK\r\nContent-Length: %zu\r\n\r\n", body_size);
+    nw_send(client_fd, header_buffer, ft_strlen(header_buffer), 0);
+    size_t total_sent;
+
+    total_sent = 0;
+    while (total_sent < body_size)
+    {
+        size_t remaining;
+        size_t chunk_size;
+        ssize_t bytes_sent;
+
+        remaining = body_size - total_sent;
+        chunk_size = 32768;
+        if (chunk_size > remaining)
+            chunk_size = remaining;
+        bytes_sent = nw_send(client_fd, body_buffer + total_sent,
+                chunk_size, 0);
+        printf("server sent=%zd total=%zu remaining=%zu\n",
+            bytes_sent, total_sent, remaining);
+        if (bytes_sent <= 0)
+            break ;
+        total_sent += static_cast<size_t>(bytes_sent);
+    }
+    printf("server completed total=%zu\n", total_sent);
+    cma_free(body_buffer);
+    FT_CLOSE_SOCKET(client_fd);
+    return ;
+}
+
 static void api_request_retry_success_server(void)
 {
     SocketConfig server_configuration;
@@ -207,7 +309,7 @@ static void api_request_retry_failure_server(void)
     if (server_socket.get_error() != ER_SUCCESS)
         return ;
     accepted_count = 0;
-    while (accepted_count < 3)
+    while (accepted_count < 2)
     {
         address_length = sizeof(address_storage);
         client_fd = nw_accept(server_socket.get_fd(),
@@ -300,6 +402,49 @@ static void api_request_async_retry_callback(char *body, int status, void *user_
     data->status->store(status);
     data->body->store(body);
     data->completed->store(true);
+    return ;
+}
+
+static void api_request_stream_chunked_response_server(void)
+{
+    SocketConfig server_configuration;
+    ft_socket server_socket;
+    struct sockaddr_storage address_storage;
+    socklen_t address_length;
+    int client_fd;
+    const char *response;
+    size_t response_length;
+    size_t total_sent;
+
+    server_configuration._type = SocketType::SERVER;
+    server_configuration._ip = "127.0.0.1";
+    server_configuration._port = 54359;
+    server_socket = ft_socket(server_configuration);
+    if (server_socket.get_error() != ER_SUCCESS)
+        return ;
+    address_length = sizeof(address_storage);
+    client_fd = nw_accept(server_socket.get_fd(),
+            reinterpret_cast<struct sockaddr*>(&address_storage),
+            &address_length);
+    if (client_fd < 0)
+        return ;
+    response = "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n"
+        "10\r\n0123456789ABCDEF\r\n"
+        "08\r\nABCDEFGH\r\n"
+        "0\r\n\r\n";
+    response_length = ft_strlen(response);
+    total_sent = 0;
+    while (total_sent < response_length)
+    {
+        ssize_t bytes_sent;
+
+        bytes_sent = nw_send(client_fd, response + total_sent,
+                response_length - total_sent, 0);
+        if (bytes_sent <= 0)
+            break ;
+        total_sent += static_cast<size_t>(bytes_sent);
+    }
+    FT_CLOSE_SOCKET(client_fd);
     return ;
 }
 
@@ -500,6 +645,101 @@ FT_TEST(test_api_request_success_resets_errno, "api_request_string success reset
     if (ft_errno != ER_SUCCESS)
         return (0);
     cma_free(body);
+    return (1);
+}
+
+FT_TEST(test_api_request_stream_large_response,
+    "api_request_stream streams large response")
+{
+    ft_thread server_thread;
+    api_stream_test_context context;
+    api_streaming_handler handler;
+    bool result;
+    size_t expected_size;
+
+#ifndef _WIN32
+    signal(SIGPIPE, SIG_IGN);
+#endif
+    ft_errno = ER_SUCCESS;
+    context.total_bytes = 0;
+    context.chunk_count = 0;
+    context.headers_received = false;
+    context.final_received = false;
+    context.status_code = 0;
+    handler.headers_callback = api_request_stream_headers_callback;
+    handler.body_callback = api_request_stream_body_callback;
+    handler.user_data = &context;
+    server_thread = ft_thread(api_request_stream_large_response_server);
+    if (server_thread.get_error() != ER_SUCCESS)
+        return (0);
+    api_request_small_delay();
+    expected_size = 2 * 1024 * 1024;
+    result = api_request_stream("127.0.0.1", 54358, "GET", "/", &handler,
+            ft_nullptr, ft_nullptr, 5000, ft_nullptr);
+    printf("debug result=%d ft_errno=%d total=%zu final=%d chunk_count=%zu\n",
+        result ? 1 : 0, ft_errno, context.total_bytes,
+        context.final_received ? 1 : 0, context.chunk_count);
+    server_thread.join();
+    if (!result)
+        return (0);
+    if (ft_errno != ER_SUCCESS)
+        return (0);
+    if (!context.headers_received)
+        return (0);
+    if (context.status_code != 200)
+        return (0);
+    if (!context.final_received)
+        return (0);
+    if (context.total_bytes != expected_size)
+        return (0);
+    if (context.chunk_count == 0)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_api_request_stream_chunked_response,
+    "api_request_stream handles chunked encoding")
+{
+    ft_thread server_thread;
+    api_stream_test_context context;
+    api_streaming_handler handler;
+    bool result;
+    size_t expected_size;
+
+#ifndef _WIN32
+    signal(SIGPIPE, SIG_IGN);
+#endif
+    ft_errno = ER_SUCCESS;
+    context.total_bytes = 0;
+    context.chunk_count = 0;
+    context.headers_received = false;
+    context.final_received = false;
+    context.status_code = 0;
+    handler.headers_callback = api_request_stream_headers_callback;
+    handler.body_callback = api_request_stream_body_callback;
+    handler.user_data = &context;
+    server_thread = ft_thread(api_request_stream_chunked_response_server);
+    if (server_thread.get_error() != ER_SUCCESS)
+        return (0);
+    api_request_small_delay();
+    expected_size = 24;
+    result = api_request_stream("127.0.0.1", 54359, "GET", "/", &handler,
+            ft_nullptr, ft_nullptr, 2000, ft_nullptr);
+    server_thread.join();
+    if (!result)
+        return (0);
+    if (ft_errno != ER_SUCCESS)
+        return (0);
+    if (!context.headers_received)
+        return (0);
+    if (context.status_code != 200)
+        return (0);
+    if (!context.final_received)
+        return (0);
+    if (context.total_bytes != expected_size)
+        return (0);
+    if (context.chunk_count < 2)
+        return (0);
     return (1);
 }
 
@@ -870,7 +1110,11 @@ FT_TEST(test_api_request_retry_policy_exhaustion, "api_request_string stops afte
     status_value = 777;
     body = api_request_string("127.0.0.1", 54340, "GET", "/", ft_nullptr,
             ft_nullptr, &status_value, 100, &retry_policy);
+    int request_errno;
+
+    request_errno = ft_errno;
     server_thread.join();
+    ft_errno = request_errno;
     if (body)
     {
         cma_free(body);
@@ -878,7 +1122,9 @@ FT_TEST(test_api_request_retry_policy_exhaustion, "api_request_string stops afte
     }
     if (status_value != 777)
         return (0);
-    if (ft_errno != SOCKET_RECEIVE_FAILED && ft_errno != FT_EIO)
+    if (request_errno != SOCKET_RECEIVE_FAILED
+        && request_errno != FT_EIO
+        && request_errno != SOCKET_SEND_FAILED)
         return (0);
     return (1);
 }

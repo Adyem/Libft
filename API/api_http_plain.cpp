@@ -125,6 +125,12 @@ static char *api_http_execute_plain_http2_once(
     const char *method, const char *path, const char *host_header,
     json_group *payload, const char *headers, int *status, int timeout,
     bool &used_http2, int &error_code);
+static bool api_http_execute_plain_streaming_once(
+    api_connection_pool_handle &connection_handle,
+    const char *method, const char *path, const char *host_header,
+    json_group *payload, const char *headers, int timeout,
+    const api_streaming_handler *streaming_handler, bool &connection_close,
+    int &error_code);
 
 static bool api_http_send_request(ft_socket &socket_wrapper,
     const ft_string &request, int &error_code)
@@ -264,14 +270,219 @@ static bool api_http_prepare_request(const char *method, const char *path,
     return (true);
 }
 
+bool api_http_stream_invoke_body(
+    const api_streaming_handler *streaming_handler, const char *chunk_data,
+    size_t chunk_size, bool is_final_chunk, int &error_code)
+{
+    bool callback_result;
+
+    if (!streaming_handler)
+        return (true);
+    if (!streaming_handler->body_callback)
+        return (true);
+    callback_result = streaming_handler->body_callback(chunk_data, chunk_size,
+            is_final_chunk, streaming_handler->user_data);
+    if (!callback_result)
+    {
+        error_code = FT_EIO;
+        return (false);
+    }
+    return (true);
+}
+
+void api_http_stream_invoke_headers(
+    const api_streaming_handler *streaming_handler, int status_code,
+    const char *headers)
+{
+    if (!streaming_handler)
+        return ;
+    if (!streaming_handler->headers_callback)
+        return ;
+    streaming_handler->headers_callback(status_code, headers,
+        streaming_handler->user_data);
+    return ;
+}
+
+bool api_http_stream_process_chunked_buffer(ft_string &buffer,
+    long long &chunk_remaining, bool &trailers_pending,
+    bool &final_chunk_sent, const api_streaming_handler *streaming_handler,
+    int &error_code)
+{
+    while (true)
+    {
+        if (trailers_pending)
+        {
+            const char *trailer_end;
+            size_t trailer_length;
+
+            trailer_end = api_http_find_crlf(buffer.c_str(),
+                    buffer.c_str() + buffer.size());
+            if (!trailer_end)
+                break ;
+            trailer_length = static_cast<size_t>(trailer_end - buffer.c_str());
+            if (buffer.size() < trailer_length + 2)
+                break ;
+            buffer.erase(0, trailer_length + 2);
+            if (trailer_length == 0)
+            {
+                trailers_pending = false;
+                if (!final_chunk_sent)
+                {
+                    if (!api_http_stream_invoke_body(streaming_handler,
+                            ft_nullptr, 0, true, error_code))
+                        return (false);
+                    final_chunk_sent = true;
+                }
+            }
+            continue ;
+        }
+        if (chunk_remaining < 0)
+        {
+            const char *line_end;
+            size_t line_length;
+            long long chunk_size_value;
+
+            line_end = api_http_find_crlf(buffer.c_str(),
+                    buffer.c_str() + buffer.size());
+            if (!line_end)
+                break ;
+            line_length = static_cast<size_t>(line_end - buffer.c_str());
+            if (buffer.size() < line_length + 2)
+                break ;
+            if (!api_http_parse_hex(buffer.c_str(),
+                    buffer.c_str() + line_length, chunk_size_value))
+            {
+                error_code = FT_EIO;
+                return (false);
+            }
+            buffer.erase(0, line_length + 2);
+            if (chunk_size_value < 0)
+            {
+                error_code = FT_EIO;
+                return (false);
+            }
+            if (chunk_size_value == 0)
+            {
+                chunk_remaining = -1;
+                trailers_pending = true;
+                continue ;
+            }
+            chunk_remaining = chunk_size_value;
+            continue ;
+        }
+        size_t required_size;
+
+        required_size = static_cast<size_t>(chunk_remaining);
+        if (buffer.size() < required_size + 2)
+            break ;
+        if (!api_http_stream_invoke_body(streaming_handler,
+                buffer.c_str(), required_size, false, error_code))
+            return (false);
+        buffer.erase(0, required_size);
+        if (buffer.size() < 2)
+        {
+            error_code = FT_EIO;
+            return (false);
+        }
+        if (buffer.c_str()[0] != '\r' || buffer.c_str()[1] != '\n')
+        {
+            error_code = FT_EIO;
+            return (false);
+        }
+        buffer.erase(0, 2);
+        chunk_remaining = -1;
+    }
+    return (true);
+}
+
+static bool api_http_streaming_flush_buffer(ft_string &streaming_body_buffer,
+    bool has_length, long long content_length, size_t &streaming_delivered,
+    bool &final_chunk_sent, bool chunked_encoding,
+    long long &chunk_stream_remaining, bool &chunk_stream_trailers,
+    const api_streaming_handler *streaming_handler, int &error_code)
+{
+    if (streaming_body_buffer.size() == 0)
+        return (true);
+    if (has_length)
+    {
+        while (streaming_body_buffer.size() > 0
+            && streaming_delivered < static_cast<size_t>(content_length))
+        {
+            size_t remaining_length;
+            size_t chunk_size;
+            bool final_chunk;
+
+            remaining_length = static_cast<size_t>(content_length)
+                - streaming_delivered;
+            chunk_size = streaming_body_buffer.size();
+            if (chunk_size > remaining_length)
+                chunk_size = remaining_length;
+            final_chunk = (streaming_delivered + chunk_size)
+                == static_cast<size_t>(content_length);
+            if (!api_http_stream_invoke_body(streaming_handler,
+                    streaming_body_buffer.c_str(), chunk_size,
+                    final_chunk, error_code))
+                return (false);
+            streaming_body_buffer.erase(0, chunk_size);
+            streaming_delivered += chunk_size;
+            if (final_chunk)
+            {
+                final_chunk_sent = true;
+                break ;
+            }
+        }
+        if (final_chunk_sent && streaming_body_buffer.size() > 0)
+        {
+            error_code = FT_EIO;
+            return (false);
+        }
+        return (true);
+    }
+    if (chunked_encoding)
+    {
+        if (!api_http_stream_process_chunked_buffer(streaming_body_buffer,
+                chunk_stream_remaining, chunk_stream_trailers,
+                final_chunk_sent, streaming_handler, error_code))
+            return (false);
+        if (final_chunk_sent && streaming_body_buffer.size() > 0)
+        {
+            error_code = FT_EIO;
+            return (false);
+        }
+        return (true);
+    }
+    if (!api_http_stream_invoke_body(streaming_handler,
+            streaming_body_buffer.c_str(), streaming_body_buffer.size(),
+            false, error_code))
+        return (false);
+    streaming_body_buffer.clear();
+    return (true);
+}
+
 static bool api_http_receive_response(ft_socket &socket_wrapper,
     ft_string &response, size_t &header_length, bool &connection_close,
     bool &chunked_encoding, bool &has_length, long long &content_length,
-    int &error_code)
+    int &error_code, const api_streaming_handler *streaming_handler)
 {
-    char buffer[1024];
+    char buffer[32768 + 1];
     ssize_t received;
+    bool streaming_enabled;
+    bool headers_complete;
+    ft_string header_storage;
+    ft_string streaming_body_buffer;
+    size_t streaming_delivered;
+    bool final_chunk_sent;
+    int header_status_code;
+    long long chunk_stream_remaining;
+    bool chunk_stream_trailers;
 
+    streaming_enabled = (streaming_handler != ft_nullptr);
+    headers_complete = false;
+    streaming_delivered = 0;
+    final_chunk_sent = false;
+    header_status_code = -1;
+    chunk_stream_remaining = -1;
+    chunk_stream_trailers = false;
     response.clear();
     header_length = 0;
     connection_close = false;
@@ -292,33 +503,197 @@ static bool api_http_receive_response(ft_socket &socket_wrapper,
             return (false);
         }
         if (received == 0)
-            break;
-        buffer[received] = '\0';
-        response += buffer;
-        if (response.get_error())
         {
-            error_code = response.get_error();
-            return (false);
-        }
-        const char *headers_start;
-        const char *headers_end;
+            if (!headers_complete)
+            {
+                error_code = FT_EIO;
+                return (false);
+            }
+            if (!streaming_enabled)
+            {
+                if (!chunked_encoding && has_length)
+                {
+                    size_t expected_size;
 
-        headers_start = response.c_str();
-        headers_end = ft_strstr(response.c_str(), "\r\n\r\n");
-        if (headers_end)
+                    expected_size = static_cast<size_t>(content_length);
+                    if (response.size() < header_length + expected_size)
+                    {
+                        error_code = FT_EIO;
+                        return (false);
+                    }
+                }
+                if (chunked_encoding)
+                {
+                    size_t consumed_length;
+
+                    if (!api_http_chunked_body_complete(
+                            response.c_str() + header_length,
+                            response.size() - header_length, consumed_length))
+                    {
+                        error_code = FT_EIO;
+                        return (false);
+                    }
+                }
+                break ;
+            }
+            if (!api_http_streaming_flush_buffer(streaming_body_buffer,
+                    has_length, content_length, streaming_delivered,
+                    final_chunk_sent, chunked_encoding,
+                    chunk_stream_remaining, chunk_stream_trailers,
+                    streaming_handler, error_code))
+                return (false);
+            if (chunked_encoding)
+            {
+                if (!final_chunk_sent
+                    || chunk_stream_trailers
+                    || chunk_stream_remaining >= 0
+                    || streaming_body_buffer.size() > 0)
+                {
+                    error_code = FT_EIO;
+                    return (false);
+                }
+                break ;
+            }
+            if (has_length)
+            {
+                if (static_cast<long long>(streaming_delivered)
+                    != content_length)
+                {
+                    error_code = FT_EIO;
+                    return (false);
+                }
+                if (!final_chunk_sent)
+                {
+                    if (!api_http_stream_invoke_body(streaming_handler,
+                            ft_nullptr, 0, true, error_code))
+                        return (false);
+                    final_chunk_sent = true;
+                }
+                break ;
+            }
+            if (!api_http_stream_invoke_body(streaming_handler,
+                    ft_nullptr, 0, true, error_code))
+                return (false);
+            final_chunk_sent = true;
+            break ;
+        }
+        if (!headers_complete)
         {
+            buffer[received] = '\0';
+            response.append(buffer, static_cast<size_t>(received));
+            if (response.get_error())
+            {
+                error_code = response.get_error();
+                return (false);
+            }
+            const char *headers_start;
+            const char *headers_end;
+
+            headers_start = response.c_str();
+            headers_end = ft_strstr(response.c_str(), "\r\n\r\n");
+            if (!headers_end)
+            {
+                if (!streaming_enabled && response.size() >= sizeof(buffer))
+                {
+                    error_code = FT_EIO;
+                    return (false);
+                }
+                continue ;
+            }
             headers_end += 2;
             header_length = static_cast<size_t>(headers_end - headers_start) + 2;
-            api_http_parse_headers(headers_start, headers_end, connection_close,
-                chunked_encoding, has_length, content_length);
+            api_http_parse_headers(headers_start, headers_end,
+                connection_close, chunked_encoding, has_length,
+                content_length);
+            if (!chunked_encoding && !has_length)
+                connection_close = true;
+            header_storage.assign(response.c_str(), header_length);
+            if (header_storage.get_error())
+            {
+                error_code = header_storage.get_error();
+                return (false);
+            }
+            if (streaming_enabled)
+            {
+                const char *status_space;
+                size_t body_length;
+
+                status_space = ft_strchr(header_storage.c_str(), ' ');
+                if (status_space)
+                    header_status_code = ft_atoi(status_space + 1);
+                api_http_stream_invoke_headers(streaming_handler,
+                    header_status_code, header_storage.c_str());
+                body_length = response.size() - header_length;
+                if (body_length > 0)
+                {
+                    streaming_body_buffer.append(
+                        response.c_str() + header_length, body_length);
+                    if (streaming_body_buffer.get_error())
+                    {
+                        error_code = streaming_body_buffer.get_error();
+                        return (false);
+                    }
+                    if (!api_http_streaming_flush_buffer(
+                            streaming_body_buffer, has_length,
+                            content_length, streaming_delivered,
+                            final_chunk_sent, chunked_encoding,
+                            chunk_stream_remaining, chunk_stream_trailers,
+                            streaming_handler, error_code))
+                        return (false);
+                    if (final_chunk_sent)
+                        return (true);
+                }
+                response = header_storage;
+            }
+            if (!streaming_enabled)
+            {
+                size_t body_length;
+
+                body_length = response.size() - header_length;
+                if (chunked_encoding)
+                {
+                    size_t consumed_length;
+
+                    if (api_http_chunked_body_complete(
+                            response.c_str() + header_length, body_length,
+                            consumed_length))
+                    {
+                        if (consumed_length <= body_length)
+                            return (true);
+                    }
+                }
+                else if (has_length)
+                {
+                    if (body_length >= static_cast<size_t>(content_length))
+                        return (true);
+                }
+                else if (response.size() >= sizeof(buffer))
+                {
+                    error_code = FT_EIO;
+                    return (false);
+                }
+            }
+            headers_complete = true;
+            continue ;
+        }
+        if (!streaming_enabled)
+        {
+            buffer[received] = '\0';
+            response.append(buffer, static_cast<size_t>(received));
+            if (response.get_error())
+            {
+                error_code = response.get_error();
+                return (false);
+            }
             if (chunked_encoding)
             {
                 size_t body_size;
                 size_t consumed_length;
 
                 body_size = response.size() - header_length;
-                if (api_http_chunked_body_complete(response.c_str() + header_length,
-                        body_size, consumed_length))
+                if (api_http_chunked_body_complete(
+                        response.c_str() + header_length, body_size,
+                        consumed_length))
                 {
                     if (consumed_length <= body_size)
                         return (true);
@@ -332,27 +707,29 @@ static bool api_http_receive_response(ft_socket &socket_wrapper,
                 if (body_size >= static_cast<size_t>(content_length))
                     return (true);
             }
+            continue ;
         }
-        else if (response.size() >= sizeof(buffer))
+        streaming_body_buffer.append(buffer, static_cast<size_t>(received));
+        if (streaming_body_buffer.get_error())
         {
-            error_code = FT_EIO;
+            error_code = streaming_body_buffer.get_error();
             return (false);
         }
-        if (received < static_cast<ssize_t>(sizeof(buffer) - 1))
-        {
-            if (!headers_end)
-            {
-                error_code = FT_EIO;
-                return (false);
-            }
+        if (!api_http_streaming_flush_buffer(streaming_body_buffer, has_length,
+                content_length, streaming_delivered, final_chunk_sent,
+                chunked_encoding, chunk_stream_remaining,
+                chunk_stream_trailers, streaming_handler, error_code))
+            return (false);
+        if (final_chunk_sent)
             return (true);
-        }
     }
     if (response.size() == 0)
     {
         error_code = FT_EIO;
         return (false);
     }
+    if (streaming_enabled)
+        return (true);
     const char *headers_start;
     const char *headers_end;
 
@@ -443,7 +820,7 @@ static char *api_http_execute_plain_once(
         error_code = ER_SUCCESS;
     if (!api_http_receive_response(socket_wrapper, response, header_length,
             connection_close, chunked_encoding, has_length, content_length,
-            error_code))
+            error_code, ft_nullptr))
     {
         if (send_failed)
             error_code = send_error_code;
@@ -535,6 +912,178 @@ static char *api_http_execute_plain_once(
     result_body[result_length] = '\0';
     error_code = ER_SUCCESS;
     return (result_body);
+}
+
+static bool api_http_execute_plain_streaming_once(
+    api_connection_pool_handle &connection_handle,
+    const char *method, const char *path, const char *host_header,
+    json_group *payload, const char *headers, int timeout,
+    const api_streaming_handler *streaming_handler, bool &connection_close,
+    int &error_code)
+{
+    ft_socket &socket_wrapper = connection_handle.socket;
+
+    connection_close = false;
+    if (socket_wrapper.get_error())
+    {
+        error_code = socket_wrapper.get_error();
+        return (false);
+    }
+    if (!api_http_apply_timeouts(socket_wrapper, timeout))
+    {
+#ifdef _WIN32
+        int last_error;
+
+        last_error = WSAGetLastError();
+        if (last_error != 0)
+            error_code = last_error + ERRNO_OFFSET;
+        else
+            error_code = SOCKET_INVALID_CONFIGURATION;
+#else
+        if (errno != 0)
+            error_code = errno + ERRNO_OFFSET;
+        else
+            error_code = SOCKET_INVALID_CONFIGURATION;
+#endif
+        return (false);
+    }
+
+    ft_string request;
+    ft_string body_string;
+    if (!api_http_prepare_request(method, path, host_header, payload, headers,
+            request, body_string, error_code))
+        return (false);
+    bool send_failed;
+    int send_error_code;
+
+    send_failed = false;
+    send_error_code = ER_SUCCESS;
+    if (!api_http_send_request(socket_wrapper, request, error_code))
+    {
+        send_failed = true;
+        send_error_code = error_code;
+        api_connection_pool_disable_store(connection_handle);
+#ifdef _WIN32
+        if (send_error_code == (WSAECONNRESET + ERRNO_OFFSET))
+            send_error_code = SOCKET_SEND_FAILED;
+        if (send_error_code == (WSAECONNABORTED + ERRNO_OFFSET))
+            send_error_code = SOCKET_SEND_FAILED;
+#else
+        if (send_error_code == (ECONNRESET + ERRNO_OFFSET))
+            send_error_code = SOCKET_SEND_FAILED;
+        if (send_error_code == (EPIPE + ERRNO_OFFSET))
+            send_error_code = SOCKET_SEND_FAILED;
+#endif
+        if (!api_http_is_recoverable_send_error(send_error_code))
+            return (false);
+    }
+
+    ft_string response;
+    size_t header_length;
+    bool chunked_encoding;
+    bool has_length;
+    long long content_length;
+
+    chunked_encoding = false;
+    has_length = false;
+    content_length = 0;
+    if (send_failed)
+        error_code = ER_SUCCESS;
+    if (!api_http_receive_response(socket_wrapper, response, header_length,
+            connection_close, chunked_encoding, has_length, content_length,
+            error_code, streaming_handler))
+    {
+        if (send_failed)
+            error_code = send_error_code;
+        return (false);
+    }
+    if (send_failed)
+        connection_close = true;
+    error_code = ER_SUCCESS;
+    return (true);
+}
+
+bool api_http_execute_plain_streaming(
+    api_connection_pool_handle &connection_handle, const char *method,
+    const char *path, const char *host_header, json_group *payload,
+    const char *headers, int timeout, const char *host, uint16_t port,
+    const api_retry_policy *retry_policy,
+    const api_streaming_handler *streaming_handler, int &error_code)
+{
+    int max_attempts;
+    int attempt_index;
+    int initial_delay;
+    int current_delay;
+    int max_delay;
+    int multiplier;
+
+    max_attempts = api_retry_get_max_attempts(retry_policy);
+    initial_delay = api_retry_get_initial_delay(retry_policy);
+    max_delay = api_retry_get_max_delay(retry_policy);
+    multiplier = api_retry_get_multiplier(retry_policy);
+    current_delay = api_retry_prepare_delay(initial_delay, max_delay);
+    attempt_index = 0;
+    while (attempt_index < max_attempts)
+    {
+        bool socket_ready;
+        bool should_retry;
+
+        socket_ready = api_http_prepare_plain_socket(connection_handle, host,
+                port, timeout, error_code);
+        if (socket_ready)
+        {
+            bool connection_close;
+            bool success;
+
+            connection_close = false;
+            success = api_http_execute_plain_streaming_once(
+                    connection_handle, method, path, host_header, payload,
+                    headers, timeout, streaming_handler, connection_close,
+                    error_code);
+            if (success)
+            {
+                if (connection_close)
+                    api_connection_pool_disable_store(connection_handle);
+                return (true);
+            }
+        }
+        should_retry = api_http_should_retry_plain(error_code);
+        if (!should_retry)
+            return (false);
+        api_connection_pool_evict(connection_handle);
+        attempt_index++;
+        if (attempt_index >= max_attempts)
+            break ;
+        if (current_delay > 0)
+        {
+            int sleep_delay;
+
+            sleep_delay = api_retry_prepare_delay(current_delay, max_delay);
+            if (sleep_delay > 0)
+                time_sleep_ms(static_cast<unsigned int>(sleep_delay));
+        }
+        current_delay = api_retry_next_delay(current_delay, max_delay,
+                multiplier);
+        if (current_delay <= 0)
+            current_delay = api_retry_prepare_delay(initial_delay, max_delay);
+    }
+    if (error_code == ER_SUCCESS)
+        error_code = FT_EIO;
+    return (false);
+}
+
+bool api_http_execute_plain_http2_streaming(
+    api_connection_pool_handle &connection_handle, const char *method,
+    const char *path, const char *host_header, json_group *payload,
+    const char *headers, int timeout, const char *host, uint16_t port,
+    const api_retry_policy *retry_policy,
+    const api_streaming_handler *streaming_handler, bool &used_http2,
+    int &error_code)
+{
+    used_http2 = false;
+    return (api_http_execute_plain_streaming(connection_handle, method, path,
+            host_header, payload, headers, timeout, host, port, retry_policy,
+            streaming_handler, error_code));
 }
 
 char *api_http_execute_plain_http2(api_connection_pool_handle &connection_handle,

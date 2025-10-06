@@ -115,7 +115,7 @@ class ft_task_scheduler
         ft_vector<ft_thread> _workers;
         ft_thread _timer_thread;
         ft_vector<scheduled_task> _scheduled;
-        pt_mutex _scheduled_mutex;
+        mutable pt_mutex _scheduled_mutex;
         pt_condition_variable _scheduled_condition;
         std::atomic<bool> _running;
         mutable pt_mutex _queue_metrics_mutex;
