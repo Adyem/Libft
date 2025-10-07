@@ -223,22 +223,75 @@ ft_string yaml_write_to_string(const yaml_value *value) noexcept
 
 int yaml_write_to_file(const char *file_path, const yaml_value *value) noexcept
 {
-    ft_string output = yaml_write_to_string(value);
-    if (output.get_error() != ER_SUCCESS)
+    int final_error;
+    int result;
+
+    final_error = ER_SUCCESS;
+    result = 0;
     {
-        ft_errno = output.get_error();
-        return (-1);
+        ft_string output = yaml_write_to_string(value);
+        if (output.get_error() != ER_SUCCESS)
+        {
+            final_error = output.get_error();
+            result = -1;
+        }
+        else
+        {
+            su_file *file;
+
+            file = su_fopen(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (file == ft_nullptr)
+            {
+                if (ft_errno != ER_SUCCESS)
+                    final_error = ft_errno;
+                else
+                    final_error = FT_EINVAL;
+                result = -1;
+            }
+            else
+            {
+                const char *data;
+                size_t expected_size;
+                size_t written;
+
+                data = output.c_str();
+                expected_size = output.size();
+                written = su_fwrite(data, 1, expected_size, file);
+                if (written != expected_size)
+                {
+                    int write_error;
+                    int close_error;
+
+                    write_error = ft_errno;
+                    close_error = su_fclose(file);
+                    if (close_error != 0 && write_error == ER_SUCCESS)
+                    {
+                        if (ft_errno != ER_SUCCESS)
+                            write_error = ft_errno;
+                        else
+                            write_error = FT_EINVAL;
+                    }
+                    if (write_error != ER_SUCCESS)
+                        final_error = write_error;
+                    else if (ft_errno != ER_SUCCESS)
+                        final_error = ft_errno;
+                    else
+                        final_error = FT_EINVAL;
+                    result = -1;
+                }
+                else if (su_fclose(file) != 0)
+                {
+                    if (ft_errno != ER_SUCCESS)
+                        final_error = ft_errno;
+                    else
+                        final_error = FT_EINVAL;
+                    result = -1;
+                }
+            }
+        }
     }
-    su_file *file = su_fopen(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if (file == ft_nullptr)
-    {
-        if (ft_errno == ER_SUCCESS)
-            ft_errno = FT_EINVAL;
-        return (-1);
-    }
-    const char *data = output.c_str();
-    su_fwrite(data, 1, output.size(), file);
-    su_fclose(file);
-    ft_errno = ER_SUCCESS;
-    return (0);
+    if (result == 0)
+        final_error = ER_SUCCESS;
+    ft_errno = final_error;
+    return (result);
 }

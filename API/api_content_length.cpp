@@ -1,4 +1,5 @@
 #include "api_internal.hpp"
+#include "../Errno/errno.hpp"
 #include "../Printf/printf.hpp"
 
 bool api_append_content_length_header(ft_string &request, size_t content_length)
@@ -12,6 +13,10 @@ bool api_append_content_length_header(ft_string &request, size_t content_length)
     if (static_cast<size_t>(formatted_length) >= sizeof(content_length_buffer))
         return (false);
     request += "\r\nContent-Length: ";
+    if (request.get_error() != ER_SUCCESS)
+        return (false);
     request += content_length_buffer;
+    if (request.get_error() != ER_SUCCESS)
+        return (false);
     return (true);
 }

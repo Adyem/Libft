@@ -156,6 +156,7 @@ int ft_decompress_stream(int input_fd, int output_fd)
     int             inflate_status;
     ssize_t         read_bytes;
     int             flush_mode;
+    int             stream_finished;
 
     if (input_fd < 0 || output_fd < 0)
     {
@@ -169,8 +170,9 @@ int ft_decompress_stream(int input_fd, int output_fd)
         ft_errno = map_zlib_error(inflate_status);
         return (1);
     }
+    stream_finished = 0;
     flush_mode = Z_NO_FLUSH;
-    while (flush_mode != Z_FINISH)
+    while (stream_finished == 0)
     {
         read_bytes = su_read(input_fd, input_buffer, sizeof(input_buffer));
         if (read_bytes < 0)
@@ -190,6 +192,8 @@ int ft_decompress_stream(int input_fd, int output_fd)
             stream.next_out = output_buffer;
             stream.avail_out = sizeof(output_buffer);
             inflate_status = g_decompress_stream_inflate_hook(&stream, flush_mode);
+            if (inflate_status == Z_STREAM_END)
+                stream_finished = 1;
             if (inflate_status == Z_NEED_DICT
                 || inflate_status == Z_DATA_ERROR
                 || inflate_status == Z_MEM_ERROR
@@ -208,7 +212,23 @@ int ft_decompress_stream(int input_fd, int output_fd)
                 return (1);
             }
         }
-        while (stream.avail_out == 0);
+        while (stream.avail_out == 0 && stream_finished == 0);
+        if (stream_finished != 0)
+        {
+            if (stream.avail_in != 0)
+            {
+                inflateEnd(&stream);
+                ft_errno = FT_EINVAL;
+                return (1);
+            }
+            break ;
+        }
+        if (flush_mode == Z_FINISH)
+        {
+            inflateEnd(&stream);
+            ft_errno = FT_EINVAL;
+            return (1);
+        }
     }
     inflateEnd(&stream);
     ft_errno = ER_SUCCESS;
