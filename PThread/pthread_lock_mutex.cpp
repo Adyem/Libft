@@ -3,7 +3,7 @@
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
 
-int pt_mutex::lock(pthread_t thread_id)
+int pt_mutex::lock(pthread_t thread_id) const
 {
     if (this->_owner.load(std::memory_order_relaxed) == thread_id)
     {
