@@ -186,3 +186,40 @@ cleanup:
     return (1);
 }
 
+FT_TEST(test_readline_printable_char_preserves_buffer_on_resize_failure, "rl_handle_printable_char keeps buffer on resize failure")
+{
+    readline_state_t state = {};
+    const char *prompt;
+    char *initial_buffer;
+    int handle_result;
+
+    prompt = "> ";
+    initial_buffer = static_cast<char *>(cma_malloc(4));
+    if (initial_buffer == ft_nullptr)
+        return (0);
+    initial_buffer[0] = 'x';
+    initial_buffer[1] = '\0';
+    state.buffer = initial_buffer;
+    state.bufsize = 2;
+    state.pos = state.bufsize - 1;
+    state.prev_buffer_length = 1;
+    state.history_index = 0;
+    state.in_completion_mode = 0;
+    state.current_match_count = 0;
+    state.current_match_index = 0;
+    state.word_start = 0;
+    ft_errno = ER_SUCCESS;
+    cma_set_alloc_limit(1);
+    handle_result = rl_handle_printable_char(&state, 'a', prompt);
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(-1, handle_result);
+    FT_ASSERT_EQ(FT_EALLOC, ft_errno);
+    FT_ASSERT_EQ(initial_buffer, state.buffer);
+    FT_ASSERT_EQ(2, state.bufsize);
+    FT_ASSERT_EQ(1, state.pos);
+    FT_ASSERT_EQ('x', state.buffer[0]);
+    FT_ASSERT_EQ('\0', state.buffer[1]);
+    cma_free(initial_buffer);
+    return (1);
+}
+

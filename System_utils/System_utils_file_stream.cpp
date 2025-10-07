@@ -4,6 +4,7 @@
 #include "../Errno/errno.hpp"
 #include <cstdlib>
 #include <cerrno>
+#include <limits>
 
 static bool g_force_file_stream_allocation_failure = false;
 
@@ -103,10 +104,22 @@ size_t su_fread(void *buffer, size_t size, size_t count, su_file *stream)
     size_t total_read;
     char *byte_buffer;
     ssize_t bytes_read;
+    size_t maximum_size;
 
     if (buffer == ft_nullptr || stream == ft_nullptr)
     {
         ft_errno = FT_EINVAL;
+        return (0);
+    }
+    if (size == 0 || count == 0)
+    {
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    maximum_size = std::numeric_limits<size_t>::max();
+    if (count > maximum_size / size)
+    {
+        ft_errno = FT_ERANGE;
         return (0);
     }
     total_size = size * count;
@@ -127,16 +140,29 @@ size_t su_fwrite(const void *buffer, size_t size, size_t count, su_file *stream)
 {
     size_t total_size;
     ssize_t bytes_written;
+    size_t maximum_size;
 
     if (buffer == ft_nullptr || stream == ft_nullptr)
     {
         ft_errno = FT_EINVAL;
         return (0);
     }
+    if (size == 0 || count == 0)
+    {
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    maximum_size = std::numeric_limits<size_t>::max();
+    if (count > maximum_size / size)
+    {
+        ft_errno = FT_ERANGE;
+        return (0);
+    }
     total_size = size * count;
     bytes_written = su_write(stream->_descriptor, buffer, total_size);
     if (bytes_written < 0)
         return (0);
+    ft_errno = ER_SUCCESS;
     return (static_cast<size_t>(bytes_written) / size);
 }
 

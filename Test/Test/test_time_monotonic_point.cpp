@@ -1,5 +1,6 @@
 #include "../../Time/time.hpp"
 #include "../../System_utils/test_runner.hpp"
+#include <climits>
 
 FT_TEST(test_time_monotonic_point_add_ms_positive_offset,
         "time_monotonic_point_add_ms adds positive offsets to the baseline")
@@ -25,6 +26,21 @@ FT_TEST(test_time_monotonic_point_add_ms_negative_offset,
     return (1);
 }
 
+FT_TEST(test_time_monotonic_point_add_ms_clamps_overflow,
+        "time_monotonic_point_add_ms clamps additions that exceed long long range")
+{
+    t_monotonic_time_point baseline;
+    t_monotonic_time_point adjusted;
+
+    baseline.milliseconds = LLONG_MAX - 5;
+    adjusted = time_monotonic_point_add_ms(baseline, 10);
+    FT_ASSERT_EQ(LLONG_MAX, adjusted.milliseconds);
+    baseline.milliseconds = LLONG_MIN + 5;
+    adjusted = time_monotonic_point_add_ms(baseline, -10);
+    FT_ASSERT_EQ(LLONG_MIN, adjusted.milliseconds);
+    return (1);
+}
+
 FT_TEST(test_time_monotonic_point_diff_ms_forward_interval,
         "time_monotonic_point_diff_ms returns positive deltas when end is after start")
 {
@@ -36,6 +52,24 @@ FT_TEST(test_time_monotonic_point_diff_ms_forward_interval,
     end_point.milliseconds = 425;
     difference = time_monotonic_point_diff_ms(start_point, end_point);
     FT_ASSERT_EQ(325LL, difference);
+    return (1);
+}
+
+FT_TEST(test_time_monotonic_point_diff_ms_clamps_overflow,
+        "time_monotonic_point_diff_ms clamps differences that exceed long long range")
+{
+    t_monotonic_time_point start_point;
+    t_monotonic_time_point end_point;
+    long long difference;
+
+    start_point.milliseconds = LLONG_MIN;
+    end_point.milliseconds = LLONG_MAX;
+    difference = time_monotonic_point_diff_ms(start_point, end_point);
+    FT_ASSERT_EQ(LLONG_MAX, difference);
+    start_point.milliseconds = LLONG_MAX;
+    end_point.milliseconds = LLONG_MIN;
+    difference = time_monotonic_point_diff_ms(start_point, end_point);
+    FT_ASSERT_EQ(LLONG_MIN, difference);
     return (1);
 }
 

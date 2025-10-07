@@ -9,7 +9,7 @@ size_t ft_strlcat(char *destination, const char *source, size_t buffer_size)
     size_t copy_index;
 
     ft_errno = ER_SUCCESS;
-    if (destination == ft_nullptr || source == ft_nullptr)
+    if (source == ft_nullptr)
     {
         ft_errno = FT_EINVAL;
         return (0);
@@ -17,6 +17,15 @@ size_t ft_strlcat(char *destination, const char *source, size_t buffer_size)
     source_length = ft_strlen_size_t(source);
     if (ft_errno != ER_SUCCESS)
         return (0);
+    if (buffer_size == 0)
+    {
+        return (source_length);
+    }
+    if (destination == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
+        return (0);
+    }
     destination_length = 0;
     while (destination_length < buffer_size && destination[destination_length] != '\0')
         destination_length++;

@@ -57,6 +57,22 @@ FT_TEST(test_strnstr_empty_needle_zero_size, "ft_strnstr empty needle ignores si
     return (1);
 }
 
+FT_TEST(test_strnstr_zero_size_allows_null_haystack, "ft_strnstr zero size allows null haystack")
+{
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(ft_nullptr, ft_strnstr(ft_nullptr, "needle", 0));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strnstr_zero_size_null_haystack_empty_needle, "ft_strnstr zero size allows null haystack for empty needle")
+{
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(ft_nullptr, ft_strnstr(ft_nullptr, "", 0));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_strnstr_null_arguments, "ft_strnstr null arguments return nullptr")
 {
     ft_errno = ER_SUCCESS;

@@ -35,6 +35,20 @@ FT_TEST(test_strncmp_zero_length, "ft_strncmp zero length")
     return (1);
 }
 
+FT_TEST(test_strncmp_zero_length_null_arguments, "ft_strncmp zero length allows null pointers")
+{
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(0, ft_strncmp(ft_nullptr, "abc", 0));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(0, ft_strncmp("abc", ft_nullptr, 0));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(0, ft_strncmp(ft_nullptr, ft_nullptr, 0));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_strncmp_shorter_first, "ft_strncmp shorter first")
 {
     ft_errno = FT_EINVAL;

@@ -71,6 +71,35 @@ FT_TEST(test_strncpy_zero_length, "ft_strncpy zero length")
     return (1);
 }
 
+FT_TEST(test_strncpy_zero_length_null_destination, "ft_strncpy zero length allows null destination")
+{
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(ft_nullptr, ft_strncpy(ft_nullptr, "abc", 0));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strncpy_zero_length_null_source, "ft_strncpy zero length allows null source")
+{
+    char destination[2];
+
+    destination[0] = 'v';
+    destination[1] = '\0';
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(destination, ft_strncpy(destination, ft_nullptr, 0));
+    FT_ASSERT_EQ('v', destination[0]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strncpy_zero_length_both_null, "ft_strncpy zero length allows both null arguments")
+{
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(ft_nullptr, ft_strncpy(ft_nullptr, ft_nullptr, 0));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_strncpy_null, "ft_strncpy with nullptr")
 {
     char buffer[4];

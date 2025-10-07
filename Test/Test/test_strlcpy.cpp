@@ -43,6 +43,14 @@ FT_TEST(test_strlcpy_zero, "ft_strlcpy zero size")
     return (1);
 }
 
+FT_TEST(test_strlcpy_zero_size_null_destination, "ft_strlcpy zero size allows null destination")
+{
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(5u, ft_strlcpy(ft_nullptr, "hello", 0));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_strlcpy_one_byte_buffer, "ft_strlcpy buffer size one")
 {
     char destination[4];
