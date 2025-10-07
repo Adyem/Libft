@@ -4,9 +4,10 @@
 #include <unistd.h>
 #include "../Printf/printf.hpp"
 #include "../Libft/libft.hpp"
+#include "../Errno/errno.hpp"
 #include "readline_internal.hpp"
 
-static void rl_find_word_start_and_prefix(readline_state_t *state, char *prefix, int *prefix_len)
+static int rl_find_word_start_and_prefix(readline_state_t *state, char *prefix, int *prefix_len, int prefix_capacity)
 {
     state->word_start = state->pos - 1;
     while (state->word_start >= 0 && state->buffer[state->word_start] != ' ')
@@ -14,10 +15,21 @@ static void rl_find_word_start_and_prefix(readline_state_t *state, char *prefix,
     state->word_start++;
     *prefix_len = state->pos - state->word_start;
     if (*prefix_len == 0)
-        return ;
+    {
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    if (*prefix_len >= prefix_capacity)
+    {
+        prefix[0] = '\0';
+        *prefix_len = 0;
+        ft_errno = FT_ERANGE;
+        return (-1);
+    }
     ft_memcpy(prefix, &state->buffer[state->word_start], *prefix_len);
     prefix[*prefix_len] = '\0';
-    return ;
+    ft_errno = ER_SUCCESS;
+    return (0);
 }
 
 static void rl_gather_matching_suggestions(readline_state_t *state, const char *prefix, int prefix_len)
@@ -77,7 +89,11 @@ int rl_handle_tab_completion(readline_state_t *state, const char *prompt)
     {
         char prefix[INITIAL_BUFFER_SIZE];
         int prefix_len;
-        rl_find_word_start_and_prefix(state, prefix, &prefix_len);
+        int prefix_status;
+
+        prefix_status = rl_find_word_start_and_prefix(state, prefix, &prefix_len, INITIAL_BUFFER_SIZE);
+        if (prefix_status != 0)
+            return (-1);
         if (prefix_len == 0)
             return (0);
         rl_gather_matching_suggestions(state, prefix, prefix_len);

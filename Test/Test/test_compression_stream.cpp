@@ -43,6 +43,26 @@ static int compression_stream_stream_error_inflate(z_stream *stream, int flush_m
     return (Z_STREAM_ERROR);
 }
 
+static int g_inflate_stream_end_extra_calls = 0;
+
+static int compression_stream_trailing_bytes_inflate(z_stream *stream, int flush_mode)
+{
+    (void)flush_mode;
+    if (g_inflate_stream_end_extra_calls == 0)
+    {
+        g_inflate_stream_end_extra_calls = 1;
+        if (stream->avail_out > 0)
+        {
+            stream->next_out[0] = 'X';
+            stream->avail_out -= 1;
+        }
+        if (stream->avail_in > 0)
+            stream->avail_in = 1;
+        return (Z_STREAM_END);
+    }
+    return (Z_STREAM_END);
+}
+
 FT_TEST(test_ft_compress_stream_rejects_invalid_descriptors, "ft_compress_stream rejects invalid descriptors")
 {
     int result;
@@ -344,5 +364,35 @@ FT_TEST(test_ft_decompress_stream_success_sets_errno_success, "ft_decompress_str
     close(output_pipe[1]);
     FT_ASSERT_EQ(0, result);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_ft_decompress_stream_rejects_trailing_bytes, "ft_decompress_stream rejects trailing input")
+{
+    int             input_pipe[2];
+    int             output_pipe[2];
+    unsigned char   payload[4];
+    ssize_t         payload_written;
+    int             result;
+
+    payload[0] = 0x01;
+    payload[1] = 0x02;
+    payload[2] = 0x03;
+    payload[3] = 0x04;
+    FT_ASSERT_EQ(0, pipe(input_pipe));
+    FT_ASSERT_EQ(0, pipe(output_pipe));
+    payload_written = su_write(input_pipe[1], payload, sizeof(payload));
+    FT_ASSERT_EQ(static_cast<ssize_t>(sizeof(payload)), payload_written);
+    close(input_pipe[1]);
+    g_inflate_stream_end_extra_calls = 0;
+    ft_decompress_stream_set_inflate_hook(compression_stream_trailing_bytes_inflate);
+    ft_errno = ER_SUCCESS;
+    result = ft_decompress_stream(input_pipe[0], output_pipe[1]);
+    ft_decompress_stream_set_inflate_hook(ft_nullptr);
+    close(input_pipe[0]);
+    close(output_pipe[0]);
+    close(output_pipe[1]);
+    FT_ASSERT_EQ(1, result);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
     return (1);
 }

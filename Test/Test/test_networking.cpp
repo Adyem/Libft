@@ -243,7 +243,7 @@ FT_TEST(test_udp_socket_propagates_ft_errno_on_creation_failure,
     FT_ASSERT_EQ(SOCKET_CREATION_FAILED, socket_instance.get_error());
     FT_ASSERT_EQ(SOCKET_CREATION_FAILED, ft_errno);
     FT_ASSERT_EQ(0, errno);
-    return (0);
+    return (1);
 }
 
 FT_TEST(test_network_invalid_ip_address, "invalid IPv4 address returns error")

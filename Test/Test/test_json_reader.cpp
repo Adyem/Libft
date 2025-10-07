@@ -43,6 +43,26 @@ FT_TEST(test_json_read_from_string_missing_closing_sets_errno, "json reader requ
     return (1);
 }
 
+FT_TEST(test_json_read_from_string_missing_fraction_digits_sets_errno, "json reader rejects missing fraction digits")
+{
+    const char *content = "{ \"config\": { \"value\": 1. } }";
+    ft_errno = ER_SUCCESS;
+    json_group *groups = json_read_from_string(content);
+    FT_ASSERT(groups == ft_nullptr);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_json_read_from_string_missing_exponent_digits_sets_errno, "json reader rejects missing exponent digits")
+{
+    const char *content = "{ \"config\": { \"value\": 1e } }";
+    ft_errno = ER_SUCCESS;
+    json_group *groups = json_read_from_string(content);
+    FT_ASSERT(groups == ft_nullptr);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_json_read_from_string_success_resets_errno, "json reader clears errno on success")
 {
     const char *content = "{ \"config\": { \"name\": \"value\" } }";
