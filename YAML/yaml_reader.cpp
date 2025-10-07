@@ -101,6 +101,138 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                 }
                 else
                 {
+                    size_t inline_colon = yaml_find_char(item_line, ':');
+                    if (inline_colon != static_cast<size_t>(-1))
+                    {
+                        yaml_value *map_child = new (std::nothrow) yaml_value();
+                        bool processing_current_line = true;
+                        int map_indent = indent + 2;
+
+                        if (map_child == ft_nullptr)
+                        {
+                            error_code = FT_EALLOC;
+                            goto list_cleanup;
+                        }
+                        map_child->set_type(YAML_MAP);
+                        while (true)
+                        {
+                            ft_string map_line;
+
+                            if (processing_current_line == true)
+                                map_line = item_line;
+                            else
+                            {
+                                size_t child_indent;
+
+                                if (index >= lines_count)
+                                    break;
+                                child_indent = yaml_count_indent(lines[index]);
+                                if (child_indent != static_cast<size_t>(map_indent))
+                                    break;
+                                map_line = yaml_substr_from(lines[index], child_indent);
+                                if (map_line.get_error() != ER_SUCCESS)
+                                {
+                                    error_code = map_line.get_error();
+                                    delete map_child;
+                                    goto list_cleanup;
+                                }
+                            }
+                            size_t map_colon = yaml_find_char(map_line, ':');
+                            if (map_colon == static_cast<size_t>(-1))
+                            {
+                                error_code = FT_EINVAL;
+                                delete map_child;
+                                goto list_cleanup;
+                            }
+                            ft_string key = yaml_substr(map_line, 0, map_colon);
+                            if (key.get_error() != ER_SUCCESS)
+                            {
+                                error_code = key.get_error();
+                                delete map_child;
+                                goto list_cleanup;
+                            }
+                            yaml_trim(key);
+                            if (key.get_error() != ER_SUCCESS)
+                            {
+                                error_code = key.get_error();
+                                delete map_child;
+                                goto list_cleanup;
+                            }
+                            ft_string value_part = yaml_substr_from(map_line, map_colon + 1);
+                            if (value_part.get_error() != ER_SUCCESS)
+                            {
+                                error_code = value_part.get_error();
+                                delete map_child;
+                                goto list_cleanup;
+                            }
+                            yaml_trim(value_part);
+                            if (value_part.get_error() != ER_SUCCESS)
+                            {
+                                error_code = value_part.get_error();
+                                delete map_child;
+                                goto list_cleanup;
+                            }
+                            if (value_part.size() == 0)
+                            {
+                                yaml_value *nested_child;
+
+                                index++;
+                                nested_child = parse_value(lines, index, map_indent + 2);
+                                if (nested_child == ft_nullptr)
+                                {
+                                    error_code = ft_errno;
+                                    delete map_child;
+                                    goto list_cleanup;
+                                }
+                                map_child->add_map_item(key, nested_child);
+                                if (map_child->get_error() != ER_SUCCESS)
+                                {
+                                    error_code = map_child->get_error();
+                                    delete map_child;
+                                    goto list_cleanup;
+                                }
+                            }
+                            else
+                            {
+                                yaml_value *scalar_child = new (std::nothrow) yaml_value();
+
+                                if (scalar_child == ft_nullptr)
+                                {
+                                    error_code = FT_EALLOC;
+                                    delete map_child;
+                                    goto list_cleanup;
+                                }
+                                scalar_child->set_scalar(value_part);
+                                if (scalar_child->get_error() != ER_SUCCESS)
+                                {
+                                    error_code = scalar_child->get_error();
+                                    delete scalar_child;
+                                    delete map_child;
+                                    goto list_cleanup;
+                                }
+                                map_child->add_map_item(key, scalar_child);
+                                if (map_child->get_error() != ER_SUCCESS)
+                                {
+                                    error_code = map_child->get_error();
+                                    delete map_child;
+                                    goto list_cleanup;
+                                }
+                                index++;
+                            }
+                            if (processing_current_line == true)
+                                processing_current_line = false;
+                            else if (index >= lines_count)
+                                break;
+                        }
+                        list_value->add_list_item(map_child);
+                        if (list_value->get_error() != ER_SUCCESS)
+                        {
+                            error_code = list_value->get_error();
+                            delete map_child;
+                            goto list_cleanup;
+                        }
+                        continue;
+                    }
                     yaml_value *child = new (std::nothrow) yaml_value();
                     if (child == ft_nullptr)
                     {

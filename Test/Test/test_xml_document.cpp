@@ -102,6 +102,19 @@ FT_TEST(test_xml_document_load_from_string_malformed_sets_errno, "xml_document::
     return (1);
 }
 
+FT_TEST(test_xml_document_load_from_string_detects_mismatched_closing_tag, "xml_document::load_from_string rejects mismatched closing tags")
+{
+    xml_document document;
+    int result;
+
+    ft_errno = ER_SUCCESS;
+    result = document.load_from_string("<root><child></rood>");
+    FT_ASSERT_EQ(FT_EINVAL, result);
+    FT_ASSERT_EQ(FT_EINVAL, document.get_error());
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_xml_document_load_from_string_allocation_failure_sets_errno, "xml_document::load_from_string reports FT_EALLOC on allocation failure")
 {
     xml_document document;

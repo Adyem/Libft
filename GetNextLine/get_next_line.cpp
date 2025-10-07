@@ -42,6 +42,23 @@ static char* allocate_new_string(char* string_one, char* string_two)
     return (new_string);
 }
 
+static void    *(*g_gnl_leftover_alloc_hook)(ft_size_t size) = cma_malloc;
+
+void    gnl_set_leftover_alloc_hook(void *(*hook)(ft_size_t size))
+{
+    if (hook)
+        g_gnl_leftover_alloc_hook = hook;
+    else
+        g_gnl_leftover_alloc_hook = cma_malloc;
+    return ;
+}
+
+void    gnl_reset_leftover_alloc_hook(void)
+{
+    g_gnl_leftover_alloc_hook = cma_malloc;
+    return ;
+}
+
 char* ft_strjoin_gnl(char* string_one, char* string_two)
 {
     char* result;
@@ -81,10 +98,12 @@ static char* leftovers(char* readed_string)
         cma_free(readed_string);
         return (ft_nullptr);
     }
-    string = static_cast<char*>(cma_malloc(ft_strlen(readed_string) - read_index + 1));
+    string = static_cast<char*>(g_gnl_leftover_alloc_hook(ft_strlen(readed_string)
+            - read_index + 1));
     if (!string)
     {
         ft_errno = FT_EALLOC;
+        cma_free(readed_string);
         return (ft_nullptr);
     }
     read_index++;

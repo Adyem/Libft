@@ -30,6 +30,16 @@ struct http_stream_handler_state
 
 static http_stream_handler_state *g_http_stream_handler_state = NULL;
 
+static int socket_creation_failure_hook(int domain, int type, int protocol)
+{
+    (void)domain;
+    (void)type;
+    (void)protocol;
+    errno = 0;
+    ft_errno = SOCKET_CREATION_FAILED;
+    return (-1);
+}
+
 static void http_stream_test_server(http_stream_test_server_context *context)
 {
     struct sockaddr_storage address_storage;
@@ -204,6 +214,36 @@ FT_TEST(test_udp_send_receive_ipv4, "nw_sendto/nw_recvfrom IPv4")
         return (0);
     buffer[receive_result] = '\0';
     return (ft_strcmp(buffer, message) == 0);
+}
+
+FT_TEST(test_udp_socket_propagates_ft_errno_on_creation_failure,
+    "udp_socket initialization forwards ft_errno")
+{
+    SocketConfig config;
+    udp_socket socket_instance;
+    int initialize_result;
+
+    config._type = SocketType::CLIENT;
+    config._address_family = AF_INET;
+    config._protocol = 0;
+    config._reuse_address = false;
+    config._non_blocking = false;
+    config._recv_timeout = 0;
+    config._send_timeout = 0;
+    config._port = 54355;
+    config._ip = "127.0.0.1";
+    if (config._ip.get_error() != ER_SUCCESS)
+        return (0);
+    errno = 0;
+    ft_errno = ER_SUCCESS;
+    nw_set_socket_hook(socket_creation_failure_hook);
+    initialize_result = socket_instance.initialize(config);
+    nw_set_socket_hook(ft_nullptr);
+    FT_ASSERT(initialize_result != ER_SUCCESS);
+    FT_ASSERT_EQ(SOCKET_CREATION_FAILED, socket_instance.get_error());
+    FT_ASSERT_EQ(SOCKET_CREATION_FAILED, ft_errno);
+    FT_ASSERT_EQ(0, errno);
+    return (0);
 }
 
 FT_TEST(test_network_invalid_ip_address, "invalid IPv4 address returns error")
