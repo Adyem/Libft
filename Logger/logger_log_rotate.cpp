@@ -31,12 +31,6 @@ void ft_log_rotate(s_file_sink *sink)
         ft_errno = ER_SUCCESS;
         return ;
     }
-    close_result = close(sink->fd);
-    if (close_result == -1)
-    {
-        ft_errno = errno + ERRNO_OFFSET;
-        return ;
-    }
     rotated = sink->path + ".1";
     if (rotated.get_error() != ER_SUCCESS)
     {
@@ -45,13 +39,33 @@ void ft_log_rotate(s_file_sink *sink)
     }
     if (rename(sink->path.c_str(), rotated.c_str()) != 0)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        int saved_errno;
+
+        saved_errno = errno;
+        ft_errno_reference() = saved_errno + ERRNO_OFFSET;
+        errno = saved_errno;
         return ;
     }
+    close_result = close(sink->fd);
+    if (close_result == -1)
+    {
+        sink->fd = -1;
+        int saved_errno;
+
+        saved_errno = errno;
+        ft_errno_reference() = saved_errno + ERRNO_OFFSET;
+        errno = saved_errno;
+        return ;
+    }
+    sink->fd = -1;
     sink->fd = open(sink->path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
     if (sink->fd == -1)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        int saved_errno;
+
+        saved_errno = errno;
+        ft_errno_reference() = saved_errno + ERRNO_OFFSET;
+        errno = saved_errno;
         return ;
     }
     ft_errno = ER_SUCCESS;

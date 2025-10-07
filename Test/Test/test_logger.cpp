@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 FT_TEST(test_logger_color_toggle, "logger color toggle")
 {
@@ -100,6 +101,47 @@ FT_TEST(test_logger_rotate_success_clears_errno, "ft_log_rotate clears errno aft
     close(sink.fd);
     unlink(template_path);
     unlink(rotated_path.c_str());
+    return (1);
+}
+
+FT_TEST(test_logger_rotate_rename_failure_reopens_file, "ft_log_rotate reopens original file when rename fails")
+{
+    char        directory_template[] = "/tmp/libft_logger_rotate_fail_XXXXXX";
+    char       *directory_path;
+    ft_string   file_path;
+    ft_string   long_name;
+    int         file_descriptor;
+    ssize_t     write_result;
+    s_file_sink sink;
+
+    directory_path = mkdtemp(directory_template);
+    FT_ASSERT(directory_path != ft_nullptr);
+    file_path = directory_path;
+    FT_ASSERT_EQ(ER_SUCCESS, file_path.get_error());
+    file_path += "/";
+    FT_ASSERT_EQ(ER_SUCCESS, file_path.get_error());
+    long_name = ft_string(255, 'a');
+    FT_ASSERT_EQ(ER_SUCCESS, long_name.get_error());
+    file_path += long_name;
+    FT_ASSERT_EQ(ER_SUCCESS, file_path.get_error());
+    file_descriptor = open(file_path.c_str(), O_CREAT | O_WRONLY | O_APPEND, 0644);
+    FT_ASSERT(file_descriptor >= 0);
+    write_result = write(file_descriptor, "trigger", 7);
+    FT_ASSERT_EQ(7, write_result);
+    sink.fd = file_descriptor;
+    sink.path = ft_string(file_path);
+    FT_ASSERT_EQ(ER_SUCCESS, sink.path.get_error());
+    sink.max_size = 4;
+    errno = 0;
+    ft_errno = ER_SUCCESS;
+    ft_log_rotate(&sink);
+    FT_ASSERT_EQ(ENAMETOOLONG, errno);
+    FT_ASSERT_EQ(file_descriptor, sink.fd);
+    write_result = write(sink.fd, "ok", 2);
+    FT_ASSERT_EQ(2, write_result);
+    close(sink.fd);
+    FT_ASSERT_EQ(0, unlink(file_path.c_str()));
+    FT_ASSERT_EQ(0, rmdir(directory_path));
     return (1);
 }
 
