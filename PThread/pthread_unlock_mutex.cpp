@@ -76,7 +76,7 @@ static void pt_mutex_report_wake_failure(int wake_error)
 }
 
 
-int pt_mutex::unlock(pthread_t thread_id)
+int pt_mutex::unlock(pthread_t thread_id) const
 {
     this->set_error(ER_SUCCESS);
     if (this->_owner.load(std::memory_order_relaxed) != thread_id)

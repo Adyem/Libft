@@ -2,7 +2,7 @@
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
 
-int pt_mutex::try_lock(pthread_t thread_id)
+int pt_mutex::try_lock(pthread_t thread_id) const
 {
     this->set_error(ER_SUCCESS);
     if (this->_owner.load(std::memory_order_relaxed) == thread_id)
