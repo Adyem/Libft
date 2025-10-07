@@ -64,7 +64,8 @@ static bool parse_timezone_offset(const char *timezone_buffer, int *offset_secon
         ft_errno = FT_EINVAL;
         return (false);
     }
-    if (timezone_buffer[0] == 'Z' && timezone_buffer[1] == '\0')
+    if ((timezone_buffer[0] == 'Z' || timezone_buffer[0] == 'z')
+        && timezone_buffer[1] == '\0')
     {
         *offset_seconds = 0;
         return (true);

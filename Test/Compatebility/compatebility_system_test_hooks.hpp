@@ -25,6 +25,7 @@ void    cmp_set_force_putenv_windows_error(int last_error);
 #if !defined(_WIN32) && !defined(_WIN64)
 void    cmp_force_rng_open_failure(int error_code);
 void    cmp_force_rng_read_failure(int error_code);
+void    cmp_force_rng_read_eof(void);
 void    cmp_force_rng_close_failure(int error_code);
 void    cmp_clear_force_rng_failures(void);
 #endif

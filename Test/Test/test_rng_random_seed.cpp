@@ -100,4 +100,18 @@ FT_TEST(test_ft_random_uint32_failure_returns_zero, "ft_random_uint32 returns ze
         return (0);
     return (1);
 }
+
+FT_TEST(test_ft_random_uint32_eof_returns_zero, "ft_random_uint32 treats unexpected EOF as an error")
+{
+    cmp_clear_force_rng_failures();
+    ft_errno = ER_SUCCESS;
+    cmp_force_rng_read_eof();
+    uint32_t random_value = ft_random_uint32();
+    cmp_clear_force_rng_failures();
+    if (ft_errno != FT_EIO)
+        return (0);
+    if (random_value != 0u)
+        return (0);
+    return (1);
+}
 #endif

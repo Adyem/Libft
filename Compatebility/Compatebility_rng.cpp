@@ -47,12 +47,14 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
 
 void cmp_force_rng_open_failure(int error_code);
 void cmp_force_rng_read_failure(int error_code);
+void cmp_force_rng_read_eof(void);
 void cmp_force_rng_close_failure(int error_code);
 void cmp_clear_force_rng_failures(void);
 
 static int g_force_rng_open_errno = 0;
 static int g_force_rng_read_errno = 0;
 static int g_force_rng_close_errno = 0;
+static int g_force_rng_read_zero = 0;
 
 void cmp_force_rng_open_failure(int error_code)
 {
@@ -72,11 +74,18 @@ void cmp_force_rng_close_failure(int error_code)
     return ;
 }
 
+void cmp_force_rng_read_eof(void)
+{
+    g_force_rng_read_zero = 1;
+    return ;
+}
+
 void cmp_clear_force_rng_failures(void)
 {
     g_force_rng_open_errno = 0;
     g_force_rng_read_errno = 0;
     g_force_rng_close_errno = 0;
+    g_force_rng_read_zero = 0;
     return ;
 }
 int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
@@ -109,14 +118,36 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
             errno = stored_errno;
             return (-1);
         }
-        ssize_t bytes_read = read(file_descriptor, buffer + offset,
-            length - offset);
+        ssize_t bytes_read;
+
+        if (g_force_rng_read_zero != 0)
+        {
+            g_force_rng_read_zero = 0;
+            bytes_read = 0;
+        }
+        else
+        {
+            bytes_read = read(file_descriptor, buffer + offset,
+                length - offset);
+        }
         if (bytes_read < 0)
         {
             ft_errno = errno + ERRNO_OFFSET;
             int stored_errno = errno;
             close(file_descriptor);
             errno = stored_errno;
+            return (-1);
+        }
+        if (bytes_read == 0)
+        {
+            int close_result = close(file_descriptor);
+
+            if (close_result < 0)
+            {
+                ft_errno = errno + ERRNO_OFFSET;
+                return (-1);
+            }
+            ft_errno = FT_EIO;
             return (-1);
         }
         offset += static_cast<size_t>(bytes_read);

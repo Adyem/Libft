@@ -267,9 +267,22 @@ int nw_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
     return (accept_platform(sockfd, addr, addrlen));
 }
 
+static t_nw_socket_hook g_nw_socket_hook = socket_platform;
+
+void nw_set_socket_hook(t_nw_socket_hook hook)
+{
+    if (hook != ft_nullptr)
+    {
+        g_nw_socket_hook = hook;
+        return ;
+    }
+    g_nw_socket_hook = socket_platform;
+    return ;
+}
+
 int nw_socket(int domain, int type, int protocol)
 {
-    return (socket_platform(domain, type, protocol));
+    return (g_nw_socket_hook(domain, type, protocol));
 }
 
 int nw_connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)

@@ -193,3 +193,35 @@ FT_TEST(test_get_next_line_map_failure_sets_errno, "get_next_line surfaces hash 
     FT_ASSERT_EQ(UNORD_MAP_MEMORY, ft_errno);
     return (1);
 }
+
+static void    *gnl_fail_leftover_alloc(ft_size_t size)
+{
+    (void)size;
+    ft_errno = FT_EALLOC;
+    return (ft_nullptr);
+}
+
+FT_TEST(test_get_next_line_leftover_alloc_failure_frees_buffer, "get_next_line releases buffered data when leftover allocation fails")
+{
+    ft_istringstream input("one\ntwo\nthree\n");
+    char *line;
+    ft_size_t allocation_before;
+    ft_size_t free_before;
+    ft_size_t allocation_after;
+    ft_size_t free_after;
+
+    gnl_reset_leftover_alloc_hook();
+    line = get_next_line(input, 32);
+    FT_ASSERT(line != ft_nullptr);
+    cma_free(line);
+    cma_get_stats(&allocation_before, &free_before);
+    gnl_set_leftover_alloc_hook(gnl_fail_leftover_alloc);
+    line = get_next_line(input, 32);
+    gnl_reset_leftover_alloc_hook();
+    FT_ASSERT(line == ft_nullptr);
+    FT_ASSERT_EQ(FT_EALLOC, ft_errno);
+    cma_get_stats(&allocation_after, &free_after);
+    FT_ASSERT_EQ(allocation_before + 1, allocation_after);
+    FT_ASSERT_EQ(free_before + 2, free_after);
+    return (1);
+}
