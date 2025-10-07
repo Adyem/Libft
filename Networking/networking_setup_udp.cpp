@@ -15,25 +15,49 @@
 #ifdef _WIN32
 static inline int setsockopt_reuse(int fd, int opt)
 {
-    return (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR,
-                       reinterpret_cast<const char*>(&opt), sizeof(opt)));
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR,
+            reinterpret_cast<const char*>(&opt), sizeof(opt)) == SOCKET_ERROR)
+    {
+        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
+        return (-1);
+    }
+    ft_errno = ER_SUCCESS;
+    return (0);
 }
 
 static inline int set_timeout_recv(int fd, int ms)
 {
-    return (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO,
-                       reinterpret_cast<const char*>(&ms), sizeof(ms)));
+    if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO,
+            reinterpret_cast<const char*>(&ms), sizeof(ms)) == SOCKET_ERROR)
+    {
+        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
+        return (-1);
+    }
+    ft_errno = ER_SUCCESS;
+    return (0);
 }
 
 static inline int set_timeout_send(int fd, int ms)
 {
-    return (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO,
-                       reinterpret_cast<const char*>(&ms), sizeof(ms)));
+    if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO,
+            reinterpret_cast<const char*>(&ms), sizeof(ms)) == SOCKET_ERROR)
+    {
+        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
+        return (-1);
+    }
+    ft_errno = ER_SUCCESS;
+    return (0);
 }
 #else
 static inline int setsockopt_reuse(int fd, int opt)
 {
-    return (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)));
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
+        return (-1);
+    }
+    ft_errno = ER_SUCCESS;
+    return (0);
 }
 
 static inline int set_timeout_recv(int fd, int ms)
@@ -41,7 +65,13 @@ static inline int set_timeout_recv(int fd, int ms)
     struct timeval tv;
     tv.tv_sec = ms / 1000;
     tv.tv_usec = (ms % 1000) * 1000;
-    return (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)));
+    if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
+        return (-1);
+    }
+    ft_errno = ER_SUCCESS;
+    return (0);
 }
 
 static inline int set_timeout_send(int fd, int ms)
@@ -49,7 +79,13 @@ static inline int set_timeout_send(int fd, int ms)
     struct timeval tv;
     tv.tv_sec = ms / 1000;
     tv.tv_usec = (ms % 1000) * 1000;
-    return (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)));
+    if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
+        return (-1);
+    }
+    ft_errno = ER_SUCCESS;
+    return (0);
 }
 #endif
 
@@ -78,7 +114,12 @@ int udp_socket::create_socket(const SocketConfig &config)
     this->_socket_fd = nw_socket(config._address_family, SOCK_DGRAM, config._protocol);
     if (this->_socket_fd < 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        int error_code;
+
+        error_code = ft_errno;
+        if (error_code == ER_SUCCESS)
+            error_code = SOCKET_CREATION_FAILED;
+        this->set_error(error_code);
         return (this->_error_code);
     }
     this->set_error(ER_SUCCESS);
@@ -91,7 +132,12 @@ int udp_socket::set_non_blocking(const SocketConfig &config)
         return (ER_SUCCESS);
     if (nw_set_nonblocking(this->_socket_fd) != 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        int error_code;
+
+        error_code = ft_errno;
+        if (error_code == ER_SUCCESS)
+            error_code = SOCKET_INVALID_CONFIGURATION;
+        this->set_error(error_code);
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
@@ -106,7 +152,12 @@ int udp_socket::set_timeouts(const SocketConfig &config)
     {
         if (set_timeout_recv(this->_socket_fd, config._recv_timeout) < 0)
         {
-            this->set_error(errno + ERRNO_OFFSET);
+            int error_code;
+
+            error_code = ft_errno;
+            if (error_code == ER_SUCCESS)
+                error_code = SOCKET_INVALID_CONFIGURATION;
+            this->set_error(error_code);
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
@@ -116,7 +167,12 @@ int udp_socket::set_timeouts(const SocketConfig &config)
     {
         if (set_timeout_send(this->_socket_fd, config._send_timeout) < 0)
         {
-            this->set_error(errno + ERRNO_OFFSET);
+            int error_code;
+
+            error_code = ft_errno;
+            if (error_code == ER_SUCCESS)
+                error_code = SOCKET_INVALID_CONFIGURATION;
+            this->set_error(error_code);
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
@@ -178,10 +234,15 @@ int udp_socket::bind_socket(const SocketConfig &config)
     else
         addr_len = sizeof(struct sockaddr_in6);
     if (nw_bind(this->_socket_fd,
-                reinterpret_cast<const struct sockaddr*>(&this->_address),
-                addr_len) < 0)
+            reinterpret_cast<const struct sockaddr*>(&this->_address),
+            addr_len) < 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        int error_code;
+
+        error_code = ft_errno;
+        if (error_code == ER_SUCCESS)
+            error_code = SOCKET_BIND_FAILED;
+        this->set_error(error_code);
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
@@ -200,10 +261,15 @@ int udp_socket::connect_socket(const SocketConfig &config)
     else
         addr_len = sizeof(struct sockaddr_in6);
     if (nw_connect(this->_socket_fd,
-                   reinterpret_cast<const struct sockaddr*>(&this->_address),
-                   addr_len) < 0)
+            reinterpret_cast<const struct sockaddr*>(&this->_address),
+            addr_len) < 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        int error_code;
+
+        error_code = ft_errno;
+        if (error_code == ER_SUCCESS)
+            error_code = SOCKET_CONNECT_FAILED;
+        this->set_error(error_code);
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
@@ -227,7 +293,12 @@ int udp_socket::initialize(const SocketConfig &config)
     if (config._reuse_address)
         if (setsockopt_reuse(this->_socket_fd, 1) < 0)
         {
-            this->set_error(errno + ERRNO_OFFSET);
+            int error_code;
+
+            error_code = ft_errno;
+            if (error_code == ER_SUCCESS)
+                error_code = SOCKET_INVALID_CONFIGURATION;
+            this->set_error(error_code);
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
@@ -251,7 +322,14 @@ ssize_t udp_socket::send_to(const void *data, size_t size, int flags,
     ssize_t bytes_sent;
     bytes_sent = nw_sendto(this->_socket_fd, data, size, flags, dest_addr, addr_len);
     if (bytes_sent < 0)
-        this->set_error(errno + ERRNO_OFFSET);
+    {
+        int error_code;
+
+        error_code = ft_errno;
+        if (error_code == ER_SUCCESS)
+            error_code = SOCKET_SEND_FAILED;
+        this->set_error(error_code);
+    }
     else
         this->set_error(ER_SUCCESS);
     return (bytes_sent);
@@ -268,7 +346,14 @@ ssize_t udp_socket::receive_from(void *buffer, size_t size, int flags,
     ssize_t bytes_received;
     bytes_received = nw_recvfrom(this->_socket_fd, buffer, size, flags, src_addr, addr_len);
     if (bytes_received < 0)
-        this->set_error(errno + ERRNO_OFFSET);
+    {
+        int error_code;
+
+        error_code = ft_errno;
+        if (error_code == ER_SUCCESS)
+            error_code = SOCKET_RECEIVE_FAILED;
+        this->set_error(error_code);
+    }
     else
         this->set_error(ER_SUCCESS);
     return (bytes_received);
@@ -284,7 +369,11 @@ bool udp_socket::close_socket()
             this->set_error(ER_SUCCESS);
             return (true);
         }
+#ifdef _WIN32
+        this->set_error(WSAGetLastError() + ERRNO_OFFSET);
+#else
         this->set_error(errno + ERRNO_OFFSET);
+#endif
         return (false);
     }
     this->set_error(ER_SUCCESS);

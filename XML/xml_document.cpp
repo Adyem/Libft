@@ -12,6 +12,19 @@ static const char *skip_whitespace(const char *string)
     return (string);
 }
 
+static int  is_xml_whitespace(char character)
+{
+    if (character == ' ')
+        return (1);
+    if (character == '\n')
+        return (1);
+    if (character == '\t')
+        return (1);
+    if (character == '\r')
+        return (1);
+    return (0);
+}
+
 static char *duplicate_range(const char *start, size_t length)
 {
     char *copy = static_cast<char *>(cma_malloc(length + 1));
@@ -176,8 +189,39 @@ static const char *parse_node(const char *string, xml_node **out_node)
         return (ft_nullptr);
     }
     string += 2;
-    while (*string && *string != '>')
+    string = skip_whitespace(string);
+    const char *closing_name_start = string;
+    while (*string && *string != '>' && !is_xml_whitespace(*string))
         string++;
+    size_t closing_name_length = static_cast<size_t>(string - closing_name_start);
+    size_t opening_name_length = ft_strlen(node->name);
+    if (closing_name_length != opening_name_length)
+    {
+        delete node;
+        ft_errno = FT_EINVAL;
+        return (ft_nullptr);
+    }
+    size_t name_index = 0;
+    while (name_index < closing_name_length)
+    {
+        if (closing_name_start[name_index] != node->name[name_index])
+        {
+            delete node;
+            ft_errno = FT_EINVAL;
+            return (ft_nullptr);
+        }
+        name_index++;
+    }
+    while (*string && *string != '>')
+    {
+        if (!is_xml_whitespace(*string))
+        {
+            delete node;
+            ft_errno = FT_EINVAL;
+            return (ft_nullptr);
+        }
+        string++;
+    }
     if (*string != '>')
     {
         delete node;
