@@ -624,12 +624,20 @@ std::time_t cmp_timegm(std::tm *time_pointer)
         ft_errno = FT_EINVAL;
         return (static_cast<std::time_t>(-1));
     }
+    errno = 0;
 #if defined(_WIN32) || defined(_WIN64)
     conversion_result = _mkgmtime(time_pointer);
 #else
     conversion_result = ::timegm(time_pointer);
 #endif
-    if (conversion_result != static_cast<std::time_t>(-1))
+    if (conversion_result == static_cast<std::time_t>(-1))
+    {
+        if (errno != 0)
+            ft_errno = errno + ERRNO_OFFSET;
+        else
+            ft_errno = ER_SUCCESS;
+    }
+    else
         ft_errno = ER_SUCCESS;
     return (conversion_result);
 }

@@ -121,6 +121,16 @@ FT_TEST(test_file_path_normalize_preserves_trailing_separator, "file_path_normal
     return (1);
 }
 
+FT_TEST(test_file_path_normalize_handles_null_input, "file_path_normalize gracefully handles null input")
+{
+    ft_string normalized;
+
+    normalized = file_path_normalize(ft_nullptr);
+    FT_ASSERT_EQ(ER_SUCCESS, normalized.get_error());
+    FT_ASSERT_EQ(0, ft_strcmp(normalized.c_str(), ""));
+    return (1);
+}
+
 FT_TEST(test_file_path_join_appends_missing_separator, "file_path_join inserts missing separator between components")
 {
     char left_buffer[64];

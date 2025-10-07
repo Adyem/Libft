@@ -67,6 +67,23 @@ FT_TEST(test_html_write_to_string_success_clears_errno, "html_write_to_string cl
     return (1);
 }
 
+FT_TEST(test_html_find_by_selector_allocation_failure_sets_errno, "html_find_by_selector propagates allocation failures")
+{
+    html_node *root = html_create_node("div", ft_nullptr);
+    FT_ASSERT(root != ft_nullptr);
+    html_attr *id_attr = html_create_attr("id", "value");
+    FT_ASSERT(id_attr != ft_nullptr);
+    html_add_attr(root, id_attr);
+    ft_errno = ER_SUCCESS;
+    cma_set_alloc_limit(1);
+    html_node *found = html_find_by_selector(root, "[id=value]");
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(ft_nullptr, found);
+    FT_ASSERT_EQ(FT_EALLOC, ft_errno);
+    html_free_nodes(root);
+    return (1);
+}
+
 int test_html_find_by_attr(void)
 {
     html_node *root = html_create_node("div", ft_nullptr);

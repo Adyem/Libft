@@ -125,6 +125,7 @@ size_t su_fread(void *buffer, size_t size, size_t count, su_file *stream)
     total_size = size * count;
     total_read = 0;
     byte_buffer = static_cast<char*>(buffer);
+    bytes_read = 0;
     while (total_read < total_size)
     {
         bytes_read = su_read(stream->_descriptor,
@@ -133,6 +134,8 @@ size_t su_fread(void *buffer, size_t size, size_t count, su_file *stream)
             break;
         total_read += static_cast<size_t>(bytes_read);
     }
+    if (bytes_read >= 0)
+        ft_errno = ER_SUCCESS;
     return (total_read / size);
 }
 
