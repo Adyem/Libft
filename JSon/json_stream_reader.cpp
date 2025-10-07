@@ -140,6 +140,189 @@ static int json_stream_ensure_capacity(char **buffer, size_t *capacity, size_t m
     return (0);
 }
 
+static int json_stream_hex_value(char character, unsigned int &value) noexcept
+{
+    if (character >= '0' && character <= '9')
+    {
+        value = static_cast<unsigned int>(character - '0');
+        return (0);
+    }
+    if (character >= 'a' && character <= 'f')
+    {
+        value = static_cast<unsigned int>(character - 'a' + 10);
+        return (0);
+    }
+    if (character >= 'A' && character <= 'F')
+    {
+        value = static_cast<unsigned int>(character - 'A' + 10);
+        return (0);
+    }
+    return (-1);
+}
+
+static int json_stream_append_utf8(char **buffer,
+    size_t *capacity,
+    size_t *length,
+    unsigned int code_point) noexcept
+{
+    if (!buffer || !capacity || !length)
+    {
+        ft_errno = FT_EINVAL;
+        return (-1);
+    }
+    if (code_point <= 0x7F)
+    {
+        if (json_stream_ensure_capacity(buffer, capacity, *length + 1) != 0)
+            return (-1);
+        (*buffer)[*length] = static_cast<char>(code_point);
+        *length += 1;
+        return (0);
+    }
+    if (code_point <= 0x7FF)
+    {
+        if (json_stream_ensure_capacity(buffer, capacity, *length + 2) != 0)
+            return (-1);
+        (*buffer)[*length] = static_cast<char>(0xC0 | (code_point >> 6));
+        *length += 1;
+        (*buffer)[*length] = static_cast<char>(0x80 | (code_point & 0x3F));
+        *length += 1;
+        return (0);
+    }
+    if (code_point <= 0xFFFF)
+    {
+        if (json_stream_ensure_capacity(buffer, capacity, *length + 3) != 0)
+            return (-1);
+        (*buffer)[*length] = static_cast<char>(0xE0 | (code_point >> 12));
+        *length += 1;
+        (*buffer)[*length] = static_cast<char>(0x80 | ((code_point >> 6) & 0x3F));
+        *length += 1;
+        (*buffer)[*length] = static_cast<char>(0x80 | (code_point & 0x3F));
+        *length += 1;
+        return (0);
+    }
+    if (code_point <= 0x10FFFF)
+    {
+        if (json_stream_ensure_capacity(buffer, capacity, *length + 4) != 0)
+            return (-1);
+        (*buffer)[*length] = static_cast<char>(0xF0 | (code_point >> 18));
+        *length += 1;
+        (*buffer)[*length] = static_cast<char>(0x80 | ((code_point >> 12) & 0x3F));
+        *length += 1;
+        (*buffer)[*length] = static_cast<char>(0x80 | ((code_point >> 6) & 0x3F));
+        *length += 1;
+        (*buffer)[*length] = static_cast<char>(0x80 | (code_point & 0x3F));
+        *length += 1;
+        return (0);
+    }
+    ft_errno = FT_EINVAL;
+    return (-1);
+}
+
+static int json_stream_parse_code_unit(json_stream_reader *reader, unsigned int &code_unit)
+{
+    code_unit = 0;
+    size_t digit_index = 0;
+    while (digit_index < 4)
+    {
+        char current_char;
+        int status = json_stream_reader_consume(reader, &current_char);
+        if (status != JSON_STREAM_STATUS_OK)
+        {
+            ft_errno = FT_EINVAL;
+            return (-1);
+        }
+        unsigned int digit_value = 0;
+        if (json_stream_hex_value(current_char, digit_value) != 0)
+        {
+            ft_errno = FT_EINVAL;
+            return (-1);
+        }
+        code_unit = (code_unit << 4) | digit_value;
+        digit_index += 1;
+    }
+    return (0);
+}
+
+static int json_stream_append_escape(json_stream_reader *reader,
+    char **buffer,
+    size_t *capacity,
+    size_t *length)
+{
+    char escape_char;
+    int status = json_stream_reader_consume(reader, &escape_char);
+    if (status != JSON_STREAM_STATUS_OK)
+    {
+        ft_errno = FT_EINVAL;
+        return (-1);
+    }
+    if (escape_char == '"' || escape_char == '\\' || escape_char == '/')
+    {
+        if (json_stream_ensure_capacity(buffer, capacity, *length + 1) != 0)
+            return (-1);
+        (*buffer)[*length] = escape_char;
+        *length += 1;
+        return (0);
+    }
+    if (escape_char == 'b')
+        return (json_stream_append_utf8(buffer, capacity, length, '\b'));
+    if (escape_char == 'f')
+        return (json_stream_append_utf8(buffer, capacity, length, '\f'));
+    if (escape_char == 'n')
+        return (json_stream_append_utf8(buffer, capacity, length, '\n'));
+    if (escape_char == 'r')
+        return (json_stream_append_utf8(buffer, capacity, length, '\r'));
+    if (escape_char == 't')
+        return (json_stream_append_utf8(buffer, capacity, length, '\t'));
+    if (escape_char != 'u')
+    {
+        ft_errno = FT_EINVAL;
+        return (-1);
+    }
+    unsigned int code_unit = 0;
+    if (json_stream_parse_code_unit(reader, code_unit) != 0)
+        return (-1);
+    unsigned int code_point = code_unit;
+    if (code_unit >= 0xD800 && code_unit <= 0xDBFF)
+    {
+        char next_char;
+        status = json_stream_reader_peek(reader, &next_char);
+        if (status != JSON_STREAM_STATUS_OK || next_char != '\\')
+        {
+            ft_errno = FT_EINVAL;
+            return (-1);
+        }
+        status = json_stream_reader_consume(reader, &next_char);
+        if (status != JSON_STREAM_STATUS_OK)
+        {
+            ft_errno = FT_EINVAL;
+            return (-1);
+        }
+        status = json_stream_reader_consume(reader, &next_char);
+        if (status != JSON_STREAM_STATUS_OK || next_char != 'u')
+        {
+            ft_errno = FT_EINVAL;
+            return (-1);
+        }
+        unsigned int low_unit = 0;
+        if (json_stream_parse_code_unit(reader, low_unit) != 0)
+            return (-1);
+        if (low_unit < 0xDC00 || low_unit > 0xDFFF)
+        {
+            ft_errno = FT_EINVAL;
+            return (-1);
+        }
+        code_point = 0x10000;
+        code_point = code_point + ((code_unit - 0xD800) << 10);
+        code_point = code_point + (low_unit - 0xDC00);
+    }
+    else if (code_unit >= 0xDC00 && code_unit <= 0xDFFF)
+    {
+        ft_errno = FT_EINVAL;
+        return (-1);
+    }
+    return (json_stream_append_utf8(buffer, capacity, length, code_point));
+}
+
 static char *json_stream_parse_string(json_stream_reader *reader)
 {
     if (json_stream_reader_expect(reader, '"') != 0)
@@ -168,7 +351,22 @@ static char *json_stream_parse_string(json_stream_reader *reader)
             closed = true;
             break;
         }
-        if (json_stream_ensure_capacity(&result, &capacity, length + 2) != 0)
+        if (current_char == '\\')
+        {
+            if (json_stream_append_escape(reader, &result, &capacity, &length) != 0)
+            {
+                cma_free(result);
+                return (ft_nullptr);
+            }
+            continue;
+        }
+        if (static_cast<unsigned char>(current_char) < 0x20)
+        {
+            cma_free(result);
+            ft_errno = FT_EINVAL;
+            return (ft_nullptr);
+        }
+        if (json_stream_ensure_capacity(&result, &capacity, length + 1) != 0)
         {
             cma_free(result);
             return (ft_nullptr);

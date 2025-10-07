@@ -163,6 +163,38 @@ FT_TEST(test_json_stream_reader_respects_allocator_limits, "json stream reader s
     return (1);
 }
 
+FT_TEST(test_json_stream_reader_decodes_escaped_strings, "json stream reader decodes escaped and unicode sequences")
+{
+    std::string json_text = "{ \"config\": { \"value\": \"";
+    json_text.append("Line\\nBreak \\\"Quote\\\" Backslash\\\\ Unicode ");
+    json_text.append("\\u263A ");
+    json_text.append("\\uD834\\uDD1E");
+    json_text.append("\" } }");
+    const char *chunk_data[1];
+    size_t chunk_sizes[1];
+    chunk_data[0] = json_text.c_str();
+    chunk_sizes[0] = json_text.size();
+    json_stream_test_state state = { chunk_data, chunk_sizes, 1, 0, 0 };
+    ft_errno = FT_EINVAL;
+    json_group *groups = json_read_from_stream(test_chunk_callback, &state, 5);
+    FT_ASSERT(groups != ft_nullptr);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    json_group *group = json_find_group(groups, "config");
+    FT_ASSERT(group != ft_nullptr);
+    json_item *item = json_find_item(group, "value");
+    FT_ASSERT(item != ft_nullptr);
+    FT_ASSERT(item->value != ft_nullptr);
+    std::string expected = "Line";
+    expected.push_back('\n');
+    expected.append("Break \"Quote\" Backslash\\ Unicode ");
+    expected.append("\xE2\x98\xBA ");
+    expected.append("\xF0\x9D\x84\x9E");
+    std::string actual = item->value;
+    FT_ASSERT_EQ(expected, actual);
+    json_free_groups(groups);
+    return (1);
+}
+
 FT_TEST(test_json_document_streaming_loads_file, "json document supports streaming loads from files")
 {
     const char *file_path = "Test/tmp_json_stream_reader.json";

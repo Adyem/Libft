@@ -93,18 +93,24 @@ html_node *html_find_by_selector(html_node *node_list, const char *selector)
         if (equal_sign && equal_sign < close_bracket)
         {
             key = cma_substr(selector + 1, 0, static_cast<size_t>(equal_sign - selector - 1));
+            if (!key)
+                return (ft_nullptr);
             value = cma_substr(equal_sign + 1, 0, static_cast<size_t>(close_bracket - equal_sign - 1));
-            result = html_find_by_attr(node_list, key, value);
-            if (key)
+            if (!value)
+            {
                 cma_free(key);
-            if (value)
-                cma_free(value);
+                return (ft_nullptr);
+            }
+            result = html_find_by_attr(node_list, key, value);
+            cma_free(key);
+            cma_free(value);
             return (result);
         }
         key = cma_substr(selector + 1, 0, static_cast<size_t>(close_bracket - selector - 1));
+        if (!key)
+            return (ft_nullptr);
         result = html_find_by_attr(node_list, key, ft_nullptr);
-        if (key)
-            cma_free(key);
+        cma_free(key);
         return (result);
     }
     return (html_find_by_tag(node_list, selector));

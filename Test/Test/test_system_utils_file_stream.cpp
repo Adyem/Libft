@@ -154,6 +154,32 @@ FT_TEST(test_su_fread_overflow_sets_ft_erange, "su_fread rejects overflowing siz
     return (1);
 }
 
+FT_TEST(test_su_fread_success_clears_errno, "su_fread clears ft_errno after successful read")
+{
+    su_file *file_stream;
+    char buffer[5];
+    size_t read_count;
+
+    create_test_file_stream_file();
+    file_stream = su_fopen("test_su_file_stream.txt");
+    if (file_stream == ft_nullptr)
+        return (0);
+    ft_errno = FT_EINVAL;
+    read_count = su_fread(buffer, 1, 4, file_stream);
+    if (read_count > 4)
+        read_count = 4;
+    buffer[read_count] = '\0';
+    FT_ASSERT_EQ(static_cast<size_t>(4), read_count);
+    FT_ASSERT_EQ('d', buffer[0]);
+    FT_ASSERT_EQ('a', buffer[1]);
+    FT_ASSERT_EQ('t', buffer[2]);
+    FT_ASSERT_EQ('a', buffer[3]);
+    FT_ASSERT_EQ('\0', buffer[4]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(0, su_fclose(file_stream));
+    return (1);
+}
+
 FT_TEST(test_su_fwrite_null_buffer_sets_ft_einval, "su_fwrite rejects null buffer")
 {
     su_file *file_stream;
