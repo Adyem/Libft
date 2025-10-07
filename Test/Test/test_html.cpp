@@ -84,6 +84,25 @@ FT_TEST(test_html_find_by_selector_allocation_failure_sets_errno, "html_find_by_
     return (1);
 }
 
+FT_TEST(test_html_find_by_selector_quoted_attribute_values,
+        "html_find_by_selector matches attribute selectors with quoted values")
+{
+    html_node *root = html_create_node("div", ft_nullptr);
+    FT_ASSERT(root != ft_nullptr);
+    html_node *child = html_create_node("p", ft_nullptr);
+    FT_ASSERT(child != ft_nullptr);
+    html_attr *attr = html_create_attr("data-id", "42");
+    FT_ASSERT(attr != ft_nullptr);
+    html_add_attr(child, attr);
+    html_add_child(root, child);
+    html_node *found_double = html_find_by_selector(root, "[data-id=\"42\"]");
+    FT_ASSERT(found_double == child);
+    html_node *found_single = html_find_by_selector(root, "[data-id='42']");
+    FT_ASSERT(found_single == child);
+    html_free_nodes(root);
+    return (1);
+}
+
 int test_html_find_by_attr(void)
 {
     html_node *root = html_create_node("div", ft_nullptr);
