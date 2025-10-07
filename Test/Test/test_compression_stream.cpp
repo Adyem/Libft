@@ -36,6 +36,13 @@ static int compression_stream_fail_inflate(z_stream *stream, int flush_mode)
     return (Z_DATA_ERROR);
 }
 
+static int compression_stream_stream_error_inflate(z_stream *stream, int flush_mode)
+{
+    (void)stream;
+    (void)flush_mode;
+    return (Z_STREAM_ERROR);
+}
+
 FT_TEST(test_ft_compress_stream_rejects_invalid_descriptors, "ft_compress_stream rejects invalid descriptors")
 {
     int result;
@@ -222,6 +229,43 @@ FT_TEST(test_ft_decompress_stream_reports_inflate_failure, "ft_decompress_stream
     FT_ASSERT_EQ(0, pipe(output_pipe));
     close(input_pipe[1]);
     ft_decompress_stream_set_inflate_hook(compression_stream_fail_inflate);
+    ft_errno = ER_SUCCESS;
+    result = ft_decompress_stream(input_pipe[0], output_pipe[1]);
+    ft_decompress_stream_set_inflate_hook(ft_nullptr);
+    close(input_pipe[0]);
+    close(output_pipe[0]);
+    close(output_pipe[1]);
+    FT_ASSERT_EQ(1, result);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_ft_decompress_stream_reports_stream_errors, "ft_decompress_stream reports stream errors")
+{
+    int input_pipe[2];
+    int output_pipe[2];
+    const unsigned char *payload;
+    unsigned char *compressed_buffer;
+    std::size_t compressed_size;
+    ssize_t payload_written;
+    int result;
+
+    payload = reinterpret_cast<const unsigned char *>("stream error");
+    compressed_size = 0;
+    compressed_buffer = ft_compress(payload, ft_strlen_size_t("stream error"), &compressed_size);
+    FT_ASSERT(compressed_buffer != ft_nullptr);
+    FT_ASSERT(compressed_size > 0);
+    FT_ASSERT_EQ(0, pipe(input_pipe));
+    FT_ASSERT_EQ(0, pipe(output_pipe));
+    FT_ASSERT(compressed_size > sizeof(uint32_t));
+    payload_written = su_write(input_pipe[1],
+            compressed_buffer + sizeof(uint32_t),
+            compressed_size - sizeof(uint32_t));
+    FT_ASSERT_EQ(static_cast<ssize_t>(compressed_size - sizeof(uint32_t)),
+        payload_written);
+    close(input_pipe[1]);
+    cma_free(compressed_buffer);
+    ft_decompress_stream_set_inflate_hook(compression_stream_stream_error_inflate);
     ft_errno = ER_SUCCESS;
     result = ft_decompress_stream(input_pipe[0], output_pipe[1]);
     ft_decompress_stream_set_inflate_hook(ft_nullptr);

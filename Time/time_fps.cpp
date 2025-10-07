@@ -43,7 +43,7 @@ int     time_fps::set_frames_per_second(long frames_per_second)
         this->_frame_duration_ms = 0.0;
         this->_last_frame_time = std::chrono::steady_clock::now();
         this->set_error(FT_EINVAL);
-        return (1);
+        return (-1);
     }
     this->_frames_per_second = frames_per_second;
     this->_frame_duration_ms = 1000.0 / static_cast<double>(frames_per_second);
