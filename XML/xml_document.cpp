@@ -143,6 +143,14 @@ static const char *parse_node(const char *string, xml_node **out_node)
                 return (ft_nullptr);
             }
             node->children.push_back(child);
+            int children_error_code = node->children.get_error();
+            if (children_error_code != ER_SUCCESS)
+            {
+                delete child;
+                delete node;
+                ft_errno = translate_vector_error(children_error_code);
+                return (ft_nullptr);
+            }
             string = skip_whitespace(string);
             if (*string == '<' && string[1] == '/')
                 break;

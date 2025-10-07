@@ -118,12 +118,12 @@ void yaml_trim(ft_string &string) noexcept
     return ;
 }
 
-void yaml_split_lines(const ft_string &content, ft_vector<ft_string> &lines) noexcept
+int yaml_split_lines(const ft_string &content, ft_vector<ft_string> &lines) noexcept
 {
     if (content.get_error() != ER_SUCCESS)
     {
         ft_errno = content.get_error();
-        return ;
+        return (content.get_error());
     }
     const char *data = content.c_str();
     size_t start_index = 0;
@@ -135,16 +135,19 @@ void yaml_split_lines(const ft_string &content, ft_vector<ft_string> &lines) noe
             end_index++;
         ft_string part = yaml_substr(content, start_index, end_index - start_index);
         if (part.get_error() != ER_SUCCESS)
-            return ;
+        {
+            ft_errno = part.get_error();
+            return (part.get_error());
+        }
         lines.push_back(part);
         if (lines.get_error() != ER_SUCCESS)
         {
             ft_errno = lines.get_error();
-            return ;
+            return (lines.get_error());
         }
         start_index = end_index + 1;
     }
     ft_errno = ER_SUCCESS;
-    return ;
+    return (ER_SUCCESS);
 }
 
