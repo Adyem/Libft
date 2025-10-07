@@ -15,7 +15,7 @@ static int    math_roll_check_arg(char *string)
             i++;
         else if (string[i] == '/' || string[i] == '*')
             i++;
-        else if (string[i] >= '0' || string[i] <= '9')
+        else if (string[i] >= '0' && string[i] <= '9')
         {
             check++;
             i++;
