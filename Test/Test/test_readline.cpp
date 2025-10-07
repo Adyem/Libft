@@ -223,3 +223,49 @@ FT_TEST(test_readline_printable_char_preserves_buffer_on_resize_failure, "rl_han
     return (1);
 }
 
+FT_TEST(test_readline_tab_completion_rejects_long_prefix, "rl_handle_tab_completion refuses overly long prefixes")
+{
+    readline_state_t state;
+    char *buffer;
+    int index;
+    int result;
+    int buffer_length;
+
+    buffer_length = INITIAL_BUFFER_SIZE + 8;
+    buffer = static_cast<char *>(cma_malloc(buffer_length + 1));
+    if (buffer == ft_nullptr)
+        return (0);
+    index = 0;
+    while (index < buffer_length)
+    {
+        buffer[index] = 'a';
+        index++;
+    }
+    buffer[buffer_length] = '\0';
+    state.buffer = buffer;
+    state.bufsize = buffer_length + 1;
+    state.pos = buffer_length;
+    state.prev_buffer_length = buffer_length;
+    state.history_index = 0;
+    state.in_completion_mode = 0;
+    state.current_match_count = 0;
+    state.current_match_index = 0;
+    state.word_start = 0;
+    index = 0;
+    while (index < MAX_SUGGESTIONS)
+    {
+        state.current_matches[index] = ft_nullptr;
+        index++;
+    }
+    suggestion_count = 0;
+    ft_errno = ER_SUCCESS;
+    result = rl_handle_tab_completion(&state, "> ");
+    FT_ASSERT_EQ(-1, result);
+    FT_ASSERT_EQ(FT_ERANGE, ft_errno);
+    FT_ASSERT_EQ(0, state.in_completion_mode);
+    FT_ASSERT_EQ(buffer_length, state.pos);
+    FT_ASSERT_EQ(0, std::strcmp(buffer, state.buffer));
+    cma_free(buffer);
+    return (1);
+}
+

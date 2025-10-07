@@ -1,6 +1,7 @@
 #include "../../Math/math.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
+#include <limits>
 
 FT_TEST(test_math_sqrt_clears_errno, "math_sqrt clears errno on success")
 {
@@ -43,5 +44,18 @@ FT_TEST(test_math_sqrt_negative_returns_nan, "math_sqrt returns nan for negative
     result = math_sqrt(-4.0);
     FT_ASSERT(math_isnan(result));
     FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_math_sqrt_positive_infinity, "math_sqrt returns infinity for positive infinity input")
+{
+    double input;
+    double result;
+
+    input = std::numeric_limits<double>::infinity();
+    ft_errno = FT_EINVAL;
+    result = math_sqrt(input);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(input, result);
     return (1);
 }

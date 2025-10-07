@@ -3,6 +3,7 @@
 #include "../../Libft/libft.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+#include <cerrno>
 
 FT_TEST(test_yaml_round_trip, "yaml round trip")
 {
@@ -40,5 +41,19 @@ FT_TEST(test_yaml_round_trip, "yaml round trip")
     FT_ASSERT_EQ(ER_SUCCESS, round_trip.get_error());
     FT_ASSERT_EQ(0, ft_strcmp(yaml_string.c_str(), round_trip.c_str()));
     yaml_free(parsed);
+    return (1);
+}
+
+FT_TEST(test_yaml_write_to_file_reports_write_failure, "yaml_write_to_file reports write failure")
+{
+    yaml_value scalar;
+
+    scalar.set_scalar("content");
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(-1, yaml_write_to_file("/dev/full", &scalar));
+    FT_ASSERT(ft_errno != ER_SUCCESS);
+#if defined(__linux__) || defined(__APPLE__)
+    FT_ASSERT_EQ(ENOSPC + ERRNO_OFFSET, ft_errno);
+#endif
     return (1);
 }

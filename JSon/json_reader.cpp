@@ -306,19 +306,41 @@ static char *parse_number(const char *json_string, size_t &index)
     }
     if (index < length && json_string[index] == '.')
     {
+        size_t fractional_count;
+
         index++;
+        fractional_count = 0;
         while (index < length
             && ft_isdigit(static_cast<unsigned char>(json_string[index])))
+        {
             index++;
+            fractional_count++;
+        }
+        if (fractional_count == 0)
+        {
+            ft_errno = FT_EINVAL;
+            return (ft_nullptr);
+        }
     }
     if (index < length && (json_string[index] == 'e' || json_string[index] == 'E'))
     {
+        size_t exponent_count;
+
         index++;
         if (index < length && (json_string[index] == '-' || json_string[index] == '+'))
             index++;
+        exponent_count = 0;
         while (index < length
             && ft_isdigit(static_cast<unsigned char>(json_string[index])))
+        {
             index++;
+            exponent_count++;
+        }
+        if (exponent_count == 0)
+        {
+            ft_errno = FT_EINVAL;
+            return (ft_nullptr);
+        }
     }
     if (!has_digits)
     {

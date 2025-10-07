@@ -43,6 +43,7 @@ static char* allocate_new_string(char* string_one, char* string_two)
 }
 
 static void    *(*g_gnl_leftover_alloc_hook)(ft_size_t size) = cma_malloc;
+static int      g_gnl_last_leftover_error = ER_SUCCESS;
 
 void    gnl_set_leftover_alloc_hook(void *(*hook)(ft_size_t size))
 {
@@ -50,12 +51,14 @@ void    gnl_set_leftover_alloc_hook(void *(*hook)(ft_size_t size))
         g_gnl_leftover_alloc_hook = hook;
     else
         g_gnl_leftover_alloc_hook = cma_malloc;
+    g_gnl_last_leftover_error = ER_SUCCESS;
     return ;
 }
 
 void    gnl_reset_leftover_alloc_hook(void)
 {
     g_gnl_leftover_alloc_hook = cma_malloc;
+    g_gnl_last_leftover_error = ER_SUCCESS;
     return ;
 }
 
@@ -91,6 +94,7 @@ static char* leftovers(char* readed_string)
     int write_index = 0;
     char* string;
 
+    g_gnl_last_leftover_error = ER_SUCCESS;
     while (readed_string[read_index] && readed_string[read_index] != '\n')
         read_index++;
     if (!readed_string[read_index])
@@ -103,6 +107,7 @@ static char* leftovers(char* readed_string)
     if (!string)
     {
         ft_errno = FT_EALLOC;
+        g_gnl_last_leftover_error = FT_EALLOC;
         cma_free(readed_string);
         return (ft_nullptr);
     }
@@ -166,6 +171,10 @@ static char* read_stream(ft_istream &input, char* readed_string, std::size_t buf
     std::size_t readed_bytes;
     bool has_read_bytes;
 
+    if (readed_string && ft_strchr(readed_string, '\n'))
+    {
+        return (readed_string);
+    }
     buffer = static_cast<char*>(cma_malloc(buffer_size + 1));
     if (!buffer)
     {
@@ -247,7 +256,21 @@ char    *get_next_line(ft_istream &input, std::size_t buffer_size)
     string = fetch_line(stored_string);
     int line_error = ft_errno;
     stored_string = leftovers(stored_string);
-    int leftovers_error = ft_errno;
+    int leftovers_error = g_gnl_last_leftover_error;
+    if (leftovers_error != ER_SUCCESS)
+    {
+        map_error_before = readed_map.get_error();
+        readed_map.remove(&input);
+        if (map_has_new_error(readed_map, map_error_before, &map_error_after))
+        {
+            ft_errno = map_error_after;
+            cma_free(string);
+            return (ft_nullptr);
+        }
+        cma_free(string);
+        ft_errno = leftovers_error;
+        return (ft_nullptr);
+    }
     if (!string)
     {
         if (stored_string)
@@ -283,12 +306,6 @@ char    *get_next_line(ft_istream &input, std::size_t buffer_size)
         {
             ft_errno = map_error_after;
             cma_free(string);
-            return (ft_nullptr);
-        }
-        if (leftovers_error != ER_SUCCESS)
-        {
-            cma_free(string);
-            ft_errno = leftovers_error;
             return (ft_nullptr);
         }
     }

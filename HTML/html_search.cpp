@@ -3,6 +3,33 @@
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
 
+static int normalize_selector_value(char *value_string)
+{
+    size_t value_length;
+    char opening_character;
+    char closing_character;
+
+    if (!value_string)
+        return (0);
+    value_length = ft_strlen_size_t(value_string);
+    if (ft_errno != ER_SUCCESS)
+    {
+        ft_errno = FT_ERANGE;
+        return (-1);
+    }
+    if (value_length < 2)
+        return (0);
+    opening_character = value_string[0];
+    closing_character = value_string[value_length - 1];
+    if ((opening_character == '"' && closing_character == '"')
+        || (opening_character == '\'' && closing_character == '\''))
+    {
+        ft_memmove(value_string, value_string + 1, value_length - 1);
+        value_string[value_length - 2] = '\0';
+    }
+    return (0);
+}
+
 html_node *html_find_by_tag(html_node *nodeList, const char *tagName)
 {
     html_node *currentNode = nodeList;
@@ -99,6 +126,12 @@ html_node *html_find_by_selector(html_node *node_list, const char *selector)
             if (!value)
             {
                 cma_free(key);
+                return (ft_nullptr);
+            }
+            if (normalize_selector_value(value) != 0)
+            {
+                cma_free(key);
+                cma_free(value);
                 return (ft_nullptr);
             }
             result = html_find_by_attr(node_list, key, value);
