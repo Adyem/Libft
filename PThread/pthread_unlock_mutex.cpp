@@ -14,6 +14,8 @@ static void pt_mutex_report_wake_failure(int wake_error)
     char digit_buffer[16];
     size_t digit_index;
     size_t message_index;
+    size_t write_operation_index;
+    ssize_t write_operation_result;
 
     prefix_string = "pt_mutex::unlock wake failure: ";
     prefix_index = 0;
@@ -60,7 +62,16 @@ static void pt_mutex_report_wake_failure(int wake_error)
         message_buffer[message_index] = '\n';
         message_index += 1;
     }
-    write(2, message_buffer, message_index);
+    write_operation_index = 0;
+    while (write_operation_index < message_index)
+    {
+        write_operation_result = write(2, message_buffer + write_operation_index, message_index - write_operation_index);
+        if (write_operation_result <= 0)
+        {
+            break;
+        }
+        write_operation_index += static_cast<size_t>(write_operation_result);
+    }
     return ;
 }
 
