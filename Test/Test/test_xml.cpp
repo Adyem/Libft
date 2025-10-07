@@ -24,3 +24,19 @@ int test_xml_parse_simple(void)
     return (ok && ok2);
 }
 
+int test_xml_propagates_child_allocation_failure(void)
+{
+    const char *xml = "<root><a/><b/><c/></root>";
+    xml_document doc;
+    cma_set_alloc_limit(16);
+    int load_result = doc.load_from_string(xml);
+    cma_set_alloc_limit(0);
+    if (load_result != FT_EALLOC)
+        return (0);
+    if (doc.get_root() != ft_nullptr)
+        return (0);
+    if (doc.get_error() != FT_EALLOC)
+        return (0);
+    return (1);
+}
+

@@ -20,7 +20,7 @@ int networking_check_socket_after_send(int socket_fd)
     if (socket_fd < 0)
     {
         ft_errno = FT_EINVAL;
-        return (0);
+        return (-1);
     }
     attempt_limit = 3;
     attempt_count = 0;

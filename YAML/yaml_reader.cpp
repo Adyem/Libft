@@ -227,7 +227,12 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
     }
     scalar_value->set_scalar(line);
     if (scalar_value->get_error() != ER_SUCCESS)
-        return (scalar_value);
+    {
+        error_code = scalar_value->get_error();
+        delete scalar_value;
+        scalar_value = ft_nullptr;
+        goto error;
+    }
     index++;
     result = scalar_value;
     scalar_value = ft_nullptr;
@@ -268,12 +273,9 @@ yaml_value *yaml_read_from_string(const ft_string &content) noexcept
     int parse_error = ER_SUCCESS;
     {
         ft_vector<ft_string> lines;
-        yaml_split_lines(content, lines);
-        if (lines.get_error() != ER_SUCCESS)
-        {
-            ft_errno = lines.get_error();
+        int split_error = yaml_split_lines(content, lines);
+        if (split_error != ER_SUCCESS)
             return (ft_nullptr);
-        }
         size_t local_index = 0;
         root = parse_value(lines, local_index, 0);
         parse_error = ft_errno;

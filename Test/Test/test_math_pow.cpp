@@ -1,6 +1,8 @@
 #include "../../Math/math.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
+#include <climits>
+#include <cfloat>
 
 FT_TEST(test_math_pow_positive_exponent, "math_pow handles positive exponents and clears errno")
 {
@@ -43,5 +45,16 @@ FT_TEST(test_math_pow_zero_base_negative_exponent_sets_errno, "math_pow rejects 
     result = math_pow(0.0, -1);
     FT_ASSERT(math_isnan(result));
     FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_math_pow_handles_int_min_exponent, "math_pow handles the smallest integer exponent")
+{
+    double result;
+
+    ft_errno = FT_EINVAL;
+    result = math_pow(2.0, INT_MIN);
+    FT_ASSERT(result < DBL_MIN);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }

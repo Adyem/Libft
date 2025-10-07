@@ -523,7 +523,7 @@ FT_TEST(test_networking_check_socket_after_send_handles_invalid_descriptor, "net
 
     ft_errno = ER_SUCCESS;
     check_result = networking_check_socket_after_send(-1);
-    if (check_result != 0)
+    if (check_result != -1)
         return (0);
     if (ft_errno != FT_EINVAL)
         return (0);
