@@ -57,6 +57,22 @@ FT_TEST(test_rng_secure_bytes_read_failure_propagates_errno, "rng_secure_bytes p
     return (1);
 }
 
+FT_TEST(test_rng_secure_bytes_detects_unexpected_eof, "rng_secure_bytes treats unexpected EOF as an error")
+{
+    unsigned char buffer[4];
+
+    cmp_clear_force_rng_failures();
+    ft_errno = ER_SUCCESS;
+    cmp_force_rng_read_eof();
+    int result = rng_secure_bytes(buffer, 4);
+    cmp_clear_force_rng_failures();
+    if (result != -1)
+        return (0);
+    if (ft_errno != FT_EIO)
+        return (0);
+    return (1);
+}
+
 FT_TEST(test_rng_secure_bytes_close_failure_propagates_errno, "rng_secure_bytes propagates close failures")
 {
     unsigned char buffer[4];
