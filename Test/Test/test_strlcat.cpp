@@ -47,6 +47,14 @@ FT_TEST(test_strlcat_zero_size, "ft_strlcat zero size")
     return (1);
 }
 
+FT_TEST(test_strlcat_zero_size_null_destination, "ft_strlcat zero size allows null destination")
+{
+    ft_errno = FT_EINVAL;
+    FT_ASSERT_EQ(5u, ft_strlcat(ft_nullptr, "hello", 0));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_strlcat_insufficient_dest, "ft_strlcat size less than dest length")
 {
     char destination[6];

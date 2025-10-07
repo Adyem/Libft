@@ -50,6 +50,15 @@ FT_TEST(test_pf_snprintf_null_string, "pf_snprintf returns error for null string
     return (1);
 }
 
+FT_TEST(test_pf_snprintf_null_string_zero_size, "pf_snprintf accepts null buffer when size is zero")
+{
+    ft_errno = FT_EINVAL;
+    int result = pf_snprintf(static_cast<char *>(ft_nullptr), 0, "%s", "noop");
+    FT_ASSERT_EQ(4, result);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_pf_snprintf_null_format, "pf_snprintf returns error for null format")
 {
     char buffer[8];
@@ -75,6 +84,15 @@ FT_TEST(test_pf_vsnprintf_null_format, "pf_vsnprintf returns error for null form
     int result = pf_vsnprintf_wrapper(buffer, sizeof(buffer), static_cast<const char *>(ft_nullptr));
     FT_ASSERT_EQ(-1, result);
     FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_pf_vsnprintf_null_string_zero_size, "pf_vsnprintf accepts null buffer when size is zero")
+{
+    ft_errno = FT_EINVAL;
+    int result = pf_vsnprintf_wrapper(static_cast<char *>(ft_nullptr), 0, "%s", "noop");
+    FT_ASSERT_EQ(4, result);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 

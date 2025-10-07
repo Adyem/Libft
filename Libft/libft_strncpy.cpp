@@ -7,6 +7,8 @@ char *ft_strncpy(char *destination, const char *source, size_t number_of_charact
     size_t index;
 
     ft_errno = ER_SUCCESS;
+    if (number_of_characters == 0)
+        return (destination);
     if (destination == ft_nullptr || source == ft_nullptr)
     {
         ft_errno = FT_EINVAL;

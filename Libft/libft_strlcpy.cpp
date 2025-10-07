@@ -2,31 +2,40 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 
-size_t    ft_strlcpy(char *destination, const char *source, size_t bufferSize)
+size_t ft_strlcpy(char *destination, const char *source, size_t buffer_size)
 {
-    size_t    sourceLength;
+    size_t source_length;
 
     ft_errno = ER_SUCCESS;
-    if (destination == ft_nullptr || source == ft_nullptr)
+    if (source == ft_nullptr)
     {
         ft_errno = FT_EINVAL;
         return (0);
     }
-    sourceLength = 0;
-    if (bufferSize == 0)
+    source_length = 0;
+    if (buffer_size == 0)
     {
-        while (source[sourceLength] != '\0')
-            sourceLength++;
-        return (sourceLength);
+        while (source[source_length] != '\0')
+        {
+            source_length++;
+        }
+        return (source_length);
     }
-    while (sourceLength < bufferSize - 1 && source[sourceLength] != '\0')
+    if (destination == ft_nullptr)
     {
-        destination[sourceLength] = source[sourceLength];
-        sourceLength++;
+        ft_errno = FT_EINVAL;
+        return (0);
     }
-    if (sourceLength < bufferSize)
-        destination[sourceLength] = '\0';
-    while (source[sourceLength] != '\0')
-        sourceLength++;
-    return (sourceLength);
+    while (source_length < buffer_size - 1 && source[source_length] != '\0')
+    {
+        destination[source_length] = source[source_length];
+        source_length++;
+    }
+    if (source_length < buffer_size)
+        destination[source_length] = '\0';
+    while (source[source_length] != '\0')
+    {
+        source_length++;
+    }
+    return (source_length);
 }

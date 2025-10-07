@@ -60,7 +60,7 @@ void pf_reset_ftell_function(void)
 
 int pf_vsnprintf(char *string, size_t size, const char *format, va_list args)
 {
-    if (string == ft_nullptr || format == ft_nullptr)
+    if (format == ft_nullptr || (string == ft_nullptr && size > 0))
     {
         ft_errno = FT_EINVAL;
         return (-1);
@@ -69,7 +69,7 @@ int pf_vsnprintf(char *string, size_t size, const char *format, va_list args)
     if (stream == ft_nullptr)
     {
         ft_errno = FT_EALLOC;
-        if (size > 0)
+        if (string != ft_nullptr && size > 0)
             string[0] = '\0';
         return (-1);
     }
@@ -79,7 +79,7 @@ int pf_vsnprintf(char *string, size_t size, const char *format, va_list args)
     va_end(copy);
     if (printed < 0)
     {
-        if (size > 0)
+        if (string != ft_nullptr && size > 0)
             string[0] = '\0';
         fclose(stream);
         return (printed);
@@ -90,7 +90,7 @@ int pf_vsnprintf(char *string, size_t size, const char *format, va_list args)
         int saved_errno = errno;
         ft_errno = saved_errno + ERRNO_OFFSET;
         fclose(stream);
-        if (size > 0)
+        if (string != ft_nullptr && size > 0)
             string[0] = '\0';
         return (-1);
     }
@@ -100,12 +100,12 @@ int pf_vsnprintf(char *string, size_t size, const char *format, va_list args)
         int saved_errno = errno;
         ft_errno = saved_errno + ERRNO_OFFSET;
         fclose(stream);
-        if (size > 0)
+        if (string != ft_nullptr && size > 0)
             string[0] = '\0';
         return (-1);
     }
     rewind(stream);
-    if (size > 0)
+    if (string != ft_nullptr && size > 0)
     {
         size_t copy_length = static_cast<size_t>(position);
         if (copy_length >= size)
