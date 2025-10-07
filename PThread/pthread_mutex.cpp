@@ -13,7 +13,7 @@ pt_mutex::~pt_mutex()
     return ;
 }
 
-void    pt_mutex::set_error(int error)
+void    pt_mutex::set_error(int error) const
 {
     this->_error = error;
     ft_errno = error;
