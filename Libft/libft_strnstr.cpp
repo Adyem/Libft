@@ -2,15 +2,27 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 
-char *ft_strnstr(const char *haystack, const char *needle, size_t max_length)
+char    *ft_strnstr(const char *haystack, const char *needle, size_t max_length)
 {
-    size_t haystack_index;
-    size_t match_index;
-    char *haystack_pointer;
-    size_t needle_length;
+    size_t  haystack_index;
+    size_t  match_index;
+    char    *haystack_pointer;
+    size_t  needle_length;
 
     ft_errno = ER_SUCCESS;
-    if (haystack == ft_nullptr || needle == ft_nullptr)
+    if (needle == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
+        return (ft_nullptr);
+    }
+    if (max_length == 0)
+    {
+        ft_errno = ER_SUCCESS;
+        if (needle[0] == '\0')
+            return (const_cast<char *>(haystack));
+        return (ft_nullptr);
+    }
+    if (haystack == ft_nullptr)
     {
         ft_errno = FT_EINVAL;
         return (ft_nullptr);

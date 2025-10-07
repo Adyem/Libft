@@ -268,13 +268,10 @@ static void api_request_stream_large_response_server(void)
             chunk_size = remaining;
         bytes_sent = nw_send(client_fd, body_buffer + total_sent,
                 chunk_size, 0);
-        printf("server sent=%zd total=%zu remaining=%zu\n",
-            bytes_sent, total_sent, remaining);
         if (bytes_sent <= 0)
             break ;
         total_sent += static_cast<size_t>(bytes_sent);
     }
-    printf("server completed total=%zu\n", total_sent);
     cma_free(body_buffer);
     FT_CLOSE_SOCKET(client_fd);
     return ;

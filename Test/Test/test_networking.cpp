@@ -3,6 +3,7 @@
 #include "../../Networking/udp_socket.hpp"
 #include "../../Networking/http_client.hpp"
 #include "../../Libft/libft.hpp"
+#include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../PThread/thread.hpp"
@@ -562,6 +563,50 @@ FT_TEST(test_networking_check_socket_after_send_reports_success, "networking_che
     client_socket.close_socket();
     server_socket.close_socket();
     if (check_result != 0)
+        return (0);
+    if (ft_errno != ER_SUCCESS)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_nw_inet_pton_null_arguments_sets_einval, "nw_inet_pton null arguments set FT_EINVAL")
+{
+    struct in_addr address;
+    int result;
+
+    result = nw_inet_pton(AF_INET, ft_nullptr, &address);
+    if (result != -1)
+        return (0);
+    if (ft_errno != FT_EINVAL)
+        return (0);
+    result = nw_inet_pton(AF_INET, "127.0.0.1", ft_nullptr);
+    if (result != -1)
+        return (0);
+    if (ft_errno != FT_EINVAL)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_nw_inet_pton_invalid_address_sets_einval, "nw_inet_pton invalid address sets FT_EINVAL")
+{
+    struct in_addr address;
+    int result;
+
+    ft_errno = ER_SUCCESS;
+    result = nw_inet_pton(AF_INET, "not-an-ip", &address);
+    if (result != 0)
+        return (0);
+    if (ft_errno != FT_EINVAL)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_nw_inet_pton_success_clears_errno, "nw_inet_pton success clears errno")
+{
+    struct in_addr address;
+
+    ft_errno = FT_EINVAL;
+    if (nw_inet_pton(AF_INET, "127.0.0.1", &address) != 1)
         return (0);
     if (ft_errno != ER_SUCCESS)
         return (0);
