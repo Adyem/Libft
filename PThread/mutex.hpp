@@ -3,17 +3,18 @@
 
 #include <pthread.h>
 #include <atomic>
+#include <cstdint>
 
 class pt_mutex
 {
     private:
-        std::atomic<uint32_t>     _next;
-        std::atomic<uint32_t>     _serving;
-        std::atomic<pthread_t>    _owner;
-        volatile bool           _lock;
-        int                     _error;
+        mutable std::atomic<uint32_t>     _next;
+        mutable std::atomic<uint32_t>     _serving;
+        mutable std::atomic<pthread_t>    _owner;
+        mutable volatile bool             _lock;
+        mutable int                       _error;
 
-        void    set_error(int error);
+        void    set_error(int error) const;
 
         pt_mutex(const pt_mutex&) = delete;
         pt_mutex& operator=(const pt_mutex&) = delete;
@@ -26,9 +27,9 @@ class pt_mutex
 
         const volatile bool &lockState() const;
 
-        int     lock(pthread_t thread_id);
-        int     unlock(pthread_t thread_id);
-        int     try_lock(pthread_t thread_id);
+        int     lock(pthread_t thread_id) const;
+        int     unlock(pthread_t thread_id) const;
+        int     try_lock(pthread_t thread_id) const;
 
         int     get_error() const;
         const char *get_error_str() const;
