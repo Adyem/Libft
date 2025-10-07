@@ -4,11 +4,11 @@
 
 double math_pow(double base_value, int exponent)
 {
-    double result;
-    int    exponent_value;
+    double      result;
+    long long   exponent_value;
 
     result = 1.0;
-    exponent_value = exponent;
+    exponent_value = static_cast<long long>(exponent);
     ft_errno = ER_SUCCESS;
     if (exponent_value < 0)
     {

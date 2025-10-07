@@ -190,7 +190,11 @@ int ft_decompress_stream(int input_fd, int output_fd)
             stream.next_out = output_buffer;
             stream.avail_out = sizeof(output_buffer);
             inflate_status = g_decompress_stream_inflate_hook(&stream, flush_mode);
-            if (inflate_status == Z_NEED_DICT || inflate_status == Z_DATA_ERROR || inflate_status == Z_MEM_ERROR)
+            if (inflate_status == Z_NEED_DICT
+                || inflate_status == Z_DATA_ERROR
+                || inflate_status == Z_MEM_ERROR
+                || inflate_status == Z_STREAM_ERROR
+                || inflate_status == Z_VERSION_ERROR)
             {
                 inflateEnd(&stream);
                 ft_errno = map_zlib_error(inflate_status);

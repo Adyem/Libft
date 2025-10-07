@@ -39,3 +39,22 @@ FT_TEST(test_yaml_reader_allocation_failure_sets_errno, "yaml_reader propagates 
     FT_ASSERT_EQ(FT_EALLOC, ft_errno);
     return (1);
 }
+
+FT_TEST(test_yaml_reader_scalar_set_scalar_failure, "yaml_reader handles scalar assignment failures")
+{
+    ft_string content(32, 'A');
+    yaml_value *result;
+
+    FT_ASSERT_EQ(ER_SUCCESS, content.get_error());
+    cma_set_alloc_limit(32);
+    ft_errno = ER_SUCCESS;
+    result = yaml_read_from_string(content);
+    cma_set_alloc_limit(0);
+    if (result != ft_nullptr)
+    {
+        yaml_free(result);
+    }
+    FT_ASSERT(result == ft_nullptr);
+    FT_ASSERT_EQ(STRING_MEM_ALLOC_FAIL, ft_errno);
+    return (1);
+}

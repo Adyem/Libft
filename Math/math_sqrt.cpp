@@ -17,7 +17,7 @@ double math_sqrt(double number)
     if (number < 0)
     {
         ft_errno = FT_EINVAL;
-        return (-1.0);
+        return (math_nan());
     }
     if (math_fabs(number) < 1e-12)
     {
