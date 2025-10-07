@@ -13,6 +13,7 @@
 #endif
 #include "socket_class.hpp"
 #include "../Errno/errno.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 
 #ifdef _WIN32
 static inline int bind_platform(int sockfd, const struct sockaddr *addr, socklen_t len)
@@ -300,5 +301,39 @@ ssize_t nw_recvfrom(int sockfd, void *buf, size_t len, int flags,
 
 int nw_inet_pton(int family, const char *ip_address, void *destination)
 {
-    return (inet_pton(family, ip_address, destination));
+    int result;
+
+    if (ip_address == ft_nullptr || destination == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
+        return (-1);
+    }
+    result = inet_pton(family, ip_address, destination);
+    if (result == 1)
+    {
+        ft_errno = ER_SUCCESS;
+        return (1);
+    }
+    if (result == 0)
+    {
+        ft_errno = FT_EINVAL;
+        return (0);
+    }
+#ifdef _WIN32
+    {
+        int error_code;
+
+        error_code = WSAGetLastError();
+        if (error_code != 0)
+            ft_errno = error_code + ERRNO_OFFSET;
+        else
+            ft_errno = FT_EINVAL;
+    }
+#else
+    if (errno != 0)
+        ft_errno = errno + ERRNO_OFFSET;
+    else
+        ft_errno = FT_EINVAL;
+#endif
+    return (-1);
 }

@@ -5,7 +5,7 @@
 
 int pf_snprintf(char *string, size_t size, const char *format, ...)
 {
-    if (string == ft_nullptr || format == ft_nullptr)
+    if (format == ft_nullptr || (string == ft_nullptr && size > 0))
     {
         ft_errno = FT_EINVAL;
         if (string != ft_nullptr && size > 0)
