@@ -16,6 +16,18 @@
 #include "../Libft/libft.hpp"
 
 #ifdef _WIN32
+static inline int translate_platform_error()
+{
+    return (WSAGetLastError() + ERRNO_OFFSET);
+}
+#else
+static inline int translate_platform_error()
+{
+    return (errno + ERRNO_OFFSET);
+}
+#endif
+
+#ifdef _WIN32
 static inline int setsockopt_reuse(int fd, int opt)
 {
     return (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR,
@@ -75,7 +87,7 @@ int ft_socket::create_socket(const SocketConfig &config)
     this->_socket_fd = nw_socket(config._address_family, SOCK_STREAM, config._protocol);
     if (this->_socket_fd < 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(translate_platform_error());
         return (this->_error_code);
     }
     this->set_error(ER_SUCCESS);
@@ -89,7 +101,7 @@ int ft_socket::set_reuse_address(const SocketConfig &config)
     int opt = 1;
     if (setsockopt_reuse(this->_socket_fd, opt) < 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(translate_platform_error());
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
@@ -104,7 +116,7 @@ int ft_socket::set_non_blocking(const SocketConfig &config)
         return (ER_SUCCESS);
     if (set_nonblocking_platform(this->_socket_fd) != 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(translate_platform_error());
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
@@ -119,7 +131,7 @@ int ft_socket::set_timeouts(const SocketConfig &config)
     {
         if (set_timeout_recv(this->_socket_fd, config._recv_timeout) < 0)
         {
-            this->set_error(errno + ERRNO_OFFSET);
+            this->set_error(translate_platform_error());
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
@@ -129,7 +141,7 @@ int ft_socket::set_timeouts(const SocketConfig &config)
     {
         if (set_timeout_send(this->_socket_fd, config._send_timeout) < 0)
         {
-            this->set_error(errno + ERRNO_OFFSET);
+            this->set_error(translate_platform_error());
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
@@ -206,7 +218,7 @@ int ft_socket::bind_socket(const SocketConfig &config)
     if (nw_bind(this->_socket_fd, reinterpret_cast<const struct sockaddr*>(&this->_address),
                 addr_len) < 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(translate_platform_error());
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
@@ -220,7 +232,7 @@ int ft_socket::listen_socket(const SocketConfig &config)
 {
     if (nw_listen(this->_socket_fd, config._backlog) < 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(translate_platform_error());
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);

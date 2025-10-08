@@ -12,6 +12,7 @@ SRCS := libft_atoi.cpp \
     libft_strchr.cpp \
     libft_strlcat.cpp \
     libft_strlcpy.cpp \
+    libft_strnlen.cpp \
     libft_strncmp.cpp \
     libft_strnstr.cpp \
     libft_strstr.cpp \
@@ -30,6 +31,8 @@ SRCS := libft_atoi.cpp \
     libft_toupper.cpp \
     libft_tolower.cpp \
     libft_strncpy.cpp \
+    libft_strndup.cpp \
+    libft_span.cpp \
     libft_strmapi.cpp \
     libft_striteri.cpp \
     libft_isspace.cpp \

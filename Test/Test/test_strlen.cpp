@@ -1,6 +1,7 @@
 #include "../../Libft/libft.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
+#include "../../CMA/CMA.hpp"
 #include "../../System_utils/test_runner.hpp"
 
 FT_TEST(test_strlen_nullptr, "ft_strlen nullptr")
@@ -126,5 +127,163 @@ FT_TEST(test_strlen_size_t_handles_unaligned_pointers,
     measured_length = ft_strlen_size_t(start_pointer);
     FT_ASSERT_EQ(static_cast<size_t>(5), measured_length);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strnlen_nullptr_sets_errno, "ft_strnlen nullptr sets FT_EINVAL")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(static_cast<size_t>(0), ft_strnlen(ft_nullptr, 8));
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strnlen_truncates_to_maximum, "ft_strnlen caps measured length at maximum_length")
+{
+    static const char *source = "bounded-string";
+    size_t measured_length;
+
+    ft_errno = FT_ERANGE;
+    measured_length = ft_strnlen(source, 6);
+    FT_ASSERT_EQ(static_cast<size_t>(6), measured_length);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strnlen_returns_full_length_when_smaller_than_bound,
+        "ft_strnlen returns string length when maximum_length exceeds it")
+{
+    static const char *source = "short";
+    size_t measured_length;
+
+    ft_errno = FT_ERANGE;
+    measured_length = ft_strnlen(source, 32);
+    FT_ASSERT_EQ(static_cast<size_t>(5), measured_length);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strndup_nullptr_sets_errno, "ft_strndup nullptr sets FT_EINVAL")
+{
+    char *duplicate;
+
+    ft_errno = ER_SUCCESS;
+    duplicate = ft_strndup(ft_nullptr, 4);
+    FT_ASSERT_EQ(ft_nullptr, duplicate);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strndup_truncates_copy_to_requested_length, "ft_strndup copies at most maximum_length characters")
+{
+    char *duplicate;
+
+    ft_errno = ER_SUCCESS;
+    duplicate = ft_strndup("truncate-me", 3);
+    FT_ASSERT(duplicate != ft_nullptr);
+    FT_ASSERT_EQ(0, ft_strncmp(duplicate, "tru", 4));
+    FT_ASSERT_EQ('\0', duplicate[3]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    cma_free(duplicate);
+    return (1);
+}
+
+FT_TEST(test_strndup_copies_full_string_when_shorter_than_bound,
+        "ft_strndup duplicates entire string when it is shorter than maximum_length")
+{
+    char *duplicate;
+
+    ft_errno = ER_SUCCESS;
+    duplicate = ft_strndup("abc", 8);
+    FT_ASSERT(duplicate != ft_nullptr);
+    FT_ASSERT_EQ(0, ft_strncmp(duplicate, "abc", 4));
+    FT_ASSERT_EQ('\0', duplicate[3]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    cma_free(duplicate);
+    return (1);
+}
+FT_TEST(test_span_dup_copies_full_buffer_without_null, "ft_span_dup copies buffers without null terminators")
+{
+    char buffer[4];
+    char *duplicate;
+
+    buffer[0] = 'x';
+    buffer[1] = 'y';
+    buffer[2] = 'z';
+    buffer[3] = 'w';
+    ft_errno = FT_ERANGE;
+    duplicate = ft_span_dup(buffer, 4);
+    FT_ASSERT(duplicate != ft_nullptr);
+    FT_ASSERT_EQ(0, ft_strncmp(duplicate, "xyzw", 5));
+    FT_ASSERT_EQ('\0', duplicate[4]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    cma_free(duplicate);
+    return (1);
+}
+
+FT_TEST(test_span_dup_handles_zero_length, "ft_span_dup allocates empty strings when length is zero")
+{
+    char buffer[1];
+    char *duplicate;
+
+    buffer[0] = 'q';
+    ft_errno = FT_EINVAL;
+    duplicate = ft_span_dup(buffer, 0);
+    FT_ASSERT(duplicate != ft_nullptr);
+    FT_ASSERT_EQ('\0', duplicate[0]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    cma_free(duplicate);
+    return (1);
+}
+
+FT_TEST(test_span_dup_nullptr_with_length_sets_errno, "ft_span_dup nullptr with non-zero length sets FT_EINVAL")
+{
+    char *duplicate;
+
+    ft_errno = ER_SUCCESS;
+    duplicate = ft_span_dup(ft_nullptr, 3);
+    FT_ASSERT_EQ(ft_nullptr, duplicate);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_span_to_string_copies_span, "ft_span_to_string copies spans into ft_string")
+{
+    char buffer[5];
+    ft_string span_string;
+
+    buffer[0] = 'a';
+    buffer[1] = 'b';
+    buffer[2] = 'c';
+    buffer[3] = 'd';
+    buffer[4] = 'e';
+    ft_errno = FT_EINVAL;
+    span_string = ft_span_to_string(buffer, 5);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(static_cast<size_t>(5), span_string.size());
+    FT_ASSERT(span_string == "abcde");
+    return (1);
+}
+
+FT_TEST(test_span_to_string_nullptr_with_length_sets_errno, "ft_span_to_string nullptr with non-zero length sets FT_EINVAL")
+{
+    ft_string span_string;
+
+    ft_errno = ER_SUCCESS;
+    span_string = ft_span_to_string(ft_nullptr, 2);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_EINVAL, span_string.get_error());
+    return (1);
+}
+
+FT_TEST(test_span_to_string_allows_empty_nullptr, "ft_span_to_string accepts nullptr when length is zero")
+{
+    ft_string span_string;
+
+    ft_errno = FT_EINVAL;
+    span_string = ft_span_to_string(ft_nullptr, 0);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(static_cast<size_t>(0), span_string.size());
+    FT_ASSERT(span_string.empty());
     return (1);
 }
