@@ -269,3 +269,50 @@ FT_TEST(test_readline_tab_completion_rejects_long_prefix, "rl_handle_tab_complet
     return (1);
 }
 
+FT_TEST(test_readline_tab_completion_preserves_suffix, "rl_handle_tab_completion keeps trailing text intact")
+{
+    readline_state_t state;
+    char *buffer;
+    const char *initial_line;
+    int index;
+    int result;
+    int buffer_capacity;
+
+    rl_clear_suggestions();
+    rl_add_suggestion("hello");
+    initial_line = "say hel there";
+    buffer_capacity = 64;
+    buffer = static_cast<char *>(cma_malloc(buffer_capacity));
+    if (buffer == ft_nullptr)
+    {
+        rl_clear_suggestions();
+        return (0);
+    }
+    ft_strlcpy(buffer, initial_line, buffer_capacity);
+    state.buffer = buffer;
+    state.bufsize = buffer_capacity;
+    state.pos = 7;
+    state.prev_buffer_length = ft_strlen(buffer);
+    state.history_index = 0;
+    state.in_completion_mode = 0;
+    state.current_match_count = 0;
+    state.current_match_index = 0;
+    state.word_start = 0;
+    index = 0;
+    while (index < MAX_SUGGESTIONS)
+    {
+        state.current_matches[index] = ft_nullptr;
+        index++;
+    }
+    ft_errno = ER_SUCCESS;
+    result = rl_handle_tab_completion(&state, "> ");
+    FT_ASSERT_EQ(0, result);
+    FT_ASSERT_EQ(1, state.in_completion_mode);
+    FT_ASSERT_EQ(0, std::strcmp("say hello there", state.buffer));
+    FT_ASSERT_EQ(9, state.pos);
+    FT_ASSERT_EQ(ft_strlen(state.buffer), state.prev_buffer_length);
+    rl_clear_suggestions();
+    cma_free(buffer);
+    return (1);
+}
+

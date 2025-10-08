@@ -103,6 +103,36 @@ FT_TEST(test_html_find_by_selector_quoted_attribute_values,
     return (1);
 }
 
+FT_TEST(test_html_remove_helpers_validate_inputs, "html_remove_* guard against invalid inputs")
+{
+    html_node *root = html_create_node("div", ft_nullptr);
+
+    FT_ASSERT(root != ft_nullptr);
+    ft_errno = ER_SUCCESS;
+    html_remove_nodes_by_tag(ft_nullptr, "div");
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    ft_errno = ER_SUCCESS;
+    html_remove_nodes_by_tag(&root, ft_nullptr);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    ft_errno = ER_SUCCESS;
+    html_remove_nodes_by_attr(ft_nullptr, "id", "value");
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    ft_errno = ER_SUCCESS;
+    html_remove_nodes_by_attr(&root, ft_nullptr, "value");
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    ft_errno = ER_SUCCESS;
+    html_remove_nodes_by_attr(&root, "id", ft_nullptr);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    ft_errno = ER_SUCCESS;
+    html_remove_nodes_by_text(ft_nullptr, "text");
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    ft_errno = ER_SUCCESS;
+    html_remove_nodes_by_text(&root, ft_nullptr);
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    html_free_nodes(root);
+    return (1);
+}
+
 int test_html_find_by_attr(void)
 {
     html_node *root = html_create_node("div", ft_nullptr);

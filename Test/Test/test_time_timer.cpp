@@ -2,6 +2,7 @@
 #include "../../Time/time.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
+#include <climits>
 
 FT_TEST(test_time_timer_start_rejects_negative_duration, "time_timer::start rejects negative durations")
 {
@@ -70,6 +71,27 @@ FT_TEST(test_time_timer_add_time_extends_active_timer, "time_timer::add_time ext
 
     time_sleep_ms(70);
     FT_ASSERT_EQ(static_cast<long>(0), timer.update());
+    FT_ASSERT_EQ(ER_SUCCESS, timer.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_time_timer_add_time_detects_overflow, "time_timer::add_time detects overflow without stopping the timer")
+{
+    time_timer timer;
+    long add_result;
+    long remaining_after_failure;
+
+    ft_errno = ER_SUCCESS;
+    timer.start(LONG_MAX - 10);
+    add_result = timer.add_time(100);
+    FT_ASSERT_EQ(static_cast<long>(-1), add_result);
+    FT_ASSERT_EQ(FT_ERANGE, timer.get_error());
+    FT_ASSERT_EQ(FT_ERANGE, ft_errno);
+
+    ft_errno = ER_SUCCESS;
+    remaining_after_failure = timer.update();
+    FT_ASSERT(remaining_after_failure > 0);
     FT_ASSERT_EQ(ER_SUCCESS, timer.get_error());
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);

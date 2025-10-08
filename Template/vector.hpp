@@ -503,16 +503,16 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::erase(iterator
         return (endIt);
     }
     destroy_at(&this->_data[index]);
-    size_t i = index;
-    while (i < this->_size - 1)
+    size_t shift_index = index;
+    while (shift_index < this->_size - 1)
     {
-        construct_at(&this->_data[i], this->_data[i + 1]);
-        destroy_at(&this->_data[i + 1]);
-        ++i;
+        construct_at(&this->_data[shift_index], std::move(this->_data[shift_index + 1]));
+        destroy_at(&this->_data[shift_index + 1]);
+        ++shift_index;
     }
     --this->_size;
     iterator ret;
-    if (index == this->_size)
+    if (index >= this->_size)
         ret = this->_data + this->_size;
     else
         ret = &this->_data[index];

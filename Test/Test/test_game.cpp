@@ -11,8 +11,10 @@
 #include "../../Game/game_inventory.hpp"
 #include "../../Template/vector.hpp"
 #include "../../Template/shared_ptr.hpp"
+#include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../JSon/json.hpp"
+#include <climits>
 #include <cstdio>
 
 int test_game_simulation(void)
@@ -288,6 +290,45 @@ int test_event_subtracters(void)
     return (ev.get_duration() == 4 && ev.get_modifier1() == 2 &&
             ev.get_modifier2() == 0 && ev.get_modifier3() == 0 &&
             ev.get_modifier4() == -1);
+}
+
+FT_TEST(test_game_event_sub_duration_prevents_underflow, "ft_event::sub_duration rejects underflow")
+{
+    ft_event event;
+
+    event.set_duration(3);
+    ft_errno = ER_SUCCESS;
+    event.sub_duration(5);
+    FT_ASSERT_EQ(3, event.get_duration());
+    FT_ASSERT_EQ(FT_EINVAL, event.get_error());
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+
+    event.set_duration(3);
+    ft_errno = FT_EINVAL;
+    event.sub_duration(3);
+    FT_ASSERT_EQ(0, event.get_duration());
+    FT_ASSERT_EQ(ER_SUCCESS, event.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_game_event_add_duration_detects_overflow, "ft_event::add_duration rejects overflow")
+{
+    ft_event event;
+
+    event.set_duration(INT_MAX - 2);
+    ft_errno = ER_SUCCESS;
+    event.add_duration(5);
+    FT_ASSERT_EQ(INT_MAX - 2, event.get_duration());
+    FT_ASSERT_EQ(FT_ERANGE, event.get_error());
+    FT_ASSERT_EQ(FT_ERANGE, ft_errno);
+
+    ft_errno = FT_ERANGE;
+    event.add_duration(2);
+    FT_ASSERT_EQ(INT_MAX, event.get_duration());
+    FT_ASSERT_EQ(ER_SUCCESS, event.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
 }
 
 int test_upgrade_subtracters(void)

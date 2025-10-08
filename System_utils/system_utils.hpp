@@ -39,6 +39,8 @@ typedef struct su_file
 } su_file;
 
 void    su_force_file_stream_allocation_failure(bool should_fail);
+void    su_force_fread_failure(int error_code);
+void    su_clear_forced_fread_failure(void);
 su_file *su_fopen(const char *path_name);
 su_file *su_fopen(const char *path_name, int flags);
 su_file *su_fopen(const char *path_name, int flags, mode_t mode);
