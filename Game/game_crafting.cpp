@@ -139,8 +139,8 @@ int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id, const ft_sha
     this->set_error(ER_SUCCESS);
     if (!result)
     {
-        this->set_error(GAME_GENERAL_ERROR);
-        return (GAME_GENERAL_ERROR);
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
+        return (FT_ERR_GAME_GENERAL_ERROR);
     }
     if (result.get_error() != ER_SUCCESS)
     {
@@ -155,8 +155,8 @@ int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id, const ft_sha
     Pair<int, ft_vector<ft_crafting_ingredient>> *recipe_entry = this->_recipes.find(recipe_id);
     if (!recipe_entry)
     {
-        this->set_error(GAME_GENERAL_ERROR);
-        return (GAME_GENERAL_ERROR);
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
+        return (FT_ERR_GAME_GENERAL_ERROR);
     }
 
     ft_vector<ft_crafting_ingredient> &ingredients = recipe_entry->value;
@@ -192,8 +192,8 @@ int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id, const ft_sha
         }
         if (have_count < ingredient.count)
         {
-            this->set_error(GAME_GENERAL_ERROR);
-            return (GAME_GENERAL_ERROR);
+            this->set_error(FT_ERR_GAME_GENERAL_ERROR);
+            return (FT_ERR_GAME_GENERAL_ERROR);
         }
         ++index;
     }

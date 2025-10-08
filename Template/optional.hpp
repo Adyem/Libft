@@ -59,7 +59,7 @@ ft_optional<T>::ft_optional(const T& value)
 {
     _value = static_cast<T*>(cma_malloc(sizeof(T)));
     if (_value == ft_nullptr)
-        this->set_error(OPTIONAL_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
     else
     {
         construct_at(_value, value);
@@ -74,7 +74,7 @@ ft_optional<T>::ft_optional(T&& value)
 {
     _value = static_cast<T*>(cma_malloc(sizeof(T)));
     if (_value == ft_nullptr)
-        this->set_error(OPTIONAL_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
     else
     {
         construct_at(_value, std::move(value));
@@ -107,12 +107,12 @@ ft_optional<T>& ft_optional<T>::operator=(ft_optional&& other) noexcept
     {
         if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
-            this->set_error(PT_ERR_MUTEX_OWNER);
+            this->set_error(FT_ERR_MUTEX_NOT_OWNER);
             return (*this);
         }
         if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
-            this->set_error(PT_ERR_MUTEX_OWNER);
+            this->set_error(FT_ERR_MUTEX_NOT_OWNER);
             this->_mutex.unlock(THREAD_ID);
             return (*this);
         }
@@ -141,7 +141,7 @@ bool ft_optional<T>::has_value() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        const_cast<ft_optional*>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        const_cast<ft_optional*>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (false);
     }
     bool result = (this->_value != ft_nullptr);
@@ -155,12 +155,12 @@ T& ft_optional<T>::value()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (ft_optional<T>::fallback_reference());
     }
     if (this->_value == ft_nullptr)
     {
-        this->set_error(OPTIONAL_EMPTY);
+        this->set_error(FT_ERR_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         return (ft_optional<T>::fallback_reference());
     }
@@ -175,12 +175,12 @@ const T& ft_optional<T>::value() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        const_cast<ft_optional*>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        const_cast<ft_optional*>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (ft_optional<T>::fallback_reference());
     }
     if (this->_value == ft_nullptr)
     {
-        const_cast<ft_optional*>(this)->set_error(OPTIONAL_EMPTY);
+        const_cast<ft_optional*>(this)->set_error(FT_ERR_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         return (ft_optional<T>::fallback_reference());
     }
@@ -210,7 +210,7 @@ void ft_optional<T>::reset()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     if (this->_value != ft_nullptr)
@@ -229,7 +229,7 @@ int ft_optional<T>::get_error() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        const_cast<ft_optional*>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        const_cast<ft_optional*>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (this->_error_code);
     }
     int error = this->_error_code;
@@ -243,7 +243,7 @@ const char* ft_optional<T>::get_error_str() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        const_cast<ft_optional*>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        const_cast<ft_optional*>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (ft_strerror(this->_error_code));
     }
     int error = this->_error_code;

@@ -16,7 +16,7 @@ int file_dir_exists(const char *rel_path)
     ft_string path = normalize_path(rel_path);
     if (path.get_error())
     {
-        ft_errno = CHECK_DIR_FAIL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     return (cmp_directory_exists(path.c_str()));

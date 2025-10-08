@@ -51,7 +51,7 @@ FT_TEST(test_cmp_read_invalid_fd_sets_ft_einval, "cmp_read invalid descriptor")
 
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, cmp_read(-1, buffer, sizeof(buffer)));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -61,7 +61,7 @@ FT_TEST(test_cmp_write_invalid_fd_sets_ft_einval, "cmp_write invalid descriptor"
 
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, cmp_write(-1, buffer, sizeof(buffer)));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -69,7 +69,7 @@ FT_TEST(test_cmp_close_invalid_fd_sets_ft_einval, "cmp_close invalid descriptor"
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, cmp_close(-1));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -111,7 +111,7 @@ FT_TEST(test_cmp_write_translates_errno, "cmp_write propagates errno failures")
     return (1);
 }
 
-FT_TEST(test_su_write_reports_zero_progress, "su_write reports stalled writes as FT_EIO")
+FT_TEST(test_su_write_reports_zero_progress, "su_write reports stalled writes as FT_ERR_IO")
 {
     const char  buffer[4] = {'d', 'a', 't', 'a'};
 
@@ -119,7 +119,7 @@ FT_TEST(test_su_write_reports_zero_progress, "su_write reports stalled writes as
     su_set_write_syscall_hook(su_write_zero_progress_hook);
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, su_write(42, buffer, sizeof(buffer)));
-    FT_ASSERT_EQ(FT_EIO, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     FT_ASSERT_EQ(1, g_su_write_hook_calls);
     su_reset_write_syscall_hook();
     ft_errno = ER_SUCCESS;

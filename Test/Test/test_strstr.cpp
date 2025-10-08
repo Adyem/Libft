@@ -8,7 +8,7 @@ FT_TEST(test_strstr_basic, "ft_strstr basic match")
     const char *haystack = "hello world";
     const char *needle = "world";
 
-    ft_errno = FT_ERANGE;
+    ft_errno = FT_ERR_OUT_OF_RANGE;
     FT_ASSERT_EQ(haystack + 6, ft_strstr(haystack, needle));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
@@ -19,7 +19,7 @@ FT_TEST(test_strstr_not_found, "ft_strstr not found")
     const char *haystack = "hello";
     const char *needle = "world";
 
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(ft_nullptr, ft_strstr(haystack, needle));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
@@ -29,7 +29,7 @@ FT_TEST(test_strstr_empty_needle, "ft_strstr empty needle")
 {
     const char *haystack = "abc";
 
-    ft_errno = FT_ERANGE;
+    ft_errno = FT_ERR_OUT_OF_RANGE;
     FT_ASSERT_EQ(haystack, ft_strstr(haystack, ""));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
@@ -40,7 +40,7 @@ FT_TEST(test_strstr_empty_haystack, "ft_strstr empty haystack")
     const char *haystack = "";
     const char *needle = "a";
 
-    ft_errno = FT_ERANGE;
+    ft_errno = FT_ERR_OUT_OF_RANGE;
     FT_ASSERT_EQ(ft_nullptr, ft_strstr(haystack, needle));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
@@ -52,10 +52,10 @@ FT_TEST(test_strstr_null, "ft_strstr with nullptr")
 
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_strstr(ft_nullptr, "a"));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_strstr(haystack, ft_nullptr));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -64,7 +64,7 @@ FT_TEST(test_strstr_overlapping_partial_match, "ft_strstr restarts after overlap
     const char *haystack = "ababac";
     const char *needle = "abac";
 
-    ft_errno = FT_ERANGE;
+    ft_errno = FT_ERR_OUT_OF_RANGE;
     FT_ASSERT_EQ(haystack + 2, ft_strstr(haystack, needle));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);

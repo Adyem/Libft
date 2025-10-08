@@ -7,18 +7,18 @@ char *cma_strjoin_multiple(int count, ...)
 {
     if (count <= 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     if (static_cast<size_t>(count) > SIZE_MAX / sizeof(size_t))
     {
-        ft_errno = FT_ERANGE;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
         return (ft_nullptr);
     }
     size_t *cached_lengths = static_cast<size_t*>(cma_malloc(static_cast<size_t>(count) * sizeof(size_t)));
     if (!cached_lengths)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     va_list args;
@@ -42,7 +42,7 @@ char *cma_strjoin_multiple(int count, ...)
             current_length = measured_length;
             if (total_length > SIZE_MAX - current_length)
             {
-                ft_errno = FT_ERANGE;
+                ft_errno = FT_ERR_OUT_OF_RANGE;
                 va_end(args);
                 cma_free(cached_lengths);
                 return (ft_nullptr);
@@ -55,14 +55,14 @@ char *cma_strjoin_multiple(int count, ...)
     va_end(args);
     if (total_length == SIZE_MAX)
     {
-        ft_errno = FT_ERANGE;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
         cma_free(cached_lengths);
         return (ft_nullptr);
     }
     char *result = static_cast<char*>(cma_malloc(total_length + 1));
     if (!result)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         cma_free(cached_lengths);
         return (ft_nullptr);
     }

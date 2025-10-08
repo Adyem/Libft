@@ -28,7 +28,7 @@ static size_t   format_time_component(char *destination, size_t destination_size
     {
         if (digit_count >= sizeof(reversed_digits))
         {
-            ft_errno = FT_ERANGE;
+            ft_errno = FT_ERR_OUT_OF_RANGE;
             return (0);
         }
         reversed_digits[digit_count] = '0';
@@ -38,7 +38,7 @@ static size_t   format_time_component(char *destination, size_t destination_size
     {
         if (digit_count >= sizeof(reversed_digits))
         {
-            ft_errno = FT_ERANGE;
+            ft_errno = FT_ERR_OUT_OF_RANGE;
             return (0);
         }
         reversed_digits[digit_count] = static_cast<char>('0' + (magnitude % 10));
@@ -49,7 +49,7 @@ static size_t   format_time_component(char *destination, size_t destination_size
     {
         if (digit_count >= sizeof(reversed_digits))
         {
-            ft_errno = FT_ERANGE;
+            ft_errno = FT_ERR_OUT_OF_RANGE;
             return (0);
         }
         reversed_digits[digit_count] = '-';
@@ -60,7 +60,7 @@ static size_t   format_time_component(char *destination, size_t destination_size
         required_length = static_cast<size_t>(minimum_width);
     if (required_length >= destination_size)
     {
-        ft_errno = FT_ERANGE;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
         return (0);
     }
     destination[required_length] = '\0';
@@ -91,7 +91,7 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
 
     if (!buffer || size == 0 || !format || !time_info)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
     format_index = 0;

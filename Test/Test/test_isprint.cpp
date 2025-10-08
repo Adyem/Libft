@@ -4,10 +4,10 @@
 
 FT_TEST(test_isprint, "ft_isprint")
 {
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(1, ft_isprint('A'));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(1, ft_isprint(' '));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     ft_errno = ER_SUCCESS;

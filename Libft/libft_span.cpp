@@ -11,13 +11,13 @@ char *ft_span_dup(const char *buffer, size_t length)
     ft_errno = ER_SUCCESS;
     if (buffer == ft_nullptr && length != 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     duplicate = static_cast<char *>(cma_malloc(length + 1));
     if (duplicate == ft_nullptr)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     index = 0;
@@ -37,8 +37,8 @@ ft_string ft_span_to_string(const char *buffer, size_t length)
     ft_errno = ER_SUCCESS;
     if (buffer == ft_nullptr && length != 0)
     {
-        ft_errno = FT_EINVAL;
-        return (ft_string(FT_EINVAL));
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (ft_string(FT_ERR_INVALID_ARGUMENT));
     }
     if (length == 0)
     {

@@ -16,7 +16,7 @@ int pf_printf_fd(int fd, const char *format, ...)
 
     if (!format)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     va_start(args, format);
@@ -32,7 +32,7 @@ int pf_printf(const char *format, ...)
 
     if (!format)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     va_start(args, format);

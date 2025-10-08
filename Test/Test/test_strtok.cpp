@@ -32,7 +32,7 @@ FT_TEST(test_strtok_edge, "ft_strtok edge")
 
     char second[4] = "abc";
     FT_ASSERT_EQ(ft_nullptr, ft_strtok(second, ft_nullptr));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 

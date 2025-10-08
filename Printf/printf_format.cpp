@@ -200,7 +200,7 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
         return (-1);
     if (count > static_cast<size_t>(INT_MAX))
     {
-        ft_errno = FT_ERANGE;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
         return (-1);
     }
     ft_errno = ER_SUCCESS;

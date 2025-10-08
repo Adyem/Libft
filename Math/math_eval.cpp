@@ -9,7 +9,7 @@ int    *math_eval(const char *expression)
 
     if (!expression)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     index = 0;
@@ -17,7 +17,7 @@ int    *math_eval(const char *expression)
     {
         if (expression[index] == 'd')
         {
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             if (DEBUG == 1)
             {
                 pf_printf_fd(2, "dice rolls are not allowed\n");

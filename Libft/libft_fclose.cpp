@@ -10,7 +10,7 @@ int ft_fclose(FILE *stream)
 
     if (stream == ft_nullptr)
     {
-        ft_errno = FILE_INVALID_FD;
+        ft_errno = FT_ERR_INVALID_HANDLE;
         return (EOF);
     }
     close_result = std::fclose(stream);
@@ -22,7 +22,7 @@ int ft_fclose(FILE *stream)
         if (close_error != 0)
             ft_errno = close_error + ERRNO_OFFSET;
         else
-            ft_errno = FILE_INVALID_FD;
+            ft_errno = FT_ERR_INVALID_HANDLE;
         return (EOF);
     }
     ft_errno = ER_SUCCESS;

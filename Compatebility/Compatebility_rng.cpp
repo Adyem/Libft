@@ -15,7 +15,7 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
         if (last_error != 0)
             ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
         else
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     if (CryptGenRandom(crypt_provider, static_cast<DWORD>(length), buffer) == 0)
@@ -25,7 +25,7 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
         if (last_error != 0)
             ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
         else
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     if (CryptReleaseContext(crypt_provider, 0) == 0)
@@ -34,7 +34,7 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
         if (last_error != 0)
             ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
         else
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -147,7 +147,7 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
                 ft_errno = errno + ERRNO_OFFSET;
                 return (-1);
             }
-            ft_errno = FT_EIO;
+            ft_errno = FT_ERR_IO;
             return (-1);
         }
         offset += static_cast<size_t>(bytes_read);

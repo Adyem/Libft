@@ -12,7 +12,7 @@ void *ft_memset(void *destination, int value, size_t number_of_bytes)
             ft_errno = ER_SUCCESS;
             return (ft_nullptr);
         }
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     ft_errno = ER_SUCCESS;

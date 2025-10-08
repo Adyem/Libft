@@ -15,8 +15,8 @@ FT_TEST(test_ft_file_error_resets, "ft_file resets error state after success")
 
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, file.read(ft_nullptr, 1));
-    FT_ASSERT_EQ(FT_EINVAL, file.get_error());
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, file.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(0, file.open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644));
     FT_ASSERT_EQ(ER_SUCCESS, file.get_error());
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -32,8 +32,8 @@ FT_TEST(test_ft_ofstream_error_resets, "ft_ofstream resets error state after suc
 
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(1, stream.open(ft_nullptr));
-    FT_ASSERT_EQ(FT_EINVAL, stream.get_error());
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, stream.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(0, stream.open(filename));
     FT_ASSERT_EQ(ER_SUCCESS, stream.get_error());
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -100,8 +100,8 @@ FT_TEST(test_ft_istringstream_error_resets, "ft_istringstream resets error state
 
     ft_errno = ER_SUCCESS;
     stream.read(ft_nullptr, 1);
-    FT_ASSERT_EQ(FT_EINVAL, stream.get_error());
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, stream.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT(stream.bad());
 
     stream.read(read_buffer, 5);

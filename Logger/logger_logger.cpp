@@ -16,7 +16,7 @@ ft_logger::ft_logger(const char *path, size_t max_size, t_log_level level) noexc
 
             error_code = ft_errno;
             if (error_code == ER_SUCCESS)
-                error_code = FT_EINVAL;
+                error_code = FT_ERR_INVALID_ARGUMENT;
             this->set_error(error_code);
             return ;
         }
@@ -58,7 +58,7 @@ int ft_logger::set_file(const char *path, size_t max_size) noexcept
 
         error_code = ft_errno;
         if (error_code == ER_SUCCESS)
-            error_code = FT_EINVAL;
+            error_code = FT_ERR_INVALID_ARGUMENT;
         this->set_error(error_code);
         return (-1);
     }
@@ -77,7 +77,7 @@ int ft_logger::add_sink(t_log_sink sink, void *user_data) noexcept
 
         error_code = ft_errno;
         if (error_code == ER_SUCCESS)
-            error_code = FT_EINVAL;
+            error_code = FT_ERR_INVALID_ARGUMENT;
         this->set_error(error_code);
         return (-1);
     }
@@ -152,7 +152,7 @@ int ft_logger::set_syslog(const char *identifier) noexcept
 
         error_code = ft_errno;
         if (error_code == ER_SUCCESS)
-            error_code = FT_EINVAL;
+            error_code = FT_ERR_INVALID_ARGUMENT;
         this->set_error(error_code);
         return (-1);
     }
@@ -172,7 +172,7 @@ int ft_logger::set_remote_sink(const char *host, unsigned short port,
 
         error_code = ft_errno;
         if (error_code == ER_SUCCESS)
-            error_code = FT_EINVAL;
+            error_code = FT_ERR_INVALID_ARGUMENT;
         this->set_error(error_code);
         return (-1);
     }
@@ -196,7 +196,7 @@ void ft_logger::debug(const char *fmt, ...) noexcept
 
     if (!fmt)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     ft_errno = ER_SUCCESS;
@@ -219,7 +219,7 @@ void ft_logger::info(const char *fmt, ...) noexcept
 
     if (!fmt)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     ft_errno = ER_SUCCESS;
@@ -242,7 +242,7 @@ void ft_logger::warn(const char *fmt, ...) noexcept
 
     if (!fmt)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     ft_errno = ER_SUCCESS;
@@ -265,7 +265,7 @@ void ft_logger::error(const char *fmt, ...) noexcept
 
     if (!fmt)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     ft_errno = ER_SUCCESS;

@@ -35,7 +35,7 @@ matrix2 matrix2::invert() const
     epsilon = 0.000001;
     if (math_fabs(determinant) < epsilon)
     {
-        result.set_error(FT_EINVAL);
+        result.set_error(FT_ERR_INVALID_ARGUMENT);
         return (result);
     }
     result._m[0][0] = this->_m[1][1] / determinant;
@@ -104,7 +104,7 @@ matrix3 matrix3::invert() const
         + this->_m[0][2] * (this->_m[1][0] * this->_m[2][1] - this->_m[1][1] * this->_m[2][0]);
     if (math_absdiff(determinant, 0.0) <= 0.000001)
     {
-        result.set_error(FT_EINVAL);
+        result.set_error(FT_ERR_INVALID_ARGUMENT);
         return (result);
     }
     inv_det = 1.0 / determinant;
@@ -212,7 +212,7 @@ matrix4 matrix4::invert() const
         pivot = temp[row][row];
         if (math_fabs(pivot) < 0.000001)
         {
-            result.set_error(FT_EINVAL);
+            result.set_error(FT_ERR_INVALID_ARGUMENT);
             return (result);
         }
         column = 0;

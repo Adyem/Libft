@@ -78,7 +78,7 @@ void ft_buff::set_id(int id) noexcept
 {
     if (id < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_id = id;
@@ -96,7 +96,7 @@ void ft_buff::set_duration(int duration) noexcept
 {
     if (duration < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_duration = duration;
@@ -108,7 +108,7 @@ void ft_buff::add_duration(int duration) noexcept
 {
     if (duration < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_duration += duration;
@@ -120,7 +120,7 @@ void ft_buff::sub_duration(int duration) noexcept
 {
     if (duration < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_duration -= duration;

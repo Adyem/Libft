@@ -10,7 +10,7 @@ json_group *json_find_group(json_group *head, const char *name)
 {
     if (!name)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     json_group *current = head;
@@ -31,7 +31,7 @@ json_item *json_find_item(json_group *group, const char *key)
 {
     if (!group || !key)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     json_item *current = group->items;
@@ -52,7 +52,7 @@ void json_remove_item(json_group *group, const char *key)
 {
     if (!group || !key)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     json_item *current = group->items;
@@ -86,13 +86,13 @@ void json_update_item(json_group *group, const char *key, const char *value)
 {
     if (!group || !key || !value)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     json_item *item = json_find_item(group, key);
     if (!item)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     if (item->big_number)
@@ -106,7 +106,7 @@ void json_update_item(json_group *group, const char *key, const char *value)
     item->value = cma_strdup(value);
     if (!item->value)
     {
-        ft_errno = JSON_MALLOC_FAIL;
+        ft_errno = FT_ERR_NO_MEMORY;
         return ;
     }
     ft_errno = ER_SUCCESS;
@@ -118,13 +118,13 @@ void json_update_item(json_group *group, const char *key, const int value)
 {
     if (!group || !key)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     json_item *item = json_find_item(group, key);
     if (!item)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     if (item->big_number)
@@ -138,7 +138,7 @@ void json_update_item(json_group *group, const char *key, const int value)
     item->value = cma_itoa(value);
     if (!item->value)
     {
-        ft_errno = JSON_MALLOC_FAIL;
+        ft_errno = FT_ERR_NO_MEMORY;
         return ;
     }
     ft_errno = ER_SUCCESS;
@@ -150,13 +150,13 @@ void json_update_item(json_group *group, const char *key, const bool value)
 {
     if (!group || !key)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     json_item *item = json_find_item(group, key);
     if (!item)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     if (item->big_number)
@@ -173,7 +173,7 @@ void json_update_item(json_group *group, const char *key, const bool value)
         item->value = cma_strdup("false");
     if (!item->value)
     {
-        ft_errno = JSON_MALLOC_FAIL;
+        ft_errno = FT_ERR_NO_MEMORY;
         return ;
     }
     ft_errno = ER_SUCCESS;
@@ -185,13 +185,13 @@ void json_update_item(json_group *group, const char *key, const ft_big_number &v
 {
     if (!group || !key)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     json_item *item = json_find_item(group, key);
     if (!item)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     if (item->big_number)
@@ -205,7 +205,7 @@ void json_update_item(json_group *group, const char *key, const ft_big_number &v
     item->value = cma_strdup(value.c_str());
     if (!item->value)
     {
-        ft_errno = JSON_MALLOC_FAIL;
+        ft_errno = FT_ERR_NO_MEMORY;
         return ;
     }
     ft_errno = ER_SUCCESS;
@@ -217,7 +217,7 @@ void json_remove_group(json_group **head, const char *name)
 {
     if (!head || !(*head) || !name)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     json_group *current = *head;

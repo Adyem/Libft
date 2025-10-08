@@ -20,7 +20,7 @@ FT_TEST(test_ft_promise_not_ready, "ft_promise not ready")
     ft_promise<int> promise_instance;
 
     promise_instance.get();
-    FT_ASSERT_EQ(FT_EINVAL, promise_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, promise_instance.get_error());
     return (1);
 }
 

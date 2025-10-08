@@ -26,7 +26,7 @@ int cmp_file_exists(const char *path)
 
     if (path == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
     file_attributes = GetFileAttributesA(path);
@@ -37,14 +37,14 @@ int cmp_file_exists(const char *path)
             ft_errno = ER_SUCCESS;
             return (1);
         }
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
     last_error = GetLastError();
     if (last_error != 0)
         ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
     else
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
     return (0);
 }
 
@@ -54,7 +54,7 @@ int cmp_file_delete(const char *path)
 
     if (path == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     if (DeleteFileA(path) != 0)
@@ -66,7 +66,7 @@ int cmp_file_delete(const char *path)
     if (last_error != 0)
         ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
     else
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
     return (-1);
 }
 
@@ -77,7 +77,7 @@ int cmp_file_move(const char *source_path, const char *destination_path)
 
     if (source_path == ft_nullptr || destination_path == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     if (global_force_cross_device_move == false)
@@ -109,7 +109,7 @@ int cmp_file_move(const char *source_path, const char *destination_path)
     else if (last_error != 0)
         ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
     else
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
     return (-1);
 }
 
@@ -119,7 +119,7 @@ int cmp_file_copy(const char *source_path, const char *destination_path)
 
     if (source_path == ft_nullptr || destination_path == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     if (CopyFileA(source_path, destination_path, 0))
@@ -131,7 +131,7 @@ int cmp_file_copy(const char *source_path, const char *destination_path)
     if (last_error != 0)
         ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
     else
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
     return (-1);
 }
 
@@ -142,7 +142,7 @@ int cmp_file_create_directory(const char *path, mode_t mode)
 
     if (path == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     if (CreateDirectoryA(path, ft_nullptr))
@@ -154,7 +154,7 @@ int cmp_file_create_directory(const char *path, mode_t mode)
     if (last_error != 0)
         ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
     else
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
     return (-1);
 }
 
@@ -181,7 +181,7 @@ int cmp_file_exists(const char *path)
     struct stat stat_buffer;
     if (path == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
     if (stat(path, &stat_buffer) == 0)
@@ -191,7 +191,7 @@ int cmp_file_exists(const char *path)
             ft_errno = ER_SUCCESS;
             return (1);
         }
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
     ft_errno = errno + ERRNO_OFFSET;
@@ -202,7 +202,7 @@ int cmp_file_delete(const char *path)
 {
     if (path == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     if (unlink(path) == 0)
@@ -221,7 +221,7 @@ int cmp_file_move(const char *source_path, const char *destination_path)
 
     if (source_path == ft_nullptr || destination_path == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     if (global_force_cross_device_move != false)
@@ -265,7 +265,7 @@ int cmp_file_copy(const char *source_path, const char *destination_path)
     std::error_code copy_error_code;
     if (source_path == ft_nullptr || destination_path == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     std::filesystem::copy_file(source_path, destination_path,
@@ -284,7 +284,7 @@ int cmp_file_create_directory(const char *path, mode_t mode)
 {
     if (path == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     if (mkdir(path, mode) == 0)

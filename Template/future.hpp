@@ -177,7 +177,7 @@ ft_future<ValueType>::ft_future(ft_sharedptr<ft_promise<ValueType> > promise_poi
     }
     if (!this->_promise)
     {
-        this->set_error(FUTURE_INVALID);
+        this->set_error(FT_ERR_INVALID_STATE);
         guard.unlock();
         if (guard.get_error() != ER_SUCCESS)
         {
@@ -328,7 +328,7 @@ bool ft_future<ValueType>::wait_ready_locked(ft_unique_lock<pt_mutex>& guard) co
     {
         if (steady_clock::now() - start > seconds(1))
         {
-            this->set_error(FUTURE_BROKEN);
+            this->set_error(FT_ERR_BROKEN_PROMISE);
             return (false);
         }
         pt_thread_yield();
@@ -349,7 +349,7 @@ ValueType ft_future<ValueType>::get() const
     }
     if (!this->_promise)
     {
-        this->set_error(FUTURE_INVALID);
+        this->set_error(FT_ERR_INVALID_STATE);
         guard.unlock();
         if (guard.get_error() != ER_SUCCESS)
         {
@@ -390,7 +390,7 @@ void ft_future<ValueType>::wait() const
     }
     if (!this->_promise)
     {
-        this->set_error(FUTURE_INVALID);
+        this->set_error(FT_ERR_INVALID_STATE);
         guard.unlock();
         if (guard.get_error() != ER_SUCCESS)
         {
@@ -502,7 +502,7 @@ inline bool ft_future<void>::wait_ready_locked(ft_unique_lock<pt_mutex>& guard) 
     {
         if (steady_clock::now() - start > seconds(1))
         {
-            this->set_error(FUTURE_BROKEN);
+            this->set_error(FT_ERR_BROKEN_PROMISE);
             return (false);
         }
         pt_thread_yield();
@@ -605,7 +605,7 @@ inline ft_future<void>::ft_future(ft_sharedptr<ft_promise<void> > promise_pointe
     }
     if (!this->_promise)
     {
-        this->set_error(FUTURE_INVALID);
+        this->set_error(FT_ERR_INVALID_STATE);
         guard.unlock();
         if (guard.get_error() != ER_SUCCESS)
         {
@@ -752,7 +752,7 @@ inline void ft_future<void>::get() const
     }
     if (!this->_promise)
     {
-        this->set_error(FUTURE_INVALID);
+        this->set_error(FT_ERR_INVALID_STATE);
         guard.unlock();
         if (guard.get_error() != ER_SUCCESS)
         {
@@ -789,7 +789,7 @@ inline void ft_future<void>::wait() const
     }
     if (!this->_promise)
     {
-        this->set_error(FUTURE_INVALID);
+        this->set_error(FT_ERR_INVALID_STATE);
         guard.unlock();
         if (guard.get_error() != ER_SUCCESS)
         {

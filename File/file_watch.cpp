@@ -40,7 +40,7 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
 {
     if (path == ft_nullptr || callback == ft_nullptr)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     this->_path = ft_string(path);
@@ -50,7 +50,7 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
     this->_fd = inotify_init();
     if (this->_fd < 0)
     {
-        this->set_error(FILE_INVALID_FD);
+        this->set_error(FT_ERR_INVALID_HANDLE);
         return (-1);
     }
     this->_watch = inotify_add_watch(this->_fd, path, IN_CREATE | IN_MODIFY | IN_DELETE);
@@ -58,14 +58,14 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
     {
         close(this->_fd);
         this->_fd = -1;
-        this->set_error(FILE_INVALID_FD);
+        this->set_error(FT_ERR_INVALID_HANDLE);
         return (-1);
     }
 #elif defined(__APPLE__) || defined(__FreeBSD__)
     this->_fd = open(path, O_EVTONLY);
     if (this->_fd < 0)
     {
-        this->set_error(FILE_INVALID_FD);
+        this->set_error(FT_ERR_INVALID_HANDLE);
         return (-1);
     }
     this->_kqueue = kqueue();
@@ -73,7 +73,7 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
     {
         close(this->_fd);
         this->_fd = -1;
-        this->set_error(FILE_INVALID_FD);
+        this->set_error(FT_ERR_INVALID_HANDLE);
         return (-1);
     }
 #elif defined(_WIN32)
@@ -83,7 +83,7 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
     if (this->_handle == INVALID_HANDLE_VALUE)
     {
         this->_handle = ft_nullptr;
-        this->set_error(FILE_INVALID_FD);
+        this->set_error(FT_ERR_INVALID_HANDLE);
         return (-1);
     }
 #endif

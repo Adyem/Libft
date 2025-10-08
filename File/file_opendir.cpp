@@ -13,7 +13,7 @@ file_dirent *file_readdir(file_dir *directory_stream)
 
     if (!directory_stream)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     directory_entry = cmp_dir_read(directory_stream);
@@ -28,7 +28,7 @@ int file_closedir(file_dir *directory_stream)
 
     if (!directory_stream)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     close_result = cmp_dir_close(directory_stream);

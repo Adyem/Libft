@@ -8,6 +8,6 @@ int rl_get_terminal_width(void)
 
     width = cmp_readline_terminal_width();
     if (width == -1 && ft_errno == ER_SUCCESS)
-        ft_errno = FT_ETERM;
+        ft_errno = FT_ERR_TERMINATED;
     return (width);
 }

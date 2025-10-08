@@ -38,7 +38,7 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
 {
     if (new_size > FT_SYSTEM_SIZE_MAX)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     if (OFFSWITCH == 1)
@@ -55,14 +55,14 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
             ft_errno = ER_SUCCESS;
         }
         else if (!result && new_size != 0)
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_ERR_NO_MEMORY;
         else
             ft_errno = ER_SUCCESS;
         return (result);
     }
     if (g_cma_alloc_limit != 0 && new_size > g_cma_alloc_limit)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     if (g_cma_thread_safe)
@@ -108,7 +108,7 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         if (g_cma_thread_safe)
             g_malloc_mutex.unlock(THREAD_ID);
         cma_free(ptr);
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     ft_size_t copy_size;

@@ -16,7 +16,7 @@ int64_t ft_time_ms(void)
         if (errno != 0)
             ft_errno = errno + ERRNO_OFFSET;
         else
-            ft_errno = FT_ETERM;
+            ft_errno = FT_ERR_TERMINATED;
         return (-1);
     }
     milliseconds = static_cast<int64_t>(time_value.tv_sec) * 1000;
@@ -32,7 +32,7 @@ char *ft_time_format(char *buffer, size_t buffer_size)
 
     if (!buffer || buffer_size == 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     ft_errno = ER_SUCCESS;
@@ -49,7 +49,7 @@ char *ft_time_format(char *buffer, size_t buffer_size)
     formatted_length = time_strftime(buffer, buffer_size, "%Y-%m-%d %H:%M:%S", &time_info);
     if (formatted_length == 0)
     {
-        ft_errno = FT_ERANGE;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
         return (ft_nullptr);
     }
     return (buffer);

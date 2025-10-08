@@ -208,7 +208,7 @@ CharType ft_string_view<CharType>::operator[](size_t index) const
     }
     if (index >= this->_size)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (CharType());
     }
     this->set_error(ER_SUCCESS);
@@ -294,8 +294,8 @@ ft_string_view<CharType> ft_string_view<CharType>::substr(size_t position, size_
     {
         ft_string_view<CharType> result;
 
-        this->set_error(FT_EINVAL);
-        result.set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        result.set_error(FT_ERR_INVALID_ARGUMENT);
         return (result);
     }
     size_t available;

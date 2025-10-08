@@ -12,7 +12,7 @@ int ft_utf8_count(const char *string, size_t *code_point_count_pointer)
     ft_errno = ER_SUCCESS;
     if (string == ft_nullptr || code_point_count_pointer == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (FT_FAILURE);
     }
     string_length = ft_strlen_size_t(string);

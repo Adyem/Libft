@@ -4,13 +4,13 @@
 
 FT_TEST(test_isspace, "ft_isspace")
 {
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(1, ft_isspace(' '));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(1, ft_isspace('\n'));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(1, ft_isspace('\t'));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     ft_errno = ER_SUCCESS;
@@ -24,13 +24,13 @@ FT_TEST(test_isspace, "ft_isspace")
 
 FT_TEST(test_isspace_additional_controls, "ft_isspace handles form feed and vertical tab")
 {
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(1, ft_isspace('\f'));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(1, ft_isspace('\r'));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(1, ft_isspace('\v'));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     ft_errno = ER_SUCCESS;

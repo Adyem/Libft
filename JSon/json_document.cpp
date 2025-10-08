@@ -12,14 +12,14 @@ static char *json_document_unescape_pointer_token(const char *start, size_t leng
 {
     if (!start && length != 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     size_t allocation_size = length + 1;
     char *token = static_cast<char *>(cma_malloc(allocation_size));
     if (!token)
     {
-        ft_errno = JSON_MALLOC_FAIL;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     size_t input_index = 0;
@@ -32,7 +32,7 @@ static char *json_document_unescape_pointer_token(const char *start, size_t leng
             if (input_index + 1 >= length)
             {
                 cma_free(token);
-                ft_errno = FT_EINVAL;
+                ft_errno = FT_ERR_INVALID_ARGUMENT;
                 return (ft_nullptr);
             }
             char escape_character = start[input_index + 1];
@@ -43,7 +43,7 @@ static char *json_document_unescape_pointer_token(const char *start, size_t leng
             else
             {
                 cma_free(token);
-                ft_errno = FT_EINVAL;
+                ft_errno = FT_ERR_INVALID_ARGUMENT;
                 return (ft_nullptr);
             }
             input_index += 2;
@@ -76,7 +76,7 @@ json_group *json_document::create_group(const char *name) noexcept
 {
     if (!name)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     json_group *group = json_create_json_group(name);
@@ -84,7 +84,7 @@ json_group *json_document::create_group(const char *name) noexcept
     {
         int current_error = ft_errno;
         if (current_error == ER_SUCCESS)
-            current_error = JSON_MALLOC_FAIL;
+            current_error = FT_ERR_NO_MEMORY;
         this->set_error(current_error);
         return (ft_nullptr);
     }
@@ -96,7 +96,7 @@ json_item *json_document::create_item(const char *key, const char *value) noexce
 {
     if (!key || !value)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     json_item *item = json_create_item(key, value);
@@ -104,7 +104,7 @@ json_item *json_document::create_item(const char *key, const char *value) noexce
     {
         int current_error = ft_errno;
         if (current_error == ER_SUCCESS)
-            current_error = JSON_MALLOC_FAIL;
+            current_error = FT_ERR_NO_MEMORY;
         this->set_error(current_error);
         return (ft_nullptr);
     }
@@ -116,7 +116,7 @@ json_item *json_document::create_item(const char *key, const ft_big_number &valu
 {
     if (!key)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     json_item *item = json_create_item(key, value);
@@ -124,7 +124,7 @@ json_item *json_document::create_item(const char *key, const ft_big_number &valu
     {
         int current_error = ft_errno;
         if (current_error == ER_SUCCESS)
-            current_error = JSON_MALLOC_FAIL;
+            current_error = FT_ERR_NO_MEMORY;
         this->set_error(current_error);
         return (ft_nullptr);
     }
@@ -136,7 +136,7 @@ json_item *json_document::create_item(const char *key, const int value) noexcept
 {
     if (!key)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     json_item *item = json_create_item(key, value);
@@ -144,7 +144,7 @@ json_item *json_document::create_item(const char *key, const int value) noexcept
     {
         int current_error = ft_errno;
         if (current_error == ER_SUCCESS)
-            current_error = JSON_MALLOC_FAIL;
+            current_error = FT_ERR_NO_MEMORY;
         this->set_error(current_error);
         return (ft_nullptr);
     }
@@ -156,7 +156,7 @@ json_item *json_document::create_item(const char *key, const bool value) noexcep
 {
     if (!key)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     json_item *item = json_create_item(key, value);
@@ -164,7 +164,7 @@ json_item *json_document::create_item(const char *key, const bool value) noexcep
     {
         int current_error = ft_errno;
         if (current_error == ER_SUCCESS)
-            current_error = JSON_MALLOC_FAIL;
+            current_error = FT_ERR_NO_MEMORY;
         this->set_error(current_error);
         return (ft_nullptr);
     }
@@ -176,7 +176,7 @@ void json_document::add_item(json_group *group, json_item *item) noexcept
 {
     if (!group || !item)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     json_add_item_to_group(group, item);
@@ -188,7 +188,7 @@ void json_document::append_group(json_group *group) noexcept
 {
     if (!group)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     json_append_group(&this->_groups, group);
@@ -200,7 +200,7 @@ int json_document::write_to_file(const char *file_path) const noexcept
 {
     if (!file_path)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     int result = json_write_to_file(file_path, this->_groups);
@@ -208,7 +208,7 @@ int json_document::write_to_file(const char *file_path) const noexcept
     {
         int current_error = ft_errno;
         if (current_error == ER_SUCCESS)
-            current_error = FILE_INVALID_FD;
+            current_error = FT_ERR_INVALID_HANDLE;
         this->set_error(current_error);
         return (result);
     }
@@ -223,7 +223,7 @@ char *json_document::write_to_string() const noexcept
     {
         int current_error = ft_errno;
         if (current_error == ER_SUCCESS)
-            current_error = JSON_MALLOC_FAIL;
+            current_error = FT_ERR_NO_MEMORY;
         this->set_error(current_error);
         return (ft_nullptr);
     }
@@ -236,7 +236,7 @@ int json_document::read_from_file(const char *file_path) noexcept
     if (!file_path)
     {
         this->clear();
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     this->clear();
@@ -245,7 +245,7 @@ int json_document::read_from_file(const char *file_path) noexcept
     {
         int current_error = ft_errno;
         if (current_error == ER_SUCCESS)
-            current_error = FT_EINVAL;
+            current_error = FT_ERR_INVALID_ARGUMENT;
         this->set_error(current_error);
         return (-1);
     }
@@ -259,14 +259,14 @@ int json_document::read_from_file_streaming(const char *file_path, size_t buffer
     if (!file_path || buffer_capacity == 0)
     {
         this->clear();
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     FILE *file = fopen(file_path, "rb");
     if (!file)
     {
         this->clear();
-        this->set_error(FT_EIO);
+        this->set_error(FT_ERR_IO);
         return (-1);
     }
     this->clear();
@@ -276,7 +276,7 @@ int json_document::read_from_file_streaming(const char *file_path, size_t buffer
     {
         int current_error = ft_errno;
         if (current_error == ER_SUCCESS)
-            current_error = FT_EINVAL;
+            current_error = FT_ERR_INVALID_ARGUMENT;
         this->set_error(current_error);
         return (-1);
     }
@@ -290,7 +290,7 @@ int json_document::read_from_string(const char *content) noexcept
     if (!content)
     {
         this->clear();
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     this->clear();
@@ -299,7 +299,7 @@ int json_document::read_from_string(const char *content) noexcept
     {
         int current_error = ft_errno;
         if (current_error == ER_SUCCESS)
-            current_error = FT_EINVAL;
+            current_error = FT_ERR_INVALID_ARGUMENT;
         this->set_error(current_error);
         return (-1);
     }
@@ -312,7 +312,7 @@ json_group *json_document::find_group(const char *name) const noexcept
 {
     if (!name)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     json_group *group = json_find_group(this->_groups, name);
@@ -324,7 +324,7 @@ json_item *json_document::find_item(json_group *group, const char *key) const no
 {
     if (!group || !key)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     json_item *item = json_find_item(group, key);
@@ -336,12 +336,12 @@ json_item *json_document::find_item_by_pointer(const char *pointer) const noexce
 {
     if (!pointer)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     if (pointer[0] == '\0' || pointer[0] != '/')
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     const char *cursor = pointer;
@@ -351,7 +351,7 @@ json_item *json_document::find_item_by_pointer(const char *pointer) const noexce
     {
         if (*cursor != '/')
         {
-            this->set_error(FT_EINVAL);
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
             return (ft_nullptr);
         }
         cursor += 1;
@@ -361,7 +361,7 @@ json_item *json_document::find_item_by_pointer(const char *pointer) const noexce
         size_t segment_length = static_cast<size_t>(cursor - segment_start);
         if (segment_length == 0)
         {
-            this->set_error(FT_EINVAL);
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
             return (ft_nullptr);
         }
         char *token = json_document_unescape_pointer_token(segment_start, segment_length);
@@ -389,14 +389,14 @@ json_item *json_document::find_item_by_pointer(const char *pointer) const noexce
             cma_free(token);
             if (!found_group)
             {
-                this->set_error(MAP_KEY_NOT_FOUND);
+                this->set_error(FT_ERR_NOT_FOUND);
                 return (ft_nullptr);
             }
             current_group = group_iterator;
             expecting_group = false;
             if (*cursor == '\0')
             {
-                this->set_error(FT_EINVAL);
+                this->set_error(FT_ERR_INVALID_ARGUMENT);
                 return (ft_nullptr);
             }
             continue;
@@ -416,18 +416,18 @@ json_item *json_document::find_item_by_pointer(const char *pointer) const noexce
         cma_free(token);
         if (!item_iterator)
         {
-            this->set_error(MAP_KEY_NOT_FOUND);
+            this->set_error(FT_ERR_NOT_FOUND);
             return (ft_nullptr);
         }
         if (*cursor != '\0')
         {
-            this->set_error(FT_EINVAL);
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
             return (ft_nullptr);
         }
         this->set_error(ER_SUCCESS);
         return (item_iterator);
     }
-    this->set_error(FT_EINVAL);
+    this->set_error(FT_ERR_INVALID_ARGUMENT);
     return (ft_nullptr);
 }
 
@@ -438,7 +438,7 @@ const char *json_document::get_value_by_pointer(const char *pointer) const noexc
         return (ft_nullptr);
     if (!item->value)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     this->set_error(ER_SUCCESS);
@@ -449,7 +449,7 @@ void json_document::remove_group(const char *name) noexcept
 {
     if (!name)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     json_remove_group(&this->_groups, name);
@@ -461,7 +461,7 @@ void json_document::remove_item(json_group *group, const char *key) noexcept
 {
     if (!group || !key)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     json_remove_item(group, key);
@@ -473,13 +473,13 @@ void json_document::update_item(json_group *group, const char *key, const char *
 {
     if (!group || !key || !value)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     json_item *item = json_find_item(group, key);
     if (!item)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     json_update_item(group, key, value);
@@ -487,7 +487,7 @@ void json_document::update_item(json_group *group, const char *key, const char *
     {
         int current_error = ft_errno;
         if (current_error == ER_SUCCESS)
-            current_error = JSON_MALLOC_FAIL;
+            current_error = FT_ERR_NO_MEMORY;
         this->set_error(current_error);
         return ;
     }
@@ -499,13 +499,13 @@ void json_document::update_item(json_group *group, const char *key, const int va
 {
     if (!group || !key)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     json_item *item = json_find_item(group, key);
     if (!item)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     json_update_item(group, key, value);
@@ -513,7 +513,7 @@ void json_document::update_item(json_group *group, const char *key, const int va
     {
         int current_error = ft_errno;
         if (current_error == ER_SUCCESS)
-            current_error = JSON_MALLOC_FAIL;
+            current_error = FT_ERR_NO_MEMORY;
         this->set_error(current_error);
         return ;
     }
@@ -525,13 +525,13 @@ void json_document::update_item(json_group *group, const char *key, const bool v
 {
     if (!group || !key)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     json_item *item = json_find_item(group, key);
     if (!item)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     json_update_item(group, key, value);
@@ -539,7 +539,7 @@ void json_document::update_item(json_group *group, const char *key, const bool v
     {
         int current_error = ft_errno;
         if (current_error == ER_SUCCESS)
-            current_error = JSON_MALLOC_FAIL;
+            current_error = FT_ERR_NO_MEMORY;
         this->set_error(current_error);
         return ;
     }
@@ -551,13 +551,13 @@ void json_document::update_item(json_group *group, const char *key, const ft_big
 {
     if (!group || !key)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     json_item *item = json_find_item(group, key);
     if (!item)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     json_update_item(group, key, value);
@@ -565,7 +565,7 @@ void json_document::update_item(json_group *group, const char *key, const ft_big
     {
         int current_error = ft_errno;
         if (current_error == ER_SUCCESS)
-            current_error = JSON_MALLOC_FAIL;
+            current_error = FT_ERR_NO_MEMORY;
         this->set_error(current_error);
         return ;
     }

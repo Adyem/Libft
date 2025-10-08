@@ -39,7 +39,7 @@ cnfg_config *cnfg_parse(const char *filename)
 {
     if (!filename)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     FILE *file = ft_fopen(filename, "r");
@@ -48,7 +48,7 @@ cnfg_config *cnfg_parse(const char *filename)
     cnfg_config *config = static_cast<cnfg_config*>(cma_calloc(1, sizeof(cnfg_config)));
     if (!config)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         ft_fclose(file);
         return (ft_nullptr);
     }
@@ -72,7 +72,7 @@ cnfg_config *cnfg_parse(const char *filename)
                     current_section = cma_strdup(line_string + 1);
                     if (!current_section)
                     {
-                        ft_errno = FT_EALLOC;
+                        ft_errno = FT_ERR_NO_MEMORY;
                         cnfg_free(config);
                         ft_fclose(file);
                         return (ft_nullptr);
@@ -94,7 +94,7 @@ cnfg_config *cnfg_parse(const char *filename)
                 key = cma_strdup(key_start);
                 if (!key)
                 {
-                    ft_errno = FT_EALLOC;
+                    ft_errno = FT_ERR_NO_MEMORY;
                     cma_free(value);
                     cnfg_free(config);
                     if (current_section)
@@ -108,7 +108,7 @@ cnfg_config *cnfg_parse(const char *filename)
                 value = cma_strdup(value_start);
                 if (!value)
                 {
-                    ft_errno = FT_EALLOC;
+                    ft_errno = FT_ERR_NO_MEMORY;
                     cma_free(key);
                     cnfg_free(config);
                     if (current_section)
@@ -126,7 +126,7 @@ cnfg_config *cnfg_parse(const char *filename)
                 key = cma_strdup(key_start);
                 if (!key)
                 {
-                    ft_errno = FT_EALLOC;
+                    ft_errno = FT_ERR_NO_MEMORY;
                     cnfg_free(config);
                     if (current_section)
                         cma_free(current_section);
@@ -144,7 +144,7 @@ cnfg_config *cnfg_parse(const char *filename)
         entry.value = value;
         if (current_section && !entry.section)
         {
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_ERR_NO_MEMORY;
             cma_free(key);
             cma_free(entry.value);
             cnfg_free(config);
@@ -156,7 +156,7 @@ cnfg_config *cnfg_parse(const char *filename)
         cnfg_entry *new_entries = static_cast<cnfg_entry*>(cma_realloc(config->entries, sizeof(cnfg_entry) * (config->entry_count + 1)));
         if (!new_entries)
         {
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_ERR_NO_MEMORY;
             cma_free(entry.section);
             cma_free(entry.key);
             cma_free(entry.value);
@@ -181,7 +181,7 @@ static cnfg_config *cnfg_parse_json(const char *filename)
 {
     if (!filename)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     json_group *groups = json_read_from_file(filename);
@@ -202,7 +202,7 @@ static cnfg_config *cnfg_parse_json(const char *filename)
     cnfg_config *config = static_cast<cnfg_config*>(cma_calloc(1, sizeof(cnfg_config)));
     if (!config)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         json_free_groups(groups);
         return (ft_nullptr);
     }
@@ -211,7 +211,7 @@ static cnfg_config *cnfg_parse_json(const char *filename)
         config->entries = static_cast<cnfg_entry*>(cma_calloc(count, sizeof(cnfg_entry)));
         if (!config->entries)
         {
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_ERR_NO_MEMORY;
             cma_free(config);
             json_free_groups(groups);
             return (ft_nullptr);
@@ -230,7 +230,7 @@ static cnfg_config *cnfg_parse_json(const char *filename)
                 entry->section = cma_strdup(group_pointer->name);
                 if (!entry->section)
                 {
-                    ft_errno = FT_EALLOC;
+                    ft_errno = FT_ERR_NO_MEMORY;
                     config->entry_count = index;
                     cnfg_free(config);
                     json_free_groups(groups);
@@ -242,7 +242,7 @@ static cnfg_config *cnfg_parse_json(const char *filename)
                 entry->key = cma_strdup(item_pointer->key);
                 if (!entry->key)
                 {
-                    ft_errno = FT_EALLOC;
+                    ft_errno = FT_ERR_NO_MEMORY;
                     config->entry_count = index + 1;
                     cnfg_free(config);
                     json_free_groups(groups);
@@ -254,7 +254,7 @@ static cnfg_config *cnfg_parse_json(const char *filename)
                 entry->value = cma_strdup(item_pointer->value);
                 if (!entry->value)
                 {
-                    ft_errno = FT_EALLOC;
+                    ft_errno = FT_ERR_NO_MEMORY;
                     config->entry_count = index + 1;
                     cnfg_free(config);
                     json_free_groups(groups);
@@ -278,7 +278,7 @@ cnfg_config *config_load_env()
     cnfg_config *config = static_cast<cnfg_config*>(cma_calloc(1, sizeof(cnfg_config)));
     if (!config)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     size_t count = 0;
@@ -295,7 +295,7 @@ cnfg_config *config_load_env()
     config->entries = static_cast<cnfg_entry*>(cma_calloc(count, sizeof(cnfg_entry)));
     if (!config->entries)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         cma_free(config);
         return (ft_nullptr);
     }
@@ -313,7 +313,7 @@ cnfg_config *config_load_env()
             entry->key = static_cast<char*>(cma_calloc(key_length + 1, sizeof(char)));
             if (!entry->key)
             {
-                ft_errno = FT_EALLOC;
+                ft_errno = FT_ERR_NO_MEMORY;
                 config->entry_count = index;
                 cnfg_free(config);
                 return (ft_nullptr);
@@ -324,7 +324,7 @@ cnfg_config *config_load_env()
                 entry->value = cma_strdup(equals_sign + 1);
                 if (!entry->value)
                 {
-                    ft_errno = FT_EALLOC;
+                    ft_errno = FT_ERR_NO_MEMORY;
                     config->entry_count = index + 1;
                     cnfg_free(config);
                     return (ft_nullptr);
@@ -336,7 +336,7 @@ cnfg_config *config_load_env()
             entry->key = cma_strdup(pair);
             if (!entry->key)
             {
-                ft_errno = FT_EALLOC;
+                ft_errno = FT_ERR_NO_MEMORY;
                 config->entry_count = index;
                 cnfg_free(config);
                 return (ft_nullptr);
@@ -354,7 +354,7 @@ cnfg_config *config_load_file(const char *filename)
 {
     if (!filename)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     const char *dot = ft_strrchr(filename, '.');

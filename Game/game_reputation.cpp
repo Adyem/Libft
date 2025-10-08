@@ -213,13 +213,13 @@ int ft_reputation::get_milestone(int id) const noexcept
 {
     if (id < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     const Pair<int, int> *entry = this->_milestones.find(id);
     if (!entry)
     {
-        this->set_error(MAP_KEY_NOT_FOUND);
+        this->set_error(FT_ERR_NOT_FOUND);
         return (0);
     }
     this->set_error(ER_SUCCESS);
@@ -230,7 +230,7 @@ void ft_reputation::set_milestone(int id, int value) noexcept
 {
     if (id < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     Pair<int, int> *entry = this->_milestones.find(id);
@@ -277,13 +277,13 @@ int ft_reputation::get_rep(int id) const noexcept
 {
     if (id < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     const Pair<int, int> *entry = this->_reps.find(id);
     if (!entry)
     {
-        this->set_error(MAP_KEY_NOT_FOUND);
+        this->set_error(FT_ERR_NOT_FOUND);
         return (0);
     }
     this->set_error(ER_SUCCESS);
@@ -294,7 +294,7 @@ void ft_reputation::set_rep(int id, int value) noexcept
 {
     if (id < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     Pair<int, int> *entry = this->_reps.find(id);

@@ -11,7 +11,7 @@ FT_TEST(test_ft_to_string_positive_number,
     ft_string converted_value;
     std::string actual_value;
 
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     converted_value = ft_to_string(12345);
     actual_value = converted_value.c_str();
     FT_ASSERT(actual_value == "12345");
@@ -43,7 +43,7 @@ FT_TEST(test_ft_to_string_extreme_values,
     std::string zero_result;
     std::string minimum_result;
 
-    ft_errno = FILE_INVALID_FD;
+    ft_errno = FT_ERR_INVALID_HANDLE;
     zero_string = ft_to_string(0);
     minimum_string = ft_to_string(FT_LONG_MIN);
     expected_stream << std::numeric_limits<long>::min();
@@ -64,7 +64,7 @@ FT_TEST(test_ft_to_string_independent_instances,
     const char *first_pointer;
     const char *second_pointer;
 
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     first_result = ft_to_string(42);
     second_result = ft_to_string(42);
     first_pointer = first_result.c_str();

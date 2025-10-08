@@ -82,7 +82,7 @@ int ft_websocket_server::start(const char *ip, uint16_t port, int address_family
         if (this->_server_socket)
             this->set_error(this->_server_socket->get_error());
         else
-            this->set_error(FT_EINVAL);
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
     this->set_error(ER_SUCCESS);
@@ -107,7 +107,7 @@ int ft_websocket_server::perform_handshake(int client_fd)
     {
         if (request.size() >= MAX_HANDSHAKE_SIZE)
         {
-            this->set_error(FT_EINVAL);
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
             return (1);
         }
         bytes_received = nw_recv(client_fd, buffer, sizeof(buffer) - 1, 0);
@@ -118,14 +118,14 @@ int ft_websocket_server::perform_handshake(int client_fd)
         }
         if (bytes_received == 0)
         {
-            this->set_error(SOCKET_RECEIVE_FAILED);
+            this->set_error(FT_ERR_SOCKET_RECEIVE_FAILED);
             return (1);
         }
         buffer[bytes_received] = '\0';
         request_size = request.size();
         if (request_size + static_cast<std::size_t>(bytes_received) > MAX_HANDSHAKE_SIZE)
         {
-            this->set_error(FT_EINVAL);
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
             return (1);
         }
         request.append(buffer);
@@ -135,7 +135,7 @@ int ft_websocket_server::perform_handshake(int client_fd)
     key_line = ft_strstr(request.c_str(), "Sec-WebSocket-Key: ");
     if (!key_line)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
     key_line += ft_strlen("Sec-WebSocket-Key: ");
@@ -270,7 +270,7 @@ int ft_websocket_server::receive_frame(int client_fd, ft_string &message)
         payload = static_cast<unsigned char *>(cma_malloc(payload_length));
         if (!payload)
         {
-            this->set_error(FT_EINVAL);
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
             return (1);
         }
         index_value = 0;
@@ -316,7 +316,7 @@ int ft_websocket_server::receive_frame(int client_fd, ft_string &message)
             return (0);
         }
         cma_free(payload);
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
 }
@@ -357,7 +357,7 @@ int ft_websocket_server::send_text(int client_fd, const ft_string &message)
 
     if (client_fd < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
     frame.append(static_cast<char>(0x81));

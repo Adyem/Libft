@@ -100,7 +100,7 @@ void ft_event_scheduler::schedule_event(const ft_sharedptr<ft_event> &event) noe
     this->set_error(ER_SUCCESS);
     if (!event)
     {
-        this->set_error(GAME_GENERAL_ERROR);
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return ;
     }
     if (event.get_error() != ER_SUCCESS)
@@ -160,7 +160,7 @@ void ft_event_scheduler::cancel_event(int id) noexcept
         }
     }
     if (!event_found)
-        this->set_error(GAME_GENERAL_ERROR);
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
     else
         this->set_error(ER_SUCCESS);
     return ;
@@ -213,7 +213,7 @@ void ft_event_scheduler::reschedule_event(int id, int new_duration) noexcept
         }
     }
     if (!event_found)
-        this->set_error(GAME_GENERAL_ERROR);
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
     else
         this->set_error(ER_SUCCESS);
     return ;
@@ -224,7 +224,7 @@ void ft_event_scheduler::update_events(ft_sharedptr<ft_world> &world, int ticks,
     this->set_error(ER_SUCCESS);
     if (!world)
     {
-        this->set_error(GAME_GENERAL_ERROR);
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return ;
     }
     ft_priority_queue<ft_sharedptr<ft_event>, ft_event_compare_ptr> temp;
@@ -382,14 +382,14 @@ int log_event_to_file(const ft_event &event, const char *file_path) noexcept
     FILE *file = fopen(file_path, "a");
     if (!file)
     {
-        ft_errno = GAME_GENERAL_ERROR;
-        return (GAME_GENERAL_ERROR);
+        ft_errno = FT_ERR_GAME_GENERAL_ERROR;
+        return (FT_ERR_GAME_GENERAL_ERROR);
     }
     if (fprintf(file, "event %d processed\n", event.get_id()) < 0)
     {
         fclose(file);
-        ft_errno = GAME_GENERAL_ERROR;
-        return (GAME_GENERAL_ERROR);
+        ft_errno = FT_ERR_GAME_GENERAL_ERROR;
+        return (FT_ERR_GAME_GENERAL_ERROR);
     }
     fclose(file);
     ft_errno = ER_SUCCESS;
@@ -401,7 +401,7 @@ void log_event_to_buffer(const ft_event &event, ft_string &buffer) noexcept
     char *id_string = cma_itoa(event.get_id());
     if (!id_string)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return ;
     }
     buffer += "event ";
@@ -418,8 +418,8 @@ static int add_item_field(json_group *group, const ft_string &key, int value)
     if (!json_item_ptr)
     {
         json_free_groups(group);
-        ft_errno = JSON_MALLOC_FAIL;
-        return (JSON_MALLOC_FAIL);
+        ft_errno = FT_ERR_NO_MEMORY;
+        return (FT_ERR_NO_MEMORY);
     }
     json_add_item_to_group(group, json_item_ptr);
     ft_errno = ER_SUCCESS;
@@ -430,20 +430,20 @@ json_group *serialize_event_scheduler(const ft_sharedptr<ft_event_scheduler> &sc
 {
     if (!scheduler)
     {
-        ft_errno = GAME_GENERAL_ERROR;
+        ft_errno = FT_ERR_GAME_GENERAL_ERROR;
         return (ft_nullptr);
     }
     json_group *group = json_create_json_group("world");
     if (!group)
     {
-        ft_errno = JSON_MALLOC_FAIL;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     json_item *count_item = json_create_item("event_count", static_cast<int>(scheduler->size()));
     if (!count_item)
     {
         json_free_groups(group);
-        ft_errno = JSON_MALLOC_FAIL;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     json_add_item_to_group(group, count_item);
@@ -462,7 +462,7 @@ json_group *serialize_event_scheduler(const ft_sharedptr<ft_event_scheduler> &sc
         if (!event_index_string)
         {
             json_free_groups(group);
-            ft_errno = JSON_MALLOC_FAIL;
+            ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
         ft_string key_id = "event_";
@@ -486,14 +486,14 @@ int deserialize_event_scheduler(ft_sharedptr<ft_event_scheduler> &scheduler, jso
     ft_errno = ER_SUCCESS;
     if (!scheduler)
     {
-        ft_errno = GAME_GENERAL_ERROR;
-        return (GAME_GENERAL_ERROR);
+        ft_errno = FT_ERR_GAME_GENERAL_ERROR;
+        return (FT_ERR_GAME_GENERAL_ERROR);
     }
     json_item *count_item = json_find_item(group, "event_count");
     if (!count_item)
     {
-        ft_errno = GAME_GENERAL_ERROR;
-        return (GAME_GENERAL_ERROR);
+        ft_errno = FT_ERR_GAME_GENERAL_ERROR;
+        return (FT_ERR_GAME_GENERAL_ERROR);
     }
     int event_count = ft_atoi(count_item->value);
     int event_index = 0;
@@ -502,8 +502,8 @@ int deserialize_event_scheduler(ft_sharedptr<ft_event_scheduler> &scheduler, jso
         char *event_index_string = cma_itoa(event_index);
         if (!event_index_string)
         {
-            ft_errno = JSON_MALLOC_FAIL;
-            return (JSON_MALLOC_FAIL);
+            ft_errno = FT_ERR_NO_MEMORY;
+            return (FT_ERR_NO_MEMORY);
         }
         ft_string key_id = "event_";
         key_id += event_index_string;
@@ -516,8 +516,8 @@ int deserialize_event_scheduler(ft_sharedptr<ft_event_scheduler> &scheduler, jso
         json_item *duration_item = json_find_item(group, key_duration.c_str());
         if (!id_item || !duration_item)
         {
-            ft_errno = GAME_GENERAL_ERROR;
-            return (GAME_GENERAL_ERROR);
+            ft_errno = FT_ERR_GAME_GENERAL_ERROR;
+            return (FT_ERR_GAME_GENERAL_ERROR);
         }
         ft_sharedptr<ft_event> event(new ft_event());
         if (event.get_error() != ER_SUCCESS)

@@ -126,13 +126,13 @@ void ft_deque<ElementType>::push_front(const ElementType& value)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     DequeNode* node = static_cast<DequeNode*>(cma_malloc(sizeof(DequeNode)));
     if (node == ft_nullptr)
     {
-        this->set_error(DEQUE_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
@@ -155,13 +155,13 @@ void ft_deque<ElementType>::push_front(ElementType&& value)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     DequeNode* node = static_cast<DequeNode*>(cma_malloc(sizeof(DequeNode)));
     if (node == ft_nullptr)
     {
-        this->set_error(DEQUE_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
@@ -184,13 +184,13 @@ void ft_deque<ElementType>::push_back(const ElementType& value)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     DequeNode* node = static_cast<DequeNode*>(cma_malloc(sizeof(DequeNode)));
     if (node == ft_nullptr)
     {
-        this->set_error(DEQUE_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
@@ -213,13 +213,13 @@ void ft_deque<ElementType>::push_back(ElementType&& value)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     DequeNode* node = static_cast<DequeNode*>(cma_malloc(sizeof(DequeNode)));
     if (node == ft_nullptr)
     {
-        this->set_error(DEQUE_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
@@ -242,12 +242,12 @@ ElementType ft_deque<ElementType>::pop_front()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (ElementType());
     }
     if (this->_front == ft_nullptr)
     {
-        this->set_error(DEQUE_EMPTY);
+        this->set_error(FT_ERR_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         return (ElementType());
     }
@@ -271,12 +271,12 @@ ElementType ft_deque<ElementType>::pop_back()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (ElementType());
     }
     if (this->_back == ft_nullptr)
     {
-        this->set_error(DEQUE_EMPTY);
+        this->set_error(FT_ERR_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         return (ElementType());
     }
@@ -301,12 +301,12 @@ ElementType& ft_deque<ElementType>::front()
     static ElementType error_element = ElementType();
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (error_element);
     }
     if (this->_front == ft_nullptr)
     {
-        this->set_error(DEQUE_EMPTY);
+        this->set_error(FT_ERR_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         return (error_element);
     }
@@ -322,12 +322,12 @@ const ElementType& ft_deque<ElementType>::front() const
     static ElementType error_element = ElementType();
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (error_element);
     }
     if (this->_front == ft_nullptr)
     {
-        this->set_error(DEQUE_EMPTY);
+        this->set_error(FT_ERR_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         return (error_element);
     }
@@ -343,12 +343,12 @@ ElementType& ft_deque<ElementType>::back()
     static ElementType error_element = ElementType();
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (error_element);
     }
     if (this->_back == ft_nullptr)
     {
-        this->set_error(DEQUE_EMPTY);
+        this->set_error(FT_ERR_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         return (error_element);
     }
@@ -364,12 +364,12 @@ const ElementType& ft_deque<ElementType>::back() const
     static ElementType error_element = ElementType();
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (error_element);
     }
     if (this->_back == ft_nullptr)
     {
-        this->set_error(DEQUE_EMPTY);
+        this->set_error(FT_ERR_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         return (error_element);
     }
@@ -384,7 +384,7 @@ size_t ft_deque<ElementType>::size() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        const_cast<ft_deque<ElementType> *>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        const_cast<ft_deque<ElementType> *>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (0);
     }
     size_t current_size = this->_size;
@@ -398,7 +398,7 @@ bool ft_deque<ElementType>::empty() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        const_cast<ft_deque<ElementType> *>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        const_cast<ft_deque<ElementType> *>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (true);
     }
     bool result = (this->_size == 0);
@@ -432,7 +432,7 @@ void ft_deque<ElementType>::clear()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     while (this->_front != ft_nullptr)

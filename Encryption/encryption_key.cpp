@@ -14,7 +14,7 @@ const char *be_getEncryptionKey(void)
     char *key = static_cast<char *>(cma_malloc(key_length + 1));
     if (key == ft_nullptr)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     if (cmp_rng_secure_bytes(reinterpret_cast<unsigned char *>(key), key_length) == 0)

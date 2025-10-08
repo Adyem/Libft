@@ -80,13 +80,13 @@ int *math_roll(const char *expression)
 
     if (!expression)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     result = cma_strdup(expression);
     if (!result)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         if (DEBUG == 1)
         {
             pf_printf_fd(2, "168-Error: Malloc failed in cma_strdup\n");
@@ -95,7 +95,7 @@ int *math_roll(const char *expression)
     }
     if (math_roll_validate(result))
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         if (DEBUG == 1)
         {
             pf_printf_fd(2, "169-Command Roll Error with the string: %s\n", result);
@@ -106,20 +106,20 @@ int *math_roll(const char *expression)
     parse_error = math_roll_parse(result, 0);
     if (parse_error)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         cma_free(result);
         return (ft_nullptr);
     }
     if (!math_check_string_number(result))
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         cma_free(result);
         return (ft_nullptr);
     }
     value = reinterpret_cast<int*>(cma_malloc(sizeof(int)));
     if (!value)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         cma_free(result);
         return (ft_nullptr);
     }

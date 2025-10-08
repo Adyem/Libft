@@ -17,12 +17,12 @@ static char    *allocate_new_string(const char *string_1, const char *string_2)
         string_1_length = ft_strlen_size_t(string_1);
         if (ft_errno != ER_SUCCESS)
         {
-            ft_errno = FT_ERANGE;
+            ft_errno = FT_ERR_OUT_OF_RANGE;
             return (ft_nullptr);
         }
         if (string_1_length > SIZE_MAX - 1 - total_length)
         {
-            ft_errno = FT_ERANGE;
+            ft_errno = FT_ERR_OUT_OF_RANGE;
             return (ft_nullptr);
         }
         total_length += string_1_length;
@@ -35,12 +35,12 @@ static char    *allocate_new_string(const char *string_1, const char *string_2)
         string_2_length = ft_strlen_size_t(string_2);
         if (ft_errno != ER_SUCCESS)
         {
-            ft_errno = FT_ERANGE;
+            ft_errno = FT_ERR_OUT_OF_RANGE;
             return (ft_nullptr);
         }
         if (string_2_length > SIZE_MAX - 1 - total_length)
         {
-            ft_errno = FT_ERANGE;
+            ft_errno = FT_ERR_OUT_OF_RANGE;
             return (ft_nullptr);
         }
         total_length += string_2_length;

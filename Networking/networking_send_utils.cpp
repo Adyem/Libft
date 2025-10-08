@@ -19,7 +19,7 @@ int networking_check_socket_after_send(int socket_fd)
 
     if (socket_fd < 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     attempt_limit = 3;
@@ -130,7 +130,7 @@ int networking_check_socket_after_send(int socket_fd)
     }
     if (disconnect_detected)
     {
-        ft_errno = SOCKET_SEND_FAILED;
+        ft_errno = FT_ERR_SOCKET_SEND_FAILED;
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -145,7 +145,7 @@ int networking_check_ssl_after_send(SSL *ssl_connection)
 
     if (ssl_connection == NULL)
     {
-        ft_errno = SOCKET_SEND_FAILED;
+        ft_errno = FT_ERR_SOCKET_SEND_FAILED;
         return (-1);
     }
     attempt_limit = 3;
@@ -200,7 +200,7 @@ int networking_check_ssl_after_send(SSL *ssl_connection)
             break;
         if (peek_result == 0)
         {
-            ft_errno = SOCKET_SEND_FAILED;
+            ft_errno = FT_ERR_SOCKET_SEND_FAILED;
             return (-1);
         }
         ssl_error = SSL_get_error(ssl_connection, peek_result);
@@ -211,7 +211,7 @@ int networking_check_ssl_after_send(SSL *ssl_connection)
         }
         if (ssl_error == SSL_ERROR_ZERO_RETURN)
         {
-            ft_errno = SOCKET_SEND_FAILED;
+            ft_errno = FT_ERR_SOCKET_SEND_FAILED;
             return (-1);
         }
 #ifdef _WIN32
@@ -228,7 +228,7 @@ int networking_check_ssl_after_send(SSL *ssl_connection)
             if (last_error != 0)
                 ft_errno = last_error + ERRNO_OFFSET;
             else
-                ft_errno = SOCKET_SEND_FAILED;
+                ft_errno = FT_ERR_SOCKET_SEND_FAILED;
             return (-1);
         }
 #else
@@ -242,11 +242,11 @@ int networking_check_ssl_after_send(SSL *ssl_connection)
             if (errno != 0)
                 ft_errno = errno + ERRNO_OFFSET;
             else
-                ft_errno = SOCKET_SEND_FAILED;
+                ft_errno = FT_ERR_SOCKET_SEND_FAILED;
             return (-1);
         }
 #endif
-        ft_errno = SOCKET_SEND_FAILED;
+        ft_errno = FT_ERR_SOCKET_SEND_FAILED;
         return (-1);
     }
     if (networking_check_socket_after_send(socket_fd) != 0)

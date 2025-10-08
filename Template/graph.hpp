@@ -75,7 +75,7 @@ ft_graph<VertexType>::ft_graph(size_t initialCapacity)
         this->_nodes = static_cast<GraphNode*>(cma_malloc(sizeof(GraphNode) * initialCapacity));
         if (this->_nodes == ft_nullptr)
         {
-            this->set_error(GRAPH_ALLOC_FAIL);
+            this->set_error(FT_ERR_NO_MEMORY);
             return ;
         }
         this->_capacity = initialCapacity;
@@ -121,12 +121,12 @@ ft_graph<VertexType>& ft_graph<VertexType>::operator=(ft_graph&& other) noexcept
     {
         if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
-            this->set_error(PT_ERR_MUTEX_OWNER);
+            this->set_error(FT_ERR_MUTEX_NOT_OWNER);
             return (*this);
         }
         if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
-            this->set_error(PT_ERR_MUTEX_OWNER);
+            this->set_error(FT_ERR_MUTEX_NOT_OWNER);
             this->_mutex.unlock(THREAD_ID);
             return (*this);
         }
@@ -174,7 +174,7 @@ bool ft_graph<VertexType>::ensure_node_capacity(size_t desired)
     GraphNode* newNodes = static_cast<GraphNode*>(cma_malloc(sizeof(GraphNode) * newCap));
     if (newNodes == ft_nullptr)
     {
-        this->set_error(GRAPH_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
         return (false);
     }
     size_t node_index = 0;
@@ -213,7 +213,7 @@ bool ft_graph<VertexType>::ensure_edge_capacity(GraphNode& node, size_t desired)
     size_t* newEdges = static_cast<size_t*>(cma_malloc(sizeof(size_t) * newCap));
     if (newEdges == ft_nullptr)
     {
-        this->set_error(GRAPH_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
         return (false);
     }
     size_t edge_index = 0;
@@ -235,7 +235,7 @@ size_t ft_graph<VertexType>::add_vertex(const VertexType& value)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (this->_size);
     }
     if (!ensure_node_capacity(this->_size + 1))
@@ -259,7 +259,7 @@ size_t ft_graph<VertexType>::add_vertex(VertexType&& value)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (this->_size);
     }
     if (!ensure_node_capacity(this->_size + 1))
@@ -283,12 +283,12 @@ void ft_graph<VertexType>::add_edge(size_t from, size_t to)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     if (from >= this->_size || to >= this->_size)
     {
-        this->set_error(GRAPH_NOT_FOUND);
+        this->set_error(FT_ERR_NOT_FOUND);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
@@ -311,19 +311,19 @@ void ft_graph<VertexType>::bfs(size_t start, Func visit)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     if (start >= this->_size)
     {
-        this->set_error(GRAPH_NOT_FOUND);
+        this->set_error(FT_ERR_NOT_FOUND);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
     bool* visited = static_cast<bool*>(cma_malloc(sizeof(bool) * this->_size));
     if (visited == ft_nullptr)
     {
-        this->set_error(GRAPH_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
@@ -364,19 +364,19 @@ void ft_graph<VertexType>::dfs(size_t start, Func visit)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     if (start >= this->_size)
     {
-        this->set_error(GRAPH_NOT_FOUND);
+        this->set_error(FT_ERR_NOT_FOUND);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
     bool* visited = static_cast<bool*>(cma_malloc(sizeof(bool) * this->_size));
     if (visited == ft_nullptr)
     {
-        this->set_error(GRAPH_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
@@ -415,12 +415,12 @@ void ft_graph<VertexType>::neighbors(size_t index, ft_vector<size_t> &out) const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     if (index >= this->_size)
     {
-        this->set_error(GRAPH_NOT_FOUND);
+        this->set_error(FT_ERR_NOT_FOUND);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
@@ -440,7 +440,7 @@ size_t ft_graph<VertexType>::size() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (0);
     }
     size_t s = this->_size;
@@ -454,7 +454,7 @@ bool ft_graph<VertexType>::empty() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (true);
     }
     bool res = (this->_size == 0);
@@ -468,7 +468,7 @@ int ft_graph<VertexType>::get_error() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (this->_error_code);
     }
     int err = this->_error_code;
@@ -481,7 +481,7 @@ const char* ft_graph<VertexType>::get_error_str() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (ft_strerror(this->_error_code));
     }
     int err = this->_error_code;
@@ -494,7 +494,7 @@ void ft_graph<VertexType>::clear()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     size_t node_index_clear = 0;

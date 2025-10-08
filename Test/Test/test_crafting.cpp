@@ -63,7 +63,7 @@ FT_TEST(test_crafting_missing_ingredient, "crafting fails with missing ingredien
     crafted.set_stack_size(1);
     crafted.set_rarity(0);
 
-    FT_ASSERT_EQ(GAME_GENERAL_ERROR, crafting.craft_item(inventory, 1, crafted));
+    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, crafting.craft_item(inventory, 1, crafted));
     FT_ASSERT_EQ(0, inventory.count_item(3));
     FT_ASSERT_EQ(1, inventory.count_item(1));
     return (1);

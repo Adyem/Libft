@@ -24,7 +24,7 @@ FT_TEST(test_ft_sin_success_resets_errno, "ft_sin clears ft_errno after prior fa
 {
     double result;
 
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     result = ft_sin(0.0);
     FT_ASSERT(math_fabs(result) < 0.000001);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -44,7 +44,7 @@ FT_TEST(test_math_cos_success_resets_errno, "math_cos clears ft_errno after prio
 {
     double result;
 
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     result = math_cos(0.0);
     FT_ASSERT(math_fabs(result - 1.0) < 0.000001);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -71,7 +71,7 @@ FT_TEST(test_ft_tan_forty_five, "ft_tan returns one for forty five degrees")
     return (1);
 }
 
-FT_TEST(test_ft_tan_near_pi_over_two_sets_errno, "ft_tan near pi over two reports FT_EINVAL")
+FT_TEST(test_ft_tan_near_pi_over_two_sets_errno, "ft_tan near pi over two reports FT_ERR_INVALID_ARGUMENT")
 {
     double result;
     double angle;
@@ -80,6 +80,6 @@ FT_TEST(test_ft_tan_near_pi_over_two_sets_errno, "ft_tan near pi over two report
     ft_errno = ER_SUCCESS;
     result = ft_tan(angle);
     FT_ASSERT(math_isnan(result));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }

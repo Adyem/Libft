@@ -185,7 +185,7 @@ bool ft_inventory::check_item_errors(const ft_sharedptr<ft_item> &item) const no
 {
     if (!item)
     {
-        this->set_error(GAME_GENERAL_ERROR);
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return (true);
     }
     if (item.get_error() != ER_SUCCESS)
@@ -210,8 +210,8 @@ int ft_inventory::add_item(const ft_sharedptr<ft_item> &item) noexcept
 #if USE_INVENTORY_WEIGHT
     if (this->_weight_limit != 0 && this->_current_weight + remaining > this->_weight_limit)
     {
-        this->set_error(CHARACTER_INVENTORY_FULL);
-        return (CHARACTER_INVENTORY_FULL);
+        this->set_error(FT_ERR_FULL);
+        return (FT_ERR_FULL);
     }
 #endif
     int item_id = item->get_item_id();
@@ -247,8 +247,8 @@ int ft_inventory::add_item(const ft_sharedptr<ft_item> &item) noexcept
         int slot_usage = item->get_width() * item->get_height();
         if (this->_capacity != 0 && this->_used_slots + slot_usage > this->_capacity)
         {
-            this->set_error(CHARACTER_INVENTORY_FULL);
-            return (CHARACTER_INVENTORY_FULL);
+            this->set_error(FT_ERR_FULL);
+            return (FT_ERR_FULL);
         }
 #endif
         ft_sharedptr<ft_item> new_item(new ft_item(*item));
@@ -256,7 +256,7 @@ int ft_inventory::add_item(const ft_sharedptr<ft_item> &item) noexcept
         if (!new_item || new_item_error != ER_SUCCESS)
         {
             if (new_item_error == ER_SUCCESS)
-                this->set_error(GAME_GENERAL_ERROR);
+                this->set_error(FT_ERR_GAME_GENERAL_ERROR);
             else
                 this->set_error(new_item_error);
             return (this->_error);

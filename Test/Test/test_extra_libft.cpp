@@ -17,7 +17,7 @@ int test_strlen_size_t_null(void)
     {
         return (0);
     }
-    return (ft_errno == FT_EINVAL);
+    return (ft_errno == FT_ERR_INVALID_ARGUMENT);
 }
 
 int test_strlen_size_t_basic(void)

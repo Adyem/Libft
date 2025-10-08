@@ -201,7 +201,7 @@ static ssize_t ssl_send_all(SSL *ssl, const void *data, size_t size)
         }
         if (sent < 0)
             return (-1);
-        if (ft_errno == SSL_WANT_READ || ft_errno == SSL_WANT_WRITE)
+        if (ft_errno == FT_ERR_SSL_WANT_READ || ft_errno == FT_ERR_SSL_WANT_WRITE)
         {
             if (ssl_pointer_supports_network_checks(ssl))
             {
@@ -221,27 +221,27 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
     this->set_error(ER_SUCCESS);
     if (!host_c)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_host = host_c;
     if (!OPENSSL_init_ssl(0, ft_nullptr))
     {
-        this->set_error(FT_ETERM);
+        this->set_error(FT_ERR_TERMINATED);
         return ;
     }
 
     this->_ctx = SSL_CTX_new(TLS_client_method());
     if (!this->_ctx)
     {
-        this->set_error(FT_EALLOC);
+        this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
     if (SSL_CTX_set_default_verify_paths(this->_ctx) != 1)
     {
         SSL_CTX_free(this->_ctx);
         this->_ctx = ft_nullptr;
-        this->set_error(SOCKET_INVALID_CONFIGURATION);
+        this->set_error(FT_ERR_CONFIGURATION);
         return ;
     }
     SSL_CTX_set_verify(this->_ctx, SSL_VERIFY_PEER, ft_nullptr);
@@ -256,7 +256,7 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
     pf_snprintf(port_string, sizeof(port_string), "%u", port);
     if (getaddrinfo(host_c, port_string, &hints, &address_results) != 0)
     {
-        this->set_error(SOCKET_INVALID_CONFIGURATION);
+        this->set_error(FT_ERR_CONFIGURATION);
         return ;
     }
 
@@ -285,14 +285,14 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
         freeaddrinfo(address_results);
     if (this->_sock < 0)
     {
-        this->set_error(SOCKET_CONNECT_FAILED);
+        this->set_error(FT_ERR_SOCKET_CONNECT_FAILED);
         return ;
     }
 
     this->_ssl = SSL_new(this->_ctx);
     if (!this->_ssl)
     {
-        this->set_error(FT_EALLOC);
+        this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
     if (SSL_set1_host(this->_ssl, this->_host.c_str()) != 1)
@@ -301,7 +301,7 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
         this->_ssl = ft_nullptr;
         FT_CLOSE_SOCKET(this->_sock);
         this->_sock = -1;
-        this->set_error(SOCKET_INVALID_CONFIGURATION);
+        this->set_error(FT_ERR_CONFIGURATION);
         return ;
     }
     SSL_set_hostflags(this->_ssl, X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
@@ -314,7 +314,7 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
         this->_ssl = ft_nullptr;
         FT_CLOSE_SOCKET(this->_sock);
         this->_sock = -1;
-        this->set_error(SOCKET_INVALID_CONFIGURATION);
+        this->set_error(FT_ERR_CONFIGURATION);
         return ;
     }
     if (SSL_set_fd(this->_ssl, this->_sock) != 1)
@@ -323,7 +323,7 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
         this->_ssl = ft_nullptr;
         FT_CLOSE_SOCKET(this->_sock);
         this->_sock = -1;
-        this->set_error(SOCKET_INVALID_CONFIGURATION);
+        this->set_error(FT_ERR_CONFIGURATION);
         return ;
     }
     if (SSL_connect(this->_ssl) <= 0)
@@ -332,7 +332,7 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
         this->_ssl = ft_nullptr;
         FT_CLOSE_SOCKET(this->_sock);
         this->_sock = -1;
-        this->set_error(SOCKET_CONNECT_FAILED);
+        this->set_error(FT_ERR_SOCKET_CONNECT_FAILED);
         return ;
     }
     this->set_error(ER_SUCCESS);
@@ -368,7 +368,7 @@ bool api_tls_client::is_valid() const
         this->set_error(ER_SUCCESS);
         return (true);
     }
-    this->set_error(SOCKET_INVALID_CONFIGURATION);
+    this->set_error(FT_ERR_CONFIGURATION);
     return (false);
 }
 
@@ -377,12 +377,12 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
 {
     if (!method || !path)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     if (this->_ssl == ft_nullptr)
     {
-        this->set_error(SOCKET_INVALID_CONFIGURATION);
+        this->set_error(FT_ERR_CONFIGURATION);
         return (ft_nullptr);
     }
     this->set_error(ER_SUCCESS);
@@ -417,7 +417,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
         {
             int json_error = ft_errno;
             if (json_error == ER_SUCCESS)
-                json_error = JSON_MALLOC_FAIL;
+                json_error = FT_ERR_NO_MEMORY;
             this->set_error(json_error);
             return (ft_nullptr);
         }
@@ -426,7 +426,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
         request += "\r\nContent-Type: application/json";
         if (!api_append_content_length_header(request, body_string.size()))
         {
-            this->set_error(FT_EIO);
+            this->set_error(FT_ERR_IO);
             return (ft_nullptr);
         }
     }
@@ -436,7 +436,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
 
     if (ssl_send_all(this->_ssl, request.c_str(), request.size()) < 0)
     {
-        this->set_error(SOCKET_SEND_FAILED);
+        this->set_error(FT_ERR_SOCKET_SEND_FAILED);
         return (ft_nullptr);
     }
 
@@ -450,7 +450,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
         bytes_received = nw_ssl_read(this->_ssl, buffer, sizeof(buffer) - 1);
         if (bytes_received <= 0)
         {
-            this->set_error(SOCKET_RECEIVE_FAILED);
+            this->set_error(FT_ERR_SOCKET_RECEIVE_FAILED);
             return (ft_nullptr);
         }
         buffer[bytes_received] = '\0';
@@ -514,14 +514,14 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
             }
             if (!header_parse_end || header_parse_end == header_value_cstr)
             {
-                this->set_error(FT_ERANGE);
+                this->set_error(FT_ERR_OUT_OF_RANGE);
                 return (ft_nullptr);
             }
             while (*header_parse_end != '\0')
             {
                 if (*header_parse_end != ' ' && *header_parse_end != '\t')
                 {
-                    this->set_error(FT_ERANGE);
+                    this->set_error(FT_ERR_OUT_OF_RANGE);
                     return (ft_nullptr);
                 }
                 header_parse_end += 1;
@@ -529,7 +529,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
             parsed_length_ull = static_cast<unsigned long long>(parsed_length);
             if (parsed_length_ull > FT_SYSTEM_SIZE_MAX)
             {
-                this->set_error(FT_ERANGE);
+                this->set_error(FT_ERR_OUT_OF_RANGE);
                 return (ft_nullptr);
             }
             content_length = static_cast<size_t>(parsed_length);
@@ -577,7 +577,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
                 bytes_received = nw_ssl_read(this->_ssl, buffer, sizeof(buffer) - 1);
                 if (bytes_received <= 0)
                 {
-                    this->set_error(SOCKET_RECEIVE_FAILED);
+                    this->set_error(FT_ERR_SOCKET_RECEIVE_FAILED);
                     return (ft_nullptr);
                 }
                 buffer[bytes_received] = '\0';
@@ -620,7 +620,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
                 bytes_received = nw_ssl_read(this->_ssl, buffer, sizeof(buffer) - 1);
                 if (bytes_received <= 0)
                 {
-                    this->set_error(SOCKET_RECEIVE_FAILED);
+                    this->set_error(FT_ERR_SOCKET_RECEIVE_FAILED);
                     return (ft_nullptr);
                 }
                 buffer[bytes_received] = '\0';
@@ -641,7 +641,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
                     bytes_received = nw_ssl_read(this->_ssl, buffer, sizeof(buffer) - 1);
                     if (bytes_received <= 0)
                     {
-                        this->set_error(SOCKET_RECEIVE_FAILED);
+                        this->set_error(FT_ERR_SOCKET_RECEIVE_FAILED);
                         return (ft_nullptr);
                     }
                     buffer[bytes_received] = '\0';
@@ -660,7 +660,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
                         bytes_received = nw_ssl_read(this->_ssl, buffer, sizeof(buffer) - 1);
                         if (bytes_received <= 0)
                         {
-                            this->set_error(SOCKET_RECEIVE_FAILED);
+                            this->set_error(FT_ERR_SOCKET_RECEIVE_FAILED);
                             return (ft_nullptr);
                         }
                         buffer[bytes_received] = '\0';
@@ -685,7 +685,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
             bytes_received = nw_ssl_read(this->_ssl, buffer, sizeof(buffer) - 1);
             if (bytes_received <= 0)
             {
-                this->set_error(SOCKET_RECEIVE_FAILED);
+                this->set_error(FT_ERR_SOCKET_RECEIVE_FAILED);
                 return (ft_nullptr);
             }
             buffer[bytes_received] = '\0';
@@ -703,7 +703,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
         }
         if (bytes_received < 0)
         {
-            this->set_error(SOCKET_RECEIVE_FAILED);
+            this->set_error(FT_ERR_SOCKET_RECEIVE_FAILED);
             return (ft_nullptr);
         }
     }
@@ -711,7 +711,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
     char *result_body = cma_strdup(body.c_str());
     if (!result_body)
     {
-        this->set_error(CMA_BAD_ALLOC);
+        this->set_error(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
     this->set_error(ER_SUCCESS);
@@ -731,7 +731,7 @@ json_group *api_tls_client::request_json(const char *method, const char *path,
     {
         int json_error = ft_errno;
         if (json_error == ER_SUCCESS)
-            json_error = JSON_MALLOC_FAIL;
+            json_error = FT_ERR_NO_MEMORY;
         this->set_error(json_error);
         return (ft_nullptr);
     }
@@ -747,7 +747,7 @@ bool api_tls_client::request_async(const char *method, const char *path,
 {
     if (!callback)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     ft_thread worker([this, method, path, payload, headers, callback, user_data]()
@@ -774,7 +774,7 @@ bool api_tls_client::request_async(const char *method, const char *path,
             worker.join();
         vector_error = this->_async_workers.get_error();
         if (vector_error == ER_SUCCESS)
-            vector_error = VECTOR_ALLOC_FAIL;
+            vector_error = FT_ERR_NO_MEMORY;
         this->set_error(vector_error);
         return (false);
     }

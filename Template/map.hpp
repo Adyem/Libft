@@ -65,7 +65,7 @@ ft_map<Key, MappedType>::ft_map(size_t initial_capacity)
     void* raw_memory = cma_malloc(sizeof(Pair<Key, MappedType>) * this->_capacity);
     if (!raw_memory)
     {
-        this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+        this->set_error(FT_ERR_NO_MEMORY);
         this->_data = ft_nullptr;
         this->_capacity = 0;
         return ;
@@ -84,7 +84,7 @@ ft_map<Key, MappedType>::ft_map(const ft_map<Key, MappedType>& other)
         void* raw_memory = cma_malloc(sizeof(Pair<Key, MappedType>) * this->_capacity);
         if (!raw_memory)
         {
-            this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+            this->set_error(FT_ERR_NO_MEMORY);
             this->_data = ft_nullptr;
             this->_size = 0;
             this->_capacity = 0;
@@ -127,7 +127,7 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(const ft_map<Key, Ma
             void* raw_memory = cma_malloc(sizeof(Pair<Key, MappedType>) * other._capacity);
             if (!raw_memory)
             {
-                this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+                this->set_error(FT_ERR_NO_MEMORY);
                 this->_data = ft_nullptr;
                 this->_size = 0;
                 this->_capacity = 0;
@@ -169,12 +169,12 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(ft_map<Key, MappedTy
     {
         if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
-            this->set_error(PT_ERR_MUTEX_OWNER);
+            this->set_error(FT_ERR_MUTEX_NOT_OWNER);
             return (*this);
         }
         if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
-            this->set_error(PT_ERR_MUTEX_OWNER);
+            this->set_error(FT_ERR_MUTEX_NOT_OWNER);
             this->_mutex.unlock(THREAD_ID);
             return (*this);
         }
@@ -224,7 +224,7 @@ void ft_map<Key, MappedType>::insert(const Key& key, const MappedType& value)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        set_error(PT_ERR_MUTEX_OWNER);
+        set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     this->set_error(ER_SUCCESS);
@@ -248,7 +248,7 @@ void ft_map<Key, MappedType>::insert(const Key& key, const MappedType& value)
             doubled_capacity = this->_capacity * 2;
             if (doubled_capacity <= this->_capacity)
             {
-                this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+                this->set_error(FT_ERR_NO_MEMORY);
                 this->_mutex.unlock(THREAD_ID);
                 return ;
             }
@@ -273,7 +273,7 @@ void ft_map<Key, MappedType>::insert(const Key& key, MappedType&& value)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        set_error(PT_ERR_MUTEX_OWNER);
+        set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     this->set_error(ER_SUCCESS);
@@ -297,7 +297,7 @@ void ft_map<Key, MappedType>::insert(const Key& key, MappedType&& value)
             doubled_capacity = this->_capacity * 2;
             if (doubled_capacity <= this->_capacity)
             {
-                this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+                this->set_error(FT_ERR_NO_MEMORY);
                 this->_mutex.unlock(THREAD_ID);
                 return ;
             }
@@ -322,7 +322,7 @@ Pair<Key, MappedType> *ft_map<Key, MappedType>::find(const Key& key)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        set_error(PT_ERR_MUTEX_OWNER);
+        set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (ft_nullptr);
     }
     size_t index = 0;
@@ -347,7 +347,7 @@ const Pair<Key, MappedType> *ft_map<Key, MappedType>::find(const Key& key) const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        set_error(PT_ERR_MUTEX_OWNER);
+        set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (ft_nullptr);
     }
     size_t index = 0;
@@ -372,7 +372,7 @@ void ft_map<Key, MappedType>::remove(const Key& key)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        set_error(PT_ERR_MUTEX_OWNER);
+        set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     size_t index = 0;
@@ -403,7 +403,7 @@ bool ft_map<Key, MappedType>::empty() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (true);
     }
     bool result = (this->_size == 0);
@@ -417,7 +417,7 @@ void ft_map<Key, MappedType>::clear()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        set_error(PT_ERR_MUTEX_OWNER);
+        set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     size_t index = 0;
@@ -437,7 +437,7 @@ size_t ft_map<Key, MappedType>::size() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (0);
     }
     size_t current_size = this->_size;
@@ -451,7 +451,7 @@ size_t ft_map<Key, MappedType>::capacity() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (0);
     }
     size_t current_capacity = this->_capacity;
@@ -465,7 +465,7 @@ int ft_map<Key, MappedType>::get_error() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (_error);
     }
     int error_value = this->_error;
@@ -479,7 +479,7 @@ const char* ft_map<Key, MappedType>::get_error_str() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (ft_strerror(_error));
     }
     int error_value = this->_error;
@@ -503,7 +503,7 @@ void ft_map<Key, MappedType>::resize(size_t new_capacity)
     void* raw_memory = cma_malloc(sizeof(Pair<Key, MappedType>) * new_capacity);
     if (!raw_memory)
     {
-        this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+        this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
     Pair<Key, MappedType>* new_data = static_cast<Pair<Key, MappedType>*>(raw_memory);
@@ -539,7 +539,7 @@ Pair<Key, MappedType>* ft_map<Key, MappedType>::end()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (this->_data + this->_size);
     }
     Pair<Key, MappedType>* result = this->_data + this->_size;
@@ -553,7 +553,7 @@ const Pair<Key, MappedType>* ft_map<Key, MappedType>::end() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (this->_data + this->_size);
     }
     const Pair<Key, MappedType>* result = this->_data + this->_size;
@@ -568,13 +568,13 @@ MappedType& ft_map<Key, MappedType>::at(const Key& key)
     static MappedType error_mapped_type = MappedType();
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        set_error(PT_ERR_MUTEX_OWNER);
+        set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (error_mapped_type);
     }
     size_t index = find_index(key);
     if (this->_size == 0 || index == this->_size)
     {
-        this->set_error(UNORD_MAP_UNKNOWN);
+        this->set_error(FT_ERR_INTERNAL);
         this->_mutex.unlock(THREAD_ID);
         return (error_mapped_type);
     }
@@ -590,13 +590,13 @@ const MappedType& ft_map<Key, MappedType>::at(const Key& key) const
     static MappedType error_mapped_type = MappedType();
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        set_error(PT_ERR_MUTEX_OWNER);
+        set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (error_mapped_type);
     }
     size_t index = find_index(key);
     if (this->_size == 0 || index == this->_size)
     {
-        this->set_error(UNORD_MAP_UNKNOWN);
+        this->set_error(FT_ERR_INTERNAL);
         this->_mutex.unlock(THREAD_ID);
         return (error_mapped_type);
     }

@@ -14,12 +14,12 @@ void    *cma_calloc(ft_size_t count, ft_size_t size)
 
     if (count == 0 || size == 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     if (count != 0 && size > SIZE_MAX / count)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     total_size = count * size;

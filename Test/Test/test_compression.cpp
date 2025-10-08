@@ -29,7 +29,7 @@ FT_TEST(test_compress_rejects_oversize_input, "compress rejects oversize input")
     }
     if (compressed_length != 0)
         return (0);
-    if (ft_errno != FT_EINVAL)
+    if (ft_errno != FT_ERR_INVALID_ARGUMENT)
         return (0);
     return (1);
 }
@@ -55,7 +55,7 @@ FT_TEST(test_decompress_rejects_oversize_payload, "decompress rejects oversize p
     }
     if (decompressed_length != 0)
         return (0);
-    if (ft_errno != FT_EINVAL)
+    if (ft_errno != FT_ERR_INVALID_ARGUMENT)
         return (0);
     return (1);
 }
@@ -73,7 +73,7 @@ FT_TEST(test_ft_compress_round_trip, "ft_compress round trip")
     input_string = "The quick brown fox jumps over the lazy dog";
     input_length = ft_strlen_size_t(input_string);
     compressed_length = 0;
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     compressed_buffer = ft_compress(reinterpret_cast<const unsigned char *>(input_string), input_length, &compressed_length);
     if (!compressed_buffer)
         return (0);
@@ -83,7 +83,7 @@ FT_TEST(test_ft_compress_round_trip, "ft_compress round trip")
         return (0);
     }
     decompressed_length = 0;
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     decompressed_buffer = ft_decompress(compressed_buffer, compressed_length, &decompressed_length);
     cma_free(compressed_buffer);
     if (!decompressed_buffer)

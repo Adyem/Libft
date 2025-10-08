@@ -10,7 +10,7 @@ char *ft_fgets(char *string, int size, FILE *stream)
 
     if (string == ft_nullptr || stream == ft_nullptr || size <= 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     result_string = std::fgets(string, size, stream);
@@ -21,12 +21,12 @@ char *ft_fgets(char *string, int size, FILE *stream)
             int saved_errno;
 
             saved_errno = errno;
-            ft_errno = saved_errno != 0 ? saved_errno + ERRNO_OFFSET : FILE_INVALID_FD;
+            ft_errno = saved_errno != 0 ? saved_errno + ERRNO_OFFSET : FT_ERR_INVALID_HANDLE;
             return (ft_nullptr);
         }
         if (std::feof(stream) != 0)
         {
-            ft_errno = FILE_END_OF_FILE;
+            ft_errno = FT_ERR_END_OF_FILE;
             return (ft_nullptr);
         }
         ft_errno = ER_SUCCESS;

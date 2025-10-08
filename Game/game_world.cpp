@@ -39,7 +39,7 @@ bool ft_world::propagate_scheduler_state_error() const noexcept
 {
     if (!this->_event_scheduler)
     {
-        this->set_error(GAME_GENERAL_ERROR);
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return (true);
     }
     int pointer_error = this->_event_scheduler.get_error();
@@ -114,7 +114,7 @@ void ft_world::schedule_event(const ft_sharedptr<ft_event> &event) noexcept
 {
     if (!event)
     {
-        this->set_error(GAME_GENERAL_ERROR);
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return ;
     }
     if (event.get_error() != ER_SUCCESS)
@@ -135,7 +135,7 @@ void ft_world::update_events(ft_sharedptr<ft_world> &self, int ticks, const char
 {
     if (!self)
     {
-        this->set_error(GAME_GENERAL_ERROR);
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return ;
     }
     if (this->propagate_scheduler_state_error() == true)
@@ -198,7 +198,7 @@ int ft_world::save_to_file(const char *file_path, const ft_character &character,
     if (json_write_to_file(file_path, groups) != 0)
     {
         json_free_groups(groups);
-        this->set_error(GAME_GENERAL_ERROR);
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return (this->_error);
     }
     json_free_groups(groups);
@@ -211,7 +211,7 @@ int ft_world::load_from_file(const char *file_path, ft_character &character, ft_
     json_group *groups = json_read_from_file(file_path);
     if (!groups)
     {
-        this->set_error(GAME_GENERAL_ERROR);
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return (this->_error);
     }
     json_group *event_group = json_find_group(groups, "world");
@@ -221,7 +221,7 @@ int ft_world::load_from_file(const char *file_path, ft_character &character, ft_
     if (!event_group || !character_group || !inventory_group || !equipment_group)
     {
         json_free_groups(groups);
-        this->set_error(GAME_GENERAL_ERROR);
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return (this->_error);
     }
     if (this->propagate_scheduler_state_error() == true)

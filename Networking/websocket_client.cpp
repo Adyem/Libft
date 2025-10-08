@@ -109,7 +109,7 @@ int ft_websocket_client::perform_handshake(const char *host, const char *path)
     encoded_key = ft_base64_encode(random_key, 16, &encoded_size);
     if (!encoded_key)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
     key_string.clear();
@@ -141,7 +141,7 @@ int ft_websocket_client::perform_handshake(const char *host, const char *path)
             if (send_result < 0)
                 this->set_error(ft_errno);
             else
-                this->set_error(SOCKET_SEND_FAILED);
+                this->set_error(FT_ERR_SOCKET_SEND_FAILED);
             return (1);
         }
         total_sent += static_cast<size_t>(send_result);
@@ -162,7 +162,7 @@ int ft_websocket_client::perform_handshake(const char *host, const char *path)
         }
         if (bytes_received == 0)
         {
-            this->set_error(SOCKET_RECEIVE_FAILED);
+            this->set_error(FT_ERR_SOCKET_RECEIVE_FAILED);
             return (1);
         }
         buffer[bytes_received] = '\0';
@@ -175,7 +175,7 @@ int ft_websocket_client::perform_handshake(const char *host, const char *path)
     accept_line = ft_strstr(response.c_str(), "Sec-WebSocket-Accept: ");
     if (!accept_line)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
     accept_line += ft_strlen("Sec-WebSocket-Accept: ");
@@ -202,7 +202,7 @@ int ft_websocket_client::perform_handshake(const char *host, const char *path)
     compute_accept_key(key_string, expected);
     if (!(accept_key == expected))
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
     this->set_error(ER_SUCCESS);
@@ -222,7 +222,7 @@ int ft_websocket_client::connect(const char *host, uint16_t port, const char *pa
     std::snprintf(port_string, sizeof(port_string), "%u", port);
     if (getaddrinfo(host, port_string, &address_hints, &address_info) != 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
     this->_socket_fd = nw_socket(address_info->ai_family, address_info->ai_socktype, address_info->ai_protocol);
@@ -318,7 +318,7 @@ int ft_websocket_client::send_text(const ft_string &message)
 
     if (this->_socket_fd < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
     mask_value = ft_random_uint32();
@@ -385,7 +385,7 @@ int ft_websocket_client::receive_text(ft_string &message)
     message.clear();
     if (this->_socket_fd < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
     while (true)
@@ -440,7 +440,7 @@ int ft_websocket_client::receive_text(ft_string &message)
         payload = static_cast<unsigned char *>(cma_malloc(payload_length));
         if (!payload)
         {
-            this->set_error(FT_EINVAL);
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
             return (1);
         }
         index_value = 0;
@@ -489,7 +489,7 @@ int ft_websocket_client::receive_text(ft_string &message)
             return (0);
         }
         cma_free(payload);
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
 }

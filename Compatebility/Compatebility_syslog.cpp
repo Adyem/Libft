@@ -5,20 +5,20 @@
 int cmp_syslog_open(const char *identifier)
 {
     (void)identifier;
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     return (-1);
 }
 
 void cmp_syslog_write(const char *message)
 {
     (void)message;
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     return ;
 }
 
 void cmp_syslog_close(void)
 {
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     return ;
 }
 #else

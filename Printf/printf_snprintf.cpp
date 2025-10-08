@@ -7,7 +7,7 @@ int pf_snprintf(char *string, size_t size, const char *format, ...)
 {
     if (format == ft_nullptr || (string == ft_nullptr && size > 0))
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         if (string != ft_nullptr && size > 0)
             string[0] = '\0';
         return (-1);

@@ -63,7 +63,7 @@ void json_item_refresh_numeric_state(json_item *item)
 {
     if (!item)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     if (item->big_number)
@@ -85,7 +85,7 @@ void json_item_refresh_numeric_state(json_item *item)
     ft_big_number *allocated_number = new(std::nothrow) ft_big_number;
     if (!allocated_number)
     {
-        ft_errno = JSON_MALLOC_FAIL;
+        ft_errno = FT_ERR_NO_MEMORY;
         return ;
     }
     allocated_number->assign(item->value);
@@ -122,14 +122,14 @@ json_group* json_create_json_group(const char *name)
     json_group *group = new(std::nothrow) json_group;
     if (!group)
     {
-        ft_errno = JSON_MALLOC_FAIL;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     group->name = cma_strdup(name);
     if (!group->name)
     {
         delete group;
-        ft_errno = JSON_MALLOC_FAIL;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     group->items = ft_nullptr;

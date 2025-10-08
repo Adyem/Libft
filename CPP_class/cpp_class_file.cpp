@@ -164,12 +164,12 @@ ssize_t ft_file::read(char *buffer, int count) noexcept
 {
     if (buffer == ft_nullptr || count <= 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (this->_fd < 0)
     {
-        this->set_error(FILE_INVALID_FD);
+        this->set_error(FT_ERR_INVALID_HANDLE);
         return (-1);
     }
     ssize_t bytes_read = su_read(this->_fd, buffer, static_cast<size_t>(count));
@@ -186,7 +186,7 @@ ssize_t ft_file::write(const char *string) noexcept
 {
     if (string == ft_nullptr)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     ssize_t result = su_write(this->_fd, string, ft_strlen(string));
@@ -217,12 +217,12 @@ int ft_file::printf(const char *format, ...)
 
     if (format == ft_nullptr)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     if (this->_fd == -1)
     {
-        this->set_error(FILE_INVALID_FD);
+        this->set_error(FT_ERR_INVALID_HANDLE);
         return (0);
     }
     va_start(args, format);

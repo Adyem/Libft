@@ -38,7 +38,7 @@ int kv_store::compute_expiration(long long ttl_seconds, bool &has_expiration, lo
     current_time = this->current_time_seconds();
     if (current_time < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     has_expiration = true;
@@ -56,14 +56,14 @@ int kv_store::parse_expiration_timestamp(const char *value_string, long long &ex
 
     if (value_string == ft_nullptr)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     errno = 0;
     parsed_value = std::strtoll(value_string, &end_pointer, 10);
     if (errno != 0 || end_pointer == value_string || *end_pointer != '\0')
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     expiration_timestamp = parsed_value;
@@ -87,7 +87,7 @@ int kv_store::prune_expired()
     current_time = this->current_time_seconds();
     if (current_time < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     Pair<ft_string, kv_store_entry> *map_end;
@@ -143,7 +143,7 @@ int kv_store::kv_set(const char *key_string, const char *value_string, long long
 
     if (key_string == ft_nullptr || value_string == ft_nullptr)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     key_storage = key_string;
@@ -211,7 +211,7 @@ int kv_store::kv_set(const char *key_string, const char *value_string, long long
         current_time = this->current_time_seconds();
         if (current_time < 0)
         {
-            this->set_error(FT_EINVAL);
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
             return (-1);
         }
         if (expiration_timestamp <= current_time)
@@ -232,7 +232,7 @@ const char *kv_store::kv_get(const char *key_string) const
 
     if (key_string == ft_nullptr)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     mutable_this = const_cast<kv_store *>(this);
@@ -252,7 +252,7 @@ const char *kv_store::kv_get(const char *key_string) const
     }
     if (map_pair == ft_nullptr)
     {
-        this->set_error(MAP_KEY_NOT_FOUND);
+        this->set_error(FT_ERR_NOT_FOUND);
         return (ft_nullptr);
     }
     this->set_error(ER_SUCCESS);
@@ -266,7 +266,7 @@ int kv_store::kv_delete(const char *key_string)
 
     if (key_string == ft_nullptr)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (this->prune_expired() != 0)
@@ -285,7 +285,7 @@ int kv_store::kv_delete(const char *key_string)
     }
     if (map_pair == ft_nullptr)
     {
-        this->set_error(MAP_KEY_NOT_FOUND);
+        this->set_error(FT_ERR_NOT_FOUND);
         return (-1);
     }
     this->_data.remove(key_storage);
@@ -318,7 +318,7 @@ int kv_store::kv_flush() const
     store_group = json_create_json_group("kv_store");
     if (store_group == ft_nullptr)
     {
-        this->set_error(JSON_MALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
         return (-1);
     }
     if (this->_encryption_enabled)
@@ -327,7 +327,7 @@ int kv_store::kv_flush() const
         if (item_pointer == ft_nullptr)
         {
             json_free_groups(store_group);
-            this->set_error(JSON_MALLOC_FAIL);
+            this->set_error(FT_ERR_NO_MEMORY);
             return (-1);
         }
         json_add_item_to_group(store_group, item_pointer);
@@ -368,7 +368,7 @@ int kv_store::kv_flush() const
         if (item_pointer == ft_nullptr)
         {
             json_free_groups(store_group);
-            this->set_error(JSON_MALLOC_FAIL);
+            this->set_error(FT_ERR_NO_MEMORY);
             return (-1);
         }
         json_add_item_to_group(store_group, item_pointer);
@@ -396,14 +396,14 @@ int kv_store::kv_flush() const
             if (written_length < 0 || static_cast<size_t>(written_length) >= sizeof(expiration_buffer))
             {
                 json_free_groups(store_group);
-                this->set_error(FT_EINVAL);
+                this->set_error(FT_ERR_INVALID_ARGUMENT);
                 return (-1);
             }
             item_pointer = json_create_item(ttl_key.c_str(), expiration_buffer);
             if (item_pointer == ft_nullptr)
             {
                 json_free_groups(store_group);
-                this->set_error(JSON_MALLOC_FAIL);
+                this->set_error(FT_ERR_NO_MEMORY);
                 return (-1);
             }
             json_add_item_to_group(store_group, item_pointer);
@@ -420,7 +420,7 @@ int kv_store::kv_flush() const
         if (error_code != ER_SUCCESS)
             this->set_error(error_code);
         else
-            this->set_error(FT_EINVAL);
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     this->set_error(ER_SUCCESS);

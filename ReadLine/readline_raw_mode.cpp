@@ -14,6 +14,6 @@ int rl_enable_raw_mode()
 
     enable_result = cmp_readline_enable_raw_mode();
     if (enable_result == -1 && ft_errno == ER_SUCCESS)
-        ft_errno = FT_ETERM;
+        ft_errno = FT_ERR_TERMINATED;
     return (enable_result);
 }

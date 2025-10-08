@@ -66,14 +66,14 @@ FT_TEST(test_strmapi_uses_index_values, "ft_strmapi forwards index values to cal
     return (1);
 }
 
-FT_TEST(test_strmapi_null_arguments_set_errno, "ft_strmapi null inputs set FT_EINVAL")
+FT_TEST(test_strmapi_null_arguments_set_errno, "ft_strmapi null inputs set FT_ERR_INVALID_ARGUMENT")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_strmapi(ft_nullptr, to_upper_map));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_strmapi("sample", ft_nullptr));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -83,7 +83,7 @@ FT_TEST(test_strmapi_success_after_failure_resets_errno, "ft_strmapi clears errn
 
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_strmapi(ft_nullptr, to_upper_map));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     result = ft_strmapi("abc", to_upper_map);
     if (result == ft_nullptr)
         return (0);

@@ -108,12 +108,12 @@ void ft_unique_lock<MutexType>::lock()
 {
     if (!this->_mutex)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     if (this->_owns_lock)
     {
-        this->set_error(PT_ERR_ALREADY_LOCKED);
+        this->set_error(FT_ERR_MUTEX_ALREADY_LOCKED);
         return ;
     }
     this->_mutex->lock(THREAD_ID);
@@ -133,12 +133,12 @@ void ft_unique_lock<MutexType>::unlock()
 {
     if (!this->_mutex)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     if (!this->_owns_lock)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_mutex->unlock(THREAD_ID);

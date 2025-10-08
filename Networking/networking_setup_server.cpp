@@ -166,7 +166,7 @@ int ft_socket::configure_address(const SocketConfig &config)
         }
         else if (nw_inet_pton(AF_INET, config._ip.c_str(), &addr_in->sin_addr) <= 0)
         {
-            this->set_error(SOCKET_INVALID_CONFIGURATION);
+            this->set_error(FT_ERR_CONFIGURATION);
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
@@ -183,7 +183,7 @@ int ft_socket::configure_address(const SocketConfig &config)
         }
         else if (nw_inet_pton(AF_INET6, config._ip.c_str(), &addr_in6->sin6_addr) <= 0)
         {
-            this->set_error(SOCKET_INVALID_CONFIGURATION);
+            this->set_error(FT_ERR_CONFIGURATION);
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
@@ -191,7 +191,7 @@ int ft_socket::configure_address(const SocketConfig &config)
     }
     else
     {
-        this->set_error(SOCKET_INVALID_CONFIGURATION);
+        this->set_error(FT_ERR_CONFIGURATION);
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
@@ -210,7 +210,7 @@ int ft_socket::bind_socket(const SocketConfig &config)
         addr_len = sizeof(struct sockaddr_in6);
     else
     {
-        this->set_error(SOCKET_INVALID_CONFIGURATION);
+        this->set_error(FT_ERR_CONFIGURATION);
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
@@ -284,7 +284,7 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
         ft_bzero(&mreq, sizeof(mreq));
         if (nw_inet_pton(AF_INET, config._multicast_group.c_str(), &mreq.imr_multiaddr) <= 0)
         {
-            this->set_error(SOCKET_INVALID_CONFIGURATION);
+            this->set_error(FT_ERR_CONFIGURATION);
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
@@ -293,7 +293,7 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
             mreq.imr_interface.s_addr = htonl(INADDR_ANY);
         else if (nw_inet_pton(AF_INET, config._multicast_interface.c_str(), &mreq.imr_interface) <= 0)
         {
-            this->set_error(SOCKET_INVALID_CONFIGURATION);
+            this->set_error(FT_ERR_CONFIGURATION);
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
@@ -301,7 +301,7 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
         if (setsockopt(this->_socket_fd, IPPROTO_IP, IP_ADD_MEMBERSHIP,
                        reinterpret_cast<const char*>(&mreq), sizeof(mreq)) < 0)
         {
-            this->set_error(SOCKET_JOIN_GROUP_FAILED);
+            this->set_error(FT_ERR_SOCKET_JOIN_GROUP_FAILED);
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
@@ -313,7 +313,7 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
         ft_bzero(&mreq6, sizeof(mreq6));
         if (nw_inet_pton(AF_INET6, config._multicast_group.c_str(), &mreq6.ipv6mr_multiaddr) <= 0)
         {
-            this->set_error(SOCKET_INVALID_CONFIGURATION);
+            this->set_error(FT_ERR_CONFIGURATION);
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
@@ -322,7 +322,7 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
         if (setsockopt(this->_socket_fd, IPPROTO_IPV6, IPV6_JOIN_GROUP,
                        reinterpret_cast<const char*>(&mreq6), sizeof(mreq6)) < 0)
         {
-            this->set_error(SOCKET_JOIN_GROUP_FAILED);
+            this->set_error(FT_ERR_SOCKET_JOIN_GROUP_FAILED);
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
@@ -330,7 +330,7 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
     }
     else
     {
-        this->set_error(SOCKET_INVALID_CONFIGURATION);
+        this->set_error(FT_ERR_CONFIGURATION);
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);

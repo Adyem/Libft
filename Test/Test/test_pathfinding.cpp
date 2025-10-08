@@ -22,7 +22,7 @@ FT_TEST(test_astar_blocked, "astar blocked path")
     grid.set(0, 1, 0, 1);
     ft_pathfinding finder;
     ft_vector<ft_path_step> path;
-    FT_ASSERT_EQ(GAME_INVALID_MOVE, finder.astar_grid(grid, 0, 0, 0, 1, 1, 0, path));
+    FT_ASSERT_EQ(FT_ERR_GAME_INVALID_MOVE, finder.astar_grid(grid, 0, 0, 0, 1, 1, 0, path));
     return (1);
 }
 

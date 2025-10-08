@@ -31,11 +31,11 @@ int test_xml_propagates_child_allocation_failure(void)
     cma_set_alloc_limit(16);
     int load_result = doc.load_from_string(xml);
     cma_set_alloc_limit(0);
-    if (load_result != FT_EALLOC)
+    if (load_result != FT_ERR_NO_MEMORY)
         return (0);
     if (doc.get_root() != ft_nullptr)
         return (0);
-    if (doc.get_error() != FT_EALLOC)
+    if (doc.get_error() != FT_ERR_NO_MEMORY)
         return (0);
     return (1);
 }

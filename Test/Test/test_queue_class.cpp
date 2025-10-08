@@ -15,7 +15,7 @@ int test_ft_queue_class_basic(void)
     if (second != 2)
         return (0);
     q.dequeue();
-    if (q.get_error() != QUEUE_EMPTY)
+    if (q.get_error() != FT_ERR_EMPTY)
         return (0);
     return (1);
 }

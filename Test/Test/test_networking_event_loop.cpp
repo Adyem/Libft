@@ -19,7 +19,7 @@ FT_TEST(test_event_loop_add_socket_reports_allocation_failure,
         event_loop_clear(&loop);
         return (0);
     }
-    if (ft_errno != FT_EALLOC)
+    if (ft_errno != FT_ERR_NO_MEMORY)
     {
         event_loop_clear(&loop);
         return (0);
@@ -34,7 +34,7 @@ FT_TEST(test_event_loop_add_socket_reports_allocation_failure,
 }
 
 FT_TEST(test_event_loop_remove_socket_sets_errno_when_missing,
-    "event_loop_remove_socket sets FT_EINVAL when descriptor missing")
+    "event_loop_remove_socket sets FT_ERR_INVALID_ARGUMENT when descriptor missing")
 {
     event_loop loop;
     int add_result;
@@ -59,7 +59,7 @@ FT_TEST(test_event_loop_remove_socket_sets_errno_when_missing,
         event_loop_clear(&loop);
         return (0);
     }
-    if (ft_errno != FT_EINVAL)
+    if (ft_errno != FT_ERR_INVALID_ARGUMENT)
     {
         event_loop_clear(&loop);
         return (0);

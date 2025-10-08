@@ -14,7 +14,7 @@ FT_TEST(test_memdup_basic, "ft_memdup basic")
     source[2] = 'l';
     source[3] = 'l';
     source[4] = 'o';
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     duplicate = ft_memdup(source, 5);
     FT_ASSERT(duplicate != ft_nullptr);
     FT_ASSERT(duplicate != source);
@@ -33,7 +33,7 @@ FT_TEST(test_memdup_zero_size, "ft_memdup zero size")
     buffer[2] = 'c';
     void *duplicate;
 
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     duplicate = ft_memdup(buffer, 0);
     FT_ASSERT(duplicate != ft_nullptr);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -45,7 +45,7 @@ FT_TEST(test_memdup_null_source, "ft_memdup null source")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_memdup(ft_nullptr, 5));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -58,7 +58,7 @@ FT_TEST(test_memdup_independent_copy, "ft_memdup duplicates without sharing stor
     source[1] = 'o';
     source[2] = 'o';
     source[3] = '!';
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     duplicate = static_cast<unsigned char *>(ft_memdup(source, sizeof(source)));
     FT_ASSERT(duplicate != ft_nullptr);
     duplicate[0] = 'b';

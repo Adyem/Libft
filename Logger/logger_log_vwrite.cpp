@@ -42,7 +42,7 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
 {
     if (!fmt)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     if (level < g_level)
@@ -111,7 +111,7 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
         {
             return ;
         }
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     if (sink_count != 0)

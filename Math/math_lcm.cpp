@@ -44,7 +44,7 @@ int math_lcm(int first_number, int second_number)
     limit_value = static_cast<unsigned long long>(FT_INT_MAX);
     if (math_lcm_check_overflow(quotient, magnitude_second, limit_value))
     {
-        ft_errno = FT_ERANGE;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
         return (0);
     }
     result_value = quotient * magnitude_second;
@@ -73,7 +73,7 @@ long math_lcm(long first_number, long second_number)
     limit_value = static_cast<unsigned long long>(FT_LONG_MAX);
     if (math_lcm_check_overflow(quotient, magnitude_second, limit_value))
     {
-        ft_errno = FT_ERANGE;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
         return (0);
     }
     result_value = quotient * magnitude_second;
@@ -102,7 +102,7 @@ long long   math_lcm(long long first_number, long long second_number)
     limit_value = static_cast<unsigned long long>(FT_LLONG_MAX);
     if (math_lcm_check_overflow(quotient, magnitude_second, limit_value))
     {
-        ft_errno = FT_ERANGE;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
         return (0);
     }
     result_value = quotient * magnitude_second;
