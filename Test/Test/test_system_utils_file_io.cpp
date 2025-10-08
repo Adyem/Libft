@@ -1,6 +1,7 @@
 #include "../../Compatebility/compatebility_internal.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
+#include "../../System_utils/system_utils.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <cerrno>
 #include <cstdio>
@@ -18,6 +19,20 @@ static void create_system_io_test_file(void)
         std::fclose(file_handle);
     }
     return ;
+}
+
+static int  g_su_write_hook_calls = 0;
+
+static ssize_t   su_write_zero_progress_hook(int file_descriptor, const void *buffer, size_t count)
+{
+    (void)file_descriptor;
+    (void)buffer;
+    if (count == 0)
+        return (0);
+    g_su_write_hook_calls += 1;
+    if (g_su_write_hook_calls == 1)
+        return (0);
+    return (static_cast<ssize_t>(count));
 }
 
 FT_TEST(test_cmp_open_failure_sets_errno, "cmp_open failure reports ft_errno")
@@ -93,6 +108,21 @@ FT_TEST(test_cmp_write_translates_errno, "cmp_write propagates errno failures")
     FT_ASSERT_EQ(EBADF + ERRNO_OFFSET, ft_errno);
     FT_ASSERT_EQ(0, cmp_close(file_descriptor));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_su_write_reports_zero_progress, "su_write reports stalled writes as FT_EIO")
+{
+    const char  buffer[4] = {'d', 'a', 't', 'a'};
+
+    g_su_write_hook_calls = 0;
+    su_set_write_syscall_hook(su_write_zero_progress_hook);
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(-1, su_write(42, buffer, sizeof(buffer)));
+    FT_ASSERT_EQ(FT_EIO, ft_errno);
+    FT_ASSERT_EQ(1, g_su_write_hook_calls);
+    su_reset_write_syscall_hook();
+    ft_errno = ER_SUCCESS;
     return (1);
 }
 

@@ -94,6 +94,10 @@ long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
         {
             overflow_detected = true;
             accumulated_value = limit_value;
+            ++current_character;
+            while (ft_digit_value(*current_character) >= 0
+                    && ft_digit_value(*current_character) < numeric_base)
+                ++current_character;
             break;
         }
         accumulated_value = accumulated_value * base_value

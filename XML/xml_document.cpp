@@ -110,8 +110,22 @@ static const char *parse_node(const char *string, xml_node **out_node)
         return (ft_nullptr);
     }
     node->name = name;
-    while (*string && *string != '>')
+    char quote_character;
+
+    quote_character = '\0';
+    while (*string)
+    {
+        if (*string == '>' && quote_character == '\0')
+            break ;
+        if (*string == '"' || *string == '\'')
+        {
+            if (quote_character == '\0')
+                quote_character = *string;
+            else if (quote_character == *string)
+                quote_character = '\0';
+        }
         string++;
+    }
     if (*string != '>')
     {
         delete node;

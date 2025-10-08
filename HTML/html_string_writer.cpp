@@ -4,6 +4,86 @@
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
 
+static void html_append_literal(char *destination, size_t *output_index, const char *literal)
+{
+    size_t literal_index;
+
+    literal_index = 0;
+    while (literal[literal_index])
+    {
+        destination[*output_index] = literal[literal_index];
+        *output_index += 1;
+        literal_index += 1;
+    }
+    return ;
+}
+
+static char *html_escape_attribute_value(const char *value)
+{
+    size_t  input_length;
+    size_t  input_index;
+    size_t  output_length;
+    char    *escaped_value;
+    size_t  output_index;
+
+    if (!value)
+    {
+        ft_errno = FT_EINVAL;
+        return (ft_nullptr);
+    }
+    input_length = ft_strlen(value);
+    output_length = input_length;
+    input_index = 0;
+    while (input_index < input_length)
+    {
+        char current_character;
+
+        current_character = value[input_index];
+        if (current_character == '&')
+            output_length += 4;
+        else if (current_character == '"')
+            output_length += 5;
+        else if (current_character == static_cast<char>(39))
+            output_length += 4;
+        else if (current_character == '<' || current_character == '>')
+            output_length += 3;
+        input_index += 1;
+    }
+    escaped_value = static_cast<char *>(cma_malloc(output_length + 1));
+    if (!escaped_value)
+    {
+        ft_errno = FT_EALLOC;
+        return (ft_nullptr);
+    }
+    input_index = 0;
+    output_index = 0;
+    while (input_index < input_length)
+    {
+        char current_character;
+
+        current_character = value[input_index];
+        if (current_character == '&')
+            html_append_literal(escaped_value, &output_index, "&amp;");
+        else if (current_character == '"')
+            html_append_literal(escaped_value, &output_index, "&quot;");
+        else if (current_character == static_cast<char>(39))
+            html_append_literal(escaped_value, &output_index, "&#39;");
+        else if (current_character == '<')
+            html_append_literal(escaped_value, &output_index, "&lt;");
+        else if (current_character == '>')
+            html_append_literal(escaped_value, &output_index, "&gt;");
+        else
+        {
+            escaped_value[output_index] = current_character;
+            output_index += 1;
+        }
+        input_index += 1;
+    }
+    escaped_value[output_index] = '\0';
+    ft_errno = ER_SUCCESS;
+    return (escaped_value);
+}
+
 static char *html_attrs_to_string(html_attr *attribute)
 {
     char *result = cma_strdup("");
@@ -14,7 +94,17 @@ static char *html_attrs_to_string(html_attr *attribute)
     }
     while (attribute)
     {
-        char *attr = cma_strjoin_multiple(5, " ", attribute->key, "=\"", attribute->value, "\"");
+        char *escaped_value;
+        char *attr;
+
+        escaped_value = html_escape_attribute_value(attribute->value);
+        if (!escaped_value)
+        {
+            cma_free(result);
+            return (ft_nullptr);
+        }
+        attr = cma_strjoin_multiple(5, " ", attribute->key, "=\"", escaped_value, "\"");
+        cma_free(escaped_value);
         if (!attr)
         {
             cma_free(result);
