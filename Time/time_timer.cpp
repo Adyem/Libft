@@ -1,6 +1,7 @@
 #include "time.hpp"
 #include "timer.hpp"
 #include <chrono>
+#include <climits>
 #include "../Errno/errno.hpp"
 
 time_timer::time_timer() noexcept
@@ -56,6 +57,12 @@ long time_timer::add_time(long amount_ms) noexcept
     if (!this->_running || amount_ms < 0)
     {
         this->set_error(FT_EINVAL);
+        return (-1);
+    }
+    if (amount_ms > 0
+        && this->_duration_ms > LONG_MAX - amount_ms)
+    {
+        this->set_error(FT_ERANGE);
         return (-1);
     }
     this->_duration_ms += amount_ms;

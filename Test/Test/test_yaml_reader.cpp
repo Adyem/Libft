@@ -3,6 +3,8 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../CMA/CMA.hpp"
+#include "../../System_utils/system_utils.hpp"
+#include <cstdio>
 
 FT_TEST(test_yaml_reader_malformed_structure_sets_errno, "yaml_reader reports malformed map indentation")
 {
@@ -102,5 +104,24 @@ FT_TEST(test_yaml_reader_list_inline_map_entries, "yaml_reader parses inline map
 
     yaml_free(root);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_yaml_read_from_file_propagates_read_error, "yaml_read_from_file reports su_fread failures")
+{
+    const char *file_path = "yaml_reader_forced_failure.yaml";
+    int file_descriptor;
+    yaml_value *result;
+
+    file_descriptor = su_open(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    FT_ASSERT(file_descriptor >= 0);
+    FT_ASSERT_EQ(0, su_close(file_descriptor));
+    su_force_fread_failure(FT_EIO);
+    ft_errno = ER_SUCCESS;
+    result = yaml_read_from_file(file_path);
+    su_clear_forced_fread_failure();
+    std::remove(file_path);
+    FT_ASSERT(result == ft_nullptr);
+    FT_ASSERT_EQ(FT_EIO, ft_errno);
     return (1);
 }

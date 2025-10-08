@@ -1,4 +1,5 @@
 #include "game_event.hpp"
+#include <climits>
 #include <utility>
 
 ft_event::ft_event() noexcept
@@ -148,6 +149,14 @@ void ft_event::add_duration(int duration) noexcept
         this->set_error(FT_EINVAL);
         return ;
     }
+    if (duration > 0)
+    {
+        if (this->_duration > INT_MAX - duration)
+        {
+            this->set_error(FT_ERANGE);
+            return ;
+        }
+    }
     this->_duration += duration;
     this->set_error(ER_SUCCESS);
     return ;
@@ -156,6 +165,11 @@ void ft_event::add_duration(int duration) noexcept
 void ft_event::sub_duration(int duration) noexcept
 {
     if (duration < 0)
+    {
+        this->set_error(FT_EINVAL);
+        return ;
+    }
+    if (duration > this->_duration)
     {
         this->set_error(FT_EINVAL);
         return ;

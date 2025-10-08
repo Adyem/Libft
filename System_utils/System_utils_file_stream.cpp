@@ -7,6 +7,28 @@
 #include <limits>
 
 static bool g_force_file_stream_allocation_failure = false;
+static int g_force_fread_failure_enabled = 0;
+static int g_force_fread_failure_error = ER_SUCCESS;
+
+void su_force_fread_failure(int error_code)
+{
+    if (error_code == ER_SUCCESS)
+    {
+        g_force_fread_failure_enabled = 0;
+        g_force_fread_failure_error = ER_SUCCESS;
+        return ;
+    }
+    g_force_fread_failure_enabled = 1;
+    g_force_fread_failure_error = error_code;
+    return ;
+}
+
+void su_clear_forced_fread_failure(void)
+{
+    g_force_fread_failure_enabled = 0;
+    g_force_fread_failure_error = ER_SUCCESS;
+    return ;
+}
 
 void su_force_file_stream_allocation_failure(bool should_fail)
 {
@@ -114,6 +136,18 @@ size_t su_fread(void *buffer, size_t size, size_t count, su_file *stream)
     if (size == 0 || count == 0)
     {
         ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    if (g_force_fread_failure_enabled != 0)
+    {
+        int forced_error;
+
+        forced_error = g_force_fread_failure_error;
+        g_force_fread_failure_enabled = 0;
+        g_force_fread_failure_error = ER_SUCCESS;
+        if (forced_error == ER_SUCCESS)
+            forced_error = FT_EIO;
+        ft_errno = forced_error;
         return (0);
     }
     maximum_size = std::numeric_limits<size_t>::max();

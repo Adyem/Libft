@@ -430,7 +430,11 @@ yaml_value *yaml_read_from_file(const char *file_path) noexcept
         return (ft_nullptr);
     ft_string content;
     char buffer[1024];
-    size_t read_count = su_fread(buffer, 1, sizeof(buffer), file);
+    int read_error;
+    size_t read_count;
+
+    read_error = ER_SUCCESS;
+    read_count = su_fread(buffer, 1, sizeof(buffer), file);
     while (read_count > 0)
     {
         size_t buffer_index = 0;
@@ -448,7 +452,14 @@ yaml_value *yaml_read_from_file(const char *file_path) noexcept
         }
         read_count = su_fread(buffer, 1, sizeof(buffer), file);
     }
+    if (read_count == 0 && ft_errno != ER_SUCCESS)
+        read_error = ft_errno;
     su_fclose(file);
+    if (read_error != ER_SUCCESS)
+    {
+        ft_errno = read_error;
+        return (ft_nullptr);
+    }
     yaml_value *result = yaml_read_from_string(content);
     int parse_error = ft_errno;
     if (result == ft_nullptr)
