@@ -34,6 +34,7 @@ static void    ft_rng_test_seed_engine(uint32_t default_seed, const char *contex
     return ;
 }
 
+[[maybe_unused]]
 static void    ft_rng_test_seed_engine(uint32_t default_seed)
 {
     ft_rng_test_seed_engine(default_seed, ft_nullptr);
