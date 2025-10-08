@@ -59,3 +59,16 @@ FT_TEST(test_math_sqrt_positive_infinity, "math_sqrt returns infinity for positi
     FT_ASSERT_EQ(input, result);
     return (1);
 }
+
+FT_TEST(test_math_sqrt_small_positive_input, "math_sqrt returns precise result for small positive input")
+{
+    double input;
+    double result;
+
+    input = 1e-14;
+    ft_errno = FT_ERANGE;
+    result = math_sqrt(input);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT(math_fabs(result - 1e-7) < 1e-12);
+    return (1);
+}

@@ -274,6 +274,13 @@ int xml_document::load_from_string(const char *xml) noexcept
         this->set_error(error_code);
         return (error_code);
     }
+    const char *remaining = skip_whitespace(end);
+    if (remaining && *remaining != '\0')
+    {
+        delete node;
+        this->set_error(FT_EINVAL);
+        return (FT_EINVAL);
+    }
     this->_root = node;
     this->set_error(ER_SUCCESS);
     return (ER_SUCCESS);
