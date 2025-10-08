@@ -4,6 +4,7 @@
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <cerrno>
+#include <cstring>
 
 FT_TEST(test_xml_document_write_to_string_empty_document_sets_error, "xml_document::write_to_string reports FT_EINVAL when empty")
 {
@@ -154,6 +155,26 @@ FT_TEST(test_xml_document_load_from_string_success_clears_errno, "xml_document::
     FT_ASSERT_EQ(ER_SUCCESS, result);
     FT_ASSERT_EQ(ER_SUCCESS, document.get_error());
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_xml_document_load_from_string_handles_gt_in_attribute, "xml_document::load_from_string tolerates '>' inside attribute values")
+{
+    xml_document document;
+    const char *xml_input;
+    xml_node *root_node;
+    char *written_string;
+
+    xml_input = "<root attr=\"a>b\">payload</root>";
+    FT_ASSERT_EQ(ER_SUCCESS, document.load_from_string(xml_input));
+    root_node = document.get_root();
+    FT_ASSERT(root_node != ft_nullptr);
+    FT_ASSERT(root_node->text != ft_nullptr);
+    FT_ASSERT_EQ(0, std::strcmp(root_node->text, "payload"));
+    written_string = document.write_to_string();
+    FT_ASSERT(written_string != ft_nullptr);
+    FT_ASSERT_EQ(0, std::strcmp(written_string, "<root>payload</root>\n"));
+    cma_free(written_string);
     return (1);
 }
 
