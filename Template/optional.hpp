@@ -22,6 +22,7 @@ class ft_optional
         mutable pt_mutex _mutex;
 
         void set_error(int error) const;
+        static T &fallback_reference() noexcept;
 
     public:
         ft_optional();
@@ -152,23 +153,16 @@ bool ft_optional<T>::has_value() const
 template <typename T>
 T& ft_optional<T>::value()
 {
-    static T default_instance = T();
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(PT_ERR_MUTEX_OWNER);
-        return (default_instance);
+        return (ft_optional<T>::fallback_reference());
     }
     if (this->_value == ft_nullptr)
     {
         this->set_error(OPTIONAL_EMPTY);
         this->_mutex.unlock(THREAD_ID);
-        if constexpr (!std::is_abstract_v<T>)
-            return (default_instance);
-        else
-        {
-            static char dummy_buffer[sizeof(T)] = {0};
-            return (*reinterpret_cast<T*>(dummy_buffer));
-        }
+        return (ft_optional<T>::fallback_reference());
     }
     T& reference = *this->_value;
     this->set_error(ER_SUCCESS);
@@ -179,28 +173,36 @@ T& ft_optional<T>::value()
 template <typename T>
 const T& ft_optional<T>::value() const
 {
-    static T default_instance = T();
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         const_cast<ft_optional*>(this)->set_error(PT_ERR_MUTEX_OWNER);
-        return (default_instance);
+        return (ft_optional<T>::fallback_reference());
     }
     if (this->_value == ft_nullptr)
     {
         const_cast<ft_optional*>(this)->set_error(OPTIONAL_EMPTY);
         this->_mutex.unlock(THREAD_ID);
-        if constexpr (!std::is_abstract_v<T>)
-            return (default_instance);
-        else
-        {
-            static char dummy_buffer[sizeof(T)] = {0};
-            return (*reinterpret_cast<T*>(dummy_buffer));
-        }
+        return (ft_optional<T>::fallback_reference());
     }
     const T& reference = *this->_value;
     const_cast<ft_optional*>(this)->set_error(ER_SUCCESS);
     this->_mutex.unlock(THREAD_ID);
     return (reference);
+}
+
+template <typename T>
+T &ft_optional<T>::fallback_reference() noexcept
+{
+    if constexpr (std::is_default_constructible_v<T>)
+    {
+        static T default_instance = T();
+        return (default_instance);
+    }
+    else
+    {
+        alignas(T) static unsigned char storage[sizeof(T)] = {0};
+        return (*reinterpret_cast<T*>(storage));
+    }
 }
 
 template <typename T>
