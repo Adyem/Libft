@@ -4,6 +4,7 @@
 #include "../../Libft/libft.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
+#include "../../System_utils/system_utils.hpp"
 #include <cerrno>
 #include <cstdlib>
 #include <fcntl.h>
@@ -38,6 +39,53 @@ FT_TEST(test_logger_json_sink, "logger json sink")
     ft_log_remove_sink(ft_json_sink, &write_fd);
     close(pipe_fds[0]);
     close(pipe_fds[1]);
+    return (1);
+}
+
+static int  g_file_sink_hook_calls = 0;
+
+static ssize_t    logger_partial_write_hook(int file_descriptor, const void *buffer, size_t count)
+{
+    size_t  chunk_size;
+    ssize_t write_result;
+
+    g_file_sink_hook_calls += 1;
+    chunk_size = 4;
+    if (count < chunk_size)
+        chunk_size = count;
+    write_result = write(file_descriptor, buffer, chunk_size);
+    if (write_result < 0)
+        return (write_result);
+    return (write_result);
+}
+
+FT_TEST(test_logger_file_sink_uses_system_utils_write, "file sink routes writes through su_write")
+{
+    char    template_path[] = "/tmp/libft_logger_file_sink_XXXXXX";
+    int     temp_fd;
+    char    read_buffer[512];
+    ssize_t read_count;
+    int     log_fd;
+
+    temp_fd = mkstemp(template_path);
+    FT_ASSERT(temp_fd >= 0);
+    close(temp_fd);
+    ft_log_close();
+    FT_ASSERT_EQ(0, ft_log_set_file(template_path, 4096));
+    g_file_sink_hook_calls = 0;
+    su_set_write_syscall_hook(logger_partial_write_hook);
+    ft_log_info("file sink test message");
+    su_reset_write_syscall_hook();
+    FT_ASSERT(g_file_sink_hook_calls > 1);
+    ft_log_close();
+    log_fd = open(template_path, O_RDONLY);
+    FT_ASSERT(log_fd >= 0);
+    read_count = read(log_fd, read_buffer, sizeof(read_buffer) - 1);
+    FT_ASSERT(read_count > 0);
+    read_buffer[read_count] = '\0';
+    FT_ASSERT(ft_strstr(read_buffer, "file sink test message") != ft_nullptr);
+    close(log_fd);
+    unlink(template_path);
     return (1);
 }
 

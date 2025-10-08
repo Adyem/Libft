@@ -67,6 +67,24 @@ FT_TEST(test_html_write_to_string_success_clears_errno, "html_write_to_string cl
     return (1);
 }
 
+FT_TEST(test_html_write_to_string_escapes_attribute_values,
+        "html_write_to_string escapes attribute values")
+{
+    html_node *node = html_create_node("div", ft_nullptr);
+    FT_ASSERT(node != ft_nullptr);
+    html_attr *attribute = html_create_attr("data", "A \"quote\" & <tag>");
+    FT_ASSERT(attribute != ft_nullptr);
+    html_add_attr(node, attribute);
+    ft_errno = FT_EINVAL;
+    char *result = html_write_to_string(node);
+    FT_ASSERT(result != ft_nullptr);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(0, std::strcmp(result, "<div data=\"A &quot;quote&quot; &amp; &lt;tag&gt;\"/>\n"));
+    cma_free(result);
+    html_free_nodes(node);
+    return (1);
+}
+
 FT_TEST(test_html_find_by_selector_allocation_failure_sets_errno, "html_find_by_selector propagates allocation failures")
 {
     html_node *root = html_create_node("div", ft_nullptr);

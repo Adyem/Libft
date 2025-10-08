@@ -4,19 +4,18 @@
 #include <unistd.h>
 #include <new>
 #include "../Libft/libft.hpp"
+#include "../System_utils/system_utils.hpp"
 
 void ft_file_sink(const char *message, void *user_data)
 {
     s_file_sink *sink;
     size_t       length;
-    ssize_t      written;
 
     sink = static_cast<s_file_sink *>(user_data);
     if (!sink)
         return ;
     length = ft_strlen(message);
-    written = write(sink->fd, message, length);
-    (void)written;
+    su_write(sink->fd, message, length);
     return ;
 }
 
