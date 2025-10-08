@@ -5,6 +5,9 @@
 #include <cstring>
 #include <cstdio>
 #include <cerrno>
+#ifdef _WIN32
+# include <winsock2.h>
+#endif
 
 ft_http_server::ft_http_server()
     : _server_socket(), _error_code(ER_SUCCESS), _non_blocking(false)
@@ -283,9 +286,16 @@ int ft_http_server::run_once()
         send_result = nw_send(client_socket, response_data + total_sent, response.size() - total_sent, 0);
         if (send_result <= 0)
         {
+            int last_socket_error;
+
+#ifdef _WIN32
+            last_socket_error = WSAGetLastError();
+#else
+            last_socket_error = errno;
+#endif
             FT_CLOSE_SOCKET(client_socket);
             if (send_result < 0)
-                this->set_error(errno + ERRNO_OFFSET);
+                this->set_error(last_socket_error + ERRNO_OFFSET);
             else
                 this->set_error(SOCKET_SEND_FAILED);
             return (1);

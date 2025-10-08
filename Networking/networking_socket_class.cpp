@@ -407,12 +407,18 @@ int ft_socket::initialize(const SocketConfig &config)
         return (1);
     }
     if (config._type == SocketType::SERVER)
-        setup_server(config);
+    {
+        if (setup_server(config) != ER_SUCCESS)
+            return (this->_error_code);
+    }
     else if (config._type == SocketType::CLIENT)
-        setup_client(config);
+    {
+        if (setup_client(config) != ER_SUCCESS)
+            return (this->_error_code);
+    }
     else
     {
         this->set_error(SOCKET_UNSUPPORTED_TYPE);
     }
-    return (0);
+    return (this->_error_code);
 }
