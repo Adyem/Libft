@@ -75,7 +75,7 @@ inline ft_bitset::ft_bitset(size_t bits)
         this->_data = static_cast<size_t*>(cma_malloc(sizeof(size_t) * this->_blockCount));
         if (this->_data == ft_nullptr)
         {
-            this->set_error(BITFT_ERR_NO_MEMORY);
+            this->set_error(FT_ERR_BITSET_NO_MEMORY);
             return ;
         }
         size_t i = 0;

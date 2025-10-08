@@ -60,6 +60,9 @@ static const t_ft_error_string g_error_strings[] =
     {FT_ERR_SSL_WANT_READ, "SSL wants to read"},
     {FT_ERR_SSL_WANT_WRITE, "SSL wants to write"},
     {FT_ERR_SSL_ZERO_RETURN, "SSL connection closed"},
+    {FT_ERR_BITSET_NO_MEMORY, "Bitset memory allocation failed"},
+    {FT_ERR_PRIORITY_QUEUE_EMPTY, "Priority queue is empty"},
+    {FT_ERR_PRIORITY_QUEUE_NO_MEMORY, "Priority queue memory allocation failed"},
     {FT_ERR_SSL_SYSCALL_ERROR, "SSL system call error"}
 };
 

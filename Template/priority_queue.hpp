@@ -67,7 +67,7 @@ ft_priority_queue<ElementType, Compare>::ft_priority_queue(size_t initialCapacit
         this->_data = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * initialCapacity));
         if (this->_data == ft_nullptr)
         {
-            this->set_error(PRIORITY_FT_ERR_NO_MEMORY);
+            this->set_error(FT_ERR_PRIORITY_QUEUE_NO_MEMORY);
             return ;
         }
         this->_capacity = initialCapacity;
@@ -158,7 +158,7 @@ bool ft_priority_queue<ElementType, Compare>::ensure_capacity(size_t desired)
     ElementType* newData = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * newCap));
     if (newData == ft_nullptr)
     {
-        this->set_error(PRIORITY_FT_ERR_NO_MEMORY);
+        this->set_error(FT_ERR_PRIORITY_QUEUE_NO_MEMORY);
         return (false);
     }
     size_t i = 0;
@@ -262,7 +262,7 @@ ElementType ft_priority_queue<ElementType, Compare>::pop()
     }
     if (this->_size == 0)
     {
-        this->set_error(PRIORITY_FT_ERR_EMPTY);
+        this->set_error(FT_ERR_PRIORITY_QUEUE_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         return (ElementType());
     }
@@ -291,7 +291,7 @@ ElementType& ft_priority_queue<ElementType, Compare>::top()
     }
     if (this->_size == 0)
     {
-        this->set_error(PRIORITY_FT_ERR_EMPTY);
+        this->set_error(FT_ERR_PRIORITY_QUEUE_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         return (error_element);
     }
@@ -312,7 +312,7 @@ const ElementType& ft_priority_queue<ElementType, Compare>::top() const
     }
     if (this->_size == 0)
     {
-        this->set_error(PRIORITY_FT_ERR_EMPTY);
+        this->set_error(FT_ERR_PRIORITY_QUEUE_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         return (error_element);
     }
