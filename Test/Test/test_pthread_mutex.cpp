@@ -53,9 +53,9 @@ FT_TEST(test_pt_mutex_try_lock_detects_foreign_owner, "pt_mutex::try_lock reject
     FT_ASSERT_EQ(FT_SUCCESS, lock_result);
     FT_ASSERT(mutex.lockState());
     try_result = mutex.try_lock(requesting_thread_identifier);
-    FT_ASSERT_EQ(PT_ERR_ALREADY_LOCKED, try_result);
-    FT_ASSERT_EQ(PT_ERR_ALREADY_LOCKED, mutex.get_error());
-    FT_ASSERT_EQ(PT_ERR_ALREADY_LOCKED, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, try_result);
+    FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, mutex.get_error());
+    FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, ft_errno);
     FT_ASSERT(mutex.lockState());
     unlock_result = mutex.unlock(owning_thread_identifier);
     FT_ASSERT_EQ(FT_SUCCESS, unlock_result);
@@ -79,8 +79,8 @@ FT_TEST(test_pt_mutex_try_lock_rejects_reentrant_attempt, "pt_mutex::try_lock bl
     FT_ASSERT(mutex.lockState());
     try_result = mutex.try_lock(thread_identifier);
     FT_ASSERT_EQ(-1, try_result);
-    FT_ASSERT_EQ(PT_ERR_ALREADY_LOCKED, mutex.get_error());
-    FT_ASSERT_EQ(PT_ERR_ALREADY_LOCKED, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, mutex.get_error());
+    FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, ft_errno);
     FT_ASSERT(mutex.lockState());
     unlock_result = mutex.unlock(thread_identifier);
     FT_ASSERT_EQ(FT_SUCCESS, unlock_result);
@@ -109,8 +109,8 @@ FT_TEST(test_pt_mutex_unlock_requires_ownership, "pt_mutex::unlock enforces owne
     FT_ASSERT(pthread_equal(owning_thread_identifier, foreign_thread_identifier) == 0);
     unlock_result = mutex.unlock(foreign_thread_identifier);
     FT_ASSERT_EQ(-1, unlock_result);
-    FT_ASSERT_EQ(PT_ERR_MUTEX_OWNER, mutex.get_error());
-    FT_ASSERT_EQ(PT_ERR_MUTEX_OWNER, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_MUTEX_NOT_OWNER, mutex.get_error());
+    FT_ASSERT_EQ(FT_ERR_MUTEX_NOT_OWNER, ft_errno);
     FT_ASSERT(mutex.lockState());
     unlock_result = mutex.unlock(owning_thread_identifier);
     FT_ASSERT_EQ(FT_SUCCESS, unlock_result);

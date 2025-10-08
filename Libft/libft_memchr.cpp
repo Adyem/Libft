@@ -13,7 +13,7 @@ void* ft_memchr(const void* pointer, int number, size_t size)
         return (ft_nullptr);
     if (pointer == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     string = static_cast<const unsigned char*>(pointer);

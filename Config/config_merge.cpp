@@ -25,7 +25,7 @@ static int config_duplicate_entry(const cnfg_entry *source, cnfg_entry *destinat
 {
     if (!source || !destination)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     destination->section = ft_nullptr;
@@ -97,7 +97,7 @@ static int config_append_entry(cnfg_config *destination, const cnfg_entry *sourc
 
     if (!destination || !source)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     if (config_duplicate_entry(source, &copy) != 0)
@@ -123,7 +123,7 @@ static int config_copy_entries(cnfg_config *destination, const cnfg_config *sour
         return (0);
     if (source->entry_count && !source->entries)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     index = 0;
@@ -143,13 +143,13 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
 
     if (!base_config && !override_config)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     result = static_cast<cnfg_config*>(cma_calloc(1, sizeof(cnfg_config)));
     if (!result)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     if (config_copy_entries(result, base_config) != 0)
@@ -159,7 +159,7 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
     }
     if (override_config && override_config->entry_count && !override_config->entries)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         cnfg_free(result);
         return (ft_nullptr);
     }

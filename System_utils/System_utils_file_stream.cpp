@@ -45,14 +45,14 @@ static su_file *create_file_stream(int file_descriptor)
     if (g_force_file_stream_allocation_failure == true)
     {
         cmp_close(file_descriptor);
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     file_stream = static_cast<su_file*>(std::malloc(sizeof(su_file)));
     if (file_stream == ft_nullptr)
     {
         cmp_close(file_descriptor);
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     file_stream->_descriptor = file_descriptor;
@@ -66,7 +66,7 @@ su_file *su_fopen(const char *path_name)
 
     if (path_name == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     file_descriptor = su_open(path_name);
@@ -79,7 +79,7 @@ su_file *su_fopen(const char *path_name, int flags)
 
     if (path_name == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     file_descriptor = su_open(path_name, flags);
@@ -92,7 +92,7 @@ su_file *su_fopen(const char *path_name, int flags, mode_t mode)
 
     if (path_name == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     file_descriptor = su_open(path_name, flags, mode);
@@ -105,7 +105,7 @@ int su_fclose(su_file *stream)
 
     if (stream == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     result = cmp_close(stream->_descriptor);
@@ -130,7 +130,7 @@ size_t su_fread(void *buffer, size_t size, size_t count, su_file *stream)
 
     if (buffer == ft_nullptr || stream == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
     if (size == 0 || count == 0)
@@ -146,14 +146,14 @@ size_t su_fread(void *buffer, size_t size, size_t count, su_file *stream)
         g_force_fread_failure_enabled = 0;
         g_force_fread_failure_error = ER_SUCCESS;
         if (forced_error == ER_SUCCESS)
-            forced_error = FT_EIO;
+            forced_error = FT_ERR_IO;
         ft_errno = forced_error;
         return (0);
     }
     maximum_size = std::numeric_limits<size_t>::max();
     if (count > maximum_size / size)
     {
-        ft_errno = FT_ERANGE;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
         return (0);
     }
     total_size = size * count;
@@ -181,7 +181,7 @@ size_t su_fwrite(const void *buffer, size_t size, size_t count, su_file *stream)
 
     if (buffer == ft_nullptr || stream == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
     if (size == 0 || count == 0)
@@ -192,7 +192,7 @@ size_t su_fwrite(const void *buffer, size_t size, size_t count, su_file *stream)
     maximum_size = std::numeric_limits<size_t>::max();
     if (count > maximum_size / size)
     {
-        ft_errno = FT_ERANGE;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
         return (0);
     }
     total_size = size * count;
@@ -209,7 +209,7 @@ int su_fseek(su_file *stream, long offset, int origin)
 
     if (stream == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     result = lseek(stream->_descriptor, offset, origin);
@@ -229,7 +229,7 @@ long su_ftell(su_file *stream)
 
     if (stream == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1L);
     }
     position = lseek(stream->_descriptor, 0, SEEK_CUR);

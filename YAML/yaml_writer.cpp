@@ -245,7 +245,7 @@ int yaml_write_to_file(const char *file_path, const yaml_value *value) noexcept
                 if (ft_errno != ER_SUCCESS)
                     final_error = ft_errno;
                 else
-                    final_error = FT_EINVAL;
+                    final_error = FT_ERR_INVALID_ARGUMENT;
                 result = -1;
             }
             else
@@ -269,14 +269,14 @@ int yaml_write_to_file(const char *file_path, const yaml_value *value) noexcept
                         if (ft_errno != ER_SUCCESS)
                             write_error = ft_errno;
                         else
-                            write_error = FT_EINVAL;
+                            write_error = FT_ERR_INVALID_ARGUMENT;
                     }
                     if (write_error != ER_SUCCESS)
                         final_error = write_error;
                     else if (ft_errno != ER_SUCCESS)
                         final_error = ft_errno;
                     else
-                        final_error = FT_EINVAL;
+                        final_error = FT_ERR_INVALID_ARGUMENT;
                     result = -1;
                 }
                 else if (su_fclose(file) != 0)
@@ -284,7 +284,7 @@ int yaml_write_to_file(const char *file_path, const yaml_value *value) noexcept
                     if (ft_errno != ER_SUCCESS)
                         final_error = ft_errno;
                     else
-                        final_error = FT_EINVAL;
+                        final_error = FT_ERR_INVALID_ARGUMENT;
                     result = -1;
                 }
             }

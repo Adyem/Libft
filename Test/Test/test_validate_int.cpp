@@ -6,10 +6,10 @@
 
 FT_TEST(test_validate_int_ok, "validate int ok")
 {
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(FT_SUCCESS, ft_validate_int("123"));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(FT_SUCCESS, math_validate_int("456"));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
@@ -19,10 +19,10 @@ FT_TEST(test_validate_int_empty, "validate int empty")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(FT_FAILURE, ft_validate_int("+"));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(FT_FAILURE, math_validate_int("-"));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -30,10 +30,10 @@ FT_TEST(test_validate_int_range, "validate int range")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(FT_FAILURE, ft_validate_int("2147483648"));
-    FT_ASSERT_EQ(FT_ERANGE, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(FT_FAILURE, math_validate_int("-2147483649"));
-    FT_ASSERT_EQ(FT_ERANGE, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
     return (1);
 }
 
@@ -41,10 +41,10 @@ FT_TEST(test_validate_int_invalid, "validate int invalid")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(FT_FAILURE, ft_validate_int("12a3"));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(FT_FAILURE, math_validate_int("123b"));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -52,7 +52,7 @@ FT_TEST(test_validate_int_nullptr, "validate int nullptr")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(FT_FAILURE, ft_validate_int(ft_nullptr));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -60,10 +60,10 @@ FT_TEST(test_validate_int_leading_whitespace_fails, "validate int rejects leadin
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(FT_FAILURE, ft_validate_int(" 123"));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(FT_FAILURE, ft_validate_int("\t456"));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -71,10 +71,10 @@ FT_TEST(test_validate_int_trailing_whitespace_fails, "validate int rejects trail
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(FT_FAILURE, ft_validate_int("789 "));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(FT_FAILURE, ft_validate_int("321\n"));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 

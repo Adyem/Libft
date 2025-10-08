@@ -19,13 +19,13 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
     }
     if (index >= lines_count)
     {
-        error_code = FT_EINVAL;
+        error_code = FT_ERR_INVALID_ARGUMENT;
         goto error;
     }
     line_indent = yaml_count_indent(lines[index]);
     if (line_indent != static_cast<size_t>(indent))
     {
-        error_code = FT_EINVAL;
+        error_code = FT_ERR_INVALID_ARGUMENT;
         goto error;
     }
     {
@@ -47,7 +47,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
             list_value = new (std::nothrow) yaml_value();
             if (list_value == ft_nullptr)
             {
-                error_code = FT_EALLOC;
+                error_code = FT_ERR_NO_MEMORY;
                 goto error;
             }
             list_value->set_type(YAML_LIST);
@@ -110,7 +110,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
 
                         if (map_child == ft_nullptr)
                         {
-                            error_code = FT_EALLOC;
+                            error_code = FT_ERR_NO_MEMORY;
                             goto list_cleanup;
                         }
                         map_child->set_type(YAML_MAP);
@@ -140,7 +140,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                             size_t map_colon = yaml_find_char(map_line, ':');
                             if (map_colon == static_cast<size_t>(-1))
                             {
-                                error_code = FT_EINVAL;
+                                error_code = FT_ERR_INVALID_ARGUMENT;
                                 delete map_child;
                                 goto list_cleanup;
                             }
@@ -198,7 +198,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
 
                                 if (scalar_child == ft_nullptr)
                                 {
-                                    error_code = FT_EALLOC;
+                                    error_code = FT_ERR_NO_MEMORY;
                                     delete map_child;
                                     goto list_cleanup;
                                 }
@@ -236,7 +236,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     yaml_value *child = new (std::nothrow) yaml_value();
                     if (child == ft_nullptr)
                     {
-                        error_code = FT_EALLOC;
+                        error_code = FT_ERR_NO_MEMORY;
                         goto list_cleanup;
                     }
                     child->set_scalar(item_line);
@@ -265,7 +265,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
             map_value = new (std::nothrow) yaml_value();
             if (map_value == ft_nullptr)
             {
-                error_code = FT_EALLOC;
+                error_code = FT_ERR_NO_MEMORY;
                 goto error;
             }
             map_value->set_type(YAML_MAP);
@@ -328,7 +328,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     yaml_value *child = new (std::nothrow) yaml_value();
                     if (child == ft_nullptr)
                     {
-                        error_code = FT_EALLOC;
+                        error_code = FT_ERR_NO_MEMORY;
                         goto map_cleanup;
                     }
                     child->set_scalar(value_part);
@@ -354,7 +354,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
     yaml_value *scalar_value = new (std::nothrow) yaml_value();
     if (scalar_value == ft_nullptr)
     {
-        error_code = FT_EALLOC;
+        error_code = FT_ERR_NO_MEMORY;
         goto error;
     }
     scalar_value->set_scalar(line);
@@ -389,7 +389,7 @@ map_cleanup:
     goto error;
 error:
     if (error_code == ER_SUCCESS)
-        error_code = FT_EINVAL;
+        error_code = FT_ERR_INVALID_ARGUMENT;
     ft_errno = error_code;
     return (ft_nullptr);
 }
@@ -415,7 +415,7 @@ yaml_value *yaml_read_from_string(const ft_string &content) noexcept
     if (root == ft_nullptr)
     {
         if (parse_error == ER_SUCCESS)
-            parse_error = FT_EINVAL;
+            parse_error = FT_ERR_INVALID_ARGUMENT;
         ft_errno = parse_error;
         return (ft_nullptr);
     }
@@ -465,7 +465,7 @@ yaml_value *yaml_read_from_file(const char *file_path) noexcept
     if (result == ft_nullptr)
     {
         if (parse_error == ER_SUCCESS)
-            parse_error = FT_EINVAL;
+            parse_error = FT_ERR_INVALID_ARGUMENT;
         ft_errno = parse_error;
         return (ft_nullptr);
     }

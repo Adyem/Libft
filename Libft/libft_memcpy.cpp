@@ -10,7 +10,7 @@ void* ft_memcpy(void* destination, const void* source, size_t size)
         return (destination);
     if (destination == ft_nullptr || source == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
 
@@ -24,7 +24,7 @@ void* ft_memcpy(void* destination, const void* source, size_t size)
     src_end = src + size;
     if (dest != src && dest < src_end && src < dest_end)
     {
-        ft_errno = FT_EOVERLAP;
+        ft_errno = FT_ERR_OVERLAP;
         return (destination);
     }
 

@@ -34,7 +34,7 @@ int ft_socket::setup_client(const SocketConfig &config)
         addr_len = sizeof(struct sockaddr_in6);
     else
     {
-        this->set_error(SOCKET_INVALID_CONFIGURATION);
+        this->set_error(FT_ERR_CONFIGURATION);
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);

@@ -51,7 +51,7 @@ FT_TEST(test_strjoin_multiple_resets_errno_before_joining, "cma_strjoin_multiple
     char *joined_string;
     int result;
 
-    ft_errno = FT_ERANGE;
+    ft_errno = FT_ERR_OUT_OF_RANGE;
     joined_string = cma_strjoin_multiple(2, "foo", "bar");
     if (joined_string == ft_nullptr)
         return (0);

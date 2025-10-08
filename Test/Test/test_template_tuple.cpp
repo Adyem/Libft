@@ -35,11 +35,11 @@ FT_TEST(test_ft_tuple_reset_and_error_reporting, "ft_tuple signals bad access af
 
     int missing_value = tuple_instance.get<0>();
     FT_ASSERT_EQ(0, missing_value);
-    FT_ASSERT_EQ(TUPLE_BAD_ACCESS, tuple_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, tuple_instance.get_error());
 
     ft_string &missing_string = tuple_instance.get<1>();
     FT_ASSERT(missing_string == "");
-    FT_ASSERT_EQ(TUPLE_BAD_ACCESS, tuple_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, tuple_instance.get_error());
 
     ft_tuple<int, ft_string> refreshed_tuple(11, ft_string("eleven"));
     tuple_instance = std::move(refreshed_tuple);
@@ -65,7 +65,7 @@ FT_TEST(test_ft_tuple_move_semantics, "ft_tuple move constructor releases origin
 
     int default_value = original_tuple.get<0>();
     FT_ASSERT_EQ(0, default_value);
-    FT_ASSERT_EQ(TUPLE_BAD_ACCESS, original_tuple.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, original_tuple.get_error());
 
     ft_tuple<int, ft_string> assigned_tuple(1, ft_string("one"));
     assigned_tuple = std::move(moved_tuple);

@@ -372,7 +372,7 @@ ft_skill *ft_character::get_skill(int id) noexcept
     }
     if (found == ft_nullptr)
     {
-        this->set_error(MAP_KEY_NOT_FOUND);
+        this->set_error(FT_ERR_NOT_FOUND);
         return (ft_nullptr);
     }
     this->set_error(ER_SUCCESS);
@@ -390,7 +390,7 @@ const ft_skill *ft_character::get_skill(int id) const noexcept
     }
     if (found == ft_nullptr)
     {
-        this->set_error(MAP_KEY_NOT_FOUND);
+        this->set_error(FT_ERR_NOT_FOUND);
         return (ft_nullptr);
     }
     this->set_error(ER_SUCCESS);

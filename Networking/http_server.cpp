@@ -62,7 +62,7 @@ static int parse_request(const ft_string &request, ft_string &body, bool &is_pos
     else if (ft_strncmp(request_data, "GET ", 4) == 0)
         is_post = false;
     else
-        return (FT_EINVAL);
+        return (FT_ERR_INVALID_ARGUMENT);
     body_separator = ft_strstr(request_data, "\r\n\r\n");
     if (body_separator)
     {
@@ -149,7 +149,7 @@ int ft_http_server::run_once()
         if (bytes_received == 0)
         {
             FT_CLOSE_SOCKET(client_socket);
-            this->set_error(SOCKET_RECEIVE_FAILED);
+            this->set_error(FT_ERR_SOCKET_RECEIVE_FAILED);
             return (1);
         }
         buffer[bytes_received] = '\0';
@@ -157,7 +157,7 @@ int ft_http_server::run_once()
         if (request.size() > max_request_size)
         {
             FT_CLOSE_SOCKET(client_socket);
-            this->set_error(FT_EINVAL);
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
             return (1);
         }
         if (header_complete == false)
@@ -194,7 +194,7 @@ int ft_http_server::run_once()
                         || ft_isdigit(static_cast<unsigned char>(*length_value_pointer)) == 0)
                     {
                         FT_CLOSE_SOCKET(client_socket);
-                        this->set_error(FT_EINVAL);
+                        this->set_error(FT_ERR_INVALID_ARGUMENT);
                         return (1);
                     }
                     has_length_digits = false;
@@ -209,7 +209,7 @@ int ft_http_server::run_once()
                         if (expected_body_length > (max_request_size - digit_value) / 10)
                         {
                             FT_CLOSE_SOCKET(client_socket);
-                            this->set_error(FT_EINVAL);
+                            this->set_error(FT_ERR_INVALID_ARGUMENT);
                             return (1);
                         }
                         expected_body_length = expected_body_length * 10 + digit_value;
@@ -218,13 +218,13 @@ int ft_http_server::run_once()
                     if (has_length_digits == false)
                     {
                         FT_CLOSE_SOCKET(client_socket);
-                        this->set_error(FT_EINVAL);
+                        this->set_error(FT_ERR_INVALID_ARGUMENT);
                         return (1);
                     }
                     if (expected_body_length > max_request_size)
                     {
                         FT_CLOSE_SOCKET(client_socket);
-                        this->set_error(FT_EINVAL);
+                        this->set_error(FT_ERR_INVALID_ARGUMENT);
                         return (1);
                     }
                     has_content_length = true;
@@ -297,7 +297,7 @@ int ft_http_server::run_once()
             if (send_result < 0)
                 this->set_error(last_socket_error + ERRNO_OFFSET);
             else
-                this->set_error(SOCKET_SEND_FAILED);
+                this->set_error(FT_ERR_SOCKET_SEND_FAILED);
             return (1);
         }
         total_sent += static_cast<size_t>(send_result);

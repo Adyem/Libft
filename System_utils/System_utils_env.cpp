@@ -40,7 +40,7 @@ int su_putenv(char *string)
 
     if (string == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     if (g_env_mutex.lock(THREAD_ID) != FT_SUCCESS)

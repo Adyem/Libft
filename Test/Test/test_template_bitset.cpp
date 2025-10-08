@@ -39,13 +39,13 @@ FT_TEST(test_ft_bitset_out_of_range_errors, "ft_bitset reports errors when acces
     ft_bitset bitset_value(8);
 
     bitset_value.set(12);
-    FT_ASSERT_EQ(BITSET_OUT_OF_RANGE, bitset_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, bitset_value.get_error());
 
     FT_ASSERT_EQ(false, bitset_value.test(9));
-    FT_ASSERT_EQ(BITSET_OUT_OF_RANGE, bitset_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, bitset_value.get_error());
 
     bitset_value.reset(15);
-    FT_ASSERT_EQ(BITSET_OUT_OF_RANGE, bitset_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, bitset_value.get_error());
 
     bitset_value.set(4);
     FT_ASSERT(bitset_value.test(4));

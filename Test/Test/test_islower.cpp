@@ -4,10 +4,10 @@
 
 FT_TEST(test_islower, "ft_islower")
 {
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(1, ft_islower('a'));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(1, ft_islower('z'));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     ft_errno = ER_SUCCESS;

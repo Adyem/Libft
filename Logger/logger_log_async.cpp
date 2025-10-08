@@ -193,7 +193,7 @@ void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
 
     if (!fmt)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     if (level < g_level)
@@ -208,7 +208,7 @@ void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
     length = pf_snprintf(final_buffer, sizeof(final_buffer), "[%s] [%s] %s\n", time_buffer, ft_level_to_str(level), message_buffer);
     if (length <= 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     ft_string message(final_buffer);

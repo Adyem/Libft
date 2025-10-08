@@ -143,7 +143,7 @@ int test_inventory_slots(void)
     small->set_item_id(2);
     small->set_max_stack(1);
     small->set_stack_size(1);
-    if (inventory.add_item(small) != CHARACTER_INVENTORY_FULL)
+    if (inventory.add_item(small) != FT_ERR_FULL)
         return (0);
     return (1);
 }
@@ -300,11 +300,11 @@ FT_TEST(test_game_event_sub_duration_prevents_underflow, "ft_event::sub_duration
     ft_errno = ER_SUCCESS;
     event.sub_duration(5);
     FT_ASSERT_EQ(3, event.get_duration());
-    FT_ASSERT_EQ(FT_EINVAL, event.get_error());
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, event.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
 
     event.set_duration(3);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     event.sub_duration(3);
     FT_ASSERT_EQ(0, event.get_duration());
     FT_ASSERT_EQ(ER_SUCCESS, event.get_error());
@@ -320,10 +320,10 @@ FT_TEST(test_game_event_add_duration_detects_overflow, "ft_event::add_duration r
     ft_errno = ER_SUCCESS;
     event.add_duration(5);
     FT_ASSERT_EQ(INT_MAX - 2, event.get_duration());
-    FT_ASSERT_EQ(FT_ERANGE, event.get_error());
-    FT_ASSERT_EQ(FT_ERANGE, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, event.get_error());
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
 
-    ft_errno = FT_ERANGE;
+    ft_errno = FT_ERR_OUT_OF_RANGE;
     event.add_duration(2);
     FT_ASSERT_EQ(INT_MAX, event.get_duration());
     FT_ASSERT_EQ(ER_SUCCESS, event.get_error());

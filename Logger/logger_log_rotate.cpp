@@ -13,12 +13,12 @@ void ft_log_rotate(s_file_sink *sink)
 
     if (!sink)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     if (sink->path.empty() || sink->path.get_error() != ER_SUCCESS || sink->max_size == 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     if (fstat(sink->fd, &st) == -1)

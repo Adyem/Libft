@@ -31,12 +31,12 @@ double math_sqrt(double number)
 
     if (math_isnan(number))
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (math_nan());
     }
     if (number < 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (math_nan());
     }
     if (math_is_infinite_internal(number) != 0)
@@ -58,7 +58,7 @@ double math_sqrt(double number)
         next_guess = 0.5 * (guess + number / guess);
         if (math_isnan(next_guess))
         {
-            ft_errno = FT_ERANGE;
+            ft_errno = FT_ERR_OUT_OF_RANGE;
             return (math_nan());
         }
         difference = math_fabs(next_guess - guess);
@@ -74,6 +74,6 @@ double math_sqrt(double number)
         guess = next_guess;
         iteration_count += 1;
     }
-    ft_errno = FT_ERANGE;
+    ft_errno = FT_ERR_OUT_OF_RANGE;
     return (math_nan());
 }

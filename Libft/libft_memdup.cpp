@@ -13,20 +13,20 @@ void *ft_memdup(const void *source, size_t size)
         duplicate_zero = cma_malloc(0);
         if (duplicate_zero == ft_nullptr)
         {
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
         return (duplicate_zero);
     }
     if (source == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     void *duplicate = cma_malloc(size);
     if (duplicate == ft_nullptr)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     ft_memcpy(duplicate, source, size);

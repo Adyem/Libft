@@ -200,11 +200,11 @@ FT_TEST(test_file_dir_exists_matches_file_exists_semantics, "file_dir_exists ret
     return (1);
 }
 
-FT_TEST(test_file_readdir_handles_null_stream, "file_readdir sets FT_EINVAL when stream is null")
+FT_TEST(test_file_readdir_handles_null_stream, "file_readdir sets FT_ERR_INVALID_ARGUMENT when stream is null")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, file_readdir(ft_nullptr));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -217,7 +217,7 @@ FT_TEST(test_file_readdir_clears_error_on_success, "file_readdir sets ER_SUCCESS
     FT_ASSERT(directory_stream != ft_nullptr);
     if (directory_stream == ft_nullptr)
         return (0);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     directory_entry = file_readdir(directory_stream);
     FT_ASSERT(directory_entry != ft_nullptr);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -225,11 +225,11 @@ FT_TEST(test_file_readdir_clears_error_on_success, "file_readdir sets ER_SUCCESS
     return (1);
 }
 
-FT_TEST(test_file_closedir_handles_null_stream, "file_closedir sets FT_EINVAL when stream is null")
+FT_TEST(test_file_closedir_handles_null_stream, "file_closedir sets FT_ERR_INVALID_ARGUMENT when stream is null")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, file_closedir(ft_nullptr));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -241,7 +241,7 @@ FT_TEST(test_file_closedir_clears_error_on_success, "file_closedir sets ER_SUCCE
     FT_ASSERT(directory_stream != ft_nullptr);
     if (directory_stream == ft_nullptr)
         return (0);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(0, file_closedir(directory_stream));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);

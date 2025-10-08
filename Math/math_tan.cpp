@@ -12,7 +12,7 @@ double ft_tan(double value)
     cos_value = math_cos(value);
     if (math_fabs(cos_value) < epsilon)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (math_nan());
     }
     ft_errno = ER_SUCCESS;

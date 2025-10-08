@@ -64,7 +64,7 @@ static void api_pool_test_server(api_pool_test_server_context *context)
             &address_length);
     if (client_fd < 0)
     {
-        context->result.store(FT_EIO);
+        context->result.store(FT_ERR_IO);
         return ;
     }
     context->accept_count.store(1);

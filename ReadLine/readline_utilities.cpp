@@ -15,7 +15,7 @@ char *rl_resize_buffer(char *old_buffer, int current_size, int new_size)
     if (!new_buffer)
     {
         pf_printf_fd(2, "Allocation error\n");
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     ft_memcpy(new_buffer, old_buffer, current_size);
@@ -32,7 +32,7 @@ int rl_clear_line(const char *prompt, const char *buffer)
 
     if (prompt == ft_nullptr || buffer == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     prompt_length = ft_strlen(prompt);
@@ -78,12 +78,12 @@ int rl_read_key(void)
         }
         if (bytes_read == 0)
         {
-            ft_errno = FT_ETERM;
+            ft_errno = FT_ERR_TERMINATED;
             return (-1);
         }
         if (bytes_read < 0)
         {
-            ft_errno = FT_ETERM;
+            ft_errno = FT_ERR_TERMINATED;
             return (-1);
         }
     }

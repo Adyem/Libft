@@ -32,7 +32,7 @@ void hmac_sha256(const unsigned char *key, size_t key_len, const void *data, siz
     unsigned char *inner_data = static_cast<unsigned char *>(cma_malloc(64 + len));
     if (!inner_data)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return ;
     }
     current_index = 0;
@@ -54,7 +54,7 @@ void hmac_sha256(const unsigned char *key, size_t key_len, const void *data, siz
     unsigned char *outer_data = static_cast<unsigned char *>(cma_malloc(64 + 32));
     if (!outer_data)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return ;
     }
     current_index = 0;

@@ -5,12 +5,12 @@
 
 #include <cerrno>
 
-FT_TEST(test_rng_secure_bytes_null_buffer_sets_ft_einval, "rng_secure_bytes null buffer sets FT_EINVAL")
+FT_TEST(test_rng_secure_bytes_null_buffer_sets_ft_einval, "rng_secure_bytes null buffer sets FT_ERR_INVALID_ARGUMENT")
 {
     ft_errno = ER_SUCCESS;
     if (rng_secure_bytes(ft_nullptr, 16) != -1)
         return (0);
-    if (ft_errno != FT_EINVAL)
+    if (ft_errno != FT_ERR_INVALID_ARGUMENT)
         return (0);
     return (1);
 }
@@ -18,7 +18,7 @@ FT_TEST(test_rng_secure_bytes_null_buffer_sets_ft_einval, "rng_secure_bytes null
 FT_TEST(test_rng_secure_bytes_success_clears_errno, "rng_secure_bytes success clears ft_errno")
 {
     unsigned char buffer[8];
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     if (rng_secure_bytes(buffer, 8) != 0)
         return (0);
     if (ft_errno != ER_SUCCESS)
@@ -68,7 +68,7 @@ FT_TEST(test_rng_secure_bytes_detects_unexpected_eof, "rng_secure_bytes treats u
     cmp_clear_force_rng_failures();
     if (result != -1)
         return (0);
-    if (ft_errno != FT_EIO)
+    if (ft_errno != FT_ERR_IO)
         return (0);
     return (1);
 }

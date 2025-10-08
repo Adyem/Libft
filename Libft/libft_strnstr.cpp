@@ -12,7 +12,7 @@ char    *ft_strnstr(const char *haystack, const char *needle, size_t max_length)
     ft_errno = ER_SUCCESS;
     if (needle == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     if (max_length == 0)
@@ -24,7 +24,7 @@ char    *ft_strnstr(const char *haystack, const char *needle, size_t max_length)
     }
     if (haystack == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     needle_length = ft_strlen_size_t(needle);

@@ -7,7 +7,7 @@ ft_game_state::ft_game_state() noexcept
 {
     ft_sharedptr<ft_world> world(new (std::nothrow) ft_world());
     if (!world)
-        this->set_error(GAME_GENERAL_ERROR);
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
     else if (world.get_error() != ER_SUCCESS)
         this->set_error(world.get_error());
     else if (world->get_error() != ER_SUCCESS)
@@ -207,7 +207,7 @@ int ft_game_state::add_character(const ft_sharedptr<ft_character> &character) no
 {
     if (!character)
     {
-        this->set_error(GAME_GENERAL_ERROR);
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return (this->_error_code);
     }
     if (character.get_error() != ER_SUCCESS)
@@ -232,7 +232,7 @@ void ft_game_state::remove_character(size_t index) noexcept
 {
     if (index >= this->_characters.size())
     {
-        this->set_error(GAME_GENERAL_ERROR);
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return ;
     }
     this->_characters.erase(this->_characters.begin() + index);

@@ -18,7 +18,7 @@ file_dir *cmp_dir_open(const char *directory_path)
     WIN32_FIND_DATAA find_data;
     if (directory_path == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     size_t directory_path_length = ft_strlen(directory_path);
@@ -26,7 +26,7 @@ file_dir *cmp_dir_open(const char *directory_path)
     char *search_path = reinterpret_cast<char*>(cma_malloc(allocation_size));
     if (!search_path)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     ft_strlcpy(search_path, directory_path, allocation_size);
@@ -52,7 +52,7 @@ file_dir *cmp_dir_open(const char *directory_path)
         if (last_error != 0)
             ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
         else
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     cma_free(search_path);
@@ -60,7 +60,7 @@ file_dir *cmp_dir_open(const char *directory_path)
     if (!directory_stream)
     {
         FindClose(handle);
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     ft_memset(directory_stream, 0, sizeof(file_dir));
@@ -75,7 +75,7 @@ file_dirent *cmp_dir_read(file_dir *directory_stream)
 {
     if (directory_stream == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     HANDLE handle = reinterpret_cast<HANDLE>(directory_stream->fd);
@@ -92,7 +92,7 @@ file_dirent *cmp_dir_read(file_dir *directory_stream)
         else if (last_error != 0)
             ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
         else
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     ft_bzero(&entry, sizeof(entry));
@@ -118,7 +118,7 @@ int cmp_directory_exists(const char *path)
 {
     if (path == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
     DWORD attr = GetFileAttributesA(path);
@@ -136,7 +136,7 @@ int cmp_directory_exists(const char *path)
     if (last_error != 0)
         ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
     else
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
     return (0);
 }
 
@@ -162,7 +162,7 @@ file_dir *cmp_dir_open(const char *directory_path)
 {
     if (directory_path == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
 #ifdef __linux__
@@ -172,14 +172,14 @@ file_dir *cmp_dir_open(const char *directory_path)
         if (errno != 0)
             ft_errno = errno + ERRNO_OFFSET;
         else
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     file_dir *directory_stream = reinterpret_cast<file_dir*>(cma_malloc(sizeof(file_dir)));
     if (!directory_stream)
     {
         cmp_close(file_descriptor);
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     ft_memset(directory_stream, 0, sizeof(file_dir));
@@ -190,7 +190,7 @@ file_dir *cmp_dir_open(const char *directory_path)
     {
         cma_free(directory_stream);
         cmp_close(file_descriptor);
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     directory_stream->buffer_used = 0;
@@ -204,14 +204,14 @@ file_dir *cmp_dir_open(const char *directory_path)
         if (errno != 0)
             ft_errno = errno + ERRNO_OFFSET;
         else
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     file_dir *directory_stream = reinterpret_cast<file_dir*>(cma_malloc(sizeof(file_dir)));
     if (!directory_stream)
     {
         closedir(dir);
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     ft_memset(directory_stream, 0, sizeof(file_dir));
@@ -225,7 +225,7 @@ file_dirent *cmp_dir_read(file_dir *directory_stream)
 {
     if (directory_stream == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
 #ifdef __linux__
@@ -241,7 +241,7 @@ file_dirent *cmp_dir_read(file_dir *directory_stream)
             else if (errno != 0)
                 ft_errno = errno + ERRNO_OFFSET;
             else
-                ft_errno = FT_EINVAL;
+                ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (ft_nullptr);
         }
         directory_stream->buffer_used = bytes;
@@ -249,7 +249,7 @@ file_dirent *cmp_dir_read(file_dir *directory_stream)
     linux_dirent64 *raw = reinterpret_cast<linux_dirent64*>(directory_stream->buffer + directory_stream->buffer_offset);
     if (raw->d_reclen == 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     static file_dirent entry;
@@ -300,7 +300,7 @@ int cmp_directory_exists(const char *path)
 {
     if (path == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
     struct stat stat_buffer;
@@ -317,7 +317,7 @@ int cmp_directory_exists(const char *path)
     if (errno != 0)
         ft_errno = errno + ERRNO_OFFSET;
     else
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
     return (0);
 }
 

@@ -159,7 +159,7 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
     if (start_x >= grid_width || start_y >= grid_height || start_z >= grid_depth ||
         goal_x >= grid_width || goal_y >= grid_height || goal_z >= grid_depth)
     {
-        this->set_error(GAME_INVALID_MOVE);
+        this->set_error(FT_ERR_GAME_INVALID_MOVE);
         return (this->_error_code);
     }
     struct node
@@ -306,7 +306,7 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
             ++neighbor_index;
         }
     }
-    this->set_error(GAME_INVALID_MOVE);
+    this->set_error(FT_ERR_GAME_INVALID_MOVE);
     return (this->_error_code);
 }
 
@@ -318,7 +318,7 @@ int ft_pathfinding::dijkstra_graph(const ft_graph<int> &graph,
     size_t graph_size = graph.size();
     if (start_vertex >= graph_size || goal_vertex >= graph_size)
     {
-        this->set_error(GAME_INVALID_MOVE);
+        this->set_error(FT_ERR_GAME_INVALID_MOVE);
         return (this->_error_code);
     }
     ft_vector<int> distance;
@@ -369,7 +369,7 @@ int ft_pathfinding::dijkstra_graph(const ft_graph<int> &graph,
     }
     if (distance[goal_vertex] == -1)
     {
-        this->set_error(GAME_INVALID_MOVE);
+        this->set_error(FT_ERR_GAME_INVALID_MOVE);
         return (this->_error_code);
     }
     ft_vector<size_t> reverse_path;

@@ -11,7 +11,7 @@ ft_experience_table::ft_experience_table(int count) noexcept
         this->_levels = static_cast<int*>(cma_calloc(count, sizeof(int)));
         if (!this->_levels)
         {
-            this->set_error(CMA_BAD_ALLOC);
+            this->set_error(FT_ERR_NO_MEMORY);
             return ;
         }
         this->_count = count;
@@ -38,7 +38,7 @@ ft_experience_table::ft_experience_table(const ft_experience_table &other) noexc
         this->_levels = static_cast<int*>(cma_calloc(this->_count, sizeof(int)));
         if (!this->_levels)
         {
-            this->set_error(CMA_BAD_ALLOC);
+            this->set_error(FT_ERR_NO_MEMORY);
             this->_count = 0;
             return ;
         }
@@ -66,7 +66,7 @@ ft_experience_table &ft_experience_table::operator=(const ft_experience_table &o
             this->_levels = static_cast<int*>(cma_calloc(this->_count, sizeof(int)));
             if (!this->_levels)
             {
-                this->set_error(CMA_BAD_ALLOC);
+                this->set_error(FT_ERR_NO_MEMORY);
                 this->_count = 0;
                 return (*this);
             }
@@ -151,7 +151,7 @@ int ft_experience_table::resize(int new_count) noexcept
                     sizeof(int) * new_count));
     if (!new_levels)
     {
-        this->set_error(CMA_BAD_ALLOC);
+        this->set_error(FT_ERR_NO_MEMORY);
         return (this->_error);
     }
     if (new_count > old_count)
@@ -170,7 +170,7 @@ int ft_experience_table::resize(int new_count) noexcept
         check_count = new_count;
     if (!this->is_valid(check_count, this->_levels))
     {
-        this->set_error(CHARACTER_LEVEL_TABLE_INVALID);
+        this->set_error(FT_ERR_CONFIGURATION);
         return (this->_error);
     }
     this->set_error(ER_SUCCESS);
@@ -195,7 +195,7 @@ int ft_experience_table::get_value(int index) const noexcept
 {
     if (index < 0 || index >= this->_count || !this->_levels)
     {
-        const_cast<ft_experience_table*>(this)->set_error(VECTOR_OUT_OF_BOUNDS);
+        const_cast<ft_experience_table*>(this)->set_error(FT_ERR_OUT_OF_RANGE);
         return (0);
     }
     const_cast<ft_experience_table*>(this)->set_error(ER_SUCCESS);
@@ -206,13 +206,13 @@ void ft_experience_table::set_value(int index, int value) noexcept
 {
     if (index < 0 || index >= this->_count || !this->_levels)
     {
-        this->set_error(VECTOR_OUT_OF_BOUNDS);
+        this->set_error(FT_ERR_OUT_OF_RANGE);
         return ;
     }
     this->_levels[index] = value;
     if (!this->is_valid(this->_count, this->_levels))
     {
-        this->set_error(CHARACTER_LEVEL_TABLE_INVALID);
+        this->set_error(FT_ERR_CONFIGURATION);
         return ;
     }
     this->set_error(ER_SUCCESS);
@@ -234,7 +234,7 @@ int ft_experience_table::set_levels(const int *levels, int count) noexcept
     }
     if (!this->is_valid(this->_count, this->_levels))
     {
-        this->set_error(CHARACTER_LEVEL_TABLE_INVALID);
+        this->set_error(FT_ERR_CONFIGURATION);
         return (this->_error);
     }
     this->set_error(ER_SUCCESS);
@@ -259,7 +259,7 @@ int ft_experience_table::generate_levels_total(int count, int base,
     }
     if (!this->is_valid(this->_count, this->_levels))
     {
-        this->set_error(CHARACTER_LEVEL_TABLE_INVALID);
+        this->set_error(FT_ERR_CONFIGURATION);
         return (this->_error);
     }
     this->set_error(ER_SUCCESS);
@@ -287,7 +287,7 @@ int ft_experience_table::generate_levels_scaled(int count, int base,
     }
     if (!this->is_valid(this->_count, this->_levels))
     {
-        this->set_error(CHARACTER_LEVEL_TABLE_INVALID);
+        this->set_error(FT_ERR_CONFIGURATION);
         return (this->_error);
     }
     this->set_error(ER_SUCCESS);
@@ -307,7 +307,7 @@ int ft_experience_table::check_for_error() const noexcept
         if (this->_levels[index] <= this->_levels[index - 1])
         {
             const_cast<ft_experience_table*>(this)->set_error
-                (CHARACTER_LEVEL_TABLE_INVALID);
+                (FT_ERR_CONFIGURATION);
             return (this->_levels[index]);
         }
         ++index;

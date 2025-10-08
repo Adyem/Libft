@@ -63,7 +63,7 @@ ft_scheduled_task_handle::ft_scheduled_task_handle(ft_task_scheduler *scheduler,
     if (!scheduler || !state)
     {
         this->_scheduler = ft_nullptr;
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     if (state.hasError())
@@ -127,7 +127,7 @@ bool ft_scheduled_task_handle::cancel()
 
     if (!this->_scheduler || !this->_state)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     cancel_result = this->_scheduler->cancel_task_state(this->_state);
@@ -147,7 +147,7 @@ bool ft_scheduled_task_handle::valid() const
     state_valid = static_cast<bool>(this->_state);
     if (!this->_scheduler || !state_valid)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     this->set_error(ER_SUCCESS);
@@ -556,7 +556,7 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
 
     if (!state)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     state_copy = state;
@@ -568,7 +568,7 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
     state_pointer = state_copy.get();
     if (!state_pointer)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     state_pointer->cancel();

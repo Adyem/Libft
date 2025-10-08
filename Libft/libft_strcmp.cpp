@@ -7,7 +7,7 @@ int    ft_strcmp(const char *string1, const char *string2)
     ft_errno = ER_SUCCESS;
     if (string1 == ft_nullptr || string2 == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     while (*string1 != '\0' && static_cast<unsigned char>(*string1) == static_cast<unsigned char>(*string2))

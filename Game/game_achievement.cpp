@@ -87,7 +87,7 @@ void ft_achievement::set_id(int id) noexcept
 {
     if (id < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_id = id;
@@ -123,13 +123,13 @@ int ft_achievement::get_goal(int id) const noexcept
 {
     if (id < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     const Pair<int, ft_goal> *entry = this->_goals.find(id);
     if (!entry)
     {
-        this->set_error(MAP_KEY_NOT_FOUND);
+        this->set_error(FT_ERR_NOT_FOUND);
         return (0);
     }
     this->set_error(ER_SUCCESS);
@@ -140,7 +140,7 @@ void ft_achievement::set_goal(int id, int goal) noexcept
 {
     if (id < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     Pair<int, ft_goal> *entry = this->_goals.find(id);
@@ -164,13 +164,13 @@ int ft_achievement::get_progress(int id) const noexcept
 {
     if (id < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     const Pair<int, ft_goal> *entry = this->_goals.find(id);
     if (!entry)
     {
-        this->set_error(MAP_KEY_NOT_FOUND);
+        this->set_error(FT_ERR_NOT_FOUND);
         return (0);
     }
     this->set_error(ER_SUCCESS);
@@ -181,7 +181,7 @@ void ft_achievement::set_progress(int id, int progress) noexcept
 {
     if (id < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     Pair<int, ft_goal> *entry = this->_goals.find(id);
@@ -205,7 +205,7 @@ void ft_achievement::add_progress(int id, int value) noexcept
 {
     if (id < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     Pair<int, ft_goal> *entry = this->_goals.find(id);
@@ -229,13 +229,13 @@ bool ft_achievement::is_goal_complete(int id) const noexcept
 {
     if (id < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     const Pair<int, ft_goal> *entry = this->_goals.find(id);
     if (!entry)
     {
-        this->set_error(MAP_KEY_NOT_FOUND);
+        this->set_error(FT_ERR_NOT_FOUND);
         return (false);
     }
     this->set_error(ER_SUCCESS);

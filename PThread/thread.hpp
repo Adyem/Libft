@@ -51,7 +51,7 @@ ft_thread::ft_thread(FunctionType function, Args... args)
     data = new (std::nothrow) start_data;
     if (!data)
     {
-        this->set_error(FT_EALLOC);
+        this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
     data->function = ft_function<void()>([function, args...]() mutable

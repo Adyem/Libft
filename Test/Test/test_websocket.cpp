@@ -345,7 +345,7 @@ FT_TEST(test_websocket_client_rejects_invalid_handshake, "websocket client detec
         return (0);
     if (connect_result == 0)
         return (0);
-    if (client.get_error() != FT_EINVAL)
+    if (client.get_error() != FT_ERR_INVALID_ARGUMENT)
         return (0);
     return (1);
 }

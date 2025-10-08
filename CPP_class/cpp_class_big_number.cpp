@@ -84,7 +84,7 @@ ft_big_number::ft_big_number(const ft_big_number& other) noexcept
         {
             this->_size = 0;
             this->_capacity = 0;
-            this->set_error(BIG_NUMBER_ALLOC_FAIL);
+            this->set_error(FT_ERR_NO_MEMORY);
             return ;
         }
         ft_memcpy(this->_digits, other._digits, other._size + 1);
@@ -123,7 +123,7 @@ ft_big_number& ft_big_number::operator=(const ft_big_number& other) noexcept
         new_digits = static_cast<char*>(cma_calloc(other._capacity, sizeof(char)));
         if (!new_digits)
         {
-            this->set_error(BIG_NUMBER_ALLOC_FAIL);
+            this->set_error(FT_ERR_NO_MEMORY);
             return (*this);
         }
         ft_memcpy(new_digits, other._digits, other._size + 1);
@@ -276,7 +276,7 @@ ft_big_number ft_big_number::subtract_magnitude(const ft_big_number& other) cons
     int comparison = this->compare_magnitude(other);
     if (comparison < 0)
     {
-        result.set_error(BIG_NUMBER_NEGATIVE_RESULT);
+        result.set_error(FT_ERR_INVALID_STATE);
         return (result);
     }
     if (comparison == 0)
@@ -336,7 +336,7 @@ void ft_big_number::reserve(ft_size_t new_capacity) noexcept
         new_digits = static_cast<char*>(cma_calloc(new_capacity, sizeof(char)));
     if (!new_digits)
     {
-        this->set_error(BIG_NUMBER_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
     this->_digits = new_digits;
@@ -368,7 +368,7 @@ void ft_big_number::shrink_capacity() noexcept
     char* new_digits = static_cast<char*>(cma_realloc(this->_digits, desired_capacity));
     if (!new_digits)
     {
-        this->set_error(BIG_NUMBER_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
     this->_digits = new_digits;
@@ -398,7 +398,7 @@ void ft_big_number::assign(const char* number) noexcept
     {
         if (number[index] < '0' || number[index] > '9')
         {
-            this->set_error(BIG_NUMBER_INVALID_DIGIT);
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
             return ;
         }
         length++;
@@ -408,7 +408,7 @@ void ft_big_number::assign(const char* number) noexcept
     {
         if (parsed_negative)
         {
-            this->set_error(BIG_NUMBER_INVALID_DIGIT);
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
             return ;
         }
         this->clear();
@@ -446,7 +446,7 @@ void ft_big_number::assign_base(const char* digits, int base) noexcept
     ft_size_t index = 0;
 
     if (base < 2 || base > 16)
-        local_error = BIG_NUMBER_INVALID_DIGIT;
+        local_error = FT_ERR_INVALID_ARGUMENT;
     else
     {
         if (digits[index] == '-')
@@ -455,7 +455,7 @@ void ft_big_number::assign_base(const char* digits, int base) noexcept
             index++;
         }
         if (digits[index] == '\0')
-            local_error = BIG_NUMBER_INVALID_DIGIT;
+            local_error = FT_ERR_INVALID_ARGUMENT;
         else
         {
             ft_big_number base_number;
@@ -473,7 +473,7 @@ void ft_big_number::assign_base(const char* digits, int base) noexcept
 
                     if (digit_value < 0 || digit_value >= base)
                     {
-                        local_error = BIG_NUMBER_INVALID_DIGIT;
+                        local_error = FT_ERR_INVALID_ARGUMENT;
                         break;
                     }
                     ft_big_number product = result * base_number;
@@ -540,7 +540,7 @@ void ft_big_number::append_digit(char digit) noexcept
 {
     if (digit < '0' || digit > '9')
     {
-        this->set_error(BIG_NUMBER_INVALID_DIGIT);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     ft_size_t required_capacity = this->_size + 2;
@@ -814,7 +814,7 @@ ft_big_number ft_big_number::operator/(const ft_big_number& other) const noexcep
     ft_big_number result;
     if (other.is_zero_value())
     {
-        result.set_error(BIG_NUMBER_DIVIDE_BY_ZERO);
+        result.set_error(FT_ERR_DIVIDE_BY_ZERO);
         return (result);
     }
     if (this->is_zero_value())
@@ -892,7 +892,7 @@ ft_big_number ft_big_number::operator%(const ft_big_number& other) const noexcep
     ft_big_number result;
     if (other.is_zero_value())
     {
-        result.set_error(BIG_NUMBER_DIVIDE_BY_ZERO);
+        result.set_error(FT_ERR_DIVIDE_BY_ZERO);
         return (result);
     }
     if (this->is_zero_value())
@@ -1063,8 +1063,8 @@ ft_string ft_big_number::to_string_base(int base) noexcept
 {
     if (base < 2 || base > 16)
     {
-        this->set_error(BIG_NUMBER_INVALID_DIGIT);
-        return (ft_string(BIG_NUMBER_INVALID_DIGIT));
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return (ft_string(FT_ERR_INVALID_ARGUMENT));
     }
     if (this->_error_code != 0)
         return (ft_string(this->_error_code));
@@ -1075,8 +1075,8 @@ ft_string ft_big_number::to_string_base(int base) noexcept
         zero_result.append('0');
         if (zero_result.get_error() != 0)
         {
-            this->set_error(BIG_NUMBER_ALLOC_FAIL);
-            return (ft_string(BIG_NUMBER_ALLOC_FAIL));
+            this->set_error(FT_ERR_NO_MEMORY);
+            return (ft_string(FT_ERR_NO_MEMORY));
         }
         return (zero_result);
     }
@@ -1129,14 +1129,14 @@ ft_string ft_big_number::to_string_base(int base) noexcept
 
         if (digit_symbol == '\0')
         {
-            this->set_error(BIG_NUMBER_INVALID_DIGIT);
-            return (ft_string(BIG_NUMBER_INVALID_DIGIT));
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
+            return (ft_string(FT_ERR_INVALID_ARGUMENT));
         }
         digits.append(digit_symbol);
         if (digits.get_error() != 0)
         {
-            this->set_error(BIG_NUMBER_ALLOC_FAIL);
-            return (ft_string(BIG_NUMBER_ALLOC_FAIL));
+            this->set_error(FT_ERR_NO_MEMORY);
+            return (ft_string(FT_ERR_NO_MEMORY));
         }
         magnitude = quotient;
         if (magnitude.get_error() != 0)
@@ -1153,8 +1153,8 @@ ft_string ft_big_number::to_string_base(int base) noexcept
         result.append('-');
         if (result.get_error() != 0)
         {
-            this->set_error(BIG_NUMBER_ALLOC_FAIL);
-            return (ft_string(BIG_NUMBER_ALLOC_FAIL));
+            this->set_error(FT_ERR_NO_MEMORY);
+            return (ft_string(FT_ERR_NO_MEMORY));
         }
     }
     const char* digits_buffer = digits.c_str();
@@ -1166,8 +1166,8 @@ ft_string ft_big_number::to_string_base(int base) noexcept
         result.append(digits_buffer[digits_length]);
         if (result.get_error() != 0)
         {
-            this->set_error(BIG_NUMBER_ALLOC_FAIL);
-            return (ft_string(BIG_NUMBER_ALLOC_FAIL));
+            this->set_error(FT_ERR_NO_MEMORY);
+            return (ft_string(FT_ERR_NO_MEMORY));
         }
     }
     return (result);
@@ -1189,19 +1189,19 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
     if (modulus.is_zero_value())
     {
         ft_big_number error_result;
-        error_result.set_error(BIG_NUMBER_DIVIDE_BY_ZERO);
+        error_result.set_error(FT_ERR_DIVIDE_BY_ZERO);
         return (error_result);
     }
     if (modulus.is_negative())
     {
         ft_big_number error_result;
-        error_result.set_error(BIG_NUMBER_INVALID_DIGIT);
+        error_result.set_error(FT_ERR_INVALID_ARGUMENT);
         return (error_result);
     }
     if (exponent.is_negative())
     {
         ft_big_number error_result;
-        error_result.set_error(BIG_NUMBER_INVALID_DIGIT);
+        error_result.set_error(FT_ERR_INVALID_ARGUMENT);
         return (error_result);
     }
     ft_big_number modulus_value(modulus);

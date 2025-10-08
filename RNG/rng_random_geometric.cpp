@@ -11,12 +11,12 @@ int ft_random_geometric(double success_probability)
     ft_init_srand();
     if (success_probability <= 0.0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
     if (success_probability > 1.0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
     const double probability_epsilon = std::numeric_limits<double>::epsilon();

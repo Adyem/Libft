@@ -32,7 +32,7 @@ class ft_failing_istream : public ft_istream
             if (!this->_triggered)
             {
                 this->_triggered = true;
-                this->set_error(FT_EIO);
+                this->set_error(FT_ERR_IO);
                 return (0);
             }
             return (0);
@@ -97,7 +97,7 @@ int test_ft_open_and_read_file(void)
     return (ok);
 }
 
-FT_TEST(test_get_next_line_zero_buffer_sets_errno, "get_next_line reports FT_EINVAL when buffer size is zero")
+FT_TEST(test_get_next_line_zero_buffer_sets_errno, "get_next_line reports FT_ERR_INVALID_ARGUMENT when buffer size is zero")
 {
     ft_istringstream input("Hello\n");
     char *line;
@@ -105,7 +105,7 @@ FT_TEST(test_get_next_line_zero_buffer_sets_errno, "get_next_line reports FT_EIN
     ft_errno = ER_SUCCESS;
     line = get_next_line(input, 0);
     FT_ASSERT(line == ft_nullptr);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -117,11 +117,11 @@ FT_TEST(test_get_next_line_stream_error_sets_errno, "get_next_line propagates st
     ft_errno = ER_SUCCESS;
     line = get_next_line(input, 4);
     FT_ASSERT(line == ft_nullptr);
-    FT_ASSERT_EQ(FT_EIO, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
 }
 
-FT_TEST(test_get_next_line_allocator_failure_sets_errno, "get_next_line reports FT_EALLOC when allocations fail")
+FT_TEST(test_get_next_line_allocator_failure_sets_errno, "get_next_line reports FT_ERR_NO_MEMORY when allocations fail")
 {
     ft_istringstream input("data\n");
     char *line;
@@ -135,7 +135,7 @@ FT_TEST(test_get_next_line_allocator_failure_sets_errno, "get_next_line reports 
         cma_free(line);
         return (0);
     }
-    FT_ASSERT_EQ(FT_EALLOC, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     return (1);
 }
 
@@ -190,14 +190,14 @@ FT_TEST(test_get_next_line_map_failure_sets_errno, "get_next_line surfaces hash 
     line = get_next_line(stream_six, 2);
     cma_set_alloc_limit(0);
     FT_ASSERT(line == ft_nullptr);
-    FT_ASSERT_EQ(UNORD_MAP_MEMORY, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     return (1);
 }
 
 static void    *gnl_fail_leftover_alloc(ft_size_t size)
 {
     (void)size;
-    ft_errno = FT_EALLOC;
+    ft_errno = FT_ERR_NO_MEMORY;
     return (ft_nullptr);
 }
 
@@ -219,7 +219,7 @@ FT_TEST(test_get_next_line_leftover_alloc_failure_frees_buffer, "get_next_line r
     line = get_next_line(input, 32);
     gnl_reset_leftover_alloc_hook();
     FT_ASSERT(line == ft_nullptr);
-    FT_ASSERT_EQ(FT_EALLOC, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     cma_get_stats(&allocation_after, &free_after);
     FT_ASSERT_EQ(allocation_before + 1, allocation_after);
     FT_ASSERT_EQ(free_before + 2, free_after);

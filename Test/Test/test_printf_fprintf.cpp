@@ -62,7 +62,7 @@ FT_TEST(test_ft_vfprintf_writes_output, "ft_vfprintf formats text into the provi
         close_pipe_end(pipe_fds[1]);
         return (0);
     }
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     int printed = call_ft_vfprintf(stream, "Value:%d %s!", 42, word);
     FT_ASSERT_EQ(14, printed);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -85,7 +85,7 @@ FT_TEST(test_ft_vfprintf_null_arguments_return_error, "ft_vfprintf rejects null 
 
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, call_ft_vfprintf(static_cast<FILE *>(ft_nullptr), "noop"));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT(create_pipe(pipe_fds));
     stream = fdopen(pipe_fds[1], "w");
     if (stream == ft_nullptr)
@@ -96,7 +96,7 @@ FT_TEST(test_ft_vfprintf_null_arguments_return_error, "ft_vfprintf rejects null 
     }
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, call_ft_vfprintf(stream, static_cast<const char *>(ft_nullptr)));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(0, fclose(stream));
     stream = static_cast<FILE *>(ft_nullptr);
     FT_ASSERT(close_pipe_end(pipe_fds[0]));
@@ -143,7 +143,7 @@ FT_TEST(test_ft_fprintf_writes_and_counts, "ft_fprintf forwards to ft_vfprintf a
         close_pipe_end(pipe_fds[1]);
         return (0);
     }
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     int printed = ft_fprintf(stream, "Hello %s", name);
     FT_ASSERT_EQ(11, printed);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -168,7 +168,7 @@ FT_TEST(test_ft_fprintf_null_arguments_return_error, "ft_fprintf rejects null st
 
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, ft_fprintf(static_cast<FILE *>(ft_nullptr), "noop"));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT(create_pipe(pipe_fds));
     stream = fdopen(pipe_fds[1], "w");
     if (stream == ft_nullptr)
@@ -180,7 +180,7 @@ FT_TEST(test_ft_fprintf_null_arguments_return_error, "ft_fprintf rejects null st
     ft_errno = ER_SUCCESS;
     plain_ft_fprintf = ft_fprintf;
     FT_ASSERT_EQ(-1, plain_ft_fprintf(stream, static_cast<const char *>(ft_nullptr)));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(0, fclose(stream));
     stream = static_cast<FILE *>(ft_nullptr);
     FT_ASSERT(close_pipe_end(pipe_fds[0]));
@@ -210,7 +210,7 @@ FT_TEST(test_pf_printf_writes_to_stdout, "pf_printf writes formatted output to S
         close(stdout_backup);
         return (0);
     }
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     int printed = pf_printf("Sum=%d %s", 7, status);
     FT_ASSERT_EQ(10, printed);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -235,6 +235,6 @@ FT_TEST(test_pf_printf_null_format_sets_errno, "pf_printf rejects null format st
     ft_errno = ER_SUCCESS;
     plain_pf_printf = pf_printf;
     FT_ASSERT_EQ(-1, plain_pf_printf(static_cast<const char *>(ft_nullptr)));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }

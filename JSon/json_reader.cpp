@@ -37,7 +37,7 @@ static int json_reader_ensure_capacity(char **buffer_ptr, size_t &capacity, size
 {
     if (buffer_ptr == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     if (capacity > required)
@@ -50,7 +50,7 @@ static int json_reader_ensure_capacity(char **buffer_ptr, size_t &capacity, size
         size_t next_capacity = new_capacity * 2;
         if (next_capacity <= new_capacity)
         {
-            ft_errno = FT_ERANGE;
+            ft_errno = FT_ERR_OUT_OF_RANGE;
             return (-1);
         }
         new_capacity = next_capacity;
@@ -58,7 +58,7 @@ static int json_reader_ensure_capacity(char **buffer_ptr, size_t &capacity, size
     char *resized_buffer = static_cast<char *>(cma_realloc(*buffer_ptr, new_capacity));
     if (!resized_buffer)
     {
-        ft_errno = JSON_MALLOC_FAIL;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (-1);
     }
     *buffer_ptr = resized_buffer;
@@ -115,7 +115,7 @@ static int json_reader_append_utf8(char **buffer_ptr,
         length++;
         return (0);
     }
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     return (-1);
 }
 
@@ -130,13 +130,13 @@ static int json_reader_parse_code_unit(const char *json_string,
     {
         if (index >= length)
         {
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (-1);
         }
         unsigned int digit_value = 0;
         if (json_reader_hex_value(json_string[index], digit_value) != 0)
         {
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (-1);
         }
         code_unit = (code_unit << 4) | digit_value;
@@ -155,7 +155,7 @@ static int json_reader_append_escape(const char *json_string,
 {
     if (index >= length)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     char escape_char = json_string[index];
@@ -180,7 +180,7 @@ static int json_reader_append_escape(const char *json_string,
         return (json_reader_append_utf8(buffer_ptr, capacity, out_length, '\t'));
     if (escape_char != 'u')
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     unsigned int code_unit = 0;
@@ -191,12 +191,12 @@ static int json_reader_append_escape(const char *json_string,
     {
         if (index + 1 >= length)
         {
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (-1);
         }
         if (json_string[index] != '\\' || json_string[index + 1] != 'u')
         {
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (-1);
         }
         index = index + 2;
@@ -205,7 +205,7 @@ static int json_reader_append_escape(const char *json_string,
             return (-1);
         if (low_unit < 0xDC00 || low_unit > 0xDFFF)
         {
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (-1);
         }
         code_point = 0x10000;
@@ -214,7 +214,7 @@ static int json_reader_append_escape(const char *json_string,
     }
     else if (code_unit >= 0xDC00 && code_unit <= 0xDFFF)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     return (json_reader_append_utf8(buffer_ptr, capacity, out_length, code_point));
@@ -225,7 +225,7 @@ static char *parse_string(const char *json_string, size_t &index)
     size_t length = ft_strlen_size_t(json_string);
     if (index >= length || json_string[index] != '"')
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     index++;
@@ -234,7 +234,7 @@ static char *parse_string(const char *json_string, size_t &index)
     char *result = static_cast<char *>(cma_malloc(capacity));
     if (!result)
     {
-        ft_errno = JSON_MALLOC_FAIL;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     bool closed = false;
@@ -264,7 +264,7 @@ static char *parse_string(const char *json_string, size_t &index)
         if (static_cast<unsigned char>(current_char) < 0x20)
         {
             cma_free(result);
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (ft_nullptr);
         }
         if (json_reader_ensure_capacity(&result, capacity, out_length + 1) != 0)
@@ -278,7 +278,7 @@ static char *parse_string(const char *json_string, size_t &index)
     if (!closed)
     {
         cma_free(result);
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     if (json_reader_ensure_capacity(&result, capacity, out_length + 1) != 0)
@@ -318,7 +318,7 @@ static char *parse_number(const char *json_string, size_t &index)
         }
         if (fractional_count == 0)
         {
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (ft_nullptr);
         }
     }
@@ -338,13 +338,13 @@ static char *parse_number(const char *json_string, size_t &index)
         }
         if (exponent_count == 0)
         {
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (ft_nullptr);
         }
     }
     if (!has_digits)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     char *number = cma_substr(json_string,
@@ -352,7 +352,7 @@ static char *parse_number(const char *json_string, size_t &index)
                                index - start_index);
     if (!number)
     {
-        ft_errno = JSON_MALLOC_FAIL;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     ft_errno = ER_SUCCESS;
@@ -365,7 +365,7 @@ static char *parse_value(const char *json_string, size_t &index)
     size_t length = ft_strlen_size_t(json_string);
     if (index >= length)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     if (json_string[index] == '"')
@@ -376,7 +376,7 @@ static char *parse_value(const char *json_string, size_t &index)
         char *value = cma_strdup("true");
         if (!value)
         {
-            ft_errno = JSON_MALLOC_FAIL;
+            ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
         ft_errno = ER_SUCCESS;
@@ -388,7 +388,7 @@ static char *parse_value(const char *json_string, size_t &index)
         char *value = cma_strdup("false");
         if (!value)
         {
-            ft_errno = JSON_MALLOC_FAIL;
+            ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
         ft_errno = ER_SUCCESS;
@@ -397,7 +397,7 @@ static char *parse_value(const char *json_string, size_t &index)
     if (ft_isdigit(static_cast<unsigned char>(json_string[index]))
         || json_string[index] == '-' || json_string[index] == '+')
         return (parse_number(json_string, index));
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     return (ft_nullptr);
 }
 
@@ -409,7 +409,7 @@ static json_item *parse_items(const char *json_string, size_t &index)
     skip_whitespace(json_string, index);
     if (index >= length || json_string[index] != '{')
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     index++;
@@ -434,7 +434,7 @@ static json_item *parse_items(const char *json_string, size_t &index)
         {
             cma_free(key);
             json_free_items(head);
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (ft_nullptr);
         }
         index++;
@@ -471,7 +471,7 @@ static json_item *parse_items(const char *json_string, size_t &index)
     if (!object_closed)
     {
         json_free_items(head);
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     ft_errno = ER_SUCCESS;
@@ -483,7 +483,7 @@ json_group *json_read_from_file(const char *filename)
     char **lines = ft_open_and_read_file(filename, 512);
     if (!lines)
     {
-        ft_errno = FT_EIO;
+        ft_errno = FT_ERR_IO;
         return (ft_nullptr);
     }
     char *content = cma_strdup("");
@@ -496,7 +496,7 @@ json_group *json_read_from_file(const char *filename)
             ++line_index;
         }
         cma_free(lines);
-        ft_errno = JSON_MALLOC_FAIL;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     int line_index = 0;
@@ -514,7 +514,7 @@ json_group *json_read_from_file(const char *filename)
                 ++remaining_index;
             }
             cma_free(lines);
-            ft_errno = JSON_MALLOC_FAIL;
+            ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
         content = tmp;
@@ -527,7 +527,7 @@ json_group *json_read_from_file(const char *filename)
     if (index >= length || content[index] != '{')
     {
         cma_free(content);
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     index++;
@@ -556,7 +556,7 @@ json_group *json_read_from_file(const char *filename)
             cma_free(group_name);
             json_free_groups(head);
             cma_free(content);
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (ft_nullptr);
         }
         index++;
@@ -596,7 +596,7 @@ json_group *json_read_from_file(const char *filename)
     {
         json_free_groups(head);
         cma_free(content);
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     cma_free(content);
@@ -608,7 +608,7 @@ json_group *json_read_from_string(const char *content)
 {
     if (!content)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     size_t index = 0;
@@ -616,7 +616,7 @@ json_group *json_read_from_string(const char *content)
     size_t length = ft_strlen_size_t(content);
     if (index >= length || content[index] != '{')
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     index++;
@@ -640,7 +640,7 @@ json_group *json_read_from_string(const char *content)
             error_code = ft_errno;
             json_free_groups(head);
             if (error_code == ER_SUCCESS)
-                ft_errno = FT_EINVAL;
+                ft_errno = FT_ERR_INVALID_ARGUMENT;
             else
                 ft_errno = error_code;
             return (ft_nullptr);
@@ -650,7 +650,7 @@ json_group *json_read_from_string(const char *content)
         {
             cma_free(group_name);
             json_free_groups(head);
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (ft_nullptr);
         }
         index++;
@@ -663,7 +663,7 @@ json_group *json_read_from_string(const char *content)
             cma_free(group_name);
             json_free_groups(head);
             if (error_code == ER_SUCCESS)
-                ft_errno = FT_EINVAL;
+                ft_errno = FT_ERR_INVALID_ARGUMENT;
             else
                 ft_errno = error_code;
             return (ft_nullptr);
@@ -698,7 +698,7 @@ json_group *json_read_from_string(const char *content)
         error_code = ft_errno;
         json_free_groups(head);
         if (error_code == ER_SUCCESS)
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
         else
             ft_errno = error_code;
         return (ft_nullptr);

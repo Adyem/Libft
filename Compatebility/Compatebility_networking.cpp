@@ -8,7 +8,7 @@ ssize_t cmp_socket_send_all(ft_socket *socket_object, const void *buffer,
 {
     if (socket_object == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     return (socket_object->send_all(buffer, length, flags));

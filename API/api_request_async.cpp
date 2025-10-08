@@ -135,7 +135,7 @@ static bool api_async_build_request(const api_async_request &data,
     body_string.clear();
     if (!data.method || !data.path || !data.ip)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (false);
     }
     request += data.method;
@@ -202,7 +202,7 @@ static bool api_async_build_request(const api_async_request &data,
         if (!temporary_string)
         {
             if (ft_errno == ER_SUCCESS)
-                ft_errno = FT_EALLOC;
+                ft_errno = FT_ERR_NO_MEMORY;
             request.clear();
             return (false);
         }
@@ -224,7 +224,7 @@ static bool api_async_build_request(const api_async_request &data,
         if (!api_append_content_length_header(request, body_string.size()))
         {
             if (ft_errno == ER_SUCCESS)
-                ft_errno = FT_EIO;
+                ft_errno = FT_ERR_IO;
             request.clear();
             return (false);
         }
@@ -418,13 +418,13 @@ bool    api_request_string_async(const char *ip, uint16_t port,
 {
     if (!ip || !method || !path || !callback)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (false);
     }
     api_async_request *data = static_cast<api_async_request*>(cma_malloc(sizeof(api_async_request)));
     if (!data)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (false);
     }
     ft_bzero(data, sizeof(api_async_request));
@@ -449,7 +449,7 @@ bool    api_request_string_async(const char *ip, uint16_t port,
         if (data->headers)
             cma_free(data->headers);
         cma_free(data);
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (false);
     }
     ft_thread thread_worker(api_async_worker, data);
@@ -491,13 +491,13 @@ bool    api_request_json_async(const char *ip, uint16_t port,
 
     if (!ip || !method || !path || !callback)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (false);
     }
     data = static_cast<api_json_async_data*>(cma_malloc(sizeof(api_json_async_data)));
     if (!data)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (false);
     }
     data->callback = callback;
@@ -506,7 +506,7 @@ bool    api_request_json_async(const char *ip, uint16_t port,
             data, payload, headers, timeout))
     {
         cma_free(data);
-        ft_errno = ft_errno == ER_SUCCESS ? FT_EALLOC : ft_errno;
+        ft_errno = ft_errno == ER_SUCCESS ? FT_ERR_NO_MEMORY : ft_errno;
         return (false);
     }
     ft_errno = ER_SUCCESS;

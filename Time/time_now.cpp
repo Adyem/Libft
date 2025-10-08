@@ -16,7 +16,7 @@ t_time  time_now(void)
         if (saved_errno != 0)
             ft_errno = saved_errno + ERRNO_OFFSET;
         else
-            ft_errno = FT_ETERM;
+            ft_errno = FT_ERR_TERMINATED;
         return (static_cast<t_time>(-1));
     }
     ft_errno = ER_SUCCESS;

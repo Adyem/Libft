@@ -115,13 +115,13 @@ void ft_stack<ElementType>::push(const ElementType& value)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     StackNode* new_node = static_cast<StackNode*>(cma_malloc(sizeof(StackNode)));
     if (new_node == ft_nullptr)
     {
-        this->set_error(STACK_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
@@ -139,13 +139,13 @@ void ft_stack<ElementType>::push(ElementType&& value)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     StackNode* new_node = static_cast<StackNode*>(cma_malloc(sizeof(StackNode)));
     if (new_node == ft_nullptr)
     {
-        this->set_error(STACK_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
@@ -163,12 +163,12 @@ ElementType ft_stack<ElementType>::pop()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (ElementType());
     }
     if (this->_top == ft_nullptr)
     {
-        this->set_error(STACK_EMPTY);
+        this->set_error(FT_ERR_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         return (ElementType());
     }
@@ -189,12 +189,12 @@ ElementType& ft_stack<ElementType>::top()
     static ElementType error_element = ElementType();
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (error_element);
     }
     if (this->_top == ft_nullptr)
     {
-        this->set_error(STACK_EMPTY);
+        this->set_error(FT_ERR_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         return (error_element);
     }
@@ -210,12 +210,12 @@ const ElementType& ft_stack<ElementType>::top() const
     static ElementType error_element = ElementType();
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (error_element);
     }
     if (this->_top == ft_nullptr)
     {
-        this->set_error(STACK_EMPTY);
+        this->set_error(FT_ERR_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         return (error_element);
     }

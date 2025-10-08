@@ -62,13 +62,13 @@ int pf_vsnprintf(char *string, size_t size, const char *format, va_list args)
 {
     if (format == ft_nullptr || (string == ft_nullptr && size > 0))
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     FILE *stream = g_pf_tmpfile_function();
     if (stream == ft_nullptr)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         if (string != ft_nullptr && size > 0)
             string[0] = '\0';
         return (-1);

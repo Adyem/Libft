@@ -13,7 +13,7 @@ int    ft_memcmp(const void *pointer1, const void *pointer2, size_t size)
         return (0);
     if (pointer1 == ft_nullptr || pointer2 == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
 

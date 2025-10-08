@@ -318,7 +318,7 @@ int nw_inet_pton(int family, const char *ip_address, void *destination)
 
     if (ip_address == ft_nullptr || destination == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     result = inet_pton(family, ip_address, destination);
@@ -329,7 +329,7 @@ int nw_inet_pton(int family, const char *ip_address, void *destination)
     }
     if (result == 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
 #ifdef _WIN32
@@ -340,13 +340,13 @@ int nw_inet_pton(int family, const char *ip_address, void *destination)
         if (error_code != 0)
             ft_errno = error_code + ERRNO_OFFSET;
         else
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
     }
 #else
     if (errno != 0)
         ft_errno = errno + ERRNO_OFFSET;
     else
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
 #endif
     return (-1);
 }

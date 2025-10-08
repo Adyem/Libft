@@ -11,7 +11,7 @@ FT_TEST(test_math_exp_clears_errno_after_previous_failure, "math_exp resets errn
     ft_errno = ER_SUCCESS;
     result = math_log(0.0);
     FT_ASSERT(math_isnan(result));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     expected = 2.71828182845904523536;
     result = math_exp(1.0);
     difference = math_fabs(result - expected);

@@ -7,7 +7,7 @@ char    *ft_strrchr(const char *string, int char_to_find)
     ft_errno = ER_SUCCESS;
     if (!string)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     size_t string_length = ft_strlen_size_t(string);

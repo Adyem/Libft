@@ -70,12 +70,12 @@ int pt_condition_variable::wait(pt_mutex &mutex)
 {
     if (!this->_condition_initialized || !this->_mutex_initialized)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (!mutex.lockState())
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (-1);
     }
     if (pthread_mutex_lock(&this->_mutex) != 0)
@@ -143,12 +143,12 @@ int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &ab
 
     if (!this->_condition_initialized || !this->_mutex_initialized)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (!mutex.lockState())
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (-1);
     }
     if (pthread_mutex_lock(&this->_mutex) != 0)
@@ -208,7 +208,7 @@ int pt_condition_variable::signal()
 {
     if (!this->_condition_initialized || !this->_mutex_initialized)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (pthread_mutex_lock(&this->_mutex) != 0)
@@ -238,7 +238,7 @@ int pt_condition_variable::broadcast()
 {
     if (!this->_condition_initialized || !this->_mutex_initialized)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     if (pthread_mutex_lock(&this->_mutex) != 0)

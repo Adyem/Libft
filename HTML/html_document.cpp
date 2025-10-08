@@ -21,7 +21,7 @@ html_node *html_document::create_node(const char *tag_name, const char *text_con
 
     if (!tag_name)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     ft_errno = ER_SUCCESS;
@@ -29,7 +29,7 @@ html_node *html_document::create_node(const char *tag_name, const char *text_con
     if (!node)
     {
         if (ft_errno == ER_SUCCESS)
-            this->set_error(FT_EALLOC);
+            this->set_error(FT_ERR_NO_MEMORY);
         else
             this->set_error(ft_errno);
         return (ft_nullptr);
@@ -44,7 +44,7 @@ html_attr *html_document::create_attr(const char *key, const char *value) noexce
 
     if (!key || !value)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     ft_errno = ER_SUCCESS;
@@ -52,7 +52,7 @@ html_attr *html_document::create_attr(const char *key, const char *value) noexce
     if (!attribute)
     {
         if (ft_errno == ER_SUCCESS)
-            this->set_error(FT_EALLOC);
+            this->set_error(FT_ERR_NO_MEMORY);
         else
             this->set_error(ft_errno);
         return (ft_nullptr);
@@ -65,7 +65,7 @@ void html_document::add_attr(html_node *target_node, html_attr *new_attribute) n
 {
     if (!target_node || !new_attribute)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     html_add_attr(target_node, new_attribute);
@@ -77,7 +77,7 @@ void html_document::remove_attr(html_node *target_node, const char *key) noexcep
 {
     if (!target_node || !key)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     html_remove_attr(target_node, key);
@@ -89,7 +89,7 @@ void html_document::add_child(html_node *parent_node, html_node *child_node) noe
 {
     if (!parent_node || !child_node)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     html_add_child(parent_node, child_node);
@@ -101,7 +101,7 @@ void html_document::append_node(html_node *new_node) noexcept
 {
     if (!new_node)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     html_append_node(&this->_root, new_node);
@@ -115,7 +115,7 @@ int html_document::write_to_file(const char *file_path) const noexcept
 
     if (!file_path)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -123,7 +123,7 @@ int html_document::write_to_file(const char *file_path) const noexcept
     if (result != 0)
     {
         if (ft_errno == ER_SUCCESS)
-            this->set_error(FILE_INVALID_FD);
+            this->set_error(FT_ERR_INVALID_HANDLE);
         else
             this->set_error(ft_errno);
         return (-1);
@@ -141,7 +141,7 @@ char *html_document::write_to_string() const noexcept
     if (!result)
     {
         if (ft_errno == ER_SUCCESS)
-            this->set_error(FT_EALLOC);
+            this->set_error(FT_ERR_NO_MEMORY);
         else
             this->set_error(ft_errno);
         return (ft_nullptr);
@@ -154,7 +154,7 @@ void html_document::remove_nodes_by_tag(const char *tag_name) noexcept
 {
     if (!tag_name)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     html_remove_nodes_by_tag(&this->_root, tag_name);
@@ -166,7 +166,7 @@ void html_document::remove_nodes_by_attr(const char *key, const char *value) noe
 {
     if (!key || !value)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     html_remove_nodes_by_attr(&this->_root, key, value);
@@ -178,7 +178,7 @@ void html_document::remove_nodes_by_text(const char *text_content) noexcept
 {
     if (!text_content)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     html_remove_nodes_by_text(&this->_root, text_content);
@@ -192,7 +192,7 @@ html_node *html_document::find_by_tag(const char *tag_name) const noexcept
 
     if (!tag_name)
     {
-        const_cast<html_document *>(this)->set_error(FT_EINVAL);
+        const_cast<html_document *>(this)->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     node = html_find_by_tag(this->_root, tag_name);
@@ -206,7 +206,7 @@ html_node *html_document::find_by_attr(const char *key, const char *value) const
 
     if (!key || !value)
     {
-        const_cast<html_document *>(this)->set_error(FT_EINVAL);
+        const_cast<html_document *>(this)->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     node = html_find_by_attr(this->_root, key, value);
@@ -220,7 +220,7 @@ html_node *html_document::find_by_text(const char *text_content) const noexcept
 
     if (!text_content)
     {
-        const_cast<html_document *>(this)->set_error(FT_EINVAL);
+        const_cast<html_document *>(this)->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     node = html_find_by_text(this->_root, text_content);
@@ -234,7 +234,7 @@ html_node *html_document::find_by_selector(const char *selector) const noexcept
 
     if (!selector)
     {
-        const_cast<html_document *>(this)->set_error(FT_EINVAL);
+        const_cast<html_document *>(this)->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     node = html_find_by_selector(this->_root, selector);
@@ -248,7 +248,7 @@ size_t html_document::count_nodes_by_tag(const char *tag_name) const noexcept
 
     if (!tag_name)
     {
-        const_cast<html_document *>(this)->set_error(FT_EINVAL);
+        const_cast<html_document *>(this)->set_error(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     count = html_count_nodes_by_tag(this->_root, tag_name);

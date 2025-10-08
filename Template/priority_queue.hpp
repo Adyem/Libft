@@ -67,7 +67,7 @@ ft_priority_queue<ElementType, Compare>::ft_priority_queue(size_t initialCapacit
         this->_data = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * initialCapacity));
         if (this->_data == ft_nullptr)
         {
-            this->set_error(PRIORITY_QUEUE_ALLOC_FAIL);
+            this->set_error(PRIORITY_FT_ERR_NO_MEMORY);
             return ;
         }
         this->_capacity = initialCapacity;
@@ -104,12 +104,12 @@ ft_priority_queue<ElementType, Compare>& ft_priority_queue<ElementType, Compare>
     {
         if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
-            this->set_error(PT_ERR_MUTEX_OWNER);
+            this->set_error(FT_ERR_MUTEX_NOT_OWNER);
             return (*this);
         }
         if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
-            this->set_error(PT_ERR_MUTEX_OWNER);
+            this->set_error(FT_ERR_MUTEX_NOT_OWNER);
             this->_mutex.unlock(THREAD_ID);
             return (*this);
         }
@@ -158,7 +158,7 @@ bool ft_priority_queue<ElementType, Compare>::ensure_capacity(size_t desired)
     ElementType* newData = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * newCap));
     if (newData == ft_nullptr)
     {
-        this->set_error(PRIORITY_QUEUE_ALLOC_FAIL);
+        this->set_error(PRIORITY_FT_ERR_NO_MEMORY);
         return (false);
     }
     size_t i = 0;
@@ -215,7 +215,7 @@ void ft_priority_queue<ElementType, Compare>::push(const ElementType& value)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     if (!this->ensure_capacity(this->_size + 1))
@@ -236,7 +236,7 @@ void ft_priority_queue<ElementType, Compare>::push(ElementType&& value)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     if (!this->ensure_capacity(this->_size + 1))
@@ -257,12 +257,12 @@ ElementType ft_priority_queue<ElementType, Compare>::pop()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (ElementType());
     }
     if (this->_size == 0)
     {
-        this->set_error(PRIORITY_QUEUE_EMPTY);
+        this->set_error(PRIORITY_FT_ERR_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         return (ElementType());
     }
@@ -286,12 +286,12 @@ ElementType& ft_priority_queue<ElementType, Compare>::top()
     static ElementType error_element = ElementType();
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (error_element);
     }
     if (this->_size == 0)
     {
-        this->set_error(PRIORITY_QUEUE_EMPTY);
+        this->set_error(PRIORITY_FT_ERR_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         return (error_element);
     }
@@ -307,12 +307,12 @@ const ElementType& ft_priority_queue<ElementType, Compare>::top() const
     static ElementType error_element = ElementType();
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (error_element);
     }
     if (this->_size == 0)
     {
-        this->set_error(PRIORITY_QUEUE_EMPTY);
+        this->set_error(PRIORITY_FT_ERR_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         return (error_element);
     }
@@ -327,7 +327,7 @@ size_t ft_priority_queue<ElementType, Compare>::size() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (0);
     }
     size_t current_size = this->_size;
@@ -341,7 +341,7 @@ bool ft_priority_queue<ElementType, Compare>::empty() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (true);
     }
     bool result = (this->_size == 0);
@@ -355,7 +355,7 @@ int ft_priority_queue<ElementType, Compare>::get_error() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (this->_error_code);
     }
     int err = this->_error_code;
@@ -369,7 +369,7 @@ const char* ft_priority_queue<ElementType, Compare>::get_error_str() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (ft_strerror(this->_error_code));
     }
     int err = this->_error_code;
@@ -383,7 +383,7 @@ void ft_priority_queue<ElementType, Compare>::clear()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     size_t i = 0;

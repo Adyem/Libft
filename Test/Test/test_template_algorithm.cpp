@@ -2,6 +2,7 @@
 #include "../../RNG/rng.hpp"
 #include "../../RNG/rng_internal.hpp"
 #include "../../System_utils/test_runner.hpp"
+#include "rng_test_utils.hpp"
 #include <vector>
 #include <array>
 
@@ -97,7 +98,7 @@ FT_TEST(test_ft_shuffle_matches_manual_simulation, "ft_shuffle matches manual Fi
     {
         size_t iterator_index;
 
-        ft_seed_random_engine(123u);
+        ft_rng_test_seed_engine(123u, "template_algorithm_shuffle");
         iterator_index = expected.size() - 1;
         while (iterator_index > 0)
         {
@@ -117,7 +118,7 @@ FT_TEST(test_ft_shuffle_matches_manual_simulation, "ft_shuffle matches manual Fi
     shuffled.push_back(3);
     shuffled.push_back(4);
     shuffled.push_back(5);
-    ft_seed_random_engine(123u);
+    ft_rng_test_seed_engine(123u, "template_algorithm_shuffle");
     ft_shuffle(shuffled.begin(), shuffled.end());
     size_t index;
 

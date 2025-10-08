@@ -23,8 +23,8 @@ ElementType *ft_deck<ElementType>::popRandomElement()
 {
     if (this->empty())
     {
-        ft_errno = DECK_EMPTY;
-        this->set_error(DECK_EMPTY);
+        ft_errno = FT_ERR_EMPTY;
+        this->set_error(FT_ERR_EMPTY);
         return (ft_nullptr);
     }
     size_t index = static_cast<size_t>(ft_dice_roll(1, static_cast<int>(this->size())) - 1);
@@ -39,8 +39,8 @@ ElementType *ft_deck<ElementType>::getRandomElement() const
 {
     if (this->empty())
     {
-        ft_errno = DECK_EMPTY;
-        this->set_error(DECK_EMPTY);
+        ft_errno = FT_ERR_EMPTY;
+        this->set_error(FT_ERR_EMPTY);
         return (ft_nullptr);
     }
     size_t index = static_cast<size_t>(ft_dice_roll(1, static_cast<int>(this->size())) - 1);
@@ -53,8 +53,8 @@ ElementType *ft_deck<ElementType>::drawTopElement()
 {
     if (this->empty())
     {
-        ft_errno = DECK_EMPTY;
-        this->set_error(DECK_EMPTY);
+        ft_errno = FT_ERR_EMPTY;
+        this->set_error(FT_ERR_EMPTY);
         return (ft_nullptr);
     }
     size_t index = this->size() - 1;
@@ -69,8 +69,8 @@ ElementType *ft_deck<ElementType>::peekTopElement() const
 {
     if (this->empty())
     {
-        ft_errno = DECK_EMPTY;
-        this->set_error(DECK_EMPTY);
+        ft_errno = FT_ERR_EMPTY;
+        this->set_error(FT_ERR_EMPTY);
         return (ft_nullptr);
     }
     size_t index = this->size() - 1;
@@ -84,8 +84,8 @@ void ft_deck<ElementType>::shuffle()
 {
     if (this->empty())
     {
-        ft_errno = DECK_EMPTY;
-        this->set_error(DECK_EMPTY);
+        ft_errno = FT_ERR_EMPTY;
+        this->set_error(FT_ERR_EMPTY);
         return ;
     }
     size_t index = this->size() - 1;

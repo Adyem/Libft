@@ -72,7 +72,7 @@ void Pool<T>::release(size_t idx) noexcept
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     this->_freeIndices.push_back(idx);
@@ -91,7 +91,7 @@ T* Pool<T>::ptrAt(size_t idx) noexcept
     size_t buffer_size = this->_buffer.size();
     if (buffer_size == 0 || idx >= buffer_size)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     this->set_error(ER_SUCCESS);
@@ -145,7 +145,7 @@ void Pool<T>::resize(size_t new_size)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     this->_buffer.resize(new_size);
@@ -196,18 +196,18 @@ typename Pool<T>::Object Pool<T>::acquire(Args&&... args)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         Object error_object;
-        error_object.set_error(PT_ERR_MUTEX_OWNER);
+        error_object.set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (error_object);
     }
     size_t free_count = this->_freeIndices.size();
     if (free_count == 0)
     {
         this->_mutex.unlock(THREAD_ID);
-        this->set_error(POOL_EMPTY);
+        this->set_error(FT_ERR_EMPTY);
         Object error_object;
-        error_object.set_error(POOL_EMPTY);
+        error_object.set_error(FT_ERR_EMPTY);
         return (error_object);
     }
     size_t last = free_count - 1;
@@ -292,7 +292,7 @@ Pool<T>::Object::~Object() noexcept
         if (this->_pool != ft_nullptr)
             this->_pool->release(this->_idx);
         else
-            this->set_error(POOL_INVALID_OBJECT);
+            this->set_error(FT_ERR_INVALID_HANDLE);
     }
     this->_pool = ft_nullptr;
     this->_ptr = ft_nullptr;
@@ -306,7 +306,7 @@ T* Pool<T>::Object::operator->() const noexcept
 {
     if (this->_ptr == ft_nullptr)
     {
-        this->set_error(POOL_INVALID_OBJECT);
+        this->set_error(FT_ERR_INVALID_HANDLE);
         return (ft_nullptr);
     }
     this->set_error(ER_SUCCESS);
@@ -321,7 +321,7 @@ Pool<T>::Object::operator bool() const noexcept
         this->set_error(ER_SUCCESS);
         return (true);
     }
-    this->set_error(POOL_INVALID_OBJECT);
+    this->set_error(FT_ERR_INVALID_HANDLE);
     return (false);
 }
 

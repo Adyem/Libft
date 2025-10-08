@@ -14,24 +14,24 @@ int rl_handle_printable_char(readline_state_t *state, char c, const char *prompt
 
     if (state == ft_nullptr || prompt == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     if (state->buffer == ft_nullptr || state->bufsize <= 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     if (state->pos < 0 || state->pos > state->bufsize)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     if (state->pos >= state->bufsize - 1)
     {
         if (state->bufsize > INT_MAX / 2)
         {
-            ft_errno = FT_ERANGE;
+            ft_errno = FT_ERR_OUT_OF_RANGE;
             return (-1);
         }
         new_bufsize = state->bufsize * 2;

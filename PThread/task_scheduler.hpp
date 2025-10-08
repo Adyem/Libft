@@ -275,7 +275,7 @@ bool ft_blocking_queue<ElementType>::pop(ElementType &result)
             this->set_error(this->_mutex.get_error());
             return (false);
         }
-        this->set_error(QUEUE_EMPTY);
+        this->set_error(FT_ERR_EMPTY);
         return (false);
     }
     value = this->_storage.dequeue();
@@ -332,7 +332,7 @@ bool ft_blocking_queue<ElementType>::wait_pop(ElementType &result, const std::at
                 this->set_error(this->_mutex.get_error());
                 return (false);
             }
-            this->set_error(QUEUE_EMPTY);
+            this->set_error(FT_ERR_EMPTY);
             return (false);
         }
         if (this->_condition.wait(this->_mutex) != 0)
@@ -420,7 +420,7 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
     promise_raw = new (std::nothrow) promise_type();
     if (!promise_raw)
     {
-        this->set_error(FT_EALLOC);
+        this->set_error(FT_ERR_NO_MEMORY);
         ft_future<return_type> empty_future;
         return (empty_future);
     }
@@ -501,7 +501,7 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     promise_raw = new (std::nothrow) promise_type();
     if (!promise_raw)
     {
-        this->set_error(FT_EALLOC);
+        this->set_error(FT_ERR_NO_MEMORY);
         return (result_pair);
     }
     promise_shared.reset(promise_raw, 1, false);
@@ -519,7 +519,7 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     state_raw = new (std::nothrow) ft_scheduled_task_state();
     if (!state_raw)
     {
-        this->set_error(FT_EALLOC);
+        this->set_error(FT_ERR_NO_MEMORY);
         return (result_pair);
     }
     state_shared.reset(state_raw, 1, false);
@@ -631,7 +631,7 @@ ft_scheduled_task_handle ft_task_scheduler::schedule_every(std::chrono::duration
     state_raw = new (std::nothrow) ft_scheduled_task_state();
     if (!state_raw)
     {
-        this->set_error(FT_EALLOC);
+        this->set_error(FT_ERR_NO_MEMORY);
         return (handle_result);
     }
     state_shared.reset(state_raw, 1, false);

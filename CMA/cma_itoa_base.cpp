@@ -30,7 +30,7 @@ char    *cma_itoa_base(int number, int base)
 
     if (base < 2 || base > 16)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     if (number < 0 && base == 10)

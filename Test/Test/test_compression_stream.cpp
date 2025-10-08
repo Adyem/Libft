@@ -70,7 +70,7 @@ FT_TEST(test_ft_compress_stream_rejects_invalid_descriptors, "ft_compress_stream
     ft_errno = ER_SUCCESS;
     result = ft_compress_stream(-1, -1);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -91,7 +91,7 @@ FT_TEST(test_ft_compress_stream_reports_deflate_init_failure, "ft_compress_strea
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_EALLOC, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     return (1);
 }
 
@@ -110,7 +110,7 @@ FT_TEST(test_ft_compress_stream_reports_read_failure, "ft_compress_stream report
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_EIO, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
 }
 
@@ -136,7 +136,7 @@ FT_TEST(test_ft_compress_stream_reports_deflate_failure, "ft_compress_stream rep
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -160,7 +160,7 @@ FT_TEST(test_ft_compress_stream_reports_write_failure, "ft_compress_stream repor
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_EIO, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
 }
 
@@ -195,7 +195,7 @@ FT_TEST(test_ft_decompress_stream_rejects_invalid_descriptors, "ft_decompress_st
     ft_errno = ER_SUCCESS;
     result = ft_decompress_stream(-1, -1);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -216,7 +216,7 @@ FT_TEST(test_ft_decompress_stream_reports_inflate_init_failure, "ft_decompress_s
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_EALLOC, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     return (1);
 }
 
@@ -235,7 +235,7 @@ FT_TEST(test_ft_decompress_stream_reports_read_failure, "ft_decompress_stream re
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_EIO, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
 }
 
@@ -256,7 +256,7 @@ FT_TEST(test_ft_decompress_stream_reports_inflate_failure, "ft_decompress_stream
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -293,7 +293,7 @@ FT_TEST(test_ft_decompress_stream_reports_stream_errors, "ft_decompress_stream r
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -328,7 +328,7 @@ FT_TEST(test_ft_decompress_stream_reports_write_failure, "ft_decompress_stream r
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_EIO, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
 }
 
@@ -393,6 +393,6 @@ FT_TEST(test_ft_decompress_stream_rejects_trailing_bytes, "ft_decompress_stream 
     close(output_pipe[0]);
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }

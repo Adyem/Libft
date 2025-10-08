@@ -39,7 +39,7 @@ static void set_stream_error(void)
         ft_errno = saved_errno + ERRNO_OFFSET;
         return ;
     }
-    ft_errno = FT_EIO;
+    ft_errno = FT_ERR_IO;
     return ;
 }
 
@@ -72,20 +72,20 @@ static int format_double_output(char specifier, int precision, double number, ft
         int required_length = std::snprintf(ft_nullptr, 0, literal, precision, number); \
         if (required_length < 0) \
         { \
-            ft_errno = FT_EIO; \
+            ft_errno = FT_ERR_IO; \
             return (-1); \
         } \
         output.clear(); \
         output.resize_length(static_cast<size_t>(required_length)); \
         if (output.get_error() != ER_SUCCESS) \
         { \
-            ft_errno = FT_EIO; \
+            ft_errno = FT_ERR_IO; \
             return (-1); \
         } \
         int written_length = std::snprintf(output.print(), static_cast<size_t>(required_length) + 1, literal, precision, number); \
         if (written_length < 0) \
         { \
-            ft_errno = FT_EIO; \
+            ft_errno = FT_ERR_IO; \
             return (-1); \
         } \
         output.resize_length(static_cast<size_t>(written_length)); \
@@ -296,7 +296,7 @@ int ft_vfprintf(FILE *stream, const char *format, va_list args)
 {
     if (stream == ft_nullptr || format == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     size_t count = 0;
@@ -484,7 +484,7 @@ int ft_vfprintf(FILE *stream, const char *format, va_list args)
         return (-1);
     if (count > static_cast<size_t>(INT_MAX))
     {
-        ft_errno = FT_ERANGE;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -495,7 +495,7 @@ int ft_fprintf(FILE *stream, const char *format, ...)
 {
     if (stream == ft_nullptr || format == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     va_list args;

@@ -14,7 +14,7 @@ static int config_handle_write_failure(FILE *file)
     if (file)
         ft_fclose(file);
     if (error_code == ER_SUCCESS)
-        error_code = FT_EIO;
+        error_code = FT_ERR_IO;
     ft_errno = error_code;
     return (-1);
 }
@@ -81,7 +81,7 @@ static json_group *config_find_or_create_group(json_group **groups_head, const c
 
     if (!groups_head)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     name = section_name;
@@ -121,7 +121,7 @@ static int config_write_json(const cnfg_config *config, const char *filename)
         const cnfg_entry *entry = &config->entries[entry_index];
         if (!entry->key || !entry->value)
         {
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             json_free_groups(groups);
             return (-1);
         }
@@ -155,12 +155,12 @@ int config_write_file(const cnfg_config *config, const char *filename)
 
     if (!config || !filename)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     if (config->entry_count && !config->entries)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     extension = ft_strrchr(filename, '.');

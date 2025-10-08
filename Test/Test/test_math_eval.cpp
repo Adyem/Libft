@@ -35,7 +35,7 @@ int test_math_eval_dice_rejected(void)
 
     ft_errno = 0;
     value = math_eval("1d6");
-    if (value != ft_nullptr || ft_errno != FT_EINVAL)
+    if (value != ft_nullptr || ft_errno != FT_ERR_INVALID_ARGUMENT)
     {
         if (value)
             cma_free(value);

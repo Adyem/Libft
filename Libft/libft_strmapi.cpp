@@ -8,7 +8,7 @@ char *ft_strmapi(const char *string, char (*function)(unsigned int, char))
     ft_errno = ER_SUCCESS;
     if (string == ft_nullptr || function == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     size_t length = ft_strlen_size_t(string);
@@ -17,7 +17,7 @@ char *ft_strmapi(const char *string, char (*function)(unsigned int, char))
     char *result = static_cast<char*>(cma_malloc(length + 1));
     if (result == ft_nullptr)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     unsigned int index = 0;

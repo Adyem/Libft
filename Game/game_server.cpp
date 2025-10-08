@@ -112,7 +112,7 @@ int ft_game_server::handle_message(int client_handle, const ft_string &message) 
         if (!id_item)
         {
             json_free_groups(groups);
-            this->set_error(GAME_GENERAL_ERROR);
+            this->set_error(FT_ERR_GAME_GENERAL_ERROR);
             return (1);
         }
         if (this->_auth_token.size() > 0)
@@ -121,7 +121,7 @@ int ft_game_server::handle_message(int client_handle, const ft_string &message) 
             {
                 json_free_groups(groups);
                 FT_CLOSE_SOCKET(client_handle);
-                this->set_error(GAME_GENERAL_ERROR);
+                this->set_error(FT_ERR_GAME_GENERAL_ERROR);
                 return (1);
             }
         }
@@ -137,7 +137,7 @@ int ft_game_server::handle_message(int client_handle, const ft_string &message) 
         if (!id_item)
         {
             json_free_groups(groups);
-            this->set_error(GAME_GENERAL_ERROR);
+            this->set_error(FT_ERR_GAME_GENERAL_ERROR);
             return (1);
         }
         this->leave_client(ft_atoi(id_item->value));
@@ -150,7 +150,7 @@ int ft_game_server::handle_message(int client_handle, const ft_string &message) 
     if (!event_group)
     {
         json_free_groups(groups);
-        this->set_error(GAME_GENERAL_ERROR);
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return (1);
     }
     json_item *id_item = json_find_item(event_group, "id");
@@ -158,7 +158,7 @@ int ft_game_server::handle_message(int client_handle, const ft_string &message) 
     if (!id_item || !duration_item)
     {
         json_free_groups(groups);
-        this->set_error(GAME_GENERAL_ERROR);
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return (1);
     }
     ft_sharedptr<ft_event> event(new ft_event());

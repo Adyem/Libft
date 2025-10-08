@@ -51,11 +51,11 @@ FT_TEST(test_ft_deque_pop_on_empty_sets_error, "ft_deque reports underflow error
 
     int value_from_front = deque_instance.pop_front();
     FT_ASSERT_EQ(0, value_from_front);
-    FT_ASSERT_EQ(DEQUE_EMPTY, deque_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_EMPTY, deque_instance.get_error());
 
     int value_from_back = deque_instance.pop_back();
     FT_ASSERT_EQ(0, value_from_back);
-    FT_ASSERT_EQ(DEQUE_EMPTY, deque_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_EMPTY, deque_instance.get_error());
 
     FT_ASSERT(deque_instance.empty());
     FT_ASSERT_EQ(ER_SUCCESS, deque_instance.get_error());
@@ -70,7 +70,7 @@ FT_TEST(test_ft_deque_allocation_failure_sets_error, "ft_deque surfaces allocati
     deque_instance.push_back(42);
     cma_set_alloc_limit(0);
 
-    FT_ASSERT_EQ(DEQUE_ALLOC_FAIL, deque_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, deque_instance.get_error());
     FT_ASSERT(deque_instance.empty());
 
     deque_instance.push_back(5);

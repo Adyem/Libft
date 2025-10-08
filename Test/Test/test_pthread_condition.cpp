@@ -34,11 +34,11 @@ FT_TEST(test_pt_cond_wait_updates_errno, "pt_cond_wait updates ft_errno on failu
     FT_ASSERT_EQ(0, pthread_mutex_init(&mutex, ft_nullptr));
     failure_result = pt_cond_wait(ft_nullptr, &mutex);
     FT_ASSERT_EQ(-1, failure_result);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(0, pt_cond_init(&condition, ft_nullptr));
     failure_result = pt_cond_wait(&condition, ft_nullptr);
     FT_ASSERT_EQ(-1, failure_result);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     ready = 0;
     data.condition = &condition;
     data.mutex = &mutex;

@@ -11,14 +11,14 @@ FT_TEST(test_time_timer_start_rejects_negative_duration, "time_timer::start reje
 
     ft_errno = ER_SUCCESS;
     timer.start(-5);
-    FT_ASSERT_EQ(FT_EINVAL, timer.get_error());
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, timer.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
 
     ft_errno = ER_SUCCESS;
     update_result = timer.update();
     FT_ASSERT_EQ(static_cast<long>(-1), update_result);
-    FT_ASSERT_EQ(FT_EINVAL, timer.get_error());
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, timer.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -28,7 +28,7 @@ FT_TEST(test_time_timer_update_counts_down_to_completion, "time_timer::update tr
     long remaining_before_wait;
     long update_after_completion;
 
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     timer.start(25);
     remaining_before_wait = timer.update();
     FT_ASSERT(remaining_before_wait >= 0);
@@ -44,8 +44,8 @@ FT_TEST(test_time_timer_update_counts_down_to_completion, "time_timer::update tr
     ft_errno = ER_SUCCESS;
     update_after_completion = timer.update();
     FT_ASSERT_EQ(static_cast<long>(-1), update_after_completion);
-    FT_ASSERT_EQ(FT_EINVAL, timer.get_error());
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, timer.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -86,8 +86,8 @@ FT_TEST(test_time_timer_add_time_detects_overflow, "time_timer::add_time detects
     timer.start(LONG_MAX - 10);
     add_result = timer.add_time(100);
     FT_ASSERT_EQ(static_cast<long>(-1), add_result);
-    FT_ASSERT_EQ(FT_ERANGE, timer.get_error());
-    FT_ASSERT_EQ(FT_ERANGE, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, timer.get_error());
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
 
     ft_errno = ER_SUCCESS;
     remaining_after_failure = timer.update();
@@ -105,8 +105,8 @@ FT_TEST(test_time_timer_add_time_requires_running_timer, "time_timer::add_time r
     ft_errno = ER_SUCCESS;
     add_result = timer.add_time(5);
     FT_ASSERT_EQ(static_cast<long>(-1), add_result);
-    FT_ASSERT_EQ(FT_EINVAL, timer.get_error());
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, timer.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -124,8 +124,8 @@ FT_TEST(test_time_timer_remove_time_can_force_expiration, "time_timer::remove_ti
     ft_errno = ER_SUCCESS;
     update_result = timer.update();
     FT_ASSERT_EQ(static_cast<long>(-1), update_result);
-    FT_ASSERT_EQ(FT_EINVAL, timer.get_error());
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, timer.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -137,15 +137,15 @@ FT_TEST(test_time_timer_remove_time_requires_running_timer, "time_timer::remove_
     ft_errno = ER_SUCCESS;
     remove_result = timer.remove_time(10);
     FT_ASSERT_EQ(static_cast<long>(-1), remove_result);
-    FT_ASSERT_EQ(FT_EINVAL, timer.get_error());
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, timer.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
 
     timer.start(20);
     ft_errno = ER_SUCCESS;
     remove_result = timer.remove_time(-5);
     FT_ASSERT_EQ(static_cast<long>(-1), remove_result);
-    FT_ASSERT_EQ(FT_EINVAL, timer.get_error());
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, timer.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -154,7 +154,7 @@ FT_TEST(test_time_timer_sleep_remaining_waits_until_finished, "time_timer::sleep
     time_timer timer;
 
     timer.start(25);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     timer.sleep_remaining();
     FT_ASSERT_EQ(ER_SUCCESS, timer.get_error());
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -170,7 +170,7 @@ FT_TEST(test_time_timer_sleep_remaining_preserves_error_on_inactive_timer, "time
 
     ft_errno = ER_SUCCESS;
     timer.sleep_remaining();
-    FT_ASSERT_EQ(FT_EINVAL, timer.get_error());
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, timer.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }

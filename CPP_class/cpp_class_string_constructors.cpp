@@ -22,7 +22,7 @@ ft_string::ft_string(const char* init_str) noexcept
         this->_data = static_cast<char*>(cma_calloc(this->_capacity + 1, sizeof(char)));
         if (!this->_data)
         {
-            this->set_error(STRING_MEM_ALLOC_FAIL);
+            this->set_error(FT_ERR_NO_MEMORY);
             return ;
         }
         ft_memcpy(this->_data, init_str, this->_length + 1);
@@ -54,7 +54,7 @@ ft_string::ft_string(const ft_string& other) noexcept
         this->_data = static_cast<char*>(cma_calloc(this->_capacity + 1, sizeof(char)));
         if (!this->_data)
         {
-            this->set_error(STRING_MEM_ALLOC_FAIL);
+            this->set_error(FT_ERR_NO_MEMORY);
             return ;
         }
         ft_memcpy(this->_data, other._data, this->_length + 1);
@@ -102,7 +102,7 @@ ft_string& ft_string::operator=(const ft_string& other) noexcept
         this->_data = static_cast<char*>(cma_calloc(this->_capacity + 1, sizeof(char)));
         if (!this->_data)
         {
-            this->set_error(STRING_MEM_ALLOC_FAIL);
+            this->set_error(FT_ERR_NO_MEMORY);
             return (*this);
         }
         ft_memcpy(this->_data, other._data, this->_length + 1);
@@ -124,7 +124,7 @@ ft_string& ft_string::operator=(const char* other) noexcept
         this->_data = static_cast<char*>(cma_calloc(this->_capacity + 1, sizeof(char)));
         if (!this->_data)
         {
-            this->set_error(STRING_MEM_ALLOC_FAIL);
+            this->set_error(FT_ERR_NO_MEMORY);
             return (*this);
         }
         ft_memcpy(this->_data, other, this->_length + 1);

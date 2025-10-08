@@ -118,7 +118,7 @@ int udp_socket::create_socket(const SocketConfig &config)
 
         error_code = ft_errno;
         if (error_code == ER_SUCCESS)
-            error_code = SOCKET_CREATION_FAILED;
+            error_code = FT_ERR_SOCKET_CREATION_FAILED;
         this->set_error(error_code);
         return (this->_error_code);
     }
@@ -136,7 +136,7 @@ int udp_socket::set_non_blocking(const SocketConfig &config)
 
         error_code = ft_errno;
         if (error_code == ER_SUCCESS)
-            error_code = SOCKET_INVALID_CONFIGURATION;
+            error_code = FT_ERR_CONFIGURATION;
         this->set_error(error_code);
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
@@ -156,7 +156,7 @@ int udp_socket::set_timeouts(const SocketConfig &config)
 
             error_code = ft_errno;
             if (error_code == ER_SUCCESS)
-                error_code = SOCKET_INVALID_CONFIGURATION;
+                error_code = FT_ERR_CONFIGURATION;
             this->set_error(error_code);
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
@@ -171,7 +171,7 @@ int udp_socket::set_timeouts(const SocketConfig &config)
 
             error_code = ft_errno;
             if (error_code == ER_SUCCESS)
-                error_code = SOCKET_INVALID_CONFIGURATION;
+                error_code = FT_ERR_CONFIGURATION;
             this->set_error(error_code);
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
@@ -193,7 +193,7 @@ int udp_socket::configure_address(const SocketConfig &config)
         addr->sin_port = htons(config._port);
         if (nw_inet_pton(AF_INET, config._ip.c_str(), &addr->sin_addr) <= 0)
         {
-            this->set_error(SOCKET_INVALID_CONFIGURATION);
+            this->set_error(FT_ERR_CONFIGURATION);
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
@@ -207,7 +207,7 @@ int udp_socket::configure_address(const SocketConfig &config)
         addr6->sin6_port = htons(config._port);
         if (nw_inet_pton(AF_INET6, config._ip.c_str(), &addr6->sin6_addr) <= 0)
         {
-            this->set_error(SOCKET_INVALID_CONFIGURATION);
+            this->set_error(FT_ERR_CONFIGURATION);
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
@@ -215,7 +215,7 @@ int udp_socket::configure_address(const SocketConfig &config)
     }
     else
     {
-        this->set_error(SOCKET_INVALID_CONFIGURATION);
+        this->set_error(FT_ERR_CONFIGURATION);
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
@@ -241,7 +241,7 @@ int udp_socket::bind_socket(const SocketConfig &config)
 
         error_code = ft_errno;
         if (error_code == ER_SUCCESS)
-            error_code = SOCKET_BIND_FAILED;
+            error_code = FT_ERR_SOCKET_BIND_FAILED;
         this->set_error(error_code);
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
@@ -268,7 +268,7 @@ int udp_socket::connect_socket(const SocketConfig &config)
 
         error_code = ft_errno;
         if (error_code == ER_SUCCESS)
-            error_code = SOCKET_CONNECT_FAILED;
+            error_code = FT_ERR_SOCKET_CONNECT_FAILED;
         this->set_error(error_code);
         FT_CLOSE_SOCKET(this->_socket_fd);
         this->_socket_fd = -1;
@@ -297,7 +297,7 @@ int udp_socket::initialize(const SocketConfig &config)
 
             error_code = ft_errno;
             if (error_code == ER_SUCCESS)
-                error_code = SOCKET_INVALID_CONFIGURATION;
+                error_code = FT_ERR_CONFIGURATION;
             this->set_error(error_code);
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
@@ -316,7 +316,7 @@ ssize_t udp_socket::send_to(const void *data, size_t size, int flags,
 {
     if (this->_socket_fd < 0)
     {
-        this->set_error(SOCKET_INVALID_CONFIGURATION);
+        this->set_error(FT_ERR_CONFIGURATION);
         return (-1);
     }
     ssize_t bytes_sent;
@@ -327,7 +327,7 @@ ssize_t udp_socket::send_to(const void *data, size_t size, int flags,
 
         error_code = ft_errno;
         if (error_code == ER_SUCCESS)
-            error_code = SOCKET_SEND_FAILED;
+            error_code = FT_ERR_SOCKET_SEND_FAILED;
         this->set_error(error_code);
     }
     else
@@ -340,7 +340,7 @@ ssize_t udp_socket::receive_from(void *buffer, size_t size, int flags,
 {
     if (this->_socket_fd < 0)
     {
-        this->set_error(SOCKET_INVALID_CONFIGURATION);
+        this->set_error(FT_ERR_CONFIGURATION);
         return (-1);
     }
     ssize_t bytes_received;
@@ -351,7 +351,7 @@ ssize_t udp_socket::receive_from(void *buffer, size_t size, int flags,
 
         error_code = ft_errno;
         if (error_code == ER_SUCCESS)
-            error_code = SOCKET_RECEIVE_FAILED;
+            error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
         this->set_error(error_code);
     }
     else

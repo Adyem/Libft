@@ -152,7 +152,7 @@ ValueType ft_promise<ValueType>::get() const
     }
     if (!this->_ready.load(std::memory_order_acquire))
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ValueType());
     }
     ValueType value_copy(this->_value);

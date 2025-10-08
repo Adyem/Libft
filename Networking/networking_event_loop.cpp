@@ -34,7 +34,7 @@ int event_loop_add_socket(event_loop *loop, int socket_fd, bool is_write)
                                                    sizeof(int) * (loop->write_count + 1)));
         if (!new_array)
         {
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_ERR_NO_MEMORY;
             return (-1);
         }
         loop->write_file_descriptors = new_array;
@@ -47,7 +47,7 @@ int event_loop_add_socket(event_loop *loop, int socket_fd, bool is_write)
                                                    sizeof(int) * (loop->read_count + 1)));
         if (!new_array)
         {
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_ERR_NO_MEMORY;
             return (-1);
         }
         loop->read_file_descriptors = new_array;
@@ -73,7 +73,7 @@ int event_loop_remove_socket(event_loop *loop, int socket_fd, bool is_write)
         }
         if (index == loop->write_count)
         {
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (-1);
         }
         while (index + 1 < loop->write_count)
@@ -95,7 +95,7 @@ int event_loop_remove_socket(event_loop *loop, int socket_fd, bool is_write)
         }
         if (index == loop->read_count)
         {
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (-1);
         }
         while (index + 1 < loop->read_count)

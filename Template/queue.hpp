@@ -119,13 +119,13 @@ void ft_queue<ElementType>::enqueue(const ElementType& value)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     QueueNode* node = static_cast<QueueNode*>(cma_malloc(sizeof(QueueNode)));
     if (node == ft_nullptr)
     {
-        this->set_error(QUEUE_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
@@ -152,13 +152,13 @@ void ft_queue<ElementType>::enqueue(ElementType&& value)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     QueueNode* node = static_cast<QueueNode*>(cma_malloc(sizeof(QueueNode)));
     if (node == ft_nullptr)
     {
-        this->set_error(QUEUE_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
@@ -185,12 +185,12 @@ ElementType ft_queue<ElementType>::dequeue()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (ElementType());
     }
     if (this->_front == ft_nullptr)
     {
-        this->set_error(QUEUE_EMPTY);
+        this->set_error(FT_ERR_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         return (ElementType());
     }
@@ -213,12 +213,12 @@ ElementType& ft_queue<ElementType>::front()
     static ElementType error_element = ElementType();
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (error_element);
     }
     if (this->_front == ft_nullptr)
     {
-        this->set_error(QUEUE_EMPTY);
+        this->set_error(FT_ERR_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         return (error_element);
     }
@@ -234,12 +234,12 @@ const ElementType& ft_queue<ElementType>::front() const
     static ElementType error_element = ElementType();
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (error_element);
     }
     if (this->_front == ft_nullptr)
     {
-        this->set_error(QUEUE_EMPTY);
+        this->set_error(FT_ERR_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         return (error_element);
     }

@@ -11,7 +11,7 @@ float ft_random_exponential(float lambda_value)
     ft_init_srand();
     if (lambda_value <= 0.0f)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0.0f);
     }
     uniform_value = ft_random_float();

@@ -117,7 +117,7 @@ void ft_event::set_id(int id) noexcept
 {
     if (id < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_id = id;
@@ -134,7 +134,7 @@ void ft_event::set_duration(int duration) noexcept
 {
     if (duration < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_duration = duration;
@@ -146,14 +146,14 @@ void ft_event::add_duration(int duration) noexcept
 {
     if (duration < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     if (duration > 0)
     {
         if (this->_duration > INT_MAX - duration)
         {
-            this->set_error(FT_ERANGE);
+            this->set_error(FT_ERR_OUT_OF_RANGE);
             return ;
         }
     }
@@ -166,12 +166,12 @@ void ft_event::sub_duration(int duration) noexcept
 {
     if (duration < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     if (duration > this->_duration)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_duration -= duration;

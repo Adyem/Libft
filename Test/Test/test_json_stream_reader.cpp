@@ -80,7 +80,7 @@ FT_TEST(test_json_stream_reader_file_small_buffer, "json stream reader handles f
     }
     fflush(file);
     rewind(file);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     json_group *groups = json_read_from_file_stream(file, 8);
     FT_ASSERT(groups != ft_nullptr);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -120,7 +120,7 @@ FT_TEST(test_json_stream_reader_callback_error_propagation, "json stream reader 
     ft_errno = ER_SUCCESS;
     json_group *groups = json_read_from_stream(test_chunk_callback, &state, 4);
     FT_ASSERT(groups == ft_nullptr);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -146,7 +146,7 @@ FT_TEST(test_json_stream_reader_respects_allocator_limits, "json stream reader s
     chunk_sizes[0] = content.size();
     json_stream_test_state state = { chunk_data, chunk_sizes, 1, 0, 0 };
     cma_set_alloc_limit(4096);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     json_group *groups = json_read_from_stream(test_chunk_callback, &state, 5);
     cma_set_alloc_limit(0);
     FT_ASSERT(groups != ft_nullptr);
@@ -175,7 +175,7 @@ FT_TEST(test_json_stream_reader_decodes_escaped_strings, "json stream reader dec
     chunk_data[0] = json_text.c_str();
     chunk_sizes[0] = json_text.size();
     json_stream_test_state state = { chunk_data, chunk_sizes, 1, 0, 0 };
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     json_group *groups = json_read_from_stream(test_chunk_callback, &state, 5);
     FT_ASSERT(groups != ft_nullptr);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);

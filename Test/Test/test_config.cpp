@@ -40,7 +40,7 @@ FT_TEST(test_cnfg_parse_null_filename_sets_errno, "cnfg_parse rejects null filen
     ft_errno = ER_SUCCESS;
     cnfg_config *config = cnfg_parse(ft_nullptr);
     FT_ASSERT(config == ft_nullptr);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -49,7 +49,7 @@ FT_TEST(test_config_load_file_null_filename_sets_errno, "config_load_file reject
     ft_errno = ER_SUCCESS;
     cnfg_config *config = config_load_file(ft_nullptr);
     FT_ASSERT(config == ft_nullptr);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -77,7 +77,7 @@ FT_TEST(test_cnfg_parse_success_sets_errno_success, "cnfg_parse loads ini files 
         cnfg_free(source);
         return (0);
     }
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     if (config_write_file(source, filename) != 0)
     {
         cnfg_free(source);
@@ -85,7 +85,7 @@ FT_TEST(test_cnfg_parse_success_sets_errno_success, "cnfg_parse loads ini files 
         return (0);
     }
     cnfg_free(source);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     cnfg_config *config = cnfg_parse(filename);
     FT_ASSERT(config != ft_nullptr);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -127,7 +127,7 @@ FT_TEST(test_cnfg_parse_missing_value_handles_entries, "cnfg_parse accepts missi
         return (0);
     }
     cnfg_free(source);
-    ft_errno = FT_EALLOC;
+    ft_errno = FT_ERR_NO_MEMORY;
     cnfg_config *config = cnfg_parse(filename);
     FT_ASSERT(config != ft_nullptr);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
