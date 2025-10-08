@@ -12,7 +12,7 @@ FT_TEST(test_base64_encode_null_input_sets_errno, "ft_base64_encode null input s
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_base64_encode(ft_nullptr, 4, &encoded_length));
     FT_ASSERT_EQ(FT_EINVAL, ft_errno);
-    FT_ASSERT_EQ(static_cast<std::size_t>(123), encoded_length);
+    FT_ASSERT_EQ(static_cast<std::size_t>(0), encoded_length);
     return (1);
 }
 

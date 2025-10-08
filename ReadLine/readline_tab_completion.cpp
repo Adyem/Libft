@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "../Printf/printf.hpp"
+#include "../Libft/limits.hpp"
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
 #include "readline_internal.hpp"
@@ -62,15 +63,38 @@ static int rl_resize_buffer_if_needed(readline_state_t *state, int required_size
 
 static int rl_apply_completion(readline_state_t *state, const char *completion)
 {
-    int completion_len = ft_strlen(completion);
+    int completion_length;
+    int original_position;
+    int suffix_length;
+    long long total_length;
+    int required_size;
+
+    completion_length = ft_strlen(completion);
+    if (ft_errno != ER_SUCCESS)
+        return (-1);
+    original_position = state->pos;
+    suffix_length = ft_strlen(&state->buffer[original_position]);
+    if (ft_errno != ER_SUCCESS)
+        return (-1);
+    total_length = static_cast<long long>(state->word_start)
+        + static_cast<long long>(completion_length)
+        + static_cast<long long>(suffix_length);
+    if (total_length > static_cast<long long>(FT_INT_MAX))
+    {
+        ft_errno = FT_ERANGE;
+        return (-1);
+    }
     state->pos = state->word_start;
-    state->buffer[state->pos] = '\0';
-    int required_size = state->pos + completion_len;
+    required_size = static_cast<int>(total_length);
     if (rl_resize_buffer_if_needed(state, required_size) == -1)
         return (-1);
-    strcpy(&state->buffer[state->pos], completion);
-    state->pos += completion_len;
-    state->buffer[state->pos] = '\0';
+    ft_memmove(&state->buffer[state->pos + completion_length],
+        &state->buffer[original_position],
+        static_cast<size_t>(suffix_length) + 1);
+    if (completion_length > 0)
+        ft_memcpy(&state->buffer[state->pos], completion,
+            static_cast<size_t>(completion_length));
+    state->pos += completion_length;
     return (0);
 }
 

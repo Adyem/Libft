@@ -49,9 +49,15 @@ unsigned char    *ft_base64_encode(const unsigned char *input_buffer, std::size_
     int             has_byte_two;
     int             has_byte_three;
 
-    if (!input_buffer || !encoded_size)
+    if (encoded_size == ft_nullptr)
     {
         ft_errno = FT_EINVAL;
+        return (ft_nullptr);
+    }
+    if (input_buffer == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
+        *encoded_size = 0;
         return (ft_nullptr);
     }
     base64_table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

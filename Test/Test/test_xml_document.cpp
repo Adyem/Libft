@@ -115,6 +115,20 @@ FT_TEST(test_xml_document_load_from_string_detects_mismatched_closing_tag, "xml_
     return (1);
 }
 
+FT_TEST(test_xml_document_load_from_string_rejects_trailing_characters, "xml_document::load_from_string rejects trailing content")
+{
+    xml_document document;
+    int result;
+
+    ft_errno = ER_SUCCESS;
+    result = document.load_from_string("<root/>extra");
+    FT_ASSERT_EQ(FT_EINVAL, result);
+    FT_ASSERT_EQ(FT_EINVAL, document.get_error());
+    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT(document.get_root() == ft_nullptr);
+    return (1);
+}
+
 FT_TEST(test_xml_document_load_from_string_allocation_failure_sets_errno, "xml_document::load_from_string reports FT_EALLOC on allocation failure")
 {
     xml_document document;

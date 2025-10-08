@@ -56,11 +56,18 @@ template <typename Key, typename MappedType>
 ft_map<Key, MappedType>::ft_map(size_t initial_capacity)
     : _capacity(initial_capacity), _size(0), _error(ER_SUCCESS)
 {
+    if (this->_capacity == 0)
+    {
+        this->_data = ft_nullptr;
+        this->set_error(ER_SUCCESS);
+        return ;
+    }
     void* raw_memory = cma_malloc(sizeof(Pair<Key, MappedType>) * this->_capacity);
     if (!raw_memory)
     {
         this->set_error(SHARED_PTR_ALLOCATION_FAILED);
         this->_data = ft_nullptr;
+        this->_capacity = 0;
         return ;
     }
     this->_data = static_cast<Pair<Key, MappedType>*>(raw_memory);
@@ -231,7 +238,23 @@ void ft_map<Key, MappedType>::insert(const Key& key, const MappedType& value)
     }
     if (this->_size == this->_capacity)
     {
-        resize(this->_capacity * 2);
+        size_t next_capacity;
+        if (this->_capacity == 0)
+            next_capacity = 1;
+        else
+        {
+            size_t doubled_capacity;
+
+            doubled_capacity = this->_capacity * 2;
+            if (doubled_capacity <= this->_capacity)
+            {
+                this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+                this->_mutex.unlock(THREAD_ID);
+                return ;
+            }
+            next_capacity = doubled_capacity;
+        }
+        resize(next_capacity);
         if (this->_error != ER_SUCCESS)
         {
             this->_mutex.unlock(THREAD_ID);
@@ -264,7 +287,23 @@ void ft_map<Key, MappedType>::insert(const Key& key, MappedType&& value)
     }
     if (this->_size == this->_capacity)
     {
-        resize(this->_capacity * 2);
+        size_t next_capacity;
+        if (this->_capacity == 0)
+            next_capacity = 1;
+        else
+        {
+            size_t doubled_capacity;
+
+            doubled_capacity = this->_capacity * 2;
+            if (doubled_capacity <= this->_capacity)
+            {
+                this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+                this->_mutex.unlock(THREAD_ID);
+                return ;
+            }
+            next_capacity = doubled_capacity;
+        }
+        resize(next_capacity);
         if (this->_error != ER_SUCCESS)
         {
             this->_mutex.unlock(THREAD_ID);

@@ -1,6 +1,7 @@
 #include "parser.hpp"
 #include "../Libft/libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
 
 void html_free_nodes(html_node *nodeList)
 {
@@ -31,8 +32,16 @@ void html_free_nodes(html_node *nodeList)
 
 void html_remove_nodes_by_tag(html_node **nodeList, const char *tagName)
 {
-    html_node *current = *nodeList;
-    html_node *prev = ft_nullptr;
+    html_node *current;
+    html_node *prev;
+
+    if (nodeList == ft_nullptr || tagName == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
+        return ;
+    }
+    current = *nodeList;
+    prev = ft_nullptr;
     while (current)
     {
         html_node *next = current->next;
@@ -52,12 +61,21 @@ void html_remove_nodes_by_tag(html_node **nodeList, const char *tagName)
         }
         current = next;
     }
+    ft_errno = ER_SUCCESS;
 }
 
 void html_remove_nodes_by_attr(html_node **nodeList, const char *key, const char *value)
 {
-    html_node *current = *nodeList;
-    html_node *prev = ft_nullptr;
+    html_node *current;
+    html_node *prev;
+
+    if (nodeList == ft_nullptr || key == ft_nullptr || value == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
+        return ;
+    }
+    current = *nodeList;
+    prev = ft_nullptr;
     while (current)
     {
         html_node *next = current->next;
@@ -90,12 +108,21 @@ void html_remove_nodes_by_attr(html_node **nodeList, const char *key, const char
         }
         current = next;
     }
+    ft_errno = ER_SUCCESS;
 }
 
 void html_remove_nodes_by_text(html_node **nodeList, const char *textContent)
 {
-    html_node *current = *nodeList;
-    html_node *prev = ft_nullptr;
+    html_node *current;
+    html_node *prev;
+
+    if (nodeList == ft_nullptr || textContent == ft_nullptr)
+    {
+        ft_errno = FT_EINVAL;
+        return ;
+    }
+    current = *nodeList;
+    prev = ft_nullptr;
     while (current)
     {
         html_node *next = current->next;
@@ -115,4 +142,5 @@ void html_remove_nodes_by_text(html_node **nodeList, const char *textContent)
         }
         current = next;
     }
+    ft_errno = ER_SUCCESS;
 }

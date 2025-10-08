@@ -25,6 +25,7 @@ double math_sqrt(double number)
     double guess;
     double next_guess;
     double difference;
+    double tolerance;
     int    iteration_count;
     int    max_iterations;
 
@@ -43,7 +44,7 @@ double math_sqrt(double number)
         ft_errno = ER_SUCCESS;
         return (number);
     }
-    if (math_fabs(number) < 1e-12)
+    if (number == 0.0)
     {
         ft_errno = ER_SUCCESS;
         return (0.0);
@@ -61,7 +62,14 @@ double math_sqrt(double number)
             return (math_nan());
         }
         difference = math_fabs(next_guess - guess);
-        if (difference < 0.000001)
+        tolerance = 0.000001;
+        if (math_fabs(next_guess) < 1.0)
+        {
+            tolerance = 0.000001 * math_fabs(next_guess);
+            if (tolerance < 1e-12)
+                tolerance = 1e-12;
+        }
+        if (difference < tolerance)
             return (next_guess);
         guess = next_guess;
         iteration_count += 1;

@@ -31,6 +31,9 @@ class ft_event_emitter
         void    set_error(int error) const;
         bool    ensure_capacity(size_t desired);
 
+        template <typename, typename...>
+        friend struct ft_event_emitter_test_helper;
+
     public:
         ft_event_emitter(size_t initial_capacity = 0);
         ~ft_event_emitter();
@@ -131,15 +134,35 @@ void ft_event_emitter<EventType, Args...>::set_error(int error) const
 template <typename EventType, typename... Args>
 bool ft_event_emitter<EventType, Args...>::ensure_capacity(size_t desired)
 {
+    size_t maximum_capacity;
+    size_t new_capacity;
+
     if (desired <= this->_capacity)
         return (true);
-    size_t new_capacity;
+    maximum_capacity = FT_SYSTEM_SIZE_MAX / sizeof(Listener);
+    if (desired > maximum_capacity)
+    {
+        this->set_error(FT_ERANGE);
+        return (false);
+    }
+    if (this->_capacity > maximum_capacity)
+        this->_capacity = maximum_capacity;
     if (this->_capacity == 0)
         new_capacity = 1;
     else
-        new_capacity = this->_capacity * 2;
+        new_capacity = this->_capacity;
     while (new_capacity < desired)
-        new_capacity *= 2;
+    {
+        if (new_capacity >= maximum_capacity)
+        {
+            new_capacity = maximum_capacity;
+            break ;
+        }
+        if (new_capacity > maximum_capacity / 2)
+            new_capacity = maximum_capacity;
+        else
+            new_capacity *= 2;
+    }
     Listener* new_data = static_cast<Listener*>(cma_malloc(sizeof(Listener) * new_capacity));
     if (new_data == ft_nullptr)
     {
@@ -160,6 +183,15 @@ bool ft_event_emitter<EventType, Args...>::ensure_capacity(size_t desired)
     this->set_error(ER_SUCCESS);
     return (true);
 }
+
+template <typename EventType, typename... Args>
+struct ft_event_emitter_test_helper
+{
+    static bool ensure_capacity(ft_event_emitter<EventType, Args...> &emitter, size_t desired)
+    {
+        return (emitter.ensure_capacity(desired));
+    }
+};
 
 template <typename EventType, typename... Args>
 void ft_event_emitter<EventType, Args...>::on(const EventType& event, void (*callback)(Args...))

@@ -8,10 +8,117 @@
 #include "../../Errno/errno.hpp"
 #include "../../JSon/document.hpp"
 #include "../../CMA/CMA.hpp"
+#include "../../Libft/libft.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <cstring>
 #include <cstdio>
 #include <vector>
+
+class vector_destructor_tracker
+{
+    private:
+        static int _live_count;
+        int _value;
+        mutable int _error_code;
+
+        void set_error(int error_code) const;
+
+    public:
+        vector_destructor_tracker();
+        explicit vector_destructor_tracker(int value);
+        vector_destructor_tracker(const vector_destructor_tracker &other);
+        vector_destructor_tracker(vector_destructor_tracker &&other) noexcept;
+        vector_destructor_tracker &operator=(const vector_destructor_tracker &other);
+        vector_destructor_tracker &operator=(vector_destructor_tracker &&other) noexcept;
+        ~vector_destructor_tracker();
+
+        static void reset();
+        static int live_count();
+        int get_error() const;
+        const char *get_error_str() const;
+};
+
+int vector_destructor_tracker::_live_count = 0;
+
+vector_destructor_tracker::vector_destructor_tracker()
+    : _value(0), _error_code(ER_SUCCESS)
+{
+    ++_live_count;
+    return ;
+}
+
+vector_destructor_tracker::vector_destructor_tracker(int value)
+    : _value(value), _error_code(ER_SUCCESS)
+{
+    ++_live_count;
+    return ;
+}
+
+vector_destructor_tracker::vector_destructor_tracker(const vector_destructor_tracker &other)
+    : _value(other._value), _error_code(ER_SUCCESS)
+{
+    ++_live_count;
+    return ;
+}
+
+vector_destructor_tracker::vector_destructor_tracker(vector_destructor_tracker &&other) noexcept
+    : _value(other._value), _error_code(ER_SUCCESS)
+{
+    ++_live_count;
+    return ;
+}
+
+vector_destructor_tracker &vector_destructor_tracker::operator=(const vector_destructor_tracker &other)
+{
+    if (this != &other)
+        this->_value = other._value;
+    this->set_error(ER_SUCCESS);
+    return (*this);
+}
+
+vector_destructor_tracker &vector_destructor_tracker::operator=(vector_destructor_tracker &&other) noexcept
+{
+    if (this != &other)
+        this->_value = other._value;
+    this->set_error(ER_SUCCESS);
+    return (*this);
+}
+
+vector_destructor_tracker::~vector_destructor_tracker()
+{
+    --_live_count;
+    this->set_error(ER_SUCCESS);
+    return ;
+}
+
+void vector_destructor_tracker::reset()
+{
+    _live_count = 0;
+    ft_errno = ER_SUCCESS;
+    return ;
+}
+
+int vector_destructor_tracker::live_count()
+{
+    return (_live_count);
+}
+
+void vector_destructor_tracker::set_error(int error_code) const
+{
+    this->_error_code = error_code;
+    ft_errno = error_code;
+    return ;
+}
+
+int vector_destructor_tracker::get_error() const
+{
+    return (this->_error_code);
+}
+
+const char *vector_destructor_tracker::get_error_str() const
+{
+    return (ft_strerror(this->_error_code));
+}
 
 int test_ft_vector_push_back(void)
 {
@@ -149,6 +256,25 @@ int test_ft_vector_vs_std_reserve_resize(void)
         index_ft++;
     }
     return (ft.capacity() >= 10 && stdv.capacity() >= 10);
+}
+
+FT_TEST(test_ft_vector_erase_releases_resources, "ft_vector erase destroys overwritten elements")
+{
+    vector_destructor_tracker::reset();
+
+    {
+        ft_vector<vector_destructor_tracker> vector_instance;
+
+        vector_instance.push_back(vector_destructor_tracker(1));
+        vector_instance.push_back(vector_destructor_tracker(2));
+        vector_instance.push_back(vector_destructor_tracker(3));
+        FT_ASSERT_EQ(static_cast<size_t>(3), vector_instance.size());
+        vector_instance.erase(vector_instance.begin());
+        FT_ASSERT_EQ(static_cast<size_t>(2), vector_instance.size());
+    }
+
+    FT_ASSERT_EQ(0, vector_destructor_tracker::live_count());
+    return (1);
 }
 
 
@@ -327,6 +453,21 @@ FT_TEST(test_ft_stack_resets_errno_after_successful_push, "ft_stack clears errno
     FT_ASSERT_EQ(7, stack_instance.top());
     FT_ASSERT_EQ(ER_SUCCESS, stack_instance.get_error());
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_ft_map_grows_from_zero_capacity, "ft_map grows when constructed with zero capacity")
+{
+    ft_map<int, int> map_instance(0);
+
+    FT_ASSERT_EQ(ER_SUCCESS, map_instance.get_error());
+    map_instance.insert(42, 7);
+    FT_ASSERT_EQ(ER_SUCCESS, map_instance.get_error());
+    FT_ASSERT_EQ(static_cast<size_t>(1), map_instance.size());
+    Pair<int, int> *found_entry = map_instance.find(42);
+    FT_ASSERT(found_entry != ft_nullptr);
+    FT_ASSERT_EQ(ER_SUCCESS, map_instance.get_error());
+    FT_ASSERT_EQ(7, found_entry->value);
     return (1);
 }
 
