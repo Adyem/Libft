@@ -6,7 +6,7 @@ int rng_secure_bytes(unsigned char *buffer, size_t length)
 {
     if (buffer == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     int result = cmp_rng_secure_bytes(buffer, length);

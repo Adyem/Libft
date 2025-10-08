@@ -15,7 +15,7 @@ FT_TEST(test_math_roll_null_input, "math_roll rejects null input")
         cma_free(value);
         return (0);
     }
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -23,14 +23,14 @@ FT_TEST(test_math_roll_empty_expression, "math_roll rejects empty expression")
 {
     int *value;
 
-    ft_errno = FT_EALLOC;
+    ft_errno = FT_ERR_NO_MEMORY;
     value = math_roll("");
     if (value != ft_nullptr)
     {
         cma_free(value);
         return (0);
     }
-    FT_ASSERT(ft_errno == FT_EINVAL || ft_errno == ER_SUCCESS);
+    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == ER_SUCCESS);
     return (1);
 }
 
@@ -38,14 +38,14 @@ FT_TEST(test_math_roll_invalid_character, "math_roll rejects invalid characters"
 {
     int *value;
 
-    ft_errno = FT_EALLOC;
+    ft_errno = FT_ERR_NO_MEMORY;
     value = math_roll("2a+3");
     if (value != ft_nullptr)
     {
         cma_free(value);
         return (0);
     }
-    FT_ASSERT(ft_errno == FT_EINVAL || ft_errno == ER_SUCCESS);
+    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == ER_SUCCESS);
     return (1);
 }
 
@@ -53,14 +53,14 @@ FT_TEST(test_math_roll_unbalanced_parentheses, "math_roll rejects unbalanced par
 {
     int *value;
 
-    ft_errno = FT_EALLOC;
+    ft_errno = FT_ERR_NO_MEMORY;
     value = math_roll(")2+3(");
     if (value != ft_nullptr)
     {
         cma_free(value);
         return (0);
     }
-    FT_ASSERT(ft_errno == FT_EINVAL || ft_errno == ER_SUCCESS);
+    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == ER_SUCCESS);
     return (1);
 }
 
@@ -68,14 +68,14 @@ FT_TEST(test_math_roll_division_by_zero, "math_roll rejects division by zero")
 {
     int *value;
 
-    ft_errno = FT_EALLOC;
+    ft_errno = FT_ERR_NO_MEMORY;
     value = math_roll("10/0");
     if (value != ft_nullptr)
     {
         cma_free(value);
         return (0);
     }
-    FT_ASSERT(ft_errno == FT_EINVAL || ft_errno == ER_SUCCESS);
+    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == ER_SUCCESS);
     return (1);
 }
 
@@ -83,14 +83,14 @@ FT_TEST(test_math_roll_detects_overflow, "math_roll rejects overflowing results"
 {
     int *value;
 
-    ft_errno = FT_EALLOC;
+    ft_errno = FT_ERR_NO_MEMORY;
     value = math_roll("2147483647+1");
     if (value != ft_nullptr)
     {
         cma_free(value);
         return (0);
     }
-    FT_ASSERT(ft_errno == FT_EINVAL || ft_errno == ER_SUCCESS);
+    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == ER_SUCCESS);
     return (1);
 }
 

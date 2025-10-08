@@ -38,7 +38,7 @@ ft_size_t cma_block_size(const void *memory_pointer)
 {
     if (memory_pointer == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
     if (g_cma_thread_safe)
@@ -64,13 +64,13 @@ int cma_checked_block_size(const void *memory_pointer, ft_size_t *block_size)
 {
     if (block_size == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     *block_size = 0;
     if (memory_pointer == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     if (g_cma_thread_safe)
@@ -81,7 +81,7 @@ int cma_checked_block_size(const void *memory_pointer, ft_size_t *block_size)
     {
         if (g_cma_thread_safe)
             g_malloc_mutex.unlock(THREAD_ID);
-        ft_errno = CMA_INVALID_PTR;
+        ft_errno = FT_ERR_INVALID_POINTER;
         return (-1);
     }
     *block_size = block->size;

@@ -75,7 +75,7 @@ FT_TEST(test_ft_strerror_errno_message, "ft_strerror returns standard errno mess
     int         previous_errno;
 
     expected_message = strerror(EINVAL);
-    previous_errno = FT_EINVAL;
+    previous_errno = FT_ERR_INVALID_ARGUMENT;
     ft_errno = previous_errno;
     actual_message = ft_strerror(EINVAL + ERRNO_OFFSET);
     FT_ASSERT(expected_message != NULL);
@@ -94,7 +94,7 @@ FT_TEST(test_ft_errno_memcpy_tracks_error_state, "ft_memcpy updates ft_errno on 
     ft_errno = ER_SUCCESS;
     copy_result = ft_memcpy(ft_nullptr, source_buffer, sizeof(source_buffer));
     FT_ASSERT(copy_result == ft_nullptr);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
 
     copy_result = ft_memcpy(destination_buffer, source_buffer, sizeof(source_buffer));
     FT_ASSERT(copy_result == destination_buffer);
@@ -112,7 +112,7 @@ FT_TEST(test_ft_errno_strlen_resets_after_failure, "ft_strlen resets ft_errno to
     ft_errno = ER_SUCCESS;
     string_length = ft_strlen(ft_nullptr);
     FT_ASSERT_EQ(0, string_length);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
 
     string_length = ft_strlen(valid_string);
     FT_ASSERT_EQ(7, string_length);
@@ -126,18 +126,18 @@ FT_TEST(test_ft_errno_is_thread_local, "ft_errno maintains independent values pe
     std::thread      worker_thread;
 
     thread_errno_value.store(ER_SUCCESS);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     worker_thread = std::thread(
         [&thread_errno_value]()
         {
             ft_errno = ER_SUCCESS;
-            ft_errno = FT_ERANGE;
+            ft_errno = FT_ERR_OUT_OF_RANGE;
             thread_errno_value.store(ft_errno);
             return ;
         });
     worker_thread.join();
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
-    FT_ASSERT_EQ(FT_ERANGE, thread_errno_value.load());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, thread_errno_value.load());
     return (1);
 }
 
@@ -151,8 +151,8 @@ FT_TEST(test_ft_perror_null_message_outputs_errno, "ft_perror prints strerror wh
     const char *expected_message;
 
     original_errno_value = ft_errno;
-    expected_message = ft_strerror(FT_EINVAL);
-    ft_errno = FT_EINVAL;
+    expected_message = ft_strerror(FT_ERR_INVALID_ARGUMENT);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(0, pipe(pipe_fds));
     saved_stderr = dup(2);
     FT_ASSERT(saved_stderr >= 0);
@@ -165,7 +165,7 @@ FT_TEST(test_ft_perror_null_message_outputs_errno, "ft_perror prints strerror wh
     FT_ASSERT(read_count > 0);
     buffer[read_count] = '\0';
     FT_ASSERT(std::strstr(buffer, expected_message) != ft_nullptr);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
 
     FT_ASSERT(dup2(saved_stderr, 2) >= 0);
     close(saved_stderr);
@@ -184,8 +184,8 @@ FT_TEST(test_ft_perror_prefixes_custom_message, "ft_perror prefixes custom text 
     const char *expected_message;
 
     original_errno_value = ft_errno;
-    expected_message = ft_strerror(FT_EIO);
-    ft_errno = FT_EIO;
+    expected_message = ft_strerror(FT_ERR_IO);
+    ft_errno = FT_ERR_IO;
     FT_ASSERT_EQ(0, pipe(pipe_fds));
     saved_stderr = dup(2);
     FT_ASSERT(saved_stderr >= 0);
@@ -199,7 +199,7 @@ FT_TEST(test_ft_perror_prefixes_custom_message, "ft_perror prefixes custom text 
     buffer[read_count] = '\0';
     FT_ASSERT(std::strstr(buffer, "custom context: ") != ft_nullptr);
     FT_ASSERT(std::strstr(buffer, expected_message) != ft_nullptr);
-    FT_ASSERT_EQ(FT_EIO, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
 
     FT_ASSERT(dup2(saved_stderr, 2) >= 0);
     close(saved_stderr);
@@ -231,8 +231,8 @@ FT_TEST(test_ft_exit_message_with_errno, "ft_exit appends strerror details when 
     int         original_errno_value;
 
     original_errno_value = ft_errno;
-    expected_error_message = ft_strerror(FT_EIO);
-    FT_ASSERT(capture_ft_exit_output("fatal failure", FT_EIO, 90, captured_output, child_status));
+    expected_error_message = ft_strerror(FT_ERR_IO);
+    FT_ASSERT(capture_ft_exit_output("fatal failure", FT_ERR_IO, 90, captured_output, child_status));
     FT_ASSERT(WIFEXITED(child_status));
     FT_ASSERT_EQ(90, WEXITSTATUS(child_status));
     FT_ASSERT(!captured_output.empty());
@@ -252,10 +252,10 @@ FT_TEST(test_ft_exit_without_message_outputs_errno, "ft_exit prints strerror whe
     int         original_errno_value;
 
     original_errno_value = ft_errno;
-    expected_error_message = ft_strerror(FT_EINVAL);
+    expected_error_message = ft_strerror(FT_ERR_INVALID_ARGUMENT);
     expected_output = expected_error_message;
     expected_output.push_back('\n');
-    FT_ASSERT(capture_ft_exit_output(ft_nullptr, FT_EINVAL, 7, captured_output, child_status));
+    FT_ASSERT(capture_ft_exit_output(ft_nullptr, FT_ERR_INVALID_ARGUMENT, 7, captured_output, child_status));
     FT_ASSERT(WIFEXITED(child_status));
     FT_ASSERT_EQ(7, WEXITSTATUS(child_status));
     FT_ASSERT_EQ(expected_output, captured_output);

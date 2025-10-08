@@ -13,7 +13,7 @@ void *ft_memmove(void *destination, const void *source, size_t size)
     {
         if (size > 0)
         {
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (ft_nullptr);
         }
         return (destination);

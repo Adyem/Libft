@@ -7,7 +7,7 @@ void ft_striteri(char *string, void (*function)(unsigned int, char *))
     ft_errno = ER_SUCCESS;
     if (string == ft_nullptr || function == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     unsigned int index = 0;

@@ -28,14 +28,14 @@ long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
 
     if (current_character == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         if (end_pointer != ft_nullptr)
             *end_pointer = ft_nullptr;
         return (0L);
     }
     if (numeric_base != 0 && (numeric_base < 2 || numeric_base > 36))
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         if (end_pointer != ft_nullptr)
             *end_pointer = const_cast<char *>(input_string);
         return (0L);
@@ -106,7 +106,7 @@ long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
     }
     if (!digit_processed)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         if (end_pointer != ft_nullptr)
             *end_pointer = const_cast<char *>(input_string);
         return (0L);
@@ -114,7 +114,7 @@ long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
     if (end_pointer)
         *end_pointer = const_cast<char *>(current_character);
     if (overflow_detected)
-        ft_errno = FT_ERANGE;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
     if (sign_value < 0)
     {
         if (accumulated_value > positive_limit)

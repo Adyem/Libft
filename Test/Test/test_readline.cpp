@@ -19,7 +19,7 @@ FT_TEST(test_readline_clear_line_null_prompt, "rl_clear_line rejects null prompt
     ft_errno = ER_SUCCESS;
     clear_result = rl_clear_line(ft_nullptr, buffer);
     FT_ASSERT_EQ(-1, clear_result);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -32,7 +32,7 @@ FT_TEST(test_readline_clear_line_null_buffer, "rl_clear_line rejects null buffer
     ft_errno = ER_SUCCESS;
     clear_result = rl_clear_line(prompt, ft_nullptr);
     FT_ASSERT_EQ(-1, clear_result);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -44,7 +44,7 @@ FT_TEST(test_readline_initialize_state_null_pointer, "rl_initialize_state reject
     ft_errno = ER_SUCCESS;
     init_result = rl_initialize_state(ft_nullptr);
     FT_ASSERT_EQ(1, init_result);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -58,7 +58,7 @@ FT_TEST(test_readline_initialize_state_allocation_failure, "rl_initialize_state 
     init_result = rl_initialize_state(&state);
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(1, init_result);
-    FT_ASSERT_EQ(FT_EALLOC, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     return (1);
 }
 
@@ -213,7 +213,7 @@ FT_TEST(test_readline_printable_char_preserves_buffer_on_resize_failure, "rl_han
     handle_result = rl_handle_printable_char(&state, 'a', prompt);
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(-1, handle_result);
-    FT_ASSERT_EQ(FT_EALLOC, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     FT_ASSERT_EQ(initial_buffer, state.buffer);
     FT_ASSERT_EQ(2, state.bufsize);
     FT_ASSERT_EQ(1, state.pos);
@@ -261,7 +261,7 @@ FT_TEST(test_readline_tab_completion_rejects_long_prefix, "rl_handle_tab_complet
     ft_errno = ER_SUCCESS;
     result = rl_handle_tab_completion(&state, "> ");
     FT_ASSERT_EQ(-1, result);
-    FT_ASSERT_EQ(FT_ERANGE, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
     FT_ASSERT_EQ(0, state.in_completion_mode);
     FT_ASSERT_EQ(buffer_length, state.pos);
     FT_ASSERT_EQ(0, std::strcmp(buffer, state.buffer));

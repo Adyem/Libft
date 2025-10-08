@@ -36,7 +36,7 @@ static int socket_creation_failure_hook(int domain, int type, int protocol)
     (void)type;
     (void)protocol;
     errno = 0;
-    ft_errno = SOCKET_CREATION_FAILED;
+    ft_errno = FT_ERR_SOCKET_CREATION_FAILED;
     return (-1);
 }
 
@@ -240,8 +240,8 @@ FT_TEST(test_udp_socket_propagates_ft_errno_on_creation_failure,
     initialize_result = socket_instance.initialize(config);
     nw_set_socket_hook(ft_nullptr);
     FT_ASSERT(initialize_result != ER_SUCCESS);
-    FT_ASSERT_EQ(SOCKET_CREATION_FAILED, socket_instance.get_error());
-    FT_ASSERT_EQ(SOCKET_CREATION_FAILED, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SOCKET_CREATION_FAILED, socket_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SOCKET_CREATION_FAILED, ft_errno);
     FT_ASSERT_EQ(0, errno);
     return (1);
 }
@@ -552,7 +552,7 @@ FT_TEST(test_networking_check_socket_after_send_detects_disconnect, "networking_
     FT_CLOSE_SOCKET(accepted_fd);
     if (check_result == 0)
         return (0);
-    if (ft_errno != SOCKET_SEND_FAILED)
+    if (ft_errno != FT_ERR_SOCKET_SEND_FAILED)
         return (0);
     return (1);
 }
@@ -565,7 +565,7 @@ FT_TEST(test_networking_check_socket_after_send_handles_invalid_descriptor, "net
     check_result = networking_check_socket_after_send(-1);
     if (check_result != -1)
         return (0);
-    if (ft_errno != FT_EINVAL)
+    if (ft_errno != FT_ERR_INVALID_ARGUMENT)
         return (0);
     return (1);
 }
@@ -597,7 +597,7 @@ FT_TEST(test_networking_check_socket_after_send_reports_success, "networking_che
     accepted_fd = nw_accept(server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
     if (accepted_fd < 0)
         return (0);
-    ft_errno = SOCKET_SEND_FAILED;
+    ft_errno = FT_ERR_SOCKET_SEND_FAILED;
     check_result = networking_check_socket_after_send(accepted_fd);
     FT_CLOSE_SOCKET(accepted_fd);
     client_socket.close_socket();
@@ -609,7 +609,7 @@ FT_TEST(test_networking_check_socket_after_send_reports_success, "networking_che
     return (1);
 }
 
-FT_TEST(test_nw_inet_pton_null_arguments_sets_einval, "nw_inet_pton null arguments set FT_EINVAL")
+FT_TEST(test_nw_inet_pton_null_arguments_sets_einval, "nw_inet_pton null arguments set FT_ERR_INVALID_ARGUMENT")
 {
     struct in_addr address;
     int result;
@@ -617,17 +617,17 @@ FT_TEST(test_nw_inet_pton_null_arguments_sets_einval, "nw_inet_pton null argumen
     result = nw_inet_pton(AF_INET, ft_nullptr, &address);
     if (result != -1)
         return (0);
-    if (ft_errno != FT_EINVAL)
+    if (ft_errno != FT_ERR_INVALID_ARGUMENT)
         return (0);
     result = nw_inet_pton(AF_INET, "127.0.0.1", ft_nullptr);
     if (result != -1)
         return (0);
-    if (ft_errno != FT_EINVAL)
+    if (ft_errno != FT_ERR_INVALID_ARGUMENT)
         return (0);
     return (1);
 }
 
-FT_TEST(test_nw_inet_pton_invalid_address_sets_einval, "nw_inet_pton invalid address sets FT_EINVAL")
+FT_TEST(test_nw_inet_pton_invalid_address_sets_einval, "nw_inet_pton invalid address sets FT_ERR_INVALID_ARGUMENT")
 {
     struct in_addr address;
     int result;
@@ -636,7 +636,7 @@ FT_TEST(test_nw_inet_pton_invalid_address_sets_einval, "nw_inet_pton invalid add
     result = nw_inet_pton(AF_INET, "not-an-ip", &address);
     if (result != 0)
         return (0);
-    if (ft_errno != FT_EINVAL)
+    if (ft_errno != FT_ERR_INVALID_ARGUMENT)
         return (0);
     return (1);
 }
@@ -645,7 +645,7 @@ FT_TEST(test_nw_inet_pton_success_clears_errno, "nw_inet_pton success clears err
 {
     struct in_addr address;
 
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     if (nw_inet_pton(AF_INET, "127.0.0.1", &address) != 1)
         return (0);
     if (ft_errno != ER_SUCCESS)

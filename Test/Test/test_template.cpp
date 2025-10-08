@@ -290,7 +290,7 @@ int test_ft_map_at_missing(void)
     ft_map<int, const char*> m;
     m.insert(1, "one");
     m.at(2);
-    return (m.get_error() == UNORD_MAP_UNKNOWN);
+    return (m.get_error() == FT_ERR_INTERNAL);
 }
 
 int test_ft_map_clear_empty(void)
@@ -413,7 +413,7 @@ FT_TEST(test_ft_vector_resets_errno_after_successful_push, "ft_vector clears err
 
     ft_errno = ER_SUCCESS;
     vector_instance[0];
-    FT_ASSERT_EQ(VECTOR_OUT_OF_BOUNDS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, vector_instance.get_error());
     vector_instance.push_back(5);
     FT_ASSERT_EQ(ER_SUCCESS, vector_instance.get_error());
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -429,7 +429,7 @@ FT_TEST(test_ft_set_resets_errno_after_successful_insert, "ft_set clears errno a
 
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, set_instance.find(42));
-    FT_ASSERT_EQ(SET_NOT_FOUND, set_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, set_instance.get_error());
     set_instance.insert(42);
     FT_ASSERT_EQ(ER_SUCCESS, set_instance.get_error());
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -446,7 +446,7 @@ FT_TEST(test_ft_stack_resets_errno_after_successful_push, "ft_stack clears errno
 
     ft_errno = ER_SUCCESS;
     stack_instance.pop();
-    FT_ASSERT_EQ(STACK_EMPTY, stack_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_EMPTY, stack_instance.get_error());
     stack_instance.push(7);
     FT_ASSERT_EQ(ER_SUCCESS, stack_instance.get_error());
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);

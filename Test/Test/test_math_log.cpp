@@ -11,7 +11,7 @@ FT_TEST(test_math_log_zero_sets_errno, "math_log returns nan and sets errno for 
     ft_errno = ER_SUCCESS;
     result = math_log(0.0);
     FT_ASSERT(math_isnan(result));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -22,7 +22,7 @@ FT_TEST(test_math_log_negative_sets_errno, "math_log returns nan and sets errno 
     ft_errno = ER_SUCCESS;
     result = math_log(-4.2);
     FT_ASSERT(math_isnan(result));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -35,7 +35,7 @@ FT_TEST(test_math_log_subnormal_positive, "math_log matches std::log for subnorm
     double tolerance;
 
     input = std::numeric_limits<double>::denorm_min();
-    ft_errno = FT_ETERM;
+    ft_errno = FT_ERR_TERMINATED;
     result = math_log(input);
     expected = std::log(input);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);

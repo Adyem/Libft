@@ -24,7 +24,7 @@ static int rl_find_word_start_and_prefix(readline_state_t *state, char *prefix, 
     {
         prefix[0] = '\0';
         *prefix_len = 0;
-        ft_errno = FT_ERANGE;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
         return (-1);
     }
     ft_memcpy(prefix, &state->buffer[state->word_start], *prefix_len);
@@ -81,7 +81,7 @@ static int rl_apply_completion(readline_state_t *state, const char *completion)
         + static_cast<long long>(suffix_length);
     if (total_length > static_cast<long long>(FT_INT_MAX))
     {
-        ft_errno = FT_ERANGE;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
         return (-1);
     }
     state->pos = state->word_start;

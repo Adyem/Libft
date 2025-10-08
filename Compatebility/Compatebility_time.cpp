@@ -28,7 +28,7 @@ static int  cmp_localtime_from_shared_state(const std::time_t *time_value, std::
         if (errno != 0)
             ft_errno = errno + ERRNO_OFFSET;
         else
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     *output = *shared_result;
@@ -43,7 +43,7 @@ int cmp_localtime(const std::time_t *time_value, std::tm *output)
 {
     if (!time_value || !output)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
 #if defined(_WIN32) || defined(_WIN64)
@@ -67,7 +67,7 @@ int cmp_localtime(const std::time_t *time_value, std::tm *output)
     if (errno != 0)
         ft_errno = errno + ERRNO_OFFSET;
     else
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
     return (-1);
 # else
 #  if !defined(_WIN32) && !defined(_WIN64)
@@ -75,7 +75,7 @@ int cmp_localtime(const std::time_t *time_value, std::tm *output)
 #  else
     (void)time_value;
     (void)output;
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     return (-1);
 #  endif
 # endif
@@ -86,7 +86,7 @@ int cmp_time_get_time_of_day(struct timeval *time_value)
 {
     if (!time_value)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
 #if defined(_WIN32) || defined(_WIN64)

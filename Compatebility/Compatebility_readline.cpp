@@ -11,7 +11,7 @@ static void cmp_set_errno_from_last_error()
 
     last_error = GetLastError();
     if (last_error == 0)
-        ft_errno = FT_ETERM;
+        ft_errno = FT_ERR_TERMINATED;
     else
         ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
     return ;
@@ -87,7 +87,7 @@ static termios g_orig_termios;
 static void cmp_set_errno_from_errno()
 {
     if (errno == 0)
-        ft_errno = FT_ETERM;
+        ft_errno = FT_ERR_TERMINATED;
     else
         ft_errno = errno + ERRNO_OFFSET;
     return ;

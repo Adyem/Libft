@@ -40,7 +40,7 @@ static void restore_environment_value(const char *name, const std::string &stora
 #endif
 
 FT_TEST(test_su_get_home_directory_windows_missing_guard_sets_errno,
-        "su_get_home_directory missing HOMEPATH sets FT_EINVAL")
+        "su_get_home_directory missing HOMEPATH sets FT_ERR_INVALID_ARGUMENT")
 {
 #if defined(_WIN32) || defined(_WIN64)
     std::string    original_userprofile;
@@ -63,7 +63,7 @@ FT_TEST(test_su_get_home_directory_windows_missing_guard_sets_errno,
     ft_errno = ER_SUCCESS;
     home_directory = su_get_home_directory();
     FT_ASSERT_EQ(ft_nullptr, home_directory);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     restore_environment_value("USERPROFILE", original_userprofile,
                               original_userprofile_present);
     restore_environment_value("HOMEDRIVE", original_home_drive,
@@ -103,7 +103,7 @@ FT_TEST(test_su_get_home_directory_windows_concatenates_success,
     FT_ASSERT_EQ(0, cmp_unsetenv("USERPROFILE"));
     FT_ASSERT_EQ(0, cmp_setenv("HOMEDRIVE", forced_home_drive.c_str(), 1));
     FT_ASSERT_EQ(0, cmp_setenv("HOMEPATH", forced_home_path.c_str(), 1));
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     home_directory = su_get_home_directory();
     FT_ASSERT(home_directory != ft_nullptr);
     FT_ASSERT_EQ(0, std::strcmp(home_directory,

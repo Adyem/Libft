@@ -177,7 +177,7 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
                         base_entry->value = cma_strdup(override_entry->value);
                         if (!base_entry->value)
                         {
-                            ft_errno = FT_EALLOC;
+                            ft_errno = FT_ERR_NO_MEMORY;
                             cnfg_free(base_config);
                             return (ft_nullptr);
                         }
@@ -198,7 +198,7 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
                     sizeof(cnfg_config)));
                 if (!base_config)
                 {
-                    ft_errno = FT_EALLOC;
+                    ft_errno = FT_ERR_NO_MEMORY;
                     return (ft_nullptr);
                 }
             }
@@ -207,7 +207,7 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
                 * (base_config->entry_count + 1)));
             if (!new_entries)
             {
-                ft_errno = FT_EALLOC;
+                ft_errno = FT_ERR_NO_MEMORY;
                 cnfg_free(base_config);
                 return (ft_nullptr);
             }
@@ -218,7 +218,7 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
                 new_entry->section = cma_strdup(override_entry->section);
                 if (!new_entry->section)
                 {
-                    ft_errno = FT_EALLOC;
+                    ft_errno = FT_ERR_NO_MEMORY;
                     cnfg_free(base_config);
                     return (ft_nullptr);
                 }
@@ -230,7 +230,7 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
                 new_entry->key = cma_strdup(override_entry->key);
                 if (!new_entry->key)
                 {
-                    ft_errno = FT_EALLOC;
+                    ft_errno = FT_ERR_NO_MEMORY;
                     cnfg_free(base_config);
                     return (ft_nullptr);
                 }
@@ -242,7 +242,7 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
                 new_entry->value = cma_strdup(override_entry->value);
                 if (!new_entry->value)
                 {
-                    ft_errno = FT_EALLOC;
+                    ft_errno = FT_ERR_NO_MEMORY;
                     cnfg_free(base_config);
                     return (ft_nullptr);
                 }
@@ -265,7 +265,7 @@ static cnfg_config *append_flag_entry(cnfg_config *config, const char *flag)
     entry.value = ft_nullptr;
     if (!entry.key)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         cnfg_free(config);
         return (ft_nullptr);
     }
@@ -361,7 +361,7 @@ cnfg_config *config_merge_sources(int argument_count,
         result = static_cast<cnfg_config*>(cma_calloc(1, sizeof(cnfg_config)));
         if (!result)
         {
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
     }

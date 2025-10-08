@@ -84,7 +84,7 @@ void ft_upgrade::set_id(int id) noexcept
 {
     if (id < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_id = id;
@@ -102,7 +102,7 @@ void ft_upgrade::set_current_level(uint16_t level) noexcept
 {
     if (this->_max_level != 0 && level > this->_max_level)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_current_level = level;

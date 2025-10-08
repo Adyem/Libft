@@ -17,7 +17,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
     if (file_path == ft_nullptr)
     {
         this->_file_path.clear();
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_file_path = file_path;
@@ -30,7 +30,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
     {
         if (encryption_key == ft_nullptr)
         {
-            this->set_error(FT_EINVAL);
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
             return ;
         }
         this->_encryption_key = encryption_key;
@@ -41,7 +41,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
         }
         if (this->_encryption_key.size() != 16)
         {
-            this->set_error(FT_EINVAL);
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
             return ;
         }
         this->_encryption_enabled = true;
@@ -67,7 +67,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
     {
         current_error = ft_errno;
         if (current_error == ER_SUCCESS)
-            current_error = FT_EINVAL;
+            current_error = FT_ERR_INVALID_ARGUMENT;
         this->set_error(current_error);
         return ;
     }
@@ -75,7 +75,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
     if (store_group == ft_nullptr)
     {
         json_free_groups(group_head);
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     ttl_prefix_length = std::strlen(g_kv_store_ttl_prefix);
@@ -89,14 +89,14 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
                 if (this->_encryption_enabled == false)
                 {
                     json_free_groups(group_head);
-                    this->set_error(FT_EINVAL);
+                    this->set_error(FT_ERR_INVALID_ARGUMENT);
                     return ;
                 }
             }
             else
             {
                 json_free_groups(group_head);
-                this->set_error(FT_EINVAL);
+                this->set_error(FT_ERR_INVALID_ARGUMENT);
                 return ;
             }
             item_pointer = item_pointer->next;

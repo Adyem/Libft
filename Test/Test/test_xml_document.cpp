@@ -6,7 +6,7 @@
 #include <cerrno>
 #include <cstring>
 
-FT_TEST(test_xml_document_write_to_string_empty_document_sets_error, "xml_document::write_to_string reports FT_EINVAL when empty")
+FT_TEST(test_xml_document_write_to_string_empty_document_sets_error, "xml_document::write_to_string reports FT_ERR_INVALID_ARGUMENT when empty")
 {
     xml_document document;
     char *result;
@@ -14,25 +14,25 @@ FT_TEST(test_xml_document_write_to_string_empty_document_sets_error, "xml_docume
     ft_errno = ER_SUCCESS;
     result = document.write_to_string();
     FT_ASSERT(result == ft_nullptr);
-    FT_ASSERT_EQ(FT_EINVAL, document.get_error());
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, document.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
-FT_TEST(test_xml_document_write_to_file_empty_document_sets_error, "xml_document::write_to_file reports FT_EINVAL when empty")
+FT_TEST(test_xml_document_write_to_file_empty_document_sets_error, "xml_document::write_to_file reports FT_ERR_INVALID_ARGUMENT when empty")
 {
     xml_document document;
     int result;
 
     ft_errno = ER_SUCCESS;
     result = document.write_to_file("Test");
-    FT_ASSERT_EQ(FT_EINVAL, result);
-    FT_ASSERT_EQ(FT_EINVAL, document.get_error());
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, document.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
-FT_TEST(test_xml_document_write_to_string_allocation_failure_sets_error, "xml_document::write_to_string reports FT_EALLOC when allocation fails")
+FT_TEST(test_xml_document_write_to_string_allocation_failure_sets_error, "xml_document::write_to_string reports FT_ERR_NO_MEMORY when allocation fails")
 {
     xml_document document;
     char *result;
@@ -43,8 +43,8 @@ FT_TEST(test_xml_document_write_to_string_allocation_failure_sets_error, "xml_do
     result = document.write_to_string();
     cma_set_alloc_limit(0);
     FT_ASSERT(result == ft_nullptr);
-    FT_ASSERT_EQ(FT_EALLOC, document.get_error());
-    FT_ASSERT_EQ(FT_EALLOC, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, document.get_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     return (1);
 }
 
@@ -65,7 +65,7 @@ FT_TEST(test_xml_document_write_to_file_fopen_failure_sets_errno_offset, "xml_do
     if (open_errno != 0)
         FT_ASSERT_EQ(open_errno + ERRNO_OFFSET, result);
     else
-        FT_ASSERT_EQ(FT_EINVAL, result);
+        FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result);
     return (1);
 }
 
@@ -86,20 +86,20 @@ FT_TEST(test_xml_document_write_to_file_fwrite_failure_sets_errno_offset, "xml_d
     if (write_errno != 0)
         FT_ASSERT_EQ(write_errno + ERRNO_OFFSET, result);
     else
-        FT_ASSERT_EQ(FT_EINVAL, result);
+        FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result);
     return (1);
 }
 
-FT_TEST(test_xml_document_load_from_string_malformed_sets_errno, "xml_document::load_from_string reports FT_EINVAL on malformed input")
+FT_TEST(test_xml_document_load_from_string_malformed_sets_errno, "xml_document::load_from_string reports FT_ERR_INVALID_ARGUMENT on malformed input")
 {
     xml_document document;
     int result;
 
     ft_errno = ER_SUCCESS;
     result = document.load_from_string("<root>");
-    FT_ASSERT_EQ(FT_EINVAL, result);
-    FT_ASSERT_EQ(FT_EINVAL, document.get_error());
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, document.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -110,9 +110,9 @@ FT_TEST(test_xml_document_load_from_string_detects_mismatched_closing_tag, "xml_
 
     ft_errno = ER_SUCCESS;
     result = document.load_from_string("<root><child></rood>");
-    FT_ASSERT_EQ(FT_EINVAL, result);
-    FT_ASSERT_EQ(FT_EINVAL, document.get_error());
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, document.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -123,14 +123,14 @@ FT_TEST(test_xml_document_load_from_string_rejects_trailing_characters, "xml_doc
 
     ft_errno = ER_SUCCESS;
     result = document.load_from_string("<root/>extra");
-    FT_ASSERT_EQ(FT_EINVAL, result);
-    FT_ASSERT_EQ(FT_EINVAL, document.get_error());
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, document.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT(document.get_root() == ft_nullptr);
     return (1);
 }
 
-FT_TEST(test_xml_document_load_from_string_allocation_failure_sets_errno, "xml_document::load_from_string reports FT_EALLOC on allocation failure")
+FT_TEST(test_xml_document_load_from_string_allocation_failure_sets_errno, "xml_document::load_from_string reports FT_ERR_NO_MEMORY on allocation failure")
 {
     xml_document document;
     int result;
@@ -139,9 +139,9 @@ FT_TEST(test_xml_document_load_from_string_allocation_failure_sets_errno, "xml_d
     ft_errno = ER_SUCCESS;
     result = document.load_from_string("<root><child/></root>");
     cma_set_alloc_limit(0);
-    FT_ASSERT_EQ(FT_EALLOC, result);
-    FT_ASSERT_EQ(FT_EALLOC, document.get_error());
-    FT_ASSERT_EQ(FT_EALLOC, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, result);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, document.get_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     return (1);
 }
 
@@ -150,7 +150,7 @@ FT_TEST(test_xml_document_load_from_string_success_clears_errno, "xml_document::
     xml_document document;
     int result;
 
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     result = document.load_from_string("<root/>");
     FT_ASSERT_EQ(ER_SUCCESS, result);
     FT_ASSERT_EQ(ER_SUCCESS, document.get_error());

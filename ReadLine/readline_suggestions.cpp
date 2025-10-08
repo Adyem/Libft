@@ -33,7 +33,7 @@ void rl_add_suggestion(const char *word)
     else
     {
         pf_printf_fd(2, "Suggestion list full\n");
-        ft_errno = FT_ERANGE;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
     }
     return ;
 }

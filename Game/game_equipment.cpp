@@ -60,7 +60,7 @@ bool ft_equipment::validate_item(const ft_sharedptr<ft_item> &item) noexcept
 {
     if (!item)
     {
-        this->set_error(GAME_GENERAL_ERROR);
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return (true);
     }
     if (item.get_error() != ER_SUCCESS)
@@ -89,7 +89,7 @@ int ft_equipment::equip(int slot, const ft_sharedptr<ft_item> &item) noexcept
         this->_weapon = item;
     else
     {
-        this->set_error(GAME_GENERAL_ERROR);
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return (this->_error_code);
     }
     return (ER_SUCCESS);
@@ -105,7 +105,7 @@ void ft_equipment::unequip(int slot) noexcept
     else if (slot == EQUIP_WEAPON)
         this->_weapon = ft_sharedptr<ft_item>();
     else
-        this->set_error(GAME_GENERAL_ERROR);
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
     return ;
 }
 
@@ -117,7 +117,7 @@ ft_sharedptr<ft_item> ft_equipment::get_item(int slot) noexcept
         return (this->_chest);
     else if (slot == EQUIP_WEAPON)
         return (this->_weapon);
-    this->set_error(GAME_GENERAL_ERROR);
+    this->set_error(FT_ERR_GAME_GENERAL_ERROR);
     return (ft_sharedptr<ft_item>());
 }
 
@@ -129,7 +129,7 @@ ft_sharedptr<ft_item> ft_equipment::get_item(int slot) const noexcept
         return (this->_chest);
     else if (slot == EQUIP_WEAPON)
         return (this->_weapon);
-    this->set_error(GAME_GENERAL_ERROR);
+    this->set_error(FT_ERR_GAME_GENERAL_ERROR);
     return (ft_sharedptr<ft_item>());
 }
 

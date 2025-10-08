@@ -109,7 +109,7 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
         {
             if (write_result == 0)
             {
-                ft_errno = FT_EIO;
+                ft_errno = FT_ERR_IO;
                 return (-1);
             }
             int stored_error = ft_errno;

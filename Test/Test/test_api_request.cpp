@@ -588,7 +588,7 @@ FT_TEST(test_api_request_invalid_ip_sets_socket_error, "api_request_string inval
     result = api_request_string("bad-ip", 8080, "GET", "/", ft_nullptr, ft_nullptr, ft_nullptr, 10);
     if (result != ft_nullptr)
         return (0);
-    if (ft_errno != SOCKET_INVALID_CONFIGURATION)
+    if (ft_errno != FT_ERR_CONFIGURATION)
         return (0);
     return (1);
 }
@@ -601,7 +601,7 @@ FT_TEST(test_api_request_connect_failure_sets_errno, "api_request_string_host co
     result = api_request_string_host("127.0.0.1", 59999, "GET", "/", ft_nullptr, ft_nullptr, ft_nullptr, 50);
     if (result != ft_nullptr)
         return (0);
-    if (ft_errno != SOCKET_CONNECT_FAILED)
+    if (ft_errno != FT_ERR_SOCKET_CONNECT_FAILED)
         return (0);
     return (1);
 }
@@ -624,7 +624,7 @@ FT_TEST(test_api_request_send_failure_sets_errno, "api_request_string send failu
     server_thread.join();
     if (result != ft_nullptr)
         return (0);
-    if (request_errno != SOCKET_SEND_FAILED && request_errno != (EPIPE + ERRNO_OFFSET))
+    if (request_errno != FT_ERR_SOCKET_SEND_FAILED && request_errno != (EPIPE + ERRNO_OFFSET))
         return (0);
     if (ft_errno != ER_SUCCESS)
         return (0);
@@ -643,7 +643,7 @@ FT_TEST(test_api_request_async_alloc_failure_sets_errno, "api_request_string_asy
     cma_set_alloc_limit(0);
     if (result)
         return (0);
-    if (ft_errno != FT_EALLOC)
+    if (ft_errno != FT_ERR_NO_MEMORY)
         return (0);
     return (1);
 }
@@ -656,7 +656,7 @@ FT_TEST(test_api_request_bad_input_sets_errno, "api_request_string_host bad inpu
     result = api_request_string_host(ft_nullptr, 8080, "GET", "/", ft_nullptr, ft_nullptr, ft_nullptr, 10);
     if (result != ft_nullptr)
         return (0);
-    if (ft_errno != FT_EINVAL)
+    if (ft_errno != FT_ERR_INVALID_ARGUMENT)
         return (0);
     return (1);
 }
@@ -669,7 +669,7 @@ FT_TEST(test_api_request_success_resets_errno, "api_request_string success reset
 #ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
 #endif
-    ft_errno = FT_EALLOC;
+    ft_errno = FT_ERR_NO_MEMORY;
     server_thread = ft_thread(api_request_success_server);
     if (server_thread.get_error() != ER_SUCCESS)
         return (0);
@@ -859,7 +859,7 @@ FT_TEST(test_api_request_string_url_invalid_sets_errno, "api_request_string_url 
     result = api_request_string_url("example.com/path", "GET", ft_nullptr, ft_nullptr, ft_nullptr, 1000);
     if (result != ft_nullptr)
         return (0);
-    if (ft_errno != FT_EINVAL)
+    if (ft_errno != FT_ERR_INVALID_ARGUMENT)
         return (0);
     return (1);
 }
@@ -872,7 +872,7 @@ FT_TEST(test_api_request_tls_missing_host_sets_errno, "api_request_string_tls mi
     result = api_request_string_tls(ft_nullptr, 443, "GET", "/", ft_nullptr, ft_nullptr, ft_nullptr, 1000);
     if (result != ft_nullptr)
         return (0);
-    if (ft_errno != FT_EINVAL)
+    if (ft_errno != FT_ERR_INVALID_ARGUMENT)
         return (0);
     return (1);
 }
@@ -885,7 +885,7 @@ FT_TEST(test_api_request_async_missing_callback_sets_errno, "api_request_string_
     result = api_request_string_async("127.0.0.1", 8080, "GET", "/", ft_nullptr, ft_nullptr, ft_nullptr, ft_nullptr, 1000);
     if (result)
         return (0);
-    if (ft_errno != FT_EINVAL)
+    if (ft_errno != FT_ERR_INVALID_ARGUMENT)
         return (0);
     return (1);
 }
@@ -894,7 +894,7 @@ FT_TEST(test_api_request_async_success_resets_errno, "api_request_string_async s
 {
     bool result;
 
-    ft_errno = FT_EALLOC;
+    ft_errno = FT_ERR_NO_MEMORY;
     result = api_request_string_async("127.0.0.1", 59999, "GET", "/", api_request_noop_callback,
                                       ft_nullptr, ft_nullptr, ft_nullptr, 100);
     if (!result)
@@ -1158,9 +1158,9 @@ FT_TEST(test_api_request_retry_policy_exhaustion, "api_request_string stops afte
     }
     if (status_value != 777)
         return (0);
-    if (request_errno != SOCKET_RECEIVE_FAILED
-        && request_errno != FT_EIO
-        && request_errno != SOCKET_SEND_FAILED)
+    if (request_errno != FT_ERR_SOCKET_RECEIVE_FAILED
+        && request_errno != FT_ERR_IO
+        && request_errno != FT_ERR_SOCKET_SEND_FAILED)
         return (0);
     return (1);
 }
@@ -1198,7 +1198,7 @@ FT_TEST(test_api_request_retry_policy_timeout, "api_request_string retries until
     }
     if (status_value != -45)
         return (0);
-    if (request_errno != SOCKET_RECEIVE_FAILED && request_errno != FT_EIO)
+    if (request_errno != FT_ERR_SOCKET_RECEIVE_FAILED && request_errno != FT_ERR_IO)
         return (0);
     return (1);
 }

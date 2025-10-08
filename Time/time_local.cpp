@@ -10,7 +10,7 @@ void    time_local(t_time time_value, t_time_info *out)
 
     if (!out)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     standard_time = static_cast<std::time_t>(time_value);

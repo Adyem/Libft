@@ -92,7 +92,7 @@ void ft_skill::set_id(int id) noexcept
 {
     if (id < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_id = id;
@@ -110,7 +110,7 @@ void ft_skill::set_level(int level) noexcept
 {
     if (level < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_level = level;
@@ -128,7 +128,7 @@ void ft_skill::set_cooldown(int cooldown) noexcept
 {
     if (cooldown < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_cooldown = cooldown;
@@ -140,7 +140,7 @@ void ft_skill::add_cooldown(int cooldown) noexcept
 {
     if (cooldown < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_cooldown += cooldown;
@@ -152,7 +152,7 @@ void ft_skill::sub_cooldown(int cooldown) noexcept
 {
     if (cooldown < 0 || this->_cooldown < cooldown)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_cooldown -= cooldown;
@@ -177,7 +177,7 @@ void ft_skill::add_modifier1(int mod) noexcept
 {
     if (mod < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_modifier1 += mod;
@@ -189,7 +189,7 @@ void ft_skill::sub_modifier1(int mod) noexcept
 {
     if (mod < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_modifier1 -= mod;
@@ -214,7 +214,7 @@ void ft_skill::add_modifier2(int mod) noexcept
 {
     if (mod < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_modifier2 += mod;
@@ -226,7 +226,7 @@ void ft_skill::sub_modifier2(int mod) noexcept
 {
     if (mod < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_modifier2 -= mod;
@@ -251,7 +251,7 @@ void ft_skill::add_modifier3(int mod) noexcept
 {
     if (mod < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_modifier3 += mod;
@@ -263,7 +263,7 @@ void ft_skill::sub_modifier3(int mod) noexcept
 {
     if (mod < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_modifier3 -= mod;
@@ -288,7 +288,7 @@ void ft_skill::add_modifier4(int mod) noexcept
 {
     if (mod < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_modifier4 += mod;
@@ -300,7 +300,7 @@ void ft_skill::sub_modifier4(int mod) noexcept
 {
     if (mod < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_modifier4 -= mod;

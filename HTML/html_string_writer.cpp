@@ -28,7 +28,7 @@ static char *html_escape_attribute_value(const char *value)
 
     if (!value)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     input_length = ft_strlen(value);
@@ -52,7 +52,7 @@ static char *html_escape_attribute_value(const char *value)
     escaped_value = static_cast<char *>(cma_malloc(output_length + 1));
     if (!escaped_value)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     input_index = 0;
@@ -89,7 +89,7 @@ static char *html_attrs_to_string(html_attr *attribute)
     char *result = cma_strdup("");
     if (!result)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     while (attribute)
@@ -108,7 +108,7 @@ static char *html_attrs_to_string(html_attr *attribute)
         if (!attr)
         {
             cma_free(result);
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
         char *tmp = cma_strjoin(result, attr);
@@ -116,7 +116,7 @@ static char *html_attrs_to_string(html_attr *attribute)
         cma_free(attr);
         if (!tmp)
         {
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
         result = tmp;
@@ -132,7 +132,7 @@ static char *html_indent(int indent)
     char *result = static_cast<char*>(cma_calloc(spaces + 1, sizeof(char)));
     if (!result)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     int index = 0;
@@ -150,14 +150,14 @@ static char *html_node_to_string(html_node *node, int indent)
     char *result = cma_strdup("");
     if (!result)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     char *pad = html_indent(indent);
     if (!pad)
     {
         cma_free(result);
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     char *tmp = cma_strjoin(result, pad);
@@ -165,7 +165,7 @@ static char *html_node_to_string(html_node *node, int indent)
     cma_free(pad);
     if (!tmp)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     result = tmp;
@@ -173,7 +173,7 @@ static char *html_node_to_string(html_node *node, int indent)
     if (!attrs)
     {
         cma_free(result);
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     char *open = cma_strjoin_multiple(3, "<", node->tag, attrs);
@@ -181,7 +181,7 @@ static char *html_node_to_string(html_node *node, int indent)
     if (!open)
     {
         cma_free(result);
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     if (!node->text && !node->children)
@@ -191,7 +191,7 @@ static char *html_node_to_string(html_node *node, int indent)
         if (!line)
         {
             cma_free(result);
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
         tmp = cma_strjoin(result, line);
@@ -199,7 +199,7 @@ static char *html_node_to_string(html_node *node, int indent)
         cma_free(line);
         if (!tmp)
         {
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
         result = tmp;
@@ -211,7 +211,7 @@ static char *html_node_to_string(html_node *node, int indent)
     if (!tmp)
     {
         cma_free(result);
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     char *joined = cma_strjoin(result, tmp);
@@ -219,7 +219,7 @@ static char *html_node_to_string(html_node *node, int indent)
     cma_free(tmp);
     if (!joined)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     result = joined;
@@ -229,7 +229,7 @@ static char *html_node_to_string(html_node *node, int indent)
         cma_free(result);
         if (!tmp)
         {
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
         result = tmp;
@@ -240,7 +240,7 @@ static char *html_node_to_string(html_node *node, int indent)
         cma_free(result);
         if (!tmp)
         {
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
         result = tmp;
@@ -251,7 +251,7 @@ static char *html_node_to_string(html_node *node, int indent)
             if (!child_str)
             {
                 cma_free(result);
-                ft_errno = FT_EALLOC;
+                ft_errno = FT_ERR_NO_MEMORY;
                 return (ft_nullptr);
             }
             tmp = cma_strjoin(result, child_str);
@@ -259,7 +259,7 @@ static char *html_node_to_string(html_node *node, int indent)
             cma_free(child_str);
             if (!tmp)
             {
-                ft_errno = FT_EALLOC;
+                ft_errno = FT_ERR_NO_MEMORY;
                 return (ft_nullptr);
             }
             result = tmp;
@@ -269,7 +269,7 @@ static char *html_node_to_string(html_node *node, int indent)
         if (!pad)
         {
             cma_free(result);
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
         tmp = cma_strjoin(result, pad);
@@ -277,7 +277,7 @@ static char *html_node_to_string(html_node *node, int indent)
         cma_free(pad);
         if (!tmp)
         {
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
         result = tmp;
@@ -286,7 +286,7 @@ static char *html_node_to_string(html_node *node, int indent)
     if (!close_start)
     {
         cma_free(result);
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     char *close = cma_strjoin_multiple(3, close_start, ">", "\n");
@@ -294,7 +294,7 @@ static char *html_node_to_string(html_node *node, int indent)
     if (!close)
     {
         cma_free(result);
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     tmp = cma_strjoin(result, close);
@@ -302,7 +302,7 @@ static char *html_node_to_string(html_node *node, int indent)
     cma_free(close);
     if (!tmp)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     result = tmp;
@@ -315,7 +315,7 @@ char *html_write_to_string(html_node *nodeList)
     char *result = cma_strdup("");
     if (!result)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     html_node *current = nodeList;
@@ -325,7 +325,7 @@ char *html_write_to_string(html_node *nodeList)
         if (!node_str)
         {
             cma_free(result);
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
         char *tmp = cma_strjoin(result, node_str);
@@ -333,7 +333,7 @@ char *html_write_to_string(html_node *nodeList)
         cma_free(node_str);
         if (!tmp)
         {
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
         result = tmp;

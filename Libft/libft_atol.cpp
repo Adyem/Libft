@@ -14,7 +14,7 @@ long ft_atol(const char *string)
 
     if (string == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
     ft_errno = ER_SUCCESS;
@@ -37,13 +37,13 @@ long ft_atol(const char *string)
         {
             if (result > positive_limit / 10)
             {
-                ft_errno = FT_ERANGE;
+                ft_errno = FT_ERR_OUT_OF_RANGE;
                 return (FT_LONG_MAX);
             }
             if (result == positive_limit / 10
                 && static_cast<unsigned long long>(digit) > positive_limit % 10)
             {
-                ft_errno = FT_ERANGE;
+                ft_errno = FT_ERR_OUT_OF_RANGE;
                 return (FT_LONG_MAX);
             }
         }
@@ -51,13 +51,13 @@ long ft_atol(const char *string)
         {
             if (result > negative_limit / 10)
             {
-                ft_errno = FT_ERANGE;
+                ft_errno = FT_ERR_OUT_OF_RANGE;
                 return (FT_LONG_MIN);
             }
             if (result == negative_limit / 10
                 && static_cast<unsigned long long>(digit) > negative_limit % 10)
             {
-                ft_errno = FT_ERANGE;
+                ft_errno = FT_ERR_OUT_OF_RANGE;
                 return (FT_LONG_MIN);
             }
         }
@@ -66,11 +66,11 @@ long ft_atol(const char *string)
     }
     if (digit_found == false)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
     if (string[index] != '\0')
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
     if (sign == -1)
     {
         if (result == negative_limit)

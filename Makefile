@@ -1,3 +1,7 @@
+PYTHON      ?= python3
+
+GENERATE_COMPILE_COMMANDS ?= 1
+
 OPT_LEVEL ?= 0
 ifeq ($(OPT_LEVEL),0)
     OPT_FLAGS = -O0 -g
@@ -11,16 +15,54 @@ else
     $(error Unsupported OPT_LEVEL=$(OPT_LEVEL))
 endif
 
+SANITIZERS ?=
+SANITIZER_FLAGS :=
+
+ifneq ($(strip $(SANITIZERS)),)
+    SANITIZER_SELECTION := $(sort $(SANITIZERS))
+    UNSUPPORTED_SANITIZERS := $(filter-out address undefined,$(SANITIZER_SELECTION))
+    ifneq ($(UNSUPPORTED_SANITIZERS),)
+        $(error Unsupported SANITIZERS: $(UNSUPPORTED_SANITIZERS))
+    endif
+    ifneq ($(filter address,$(SANITIZER_SELECTION)),)
+        SANITIZER_FLAGS += -fsanitize=address
+    endif
+    ifneq ($(filter undefined,$(SANITIZER_SELECTION)),)
+        SANITIZER_FLAGS += -fsanitize=undefined
+    endif
+    SANITIZER_FLAGS += -fno-omit-frame-pointer
+endif
+
 COMPILE_FLAGS = -Wall -Werror -Wextra -std=c++17 -Wmissing-declarations \
                 -Wold-style-cast -Wshadow -Wconversion -Wformat=2 -Wundef \
                 -Wfloat-equal -Wconversion -Wodr -Wuseless-cast \
-                -Wzero-as-null-pointer-constant -Wmaybe-uninitialized $(OPT_FLAGS)
+                -Wzero-as-null-pointer-constant -Wmaybe-uninitialized $(OPT_FLAGS) \
+                $(SANITIZER_FLAGS)
 
 export COMPILE_FLAGS
+export SANITIZER_FLAGS
+export SANITIZERS
 
-CXX      := g++
-AR       := ar
-ARFLAGS  := rcs
+CXX             := g++
+AR              := ar
+ARFLAGS         := rcs
+CLANG_FORMAT   ?= clang-format
+
+TOOLS_DIR := $(CURDIR)/Tools
+
+COMPILE_COMMANDS_FILE   := $(CURDIR)/compile_commands.json
+COMPILE_COMMANDS_STAGING := $(CURDIR)/.compile_commands
+
+ifeq ($(GENERATE_COMPILE_COMMANDS),1)
+    export FT_GENERATE_COMPILE_DB := 1
+    export FT_COMPILE_DB_DIR := $(COMPILE_COMMANDS_STAGING)
+    export FT_COMPILE_DB_ROOT := $(CURDIR)
+    COMPILE_DB_WRAPPER := $(PYTHON) $(TOOLS_DIR)/compile_db_wrapper.py g++
+    SUBMAKE_OVERRIDES := CXX="$(COMPILE_DB_WRAPPER)"
+    COMPILE_COMMANDS_SETUP := $(shell $(PYTHON) $(TOOLS_DIR)/reset_compile_commands_dir.py "$(COMPILE_COMMANDS_STAGING)")
+else
+    SUBMAKE_OVERRIDES :=
+endif
 
 ifeq ($(OS),Windows_NT)
     MKDIR  = mkdir
@@ -87,12 +129,49 @@ DEBUG_TARGET  := Full_Libft_debug.a
 
 all: $(TARGET)
 
+ifeq ($(GENERATE_COMPILE_COMMANDS),1)
+all: compile_commands.json
+endif
+
 debug: $(DEBUG_TARGET)
 
 both: all debug
 
 tests: $(TARGET)
-	$(MAKE) -C Test
+	$(MAKE) -C Test $(SUBMAKE_OVERRIDES)
+
+format:
+	@if ! command -v $(CLANG_FORMAT) >/dev/null 2>&1; then \
+		echo "Error: clang-format not found."; \
+		exit 1; \
+	fi
+	@files="$$(git ls-files '*.cpp' '*.hpp' '*.ipp')"; \
+	if [ -n "$$files" ]; then \
+		printf '%s\n' "$$files" | tr '\n' '\0' | xargs -0 $(CLANG_FORMAT) --style=file -i; \
+	else \
+		echo "No source files to format."; \
+	fi
+
+sanitize-clean:
+	$(MAKE) clean
+
+asan: sanitize-clean
+	$(MAKE) SANITIZERS=address all
+
+asan-tests: sanitize-clean
+	$(MAKE) SANITIZERS=address tests
+
+ubsan: sanitize-clean
+	$(MAKE) SANITIZERS=undefined all
+
+ubsan-tests: sanitize-clean
+	$(MAKE) SANITIZERS=undefined tests
+
+asan-ubsan: sanitize-clean
+	$(MAKE) SANITIZERS="address undefined" all
+
+asan-ubsan-tests: sanitize-clean
+	$(MAKE) SANITIZERS="address undefined" tests
 
 re: fclean all
 
@@ -117,10 +196,10 @@ $(DEBUG_TARGET): $(DEBUG_LIBS)
 	$(RMDIR) temp_objs
 
 %.a:
-	$(MAKE) -C $(dir $@)
+	$(MAKE) -C $(dir $@) $(SUBMAKE_OVERRIDES)
 
 %_debug.a:
-	$(MAKE) -C $(dir $@) debug
+	$(MAKE) -C $(dir $@) debug $(SUBMAKE_OVERRIDES)
 
 clean:
 	$(foreach dir,$(SUBDIRS),$(MAKE) -C $(dir) clean;)
@@ -130,4 +209,9 @@ fclean:
 	$(foreach dir,$(SUBDIRS),$(MAKE) -C $(dir) fclean;)
 	$(RM) $(TARGET) $(DEBUG_TARGET)
 
-.PHONY: all debug both re clean fclean tests
+compile_commands.json: $(TARGET) Tools/compile_db_wrapper.py Tools/merge_compile_commands.py
+	$(PYTHON) Tools/merge_compile_commands.py "$(COMPILE_COMMANDS_STAGING)" "$(COMPILE_COMMANDS_FILE)"
+	$(RMDIR) $(COMPILE_COMMANDS_STAGING)
+
+.PHONY: all debug both re clean fclean tests format sanitize-clean \
+        asan asan-tests ubsan ubsan-tests asan-ubsan asan-ubsan-tests

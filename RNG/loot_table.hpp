@@ -41,8 +41,8 @@ ElementType *ft_loot_table<ElementType>::getRandomLoot() const
 {
     if (this->size() == 0)
     {
-        ft_errno = LOOT_TABLE_EMPTY;
-        const_cast<ft_loot_table<ElementType>*>(this)->set_error(LOOT_TABLE_EMPTY);
+        ft_errno = FT_ERR_EMPTY;
+        const_cast<ft_loot_table<ElementType>*>(this)->set_error(FT_ERR_EMPTY);
         return (ft_nullptr);
     }
     int total_weight = 0;
@@ -54,8 +54,8 @@ ElementType *ft_loot_table<ElementType>::getRandomLoot() const
             effective = 1;
         if (INT_MAX - total_weight < effective)
         {
-            ft_errno = FT_ERANGE;
-            const_cast<ft_loot_table<ElementType>*>(this)->set_error(FT_ERANGE);
+            ft_errno = FT_ERR_OUT_OF_RANGE;
+            const_cast<ft_loot_table<ElementType>*>(this)->set_error(FT_ERR_OUT_OF_RANGE);
             return (ft_nullptr);
         }
         total_weight += effective;
@@ -78,8 +78,8 @@ ElementType *ft_loot_table<ElementType>::getRandomLoot() const
         }
         ++index;
     }
-    ft_errno = FT_ERANGE;
-    const_cast<ft_loot_table<ElementType>*>(this)->set_error(FT_ERANGE);
+    ft_errno = FT_ERR_OUT_OF_RANGE;
+    const_cast<ft_loot_table<ElementType>*>(this)->set_error(FT_ERR_OUT_OF_RANGE);
     return (ft_nullptr);
 }
 
@@ -89,8 +89,8 @@ ElementType *ft_loot_table<ElementType>::popRandomLoot()
 {
     if (this->size() == 0)
     {
-        ft_errno = LOOT_TABLE_EMPTY;
-        this->set_error(LOOT_TABLE_EMPTY);
+        ft_errno = FT_ERR_EMPTY;
+        this->set_error(FT_ERR_EMPTY);
         return (ft_nullptr);
     }
     int total_weight = 0;
@@ -102,8 +102,8 @@ ElementType *ft_loot_table<ElementType>::popRandomLoot()
             effective = 1;
         if (INT_MAX - total_weight < effective)
         {
-            ft_errno = FT_ERANGE;
-            this->set_error(FT_ERANGE);
+            ft_errno = FT_ERR_OUT_OF_RANGE;
+            this->set_error(FT_ERR_OUT_OF_RANGE);
             return (ft_nullptr);
         }
         total_weight += effective;
@@ -128,8 +128,8 @@ ElementType *ft_loot_table<ElementType>::popRandomLoot()
         }
         ++index;
     }
-    ft_errno = FT_ERANGE;
-    this->set_error(FT_ERANGE);
+    ft_errno = FT_ERR_OUT_OF_RANGE;
+    this->set_error(FT_ERR_OUT_OF_RANGE);
     return (ft_nullptr);
 }
 

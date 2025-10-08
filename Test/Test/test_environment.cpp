@@ -10,7 +10,7 @@ FT_TEST(test_ft_unsetenv_rejects_empty_name, "ft_unsetenv rejects empty names")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, ft_unsetenv(""));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -18,7 +18,7 @@ FT_TEST(test_ft_getenv_empty_name_sets_errno, "ft_getenv rejects empty names")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_getenv(""));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -26,7 +26,7 @@ FT_TEST(test_ft_getenv_null_name_sets_errno, "ft_getenv rejects null names")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_getenv(ft_nullptr));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -36,7 +36,7 @@ FT_TEST(test_ft_getenv_missing_clears_errno, "ft_getenv clears errno when variab
 
     variable_name = "LIBFT_TEST_GETENV_MISSING";
     ft_unsetenv(variable_name);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(ft_nullptr, ft_getenv(variable_name));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
@@ -49,7 +49,7 @@ FT_TEST(test_ft_getenv_returns_value, "ft_getenv returns stored value")
 
     variable_name = "LIBFT_TEST_GETENV_PRESENT";
     FT_ASSERT_EQ(0, ft_setenv(variable_name, "present", 1));
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     value = ft_getenv(variable_name);
     FT_ASSERT(value != ft_nullptr);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -58,11 +58,11 @@ FT_TEST(test_ft_getenv_returns_value, "ft_getenv returns stored value")
     return (1);
 }
 
-FT_TEST(test_ft_setenv_null_value_sets_errno, "ft_setenv null value sets FT_EINVAL")
+FT_TEST(test_ft_setenv_null_value_sets_errno, "ft_setenv null value sets FT_ERR_INVALID_ARGUMENT")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, ft_setenv("LIBFT_TEST_NULL_VALUE", ft_nullptr, 1));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -70,7 +70,7 @@ FT_TEST(test_ft_setenv_null_name_sets_errno, "ft_setenv rejects null name")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, ft_setenv(ft_nullptr, "value", 1));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -78,7 +78,7 @@ FT_TEST(test_ft_setenv_empty_name_sets_errno, "ft_setenv rejects empty name")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, ft_setenv("", "value", 1));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -86,7 +86,7 @@ FT_TEST(test_ft_setenv_equals_sign_sets_errno, "ft_setenv rejects names with equ
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, ft_setenv("INVALID=NAME", "value", 1));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -96,7 +96,7 @@ FT_TEST(test_ft_setenv_success_resets_errno, "ft_setenv stores value and clears 
     char *value;
 
     variable_name = "LIBFT_TEST_SETENV_SUCCESS";
-    ft_errno = FT_ETERM;
+    ft_errno = FT_ERR_TERMINATED;
     FT_ASSERT_EQ(0, ft_setenv(variable_name, "stored", 1));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     value = ft_getenv(variable_name);
@@ -113,7 +113,7 @@ FT_TEST(test_ft_setenv_overwrite_disabled_preserves_existing, "ft_setenv leaves 
 
     variable_name = "LIBFT_TEST_SETENV_NO_OVERWRITE";
     FT_ASSERT_EQ(0, ft_setenv(variable_name, "initial", 1));
-    ft_errno = FT_ETERM;
+    ft_errno = FT_ERR_TERMINATED;
     FT_ASSERT_EQ(0, ft_setenv(variable_name, "replacement", 0));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     value = ft_getenv(variable_name);
@@ -130,7 +130,7 @@ FT_TEST(test_ft_setenv_overwrite_disabled_creates_variable, "ft_setenv creates v
 
     variable_name = "LIBFT_TEST_SETENV_CREATE_NO_OVERWRITE";
     ft_unsetenv(variable_name);
-    ft_errno = FT_ETERM;
+    ft_errno = FT_ERR_TERMINATED;
     FT_ASSERT_EQ(0, ft_setenv(variable_name, "created", 0));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     value = ft_getenv(variable_name);
@@ -144,7 +144,7 @@ FT_TEST(test_ft_unsetenv_rejects_equals_sign, "ft_unsetenv rejects names contain
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, ft_unsetenv("INVALID=NAME"));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -152,7 +152,7 @@ FT_TEST(test_ft_unsetenv_null_name_sets_errno, "ft_unsetenv rejects null names")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, ft_unsetenv(ft_nullptr));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -162,7 +162,7 @@ FT_TEST(test_ft_unsetenv_success_resets_errno, "ft_unsetenv clears ft_errno on s
 
     variable_name = "LIBFT_TEST_UNSET_OK";
     FT_ASSERT_EQ(0, ft_setenv(variable_name, "value", 1));
-    ft_errno = FT_ETERM;
+    ft_errno = FT_ERR_TERMINATED;
     FT_ASSERT_EQ(0, ft_unsetenv(variable_name));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(ft_nullptr, ft_getenv(variable_name));
@@ -198,7 +198,7 @@ FT_TEST(test_ft_unsetenv_failure_without_errno, "ft_unsetenv falls back when err
     function_result = ft_unsetenv(variable_name);
     cmp_clear_force_unsetenv_result();
     FT_ASSERT_EQ(-1, function_result);
-    FT_ASSERT_EQ(FT_ETERM, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_TERMINATED, ft_errno);
     ft_unsetenv(variable_name);
     return (1);
 }

@@ -57,7 +57,7 @@ ft_set<ElementType>::ft_set(size_t initial_capacity)
     {
         this->_data = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * initial_capacity));
         if (this->_data == ft_nullptr)
-            this->set_error(SET_ALLOC_FAIL);
+            this->set_error(FT_ERR_NO_MEMORY);
         else
             this->_capacity = initial_capacity;
     }
@@ -144,7 +144,7 @@ bool ft_set<ElementType>::ensure_capacity(size_t desired_capacity)
     ElementType* new_data = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * new_capacity));
     if (new_data == ft_nullptr)
     {
-        this->set_error(SET_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
         return (false);
     }
     size_t index = 0;
@@ -200,7 +200,7 @@ void ft_set<ElementType>::insert(const ElementType& value)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     size_t position = lower_bound(value);
@@ -234,7 +234,7 @@ void ft_set<ElementType>::insert(ElementType&& value)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     size_t position = lower_bound(value);
@@ -268,13 +268,13 @@ ElementType* ft_set<ElementType>::find(const ElementType& value)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (ft_nullptr);
     }
     size_t index = find_index(value);
     if (index == this->_size)
     {
-        this->set_error(SET_NOT_FOUND);
+        this->set_error(FT_ERR_NOT_FOUND);
         this->_mutex.unlock(THREAD_ID);
         return (ft_nullptr);
     }
@@ -289,13 +289,13 @@ const ElementType* ft_set<ElementType>::find(const ElementType& value) const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        const_cast<ft_set*>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        const_cast<ft_set*>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (ft_nullptr);
     }
     size_t index = find_index(value);
     if (index == this->_size)
     {
-        const_cast<ft_set*>(this)->set_error(SET_NOT_FOUND);
+        const_cast<ft_set*>(this)->set_error(FT_ERR_NOT_FOUND);
         this->_mutex.unlock(THREAD_ID);
         return (ft_nullptr);
     }
@@ -310,13 +310,13 @@ void ft_set<ElementType>::remove(const ElementType& value)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     size_t index = find_index(value);
     if (index == this->_size)
     {
-        this->set_error(SET_NOT_FOUND);
+        this->set_error(FT_ERR_NOT_FOUND);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }

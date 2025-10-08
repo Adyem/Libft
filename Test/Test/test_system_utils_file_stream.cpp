@@ -26,7 +26,7 @@ FT_TEST(test_su_fopen_null_path_sets_ft_einval, "su_fopen rejects null path")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, su_fopen(ft_nullptr));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -53,7 +53,7 @@ FT_TEST(test_su_fopen_allocation_failure_sets_ft_ealloc, "su_fopen reports alloc
     file_stream = su_fopen("test_su_file_stream.txt");
     su_force_file_stream_allocation_failure(false);
     FT_ASSERT_EQ(ft_nullptr, file_stream);
-    FT_ASSERT_EQ(FT_EALLOC, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     return (1);
 }
 
@@ -62,7 +62,7 @@ FT_TEST(test_su_fopen_success_clears_errno, "su_fopen clears ft_errno on success
     su_file *file_stream;
 
     create_test_file_stream_file();
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     file_stream = su_fopen("test_su_file_stream.txt");
     if (file_stream == ft_nullptr)
         return (0);
@@ -76,7 +76,7 @@ FT_TEST(test_su_fclose_null_stream_sets_ft_einval, "su_fclose rejects null strea
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, su_fclose(ft_nullptr));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -90,7 +90,7 @@ FT_TEST(test_su_fclose_invalid_descriptor_propagates_error, "su_fclose preserves
     file_stream->_descriptor = -1;
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, su_fclose(file_stream));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     std::free(file_stream);
     return (1);
 }
@@ -105,7 +105,7 @@ FT_TEST(test_su_fread_null_buffer_sets_ft_einval, "su_fread rejects null buffer"
     file_stream->_descriptor = 0;
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(0, su_fread(ft_nullptr, 1, 1, file_stream));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     std::free(file_stream);
     return (1);
 }
@@ -116,7 +116,7 @@ FT_TEST(test_su_fread_null_stream_sets_ft_einval, "su_fread rejects null stream"
 
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(0, su_fread(buffer, 1, 1, ft_nullptr));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -129,7 +129,7 @@ FT_TEST(test_su_fread_zero_size_returns_zero, "su_fread handles zero-sized reque
     if (file_stream == ft_nullptr)
         return (0);
     file_stream->_descriptor = -1;
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(0, su_fread(buffer, 0, 4, file_stream));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     std::free(file_stream);
@@ -149,7 +149,7 @@ FT_TEST(test_su_fread_overflow_sets_ft_erange, "su_fread rejects overflowing siz
     maximum_size = std::numeric_limits<size_t>::max();
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(0, su_fread(buffer, maximum_size, 2, file_stream));
-    FT_ASSERT_EQ(FT_ERANGE, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
     std::free(file_stream);
     return (1);
 }
@@ -164,7 +164,7 @@ FT_TEST(test_su_fread_success_clears_errno, "su_fread clears ft_errno after succ
     file_stream = su_fopen("test_su_file_stream.txt");
     if (file_stream == ft_nullptr)
         return (0);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     read_count = su_fread(buffer, 1, 4, file_stream);
     if (read_count > 4)
         read_count = 4;
@@ -190,7 +190,7 @@ FT_TEST(test_su_fwrite_null_buffer_sets_ft_einval, "su_fwrite rejects null buffe
     file_stream->_descriptor = 0;
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(0, su_fwrite(ft_nullptr, 1, 1, file_stream));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     std::free(file_stream);
     return (1);
 }
@@ -201,7 +201,7 @@ FT_TEST(test_su_fwrite_null_stream_sets_ft_einval, "su_fwrite rejects null strea
 
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(0, su_fwrite(buffer, 1, 4, ft_nullptr));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -214,7 +214,7 @@ FT_TEST(test_su_fwrite_zero_size_returns_zero, "su_fwrite handles zero-sized req
     if (file_stream == ft_nullptr)
         return (0);
     file_stream->_descriptor = -1;
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(0, su_fwrite(buffer, 0, 4, file_stream));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     std::free(file_stream);
@@ -234,7 +234,7 @@ FT_TEST(test_su_fwrite_overflow_sets_ft_erange, "su_fwrite rejects overflowing s
     maximum_size = std::numeric_limits<size_t>::max();
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(0, su_fwrite(buffer, maximum_size, 2, file_stream));
-    FT_ASSERT_EQ(FT_ERANGE, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
     std::free(file_stream);
     return (1);
 }
@@ -243,7 +243,7 @@ FT_TEST(test_su_fseek_null_stream_sets_ft_einval, "su_fseek rejects null stream"
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, su_fseek(ft_nullptr, 0, SEEK_SET));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -251,7 +251,7 @@ FT_TEST(test_su_ftell_null_stream_sets_ft_einval, "su_ftell rejects null stream"
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1L, su_ftell(ft_nullptr));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 

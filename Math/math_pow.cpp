@@ -14,7 +14,7 @@ double math_pow(double base_value, int exponent)
     {
         if (math_fabs(base_value) <= DBL_MIN)
         {
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (math_nan());
         }
         base_value = 1.0 / base_value;

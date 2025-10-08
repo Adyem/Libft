@@ -70,7 +70,7 @@ static void api_request_authorization_server(
             &address_length);
     if (client_fd < 0)
     {
-        context->result.store(FT_EIO);
+        context->result.store(FT_ERR_IO);
         return ;
     }
     bool connection_active;
@@ -138,7 +138,7 @@ static void api_request_authorization_server(
             context->result.store(context->request.get_error());
     }
     else if (context->result.load() == ER_SUCCESS)
-        context->result.store(FT_EIO);
+        context->result.store(FT_ERR_IO);
     if (connection_active && header_complete
             && context->result.load() == ER_SUCCESS)
     {
@@ -157,7 +157,7 @@ static void api_request_authorization_server(
                     response_length - total_sent, 0);
             if (bytes_sent <= 0)
             {
-                context->result.store(FT_EIO);
+                context->result.store(FT_ERR_IO);
                 break ;
             }
             total_sent += static_cast<size_t>(bytes_sent);
@@ -276,21 +276,21 @@ FT_TEST(test_api_request_string_host_validates_arguments,
     result_body = api_request_string_host(ft_nullptr, 80, "GET", "/",
             ft_nullptr, ft_nullptr, &status_value, 1000);
     FT_ASSERT(result_body == ft_nullptr);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
 
     ft_errno = ER_SUCCESS;
     status_value = 0;
     result_body = api_request_string_host("localhost", 80, ft_nullptr, "/",
             ft_nullptr, ft_nullptr, &status_value, 1000);
     FT_ASSERT(result_body == ft_nullptr);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
 
     ft_errno = ER_SUCCESS;
     status_value = 0;
     result_body = api_request_string_host("localhost", 80, "GET",
             ft_nullptr, ft_nullptr, ft_nullptr, &status_value, 1000);
     FT_ASSERT(result_body == ft_nullptr);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -305,21 +305,21 @@ FT_TEST(test_api_request_string_url_validates_arguments,
     result_body = api_request_string_url(ft_nullptr, "GET", ft_nullptr,
             ft_nullptr, &status_value, 1000);
     FT_ASSERT(result_body == ft_nullptr);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
 
     ft_errno = ER_SUCCESS;
     status_value = 0;
     result_body = api_request_string_url("example.com/test", "GET",
             ft_nullptr, ft_nullptr, &status_value, 1000);
     FT_ASSERT(result_body == ft_nullptr);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
 
     ft_errno = ER_SUCCESS;
     status_value = 0;
     result_body = api_request_string_url("http://example.com/test",
             ft_nullptr, ft_nullptr, ft_nullptr, &status_value, 1000);
     FT_ASSERT(result_body == ft_nullptr);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -329,61 +329,61 @@ FT_TEST(test_api_request_set_resolve_error_maps_known_codes,
 #ifdef EAI_BADFLAGS
     ft_errno = ER_SUCCESS;
     api_request_set_resolve_error(EAI_BADFLAGS);
-    FT_ASSERT_EQ(SOCKET_RESOLVE_BAD_FLAGS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SOCKET_RESOLVE_BAD_FLAGS, ft_errno);
 #endif
 #ifdef EAI_AGAIN
     ft_errno = ER_SUCCESS;
     api_request_set_resolve_error(EAI_AGAIN);
-    FT_ASSERT_EQ(SOCKET_RESOLVE_AGAIN, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SOCKET_RESOLVE_AGAIN, ft_errno);
 #endif
 #ifdef EAI_FAIL
     ft_errno = ER_SUCCESS;
     api_request_set_resolve_error(EAI_FAIL);
-    FT_ASSERT_EQ(SOCKET_RESOLVE_FAIL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SOCKET_RESOLVE_FAIL, ft_errno);
 #endif
 #ifdef EAI_FAMILY
     ft_errno = ER_SUCCESS;
     api_request_set_resolve_error(EAI_FAMILY);
-    FT_ASSERT_EQ(SOCKET_RESOLVE_FAMILY, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SOCKET_RESOLVE_FAMILY, ft_errno);
 #endif
 #ifdef EAI_ADDRFAMILY
     ft_errno = ER_SUCCESS;
     api_request_set_resolve_error(EAI_ADDRFAMILY);
-    FT_ASSERT_EQ(SOCKET_RESOLVE_FAMILY, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SOCKET_RESOLVE_FAMILY, ft_errno);
 #endif
 #ifdef EAI_SOCKTYPE
     ft_errno = ER_SUCCESS;
     api_request_set_resolve_error(EAI_SOCKTYPE);
-    FT_ASSERT_EQ(SOCKET_RESOLVE_SOCKTYPE, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SOCKET_RESOLVE_SOCKTYPE, ft_errno);
 #endif
 #ifdef EAI_SERVICE
     ft_errno = ER_SUCCESS;
     api_request_set_resolve_error(EAI_SERVICE);
-    FT_ASSERT_EQ(SOCKET_RESOLVE_SERVICE, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SOCKET_RESOLVE_SERVICE, ft_errno);
 #endif
 #ifdef EAI_MEMORY
     ft_errno = ER_SUCCESS;
     api_request_set_resolve_error(EAI_MEMORY);
-    FT_ASSERT_EQ(SOCKET_RESOLVE_MEMORY, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SOCKET_RESOLVE_MEMORY, ft_errno);
 #endif
 #ifdef EAI_NONAME
     ft_errno = ER_SUCCESS;
     api_request_set_resolve_error(EAI_NONAME);
-    FT_ASSERT_EQ(SOCKET_RESOLVE_NO_NAME, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SOCKET_RESOLVE_NO_NAME, ft_errno);
 #endif
 #ifdef EAI_NODATA
     ft_errno = ER_SUCCESS;
     api_request_set_resolve_error(EAI_NODATA);
-    FT_ASSERT_EQ(SOCKET_RESOLVE_NO_NAME, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SOCKET_RESOLVE_NO_NAME, ft_errno);
 #endif
 #ifdef EAI_OVERFLOW
     ft_errno = ER_SUCCESS;
     api_request_set_resolve_error(EAI_OVERFLOW);
-    FT_ASSERT_EQ(SOCKET_RESOLVE_OVERFLOW, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SOCKET_RESOLVE_OVERFLOW, ft_errno);
 #endif
     ft_errno = ER_SUCCESS;
     api_request_set_resolve_error(12345);
-    FT_ASSERT_EQ(SOCKET_RESOLVE_FAILED, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SOCKET_RESOLVE_FAILED, ft_errno);
     return (1);
 }
 
@@ -404,7 +404,7 @@ FT_TEST(test_api_request_set_resolve_error_handles_system_errno,
     errno = 0;
     ft_errno = ER_SUCCESS;
     api_request_set_resolve_error(EAI_SYSTEM);
-    FT_ASSERT_EQ(SOCKET_RESOLVE_FAIL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SOCKET_RESOLVE_FAIL, ft_errno);
     errno = previous_errno;
 #endif
 #endif
@@ -427,12 +427,12 @@ FT_TEST(test_api_request_set_ssl_error_prefers_openssl_queue,
 }
 
 FT_TEST(test_api_request_set_ssl_error_handles_missing_session,
-    "api_request_set_ssl_error falls back to FT_EIO without a session")
+    "api_request_set_ssl_error falls back to FT_ERR_IO without a session")
 {
     ERR_clear_error();
     ft_errno = ER_SUCCESS;
     api_request_set_ssl_error(ft_nullptr, 0);
-    FT_ASSERT_EQ(FT_EIO, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
 }
 

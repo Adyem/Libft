@@ -36,7 +36,7 @@ int test_cma_checked_free_invalid(void)
 
     ft_errno = 0;
     free_result = cma_checked_free(&local_variable);
-    return (free_result == -1 && ft_errno == CMA_INVALID_PTR);
+    return (free_result == -1 && ft_errno == FT_ERR_INVALID_POINTER);
 }
 
 static void cma_thread_success(bool *thread_result)
@@ -68,7 +68,7 @@ static void cma_thread_failure(bool *thread_result)
 
     ft_errno = ER_SUCCESS;
     free_result = cma_checked_free(&local_variable);
-    *thread_result = (free_result == -1 && ft_errno == CMA_INVALID_PTR);
+    *thread_result = (free_result == -1 && ft_errno == FT_ERR_INVALID_POINTER);
     return ;
 }
 

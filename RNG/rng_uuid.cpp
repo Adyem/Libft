@@ -5,7 +5,7 @@ void ft_generate_uuid(char out[37])
 {
     if (out == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     unsigned char uuid_bytes[16];

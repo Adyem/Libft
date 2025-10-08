@@ -10,14 +10,14 @@ FT_TEST(test_socket_config_copy_detects_string_error,
     SocketConfig original;
     const char *error_string;
 
-    original._ip = ft_string(FT_EINVAL);
+    original._ip = ft_string(FT_ERR_INVALID_ARGUMENT);
     original._multicast_group = "239.1.1.1";
     ft_errno = ER_SUCCESS;
     SocketConfig copy(original);
-    FT_ASSERT_EQ(FT_EINVAL, copy.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, copy.get_error());
     error_string = copy.get_error_str();
     FT_ASSERT(error_string != ft_nullptr);
-    FT_ASSERT_EQ(0, ft_strcmp(error_string, ft_strerror(FT_EINVAL)));
+    FT_ASSERT_EQ(0, ft_strcmp(error_string, ft_strerror(FT_ERR_INVALID_ARGUMENT)));
     return (1);
 }
 

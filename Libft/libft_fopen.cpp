@@ -10,7 +10,7 @@ FILE *ft_fopen(const char *filename, const char *mode)
 
     if (filename == ft_nullptr || mode == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     file_handle = std::fopen(filename, mode);
@@ -22,7 +22,7 @@ FILE *ft_fopen(const char *filename, const char *mode)
         if (open_error != 0)
             ft_errno = open_error + ERRNO_OFFSET;
         else
-            ft_errno = FILE_INVALID_FD;
+            ft_errno = FT_ERR_INVALID_HANDLE;
         return (ft_nullptr);
     }
     ft_errno = ER_SUCCESS;

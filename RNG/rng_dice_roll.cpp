@@ -14,7 +14,7 @@ int ft_dice_roll(int number, int faces)
     }
     if (faces < 1 || number < 1)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     if (faces == 1)
@@ -32,7 +32,7 @@ int ft_dice_roll(int number, int faces)
             return (-1);
         if (result > INT_MAX - ((roll % faces) + 1))
         {
-            ft_errno = FT_ERANGE;
+            ft_errno = FT_ERR_OUT_OF_RANGE;
             return (-1);
         }
         result += (roll % faces) + 1;

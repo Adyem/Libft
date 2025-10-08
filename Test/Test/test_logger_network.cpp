@@ -88,7 +88,7 @@ FT_TEST(test_logger_network_sink_handles_send_failure, "logger network sink hand
     int failure_errno = ft_errno;
     prefix_length = g_mock_network_send_state.chunk_size;
     expected_prefix.assign(log_message, prefix_length);
-    FT_ASSERT_EQ(SOCKET_SEND_FAILED, failure_errno);
+    FT_ASSERT_EQ(FT_ERR_SOCKET_SEND_FAILED, failure_errno);
     FT_ASSERT_EQ(-1, sink.socket_fd);
     FT_ASSERT(sink.send_function == ft_nullptr);
     FT_ASSERT_EQ(prefix_length, g_mock_network_send_state.transmitted_data.size());

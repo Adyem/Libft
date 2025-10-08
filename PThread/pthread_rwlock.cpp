@@ -45,7 +45,7 @@ int pt_rwlock_unlock(pthread_rwlock_t *rwlock)
 
     if (rwlock == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     return_value = pthread_rwlock_unlock(rwlock);

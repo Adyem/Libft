@@ -81,8 +81,8 @@ int pt_mutex::unlock(pthread_t thread_id) const
     this->set_error(ER_SUCCESS);
     if (this->_owner.load(std::memory_order_relaxed) != thread_id)
     {
-        ft_errno = PT_ERR_MUTEX_OWNER;
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        ft_errno = FT_ERR_MUTEX_NOT_OWNER;
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (-1);
     }
     this->_owner.store(0, std::memory_order_relaxed);

@@ -123,7 +123,7 @@ ft_tuple<Types...>::ft_tuple(Args&&... args)
 {
     _data = static_cast<tuple_t*>(cma_malloc(sizeof(tuple_t)));
     if (_data == ft_nullptr)
-        this->set_error(TUPLE_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
     else
         construct_at(_data, std::forward<Args>(args)...);
     return ;
@@ -140,12 +140,12 @@ ft_tuple<Types...>::get()
     static elem_t default_instance = elem_t();
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (default_instance);
     }
     if (this->_data == ft_nullptr)
     {
-        this->set_error(TUPLE_BAD_ACCESS);
+        this->set_error(FT_ERR_INVALID_OPERATION);
         this->_mutex.unlock(THREAD_ID);
         if constexpr (!std::is_abstract_v<elem_t>)
             return (default_instance);
@@ -170,12 +170,12 @@ ft_tuple<Types...>::get() const
     static elem_t default_instance = elem_t();
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        const_cast<ft_tuple*>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        const_cast<ft_tuple*>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (default_instance);
     }
     if (this->_data == ft_nullptr)
     {
-        const_cast<ft_tuple*>(this)->set_error(TUPLE_BAD_ACCESS);
+        const_cast<ft_tuple*>(this)->set_error(FT_ERR_INVALID_OPERATION);
         this->_mutex.unlock(THREAD_ID);
         if constexpr (!std::is_abstract_v<elem_t>)
             return (default_instance);
@@ -200,12 +200,12 @@ T& ft_tuple<Types...>::get()
     static T default_instance = T();
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (default_instance);
     }
     if (this->_data == ft_nullptr)
     {
-        this->set_error(TUPLE_BAD_ACCESS);
+        this->set_error(FT_ERR_INVALID_OPERATION);
         this->_mutex.unlock(THREAD_ID);
         if constexpr (!std::is_abstract_v<T>)
             return (default_instance);
@@ -228,12 +228,12 @@ const T& ft_tuple<Types...>::get() const
     static T default_instance = T();
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        const_cast<ft_tuple*>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        const_cast<ft_tuple*>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (default_instance);
     }
     if (this->_data == ft_nullptr)
     {
-        const_cast<ft_tuple*>(this)->set_error(TUPLE_BAD_ACCESS);
+        const_cast<ft_tuple*>(this)->set_error(FT_ERR_INVALID_OPERATION);
         this->_mutex.unlock(THREAD_ID);
         if constexpr (!std::is_abstract_v<T>)
             return (default_instance);
@@ -256,7 +256,7 @@ void ft_tuple<Types...>::reset()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     if (this->_data != ft_nullptr)

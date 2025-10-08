@@ -14,7 +14,7 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
 
     if (!host)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     socket_type = SOCK_DGRAM;
@@ -24,7 +24,7 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
     if (socket_fd < 0)
     {
         if (ft_errno == ER_SUCCESS)
-            ft_errno = SOCKET_CREATION_FAILED;
+            ft_errno = FT_ERR_SOCKET_CREATION_FAILED;
         return (-1);
     }
     ft_memset(&address, 0, sizeof(address));
@@ -33,7 +33,7 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
     if (nw_inet_pton(AF_INET, host, &address.sin_addr) != 1)
     {
         su_close(socket_fd);
-        ft_errno = INVALID_IP_FORMAT;
+        ft_errno = FT_ERR_INVALID_IP_FORMAT;
         return (-1);
     }
     if (use_tcp)
@@ -42,7 +42,7 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
         {
             su_close(socket_fd);
             if (ft_errno == ER_SUCCESS)
-                ft_errno = SOCKET_CONNECT_FAILED;
+                ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
             return (-1);
         }
     }
@@ -54,7 +54,7 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
     if (!sink)
     {
         su_close(socket_fd);
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (-1);
     }
     sink->socket_fd = socket_fd;
@@ -64,7 +64,7 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
         su_close(socket_fd);
         delete sink;
         if (ft_errno == ER_SUCCESS)
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -97,7 +97,7 @@ void ft_network_sink(const char *message, void *user_data)
                 su_close(sink->socket_fd);
             sink->socket_fd = -1;
             sink->send_function = ft_nullptr;
-            ft_errno = SOCKET_SEND_FAILED;
+            ft_errno = FT_ERR_SOCKET_SEND_FAILED;
             return ;
         }
         total_bytes_sent += static_cast<size_t>(send_result);

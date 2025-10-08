@@ -9,7 +9,7 @@ size_t ft_strnlen(const char *string, size_t maximum_length)
     ft_errno = ER_SUCCESS;
     if (string == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
     index = 0;

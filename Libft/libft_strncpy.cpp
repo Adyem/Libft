@@ -11,7 +11,7 @@ char *ft_strncpy(char *destination, const char *source, size_t number_of_charact
         return (destination);
     if (destination == ft_nullptr || source == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     index = 0;

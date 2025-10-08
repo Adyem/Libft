@@ -60,13 +60,13 @@ FT_TEST(test_strtol_sign_only_sets_error_and_input_pointer,
     end_pointer = reinterpret_cast<char *>(0x1);
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(0L, ft_strtol(plus_input, &end_pointer, 10));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(const_cast<char *>(plus_input), end_pointer);
 
     end_pointer = reinterpret_cast<char *>(0x1);
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(0L, ft_strtol(minus_input, &end_pointer, 10));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(const_cast<char *>(minus_input), end_pointer);
     return (1);
 }
@@ -79,13 +79,13 @@ FT_TEST(test_strtol_invalid_base, "ft_strtol invalid base returns error and inpu
     end_pointer = reinterpret_cast<char *>(0x1);
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(0, ft_strtol(input_string, &end_pointer, 1));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(const_cast<char *>(input_string), end_pointer);
 
     end_pointer = reinterpret_cast<char *>(0x1);
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(0, ft_strtol(input_string, &end_pointer, 37));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(const_cast<char *>(input_string), end_pointer);
     return (1);
 }
@@ -95,7 +95,7 @@ FT_TEST(test_strtol_maximum_in_range, "ft_strtol handles FT_LONG_MAX without ove
     char *end;
     ft_string max_string = ft_to_string(FT_LONG_MAX);
 
-    ft_errno = FT_ERANGE;
+    ft_errno = FT_ERR_OUT_OF_RANGE;
     FT_ASSERT_EQ(FT_LONG_MAX, ft_strtol(max_string.c_str(), &end, 10));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ('\0', *end);
@@ -111,7 +111,7 @@ FT_TEST(test_strtol_positive_overflow, "ft_strtol clamps positive overflow and r
     overflow_string.append('9');
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(FT_LONG_MAX, ft_strtol(overflow_string.c_str(), &end, 10));
-    FT_ASSERT_EQ(FT_ERANGE, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
     FT_ASSERT_EQ('\0', *end);
     FT_ASSERT_EQ(static_cast<size_t>(overflow_string.size()),
         static_cast<size_t>(end - overflow_string.c_str()));
@@ -127,7 +127,7 @@ FT_TEST(test_strtol_negative_overflow, "ft_strtol clamps negative overflow and r
     underflow_string.append('9');
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(FT_LONG_MIN, ft_strtol(underflow_string.c_str(), &end, 10));
-    FT_ASSERT_EQ(FT_ERANGE, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
     FT_ASSERT_EQ('\0', *end);
     FT_ASSERT_EQ(static_cast<size_t>(underflow_string.size()),
         static_cast<size_t>(end - underflow_string.c_str()));
@@ -138,7 +138,7 @@ FT_TEST(test_strtol_uppercase_hex_prefix, "ft_strtol accepts uppercase hex prefi
 {
     char *end_pointer;
 
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(255, ft_strtol("0Xff", &end_pointer, 0));
     FT_ASSERT_EQ('\0', *end_pointer);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -149,7 +149,7 @@ FT_TEST(test_strtol_base36_mixed_case, "ft_strtol parses base 36 digits in any c
 {
     char *end_pointer;
 
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(1294L, ft_strtol("Zy", &end_pointer, 36));
     FT_ASSERT_EQ('\0', *end_pointer);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -160,7 +160,7 @@ FT_TEST(test_strtol_skips_leading_whitespace, "ft_strtol ignores leading whitesp
 {
     char *end_pointer;
 
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(678L, ft_strtol("\t  678xyz", &end_pointer, 10));
     FT_ASSERT_EQ('x', *end_pointer);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -173,7 +173,7 @@ FT_TEST(test_strtol_null_input, "ft_strtol null input sets errno and end pointer
 
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(0, ft_strtol(ft_nullptr, &end_pointer, 10));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(ft_nullptr, end_pointer);
     return (1);
 }
@@ -184,7 +184,7 @@ FT_TEST(test_strtol_base_two_rejects_invalid_digit,
     char *end_pointer;
     long parsed_value;
 
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     parsed_value = ft_strtol("10102", &end_pointer, 2);
     FT_ASSERT_EQ(10L, parsed_value);
     FT_ASSERT_EQ('2', *end_pointer);
@@ -198,7 +198,7 @@ FT_TEST(test_strtol_mixed_case_digits_custom_base,
     char *end_pointer;
     long parsed_value;
 
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     parsed_value = ft_strtol("aB19", &end_pointer, 20);
     FT_ASSERT_EQ(84429L, parsed_value);
     FT_ASSERT_EQ('\0', *end_pointer);
@@ -216,7 +216,7 @@ FT_TEST(test_strtol_rejects_at_symbol_in_high_base,
     parsed_value = ft_strtol("@123", &end_pointer, 36);
     FT_ASSERT_EQ(0L, parsed_value);
     FT_ASSERT_EQ('@', *end_pointer);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -226,7 +226,7 @@ FT_TEST(test_strtol_stops_before_brace_character,
     char *end_pointer;
     long parsed_value;
 
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     parsed_value = ft_strtol("Zz{", &end_pointer, 36);
     FT_ASSERT_EQ(1295L, parsed_value);
     FT_ASSERT_EQ('{', *end_pointer);

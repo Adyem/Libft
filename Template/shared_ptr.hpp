@@ -84,7 +84,7 @@ class ft_sharedptr
             }
             if (this->_referenceCount && !this->_referenceMutex)
             {
-                this->set_error(SHARED_PTR_INVALID_OPERATION);
+                this->set_error(FT_ERR_INVALID_OPERATION);
                 return ;
             }
             return ;
@@ -162,7 +162,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args)
     this->_referenceCount = new (std::nothrow) int;
     if (!this->_referenceCount)
     {
-        this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+        this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
     this->_referenceMutex = new (std::nothrow) pt_mutex;
@@ -170,7 +170,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args)
     {
         delete this->_referenceCount;
         this->_referenceCount = ft_nullptr;
-        this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+        this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
     *this->_referenceCount = 1;
@@ -181,7 +181,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args)
         this->_referenceCount = ft_nullptr;
         delete this->_referenceMutex;
         this->_referenceMutex = ft_nullptr;
-        this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+        this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
     this->set_error(ER_SUCCESS);
@@ -204,7 +204,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ManagedType* pointer, bool isArray, size
         this->_referenceCount = new (std::nothrow) int;
         if (!this->_referenceCount)
         {
-            this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+            this->set_error(FT_ERR_NO_MEMORY);
             return ;
         }
         this->_referenceMutex = new (std::nothrow) pt_mutex;
@@ -212,7 +212,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ManagedType* pointer, bool isArray, size
         {
             delete this->_referenceCount;
             this->_referenceCount = ft_nullptr;
-            this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+            this->set_error(FT_ERR_NO_MEMORY);
             return ;
         }
         *this->_referenceCount = 1;
@@ -248,7 +248,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(size_t size)
     this->_referenceCount = new (std::nothrow) int;
     if (!this->_referenceCount)
     {
-        this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+        this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
     this->_referenceMutex = new (std::nothrow) pt_mutex;
@@ -256,7 +256,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(size_t size)
     {
         delete this->_referenceCount;
         this->_referenceCount = ft_nullptr;
-        this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+        this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
     *this->_referenceCount = 1;
@@ -267,7 +267,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(size_t size)
         this->_referenceCount = ft_nullptr;
         delete this->_referenceMutex;
         this->_referenceMutex = ft_nullptr;
-        this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+        this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
     this->set_error(ER_SUCCESS);
@@ -310,7 +310,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<ManagedType>& other)
     }
     if (this->_referenceCount && !this->_referenceMutex)
     {
-        this->set_error(SHARED_PTR_INVALID_OPERATION);
+        this->set_error(FT_ERR_INVALID_OPERATION);
         return ;
     }
     return ;
@@ -547,7 +547,7 @@ ft_sharedptr<ManagedType>& ft_sharedptr<ManagedType>::operator=(const ft_sharedp
     }
     if (this->_referenceCount && !this->_referenceMutex)
     {
-        this->set_error(SHARED_PTR_INVALID_OPERATION);
+        this->set_error(FT_ERR_INVALID_OPERATION);
         return (*this);
     }
     this->set_error(ER_SUCCESS);
@@ -574,7 +574,7 @@ ManagedType& ft_sharedptr<ManagedType>::operator*()
     }
     if (!this->_managedPointer)
     {
-        this->set_error(SHARED_PTR_NULL_PTR);
+        this->set_error(FT_ERR_INVALID_POINTER);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType default_instance;
@@ -582,7 +582,7 @@ ManagedType& ft_sharedptr<ManagedType>::operator*()
         }
         else
         {
-            this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+            this->set_error(FT_ERR_NO_MEMORY);
             static char dummy_buffer[sizeof(ManagedType)] = {0};
             return (*reinterpret_cast<ManagedType*>(dummy_buffer));
         }
@@ -611,7 +611,7 @@ const ManagedType& ft_sharedptr<ManagedType>::operator*() const
     }
     if (!this->_managedPointer)
     {
-        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error(SHARED_PTR_NULL_PTR);
+        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error(FT_ERR_INVALID_POINTER);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType default_instance;
@@ -619,7 +619,7 @@ const ManagedType& ft_sharedptr<ManagedType>::operator*() const
         }
         else
         {
-            this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+            this->set_error(FT_ERR_NO_MEMORY);
             static char dummy_buffer[sizeof(ManagedType)] = {0};
             return (*reinterpret_cast<const ManagedType*>(dummy_buffer));
         }
@@ -639,7 +639,7 @@ ManagedType* ft_sharedptr<ManagedType>::operator->()
     }
     if (!this->_managedPointer)
     {
-        this->set_error(SHARED_PTR_NULL_PTR);
+        this->set_error(FT_ERR_INVALID_POINTER);
         return (ft_nullptr);
     }
     this->set_error(ER_SUCCESS);
@@ -657,7 +657,7 @@ const ManagedType* ft_sharedptr<ManagedType>::operator->() const
     }
     if (!this->_managedPointer)
     {
-        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error(SHARED_PTR_NULL_PTR);
+        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error(FT_ERR_INVALID_POINTER);
         return (ft_nullptr);
     }
     this->set_error(ER_SUCCESS);
@@ -684,7 +684,7 @@ ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index)
     }
     if (!this->_isArrayType)
     {
-        this->set_error(SHARED_PTR_INVALID_OPERATION);
+        this->set_error(FT_ERR_INVALID_OPERATION);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType default_instance;
@@ -692,13 +692,13 @@ ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index)
         }
         else
         {
-            this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+            this->set_error(FT_ERR_NO_MEMORY);
             return (ft_nullptr);
         }
     }
     if (!this->_managedPointer)
     {
-        this->set_error(SHARED_PTR_NULL_PTR);
+        this->set_error(FT_ERR_INVALID_POINTER);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType default_instance;
@@ -706,13 +706,13 @@ ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index)
         }
         else
         {
-            this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+            this->set_error(FT_ERR_NO_MEMORY);
             return (ft_nullptr);
         }
     }
     if (index >= this->_arraySize)
     {
-        this->set_error(SHARED_PTR_OUT_OF_BOUNDS);
+        this->set_error(FT_ERR_OUT_OF_RANGE);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType default_instance;
@@ -720,7 +720,7 @@ ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index)
         }
         else
         {
-            this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+            this->set_error(FT_ERR_NO_MEMORY);
             return (ft_nullptr);
         }
     }
@@ -748,7 +748,7 @@ const ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index) const
     }
     if (!this->_isArrayType)
     {
-        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error(SHARED_PTR_INVALID_OPERATION);
+        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error(FT_ERR_INVALID_OPERATION);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType default_instance;
@@ -756,13 +756,13 @@ const ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index) const
         }
         else
         {
-            this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+            this->set_error(FT_ERR_NO_MEMORY);
             return (ft_nullptr);
         }
     }
     if (!this->_managedPointer)
     {
-        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error(SHARED_PTR_NULL_PTR);
+        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error(FT_ERR_INVALID_POINTER);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType default_instance;
@@ -770,13 +770,13 @@ const ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index) const
         }
         else
         {
-            this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+            this->set_error(FT_ERR_NO_MEMORY);
             return (ft_nullptr);
         }
     }
     if (index >= this->_arraySize)
     {
-        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error(SHARED_PTR_OUT_OF_BOUNDS);
+        const_cast<ft_sharedptr<ManagedType>*>(this)->set_error(FT_ERR_OUT_OF_RANGE);
         if constexpr (!std::is_abstract_v<ManagedType>)
         {
             static ManagedType default_instance;
@@ -784,7 +784,7 @@ const ManagedType& ft_sharedptr<ManagedType>::operator[](size_t index) const
         }
         else
         {
-            this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+            this->set_error(FT_ERR_NO_MEMORY);
             return (ft_nullptr);
         }
     }
@@ -808,7 +808,7 @@ int ft_sharedptr<ManagedType>::use_count() const
     }
     if (!this->_referenceMutex)
     {
-        this->set_error(SHARED_PTR_INVALID_OPERATION);
+        this->set_error(FT_ERR_INVALID_OPERATION);
         return (0);
     }
     ft_unique_lock<pt_mutex> shared_guard(*this->_referenceMutex);
@@ -933,7 +933,7 @@ void ft_sharedptr<ManagedType>::reset(ManagedType* pointer, size_t size, bool ar
     this->_referenceCount = new (std::nothrow) int;
     if (!this->_referenceCount)
     {
-        this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+        this->set_error(FT_ERR_NO_MEMORY);
         if (this->_managedPointer)
         {
             if (this->_isArrayType)
@@ -949,7 +949,7 @@ void ft_sharedptr<ManagedType>::reset(ManagedType* pointer, size_t size, bool ar
     {
         delete this->_referenceCount;
         this->_referenceCount = ft_nullptr;
-        this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+        this->set_error(FT_ERR_NO_MEMORY);
         if (this->_managedPointer)
         {
             if (this->_isArrayType)
@@ -1028,12 +1028,12 @@ void ft_sharedptr<ManagedType>::add(const ManagedType& element)
     }
     if (!this->_isArrayType)
     {
-        this->set_error(SHARED_PTR_INVALID_OPERATION);
+        this->set_error(FT_ERR_INVALID_OPERATION);
         return ;
     }
     if (!this->_managedPointer)
     {
-        this->set_error(SHARED_PTR_NULL_PTR);
+        this->set_error(FT_ERR_INVALID_POINTER);
         return ;
     }
     ft_unique_lock<pt_mutex> shared_guard_placeholder;
@@ -1054,7 +1054,7 @@ void ft_sharedptr<ManagedType>::add(const ManagedType& element)
     new_array = new (std::nothrow) ManagedType[new_size];
     if (!new_array)
     {
-        this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+        this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
     size_t array_index;
@@ -1086,12 +1086,12 @@ void ft_sharedptr<ManagedType>::remove(int index)
     }
     if (!this->_isArrayType)
     {
-        this->set_error(SHARED_PTR_INVALID_OPERATION);
+        this->set_error(FT_ERR_INVALID_OPERATION);
         return ;
     }
     if (!this->_managedPointer || static_cast<size_t>(index) >= this->_arraySize || index < 0)
     {
-        this->set_error(SHARED_PTR_OUT_OF_BOUNDS);
+        this->set_error(FT_ERR_OUT_OF_RANGE);
         return ;
     }
     ft_unique_lock<pt_mutex> shared_guard_placeholder;
@@ -1115,7 +1115,7 @@ void ft_sharedptr<ManagedType>::remove(int index)
         new_array = new (std::nothrow) ManagedType[new_size];
         if (!new_array)
         {
-            this->set_error(SHARED_PTR_ALLOCATION_FAILED);
+            this->set_error(FT_ERR_NO_MEMORY);
             return ;
         }
     }

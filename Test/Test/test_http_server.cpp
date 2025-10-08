@@ -194,7 +194,7 @@ FT_TEST(test_http_server_short_write_sets_error, "HTTP server detects closed cli
     if (context.result == 0)
         return (0);
     error_code = server.get_error();
-    if (error_code == SOCKET_SEND_FAILED)
+    if (error_code == FT_ERR_SOCKET_SEND_FAILED)
         return (1);
 #ifdef _WIN32
     if (error_code == (WSAECONNRESET + ERRNO_OFFSET)

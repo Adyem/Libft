@@ -61,7 +61,7 @@ int be_saveGame(const char *filename, const char *data, const char *key)
     char *encrypted_data = static_cast<char *>(cma_malloc(data_length));
     if (encrypted_data == ft_nullptr)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (1);
     }
     ft_memcpy(encrypted_data, data, data_length);
@@ -94,7 +94,7 @@ char **be_DecryptData(char **data, const char *key)
 {
     if (data == ft_nullptr || *data == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     size_t data_length = ft_strlen(*data);

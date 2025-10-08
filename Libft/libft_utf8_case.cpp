@@ -26,17 +26,17 @@ int ft_utf8_encode(uint32_t code_point, char *buffer, size_t buffer_size,
     ft_errno = ER_SUCCESS;
     if (buffer == ft_nullptr && buffer_size != 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (FT_FAILURE);
     }
     if (code_point > 0x10FFFF)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (FT_FAILURE);
     }
     if (code_point >= 0xD800 && code_point <= 0xDFFF)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (FT_FAILURE);
     }
     if (code_point <= 0x7F)
@@ -49,7 +49,7 @@ int ft_utf8_encode(uint32_t code_point, char *buffer, size_t buffer_size,
         required_length = 4;
     if (buffer_size <= required_length)
     {
-        ft_errno = FT_ERANGE;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
         return (FT_FAILURE);
     }
     if (required_length == 1)
@@ -90,7 +90,7 @@ int ft_utf8_transform(const char *input, size_t input_length,
     if (input == ft_nullptr || output_buffer == ft_nullptr
         || case_hook == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (FT_FAILURE);
     }
     effective_length = input_length;
@@ -121,7 +121,7 @@ int ft_utf8_transform(const char *input, size_t input_length,
             return (FT_FAILURE);
         if (output_index + encoded_length >= output_buffer_size)
         {
-            ft_errno = FT_ERANGE;
+            ft_errno = FT_ERR_OUT_OF_RANGE;
             return (FT_FAILURE);
         }
         copy_index = 0;
@@ -135,7 +135,7 @@ int ft_utf8_transform(const char *input, size_t input_length,
     }
     if (output_index >= output_buffer_size)
     {
-        ft_errno = FT_ERANGE;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
         return (FT_FAILURE);
     }
     output_buffer[output_index] = '\0';
@@ -153,7 +153,7 @@ int ft_utf8_transform_alloc(const char *input, char **output_pointer,
     if (input == ft_nullptr || output_pointer == ft_nullptr
         || case_hook == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (FT_FAILURE);
     }
     *output_pointer = ft_nullptr;
@@ -164,7 +164,7 @@ int ft_utf8_transform_alloc(const char *input, char **output_pointer,
     allocated_buffer = static_cast<char *>(cma_malloc(static_cast<ft_size_t>(allocation_size)));
     if (allocated_buffer == ft_nullptr)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (FT_FAILURE);
     }
     if (ft_utf8_transform(input, ft_strlen_size_t(input), allocated_buffer,

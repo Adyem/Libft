@@ -27,7 +27,7 @@ FT_TEST(test_json_write_to_string_initial_alloc_failure_sets_errno, "json_write_
     char *result = json_write_to_string(ft_nullptr);
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(ft_nullptr, result);
-    FT_ASSERT_EQ(FT_EALLOC, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     return (1);
 }
 
@@ -40,7 +40,7 @@ FT_TEST(test_json_write_to_string_midway_failure_preserves_errno, "json_write_to
     char *result = json_write_to_string(group);
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(ft_nullptr, result);
-    FT_ASSERT_EQ(FT_EALLOC, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     json_free_groups(group);
     return (1);
 }
@@ -49,7 +49,7 @@ FT_TEST(test_json_write_to_string_success_resets_errno, "json_write_to_string cl
 {
     json_group *group = create_sample_group();
     FT_ASSERT(group != ft_nullptr);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     char *result = json_write_to_string(group);
     FT_ASSERT(result != ft_nullptr);
     const char *expected = "{\n  \"sample\": {\n    \"key\": \"value\"\n  }\n}\n";

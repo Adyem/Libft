@@ -31,7 +31,7 @@ char    *ft_strtok(char *string, const char *delimiters)
     }
     if (delimiters == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     if (saved_string == ft_nullptr)

@@ -20,7 +20,7 @@ double math_log(double value)
 
     if (value <= 0.0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (math_nan());
     }
     converter.double_value = value;

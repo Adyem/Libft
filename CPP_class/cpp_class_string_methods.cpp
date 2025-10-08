@@ -15,7 +15,7 @@ void ft_string::resize(size_t new_capacity) noexcept
     char* new_data = static_cast<char*>(cma_realloc(this->_data, new_capacity + 1));
     if (!new_data)
     {
-        this->set_error(STRING_MEM_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
     this->_data = new_data;
@@ -257,7 +257,7 @@ void ft_string::erase(std::size_t index, std::size_t count) noexcept
     }
     if (index >= this->_length)
     {
-        this->set_error(STRING_ERASE_OUT_OF_BOUNDS);
+        this->set_error(FT_ERR_OUT_OF_RANGE);
         return ;
     }
     if (index + count > this->_length)
@@ -404,7 +404,7 @@ void ft_string::resize_length(size_t new_length) noexcept
         this->_data = static_cast<char*>(cma_calloc(new_length + 1, sizeof(char)));
         if (!this->_data)
         {
-            this->set_error(STRING_MEM_ALLOC_FAIL);
+            this->set_error(FT_ERR_NO_MEMORY);
             return ;
         }
         this->_capacity = new_length;
@@ -448,7 +448,7 @@ char ft_string::back() noexcept
     }
     if (this->_length == 0)
     {
-        this->set_error(STRING_ERASE_OUT_OF_BOUNDS);
+        this->set_error(FT_ERR_OUT_OF_RANGE);
         return ('\0');
     }
     this->set_error(ER_SUCCESS);
@@ -516,7 +516,7 @@ ft_string ft_string::substr(size_t index, size_t count) const noexcept
     }
     if (index > this->_length)
     {
-        substring.set_error(STRING_ERASE_OUT_OF_BOUNDS);
+        substring.set_error(FT_ERR_OUT_OF_RANGE);
         return (substring);
     }
     available_length = this->_length - index;

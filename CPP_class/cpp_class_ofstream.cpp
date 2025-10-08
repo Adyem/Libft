@@ -23,7 +23,7 @@ int ft_ofstream::open(const char *filename) noexcept
 {
     if (filename == ft_nullptr)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
     if (this->_file.open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644) != 0)
@@ -39,7 +39,7 @@ ssize_t ft_ofstream::write(const char *string) noexcept
 {
     if (string == ft_nullptr)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     ssize_t result = this->_file.write(string);

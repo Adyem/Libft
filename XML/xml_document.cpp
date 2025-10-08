@@ -30,7 +30,7 @@ static char *duplicate_range(const char *start, size_t length)
     char *copy = static_cast<char *>(cma_malloc(length + 1));
     if (!copy)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     size_t index = 0;
@@ -47,8 +47,8 @@ static int translate_vector_error(int error_code)
 {
     if (error_code == ER_SUCCESS)
         return (ER_SUCCESS);
-    if (error_code == VECTOR_ALLOC_FAIL)
-        return (FT_EALLOC);
+    if (error_code == FT_ERR_NO_MEMORY)
+        return (FT_ERR_NO_MEMORY);
     return (error_code);
 }
 
@@ -91,7 +91,7 @@ static const char *parse_node(const char *string, xml_node **out_node)
     string = skip_whitespace(string);
     if (!string || *string != '<')
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     string++;
@@ -106,7 +106,7 @@ static const char *parse_node(const char *string, xml_node **out_node)
     if (!node)
     {
         cma_free(name);
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     node->name = name;
@@ -129,7 +129,7 @@ static const char *parse_node(const char *string, xml_node **out_node)
     if (*string != '>')
     {
         delete node;
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     const char *tag_end = string;
@@ -192,14 +192,14 @@ static const char *parse_node(const char *string, xml_node **out_node)
         if (!node->text && text_length > 0)
         {
             delete node;
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
     }
     if (*string != '<' || string[1] != '/')
     {
         delete node;
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     string += 2;
@@ -212,7 +212,7 @@ static const char *parse_node(const char *string, xml_node **out_node)
     if (closing_name_length != opening_name_length)
     {
         delete node;
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     size_t name_index = 0;
@@ -221,7 +221,7 @@ static const char *parse_node(const char *string, xml_node **out_node)
         if (closing_name_start[name_index] != node->name[name_index])
         {
             delete node;
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (ft_nullptr);
         }
         name_index++;
@@ -231,7 +231,7 @@ static const char *parse_node(const char *string, xml_node **out_node)
         if (!is_xml_whitespace(*string))
         {
             delete node;
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (ft_nullptr);
         }
         string++;
@@ -239,7 +239,7 @@ static const char *parse_node(const char *string, xml_node **out_node)
     if (*string != '>')
     {
         delete node;
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     string++;
@@ -272,8 +272,8 @@ int xml_document::load_from_string(const char *xml) noexcept
 {
     if (!xml)
     {
-        this->set_error(FT_EINVAL);
-        return (FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     if (this->_root)
     {
@@ -284,7 +284,7 @@ int xml_document::load_from_string(const char *xml) noexcept
     const char *end = parse_node(xml, &node);
     if (!end)
     {
-        int error_code = ft_errno ? ft_errno : FT_EINVAL;
+        int error_code = ft_errno ? ft_errno : FT_ERR_INVALID_ARGUMENT;
         this->set_error(error_code);
         return (error_code);
     }
@@ -292,8 +292,8 @@ int xml_document::load_from_string(const char *xml) noexcept
     if (remaining && *remaining != '\0')
     {
         delete node;
-        this->set_error(FT_EINVAL);
-        return (FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     this->_root = node;
     this->set_error(ER_SUCCESS);
@@ -306,14 +306,14 @@ static int read_file_content(const char *file_path, char **out_content)
     FILE *file = std::fopen(file_path, "rb");
     if (!file)
     {
-        int error_code = errno ? errno + ERRNO_OFFSET : FT_EINVAL;
+        int error_code = errno ? errno + ERRNO_OFFSET : FT_ERR_INVALID_ARGUMENT;
         ft_errno = error_code;
         return (error_code);
     }
     errno = 0;
     if (std::fseek(file, 0, SEEK_END) != 0)
     {
-        int error_code = errno ? errno + ERRNO_OFFSET : FT_EINVAL;
+        int error_code = errno ? errno + ERRNO_OFFSET : FT_ERR_INVALID_ARGUMENT;
         std::fclose(file);
         ft_errno = error_code;
         return (error_code);
@@ -322,13 +322,13 @@ static int read_file_content(const char *file_path, char **out_content)
     if (size <= 0)
     {
         std::fclose(file);
-        ft_errno = FT_EINVAL;
-        return (FT_EINVAL);
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (FT_ERR_INVALID_ARGUMENT);
     }
     errno = 0;
     if (std::fseek(file, 0, SEEK_SET) != 0)
     {
-        int error_code = errno ? errno + ERRNO_OFFSET : FT_EINVAL;
+        int error_code = errno ? errno + ERRNO_OFFSET : FT_ERR_INVALID_ARGUMENT;
         std::fclose(file);
         ft_errno = error_code;
         return (error_code);
@@ -337,8 +337,8 @@ static int read_file_content(const char *file_path, char **out_content)
     if (!buffer)
     {
         std::fclose(file);
-        ft_errno = FT_EALLOC;
-        return (FT_EALLOC);
+        ft_errno = FT_ERR_NO_MEMORY;
+        return (FT_ERR_NO_MEMORY);
     }
     errno = 0;
     size_t read_size = std::fread(buffer, 1, static_cast<size_t>(size), file);
@@ -346,7 +346,7 @@ static int read_file_content(const char *file_path, char **out_content)
     if (read_size != static_cast<size_t>(size))
     {
         cma_free(buffer);
-        int error_code = errno ? errno + ERRNO_OFFSET : FT_EINVAL;
+        int error_code = errno ? errno + ERRNO_OFFSET : FT_ERR_INVALID_ARGUMENT;
         ft_errno = error_code;
         return (error_code);
     }
@@ -411,7 +411,7 @@ char *xml_document::write_to_string() const noexcept
 {
     if (!this->_root)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     char *result = ft_nullptr;
@@ -441,7 +441,7 @@ char *xml_document::write_to_string() const noexcept
             size_t length = buffer.size();
             result = static_cast<char *>(cma_malloc(length));
             if (!result)
-                error_code = FT_EALLOC;
+                error_code = FT_ERR_NO_MEMORY;
             else
             {
                 size_t index = 0;
@@ -472,8 +472,8 @@ int xml_document::write_to_file(const char *file_path) const noexcept
         int error_code = this->get_error();
         if (error_code == ER_SUCCESS)
         {
-            this->set_error(FT_EINVAL);
-            error_code = FT_EINVAL;
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
+            error_code = FT_ERR_INVALID_ARGUMENT;
         }
         return (error_code);
     }
@@ -481,7 +481,7 @@ int xml_document::write_to_file(const char *file_path) const noexcept
     FILE *file = std::fopen(file_path, "wb");
     if (!file)
     {
-        int error_code = errno ? errno + ERRNO_OFFSET : FT_EINVAL;
+        int error_code = errno ? errno + ERRNO_OFFSET : FT_ERR_INVALID_ARGUMENT;
         cma_free(content);
         this->set_error(error_code);
         return (error_code);
@@ -491,7 +491,7 @@ int xml_document::write_to_file(const char *file_path) const noexcept
     size_t written = std::fwrite(content, 1, length, file);
     if (written != length)
     {
-        int error_code = errno ? errno + ERRNO_OFFSET : FT_EINVAL;
+        int error_code = errno ? errno + ERRNO_OFFSET : FT_ERR_INVALID_ARGUMENT;
         std::fclose(file);
         cma_free(content);
         this->set_error(error_code);
@@ -500,7 +500,7 @@ int xml_document::write_to_file(const char *file_path) const noexcept
     errno = 0;
     if (std::fclose(file) != 0)
     {
-        int error_code = errno ? errno + ERRNO_OFFSET : FT_EINVAL;
+        int error_code = errno ? errno + ERRNO_OFFSET : FT_ERR_INVALID_ARGUMENT;
         cma_free(content);
         this->set_error(error_code);
         return (error_code);

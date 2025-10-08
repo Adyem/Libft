@@ -7,8 +7,8 @@ int pt_mutex::lock(pthread_t thread_id) const
 {
     if (this->_owner.load(std::memory_order_relaxed) == thread_id)
     {
-        ft_errno = PT_ERR_ALREADY_LOCKED;
-        this->set_error(PT_ERR_ALREADY_LOCKED);
+        ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
+        this->set_error(FT_ERR_MUTEX_ALREADY_LOCKED);
         return (-1);
     }
     this->set_error(ER_SUCCESS);

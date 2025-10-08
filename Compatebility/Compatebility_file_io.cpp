@@ -92,7 +92,7 @@ static int cmp_open_internal(const char *path_name, int flags, int mode)
     if (file_descriptor < 0)
     {
         CloseHandle(file_handle);
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         g_file_mutex.unlock(GetCurrentThreadId());
         return (-1);
     }
@@ -122,7 +122,7 @@ ssize_t cmp_read(int file_descriptor, void *buffer, unsigned int count)
     HANDLE file_handle = cmp_retrieve_handle(file_descriptor);
     if (file_handle == INVALID_HANDLE_VALUE)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         g_file_mutex.unlock(GetCurrentThreadId());
         return (-1);
     }
@@ -131,7 +131,7 @@ ssize_t cmp_read(int file_descriptor, void *buffer, unsigned int count)
     {
         if (file_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             g_file_mutex.unlock(GetCurrentThreadId());
             return (-1);
         }
@@ -155,7 +155,7 @@ ssize_t cmp_write(int file_descriptor, const void *buffer, unsigned int count)
     HANDLE file_handle = cmp_retrieve_handle(file_descriptor);
     if (file_handle == INVALID_HANDLE_VALUE)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         g_file_mutex.unlock(GetCurrentThreadId());
         return (-1);
     }
@@ -178,7 +178,7 @@ int cmp_close(int file_descriptor)
     HANDLE file_handle = cmp_retrieve_handle(file_descriptor);
     if (file_handle == INVALID_HANDLE_VALUE)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         g_file_mutex.unlock(GetCurrentThreadId());
         return (-1);
     }
@@ -284,7 +284,7 @@ ssize_t cmp_read(int file_descriptor, void *buffer, size_t count)
 {
     if (file_descriptor < 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     ssize_t bytes_read = read(file_descriptor, buffer, count);
@@ -301,7 +301,7 @@ ssize_t cmp_write(int file_descriptor, const void *buffer, size_t count)
 {
     if (file_descriptor < 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     ssize_t bytes_written = write(file_descriptor, buffer, count);
@@ -318,7 +318,7 @@ int cmp_close(int file_descriptor)
 {
     if (file_descriptor < 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     if (close(file_descriptor) == -1)

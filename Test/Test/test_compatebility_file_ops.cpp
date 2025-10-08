@@ -53,11 +53,11 @@ static void write_test_file(const char *path)
     return ;
 }
 
-FT_TEST(test_cmp_file_exists_null_pointer_sets_errno, "cmp_file_exists reports FT_EINVAL for null path")
+FT_TEST(test_cmp_file_exists_null_pointer_sets_errno, "cmp_file_exists reports FT_ERR_INVALID_ARGUMENT for null path")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(0, cmp_file_exists(ft_nullptr));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -78,18 +78,18 @@ FT_TEST(test_cmp_file_exists_success_clears_errno, "cmp_file_exists clears errno
 
     remove_file_if_present(path);
     write_test_file(path);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(1, cmp_file_exists(path));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     remove_file_if_present(path);
     return (1);
 }
 
-FT_TEST(test_cmp_file_delete_null_pointer_sets_errno, "cmp_file_delete reports FT_EINVAL for null path")
+FT_TEST(test_cmp_file_delete_null_pointer_sets_errno, "cmp_file_delete reports FT_ERR_INVALID_ARGUMENT for null path")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, cmp_file_delete(ft_nullptr));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -128,17 +128,17 @@ FT_TEST(test_cmp_file_delete_success_clears_errno, "cmp_file_delete clears errno
 
     remove_file_if_present(path);
     write_test_file(path);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(0, cmp_file_delete(path));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
-FT_TEST(test_cmp_file_move_null_pointer_sets_errno, "cmp_file_move reports FT_EINVAL for null source")
+FT_TEST(test_cmp_file_move_null_pointer_sets_errno, "cmp_file_move reports FT_ERR_INVALID_ARGUMENT for null source")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, cmp_file_move(ft_nullptr, "cmp_file_move_null_pointer_destination.txt"));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -185,11 +185,11 @@ FT_TEST(test_cmp_file_move_cross_device_copy_failure_preserves_errno, "cmp_file_
     return (1);
 }
 
-FT_TEST(test_cmp_file_copy_null_pointer_sets_errno, "cmp_file_copy reports FT_EINVAL for null source")
+FT_TEST(test_cmp_file_copy_null_pointer_sets_errno, "cmp_file_copy reports FT_ERR_INVALID_ARGUMENT for null source")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, cmp_file_copy(ft_nullptr, "cmp_file_copy_null_pointer_destination.txt"));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -229,7 +229,7 @@ FT_TEST(test_cmp_file_copy_success_clears_errno, "cmp_file_copy clears errno on 
     remove_file_if_present(source_path);
     remove_file_if_present(destination_path);
     write_test_file(source_path);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(0, cmp_file_copy(source_path, destination_path));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     cmp_file_delete(source_path);
@@ -237,11 +237,11 @@ FT_TEST(test_cmp_file_copy_success_clears_errno, "cmp_file_copy clears errno on 
     return (1);
 }
 
-FT_TEST(test_cmp_file_create_directory_null_pointer_sets_errno, "cmp_file_create_directory reports FT_EINVAL for null path")
+FT_TEST(test_cmp_file_create_directory_null_pointer_sets_errno, "cmp_file_create_directory reports FT_ERR_INVALID_ARGUMENT for null path")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, cmp_file_create_directory(ft_nullptr, 0700));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -291,7 +291,7 @@ FT_TEST(test_cmp_file_create_directory_success_clears_errno, "cmp_file_create_di
     const char *directory_path = "cmp_file_create_directory_success";
 
     remove_directory_if_present(directory_path);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(0, cmp_file_create_directory(directory_path, 0700));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     remove_directory_if_present(directory_path);

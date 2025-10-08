@@ -146,7 +146,7 @@ int ft_map3d::get(size_t x, size_t y, size_t z) const
 {
     if (!this->_data || x >= this->_width || y >= this->_height || z >= this->_depth)
     {
-        const_cast<ft_map3d*>(this)->set_error(MAP3D_OUT_OF_BOUNDS);
+        const_cast<ft_map3d*>(this)->set_error(FT_ERR_OUT_OF_RANGE);
         return (0);
     }
     const_cast<ft_map3d*>(this)->set_error(ER_SUCCESS);
@@ -157,7 +157,7 @@ void ft_map3d::set(size_t x, size_t y, size_t z, int value)
 {
     if (!this->_data || x >= this->_width || y >= this->_height || z >= this->_depth)
     {
-        this->set_error(MAP3D_OUT_OF_BOUNDS);
+        this->set_error(FT_ERR_OUT_OF_RANGE);
         return ;
     }
     this->_data[z][y][x] = value;
@@ -180,7 +180,7 @@ void ft_map3d::toggle_obstacle(size_t x, size_t y, size_t z, ft_pathfinding *lis
 {
     if (!this->_data || x >= this->_width || y >= this->_height || z >= this->_depth)
     {
-        this->set_error(MAP3D_OUT_OF_BOUNDS);
+        this->set_error(FT_ERR_OUT_OF_RANGE);
         return ;
     }
     if (this->_data[z][y][x] == 0)
@@ -225,7 +225,7 @@ void ft_map3d::allocate(size_t width, size_t height, size_t depth, int value)
     this->_data = static_cast<int***>(cma_malloc(sizeof(int**) * depth));
     if (!this->_data)
     {
-        this->set_error(MAP3D_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
     size_t z = 0;
@@ -240,7 +240,7 @@ void ft_map3d::allocate(size_t width, size_t height, size_t depth, int value)
         this->_data[z] = static_cast<int**>(cma_malloc(sizeof(int*) * height));
         if (!this->_data[z])
         {
-            this->set_error(MAP3D_ALLOC_FAIL);
+            this->set_error(FT_ERR_NO_MEMORY);
             this->deallocate();
             return ;
         }
@@ -256,7 +256,7 @@ void ft_map3d::allocate(size_t width, size_t height, size_t depth, int value)
             this->_data[z][y] = static_cast<int*>(cma_malloc(sizeof(int) * width));
             if (!this->_data[z][y])
             {
-                this->set_error(MAP3D_ALLOC_FAIL);
+                this->set_error(FT_ERR_NO_MEMORY);
                 this->deallocate();
                 return ;
             }

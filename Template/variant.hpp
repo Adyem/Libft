@@ -139,7 +139,7 @@ ft_variant<Types...>::ft_variant()
       _index(npos), _error_code(ER_SUCCESS)
 {
     if (this->_data == ft_nullptr)
-        this->set_error(VARIANT_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
     return ;
 }
 
@@ -223,7 +223,7 @@ void ft_variant<Types...>::emplace(T&& value)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     if (this->_data == ft_nullptr)
@@ -231,7 +231,7 @@ void ft_variant<Types...>::emplace(T&& value)
         this->_data = static_cast<storage_t*>(cma_malloc(sizeof(storage_t)));
         if (this->_data == ft_nullptr)
         {
-            this->set_error(VARIANT_ALLOC_FAIL);
+            this->set_error(FT_ERR_NO_MEMORY);
             this->_mutex.unlock(THREAD_ID);
             return ;
         }
@@ -250,7 +250,7 @@ bool ft_variant<Types...>::holds_alternative() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        const_cast<ft_variant*>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        const_cast<ft_variant*>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (false);
     }
     size_t idx = variant_index<T, Types...>::value;
@@ -267,13 +267,13 @@ T& ft_variant<Types...>::get()
     static T default_instance = T();
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (default_instance);
     }
     size_t idx = variant_index<T, Types...>::value;
     if (this->_index != idx)
     {
-        this->set_error(VARIANT_BAD_ACCESS);
+        this->set_error(FT_ERR_INVALID_OPERATION);
         this->_mutex.unlock(THREAD_ID);
         return (default_instance);
     }
@@ -290,13 +290,13 @@ const T& ft_variant<Types...>::get() const
     static T default_instance = T();
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        const_cast<ft_variant*>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        const_cast<ft_variant*>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (default_instance);
     }
     size_t idx = variant_index<T, Types...>::value;
     if (this->_index != idx)
     {
-        const_cast<ft_variant*>(this)->set_error(VARIANT_BAD_ACCESS);
+        const_cast<ft_variant*>(this)->set_error(FT_ERR_INVALID_OPERATION);
         this->_mutex.unlock(THREAD_ID);
         return (default_instance);
     }
@@ -312,12 +312,12 @@ void ft_variant<Types...>::visit(Visitor&& vis)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     if (this->_index == npos)
     {
-        this->set_error(VARIANT_BAD_ACCESS);
+        this->set_error(FT_ERR_INVALID_OPERATION);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }

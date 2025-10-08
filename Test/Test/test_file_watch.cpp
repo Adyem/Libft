@@ -15,8 +15,8 @@ FT_TEST(test_file_watch_error_resets_after_success, "ft_file_watch resets error 
     ft_file_watch file_watch;
 
     FT_ASSERT_EQ(-1, file_watch.watch_directory(ft_nullptr, ft_nullptr, ft_nullptr));
-    FT_ASSERT_EQ(FT_EINVAL, file_watch.get_error());
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, file_watch.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(0, file_watch.watch_directory(".", &file_watch_noop_callback, ft_nullptr));
     FT_ASSERT_EQ(ER_SUCCESS, file_watch.get_error());
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);

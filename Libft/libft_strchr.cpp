@@ -7,7 +7,7 @@ char    *ft_strchr(const char *string, int char_to_find)
     ft_errno = ER_SUCCESS;
     if (!string)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     char target_char = static_cast<char>(char_to_find);

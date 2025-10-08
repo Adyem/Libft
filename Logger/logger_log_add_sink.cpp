@@ -7,7 +7,7 @@ int ft_log_add_sink(t_log_sink sink, void *user_data)
 {
     if (!sink)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     s_log_sink entry;

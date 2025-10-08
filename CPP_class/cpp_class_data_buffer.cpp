@@ -122,7 +122,7 @@ bool DataBuffer::seek(size_t pos) noexcept
         return (true);
     }
     this->_ok = false;
-    this->set_error(FT_EINVAL);
+    this->set_error(FT_ERR_INVALID_ARGUMENT);
     return (false);
 }
 
@@ -175,7 +175,7 @@ DataBuffer& DataBuffer::operator>>(size_t& len)
     if (this->_read_pos + sizeof(size_t) > this->_buffer.size())
     {
         this->_ok = false;
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (*this);
     }
     ft_memcpy(&len, this->_buffer.begin() + this->_read_pos, sizeof(size_t));
