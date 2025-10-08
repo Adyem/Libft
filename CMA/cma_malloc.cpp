@@ -17,7 +17,7 @@ void* cma_malloc(ft_size_t size)
 {
     if (size > FT_SYSTEM_SIZE_MAX)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     if (OFFSWITCH == 1)
@@ -29,7 +29,7 @@ void* cma_malloc(ft_size_t size)
             ft_errno = ER_SUCCESS;
         }
         else
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_ERR_NO_MEMORY;
         if (ft_log_get_alloc_logging())
             ft_log_debug("cma_malloc %llu -> %p",
                 static_cast<unsigned long long>(size), ptr);
@@ -40,7 +40,7 @@ void* cma_malloc(ft_size_t size)
         size = 1;
     if (g_cma_alloc_limit != 0 && size > g_cma_alloc_limit)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     if (g_cma_thread_safe)
@@ -54,7 +54,7 @@ void* cma_malloc(ft_size_t size)
         {
             int error_code;
 
-            error_code = FT_EALLOC;
+            error_code = FT_ERR_NO_MEMORY;
             if (g_cma_thread_safe)
                 g_malloc_mutex.unlock(THREAD_ID);
             ft_errno = error_code;

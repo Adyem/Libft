@@ -7,7 +7,7 @@ void ft_to_upper(char *string)
     ft_errno = ER_SUCCESS;
     if (string == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     while (*string != '\0')

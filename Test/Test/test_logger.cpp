@@ -138,7 +138,7 @@ FT_TEST(test_logger_rotate_success_clears_errno, "ft_log_rotate clears errno aft
     sink.path = ft_string(template_path);
     FT_ASSERT_EQ(ER_SUCCESS, sink.path.get_error());
     sink.max_size = 4;
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     errno = 0;
     ft_log_rotate(&sink);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -200,7 +200,7 @@ FT_TEST(test_ft_log_set_level_updates_global_threshold, "ft_log_set_level update
 
     previous_level = g_level;
     previous_errno_value = ft_errno;
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     ft_log_set_level(LOG_LEVEL_ERROR);
     FT_ASSERT_EQ(LOG_LEVEL_ERROR, g_level);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -218,10 +218,10 @@ FT_TEST(test_ft_log_alloc_logging_without_global_logger, "ft_log_set_alloc_loggi
     FT_ASSERT(previous_logger == ft_nullptr);
     g_logger = ft_nullptr;
     previous_errno_value = ft_errno;
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     ft_log_set_alloc_logging(true);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(false, ft_log_get_alloc_logging());
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     g_logger = previous_logger;
@@ -241,21 +241,21 @@ FT_TEST(test_ft_log_global_helpers_forward_to_logger, "ft_log_* helpers forward 
         ft_logger logger_instance;
 
         logger_instance.set_global();
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         ft_log_set_alloc_logging(true);
         FT_ASSERT_EQ(true, logger_instance.get_alloc_logging());
         FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
 
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         FT_ASSERT_EQ(true, ft_log_get_alloc_logging());
         FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
 
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         ft_log_set_api_logging(true);
         FT_ASSERT_EQ(true, logger_instance.get_api_logging());
         FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
 
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         FT_ASSERT_EQ(true, ft_log_get_api_logging());
         FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
 

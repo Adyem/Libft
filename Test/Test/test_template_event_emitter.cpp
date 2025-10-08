@@ -63,7 +63,7 @@ FT_TEST(test_ft_event_emitter_remove_listener_stops_callback, "ft_event_emitter 
     FT_ASSERT_EQ(4, g_event_listener_two_total);
 
     emitter_instance.remove_listener(3, event_listener_add_to_first);
-    FT_ASSERT_EQ(EVENT_EMITTER_NOT_FOUND, emitter_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, emitter_instance.get_error());
     return (1);
 }
 
@@ -72,7 +72,7 @@ FT_TEST(test_ft_event_emitter_emit_missing_sets_error, "ft_event_emitter reports
     ft_event_emitter<int, int> emitter_instance;
 
     emitter_instance.emit(1, 10);
-    FT_ASSERT_EQ(EVENT_EMITTER_NOT_FOUND, emitter_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, emitter_instance.get_error());
     FT_ASSERT_EQ(0UL, emitter_instance.size());
     FT_ASSERT(emitter_instance.empty());
     return (1);
@@ -86,7 +86,7 @@ FT_TEST(test_ft_event_emitter_allocation_failure_sets_error, "ft_event_emitter s
     emitter_instance.on(9, event_listener_add_to_first);
     cma_set_alloc_limit(0);
 
-    FT_ASSERT_EQ(EVENT_EMITTER_ALLOC_FAIL, emitter_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, emitter_instance.get_error());
     FT_ASSERT_EQ(0UL, emitter_instance.size());
     FT_ASSERT(emitter_instance.empty());
     return (1);
@@ -124,7 +124,7 @@ FT_TEST(test_ft_event_emitter_capacity_overflow_sets_error, "ft_event_emitter de
     desired_capacity = std::numeric_limits<size_t>::max();
     ensured = ft_event_emitter_test_helper<int, int>::ensure_capacity(emitter_instance, desired_capacity);
     FT_ASSERT_EQ(false, ensured);
-    FT_ASSERT_EQ(FT_ERANGE, emitter_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, emitter_instance.get_error());
     FT_ASSERT(emitter_instance.empty());
     return (1);
 }

@@ -43,7 +43,7 @@ int cma_checked_free(void* ptr)
     {
         if (g_cma_thread_safe)
             g_malloc_mutex.unlock(THREAD_ID);
-        ft_errno = CMA_INVALID_PTR;
+        ft_errno = FT_ERR_INVALID_POINTER;
         return (-1);
     }
     found->free = true;

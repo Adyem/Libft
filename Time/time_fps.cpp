@@ -11,7 +11,7 @@ time_fps::time_fps(long frames_per_second)
     this->set_error(ER_SUCCESS);
     if (frames_per_second < 24)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_frames_per_second = frames_per_second;
@@ -28,7 +28,7 @@ long    time_fps::get_frames_per_second()
 {
     if (this->_frames_per_second <= 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     this->set_error(ER_SUCCESS);
@@ -42,7 +42,7 @@ int     time_fps::set_frames_per_second(long frames_per_second)
         this->_frames_per_second = 0;
         this->_frame_duration_ms = 0.0;
         this->_last_frame_time = std::chrono::steady_clock::now();
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     this->_frames_per_second = frames_per_second;
@@ -60,7 +60,7 @@ void    time_fps::sleep_to_next_frame()
 
     if (this->_frame_duration_ms <= 0.0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     now = std::chrono::steady_clock::now();

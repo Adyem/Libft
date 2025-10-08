@@ -54,7 +54,7 @@ static bool api_http_apply_timeouts(ft_socket &socket_wrapper, int timeout)
 
 static bool api_http_is_recoverable_send_error(int error_code)
 {
-    if (error_code == SOCKET_SEND_FAILED)
+    if (error_code == FT_ERR_SOCKET_SEND_FAILED)
         return (true);
 #ifdef _WIN32
     if (error_code == (WSAECONNRESET + ERRNO_OFFSET))
@@ -81,9 +81,9 @@ static bool api_http_should_retry_plain(int error_code)
     if (error_code == (ECONNRESET + ERRNO_OFFSET))
         return (true);
 #endif
-    if (error_code == SOCKET_RECEIVE_FAILED)
+    if (error_code == FT_ERR_SOCKET_RECEIVE_FAILED)
         return (true);
-    if (error_code == SOCKET_CONNECT_FAILED)
+    if (error_code == FT_ERR_SOCKET_CONNECT_FAILED)
         return (true);
     return (false);
 }
@@ -113,10 +113,10 @@ static bool api_http_prepare_plain_socket(
         int socket_error_code;
 
         socket_error_code = new_socket.get_error();
-        if (socket_error_code == SOCKET_INVALID_CONFIGURATION)
-            error_code = SOCKET_INVALID_CONFIGURATION;
+        if (socket_error_code == FT_ERR_CONFIGURATION)
+            error_code = FT_ERR_CONFIGURATION;
         else
-            error_code = SOCKET_CONNECT_FAILED;
+            error_code = FT_ERR_SOCKET_CONNECT_FAILED;
         return (false);
     }
     connection_handle.socket = std::move(new_socket);
@@ -154,7 +154,7 @@ static bool api_http_send_request(ft_socket &socket_wrapper,
         else if (ft_errno != ER_SUCCESS)
             error_code = ft_errno;
         else
-            error_code = FT_EIO;
+            error_code = FT_ERR_IO;
         return (false);
     }
     return (true);
@@ -170,7 +170,7 @@ static bool api_http_prepare_request(const char *method, const char *path,
     body_string.clear();
     if (!method || !path)
     {
-        error_code = FT_EINVAL;
+        error_code = FT_ERR_INVALID_ARGUMENT;
         return (false);
     }
     request = method;
@@ -232,7 +232,7 @@ static bool api_http_prepare_request(const char *method, const char *path,
         if (!temporary_string)
         {
             if (ft_errno == ER_SUCCESS)
-                error_code = FT_EALLOC;
+                error_code = FT_ERR_NO_MEMORY;
             else
                 error_code = ft_errno;
             return (false);
@@ -253,7 +253,7 @@ static bool api_http_prepare_request(const char *method, const char *path,
         if (!api_append_content_length_header(request, body_string.size()))
         {
             if (ft_errno == ER_SUCCESS)
-                error_code = FT_EIO;
+                error_code = FT_ERR_IO;
             else
                 error_code = ft_errno;
             return (false);
@@ -291,7 +291,7 @@ bool api_http_stream_invoke_body(
             is_final_chunk, streaming_handler->user_data);
     if (!callback_result)
     {
-        error_code = FT_EIO;
+        error_code = FT_ERR_IO;
         return (false);
     }
     return (true);
@@ -359,13 +359,13 @@ bool api_http_stream_process_chunked_buffer(ft_string &buffer,
             if (!api_http_parse_hex(buffer.c_str(),
                     buffer.c_str() + line_length, chunk_size_value))
             {
-                error_code = FT_EIO;
+                error_code = FT_ERR_IO;
                 return (false);
             }
             buffer.erase(0, line_length + 2);
             if (chunk_size_value < 0)
             {
-                error_code = FT_EIO;
+                error_code = FT_ERR_IO;
                 return (false);
             }
             if (chunk_size_value == 0)
@@ -388,12 +388,12 @@ bool api_http_stream_process_chunked_buffer(ft_string &buffer,
         buffer.erase(0, required_size);
         if (buffer.size() < 2)
         {
-            error_code = FT_EIO;
+            error_code = FT_ERR_IO;
             return (false);
         }
         if (buffer.c_str()[0] != '\r' || buffer.c_str()[1] != '\n')
         {
-            error_code = FT_EIO;
+            error_code = FT_ERR_IO;
             return (false);
         }
         buffer.erase(0, 2);
@@ -440,7 +440,7 @@ static bool api_http_streaming_flush_buffer(ft_string &streaming_body_buffer,
         }
         if (final_chunk_sent && streaming_body_buffer.size() > 0)
         {
-            error_code = FT_EIO;
+            error_code = FT_ERR_IO;
             return (false);
         }
         return (true);
@@ -453,7 +453,7 @@ static bool api_http_streaming_flush_buffer(ft_string &streaming_body_buffer,
             return (false);
         if (final_chunk_sent && streaming_body_buffer.size() > 0)
         {
-            error_code = FT_EIO;
+            error_code = FT_ERR_IO;
             return (false);
         }
         return (true);
@@ -509,27 +509,27 @@ static bool api_http_receive_response(ft_socket &socket_wrapper,
             else if (ft_errno != ER_SUCCESS)
                 error_code = ft_errno;
             else
-                error_code = FT_EIO;
+                error_code = FT_ERR_IO;
 #ifdef _WIN32
             if (error_code == (WSAEWOULDBLOCK + ERRNO_OFFSET)
                 || error_code == (WSAETIMEDOUT + ERRNO_OFFSET))
-                error_code = SOCKET_RECEIVE_FAILED;
+                error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
 #else
             if (error_code == (EAGAIN + ERRNO_OFFSET)
                 || error_code == (EWOULDBLOCK + ERRNO_OFFSET)
                 || error_code == (ETIMEDOUT + ERRNO_OFFSET))
-                error_code = SOCKET_RECEIVE_FAILED;
+                error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
 #endif
-            if (error_code == FT_EIO && socket_error_code == ER_SUCCESS
+            if (error_code == FT_ERR_IO && socket_error_code == ER_SUCCESS
                 && ft_errno == ER_SUCCESS)
-                error_code = SOCKET_RECEIVE_FAILED;
+                error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
             return (false);
         }
         if (received == 0)
         {
             if (!headers_complete)
             {
-                error_code = FT_EIO;
+                error_code = FT_ERR_IO;
                 return (false);
             }
             if (!streaming_enabled)
@@ -541,7 +541,7 @@ static bool api_http_receive_response(ft_socket &socket_wrapper,
                     expected_size = static_cast<size_t>(content_length);
                     if (response.size() < header_length + expected_size)
                     {
-                        error_code = FT_EIO;
+                        error_code = FT_ERR_IO;
                         return (false);
                     }
                 }
@@ -553,7 +553,7 @@ static bool api_http_receive_response(ft_socket &socket_wrapper,
                             response.c_str() + header_length,
                             response.size() - header_length, consumed_length))
                     {
-                        error_code = FT_EIO;
+                        error_code = FT_ERR_IO;
                         return (false);
                     }
                 }
@@ -572,7 +572,7 @@ static bool api_http_receive_response(ft_socket &socket_wrapper,
                     || chunk_stream_remaining >= 0
                     || streaming_body_buffer.size() > 0)
                 {
-                    error_code = FT_EIO;
+                    error_code = FT_ERR_IO;
                     return (false);
                 }
                 break ;
@@ -582,7 +582,7 @@ static bool api_http_receive_response(ft_socket &socket_wrapper,
                 if (static_cast<long long>(streaming_delivered)
                     != content_length)
                 {
-                    error_code = FT_EIO;
+                    error_code = FT_ERR_IO;
                     return (false);
                 }
                 if (!final_chunk_sent)
@@ -618,7 +618,7 @@ static bool api_http_receive_response(ft_socket &socket_wrapper,
             {
                 if (!streaming_enabled && response.size() >= sizeof(buffer))
                 {
-                    error_code = FT_EIO;
+                    error_code = FT_ERR_IO;
                     return (false);
                 }
                 continue ;
@@ -692,7 +692,7 @@ static bool api_http_receive_response(ft_socket &socket_wrapper,
                 }
                 else if (response.size() >= sizeof(buffer))
                 {
-                    error_code = FT_EIO;
+                    error_code = FT_ERR_IO;
                     return (false);
                 }
             }
@@ -748,7 +748,7 @@ static bool api_http_receive_response(ft_socket &socket_wrapper,
     }
     if (response.size() == 0)
     {
-        error_code = FT_EIO;
+        error_code = FT_ERR_IO;
         return (false);
     }
     if (streaming_enabled)
@@ -760,7 +760,7 @@ static bool api_http_receive_response(ft_socket &socket_wrapper,
     headers_end = ft_strstr(response.c_str(), "\r\n\r\n");
     if (!headers_end)
     {
-        error_code = FT_EIO;
+        error_code = FT_ERR_IO;
         return (false);
     }
     headers_end += 2;
@@ -792,12 +792,12 @@ static char *api_http_execute_plain_once(
         if (last_error != 0)
             error_code = last_error + ERRNO_OFFSET;
         else
-            error_code = SOCKET_INVALID_CONFIGURATION;
+            error_code = FT_ERR_CONFIGURATION;
 #else
         if (errno != 0)
             error_code = errno + ERRNO_OFFSET;
         else
-            error_code = SOCKET_INVALID_CONFIGURATION;
+            error_code = FT_ERR_CONFIGURATION;
 #endif
         return (ft_nullptr);
     }
@@ -819,14 +819,14 @@ static char *api_http_execute_plain_once(
         api_connection_pool_disable_store(connection_handle);
 #ifdef _WIN32
         if (send_error_code == (WSAECONNRESET + ERRNO_OFFSET))
-            send_error_code = SOCKET_SEND_FAILED;
+            send_error_code = FT_ERR_SOCKET_SEND_FAILED;
         if (send_error_code == (WSAECONNABORTED + ERRNO_OFFSET))
-            send_error_code = SOCKET_SEND_FAILED;
+            send_error_code = FT_ERR_SOCKET_SEND_FAILED;
 #else
         if (send_error_code == (ECONNRESET + ERRNO_OFFSET))
-            send_error_code = SOCKET_SEND_FAILED;
+            send_error_code = FT_ERR_SOCKET_SEND_FAILED;
         if (send_error_code == (EPIPE + ERRNO_OFFSET))
-            send_error_code = SOCKET_SEND_FAILED;
+            send_error_code = FT_ERR_SOCKET_SEND_FAILED;
 #endif
         if (!api_http_is_recoverable_send_error(send_error_code))
             return (ft_nullptr);
@@ -873,7 +873,7 @@ static char *api_http_execute_plain_once(
         if (!api_http_decode_chunked(body_start, body_length, decoded_body,
                 consumed_length))
         {
-            error_code = FT_EIO;
+            error_code = FT_ERR_IO;
             return (ft_nullptr);
         }
         result_source = decoded_body.c_str();
@@ -887,7 +887,7 @@ static char *api_http_execute_plain_once(
         expected_length = static_cast<size_t>(content_length);
         if (body_length < expected_length)
         {
-            error_code = FT_EIO;
+            error_code = FT_ERR_IO;
             return (ft_nullptr);
         }
         decoded_body.clear();
@@ -925,7 +925,7 @@ static char *api_http_execute_plain_once(
     if (!result_body)
     {
         if (ft_errno == ER_SUCCESS)
-            error_code = FT_EALLOC;
+            error_code = FT_ERR_NO_MEMORY;
         else
             error_code = ft_errno;
         return (ft_nullptr);
@@ -961,12 +961,12 @@ static bool api_http_execute_plain_streaming_once(
         if (last_error != 0)
             error_code = last_error + ERRNO_OFFSET;
         else
-            error_code = SOCKET_INVALID_CONFIGURATION;
+            error_code = FT_ERR_CONFIGURATION;
 #else
         if (errno != 0)
             error_code = errno + ERRNO_OFFSET;
         else
-            error_code = SOCKET_INVALID_CONFIGURATION;
+            error_code = FT_ERR_CONFIGURATION;
 #endif
         return (false);
     }
@@ -988,14 +988,14 @@ static bool api_http_execute_plain_streaming_once(
         api_connection_pool_disable_store(connection_handle);
 #ifdef _WIN32
         if (send_error_code == (WSAECONNRESET + ERRNO_OFFSET))
-            send_error_code = SOCKET_SEND_FAILED;
+            send_error_code = FT_ERR_SOCKET_SEND_FAILED;
         if (send_error_code == (WSAECONNABORTED + ERRNO_OFFSET))
-            send_error_code = SOCKET_SEND_FAILED;
+            send_error_code = FT_ERR_SOCKET_SEND_FAILED;
 #else
         if (send_error_code == (ECONNRESET + ERRNO_OFFSET))
-            send_error_code = SOCKET_SEND_FAILED;
+            send_error_code = FT_ERR_SOCKET_SEND_FAILED;
         if (send_error_code == (EPIPE + ERRNO_OFFSET))
-            send_error_code = SOCKET_SEND_FAILED;
+            send_error_code = FT_ERR_SOCKET_SEND_FAILED;
 #endif
         if (!api_http_is_recoverable_send_error(send_error_code))
             return (false);
@@ -1100,7 +1100,7 @@ bool api_http_execute_plain_streaming(
             current_delay = api_retry_prepare_delay(initial_delay, max_delay);
     }
     if (error_code == ER_SUCCESS)
-        error_code = FT_EIO;
+        error_code = FT_ERR_IO;
     return (false);
 }
 
@@ -1183,7 +1183,7 @@ char *api_http_execute_plain_http2(api_connection_pool_handle &connection_handle
     }
     used_http2 = false;
     if (error_code == ER_SUCCESS)
-        error_code = FT_EIO;
+        error_code = FT_ERR_IO;
     return (ft_nullptr);
 }
 
@@ -1245,7 +1245,7 @@ char *api_http_execute_plain(api_connection_pool_handle &connection_handle,
                     max_delay);
     }
     if (error_code == ER_SUCCESS)
-        error_code = FT_EIO;
+        error_code = FT_ERR_IO;
     return (ft_nullptr);
 }
 
@@ -1267,7 +1267,7 @@ static char *api_http_execute_plain_http2_once(
     error_code = ER_SUCCESS;
     if (!method || !path)
     {
-        error_code = FT_EINVAL;
+        error_code = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     field_entry.name = ":method";
@@ -1363,7 +1363,7 @@ static char *api_http_execute_plain_http2_once(
     if (!http2_compress_headers(header_fields, compressed_headers, error_code))
     {
         if (error_code == ER_SUCCESS)
-            error_code = FT_EIO;
+            error_code = FT_ERR_IO;
         return (ft_nullptr);
     }
     headers_frame.type = 0x1;
@@ -1378,7 +1378,7 @@ static char *api_http_execute_plain_http2_once(
     if (!http2_encode_frame(headers_frame, encoded_frame, error_code))
     {
         if (error_code == ER_SUCCESS)
-            error_code = FT_EIO;
+            error_code = FT_ERR_IO;
         return (ft_nullptr);
     }
     if (!stream_manager.open_stream(1))

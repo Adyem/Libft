@@ -10,18 +10,18 @@
 static int map_zlib_error(int zlib_status)
 {
     if (zlib_status == Z_MEM_ERROR)
-        return (FT_EALLOC);
+        return (FT_ERR_NO_MEMORY);
     if (zlib_status == Z_BUF_ERROR)
-        return (FT_EIO);
+        return (FT_ERR_IO);
     if (zlib_status == Z_NEED_DICT)
-        return (FT_EINVAL);
+        return (FT_ERR_INVALID_ARGUMENT);
     if (zlib_status == Z_DATA_ERROR)
-        return (FT_EINVAL);
+        return (FT_ERR_INVALID_ARGUMENT);
     if (zlib_status == Z_STREAM_ERROR)
-        return (FT_EINVAL);
+        return (FT_ERR_INVALID_ARGUMENT);
     if (zlib_status == Z_VERSION_ERROR)
-        return (FT_EINVAL);
-    return (FT_EINVAL);
+        return (FT_ERR_INVALID_ARGUMENT);
+    return (FT_ERR_INVALID_ARGUMENT);
 }
 
 static int compress_stream_default_deflate_init(z_stream *stream, int compression_level)
@@ -96,7 +96,7 @@ int ft_compress_stream(int input_fd, int output_fd)
 
     if (input_fd < 0 || output_fd < 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (1);
     }
     ft_bzero(&stream, sizeof(stream));
@@ -113,7 +113,7 @@ int ft_compress_stream(int input_fd, int output_fd)
         if (read_bytes < 0)
         {
             deflateEnd(&stream);
-            ft_errno = FT_EIO;
+            ft_errno = FT_ERR_IO;
             return (1);
         }
         stream.next_in = input_buffer;
@@ -137,7 +137,7 @@ int ft_compress_stream(int input_fd, int output_fd)
             if (su_write(output_fd, output_buffer, produced_bytes) != static_cast<ssize_t>(produced_bytes))
             {
                 deflateEnd(&stream);
-                ft_errno = FT_EIO;
+                ft_errno = FT_ERR_IO;
                 return (1);
             }
         }
@@ -160,7 +160,7 @@ int ft_decompress_stream(int input_fd, int output_fd)
 
     if (input_fd < 0 || output_fd < 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (1);
     }
     ft_bzero(&stream, sizeof(stream));
@@ -178,7 +178,7 @@ int ft_decompress_stream(int input_fd, int output_fd)
         if (read_bytes < 0)
         {
             inflateEnd(&stream);
-            ft_errno = FT_EIO;
+            ft_errno = FT_ERR_IO;
             return (1);
         }
         stream.next_in = input_buffer;
@@ -208,7 +208,7 @@ int ft_decompress_stream(int input_fd, int output_fd)
             if (su_write(output_fd, output_buffer, produced_bytes) != static_cast<ssize_t>(produced_bytes))
             {
                 inflateEnd(&stream);
-                ft_errno = FT_EIO;
+                ft_errno = FT_ERR_IO;
                 return (1);
             }
         }
@@ -218,7 +218,7 @@ int ft_decompress_stream(int input_fd, int output_fd)
             if (stream.avail_in != 0)
             {
                 inflateEnd(&stream);
-                ft_errno = FT_EINVAL;
+                ft_errno = FT_ERR_INVALID_ARGUMENT;
                 return (1);
             }
             break ;
@@ -226,7 +226,7 @@ int ft_decompress_stream(int input_fd, int output_fd)
         if (flush_mode == Z_FINISH)
         {
             inflateEnd(&stream);
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (1);
         }
     }

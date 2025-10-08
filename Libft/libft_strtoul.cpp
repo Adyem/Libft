@@ -27,14 +27,14 @@ unsigned long ft_strtoul(const char *input_string, char **end_pointer, int numer
 
     if (current_character == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         if (end_pointer != ft_nullptr)
             *end_pointer = ft_nullptr;
         return (0UL);
     }
     if (numeric_base != 0 && (numeric_base < 2 || numeric_base > 36))
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         if (end_pointer != ft_nullptr)
             *end_pointer = const_cast<char *>(input_string);
         return (0UL);
@@ -96,7 +96,7 @@ unsigned long ft_strtoul(const char *input_string, char **end_pointer, int numer
     }
     if (!digit_processed)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         if (end_pointer != ft_nullptr)
             *end_pointer = const_cast<char *>(input_string);
         return (0UL);
@@ -104,7 +104,7 @@ unsigned long ft_strtoul(const char *input_string, char **end_pointer, int numer
     if (end_pointer)
         *end_pointer = const_cast<char *>(current_character);
     if (overflow_detected)
-        ft_errno = FT_ERANGE;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
     if (sign_value < 0)
     {
         if (overflow_detected)

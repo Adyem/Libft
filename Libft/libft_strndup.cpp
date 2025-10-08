@@ -12,14 +12,14 @@ char *ft_strndup(const char *string, size_t maximum_length)
     ft_errno = ER_SUCCESS;
     if (string == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     copy_length = ft_strnlen(string, maximum_length);
     duplicate = static_cast<char *>(cma_malloc(copy_length + 1));
     if (duplicate == ft_nullptr)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     index = 0;

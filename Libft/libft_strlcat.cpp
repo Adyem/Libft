@@ -11,7 +11,7 @@ size_t ft_strlcat(char *destination, const char *source, size_t buffer_size)
     ft_errno = ER_SUCCESS;
     if (source == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
     source_length = ft_strlen_size_t(source);
@@ -23,7 +23,7 @@ size_t ft_strlcat(char *destination, const char *source, size_t buffer_size)
     }
     if (destination == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
     destination_length = 0;

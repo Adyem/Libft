@@ -32,7 +32,7 @@ Iterator<ValueType>::Iterator(ValueType* ptr) noexcept
     : _ptr(ptr), _error_code(ER_SUCCESS)
 {
     if (this->_ptr == ft_nullptr)
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
     else
         this->set_error(ER_SUCCESS);
     return ;
@@ -87,7 +87,7 @@ Iterator<ValueType> Iterator<ValueType>::operator++() noexcept
 {
     if (this->_ptr == ft_nullptr)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (*this);
     }
     ++this->_ptr;
@@ -108,7 +108,7 @@ ValueType& Iterator<ValueType>::operator*() const noexcept
 {
     if (this->_ptr == ft_nullptr)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         static ValueType default_value = ValueType();
         return (default_value);
     }

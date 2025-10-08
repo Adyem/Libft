@@ -61,7 +61,7 @@ ft_circular_buffer<ElementType>::ft_circular_buffer(size_t capacity)
     _buffer = static_cast<ElementType*>(cma_malloc(sizeof(ElementType) * capacity));
     if (_buffer == ft_nullptr)
     {
-        this->set_error(CIRCULAR_BUFFER_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
         _capacity = 0;
         return ;
     }
@@ -137,12 +137,12 @@ void ft_circular_buffer<ElementType>::push(const ElementType& value)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     if (this->_size == this->_capacity)
     {
-        this->set_error(CIRCULAR_BUFFER_FULL);
+        this->set_error(FT_ERR_FULL);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
@@ -159,12 +159,12 @@ void ft_circular_buffer<ElementType>::push(ElementType&& value)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     if (this->_size == this->_capacity)
     {
-        this->set_error(CIRCULAR_BUFFER_FULL);
+        this->set_error(FT_ERR_FULL);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
@@ -181,12 +181,12 @@ ElementType ft_circular_buffer<ElementType>::pop()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (ElementType());
     }
     if (this->_size == 0)
     {
-        this->set_error(CIRCULAR_BUFFER_EMPTY);
+        this->set_error(FT_ERR_EMPTY);
         this->_mutex.unlock(THREAD_ID);
         return (ElementType());
     }
@@ -204,7 +204,7 @@ bool ft_circular_buffer<ElementType>::is_full() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        const_cast<ft_circular_buffer<ElementType> *>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        const_cast<ft_circular_buffer<ElementType> *>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (false);
     }
     bool res = (this->_size == this->_capacity);
@@ -218,7 +218,7 @@ bool ft_circular_buffer<ElementType>::is_empty() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        const_cast<ft_circular_buffer<ElementType> *>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        const_cast<ft_circular_buffer<ElementType> *>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (true);
     }
     bool res = (this->_size == 0);
@@ -232,7 +232,7 @@ size_t ft_circular_buffer<ElementType>::size() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        const_cast<ft_circular_buffer<ElementType> *>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        const_cast<ft_circular_buffer<ElementType> *>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (0);
     }
     size_t s = this->_size;
@@ -246,7 +246,7 @@ size_t ft_circular_buffer<ElementType>::capacity() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        const_cast<ft_circular_buffer<ElementType> *>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        const_cast<ft_circular_buffer<ElementType> *>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (0);
     }
     size_t c = this->_capacity;
@@ -280,7 +280,7 @@ void ft_circular_buffer<ElementType>::clear()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     size_t i = 0;

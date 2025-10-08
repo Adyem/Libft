@@ -13,7 +13,7 @@ int ft_random_poisson(double lambda_value)
     ft_init_srand();
     if (lambda_value <= 0.0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
     limit_value = math_exp(-lambda_value);

@@ -10,7 +10,7 @@ char    *ft_getenv(const char *name)
     ft_errno = ER_SUCCESS;
     if (name == ft_nullptr || *name == '\0')
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     value = getenv(name);

@@ -85,7 +85,7 @@ FT_TEST(test_ft_optional_non_default_constructible, "ft_optional stores and retr
     ft_optional<no_default_optional_value> empty_optional;
     FT_ASSERT(empty_optional.has_value() == false);
     empty_optional.value();
-    FT_ASSERT_EQ(OPTIONAL_EMPTY, empty_optional.get_error());
+    FT_ASSERT_EQ(FT_ERR_EMPTY, empty_optional.get_error());
 
     ft_optional<no_default_optional_value> value_optional(no_default_optional_value(42));
     FT_ASSERT(value_optional.has_value() == true);

@@ -33,7 +33,7 @@ int pt_cond_wait(pthread_cond_t *condition, pthread_mutex_t *mutex)
 
     if (condition == ft_nullptr || mutex == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     return_value = pthread_cond_wait(condition, mutex);

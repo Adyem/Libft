@@ -10,7 +10,7 @@ int math_factorial(int number)
     ft_errno = ER_SUCCESS;
     if (number < 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
     result = 1;
@@ -19,7 +19,7 @@ int math_factorial(int number)
     {
         if (result > INT_MAX / current_number)
         {
-            ft_errno = FT_ERANGE;
+            ft_errno = FT_ERR_OUT_OF_RANGE;
             return (0);
         }
         result *= current_number;
@@ -36,7 +36,7 @@ long math_factorial(long number)
     ft_errno = ER_SUCCESS;
     if (number < 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
     result = 1;
@@ -45,7 +45,7 @@ long math_factorial(long number)
     {
         if (result > LONG_MAX / current_number)
         {
-            ft_errno = FT_ERANGE;
+            ft_errno = FT_ERR_OUT_OF_RANGE;
             return (0);
         }
         result *= current_number;
@@ -62,7 +62,7 @@ long long math_factorial(long long number)
     ft_errno = ER_SUCCESS;
     if (number < 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
     result = 1;
@@ -71,7 +71,7 @@ long long math_factorial(long long number)
     {
         if (result > LLONG_MAX / current_number)
         {
-            ft_errno = FT_ERANGE;
+            ft_errno = FT_ERR_OUT_OF_RANGE;
             return (0);
         }
         result *= current_number;

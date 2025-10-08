@@ -37,7 +37,7 @@ ft_string    time_format_iso8601(t_time time_value)
         mutex_result = g_gmtime_mutex.unlock(THREAD_ID);
         if (mutex_result != FT_SUCCESS)
             return (time_format_failure(g_gmtime_mutex.get_error()));
-        return (time_format_failure(FT_EINVAL));
+        return (time_format_failure(FT_ERR_INVALID_ARGUMENT));
     }
     time_storage = *time_pointer;
     mutex_result = g_gmtime_mutex.unlock(THREAD_ID);
@@ -47,7 +47,7 @@ ft_string    time_format_iso8601(t_time time_value)
     if (strftime_result == 0)
     {
         if (ft_errno == ER_SUCCESS)
-            return (time_format_failure(FT_EINVAL));
+            return (time_format_failure(FT_ERR_INVALID_ARGUMENT));
         return (time_format_failure(ft_errno));
     }
     formatted = ft_string(buffer);

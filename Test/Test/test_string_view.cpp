@@ -34,8 +34,8 @@ FT_TEST(test_string_view_substr_oob, "ft_string_view substr out of bounds")
     buffer[5] = '\0';
     ft_string_view<char> view(buffer);
     ft_string_view<char> substring = view.substr(10, 2);
-    FT_ASSERT_EQ(FT_EINVAL, view.get_error());
-    FT_ASSERT_EQ(FT_EINVAL, substring.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, view.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, substring.get_error());
     FT_ASSERT_EQ(0u, substring.size());
     cma_free(buffer);
     return (1);

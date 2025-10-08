@@ -44,7 +44,7 @@ bool api_request_stream(const char *ip, uint16_t port,
     }
     if (!streaming_handler)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (false);
     }
     int error_code = ER_SUCCESS;
@@ -84,10 +84,10 @@ bool api_request_stream(const char *ip, uint16_t port,
             int socket_error_code;
 
             socket_error_code = new_socket.get_error();
-            if (socket_error_code == SOCKET_INVALID_CONFIGURATION)
-                error_code = SOCKET_INVALID_CONFIGURATION;
+            if (socket_error_code == FT_ERR_CONFIGURATION)
+                error_code = FT_ERR_CONFIGURATION;
             else
-                error_code = SOCKET_CONNECT_FAILED;
+                error_code = FT_ERR_SOCKET_CONNECT_FAILED;
             return (false);
         }
         connection_handle.socket = std::move(new_socket);
@@ -123,7 +123,7 @@ bool api_request_stream(const char *ip, uint16_t port,
     } connection_guard(connection_handle);
     if (!connection_handle.has_socket)
     {
-        error_code = FT_EIO;
+        error_code = FT_ERR_IO;
         return (false);
     }
     bool result;
@@ -162,7 +162,7 @@ bool api_request_stream_http2(const char *ip, uint16_t port,
     }
     if (!streaming_handler)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (false);
     }
     int error_code = ER_SUCCESS;
@@ -202,10 +202,10 @@ bool api_request_stream_http2(const char *ip, uint16_t port,
             int socket_error_code;
 
             socket_error_code = new_socket.get_error();
-            if (socket_error_code == SOCKET_INVALID_CONFIGURATION)
-                error_code = SOCKET_INVALID_CONFIGURATION;
+            if (socket_error_code == FT_ERR_CONFIGURATION)
+                error_code = FT_ERR_CONFIGURATION;
             else
-                error_code = SOCKET_CONNECT_FAILED;
+                error_code = FT_ERR_SOCKET_CONNECT_FAILED;
             return (false);
         }
         connection_handle.socket = std::move(new_socket);
@@ -241,7 +241,7 @@ bool api_request_stream_http2(const char *ip, uint16_t port,
     } connection_guard(connection_handle);
     if (!connection_handle.has_socket)
     {
-        error_code = FT_EIO;
+        error_code = FT_ERR_IO;
         return (false);
     }
     bool http2_used_local;
@@ -323,10 +323,10 @@ char *api_request_string(const char *ip, uint16_t port,
             int socket_error_code;
 
             socket_error_code = new_socket.get_error();
-            if (socket_error_code == SOCKET_INVALID_CONFIGURATION)
-                error_code = SOCKET_INVALID_CONFIGURATION;
+            if (socket_error_code == FT_ERR_CONFIGURATION)
+                error_code = FT_ERR_CONFIGURATION;
             else
-                error_code = SOCKET_CONNECT_FAILED;
+                error_code = FT_ERR_SOCKET_CONNECT_FAILED;
             return (ft_nullptr);
         }
         connection_handle.socket = std::move(new_socket);
@@ -362,7 +362,7 @@ char *api_request_string(const char *ip, uint16_t port,
     } connection_guard(connection_handle);
     if (!connection_handle.has_socket)
     {
-        error_code = FT_EIO;
+        error_code = FT_ERR_IO;
         return (ft_nullptr);
     }
     char *result_body;
@@ -434,10 +434,10 @@ char *api_request_string_http2(const char *ip, uint16_t port,
             int socket_error_code;
 
             socket_error_code = new_socket.get_error();
-            if (socket_error_code == SOCKET_INVALID_CONFIGURATION)
-                error_code = SOCKET_INVALID_CONFIGURATION;
+            if (socket_error_code == FT_ERR_CONFIGURATION)
+                error_code = FT_ERR_CONFIGURATION;
             else
-                error_code = SOCKET_CONNECT_FAILED;
+                error_code = FT_ERR_SOCKET_CONNECT_FAILED;
             return (ft_nullptr);
         }
         connection_handle.socket = std::move(new_socket);
@@ -473,7 +473,7 @@ char *api_request_string_http2(const char *ip, uint16_t port,
     } connection_guard(connection_handle);
     if (!connection_handle.has_socket)
     {
-        error_code = FT_EIO;
+        error_code = FT_ERR_IO;
         return (ft_nullptr);
     }
     bool http2_used_local;
@@ -509,7 +509,7 @@ json_group *api_request_json(const char *ip, uint16_t port,
     if (!body)
     {
         if (ft_errno == ER_SUCCESS)
-            ft_errno = FT_EIO;
+            ft_errno = FT_ERR_IO;
         return (ft_nullptr);
     }
     json_group *result = json_read_from_string(body);
@@ -535,7 +535,7 @@ json_group *api_request_json_http2(const char *ip, uint16_t port,
     if (!body)
     {
         if (ft_errno == ER_SUCCESS)
-            ft_errno = FT_EIO;
+            ft_errno = FT_ERR_IO;
         return (ft_nullptr);
     }
     json_group *result = json_read_from_string(body);
@@ -568,7 +568,7 @@ bool api_request_stream_host(const char *host, uint16_t port,
     }
     if (!host || !method || !path || !streaming_handler)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (false);
     }
     char port_string[6];
@@ -594,7 +594,7 @@ bool api_request_stream_host(const char *host, uint16_t port,
     {
         freeaddrinfo(address_results);
         if (ft_errno == ER_SUCCESS)
-            ft_errno = SOCKET_RESOLVE_FAILED;
+            ft_errno = FT_ERR_SOCKET_RESOLVE_FAILED;
         return (false);
     }
     char ip_buffer[INET6_ADDRSTRLEN];
@@ -611,7 +611,7 @@ bool api_request_stream_host(const char *host, uint16_t port,
             if (errno != 0)
                 ft_errno = errno + ERRNO_OFFSET;
             else if (ft_errno == ER_SUCCESS)
-                ft_errno = SOCKET_RESOLVE_FAILED;
+                ft_errno = FT_ERR_SOCKET_RESOLVE_FAILED;
             return (false);
         }
     }
@@ -624,14 +624,14 @@ bool api_request_stream_host(const char *host, uint16_t port,
             if (errno != 0)
                 ft_errno = errno + ERRNO_OFFSET;
             else if (ft_errno == ER_SUCCESS)
-                ft_errno = SOCKET_RESOLVE_FAILED;
+                ft_errno = FT_ERR_SOCKET_RESOLVE_FAILED;
             return (false);
         }
     }
     else
     {
         freeaddrinfo(address_results);
-        ft_errno = SOCKET_RESOLVE_FAMILY;
+        ft_errno = FT_ERR_SOCKET_RESOLVE_FAMILY;
         return (false);
     }
     freeaddrinfo(address_results);
@@ -661,7 +661,7 @@ char *api_request_string_host(const char *host, uint16_t port,
     }
     if (!host || !method || !path)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     char port_string[6];
@@ -687,7 +687,7 @@ char *api_request_string_host(const char *host, uint16_t port,
     {
         freeaddrinfo(address_results);
         if (ft_errno == ER_SUCCESS)
-            ft_errno = SOCKET_RESOLVE_FAILED;
+            ft_errno = FT_ERR_SOCKET_RESOLVE_FAILED;
         return (ft_nullptr);
     }
     char ip_buffer[INET6_ADDRSTRLEN];
@@ -704,7 +704,7 @@ char *api_request_string_host(const char *host, uint16_t port,
             if (errno != 0)
                 ft_errno = errno + ERRNO_OFFSET;
             else if (ft_errno == ER_SUCCESS)
-                ft_errno = SOCKET_RESOLVE_FAILED;
+                ft_errno = FT_ERR_SOCKET_RESOLVE_FAILED;
             return (ft_nullptr);
         }
     }
@@ -717,14 +717,14 @@ char *api_request_string_host(const char *host, uint16_t port,
             if (errno != 0)
                 ft_errno = errno + ERRNO_OFFSET;
             else if (ft_errno == ER_SUCCESS)
-                ft_errno = SOCKET_RESOLVE_FAILED;
+                ft_errno = FT_ERR_SOCKET_RESOLVE_FAILED;
             return (ft_nullptr);
         }
     }
     else
     {
         freeaddrinfo(address_results);
-        ft_errno = SOCKET_RESOLVE_FAMILY;
+        ft_errno = FT_ERR_SOCKET_RESOLVE_FAMILY;
         return (ft_nullptr);
     }
     freeaddrinfo(address_results);
@@ -743,7 +743,7 @@ json_group *api_request_json_host(const char *host, uint16_t port,
     if (!body)
     {
         if (ft_errno == ER_SUCCESS)
-            ft_errno = FT_EIO;
+            ft_errno = FT_ERR_IO;
         return (ft_nullptr);
     }
     json_group *result = json_read_from_string(body);
@@ -786,7 +786,7 @@ json_group *api_request_json_bearer(const char *ip, uint16_t port,
     if (!body)
     {
         if (ft_errno == ER_SUCCESS)
-            ft_errno = FT_EIO;
+            ft_errno = FT_ERR_IO;
         return (ft_nullptr);
     }
     json_group *result = json_read_from_string(body);
@@ -829,7 +829,7 @@ json_group *api_request_json_basic(const char *ip, uint16_t port,
     if (!body)
     {
         if (ft_errno == ER_SUCCESS)
-            ft_errno = FT_EIO;
+            ft_errno = FT_ERR_IO;
         return (ft_nullptr);
     }
     json_group *result = json_read_from_string(body);
@@ -873,7 +873,7 @@ json_group *api_request_json_host_bearer(const char *host, uint16_t port,
     if (!body)
     {
         if (ft_errno == ER_SUCCESS)
-            ft_errno = FT_EIO;
+            ft_errno = FT_ERR_IO;
         return (ft_nullptr);
     }
     json_group *result = json_read_from_string(body);
@@ -918,7 +918,7 @@ json_group *api_request_json_host_basic(const char *host, uint16_t port,
     if (!body)
     {
         if (ft_errno == ER_SUCCESS)
-            ft_errno = FT_EIO;
+            ft_errno = FT_ERR_IO;
         return (ft_nullptr);
     }
     json_group *result = json_read_from_string(body);
@@ -942,13 +942,13 @@ static bool parse_url(const char *url, bool &tls, ft_string &host,
 
     if (!url)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (false);
     }
     scheme_end = ft_strstr(url, "://");
     if (!scheme_end)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (false);
     }
     walker = url;
@@ -1039,7 +1039,7 @@ char *api_request_string_url(const char *url, const char *method,
     }
     if (!method)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     bool tls;
@@ -1066,7 +1066,7 @@ json_group *api_request_json_url(const char *url, const char *method,
     if (!body)
     {
         if (ft_errno == ER_SUCCESS)
-            ft_errno = FT_EIO;
+            ft_errno = FT_ERR_IO;
         return (ft_nullptr);
     }
     json_group *result = json_read_from_string(body);

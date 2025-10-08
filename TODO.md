@@ -2,19 +2,18 @@
 
 ## Library-wide priorities
 - [ ] Publish a canonical error-code registry that documents each value exposed through `Errno/errno.hpp` and clarifies which modules set them, so cross-module error handling stays consistent.
-- [ ] Re-audit the error code catalog to collapse redundant class-specific values into shared generic codes where possible so callers can rely on a simpler set of outcomes when handling failures.
-- [ ] Add a CONTRIBUTING guide with coding guidelines, review expectations, and module ownership to streamline onboarding.
+- [x] Re-audit the error code catalog to collapse redundant class-specific values into shared generic codes where possible so callers can rely on a simpler set of outcomes when handling failures.
+- [x] Add a CONTRIBUTING guide with coding guidelines, review expectations, and module ownership to streamline onboarding.
 - [ ] Provide package metadata (pkg-config file and install rules) so downstream projects can consume `Full_Libft.a` without copying headers manually.
 - [ ] Deduplicate and auto-generate `FullLibft.hpp` so umbrella includes stay sorted and avoid the current duplicate entries like `System_utils/system_utils.hpp`.
 - [ ] Introduce clang-tidy and cppcheck configurations, wiring them into the top-level `Makefile` to keep style and safety issues from regressing.
-- [ ] Offer address/undefined-behavior sanitizer build targets to harden modules that manipulate raw pointers and system handles.
+- [x] Offer address/undefined-behavior sanitizer build targets to harden modules that manipulate raw pointers and system handles.
 - [ ] Stand up a documentation site (GitHub Pages or MkDocs) that renders API references, tutorials, and changelogs from the repository sources.
 - [ ] Establish a backwards-compatibility policy (semantic versioning, deprecation schedule) and reflect it in release notes and CI checks.
 
 ## Build, tooling, and CI
-- [ ] Ship a top-level CMake configuration that mirrors the existing Makefiles to simplify IDE integration and cross-platform builds.
-- [ ] Add GitHub Actions (or similar) workflows that compile every module, run unit tests, and execute style checks on push and pull requests.
-- [ ] Generate a compilation database automatically when building so editors can provide accurate IntelliSense without committing `compile_commands.json`.
+- [x] Add GitHub Actions (or similar) workflows that compile every module, run unit tests, and execute style checks on push and pull requests.
+- [x] Generate a compilation database automatically when building so editors can provide accurate IntelliSense without committing `compile_commands.json`.
 - [ ] Create release automation that tags versions, produces prebuilt archives, and publishes API documentation artifacts.
 - [ ] Cache third-party dependencies and toolchains in CI to reduce turnaround time for full project rebuilds.
 - [ ] Publish nightly snapshots (artifacts plus test results) so consumers can trial upcoming changes without building from source.
@@ -25,7 +24,7 @@
 - [ ] Add fuzzing suites for string parsing, JSON/YAML decoders, and compression streams to shake out edge cases.
 - [ ] Provide integration tests that spin up networking servers and run the HTTP/2, WebSocket, and TLS client code paths end-to-end.
 - [ ] Record performance baselines for heavy subsystems (compression, networking, containers) and alert when regressions exceed agreed thresholds.
-- [ ] Add deterministic seeding hooks in RNG tests to make failures reproducible.
+- [x] Add deterministic seeding hooks in RNG tests to make failures reproducible.
 - [ ] Wire code coverage reporting into CI and enforce minimum thresholds per module to prevent untested regressions.
 - [ ] Schedule periodic chaos/resilience tests that inject network faults and disk pressure to validate recovery paths.
 - [ ] Stand up regression suites for bugfixes, tagging tests with the issue that introduced them for traceability.
@@ -212,13 +211,13 @@
 
 ### Tools and ancillary utilities
 - [ ] Audit the scripts in `Tools/` for portability, converting Bash-specific pieces into cross-platform equivalents where feasible.
-- [ ] Provide a `make format` target that runs clang-format with a checked-in style file.
+- [x] Provide a `make format` target that runs clang-format with a checked-in style file.
 - [ ] Add developer ergonomics such as pre-commit hooks, git blame ignore lists, and automated code ownership updates.
 - [ ] Create code-generation scaffolds (module boilerplate, test templates) that follow project conventions.
 - [ ] Document how to bootstrap a development environment on macOS, Linux, and Windows Subsystem for Linux.
 
 ## Security and compliance
-- [ ] Establish a vulnerability disclosure policy and security contact in `SECURITY.md`.
+- [x] Establish a vulnerability disclosure policy and security contact in `SECURITY.md`.
 - [ ] Run dependency audits (e.g., `cargo audit`, `npm audit`, `pip-audit` equivalents) and track remediation timelines.
 - [ ] Add threat models for networking, storage, and encryption modules, outlining mitigations for common attack vectors.
 - [ ] Provide secure coding checklists for contributors, including guidelines for handling secrets and memory safety.
@@ -230,7 +229,7 @@
 - [ ] Publish SLO dashboards that highlight latency, error, and saturation metrics for critical modules.
 
 ## Community and support
-- [ ] Create issue and PR templates that capture reproduction steps, environment info, and expected behaviour.
+- [x] Create issue and PR templates that capture reproduction steps, environment info, and expected behaviour.
 - [ ] Host regular changelog updates (blog posts, release highlights) to keep users informed about progress.
 - [ ] Stand up a discussion forum or chat channel with moderation guidelines to support adopters.
 - [ ] Offer office-hours or triage rotations to ensure community questions receive timely responses.

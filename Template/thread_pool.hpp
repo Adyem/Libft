@@ -147,7 +147,7 @@ inline ft_thread_pool::ft_thread_pool(size_t thread_count, size_t max_tasks)
     this->_workers.reserve(thread_count);
     if (this->_workers.get_error() != ER_SUCCESS)
     {
-        this->set_error(THREAD_POOL_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
         this->_stop = true;
         return ;
     }
@@ -158,7 +158,7 @@ inline ft_thread_pool::ft_thread_pool(size_t thread_count, size_t max_tasks)
         this->_workers.push_back(std::move(worker));
         if (this->_workers.get_error() != ER_SUCCESS)
         {
-            this->set_error(THREAD_POOL_ALLOC_FAIL);
+            this->set_error(FT_ERR_NO_MEMORY);
             this->_stop = true;
             break;
         }
@@ -190,7 +190,7 @@ inline void ft_thread_pool::submit(Function &&function)
     }
     if (this->_max_tasks != 0 && this->_tasks.size() >= this->_max_tasks)
     {
-        this->set_error(THREAD_POOL_FULL);
+        this->set_error(FT_ERR_FULL);
         pthread_mutex_unlock(&this->_mutex);
         return ;
     }

@@ -12,7 +12,7 @@ FT_TEST(test_time_parse_iso8601_pre_epoch, "time_parse_iso8601 handles pre-epoch
 
     ft_memset(&parsed_time, 0, sizeof(parsed_time));
     parsed_timestamp = 0;
-    ft_errno = FT_ETERM;
+    ft_errno = FT_ERR_TERMINATED;
     parse_result = time_parse_iso8601("1969-12-31T23:59:59Z", &parsed_time, &parsed_timestamp);
     FT_ASSERT(parse_result == true);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -34,7 +34,7 @@ FT_TEST(test_time_parse_iso8601_accepts_lowercase_z, "time_parse_iso8601 accepts
 
     ft_memset(&parsed_time, 0, sizeof(parsed_time));
     parsed_timestamp = 0;
-    ft_errno = FT_ETERM;
+    ft_errno = FT_ERR_TERMINATED;
     parse_result = time_parse_iso8601("2024-03-01T12:34:56z", &parsed_time, &parsed_timestamp);
     FT_ASSERT(parse_result == true);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);

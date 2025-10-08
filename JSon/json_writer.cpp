@@ -16,7 +16,7 @@
 static char *json_writer_return_failure(void)
 {
     if (ft_errno == ER_SUCCESS)
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
     return (ft_nullptr);
 }
 
@@ -24,7 +24,7 @@ int json_write_to_file(const char *file_path, json_group *groups)
 {
     if (!file_path)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     int file_descriptor = su_open(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);

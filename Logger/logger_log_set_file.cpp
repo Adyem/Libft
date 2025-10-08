@@ -26,7 +26,7 @@ int ft_log_set_file(const char *path, size_t max_size)
 
     if (!path)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     file_descriptor = open(path, O_CREAT | O_WRONLY | O_APPEND, 0644);
@@ -38,14 +38,14 @@ int ft_log_set_file(const char *path, size_t max_size)
         if (saved_errno != 0)
             ft_errno = saved_errno + ERRNO_OFFSET;
         else
-            ft_errno = FILE_INVALID_FD;
+            ft_errno = FT_ERR_INVALID_HANDLE;
         return (-1);
     }
     sink = new(std::nothrow) s_file_sink;
     if (!sink)
     {
         close(file_descriptor);
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (-1);
     }
     sink->fd = file_descriptor;
@@ -64,7 +64,7 @@ int ft_log_set_file(const char *path, size_t max_size)
 
         error_code = ft_errno;
         if (error_code == ER_SUCCESS)
-            error_code = FT_EINVAL;
+            error_code = FT_ERR_INVALID_ARGUMENT;
         close(file_descriptor);
         delete sink;
         ft_errno = error_code;

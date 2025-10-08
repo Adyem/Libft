@@ -153,7 +153,7 @@ void ft_quest::set_id(int id) noexcept
 {
     if (id < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_id = id;
@@ -171,7 +171,7 @@ void ft_quest::set_phases(int phases) noexcept
 {
     if (phases < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_phases = phases;
@@ -191,7 +191,7 @@ void ft_quest::set_current_phase(int phase) noexcept
 {
     if (phase < 0 || phase > this->_phases)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_current_phase = phase;
@@ -255,7 +255,7 @@ void ft_quest::set_reward_experience(int experience) noexcept
 {
     if (experience < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->_reward_experience = experience;
@@ -306,7 +306,7 @@ void ft_quest::set_reward_items(const ft_vector<ft_sharedptr<ft_item> > &items) 
         }
         if (!item_ptr)
         {
-            this->set_error(SHARED_PTR_NULL_PTR);
+            this->set_error(FT_ERR_INVALID_POINTER);
             return ;
         }
         if (item_ptr.get_error() != ER_SUCCESS)
@@ -341,12 +341,12 @@ void ft_quest::advance_phase() noexcept
 {
     if (this->_phases <= 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     if (this->_current_phase >= this->_phases)
     {
-        this->set_error(GAME_GENERAL_ERROR);
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return ;
     }
     ++this->_current_phase;

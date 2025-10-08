@@ -75,7 +75,7 @@ inline ft_bitset::ft_bitset(size_t bits)
         this->_data = static_cast<size_t*>(cma_malloc(sizeof(size_t) * this->_blockCount));
         if (this->_data == ft_nullptr)
         {
-            this->set_error(BITSET_ALLOC_FAIL);
+            this->set_error(BITFT_ERR_NO_MEMORY);
             return ;
         }
         size_t i = 0;
@@ -137,12 +137,12 @@ inline void ft_bitset::set(size_t pos)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     if (pos >= this->_size)
     {
-        this->set_error(BITSET_OUT_OF_RANGE);
+        this->set_error(FT_ERR_OUT_OF_RANGE);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
@@ -156,12 +156,12 @@ inline void ft_bitset::reset(size_t pos)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     if (pos >= this->_size)
     {
-        this->set_error(BITSET_OUT_OF_RANGE);
+        this->set_error(FT_ERR_OUT_OF_RANGE);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
@@ -175,12 +175,12 @@ inline void ft_bitset::flip(size_t pos)
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     if (pos >= this->_size)
     {
-        this->set_error(BITSET_OUT_OF_RANGE);
+        this->set_error(FT_ERR_OUT_OF_RANGE);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
@@ -194,12 +194,12 @@ inline bool ft_bitset::test(size_t pos) const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        const_cast<ft_bitset*>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        const_cast<ft_bitset*>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (false);
     }
     if (pos >= this->_size)
     {
-        const_cast<ft_bitset*>(this)->set_error(BITSET_OUT_OF_RANGE);
+        const_cast<ft_bitset*>(this)->set_error(FT_ERR_OUT_OF_RANGE);
         this->_mutex.unlock(THREAD_ID);
         return (false);
     }
@@ -213,7 +213,7 @@ inline size_t ft_bitset::size() const
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        const_cast<ft_bitset*>(this)->set_error(PT_ERR_MUTEX_OWNER);
+        const_cast<ft_bitset*>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return (0);
     }
     size_t s = this->_size;
@@ -226,7 +226,7 @@ inline void ft_bitset::clear()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     size_t i = 0;

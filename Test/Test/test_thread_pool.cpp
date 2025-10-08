@@ -17,8 +17,8 @@ FT_TEST(test_thread_pool_resets_error_status,
         execution_count.store(-1);
         return ;
     });
-    FT_ASSERT_EQ(QUEUE_ALLOC_FAIL, pool_instance.get_error());
-    FT_ASSERT_EQ(QUEUE_ALLOC_FAIL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, pool_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     cma_set_alloc_limit(0);
     pool_instance.submit([&execution_count]()
     {

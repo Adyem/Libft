@@ -175,7 +175,7 @@ FT_TEST(test_kv_store_wrong_key_fails_to_decrypt, "kv_store wrong key fails to d
     FT_ASSERT_EQ(0, encrypted_store.kv_flush());
     FT_ASSERT_EQ(ER_SUCCESS, encrypted_store.get_error());
     kv_store failing_store(file_path, wrong_key, true);
-    FT_ASSERT_EQ(FT_EINVAL, failing_store.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, failing_store.get_error());
     cleanup_paths(directory_path, file_path);
     return (1);
 }
@@ -193,9 +193,9 @@ FT_TEST(test_kv_store_configure_encryption_validates_key, "kv_store configure en
     kv_store configurable_store(file_path);
     FT_ASSERT_EQ(ER_SUCCESS, configurable_store.get_error());
     FT_ASSERT_EQ(-1, configurable_store.configure_encryption(ft_nullptr, true));
-    FT_ASSERT_EQ(FT_EINVAL, configurable_store.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, configurable_store.get_error());
     FT_ASSERT_EQ(-1, configurable_store.configure_encryption("short", true));
-    FT_ASSERT_EQ(FT_EINVAL, configurable_store.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, configurable_store.get_error());
     FT_ASSERT_EQ(0, configurable_store.configure_encryption("sixteen-byte-key", true));
     FT_ASSERT_EQ(ER_SUCCESS, configurable_store.get_error());
     FT_ASSERT_EQ(0, configurable_store.configure_encryption(ft_nullptr, false));
@@ -284,7 +284,7 @@ FT_TEST(test_kv_store_expired_entries_are_evicted, "kv_store expired entries are
     sleep(2);
 #endif
     FT_ASSERT(store.kv_get("temporary") == ft_nullptr);
-    FT_ASSERT_EQ(MAP_KEY_NOT_FOUND, store.get_error());
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, store.get_error());
     cleanup_paths(directory_path, file_path);
     return (1);
 }

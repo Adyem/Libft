@@ -25,7 +25,7 @@ int rl_initialize_state(readline_state_t *state)
 {
     if (state == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (1);
     }
     if (rl_enable_raw_mode() == -1)
@@ -35,7 +35,7 @@ int rl_initialize_state(readline_state_t *state)
     if (!state->buffer)
     {
         rl_disable_raw_mode();
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (1);
     }
     state->pos = 0;

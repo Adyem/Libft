@@ -23,7 +23,7 @@ FT_TEST(test_cnfg_parse_flags_collects_unique_alpha, "cnfg_parse_flags collects 
         long_flag_argument,
         mixed_argument
     };
-    ft_errno = FT_EALLOC;
+    ft_errno = FT_ERR_NO_MEMORY;
     char *parsed_flags = cnfg_parse_flags(7, arguments);
     FT_ASSERT(parsed_flags != ft_nullptr);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -41,7 +41,7 @@ FT_TEST(test_cnfg_parse_flags_null_arguments_set_errno, "cnfg_parse_flags reject
     ft_errno = ER_SUCCESS;
     char *parsed_flags = cnfg_parse_flags(2, ft_nullptr);
     FT_ASSERT(parsed_flags == ft_nullptr);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -59,7 +59,7 @@ FT_TEST(test_cnfg_parse_long_flags_deduplicates, "cnfg_parse_long_flags ignores 
         duplicate_long_flag,
         short_argument
     };
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     char **parsed_flags = cnfg_parse_long_flags(5, arguments);
     FT_ASSERT(parsed_flags != ft_nullptr);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -83,7 +83,7 @@ FT_TEST(test_cnfg_parse_long_flags_null_arguments_set_errno, "cnfg_parse_long_fl
     ft_errno = ER_SUCCESS;
     char **parsed_flags = cnfg_parse_long_flags(2, ft_nullptr);
     FT_ASSERT(parsed_flags == ft_nullptr);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -102,7 +102,7 @@ FT_TEST(test_cnfg_flag_parser_parse_populates_counts, "cnfg_flag_parser parses a
         short_flag_b
     };
     cnfg_flag_parser parser;
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     bool parse_result = parser.parse(5, arguments);
     FT_ASSERT(parse_result);
     FT_ASSERT_EQ(ER_SUCCESS, parser.get_error());
@@ -133,7 +133,7 @@ FT_TEST(test_cnfg_flag_parser_failure_resets_state, "cnfg_flag_parser clears fla
     FT_ASSERT(parser.get_total_flag_count() == 1);
     bool parse_result = parser.parse(2, ft_nullptr);
     FT_ASSERT(!parse_result);
-    FT_ASSERT_EQ(FT_EINVAL, parser.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, parser.get_error());
     FT_ASSERT(parser.get_short_flag_count() == 0);
     FT_ASSERT(parser.get_long_flag_count() == 0);
     FT_ASSERT(parser.get_total_flag_count() == 0);

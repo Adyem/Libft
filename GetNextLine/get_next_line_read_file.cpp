@@ -31,7 +31,7 @@ static char **ft_reallocate_lines(char **lines, int new_size)
     if (!new_lines)
     {
         ft_handle_allocation_failure(lines);
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
 
@@ -58,7 +58,7 @@ char **ft_read_file_lines(ft_istream &input, std::size_t buffer_size)
         current_line = get_next_line(input, buffer_size);
         if (!current_line)
         {
-            if (ft_errno == FILE_END_OF_FILE || ft_errno == ER_SUCCESS)
+            if (ft_errno == FT_ERR_END_OF_FILE || ft_errno == ER_SUCCESS)
             {
                 ft_errno = ER_SUCCESS;
                 break ;
@@ -75,7 +75,7 @@ char **ft_read_file_lines(ft_istream &input, std::size_t buffer_size)
         if (!lines)
         {
             cma_free(current_line);
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
         lines[line_count - 1] = current_line;
@@ -93,7 +93,7 @@ char **ft_open_and_read_file(const char *file_name, std::size_t buffer_size)
     if (fd < 0)
     {
         if (ft_errno == ER_SUCCESS)
-            ft_errno = FILE_INVALID_FD;
+            ft_errno = FT_ERR_INVALID_HANDLE;
         return (ft_nullptr);
     }
     lines = ft_read_file_lines(input, buffer_size);

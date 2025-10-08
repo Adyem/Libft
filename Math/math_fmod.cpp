@@ -28,17 +28,17 @@ double math_fmod(double value, double modulus)
 
     if (math_isnan(value) || math_isnan(modulus))
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (math_nan());
     }
     if (math_is_infinite_internal(value) != 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (math_nan());
     }
     if (math_fabs(modulus) <= std::numeric_limits<double>::denorm_min())
     {
-        ft_errno = FT_ERANGE;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
         return (math_nan());
     }
     if (math_is_infinite_internal(modulus) != 0)

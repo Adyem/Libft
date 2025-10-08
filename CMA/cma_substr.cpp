@@ -16,7 +16,7 @@ char    *cma_substr(const char *source, unsigned int start, size_t length)
     source_length = ft_strlen_size_t(source);
     if (ft_errno != ER_SUCCESS)
     {
-        ft_errno = FT_ERANGE;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
         return (ft_nullptr);
     }
     start_index = static_cast<size_t>(start);
@@ -27,14 +27,14 @@ char    *cma_substr(const char *source, unsigned int start, size_t length)
     {
         if (available_length >= static_cast<size_t>(FT_SYSTEM_SIZE_MAX))
         {
-            ft_errno = FT_ERANGE;
+            ft_errno = FT_ERR_OUT_OF_RANGE;
             return (ft_nullptr);
         }
         length = available_length;
     }
     if (length >= static_cast<size_t>(FT_SYSTEM_SIZE_MAX))
     {
-        ft_errno = FT_ERANGE;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
         return (ft_nullptr);
     }
     substring = static_cast<char *>(cma_malloc(length + 1));

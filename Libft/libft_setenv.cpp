@@ -15,7 +15,7 @@ int ft_setenv(const char *name, const char *value, int overwrite)
     ft_errno = ER_SUCCESS;
     if (name == ft_nullptr || value == ft_nullptr || *name == '\0' || ft_strchr(name, '=') != ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     result = cmp_setenv(name, value, overwrite);
@@ -38,7 +38,7 @@ int ft_setenv(const char *name, const char *value, int overwrite)
         else if (saved_errno != 0)
             ft_errno = saved_errno + ERRNO_OFFSET;
         else
-            ft_errno = FT_ETERM;
+            ft_errno = FT_ERR_TERMINATED;
 #else
         int saved_errno;
 
@@ -46,7 +46,7 @@ int ft_setenv(const char *name, const char *value, int overwrite)
         if (saved_errno != 0)
             ft_errno = saved_errno + ERRNO_OFFSET;
         else
-            ft_errno = FT_ETERM;
+            ft_errno = FT_ERR_TERMINATED;
 #endif
     }
     return (result);

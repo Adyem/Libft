@@ -36,7 +36,7 @@ int kv_store::encrypt_value(const ft_string &plain_string, ft_string &encoded_st
     }
     if (this->_encryption_key.size() != 16)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     plain_c_string = plain_string.c_str();
@@ -142,7 +142,7 @@ int kv_store::decrypt_value(const ft_string &encoded_string, ft_string &plain_st
     }
     if (this->_encryption_key.size() != 16)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     decoded_size = 0;
@@ -167,7 +167,7 @@ int kv_store::decrypt_value(const ft_string &encoded_string, ft_string &plain_st
     if (decoded_size < 16)
     {
         cma_free(decoded_buffer);
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     header_index = 0;
@@ -184,7 +184,7 @@ int kv_store::decrypt_value(const ft_string &encoded_string, ft_string &plain_st
         if (decoded_buffer[header_index] != expected_header[header_index])
         {
             cma_free(decoded_buffer);
-            this->set_error(FT_EINVAL);
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
             return (-1);
         }
         header_index++;
@@ -243,7 +243,7 @@ int kv_store::configure_encryption(const char *encryption_key, bool enable_encry
     {
         if (encryption_key == ft_nullptr)
         {
-            this->set_error(FT_EINVAL);
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
             return (-1);
         }
         this->_encryption_key = encryption_key;
@@ -254,7 +254,7 @@ int kv_store::configure_encryption(const char *encryption_key, bool enable_encry
         }
         if (this->_encryption_key.size() != 16)
         {
-            this->set_error(FT_EINVAL);
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
             return (-1);
         }
         this->_encryption_enabled = true;

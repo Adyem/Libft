@@ -17,12 +17,12 @@ char    *cma_strdup(const char *string)
     measured_length_raw = ft_strlen_size_t(string);
     if (ft_errno != ER_SUCCESS)
     {
-        ft_errno = FT_ERANGE;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
         return (ft_nullptr);
     }
     if (measured_length_raw >= static_cast<size_t>(FT_SYSTEM_SIZE_MAX))
     {
-        ft_errno = FT_ERANGE;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
         return (ft_nullptr);
     }
     length = static_cast<ft_size_t>(measured_length_raw);

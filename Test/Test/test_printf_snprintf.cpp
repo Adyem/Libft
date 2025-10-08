@@ -46,13 +46,13 @@ FT_TEST(test_pf_snprintf_null_string, "pf_snprintf returns error for null string
     ft_errno = ER_SUCCESS;
     int result = pf_snprintf(static_cast<char *>(ft_nullptr), 8, "%s", "noop");
     FT_ASSERT_EQ(-1, result);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
 FT_TEST(test_pf_snprintf_null_string_zero_size, "pf_snprintf accepts null buffer when size is zero")
 {
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     int result = pf_snprintf(static_cast<char *>(ft_nullptr), 0, "%s", "noop");
     FT_ASSERT_EQ(4, result);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -71,7 +71,7 @@ FT_TEST(test_pf_snprintf_null_format, "pf_snprintf returns error for null format
     int result = call_pf_snprintf(buffer, sizeof(buffer), static_cast<const char *>(ft_nullptr));
     FT_ASSERT_EQ(-1, result);
     FT_ASSERT_EQ('\0', buffer[0]);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -83,13 +83,13 @@ FT_TEST(test_pf_vsnprintf_null_format, "pf_vsnprintf returns error for null form
     ft_errno = ER_SUCCESS;
     int result = pf_vsnprintf_wrapper(buffer, sizeof(buffer), static_cast<const char *>(ft_nullptr));
     FT_ASSERT_EQ(-1, result);
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
 FT_TEST(test_pf_vsnprintf_null_string_zero_size, "pf_vsnprintf accepts null buffer when size is zero")
 {
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     int result = pf_vsnprintf_wrapper(static_cast<char *>(ft_nullptr), 0, "%s", "noop");
     FT_ASSERT_EQ(4, result);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -107,7 +107,7 @@ FT_TEST(test_pf_snprintf_tmpfile_failure, "pf_snprintf translates tmpfile failur
     pf_reset_tmpfile_function();
     FT_ASSERT_EQ(-1, result);
     FT_ASSERT_EQ('\0', buffer[0]);
-    FT_ASSERT_EQ(FT_EALLOC, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     return (1);
 }
 
@@ -147,7 +147,7 @@ FT_TEST(test_pf_snprintf_success_resets_errno, "pf_snprintf resets ft_errno on s
 {
     char buffer[16];
 
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     int result = pf_snprintf(buffer, sizeof(buffer), "%s", "ok");
     FT_ASSERT(result >= 0);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);

@@ -59,7 +59,7 @@ constexpr size_t ft_strlen_size_t(const char *string)
     if (!string)
     {
         if (!ft_is_constant_evaluated())
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
     const char *string_pointer = string;
@@ -88,7 +88,7 @@ constexpr int ft_strlen(const char *string)
     if (length > static_cast<size_t>(FT_INT_MAX))
     {
         if (!ft_is_constant_evaluated())
-            ft_errno = FT_ERANGE;
+            ft_errno = FT_ERR_OUT_OF_RANGE;
         return (FT_INT_MAX);
     }
     return (static_cast<int>(length));

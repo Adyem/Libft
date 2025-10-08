@@ -93,7 +93,7 @@ int ft_trie<ValueType>::insert_helper(const char *key, int unset_value, ValueTyp
     }
     if (key == ft_nullptr)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
     size_t key_length = ft_strlen_size_t(key);
@@ -118,7 +118,7 @@ int ft_trie<ValueType>::insert_helper(const char *key, int unset_value, ValueTyp
             ft_trie<ValueType> *new_child = new (std::nothrow) ft_trie<ValueType>();
             if (new_child == ft_nullptr)
             {
-                this->set_error(FT_EALLOC);
+                this->set_error(FT_ERR_NO_MEMORY);
                 return (1);
             }
             current_node->_children[character] = new_child;
@@ -144,7 +144,7 @@ int ft_trie<ValueType>::insert_helper(const char *key, int unset_value, ValueTyp
         current_node->_data = static_cast<node_value *>(cma_malloc(sizeof(node_value)));
         if (current_node->_data == ft_nullptr)
         {
-            this->set_error(FT_EALLOC);
+            this->set_error(FT_ERR_NO_MEMORY);
             return (1);
         }
     }
@@ -170,7 +170,7 @@ const typename ft_trie<ValueType>::node_value *ft_trie<ValueType>::search(const 
 {
     if (key == ft_nullptr)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
     int attempt;

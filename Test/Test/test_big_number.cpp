@@ -87,8 +87,8 @@ FT_TEST(test_big_number_assign_base_octal_hex, "ft_big_number assign_base handle
 
     ft_errno = 0;
     invalid_number.assign_base("19", 8);
-    FT_ASSERT_EQ(BIG_NUMBER_INVALID_DIGIT, invalid_number.get_error());
-    FT_ASSERT_EQ(BIG_NUMBER_INVALID_DIGIT, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, invalid_number.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     ft_errno = 0;
     return (1);
 }
@@ -116,8 +116,8 @@ FT_TEST(test_big_number_assign_invalid_digit, "ft_big_number assign rejects inva
 
     ft_errno = 0;
     number.assign("12a3");
-    FT_ASSERT_EQ(BIG_NUMBER_INVALID_DIGIT, number.get_error());
-    FT_ASSERT_EQ(BIG_NUMBER_INVALID_DIGIT, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, number.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(static_cast<ft_size_t>(0), number.size());
     FT_ASSERT_EQ(0, std::strcmp(number.c_str(), "0"));
     ft_errno = 0;
@@ -130,8 +130,8 @@ FT_TEST(test_big_number_append_invalid_digit, "ft_big_number append_digit reject
 
     ft_errno = 0;
     number.append_digit('x');
-    FT_ASSERT_EQ(BIG_NUMBER_INVALID_DIGIT, number.get_error());
-    FT_ASSERT_EQ(BIG_NUMBER_INVALID_DIGIT, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, number.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     ft_errno = 0;
     return (1);
 }
@@ -161,9 +161,9 @@ FT_TEST(test_big_number_to_string_base_conversions, "ft_big_number to_string_bas
 
     ft_errno = 0;
     ft_string invalid_output = decimal_value.to_string_base(1);
-    FT_ASSERT_EQ(BIG_NUMBER_INVALID_DIGIT, decimal_value.get_error());
-    FT_ASSERT_EQ(BIG_NUMBER_INVALID_DIGIT, ft_errno);
-    FT_ASSERT_EQ(BIG_NUMBER_INVALID_DIGIT, invalid_output.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, decimal_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, invalid_output.get_error());
     ft_errno = 0;
     return (1);
 }
@@ -441,8 +441,8 @@ FT_TEST(test_big_number_division_by_zero_error, "ft_big_number division reports 
     ft_errno = 0;
     numerator_number.assign("12345");
     ft_big_number result_number = numerator_number / zero_number;
-    FT_ASSERT_EQ(BIG_NUMBER_DIVIDE_BY_ZERO, result_number.get_error());
-    FT_ASSERT_EQ(BIG_NUMBER_DIVIDE_BY_ZERO, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, result_number.get_error());
+    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_errno);
     ft_errno = 0;
     return (1);
 }
@@ -485,8 +485,8 @@ FT_TEST(test_big_number_modulus_basic, "ft_big_number modulus returns signed rem
 
     ft_errno = 0;
     ft_big_number error_remainder = positive_dividend % zero_divisor;
-    FT_ASSERT_EQ(BIG_NUMBER_DIVIDE_BY_ZERO, error_remainder.get_error());
-    FT_ASSERT_EQ(BIG_NUMBER_DIVIDE_BY_ZERO, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, error_remainder.get_error());
+    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_errno);
     ft_errno = 0;
     return (1);
 }
@@ -535,8 +535,8 @@ FT_TEST(test_big_number_modular_exponentiation, "ft_big_number mod_pow performs 
     exponent_one.assign("1");
     ft_errno = 0;
     ft_big_number modulus_error = base_number.mod_pow(exponent_one, zero_modulus);
-    FT_ASSERT_EQ(BIG_NUMBER_DIVIDE_BY_ZERO, modulus_error.get_error());
-    FT_ASSERT_EQ(BIG_NUMBER_DIVIDE_BY_ZERO, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, modulus_error.get_error());
+    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_errno);
     ft_errno = 0;
 
     ft_big_number negative_exponent;
@@ -544,8 +544,8 @@ FT_TEST(test_big_number_modular_exponentiation, "ft_big_number mod_pow performs 
     negative_exponent.assign("-1");
     ft_errno = 0;
     ft_big_number exponent_error = base_number.mod_pow(negative_exponent, modulus_number);
-    FT_ASSERT_EQ(BIG_NUMBER_INVALID_DIGIT, exponent_error.get_error());
-    FT_ASSERT_EQ(BIG_NUMBER_INVALID_DIGIT, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, exponent_error.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     ft_errno = 0;
     return (1);
 }

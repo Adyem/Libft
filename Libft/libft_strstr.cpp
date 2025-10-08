@@ -9,7 +9,7 @@ char    *ft_strstr(const char *haystack, const char *needle)
     ft_errno = ER_SUCCESS;
     if (haystack == ft_nullptr || needle == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     haystack_length = ft_strlen_size_t(haystack);

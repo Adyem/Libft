@@ -69,7 +69,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
     {
         close(kqueue_descriptor);
         if (ft_errno == ER_SUCCESS)
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_ERR_NO_MEMORY;
         return (-1);
     }
     timeout.tv_sec = timeout_milliseconds / 1000;

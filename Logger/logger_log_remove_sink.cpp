@@ -51,7 +51,7 @@ void ft_log_remove_sink(t_log_sink sink, void *user_data)
         index++;
     }
     if (!removed)
-        final_error = FT_EINVAL;
+        final_error = FT_ERR_INVALID_ARGUMENT;
     else
         final_error = ER_SUCCESS;
     if (logger_unlock_sinks() != 0)

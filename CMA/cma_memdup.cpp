@@ -16,7 +16,7 @@ void* cma_memdup(const void* src, size_t size)
     }
     if (!src)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     new_mem = cma_malloc(size);

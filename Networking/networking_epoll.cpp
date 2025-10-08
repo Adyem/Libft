@@ -96,7 +96,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
     {
         close(epoll_descriptor);
         if (ft_errno == ER_SUCCESS)
-            ft_errno = FT_EALLOC;
+            ft_errno = FT_ERR_NO_MEMORY;
         return (-1);
     }
     read_ready_flags = ft_nullptr;
@@ -109,7 +109,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
             cma_free(events);
             close(epoll_descriptor);
             if (ft_errno == ER_SUCCESS)
-                ft_errno = FT_EALLOC;
+                ft_errno = FT_ERR_NO_MEMORY;
             return (-1);
         }
         index = 0;

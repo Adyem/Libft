@@ -131,7 +131,7 @@ ft_function<ReturnType(Args...)>::ft_function(FunctionType function)
     copy = new (std::nothrow) FunctionType(std::move(function));
     if (!copy)
     {
-        this->set_error(FT_EALLOC);
+        this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
     this->_callable = copy;
@@ -159,7 +159,7 @@ ft_function<ReturnType(Args...)>::ft_function(const ft_function &other)
         this->_callable = other._clone(other._callable);
         if (!this->_callable)
         {
-            this->set_error(FT_EALLOC);
+            this->set_error(FT_ERR_NO_MEMORY);
             return ;
         }
     }
@@ -272,7 +272,7 @@ ft_function<ReturnType(Args...)> &ft_function<ReturnType(Args...)>::operator=(co
         new_callable = other._clone(other._callable);
         if (!new_callable)
         {
-            this->set_error(FT_EALLOC);
+            this->set_error(FT_ERR_NO_MEMORY);
             return (*this);
         }
     }
@@ -393,7 +393,7 @@ ReturnType ft_function<ReturnType(Args...)>::operator()(Args... args) const
     callable = this->_callable;
     if (!invoke_target || !callable)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         guard.unlock();
         if (guard.get_error() != ER_SUCCESS)
         {

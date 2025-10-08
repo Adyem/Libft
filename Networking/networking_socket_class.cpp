@@ -42,7 +42,7 @@ ssize_t ft_socket::send_data(const void *data, size_t size, int flags, int fd)
         }
         index++;
     }
-    this->set_error(FT_EINVAL);
+    this->set_error(FT_ERR_INVALID_ARGUMENT);
     return (-1);
 }
 
@@ -121,7 +121,7 @@ int ft_socket::accept_connection()
 {
     if (this->_socket_fd < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     struct sockaddr_storage client_addr;
@@ -147,7 +147,7 @@ int ft_socket::accept_connection()
         }
         if (push_error == ER_SUCCESS)
         {
-            push_error = VECTOR_ALLOC_FAIL;
+            push_error = FT_ERR_NO_MEMORY;
         }
         this->set_error(push_error);
         return (-1);
@@ -173,7 +173,7 @@ bool ft_socket::disconnect_client(int fd)
         }
         index++;
     }
-    this->set_error(FT_EINVAL);
+    this->set_error(FT_ERR_INVALID_ARGUMENT);
     return (false);
 }
 
@@ -229,7 +229,7 @@ ft_socket::ft_socket(const SocketConfig &config) : _socket_fd(-1), _error_code(E
         setup_client(config);
     else
     {
-        this->set_error(SOCKET_UNSUPPORTED_TYPE);
+        this->set_error(FT_ERR_UNSUPPORTED_TYPE);
     }
     return ;
 }
@@ -247,7 +247,7 @@ ssize_t ft_socket::send_data(const void *data, size_t size, int flags)
 {
     if (this->_socket_fd < 0)
     {
-        this->set_error(SOCKET_INVALID_CONFIGURATION);
+        this->set_error(FT_ERR_CONFIGURATION);
         return (-1);
     }
     ssize_t bytes_sent = nw_send(this->_socket_fd, data, size, flags);
@@ -262,7 +262,7 @@ ssize_t ft_socket::send_all(const void *data, size_t size, int flags)
 {
     if (this->_socket_fd < 0)
     {
-        this->set_error(SOCKET_INVALID_CONFIGURATION);
+        this->set_error(FT_ERR_CONFIGURATION);
         return (-1);
     }
     size_t total_sent = 0;
@@ -312,7 +312,7 @@ ssize_t ft_socket::send_all(const void *data, size_t size, int flags)
                 this->set_error(ft_errno);
                 return (-1);
             }
-            this->set_error(SOCKET_SEND_FAILED);
+            this->set_error(FT_ERR_SOCKET_SEND_FAILED);
             return (-1);
         }
         total_sent += bytes_sent;
@@ -330,7 +330,7 @@ ssize_t ft_socket::receive_data(void *buffer, size_t size, int flags)
 {
     if (this->_socket_fd < 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     ssize_t bytes_received = nw_recv(this->_socket_fd, buffer, size, flags);
@@ -403,7 +403,7 @@ int ft_socket::initialize(const SocketConfig &config)
 {
     if (this->_socket_fd != -1)
     {
-        this->set_error(SOCKET_ALREADY_INITIALIZED);
+        this->set_error(FT_ERR_ALREADY_INITIALIZED);
         return (1);
     }
     if (config._type == SocketType::SERVER)
@@ -418,7 +418,7 @@ int ft_socket::initialize(const SocketConfig &config)
     }
     else
     {
-        this->set_error(SOCKET_UNSUPPORTED_TYPE);
+        this->set_error(FT_ERR_UNSUPPORTED_TYPE);
     }
     return (this->_error_code);
 }

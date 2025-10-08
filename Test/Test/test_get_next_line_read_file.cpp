@@ -11,7 +11,7 @@ FT_TEST(test_ft_read_file_lines_basic, "ft_read_file_lines collects lines from s
     ft_istringstream input("First\nSecond\n");
     char **lines;
 
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     lines = ft_read_file_lines(input, 4);
     if (lines == ft_nullptr)
         return (0);
@@ -49,7 +49,7 @@ FT_TEST(test_ft_read_file_lines_empty_stream_returns_null, "ft_read_file_lines r
     ft_istringstream input("");
     char **lines;
 
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     lines = ft_read_file_lines(input, 8);
     FT_ASSERT_EQ(ft_nullptr, lines);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -66,6 +66,6 @@ FT_TEST(test_ft_read_file_lines_allocation_failure_sets_errno, "ft_read_file_lin
     lines = ft_read_file_lines(input, 4);
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(ft_nullptr, lines);
-    FT_ASSERT_EQ(FT_EALLOC, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     return (1);
 }

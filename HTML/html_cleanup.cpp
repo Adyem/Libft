@@ -37,7 +37,7 @@ void html_remove_nodes_by_tag(html_node **nodeList, const char *tagName)
 
     if (nodeList == ft_nullptr || tagName == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     current = *nodeList;
@@ -71,7 +71,7 @@ void html_remove_nodes_by_attr(html_node **nodeList, const char *key, const char
 
     if (nodeList == ft_nullptr || key == ft_nullptr || value == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     current = *nodeList;
@@ -118,7 +118,7 @@ void html_remove_nodes_by_text(html_node **nodeList, const char *textContent)
 
     if (nodeList == ft_nullptr || textContent == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     current = *nodeList;

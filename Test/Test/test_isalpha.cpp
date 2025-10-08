@@ -4,10 +4,10 @@
 
 FT_TEST(test_isalpha, "ft_isalpha")
 {
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(1, ft_isalpha('a'));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(1, ft_isalpha('Z'));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     ft_errno = ER_SUCCESS;

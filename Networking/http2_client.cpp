@@ -36,7 +36,7 @@ bool http2_stream_manager::open_stream(uint32_t stream_identifier) noexcept
     existing_entry = this->_streams.find(stream_identifier);
     if (existing_entry != ft_nullptr)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     this->_streams.insert(stream_identifier, ft_string());
@@ -57,13 +57,13 @@ bool http2_stream_manager::append_data(uint32_t stream_identifier, const char *d
 
     if (!data && length > 0)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
     stream_entry = this->_streams.find(stream_identifier);
     if (stream_entry == ft_nullptr)
     {
-        this->set_error(MAP_KEY_NOT_FOUND);
+        this->set_error(FT_ERR_NOT_FOUND);
         return (false);
     }
     index = 0;
@@ -88,7 +88,7 @@ bool http2_stream_manager::close_stream(uint32_t stream_identifier) noexcept
     stream_entry = this->_streams.find(stream_identifier);
     if (stream_entry == ft_nullptr)
     {
-        this->set_error(MAP_KEY_NOT_FOUND);
+        this->set_error(FT_ERR_NOT_FOUND);
         return (false);
     }
     this->_streams.remove(stream_identifier);
@@ -109,7 +109,7 @@ bool http2_stream_manager::get_stream_buffer(uint32_t stream_identifier,
     stream_entry = this->_streams.find(stream_identifier);
     if (stream_entry == ft_nullptr)
     {
-        this->set_error(MAP_KEY_NOT_FOUND);
+        this->set_error(FT_ERR_NOT_FOUND);
         return (false);
     }
     out_buffer = stream_entry->value;
@@ -149,7 +149,7 @@ bool http2_encode_frame(const http2_frame &frame, ft_string &out_buffer,
     payload_length = frame.payload.size();
     if (payload_length > 0xFFFFFF)
     {
-        error_code = FT_ERANGE;
+        error_code = FT_ERR_OUT_OF_RANGE;
         return (false);
     }
     header[0] = static_cast<unsigned char>((payload_length >> 16) & 0xFF);
@@ -198,18 +198,18 @@ bool http2_decode_frame(const unsigned char *buffer, size_t buffer_size,
 
     if (!buffer)
     {
-        error_code = FT_EINVAL;
+        error_code = FT_ERR_INVALID_ARGUMENT;
         return (false);
     }
     if (buffer_size < offset)
     {
-        error_code = FT_EINVAL;
+        error_code = FT_ERR_INVALID_ARGUMENT;
         return (false);
     }
     remaining = buffer_size - offset;
     if (remaining < 9)
     {
-        error_code = FT_ERANGE;
+        error_code = FT_ERR_OUT_OF_RANGE;
         return (false);
     }
     payload_length = (static_cast<size_t>(buffer[offset]) << 16);
@@ -223,7 +223,7 @@ bool http2_decode_frame(const unsigned char *buffer, size_t buffer_size,
     out_frame.stream_id |= static_cast<uint32_t>(buffer[offset + 8]);
     if (remaining < 9 + payload_length)
     {
-        error_code = FT_ERANGE;
+        error_code = FT_ERR_OUT_OF_RANGE;
         return (false);
     }
     out_frame.payload.clear();
@@ -269,7 +269,7 @@ bool http2_compress_headers(const ft_vector<http2_header_field> &headers,
     }
     if (header_count > 0xFFFF)
     {
-        error_code = FT_ERANGE;
+        error_code = FT_ERR_OUT_OF_RANGE;
         return (false);
     }
     http2_append_raw_byte(out_block,
@@ -309,7 +309,7 @@ bool http2_compress_headers(const ft_vector<http2_header_field> &headers,
         }
         if (name_length > 0xFFFF || value_length > 0xFFFF)
         {
-            error_code = FT_ERANGE;
+            error_code = FT_ERR_OUT_OF_RANGE;
             return (false);
         }
         http2_append_raw_byte(out_block,
@@ -389,7 +389,7 @@ bool http2_decompress_headers(const ft_string &block,
     }
     if (buffer_length < 2)
     {
-        error_code = FT_ERANGE;
+        error_code = FT_ERR_OUT_OF_RANGE;
         return (false);
     }
     header_count = (static_cast<size_t>(buffer[0]) << 8)
@@ -406,7 +406,7 @@ bool http2_decompress_headers(const ft_string &block,
 
         if (offset + 4 > buffer_length)
         {
-            error_code = FT_ERANGE;
+            error_code = FT_ERR_OUT_OF_RANGE;
             return (false);
         }
         name_length = (static_cast<size_t>(buffer[offset]) << 8)
@@ -414,7 +414,7 @@ bool http2_decompress_headers(const ft_string &block,
         offset += 2;
         if (offset + name_length + 2 > buffer_length)
         {
-            error_code = FT_ERANGE;
+            error_code = FT_ERR_OUT_OF_RANGE;
             return (false);
         }
         name_index = 0;
@@ -434,7 +434,7 @@ bool http2_decompress_headers(const ft_string &block,
         offset += 2;
         if (offset + value_length > buffer_length)
         {
-            error_code = FT_ERANGE;
+            error_code = FT_ERR_OUT_OF_RANGE;
             return (false);
         }
         value_index = 0;
@@ -472,7 +472,7 @@ bool http2_select_alpn_protocol(SSL *ssl_session, bool &selected_http2,
     selected_http2 = false;
     if (!ssl_session)
     {
-        error_code = FT_EINVAL;
+        error_code = FT_ERR_INVALID_ARGUMENT;
         return (false);
     }
     protocols[0] = 2;
@@ -491,7 +491,7 @@ bool http2_select_alpn_protocol(SSL *ssl_session, bool &selected_http2,
     result = SSL_set_alpn_protos(ssl_session, protocols, sizeof(protocols));
     if (result != 0)
     {
-        error_code = FT_EIO;
+        error_code = FT_ERR_IO;
         return (false);
     }
     selected_protocol = ft_nullptr;

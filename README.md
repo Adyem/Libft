@@ -145,17 +145,17 @@ int     ft_utf8_duplicate_grapheme(const char *string, size_t string_length,
 ```
 
 `ft_strtol` clamps values that exceed `FT_LONG_MAX` or `FT_LONG_MIN` and sets
-`ft_errno` to `FT_ERANGE` when overflow is detected.
+`ft_errno` to `FT_ERR_OUT_OF_RANGE` when overflow is detected.
 
 `ft_utf8_next` and `ft_utf8_count` decode UTF-8 sequences while mirroring invalid
-byte sequences through `FT_EINVAL`. The transformation helpers keep ASCII case
-conversion on the existing hooks, set `FT_ERANGE` if the destination buffer is
-too small, and surface allocation failures as `FT_EALLOC`. Optional grapheme
+byte sequences through `FT_ERR_INVALID_ARGUMENT`. The transformation helpers keep ASCII case
+conversion on the existing hooks, set `FT_ERR_OUT_OF_RANGE` if the destination buffer is
+too small, and surface allocation failures as `FT_ERR_NO_MEMORY`. Optional grapheme
 wrappers reuse the CMA allocation utilities to duplicate composed characters
 while leaving successful iterations with `ER_SUCCESS` so callers can detect the
 end of input without spurious errors.
 
-`ft_fgets` sets `ft_errno` to `FILE_END_OF_FILE` when the stream reaches end of
+`ft_fgets` sets `ft_errno` to `FT_ERR_END_OF_FILE` when the stream reaches end of
 file without an input error, allowing callers to differentiate EOF from other
 failures.
 
@@ -637,14 +637,14 @@ operator const char*() const noexcept;
 
 **Error reporting**
 
-- `BIG_NUMBER_ALLOC_FAIL` – memory allocation failed while growing or
+- `FT_ERR_NO_MEMORY` – memory allocation failed while growing or
   shrinking the digit buffer.
-- `BIG_NUMBER_INVALID_DIGIT` – parsing encountered a non-numeric digit for the
+- `FT_ERR_INVALID_ARGUMENT` – parsing encountered a non-numeric digit for the
   requested base.
-- `BIG_NUMBER_NEGATIVE_RESULT` – a magnitude-only subtraction detected the
+- `FT_ERR_INVALID_STATE` – a magnitude-only subtraction detected the
   right operand was larger than the left, which would otherwise yield a
   negative magnitude.
-- `BIG_NUMBER_DIVIDE_BY_ZERO` – division or modulo detected a zero divisor.
+- `FT_ERR_DIVIDE_BY_ZERO` – division or modulo detected a zero divisor.
 - Query errors with `get_error()`/`get_error_str()` after each operation to
   guard against silent failures.
 
@@ -863,12 +863,12 @@ int         join_multicast_group(const SocketConfig &config);
 ```
 
 Calling `send_all` now treats a zero-byte transmission as a peer disconnect and
-returns `-1` with the `SOCKET_SEND_FAILED` error code instead of retrying
+returns `-1` with the `FT_ERR_SOCKET_SEND_FAILED` error code instead of retrying
 indefinitely. This ensures callers can react promptly to closed connections.
 
 The HTTP client exposes `http_client_send_plain_request` and
 `http_client_send_ssl_request` helpers to retry partial transmissions and
-surface `SOCKET_SEND_FAILED` through `ft_errno` when the peer stops
+surface `FT_ERR_SOCKET_SEND_FAILED` through `ft_errno` when the peer stops
 accepting data.
 The compatibility layer exposes `cmp_socket_send_all`, letting C callers invoke
 `ft_socket::send_all` while preserving the same error propagation and return
@@ -1371,7 +1371,7 @@ unsigned char *decompress_buffer(const unsigned char *input_buffer, std::size_t 
 The helpers prefix each payload with its uncompressed size stored as an
 unsigned 32-bit value. As a result, any request whose buffer exceeds
 `compression_max_size` (`UINT32_MAX` bytes) is rejected before reaching zlib and
-sets `ft_errno` to `FT_EINVAL`.
+sets `ft_errno` to `FT_ERR_INVALID_ARGUMENT`.
 
 The returned buffers are allocated with CMA and must be freed using `cma_free`.
 
@@ -1622,7 +1622,7 @@ and `get_error_str`.
 When encryption is enabled values are padded, AES-128 encrypted, Base64
 encoded, and stored alongside a `__encryption__` metadata flag. The key must
 be exactly 16 bytes. Loading encrypted data without a key, with a wrong key,
-or with unsupported metadata fails with `FT_EINVAL`. Existing plaintext files
+or with unsupported metadata fails with `FT_ERR_INVALID_ARGUMENT`. Existing plaintext files
 can be encrypted by configuring a key and calling `kv_flush`, but mixing
 encrypted and plaintext entries in the same file is not supported.
 
@@ -2014,7 +2014,7 @@ scheduler->reschedule_event(1, 5);
 scheduler->cancel_event(1);
 ```
 
-Both helpers search the scheduler's queue and set `GAME_GENERAL_ERROR` if the event is not found.
+Both helpers search the scheduler's queue and set `FT_ERR_GAME_GENERAL_ERROR` if the event is not found.
 
 Queued events can be saved and reloaded through `serialize_event_scheduler` and
 `deserialize_event_scheduler`, which `ft_world::save_to_file` and

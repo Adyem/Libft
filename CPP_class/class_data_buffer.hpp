@@ -57,7 +57,7 @@ DataBuffer& DataBuffer::operator<<(const T& value)
     if (!bytes)
     {
         this->_ok = false;
-        this->set_error(CMA_BAD_ALLOC);
+        this->set_error(FT_ERR_NO_MEMORY);
         return (*this);
     }
     size_t len = ft_strlen_size_t(bytes);
@@ -96,14 +96,14 @@ DataBuffer& DataBuffer::operator>>(T& value)
     if (!this->_ok || this->_read_pos + len > this->_buffer.size())
     {
         this->_ok = false;
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (*this);
     }
     char *bytes = static_cast<char*>(cma_calloc(len + 1, sizeof(char)));
     if (!bytes)
     {
         this->_ok = false;
-        this->set_error(CMA_BAD_ALLOC);
+        this->set_error(FT_ERR_NO_MEMORY);
         return (*this);
     }
     ft_memcpy(bytes, this->_buffer.begin() + this->_read_pos, len);

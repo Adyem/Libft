@@ -58,7 +58,7 @@ int html_write_to_file(const char *file_path, html_node *node_list)
 
     if (!file_path)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     file_descriptor = su_open(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);

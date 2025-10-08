@@ -10,11 +10,11 @@ FT_TEST(test_loot_table_get_random_success_sets_success, "ft_loot_table getRando
     int treasure_value = 42;
 
     FT_ASSERT_EQ(ft_nullptr, table.getRandomLoot());
-    FT_ASSERT_EQ(LOOT_TABLE_EMPTY, ft_errno);
-    FT_ASSERT_EQ(LOOT_TABLE_EMPTY, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_EMPTY, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_EMPTY, table.get_error());
 
     table.addElement(&treasure_value, 10, 0);
-    ft_errno = FT_ERANGE;
+    ft_errno = FT_ERR_OUT_OF_RANGE;
 
     int *result = table.getRandomLoot();
     if (result == ft_nullptr)
@@ -36,8 +36,8 @@ FT_TEST(test_loot_table_get_random_overflow_sets_error, "ft_loot_table getRandom
 
     int *result = table.getRandomLoot();
     FT_ASSERT_EQ(ft_nullptr, result);
-    FT_ASSERT_EQ(FT_ERANGE, ft_errno);
-    FT_ASSERT_EQ(FT_ERANGE, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, table.get_error());
     return (1);
 }
 
@@ -47,11 +47,11 @@ FT_TEST(test_loot_table_pop_random_success_sets_success, "ft_loot_table popRando
     int loot_piece = 7;
 
     FT_ASSERT_EQ(ft_nullptr, table.popRandomLoot());
-    FT_ASSERT_EQ(LOOT_TABLE_EMPTY, ft_errno);
-    FT_ASSERT_EQ(LOOT_TABLE_EMPTY, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_EMPTY, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_EMPTY, table.get_error());
 
     table.addElement(&loot_piece, 3, 0);
-    ft_errno = FT_ERANGE;
+    ft_errno = FT_ERR_OUT_OF_RANGE;
 
     int *result = table.popRandomLoot();
     if (result != &loot_piece)
@@ -73,7 +73,7 @@ FT_TEST(test_loot_table_pop_random_overflow_sets_error, "ft_loot_table popRandom
 
     int *result = table.popRandomLoot();
     FT_ASSERT_EQ(ft_nullptr, result);
-    FT_ASSERT_EQ(FT_ERANGE, ft_errno);
-    FT_ASSERT_EQ(FT_ERANGE, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, table.get_error());
     return (1);
 }

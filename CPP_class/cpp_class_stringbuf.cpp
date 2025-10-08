@@ -27,7 +27,7 @@ std::size_t ft_stringbuf::read(char *buffer, std::size_t count)
 
     if (!buffer)
     {
-        this->set_error(FT_EINVAL);
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (0);
     }
     while (index < count && this->_position < this->_storage.size())
@@ -35,7 +35,7 @@ std::size_t ft_stringbuf::read(char *buffer, std::size_t count)
         const char *current = this->_storage.at(this->_position);
         if (!current)
         {
-            this->set_error(FT_EINVAL);
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
             failure_occurred = true;
             break ;
         }

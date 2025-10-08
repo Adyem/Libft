@@ -33,7 +33,7 @@ FT_TEST(test_json_document_find_item_by_pointer_missing_path_sets_error, "json d
     document.append_group(group);
     json_item *missing = document.find_item_by_pointer("/missing/name");
     FT_ASSERT(missing == ft_nullptr);
-    FT_ASSERT_EQ(MAP_KEY_NOT_FOUND, document.get_error());
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, document.get_error());
     return (1);
 }
 
@@ -67,7 +67,7 @@ FT_TEST(test_json_document_pointer_requires_leading_slash, "json document pointe
     document.add_item(group, item);
     json_item *found_item = document.find_item_by_pointer("config/name");
     FT_ASSERT(found_item == ft_nullptr);
-    FT_ASSERT_EQ(FT_EINVAL, document.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, document.get_error());
     return (1);
 }
 
@@ -82,7 +82,7 @@ FT_TEST(test_json_document_pointer_rejects_empty_segment, "json document pointer
     document.add_item(group, item);
     json_item *found_item = document.find_item_by_pointer("/config//name");
     FT_ASSERT(found_item == ft_nullptr);
-    FT_ASSERT_EQ(FT_EINVAL, document.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, document.get_error());
     return (1);
 }
 
@@ -97,6 +97,6 @@ FT_TEST(test_json_document_pointer_invalid_escape_sets_error, "json document poi
     document.add_item(group, item);
     json_item *found_item = document.find_item_by_pointer("/config/~2name");
     FT_ASSERT(found_item == ft_nullptr);
-    FT_ASSERT_EQ(FT_EINVAL, document.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, document.get_error());
     return (1);
 }

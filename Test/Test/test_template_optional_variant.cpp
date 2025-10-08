@@ -13,7 +13,7 @@ FT_TEST(test_ft_optional_reports_empty_state, "ft_optional reports empty state w
     int &fallback_value = optional_value.value();
 
     FT_ASSERT_EQ(0, fallback_value);
-    FT_ASSERT_EQ(OPTIONAL_EMPTY, optional_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_EMPTY, optional_value.get_error());
     return (1);
 }
 
@@ -58,7 +58,7 @@ FT_TEST(test_ft_variant_emplace_and_get, "ft_variant emplace selects alternative
     FT_ASSERT_EQ(0, std::strcmp("hello", string_value));
     int wrong_access = variant_value.get<int>();
     FT_ASSERT_EQ(0, wrong_access);
-    FT_ASSERT_EQ(VARIANT_BAD_ACCESS, variant_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, variant_value.get_error());
     return (1);
 }
 
@@ -75,6 +75,6 @@ FT_TEST(test_ft_variant_visit_and_reset, "ft_variant visit dispatches to active 
     visit_sum = 5;
     variant_value.visit([&visit_sum](const auto &value){ visit_sum += value; });
     FT_ASSERT_EQ(5L, visit_sum);
-    FT_ASSERT_EQ(VARIANT_BAD_ACCESS, variant_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, variant_value.get_error());
     return (1);
 }

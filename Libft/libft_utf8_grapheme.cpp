@@ -39,7 +39,7 @@ int ft_utf8_next_grapheme(const char *string, size_t string_length,
     if (string == ft_nullptr || index_pointer == ft_nullptr
         || grapheme_length_pointer == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (FT_FAILURE);
     }
     if (*index_pointer >= string_length)
@@ -87,7 +87,7 @@ int ft_utf8_duplicate_grapheme(const char *string, size_t string_length,
     if (string == ft_nullptr || index_pointer == ft_nullptr
         || grapheme_pointer == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (FT_FAILURE);
     }
     *grapheme_pointer = ft_nullptr;
@@ -100,7 +100,7 @@ int ft_utf8_duplicate_grapheme(const char *string, size_t string_length,
     allocated_grapheme = static_cast<char *>(cma_malloc(static_cast<ft_size_t>(grapheme_length + 1)));
     if (allocated_grapheme == ft_nullptr)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (FT_FAILURE);
     }
     copy_index = 0;

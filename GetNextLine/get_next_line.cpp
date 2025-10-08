@@ -36,7 +36,7 @@ static char* allocate_new_string(char* string_one, char* string_two)
     new_string = static_cast<char*>(cma_malloc(total_length + 1));
     if (!new_string)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     return (new_string);
@@ -70,7 +70,7 @@ char* ft_strjoin_gnl(char* string_one, char* string_two)
 
     if (!string_one && !string_two)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     result = allocate_new_string(string_one, string_two);
@@ -106,8 +106,8 @@ static char* leftovers(char* readed_string)
             - read_index + 1));
     if (!string)
     {
-        ft_errno = FT_EALLOC;
-        g_gnl_last_leftover_error = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
+        g_gnl_last_leftover_error = FT_ERR_NO_MEMORY;
         cma_free(readed_string);
         return (ft_nullptr);
     }
@@ -129,7 +129,7 @@ static char* malloc_gnl(char* readed_string, size_t length)
         string = static_cast<char*>(cma_malloc(length + 1));
     if (!string)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     return (string);
@@ -142,7 +142,7 @@ static char* fetch_line(char* readed_string)
 
     if (!readed_string[index])
     {
-        ft_errno = FILE_END_OF_FILE;
+        ft_errno = FT_ERR_END_OF_FILE;
         return (ft_nullptr);
     }
     while (readed_string[index] && readed_string[index] != '\n')
@@ -178,7 +178,7 @@ static char* read_stream(ft_istream &input, char* readed_string, std::size_t buf
     buffer = static_cast<char*>(cma_malloc(buffer_size + 1));
     if (!buffer)
     {
-        ft_errno = FT_EALLOC;
+        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
     readed_bytes = 1;
@@ -195,7 +195,7 @@ static char* read_stream(ft_istream &input, char* readed_string, std::size_t buf
             cma_free(readed_string);
             int stream_error = input.get_error();
             if (stream_error == ER_SUCCESS)
-                ft_errno = FT_EIO;
+                ft_errno = FT_ERR_IO;
             else
                 ft_errno = stream_error;
             return (ft_nullptr);
@@ -210,7 +210,7 @@ static char* read_stream(ft_istream &input, char* readed_string, std::size_t buf
     }
     cma_free(buffer);
     if (!has_read_bytes && !readed_string)
-        ft_errno = FILE_END_OF_FILE;
+        ft_errno = FT_ERR_END_OF_FILE;
     return (readed_string);
 }
 
@@ -224,7 +224,7 @@ char    *get_next_line(ft_istream &input, std::size_t buffer_size)
 
     if (buffer_size == 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     map_error_before = readed_map.get_error();

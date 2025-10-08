@@ -12,7 +12,7 @@ int ft_strncmp(const char *string_1, const char *string_2, size_t max_len)
         return (0);
     if (string_1 == ft_nullptr || string_2 == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     while (string_1[current_index] != '\0' &&

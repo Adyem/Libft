@@ -63,7 +63,7 @@ ft_event_emitter<EventType, Args...>::ft_event_emitter(size_t initial_capacity)
         this->_listeners = static_cast<Listener*>(cma_malloc(sizeof(Listener) * initial_capacity));
         if (this->_listeners == ft_nullptr)
         {
-            this->set_error(EVENT_EMITTER_ALLOC_FAIL);
+            this->set_error(FT_ERR_NO_MEMORY);
             return ;
         }
         this->_capacity = initial_capacity;
@@ -142,7 +142,7 @@ bool ft_event_emitter<EventType, Args...>::ensure_capacity(size_t desired)
     maximum_capacity = FT_SYSTEM_SIZE_MAX / sizeof(Listener);
     if (desired > maximum_capacity)
     {
-        this->set_error(FT_ERANGE);
+        this->set_error(FT_ERR_OUT_OF_RANGE);
         return (false);
     }
     if (this->_capacity > maximum_capacity)
@@ -166,7 +166,7 @@ bool ft_event_emitter<EventType, Args...>::ensure_capacity(size_t desired)
     Listener* new_data = static_cast<Listener*>(cma_malloc(sizeof(Listener) * new_capacity));
     if (new_data == ft_nullptr)
     {
-        this->set_error(EVENT_EMITTER_ALLOC_FAIL);
+        this->set_error(FT_ERR_NO_MEMORY);
         return (false);
     }
     size_t listener_index = 0;
@@ -198,7 +198,7 @@ void ft_event_emitter<EventType, Args...>::on(const EventType& event, void (*cal
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     if (!this->ensure_capacity(this->_size + 1))
@@ -218,7 +218,7 @@ void ft_event_emitter<EventType, Args...>::emit(const EventType& event, Args... 
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     bool found = false;
@@ -234,7 +234,7 @@ void ft_event_emitter<EventType, Args...>::emit(const EventType& event, Args... 
     }
     if (!found)
     {
-        this->set_error(EVENT_EMITTER_NOT_FOUND);
+        this->set_error(FT_ERR_NOT_FOUND);
         this->_mutex.unlock(THREAD_ID);
         return ;
     }
@@ -248,7 +248,7 @@ void ft_event_emitter<EventType, Args...>::remove_listener(const EventType& even
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     size_t listener_index = 0;
@@ -271,7 +271,7 @@ void ft_event_emitter<EventType, Args...>::remove_listener(const EventType& even
         }
         ++listener_index;
     }
-    this->set_error(EVENT_EMITTER_NOT_FOUND);
+    this->set_error(FT_ERR_NOT_FOUND);
     this->_mutex.unlock(THREAD_ID);
     return ;
 }
@@ -307,7 +307,7 @@ void ft_event_emitter<EventType, Args...>::clear()
 {
     if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
-        this->set_error(PT_ERR_MUTEX_OWNER);
+        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
         return ;
     }
     size_t listener_index = 0;

@@ -13,7 +13,7 @@ FT_TEST(test_memcmp_equal, "ft_memcmp equal buffers")
     b[0] = 'a';
     b[1] = 'b';
     b[2] = 'c';
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(0, ft_memcmp(a, b, 3));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
@@ -29,7 +29,7 @@ FT_TEST(test_memcmp_less, "ft_memcmp less than")
     b[0] = 'a';
     b[1] = 'b';
     b[2] = 'd';
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT(ft_memcmp(a, b, 3) < 0);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
@@ -45,7 +45,7 @@ FT_TEST(test_memcmp_greater, "ft_memcmp greater than")
     b[0] = 'a';
     b[1] = 'b';
     b[2] = 'c';
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT(ft_memcmp(a, b, 3) > 0);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
@@ -57,7 +57,7 @@ FT_TEST(test_memcmp_zero_length, "ft_memcmp zero length")
     char b[1];
     a[0] = 'x';
     b[0] = 'y';
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(0, ft_memcmp(a, b, 0));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
@@ -65,7 +65,7 @@ FT_TEST(test_memcmp_zero_length, "ft_memcmp zero length")
 
 FT_TEST(test_memcmp_zero_length_clears_errno, "ft_memcmp zero length clears errno")
 {
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(0, ft_memcmp(ft_nullptr, ft_nullptr, 0));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
@@ -77,7 +77,7 @@ FT_TEST(test_memcmp_high_bit, "ft_memcmp high-bit comparison")
     char b[1];
     a[0] = (char)0x80;
     b[0] = 0;
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT(ft_memcmp(a, b, 1) > 0);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
@@ -96,13 +96,13 @@ FT_TEST(test_memcmp_limit_hides_late_difference, "ft_memcmp stops comparing afte
     second[1] = 'b';
     second[2] = 'x';
     second[3] = '\0';
-    ft_errno = FT_EINVAL;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(0, ft_memcmp(first, second, 2));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
-FT_TEST(test_memcmp_null_pointer_sets_errno, "ft_memcmp null pointer sets FT_EINVAL")
+FT_TEST(test_memcmp_null_pointer_sets_errno, "ft_memcmp null pointer sets FT_ERR_INVALID_ARGUMENT")
 {
     char buffer[2];
 
@@ -110,9 +110,9 @@ FT_TEST(test_memcmp_null_pointer_sets_errno, "ft_memcmp null pointer sets FT_EIN
     buffer[1] = '\0';
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(0, ft_memcmp(buffer, ft_nullptr, 1));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(0, ft_memcmp(ft_nullptr, buffer, 1));
-    FT_ASSERT_EQ(FT_EINVAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }

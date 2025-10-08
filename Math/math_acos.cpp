@@ -32,12 +32,12 @@ double math_acos(double dot)
 
     if (math_isnan(dot))
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (math_nan());
     }
     if (math_is_infinite_internal(dot) != 0)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (math_nan());
     }
     tolerance = 0.0000000000001;
@@ -47,7 +47,7 @@ double math_acos(double dot)
             dot = 1.0;
         else
         {
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (math_nan());
         }
     }
@@ -57,7 +57,7 @@ double math_acos(double dot)
             dot = -1.0;
         else
         {
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (math_nan());
         }
     }

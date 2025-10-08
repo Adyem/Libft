@@ -59,7 +59,7 @@ int ft_utf8_next(const char *string, size_t string_length,
     if (string == ft_nullptr || index_pointer == ft_nullptr
         || code_point_pointer == ft_nullptr)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (FT_FAILURE);
     }
     if (*index_pointer >= string_length)
@@ -72,12 +72,12 @@ int ft_utf8_next(const char *string, size_t string_length,
     if (ft_utf8_detect_sequence(first_byte, &expected_length,
             &decoded_value, &minimum_value) != FT_SUCCESS)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (FT_FAILURE);
     }
     if (current_index + expected_length > string_length)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (FT_FAILURE);
     }
     processed_bytes = 1;
@@ -88,7 +88,7 @@ int ft_utf8_next(const char *string, size_t string_length,
         continuation_byte = static_cast<unsigned char>(string[current_index + processed_bytes]);
         if (!ft_utf8_is_trailing_byte(continuation_byte))
         {
-            ft_errno = FT_EINVAL;
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (FT_FAILURE);
         }
         decoded_value = (decoded_value << 6) | (continuation_byte & 0x3F);
@@ -96,17 +96,17 @@ int ft_utf8_next(const char *string, size_t string_length,
     }
     if (decoded_value < minimum_value)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (FT_FAILURE);
     }
     if (decoded_value > 0x10FFFF)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (FT_FAILURE);
     }
     if (decoded_value >= 0xD800 && decoded_value <= 0xDFFF)
     {
-        ft_errno = FT_EINVAL;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (FT_FAILURE);
     }
     *code_point_pointer = decoded_value;
