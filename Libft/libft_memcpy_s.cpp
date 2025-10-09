@@ -1,3 +1,5 @@
+#include "libft_config.hpp"
+#if LIBFT_ENABLE_BOUNDS_CHECKED_HELPERS
 #include "libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
@@ -40,3 +42,4 @@ int ft_memcpy_s(void *destination, size_t destination_size, const void *source, 
         return (-1);
     return (0);
 }
+#endif
