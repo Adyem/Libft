@@ -7,9 +7,17 @@
 #include "../Libft/libft.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
-#include "unordened_map.hpp"
+#include "unordered_map.hpp"
 #include <cstddef>
 #include <new>
+
+/*
+** Complexity and iterator invalidation guarantees:
+** - insert: O(k) where k is key length; may allocate new nodes and invalidates raw node pointers returned earlier.
+** - search: O(k); read-only on success.
+** - clear/destructor: O(n) over stored keys; invalidates all outstanding references.
+** Thread safety: locking ensures internal consistency, but callers should avoid concurrent inserts targeting the same key.
+*/
 
 int pt_thread_yield();
 
@@ -25,7 +33,7 @@ class ft_trie
         };
 
         node_value                                      *_data;
-        ft_unord_map<char, ft_trie<ValueType>*>          _children;
+        ft_unordered_map<char, ft_trie<ValueType>*>          _children;
         mutable pt_mutex                                 _mutex;
         mutable int                                      _error_code;
         mutable int                                      _last_error;
@@ -60,7 +68,7 @@ ft_trie<ValueType>::~ft_trie()
         this->set_error(guard.get_error());
         return ;
     }
-    typename ft_unord_map<char, ft_trie<ValueType>*>::iterator child_iterator = this->_children.begin();
+    typename ft_unordered_map<char, ft_trie<ValueType>*>::iterator child_iterator = this->_children.begin();
     while (child_iterator != this->_children.end())
     {
         delete child_iterator->second;
@@ -191,7 +199,7 @@ const typename ft_trie<ValueType>::node_value *ft_trie<ValueType>::search(const 
                 this->set_error(guard.get_error());
                 return (ft_nullptr);
             }
-            typename ft_unord_map<char, ft_trie<ValueType>*>::const_iterator child_iterator(current_node->_children.find(*key_iterator));
+            typename ft_unordered_map<char, ft_trie<ValueType>*>::const_iterator child_iterator(current_node->_children.find(*key_iterator));
             if (child_iterator == current_node->_children.end())
             {
                 this->set_error(ER_SUCCESS);

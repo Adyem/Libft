@@ -10,6 +10,14 @@
 #include <cstddef>
 #include <utility>
 
+/*
+** Complexity and iterator invalidation guarantees:
+** - size, empty: O(1) without invalidation.
+** - push_front, push_back: O(1); only invalidates references to previous front/back respectively.
+** - pop_front, pop_back: O(1); invalidates references to removed element.
+** - clear: O(n); invalidates all node references.
+** Thread safety: synchronize concurrent access; mutex protects error state only.
+*/
 template <typename ElementType>
 class ft_deque
 {

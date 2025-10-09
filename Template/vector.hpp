@@ -10,6 +10,16 @@
 #include "../PThread/mutex.hpp"
 #include "../Libft/libft.hpp"
 
+/*
+** Complexity and iterator invalidation guarantees:
+** - size, capacity, empty: O(1) without invalidation.
+** - push_back: amortized O(1); reallocation invalidates all iterators and references.
+** - pop_back: O(1); invalidates end() and references to removed element only.
+** - reserve, resize: O(n) due to element moves; reallocation invalidates all iterators and references.
+** - insert, erase: O(n) from insertion/erase position to end; invalidate iterators at or after position.
+** - clear: O(n); invalidates all iterators and references.
+** Thread safety: callers must synchronize concurrent reads or writes; internal mutex protects error reporting only.
+*/
 template <typename ElementType>
 class ft_vector
 {

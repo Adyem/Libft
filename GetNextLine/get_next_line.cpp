@@ -3,11 +3,11 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include <cstdio>
 #include "../CPP_class/class_istream.hpp"
-#include "../Template/unordened_map.hpp"
+#include "../Template/unordered_map.hpp"
 #include "../Errno/errno.hpp"
 #include "get_next_line.hpp"
 
-static bool map_has_new_error(ft_unord_map<ft_istream*, char*> &map, int previous_error, int *current_error)
+static bool map_has_new_error(ft_unordered_map<ft_istream*, char*> &map, int previous_error, int *current_error)
 {
     int updated_error;
 
@@ -216,7 +216,7 @@ static char* read_stream(ft_istream &input, char* readed_string, std::size_t buf
 
 char    *get_next_line(ft_istream &input, std::size_t buffer_size)
 {
-    static ft_unord_map<ft_istream*, char*> readed_map;
+    static ft_unordered_map<ft_istream*, char*> readed_map;
     char                                   *string = ft_nullptr;
     char                                   *stored_string = ft_nullptr;
     int                                     map_error_before;
@@ -228,7 +228,7 @@ char    *get_next_line(ft_istream &input, std::size_t buffer_size)
         return (ft_nullptr);
     }
     map_error_before = readed_map.get_error();
-    ft_unord_map<ft_istream*, char*>::iterator map_it = readed_map.find(&input);
+    ft_unordered_map<ft_istream*, char*>::iterator map_it = readed_map.find(&input);
     if (map_has_new_error(readed_map, map_error_before, &map_error_after))
     {
         ft_errno = map_error_after;
@@ -243,7 +243,7 @@ char    *get_next_line(ft_istream &input, std::size_t buffer_size)
 
         failure_errno = ft_errno;
         map_error_before = readed_map.get_error();
-        readed_map.remove(&input);
+        readed_map.erase(&input);
         if (map_has_new_error(readed_map, map_error_before, &map_error_after))
         {
             ft_errno = map_error_after;
@@ -260,7 +260,7 @@ char    *get_next_line(ft_istream &input, std::size_t buffer_size)
     if (leftovers_error != ER_SUCCESS)
     {
         map_error_before = readed_map.get_error();
-        readed_map.remove(&input);
+        readed_map.erase(&input);
         if (map_has_new_error(readed_map, map_error_before, &map_error_after))
         {
             ft_errno = map_error_after;
@@ -287,7 +287,7 @@ char    *get_next_line(ft_istream &input, std::size_t buffer_size)
         else
         {
             map_error_before = readed_map.get_error();
-            readed_map.remove(&input);
+            readed_map.erase(&input);
             if (map_has_new_error(readed_map, map_error_before, &map_error_after))
             {
                 ft_errno = map_error_after;
@@ -301,7 +301,7 @@ char    *get_next_line(ft_istream &input, std::size_t buffer_size)
     if (!stored_string)
     {
         map_error_before = readed_map.get_error();
-        readed_map.remove(&input);
+        readed_map.erase(&input);
         if (map_has_new_error(readed_map, map_error_before, &map_error_after))
         {
             ft_errno = map_error_after;

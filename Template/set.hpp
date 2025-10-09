@@ -10,6 +10,16 @@
 #include <cstddef>
 #include <utility>
 
+/*
+** Complexity and iterator invalidation guarantees:
+** - size, empty: O(1) without invalidation.
+** - find: O(log n); does not invalidate iterators.
+** - insert: O(n) due to shifting to maintain order; invalidates iterators at or after insertion point.
+** - remove: O(n) with element compaction; invalidates iterators at or after removed position.
+** - clear: O(n); invalidates all iterators and references.
+** Thread safety: external synchronization required; mutex covers error reporting only.
+*/
+
 
 
 template <typename ElementType>

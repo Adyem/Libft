@@ -11,6 +11,15 @@
 #include "../Libft/libft.hpp"
 #include <utility>
 
+/*
+** Complexity and iterator invalidation guarantees:
+** - size, empty: O(1) without invalidation.
+** - insert: O(n) due to linear search and potential reallocation; resizing invalidates all iterators.
+** - remove: O(n); invalidates iterators pointing to removed element and any iterators after compaction.
+** - find: O(n); does not invalidate iterators.
+** - clear: O(n); invalidates all iterators and references.
+** Thread safety: synchronize external access; internal mutex preserves error state only.
+*/
 template <typename Key, typename MappedType>
 class ft_map
 {

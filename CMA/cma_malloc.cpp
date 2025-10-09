@@ -20,6 +20,16 @@ void* cma_malloc(ft_size_t size)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
+    ft_size_t request_size = size;
+    if (size == 0)
+        size = 1;
+    if (g_cma_alloc_limit != 0 && size > g_cma_alloc_limit)
+    {
+        ft_errno = FT_ERR_NO_MEMORY;
+        return (ft_nullptr);
+    }
+    if (cma_backend_is_enabled())
+        return (cma_backend_allocate(size));
     if (OFFSWITCH == 1)
     {
         void *ptr = malloc(static_cast<size_t>(size));
@@ -34,14 +44,6 @@ void* cma_malloc(ft_size_t size)
             ft_log_debug("cma_malloc %llu -> %p",
                 static_cast<unsigned long long>(size), ptr);
         return (ptr);
-    }
-    ft_size_t request_size = size;
-    if (size == 0)
-        size = 1;
-    if (g_cma_alloc_limit != 0 && size > g_cma_alloc_limit)
-    {
-        ft_errno = FT_ERR_NO_MEMORY;
-        return (ft_nullptr);
     }
     if (g_cma_thread_safe)
         g_malloc_mutex.lock(THREAD_ID);

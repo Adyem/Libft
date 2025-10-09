@@ -10,6 +10,15 @@
 #include <cstddef>
 #include <utility>
 
+/*
+** Complexity and iterator invalidation guarantees:
+** - size, empty: O(1) without invalidation.
+** - push: O(1); invalidates only the previous top reference.
+** - pop: O(1); invalidates references to removed top element.
+** - top accessors: O(1); no invalidation.
+** - clear: O(n); invalidates all node references.
+** Thread safety: external synchronization required; mutex protects error propagation only.
+*/
 template <typename ElementType>
 class ft_stack
 {

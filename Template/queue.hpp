@@ -10,6 +10,15 @@
 #include <cstddef>
 #include <utility>
 
+/*
+** Complexity and iterator invalidation guarantees:
+** - size, empty: O(1) without invalidation.
+** - enqueue: O(1); invalidates only references to previous rear when queue was empty.
+** - dequeue: O(1); invalidates references to removed front element.
+** - front accessors: O(1); no invalidation.
+** - clear: O(n); invalidates all node references.
+** Thread safety: external synchronization required; mutex protects error propagation only.
+*/
 template <typename ElementType>
 class ft_queue
 {
