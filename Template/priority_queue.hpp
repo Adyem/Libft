@@ -12,6 +12,15 @@
 #include <utility>
 #include <functional>
 
+/*
+** Complexity and iterator invalidation guarantees:
+** - size, empty, top: O(1) without invalidation.
+** - push: O(log n); reallocation invalidates all element references.
+** - pop: O(log n); invalidates references to removed top and any elements relocated during heapify.
+** - clear: O(n); invalidates all references.
+** Thread safety: callers must guard concurrent operations; mutex secures error propagation only.
+*/
+
 
 
 template <typename ElementType, typename Compare = std::less<ElementType> >

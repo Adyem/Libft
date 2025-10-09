@@ -493,7 +493,7 @@ void    cma_get_extended_stats(ft_size_t *allocation_count,
 
 ### GetNextLine
 
-`GetNextLine/get_next_line.hpp` implements a simple file reader that works with `ft_istream` and a configurable buffer size. It stores per-stream leftovers in the custom `ft_unord_map`, allowing error reporting through `ft_errno`. The `CPP_class` module provides `ft_istream`, `ft_stringbuf`, `ft_istringstream`, and `ft_ofstream` as lightweight replacements for the standard stream classes.
+`GetNextLine/get_next_line.hpp` implements a simple file reader that works with `ft_istream` and a configurable buffer size. It stores per-stream leftovers in the custom `ft_unordered_map`, allowing error reporting through `ft_errno`. The `CPP_class` module provides `ft_istream`, `ft_stringbuf`, `ft_istringstream`, and `ft_ofstream` as lightweight replacements for the standard stream classes.
 
 ```
 char   *ft_strjoin_gnl(char *string_one, char *string_two);
@@ -1212,7 +1212,7 @@ unsigned long long su_get_total_memory(void);
 components include:
 
 - Containers: `ft_vector`, `ft_deque`, `ft_stack`, `ft_queue`,
-  `ft_priority_queue`, `ft_set`, `ft_map`, `ft_unordened_map`,
+  `ft_priority_queue`, `ft_set`, `ft_map`, `ft_unordered_map`,
   `ft_trie`, `ft_circular_buffer`, `ft_graph` and `ft_matrix`.
  - Utility types: `ft_pair`, `ft_tuple`, `ft_optional`, `ft_variant`,
    `ft_bitset`, `ft_function` and `ft_string_view`.

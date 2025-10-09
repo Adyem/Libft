@@ -5,6 +5,34 @@
 #include "../Libft/libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
+typedef void    *(*cma_backend_allocate_function)(ft_size_t size, void *user_data);
+typedef void    *(*cma_backend_reallocate_function)(void *memory_pointer,
+            ft_size_t size, void *user_data);
+typedef void    (*cma_backend_deallocate_function)(void *memory_pointer,
+            void *user_data);
+typedef void    *(*cma_backend_aligned_allocate_function)(ft_size_t alignment,
+            ft_size_t size, void *user_data);
+typedef ft_size_t    (*cma_backend_get_allocation_size_function)(
+            const void *memory_pointer, void *user_data);
+typedef int     (*cma_backend_owns_allocation_function)(
+            const void *memory_pointer, void *user_data);
+
+struct cma_backend_hooks
+{
+    cma_backend_allocate_function allocate;
+    cma_backend_reallocate_function reallocate;
+    cma_backend_deallocate_function deallocate;
+    cma_backend_aligned_allocate_function aligned_allocate;
+    cma_backend_get_allocation_size_function get_allocation_size;
+    cma_backend_owns_allocation_function owns_allocation;
+    void    *user_data;
+};
+
+int     cma_set_backend(const cma_backend_hooks *hooks)
+            __attribute__ ((warn_unused_result));
+void    cma_clear_backend(void);
+int     cma_backend_is_enabled(void) __attribute__ ((warn_unused_result));
+
 void    *cma_malloc(ft_size_t size) __attribute__ ((warn_unused_result, hot));
 void    cma_free(void* ptr) __attribute__ ((hot));
 int     cma_checked_free(void* ptr) __attribute__ ((warn_unused_result, hot));

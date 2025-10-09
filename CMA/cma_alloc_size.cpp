@@ -41,6 +41,8 @@ ft_size_t cma_block_size(const void *memory_pointer)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
+    if (cma_backend_is_enabled() && cma_backend_owns_pointer(memory_pointer))
+        return (cma_backend_block_size(memory_pointer));
     if (g_cma_thread_safe)
         g_malloc_mutex.lock(THREAD_ID);
     Block *block = cma_get_block_from_pointer(memory_pointer);
@@ -73,6 +75,8 @@ int cma_checked_block_size(const void *memory_pointer, ft_size_t *block_size)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
+    if (cma_backend_is_enabled() && cma_backend_owns_pointer(memory_pointer))
+        return (cma_backend_checked_block_size(memory_pointer, block_size));
     if (g_cma_thread_safe)
         g_malloc_mutex.lock(THREAD_ID);
     Block *block = cma_find_block_for_pointer(memory_pointer);

@@ -41,6 +41,16 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
+    if (g_cma_alloc_limit != 0 && new_size > g_cma_alloc_limit)
+    {
+        ft_errno = FT_ERR_NO_MEMORY;
+        return (ft_nullptr);
+    }
+    if (cma_backend_is_enabled())
+    {
+        if (!ptr || cma_backend_owns_pointer(ptr))
+            return (cma_backend_reallocate(ptr, new_size));
+    }
     if (OFFSWITCH == 1)
     {
         void *result = std::realloc(ptr, static_cast<size_t>(new_size));
@@ -59,11 +69,6 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         else
             ft_errno = ER_SUCCESS;
         return (result);
-    }
-    if (g_cma_alloc_limit != 0 && new_size > g_cma_alloc_limit)
-    {
-        ft_errno = FT_ERR_NO_MEMORY;
-        return (ft_nullptr);
     }
     if (g_cma_thread_safe)
         g_malloc_mutex.lock(THREAD_ID);

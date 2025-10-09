@@ -8,11 +8,11 @@
 ## Documentation and examples
 - [x] Produce per-module overviews that explain design goals, invariants, and error-reporting patterns referenced throughout `README.md` (see `Docs/module_overviews.md`).
 - [x] Generate Doxygen (or Sphinx/Breathe) API references so consumers can navigate the large header surface (see `Docs/Doxyfile` and `tools/run_doxygen.py`).
-- [ ] Add copyable examples for common tasks (file I/O, HTTP client usage, task scheduling) showing how `_error_code` flows should be checked.
-- [ ] Document platform support expectations and how the `Compatebility` shims should be extended when adding new targets.
-- [ ] Maintain an FAQ and troubleshooting guide informed by common issues raised in bug reports or support channels.
-- [ ] Offer quick-start templates (CMake, Meson, Bazel) demonstrating how to consume the library in fresh projects.
-- [ ] Publish architecture decision records (ADRs) for major subsystem changes to capture context and trade-offs.
+- [x] Add copyable examples for common tasks (file I/O, HTTP client usage, task scheduling) showing how `_error_code` flows should be checked.
+- [x] Document platform support expectations and how the `Compatebility` shims should be extended when adding new targets.
+- [x] Maintain an FAQ and troubleshooting guide informed by common issues raised in bug reports or support channels.
+- [x] Offer quick-start templates (CMake, Meson, Bazel) demonstrating how to consume the library in fresh projects.
+- [x] Publish architecture decision records (ADRs) for major subsystem changes to capture context and trade-offs. See `Docs/architecture_decision_records/`.
 
 ## Module-specific improvements
 
@@ -32,10 +32,10 @@
 
 ### CMA (custom memory allocation)
 - [x] Document how the allocation limit and thread-safety toggles interact, including examples that demonstrate failure injection. (See `Docs/cma_allocation_controls.md` and new regression tests.)
-- [ ] Add stress tests that mix `cma_malloc`, `cma_realloc`, and `cma_free` across threads to validate the internal bookkeeping under contention.
+- [x] Add stress tests that mix `cma_malloc`, `cma_realloc`, and `cma_free` across threads to validate the internal bookkeeping under contention.
 - [x] Surface allocator statistics (total allocated bytes, peak usage) through a public query API for diagnostics.
-- [ ] Provide hooks for custom backends so projects can route allocations to region-specific arenas or embedded allocators.
-- [ ] Audit the global new/delete overrides to ensure they respect alignment requirements on every supported platform.
+- [x] Provide hooks for custom backends so projects can route allocations to region-specific arenas or embedded allocators.
+- [x] Audit the global new/delete overrides to ensure they respect alignment requirements on every supported platform.
 - [ ] Implement guard-page or canary instrumentation in debug mode to catch buffer overruns during development.
 - [ ] Add leak detection and reporting helpers that can be toggled per-thread for targeted investigations.
 - [ ] Supply RAII helpers and scope guards that automatically free CMA allocations to simplify error paths in callers.
@@ -89,8 +89,8 @@
 - [ ] Add lock contention diagnostics (sampling, priority inversion detection) exposed through the Logger module.
 
 ### Template containers and utilities
-- [ ] Review container naming (e.g., rename `unordened_map.hpp` to `unordered_map.hpp`) and ensure API parity with the standard library counterparts.
-- [ ] Add iterator invalidation rules and complexity annotations to headers so users know when operations are safe in real-time systems.
+- [x] Review container naming (e.g., rename `unordened_map.hpp` to `unordered_map.hpp`) and ensure API parity with the standard library counterparts.
+- [x] Add iterator invalidation rules and complexity annotations to headers so users know when operations are safe in real-time systems.
 - [ ] Provide small-buffer optimizations or node pooling options for frequently-used containers (`vector`, `map`, `trie`).
 - [ ] Expand constexpr support where possible so templates can be used in compile-time contexts.
 - [ ] Write exhaustive tests for allocator-aware paths, ensuring `_error_code` mirrors allocation failures.

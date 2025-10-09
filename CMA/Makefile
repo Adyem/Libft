@@ -5,6 +5,7 @@ SRCS := cma_calloc.cpp \
         cma_strdup.cpp \
         cma_strndup.cpp \
         cma_memdup.cpp \
+        cma_backend.cpp \
         cma_malloc.cpp \
         cma_free.cpp \
         cma_free_checked.cpp \

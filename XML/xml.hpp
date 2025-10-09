@@ -2,7 +2,7 @@
 #define XML_HPP
 
 #include "../Template/vector.hpp"
-#include "../Template/unordened_map.hpp"
+#include "../Template/unordered_map.hpp"
 #include "../Errno/errno.hpp"
 #include "../CMA/CMA.hpp"
 
@@ -11,7 +11,7 @@ struct xml_node
     char *name;
     char *text;
     ft_vector<xml_node*> children;
-    ft_unord_map<char*, char*> attributes;
+    ft_unordered_map<char*, char*> attributes;
 
     xml_node() noexcept;
     ~xml_node() noexcept;

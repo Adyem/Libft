@@ -69,8 +69,8 @@ xml_node::~xml_node() noexcept
             delete child;
         child_index++;
     }
-    ft_unord_map<char*, char*>::iterator it = this->attributes.begin();
-    ft_unord_map<char*, char*>::iterator end = this->attributes.end();
+    ft_unordered_map<char*, char*>::iterator it = this->attributes.begin();
+    ft_unordered_map<char*, char*>::iterator end = this->attributes.end();
     while (it != end)
     {
         if (it->first)

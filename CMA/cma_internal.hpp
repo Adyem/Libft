@@ -70,6 +70,20 @@ Block    *merge_block(Block *block);
 void    print_block_info(Block *block);
 Page    *find_page_of_block(Block *block);
 void    free_page_if_empty(Page *page);
+int     cma_backend_is_enabled(void) __attribute__ ((warn_unused_result));
+int     cma_backend_owns_pointer(const void *memory_pointer)
+            __attribute__ ((warn_unused_result));
+void    *cma_backend_allocate(ft_size_t size)
+            __attribute__ ((warn_unused_result, hot));
+void    *cma_backend_reallocate(void *memory_pointer, ft_size_t size)
+            __attribute__ ((warn_unused_result, hot));
+void    cma_backend_deallocate(void *memory_pointer) __attribute__ ((hot));
+void    *cma_backend_aligned_allocate(ft_size_t alignment, ft_size_t size)
+            __attribute__ ((warn_unused_result, hot));
+ft_size_t    cma_backend_block_size(const void *memory_pointer)
+            __attribute__ ((warn_unused_result, hot));
+int     cma_backend_checked_block_size(const void *memory_pointer,
+            ft_size_t *block_size) __attribute__ ((warn_unused_result, hot));
 
 inline __attribute__((always_inline, hot)) ft_size_t align16(ft_size_t size)
 {

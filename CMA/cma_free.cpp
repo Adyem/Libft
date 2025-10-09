@@ -22,6 +22,11 @@ void cma_free(void* ptr)
     }
     if (!ptr)
         return ;
+    if (cma_backend_is_enabled() && cma_backend_owns_pointer(ptr))
+    {
+        cma_backend_deallocate(ptr);
+        return ;
+    }
     if (g_cma_thread_safe)
         g_malloc_mutex.lock(THREAD_ID);
     Block* block = reinterpret_cast<Block*>((static_cast<char*> (ptr)
