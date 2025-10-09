@@ -12,6 +12,8 @@ typedef SSIZE_T ssize_t;
 # include <unistd.h>
 #endif
 
+class ft_string;
+
 char    *su_getenv(const char *name);
 int     su_setenv(const char *name, const char *value, int overwrite);
 int     su_putenv(char *string);
@@ -35,6 +37,9 @@ void    su_sigint(void);
 void    su_sigsegv(void);
 void    su_sigterm(void);
 void    su_assert(bool condition, const char *message);
+
+int     su_locale_compare(const char *left, const char *right, const char *locale_name, int *result);
+int     su_locale_casefold(const char *input, const char *locale_name, ft_string &output);
 
 typedef struct su_file
 {

@@ -26,6 +26,7 @@ void cma_free(void* ptr)
         g_malloc_mutex.lock(THREAD_ID);
     Block* block = reinterpret_cast<Block*>((static_cast<char*> (ptr)
                 - sizeof(Block)));
+    ft_size_t freed_size = 0;
     if (block->magic != MAGIC_NUMBER)
     {
         pf_printf_fd(2, "Invalid block detected in cma_free. \n");
@@ -34,10 +35,15 @@ void cma_free(void* ptr)
             g_malloc_mutex.unlock(THREAD_ID);
         su_sigabrt();
     }
+    freed_size = block->size;
     block->free = true;
     block = merge_block(block);
     Page *page = find_page_of_block(block);
     free_page_if_empty(page);
+    if (g_cma_current_bytes >= freed_size)
+        g_cma_current_bytes -= freed_size;
+    else
+        g_cma_current_bytes = 0;
     if (g_cma_thread_safe)
         g_malloc_mutex.unlock(THREAD_ID);
     g_cma_free_count++;

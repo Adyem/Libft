@@ -14,7 +14,7 @@ static void zero_buffer(char *buffer, size_t buffer_size)
     return ;
 }
 
-int ft_strcpy_s(char *destination, size_t destination_size, const char *source)
+int ft_strncpy_s(char *destination, size_t destination_size, const char *source, size_t max_copy_length)
 {
     size_t source_length;
 
@@ -33,6 +33,12 @@ int ft_strcpy_s(char *destination, size_t destination_size, const char *source)
     if (ft_errno != ER_SUCCESS)
     {
         zero_buffer(destination, destination_size);
+        return (-1);
+    }
+    if (source_length > max_copy_length)
+    {
+        zero_buffer(destination, destination_size);
+        ft_errno = FT_ERR_OUT_OF_RANGE;
         return (-1);
     }
     if (source_length + 1 > destination_size)

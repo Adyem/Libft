@@ -1,3 +1,5 @@
+#include "libft_config.hpp"
+#if LIBFT_ENABLE_FILE_IO_HELPERS
 #include "libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
@@ -35,4 +37,5 @@ char *ft_fgets(char *string, int size, FILE *stream)
     ft_errno = ER_SUCCESS;
     return (result_string);
 }
+#endif
 

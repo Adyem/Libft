@@ -14,8 +14,9 @@ static void zero_buffer(char *buffer, size_t buffer_size)
     return ;
 }
 
-int ft_strcpy_s(char *destination, size_t destination_size, const char *source)
+int ft_strncat_s(char *destination, size_t destination_size, const char *source, size_t max_append_length)
 {
+    size_t destination_length;
     size_t source_length;
 
     ft_errno = ER_SUCCESS;
@@ -29,23 +30,42 @@ int ft_strcpy_s(char *destination, size_t destination_size, const char *source)
         ft_errno = FT_ERR_OUT_OF_RANGE;
         return (-1);
     }
+    destination_length = static_cast<size_t>(ft_strlen(destination));
+    if (ft_errno != ER_SUCCESS)
+    {
+        zero_buffer(destination, destination_size);
+        return (-1);
+    }
+    if (destination_length >= destination_size)
+    {
+        zero_buffer(destination, destination_size);
+        ft_errno = FT_ERR_OUT_OF_RANGE;
+        return (-1);
+    }
     source_length = static_cast<size_t>(ft_strlen(source));
     if (ft_errno != ER_SUCCESS)
     {
         zero_buffer(destination, destination_size);
         return (-1);
     }
-    if (source_length + 1 > destination_size)
+    if (source_length > max_append_length)
     {
         zero_buffer(destination, destination_size);
         ft_errno = FT_ERR_OUT_OF_RANGE;
         return (-1);
     }
-    if (ft_memcpy(destination, source, source_length + 1) == ft_nullptr)
+    if (destination_length + source_length + 1 > destination_size)
+    {
+        zero_buffer(destination, destination_size);
+        ft_errno = FT_ERR_OUT_OF_RANGE;
+        return (-1);
+    }
+    if (ft_memcpy(destination + destination_length, source, source_length) == ft_nullptr)
     {
         zero_buffer(destination, destination_size);
         return (-1);
     }
+    destination[destination_length + source_length] = '\0';
     if (ft_errno != ER_SUCCESS)
     {
         zero_buffer(destination, destination_size);

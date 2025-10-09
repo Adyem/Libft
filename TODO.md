@@ -1,13 +1,13 @@
 # TODO
 
 ## Library-wide priorities
-- [ ] Publish a canonical error-code registry that documents each value exposed through `Errno/errno.hpp` and clarifies which modules set them, so cross-module error handling stays consistent.
+- [x] Publish a canonical error-code registry that documents each value exposed through `Errno/errno.hpp` and clarifies which modules set them, so cross-module error handling stays consistent.
 - [x] Re-audit the error code catalog to collapse redundant class-specific values into shared generic codes where possible so callers can rely on a simpler set of outcomes when handling failures.
-- [ ] Deduplicate and auto-generate `FullLibft.hpp` so umbrella includes stay sorted and avoid the current duplicate entries like `System_utils/system_utils.hpp`.
+- [x] Deduplicate and auto-generate `FullLibft.hpp` so umbrella includes stay sorted and avoid the current duplicate entries like `System_utils/system_utils.hpp` (manifest-driven generator keeps the header updated).
 
 ## Documentation and examples
-- [ ] Produce per-module overviews that explain design goals, invariants, and error-reporting patterns referenced throughout `README.md`.
-- [ ] Generate Doxygen (or Sphinx/Breathe) API references so consumers can navigate the large header surface.
+- [x] Produce per-module overviews that explain design goals, invariants, and error-reporting patterns referenced throughout `README.md` (see `Docs/module_overviews.md`).
+- [x] Generate Doxygen (or Sphinx/Breathe) API references so consumers can navigate the large header surface (see `Docs/Doxyfile` and `tools/run_doxygen.py`).
 - [ ] Add copyable examples for common tasks (file I/O, HTTP client usage, task scheduling) showing how `_error_code` flows should be checked.
 - [ ] Document platform support expectations and how the `Compatebility` shims should be extended when adding new targets.
 - [ ] Maintain an FAQ and troubleshooting guide informed by common issues raised in bug reports or support channels.
@@ -18,21 +18,22 @@
 
 ### Libft (core C utilities)
 - [x] Implement missing staples such as `ft_split`, `ft_strdup`, `ft_strjoin`, and `ft_itoa` to complete the libc-like surface offered in `libft.hpp` (already exposed today through the CMA wrappers alongside the Libft exports).
-- [ ] Add bounded counterparts so callers can avoid manual truncation checks.
+- [x] Add bounded counterparts so callers can avoid manual truncation checks.
   - [x] Provide `ft_strnlen` and `cma_strndup` implementations that mirror libc semantics while propagating `ft_errno` on failure.
   - [x] Provide span-friendly adapters that operate on buffers without null terminators (`ft_span_dup`, `ft_span_to_string`).
-- [ ] Document and reconcile the overlap between CMA-provided string helpers and the Libft implementations so their semantics and error codes do not drift apart.
+  - [x] Add `ft_strncpy_s` and `ft_strncat_s` helpers that fail fast on truncation and zero buffers when bounds are exceeded.
+- [x] Document and reconcile the overlap between CMA-provided string helpers and the Libft implementations so their semantics and error codes do not drift apart (README now maps shared error codes and regression tests cover the memdup overlap).
 - [x] Extend `ft_to_string` to avoid `std::ostringstream` overhead, propagate `ft_string` allocation failures, and offer formatting for unsigned and floating-point types.
 - [x] Provide wide-character helpers (`ft_wstrlen`, UTF-16/32 conversion) to complement the existing UTF-8 routines.
-- [ ] Harden environment helpers (`ft_setenv`, `ft_getenv`) with thread-safety guards and explicit documentation about process-wide side effects.
+- [x] Harden environment helpers (`ft_setenv`, `ft_getenv`) with thread-safety guards and explicit documentation about process-wide side effects.
 - [x] Add optional bounds-checked wrappers for memory and string functions that return rich error codes instead of sentinel values.
-- [ ] Introduce compile-time configuration flags that allow trimming unused helpers for embedded builds.
-- [ ] Add locale-aware collation and case-folding helpers that rely on the `System_utils` abstractions when available.
+- [x] Introduce compile-time configuration flags that allow trimming unused helpers for embedded builds.
+- [x] Add locale-aware collation and case-folding helpers that rely on the `System_utils` abstractions when available.
 
 ### CMA (custom memory allocation)
-- [ ] Document how the allocation limit and thread-safety toggles interact, including examples that demonstrate failure injection.
+- [x] Document how the allocation limit and thread-safety toggles interact, including examples that demonstrate failure injection. (See `Docs/cma_allocation_controls.md` and new regression tests.)
 - [ ] Add stress tests that mix `cma_malloc`, `cma_realloc`, and `cma_free` across threads to validate the internal bookkeeping under contention.
-- [ ] Surface allocator statistics (total allocated bytes, peak usage) through a public query API for diagnostics.
+- [x] Surface allocator statistics (total allocated bytes, peak usage) through a public query API for diagnostics.
 - [ ] Provide hooks for custom backends so projects can route allocations to region-specific arenas or embedded allocators.
 - [ ] Audit the global new/delete overrides to ensure they respect alignment requirements on every supported platform.
 - [ ] Implement guard-page or canary instrumentation in debug mode to catch buffer overruns during development.

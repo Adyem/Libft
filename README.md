@@ -12,7 +12,9 @@ Header files now use class names or concise module names instead of module prefi
 
 This document briefly lists the main headers and the interfaces they expose. The
 summaries below only outline the available functions and classes. See the header
-files for detailed information.
+files for detailed information. High-level design notes for each subsystem now
+live in `Docs/module_overviews.md` with per-module invariants and error-handling
+conventions referenced by the summaries below.
 
 All classes report errors through a mutable `_error_code` member with `get_error` and `get_error_str` accessors so `const` methods can update the error state. A thread-local `ft_errno` variable mirrors the last error for cross-module access.
 
@@ -31,6 +33,22 @@ make tests
 
 Functional tests reside in `Test/Test` and performance benchmarks in `Test/Efficiency`. The test suite is currently incomplete
 and some files may fail to compile until they are updated for recent interface changes.
+
+## API reference documentation
+
+Libft ships with a Doxygen configuration that emits browsable API documentation
+covering the public headers across every module. Install Doxygen locally and run
+the helper script to validate the configuration or build the docs directly:
+
+```bash
+tools/run_doxygen.py --check   # verifies that referenced modules exist
+tools/run_doxygen.py           # runs doxygen when the executable is available
+```
+
+Generated artifacts are written beneath `Docs/api/html`. The warning log lives at
+`Docs/api/doxygen-warnings.log` so new diagnostics are easy to triage. The
+configuration treats the module overview as the main page to connect the
+high-level design notes with the generated reference.
 
 The test runner prints `OK` or `KO` for each registered case and
 summarizes the total. Detailed assertion failures are written to
@@ -86,6 +104,41 @@ entering their directory and running `make`.
 
 Standard C utilities located in `Libft/`. Headers: `libft.hpp` and `limits.hpp`. Source files use the `libft_` prefix.
 
+Embedded or size-constrained builds can opt out of optional helpers by defining feature
+macros before including `libft.hpp`. Each macro defaults to `1` and can be set to `0`
+to exclude the associated functionality:
+
+- `LIBFT_ENABLE_ENVIRONMENT_HELPERS` removes `ft_getenv`, `ft_setenv`, and `ft_unsetenv`.
+- `LIBFT_ENABLE_FILE_IO_HELPERS` removes `ft_fopen`, `ft_fclose`, and `ft_fgets`.
+- `LIBFT_ENABLE_TIME_HELPERS` removes `ft_time_ms` and `ft_time_format`.
+- `LIBFT_ENABLE_BOUNDS_CHECKED_HELPERS` removes the `_s` safety wrappers such as
+  `ft_memcpy_s` and `ft_strncat_s`.
+- `LIBFT_ENABLE_LOCALE_HELPERS` removes the locale-aware collation and case-folding
+  helpers described below.
+
+The convenience macros `LIBFT_HAS_*` mirror the effective configuration so callers can
+branch on availability without repeating preprocessor checks.
+
+#### Coordinating with CMA string helpers
+
+Libft’s duplication helpers are implemented on top of the CMA allocator so projects can
+mix the higher-level `ft_*` APIs with the lower-level `cma_*` entry points without
+switching error-handling conventions. The overlapping functions now share the same
+`ft_errno` outcomes for their core failure paths:
+
+| Scenario | Libft helper | CMA helper | `ft_errno` |
+| --- | --- | --- | --- |
+| Null source with non-zero length | `ft_memdup`, `ft_span_dup` | `cma_memdup` | `FT_ERR_INVALID_ARGUMENT` |
+| Zero-length span | `ft_memdup`, `ft_span_dup` | `cma_memdup` | `ER_SUCCESS` |
+| Allocation failure | `ft_memdup`, `ft_span_dup` | `cma_memdup` | `FT_ERR_NO_MEMORY` |
+
+Formatting wrappers follow the same pattern: `ft_to_string` mirrors allocator failures
+as `FT_ERR_NO_MEMORY`, just like `cma_itoa`, while also reporting conversion issues as
+`FT_ERR_INTERNAL`. CMA helpers that accept optional pointers, such as `cma_strdup`, leave
+`ft_errno` untouched when invoked with `ft_nullptr`. Libft callers expecting
+`FT_ERR_INVALID_ARGUMENT` for null inputs should validate their pointers before choosing
+between the two surfaces, keeping mixed code paths predictable.
+
 ```
 typedef uint32_t (*ft_utf8_case_hook)(uint32_t code_point);
 size_t  ft_strlen_size_t(const char *string);
@@ -118,6 +171,8 @@ unsigned long ft_strtoul(const char *nptr, char **endptr, int base);
 int     ft_setenv(const char *name, const char *value, int overwrite);
 int     ft_unsetenv(const char *name);
 char   *ft_getenv(const char *name);
+int     ft_locale_compare(const char *left, const char *right, const char *locale_name);
+ft_string ft_locale_casefold(const char *input, const char *locale_name);
 void   *ft_memset(void *dst, int value, size_t n);
 int     ft_isspace(int c);
 char   *ft_fgets(char *string, int size, FILE *stream);
@@ -158,6 +213,19 @@ end of input without spurious errors.
 `ft_fgets` sets `ft_errno` to `FT_ERR_END_OF_FILE` when the stream reaches end of
 file without an input error, allowing callers to differentiate EOF from other
 failures.
+
+`ft_setenv`, `ft_unsetenv`, and `ft_getenv` serialize every environment
+mutation through an internal mutex so concurrent threads do not corrupt the
+process-wide state. Because these helpers still operate on the shared
+environment for the entire process, callers should coordinate updates and clean
+up temporary overrides once the surrounding work completes.
+
+`ft_locale_compare` and `ft_locale_casefold` wrap the new System_utils locale
+helpers so callers can perform collation-aware comparisons and lowercasing
+without constructing `std::locale` instances directly. When no locale name is
+provided the helpers fall back to the process default and then to the classic C
+locale if initialization fails, reporting configuration issues through
+`ft_errno`.
 
 `limits.hpp` exposes integer boundary constants:
 
@@ -366,9 +434,25 @@ CMA-allocated integer on success or `ft_nullptr` on failure.
 When allocation logging is enabled via the logger, the allocator emits debug messages for each `cma_malloc` and `cma_free`.
 The allocator enforces an optional global allocation limit that can be
 changed at runtime with `cma_set_alloc_limit`. A limit of `0` disables the
-check. The allocator also tracks allocation and free counts, accessible
-through `cma_get_stats`. Internally, `cma_realloc` has been simplified by
-removing redundant braces.
+check. When thread safety is enabled, limit updates acquire the allocator
+mutex so concurrent callers never observe torn writes, and they preserve the
+incoming `ft_errno` value on both success and failure. Disabling thread
+safety via `cma_set_thread_safety(false)` skips the mutex entirely, which
+keeps single-threaded tests cheap but requires the caller to avoid mixing
+limit updates with concurrent allocator traffic.
+
+The limit check runs before the allocator touches shared state, letting
+tests inject deterministic failures by setting a small cap and attempting an
+oversized allocation. Pair the toggle with `cma_set_thread_safety(false)`
+when failure injection must run without synchronization overhead, and
+restore both settings plus `cma_cleanup` during teardown so the allocator
+returns to its default invariants. See
+[`Docs/cma_allocation_controls.md`](Docs/cma_allocation_controls.md) for a
+focused walkthrough and ready-to-copy helper routines.
+
+The allocator also tracks allocation and free counts, accessible through
+`cma_get_stats`, and exposes live plus peak byte usage via
+`cma_get_extended_stats`.
 `cma_calloc` now validates multiplication overflow by ensuring the element
 count is zero or the product of `count` and `size` stays within `SIZE_MAX`.
 Overflowing requests return `ft_nullptr` without incrementing the allocation
@@ -401,6 +485,10 @@ void    cma_cleanup();
 void    cma_set_alloc_limit(ft_size_t limit);
 void    cma_set_thread_safety(bool enable);
 void    cma_get_stats(ft_size_t *allocation_count, ft_size_t *free_count);
+void    cma_get_extended_stats(ft_size_t *allocation_count,
+            ft_size_t *free_count,
+            ft_size_t *current_bytes,
+            ft_size_t *peak_bytes);
 ```
 
 ### GetNextLine
@@ -1241,6 +1329,8 @@ in-class implementations.
 
 #### Errno
 `Errno/errno.hpp` defines a thread-local `ft_errno` variable and helpers for retrieving messages.
+
+The [Libft error code registry](Errno/ERROR_CODE_REGISTRY.md) documents every value surfaced through `ft_errno`, the modules that emit them, and guidance for keeping success paths from leaking stale failures.
 
 ```
 const char *ft_strerror(int err);
