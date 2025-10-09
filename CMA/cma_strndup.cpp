@@ -1,13 +1,12 @@
-#include "libft.hpp"
-#include "../CMA/CMA.hpp"
+#include "CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 
-char *ft_strndup(const char *string, size_t maximum_length)
+char    *cma_strndup(const char *string, size_t maximum_length)
 {
-    size_t copy_length;
-    char *duplicate;
-    size_t index;
+    size_t  copy_length;
+    char    *duplicate;
+    size_t  index;
 
     ft_errno = ER_SUCCESS;
     if (string == ft_nullptr)

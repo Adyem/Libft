@@ -9,6 +9,8 @@ void    *cma_malloc(ft_size_t size) __attribute__ ((warn_unused_result, hot));
 void    cma_free(void* ptr) __attribute__ ((hot));
 int     cma_checked_free(void* ptr) __attribute__ ((warn_unused_result, hot));
 char    *cma_strdup(const char *string) __attribute__ ((warn_unused_result));
+char    *cma_strndup(const char *string, size_t maximum_length)
+            __attribute__ ((warn_unused_result));
 void    *cma_memdup(const void *source, size_t size) __attribute__ ((warn_unused_result));
 void    *cma_calloc(ft_size_t count, ft_size_t size) __attribute__ ((warn_unused_result));
 void    *cma_realloc(void* ptr, ft_size_t new_size) __attribute__ ((warn_unused_result));
