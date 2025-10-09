@@ -1,10 +1,99 @@
 #include "libft.hpp"
-#include <sstream>
+#include "../Errno/errno.hpp"
+#include <cstdio>
+
+static ft_string create_string_from_buffer(const char *buffer)
+{
+    ft_string result(buffer);
+    return (result);
+}
+
+static ft_string format_signed_long(long number)
+{
+    char buffer[64];
+    int conversion_result;
+
+    conversion_result = std::snprintf(buffer, sizeof(buffer), "%ld", number);
+    if (conversion_result < 0)
+    {
+        ft_errno = FT_ERR_INTERNAL;
+        return (ft_string(FT_ERR_INTERNAL));
+    }
+    if (static_cast<size_t>(conversion_result) >= sizeof(buffer))
+    {
+        ft_errno = FT_ERR_INTERNAL;
+        return (ft_string(FT_ERR_INTERNAL));
+    }
+    return (create_string_from_buffer(buffer));
+}
+
+static ft_string format_unsigned_long(unsigned long number)
+{
+    char buffer[64];
+    int conversion_result;
+
+    conversion_result = std::snprintf(buffer, sizeof(buffer), "%lu", number);
+    if (conversion_result < 0)
+    {
+        ft_errno = FT_ERR_INTERNAL;
+        return (ft_string(FT_ERR_INTERNAL));
+    }
+    if (static_cast<size_t>(conversion_result) >= sizeof(buffer))
+    {
+        ft_errno = FT_ERR_INTERNAL;
+        return (ft_string(FT_ERR_INTERNAL));
+    }
+    return (create_string_from_buffer(buffer));
+}
+
+static ft_string format_double_value(double number)
+{
+    char buffer[128];
+    int conversion_result;
+
+    conversion_result = std::snprintf(buffer, sizeof(buffer), "%.17g", number);
+    if (conversion_result < 0)
+    {
+        ft_errno = FT_ERR_INTERNAL;
+        return (ft_string(FT_ERR_INTERNAL));
+    }
+    if (static_cast<size_t>(conversion_result) >= sizeof(buffer))
+    {
+        ft_errno = FT_ERR_INTERNAL;
+        return (ft_string(FT_ERR_INTERNAL));
+    }
+    return (create_string_from_buffer(buffer));
+}
 
 ft_string ft_to_string(long number)
 {
-    std::ostringstream stream;
-    stream << number;
-    ft_string number_string(stream.str().c_str());
-    return (number_string);
+    ft_errno = ER_SUCCESS;
+    return (format_signed_long(number));
+}
+
+ft_string ft_to_string(unsigned long number)
+{
+    ft_errno = ER_SUCCESS;
+    return (format_unsigned_long(number));
+}
+
+ft_string ft_to_string(double number)
+{
+    ft_errno = ER_SUCCESS;
+    return (format_double_value(number));
+}
+
+ft_string ft_to_string(int number)
+{
+    return (ft_to_string(static_cast<long>(number)));
+}
+
+ft_string ft_to_string(unsigned int number)
+{
+    return (ft_to_string(static_cast<unsigned long>(number)));
+}
+
+ft_string ft_to_string(float number)
+{
+    return (ft_to_string(static_cast<double>(number)));
 }

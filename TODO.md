@@ -22,10 +22,10 @@
   - [x] Provide `ft_strnlen` and `cma_strndup` implementations that mirror libc semantics while propagating `ft_errno` on failure.
   - [x] Provide span-friendly adapters that operate on buffers without null terminators (`ft_span_dup`, `ft_span_to_string`).
 - [ ] Document and reconcile the overlap between CMA-provided string helpers and the Libft implementations so their semantics and error codes do not drift apart.
-- [ ] Extend `ft_to_string` to avoid `std::ostringstream` overhead, propagate `ft_string` allocation failures, and offer formatting for unsigned and floating-point types.
-- [ ] Provide wide-character helpers (`ft_wstrlen`, UTF-16/32 conversion) to complement the existing UTF-8 routines.
+- [x] Extend `ft_to_string` to avoid `std::ostringstream` overhead, propagate `ft_string` allocation failures, and offer formatting for unsigned and floating-point types.
+- [x] Provide wide-character helpers (`ft_wstrlen`, UTF-16/32 conversion) to complement the existing UTF-8 routines.
 - [ ] Harden environment helpers (`ft_setenv`, `ft_getenv`) with thread-safety guards and explicit documentation about process-wide side effects.
-- [ ] Add optional bounds-checked wrappers for memory and string functions that return rich error codes instead of sentinel values.
+- [x] Add optional bounds-checked wrappers for memory and string functions that return rich error codes instead of sentinel values.
 - [ ] Introduce compile-time configuration flags that allow trimming unused helpers for embedded builds.
 - [ ] Add locale-aware collation and case-folding helpers that rely on the `System_utils` abstractions when available.
 
@@ -40,10 +40,10 @@
 - [ ] Supply RAII helpers and scope guards that automatically free CMA allocations to simplify error paths in callers.
 
 ### Compression
-- [ ] Allow callers to configure input/output buffer sizes in `ft_compress_stream` and `ft_decompress_stream` instead of hard-coding 4096-byte stacks.
-- [ ] Differentiate zlib error mappings so `map_zlib_error` returns distinct codes for buffer exhaustion versus malformed input.
-- [ ] Offer in-memory convenience helpers that compress or decompress between `ft_string`/`ft_vector` instances without touching file descriptors.
-- [ ] Expand streaming tests to cover flush behavior, incremental hook replacement via `compression_stream_test_hooks.hpp`, and truncated inputs.
+- [x] Allow callers to configure input/output buffer sizes in `ft_compress_stream` and `ft_decompress_stream` instead of hard-coding 4096-byte stacks.
+- [x] Differentiate zlib error mappings so `map_zlib_error` returns distinct codes for buffer exhaustion versus malformed input.
+- [x] Offer in-memory convenience helpers that compress or decompress between `ft_string`/`ft_vector` instances without touching file descriptors.
+- [x] Expand streaming tests to cover flush behavior, incremental hook replacement via `compression_stream_test_hooks.hpp`, and truncated inputs.
 - [ ] Evaluate adding alternative algorithms (e.g., LZ4, Brotli) behind a common interface with capability detection.
 - [ ] Provide progress callbacks and cancellation support for long-running compression tasks.
 - [ ] Document tuning guidelines (window sizes, compression levels) and expose presets optimized for speed vs. ratio.
