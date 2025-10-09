@@ -6,7 +6,9 @@ SRCS := libft_atoi.cpp \
     libft_memchr.cpp \
     libft_memcmp.cpp \
     libft_memcpy.cpp \
+    libft_memcpy_s.cpp \
     libft_memmove.cpp \
+    libft_memmove_s.cpp \
     libft_memdup.cpp \
     libft_memset.cpp \
     libft_strchr.cpp \
@@ -31,7 +33,10 @@ SRCS := libft_atoi.cpp \
     libft_toupper.cpp \
     libft_tolower.cpp \
     libft_strncpy.cpp \
+    libft_strcpy_s.cpp \
+    libft_strcat_s.cpp \
     libft_span.cpp \
+    libft_wide.cpp \
     libft_strmapi.cpp \
     libft_striteri.cpp \
     libft_isspace.cpp \
