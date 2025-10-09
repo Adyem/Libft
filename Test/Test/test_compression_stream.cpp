@@ -23,6 +23,13 @@ static int compression_stream_fail_deflate(z_stream *stream, int flush_mode)
     return (Z_STREAM_ERROR);
 }
 
+static int compression_stream_buf_error_deflate(z_stream *stream, int flush_mode)
+{
+    (void)stream;
+    (void)flush_mode;
+    return (Z_BUF_ERROR);
+}
+
 static int compression_stream_fail_inflate_init(z_stream *stream)
 {
     (void)stream;
@@ -43,7 +50,51 @@ static int compression_stream_stream_error_inflate(z_stream *stream, int flush_m
     return (Z_STREAM_ERROR);
 }
 
+static int compression_stream_buf_error_inflate(z_stream *stream, int flush_mode)
+{
+    (void)stream;
+    (void)flush_mode;
+    return (Z_BUF_ERROR);
+}
+
 static int g_inflate_stream_end_extra_calls = 0;
+
+static int g_compress_flush_first_non_finish = -1;
+static int g_compress_flush_finish_count = 0;
+
+static int compression_stream_capture_flush_deflate(z_stream *stream, int flush_mode)
+{
+    if (flush_mode != Z_FINISH && g_compress_flush_first_non_finish == -1)
+        g_compress_flush_first_non_finish = flush_mode;
+    if (flush_mode == Z_FINISH)
+        g_compress_flush_finish_count += 1;
+    return (deflate(stream, flush_mode));
+}
+
+static int g_decompress_last_flush_mode = -1;
+
+static int compression_stream_capture_flush_inflate(z_stream *stream, int flush_mode)
+{
+    g_decompress_last_flush_mode = flush_mode;
+    return (inflate(stream, flush_mode));
+}
+
+static int g_compress_first_hook_calls = 0;
+static int g_compress_second_hook_calls = 0;
+
+static int compression_stream_counting_deflate(z_stream *stream, int flush_mode)
+{
+    g_compress_first_hook_calls += 1;
+    return (deflate(stream, flush_mode));
+}
+
+static int compression_stream_failing_replacement_deflate(z_stream *stream, int flush_mode)
+{
+    (void)stream;
+    (void)flush_mode;
+    g_compress_second_hook_calls += 1;
+    return (Z_STREAM_ERROR);
+}
 
 static int compression_stream_trailing_bytes_inflate(z_stream *stream, int flush_mode)
 {
@@ -71,6 +122,55 @@ FT_TEST(test_ft_compress_stream_rejects_invalid_descriptors, "ft_compress_stream
     result = ft_compress_stream(-1, -1);
     FT_ASSERT_EQ(1, result);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_ft_compress_stream_with_options_rejects_zero_buffer, "ft_compress_stream_with_options rejects zero-sized buffers")
+{
+    int                         input_pipe[2];
+    int                         output_pipe[2];
+    t_compress_stream_options   options;
+    int                         result;
+
+    options.input_buffer_size = 0;
+    options.output_buffer_size = 16;
+    FT_ASSERT_EQ(0, pipe(input_pipe));
+    FT_ASSERT_EQ(0, pipe(output_pipe));
+    close(input_pipe[1]);
+    ft_errno = ER_SUCCESS;
+    result = ft_compress_stream_with_options(input_pipe[0], output_pipe[1], &options);
+    close(input_pipe[0]);
+    close(output_pipe[0]);
+    close(output_pipe[1]);
+    FT_ASSERT_EQ(1, result);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_ft_compress_stream_with_options_supports_custom_buffers, "ft_compress_stream_with_options accepts custom buffer sizes")
+{
+    int                         input_pipe[2];
+    int                         output_pipe[2];
+    t_compress_stream_options   options;
+    const char                  *payload;
+    ssize_t                     written_bytes;
+    int                         result;
+
+    options.input_buffer_size = 8;
+    options.output_buffer_size = 12;
+    payload = "custom buffer payload";
+    FT_ASSERT_EQ(0, pipe(input_pipe));
+    FT_ASSERT_EQ(0, pipe(output_pipe));
+    written_bytes = su_write(input_pipe[1], payload, ft_strlen_size_t(payload));
+    FT_ASSERT_EQ(static_cast<ssize_t>(ft_strlen_size_t(payload)), written_bytes);
+    close(input_pipe[1]);
+    ft_errno = ER_SUCCESS;
+    result = ft_compress_stream_with_options(input_pipe[0], output_pipe[1], &options);
+    close(input_pipe[0]);
+    close(output_pipe[0]);
+    close(output_pipe[1]);
+    FT_ASSERT_EQ(0, result);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -140,6 +240,32 @@ FT_TEST(test_ft_compress_stream_reports_deflate_failure, "ft_compress_stream rep
     return (1);
 }
 
+FT_TEST(test_ft_compress_stream_reports_buffer_exhaustion, "ft_compress_stream reports buffer exhaustion distinctly")
+{
+    int input_pipe[2];
+    int output_pipe[2];
+    const char *payload;
+    ssize_t written;
+    int result;
+
+    FT_ASSERT_EQ(0, pipe(input_pipe));
+    FT_ASSERT_EQ(0, pipe(output_pipe));
+    payload = "buffer exhaustion";
+    written = su_write(input_pipe[1], payload, ft_strlen_size_t(payload));
+    FT_ASSERT_EQ(static_cast<ssize_t>(ft_strlen_size_t(payload)), written);
+    close(input_pipe[1]);
+    ft_compress_stream_set_deflate_hook(compression_stream_buf_error_deflate);
+    ft_errno = ER_SUCCESS;
+    result = ft_compress_stream(input_pipe[0], output_pipe[1]);
+    ft_compress_stream_set_deflate_hook(ft_nullptr);
+    close(input_pipe[0]);
+    close(output_pipe[0]);
+    close(output_pipe[1]);
+    FT_ASSERT_EQ(1, result);
+    FT_ASSERT_EQ(FT_ERR_FULL, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_ft_compress_stream_reports_write_failure, "ft_compress_stream reports su_write failures")
 {
     int input_pipe[2];
@@ -196,6 +322,64 @@ FT_TEST(test_ft_decompress_stream_rejects_invalid_descriptors, "ft_decompress_st
     result = ft_decompress_stream(-1, -1);
     FT_ASSERT_EQ(1, result);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_ft_decompress_stream_with_options_rejects_zero_buffer, "ft_decompress_stream_with_options rejects zero-sized buffers")
+{
+    int                         input_pipe[2];
+    int                         output_pipe[2];
+    t_compress_stream_options   options;
+    int                         result;
+
+    options.input_buffer_size = 4;
+    options.output_buffer_size = 0;
+    FT_ASSERT_EQ(0, pipe(input_pipe));
+    FT_ASSERT_EQ(0, pipe(output_pipe));
+    close(input_pipe[1]);
+    ft_errno = ER_SUCCESS;
+    result = ft_decompress_stream_with_options(input_pipe[0], output_pipe[1], &options);
+    close(input_pipe[0]);
+    close(output_pipe[0]);
+    close(output_pipe[1]);
+    FT_ASSERT_EQ(1, result);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_ft_decompress_stream_with_options_supports_custom_buffers, "ft_decompress_stream_with_options accepts custom buffer sizes")
+{
+    int                         input_pipe[2];
+    int                         output_pipe[2];
+    const unsigned char         *payload;
+    unsigned char               *compressed_buffer;
+    std::size_t                 compressed_size;
+    ssize_t                     written_bytes;
+    t_compress_stream_options   options;
+    int                         result;
+
+    options.input_buffer_size = 10;
+    options.output_buffer_size = 7;
+    payload = reinterpret_cast<const unsigned char *>("custom decompress payload");
+    compressed_size = 0;
+    compressed_buffer = ft_compress(payload, ft_strlen_size_t("custom decompress payload"), &compressed_size);
+    FT_ASSERT(compressed_buffer != ft_nullptr);
+    FT_ASSERT(compressed_size > sizeof(uint32_t));
+    FT_ASSERT_EQ(0, pipe(input_pipe));
+    FT_ASSERT_EQ(0, pipe(output_pipe));
+    written_bytes = su_write(input_pipe[1],
+            compressed_buffer + sizeof(uint32_t),
+            compressed_size - sizeof(uint32_t));
+    FT_ASSERT_EQ(static_cast<ssize_t>(compressed_size - sizeof(uint32_t)), written_bytes);
+    close(input_pipe[1]);
+    cma_free(compressed_buffer);
+    ft_errno = ER_SUCCESS;
+    result = ft_decompress_stream_with_options(input_pipe[0], output_pipe[1], &options);
+    close(input_pipe[0]);
+    close(output_pipe[0]);
+    close(output_pipe[1]);
+    FT_ASSERT_EQ(0, result);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -257,6 +441,27 @@ FT_TEST(test_ft_decompress_stream_reports_inflate_failure, "ft_decompress_stream
     close(output_pipe[1]);
     FT_ASSERT_EQ(1, result);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_ft_decompress_stream_reports_buffer_exhaustion, "ft_decompress_stream reports buffer exhaustion distinctly")
+{
+    int input_pipe[2];
+    int output_pipe[2];
+    int result;
+
+    FT_ASSERT_EQ(0, pipe(input_pipe));
+    FT_ASSERT_EQ(0, pipe(output_pipe));
+    close(input_pipe[1]);
+    ft_decompress_stream_set_inflate_hook(compression_stream_buf_error_inflate);
+    ft_errno = ER_SUCCESS;
+    result = ft_decompress_stream(input_pipe[0], output_pipe[1]);
+    ft_decompress_stream_set_inflate_hook(ft_nullptr);
+    close(input_pipe[0]);
+    close(output_pipe[0]);
+    close(output_pipe[1]);
+    FT_ASSERT_EQ(1, result);
+    FT_ASSERT_EQ(FT_ERR_FULL, ft_errno);
     return (1);
 }
 
@@ -389,6 +594,144 @@ FT_TEST(test_ft_decompress_stream_rejects_trailing_bytes, "ft_decompress_stream 
     ft_errno = ER_SUCCESS;
     result = ft_decompress_stream(input_pipe[0], output_pipe[1]);
     ft_decompress_stream_set_inflate_hook(ft_nullptr);
+    close(input_pipe[0]);
+    close(output_pipe[0]);
+    close(output_pipe[1]);
+    FT_ASSERT_EQ(1, result);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_ft_compress_stream_uses_finish_flush_after_partial_read, "ft_compress_stream uses Z_FINISH after the final read")
+{
+    int                         input_pipe[2];
+    int                         output_pipe[2];
+    t_compress_stream_options   options;
+    const char                  *payload;
+    ssize_t                     written_bytes;
+    int                         result;
+
+    options.input_buffer_size = 4;
+    options.output_buffer_size = 64;
+    payload = "partial-flush";
+    FT_ASSERT_EQ(0, pipe(input_pipe));
+    FT_ASSERT_EQ(0, pipe(output_pipe));
+    written_bytes = su_write(input_pipe[1], payload, ft_strlen_size_t(payload));
+    FT_ASSERT_EQ(static_cast<ssize_t>(ft_strlen_size_t(payload)), written_bytes);
+    close(input_pipe[1]);
+    g_compress_flush_first_non_finish = -1;
+    g_compress_flush_finish_count = 0;
+    ft_compress_stream_set_deflate_hook(compression_stream_capture_flush_deflate);
+    ft_errno = ER_SUCCESS;
+    result = ft_compress_stream_with_options(input_pipe[0], output_pipe[1], &options);
+    ft_compress_stream_set_deflate_hook(ft_nullptr);
+    close(input_pipe[0]);
+    close(output_pipe[0]);
+    close(output_pipe[1]);
+    FT_ASSERT_EQ(0, result);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(Z_NO_FLUSH, g_compress_flush_first_non_finish);
+    FT_ASSERT(g_compress_flush_finish_count > 0);
+    return (1);
+}
+
+FT_TEST(test_ft_decompress_stream_uses_finish_flush_at_end, "ft_decompress_stream switches to Z_FINISH at EOF")
+{
+    const char                  *payload;
+    unsigned char               compressed_buffer[256];
+    uLongf                      compressed_size;
+    int                         zlib_status;
+    int                         input_pipe[2];
+    int                         output_pipe[2];
+    int                         result;
+
+    payload = "stream flush verification";
+    compressed_size = sizeof(compressed_buffer);
+    zlib_status = compress2(compressed_buffer, &compressed_size,
+            reinterpret_cast<const Bytef *>(payload), static_cast<uLong>(ft_strlen_size_t(payload)), Z_BEST_COMPRESSION);
+    FT_ASSERT_EQ(Z_OK, zlib_status);
+    FT_ASSERT_EQ(0, pipe(input_pipe));
+    FT_ASSERT_EQ(0, pipe(output_pipe));
+    FT_ASSERT_EQ(static_cast<ssize_t>(compressed_size),
+        su_write(input_pipe[1], compressed_buffer, compressed_size));
+    close(input_pipe[1]);
+    g_decompress_last_flush_mode = -1;
+    ft_decompress_stream_set_inflate_hook(compression_stream_capture_flush_inflate);
+    ft_errno = ER_SUCCESS;
+    result = ft_decompress_stream(input_pipe[0], output_pipe[1]);
+    ft_decompress_stream_set_inflate_hook(ft_nullptr);
+    close(input_pipe[0]);
+    close(output_pipe[0]);
+    close(output_pipe[1]);
+    FT_ASSERT_EQ(0, result);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(Z_FINISH, g_decompress_last_flush_mode);
+    return (1);
+}
+
+FT_TEST(test_compress_stream_hooks_replace_incrementally, "ft_compress_stream accepts incremental hook replacement")
+{
+    int         input_pipe[2];
+    int         output_pipe[2];
+    const char  *payload;
+    ssize_t     written_bytes;
+    int         result;
+
+    payload = "hook rotation";
+    FT_ASSERT_EQ(0, pipe(input_pipe));
+    FT_ASSERT_EQ(0, pipe(output_pipe));
+    written_bytes = su_write(input_pipe[1], payload, ft_strlen_size_t(payload));
+    FT_ASSERT_EQ(static_cast<ssize_t>(ft_strlen_size_t(payload)), written_bytes);
+    close(input_pipe[1]);
+    g_compress_first_hook_calls = 0;
+    g_compress_second_hook_calls = 0;
+    ft_compress_stream_set_deflate_hook(compression_stream_counting_deflate);
+    ft_errno = ER_SUCCESS;
+    result = ft_compress_stream(input_pipe[0], output_pipe[1]);
+    FT_ASSERT_EQ(0, result);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT(g_compress_first_hook_calls > 0);
+    ft_compress_stream_set_deflate_hook(compression_stream_failing_replacement_deflate);
+    ft_errno = ER_SUCCESS;
+    result = ft_compress_stream(input_pipe[0], output_pipe[1]);
+    FT_ASSERT_EQ(1, result);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT(g_compress_second_hook_calls > 0);
+    ft_compress_stream_set_deflate_hook(ft_nullptr);
+    ft_errno = ER_SUCCESS;
+    result = ft_compress_stream(input_pipe[0], output_pipe[1]);
+    close(input_pipe[0]);
+    close(output_pipe[0]);
+    close(output_pipe[1]);
+    FT_ASSERT_EQ(0, result);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_ft_decompress_stream_reports_truncated_input, "ft_decompress_stream fails on truncated inputs")
+{
+    const char        *payload;
+    unsigned char     compressed_buffer[256];
+    uLongf            compressed_size;
+    int               zlib_status;
+    int               input_pipe[2];
+    int               output_pipe[2];
+    ssize_t           written_bytes;
+    int               result;
+
+    payload = "truncate";
+    compressed_size = sizeof(compressed_buffer);
+    zlib_status = compress2(compressed_buffer, &compressed_size,
+            reinterpret_cast<const Bytef *>(payload), static_cast<uLong>(ft_strlen_size_t(payload)), Z_BEST_COMPRESSION);
+    FT_ASSERT_EQ(Z_OK, zlib_status);
+    FT_ASSERT(compressed_size > 1);
+    FT_ASSERT_EQ(0, pipe(input_pipe));
+    FT_ASSERT_EQ(0, pipe(output_pipe));
+    written_bytes = su_write(input_pipe[1], compressed_buffer, compressed_size - 1);
+    FT_ASSERT_EQ(static_cast<ssize_t>(compressed_size - 1), written_bytes);
+    close(input_pipe[1]);
+    ft_errno = ER_SUCCESS;
+    result = ft_decompress_stream(input_pipe[0], output_pipe[1]);
     close(input_pipe[0]);
     close(output_pipe[0]);
     close(output_pipe[1]);
