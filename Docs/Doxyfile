@@ -1,0 +1,102 @@
+# Doxyfile 1.9.7
+PROJECT_NAME           = "Libft"
+PROJECT_NUMBER         = "dev"
+PROJECT_BRIEF          = "Comprehensive utility library with modules spanning system helpers, networking, and allocation."
+OUTPUT_DIRECTORY       = api
+CREATE_SUBDIRS         = YES
+OUTPUT_LANGUAGE        = English
+BRIEF_MEMBER_DESC      = YES
+REPEAT_BRIEF           = YES
+ABBREVIATE_BRIEF       = "The $name class" \
+                          "The $name interface" \
+                          "The $name module" \
+                          "The $name namespace" \
+                          "The $name file" \
+                          "is" \
+                          "provides"
+ALWAYS_DETAILED_SEC    = NO
+INLINE_INHERITED_MEMB  = NO
+FULL_PATH_NAMES        = YES
+STRIP_FROM_PATH        = ..
+STRIP_FROM_INC_PATH    = ..
+SHORT_NAMES            = NO
+JAVADOC_AUTOBRIEF      = YES
+MULTILINE_CPP_IS_BRIEF = YES
+TAB_SIZE               = 4
+MARKDOWN_SUPPORT       = YES
+AUTOLINK_SUPPORT       = YES
+BUILTIN_STL_SUPPORT    = YES
+EXTRACT_ALL            = NO
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = NO
+EXTRACT_LOCAL_CLASSES  = NO
+EXTRACT_LOCAL_METHODS  = NO
+EXTRACT_ANON_NSPACES   = NO
+HIDE_UNDOC_MEMBERS     = NO
+HIDE_UNDOC_CLASSES     = NO
+HIDE_FRIEND_COMPOUNDS  = NO
+HIDE_IN_BODY_DOCS      = NO
+INTERNAL_DOCS          = NO
+SHOW_INCLUDE_FILES     = YES
+SHOW_GROUPED_MEMB_INC  = YES
+SORT_MEMBER_DOCS       = YES
+SORT_BRIEF_DOCS        = YES
+SORT_MEMBERS_CTORS_1ST = YES
+SORT_GROUP_NAMES       = YES
+SORT_BY_SCOPE_NAME     = YES
+STRICT_PROTO_MATCHING  = YES
+GENERATE_TODOLIST      = NO
+GENERATE_TESTLIST      = NO
+GENERATE_BUGLIST       = YES
+GENERATE_DEPRECATEDLIST= YES
+MAX_INITIALIZER_LINES  = 0
+SHOW_USED_FILES        = NO
+SHOW_FILES             = YES
+SHOW_NAMESPACES        = YES
+QUIET                  = NO
+WARN_LOGFILE           = api/doxygen-warnings.log
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES
+WARN_NO_PARAMDOC       = YES
+INPUT                  = ../API \
+                          ../CMA \
+                          ../Compression \
+                          ../Config \
+                          ../Errno \
+                          ../Libft \
+                          ../Logger \
+                          ../Networking \
+                          ../Printf \
+                          ../Storage \
+                          ../System_utils \
+                          ../Template \
+                          ../Time
+FILE_PATTERNS          = *.hpp \
+                          *.h \
+                          *.cpp \
+                          *.c \
+                          *.md
+RECURSIVE              = YES
+EXCLUDE_SYMLINKS       = YES
+EXCLUDE                = ../Test \
+                          ../tools \
+                          ../Docs/api
+EXCLUDE_PATTERNS       = *_test.hpp \
+                          *_test.cpp \
+                          test_*.cpp
+INPUT_ENCODING         = UTF-8
+GENERATE_HTML          = YES
+HTML_TIMESTAMP         = NO
+GENERATE_LATEX         = NO
+GENERATE_XML           = NO
+GENERATE_MAN           = NO
+GENERATE_RTF           = NO
+GENERATE_AUTOGEN_DEF   = NO
+GENERATE_TREEVIEW      = YES
+DISABLE_INDEX          = NO
+FULL_SIDEBAR           = YES
+USE_MDFILE_AS_MAINPAGE = ../Docs/module_overviews.md
+ALIASES                = ft_error_code="\xrefitem ft_error_code \"ft_error_code\" \"ft_error_code\""
+PREDEFINED             = LIBFT_DOXYGEN=1
+EXTENSION_MAPPING      = md=markdown
+WARN_AS_ERROR          = NO

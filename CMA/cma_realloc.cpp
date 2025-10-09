@@ -82,9 +82,19 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         return (ft_nullptr);
     }
     ft_size_t aligned_size = align16(new_size);
+    Block* block = reinterpret_cast<Block*>((static_cast<char*>(ptr)
+                - sizeof(Block)));
+    ft_size_t previous_size = block->size;
     int error = reallocate_block(ptr, aligned_size);
     if (error == 0)
     {
+        if (g_cma_current_bytes >= previous_size)
+            g_cma_current_bytes -= previous_size;
+        else
+            g_cma_current_bytes = 0;
+        g_cma_current_bytes += block->size;
+        if (g_cma_current_bytes > g_cma_peak_bytes)
+            g_cma_peak_bytes = g_cma_current_bytes;
         if (g_cma_thread_safe)
             g_malloc_mutex.unlock(THREAD_ID);
         ft_errno = ER_SUCCESS;

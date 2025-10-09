@@ -1,3 +1,5 @@
+#include "libft_config.hpp"
+#if LIBFT_ENABLE_FILE_IO_HELPERS
 #include "libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
@@ -28,4 +30,5 @@ FILE *ft_fopen(const char *filename, const char *mode)
     ft_errno = ER_SUCCESS;
     return (file_handle);
 }
+#endif
 

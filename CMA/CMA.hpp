@@ -39,5 +39,9 @@ void    cma_cleanup();
 void    cma_set_alloc_limit(ft_size_t limit);
 void    cma_set_thread_safety(bool enable);
 void    cma_get_stats(ft_size_t *allocation_count, ft_size_t *free_count);
+void    cma_get_extended_stats(ft_size_t *allocation_count,
+            ft_size_t *free_count,
+            ft_size_t *current_bytes,
+            ft_size_t *peak_bytes);
 
 #endif

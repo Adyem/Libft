@@ -30,6 +30,7 @@ void cma_cleanup()
         current_page = next_page;
     }
     page_list = ft_nullptr;
+    g_cma_current_bytes = 0;
     if (g_cma_thread_safe)
         g_malloc_mutex.unlock(THREAD_ID);
     return ;

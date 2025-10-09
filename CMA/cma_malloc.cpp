@@ -65,6 +65,9 @@ void* cma_malloc(ft_size_t size)
     block = split_block(block, aligned_size);
     block->free = false;
     g_cma_allocation_count++;
+    g_cma_current_bytes += block->size;
+    if (g_cma_current_bytes > g_cma_peak_bytes)
+        g_cma_peak_bytes = g_cma_current_bytes;
     void *result = reinterpret_cast<char*>(block) + sizeof(Block);
     if (g_cma_thread_safe)
         g_malloc_mutex.unlock(THREAD_ID);

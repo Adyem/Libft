@@ -16,6 +16,8 @@ bool g_cma_thread_safe = true;
 ft_size_t    g_cma_alloc_limit = 0;
 ft_size_t    g_cma_allocation_count = 0;
 ft_size_t    g_cma_free_count = 0;
+ft_size_t    g_cma_current_bytes = 0;
+ft_size_t    g_cma_peak_bytes = 0;
 
 static ft_size_t determine_page_size(ft_size_t size)
 {
@@ -247,7 +249,10 @@ void print_block_info(Block *block)
     return ;
 }
 
-void cma_get_stats(ft_size_t *allocation_count, ft_size_t *free_count)
+void cma_get_extended_stats(ft_size_t *allocation_count,
+        ft_size_t *free_count,
+        ft_size_t *current_bytes,
+        ft_size_t *peak_bytes)
 {
     if (g_cma_thread_safe)
         g_malloc_mutex.lock(THREAD_ID);
@@ -255,7 +260,17 @@ void cma_get_stats(ft_size_t *allocation_count, ft_size_t *free_count)
         *allocation_count = static_cast<ft_size_t>(g_cma_allocation_count);
     if (free_count != ft_nullptr)
         *free_count = static_cast<ft_size_t>(g_cma_free_count);
+    if (current_bytes != ft_nullptr)
+        *current_bytes = static_cast<ft_size_t>(g_cma_current_bytes);
+    if (peak_bytes != ft_nullptr)
+        *peak_bytes = static_cast<ft_size_t>(g_cma_peak_bytes);
     if (g_cma_thread_safe)
         g_malloc_mutex.unlock(THREAD_ID);
+    return ;
+}
+
+void cma_get_stats(ft_size_t *allocation_count, ft_size_t *free_count)
+{
+    cma_get_extended_stats(allocation_count, free_count, ft_nullptr, ft_nullptr);
     return ;
 }
