@@ -1,3 +1,5 @@
+#include "libft_config.hpp"
+#if LIBFT_ENABLE_BOUNDS_CHECKED_HELPERS
 #include "libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
@@ -58,3 +60,4 @@ int ft_strcat_s(char *destination, size_t destination_size, const char *source)
     }
     return (0);
 }
+#endif

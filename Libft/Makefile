@@ -34,13 +34,17 @@ SRCS := libft_atoi.cpp \
     libft_tolower.cpp \
     libft_strncpy.cpp \
     libft_strcpy_s.cpp \
+    libft_strncpy_s.cpp \
     libft_strcat_s.cpp \
+    libft_strncat_s.cpp \
     libft_span.cpp \
+    libft_locale.cpp \
     libft_wide.cpp \
     libft_strmapi.cpp \
     libft_striteri.cpp \
     libft_isspace.cpp \
     libft_getenv.cpp \
+    libft_environment_lock.cpp \
     libft_setenv.cpp \
     libft_unsetenv.cpp \
     libft_fopen.cpp \

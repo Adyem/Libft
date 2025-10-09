@@ -1,0 +1,34 @@
+#ifndef LIBFT_CONFIG_HPP
+#define LIBFT_CONFIG_HPP
+
+// Compile-time configuration flags for trimming optional Libft helpers.
+// Projects may define these macros before including libft.hpp to opt out of
+// functionality that is not required in constrained builds.
+
+#ifndef LIBFT_ENABLE_ENVIRONMENT_HELPERS
+#define LIBFT_ENABLE_ENVIRONMENT_HELPERS 1
+#endif
+
+#ifndef LIBFT_ENABLE_FILE_IO_HELPERS
+#define LIBFT_ENABLE_FILE_IO_HELPERS 1
+#endif
+
+#ifndef LIBFT_ENABLE_TIME_HELPERS
+#define LIBFT_ENABLE_TIME_HELPERS 1
+#endif
+
+#ifndef LIBFT_ENABLE_BOUNDS_CHECKED_HELPERS
+#define LIBFT_ENABLE_BOUNDS_CHECKED_HELPERS 1
+#endif
+
+#ifndef LIBFT_ENABLE_LOCALE_HELPERS
+#define LIBFT_ENABLE_LOCALE_HELPERS 1
+#endif
+
+#define LIBFT_HAS_ENVIRONMENT_HELPERS (LIBFT_ENABLE_ENVIRONMENT_HELPERS != 0)
+#define LIBFT_HAS_FILE_IO_HELPERS (LIBFT_ENABLE_FILE_IO_HELPERS != 0)
+#define LIBFT_HAS_TIME_HELPERS (LIBFT_ENABLE_TIME_HELPERS != 0)
+#define LIBFT_HAS_BOUNDS_CHECKED_HELPERS (LIBFT_ENABLE_BOUNDS_CHECKED_HELPERS != 0)
+#define LIBFT_HAS_LOCALE_HELPERS (LIBFT_ENABLE_LOCALE_HELPERS != 0)
+
+#endif

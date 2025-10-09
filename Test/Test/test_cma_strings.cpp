@@ -396,3 +396,77 @@ FT_TEST(test_cma_strdup_allocation_failure_sets_errno, "cma_strdup surfaces allo
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     return (1);
 }
+
+FT_TEST(test_cma_memdup_and_ft_memdup_share_null_error,
+        "cma_memdup and ft_memdup report invalid argument for null sources")
+{
+    void *duplicate;
+
+    ft_errno = ER_SUCCESS;
+    duplicate = cma_memdup(ft_nullptr, 4);
+    FT_ASSERT_EQ(ft_nullptr, duplicate);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    ft_errno = ER_SUCCESS;
+    duplicate = ft_memdup(ft_nullptr, 4);
+    FT_ASSERT_EQ(ft_nullptr, duplicate);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_cma_memdup_and_ft_memdup_share_zero_length,
+        "cma_memdup and ft_memdup treat zero-length spans as successful allocations")
+{
+    char    buffer[3];
+    void    *cma_duplicate;
+    void    *libft_duplicate;
+
+    buffer[0] = 'a';
+    buffer[1] = 'b';
+    buffer[2] = 'c';
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    cma_duplicate = cma_memdup(buffer, 0);
+    if (!cma_duplicate)
+        return (0);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    libft_duplicate = ft_memdup(buffer, 0);
+    if (!libft_duplicate)
+    {
+        cma_free(cma_duplicate);
+        return (0);
+    }
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    cma_free(cma_duplicate);
+    cma_free(libft_duplicate);
+    return (1);
+}
+
+FT_TEST(test_cma_memdup_and_ft_memdup_share_successful_copy,
+        "cma_memdup and ft_memdup produce identical buffers on success")
+{
+    unsigned char   source[4];
+    void            *cma_duplicate;
+    void            *libft_duplicate;
+
+    source[0] = 1;
+    source[1] = 2;
+    source[2] = 3;
+    source[3] = 4;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    cma_duplicate = cma_memdup(source, sizeof(source));
+    if (!cma_duplicate)
+        return (0);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    libft_duplicate = ft_memdup(source, sizeof(source));
+    if (!libft_duplicate)
+    {
+        cma_free(cma_duplicate);
+        return (0);
+    }
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(0, ft_memcmp(cma_duplicate, libft_duplicate, sizeof(source)));
+    cma_free(cma_duplicate);
+    cma_free(libft_duplicate);
+    return (1);
+}
