@@ -5,6 +5,3 @@ Test/libft_tests
 test_*.txt
 
 test_failures.log
-
-compile_commands.json
-.compile_commands/
