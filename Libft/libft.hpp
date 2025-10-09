@@ -15,6 +15,7 @@ typedef unsigned long long ft_size_t;
 #include <stdint.h>
 #include <stdarg.h>
 #include <type_traits>
+#include <wchar.h>
 #include "limits.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
@@ -100,7 +101,9 @@ int             ft_validate_int(const char *input);
 void            ft_bzero(void *string, size_t size);
 void            *ft_memchr(const void *pointer, int character, size_t size);
 void            *ft_memcpy(void* destination, const void* source, size_t num);
+int             ft_memcpy_s(void *destination, size_t destination_size, const void *source, size_t number_of_bytes);
 void            *ft_memmove(void *destination, const void *source, size_t size);
+int             ft_memmove_s(void *destination, size_t destination_size, const void *source, size_t number_of_bytes);
 void            *ft_memdup(const void *source, size_t size);
 size_t            ft_strlcat(char *destination, const char *source, size_t bufferSize);
 size_t            ft_strlcpy(char *destination, const char *source, size_t bufferSize);
@@ -123,6 +126,8 @@ int                ft_strcmp(const char *string1, const char *string2);
 void            ft_to_lower(char *string);
 void            ft_to_upper(char *string);
 char             *ft_strncpy(char *destination, const char *source, size_t number_of_characters);
+int             ft_strcpy_s(char *destination, size_t destination_size, const char *source);
+int             ft_strcat_s(char *destination, size_t destination_size, const char *source);
 char            *ft_span_dup(const char *buffer, size_t length);
 ft_string        ft_span_to_string(const char *buffer, size_t length);
 char            *ft_strtok(char *string, const char *delimiters);
@@ -133,6 +138,11 @@ void            ft_striteri(char *string, void (*function)(unsigned int, char *)
 char            *ft_getenv(const char *name);
 int             ft_setenv(const char *name, const char *value, int overwrite);
 int             ft_unsetenv(const char *name);
+size_t          ft_wstrlen(const wchar_t *string);
+ft_string       ft_utf16_to_utf8(const char16_t *input, size_t input_length);
+ft_string       ft_utf32_to_utf8(const char32_t *input, size_t input_length);
+char16_t        *ft_utf8_to_utf16(const char *input, size_t input_length, size_t *output_length_pointer);
+char32_t        *ft_utf8_to_utf32(const char *input, size_t input_length, size_t *output_length_pointer);
 
 FILE            *ft_fopen(const char *filename, const char *mode);
 int             ft_fclose(FILE *stream);
@@ -140,5 +150,10 @@ char            *ft_fgets(char *string, int size, FILE *stream);
 int64_t        ft_time_ms(void);
 char            *ft_time_format(char *buffer, size_t buffer_size);
 ft_string        ft_to_string(long number);
+ft_string        ft_to_string(unsigned long number);
+ft_string        ft_to_string(double number);
+ft_string        ft_to_string(int number);
+ft_string        ft_to_string(unsigned int number);
+ft_string        ft_to_string(float number);
 
 #endif
