@@ -163,23 +163,23 @@ FT_TEST(test_strnlen_returns_full_length_when_smaller_than_bound,
     return (1);
 }
 
-FT_TEST(test_strndup_nullptr_sets_errno, "ft_strndup nullptr sets FT_ERR_INVALID_ARGUMENT")
+FT_TEST(test_cma_strndup_nullptr_sets_errno, "cma_strndup nullptr sets FT_ERR_INVALID_ARGUMENT")
 {
     char *duplicate;
 
     ft_errno = ER_SUCCESS;
-    duplicate = ft_strndup(ft_nullptr, 4);
+    duplicate = cma_strndup(ft_nullptr, 4);
     FT_ASSERT_EQ(ft_nullptr, duplicate);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
-FT_TEST(test_strndup_truncates_copy_to_requested_length, "ft_strndup copies at most maximum_length characters")
+FT_TEST(test_cma_strndup_truncates_copy_to_requested_length, "cma_strndup copies at most maximum_length characters")
 {
     char *duplicate;
 
     ft_errno = ER_SUCCESS;
-    duplicate = ft_strndup("truncate-me", 3);
+    duplicate = cma_strndup("truncate-me", 3);
     FT_ASSERT(duplicate != ft_nullptr);
     FT_ASSERT_EQ(0, ft_strncmp(duplicate, "tru", 4));
     FT_ASSERT_EQ('\0', duplicate[3]);
@@ -188,13 +188,13 @@ FT_TEST(test_strndup_truncates_copy_to_requested_length, "ft_strndup copies at m
     return (1);
 }
 
-FT_TEST(test_strndup_copies_full_string_when_shorter_than_bound,
-        "ft_strndup duplicates entire string when it is shorter than maximum_length")
+FT_TEST(test_cma_strndup_copies_full_string_when_shorter_than_bound,
+        "cma_strndup duplicates entire string when it is shorter than maximum_length")
 {
     char *duplicate;
 
     ft_errno = ER_SUCCESS;
-    duplicate = ft_strndup("abc", 8);
+    duplicate = cma_strndup("abc", 8);
     FT_ASSERT(duplicate != ft_nullptr);
     FT_ASSERT_EQ(0, ft_strncmp(duplicate, "abc", 4));
     FT_ASSERT_EQ('\0', duplicate[3]);

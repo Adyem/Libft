@@ -123,7 +123,6 @@ int                ft_strcmp(const char *string1, const char *string2);
 void            ft_to_lower(char *string);
 void            ft_to_upper(char *string);
 char             *ft_strncpy(char *destination, const char *source, size_t number_of_characters);
-char            *ft_strndup(const char *string, size_t maximum_length);
 char            *ft_span_dup(const char *buffer, size_t length);
 ft_string        ft_span_to_string(const char *buffer, size_t length);
 char            *ft_strtok(char *string, const char *delimiters);
