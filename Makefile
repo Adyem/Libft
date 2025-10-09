@@ -1,7 +1,3 @@
-PYTHON      ?= python3
-
-GENERATE_COMPILE_COMMANDS ?= 1
-
 OPT_LEVEL ?= 0
 ifeq ($(OPT_LEVEL),0)
     OPT_FLAGS = -O0 -g
@@ -48,21 +44,7 @@ AR              := ar
 ARFLAGS         := rcs
 CLANG_FORMAT   ?= clang-format
 
-TOOLS_DIR := $(CURDIR)/Tools
-
-COMPILE_COMMANDS_FILE   := $(CURDIR)/compile_commands.json
-COMPILE_COMMANDS_STAGING := $(CURDIR)/.compile_commands
-
-ifeq ($(GENERATE_COMPILE_COMMANDS),1)
-    export FT_GENERATE_COMPILE_DB := 1
-    export FT_COMPILE_DB_DIR := $(COMPILE_COMMANDS_STAGING)
-    export FT_COMPILE_DB_ROOT := $(CURDIR)
-    COMPILE_DB_WRAPPER := $(PYTHON) $(TOOLS_DIR)/compile_db_wrapper.py g++
-    SUBMAKE_OVERRIDES := CXX="$(COMPILE_DB_WRAPPER)"
-    COMPILE_COMMANDS_SETUP := $(shell $(PYTHON) $(TOOLS_DIR)/reset_compile_commands_dir.py "$(COMPILE_COMMANDS_STAGING)")
-else
-    SUBMAKE_OVERRIDES :=
-endif
+SUBMAKE_OVERRIDES :=
 
 ifeq ($(OS),Windows_NT)
     MKDIR  = mkdir
@@ -128,10 +110,6 @@ TARGET        := Full_Libft.a
 DEBUG_TARGET  := Full_Libft_debug.a
 
 all: $(TARGET)
-
-ifeq ($(GENERATE_COMPILE_COMMANDS),1)
-all: compile_commands.json
-endif
 
 debug: $(DEBUG_TARGET)
 
@@ -208,10 +186,6 @@ clean:
 fclean:
 	$(foreach dir,$(SUBDIRS),$(MAKE) -C $(dir) fclean;)
 	$(RM) $(TARGET) $(DEBUG_TARGET)
-
-compile_commands.json: $(TARGET) Tools/compile_db_wrapper.py Tools/merge_compile_commands.py
-	$(PYTHON) Tools/merge_compile_commands.py "$(COMPILE_COMMANDS_STAGING)" "$(COMPILE_COMMANDS_FILE)"
-	$(RMDIR) $(COMPILE_COMMANDS_STAGING)
 
 .PHONY: all debug both re clean fclean tests format sanitize-clean \
         asan asan-tests ubsan ubsan-tests asan-ubsan asan-ubsan-tests
