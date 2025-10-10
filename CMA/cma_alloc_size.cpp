@@ -7,12 +7,6 @@
 #include "CMA.hpp"
 #include "cma_internal.hpp"
 
-static Block    *cma_get_block_from_pointer(const void *memory_pointer)
-{
-    return (reinterpret_cast<Block*>(const_cast<char*>(
-        static_cast<const char*>(memory_pointer)) - sizeof(Block)));
-}
-
 static Block    *cma_find_block_for_pointer(const void *memory_pointer)
 {
     Page *current_page = page_list;
@@ -36,22 +30,21 @@ static Block    *cma_find_block_for_pointer(const void *memory_pointer)
 
 ft_size_t cma_block_size(const void *memory_pointer)
 {
+    ft_size_t block_size;
+
     if (memory_pointer == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
-    if (cma_backend_is_enabled() && cma_backend_owns_pointer(memory_pointer))
-        return (cma_backend_block_size(memory_pointer));
-    if (g_cma_thread_safe)
-        g_malloc_mutex.lock(THREAD_ID);
-    Block *block = cma_get_block_from_pointer(memory_pointer);
-
-    cma_validate_block(block, "cma_block_size", const_cast<void *>(memory_pointer));
-    ft_size_t block_size = block->size;
-
-    if (g_cma_thread_safe)
-        g_malloc_mutex.unlock(THREAD_ID);
+    if (cma_backend_is_enabled())
+    {
+        ft_errno = FT_ERR_INVALID_STATE;
+        return (0);
+    }
+    block_size = 0;
+    if (cma_checked_block_size(memory_pointer, &block_size) != 0)
+        return (0);
     return (block_size);
 }
 

@@ -119,6 +119,9 @@ void ft_file_watch::stop()
 #endif
     if (this->_thread.joinable())
         this->_thread.join();
+    this->_callback = ft_nullptr;
+    this->_user_data = ft_nullptr;
+    this->_path.clear();
     return ;
 }
 
