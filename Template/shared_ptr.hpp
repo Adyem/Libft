@@ -1057,7 +1057,14 @@ void ft_sharedptr<ManagedType>::add(const ManagedType& element)
     }
     size_t new_size;
     ManagedType* new_array;
-    ManagedType* old_array;
+    ManagedType* previous_array;
+    int* previous_reference;
+    pt_mutex* previous_mutex;
+    bool detach_required;
+    bool delete_previous_array;
+    int* new_reference;
+    pt_mutex* new_reference_mutex;
+    size_t array_index;
 
     new_size = this->_arraySize + 1;
     new_array = new (std::nothrow) ManagedType[new_size];
@@ -1066,20 +1073,77 @@ void ft_sharedptr<ManagedType>::add(const ManagedType& element)
         this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
-    size_t array_index;
-
+    previous_array = this->_managedPointer;
+    previous_reference = this->_referenceCount;
+    previous_mutex = this->_referenceMutex;
+    detach_required = false;
+    delete_previous_array = true;
+    new_reference = ft_nullptr;
+    new_reference_mutex = ft_nullptr;
+    if (previous_reference && !previous_mutex)
+    {
+        delete[] new_array;
+        this->set_error(FT_ERR_INVALID_OPERATION);
+        return ;
+    }
+    if (previous_reference && previous_mutex && *previous_reference > 1)
+        detach_required = true;
+    if (detach_required)
+    {
+        new_reference = new (std::nothrow) int;
+        if (!new_reference)
+        {
+            delete[] new_array;
+            this->set_error(FT_ERR_NO_MEMORY);
+            return ;
+        }
+        new_reference_mutex = new (std::nothrow) pt_mutex;
+        if (!new_reference_mutex)
+        {
+            delete new_reference;
+            delete[] new_array;
+            this->set_error(FT_ERR_NO_MEMORY);
+            return ;
+        }
+        *new_reference = 1;
+        --(*previous_reference);
+        if (shared_guard_placeholder.owns_lock())
+        {
+            shared_guard_placeholder.unlock();
+            if (shared_guard_placeholder.get_error() != ER_SUCCESS)
+            {
+                ++(*previous_reference);
+                delete new_reference;
+                delete new_reference_mutex;
+                delete[] new_array;
+                this->set_error(shared_guard_placeholder.get_error());
+                return ;
+            }
+        }
+        this->_referenceCount = new_reference;
+        this->_referenceMutex = new_reference_mutex;
+        delete_previous_array = false;
+    }
     array_index = 0;
     while (array_index < this->_arraySize)
     {
-        new_array[array_index] = this->_managedPointer[array_index];
+        new_array[array_index] = previous_array[array_index];
         ++array_index;
     }
     new_array[this->_arraySize] = element;
-    old_array = this->_managedPointer;
     this->_managedPointer = new_array;
     this->_arraySize = new_size;
-    if (old_array)
-        delete[] old_array;
+    if (delete_previous_array && previous_array)
+        delete[] previous_array;
+    if (!detach_required && shared_guard_placeholder.owns_lock())
+    {
+        shared_guard_placeholder.unlock();
+        if (shared_guard_placeholder.get_error() != ER_SUCCESS)
+        {
+            this->set_error(shared_guard_placeholder.get_error());
+            return ;
+        }
+    }
     this->set_error(ER_SUCCESS);
     return ;
 }
@@ -1115,7 +1179,13 @@ void ft_sharedptr<ManagedType>::remove(int index)
     }
     size_t new_size;
     ManagedType* new_array;
-    ManagedType* old_array;
+    ManagedType* previous_array;
+    int* previous_reference;
+    pt_mutex* previous_mutex;
+    bool detach_required;
+    bool delete_previous_array;
+    int* new_reference;
+    pt_mutex* new_reference_mutex;
 
     new_size = this->_arraySize - 1;
     new_array = ft_nullptr;
@@ -1128,6 +1198,61 @@ void ft_sharedptr<ManagedType>::remove(int index)
             return ;
         }
     }
+    previous_array = this->_managedPointer;
+    previous_reference = this->_referenceCount;
+    previous_mutex = this->_referenceMutex;
+    detach_required = false;
+    delete_previous_array = true;
+    new_reference = ft_nullptr;
+    new_reference_mutex = ft_nullptr;
+    if (previous_reference && !previous_mutex)
+    {
+        if (new_array)
+            delete[] new_array;
+        this->set_error(FT_ERR_INVALID_OPERATION);
+        return ;
+    }
+    if (previous_reference && previous_mutex && *previous_reference > 1)
+        detach_required = true;
+    if (detach_required)
+    {
+        new_reference = new (std::nothrow) int;
+        if (!new_reference)
+        {
+            if (new_array)
+                delete[] new_array;
+            this->set_error(FT_ERR_NO_MEMORY);
+            return ;
+        }
+        new_reference_mutex = new (std::nothrow) pt_mutex;
+        if (!new_reference_mutex)
+        {
+            delete new_reference;
+            if (new_array)
+                delete[] new_array;
+            this->set_error(FT_ERR_NO_MEMORY);
+            return ;
+        }
+        *new_reference = 1;
+        --(*previous_reference);
+        if (shared_guard_placeholder.owns_lock())
+        {
+            shared_guard_placeholder.unlock();
+            if (shared_guard_placeholder.get_error() != ER_SUCCESS)
+            {
+                ++(*previous_reference);
+                delete new_reference;
+                delete new_reference_mutex;
+                if (new_array)
+                    delete[] new_array;
+                this->set_error(shared_guard_placeholder.get_error());
+                return ;
+            }
+        }
+        this->_referenceCount = new_reference;
+        this->_referenceMutex = new_reference_mutex;
+        delete_previous_array = false;
+    }
     if (new_array)
     {
         size_t array_index;
@@ -1136,21 +1261,29 @@ void ft_sharedptr<ManagedType>::remove(int index)
         array_index = 0;
         while (array_index < static_cast<size_t>(index))
         {
-            new_array[array_index] = this->_managedPointer[array_index];
+            new_array[array_index] = previous_array[array_index];
             ++array_index;
         }
         copy_index = static_cast<size_t>(index);
         while (copy_index < new_size)
         {
-            new_array[copy_index] = this->_managedPointer[copy_index + 1];
+            new_array[copy_index] = previous_array[copy_index + 1];
             ++copy_index;
         }
     }
-    old_array = this->_managedPointer;
     this->_managedPointer = new_array;
     this->_arraySize = new_size;
-    if (old_array)
-        delete[] old_array;
+    if (delete_previous_array && previous_array)
+        delete[] previous_array;
+    if (!detach_required && shared_guard_placeholder.owns_lock())
+    {
+        shared_guard_placeholder.unlock();
+        if (shared_guard_placeholder.get_error() != ER_SUCCESS)
+        {
+            this->set_error(shared_guard_placeholder.get_error());
+            return ;
+        }
+    }
     this->set_error(ER_SUCCESS);
     return ;
 }
