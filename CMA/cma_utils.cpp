@@ -105,20 +105,52 @@ void cma_validate_block(Block *block, const char *context, void *user_pointer)
     return ;
 }
 
+static ft_size_t    minimum_split_payload(void)
+{
+    ft_size_t    minimum_payload;
+
+    minimum_payload = align16(1);
+    if (minimum_payload < static_cast<ft_size_t>(16))
+        minimum_payload = static_cast<ft_size_t>(16);
+    return (minimum_payload);
+}
+
 Block* split_block(Block* block, ft_size_t size)
 {
+    unsigned char   *raw_block;
+    Block           *new_block;
+    ft_size_t        header_size;
+    ft_size_t        available_size;
+    ft_size_t        remaining_size;
+    ft_size_t        minimum_payload;
+
     cma_validate_block(block, "split_block", ft_nullptr);
-    if (block->size <= size + sizeof(Block))
+    header_size = static_cast<ft_size_t>(sizeof(Block));
+    available_size = block->size;
+    if (size >= available_size)
+    {
+        block->magic = MAGIC_NUMBER;
         return (block);
-    Block* new_block = reinterpret_cast<Block*>(reinterpret_cast<char*>(block) + sizeof(Block)
-            + size);
+    }
+    remaining_size = available_size - size;
+    minimum_payload = minimum_split_payload();
+    if (remaining_size <= header_size + minimum_payload)
+    {
+        block->magic = MAGIC_NUMBER;
+        return (block);
+    }
+    raw_block = reinterpret_cast<unsigned char *>(block);
+    new_block = reinterpret_cast<Block *>(raw_block + header_size + size);
     new_block->magic = MAGIC_NUMBER;
-    new_block->size = block->size - size - sizeof(Block);
+    new_block->size = remaining_size - header_size;
     new_block->free = true;
     new_block->next = block->next;
     new_block->prev = block;
     if (new_block->next)
+    {
+        cma_validate_block(new_block->next, "split_block relink next", ft_nullptr);
         new_block->next->prev = new_block;
+    }
     block->next = new_block;
     block->size = size;
     block->magic = MAGIC_NUMBER;
@@ -211,32 +243,49 @@ Block *find_free_block(ft_size_t size)
 
 Block *merge_block(Block *block)
 {
+    Block       *current;
+    ft_size_t    header_size;
+
     cma_validate_block(block, "merge_block", ft_nullptr);
-    if (block->next && block->next->free)
+    header_size = static_cast<ft_size_t>(sizeof(Block));
+    current = block;
+    while (current->prev && current->prev->free)
     {
-        cma_validate_block(block->next, "merge_block next", ft_nullptr);
-        block->size += sizeof(Block) + block->next->size;
-        block->next = block->next->next;
-        if (block->next)
+        Block   *previous_block;
+
+        previous_block = current->prev;
+        cma_validate_block(previous_block, "merge_block prev", ft_nullptr);
+        previous_block->size += header_size + current->size;
+        previous_block->next = current->next;
+        if (current->next)
         {
-            cma_validate_block(block->next, "merge_block relink next", ft_nullptr);
-            block->next->prev = block;
+            cma_validate_block(current->next, "merge_block relink prev", ft_nullptr);
+            current->next->prev = previous_block;
         }
+        current->next = ft_nullptr;
+        current->prev = ft_nullptr;
+        current->magic = MAGIC_NUMBER;
+        current = previous_block;
     }
-    if (block->prev && block->prev->free)
+    while (current->next && current->next->free)
     {
-        cma_validate_block(block->prev, "merge_block prev", ft_nullptr);
-        block->prev->size += sizeof(Block) + block->size;
-        block->prev->next = block->next;
-        if (block->next)
+        Block   *next_block;
+
+        next_block = current->next;
+        cma_validate_block(next_block, "merge_block next", ft_nullptr);
+        current->size += header_size + next_block->size;
+        current->next = next_block->next;
+        if (current->next)
         {
-            cma_validate_block(block->next, "merge_block relink prev", ft_nullptr);
-            block->next->prev = block->prev;
+            cma_validate_block(current->next, "merge_block relink next", ft_nullptr);
+            current->next->prev = current;
         }
-        block = block->prev;
+        next_block->next = ft_nullptr;
+        next_block->prev = ft_nullptr;
+        next_block->magic = MAGIC_NUMBER;
     }
-    block->magic = MAGIC_NUMBER;
-    return (block);
+    current->magic = MAGIC_NUMBER;
+    return (current);
 }
 
 Page *find_page_of_block(Block *block)
