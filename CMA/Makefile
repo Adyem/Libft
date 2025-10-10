@@ -1,7 +1,8 @@
 TARGET         := CustomMemoryAllocator.a
 DEBUG_TARGET   := CustomMemoryAllocator_debug.a
 
-SRCS := cma_calloc.cpp \
+SRCS := cma_allocation_guard.cpp \
+        cma_calloc.cpp \
         cma_strdup.cpp \
         cma_strndup.cpp \
         cma_memdup.cpp \
@@ -28,6 +29,7 @@ SRCS := cma_calloc.cpp \
         cma_set_thread_safety.cpp
 
 HEADERS := CMA.hpp \
+           cma_allocation_guard.hpp \
            cma_internal.hpp
 
 ifeq ($(OS),Windows_NT)

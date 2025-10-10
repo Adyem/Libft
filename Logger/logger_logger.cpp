@@ -66,6 +66,46 @@ int ft_logger::set_file(const char *path, size_t max_size) noexcept
     return (0);
 }
 
+int ft_logger::set_rotation(size_t max_size, size_t retention_count,
+                            unsigned int max_age_seconds) noexcept
+{
+    int result;
+
+    result = ft_log_set_rotation(max_size, retention_count, max_age_seconds);
+    if (result != 0)
+    {
+        int error_code;
+
+        error_code = ft_errno;
+        if (error_code == ER_SUCCESS)
+            error_code = FT_ERR_INVALID_ARGUMENT;
+        this->set_error(error_code);
+        return (-1);
+    }
+    this->set_error(ER_SUCCESS);
+    return (0);
+}
+
+int ft_logger::get_rotation(size_t *max_size, size_t *retention_count,
+                            unsigned int *max_age_seconds) noexcept
+{
+    int result;
+
+    result = ft_log_get_rotation(max_size, retention_count, max_age_seconds);
+    if (result != 0)
+    {
+        int error_code;
+
+        error_code = ft_errno;
+        if (error_code == ER_SUCCESS)
+            error_code = FT_ERR_INVALID_ARGUMENT;
+        this->set_error(error_code);
+        return (-1);
+    }
+    this->set_error(ER_SUCCESS);
+    return (0);
+}
+
 int ft_logger::add_sink(t_log_sink sink, void *user_data) noexcept
 {
     int result;
@@ -180,6 +220,43 @@ int ft_logger::set_remote_sink(const char *host, unsigned short port,
     return (0);
 }
 
+void ft_logger::set_async_queue_limit(size_t limit) noexcept
+{
+    ft_log_set_async_queue_limit(limit);
+    this->set_error(ft_errno);
+    return ;
+}
+
+size_t ft_logger::get_async_queue_limit() const noexcept
+{
+    size_t limit;
+
+    limit = ft_log_get_async_queue_limit();
+    const_cast<ft_logger *>(this)->set_error(ft_errno);
+    return (limit);
+}
+
+int ft_logger::get_async_metrics(s_log_async_metrics *metrics) noexcept
+{
+    int result;
+
+    result = ft_log_get_async_metrics(metrics);
+    if (result != 0)
+    {
+        this->set_error(ft_errno);
+        return (-1);
+    }
+    this->set_error(ER_SUCCESS);
+    return (0);
+}
+
+void ft_logger::reset_async_metrics() noexcept
+{
+    ft_log_reset_async_metrics();
+    this->set_error(ft_errno);
+    return ;
+}
+
 int ft_logger::get_error() const noexcept
 {
     return (this->_error_code);
@@ -279,6 +356,47 @@ void ft_logger::error(const char *fmt, ...) noexcept
         this->set_error(ft_errno);
     else
         this->set_error(ER_SUCCESS);
+    return ;
+}
+
+void ft_logger::structured(t_log_level level, const char *message,
+                           const s_log_field *fields,
+                           size_t field_count) noexcept
+{
+    ft_log_structured(level, message, fields, field_count);
+    this->set_error(ft_errno);
+    return ;
+}
+
+void ft_logger::structured_debug(const char *message,
+                                 const s_log_field *fields,
+                                 size_t field_count) noexcept
+{
+    this->structured(LOG_LEVEL_DEBUG, message, fields, field_count);
+    return ;
+}
+
+void ft_logger::structured_info(const char *message,
+                                const s_log_field *fields,
+                                size_t field_count) noexcept
+{
+    this->structured(LOG_LEVEL_INFO, message, fields, field_count);
+    return ;
+}
+
+void ft_logger::structured_warn(const char *message,
+                                const s_log_field *fields,
+                                size_t field_count) noexcept
+{
+    this->structured(LOG_LEVEL_WARN, message, fields, field_count);
+    return ;
+}
+
+void ft_logger::structured_error(const char *message,
+                                 const s_log_field *fields,
+                                 size_t field_count) noexcept
+{
+    this->structured(LOG_LEVEL_ERROR, message, fields, field_count);
     return ;
 }
 

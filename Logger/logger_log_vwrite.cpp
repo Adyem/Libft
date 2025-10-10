@@ -206,14 +206,37 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
             ft_errno = sinks_snapshot.get_error();
             return ;
         }
+        bool rotate_for_size_pre;
+        bool rotate_for_age_pre;
+        s_file_sink *file_sink;
+
+        rotate_for_size_pre = false;
+        rotate_for_age_pre = false;
+        file_sink = ft_nullptr;
+        if (entry.function == ft_file_sink)
+        {
+            file_sink = static_cast<s_file_sink *>(entry.user_data);
+            if (logger_prepare_rotation(file_sink, &rotate_for_size_pre, &rotate_for_age_pre) != 0)
+                return ;
+        }
         entry.function(final_buffer, entry.user_data);
         if (ft_errno != ER_SUCCESS)
             return ;
         if (entry.function == ft_file_sink)
         {
-            ft_log_rotate(static_cast<s_file_sink *>(entry.user_data));
-            if (ft_errno != ER_SUCCESS)
+            bool rotate_for_size_post;
+            bool rotate_for_age_post;
+
+            rotate_for_size_post = false;
+            rotate_for_age_post = false;
+            if (logger_prepare_rotation(file_sink, &rotate_for_size_post, &rotate_for_age_post) != 0)
                 return ;
+            if (rotate_for_size_pre || rotate_for_age_pre || rotate_for_size_post || rotate_for_age_post)
+            {
+                logger_execute_rotation(file_sink);
+                if (ft_errno != ER_SUCCESS)
+                    return ;
+            }
         }
         index++;
     }

@@ -3,8 +3,27 @@
 #include "libft_environment_lock.hpp"
 #include "../Errno/errno.hpp"
 #include <pthread.h>
+#include <mutex>
 
-static pthread_mutex_t g_environment_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t g_environment_mutex;
+static std::once_flag g_environment_mutex_once;
+static int g_environment_mutex_init_error = ER_SUCCESS;
+
+static void ft_environment_initialize_mutex(void)
+{
+    int init_result;
+
+    init_result = pthread_mutex_init(&g_environment_mutex, NULL);
+    if (init_result != 0)
+    {
+        g_environment_mutex_init_error = init_result + ERRNO_OFFSET;
+    }
+    else
+    {
+        g_environment_mutex_init_error = ER_SUCCESS;
+    }
+    return ;
+}
 static int g_environment_force_lock_failure = 0;
 static int g_environment_forced_lock_errno = ER_SUCCESS;
 static int g_environment_force_unlock_failure = 0;
@@ -15,6 +34,12 @@ int ft_environment_lock(void)
     int lock_result;
     int forced_errno;
 
+    std::call_once(g_environment_mutex_once, ft_environment_initialize_mutex);
+    if (g_environment_mutex_init_error != ER_SUCCESS)
+    {
+        ft_errno = g_environment_mutex_init_error;
+        return (-1);
+    }
     if (g_environment_force_lock_failure != 0)
     {
         forced_errno = g_environment_forced_lock_errno;
@@ -40,6 +65,12 @@ int ft_environment_unlock(void)
     int unlock_result;
     int forced_errno;
 
+    std::call_once(g_environment_mutex_once, ft_environment_initialize_mutex);
+    if (g_environment_mutex_init_error != ER_SUCCESS)
+    {
+        ft_errno = g_environment_mutex_init_error;
+        return (-1);
+    }
     unlock_result = pthread_mutex_unlock(&g_environment_mutex);
     if (unlock_result != 0)
     {

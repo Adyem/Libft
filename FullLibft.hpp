@@ -5,6 +5,7 @@
 #include "API/promise.hpp"
 #include "API/tls_client.hpp"
 #include "CMA/CMA.hpp"
+#include "CMA/cma_allocation_guard.hpp"
 #include "CMA/cma_internal.hpp"
 #include "CPP_class/class_big_number.hpp"
 #include "CPP_class/class_data_buffer.hpp"

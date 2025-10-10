@@ -49,6 +49,7 @@ void ft_json_sink(const char *message, void *user_data)
     size_t dest_index;
     int fd;
     int length;
+    bool structured_message;
 
     if (!message)
         return ;
@@ -79,9 +80,12 @@ void ft_json_sink(const char *message, void *user_data)
         return ;
     index += 2;
     dest_index = 0;
+    structured_message = false;
+    if (message[index] == '{')
+        structured_message = true;
     while (message[index] && message[index] != '\n')
     {
-        if (message[index] == '\\' || message[index] == '"')
+        if (!structured_message && (message[index] == '\\' || message[index] == '"'))
         {
             text_buffer[dest_index] = '\\';
             dest_index++;
@@ -91,9 +95,14 @@ void ft_json_sink(const char *message, void *user_data)
         index++;
     }
     text_buffer[dest_index] = '\0';
-    length = pf_snprintf(json_buffer, sizeof(json_buffer),
-        "{\"time\":\"%s\",\"level\":\"%s\",\"message\":\"%s\"}\n",
-        time_buffer, level_buffer, text_buffer);
+    if (structured_message)
+        length = pf_snprintf(json_buffer, sizeof(json_buffer),
+            "{\"time\":\"%s\",\"level\":\"%s\",\"message\":%s}\n",
+            time_buffer, level_buffer, text_buffer);
+    else
+        length = pf_snprintf(json_buffer, sizeof(json_buffer),
+            "{\"time\":\"%s\",\"level\":\"%s\",\"message\":\"%s\"}\n",
+            time_buffer, level_buffer, text_buffer);
     if (length > 0)
     {
         ssize_t write_result;
