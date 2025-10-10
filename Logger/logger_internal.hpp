@@ -29,6 +29,8 @@ struct s_file_sink
     int       fd;
     ft_string path;
     size_t    max_size;
+    size_t    retention_count;
+    unsigned int max_age_seconds;
 };
 
 struct s_network_sink
@@ -44,6 +46,8 @@ int logger_lock_sinks();
 int logger_unlock_sinks();
 
 void ft_log_rotate(s_file_sink *sink);
+int logger_prepare_rotation(s_file_sink *sink, bool *rotate_for_size, bool *rotate_for_age);
+void logger_execute_rotation(s_file_sink *sink);
 void ft_file_sink(const char *message, void *user_data);
 void ft_network_sink(const char *message, void *user_data);
 const char *ft_level_to_str(t_log_level level);

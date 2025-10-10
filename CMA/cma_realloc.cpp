@@ -15,7 +15,8 @@ static int reallocate_block(void *ptr, ft_size_t new_size)
 {
     if (!ptr)
         return (-1);
-    Block* block = reinterpret_cast<Block*>((static_cast<char*>(ptr) - sizeof(Block)));
+    Block *block = reinterpret_cast<Block*>(static_cast<char*>(ptr)
+            - sizeof(Block));
     if (block->size >= new_size)
     {
         split_block(block, new_size);
@@ -32,6 +33,50 @@ static int reallocate_block(void *ptr, ft_size_t new_size)
         return (0);
     }
     return (-1);
+}
+
+static void *allocate_block_locked(ft_size_t aligned_size)
+{
+    Block *block;
+    Page *page;
+
+    block = find_free_block(aligned_size);
+    if (!block)
+    {
+        page = create_page(aligned_size);
+        if (!page)
+        {
+            ft_errno = FT_ERR_NO_MEMORY;
+            return (ft_nullptr);
+        }
+        block = page->blocks;
+    }
+    block = split_block(block, aligned_size);
+    block->free = false;
+    g_cma_allocation_count++;
+    g_cma_current_bytes += block->size;
+    if (g_cma_current_bytes > g_cma_peak_bytes)
+        g_cma_peak_bytes = g_cma_current_bytes;
+    ft_errno = ER_SUCCESS;
+    return (reinterpret_cast<char*>(block) + sizeof(Block));
+}
+
+static void release_block_locked(Block *block)
+{
+    ft_size_t freed_size;
+    Page *page;
+
+    freed_size = block->size;
+    block->free = true;
+    block = merge_block(block);
+    page = find_page_of_block(block);
+    free_page_if_empty(page);
+    if (g_cma_current_bytes >= freed_size)
+        g_cma_current_bytes -= freed_size;
+    else
+        g_cma_current_bytes = 0;
+    g_cma_free_count++;
+    return ;
 }
 
 void *cma_realloc(void* ptr, ft_size_t new_size)
@@ -87,8 +132,8 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         return (ft_nullptr);
     }
     ft_size_t aligned_size = align16(new_size);
-    Block* block = reinterpret_cast<Block*>((static_cast<char*>(ptr)
-                - sizeof(Block)));
+    Block *block = reinterpret_cast<Block*>(static_cast<char*>(ptr)
+            - sizeof(Block));
     ft_size_t previous_size = block->size;
     int error = reallocate_block(ptr, aligned_size);
     if (error == 0)
@@ -105,19 +150,11 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         ft_errno = ER_SUCCESS;
         return (ptr);
     }
-    void* new_ptr = cma_malloc(new_size);
-    if (!new_ptr)
-    {
-        int error_code;
+    Block *old_block;
+    ft_size_t copy_size;
 
-        error_code = ft_errno;
-        if (g_cma_thread_safe)
-            g_malloc_mutex.unlock(THREAD_ID);
-        ft_errno = error_code;
-        return (ft_nullptr);
-    }
-    Block* old_block = reinterpret_cast<Block*>((static_cast<char*> (ptr)
-                - sizeof(Block)));
+    old_block = reinterpret_cast<Block*>(static_cast<char*>(ptr)
+            - sizeof(Block));
     if (old_block->magic != MAGIC_NUMBER)
     {
         if (g_cma_thread_safe)
@@ -126,15 +163,21 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
-    ft_size_t copy_size;
     if (old_block->size < aligned_size)
         copy_size = old_block->size;
     else
         copy_size = aligned_size;
+    void *new_ptr = allocate_block_locked(aligned_size);
+    if (!new_ptr)
+    {
+        if (g_cma_thread_safe)
+            g_malloc_mutex.unlock(THREAD_ID);
+        return (ft_nullptr);
+    }
     ft_memcpy(new_ptr, ptr, static_cast<size_t>(copy_size));
+    release_block_locked(old_block);
     if (g_cma_thread_safe)
         g_malloc_mutex.unlock(THREAD_ID);
-    cma_free(ptr);
     ft_errno = ER_SUCCESS;
     return (new_ptr);
 }

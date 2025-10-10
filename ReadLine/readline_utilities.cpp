@@ -10,15 +10,25 @@
 
 char *rl_resize_buffer(char *old_buffer, int current_size, int new_size)
 {
-    char *new_buffer = static_cast<char *>(cma_malloc(new_size));
+    size_t copy_size;
+    char *new_buffer;
 
+    copy_size = 0;
+    if (current_size > 0)
+    {
+        copy_size = static_cast<size_t>(current_size);
+        if (current_size > new_size)
+            copy_size = static_cast<size_t>(new_size);
+    }
+    new_buffer = static_cast<char *>(cma_malloc(new_size));
     if (!new_buffer)
     {
         pf_printf_fd(2, "Allocation error\n");
         ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
-    ft_memcpy(new_buffer, old_buffer, current_size);
+    if (copy_size > 0)
+        ft_memcpy(new_buffer, old_buffer, copy_size);
     cma_free(old_buffer);
     ft_errno = ER_SUCCESS;
     return (new_buffer);

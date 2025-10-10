@@ -2,6 +2,7 @@ API/api.hpp
 API/promise.hpp
 API/tls_client.hpp
 CMA/CMA.hpp
+CMA/cma_allocation_guard.hpp
 CMA/cma_internal.hpp
 CPP_class/class_big_number.hpp
 CPP_class/class_data_buffer.hpp

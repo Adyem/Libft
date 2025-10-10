@@ -57,7 +57,11 @@ int su_locale_compare(const char *left, const char *right, const char *locale_na
     }
     ft_errno = ER_SUCCESS;
     if (assign_locale(locale_name, locale_object) != 0)
+    {
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = FT_ERR_CONFIGURATION;
         return (-1);
+    }
     try
     {
         collate_facet = &std::use_facet<std::collate<char> >(locale_object);
@@ -94,7 +98,11 @@ int su_locale_casefold(const char *input, const char *locale_name, ft_string &ou
     }
     ft_errno = ER_SUCCESS;
     if (assign_locale(locale_name, locale_object) != 0)
+    {
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = FT_ERR_CONFIGURATION;
         return (-1);
+    }
     try
     {
         ctype_facet = &std::use_facet<std::ctype<char> >(locale_object);

@@ -10,6 +10,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <utime.h>
+#include <ctime>
 
 FT_TEST(test_logger_color_toggle, "logger color toggle")
 {
@@ -42,6 +44,37 @@ FT_TEST(test_logger_json_sink, "logger json sink")
     return (1);
 }
 
+FT_TEST(test_logger_structured_logging, "structured logging emits structured payloads")
+{
+    int pipe_fds[2];
+    int write_fd;
+    ssize_t read_count;
+    char buffer[512];
+    s_log_field fields[3];
+
+    FT_ASSERT_EQ(0, pipe(pipe_fds));
+    write_fd = pipe_fds[1];
+    FT_ASSERT_EQ(0, ft_log_add_sink(ft_json_sink, &write_fd));
+    fields[0].key = "user";
+    fields[0].value = "alice";
+    fields[1].key = "ip";
+    fields[1].value = "127.0.0.1";
+    fields[2].key = "attempts";
+    fields[2].value = ft_nullptr;
+    ft_log_info_structured("login", fields, 3);
+    read_count = read(pipe_fds[0], buffer, sizeof(buffer) - 1);
+    FT_ASSERT(read_count > 0);
+    buffer[read_count] = '\0';
+    FT_ASSERT(ft_strstr(buffer, "\"message\":{\"message\":\"login\"") != ft_nullptr);
+    FT_ASSERT(ft_strstr(buffer, "\"user\":\"alice\"") != ft_nullptr);
+    FT_ASSERT(ft_strstr(buffer, "\"ip\":\"127.0.0.1\"") != ft_nullptr);
+    FT_ASSERT(ft_strstr(buffer, "\"attempts\":null") != ft_nullptr);
+    ft_log_remove_sink(ft_json_sink, &write_fd);
+    close(pipe_fds[0]);
+    close(pipe_fds[1]);
+    return (1);
+}
+
 static int  g_file_sink_hook_calls = 0;
 
 static ssize_t    logger_partial_write_hook(int file_descriptor, const void *buffer, size_t count)
@@ -57,6 +90,16 @@ static ssize_t    logger_partial_write_hook(int file_descriptor, const void *buf
     if (write_result < 0)
         return (write_result);
     return (write_result);
+}
+
+static void    logger_enqueue_message(const char *fmt, ...)
+{
+    va_list args;
+
+    va_start(args, fmt);
+    ft_log_enqueue(LOG_LEVEL_INFO, fmt, args);
+    va_end(args);
+    return ;
 }
 
 FT_TEST(test_logger_file_sink_uses_system_utils_write, "file sink routes writes through su_write")
@@ -190,6 +233,172 @@ FT_TEST(test_logger_rotate_rename_failure_reopens_file, "ft_log_rotate reopens o
     close(sink.fd);
     FT_ASSERT_EQ(0, unlink(file_path.c_str()));
     FT_ASSERT_EQ(0, rmdir(directory_path));
+    return (1);
+}
+
+FT_TEST(test_logger_set_rotation_without_file_sink,
+        "ft_log_set_rotation reports missing file sinks")
+{
+    ft_log_close();
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(-1, ft_log_set_rotation(1024, 2, 60));
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_logger_rotation_by_age, "age-based rotation creates an archive")
+{
+    char            template_path[] = "/tmp/libft_logger_age_XXXXXX";
+    int             temp_fd;
+    struct utimbuf  timestamps;
+    time_t          current_time;
+    ft_string       rotated_path;
+    int             log_fd;
+    ssize_t         read_count;
+    char            buffer[512];
+
+    temp_fd = mkstemp(template_path);
+    FT_ASSERT(temp_fd >= 0);
+    close(temp_fd);
+    ft_log_close();
+    FT_ASSERT_EQ(0, ft_log_set_file(template_path, 4096));
+    FT_ASSERT_EQ(0, ft_log_set_rotation(4096, 1, 1));
+    current_time = ::time(ft_nullptr);
+    FT_ASSERT(current_time != static_cast<time_t>(-1));
+    timestamps.actime = current_time - 5;
+    timestamps.modtime = current_time - 5;
+    FT_ASSERT_EQ(0, utime(template_path, &timestamps));
+    ft_log_info("age-rotation-test");
+    ft_log_close();
+    rotated_path = ft_string(template_path);
+    FT_ASSERT_EQ(ER_SUCCESS, rotated_path.get_error());
+    rotated_path += ".1";
+    FT_ASSERT_EQ(ER_SUCCESS, rotated_path.get_error());
+    log_fd = open(rotated_path.c_str(), O_RDONLY);
+    FT_ASSERT(log_fd >= 0);
+    read_count = read(log_fd, buffer, sizeof(buffer) - 1);
+    FT_ASSERT(read_count > 0);
+    buffer[read_count] = '\0';
+    FT_ASSERT(ft_strstr(buffer, "age-rotation-test") != ft_nullptr);
+    close(log_fd);
+    log_fd = open(template_path, O_RDONLY);
+    FT_ASSERT(log_fd >= 0);
+    read_count = read(log_fd, buffer, sizeof(buffer));
+    FT_ASSERT_EQ(0, read_count);
+    close(log_fd);
+    unlink(rotated_path.c_str());
+    unlink(template_path);
+    return (1);
+}
+
+FT_TEST(test_logger_rotation_getter_reports_config,
+        "ft_log_get_rotation returns the active rotation policy")
+{
+    char            template_path[] = "/tmp/libft_logger_get_rotation_XXXXXX";
+    int             temp_fd;
+    size_t          max_size;
+    size_t          retention_count;
+    unsigned int    max_age_seconds;
+
+    temp_fd = mkstemp(template_path);
+    FT_ASSERT(temp_fd >= 0);
+    close(temp_fd);
+    ft_log_close();
+    FT_ASSERT_EQ(0, ft_log_set_file(template_path, 64));
+    FT_ASSERT_EQ(0, ft_log_set_rotation(128, 3, 42));
+    max_size = 0;
+    retention_count = 0;
+    max_age_seconds = 0;
+    FT_ASSERT_EQ(0, ft_log_get_rotation(&max_size, &retention_count, &max_age_seconds));
+    FT_ASSERT_EQ(static_cast<size_t>(128), max_size);
+    FT_ASSERT_EQ(static_cast<size_t>(3), retention_count);
+    FT_ASSERT_EQ(static_cast<unsigned int>(42), max_age_seconds);
+    ft_log_close();
+    unlink(template_path);
+    return (1);
+}
+
+FT_TEST(test_logger_rotation_retention_limit,
+        "rotation honors retention count and discards oldest archives")
+{
+    char        template_path[] = "/tmp/libft_logger_retention_XXXXXX";
+    int         temp_fd;
+    ft_string   rotated_one_path;
+    ft_string   rotated_two_path;
+    ft_string   rotated_three_path;
+    int         fd;
+    ssize_t     read_count;
+    char        buffer[512];
+
+    temp_fd = mkstemp(template_path);
+    FT_ASSERT(temp_fd >= 0);
+    close(temp_fd);
+    ft_log_close();
+    FT_ASSERT_EQ(0, ft_log_set_file(template_path, 8));
+    FT_ASSERT_EQ(0, ft_log_set_rotation(8, 2, 0));
+    ft_log_info("retention-first");
+    ft_log_info("retention-second");
+    ft_log_info("retention-third");
+    ft_log_close();
+    rotated_one_path = ft_string(template_path);
+    FT_ASSERT_EQ(ER_SUCCESS, rotated_one_path.get_error());
+    rotated_one_path += ".1";
+    FT_ASSERT_EQ(ER_SUCCESS, rotated_one_path.get_error());
+    rotated_two_path = ft_string(template_path);
+    FT_ASSERT_EQ(ER_SUCCESS, rotated_two_path.get_error());
+    rotated_two_path += ".2";
+    FT_ASSERT_EQ(ER_SUCCESS, rotated_two_path.get_error());
+    rotated_three_path = ft_string(template_path);
+    FT_ASSERT_EQ(ER_SUCCESS, rotated_three_path.get_error());
+    rotated_three_path += ".3";
+    FT_ASSERT_EQ(ER_SUCCESS, rotated_three_path.get_error());
+    fd = open(rotated_one_path.c_str(), O_RDONLY);
+    FT_ASSERT(fd >= 0);
+    read_count = read(fd, buffer, sizeof(buffer) - 1);
+    FT_ASSERT(read_count > 0);
+    buffer[read_count] = '\0';
+    FT_ASSERT(ft_strstr(buffer, "retention-third") != ft_nullptr);
+    close(fd);
+    fd = open(rotated_two_path.c_str(), O_RDONLY);
+    FT_ASSERT(fd >= 0);
+    read_count = read(fd, buffer, sizeof(buffer) - 1);
+    FT_ASSERT(read_count > 0);
+    buffer[read_count] = '\0';
+    FT_ASSERT(ft_strstr(buffer, "retention-second") != ft_nullptr);
+    close(fd);
+    errno = 0;
+    FT_ASSERT_EQ(-1, access(rotated_three_path.c_str(), F_OK));
+    FT_ASSERT_EQ(ENOENT, errno);
+    unlink(rotated_one_path.c_str());
+    unlink(rotated_two_path.c_str());
+    unlink(template_path);
+    return (1);
+}
+
+FT_TEST(test_logger_async_backpressure_metrics, "async logger reports queue drops and backlog")
+{
+    s_log_async_metrics metrics;
+    size_t original_limit;
+
+    ft_log_enable_async(false);
+    original_limit = ft_log_get_async_queue_limit();
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    ft_log_set_async_queue_limit(2);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    ft_log_reset_async_metrics();
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    logger_enqueue_message("backpressure-1");
+    logger_enqueue_message("backpressure-2");
+    logger_enqueue_message("backpressure-3");
+    logger_enqueue_message("backpressure-4");
+    FT_ASSERT_EQ(0, ft_log_get_async_metrics(&metrics));
+    FT_ASSERT(metrics.pending_messages == 2);
+    FT_ASSERT(metrics.dropped_messages >= 2);
+    FT_ASSERT(metrics.peak_pending_messages >= metrics.pending_messages);
+    ft_log_enable_async(true);
+    ft_log_enable_async(false);
+    ft_log_set_async_queue_limit(original_limit);
+    ft_log_reset_async_metrics();
     return (1);
 }
 

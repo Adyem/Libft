@@ -1,5 +1,6 @@
 #include "math.hpp"
 #include "../Errno/errno.hpp"
+#include <cfloat>
 
 static int math_is_infinite_internal(double number)
 {
@@ -44,7 +45,7 @@ double math_sqrt(double number)
         ft_errno = ER_SUCCESS;
         return (number);
     }
-    if (number == 0.0)
+    if (math_fabs(number) <= DBL_MIN)
     {
         ft_errno = ER_SUCCESS;
         return (0.0);
