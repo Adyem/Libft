@@ -57,12 +57,9 @@ int cma_checked_free(void* ptr)
     }
     ft_size_t freed_size = found->size;
     found->free = true;
-    found->retired = true;
     found->magic = MAGIC_NUMBER;
-    // Coalescing temporarily disabled.
-    // found = merge_block(found);
+    found = merge_block(found);
     Page *pg = find_page_of_block(found);
-    cma_detach_block_from_page(found, pg);
     free_page_if_empty(pg);
     if (g_cma_current_bytes >= freed_size)
         g_cma_current_bytes -= freed_size;

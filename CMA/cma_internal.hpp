@@ -46,7 +46,6 @@ struct Block
     uint32_t    magic;
     ft_size_t    size;
     bool        free;
-    bool        retired;
     Block        *next;
     Block        *prev;
 } __attribute__ ((aligned(16)));
@@ -59,7 +58,7 @@ struct Page
     Page        *prev;
     Block        *blocks;
     bool        heap;
-    int8_t        alloc_size_type;
+    int8_t        alloc_size_type;    
 } __attribute__ ((aligned(16)));
 
 extern Page *page_list;
@@ -71,7 +70,6 @@ Block    *merge_block(Block *block);
 void    print_block_info(Block *block);
 void    dump_block_bytes(Block *block);
 Page    *find_page_of_block(Block *block);
-void    cma_detach_block_from_page(Block *block, Page *page);
 void    free_page_if_empty(Page *page);
 void    cma_validate_block(Block *block, const char *context, void *user_pointer);
 int     cma_backend_is_enabled(void) __attribute__ ((warn_unused_result));
