@@ -68,6 +68,7 @@ Page    *create_page(ft_size_t size);
 Block    *find_free_block(ft_size_t size);
 Block    *merge_block(Block *block);
 void    print_block_info(Block *block);
+void    dump_block_bytes(Block *block);
 Page    *find_page_of_block(Block *block);
 void    free_page_if_empty(Page *page);
 int     cma_backend_is_enabled(void) __attribute__ ((warn_unused_result));

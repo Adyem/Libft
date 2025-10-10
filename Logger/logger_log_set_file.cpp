@@ -51,6 +51,8 @@ int ft_log_set_file(const char *path, size_t max_size)
     sink->fd = file_descriptor;
     sink->path = path;
     sink->max_size = max_size;
+    sink->retention_count = 1;
+    sink->max_age_seconds = 0;
     if (sink->path.get_error() != ER_SUCCESS)
     {
         ft_errno = sink->path.get_error();

@@ -1,6 +1,7 @@
 #include <cstddef>
 #include "../Errno/errno.hpp"
 #include "CMA.hpp"
+#include "cma_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
 void *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)

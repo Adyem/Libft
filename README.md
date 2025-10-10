@@ -1138,6 +1138,10 @@ enum t_log_level {
 
 void ft_log_set_level(t_log_level level);
 int  ft_log_set_file(const char *path, size_t max_size);
+int  ft_log_set_rotation(size_t max_size, size_t retention_count,
+                         unsigned int max_age_seconds);
+int  ft_log_get_rotation(size_t *max_size, size_t *retention_count,
+                         unsigned int *max_age_seconds);
 typedef void (*t_log_sink)(const char *message, void *user_data);
 int  ft_log_add_sink(t_log_sink sink, void *user_data);
 void ft_log_remove_sink(t_log_sink sink, void *user_data);
@@ -1156,6 +1160,11 @@ void ft_log_warn(const char *fmt, ...);
 void ft_log_error(const char *fmt, ...);
 void ft_log_debug(const char *fmt, ...);
 ```
+
+The logger automatically rotates file sinks when they exceed a configured size
+or age. Call `ft_log_set_rotation` to update the active file sink thresholds,
+retention count, and maximum age, or `ft_log_get_rotation` to query the current
+policy.
 
 For RAII-style usage, `ft_logger` wraps the C functions and automatically
 closes the log when the object is destroyed:
