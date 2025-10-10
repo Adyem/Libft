@@ -236,6 +236,8 @@ void ft_log_rotate(s_file_sink *sink)
     bool rotate_for_size;
     bool rotate_for_age;
 
+    rotate_for_size = false;
+    rotate_for_age = false;
     if (logger_prepare_rotation(sink, &rotate_for_size, &rotate_for_age) != 0)
         return ;
     if (!rotate_for_size && !rotate_for_age)

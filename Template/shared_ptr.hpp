@@ -389,6 +389,15 @@ void ft_sharedptr<ManagedType>::release_locked()
             mutex_to_delete = this->_referenceMutex;
             delete_as_array = this->_isArrayType;
         }
+        if (shared_guard.owns_lock())
+        {
+            shared_guard.unlock();
+            if (shared_guard.get_error() != ER_SUCCESS)
+            {
+                this->set_error(shared_guard.get_error());
+                return ;
+            }
+        }
         this->_managedPointer = ft_nullptr;
         this->_referenceCount = ft_nullptr;
         this->_referenceMutex = ft_nullptr;

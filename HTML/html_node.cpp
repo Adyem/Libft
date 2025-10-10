@@ -1,9 +1,18 @@
+#include <cstdlib>
 #include <new>
 #include "parser.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+
+static void html_release_string(char *string)
+{
+    if (!string)
+        return ;
+    cma_checked_free(string);
+    return ;
+}
 
 #define HTML_MALLOC_FAIL 1001
 
@@ -28,7 +37,7 @@ html_node *html_create_node(const char *tagName, const char *textContent)
         newNode->text = ft_nullptr;
     if (textContent && !newNode->text)
     {
-        delete[] newNode->tag;
+        html_release_string(newNode->tag);
         delete newNode;
         ft_errno = HTML_MALLOC_FAIL;
         return (ft_nullptr);
@@ -57,7 +66,7 @@ html_attr *html_create_attr(const char *key, const char *value)
     newAttr->value = cma_strdup(value);
     if (!newAttr->value)
     {
-        delete[] newAttr->key;
+        html_release_string(newAttr->key);
         delete newAttr;
         ft_errno = HTML_MALLOC_FAIL;
         return (ft_nullptr);
@@ -92,10 +101,8 @@ void html_remove_attr(html_node *targetNode, const char *key)
                 prev->next = current->next;
             else
                 targetNode->attributes = current->next;
-            if (current->key)
-                delete[] current->key;
-            if (current->value)
-                delete[] current->value;
+            html_release_string(current->key);
+            html_release_string(current->value);
             delete current;
             return ;
         }
