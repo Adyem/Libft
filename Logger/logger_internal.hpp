@@ -31,6 +31,12 @@ struct s_file_sink
     size_t    max_size;
     size_t    retention_count;
     unsigned int max_age_seconds;
+
+    s_file_sink()
+        : fd(-1), path(), max_size(0), retention_count(1), max_age_seconds(0)
+    {
+        return ;
+    }
 };
 
 struct s_network_sink
