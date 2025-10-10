@@ -1,25 +1,31 @@
+#include <cstdlib>
 #include "parser.hpp"
 #include "../Libft/libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../CMA/CMA.hpp"
+
+static void release_html_string(char *string)
+{
+    if (!string)
+        return ;
+    cma_checked_free(string);
+    return ;
+}
 
 void html_free_nodes(html_node *nodeList)
 {
     while (nodeList)
     {
         html_node *nextNode = nodeList->next;
-        if (nodeList->tag)
-            delete[] nodeList->tag;
-        if (nodeList->text)
-            delete[] nodeList->text;
+        release_html_string(nodeList->tag);
+        release_html_string(nodeList->text);
         html_attr *attribute = nodeList->attributes;
         while (attribute)
         {
             html_attr *nextAttr = attribute->next;
-            if (attribute->key)
-                delete[] attribute->key;
-            if (attribute->value)
-                delete[] attribute->value;
+            release_html_string(attribute->key);
+            release_html_string(attribute->value);
             delete attribute;
             attribute = nextAttr;
         }
