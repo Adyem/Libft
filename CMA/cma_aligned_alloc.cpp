@@ -19,6 +19,7 @@ static ft_size_t    calculate_alignment_padding(Block *block, ft_size_t alignmen
     ft_size_t  padding;
 
     block_address = reinterpret_cast<uintptr_t>(block);
+<<<<<<< HEAD
     header_size_bytes = sizeof(Block);
     user_address = block_address + header_size_bytes;
     alignment_value = static_cast<uintptr_t>(alignment);
@@ -29,6 +30,14 @@ static ft_size_t    calculate_alignment_padding(Block *block, ft_size_t alignmen
         return (0);
     padding = static_cast<ft_size_t>(alignment_value - remainder);
     return (padding);
+=======
+    header_size = sizeof(Block);
+    user_address = block_address + header_size;
+    remainder = (user_address + header_size) & static_cast<uintptr_t>(alignment - 1);
+    if (remainder == 0)
+        return (0);
+    return (alignment - remainder);
+>>>>>>> origin/main
 }
 
 static int  block_supports_aligned_request(Block *block, ft_size_t aligned_size,
@@ -38,7 +47,7 @@ static int  block_supports_aligned_request(Block *block, ft_size_t aligned_size,
     ft_size_t   remaining_size;
     ft_size_t   local_padding;
 
-    header_size = static_cast<ft_size_t>(sizeof(Block));
+    header_size = sizeof(Block);
     local_padding = calculate_alignment_padding(block, alignment);
     if (local_padding > 0)
     {
@@ -140,7 +149,7 @@ static ft_size_t    compute_extended_page_request(ft_size_t aligned_size,
     ft_size_t   extended_size;
     ft_size_t   total_size;
 
-    header_size = static_cast<ft_size_t>(sizeof(Block));
+    header_size = sizeof(Block);
     if (aligned_size > FT_SYSTEM_SIZE_MAX - alignment)
         return (0);
     extended_size = aligned_size + alignment;
@@ -159,7 +168,7 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     void        *result;
 
     if ((alignment & (alignment - 1)) != 0
-        || alignment < static_cast<ft_size_t>(sizeof(void *)))
+        || alignment < sizeof(void *))
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
