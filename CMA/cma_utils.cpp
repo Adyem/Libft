@@ -115,6 +115,7 @@ Block* split_block(Block* block, ft_size_t size)
     new_block->magic = MAGIC_NUMBER;
     new_block->size = block->size - size - sizeof(Block);
     new_block->free = true;
+    new_block->retired = false;
     new_block->next = block->next;
     new_block->prev = block;
     if (new_block->next)
@@ -169,6 +170,7 @@ Page *create_page(ft_size_t size)
     page->blocks->magic = MAGIC_NUMBER;
     page->blocks->size = page_size - sizeof(Block);
     page->blocks->free = true;
+    page->blocks->retired = false;
     page->blocks->next = ft_nullptr;
     page->blocks->prev = ft_nullptr;
     cma_validate_block(page->blocks, "create_page", ft_nullptr);
@@ -200,7 +202,7 @@ Block *find_free_block(ft_size_t size)
         while (cur_block)
         {
             cma_validate_block(cur_block, "find_free_block", ft_nullptr);
-            if (cur_block->free && cur_block->size >= size)
+            if (cur_block->free && !cur_block->retired && cur_block->size >= size)
                 return (cur_block);
             cur_block = cur_block->next;
         }

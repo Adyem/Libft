@@ -17,12 +17,15 @@ static ft_size_t    calculate_alignment_padding(Block *block, ft_size_t alignmen
     uintptr_t  remainder;
 
     block_address = reinterpret_cast<uintptr_t>(block);
-    header_size = static_cast<uintptr_t>(sizeof(Block));
+    header_size = sizeof(Block);
     user_address = block_address + header_size;
     remainder = (user_address + header_size) & static_cast<uintptr_t>(alignment - 1);
     if (remainder == 0)
         return (0);
-    return (static_cast<ft_size_t>(alignment - remainder));
+    ft_size_t   remainder_size;
+
+    remainder_size = static_cast<ft_size_t>(remainder);
+    return (alignment - remainder_size);
 }
 
 static int  block_supports_aligned_request(Block *block, ft_size_t aligned_size,
@@ -64,7 +67,7 @@ static Block   *find_aligned_free_block(ft_size_t aligned_size, ft_size_t alignm
         while (current_block)
         {
             cma_validate_block(current_block, "cma_aligned_alloc search", ft_nullptr);
-            if (current_block->free)
+            if (current_block->free && !current_block->retired)
             {
                 ft_size_t   local_padding;
 
@@ -237,6 +240,7 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         su_sigabrt();
     }
     block->free = false;
+    block->retired = false;
     block->magic = MAGIC_NUMBER;
     g_cma_allocation_count++;
     g_cma_current_bytes += block->size;

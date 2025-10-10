@@ -46,6 +46,7 @@ struct Block
     uint32_t    magic;
     ft_size_t    size;
     bool        free;
+    bool        retired;
     Block        *next;
     Block        *prev;
 } __attribute__ ((aligned(16)));

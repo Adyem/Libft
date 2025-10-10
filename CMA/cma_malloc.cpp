@@ -78,6 +78,7 @@ void* cma_malloc(ft_size_t size)
     block = split_block(block, aligned_size);
     cma_validate_block(block, "cma_malloc split", ft_nullptr);
     block->free = false;
+    block->retired = false;
     block->magic = MAGIC_NUMBER;
     g_cma_allocation_count++;
     g_cma_current_bytes += block->size;
