@@ -8,6 +8,7 @@ SRCS := \
     logger_log_vwrite.cpp \
     logger_log_set_level.cpp \
     logger_log_set_file.cpp \
+    logger_log_set_rotation.cpp \
     logger_log_add_sink.cpp \
     logger_log_remove_sink.cpp \
     logger_log_set_alloc_logging.cpp \
@@ -21,6 +22,7 @@ SRCS := \
     logger_log_info.cpp \
     logger_log_warn.cpp \
     logger_log_error.cpp \
+    logger_log_structured.cpp \
     logger_log_async.cpp \
     logger_logger.cpp \
     logger_syslog.cpp \

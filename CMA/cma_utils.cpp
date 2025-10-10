@@ -249,6 +249,61 @@ void print_block_info(Block *block)
     return ;
 }
 
+static void dump_hex_bytes(const unsigned char *bytes, ft_size_t length)
+{
+    ft_size_t index;
+    int column_count;
+
+    index = 0;
+    column_count = 0;
+    while (index < length)
+    {
+        if (column_count == 0)
+            pf_printf_fd(2, "    ");
+        pf_printf_fd(2, "%02X ", static_cast<unsigned int>(bytes[index]));
+        column_count++;
+        if (column_count == 16)
+        {
+            pf_printf_fd(2, "\n");
+            column_count = 0;
+        }
+        index++;
+    }
+    if (column_count != 0)
+        pf_printf_fd(2, "\n");
+    return ;
+}
+
+void dump_block_bytes(Block *block)
+{
+    unsigned char   *raw_block;
+    ft_size_t        header_bytes;
+    ft_size_t        payload_bytes;
+
+    if (!block)
+    {
+        pf_printf_fd(2, "Cannot dump bytes for null block.\n");
+        return ;
+    }
+    raw_block = reinterpret_cast<unsigned char *>(block);
+    header_bytes = static_cast<ft_size_t>(sizeof(Block));
+    pf_printf_fd(2, "Header bytes at %p:\n", static_cast<void *>(block));
+    dump_hex_bytes(raw_block, header_bytes);
+    pf_printf_fd(2, "User pointer: %p\n", static_cast<void *>(raw_block + header_bytes));
+    payload_bytes = 64;
+    if (block->size < payload_bytes)
+        payload_bytes = block->size;
+    if (payload_bytes > 0)
+    {
+        pf_printf_fd(2, "First %llu bytes of payload:\n",
+            static_cast<unsigned long long>(payload_bytes));
+        dump_hex_bytes(raw_block + header_bytes, payload_bytes);
+    }
+    else
+        pf_printf_fd(2, "Block payload reported as empty.\n");
+    return ;
+}
+
 void cma_get_extended_stats(ft_size_t *allocation_count,
         ft_size_t *free_count,
         ft_size_t *current_bytes,

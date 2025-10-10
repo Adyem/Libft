@@ -8,6 +8,10 @@
 #include <cerrno>
 
 bool g_async_running = false;
+static size_t g_async_queue_limit = 1024;
+static size_t g_async_pending_messages = 0;
+static size_t g_async_peak_pending = 0;
+static size_t g_async_dropped_messages = 0;
 static ft_queue<ft_string> g_log_queue;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
@@ -82,9 +86,36 @@ static void ft_log_process_message(const ft_string &message)
             ft_errno = sinks_snapshot.get_error();
             return ;
         }
+        bool rotate_for_size_pre;
+        bool rotate_for_age_pre;
+        s_file_sink *file_sink;
+
+        rotate_for_size_pre = false;
+        rotate_for_age_pre = false;
+        file_sink = ft_nullptr;
+        if (entry.function == ft_file_sink)
+        {
+            file_sink = static_cast<s_file_sink *>(entry.user_data);
+            if (logger_prepare_rotation(file_sink, &rotate_for_size_pre, &rotate_for_age_pre) != 0)
+                return ;
+        }
         entry.function(message.c_str(), entry.user_data);
         if (entry.function == ft_file_sink)
-            ft_log_rotate(static_cast<s_file_sink *>(entry.user_data));
+        {
+            bool rotate_for_size_post;
+            bool rotate_for_age_post;
+
+            rotate_for_size_post = false;
+            rotate_for_age_post = false;
+            if (logger_prepare_rotation(file_sink, &rotate_for_size_post, &rotate_for_age_post) != 0)
+                return ;
+            if (rotate_for_size_pre || rotate_for_age_pre || rotate_for_size_post || rotate_for_age_post)
+            {
+                logger_execute_rotation(file_sink);
+                if (ft_errno != ER_SUCCESS)
+                    return ;
+            }
+        }
         index++;
     }
     return ;
@@ -94,6 +125,7 @@ static void *ft_log_worker(void *argument)
 {
     bool queue_is_empty;
     ft_string message;
+    int queue_error;
 
     (void)argument;
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
@@ -116,8 +148,14 @@ static void *ft_log_worker(void *argument)
         else
         {
             message = g_log_queue.dequeue();
+            queue_error = g_log_queue.get_error();
+            if (queue_error == ER_SUCCESS)
+            {
+                if (g_async_pending_messages > 0)
+                    g_async_pending_messages -= 1;
+            }
             pthread_mutex_unlock(&g_condition_mutex);
-            if (g_log_queue.get_error() == ER_SUCCESS)
+            if (queue_error == ER_SUCCESS)
                 ft_log_process_message(message);
             if (pthread_mutex_lock(&g_condition_mutex) != 0)
             {
@@ -146,6 +184,9 @@ void ft_log_enable_async(bool enable)
             return ;
         }
         g_async_running = true;
+        g_async_pending_messages = 0;
+        g_async_peak_pending = 0;
+        g_async_dropped_messages = 0;
         pthread_mutex_unlock(&g_condition_mutex);
         if (pt_thread_create(&g_log_thread, ft_nullptr, ft_log_worker, ft_nullptr) != 0)
         {
@@ -174,6 +215,11 @@ void ft_log_enable_async(bool enable)
             return ;
         if (pt_thread_join(g_log_thread, ft_nullptr) != 0)
             return ;
+        if (pthread_mutex_lock(&g_condition_mutex) == 0)
+        {
+            g_async_pending_messages = 0;
+            pthread_mutex_unlock(&g_condition_mutex);
+        }
         ft_errno = ER_SUCCESS;
     }
     return ;
@@ -222,8 +268,25 @@ void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
         ft_errno = errno + ERRNO_OFFSET;
         return ;
     }
+    if (g_async_queue_limit > 0 && g_async_pending_messages >= g_async_queue_limit)
+    {
+        g_async_dropped_messages += 1;
+        if (pthread_mutex_unlock(&g_condition_mutex) != 0)
+        {
+            ft_errno = errno + ERRNO_OFFSET;
+            return ;
+        }
+        ft_errno = FT_ERR_FULL;
+        return ;
+    }
     g_log_queue.enqueue(message);
     queue_error = g_log_queue.get_error();
+    if (queue_error == ER_SUCCESS)
+    {
+        g_async_pending_messages += 1;
+        if (g_async_pending_messages > g_async_peak_pending)
+            g_async_peak_pending = g_async_pending_messages;
+    }
     signal_result = 0;
     if (queue_error == ER_SUCCESS)
         signal_result = pt_cond_signal(&g_queue_condition);
@@ -240,6 +303,112 @@ void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
     }
     if (signal_result != 0)
         return ;
+    ft_errno = ER_SUCCESS;
+    return ;
+}
+
+void ft_log_set_async_queue_limit(size_t limit)
+{
+    if (pthread_mutex_lock(&g_condition_mutex) != 0)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
+        return ;
+    }
+    g_async_queue_limit = limit;
+    if (g_async_queue_limit > 0)
+    {
+        bool needs_trim;
+
+        needs_trim = g_async_pending_messages > g_async_queue_limit;
+        while (needs_trim)
+        {
+            ft_string dropped_message;
+            int drop_error;
+
+            dropped_message = g_log_queue.dequeue();
+            drop_error = g_log_queue.get_error();
+            if (drop_error != ER_SUCCESS)
+            {
+                if (pthread_mutex_unlock(&g_condition_mutex) != 0)
+                {
+                    ft_errno = errno + ERRNO_OFFSET;
+                    return ;
+                }
+                ft_errno = drop_error;
+                return ;
+            }
+            if (g_async_pending_messages > 0)
+                g_async_pending_messages -= 1;
+            g_async_dropped_messages += 1;
+            needs_trim = g_async_pending_messages > g_async_queue_limit;
+        }
+    }
+    if (pthread_mutex_unlock(&g_condition_mutex) != 0)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
+        return ;
+    }
+    ft_errno = ER_SUCCESS;
+    return ;
+}
+
+size_t ft_log_get_async_queue_limit()
+{
+    size_t limit;
+
+    if (pthread_mutex_lock(&g_condition_mutex) != 0)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
+        return (0);
+    }
+    limit = g_async_queue_limit;
+    if (pthread_mutex_unlock(&g_condition_mutex) != 0)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
+        return (0);
+    }
+    ft_errno = ER_SUCCESS;
+    return (limit);
+}
+
+int ft_log_get_async_metrics(s_log_async_metrics *metrics)
+{
+    if (!metrics)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (-1);
+    }
+    if (pthread_mutex_lock(&g_condition_mutex) != 0)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
+        return (-1);
+    }
+    metrics->pending_messages = g_async_pending_messages;
+    metrics->peak_pending_messages = g_async_peak_pending;
+    metrics->dropped_messages = g_async_dropped_messages;
+    if (pthread_mutex_unlock(&g_condition_mutex) != 0)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
+        return (-1);
+    }
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+void ft_log_reset_async_metrics()
+{
+    if (pthread_mutex_lock(&g_condition_mutex) != 0)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
+        return ;
+    }
+    g_async_peak_pending = g_async_pending_messages;
+    g_async_dropped_messages = 0;
+    if (pthread_mutex_unlock(&g_condition_mutex) != 0)
+    {
+        ft_errno = errno + ERRNO_OFFSET;
+        return ;
+    }
     ft_errno = ER_SUCCESS;
     return ;
 }

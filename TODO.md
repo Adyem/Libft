@@ -38,7 +38,7 @@
 - [x] Audit the global new/delete overrides to ensure they respect alignment requirements on every supported platform.
 - [ ] Implement guard-page or canary instrumentation in debug mode to catch buffer overruns during development.
 - [ ] Add leak detection and reporting helpers that can be toggled per-thread for targeted investigations.
-- [ ] Supply RAII helpers and scope guards that automatically free CMA allocations to simplify error paths in callers.
+- [x] Supply RAII helpers and scope guards that automatically free CMA allocations to simplify error paths in callers.
 
 ### Compression
 - [x] Allow callers to configure input/output buffer sizes in `ft_compress_stream` and `ft_decompress_stream` instead of hard-coding 4096-byte stacks.
@@ -50,9 +50,9 @@
 - [ ] Document tuning guidelines (window sizes, compression levels) and expose presets optimized for speed vs. ratio.
 
 ### Logger
-- [ ] Provide structured logging helpers (JSON key/value or printf-style macros) so log consumers avoid manual string assembly.
-- [ ] Add backpressure metrics and drop counters for the asynchronous logger to expose when the worker thread cannot keep up.
-- [ ] Implement log rotation policies based on age and size, including retention limits and unit tests that verify rollover correctness.
+- [x] Provide structured logging helpers (JSON key/value or printf-style macros) so log consumers avoid manual string assembly.
+- [x] Add backpressure metrics and drop counters for the asynchronous logger to expose when the worker thread cannot keep up.
+- [x] Implement log rotation policies based on age and size, including retention limits and unit tests that verify rollover correctness.
 - [ ] Expose sink health probes that periodically ping remote targets configured via `ft_log_set_remote_sink` and surface connection errors early.
 - [ ] Document how `_alloc_logging` and `_api_logging` flags influence emitted messages to prevent confusion when toggling modes.
 - [ ] Add redaction helpers for sensitive fields and ensure they integrate with formatting utilities.

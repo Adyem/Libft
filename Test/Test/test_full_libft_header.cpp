@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "../../System_utils/test_runner.hpp"
 
 static std::string trim_whitespace(const std::string &input)
 {
@@ -73,51 +74,53 @@ static std::vector<std::string> read_manifest(const std::string &path)
     return (entries);
 }
 
-int main()
+static std::string resolve_existing_path(const std::vector<std::string> &candidates)
 {
-    const std::string header_path = "Libft/FullLibft.hpp";
-    const std::string manifest_path = "Libft/full_libft_manifest.txt";
+    std::size_t index = 0;
+    std::size_t candidate_count = candidates.size();
+    while (index < candidate_count)
+    {
+        std::ifstream file(candidates[index].c_str());
+        if (file.is_open())
+        {
+            return (candidates[index]);
+        }
+        index += 1;
+    }
+    return (std::string());
+}
+
+FT_TEST(test_full_libft_header_manifest_sync, "full libft header matches manifest")
+{
+    std::vector<std::string> header_candidates;
+    std::vector<std::string> manifest_candidates;
+    header_candidates.push_back("FullLibft.hpp");
+    header_candidates.push_back("../FullLibft.hpp");
+    header_candidates.push_back("Libft/FullLibft.hpp");
+    manifest_candidates.push_back("full_libft_manifest.txt");
+    manifest_candidates.push_back("../full_libft_manifest.txt");
+    manifest_candidates.push_back("Libft/full_libft_manifest.txt");
+    std::string header_path = resolve_existing_path(header_candidates);
+    std::string manifest_path = resolve_existing_path(manifest_candidates);
+    FT_ASSERT(header_path.empty() == false);
+    FT_ASSERT(manifest_path.empty() == false);
     std::vector<std::string> header_includes = read_includes(header_path, "#include \"");
-    if (header_includes.empty())
-    {
-        std::cerr << "No includes found in " << header_path << '\n';
-        return (1);
-    }
+    FT_ASSERT(header_includes.empty() == false);
     std::vector<std::string> manifest_entries = read_manifest(manifest_path);
-    if (manifest_entries.empty())
-    {
-        std::cerr << "Manifest is empty: " << manifest_path << '\n';
-        return (1);
-    }
+    FT_ASSERT(manifest_entries.empty() == false);
     std::vector<std::string> sorted_header = header_includes;
     std::sort(sorted_header.begin(), sorted_header.end());
-    if (sorted_header != header_includes)
-    {
-        std::cerr << "Header includes are not sorted alphabetically." << '\n';
-        return (1);
-    }
+    FT_ASSERT(sorted_header == header_includes);
     std::vector<std::string> sorted_manifest = manifest_entries;
     std::sort(sorted_manifest.begin(), sorted_manifest.end());
-    if (sorted_manifest != manifest_entries)
-    {
-        std::cerr << "Manifest entries are not sorted alphabetically." << '\n';
-        return (1);
-    }
-    if (header_includes != manifest_entries)
-    {
-        std::cerr << "Header includes and manifest entries differ." << '\n';
-        return (1);
-    }
+    FT_ASSERT(sorted_manifest == manifest_entries);
+    FT_ASSERT(header_includes == manifest_entries);
     std::size_t index = 1;
     std::size_t header_count = header_includes.size();
     while (index < header_count)
     {
-        if (header_includes[index] == header_includes[index - 1])
-        {
-            std::cerr << "Duplicate include detected: " << header_includes[index] << '\n';
-            return (1);
-        }
+        FT_ASSERT(header_includes[index] != header_includes[index - 1]);
         index += 1;
     }
-    return (0);
+    return (1);
 }
