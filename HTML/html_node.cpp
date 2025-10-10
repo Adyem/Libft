@@ -10,7 +10,9 @@ static void html_release_string(char *string)
 {
     if (!string)
         return ;
-    cma_checked_free(string);
+    int release_result = cma_checked_free(string);
+    if (release_result != 0)
+        return ;
     return ;
 }
 
