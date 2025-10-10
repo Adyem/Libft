@@ -47,14 +47,7 @@ ft_size_t cma_block_size(const void *memory_pointer)
         g_malloc_mutex.lock(THREAD_ID);
     Block *block = cma_get_block_from_pointer(memory_pointer);
 
-    if (block->magic != MAGIC_NUMBER)
-    {
-        pf_printf_fd(2, "Invalid block detected in cma_block_size.\n");
-        print_block_info(block);
-        if (g_cma_thread_safe)
-            g_malloc_mutex.unlock(THREAD_ID);
-        su_sigabrt();
-    }
+    cma_validate_block(block, "cma_block_size", const_cast<void *>(memory_pointer));
     ft_size_t block_size = block->size;
 
     if (g_cma_thread_safe)
