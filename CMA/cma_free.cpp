@@ -49,6 +49,7 @@ void cma_free(void* ptr)
     // Coalescing temporarily disabled.
     // block = merge_block(block);
     Page *page = find_page_of_block(block);
+    cma_detach_block_from_page(block, page);
     free_page_if_empty(page);
     if (g_cma_current_bytes >= freed_size)
         g_cma_current_bytes -= freed_size;

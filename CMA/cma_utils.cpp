@@ -256,10 +256,44 @@ Page *find_page_of_block(Block *block)
     return (ft_nullptr);
 }
 
+void cma_detach_block_from_page(Block *block, Page *page)
+{
+    if (!block || !page)
+        return ;
+    if (block->prev)
+    {
+        cma_validate_block(block->prev, "cma_detach_block prev", ft_nullptr);
+        block->prev->next = block->next;
+    }
+    else
+        page->blocks = block->next;
+    if (block->next)
+    {
+        cma_validate_block(block->next, "cma_detach_block next", ft_nullptr);
+        block->next->prev = block->prev;
+    }
+    block->next = ft_nullptr;
+    block->prev = ft_nullptr;
+    block->magic = MAGIC_NUMBER;
+    return ;
+}
+
 void free_page_if_empty(Page *page)
 {
     if (!page || page->heap == false)
         return ;
+    if (page->blocks == ft_nullptr)
+    {
+        if (page->prev)
+            page->prev->next = page->next;
+        if (page->next)
+            page->next->prev = page->prev;
+        if (page_list == page)
+            page_list = page->next;
+        std::free(page->start);
+        std::free(page);
+        return ;
+    }
     if (page->blocks && page->blocks->free &&
         page->blocks->next == ft_nullptr &&
         page->blocks->prev == ft_nullptr)
