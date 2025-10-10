@@ -281,50 +281,36 @@ Block *find_free_block(ft_size_t size)
 Block *merge_block(Block *block)
 {
     Block       *current;
+    Block       *next_block;
+    Block       *previous_block;
     ft_size_t    header_size;
 
     cma_validate_block(block, "merge_block", ft_nullptr);
-<<<<<<< HEAD
     header_size = static_cast<ft_size_t>(sizeof(Block));
     current = block;
-    while (current->prev && current->prev->free)
+    previous_block = current->prev;
+    while (previous_block && previous_block->free)
     {
-        Block   *previous_block;
-
-        previous_block = current->prev;
         cma_validate_block(previous_block, "merge_block prev", ft_nullptr);
+        verify_backward_link(current, previous_block);
         previous_block->size += header_size + current->size;
         previous_block->next = current->next;
         if (current->next)
-=======
-    Block    *next_block;
-    Block    *previous_block;
-
-    next_block = block->next;
-    while (next_block && next_block->free)
-    {
-        cma_validate_block(next_block, "merge_block next", ft_nullptr);
-        verify_forward_link(block, next_block);
-        block->size += sizeof(Block) + next_block->size;
-        block->next = next_block->next;
-        if (block->next)
->>>>>>> origin/main
         {
             cma_validate_block(current->next, "merge_block relink prev", ft_nullptr);
             current->next->prev = previous_block;
         }
-<<<<<<< HEAD
         current->next = ft_nullptr;
         current->prev = ft_nullptr;
         current->magic = MAGIC_NUMBER;
         current = previous_block;
+        previous_block = current->prev;
     }
-    while (current->next && current->next->free)
+    next_block = current->next;
+    while (next_block && next_block->free)
     {
-        Block   *next_block;
-
-        next_block = current->next;
         cma_validate_block(next_block, "merge_block next", ft_nullptr);
+        verify_forward_link(current, next_block);
         current->size += header_size + next_block->size;
         current->next = next_block->next;
         if (current->next)
@@ -335,24 +321,7 @@ Block *merge_block(Block *block)
         next_block->next = ft_nullptr;
         next_block->prev = ft_nullptr;
         next_block->magic = MAGIC_NUMBER;
-=======
-        next_block = block->next;
-    }
-    previous_block = block->prev;
-    while (previous_block && previous_block->free)
-    {
-        cma_validate_block(previous_block, "merge_block prev", ft_nullptr);
-        verify_backward_link(block, previous_block);
-        previous_block->size += sizeof(Block) + block->size;
-        previous_block->next = block->next;
-        if (block->next)
-        {
-            cma_validate_block(block->next, "merge_block relink prev", ft_nullptr);
-            block->next->prev = previous_block;
-        }
-        block = previous_block;
-        previous_block = block->prev;
->>>>>>> origin/main
+        next_block = current->next;
     }
     current->magic = MAGIC_NUMBER;
     return (current);
