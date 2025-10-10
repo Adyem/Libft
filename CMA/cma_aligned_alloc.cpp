@@ -19,25 +19,16 @@ static ft_size_t    calculate_alignment_padding(Block *block, ft_size_t alignmen
     ft_size_t  padding;
 
     block_address = reinterpret_cast<uintptr_t>(block);
-<<<<<<< HEAD
-    header_size_bytes = sizeof(Block);
+    header_size_bytes = static_cast<uintptr_t>(sizeof(Block));
     user_address = block_address + header_size_bytes;
     alignment_value = static_cast<uintptr_t>(alignment);
     if (alignment_value == 0)
         return (0);
-    remainder = (user_address + header_size_bytes) & (alignment_value - 1);
+    remainder = user_address & (alignment_value - 1);
     if (remainder == 0)
         return (0);
     padding = static_cast<ft_size_t>(alignment_value - remainder);
     return (padding);
-=======
-    header_size = sizeof(Block);
-    user_address = block_address + header_size;
-    remainder = (user_address + header_size) & static_cast<uintptr_t>(alignment - 1);
-    if (remainder == 0)
-        return (0);
-    return (alignment - remainder);
->>>>>>> origin/main
 }
 
 static int  block_supports_aligned_request(Block *block, ft_size_t aligned_size,
