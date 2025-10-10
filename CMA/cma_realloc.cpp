@@ -10,6 +10,8 @@
 #include "../Libft/libft.hpp"
 #include "../Libft/limits.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Printf/printf.hpp"
+#include "../System_utils/system_utils.hpp"
 
 static int reallocate_block(void *ptr, ft_size_t new_size)
 {
@@ -17,19 +19,26 @@ static int reallocate_block(void *ptr, ft_size_t new_size)
         return (-1);
     Block *block = reinterpret_cast<Block*>(static_cast<char*>(ptr)
             - sizeof(Block));
+    cma_validate_block(block, "cma_realloc resize", ptr);
     if (block->size >= new_size)
     {
         split_block(block, new_size);
+        cma_validate_block(block, "cma_realloc split in place", ptr);
         return (0);
     }
     if (block->next && block->next->free &&
         (block->size + sizeof(Block) + block->next->size) >= new_size)
     {
+        cma_validate_block(block->next, "cma_realloc neighbor", ft_nullptr);
         block->size += sizeof(Block) + block->next->size;
         block->next = block->next->next;
         if (block->next)
+        {
+            cma_validate_block(block->next, "cma_realloc relink", ft_nullptr);
             block->next->prev = block;
+        }
         split_block(block, new_size);
+        cma_validate_block(block, "cma_realloc split after merge", ptr);
         return (0);
     }
     return (-1);
@@ -51,8 +60,17 @@ static void *allocate_block_locked(ft_size_t aligned_size)
         }
         block = page->blocks;
     }
+    cma_validate_block(block, "cma_realloc allocate", ft_nullptr);
+    if (!block->free)
+    {
+        pf_printf_fd(2, "Allocator selected an in-use block in reallocate.\n");
+        print_block_info(block);
+        su_sigabrt();
+    }
     block = split_block(block, aligned_size);
+    cma_validate_block(block, "cma_realloc allocate split", ft_nullptr);
     block->free = false;
+    block->magic = MAGIC_NUMBER;
     g_cma_allocation_count++;
     g_cma_current_bytes += block->size;
     if (g_cma_current_bytes > g_cma_peak_bytes)
@@ -66,8 +84,16 @@ static void release_block_locked(Block *block)
     ft_size_t freed_size;
     Page *page;
 
+    cma_validate_block(block, "cma_realloc release", ft_nullptr);
+    if (block->free)
+    {
+        pf_printf_fd(2, "Attempted to release an already free block in cma_realloc.\n");
+        print_block_info(block);
+        su_sigabrt();
+    }
     freed_size = block->size;
     block->free = true;
+    block->magic = MAGIC_NUMBER;
     block = merge_block(block);
     page = find_page_of_block(block);
     free_page_if_empty(page);
@@ -134,6 +160,7 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
     ft_size_t aligned_size = align16(new_size);
     Block *block = reinterpret_cast<Block*>(static_cast<char*>(ptr)
             - sizeof(Block));
+    cma_validate_block(block, "cma_realloc header", ptr);
     ft_size_t previous_size = block->size;
     int error = reallocate_block(ptr, aligned_size);
     if (error == 0)
@@ -155,14 +182,7 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
 
     old_block = reinterpret_cast<Block*>(static_cast<char*>(ptr)
             - sizeof(Block));
-    if (old_block->magic != MAGIC_NUMBER)
-    {
-        if (g_cma_thread_safe)
-            g_malloc_mutex.unlock(THREAD_ID);
-        cma_free(ptr);
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (ft_nullptr);
-    }
+    cma_validate_block(old_block, "cma_realloc copy source", ptr);
     if (old_block->size < aligned_size)
         copy_size = old_block->size;
     else

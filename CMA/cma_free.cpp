@@ -32,20 +32,11 @@ void cma_free(void* ptr)
     Block* block = reinterpret_cast<Block*>((static_cast<char*> (ptr)
                 - sizeof(Block)));
     ft_size_t freed_size = 0;
-    if (block->magic != MAGIC_NUMBER)
+    cma_validate_block(block, "cma_free", ptr);
+    if (block->free)
     {
-        unsigned char   *expected_pointer;
-        long long        pointer_delta;
-
-        pf_printf_fd(2, "Invalid block detected in cma_free. \n");
+        pf_printf_fd(2, "Double free detected in cma_free.\n");
         print_block_info(block);
-        expected_pointer = reinterpret_cast<unsigned char *>(block)
-            + sizeof(Block);
-        pointer_delta = reinterpret_cast<unsigned char *>(ptr)
-            - expected_pointer;
-        pf_printf_fd(2, "Pointer passed to cma_free: %p\n", ptr);
-        pf_printf_fd(2, "Pointer offset from user start: %lld bytes\n",
-            pointer_delta);
         dump_block_bytes(block);
         if (g_cma_thread_safe)
             g_malloc_mutex.unlock(THREAD_ID);
@@ -53,6 +44,7 @@ void cma_free(void* ptr)
     }
     freed_size = block->size;
     block->free = true;
+    block->magic = MAGIC_NUMBER;
     block = merge_block(block);
     Page *page = find_page_of_block(block);
     free_page_if_empty(page);

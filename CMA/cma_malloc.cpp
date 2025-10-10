@@ -10,8 +10,10 @@
 #include "cma_internal.hpp"
 #include "../PThread/mutex.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Printf/printf.hpp"
 #include "../Logger/logger.hpp"
 #include "../Libft/limits.hpp"
+#include "../System_utils/system_utils.hpp"
 
 void* cma_malloc(ft_size_t size)
 {
@@ -64,8 +66,19 @@ void* cma_malloc(ft_size_t size)
         }
         block = page->blocks;
     }
+    cma_validate_block(block, "cma_malloc", ft_nullptr);
+    if (!block->free)
+    {
+        if (g_cma_thread_safe)
+            g_malloc_mutex.unlock(THREAD_ID);
+        pf_printf_fd(2, "Allocator selected an in-use block in cma_malloc.\n");
+        print_block_info(block);
+        su_sigabrt();
+    }
     block = split_block(block, aligned_size);
+    cma_validate_block(block, "cma_malloc split", ft_nullptr);
     block->free = false;
+    block->magic = MAGIC_NUMBER;
     g_cma_allocation_count++;
     g_cma_current_bytes += block->size;
     if (g_cma_current_bytes > g_cma_peak_bytes)

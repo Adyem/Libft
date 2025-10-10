@@ -71,6 +71,7 @@ void    print_block_info(Block *block);
 void    dump_block_bytes(Block *block);
 Page    *find_page_of_block(Block *block);
 void    free_page_if_empty(Page *page);
+void    cma_validate_block(Block *block, const char *context, void *user_pointer);
 int     cma_backend_is_enabled(void) __attribute__ ((warn_unused_result));
 int     cma_backend_owns_pointer(const void *memory_pointer)
             __attribute__ ((warn_unused_result));
