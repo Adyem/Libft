@@ -88,6 +88,43 @@ static void report_corrupted_block(Block *block, const char *context,
     return ;
 }
 
+static int are_blocks_adjacent(Block *left_block, Block *right_block)
+{
+    unsigned char   *expected_address;
+    unsigned char   *actual_address;
+
+    if (left_block == ft_nullptr || right_block == ft_nullptr)
+        return (0);
+    expected_address = reinterpret_cast<unsigned char *>(left_block)
+        + sizeof(Block) + left_block->size;
+    actual_address = reinterpret_cast<unsigned char *>(right_block);
+    if (expected_address == actual_address)
+        return (1);
+    return (0);
+}
+
+static void verify_forward_link(Block *block, Block *next_block)
+{
+    if (next_block->prev != block)
+        report_corrupted_block(next_block, "merge_block inconsistent next link",
+            ft_nullptr);
+    if (are_blocks_adjacent(block, next_block) == 0)
+        report_corrupted_block(next_block, "merge_block detached next neighbor",
+            ft_nullptr);
+    return ;
+}
+
+static void verify_backward_link(Block *block, Block *previous_block)
+{
+    if (previous_block->next != block)
+        report_corrupted_block(previous_block,
+            "merge_block inconsistent prev link", ft_nullptr);
+    if (are_blocks_adjacent(previous_block, block) == 0)
+        report_corrupted_block(previous_block,
+            "merge_block detached prev neighbor", ft_nullptr);
+    return ;
+}
+
 void cma_validate_block(Block *block, const char *context, void *user_pointer)
 {
     const char    *location;
@@ -247,6 +284,7 @@ Block *merge_block(Block *block)
     ft_size_t    header_size;
 
     cma_validate_block(block, "merge_block", ft_nullptr);
+<<<<<<< HEAD
     header_size = static_cast<ft_size_t>(sizeof(Block));
     current = block;
     while (current->prev && current->prev->free)
@@ -258,10 +296,24 @@ Block *merge_block(Block *block)
         previous_block->size += header_size + current->size;
         previous_block->next = current->next;
         if (current->next)
+=======
+    Block    *next_block;
+    Block    *previous_block;
+
+    next_block = block->next;
+    while (next_block && next_block->free)
+    {
+        cma_validate_block(next_block, "merge_block next", ft_nullptr);
+        verify_forward_link(block, next_block);
+        block->size += sizeof(Block) + next_block->size;
+        block->next = next_block->next;
+        if (block->next)
+>>>>>>> origin/main
         {
             cma_validate_block(current->next, "merge_block relink prev", ft_nullptr);
             current->next->prev = previous_block;
         }
+<<<<<<< HEAD
         current->next = ft_nullptr;
         current->prev = ft_nullptr;
         current->magic = MAGIC_NUMBER;
@@ -283,6 +335,24 @@ Block *merge_block(Block *block)
         next_block->next = ft_nullptr;
         next_block->prev = ft_nullptr;
         next_block->magic = MAGIC_NUMBER;
+=======
+        next_block = block->next;
+    }
+    previous_block = block->prev;
+    while (previous_block && previous_block->free)
+    {
+        cma_validate_block(previous_block, "merge_block prev", ft_nullptr);
+        verify_backward_link(block, previous_block);
+        previous_block->size += sizeof(Block) + block->size;
+        previous_block->next = block->next;
+        if (block->next)
+        {
+            cma_validate_block(block->next, "merge_block relink prev", ft_nullptr);
+            block->next->prev = previous_block;
+        }
+        block = previous_block;
+        previous_block = block->prev;
+>>>>>>> origin/main
     }
     current->magic = MAGIC_NUMBER;
     return (current);
