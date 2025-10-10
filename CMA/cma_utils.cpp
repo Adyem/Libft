@@ -9,6 +9,7 @@
 #include "cma_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Printf/printf.hpp"
+#include "../System_utils/system_utils.hpp"
 
 Page *page_list = ft_nullptr;
 pt_mutex g_malloc_mutex;
@@ -59,8 +60,54 @@ static void *create_stack_block(void)
     return (memory_block);
 }
 
+static void report_corrupted_block(Block *block, const char *context,
+        void *user_pointer)
+{
+    const char    *location;
+
+    location = context;
+    if (location == ft_nullptr)
+        location = "unknown";
+    pf_printf_fd(2, "Invalid block detected in %s.\n", location);
+    print_block_info(block);
+    if (user_pointer != ft_nullptr)
+    {
+        unsigned char   *expected_pointer;
+        long long        pointer_delta;
+
+        expected_pointer = reinterpret_cast<unsigned char *>(block)
+            + sizeof(Block);
+        pointer_delta = reinterpret_cast<unsigned char *>(user_pointer)
+            - expected_pointer;
+        pf_printf_fd(2, "Pointer passed to %s: %p\n", location, user_pointer);
+        pf_printf_fd(2, "Pointer offset from user start: %lld bytes\n",
+            pointer_delta);
+    }
+    dump_block_bytes(block);
+    su_sigabrt();
+    return ;
+}
+
+void cma_validate_block(Block *block, const char *context, void *user_pointer)
+{
+    const char    *location;
+
+    location = context;
+    if (block == ft_nullptr)
+    {
+        if (location == ft_nullptr)
+            location = "unknown";
+        pf_printf_fd(2, "Null block encountered in %s.\n", location);
+        su_sigabrt();
+    }
+    if (block->magic != MAGIC_NUMBER)
+        report_corrupted_block(block, location, user_pointer);
+    return ;
+}
+
 Block* split_block(Block* block, ft_size_t size)
 {
+    cma_validate_block(block, "split_block", ft_nullptr);
     if (block->size <= size + sizeof(Block))
         return (block);
     Block* new_block = reinterpret_cast<Block*>(reinterpret_cast<char*>(block) + sizeof(Block)
@@ -74,6 +121,7 @@ Block* split_block(Block* block, ft_size_t size)
         new_block->next->prev = new_block;
     block->next = new_block;
     block->size = size;
+    block->magic = MAGIC_NUMBER;
     return (block);
 }
 
@@ -123,6 +171,7 @@ Page *create_page(ft_size_t size)
     page->blocks->free = true;
     page->blocks->next = ft_nullptr;
     page->blocks->prev = ft_nullptr;
+    cma_validate_block(page->blocks, "create_page", ft_nullptr);
     determine_page_use(page);
     if (!page_list) {
         page_list = page;
@@ -150,6 +199,7 @@ Block *find_free_block(ft_size_t size)
         Block* cur_block = cur_page->blocks;
         while (cur_block)
         {
+            cma_validate_block(cur_block, "find_free_block", ft_nullptr);
             if (cur_block->free && cur_block->size >= size)
                 return (cur_block);
             cur_block = cur_block->next;
@@ -161,21 +211,31 @@ Block *find_free_block(ft_size_t size)
 
 Block *merge_block(Block *block)
 {
+    cma_validate_block(block, "merge_block", ft_nullptr);
     if (block->next && block->next->free)
     {
+        cma_validate_block(block->next, "merge_block next", ft_nullptr);
         block->size += sizeof(Block) + block->next->size;
         block->next = block->next->next;
         if (block->next)
+        {
+            cma_validate_block(block->next, "merge_block relink next", ft_nullptr);
             block->next->prev = block;
+        }
     }
     if (block->prev && block->prev->free)
     {
+        cma_validate_block(block->prev, "merge_block prev", ft_nullptr);
         block->prev->size += sizeof(Block) + block->size;
         block->prev->next = block->next;
         if (block->next)
+        {
+            cma_validate_block(block->next, "merge_block relink prev", ft_nullptr);
             block->next->prev = block->prev;
+        }
         block = block->prev;
     }
+    block->magic = MAGIC_NUMBER;
     return (block);
 }
 
