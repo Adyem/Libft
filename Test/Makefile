@@ -1,5 +1,7 @@
 TARGET := libft_tests
 DEBUG_TARGET := libft_tests_debug
+LIBFT_ARCHIVE := Full_Libft.a
+LIBFT_DEBUG_ARCHIVE := Full_Libft_debug.a
 
 EFF_SRCS := $(wildcard Efficiency/*.cpp)
 
@@ -53,8 +55,8 @@ DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
 
 all: $(TARGET)
 
-$(TARGET): ../Full_Libft.a $(OBJS)
-	@$(CXX) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+$(TARGET): $(OBJS) ../Full_Libft.a
+	@$(CXX) $(CFLAGS) -o $@ $(OBJS) ../Full_Libft.a $(LDFLAGS)
 	@printf '        [%s] Test binary ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
 $(OBJDIR)/%.o: %.cpp
@@ -79,8 +81,8 @@ $(OBJDIR)/Test/test_encryption_key.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\
 debug: CXXFLAGS += -DDEBUG=1
 debug: $(DEBUG_TARGET)
 
-$(DEBUG_TARGET): ../Full_Libft_debug.a $(DEBUG_OBJS)
-	@$(CXX) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+$(DEBUG_TARGET): $(DEBUG_OBJS) ../Full_Libft_debug.a
+	@$(CXX) $(CFLAGS) -o $@ $(DEBUG_OBJS) ../Full_Libft_debug.a $(LDFLAGS)
 	@printf '        [%s Debug] Test binary ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
 $(DEBUG_OBJDIR)/%.o: %.cpp
@@ -90,10 +92,38 @@ $(DEBUG_OBJDIR)/%.o: %.cpp
 	    printf '        [%s Debug] Files built: %d/%d\n' "$(MODULE_NAME)" $$count $(TOTAL_SRCS)
 
 ../Full_Libft.a:
-	@$(MAKE) -C .. COMPILE_FLAGS="$(COMPILE_FLAGS)"
+	@need_build=0; \
+	if $(MAKE) -C .. -q $(LIBFT_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)"; then \
+		printf '        [%s] Full_Libft.a is up to date\n' "$(MODULE_NAME)"; \
+	else \
+		status=$$?; \
+		if [ $$status -eq 1 ]; then \
+			need_build=1; \
+		else \
+			exit $$status; \
+		fi; \
+	fi; \
+	if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
+		printf '        [%s] Updating Full_Libft.a\n' "$(MODULE_NAME)"; \
+		$(MAKE) -C .. $(LIBFT_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)"; \
+	fi
 
 ../Full_Libft_debug.a:
-	@$(MAKE) -C .. debug COMPILE_FLAGS="$(COMPILE_FLAGS)"
+	@need_build=0; \
+	if $(MAKE) -C .. -q $(LIBFT_DEBUG_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)"; then \
+		printf '        [%s] Full_Libft_debug.a is up to date\n' "$(MODULE_NAME)"; \
+	else \
+		status=$$?; \
+		if [ $$status -eq 1 ]; then \
+			need_build=1; \
+		else \
+			exit $$status; \
+		fi; \
+	fi; \
+	if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
+		printf '        [%s] Updating Full_Libft_debug.a\n' "$(MODULE_NAME)"; \
+		$(MAKE) -C .. $(LIBFT_DEBUG_ARCHIVE) COMPILE_FLAGS="$(COMPILE_FLAGS)"; \
+	fi
 
 CLEAN_OBJS := $(shell find $(OBJDIR) $(DEBUG_OBJDIR) -type f -name '*.o' 2>/dev/null)
 
@@ -104,13 +134,37 @@ else
 endif
 
 clean:
-	-$(RM) $(CLEAN_FILES)
-	@$(MAKE) -C .. clean COMPILE_FLAGS="$(COMPILE_FLAGS)"
+	@status=0; \
+	if ! $(RM) $(CLEAN_FILES); then \
+		status=1; \
+	fi; \
+	if ! $(MAKE) -s -C .. clean COMPILE_FLAGS="$(COMPILE_FLAGS)" >/dev/null; then \
+		status=1; \
+	fi; \
+	if [ $$status -eq 0 ]; then \
+		printf '        [%s] clean: success\n' "$(MODULE_NAME)"; \
+	else \
+		printf '        [%s] clean: failed\n' "$(MODULE_NAME)"; \
+		exit 1; \
+	fi
 
 fclean:
-	-$(RM) $(CLEAN_FILES)
-	-$(RM) $(TARGET) $(DEBUG_TARGET)
-	@$(MAKE) -C .. fclean COMPILE_FLAGS="$(COMPILE_FLAGS)"
+	@status=0; \
+	if ! $(RM) $(CLEAN_FILES); then \
+		status=1; \
+	fi; \
+	if ! $(RM) $(TARGET) $(DEBUG_TARGET); then \
+		status=1; \
+	fi; \
+	if ! $(MAKE) -s -C .. fclean COMPILE_FLAGS="$(COMPILE_FLAGS)" >/dev/null; then \
+		status=1; \
+	fi; \
+	if [ $$status -eq 0 ]; then \
+		printf '        [%s] fclean: success\n' "$(MODULE_NAME)"; \
+	else \
+		printf '        [%s] fclean: failed\n' "$(MODULE_NAME)"; \
+		exit 1; \
+	fi
 
 re: fclean all
 
