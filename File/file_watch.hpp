@@ -5,7 +5,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../CPP_class/class_string_class.hpp"
 
-#include <thread>
+#include "../PThread/thread.hpp"
 
 enum file_watch_event_type
 {
@@ -20,8 +20,9 @@ class ft_file_watch
         ft_string _path;
         void (*_callback)(const char *, int, void *);
         void *_user_data;
-        std::thread _thread;
+        ft_thread _thread;
         bool _running;
+        bool _stopped;
         mutable int _error_code;
 #ifdef __linux__
         int _fd;
@@ -34,6 +35,7 @@ class ft_file_watch
 #endif
         void set_error(int error) const;
         void event_loop();
+        void close_handles();
 
     public:
         ft_file_watch();

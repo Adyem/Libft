@@ -77,6 +77,7 @@ void* cma_malloc(ft_size_t size)
     }
     block = split_block(block, aligned_size);
     cma_validate_block(block, "cma_malloc split", ft_nullptr);
+    cma_clear_block_diagnostic(block);
     block->free = false;
     block->magic = MAGIC_NUMBER;
     g_cma_allocation_count++;
@@ -84,6 +85,8 @@ void* cma_malloc(ft_size_t size)
     if (g_cma_current_bytes > g_cma_peak_bytes)
         g_cma_peak_bytes = g_cma_current_bytes;
     void *result = reinterpret_cast<char*>(block) + sizeof(Block);
+    cma_record_allocation(block, __builtin_return_address(0), THREAD_ID,
+        g_cma_allocation_count);
     if (g_cma_thread_safe)
         g_malloc_mutex.unlock(THREAD_ID);
     ft_errno = ER_SUCCESS;

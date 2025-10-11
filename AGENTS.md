@@ -25,3 +25,7 @@ Generic headers may use the module's name, while class headers should use the cl
 Update README.md only when the change is important for the end user, such as improved functionality or unavoidable undefined behavior. Bug fixes alone do not require README updates.
 
 Code that relies on platform-specific features must place only the platform-dependent portions into helper functions in the Compatebility module.
+
+#Build and Test Timing
+
+Building the library and running the full test suite typically takes about two and a half minutes, possibly a little longer.
