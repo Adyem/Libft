@@ -5,6 +5,11 @@ EFF_SRCS := $(wildcard Efficiency/*.cpp)
 
 SRCS := main.cpp $(wildcard Test/*.cpp) $(wildcard API/*.cpp)
 
+MODULE_NAME := $(notdir $(CURDIR))
+TOTAL_SRCS := $(words $(SRCS))
+
+MAKEFLAGS += --no-print-directory
+
 ifeq ($(OS),Windows_NT)
     MKDIR = mkdir
     RM    = del /F /Q
@@ -49,11 +54,14 @@ DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
 all: $(TARGET)
 
 $(TARGET): $(OBJS) ../Full_Libft.a
-	$(CXX) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	@$(CXX) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	@printf '        [%s] Test binary ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
 $(OBJDIR)/%.o: %.cpp
-	$(MKDIR) $(dir $@)
-	$(CXX) $(CFLAGS) -c $< -o $@
+	@$(MKDIR) $(dir $@)
+	@$(CXX) $(CFLAGS) -c $< -o $@
+	@count=$$(find $(OBJDIR) -type f -name '*.o' 2>/dev/null | wc -l); \
+	    printf '        [%s] Files built: %d/%d\n' "$(MODULE_NAME)" $$count $(TOTAL_SRCS)
 
 $(OBJDIR)/Test/test_promise.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Template\"
 $(OBJDIR)/Test/test_task_scheduler.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"PThread\"
@@ -72,17 +80,20 @@ debug: CXXFLAGS += -DDEBUG=1
 debug: $(DEBUG_TARGET)
 
 $(DEBUG_TARGET): $(DEBUG_OBJS) ../Full_Libft_debug.a
-	$(CXX) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	@$(CXX) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	@printf '        [%s Debug] Test binary ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
 $(DEBUG_OBJDIR)/%.o: %.cpp
-	$(MKDIR) $(dir $@)
-	$(CXX) $(CFLAGS) -c $< -o $@
+	@$(MKDIR) $(dir $@)
+	@$(CXX) $(CFLAGS) -c $< -o $@
+	@count=$$(find $(DEBUG_OBJDIR) -type f -name '*.o' 2>/dev/null | wc -l); \
+	    printf '        [%s Debug] Files built: %d/%d\n' "$(MODULE_NAME)" $$count $(TOTAL_SRCS)
 
 ../Full_Libft.a:
-	$(MAKE) -C .. COMPILE_FLAGS="$(COMPILE_FLAGS)"
+	@$(MAKE) -C .. COMPILE_FLAGS="$(COMPILE_FLAGS)"
 
 ../Full_Libft_debug.a:
-	$(MAKE) -C .. debug COMPILE_FLAGS="$(COMPILE_FLAGS)"
+	@$(MAKE) -C .. debug COMPILE_FLAGS="$(COMPILE_FLAGS)"
 
 CLEAN_OBJS := $(shell find $(OBJDIR) $(DEBUG_OBJDIR) -type f -name '*.o' 2>/dev/null)
 
@@ -94,12 +105,12 @@ endif
 
 clean:
 	-$(RM) $(CLEAN_FILES)
-	$(MAKE) -C .. clean COMPILE_FLAGS="$(COMPILE_FLAGS)"
+	@$(MAKE) -C .. clean COMPILE_FLAGS="$(COMPILE_FLAGS)"
 
 fclean:
 	-$(RM) $(CLEAN_FILES)
 	-$(RM) $(TARGET) $(DEBUG_TARGET)
-	$(MAKE) -C .. fclean COMPILE_FLAGS="$(COMPILE_FLAGS)"
+	@$(MAKE) -C .. fclean COMPILE_FLAGS="$(COMPILE_FLAGS)"
 
 re: fclean all
 
