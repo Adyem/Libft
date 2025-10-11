@@ -6,11 +6,15 @@
 
 static void zero_buffer(void *buffer, size_t buffer_size)
 {
+    int saved_errno;
+
     if (buffer == ft_nullptr)
         return ;
     if (buffer_size == 0)
         return ;
+    saved_errno = ft_errno;
     ft_memset(buffer, 0, buffer_size);
+    ft_errno = saved_errno;
     return ;
 }
 

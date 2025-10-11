@@ -38,13 +38,16 @@ void cma_free(void* ptr)
         cma_backend_deallocate(ptr);
         return ;
     }
-    if (g_cma_thread_safe)
-        g_malloc_mutex.lock(THREAD_ID);
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (cma_lock_allocator(&lock_acquired) != 0)
+        return ;
     Block* block = reinterpret_cast<Block*>((static_cast<char*> (ptr)
                 - sizeof(Block)));
     ft_size_t freed_size = 0;
     cma_validate_block(block, "cma_free", ptr);
-    if (block->free)
+    if (cma_block_is_free(block))
     {
         pf_printf_fd(2, "Double free detected in cma_free.\n");
         print_block_info(block);
@@ -57,15 +60,13 @@ void cma_free(void* ptr)
                 diagnostic->first_free_return);
         }
         dump_block_bytes(block);
-        if (g_cma_thread_safe)
-            g_malloc_mutex.unlock(THREAD_ID);
+        cma_unlock_allocator(lock_acquired);
         su_sigabrt();
     }
     freed_size = block->size;
     cma_record_first_free(block, cma_capture_return_address(),
         pt_thread_self(), g_cma_free_count + 1);
-    block->free = true;
-    block->magic = MAGIC_NUMBER;
+    cma_mark_block_free(block);
     block = merge_block(block);
     Page *page = find_page_of_block(block);
     free_page_if_empty(page);
@@ -73,8 +74,7 @@ void cma_free(void* ptr)
         g_cma_current_bytes -= freed_size;
     else
         g_cma_current_bytes = 0;
-    if (g_cma_thread_safe)
-        g_malloc_mutex.unlock(THREAD_ID);
+    cma_unlock_allocator(lock_acquired);
     g_cma_free_count++;
     if (ft_log_get_alloc_logging())
         ft_log_debug("cma_free %p", ptr);

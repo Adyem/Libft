@@ -10,6 +10,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
+#include "../Errno/errno.hpp"
 
 Page *page_list = ft_nullptr;
 pt_mutex g_malloc_mutex;
@@ -19,6 +20,44 @@ ft_size_t    g_cma_allocation_count = 0;
 ft_size_t    g_cma_free_count = 0;
 ft_size_t    g_cma_current_bytes = 0;
 ft_size_t    g_cma_peak_bytes = 0;
+
+int cma_lock_allocator(bool *lock_acquired)
+{
+    int lock_result;
+
+    if (!lock_acquired)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (-1);
+    }
+    *lock_acquired = false;
+    if (!g_cma_thread_safe)
+        return (0);
+    lock_result = g_malloc_mutex.lock(THREAD_ID);
+    if (lock_result == 0)
+    {
+        *lock_acquired = true;
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    if (ft_errno == FT_ERR_MUTEX_ALREADY_LOCKED)
+        return (0);
+    return (-1);
+}
+
+void cma_unlock_allocator(bool lock_acquired)
+{
+    int unlock_result;
+
+    if (!g_cma_thread_safe)
+        return ;
+    if (!lock_acquired)
+        return ;
+    unlock_result = g_malloc_mutex.unlock(THREAD_ID);
+    if (unlock_result == 0)
+        ft_errno = ER_SUCCESS;
+    return ;
+}
 
 struct cma_block_diagnostic_node
 {
@@ -194,6 +233,8 @@ static void verify_backward_link(Block *block, Block *previous_block)
 void cma_validate_block(Block *block, const char *context, void *user_pointer)
 {
     const char    *location;
+    bool            sentinel_free;
+    bool            sentinel_allocated;
 
     location = context;
     if (block == ft_nullptr)
@@ -203,8 +244,14 @@ void cma_validate_block(Block *block, const char *context, void *user_pointer)
         pf_printf_fd(2, "Null block encountered in %s.\n", location);
         su_sigabrt();
     }
-    if (block->magic != MAGIC_NUMBER)
+    sentinel_free = (block->magic == MAGIC_NUMBER_FREE);
+    sentinel_allocated = (block->magic == MAGIC_NUMBER_ALLOCATED);
+    if (!sentinel_free && !sentinel_allocated)
         report_corrupted_block(block, location, user_pointer);
+    if (sentinel_free && block->free == false)
+        cma_mark_block_free(block);
+    if (sentinel_allocated && block->free == true)
+        cma_mark_block_allocated(block);
     return ;
 }
 
@@ -334,21 +381,26 @@ Block* split_block(Block* block, ft_size_t size)
     }
     if (size >= available_size)
     {
-        block->magic = MAGIC_NUMBER;
+        if (cma_block_is_free(block))
+            cma_mark_block_free(block);
+        else
+            cma_mark_block_allocated(block);
         return (block);
     }
     remaining_size = available_size - size;
     minimum_payload = minimum_split_payload();
     if (remaining_size <= header_size + minimum_payload)
     {
-        block->magic = MAGIC_NUMBER;
+        if (cma_block_is_free(block))
+            cma_mark_block_free(block);
+        else
+            cma_mark_block_allocated(block);
         return (block);
     }
     raw_block = reinterpret_cast<unsigned char *>(block);
     new_block = reinterpret_cast<Block *>(raw_block + header_size + size);
-    new_block->magic = MAGIC_NUMBER;
     new_block->size = remaining_size - header_size;
-    new_block->free = true;
+    cma_mark_block_free(new_block);
     new_block->next = block->next;
     new_block->prev = block;
     if (new_block->next)
@@ -358,7 +410,10 @@ Block* split_block(Block* block, ft_size_t size)
     }
     block->next = new_block;
     block->size = size;
-    block->magic = MAGIC_NUMBER;
+    if (cma_block_is_free(block))
+        cma_mark_block_free(block);
+    else
+        cma_mark_block_allocated(block);
     return (block);
 }
 
@@ -403,9 +458,8 @@ Page *create_page(ft_size_t size)
     page->next = ft_nullptr;
     page->prev = ft_nullptr;
     page->blocks = static_cast<Block*>(ptr);
-    page->blocks->magic = MAGIC_NUMBER;
     page->blocks->size = page_size - sizeof(Block);
-    page->blocks->free = true;
+    cma_mark_block_free(page->blocks);
     page->blocks->next = ft_nullptr;
     page->blocks->prev = ft_nullptr;
     cma_validate_block(page->blocks, "create_page", ft_nullptr);
@@ -437,7 +491,7 @@ Block *find_free_block(ft_size_t size)
         while (cur_block)
         {
             cma_validate_block(cur_block, "find_free_block", ft_nullptr);
-            if (cur_block->free && cur_block->size >= size)
+            if (cma_block_is_free(cur_block) && cur_block->size >= size)
                 return (cur_block);
             cur_block = cur_block->next;
         }
@@ -457,7 +511,7 @@ Block *merge_block(Block *block)
     header_size = static_cast<ft_size_t>(sizeof(Block));
     current = block;
     previous_block = current->prev;
-    while (previous_block && previous_block->free)
+    while (previous_block && cma_block_is_free(previous_block))
     {
         cma_validate_block(previous_block, "merge_block prev", ft_nullptr);
         verify_backward_link(current, previous_block);
@@ -470,12 +524,12 @@ Block *merge_block(Block *block)
         }
         current->next = ft_nullptr;
         current->prev = ft_nullptr;
-        current->magic = MAGIC_NUMBER;
+        cma_mark_block_free(current);
         current = previous_block;
         previous_block = current->prev;
     }
     next_block = current->next;
-    while (next_block && next_block->free)
+    while (next_block && cma_block_is_free(next_block))
     {
         cma_validate_block(next_block, "merge_block next", ft_nullptr);
         verify_forward_link(current, next_block);
@@ -488,10 +542,10 @@ Block *merge_block(Block *block)
         }
         next_block->next = ft_nullptr;
         next_block->prev = ft_nullptr;
-        next_block->magic = MAGIC_NUMBER;
+        cma_mark_block_free(next_block);
         next_block = current->next;
     }
-    current->magic = MAGIC_NUMBER;
+    cma_mark_block_free(current);
     return (current);
 }
 
@@ -514,7 +568,7 @@ void free_page_if_empty(Page *page)
 {
     if (!page || page->heap == false)
         return ;
-    if (page->blocks && page->blocks->free &&
+    if (page->blocks && cma_block_is_free(page->blocks) &&
         page->blocks->next == ft_nullptr &&
         page->blocks->prev == ft_nullptr)
     {
@@ -542,7 +596,7 @@ static inline void print_block_info_impl(Block *block)
         return ;
     }
     const char* free_status;
-    if (block->free)
+    if (cma_block_is_free(block))
         free_status = "Yes";
     else
         free_status = "No";
@@ -625,8 +679,11 @@ void cma_get_extended_stats(ft_size_t *allocation_count,
         ft_size_t *current_bytes,
         ft_size_t *peak_bytes)
 {
-    if (g_cma_thread_safe)
-        g_malloc_mutex.lock(THREAD_ID);
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (cma_lock_allocator(&lock_acquired) != 0)
+        return ;
     if (allocation_count != ft_nullptr)
         *allocation_count = static_cast<ft_size_t>(g_cma_allocation_count);
     if (free_count != ft_nullptr)
@@ -635,8 +692,7 @@ void cma_get_extended_stats(ft_size_t *allocation_count,
         *current_bytes = static_cast<ft_size_t>(g_cma_current_bytes);
     if (peak_bytes != ft_nullptr)
         *peak_bytes = static_cast<ft_size_t>(g_cma_peak_bytes);
-    if (g_cma_thread_safe)
-        g_malloc_mutex.unlock(THREAD_ID);
+    cma_unlock_allocator(lock_acquired);
     return ;
 }
 

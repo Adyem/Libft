@@ -63,20 +63,23 @@ int cma_checked_block_size(const void *memory_pointer, ft_size_t *block_size)
     }
     if (cma_backend_is_enabled() && cma_backend_owns_pointer(memory_pointer))
         return (cma_backend_checked_block_size(memory_pointer, block_size));
-    if (g_cma_thread_safe)
-        g_malloc_mutex.lock(THREAD_ID);
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (cma_lock_allocator(&lock_acquired) != 0)
+        return (-1);
     Block *block = cma_find_block_for_pointer(memory_pointer);
 
-    if (block == ft_nullptr || block->magic != MAGIC_NUMBER || block->free)
+    if (block == ft_nullptr
+        || block->magic != MAGIC_NUMBER_ALLOCATED
+        || cma_block_is_free(block))
     {
-        if (g_cma_thread_safe)
-            g_malloc_mutex.unlock(THREAD_ID);
+        cma_unlock_allocator(lock_acquired);
         ft_errno = FT_ERR_INVALID_POINTER;
         return (-1);
     }
     *block_size = block->size;
-    if (g_cma_thread_safe)
-        g_malloc_mutex.unlock(THREAD_ID);
+    cma_unlock_allocator(lock_acquired);
     ft_errno = ER_SUCCESS;
     return (0);
 }

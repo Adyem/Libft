@@ -47,8 +47,11 @@ void* cma_malloc(ft_size_t size)
                 static_cast<unsigned long long>(size), ptr);
         return (ptr);
     }
-    if (g_cma_thread_safe)
-        g_malloc_mutex.lock(THREAD_ID);
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (cma_lock_allocator(&lock_acquired) != 0)
+        return (ft_nullptr);
     ft_size_t aligned_size = align16(size);
     Block *block = find_free_block(aligned_size);
     if (!block)
@@ -59,18 +62,16 @@ void* cma_malloc(ft_size_t size)
             int error_code;
 
             error_code = FT_ERR_NO_MEMORY;
-            if (g_cma_thread_safe)
-                g_malloc_mutex.unlock(THREAD_ID);
+            cma_unlock_allocator(lock_acquired);
             ft_errno = error_code;
             return (ft_nullptr);
         }
         block = page->blocks;
     }
     cma_validate_block(block, "cma_malloc", ft_nullptr);
-    if (!block->free)
+    if (!cma_block_is_free(block))
     {
-        if (g_cma_thread_safe)
-            g_malloc_mutex.unlock(THREAD_ID);
+        cma_unlock_allocator(lock_acquired);
         pf_printf_fd(2, "Allocator selected an in-use block in cma_malloc.\n");
         print_block_info(block);
         su_sigabrt();
@@ -78,8 +79,7 @@ void* cma_malloc(ft_size_t size)
     block = split_block(block, aligned_size);
     cma_validate_block(block, "cma_malloc split", ft_nullptr);
     cma_clear_block_diagnostic(block);
-    block->free = false;
-    block->magic = MAGIC_NUMBER;
+    cma_mark_block_allocated(block);
     g_cma_allocation_count++;
     g_cma_current_bytes += block->size;
     if (g_cma_current_bytes > g_cma_peak_bytes)
@@ -87,8 +87,7 @@ void* cma_malloc(ft_size_t size)
     void *result = reinterpret_cast<char*>(block) + sizeof(Block);
     cma_record_allocation(block, __builtin_return_address(0), THREAD_ID,
         g_cma_allocation_count);
-    if (g_cma_thread_safe)
-        g_malloc_mutex.unlock(THREAD_ID);
+    cma_unlock_allocator(lock_acquired);
     ft_errno = ER_SUCCESS;
     if (ft_log_get_alloc_logging())
     {
