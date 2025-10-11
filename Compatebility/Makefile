@@ -67,10 +67,27 @@ CLEAN_FILES := $(CLEAN_OBJS)
 endif
 
 clean:
->@-$(RM) $(CLEAN_FILES)
+>@if $(RM) $(CLEAN_FILES); then \
+>    printf '        [%s] clean: success\n' "$(MODULE_NAME)"; \
+>else \
+>    printf '        [%s] clean: failed\n' "$(MODULE_NAME)"; \
+>    exit 1; \
+>fi
 
-fclean: clean
->@-$(RM) $(TARGET) $(DEBUG_TARGET)
+fclean:
+>@status=0; \
+>if ! $(RM) $(CLEAN_FILES); then \
+>    status=1; \
+>fi; \
+>if ! $(RM) $(TARGET) $(DEBUG_TARGET); then \
+>    status=1; \
+>fi; \
+>if [ $$status -eq 0 ]; then \
+>    printf '        [%s] fclean: success\n' "$(MODULE_NAME)"; \
+>else \
+>    printf '        [%s] fclean: failed\n' "$(MODULE_NAME)"; \
+>    exit 1; \
+>fi
 
 re: fclean all
 
