@@ -12,8 +12,11 @@ void cma_cleanup()
         pf_printf("calling cleanup\n");
     if (OFFSWITCH)
         return ;
-    if (g_cma_thread_safe)
-        g_malloc_mutex.lock(THREAD_ID);
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (cma_lock_allocator(&lock_acquired) != 0)
+        return ;
     Page* current_page = page_list;
     while (current_page)
     {
@@ -31,7 +34,6 @@ void cma_cleanup()
     }
     page_list = ft_nullptr;
     g_cma_current_bytes = 0;
-    if (g_cma_thread_safe)
-        g_malloc_mutex.unlock(THREAD_ID);
+    cma_unlock_allocator(lock_acquired);
     return ;
 }

@@ -9,7 +9,8 @@
 
 #define PAGE_SIZE 131072
 #define BYPASS_ALLOC DEBUG
-#define MAGIC_NUMBER 0xDEADBEEF
+#define MAGIC_NUMBER_ALLOCATED 0xDEADBEEF
+#define MAGIC_NUMBER_FREE 0xBEEFDEAD
 
 #define OFFSWITCH 0
 
@@ -94,6 +95,8 @@ void    cma_record_allocation(Block *block, void *return_address,
 void    cma_debug_log_start_data_event(const char *event_label,
             void *start_data_pointer, void *mutex_pointer,
             void *function_pointer);
+int     cma_lock_allocator(bool *lock_acquired);
+void    cma_unlock_allocator(bool lock_acquired);
 int     cma_backend_is_enabled(void) __attribute__ ((warn_unused_result));
 int     cma_backend_owns_pointer(const void *memory_pointer)
             __attribute__ ((warn_unused_result));
@@ -112,6 +115,46 @@ int     cma_backend_checked_block_size(const void *memory_pointer,
 inline __attribute__((always_inline, hot)) ft_size_t align16(ft_size_t size)
 {
     return ((size + 15) & ~static_cast<ft_size_t>(15));
+}
+
+inline __attribute__((always_inline, hot)) bool cma_block_is_free(const Block *block)
+{
+    if (!block)
+        return (false);
+    if (block->magic == MAGIC_NUMBER_FREE)
+        return (true);
+    return (false);
+}
+
+inline __attribute__((always_inline, hot)) void cma_mark_block_free(Block *block)
+{
+    if (!block)
+        return ;
+    block->free = true;
+    block->magic = MAGIC_NUMBER_FREE;
+    return ;
+}
+
+inline __attribute__((always_inline, hot)) void cma_mark_block_allocated(Block *block)
+{
+    if (!block)
+        return ;
+    block->free = false;
+    block->magic = MAGIC_NUMBER_ALLOCATED;
+    return ;
+}
+
+inline __attribute__((always_inline, hot)) void cma_update_block_magic(Block *block)
+{
+    if (!block)
+        return ;
+    if (cma_block_is_free(block))
+    {
+        cma_mark_block_free(block);
+        return ;
+    }
+    cma_mark_block_allocated(block);
+    return ;
 }
 
 #endif
