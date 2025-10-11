@@ -6,9 +6,20 @@
 #include "CMA.hpp"
 #include "cma_internal.hpp"
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include "../Printf/printf.hpp"
 #include "../Logger/logger.hpp"
 #include "../System_utils/system_utils.hpp"
+
+static void *cma_capture_return_address(void)
+{
+#if defined(__GNUC__) || defined(__clang__)
+    return (__builtin_return_address(0));
+#else
+    return (ft_nullptr);
+#endif
+}
 
 void cma_free(void* ptr)
 {
@@ -37,12 +48,22 @@ void cma_free(void* ptr)
     {
         pf_printf_fd(2, "Double free detected in cma_free.\n");
         print_block_info(block);
+        const cma_block_diagnostic    *diagnostic = cma_find_block_diagnostic(block);
+        if (diagnostic != ft_nullptr && diagnostic->recorded)
+        {
+            pf_printf_fd(2, "First free sequence: %llu\n",
+                static_cast<unsigned long long>(diagnostic->first_free_sequence));
+            pf_printf_fd(2, "First free return address: %p\n",
+                diagnostic->first_free_return);
+        }
         dump_block_bytes(block);
         if (g_cma_thread_safe)
             g_malloc_mutex.unlock(THREAD_ID);
         su_sigabrt();
     }
     freed_size = block->size;
+    cma_record_first_free(block, cma_capture_return_address(),
+        pt_thread_self(), g_cma_free_count + 1);
     block->free = true;
     block->magic = MAGIC_NUMBER;
     block = merge_block(block);

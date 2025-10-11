@@ -65,16 +65,6 @@ constexpr size_t ft_strlen_size_t(const char *string)
         return (0);
     }
     const char *string_pointer = string;
-    while (reinterpret_cast<uintptr_t>(string_pointer) & (sizeof(size_t) - 1))
-    {
-        if (*string_pointer == '\0')
-            return (static_cast<size_t>(string_pointer - string));
-        ++string_pointer;
-    }
-    const size_t *word_pointer = reinterpret_cast<const size_t*>(string_pointer);
-    while (!ft_detail::has_zero(*word_pointer))
-        ++word_pointer;
-    string_pointer = reinterpret_cast<const char*>(word_pointer);
     while (*string_pointer)
         ++string_pointer;
     return (static_cast<size_t>(string_pointer - string));
