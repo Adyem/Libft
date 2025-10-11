@@ -16,45 +16,29 @@ void* ft_memcpy(void* destination, const void* source, size_t size)
 
     unsigned char*       dest = static_cast<unsigned char*>(destination);
     const unsigned char* src = static_cast<const unsigned char*>(source);
-    const unsigned char* dest_end;
-    const unsigned char* src_end;
-    uintptr_t            alignment_mask = sizeof(size_t) - 1;
+    uintptr_t            dest_address = reinterpret_cast<uintptr_t>(dest);
+    uintptr_t            src_address = reinterpret_cast<uintptr_t>(src);
+    uintptr_t            range_size;
+    uintptr_t            dest_end_address;
+    uintptr_t            src_end_address;
 
-    dest_end = dest + size;
-    src_end = src + size;
-    if (dest != src && dest < src_end && src < dest_end)
+    if (size > UINTPTR_MAX)
+        range_size = UINTPTR_MAX;
+    else
+        range_size = static_cast<uintptr_t>(size);
+    if (UINTPTR_MAX - dest_address < range_size)
+        dest_end_address = UINTPTR_MAX;
+    else
+        dest_end_address = dest_address + range_size;
+    if (UINTPTR_MAX - src_address < range_size)
+        src_end_address = UINTPTR_MAX;
+    else
+        src_end_address = src_address + range_size;
+    if (dest_address != src_address && dest_address < src_end_address && src_address < dest_end_address)
     {
         ft_errno = FT_ERR_OVERLAP;
         return (destination);
     }
-
-    if ((reinterpret_cast<uintptr_t>(dest) & alignment_mask) != (reinterpret_cast<uintptr_t>(src) & alignment_mask))
-    {
-        while (size)
-        {
-            *dest++ = *src++;
-            --size;
-        }
-        return (destination);
-    }
-
-    while (size && (reinterpret_cast<uintptr_t>(dest) & alignment_mask))
-    {
-        *dest++ = *src++;
-        --size;
-    }
-
-    size_t*       dest_word = reinterpret_cast<size_t*>(dest);
-    const size_t* src_word  = reinterpret_cast<const size_t*>(src);
-
-    while (size >= sizeof(size_t))
-    {
-        *dest_word++ = *src_word++;
-        size -= sizeof(size_t);
-    }
-
-    dest = reinterpret_cast<unsigned char*>(dest_word);
-    src  = reinterpret_cast<const unsigned char*>(src_word);
 
     while (size)
     {

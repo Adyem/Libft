@@ -10,8 +10,18 @@
 #include "../Libft/libft.hpp"
 #include "../Libft/limits.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../PThread/pthread.hpp"
 #include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
+
+static void *cma_realloc_capture_return_address(void)
+{
+#if defined(__GNUC__) || defined(__clang__)
+    return (__builtin_return_address(0));
+#else
+    return (ft_nullptr);
+#endif
+}
 
 static int reallocate_block(void *ptr, ft_size_t new_size)
 {
@@ -69,6 +79,7 @@ static void *allocate_block_locked(ft_size_t aligned_size)
     }
     block = split_block(block, aligned_size);
     cma_validate_block(block, "cma_realloc allocate split", ft_nullptr);
+    cma_clear_block_diagnostic(block);
     block->free = false;
     block->magic = MAGIC_NUMBER;
     g_cma_allocation_count++;
@@ -76,7 +87,12 @@ static void *allocate_block_locked(ft_size_t aligned_size)
     if (g_cma_current_bytes > g_cma_peak_bytes)
         g_cma_peak_bytes = g_cma_current_bytes;
     ft_errno = ER_SUCCESS;
-    return (reinterpret_cast<char*>(block) + sizeof(Block));
+    void *result;
+
+    result = reinterpret_cast<char*>(block) + sizeof(Block);
+    cma_record_allocation(block, __builtin_return_address(0), THREAD_ID,
+        g_cma_allocation_count);
+    return (result);
 }
 
 static void release_block_locked(Block *block)
@@ -89,9 +105,19 @@ static void release_block_locked(Block *block)
     {
         pf_printf_fd(2, "Attempted to release an already free block in cma_realloc.\n");
         print_block_info(block);
+        const cma_block_diagnostic    *diagnostic = cma_find_block_diagnostic(block);
+        if (diagnostic != ft_nullptr && diagnostic->recorded)
+        {
+            pf_printf_fd(2, "First free sequence: %llu\n",
+                static_cast<unsigned long long>(diagnostic->first_free_sequence));
+            pf_printf_fd(2, "First free return address: %p\n",
+                diagnostic->first_free_return);
+        }
         su_sigabrt();
     }
     freed_size = block->size;
+    cma_record_first_free(block, cma_realloc_capture_return_address(),
+        pt_thread_self(), g_cma_free_count + 1);
     block->free = true;
     block->magic = MAGIC_NUMBER;
     block = merge_block(block);

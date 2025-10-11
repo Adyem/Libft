@@ -105,6 +105,8 @@ LIB_BASES := \
 
 LIBS       := $(addsuffix .a, $(LIB_BASES))
 DEBUG_LIBS := $(addsuffix _debug.a, $(LIB_BASES))
+TOTAL_LIBS := $(words $(LIBS))
+TOTAL_DEBUG_LIBS := $(words $(DEBUG_LIBS))
 
 TARGET        := Full_Libft.a
 DEBUG_TARGET  := Full_Libft_debug.a
@@ -174,10 +176,24 @@ $(DEBUG_TARGET): $(DEBUG_LIBS)
 	$(RMDIR) temp_objs
 
 %.a:
-	$(MAKE) -C $(dir $@) $(SUBMAKE_OVERRIDES)
+	@$(MAKE) -C $(dir $@) $(SUBMAKE_OVERRIDES)
+	@built=0; \
+	for lib in $(LIBS); do \
+		if [ -f $$lib ]; then \
+			built=$$((built + 1)); \
+		fi; \
+	done; \
+	printf '[%d/%d] Built %s\n' $$built $(TOTAL_LIBS) $@
 
 %_debug.a:
-	$(MAKE) -C $(dir $@) debug $(SUBMAKE_OVERRIDES)
+	@$(MAKE) -C $(dir $@) debug $(SUBMAKE_OVERRIDES)
+	@built=0; \
+	for lib in $(DEBUG_LIBS); do \
+		if [ -f $$lib ]; then \
+			built=$$((built + 1)); \
+		fi; \
+	done; \
+	printf '[%d/%d] Built %s\n' $$built $(TOTAL_DEBUG_LIBS) $@
 
 clean:
 	$(foreach dir,$(SUBDIRS),$(MAKE) -C $(dir) clean;)

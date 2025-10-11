@@ -7,17 +7,17 @@ void* cma_memdup(const void* src, size_t size)
 {
     void *new_mem;
 
+    if (src == ft_nullptr && size != 0)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (ft_nullptr);
+    }
     if (size == 0)
     {
         void *duplicate_zero;
 
         duplicate_zero = cma_malloc(0);
         return (duplicate_zero);
-    }
-    if (!src)
-    {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (ft_nullptr);
     }
     new_mem = cma_malloc(size);
     if (!new_mem)

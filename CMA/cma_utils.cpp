@@ -20,6 +20,30 @@ ft_size_t    g_cma_free_count = 0;
 ft_size_t    g_cma_current_bytes = 0;
 ft_size_t    g_cma_peak_bytes = 0;
 
+struct cma_block_diagnostic_node
+{
+    Block    *block;
+    cma_block_diagnostic    diagnostic;
+    cma_block_diagnostic_node    *next;
+};
+
+static cma_block_diagnostic_node    *g_cma_block_diagnostics_head = ft_nullptr;
+
+void    cma_debug_log_start_data_event(const char *event_label,
+        void *start_data_pointer, void *mutex_pointer,
+        void *function_pointer)
+{
+    const char    *label;
+
+    label = event_label;
+    if (label == ft_nullptr)
+        label = "unknown";
+    pf_printf_fd(2,
+        "CMA DEBUG start_data event: %s start=%p mutex=%p function=%p\n",
+        label, start_data_pointer, mutex_pointer, function_pointer);
+    return ;
+}
+
 static ft_size_t determine_page_size(ft_size_t size)
 {
     if (size < SMALL_SIZE)
@@ -60,16 +84,58 @@ static void *create_stack_block(void)
     return (memory_block);
 }
 
+static unsigned long long cma_convert_thread_id(pt_thread_id_type thread_id)
+{
+    unsigned long long    identifier;
+    size_t                copy_size;
+
+    identifier = 0;
+    copy_size = sizeof(identifier);
+    if (sizeof(thread_id) < copy_size)
+        copy_size = sizeof(thread_id);
+    std::memcpy(&identifier, &thread_id, copy_size);
+    return (identifier);
+}
+
 static void report_corrupted_block(Block *block, const char *context,
         void *user_pointer)
 {
     const char    *location;
+    const cma_block_diagnostic    *diagnostic;
+    unsigned long long    thread_identifier;
 
     location = context;
     if (location == ft_nullptr)
         location = "unknown";
     pf_printf_fd(2, "Invalid block detected in %s.\n", location);
     print_block_info(block);
+    diagnostic = cma_find_block_diagnostic(block);
+    if (diagnostic != ft_nullptr)
+    {
+        if (diagnostic->allocation_recorded)
+        {
+            pf_printf_fd(2, "Last allocation sequence: %llu\n",
+                static_cast<unsigned long long>(
+                    diagnostic->last_allocation_sequence));
+            pf_printf_fd(2, "Last allocation return address: %p\n",
+                diagnostic->last_allocation_return);
+            thread_identifier = cma_convert_thread_id(
+                diagnostic->last_allocation_thread);
+            pf_printf_fd(2, "Last allocation thread id (approx): 0x%llx\n",
+                thread_identifier);
+        }
+        if (diagnostic->recorded)
+        {
+            pf_printf_fd(2, "First free sequence: %llu\n",
+                static_cast<unsigned long long>(diagnostic->first_free_sequence));
+            pf_printf_fd(2, "First free return address: %p\n",
+                diagnostic->first_free_return);
+            thread_identifier = cma_convert_thread_id(
+                diagnostic->first_free_thread);
+            pf_printf_fd(2,
+                "First free thread id (approx): 0x%llx\n", thread_identifier);
+        }
+    }
     if (user_pointer != ft_nullptr)
     {
         unsigned char   *expected_pointer;
@@ -152,6 +218,103 @@ static ft_size_t    minimum_split_payload(void)
     return (minimum_payload);
 }
 
+void    cma_record_first_free(Block *block, void *return_address,
+        pt_thread_id_type thread_id, ft_size_t sequence)
+{
+    cma_block_diagnostic_node    *current;
+    cma_block_diagnostic_node    *node;
+
+    current = g_cma_block_diagnostics_head;
+    while (current)
+    {
+        if (current->block == block)
+        {
+            if (current->diagnostic.recorded)
+                return ;
+            current->diagnostic.first_free_return = return_address;
+            current->diagnostic.first_free_thread = thread_id;
+            current->diagnostic.first_free_sequence = sequence;
+            current->diagnostic.recorded = true;
+            return ;
+        }
+        current = current->next;
+    }
+    node = static_cast<cma_block_diagnostic_node *>(std::malloc(
+            sizeof(cma_block_diagnostic_node)));
+    if (node == ft_nullptr)
+        return ;
+    node->block = block;
+    node->diagnostic.first_free_return = return_address;
+    node->diagnostic.first_free_thread = thread_id;
+    node->diagnostic.first_free_sequence = sequence;
+    node->diagnostic.recorded = true;
+    node->diagnostic.last_allocation_return = ft_nullptr;
+    node->diagnostic.last_allocation_thread = 0;
+    node->diagnostic.last_allocation_sequence = 0;
+    node->diagnostic.allocation_recorded = false;
+    node->next = g_cma_block_diagnostics_head;
+    g_cma_block_diagnostics_head = node;
+    return ;
+}
+
+void    cma_record_allocation(Block *block, void *return_address,
+        pt_thread_id_type thread_id, ft_size_t sequence)
+{
+    cma_block_diagnostic_node    *current;
+    current = g_cma_block_diagnostics_head;
+    while (current)
+    {
+        if (current->block == block)
+        {
+            current->diagnostic.last_allocation_return = return_address;
+            current->diagnostic.last_allocation_thread = thread_id;
+            current->diagnostic.last_allocation_sequence = sequence;
+            current->diagnostic.allocation_recorded = true;
+            return ;
+        }
+        current = current->next;
+    }
+    return ;
+}
+
+const cma_block_diagnostic    *cma_find_block_diagnostic(Block *block)
+{
+    cma_block_diagnostic_node    *current;
+
+    current = g_cma_block_diagnostics_head;
+    while (current)
+    {
+        if (current->block == block)
+            return (&current->diagnostic);
+        current = current->next;
+    }
+    return (ft_nullptr);
+}
+
+void    cma_clear_block_diagnostic(Block *block)
+{
+    cma_block_diagnostic_node    *current;
+    cma_block_diagnostic_node    *previous;
+
+    current = g_cma_block_diagnostics_head;
+    previous = ft_nullptr;
+    while (current)
+    {
+        if (current->block == block)
+        {
+            if (previous == ft_nullptr)
+                g_cma_block_diagnostics_head = current->next;
+            else
+                previous->next = current->next;
+            std::free(current);
+            return ;
+        }
+        previous = current;
+        current = current->next;
+    }
+    return ;
+}
+
 Block* split_block(Block* block, ft_size_t size)
 {
     unsigned char   *raw_block;
@@ -164,6 +327,11 @@ Block* split_block(Block* block, ft_size_t size)
     cma_validate_block(block, "split_block", ft_nullptr);
     header_size = static_cast<ft_size_t>(sizeof(Block));
     available_size = block->size;
+    if (((header_size + size) & static_cast<ft_size_t>(0xF)) != 0)
+    {
+        pf_printf_fd(2, "Requested split size misaligns block metadata in split_block.\n");
+        su_sigabrt();
+    }
     if (size >= available_size)
     {
         block->magic = MAGIC_NUMBER;

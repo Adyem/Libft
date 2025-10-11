@@ -54,6 +54,7 @@ class ft_function<ReturnType(Args...)>
 
         int get_error() const;
         const char *get_error_str() const;
+        void *get_mutex_address_debug() const;
 };
 
 template <typename ReturnType, typename... Args>
@@ -460,6 +461,12 @@ template <typename ReturnType, typename... Args>
 const char *ft_function<ReturnType(Args...)>::get_error_str() const
 {
     return (ft_strerror(this->_error_code));
+}
+
+template <typename ReturnType, typename... Args>
+void *ft_function<ReturnType(Args...)>::get_mutex_address_debug() const
+{
+    return (const_cast<pt_mutex *>(&this->_mutex));
 }
 
 #endif

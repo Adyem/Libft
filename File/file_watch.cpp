@@ -1,4 +1,5 @@
 #include "file_watch.hpp"
+#include <utility>
 #ifdef __linux__
 #include <sys/inotify.h>
 #include <unistd.h>
@@ -11,7 +12,7 @@
 #endif
 
 ft_file_watch::ft_file_watch()
-    : _path(), _callback(ft_nullptr), _user_data(ft_nullptr), _thread(), _running(false), _error_code(ER_SUCCESS)
+    : _path(), _callback(ft_nullptr), _user_data(ft_nullptr), _thread(), _running(false), _stopped(true), _error_code(ER_SUCCESS)
 #ifdef __linux__
     , _fd(-1), _watch(-1)
 #elif defined(__APPLE__) || defined(__FreeBSD__)
@@ -42,6 +43,10 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
+    }
+    if (this->_stopped == false)
+    {
+        this->stop();
     }
     this->_path = ft_string(path);
     this->_callback = callback;
@@ -88,16 +93,42 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
     }
 #endif
     this->_running = true;
-    this->_thread = std::thread(&ft_file_watch::event_loop, this);
+    ft_thread new_thread(&ft_file_watch::event_loop, this);
+    if (new_thread.get_error() != ER_SUCCESS)
+    {
+        this->_running = false;
+        this->_stopped = true;
+        this->close_handles();
+        this->_callback = ft_nullptr;
+        this->_user_data = ft_nullptr;
+        this->_path.clear();
+        this->set_error(new_thread.get_error());
+        return (-1);
+    }
+    this->_thread = ft_thread(std::move(new_thread));
+    this->_stopped = false;
     this->set_error(ER_SUCCESS);
     return (0);
 }
 
 void ft_file_watch::stop()
 {
-    if (this->_running == false && this->_thread.joinable() == false)
+    if (this->_stopped)
         return ;
+    this->_stopped = true;
     this->_running = false;
+    this->close_handles();
+    if (this->_thread.joinable())
+        this->_thread.join();
+    this->_thread = ft_thread();
+    this->_callback = ft_nullptr;
+    this->_user_data = ft_nullptr;
+    this->_path.clear();
+    return ;
+}
+
+void ft_file_watch::close_handles()
+{
 #ifdef __linux__
     if (this->_watch >= 0 && this->_fd >= 0)
         inotify_rm_watch(this->_fd, this->_watch);
@@ -117,11 +148,6 @@ void ft_file_watch::stop()
         CloseHandle(this->_handle);
     this->_handle = ft_nullptr;
 #endif
-    if (this->_thread.joinable())
-        this->_thread.join();
-    this->_callback = ft_nullptr;
-    this->_user_data = ft_nullptr;
-    this->_path.clear();
     return ;
 }
 
