@@ -120,7 +120,21 @@ debug: $(DEBUG_TARGET)
 both: all debug
 
 tests: $(TARGET)
-	$(MAKE) -C Test $(SUBMAKE_OVERRIDES)
+	@need_build=0; \
+	if $(MAKE) -C Test -q all $(SUBMAKE_OVERRIDES); then \
+		printf '\033[1;35m[LIBFT CHECK] Test suite is up to date\033[0m\n'; \
+	else \
+		status=$$?; \
+		if [ $$status -eq 1 ]; then \
+			need_build=1; \
+		else \
+			exit $$status; \
+		fi; \
+	fi; \
+	if [ $$need_build -eq 1 ]; then \
+		printf '\033[1;35m[LIBFT BUILD] Updating test suite\033[0m\n'; \
+		$(MAKE) -C Test all $(SUBMAKE_OVERRIDES); \
+	fi
 
 format:
 	@if ! command -v $(CLANG_FORMAT) >/dev/null 2>&1; then \
@@ -178,8 +192,24 @@ $(DEBUG_TARGET): $(DEBUG_LIBS)
 	@$(RMDIR) temp_objs
 
 %.a:
-	@$(MAKE) -C $(dir $@) $(SUBMAKE_OVERRIDES)
-	@built=0; \
+	@module_dir="$(patsubst %/,%,$(dir $@))"; \
+	module_target="$(notdir $@)"; \
+	need_build=0; \
+	if $(MAKE) -C $$module_dir -q $$module_target $(SUBMAKE_OVERRIDES); then \
+		printf '\033[1;35m[LIBFT CHECK] %s is up to date\033[0m\n' "$$module_dir"; \
+	else \
+		status=$$?; \
+		if [ $$status -eq 1 ]; then \
+			need_build=1; \
+		else \
+			exit $$status; \
+		fi; \
+	fi; \
+	if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
+		printf '\033[1;35m[LIBFT BUILD] Updating %s\033[0m\n' "$$module_dir"; \
+		$(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
+	fi; \
+	built=0; \
 	for lib in $(LIBS); do \
 		if [ -f $$lib ]; then \
 			built=$$((built + 1)); \
@@ -188,8 +218,24 @@ $(DEBUG_TARGET): $(DEBUG_LIBS)
 	printf '\033[1;35m[LIBFT PROGRESS] Modules completed: %d/%d\033[0m\n' $$built $(TOTAL_LIBS)
 
 %_debug.a:
-	@$(MAKE) -C $(dir $@) debug $(SUBMAKE_OVERRIDES)
-	@built=0; \
+	@module_dir="$(patsubst %/,%,$(dir $@))"; \
+	module_target="$(notdir $@)"; \
+	need_build=0; \
+	if $(MAKE) -C $$module_dir -q $$module_target $(SUBMAKE_OVERRIDES); then \
+		printf '\033[1;35m[LIBFT CHECK] %s (debug) is up to date\033[0m\n' "$$module_dir"; \
+	else \
+		status=$$?; \
+		if [ $$status -eq 1 ]; then \
+			need_build=1; \
+		else \
+			exit $$status; \
+		fi; \
+	fi; \
+	if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
+		printf '\033[1;35m[LIBFT BUILD] Updating %s (debug)\033[0m\n' "$$module_dir"; \
+		$(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
+	fi; \
+	built=0; \
 	for lib in $(DEBUG_LIBS); do \
 		if [ -f $$lib ]; then \
 			built=$$((built + 1)); \
@@ -198,12 +244,38 @@ $(DEBUG_TARGET): $(DEBUG_LIBS)
 	printf '\033[1;35m[LIBFT PROGRESS] Debug modules completed: %d/%d\033[0m\n' $$built $(TOTAL_DEBUG_LIBS)
 
 clean:
-	@$(foreach dir,$(SUBDIRS),$(MAKE) -C $(dir) clean;)
-	@$(RM) $(TARGET) $(DEBUG_TARGET)
+	@status=0; \
+	for dir in $(SUBDIRS); do \
+		if ! $(MAKE) -C $$dir clean $(SUBMAKE_OVERRIDES); then \
+			status=1; \
+		fi; \
+	done; \
+	if ! $(RM) $(TARGET) $(DEBUG_TARGET); then \
+		status=1; \
+	fi; \
+	if [ $$status -eq 0 ]; then \
+		printf '\033[1;35m[LIBFT CLEAN] Success\033[0m\n'; \
+	else \
+		printf '\033[1;35m[LIBFT CLEAN] Failed\033[0m\n'; \
+		exit 1; \
+	fi
 
 fclean:
-	@$(foreach dir,$(SUBDIRS),$(MAKE) -C $(dir) fclean;)
-	@$(RM) $(TARGET) $(DEBUG_TARGET)
+	@status=0; \
+	for dir in $(SUBDIRS); do \
+		if ! $(MAKE) -C $$dir fclean $(SUBMAKE_OVERRIDES); then \
+			status=1; \
+		fi; \
+	done; \
+	if ! $(RM) $(TARGET) $(DEBUG_TARGET); then \
+		status=1; \
+	fi; \
+	if [ $$status -eq 0 ]; then \
+		printf '\033[1;35m[LIBFT FCLEAN] Success\033[0m\n'; \
+	else \
+		printf '\033[1;35m[LIBFT FCLEAN] Failed\033[0m\n'; \
+		exit 1; \
+	fi
 
 .PHONY: all debug both re clean fclean tests format sanitize-clean \
         asan asan-tests ubsan ubsan-tests asan-ubsan asan-ubsan-tests
