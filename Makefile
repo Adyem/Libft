@@ -44,6 +44,8 @@ AR              := ar
 ARFLAGS         := rcs
 CLANG_FORMAT   ?= clang-format
 
+MAKEFLAGS      += --no-print-directory
+
 SUBMAKE_OVERRIDES :=
 
 ifeq ($(OS),Windows_NT)
