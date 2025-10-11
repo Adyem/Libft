@@ -99,7 +99,7 @@ static Block   *find_aligned_free_block(ft_size_t aligned_size, ft_size_t alignm
         while (current_block)
         {
             cma_validate_block(current_block, "cma_aligned_alloc search", ft_nullptr);
-            if (current_block->free)
+            if (cma_block_is_free(current_block))
             {
                 ft_size_t   local_padding;
 
@@ -216,8 +216,11 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         return (cma_backend_aligned_allocate(alignment, aligned_size));
     if (OFFSWITCH == 1)
         return (aligned_alloc_offswitch(alignment, request_size));
-    if (g_cma_thread_safe)
-        g_malloc_mutex.lock(THREAD_ID);
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (cma_lock_allocator(&lock_acquired) != 0)
+        return (ft_nullptr);
     padding = 0;
     block = find_aligned_free_block(aligned_size, alignment, &padding);
     if (!block)
@@ -228,16 +231,14 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         page_request = compute_extended_page_request(aligned_size, alignment);
         if (page_request == 0)
         {
-            if (g_cma_thread_safe)
-                g_malloc_mutex.unlock(THREAD_ID);
+            cma_unlock_allocator(lock_acquired);
             ft_errno = FT_ERR_OUT_OF_RANGE;
             return (ft_nullptr);
         }
         page = create_page(page_request);
         if (!page)
         {
-            if (g_cma_thread_safe)
-                g_malloc_mutex.unlock(THREAD_ID);
+            cma_unlock_allocator(lock_acquired);
             ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
@@ -247,8 +248,7 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     }
     if (normalize_alignment_padding(&padding) == 0)
     {
-        if (g_cma_thread_safe)
-            g_malloc_mutex.unlock(THREAD_ID);
+        cma_unlock_allocator(lock_acquired);
         ft_errno = FT_ERR_OUT_OF_RANGE;
         return (ft_nullptr);
     }
@@ -261,8 +261,7 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         block = prefix_block->next;
         if (!block)
         {
-            if (g_cma_thread_safe)
-                g_malloc_mutex.unlock(THREAD_ID);
+            cma_unlock_allocator(lock_acquired);
             ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
@@ -270,17 +269,15 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     }
     block = split_block(block, aligned_size);
     cma_validate_block(block, "cma_aligned_alloc split", ft_nullptr);
-    if (!block->free)
+    if (!cma_block_is_free(block))
     {
-        if (g_cma_thread_safe)
-            g_malloc_mutex.unlock(THREAD_ID);
+        cma_unlock_allocator(lock_acquired);
         pf_printf_fd(2, "Allocator selected an in-use block in cma_aligned_alloc.\n");
         print_block_info(block);
         su_sigabrt();
     }
     cma_clear_block_diagnostic(block);
-    block->free = false;
-    block->magic = MAGIC_NUMBER;
+    cma_mark_block_allocated(block);
     g_cma_allocation_count++;
     g_cma_current_bytes += block->size;
     if (g_cma_current_bytes > g_cma_peak_bytes)
@@ -288,8 +285,7 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     result = reinterpret_cast<char*>(block) + sizeof(Block);
     cma_record_allocation(block, __builtin_return_address(0), THREAD_ID,
         g_cma_allocation_count);
-    if (g_cma_thread_safe)
-        g_malloc_mutex.unlock(THREAD_ID);
+    cma_unlock_allocator(lock_acquired);
     ft_errno = ER_SUCCESS;
     if (ft_log_get_alloc_logging())
         ft_log_debug("cma_aligned_alloc %llu (alignment %llu) -> %p",

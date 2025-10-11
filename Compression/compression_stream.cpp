@@ -29,10 +29,14 @@ static int  map_zlib_error(int zlib_status)
 
 static void compression_stream_release_buffers(unsigned char *input_buffer, unsigned char *output_buffer)
 {
+    int saved_errno;
+
+    saved_errno = ft_errno;
     if (input_buffer)
         cma_free(input_buffer);
     if (output_buffer)
         cma_free(output_buffer);
+    ft_errno = saved_errno;
     return ;
 }
 
@@ -179,8 +183,11 @@ int ft_compress_stream_with_options(int input_fd, int output_fd, const t_compres
     deflate_status = g_compress_stream_deflate_init_hook(&stream, Z_BEST_COMPRESSION);
     if (deflate_status != Z_OK)
     {
-        ft_errno = map_zlib_error(deflate_status);
+        int error_code;
+
+        error_code = map_zlib_error(deflate_status);
         compression_stream_release_buffers(input_buffer, output_buffer);
+        ft_errno = error_code;
         return (1);
     }
     flush_mode = Z_NO_FLUSH;
@@ -207,9 +214,12 @@ int ft_compress_stream_with_options(int input_fd, int output_fd, const t_compres
             deflate_status = g_compress_stream_deflate_hook(&stream, flush_mode);
             if (deflate_status == Z_STREAM_ERROR || deflate_status == Z_BUF_ERROR)
             {
+                int error_code;
+
+                error_code = map_zlib_error(deflate_status);
                 deflateEnd(&stream);
                 compression_stream_release_buffers(input_buffer, output_buffer);
-                ft_errno = map_zlib_error(deflate_status);
+                ft_errno = error_code;
                 return (1);
             }
             std::size_t produced_bytes = output_buffer_size - static_cast<std::size_t>(stream.avail_out);
@@ -240,6 +250,7 @@ int ft_decompress_stream_with_options(int input_fd, int output_fd, const t_compr
     ssize_t         read_bytes;
     int             flush_mode;
     int             stream_finished;
+    int             read_any_input;
 
     if (input_fd < 0 || output_fd < 0)
     {
@@ -257,13 +268,14 @@ int ft_decompress_stream_with_options(int input_fd, int output_fd, const t_compr
     inflate_status = g_decompress_stream_inflate_init_hook(&stream);
     if (inflate_status != Z_OK)
     {
-        ft_errno = map_zlib_error(inflate_status);
         compression_stream_release_buffers(input_buffer, output_buffer);
+        ft_errno = map_zlib_error(inflate_status);
         return (1);
     }
     stream_finished = 0;
+    read_any_input = 0;
     flush_mode = Z_NO_FLUSH;
-    while (stream_finished == 0)
+    while (1)
     {
         read_bytes = su_read(input_fd, input_buffer, input_buffer_size);
         if (read_bytes < 0)
@@ -275,6 +287,8 @@ int ft_decompress_stream_with_options(int input_fd, int output_fd, const t_compr
         }
         stream.next_in = input_buffer;
         stream.avail_in = static_cast<unsigned int>(read_bytes);
+        if (read_bytes > 0)
+            read_any_input = 1;
         if (read_bytes == 0)
             flush_mode = Z_FINISH;
         else
@@ -286,6 +300,16 @@ int ft_decompress_stream_with_options(int input_fd, int output_fd, const t_compr
             inflate_status = g_decompress_stream_inflate_hook(&stream, flush_mode);
             if (inflate_status == Z_STREAM_END)
                 stream_finished = 1;
+            if (inflate_status == Z_BUF_ERROR && stream_finished == 0)
+            {
+                inflateEnd(&stream);
+                compression_stream_release_buffers(input_buffer, output_buffer);
+                if (read_any_input == 0)
+                    ft_errno = FT_ERR_FULL;
+                else
+                    ft_errno = FT_ERR_INVALID_ARGUMENT;
+                return (1);
+            }
             if (inflate_status == Z_NEED_DICT
                 || inflate_status == Z_DATA_ERROR
                 || inflate_status == Z_MEM_ERROR
@@ -298,7 +322,8 @@ int ft_decompress_stream_with_options(int input_fd, int output_fd, const t_compr
                 return (1);
             }
             std::size_t produced_bytes = output_buffer_size - static_cast<std::size_t>(stream.avail_out);
-            if (su_write(output_fd, output_buffer, produced_bytes) != static_cast<ssize_t>(produced_bytes))
+            if (produced_bytes != 0
+                && su_write(output_fd, output_buffer, produced_bytes) != static_cast<ssize_t>(produced_bytes))
             {
                 inflateEnd(&stream);
                 compression_stream_release_buffers(input_buffer, output_buffer);
@@ -306,17 +331,19 @@ int ft_decompress_stream_with_options(int input_fd, int output_fd, const t_compr
                 return (1);
             }
         }
-        while (stream.avail_out == 0 && stream_finished == 0);
+        while (stream.avail_out == 0 && stream_finished == 0 && stream.avail_in != 0);
+        if (stream_finished != 0 && stream.avail_in != 0)
+        {
+            inflateEnd(&stream);
+            compression_stream_release_buffers(input_buffer, output_buffer);
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            return (1);
+        }
         if (stream_finished != 0)
         {
-            if (stream.avail_in != 0)
-            {
-                inflateEnd(&stream);
-                compression_stream_release_buffers(input_buffer, output_buffer);
-                ft_errno = FT_ERR_INVALID_ARGUMENT;
-                return (1);
-            }
-            break ;
+            if (flush_mode == Z_FINISH)
+                break ;
+            continue ;
         }
         if (flush_mode == Z_FINISH)
         {

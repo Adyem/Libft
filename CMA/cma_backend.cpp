@@ -30,8 +30,11 @@ static int cma_backend_query_ownership(const void *memory_pointer)
 
 static void cma_backend_track_allocation(ft_size_t allocation_size)
 {
-    if (g_cma_thread_safe)
-        g_malloc_mutex.lock(THREAD_ID);
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (cma_lock_allocator(&lock_acquired) != 0)
+        return ;
     g_cma_allocation_count++;
     if (allocation_size != 0)
     {
@@ -39,15 +42,17 @@ static void cma_backend_track_allocation(ft_size_t allocation_size)
         if (g_cma_current_bytes > g_cma_peak_bytes)
             g_cma_peak_bytes = g_cma_current_bytes;
     }
-    if (g_cma_thread_safe)
-        g_malloc_mutex.unlock(THREAD_ID);
+    cma_unlock_allocator(lock_acquired);
     return ;
 }
 
 static void cma_backend_track_free(ft_size_t allocation_size)
 {
-    if (g_cma_thread_safe)
-        g_malloc_mutex.lock(THREAD_ID);
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (cma_lock_allocator(&lock_acquired) != 0)
+        return ;
     if (allocation_size != 0)
     {
         if (g_cma_current_bytes >= allocation_size)
@@ -56,8 +61,7 @@ static void cma_backend_track_free(ft_size_t allocation_size)
             g_cma_current_bytes = 0;
     }
     g_cma_free_count++;
-    if (g_cma_thread_safe)
-        g_malloc_mutex.unlock(THREAD_ID);
+    cma_unlock_allocator(lock_acquired);
     return ;
 }
 
@@ -165,8 +169,11 @@ void *cma_backend_aligned_allocate(ft_size_t alignment, ft_size_t size)
 static void cma_backend_update_stats_for_resize(ft_size_t previous_size,
         ft_size_t new_size)
 {
-    if (g_cma_thread_safe)
-        g_malloc_mutex.lock(THREAD_ID);
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (cma_lock_allocator(&lock_acquired) != 0)
+        return ;
     if (previous_size != 0)
     {
         if (g_cma_current_bytes >= previous_size)
@@ -180,8 +187,7 @@ static void cma_backend_update_stats_for_resize(ft_size_t previous_size,
         if (g_cma_current_bytes > g_cma_peak_bytes)
             g_cma_peak_bytes = g_cma_current_bytes;
     }
-    if (g_cma_thread_safe)
-        g_malloc_mutex.unlock(THREAD_ID);
+    cma_unlock_allocator(lock_acquired);
     return ;
 }
 

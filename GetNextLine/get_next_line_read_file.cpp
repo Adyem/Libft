@@ -7,41 +7,24 @@
 #include <unistd.h>
 #include "../Errno/errno.hpp"
 
-static void ft_handle_allocation_failure(char **lines)
+static char **ft_grow_lines(char **lines, int line_count, int new_capacity)
 {
-    int index = 0;
+    int index;
+    char **new_lines;
 
-    if (lines)
-    {
-        while (lines[index])
-        {
-            cma_free(lines[index]);
-            index++;
-        }
-        cma_free(lines);
-    }
-    return ;
-}
-
-static char **ft_reallocate_lines(char **lines, int new_size)
-{
-    int index = 0;
-    char **new_lines = static_cast<char **>(cma_calloc(new_size + 1, sizeof(char *)));
-
+    new_lines = static_cast<char **>(cma_calloc(new_capacity + 1,
+            sizeof(char *)));
     if (!new_lines)
     {
-        ft_handle_allocation_failure(lines);
+        cma_free_double(lines);
         ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
-
-    if (lines)
+    index = 0;
+    while (index < line_count)
     {
-        while (lines[index])
-        {
-            new_lines[index] = lines[index];
-            index++;
-        }
+        new_lines[index] = lines[index];
+        index++;
     }
     cma_free(lines);
     return (new_lines);
@@ -52,6 +35,7 @@ char **ft_read_file_lines(ft_istream &input, std::size_t buffer_size)
     char **lines = ft_nullptr;
     char *current_line = ft_nullptr;
     int line_count = 0;
+    int line_capacity = 0;
 
     while (true)
     {
@@ -63,22 +47,30 @@ char **ft_read_file_lines(ft_istream &input, std::size_t buffer_size)
                 ft_errno = ER_SUCCESS;
                 break ;
             }
-            ft_handle_allocation_failure(lines);
+            cma_free_double(lines);
             return (ft_nullptr);
         }
         #ifdef DEBUG
         if (DEBUG == 1)
             pf_printf("LINE = %s", current_line);
         #endif
-        line_count++;
-        lines = ft_reallocate_lines(lines, line_count);
-        if (!lines)
+        if (line_count >= line_capacity)
         {
-            cma_free(current_line);
-            ft_errno = FT_ERR_NO_MEMORY;
-            return (ft_nullptr);
+            char **new_lines;
+
+            new_lines = ft_grow_lines(lines, line_count, line_count + 1);
+            if (!new_lines)
+            {
+                cma_free(current_line);
+                ft_errno = FT_ERR_NO_MEMORY;
+                return (ft_nullptr);
+            }
+            lines = new_lines;
+            line_capacity = line_count + 1;
         }
-        lines[line_count - 1] = current_line;
+        lines[line_count] = current_line;
+        line_count++;
+        lines[line_count] = ft_nullptr;
     }
     ft_errno = ER_SUCCESS;
     return (lines);

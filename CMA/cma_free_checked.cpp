@@ -18,8 +18,11 @@ int cma_checked_free(void* ptr)
         ft_errno = ER_SUCCESS;
         return (0);
     }
-    if (g_cma_thread_safe)
-        g_malloc_mutex.lock(THREAD_ID);
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (cma_lock_allocator(&lock_acquired) != 0)
+        return (-1);
     Page* page = page_list;
     Block* found = ft_nullptr;
     while (page && !found)
@@ -41,8 +44,7 @@ int cma_checked_free(void* ptr)
     }
     if (!found)
     {
-        if (g_cma_thread_safe)
-            g_malloc_mutex.unlock(THREAD_ID);
+        cma_unlock_allocator(lock_acquired);
         ft_errno = FT_ERR_INVALID_POINTER;
         return (-1);
     }
@@ -50,14 +52,12 @@ int cma_checked_free(void* ptr)
     char *expected_pointer = reinterpret_cast<char*>(found) + sizeof(Block);
     if (reinterpret_cast<char*>(ptr) != expected_pointer)
     {
-        if (g_cma_thread_safe)
-            g_malloc_mutex.unlock(THREAD_ID);
+        cma_unlock_allocator(lock_acquired);
         ft_errno = FT_ERR_INVALID_POINTER;
         return (-1);
     }
     ft_size_t freed_size = found->size;
-    found->free = true;
-    found->magic = MAGIC_NUMBER;
+    cma_mark_block_free(found);
     found = merge_block(found);
     Page *pg = find_page_of_block(found);
     free_page_if_empty(pg);
@@ -66,8 +66,7 @@ int cma_checked_free(void* ptr)
     else
         g_cma_current_bytes = 0;
     g_cma_free_count++;
-    if (g_cma_thread_safe)
-        g_malloc_mutex.unlock(THREAD_ID);
+    cma_unlock_allocator(lock_acquired);
     ft_errno = ER_SUCCESS;
     return (0);
 }
