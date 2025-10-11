@@ -160,20 +160,20 @@ cd temp_objs && $(AR) x ../$1 && cd ..;
 endef
 
 $(TARGET): $(LIBS)
-	@echo "Linking libraries into $(TARGET)..."
-	$(RM) $@
-	$(MKDIR) temp_objs
-	$(foreach lib,$(LIBS),$(call EXTRACT,$(lib)))
-	$(AR) $(ARFLAGS) $@ temp_objs/*.o
-	$(RMDIR) temp_objs
+	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_LIBS) $@
+	@$(RM) $@
+	@$(MKDIR) temp_objs
+	@$(foreach lib,$(LIBS),$(call EXTRACT,$(lib)))
+	@$(AR) $(ARFLAGS) $@ temp_objs/*.o
+	@$(RMDIR) temp_objs
 
 $(DEBUG_TARGET): $(DEBUG_LIBS)
-	@echo "Linking libraries into $(DEBUG_TARGET)..."
-	$(RM) $@
-	$(MKDIR) temp_objs
-	$(foreach lib,$(DEBUG_LIBS),$(call EXTRACT,$(lib)))
-	$(AR) $(ARFLAGS) $@ temp_objs/*.o
-	$(RMDIR) temp_objs
+	@printf '\033[1;35m[LIBFT BUILD] Combining %d modules into %s\033[0m\n' $(TOTAL_DEBUG_LIBS) $@
+	@$(RM) $@
+	@$(MKDIR) temp_objs
+	@$(foreach lib,$(DEBUG_LIBS),$(call EXTRACT,$(lib)))
+	@$(AR) $(ARFLAGS) $@ temp_objs/*.o
+	@$(RMDIR) temp_objs
 
 %.a:
 	@$(MAKE) -C $(dir $@) $(SUBMAKE_OVERRIDES)
@@ -183,7 +183,7 @@ $(DEBUG_TARGET): $(DEBUG_LIBS)
 			built=$$((built + 1)); \
 		fi; \
 	done; \
-	printf '[%d/%d] Built %s\n' $$built $(TOTAL_LIBS) $@
+	printf '\033[1;35m[LIBFT PROGRESS] Modules completed: %d/%d\033[0m\n' $$built $(TOTAL_LIBS)
 
 %_debug.a:
 	@$(MAKE) -C $(dir $@) debug $(SUBMAKE_OVERRIDES)
@@ -193,15 +193,15 @@ $(DEBUG_TARGET): $(DEBUG_LIBS)
 			built=$$((built + 1)); \
 		fi; \
 	done; \
-	printf '[%d/%d] Built %s\n' $$built $(TOTAL_DEBUG_LIBS) $@
+	printf '\033[1;35m[LIBFT PROGRESS] Debug modules completed: %d/%d\033[0m\n' $$built $(TOTAL_DEBUG_LIBS)
 
 clean:
-	$(foreach dir,$(SUBDIRS),$(MAKE) -C $(dir) clean;)
-	$(RM) $(TARGET) $(DEBUG_TARGET)
+	@$(foreach dir,$(SUBDIRS),$(MAKE) -C $(dir) clean;)
+	@$(RM) $(TARGET) $(DEBUG_TARGET)
 
 fclean:
-	$(foreach dir,$(SUBDIRS),$(MAKE) -C $(dir) fclean;)
-	$(RM) $(TARGET) $(DEBUG_TARGET)
+	@$(foreach dir,$(SUBDIRS),$(MAKE) -C $(dir) fclean;)
+	@$(RM) $(TARGET) $(DEBUG_TARGET)
 
 .PHONY: all debug both re clean fclean tests format sanitize-clean \
         asan asan-tests ubsan ubsan-tests asan-ubsan asan-ubsan-tests
