@@ -53,7 +53,7 @@ DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS) ../Full_Libft.a
+$(TARGET): ../Full_Libft.a $(OBJS)
 	@$(CXX) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 	@printf '        [%s] Test binary ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
@@ -79,7 +79,7 @@ $(OBJDIR)/Test/test_encryption_key.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\
 debug: CXXFLAGS += -DDEBUG=1
 debug: $(DEBUG_TARGET)
 
-$(DEBUG_TARGET): $(DEBUG_OBJS) ../Full_Libft_debug.a
+$(DEBUG_TARGET): ../Full_Libft_debug.a $(DEBUG_OBJS)
 	@$(CXX) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 	@printf '        [%s Debug] Test binary ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
