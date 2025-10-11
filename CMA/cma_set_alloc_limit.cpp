@@ -6,25 +6,23 @@
 void    cma_set_alloc_limit(ft_size_t limit)
 {
     int entry_errno;
-    int lock_result;
     int current_errno;
+    bool lock_acquired;
 
     entry_errno = ft_errno;
-    if (g_cma_thread_safe)
-    {
-        lock_result = g_malloc_mutex.lock(THREAD_ID);
-        if (lock_result != FT_SUCCESS)
-            return ;
+    lock_acquired = false;
+    if (cma_lock_allocator(&lock_acquired) != 0)
+        return ;
+    if (lock_acquired)
         ft_errno = entry_errno;
-    }
     g_cma_alloc_limit = limit;
-    if (g_cma_thread_safe)
+    if (lock_acquired)
     {
         current_errno = ft_errno;
-        lock_result = g_malloc_mutex.unlock(THREAD_ID);
-        if (lock_result != FT_SUCCESS)
-            return ;
+        cma_unlock_allocator(lock_acquired);
         ft_errno = current_errno;
+        return ;
     }
+    cma_unlock_allocator(lock_acquired);
     return ;
 }
