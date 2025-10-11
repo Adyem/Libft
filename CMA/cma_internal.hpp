@@ -2,6 +2,7 @@
 # define CMA_INTERNAL_HPP
 
 #include "../PThread/mutex.hpp"
+#include "../PThread/pthread.hpp"
 #include "../Libft/libft.hpp"
 #include <cstdint>
 #include <stdint.h>
@@ -50,6 +51,18 @@ struct Block
     Block        *prev;
 } __attribute__ ((aligned(16)));
 
+struct cma_block_diagnostic
+{
+    void        *first_free_return;
+    pt_thread_id_type    first_free_thread;
+    ft_size_t    first_free_sequence;
+    bool        recorded;
+    void        *last_allocation_return;
+    pt_thread_id_type    last_allocation_thread;
+    ft_size_t    last_allocation_sequence;
+    bool        allocation_recorded;
+};
+
 struct Page
 {
     void        *start;
@@ -72,6 +85,15 @@ void    dump_block_bytes(Block *block);
 Page    *find_page_of_block(Block *block);
 void    free_page_if_empty(Page *page);
 void    cma_validate_block(Block *block, const char *context, void *user_pointer);
+void    cma_record_first_free(Block *block, void *return_address,
+            pt_thread_id_type thread_id, ft_size_t sequence);
+const cma_block_diagnostic    *cma_find_block_diagnostic(Block *block);
+void    cma_clear_block_diagnostic(Block *block);
+void    cma_record_allocation(Block *block, void *return_address,
+            pt_thread_id_type thread_id, ft_size_t sequence);
+void    cma_debug_log_start_data_event(const char *event_label,
+            void *start_data_pointer, void *mutex_pointer,
+            void *function_pointer);
 int     cma_backend_is_enabled(void) __attribute__ ((warn_unused_result));
 int     cma_backend_owns_pointer(const void *memory_pointer)
             __attribute__ ((warn_unused_result));
