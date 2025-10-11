@@ -6,6 +6,9 @@ SRCS := yaml_reader.cpp \
         yaml_reader_utils.cpp \
         yaml_writer.cpp
 
+MODULE_NAME := $(notdir $(CURDIR))
+TOTAL_SRCS := $(words $(SRCS))
+
 HEADERS := yaml.hpp
 
 ifeq ($(OS),Windows_NT)
@@ -35,22 +38,28 @@ CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(AR) $(ARFLAGS) $@ $^
+	@$(AR) $(ARFLAGS) $@ $^
+	@printf '        [%s] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
 $(OBJDIR)/%.o: %.cpp $(HEADERS) | $(OBJDIR)
-	$(CXX) $(CFLAGS) -c $< -o $@
+	@$(CXX) $(CFLAGS) -c $< -o $@
+	@count=$$(find $(OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	    printf '        [%s] Files built: %d/%d\n' "$(MODULE_NAME)" $$count $(TOTAL_SRCS)
 
 debug: CXXFLAGS += -DDEBUG=1
 debug: $(DEBUG_TARGET)
 
 $(DEBUG_TARGET): $(DEBUG_OBJS)
-	$(AR) $(ARFLAGS) $@ $^
+	@$(AR) $(ARFLAGS) $@ $^
+	@printf '        [%s Debug] Module archive ready (%d files)\n' "$(MODULE_NAME)" $(TOTAL_SRCS)
 
 $(DEBUG_OBJDIR)/%.o: %.cpp $(HEADERS) | $(DEBUG_OBJDIR)
-	$(CXX) $(CFLAGS) -c $< -o $@
+	@$(CXX) $(CFLAGS) -c $< -o $@
+	@count=$$(find $(DEBUG_OBJDIR) -maxdepth 1 -name '*.o' 2>/dev/null | wc -l); \
+	    printf '        [%s Debug] Files built: %d/%d\n' "$(MODULE_NAME)" $$count $(TOTAL_SRCS)
 
 $(OBJDIR) $(DEBUG_OBJDIR):
-	$(MKDIR) $@
+	@$(MKDIR) $@
 
 CLEAN_OBJS := $(wildcard $(OBJDIR)/*.o) $(wildcard $(DEBUG_OBJDIR)/*.o)
 
@@ -61,10 +70,10 @@ else
 endif
 
 clean:
-	-$(RM) $(CLEAN_FILES)
+	@-$(RM) $(CLEAN_FILES)
 
 fclean: clean
-	-$(RM) $(TARGET) $(DEBUG_TARGET)
+	@-$(RM) $(TARGET) $(DEBUG_TARGET)
 
 re: fclean all
 
