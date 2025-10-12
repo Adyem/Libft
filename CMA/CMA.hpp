@@ -71,5 +71,4 @@ void    cma_get_extended_stats(ft_size_t *allocation_count,
             ft_size_t *free_count,
             ft_size_t *current_bytes,
             ft_size_t *peak_bytes);
-
 #endif
