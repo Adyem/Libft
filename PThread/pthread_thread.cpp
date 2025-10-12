@@ -1,48 +1,39 @@
 #include "thread.hpp"
+#include <cerrno>
 
 void *ft_thread::start_routine(void *data)
 {
     start_data *start;
-    void *mutex_address;
-    void *function_address;
-
     start = static_cast<start_data *>(data);
     if (start == ft_nullptr)
         return (ft_nullptr);
-    mutex_address = start->function.get_mutex_address_debug();
-    function_address = reinterpret_cast<void *>(&start->function);
-    cma_debug_log_start_data_event("start_data_thread_begin", start,
-        mutex_address, function_address);
     start->function();
-    cma_debug_log_start_data_event("start_data_thread_finished", start,
-        mutex_address, function_address);
-    ft_thread::release_start_data(start);
+    ft_thread::release_start_data(start, false);
     return (ft_nullptr);
 }
 
-void ft_thread::release_start_data(start_data *data)
+void ft_thread::release_start_data(start_data *data, bool owner_release)
 {
     int previous_count;
-    void *mutex_address;
-    void *function_address;
+    bool owner_finalized;
 
     if (data == ft_nullptr)
         return ;
-    mutex_address = data->function.get_mutex_address_debug();
-    function_address = reinterpret_cast<void *>(&data->function);
+    if (owner_release)
+        data->owner_finalized.store(true);
     previous_count = data->reference_count.fetch_sub(1);
-    cma_debug_log_start_data_event("start_data_release_reference", data,
-        mutex_address, function_address);
     if (previous_count <= 0)
     {
-        cma_debug_log_start_data_event("start_data_release_underflow", data,
-            mutex_address, function_address);
         return ;
     }
     if (previous_count == 1)
     {
-        cma_debug_log_start_data_event("start_data_destroy", data,
-            mutex_address, function_address);
+        owner_finalized = data->owner_finalized.load();
+        if (!owner_finalized)
+        {
+            data->reference_count.fetch_add(1);
+            return ;
+        }
         delete data;
     }
     return ;
@@ -67,8 +58,11 @@ ft_thread::~ft_thread()
         this->detach();
     else if (this->_start_data != ft_nullptr)
     {
-        ft_thread::release_start_data(this->_start_data);
+        start_data *data;
+
+        data = this->_start_data;
         this->_start_data = ft_nullptr;
+        ft_thread::release_start_data(data, true);
     }
     return ;
 }
@@ -91,8 +85,11 @@ ft_thread &ft_thread::operator=(ft_thread &&other)
             this->detach();
         else if (this->_start_data != ft_nullptr)
         {
-            ft_thread::release_start_data(this->_start_data);
+            start_data *data;
+
+            data = this->_start_data;
             this->_start_data = ft_nullptr;
+            ft_thread::release_start_data(data, true);
         }
         this->_thread = other._thread;
         this->_joinable = other._joinable;
@@ -119,12 +116,27 @@ void ft_thread::join()
     }
     if (pt_thread_join(this->_thread, ft_nullptr) != 0)
     {
-        this->set_error(ft_errno);
+        int join_error;
+
+        join_error = ft_errno;
+        this->set_error(join_error);
+        if (join_error == ESRCH || join_error == EINVAL)
+        {
+            start_data *data;
+
+            data = this->_start_data;
+            this->_start_data = ft_nullptr;
+            this->_joinable = false;
+            ft_thread::release_start_data(data, true);
+        }
         return ;
     }
-    this->_joinable = false;
-    ft_thread::release_start_data(this->_start_data);
+    start_data *data;
+
+    data = this->_start_data;
     this->_start_data = ft_nullptr;
+    this->_joinable = false;
+    ft_thread::release_start_data(data, true);
     this->set_error(ER_SUCCESS);
     return ;
 }
@@ -138,12 +150,27 @@ void ft_thread::detach()
     }
     if (pt_thread_detach(this->_thread) != 0)
     {
-        this->set_error(ft_errno);
+        int detach_error;
+
+        detach_error = ft_errno;
+        this->set_error(detach_error);
+        if (detach_error == ESRCH || detach_error == EINVAL)
+        {
+            start_data *data;
+
+            data = this->_start_data;
+            this->_start_data = ft_nullptr;
+            this->_joinable = false;
+            ft_thread::release_start_data(data, true);
+        }
         return ;
     }
-    this->_joinable = false;
-    ft_thread::release_start_data(this->_start_data);
+    start_data *data;
+
+    data = this->_start_data;
     this->_start_data = ft_nullptr;
+    this->_joinable = false;
+    ft_thread::release_start_data(data, true);
     this->set_error(ER_SUCCESS);
     return ;
 }

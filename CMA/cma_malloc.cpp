@@ -8,9 +8,7 @@
 #include "../Errno/errno.hpp"
 #include "CMA.hpp"
 #include "cma_internal.hpp"
-#include "../PThread/mutex.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../Printf/printf.hpp"
 #include "../Logger/logger.hpp"
 #include "../Libft/limits.hpp"
 #include "../System_utils/system_utils.hpp"
@@ -43,26 +41,26 @@ void* cma_malloc(ft_size_t size)
         else
             ft_errno = FT_ERR_NO_MEMORY;
         if (ft_log_get_alloc_logging())
-            ft_log_debug("cma_malloc %llu -> %p",
-                static_cast<unsigned long long>(size), ptr);
+            ft_log_debug("cma_malloc %llu -> %p", size, ptr);
         return (ptr);
     }
-    bool lock_acquired;
+    cma_allocator_guard allocator_guard;
 
-    lock_acquired = false;
-    if (cma_lock_allocator(&lock_acquired) != 0)
+    if (!allocator_guard.is_active())
         return (ft_nullptr);
     ft_size_t aligned_size = align16(size);
     Block *block = find_free_block(aligned_size);
     if (!block)
     {
         Page* page = create_page(aligned_size);
+
         if (!page)
         {
             int error_code;
 
             error_code = FT_ERR_NO_MEMORY;
-            cma_unlock_allocator(lock_acquired);
+            ft_errno = error_code;
+            allocator_guard.unlock();
             ft_errno = error_code;
             return (ft_nullptr);
         }
@@ -71,33 +69,27 @@ void* cma_malloc(ft_size_t size)
     cma_validate_block(block, "cma_malloc", ft_nullptr);
     if (!cma_block_is_free(block))
     {
-        cma_unlock_allocator(lock_acquired);
-        pf_printf_fd(2, "Allocator selected an in-use block in cma_malloc.\n");
-        print_block_info(block);
+        allocator_guard.unlock();
+        ft_errno = FT_ERR_INVALID_STATE;
         su_sigabrt();
     }
     block = split_block(block, aligned_size);
     cma_validate_block(block, "cma_malloc split", ft_nullptr);
-    cma_clear_block_diagnostic(block);
     cma_mark_block_allocated(block);
     g_cma_allocation_count++;
     g_cma_current_bytes += block->size;
     if (g_cma_current_bytes > g_cma_peak_bytes)
         g_cma_peak_bytes = g_cma_current_bytes;
-    void *result = reinterpret_cast<char*>(block) + sizeof(Block);
-    cma_record_allocation(block, __builtin_return_address(0), THREAD_ID,
-        g_cma_allocation_count);
-    cma_unlock_allocator(lock_acquired);
+    void *result = static_cast<void *>(block->payload);
+    allocator_guard.unlock();
     ft_errno = ER_SUCCESS;
     if (ft_log_get_alloc_logging())
     {
         if (request_size == size)
-            ft_log_debug("cma_malloc %llu -> %p",
-                static_cast<unsigned long long>(aligned_size), result);
+            ft_log_debug("cma_malloc %llu -> %p", aligned_size, result);
         else
             ft_log_debug("cma_malloc %llu (rounded to %llu) -> %p",
-                static_cast<unsigned long long>(request_size),
-                static_cast<unsigned long long>(aligned_size), result);
+                request_size, aligned_size, result);
     }
     return (result);
 }

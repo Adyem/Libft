@@ -179,11 +179,16 @@ static char* read_stream(ft_istream &input, char* readed_string, std::size_t buf
     if (!buffer)
     {
         ft_errno = FT_ERR_NO_MEMORY;
+        if (readed_string)
+        {
+            cma_free(readed_string);
+        }
         return (ft_nullptr);
     }
     readed_bytes = 1;
     has_read_bytes = false;
-    while (!ft_strchr(readed_string, '\n') && readed_bytes != 0)
+    while (((readed_string == ft_nullptr) || !ft_strchr(readed_string, '\n'))
+        && readed_bytes != 0)
     {
         input.read(buffer, buffer_size);
         readed_bytes = input.gcount();
@@ -192,7 +197,10 @@ static char* read_stream(ft_istream &input, char* readed_string, std::size_t buf
         if (input.bad())
         {
             cma_free(buffer);
-            cma_free(readed_string);
+            if (readed_string)
+            {
+                cma_free(readed_string);
+            }
             int stream_error = input.get_error();
             if (stream_error == ER_SUCCESS)
                 ft_errno = FT_ERR_IO;
@@ -201,9 +209,16 @@ static char* read_stream(ft_istream &input, char* readed_string, std::size_t buf
             return (ft_nullptr);
         }
         buffer[readed_bytes] = '\0';
+        char* previous_string;
+
+        previous_string = readed_string;
         readed_string = ft_strjoin_gnl(readed_string, buffer);
         if (!readed_string)
         {
+            if (previous_string)
+            {
+                cma_free(previous_string);
+            }
             cma_free(buffer);
             return (ft_nullptr);
         }
@@ -235,13 +250,8 @@ char    *get_next_line(ft_istream &input, std::size_t buffer_size)
         return (ft_nullptr);
     }
     if (map_it != readed_map.end())
-        stored_string = map_it->second;
-    stored_string = read_stream(input, stored_string, buffer_size);
-    if (!stored_string)
     {
-        int failure_errno;
-
-        failure_errno = ft_errno;
+        stored_string = map_it->second;
         map_error_before = readed_map.get_error();
         readed_map.erase(&input);
         if (map_has_new_error(readed_map, map_error_before, &map_error_after))
@@ -249,6 +259,13 @@ char    *get_next_line(ft_istream &input, std::size_t buffer_size)
             ft_errno = map_error_after;
             return (ft_nullptr);
         }
+    }
+    stored_string = read_stream(input, stored_string, buffer_size);
+    if (!stored_string)
+    {
+        int failure_errno;
+
+        failure_errno = ft_errno;
         if (failure_errno != ER_SUCCESS)
             ft_errno = failure_errno;
         return (ft_nullptr);

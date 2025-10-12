@@ -1,9 +1,7 @@
 #include <cstdlib>
 #include <cstddef>
 #include <cstdio>
-#include <cassert>
 #include <pthread.h>
-#include <csignal>
 #include "../Errno/errno.hpp"
 #include "CMA.hpp"
 #include "cma_internal.hpp"
@@ -11,24 +9,15 @@
 #include "../Libft/limits.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../PThread/pthread.hpp"
-#include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
-
-static void *cma_realloc_capture_return_address(void)
-{
-#if defined(__GNUC__) || defined(__clang__)
-    return (__builtin_return_address(0));
-#else
-    return (ft_nullptr);
-#endif
-}
 
 static int reallocate_block(void *ptr, ft_size_t new_size)
 {
     if (!ptr)
         return (-1);
-    Block *block = reinterpret_cast<Block*>(static_cast<char*>(ptr)
-            - sizeof(Block));
+    Block *block = cma_find_block_for_pointer(ptr);
+    if (!block)
+        return (-1);
     cma_validate_block(block, "cma_realloc resize", ptr);
     if (block->size >= new_size)
     {
@@ -37,10 +26,10 @@ static int reallocate_block(void *ptr, ft_size_t new_size)
         return (0);
     }
     if (block->next && cma_block_is_free(block->next) &&
-        (block->size + sizeof(Block) + block->next->size) >= new_size)
+        (block->size + block->next->size) >= new_size)
     {
         cma_validate_block(block->next, "cma_realloc neighbor", ft_nullptr);
-        block->size += sizeof(Block) + block->next->size;
+        block->size += block->next->size;
         block->next = block->next->next;
         if (block->next)
         {
@@ -73,13 +62,11 @@ static void *allocate_block_locked(ft_size_t aligned_size)
     cma_validate_block(block, "cma_realloc allocate", ft_nullptr);
     if (!cma_block_is_free(block))
     {
-        pf_printf_fd(2, "Allocator selected an in-use block in reallocate.\n");
-        print_block_info(block);
+        ft_errno = FT_ERR_INVALID_STATE;
         su_sigabrt();
     }
     block = split_block(block, aligned_size);
     cma_validate_block(block, "cma_realloc allocate split", ft_nullptr);
-    cma_clear_block_diagnostic(block);
     cma_mark_block_allocated(block);
     g_cma_allocation_count++;
     g_cma_current_bytes += block->size;
@@ -88,9 +75,7 @@ static void *allocate_block_locked(ft_size_t aligned_size)
     ft_errno = ER_SUCCESS;
     void *result;
 
-    result = reinterpret_cast<char*>(block) + sizeof(Block);
-    cma_record_allocation(block, __builtin_return_address(0), THREAD_ID,
-        g_cma_allocation_count);
+    result = block->payload;
     return (result);
 }
 
@@ -102,21 +87,10 @@ static void release_block_locked(Block *block)
     cma_validate_block(block, "cma_realloc release", ft_nullptr);
     if (cma_block_is_free(block))
     {
-        pf_printf_fd(2, "Attempted to release an already free block in cma_realloc.\n");
-        print_block_info(block);
-        const cma_block_diagnostic    *diagnostic = cma_find_block_diagnostic(block);
-        if (diagnostic != ft_nullptr && diagnostic->recorded)
-        {
-            pf_printf_fd(2, "First free sequence: %llu\n",
-                static_cast<unsigned long long>(diagnostic->first_free_sequence));
-            pf_printf_fd(2, "First free return address: %p\n",
-                diagnostic->first_free_return);
-        }
+        ft_errno = FT_ERR_INVALID_STATE;
         su_sigabrt();
     }
     freed_size = block->size;
-    cma_record_first_free(block, cma_realloc_capture_return_address(),
-        pt_thread_self(), g_cma_free_count + 1);
     cma_mark_block_free(block);
     block = merge_block(block);
     page = find_page_of_block(block);
@@ -165,26 +139,34 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
             ft_errno = ER_SUCCESS;
         return (result);
     }
-    bool lock_acquired;
+    cma_allocator_guard allocator_guard;
 
-    lock_acquired = false;
-    if (cma_lock_allocator(&lock_acquired) != 0)
+    if (!allocator_guard.is_active())
         return (ft_nullptr);
     if (!ptr)
     {
-        cma_unlock_allocator(lock_acquired);
+        allocator_guard.unlock();
         return (cma_malloc(new_size));
     }
     if (new_size == 0)
     {
-        cma_unlock_allocator(lock_acquired);
+        allocator_guard.unlock();
         cma_free(ptr);
         ft_errno = ER_SUCCESS;
         return (ft_nullptr);
     }
     ft_size_t aligned_size = align16(new_size);
-    Block *block = reinterpret_cast<Block*>(static_cast<char*>(ptr)
-            - sizeof(Block));
+    Block *block = cma_find_block_for_pointer(ptr);
+    if (!block)
+    {
+        int error_code;
+
+        ft_errno = FT_ERR_INVALID_POINTER;
+        error_code = ft_errno;
+        allocator_guard.unlock();
+        ft_errno = error_code;
+        return (ft_nullptr);
+    }
     cma_validate_block(block, "cma_realloc header", ptr);
     ft_size_t previous_size = block->size;
     int error = reallocate_block(ptr, aligned_size);
@@ -197,15 +179,15 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         g_cma_current_bytes += block->size;
         if (g_cma_current_bytes > g_cma_peak_bytes)
             g_cma_peak_bytes = g_cma_current_bytes;
-        cma_unlock_allocator(lock_acquired);
+        ft_errno = ER_SUCCESS;
+        allocator_guard.unlock();
         ft_errno = ER_SUCCESS;
         return (ptr);
     }
     Block *old_block;
     ft_size_t copy_size;
 
-    old_block = reinterpret_cast<Block*>(static_cast<char*>(ptr)
-            - sizeof(Block));
+    old_block = block;
     cma_validate_block(old_block, "cma_realloc copy source", ptr);
     if (old_block->size < aligned_size)
         copy_size = old_block->size;
@@ -214,12 +196,17 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
     void *new_ptr = allocate_block_locked(aligned_size);
     if (!new_ptr)
     {
-        cma_unlock_allocator(lock_acquired);
+        int error_code;
+
+        error_code = ft_errno;
+        allocator_guard.unlock();
+        ft_errno = error_code;
         return (ft_nullptr);
     }
     ft_memcpy(new_ptr, ptr, static_cast<size_t>(copy_size));
     release_block_locked(old_block);
-    cma_unlock_allocator(lock_acquired);
+    ft_errno = ER_SUCCESS;
+    allocator_guard.unlock();
     ft_errno = ER_SUCCESS;
     return (new_ptr);
 }
