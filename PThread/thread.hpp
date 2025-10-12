@@ -18,6 +18,7 @@ class ft_thread
         {
             ft_function<void()> function;
             std::atomic<int> reference_count;
+            std::atomic<bool> owner_finalized;
         };
 
         pthread_t _thread;
@@ -26,7 +27,7 @@ class ft_thread
         start_data *_start_data;
 
         static void *start_routine(void *data);
-        static void release_start_data(start_data *data);
+        static void release_start_data(start_data *data, bool owner_release);
         void set_error(int error) const;
 
     public:
@@ -53,9 +54,6 @@ ft_thread::ft_thread(FunctionType function, Args... args)
     : _thread(), _joinable(false), _error_code(ER_SUCCESS), _start_data(ft_nullptr)
 {
     start_data *data;
-    void *mutex_address;
-    void *function_address;
-
     data = new (std::nothrow) start_data;
     if (!data)
     {
@@ -63,11 +61,8 @@ ft_thread::ft_thread(FunctionType function, Args... args)
         return ;
     }
     data->reference_count.store(2);
+    data->owner_finalized.store(false);
     this->_start_data = data;
-    mutex_address = data->function.get_mutex_address_debug();
-    function_address = reinterpret_cast<void *>(&data->function);
-    cma_debug_log_start_data_event("start_data_allocate", data,
-        mutex_address, function_address);
     data->function = ft_function<void()>([function, args...]() mutable
     {
         ft_invoke(function, args...);
@@ -76,10 +71,8 @@ ft_thread::ft_thread(FunctionType function, Args... args)
     if (data->function.get_error() != ER_SUCCESS)
     {
         this->set_error(data->function.get_error());
-        cma_debug_log_start_data_event("start_data_destroy_function_error",
-            data, mutex_address, function_address);
-        ft_thread::release_start_data(data);
-        ft_thread::release_start_data(data);
+        ft_thread::release_start_data(data, false);
+        ft_thread::release_start_data(data, true);
         this->_start_data = ft_nullptr;
         return ;
     }
@@ -87,10 +80,8 @@ ft_thread::ft_thread(FunctionType function, Args... args)
             &ft_thread::start_routine, data) != 0)
     {
         this->set_error(ft_errno);
-        cma_debug_log_start_data_event("start_data_destroy_thread_create_fail",
-            data, mutex_address, function_address);
-        ft_thread::release_start_data(data);
-        ft_thread::release_start_data(data);
+        ft_thread::release_start_data(data, false);
+        ft_thread::release_start_data(data, true);
         this->_start_data = ft_nullptr;
         return ;
     }

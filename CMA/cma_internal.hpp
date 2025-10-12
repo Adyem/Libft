@@ -1,7 +1,6 @@
 #ifndef CMA_INTERNAL_HPP
 # define CMA_INTERNAL_HPP
 
-#include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
 #include "../Libft/libft.hpp"
 #include <cstdint>
@@ -35,13 +34,32 @@
 #define UNPROTECT_METADATA(ptr, size) ((void)0)
 #endif
 
-extern pt_mutex g_malloc_mutex;
 extern bool g_cma_thread_safe;
 extern ft_size_t    g_cma_alloc_limit;
 extern ft_size_t    g_cma_allocation_count;
 extern ft_size_t    g_cma_free_count;
 extern ft_size_t    g_cma_current_bytes;
 extern ft_size_t    g_cma_peak_bytes;
+
+class cma_allocator_guard
+{
+    private:
+        bool _lock_acquired;
+        bool _active;
+        mutable int _error_code;
+
+        void set_error(int error) const;
+
+    public:
+        cma_allocator_guard();
+        ~cma_allocator_guard();
+
+        bool is_active() const;
+        bool lock_acquired() const;
+        void unlock();
+        int get_error() const;
+        const char *get_error_str() const;
+};
 
 struct Block
 {
@@ -50,19 +68,8 @@ struct Block
     bool        free;
     Block        *next;
     Block        *prev;
+    unsigned char    *payload;
 } __attribute__ ((aligned(16)));
-
-struct cma_block_diagnostic
-{
-    void        *first_free_return;
-    pt_thread_id_type    first_free_thread;
-    ft_size_t    first_free_sequence;
-    bool        recorded;
-    void        *last_allocation_return;
-    pt_thread_id_type    last_allocation_thread;
-    ft_size_t    last_allocation_sequence;
-    bool        allocation_recorded;
-};
 
 struct Page
 {
@@ -81,20 +88,10 @@ Block    *split_block(Block *block, ft_size_t size);
 Page    *create_page(ft_size_t size);
 Block    *find_free_block(ft_size_t size);
 Block    *merge_block(Block *block);
-void    print_block_info(Block *block);
-void    dump_block_bytes(Block *block);
 Page    *find_page_of_block(Block *block);
 void    free_page_if_empty(Page *page);
 void    cma_validate_block(Block *block, const char *context, void *user_pointer);
-void    cma_record_first_free(Block *block, void *return_address,
-            pt_thread_id_type thread_id, ft_size_t sequence);
-const cma_block_diagnostic    *cma_find_block_diagnostic(Block *block);
-void    cma_clear_block_diagnostic(Block *block);
-void    cma_record_allocation(Block *block, void *return_address,
-            pt_thread_id_type thread_id, ft_size_t sequence);
-void    cma_debug_log_start_data_event(const char *event_label,
-            void *start_data_pointer, void *mutex_pointer,
-            void *function_pointer);
+Block    *cma_find_block_for_pointer(const void *memory_pointer);
 int     cma_lock_allocator(bool *lock_acquired);
 void    cma_unlock_allocator(bool lock_acquired);
 int     cma_backend_is_enabled(void) __attribute__ ((warn_unused_result));
@@ -111,6 +108,15 @@ ft_size_t    cma_backend_block_size(const void *memory_pointer)
             __attribute__ ((warn_unused_result, hot));
 int     cma_backend_checked_block_size(const void *memory_pointer,
             ft_size_t *block_size) __attribute__ ((warn_unused_result, hot));
+#ifndef CMA_ENABLE_METADATA_PROTECTION
+# define CMA_ENABLE_METADATA_PROTECTION 0
+#endif
+
+int     cma_metadata_make_writable(void);
+void    cma_metadata_make_inaccessible(void);
+Block    *cma_metadata_allocate_block(void) __attribute__ ((warn_unused_result));
+void    cma_metadata_release_block(Block *block);
+void    cma_metadata_reset(void);
 
 inline __attribute__((always_inline, hot)) ft_size_t align16(ft_size_t size)
 {

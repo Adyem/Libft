@@ -7,22 +7,21 @@ void    cma_set_alloc_limit(ft_size_t limit)
 {
     int entry_errno;
     int current_errno;
-    bool lock_acquired;
-
     entry_errno = ft_errno;
-    lock_acquired = false;
-    if (cma_lock_allocator(&lock_acquired) != 0)
+    cma_allocator_guard allocator_guard;
+
+    if (!allocator_guard.is_active())
         return ;
-    if (lock_acquired)
+    if (allocator_guard.lock_acquired())
         ft_errno = entry_errno;
     g_cma_alloc_limit = limit;
-    if (lock_acquired)
+    if (allocator_guard.lock_acquired())
     {
         current_errno = ft_errno;
-        cma_unlock_allocator(lock_acquired);
+        allocator_guard.unlock();
         ft_errno = current_errno;
         return ;
     }
-    cma_unlock_allocator(lock_acquired);
+    allocator_guard.unlock();
     return ;
 }

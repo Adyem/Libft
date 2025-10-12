@@ -1,25 +1,13 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
-#include <cassert>
 #include <pthread.h>
 #include "CMA.hpp"
 #include "cma_internal.hpp"
-#include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../Printf/printf.hpp"
 #include "../Logger/logger.hpp"
 #include "../System_utils/system_utils.hpp"
-
-static void *cma_capture_return_address(void)
-{
-#if defined(__GNUC__) || defined(__clang__)
-    return (__builtin_return_address(0));
-#else
-    return (ft_nullptr);
-#endif
-}
 
 void cma_free(void* ptr)
 {
@@ -38,34 +26,30 @@ void cma_free(void* ptr)
         cma_backend_deallocate(ptr);
         return ;
     }
-    bool lock_acquired;
+    cma_allocator_guard allocator_guard;
 
-    lock_acquired = false;
-    if (cma_lock_allocator(&lock_acquired) != 0)
+    if (!allocator_guard.is_active())
         return ;
-    Block* block = reinterpret_cast<Block*>((static_cast<char*> (ptr)
-                - sizeof(Block)));
+    Block* block = cma_find_block_for_pointer(ptr);
+    if (!block)
+    {
+        int error_code;
+
+        error_code = FT_ERR_INVALID_POINTER;
+        ft_errno = FT_ERR_INVALID_POINTER;
+        allocator_guard.unlock();
+        ft_errno = error_code;
+        return ;
+    }
     ft_size_t freed_size = 0;
     cma_validate_block(block, "cma_free", ptr);
     if (cma_block_is_free(block))
     {
-        pf_printf_fd(2, "Double free detected in cma_free.\n");
-        print_block_info(block);
-        const cma_block_diagnostic    *diagnostic = cma_find_block_diagnostic(block);
-        if (diagnostic != ft_nullptr && diagnostic->recorded)
-        {
-            pf_printf_fd(2, "First free sequence: %llu\n",
-                static_cast<unsigned long long>(diagnostic->first_free_sequence));
-            pf_printf_fd(2, "First free return address: %p\n",
-                diagnostic->first_free_return);
-        }
-        dump_block_bytes(block);
-        cma_unlock_allocator(lock_acquired);
+        allocator_guard.unlock();
+        ft_errno = FT_ERR_INVALID_STATE;
         su_sigabrt();
     }
     freed_size = block->size;
-    cma_record_first_free(block, cma_capture_return_address(),
-        pt_thread_self(), g_cma_free_count + 1);
     cma_mark_block_free(block);
     block = merge_block(block);
     Page *page = find_page_of_block(block);
@@ -74,8 +58,9 @@ void cma_free(void* ptr)
         g_cma_current_bytes -= freed_size;
     else
         g_cma_current_bytes = 0;
-    cma_unlock_allocator(lock_acquired);
     g_cma_free_count++;
+    allocator_guard.unlock();
+    ft_errno = ER_SUCCESS;
     if (ft_log_get_alloc_logging())
         ft_log_debug("cma_free %p", ptr);
     return ;
