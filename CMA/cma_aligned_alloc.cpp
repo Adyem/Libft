@@ -6,46 +6,37 @@
 #include "cma_internal.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Logger/logger.hpp"
-#include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 
 static int  normalize_alignment_padding(ft_size_t *padding)
 {
-    ft_size_t   header_size;
-    ft_size_t   combined_size;
-    ft_size_t   aligned_size;
+    ft_size_t    aligned_padding;
 
     if (padding == ft_nullptr)
         return (0);
     if (*padding == 0)
         return (1);
-    header_size = static_cast<ft_size_t>(sizeof(Block));
-    if (*padding > FT_SYSTEM_SIZE_MAX - header_size)
+    aligned_padding = align16(*padding);
+    if (aligned_padding < *padding)
         return (0);
-    combined_size = header_size + *padding;
-    aligned_size = align16(combined_size);
-    if (aligned_size < combined_size)
-        return (0);
-    *padding = aligned_size - header_size;
+    *padding = aligned_padding;
     return (1);
 }
 
 static ft_size_t    calculate_alignment_padding(Block *block, ft_size_t alignment)
 {
-    uintptr_t  block_address;
-    uintptr_t  header_size_bytes;
-    uintptr_t  user_address;
-    uintptr_t  alignment_value;
-    uintptr_t  remainder;
-    ft_size_t  padding;
+    uintptr_t    payload_address;
+    uintptr_t    alignment_value;
+    uintptr_t    remainder;
+    ft_size_t    padding;
 
-    block_address = reinterpret_cast<uintptr_t>(block);
-    header_size_bytes = sizeof(Block);
-    user_address = block_address + header_size_bytes;
+    if (block == ft_nullptr)
+        return (0);
+    payload_address = reinterpret_cast<uintptr_t>(block->payload);
     alignment_value = static_cast<uintptr_t>(alignment);
     if (alignment_value == 0)
         return (0);
-    remainder = user_address & (alignment_value - 1);
+    remainder = payload_address & (alignment_value - 1);
     if (remainder == 0)
         return (0);
     padding = static_cast<ft_size_t>(alignment_value - remainder);
@@ -55,12 +46,10 @@ static ft_size_t    calculate_alignment_padding(Block *block, ft_size_t alignmen
 static int  block_supports_aligned_request(Block *block, ft_size_t aligned_size,
             ft_size_t alignment, ft_size_t *padding)
 {
-    ft_size_t   header_size;
-    ft_size_t   remaining_size;
-    ft_size_t   local_padding;
-    ft_size_t   minimum_payload;
+    ft_size_t    remaining_size;
+    ft_size_t    local_padding;
+    ft_size_t    minimum_payload;
 
-    header_size = sizeof(Block);
     local_padding = calculate_alignment_padding(block, alignment);
     if (normalize_alignment_padding(&local_padding) == 0)
         return (0);
@@ -72,11 +61,8 @@ static int  block_supports_aligned_request(Block *block, ft_size_t aligned_size,
         if (block->size <= local_padding)
             return (0);
         remaining_size = block->size - local_padding;
-        if (remaining_size <= header_size + minimum_payload)
+        if (remaining_size < minimum_payload)
             return (0);
-        if (remaining_size <= header_size)
-            return (0);
-        remaining_size -= header_size;
     }
     else
         remaining_size = block->size;
@@ -157,26 +143,19 @@ static void    *aligned_alloc_offswitch(ft_size_t alignment, ft_size_t request_s
 #endif
     if (ft_log_get_alloc_logging())
         ft_log_debug("cma_aligned_alloc %llu (alignment %llu) -> %p",
-            static_cast<unsigned long long>(allocation_size),
-            static_cast<unsigned long long>(alignment), pointer);
+            allocation_size, alignment, pointer);
     return (pointer);
 }
 
 static ft_size_t    compute_extended_page_request(ft_size_t aligned_size,
             ft_size_t alignment)
 {
-    ft_size_t   header_size;
-    ft_size_t   extended_size;
-    ft_size_t   total_size;
+    ft_size_t    extended_size;
 
-    header_size = sizeof(Block);
     if (aligned_size > FT_SYSTEM_SIZE_MAX - alignment)
         return (0);
     extended_size = aligned_size + alignment;
-    if (extended_size > FT_SYSTEM_SIZE_MAX - header_size)
-        return (0);
-    total_size = extended_size + header_size;
-    return (total_size);
+    return (extended_size);
 }
 
 void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
@@ -216,10 +195,9 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         return (cma_backend_aligned_allocate(alignment, aligned_size));
     if (OFFSWITCH == 1)
         return (aligned_alloc_offswitch(alignment, request_size));
-    bool lock_acquired;
+    cma_allocator_guard allocator_guard;
 
-    lock_acquired = false;
-    if (cma_lock_allocator(&lock_acquired) != 0)
+    if (!allocator_guard.is_active())
         return (ft_nullptr);
     padding = 0;
     block = find_aligned_free_block(aligned_size, alignment, &padding);
@@ -231,15 +209,23 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         page_request = compute_extended_page_request(aligned_size, alignment);
         if (page_request == 0)
         {
-            cma_unlock_allocator(lock_acquired);
+            int error_code;
+
             ft_errno = FT_ERR_OUT_OF_RANGE;
+            error_code = ft_errno;
+            allocator_guard.unlock();
+            ft_errno = error_code;
             return (ft_nullptr);
         }
         page = create_page(page_request);
         if (!page)
         {
-            cma_unlock_allocator(lock_acquired);
+            int error_code;
+
             ft_errno = FT_ERR_NO_MEMORY;
+            error_code = ft_errno;
+            allocator_guard.unlock();
+            ft_errno = error_code;
             return (ft_nullptr);
         }
         block = page->blocks;
@@ -248,8 +234,12 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     }
     if (normalize_alignment_padding(&padding) == 0)
     {
-        cma_unlock_allocator(lock_acquired);
+        int error_code;
+
         ft_errno = FT_ERR_OUT_OF_RANGE;
+        error_code = ft_errno;
+        allocator_guard.unlock();
+        ft_errno = error_code;
         return (ft_nullptr);
     }
     if (padding > 0)
@@ -261,8 +251,12 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         block = prefix_block->next;
         if (!block)
         {
-            cma_unlock_allocator(lock_acquired);
+            int error_code;
+
             ft_errno = FT_ERR_NO_MEMORY;
+            error_code = ft_errno;
+            allocator_guard.unlock();
+            ft_errno = error_code;
             return (ft_nullptr);
         }
         cma_validate_block(block, "cma_aligned_alloc aligned", ft_nullptr);
@@ -271,25 +265,20 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     cma_validate_block(block, "cma_aligned_alloc split", ft_nullptr);
     if (!cma_block_is_free(block))
     {
-        cma_unlock_allocator(lock_acquired);
-        pf_printf_fd(2, "Allocator selected an in-use block in cma_aligned_alloc.\n");
-        print_block_info(block);
+        allocator_guard.unlock();
+        ft_errno = FT_ERR_INVALID_STATE;
         su_sigabrt();
     }
-    cma_clear_block_diagnostic(block);
     cma_mark_block_allocated(block);
     g_cma_allocation_count++;
     g_cma_current_bytes += block->size;
     if (g_cma_current_bytes > g_cma_peak_bytes)
         g_cma_peak_bytes = g_cma_current_bytes;
-    result = reinterpret_cast<char*>(block) + sizeof(Block);
-    cma_record_allocation(block, __builtin_return_address(0), THREAD_ID,
-        g_cma_allocation_count);
-    cma_unlock_allocator(lock_acquired);
+    result = static_cast<void *>(block->payload);
+    allocator_guard.unlock();
     ft_errno = ER_SUCCESS;
     if (ft_log_get_alloc_logging())
         ft_log_debug("cma_aligned_alloc %llu (alignment %llu) -> %p",
-            static_cast<unsigned long long>(request_size),
-            static_cast<unsigned long long>(alignment), result);
+            request_size, alignment, result);
     return (result);
 }

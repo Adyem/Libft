@@ -2,18 +2,17 @@
 #include <cstdlib>
 #include <cstddef>
 #include <cstring>
-#include <cstdio>
-#include <cassert>
-#include <csignal>
+#include <sys/mman.h>
+#include <unistd.h>
 #include "CMA.hpp"
 #include "cma_internal.hpp"
+#include "../PThread/mutex.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../Printf/printf.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../Errno/errno.hpp"
 
 Page *page_list = ft_nullptr;
-pt_mutex g_malloc_mutex;
+static pt_mutex g_cma_allocator_mutex;
 bool g_cma_thread_safe = true;
 ft_size_t    g_cma_alloc_limit = 0;
 ft_size_t    g_cma_allocation_count = 0;
@@ -21,9 +20,378 @@ ft_size_t    g_cma_free_count = 0;
 ft_size_t    g_cma_current_bytes = 0;
 ft_size_t    g_cma_peak_bytes = 0;
 
+struct cma_metadata_chunk
+{
+    unsigned char    *memory;
+    ft_size_t    size;
+    ft_size_t    used;
+    bool        protected_state;
+    cma_metadata_chunk    *next;
+};
+
+static cma_metadata_chunk    *g_cma_metadata_chunks = ft_nullptr;
+static Block    *g_cma_metadata_free_list = ft_nullptr;
+static ft_size_t    g_cma_metadata_stride = 0;
+static ft_size_t    g_cma_metadata_page_size = 0;
+static unsigned long long    g_cma_metadata_access_depth = 0;
+
+static bool cma_allocator_guard_attempt_lock(bool *lock_acquired);
+
+
+cma_allocator_guard::cma_allocator_guard()
+    : _lock_acquired(false), _active(false), _error_code(ER_SUCCESS)
+{
+    bool local_lock_acquired;
+
+    local_lock_acquired = false;
+    if (cma_allocator_guard_attempt_lock(&local_lock_acquired) == false)
+    {
+        this->_lock_acquired = local_lock_acquired;
+        this->_active = false;
+        this->set_error(ft_errno);
+        return ;
+    }
+    this->_lock_acquired = local_lock_acquired;
+    this->_active = true;
+    this->set_error(ER_SUCCESS);
+    return ;
+}
+
+cma_allocator_guard::~cma_allocator_guard()
+{
+    this->unlock();
+    return ;
+}
+
+bool cma_allocator_guard::is_active() const
+{
+    return (this->_active);
+}
+
+bool cma_allocator_guard::lock_acquired() const
+{
+    return (this->_lock_acquired);
+}
+
+void cma_allocator_guard::unlock()
+{
+    if (!this->_active)
+        return ;
+    cma_unlock_allocator(this->_lock_acquired);
+    this->_active = false;
+    this->set_error(ft_errno);
+    return ;
+}
+
+int cma_allocator_guard::get_error() const
+{
+    return (this->_error_code);
+}
+
+const char *cma_allocator_guard::get_error_str() const
+{
+    return (ft_strerror(this->_error_code));
+}
+
+void cma_allocator_guard::set_error(int error) const
+{
+    this->_error_code = error;
+    ft_errno = error;
+    return ;
+}
+
+static bool cma_allocator_guard_attempt_lock(bool *lock_acquired)
+{
+    bool acquired;
+
+    if (lock_acquired == ft_nullptr)
+        return (false);
+    acquired = false;
+    if (cma_lock_allocator(&acquired) != 0)
+    {
+        *lock_acquired = acquired;
+        return (false);
+    }
+    *lock_acquired = acquired;
+    return (true);
+}
+
+static bool cma_metadata_guard_increment(void);
+static bool cma_metadata_guard_decrement(void);
+
+static ft_size_t cma_metadata_compute_stride(void)
+{
+    ft_size_t    stride;
+
+    if (g_cma_metadata_stride != 0)
+        return (g_cma_metadata_stride);
+    stride = align16(static_cast<ft_size_t>(sizeof(Block)));
+    g_cma_metadata_stride = stride;
+    return (stride);
+}
+
+static ft_size_t cma_metadata_compute_page_size(void)
+{
+    long    system_page_size;
+
+    if (g_cma_metadata_page_size != 0)
+        return (g_cma_metadata_page_size);
+    system_page_size = sysconf(_SC_PAGESIZE);
+    if (system_page_size <= 0)
+        g_cma_metadata_page_size = static_cast<ft_size_t>(4096);
+    else
+        g_cma_metadata_page_size = static_cast<ft_size_t>(system_page_size);
+    return (g_cma_metadata_page_size);
+}
+
+static int  cma_metadata_add_chunk(void)
+{
+    cma_metadata_chunk    *chunk;
+    ft_size_t    page_size;
+    ft_size_t    chunk_size;
+    void        *memory;
+
+    chunk = static_cast<cma_metadata_chunk *>(std::malloc(
+            sizeof(cma_metadata_chunk)));
+    if (chunk == ft_nullptr)
+        return (-1);
+    page_size = cma_metadata_compute_page_size();
+    chunk_size = page_size * 4;
+    memory = mmap(ft_nullptr, chunk_size, PROT_READ | PROT_WRITE,
+            MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (memory == MAP_FAILED)
+    {
+        std::free(chunk);
+        return (-1);
+    }
+    chunk->memory = static_cast<unsigned char *>(memory);
+    chunk->size = chunk_size;
+    chunk->used = 0;
+    chunk->protected_state = false;
+    chunk->next = g_cma_metadata_chunks;
+    g_cma_metadata_chunks = chunk;
+    return (0);
+}
+
+#if CMA_ENABLE_METADATA_PROTECTION
+
+static int  cma_metadata_apply_protection(int protection)
+{
+    cma_metadata_chunk    *chunk;
+
+    chunk = g_cma_metadata_chunks;
+    while (chunk)
+    {
+        if (chunk->memory != ft_nullptr && chunk->size != 0)
+        {
+            bool desired_protected;
+            bool needs_update;
+
+            desired_protected = false;
+            if (protection == PROT_NONE)
+                desired_protected = true;
+            needs_update = true;
+            if (chunk->protected_state == desired_protected)
+                needs_update = false;
+            if (needs_update)
+            {
+                if (mprotect(chunk->memory, chunk->size, protection) != 0)
+                {
+                    ft_errno = FT_ERR_INTERNAL;
+                    return (-1);
+                }
+                if (desired_protected)
+                    chunk->protected_state = true;
+                else
+                    chunk->protected_state = false;
+            }
+        }
+        chunk = chunk->next;
+    }
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+#endif
+
+#if CMA_ENABLE_METADATA_PROTECTION
+
+int cma_metadata_make_writable(void)
+{
+    if (g_cma_metadata_access_depth != 0)
+    {
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    if (g_cma_metadata_chunks == ft_nullptr)
+    {
+        if (cma_metadata_add_chunk() != 0)
+        {
+            ft_errno = FT_ERR_NO_MEMORY;
+            return (-1);
+        }
+    }
+    if (cma_metadata_apply_protection(PROT_READ | PROT_WRITE) != 0)
+        return (-1);
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+void cma_metadata_make_inaccessible(void)
+{
+    if (g_cma_metadata_chunks == ft_nullptr)
+        return ;
+    cma_metadata_apply_protection(PROT_NONE);
+    return ;
+}
+
+
+
+
+
+static bool cma_metadata_guard_increment(void)
+{
+    g_cma_metadata_access_depth++;
+    return (true);
+}
+
+static bool cma_metadata_guard_decrement(void)
+{
+    if (g_cma_metadata_access_depth == 0)
+    {
+        ft_errno = FT_ERR_INVALID_STATE;
+        return (false);
+    }
+    g_cma_metadata_access_depth--;
+    if (g_cma_metadata_access_depth == 0)
+        cma_metadata_make_inaccessible();
+    return (true);
+}
+
+#else
+
+int cma_metadata_make_writable(void)
+{
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+void cma_metadata_make_inaccessible(void)
+{
+    return ;
+}
+
+static bool cma_metadata_guard_increment(void)
+{
+    g_cma_metadata_access_depth++;
+    return (true);
+}
+
+static bool cma_metadata_guard_decrement(void)
+{
+    if (g_cma_metadata_access_depth == 0)
+    {
+        ft_errno = FT_ERR_INVALID_STATE;
+        return (false);
+    }
+    g_cma_metadata_access_depth--;
+    return (true);
+}
+
+#endif
+
+Block    *cma_metadata_allocate_block(void)
+{
+    cma_metadata_chunk    *chunk;
+    Block                *block;
+    ft_size_t            stride;
+
+    if (g_cma_metadata_free_list != ft_nullptr)
+    {
+        block = g_cma_metadata_free_list;
+        g_cma_metadata_free_list = block->next;
+        std::memset(block, 0, sizeof(Block));
+        return (block);
+    }
+    if (g_cma_metadata_chunks == ft_nullptr)
+    {
+        if (cma_metadata_add_chunk() != 0)
+        {
+            ft_errno = FT_ERR_NO_MEMORY;
+            return (ft_nullptr);
+        }
+    }
+    stride = cma_metadata_compute_stride();
+    chunk = g_cma_metadata_chunks;
+    while (chunk)
+    {
+        if (chunk->used + stride <= chunk->size)
+        {
+            block = reinterpret_cast<Block *>(chunk->memory + chunk->used);
+            chunk->used += stride;
+            std::memset(block, 0, sizeof(Block));
+            ft_errno = ER_SUCCESS;
+            return (block);
+        }
+        if (chunk->next == ft_nullptr)
+        {
+            if (cma_metadata_add_chunk() != 0)
+            {
+                ft_errno = FT_ERR_NO_MEMORY;
+                return (ft_nullptr);
+            }
+            chunk = g_cma_metadata_chunks;
+        }
+        else
+            chunk = chunk->next;
+    }
+    ft_errno = FT_ERR_NO_MEMORY;
+    return (ft_nullptr);
+}
+
+void    cma_metadata_release_block(Block *block)
+{
+    if (block == ft_nullptr)
+        return ;
+    block->next = g_cma_metadata_free_list;
+    block->prev = ft_nullptr;
+    block->size = 0;
+    block->payload = ft_nullptr;
+    g_cma_metadata_free_list = block;
+    return ;
+}
+
+void    cma_metadata_reset(void)
+{
+    cma_metadata_chunk    *chunk;
+
+    chunk = g_cma_metadata_chunks;
+    while (chunk)
+    {
+        cma_metadata_chunk    *next_chunk;
+
+        next_chunk = chunk->next;
+        if (chunk->memory != ft_nullptr && chunk->size != 0)
+            munmap(chunk->memory, chunk->size);
+        std::free(chunk);
+        chunk = next_chunk;
+    }
+    g_cma_metadata_chunks = ft_nullptr;
+    g_cma_metadata_free_list = ft_nullptr;
+    g_cma_metadata_stride = 0;
+    g_cma_metadata_page_size = 0;
+    return ;
+}
+
+
+
+
+
+
+
 int cma_lock_allocator(bool *lock_acquired)
 {
     int lock_result;
+    bool guard_incremented;
 
     if (!lock_acquired)
     {
@@ -31,57 +399,75 @@ int cma_lock_allocator(bool *lock_acquired)
         return (-1);
     }
     *lock_acquired = false;
+    guard_incremented = false;
     if (!g_cma_thread_safe)
+    {
+        if (cma_metadata_make_writable() != 0)
+            return (-1);
+        guard_incremented = cma_metadata_guard_increment();
+        if (!guard_incremented)
+        {
+            ft_errno = FT_ERR_INVALID_STATE;
+            return (-1);
+        }
         return (0);
-    lock_result = g_malloc_mutex.lock(THREAD_ID);
+    }
+    lock_result = g_cma_allocator_mutex.lock(THREAD_ID);
     if (lock_result == 0)
     {
         *lock_acquired = true;
+        if (cma_metadata_make_writable() != 0)
+        {
+            g_cma_allocator_mutex.unlock(THREAD_ID);
+            *lock_acquired = false;
+            return (-1);
+        }
+        guard_incremented = cma_metadata_guard_increment();
+        if (!guard_incremented)
+        {
+            g_cma_allocator_mutex.unlock(THREAD_ID);
+            *lock_acquired = false;
+            ft_errno = FT_ERR_INVALID_STATE;
+            return (-1);
+        }
         ft_errno = ER_SUCCESS;
         return (0);
     }
     if (ft_errno == FT_ERR_MUTEX_ALREADY_LOCKED)
+    {
+        if (cma_metadata_make_writable() != 0)
+            return (-1);
+        guard_incremented = cma_metadata_guard_increment();
+        if (!guard_incremented)
+        {
+            ft_errno = FT_ERR_INVALID_STATE;
+            return (-1);
+        }
         return (0);
+    }
     return (-1);
 }
 
 void cma_unlock_allocator(bool lock_acquired)
 {
     int unlock_result;
+    bool guard_decremented;
 
+    guard_decremented = cma_metadata_guard_decrement();
+    (void)guard_decremented;
     if (!g_cma_thread_safe)
         return ;
     if (!lock_acquired)
         return ;
-    unlock_result = g_malloc_mutex.unlock(THREAD_ID);
+    unlock_result = g_cma_allocator_mutex.unlock(THREAD_ID);
     if (unlock_result == 0)
         ft_errno = ER_SUCCESS;
     return ;
 }
 
-struct cma_block_diagnostic_node
-{
-    Block    *block;
-    cma_block_diagnostic    diagnostic;
-    cma_block_diagnostic_node    *next;
-};
 
-static cma_block_diagnostic_node    *g_cma_block_diagnostics_head = ft_nullptr;
 
-void    cma_debug_log_start_data_event(const char *event_label,
-        void *start_data_pointer, void *mutex_pointer,
-        void *function_pointer)
-{
-    const char    *label;
 
-    label = event_label;
-    if (label == ft_nullptr)
-        label = "unknown";
-    pf_printf_fd(2,
-        "CMA DEBUG start_data event: %s start=%p mutex=%p function=%p\n",
-        label, start_data_pointer, mutex_pointer, function_pointer);
-    return ;
-}
 
 static ft_size_t determine_page_size(ft_size_t size)
 {
@@ -118,77 +504,19 @@ static void *create_stack_block(void)
 {
     static char memory_block[PAGE_SIZE];
 
-    if (DEBUG == 1)
-        pf_printf("allocating stack memory for CMA\n");
     return (memory_block);
 }
 
-static unsigned long long cma_convert_thread_id(pt_thread_id_type thread_id)
-{
-    unsigned long long    identifier;
-    size_t                copy_size;
 
-    identifier = 0;
-    copy_size = sizeof(identifier);
-    if (sizeof(thread_id) < copy_size)
-        copy_size = sizeof(thread_id);
-    std::memcpy(&identifier, &thread_id, copy_size);
-    return (identifier);
-}
+
 
 static void report_corrupted_block(Block *block, const char *context,
         void *user_pointer)
 {
-    const char    *location;
-    const cma_block_diagnostic    *diagnostic;
-    unsigned long long    thread_identifier;
-
-    location = context;
-    if (location == ft_nullptr)
-        location = "unknown";
-    pf_printf_fd(2, "Invalid block detected in %s.\n", location);
-    print_block_info(block);
-    diagnostic = cma_find_block_diagnostic(block);
-    if (diagnostic != ft_nullptr)
-    {
-        if (diagnostic->allocation_recorded)
-        {
-            pf_printf_fd(2, "Last allocation sequence: %llu\n",
-                static_cast<unsigned long long>(
-                    diagnostic->last_allocation_sequence));
-            pf_printf_fd(2, "Last allocation return address: %p\n",
-                diagnostic->last_allocation_return);
-            thread_identifier = cma_convert_thread_id(
-                diagnostic->last_allocation_thread);
-            pf_printf_fd(2, "Last allocation thread id (approx): 0x%llx\n",
-                thread_identifier);
-        }
-        if (diagnostic->recorded)
-        {
-            pf_printf_fd(2, "First free sequence: %llu\n",
-                static_cast<unsigned long long>(diagnostic->first_free_sequence));
-            pf_printf_fd(2, "First free return address: %p\n",
-                diagnostic->first_free_return);
-            thread_identifier = cma_convert_thread_id(
-                diagnostic->first_free_thread);
-            pf_printf_fd(2,
-                "First free thread id (approx): 0x%llx\n", thread_identifier);
-        }
-    }
-    if (user_pointer != ft_nullptr)
-    {
-        unsigned char   *expected_pointer;
-        long long        pointer_delta;
-
-        expected_pointer = reinterpret_cast<unsigned char *>(block)
-            + sizeof(Block);
-        pointer_delta = reinterpret_cast<unsigned char *>(user_pointer)
-            - expected_pointer;
-        pf_printf_fd(2, "Pointer passed to %s: %p\n", location, user_pointer);
-        pf_printf_fd(2, "Pointer offset from user start: %lld bytes\n",
-            pointer_delta);
-    }
-    dump_block_bytes(block);
+    (void)block;
+    (void)user_pointer;
+    (void)context;
+    ft_errno = FT_ERR_INVALID_STATE;
     su_sigabrt();
     return ;
 }
@@ -200,9 +528,10 @@ static int are_blocks_adjacent(Block *left_block, Block *right_block)
 
     if (left_block == ft_nullptr || right_block == ft_nullptr)
         return (0);
-    expected_address = reinterpret_cast<unsigned char *>(left_block)
-        + sizeof(Block) + left_block->size;
-    actual_address = reinterpret_cast<unsigned char *>(right_block);
+    if (left_block->payload == ft_nullptr || right_block->payload == ft_nullptr)
+        return (0);
+    expected_address = left_block->payload + left_block->size;
+    actual_address = right_block->payload;
     if (expected_address == actual_address)
         return (1);
     return (0);
@@ -241,7 +570,6 @@ void cma_validate_block(Block *block, const char *context, void *user_pointer)
     {
         if (location == ft_nullptr)
             location = "unknown";
-        pf_printf_fd(2, "Null block encountered in %s.\n", location);
         su_sigabrt();
     }
     sentinel_free = (block->magic == MAGIC_NUMBER_FREE);
@@ -252,6 +580,8 @@ void cma_validate_block(Block *block, const char *context, void *user_pointer)
         cma_mark_block_free(block);
     if (sentinel_allocated && block->free == true)
         cma_mark_block_allocated(block);
+    if (block->payload == ft_nullptr)
+        report_corrupted_block(block, location, user_pointer);
     return ;
 }
 
@@ -265,120 +595,23 @@ static ft_size_t    minimum_split_payload(void)
     return (minimum_payload);
 }
 
-void    cma_record_first_free(Block *block, void *return_address,
-        pt_thread_id_type thread_id, ft_size_t sequence)
-{
-    cma_block_diagnostic_node    *current;
-    cma_block_diagnostic_node    *node;
 
-    current = g_cma_block_diagnostics_head;
-    while (current)
-    {
-        if (current->block == block)
-        {
-            if (current->diagnostic.recorded)
-                return ;
-            current->diagnostic.first_free_return = return_address;
-            current->diagnostic.first_free_thread = thread_id;
-            current->diagnostic.first_free_sequence = sequence;
-            current->diagnostic.recorded = true;
-            return ;
-        }
-        current = current->next;
-    }
-    node = static_cast<cma_block_diagnostic_node *>(std::malloc(
-            sizeof(cma_block_diagnostic_node)));
-    if (node == ft_nullptr)
-        return ;
-    node->block = block;
-    node->diagnostic.first_free_return = return_address;
-    node->diagnostic.first_free_thread = thread_id;
-    node->diagnostic.first_free_sequence = sequence;
-    node->diagnostic.recorded = true;
-    node->diagnostic.last_allocation_return = ft_nullptr;
-    node->diagnostic.last_allocation_thread = 0;
-    node->diagnostic.last_allocation_sequence = 0;
-    node->diagnostic.allocation_recorded = false;
-    node->next = g_cma_block_diagnostics_head;
-    g_cma_block_diagnostics_head = node;
-    return ;
-}
 
-void    cma_record_allocation(Block *block, void *return_address,
-        pt_thread_id_type thread_id, ft_size_t sequence)
-{
-    cma_block_diagnostic_node    *current;
-    current = g_cma_block_diagnostics_head;
-    while (current)
-    {
-        if (current->block == block)
-        {
-            current->diagnostic.last_allocation_return = return_address;
-            current->diagnostic.last_allocation_thread = thread_id;
-            current->diagnostic.last_allocation_sequence = sequence;
-            current->diagnostic.allocation_recorded = true;
-            return ;
-        }
-        current = current->next;
-    }
-    return ;
-}
 
-const cma_block_diagnostic    *cma_find_block_diagnostic(Block *block)
-{
-    cma_block_diagnostic_node    *current;
 
-    current = g_cma_block_diagnostics_head;
-    while (current)
-    {
-        if (current->block == block)
-            return (&current->diagnostic);
-        current = current->next;
-    }
-    return (ft_nullptr);
-}
 
-void    cma_clear_block_diagnostic(Block *block)
-{
-    cma_block_diagnostic_node    *current;
-    cma_block_diagnostic_node    *previous;
 
-    current = g_cma_block_diagnostics_head;
-    previous = ft_nullptr;
-    while (current)
-    {
-        if (current->block == block)
-        {
-            if (previous == ft_nullptr)
-                g_cma_block_diagnostics_head = current->next;
-            else
-                previous->next = current->next;
-            std::free(current);
-            return ;
-        }
-        previous = current;
-        current = current->next;
-    }
-    return ;
-}
+
 
 Block* split_block(Block* block, ft_size_t size)
 {
-    unsigned char   *raw_block;
-    Block           *new_block;
-    ft_size_t        header_size;
-    ft_size_t        available_size;
-    ft_size_t        remaining_size;
-    ft_size_t        minimum_payload;
+    Block       *new_block;
+    ft_size_t    available_size;
+    ft_size_t    remaining_size;
+    ft_size_t    minimum_payload;
 
     cma_validate_block(block, "split_block", ft_nullptr);
-    header_size = static_cast<ft_size_t>(sizeof(Block));
     available_size = block->size;
-    if (((header_size + size) & static_cast<ft_size_t>(0xF)) != 0)
-    {
-        pf_printf_fd(2, "Requested split size misaligns block metadata in split_block.\n");
-        su_sigabrt();
-    }
     if (size >= available_size)
     {
         if (cma_block_is_free(block))
@@ -389,7 +622,7 @@ Block* split_block(Block* block, ft_size_t size)
     }
     remaining_size = available_size - size;
     minimum_payload = minimum_split_payload();
-    if (remaining_size <= header_size + minimum_payload)
+    if (remaining_size <= minimum_payload)
     {
         if (cma_block_is_free(block))
             cma_mark_block_free(block);
@@ -397,9 +630,17 @@ Block* split_block(Block* block, ft_size_t size)
             cma_mark_block_allocated(block);
         return (block);
     }
-    raw_block = reinterpret_cast<unsigned char *>(block);
-    new_block = reinterpret_cast<Block *>(raw_block + header_size + size);
-    new_block->size = remaining_size - header_size;
+    new_block = cma_metadata_allocate_block();
+    if (new_block == ft_nullptr)
+    {
+        if (cma_block_is_free(block))
+            cma_mark_block_free(block);
+        else
+            cma_mark_block_allocated(block);
+        return (block);
+    }
+    new_block->size = remaining_size;
+    new_block->payload = block->payload + size;
     cma_mark_block_free(new_block);
     new_block->next = block->next;
     new_block->prev = block;
@@ -429,8 +670,8 @@ Page *create_page(ft_size_t size)
     }
     else
     {
-        if (size + sizeof(Block) > determine_page_size(size))
-            page_size = size + sizeof(Block);
+        if (size > determine_page_size(size))
+            page_size = size;
     }
     void* ptr;
     if (use_heap)
@@ -457,8 +698,16 @@ Page *create_page(ft_size_t size)
     page->size = page_size;
     page->next = ft_nullptr;
     page->prev = ft_nullptr;
-    page->blocks = static_cast<Block*>(ptr);
-    page->blocks->size = page_size - sizeof(Block);
+    page->blocks = cma_metadata_allocate_block();
+    if (page->blocks == ft_nullptr)
+    {
+        if (use_heap)
+            std::free(ptr);
+        std::free(page);
+        return (ft_nullptr);
+    }
+    page->blocks->size = page_size;
+    page->blocks->payload = static_cast<unsigned char *>(ptr);
     cma_mark_block_free(page->blocks);
     page->blocks->next = ft_nullptr;
     page->blocks->prev = ft_nullptr;
@@ -500,22 +749,47 @@ Block *find_free_block(ft_size_t size)
     return (ft_nullptr);
 }
 
+Block    *cma_find_block_for_pointer(const void *memory_pointer)
+{
+    Page    *current_page;
+
+    if (memory_pointer == ft_nullptr)
+        return (ft_nullptr);
+    current_page = page_list;
+    while (current_page)
+    {
+        Block    *current_block;
+
+        current_block = current_page->blocks;
+        while (current_block)
+        {
+            if (current_block->payload == memory_pointer)
+                return (current_block);
+            current_block = current_block->next;
+        }
+        current_page = current_page->next;
+    }
+    return (ft_nullptr);
+}
+
 Block *merge_block(Block *block)
 {
     Block       *current;
     Block       *next_block;
     Block       *previous_block;
-    ft_size_t    header_size;
 
     cma_validate_block(block, "merge_block", ft_nullptr);
-    header_size = static_cast<ft_size_t>(sizeof(Block));
     current = block;
     previous_block = current->prev;
     while (previous_block && cma_block_is_free(previous_block))
     {
         cma_validate_block(previous_block, "merge_block prev", ft_nullptr);
         verify_backward_link(current, previous_block);
-        previous_block->size += header_size + current->size;
+#ifdef DEBUG
+#endif
+        previous_block->size += current->size;
+#ifdef DEBUG
+#endif
         previous_block->next = current->next;
         if (current->next)
         {
@@ -525,6 +799,7 @@ Block *merge_block(Block *block)
         current->next = ft_nullptr;
         current->prev = ft_nullptr;
         cma_mark_block_free(current);
+        cma_metadata_release_block(current);
         current = previous_block;
         previous_block = current->prev;
     }
@@ -533,7 +808,11 @@ Block *merge_block(Block *block)
     {
         cma_validate_block(next_block, "merge_block next", ft_nullptr);
         verify_forward_link(current, next_block);
-        current->size += header_size + next_block->size;
+#ifdef DEBUG
+#endif
+        current->size += next_block->size;
+#ifdef DEBUG
+#endif
         current->next = next_block->next;
         if (current->next)
         {
@@ -543,9 +822,12 @@ Block *merge_block(Block *block)
         next_block->next = ft_nullptr;
         next_block->prev = ft_nullptr;
         cma_mark_block_free(next_block);
+        cma_metadata_release_block(next_block);
         next_block = current->next;
     }
     cma_mark_block_free(current);
+#ifdef DEBUG
+#endif
     return (current);
 }
 
@@ -554,10 +836,14 @@ Page *find_page_of_block(Block *block)
     Page *page = page_list;
     while (page)
     {
-        char *start = static_cast<char*>(page->start);
-        char *end = start + static_cast<size_t>(page->size);
-        if (reinterpret_cast<char*>(block) >= start &&
-            reinterpret_cast<char*>(block) < end)
+        unsigned char    *start;
+        unsigned char    *end;
+        unsigned char    *payload;
+
+        start = static_cast<unsigned char *>(page->start);
+        end = start + static_cast<size_t>(page->size);
+        payload = block->payload;
+        if (payload >= start && payload < end)
             return (page);
         page = page->next;
     }
@@ -579,120 +865,37 @@ void free_page_if_empty(Page *page)
         if (page_list == page)
             page_list = page->next;
         std::free(page->start);
+        cma_metadata_release_block(page->blocks);
         std::free(page);
     }
     return ;
 }
 
-static inline void print_block_info_impl(Block *block)
-{
-#ifdef _WIN32
-    (void)block;
-    return ;
-#else
-    if (!block)
-    {
-        pf_printf_fd(2, "Block pointer is ft_nullptr.\n");
-        return ;
-    }
-    const char* free_status;
-    if (cma_block_is_free(block))
-        free_status = "Yes";
-    else
-        free_status = "No";
-    pf_printf_fd(3, "---- Block Information ----\n");
-    pf_printf_fd(2, "Address of Block: %p\n", static_cast<void *>(block));
-    pf_printf_fd(2, "Magic Number: 0x%X\n", block->magic);
-    pf_printf_fd(2, "Size: %llu bytes\n",
-        static_cast<unsigned long long>(block->size));
-    pf_printf_fd(2, "Free: %s\n", free_status);
-    pf_printf_fd(2, "Next Block: %p\n", static_cast<void*>(block->next));
-    pf_printf_fd(2, "Previous Block: %p\n", static_cast<void*>(block->prev));
-    pf_printf_fd(2, "---------------------------\n");
-#endif
-    return ;
-}
 
-void print_block_info(Block *block)
-{
-    print_block_info_impl(block);
-    return ;
-}
 
-static void dump_hex_bytes(const unsigned char *bytes, ft_size_t length)
-{
-    ft_size_t index;
-    int column_count;
 
-    index = 0;
-    column_count = 0;
-    while (index < length)
-    {
-        if (column_count == 0)
-            pf_printf_fd(2, "    ");
-        pf_printf_fd(2, "%02X ", static_cast<unsigned int>(bytes[index]));
-        column_count++;
-        if (column_count == 16)
-        {
-            pf_printf_fd(2, "\n");
-            column_count = 0;
-        }
-        index++;
-    }
-    if (column_count != 0)
-        pf_printf_fd(2, "\n");
-    return ;
-}
 
-void dump_block_bytes(Block *block)
-{
-    unsigned char   *raw_block;
-    ft_size_t        header_bytes;
-    ft_size_t        payload_bytes;
 
-    if (!block)
-    {
-        pf_printf_fd(2, "Cannot dump bytes for null block.\n");
-        return ;
-    }
-    raw_block = reinterpret_cast<unsigned char *>(block);
-    header_bytes = static_cast<ft_size_t>(sizeof(Block));
-    pf_printf_fd(2, "Header bytes at %p:\n", static_cast<void *>(block));
-    dump_hex_bytes(raw_block, header_bytes);
-    pf_printf_fd(2, "User pointer: %p\n", static_cast<void *>(raw_block + header_bytes));
-    payload_bytes = 64;
-    if (block->size < payload_bytes)
-        payload_bytes = block->size;
-    if (payload_bytes > 0)
-    {
-        pf_printf_fd(2, "First %llu bytes of payload:\n",
-            static_cast<unsigned long long>(payload_bytes));
-        dump_hex_bytes(raw_block + header_bytes, payload_bytes);
-    }
-    else
-        pf_printf_fd(2, "Block payload reported as empty.\n");
-    return ;
-}
+
+
 
 void cma_get_extended_stats(ft_size_t *allocation_count,
         ft_size_t *free_count,
         ft_size_t *current_bytes,
         ft_size_t *peak_bytes)
 {
-    bool lock_acquired;
+    cma_allocator_guard allocator_guard;
 
-    lock_acquired = false;
-    if (cma_lock_allocator(&lock_acquired) != 0)
+    if (!allocator_guard.is_active())
         return ;
     if (allocation_count != ft_nullptr)
-        *allocation_count = static_cast<ft_size_t>(g_cma_allocation_count);
+        *allocation_count = g_cma_allocation_count;
     if (free_count != ft_nullptr)
-        *free_count = static_cast<ft_size_t>(g_cma_free_count);
+        *free_count = g_cma_free_count;
     if (current_bytes != ft_nullptr)
-        *current_bytes = static_cast<ft_size_t>(g_cma_current_bytes);
+        *current_bytes = g_cma_current_bytes;
     if (peak_bytes != ft_nullptr)
-        *peak_bytes = static_cast<ft_size_t>(g_cma_peak_bytes);
-    cma_unlock_allocator(lock_acquired);
+        *peak_bytes = g_cma_peak_bytes;
     return ;
 }
 
