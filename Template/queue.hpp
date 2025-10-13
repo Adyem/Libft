@@ -6,7 +6,6 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
-#include "../PThread/mutex.hpp"
 #include <cstddef>
 #include <utility>
 
@@ -33,7 +32,6 @@ class ft_queue
         QueueNode*  _rear;
         size_t      _size;
         mutable int _error_code;
-        mutable pt_mutex _mutex;
 
         void    set_error(int error) const;
 
@@ -93,13 +91,6 @@ ft_queue<ElementType>& ft_queue<ElementType>::operator=(ft_queue&& other) noexce
 {
     if (this != &other)
     {
-        if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-            return (*this);
-        if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
-        {
-            this->_mutex.unlock(THREAD_ID);
-            return (*this);
-        }
         this->clear();
         this->_front = other._front;
         this->_rear = other._rear;
@@ -109,8 +100,6 @@ ft_queue<ElementType>& ft_queue<ElementType>::operator=(ft_queue&& other) noexce
         other._rear = ft_nullptr;
         other._size = 0;
         other._error_code = ER_SUCCESS;
-        other._mutex.unlock(THREAD_ID);
-        this->_mutex.unlock(THREAD_ID);
     }
     return (*this);
 }
@@ -126,16 +115,10 @@ void ft_queue<ElementType>::set_error(int error) const
 template <typename ElementType>
 void ft_queue<ElementType>::enqueue(const ElementType& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return ;
-    }
     QueueNode* node = static_cast<QueueNode*>(cma_malloc(sizeof(QueueNode)));
     if (node == ft_nullptr)
     {
         this->set_error(FT_ERR_NO_MEMORY);
-        this->_mutex.unlock(THREAD_ID);
         return ;
     }
     construct_at(&node->_data, value);
@@ -152,23 +135,16 @@ void ft_queue<ElementType>::enqueue(const ElementType& value)
     }
     ++this->_size;
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 
 template <typename ElementType>
 void ft_queue<ElementType>::enqueue(ElementType&& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return ;
-    }
     QueueNode* node = static_cast<QueueNode*>(cma_malloc(sizeof(QueueNode)));
     if (node == ft_nullptr)
     {
         this->set_error(FT_ERR_NO_MEMORY);
-        this->_mutex.unlock(THREAD_ID);
         return ;
     }
     construct_at(&node->_data, std::move(value));
@@ -185,22 +161,15 @@ void ft_queue<ElementType>::enqueue(ElementType&& value)
     }
     ++this->_size;
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 
 template <typename ElementType>
 ElementType ft_queue<ElementType>::dequeue()
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return (ElementType());
-    }
     if (this->_front == ft_nullptr)
     {
         this->set_error(FT_ERR_EMPTY);
-        this->_mutex.unlock(THREAD_ID);
         return (ElementType());
     }
     QueueNode* node = this->_front;
@@ -212,7 +181,6 @@ ElementType ft_queue<ElementType>::dequeue()
     cma_free(node);
     --this->_size;
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (value);
 }
 
@@ -220,20 +188,13 @@ template <typename ElementType>
 ElementType& ft_queue<ElementType>::front()
 {
     static ElementType error_element = ElementType();
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return (error_element);
-    }
     if (this->_front == ft_nullptr)
     {
         this->set_error(FT_ERR_EMPTY);
-        this->_mutex.unlock(THREAD_ID);
         return (error_element);
     }
     ElementType& value = this->_front->_data;
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (value);
 }
 
@@ -241,80 +202,45 @@ template <typename ElementType>
 const ElementType& ft_queue<ElementType>::front() const
 {
     static ElementType error_element = ElementType();
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return (error_element);
-    }
     if (this->_front == ft_nullptr)
     {
         this->set_error(FT_ERR_EMPTY);
-        this->_mutex.unlock(THREAD_ID);
         return (error_element);
     }
     const ElementType& value = this->_front->_data;
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (value);
 }
 
 template <typename ElementType>
 size_t ft_queue<ElementType>::size() const
 {
-    size_t current_size;
-
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(this->_mutex.get_error());
-        return (0);
-    }
-    current_size = this->_size;
-    this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
-    return (current_size);
+    const_cast<ft_queue<ElementType>*>(this)->set_error(ER_SUCCESS);
+    return (this->_size);
 }
 
 template <typename ElementType>
 bool ft_queue<ElementType>::empty() const
 {
-    bool result;
-
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(this->_mutex.get_error());
-        return (true);
-    }
-    result = (this->_size == 0);
-    this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
-    return (result);
+    const_cast<ft_queue<ElementType>*>(this)->set_error(ER_SUCCESS);
+    return (this->_size == 0);
 }
 
 template <typename ElementType>
 int ft_queue<ElementType>::get_error() const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-        return (this->_error_code);
-    int err = this->_error_code;
-    this->_mutex.unlock(THREAD_ID);
-    return (err);
+    return (this->_error_code);
 }
 
 template <typename ElementType>
 const char* ft_queue<ElementType>::get_error_str() const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-        return (ft_strerror(this->_error_code));
-    int err = this->_error_code;
-    this->_mutex.unlock(THREAD_ID);
-    return (ft_strerror(err));
+    return (ft_strerror(this->_error_code));
 }
 
 template <typename ElementType>
 void ft_queue<ElementType>::clear()
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-        return ;
     while (this->_front != ft_nullptr)
     {
         QueueNode* node = this->_front;
@@ -325,7 +251,6 @@ void ft_queue<ElementType>::clear()
     this->_rear = ft_nullptr;
     this->_size = 0;
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 

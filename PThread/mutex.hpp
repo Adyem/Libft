@@ -3,15 +3,12 @@
 
 #include <pthread.h>
 #include <atomic>
-#include <cstdint>
 
 class pt_mutex
 {
     private:
-        mutable std::atomic<uint32_t>     _next;
-        mutable std::atomic<uint32_t>     _serving;
         mutable std::atomic<pthread_t>    _owner;
-        mutable volatile bool             _lock;
+        mutable bool                      _lock;
         mutable int                       _error;
 
         void    set_error(int error) const;
