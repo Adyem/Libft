@@ -5,9 +5,6 @@
 #include <stdint.h>
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
-
 
 template <typename CharType>
 class ft_string_view
@@ -15,7 +12,6 @@ class ft_string_view
     private:
         const CharType* _data;
         size_t          _size;
-        mutable pt_mutex _mutex;
         mutable int     _error_code;
 
         void set_error(int error) const;
@@ -47,7 +43,7 @@ const size_t ft_string_view<CharType>::npos = static_cast<size_t>(-1);
 
 template <typename CharType>
 ft_string_view<CharType>::ft_string_view()
-    : _data(ft_nullptr), _size(0), _mutex(), _error_code(ER_SUCCESS)
+    : _data(ft_nullptr), _size(0), _error_code(ER_SUCCESS)
 {
     this->set_error(ER_SUCCESS);
     return ;
@@ -55,7 +51,7 @@ ft_string_view<CharType>::ft_string_view()
 
 template <typename CharType>
 ft_string_view<CharType>::ft_string_view(const CharType* string)
-    : _data(string), _size(0), _mutex(), _error_code(ER_SUCCESS)
+    : _data(string), _size(0), _error_code(ER_SUCCESS)
 {
     if (string == ft_nullptr)
     {
@@ -75,7 +71,7 @@ ft_string_view<CharType>::ft_string_view(const CharType* string)
 
 template <typename CharType>
 ft_string_view<CharType>::ft_string_view(const CharType* string, size_t size)
-    : _data(string), _size(size), _mutex(), _error_code(ER_SUCCESS)
+    : _data(string), _size(size), _error_code(ER_SUCCESS)
 {
     this->set_error(ER_SUCCESS);
     return ;
@@ -83,17 +79,8 @@ ft_string_view<CharType>::ft_string_view(const CharType* string, size_t size)
 
 template <typename CharType>
 ft_string_view<CharType>::ft_string_view(const ft_string_view& other)
-    : _data(ft_nullptr), _size(0), _mutex(), _error_code(ER_SUCCESS)
+    : _data(other._data), _size(other._size), _error_code(other._error_code)
 {
-    ft_unique_lock<pt_mutex> guard(other._mutex);
-
-    if (guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
-    this->_data = other._data;
-    this->_size = other._size;
     this->set_error(other._error_code);
     return ;
 }
@@ -101,49 +88,12 @@ ft_string_view<CharType>::ft_string_view(const ft_string_view& other)
 template <typename CharType>
 ft_string_view<CharType>& ft_string_view<CharType>::operator=(const ft_string_view& other)
 {
-    if (this == &other)
+    if (this != &other)
     {
-        ft_unique_lock<pt_mutex> self_guard(this->_mutex);
-
-        if (self_guard.get_error() != ER_SUCCESS)
-            this->set_error(self_guard.get_error());
-        else
-            this->set_error(ER_SUCCESS);
-        return (*this);
+        this->_data = other._data;
+        this->_size = other._size;
+        this->_error_code = other._error_code;
     }
-    uintptr_t this_address;
-    uintptr_t other_address;
-    const ft_string_view<CharType>* first_view;
-    const ft_string_view<CharType>* second_view;
-
-    this_address = reinterpret_cast<uintptr_t>(this);
-    other_address = reinterpret_cast<uintptr_t>(&other);
-    if (this_address < other_address)
-    {
-        first_view = this;
-        second_view = &other;
-    }
-    else
-    {
-        first_view = &other;
-        second_view = this;
-    }
-    ft_unique_lock<pt_mutex> first_guard(first_view->_mutex);
-
-    if (first_guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(first_guard.get_error());
-        return (*this);
-    }
-    ft_unique_lock<pt_mutex> second_guard(second_view->_mutex);
-
-    if (second_guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(second_guard.get_error());
-        return (*this);
-    }
-    this->_data = other._data;
-    this->_size = other._size;
     this->set_error(other._error_code);
     return (*this);
 }
@@ -157,13 +107,6 @@ ft_string_view<CharType>::~ft_string_view()
 template <typename CharType>
 const CharType* ft_string_view<CharType>::data() const
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    if (guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return (ft_nullptr);
-    }
     this->set_error(ER_SUCCESS);
     return (this->_data);
 }
@@ -171,13 +114,6 @@ const CharType* ft_string_view<CharType>::data() const
 template <typename CharType>
 size_t ft_string_view<CharType>::size() const
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    if (guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return (0);
-    }
     this->set_error(ER_SUCCESS);
     return (this->_size);
 }
@@ -185,13 +121,6 @@ size_t ft_string_view<CharType>::size() const
 template <typename CharType>
 bool ft_string_view<CharType>::empty() const
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    if (guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return (true);
-    }
     this->set_error(ER_SUCCESS);
     return (this->_size == 0);
 }
@@ -199,13 +128,6 @@ bool ft_string_view<CharType>::empty() const
 template <typename CharType>
 CharType ft_string_view<CharType>::operator[](size_t index) const
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    if (guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return (CharType());
-    }
     if (index >= this->_size)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -218,37 +140,6 @@ CharType ft_string_view<CharType>::operator[](size_t index) const
 template <typename CharType>
 int ft_string_view<CharType>::compare(const ft_string_view& other) const
 {
-    uintptr_t this_address;
-    uintptr_t other_address;
-    const ft_string_view<CharType>* first_view;
-    const ft_string_view<CharType>* second_view;
-
-    this_address = reinterpret_cast<uintptr_t>(this);
-    other_address = reinterpret_cast<uintptr_t>(&other);
-    if (this_address < other_address)
-    {
-        first_view = this;
-        second_view = &other;
-    }
-    else
-    {
-        first_view = &other;
-        second_view = this;
-    }
-    ft_unique_lock<pt_mutex> first_guard(first_view->_mutex);
-
-    if (first_guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(first_guard.get_error());
-        return (0);
-    }
-    ft_unique_lock<pt_mutex> second_guard(second_view->_mutex);
-
-    if (second_guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(second_guard.get_error());
-        return (0);
-    }
     size_t index;
 
     index = 0;
@@ -283,13 +174,6 @@ int ft_string_view<CharType>::compare(const ft_string_view& other) const
 template <typename CharType>
 ft_string_view<CharType> ft_string_view<CharType>::substr(size_t position, size_t count) const
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    if (guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return (ft_string_view<CharType>());
-    }
     if (position > this->_size)
     {
         ft_string_view<CharType> result;

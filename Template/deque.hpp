@@ -6,7 +6,6 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
-#include "../PThread/mutex.hpp"
 #include <cstddef>
 #include <utility>
 
@@ -16,7 +15,6 @@
 ** - push_front, push_back: O(1); only invalidates references to previous front/back respectively.
 ** - pop_front, pop_back: O(1); invalidates references to removed element.
 ** - clear: O(n); invalidates all node references.
-** Thread safety: synchronize concurrent access; mutex protects error state only.
 */
 template <typename ElementType>
 class ft_deque
@@ -33,7 +31,6 @@ class ft_deque
         DequeNode*   _back;
         size_t       _size;
         mutable int  _error_code;
-        mutable pt_mutex _mutex;
 
         void    set_error(int error) const;
 
@@ -99,13 +96,6 @@ ft_deque<ElementType>& ft_deque<ElementType>::operator=(ft_deque&& other) noexce
 {
     if (this != &other)
     {
-        if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-            return (*this);
-        if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
-        {
-            this->_mutex.unlock(THREAD_ID);
-            return (*this);
-        }
         this->clear();
         this->_front = other._front;
         this->_back = other._back;
@@ -115,8 +105,7 @@ ft_deque<ElementType>& ft_deque<ElementType>::operator=(ft_deque&& other) noexce
         other._back = ft_nullptr;
         other._size = 0;
         other._error_code = ER_SUCCESS;
-        other._mutex.unlock(THREAD_ID);
-        this->_mutex.unlock(THREAD_ID);
+        this->set_error(ER_SUCCESS);
     }
     return (*this);
 }
@@ -132,16 +121,10 @@ void ft_deque<ElementType>::set_error(int error) const
 template <typename ElementType>
 void ft_deque<ElementType>::push_front(const ElementType& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return ;
-    }
     DequeNode* node = static_cast<DequeNode*>(cma_malloc(sizeof(DequeNode)));
     if (node == ft_nullptr)
     {
         this->set_error(FT_ERR_NO_MEMORY);
-        this->_mutex.unlock(THREAD_ID);
         return ;
     }
     construct_at(&node->_data, value);
@@ -154,23 +137,16 @@ void ft_deque<ElementType>::push_front(const ElementType& value)
     this->_front = node;
     ++this->_size;
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 
 template <typename ElementType>
 void ft_deque<ElementType>::push_front(ElementType&& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return ;
-    }
     DequeNode* node = static_cast<DequeNode*>(cma_malloc(sizeof(DequeNode)));
     if (node == ft_nullptr)
     {
         this->set_error(FT_ERR_NO_MEMORY);
-        this->_mutex.unlock(THREAD_ID);
         return ;
     }
     construct_at(&node->_data, std::move(value));
@@ -183,23 +159,16 @@ void ft_deque<ElementType>::push_front(ElementType&& value)
     this->_front = node;
     ++this->_size;
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 
 template <typename ElementType>
 void ft_deque<ElementType>::push_back(const ElementType& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return ;
-    }
     DequeNode* node = static_cast<DequeNode*>(cma_malloc(sizeof(DequeNode)));
     if (node == ft_nullptr)
     {
         this->set_error(FT_ERR_NO_MEMORY);
-        this->_mutex.unlock(THREAD_ID);
         return ;
     }
     construct_at(&node->_data, value);
@@ -212,23 +181,16 @@ void ft_deque<ElementType>::push_back(const ElementType& value)
     this->_back = node;
     ++this->_size;
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 
 template <typename ElementType>
 void ft_deque<ElementType>::push_back(ElementType&& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return ;
-    }
     DequeNode* node = static_cast<DequeNode*>(cma_malloc(sizeof(DequeNode)));
     if (node == ft_nullptr)
     {
         this->set_error(FT_ERR_NO_MEMORY);
-        this->_mutex.unlock(THREAD_ID);
         return ;
     }
     construct_at(&node->_data, std::move(value));
@@ -241,22 +203,15 @@ void ft_deque<ElementType>::push_back(ElementType&& value)
     this->_back = node;
     ++this->_size;
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 
 template <typename ElementType>
 ElementType ft_deque<ElementType>::pop_front()
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return (ElementType());
-    }
     if (this->_front == ft_nullptr)
     {
         this->set_error(FT_ERR_EMPTY);
-        this->_mutex.unlock(THREAD_ID);
         return (ElementType());
     }
     DequeNode* node = this->_front;
@@ -270,22 +225,15 @@ ElementType ft_deque<ElementType>::pop_front()
     cma_free(node);
     --this->_size;
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (value);
 }
 
 template <typename ElementType>
 ElementType ft_deque<ElementType>::pop_back()
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return (ElementType());
-    }
     if (this->_back == ft_nullptr)
     {
         this->set_error(FT_ERR_EMPTY);
-        this->_mutex.unlock(THREAD_ID);
         return (ElementType());
     }
     DequeNode* node = this->_back;
@@ -299,7 +247,6 @@ ElementType ft_deque<ElementType>::pop_back()
     cma_free(node);
     --this->_size;
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (value);
 }
 
@@ -307,20 +254,13 @@ template <typename ElementType>
 ElementType& ft_deque<ElementType>::front()
 {
     static ElementType error_element = ElementType();
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return (error_element);
-    }
     if (this->_front == ft_nullptr)
     {
         this->set_error(FT_ERR_EMPTY);
-        this->_mutex.unlock(THREAD_ID);
         return (error_element);
     }
     ElementType& reference = this->_front->_data;
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (reference);
 }
 
@@ -328,20 +268,13 @@ template <typename ElementType>
 const ElementType& ft_deque<ElementType>::front() const
 {
     static ElementType error_element = ElementType();
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return (error_element);
-    }
     if (this->_front == ft_nullptr)
     {
         this->set_error(FT_ERR_EMPTY);
-        this->_mutex.unlock(THREAD_ID);
         return (error_element);
     }
     const ElementType& reference = this->_front->_data;
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (reference);
 }
 
@@ -349,20 +282,13 @@ template <typename ElementType>
 ElementType& ft_deque<ElementType>::back()
 {
     static ElementType error_element = ElementType();
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return (error_element);
-    }
     if (this->_back == ft_nullptr)
     {
         this->set_error(FT_ERR_EMPTY);
-        this->_mutex.unlock(THREAD_ID);
         return (error_element);
     }
     ElementType& reference = this->_back->_data;
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (reference);
 }
 
@@ -370,79 +296,47 @@ template <typename ElementType>
 const ElementType& ft_deque<ElementType>::back() const
 {
     static ElementType error_element = ElementType();
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return (error_element);
-    }
     if (this->_back == ft_nullptr)
     {
         this->set_error(FT_ERR_EMPTY);
-        this->_mutex.unlock(THREAD_ID);
         return (error_element);
     }
     const ElementType& reference = this->_back->_data;
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (reference);
 }
 
 template <typename ElementType>
 size_t ft_deque<ElementType>::size() const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        const_cast<ft_deque<ElementType> *>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return (0);
-    }
     size_t current_size = this->_size;
     const_cast<ft_deque<ElementType> *>(this)->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (current_size);
 }
 
 template <typename ElementType>
 bool ft_deque<ElementType>::empty() const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        const_cast<ft_deque<ElementType> *>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return (true);
-    }
     bool result = (this->_size == 0);
     const_cast<ft_deque<ElementType> *>(this)->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (result);
 }
 
 template <typename ElementType>
 int ft_deque<ElementType>::get_error() const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-        return (this->_error_code);
-    int error = this->_error_code;
-    this->_mutex.unlock(THREAD_ID);
-    return (error);
+    return (this->_error_code);
 }
 
 template <typename ElementType>
 const char* ft_deque<ElementType>::get_error_str() const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-        return (ft_strerror(this->_error_code));
-    int error = this->_error_code;
-    this->_mutex.unlock(THREAD_ID);
-    return (ft_strerror(error));
+    return (ft_strerror(this->_error_code));
 }
 
 template <typename ElementType>
 void ft_deque<ElementType>::clear()
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return ;
-    }
     while (this->_front != ft_nullptr)
     {
         DequeNode* node = this->_front;
@@ -453,7 +347,6 @@ void ft_deque<ElementType>::clear()
     this->_back = ft_nullptr;
     this->_size = 0;
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 

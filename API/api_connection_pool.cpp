@@ -22,7 +22,14 @@ typedef Pair<ft_string, t_api_connection_bucket> t_api_connection_pair;
 typedef ft_map<ft_string, t_api_connection_bucket> t_api_connection_map;
 typedef t_api_connection_bucket::difference_type t_api_bucket_difference;
 
-static t_api_connection_map g_api_connection_buckets;
+static t_api_connection_map &api_connection_pool_get_buckets(void)
+{
+    static t_api_connection_map *buckets = ft_nullptr;
+
+    if (buckets == ft_nullptr)
+        buckets = new t_api_connection_map();
+    return (*buckets);
+}
 static size_t g_api_connection_max_idle = 8;
 static long long g_api_connection_idle_timeout_ms = 60000;
 static size_t g_api_connection_pool_acquire_calls = 0;
@@ -142,12 +149,14 @@ static void api_connection_pool_cleanup_if_empty(const ft_string &key)
 {
     t_api_connection_pair *pair;
 
-    pair = g_api_connection_buckets.find(key);
+    t_api_connection_map &buckets = api_connection_pool_get_buckets();
+
+    pair = buckets.find(key);
     if (pair == ft_nullptr)
         return ;
     if (!pair->value.empty())
         return ;
-    g_api_connection_buckets.remove(key);
+    buckets.remove(key);
     return ;
 }
 
@@ -170,7 +179,9 @@ bool api_connection_pool_acquire(api_connection_pool_handle &handle,
     handle.should_store = true;
     acquired = false;
     g_api_connection_pool_acquire_calls++;
-    pair = g_api_connection_buckets.find(key);
+    t_api_connection_map &buckets = api_connection_pool_get_buckets();
+
+    pair = buckets.find(key);
     if (pair == ft_nullptr)
     {
         g_api_connection_pool_acquire_misses++;
@@ -240,13 +251,15 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
         return ;
     }
     now_ms = api_connection_pool_now_ms();
-    pair = g_api_connection_buckets.find(handle.key);
+    t_api_connection_map &buckets = api_connection_pool_get_buckets();
+
+    pair = buckets.find(handle.key);
     if (pair == ft_nullptr)
     {
         t_api_connection_bucket new_bucket;
 
-        g_api_connection_buckets.insert(handle.key, std::move(new_bucket));
-        pair = g_api_connection_buckets.find(handle.key);
+        buckets.insert(handle.key, std::move(new_bucket));
+        pair = buckets.find(handle.key);
         if (pair == ft_nullptr)
         {
             api_connection_pool_evict(handle);
@@ -302,13 +315,15 @@ void api_connection_pool_flush(void)
     t_api_connection_pair *begin_pair;
     size_t bucket_index;
 
-    bucket_count = g_api_connection_buckets.size();
+    t_api_connection_map &buckets = api_connection_pool_get_buckets();
+
+    bucket_count = buckets.size();
     if (bucket_count == 0)
     {
-        g_api_connection_buckets.clear();
+        buckets.clear();
         return ;
     }
-    end_pair = g_api_connection_buckets.end();
+    end_pair = buckets.end();
     begin_pair = end_pair - static_cast<std::ptrdiff_t>(bucket_count);
     bucket_index = 0;
     while (bucket_index < bucket_count)
@@ -327,7 +342,7 @@ void api_connection_pool_flush(void)
         bucket.clear();
         bucket_index++;
     }
-    g_api_connection_buckets.clear();
+    buckets.clear();
     return ;
 }
 
