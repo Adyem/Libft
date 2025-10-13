@@ -52,3 +52,9 @@ The latest stall confirms that the worker threads spawned by `test_cma_threaded_
 
 These changes address the immediate start-data lifetime hazard while providing allocator telemetry for any remaining stalls after case 829.
 
+## 2025-10-15 test run
+
+- `make -j4` rebuilt all 27 library modules without errors.【dbec77†L1-L15】【878b89†L1-L8】
+- `make -C Test -j4` refreshed the test suite successfully.【17b82c†L1-L5】【6b678c†L1-L5】
+- `./Test/libft_tests` continues to segfault; the redirected run logged progress through test 210 before the process crashed.【05ef65†L1-L86】【a3958b†L1-L2】
+
