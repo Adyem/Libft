@@ -7,6 +7,7 @@
 #include "CMA.hpp"
 #include "cma_internal.hpp"
 #include "../PThread/mutex.hpp"
+#include "../Logger/logger.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../Errno/errno.hpp"
@@ -39,7 +40,8 @@ static bool cma_allocator_guard_attempt_lock(bool *lock_acquired);
 
 
 cma_allocator_guard::cma_allocator_guard()
-    : _lock_acquired(false), _active(false), _error_code(ER_SUCCESS)
+    : _lock_acquired(false), _active(false), _error_code(ER_SUCCESS),
+      _failure_logged(false)
 {
     bool local_lock_acquired;
 
@@ -65,6 +67,13 @@ cma_allocator_guard::~cma_allocator_guard()
 
 bool cma_allocator_guard::is_active() const
 {
+    if (!this->_active && !this->_failure_logged)
+    {
+        void *return_address;
+
+        return_address = __builtin_return_address(0);
+        this->log_inactive_guard(return_address);
+    }
     return (this->_active);
 }
 
@@ -97,6 +106,22 @@ void cma_allocator_guard::set_error(int error) const
 {
     this->_error_code = error;
     ft_errno = error;
+    return ;
+}
+
+void cma_allocator_guard::log_inactive_guard(void *return_address) const
+{
+    pt_thread_id_type thread_identifier;
+    int previous_errno;
+
+    if (this->_failure_logged)
+        return ;
+    this->_failure_logged = true;
+    previous_errno = ft_errno;
+    thread_identifier = pt_thread_self();
+    ft_log_error("cma_allocator_guard inactive thread=%p return_address=%p",
+        reinterpret_cast<void *>(thread_identifier), return_address);
+    ft_errno = previous_errno;
     return ;
 }
 

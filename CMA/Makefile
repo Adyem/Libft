@@ -1,7 +1,8 @@
 TARGET         := CustomMemoryAllocator.a
 DEBUG_TARGET   := CustomMemoryAllocator_debug.a
 
-SRCS := cma_allocation_guard.cpp \
+SRCS := cma_alloc_limit_guard.cpp \
+        cma_allocation_guard.cpp \
         cma_calloc.cpp \
         cma_strdup.cpp \
         cma_strndup.cpp \
@@ -32,6 +33,7 @@ MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
 HEADERS := CMA.hpp \
+           cma_alloc_limit_guard.hpp \
            cma_allocation_guard.hpp \
            cma_internal.hpp
 
