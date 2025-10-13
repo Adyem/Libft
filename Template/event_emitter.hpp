@@ -6,7 +6,6 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
-#include "../PThread/mutex.hpp"
 #include <cstddef>
 #include <utility>
 
@@ -26,7 +25,6 @@ class ft_event_emitter
         size_t      _capacity;
         size_t      _size;
         mutable int _error_code;
-        mutable pt_mutex _mutex;
 
         void    set_error(int error) const;
         bool    ensure_capacity(size_t desired);
@@ -99,13 +97,6 @@ ft_event_emitter<EventType, Args...>& ft_event_emitter<EventType, Args...>::oper
 {
     if (this != &other)
     {
-        if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-            return (*this);
-        if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
-        {
-            this->_mutex.unlock(THREAD_ID);
-            return (*this);
-        }
         this->clear();
         if (this->_listeners != ft_nullptr)
             cma_free(this->_listeners);
@@ -117,8 +108,6 @@ ft_event_emitter<EventType, Args...>& ft_event_emitter<EventType, Args...>::oper
         other._capacity = 0;
         other._size = 0;
         other._error_code = ER_SUCCESS;
-        other._mutex.unlock(THREAD_ID);
-        this->_mutex.unlock(THREAD_ID);
     }
     return (*this);
 }
@@ -196,31 +185,17 @@ struct ft_event_emitter_test_helper
 template <typename EventType, typename... Args>
 void ft_event_emitter<EventType, Args...>::on(const EventType& event, void (*callback)(Args...))
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return ;
-    }
     if (!this->ensure_capacity(this->_size + 1))
-    {
-        this->_mutex.unlock(THREAD_ID);
         return ;
-    }
     construct_at(&this->_listeners[this->_size], Listener{event, callback});
     ++this->_size;
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 
 template <typename EventType, typename... Args>
 void ft_event_emitter<EventType, Args...>::emit(const EventType& event, Args... args)
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return ;
-    }
     bool found = false;
     size_t listener_index = 0;
     while (listener_index < this->_size)
@@ -235,22 +210,15 @@ void ft_event_emitter<EventType, Args...>::emit(const EventType& event, Args... 
     if (!found)
     {
         this->set_error(FT_ERR_NOT_FOUND);
-        this->_mutex.unlock(THREAD_ID);
         return ;
     }
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 
 template <typename EventType, typename... Args>
 void ft_event_emitter<EventType, Args...>::remove_listener(const EventType& event, void (*callback)(Args...))
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return ;
-    }
     size_t listener_index = 0;
     while (listener_index < this->_size)
     {
@@ -266,13 +234,11 @@ void ft_event_emitter<EventType, Args...>::remove_listener(const EventType& even
             }
             --this->_size;
             this->set_error(ER_SUCCESS);
-            this->_mutex.unlock(THREAD_ID);
             return ;
         }
         ++listener_index;
     }
     this->set_error(FT_ERR_NOT_FOUND);
-    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 
@@ -305,11 +271,6 @@ const char* ft_event_emitter<EventType, Args...>::get_error_str() const
 template <typename EventType, typename... Args>
 void ft_event_emitter<EventType, Args...>::clear()
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return ;
-    }
     size_t listener_index = 0;
     while (listener_index < this->_size)
     {
@@ -318,7 +279,6 @@ void ft_event_emitter<EventType, Args...>::clear()
     }
     this->_size = 0;
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 

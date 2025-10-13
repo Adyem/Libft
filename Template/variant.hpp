@@ -6,7 +6,6 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
-#include "../PThread/mutex.hpp"
 #include <type_traits>
 #include <utility>
 #include <cstddef>
@@ -83,7 +82,6 @@ class ft_variant
         storage_t*      _data;
         size_t          _index;
         mutable int     _error_code;
-        mutable pt_mutex _mutex;
 
         void set_error(int error) const;
         void destroy();
@@ -183,27 +181,17 @@ ft_variant<Types...>::ft_variant(ft_variant&& other) noexcept
 template <typename... Types>
 ft_variant<Types...>& ft_variant<Types...>::operator=(ft_variant&& other) noexcept
 {
-    if (this != &other)
-    {
-        if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-            return (*this);
-        if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
-        {
-            this->_mutex.unlock(THREAD_ID);
-            return (*this);
-        }
-        this->destroy();
-        if (this->_data != ft_nullptr)
-            cma_free(this->_data);
-        this->_data = other._data;
-        this->_index = other._index;
-        this->_error_code = other._error_code;
-        other._data = ft_nullptr;
-        other._index = npos;
-        other._error_code = ER_SUCCESS;
-        other._mutex.unlock(THREAD_ID);
-        this->_mutex.unlock(THREAD_ID);
-    }
+    if (this == &other)
+        return (*this);
+    this->destroy();
+    if (this->_data != ft_nullptr)
+        cma_free(this->_data);
+    this->_data = other._data;
+    this->_index = other._index;
+    this->_error_code = other._error_code;
+    other._data = ft_nullptr;
+    other._index = npos;
+    other._error_code = ER_SUCCESS;
     return (*this);
 }
 
@@ -221,18 +209,12 @@ template <typename... Types>
 template <typename T>
 void ft_variant<Types...>::emplace(T&& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return ;
-    }
     if (this->_data == ft_nullptr)
     {
         this->_data = static_cast<storage_t*>(cma_malloc(sizeof(storage_t)));
         if (this->_data == ft_nullptr)
         {
             this->set_error(FT_ERR_NO_MEMORY);
-            this->_mutex.unlock(THREAD_ID);
             return ;
         }
     }
@@ -240,7 +222,6 @@ void ft_variant<Types...>::emplace(T&& value)
     construct_at(reinterpret_cast<std::decay_t<T>*>(this->_data), std::forward<T>(value));
     this->_index = variant_index<std::decay_t<T>, Types...>::value;
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 
@@ -248,15 +229,9 @@ template <typename... Types>
 template <typename T>
 bool ft_variant<Types...>::holds_alternative() const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        const_cast<ft_variant*>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return (false);
-    }
     size_t idx = variant_index<T, Types...>::value;
     bool result = (this->_index == idx);
-    this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
+    const_cast<ft_variant*>(this)->set_error(ER_SUCCESS);
     return (result);
 }
 
@@ -265,21 +240,14 @@ template <typename T>
 T& ft_variant<Types...>::get()
 {
     static T default_instance = T();
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return (default_instance);
-    }
     size_t idx = variant_index<T, Types...>::value;
     if (this->_index != idx)
     {
         this->set_error(FT_ERR_INVALID_OPERATION);
-        this->_mutex.unlock(THREAD_ID);
         return (default_instance);
     }
     T& ref = *reinterpret_cast<T*>(this->_data);
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (ref);
 }
 
@@ -288,21 +256,14 @@ template <typename T>
 const T& ft_variant<Types...>::get() const
 {
     static T default_instance = T();
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        const_cast<ft_variant*>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return (default_instance);
-    }
     size_t idx = variant_index<T, Types...>::value;
     if (this->_index != idx)
     {
         const_cast<ft_variant*>(this)->set_error(FT_ERR_INVALID_OPERATION);
-        this->_mutex.unlock(THREAD_ID);
         return (default_instance);
     }
     const T& ref = *reinterpret_cast<const T*>(this->_data);
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (ref);
 }
 
@@ -310,55 +271,34 @@ template <typename... Types>
 template <typename Visitor>
 void ft_variant<Types...>::visit(Visitor&& vis)
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return ;
-    }
     if (this->_index == npos)
     {
         this->set_error(FT_ERR_INVALID_OPERATION);
-        this->_mutex.unlock(THREAD_ID);
         return ;
     }
     variant_visitor<0, Types...>::apply(this->_index, this->_data, std::forward<Visitor>(vis));
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 
 template <typename... Types>
 void ft_variant<Types...>::reset()
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(this->_mutex.get_error());
-        return ;
-    }
     this->destroy();
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 
 template <typename... Types>
 int ft_variant<Types...>::get_error() const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-        return (this->_error_code);
-    int err = this->_error_code;
-    this->_mutex.unlock(THREAD_ID);
-    return (err);
+    return (this->_error_code);
 }
 
 template <typename... Types>
 const char* ft_variant<Types...>::get_error_str() const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-        return (ft_strerror(this->_error_code));
-    int err = this->_error_code;
-    this->_mutex.unlock(THREAD_ID);
-    return (ft_strerror(err));
+    return (ft_strerror(this->_error_code));
 }
 
 #endif 

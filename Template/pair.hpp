@@ -3,15 +3,11 @@
 
 #include <utility>
 #include "../Errno/errno.hpp"
-#include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
-#include <stdint.h>
 
 template <typename KeyType, typename ValueType>
 class Pair
 {
     private:
-        mutable pt_mutex            _mutex;
         mutable int                 _error_code;
 
         void set_error(int error) const;
@@ -49,7 +45,7 @@ void Pair<KeyType, ValueType>::set_error(int error) const
 
 template <typename KeyType, typename ValueType>
 Pair<KeyType, ValueType>::Pair()
-        : _mutex(), _error_code(ER_SUCCESS), key(), value()
+        : _error_code(ER_SUCCESS), key(), value()
 {
     this->set_error(ER_SUCCESS);
     return ;
@@ -57,7 +53,7 @@ Pair<KeyType, ValueType>::Pair()
 
 template <typename KeyType, typename ValueType>
 Pair<KeyType, ValueType>::Pair(const KeyType &input_key, const ValueType &input_value)
-        : _mutex(), _error_code(ER_SUCCESS), key(input_key), value(input_value)
+        : _error_code(ER_SUCCESS), key(input_key), value(input_value)
 {
     this->set_error(ER_SUCCESS);
     return ;
@@ -65,7 +61,7 @@ Pair<KeyType, ValueType>::Pair(const KeyType &input_key, const ValueType &input_
 
 template <typename KeyType, typename ValueType>
 Pair<KeyType, ValueType>::Pair(const KeyType &input_key, ValueType &&input_value)
-        : _mutex(), _error_code(ER_SUCCESS), key(input_key), value(std::move(input_value))
+        : _error_code(ER_SUCCESS), key(input_key), value(std::move(input_value))
 {
     this->set_error(ER_SUCCESS);
     return ;
@@ -73,14 +69,8 @@ Pair<KeyType, ValueType>::Pair(const KeyType &input_key, ValueType &&input_value
 
 template <typename KeyType, typename ValueType>
 Pair<KeyType, ValueType>::Pair(const Pair &other)
-        : _mutex(), _error_code(ER_SUCCESS), key(), value()
+        : _error_code(ER_SUCCESS), key(), value()
 {
-    ft_unique_lock<pt_mutex> guard(other._mutex);
-    if (guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
     this->key = other.key;
     this->value = other.value;
     this->set_error(ER_SUCCESS);
@@ -89,14 +79,8 @@ Pair<KeyType, ValueType>::Pair(const Pair &other)
 
 template <typename KeyType, typename ValueType>
 Pair<KeyType, ValueType>::Pair(Pair &&other)
-        : _mutex(), _error_code(ER_SUCCESS), key(), value()
+        : _error_code(ER_SUCCESS), key(), value()
 {
-    ft_unique_lock<pt_mutex> guard(other._mutex);
-    if (guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
     this->key = std::move(other.key);
     this->value = std::move(other.value);
     other.set_error(ER_SUCCESS);
@@ -119,35 +103,6 @@ Pair<KeyType, ValueType> &Pair<KeyType, ValueType>::operator=(const Pair &other)
         this->set_error(ER_SUCCESS);
         return (*this);
     }
-    uintptr_t this_address;
-    uintptr_t other_address;
-    const Pair<KeyType, ValueType> *first;
-    const Pair<KeyType, ValueType> *second;
-
-    this_address = reinterpret_cast<uintptr_t>(this);
-    other_address = reinterpret_cast<uintptr_t>(&other);
-    if (this_address < other_address)
-    {
-        first = this;
-        second = &other;
-    }
-    else
-    {
-        first = &other;
-        second = this;
-    }
-    ft_unique_lock<pt_mutex> first_guard(first->_mutex);
-    if (first_guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(first_guard.get_error());
-        return (*this);
-    }
-    ft_unique_lock<pt_mutex> second_guard(second->_mutex);
-    if (second_guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(second_guard.get_error());
-        return (*this);
-    }
     this->key = other.key;
     this->value = other.value;
     this->set_error(ER_SUCCESS);
@@ -162,35 +117,6 @@ Pair<KeyType, ValueType> &Pair<KeyType, ValueType>::operator=(Pair &&other)
         this->set_error(ER_SUCCESS);
         return (*this);
     }
-    uintptr_t this_address;
-    uintptr_t other_address;
-    const Pair<KeyType, ValueType> *first;
-    const Pair<KeyType, ValueType> *second;
-
-    this_address = reinterpret_cast<uintptr_t>(this);
-    other_address = reinterpret_cast<uintptr_t>(&other);
-    if (this_address < other_address)
-    {
-        first = this;
-        second = &other;
-    }
-    else
-    {
-        first = &other;
-        second = this;
-    }
-    ft_unique_lock<pt_mutex> first_guard(first->_mutex);
-    if (first_guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(first_guard.get_error());
-        return (*this);
-    }
-    ft_unique_lock<pt_mutex> second_guard(second->_mutex);
-    if (second_guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(second_guard.get_error());
-        return (*this);
-    }
     this->key = std::move(other.key);
     this->value = std::move(other.value);
     other.set_error(ER_SUCCESS);
@@ -201,12 +127,6 @@ Pair<KeyType, ValueType> &Pair<KeyType, ValueType>::operator=(Pair &&other)
 template <typename KeyType, typename ValueType>
 KeyType Pair<KeyType, ValueType>::get_key() const
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return (KeyType());
-    }
     KeyType key_copy(this->key);
     this->set_error(ER_SUCCESS);
     return (key_copy);
@@ -215,12 +135,6 @@ KeyType Pair<KeyType, ValueType>::get_key() const
 template <typename KeyType, typename ValueType>
 ValueType Pair<KeyType, ValueType>::get_value() const
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return (ValueType());
-    }
     ValueType value_copy(this->value);
     this->set_error(ER_SUCCESS);
     return (value_copy);
@@ -229,12 +143,6 @@ ValueType Pair<KeyType, ValueType>::get_value() const
 template <typename KeyType, typename ValueType>
 void Pair<KeyType, ValueType>::set_key(const KeyType &input_key)
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
     this->key = input_key;
     this->set_error(ER_SUCCESS);
     return ;
@@ -243,12 +151,6 @@ void Pair<KeyType, ValueType>::set_key(const KeyType &input_key)
 template <typename KeyType, typename ValueType>
 void Pair<KeyType, ValueType>::set_key(KeyType &&input_key)
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
     this->key = std::move(input_key);
     this->set_error(ER_SUCCESS);
     return ;
@@ -257,12 +159,6 @@ void Pair<KeyType, ValueType>::set_key(KeyType &&input_key)
 template <typename KeyType, typename ValueType>
 void Pair<KeyType, ValueType>::set_value(const ValueType &input_value)
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
     this->value = input_value;
     this->set_error(ER_SUCCESS);
     return ;
@@ -271,12 +167,6 @@ void Pair<KeyType, ValueType>::set_value(const ValueType &input_value)
 template <typename KeyType, typename ValueType>
 void Pair<KeyType, ValueType>::set_value(ValueType &&input_value)
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
     this->value = std::move(input_value);
     this->set_error(ER_SUCCESS);
     return ;

@@ -34,7 +34,6 @@
 #define UNPROTECT_METADATA(ptr, size) ((void)0)
 #endif
 
-extern bool g_cma_thread_safe;
 extern ft_size_t    g_cma_alloc_limit;
 extern ft_size_t    g_cma_allocation_count;
 extern ft_size_t    g_cma_free_count;

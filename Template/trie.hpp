@@ -5,8 +5,6 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
-#include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
 #include "unordered_map.hpp"
 #include <cstddef>
 #include <new>
@@ -16,10 +14,8 @@
 ** - insert: O(k) where k is key length; may allocate new nodes and invalidates raw node pointers returned earlier.
 ** - search: O(k); read-only on success.
 ** - clear/destructor: O(n) over stored keys; invalidates all outstanding references.
-** Thread safety: locking ensures internal consistency, but callers should avoid concurrent inserts targeting the same key.
+** Single-threaded usage only; callers must provide their own synchronisation if sharing instances.
 */
-
-int pt_thread_yield();
 
 template <typename ValueType>
 class ft_trie
@@ -33,8 +29,7 @@ class ft_trie
         };
 
         node_value                                      *_data;
-        ft_unordered_map<char, ft_trie<ValueType>*>          _children;
-        mutable pt_mutex                                 _mutex;
+        ft_unordered_map<char, ft_trie<ValueType>*>     _children;
         mutable int                                      _error_code;
         mutable int                                      _last_error;
 
@@ -53,7 +48,7 @@ class ft_trie
 
 template <typename ValueType>
 ft_trie<ValueType>::ft_trie()
-        : _data(ft_nullptr), _children(), _mutex(), _error_code(ER_SUCCESS), _last_error(ER_SUCCESS)
+        : _data(ft_nullptr), _children(), _error_code(ER_SUCCESS), _last_error(ER_SUCCESS)
 {
     this->set_error(ER_SUCCESS);
     return ;
@@ -62,18 +57,14 @@ ft_trie<ValueType>::ft_trie()
 template <typename ValueType>
 ft_trie<ValueType>::~ft_trie()
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(guard.get_error());
-        return ;
-    }
-    typename ft_unordered_map<char, ft_trie<ValueType>*>::iterator child_iterator = this->_children.begin();
+    typename ft_unordered_map<char, ft_trie<ValueType>*>::iterator child_iterator(this->_children.begin());
     while (child_iterator != this->_children.end())
     {
-        delete child_iterator->second;
+        if (child_iterator->second != ft_nullptr)
+            delete child_iterator->second;
         ++child_iterator;
     }
+    this->_children.clear();
     if (this->_data != ft_nullptr)
     {
         cma_free(this->_data);
@@ -86,44 +77,38 @@ ft_trie<ValueType>::~ft_trie()
 template <typename ValueType>
 int ft_trie<ValueType>::insert_helper(const char *key, int unset_value, ValueType *value_pointer)
 {
+    ft_trie<ValueType> *current_node;
+    const char *key_iterator;
+    size_t key_length;
+
+    if (this->_error_code != ER_SUCCESS)
     {
-        ft_unique_lock<pt_mutex> guard(this->_mutex);
-        if (guard.get_error() != ER_SUCCESS)
-        {
-            this->set_error(guard.get_error());
-            return (1);
-        }
-        if (this->_error_code != ER_SUCCESS)
-        {
-            this->set_error(this->_error_code);
-            return (1);
-        }
+        this->set_error(this->_error_code);
+        return (1);
     }
     if (key == ft_nullptr)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
-    size_t key_length = ft_strlen_size_t(key);
+    key_length = ft_strlen_size_t(key);
     if (ft_errno != ER_SUCCESS)
     {
         this->set_error(ft_errno);
         return (1);
     }
-    ft_trie<ValueType> *current_node = this;
-    const char *key_iterator = key;
+    current_node = this;
+    key_iterator = key;
     while (*key_iterator)
     {
-        ft_unique_lock<pt_mutex> guard(current_node->_mutex);
-        if (guard.get_error() != ER_SUCCESS)
-        {
-            this->set_error(guard.get_error());
-            return (1);
-        }
-        char character = *key_iterator;
+        char character;
+
+        character = *key_iterator;
         if (current_node->_children[character] == ft_nullptr)
         {
-            ft_trie<ValueType> *new_child = new (std::nothrow) ft_trie<ValueType>();
+            ft_trie<ValueType> *new_child;
+
+            new_child = new (std::nothrow) ft_trie<ValueType>();
             if (new_child == ft_nullptr)
             {
                 this->set_error(FT_ERR_NO_MEMORY);
@@ -131,21 +116,8 @@ int ft_trie<ValueType>::insert_helper(const char *key, int unset_value, ValueTyp
             }
             current_node->_children[character] = new_child;
         }
-        ft_trie<ValueType> *next_node = current_node->_children[character];
-        guard.unlock();
-        if (guard.get_error() != ER_SUCCESS)
-        {
-            this->set_error(guard.get_error());
-            return (1);
-        }
-        current_node = next_node;
-        key_iterator++;
-    }
-    ft_unique_lock<pt_mutex> final_guard(current_node->_mutex);
-    if (final_guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(final_guard.get_error());
-        return (1);
+        current_node = current_node->_children[character];
+        key_iterator = key_iterator + 1;
     }
     if (current_node->_data == ft_nullptr)
     {
@@ -167,7 +139,9 @@ int ft_trie<ValueType>::insert_helper(const char *key, int unset_value, ValueTyp
 template <typename ValueType>
 int ft_trie<ValueType>::insert(const char *key, ValueType *value_pointer, int unset_value)
 {
-    int result = this->insert_helper(key, unset_value, value_pointer);
+    int result;
+
+    result = this->insert_helper(key, unset_value, value_pointer);
     if (result == 0)
         this->set_error(ER_SUCCESS);
     return (result);
@@ -176,68 +150,36 @@ int ft_trie<ValueType>::insert(const char *key, ValueType *value_pointer, int un
 template <typename ValueType>
 const typename ft_trie<ValueType>::node_value *ft_trie<ValueType>::search(const char *key) const
 {
+    const ft_trie<ValueType> *current_node;
+    const char *key_iterator;
+
     if (key == ft_nullptr)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
-    int attempt;
-    attempt = 0;
-    while (attempt < 512)
+    current_node = this;
+    key_iterator = key;
+    while (*key_iterator)
     {
-        const ft_trie<ValueType> *current_node;
-        current_node = this;
-        const char *key_iterator;
-        key_iterator = key;
-        bool missing_child;
-        missing_child = false;
-        while (*key_iterator && !missing_child)
+        typename ft_unordered_map<char, ft_trie<ValueType>*>::const_iterator child_iterator(current_node->_children.find(*key_iterator));
+        if (child_iterator == current_node->_children.end())
         {
-            ft_unique_lock<pt_mutex> guard(current_node->_mutex);
-            if (guard.get_error() != ER_SUCCESS)
-            {
-                this->set_error(guard.get_error());
-                return (ft_nullptr);
-            }
-            typename ft_unordered_map<char, ft_trie<ValueType>*>::const_iterator child_iterator(current_node->_children.find(*key_iterator));
-            if (child_iterator == current_node->_children.end())
-            {
-                this->set_error(ER_SUCCESS);
-                missing_child = true;
-            }
-            else
-            {
-                const ft_trie<ValueType> *next_node;
-                next_node = child_iterator->second;
-                if (next_node == ft_nullptr)
-                {
-                    this->set_error(ER_SUCCESS);
-                    missing_child = true;
-                }
-                else
-                {
-                    current_node = next_node;
-                    key_iterator = key_iterator + 1;
-                }
-            }
-        }
-        if (!missing_child && *key_iterator == '\0')
-        {
-            ft_unique_lock<pt_mutex> final_guard(current_node->_mutex);
-            if (final_guard.get_error() != ER_SUCCESS)
-            {
-                this->set_error(final_guard.get_error());
-                return (ft_nullptr);
-            }
-            if (current_node->_data != ft_nullptr)
-            {
-                this->set_error(ER_SUCCESS);
-                return (current_node->_data);
-            }
             this->set_error(ER_SUCCESS);
+            return (ft_nullptr);
         }
-        pt_thread_yield();
-        attempt = attempt + 1;
+        if (child_iterator->second == ft_nullptr)
+        {
+            this->set_error(ER_SUCCESS);
+            return (ft_nullptr);
+        }
+        current_node = child_iterator->second;
+        key_iterator = key_iterator + 1;
+    }
+    if (current_node->_data != ft_nullptr)
+    {
+        this->set_error(ER_SUCCESS);
+        return (current_node->_data);
     }
     this->set_error(ER_SUCCESS);
     return (ft_nullptr);
@@ -246,11 +188,6 @@ const typename ft_trie<ValueType>::node_value *ft_trie<ValueType>::search(const 
 template <typename ValueType>
 int ft_trie<ValueType>::get_error() const
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
-    {
-        return (guard.get_error());
-    }
     return (this->_error_code);
 }
 

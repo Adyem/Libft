@@ -6,15 +6,12 @@
 #include <unistd.h>
 #include "CMA.hpp"
 #include "cma_internal.hpp"
-#include "../PThread/mutex.hpp"
 #include "../Logger/logger.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../System_utils/system_utils.hpp"
 #include "../Errno/errno.hpp"
 
 Page *page_list = ft_nullptr;
-static pt_mutex g_cma_allocator_mutex;
-bool g_cma_thread_safe = true;
 ft_size_t    g_cma_alloc_limit = 0;
 ft_size_t    g_cma_allocation_count = 0;
 ft_size_t    g_cma_free_count = 0;
@@ -415,7 +412,6 @@ void    cma_metadata_reset(void)
 
 int cma_lock_allocator(bool *lock_acquired)
 {
-    int lock_result;
     bool guard_incremented;
 
     if (!lock_acquired)
@@ -424,69 +420,27 @@ int cma_lock_allocator(bool *lock_acquired)
         return (-1);
     }
     *lock_acquired = false;
-    guard_incremented = false;
-    if (!g_cma_thread_safe)
+    if (cma_metadata_make_writable() != 0)
+        return (-1);
+    guard_incremented = cma_metadata_guard_increment();
+    if (!guard_incremented)
     {
-        if (cma_metadata_make_writable() != 0)
-            return (-1);
-        guard_incremented = cma_metadata_guard_increment();
-        if (!guard_incremented)
-        {
-            ft_errno = FT_ERR_INVALID_STATE;
-            return (-1);
-        }
-        return (0);
+        ft_errno = FT_ERR_INVALID_STATE;
+        return (-1);
     }
-    lock_result = g_cma_allocator_mutex.lock(THREAD_ID);
-    if (lock_result == 0)
-    {
-        *lock_acquired = true;
-        if (cma_metadata_make_writable() != 0)
-        {
-            g_cma_allocator_mutex.unlock(THREAD_ID);
-            *lock_acquired = false;
-            return (-1);
-        }
-        guard_incremented = cma_metadata_guard_increment();
-        if (!guard_incremented)
-        {
-            g_cma_allocator_mutex.unlock(THREAD_ID);
-            *lock_acquired = false;
-            ft_errno = FT_ERR_INVALID_STATE;
-            return (-1);
-        }
-        ft_errno = ER_SUCCESS;
-        return (0);
-    }
-    if (ft_errno == FT_ERR_MUTEX_ALREADY_LOCKED)
-    {
-        if (cma_metadata_make_writable() != 0)
-            return (-1);
-        guard_incremented = cma_metadata_guard_increment();
-        if (!guard_incremented)
-        {
-            ft_errno = FT_ERR_INVALID_STATE;
-            return (-1);
-        }
-        return (0);
-    }
-    return (-1);
+    ft_errno = ER_SUCCESS;
+    return (0);
 }
 
 void cma_unlock_allocator(bool lock_acquired)
 {
-    int unlock_result;
     bool guard_decremented;
 
+    (void)lock_acquired;
     guard_decremented = cma_metadata_guard_decrement();
-    (void)guard_decremented;
-    if (!g_cma_thread_safe)
+    if (!guard_decremented)
         return ;
-    if (!lock_acquired)
-        return ;
-    unlock_result = g_cma_allocator_mutex.unlock(THREAD_ID);
-    if (unlock_result == 0)
-        ft_errno = ER_SUCCESS;
+    ft_errno = ER_SUCCESS;
     return ;
 }
 
