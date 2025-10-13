@@ -1,42 +1,31 @@
 #include "thread.hpp"
 #include <cerrno>
 
-void *ft_thread::start_routine(void *data)
+ft_thread::start_payload::start_payload()
+    : function()
 {
-    start_data *start;
-    start = static_cast<start_data *>(data);
-    if (start == ft_nullptr)
-        return (ft_nullptr);
-    start->function();
-    ft_thread::release_start_data(start, false);
-    return (ft_nullptr);
+    return ;
 }
 
-void ft_thread::release_start_data(start_data *data, bool owner_release)
+ft_thread::start_payload::~start_payload()
 {
-    int previous_count;
-    bool owner_finalized;
-
-    if (data == ft_nullptr)
-        return ;
-    if (owner_release)
-        data->owner_finalized.store(true);
-    previous_count = data->reference_count.fetch_sub(1);
-    if (previous_count <= 0)
-    {
-        return ;
-    }
-    if (previous_count == 1)
-    {
-        owner_finalized = data->owner_finalized.load();
-        if (!owner_finalized)
-        {
-            data->reference_count.fetch_add(1);
-            return ;
-        }
-        delete data;
-    }
     return ;
+}
+
+void *ft_thread::start_routine(void *data)
+{
+    std::shared_ptr<start_payload> *payload_capsule;
+    std::shared_ptr<start_payload> payload;
+
+    payload_capsule = static_cast<std::shared_ptr<start_payload> *>(data);
+    if (payload_capsule == ft_nullptr)
+        return (ft_nullptr);
+    payload = *payload_capsule;
+    delete payload_capsule;
+    if (!payload)
+        return (ft_nullptr);
+    payload->function();
+    return (ft_nullptr);
 }
 
 void ft_thread::set_error(int error) const
@@ -47,7 +36,7 @@ void ft_thread::set_error(int error) const
 }
 
 ft_thread::ft_thread()
-    : _thread(), _joinable(false), _error_code(ER_SUCCESS), _start_data(ft_nullptr)
+    : _thread(), _joinable(false), _error_code(ER_SUCCESS), _start_payload()
 {
     return ;
 }
@@ -56,24 +45,17 @@ ft_thread::~ft_thread()
 {
     if (this->_joinable)
         this->detach();
-    else if (this->_start_data != ft_nullptr)
-    {
-        start_data *data;
-
-        data = this->_start_data;
-        this->_start_data = ft_nullptr;
-        ft_thread::release_start_data(data, true);
-    }
+    else
+        this->_start_payload.reset();
     return ;
 }
 
 ft_thread::ft_thread(ft_thread &&other)
     : _thread(other._thread), _joinable(other._joinable),
-      _error_code(other._error_code), _start_data(other._start_data)
+      _error_code(other._error_code), _start_payload(std::move(other._start_payload))
 {
     other._joinable = false;
     other._error_code = ER_SUCCESS;
-    other._start_data = ft_nullptr;
     return ;
 }
 
@@ -83,21 +65,12 @@ ft_thread &ft_thread::operator=(ft_thread &&other)
     {
         if (this->_joinable)
             this->detach();
-        else if (this->_start_data != ft_nullptr)
-        {
-            start_data *data;
-
-            data = this->_start_data;
-            this->_start_data = ft_nullptr;
-            ft_thread::release_start_data(data, true);
-        }
         this->_thread = other._thread;
         this->_joinable = other._joinable;
         this->_error_code = other._error_code;
-        this->_start_data = other._start_data;
+        this->_start_payload = std::move(other._start_payload);
         other._joinable = false;
         other._error_code = ER_SUCCESS;
-        other._start_data = ft_nullptr;
     }
     return (*this);
 }
@@ -111,6 +84,7 @@ void ft_thread::join()
 {
     if (!this->_joinable)
     {
+        this->_start_payload.reset();
         this->set_error(ER_SUCCESS);
         return ;
     }
@@ -122,21 +96,13 @@ void ft_thread::join()
         this->set_error(join_error);
         if (join_error == ESRCH || join_error == EINVAL)
         {
-            start_data *data;
-
-            data = this->_start_data;
-            this->_start_data = ft_nullptr;
             this->_joinable = false;
-            ft_thread::release_start_data(data, true);
+            this->_start_payload.reset();
         }
         return ;
     }
-    start_data *data;
-
-    data = this->_start_data;
-    this->_start_data = ft_nullptr;
     this->_joinable = false;
-    ft_thread::release_start_data(data, true);
+    this->_start_payload.reset();
     this->set_error(ER_SUCCESS);
     return ;
 }
@@ -145,6 +111,7 @@ void ft_thread::detach()
 {
     if (!this->_joinable)
     {
+        this->_start_payload.reset();
         this->set_error(ER_SUCCESS);
         return ;
     }
@@ -156,21 +123,13 @@ void ft_thread::detach()
         this->set_error(detach_error);
         if (detach_error == ESRCH || detach_error == EINVAL)
         {
-            start_data *data;
-
-            data = this->_start_data;
-            this->_start_data = ft_nullptr;
             this->_joinable = false;
-            ft_thread::release_start_data(data, true);
+            this->_start_payload.reset();
         }
         return ;
     }
-    start_data *data;
-
-    data = this->_start_data;
-    this->_start_data = ft_nullptr;
     this->_joinable = false;
-    ft_thread::release_start_data(data, true);
+    this->_start_payload.reset();
     this->set_error(ER_SUCCESS);
     return ;
 }

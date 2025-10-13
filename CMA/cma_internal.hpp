@@ -47,8 +47,10 @@ class cma_allocator_guard
         bool _lock_acquired;
         bool _active;
         mutable int _error_code;
+        mutable bool _failure_logged;
 
         void set_error(int error) const;
+        void log_inactive_guard(void *return_address) const;
 
     public:
         cma_allocator_guard();
