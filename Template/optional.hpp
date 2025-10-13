@@ -6,7 +6,6 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
-#include "../PThread/mutex.hpp"
 #include <utility>
 #include <type_traits>
 #include <new>
@@ -19,7 +18,6 @@ class ft_optional
     private:
         T*          _value;
         mutable int _error_code;
-        mutable pt_mutex _mutex;
 
         void set_error(int error) const;
         static T &fallback_reference() noexcept;
@@ -105,24 +103,11 @@ ft_optional<T>& ft_optional<T>::operator=(ft_optional&& other) noexcept
 {
     if (this != &other)
     {
-        if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-        {
-            this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-            return (*this);
-        }
-        if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
-        {
-            this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-            this->_mutex.unlock(THREAD_ID);
-            return (*this);
-        }
         this->reset();
         this->_value = other._value;
         this->_error_code = other._error_code;
         other._value = ft_nullptr;
         other._error_code = ER_SUCCESS;
-        other._mutex.unlock(THREAD_ID);
-        this->_mutex.unlock(THREAD_ID);
     }
     this->set_error(this->_error_code);
     return (*this);
@@ -139,54 +124,34 @@ void ft_optional<T>::set_error(int error) const
 template <typename T>
 bool ft_optional<T>::has_value() const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        const_cast<ft_optional*>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return (false);
-    }
     bool result = (this->_value != ft_nullptr);
     const_cast<ft_optional*>(this)->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (result);
 }
 
 template <typename T>
 T& ft_optional<T>::value()
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return (ft_optional<T>::fallback_reference());
-    }
     if (this->_value == ft_nullptr)
     {
         this->set_error(FT_ERR_EMPTY);
-        this->_mutex.unlock(THREAD_ID);
         return (ft_optional<T>::fallback_reference());
     }
     T& reference = *this->_value;
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (reference);
 }
 
 template <typename T>
 const T& ft_optional<T>::value() const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        const_cast<ft_optional*>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return (ft_optional<T>::fallback_reference());
-    }
     if (this->_value == ft_nullptr)
     {
         const_cast<ft_optional*>(this)->set_error(FT_ERR_EMPTY);
-        this->_mutex.unlock(THREAD_ID);
         return (ft_optional<T>::fallback_reference());
     }
     const T& reference = *this->_value;
     const_cast<ft_optional*>(this)->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (reference);
 }
 
@@ -208,11 +173,6 @@ T &ft_optional<T>::fallback_reference() noexcept
 template <typename T>
 void ft_optional<T>::reset()
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return ;
-    }
     if (this->_value != ft_nullptr)
     {
         destroy_at(this->_value);
@@ -220,36 +180,19 @@ void ft_optional<T>::reset()
         this->_value = ft_nullptr;
     }
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 
 template <typename T>
 int ft_optional<T>::get_error() const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        const_cast<ft_optional*>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return (this->_error_code);
-    }
-    int error = this->_error_code;
-    const_cast<ft_optional*>(this)->set_error(error);
-    this->_mutex.unlock(THREAD_ID);
-    return (error);
+    return (this->_error_code);
 }
 
 template <typename T>
 const char* ft_optional<T>::get_error_str() const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        const_cast<ft_optional*>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return (ft_strerror(this->_error_code));
-    }
-    int error = this->_error_code;
-    const_cast<ft_optional*>(this)->set_error(error);
-    this->_mutex.unlock(THREAD_ID);
-    return (ft_strerror(error));
+    return (ft_strerror(this->_error_code));
 }
 
 #endif 

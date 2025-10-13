@@ -3,7 +3,7 @@
 #include "../Errno/errno.hpp"
 
 pt_mutex::pt_mutex()
-    : _next(0), _serving(0), _owner(0), _lock(false), _error(ER_SUCCESS)
+    : _owner(0), _lock(false), _error(ER_SUCCESS)
 {
     return ;
 }

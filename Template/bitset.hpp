@@ -6,7 +6,6 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
-#include "../PThread/mutex.hpp"
 #include <cstddef>
 #include <climits>
 
@@ -18,7 +17,6 @@ class ft_bitset
         size_t      _blockCount;
         size_t*     _data;
         mutable int _error_code;
-        mutable pt_mutex _mutex;
 
         static const size_t BITS_PER_BLOCK = sizeof(size_t) * CHAR_BIT;
 
@@ -110,13 +108,6 @@ inline ft_bitset& ft_bitset::operator=(ft_bitset&& other) noexcept
 {
     if (this != &other)
     {
-        if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-            return (*this);
-        if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
-        {
-            this->_mutex.unlock(THREAD_ID);
-            return (*this);
-        }
         if (this->_data != ft_nullptr)
             cma_free(this->_data);
         this->_size = other._size;
@@ -127,123 +118,77 @@ inline ft_bitset& ft_bitset::operator=(ft_bitset&& other) noexcept
         other._blockCount = 0;
         other._data = ft_nullptr;
         other._error_code = ER_SUCCESS;
-        other._mutex.unlock(THREAD_ID);
-        this->_mutex.unlock(THREAD_ID);
     }
     return (*this);
 }
 
 inline void ft_bitset::set(size_t pos)
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return ;
-    }
     if (pos >= this->_size)
     {
         this->set_error(FT_ERR_OUT_OF_RANGE);
-        this->_mutex.unlock(THREAD_ID);
         return ;
     }
     this->_data[block_index(pos)] |= bit_mask(pos);
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 
 inline void ft_bitset::reset(size_t pos)
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return ;
-    }
     if (pos >= this->_size)
     {
         this->set_error(FT_ERR_OUT_OF_RANGE);
-        this->_mutex.unlock(THREAD_ID);
         return ;
     }
     this->_data[block_index(pos)] &= ~bit_mask(pos);
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 
 inline void ft_bitset::flip(size_t pos)
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return ;
-    }
     if (pos >= this->_size)
     {
         this->set_error(FT_ERR_OUT_OF_RANGE);
-        this->_mutex.unlock(THREAD_ID);
         return ;
     }
     this->_data[block_index(pos)] ^= bit_mask(pos);
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 
 inline bool ft_bitset::test(size_t pos) const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        const_cast<ft_bitset*>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return (false);
-    }
     if (pos >= this->_size)
     {
         const_cast<ft_bitset*>(this)->set_error(FT_ERR_OUT_OF_RANGE);
-        this->_mutex.unlock(THREAD_ID);
         return (false);
     }
     bool res = (this->_data[block_index(pos)] & bit_mask(pos)) != 0;
     const_cast<ft_bitset*>(this)->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (res);
 }
 
 inline size_t ft_bitset::size() const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        const_cast<ft_bitset*>(this)->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return (0);
-    }
     size_t s = this->_size;
     const_cast<ft_bitset*>(this)->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (s);
 }
 
 inline void ft_bitset::clear()
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return ;
-    }
     size_t i = 0;
     while (i < this->_blockCount)
         this->_data[i++] = 0;
     this->set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 
 inline int ft_bitset::get_error() const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-        return (this->_error_code);
-    int err = this->_error_code;
-    this->_mutex.unlock(THREAD_ID);
-    return (err);
+    return (this->_error_code);
 }
 
 inline const char* ft_bitset::get_error_str() const

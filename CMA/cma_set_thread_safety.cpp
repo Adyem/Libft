@@ -3,7 +3,7 @@
 
 void    cma_set_thread_safety(bool enable)
 {
-    g_cma_thread_safe = enable;
+    (void)enable;
     return ;
 }
 

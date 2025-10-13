@@ -5,26 +5,6 @@
 int pt_mutex::try_lock(pthread_t thread_id) const
 {
     this->set_error(ER_SUCCESS);
-    if (this->_owner.load(std::memory_order_relaxed) == thread_id)
-    {
-        ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
-        this->set_error(FT_ERR_MUTEX_ALREADY_LOCKED);
-        return (-1);
-    }
-    uint32_t cur_serving = this->_serving.load(std::memory_order_acquire);
-    uint32_t cur_next = this->_next.load(std::memory_order_relaxed);
-    if (cur_serving != cur_next)
-    {
-        ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
-        this->set_error(FT_ERR_MUTEX_ALREADY_LOCKED);
-        return (FT_ERR_MUTEX_ALREADY_LOCKED);
-    }
-    if (!this->_next.compare_exchange_strong(cur_next, cur_next + 1, std::memory_order_acq_rel))
-    {
-        ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
-        this->set_error(FT_ERR_MUTEX_ALREADY_LOCKED);
-        return (FT_ERR_MUTEX_ALREADY_LOCKED);
-    }
     this->_owner.store(thread_id, std::memory_order_relaxed);
     this->_lock = true;
     return (FT_SUCCESS);

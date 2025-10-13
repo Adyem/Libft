@@ -10,7 +10,7 @@ void    ft_exit(const char *error_msg, int exit_code)
         pf_printf_fd(2, "%s\n", error_msg);
     else if (ft_errno != ER_SUCCESS)
         pf_printf_fd(2, "%s\n", ft_strerror(ft_errno));
-    std::exit(exit_code);
+    std::_Exit(exit_code);
     return ;
 }
 

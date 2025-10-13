@@ -4,7 +4,6 @@
 #include <type_traits>
 #include <utility>
 #include "vector.hpp"
-#include "../PThread/mutex.hpp"
 #include "../Errno/errno.hpp"
 
 template<typename T>
@@ -14,7 +13,6 @@ class Pool
         using Storage = std::aligned_storage_t<sizeof(T), alignof(T)>;
         ft_vector<Storage> _buffer;
         ft_vector<size_t> _freeIndices;
-        mutable pt_mutex _mutex;
         mutable int _error_code;
 
         void release(size_t idx) noexcept;
@@ -70,14 +68,8 @@ class Pool<T>::Object
 template<typename T>
 void Pool<T>::release(size_t idx) noexcept
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return ;
-    }
     this->_freeIndices.push_back(idx);
     int vector_error = this->_freeIndices.get_error();
-    this->_mutex.unlock(THREAD_ID);
     if (vector_error != ER_SUCCESS)
         this->set_error(vector_error);
     else
@@ -143,16 +135,10 @@ Pool<T>::~Pool()
 template<typename T>
 void Pool<T>::resize(size_t new_size)
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return ;
-    }
     this->_buffer.resize(new_size);
     int buffer_error = this->_buffer.get_error();
     if (buffer_error != ER_SUCCESS)
     {
-        this->_mutex.unlock(THREAD_ID);
         this->set_error(buffer_error);
         return ;
     }
@@ -160,7 +146,6 @@ void Pool<T>::resize(size_t new_size)
     int free_error = this->_freeIndices.get_error();
     if (free_error != ER_SUCCESS)
     {
-        this->_mutex.unlock(THREAD_ID);
         this->set_error(free_error);
         return ;
     }
@@ -168,7 +153,6 @@ void Pool<T>::resize(size_t new_size)
     free_error = this->_freeIndices.get_error();
     if (free_error != ER_SUCCESS)
     {
-        this->_mutex.unlock(THREAD_ID);
         this->set_error(free_error);
         return ;
     }
@@ -179,13 +163,11 @@ void Pool<T>::resize(size_t new_size)
         int push_error = this->_freeIndices.get_error();
         if (push_error != ER_SUCCESS)
         {
-            this->_mutex.unlock(THREAD_ID);
             this->set_error(push_error);
             return ;
         }
         index++;
     }
-    this->_mutex.unlock(THREAD_ID);
     this->set_error(ER_SUCCESS);
     return ;
 }
@@ -194,17 +176,9 @@ template<typename T>
 template<typename... Args>
 typename Pool<T>::Object Pool<T>::acquire(Args&&... args)
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        this->set_error(FT_ERR_MUTEX_NOT_OWNER);
-        Object error_object;
-        error_object.set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return (error_object);
-    }
     size_t free_count = this->_freeIndices.size();
     if (free_count == 0)
     {
-        this->_mutex.unlock(THREAD_ID);
         this->set_error(FT_ERR_EMPTY);
         Object error_object;
         error_object.set_error(FT_ERR_EMPTY);
@@ -216,7 +190,6 @@ typename Pool<T>::Object Pool<T>::acquire(Args&&... args)
     int vector_error = this->_freeIndices.get_error();
     if (vector_error != ER_SUCCESS)
     {
-        this->_mutex.unlock(THREAD_ID);
         this->set_error(vector_error);
         Object error_object;
         error_object.set_error(vector_error);
@@ -226,13 +199,11 @@ typename Pool<T>::Object Pool<T>::acquire(Args&&... args)
     if (storage_ptr == ft_nullptr)
     {
         int pointer_error = this->_error_code;
-        this->_mutex.unlock(THREAD_ID);
         Object error_object;
         error_object.set_error(pointer_error);
         return (error_object);
     }
     T* ptr = new (storage_ptr) T(std::forward<Args>(args)...);
-    this->_mutex.unlock(THREAD_ID);
     Object result(this, idx, ptr);
     result.set_error(ER_SUCCESS);
     this->set_error(ER_SUCCESS);

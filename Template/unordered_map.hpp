@@ -7,7 +7,6 @@
 #include "constructor.hpp"
 #include <cstddef>
 #include <functional>
-#include "../PThread/mutex.hpp"
 #include "../Libft/libft.hpp"
 #include <utility>
 
@@ -18,7 +17,7 @@
 ** - erase: average O(1), worst-case O(n); invalidates iterators pointing to erased element only.
 ** - find, at, operator[]: average O(1), worst-case O(n); do not invalidate iterators.
 ** - clear: O(n); invalidates all iterators and references.
-** Thread safety: callers must synchronize all concurrent access; internal mutex only protects error propagation.
+** Single-threaded usage only; callers must synchronise externally if sharing an instance.
 */
 template <typename Key, typename MappedType>
 struct ft_pair
@@ -38,7 +37,6 @@ class ft_unordered_map
         size_t                     _capacity;
         size_t                     _size;
         mutable int                _error;
-        mutable pt_mutex           _mutex;
 
         void    resize(size_t new_capacity);
         size_t  find_index(const Key& key) const;
@@ -398,13 +396,6 @@ ft_unordered_map<Key, MappedType>& ft_unordered_map<Key, MappedType>::operator=(
 {
     if (this != &other)
     {
-        if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-            return (*this);
-        if (other._mutex.lock(THREAD_ID) != FT_SUCCESS)
-        {
-            this->_mutex.unlock(THREAD_ID);
-            return (*this);
-        }
         if (_data != ft_nullptr)
         {
             size_t i = 0;
@@ -431,8 +422,6 @@ ft_unordered_map<Key, MappedType>& ft_unordered_map<Key, MappedType>::operator=(
         other._capacity = 0;
         other._size = 0;
         other._error = ER_SUCCESS;
-        other._mutex.unlock(THREAD_ID);
-        this->_mutex.unlock(THREAD_ID);
     }
     return (*this);
 }
@@ -628,102 +617,68 @@ void ft_unordered_map<Key, MappedType>::insert_internal(const Key& key, const Ma
 template <typename Key, typename MappedType>
 void ft_unordered_map<Key, MappedType>::insert(const Key& key, const MappedType& value)
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        set_error(this->_mutex.get_error());
-        return ;
-    }
     if (!has_storage())
     {
         flag_storage_error();
-        this->_mutex.unlock(THREAD_ID);
         return ;
     }
     _error = ER_SUCCESS;
     insert_internal(key, value);
     if (_error == ER_SUCCESS)
         set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 
 template <typename Key, typename MappedType>
 typename ft_unordered_map<Key, MappedType>::iterator ft_unordered_map<Key, MappedType>::find(const Key& key)
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        set_error(this->_mutex.get_error());
-        return (iterator(_data, _occupied, _capacity, _capacity));
-    }
     if (!has_storage())
     {
         flag_storage_error();
-        iterator res(_data, _occupied, _capacity, _capacity);
-        this->_mutex.unlock(THREAD_ID);
-        return (res);
+        return (iterator(_data, _occupied, _capacity, _capacity));
     }
     size_t idx = find_index(key);
     if (idx == _capacity)
     {
-        iterator res(_data, _occupied, _capacity, _capacity);
         set_error(ER_SUCCESS);
-        this->_mutex.unlock(THREAD_ID);
-        return (res);
+        return (iterator(_data, _occupied, _capacity, _capacity));
     }
     iterator res(_data, _occupied, idx, _capacity);
     set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (res);
 }
 
 template <typename Key, typename MappedType>
 typename ft_unordered_map<Key, MappedType>::const_iterator ft_unordered_map<Key, MappedType>::find(const Key& key) const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        set_error(this->_mutex.get_error());
-        return (const_iterator(_data, _occupied, _capacity, _capacity));
-    }
     if (!has_storage())
     {
         flag_storage_error();
-        const_iterator res(_data, _occupied, _capacity, _capacity);
-        this->_mutex.unlock(THREAD_ID);
-        return (res);
+        return (const_iterator(_data, _occupied, _capacity, _capacity));
     }
     size_t idx = find_index(key);
     if (idx == _capacity)
     {
-        const_iterator res(_data, _occupied, _capacity, _capacity);
         set_error(ER_SUCCESS);
-        this->_mutex.unlock(THREAD_ID);
-        return (res);
+        return (const_iterator(_data, _occupied, _capacity, _capacity));
     }
     const_iterator res(_data, _occupied, idx, _capacity);
     set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (res);
 }
 
 template <typename Key, typename MappedType>
 void ft_unordered_map<Key, MappedType>::erase(const Key& key)
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        set_error(FT_ERR_MUTEX_NOT_OWNER);
-        return ;
-    }
     if (!has_storage())
     {
         flag_storage_error();
-        this->_mutex.unlock(THREAD_ID);
         return ;
     }
     size_t idx = find_index(key);
     if (idx == _capacity)
     {
         set_error(ER_SUCCESS);
-        this->_mutex.unlock(THREAD_ID);
         return ;
     }
     ::destroy_at(&_data[idx]);
@@ -744,36 +699,23 @@ void ft_unordered_map<Key, MappedType>::erase(const Key& key)
         next = (next + 1) % _capacity;
     }
     set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 
 template <typename Key, typename MappedType>
 bool ft_unordered_map<Key, MappedType>::empty() const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        set_error(this->_mutex.get_error());
-        return (true);
-    }
     bool res = (_size == 0);
     set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (res);
 }
 
 template <typename Key, typename MappedType>
 void ft_unordered_map<Key, MappedType>::clear()
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        set_error(this->_mutex.get_error());
-        return ;
-    }
     if (!has_storage())
     {
         flag_storage_error();
-        this->_mutex.unlock(THREAD_ID);
         return ;
     }
     size_t i = 0;
@@ -790,125 +732,78 @@ void ft_unordered_map<Key, MappedType>::clear()
     }
     _size = 0;
     set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return ;
 }
 
 template <typename Key, typename MappedType>
 size_t ft_unordered_map<Key, MappedType>::size() const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        set_error(this->_mutex.get_error());
-        return (0);
-    }
     size_t s = _size;
     set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (s);
 }
 
 template <typename Key, typename MappedType>
 size_t ft_unordered_map<Key, MappedType>::bucket_count() const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        set_error(this->_mutex.get_error());
-        return (0);
-    }
     size_t c = _capacity;
     set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (c);
 }
 
 template <typename Key, typename MappedType>
 int ft_unordered_map<Key, MappedType>::get_error() const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-        return (_error);
     int err = _error;
-    this->_mutex.unlock(THREAD_ID);
     return (err);
 }
 
 template <typename Key, typename MappedType>
 const char* ft_unordered_map<Key, MappedType>::get_error_str() const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-        return (ft_strerror(_error));
     int err = _error;
-    this->_mutex.unlock(THREAD_ID);
     return (ft_strerror(err));
 }
 
 template <typename Key, typename MappedType>
 typename ft_unordered_map<Key, MappedType>::iterator ft_unordered_map<Key, MappedType>::begin()
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        set_error(this->_mutex.get_error());
-        return (iterator(_data, _occupied, 0, _capacity));
-    }
     if (!has_storage())
     {
         flag_storage_error();
-        iterator res(_data, _occupied, _capacity, _capacity);
-        this->_mutex.unlock(THREAD_ID);
-        return (res);
+        return (iterator(_data, _occupied, _capacity, _capacity));
     }
     iterator res(_data, _occupied, 0, _capacity);
     set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (res);
 }
 
 template <typename Key, typename MappedType>
 typename ft_unordered_map<Key, MappedType>::iterator ft_unordered_map<Key, MappedType>::end()
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        set_error(this->_mutex.get_error());
-        return (iterator(_data, _occupied, _capacity, _capacity));
-    }
     iterator res(_data, _occupied, _capacity, _capacity);
     set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (res);
 }
 
 template <typename Key, typename MappedType>
 typename ft_unordered_map<Key, MappedType>::const_iterator ft_unordered_map<Key, MappedType>::begin() const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        set_error(this->_mutex.get_error());
-        return (const_iterator(_data, _occupied, 0, _capacity));
-    }
     if (!has_storage())
     {
         flag_storage_error();
-        const_iterator res(_data, _occupied, _capacity, _capacity);
-        this->_mutex.unlock(THREAD_ID);
-        return (res);
+        return (const_iterator(_data, _occupied, _capacity, _capacity));
     }
     const_iterator res(_data, _occupied, 0, _capacity);
     set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (res);
 }
 
 template <typename Key, typename MappedType>
 typename ft_unordered_map<Key, MappedType>::const_iterator ft_unordered_map<Key, MappedType>::end() const
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        set_error(this->_mutex.get_error());
-        return (const_iterator(_data, _occupied, _capacity, _capacity));
-    }
     const_iterator res(_data, _occupied, _capacity, _capacity);
     set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (res);
 }
 
@@ -916,27 +811,19 @@ template <typename Key, typename MappedType>
 MappedType& ft_unordered_map<Key, MappedType>::at(const Key& key)
 {
     static MappedType error_mapped_value = MappedType();
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        set_error(this->_mutex.get_error());
-        return (error_mapped_value);
-    }
     if (!has_storage())
     {
         flag_storage_error();
-        this->_mutex.unlock(THREAD_ID);
         return (error_mapped_value);
     }
     size_t idx = find_index(key);
     if (idx == _capacity)
     {
         set_error(FT_ERR_INTERNAL);
-        this->_mutex.unlock(THREAD_ID);
         return (error_mapped_value);
     }
     MappedType& val = _data[idx].second;
     set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (val);
 }
 
@@ -944,44 +831,29 @@ template <typename Key, typename MappedType>
 const MappedType& ft_unordered_map<Key, MappedType>::at(const Key& key) const
 {
     static MappedType error_mapped_value = MappedType();
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        set_error(this->_mutex.get_error());
-        return (error_mapped_value);
-    }
     if (!has_storage())
     {
         flag_storage_error();
-        this->_mutex.unlock(THREAD_ID);
         return (error_mapped_value);
     }
     size_t idx = find_index(key);
     if (idx == _capacity)
     {
         set_error(FT_ERR_INTERNAL);
-        this->_mutex.unlock(THREAD_ID);
         return (error_mapped_value);
     }
     const MappedType& val = _data[idx].second;
     set_error(ER_SUCCESS);
-    this->_mutex.unlock(THREAD_ID);
     return (val);
 }
 
 template <typename Key, typename MappedType>
 MappedType& ft_unordered_map<Key, MappedType>::operator[](const Key& key)
 {
-    if (this->_mutex.lock(THREAD_ID) != FT_SUCCESS)
-    {
-        static MappedType error_value = MappedType();
-        set_error(this->_mutex.get_error());
-        return (error_value);
-    }
     if (!has_storage())
     {
         static MappedType error_value = MappedType();
         flag_storage_error();
-        this->_mutex.unlock(THREAD_ID);
         return (error_value);
     }
     _error = ER_SUCCESS;
@@ -990,7 +862,6 @@ MappedType& ft_unordered_map<Key, MappedType>::operator[](const Key& key)
     {
         MappedType& res = _data[idx].second;
         set_error(ER_SUCCESS);
-        this->_mutex.unlock(THREAD_ID);
         return (res);
     }
     if ((_size * 2) >= _capacity)
@@ -998,7 +869,6 @@ MappedType& ft_unordered_map<Key, MappedType>::operator[](const Key& key)
         resize(_capacity * 2);
         if (_error != ER_SUCCESS)
         {
-            this->_mutex.unlock(THREAD_ID);
             static MappedType error_value = MappedType();
             return (error_value);
         }
@@ -1014,7 +884,6 @@ MappedType& ft_unordered_map<Key, MappedType>::operator[](const Key& key)
             ++_size;
             MappedType& res = _data[i].second;
             set_error(ER_SUCCESS);
-            this->_mutex.unlock(THREAD_ID);
             return (res);
         }
         i = (i + 1) % _capacity;
@@ -1023,7 +892,6 @@ MappedType& ft_unordered_map<Key, MappedType>::operator[](const Key& key)
     }
     static MappedType error_value = MappedType();
     set_error(FT_ERR_INTERNAL);
-    this->_mutex.unlock(THREAD_ID);
     return (error_value);
 }
 
