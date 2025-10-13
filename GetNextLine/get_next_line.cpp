@@ -7,7 +7,12 @@
 #include "../Errno/errno.hpp"
 #include "get_next_line.hpp"
 
-static bool map_has_new_error(ft_unordered_map<ft_istream*, char*> &map, int previous_error, int *current_error)
+struct gnl_leftover_entry
+{
+    char    *buffer;
+};
+
+static bool map_has_new_error(ft_unordered_map<ft_istream*, gnl_leftover_entry*> &map, int previous_error, int *current_error)
 {
     int updated_error;
 
@@ -23,6 +28,8 @@ static bool map_has_new_error(ft_unordered_map<ft_istream*, char*> &map, int pre
     }
     return (false);
 }
+
+static ft_unordered_map<ft_istream*, gnl_leftover_entry*> g_gnl_leftovers;
 
 static char* allocate_new_string(char* string_one, char* string_two)
 {
@@ -229,11 +236,56 @@ static char* read_stream(ft_istream &input, char* readed_string, std::size_t buf
     return (readed_string);
 }
 
+int gnl_clear_stream(ft_istream &input)
+{
+    int entry_errno;
+    int map_error_before;
+    int map_error_after;
+    ft_unordered_map<ft_istream*, gnl_leftover_entry*>::iterator map_it = g_gnl_leftovers.end();
+    gnl_leftover_entry *entry;
+    char *leftover;
+
+    entry_errno = ft_errno;
+    map_error_before = g_gnl_leftovers.get_error();
+    map_it = g_gnl_leftovers.find(&input);
+    if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
+    {
+        ft_errno = map_error_after;
+        return (map_error_after);
+    }
+    if (map_it == g_gnl_leftovers.end())
+    {
+        ft_errno = entry_errno;
+        return (ER_SUCCESS);
+    }
+    entry = map_it->second;
+    leftover = ft_nullptr;
+    if (entry)
+        leftover = entry->buffer;
+    map_error_before = g_gnl_leftovers.get_error();
+    g_gnl_leftovers.erase(&input);
+    if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
+    {
+        if (leftover)
+            cma_free(leftover);
+        if (entry)
+            cma_free(entry);
+        ft_errno = map_error_after;
+        return (map_error_after);
+    }
+    if (leftover)
+        cma_free(leftover);
+    if (entry)
+        cma_free(entry);
+    ft_errno = entry_errno;
+    return (ER_SUCCESS);
+}
+
 char    *get_next_line(ft_istream &input, std::size_t buffer_size)
 {
-    static ft_unordered_map<ft_istream*, char*> readed_map;
     char                                   *string = ft_nullptr;
     char                                   *stored_string = ft_nullptr;
+    gnl_leftover_entry                     *stored_entry = ft_nullptr;
     int                                     map_error_before;
     int                                     map_error_after;
 
@@ -242,19 +294,21 @@ char    *get_next_line(ft_istream &input, std::size_t buffer_size)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
-    map_error_before = readed_map.get_error();
-    ft_unordered_map<ft_istream*, char*>::iterator map_it = readed_map.find(&input);
-    if (map_has_new_error(readed_map, map_error_before, &map_error_after))
+    map_error_before = g_gnl_leftovers.get_error();
+    ft_unordered_map<ft_istream*, gnl_leftover_entry*>::iterator map_it = g_gnl_leftovers.find(&input);
+    if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
     {
         ft_errno = map_error_after;
         return (ft_nullptr);
     }
-    if (map_it != readed_map.end())
+    if (map_it != g_gnl_leftovers.end())
     {
-        stored_string = map_it->second;
-        map_error_before = readed_map.get_error();
-        readed_map.erase(&input);
-        if (map_has_new_error(readed_map, map_error_before, &map_error_after))
+        stored_entry = map_it->second;
+        if (stored_entry)
+            stored_string = stored_entry->buffer;
+        map_error_before = g_gnl_leftovers.get_error();
+        g_gnl_leftovers.erase(&input);
+        if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
         {
             ft_errno = map_error_after;
             return (ft_nullptr);
@@ -265,6 +319,10 @@ char    *get_next_line(ft_istream &input, std::size_t buffer_size)
     {
         int failure_errno;
 
+        if (stored_entry)
+        {
+            cma_free(stored_entry);
+        }
         failure_errno = ft_errno;
         if (failure_errno != ER_SUCCESS)
             ft_errno = failure_errno;
@@ -272,13 +330,20 @@ char    *get_next_line(ft_istream &input, std::size_t buffer_size)
     }
     string = fetch_line(stored_string);
     int line_error = ft_errno;
+    if (stored_entry)
+        stored_entry->buffer = ft_nullptr;
     stored_string = leftovers(stored_string);
     int leftovers_error = g_gnl_last_leftover_error;
     if (leftovers_error != ER_SUCCESS)
     {
-        map_error_before = readed_map.get_error();
-        readed_map.erase(&input);
-        if (map_has_new_error(readed_map, map_error_before, &map_error_after))
+        if (stored_entry)
+        {
+            cma_free(stored_entry);
+            stored_entry = ft_nullptr;
+        }
+        map_error_before = g_gnl_leftovers.get_error();
+        g_gnl_leftovers.erase(&input);
+        if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
         {
             ft_errno = map_error_after;
             cma_free(string);
@@ -292,20 +357,47 @@ char    *get_next_line(ft_istream &input, std::size_t buffer_size)
     {
         if (stored_string)
         {
-            map_error_before = readed_map.get_error();
-            readed_map.insert(&input, stored_string);
-            if (map_has_new_error(readed_map, map_error_before, &map_error_after))
+            gnl_leftover_entry *entry_to_store;
+
+            entry_to_store = stored_entry;
+            if (!entry_to_store)
+            {
+                entry_to_store = static_cast<gnl_leftover_entry*>(cma_malloc(sizeof(gnl_leftover_entry)));
+                if (!entry_to_store)
+                {
+                    cma_free(stored_string);
+                    ft_errno = FT_ERR_NO_MEMORY;
+                    return (ft_nullptr);
+                }
+            }
+            entry_to_store->buffer = stored_string;
+            map_error_before = g_gnl_leftovers.get_error();
+            g_gnl_leftovers.insert(&input, entry_to_store);
+            if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
             {
                 cma_free(stored_string);
+                cma_free(entry_to_store);
+                ft_errno = map_error_after;
+                return (ft_nullptr);
+            }
+        }
+        else if (stored_entry)
+        {
+            cma_free(stored_entry);
+            stored_entry = ft_nullptr;
+            map_error_before = g_gnl_leftovers.get_error();
+            g_gnl_leftovers.erase(&input);
+            if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
+            {
                 ft_errno = map_error_after;
                 return (ft_nullptr);
             }
         }
         else
         {
-            map_error_before = readed_map.get_error();
-            readed_map.erase(&input);
-            if (map_has_new_error(readed_map, map_error_before, &map_error_after))
+            map_error_before = g_gnl_leftovers.get_error();
+            g_gnl_leftovers.erase(&input);
+            if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
             {
                 ft_errno = map_error_after;
                 return (ft_nullptr);
@@ -317,9 +409,14 @@ char    *get_next_line(ft_istream &input, std::size_t buffer_size)
     }
     if (!stored_string)
     {
-        map_error_before = readed_map.get_error();
-        readed_map.erase(&input);
-        if (map_has_new_error(readed_map, map_error_before, &map_error_after))
+        if (stored_entry)
+        {
+            cma_free(stored_entry);
+            stored_entry = ft_nullptr;
+        }
+        map_error_before = g_gnl_leftovers.get_error();
+        g_gnl_leftovers.erase(&input);
+        if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
         {
             ft_errno = map_error_after;
             cma_free(string);
@@ -328,11 +425,27 @@ char    *get_next_line(ft_istream &input, std::size_t buffer_size)
     }
     else
     {
-        map_error_before = readed_map.get_error();
-        readed_map.insert(&input, stored_string);
-        if (map_has_new_error(readed_map, map_error_before, &map_error_after))
+        gnl_leftover_entry *entry_to_store;
+
+        entry_to_store = stored_entry;
+        if (!entry_to_store)
+        {
+            entry_to_store = static_cast<gnl_leftover_entry*>(cma_malloc(sizeof(gnl_leftover_entry)));
+            if (!entry_to_store)
+            {
+                cma_free(stored_string);
+                cma_free(string);
+                ft_errno = FT_ERR_NO_MEMORY;
+                return (ft_nullptr);
+            }
+        }
+        entry_to_store->buffer = stored_string;
+        map_error_before = g_gnl_leftovers.get_error();
+        g_gnl_leftovers.insert(&input, entry_to_store);
+        if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
         {
             cma_free(stored_string);
+            cma_free(entry_to_store);
             cma_free(string);
             ft_errno = map_error_after;
             return (ft_nullptr);

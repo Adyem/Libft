@@ -16,7 +16,6 @@ static char **ft_grow_lines(char **lines, int line_count, int new_capacity)
             sizeof(char *)));
     if (!new_lines)
     {
-        cma_free_double(lines);
         ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
@@ -26,7 +25,8 @@ static char **ft_grow_lines(char **lines, int line_count, int new_capacity)
         new_lines[index] = lines[index];
         index++;
     }
-    cma_free(lines);
+    if (lines)
+        cma_free(lines);
     return (new_lines);
 }
 
@@ -47,6 +47,11 @@ char **ft_read_file_lines(ft_istream &input, std::size_t buffer_size)
                 ft_errno = ER_SUCCESS;
                 break ;
             }
+            int failure_errno;
+
+            failure_errno = ft_errno;
+            gnl_clear_stream(input);
+            ft_errno = failure_errno;
             cma_free_double(lines);
             return (ft_nullptr);
         }
@@ -61,8 +66,13 @@ char **ft_read_file_lines(ft_istream &input, std::size_t buffer_size)
             new_lines = ft_grow_lines(lines, line_count, line_count + 1);
             if (!new_lines)
             {
+                int failure_errno;
+
+                failure_errno = ft_errno;
+                gnl_clear_stream(input);
+                ft_errno = failure_errno;
+                cma_free_double(lines);
                 cma_free(current_line);
-                ft_errno = FT_ERR_NO_MEMORY;
                 return (ft_nullptr);
             }
             lines = new_lines;

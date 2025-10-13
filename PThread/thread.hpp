@@ -3,9 +3,9 @@
 
 #include "../CPP_class/class_nullptr.hpp"
 #include "pthread.hpp"
-#include <utility>
-#include <atomic>
+#include <memory>
 #include <new>
+#include <utility>
 #include "../Template/function.hpp"
 #include "../Template/invoke.hpp"
 #include "../Errno/errno.hpp"
@@ -14,20 +14,20 @@
 class ft_thread
 {
     private:
-        struct start_data
+        struct start_payload
         {
             ft_function<void()> function;
-            std::atomic<int> reference_count;
-            std::atomic<bool> owner_finalized;
+
+            start_payload();
+            ~start_payload();
         };
 
         pthread_t _thread;
         bool _joinable;
         mutable int _error_code;
-        start_data *_start_data;
+        std::shared_ptr<start_payload> _start_payload;
 
         static void *start_routine(void *data);
-        static void release_start_data(start_data *data, bool owner_release);
         void set_error(int error) const;
 
     public:
@@ -51,38 +51,44 @@ class ft_thread
 
 template <typename FunctionType, typename... Args>
 ft_thread::ft_thread(FunctionType function, Args... args)
-    : _thread(), _joinable(false), _error_code(ER_SUCCESS), _start_data(ft_nullptr)
+    : _thread(), _joinable(false), _error_code(ER_SUCCESS), _start_payload()
 {
-    start_data *data;
-    data = new (std::nothrow) start_data;
-    if (!data)
+    start_payload *payload_raw;
+    std::shared_ptr<start_payload> payload;
+    std::shared_ptr<start_payload> *shared_capsule;
+
+    payload_raw = new (std::nothrow) start_payload();
+    if (!payload_raw)
     {
         this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
-    data->reference_count.store(2);
-    data->owner_finalized.store(false);
-    this->_start_data = data;
-    data->function = ft_function<void()>([function, args...]() mutable
+    payload = std::shared_ptr<start_payload>(payload_raw);
+    this->_start_payload = payload;
+    payload->function = ft_function<void()>([function, args...]() mutable
     {
         ft_invoke(function, args...);
         return ;
     });
-    if (data->function.get_error() != ER_SUCCESS)
+    if (payload->function.get_error() != ER_SUCCESS)
     {
-        this->set_error(data->function.get_error());
-        ft_thread::release_start_data(data, false);
-        ft_thread::release_start_data(data, true);
-        this->_start_data = ft_nullptr;
+        this->set_error(payload->function.get_error());
+        this->_start_payload.reset();
+        return ;
+    }
+    shared_capsule = new (std::nothrow) std::shared_ptr<start_payload>(payload);
+    if (!shared_capsule)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        this->_start_payload.reset();
         return ;
     }
     if (pt_thread_create(&this->_thread, ft_nullptr,
-            &ft_thread::start_routine, data) != 0)
+            &ft_thread::start_routine, shared_capsule) != 0)
     {
         this->set_error(ft_errno);
-        ft_thread::release_start_data(data, false);
-        ft_thread::release_start_data(data, true);
-        this->_start_data = ft_nullptr;
+        delete shared_capsule;
+        this->_start_payload.reset();
         return ;
     }
     this->_joinable = true;
