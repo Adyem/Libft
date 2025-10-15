@@ -407,7 +407,10 @@ yaml_value *yaml_read_from_string(const ft_string &content) noexcept
         ft_vector<ft_string> lines;
         int split_error = yaml_split_lines(content, lines);
         if (split_error != ER_SUCCESS)
+        {
+            ft_errno = split_error;
             return (ft_nullptr);
+        }
         size_t local_index = 0;
         root = parse_value(lines, local_index, 0);
         parse_error = ft_errno;

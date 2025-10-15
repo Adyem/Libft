@@ -493,13 +493,11 @@ void    cma_get_extended_stats(ft_size_t *allocation_count,
 
 ### GetNextLine
 
-`GetNextLine/get_next_line.hpp` implements a simple file reader that works with `ft_istream` and a configurable buffer size. It stores per-stream leftovers in the custom `ft_unordered_map`, allowing error reporting through `ft_errno`. The `CPP_class` module provides `ft_istream`, `ft_stringbuf`, `ft_istringstream`, and `ft_ofstream` as lightweight replacements for the standard stream classes.
+`GetNextLine/get_next_line.hpp` implements a simple file reader that operates on POSIX file descriptors with a configurable buffer size. It stores per-descriptor leftovers in the custom `ft_unordered_map`, allowing error reporting through `ft_errno` without relying on the `CPP_class` stream wrappers.
 
 ```
 char   *ft_strjoin_gnl(char *string_one, char *string_two);
-char   *get_next_line(ft_istream &input, std::size_t buffer_size);
-char  **ft_read_file_lines(ft_istream &input, std::size_t buffer_size);
-char  **ft_open_and_read_file(const char *file_name, std::size_t buffer_size);
+char   *get_next_line(int fd, std::size_t buffer_size);
 ```
 
 ### Printf
