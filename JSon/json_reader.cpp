@@ -1,9 +1,11 @@
 #include "../Libft/libft.hpp"
 #include "json.hpp"
-#include "../GetNextLine/get_next_line.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../System_utils/system_utils.hpp"
+#include <cstdio>
+#include <limits>
 
 static void skip_whitespace(const char *json_string, size_t &index)
 {
@@ -11,6 +13,79 @@ static void skip_whitespace(const char *json_string, size_t &index)
         && ft_isspace(static_cast<unsigned char>(json_string[index])))
         index++;
     return ;
+}
+
+static char    *json_read_file_content(const char *filename)
+{
+    su_file *file_stream;
+    long file_size_long;
+    size_t file_size;
+    char *content;
+    size_t read_count;
+
+    file_stream = su_fopen(filename);
+    if (file_stream == ft_nullptr)
+    {
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = FT_ERR_IO;
+        return (ft_nullptr);
+    }
+    if (su_fseek(file_stream, 0, SEEK_END) != 0)
+    {
+        su_fclose(file_stream);
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = FT_ERR_IO;
+        return (ft_nullptr);
+    }
+    file_size_long = su_ftell(file_stream);
+    if (file_size_long < 0)
+    {
+        su_fclose(file_stream);
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = FT_ERR_IO;
+        return (ft_nullptr);
+    }
+    if (su_fseek(file_stream, 0, SEEK_SET) != 0)
+    {
+        su_fclose(file_stream);
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = FT_ERR_IO;
+        return (ft_nullptr);
+    }
+    if (static_cast<unsigned long long>(file_size_long)
+        > static_cast<unsigned long long>(std::numeric_limits<size_t>::max()))
+    {
+        su_fclose(file_stream);
+        ft_errno = FT_ERR_OUT_OF_RANGE;
+        return (ft_nullptr);
+    }
+    file_size = static_cast<size_t>(file_size_long);
+    content = static_cast<char*>(cma_malloc(file_size + 1));
+    if (content == ft_nullptr)
+    {
+        su_fclose(file_stream);
+        ft_errno = FT_ERR_NO_MEMORY;
+        return (ft_nullptr);
+    }
+    read_count = su_fread(content, 1, file_size, file_stream);
+    if (read_count != file_size)
+    {
+        cma_free(content);
+        su_fclose(file_stream);
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = FT_ERR_IO;
+        return (ft_nullptr);
+    }
+    content[file_size] = '\0';
+    if (su_fclose(file_stream) != 0)
+    {
+        cma_free(content);
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = FT_ERR_IO;
+        return (ft_nullptr);
+    }
+    ft_errno = ER_SUCCESS;
+    return (content);
 }
 
 static int json_reader_hex_value(char character, unsigned int &value) noexcept
@@ -480,50 +555,19 @@ static json_item *parse_items(const char *json_string, size_t &index)
 
 json_group *json_read_from_file(const char *filename)
 {
-    char **lines = ft_open_and_read_file(filename, 512);
-    if (!lines)
-    {
-        ft_errno = FT_ERR_IO;
+    char *content;
+    size_t index;
+    size_t length;
+    json_group *head;
+    json_group *tail;
+    bool object_closed;
+
+    content = json_read_file_content(filename);
+    if (content == ft_nullptr)
         return (ft_nullptr);
-    }
-    char *content = cma_strdup("");
-    if (!content)
-    {
-        int line_index = 0;
-        while (lines[line_index])
-        {
-            cma_free(lines[line_index]);
-            ++line_index;
-        }
-        cma_free(lines);
-        ft_errno = FT_ERR_NO_MEMORY;
-        return (ft_nullptr);
-    }
-    int line_index = 0;
-    while (lines[line_index])
-    {
-        char *tmp = cma_strjoin(content, lines[line_index]);
-        cma_free(content);
-        cma_free(lines[line_index]);
-        if (!tmp)
-        {
-            int remaining_index = line_index + 1;
-            while (lines[remaining_index])
-            {
-                cma_free(lines[remaining_index]);
-                ++remaining_index;
-            }
-            cma_free(lines);
-            ft_errno = FT_ERR_NO_MEMORY;
-            return (ft_nullptr);
-        }
-        content = tmp;
-        ++line_index;
-    }
-    cma_free(lines);
-    size_t index = 0;
+    index = 0;
     skip_whitespace(content, index);
-    size_t length = ft_strlen_size_t(content);
+    length = ft_strlen_size_t(content);
     if (index >= length || content[index] != '{')
     {
         cma_free(content);
@@ -531,9 +575,9 @@ json_group *json_read_from_file(const char *filename)
         return (ft_nullptr);
     }
     index++;
-    json_group *head = ft_nullptr;
-    json_group *tail = ft_nullptr;
-    bool object_closed = false;
+    head = ft_nullptr;
+    tail = ft_nullptr;
+    object_closed = false;
     while (index < length)
     {
         skip_whitespace(content, index);

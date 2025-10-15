@@ -34,7 +34,7 @@ FT_TEST(test_yaml_reader_allocation_failure_sets_errno, "yaml_reader propagates 
     yaml_value *result;
 
     ft_errno = ER_SUCCESS;
-    cma_set_alloc_limit(200);
+    cma_set_alloc_limit(64);
     result = yaml_read_from_string(simple);
     cma_set_alloc_limit(0);
     FT_ASSERT(result == ft_nullptr);

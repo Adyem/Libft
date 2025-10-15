@@ -1,8 +1,7 @@
 TARGET := GetNextLine.a
 DEBUG_TARGET := GetNextLine_debug.a
 
-SRCS := get_next_line.cpp \
-        get_next_line_read_file.cpp
+SRCS := get_next_line.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
