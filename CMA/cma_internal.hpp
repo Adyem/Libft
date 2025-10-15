@@ -2,9 +2,11 @@
 # define CMA_INTERNAL_HPP
 
 #include "../PThread/pthread.hpp"
+#include "../PThread/pthread_lock_tracking.hpp"
 #include "../Libft/libft.hpp"
 #include <cstdint>
 #include <stdint.h>
+#include <vector>
 
 #define PAGE_SIZE 131072
 #define BYPASS_ALLOC DEBUG
@@ -47,9 +49,24 @@ class cma_allocator_guard
         bool _active;
         mutable int _error_code;
         mutable bool _failure_logged;
+        struct s_mutex_entry
+        {
+            pthread_mutex_t *mutex_pointer;
+            bool lock_acquired;
+        };
+        std::vector<s_mutex_entry> _owned_mutexes;
 
         void set_error(int error) const;
         void log_inactive_guard(void *return_address) const;
+        bool acquire_allocator_mutex();
+        bool acquire_mutex(pthread_mutex_t *mutex_pointer);
+        void release_all_mutexes();
+        bool reacquire_mutexes(const std::vector<s_mutex_entry> &previous_mutexes);
+        void track_mutex_acquisition(pthread_mutex_t *mutex_pointer, bool lock_acquired);
+        std::vector<pthread_mutex_t *> owned_mutex_pointers() const;
+        std::vector<s_mutex_entry> snapshot_owned_mutexes() const;
+        bool mutex_vector_contains(const std::vector<pthread_mutex_t *> &mutexes, pthread_mutex_t *mutex_pointer) const;
+        void sleep_random_backoff() const;
 
     public:
         cma_allocator_guard();
