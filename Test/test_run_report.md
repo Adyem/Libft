@@ -118,3 +118,18 @@
   - Status: Failed (1 KO, abort on test #328).
   - Observed behavior: `api_request_string_http2 falls back to http1` still reports `KO`, indicating the HTTP/2 fallback path is not setting the expected status, and the run subsequently aborts during `get_next_line surfaces hash map allocation failures` when the CMA allocator detects a double free in the leftovers cache cleanup.【5fd549†L1-L37】【8182be†L1-L12】
   - Suggested follow-up: Inspect the HTTP/2 fallback flag handling so the test sees an HTTP/1.1 retry, and harden the GetNextLine leftover failure branch to free each buffer exactly once before rebuilding the cache.
+
+- Command: `make tests`
+  - Status: Succeeded.
+
+- Command: `./Test/libft_tests`
+  - Status: Segmentation fault immediately after launch.
+  - Observed behavior: The binary prints no test progress before aborting with "Segmentation fault" on stdout.
+
+- Command: `make tests`
+  - Status: Succeeded.
+  - Observed behavior: Incremental rebuild refreshed the test suite artifacts without additional module work beyond regenerating the harness binaries.【89841b†L1-L2】
+
+- Command: `./Test/libft_tests`
+  - Status: Succeeded.
+  - Observed behavior: The runner completed all 1,133 test cases without failures, confirming the allocator guard changes eliminated the post-suite crash and maintained CMA tracking stability.【b4f7dc†L1-L40】【7d8db8†L1-L18】
