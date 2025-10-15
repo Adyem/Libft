@@ -195,20 +195,22 @@ $(DEBUG_TARGET): $(DEBUG_LIBS)
 	@module_dir="$(patsubst %/,%,$(dir $@))"; \
 	module_target="$(notdir $@)"; \
 	need_build=0; \
-	if $(MAKE) -C $$module_dir -q $$module_target $(SUBMAKE_OVERRIDES); then \
-		printf '\033[1;35m[LIBFT CHECK] %s is up to date\033[0m\n' "$$module_dir"; \
-	else \
-		status=$$?; \
-		if [ $$status -eq 1 ]; then \
-			need_build=1; \
-		else \
-			exit $$status; \
-		fi; \
-	fi; \
-	if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
-		printf '\033[1;35m[LIBFT BUILD] Updating %s\033[0m\n' "$$module_dir"; \
-		$(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
-	fi; \
+        if $(MAKE) -C $$module_dir -q $$module_target $(SUBMAKE_OVERRIDES); then \
+                :; \
+        else \
+                status=$$?; \
+                if [ $$status -eq 1 ]; then \
+                        need_build=1; \
+                else \
+                        exit $$status; \
+                fi; \
+        fi; \
+        if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
+                $(RM) $$module_dir/objs/*.o; \
+                $(RM) $$module_dir/$$module_target; \
+                printf '\033[1;35m[LIBFT BUILD] Updating %s\033[0m\n' "$$module_dir"; \
+                $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
+        fi; \
 	built=0; \
 	for lib in $(LIBS); do \
 		if [ -f $$lib ]; then \
@@ -221,20 +223,22 @@ $(DEBUG_TARGET): $(DEBUG_LIBS)
 	@module_dir="$(patsubst %/,%,$(dir $@))"; \
 	module_target="$(notdir $@)"; \
 	need_build=0; \
-	if $(MAKE) -C $$module_dir -q $$module_target $(SUBMAKE_OVERRIDES); then \
-		printf '\033[1;35m[LIBFT CHECK] %s (debug) is up to date\033[0m\n' "$$module_dir"; \
-	else \
-		status=$$?; \
-		if [ $$status -eq 1 ]; then \
-			need_build=1; \
-		else \
-			exit $$status; \
-		fi; \
-	fi; \
-	if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
-		printf '\033[1;35m[LIBFT BUILD] Updating %s (debug)\033[0m\n' "$$module_dir"; \
-		$(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
-	fi; \
+        if $(MAKE) -C $$module_dir -q $$module_target $(SUBMAKE_OVERRIDES); then \
+                :; \
+        else \
+                status=$$?; \
+                if [ $$status -eq 1 ]; then \
+                        need_build=1; \
+                else \
+                        exit $$status; \
+                fi; \
+        fi; \
+        if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
+                $(RM) $$module_dir/objs_debug/*.o; \
+                $(RM) $$module_dir/$$module_target; \
+                printf '\033[1;35m[LIBFT BUILD] Updating %s (debug)\033[0m\n' "$$module_dir"; \
+                $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
+        fi; \
 	built=0; \
 	for lib in $(DEBUG_LIBS); do \
 		if [ -f $$lib ]; then \
