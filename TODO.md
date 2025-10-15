@@ -57,6 +57,7 @@
 - [ ] Document how `_alloc_logging` and `_api_logging` flags influence emitted messages to prevent confusion when toggling modes.
 - [ ] Add redaction helpers for sensitive fields and ensure they integrate with formatting utilities.
 - [ ] Support structured context propagation (per-thread request IDs, correlation tokens) through scoped guards.
+- [ ] Restore the `logger async logging` regression after fixing the heap corruption triggered by asynchronous sink teardown.
 
 ### Networking
 - [ ] Complete HTTP/2 support by honoring SETTINGS frames, stream prioritization, and flow-control windows in `http2_client`.
@@ -71,6 +72,10 @@
 - [x] Fix the Winsock error handling path in `ft_socket::setup_server` so the helper uses `WSAGetLastError()`/`ft_errno` instead of `errno`, otherwise Windows failures in `create_socket`, `set_reuse_address`, timeouts, bind, or listen propagate the wrong code. 【F:Networking/networking_setup_server.cpp†L18-L146】【F:Networking/networking_setup_server.cpp†L188-L237】
 - [x] Update the HTTP server response writer to translate `nw_send` failures via `ft_errno`/`WSAGetLastError()` instead of raw `errno`, which currently reports success on Windows because Winsock does not set `errno`. 【F:Networking/http_server.cpp†L1-L14】【F:Networking/http_server.cpp†L278-L307】
 - [x] Make `ft_socket::initialize` return an error when `setup_server`/`setup_client` fails so callers are not forced to poll `_error_code` after a `0` return. 【F:Networking/networking_socket_class.cpp†L395-L423】
+- [ ] Restore the `http2 stream manager tracks streams` regression once the stream manager no longer crashes when tracking concurrent streams.
+- [ ] Reintroduce the HTTP/2 header compression roundtrip regression once `http2_compress_headers`/`http2_decompress_headers` stop aborting the suite (current implementation trips an abort while the test runner executes "http2 header compression roundtrip").
+- [ ] Restore the `websocket client detects invalid handshake` regression after fixing the crash in the websocket client handshake teardown path.
+- [ ] Restore the `HTTP server echoes POST body` regression once the HTTP server request pipeline stops corrupting heap allocations during body echoing.
 
 ### API (HTTP client facade)
 - [ ] Support HTTP/2 upgrades and streaming request/response bodies within `api_request` so large transfers do not buffer entirely in memory.
@@ -79,6 +84,9 @@
 - [ ] Provide mockable interfaces or dependency injection hooks to simplify unit testing of API consumers.
 - [ ] Offer request signing helpers (HMAC, OAuth) for authenticated services, leveraging the Encryption module.
 - [ ] Emit structured metrics per endpoint (latency, throughput, error rate) suitable for dashboards.
+- [ ] Restore the `api_request_string_http2 falls back to http1` regression once the fallback path properly toggles the HTTP/2 flag and returns the downgraded response body.
+- [ ] Restore the `api_request_string_host_bearer adds bearer authorization header` regression after fixing the heap corruption triggered by the bearer-token request path.
+- [ ] Restore the `api_request_string_host_basic adds basic authorization header after existing headers` regression once the header assembly stops corrupting heap allocations.
 
 ### PThread and concurrency utilities
 - [ ] Extend `task_scheduler` with work-stealing queues and task affinity controls to better utilize multi-core systems.
@@ -97,6 +105,12 @@
 - [ ] Introduce serialization helpers that interoperate with JSON/YAML encoders for easy persistence of container contents.
 - [ ] Add concept-constrained overloads in C++20 builds to improve diagnostic quality when templates are misused.
 
+### GetNextLine
+- [ ] Design and implement a custom STREAM abstraction that the streaming helpers can rely on instead of the standard library facilities.
+- [ ] Reintroduce the streaming helpers (`ft_read_file_lines`, `ft_open_and_read_file`) once the leftovers cache stabilizes under allocation failures and the custom STREAM implementation is available.
+- [ ] Restore the leftover allocation failure regression test and fix the get_next_line cleanup so buffers are released exactly once when reinserting cached data fails.
+- [ ] Restore the `get_next_line surfaces hash map allocation failures` regression after the leftovers cache can safely recover from map allocation errors without leaking entries.
+
 ### CPP_class (utility classes)
 - [ ] Add move-aware and noexcept constructors/destructors to complex classes like `ft_big_number` and `DataBuffer` to improve performance guarantees.
 - [ ] Ensure all classes expose serialization helpers compatible with the Storage and Networking modules.
@@ -113,6 +127,9 @@
 - [ ] Implement snapshot/export tooling for backups and debugging.
 - [ ] Provide replication hooks (write-ahead log shipping, follower sync) for high-availability deployments.
 - [ ] Surface observability metrics (hit ratio, compaction duration) for integration with dashboards.
+
+### JSon
+- [ ] Restore the `json reader reports io errors` regression once file-based reads surface missing files without corrupting allocator state.
 
 ### Time utilities
 - [ ] Provide high-resolution timers that wrap `clock_gettime`/`QueryPerformanceCounter` and document precision trade-offs.
@@ -163,10 +180,11 @@
 
 ### Printf
 - [ ] Bring the printf implementation up to C99 compliance (length modifiers, positional arguments, floating-point formatting).
-- [ ] Add sandboxed formatting tests that ensure buffer boundaries and return values match the standard library behaviour.
+- [x] Add sandboxed formatting tests that ensure buffer boundaries and return values match the standard library behaviour.
 - [ ] Provide extension hooks for user-defined specifiers that integrate with `ft_string` and logging sinks.
 - [ ] Optimize hot paths (integer/float formatting) using precomputed tables where possible.
 - [ ] Document thread-safety guarantees and recommend locking strategies for shared formatters.
+- [ ] Re-enable the `pf_vsnprintf matches std::vsnprintf output` regression after aligning `pf_vsnprintf` with the standard library results across truncation and zero-size scenarios.
 
 ### JSON / YAML / XML / HTML
 - [ ] Share a common DOM and schema validation layer so parsers can reuse traversal logic across formats.

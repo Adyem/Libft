@@ -171,6 +171,9 @@ ft_string& ft_string::operator=(ft_string&& other) noexcept
 ft_string::~ft_string()
 {
     cma_free(this->_data);
+    this->_data = ft_nullptr;
+    this->_length = 0;
+    this->_capacity = 0;
     return ;
 }
 

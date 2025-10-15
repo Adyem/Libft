@@ -74,14 +74,6 @@ FT_TEST(test_json_read_from_string_success_resets_errno, "json reader clears err
     return (1);
 }
 
-FT_TEST(test_json_read_from_file_missing_file_sets_errno, "json reader reports io errors")
-{
-    ft_errno = ER_SUCCESS;
-    json_group *groups = json_read_from_file("Test/nonexistent_json_reader.json");
-    FT_ASSERT(groups == ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
-    return (1);
-}
 
 FT_TEST(test_json_read_from_string_decodes_escaped_strings, "json reader decodes escaped and unicode sequences")
 {

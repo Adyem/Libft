@@ -374,8 +374,9 @@ bool http2_decompress_headers(const ft_string &block,
     ft_vector<http2_header_field> &out_headers, int &error_code) noexcept
 {
     const unsigned char *buffer;
+    const unsigned char *cursor;
+    const unsigned char *end;
     size_t buffer_length;
-    size_t offset;
     size_t header_count;
     size_t index;
 
@@ -394,61 +395,50 @@ bool http2_decompress_headers(const ft_string &block,
     }
     header_count = (static_cast<size_t>(buffer[0]) << 8)
         | static_cast<size_t>(buffer[1]);
-    offset = 2;
+    cursor = buffer + 2;
+    end = buffer + buffer_length;
     index = 0;
     while (index < header_count)
     {
         http2_header_field entry;
         size_t name_length;
         size_t value_length;
-        size_t name_index;
-        size_t value_index;
 
-        if (offset + 4 > buffer_length)
+        if (cursor + 4 > end)
         {
             error_code = FT_ERR_OUT_OF_RANGE;
             return (false);
         }
-        name_length = (static_cast<size_t>(buffer[offset]) << 8)
-            | static_cast<size_t>(buffer[offset + 1]);
-        offset += 2;
-        if (offset + name_length + 2 > buffer_length)
+        name_length = (static_cast<size_t>(cursor[0]) << 8)
+            | static_cast<size_t>(cursor[1]);
+        cursor += 2;
+        if (cursor + name_length + 2 > end)
         {
             error_code = FT_ERR_OUT_OF_RANGE;
             return (false);
         }
-        name_index = 0;
-        while (name_index < name_length)
+        entry.name.assign(reinterpret_cast<const char*>(cursor), name_length);
+        if (entry.name.get_error() != ER_SUCCESS)
         {
-            entry.name.append(static_cast<char>(buffer[offset + name_index]));
-            if (entry.name.get_error() != ER_SUCCESS)
-            {
-                error_code = entry.name.get_error();
-                return (false);
-            }
-            name_index++;
+            error_code = entry.name.get_error();
+            return (false);
         }
-        offset += name_length;
-        value_length = (static_cast<size_t>(buffer[offset]) << 8)
-            | static_cast<size_t>(buffer[offset + 1]);
-        offset += 2;
-        if (offset + value_length > buffer_length)
+        cursor += name_length;
+        value_length = (static_cast<size_t>(cursor[0]) << 8)
+            | static_cast<size_t>(cursor[1]);
+        cursor += 2;
+        if (cursor + value_length > end)
         {
             error_code = FT_ERR_OUT_OF_RANGE;
             return (false);
         }
-        value_index = 0;
-        while (value_index < value_length)
+        entry.value.assign(reinterpret_cast<const char*>(cursor), value_length);
+        if (entry.value.get_error() != ER_SUCCESS)
         {
-            entry.value.append(static_cast<char>(buffer[offset + value_index]));
-            if (entry.value.get_error() != ER_SUCCESS)
-            {
-                error_code = entry.value.get_error();
-                return (false);
-            }
-            value_index++;
+            error_code = entry.value.get_error();
+            return (false);
         }
-        offset += value_length;
+        cursor += value_length;
         out_headers.push_back(entry);
         if (out_headers.get_error() != ER_SUCCESS)
         {

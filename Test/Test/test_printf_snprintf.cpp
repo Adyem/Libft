@@ -4,6 +4,7 @@
 #include "../../CPP_class/class_nullptr.hpp"
 #include <cstdarg>
 #include <cstdio>
+#include <cstring>
 #include <errno.h>
 
 extern void pf_set_tmpfile_function(FILE *(*function)(void));
@@ -39,6 +40,20 @@ static long pf_ftell_failure(FILE *stream)
     (void)stream;
     errno = EIO;
     return (-1);
+}
+
+static void build_repeated_string(char *buffer, size_t length, char character)
+{
+    size_t index;
+
+    index = 0;
+    while (index < length)
+    {
+        buffer[index] = character;
+        index++;
+    }
+    buffer[length] = '\0';
+    return ;
 }
 
 FT_TEST(test_pf_snprintf_null_string, "pf_snprintf returns error for null string")
@@ -150,6 +165,62 @@ FT_TEST(test_pf_snprintf_success_resets_errno, "pf_snprintf resets ft_errno on s
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     int result = pf_snprintf(buffer, sizeof(buffer), "%s", "ok");
     FT_ASSERT(result >= 0);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_pf_snprintf_matches_standard_exact_fit, "pf_snprintf matches std::snprintf for exact fits")
+{
+    char pf_buffer[32];
+    char standard_buffer[32];
+
+    std::memset(pf_buffer, 0, sizeof(pf_buffer));
+    std::memset(standard_buffer, 0, sizeof(standard_buffer));
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    int pf_result = pf_snprintf(pf_buffer, sizeof(pf_buffer), "%s %d", "value", 42);
+    int standard_result = std::snprintf(standard_buffer, sizeof(standard_buffer), "%s %d", "value", 42);
+    FT_ASSERT_EQ(standard_result, pf_result);
+    FT_ASSERT_EQ(0, std::strcmp(standard_buffer, pf_buffer));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_pf_snprintf_matches_standard_truncation, "pf_snprintf matches std::snprintf on truncation")
+{
+    char pf_buffer[6];
+    char standard_buffer[6];
+    char long_input[16];
+    size_t long_length;
+
+    std::memset(pf_buffer, 0, sizeof(pf_buffer));
+    std::memset(standard_buffer, 0, sizeof(standard_buffer));
+    long_length = 8;
+    build_repeated_string(long_input, long_length, 't');
+
+    ft_errno = ER_SUCCESS;
+    int pf_result = pf_snprintf(pf_buffer, sizeof(pf_buffer), "%s", long_input);
+    int standard_result = std::snprintf(standard_buffer, sizeof(standard_buffer), "%s", long_input);
+    FT_ASSERT_EQ(standard_result, pf_result);
+    FT_ASSERT_EQ(0, std::strcmp(standard_buffer, pf_buffer));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_pf_snprintf_matches_standard_zero_size, "pf_snprintf matches std::snprintf when size is zero")
+{
+    char pf_buffer[4];
+    char standard_buffer[4];
+
+    pf_buffer[0] = 'P';
+    standard_buffer[0] = 'S';
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    int pf_result = pf_snprintf(pf_buffer, 0, "%s", "noop");
+    int standard_result = std::snprintf(standard_buffer, 0, "%s", "noop");
+    FT_ASSERT_EQ(standard_result, pf_result);
+    FT_ASSERT_EQ('P', pf_buffer[0]);
+    FT_ASSERT_EQ('S', standard_buffer[0]);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }

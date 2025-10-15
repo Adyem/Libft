@@ -2,6 +2,21 @@
 
 #include <cstdio>
 #include <cstring>
+#include <csignal>
+#include <execinfo.h>
+#include <unistd.h>
+
+static void ft_test_signal_handler(int signal_number)
+{
+    void *frames[64];
+    int frame_count;
+
+    frame_count = backtrace(frames, 64);
+    backtrace_symbols_fd(frames, frame_count, STDERR_FILENO);
+    signal(signal_number, SIG_DFL);
+    raise(signal_number);
+    return ;
+}
 
 static int *get_test_count(void)
 {
@@ -107,6 +122,8 @@ int ft_run_registered_tests(void)
     log_file = fopen("test_failures.log", "w");
     if (log_file)
         fclose(log_file);
+    signal(SIGSEGV, ft_test_signal_handler);
+    signal(SIGABRT, ft_test_signal_handler);
     sort_tests();
     tests = get_tests();
     test_count = get_test_count();
@@ -122,6 +139,7 @@ int ft_run_registered_tests(void)
             printf("== %s ==\n", current_module);
             fflush(stdout);
         }
+        printf("Starting to run %d %s\n", index + 1, tests[index].description);
         fflush(stdout);
         if (tests[index].func())
         {

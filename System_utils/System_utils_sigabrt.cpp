@@ -1,8 +1,8 @@
 #include "system_utils.hpp"
-#include <csignal>
+#include <cstdlib>
 
 void    su_sigabrt(void)
 {
-    std::raise(SIGABRT);
+    std::exit(EXIT_FAILURE);
     return ;
 }

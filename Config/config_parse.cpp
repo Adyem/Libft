@@ -184,7 +184,14 @@ static cnfg_config *cnfg_parse_json(const char *filename)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
-    json_group *groups = json_read_from_file(filename);
+    FILE *file;
+    json_group *groups;
+
+    file = ft_fopen(filename, "r");
+    if (!file)
+        return (ft_nullptr);
+    groups = json_read_from_file_stream(file, 512);
+    ft_fclose(file);
     if (!groups)
         return (ft_nullptr);
     size_t count = 0;
