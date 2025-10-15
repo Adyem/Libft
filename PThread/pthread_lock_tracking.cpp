@@ -1,9 +1,42 @@
 #include "pthread_lock_tracking.hpp"
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
+static thread_local bool g_registry_mutex_owned = false;
 
-pthread_mutex_t pt_lock_tracking::_registry_mutex = PTHREAD_MUTEX_INITIALIZER;
-std::vector<s_pt_thread_lock_info> pt_lock_tracking::_thread_infos;
+pthread_mutex_t *pt_lock_tracking::get_registry_mutex(void)
+{
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+    static pthread_mutex_t registry_mutex = PTHREAD_MUTEX_INITIALIZER;
+#pragma GCC diagnostic pop
+
+    return (&registry_mutex);
+}
+
+bool pt_lock_tracking::ensure_registry_mutex_initialized(void)
+{
+    pt_lock_tracking::get_registry_mutex();
+    ft_errno = ER_SUCCESS;
+    return (true);
+}
+
+std::vector<s_pt_thread_lock_info, pt_system_allocator<s_pt_thread_lock_info> > *pt_lock_tracking::get_thread_infos(void)
+{
+    static std::vector<s_pt_thread_lock_info, pt_system_allocator<s_pt_thread_lock_info> > *thread_infos_pointer = ft_nullptr;
+    void *memory_pointer;
+
+    if (thread_infos_pointer != ft_nullptr)
+        return (thread_infos_pointer);
+    memory_pointer = std::malloc(sizeof(std::vector<s_pt_thread_lock_info, pt_system_allocator<s_pt_thread_lock_info> >));
+    if (memory_pointer == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_STATE;
+        return (ft_nullptr);
+    }
+    thread_infos_pointer = new(memory_pointer) std::vector<s_pt_thread_lock_info, pt_system_allocator<s_pt_thread_lock_info> >();
+    ft_errno = ER_SUCCESS;
+    return (thread_infos_pointer);
+}
 
 pt_lock_tracking::pt_lock_tracking()
 {
@@ -15,30 +48,58 @@ pt_lock_tracking::~pt_lock_tracking()
     return ;
 }
 
-std::vector<pthread_mutex_t *> pt_lock_tracking::get_owned_mutexes(pt_thread_id_type thread_identifier)
+pt_mutex_vector pt_lock_tracking::get_owned_mutexes(pt_thread_id_type thread_identifier)
 {
-    std::vector<pthread_mutex_t *> owned_mutexes;
-    int lock_error;
+    pt_mutex_vector owned_mutexes;
     s_pt_thread_lock_info *info;
     ft_size_t index;
+    int lock_error;
+    bool lock_acquired;
 
-    lock_error = pthread_mutex_lock(&pt_lock_tracking::_registry_mutex);
-    if (lock_error != 0)
+    if (!pt_lock_tracking::ensure_registry_mutex_initialized())
+        return (owned_mutexes);
+    lock_acquired = false;
+    if (!g_registry_mutex_owned)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
+        lock_error = pthread_mutex_lock(pt_lock_tracking::get_registry_mutex());
+        if (lock_error != 0)
+        {
+            ft_errno = FT_ERR_INVALID_STATE;
+            return (owned_mutexes);
+        }
+        g_registry_mutex_owned = true;
+        lock_acquired = true;
+        info = pt_lock_tracking::find_thread_info(thread_identifier);
+    }
+    else
+        info = pt_lock_tracking::lookup_thread_info(thread_identifier);
+    if (info == ft_nullptr)
+    {
+        if (lock_acquired)
+        {
+            if (pthread_mutex_unlock(pt_lock_tracking::get_registry_mutex()) != 0)
+            {
+                ft_errno = FT_ERR_INVALID_STATE;
+                return (owned_mutexes);
+            }
+            g_registry_mutex_owned = false;
+        }
         return (owned_mutexes);
     }
-    info = pt_lock_tracking::find_thread_info(thread_identifier);
     index = 0;
     while (index < info->owned_mutexes.size())
     {
         owned_mutexes.push_back(info->owned_mutexes[index]);
         index += 1;
     }
-    if (pthread_mutex_unlock(&pt_lock_tracking::_registry_mutex) != 0)
+    if (lock_acquired)
     {
-        ft_errno = FT_ERR_INVALID_STATE;
-        return (owned_mutexes);
+        if (pthread_mutex_unlock(pt_lock_tracking::get_registry_mutex()) != 0)
+        {
+            ft_errno = FT_ERR_INVALID_STATE;
+            return (owned_mutexes);
+        }
+        g_registry_mutex_owned = false;
     }
     ft_errno = ER_SUCCESS;
     return (owned_mutexes);
@@ -47,12 +108,18 @@ std::vector<pthread_mutex_t *> pt_lock_tracking::get_owned_mutexes(pt_thread_id_
 s_pt_thread_lock_info *pt_lock_tracking::find_thread_info(pt_thread_id_type thread_identifier)
 {
     ft_size_t index;
+    std::vector<s_pt_thread_lock_info, pt_system_allocator<s_pt_thread_lock_info> > *thread_infos;
+    s_pt_thread_lock_info *info;
 
+    thread_infos = pt_lock_tracking::get_thread_infos();
+    if (thread_infos == ft_nullptr)
+        return (ft_nullptr);
     index = 0;
-    while (index < pt_lock_tracking::_thread_infos.size())
+    while (index < thread_infos->size())
     {
-        if (pt_lock_tracking::_thread_infos[index].thread_identifier == thread_identifier)
-            return (&pt_lock_tracking::_thread_infos[index]);
+        info = &(*thread_infos)[index];
+        if (info->thread_identifier == thread_identifier)
+            return (info);
         index += 1;
     }
     s_pt_thread_lock_info new_info;
@@ -60,11 +127,31 @@ s_pt_thread_lock_info *pt_lock_tracking::find_thread_info(pt_thread_id_type thre
     new_info.thread_identifier = thread_identifier;
     new_info.owned_mutexes.clear();
     new_info.waiting_mutex = ft_nullptr;
-    pt_lock_tracking::_thread_infos.push_back(new_info);
-    return (&pt_lock_tracking::_thread_infos.back());
+    thread_infos->push_back(new_info);
+    return (&thread_infos->back());
 }
 
-bool pt_lock_tracking::vector_contains_mutex(const std::vector<pthread_mutex_t *> &mutexes, pthread_mutex_t *mutex_pointer)
+s_pt_thread_lock_info *pt_lock_tracking::lookup_thread_info(pt_thread_id_type thread_identifier)
+{
+    ft_size_t index;
+    std::vector<s_pt_thread_lock_info, pt_system_allocator<s_pt_thread_lock_info> > *thread_infos;
+    s_pt_thread_lock_info *info;
+
+    thread_infos = pt_lock_tracking::get_thread_infos();
+    if (thread_infos == ft_nullptr)
+        return (ft_nullptr);
+    index = 0;
+    while (index < thread_infos->size())
+    {
+        info = &(*thread_infos)[index];
+        if (info->thread_identifier == thread_identifier)
+            return (info);
+        index += 1;
+    }
+    return (ft_nullptr);
+}
+
+bool pt_lock_tracking::vector_contains_mutex(const pt_mutex_vector &mutexes, pthread_mutex_t *mutex_pointer)
 {
     ft_size_t index;
 
@@ -78,7 +165,7 @@ bool pt_lock_tracking::vector_contains_mutex(const std::vector<pthread_mutex_t *
     return (false);
 }
 
-bool pt_lock_tracking::vector_contains_thread(const std::vector<pt_thread_id_type> &thread_identifiers, pt_thread_id_type thread_identifier)
+bool pt_lock_tracking::vector_contains_thread(const pt_thread_vector &thread_identifiers, pt_thread_id_type thread_identifier)
 {
     ft_size_t index;
 
@@ -92,19 +179,23 @@ bool pt_lock_tracking::vector_contains_thread(const std::vector<pt_thread_id_typ
     return (false);
 }
 
-bool pt_lock_tracking::detect_cycle(const s_pt_thread_lock_info *origin, pthread_mutex_t *requested_mutex, std::vector<pthread_mutex_t *> *visited_mutexes, std::vector<pt_thread_id_type> *visited_threads)
+bool pt_lock_tracking::detect_cycle(const s_pt_thread_lock_info *origin, pthread_mutex_t *requested_mutex, pt_mutex_vector *visited_mutexes, pt_thread_vector *visited_threads)
 {
+    std::vector<s_pt_thread_lock_info, pt_system_allocator<s_pt_thread_lock_info> > *thread_infos;
     if (pt_lock_tracking::vector_contains_mutex(*visited_mutexes, requested_mutex))
         return (false);
     visited_mutexes->push_back(requested_mutex);
     ft_size_t index;
 
+    thread_infos = pt_lock_tracking::get_thread_infos();
+    if (thread_infos == ft_nullptr)
+        return (false);
     index = 0;
-    while (index < pt_lock_tracking::_thread_infos.size())
+    while (index < thread_infos->size())
     {
         s_pt_thread_lock_info *info;
 
-        info = &pt_lock_tracking::_thread_infos[index];
+        info = &(*thread_infos)[index];
         if (!pt_lock_tracking::vector_contains_mutex(info->owned_mutexes, requested_mutex))
         {
             index += 1;
@@ -133,27 +224,59 @@ bool pt_lock_tracking::detect_cycle(const s_pt_thread_lock_info *origin, pthread
     return (false);
 }
 
-bool pt_lock_tracking::notify_wait(pt_thread_id_type thread_identifier, pthread_mutex_t *requested_mutex, const std::vector<pthread_mutex_t *> &owned_mutexes)
+bool pt_lock_tracking::notify_wait(pt_thread_id_type thread_identifier, pthread_mutex_t *requested_mutex, const pt_mutex_vector &owned_mutexes)
 {
     int lock_error;
     s_pt_thread_lock_info *info;
-    std::vector<pthread_mutex_t *> visited_mutexes;
-    std::vector<pt_thread_id_type> visited_threads;
+    pt_mutex_vector visited_mutexes;
+    pt_thread_vector visited_threads;
     bool cycle_detected;
+    bool lock_acquired;
 
-    lock_error = pthread_mutex_lock(&pt_lock_tracking::_registry_mutex);
-    if (lock_error != 0)
-    {
-        ft_errno = FT_ERR_INVALID_STATE;
+    if (!pt_lock_tracking::ensure_registry_mutex_initialized())
         return (false);
+    lock_acquired = false;
+    if (!g_registry_mutex_owned)
+    {
+        lock_error = pthread_mutex_lock(pt_lock_tracking::get_registry_mutex());
+        if (lock_error != 0)
+        {
+            ft_errno = FT_ERR_INVALID_STATE;
+            return (false);
+        }
+        g_registry_mutex_owned = true;
+        lock_acquired = true;
     }
     info = pt_lock_tracking::find_thread_info(thread_identifier);
+    if (info == ft_nullptr)
+    {
+        if (lock_acquired)
+        {
+            if (pthread_mutex_unlock(pt_lock_tracking::get_registry_mutex()) != 0)
+            {
+                ft_errno = FT_ERR_INVALID_STATE;
+                return (false);
+            }
+            g_registry_mutex_owned = false;
+        }
+        if (!lock_acquired)
+            ft_errno = FT_ERR_INVALID_STATE;
+        return (false);
+    }
     info->owned_mutexes = owned_mutexes;
     info->waiting_mutex = requested_mutex;
     visited_mutexes.clear();
     visited_threads.clear();
     cycle_detected = pt_lock_tracking::detect_cycle(info, requested_mutex, &visited_mutexes, &visited_threads);
-    pthread_mutex_unlock(&pt_lock_tracking::_registry_mutex);
+    if (lock_acquired)
+    {
+        if (pthread_mutex_unlock(pt_lock_tracking::get_registry_mutex()) != 0)
+        {
+            ft_errno = FT_ERR_INVALID_STATE;
+            return (false);
+        }
+        g_registry_mutex_owned = false;
+    }
     if (cycle_detected)
     {
         ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
@@ -167,18 +290,50 @@ void pt_lock_tracking::notify_acquired(pt_thread_id_type thread_identifier, pthr
 {
     int lock_error;
     s_pt_thread_lock_info *info;
+    bool lock_acquired;
 
-    lock_error = pthread_mutex_lock(&pt_lock_tracking::_registry_mutex);
-    if (lock_error != 0)
-    {
-        ft_errno = FT_ERR_INVALID_STATE;
+    if (!pt_lock_tracking::ensure_registry_mutex_initialized())
         return ;
+    lock_acquired = false;
+    if (!g_registry_mutex_owned)
+    {
+        lock_error = pthread_mutex_lock(pt_lock_tracking::get_registry_mutex());
+        if (lock_error != 0)
+        {
+            ft_errno = FT_ERR_INVALID_STATE;
+            return ;
+        }
+        g_registry_mutex_owned = true;
+        lock_acquired = true;
     }
     info = pt_lock_tracking::find_thread_info(thread_identifier);
+    if (info == ft_nullptr)
+    {
+        if (lock_acquired)
+        {
+            if (pthread_mutex_unlock(pt_lock_tracking::get_registry_mutex()) != 0)
+            {
+                ft_errno = FT_ERR_INVALID_STATE;
+                return ;
+            }
+            g_registry_mutex_owned = false;
+        }
+        if (!lock_acquired)
+            ft_errno = FT_ERR_INVALID_STATE;
+        return ;
+    }
     if (!pt_lock_tracking::vector_contains_mutex(info->owned_mutexes, mutex_pointer))
         info->owned_mutexes.push_back(mutex_pointer);
     info->waiting_mutex = ft_nullptr;
-    pthread_mutex_unlock(&pt_lock_tracking::_registry_mutex);
+    if (lock_acquired)
+    {
+        if (pthread_mutex_unlock(pt_lock_tracking::get_registry_mutex()) != 0)
+        {
+            ft_errno = FT_ERR_INVALID_STATE;
+            return ;
+        }
+        g_registry_mutex_owned = false;
+    }
     ft_errno = ER_SUCCESS;
     return ;
 }
@@ -188,14 +343,38 @@ void pt_lock_tracking::notify_released(pt_thread_id_type thread_identifier, pthr
     int lock_error;
     s_pt_thread_lock_info *info;
     ft_size_t index;
+    bool lock_acquired;
 
-    lock_error = pthread_mutex_lock(&pt_lock_tracking::_registry_mutex);
-    if (lock_error != 0)
-    {
-        ft_errno = FT_ERR_INVALID_STATE;
+    if (!pt_lock_tracking::ensure_registry_mutex_initialized())
         return ;
+    lock_acquired = false;
+    if (!g_registry_mutex_owned)
+    {
+        lock_error = pthread_mutex_lock(pt_lock_tracking::get_registry_mutex());
+        if (lock_error != 0)
+        {
+            ft_errno = FT_ERR_INVALID_STATE;
+            return ;
+        }
+        g_registry_mutex_owned = true;
+        lock_acquired = true;
     }
     info = pt_lock_tracking::find_thread_info(thread_identifier);
+    if (info == ft_nullptr)
+    {
+        if (lock_acquired)
+        {
+            if (pthread_mutex_unlock(pt_lock_tracking::get_registry_mutex()) != 0)
+            {
+                ft_errno = FT_ERR_INVALID_STATE;
+                return ;
+            }
+            g_registry_mutex_owned = false;
+        }
+        if (!lock_acquired)
+            ft_errno = FT_ERR_INVALID_STATE;
+        return ;
+    }
     index = 0;
     while (index < info->owned_mutexes.size())
     {
@@ -208,7 +387,15 @@ void pt_lock_tracking::notify_released(pt_thread_id_type thread_identifier, pthr
     }
     if (info->waiting_mutex == mutex_pointer)
         info->waiting_mutex = ft_nullptr;
-    pthread_mutex_unlock(&pt_lock_tracking::_registry_mutex);
+    if (lock_acquired)
+    {
+        if (pthread_mutex_unlock(pt_lock_tracking::get_registry_mutex()) != 0)
+        {
+            ft_errno = FT_ERR_INVALID_STATE;
+            return ;
+        }
+        g_registry_mutex_owned = false;
+    }
     ft_errno = ER_SUCCESS;
     return ;
 }

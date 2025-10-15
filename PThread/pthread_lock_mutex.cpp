@@ -7,7 +7,7 @@
 
 int pt_mutex::lock(pthread_t thread_id) const
 {
-    std::vector<pthread_mutex_t *> owned_mutexes;
+    pt_mutex_vector owned_mutexes;
     int mutex_error;
 
     this->set_error(ER_SUCCESS);
@@ -30,8 +30,6 @@ int pt_mutex::lock(pthread_t thread_id) const
 
         tracker_error = ft_errno;
         pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
-        this->_lock = false;
-        this->_owner.store(0, std::memory_order_relaxed);
         this->set_error(tracker_error);
         return (FT_SUCCESS);
     }
@@ -39,8 +37,6 @@ int pt_mutex::lock(pthread_t thread_id) const
     if (mutex_error != 0)
     {
         pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
-        this->_lock = false;
-        this->_owner.store(0, std::memory_order_relaxed);
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_SUCCESS);
     }
