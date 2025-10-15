@@ -10,8 +10,11 @@ class pt_mutex
         mutable std::atomic<pthread_t>    _owner;
         mutable bool                      _lock;
         mutable int                       _error;
+        mutable pthread_mutex_t           _native_mutex;
+        mutable bool                      _native_initialized;
 
         void    set_error(int error) const;
+        bool    ensure_native_mutex() const;
 
         pt_mutex(const pt_mutex&) = delete;
         pt_mutex& operator=(const pt_mutex&) = delete;

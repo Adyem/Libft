@@ -23,12 +23,13 @@ SRCS := pthread_lock_mutex.cpp \
         pthread_condition.cpp \
         pthread_condition_variable.cpp \
         pthread_rwlock.cpp \
-        pthread_task_scheduler.cpp
+        pthread_task_scheduler.cpp \
+        pthread_lock_tracking.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
-HEADERS := pthread.hpp mutex.hpp condition.hpp thread.hpp task_scheduler.hpp unique_lock.hpp
+HEADERS := pthread.hpp mutex.hpp condition.hpp thread.hpp task_scheduler.hpp unique_lock.hpp pthread_lock_tracking.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
