@@ -4,6 +4,7 @@
 - [x] Publish a canonical error-code registry that documents each value exposed through `Errno/errno.hpp` and clarifies which modules set them, so cross-module error handling stays consistent.
 - [x] Re-audit the error code catalog to collapse redundant class-specific values into shared generic codes where possible so callers can rely on a simpler set of outcomes when handling failures.
 - [x] Deduplicate and auto-generate `FullLibft.hpp` so umbrella includes stay sorted and avoid the current duplicate entries like `System_utils/system_utils.hpp` (manifest-driven generator keeps the header updated).
+- [x] Complete the module-by-module thread-safety audit, removing each module from the temporary tracking checklist after its classes were added below with shared deadlock-resolution coverage, and delete the checklist once the pass finished.
 
 ## Documentation and examples
 - [x] Produce per-module overviews that explain design goals, invariants, and error-reporting patterns referenced throughout `README.md` (see `Docs/module_overviews.md`).
@@ -39,6 +40,12 @@
 - [ ] Implement guard-page or canary instrumentation in debug mode to catch buffer overruns during development.
 - [ ] Add leak detection and reporting helpers that can be toggled per-thread for targeted investigations.
 - [x] Supply RAII helpers and scope guards that automatically free CMA allocations to simplify error paths in callers.
+- [ ] Make `cma_alloc_limit_guard` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `cma_allocation_guard` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `cma_allocator_guard` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `Block` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `Page` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Implement per-class lock tracking for the CMA guards by wiring them into the PThread lock tracking routine.
 
 ### Compression
 - [x] Allow callers to configure input/output buffer sizes in `ft_compress_stream` and `ft_decompress_stream` instead of hard-coding 4096-byte stacks.
@@ -48,6 +55,12 @@
 - [ ] Evaluate adding alternative algorithms (e.g., LZ4, Brotli) behind a common interface with capability detection.
 - [ ] Provide progress callbacks and cancellation support for long-running compression tasks.
 - [ ] Document tuning guidelines (window sizes, compression levels) and expose presets optimized for speed vs. ratio.
+- [ ] Make `t_compress_stream_options` thread safe (relies on the shared deadlock resolution routine described below).
+
+### Config
+- [ ] Make `cnfg_flag_parser` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `cnfg_config` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `cnfg_entry` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Logger
 - [x] Provide structured logging helpers (JSON key/value or printf-style macros) so log consumers avoid manual string assembly.
@@ -58,6 +71,12 @@
 - [ ] Add redaction helpers for sensitive fields and ensure they integrate with formatting utilities.
 - [ ] Support structured context propagation (per-thread request IDs, correlation tokens) through scoped guards.
 - [ ] Restore the `logger async logging` regression after fixing the heap corruption triggered by asynchronous sink teardown.
+- [ ] Make `ft_logger` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `s_log_field` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `s_log_async_metrics` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `s_log_sink` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `s_file_sink` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `s_network_sink` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Networking
 - [ ] Complete HTTP/2 support by honoring SETTINGS frames, stream prioritization, and flow-control windows in `http2_client`.
@@ -72,6 +91,16 @@
 - [x] Fix the Winsock error handling path in `ft_socket::setup_server` so the helper uses `WSAGetLastError()`/`ft_errno` instead of `errno`, otherwise Windows failures in `create_socket`, `set_reuse_address`, timeouts, bind, or listen propagate the wrong code. 【F:Networking/networking_setup_server.cpp†L18-L146】【F:Networking/networking_setup_server.cpp†L188-L237】
 - [x] Update the HTTP server response writer to translate `nw_send` failures via `ft_errno`/`WSAGetLastError()` instead of raw `errno`, which currently reports success on Windows because Winsock does not set `errno`. 【F:Networking/http_server.cpp†L1-L14】【F:Networking/http_server.cpp†L278-L307】
 - [x] Make `ft_socket::initialize` return an error when `setup_server`/`setup_client` fails so callers are not forced to poll `_error_code` after a `0` return. 【F:Networking/networking_socket_class.cpp†L395-L423】
+- [ ] Make `SocketConfig` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_socket` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `udp_socket` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_websocket_server` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_websocket_client` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_http_server` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `http2_stream_manager` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `event_loop` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `http2_header_field` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `http2_frame` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Restore the `http2 stream manager tracks streams` regression once the stream manager no longer crashes when tracking concurrent streams.
 - [ ] Reintroduce the HTTP/2 header compression roundtrip regression once `http2_compress_headers`/`http2_decompress_headers` stop aborting the suite (current implementation trips an abort while the test runner executes "http2 header compression roundtrip").
 - [ ] Restore the `websocket client detects invalid handshake` regression after fixing the crash in the websocket client handshake teardown path.
@@ -87,6 +116,14 @@
 - [ ] Restore the `api_request_string_http2 falls back to http1` regression once the fallback path properly toggles the HTTP/2 flag and returns the downgraded response body.
 - [ ] Restore the `api_request_string_host_bearer adds bearer authorization header` regression after fixing the heap corruption triggered by the bearer-token request path.
 - [ ] Restore the `api_request_string_host_basic adds basic authorization header after existing headers` regression once the header assembly stops corrupting heap allocations.
+- [ ] Make `api_promise` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `api_string_promise` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `api_tls_promise` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `api_tls_string_promise` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `api_tls_client` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `api_connection_pool_handle` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `api_streaming_handler` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `api_retry_policy` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### PThread and concurrency utilities
 - [ ] Extend `task_scheduler` with work-stealing queues and task affinity controls to better utilize multi-core systems.
@@ -95,6 +132,16 @@
 - [ ] Offer cooperative cancellation tokens that integrate with `thread_pool` in `Template/` to unify async control flows.
 - [ ] Provide structured tracing of task lifecycles to aid debugging of scheduling stalls.
 - [ ] Add lock contention diagnostics (sampling, priority inversion detection) exposed through the Logger module.
+- [ ] Make `pt_mutex` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `pt_condition_variable` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_unique_lock` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_thread` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_blocking_queue` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_scheduled_task_state` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_scheduled_task_handle` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_task_scheduler` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_promise` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Implement per-class lock tracking for the PThread classes marked above so lock acquisition records, deadlock detection, temporary release, 1-10 millisecond randomized backoff, and reacquisition behave consistently (this is the deadlock resolution point the class upgrades rely on).
 
 ### Template containers and utilities
 - [x] Review container naming (e.g., rename `unordened_map.hpp` to `unordered_map.hpp`) and ensure API parity with the standard library counterparts.
@@ -104,6 +151,35 @@
 - [ ] Write exhaustive tests for allocator-aware paths, ensuring `_error_code` mirrors allocation failures.
 - [ ] Introduce serialization helpers that interoperate with JSON/YAML encoders for easy persistence of container contents.
 - [ ] Add concept-constrained overloads in C++20 builds to improve diagnostic quality when templates are misused.
+- [ ] Make `ft_stack` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_unordered_map` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_unordered_map::iterator` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_unordered_map::const_iterator` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_set` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_priority_queue` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `Pair` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_thread_pool` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_graph` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_vector` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_event_emitter` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_optional` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_string_view` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_sharedptr` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_matrix` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_tuple` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_trie` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `Iterator` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_queue` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_deque` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_uniqueptr` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_circular_buffer` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_variant` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_future` (including `ft_future<void>`) thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `Pool` (including `Pool<T>::Object`) thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_function` (including callable specializations) thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_bitset` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_promise` (including `ft_promise<void>`) thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_map` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### GetNextLine
 - [ ] Design and implement a custom STREAM abstraction that the streaming helpers can rely on instead of the standard library facilities.
@@ -118,6 +194,16 @@
 - [ ] Document ownership semantics for wrappers like `ft_file` to avoid double-close mistakes.
 - [ ] Audit exception safety for each class and document the strong/weak guarantees they provide.
 - [ ] Supply sample adapters showing how to embed these classes into user-defined types with RAII expectations.
+- [ ] Make `ft_big_number` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `DataBuffer` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_string` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_stringbuf` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_file` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_ofstream` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_istream` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_fd_istream` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_istringstream` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_nullptr` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Storage
 - [ ] Optimize TTL pruning in `kv_store` to avoid copying keys into a `std::vector` during every sweep.
@@ -127,9 +213,17 @@
 - [ ] Implement snapshot/export tooling for backups and debugging.
 - [ ] Provide replication hooks (write-ahead log shipping, follower sync) for high-availability deployments.
 - [ ] Surface observability metrics (hit ratio, compaction duration) for integration with dashboards.
+- [ ] Make `kv_store` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `kv_store_entry` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### JSon
 - [ ] Restore the `json reader reports io errors` regression once file-based reads surface missing files without corrupting allocator state.
+- [ ] Make `json_document` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `json_group` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `json_item` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `json_schema` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `json_schema_field` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `json_stream_reader` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Time utilities
 - [ ] Provide high-resolution timers that wrap `clock_gettime`/`QueryPerformanceCounter` and document precision trade-offs.
@@ -138,6 +232,11 @@
 - [ ] Supply benchmarking helpers that record rolling averages and jitter for repeated measurements.
 - [ ] Offer monotonic-to-wall-clock translation utilities to reconcile timestamps across modules.
 - [ ] Integrate profiling markers compatible with Chrome tracing or perfetto for visualizing timelines.
+- [ ] Make `time_fps` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `time_timer` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `s_monotonic_time_point` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `s_duration_milliseconds` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `s_time_info` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### RNG
 - [ ] Add cryptographically secure RNG wrappers that rely on system entropy sources with clear fallbacks.
@@ -146,6 +245,9 @@
 - [ ] Document statistical quality guarantees and include tests that run chi-squared or KS checks.
 - [ ] Supply vectorized sampling routines that take advantage of SIMD when available.
 - [ ] Publish guidance on combining RNG streams safely to avoid correlation in parallel workloads.
+- [ ] Make `ft_loot_table` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_deck` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_loot_entry` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Math
 - [ ] Complete the linear algebra module with vector, matrix, and quaternion operations optimized using SIMD when available.
@@ -154,6 +256,19 @@
 - [ ] Add unit tests that validate tolerance-based comparisons and edge-case handling (NaN, infinities).
 - [ ] Implement automatic differentiation primitives for optimization and machine-learning use cases.
 - [ ] Supply FFT and convolution helpers that reuse existing complex-number utilities.
+- [ ] Make `vector2` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `vector3` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `vector4` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `matrix2` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `matrix3` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `matrix4` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `quaternion` thread safe (relies on the shared deadlock resolution routine described below).
+
+### Geometry
+- [ ] Make `aabb` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `circle` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `sphere` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Implement per-struct lock tracking for the Geometry shapes so mutex ownership, circular wait detection, randomized 1-10 millisecond sleeps, and lock reacquisition remain consistent (this is the deadlock resolution point the struct upgrades rely on).
 
 ### Encryption
 - [ ] Expand beyond SHA-1 by adding SHA-2/3, BLAKE2, and streaming HMAC helpers.
@@ -170,6 +285,7 @@
 - [ ] Offer environment sandboxing helpers that capture and restore process state during tests.
 - [ ] Build service management helpers (daemonization, signal handling) consistent across supported platforms.
 - [ ] Document security hardening options (seccomp, chroot) for services built on top of these utilities.
+- [ ] Make `su_file` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### File and ReadLine modules
 - [ ] Harmonize the File module with `ft_file` so both expose the same error-reporting surface and buffering strategies.
@@ -177,6 +293,11 @@
 - [ ] Add UTF-8 aware cursor movement and rendering in ReadLine to match the Unicode helpers in Libft.
 - [ ] Provide pluggable history storage (SQLite, JSON) and search that respects multi-byte characters.
 - [ ] Document terminal capability detection and fallback behaviour for minimal environments.
+- [ ] Make `ft_file_watch` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `file_dir` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `file_dirent` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `readline_state_t` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `terminal_dimensions` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Printf
 - [ ] Bring the printf implementation up to C99 compliance (length modifiers, positional arguments, floating-point formatting).
@@ -194,6 +315,12 @@
 - [ ] Provide tooling that round-trips documents and highlights diffs to simplify regression testing.
 - [ ] Offer pluggable storage backends (file, HTTP, memory) for parsers to read from and serializers to write to.
 - [ ] Publish style guides for canonical formatting so diffs remain readable across teams.
+- [ ] Make `html_document` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `xml_document` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `yaml_value` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `html_node` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `html_attr` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `xml_node` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Game module
 - [ ] Build deterministic simulation tests that cover combat, crafting, quest progression, and event scheduling.
@@ -203,6 +330,32 @@
 - [ ] Document extension points for mods or scripting integrations.
 - [ ] Introduce scripting bridges (Lua, Python) with sandboxing controls for user-generated content.
 - [ ] Add telemetry hooks that emit gameplay metrics for balancing and analytics.
+- [ ] Make `ft_game_state` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_character` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_item` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_inventory` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_equipment` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_upgrade` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_world` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_event` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_event_scheduler` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_map3d` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_pathfinding` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_quest` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_reputation` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_buff` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_debuff` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_skill` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_achievement` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_crafting` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_experience_table` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_game_server` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_goal` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_crafting_ingredient` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_item_modifier` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_event_compare_ptr` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_resistance` thread safe (relies on the shared deadlock resolution routine described below).
+- [ ] Make `ft_path_step` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Tools and ancillary utilities
 - [x] Provide a `make format` target that runs clang-format with a checked-in style file.
