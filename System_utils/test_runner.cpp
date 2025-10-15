@@ -118,6 +118,7 @@ int ft_run_registered_tests(void)
     s_test_case *tests;
     int *test_count;
     int total_tests;
+    int output_is_terminal;
 
     log_file = fopen("test_failures.log", "w");
     if (log_file)
@@ -131,6 +132,7 @@ int ft_run_registered_tests(void)
     index = 0;
     passed = 0;
     current_module = NULL;
+    output_is_terminal = isatty(STDOUT_FILENO);
     while (index < total_tests)
     {
         if (!current_module || std::strcmp(current_module, tests[index].module) != 0)
@@ -139,16 +141,23 @@ int ft_run_registered_tests(void)
             printf("== %s ==\n", current_module);
             fflush(stdout);
         }
-        printf("Starting to run %d %s\n", index + 1, tests[index].description);
+        if (output_is_terminal)
+            printf("Running test %d \"%s\"", index + 1, tests[index].description);
+        else
+            printf("Running test %d \"%s\"\n", index + 1, tests[index].description);
         fflush(stdout);
         if (tests[index].func())
         {
+            if (output_is_terminal)
+                printf("\r\033[K");
             printf("OK %d %s\n", index + 1, tests[index].description);
             fflush(stdout);
             passed++;
         }
         else
         {
+            if (output_is_terminal)
+                printf("\r\033[K");
             printf("KO %d %s\n", index + 1, tests[index].description);
             fflush(stdout);
         }
