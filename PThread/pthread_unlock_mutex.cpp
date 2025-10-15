@@ -14,14 +14,17 @@ int pt_mutex::unlock(pthread_t thread_id) const
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_SUCCESS);
     }
-    if (!this->_lock)
+    pthread_t owner;
+
+    owner = this->_owner.load(std::memory_order_relaxed);
+    if (!pt_thread_equal(owner, thread_id))
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_SUCCESS);
     }
-    if (!pt_thread_equal(this->_owner.load(std::memory_order_relaxed), thread_id))
+    if (!this->_lock)
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        this->set_error(FT_ERR_INVALID_STATE);
         return (FT_SUCCESS);
     }
     mutex_error = pthread_mutex_unlock(&this->_native_mutex);

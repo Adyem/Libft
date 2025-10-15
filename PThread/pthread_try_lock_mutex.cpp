@@ -8,7 +8,7 @@
 
 int pt_mutex::try_lock(pthread_t thread_id) const
 {
-    std::vector<pthread_mutex_t *> owned_mutexes;
+    pt_mutex_vector owned_mutexes;
     int mutex_error;
 
     this->set_error(ER_SUCCESS);
