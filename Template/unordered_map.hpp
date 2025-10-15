@@ -98,6 +98,7 @@ class ft_unordered_map
         void           clear();
         size_t         size() const;
         size_t         bucket_count() const;
+        bool           has_valid_storage() const;
         int            get_error() const;
         const char*    get_error_str() const;
         iterator       begin();
@@ -429,7 +430,7 @@ ft_unordered_map<Key, MappedType>& ft_unordered_map<Key, MappedType>::operator=(
 template <typename Key, typename MappedType>
 ft_unordered_map<Key, MappedType>::~ft_unordered_map()
 {
-    if (_data != ft_nullptr)
+    if (_data != ft_nullptr && _occupied != ft_nullptr)
     {
         size_t i = 0;
         size_t count = 0;
@@ -442,9 +443,11 @@ ft_unordered_map<Key, MappedType>::~ft_unordered_map()
             }
             i++;
         }
-        cma_free(_data);
-        cma_free(_occupied);
     }
+    if (_data != ft_nullptr)
+        cma_free(_data);
+    if (_occupied != ft_nullptr)
+        cma_free(_occupied);
 }
 
 template<typename Key, typename MappedType>
@@ -749,6 +752,12 @@ size_t ft_unordered_map<Key, MappedType>::bucket_count() const
     size_t c = _capacity;
     set_error(ER_SUCCESS);
     return (c);
+}
+
+template <typename Key, typename MappedType>
+bool ft_unordered_map<Key, MappedType>::has_valid_storage() const
+{
+    return (has_storage());
 }
 
 template <typename Key, typename MappedType>

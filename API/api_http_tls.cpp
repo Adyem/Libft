@@ -357,6 +357,16 @@ static bool api_https_ensure_session(
     }
     connection_handle.tls_context = context;
     connection_handle.tls_session = ssl_session;
+    if (!api_connection_pool_track_tls_session(connection_handle.tls_session))
+    {
+        SSL_shutdown(ssl_session);
+        SSL_free(ssl_session);
+        SSL_CTX_free(context);
+        connection_handle.tls_context = ft_nullptr;
+        connection_handle.tls_session = ft_nullptr;
+        error_code = FT_ERR_IO;
+        return (false);
+    }
     return (true);
 }
 

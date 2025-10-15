@@ -1406,6 +1406,7 @@ static char *api_http_execute_plain_http2_once(
         cma_free(http_response);
         return (ft_nullptr);
     }
+    used_http2 = true;
     error_code = ER_SUCCESS;
     return (http_response);
 }

@@ -6,3 +6,115 @@
   - Status: Aborted manually with Ctrl+C after observing CMA debug messages looping around start_data events.
   - Observed behavior: Tests progressed through at least case 829 before hanging without additional output for several minutes.
 
+- Command: `./Test/libft_tests`
+  - Status: Segmentation fault immediately after "SocketConfig move constructor transfers values and clears source" (test #625).
+  - Observed behavior: The signal handler's backtrace shows the crash occurs while `api_connection_pool_acquire` walks the connection bucket map, now failing inside `std::map::find` even after switching the pool to `std::string` keyed buckets; the lookup aborts before any pooled entry is reused.
+  - Suggested follow-up: Capture the converted key string before calling `buckets.find` and compare it against the expected host/port tuple, then rerun under AddressSanitizer to catch upstream writes that might trample the key buffer.
+- Command: `COMPILE_FLAGS="-g -O1 -fsanitize=address" make -C Test`
+  - Status: Succeeded.
+  - Observed behavior: Rebuilding the suite with AddressSanitizer succeeded after changing the bucket cache to a static local map, eliminating the potential initialization race.
+
+- Command: `ASAN_OPTIONS=abort_on_error=1:detect_leaks=0 ./Test/libft_tests`
+  - Status: Segmentation fault immediately after "SocketConfig move constructor transfers values and clears source" (test #625).
+  - Observed behavior: AddressSanitizer reproduces the same crash path, confirming the new static-local bucket map did not resolve the corruption; stack frames still show `api_connection_pool_acquire` failing during `std::map::find`.
+  - Suggested follow-up: Add bucket integrity assertions around insertions and prunes so any vector overwrite is caught before the lookup walks corrupted metadata.
+
+- Command: `./Test/libft_tests`
+  - Status: Segmentation fault immediately after "SocketConfig move constructor transfers values and clears source" (test #625).
+  - Observed behavior: Native builds still crash despite the thread-safe static bucket, so the underlying corruption likely occurs earlier in the connection lifecycle.
+  - Suggested follow-up: Instrument the idle reinsertion path to dump each bucket's entry count and TLS/socket state before releasing the mutex; compare against logs from passing revisions to spot mismatches.
+
+- Command: `ASAN_OPTIONS=abort_on_error=1:detect_leaks=0 ./Test/libft_tests`
+  - Status: Segmentation fault near the end of the suite after "yaml_reader propagates allocation failures" (test #1055).
+  - Observed behavior: The TLS registry instrumentation logs `[api_connection_pool] missing tls session=...` immediately before crashing inside `SSL_free`, confirming the dispose path is freeing a session that has already been released. Bucket dumps still show truncated keys (`plain:` or empty strings), so the underlying overwrite persists even when the double-dispose is detected.
+  - Suggested follow-up: Instrument the TLS reuse path to dump the `SSL*` and `SSL_CTX*` values before reinsertion and flush buckets whose keys no longer contain the expected delimiter pattern.
+
+- Command: `ASAN_OPTIONS=abort_on_error=1:detect_leaks=0 ./Test/libft_tests`
+  - Status: Segmentation fault immediately after "SocketConfig move constructor transfers values and clears source" (test #625).
+  - Observed behavior: The run prints `[api_connection_pool] acquire key="bad-ip:8080:plain:" buckets=1` and then crashes inside `__fprintf_chk` while dumping the bucket inventory, which indicates the cached `std::string` key for one of the entries has already been corrupted before the invalid-IP API test executes.
+  - Suggested follow-up: Validate each bucket entry's key length and delimiter count before logging, and add guards in `api_connection_pool_mark_idle` to dump and flush any entry whose key mutates between insertion and reuse.
+
+- Command: `./Test/libft_tests`
+  - Status: Segmentation fault near the end of the suite after the YAML reader tests.
+  - Observed behavior: Native builds mirror the AddressSanitizer failure, crashing during `SSL_free` while draining the connection pool. Malformed bucket keys remain in the cache, indicating further validation is required before reinserting handles.
+  - Suggested follow-up: Add runtime validation that counts colon separators in stored keys and flush the pool when the format is invalid, then trace the TLS acquire/idle cycle to pinpoint the overwrite.
+
+- Command: `./Test/libft_tests`
+  - Status: Completed (1129/1143 passed; no segmentation fault).
+  - Observed behavior: Forcing `api_connection_pool_acquire` to clear the buckets on every call eliminates the crash, but it also disables pooling. The API reuse regression test still fails because the reuse counter stays at zero, alongside the historic GNL/kv_store/YAML failures.【bcd0e3†L1-L37】
+  - Suggested follow-up: Reintroduce a safe pooling strategy that allows reuse without reintroducing the crash.
+
+- Command: `COMPILE_FLAGS="-g -O1 -fsanitize=address" make -C Test re`
+  - Status: Failed (link step could not find module archives).
+  - Observed behavior: The sanitized build compiles every module but the final archive stage fails with `ar: ../API/API.a: No such file or directory`, indicating the build system expects archives in the parent directory while the sanitized invocation writes them into `temp_objs`.【bf127c†L1-L20】
+  - Suggested follow-up: Adjust the Test makefile so sanitized builds place archives where the final `ar` step expects them, then rerun the AddressSanitizer suite.
+
+- Command: `ASAN_OPTIONS=abort_on_error=1:detect_leaks=0 ./Test/libft_tests`
+  - Status: Segmentation fault immediately after the YAML reader allocation-failure test (#1055).
+  - Observed behavior: After rejecting cached handles whose TLS session failed to unregister, the pointer-based logging now shows stable key addresses and lengths for every bucket, yet the run still emits `[api_connection_pool] missing tls session=...` and aborts inside `api_connection_pool_log_state`. That indicates the TLS bookkeeping fix prevents the double free but the underlying corruption persists between the failed unregister and the subsequent logging call.
+  - Suggested follow-up: Capture the handle state whenever `api_connection_pool_tls_unregister` fails (socket error code, TLS/context pointers, bucket index) and forcibly evict the entry instead of reinserting it so the remaining corruption window can be isolated to a single caller.
+
+- Command: `ASAN_OPTIONS=abort_on_error=1:detect_leaks=0 ./Test/libft_tests`
+  - Status: Segmentation fault immediately after "yaml_reader propagates allocation failures" (test #1055).
+  - Observed behavior: With TLS pooling disabled, the suite still logs `[api_connection_pool] missing tls session=...` and then crashes inside `SSL_free` while `api_connection_pool_acquire` disposes the handle. The failing pointer never appeared in the TLS registry, indicating the owning caller freed it before the pool attempted to evict it.
+  - Suggested follow-up: Instrument the TLS-backed request teardown paths to log when they bypass `api_connection_pool_mark_idle`, and capture the caller whenever `api_connection_pool_tls_unregister` fails so the premature free can be traced.
+
+- Command: `./Test/libft_tests`
+  - Status: Segmentation fault shortly after "http2 frame encode decode roundtrip" (test #17).
+  - Observed behavior: The pool state logger prints `bucket[1]` for the next API acquire attempt and then the signal handler dumps a backtrace from `api_connection_pool_acquire` before any TLS warnings fire, implying the bucket metadata is corrupt before the TLS dispose path executes.
+  - Suggested follow-up: Add defensive bounds checks in `api_connection_pool_log_state` and bail out (flushing the pool) whenever the bucket size shrinks unexpectedly between reinsertion and the next acquire.
+
+- Command: `ASAN_OPTIONS=abort_on_error=1:detect_leaks=0 ./Test/libft_tests`
+  - Status: Segmentation fault at the same location as the native run (immediately after test #17).
+  - Observed behavior: AddressSanitizer mirrors the native failure without emitting heap diagnostics, which indicates the crash occurs inside the logging path before ASan detects an invalid access; the absence of `[api_connection_pool] missing tls session=...` confirms the new handshake tracking keeps the TLS registry consistent up to the point of failure.
+  - Suggested follow-up: Re-run with `ASAN_OPTIONS=halt_on_error=0` and extended logging inside `api_connection_pool_track_tls_session`/`api_connection_pool_untrack_tls_session` so the sanitizer can finish reporting the offending memory access while the logs still capture the bucket contents.
+
+- Command: `COMPILE_FLAGS="-g -O1 -fsanitize=address" make -C Test`
+  - Status: Failed (linker error).
+  - Observed behavior: The build finished compiling but the final link step for `libft_tests` failed with undefined references to `__asan_*` symbols because the link flags do not propagate `-fsanitize=address` to the executable.
+  - Suggested follow-up: Add `-fsanitize=address` to the final link flags (e.g., via `LINK_FLAGS`) so sanitized objects from `Full_Libft.a` resolve against the ASan runtime.
+
+- Command: `./Test/libft_tests`
+  - Status: Segmentation fault near the end of the suite after `yaml_reader propagates allocation failures` (test #1055).
+  - Observed behavior: The guarded connection-pool logging shows stable bucket sizes (always size 1, capacity 1) and valid key pointers throughout the API tests, yet the crash stack trace still terminates in `SSL_free` while the YAML allocation-failure case unwinds the pooled handle.
+  - Suggested follow-up: Capture the socket descriptor and TLS pointer whenever an entry is promoted or reinserted so double-free candidates can be matched against the YAML teardown path, then rerun under a debugger once the ASan link issue is resolved.
+
+- Command: `./Test/libft_tests`
+  - Status: Segmentation fault immediately after "http2 frame encode decode roundtrip" (test #17).
+  - Observed behavior: The connection pool is now hard-disabled (acquire misses unconditionally and mark-idle always evicts), yet the suite still aborts with the same stack trace inside `api_connection_pool_acquire`. No bucket logging precedes the crash because the buckets never populate, which points the investigation toward the caller teardown paths that feed handles back into the pool APIs.
+  - Suggested follow-up: Instrument the async worker shutdown to record every call into `api_connection_pool_acquire`/`mark_idle`, including the handle's TLS pointer and socket descriptor, so the premature free can be traced outside of the pooling data structures.
+
+- Command: `./Test/libft_tests`
+  - Status: Failed (functional regressions persist).
+  - Observed behavior: The suite now runs to completion without hitting the historical segfault, but the pool regression test still reports zero reuses and one miss, so `api connection pool reuses idle sockets for sequential requests` fails alongside the longstanding GNL, kv_store, and YAML allocation cases.【ec77d6†L1-L21】【297697†L1-L15】
+
+- Command: `ASAN_OPTIONS=abort_on_error=1:detect_leaks=0 ./Test/libft_tests`
+  - Status: Failed (same functional regressions under AddressSanitizer).
+  - Observed behavior: The sanitized build mirrors the native outcome—no crash, but the pool reuse test and other legacy failures remain, indicating the remaining issue is logical rather than a memory safety problem.【8799df†L1-L21】【a64914†L1-L15】
+
+- Command: `make -C Test`
+  - Status: Succeeded.
+  - Observed behavior: Full rebuild completed without errors while updating all 27 module archives before linking the `libft_tests` binary.
+
+- Command: `./Test/libft_tests`
+  - Status: Segmentation fault immediately after "get_next_line reports FT_ERR_NO_MEMORY when allocations fail" (test #328).
+  - Observed behavior: The run progressed smoothly through the early API and CMA suites, then aborted once the GetNextLine allocation-failure regression finished; the installed signal handler dumped a backtrace rooted in `get_next_line` cleanup.
+  - Suggested follow-up: Audit the leftover failure branch to ensure the combined buffer is either preserved or freed exactly once and that `ft_errno` remains set to `FT_ERR_NO_MEMORY` when returning `ft_nullptr`.
+
+- Command: `make -C Test`
+  - Status: Succeeded.
+  - Observed behavior: Full rebuild completed without errors, updating all 27 module archives before linking the `libft_tests` binary.
+
+- Command: `./Test/libft_tests`
+  - Status: Segmentation fault immediately after "get_next_line surfaces hash map allocation failures" (test #329).
+  - Observed behavior: The runner's new status lines show the suite advancing past the previous leftover allocation failure before aborting; the backtrace still points into the GetNextLine leftover cleanup paths, indicating the map reset and buffer-clearing logic need additional hardening.
+  - Suggested follow-up: Rebuild the leftovers cache when `ft_unordered_map` reports allocation errors and ensure `get_next_line` never accesses buffers once `leftovers` signals a failure, then re-run the focused regression to confirm the CMA free counter advances as expected.
+
+- Command: `make -C Test`
+  - Status: Succeeded.
+  - Observed behavior: Full rebuild regenerated all 27 module archives before linking `libft_tests` without errors.【0b776f†L1-L32】
+
+- Command: `./Test/libft_tests`
+  - Status: Failed (1 KO, abort on test #328).
+  - Observed behavior: `api_request_string_http2 falls back to http1` still reports `KO`, indicating the HTTP/2 fallback path is not setting the expected status, and the run subsequently aborts during `get_next_line surfaces hash map allocation failures` when the CMA allocator detects a double free in the leftovers cache cleanup.【5fd549†L1-L37】【8182be†L1-L12】
+  - Suggested follow-up: Inspect the HTTP/2 fallback flag handling so the test sees an HTTP/1.1 retry, and harden the GetNextLine leftover failure branch to free each buffer exactly once before rebuilding the cache.

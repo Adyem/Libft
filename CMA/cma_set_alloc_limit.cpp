@@ -11,17 +11,16 @@ void    cma_set_alloc_limit(ft_size_t limit)
     cma_allocator_guard allocator_guard;
 
     if (!allocator_guard.is_active())
-        return ;
-    if (allocator_guard.lock_acquired())
-        ft_errno = entry_errno;
-    g_cma_alloc_limit = limit;
-    if (allocator_guard.lock_acquired())
     {
-        current_errno = ft_errno;
-        allocator_guard.unlock();
-        ft_errno = current_errno;
+        g_cma_alloc_limit = limit;
+        if (allocator_guard.get_error() == ER_SUCCESS)
+            ft_errno = entry_errno;
         return ;
     }
+    ft_errno = entry_errno;
+    g_cma_alloc_limit = limit;
+    current_errno = ft_errno;
     allocator_guard.unlock();
+    ft_errno = current_errno;
     return ;
 }
