@@ -445,8 +445,8 @@ The limit check runs before the allocator touches shared state, letting
 tests inject deterministic failures by setting a small cap and attempting an
 oversized allocation. Pair the toggle with `cma_set_thread_safety(false)`
 when failure injection must run without synchronization overhead, and
-restore both settings plus `cma_cleanup` during teardown so the allocator
-returns to its default invariants. See
+restore both settings during teardown so the allocator returns to its
+default invariants. See
 [`Docs/cma_allocation_controls.md`](Docs/cma_allocation_controls.md) for a
 focused walkthrough and ready-to-copy helper routines.
 
@@ -481,7 +481,6 @@ char   *cma_strjoin_multiple(int count, ...);
 char   *cma_substr(const char *s, unsigned int start, size_t len);
 char   *cma_strtrim(const char *s1, const char *set);
 void    cma_free_double(char **content);
-void    cma_cleanup();
 void    cma_set_alloc_limit(ft_size_t limit);
 void    cma_set_thread_safety(bool enable);
 void    cma_get_stats(ft_size_t *allocation_count, ft_size_t *free_count);
