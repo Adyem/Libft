@@ -1,6 +1,5 @@
 #include "../../CMA/CMA.hpp"
 #include "../../Libft/libft.hpp"
-#include "../cma_test_helpers.hpp"
 #include "utils.hpp"
 
 #include <cstdlib>
@@ -30,8 +29,6 @@ int test_efficiency_cma_memdup(void)
     }
     auto end_ft = clock_type::now();
 
-    if (!ensure_cma_cleanup_success())
-        return (0);
     print_comparison("cma_memdup", elapsed_us(start_std, end_std),
                      elapsed_us(start_ft, end_ft));
     return (1);

@@ -114,7 +114,6 @@ int ft_run_registered_tests(void)
     FILE *log_file;
     int index;
     int passed;
-    const char *current_module;
     s_test_case *tests;
     int *test_count;
     int total_tests;
@@ -131,16 +130,9 @@ int ft_run_registered_tests(void)
     total_tests = *test_count;
     index = 0;
     passed = 0;
-    current_module = NULL;
     output_is_terminal = isatty(STDOUT_FILENO);
     while (index < total_tests)
     {
-        if (!current_module || std::strcmp(current_module, tests[index].module) != 0)
-        {
-            current_module = tests[index].module;
-            printf("== %s ==\n", current_module);
-            fflush(stdout);
-        }
         if (output_is_terminal)
             printf("Running test %d \"%s\"", index + 1, tests[index].description);
         else

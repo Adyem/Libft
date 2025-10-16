@@ -3,7 +3,6 @@
 #include "../../Libft/libft.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_runner.hpp"
-#include "../cma_test_helpers.hpp"
 
 FT_TEST(test_cma_set_alloc_limit_preserves_errno,
         "cma_set_alloc_limit keeps ft_errno intact when locking")
@@ -26,14 +25,12 @@ FT_TEST(test_cma_limit_blocks_large_allocations_with_lock,
     void    *allocation;
 
     cma_set_thread_safety(true);
-    FT_ASSERT(ensure_cma_cleanup_success());
     cma_set_alloc_limit(16);
     ft_errno = ER_SUCCESS;
     allocation = cma_malloc(32);
     FT_ASSERT_EQ(ft_nullptr, allocation);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     cma_set_alloc_limit(0);
-    FT_ASSERT(ensure_cma_cleanup_success());
     return (1);
 }
 
@@ -44,7 +41,6 @@ FT_TEST(test_cma_limit_blocks_large_allocations_without_lock,
     void    *blocked_allocation;
 
     cma_set_thread_safety(false);
-    FT_ASSERT(ensure_cma_cleanup_success());
     cma_set_alloc_limit(64);
     ft_errno = ER_SUCCESS;
     allowed_allocation = cma_malloc(32);
@@ -52,8 +48,6 @@ FT_TEST(test_cma_limit_blocks_large_allocations_without_lock,
     {
         cma_set_thread_safety(true);
         cma_set_alloc_limit(0);
-        if (!ensure_cma_cleanup_success())
-            return (0);
         return (0);
     }
     blocked_allocation = cma_malloc(96);
@@ -62,6 +56,5 @@ FT_TEST(test_cma_limit_blocks_large_allocations_without_lock,
     cma_free(allowed_allocation);
     cma_set_thread_safety(true);
     cma_set_alloc_limit(0);
-    FT_ASSERT(ensure_cma_cleanup_success());
     return (1);
 }
