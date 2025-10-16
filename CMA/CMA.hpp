@@ -63,7 +63,6 @@ char    *cma_substr(const char *source, unsigned int start, size_t length)
 char    *cma_strtrim(const char *string, const char *set)
             __attribute__ ((warn_unused_result));
 void    cma_free_double(char **content);
-void    cma_cleanup();
 void    cma_set_alloc_limit(ft_size_t limit);
 void    cma_set_thread_safety(bool enable);
 void    cma_get_stats(ft_size_t *allocation_count, ft_size_t *free_count);

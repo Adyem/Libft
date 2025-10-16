@@ -3,15 +3,16 @@
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
-#include <vector>
-#include <memory>
+#include "../CMA/CMA.hpp"
+#include "../Template/vector.hpp"
+#include "../Logger/logger.hpp"
 #include <chrono>
 #include <utility>
 #include <cstddef>
 #include <string>
 #include <set>
-#include <cstdlib>
 #include <new>
+#include "../Template/unique_ptr.hpp"
 
 struct api_pooled_connection
 {
@@ -21,25 +22,38 @@ struct api_pooled_connection
     bool uses_tls;
     long long idle_timestamp_ms;
 
-    static void *operator new(size_t size)
+    static void *operator new(size_t size) noexcept
     {
         void *pointer;
 
-        pointer = std::malloc(size);
+        pointer = cma_malloc(size);
         if (!pointer)
-            throw std::bad_alloc();
+            ft_errno = FT_ERR_NO_MEMORY;
         return (pointer);
+    }
+
+    static void *operator new(size_t size, const std::nothrow_t&) noexcept
+    {
+        return (api_pooled_connection::operator new(size));
     }
 
     static void operator delete(void *pointer) noexcept
     {
-        std::free(pointer);
+        if (pointer)
+            cma_free(pointer);
+        ft_errno = ER_SUCCESS;
+        return ;
+    }
+
+    static void operator delete(void *pointer, const std::nothrow_t&) noexcept
+    {
+        api_pooled_connection::operator delete(pointer);
         return ;
     }
 };
 
-typedef std::unique_ptr<api_pooled_connection> t_api_connection_entry;
-typedef std::vector<t_api_connection_entry> t_api_connection_bucket;
+typedef ft_uniqueptr<api_pooled_connection> t_api_connection_entry;
+typedef ft_vector<t_api_connection_entry> t_api_connection_bucket;
 
 struct api_connection_bucket_entry
 {
@@ -47,9 +61,7 @@ struct api_connection_bucket_entry
     t_api_connection_bucket bucket;
 };
 
-typedef std::vector<api_connection_bucket_entry> t_api_connection_map;
-typedef t_api_connection_bucket::difference_type t_api_bucket_difference;
-typedef t_api_connection_map::difference_type t_api_map_difference;
+typedef ft_vector<api_connection_bucket_entry> t_api_connection_map;
 
 static void api_connection_pool_dispose_entry(api_pooled_connection &entry);
 
@@ -185,6 +197,50 @@ static size_t g_api_connection_pool_reuse_hits = 0;
 static size_t g_api_connection_pool_acquire_misses = 0;
 static bool g_api_connection_pool_enabled = true;
 
+struct api_connection_pool_dispose_snapshot
+{
+    bool socket_cleanup_allowed;
+    bool socket_is_open;
+    int socket_error;
+    size_t client_count;
+};
+
+static api_connection_pool_dispose_snapshot g_api_connection_pool_last_dispose_snapshot =
+{
+    false,
+    false,
+    ER_SUCCESS,
+    0
+};
+
+static void api_connection_pool_record_dispose_snapshot(
+    bool socket_cleanup_allowed,
+    bool socket_is_open,
+    int socket_error,
+    size_t client_count)
+{
+    int cleanup_allowed_flag;
+    int socket_open_flag;
+
+    g_api_connection_pool_last_dispose_snapshot.socket_cleanup_allowed = socket_cleanup_allowed;
+    g_api_connection_pool_last_dispose_snapshot.socket_is_open = socket_is_open;
+    g_api_connection_pool_last_dispose_snapshot.socket_error = socket_error;
+    g_api_connection_pool_last_dispose_snapshot.client_count = client_count;
+    cleanup_allowed_flag = 0;
+    if (socket_cleanup_allowed)
+        cleanup_allowed_flag = 1;
+    socket_open_flag = 0;
+    if (socket_is_open)
+        socket_open_flag = 1;
+    ft_log_debug(
+        "api_connection_pool_dispose_entry snapshot cleanup_allowed=%d socket_open=%d socket_error=%d client_count=%llu",
+        cleanup_allowed_flag,
+        socket_open_flag,
+        socket_error,
+        (unsigned long long)client_count);
+    return ;
+}
+
 static long long api_connection_pool_now_ms(void)
 {
     std::chrono::steady_clock::time_point now_point;
@@ -232,8 +288,44 @@ static void api_connection_pool_free_tls(SSL *tls_session, SSL_CTX *tls_context)
 
 static void api_connection_pool_dispose_entry(api_pooled_connection &entry)
 {
-    entry.socket.disconnect_all_clients();
-    if (entry.uses_tls)
+    bool socket_is_open;
+    bool socket_has_clients;
+    bool socket_cleanup_allowed;
+    size_t client_count;
+    int socket_error;
+
+    socket_is_open = (entry.socket.get_fd() >= 0);
+    socket_has_clients = false;
+    socket_cleanup_allowed = true;
+    client_count = 0;
+    socket_error = ER_SUCCESS;
+    if (socket_is_open)
+    {
+        client_count = entry.socket.get_client_count();
+        socket_error = entry.socket.get_error();
+        if (socket_error != ER_SUCCESS)
+        {
+            socket_cleanup_allowed = false;
+        }
+        else if (client_count > 0)
+            socket_has_clients = true;
+    }
+    if (!socket_cleanup_allowed)
+    {
+        if (socket_error != ER_SUCCESS)
+            ft_errno = socket_error;
+    }
+    else if (socket_has_clients)
+    {
+        entry.socket.disconnect_all_clients();
+        socket_error = entry.socket.get_error();
+        if (socket_error != ER_SUCCESS)
+        {
+            socket_cleanup_allowed = false;
+            ft_errno = socket_error;
+        }
+    }
+    if (entry.uses_tls && entry.tls_session)
     {
         if (api_connection_pool_tls_unregister(entry.tls_session))
             api_connection_pool_free_tls(entry.tls_session, entry.tls_context);
@@ -242,17 +334,40 @@ static void api_connection_pool_dispose_entry(api_pooled_connection &entry)
     entry.tls_context = ft_nullptr;
     entry.uses_tls = false;
     entry.idle_timestamp_ms = 0;
-    entry.socket.close_socket();
+    api_connection_pool_record_dispose_snapshot(
+        socket_cleanup_allowed,
+        socket_is_open,
+        socket_error,
+        client_count);
+    if (socket_cleanup_allowed && socket_is_open)
+        entry.socket.close_socket();
+    if (socket_cleanup_allowed)
+    {
+        ft_socket empty_socket;
+
+        entry.socket = std::move(empty_socket);
+    }
     return ;
 }
 
-static void api_connection_pool_bucket_erase(t_api_connection_bucket &entries, size_t index)
+static bool api_connection_pool_bucket_erase(t_api_connection_bucket &entries, size_t index)
 {
-    t_api_bucket_difference offset;
+    if (index >= entries.size())
+        return (false);
+    entries.erase(entries.begin() + index);
+    if (entries.get_error() != ER_SUCCESS)
+        return (false);
+    return (true);
+}
 
-    offset = static_cast<t_api_bucket_difference>(index);
-    entries.erase(entries.begin() + offset);
-    return ;
+static bool api_connection_pool_map_erase(t_api_connection_map &buckets, size_t index)
+{
+    if (index >= buckets.size())
+        return (false);
+    buckets.erase(buckets.begin() + index);
+    if (buckets.get_error() != ER_SUCCESS)
+        return (false);
+    return (true);
 }
 
 static void api_connection_pool_drop_tls_duplicates(SSL *tls_session)
@@ -290,7 +405,8 @@ static void api_connection_pool_drop_tls_duplicates(SSL *tls_session)
             entry->tls_session = ft_nullptr;
             entry->tls_context = ft_nullptr;
             entry->uses_tls = false;
-            api_connection_pool_bucket_erase(bucket, entry_index);
+            if (!api_connection_pool_bucket_erase(bucket, entry_index))
+                return ;
             continue ;
         }
         bucket_index++;
@@ -312,7 +428,8 @@ static void api_connection_pool_prune_expired(t_api_connection_bucket &entries,
 
         if (!entry_pointer)
         {
-            api_connection_pool_bucket_erase(entries, index);
+            if (!api_connection_pool_bucket_erase(entries, index))
+                return ;
             continue;
         }
         entry = entry_pointer.get();
@@ -330,7 +447,8 @@ static void api_connection_pool_prune_expired(t_api_connection_bucket &entries,
         if (remove_entry)
         {
             api_connection_pool_dispose_entry(*entry);
-            api_connection_pool_bucket_erase(entries, index);
+            if (!api_connection_pool_bucket_erase(entries, index))
+                return ;
         }
         else
             index++;
@@ -344,8 +462,10 @@ static void api_connection_pool_remove_oldest(t_api_connection_bucket &entries)
         return ;
     t_api_connection_entry entry_pointer;
 
-    entry_pointer = std::move(entries.front());
+    entry_pointer = std::move(entries[0]);
     entries.erase(entries.begin());
+    if (entries.get_error() != ER_SUCCESS)
+        return ;
     if (!entry_pointer)
         return ;
     api_connection_pool_dispose_entry(*entry_pointer);
@@ -372,7 +492,7 @@ static t_api_connection_map::iterator api_connection_pool_find_entry(
     {
         t_api_connection_map::iterator iterator;
 
-        iterator = buckets.begin() + static_cast<t_api_map_difference>(index);
+        iterator = buckets.begin() + index;
         if (iterator->key == key)
             return (iterator);
         index++;
@@ -430,12 +550,13 @@ bool api_connection_pool_acquire(api_connection_pool_handle &handle,
 
         last_index = iterator->bucket.size() - 1;
         entry_pointer = std::move(iterator->bucket[last_index]);
-        iterator->bucket.erase(iterator->bucket.begin()
-                + static_cast<t_api_bucket_difference>(last_index));
+        if (!api_connection_pool_bucket_erase(iterator->bucket, last_index))
+            return (false);
         if (!entry_pointer)
             continue ;
         entry = entry_pointer.get();
         handle.socket = std::move(entry->socket);
+        entry->socket = ft_socket();
         handle.tls_session = entry->tls_session;
         handle.tls_context = entry->tls_context;
         handle.has_socket = true;
@@ -448,20 +569,22 @@ bool api_connection_pool_acquire(api_connection_pool_handle &handle,
         entry->uses_tls = false;
         if (iterator->bucket.empty())
         {
-            t_api_map_difference bucket_offset;
+            size_t bucket_offset;
 
-            bucket_offset = iterator - buckets.begin();
-            buckets.erase(buckets.begin() + bucket_offset);
+            bucket_offset = static_cast<size_t>(iterator - buckets.begin());
+            if (!api_connection_pool_map_erase(buckets, bucket_offset))
+                return (false);
         }
         g_api_connection_pool_reuse_hits++;
         return (true);
     }
     if (iterator->bucket.empty())
     {
-        t_api_map_difference bucket_offset;
+        size_t bucket_offset;
 
-        bucket_offset = iterator - buckets.begin();
-        buckets.erase(buckets.begin() + bucket_offset);
+        bucket_offset = static_cast<size_t>(iterator - buckets.begin());
+        if (!api_connection_pool_map_erase(buckets, bucket_offset))
+            return (false);
     }
     g_api_connection_pool_acquire_misses++;
     return (false);
@@ -518,20 +641,39 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
 
         new_entry.key = map_key;
         buckets.push_back(std::move(new_entry));
-        iterator = buckets.begin() + static_cast<t_api_map_difference>(
-                buckets.size() - 1);
+        if (buckets.get_error() != ER_SUCCESS)
+        {
+            api_connection_pool_evict(handle);
+            return ;
+        }
+        iterator = buckets.begin() + (buckets.size() - 1);
     }
     bucket = &iterator->bucket;
     api_connection_pool_prune_expired(*bucket, now_ms);
     while (bucket->size() >= g_api_connection_max_idle)
-        api_connection_pool_remove_oldest(*bucket);
-    t_api_connection_entry entry_pointer(new api_pooled_connection());
-    if (!entry_pointer)
     {
+        size_t previous_size;
+
+        previous_size = bucket->size();
+        api_connection_pool_remove_oldest(*bucket);
+        if (bucket->get_error() != ER_SUCCESS)
+            break ;
+        if (bucket->size() >= previous_size)
+            break ;
+    }
+    t_api_connection_entry entry_pointer;
+    api_pooled_connection *new_entry;
+
+    new_entry = new (std::nothrow) api_pooled_connection();
+    if (!new_entry)
+    {
+        ft_errno = FT_ERR_NO_MEMORY;
         api_connection_pool_evict(handle);
         return ;
     }
+    entry_pointer.reset(new_entry, 1, false);
     entry_pointer->socket = std::move(handle.socket);
+    handle.socket = ft_socket();
     entry_pointer->tls_session = handle.tls_session;
     entry_pointer->tls_context = handle.tls_context;
     entry_pointer->uses_tls = handle.security_mode == api_connection_security_mode::TLS;
@@ -541,11 +683,36 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
         api_connection_pool_drop_tls_duplicates(entry_pointer->tls_session);
         if (!api_connection_pool_tls_register(entry_pointer->tls_session))
         {
-            api_connection_pool_evict(handle);
+            api_pooled_connection *failed_entry;
+
+            failed_entry = entry_pointer.get();
+            if (failed_entry)
+                api_connection_pool_dispose_entry(*failed_entry);
+            entry_pointer.reset();
+            handle.tls_session = ft_nullptr;
+            handle.tls_context = ft_nullptr;
+            handle.has_socket = false;
+            handle.from_pool = false;
+            handle.should_store = false;
             return ;
         }
     }
+    api_pooled_connection *stored_entry;
+
+    stored_entry = entry_pointer.get();
     bucket->push_back(std::move(entry_pointer));
+    if (bucket->get_error() != ER_SUCCESS)
+    {
+        if (stored_entry)
+            api_connection_pool_dispose_entry(*stored_entry);
+        entry_pointer.reset();
+        handle.tls_session = ft_nullptr;
+        handle.tls_context = ft_nullptr;
+        handle.has_socket = false;
+        handle.from_pool = false;
+        handle.should_store = false;
+        return ;
+    }
     handle.tls_session = ft_nullptr;
     handle.tls_context = ft_nullptr;
     handle.has_socket = false;

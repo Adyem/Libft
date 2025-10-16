@@ -3,7 +3,6 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
-#include "../cma_test_helpers.hpp"
 
 #include <utility>
 
@@ -40,7 +39,6 @@ FT_TEST(test_cma_allocation_guard_releases_allocation,
     allocation_iterations = 64;
     allocation_size_base = 32;
     cma_set_alloc_limit(0);
-    FT_ASSERT(ensure_cma_cleanup_success());
     thread_index = 0;
     while (thread_index < thread_count)
     {
@@ -57,7 +55,6 @@ FT_TEST(test_cma_allocation_guard_releases_allocation,
         FT_ASSERT_EQ(ER_SUCCESS, threads[join_index].get_error());
         join_index = join_index + 1;
     }
-    FT_ASSERT(ensure_cma_cleanup_success());
     return (1);
 }
 */
@@ -74,7 +71,6 @@ FT_TEST(test_cma_allocation_guard_release_transfers_ownership,
     void *released_pointer;
 
     cma_set_alloc_limit(0);
-    FT_ASSERT(ensure_cma_cleanup_success());
     cma_get_stats(&allocation_count_before, &free_count_before);
     released_pointer = cma_malloc(48);
     if (released_pointer == ft_nullptr)

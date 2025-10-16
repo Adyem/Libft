@@ -179,13 +179,17 @@ bool ft_socket::disconnect_client(int fd)
 
 void ft_socket::disconnect_all_clients()
 {
-    size_t index = 0;
-    while (index < this->_connected.size())
+    ft_vector<ft_socket> owned_clients;
+    size_t index;
+
+    owned_clients = std::move(this->_connected);
+    index = 0;
+    while (index < owned_clients.size())
     {
-        this->_connected[index].close_socket();
+        owned_clients[index].close_socket();
         index++;
     }
-    this->_connected.clear();
+    owned_clients.clear();
     this->set_error(ER_SUCCESS);
     return ;
 }
@@ -375,12 +379,30 @@ const char* ft_socket::get_error_str() const
     return (ft_strerror(this->_error_code));
 }
 
+void ft_socket::reset_to_empty_state()
+{
+    size_t connection_index;
+
+    connection_index = 0;
+    while (connection_index < this->_connected.size())
+    {
+        this->_connected[connection_index].close_socket();
+        connection_index++;
+    }
+    this->_connected.clear();
+    ft_bzero(&this->_address, sizeof(this->_address));
+    this->_socket_fd = -1;
+    this->_error_code = ER_SUCCESS;
+    this->set_error(ER_SUCCESS);
+    return ;
+}
+
 ft_socket::ft_socket(ft_socket &&other) noexcept
     : _address(other._address), _connected(std::move(other._connected)),
     _socket_fd(other._socket_fd), _error_code(other._error_code)
 {
-    other._socket_fd = -1;
-    other.set_error(ER_SUCCESS);
+    other.reset_to_empty_state();
+    this->set_error(this->_error_code);
     return ;
 }
 
@@ -388,13 +410,23 @@ ft_socket &ft_socket::operator=(ft_socket &&other) noexcept
 {
     if (this != &other)
     {
-        close_socket();
+        int moved_error_code;
+        size_t connected_index;
+
+        connected_index = 0;
+        while (connected_index < this->_connected.size())
+        {
+            this->_connected[connected_index].close_socket();
+            connected_index++;
+        }
+        this->_connected.clear();
+        this->close_socket();
         this->_address = other._address;
-        this->_socket_fd = other._socket_fd;
-        this->set_error(other._error_code);
         this->_connected = std::move(other._connected);
-        other._socket_fd = -1;
-        other.set_error(ER_SUCCESS);
+        this->_socket_fd = other._socket_fd;
+        moved_error_code = other._error_code;
+        other.reset_to_empty_state();
+        this->set_error(moved_error_code);
     }
     return (*this);
 }
