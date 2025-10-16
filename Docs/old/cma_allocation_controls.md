@@ -37,7 +37,6 @@ void    setup_limit_guard(void)
 void    teardown_limit_guard(void)
 {
     cma_set_alloc_limit(0);
-    cma_cleanup();
     return ;
 }
 ```
@@ -62,6 +61,4 @@ void    inject_failure_without_lock(ft_size_t request_size)
 ```
 
 Always restore both toggles once the failure scenario finishes so subsequent
-code runs with the expected allocator invariants. Pair the configuration with a
-call to `cma_cleanup` during test teardown to free internal pages and reset
-usage counters.
+code runs with the expected allocator invariants.

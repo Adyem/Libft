@@ -3,7 +3,6 @@
 #include "../../Libft/libft.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_runner.hpp"
-#include "../cma_test_helpers.hpp"
 
 FT_TEST(test_cma_extended_stats_track_bytes,
         "cma_get_extended_stats reports live and peak usage")
@@ -30,7 +29,6 @@ FT_TEST(test_cma_extended_stats_track_bytes,
     ft_size_t second_block_size;
 
     cma_set_alloc_limit(0);
-    FT_ASSERT(ensure_cma_cleanup_success());
     cma_get_extended_stats(&allocation_count_before,
             &free_count_before,
             &current_bytes_before,

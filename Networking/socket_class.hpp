@@ -28,6 +28,7 @@ class ft_socket
         int     listen_socket(const SocketConfig &config);
         int        accept_connection();
         void     set_error(int error_code) const noexcept;
+        void     reset_to_empty_state();
 
         struct sockaddr_storage _address;
         ft_vector<ft_socket>     _connected;
