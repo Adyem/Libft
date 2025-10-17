@@ -63,6 +63,7 @@ enum PTErrorCode
     FT_ERR_PRIORITY_QUEUE_EMPTY,
     FT_ERR_PRIORITY_QUEUE_NO_MEMORY,
     FT_ERR_SSL_SYSCALL_ERROR = 2005,
+    FT_ERR_HTTP_PROTOCOL_MISMATCH = 2006,
 };
 
 const char* ft_strerror(int error_code);

@@ -4,43 +4,87 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include <cerrno>
+#include <memory>
+#include <new>
+
+static void yaml_value_deleter(yaml_value *value)
+{
+    if (value != ft_nullptr)
+        yaml_free(value);
+    return ;
+}
 
 FT_TEST(test_yaml_round_trip, "yaml round trip")
 {
     yaml_value root;
+    std::unique_ptr<yaml_value> name_value_guard;
+    std::unique_ptr<yaml_value> numbers_value_guard;
+    std::unique_ptr<yaml_value> number_one_guard;
+    std::unique_ptr<yaml_value> number_two_guard;
+    ft_string yaml_string;
+    std::unique_ptr<yaml_value, void (*)(yaml_value *)> parsed_value_guard(ft_nullptr, &yaml_value_deleter);
+    ft_string round_trip_string;
+
     root.set_type(YAML_MAP);
+    name_value_guard.reset(new (std::nothrow) yaml_value());
+    if (name_value_guard.get() == ft_nullptr)
+        return (0);
+    name_value_guard->set_scalar("Alice");
+    if (name_value_guard->get_error() != ER_SUCCESS)
+        return (0);
+    root.add_map_item("name", name_value_guard.get());
+    if (root.get_error() != ER_SUCCESS)
+        return (0);
+    name_value_guard.release();
 
-    yaml_value *name_value = new yaml_value();
-    name_value->set_scalar("Alice");
-    root.add_map_item("name", name_value);
+    numbers_value_guard.reset(new (std::nothrow) yaml_value());
+    if (numbers_value_guard.get() == ft_nullptr)
+        return (0);
+    numbers_value_guard->set_type(YAML_LIST);
+    if (numbers_value_guard->get_error() != ER_SUCCESS)
+        return (0);
 
-    yaml_value *numbers_value = new yaml_value();
-    numbers_value->set_type(YAML_LIST);
+    number_one_guard.reset(new (std::nothrow) yaml_value());
+    if (number_one_guard.get() == ft_nullptr)
+        return (0);
+    number_one_guard->set_scalar("one");
+    if (number_one_guard->get_error() != ER_SUCCESS)
+        return (0);
+    numbers_value_guard->add_list_item(number_one_guard.get());
+    if (numbers_value_guard->get_error() != ER_SUCCESS)
+        return (0);
+    number_one_guard.release();
 
-    yaml_value *number_one = new yaml_value();
-    number_one->set_scalar("one");
-    numbers_value->add_list_item(number_one);
+    number_two_guard.reset(new (std::nothrow) yaml_value());
+    if (number_two_guard.get() == ft_nullptr)
+        return (0);
+    number_two_guard->set_scalar("two");
+    if (number_two_guard->get_error() != ER_SUCCESS)
+        return (0);
+    numbers_value_guard->add_list_item(number_two_guard.get());
+    if (numbers_value_guard->get_error() != ER_SUCCESS)
+        return (0);
+    number_two_guard.release();
 
-    yaml_value *number_two = new yaml_value();
-    number_two->set_scalar("two");
-    numbers_value->add_list_item(number_two);
+    root.add_map_item("numbers", numbers_value_guard.get());
+    if (root.get_error() != ER_SUCCESS)
+        return (0);
+    numbers_value_guard.release();
 
-    root.add_map_item("numbers", numbers_value);
+    yaml_string = yaml_write_to_string(&root);
+    if (yaml_string.get_error() != ER_SUCCESS)
+        return (0);
 
-    FT_ASSERT_EQ(ER_SUCCESS, root.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, numbers_value->get_error());
+    parsed_value_guard.reset(yaml_read_from_string(yaml_string));
+    if (parsed_value_guard.get() == ft_nullptr)
+        return (0);
+    if (parsed_value_guard->get_error() != ER_SUCCESS)
+        return (0);
 
-    ft_string yaml_string = yaml_write_to_string(&root);
-    FT_ASSERT_EQ(ER_SUCCESS, yaml_string.get_error());
-
-    yaml_value *parsed = yaml_read_from_string(yaml_string);
-    FT_ASSERT(parsed != ft_nullptr);
-    FT_ASSERT_EQ(ER_SUCCESS, parsed->get_error());
-
-    ft_string round_trip = yaml_write_to_string(parsed);
-    FT_ASSERT_EQ(ER_SUCCESS, round_trip.get_error());
-    FT_ASSERT_EQ(0, ft_strcmp(yaml_string.c_str(), round_trip.c_str()));
-    yaml_free(parsed);
+    round_trip_string = yaml_write_to_string(parsed_value_guard.get());
+    if (round_trip_string.get_error() != ER_SUCCESS)
+        return (0);
+    FT_ASSERT_EQ(0, ft_strcmp(yaml_string.c_str(), round_trip_string.c_str()));
     return (1);
 }
 
