@@ -20,7 +20,7 @@ FT_TEST(test_su_get_cpu_count_forced_failure_errno, "su_get_cpu_count forced fai
     ft_errno = ER_SUCCESS;
     cmp_set_force_cpu_count_failure(EIO);
     FT_ASSERT_EQ(0u, su_get_cpu_count());
-    FT_ASSERT_EQ(EIO + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     cmp_clear_force_cpu_count_result();
     ft_errno = ER_SUCCESS;
     return (1);
@@ -53,7 +53,7 @@ FT_TEST(test_su_get_total_memory_forced_failure_errno, "su_get_total_memory forc
     ft_errno = ER_SUCCESS;
     cmp_set_force_total_memory_failure(ENOMEM);
     FT_ASSERT_EQ(0ull, su_get_total_memory());
-    FT_ASSERT_EQ(ENOMEM + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     cmp_clear_force_total_memory_result();
     ft_errno = ER_SUCCESS;
     return (1);

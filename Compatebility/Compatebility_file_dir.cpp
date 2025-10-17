@@ -50,7 +50,7 @@ file_dir *cmp_dir_open(const char *directory_path)
         DWORD last_error = GetLastError();
         cma_free(search_path);
         if (last_error != 0)
-            ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
+            ft_errno = cmp_map_system_error_to_ft(static_cast<int>(last_error));
         else
             ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
@@ -90,7 +90,7 @@ file_dirent *cmp_dir_read(file_dir *directory_stream)
         if (last_error == ERROR_NO_MORE_FILES)
             ft_errno = ER_SUCCESS;
         else if (last_error != 0)
-            ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
+            ft_errno = cmp_map_system_error_to_ft(static_cast<int>(last_error));
         else
             ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
@@ -134,7 +134,7 @@ int cmp_directory_exists(const char *path)
     }
     DWORD last_error = GetLastError();
     if (last_error != 0)
-        ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
+        ft_errno = cmp_map_system_error_to_ft(static_cast<int>(last_error));
     else
         ft_errno = FT_ERR_INVALID_ARGUMENT;
     return (0);
@@ -170,7 +170,7 @@ file_dir *cmp_dir_open(const char *directory_path)
     if (file_descriptor < 0)
     {
         if (errno != 0)
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = cmp_map_system_error_to_ft(errno);
         else
             ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
@@ -202,7 +202,7 @@ file_dir *cmp_dir_open(const char *directory_path)
     if (!dir)
     {
         if (errno != 0)
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = cmp_map_system_error_to_ft(errno);
         else
             ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
@@ -239,7 +239,7 @@ file_dirent *cmp_dir_read(file_dir *directory_stream)
             if (bytes == 0)
                 ft_errno = ER_SUCCESS;
             else if (errno != 0)
-                ft_errno = errno + ERRNO_OFFSET;
+                ft_errno = cmp_map_system_error_to_ft(errno);
             else
                 ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (ft_nullptr);
@@ -266,7 +266,7 @@ file_dirent *cmp_dir_read(file_dir *directory_stream)
     if (!entry)
     {
         if (errno != 0)
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = cmp_map_system_error_to_ft(errno);
         else
             ft_errno = ER_SUCCESS;
         return (ft_nullptr);
@@ -315,7 +315,7 @@ int cmp_directory_exists(const char *path)
         return (0);
     }
     if (errno != 0)
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = cmp_map_system_error_to_ft(errno);
     else
         ft_errno = FT_ERR_INVALID_ARGUMENT;
     return (0);

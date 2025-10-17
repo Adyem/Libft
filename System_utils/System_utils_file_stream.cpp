@@ -115,8 +115,13 @@ int su_fclose(su_file *stream)
         ft_errno = ER_SUCCESS;
         return (0);
     }
-    if (ft_errno == ER_SUCCESS && errno != 0)
-        ft_errno = errno + ERRNO_OFFSET;
+    if (ft_errno != ER_SUCCESS)
+    {
+        ft_errno = cmp_normalize_ft_errno(ft_errno);
+        return (result);
+    }
+    if (errno != 0)
+        ft_errno = cmp_map_system_error_to_ft(errno);
     return (result);
 }
 
@@ -215,8 +220,10 @@ int su_fseek(su_file *stream, long offset, int origin)
     result = lseek(stream->_descriptor, offset, origin);
     if (result < 0)
     {
-        if (ft_errno == ER_SUCCESS && errno != 0)
-            ft_errno = errno + ERRNO_OFFSET;
+        if (ft_errno != ER_SUCCESS)
+            ft_errno = cmp_normalize_ft_errno(ft_errno);
+        else if (errno != 0)
+            ft_errno = cmp_map_system_error_to_ft(errno);
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -235,8 +242,10 @@ long su_ftell(su_file *stream)
     position = lseek(stream->_descriptor, 0, SEEK_CUR);
     if (position < 0)
     {
-        if (ft_errno == ER_SUCCESS && errno != 0)
-            ft_errno = errno + ERRNO_OFFSET;
+        if (ft_errno != ER_SUCCESS)
+            ft_errno = cmp_normalize_ft_errno(ft_errno);
+        else if (errno != 0)
+            ft_errno = cmp_map_system_error_to_ft(errno);
         return (-1L);
     }
     ft_errno = ER_SUCCESS;

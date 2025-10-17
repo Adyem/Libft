@@ -9,6 +9,10 @@
 #include <thread>
 #include <unistd.h>
 #include <sys/wait.h>
+#if defined(_WIN32) || defined(_WIN64)
+# include <winsock2.h>
+# include <windows.h>
+#endif
 
 static bool capture_ft_exit_output(const char *message, int errno_value, int exit_code,
         std::string &output, int &child_status)
@@ -77,7 +81,7 @@ FT_TEST(test_ft_strerror_errno_message, "ft_strerror returns standard errno mess
     expected_message = strerror(EINVAL);
     previous_errno = FT_ERR_INVALID_ARGUMENT;
     ft_errno = previous_errno;
-    actual_message = ft_strerror(EINVAL + ERRNO_OFFSET);
+    actual_message = ft_strerror(FT_ERR_INVALID_ARGUMENT);
     FT_ASSERT(expected_message != NULL);
     FT_ASSERT(actual_message != NULL);
     FT_ASSERT_EQ(0, std::strcmp(expected_message, actual_message));
@@ -205,6 +209,64 @@ FT_TEST(test_ft_perror_prefixes_custom_message, "ft_perror prefixes custom text 
     close(saved_stderr);
     close(pipe_fds[0]);
     ft_errno = original_errno_value;
+    return (1);
+}
+
+FT_TEST(test_ft_map_system_error_normalizes_common_codes,
+    "ft_map_system_error maps common operating system errors")
+{
+    int mapped_error;
+
+    mapped_error = ft_map_system_error(0);
+    FT_ASSERT_EQ(ER_SUCCESS, mapped_error);
+#if defined(_WIN32) || defined(_WIN64)
+    mapped_error = ft_map_system_error(WSAEWOULDBLOCK);
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, mapped_error);
+    mapped_error = ft_map_system_error(WSAECONNRESET);
+    FT_ASSERT_EQ(FT_ERR_IO, mapped_error);
+    mapped_error = ft_map_system_error(ERROR_FILE_NOT_FOUND);
+    FT_ASSERT_EQ(FT_ERR_IO, mapped_error);
+    mapped_error = ft_map_system_error(ERROR_INVALID_HANDLE);
+    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, mapped_error);
+    mapped_error = ft_map_system_error(ERROR_ALREADY_EXISTS);
+    FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, mapped_error);
+#else
+    mapped_error = ft_map_system_error(EINTR);
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, mapped_error);
+    mapped_error = ft_map_system_error(EAGAIN);
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, mapped_error);
+    mapped_error = ft_map_system_error(ENOENT);
+    FT_ASSERT_EQ(FT_ERR_IO, mapped_error);
+    mapped_error = ft_map_system_error(EACCES);
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, mapped_error);
+    mapped_error = ft_map_system_error(EBADF);
+    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, mapped_error);
+    mapped_error = ft_map_system_error(ECONNREFUSED);
+    FT_ASSERT_EQ(FT_ERR_SOCKET_CONNECT_FAILED, mapped_error);
+#endif
+    mapped_error = ft_map_system_error(12345);
+    FT_ASSERT_EQ(12345 + ERRNO_OFFSET, mapped_error);
+    return (1);
+}
+
+FT_TEST(test_ft_set_errno_from_system_error_updates_global,
+    "ft_set_errno_from_system_error stores normalized result in ft_errno")
+{
+    int mapped_error;
+
+    ft_errno = ER_SUCCESS;
+#if defined(_WIN32) || defined(_WIN64)
+    mapped_error = ft_set_errno_from_system_error(ERROR_DISK_FULL);
+    FT_ASSERT_EQ(FT_ERR_FULL, mapped_error);
+    FT_ASSERT_EQ(FT_ERR_FULL, ft_errno);
+#else
+    mapped_error = ft_set_errno_from_system_error(ENOSPC);
+    FT_ASSERT_EQ(FT_ERR_FULL, mapped_error);
+    FT_ASSERT_EQ(FT_ERR_FULL, ft_errno);
+#endif
+    mapped_error = ft_set_errno_from_system_error(0);
+    FT_ASSERT_EQ(ER_SUCCESS, mapped_error);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 

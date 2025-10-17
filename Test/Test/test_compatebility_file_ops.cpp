@@ -61,14 +61,14 @@ FT_TEST(test_cmp_file_exists_null_pointer_sets_errno, "cmp_file_exists reports F
     return (1);
 }
 
-FT_TEST(test_cmp_file_exists_missing_path_sets_errno, "cmp_file_exists reports ENOENT for missing file")
+FT_TEST(test_cmp_file_exists_missing_path_sets_errno, "cmp_file_exists reports FT_ERR_IO for missing file")
 {
     const char *missing_path = "cmp_file_exists_missing_path.txt";
 
     remove_file_if_present(missing_path);
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(0, cmp_file_exists(missing_path));
-    FT_ASSERT_EQ(ENOENT + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
 }
 
@@ -110,13 +110,7 @@ FT_TEST(test_cmp_file_delete_permission_error_sets_errno, "cmp_file_delete repor
     write_test_file(file_path);
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, cmp_file_delete(directory_path));
-    FT_ASSERT_EQ(
-#if defined(_WIN32) || defined(_WIN64)
-        static_cast<int>(ERROR_ACCESS_DENIED) + ERRNO_OFFSET,
-#else
-        EISDIR + ERRNO_OFFSET,
-#endif
-        ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, ft_errno);
     cmp_file_delete(file_path);
     remove_directory_if_present(directory_path);
     return (1);
@@ -142,7 +136,7 @@ FT_TEST(test_cmp_file_move_null_pointer_sets_errno, "cmp_file_move reports FT_ER
     return (1);
 }
 
-FT_TEST(test_cmp_file_move_missing_source_sets_errno, "cmp_file_move reports ENOENT for missing source")
+FT_TEST(test_cmp_file_move_missing_source_sets_errno, "cmp_file_move reports FT_ERR_IO for missing source")
 {
     const char *source_path = "cmp_file_move_missing_source.txt";
     const char *destination_path = "cmp_file_move_missing_destination.txt";
@@ -151,7 +145,7 @@ FT_TEST(test_cmp_file_move_missing_source_sets_errno, "cmp_file_move reports ENO
     remove_file_if_present(destination_path);
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, cmp_file_move(source_path, destination_path));
-    FT_ASSERT_EQ(ENOENT + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
 }
 
@@ -173,11 +167,7 @@ FT_TEST(test_cmp_file_move_cross_device_copy_failure_preserves_errno, "cmp_file_
     cmp_set_force_cross_device_move(1);
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, cmp_file_move(source_path, destination_directory));
-#if defined(_WIN32) || defined(_WIN64)
-    FT_ASSERT_EQ(static_cast<int>(ERROR_ACCESS_DENIED) + ERRNO_OFFSET, ft_errno);
-#else
-    FT_ASSERT_EQ(EINVAL + ERRNO_OFFSET, ft_errno);
-#endif
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, ft_errno);
     cmp_set_force_cross_device_move(0);
     remove_file_if_present(source_path);
     remove_directory_if_present(destination_directory);
@@ -210,11 +200,7 @@ FT_TEST(test_cmp_file_copy_permission_error_sets_errno, "cmp_file_copy reports p
 #endif
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, cmp_file_copy(source_path, destination_directory));
-#if defined(_WIN32) || defined(_WIN64)
-    FT_ASSERT_EQ(static_cast<int>(ERROR_ACCESS_DENIED) + ERRNO_OFFSET, ft_errno);
-#else
-    FT_ASSERT_EQ(EINVAL + ERRNO_OFFSET, ft_errno);
-#endif
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, ft_errno);
     remove_file_if_present(source_path);
     remove_directory_if_present(destination_directory);
     remove_file_if_present(stale_destination_path);
@@ -255,11 +241,7 @@ FT_TEST(test_cmp_file_create_directory_permission_error_sets_errno, "cmp_file_cr
     write_test_file(parent_file);
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, cmp_file_create_directory(child_directory, 0700));
-#if defined(_WIN32) || defined(_WIN64)
-    FT_ASSERT_EQ(static_cast<int>(ERROR_PATH_NOT_FOUND) + ERRNO_OFFSET, ft_errno);
-#else
-    FT_ASSERT_EQ(ENOTDIR + ERRNO_OFFSET, ft_errno);
-#endif
+    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     remove_directory_if_present(child_directory);
     remove_file_if_present(parent_file);
     return (1);
@@ -277,11 +259,7 @@ FT_TEST(test_cmp_file_create_directory_existing_path_sets_errno, "cmp_file_creat
 #endif
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, cmp_file_create_directory(directory_path, 0700));
-#if defined(_WIN32) || defined(_WIN64)
-    FT_ASSERT_EQ(static_cast<int>(ERROR_ALREADY_EXISTS) + ERRNO_OFFSET, ft_errno);
-#else
-    FT_ASSERT_EQ(EEXIST + ERRNO_OFFSET, ft_errno);
-#endif
+    FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, ft_errno);
     remove_directory_if_present(directory_path);
     return (1);
 }

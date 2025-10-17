@@ -59,7 +59,7 @@ FT_TEST(test_fopen_invalid, "ft_fopen invalid path")
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_fopen("missing_file.txt", "r"));
-    FT_ASSERT_EQ(ENOENT + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
 }
 
@@ -72,7 +72,7 @@ FT_TEST(test_fopen_invalid_mode_sets_errno, "ft_fopen invalid mode reports EINVA
     ft_errno = ER_SUCCESS;
     file = ft_fopen("test_file_io.txt", "invalid");
     FT_ASSERT_EQ(ft_nullptr, file);
-    FT_ASSERT_EQ(EINVAL + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -106,7 +106,7 @@ FT_TEST(test_fclose_failure_sets_errno, "ft_fclose propagates fclose failures")
     force_file_descriptor_failure(file);
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(EOF, ft_fclose(file));
-    FT_ASSERT_EQ(EBADF + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, ft_errno);
     return (1);
 }
 
@@ -200,7 +200,7 @@ FT_TEST(test_fgets_stream_error_sets_errno, "ft_fgets reports stream errors")
     force_file_descriptor_failure(file);
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, ft_fgets(buffer, sizeof(buffer), file));
-    FT_ASSERT_EQ(EBADF + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, ft_errno);
     return (1);
 }
 

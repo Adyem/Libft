@@ -10,13 +10,13 @@ int pt_thread_join(pthread_t thread, void **retval)
     if (!thread)
     {
         return_value = ESRCH;
-        ft_errno = return_value + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(return_value);
         return (return_value);
     }
     return_value = pthread_join(thread, retval);
     if (return_value != 0)
     {
-        ft_errno = return_value + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(return_value);
         return (return_value);
     }
     ft_errno = ER_SUCCESS;

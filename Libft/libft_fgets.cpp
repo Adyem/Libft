@@ -2,6 +2,7 @@
 #if LIBFT_ENABLE_FILE_IO_HELPERS
 #include "libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
 #include <cstdio>
 #include <cerrno>
@@ -23,7 +24,10 @@ char *ft_fgets(char *string, int size, FILE *stream)
             int saved_errno;
 
             saved_errno = errno;
-            ft_errno = saved_errno != 0 ? saved_errno + ERRNO_OFFSET : FT_ERR_INVALID_HANDLE;
+            if (saved_errno != 0)
+                ft_errno = cmp_map_system_error_to_ft(saved_errno);
+            else
+                ft_errno = FT_ERR_INVALID_HANDLE;
             return (ft_nullptr);
         }
         if (std::feof(stream) != 0)

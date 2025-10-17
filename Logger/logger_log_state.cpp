@@ -29,18 +29,18 @@ int logger_lock_sinks()
     once_result = pthread_once(&g_sinks_mutex_once, logger_initialize_sinks_mutex);
     if (once_result != 0)
     {
-        ft_errno = once_result + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(once_result);
         return (-1);
     }
     if (g_sinks_mutex_init_error != 0)
     {
-        ft_errno = g_sinks_mutex_init_error + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(g_sinks_mutex_init_error);
         return (-1);
     }
     lock_result = pthread_mutex_lock(&g_sinks_mutex);
     if (lock_result != 0)
     {
-        ft_errno = lock_result + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(lock_result);
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -55,18 +55,18 @@ int logger_unlock_sinks()
     once_result = pthread_once(&g_sinks_mutex_once, logger_initialize_sinks_mutex);
     if (once_result != 0)
     {
-        ft_errno = once_result + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(once_result);
         return (-1);
     }
     if (g_sinks_mutex_init_error != 0)
     {
-        ft_errno = g_sinks_mutex_init_error + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(g_sinks_mutex_init_error);
         return (-1);
     }
     unlock_result = pthread_mutex_unlock(&g_sinks_mutex);
     if (unlock_result != 0)
     {
-        ft_errno = unlock_result + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(unlock_result);
         return (-1);
     }
     ft_errno = ER_SUCCESS;

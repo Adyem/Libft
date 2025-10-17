@@ -59,6 +59,228 @@ static int global_force_total_memory_errno_value = 0;
 static unsigned long global_force_total_memory_last_error = 0;
 #endif
 
+#if defined(_WIN32) || defined(_WIN64)
+static int cmp_translate_windows_error(int error_code)
+{
+    if (error_code == WSAEINTR)
+        return (FT_ERR_INVALID_STATE);
+    if (error_code == WSAEWOULDBLOCK)
+        return (FT_ERR_INVALID_STATE);
+    if (error_code == WSAEINPROGRESS)
+        return (FT_ERR_INVALID_STATE);
+    if (error_code == WSAEALREADY)
+        return (FT_ERR_INVALID_STATE);
+    if (error_code == WSAENOTSOCK)
+        return (FT_ERR_INVALID_HANDLE);
+    if (error_code == WSAEDESTADDRREQ)
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (error_code == WSAEMSGSIZE)
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (error_code == WSAEPROTOTYPE)
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (error_code == WSAENOPROTOOPT)
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (error_code == WSAEPROTONOSUPPORT)
+        return (FT_ERR_UNSUPPORTED_TYPE);
+    if (error_code == WSAESOCKTNOSUPPORT)
+        return (FT_ERR_UNSUPPORTED_TYPE);
+    if (error_code == WSAEOPNOTSUPP)
+        return (FT_ERR_INVALID_OPERATION);
+    if (error_code == WSAEPFNOSUPPORT)
+        return (FT_ERR_UNSUPPORTED_TYPE);
+    if (error_code == WSAEAFNOSUPPORT)
+        return (FT_ERR_UNSUPPORTED_TYPE);
+    if (error_code == WSAEADDRINUSE)
+        return (FT_ERR_ALREADY_EXISTS);
+    if (error_code == WSAEADDRNOTAVAIL)
+        return (FT_ERR_NOT_FOUND);
+    if (error_code == WSAENETDOWN)
+        return (FT_ERR_IO);
+    if (error_code == WSAENETUNREACH)
+        return (FT_ERR_IO);
+    if (error_code == WSAENETRESET)
+        return (FT_ERR_IO);
+    if (error_code == WSAECONNABORTED)
+        return (FT_ERR_IO);
+    if (error_code == WSAECONNRESET)
+        return (FT_ERR_IO);
+    if (error_code == WSAENOBUFS)
+        return (FT_ERR_NO_MEMORY);
+    if (error_code == WSAEISCONN)
+        return (FT_ERR_INVALID_STATE);
+    if (error_code == WSAENOTCONN)
+        return (FT_ERR_INVALID_STATE);
+    if (error_code == WSAESHUTDOWN)
+        return (FT_ERR_INVALID_STATE);
+    if (error_code == WSAETOOMANYREFS)
+        return (FT_ERR_FULL);
+    if (error_code == WSAETIMEDOUT)
+        return (FT_ERR_IO);
+    if (error_code == WSAECONNREFUSED)
+        return (FT_ERR_SOCKET_CONNECT_FAILED);
+    if (error_code == WSAEHOSTDOWN)
+        return (FT_ERR_IO);
+    if (error_code == WSAEHOSTUNREACH)
+        return (FT_ERR_IO);
+    if (error_code == WSAEPROCLIM)
+        return (FT_ERR_FULL);
+    if (error_code == WSAEUSERS)
+        return (FT_ERR_FULL);
+    if (error_code == WSAEDQUOT)
+        return (FT_ERR_FULL);
+    if (error_code == WSAESTALE)
+        return (FT_ERR_IO);
+    if (error_code == WSAEREMOTE)
+        return (FT_ERR_IO);
+    if (error_code == WSAEDISCON)
+        return (FT_ERR_IO);
+    if (error_code == WSASYSNOTREADY)
+        return (FT_ERR_INVALID_STATE);
+    if (error_code == WSAVERNOTSUPPORTED)
+        return (FT_ERR_UNSUPPORTED_TYPE);
+    if (error_code == WSANOTINITIALISED)
+        return (FT_ERR_INVALID_STATE);
+    if (error_code == WSAHOST_NOT_FOUND)
+        return (FT_ERR_SOCKET_RESOLVE_NO_NAME);
+    if (error_code == WSATRY_AGAIN)
+        return (FT_ERR_SOCKET_RESOLVE_AGAIN);
+    if (error_code == WSANO_RECOVERY)
+        return (FT_ERR_SOCKET_RESOLVE_FAIL);
+    if (error_code == WSANO_DATA)
+        return (FT_ERR_SOCKET_RESOLVE_NO_NAME);
+    if (error_code == ERROR_FILE_NOT_FOUND)
+        return (FT_ERR_IO);
+    if (error_code == ERROR_PATH_NOT_FOUND)
+        return (FT_ERR_IO);
+    if (error_code == ERROR_ACCESS_DENIED)
+        return (FT_ERR_INVALID_OPERATION);
+    if (error_code == ERROR_SHARING_VIOLATION)
+        return (FT_ERR_INVALID_OPERATION);
+    if (error_code == ERROR_LOCK_VIOLATION)
+        return (FT_ERR_INVALID_OPERATION);
+    if (error_code == ERROR_ALREADY_EXISTS)
+        return (FT_ERR_ALREADY_EXISTS);
+    if (error_code == ERROR_FILE_EXISTS)
+        return (FT_ERR_ALREADY_EXISTS);
+    if (error_code == ERROR_INVALID_HANDLE)
+        return (FT_ERR_INVALID_HANDLE);
+    if (error_code == ERROR_NOT_ENOUGH_MEMORY)
+        return (FT_ERR_NO_MEMORY);
+    if (error_code == ERROR_OUTOFMEMORY)
+        return (FT_ERR_NO_MEMORY);
+    if (error_code == ERROR_DISK_FULL)
+        return (FT_ERR_FULL);
+    if (error_code == ERROR_HANDLE_EOF)
+        return (FT_ERR_END_OF_FILE);
+    if (error_code == ERROR_INVALID_PARAMETER)
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (error_code == ERROR_INVALID_NAME)
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (error_code == ERROR_BROKEN_PIPE)
+        return (FT_ERR_IO);
+    return (static_cast<int>(error_code) + ERRNO_OFFSET);
+}
+#else
+static int cmp_translate_posix_error(int error_code)
+{
+    if (error_code == EINTR)
+        return (FT_ERR_INVALID_STATE);
+    if (error_code == EAGAIN)
+        return (FT_ERR_INVALID_STATE);
+    if (error_code == EWOULDBLOCK)
+        return (FT_ERR_INVALID_STATE);
+    if (error_code == ENOENT)
+        return (FT_ERR_IO);
+    if (error_code == ENOTDIR)
+        return (FT_ERR_IO);
+    if (error_code == EISDIR)
+        return (FT_ERR_INVALID_OPERATION);
+    if (error_code == EACCES)
+        return (FT_ERR_INVALID_OPERATION);
+    if (error_code == EPERM)
+        return (FT_ERR_INVALID_OPERATION);
+    if (error_code == EINVAL)
+        return (FT_ERR_INVALID_OPERATION);
+    if (error_code == EDOM)
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (error_code == ESRCH)
+        return (FT_ERR_NOT_FOUND);
+    if (error_code == EEXIST)
+        return (FT_ERR_ALREADY_EXISTS);
+    if (error_code == EADDRINUSE)
+        return (FT_ERR_ALREADY_EXISTS);
+    if (error_code == EADDRNOTAVAIL)
+        return (FT_ERR_NOT_FOUND);
+    if (error_code == EBADF)
+        return (FT_ERR_INVALID_HANDLE);
+    if (error_code == ENOTSOCK)
+        return (FT_ERR_INVALID_HANDLE);
+    if (error_code == EDESTADDRREQ)
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (error_code == EMSGSIZE)
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (error_code == EPROTOTYPE)
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (error_code == ENOPROTOOPT)
+        return (FT_ERR_INVALID_ARGUMENT);
+    if (error_code == EPROTONOSUPPORT)
+        return (FT_ERR_UNSUPPORTED_TYPE);
+    if (error_code == ESOCKTNOSUPPORT)
+        return (FT_ERR_UNSUPPORTED_TYPE);
+    if (error_code == EOPNOTSUPP)
+        return (FT_ERR_INVALID_OPERATION);
+    if (error_code == EPFNOSUPPORT)
+        return (FT_ERR_UNSUPPORTED_TYPE);
+    if (error_code == EAFNOSUPPORT)
+        return (FT_ERR_UNSUPPORTED_TYPE);
+    if (error_code == ENOMEM)
+        return (FT_ERR_NO_MEMORY);
+    if (error_code == EIO)
+        return (FT_ERR_IO);
+    if (error_code == ENOSPC)
+        return (FT_ERR_FULL);
+    if (error_code == ENETDOWN)
+        return (FT_ERR_IO);
+    if (error_code == ENETUNREACH)
+        return (FT_ERR_IO);
+    if (error_code == ENETRESET)
+        return (FT_ERR_IO);
+    if (error_code == ECONNABORTED)
+        return (FT_ERR_IO);
+    if (error_code == ECONNRESET)
+        return (FT_ERR_IO);
+    if (error_code == ETIMEDOUT)
+        return (FT_ERR_IO);
+    if (error_code == ECONNREFUSED)
+        return (FT_ERR_SOCKET_CONNECT_FAILED);
+    if (error_code == EHOSTDOWN)
+        return (FT_ERR_IO);
+    if (error_code == EHOSTUNREACH)
+        return (FT_ERR_IO);
+    if (error_code == EPIPE)
+        return (FT_ERR_IO);
+    return (error_code + ERRNO_OFFSET);
+}
+#endif
+
+int cmp_map_system_error_to_ft(int error_code)
+{
+    if (error_code == 0)
+        return (ER_SUCCESS);
+#if defined(_WIN32) || defined(_WIN64)
+    return (cmp_translate_windows_error(error_code));
+#else
+    return (cmp_translate_posix_error(error_code));
+#endif
+}
+
+int cmp_normalize_ft_errno(int error_code)
+{
+    if (error_code <= ERRNO_OFFSET)
+        return (error_code);
+    return (cmp_map_system_error_to_ft(error_code - ERRNO_OFFSET));
+}
+
 void cmp_set_force_unsetenv_result(int result, int errno_value)
 {
     global_force_unsetenv_enabled = 1;
@@ -212,9 +434,9 @@ int cmp_setenv(const char *name, const char *value, int overwrite)
 
         last_error = GetLastError();
         if (last_error != 0)
-            ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(static_cast<int>(last_error));
         else if (errno != 0)
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(errno);
         else
             ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (result);
@@ -227,7 +449,7 @@ int cmp_setenv(const char *name, const char *value, int overwrite)
     if (result != 0)
     {
         if (errno != 0)
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(errno);
         else
             ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (result);
@@ -254,11 +476,11 @@ int cmp_unsetenv(const char *name)
         if (forced_result != 0)
         {
             if (global_force_unsetenv_last_error != 0)
-                ft_errno = global_force_unsetenv_last_error + ERRNO_OFFSET;
+                ft_errno = ft_map_system_error(global_force_unsetenv_last_error);
             else if (global_force_unsetenv_socket_error != 0)
-                ft_errno = global_force_unsetenv_socket_error + ERRNO_OFFSET;
+                ft_errno = ft_map_system_error(global_force_unsetenv_socket_error);
             else if (global_force_unsetenv_errno_value != 0)
-                ft_errno = global_force_unsetenv_errno_value + ERRNO_OFFSET;
+                ft_errno = ft_map_system_error(global_force_unsetenv_errno_value);
             else
                 ft_errno = FT_ERR_INVALID_ARGUMENT;
         }
@@ -274,9 +496,9 @@ int cmp_unsetenv(const char *name)
 
         last_error = GetLastError();
         if (last_error != 0)
-            ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(static_cast<int>(last_error));
         else if (errno != 0)
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(errno);
         else
             ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (result);
@@ -291,7 +513,7 @@ int cmp_unsetenv(const char *name)
         if (forced_result != 0)
         {
             if (global_force_unsetenv_errno_value != 0)
-                ft_errno = global_force_unsetenv_errno_value + ERRNO_OFFSET;
+                ft_errno = ft_map_system_error(global_force_unsetenv_errno_value);
             else
                 ft_errno = FT_ERR_INVALID_ARGUMENT;
         }
@@ -304,7 +526,7 @@ int cmp_unsetenv(const char *name)
     if (result != 0)
     {
         if (errno != 0)
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(errno);
         else
             ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (result);
@@ -334,14 +556,14 @@ int cmp_putenv(char *string)
         {
 #if defined(_WIN32) || defined(_WIN64)
             if (global_force_putenv_last_error != 0)
-                ft_errno = global_force_putenv_last_error + ERRNO_OFFSET;
+                ft_errno = ft_map_system_error(global_force_putenv_last_error);
             else if (global_force_putenv_errno_value != 0)
-                ft_errno = global_force_putenv_errno_value + ERRNO_OFFSET;
+                ft_errno = ft_map_system_error(global_force_putenv_errno_value);
             else
                 ft_errno = FT_ERR_INVALID_ARGUMENT;
 #else
             if (global_force_putenv_errno_value != 0)
-                ft_errno = global_force_putenv_errno_value + ERRNO_OFFSET;
+                ft_errno = ft_map_system_error(global_force_putenv_errno_value);
             else
                 ft_errno = FT_ERR_INVALID_ARGUMENT;
 #endif
@@ -358,9 +580,9 @@ int cmp_putenv(char *string)
 
         last_error = GetLastError();
         if (last_error != 0)
-            ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(static_cast<int>(last_error));
         else if (errno != 0)
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(errno);
         else
             ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (result);
@@ -372,7 +594,7 @@ int cmp_putenv(char *string)
     if (result != 0)
     {
         if (errno != 0)
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(errno);
         else
             ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (result);
@@ -480,7 +702,7 @@ unsigned int cmp_get_cpu_count(void)
         if (global_force_cpu_count_should_fail != 0)
         {
             if (global_force_cpu_count_errno_value != 0)
-                ft_errno = global_force_cpu_count_errno_value + ERRNO_OFFSET;
+                ft_errno = ft_map_system_error(global_force_cpu_count_errno_value);
             else
                 ft_errno = FT_ERR_TERMINATED;
             return (0);
@@ -503,7 +725,7 @@ unsigned int cmp_get_cpu_count(void)
     if (sysctlbyname("hw.ncpu", &cpu_count, &size, ft_nullptr, 0) != 0)
     {
         if (errno != 0)
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(errno);
         else
             ft_errno = FT_ERR_TERMINATED;
         return (0);
@@ -518,7 +740,7 @@ unsigned int cmp_get_cpu_count(void)
     if (cpu_count < 0)
     {
         if (errno != 0)
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(errno);
         else
             ft_errno = FT_ERR_TERMINATED;
         return (0);
@@ -536,14 +758,14 @@ unsigned long long cmp_get_total_memory(void)
         {
 #if defined(_WIN32) || defined(_WIN64)
             if (global_force_total_memory_last_error != 0)
-                ft_errno = static_cast<int>(global_force_total_memory_last_error) + ERRNO_OFFSET;
+                ft_errno = ft_map_system_error(static_cast<int>(global_force_total_memory_last_error));
             else if (global_force_total_memory_errno_value != 0)
-                ft_errno = global_force_total_memory_errno_value + ERRNO_OFFSET;
+                ft_errno = ft_map_system_error(global_force_total_memory_errno_value);
             else
                 ft_errno = FT_ERR_TERMINATED;
 #else
             if (global_force_total_memory_errno_value != 0)
-                ft_errno = global_force_total_memory_errno_value + ERRNO_OFFSET;
+                ft_errno = ft_map_system_error(global_force_total_memory_errno_value);
             else
                 ft_errno = FT_ERR_TERMINATED;
 #endif
@@ -562,7 +784,7 @@ unsigned long long cmp_get_total_memory(void)
 
         last_error = GetLastError();
         if (last_error != 0)
-            ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(static_cast<int>(last_error));
         else
             ft_errno = FT_ERR_TERMINATED;
         return (0);
@@ -578,7 +800,7 @@ unsigned long long cmp_get_total_memory(void)
     if (sysctlbyname("hw.memsize", &memory_size, &size, ft_nullptr, 0) != 0)
     {
         if (errno != 0)
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(errno);
         else
             ft_errno = FT_ERR_TERMINATED;
         return (0);
@@ -594,7 +816,7 @@ unsigned long long cmp_get_total_memory(void)
     if (pages < 0)
     {
         if (errno != 0)
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(errno);
         else
             ft_errno = FT_ERR_TERMINATED;
         return (0);
@@ -604,7 +826,7 @@ unsigned long long cmp_get_total_memory(void)
     if (page_size < 0)
     {
         if (errno != 0)
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(errno);
         else
             ft_errno = FT_ERR_TERMINATED;
         return (0);
@@ -633,7 +855,7 @@ std::time_t cmp_timegm(std::tm *time_pointer)
     if (conversion_result == static_cast<std::time_t>(-1))
     {
         if (errno != 0)
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(errno);
         else
             ft_errno = ER_SUCCESS;
     }

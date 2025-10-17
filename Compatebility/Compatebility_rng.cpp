@@ -13,7 +13,7 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
     {
         DWORD last_error = GetLastError();
         if (last_error != 0)
-            ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(static_cast<int>(last_error));
         else
             ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
@@ -23,7 +23,7 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
         DWORD last_error = GetLastError();
         CryptReleaseContext(crypt_provider, 0);
         if (last_error != 0)
-            ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(static_cast<int>(last_error));
         else
             ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
@@ -32,7 +32,7 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
     {
         DWORD last_error = GetLastError();
         if (last_error != 0)
-            ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(static_cast<int>(last_error));
         else
             ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
@@ -95,13 +95,13 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
     if (forced_open_errno != 0)
     {
         errno = forced_open_errno;
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     int file_descriptor = open("/dev/urandom", O_RDONLY);
     if (file_descriptor < 0)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     size_t offset = 0;
@@ -112,7 +112,7 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
         {
             g_force_rng_read_errno = 0;
             errno = forced_read_errno;
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(errno);
             int stored_errno = errno;
             close(file_descriptor);
             errno = stored_errno;
@@ -132,7 +132,7 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
         }
         if (bytes_read < 0)
         {
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(errno);
             int stored_errno = errno;
             close(file_descriptor);
             errno = stored_errno;
@@ -144,7 +144,7 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
 
             if (close_result < 0)
             {
-                ft_errno = errno + ERRNO_OFFSET;
+                ft_errno = ft_map_system_error(errno);
                 return (-1);
             }
             ft_errno = FT_ERR_IO;
@@ -155,7 +155,7 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
     int close_result = close(file_descriptor);
     if (close_result < 0)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     int forced_close_errno = g_force_rng_close_errno;
@@ -163,7 +163,7 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
     if (forced_close_errno != 0)
     {
         errno = forced_close_errno;
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     ft_errno = ER_SUCCESS;

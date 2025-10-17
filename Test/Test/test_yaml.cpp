@@ -95,9 +95,6 @@ FT_TEST(test_yaml_write_to_file_reports_write_failure, "yaml_write_to_file repor
     scalar.set_scalar("content");
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, yaml_write_to_file("/dev/full", &scalar));
-    FT_ASSERT(ft_errno != ER_SUCCESS);
-#if defined(__linux__) || defined(__APPLE__)
-    FT_ASSERT_EQ(ENOSPC + ERRNO_OFFSET, ft_errno);
-#endif
+    FT_ASSERT_EQ(FT_ERR_FULL, ft_errno);
     return (1);
 }

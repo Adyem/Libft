@@ -34,11 +34,7 @@ FT_TEST(test_cmp_dir_open_os_error, "cmp_dir_open propagates operating system er
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(ft_nullptr, cmp_dir_open("cmp_dir_open_os_error_missing"));
-#if defined(_WIN32) || defined(_WIN64)
-    FT_ASSERT_EQ(static_cast<int>(ERROR_FILE_NOT_FOUND) + ERRNO_OFFSET, ft_errno);
-#else
-    FT_ASSERT_EQ(ENOENT + ERRNO_OFFSET, ft_errno);
-#endif
+    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
 }
 
@@ -86,11 +82,7 @@ FT_TEST(test_cmp_directory_exists_missing_directory, "cmp_directory_exists missi
 {
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(0, cmp_directory_exists("cmp_directory_exists_missing_directory"));
-#if defined(_WIN32) || defined(_WIN64)
-    FT_ASSERT_EQ(static_cast<int>(ERROR_FILE_NOT_FOUND) + ERRNO_OFFSET, ft_errno);
-#else
-    FT_ASSERT_EQ(ENOENT + ERRNO_OFFSET, ft_errno);
-#endif
+    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
 }
 

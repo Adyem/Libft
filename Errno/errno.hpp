@@ -7,6 +7,9 @@ int &ft_errno_reference(void);
 
 #define ERRNO_OFFSET 2000
 
+int ft_map_system_error(int error_code);
+int ft_set_errno_from_system_error(int error_code);
+
 enum PTErrorCode
 {
     ER_SUCCESS = 0,

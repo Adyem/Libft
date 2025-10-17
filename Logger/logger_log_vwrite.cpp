@@ -179,7 +179,7 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
         write_result = write(1, final_buffer, static_cast<size_t>(length));
         if (write_result < 0)
         {
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(errno);
             return ;
         }
         ft_errno = ER_SUCCESS;

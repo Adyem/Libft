@@ -15,7 +15,7 @@ int cmp_thread_cancel(pthread_t thread)
 {
     if (TerminateThread((HANDLE)thread, 0) == 0)
     {
-        ft_errno = GetLastError() + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(GetLastError());
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -58,7 +58,7 @@ int cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_val
         }
         if (error_code == ERROR_TIMEOUT)
             continue;
-        ft_errno = error_code + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(error_code);
         return (-1);
     }
 }
@@ -84,7 +84,7 @@ int cmp_thread_cancel(pthread_t thread)
     int return_value = pthread_cancel(thread);
     if (return_value != 0)
     {
-        ft_errno = return_value + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(return_value);
         return (return_value);
     }
     ft_errno = ER_SUCCESS;
@@ -95,7 +95,7 @@ int cmp_thread_yield()
 {
     if (sched_yield() != 0)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -106,7 +106,7 @@ int cmp_thread_sleep(unsigned int milliseconds)
 {
     if (usleep(milliseconds * 1000) == -1)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -138,7 +138,7 @@ int cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_val
         }
         if (errno == EINTR)
             continue;
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
 }
@@ -156,7 +156,7 @@ int cmp_thread_wake_one_uint32(std::atomic<uint32_t> *address)
             1, NULL, NULL, 0);
     if (syscall_result == -1)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     ft_errno = ER_SUCCESS;

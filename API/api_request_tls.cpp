@@ -29,6 +29,32 @@
 #include <climits>
 #include <utility>
 
+static int api_request_capture_network_error()
+{
+    int system_error;
+
+#ifdef _WIN32
+    system_error = WSAGetLastError();
+#else
+    system_error = errno;
+#endif
+    if (system_error == 0)
+        return (ER_SUCCESS);
+    return (ft_map_system_error(system_error));
+}
+
+static void api_request_assign_network_error(int mapped_error, int fallback)
+{
+    if (mapped_error != ER_SUCCESS)
+    {
+        ft_errno = mapped_error;
+        return ;
+    }
+    if (ft_errno == ER_SUCCESS)
+        ft_errno = fallback;
+    return ;
+}
+
 char *api_request_https(const char *ip, uint16_t port,
     const char *method, const char *path, json_group *payload,
     const char *headers, int *status, int timeout,
@@ -1018,26 +1044,36 @@ static void api_tls_async_worker(api_tls_async_request *data)
     if (nw_connect(socket_fd, address_info->ai_addr,
                     static_cast<socklen_t>(address_info->ai_addrlen)) < 0)
     {
+        int connect_error;
+
+        connect_error = api_request_capture_network_error();
 #ifdef _WIN32
-        int err = WSAGetLastError();
-        if (err != WSAEINPROGRESS && err != WSAEWOULDBLOCK)
-            goto cleanup;
+        if (connect_error != ft_map_system_error(WSAEINPROGRESS)
+            && connect_error != ft_map_system_error(WSAEWOULDBLOCK))
 #else
-        if (errno != EINPROGRESS)
-            goto cleanup;
+        if (connect_error != ft_map_system_error(EINPROGRESS))
 #endif
+        {
+            api_request_assign_network_error(connect_error,
+                FT_ERR_SOCKET_CONNECT_FAILED);
+            goto cleanup;
+        }
     }
 
     FD_ZERO(&write_set);
     FD_SET(socket_fd, &write_set);
     tv.tv_sec = data->timeout / 1000;
     tv.tv_usec = (data->timeout % 1000) * 1000;
-    if (select(socket_fd + 1, ft_nullptr, &write_set, ft_nullptr, &tv) <= 0)
+    int wait_result;
+
+    wait_result = select(socket_fd + 1, ft_nullptr, &write_set, ft_nullptr, &tv);
+    if (wait_result <= 0)
     {
-        if (errno != 0)
-            ft_errno = errno + ERRNO_OFFSET;
-        else if (ft_errno == ER_SUCCESS)
-            ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
+        int wait_error;
+
+        wait_error = api_request_capture_network_error();
+        api_request_assign_network_error(wait_error,
+            FT_ERR_SOCKET_CONNECT_FAILED);
         goto cleanup;
     }
 
@@ -1061,12 +1097,17 @@ static void api_tls_async_worker(api_tls_async_request *data)
         {
             FD_ZERO(&read_set);
             FD_SET(socket_fd, &read_set);
-            if (select(socket_fd + 1, &read_set, ft_nullptr, ft_nullptr, &tv) <= 0)
+            int select_result;
+
+            select_result = select(socket_fd + 1, &read_set, ft_nullptr,
+                ft_nullptr, &tv);
+            if (select_result <= 0)
             {
-                if (errno != 0)
-                    ft_errno = errno + ERRNO_OFFSET;
-                else if (ft_errno == ER_SUCCESS)
-                    ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
+                int select_error;
+
+                select_error = api_request_capture_network_error();
+                api_request_assign_network_error(select_error,
+                    FT_ERR_SOCKET_CONNECT_FAILED);
                 goto cleanup;
             }
         }
@@ -1074,12 +1115,17 @@ static void api_tls_async_worker(api_tls_async_request *data)
         {
             FD_ZERO(&write_set);
             FD_SET(socket_fd, &write_set);
-            if (select(socket_fd + 1, ft_nullptr, &write_set, ft_nullptr, &tv) <= 0)
+            int select_result;
+
+            select_result = select(socket_fd + 1, ft_nullptr, &write_set,
+                ft_nullptr, &tv);
+            if (select_result <= 0)
             {
-                if (errno != 0)
-                    ft_errno = errno + ERRNO_OFFSET;
-                else if (ft_errno == ER_SUCCESS)
-                    ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
+                int select_error;
+
+                select_error = api_request_capture_network_error();
+                api_request_assign_network_error(select_error,
+                    FT_ERR_SOCKET_CONNECT_FAILED);
                 goto cleanup;
             }
         }
@@ -1132,12 +1178,17 @@ static void api_tls_async_worker(api_tls_async_request *data)
             {
                 FD_ZERO(&read_set);
                 FD_SET(socket_fd, &read_set);
-                if (select(socket_fd + 1, &read_set, ft_nullptr, ft_nullptr, &tv) <= 0)
+                int select_result;
+
+                select_result = select(socket_fd + 1, &read_set, ft_nullptr,
+                    ft_nullptr, &tv);
+                if (select_result <= 0)
                 {
-                    if (errno != 0)
-                        ft_errno = errno + ERRNO_OFFSET;
-                    else if (ft_errno == ER_SUCCESS)
-                        ft_errno = FT_ERR_SOCKET_SEND_FAILED;
+                    int select_error;
+
+                    select_error = api_request_capture_network_error();
+                    api_request_assign_network_error(select_error,
+                        FT_ERR_SOCKET_SEND_FAILED);
                     goto cleanup;
                 }
                 continue;
@@ -1146,12 +1197,17 @@ static void api_tls_async_worker(api_tls_async_request *data)
             {
                 FD_ZERO(&write_set);
                 FD_SET(socket_fd, &write_set);
-                if (select(socket_fd + 1, ft_nullptr, &write_set, ft_nullptr, &tv) <= 0)
+                int select_result;
+
+                select_result = select(socket_fd + 1, ft_nullptr, &write_set,
+                    ft_nullptr, &tv);
+                if (select_result <= 0)
                 {
-                    if (errno != 0)
-                        ft_errno = errno + ERRNO_OFFSET;
-                    else if (ft_errno == ER_SUCCESS)
-                        ft_errno = FT_ERR_SOCKET_SEND_FAILED;
+                    int select_error;
+
+                    select_error = api_request_capture_network_error();
+                    api_request_assign_network_error(select_error,
+                        FT_ERR_SOCKET_SEND_FAILED);
                     goto cleanup;
                 }
                 continue;
@@ -1175,12 +1231,17 @@ static void api_tls_async_worker(api_tls_async_request *data)
         {
             FD_ZERO(&read_set);
             FD_SET(socket_fd, &read_set);
-            if (select(socket_fd + 1, &read_set, ft_nullptr, ft_nullptr, &tv) <= 0)
+            int select_result;
+
+            select_result = select(socket_fd + 1, &read_set, ft_nullptr,
+                ft_nullptr, &tv);
+            if (select_result <= 0)
             {
-                if (errno != 0)
-                    ft_errno = errno + ERRNO_OFFSET;
-                else if (ft_errno == ER_SUCCESS)
-                    ft_errno = FT_ERR_SOCKET_RECEIVE_FAILED;
+                int select_error;
+
+                select_error = api_request_capture_network_error();
+                api_request_assign_network_error(select_error,
+                    FT_ERR_SOCKET_RECEIVE_FAILED);
                 break;
             }
             continue;
@@ -1189,12 +1250,17 @@ static void api_tls_async_worker(api_tls_async_request *data)
         {
             FD_ZERO(&write_set);
             FD_SET(socket_fd, &write_set);
-            if (select(socket_fd + 1, ft_nullptr, &write_set, ft_nullptr, &tv) <= 0)
+            int select_result;
+
+            select_result = select(socket_fd + 1, ft_nullptr, &write_set,
+                ft_nullptr, &tv);
+            if (select_result <= 0)
             {
-                if (errno != 0)
-                    ft_errno = errno + ERRNO_OFFSET;
-                else if (ft_errno == ER_SUCCESS)
-                    ft_errno = FT_ERR_SOCKET_RECEIVE_FAILED;
+                int select_error;
+
+                select_error = api_request_capture_network_error();
+                api_request_assign_network_error(select_error,
+                    FT_ERR_SOCKET_RECEIVE_FAILED);
                 break;
             }
             continue;

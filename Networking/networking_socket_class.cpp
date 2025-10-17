@@ -293,7 +293,7 @@ ssize_t ft_socket::send_all(const void *data, size_t size, int flags)
                 }
                 continue ;
             }
-            this->set_error(last_error + ERRNO_OFFSET);
+            this->set_error(ft_map_system_error(last_error));
 #else
             if (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR)
             {
@@ -358,9 +358,9 @@ bool ft_socket::close_socket()
         else
         {
 #ifdef _WIN32
-            this->set_error(WSAGetLastError() + ERRNO_OFFSET);
+            this->set_error(ft_map_system_error(WSAGetLastError()));
 #else
-            this->set_error(errno + ERRNO_OFFSET);
+            this->set_error(ft_map_system_error(errno));
 #endif
             return (false);
         }

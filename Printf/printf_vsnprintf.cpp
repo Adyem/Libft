@@ -88,7 +88,7 @@ int pf_vsnprintf(char *string, size_t size, const char *format, va_list args)
     if (flush_status != 0)
     {
         int saved_errno = errno;
-        ft_errno = saved_errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(saved_errno);
         fclose(stream);
         if (string != ft_nullptr && size > 0)
             string[0] = '\0';
@@ -98,7 +98,7 @@ int pf_vsnprintf(char *string, size_t size, const char *format, va_list args)
     if (position < 0)
     {
         int saved_errno = errno;
-        ft_errno = saved_errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(saved_errno);
         fclose(stream);
         if (string != ft_nullptr && size > 0)
             string[0] = '\0';

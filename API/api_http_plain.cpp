@@ -57,14 +57,14 @@ static bool api_http_is_recoverable_send_error(int error_code)
     if (error_code == FT_ERR_SOCKET_SEND_FAILED)
         return (true);
 #ifdef _WIN32
-    if (error_code == (WSAECONNRESET + ERRNO_OFFSET))
+    if (error_code == (ft_map_system_error(WSAECONNRESET)))
         return (true);
-    if (error_code == (WSAECONNABORTED + ERRNO_OFFSET))
+    if (error_code == (ft_map_system_error(WSAECONNABORTED)))
         return (true);
 #else
-    if (error_code == (ECONNRESET + ERRNO_OFFSET))
+    if (error_code == (ft_map_system_error(ECONNRESET)))
         return (true);
-    if (error_code == (EPIPE + ERRNO_OFFSET))
+    if (error_code == (ft_map_system_error(EPIPE)))
         return (true);
 #endif
     return (false);
@@ -77,10 +77,10 @@ static bool api_http_should_retry_plain(int error_code)
     if (error_code == FT_ERR_HTTP_PROTOCOL_MISMATCH)
         return (true);
 #ifdef _WIN32
-    if (error_code == (WSAECONNRESET + ERRNO_OFFSET))
+    if (error_code == (ft_map_system_error(WSAECONNRESET)))
         return (true);
 #else
-    if (error_code == (ECONNRESET + ERRNO_OFFSET))
+    if (error_code == (ft_map_system_error(ECONNRESET)))
         return (true);
 #endif
     if (error_code == FT_ERR_SOCKET_RECEIVE_FAILED)
@@ -658,13 +658,13 @@ static bool api_http_receive_response(ft_socket &socket_wrapper,
             else
                 error_code = FT_ERR_IO;
 #ifdef _WIN32
-            if (error_code == (WSAEWOULDBLOCK + ERRNO_OFFSET)
-                || error_code == (WSAETIMEDOUT + ERRNO_OFFSET))
+            if (error_code == (ft_map_system_error(WSAEWOULDBLOCK))
+                || error_code == (ft_map_system_error(WSAETIMEDOUT)))
                 error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
 #else
-            if (error_code == (EAGAIN + ERRNO_OFFSET)
-                || error_code == (EWOULDBLOCK + ERRNO_OFFSET)
-                || error_code == (ETIMEDOUT + ERRNO_OFFSET))
+            if (error_code == (ft_map_system_error(EAGAIN))
+                || error_code == (ft_map_system_error(EWOULDBLOCK))
+                || error_code == (ft_map_system_error(ETIMEDOUT)))
                 error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
 #endif
             if (error_code == FT_ERR_IO && socket_error_code == ER_SUCCESS
@@ -951,12 +951,12 @@ static char *api_http_execute_plain_once(
 
         last_error = WSAGetLastError();
         if (last_error != 0)
-            error_code = last_error + ERRNO_OFFSET;
+            error_code = ft_map_system_error(last_error);
         else
             error_code = FT_ERR_CONFIGURATION;
 #else
         if (errno != 0)
-            error_code = errno + ERRNO_OFFSET;
+            error_code = ft_map_system_error(errno);
         else
             error_code = FT_ERR_CONFIGURATION;
 #endif
@@ -982,14 +982,14 @@ static char *api_http_execute_plain_once(
             send_error_code = error_code;
             api_connection_pool_disable_store(connection_handle);
 #ifdef _WIN32
-            if (send_error_code == (WSAECONNRESET + ERRNO_OFFSET))
+            if (send_error_code == (ft_map_system_error(WSAECONNRESET)))
                 send_error_code = FT_ERR_SOCKET_SEND_FAILED;
-            if (send_error_code == (WSAECONNABORTED + ERRNO_OFFSET))
+            if (send_error_code == (ft_map_system_error(WSAECONNABORTED)))
                 send_error_code = FT_ERR_SOCKET_SEND_FAILED;
 #else
-            if (send_error_code == (ECONNRESET + ERRNO_OFFSET))
+            if (send_error_code == (ft_map_system_error(ECONNRESET)))
                 send_error_code = FT_ERR_SOCKET_SEND_FAILED;
-            if (send_error_code == (EPIPE + ERRNO_OFFSET))
+            if (send_error_code == (ft_map_system_error(EPIPE)))
                 send_error_code = FT_ERR_SOCKET_SEND_FAILED;
 #endif
             if (!api_http_is_recoverable_send_error(send_error_code))
@@ -1124,12 +1124,12 @@ static bool api_http_execute_plain_streaming_once(
 
         last_error = WSAGetLastError();
         if (last_error != 0)
-            error_code = last_error + ERRNO_OFFSET;
+            error_code = ft_map_system_error(last_error);
         else
             error_code = FT_ERR_CONFIGURATION;
 #else
         if (errno != 0)
-            error_code = errno + ERRNO_OFFSET;
+            error_code = ft_map_system_error(errno);
         else
             error_code = FT_ERR_CONFIGURATION;
 #endif
@@ -1152,14 +1152,14 @@ static bool api_http_execute_plain_streaming_once(
         send_error_code = error_code;
         api_connection_pool_disable_store(connection_handle);
 #ifdef _WIN32
-        if (send_error_code == (WSAECONNRESET + ERRNO_OFFSET))
+        if (send_error_code == (ft_map_system_error(WSAECONNRESET)))
             send_error_code = FT_ERR_SOCKET_SEND_FAILED;
-        if (send_error_code == (WSAECONNABORTED + ERRNO_OFFSET))
+        if (send_error_code == (ft_map_system_error(WSAECONNABORTED)))
             send_error_code = FT_ERR_SOCKET_SEND_FAILED;
 #else
-        if (send_error_code == (ECONNRESET + ERRNO_OFFSET))
+        if (send_error_code == (ft_map_system_error(ECONNRESET)))
             send_error_code = FT_ERR_SOCKET_SEND_FAILED;
-        if (send_error_code == (EPIPE + ERRNO_OFFSET))
+        if (send_error_code == (ft_map_system_error(EPIPE)))
             send_error_code = FT_ERR_SOCKET_SEND_FAILED;
 #endif
         if (!api_http_is_recoverable_send_error(send_error_code))
@@ -1337,10 +1337,10 @@ char *api_http_execute_plain_http2(api_connection_pool_handle &connection_handle
             if (error_code == FT_ERR_SOCKET_CONNECT_FAILED)
                 connect_refused = true;
 #ifdef _WIN32
-            if (error_code == (WSAECONNREFUSED + ERRNO_OFFSET))
+            if (error_code == (ft_map_system_error(WSAECONNREFUSED)))
                 connect_refused = true;
 #else
-            if (error_code == (ECONNREFUSED + ERRNO_OFFSET))
+            if (error_code == (ft_map_system_error(ECONNREFUSED)))
                 connect_refused = true;
 #endif
             if (connect_refused)
@@ -1497,12 +1497,12 @@ static char *api_http_execute_plain_http2_once(
 
         last_error = WSAGetLastError();
         if (last_error != 0)
-            error_code = last_error + ERRNO_OFFSET;
+            error_code = ft_map_system_error(last_error);
         else
             error_code = FT_ERR_CONFIGURATION;
 #else
         if (errno != 0)
-            error_code = errno + ERRNO_OFFSET;
+            error_code = ft_map_system_error(errno);
         else
             error_code = FT_ERR_CONFIGURATION;
 #endif

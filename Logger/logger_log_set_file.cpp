@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <new>
+#include "../Compatebility/compatebility_internal.hpp"
 #include "../Libft/libft.hpp"
 #include "../System_utils/system_utils.hpp"
 
@@ -36,7 +37,7 @@ int ft_log_set_file(const char *path, size_t max_size)
 
         saved_errno = errno;
         if (saved_errno != 0)
-            ft_errno = saved_errno + ERRNO_OFFSET;
+            ft_errno = cmp_map_system_error_to_ft(saved_errno);
         else
             ft_errno = FT_ERR_INVALID_HANDLE;
         return (-1);
