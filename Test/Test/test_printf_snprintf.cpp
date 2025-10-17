@@ -148,7 +148,7 @@ FT_TEST(test_pf_snprintf_fflush_failure, "pf_snprintf translates fflush errno")
     pf_reset_fflush_function();
     FT_ASSERT_EQ(-1, result);
     FT_ASSERT_EQ('\0', buffer[0]);
-    FT_ASSERT_EQ(EIO + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
 }
 
@@ -164,7 +164,7 @@ FT_TEST(test_pf_snprintf_ftell_failure, "pf_snprintf translates ftell errno")
     pf_reset_ftell_function();
     FT_ASSERT_EQ(-1, result);
     FT_ASSERT_EQ('\0', buffer[0]);
-    FT_ASSERT_EQ(EIO + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
 }
 

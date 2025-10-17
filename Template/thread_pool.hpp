@@ -60,7 +60,7 @@ inline void ft_thread_pool::worker()
         ft_function<void()> task;
         if (pthread_mutex_lock(&this->_mutex) != 0)
         {
-            this->set_error(errno + ERRNO_OFFSET);
+            this->set_error(ft_map_system_error(errno));
             return ;
         }
         bool queue_empty;
@@ -104,7 +104,7 @@ inline void ft_thread_pool::worker()
         task();
         if (pthread_mutex_lock(&this->_mutex) != 0)
         {
-            this->set_error(errno + ERRNO_OFFSET);
+            this->set_error(ft_map_system_error(errno));
             return ;
         }
         --this->_active;
@@ -133,7 +133,7 @@ inline ft_thread_pool::ft_thread_pool(size_t thread_count, size_t max_tasks)
 {
     if (pthread_mutex_init(&this->_mutex, ft_nullptr) != 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(errno));
         this->_stop = true;
         return ;
     }
@@ -180,7 +180,7 @@ inline void ft_thread_pool::submit(Function &&function)
 {
     if (pthread_mutex_lock(&this->_mutex) != 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(errno));
         return ;
     }
     if (this->_stop)
@@ -225,7 +225,7 @@ inline void ft_thread_pool::wait()
 {
     if (pthread_mutex_lock(&this->_mutex) != 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(errno));
         return ;
     }
     bool tasks_empty;
@@ -260,7 +260,7 @@ inline void ft_thread_pool::destroy()
 {
     if (pthread_mutex_lock(&this->_mutex) != 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(errno));
         return ;
     }
     this->_stop = true;

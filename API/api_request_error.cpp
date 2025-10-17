@@ -89,10 +89,10 @@ void api_request_set_resolve_error(int resolver_status)
     if (resolver_status == EAI_SYSTEM)
     {
 #ifdef _WIN32
-        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(WSAGetLastError());
 #else
         if (errno != 0)
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(errno);
         else
             ft_errno = FT_ERR_SOCKET_RESOLVE_FAIL;
 #endif

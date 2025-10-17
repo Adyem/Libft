@@ -8,6 +8,9 @@
 #include "../../PThread/thread.hpp"
 #include <unistd.h>
 #include <cstring>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 
 struct websocket_server_context
 {
@@ -17,6 +20,39 @@ struct websocket_server_context
     ft_string message;
 };
 
+struct websocket_invalid_handshake_context
+{
+    int server_socket;
+    int result;
+};
+
+static bool get_server_socket_port(int socket_fd, unsigned short *port_value)
+{
+    struct sockaddr_storage local_address;
+    socklen_t address_length;
+
+    if (port_value == ft_nullptr)
+        return (false);
+    if (socket_fd < 0)
+        return (false);
+    address_length = sizeof(local_address);
+    if (getsockname(socket_fd, reinterpret_cast<struct sockaddr*>(&local_address), &address_length) != 0)
+        return (false);
+    if (local_address.ss_family == AF_INET)
+    {
+        const struct sockaddr_in *ipv4_address = reinterpret_cast<const struct sockaddr_in*>(&local_address);
+        *port_value = ntohs(ipv4_address->sin_port);
+    }
+    else if (local_address.ss_family == AF_INET6)
+    {
+        const struct sockaddr_in6 *ipv6_address = reinterpret_cast<const struct sockaddr_in6*>(&local_address);
+        *port_value = ntohs(ipv6_address->sin6_port);
+    }
+    else
+        return (false);
+    return (true);
+}
+
 static void websocket_server_worker(websocket_server_context *context)
 {
     if (context == ft_nullptr)
@@ -25,6 +61,62 @@ static void websocket_server_worker(websocket_server_context *context)
         return ;
     context->client_fd = -1;
     context->result = context->server->run_once(context->client_fd, context->message);
+    return ;
+}
+
+static void websocket_invalid_handshake_server(websocket_invalid_handshake_context *context)
+{
+    struct sockaddr_in client_address;
+    socklen_t client_length;
+    int client_socket;
+    ft_string request;
+    char buffer[512];
+    ssize_t bytes_received;
+    ft_string response;
+    const char *response_data;
+    size_t total_sent;
+    ssize_t send_result;
+
+    if (context == ft_nullptr)
+        return ;
+    if (context->server_socket < 0)
+        return ;
+    context->result = -1;
+    client_length = sizeof(client_address);
+    client_socket = nw_accept(context->server_socket, reinterpret_cast<struct sockaddr*>(&client_address), &client_length);
+    if (client_socket < 0)
+        return ;
+    request.clear();
+    while (1)
+    {
+        bytes_received = nw_recv(client_socket, buffer, sizeof(buffer) - 1, 0);
+        if (bytes_received <= 0)
+        {
+            FT_CLOSE_SOCKET(client_socket);
+            return ;
+        }
+        buffer[bytes_received] = '\0';
+        request.append(buffer);
+        if (ft_strstr(request.c_str(), "\r\n\r\n"))
+            break;
+    }
+    response.append("HTTP/1.1 101 Switching Protocols\r\n");
+    response.append("Upgrade: websocket\r\n");
+    response.append("Connection: Upgrade\r\n\r\n");
+    response_data = response.c_str();
+    total_sent = 0;
+    while (total_sent < response.size())
+    {
+        send_result = nw_send(client_socket, response_data + total_sent, response.size() - total_sent, 0);
+        if (send_result <= 0)
+        {
+            FT_CLOSE_SOCKET(client_socket);
+            return ;
+        }
+        total_sent += static_cast<size_t>(send_result);
+    }
+    FT_CLOSE_SOCKET(client_socket);
+    context->result = 0;
     return ;
 }
 
@@ -224,4 +316,66 @@ FT_TEST(test_websocket_server_handles_fragmented_handshake, "websocket server ha
     if (context.client_fd >= 0)
         FT_CLOSE_SOCKET(context.client_fd);
     return (context.result == 0 && context.message == expected_message);
+}
+
+FT_TEST(test_websocket_client_rejects_invalid_handshake, "websocket client detects invalid handshake")
+{
+    int server_socket;
+    struct sockaddr_in server_address;
+    websocket_invalid_handshake_context context;
+    ft_thread server_thread;
+    ft_websocket_client client;
+    int connect_result;
+    unsigned short server_port;
+
+    server_socket = nw_socket(AF_INET, SOCK_STREAM, 0);
+    if (server_socket < 0)
+        return (0);
+    std::memset(&server_address, 0, sizeof(server_address));
+    server_address.sin_family = AF_INET;
+    server_address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    server_address.sin_port = htons(0);
+    if (nw_bind(server_socket, reinterpret_cast<struct sockaddr*>(&server_address), sizeof(server_address)) != 0)
+    {
+        FT_CLOSE_SOCKET(server_socket);
+        return (0);
+    }
+    if (get_server_socket_port(server_socket, &server_port) == false)
+    {
+        FT_CLOSE_SOCKET(server_socket);
+        return (0);
+    }
+    if (nw_listen(server_socket, 1) != 0)
+    {
+        FT_CLOSE_SOCKET(server_socket);
+        return (0);
+    }
+    context.server_socket = server_socket;
+    context.result = -1;
+    server_thread = ft_thread(websocket_invalid_handshake_server, &context);
+    if (server_thread.get_error() != ER_SUCCESS)
+    {
+        FT_CLOSE_SOCKET(server_socket);
+        return (0);
+    }
+    connect_result = client.connect("127.0.0.1", static_cast<int>(server_port), "/");
+    server_thread.join();
+    FT_CLOSE_SOCKET(server_socket);
+    if (context.result != 0)
+    {
+        client.close();
+        return (0);
+    }
+    if (connect_result == 0)
+    {
+        client.close();
+        return (0);
+    }
+    if (client.get_error() != FT_ERR_INVALID_ARGUMENT)
+    {
+        client.close();
+        return (0);
+    }
+    client.close();
+    return (1);
 }

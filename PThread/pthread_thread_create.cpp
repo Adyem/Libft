@@ -12,7 +12,7 @@ int pt_thread_create(pthread_t *thread, const pthread_attr_t *attr,
     return_value = pthread_create(thread, attr, start_routine, arg);
     if (return_value != 0)
     {
-        ft_errno = return_value + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(return_value);
         return (return_value);
     }
     ft_errno = ER_SUCCESS;

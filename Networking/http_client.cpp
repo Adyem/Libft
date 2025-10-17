@@ -53,9 +53,9 @@ static int http_client_wait_for_socket_ready(int socket_fd, bool wait_for_write)
     if (poll_result < 0)
     {
 #ifdef _WIN32
-        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(WSAGetLastError());
 #else
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
 #endif
         return (-1);
     }
@@ -147,10 +147,10 @@ static void http_client_set_resolve_error(int resolver_status)
     if (resolver_status == EAI_SYSTEM)
     {
 #ifdef _WIN32
-        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(WSAGetLastError());
 #else
         if (errno != 0)
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(errno);
         else
             ft_errno = FT_ERR_SOCKET_RESOLVE_FAIL;
 #endif
@@ -273,7 +273,7 @@ int http_client_send_plain_request(int socket_fd, const char *buffer, size_t len
                     return (-1);
                 continue ;
             }
-            ft_errno = last_error + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(last_error);
 #else
             if (errno == EINTR)
                 continue ;
@@ -284,7 +284,7 @@ int http_client_send_plain_request(int socket_fd, const char *buffer, size_t len
                     return (-1);
                 continue ;
             }
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(errno);
 #endif
             return (-1);
         }
@@ -347,7 +347,7 @@ int http_client_send_ssl_request(SSL *ssl_connection, const char *buffer, size_t
                 }
                 if (last_error != 0)
                 {
-                    ft_errno = last_error + ERRNO_OFFSET;
+                    ft_errno = ft_map_system_error(last_error);
                     return (-1);
                 }
 #else
@@ -362,7 +362,7 @@ int http_client_send_ssl_request(SSL *ssl_connection, const char *buffer, size_t
                 }
                 if (errno != 0)
                 {
-                    ft_errno = errno + ERRNO_OFFSET;
+                    ft_errno = ft_map_system_error(errno);
                     return (-1);
                 }
 #endif
@@ -500,7 +500,7 @@ static int http_client_receive_stream(int socket_fd, SSL *ssl_connection, bool u
                             continue ;
                         }
                         if (last_error != 0)
-                            ft_errno = last_error + ERRNO_OFFSET;
+                            ft_errno = ft_map_system_error(last_error);
                         else
                             ft_errno = FT_ERR_SOCKET_RECEIVE_FAILED;
 #else
@@ -519,7 +519,7 @@ static int http_client_receive_stream(int socket_fd, SSL *ssl_connection, bool u
                             continue ;
                         }
                         if (last_error != 0)
-                            ft_errno = last_error + ERRNO_OFFSET;
+                            ft_errno = ft_map_system_error(last_error);
                         else
                             ft_errno = FT_ERR_SOCKET_RECEIVE_FAILED;
 #endif
@@ -546,7 +546,7 @@ static int http_client_receive_stream(int socket_fd, SSL *ssl_connection, bool u
                         continue ;
                     }
                     if (last_error != 0)
-                        ft_errno = last_error + ERRNO_OFFSET;
+                        ft_errno = ft_map_system_error(last_error);
                     else
                         ft_errno = FT_ERR_SOCKET_RECEIVE_FAILED;
 #else
@@ -565,7 +565,7 @@ static int http_client_receive_stream(int socket_fd, SSL *ssl_connection, bool u
                         continue ;
                     }
                     if (last_error != 0)
-                        ft_errno = last_error + ERRNO_OFFSET;
+                        ft_errno = ft_map_system_error(last_error);
                     else
                         ft_errno = FT_ERR_SOCKET_RECEIVE_FAILED;
 #endif
@@ -592,7 +592,7 @@ static int http_client_receive_stream(int socket_fd, SSL *ssl_connection, bool u
                 if (last_error == WSAECONNRESET)
                     break;
                 if (last_error != 0)
-                    ft_errno = last_error + ERRNO_OFFSET;
+                    ft_errno = ft_map_system_error(last_error);
                 else
                     ft_errno = FT_ERR_SOCKET_RECEIVE_FAILED;
 #else
@@ -613,7 +613,7 @@ static int http_client_receive_stream(int socket_fd, SSL *ssl_connection, bool u
                 if (last_error == ECONNRESET)
                     break;
                 if (last_error != 0)
-                    ft_errno = last_error + ERRNO_OFFSET;
+                    ft_errno = ft_map_system_error(last_error);
                 else
                     ft_errno = FT_ERR_SOCKET_RECEIVE_FAILED;
 #endif
@@ -729,7 +729,7 @@ int http_get_stream(const char *host, const char *path, http_response_handler ha
     if (socket_fd < 0 || result < 0)
     {
         if (last_socket_error != 0)
-            ft_errno = last_socket_error + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(last_socket_error);
         else
             ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
         return (-1);
@@ -885,7 +885,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
     if (socket_fd < 0 || result < 0)
     {
         if (last_socket_error != 0)
-            ft_errno = last_socket_error + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(last_socket_error);
         else
             ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
         http_client_reset_buffer_adapter_state();

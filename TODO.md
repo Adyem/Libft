@@ -102,8 +102,8 @@
 - [ ] Make `http2_header_field` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `http2_frame` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Restore the `http2 stream manager tracks streams` regression once the stream manager no longer crashes when tracking concurrent streams.
-- [ ] Reintroduce the HTTP/2 header compression roundtrip regression once `http2_compress_headers`/`http2_decompress_headers` stop aborting the suite (current implementation trips an abort while the test runner executes "http2 header compression roundtrip").
-- [ ] Restore the `websocket client detects invalid handshake` regression after fixing the crash in the websocket client handshake teardown path.
+- [x] Reintroduce the HTTP/2 header compression roundtrip regression once `http2_compress_headers`/`http2_decompress_headers` stop aborting the suite (current implementation trips an abort while the test runner executes "http2 header compression roundtrip").
+- [x] Restore the `websocket client detects invalid handshake` regression after fixing the crash in the websocket client handshake teardown path.
 - [x] Restore the `HTTP server echoes POST body` regression once the HTTP server request pipeline stops corrupting heap allocations during body echoing.
 
 ### API (HTTP client facade)
@@ -114,8 +114,8 @@
 - [ ] Offer request signing helpers (HMAC, OAuth) for authenticated services, leveraging the Encryption module.
 - [ ] Emit structured metrics per endpoint (latency, throughput, error rate) suitable for dashboards.
 - [x] Restore the `api_request_string_http2 falls back to http1` regression once the fallback path properly toggles the HTTP/2 flag and returns the downgraded response body.
-- [ ] Restore the `api_request_string_host_bearer adds bearer authorization header` regression after fixing the heap corruption triggered by the bearer-token request path.
-- [ ] Restore the `api_request_string_host_basic adds basic authorization header after existing headers` regression once the header assembly stops corrupting heap allocations.
+- [x] Restore the `api_request_string_host_bearer adds bearer authorization header` regression after fixing the heap corruption triggered by the bearer-token request path.
+- [x] Restore the `api_request_string_host_basic adds basic authorization header after existing headers` regression once the header assembly stops corrupting heap allocations.
 - [ ] Make `api_promise` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `api_string_promise` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `api_tls_promise` thread safe (relies on the shared deadlock resolution routine described below).
@@ -217,7 +217,7 @@
 - [ ] Make `kv_store_entry` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### JSon
-- [ ] Restore the `json reader reports io errors` regression once file-based reads surface missing files without corrupting allocator state.
+- [x] Restore the `json reader reports io errors` regression once file-based reads surface missing files without corrupting allocator state.
 - [ ] Make `json_document` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `json_group` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `json_item` thread safe (relies on the shared deadlock resolution routine described below).

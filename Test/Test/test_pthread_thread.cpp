@@ -29,7 +29,7 @@ FT_TEST(test_pt_thread_create_updates_errno, "pt_thread_create updates ft_errno 
     FT_ASSERT_EQ(0, set_stack_result);
     failure_result = pt_thread_create(&thread, &attributes, pthread_test_routine, &routine_started);
     FT_ASSERT(failure_result != 0);
-    FT_ASSERT_EQ(failure_result + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(ft_map_system_error(failure_result), ft_errno);
     pthread_attr_destroy(&attributes);
     success_result = pt_thread_create(&thread, ft_nullptr, pthread_test_routine, &routine_started);
     FT_ASSERT_EQ(0, success_result);
@@ -50,7 +50,7 @@ FT_TEST(test_pt_thread_join_updates_errno, "pt_thread_join updates ft_errno on f
     invalid_thread = 0;
     failure_result = pt_thread_join(invalid_thread, ft_nullptr);
     FT_ASSERT(failure_result != 0);
-    FT_ASSERT_EQ(failure_result + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(ft_map_system_error(failure_result), ft_errno);
     routine_started = 0;
     FT_ASSERT_EQ(0, pt_thread_create(&thread, ft_nullptr, pthread_test_routine, &routine_started));
     FT_ASSERT_EQ(0, pt_thread_join(thread, ft_nullptr));
@@ -70,7 +70,7 @@ FT_TEST(test_pt_thread_detach_updates_errno, "pt_thread_detach updates ft_errno 
     invalid_thread = 0;
     failure_result = pt_thread_detach(invalid_thread);
     FT_ASSERT(failure_result != 0);
-    FT_ASSERT_EQ(failure_result + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(ft_map_system_error(failure_result), ft_errno);
     routine_started = 0;
     FT_ASSERT_EQ(0, pt_thread_create(&thread, ft_nullptr, pthread_test_routine, &routine_started));
     detach_result = pt_thread_detach(thread);

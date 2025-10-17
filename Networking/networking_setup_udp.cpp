@@ -18,7 +18,7 @@ static inline int setsockopt_reuse(int fd, int opt)
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR,
             reinterpret_cast<const char*>(&opt), sizeof(opt)) == SOCKET_ERROR)
     {
-        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -30,7 +30,7 @@ static inline int set_timeout_recv(int fd, int ms)
     if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO,
             reinterpret_cast<const char*>(&ms), sizeof(ms)) == SOCKET_ERROR)
     {
-        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -42,7 +42,7 @@ static inline int set_timeout_send(int fd, int ms)
     if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO,
             reinterpret_cast<const char*>(&ms), sizeof(ms)) == SOCKET_ERROR)
     {
-        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -53,7 +53,7 @@ static inline int setsockopt_reuse(int fd, int opt)
 {
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -67,7 +67,7 @@ static inline int set_timeout_recv(int fd, int ms)
     tv.tv_usec = (ms % 1000) * 1000;
     if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -81,7 +81,7 @@ static inline int set_timeout_send(int fd, int ms)
     tv.tv_usec = (ms % 1000) * 1000;
     if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -370,9 +370,9 @@ bool udp_socket::close_socket()
             return (true);
         }
 #ifdef _WIN32
-        this->set_error(WSAGetLastError() + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(WSAGetLastError()));
 #else
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(errno));
 #endif
         return (false);
     }

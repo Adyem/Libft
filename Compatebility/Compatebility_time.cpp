@@ -26,7 +26,7 @@ static int  cmp_localtime_from_shared_state(const std::time_t *time_value, std::
         if (localtime_mutex.unlock(THREAD_ID) != FT_SUCCESS)
             return (-1);
         if (errno != 0)
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(errno);
         else
             ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
@@ -55,7 +55,7 @@ int cmp_localtime(const std::time_t *time_value, std::tm *output)
         ft_errno = ER_SUCCESS;
         return (0);
     }
-    ft_errno = error_code + ERRNO_OFFSET;
+    ft_errno = ft_map_system_error(error_code);
     return (-1);
 #else
 # if defined(_POSIX_VERSION)
@@ -65,7 +65,7 @@ int cmp_localtime(const std::time_t *time_value, std::tm *output)
         return (0);
     }
     if (errno != 0)
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
     else
         ft_errno = FT_ERR_INVALID_ARGUMENT;
     return (-1);
@@ -108,7 +108,7 @@ int cmp_time_get_time_of_day(struct timeval *time_value)
         ft_errno = ER_SUCCESS;
         return (0);
     }
-    ft_errno = errno + ERRNO_OFFSET;
+    ft_errno = ft_map_system_error(errno);
     return (-1);
 #endif
 }

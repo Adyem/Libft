@@ -36,7 +36,7 @@ static void set_stream_error(void)
     saved_errno = errno;
     if (saved_errno != 0)
     {
-        ft_errno = saved_errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(saved_errno);
         return ;
     }
     ft_errno = FT_ERR_IO;

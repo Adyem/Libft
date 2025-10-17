@@ -49,25 +49,27 @@ ssize_t su_read(int file_descriptor, void *buffer, size_t count)
             return (read_result);
         }
         int stored_error = ft_errno;
+        if (stored_error != ER_SUCCESS)
+            stored_error = cmp_normalize_ft_errno(stored_error);
 #if defined(_WIN32) || defined(_WIN64)
         if (stored_error == ER_SUCCESS)
         {
             DWORD last_error = GetLastError();
             if (last_error != 0)
-                stored_error = static_cast<int>(last_error) + ERRNO_OFFSET;
+                stored_error = cmp_map_system_error_to_ft(static_cast<int>(last_error));
         }
 #else
         if (stored_error == ER_SUCCESS && errno != 0)
-            stored_error = errno + ERRNO_OFFSET;
+            stored_error = cmp_map_system_error_to_ft(errno);
 #endif
         ft_errno = stored_error;
 #if defined(__linux__) || defined(__APPLE__)
         const int max_retries = 10;
         const int retry_delay_ms = 500;
-        if (ft_errno == EINTR + ERRNO_OFFSET)
+        if (ft_errno == ft_map_system_error(EINTR))
             continue ;
-        else if (ft_errno == EAGAIN + ERRNO_OFFSET
-            || ft_errno == EWOULDBLOCK + ERRNO_OFFSET)
+        else if (ft_errno == ft_map_system_error(EAGAIN)
+            || ft_errno == ft_map_system_error(EWOULDBLOCK))
         {
             if (retry_attempts < max_retries)
             {
@@ -113,25 +115,27 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
                 return (-1);
             }
             int stored_error = ft_errno;
+            if (stored_error != ER_SUCCESS)
+                stored_error = cmp_normalize_ft_errno(stored_error);
 #if defined(_WIN32) || defined(_WIN64)
             if (stored_error == ER_SUCCESS)
             {
                 DWORD last_error = GetLastError();
                 if (last_error != 0)
-                    stored_error = static_cast<int>(last_error) + ERRNO_OFFSET;
+                    stored_error = cmp_map_system_error_to_ft(static_cast<int>(last_error));
             }
 #else
             if (stored_error == ER_SUCCESS && errno != 0)
-                stored_error = errno + ERRNO_OFFSET;
+                stored_error = cmp_map_system_error_to_ft(errno);
 #endif
             ft_errno = stored_error;
 #if defined(__linux__) || defined(__APPLE__)
             const int max_retries = 10;
             const int retry_delay_ms = 500;
-            if (ft_errno == EINTR + ERRNO_OFFSET)
+            if (ft_errno == ft_map_system_error(EINTR))
                 continue ;
-            else if (ft_errno == EAGAIN + ERRNO_OFFSET
-                || ft_errno == EWOULDBLOCK + ERRNO_OFFSET)
+            else if (ft_errno == ft_map_system_error(EAGAIN)
+                || ft_errno == ft_map_system_error(EWOULDBLOCK))
             {
                 if (retry_attempts < max_retries)
                 {
@@ -160,16 +164,18 @@ int su_close(int file_descriptor)
     if (close_result != 0)
     {
         int stored_error = ft_errno;
+        if (stored_error != ER_SUCCESS)
+            stored_error = cmp_normalize_ft_errno(stored_error);
 #if defined(_WIN32) || defined(_WIN64)
         if (stored_error == ER_SUCCESS)
         {
             DWORD last_error = GetLastError();
             if (last_error != 0)
-                stored_error = static_cast<int>(last_error) + ERRNO_OFFSET;
+                stored_error = cmp_map_system_error_to_ft(static_cast<int>(last_error));
         }
 #else
         if (stored_error == ER_SUCCESS && errno != 0)
-            stored_error = errno + ERRNO_OFFSET;
+            stored_error = cmp_map_system_error_to_ft(errno);
 #endif
         ft_errno = stored_error;
         return (close_result);

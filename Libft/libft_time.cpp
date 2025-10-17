@@ -16,7 +16,7 @@ int64_t ft_time_ms(void)
     if (cmp_time_get_time_of_day(&time_value) != 0)
     {
         if (errno != 0)
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(errno);
         else
             ft_errno = FT_ERR_TERMINATED;
         return (-1);

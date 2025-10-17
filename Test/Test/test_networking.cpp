@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
 
 struct http_stream_test_server_context
 {
@@ -29,6 +30,37 @@ struct http_stream_handler_state
 };
 
 static http_stream_handler_state *g_http_stream_handler_state = NULL;
+
+static bool get_socket_port_string(ft_socket &socket, ft_string &port_string)
+{
+    struct sockaddr_storage local_address;
+    socklen_t address_length;
+    int socket_fd;
+    unsigned short port_value;
+
+    socket_fd = socket.get_fd();
+    if (socket_fd < 0)
+        return (false);
+    address_length = sizeof(local_address);
+    if (getsockname(socket_fd, reinterpret_cast<struct sockaddr*>(&local_address), &address_length) != 0)
+        return (false);
+    if (local_address.ss_family == AF_INET)
+    {
+        const struct sockaddr_in *ipv4_address = reinterpret_cast<const struct sockaddr_in*>(&local_address);
+        port_value = ntohs(ipv4_address->sin_port);
+    }
+    else if (local_address.ss_family == AF_INET6)
+    {
+        const struct sockaddr_in6 *ipv6_address = reinterpret_cast<const struct sockaddr_in6*>(&local_address);
+        port_value = ntohs(ipv6_address->sin6_port);
+    }
+    else
+        return (false);
+    port_string = ft_to_string(static_cast<int>(port_value));
+    if (port_string.empty())
+        return (false);
+    return (true);
+}
 
 static int socket_creation_failure_hook(int domain, int type, int protocol)
 {
@@ -337,12 +369,15 @@ FT_TEST(test_http_client_streaming_chunks, "http_get_stream handles chunked resp
     ft_thread server_thread;
     http_stream_handler_state handler_state;
     int client_result;
+    ft_string port_string;
 
     server_configuration._type = SocketType::SERVER;
     server_configuration._ip = "127.0.0.1";
-    server_configuration._port = 54360;
+    server_configuration._port = 0;
     server_socket = ft_socket(server_configuration);
     if (server_socket.get_error() != ER_SUCCESS)
+        return (0);
+    if (get_socket_port_string(server_socket, port_string) == false)
         return (0);
     server_context.server_socket = &server_socket;
     server_thread = ft_thread(http_stream_test_server, &server_context);
@@ -357,7 +392,7 @@ FT_TEST(test_http_client_streaming_chunks, "http_get_stream handles chunked resp
     handler_state.chunks[1].clear();
     handler_state.chunks[2].clear();
     g_http_stream_handler_state = &handler_state;
-    client_result = http_get_stream("127.0.0.1", "/", test_http_streaming_handler, false, "54360");
+    client_result = http_get_stream("127.0.0.1", "/", test_http_streaming_handler, false, port_string.c_str());
     g_http_stream_handler_state = NULL;
     server_thread.join();
     if (client_result != 0)

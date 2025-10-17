@@ -41,7 +41,7 @@ FT_TEST(test_cmp_open_failure_sets_errno, "cmp_open failure reports ft_errno")
     errno = 0;
     std::remove("missing_cmp_file.txt");
     FT_ASSERT_EQ(-1, cmp_open("missing_cmp_file.txt"));
-    FT_ASSERT_EQ(ENOENT + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
 }
 
@@ -86,7 +86,7 @@ FT_TEST(test_cmp_read_translates_errno, "cmp_read propagates errno failures")
     ft_errno = ER_SUCCESS;
     errno = 0;
     FT_ASSERT_EQ(-1, cmp_read(file_descriptor, buffer, sizeof(buffer)));
-    FT_ASSERT_EQ(EBADF + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, ft_errno);
     FT_ASSERT_EQ(0, cmp_close(file_descriptor));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
@@ -105,7 +105,7 @@ FT_TEST(test_cmp_write_translates_errno, "cmp_write propagates errno failures")
     ft_errno = ER_SUCCESS;
     errno = 0;
     FT_ASSERT_EQ(-1, cmp_write(file_descriptor, buffer, sizeof(buffer)));
-    FT_ASSERT_EQ(EBADF + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, ft_errno);
     FT_ASSERT_EQ(0, cmp_close(file_descriptor));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
@@ -140,7 +140,7 @@ FT_TEST(test_cmp_close_translates_errno, "cmp_close propagates errno failures")
     ft_errno = ER_SUCCESS;
     errno = 0;
     FT_ASSERT_EQ(-1, cmp_close(file_descriptor));
-    FT_ASSERT_EQ(EBADF + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, ft_errno);
     return (1);
 }
 

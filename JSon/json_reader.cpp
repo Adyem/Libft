@@ -2,6 +2,7 @@
 #include "json.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "../System_utils/system_utils.hpp"
 #include <cstdio>
@@ -12,6 +13,14 @@ static void skip_whitespace(const char *json_string, size_t &index)
     while (json_string[index]
         && ft_isspace(static_cast<unsigned char>(json_string[index])))
         index++;
+    return ;
+}
+
+static void json_reader_set_io_error(void)
+{
+    ft_errno = cmp_normalize_ft_errno(ft_errno);
+    if (ft_errno == ER_SUCCESS)
+        ft_errno = FT_ERR_IO;
     return ;
 }
 
@@ -26,30 +35,26 @@ static char    *json_read_file_content(const char *filename)
     file_stream = su_fopen(filename);
     if (file_stream == ft_nullptr)
     {
-        if (ft_errno == ER_SUCCESS)
-            ft_errno = FT_ERR_IO;
+        json_reader_set_io_error();
         return (ft_nullptr);
     }
     if (su_fseek(file_stream, 0, SEEK_END) != 0)
     {
         su_fclose(file_stream);
-        if (ft_errno == ER_SUCCESS)
-            ft_errno = FT_ERR_IO;
+        json_reader_set_io_error();
         return (ft_nullptr);
     }
     file_size_long = su_ftell(file_stream);
     if (file_size_long < 0)
     {
         su_fclose(file_stream);
-        if (ft_errno == ER_SUCCESS)
-            ft_errno = FT_ERR_IO;
+        json_reader_set_io_error();
         return (ft_nullptr);
     }
     if (su_fseek(file_stream, 0, SEEK_SET) != 0)
     {
         su_fclose(file_stream);
-        if (ft_errno == ER_SUCCESS)
-            ft_errno = FT_ERR_IO;
+        json_reader_set_io_error();
         return (ft_nullptr);
     }
     if (static_cast<unsigned long long>(file_size_long)
@@ -72,16 +77,14 @@ static char    *json_read_file_content(const char *filename)
     {
         cma_free(content);
         su_fclose(file_stream);
-        if (ft_errno == ER_SUCCESS)
-            ft_errno = FT_ERR_IO;
+        json_reader_set_io_error();
         return (ft_nullptr);
     }
     content[file_size] = '\0';
     if (su_fclose(file_stream) != 0)
     {
         cma_free(content);
-        if (ft_errno == ER_SUCCESS)
-            ft_errno = FT_ERR_IO;
+        json_reader_set_io_error();
         return (ft_nullptr);
     }
     ft_errno = ER_SUCCESS;

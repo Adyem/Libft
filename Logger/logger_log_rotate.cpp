@@ -1,6 +1,7 @@
 #include "logger_internal.hpp"
 #include "../Libft/libft.hpp"
 #include "../Time/time.hpp"
+#include "../Compatebility/compatebility_internal.hpp"
 #include <cerrno>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -30,9 +31,12 @@ static int logger_remove_oldest_rotation(const ft_string &rotation_base, size_t 
         int saved_errno;
 
         saved_errno = errno;
-        if (saved_errno != ENOENT)
+        int normalized_error;
+
+        normalized_error = cmp_map_system_error_to_ft(saved_errno);
+        if (normalized_error != FT_ERR_IO)
         {
-            ft_errno_reference() = saved_errno + ERRNO_OFFSET;
+            ft_errno_reference() = normalized_error;
             errno = saved_errno;
             return (-1);
         }
@@ -80,11 +84,13 @@ static int logger_shift_rotation_chain(const ft_string &rotation_base, size_t re
         if (rename(source_path.c_str(), destination_path.c_str()) != 0)
         {
             int saved_errno;
+            int normalized_error;
 
             saved_errno = errno;
-            if (saved_errno != ENOENT)
+            normalized_error = cmp_map_system_error_to_ft(saved_errno);
+            if (normalized_error != FT_ERR_IO)
             {
-                ft_errno_reference() = saved_errno + ERRNO_OFFSET;
+                ft_errno_reference() = normalized_error;
                 errno = saved_errno;
                 return (-1);
             }
@@ -126,7 +132,7 @@ static int logger_prepare_rotation_internal(s_file_sink *sink, bool *rotate_for_
     }
     if (fstat(sink->fd, &file_stats) == -1)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     retention_count = sink->retention_count;
@@ -200,7 +206,7 @@ void logger_execute_rotation(s_file_sink *sink)
         if (rename(sink->path.c_str(), rotated_path.c_str()) != 0)
         {
             saved_errno = errno;
-            ft_errno_reference() = saved_errno + ERRNO_OFFSET;
+            ft_errno_reference() = ft_map_system_error(saved_errno);
             errno = saved_errno;
             return ;
         }
@@ -214,7 +220,7 @@ void logger_execute_rotation(s_file_sink *sink)
     {
         sink->fd = -1;
         saved_errno = errno;
-        ft_errno_reference() = saved_errno + ERRNO_OFFSET;
+        ft_errno_reference() = ft_map_system_error(saved_errno);
         errno = saved_errno;
         return ;
     }
@@ -223,7 +229,7 @@ void logger_execute_rotation(s_file_sink *sink)
     if (sink->fd == -1)
     {
         saved_errno = errno;
-        ft_errno_reference() = saved_errno + ERRNO_OFFSET;
+        ft_errno_reference() = ft_map_system_error(saved_errno);
         errno = saved_errno;
         return ;
     }

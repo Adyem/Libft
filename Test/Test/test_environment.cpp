@@ -182,7 +182,7 @@ FT_TEST(test_ft_unsetenv_failure_propagates_errno, "ft_unsetenv propagates errno
     function_result = ft_unsetenv(variable_name);
     cmp_clear_force_unsetenv_result();
     FT_ASSERT_EQ(-1, function_result);
-    FT_ASSERT_EQ(ENOMEM + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     ft_unsetenv(variable_name);
     return (1);
 }
@@ -267,7 +267,7 @@ FT_TEST(test_ft_unsetenv_failure_uses_return_value, "ft_unsetenv uses return val
     function_result = ft_unsetenv(variable_name);
     cmp_clear_force_unsetenv_result();
     FT_ASSERT_EQ(42, function_result);
-    FT_ASSERT_EQ(42 + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(ft_map_system_error(42), ft_errno);
     ft_unsetenv(variable_name);
     return (1);
 }
@@ -285,7 +285,7 @@ FT_TEST(test_ft_unsetenv_failure_uses_windows_errors, "ft_unsetenv falls back to
     function_result = ft_unsetenv(variable_name);
     cmp_clear_force_unsetenv_result();
     FT_ASSERT_EQ(-1, function_result);
-    FT_ASSERT_EQ(123 + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(ft_map_system_error(123), ft_errno);
     ft_unsetenv(variable_name);
     return (1);
 }
@@ -303,7 +303,7 @@ FT_TEST(test_ft_unsetenv_failure_uses_wsa_error, "ft_unsetenv uses WSA error whe
     function_result = ft_unsetenv(variable_name);
     cmp_clear_force_unsetenv_result();
     FT_ASSERT_EQ(-1, function_result);
-    FT_ASSERT_EQ(321 + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(ft_map_system_error(321), ft_errno);
     ft_unsetenv(variable_name);
     return (1);
 }

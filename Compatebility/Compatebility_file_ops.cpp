@@ -42,7 +42,7 @@ int cmp_file_exists(const char *path)
     }
     last_error = GetLastError();
     if (last_error != 0)
-        ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
+        ft_errno = cmp_map_system_error_to_ft(static_cast<int>(last_error));
     else
         ft_errno = FT_ERR_INVALID_ARGUMENT;
     return (0);
@@ -64,7 +64,7 @@ int cmp_file_delete(const char *path)
     }
     last_error = GetLastError();
     if (last_error != 0)
-        ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
+        ft_errno = cmp_map_system_error_to_ft(static_cast<int>(last_error));
     else
         ft_errno = FT_ERR_INVALID_ARGUMENT;
     return (-1);
@@ -107,7 +107,7 @@ int cmp_file_move(const char *source_path, const char *destination_path)
         }
     }
     else if (last_error != 0)
-        ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
+        ft_errno = cmp_map_system_error_to_ft(static_cast<int>(last_error));
     else
         ft_errno = FT_ERR_INVALID_ARGUMENT;
     return (-1);
@@ -129,7 +129,7 @@ int cmp_file_copy(const char *source_path, const char *destination_path)
     }
     last_error = GetLastError();
     if (last_error != 0)
-        ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
+        ft_errno = cmp_map_system_error_to_ft(static_cast<int>(last_error));
     else
         ft_errno = FT_ERR_INVALID_ARGUMENT;
     return (-1);
@@ -152,7 +152,7 @@ int cmp_file_create_directory(const char *path, mode_t mode)
     }
     last_error = GetLastError();
     if (last_error != 0)
-        ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
+        ft_errno = cmp_map_system_error_to_ft(static_cast<int>(last_error));
     else
         ft_errno = FT_ERR_INVALID_ARGUMENT;
     return (-1);
@@ -194,7 +194,7 @@ int cmp_file_exists(const char *path)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
-    ft_errno = errno + ERRNO_OFFSET;
+    ft_errno = cmp_map_system_error_to_ft(errno);
     return (0);
 }
 
@@ -210,7 +210,7 @@ int cmp_file_delete(const char *path)
         ft_errno = ER_SUCCESS;
         return (0);
     }
-    ft_errno = errno + ERRNO_OFFSET;
+    ft_errno = cmp_map_system_error_to_ft(errno);
     return (-1);
 }
 
@@ -235,7 +235,7 @@ int cmp_file_move(const char *source_path, const char *destination_path)
         }
         if (errno != EXDEV)
         {
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = cmp_map_system_error_to_ft(errno);
             return (-1);
         }
     }
@@ -252,11 +252,16 @@ int cmp_file_move(const char *source_path, const char *destination_path)
         std::error_code remove_error_code;
 
         std::filesystem::remove(destination_path, remove_error_code);
-        ft_errno = delete_errno + ERRNO_OFFSET;
+        ft_errno = cmp_map_system_error_to_ft(delete_errno);
         return (-1);
     }
     if (copy_error_code.value() != 0)
-        ft_errno = copy_error_code.value() + ERRNO_OFFSET;
+    {
+        int copy_value;
+
+        copy_value = copy_error_code.value();
+        ft_errno = cmp_map_system_error_to_ft(copy_value);
+    }
     return (-1);
 }
 
@@ -276,7 +281,12 @@ int cmp_file_copy(const char *source_path, const char *destination_path)
         return (0);
     }
     if (copy_error_code.value() != 0)
-        ft_errno = copy_error_code.value() + ERRNO_OFFSET;
+    {
+        int copy_value;
+
+        copy_value = copy_error_code.value();
+        ft_errno = cmp_map_system_error_to_ft(copy_value);
+    }
     return (-1);
 }
 
@@ -292,7 +302,7 @@ int cmp_file_create_directory(const char *path, mode_t mode)
         ft_errno = ER_SUCCESS;
         return (0);
     }
-    ft_errno = errno + ERRNO_OFFSET;
+    ft_errno = cmp_map_system_error_to_ft(errno);
     return (-1);
 }
 

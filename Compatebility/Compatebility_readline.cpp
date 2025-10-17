@@ -13,7 +13,7 @@ static void cmp_set_errno_from_last_error()
     if (last_error == 0)
         ft_errno = FT_ERR_TERMINATED;
     else
-        ft_errno = static_cast<int>(last_error) + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(static_cast<int>(last_error));
     return ;
 }
 
@@ -89,7 +89,7 @@ static void cmp_set_errno_from_errno()
     if (errno == 0)
         ft_errno = FT_ERR_TERMINATED;
     else
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
     return ;
 }
 
