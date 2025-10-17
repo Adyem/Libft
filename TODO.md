@@ -184,8 +184,8 @@
 ### GetNextLine
 - [ ] Design and implement a custom STREAM abstraction that the streaming helpers can rely on instead of the standard library facilities.
 - [ ] Reintroduce the streaming helpers (`ft_read_file_lines`, `ft_open_and_read_file`) once the leftovers cache stabilizes under allocation failures and the custom STREAM implementation is available.
-- [ ] Restore the leftover allocation failure regression test and fix the get_next_line cleanup so buffers are released exactly once when reinserting cached data fails.
-- [ ] Restore the `get_next_line surfaces hash map allocation failures` regression after the leftovers cache can safely recover from map allocation errors without leaking entries.
+- [x] Restore the leftover allocation failure regression test and fix the get_next_line cleanup so buffers are released exactly once when reinserting cached data fails.
+- [x] Restore the `get_next_line surfaces hash map allocation failures` regression after the leftovers cache can safely recover from map allocation errors without leaking entries.
 
 ### CPP_class (utility classes)
 - [ ] Add move-aware and noexcept constructors/destructors to complex classes like `ft_big_number` and `DataBuffer` to improve performance guarantees.

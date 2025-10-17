@@ -237,7 +237,7 @@ static void api_connection_pool_record_dispose_snapshot(
         cleanup_allowed_flag,
         socket_open_flag,
         socket_error,
-        (unsigned long long)client_count);
+        static_cast<unsigned long long>(client_count));
     return ;
 }
 
