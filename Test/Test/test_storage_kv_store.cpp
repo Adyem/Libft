@@ -112,11 +112,7 @@ FT_TEST(test_kv_store_flush_propagates_json_writer_errno, "kv_store flush propag
     ft_errno = ER_SUCCESS;
     flush_result = store.kv_flush();
     FT_ASSERT_EQ(-1, flush_result);
-#if defined(_WIN32) || defined(_WIN64)
-    expected_error = ERROR_PATH_NOT_FOUND + ERRNO_OFFSET;
-#else
-    expected_error = ENOENT + ERRNO_OFFSET;
-#endif
+    expected_error = FT_ERR_IO;
     FT_ASSERT_EQ(expected_error, ft_errno);
     FT_ASSERT_EQ(expected_error, store.get_error());
     cleanup_paths(directory_path, file_path);

@@ -48,7 +48,7 @@ int ft_socket::setup_client(const SocketConfig &config)
         last_error = WSAGetLastError();
         if (!(config._non_blocking && last_error == WSAEWOULDBLOCK))
         {
-            this->set_error(last_error + ERRNO_OFFSET);
+            this->set_error(ft_map_system_error(last_error));
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
@@ -60,7 +60,7 @@ int ft_socket::setup_client(const SocketConfig &config)
         if (!(config._non_blocking && (last_error == EINPROGRESS
             || last_error == EWOULDBLOCK)))
         {
-            this->set_error(last_error + ERRNO_OFFSET);
+            this->set_error(ft_map_system_error(last_error));
             FT_CLOSE_SOCKET(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);

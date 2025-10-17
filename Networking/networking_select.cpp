@@ -63,7 +63,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
         if (ready_descriptors == 0)
             ft_errno = ER_SUCCESS;
         else
-            ft_errno = select_error + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(select_error);
         return (ready_descriptors);
     }
     index = 0;
@@ -140,7 +140,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
         if (ready_descriptors == 0)
             ft_errno = ER_SUCCESS;
         else
-            ft_errno = select_error + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(select_error);
         return (ready_descriptors);
     }
     index = 0;

@@ -94,7 +94,7 @@ FT_TEST(test_ft_random_uint32_failure_returns_zero, "ft_random_uint32 returns ze
     cmp_force_rng_open_failure(EACCES);
     uint32_t random_value = ft_random_uint32();
     cmp_clear_force_rng_failures();
-    if (ft_errno != EACCES + ERRNO_OFFSET)
+    if (ft_errno != FT_ERR_INVALID_OPERATION)
         return (0);
     if (random_value != 0u)
         return (0);

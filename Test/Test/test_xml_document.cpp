@@ -63,7 +63,7 @@ FT_TEST(test_xml_document_write_to_file_fopen_failure_sets_errno_offset, "xml_do
     FT_ASSERT_EQ(result, document.get_error());
     FT_ASSERT_EQ(result, ft_errno);
     if (open_errno != 0)
-        FT_ASSERT_EQ(open_errno + ERRNO_OFFSET, result);
+        FT_ASSERT_EQ(ft_map_system_error(open_errno), result);
     else
         FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result);
     return (1);
@@ -84,7 +84,7 @@ FT_TEST(test_xml_document_write_to_file_fwrite_failure_sets_errno_offset, "xml_d
     FT_ASSERT_EQ(result, document.get_error());
     FT_ASSERT_EQ(result, ft_errno);
     if (write_errno != 0)
-        FT_ASSERT_EQ(write_errno + ERRNO_OFFSET, result);
+        FT_ASSERT_EQ(ft_map_system_error(write_errno), result);
     else
         FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result);
     return (1);

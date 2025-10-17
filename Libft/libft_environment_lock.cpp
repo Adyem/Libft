@@ -16,7 +16,7 @@ static void ft_environment_initialize_mutex(void)
     init_result = pthread_mutex_init(&g_environment_mutex, NULL);
     if (init_result != 0)
     {
-        g_environment_mutex_init_error = init_result + ERRNO_OFFSET;
+        g_environment_mutex_init_error = ft_map_system_error(init_result);
     }
     else
     {
@@ -54,7 +54,7 @@ int ft_environment_lock(void)
     lock_result = pthread_mutex_lock(&g_environment_mutex);
     if (lock_result != 0)
     {
-        ft_errno = lock_result + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(lock_result);
         return (-1);
     }
     return (0);
@@ -74,7 +74,7 @@ int ft_environment_unlock(void)
     unlock_result = pthread_mutex_unlock(&g_environment_mutex);
     if (unlock_result != 0)
     {
-        ft_errno = unlock_result + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(unlock_result);
         return (-1);
     }
     if (g_environment_force_unlock_failure != 0)

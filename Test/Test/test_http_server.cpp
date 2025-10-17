@@ -132,19 +132,8 @@ FT_TEST(test_http_server_short_write_sets_error, "HTTP server detects closed cli
     error_code = server.get_error();
     if (error_code == FT_ERR_SOCKET_SEND_FAILED)
         return (1);
-#ifdef _WIN32
-    if (error_code == (WSAECONNRESET + ERRNO_OFFSET)
-        || error_code == (WSAENOTCONN + ERRNO_OFFSET)
-        || error_code == (WSAECONNABORTED + ERRNO_OFFSET))
+    if (error_code == FT_ERR_IO || error_code == FT_ERR_INVALID_STATE)
         return (1);
-#else
-    if (error_code == (ECONNRESET + ERRNO_OFFSET))
-        return (1);
-#ifdef EPIPE
-    if (error_code == (EPIPE + ERRNO_OFFSET))
-        return (1);
-#endif
-#endif
     return (0);
 }
 

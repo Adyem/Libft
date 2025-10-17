@@ -33,7 +33,7 @@ FT_TEST(test_su_putenv_forced_failure_propagates_error, "su_putenv forced failur
     ft_errno = ER_SUCCESS;
     cmp_set_force_putenv_result(-1, EACCES);
     FT_ASSERT_EQ(-1, su_putenv(environment_entry));
-    FT_ASSERT_EQ(EACCES + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, ft_errno);
     cmp_clear_force_putenv_result();
     return (1);
 }

@@ -108,7 +108,7 @@ int ft_http_server::run_once()
             this->_error_code = ER_SUCCESS;
             return (0);
         }
-        this->set_error(last_error + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(last_error));
 #else
         int last_error;
 
@@ -119,7 +119,7 @@ int ft_http_server::run_once()
             this->_error_code = ER_SUCCESS;
             return (0);
         }
-        this->set_error(last_error + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(last_error));
 #endif
         return (1);
     }
@@ -139,10 +139,10 @@ int ft_http_server::run_once()
             int library_error_code;
 
             last_error = WSAGetLastError();
-            library_error_code = last_error + ERRNO_OFFSET;
+            library_error_code = ft_map_system_error(last_error);
             this->set_error(library_error_code);
 #else
-            this->set_error(errno + ERRNO_OFFSET);
+            this->set_error(ft_map_system_error(errno));
 #endif
             return (1);
         }
@@ -295,7 +295,7 @@ int ft_http_server::run_once()
 #endif
             FT_CLOSE_SOCKET(client_socket);
             if (send_result < 0)
-                this->set_error(last_socket_error + ERRNO_OFFSET);
+                this->set_error(ft_map_system_error(last_socket_error));
             else
                 this->set_error(FT_ERR_SOCKET_SEND_FAILED);
             return (1);

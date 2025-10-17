@@ -2,6 +2,7 @@
 #if LIBFT_ENABLE_FILE_IO_HELPERS
 #include "libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
 #include <cerrno>
 #include <cstdio>
@@ -22,7 +23,7 @@ int ft_fclose(FILE *stream)
 
         close_error = errno;
         if (close_error != 0)
-            ft_errno = close_error + ERRNO_OFFSET;
+            ft_errno = cmp_map_system_error_to_ft(close_error);
         else
             ft_errno = FT_ERR_INVALID_HANDLE;
         return (EOF);

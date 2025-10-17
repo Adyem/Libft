@@ -86,6 +86,8 @@ int cmp_setenv(const char *name, const char *value, int overwrite);
 int cmp_unsetenv(const char *name);
 int cmp_putenv(char *string);
 const char *cmp_system_strerror(int error_code);
+int cmp_map_system_error_to_ft(int error_code);
+int cmp_normalize_ft_errno(int error_code);
 char *cmp_get_home_directory(void);
 unsigned int cmp_get_cpu_count(void);
 unsigned long long cmp_get_total_memory(void);

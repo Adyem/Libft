@@ -20,7 +20,7 @@ static inline int bind_platform(int sockfd, const struct sockaddr *addr, socklen
 {
     if (bind(static_cast<SOCKET>(sockfd), addr, len) == SOCKET_ERROR)
     {
-        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -31,7 +31,7 @@ static inline int listen_platform(int sockfd, int backlog)
 {
     if (listen(static_cast<SOCKET>(sockfd), backlog) == SOCKET_ERROR)
     {
-        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -43,7 +43,7 @@ static inline int accept_platform(int sockfd, struct sockaddr *addr, socklen_t *
     SOCKET new_fd = accept(static_cast<SOCKET>(sockfd), addr, addrlen);
     if (new_fd == INVALID_SOCKET)
     {
-        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -58,7 +58,7 @@ static inline int socket_platform(int domain, int type, int protocol)
         WSADATA data;
         if (WSAStartup(MAKEWORD(2,2), &data) != 0)
         {
-            ft_errno = WSAGetLastError() + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(WSAGetLastError());
             return (-1);
         }
         initialized = 1;
@@ -66,7 +66,7 @@ static inline int socket_platform(int domain, int type, int protocol)
     SOCKET sockfd = socket(domain, type, protocol);
     if (sockfd == INVALID_SOCKET)
     {
-        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -77,7 +77,7 @@ static inline int connect_platform(int sockfd, const struct sockaddr *addr, sock
 {
     if (connect(static_cast<SOCKET>(sockfd), addr, len) == SOCKET_ERROR)
     {
-        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -89,7 +89,7 @@ static inline ssize_t send_platform(int sockfd, const void *buf, size_t len, int
     int ret = ::send(static_cast<SOCKET>(sockfd), static_cast<const char*>(buf), static_cast<int>(len), flags);
     if (ret == SOCKET_ERROR)
     {
-        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -101,7 +101,7 @@ static inline ssize_t recv_platform(int sockfd, void *buf, size_t len, int flags
     int ret = ::recv(static_cast<SOCKET>(sockfd), static_cast<char*>(buf), static_cast<int>(len), flags);
     if (ret == SOCKET_ERROR)
     {
-        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -115,7 +115,7 @@ static inline ssize_t sendto_platform(int sockfd, const void *buf, size_t len, i
                        static_cast<int>(len), flags, dest_addr, addrlen);
     if (ret == SOCKET_ERROR)
     {
-        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -129,7 +129,7 @@ static inline ssize_t recvfrom_platform(int sockfd, void *buf, size_t len, int f
                          static_cast<int>(len), flags, src_addr, addrlen);
     if (ret == SOCKET_ERROR)
     {
-        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -140,7 +140,7 @@ static inline int bind_platform(int sockfd, const struct sockaddr *addr, socklen
 {
     if (bind(sockfd, addr, len) == -1)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -151,7 +151,7 @@ static inline int listen_platform(int sockfd, int backlog)
 {
     if (listen(sockfd, backlog) == -1)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -163,7 +163,7 @@ static inline int accept_platform(int sockfd, struct sockaddr *addr, socklen_t *
     int new_fd = accept(sockfd, addr, addrlen);
     if (new_fd == -1)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -175,7 +175,7 @@ static inline int socket_platform(int domain, int type, int protocol)
     int sockfd = socket(domain, type, protocol);
     if (sockfd == -1)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -186,7 +186,7 @@ static inline int connect_platform(int sockfd, const struct sockaddr *addr, sock
 {
     if (connect(sockfd, addr, len) == -1)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -200,7 +200,7 @@ static inline ssize_t send_platform(int sockfd, const void *buf, size_t len, int
     result = ::send(sockfd, buf, len, flags);
     if (result == -1)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -214,7 +214,7 @@ static inline ssize_t recv_platform(int sockfd, void *buf, size_t len, int flags
     result = ::recv(sockfd, buf, len, flags);
     if (result == -1)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -229,7 +229,7 @@ static inline ssize_t sendto_platform(int sockfd, const void *buf, size_t len, i
     result = ::sendto(sockfd, buf, len, flags, dest_addr, addrlen);
     if (result == -1)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -244,7 +244,7 @@ static inline ssize_t recvfrom_platform(int sockfd, void *buf, size_t len, int f
     result = ::recvfrom(sockfd, buf, len, flags, src_addr, addrlen);
     if (result == -1)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -338,13 +338,13 @@ int nw_inet_pton(int family, const char *ip_address, void *destination)
 
         error_code = WSAGetLastError();
         if (error_code != 0)
-            ft_errno = error_code + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(error_code);
         else
             ft_errno = FT_ERR_INVALID_ARGUMENT;
     }
 #else
     if (errno != 0)
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
     else
         ft_errno = FT_ERR_INVALID_ARGUMENT;
 #endif

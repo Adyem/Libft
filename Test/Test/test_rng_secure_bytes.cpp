@@ -37,7 +37,7 @@ FT_TEST(test_rng_secure_bytes_open_failure_propagates_errno, "rng_secure_bytes p
     cmp_clear_force_rng_failures();
     if (result != -1)
         return (0);
-    if (ft_errno != EACCES + ERRNO_OFFSET)
+    if (ft_errno != FT_ERR_INVALID_OPERATION)
         return (0);
     return (1);
 }
@@ -52,7 +52,7 @@ FT_TEST(test_rng_secure_bytes_read_failure_propagates_errno, "rng_secure_bytes p
     cmp_clear_force_rng_failures();
     if (result != -1)
         return (0);
-    if (ft_errno != EIO + ERRNO_OFFSET)
+    if (ft_errno != FT_ERR_IO)
         return (0);
     return (1);
 }
@@ -83,7 +83,7 @@ FT_TEST(test_rng_secure_bytes_close_failure_propagates_errno, "rng_secure_bytes 
     cmp_clear_force_rng_failures();
     if (result != -1)
         return (0);
-    if (ft_errno != EBADF + ERRNO_OFFSET)
+    if (ft_errno != FT_ERR_INVALID_HANDLE)
         return (0);
     return (1);
 }

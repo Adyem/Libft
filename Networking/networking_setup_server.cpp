@@ -18,12 +18,12 @@
 #ifdef _WIN32
 static inline int translate_platform_error()
 {
-    return (WSAGetLastError() + ERRNO_OFFSET);
+    return (ft_map_system_error(WSAGetLastError()));
 }
 #else
 static inline int translate_platform_error()
 {
-    return (errno + ERRNO_OFFSET);
+    return (ft_map_system_error(errno));
 }
 #endif
 

@@ -154,7 +154,7 @@ FT_TEST(test_api_request_set_resolve_error_handles_system_errno,
     errno = EDOM;
     ft_errno = ER_SUCCESS;
     api_request_set_resolve_error(EAI_SYSTEM);
-    FT_ASSERT_EQ(EDOM + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     errno = 0;
     ft_errno = ER_SUCCESS;
     api_request_set_resolve_error(EAI_SYSTEM);
@@ -216,11 +216,11 @@ FT_TEST(test_api_request_set_ssl_error_reports_errno_for_syscall,
     errno = EDOM;
     ft_errno = ER_SUCCESS;
     api_request_set_ssl_error(session, -1);
-    FT_ASSERT_EQ(EDOM + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     errno = 0;
     ft_errno = ER_SUCCESS;
     api_request_set_ssl_error(session, -1);
-    FT_ASSERT_EQ(SSL_ERROR_SYSCALL + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SSL_SYSCALL_ERROR, ft_errno);
     errno = previous_errno;
     SSL_free(session);
     SSL_CTX_free(context);

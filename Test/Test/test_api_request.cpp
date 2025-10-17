@@ -37,6 +37,25 @@ struct api_stream_test_context
     int status_code;
 };
 
+struct api_request_bearer_server_context
+{
+    std::atomic<bool> ready;
+    std::atomic<bool> header_received;
+    std::atomic<int> result;
+    int client_fd;
+    ft_string request_data;
+};
+
+struct api_request_basic_server_context
+{
+    std::atomic<bool> ready;
+    std::atomic<bool> basic_header_received;
+    std::atomic<bool> basic_header_after_custom;
+    std::atomic<int> result;
+    int client_fd;
+    ft_string request_data;
+};
+
 static void api_request_stream_headers_callback(int status_code,
     const char *headers, void *user_data)
 {
@@ -153,6 +172,128 @@ static void api_request_success_server_signal_ready(int error_code)
 {
     g_api_request_success_server_start_error.store(error_code, std::memory_order_relaxed);
     g_api_request_success_server_ready.store(true, std::memory_order_release);
+    return ;
+}
+
+static void api_request_bearer_server(api_request_bearer_server_context *context)
+{
+    SocketConfig server_configuration;
+    ft_socket server_socket;
+    struct sockaddr_storage address_storage;
+    socklen_t address_length;
+    int client_fd;
+    char buffer[512];
+    ssize_t bytes_received;
+    const char *header_location;
+    const char *response;
+    ssize_t send_result;
+
+    if (!context)
+        return ;
+    server_configuration._type = SocketType::SERVER;
+    server_configuration._ip = "127.0.0.1";
+    server_configuration._port = 54365;
+    context->client_fd = -1;
+    context->request_data.clear();
+    server_socket = ft_socket(server_configuration);
+    if (server_socket.get_error() != ER_SUCCESS)
+    {
+        context->result.store(server_socket.get_error(), std::memory_order_relaxed);
+        context->ready.store(true, std::memory_order_release);
+        return ;
+    }
+    context->result.store(0, std::memory_order_relaxed);
+    context->ready.store(true, std::memory_order_release);
+    address_length = sizeof(address_storage);
+    client_fd = nw_accept(server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
+    if (client_fd < 0)
+    {
+        context->result.store(-1, std::memory_order_relaxed);
+        return ;
+    }
+    context->client_fd = client_fd;
+    while (1)
+    {
+        bytes_received = nw_recv(client_fd, buffer, sizeof(buffer) - 1, 0);
+        if (bytes_received <= 0)
+            break;
+        buffer[bytes_received] = '\0';
+        context->request_data.append(buffer);
+        if (ft_strstr(context->request_data.c_str(), "\r\n\r\n"))
+            break;
+    }
+    header_location = ft_strstr(context->request_data.c_str(), "Authorization: Bearer test-token");
+    if (header_location)
+        context->header_received.store(true, std::memory_order_relaxed);
+    response = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
+    send_result = nw_send(client_fd, response, ft_strlen(response), 0);
+    if (send_result < 0)
+        context->result.store(-2, std::memory_order_relaxed);
+    FT_CLOSE_SOCKET(client_fd);
+    return ;
+}
+
+static void api_request_basic_server(api_request_basic_server_context *context)
+{
+    SocketConfig server_configuration;
+    ft_socket server_socket;
+    struct sockaddr_storage address_storage;
+    socklen_t address_length;
+    int client_fd;
+    char buffer[512];
+    ssize_t bytes_received;
+    const char *request_cstring;
+    const char *custom_header_location;
+    const char *basic_header_location;
+    const char *response;
+    ssize_t send_result;
+
+    if (!context)
+        return ;
+    server_configuration._type = SocketType::SERVER;
+    server_configuration._ip = "127.0.0.1";
+    server_configuration._port = 54366;
+    context->client_fd = -1;
+    context->request_data.clear();
+    server_socket = ft_socket(server_configuration);
+    if (server_socket.get_error() != ER_SUCCESS)
+    {
+        context->result.store(server_socket.get_error(), std::memory_order_relaxed);
+        context->ready.store(true, std::memory_order_release);
+        return ;
+    }
+    context->result.store(0, std::memory_order_relaxed);
+    context->ready.store(true, std::memory_order_release);
+    address_length = sizeof(address_storage);
+    client_fd = nw_accept(server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
+    if (client_fd < 0)
+    {
+        context->result.store(-1, std::memory_order_relaxed);
+        return ;
+    }
+    context->client_fd = client_fd;
+    while (1)
+    {
+        bytes_received = nw_recv(client_fd, buffer, sizeof(buffer) - 1, 0);
+        if (bytes_received <= 0)
+            break;
+        buffer[bytes_received] = '\0';
+        context->request_data.append(buffer);
+        if (ft_strstr(context->request_data.c_str(), "\r\n\r\n"))
+            break;
+    }
+    request_cstring = context->request_data.c_str();
+    basic_header_location = ft_strstr(request_cstring, "Authorization: Basic dXNlcjpwYXNz");
+    if (basic_header_location)
+        context->basic_header_received.store(true, std::memory_order_relaxed);
+    custom_header_location = ft_strstr(request_cstring, "X-Test-Header: Value");
+    if (custom_header_location && basic_header_location && custom_header_location < basic_header_location)
+        context->basic_header_after_custom.store(true, std::memory_order_relaxed);
+    response = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n";
+    send_result = nw_send(client_fd, response, ft_strlen(response), 0);
+    if (send_result < 0)
+        context->result.store(-2, std::memory_order_relaxed);
+    FT_CLOSE_SOCKET(client_fd);
     return ;
 }
 
@@ -660,7 +801,7 @@ FT_TEST(test_api_request_send_failure_sets_errno, "api_request_string send failu
     server_thread.join();
     if (result != ft_nullptr)
         return (0);
-    if (request_errno != FT_ERR_SOCKET_SEND_FAILED && request_errno != (EPIPE + ERRNO_OFFSET))
+    if (request_errno != FT_ERR_SOCKET_SEND_FAILED && request_errno != FT_ERR_IO)
         return (0);
     if (ft_errno != ER_SUCCESS)
         return (0);
@@ -722,6 +863,86 @@ FT_TEST(test_api_request_success_resets_errno, "api_request_string success reset
     if (ft_errno != ER_SUCCESS)
         return (0);
     cma_free(body);
+    return (1);
+}
+
+FT_TEST(test_api_request_host_bearer_adds_header,
+    "api_request_string_host_bearer adds bearer header")
+{
+    ft_thread server_thread;
+    api_request_bearer_server_context context;
+    char *body;
+    int status_code;
+
+#ifndef _WIN32
+    signal(SIGPIPE, SIG_IGN);
+#endif
+    context.ready.store(false, std::memory_order_relaxed);
+    context.header_received.store(false, std::memory_order_relaxed);
+    context.result.store(-99, std::memory_order_relaxed);
+    context.client_fd = -1;
+    context.request_data.clear();
+    ft_errno = ER_SUCCESS;
+    server_thread = ft_thread(api_request_bearer_server, &context);
+    if (server_thread.get_error() != ER_SUCCESS)
+        return (0);
+    while (!context.ready.load(std::memory_order_acquire))
+        api_request_small_delay();
+    status_code = 0;
+    body = api_request_string_host_bearer("127.0.0.1", 54365, "GET", "/",
+                                          "test-token", ft_nullptr, ft_nullptr,
+                                          &status_code, 1000, ft_nullptr);
+    server_thread.join();
+    if (body)
+        cma_free(body);
+    if (context.result.load(std::memory_order_relaxed) != 0)
+        return (0);
+    if (!context.header_received.load(std::memory_order_relaxed))
+        return (0);
+    if (status_code != 200)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_api_request_host_basic_appends_after_existing_header,
+    "api_request_string_host_basic adds basic header after existing header")
+{
+    ft_thread server_thread;
+    api_request_basic_server_context context;
+    char *body;
+    int status_code;
+
+#ifndef _WIN32
+    signal(SIGPIPE, SIG_IGN);
+#endif
+    context.ready.store(false, std::memory_order_relaxed);
+    context.basic_header_received.store(false, std::memory_order_relaxed);
+    context.basic_header_after_custom.store(false, std::memory_order_relaxed);
+    context.result.store(-99, std::memory_order_relaxed);
+    context.client_fd = -1;
+    context.request_data.clear();
+    ft_errno = ER_SUCCESS;
+    server_thread = ft_thread(api_request_basic_server, &context);
+    if (server_thread.get_error() != ER_SUCCESS)
+        return (0);
+    while (!context.ready.load(std::memory_order_acquire))
+        api_request_small_delay();
+    status_code = 0;
+    body = api_request_string_host_basic("127.0.0.1", 54366, "GET", "/",
+                                         "dXNlcjpwYXNz", ft_nullptr,
+                                         "X-Test-Header: Value",
+                                         &status_code, 1000, ft_nullptr);
+    server_thread.join();
+    if (body)
+        cma_free(body);
+    if (context.result.load(std::memory_order_relaxed) != 0)
+        return (0);
+    if (!context.basic_header_received.load(std::memory_order_relaxed))
+        return (0);
+    if (!context.basic_header_after_custom.load(std::memory_order_relaxed))
+        return (0);
+    if (status_code != 200)
+        return (0);
     return (1);
 }
 
@@ -1004,6 +1225,64 @@ FT_TEST(test_http2_frame_roundtrip, "http2 frame encode decode roundtrip")
         return (0);
     if (!(decoded_frame.payload == input_frame.payload))
         return (0);
+    return (1);
+}
+
+FT_TEST(test_http2_header_compression_roundtrip, "http2 header compression roundtrip")
+{
+    ft_vector<http2_header_field> headers;
+    ft_vector<http2_header_field> decoded_headers;
+    http2_header_field field_entry;
+    ft_string compressed;
+    int error_code;
+    size_t header_count;
+    size_t index;
+
+    field_entry.name = ":method";
+    field_entry.value = "GET";
+    headers.push_back(field_entry);
+    if (headers.get_error() != ER_SUCCESS)
+        return (0);
+    field_entry.name = ":path";
+    field_entry.value = "/resource";
+    headers.push_back(field_entry);
+    if (headers.get_error() != ER_SUCCESS)
+        return (0);
+    field_entry.name = "user-agent";
+    field_entry.value = "libft-tests";
+    headers.push_back(field_entry);
+    if (headers.get_error() != ER_SUCCESS)
+        return (0);
+    field_entry.name = "accept";
+    field_entry.value = "*/*";
+    headers.push_back(field_entry);
+    if (headers.get_error() != ER_SUCCESS)
+        return (0);
+    error_code = ER_SUCCESS;
+    if (!http2_compress_headers(headers, compressed, error_code))
+        return (0);
+    if (error_code != ER_SUCCESS)
+        return (0);
+    if (!http2_decompress_headers(compressed, decoded_headers, error_code))
+        return (0);
+    if (error_code != ER_SUCCESS)
+        return (0);
+    header_count = decoded_headers.size();
+    if (decoded_headers.get_error() != ER_SUCCESS)
+        return (0);
+    if (headers.get_error() != ER_SUCCESS)
+        return (0);
+    if (header_count != headers.size())
+        return (0);
+    index = 0;
+    while (index < header_count)
+    {
+        if (!(decoded_headers[index].name == headers[index].name))
+            return (0);
+        if (!(decoded_headers[index].value == headers[index].value))
+            return (0);
+        index++;
+    }
     return (1);
 }
 
