@@ -205,11 +205,14 @@ $(DEBUG_TARGET): $(DEBUG_LIBS)
 	                exit $$status; \
 	        fi; \
 	fi; \
-	if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
-	$(RM) $$module_dir/objs/*.o; \
-	$(RM) $$module_dir/$$module_target; \
-	$(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
-	fi
+        if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
+                module_path="$$module_dir/$$module_target"; \
+                progress_index=$$(printf '%s\n' "$(LIBS)" | tr ' ' '\n' | nl -ba | awk -v target="$$module_path" '$$2==target {print $$1}'); \
+                printf '\033[1;35m[LIBFT BUILD] (%d/%d) Building %s\033[0m\n' "$$progress_index" "$(TOTAL_LIBS)" "$$module_path"; \
+                $(RM) $$module_dir/objs/*.o; \
+                $(RM) $$module_dir/$$module_target; \
+                $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
+        fi
 
 %_debug.a:
 	@module_dir="$(patsubst %/,%,$(dir $@))"; \
@@ -225,11 +228,14 @@ $(DEBUG_TARGET): $(DEBUG_LIBS)
 	                exit $$status; \
 	        fi; \
 	fi; \
-	if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
-	$(RM) $$module_dir/objs_debug/*.o; \
-	$(RM) $$module_dir/$$module_target; \
-	$(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
-	fi
+        if [ $$need_build -eq 1 ] || [ ! -f $@ ]; then \
+                module_path="$$module_dir/$$module_target"; \
+                progress_index=$$(printf '%s\n' "$(DEBUG_LIBS)" | tr ' ' '\n' | nl -ba | awk -v target="$$module_path" '$$2==target {print $$1}'); \
+                printf '\033[1;35m[LIBFT BUILD] (%d/%d) Building %s\033[0m\n' "$$progress_index" "$(TOTAL_DEBUG_LIBS)" "$$module_path"; \
+                $(RM) $$module_dir/objs_debug/*.o; \
+                $(RM) $$module_dir/$$module_target; \
+                $(MAKE) -C $$module_dir $$module_target $(SUBMAKE_OVERRIDES); \
+        fi
 
 clean:
 	@status=0; \
