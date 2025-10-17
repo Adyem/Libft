@@ -189,6 +189,10 @@ static int cmp_translate_posix_error(int error_code)
         return (FT_ERR_INVALID_STATE);
     if (error_code == EWOULDBLOCK)
         return (FT_ERR_INVALID_STATE);
+    if (error_code == EINPROGRESS)
+        return (FT_ERR_INVALID_STATE);
+    if (error_code == EALREADY)
+        return (FT_ERR_INVALID_STATE);
     if (error_code == ENOENT)
         return (FT_ERR_IO);
     if (error_code == ENOTDIR)
@@ -201,20 +205,74 @@ static int cmp_translate_posix_error(int error_code)
         return (FT_ERR_INVALID_OPERATION);
     if (error_code == EINVAL)
         return (FT_ERR_INVALID_OPERATION);
+#if defined(EFAULT)
+    if (error_code == EFAULT)
+        return (FT_ERR_INVALID_POINTER);
+#endif
+#if defined(E2BIG)
+    if (error_code == E2BIG)
+        return (FT_ERR_INVALID_ARGUMENT);
+#endif
     if (error_code == EDOM)
         return (FT_ERR_INVALID_ARGUMENT);
     if (error_code == ESRCH)
         return (FT_ERR_NOT_FOUND);
     if (error_code == EEXIST)
         return (FT_ERR_ALREADY_EXISTS);
+    if (error_code == EBUSY)
+        return (FT_ERR_INVALID_STATE);
+    if (error_code == ECHILD)
+        return (FT_ERR_NOT_FOUND);
+#if defined(EDEADLK)
+    if (error_code == EDEADLK)
+        return (FT_ERR_INVALID_STATE);
+#endif
     if (error_code == EADDRINUSE)
         return (FT_ERR_ALREADY_EXISTS);
     if (error_code == EADDRNOTAVAIL)
         return (FT_ERR_NOT_FOUND);
     if (error_code == EBADF)
         return (FT_ERR_INVALID_HANDLE);
+#if defined(ENODEV)
+    if (error_code == ENODEV)
+        return (FT_ERR_NOT_FOUND);
+#endif
+#if defined(ENXIO)
+    if (error_code == ENXIO)
+        return (FT_ERR_NOT_FOUND);
+#endif
+    if (error_code == ENOTDIR)
+        return (FT_ERR_IO);
+    if (error_code == ENOENT)
+        return (FT_ERR_IO);
+#if defined(ENFILE)
+    if (error_code == ENFILE)
+        return (FT_ERR_FULL);
+#endif
+    if (error_code == EMFILE)
+        return (FT_ERR_FULL);
+#if defined(EFBIG)
+    if (error_code == EFBIG)
+        return (FT_ERR_FULL);
+#endif
+#if defined(ENOLCK)
+    if (error_code == ENOLCK)
+        return (FT_ERR_INVALID_STATE);
+#endif
     if (error_code == ENOTSOCK)
         return (FT_ERR_INVALID_HANDLE);
+#if defined(ENOTTY)
+    if (error_code == ENOTTY)
+        return (FT_ERR_INVALID_OPERATION);
+#endif
+#if defined(ENOTBLK)
+    if (error_code == ENOTBLK)
+        return (FT_ERR_INVALID_OPERATION);
+#endif
+#if defined(ESPIPE)
+    if (error_code == ESPIPE)
+        return (FT_ERR_INVALID_OPERATION);
+#endif
     if (error_code == EDESTADDRREQ)
         return (FT_ERR_INVALID_ARGUMENT);
     if (error_code == EMSGSIZE)
@@ -229,16 +287,132 @@ static int cmp_translate_posix_error(int error_code)
         return (FT_ERR_UNSUPPORTED_TYPE);
     if (error_code == EOPNOTSUPP)
         return (FT_ERR_INVALID_OPERATION);
+#if defined(ENOTSUP)
+    if (error_code == ENOTSUP)
+        return (FT_ERR_INVALID_OPERATION);
+#endif
     if (error_code == EPFNOSUPPORT)
         return (FT_ERR_UNSUPPORTED_TYPE);
     if (error_code == EAFNOSUPPORT)
         return (FT_ERR_UNSUPPORTED_TYPE);
+#if defined(ENAMETOOLONG)
+    if (error_code == ENAMETOOLONG)
+        return (FT_ERR_INVALID_ARGUMENT);
+#endif
+#if defined(ELOOP)
+    if (error_code == ELOOP)
+        return (FT_ERR_INVALID_OPERATION);
+#endif
+    if (error_code == ENOBUFS)
+        return (FT_ERR_NO_MEMORY);
     if (error_code == ENOMEM)
         return (FT_ERR_NO_MEMORY);
     if (error_code == EIO)
         return (FT_ERR_IO);
+#if defined(ENODATA)
+    if (error_code == ENODATA)
+        return (FT_ERR_IO);
+#endif
+#if defined(ETIME)
+    if (error_code == ETIME)
+        return (FT_ERR_IO);
+#endif
+#if defined(EBADMSG)
+    if (error_code == EBADMSG)
+        return (FT_ERR_IO);
+#endif
+#if defined(EMULTIHOP)
+    if (error_code == EMULTIHOP)
+        return (FT_ERR_IO);
+#endif
+#if defined(EPROTO)
+    if (error_code == EPROTO)
+        return (FT_ERR_IO);
+#endif
+#if defined(EREMOTEIO)
+    if (error_code == EREMOTEIO)
+        return (FT_ERR_IO);
+#endif
+#if defined(ENONET)
+    if (error_code == ENONET)
+        return (FT_ERR_IO);
+#endif
     if (error_code == ENOSPC)
         return (FT_ERR_FULL);
+#if defined(EOVERFLOW)
+    if (error_code == EOVERFLOW)
+        return (FT_ERR_OUT_OF_RANGE);
+#endif
+    if (error_code == ERANGE)
+        return (FT_ERR_OUT_OF_RANGE);
+#if defined(EILSEQ)
+    if (error_code == EILSEQ)
+        return (FT_ERR_INVALID_ARGUMENT);
+#endif
+#if defined(ECANCELED)
+    if (error_code == ECANCELED)
+        return (FT_ERR_TERMINATED);
+#endif
+#if defined(ENOSYS)
+    if (error_code == ENOSYS)
+        return (FT_ERR_UNSUPPORTED_TYPE);
+#endif
+#if defined(ENOLINK)
+    if (error_code == ENOLINK)
+        return (FT_ERR_INVALID_OPERATION);
+#endif
+#if defined(ENOSTR)
+    if (error_code == ENOSTR)
+        return (FT_ERR_INVALID_OPERATION);
+#endif
+#if defined(ENOSR)
+    if (error_code == ENOSR)
+        return (FT_ERR_INVALID_OPERATION);
+#endif
+#if defined(ENOTEMPTY)
+    if (error_code == ENOTEMPTY)
+        return (FT_ERR_INVALID_OPERATION);
+#endif
+#if defined(EROFS)
+    if (error_code == EROFS)
+        return (FT_ERR_INVALID_OPERATION);
+#endif
+#if defined(EXDEV)
+    if (error_code == EXDEV)
+        return (FT_ERR_INVALID_OPERATION);
+#endif
+#if defined(ETXTBSY)
+    if (error_code == ETXTBSY)
+        return (FT_ERR_INVALID_OPERATION);
+#endif
+#if defined(EUCLEAN)
+    if (error_code == EUCLEAN)
+        return (FT_ERR_INVALID_OPERATION);
+#endif
+#if defined(ENOTUNIQ)
+    if (error_code == ENOTUNIQ)
+        return (FT_ERR_ALREADY_EXISTS);
+#endif
+#if defined(EOWNERDEAD)
+    if (error_code == EOWNERDEAD)
+        return (FT_ERR_INVALID_STATE);
+#endif
+#if defined(ENOTRECOVERABLE)
+    if (error_code == ENOTRECOVERABLE)
+        return (FT_ERR_INVALID_STATE);
+#endif
+#if defined(ERFKILL)
+    if (error_code == ERFKILL)
+        return (FT_ERR_INVALID_STATE);
+#endif
+#if defined(EHWPOISON)
+    if (error_code == EHWPOISON)
+        return (FT_ERR_INVALID_STATE);
+#endif
+#if defined(EIDRM)
+    if (error_code == EIDRM)
+        return (FT_ERR_NOT_FOUND);
+#endif
     if (error_code == ENETDOWN)
         return (FT_ERR_IO);
     if (error_code == ENETUNREACH)
@@ -257,6 +431,34 @@ static int cmp_translate_posix_error(int error_code)
         return (FT_ERR_IO);
     if (error_code == EHOSTUNREACH)
         return (FT_ERR_IO);
+#if defined(EPROCLIM)
+    if (error_code == EPROCLIM)
+        return (FT_ERR_FULL);
+#endif
+#if defined(EUSERS)
+    if (error_code == EUSERS)
+        return (FT_ERR_FULL);
+#endif
+#if defined(EDQUOT)
+    if (error_code == EDQUOT)
+        return (FT_ERR_FULL);
+#endif
+#if defined(ESTALE)
+    if (error_code == ESTALE)
+        return (FT_ERR_IO);
+#endif
+#if defined(EREMOTE)
+    if (error_code == EREMOTE)
+        return (FT_ERR_IO);
+#endif
+    if (error_code == EISCONN)
+        return (FT_ERR_INVALID_STATE);
+    if (error_code == ENOTCONN)
+        return (FT_ERR_INVALID_STATE);
+    if (error_code == ESHUTDOWN)
+        return (FT_ERR_INVALID_STATE);
+    if (error_code == ETOOMANYREFS)
+        return (FT_ERR_FULL);
     if (error_code == EPIPE)
         return (FT_ERR_IO);
     return (error_code + ERRNO_OFFSET);

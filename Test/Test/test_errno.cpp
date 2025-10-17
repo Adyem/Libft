@@ -239,10 +239,74 @@ FT_TEST(test_ft_map_system_error_normalizes_common_codes,
     FT_ASSERT_EQ(FT_ERR_IO, mapped_error);
     mapped_error = ft_map_system_error(EACCES);
     FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, mapped_error);
+    mapped_error = ft_map_system_error(EINVAL);
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, mapped_error);
+#if defined(EFAULT)
+    mapped_error = ft_map_system_error(EFAULT);
+    FT_ASSERT_EQ(FT_ERR_INVALID_POINTER, mapped_error);
+#endif
+#if defined(E2BIG)
+    mapped_error = ft_map_system_error(E2BIG);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, mapped_error);
+#endif
     mapped_error = ft_map_system_error(EBADF);
     FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, mapped_error);
+#if defined(ENODEV)
+    mapped_error = ft_map_system_error(ENODEV);
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, mapped_error);
+#endif
+#if defined(ENXIO)
+    mapped_error = ft_map_system_error(ENXIO);
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, mapped_error);
+#endif
+#if defined(ENAMETOOLONG)
+    mapped_error = ft_map_system_error(ENAMETOOLONG);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, mapped_error);
+#endif
+#if defined(ENFILE)
+    mapped_error = ft_map_system_error(ENFILE);
+    FT_ASSERT_EQ(FT_ERR_FULL, mapped_error);
+#endif
+    mapped_error = ft_map_system_error(EMFILE);
+    FT_ASSERT_EQ(FT_ERR_FULL, mapped_error);
     mapped_error = ft_map_system_error(ECONNREFUSED);
     FT_ASSERT_EQ(FT_ERR_SOCKET_CONNECT_FAILED, mapped_error);
+#if defined(ENOTSUP)
+    mapped_error = ft_map_system_error(ENOTSUP);
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, mapped_error);
+#endif
+#if defined(EBADMSG)
+    mapped_error = ft_map_system_error(EBADMSG);
+    FT_ASSERT_EQ(FT_ERR_IO, mapped_error);
+#endif
+    mapped_error = ft_map_system_error(ENOSPC);
+    FT_ASSERT_EQ(FT_ERR_FULL, mapped_error);
+#if defined(EOVERFLOW)
+    mapped_error = ft_map_system_error(EOVERFLOW);
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, mapped_error);
+#endif
+    mapped_error = ft_map_system_error(ERANGE);
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, mapped_error);
+#if defined(ECANCELED)
+    mapped_error = ft_map_system_error(ECANCELED);
+    FT_ASSERT_EQ(FT_ERR_TERMINATED, mapped_error);
+#endif
+#if defined(ENOSYS)
+    mapped_error = ft_map_system_error(ENOSYS);
+    FT_ASSERT_EQ(FT_ERR_UNSUPPORTED_TYPE, mapped_error);
+#endif
+#if defined(ENOTEMPTY)
+    mapped_error = ft_map_system_error(ENOTEMPTY);
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, mapped_error);
+#endif
+#if defined(EROFS)
+    mapped_error = ft_map_system_error(EROFS);
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, mapped_error);
+#endif
+#if defined(EOWNERDEAD)
+    mapped_error = ft_map_system_error(EOWNERDEAD);
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, mapped_error);
+#endif
 #endif
     mapped_error = ft_map_system_error(12345);
     FT_ASSERT_EQ(12345 + ERRNO_OFFSET, mapped_error);
