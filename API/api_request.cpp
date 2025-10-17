@@ -8,6 +8,7 @@
 #include "../Libft/libft.hpp"
 #include "../Logger/logger.hpp"
 #include "../Printf/printf.hpp"
+#include "../Time/time.hpp"
 #include <errno.h>
 #include <utility>
 #ifdef _WIN32
@@ -20,6 +21,15 @@
 # include <sys/time.h>
 # include <unistd.h>
 #endif
+
+static api_request_wait_until_ready_hook g_api_request_wait_hook = ft_nullptr;
+
+void api_request_set_downgrade_wait_hook(
+    api_request_wait_until_ready_hook hook)
+{
+    g_api_request_wait_hook = hook;
+    return ;
+}
 
 bool api_request_stream(const char *ip, uint16_t port,
     const char *method, const char *path,
@@ -422,7 +432,9 @@ char *api_request_string_http2(const char *ip, uint16_t port,
 
     api_connection_pool_handle connection_handle;
     bool pooled_connection;
+    bool downgrade_due_to_connect_failure;
 
+    downgrade_due_to_connect_failure = false;
     pooled_connection = api_connection_pool_acquire(connection_handle, ip, port,
             api_connection_security_mode::PLAIN, ft_nullptr);
     if (!pooled_connection)
@@ -437,11 +449,18 @@ char *api_request_string_http2(const char *ip, uint16_t port,
             if (socket_error_code == FT_ERR_CONFIGURATION)
                 error_code = FT_ERR_CONFIGURATION;
             else
+            {
                 error_code = FT_ERR_SOCKET_CONNECT_FAILED;
-            return (ft_nullptr);
+                downgrade_due_to_connect_failure = true;
+            }
+            if (!downgrade_due_to_connect_failure)
+                return (ft_nullptr);
         }
-        connection_handle.socket = std::move(new_socket);
-        connection_handle.has_socket = true;
+        if (!downgrade_due_to_connect_failure)
+        {
+            connection_handle.socket = std::move(new_socket);
+            connection_handle.has_socket = true;
+        }
     }
     struct api_connection_return_guard
     {
@@ -471,6 +490,50 @@ char *api_request_string_http2(const char *ip, uint16_t port,
             return ;
         }
     } connection_guard(connection_handle);
+    if (downgrade_due_to_connect_failure)
+    {
+        char *fallback_body;
+        bool socket_ready;
+
+        if (g_api_request_wait_hook)
+        {
+            bool wait_ready;
+
+            wait_ready = g_api_request_wait_hook();
+            if (!wait_ready)
+                return (ft_nullptr);
+        }
+        error_code = ER_SUCCESS;
+        socket_ready = api_http_prepare_plain_socket(connection_handle, ip,
+                port, timeout, error_code);
+        if (!socket_ready)
+        {
+            int remaining_attempts;
+            unsigned int retry_delay_ms;
+
+            remaining_attempts = 2;
+            retry_delay_ms = 100;
+            while (!socket_ready && remaining_attempts > 0)
+            {
+                time_sleep_ms(retry_delay_ms);
+                error_code = ER_SUCCESS;
+                socket_ready = api_http_prepare_plain_socket(connection_handle,
+                        ip, port, timeout, error_code);
+                remaining_attempts = remaining_attempts - 1;
+            }
+        }
+        if (!socket_ready)
+            return (ft_nullptr);
+        fallback_body = api_http_execute_plain(connection_handle, method, path,
+                ip, payload, headers, status, timeout, ip, port, retry_policy,
+                error_code);
+        if (!fallback_body)
+            return (ft_nullptr);
+        connection_guard.set_success();
+        if (used_http2)
+            *used_http2 = false;
+        return (fallback_body);
+    }
     if (!connection_handle.has_socket)
     {
         error_code = FT_ERR_IO;
