@@ -30,6 +30,8 @@ bool api_http_execute_plain_streaming(api_connection_pool_handle &connection_han
     const char *host, uint16_t port,
     const api_retry_policy *retry_policy,
     const api_streaming_handler *streaming_handler, int &error_code);
+bool api_http_prepare_plain_socket(api_connection_pool_handle &connection_handle,
+    const char *host, uint16_t port, int timeout, int &error_code);
 bool api_http_execute_plain_http2_streaming(
     api_connection_pool_handle &connection_handle, const char *method,
     const char *path, const char *host_header, json_group *payload,

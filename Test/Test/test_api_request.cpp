@@ -73,6 +73,8 @@ static std::atomic<size_t> g_api_async_retry_server_bytes_received(0);
 static std::atomic<bool> g_api_async_retry_server_header_complete(false);
 static std::atomic<int> g_api_async_retry_server_last_recv_result(0);
 static std::atomic<int> g_api_async_retry_server_last_errno(0);
+static std::atomic<bool> g_api_request_success_server_ready(false);
+static std::atomic<int> g_api_request_success_server_start_error(ER_SUCCESS);
 
 static void api_request_log_async_transfer_stats(void)
 {
@@ -140,6 +142,29 @@ static void api_request_small_delay(void)
     return ;
 }
 
+static void api_request_success_server_reset_state(void)
+{
+    g_api_request_success_server_ready.store(false, std::memory_order_relaxed);
+    g_api_request_success_server_start_error.store(ER_SUCCESS, std::memory_order_relaxed);
+    return ;
+}
+
+static void api_request_success_server_signal_ready(int error_code)
+{
+    g_api_request_success_server_start_error.store(error_code, std::memory_order_relaxed);
+    g_api_request_success_server_ready.store(true, std::memory_order_release);
+    return ;
+}
+
+static bool api_request_success_server_wait_until_ready(void)
+{
+    while (!g_api_request_success_server_ready.load(std::memory_order_acquire))
+        api_request_small_delay();
+    if (g_api_request_success_server_start_error.load(std::memory_order_acquire) != ER_SUCCESS)
+        return (false);
+    return (true);
+}
+
 static void api_request_success_server(void)
 {
     SocketConfig server_configuration;
@@ -156,27 +181,38 @@ static void api_request_success_server(void)
     server_configuration._port = 54338;
     server_socket = ft_socket(server_configuration);
     if (server_socket.get_error() != ER_SUCCESS)
+    {
+        api_request_success_server_signal_ready(server_socket.get_error());
         return ;
-    address_length = sizeof(address_storage);
-    client_fd = nw_accept(server_socket.get_fd(),
-                          reinterpret_cast<struct sockaddr*>(&address_storage),
-                          &address_length);
-    if (client_fd < 0)
-        return ;
+    }
+    api_request_success_server_signal_ready(ER_SUCCESS);
     response = "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\nHello";
     response_length = ft_strlen(response);
-    total_sent = 0;
-    while (total_sent < response_length)
+    int remaining_connections;
+
+    remaining_connections = 2;
+    while (remaining_connections > 0)
     {
         ssize_t bytes_sent;
 
-        bytes_sent = nw_send(client_fd, response + total_sent,
-                             response_length - total_sent, 0);
-        if (bytes_sent <= 0)
+        address_length = sizeof(address_storage);
+        client_fd = nw_accept(server_socket.get_fd(),
+                              reinterpret_cast<struct sockaddr*>(&address_storage),
+                              &address_length);
+        if (client_fd < 0)
             break;
-        total_sent += static_cast<size_t>(bytes_sent);
+        total_sent = 0;
+        while (total_sent < response_length)
+        {
+            bytes_sent = nw_send(client_fd, response + total_sent,
+                                 response_length - total_sent, 0);
+            if (bytes_sent <= 0)
+                break;
+            total_sent += static_cast<size_t>(bytes_sent);
+        }
+        FT_CLOSE_SOCKET(client_fd);
+        remaining_connections -= 1;
     }
-    FT_CLOSE_SOCKET(client_fd);
     return ;
 }
 
@@ -670,10 +706,15 @@ FT_TEST(test_api_request_success_resets_errno, "api_request_string success reset
     signal(SIGPIPE, SIG_IGN);
 #endif
     ft_errno = FT_ERR_NO_MEMORY;
+    api_request_success_server_reset_state();
     server_thread = ft_thread(api_request_success_server);
     if (server_thread.get_error() != ER_SUCCESS)
         return (0);
-    api_request_small_delay();
+    if (!api_request_success_server_wait_until_ready())
+    {
+        server_thread.join();
+        return (0);
+    }
     body = api_request_string("127.0.0.1", 54338, "GET", "/", ft_nullptr, ft_nullptr, ft_nullptr, 1000);
     server_thread.join();
     if (body == ft_nullptr)
@@ -963,6 +1004,75 @@ FT_TEST(test_http2_frame_roundtrip, "http2 frame encode decode roundtrip")
         return (0);
     if (!(decoded_frame.payload == input_frame.payload))
         return (0);
+    return (1);
+}
+
+FT_TEST(test_http2_stream_manager_concurrent_streams, "http2 stream manager tracks streams")
+{
+    http2_stream_manager manager;
+    ft_string buffer;
+
+    if (!manager.open_stream(1))
+        return (0);
+    if (!manager.open_stream(3))
+        return (0);
+    if (!manager.append_data(1, "Ping", 4))
+        return (0);
+    if (!manager.append_data(3, "Pong", 4))
+        return (0);
+    if (!manager.get_stream_buffer(1, buffer))
+        return (0);
+    if (!(buffer == "Ping"))
+        return (0);
+    if (!manager.get_stream_buffer(3, buffer))
+        return (0);
+    if (!(buffer == "Pong"))
+        return (0);
+    if (!manager.close_stream(1))
+        return (0);
+    if (!manager.close_stream(3))
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_api_request_http2_plain_fallback, "api_request_string_http2 falls back to http1")
+{
+    char *body;
+    ft_thread server_thread;
+    bool used_http2;
+
+#ifndef _WIN32
+    signal(SIGPIPE, SIG_IGN);
+#endif
+    api_request_success_server_reset_state();
+    server_thread = ft_thread(api_request_success_server);
+    if (server_thread.get_error() != ER_SUCCESS)
+        return (0);
+    if (!api_request_success_server_wait_until_ready())
+    {
+        server_thread.join();
+        return (0);
+    }
+    api_request_set_downgrade_wait_hook(
+        api_request_success_server_wait_until_ready);
+    used_http2 = true;
+    body = api_request_string_http2("127.0.0.1", 54338, "GET", "/", ft_nullptr,
+            ft_nullptr, ft_nullptr, 1000, &used_http2);
+    api_request_set_downgrade_wait_hook(ft_nullptr);
+    server_thread.join();
+    if (!body)
+        return (0);
+    if (used_http2)
+    {
+        cma_free(body);
+        return (0);
+    }
+    if (ft_strcmp(body, "Hello") != 0)
+    {
+        cma_free(body);
+        return (0);
+    }
+    cma_free(body);
     return (1);
 }
 

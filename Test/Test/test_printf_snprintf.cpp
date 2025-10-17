@@ -23,6 +23,16 @@ static int pf_vsnprintf_wrapper(char *string, size_t size, const char *format, .
     return (result);
 }
 
+static int std_vsnprintf_wrapper(char *string, size_t size, const char *format, ...)
+{
+    va_list arguments;
+
+    va_start(arguments, format);
+    int result = std::vsnprintf(string, size, format, arguments);
+    va_end(arguments);
+    return (result);
+}
+
 static FILE *pf_tmpfile_failure(void)
 {
     return (static_cast<FILE *>(ft_nullptr));
@@ -221,6 +231,44 @@ FT_TEST(test_pf_snprintf_matches_standard_zero_size, "pf_snprintf matches std::s
     FT_ASSERT_EQ(standard_result, pf_result);
     FT_ASSERT_EQ('P', pf_buffer[0]);
     FT_ASSERT_EQ('S', standard_buffer[0]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_pf_vsnprintf_matches_standard_exact_fit, "pf_vsnprintf matches std::vsnprintf for exact fits")
+{
+    char pf_buffer[48];
+    char standard_buffer[48];
+
+    std::memset(pf_buffer, 0, sizeof(pf_buffer));
+    std::memset(standard_buffer, 0, sizeof(standard_buffer));
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    int pf_result = pf_vsnprintf_wrapper(pf_buffer, sizeof(pf_buffer), "%s %d %c", "value", 42, 'Z');
+    int standard_result = std_vsnprintf_wrapper(standard_buffer, sizeof(standard_buffer), "%s %d %c", "value", 42, 'Z');
+    FT_ASSERT_EQ(standard_result, pf_result);
+    FT_ASSERT_EQ(0, std::strcmp(standard_buffer, pf_buffer));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_pf_vsnprintf_matches_standard_truncation, "pf_vsnprintf matches std::vsnprintf on truncation")
+{
+    char pf_buffer[8];
+    char standard_buffer[8];
+    char long_input[32];
+    size_t long_length;
+
+    std::memset(pf_buffer, 0, sizeof(pf_buffer));
+    std::memset(standard_buffer, 0, sizeof(standard_buffer));
+    long_length = 16;
+    build_repeated_string(long_input, long_length, 'v');
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    int pf_result = pf_vsnprintf_wrapper(pf_buffer, sizeof(pf_buffer), "%s", long_input);
+    int standard_result = std_vsnprintf_wrapper(standard_buffer, sizeof(standard_buffer), "%s", long_input);
+    FT_ASSERT_EQ(standard_result, pf_result);
+    FT_ASSERT_EQ(0, std::strcmp(standard_buffer, pf_buffer));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
