@@ -70,7 +70,7 @@
 - [ ] Document how `_alloc_logging` and `_api_logging` flags influence emitted messages to prevent confusion when toggling modes.
 - [ ] Add redaction helpers for sensitive fields and ensure they integrate with formatting utilities.
 - [ ] Support structured context propagation (per-thread request IDs, correlation tokens) through scoped guards.
-- [ ] Restore the `logger async logging` regression after fixing the heap corruption triggered by asynchronous sink teardown.
+- [x] Restore the `logger async logging` regression after fixing the heap corruption triggered by asynchronous sink teardown.
 - [ ] Make `ft_logger` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `s_log_field` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `s_log_async_metrics` thread safe (relies on the shared deadlock resolution routine described below).
@@ -101,10 +101,10 @@
 - [ ] Make `event_loop` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `http2_header_field` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `http2_frame` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Restore the `http2 stream manager tracks streams` regression once the stream manager no longer crashes when tracking concurrent streams.
+- [x] Restore the `http2 stream manager tracks streams` regression once the stream manager no longer crashes when tracking concurrent streams.
 - [ ] Reintroduce the HTTP/2 header compression roundtrip regression once `http2_compress_headers`/`http2_decompress_headers` stop aborting the suite (current implementation trips an abort while the test runner executes "http2 header compression roundtrip").
 - [ ] Restore the `websocket client detects invalid handshake` regression after fixing the crash in the websocket client handshake teardown path.
-- [ ] Restore the `HTTP server echoes POST body` regression once the HTTP server request pipeline stops corrupting heap allocations during body echoing.
+- [x] Restore the `HTTP server echoes POST body` regression once the HTTP server request pipeline stops corrupting heap allocations during body echoing.
 
 ### API (HTTP client facade)
 - [ ] Support HTTP/2 upgrades and streaming request/response bodies within `api_request` so large transfers do not buffer entirely in memory.
@@ -113,7 +113,7 @@
 - [ ] Provide mockable interfaces or dependency injection hooks to simplify unit testing of API consumers.
 - [ ] Offer request signing helpers (HMAC, OAuth) for authenticated services, leveraging the Encryption module.
 - [ ] Emit structured metrics per endpoint (latency, throughput, error rate) suitable for dashboards.
-- [ ] Restore the `api_request_string_http2 falls back to http1` regression once the fallback path properly toggles the HTTP/2 flag and returns the downgraded response body.
+- [x] Restore the `api_request_string_http2 falls back to http1` regression once the fallback path properly toggles the HTTP/2 flag and returns the downgraded response body.
 - [ ] Restore the `api_request_string_host_bearer adds bearer authorization header` regression after fixing the heap corruption triggered by the bearer-token request path.
 - [ ] Restore the `api_request_string_host_basic adds basic authorization header after existing headers` regression once the header assembly stops corrupting heap allocations.
 - [ ] Make `api_promise` thread safe (relies on the shared deadlock resolution routine described below).
@@ -305,7 +305,7 @@
 - [ ] Provide extension hooks for user-defined specifiers that integrate with `ft_string` and logging sinks.
 - [ ] Optimize hot paths (integer/float formatting) using precomputed tables where possible.
 - [ ] Document thread-safety guarantees and recommend locking strategies for shared formatters.
-- [ ] Re-enable the `pf_vsnprintf matches std::vsnprintf output` regression after aligning `pf_vsnprintf` with the standard library results across truncation and zero-size scenarios.
+- [x] Re-enable the `pf_vsnprintf matches std::vsnprintf output` regression after aligning `pf_vsnprintf` with the standard library results across truncation and zero-size scenarios.
 
 ### JSON / YAML / XML / HTML
 - [ ] Share a common DOM and schema validation layer so parsers can reuse traversal logic across formats.
