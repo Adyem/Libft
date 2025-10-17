@@ -122,7 +122,7 @@ FT_TEST(test_ft_vfprintf_write_failure_sets_errno, "ft_vfprintf propagates strea
     ft_errno = ER_SUCCESS;
     int printed = call_ft_vfprintf(stream, "%s", "fail");
     FT_ASSERT_EQ(-1, printed);
-    FT_ASSERT_EQ(EBADF + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, ft_errno);
     fclose(stream);
     return (1);
 }

@@ -130,7 +130,7 @@ static void *ft_log_worker(void *argument)
     (void)argument;
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (ft_nullptr);
     }
     while (1)
@@ -159,7 +159,7 @@ static void *ft_log_worker(void *argument)
                 ft_log_process_message(message);
             if (pthread_mutex_lock(&g_condition_mutex) != 0)
             {
-                ft_errno = errno + ERRNO_OFFSET;
+                ft_errno = ft_map_system_error(errno);
                 return (ft_nullptr);
             }
         }
@@ -172,7 +172,7 @@ void ft_log_enable_async(bool enable)
 {
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return ;
     }
     if (enable)
@@ -192,7 +192,7 @@ void ft_log_enable_async(bool enable)
         {
             if (pthread_mutex_lock(&g_condition_mutex) != 0)
             {
-                ft_errno = errno + ERRNO_OFFSET;
+                ft_errno = ft_map_system_error(errno);
                 return ;
             }
             g_async_running = false;
@@ -265,7 +265,7 @@ void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
     }
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return ;
     }
     if (g_async_queue_limit > 0 && g_async_pending_messages >= g_async_queue_limit)
@@ -273,7 +273,7 @@ void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
         g_async_dropped_messages += 1;
         if (pthread_mutex_unlock(&g_condition_mutex) != 0)
         {
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(errno);
             return ;
         }
         ft_errno = FT_ERR_FULL;
@@ -293,7 +293,7 @@ void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
     unlock_result = pthread_mutex_unlock(&g_condition_mutex);
     if (unlock_result != 0)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return ;
     }
     if (queue_error != ER_SUCCESS)
@@ -311,7 +311,7 @@ void ft_log_set_async_queue_limit(size_t limit)
 {
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return ;
     }
     g_async_queue_limit = limit;
@@ -331,7 +331,7 @@ void ft_log_set_async_queue_limit(size_t limit)
             {
                 if (pthread_mutex_unlock(&g_condition_mutex) != 0)
                 {
-                    ft_errno = errno + ERRNO_OFFSET;
+                    ft_errno = ft_map_system_error(errno);
                     return ;
                 }
                 ft_errno = drop_error;
@@ -345,7 +345,7 @@ void ft_log_set_async_queue_limit(size_t limit)
     }
     if (pthread_mutex_unlock(&g_condition_mutex) != 0)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return ;
     }
     ft_errno = ER_SUCCESS;
@@ -358,13 +358,13 @@ size_t ft_log_get_async_queue_limit()
 
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (0);
     }
     limit = g_async_queue_limit;
     if (pthread_mutex_unlock(&g_condition_mutex) != 0)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (0);
     }
     ft_errno = ER_SUCCESS;
@@ -380,7 +380,7 @@ int ft_log_get_async_metrics(s_log_async_metrics *metrics)
     }
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     metrics->pending_messages = g_async_pending_messages;
@@ -388,7 +388,7 @@ int ft_log_get_async_metrics(s_log_async_metrics *metrics)
     metrics->dropped_messages = g_async_dropped_messages;
     if (pthread_mutex_unlock(&g_condition_mutex) != 0)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -399,14 +399,14 @@ void ft_log_reset_async_metrics()
 {
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return ;
     }
     g_async_peak_pending = g_async_pending_messages;
     g_async_dropped_messages = 0;
     if (pthread_mutex_unlock(&g_condition_mutex) != 0)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return ;
     }
     ft_errno = ER_SUCCESS;

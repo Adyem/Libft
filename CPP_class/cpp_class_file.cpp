@@ -23,7 +23,7 @@ ft_file::ft_file(const char* filename, int flags, mode_t mode) noexcept
         pf_printf("Opening %s\n", filename);
     this->_fd = su_open(filename, flags, mode);
     if (this->_fd < 0)
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(errno));
     return ;
 }
 
@@ -32,7 +32,7 @@ ft_file::ft_file(const char* filename, int flags) noexcept
 {
     this->_fd = su_open(filename, flags);
     if (this->_fd < 0)
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(errno));
     return ;
 }
 
@@ -46,7 +46,7 @@ ft_file::~ft_file() noexcept
     if (this->_fd >= 0)
     {
         if (su_close(this->_fd) == -1)
-            ft_errno = errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(errno);
     }
     return ;
 }
@@ -66,7 +66,12 @@ ft_file& ft_file::operator=(ft_file&& other) noexcept
         if (this->_fd >= 0)
         {
             if (su_close(this->_fd) == -1 && this->_error_code == 0)
-                this->_error_code = errno;
+            {
+                int close_error;
+
+                close_error = ft_map_system_error(errno);
+                this->_error_code = close_error;
+            }
         }
         this->_fd = other._fd;
         this->_error_code = other._error_code;
@@ -82,7 +87,7 @@ void    ft_file::close() noexcept
     {
         if (su_close(this->_fd) == -1)
         {
-            this->set_error(errno + ERRNO_OFFSET);
+            this->set_error(ft_map_system_error(errno));
             return ;
         }
         this->_fd = -1;
@@ -97,14 +102,14 @@ int ft_file::open(const char* filename, int flags, mode_t mode) noexcept
     int new_fd = su_open(filename, flags, mode);
     if (new_fd < 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(errno));
         return (1);
     }
     if (this->_fd != -1)
     {
         if (su_close(this->_fd) == -1)
         {
-            int close_error = errno + ERRNO_OFFSET;
+            int close_error = ft_map_system_error(errno);
             su_close(new_fd);
             this->set_error(close_error);
             return (1);
@@ -120,14 +125,14 @@ int ft_file::open(const char* filename, int flags) noexcept
     int new_fd = su_open(filename, flags);
     if (new_fd < 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(errno));
         return (1);
     }
     if (this->_fd != -1)
     {
         if (su_close(this->_fd) == -1)
         {
-            int close_error = errno + ERRNO_OFFSET;
+            int close_error = ft_map_system_error(errno);
             su_close(new_fd);
             this->set_error(close_error);
             return (1);
@@ -175,7 +180,7 @@ ssize_t ft_file::read(char *buffer, int count) noexcept
     ssize_t bytes_read = su_read(this->_fd, buffer, static_cast<size_t>(count));
     if (bytes_read == -1)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(errno));
         return (-1);
     }
     this->set_error(ER_SUCCESS);
@@ -192,7 +197,7 @@ ssize_t ft_file::write(const char *string) noexcept
     ssize_t result = su_write(this->_fd, string, ft_strlen(string));
     if (result == -1)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(errno));
         return (-1);
     }
     this->set_error(ER_SUCCESS);
@@ -204,7 +209,7 @@ int ft_file::seek(off_t offset, int whence) noexcept
     off_t result = ::lseek(this->_fd, offset, whence);
     if (result == -1)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(errno));
         return (-1);
     }
     this->set_error(ER_SUCCESS);

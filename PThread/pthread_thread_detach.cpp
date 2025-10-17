@@ -9,7 +9,7 @@ int pt_thread_detach(pthread_t thread)
     return_value = pthread_detach(thread);
     if (return_value != 0)
     {
-        ft_errno = return_value + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(return_value);
         return (return_value);
     }
     ft_errno = ER_SUCCESS;

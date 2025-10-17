@@ -14,7 +14,7 @@ t_time  time_now(void)
     {
         saved_errno = errno;
         if (saved_errno != 0)
-            ft_errno = saved_errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(saved_errno);
         else
             ft_errno = FT_ERR_TERMINATED;
         return (static_cast<t_time>(-1));

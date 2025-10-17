@@ -58,16 +58,16 @@ void api_request_set_ssl_error(SSL *ssl_session, int operation_result)
             last_error = WSAGetLastError();
             if (last_error != 0)
             {
-                ft_errno = last_error + ERRNO_OFFSET;
+                ft_errno = ft_map_system_error(last_error);
                 return ;
             }
 #endif
             if (errno != 0)
             {
-                ft_errno = errno + ERRNO_OFFSET;
+                ft_errno = ft_map_system_error(errno);
                 return ;
             }
-            ft_errno = SSL_ERROR_SYSCALL + ERRNO_OFFSET;
+            ft_errno = FT_ERR_SSL_SYSCALL_ERROR;
             return ;
         }
         ft_errno = ssl_error;
@@ -166,10 +166,10 @@ static bool api_https_should_retry(int error_code)
     if (error_code == FT_ERR_SOCKET_RECEIVE_FAILED)
         return (true);
 #ifdef _WIN32
-    if (error_code == (WSAECONNRESET + ERRNO_OFFSET))
+    if (error_code == (ft_map_system_error(WSAECONNRESET)))
         return (true);
 #else
-    if (error_code == (ECONNRESET + ERRNO_OFFSET))
+    if (error_code == (ft_map_system_error(ECONNRESET)))
         return (true);
 #endif
     if (error_code == FT_ERR_SOCKET_CONNECT_FAILED)
@@ -269,12 +269,12 @@ static bool api_https_ensure_session(
 
         last_error = WSAGetLastError();
         if (last_error != 0)
-            error_code = last_error + ERRNO_OFFSET;
+            error_code = ft_map_system_error(last_error);
         else
             error_code = FT_ERR_CONFIGURATION;
 #else
         if (errno != 0)
-            error_code = errno + ERRNO_OFFSET;
+            error_code = ft_map_system_error(errno);
         else
             error_code = FT_ERR_CONFIGURATION;
 #endif

@@ -22,6 +22,32 @@
 # include <unistd.h>
 #endif
 
+static int api_request_capture_network_error()
+{
+    int system_error;
+
+#ifdef _WIN32
+    system_error = WSAGetLastError();
+#else
+    system_error = errno;
+#endif
+    if (system_error == 0)
+        return (ER_SUCCESS);
+    return (ft_map_system_error(system_error));
+}
+
+static void api_request_assign_resolve_error(int mapped_error)
+{
+    if (mapped_error != ER_SUCCESS)
+    {
+        ft_errno = mapped_error;
+        return ;
+    }
+    if (ft_errno == ER_SUCCESS)
+        ft_errno = FT_ERR_SOCKET_RESOLVE_FAILED;
+    return ;
+}
+
 static api_request_wait_until_ready_hook g_api_request_wait_hook = ft_nullptr;
 
 void api_request_set_downgrade_wait_hook(
@@ -670,11 +696,11 @@ bool api_request_stream_host(const char *host, uint16_t port,
         source_address = &reinterpret_cast<sockaddr_in*>(address_info->ai_addr)->sin_addr;
         if (!inet_ntop(family, source_address, ip_buffer, sizeof(ip_buffer)))
         {
+            int resolve_error;
+
+            resolve_error = api_request_capture_network_error();
             freeaddrinfo(address_results);
-            if (errno != 0)
-                ft_errno = errno + ERRNO_OFFSET;
-            else if (ft_errno == ER_SUCCESS)
-                ft_errno = FT_ERR_SOCKET_RESOLVE_FAILED;
+            api_request_assign_resolve_error(resolve_error);
             return (false);
         }
     }
@@ -683,11 +709,11 @@ bool api_request_stream_host(const char *host, uint16_t port,
         source_address = &reinterpret_cast<sockaddr_in6*>(address_info->ai_addr)->sin6_addr;
         if (!inet_ntop(family, source_address, ip_buffer, sizeof(ip_buffer)))
         {
+            int resolve_error;
+
+            resolve_error = api_request_capture_network_error();
             freeaddrinfo(address_results);
-            if (errno != 0)
-                ft_errno = errno + ERRNO_OFFSET;
-            else if (ft_errno == ER_SUCCESS)
-                ft_errno = FT_ERR_SOCKET_RESOLVE_FAILED;
+            api_request_assign_resolve_error(resolve_error);
             return (false);
         }
     }
@@ -763,11 +789,11 @@ char *api_request_string_host(const char *host, uint16_t port,
         source_address = &reinterpret_cast<sockaddr_in*>(address_info->ai_addr)->sin_addr;
         if (!inet_ntop(family, source_address, ip_buffer, sizeof(ip_buffer)))
         {
+            int resolve_error;
+
+            resolve_error = api_request_capture_network_error();
             freeaddrinfo(address_results);
-            if (errno != 0)
-                ft_errno = errno + ERRNO_OFFSET;
-            else if (ft_errno == ER_SUCCESS)
-                ft_errno = FT_ERR_SOCKET_RESOLVE_FAILED;
+            api_request_assign_resolve_error(resolve_error);
             return (ft_nullptr);
         }
     }
@@ -776,11 +802,11 @@ char *api_request_string_host(const char *host, uint16_t port,
         source_address = &reinterpret_cast<sockaddr_in6*>(address_info->ai_addr)->sin6_addr;
         if (!inet_ntop(family, source_address, ip_buffer, sizeof(ip_buffer)))
         {
+            int resolve_error;
+
+            resolve_error = api_request_capture_network_error();
             freeaddrinfo(address_results);
-            if (errno != 0)
-                ft_errno = errno + ERRNO_OFFSET;
-            else if (ft_errno == ER_SUCCESS)
-                ft_errno = FT_ERR_SOCKET_RESOLVE_FAILED;
+            api_request_assign_resolve_error(resolve_error);
             return (ft_nullptr);
         }
     }

@@ -306,14 +306,14 @@ static int read_file_content(const char *file_path, char **out_content)
     FILE *file = std::fopen(file_path, "rb");
     if (!file)
     {
-        int error_code = errno ? errno + ERRNO_OFFSET : FT_ERR_INVALID_ARGUMENT;
+        int error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
         ft_errno = error_code;
         return (error_code);
     }
     errno = 0;
     if (std::fseek(file, 0, SEEK_END) != 0)
     {
-        int error_code = errno ? errno + ERRNO_OFFSET : FT_ERR_INVALID_ARGUMENT;
+        int error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
         std::fclose(file);
         ft_errno = error_code;
         return (error_code);
@@ -328,7 +328,7 @@ static int read_file_content(const char *file_path, char **out_content)
     errno = 0;
     if (std::fseek(file, 0, SEEK_SET) != 0)
     {
-        int error_code = errno ? errno + ERRNO_OFFSET : FT_ERR_INVALID_ARGUMENT;
+        int error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
         std::fclose(file);
         ft_errno = error_code;
         return (error_code);
@@ -346,7 +346,7 @@ static int read_file_content(const char *file_path, char **out_content)
     if (read_size != static_cast<size_t>(size))
     {
         cma_free(buffer);
-        int error_code = errno ? errno + ERRNO_OFFSET : FT_ERR_INVALID_ARGUMENT;
+        int error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
         ft_errno = error_code;
         return (error_code);
     }
@@ -481,7 +481,7 @@ int xml_document::write_to_file(const char *file_path) const noexcept
     FILE *file = std::fopen(file_path, "wb");
     if (!file)
     {
-        int error_code = errno ? errno + ERRNO_OFFSET : FT_ERR_INVALID_ARGUMENT;
+        int error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
         cma_free(content);
         this->set_error(error_code);
         return (error_code);
@@ -491,7 +491,7 @@ int xml_document::write_to_file(const char *file_path) const noexcept
     size_t written = std::fwrite(content, 1, length, file);
     if (written != length)
     {
-        int error_code = errno ? errno + ERRNO_OFFSET : FT_ERR_INVALID_ARGUMENT;
+        int error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
         std::fclose(file);
         cma_free(content);
         this->set_error(error_code);
@@ -500,7 +500,7 @@ int xml_document::write_to_file(const char *file_path) const noexcept
     errno = 0;
     if (std::fclose(file) != 0)
     {
-        int error_code = errno ? errno + ERRNO_OFFSET : FT_ERR_INVALID_ARGUMENT;
+        int error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
         cma_free(content);
         this->set_error(error_code);
         return (error_code);

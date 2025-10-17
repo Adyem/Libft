@@ -12,7 +12,7 @@ pt_condition_variable::pt_condition_variable()
 {
     if (pthread_mutex_init(&this->_mutex, ft_nullptr) != 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(errno));
         return ;
     }
     this->_mutex_initialized = true;
@@ -21,12 +21,12 @@ pt_condition_variable::pt_condition_variable()
 
     if (pthread_condattr_init(&condition_attributes) != 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(errno));
         return ;
     }
     if (pthread_condattr_setclock(&condition_attributes, CLOCK_MONOTONIC) != 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(errno));
         pthread_condattr_destroy(&condition_attributes);
         return ;
     }
@@ -80,7 +80,7 @@ int pt_condition_variable::wait(pt_mutex &mutex)
     }
     if (pthread_mutex_lock(&this->_mutex) != 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(errno));
         return (-1);
     }
     if (mutex.unlock(THREAD_ID) != FT_SUCCESS)
@@ -113,7 +113,7 @@ int pt_condition_variable::wait(pt_mutex &mutex)
     {
         int unlock_error;
 
-        unlock_error = errno + ERRNO_OFFSET;
+        unlock_error = ft_map_system_error(errno);
         if (mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
             int relock_error;
@@ -153,7 +153,7 @@ int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &ab
     }
     if (pthread_mutex_lock(&this->_mutex) != 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(errno));
         return (-1);
     }
     if (mutex.unlock(THREAD_ID) != FT_SUCCESS)
@@ -170,7 +170,7 @@ int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &ab
     {
         int unlock_error;
 
-        unlock_error = errno + ERRNO_OFFSET;
+        unlock_error = ft_map_system_error(errno);
         if (mutex.lock(THREAD_ID) != FT_SUCCESS)
         {
             int relock_error;
@@ -200,7 +200,7 @@ int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &ab
         this->set_error(ER_SUCCESS);
         return (ETIMEDOUT);
     }
-    this->set_error(wait_result + ERRNO_OFFSET);
+    this->set_error(ft_map_system_error(wait_result));
     return (-1);
 }
 
@@ -213,7 +213,7 @@ int pt_condition_variable::signal()
     }
     if (pthread_mutex_lock(&this->_mutex) != 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(errno));
         return (-1);
     }
     if (pt_cond_signal(&this->_condition) != 0)
@@ -227,7 +227,7 @@ int pt_condition_variable::signal()
     }
     if (pthread_mutex_unlock(&this->_mutex) != 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(errno));
         return (-1);
     }
     this->set_error(ER_SUCCESS);
@@ -243,7 +243,7 @@ int pt_condition_variable::broadcast()
     }
     if (pthread_mutex_lock(&this->_mutex) != 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(errno));
         return (-1);
     }
     if (pt_cond_broadcast(&this->_condition) != 0)
@@ -257,7 +257,7 @@ int pt_condition_variable::broadcast()
     }
     if (pthread_mutex_unlock(&this->_mutex) != 0)
     {
-        this->set_error(errno + ERRNO_OFFSET);
+        this->set_error(ft_map_system_error(errno));
         return (-1);
     }
     this->set_error(ER_SUCCESS);

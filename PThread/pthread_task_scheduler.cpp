@@ -697,7 +697,7 @@ void ft_task_scheduler::timer_loop()
                 {
                     int clock_error;
 
-                    clock_error = errno + ERRNO_OFFSET;
+                    clock_error = ft_map_system_error(errno);
                     this->_scheduled_mutex.unlock(THREAD_ID);
                     this->set_error(clock_error);
                     return ;

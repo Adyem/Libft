@@ -39,7 +39,7 @@ FT_TEST(test_su_fopen_propagates_open_error, "su_fopen keeps su_open error")
     std::remove("missing_su_file_stream.txt");
     file_stream = su_fopen("missing_su_file_stream.txt");
     FT_ASSERT_EQ(ft_nullptr, file_stream);
-    FT_ASSERT_EQ(ENOENT + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
 }
 

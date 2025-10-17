@@ -15,7 +15,7 @@ int nw_set_nonblocking(int socket_fd)
     mode = 1;
     if (ioctlsocket(static_cast<SOCKET>(socket_fd), FIONBIO, &mode) != 0)
     {
-        ft_errno = WSAGetLastError() + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -25,12 +25,12 @@ int nw_set_nonblocking(int socket_fd)
     flags = fcntl(socket_fd, F_GETFL, 0);
     if (flags == -1)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     if (fcntl(socket_fd, F_SETFL, flags | O_NONBLOCK) == -1)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     ft_errno = ER_SUCCESS;

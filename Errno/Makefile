@@ -4,7 +4,8 @@ DEBUG_TARGET := errno_debug.a
 SRCS :=        errno_strerror.cpp \
         errno_perror.cpp \
         errno_exit.cpp \
-        errno_code.cpp
+        errno_code.cpp \
+        errno_map.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))

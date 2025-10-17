@@ -5,6 +5,7 @@
 #include "../../Errno/errno.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/system_utils.hpp"
+#include "../../Compatebility/compatebility_internal.hpp"
 #include <cerrno>
 #include <cstdlib>
 #include <fcntl.h>
@@ -145,7 +146,7 @@ FT_TEST(test_logger_set_file_missing_directory, "ft_log_set_file returns errno f
     ft_errno = ER_SUCCESS;
     result = ft_log_set_file(file_path, 1024);
     FT_ASSERT_EQ(-1, result);
-    FT_ASSERT_EQ(ENOENT + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     ft_errno = ER_SUCCESS;
     return (1);
 }
@@ -161,7 +162,7 @@ FT_TEST(test_logger_rotate_fstat_failure_sets_errno, "ft_log_rotate reports fsta
     errno = 0;
     ft_errno = ER_SUCCESS;
     ft_log_rotate(&sink);
-    FT_ASSERT_EQ(EBADF + ERRNO_OFFSET, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, ft_errno);
     return (1);
 }
 
@@ -368,7 +369,7 @@ FT_TEST(test_logger_rotation_retention_limit,
     close(fd);
     errno = 0;
     FT_ASSERT_EQ(-1, access(rotated_three_path.c_str(), F_OK));
-    FT_ASSERT_EQ(ENOENT, errno);
+    FT_ASSERT_EQ(FT_ERR_IO, cmp_map_system_error_to_ft(errno));
     unlink(rotated_one_path.c_str());
     unlink(rotated_two_path.c_str());
     unlink(template_path);

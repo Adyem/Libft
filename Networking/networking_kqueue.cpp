@@ -24,7 +24,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
     kqueue_descriptor = kqueue();
     if (kqueue_descriptor == -1)
     {
-        ft_errno = errno + ERRNO_OFFSET;
+        ft_errno = ft_map_system_error(errno);
         return (-1);
     }
     index = 0;
@@ -37,7 +37,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
 
             last_error = errno;
             close(kqueue_descriptor);
-            ft_errno = last_error + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(last_error);
             return (-1);
         }
         index++;
@@ -52,7 +52,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
 
             last_error = errno;
             close(kqueue_descriptor);
-            ft_errno = last_error + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(last_error);
             return (-1);
         }
         index++;
@@ -85,7 +85,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
         if (ready_descriptors == 0)
             ft_errno = ER_SUCCESS;
         else
-            ft_errno = wait_error + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(wait_error);
         return (ready_descriptors);
     }
     ready_index = 0;

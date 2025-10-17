@@ -36,13 +36,13 @@ int ft_unsetenv(const char *name)
         last_error = GetLastError();
         socket_error = WSAGetLastError();
         if (result > 0)
-            ft_errno = result + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(result);
         else if (last_error != 0)
-            ft_errno = last_error + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(last_error);
         else if (socket_error != 0)
-            ft_errno = socket_error + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(socket_error);
         else if (saved_errno != 0)
-            ft_errno = saved_errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(saved_errno);
         else
             ft_errno = FT_ERR_TERMINATED;
 #else
@@ -50,7 +50,7 @@ int ft_unsetenv(const char *name)
 
         saved_errno = errno;
         if (saved_errno != 0)
-            ft_errno = saved_errno + ERRNO_OFFSET;
+            ft_errno = ft_map_system_error(saved_errno);
         else
             ft_errno = FT_ERR_TERMINATED;
 #endif
