@@ -31,6 +31,7 @@ class ft_websocket_server
         int send_text(int client_fd, const ft_string &message);
         int get_error() const;
         const char *get_error_str() const;
+        int get_port(unsigned short &port_value) const;
 };
 
 #endif

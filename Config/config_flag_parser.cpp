@@ -3,6 +3,7 @@
 #include "../Errno/errno.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
+#include "../PThread/unique_lock.hpp"
 
 cnfg_flag_parser::cnfg_flag_parser()
 {
@@ -31,99 +32,196 @@ cnfg_flag_parser::~cnfg_flag_parser()
     return ;
 }
 
-void cnfg_flag_parser::free_flags()
+void cnfg_flag_parser::free_flags_locked()
 {
     if (this->_short_flags)
+    {
         cma_free(this->_short_flags);
+        this->_short_flags = ft_nullptr;
+    }
     if (this->_long_flags)
     {
-        size_t long_flag_index = 0;
+        size_t long_flag_index;
+
+        long_flag_index = 0;
         while (this->_long_flags[long_flag_index])
         {
             cma_free(this->_long_flags[long_flag_index]);
             ++long_flag_index;
         }
         cma_free(this->_long_flags);
+        this->_long_flags = ft_nullptr;
     }
-    this->_short_flags = ft_nullptr;
-    this->_long_flags = ft_nullptr;
     this->_short_flag_count = 0;
     this->_long_flag_count = 0;
     return ;
 }
 
+void cnfg_flag_parser::free_flags()
+{
+    int entry_errno;
+    ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
+
+    entry_errno = ft_errno;
+    if (mutex_guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(mutex_guard.get_error());
+        return ;
+    }
+    this->free_flags_locked();
+    ft_errno = entry_errno;
+    return ;
+}
+
 bool cnfg_flag_parser::parse(int argument_count, char **argument_values)
 {
-    this->free_flags();
+    ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
+
+    if (mutex_guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(mutex_guard.get_error());
+        return (false);
+    }
+    this->free_flags_locked();
     this->set_error(ER_SUCCESS);
     this->_short_flags = cnfg_parse_flags(argument_count, argument_values);
     if (ft_errno != ER_SUCCESS)
     {
         this->set_error(ft_errno);
-        this->free_flags();
+        this->free_flags_locked();
         return (false);
     }
     this->_long_flags = cnfg_parse_long_flags(argument_count, argument_values);
     if (ft_errno != ER_SUCCESS)
     {
         this->set_error(ft_errno);
-        this->free_flags();
+        this->free_flags_locked();
         return (false);
     }
-    size_t flag_index = 0;
+    size_t short_flag_index;
+
+    short_flag_index = 0;
     if (this->_short_flags)
     {
-        while (this->_short_flags[flag_index])
-            ++flag_index;
-        this->_short_flag_count = flag_index;
+        while (this->_short_flags[short_flag_index])
+            ++short_flag_index;
     }
-    size_t long_flag_index = 0;
+    this->_short_flag_count = short_flag_index;
+    size_t long_flag_index;
+
+    long_flag_index = 0;
     if (this->_long_flags)
     {
         while (this->_long_flags[long_flag_index])
             ++long_flag_index;
-        this->_long_flag_count = long_flag_index;
     }
+    this->_long_flag_count = long_flag_index;
     this->set_error(ER_SUCCESS);
     return (true);
 }
 
 bool cnfg_flag_parser::has_short_flag(char flag)
 {
-    if (!this->_short_flags)
+    int entry_errno;
+    bool has_flag;
+    ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
+
+    entry_errno = ft_errno;
+    if (mutex_guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(mutex_guard.get_error());
         return (false);
-    if (ft_strchr(this->_short_flags, flag))
-        return (true);
-    return (false);
+    }
+    if (!this->_short_flags)
+    {
+        ft_errno = entry_errno;
+        return (false);
+    }
+    has_flag = ft_strchr(this->_short_flags, flag) != ft_nullptr;
+    ft_errno = entry_errno;
+    return (has_flag);
 }
 
 bool cnfg_flag_parser::has_long_flag(const char *flag)
 {
-    if (!this->_long_flags || !flag)
+    int entry_errno;
+    size_t flag_index;
+    ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
+
+    entry_errno = ft_errno;
+    if (mutex_guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(mutex_guard.get_error());
         return (false);
-    size_t flag_index = 0;
+    }
+    if (!this->_long_flags || !flag)
+    {
+        ft_errno = entry_errno;
+        return (false);
+    }
+    flag_index = 0;
     while (this->_long_flags[flag_index])
     {
         if (ft_strcmp(this->_long_flags[flag_index], flag) == 0)
+        {
+            ft_errno = entry_errno;
             return (true);
+        }
         ++flag_index;
     }
+    ft_errno = entry_errno;
     return (false);
 }
 
 size_t cnfg_flag_parser::get_short_flag_count()
 {
-    return (this->_short_flag_count);
+    int entry_errno;
+    size_t short_flag_count;
+    ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
+
+    entry_errno = ft_errno;
+    if (mutex_guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(mutex_guard.get_error());
+        return (0);
+    }
+    short_flag_count = this->_short_flag_count;
+    ft_errno = entry_errno;
+    return (short_flag_count);
 }
 
 size_t cnfg_flag_parser::get_long_flag_count()
 {
-    return (this->_long_flag_count);
+    int entry_errno;
+    size_t long_flag_count;
+    ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
+
+    entry_errno = ft_errno;
+    if (mutex_guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(mutex_guard.get_error());
+        return (0);
+    }
+    long_flag_count = this->_long_flag_count;
+    ft_errno = entry_errno;
+    return (long_flag_count);
 }
 
 size_t cnfg_flag_parser::get_total_flag_count()
 {
-    return (this->_short_flag_count + this->_long_flag_count);
+    int entry_errno;
+    size_t total_flag_count;
+    ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
+
+    entry_errno = ft_errno;
+    if (mutex_guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(mutex_guard.get_error());
+        return (0);
+    }
+    total_flag_count = this->_short_flag_count + this->_long_flag_count;
+    ft_errno = entry_errno;
+    return (total_flag_count);
 }
 
 void    cnfg_flag_parser::set_error(int error_code)
@@ -135,12 +233,38 @@ void    cnfg_flag_parser::set_error(int error_code)
 
 int     cnfg_flag_parser::get_error() const
 {
-    return (this->_error_code);
+    int entry_errno;
+    int error_code;
+    ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
+
+    entry_errno = ft_errno;
+    if (mutex_guard.get_error() != ER_SUCCESS)
+    {
+        const_cast<cnfg_flag_parser *>(this)->set_error(mutex_guard.get_error());
+        return (mutex_guard.get_error());
+    }
+    error_code = this->_error_code;
+    ft_errno = entry_errno;
+    return (error_code);
 }
 
 const char  *cnfg_flag_parser::get_error_str() const
 {
-    return (ft_strerror(this->_error_code));
+    int entry_errno;
+    int error_code;
+    const char *error_string;
+    ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
+
+    entry_errno = ft_errno;
+    if (mutex_guard.get_error() != ER_SUCCESS)
+    {
+        const_cast<cnfg_flag_parser *>(this)->set_error(mutex_guard.get_error());
+        return (ft_strerror(mutex_guard.get_error()));
+    }
+    error_code = this->_error_code;
+    error_string = ft_strerror(error_code);
+    ft_errno = entry_errno;
+    return (error_string);
 }
 
 static cnfg_config *merge_configs(cnfg_config *base_config,

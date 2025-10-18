@@ -1,0 +1,5 @@
+# Add commits that only perform mechanical formatting or large-scale vendor updates
+# to prevent git blame from attributing unrelated changes to those commits.
+#
+# Example:
+# 1234567890abcdef1234567890abcdef12345678

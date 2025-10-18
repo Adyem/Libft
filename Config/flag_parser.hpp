@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include "config.hpp"
+#include "../PThread/mutex.hpp"
 
 class cnfg_flag_parser
 {
@@ -12,6 +13,8 @@ class cnfg_flag_parser
         size_t  _short_flag_count;
         size_t  _long_flag_count;
         mutable int _error_code;
+        mutable pt_mutex _mutex;
+        void    free_flags_locked();
         void    free_flags();
         void    set_error(int error_code);
 
