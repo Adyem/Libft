@@ -69,9 +69,20 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
         ft_errno = sink->host.get_error();
         return (-1);
     }
+    if (network_sink_prepare_thread_safety(sink) != 0)
+    {
+        int prepare_error;
+
+        prepare_error = ft_errno;
+        su_close(socket_fd);
+        delete sink;
+        ft_errno = prepare_error;
+        return (-1);
+    }
     if (ft_log_add_sink(ft_network_sink, sink) != 0)
     {
         su_close(socket_fd);
+        network_sink_teardown_thread_safety(sink);
         delete sink;
         if (ft_errno == ER_SUCCESS)
             ft_errno = FT_ERR_INVALID_ARGUMENT;
@@ -86,14 +97,28 @@ void ft_network_sink(const char *message, void *user_data)
     s_network_sink *sink;
     size_t message_length;
     size_t total_bytes_sent;
+    bool   lock_acquired;
+    int    final_errno;
 
     sink = static_cast<s_network_sink *>(user_data);
     if (!sink || !message)
         return ;
-    if (sink->socket_fd < 0)
+    lock_acquired = false;
+    if (network_sink_lock(sink, &lock_acquired) != 0)
         return ;
+    final_errno = ER_SUCCESS;
+    if (sink->socket_fd < 0)
+    {
+        final_errno = ER_SUCCESS;
+        goto cleanup;
+    }
     if (!sink->send_function)
         sink->send_function = nw_send;
+    if (!sink->send_function)
+    {
+        final_errno = FT_ERR_INVALID_STATE;
+        goto cleanup;
+    }
     message_length = ft_strlen(message);
     total_bytes_sent = 0;
     while (total_bytes_sent < message_length)
@@ -107,11 +132,16 @@ void ft_network_sink(const char *message, void *user_data)
                 su_close(sink->socket_fd);
             sink->socket_fd = -1;
             sink->send_function = ft_nullptr;
-            ft_errno = FT_ERR_SOCKET_SEND_FAILED;
-            return ;
+            final_errno = FT_ERR_SOCKET_SEND_FAILED;
+            goto cleanup;
         }
         total_bytes_sent += static_cast<size_t>(send_result);
     }
-    ft_errno = ER_SUCCESS;
+    final_errno = ER_SUCCESS;
+
+cleanup:
+    ft_errno = final_errno;
+    if (lock_acquired)
+        network_sink_unlock(sink, lock_acquired);
     return ;
 }

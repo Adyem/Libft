@@ -74,9 +74,9 @@
 - [ ] Make `ft_logger` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `s_log_field` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `s_log_async_metrics` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `s_log_sink` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `s_file_sink` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `s_network_sink` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `s_log_sink` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `s_file_sink` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `s_network_sink` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Networking
 - [ ] Complete HTTP/2 support by honoring SETTINGS frames, stream prioritization, and flow-control windows in `http2_client`.
@@ -283,9 +283,9 @@
 - [x] Provide filesystem utilities (recursive copy, permissions inspection) that reuse `System_utils_file_*` primitives.
 - [x] Add resource-lifetime tracers that log when abort/assert handlers fire to aid crash diagnostics.
 - [x] Offer environment sandboxing helpers that capture and restore process state during tests.
-- [ ] Build service management helpers (daemonization, signal handling) consistent across supported platforms.
+- [x] Build service management helpers (daemonization, signal handling) consistent across supported platforms.
 - [x] Document security hardening options (seccomp, chroot) for services built on top of these utilities.
-- [ ] Make `su_file` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `su_file` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### File and ReadLine modules
 - [ ] Harmonize the File module with `ft_file` so both expose the same error-reporting surface and buffering strategies.
