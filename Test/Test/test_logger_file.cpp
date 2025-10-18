@@ -6,9 +6,12 @@
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/system_utils.hpp"
 #include "../../Compatebility/compatebility_internal.hpp"
+#include <atomic>
 #include <cerrno>
+#include <chrono>
 #include <cstdlib>
 #include <fcntl.h>
+#include <thread>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <utime.h>
@@ -29,6 +32,95 @@ static ssize_t    logger_partial_write_hook(int file_descriptor, const void *buf
     if (write_result < 0)
         return (write_result);
     return (write_result);
+}
+
+FT_TEST(test_logger_file_sink_prepare_thread_safety_initializes_mutex,
+        "file_sink_prepare_thread_safety allocates a mutex guard")
+{
+    char        template_path[] = "/tmp/libft_logger_file_sink_mutex_XXXXXX";
+    int         temp_fd;
+    s_file_sink sink;
+    bool        lock_acquired;
+
+    temp_fd = mkstemp(template_path);
+    FT_ASSERT(temp_fd >= 0);
+    sink.fd = temp_fd;
+    sink.path = ft_string(template_path);
+    FT_ASSERT_EQ(ER_SUCCESS, sink.path.get_error());
+    sink.max_size = 0;
+    sink.retention_count = 1;
+    sink.max_age_seconds = 0;
+    FT_ASSERT_EQ(0, file_sink_prepare_thread_safety(&sink));
+    lock_acquired = false;
+    FT_ASSERT_EQ(0, file_sink_lock(&sink, &lock_acquired));
+    FT_ASSERT(lock_acquired == true);
+    file_sink_unlock(&sink, lock_acquired);
+    file_sink_teardown_thread_safety(&sink);
+    close(temp_fd);
+    unlink(template_path);
+    return (1);
+}
+
+FT_TEST(test_logger_file_sink_lock_blocks_until_release,
+        "file_sink_lock waits for active writers to release the mutex")
+{
+    char                     template_path[] = "/tmp/libft_logger_file_sink_lock_XXXXXX";
+    int                      temp_fd;
+    s_file_sink              sink;
+    bool                     main_lock_acquired;
+    std::atomic<bool>        ready;
+    std::atomic<bool>        worker_failed;
+    std::atomic<long long>   wait_duration_ms;
+    std::thread              worker;
+
+    temp_fd = mkstemp(template_path);
+    FT_ASSERT(temp_fd >= 0);
+    sink.fd = temp_fd;
+    sink.path = ft_string(template_path);
+    FT_ASSERT_EQ(ER_SUCCESS, sink.path.get_error());
+    sink.max_size = 0;
+    sink.retention_count = 1;
+    sink.max_age_seconds = 0;
+    FT_ASSERT_EQ(0, file_sink_prepare_thread_safety(&sink));
+    main_lock_acquired = false;
+    FT_ASSERT_EQ(0, file_sink_lock(&sink, &main_lock_acquired));
+    FT_ASSERT(main_lock_acquired == true);
+    ready.store(false);
+    worker_failed.store(false);
+    wait_duration_ms.store(0);
+    worker = std::thread([&sink, &ready, &worker_failed, &wait_duration_ms]() {
+        bool                                       worker_lock_acquired;
+        std::chrono::steady_clock::time_point      start_time;
+        std::chrono::steady_clock::time_point      end_time;
+
+        worker_lock_acquired = false;
+        ready.store(true);
+        start_time = std::chrono::steady_clock::now();
+        if (file_sink_lock(&sink, &worker_lock_acquired) != 0)
+        {
+            worker_failed.store(true);
+            wait_duration_ms.store(-1);
+            return ;
+        }
+        end_time = std::chrono::steady_clock::now();
+        wait_duration_ms.store(std::chrono::duration_cast<std::chrono::milliseconds>(
+                    end_time - start_time).count());
+        if (!worker_lock_acquired)
+            worker_failed.store(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        file_sink_unlock(&sink, worker_lock_acquired);
+    });
+    while (!ready.load())
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    file_sink_unlock(&sink, main_lock_acquired);
+    worker.join();
+    FT_ASSERT(worker_failed.load() == false);
+    FT_ASSERT(wait_duration_ms.load() >= 40);
+    file_sink_teardown_thread_safety(&sink);
+    close(temp_fd);
+    unlink(template_path);
+    return (1);
 }
 
 FT_TEST(test_logger_file_sink_uses_system_utils_write, "file sink routes writes through su_write")

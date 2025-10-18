@@ -193,6 +193,73 @@ FT_TEST(test_logger_log_field_lock_blocks_until_released,
     return (1);
 }
 
+FT_TEST(test_logger_log_sink_prepare_thread_safety_initializes_mutex,
+        "log_sink_prepare_thread_safety installs mutex guard")
+{
+    s_log_sink sink;
+    bool       lock_acquired;
+
+    FT_ASSERT_EQ(0, log_sink_prepare_thread_safety(&sink));
+    FT_ASSERT(sink.thread_safe_enabled == true);
+    FT_ASSERT(sink.mutex != ft_nullptr);
+    lock_acquired = false;
+    FT_ASSERT_EQ(0, log_sink_lock(&sink, &lock_acquired));
+    FT_ASSERT(lock_acquired == true);
+    log_sink_unlock(&sink, lock_acquired);
+    log_sink_teardown_thread_safety(&sink);
+    return (1);
+}
+
+FT_TEST(test_logger_log_sink_lock_blocks_until_release,
+        "log_sink_lock waits for active sink usage to complete")
+{
+    s_log_sink           sink;
+    bool                 main_lock_acquired;
+    std::atomic<bool>    ready;
+    std::atomic<bool>    worker_failed;
+    std::atomic<long long> wait_duration_ms;
+    std::thread          worker;
+
+    FT_ASSERT_EQ(0, log_sink_prepare_thread_safety(&sink));
+    main_lock_acquired = false;
+    FT_ASSERT_EQ(0, log_sink_lock(&sink, &main_lock_acquired));
+    FT_ASSERT(main_lock_acquired == true);
+    ready.store(false);
+    worker_failed.store(false);
+    wait_duration_ms.store(0);
+    worker = std::thread([&sink, &ready, &worker_failed, &wait_duration_ms]() {
+        bool                                       worker_lock_acquired;
+        std::chrono::steady_clock::time_point      start_time;
+        std::chrono::steady_clock::time_point      end_time;
+
+        worker_lock_acquired = false;
+        ready.store(true);
+        start_time = std::chrono::steady_clock::now();
+        if (log_sink_lock(&sink, &worker_lock_acquired) != 0)
+        {
+            worker_failed.store(true);
+            wait_duration_ms.store(-1);
+            return ;
+        }
+        end_time = std::chrono::steady_clock::now();
+        wait_duration_ms.store(std::chrono::duration_cast<std::chrono::milliseconds>(
+                    end_time - start_time).count());
+        if (!worker_lock_acquired)
+            worker_failed.store(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        log_sink_unlock(&sink, worker_lock_acquired);
+    });
+    while (!ready.load())
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    log_sink_unlock(&sink, main_lock_acquired);
+    worker.join();
+    FT_ASSERT(worker_failed.load() == false);
+    FT_ASSERT(wait_duration_ms.load() >= 40);
+    log_sink_teardown_thread_safety(&sink);
+    return (1);
+}
+
 FT_TEST(test_logger_async_metrics_lock_blocks_until_release,
         "log_async_metrics_lock protects concurrent metric reads")
 {

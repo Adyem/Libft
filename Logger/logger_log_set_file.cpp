@@ -11,12 +11,18 @@ void ft_file_sink(const char *message, void *user_data)
 {
     s_file_sink *sink;
     size_t       length;
+    bool         lock_acquired;
 
     sink = static_cast<s_file_sink *>(user_data);
     if (!sink)
         return ;
+    lock_acquired = false;
+    if (file_sink_lock(sink, &lock_acquired) != 0)
+        return ;
     length = ft_strlen(message);
     su_write(sink->fd, message, length);
+    if (lock_acquired)
+        file_sink_unlock(sink, lock_acquired);
     return ;
 }
 
@@ -61,6 +67,16 @@ int ft_log_set_file(const char *path, size_t max_size)
         delete sink;
         return (-1);
     }
+    if (file_sink_prepare_thread_safety(sink) != 0)
+    {
+        int prepare_error;
+
+        prepare_error = ft_errno;
+        close(file_descriptor);
+        delete sink;
+        ft_errno = prepare_error;
+        return (-1);
+    }
     if (ft_log_add_sink(ft_file_sink, sink) != 0)
     {
         int error_code;
@@ -69,6 +85,7 @@ int ft_log_set_file(const char *path, size_t max_size)
         if (error_code == ER_SUCCESS)
             error_code = FT_ERR_INVALID_ARGUMENT;
         close(file_descriptor);
+        file_sink_teardown_thread_safety(sink);
         delete sink;
         ft_errno = error_code;
         return (-1);

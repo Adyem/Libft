@@ -19,6 +19,9 @@ SRCS := \
     logger_log_get_color.cpp \
     logger_log_redaction.cpp \
     logger_log_field_thread_safety.cpp \
+    logger_log_sink_thread_safety.cpp \
+    logger_file_sink_thread_safety.cpp \
+    logger_network_sink_thread_safety.cpp \
     logger_log_close.cpp \
     logger_log_health.cpp \
     logger_log_async_metrics_thread_safety.cpp \

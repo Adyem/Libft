@@ -76,14 +76,29 @@ void ft_log_close()
             ft_errno = sinks_snapshot.get_error();
             return ;
         }
-        if (entry.function == ft_file_sink)
+        bool sink_lock_acquired;
+        int  sink_error;
+
+        sink_lock_acquired = false;
+        sink_error = ER_SUCCESS;
+        if (log_sink_lock(&entry, &sink_lock_acquired) != 0)
+            sink_error = ft_errno;
+        else if (entry.function == ft_file_sink)
         {
             s_file_sink *sink;
+            bool         file_sink_lock_acquired;
 
             sink = static_cast<s_file_sink *>(entry.user_data);
             if (sink)
             {
+                file_sink_lock_acquired = false;
+                if (file_sink_lock(sink, &file_sink_lock_acquired) != 0)
+                    file_sink_lock_acquired = false;
                 close(sink->fd);
+                sink->fd = -1;
+                if (file_sink_lock_acquired)
+                    file_sink_unlock(sink, file_sink_lock_acquired);
+                file_sink_teardown_thread_safety(sink);
                 delete sink;
             }
         }
@@ -92,13 +107,29 @@ void ft_log_close()
         else if (entry.function == ft_network_sink)
         {
             s_network_sink *sink;
+            bool            network_lock_acquired;
 
             sink = static_cast<s_network_sink *>(entry.user_data);
             if (sink)
             {
+                network_lock_acquired = false;
+                if (network_sink_lock(sink, &network_lock_acquired) != 0)
+                    network_lock_acquired = false;
                 cmp_close(sink->socket_fd);
+                sink->socket_fd = -1;
+                if (network_lock_acquired)
+                    network_sink_unlock(sink, network_lock_acquired);
+                network_sink_teardown_thread_safety(sink);
                 delete sink;
             }
+        }
+        if (sink_lock_acquired)
+            log_sink_unlock(&entry, sink_lock_acquired);
+        log_sink_teardown_thread_safety(&entry);
+        if (sink_error != ER_SUCCESS)
+        {
+            ft_errno = sink_error;
+            return ;
         }
         index++;
     }

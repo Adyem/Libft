@@ -1,7 +1,10 @@
 #include "../../Logger/logger_internal.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Libft/libft.hpp"
+#include <atomic>
+#include <chrono>
 #include <string>
+#include <thread>
 
 struct mock_network_send_state
 {
@@ -47,6 +50,75 @@ static void reset_mock_network_send_state(void)
     g_mock_network_send_state.failure_returns_zero = false;
     g_sink_to_remove = ft_nullptr;
     return ;
+}
+
+FT_TEST(test_logger_network_sink_prepare_thread_safety_initializes_mutex,
+        "network_sink_prepare_thread_safety allocates a mutex guard")
+{
+    s_network_sink sink;
+    bool           lock_acquired;
+
+    sink.socket_fd = 0;
+    sink.send_function = ft_nullptr;
+    FT_ASSERT_EQ(0, network_sink_prepare_thread_safety(&sink));
+    lock_acquired = false;
+    FT_ASSERT_EQ(0, network_sink_lock(&sink, &lock_acquired));
+    FT_ASSERT(lock_acquired == true);
+    network_sink_unlock(&sink, lock_acquired);
+    network_sink_teardown_thread_safety(&sink);
+    return (1);
+}
+
+FT_TEST(test_logger_network_sink_lock_blocks_until_release,
+        "network_sink_lock waits for active senders to release the mutex")
+{
+    s_network_sink            sink;
+    bool                      main_lock_acquired;
+    std::atomic<bool>         ready;
+    std::atomic<bool>         worker_failed;
+    std::atomic<long long>    wait_duration_ms;
+    std::thread               worker;
+
+    sink.socket_fd = 10;
+    sink.send_function = ft_nullptr;
+    FT_ASSERT_EQ(0, network_sink_prepare_thread_safety(&sink));
+    main_lock_acquired = false;
+    FT_ASSERT_EQ(0, network_sink_lock(&sink, &main_lock_acquired));
+    FT_ASSERT(main_lock_acquired == true);
+    ready.store(false);
+    worker_failed.store(false);
+    wait_duration_ms.store(0);
+    worker = std::thread([&sink, &ready, &worker_failed, &wait_duration_ms]() {
+        bool                                      worker_lock_acquired;
+        std::chrono::steady_clock::time_point     start_time;
+        std::chrono::steady_clock::time_point     end_time;
+
+        worker_lock_acquired = false;
+        ready.store(true);
+        start_time = std::chrono::steady_clock::now();
+        if (network_sink_lock(&sink, &worker_lock_acquired) != 0)
+        {
+            worker_failed.store(true);
+            wait_duration_ms.store(-1);
+            return ;
+        }
+        end_time = std::chrono::steady_clock::now();
+        wait_duration_ms.store(std::chrono::duration_cast<std::chrono::milliseconds>(
+                    end_time - start_time).count());
+        if (!worker_lock_acquired)
+            worker_failed.store(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        network_sink_unlock(&sink, worker_lock_acquired);
+    });
+    while (!ready.load())
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    network_sink_unlock(&sink, main_lock_acquired);
+    worker.join();
+    FT_ASSERT(worker_failed.load() == false);
+    FT_ASSERT(wait_duration_ms.load() >= 40);
+    network_sink_teardown_thread_safety(&sink);
+    return (1);
 }
 
 static ssize_t mock_send_remove_sink(int socket_fd, const void *buffer, size_t length, int flags)
