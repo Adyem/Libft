@@ -5,14 +5,18 @@ SRCS := encryption_basic_encryption.cpp \
         encryption_key.cpp \
         encryption_aes.cpp \
         encryption_rsa.cpp \
+        encryption_secure_wipe.cpp \
         encryption_sha256.cpp \
         encryption_sha1.cpp \
-        encryption_hmac_sha256.cpp
+        encryption_hmac_sha256.cpp \
+        encryption_key_management.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
-HEADERS := basic_encryption.hpp
+HEADERS := basic_encryption.hpp \
+        encryption_secure_wipe.hpp \
+        encryption_key_management.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

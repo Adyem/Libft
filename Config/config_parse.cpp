@@ -3,7 +3,99 @@
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
 #include "../JSon/json.hpp"
+#include "../PThread/unique_lock.hpp"
+#include "../PThread/mutex.hpp"
 #include <cstdio>
+#include <new>
+
+static int cnfg_config_lock_if_enabled(cnfg_config *config, ft_unique_lock<pt_mutex> &mutex_guard)
+{
+    if (!config || !config->thread_safe_enabled || !config->mutex)
+        return (ER_SUCCESS);
+    mutex_guard = ft_unique_lock<pt_mutex>(*config->mutex);
+    if (mutex_guard.get_error() != ER_SUCCESS)
+        return (mutex_guard.get_error());
+    return (ER_SUCCESS);
+}
+
+static void cnfg_config_unlock_guard(ft_unique_lock<pt_mutex> &mutex_guard)
+{
+    if (!mutex_guard.owns_lock())
+        return ;
+    mutex_guard.unlock();
+    return ;
+}
+
+cnfg_config *cnfg_config_create()
+{
+    cnfg_config *config;
+
+    config = static_cast<cnfg_config*>(cma_calloc(1, sizeof(cnfg_config)));
+    if (!config)
+    {
+        ft_errno = FT_ERR_NO_MEMORY;
+        return (ft_nullptr);
+    }
+    if (cnfg_config_prepare_thread_safety(config) != 0)
+    {
+        cma_free(config);
+        return (ft_nullptr);
+    }
+    ft_errno = ER_SUCCESS;
+    return (config);
+}
+
+int cnfg_config_prepare_thread_safety(cnfg_config *config)
+{
+    pt_mutex *mutex_pointer;
+    void     *memory;
+
+    if (!config)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (-1);
+    }
+    if (config->thread_safe_enabled && config->mutex)
+    {
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    memory = cma_malloc(sizeof(pt_mutex));
+    if (!memory)
+    {
+        ft_errno = FT_ERR_NO_MEMORY;
+        return (-1);
+    }
+    mutex_pointer = new(memory) pt_mutex();
+    if (mutex_pointer->get_error() != ER_SUCCESS)
+    {
+        int mutex_error;
+
+        mutex_error = mutex_pointer->get_error();
+        mutex_pointer->~pt_mutex();
+        cma_free(memory);
+        ft_errno = mutex_error;
+        return (-1);
+    }
+    config->mutex = mutex_pointer;
+    config->thread_safe_enabled = true;
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+void cnfg_config_teardown_thread_safety(cnfg_config *config)
+{
+    if (!config)
+        return ;
+    if (config->mutex)
+    {
+        config->mutex->~pt_mutex();
+        cma_free(config->mutex);
+        config->mutex = ft_nullptr;
+    }
+    config->thread_safe_enabled = false;
+    return ;
+}
 
 static char *trim_whitespace(char *string)
 {
@@ -22,7 +114,29 @@ void cnfg_free(cnfg_config *config)
 {
     if (!config)
         return ;
-    size_t entry_index = 0;
+    ft_unique_lock<pt_mutex> mutex_guard;
+    int entry_errno;
+    size_t entry_index;
+
+    entry_errno = ft_errno;
+    bool already_owned = false;
+    int lock_result = cnfg_config_lock_if_enabled(config, mutex_guard);
+    if (lock_result != ER_SUCCESS)
+    {
+        if (lock_result == FT_ERR_MUTEX_ALREADY_LOCKED && config->mutex)
+        {
+            already_owned = true;
+            ft_errno = entry_errno;
+        }
+        else
+        {
+            cnfg_config_teardown_thread_safety(config);
+            cma_free(config);
+            ft_errno = entry_errno;
+            return ;
+        }
+    }
+    entry_index = 0;
     while (entry_index < config->entry_count)
     {
         cma_free(config->entries[entry_index].section);
@@ -31,6 +145,16 @@ void cnfg_free(cnfg_config *config)
         ++entry_index;
     }
     cma_free(config->entries);
+    ft_errno = entry_errno;
+    if (already_owned)
+    {
+        config->mutex->unlock(THREAD_ID);
+        if (config->mutex->get_error() != ER_SUCCESS)
+            ft_errno = config->mutex->get_error();
+    }
+    else
+        cnfg_config_unlock_guard(mutex_guard);
+    cnfg_config_teardown_thread_safety(config);
     cma_free(config);
     return ;
 }
@@ -45,10 +169,9 @@ cnfg_config *cnfg_parse(const char *filename)
     FILE *file = ft_fopen(filename, "r");
     if (!file)
         return (ft_nullptr);
-    cnfg_config *config = static_cast<cnfg_config*>(cma_calloc(1, sizeof(cnfg_config)));
+    cnfg_config *config = cnfg_config_create();
     if (!config)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
         ft_fclose(file);
         return (ft_nullptr);
     }
@@ -206,10 +329,9 @@ static cnfg_config *cnfg_parse_json(const char *filename)
         }
         group_pointer = group_pointer->next;
     }
-    cnfg_config *config = static_cast<cnfg_config*>(cma_calloc(1, sizeof(cnfg_config)));
+    cnfg_config *config = cnfg_config_create();
     if (!config)
     {
-        ft_errno = FT_ERR_NO_MEMORY;
         json_free_groups(groups);
         return (ft_nullptr);
     }
@@ -219,6 +341,7 @@ static cnfg_config *cnfg_parse_json(const char *filename)
         if (!config->entries)
         {
             ft_errno = FT_ERR_NO_MEMORY;
+            cnfg_config_teardown_thread_safety(config);
             cma_free(config);
             json_free_groups(groups);
             return (ft_nullptr);
@@ -282,12 +405,9 @@ static cnfg_config *cnfg_parse_json(const char *filename)
 cnfg_config *config_load_env()
 {
     extern char **environ;
-    cnfg_config *config = static_cast<cnfg_config*>(cma_calloc(1, sizeof(cnfg_config)));
+    cnfg_config *config = cnfg_config_create();
     if (!config)
-    {
-        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
-    }
     size_t count = 0;
     if (environ)
     {
@@ -303,6 +423,7 @@ cnfg_config *config_load_env()
     if (!config->entries)
     {
         ft_errno = FT_ERR_NO_MEMORY;
+        cnfg_config_teardown_thread_safety(config);
         cma_free(config);
         return (ft_nullptr);
     }

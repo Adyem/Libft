@@ -68,6 +68,7 @@ int cmp_file_delete(const char *path);
 int cmp_file_move(const char *source_path, const char *destination_path);
 int cmp_file_copy(const char *source_path, const char *destination_path);
 int cmp_file_create_directory(const char *path, mode_t mode);
+int cmp_file_get_permissions(const char *path, mode_t *mode_out);
 
 int cmp_thread_equal(pthread_t thread1, pthread_t thread2);
 int cmp_thread_cancel(pthread_t thread);
@@ -82,9 +83,12 @@ int cmp_readline_terminal_width(void);
 
 int cmp_rng_secure_bytes(unsigned char *buffer, size_t length);
 
+int cmp_secure_memzero(void *buffer, size_t length);
+
 int cmp_setenv(const char *name, const char *value, int overwrite);
 int cmp_unsetenv(const char *name);
 int cmp_putenv(char *string);
+char **cmp_get_environ_entries(void);
 const char *cmp_system_strerror(int error_code);
 int cmp_map_system_error_to_ft(int error_code);
 int cmp_normalize_ft_errno(int error_code);
@@ -94,6 +98,7 @@ unsigned long long cmp_get_total_memory(void);
 std::time_t cmp_timegm(std::tm *time_pointer);
 int cmp_localtime(const std::time_t *time_value, std::tm *output);
 int cmp_time_get_time_of_day(struct timeval *time_value);
+int cmp_high_resolution_time(long long *nanoseconds_out);
 
 ssize_t cmp_su_write(int file_descriptor, const char *buffer, size_t length);
 ssize_t cmp_socket_send_all(ft_socket *socket_object, const void *buffer,

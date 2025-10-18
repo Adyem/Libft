@@ -4,6 +4,25 @@
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
 #include "../PThread/unique_lock.hpp"
+#include "../PThread/mutex.hpp"
+
+static int cnfg_config_lock_if_enabled(cnfg_config *config, ft_unique_lock<pt_mutex> &mutex_guard)
+{
+    if (!config || !config->thread_safe_enabled || !config->mutex)
+        return (ER_SUCCESS);
+    mutex_guard = ft_unique_lock<pt_mutex>(*config->mutex);
+    if (mutex_guard.get_error() != ER_SUCCESS)
+        return (mutex_guard.get_error());
+    return (ER_SUCCESS);
+}
+
+static void cnfg_config_unlock_guard(ft_unique_lock<pt_mutex> &mutex_guard)
+{
+    if (!mutex_guard.owns_lock())
+        return ;
+    mutex_guard.unlock();
+    return ;
+}
 
 cnfg_flag_parser::cnfg_flag_parser()
 {
@@ -270,8 +289,28 @@ const char  *cnfg_flag_parser::get_error_str() const
 static cnfg_config *merge_configs(cnfg_config *base_config,
                                   cnfg_config *override_config)
 {
+    ft_unique_lock<pt_mutex> base_guard;
+    ft_unique_lock<pt_mutex> override_guard;
+    int lock_error;
+
     if (!override_config)
         return (base_config);
+    lock_error = cnfg_config_lock_if_enabled(override_config, override_guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        ft_errno = lock_error;
+        return (ft_nullptr);
+    }
+    if (base_config)
+    {
+        lock_error = cnfg_config_lock_if_enabled(base_config, base_guard);
+        if (lock_error != ER_SUCCESS)
+        {
+            cnfg_config_unlock_guard(override_guard);
+            ft_errno = lock_error;
+            return (ft_nullptr);
+        }
+    }
     size_t override_index = 0;
     while (override_index < override_config->entry_count)
     {
@@ -301,7 +340,8 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
                         base_entry->value = cma_strdup(override_entry->value);
                         if (!base_entry->value)
                         {
-                            ft_errno = FT_ERR_NO_MEMORY;
+                            cnfg_config_unlock_guard(base_guard);
+                            cnfg_config_unlock_guard(override_guard);
                             cnfg_free(base_config);
                             return (ft_nullptr);
                         }
@@ -318,11 +358,19 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
         {
             if (!base_config)
             {
-                base_config = static_cast<cnfg_config*>(cma_calloc(1,
-                    sizeof(cnfg_config)));
+                base_config = cnfg_config_create();
                 if (!base_config)
                 {
-                    ft_errno = FT_ERR_NO_MEMORY;
+                    cnfg_config_unlock_guard(base_guard);
+                    cnfg_config_unlock_guard(override_guard);
+                    return (ft_nullptr);
+                }
+                lock_error = cnfg_config_lock_if_enabled(base_config, base_guard);
+                if (lock_error != ER_SUCCESS)
+                {
+                    cnfg_config_unlock_guard(override_guard);
+                    cnfg_free(base_config);
+                    ft_errno = lock_error;
                     return (ft_nullptr);
                 }
             }
@@ -332,6 +380,8 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
             if (!new_entries)
             {
                 ft_errno = FT_ERR_NO_MEMORY;
+                cnfg_config_unlock_guard(base_guard);
+                cnfg_config_unlock_guard(override_guard);
                 cnfg_free(base_config);
                 return (ft_nullptr);
             }
@@ -343,6 +393,8 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
                 if (!new_entry->section)
                 {
                     ft_errno = FT_ERR_NO_MEMORY;
+                    cnfg_config_unlock_guard(base_guard);
+                    cnfg_config_unlock_guard(override_guard);
                     cnfg_free(base_config);
                     return (ft_nullptr);
                 }
@@ -355,6 +407,8 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
                 if (!new_entry->key)
                 {
                     ft_errno = FT_ERR_NO_MEMORY;
+                    cnfg_config_unlock_guard(base_guard);
+                    cnfg_config_unlock_guard(override_guard);
                     cnfg_free(base_config);
                     return (ft_nullptr);
                 }
@@ -367,6 +421,8 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
                 if (!new_entry->value)
                 {
                     ft_errno = FT_ERR_NO_MEMORY;
+                    cnfg_config_unlock_guard(base_guard);
+                    cnfg_config_unlock_guard(override_guard);
                     cnfg_free(base_config);
                     return (ft_nullptr);
                 }
@@ -377,6 +433,8 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
         }
         ++override_index;
     }
+    cnfg_config_unlock_guard(base_guard);
+    cnfg_config_unlock_guard(override_guard);
     ft_errno = ER_SUCCESS;
     return (base_config);
 }
@@ -396,6 +454,8 @@ static cnfg_config *append_flag_entry(cnfg_config *config, const char *flag)
     cnfg_config temp;
     temp.entries = &entry;
     temp.entry_count = 1;
+    temp.mutex = ft_nullptr;
+    temp.thread_safe_enabled = false;
     config = merge_configs(config, &temp);
     cma_free(entry.key);
     return (config);
@@ -482,12 +542,9 @@ cnfg_config *config_merge_sources(int argument_count,
     }
     if (!result)
     {
-        result = static_cast<cnfg_config*>(cma_calloc(1, sizeof(cnfg_config)));
+        result = cnfg_config_create();
         if (!result)
-        {
-            ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
-        }
     }
     return (result);
 }

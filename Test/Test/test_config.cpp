@@ -19,7 +19,7 @@ static cnfg_config *create_test_config(size_t entry_count)
 {
     cnfg_config *config;
 
-    config = static_cast<cnfg_config*>(cma_calloc(1, sizeof(cnfg_config)));
+    config = cnfg_config_create();
     if (!config)
         return (ft_nullptr);
     if (entry_count)
@@ -27,7 +27,7 @@ static cnfg_config *create_test_config(size_t entry_count)
         config->entries = static_cast<cnfg_entry*>(cma_calloc(entry_count, sizeof(cnfg_entry)));
         if (!config->entries)
         {
-            cma_free(config);
+            cnfg_free(config);
             return (ft_nullptr);
         }
     }
@@ -215,6 +215,36 @@ FT_TEST(test_config_write_ini_round_trip, "config_write_file supports ini round 
     FT_ASSERT(std::strcmp(parsed->entries[2].value, "value") == 0);
     cnfg_free(parsed);
     cleanup_file(filename);
+    return (1);
+}
+
+FT_TEST(test_cnfg_config_create_initializes_thread_safety, "cnfg_config_create prepares mutex protection")
+{
+    cnfg_config *config;
+
+    config = cnfg_config_create();
+    if (!config)
+        return (0);
+    FT_ASSERT(config->mutex != ft_nullptr);
+    FT_ASSERT(config->thread_safe_enabled == true);
+    cnfg_free(config);
+    return (1);
+}
+
+FT_TEST(test_cnfg_config_prepare_thread_safety_reinitializes_mutex, "cnfg_config_prepare_thread_safety recreates mutex after teardown")
+{
+    cnfg_config *config;
+
+    config = cnfg_config_create();
+    if (!config)
+        return (0);
+    cnfg_config_teardown_thread_safety(config);
+    FT_ASSERT(config->mutex == ft_nullptr);
+    FT_ASSERT(config->thread_safe_enabled == false);
+    FT_ASSERT_EQ(0, cnfg_config_prepare_thread_safety(config));
+    FT_ASSERT(config->mutex != ft_nullptr);
+    FT_ASSERT(config->thread_safe_enabled == true);
+    cnfg_free(config);
     return (1);
 }
 

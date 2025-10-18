@@ -72,6 +72,8 @@ $(OBJDIR)/Test/test_linear_algebra.o $(OBJDIR)/Test/test_quaternion.o: CFLAGS :=
 $(OBJDIR)/Test/test_string_view.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"String\"
 $(OBJDIR)/Test/test_pathfinding.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Game\"
 $(OBJDIR)/Test/test_encryption_key.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Encryption\"
+$(OBJDIR)/Test/test_encryption_secure_wipe.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Encryption\"
+$(OBJDIR)/Test/test_encryption_key_management.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Encryption\"
 
 debug: CXXFLAGS += -DDEBUG=1
 debug: $(DEBUG_TARGET)

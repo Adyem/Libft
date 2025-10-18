@@ -18,6 +18,11 @@ typedef struct s_duration_milliseconds
     long long milliseconds;
 }   t_duration_milliseconds;
 
+typedef struct s_high_resolution_time_point
+{
+    long long nanoseconds;
+}   t_high_resolution_time_point;
+
 typedef struct s_time_info
 {
     int seconds;
@@ -47,6 +52,9 @@ ft_string    time_format_iso8601(t_time time_value);
 bool    time_parse_iso8601(const char *string_input, std::tm *time_output, t_time *timestamp_output);
 bool    time_parse_custom(const char *string_input, const char *format, std::tm *time_output, t_time *timestamp_output, bool interpret_as_utc);
 bool    time_parse_custom(const char *string_input, const char *format, std::tm *time_output, t_time *timestamp_output);
+bool    time_high_resolution_now(t_high_resolution_time_point *time_point);
+long long   time_high_resolution_diff_ns(t_high_resolution_time_point start_point, t_high_resolution_time_point end_point);
+double  time_high_resolution_diff_seconds(t_high_resolution_time_point start_point, t_high_resolution_time_point end_point);
 
 typedef std::chrono::system_clock::time_point (*t_time_clock_now_hook)(void);
 
