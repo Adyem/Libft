@@ -33,6 +33,7 @@ static ft_size_t    calculate_alignment_padding(Block *block, ft_size_t alignmen
     if (block == ft_nullptr)
         return (0);
     payload_address = reinterpret_cast<uintptr_t>(block->payload);
+    payload_address += static_cast<uintptr_t>(cma_debug_guard_size());
     alignment_value = static_cast<uintptr_t>(alignment);
     if (alignment_value == 0)
         return (0);
@@ -180,8 +181,10 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     request_size = size;
     if (request_size == 0)
         request_size = 1;
-    aligned_size = align16(request_size);
-    if (aligned_size < request_size)
+    ft_size_t   backend_aligned_size;
+
+    backend_aligned_size = align16(request_size);
+    if (backend_aligned_size < request_size)
     {
         ft_errno = FT_ERR_OUT_OF_RANGE;
         return (ft_nullptr);
@@ -192,7 +195,26 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         return (ft_nullptr);
     }
     if (cma_backend_is_enabled())
-        return (cma_backend_aligned_allocate(alignment, aligned_size));
+        return (cma_backend_aligned_allocate(alignment, backend_aligned_size));
+    ft_size_t   instrumented_size;
+
+    instrumented_size = cma_debug_allocation_size(request_size);
+    if (instrumented_size < request_size)
+    {
+        int error_code;
+
+        error_code = ft_errno;
+        if (error_code == ER_SUCCESS)
+            error_code = FT_ERR_NO_MEMORY;
+        ft_errno = error_code;
+        return (ft_nullptr);
+    }
+    aligned_size = align16(instrumented_size);
+    if (aligned_size < instrumented_size)
+    {
+        ft_errno = FT_ERR_OUT_OF_RANGE;
+        return (ft_nullptr);
+    }
     if (OFFSWITCH == 1)
         return (aligned_alloc_offswitch(alignment, request_size));
     cma_allocator_guard allocator_guard;
@@ -274,8 +296,9 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     g_cma_current_bytes += block->size;
     if (g_cma_current_bytes > g_cma_peak_bytes)
         g_cma_peak_bytes = g_cma_current_bytes;
-    result = static_cast<void *>(block->payload);
-    cma_leak_tracker_record_allocation(result, block->size);
+    cma_debug_prepare_allocation(block, request_size);
+    result = static_cast<void *>(cma_block_user_pointer(block));
+    cma_leak_tracker_record_allocation(result, cma_block_user_size(block));
     allocator_guard.unlock();
     ft_errno = ER_SUCCESS;
     if (ft_log_get_alloc_logging())
