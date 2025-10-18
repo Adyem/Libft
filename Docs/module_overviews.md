@@ -24,6 +24,7 @@ Libft exposes a large surface area with many cooperating modules. This document 
   - Shims in `Compatebility` encapsulate all direct OS calls; `System_utils` performs argument validation and converts errors to `ft_errno` values.
   - Locale helpers respect `LIBFT_ENABLE_LOCALE_HELPERS`; when disabled, the module must fall back to byte-wise comparisons and case folding.
   - Resource wrappers (files, sockets) own their handles exclusively and close them in destructors to avoid leaks.
+  - `ft_file` and the higher-level stream wrappers treat the descriptor returned by `operator int()` as a borrowed view. Move operations transfer ownership and clear the source to `-1`; callers must either duplicate the descriptor or call `close()` before handing it to APIs that expect to assume lifetime management so the wrapper does not double-close it later.
 - **Error reporting:** Each helper translates native error codes to the shared registry in `Errno/ERROR_CODE_REGISTRY.md`. Callers can rely on `ft_errno` remaining untouched when operations succeed.
 
 ## Networking
@@ -40,6 +41,7 @@ Libft exposes a large surface area with many cooperating modules. This document 
   - The logging queue retains ownership of messages until sinks confirm delivery or drop policies force eviction.
   - Background worker threads exit cleanly during shutdown sequences triggered by `ft_log_shutdown`.
   - Formatting helpers avoid throwing exceptions; instead they store formatting issues in `_error_code`.
+- **Operational helpers:** Remote sink health probes run on a configurable interval via `ft_log_enable_remote_health` so callers can detect broken connections through `ft_log_get_remote_health` without waiting for application logs to fail. Scoped context guards (`ft_log_context_guard`) push per-thread metadata that is automatically prepended to plain logs and merged into structured payloads, keeping correlation identifiers attached without plumbing them through every call.
 - **Error reporting:** All logging entry points propagate failures through `_error_code` fields on logger instances. Sinks that fail must translate backend-specific errors into the canonical registry before returning.
 
 ## Storage

@@ -160,6 +160,7 @@ char            *ft_time_format(char *buffer, size_t buffer_size);
 #endif
 ft_string        ft_to_string(long number);
 ft_string        ft_to_string(unsigned long number);
+ft_string        ft_to_string(unsigned long long number);
 ft_string        ft_to_string(double number);
 ft_string        ft_to_string(int number);
 ft_string        ft_to_string(unsigned int number);

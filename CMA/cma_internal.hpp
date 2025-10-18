@@ -8,6 +8,8 @@
 #include <cstdint>
 #include <stdint.h>
 
+class pt_mutex;
+
 #define PAGE_SIZE 131072
 #define BYPASS_ALLOC DEBUG
 #define MAGIC_NUMBER_ALLOCATED 0xDEADBEEF
@@ -41,6 +43,7 @@ extern ft_size_t    g_cma_allocation_count;
 extern ft_size_t    g_cma_free_count;
 extern ft_size_t    g_cma_current_bytes;
 extern ft_size_t    g_cma_peak_bytes;
+extern unsigned long long    g_cma_metadata_access_depth;
 
 class cma_allocator_guard
 {
@@ -81,23 +84,27 @@ class cma_allocator_guard
 
 struct Block
 {
-    uint32_t    magic;
-    ft_size_t    size;
-    bool        free;
-    Block        *next;
-    Block        *prev;
-    unsigned char    *payload;
+    pt_mutex            *mutex;
+    bool                thread_safe_enabled;
+    uint32_t            magic;
+    ft_size_t           size;
+    bool                free;
+    Block               *next;
+    Block               *prev;
+    unsigned char       *payload;
 } __attribute__ ((aligned(16)));
 
 struct Page
 {
-    void        *start;
-    ft_size_t    size;
-    Page        *next;
-    Page        *prev;
-    Block        *blocks;
-    bool        heap;
-    int8_t        alloc_size_type;    
+    pt_mutex            *mutex;
+    bool                thread_safe_enabled;
+    void                *start;
+    ft_size_t           size;
+    Page                *next;
+    Page                *prev;
+    Block               *blocks;
+    bool                heap;
+    int8_t              alloc_size_type;
 } __attribute__ ((aligned(16)));
 
 extern Page *page_list;
@@ -132,11 +139,23 @@ int     cma_backend_checked_block_size(const void *memory_pointer,
 
 int     cma_metadata_make_writable(void);
 void    cma_metadata_make_inaccessible(void);
+bool    cma_metadata_guard_increment(void);
+bool    cma_metadata_guard_decrement(void);
 Block    *cma_metadata_allocate_block(void) __attribute__ ((warn_unused_result));
 void    cma_metadata_release_block(Block *block);
 void    cma_metadata_reset(void);
 void    cma_leak_tracker_record_allocation(void *memory_pointer, ft_size_t size);
 void    cma_leak_tracker_record_free(void *memory_pointer);
+
+int     cma_block_prepare_thread_safety(Block *block);
+void    cma_block_teardown_thread_safety(Block *block);
+int     cma_block_lock(Block *block, bool *lock_acquired);
+void    cma_block_unlock(Block *block, bool lock_acquired);
+
+int     cma_page_prepare_thread_safety(Page *page);
+void    cma_page_teardown_thread_safety(Page *page);
+int     cma_page_lock(Page *page, bool *lock_acquired);
+void    cma_page_unlock(Page *page, bool lock_acquired);
 
 inline __attribute__((always_inline, hot)) ft_size_t align16(ft_size_t size)
 {

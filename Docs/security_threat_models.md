@@ -36,7 +36,10 @@ This document outlines the primary threat scenarios for the Networking, Storage,
 
 ### Threats and Mitigations
 - **Weak randomness**: Seed RNG utilities from system entropy sources (`rng_seed_system`) and monitor failure codes surfaced through `_error_code` mirrors.
-- **Key exposure**: Use the CMA allocation guards for key buffers so `cma_secure_zero` wipes memory immediately after use. Avoid logging secrets by default; enable `_api_logging` only when redaction helpers are in place.
+- **Key exposure**: Use the CMA allocation guards for key buffers so `cma_secure_zero` wipes
+  memory immediately after use. Avoid logging secrets by default; when `_api_logging` is
+  required, register redaction patterns with `ft_log_add_redaction` before emitting
+  diagnostics.
 - **Algorithm downgrade**: Prefer modern primitives (e.g., SHA-2, AES-GCM). When legacy compatibility is unavoidable, gate weaker modes behind explicit feature flags.
 - **Implementation misuse**: Follow the secure coding checklist to ensure nonces are unique, authentication tags are verified, and error codes are handled before proceeding with sensitive operations.
 

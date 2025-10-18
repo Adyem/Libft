@@ -3,6 +3,10 @@
 
 #include <cstddef>
 #include <cstdarg>
+#include "../Time/time.hpp"
+#include "../CPP_class/class_nullptr.hpp"
+
+class pt_mutex;
 
 enum t_log_level {
     LOG_LEVEL_DEBUG = 0,
@@ -18,18 +22,55 @@ typedef void (*t_log_sink)(const char *message, void *user_data);
 int     ft_log_add_sink(t_log_sink sink, void *user_data);
 void    ft_log_remove_sink(t_log_sink sink, void *user_data);
 
+struct s_log_remote_health
+{
+    const char  *host;
+    unsigned short port;
+    bool use_tcp;
+    bool reachable;
+    t_time last_check;
+    int  last_error;
+};
+
 struct s_log_field
 {
+    pt_mutex   *mutex;
+    bool        thread_safe_enabled;
     const char *key;
     const char *value;
+
+    s_log_field()
+        : mutex(ft_nullptr), thread_safe_enabled(false), key(ft_nullptr), value(ft_nullptr)
+    {
+        return ;
+    }
 };
 
 struct s_log_async_metrics
 {
+    pt_mutex *mutex;
+    bool      thread_safe_enabled;
     size_t pending_messages;
     size_t peak_pending_messages;
     size_t dropped_messages;
+
+    s_log_async_metrics()
+        : mutex(ft_nullptr), thread_safe_enabled(false), pending_messages(0),
+          peak_pending_messages(0), dropped_messages(0)
+    {
+        return ;
+    }
 };
+
+int     log_field_prepare_thread_safety(s_log_field *field);
+void    log_field_teardown_thread_safety(s_log_field *field);
+int     log_field_lock(const s_log_field *field, bool *lock_acquired);
+void    log_field_unlock(const s_log_field *field, bool lock_acquired);
+
+int     log_async_metrics_prepare_thread_safety(s_log_async_metrics *metrics);
+void    log_async_metrics_teardown_thread_safety(s_log_async_metrics *metrics);
+int     log_async_metrics_lock(s_log_async_metrics *metrics, bool *lock_acquired);
+void    log_async_metrics_unlock(s_log_async_metrics *metrics, bool lock_acquired);
 
 void    ft_log_set_level(t_log_level level);
 int     ft_log_set_file(const char *path, size_t max_size);
@@ -49,6 +90,44 @@ void    ft_syslog_sink(const char *message, void *user_data);
 int     ft_log_set_syslog(const char *identifier);
 int     ft_log_set_remote_sink(const char *host, unsigned short port,
                                bool use_tcp);
+int     ft_log_add_redaction(const char *pattern);
+int     ft_log_add_redaction_with_replacement(const char *pattern,
+                               const char *replacement);
+void    ft_log_clear_redactions();
+void    ft_log_enable_remote_health(bool enable);
+void    ft_log_set_remote_health_interval(unsigned int interval_seconds);
+int     ft_log_probe_remote_health();
+int     ft_log_get_remote_health(s_log_remote_health *statuses,
+            size_t capacity, size_t *count);
+int     ft_log_context_push(const s_log_field *fields, size_t field_count);
+void    ft_log_context_pop(size_t field_count);
+void    ft_log_context_clear();
+
+class ft_log_context_guard
+{
+    private:
+        size_t _pushed_count;
+        bool _active;
+        mutable int _error_code;
+
+        void set_error(int error_code) const;
+
+    public:
+        ft_log_context_guard() noexcept;
+        ft_log_context_guard(const s_log_field *fields, size_t field_count) noexcept;
+        ~ft_log_context_guard() noexcept;
+
+        ft_log_context_guard(const ft_log_context_guard &) = delete;
+        ft_log_context_guard &operator=(const ft_log_context_guard &) = delete;
+
+        ft_log_context_guard(ft_log_context_guard &&other) noexcept;
+        ft_log_context_guard &operator=(ft_log_context_guard &&other) noexcept;
+
+        void release() noexcept;
+        bool is_active() const noexcept;
+        int get_error() const;
+        const char *get_error_str() const;
+};
 
 void ft_log_debug(const char *fmt, ...);
 void ft_log_info(const char *fmt, ...);
@@ -111,6 +190,15 @@ class ft_logger
         size_t get_async_queue_limit() const noexcept;
         int  get_async_metrics(s_log_async_metrics *metrics) noexcept;
         void reset_async_metrics() noexcept;
+        void enable_remote_health(bool enable) noexcept;
+        void set_remote_health_interval(unsigned int interval_seconds) noexcept;
+        int  probe_remote_health() noexcept;
+        int  get_remote_health(s_log_remote_health *statuses,
+                               size_t capacity, size_t *count) noexcept;
+        int  push_context(const s_log_field *fields, size_t field_count) noexcept;
+        void pop_context(size_t field_count) noexcept;
+        ft_log_context_guard make_context_guard(const s_log_field *fields,
+                size_t field_count) noexcept;
         int  get_error() const noexcept;
         const char *get_error_str() const noexcept;
 

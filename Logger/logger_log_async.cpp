@@ -373,13 +373,19 @@ size_t ft_log_get_async_queue_limit()
 
 int ft_log_get_async_metrics(s_log_async_metrics *metrics)
 {
+    bool metrics_lock_acquired;
+
     if (!metrics)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
+    metrics_lock_acquired = false;
+    if (log_async_metrics_lock(metrics, &metrics_lock_acquired) != 0)
+        return (-1);
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
     {
+        log_async_metrics_unlock(metrics, metrics_lock_acquired);
         ft_errno = ft_map_system_error(errno);
         return (-1);
     }
@@ -388,9 +394,11 @@ int ft_log_get_async_metrics(s_log_async_metrics *metrics)
     metrics->dropped_messages = g_async_dropped_messages;
     if (pthread_mutex_unlock(&g_condition_mutex) != 0)
     {
+        log_async_metrics_unlock(metrics, metrics_lock_acquired);
         ft_errno = ft_map_system_error(errno);
         return (-1);
     }
+    log_async_metrics_unlock(metrics, metrics_lock_acquired);
     ft_errno = ER_SUCCESS;
     return (0);
 }

@@ -25,7 +25,7 @@ static void cnfg_config_unlock_guard(ft_unique_lock<pt_mutex> &mutex_guard)
     return ;
 }
 
-static void config_free_entry_contents(cnfg_entry *entry)
+static void config_free_entry_contents_unlocked(cnfg_entry *entry)
 {
     if (!entry)
         return ;
@@ -41,21 +41,49 @@ static void config_free_entry_contents(cnfg_entry *entry)
     return ;
 }
 
+static void config_free_entry_contents(cnfg_entry *entry)
+{
+    bool entry_locked;
+    int entry_errno;
+
+    if (!entry)
+        return ;
+    entry_errno = ft_errno;
+    if (cnfg_entry_lock(entry, &entry_locked) != 0)
+        return ;
+    config_free_entry_contents_unlocked(entry);
+    cnfg_entry_unlock(entry, entry_locked);
+    ft_errno = entry_errno;
+    return ;
+}
+
 static int config_duplicate_entry(const cnfg_entry *source, cnfg_entry *destination)
 {
+    cnfg_entry *mutable_source;
+    bool source_locked;
+    int entry_errno;
+
     if (!source || !destination)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
+    destination->mutex = ft_nullptr;
+    destination->thread_safe_enabled = false;
     destination->section = ft_nullptr;
     destination->key = ft_nullptr;
     destination->value = ft_nullptr;
+    mutable_source = const_cast<cnfg_entry*>(source);
+    entry_errno = ft_errno;
+    if (cnfg_entry_lock(mutable_source, &source_locked) != 0)
+        return (-1);
     if (source->section)
     {
         destination->section = cma_strdup(source->section);
         if (!destination->section)
         {
+            cnfg_entry_unlock(mutable_source, source_locked);
+            ft_errno = entry_errno;
             config_free_entry_contents(destination);
             return (-1);
         }
@@ -65,6 +93,8 @@ static int config_duplicate_entry(const cnfg_entry *source, cnfg_entry *destinat
         destination->key = cma_strdup(source->key);
         if (!destination->key)
         {
+            cnfg_entry_unlock(mutable_source, source_locked);
+            ft_errno = entry_errno;
             config_free_entry_contents(destination);
             return (-1);
         }
@@ -74,10 +104,14 @@ static int config_duplicate_entry(const cnfg_entry *source, cnfg_entry *destinat
         destination->value = cma_strdup(source->value);
         if (!destination->value)
         {
+            cnfg_entry_unlock(mutable_source, source_locked);
+            ft_errno = entry_errno;
             config_free_entry_contents(destination);
             return (-1);
         }
     }
+    cnfg_entry_unlock(mutable_source, source_locked);
+    ft_errno = entry_errno;
     return (0);
 }
 
@@ -95,6 +129,7 @@ static int config_strings_equal(const char *left, const char *right)
 static cnfg_entry *config_find_matching_entry(cnfg_config *config, const cnfg_entry *entry)
 {
     size_t index;
+    int entry_errno;
 
     if (!config || !entry)
         return (ft_nullptr);
@@ -102,8 +137,17 @@ static cnfg_entry *config_find_matching_entry(cnfg_config *config, const cnfg_en
     while (index < config->entry_count)
     {
         cnfg_entry *candidate = &config->entries[index];
-        if (config_strings_equal(candidate->section, entry->section)
-            && config_strings_equal(candidate->key, entry->key))
+        bool candidate_locked;
+        bool matches;
+
+        entry_errno = ft_errno;
+        if (cnfg_entry_lock(candidate, &candidate_locked) != 0)
+            return (ft_nullptr);
+        matches = config_strings_equal(candidate->section, entry->section)
+            && config_strings_equal(candidate->key, entry->key);
+        cnfg_entry_unlock(candidate, candidate_locked);
+        ft_errno = entry_errno;
+        if (matches)
             return (candidate);
         ++index;
     }
@@ -114,6 +158,7 @@ static int config_append_entry(cnfg_config *destination, const cnfg_entry *sourc
 {
     cnfg_entry copy;
     cnfg_entry *new_entries;
+    cnfg_entry *target;
 
     if (!destination || !source)
     {
@@ -130,7 +175,20 @@ static int config_append_entry(cnfg_config *destination, const cnfg_entry *sourc
         return (-1);
     }
     destination->entries = new_entries;
-    destination->entries[destination->entry_count] = copy;
+    target = &destination->entries[destination->entry_count];
+    target->mutex = ft_nullptr;
+    target->thread_safe_enabled = false;
+    target->section = copy.section;
+    target->key = copy.key;
+    target->value = copy.value;
+    copy.section = ft_nullptr;
+    copy.key = ft_nullptr;
+    copy.value = ft_nullptr;
+    if (cnfg_entry_prepare_thread_safety(target) != 0)
+    {
+        config_free_entry_contents_unlocked(target);
+        return (-1);
+    }
     destination->entry_count++;
     return (0);
 }
@@ -228,6 +286,8 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
         if (existing)
         {
             cnfg_entry replacement;
+            bool existing_locked;
+            int entry_errno;
 
             if (config_duplicate_entry(override_entry, &replacement) != 0)
             {
@@ -235,8 +295,23 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
                 cnfg_free(result);
                 return (ft_nullptr);
             }
-            config_free_entry_contents(existing);
-            *existing = replacement;
+            entry_errno = ft_errno;
+            if (cnfg_entry_lock(existing, &existing_locked) != 0)
+            {
+                config_free_entry_contents(&replacement);
+                cnfg_config_unlock_guard(result_guard);
+                cnfg_free(result);
+                return (ft_nullptr);
+            }
+            config_free_entry_contents_unlocked(existing);
+            existing->section = replacement.section;
+            existing->key = replacement.key;
+            existing->value = replacement.value;
+            replacement.section = ft_nullptr;
+            replacement.key = ft_nullptr;
+            replacement.value = ft_nullptr;
+            cnfg_entry_unlock(existing, existing_locked);
+            ft_errno = entry_errno;
         }
         else
         {

@@ -257,6 +257,78 @@ void ft_logger::reset_async_metrics() noexcept
     return ;
 }
 
+void ft_logger::enable_remote_health(bool enable) noexcept
+{
+    ft_log_enable_remote_health(enable);
+    this->set_error(ft_errno);
+    return ;
+}
+
+void ft_logger::set_remote_health_interval(unsigned int interval_seconds) noexcept
+{
+    ft_log_set_remote_health_interval(interval_seconds);
+    this->set_error(ft_errno);
+    return ;
+}
+
+int ft_logger::probe_remote_health() noexcept
+{
+    int result;
+
+    result = ft_log_probe_remote_health();
+    if (result != 0)
+    {
+        this->set_error(ft_errno);
+        return (-1);
+    }
+    this->set_error(ER_SUCCESS);
+    return (0);
+}
+
+int ft_logger::get_remote_health(s_log_remote_health *statuses, size_t capacity, size_t *count) noexcept
+{
+    int result;
+
+    result = ft_log_get_remote_health(statuses, capacity, count);
+    if (result != 0)
+    {
+        this->set_error(ft_errno);
+        return (-1);
+    }
+    this->set_error(ER_SUCCESS);
+    return (0);
+}
+
+int ft_logger::push_context(const s_log_field *fields, size_t field_count) noexcept
+{
+    int result;
+
+    result = ft_log_context_push(fields, field_count);
+    if (result != 0)
+    {
+        this->set_error(ft_errno);
+        return (-1);
+    }
+    this->set_error(ER_SUCCESS);
+    return (0);
+}
+
+void ft_logger::pop_context(size_t field_count) noexcept
+{
+    ft_log_context_pop(field_count);
+    this->set_error(ft_errno);
+    return ;
+}
+
+ft_log_context_guard ft_logger::make_context_guard(const s_log_field *fields,
+        size_t field_count) noexcept
+{
+    ft_log_context_guard guard(fields, field_count);
+
+    this->set_error(guard.get_error());
+    return (guard);
+}
+
 int ft_logger::get_error() const noexcept
 {
     return (this->_error_code);
