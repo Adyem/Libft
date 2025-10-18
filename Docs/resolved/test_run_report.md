@@ -133,3 +133,53 @@
 - Command: `./Test/libft_tests`
   - Status: Succeeded.
   - Observed behavior: The runner completed all 1,133 test cases without failures, confirming the allocator guard changes eliminated the post-suite crash and maintained CMA tracking stability.【b4f7dc†L1-L40】【7d8db8†L1-L18】
+- Command: `make -C Test OPT_LEVEL=0`
+  - Status: Succeeded.
+  - Observed behavior: Full rebuild refreshed all 27 module archives before linking `libft_tests`, matching the standard optimized debugging build.
+- Command: `./Test/libft_tests` (run 1 of 4)
+  - Status: Succeeded.
+  - Observed behavior: Completed all 1,173 tests without hangs after the `pt_mutex::unlock` validation adjustments, covering the async logger backlog scenario and mutex unlock recovery checks.
+- Command: `./Test/libft_tests` (run 2 of 4)
+  - Status: Succeeded.
+  - Observed behavior: Repeated full suite passed with identical logging output, confirming the mutex regression remained resolved under a second consecutive execution.
+- Command: `./Test/libft_tests` (run 3 of 4)
+  - Status: Succeeded.
+  - Observed behavior: Third run completed in line with prior passes; no stalls observed around the former deadlock reproduction case.
+- Command: `./Test/libft_tests` (run 4 of 4)
+  - Status: Succeeded.
+  - Observed behavior: Final confirmation run finished the complete suite with no timeouts or deadlocks, providing confidence that the hanging behavior is no longer reproducible.
+- Command: `make -C Test OPT_LEVEL=0`
+  - Status: Succeeded.
+  - Observed behavior: Rebuilt the suite artifacts before the extended verification campaign, refreshing all 27 module archives and relinking `libft_tests` without errors.
+
+- Command: `./Test/libft_tests` (run 1 of 8)
+  - Status: Succeeded.
+  - Observed behavior: Streamed the full output to the console and completed all 1,173 tests without hangs, confirming the mutex unlock fix remains stable under a fresh run.
+
+- Command: `./Test/libft_tests` (run 2 of 8, log captured to `/tmp/libft_run2.log`)
+  - Status: Succeeded.
+  - Observed behavior: Tailed log shows the YAML regression cases finishing cleanly with the suite reporting `1173/1173 tests passed`.
+
+- Command: `./Test/libft_tests` (run 3 of 8, log captured to `/tmp/libft_run3.log`)
+  - Status: Succeeded.
+  - Observed behavior: Log tail again records the final YAML failure-handling tests passing followed by the overall success summary.
+
+- Command: `./Test/libft_tests` (run 4 of 8, log captured to `/tmp/libft_run4.log`)
+  - Status: Succeeded.
+  - Observed behavior: Repeat execution completed without stalls; tail of the log shows the concluding YAML cases and overall pass message.
+
+- Command: `./Test/libft_tests` (run 5 of 8, log captured to `/tmp/libft_run5.log`)
+  - Status: Succeeded.
+  - Observed behavior: Fifth iteration reproduced the clean YAML endings and final success report, indicating no cumulative resource leaks.
+
+- Command: `./Test/libft_tests` (run 6 of 8, log captured to `/tmp/libft_run6.log`)
+  - Status: Succeeded.
+  - Observed behavior: Sixth run remained stable with the log tail showing all 1,173 tests passing without errors.
+
+- Command: `./Test/libft_tests` (run 7 of 8, log captured to `/tmp/libft_run7.log`)
+  - Status: Succeeded.
+  - Observed behavior: Seventh pass maintained the streak of full-suite completions, again ending with the YAML write-failure case and the `1173/1173 tests passed` summary.
+
+- Command: `./Test/libft_tests` (run 8 of 8, log captured to `/tmp/libft_run8.log`)
+  - Status: Succeeded.
+  - Observed behavior: Final verification run matched prior iterations and closed out the stress sequence without hangs or regressions.

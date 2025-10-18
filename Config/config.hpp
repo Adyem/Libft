@@ -4,6 +4,8 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include <cstddef>
 
+class pt_mutex;
+
 struct cnfg_entry
 {
     char    *section;
@@ -13,10 +15,16 @@ struct cnfg_entry
 
 struct cnfg_config
 {
-    cnfg_entry *entries;
-    size_t           entry_count;
+    cnfg_entry  *entries;
+    size_t               entry_count;
+    pt_mutex             *mutex;
+    bool                 thread_safe_enabled;
 };
 
+
+cnfg_config   *cnfg_config_create();
+int         cnfg_config_prepare_thread_safety(cnfg_config *config);
+void        cnfg_config_teardown_thread_safety(cnfg_config *config);
 
 cnfg_config   *cnfg_parse(const char *filename);
 void        cnfg_free(cnfg_config *config);

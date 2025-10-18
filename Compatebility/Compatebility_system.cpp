@@ -615,6 +615,37 @@ void cmp_clear_force_total_memory_result(void)
     return ;
 }
 
+int cmp_secure_memzero(void *buffer, size_t length)
+{
+    if (buffer == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (-1);
+    }
+    if (length == 0)
+    {
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+#if defined(_WIN32) || defined(_WIN64)
+    SecureZeroMemory(buffer, length);
+    ft_errno = ER_SUCCESS;
+    return (0);
+#else
+    volatile unsigned char *volatile byte_pointer;
+
+    byte_pointer = reinterpret_cast<volatile unsigned char *>(buffer);
+    while (length > 0)
+    {
+        *byte_pointer = 0;
+        byte_pointer = byte_pointer + 1;
+        length = length - 1;
+    }
+    ft_errno = ER_SUCCESS;
+    return (0);
+#endif
+}
+
 int cmp_setenv(const char *name, const char *value, int overwrite)
 {
     if (name == ft_nullptr || value == ft_nullptr)
@@ -803,6 +834,16 @@ int cmp_putenv(char *string)
     }
     ft_errno = ER_SUCCESS;
     return (result);
+#endif
+}
+
+char **cmp_get_environ_entries(void)
+{
+#if defined(_WIN32) || defined(_WIN64)
+    return (_environ);
+#else
+    extern char **environ;
+    return (environ);
 #endif
 }
 

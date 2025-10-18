@@ -17,6 +17,8 @@ Compression/compression.hpp
 Config/config.hpp
 Config/flag_parser.hpp
 Encryption/basic_encryption.hpp
+Encryption/encryption_key_management.hpp
+Encryption/encryption_secure_wipe.hpp
 Errno/errno.hpp
 File/open_dir.hpp
 Game/game_achievement.hpp
