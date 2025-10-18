@@ -17,11 +17,17 @@ SRCS := \
     logger_log_get_api_logging.cpp \
     logger_log_set_color.cpp \
     logger_log_get_color.cpp \
+    logger_log_redaction.cpp \
+    logger_log_field_thread_safety.cpp \
     logger_log_close.cpp \
+    logger_log_health.cpp \
+    logger_log_async_metrics_thread_safety.cpp \
     logger_log_debug.cpp \
     logger_log_info.cpp \
     logger_log_warn.cpp \
     logger_log_error.cpp \
+    logger_log_context.cpp \
+    logger_log_context_guard.cpp \
     logger_log_structured.cpp \
     logger_log_async.cpp \
     logger_logger.cpp \

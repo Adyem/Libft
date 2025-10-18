@@ -7,7 +7,9 @@ Use this checklist during design reviews, code reviews, and release readiness ch
 - Validate all inputs using the Libft parsing helpers before they reach lower-level modules.
 - Treat every `_error_code` as actionable: propagate errors immediately and avoid silently ignoring failures.
 - Prefer `cma_alloc_limit_guard` and `cma_allocation_guard` for transient buffers so allocations are tracked and freed even when exceptions occur.
-- Enable `_api_logging` only in sanitized environments; redact secrets using the logging redaction helpers once they land.
+- Enable `_api_logging` only in sanitized environments; use `ft_log_add_redaction`
+  or `ft_log_add_redaction_with_replacement` to mask secrets before emitting
+  verbose traces.
 - Document threat considerations in `Docs/architecture_decision_records/` for major feature changes.
 
 ## Handling Secrets

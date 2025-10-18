@@ -315,42 +315,79 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
     while (override_index < override_config->entry_count)
     {
         cnfg_entry *override_entry = &override_config->entries[override_index];
+        const char *override_section;
+        const char *override_key;
+        const char *override_value;
+        bool override_locked;
+        int entry_errno;
         bool replaced = false;
+
+        entry_errno = ft_errno;
+        if (cnfg_entry_lock(override_entry, &override_locked) != 0)
+        {
+            cnfg_config_unlock_guard(base_guard);
+            cnfg_config_unlock_guard(override_guard);
+            ft_errno = entry_errno;
+            return (ft_nullptr);
+        }
+        override_section = override_entry->section;
+        override_key = override_entry->key;
+        override_value = override_entry->value;
+        cnfg_entry_unlock(override_entry, override_locked);
+        ft_errno = entry_errno;
         size_t base_index = 0;
         if (base_config)
         {
             while (base_index < base_config->entry_count)
             {
                 cnfg_entry *base_entry = &base_config->entries[base_index];
-                bool same_section = (base_entry->section == ft_nullptr
-                    && override_entry->section == ft_nullptr)
-                    || (base_entry->section && override_entry->section
+                bool base_locked;
+                bool same_section;
+                bool same_key;
+                int base_errno;
+
+                base_errno = ft_errno;
+                if (cnfg_entry_lock(base_entry, &base_locked) != 0)
+                {
+                    cnfg_config_unlock_guard(base_guard);
+                    cnfg_config_unlock_guard(override_guard);
+                    ft_errno = base_errno;
+                    return (ft_nullptr);
+                }
+                same_section = (base_entry->section == ft_nullptr
+                    && override_section == ft_nullptr)
+                    || (base_entry->section && override_section
                     && ft_strcmp(base_entry->section,
-                    override_entry->section) == 0);
-                bool same_key = (base_entry->key == ft_nullptr
-                    && override_entry->key == ft_nullptr)
-                    || (base_entry->key && override_entry->key
+                    override_section) == 0);
+                same_key = (base_entry->key == ft_nullptr
+                    && override_key == ft_nullptr)
+                    || (base_entry->key && override_key
                     && ft_strcmp(base_entry->key,
-                    override_entry->key) == 0);
+                    override_key) == 0);
                 if (same_section && same_key)
                 {
                     cma_free(base_entry->value);
-                    if (override_entry->value)
+                    base_entry->value = ft_nullptr;
+                    if (override_value)
                     {
-                        base_entry->value = cma_strdup(override_entry->value);
+                        base_entry->value = cma_strdup(override_value);
                         if (!base_entry->value)
                         {
+                            cnfg_entry_unlock(base_entry, base_locked);
+                            ft_errno = base_errno;
                             cnfg_config_unlock_guard(base_guard);
                             cnfg_config_unlock_guard(override_guard);
                             cnfg_free(base_config);
                             return (ft_nullptr);
                         }
                     }
-                    else
-                        base_entry->value = ft_nullptr;
+                    cnfg_entry_unlock(base_entry, base_locked);
+                    ft_errno = base_errno;
                     replaced = true;
                     break;
                 }
+                cnfg_entry_unlock(base_entry, base_locked);
+                ft_errno = base_errno;
                 ++base_index;
             }
         }
@@ -387,9 +424,11 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
             }
             base_config->entries = new_entries;
             cnfg_entry *new_entry = &base_config->entries[base_config->entry_count];
-            if (override_entry->section)
+            new_entry->mutex = ft_nullptr;
+            new_entry->thread_safe_enabled = false;
+            if (override_section)
             {
-                new_entry->section = cma_strdup(override_entry->section);
+                new_entry->section = cma_strdup(override_section);
                 if (!new_entry->section)
                 {
                     ft_errno = FT_ERR_NO_MEMORY;
@@ -401,9 +440,9 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
             }
             else
                 new_entry->section = ft_nullptr;
-            if (override_entry->key)
+            if (override_key)
             {
-                new_entry->key = cma_strdup(override_entry->key);
+                new_entry->key = cma_strdup(override_key);
                 if (!new_entry->key)
                 {
                     ft_errno = FT_ERR_NO_MEMORY;
@@ -415,9 +454,9 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
             }
             else
                 new_entry->key = ft_nullptr;
-            if (override_entry->value)
+            if (override_value)
             {
-                new_entry->value = cma_strdup(override_entry->value);
+                new_entry->value = cma_strdup(override_value);
                 if (!new_entry->value)
                 {
                     ft_errno = FT_ERR_NO_MEMORY;
@@ -429,6 +468,19 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
             }
             else
                 new_entry->value = ft_nullptr;
+            if (cnfg_entry_prepare_thread_safety(new_entry) != 0)
+            {
+                cma_free(new_entry->section);
+                cma_free(new_entry->key);
+                cma_free(new_entry->value);
+                new_entry->section = ft_nullptr;
+                new_entry->key = ft_nullptr;
+                new_entry->value = ft_nullptr;
+                cnfg_config_unlock_guard(base_guard);
+                cnfg_config_unlock_guard(override_guard);
+                cnfg_free(base_config);
+                return (ft_nullptr);
+            }
             base_config->entry_count++;
         }
         ++override_index;
@@ -442,6 +494,8 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
 static cnfg_config *append_flag_entry(cnfg_config *config, const char *flag)
 {
     cnfg_entry entry;
+    entry.mutex = ft_nullptr;
+    entry.thread_safe_enabled = false;
     entry.section = ft_nullptr;
     entry.key = cma_strdup(flag);
     entry.value = ft_nullptr;

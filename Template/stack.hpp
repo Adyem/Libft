@@ -6,6 +6,8 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/pthread.hpp"
 #include <cstddef>
 #include <utility>
 
@@ -16,7 +18,9 @@
 ** - pop: O(1); invalidates references to removed top element.
 ** - top accessors: O(1); no invalidation.
 ** - clear: O(n); invalidates all node references.
-** Thread safety: no internal synchronization; callers must provide external protection when sharing instances.
+** Thread safety: disabled by default. Call enable_thread_safety to install
+**               an internal mutex before sharing instances across threads or
+**               coordinating with the global deadlock resolution helpers.
 */
 template <typename ElementType>
 class ft_stack
@@ -28,11 +32,16 @@ class ft_stack
             StackNode* _next;
         };
 
-            StackNode*  _top;
-            size_t      _size;
-            mutable int _error_code;
+            StackNode*          _top;
+            size_t              _size;
+            mutable int         _error_code;
+            mutable pt_mutex   *_mutex;
+            bool                _thread_safe_enabled;
 
         void    set_error(int error) const;
+        int     lock_internal(bool *lock_acquired) const;
+        void    unlock_internal(bool lock_acquired) const;
+        void    teardown_thread_safety();
 
     public:
         ft_stack();
@@ -43,6 +52,12 @@ class ft_stack
 
         ft_stack(ft_stack&& other) noexcept;
         ft_stack& operator=(ft_stack&& other) noexcept;
+
+            int enable_thread_safety();
+            void disable_thread_safety();
+            bool is_thread_safe() const;
+            int lock(bool *lock_acquired) const;
+            void unlock(bool lock_acquired) const;
 
             void push(const ElementType& value);
             void push(ElementType&& value);
@@ -62,7 +77,8 @@ class ft_stack
 
 template <typename ElementType>
 ft_stack<ElementType>::ft_stack()
-    : _top(ft_nullptr), _size(0), _error_code(ER_SUCCESS)
+    : _top(ft_nullptr), _size(0), _error_code(ER_SUCCESS),
+      _mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     return ;
 }
@@ -71,16 +87,20 @@ template <typename ElementType>
 ft_stack<ElementType>::~ft_stack()
 {
     this->clear();
+    this->teardown_thread_safety();
     return ;
 }
 
 template <typename ElementType>
 ft_stack<ElementType>::ft_stack(ft_stack&& other) noexcept
-    : _top(other._top), _size(other._size), _error_code(other._error_code)
+    : _top(other._top), _size(other._size), _error_code(other._error_code),
+      _mutex(other._mutex), _thread_safe_enabled(other._thread_safe_enabled)
 {
     other._top = ft_nullptr;
     other._size = 0;
     other._error_code = ER_SUCCESS;
+    other._mutex = ft_nullptr;
+    other._thread_safe_enabled = false;
     return ;
 }
 
@@ -90,12 +110,17 @@ ft_stack<ElementType>& ft_stack<ElementType>::operator=(ft_stack&& other) noexce
     if (this != &other)
     {
         this->clear();
+        this->teardown_thread_safety();
         this->_top = other._top;
         this->_size = other._size;
         this->_error_code = other._error_code;
+        this->_mutex = other._mutex;
+        this->_thread_safe_enabled = other._thread_safe_enabled;
         other._top = ft_nullptr;
         other._size = 0;
         other._error_code = ER_SUCCESS;
+        other._mutex = ft_nullptr;
+        other._thread_safe_enabled = false;
     }
     return (*this);
 }
@@ -109,54 +134,223 @@ void ft_stack<ElementType>::set_error(int error) const
 }
 
 template <typename ElementType>
+int ft_stack<ElementType>::lock_internal(bool *lock_acquired) const
+{
+    if (lock_acquired)
+        *lock_acquired = false;
+    if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
+    {
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    this->_mutex->lock(THREAD_ID);
+    if (this->_mutex->get_error() != ER_SUCCESS)
+    {
+        ft_errno = this->_mutex->get_error();
+        return (-1);
+    }
+    if (lock_acquired)
+        *lock_acquired = true;
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+template <typename ElementType>
+void ft_stack<ElementType>::unlock_internal(bool lock_acquired) const
+{
+    int entry_errno;
+
+    if (!lock_acquired || this->_mutex == ft_nullptr)
+        return ;
+    entry_errno = ft_errno;
+    this->_mutex->unlock(THREAD_ID);
+    if (this->_mutex->get_error() != ER_SUCCESS)
+    {
+        ft_errno = this->_mutex->get_error();
+        return ;
+    }
+    ft_errno = entry_errno;
+    return ;
+}
+
+template <typename ElementType>
+void ft_stack<ElementType>::teardown_thread_safety()
+{
+    if (this->_mutex != ft_nullptr)
+    {
+        this->_mutex->~pt_mutex();
+        cma_free(this->_mutex);
+        this->_mutex = ft_nullptr;
+    }
+    this->_thread_safe_enabled = false;
+    return ;
+}
+
+template <typename ElementType>
+int ft_stack<ElementType>::enable_thread_safety()
+{
+    void     *memory;
+    pt_mutex *mutex_pointer;
+
+    if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
+    {
+        this->set_error(ER_SUCCESS);
+        return (0);
+    }
+    memory = cma_malloc(sizeof(pt_mutex));
+    if (memory == ft_nullptr)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return (-1);
+    }
+    mutex_pointer = new(memory) pt_mutex();
+    if (mutex_pointer->get_error() != ER_SUCCESS)
+    {
+        int mutex_error;
+
+        mutex_error = mutex_pointer->get_error();
+        mutex_pointer->~pt_mutex();
+        cma_free(memory);
+        this->set_error(mutex_error);
+        return (-1);
+    }
+    this->_mutex = mutex_pointer;
+    this->_thread_safe_enabled = true;
+    this->set_error(ER_SUCCESS);
+    return (0);
+}
+
+template <typename ElementType>
+void ft_stack<ElementType>::disable_thread_safety()
+{
+    this->teardown_thread_safety();
+    this->set_error(ER_SUCCESS);
+    return ;
+}
+
+template <typename ElementType>
+bool ft_stack<ElementType>::is_thread_safe() const
+{
+    bool enabled;
+
+    enabled = (this->_thread_safe_enabled && this->_mutex != ft_nullptr);
+    const_cast<ft_stack<ElementType> *>(this)->set_error(ER_SUCCESS);
+    return (enabled);
+}
+
+template <typename ElementType>
+int ft_stack<ElementType>::lock(bool *lock_acquired) const
+{
+    int result;
+
+    result = this->lock_internal(lock_acquired);
+    if (result != 0)
+        const_cast<ft_stack<ElementType> *>(this)->set_error(ft_errno);
+    else
+        const_cast<ft_stack<ElementType> *>(this)->set_error(ER_SUCCESS);
+    return (result);
+}
+
+template <typename ElementType>
+void ft_stack<ElementType>::unlock(bool lock_acquired) const
+{
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    this->unlock_internal(lock_acquired);
+    if (this->_mutex != ft_nullptr && this->_mutex->get_error() != ER_SUCCESS)
+        const_cast<ft_stack<ElementType> *>(this)->set_error(this->_mutex->get_error());
+    else
+    {
+        ft_errno = entry_errno;
+        const_cast<ft_stack<ElementType> *>(this)->set_error(ft_errno);
+    }
+    return ;
+}
+
+template <typename ElementType>
 void ft_stack<ElementType>::push(const ElementType& value)
 {
-    StackNode* new_node = static_cast<StackNode*>(cma_malloc(sizeof(StackNode)));
+    StackNode *new_node;
+    bool       lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return ;
+    }
+    new_node = static_cast<StackNode *>(cma_malloc(sizeof(StackNode)));
     if (new_node == ft_nullptr)
     {
         this->set_error(FT_ERR_NO_MEMORY);
+        this->unlock_internal(lock_acquired);
         return ;
     }
     construct_at(&new_node->_data, value);
     new_node->_next = this->_top;
     this->_top = new_node;
-    ++this->_size;
+    this->_size += 1;
     this->set_error(ER_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 template <typename ElementType>
 void ft_stack<ElementType>::push(ElementType&& value)
 {
-    StackNode* new_node = static_cast<StackNode*>(cma_malloc(sizeof(StackNode)));
+    StackNode *new_node;
+    bool       lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return ;
+    }
+    new_node = static_cast<StackNode *>(cma_malloc(sizeof(StackNode)));
     if (new_node == ft_nullptr)
     {
         this->set_error(FT_ERR_NO_MEMORY);
+        this->unlock_internal(lock_acquired);
         return ;
     }
     construct_at(&new_node->_data, std::move(value));
     new_node->_next = this->_top;
     this->_top = new_node;
-    ++this->_size;
+    this->_size += 1;
     this->set_error(ER_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 template <typename ElementType>
 ElementType ft_stack<ElementType>::pop()
 {
+    bool        lock_acquired;
+    StackNode  *node;
+    ElementType value;
+
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return (ElementType());
+    }
     if (this->_top == ft_nullptr)
     {
         this->set_error(FT_ERR_EMPTY);
+        this->unlock_internal(lock_acquired);
         return (ElementType());
     }
-    StackNode* node = this->_top;
+    node = this->_top;
     this->_top = node->_next;
-    ElementType value = std::move(node->_data);
+    value = std::move(node->_data);
     destroy_at(&node->_data);
     cma_free(node);
-    --this->_size;
+    this->_size -= 1;
     this->set_error(ER_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return (value);
 }
 
@@ -164,48 +358,86 @@ template <typename ElementType>
 ElementType& ft_stack<ElementType>::top()
 {
     static ElementType error_element = ElementType();
+    bool               lock_acquired;
+    ElementType       *value;
+
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return (error_element);
+    }
     if (this->_top == ft_nullptr)
     {
         this->set_error(FT_ERR_EMPTY);
+        this->unlock_internal(lock_acquired);
         return (error_element);
     }
-    ElementType& value = this->_top->_data;
+    value = &this->_top->_data;
     this->set_error(ER_SUCCESS);
-    return (value);
+    this->unlock_internal(lock_acquired);
+    return (*value);
 }
 
 template <typename ElementType>
 const ElementType& ft_stack<ElementType>::top() const
 {
     static ElementType error_element = ElementType();
-    if (this->_top == ft_nullptr)
+    bool               lock_acquired;
+    const ElementType *value;
+
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
     {
-        this->set_error(FT_ERR_EMPTY);
+        const_cast<ft_stack<ElementType> *>(this)->set_error(ft_errno);
         return (error_element);
     }
-    const ElementType& value = this->_top->_data;
-    this->set_error(ER_SUCCESS);
-    return (value);
+    if (this->_top == ft_nullptr)
+    {
+        const_cast<ft_stack<ElementType> *>(this)->set_error(FT_ERR_EMPTY);
+        this->unlock_internal(lock_acquired);
+        return (error_element);
+    }
+    value = &this->_top->_data;
+    const_cast<ft_stack<ElementType> *>(this)->set_error(ER_SUCCESS);
+    this->unlock_internal(lock_acquired);
+    return (*value);
 }
 
 template <typename ElementType>
 size_t ft_stack<ElementType>::size() const
 {
+    bool   lock_acquired;
     size_t current_size;
 
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
+    {
+        const_cast<ft_stack<ElementType> *>(this)->set_error(ft_errno);
+        return (0);
+    }
     current_size = this->_size;
     const_cast<ft_stack<ElementType> *>(this)->set_error(ER_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return (current_size);
 }
 
 template <typename ElementType>
 bool ft_stack<ElementType>::empty() const
 {
-    bool result;
+    bool lock_acquired;
+    bool is_empty;
 
-    result = (this->_size == 0);
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
+    {
+        const_cast<ft_stack<ElementType> *>(this)->set_error(ft_errno);
+        return (true);
+    }
+    is_empty = (this->_top == ft_nullptr);
     const_cast<ft_stack<ElementType> *>(this)->set_error(ER_SUCCESS);
-    return (result);
+    this->unlock_internal(lock_acquired);
+    return (is_empty);
 }
 
 template <typename ElementType>
@@ -223,15 +455,25 @@ const char* ft_stack<ElementType>::get_error_str() const
 template <typename ElementType>
 void ft_stack<ElementType>::clear()
 {
+    StackNode *node;
+    bool       lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return ;
+    }
     while (this->_top != ft_nullptr)
     {
-        StackNode* node = this->_top;
-        this->_top = this->_top->_next;
+        node = this->_top;
+        this->_top = node->_next;
         destroy_at(&node->_data);
         cma_free(node);
     }
     this->_size = 0;
     this->set_error(ER_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 

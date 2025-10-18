@@ -65,6 +65,25 @@ static ft_string format_double_value(double number)
     return (create_string_from_buffer(buffer));
 }
 
+static ft_string format_unsigned_long_long(unsigned long long number)
+{
+    char buffer[64];
+    int conversion_result;
+
+    conversion_result = std::snprintf(buffer, sizeof(buffer), "%llu", number);
+    if (conversion_result < 0)
+    {
+        ft_errno = FT_ERR_INTERNAL;
+        return (ft_string(FT_ERR_INTERNAL));
+    }
+    if (static_cast<size_t>(conversion_result) >= sizeof(buffer))
+    {
+        ft_errno = FT_ERR_INTERNAL;
+        return (ft_string(FT_ERR_INTERNAL));
+    }
+    return (create_string_from_buffer(buffer));
+}
+
 ft_string ft_to_string(long number)
 {
     ft_errno = ER_SUCCESS;
@@ -75,6 +94,12 @@ ft_string ft_to_string(unsigned long number)
 {
     ft_errno = ER_SUCCESS;
     return (format_unsigned_long(number));
+}
+
+ft_string ft_to_string(unsigned long long number)
+{
+    ft_errno = ER_SUCCESS;
+    return (format_unsigned_long_long(number));
 }
 
 ft_string ft_to_string(double number)

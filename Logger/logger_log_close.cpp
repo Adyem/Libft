@@ -5,6 +5,7 @@
 
 void ft_log_close()
 {
+    ft_log_enable_remote_health(false);
     size_t index;
     ft_vector<s_log_sink> sinks_snapshot;
     size_t sink_count;

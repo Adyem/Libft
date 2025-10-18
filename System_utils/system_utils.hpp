@@ -54,6 +54,8 @@ int     su_register_resource_tracer(t_su_resource_tracer tracer);
 int     su_unregister_resource_tracer(t_su_resource_tracer tracer);
 void    su_clear_resource_tracers(void);
 void    su_run_resource_tracers(const char *reason);
+void    su_internal_set_abort_reason(const char *reason);
+const char *su_internal_take_abort_reason(void);
 
 int     su_locale_compare(const char *left, const char *right, const char *locale_name, int *result);
 int     su_locale_casefold(const char *input, const char *locale_name, ft_string &output);
