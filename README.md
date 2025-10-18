@@ -1352,8 +1352,13 @@ void        ft_exit(const char *msg, int code);
 #### RNG
 Random helpers and containers in `RNG/`. `rng_secure_bytes` obtains
 cryptographically secure random data from the operating system,
+`rng_secure_bytes_with_fallback` exposes a clear path that retries with
+`std::random_device` if the system source becomes unavailable,
 `ft_random_uint32` wraps it to produce a single 32-bit value,
-and `ft_generate_uuid` formats secure bytes as a version 4 UUID string.
+`rng_secure_uint64`/`rng_secure_uint32` surface explicit fallbacks for callers
+that want integers, and `ft_generate_uuid` formats secure bytes as a version 4
+UUID string. Deterministic helpers (`rng_stream_seed*`) use SplitMix64 mixing to
+derive reproducible per-stream seeds from a base seed or user-provided string.
 
 ```
 int   ft_random_int(void);
@@ -1366,6 +1371,13 @@ int   ft_random_binomial(int trial_count, double success_probability);
 int   ft_random_geometric(double success_probability);
 uint32_t    ft_random_seed(const char *seed_str = ft_nullptr);
 int   rng_secure_bytes(unsigned char *buffer, size_t length);
+int   rng_secure_bytes_with_fallback(unsigned char *buffer, size_t length, int *fallback_used);
+int   rng_secure_uint64(uint64_t *value, int *fallback_used = ft_nullptr);
+int   rng_secure_uint32(uint32_t *value, int *fallback_used = ft_nullptr);
+int   rng_stream_seed(uint64_t base_seed, uint64_t stream_identifier, uint64_t *stream_seed);
+int   rng_stream_seed_sequence(uint64_t base_seed, uint64_t stream_identifier, uint32_t *buffer, size_t count);
+int   rng_stream_seed_from_string(const char *seed_string, uint64_t stream_identifier, uint64_t *stream_seed);
+int   rng_stream_seed_sequence_from_string(const char *seed_string, uint64_t stream_identifier, uint32_t *buffer, size_t count);
 uint32_t ft_random_uint32(void);
 void   ft_generate_uuid(char out[37]);
 ```
@@ -1374,13 +1386,23 @@ Example:
 
 ```
 unsigned char buffer[16];
-if (rng_secure_bytes(buffer, 16) == 0)
+int fallback_used = 0;
+if (rng_secure_bytes_with_fallback(buffer, 16, &fallback_used) == 0)
 {
-    /* use buffer */
+    /* use buffer; fallback_used reports whether std::random_device filled it */
 }
-uint32_t secure_value = ft_random_uint32();
+uint64_t secure_number = 0;
+if (rng_secure_uint64(&secure_number) == 0)
+{
+    /* secure_number now holds 64 random bits */
+}
 char uuid[37];
 ft_generate_uuid(uuid);
+uint64_t stream_seed = 0;
+if (rng_stream_seed_from_string("simulation", 4, &stream_seed) == 0)
+{
+    /* stream_seed deterministically identifies stream #4 */
+}
 int occurrences = ft_random_poisson(4.0);
 int successes = ft_random_binomial(10, 0.5);
 int attempts = ft_random_geometric(0.25);

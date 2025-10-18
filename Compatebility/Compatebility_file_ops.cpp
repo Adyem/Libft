@@ -5,6 +5,7 @@
 #if defined(_WIN32) || defined(_WIN64)
 # include <windows.h>
 # include <stdio.h>
+# include <errno.h>
 
 void cmp_set_force_cross_device_move(int force_cross_device_move);
 
@@ -158,6 +159,28 @@ int cmp_file_create_directory(const char *path, mode_t mode)
     return (-1);
 }
 
+int cmp_file_get_permissions(const char *path, mode_t *mode_out)
+{
+    struct _stat file_info;
+
+    if (path == ft_nullptr || mode_out == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (-1);
+    }
+    if (_stat(path, &file_info) == 0)
+    {
+        *mode_out = static_cast<mode_t>(file_info.st_mode);
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    if (errno != 0)
+        ft_errno = cmp_map_system_error_to_ft(errno);
+    else
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+    return (-1);
+}
+
 #else
 # include <filesystem>
 # include <cstdio>
@@ -299,6 +322,25 @@ int cmp_file_create_directory(const char *path, mode_t mode)
     }
     if (mkdir(path, mode) == 0)
     {
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    ft_errno = cmp_map_system_error_to_ft(errno);
+    return (-1);
+}
+
+int cmp_file_get_permissions(const char *path, mode_t *mode_out)
+{
+    struct stat file_info;
+
+    if (path == ft_nullptr || mode_out == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (-1);
+    }
+    if (stat(path, &file_info) == 0)
+    {
+        *mode_out = file_info.st_mode;
         ft_errno = ER_SUCCESS;
         return (0);
     }
