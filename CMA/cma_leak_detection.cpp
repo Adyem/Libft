@@ -275,7 +275,7 @@ ft_string cma_leak_detection_report(bool clear_after)
             return (report);
         }
     }
-    allocation_count_string = ft_to_string(static_cast<unsigned long>(g_cma_leak_records.size()));
+    allocation_count_string = ft_to_string(g_cma_leak_records.size());
     if (allocation_count_string.get_error() != ER_SUCCESS)
     {
         cma_leak_tracker_resume(was_enabled, error_state);
@@ -300,7 +300,7 @@ ft_string cma_leak_detection_report(bool clear_after)
         ft_errno = report.get_error();
         return (report);
     }
-    allocation_bytes_string = ft_to_string(static_cast<unsigned long>(g_cma_leak_outstanding_bytes));
+    allocation_bytes_string = ft_to_string(g_cma_leak_outstanding_bytes);
     if (allocation_bytes_string.get_error() != ER_SUCCESS)
     {
         cma_leak_tracker_resume(was_enabled, error_state);

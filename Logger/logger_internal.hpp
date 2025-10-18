@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include "../Template/vector.hpp"
 #include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "logger.hpp"
@@ -43,13 +44,70 @@ struct s_network_sink
 {
     int                         socket_fd;
     t_network_send_function     send_function;
+    ft_string                   host;
+    unsigned short              port;
+    bool                        use_tcp;
+
+    s_network_sink()
+        : socket_fd(-1), send_function(ft_nullptr), host(), port(0), use_tcp(false)
+    {
+        return ;
+    }
+};
+
+struct s_redaction_rule
+{
+    ft_string   pattern;
+    ft_string   replacement;
+
+    s_redaction_rule()
+        : pattern(), replacement()
+    {
+        return ;
+    }
+};
+
+struct s_log_context_entry
+{
+    ft_string   key;
+    ft_string   value;
+    bool        has_value;
+
+    s_log_context_entry()
+        : key(), value(), has_value(false)
+    {
+        return ;
+    }
+};
+
+struct s_log_context_view
+{
+    const char  *key;
+    const char  *value;
+    bool        has_value;
+
+    s_log_context_view()
+        : key(ft_nullptr), value(ft_nullptr), has_value(false)
+    {
+        return ;
+    }
 };
 
 extern ft_vector<s_log_sink> g_sinks;
 extern pthread_mutex_t g_sinks_mutex;
+extern ft_vector<s_redaction_rule> g_redaction_rules;
 
 int logger_lock_sinks();
 int logger_unlock_sinks();
+int logger_copy_redaction_rules(ft_vector<s_redaction_rule> &destination);
+int logger_apply_redactions(ft_string &text,
+        const ft_vector<s_redaction_rule> &rules);
+int logger_context_push(const s_log_field *fields, size_t field_count,
+        size_t *pushed_count);
+void logger_context_pop(size_t count);
+int logger_context_apply_plain(ft_string &text);
+int logger_context_snapshot(ft_vector<s_log_context_view> &snapshot);
+void logger_context_clear();
 
 void ft_log_rotate(s_file_sink *sink);
 int logger_prepare_rotation(s_file_sink *sink, bool *rotate_for_size, bool *rotate_for_age);

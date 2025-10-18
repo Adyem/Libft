@@ -56,6 +56,13 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
     char message_buffer[1024];
     pf_vsnprintf(message_buffer, sizeof(message_buffer), fmt, args);
 
+    ft_string message_text(message_buffer);
+    if (message_text.get_error() != ER_SUCCESS)
+    {
+        ft_errno = message_text.get_error();
+        return ;
+    }
+
     char time_buffer[32];
     t_time current_time;
     t_time_info time_info;
@@ -70,6 +77,7 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
     int length;
     char final_buffer[1200];
     ft_vector<s_log_sink> sinks_snapshot;
+    ft_vector<s_redaction_rule> redaction_snapshot;
     int final_error;
 
     if (logger_lock_sinks() != 0)
@@ -90,30 +98,6 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
     use_color = false;
     if (g_use_color && sink_count == 0 && isatty(1))
         use_color = true;
-    color_code = "";
-    if (use_color)
-    {
-        if (level == LOG_LEVEL_DEBUG)
-            color_code = "\x1b[36m";
-        else if (level == LOG_LEVEL_INFO)
-            color_code = "\x1b[32m";
-        else if (level == LOG_LEVEL_WARN)
-            color_code = "\x1b[33m";
-        else
-            color_code = "\x1b[31m";
-        length = pf_snprintf(final_buffer, sizeof(final_buffer), "%s[%s] [%s] %s\x1b[0m\n", color_code, time_buffer, ft_level_to_str(level), message_buffer);
-    }
-    else
-    length = pf_snprintf(final_buffer, sizeof(final_buffer), "[%s] [%s] %s\n", time_buffer, ft_level_to_str(level), message_buffer);
-    if (length <= 0)
-    {
-        if (logger_unlock_sinks() != 0)
-        {
-            return ;
-        }
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return ;
-    }
     if (sink_count != 0)
     {
         size_t index;
@@ -168,8 +152,48 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
             index++;
         }
     }
+    if (logger_copy_redaction_rules(redaction_snapshot) != 0)
+    {
+        final_error = ft_errno;
+        if (logger_unlock_sinks() != 0)
+        {
+            return ;
+        }
+        ft_errno = final_error;
+        return ;
+    }
     if (logger_unlock_sinks() != 0)
     {
+        return ;
+    }
+    if (logger_apply_redactions(message_text, redaction_snapshot) != 0)
+    {
+        return ;
+    }
+    if (logger_context_apply_plain(message_text) < 0)
+    {
+        return ;
+    }
+    color_code = "";
+    if (use_color)
+    {
+        if (level == LOG_LEVEL_DEBUG)
+            color_code = "\x1b[36m";
+        else if (level == LOG_LEVEL_INFO)
+            color_code = "\x1b[32m";
+        else if (level == LOG_LEVEL_WARN)
+            color_code = "\x1b[33m";
+        else
+            color_code = "\x1b[31m";
+        length = pf_snprintf(final_buffer, sizeof(final_buffer), "%s[%s] [%s] %s\x1b[0m\n", color_code, time_buffer, ft_level_to_str(level), message_text.c_str());
+    }
+    else
+    {
+        length = pf_snprintf(final_buffer, sizeof(final_buffer), "[%s] [%s] %s\n", time_buffer, ft_level_to_str(level), message_text.c_str());
+    }
+    if (length <= 0)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
     if (sink_count == 0)

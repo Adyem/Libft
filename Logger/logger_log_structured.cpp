@@ -144,11 +144,20 @@ static void logger_append_json_optional_string(ft_string &buffer,
 static void logger_append_field(ft_string &buffer, const s_log_field &field,
     bool &first_field, int &error_code)
 {
+    bool lock_acquired;
+
     if (error_code != ER_SUCCESS)
         return ;
+    lock_acquired = false;
+    if (log_field_lock(&field, &lock_acquired) != 0)
+    {
+        error_code = ft_errno;
+        return ;
+    }
     if (!field.key)
     {
         error_code = FT_ERR_INVALID_ARGUMENT;
+        log_field_unlock(&field, lock_acquired);
         return ;
     }
     if (!first_field)
@@ -156,10 +165,14 @@ static void logger_append_field(ft_string &buffer, const s_log_field &field,
     else
         first_field = false;
     if (error_code != ER_SUCCESS)
+    {
+        log_field_unlock(&field, lock_acquired);
         return ;
+    }
     logger_append_json_string(buffer, field.key, error_code);
     logger_append_literal(buffer, ":", error_code);
     logger_append_json_optional_string(buffer, field.value, error_code);
+    log_field_unlock(&field, lock_acquired);
     return ;
 }
 
@@ -183,6 +196,7 @@ void ft_log_structured(t_log_level level, const char *message,
     int error_code;
     size_t index;
     bool first_field;
+    ft_vector<s_log_context_view> context_snapshot;
 
     if (!message)
     {
@@ -204,6 +218,39 @@ void ft_log_structured(t_log_level level, const char *message,
     {
         logger_append_field(payload, fields[index], first_field, error_code);
         index += 1;
+    }
+    if (error_code == ER_SUCCESS)
+    {
+        if (logger_context_snapshot(context_snapshot) != 0)
+            error_code = ft_errno;
+    }
+    if (error_code == ER_SUCCESS)
+    {
+        size_t context_count;
+        size_t context_index;
+
+        context_count = context_snapshot.size();
+        if (context_snapshot.get_error() != ER_SUCCESS)
+            error_code = context_snapshot.get_error();
+        context_index = 0;
+        while (context_index < context_count && error_code == ER_SUCCESS)
+        {
+            const s_log_context_view &view = context_snapshot[context_index];
+            s_log_field context_field;
+
+            if (context_snapshot.get_error() != ER_SUCCESS)
+            {
+                error_code = context_snapshot.get_error();
+                break ;
+            }
+            context_field.key = view.key;
+            if (view.has_value)
+                context_field.value = view.value;
+            else
+                context_field.value = ft_nullptr;
+            logger_append_field(payload, context_field, first_field, error_code);
+            context_index += 1;
+        }
     }
     logger_append_literal(payload, "}}", error_code);
     if (error_code != ER_SUCCESS)

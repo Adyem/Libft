@@ -248,6 +248,46 @@ FT_TEST(test_cnfg_config_prepare_thread_safety_reinitializes_mutex, "cnfg_config
     return (1);
 }
 
+FT_TEST(test_cnfg_entry_prepare_thread_safety_initializes_mutex, "cnfg_entry_prepare_thread_safety allocates mutex protection")
+{
+    cnfg_entry entry;
+    bool lock_acquired;
+
+    entry.mutex = ft_nullptr;
+    entry.thread_safe_enabled = false;
+    entry.section = ft_nullptr;
+    entry.key = ft_nullptr;
+    entry.value = ft_nullptr;
+    FT_ASSERT_EQ(0, cnfg_entry_prepare_thread_safety(&entry));
+    FT_ASSERT(entry.mutex != ft_nullptr);
+    FT_ASSERT(entry.thread_safe_enabled == true);
+    lock_acquired = false;
+    FT_ASSERT_EQ(0, cnfg_entry_lock(&entry, &lock_acquired));
+    FT_ASSERT(lock_acquired == true);
+    cnfg_entry_unlock(&entry, lock_acquired);
+    cnfg_entry_teardown_thread_safety(&entry);
+    FT_ASSERT(entry.mutex == ft_nullptr);
+    FT_ASSERT(entry.thread_safe_enabled == false);
+    return (1);
+}
+
+FT_TEST(test_cnfg_entry_lock_handles_disabled_thread_safety, "cnfg_entry_lock succeeds when mutex setup is skipped")
+{
+    cnfg_entry entry;
+    bool lock_acquired;
+
+    entry.mutex = ft_nullptr;
+    entry.thread_safe_enabled = false;
+    entry.section = ft_nullptr;
+    entry.key = ft_nullptr;
+    entry.value = ft_nullptr;
+    lock_acquired = true;
+    FT_ASSERT_EQ(0, cnfg_entry_lock(&entry, &lock_acquired));
+    FT_ASSERT(lock_acquired == false);
+    cnfg_entry_unlock(&entry, lock_acquired);
+    return (1);
+}
+
 FT_TEST(test_config_write_json_round_trip, "config_write_file supports json round trips")
 {
     const char *filename = "config_round_trip.json";

@@ -8,6 +8,8 @@ class pt_mutex;
 
 struct cnfg_entry
 {
+    pt_mutex *mutex;
+    bool                 thread_safe_enabled;
     char    *section;
     char    *key;
     char    *value;
@@ -34,5 +36,10 @@ cnfg_config   *config_load_env();
 cnfg_config   *config_load_file(const char *filename);
 int         config_write_file(const cnfg_config *config, const char *filename);
 cnfg_config   *config_merge(const cnfg_config *base_config, const cnfg_config *override_config);
+
+int         cnfg_entry_prepare_thread_safety(cnfg_entry *entry);
+void        cnfg_entry_teardown_thread_safety(cnfg_entry *entry);
+int         cnfg_entry_lock(cnfg_entry *entry, bool *lock_acquired);
+void        cnfg_entry_unlock(cnfg_entry *entry, bool lock_acquired);
 
 #endif
