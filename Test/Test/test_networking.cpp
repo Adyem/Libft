@@ -423,7 +423,7 @@ FT_TEST(test_server_config_ipv4_any_address, "server accepts empty IPv4 address 
 
     configuration._type = SocketType::SERVER;
     configuration._address_family = AF_INET;
-    configuration._port = 54350;
+    configuration._port = 0;
     configuration._ip = "";
     server_socket = ft_socket(configuration);
     if (server_socket.get_error() != ER_SUCCESS)
@@ -444,7 +444,7 @@ FT_TEST(test_server_config_ipv6_any_address, "server accepts empty IPv6 address 
 
     configuration._type = SocketType::SERVER;
     configuration._address_family = AF_INET6;
-    configuration._port = 54351;
+    configuration._port = 0;
     configuration._ip = "";
     server_socket = ft_socket(configuration);
     if (server_socket.get_error() != ER_SUCCESS)

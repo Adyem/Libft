@@ -60,7 +60,7 @@ class cma_allocator_guard
         void log_inactive_guard(void *return_address) const;
         bool acquire_allocator_mutex();
         bool acquire_mutex(pthread_mutex_t *mutex_pointer);
-        void release_all_mutexes();
+        int release_all_mutexes();
         bool reacquire_mutexes(const cma_guard_vector<s_mutex_entry> &previous_mutexes);
         void track_mutex_acquisition(pthread_mutex_t *mutex_pointer, bool lock_acquired);
         pt_mutex_vector owned_mutex_pointers() const;
@@ -135,6 +135,8 @@ void    cma_metadata_make_inaccessible(void);
 Block    *cma_metadata_allocate_block(void) __attribute__ ((warn_unused_result));
 void    cma_metadata_release_block(Block *block);
 void    cma_metadata_reset(void);
+void    cma_leak_tracker_record_allocation(void *memory_pointer, ft_size_t size);
+void    cma_leak_tracker_record_free(void *memory_pointer);
 
 inline __attribute__((always_inline, hot)) ft_size_t align16(ft_size_t size)
 {

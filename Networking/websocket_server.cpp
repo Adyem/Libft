@@ -397,6 +397,53 @@ int ft_websocket_server::send_text(int client_fd, const ft_string &message)
     return (0);
 }
 
+int ft_websocket_server::get_port(unsigned short &port_value) const
+{
+    struct sockaddr_storage local_address;
+    socklen_t address_length;
+    int server_fd;
+
+    port_value = 0;
+    if (this->_server_socket == ft_nullptr)
+    {
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (1);
+    }
+    server_fd = this->_server_socket->get_fd();
+    if (server_fd < 0)
+    {
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (1);
+    }
+    address_length = sizeof(local_address);
+    if (getsockname(server_fd, reinterpret_cast<struct sockaddr*>(&local_address), &address_length) != 0)
+    {
+        this->set_error(ft_set_errno_from_system_error(errno));
+        return (1);
+    }
+    if (local_address.ss_family == AF_INET)
+    {
+        const struct sockaddr_in *ipv4_address;
+
+        ipv4_address = reinterpret_cast<const struct sockaddr_in*>(&local_address);
+        port_value = ntohs(ipv4_address->sin_port);
+    }
+    else if (local_address.ss_family == AF_INET6)
+    {
+        const struct sockaddr_in6 *ipv6_address;
+
+        ipv6_address = reinterpret_cast<const struct sockaddr_in6*>(&local_address);
+        port_value = ntohs(ipv6_address->sin6_port);
+    }
+    else
+    {
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (1);
+    }
+    this->set_error(ER_SUCCESS);
+    return (0);
+}
+
 int ft_websocket_server::get_error() const
 {
     return (this->_error_code);

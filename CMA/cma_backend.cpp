@@ -124,6 +124,7 @@ void *cma_backend_allocate(ft_size_t size)
     }
     ft_size_t allocation_size = cma_backend_query_size(memory_pointer);
     cma_backend_track_allocation(allocation_size);
+    cma_leak_tracker_record_allocation(memory_pointer, allocation_size);
     ft_errno = ER_SUCCESS;
     return (memory_pointer);
 }
@@ -140,6 +141,7 @@ void cma_backend_deallocate(void *memory_pointer)
         return ;
     }
     ft_size_t allocation_size = cma_backend_query_size(memory_pointer);
+    cma_leak_tracker_record_free(memory_pointer);
     cma_backend_track_free(allocation_size);
     g_cma_backend_hooks.deallocate(memory_pointer, g_cma_backend_hooks.user_data);
     ft_errno = ER_SUCCESS;
@@ -162,6 +164,7 @@ void *cma_backend_aligned_allocate(ft_size_t alignment, ft_size_t size)
         }
         ft_size_t allocation_size = cma_backend_query_size(memory_pointer);
         cma_backend_track_allocation(allocation_size);
+        cma_leak_tracker_record_allocation(memory_pointer, allocation_size);
         ft_errno = ER_SUCCESS;
         return (memory_pointer);
     }
@@ -219,6 +222,8 @@ void *cma_backend_reallocate(void *memory_pointer, ft_size_t size)
         }
         ft_size_t new_size_value = cma_backend_query_size(new_pointer);
         cma_backend_update_stats_for_resize(previous_size, new_size_value);
+        cma_leak_tracker_record_free(memory_pointer);
+        cma_leak_tracker_record_allocation(new_pointer, new_size_value);
         ft_errno = ER_SUCCESS;
         return (new_pointer);
     }
