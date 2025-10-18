@@ -33,6 +33,27 @@ int ft_log_set_rotation(size_t max_size, size_t retention_count, unsigned int ma
             ft_errno = final_error;
             return (-1);
         }
+        s_log_sink &stored_entry = g_sinks[index];
+        bool        sink_lock_acquired;
+
+        if (g_sinks.get_error() != ER_SUCCESS)
+        {
+            final_error = g_sinks.get_error();
+            if (logger_unlock_sinks() != 0)
+                return (-1);
+            ft_errno = final_error;
+            return (-1);
+        }
+        sink_lock_acquired = false;
+        if (log_sink_lock(&stored_entry, &sink_lock_acquired) != 0)
+        {
+            final_error = ft_errno;
+            if (logger_unlock_sinks() != 0)
+                return (-1);
+            ft_errno = final_error;
+            return (-1);
+        }
+        entry = stored_entry;
         if (entry.function == ft_file_sink)
         {
             s_file_sink *file_sink;
@@ -40,12 +61,29 @@ int ft_log_set_rotation(size_t max_size, size_t retention_count, unsigned int ma
             file_sink = static_cast<s_file_sink *>(entry.user_data);
             if (file_sink)
             {
+                bool file_sink_lock_acquired;
+
+                file_sink_lock_acquired = false;
+                if (file_sink_lock(file_sink, &file_sink_lock_acquired) != 0)
+                {
+                    final_error = ft_errno;
+                    if (sink_lock_acquired)
+                        log_sink_unlock(&stored_entry, sink_lock_acquired);
+                    if (logger_unlock_sinks() != 0)
+                        return (-1);
+                    ft_errno = final_error;
+                    return (-1);
+                }
                 file_sink->max_size = max_size;
                 file_sink->retention_count = retention_count;
                 file_sink->max_age_seconds = max_age_seconds;
+                if (file_sink_lock_acquired)
+                    file_sink_unlock(file_sink, file_sink_lock_acquired);
                 updated = true;
             }
         }
+        if (sink_lock_acquired)
+            log_sink_unlock(&stored_entry, sink_lock_acquired);
         index += 1;
     }
     if (logger_unlock_sinks() != 0)
@@ -95,6 +133,27 @@ int ft_log_get_rotation(size_t *max_size, size_t *retention_count, unsigned int 
             ft_errno = final_error;
             return (-1);
         }
+        s_log_sink &stored_entry = g_sinks[index];
+        bool        sink_lock_acquired;
+
+        if (g_sinks.get_error() != ER_SUCCESS)
+        {
+            final_error = g_sinks.get_error();
+            if (logger_unlock_sinks() != 0)
+                return (-1);
+            ft_errno = final_error;
+            return (-1);
+        }
+        sink_lock_acquired = false;
+        if (log_sink_lock(&stored_entry, &sink_lock_acquired) != 0)
+        {
+            final_error = ft_errno;
+            if (logger_unlock_sinks() != 0)
+                return (-1);
+            ft_errno = final_error;
+            return (-1);
+        }
+        entry = stored_entry;
         if (entry.function == ft_file_sink)
         {
             s_file_sink *file_sink;
@@ -102,15 +161,34 @@ int ft_log_get_rotation(size_t *max_size, size_t *retention_count, unsigned int 
             file_sink = static_cast<s_file_sink *>(entry.user_data);
             if (file_sink)
             {
+                bool file_sink_lock_acquired;
+
+                file_sink_lock_acquired = false;
+                if (file_sink_lock(file_sink, &file_sink_lock_acquired) != 0)
+                {
+                    final_error = ft_errno;
+                    if (sink_lock_acquired)
+                        log_sink_unlock(&stored_entry, sink_lock_acquired);
+                    if (logger_unlock_sinks() != 0)
+                        return (-1);
+                    ft_errno = final_error;
+                    return (-1);
+                }
                 *max_size = file_sink->max_size;
                 *retention_count = file_sink->retention_count;
                 *max_age_seconds = file_sink->max_age_seconds;
+                if (file_sink_lock_acquired)
+                    file_sink_unlock(file_sink, file_sink_lock_acquired);
+                if (sink_lock_acquired)
+                    log_sink_unlock(&stored_entry, sink_lock_acquired);
                 if (logger_unlock_sinks() != 0)
                     return (-1);
                 ft_errno = ER_SUCCESS;
                 return (0);
             }
         }
+        if (sink_lock_acquired)
+            log_sink_unlock(&stored_entry, sink_lock_acquired);
         index += 1;
     }
     if (logger_unlock_sinks() != 0)

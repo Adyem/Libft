@@ -239,6 +239,8 @@ static int logger_snapshot_network_sinks(ft_vector<s_network_sink_snapshot> &sna
     while (index < sink_count)
     {
         s_log_sink entry;
+        s_log_sink &stored_entry = g_sinks[index];
+        bool        log_sink_lock_acquired;
 
         entry = g_sinks[index];
         if (g_sinks.get_error() != ER_SUCCESS)
@@ -249,15 +251,42 @@ static int logger_snapshot_network_sinks(ft_vector<s_network_sink_snapshot> &sna
             ft_errno = final_error;
             return (-1);
         }
+        log_sink_lock_acquired = false;
+        if (log_sink_lock(&stored_entry, &log_sink_lock_acquired) != 0)
+        {
+            final_error = ft_errno;
+            if (logger_unlock_sinks() != 0)
+                return (-1);
+            ft_errno = final_error;
+            return (-1);
+        }
+        entry = stored_entry;
         if (entry.function == ft_network_sink)
         {
             s_network_sink *network_sink;
             s_network_sink_snapshot snapshot_entry;
+            bool                   network_lock_acquired;
 
             network_sink = static_cast<s_network_sink *>(entry.user_data);
             snapshot_entry.sink = network_sink;
             snapshot_entry.socket_fd = -1;
             snapshot_entry.send_function = ft_nullptr;
+            network_lock_acquired = false;
+            if (network_sink)
+            {
+                if (network_sink_lock(network_sink, &network_lock_acquired) != 0)
+                {
+                    final_error = ft_errno;
+                    if (network_lock_acquired)
+                        network_sink_unlock(network_sink, network_lock_acquired);
+                    if (log_sink_lock_acquired)
+                        log_sink_unlock(&stored_entry, log_sink_lock_acquired);
+                    if (logger_unlock_sinks() != 0)
+                        return (-1);
+                    ft_errno = final_error;
+                    return (-1);
+                }
+            }
             if (network_sink)
             {
                 snapshot_entry.socket_fd = network_sink->socket_fd;
@@ -266,6 +295,10 @@ static int logger_snapshot_network_sinks(ft_vector<s_network_sink_snapshot> &sna
                 if (snapshot_entry.host.get_error() != ER_SUCCESS)
                 {
                     final_error = snapshot_entry.host.get_error();
+                    if (network_lock_acquired)
+                        network_sink_unlock(network_sink, network_lock_acquired);
+                    if (log_sink_lock_acquired)
+                        log_sink_unlock(&stored_entry, log_sink_lock_acquired);
                     if (logger_unlock_sinks() != 0)
                         return (-1);
                     ft_errno = final_error;
@@ -274,16 +307,22 @@ static int logger_snapshot_network_sinks(ft_vector<s_network_sink_snapshot> &sna
                 snapshot_entry.port = network_sink->port;
                 snapshot_entry.use_tcp = network_sink->use_tcp;
             }
+            if (network_lock_acquired)
+                network_sink_unlock(network_sink, network_lock_acquired);
             snapshot.push_back(snapshot_entry);
             if (snapshot.get_error() != ER_SUCCESS)
             {
                 final_error = snapshot.get_error();
+                if (log_sink_lock_acquired)
+                    log_sink_unlock(&stored_entry, log_sink_lock_acquired);
                 if (logger_unlock_sinks() != 0)
                     return (-1);
                 ft_errno = final_error;
                 return (-1);
             }
         }
+        if (log_sink_lock_acquired)
+            log_sink_unlock(&stored_entry, log_sink_lock_acquired);
         index += 1;
     }
     if (logger_unlock_sinks() != 0)

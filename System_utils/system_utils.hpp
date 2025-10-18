@@ -15,6 +15,8 @@ typedef SSIZE_T ssize_t;
 #include "../CPP_class/class_string_class.hpp"
 #include "../Template/vector.hpp"
 
+class pt_mutex;
+
 typedef struct s_su_environment_snapshot
 {
     ft_vector<ft_string> entries;
@@ -62,7 +64,10 @@ int     su_locale_casefold(const char *input, const char *locale_name, ft_string
 
 typedef struct su_file
 {
-    int _descriptor;
+    pt_mutex    *mutex;
+    bool        thread_safe_enabled;
+    bool        closed;
+    int         _descriptor;
 } su_file;
 
 void    su_force_file_stream_allocation_failure(bool should_fail);
@@ -77,8 +82,19 @@ size_t  su_fwrite(const void *buffer, size_t size, size_t count, su_file *stream
 int     su_fseek(su_file *stream, long offset, int origin);
 long    su_ftell(su_file *stream);
 
+int     su_file_prepare_thread_safety(su_file *stream);
+void    su_file_teardown_thread_safety(su_file *stream);
+int     su_file_lock(su_file *stream, bool *lock_acquired);
+void    su_file_unlock(su_file *stream, bool lock_acquired);
+
 int     su_copy_file(const char *source_path, const char *destination_path);
 int     su_copy_directory_recursive(const char *source_path, const char *destination_path);
 int     su_inspect_permissions(const char *path, mode_t *permissions_out);
+
+typedef void (*t_su_service_signal_handler)(int signal_number, void *user_context);
+void    su_service_force_no_fork(bool enable);
+int     su_service_daemonize(const char *working_directory, const char *pid_file_path, bool redirect_standard_streams);
+int     su_service_install_signal_handlers(t_su_service_signal_handler handler, void *user_context);
+void    su_service_clear_signal_handlers(void);
 
 #endif
