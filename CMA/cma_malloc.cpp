@@ -48,7 +48,8 @@ void* cma_malloc(ft_size_t size)
 
     if (!allocator_guard.is_active())
         return (ft_nullptr);
-    ft_size_t aligned_size = align16(size);
+    ft_size_t instrumented_size = cma_debug_allocation_size(size);
+    ft_size_t aligned_size = align16(instrumented_size);
     Block *block = find_free_block(aligned_size);
     if (!block)
     {
@@ -80,8 +81,9 @@ void* cma_malloc(ft_size_t size)
     g_cma_current_bytes += block->size;
     if (g_cma_current_bytes > g_cma_peak_bytes)
         g_cma_peak_bytes = g_cma_current_bytes;
-    void *result = static_cast<void *>(block->payload);
-    cma_leak_tracker_record_allocation(result, block->size);
+    cma_debug_prepare_allocation(block, size);
+    void *result = static_cast<void *>(cma_block_user_pointer(block));
+    cma_leak_tracker_record_allocation(result, cma_block_user_size(block));
     allocator_guard.unlock();
     ft_errno = ER_SUCCESS;
     if (ft_log_get_alloc_logging())

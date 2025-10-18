@@ -11,7 +11,7 @@
 #include "../PThread/pthread.hpp"
 #include "../System_utils/system_utils.hpp"
 
-static int reallocate_block(void *ptr, ft_size_t new_size)
+static int reallocate_block(void *ptr, ft_size_t aligned_size, ft_size_t user_size)
 {
     if (!ptr)
         return (-1);
@@ -19,14 +19,15 @@ static int reallocate_block(void *ptr, ft_size_t new_size)
     if (!block)
         return (-1);
     cma_validate_block(block, "cma_realloc resize", ptr);
-    if (block->size >= new_size)
+    if (block->size >= aligned_size)
     {
-        split_block(block, new_size);
+        split_block(block, aligned_size);
         cma_validate_block(block, "cma_realloc split in place", ptr);
+        cma_debug_prepare_allocation(block, user_size);
         return (0);
     }
     if (block->next && cma_block_is_free(block->next) &&
-        (block->size + block->next->size) >= new_size)
+        (block->size + block->next->size) >= aligned_size)
     {
         cma_validate_block(block->next, "cma_realloc neighbor", ft_nullptr);
         block->size += block->next->size;
@@ -36,14 +37,15 @@ static int reallocate_block(void *ptr, ft_size_t new_size)
             cma_validate_block(block->next, "cma_realloc relink", ft_nullptr);
             block->next->prev = block;
         }
-        split_block(block, new_size);
+        split_block(block, aligned_size);
         cma_validate_block(block, "cma_realloc split after merge", ptr);
+        cma_debug_prepare_allocation(block, user_size);
         return (0);
     }
     return (-1);
 }
 
-static void *allocate_block_locked(ft_size_t aligned_size)
+static void *allocate_block_locked(ft_size_t aligned_size, ft_size_t user_size)
 {
     Block *block;
     Page *page;
@@ -75,8 +77,9 @@ static void *allocate_block_locked(ft_size_t aligned_size)
     ft_errno = ER_SUCCESS;
     void *result;
 
-    result = block->payload;
-    cma_leak_tracker_record_allocation(result, block->size);
+    cma_debug_prepare_allocation(block, user_size);
+    result = cma_block_user_pointer(block);
+    cma_leak_tracker_record_allocation(result, cma_block_user_size(block));
     return (result);
 }
 
@@ -92,9 +95,12 @@ static void release_block_locked(Block *block)
         su_sigabrt();
     }
     freed_size = block->size;
-    cma_leak_tracker_record_free(block->payload);
+    cma_debug_release_allocation(block, "cma_realloc release",
+        cma_block_user_pointer(block));
+    cma_leak_tracker_record_free(cma_block_user_pointer(block));
     cma_mark_block_free(block);
     block = merge_block(block);
+    cma_debug_initialize_block(block);
     page = find_page_of_block(block);
     free_page_if_empty(page);
     if (g_cma_current_bytes >= freed_size)
@@ -157,7 +163,17 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         ft_errno = ER_SUCCESS;
         return (ft_nullptr);
     }
-    ft_size_t aligned_size = align16(new_size);
+    ft_size_t instrumented_size = cma_debug_allocation_size(new_size);
+    if (instrumented_size < new_size)
+    {
+        int error_code;
+
+        error_code = ft_errno;
+        allocator_guard.unlock();
+        ft_errno = error_code;
+        return (ft_nullptr);
+    }
+    ft_size_t aligned_size = align16(instrumented_size);
     Block *block = cma_find_block_for_pointer(ptr);
     if (!block)
     {
@@ -171,7 +187,7 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
     }
     cma_validate_block(block, "cma_realloc header", ptr);
     ft_size_t previous_size = block->size;
-    int error = reallocate_block(ptr, aligned_size);
+    int error = reallocate_block(ptr, aligned_size, new_size);
     if (error == 0)
     {
         if (g_cma_current_bytes >= previous_size)
@@ -182,22 +198,24 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         if (g_cma_current_bytes > g_cma_peak_bytes)
             g_cma_peak_bytes = g_cma_current_bytes;
         cma_leak_tracker_record_free(ptr);
-        cma_leak_tracker_record_allocation(ptr, block->size);
+        cma_leak_tracker_record_allocation(ptr, cma_block_user_size(block));
         ft_errno = ER_SUCCESS;
         allocator_guard.unlock();
         ft_errno = ER_SUCCESS;
-        return (ptr);
+        return (cma_block_user_pointer(block));
     }
     Block *old_block;
     ft_size_t copy_size;
 
     old_block = block;
     cma_validate_block(old_block, "cma_realloc copy source", ptr);
-    if (old_block->size < aligned_size)
-        copy_size = old_block->size;
+    ft_size_t old_user_size;
+    old_user_size = cma_block_user_size(old_block);
+    if (old_user_size < new_size)
+        copy_size = old_user_size;
     else
-        copy_size = aligned_size;
-    void *new_ptr = allocate_block_locked(aligned_size);
+        copy_size = new_size;
+    void *new_ptr = allocate_block_locked(aligned_size, new_size);
     if (!new_ptr)
     {
         int error_code;
