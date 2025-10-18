@@ -294,6 +294,10 @@ void    cma_metadata_release_block(Block *block)
     block->prev = ft_nullptr;
     block->size = 0;
     block->payload = ft_nullptr;
+#if DEBUG
+    block->debug_base_pointer = ft_nullptr;
+    block->debug_user_size = 0;
+#endif
     g_cma_metadata_free_list = block;
     return ;
 }

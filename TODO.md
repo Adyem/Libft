@@ -37,7 +37,7 @@
 - [x] Surface allocator statistics (total allocated bytes, peak usage) through a public query API for diagnostics.
 - [x] Provide hooks for custom backends so projects can route allocations to region-specific arenas or embedded allocators.
 - [x] Audit the global new/delete overrides to ensure they respect alignment requirements on every supported platform.
-- [ ] Implement guard-page or canary instrumentation in debug mode to catch buffer overruns during development.
+- [x] Implement guard-page or canary instrumentation in debug mode to catch buffer overruns during development.
 - [x] Add leak detection and reporting helpers that can be toggled per-thread for targeted investigations.
 - [x] Supply RAII helpers and scope guards that automatically free CMA allocations to simplify error paths in callers.
 - [x] Make `cma_alloc_limit_guard` thread safe (relies on the shared deadlock resolution routine described below).

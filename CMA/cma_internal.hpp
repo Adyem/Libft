@@ -92,6 +92,10 @@ struct Block
     Block               *next;
     Block               *prev;
     unsigned char       *payload;
+#if DEBUG
+    unsigned char       *debug_base_pointer;
+    ft_size_t           debug_user_size;
+#endif
 } __attribute__ ((aligned(16)));
 
 struct Page
@@ -146,6 +150,73 @@ void    cma_metadata_release_block(Block *block);
 void    cma_metadata_reset(void);
 void    cma_leak_tracker_record_allocation(void *memory_pointer, ft_size_t size);
 void    cma_leak_tracker_record_free(void *memory_pointer);
+
+#if DEBUG
+ft_size_t    cma_debug_allocation_size(ft_size_t requested_size);
+void    cma_debug_initialize_block(Block *block);
+void    cma_debug_prepare_allocation(Block *block, ft_size_t user_size);
+void    cma_debug_release_allocation(Block *block, const char *context,
+            const void *user_pointer);
+unsigned char    *cma_debug_user_pointer(const Block *block);
+ft_size_t    cma_debug_user_size(const Block *block);
+ft_size_t    cma_debug_guard_size(void);
+#else
+inline ft_size_t cma_debug_allocation_size(ft_size_t requested_size)
+{
+    return (requested_size);
+}
+
+inline void cma_debug_initialize_block(Block *block)
+{
+    (void)block;
+    return ;
+}
+
+inline void cma_debug_prepare_allocation(Block *block, ft_size_t user_size)
+{
+    (void)block;
+    (void)user_size;
+    return ;
+}
+
+inline void cma_debug_release_allocation(Block *block, const char *context,
+        const void *user_pointer)
+{
+    (void)block;
+    (void)context;
+    (void)user_pointer;
+    return ;
+}
+
+inline unsigned char *cma_debug_user_pointer(const Block *block)
+{
+    if (!block)
+        return (ft_nullptr);
+    return (block->payload);
+}
+
+inline ft_size_t cma_debug_user_size(const Block *block)
+{
+    if (!block)
+        return (0);
+    return (block->size);
+}
+
+inline ft_size_t cma_debug_guard_size(void)
+{
+    return (0);
+}
+#endif
+
+inline unsigned char *cma_block_user_pointer(const Block *block)
+{
+    return (cma_debug_user_pointer(block));
+}
+
+inline ft_size_t cma_block_user_size(const Block *block)
+{
+    return (cma_debug_user_size(block));
+}
 
 int     cma_block_prepare_thread_safety(Block *block);
 void    cma_block_teardown_thread_safety(Block *block);
