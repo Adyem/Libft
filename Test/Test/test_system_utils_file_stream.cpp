@@ -5,6 +5,7 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <limits>
 
 extern void su_force_file_stream_allocation_failure(bool should_fail);
@@ -20,6 +21,37 @@ static void create_test_file_stream_file(void)
         std::fclose(file_handle);
     }
     return ;
+}
+
+FT_TEST(test_su_file_prepare_thread_safety_initializes_mutex,
+        "su_file_prepare_thread_safety installs mutex guard")
+{
+    su_file file_stream;
+
+    std::memset(&file_stream, 0, sizeof(su_file));
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(0, su_file_prepare_thread_safety(&file_stream));
+    FT_ASSERT(file_stream.mutex != ft_nullptr);
+    FT_ASSERT(file_stream.thread_safe_enabled);
+    su_file_teardown_thread_safety(&file_stream);
+    return (1);
+}
+
+FT_TEST(test_su_file_lock_unlock_acquires_mutex,
+        "su_file_lock acquires the prepared mutex")
+{
+    su_file file_stream;
+    bool    lock_acquired;
+
+    std::memset(&file_stream, 0, sizeof(su_file));
+    lock_acquired = false;
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(0, su_file_prepare_thread_safety(&file_stream));
+    FT_ASSERT_EQ(0, su_file_lock(&file_stream, &lock_acquired));
+    FT_ASSERT(lock_acquired);
+    su_file_unlock(&file_stream, lock_acquired);
+    su_file_teardown_thread_safety(&file_stream);
+    return (1);
 }
 
 FT_TEST(test_su_fopen_null_path_sets_ft_einval, "su_fopen rejects null path")
@@ -87,6 +119,7 @@ FT_TEST(test_su_fclose_invalid_descriptor_propagates_error, "su_fclose preserves
     file_stream = static_cast<su_file*>(std::malloc(sizeof(su_file)));
     if (file_stream == ft_nullptr)
         return (0);
+    std::memset(file_stream, 0, sizeof(su_file));
     file_stream->_descriptor = -1;
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(-1, su_fclose(file_stream));
@@ -102,6 +135,7 @@ FT_TEST(test_su_fread_null_buffer_sets_ft_einval, "su_fread rejects null buffer"
     file_stream = static_cast<su_file*>(std::malloc(sizeof(su_file)));
     if (file_stream == ft_nullptr)
         return (0);
+    std::memset(file_stream, 0, sizeof(su_file));
     file_stream->_descriptor = 0;
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(0, su_fread(ft_nullptr, 1, 1, file_stream));
@@ -128,6 +162,7 @@ FT_TEST(test_su_fread_zero_size_returns_zero, "su_fread handles zero-sized reque
     file_stream = static_cast<su_file*>(std::malloc(sizeof(su_file)));
     if (file_stream == ft_nullptr)
         return (0);
+    std::memset(file_stream, 0, sizeof(su_file));
     file_stream->_descriptor = -1;
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(0, su_fread(buffer, 0, 4, file_stream));
@@ -145,6 +180,7 @@ FT_TEST(test_su_fread_overflow_sets_ft_erange, "su_fread rejects overflowing siz
     file_stream = static_cast<su_file*>(std::malloc(sizeof(su_file)));
     if (file_stream == ft_nullptr)
         return (0);
+    std::memset(file_stream, 0, sizeof(su_file));
     file_stream->_descriptor = -1;
     maximum_size = std::numeric_limits<size_t>::max();
     ft_errno = ER_SUCCESS;
@@ -187,6 +223,7 @@ FT_TEST(test_su_fwrite_null_buffer_sets_ft_einval, "su_fwrite rejects null buffe
     file_stream = static_cast<su_file*>(std::malloc(sizeof(su_file)));
     if (file_stream == ft_nullptr)
         return (0);
+    std::memset(file_stream, 0, sizeof(su_file));
     file_stream->_descriptor = 0;
     ft_errno = ER_SUCCESS;
     FT_ASSERT_EQ(0, su_fwrite(ft_nullptr, 1, 1, file_stream));
@@ -213,6 +250,7 @@ FT_TEST(test_su_fwrite_zero_size_returns_zero, "su_fwrite handles zero-sized req
     file_stream = static_cast<su_file*>(std::malloc(sizeof(su_file)));
     if (file_stream == ft_nullptr)
         return (0);
+    std::memset(file_stream, 0, sizeof(su_file));
     file_stream->_descriptor = -1;
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(0, su_fwrite(buffer, 0, 4, file_stream));
@@ -230,6 +268,7 @@ FT_TEST(test_su_fwrite_overflow_sets_ft_erange, "su_fwrite rejects overflowing s
     file_stream = static_cast<su_file*>(std::malloc(sizeof(su_file)));
     if (file_stream == ft_nullptr)
         return (0);
+    std::memset(file_stream, 0, sizeof(su_file));
     file_stream->_descriptor = -1;
     maximum_size = std::numeric_limits<size_t>::max();
     ft_errno = ER_SUCCESS;

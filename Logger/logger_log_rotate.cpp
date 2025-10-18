@@ -166,7 +166,16 @@ static int logger_prepare_rotation_internal(s_file_sink *sink, bool *rotate_for_
 
 int logger_prepare_rotation(s_file_sink *sink, bool *rotate_for_size, bool *rotate_for_age)
 {
-    return (logger_prepare_rotation_internal(sink, rotate_for_size, rotate_for_age));
+    bool lock_acquired;
+    int  result;
+
+    lock_acquired = false;
+    if (file_sink_lock(sink, &lock_acquired) != 0)
+        return (-1);
+    result = logger_prepare_rotation_internal(sink, rotate_for_size, rotate_for_age);
+    if (lock_acquired)
+        file_sink_unlock(sink, lock_acquired);
+    return (result);
 }
 
 void logger_execute_rotation(s_file_sink *sink)
@@ -177,12 +186,20 @@ void logger_execute_rotation(s_file_sink *sink)
     int saved_errno;
     int reopen_flags;
     size_t retention_count;
+    bool lock_acquired;
+    bool should_unlock;
 
     if (!sink)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
+    lock_acquired = false;
+    should_unlock = false;
+    if (file_sink_lock(sink, &lock_acquired) != 0)
+        return ;
+    if (lock_acquired)
+        should_unlock = true;
     retention_count = sink->retention_count;
     reopen_flags = O_CREAT | O_WRONLY | O_APPEND;
     if (retention_count > 0)
@@ -191,24 +208,24 @@ void logger_execute_rotation(s_file_sink *sink)
         if (rotation_base.get_error() != ER_SUCCESS)
         {
             ft_errno = rotation_base.get_error();
-            return ;
+            goto cleanup;
         }
         if (logger_remove_oldest_rotation(rotation_base, retention_count) != 0)
-            return ;
+            goto cleanup;
         if (logger_shift_rotation_chain(rotation_base, retention_count) != 0)
-            return ;
+            goto cleanup;
         rotated_path = sink->path + ".1";
         if (rotated_path.get_error() != ER_SUCCESS)
         {
             ft_errno = rotated_path.get_error();
-            return ;
+            goto cleanup;
         }
         if (rename(sink->path.c_str(), rotated_path.c_str()) != 0)
         {
             saved_errno = errno;
             ft_errno_reference() = ft_map_system_error(saved_errno);
             errno = saved_errno;
-            return ;
+            goto cleanup;
         }
     }
     else
@@ -222,7 +239,7 @@ void logger_execute_rotation(s_file_sink *sink)
         saved_errno = errno;
         ft_errno_reference() = ft_map_system_error(saved_errno);
         errno = saved_errno;
-        return ;
+        goto cleanup;
     }
     sink->fd = -1;
     sink->fd = open(sink->path.c_str(), reopen_flags, 0644);
@@ -231,9 +248,13 @@ void logger_execute_rotation(s_file_sink *sink)
         saved_errno = errno;
         ft_errno_reference() = ft_map_system_error(saved_errno);
         errno = saved_errno;
-        return ;
+        goto cleanup;
     }
     ft_errno = ER_SUCCESS;
+
+cleanup:
+    if (should_unlock)
+        file_sink_unlock(sink, lock_acquired);
     return ;
 }
 

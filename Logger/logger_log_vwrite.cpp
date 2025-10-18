@@ -230,37 +230,59 @@ void ft_log_vwrite(t_log_level level, const char *fmt, va_list args)
             ft_errno = sinks_snapshot.get_error();
             return ;
         }
-        bool rotate_for_size_pre;
-        bool rotate_for_age_pre;
-        s_file_sink *file_sink;
+        bool sink_lock_acquired;
+        int  sink_error;
 
-        rotate_for_size_pre = false;
-        rotate_for_age_pre = false;
-        file_sink = ft_nullptr;
-        if (entry.function == ft_file_sink)
+        sink_lock_acquired = false;
+        sink_error = ER_SUCCESS;
+        if (log_sink_lock(&entry, &sink_lock_acquired) != 0)
         {
-            file_sink = static_cast<s_file_sink *>(entry.user_data);
-            if (logger_prepare_rotation(file_sink, &rotate_for_size_pre, &rotate_for_age_pre) != 0)
-                return ;
+            sink_error = ft_errno;
         }
-        entry.function(final_buffer, entry.user_data);
-        if (ft_errno != ER_SUCCESS)
-            return ;
-        if (entry.function == ft_file_sink)
+        else
         {
-            bool rotate_for_size_post;
-            bool rotate_for_age_post;
+            bool        rotate_for_size_pre;
+            bool        rotate_for_age_pre;
+            s_file_sink *file_sink;
 
-            rotate_for_size_post = false;
-            rotate_for_age_post = false;
-            if (logger_prepare_rotation(file_sink, &rotate_for_size_post, &rotate_for_age_post) != 0)
-                return ;
-            if (rotate_for_size_pre || rotate_for_age_pre || rotate_for_size_post || rotate_for_age_post)
+            rotate_for_size_pre = false;
+            rotate_for_age_pre = false;
+            file_sink = ft_nullptr;
+            if (entry.function == ft_file_sink)
             {
-                logger_execute_rotation(file_sink);
-                if (ft_errno != ER_SUCCESS)
-                    return ;
+                file_sink = static_cast<s_file_sink *>(entry.user_data);
+                if (logger_prepare_rotation(file_sink, &rotate_for_size_pre, &rotate_for_age_pre) != 0)
+                    sink_error = ft_errno;
             }
+            if (sink_error == ER_SUCCESS)
+            {
+                entry.function(final_buffer, entry.user_data);
+                if (ft_errno != ER_SUCCESS)
+                    sink_error = ft_errno;
+            }
+            if (sink_error == ER_SUCCESS && entry.function == ft_file_sink)
+            {
+                bool rotate_for_size_post;
+                bool rotate_for_age_post;
+
+                rotate_for_size_post = false;
+                rotate_for_age_post = false;
+                if (logger_prepare_rotation(file_sink, &rotate_for_size_post, &rotate_for_age_post) != 0)
+                    sink_error = ft_errno;
+                else if (rotate_for_size_pre || rotate_for_age_pre || rotate_for_size_post || rotate_for_age_post)
+                {
+                    logger_execute_rotation(file_sink);
+                    if (ft_errno != ER_SUCCESS)
+                        sink_error = ft_errno;
+                }
+            }
+        }
+        if (sink_lock_acquired)
+            log_sink_unlock(&entry, sink_lock_acquired);
+        if (sink_error != ER_SUCCESS)
+        {
+            ft_errno = sink_error;
+            return ;
         }
         index++;
     }

@@ -13,8 +13,11 @@ int ft_log_add_sink(t_log_sink sink, void *user_data)
     s_log_sink entry;
     int final_error;
 
+    if (log_sink_prepare_thread_safety(&entry) != 0)
+        return (-1);
     if (logger_lock_sinks() != 0)
     {
+        log_sink_teardown_thread_safety(&entry);
         return (-1);
     }
     entry.function = sink;
@@ -23,6 +26,7 @@ int ft_log_add_sink(t_log_sink sink, void *user_data)
     if (g_sinks.get_error() != ER_SUCCESS)
     {
         final_error = g_sinks.get_error();
+        log_sink_teardown_thread_safety(&entry);
         if (logger_unlock_sinks() != 0)
         {
             return (-1);

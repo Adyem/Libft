@@ -21,12 +21,22 @@ typedef ssize_t (*t_network_send_function)(int socket_fd, const void *buffer, si
 
 struct s_log_sink
 {
-    t_log_sink function;
-    void      *user_data;
+    pt_mutex   *mutex;
+    bool        thread_safe_enabled;
+    t_log_sink  function;
+    void       *user_data;
+
+    s_log_sink()
+        : mutex(ft_nullptr), thread_safe_enabled(false), function(ft_nullptr), user_data(ft_nullptr)
+    {
+        return ;
+    }
 };
 
 struct s_file_sink
 {
+    pt_mutex   *mutex;
+    bool        thread_safe_enabled;
     int       fd;
     ft_string path;
     size_t    max_size;
@@ -34,7 +44,8 @@ struct s_file_sink
     unsigned int max_age_seconds;
 
     s_file_sink()
-        : fd(-1), path(), max_size(0), retention_count(1), max_age_seconds(0)
+        : mutex(ft_nullptr), thread_safe_enabled(false), fd(-1), path(),
+          max_size(0), retention_count(1), max_age_seconds(0)
     {
         return ;
     }
@@ -42,6 +53,8 @@ struct s_file_sink
 
 struct s_network_sink
 {
+    pt_mutex                   *mutex;
+    bool                        thread_safe_enabled;
     int                         socket_fd;
     t_network_send_function     send_function;
     ft_string                   host;
@@ -49,7 +62,8 @@ struct s_network_sink
     bool                        use_tcp;
 
     s_network_sink()
-        : socket_fd(-1), send_function(ft_nullptr), host(), port(0), use_tcp(false)
+        : mutex(ft_nullptr), thread_safe_enabled(false), socket_fd(-1),
+          send_function(ft_nullptr), host(), port(0), use_tcp(false)
     {
         return ;
     }
@@ -116,5 +130,20 @@ void ft_file_sink(const char *message, void *user_data);
 void ft_network_sink(const char *message, void *user_data);
 const char *ft_level_to_str(t_log_level level);
 void ft_log_vwrite(t_log_level level, const char *fmt, va_list args);
+
+int log_sink_prepare_thread_safety(s_log_sink *sink);
+void log_sink_teardown_thread_safety(s_log_sink *sink);
+int log_sink_lock(const s_log_sink *sink, bool *lock_acquired);
+void log_sink_unlock(const s_log_sink *sink, bool lock_acquired);
+
+int file_sink_prepare_thread_safety(s_file_sink *sink);
+void file_sink_teardown_thread_safety(s_file_sink *sink);
+int file_sink_lock(const s_file_sink *sink, bool *lock_acquired);
+void file_sink_unlock(const s_file_sink *sink, bool lock_acquired);
+
+int network_sink_prepare_thread_safety(s_network_sink *sink);
+void network_sink_teardown_thread_safety(s_network_sink *sink);
+int network_sink_lock(const s_network_sink *sink, bool *lock_acquired);
+void network_sink_unlock(const s_network_sink *sink, bool lock_acquired);
 
 #endif
