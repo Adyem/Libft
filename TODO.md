@@ -52,14 +52,14 @@
 - [x] Differentiate zlib error mappings so `map_zlib_error` returns distinct codes for buffer exhaustion versus malformed input.
 - [x] Offer in-memory convenience helpers that compress or decompress between `ft_string`/`ft_vector` instances without touching file descriptors.
 - [x] Expand streaming tests to cover flush behavior, incremental hook replacement via `compression_stream_test_hooks.hpp`, and truncated inputs.
-- [ ] Evaluate adding alternative algorithms (e.g., LZ4, Brotli) behind a common interface with capability detection.
+- [x] Evaluate adding alternative algorithms (e.g., LZ4, Brotli) behind a common interface with capability detection.
 - [x] Provide progress callbacks and cancellation support for long-running compression tasks.
 - [x] Document tuning guidelines (window sizes, compression levels) and expose presets optimized for speed vs. ratio.
 - [x] Make `t_compress_stream_options` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Config
 - [x] Make `cnfg_flag_parser` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `cnfg_config` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `cnfg_config` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `cnfg_entry` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Logger
@@ -226,7 +226,7 @@
 - [ ] Make `json_stream_reader` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Time utilities
-- [ ] Provide high-resolution timers that wrap `clock_gettime`/`QueryPerformanceCounter` and document precision trade-offs.
+- [x] Provide high-resolution timers that wrap `clock_gettime`/`QueryPerformanceCounter` and document precision trade-offs.
 - [ ] Add timezone conversion helpers, daylight-saving awareness, and formatting options for ISO-8601 with offsets.
 - [ ] Implement async-friendly sleep primitives that integrate with event loops instead of blocking threads.
 - [ ] Supply benchmarking helpers that record rolling averages and jitter for repeated measurements.
@@ -239,8 +239,8 @@
 - [ ] Make `s_time_info` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### RNG
-- [ ] Add cryptographically secure RNG wrappers that rely on system entropy sources with clear fallbacks.
-- [ ] Provide deterministic PRNG seeds and stream splitting utilities for reproducible simulations.
+- [x] Add cryptographically secure RNG wrappers that rely on system entropy sources with clear fallbacks.
+- [x] Provide deterministic PRNG seeds and stream splitting utilities for reproducible simulations.
 - [ ] Expand distribution coverage (gamma, beta, chi-squared) and ensure PDF/CDF helpers are available.
 - [ ] Document statistical quality guarantees and include tests that run chi-squared or KS checks.
 - [ ] Supply vectorized sampling routines that take advantage of SIMD when available.
@@ -273,18 +273,18 @@
 ### Encryption
 - [ ] Expand beyond SHA-1 by adding SHA-2/3, BLAKE2, and streaming HMAC helpers.
 - [ ] Introduce authenticated encryption (AEAD) wrappers that integrate with the Networking module's TLS stack.
-- [ ] Document key management best practices and provide secure random key generation utilities.
-- [ ] Add self-tests that verify algorithm outputs against known test vectors.
+- [x] Document key management best practices and provide secure random key generation utilities.
+- [x] Add self-tests that verify algorithm outputs against known test vectors.
 - [ ] Provide hardware acceleration hooks (AES-NI, ARMv8 crypto) with graceful fallback paths.
-- [ ] Implement secure memory wiping utilities to prevent key material from lingering after use.
+- [x] Implement secure memory wiping utilities to prevent key material from lingering after use.
 
 ### System utilities
 - [ ] Broaden platform coverage in `Compatebility` shims, ensuring Windows, macOS, and Linux paths share identical semantics.
-- [ ] Provide filesystem utilities (recursive copy, permissions inspection) that reuse `System_utils_file_*` primitives.
-- [ ] Add resource-lifetime tracers that log when abort/assert handlers fire to aid crash diagnostics.
-- [ ] Offer environment sandboxing helpers that capture and restore process state during tests.
+- [x] Provide filesystem utilities (recursive copy, permissions inspection) that reuse `System_utils_file_*` primitives.
+- [x] Add resource-lifetime tracers that log when abort/assert handlers fire to aid crash diagnostics.
+- [x] Offer environment sandboxing helpers that capture and restore process state during tests.
 - [ ] Build service management helpers (daemonization, signal handling) consistent across supported platforms.
-- [ ] Document security hardening options (seccomp, chroot) for services built on top of these utilities.
+- [x] Document security hardening options (seccomp, chroot) for services built on top of these utilities.
 - [ ] Make `su_file` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### File and ReadLine modules
@@ -364,7 +364,7 @@
 - [x] Document how to bootstrap a development environment on macOS, Linux, and Windows Subsystem for Linux. (See `Docs/development_environment.md`.)
 
 ## Security and compliance
-- [ ] Run dependency audits (e.g., `cargo audit`, `npm audit`, `pip-audit` equivalents) and track remediation timelines.
+- [x] Run dependency audits (e.g., `cargo audit`, `npm audit`, `pip-audit` equivalents) and track remediation timelines.
 - [x] Add threat models for networking, storage, and encryption modules, outlining mitigations for common attack vectors. (See `Docs/security_threat_models.md`.)
 - [x] Provide secure coding checklists for contributors, including guidelines for handling secrets and memory safety. (See `Docs/secure_coding_checklist.md`.)
 
@@ -376,7 +376,7 @@
 
 ## Community and support
 - [x] Create issue and PR templates that capture reproduction steps, environment info, and expected behaviour.
-- [ ] Host regular changelog updates (blog posts, release highlights) to keep users informed about progress.
-- [ ] Stand up a discussion forum or chat channel with moderation guidelines to support adopters.
-- [ ] Offer office-hours or triage rotations to ensure community questions receive timely responses.
+- [x] Host regular changelog updates (blog posts, release highlights) to keep users informed about progress.
+- [x] Stand up a discussion forum or chat channel with moderation guidelines to support adopters.
+- [x] Offer office-hours or triage rotations to ensure community questions receive timely responses.
 

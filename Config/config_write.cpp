@@ -5,6 +5,26 @@
 #include "../Printf/printf.hpp"
 #include "../JSon/json.hpp"
 #include <cstddef>
+#include "../PThread/unique_lock.hpp"
+#include "../PThread/mutex.hpp"
+
+static int cnfg_config_lock_if_enabled(cnfg_config *config, ft_unique_lock<pt_mutex> &mutex_guard)
+{
+    if (!config || !config->thread_safe_enabled || !config->mutex)
+        return (ER_SUCCESS);
+    mutex_guard = ft_unique_lock<pt_mutex>(*config->mutex);
+    if (mutex_guard.get_error() != ER_SUCCESS)
+        return (mutex_guard.get_error());
+    return (ER_SUCCESS);
+}
+
+static void cnfg_config_unlock_guard(ft_unique_lock<pt_mutex> &mutex_guard)
+{
+    if (!mutex_guard.owns_lock())
+        return ;
+    mutex_guard.unlock();
+    return ;
+}
 
 static int config_handle_write_failure(FILE *file)
 {
@@ -152,20 +172,39 @@ static int config_write_json(const cnfg_config *config, const char *filename)
 int config_write_file(const cnfg_config *config, const char *filename)
 {
     const char *extension;
+    ft_unique_lock<pt_mutex> mutex_guard;
+    int lock_error;
 
     if (!config || !filename)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
+    lock_error = cnfg_config_lock_if_enabled(const_cast<cnfg_config*>(config), mutex_guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        ft_errno = lock_error;
+        return (-1);
+    }
     if (config->entry_count && !config->entries)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
+        cnfg_config_unlock_guard(mutex_guard);
         return (-1);
     }
     extension = ft_strrchr(filename, '.');
     if (extension && ft_strcmp(extension, ".json") == 0)
-        return (config_write_json(config, filename));
-    return (config_write_ini(config, filename));
+    {
+        int write_result;
+
+        write_result = config_write_json(config, filename);
+        cnfg_config_unlock_guard(mutex_guard);
+        return (write_result);
+    }
+    int write_result;
+
+    write_result = config_write_ini(config, filename);
+    cnfg_config_unlock_guard(mutex_guard);
+    return (write_result);
 }
 

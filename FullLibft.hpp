@@ -20,6 +20,8 @@
 #include "Config/config.hpp"
 #include "Config/flag_parser.hpp"
 #include "Encryption/basic_encryption.hpp"
+#include "Encryption/encryption_key_management.hpp"
+#include "Encryption/encryption_secure_wipe.hpp"
 #include "Errno/errno.hpp"
 #include "File/open_dir.hpp"
 #include "Game/game_achievement.hpp"

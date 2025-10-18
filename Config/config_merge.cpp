@@ -4,6 +4,26 @@
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
 #include <cstddef>
+#include "../PThread/unique_lock.hpp"
+#include "../PThread/mutex.hpp"
+
+static int cnfg_config_lock_if_enabled(cnfg_config *config, ft_unique_lock<pt_mutex> &mutex_guard)
+{
+    if (!config || !config->thread_safe_enabled || !config->mutex)
+        return (ER_SUCCESS);
+    mutex_guard = ft_unique_lock<pt_mutex>(*config->mutex);
+    if (mutex_guard.get_error() != ER_SUCCESS)
+        return (mutex_guard.get_error());
+    return (ER_SUCCESS);
+}
+
+static void cnfg_config_unlock_guard(ft_unique_lock<pt_mutex> &mutex_guard)
+{
+    if (!mutex_guard.owns_lock())
+        return ;
+    mutex_guard.unlock();
+    return ;
+}
 
 static void config_free_entry_contents(cnfg_entry *entry)
 {
@@ -140,26 +160,58 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
 {
     cnfg_config *result;
     size_t index;
+    ft_unique_lock<pt_mutex> base_guard;
+    ft_unique_lock<pt_mutex> override_guard;
+    ft_unique_lock<pt_mutex> result_guard;
+    int lock_error;
 
     if (!base_config && !override_config)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
-    result = static_cast<cnfg_config*>(cma_calloc(1, sizeof(cnfg_config)));
+    result = cnfg_config_create();
     if (!result)
-    {
-        ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
-    }
-    if (config_copy_entries(result, base_config) != 0)
+    lock_error = cnfg_config_lock_if_enabled(result, result_guard);
+    if (lock_error != ER_SUCCESS)
     {
+        cnfg_config_unlock_guard(result_guard);
         cnfg_free(result);
+        ft_errno = lock_error;
         return (ft_nullptr);
     }
     if (override_config && override_config->entry_count && !override_config->entries)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
+        cnfg_free(result);
+        return (ft_nullptr);
+    }
+    if (base_config)
+    {
+        lock_error = cnfg_config_lock_if_enabled(const_cast<cnfg_config*>(base_config), base_guard);
+        if (lock_error != ER_SUCCESS)
+        {
+            cnfg_config_unlock_guard(result_guard);
+            cnfg_free(result);
+            ft_errno = lock_error;
+            return (ft_nullptr);
+        }
+    }
+    if (override_config)
+    {
+        lock_error = cnfg_config_lock_if_enabled(const_cast<cnfg_config*>(override_config), override_guard);
+        if (lock_error != ER_SUCCESS)
+        {
+            cnfg_config_unlock_guard(result_guard);
+            cnfg_free(result);
+            ft_errno = lock_error;
+            return (ft_nullptr);
+        }
+    }
+    if (config_copy_entries(result, base_config) != 0)
+    {
+        cnfg_config_unlock_guard(result_guard);
         cnfg_free(result);
         return (ft_nullptr);
     }
@@ -179,6 +231,7 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
 
             if (config_duplicate_entry(override_entry, &replacement) != 0)
             {
+                cnfg_config_unlock_guard(result_guard);
                 cnfg_free(result);
                 return (ft_nullptr);
             }
@@ -189,6 +242,7 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
         {
             if (config_append_entry(result, override_entry) != 0)
             {
+                cnfg_config_unlock_guard(result_guard);
                 cnfg_free(result);
                 return (ft_nullptr);
             }

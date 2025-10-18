@@ -5,11 +5,13 @@
 #include "../PThread/mutex.hpp"
 #include <cerrno>
 #include <ctime>
+#include <climits>
 #if !defined(_WIN32) && !defined(_WIN64)
 # include <unistd.h>
 # include <sys/time.h>
 #else
 # include <sysinfoapi.h>
+# include <profileapi.h>
 #endif
 
 #if !defined(_WIN32) && !defined(_WIN64) && !defined(_POSIX_VERSION)
@@ -110,5 +112,121 @@ int cmp_time_get_time_of_day(struct timeval *time_value)
     }
     ft_errno = ft_map_system_error(errno);
     return (-1);
+#endif
+}
+
+static int  cmp_timespec_to_nanoseconds(const struct timespec *time_value, long long *nanoseconds_out)
+{
+    __int128 seconds_component;
+    __int128 total_nanoseconds;
+
+    if (!time_value || !nanoseconds_out)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (-1);
+    }
+    seconds_component = static_cast<__int128>(time_value->tv_sec);
+    seconds_component *= static_cast<__int128>(1000000000LL);
+    total_nanoseconds = seconds_component;
+    total_nanoseconds += static_cast<__int128>(time_value->tv_nsec);
+    if (total_nanoseconds > static_cast<__int128>(LLONG_MAX))
+    {
+        ft_errno = FT_ERR_OUT_OF_RANGE;
+        return (-1);
+    }
+    if (total_nanoseconds < static_cast<__int128>(LLONG_MIN))
+    {
+        ft_errno = FT_ERR_OUT_OF_RANGE;
+        return (-1);
+    }
+    *nanoseconds_out = static_cast<long long>(total_nanoseconds);
+    return (0);
+}
+
+int cmp_high_resolution_time(long long *nanoseconds_out)
+{
+    if (!nanoseconds_out)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (-1);
+    }
+#if defined(_WIN32) || defined(_WIN64)
+    LARGE_INTEGER performance_counter;
+    LARGE_INTEGER performance_frequency;
+    long double scaled_value;
+
+    if (!QueryPerformanceCounter(&performance_counter))
+    {
+        ft_errno = ft_map_system_error(GetLastError());
+        return (-1);
+    }
+    if (!QueryPerformanceFrequency(&performance_frequency))
+    {
+        ft_errno = ft_map_system_error(GetLastError());
+        return (-1);
+    }
+    if (performance_frequency.QuadPart <= 0)
+    {
+        ft_errno = FT_ERR_INVALID_OPERATION;
+        return (-1);
+    }
+    scaled_value = static_cast<long double>(performance_counter.QuadPart);
+    scaled_value *= 1000000000.0L;
+    scaled_value /= static_cast<long double>(performance_frequency.QuadPart);
+    if (scaled_value >= static_cast<long double>(LLONG_MAX))
+    {
+        ft_errno = FT_ERR_OUT_OF_RANGE;
+        return (-1);
+    }
+    if (scaled_value <= static_cast<long double>(LLONG_MIN))
+    {
+        ft_errno = FT_ERR_OUT_OF_RANGE;
+        return (-1);
+    }
+    *nanoseconds_out = static_cast<long long>(scaled_value);
+    ft_errno = ER_SUCCESS;
+    return (0);
+#else
+    struct timespec time_value;
+    int call_result;
+
+# if defined(CLOCK_MONOTONIC_RAW)
+    clockid_t clock_identifier;
+    int attempt_index;
+
+    attempt_index = 0;
+    call_result = -1;
+    while (attempt_index < 2)
+    {
+        if (attempt_index == 0)
+            clock_identifier = CLOCK_MONOTONIC_RAW;
+        else
+            clock_identifier = CLOCK_MONOTONIC;
+        call_result = clock_gettime(clock_identifier, &time_value);
+        if (call_result == 0)
+            break;
+        if (errno != EINVAL)
+        {
+            ft_errno = ft_map_system_error(errno);
+            return (-1);
+        }
+        attempt_index += 1;
+    }
+    if (call_result != 0)
+    {
+        ft_errno = FT_ERR_INVALID_OPERATION;
+        return (-1);
+    }
+# else
+    if (clock_gettime(CLOCK_MONOTONIC, &time_value) != 0)
+    {
+        ft_errno = ft_map_system_error(errno);
+        return (-1);
+    }
+# endif
+    if (cmp_timespec_to_nanoseconds(&time_value, nanoseconds_out) != 0)
+        return (-1);
+    ft_errno = ER_SUCCESS;
+    return (0);
 #endif
 }

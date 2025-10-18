@@ -9,6 +9,38 @@ unavailable, it falls back to `ft_random_seed` to preserve variability.
 Mapping bytes to alphabetic characters maintains compatibility with the
 existing interface while ensuring keys differ across runs.
 
+## Secure memory wiping
+
+`encryption_secure_wipe` clears arbitrary buffers without being optimized out
+by the compiler. The helper funnels operating-system specific primitives
+through `cmp_secure_memzero`, falling back to volatile writes when no dedicated
+API is available. `encryption_secure_wipe_string` erases null-terminated
+strings, including the terminator byte, so secrets retrieved with
+`be_getEncryptionKey` can be scrubbed once they are no longer required.
+
+## Key management helpers
+
+`encryption_fill_secure_buffer` writes cryptographically secure random bytes
+into an existing buffer and propagates `ft_errno` on failure. The helper is
+used by `encryption_generate_symmetric_key` and
+`encryption_generate_initialization_vector`, which allocate CMA-backed buffers
+that are automatically filled with secure randomness before being returned to
+the caller. Always wipe the buffers with `encryption_secure_wipe` and release
+them with `cma_free` once the key material is no longer required.
+
+### Best practices
+
+- Generate a unique symmetric key and initialization vector for every
+  encryption session instead of reusing values across messages.
+- Store keys encrypted at rest and restrict access controls so only processes
+  that require the material can read it.
+- Rotate keys on a schedule and immediately after detecting suspicious
+  activity, revoking old credentials as soon as possible.
+- Prefer secure key exchanges (such as an authenticated Diffie-Hellman
+  handshake) over embedding long-lived keys in configuration files.
+- Always zero buffers with `encryption_secure_wipe` before freeing them or
+  returning them to object pools.
+
 ## SHA-256
 
 `sha256_hash` computes the SHA-256 digest of arbitrary data. The function

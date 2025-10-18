@@ -14,6 +14,8 @@ SRCS := System_utils_assert.cpp \
         System_utils_file_open.cpp \
         System_utils_file_io.cpp \
         System_utils_file_stream.cpp \
+        System_utils_file_utils.cpp \
+        System_utils_resource_tracer.cpp \
         System_utils_home.cpp \
         System_utils_locale.cpp \
         test_runner.cpp

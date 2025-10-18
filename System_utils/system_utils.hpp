@@ -12,11 +12,22 @@ typedef SSIZE_T ssize_t;
 # include <unistd.h>
 #endif
 
-class ft_string;
+#include "../CPP_class/class_string_class.hpp"
+#include "../Template/vector.hpp"
+
+typedef struct s_su_environment_snapshot
+{
+    ft_vector<ft_string> entries;
+}   t_su_environment_snapshot;
 
 char    *su_getenv(const char *name);
 int     su_setenv(const char *name, const char *value, int overwrite);
 int     su_putenv(char *string);
+int     su_environment_snapshot_capture(t_su_environment_snapshot *snapshot);
+int     su_environment_snapshot_restore(const t_su_environment_snapshot *snapshot);
+void    su_environment_snapshot_dispose(t_su_environment_snapshot *snapshot);
+int     su_environment_sandbox_begin(t_su_environment_snapshot *snapshot);
+int     su_environment_sandbox_end(t_su_environment_snapshot *snapshot);
 char    *su_get_home_directory(void);
 int     su_open(const char *path_name);
 int     su_open(const char *path_name, int flags);
@@ -38,6 +49,12 @@ void    su_sigsegv(void);
 void    su_sigterm(void);
 void    su_assert(bool condition, const char *message);
 
+typedef void (*t_su_resource_tracer)(const char *reason);
+int     su_register_resource_tracer(t_su_resource_tracer tracer);
+int     su_unregister_resource_tracer(t_su_resource_tracer tracer);
+void    su_clear_resource_tracers(void);
+void    su_run_resource_tracers(const char *reason);
+
 int     su_locale_compare(const char *left, const char *right, const char *locale_name, int *result);
 int     su_locale_casefold(const char *input, const char *locale_name, ft_string &output);
 
@@ -57,5 +74,9 @@ size_t  su_fread(void *buffer, size_t size, size_t count, su_file *stream);
 size_t  su_fwrite(const void *buffer, size_t size, size_t count, su_file *stream);
 int     su_fseek(su_file *stream, long offset, int origin);
 long    su_ftell(su_file *stream);
+
+int     su_copy_file(const char *source_path, const char *destination_path);
+int     su_copy_directory_recursive(const char *source_path, const char *destination_path);
+int     su_inspect_permissions(const char *path, mode_t *permissions_out);
 
 #endif
