@@ -33,7 +33,7 @@ int cma_checked_free(void* ptr)
         return (-1);
     }
     cma_validate_block(found, "cma_checked_free", ptr);
-    if (static_cast<void *>(found->payload) != ptr)
+    if (static_cast<void *>(cma_block_user_pointer(found)) != ptr)
     {
         int error_code;
 
@@ -44,8 +44,10 @@ int cma_checked_free(void* ptr)
         return (-1);
     }
     ft_size_t freed_size = found->size;
+    cma_debug_release_allocation(found, "cma_checked_free", ptr);
     cma_mark_block_free(found);
     found = merge_block(found);
+    cma_debug_initialize_block(found);
     Page *pg = find_page_of_block(found);
     free_page_if_empty(pg);
     if (g_cma_current_bytes >= freed_size)

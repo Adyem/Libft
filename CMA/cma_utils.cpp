@@ -183,6 +183,7 @@ Block* split_block(Block* block, ft_size_t size)
     }
     new_block->size = remaining_size;
     new_block->payload = block->payload + size;
+    cma_debug_initialize_block(new_block);
     cma_mark_block_free(new_block);
     new_block->next = block->next;
     new_block->prev = block;
@@ -197,6 +198,7 @@ Block* split_block(Block* block, ft_size_t size)
         cma_mark_block_free(block);
     else
         cma_mark_block_allocated(block);
+    cma_debug_initialize_block(block);
     return (block);
 }
 
@@ -259,6 +261,7 @@ Page *create_page(ft_size_t size)
     }
     page->blocks->size = page_size;
     page->blocks->payload = static_cast<unsigned char *>(ptr);
+    cma_debug_initialize_block(page->blocks);
     cma_mark_block_free(page->blocks);
     page->blocks->next = ft_nullptr;
     page->blocks->prev = ft_nullptr;
@@ -314,7 +317,7 @@ Block    *cma_find_block_for_pointer(const void *memory_pointer)
         current_block = current_page->blocks;
         while (current_block)
         {
-            if (current_block->payload == memory_pointer)
+            if (cma_block_user_pointer(current_block) == memory_pointer)
                 return (current_block);
             current_block = current_block->next;
         }
