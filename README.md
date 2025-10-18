@@ -1182,6 +1182,11 @@ logger used internally by logging helpers. The pointer is reset to
 custom memory allocator can be toggled with `set_alloc_logging` and
 `get_alloc_logging`.
 
+Additional guidance for the `_alloc_logging` and `_api_logging` toggles is
+available in [`Docs/logger_logging_flags.md`](Docs/logger_logging_flags.md),
+which explains the debug output each switch enables and when to enable them
+during investigations.
+
 ### System Utils
 
 `System_utils/system_utils.hpp` provides a simple assertion helper that logs failures using the
@@ -1844,6 +1849,11 @@ Helper failures now short-circuit the input loop so `rl_readline` immediately
 cleans up its buffer, restores terminal state, and returns `ft_nullptr`. The
 regression exercise in `Test/Test/test_readline.cpp` simulates a backspace
 error to ensure no code touches the released buffer after `rl_error` runs.
+
+Refer to [`Docs/readline_terminal_capabilities.md`](Docs/readline_terminal_capabilities.md)
+for details on how the module detects terminal capabilities, the error codes
+returned by the Compatebility shims, and the fallbacks that keep ReadLine
+operational in minimal environments.
 
 #### API
 HTTP client helpers in `API/api.hpp` and asynchronous wrappers. URL parsing

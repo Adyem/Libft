@@ -50,6 +50,7 @@ void cma_free(void* ptr)
         su_sigabrt();
     }
     freed_size = block->size;
+    cma_leak_tracker_record_free(ptr);
     cma_mark_block_free(block);
     block = merge_block(block);
     Page *page = find_page_of_block(block);

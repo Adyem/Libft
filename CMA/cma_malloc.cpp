@@ -81,6 +81,7 @@ void* cma_malloc(ft_size_t size)
     if (g_cma_current_bytes > g_cma_peak_bytes)
         g_cma_peak_bytes = g_cma_current_bytes;
     void *result = static_cast<void *>(block->payload);
+    cma_leak_tracker_record_allocation(result, block->size);
     allocator_guard.unlock();
     ft_errno = ER_SUCCESS;
     if (ft_log_get_alloc_logging())

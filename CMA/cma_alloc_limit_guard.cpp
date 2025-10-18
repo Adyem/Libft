@@ -6,17 +6,31 @@ cma_alloc_limit_guard::cma_alloc_limit_guard(ft_size_t new_limit)
 {
     int entry_errno;
     int set_limit_error;
+    cma_allocator_guard allocator_guard;
 
     entry_errno = ft_errno;
-    this->_previous_limit = g_cma_alloc_limit;
-    cma_set_alloc_limit(new_limit);
-    set_limit_error = ft_errno;
-    if (set_limit_error != ER_SUCCESS)
+    if (!allocator_guard.is_active())
     {
-        this->_active = false;
-        this->set_error(set_limit_error);
+        this->_previous_limit = g_cma_alloc_limit;
+        cma_set_alloc_limit(new_limit);
+        set_limit_error = ft_errno;
+        if (set_limit_error != ER_SUCCESS)
+        {
+            this->_active = false;
+            this->set_error(set_limit_error);
+            return ;
+        }
+        this->_active = true;
+        this->set_error(ER_SUCCESS);
+        ft_errno = entry_errno;
         return ;
     }
+    this->_previous_limit = g_cma_alloc_limit;
+    ft_errno = entry_errno;
+    g_cma_alloc_limit = new_limit;
+    set_limit_error = ft_errno;
+    allocator_guard.unlock();
+    ft_errno = set_limit_error;
     this->_active = true;
     this->set_error(ER_SUCCESS);
     ft_errno = entry_errno;
@@ -29,17 +43,32 @@ cma_alloc_limit_guard::~cma_alloc_limit_guard()
     int restore_error;
 
     entry_errno = ft_errno;
-    if (this->_active)
+    if (!this->_active)
     {
-        cma_set_alloc_limit(this->_previous_limit);
-        restore_error = ft_errno;
-        this->_active = false;
-        if (restore_error != ER_SUCCESS)
+        this->set_error(ER_SUCCESS);
+        ft_errno = entry_errno;
+        return ;
+    }
+    {
+        cma_allocator_guard allocator_guard;
+
+        if (!allocator_guard.is_active())
         {
+            cma_set_alloc_limit(this->_previous_limit);
+            restore_error = ft_errno;
+            this->_active = false;
             this->set_error(restore_error);
+            if (restore_error == ER_SUCCESS)
+                ft_errno = entry_errno;
             return ;
         }
+        ft_errno = entry_errno;
+        g_cma_alloc_limit = this->_previous_limit;
+        restore_error = ft_errno;
+        allocator_guard.unlock();
+        ft_errno = restore_error;
     }
+    this->_active = false;
     this->set_error(ER_SUCCESS);
     ft_errno = entry_errno;
     return ;
@@ -103,11 +132,24 @@ void cma_alloc_limit_guard::reset(ft_size_t new_limit)
 {
     int entry_errno;
     int operation_error;
+    cma_allocator_guard allocator_guard;
 
     entry_errno = ft_errno;
-    if (this->_active)
+    if (!allocator_guard.is_active())
     {
-        cma_set_alloc_limit(this->_previous_limit);
+        if (this->_active)
+        {
+            cma_set_alloc_limit(this->_previous_limit);
+            operation_error = ft_errno;
+            if (operation_error != ER_SUCCESS)
+            {
+                this->_active = false;
+                this->set_error(operation_error);
+                return ;
+            }
+        }
+        this->_previous_limit = g_cma_alloc_limit;
+        cma_set_alloc_limit(new_limit);
         operation_error = ft_errno;
         if (operation_error != ER_SUCCESS)
         {
@@ -115,16 +157,21 @@ void cma_alloc_limit_guard::reset(ft_size_t new_limit)
             this->set_error(operation_error);
             return ;
         }
-    }
-    this->_previous_limit = g_cma_alloc_limit;
-    cma_set_alloc_limit(new_limit);
-    operation_error = ft_errno;
-    if (operation_error != ER_SUCCESS)
-    {
-        this->_active = false;
-        this->set_error(operation_error);
+        this->_active = true;
+        this->set_error(ER_SUCCESS);
+        ft_errno = entry_errno;
         return ;
     }
+    if (this->_active)
+    {
+        ft_errno = entry_errno;
+        g_cma_alloc_limit = this->_previous_limit;
+    }
+    this->_previous_limit = g_cma_alloc_limit;
+    g_cma_alloc_limit = new_limit;
+    operation_error = ft_errno;
+    allocator_guard.unlock();
+    ft_errno = operation_error;
     this->_active = true;
     this->set_error(ER_SUCCESS);
     ft_errno = entry_errno;

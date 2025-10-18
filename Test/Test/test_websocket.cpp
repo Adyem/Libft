@@ -128,8 +128,11 @@ FT_TEST(test_websocket_handshake_and_echo, "websocket server echoes message")
     ft_websocket_client client;
     ft_string reply;
     ft_string received;
+    unsigned short server_port;
 
-    if (server.start("127.0.0.1", 54350) != 0)
+    if (server.start("127.0.0.1", 0) != 0)
+        return (0);
+    if (server.get_port(server_port) != 0)
         return (0);
     context.server = &server;
     context.result = -1;
@@ -137,7 +140,7 @@ FT_TEST(test_websocket_handshake_and_echo, "websocket server echoes message")
     server_thread = ft_thread(websocket_server_worker, &context);
     if (server_thread.get_error() != ER_SUCCESS)
         return (0);
-    if (client.connect("127.0.0.1", 54350, "/") != 0)
+    if (client.connect("127.0.0.1", server_port, "/") != 0)
     {
         server_thread.join();
         return (0);

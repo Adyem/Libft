@@ -26,6 +26,7 @@ SRCS := cma_alloc_limit_guard.cpp \
         cma_utils.cpp \
         cma_global_overloads.cpp \
         cma_set_alloc_limit.cpp \
+        cma_leak_detection.cpp \
         cma_set_thread_safety.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))

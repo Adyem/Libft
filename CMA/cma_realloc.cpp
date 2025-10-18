@@ -76,6 +76,7 @@ static void *allocate_block_locked(ft_size_t aligned_size)
     void *result;
 
     result = block->payload;
+    cma_leak_tracker_record_allocation(result, block->size);
     return (result);
 }
 
@@ -91,6 +92,7 @@ static void release_block_locked(Block *block)
         su_sigabrt();
     }
     freed_size = block->size;
+    cma_leak_tracker_record_free(block->payload);
     cma_mark_block_free(block);
     block = merge_block(block);
     page = find_page_of_block(block);
@@ -179,6 +181,8 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         g_cma_current_bytes += block->size;
         if (g_cma_current_bytes > g_cma_peak_bytes)
             g_cma_peak_bytes = g_cma_current_bytes;
+        cma_leak_tracker_record_free(ptr);
+        cma_leak_tracker_record_allocation(ptr, block->size);
         ft_errno = ER_SUCCESS;
         allocator_guard.unlock();
         ft_errno = ER_SUCCESS;
