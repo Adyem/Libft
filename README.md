@@ -612,6 +612,10 @@ operator int() const;
 The `printf` helper forwards to the Printf module's `pf_printf_fd_v` to write formatted output directly to the file descriptor.
 All descriptor operations delegate to `System_utils`'s `su_open`, `su_read`, `su_write`, and `su_close` wrappers so the class uses the same cross-platform behaviour as the rest of the library while surfacing failures through `_error_code`.
 
+`ft_file` assumes exclusive ownership of the descriptor it wraps. Constructing an instance from an existing `int` transfers responsibility for closing that descriptor to the wrapper, so callers must not invoke `close`, `su_close`, or similar helpers on the raw handle once it has been handed to `ft_file`. When replacing an open descriptor through `open`, the existing handle remains active until the new open succeeds; failures leave the prior handle untouched so there is no window where both descriptors are invalid simultaneously. Ownership moves with the move constructor and move assignment operator, which reset the source instance to `-1` so only the destination closes the descriptor during teardown.
+
+Use `close()` before passing the descriptor to other code that expects to assume ownership. The implicit `operator int()` exposes the underlying handle for integration with APIs that require a raw descriptor, but it does not transfer ownership; the wrapper will still close the descriptor in its destructor unless `close()` was called. When bridging to code paths that duplicate descriptors (for example with `dup` or `su_dup`), take the duplicate before `close()` so the wrapper can clean up its copy without affecting the external user.
+
 #### `ft_istream`
 ```
 ft_istream() noexcept;

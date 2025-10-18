@@ -43,8 +43,8 @@
 - [x] Make `cma_alloc_limit_guard` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `cma_allocation_guard` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `cma_allocator_guard` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `Block` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `Page` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `Block` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `Page` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Implement per-class lock tracking for the CMA guards by wiring them into the PThread lock tracking routine.
 
 ### Compression
@@ -60,20 +60,20 @@
 ### Config
 - [x] Make `cnfg_flag_parser` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `cnfg_config` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `cnfg_entry` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `cnfg_entry` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Logger
 - [x] Provide structured logging helpers (JSON key/value or printf-style macros) so log consumers avoid manual string assembly.
 - [x] Add backpressure metrics and drop counters for the asynchronous logger to expose when the worker thread cannot keep up.
 - [x] Implement log rotation policies based on age and size, including retention limits and unit tests that verify rollover correctness.
-- [ ] Expose sink health probes that periodically ping remote targets configured via `ft_log_set_remote_sink` and surface connection errors early.
+- [x] Expose sink health probes that periodically ping remote targets configured via `ft_log_set_remote_sink` and surface connection errors early.
 - [x] Document how `_alloc_logging` and `_api_logging` flags influence emitted messages to prevent confusion when toggling modes.
-- [ ] Add redaction helpers for sensitive fields and ensure they integrate with formatting utilities.
-- [ ] Support structured context propagation (per-thread request IDs, correlation tokens) through scoped guards.
+- [x] Add redaction helpers for sensitive fields and ensure they integrate with formatting utilities.
+- [x] Support structured context propagation (per-thread request IDs, correlation tokens) through scoped guards.
 - [x] Restore the `logger async logging` regression after fixing the heap corruption triggered by asynchronous sink teardown.
 - [ ] Make `ft_logger` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `s_log_field` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `s_log_async_metrics` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `s_log_field` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `s_log_async_metrics` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `s_log_sink` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `s_file_sink` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `s_network_sink` thread safe (relies on the shared deadlock resolution routine described below).
@@ -151,7 +151,7 @@
 - [ ] Write exhaustive tests for allocator-aware paths, ensuring `_error_code` mirrors allocation failures.
 - [ ] Introduce serialization helpers that interoperate with JSON/YAML encoders for easy persistence of container contents.
 - [ ] Add concept-constrained overloads in C++20 builds to improve diagnostic quality when templates are misused.
-- [ ] Make `ft_stack` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_stack` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_unordered_map` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_unordered_map::iterator` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_unordered_map::const_iterator` thread safe (relies on the shared deadlock resolution routine described below).
@@ -191,7 +191,7 @@
 - [ ] Add move-aware and noexcept constructors/destructors to complex classes like `ft_big_number` and `DataBuffer` to improve performance guarantees.
 - [ ] Ensure all classes expose serialization helpers compatible with the Storage and Networking modules.
 - [ ] Provide unit tests that exercise error propagation on `_error_code` members across copy/move operations.
-- [ ] Document ownership semantics for wrappers like `ft_file` to avoid double-close mistakes.
+- [x] Document ownership semantics for wrappers like `ft_file` to avoid double-close mistakes.
 - [ ] Audit exception safety for each class and document the strong/weak guarantees they provide.
 - [ ] Supply sample adapters showing how to embed these classes into user-defined types with RAII expectations.
 - [ ] Make `ft_big_number` thread safe (relies on the shared deadlock resolution routine described below).

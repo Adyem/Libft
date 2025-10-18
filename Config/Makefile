@@ -5,7 +5,8 @@ SRCS :=         config_parse.cpp \
                 config_flags.cpp \
                 config_flag_parser.cpp \
                 config_write.cpp \
-                config_merge.cpp
+                config_merge.cpp \
+                config_entry_thread_safety.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))

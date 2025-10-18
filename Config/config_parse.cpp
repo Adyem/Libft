@@ -142,6 +142,7 @@ void cnfg_free(cnfg_config *config)
         cma_free(config->entries[entry_index].section);
         cma_free(config->entries[entry_index].key);
         cma_free(config->entries[entry_index].value);
+        cnfg_entry_teardown_thread_safety(&config->entries[entry_index]);
         ++entry_index;
     }
     cma_free(config->entries);
@@ -258,31 +259,12 @@ cnfg_config *cnfg_parse(const char *filename)
                 }
             }
         }
-        cnfg_entry entry;
-        if (current_section)
-            entry.section = cma_strdup(current_section);
-        else
-            entry.section = ft_nullptr;
-        entry.key = key;
-        entry.value = value;
-        if (current_section && !entry.section)
-        {
-            ft_errno = FT_ERR_NO_MEMORY;
-            cma_free(key);
-            cma_free(entry.value);
-            cnfg_free(config);
-            if (current_section)
-                cma_free(current_section);
-            ft_fclose(file);
-            return (ft_nullptr);
-        }
         cnfg_entry *new_entries = static_cast<cnfg_entry*>(cma_realloc(config->entries, sizeof(cnfg_entry) * (config->entry_count + 1)));
         if (!new_entries)
         {
             ft_errno = FT_ERR_NO_MEMORY;
-            cma_free(entry.section);
-            cma_free(entry.key);
-            cma_free(entry.value);
+            cma_free(key);
+            cma_free(value);
             cnfg_free(config);
             if (current_section)
                 cma_free(current_section);
@@ -290,7 +272,44 @@ cnfg_config *cnfg_parse(const char *filename)
             return (ft_nullptr);
         }
         config->entries = new_entries;
-        config->entries[config->entry_count] = entry;
+        cnfg_entry *new_entry = &config->entries[config->entry_count];
+        new_entry->mutex = ft_nullptr;
+        new_entry->thread_safe_enabled = false;
+        if (current_section)
+        {
+            new_entry->section = cma_strdup(current_section);
+            if (!new_entry->section)
+            {
+                ft_errno = FT_ERR_NO_MEMORY;
+                cma_free(key);
+                cma_free(value);
+                new_entry->key = ft_nullptr;
+                new_entry->value = ft_nullptr;
+                cnfg_free(config);
+                if (current_section)
+                    cma_free(current_section);
+                ft_fclose(file);
+                return (ft_nullptr);
+            }
+        }
+        else
+            new_entry->section = ft_nullptr;
+        new_entry->key = key;
+        new_entry->value = value;
+        if (cnfg_entry_prepare_thread_safety(new_entry) != 0)
+        {
+            cma_free(new_entry->section);
+            cma_free(new_entry->key);
+            cma_free(new_entry->value);
+            new_entry->section = ft_nullptr;
+            new_entry->key = ft_nullptr;
+            new_entry->value = ft_nullptr;
+            cnfg_free(config);
+            if (current_section)
+                cma_free(current_section);
+            ft_fclose(file);
+            return (ft_nullptr);
+        }
         config->entry_count++;
     }
     if (current_section)
@@ -355,6 +374,8 @@ static cnfg_config *cnfg_parse_json(const char *filename)
         while (item_pointer)
         {
             cnfg_entry *entry = &config->entries[index];
+            entry->mutex = ft_nullptr;
+            entry->thread_safe_enabled = false;
             if (group_pointer->name)
             {
                 entry->section = cma_strdup(group_pointer->name);
@@ -390,6 +411,13 @@ static cnfg_config *cnfg_parse_json(const char *filename)
                     json_free_groups(groups);
                     return (ft_nullptr);
                 }
+            }
+            if (cnfg_entry_prepare_thread_safety(entry) != 0)
+            {
+                config->entry_count = index + 1;
+                cnfg_free(config);
+                json_free_groups(groups);
+                return (ft_nullptr);
             }
             ++index;
             item_pointer = item_pointer->next;
@@ -435,6 +463,8 @@ cnfg_config *config_load_env()
         if (pair)
             equals_sign = ft_strchr(pair, '=');
         cnfg_entry *entry = &config->entries[index];
+        entry->mutex = ft_nullptr;
+        entry->thread_safe_enabled = false;
         if (equals_sign)
         {
             size_t key_length = static_cast<size_t>(equals_sign - pair);
@@ -471,6 +501,12 @@ cnfg_config *config_load_env()
             }
         }
         entry->section = ft_nullptr;
+        if (cnfg_entry_prepare_thread_safety(entry) != 0)
+        {
+            config->entry_count = index + 1;
+            cnfg_free(config);
+            return (ft_nullptr);
+        }
         ++index;
     }
     config->entry_count = count;

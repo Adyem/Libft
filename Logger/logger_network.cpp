@@ -59,6 +59,16 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
     }
     sink->socket_fd = socket_fd;
     sink->send_function = nw_send;
+    sink->port = port;
+    sink->use_tcp = use_tcp;
+    sink->host = host;
+    if (sink->host.get_error() != ER_SUCCESS)
+    {
+        su_close(socket_fd);
+        delete sink;
+        ft_errno = sink->host.get_error();
+        return (-1);
+    }
     if (ft_log_add_sink(ft_network_sink, sink) != 0)
     {
         su_close(socket_fd);
