@@ -114,6 +114,42 @@ static int compression_stream_trailing_bytes_inflate(z_stream *stream, int flush
     return (Z_STREAM_END);
 }
 
+static std::size_t  compression_stream_collect_compressed_size(const char *payload,
+        std::size_t payload_size,
+        t_compress_stream_options *options)
+{
+    int             input_pipe[2];
+    int             output_pipe[2];
+    ssize_t         written_bytes;
+    int             result;
+    std::size_t     total_size;
+    unsigned char   buffer[1024];
+    ssize_t         read_bytes;
+
+    FT_ASSERT_EQ(0, pipe(input_pipe));
+    FT_ASSERT_EQ(0, pipe(output_pipe));
+    written_bytes = su_write(input_pipe[1], payload, payload_size);
+    FT_ASSERT_EQ(static_cast<ssize_t>(payload_size), written_bytes);
+    close(input_pipe[1]);
+    ft_errno = ER_SUCCESS;
+    result = ft_compress_stream_with_options(input_pipe[0], output_pipe[1], options);
+    close(input_pipe[0]);
+    close(output_pipe[1]);
+    FT_ASSERT_EQ(0, result);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    total_size = 0;
+    while (1)
+    {
+        read_bytes = su_read(output_pipe[0], buffer, sizeof(buffer));
+        FT_ASSERT(read_bytes >= 0);
+        if (read_bytes == 0)
+            break ;
+        total_size += static_cast<std::size_t>(read_bytes);
+    }
+    close(output_pipe[0]);
+    return (total_size);
+}
+
 FT_TEST(test_ft_compress_stream_rejects_invalid_descriptors, "ft_compress_stream rejects invalid descriptors")
 {
     int result;
@@ -132,8 +168,8 @@ FT_TEST(test_ft_compress_stream_with_options_rejects_zero_buffer, "ft_compress_s
     t_compress_stream_options   options;
     int                         result;
 
-    options.input_buffer_size = 0;
-    options.output_buffer_size = 16;
+    FT_ASSERT_EQ(ER_SUCCESS, options.set_input_buffer_size(0));
+    FT_ASSERT_EQ(ER_SUCCESS, options.set_output_buffer_size(16));
     FT_ASSERT_EQ(0, pipe(input_pipe));
     FT_ASSERT_EQ(0, pipe(output_pipe));
     close(input_pipe[1]);
@@ -156,8 +192,8 @@ FT_TEST(test_ft_compress_stream_with_options_supports_custom_buffers, "ft_compre
     ssize_t                     written_bytes;
     int                         result;
 
-    options.input_buffer_size = 8;
-    options.output_buffer_size = 12;
+    FT_ASSERT_EQ(ER_SUCCESS, options.set_input_buffer_size(8));
+    FT_ASSERT_EQ(ER_SUCCESS, options.set_output_buffer_size(12));
     payload = "custom buffer payload";
     FT_ASSERT_EQ(0, pipe(input_pipe));
     FT_ASSERT_EQ(0, pipe(output_pipe));
@@ -171,6 +207,81 @@ FT_TEST(test_ft_compress_stream_with_options_supports_custom_buffers, "ft_compre
     close(output_pipe[1]);
     FT_ASSERT_EQ(0, result);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_ft_compress_stream_speed_preset_sets_expected_values, "speed preset configures throughput tuned defaults")
+{
+    t_compress_stream_options   options;
+
+    ft_compress_stream_apply_speed_preset(&options);
+    FT_ASSERT_EQ(static_cast<std::size_t>(16384), options.get_input_buffer_size());
+    FT_ASSERT_EQ(static_cast<std::size_t>(16384), options.get_output_buffer_size());
+    FT_ASSERT_EQ(Z_BEST_SPEED, options.get_compression_level());
+    FT_ASSERT(options.get_window_bits() >= 8);
+    FT_ASSERT(options.get_window_bits() <= MAX_WBITS);
+    FT_ASSERT(options.get_memory_level() >= 1);
+    FT_ASSERT(options.get_memory_level() <= 9);
+    FT_ASSERT_EQ(Z_DEFAULT_STRATEGY, options.get_strategy());
+    return (1);
+}
+
+FT_TEST(test_ft_compress_stream_ratio_preset_sets_expected_values, "ratio preset configures aggressive compression defaults")
+{
+    t_compress_stream_options   speed_options;
+    t_compress_stream_options   ratio_options;
+
+    ft_compress_stream_apply_speed_preset(&speed_options);
+    ft_compress_stream_apply_ratio_preset(&ratio_options);
+    FT_ASSERT_EQ(static_cast<std::size_t>(32768), ratio_options.get_input_buffer_size());
+    FT_ASSERT_EQ(static_cast<std::size_t>(32768), ratio_options.get_output_buffer_size());
+    FT_ASSERT_EQ(Z_BEST_COMPRESSION, ratio_options.get_compression_level());
+    FT_ASSERT_EQ(MAX_WBITS, ratio_options.get_window_bits());
+    FT_ASSERT(ratio_options.get_window_bits() >= speed_options.get_window_bits());
+    FT_ASSERT(ratio_options.get_memory_level() >= speed_options.get_memory_level());
+    FT_ASSERT(ratio_options.get_memory_level() <= 9);
+    FT_ASSERT_EQ(Z_DEFAULT_STRATEGY, ratio_options.get_strategy());
+    return (1);
+}
+
+FT_TEST(test_ft_compress_stream_ratio_preset_outperforms_speed_preset, "ratio preset yields smaller payloads than speed preset")
+{
+    ft_string                   payload;
+    t_compress_stream_options   speed_options;
+    t_compress_stream_options   ratio_options;
+    std::size_t                 speed_size;
+    std::size_t                 ratio_size;
+
+    payload.assign(32768, 'A');
+    FT_ASSERT_EQ(ER_SUCCESS, payload.get_error());
+    ft_compress_stream_apply_speed_preset(&speed_options);
+    ft_compress_stream_apply_ratio_preset(&ratio_options);
+    speed_size = compression_stream_collect_compressed_size(payload.data(), payload.size(), &speed_options);
+    ratio_size = compression_stream_collect_compressed_size(payload.data(), payload.size(), &ratio_options);
+    FT_ASSERT(speed_size >= ratio_size);
+    return (1);
+}
+
+FT_TEST(test_ft_compress_stream_rejects_invalid_window_bits, "ft_compress_stream rejects out-of-range window sizes")
+{
+    int                         input_pipe[2];
+    int                         output_pipe[2];
+    t_compress_stream_options   options;
+    int                         result;
+
+    FT_ASSERT_EQ(ER_SUCCESS, options.set_input_buffer_size(16));
+    FT_ASSERT_EQ(ER_SUCCESS, options.set_output_buffer_size(16));
+    FT_ASSERT_EQ(ER_SUCCESS, options.set_window_bits(16));
+    FT_ASSERT_EQ(0, pipe(input_pipe));
+    FT_ASSERT_EQ(0, pipe(output_pipe));
+    close(input_pipe[1]);
+    ft_errno = ER_SUCCESS;
+    result = ft_compress_stream_with_options(input_pipe[0], output_pipe[1], &options);
+    close(input_pipe[0]);
+    close(output_pipe[0]);
+    close(output_pipe[1]);
+    FT_ASSERT_EQ(1, result);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -332,8 +443,8 @@ FT_TEST(test_ft_decompress_stream_with_options_rejects_zero_buffer, "ft_decompre
     t_compress_stream_options   options;
     int                         result;
 
-    options.input_buffer_size = 4;
-    options.output_buffer_size = 0;
+    FT_ASSERT_EQ(ER_SUCCESS, options.set_input_buffer_size(4));
+    FT_ASSERT_EQ(ER_SUCCESS, options.set_output_buffer_size(0));
     FT_ASSERT_EQ(0, pipe(input_pipe));
     FT_ASSERT_EQ(0, pipe(output_pipe));
     close(input_pipe[1]);
@@ -358,8 +469,8 @@ FT_TEST(test_ft_decompress_stream_with_options_supports_custom_buffers, "ft_deco
     t_compress_stream_options   options;
     int                         result;
 
-    options.input_buffer_size = 10;
-    options.output_buffer_size = 7;
+    FT_ASSERT_EQ(ER_SUCCESS, options.set_input_buffer_size(10));
+    FT_ASSERT_EQ(ER_SUCCESS, options.set_output_buffer_size(7));
     payload = reinterpret_cast<const unsigned char *>("custom decompress payload");
     compressed_size = 0;
     compressed_buffer = ft_compress(payload, ft_strlen_size_t("custom decompress payload"), &compressed_size);
@@ -611,8 +722,8 @@ FT_TEST(test_ft_compress_stream_uses_finish_flush_after_partial_read, "ft_compre
     ssize_t                     written_bytes;
     int                         result;
 
-    options.input_buffer_size = 4;
-    options.output_buffer_size = 64;
+    FT_ASSERT_EQ(ER_SUCCESS, options.set_input_buffer_size(4));
+    FT_ASSERT_EQ(ER_SUCCESS, options.set_output_buffer_size(64));
     payload = "partial-flush";
     FT_ASSERT_EQ(0, pipe(input_pipe));
     FT_ASSERT_EQ(0, pipe(output_pipe));

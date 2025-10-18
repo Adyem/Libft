@@ -38,11 +38,11 @@
 - [x] Provide hooks for custom backends so projects can route allocations to region-specific arenas or embedded allocators.
 - [x] Audit the global new/delete overrides to ensure they respect alignment requirements on every supported platform.
 - [ ] Implement guard-page or canary instrumentation in debug mode to catch buffer overruns during development.
-- [ ] Add leak detection and reporting helpers that can be toggled per-thread for targeted investigations.
+- [x] Add leak detection and reporting helpers that can be toggled per-thread for targeted investigations.
 - [x] Supply RAII helpers and scope guards that automatically free CMA allocations to simplify error paths in callers.
-- [ ] Make `cma_alloc_limit_guard` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `cma_allocation_guard` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `cma_allocator_guard` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `cma_alloc_limit_guard` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `cma_allocation_guard` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `cma_allocator_guard` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `Block` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `Page` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Implement per-class lock tracking for the CMA guards by wiring them into the PThread lock tracking routine.
@@ -53,12 +53,12 @@
 - [x] Offer in-memory convenience helpers that compress or decompress between `ft_string`/`ft_vector` instances without touching file descriptors.
 - [x] Expand streaming tests to cover flush behavior, incremental hook replacement via `compression_stream_test_hooks.hpp`, and truncated inputs.
 - [ ] Evaluate adding alternative algorithms (e.g., LZ4, Brotli) behind a common interface with capability detection.
-- [ ] Provide progress callbacks and cancellation support for long-running compression tasks.
-- [ ] Document tuning guidelines (window sizes, compression levels) and expose presets optimized for speed vs. ratio.
-- [ ] Make `t_compress_stream_options` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Provide progress callbacks and cancellation support for long-running compression tasks.
+- [x] Document tuning guidelines (window sizes, compression levels) and expose presets optimized for speed vs. ratio.
+- [x] Make `t_compress_stream_options` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Config
-- [ ] Make `cnfg_flag_parser` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `cnfg_flag_parser` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `cnfg_config` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `cnfg_entry` thread safe (relies on the shared deadlock resolution routine described below).
 
@@ -67,7 +67,7 @@
 - [x] Add backpressure metrics and drop counters for the asynchronous logger to expose when the worker thread cannot keep up.
 - [x] Implement log rotation policies based on age and size, including retention limits and unit tests that verify rollover correctness.
 - [ ] Expose sink health probes that periodically ping remote targets configured via `ft_log_set_remote_sink` and surface connection errors early.
-- [ ] Document how `_alloc_logging` and `_api_logging` flags influence emitted messages to prevent confusion when toggling modes.
+- [x] Document how `_alloc_logging` and `_api_logging` flags influence emitted messages to prevent confusion when toggling modes.
 - [ ] Add redaction helpers for sensitive fields and ensure they integrate with formatting utilities.
 - [ ] Support structured context propagation (per-thread request IDs, correlation tokens) through scoped guards.
 - [x] Restore the `logger async logging` regression after fixing the heap corruption triggered by asynchronous sink teardown.
@@ -292,7 +292,7 @@
 - [ ] Extend ReadLine to support customizable key bindings, history persistence, and syntax-aware completion callbacks.
 - [ ] Add UTF-8 aware cursor movement and rendering in ReadLine to match the Unicode helpers in Libft.
 - [ ] Provide pluggable history storage (SQLite, JSON) and search that respects multi-byte characters.
-- [ ] Document terminal capability detection and fallback behaviour for minimal environments.
+- [x] Document terminal capability detection and fallback behaviour for minimal environments.
 - [ ] Make `ft_file_watch` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `file_dir` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `file_dirent` thread safe (relies on the shared deadlock resolution routine described below).
@@ -359,14 +359,14 @@
 
 ### Tools and ancillary utilities
 - [x] Provide a `make format` target that runs clang-format with a checked-in style file.
-- [ ] Add developer ergonomics such as pre-commit hooks, git blame ignore lists, and automated code ownership updates.
-- [ ] Create code-generation scaffolds (module boilerplate, test templates) that follow project conventions.
-- [ ] Document how to bootstrap a development environment on macOS, Linux, and Windows Subsystem for Linux.
+- [x] Add developer ergonomics such as pre-commit hooks, git blame ignore lists, and automated code ownership updates.
+- [x] Create code-generation scaffolds (module boilerplate, test templates) that follow project conventions. (See `Docs/code_generation_scaffolds.md` and `tools/generate_scaffold.py`.)
+- [x] Document how to bootstrap a development environment on macOS, Linux, and Windows Subsystem for Linux. (See `Docs/development_environment.md`.)
 
 ## Security and compliance
 - [ ] Run dependency audits (e.g., `cargo audit`, `npm audit`, `pip-audit` equivalents) and track remediation timelines.
-- [ ] Add threat models for networking, storage, and encryption modules, outlining mitigations for common attack vectors.
-- [ ] Provide secure coding checklists for contributors, including guidelines for handling secrets and memory safety.
+- [x] Add threat models for networking, storage, and encryption modules, outlining mitigations for common attack vectors. (See `Docs/security_threat_models.md`.)
+- [x] Provide secure coding checklists for contributors, including guidelines for handling secrets and memory safety. (See `Docs/secure_coding_checklist.md`.)
 
 ## Observability and operations
 - [ ] Standardize logging levels and message formats across modules for consistent ingestion by external systems.

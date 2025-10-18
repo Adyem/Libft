@@ -1,3 +1,5 @@
+#include <atomic>
+#include <thread>
 #include "../../Config/flag_parser.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
@@ -139,5 +141,61 @@ FT_TEST(test_cnfg_flag_parser_failure_resets_state, "cnfg_flag_parser clears fla
     FT_ASSERT(parser.get_total_flag_count() == 0);
     FT_ASSERT(!parser.has_short_flag('a'));
     FT_ASSERT(!parser.has_long_flag("anything"));
+    return (1);
+}
+
+FT_TEST(test_cnfg_flag_parser_thread_safe_parse_operations, "cnfg_flag_parser serializes parse operations across threads")
+{
+    char program_argument[] = "program";
+    char short_flag_a[] = "-a";
+    char long_flag_alpha[] = "--alpha";
+    char short_flag_b[] = "-b";
+    char long_flag_beta[] = "--beta";
+    char *first_arguments[] = {
+        program_argument,
+        short_flag_a,
+        long_flag_alpha
+    };
+    char *second_arguments[] = {
+        program_argument,
+        short_flag_b,
+        long_flag_beta
+    };
+    cnfg_flag_parser parser;
+    bool initial_result = parser.parse(3, first_arguments);
+    FT_ASSERT(initial_result);
+    std::atomic<bool> worker_failed(false);
+    std::thread parse_worker([&parser, &worker_failed, &first_arguments]() {
+        size_t worker_iteration;
+
+        worker_iteration = 0;
+        while (worker_iteration < 128)
+        {
+            bool parse_result = parser.parse(3, first_arguments);
+
+            if (!parse_result)
+                worker_failed.store(true);
+            worker_iteration++;
+        }
+        return ;
+    });
+    size_t main_iteration;
+
+    main_iteration = 0;
+    while (main_iteration < 128)
+    {
+        bool parse_result = parser.parse(3, second_arguments);
+
+        FT_ASSERT(parse_result);
+        main_iteration++;
+    }
+    parse_worker.join();
+    FT_ASSERT(!worker_failed.load());
+    bool final_result = parser.parse(3, second_arguments);
+
+    FT_ASSERT(final_result);
+    FT_ASSERT(parser.has_short_flag('b'));
+    FT_ASSERT(parser.has_long_flag("beta"));
+    FT_ASSERT(parser.get_error() == ER_SUCCESS);
     return (1);
 }
