@@ -193,6 +193,32 @@ FT_TEST(test_logger_log_field_lock_blocks_until_released,
     return (1);
 }
 
+FT_TEST(test_ft_logger_constructor_enables_thread_safety,
+        "ft_logger constructor installs thread safety guard")
+{
+    ft_logger logger_instance;
+
+    FT_ASSERT_EQ(true, logger_instance.is_thread_safe_enabled());
+    return (1);
+}
+
+FT_TEST(test_ft_logger_prepare_thread_safety_idempotent,
+        "ft_logger prepare_thread_safety may run multiple times")
+{
+    ft_logger logger_instance;
+
+    FT_ASSERT_EQ(true, logger_instance.is_thread_safe_enabled());
+    FT_ASSERT_EQ(0, logger_instance.prepare_thread_safety());
+    FT_ASSERT_EQ(true, logger_instance.is_thread_safe_enabled());
+    FT_ASSERT_EQ(0, logger_instance.prepare_thread_safety());
+    FT_ASSERT_EQ(true, logger_instance.is_thread_safe_enabled());
+    logger_instance.teardown_thread_safety();
+    FT_ASSERT_EQ(false, logger_instance.is_thread_safe_enabled());
+    FT_ASSERT_EQ(0, logger_instance.prepare_thread_safety());
+    FT_ASSERT_EQ(true, logger_instance.is_thread_safe_enabled());
+    return (1);
+}
+
 FT_TEST(test_logger_log_sink_prepare_thread_safety_initializes_mutex,
         "log_sink_prepare_thread_safety installs mutex guard")
 {
