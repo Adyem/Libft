@@ -1,48 +1,125 @@
 #include "geometry.hpp"
+#include "../Errno/errno.hpp"
+
+#include "../PThread/unique_lock.hpp"
 
 bool    intersect_aabb(const aabb &first, const aabb &second)
 {
-    if (first.maximum_x < second.minimum_x)
-        return (false);
-    if (first.minimum_x > second.maximum_x)
-        return (false);
-    if (first.maximum_y < second.minimum_y)
-        return (false);
-    if (first.minimum_y > second.maximum_y)
-        return (false);
-    return (true);
+    int entry_errno;
+    bool result;
+
+    entry_errno = ft_errno;
+    result = false;
+    {
+        ft_unique_lock<pt_mutex> first_guard;
+        ft_unique_lock<pt_mutex> second_guard;
+        int lock_error;
+        bool separated;
+
+        lock_error = aabb::lock_pair(first, second, first_guard, second_guard);
+        if (lock_error != ER_SUCCESS)
+        {
+            const_cast<aabb &>(first).set_error(lock_error);
+            const_cast<aabb &>(second).set_error(lock_error);
+            return (false);
+        }
+        separated = false;
+        if (first._maximum_x < second._minimum_x)
+            separated = true;
+        else if (first._minimum_x > second._maximum_x)
+            separated = true;
+        else if (first._maximum_y < second._minimum_y)
+            separated = true;
+        else if (first._minimum_y > second._maximum_y)
+            separated = true;
+        const_cast<aabb &>(first).set_error(ER_SUCCESS);
+        const_cast<aabb &>(second).set_error(ER_SUCCESS);
+        result = true;
+        if (separated)
+            result = false;
+    }
+    ft_errno = entry_errno;
+    if (result)
+        return (true);
+    return (false);
 }
 
 bool    intersect_circle(const circle &first, const circle &second)
 {
-    double  delta_x;
-    double  delta_y;
-    double  radius_sum;
-    double  distance_squared;
+    int entry_errno;
+    bool result;
 
-    delta_x = first.center_x - second.center_x;
-    delta_y = first.center_y - second.center_y;
-    radius_sum = first.radius + second.radius;
-    distance_squared = delta_x * delta_x + delta_y * delta_y;
-    if (distance_squared > radius_sum * radius_sum)
-        return (false);
-    return (true);
+    entry_errno = ft_errno;
+    result = false;
+    {
+        ft_unique_lock<pt_mutex> first_guard;
+        ft_unique_lock<pt_mutex> second_guard;
+        int lock_error;
+        double  delta_x;
+        double  delta_y;
+        double  radius_sum;
+        double  distance_squared;
+
+        lock_error = circle::lock_pair(first, second, first_guard, second_guard);
+        if (lock_error != ER_SUCCESS)
+        {
+            const_cast<circle &>(first).set_error(lock_error);
+            const_cast<circle &>(second).set_error(lock_error);
+            return (false);
+        }
+        delta_x = first._center_x - second._center_x;
+        delta_y = first._center_y - second._center_y;
+        radius_sum = first._radius + second._radius;
+        distance_squared = delta_x * delta_x + delta_y * delta_y;
+        const_cast<circle &>(first).set_error(ER_SUCCESS);
+        const_cast<circle &>(second).set_error(ER_SUCCESS);
+        result = true;
+        if (distance_squared > radius_sum * radius_sum)
+            result = false;
+    }
+    ft_errno = entry_errno;
+    if (result)
+        return (true);
+    return (false);
 }
 
 bool    intersect_sphere(const sphere &first, const sphere &second)
 {
-    double  delta_x;
-    double  delta_y;
-    double  delta_z;
-    double  radius_sum;
-    double  distance_squared;
+    int entry_errno;
+    bool result;
 
-    delta_x = first.center_x - second.center_x;
-    delta_y = first.center_y - second.center_y;
-    delta_z = first.center_z - second.center_z;
-    radius_sum = first.radius + second.radius;
-    distance_squared = delta_x * delta_x + delta_y * delta_y + delta_z * delta_z;
-    if (distance_squared > radius_sum * radius_sum)
-        return (false);
-    return (true);
+    entry_errno = ft_errno;
+    result = false;
+    {
+        ft_unique_lock<pt_mutex> first_guard;
+        ft_unique_lock<pt_mutex> second_guard;
+        int lock_error;
+        double  delta_x;
+        double  delta_y;
+        double  delta_z;
+        double  radius_sum;
+        double  distance_squared;
+
+        lock_error = sphere::lock_pair(first, second, first_guard, second_guard);
+        if (lock_error != ER_SUCCESS)
+        {
+            const_cast<sphere &>(first).set_error(lock_error);
+            const_cast<sphere &>(second).set_error(lock_error);
+            return (false);
+        }
+        delta_x = first._center_x - second._center_x;
+        delta_y = first._center_y - second._center_y;
+        delta_z = first._center_z - second._center_z;
+        radius_sum = first._radius + second._radius;
+        distance_squared = delta_x * delta_x + delta_y * delta_y + delta_z * delta_z;
+        const_cast<sphere &>(first).set_error(ER_SUCCESS);
+        const_cast<sphere &>(second).set_error(ER_SUCCESS);
+        result = true;
+        if (distance_squared > radius_sum * radius_sum)
+            result = false;
+    }
+    ft_errno = entry_errno;
+    if (result)
+        return (true);
+    return (false);
 }
