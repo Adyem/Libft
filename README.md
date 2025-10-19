@@ -864,6 +864,14 @@ void event_loop_clear(event_loop *loop);
 int  event_loop_add_socket(event_loop *loop, int socket_fd, bool is_write);
 int  event_loop_remove_socket(event_loop *loop, int socket_fd, bool is_write);
 int  event_loop_run(event_loop *loop, int timeout_milliseconds);
+int  udp_event_loop_wait_read(event_loop *loop, udp_socket &socket, int timeout_milliseconds);
+int  udp_event_loop_wait_write(event_loop *loop, udp_socket &socket, int timeout_milliseconds);
+ssize_t udp_event_loop_receive(event_loop *loop, udp_socket &socket, void *buffer, size_t size,
+                               int flags, struct sockaddr *source_address,
+                               socklen_t *address_length, int timeout_milliseconds);
+ssize_t udp_event_loop_send(event_loop *loop, udp_socket &socket, const void *data, size_t size,
+                            int flags, const struct sockaddr *destination_address,
+                            socklen_t address_length, int timeout_milliseconds);
 ```
 
 The polling backend is chosen at compile time. Linux builds use `epoll`,
@@ -873,6 +881,14 @@ to `select`. The event loop helpers call the appropriate backend through
 buffers with `cma_malloc` and release them with `cma_free` to stay within
 the custom allocator. The `select` backend is intended only for small
 numbers of sockets and lacks the scalability of the other backends.
+
+`udp_event_loop_wait_read` and `udp_event_loop_wait_write` wrap the common
+registration and readiness checks for datagram sockets. They temporarily
+add the socket to the loop, ensure it is non-blocking, and wait for the
+requested edge before restoring the loop state. The higher-level
+`udp_event_loop_receive` and `udp_event_loop_send` helpers build on top of
+those primitives to perform `recvfrom`/`sendto` calls once readiness is
+signaled, returning `0` on timeouts so callers can retry without blocking.
 
 `wrapper.hpp` adds helpers for encrypted sockets:
 

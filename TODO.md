@@ -84,7 +84,7 @@
 - [ ] Build a reusable DNS resolver (with caching and IPv6 support) that the socket helpers can share instead of assuming raw host strings.
 - [ ] Add connection pooling and keep-alive management for `http_client`/`http_server` to reduce socket churn under load.
 - [ ] Harden WebSocket handling with per-message deflate support and stricter frame validation (masking, RSV bits, control frame sizes).
-- [ ] Provide non-blocking, event-loop-friendly wrappers for UDP sockets that integrate with epoll/kqueue abstractions already present.
+- [x] Provide non-blocking, event-loop-friendly wrappers for UDP sockets that integrate with epoll/kqueue abstractions already present.
 - [ ] Introduce QUIC/HTTP3 experimentation behind feature flags, reusing TLS primitives where possible.
 - [ ] Add observability hooks (latency histograms, error tagging) that integrate with Prometheus or OpenTelemetry exporters.
 - [x] Provide RAII socket handles that close file descriptors automatically and coordinate Windows `WSAStartup` lifecycle management.
