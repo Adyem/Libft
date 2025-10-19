@@ -262,12 +262,12 @@
 - [ ] Make `matrix2` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `matrix3` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `matrix4` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `quaternion` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `quaternion` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Geometry
-- [ ] Make `aabb` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `circle` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `sphere` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `aabb` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `circle` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `sphere` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Implement per-struct lock tracking for the Geometry shapes so mutex ownership, circular wait detection, randomized 1-10 millisecond sleeps, and lock reacquisition remain consistent (this is the deadlock resolution point the struct upgrades rely on).
 
 ### Encryption

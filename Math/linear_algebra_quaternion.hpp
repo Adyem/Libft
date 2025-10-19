@@ -1,6 +1,8 @@
 #ifndef LINEAR_ALGEBRA_QUATERNION_HPP
 # define LINEAR_ALGEBRA_QUATERNION_HPP
 
+#include <mutex>
+
 class quaternion
 {
     private:
@@ -9,12 +11,17 @@ class quaternion
         double _y;
         double _z;
         mutable int _error_code;
+        mutable std::mutex _mutex;
 
         void    set_error(int error_code) const;
 
     public:
         quaternion();
         quaternion(double w, double x, double y, double z);
+        quaternion(const quaternion &other);
+        quaternion &operator=(const quaternion &other);
+        quaternion(quaternion &&other) noexcept;
+        quaternion &operator=(quaternion &&other) noexcept;
         ~quaternion();
         double      get_w() const;
         double      get_x() const;
