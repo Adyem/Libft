@@ -120,7 +120,7 @@ int ft_game_server::handle_message(int client_handle, const ft_string &message) 
             if (!token_item || this->_auth_token != token_item->value)
             {
                 json_free_groups(groups);
-                FT_CLOSE_SOCKET(client_handle);
+                nw_close(client_handle);
                 this->set_error(FT_ERR_GAME_GENERAL_ERROR);
                 return (1);
             }
@@ -141,7 +141,7 @@ int ft_game_server::handle_message(int client_handle, const ft_string &message) 
             return (1);
         }
         this->leave_client(ft_atoi(id_item->value));
-        FT_CLOSE_SOCKET(client_handle);
+        nw_close(client_handle);
         json_free_groups(groups);
         this->set_error(ER_SUCCESS);
         return (0);

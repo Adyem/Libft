@@ -711,7 +711,7 @@ int http_get_stream(const char *host, const char *path, http_response_handler ha
             if (errno != 0)
                 last_socket_error = errno;
 #endif
-            FT_CLOSE_SOCKET(socket_fd);
+            nw_close(socket_fd);
             socket_fd = -1;
         }
         else
@@ -743,7 +743,7 @@ int http_get_stream(const char *host, const char *path, http_response_handler ha
     {
         if (http_client_initialize_ssl(socket_fd, host, &ssl_context, &ssl_connection) != 0)
         {
-            FT_CLOSE_SOCKET(socket_fd);
+            nw_close(socket_fd);
             return (-1);
         }
         result = SSL_connect(ssl_connection);
@@ -752,7 +752,7 @@ int http_get_stream(const char *host, const char *path, http_response_handler ha
             ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
             SSL_free(ssl_connection);
             SSL_CTX_free(ssl_context);
-            FT_CLOSE_SOCKET(socket_fd);
+            nw_close(socket_fd);
             return (-1);
         }
 #if OPENSSL_VERSION_NUMBER >= 0x10002000L
@@ -762,7 +762,7 @@ int http_get_stream(const char *host, const char *path, http_response_handler ha
             SSL_shutdown(ssl_connection);
             SSL_free(ssl_connection);
             SSL_CTX_free(ssl_context);
-            FT_CLOSE_SOCKET(socket_fd);
+            nw_close(socket_fd);
             return (-1);
         }
 #endif
@@ -770,7 +770,7 @@ int http_get_stream(const char *host, const char *path, http_response_handler ha
         {
             SSL_free(ssl_connection);
             SSL_CTX_free(ssl_context);
-            FT_CLOSE_SOCKET(socket_fd);
+            nw_close(socket_fd);
             return (-1);
         }
         if (http_client_receive_stream(socket_fd, ssl_connection, true, handler) != 0)
@@ -778,7 +778,7 @@ int http_get_stream(const char *host, const char *path, http_response_handler ha
             SSL_shutdown(ssl_connection);
             SSL_free(ssl_connection);
             SSL_CTX_free(ssl_context);
-            FT_CLOSE_SOCKET(socket_fd);
+            nw_close(socket_fd);
             return (-1);
         }
         SSL_shutdown(ssl_connection);
@@ -789,16 +789,16 @@ int http_get_stream(const char *host, const char *path, http_response_handler ha
     {
         if (http_client_send_plain_request(socket_fd, request.c_str(), request.size()) != 0)
         {
-            FT_CLOSE_SOCKET(socket_fd);
+            nw_close(socket_fd);
             return (-1);
         }
         if (http_client_receive_stream(socket_fd, NULL, false, handler) != 0)
         {
-            FT_CLOSE_SOCKET(socket_fd);
+            nw_close(socket_fd);
             return (-1);
         }
     }
-    FT_CLOSE_SOCKET(socket_fd);
+    nw_close(socket_fd);
     ft_errno = ER_SUCCESS;
     return (0);
 }
@@ -867,7 +867,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
             if (errno != 0)
                 last_socket_error = errno;
 #endif
-            FT_CLOSE_SOCKET(socket_fd);
+            nw_close(socket_fd);
             socket_fd = -1;
         }
         else
@@ -904,7 +904,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
     {
         if (http_client_initialize_ssl(socket_fd, host, &ssl_context, &ssl_connection) != 0)
         {
-            FT_CLOSE_SOCKET(socket_fd);
+            nw_close(socket_fd);
             http_client_reset_buffer_adapter_state();
             return (-1);
         }
@@ -914,7 +914,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
             ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
             SSL_free(ssl_connection);
             SSL_CTX_free(ssl_context);
-            FT_CLOSE_SOCKET(socket_fd);
+            nw_close(socket_fd);
             http_client_reset_buffer_adapter_state();
             return (-1);
         }
@@ -925,7 +925,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
             SSL_shutdown(ssl_connection);
             SSL_free(ssl_connection);
             SSL_CTX_free(ssl_context);
-            FT_CLOSE_SOCKET(socket_fd);
+            nw_close(socket_fd);
             http_client_reset_buffer_adapter_state();
             return (-1);
         }
@@ -934,7 +934,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
         {
             SSL_free(ssl_connection);
             SSL_CTX_free(ssl_context);
-            FT_CLOSE_SOCKET(socket_fd);
+            nw_close(socket_fd);
             http_client_reset_buffer_adapter_state();
             return (-1);
         }
@@ -943,7 +943,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
             SSL_shutdown(ssl_connection);
             SSL_free(ssl_connection);
             SSL_CTX_free(ssl_context);
-            FT_CLOSE_SOCKET(socket_fd);
+            nw_close(socket_fd);
             http_client_reset_buffer_adapter_state();
             return (-1);
         }
@@ -955,18 +955,18 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
     {
         if (http_client_send_plain_request(socket_fd, request.c_str(), request.size()) != 0)
         {
-            FT_CLOSE_SOCKET(socket_fd);
+            nw_close(socket_fd);
             http_client_reset_buffer_adapter_state();
             return (-1);
         }
         if (http_client_receive_stream(socket_fd, NULL, false, http_client_buffering_adapter) != 0)
         {
-            FT_CLOSE_SOCKET(socket_fd);
+            nw_close(socket_fd);
             http_client_reset_buffer_adapter_state();
             return (-1);
         }
     }
-    FT_CLOSE_SOCKET(socket_fd);
+    nw_close(socket_fd);
     http_client_reset_buffer_adapter_state();
     ft_errno = ER_SUCCESS;
     return (0);

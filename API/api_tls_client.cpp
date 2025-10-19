@@ -276,7 +276,7 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
             }
             if (nw_connect(this->_sock, address_info->ai_addr, static_cast<socklen_t>(address_info->ai_addrlen)) == 0)
                 break;
-            FT_CLOSE_SOCKET(this->_sock);
+            nw_close(this->_sock);
             this->_sock = -1;
         }
         address_info = address_info->ai_next;
@@ -299,7 +299,7 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
     {
         SSL_free(this->_ssl);
         this->_ssl = ft_nullptr;
-        FT_CLOSE_SOCKET(this->_sock);
+        nw_close(this->_sock);
         this->_sock = -1;
         this->set_error(FT_ERR_CONFIGURATION);
         return ;
@@ -312,7 +312,7 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
     {
         SSL_free(this->_ssl);
         this->_ssl = ft_nullptr;
-        FT_CLOSE_SOCKET(this->_sock);
+        nw_close(this->_sock);
         this->_sock = -1;
         this->set_error(FT_ERR_CONFIGURATION);
         return ;
@@ -321,7 +321,7 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
     {
         SSL_free(this->_ssl);
         this->_ssl = ft_nullptr;
-        FT_CLOSE_SOCKET(this->_sock);
+        nw_close(this->_sock);
         this->_sock = -1;
         this->set_error(FT_ERR_CONFIGURATION);
         return ;
@@ -330,7 +330,7 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
     {
         SSL_free(this->_ssl);
         this->_ssl = ft_nullptr;
-        FT_CLOSE_SOCKET(this->_sock);
+        nw_close(this->_sock);
         this->_sock = -1;
         this->set_error(FT_ERR_SOCKET_CONNECT_FAILED);
         return ;
@@ -356,7 +356,7 @@ api_tls_client::~api_tls_client()
         SSL_free(this->_ssl);
     }
     if (this->_sock >= 0)
-        FT_CLOSE_SOCKET(this->_sock);
+        nw_close(this->_sock);
     if (this->_ctx)
         SSL_CTX_free(this->_ctx);
 }

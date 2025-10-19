@@ -133,7 +133,7 @@ int ft_http_server::run_once()
         bytes_received = nw_recv(client_socket, buffer, sizeof(buffer) - 1, 0);
         if (bytes_received < 0)
         {
-            FT_CLOSE_SOCKET(client_socket);
+            nw_close(client_socket);
 #ifdef _WIN32
             int last_error;
             int library_error_code;
@@ -148,7 +148,7 @@ int ft_http_server::run_once()
         }
         if (bytes_received == 0)
         {
-            FT_CLOSE_SOCKET(client_socket);
+            nw_close(client_socket);
             this->set_error(FT_ERR_SOCKET_RECEIVE_FAILED);
             return (1);
         }
@@ -156,7 +156,7 @@ int ft_http_server::run_once()
         request.append(buffer);
         if (request.size() > max_request_size)
         {
-            FT_CLOSE_SOCKET(client_socket);
+            nw_close(client_socket);
             this->set_error(FT_ERR_INVALID_ARGUMENT);
             return (1);
         }
@@ -193,7 +193,7 @@ int ft_http_server::run_once()
                     if (*length_value_pointer == '\0'
                         || ft_isdigit(static_cast<unsigned char>(*length_value_pointer)) == 0)
                     {
-                        FT_CLOSE_SOCKET(client_socket);
+                        nw_close(client_socket);
                         this->set_error(FT_ERR_INVALID_ARGUMENT);
                         return (1);
                     }
@@ -208,7 +208,7 @@ int ft_http_server::run_once()
                         digit_value = static_cast<size_t>(*length_value_pointer - '0');
                         if (expected_body_length > (max_request_size - digit_value) / 10)
                         {
-                            FT_CLOSE_SOCKET(client_socket);
+                            nw_close(client_socket);
                             this->set_error(FT_ERR_INVALID_ARGUMENT);
                             return (1);
                         }
@@ -217,13 +217,13 @@ int ft_http_server::run_once()
                     }
                     if (has_length_digits == false)
                     {
-                        FT_CLOSE_SOCKET(client_socket);
+                        nw_close(client_socket);
                         this->set_error(FT_ERR_INVALID_ARGUMENT);
                         return (1);
                     }
                     if (expected_body_length > max_request_size)
                     {
-                        FT_CLOSE_SOCKET(client_socket);
+                        nw_close(client_socket);
                         this->set_error(FT_ERR_INVALID_ARGUMENT);
                         return (1);
                     }
@@ -259,7 +259,7 @@ int ft_http_server::run_once()
     parse_error = parse_request(request, body, is_post);
     if (parse_error != ER_SUCCESS)
     {
-        FT_CLOSE_SOCKET(client_socket);
+        nw_close(client_socket);
         this->set_error(parse_error);
         return (1);
     }
@@ -293,7 +293,7 @@ int ft_http_server::run_once()
 #else
             last_socket_error = errno;
 #endif
-            FT_CLOSE_SOCKET(client_socket);
+            nw_close(client_socket);
             if (send_result < 0)
                 this->set_error(ft_map_system_error(last_socket_error));
             else
@@ -304,11 +304,11 @@ int ft_http_server::run_once()
     }
     if (networking_check_socket_after_send(client_socket) != 0)
     {
-        FT_CLOSE_SOCKET(client_socket);
+        nw_close(client_socket);
         this->set_error(ft_errno);
         return (1);
     }
-    FT_CLOSE_SOCKET(client_socket);
+    nw_close(client_socket);
     ft_errno = ER_SUCCESS;
     this->_error_code = ER_SUCCESS;
     return (0);

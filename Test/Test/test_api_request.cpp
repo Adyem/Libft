@@ -147,7 +147,7 @@ static void api_request_send_failure_server(void)
     address_length = sizeof(address_storage);
     client_fd = nw_accept(server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
     if (client_fd >= 0)
-        FT_CLOSE_SOCKET(client_fd);
+        nw_close(client_fd);
     return ;
 }
 
@@ -229,7 +229,7 @@ static void api_request_bearer_server(api_request_bearer_server_context *context
     send_result = nw_send(client_fd, response, ft_strlen(response), 0);
     if (send_result < 0)
         context->result.store(-2, std::memory_order_relaxed);
-    FT_CLOSE_SOCKET(client_fd);
+    nw_close(client_fd);
     return ;
 }
 
@@ -293,7 +293,7 @@ static void api_request_basic_server(api_request_basic_server_context *context)
     send_result = nw_send(client_fd, response, ft_strlen(response), 0);
     if (send_result < 0)
         context->result.store(-2, std::memory_order_relaxed);
-    FT_CLOSE_SOCKET(client_fd);
+    nw_close(client_fd);
     return ;
 }
 
@@ -351,7 +351,7 @@ static void api_request_success_server(void)
                 break;
             total_sent += static_cast<size_t>(bytes_sent);
         }
-        FT_CLOSE_SOCKET(client_fd);
+        nw_close(client_fd);
         remaining_connections -= 1;
     }
     return ;
@@ -423,7 +423,7 @@ static void api_request_stream_large_response_server(void)
     body_buffer = static_cast<char*>(cma_malloc(body_size));
     if (!body_buffer)
     {
-        FT_CLOSE_SOCKET(client_fd);
+        nw_close(client_fd);
         return ;
     }
     ft_memset(body_buffer, 'A', body_size);
@@ -450,7 +450,7 @@ static void api_request_stream_large_response_server(void)
         total_sent += static_cast<size_t>(bytes_sent);
     }
     cma_free(body_buffer);
-    FT_CLOSE_SOCKET(client_fd);
+    nw_close(client_fd);
     return ;
 }
 
@@ -481,7 +481,7 @@ static void api_request_retry_success_server(void)
         accepted_count++;
         if (accepted_count == 1)
         {
-            FT_CLOSE_SOCKET(client_fd);
+            nw_close(client_fd);
             continue ;
         }
         const char *response;
@@ -501,7 +501,7 @@ static void api_request_retry_success_server(void)
                 break ;
             total_sent += static_cast<size_t>(bytes_sent);
         }
-        FT_CLOSE_SOCKET(client_fd);
+        nw_close(client_fd);
     }
     return ;
 }
@@ -531,7 +531,7 @@ static void api_request_retry_failure_server(void)
         if (client_fd < 0)
             continue ;
         accepted_count++;
-        FT_CLOSE_SOCKET(client_fd);
+        nw_close(client_fd);
     }
     return ;
 }
@@ -566,7 +566,7 @@ static void api_request_retry_timeout_server(void)
 #else
         usleep(200000);
 #endif
-        FT_CLOSE_SOCKET(client_fd);
+        nw_close(client_fd);
     }
     return ;
 }
@@ -657,7 +657,7 @@ static void api_request_stream_chunked_response_server(void)
             break ;
         total_sent += static_cast<size_t>(bytes_sent);
     }
-    FT_CLOSE_SOCKET(client_fd);
+    nw_close(client_fd);
     return ;
 }
 
@@ -753,7 +753,7 @@ static void api_request_async_retry_server(void)
     (void)receive_duration_ms;
     response = "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK";
     nw_send(client_fd, response, ft_strlen(response), 0);
-    FT_CLOSE_SOCKET(client_fd);
+    nw_close(client_fd);
     return ;
 }
 
