@@ -87,7 +87,7 @@
 - [ ] Provide non-blocking, event-loop-friendly wrappers for UDP sockets that integrate with epoll/kqueue abstractions already present.
 - [ ] Introduce QUIC/HTTP3 experimentation behind feature flags, reusing TLS primitives where possible.
 - [ ] Add observability hooks (latency histograms, error tagging) that integrate with Prometheus or OpenTelemetry exporters.
-- [ ] Provide RAII socket handles that close file descriptors automatically and coordinate Windows `WSAStartup` lifecycle management.
+- [x] Provide RAII socket handles that close file descriptors automatically and coordinate Windows `WSAStartup` lifecycle management.
 - [x] Fix the Winsock error handling path in `ft_socket::setup_server` so the helper uses `WSAGetLastError()`/`ft_errno` instead of `errno`, otherwise Windows failures in `create_socket`, `set_reuse_address`, timeouts, bind, or listen propagate the wrong code. 【F:Networking/networking_setup_server.cpp†L18-L146】【F:Networking/networking_setup_server.cpp†L188-L237】
 - [x] Update the HTTP server response writer to translate `nw_send` failures via `ft_errno`/`WSAGetLastError()` instead of raw `errno`, which currently reports success on Windows because Winsock does not set `errno`. 【F:Networking/http_server.cpp†L1-L14】【F:Networking/http_server.cpp†L278-L307】
 - [x] Make `ft_socket::initialize` return an error when `setup_server`/`setup_client` fails so callers are not forced to poll `_error_code` after a `0` return. 【F:Networking/networking_socket_class.cpp†L395-L423】

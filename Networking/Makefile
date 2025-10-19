@@ -8,6 +8,7 @@ SRCS := networking_socket_class.cpp \
         networking_setup_client.cpp \
         networking_setup_udp.cpp \
         networking_socket_wrapper_functions.cpp \
+        socket_handle.cpp \
         networking_ssl_wrapper.cpp \
         networking_nonblocking.cpp \
         networking_event_loop.cpp \
@@ -48,6 +49,7 @@ HEADERS := socket_class.hpp \
            http_server.hpp \
            websocket_client.hpp \
            websocket_server.hpp \
+           socket_handle.hpp \
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

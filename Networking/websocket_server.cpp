@@ -336,13 +336,13 @@ int ft_websocket_server::run_once(int &client_fd, ft_string &message)
     }
     if (this->perform_handshake(client_fd) != 0)
     {
-        FT_CLOSE_SOCKET(client_fd);
+        nw_close(client_fd);
         return (1);
     }
     result = this->receive_frame(client_fd, message);
     if (result != 0)
     {
-        FT_CLOSE_SOCKET(client_fd);
+        nw_close(client_fd);
         return (1);
     }
     this->set_error(ER_SUCCESS);

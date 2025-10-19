@@ -1294,7 +1294,7 @@ cleanup:
         SSL_free(ssl_session);
     }
     if (socket_fd >= 0)
-        FT_CLOSE_SOCKET(socket_fd);
+        nw_close(socket_fd);
     if (context)
         SSL_CTX_free(context);
     if (address_results)

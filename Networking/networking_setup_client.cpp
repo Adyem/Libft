@@ -35,7 +35,7 @@ int ft_socket::setup_client(const SocketConfig &config)
     else
     {
         this->set_error(FT_ERR_CONFIGURATION);
-        FT_CLOSE_SOCKET(this->_socket_fd);
+        nw_close(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
     }
@@ -49,7 +49,7 @@ int ft_socket::setup_client(const SocketConfig &config)
         if (!(config._non_blocking && last_error == WSAEWOULDBLOCK))
         {
             this->set_error(ft_map_system_error(last_error));
-            FT_CLOSE_SOCKET(this->_socket_fd);
+            nw_close(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
         }
@@ -61,7 +61,7 @@ int ft_socket::setup_client(const SocketConfig &config)
             || last_error == EWOULDBLOCK)))
         {
             this->set_error(ft_map_system_error(last_error));
-            FT_CLOSE_SOCKET(this->_socket_fd);
+            nw_close(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
         }

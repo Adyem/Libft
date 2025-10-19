@@ -2,12 +2,13 @@
 #define WEBSOCKET_CLIENT_HPP
 
 #include "../CPP_class/class_string_class.hpp"
+#include "socket_handle.hpp"
 #include <cstdint>
 
 class ft_websocket_client
 {
     private:
-        int _socket_fd;
+        ft_socket_handle _socket;
         mutable int _error_code;
 
         int perform_handshake(const char *host, const char *path);

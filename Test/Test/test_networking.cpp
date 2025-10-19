@@ -101,7 +101,7 @@ static void http_stream_test_server(http_stream_test_server_context *context)
     send_result = nw_send(client_fd, header_block, header_length, 0);
     if (send_result != static_cast<ssize_t>(header_length))
     {
-        FT_CLOSE_SOCKET(client_fd);
+        nw_close(client_fd);
         return ;
     }
     usleep(50000);
@@ -110,7 +110,7 @@ static void http_stream_test_server(http_stream_test_server_context *context)
     send_result = nw_send(client_fd, chunk_one, chunk_one_length, 0);
     if (send_result != static_cast<ssize_t>(chunk_one_length))
     {
-        FT_CLOSE_SOCKET(client_fd);
+        nw_close(client_fd);
         return ;
     }
     usleep(50000);
@@ -119,7 +119,7 @@ static void http_stream_test_server(http_stream_test_server_context *context)
     send_result = nw_send(client_fd, chunk_two, chunk_two_length, 0);
     if (send_result != static_cast<ssize_t>(chunk_two_length))
     {
-        FT_CLOSE_SOCKET(client_fd);
+        nw_close(client_fd);
         return ;
     }
     usleep(50000);
@@ -128,10 +128,10 @@ static void http_stream_test_server(http_stream_test_server_context *context)
     send_result = nw_send(client_fd, chunk_three, chunk_three_length, 0);
     if (send_result != static_cast<ssize_t>(chunk_three_length))
     {
-        FT_CLOSE_SOCKET(client_fd);
+        nw_close(client_fd);
         return ;
     }
-    FT_CLOSE_SOCKET(client_fd);
+    nw_close(client_fd);
     return ;
 }
 
@@ -195,17 +195,17 @@ FT_TEST(test_network_send_receive_ipv4, "nw_send/nw_recv IPv4")
     send_result = client_socket.send_all(message, ft_strlen(message), 0);
     if (send_result != static_cast<ssize_t>(ft_strlen(message)))
     {
-        FT_CLOSE_SOCKET(client_fd);
+        nw_close(client_fd);
         return (0);
     }
     bytes_received = nw_recv(client_fd, buffer, sizeof(buffer) - 1, 0);
     if (bytes_received < 0)
     {
-        FT_CLOSE_SOCKET(client_fd);
+        nw_close(client_fd);
         return (0);
     }
     buffer[bytes_received] = '\0';
-    FT_CLOSE_SOCKET(client_fd);
+    nw_close(client_fd);
     return (ft_strcmp(buffer, message) == 0);
 }
 
@@ -328,36 +328,36 @@ FT_TEST(test_network_poll_ipv6_ready, "nw_poll detects IPv6 readiness")
         return (0);
     if (nw_set_nonblocking(client_fd) != 0)
     {
-        FT_CLOSE_SOCKET(client_fd);
+        nw_close(client_fd);
         return (0);
     }
     message = "start";
     send_result = client_socket.send_all(message, ft_strlen(message), 0);
     if (send_result != static_cast<ssize_t>(ft_strlen(message)))
     {
-        FT_CLOSE_SOCKET(client_fd);
+        nw_close(client_fd);
         return (0);
     }
     read_descriptors[0] = client_fd;
     poll_result = nw_poll(read_descriptors, 1, ft_nullptr, 0, 1000);
     if (poll_result != 1)
     {
-        FT_CLOSE_SOCKET(client_fd);
+        nw_close(client_fd);
         return (0);
     }
     if (read_descriptors[0] == -1)
     {
-        FT_CLOSE_SOCKET(client_fd);
+        nw_close(client_fd);
         return (0);
     }
     bytes_received = nw_recv(client_fd, buffer, sizeof(buffer) - 1, 0);
     if (bytes_received < 0)
     {
-        FT_CLOSE_SOCKET(client_fd);
+        nw_close(client_fd);
         return (0);
     }
     buffer[bytes_received] = '\0';
-    FT_CLOSE_SOCKET(client_fd);
+    nw_close(client_fd);
     return (ft_strcmp(buffer, message) == 0);
 }
 
@@ -584,7 +584,7 @@ FT_TEST(test_networking_check_socket_after_send_detects_disconnect, "networking_
     client_socket.close_socket();
     usleep(50000);
     check_result = networking_check_socket_after_send(accepted_fd);
-    FT_CLOSE_SOCKET(accepted_fd);
+    nw_close(accepted_fd);
     if (check_result == 0)
         return (0);
     if (ft_errno != FT_ERR_SOCKET_SEND_FAILED)
@@ -634,7 +634,7 @@ FT_TEST(test_networking_check_socket_after_send_reports_success, "networking_che
         return (0);
     ft_errno = FT_ERR_SOCKET_SEND_FAILED;
     check_result = networking_check_socket_after_send(accepted_fd);
-    FT_CLOSE_SOCKET(accepted_fd);
+    nw_close(accepted_fd);
     client_socket.close_socket();
     server_socket.close_socket();
     if (check_result != 0)

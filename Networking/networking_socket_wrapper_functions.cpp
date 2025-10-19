@@ -12,6 +12,7 @@
 # include <errno.h>
 #endif
 #include "socket_class.hpp"
+#include "socket_handle.hpp"
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 
@@ -52,21 +53,15 @@ static inline int accept_platform(int sockfd, struct sockaddr *addr, socklen_t *
 
 static inline int socket_platform(int domain, int type, int protocol)
 {
-    static int initialized = 0;
-    if (!initialized)
+    if (ft_socket_runtime_acquire() != ER_SUCCESS)
     {
-        WSADATA data;
-        if (WSAStartup(MAKEWORD(2,2), &data) != 0)
-        {
-            ft_errno = ft_map_system_error(WSAGetLastError());
-            return (-1);
-        }
-        initialized = 1;
+        return (-1);
     }
     SOCKET sockfd = socket(domain, type, protocol);
     if (sockfd == INVALID_SOCKET)
     {
         ft_errno = ft_map_system_error(WSAGetLastError());
+        ft_socket_runtime_release();
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -264,7 +259,22 @@ int nw_listen(int sockfd, int backlog)
 
 int nw_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
 {
-    return (accept_platform(sockfd, addr, addrlen));
+    int accepted_fd;
+    int acquire_error;
+
+    accepted_fd = accept_platform(sockfd, addr, addrlen);
+    if (accepted_fd < 0)
+    {
+        return (-1);
+    }
+    if (ft_socket_runtime_acquire() != ER_SUCCESS)
+    {
+        acquire_error = ft_errno;
+        nw_close(accepted_fd);
+        ft_errno = acquire_error;
+        return (-1);
+    }
+    return (accepted_fd);
 }
 
 static t_nw_socket_hook g_nw_socket_hook = socket_platform;
@@ -310,6 +320,46 @@ ssize_t nw_recvfrom(int sockfd, void *buf, size_t len, int flags,
                     struct sockaddr *src_addr, socklen_t *addrlen)
 {
     return (recvfrom_platform(sockfd, buf, len, flags, src_addr, addrlen));
+}
+
+int nw_close(int sockfd)
+{
+#ifdef _WIN32
+    int previous_error;
+
+    previous_error = ft_errno;
+    if (closesocket(static_cast<SOCKET>(sockfd)) == SOCKET_ERROR)
+    {
+        ft_errno = ft_map_system_error(WSAGetLastError());
+        if (ft_errno == ER_SUCCESS)
+        {
+            ft_errno = FT_ERR_SOCKET_CLOSE_FAILED;
+        }
+        return (-1);
+    }
+    ft_socket_runtime_release();
+    if (ft_errno != ER_SUCCESS)
+    {
+        return (-1);
+    }
+    ft_errno = previous_error;
+    return (0);
+#else
+    int previous_error;
+
+    previous_error = ft_errno;
+    if (close(sockfd) == -1)
+    {
+        ft_errno = ft_map_system_error(errno);
+        if (ft_errno == ER_SUCCESS)
+        {
+            ft_errno = FT_ERR_SOCKET_CLOSE_FAILED;
+        }
+        return (-1);
+    }
+    ft_errno = previous_error;
+    return (0);
+#endif
 }
 
 int nw_inet_pton(int family, const char *ip_address, void *destination)
