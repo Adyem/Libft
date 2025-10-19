@@ -7,6 +7,7 @@ SRCS := networking_socket_class.cpp \
         networking_setup_server.cpp \
         networking_setup_client.cpp \
         networking_setup_udp.cpp \
+        networking_udp_event_loop.cpp \
         networking_socket_wrapper_functions.cpp \
         socket_handle.cpp \
         networking_ssl_wrapper.cpp \
