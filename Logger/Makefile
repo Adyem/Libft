@@ -33,7 +33,7 @@ SRCS := \
     logger_log_context_guard.cpp \
     logger_log_structured.cpp \
     logger_log_async.cpp \
-    logger_logger.cpp \
+    logger.cpp \
     logger_syslog.cpp \
     logger_network.cpp
 
