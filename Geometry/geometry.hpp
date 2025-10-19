@@ -1,9 +1,9 @@
 #ifndef GEOMETRY_HPP
 # define GEOMETRY_HPP
 
-struct aabb;
-struct circle;
-struct sphere;
+class aabb;
+class circle;
+class sphere;
 
 bool    intersect_aabb(const aabb &first, const aabb &second);
 bool    intersect_circle(const circle &first, const circle &second);
