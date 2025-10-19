@@ -6,12 +6,10 @@
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>
-# define FT_CLOSE_SOCKET(fd) closesocket(fd)
 #else
 # include <sys/socket.h>
 # include <unistd.h>
 # include <arpa/inet.h>
-# define FT_CLOSE_SOCKET(fd) close(fd)
 #endif
 
 class udp_socket
