@@ -44,8 +44,9 @@ static void compute_accept_key(const ft_string &key, ft_string &accept)
     return ;
 }
 
-ft_websocket_client::ft_websocket_client() : _socket_fd(-1), _error_code(ER_SUCCESS)
+ft_websocket_client::ft_websocket_client() : _socket(), _error_code(ER_SUCCESS)
 {
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -64,15 +65,12 @@ void ft_websocket_client::set_error(int error_code) const
 
 void ft_websocket_client::close()
 {
-    if (this->_socket_fd >= 0)
+    if (!this->_socket.close())
     {
-        #ifdef _WIN32
-        closesocket(this->_socket_fd);
-        #else
-        ::close(this->_socket_fd);
-        #endif
-        this->_socket_fd = -1;
+        this->set_error(this->_socket.get_error());
+        return ;
     }
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -93,6 +91,14 @@ int ft_websocket_client::perform_handshake(const char *host, const char *path)
     unsigned char random_key[16];
     std::size_t encoded_size;
     unsigned char *encoded_key;
+    int socket_fd;
+
+    socket_fd = this->_socket.get();
+    if (socket_fd < 0)
+    {
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return (1);
+    }
 
     byte_index = 0;
     while (byte_index < 16)
@@ -135,7 +141,7 @@ int ft_websocket_client::perform_handshake(const char *host, const char *path)
     total_sent = 0;
     while (total_sent < request.size())
     {
-        send_result = nw_send(this->_socket_fd, request_data + total_sent, request.size() - total_sent, 0);
+        send_result = nw_send(socket_fd, request_data + total_sent, request.size() - total_sent, 0);
         if (send_result <= 0)
         {
             if (send_result < 0)
@@ -146,7 +152,7 @@ int ft_websocket_client::perform_handshake(const char *host, const char *path)
         }
         total_sent += static_cast<size_t>(send_result);
     }
-    if (networking_check_socket_after_send(this->_socket_fd) != 0)
+    if (networking_check_socket_after_send(socket_fd) != 0)
     {
         this->set_error(ft_errno);
         return (1);
@@ -154,7 +160,7 @@ int ft_websocket_client::perform_handshake(const char *host, const char *path)
     response.clear();
     while (true)
     {
-        bytes_received = nw_recv(this->_socket_fd, buffer, sizeof(buffer) - 1, 0);
+        bytes_received = nw_recv(socket_fd, buffer, sizeof(buffer) - 1, 0);
         if (bytes_received < 0)
         {
             this->set_error(ft_errno);
@@ -225,19 +231,33 @@ int ft_websocket_client::connect(const char *host, uint16_t port, const char *pa
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
-    this->_socket_fd = nw_socket(address_info->ai_family, address_info->ai_socktype, address_info->ai_protocol);
-    if (this->_socket_fd < 0)
+    int new_socket_fd;
+    int connect_error;
+
+    new_socket_fd = nw_socket(address_info->ai_family, address_info->ai_socktype, address_info->ai_protocol);
+    if (new_socket_fd < 0)
     {
         freeaddrinfo(address_info);
         this->set_error(ft_errno);
         return (1);
     }
-    result = nw_connect(this->_socket_fd, address_info->ai_addr, address_info->ai_addrlen);
+    if (!this->_socket.reset(new_socket_fd))
+    {
+        int reset_error;
+
+        reset_error = this->_socket.get_error();
+        nw_close(new_socket_fd);
+        freeaddrinfo(address_info);
+        this->set_error(reset_error);
+        return (1);
+    }
+    result = nw_connect(this->_socket.get(), address_info->ai_addr, address_info->ai_addrlen);
     freeaddrinfo(address_info);
     if (result < 0)
     {
-        this->set_error(ft_errno);
+        connect_error = ft_errno;
         this->close();
+        this->set_error(connect_error);
         return (1);
     }
     if (this->perform_handshake(host, path) != 0)
@@ -259,6 +279,14 @@ int ft_websocket_client::send_pong(const unsigned char *payload, std::size_t len
     uint32_t mask_value;
     unsigned char mask_key[4];
     std::size_t index_value;
+    int socket_fd;
+
+    socket_fd = this->_socket.get();
+    if (socket_fd < 0)
+    {
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return (1);
+    }
 
     mask_value = ft_random_uint32();
     index_value = 0;
@@ -299,7 +327,7 @@ int ft_websocket_client::send_pong(const unsigned char *payload, std::size_t len
         frame.append(masked_char);
         index_value++;
     }
-    if (nw_send(this->_socket_fd, frame.c_str(), frame.size(), 0) < 0)
+    if (nw_send(socket_fd, frame.c_str(), frame.size(), 0) < 0)
     {
         this->set_error(ft_errno);
         return (1);
@@ -315,12 +343,15 @@ int ft_websocket_client::send_text(const ft_string &message)
     unsigned char mask_key[4];
     std::size_t index_value;
     std::size_t length;
+    int socket_fd;
 
-    if (this->_socket_fd < 0)
+    socket_fd = this->_socket.get();
+    if (socket_fd < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
+
     mask_value = ft_random_uint32();
     index_value = 0;
     while (index_value < 4)
@@ -362,7 +393,7 @@ int ft_websocket_client::send_text(const ft_string &message)
         frame.append(masked_char);
         index_value++;
     }
-    if (nw_send(this->_socket_fd, frame.c_str(), frame.size(), 0) < 0)
+    if (nw_send(socket_fd, frame.c_str(), frame.size(), 0) < 0)
     {
         this->set_error(ft_errno);
         return (1);
@@ -381,16 +412,18 @@ int ft_websocket_client::receive_text(ft_string &message)
     unsigned char *payload;
     std::size_t index_value;
     unsigned char opcode;
+    int socket_fd;
 
     message.clear();
-    if (this->_socket_fd < 0)
+    socket_fd = this->_socket.get();
+    if (socket_fd < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (1);
     }
     while (true)
     {
-        bytes_received = nw_recv(this->_socket_fd, header, 2, 0);
+        bytes_received = nw_recv(socket_fd, header, 2, 0);
         if (bytes_received <= 0)
         {
             this->set_error(ft_errno);
@@ -402,7 +435,7 @@ int ft_websocket_client::receive_text(ft_string &message)
         if (payload_length == 126)
         {
             unsigned char extended[2];
-            bytes_received = nw_recv(this->_socket_fd, extended, 2, 0);
+            bytes_received = nw_recv(socket_fd, extended, 2, 0);
             if (bytes_received <= 0)
             {
                 this->set_error(ft_errno);
@@ -414,7 +447,7 @@ int ft_websocket_client::receive_text(ft_string &message)
         {
             unsigned char extended[8];
             std::size_t shift_index;
-            bytes_received = nw_recv(this->_socket_fd, extended, 8, 0);
+            bytes_received = nw_recv(socket_fd, extended, 8, 0);
             if (bytes_received <= 0)
             {
                 this->set_error(ft_errno);
@@ -430,7 +463,7 @@ int ft_websocket_client::receive_text(ft_string &message)
         }
         if (mask_bit_set)
         {
-            bytes_received = nw_recv(this->_socket_fd, mask_key, 4, 0);
+            bytes_received = nw_recv(socket_fd, mask_key, 4, 0);
             if (bytes_received <= 0)
             {
                 this->set_error(ft_errno);
@@ -446,7 +479,7 @@ int ft_websocket_client::receive_text(ft_string &message)
         index_value = 0;
         while (index_value < payload_length)
         {
-            bytes_received = nw_recv(this->_socket_fd, payload + index_value, payload_length - index_value, 0);
+            bytes_received = nw_recv(socket_fd, payload + index_value, payload_length - index_value, 0);
             if (bytes_received <= 0)
             {
                 cma_free(payload);

@@ -102,7 +102,7 @@ int ft_socket::set_reuse_address(const SocketConfig &config)
     if (setsockopt_reuse(this->_socket_fd, opt) < 0)
     {
         this->set_error(translate_platform_error());
-        FT_CLOSE_SOCKET(this->_socket_fd);
+        nw_close(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
     }
@@ -117,7 +117,7 @@ int ft_socket::set_non_blocking(const SocketConfig &config)
     if (set_nonblocking_platform(this->_socket_fd) != 0)
     {
         this->set_error(translate_platform_error());
-        FT_CLOSE_SOCKET(this->_socket_fd);
+        nw_close(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
     }
@@ -132,7 +132,7 @@ int ft_socket::set_timeouts(const SocketConfig &config)
         if (set_timeout_recv(this->_socket_fd, config._recv_timeout) < 0)
         {
             this->set_error(translate_platform_error());
-            FT_CLOSE_SOCKET(this->_socket_fd);
+            nw_close(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
         }
@@ -142,7 +142,7 @@ int ft_socket::set_timeouts(const SocketConfig &config)
         if (set_timeout_send(this->_socket_fd, config._send_timeout) < 0)
         {
             this->set_error(translate_platform_error());
-            FT_CLOSE_SOCKET(this->_socket_fd);
+            nw_close(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
         }
@@ -167,7 +167,7 @@ int ft_socket::configure_address(const SocketConfig &config)
         else if (nw_inet_pton(AF_INET, config._ip.c_str(), &addr_in->sin_addr) <= 0)
         {
             this->set_error(FT_ERR_CONFIGURATION);
-            FT_CLOSE_SOCKET(this->_socket_fd);
+            nw_close(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
         }
@@ -184,7 +184,7 @@ int ft_socket::configure_address(const SocketConfig &config)
         else if (nw_inet_pton(AF_INET6, config._ip.c_str(), &addr_in6->sin6_addr) <= 0)
         {
             this->set_error(FT_ERR_CONFIGURATION);
-            FT_CLOSE_SOCKET(this->_socket_fd);
+            nw_close(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
         }
@@ -192,7 +192,7 @@ int ft_socket::configure_address(const SocketConfig &config)
     else
     {
         this->set_error(FT_ERR_CONFIGURATION);
-        FT_CLOSE_SOCKET(this->_socket_fd);
+        nw_close(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
     }
@@ -211,7 +211,7 @@ int ft_socket::bind_socket(const SocketConfig &config)
     else
     {
         this->set_error(FT_ERR_CONFIGURATION);
-        FT_CLOSE_SOCKET(this->_socket_fd);
+        nw_close(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
     }
@@ -219,7 +219,7 @@ int ft_socket::bind_socket(const SocketConfig &config)
                 addr_len) < 0)
     {
         this->set_error(translate_platform_error());
-        FT_CLOSE_SOCKET(this->_socket_fd);
+        nw_close(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
     }
@@ -233,7 +233,7 @@ int ft_socket::listen_socket(const SocketConfig &config)
     if (nw_listen(this->_socket_fd, config._backlog) < 0)
     {
         this->set_error(translate_platform_error());
-        FT_CLOSE_SOCKET(this->_socket_fd);
+        nw_close(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
     }
@@ -285,7 +285,7 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
         if (nw_inet_pton(AF_INET, config._multicast_group.c_str(), &mreq.imr_multiaddr) <= 0)
         {
             this->set_error(FT_ERR_CONFIGURATION);
-            FT_CLOSE_SOCKET(this->_socket_fd);
+            nw_close(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
         }
@@ -294,7 +294,7 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
         else if (nw_inet_pton(AF_INET, config._multicast_interface.c_str(), &mreq.imr_interface) <= 0)
         {
             this->set_error(FT_ERR_CONFIGURATION);
-            FT_CLOSE_SOCKET(this->_socket_fd);
+            nw_close(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
         }
@@ -302,7 +302,7 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
                        reinterpret_cast<const char*>(&mreq), sizeof(mreq)) < 0)
         {
             this->set_error(FT_ERR_SOCKET_JOIN_GROUP_FAILED);
-            FT_CLOSE_SOCKET(this->_socket_fd);
+            nw_close(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
         }
@@ -314,7 +314,7 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
         if (nw_inet_pton(AF_INET6, config._multicast_group.c_str(), &mreq6.ipv6mr_multiaddr) <= 0)
         {
             this->set_error(FT_ERR_CONFIGURATION);
-            FT_CLOSE_SOCKET(this->_socket_fd);
+            nw_close(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
         }
@@ -323,7 +323,7 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
                        reinterpret_cast<const char*>(&mreq6), sizeof(mreq6)) < 0)
         {
             this->set_error(FT_ERR_SOCKET_JOIN_GROUP_FAILED);
-            FT_CLOSE_SOCKET(this->_socket_fd);
+            nw_close(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
         }
@@ -331,7 +331,7 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
     else
     {
         this->set_error(FT_ERR_CONFIGURATION);
-        FT_CLOSE_SOCKET(this->_socket_fd);
+        nw_close(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
     }

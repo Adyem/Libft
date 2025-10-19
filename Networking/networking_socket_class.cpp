@@ -242,7 +242,7 @@ ft_socket::~ft_socket()
 {
     if (this->_socket_fd >= 0)
     {
-        FT_CLOSE_SOCKET(this->_socket_fd);
+        nw_close(this->_socket_fd);
     }
     return ;
 }
@@ -349,7 +349,7 @@ bool ft_socket::close_socket()
 {
     if (this->_socket_fd >= 0)
     {
-        if (FT_CLOSE_SOCKET(this->_socket_fd) == 0)
+        if (nw_close(this->_socket_fd) == 0)
         {
             this->_socket_fd = -1;
             this->set_error(ER_SUCCESS);

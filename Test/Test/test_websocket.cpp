@@ -92,7 +92,7 @@ static void websocket_invalid_handshake_server(websocket_invalid_handshake_conte
         bytes_received = nw_recv(client_socket, buffer, sizeof(buffer) - 1, 0);
         if (bytes_received <= 0)
         {
-            FT_CLOSE_SOCKET(client_socket);
+            nw_close(client_socket);
             return ;
         }
         buffer[bytes_received] = '\0';
@@ -110,12 +110,12 @@ static void websocket_invalid_handshake_server(websocket_invalid_handshake_conte
         send_result = nw_send(client_socket, response_data + total_sent, response.size() - total_sent, 0);
         if (send_result <= 0)
         {
-            FT_CLOSE_SOCKET(client_socket);
+            nw_close(client_socket);
             return ;
         }
         total_sent += static_cast<size_t>(send_result);
     }
-    FT_CLOSE_SOCKET(client_socket);
+    nw_close(client_socket);
     context->result = 0;
     return ;
 }
@@ -158,14 +158,14 @@ FT_TEST(test_websocket_handshake_and_echo, "websocket server echoes message")
     {
         client.close();
         if (context.client_fd >= 0)
-            FT_CLOSE_SOCKET(context.client_fd);
+            nw_close(context.client_fd);
         return (0);
     }
     if (!(context.message == message))
     {
         client.close();
         if (context.client_fd >= 0)
-            FT_CLOSE_SOCKET(context.client_fd);
+            nw_close(context.client_fd);
         return (0);
     }
     reply = "pong";
@@ -173,19 +173,19 @@ FT_TEST(test_websocket_handshake_and_echo, "websocket server echoes message")
     {
         client.close();
         if (context.client_fd >= 0)
-            FT_CLOSE_SOCKET(context.client_fd);
+            nw_close(context.client_fd);
         return (0);
     }
     if (client.receive_text(received) != 0)
     {
         client.close();
         if (context.client_fd >= 0)
-            FT_CLOSE_SOCKET(context.client_fd);
+            nw_close(context.client_fd);
         return (0);
     }
     client.close();
     if (context.client_fd >= 0)
-        FT_CLOSE_SOCKET(context.client_fd);
+        nw_close(context.client_fd);
     return (received == reply);
 }
 
@@ -223,12 +223,12 @@ FT_TEST(test_websocket_server_handles_fragmented_handshake, "websocket server ha
     server_address.sin_port = htons(54355);
     if (nw_inet_pton(AF_INET, "127.0.0.1", &server_address.sin_addr) != 1)
     {
-        FT_CLOSE_SOCKET(client_socket);
+        nw_close(client_socket);
         return (0);
     }
     if (nw_connect(client_socket, reinterpret_cast<struct sockaddr*>(&server_address), sizeof(server_address)) != 0)
     {
-        FT_CLOSE_SOCKET(client_socket);
+        nw_close(client_socket);
         return (0);
     }
     context.server = &server;
@@ -237,7 +237,7 @@ FT_TEST(test_websocket_server_handles_fragmented_handshake, "websocket server ha
     server_thread = ft_thread(websocket_server_worker, &context);
     if (server_thread.get_error() != ER_SUCCESS)
     {
-        FT_CLOSE_SOCKET(client_socket);
+        nw_close(client_socket);
         return (0);
     }
     handshake_request = "GET / HTTP/1.1\r\n";
@@ -262,7 +262,7 @@ FT_TEST(test_websocket_server_handles_fragmented_handshake, "websocket server ha
         send_result = nw_send(client_socket, handshake_data + total_sent, send_length, 0);
         if (send_result <= 0)
         {
-            FT_CLOSE_SOCKET(client_socket);
+            nw_close(client_socket);
             server_thread.join();
             return (0);
         }
@@ -276,7 +276,7 @@ FT_TEST(test_websocket_server_handles_fragmented_handshake, "websocket server ha
         bytes_received = nw_recv(client_socket, response_buffer, sizeof(response_buffer) - 1, 0);
         if (bytes_received <= 0)
         {
-            FT_CLOSE_SOCKET(client_socket);
+            nw_close(client_socket);
             server_thread.join();
             return (0);
         }
@@ -308,16 +308,16 @@ FT_TEST(test_websocket_server_handles_fragmented_handshake, "websocket server ha
         send_result = nw_send(client_socket, frame + total_sent, frame_length - total_sent, 0);
         if (send_result <= 0)
         {
-            FT_CLOSE_SOCKET(client_socket);
+            nw_close(client_socket);
             server_thread.join();
             return (0);
         }
         total_sent += static_cast<size_t>(send_result);
     }
     server_thread.join();
-    FT_CLOSE_SOCKET(client_socket);
+    nw_close(client_socket);
     if (context.client_fd >= 0)
-        FT_CLOSE_SOCKET(context.client_fd);
+        nw_close(context.client_fd);
     return (context.result == 0 && context.message == expected_message);
 }
 
@@ -340,17 +340,17 @@ FT_TEST(test_websocket_client_rejects_invalid_handshake, "websocket client detec
     server_address.sin_port = htons(0);
     if (nw_bind(server_socket, reinterpret_cast<struct sockaddr*>(&server_address), sizeof(server_address)) != 0)
     {
-        FT_CLOSE_SOCKET(server_socket);
+        nw_close(server_socket);
         return (0);
     }
     if (get_server_socket_port(server_socket, &server_port) == false)
     {
-        FT_CLOSE_SOCKET(server_socket);
+        nw_close(server_socket);
         return (0);
     }
     if (nw_listen(server_socket, 1) != 0)
     {
-        FT_CLOSE_SOCKET(server_socket);
+        nw_close(server_socket);
         return (0);
     }
     context.server_socket = server_socket;
@@ -358,12 +358,12 @@ FT_TEST(test_websocket_client_rejects_invalid_handshake, "websocket client detec
     server_thread = ft_thread(websocket_invalid_handshake_server, &context);
     if (server_thread.get_error() != ER_SUCCESS)
     {
-        FT_CLOSE_SOCKET(server_socket);
+        nw_close(server_socket);
         return (0);
     }
     connect_result = client.connect("127.0.0.1", static_cast<int>(server_port), "/");
     server_thread.join();
-    FT_CLOSE_SOCKET(server_socket);
+    nw_close(server_socket);
     if (context.result != 0)
     {
         client.close();

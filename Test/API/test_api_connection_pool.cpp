@@ -156,7 +156,7 @@ static void api_pool_test_server(api_pool_test_server_context *context)
     }
     context->handled_requests.store(response_count);
     if (client_fd >= 0)
-        FT_CLOSE_SOCKET(client_fd);
+        nw_close(client_fd);
     return ;
 }
 
