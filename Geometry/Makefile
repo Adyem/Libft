@@ -1,7 +1,10 @@
 TARGET := geometry.a
 DEBUG_TARGET := geometry_debug.a
 
-SRCS := geometry_collision.cpp
+SRCS := geometry_aabb.cpp \
+        geometry_collision.cpp \
+        geometry_circle.cpp \
+        geometry_sphere.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
