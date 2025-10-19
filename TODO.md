@@ -71,7 +71,7 @@
 - [x] Add redaction helpers for sensitive fields and ensure they integrate with formatting utilities.
 - [x] Support structured context propagation (per-thread request IDs, correlation tokens) through scoped guards.
 - [x] Restore the `logger async logging` regression after fixing the heap corruption triggered by asynchronous sink teardown.
-- [ ] Make `ft_logger` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_logger` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `s_log_field` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `s_log_async_metrics` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `s_log_sink` thread safe (relies on the shared deadlock resolution routine described below).

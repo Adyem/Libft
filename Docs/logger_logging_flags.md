@@ -70,7 +70,7 @@ follow control flow when debugging complex integrations.
   logging to the portion of the program being investigated. The getters allow
   tests to assert that a helper respected the requested logging mode.
 - The logger defaults both switches to `false` in its constructor so processes
-  start without verbose output unless explicitly requested.【F:Logger/logger_logger.cpp†L5-L11】
+  start without verbose output unless explicitly requested.【F:Logger/logger.cpp†L37-L39】
 - Because the messages are produced on the hot path for allocations and network
   requests, keep the flags disabled in production builds and automation unless a
   specific issue requires the extra insight.
