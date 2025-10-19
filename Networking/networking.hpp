@@ -48,11 +48,22 @@ struct event_loop
     int write_count;
 };
 
+class udp_socket;
+
 void event_loop_init(event_loop *loop);
 void event_loop_clear(event_loop *loop);
 int event_loop_add_socket(event_loop *loop, int socket_fd, bool is_write);
 int event_loop_remove_socket(event_loop *loop, int socket_fd, bool is_write);
 int event_loop_run(event_loop *loop, int timeout_milliseconds);
+
+int udp_event_loop_wait_read(event_loop *loop, udp_socket &socket, int timeout_milliseconds);
+int udp_event_loop_wait_write(event_loop *loop, udp_socket &socket, int timeout_milliseconds);
+ssize_t udp_event_loop_receive(event_loop *loop, udp_socket &socket, void *buffer, size_t size,
+                               int flags, struct sockaddr *source_address,
+                               socklen_t *address_length, int timeout_milliseconds);
+ssize_t udp_event_loop_send(event_loop *loop, udp_socket &socket, const void *data, size_t size,
+                            int flags, const struct sockaddr *destination_address,
+                            socklen_t address_length, int timeout_milliseconds);
 
 int networking_check_socket_after_send(int socket_fd);
 int networking_check_ssl_after_send(SSL *ssl_connection);
