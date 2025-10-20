@@ -17,17 +17,39 @@ struct xml_node
     ~xml_node() noexcept;
 };
 
-
+class pt_mutex;
 
 class xml_document
 {
     private:
         xml_node *_root;
+        mutable pt_mutex *_mutex;
+        mutable bool _thread_safe_enabled;
         mutable int _error_code;
 
-        void set_error(int error_code) const;
+        void set_error(int error_code) const noexcept;
+        int prepare_thread_safety() noexcept;
+        void teardown_thread_safety() noexcept;
+        int lock(bool *lock_acquired) const noexcept;
+        void unlock(bool lock_acquired) const noexcept;
 
     public:
+        class thread_guard
+        {
+            private:
+                const xml_document *_document;
+                bool _lock_acquired;
+                int _status;
+                int _entry_errno;
+
+            public:
+                thread_guard(const xml_document *document) noexcept;
+                ~thread_guard() noexcept;
+
+                int get_status() const noexcept;
+                bool lock_acquired() const noexcept;
+        };
+
         xml_document() noexcept;
         ~xml_document() noexcept;
 
@@ -38,6 +60,7 @@ class xml_document
         xml_node *get_root() const noexcept;
         int get_error() const noexcept;
         const char *get_error_str() const noexcept;
+        bool is_thread_safe_enabled() const noexcept;
 };
 
 #endif
