@@ -1,5 +1,8 @@
 #include <unistd.h>
+#include <atomic>
+#include <chrono>
 #include <cstring>
+#include <thread>
 #include "../../ReadLine/readline.hpp"
 #include "../../ReadLine/readline_internal.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
@@ -313,6 +316,212 @@ FT_TEST(test_readline_tab_completion_preserves_suffix, "rl_handle_tab_completion
     FT_ASSERT_EQ(ft_strlen(state.buffer), state.prev_buffer_length);
     rl_clear_suggestions();
     cma_free(buffer);
+    return (1);
+}
+
+FT_TEST(test_readline_state_thread_safety_prepare_null,
+    "rl_state_prepare_thread_safety validates null arguments")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(-1, rl_state_prepare_thread_safety(ft_nullptr));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_readline_state_thread_safety_lock_without_prepare,
+    "rl_state_lock allows access when thread safety disabled")
+{
+    readline_state_t state;
+    bool lock_acquired;
+
+    ft_bzero(&state, sizeof(state));
+    state.thread_safe_enabled = false;
+    state.mutex = ft_nullptr;
+    lock_acquired = true;
+    ft_errno = FT_ERR_SOCKET_ACCEPT_FAILED;
+    FT_ASSERT_EQ(0, rl_state_lock(&state, &lock_acquired));
+    FT_ASSERT_EQ(false, lock_acquired);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_readline_state_thread_safety_unlock_without_lock,
+    "rl_state_unlock preserves errno when lock not held")
+{
+    readline_state_t state;
+
+    ft_bzero(&state, sizeof(state));
+    state.thread_safe_enabled = false;
+    state.mutex = ft_nullptr;
+    ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
+    rl_state_unlock(&state, false);
+    FT_ASSERT_EQ(FT_ERR_SOCKET_CONNECT_FAILED, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_readline_state_thread_safety_lifecycle,
+    "rl_state thread safety guards serialize access and preserve errno")
+{
+    readline_state_t state;
+    bool main_lock_acquired;
+    bool relock_acquired;
+    std::atomic<bool> worker_ready;
+    std::atomic<bool> worker_has_lock;
+    std::atomic<int> worker_result;
+    std::thread worker;
+
+    ft_bzero(&state, sizeof(state));
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(0, rl_state_prepare_thread_safety(&state));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT(state.thread_safe_enabled);
+    FT_ASSERT(state.mutex != ft_nullptr);
+
+    main_lock_acquired = false;
+    FT_ASSERT_EQ(0, rl_state_lock(&state, &main_lock_acquired));
+    FT_ASSERT(main_lock_acquired);
+
+    worker_ready.store(false);
+    worker_has_lock.store(false);
+    worker_result.store(0);
+    worker = std::thread([&state, &worker_ready, &worker_has_lock, &worker_result]() {
+        bool worker_lock_acquired;
+
+        worker_lock_acquired = false;
+        worker_ready.store(true);
+        if (rl_state_lock(&state, &worker_lock_acquired) != 0)
+        {
+            worker_result.store(-1);
+            return ;
+        }
+        if (worker_lock_acquired == true)
+            worker_has_lock.store(true);
+        worker_result.store(1);
+        rl_state_unlock(&state, worker_lock_acquired);
+    });
+    while (worker_ready.load() == false)
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    rl_state_unlock(&state, main_lock_acquired);
+    worker.join();
+
+    FT_ASSERT_EQ(1, worker_result.load());
+    FT_ASSERT(worker_has_lock.load());
+
+    relock_acquired = false;
+    FT_ASSERT_EQ(0, rl_state_lock(&state, &relock_acquired));
+    FT_ASSERT(relock_acquired);
+    ft_errno = FT_ERR_NO_MEMORY;
+    rl_state_unlock(&state, relock_acquired);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
+
+    rl_state_teardown_thread_safety(&state);
+    FT_ASSERT(state.thread_safe_enabled == false);
+    FT_ASSERT(state.mutex == ft_nullptr);
+    return (1);
+}
+
+FT_TEST(test_readline_terminal_dimensions_thread_safety_prepare_null,
+    "rl_terminal_dimensions_prepare_thread_safety validates null arguments")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(-1, rl_terminal_dimensions_prepare_thread_safety(ft_nullptr));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_readline_terminal_dimensions_thread_safety_lock_without_prepare,
+    "rl_terminal_dimensions_lock allows access when thread safety disabled")
+{
+    terminal_dimensions dimensions;
+    bool lock_acquired;
+
+    ft_bzero(&dimensions, sizeof(dimensions));
+    dimensions.thread_safe_enabled = false;
+    dimensions.mutex = ft_nullptr;
+    lock_acquired = true;
+    ft_errno = FT_ERR_SOCKET_LISTEN_FAILED;
+    FT_ASSERT_EQ(0, rl_terminal_dimensions_lock(&dimensions, &lock_acquired));
+    FT_ASSERT_EQ(false, lock_acquired);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_readline_terminal_dimensions_thread_safety_unlock_without_lock,
+    "rl_terminal_dimensions_unlock preserves errno when lock not held")
+{
+    terminal_dimensions dimensions;
+
+    ft_bzero(&dimensions, sizeof(dimensions));
+    dimensions.thread_safe_enabled = false;
+    dimensions.mutex = ft_nullptr;
+    ft_errno = FT_ERR_SOCKET_ACCEPT_FAILED;
+    rl_terminal_dimensions_unlock(&dimensions, false);
+    FT_ASSERT_EQ(FT_ERR_SOCKET_ACCEPT_FAILED, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_readline_terminal_dimensions_thread_safety_lifecycle,
+    "terminal_dimensions thread safety guards serialize access and preserve errno")
+{
+    terminal_dimensions dimensions;
+    bool main_lock_acquired;
+    bool relock_acquired;
+    std::atomic<bool> worker_ready;
+    std::atomic<bool> worker_has_lock;
+    std::atomic<int> worker_result;
+    std::thread worker;
+
+    ft_bzero(&dimensions, sizeof(dimensions));
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(0, rl_terminal_dimensions_prepare_thread_safety(&dimensions));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT(dimensions.thread_safe_enabled);
+    FT_ASSERT(dimensions.mutex != ft_nullptr);
+
+    main_lock_acquired = false;
+    FT_ASSERT_EQ(0, rl_terminal_dimensions_lock(&dimensions, &main_lock_acquired));
+    FT_ASSERT(main_lock_acquired);
+
+    worker_ready.store(false);
+    worker_has_lock.store(false);
+    worker_result.store(0);
+    worker = std::thread([&dimensions, &worker_ready, &worker_has_lock, &worker_result]() {
+        bool worker_lock_acquired;
+
+        worker_lock_acquired = false;
+        worker_ready.store(true);
+        if (rl_terminal_dimensions_lock(&dimensions, &worker_lock_acquired) != 0)
+        {
+            worker_result.store(-1);
+            return ;
+        }
+        if (worker_lock_acquired == true)
+            worker_has_lock.store(true);
+        worker_result.store(1);
+        rl_terminal_dimensions_unlock(&dimensions, worker_lock_acquired);
+    });
+    while (worker_ready.load() == false)
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    rl_terminal_dimensions_unlock(&dimensions, main_lock_acquired);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    worker.join();
+
+    FT_ASSERT_EQ(1, worker_result.load());
+    FT_ASSERT(worker_has_lock.load());
+
+    relock_acquired = false;
+    FT_ASSERT_EQ(0, rl_terminal_dimensions_lock(&dimensions, &relock_acquired));
+    FT_ASSERT(relock_acquired);
+    ft_errno = FT_ERR_IO;
+    rl_terminal_dimensions_unlock(&dimensions, relock_acquired);
+    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
+
+    rl_terminal_dimensions_teardown_thread_safety(&dimensions);
+    FT_ASSERT(dimensions.thread_safe_enabled == false);
+    FT_ASSERT(dimensions.mutex == ft_nullptr);
     return (1);
 }
 

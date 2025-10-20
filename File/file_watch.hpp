@@ -6,6 +6,7 @@
 #include "../CPP_class/class_string_class.hpp"
 
 #include "../PThread/thread.hpp"
+#include "../PThread/mutex.hpp"
 
 enum file_watch_event_type
 {
@@ -24,6 +25,7 @@ class ft_file_watch
         bool _running;
         bool _stopped;
         mutable int _error_code;
+        mutable pt_mutex _mutex;
 #ifdef __linux__
         int _fd;
         int _watch;
@@ -35,7 +37,16 @@ class ft_file_watch
 #endif
         void set_error(int error) const;
         void event_loop();
-        void close_handles();
+        void close_handles_locked();
+        bool snapshot_callback(void (**callback)(const char *, int, void *),
+            void *&user_data, ft_string &path_snapshot) const;
+#ifdef __linux__
+        bool get_linux_handles(int &fd) const;
+#elif defined(__APPLE__) || defined(__FreeBSD__)
+        bool get_bsd_handles(int &kqueue_handle, int &fd) const;
+#elif defined(_WIN32)
+        bool get_windows_handle(void *&handle) const;
+#endif
 
     public:
         ft_file_watch();

@@ -23,18 +23,52 @@ static void rl_open_log_file(readline_state_t *state)
 
 int rl_initialize_state(readline_state_t *state)
 {
+    bool lock_acquired;
+    bool thread_safety_created;
+    bool thread_safety_was_enabled;
+    int  index;
+
     if (state == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (1);
     }
-    if (rl_enable_raw_mode() == -1)
+    lock_acquired = false;
+    thread_safety_created = false;
+    thread_safety_was_enabled = false;
+    if (state->thread_safe_enabled == true && state->mutex != ft_nullptr)
+        thread_safety_was_enabled = true;
+    if (rl_state_prepare_thread_safety(state) != 0)
         return (1);
+    if (thread_safety_was_enabled == false && state->thread_safe_enabled == true
+        && state->mutex != ft_nullptr)
+        thread_safety_created = true;
+    if (rl_enable_raw_mode() == -1)
+    {
+        if (thread_safety_created == true)
+            rl_state_teardown_thread_safety(state);
+        return (1);
+    }
+    if (rl_state_lock(state, &lock_acquired) != 0)
+    {
+        rl_disable_raw_mode();
+        if (thread_safety_created == true)
+            rl_state_teardown_thread_safety(state);
+        return (1);
+    }
+    if (state->buffer != ft_nullptr)
+    {
+        cma_free(state->buffer);
+        state->buffer = ft_nullptr;
+    }
     state->bufsize = INITIAL_BUFFER_SIZE;
     state->buffer = static_cast<char *>(cma_calloc(state->bufsize, sizeof(char)));
     if (!state->buffer)
     {
+        rl_state_unlock(state, lock_acquired);
         rl_disable_raw_mode();
+        if (thread_safety_created == true)
+            rl_state_teardown_thread_safety(state);
         ft_errno = FT_ERR_NO_MEMORY;
         return (1);
     }
@@ -45,7 +79,14 @@ int rl_initialize_state(readline_state_t *state)
     state->current_match_count = 0;
     state->current_match_index = 0;
     state->word_start = 0;
+    index = 0;
+    while (index < MAX_SUGGESTIONS)
+    {
+        state->current_matches[index] = ft_nullptr;
+        index++;
+    }
     rl_open_log_file(state);
+    rl_state_unlock(state, lock_acquired);
     ft_errno = ER_SUCCESS;
     return (0);
 }

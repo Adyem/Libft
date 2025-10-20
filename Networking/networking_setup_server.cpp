@@ -84,105 +84,198 @@ static inline int set_timeout_send(int fd, int ms)
 
 int ft_socket::create_socket(const SocketConfig &config)
 {
-    this->_socket_fd = nw_socket(config._address_family, SOCK_STREAM, config._protocol);
+    SocketConfig *mutable_config;
+    bool          lock_acquired;
+
+    mutable_config = const_cast<SocketConfig*>(&config);
+    lock_acquired = false;
+    if (socket_config_prepare_thread_safety(mutable_config) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    this->_socket_fd = nw_socket(mutable_config->_address_family, SOCK_STREAM, mutable_config->_protocol);
     if (this->_socket_fd < 0)
     {
+        socket_config_unlock(mutable_config, lock_acquired);
         this->set_error(translate_platform_error());
         return (this->_error_code);
     }
+    socket_config_unlock(mutable_config, lock_acquired);
     this->set_error(ER_SUCCESS);
     return (ER_SUCCESS);
 }
 
 int ft_socket::set_reuse_address(const SocketConfig &config)
 {
-    if (!config._reuse_address)
+    SocketConfig *mutable_config;
+    bool          lock_acquired;
+    int           opt;
+
+    mutable_config = const_cast<SocketConfig*>(&config);
+    lock_acquired = false;
+    if (socket_config_prepare_thread_safety(mutable_config) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    if (mutable_config->_reuse_address == false)
+    {
+        socket_config_unlock(mutable_config, lock_acquired);
         return (ER_SUCCESS);
-    int opt = 1;
+    }
+    opt = 1;
     if (setsockopt_reuse(this->_socket_fd, opt) < 0)
     {
+        socket_config_unlock(mutable_config, lock_acquired);
         this->set_error(translate_platform_error());
         nw_close(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
     }
+    socket_config_unlock(mutable_config, lock_acquired);
     this->set_error(ER_SUCCESS);
     return (ER_SUCCESS);
 }
 
 int ft_socket::set_non_blocking(const SocketConfig &config)
 {
-    if (!config._non_blocking)
+    SocketConfig *mutable_config;
+    bool          lock_acquired;
+
+    mutable_config = const_cast<SocketConfig*>(&config);
+    lock_acquired = false;
+    if (socket_config_prepare_thread_safety(mutable_config) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    if (mutable_config->_non_blocking == false)
+    {
+        socket_config_unlock(mutable_config, lock_acquired);
         return (ER_SUCCESS);
+    }
     if (set_nonblocking_platform(this->_socket_fd) != 0)
     {
+        socket_config_unlock(mutable_config, lock_acquired);
         this->set_error(translate_platform_error());
         nw_close(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
     }
+    socket_config_unlock(mutable_config, lock_acquired);
     this->set_error(ER_SUCCESS);
     return (ER_SUCCESS);
 }
 
 int ft_socket::set_timeouts(const SocketConfig &config)
 {
-    if (config._recv_timeout > 0)
+    SocketConfig *mutable_config;
+    bool          lock_acquired;
+
+    mutable_config = const_cast<SocketConfig*>(&config);
+    lock_acquired = false;
+    if (socket_config_prepare_thread_safety(mutable_config) != 0)
     {
-        if (set_timeout_recv(this->_socket_fd, config._recv_timeout) < 0)
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    if (mutable_config->_recv_timeout > 0)
+    {
+        if (set_timeout_recv(this->_socket_fd, mutable_config->_recv_timeout) < 0)
         {
+            socket_config_unlock(mutable_config, lock_acquired);
             this->set_error(translate_platform_error());
             nw_close(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
         }
     }
-    if (config._send_timeout > 0)
+    if (mutable_config->_send_timeout > 0)
     {
-        if (set_timeout_send(this->_socket_fd, config._send_timeout) < 0)
+        if (set_timeout_send(this->_socket_fd, mutable_config->_send_timeout) < 0)
         {
+            socket_config_unlock(mutable_config, lock_acquired);
             this->set_error(translate_platform_error());
             nw_close(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
         }
     }
+    socket_config_unlock(mutable_config, lock_acquired);
     this->set_error(ER_SUCCESS);
     return (ER_SUCCESS);
 }
 
 int ft_socket::configure_address(const SocketConfig &config)
 {
+    SocketConfig *mutable_config;
+    bool          lock_acquired;
+
+    mutable_config = const_cast<SocketConfig*>(&config);
+    lock_acquired = false;
+    if (socket_config_prepare_thread_safety(mutable_config) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
     ft_memset(&this->_address, 0, sizeof(this->_address));
 
-    if (config._address_family == AF_INET)
+    if (mutable_config->_address_family == AF_INET)
     {
         struct sockaddr_in *addr_in = reinterpret_cast<struct sockaddr_in*>(&this->_address);
         addr_in->sin_family = AF_INET;
-        addr_in->sin_port = htons(config._port);
-        if (config._ip.empty())
+        addr_in->sin_port = htons(mutable_config->_port);
+        if (mutable_config->_ip.empty())
         {
             addr_in->sin_addr.s_addr = htonl(INADDR_ANY);
         }
-        else if (nw_inet_pton(AF_INET, config._ip.c_str(), &addr_in->sin_addr) <= 0)
+        else if (nw_inet_pton(AF_INET, mutable_config->_ip.c_str(), &addr_in->sin_addr) <= 0)
         {
+            socket_config_unlock(mutable_config, lock_acquired);
             this->set_error(FT_ERR_CONFIGURATION);
             nw_close(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
         }
     }
-    else if (config._address_family == AF_INET6)
+    else if (mutable_config->_address_family == AF_INET6)
     {
         struct sockaddr_in6 *addr_in6 = reinterpret_cast<struct sockaddr_in6*>(&this->_address);
         addr_in6->sin6_family = AF_INET6;
-        addr_in6->sin6_port = htons(config._port);
-        if (config._ip.empty())
+        addr_in6->sin6_port = htons(mutable_config->_port);
+        if (mutable_config->_ip.empty())
         {
             addr_in6->sin6_addr = in6addr_any;
         }
-        else if (nw_inet_pton(AF_INET6, config._ip.c_str(), &addr_in6->sin6_addr) <= 0)
+        else if (nw_inet_pton(AF_INET6, mutable_config->_ip.c_str(), &addr_in6->sin6_addr) <= 0)
         {
+            socket_config_unlock(mutable_config, lock_acquired);
             this->set_error(FT_ERR_CONFIGURATION);
             nw_close(this->_socket_fd);
             this->_socket_fd = -1;
@@ -191,11 +284,13 @@ int ft_socket::configure_address(const SocketConfig &config)
     }
     else
     {
+        socket_config_unlock(mutable_config, lock_acquired);
         this->set_error(FT_ERR_CONFIGURATION);
         nw_close(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
     }
+    socket_config_unlock(mutable_config, lock_acquired);
     this->set_error(ER_SUCCESS);
     return (ER_SUCCESS);
 }
@@ -230,7 +325,25 @@ int ft_socket::bind_socket(const SocketConfig &config)
 
 int ft_socket::listen_socket(const SocketConfig &config)
 {
-    if (nw_listen(this->_socket_fd, config._backlog) < 0)
+    SocketConfig *mutable_config;
+    bool          lock_acquired;
+    int           backlog;
+
+    mutable_config = const_cast<SocketConfig*>(&config);
+    lock_acquired = false;
+    if (socket_config_prepare_thread_safety(mutable_config) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    backlog = mutable_config->_backlog;
+    socket_config_unlock(mutable_config, lock_acquired);
+    if (nw_listen(this->_socket_fd, backlog) < 0)
     {
         this->set_error(translate_platform_error());
         nw_close(this->_socket_fd);
@@ -250,15 +363,39 @@ void ft_socket::set_error(int error_code) const noexcept
 
 int ft_socket::setup_server(const SocketConfig &config)
 {
+    SocketConfig *mutable_config;
+    bool          lock_acquired;
+    bool          reuse_address;
+    bool          non_blocking;
+    bool          has_timeout;
+    bool          has_multicast;
+
+    mutable_config = const_cast<SocketConfig*>(&config);
+    lock_acquired = false;
+    if (socket_config_prepare_thread_safety(mutable_config) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    reuse_address = mutable_config->_reuse_address;
+    non_blocking = mutable_config->_non_blocking;
+    has_timeout = (mutable_config->_recv_timeout > 0 || mutable_config->_send_timeout > 0);
+    has_multicast = (mutable_config->_multicast_group.empty() == false);
+    socket_config_unlock(mutable_config, lock_acquired);
     if (create_socket(config) != ER_SUCCESS)
         return (this->_error_code);
-    if (config._reuse_address)
+    if (reuse_address)
         if (set_reuse_address(config) != ER_SUCCESS)
             return (this->_error_code);
-    if (config._non_blocking)
+    if (non_blocking)
         if (set_non_blocking(config) != ER_SUCCESS)
             return (this->_error_code);
-    if (config._recv_timeout > 0 || config._send_timeout > 0)
+    if (has_timeout)
         if (set_timeouts(config) != ER_SUCCESS)
             return (this->_error_code);
     if (configure_address(config) != ER_SUCCESS)
@@ -267,7 +404,7 @@ int ft_socket::setup_server(const SocketConfig &config)
         return (this->_error_code);
     if (listen_socket(config) != ER_SUCCESS)
         return (this->_error_code);
-    if (!config._multicast_group.empty())
+    if (has_multicast)
         if (join_multicast_group(config) != ER_SUCCESS)
             return (this->_error_code);
     this->set_error(ER_SUCCESS);
@@ -276,23 +413,44 @@ int ft_socket::setup_server(const SocketConfig &config)
 
 int ft_socket::join_multicast_group(const SocketConfig &config)
 {
-    if (config._multicast_group.empty())
+    SocketConfig *mutable_config;
+    bool          lock_acquired;
+
+    mutable_config = const_cast<SocketConfig*>(&config);
+    lock_acquired = false;
+    if (socket_config_prepare_thread_safety(mutable_config) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    if (mutable_config->_multicast_group.empty())
+    {
+        socket_config_unlock(mutable_config, lock_acquired);
         return (ER_SUCCESS);
-    if (config._address_family == AF_INET)
+    }
+    if (mutable_config->_address_family == AF_INET)
     {
         struct ip_mreq mreq;
+
         ft_bzero(&mreq, sizeof(mreq));
-        if (nw_inet_pton(AF_INET, config._multicast_group.c_str(), &mreq.imr_multiaddr) <= 0)
+        if (nw_inet_pton(AF_INET, mutable_config->_multicast_group.c_str(), &mreq.imr_multiaddr) <= 0)
         {
+            socket_config_unlock(mutable_config, lock_acquired);
             this->set_error(FT_ERR_CONFIGURATION);
             nw_close(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
         }
-        if (config._multicast_interface.empty())
+        if (mutable_config->_multicast_interface.empty())
             mreq.imr_interface.s_addr = htonl(INADDR_ANY);
-        else if (nw_inet_pton(AF_INET, config._multicast_interface.c_str(), &mreq.imr_interface) <= 0)
+        else if (nw_inet_pton(AF_INET, mutable_config->_multicast_interface.c_str(), &mreq.imr_interface) <= 0)
         {
+            socket_config_unlock(mutable_config, lock_acquired);
             this->set_error(FT_ERR_CONFIGURATION);
             nw_close(this->_socket_fd);
             this->_socket_fd = -1;
@@ -301,18 +459,21 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
         if (setsockopt(this->_socket_fd, IPPROTO_IP, IP_ADD_MEMBERSHIP,
                        reinterpret_cast<const char*>(&mreq), sizeof(mreq)) < 0)
         {
+            socket_config_unlock(mutable_config, lock_acquired);
             this->set_error(FT_ERR_SOCKET_JOIN_GROUP_FAILED);
             nw_close(this->_socket_fd);
             this->_socket_fd = -1;
             return (this->_error_code);
         }
     }
-    else if (config._address_family == AF_INET6)
+    else if (mutable_config->_address_family == AF_INET6)
     {
         struct ipv6_mreq mreq6;
+
         ft_bzero(&mreq6, sizeof(mreq6));
-        if (nw_inet_pton(AF_INET6, config._multicast_group.c_str(), &mreq6.ipv6mr_multiaddr) <= 0)
+        if (nw_inet_pton(AF_INET6, mutable_config->_multicast_group.c_str(), &mreq6.ipv6mr_multiaddr) <= 0)
         {
+            socket_config_unlock(mutable_config, lock_acquired);
             this->set_error(FT_ERR_CONFIGURATION);
             nw_close(this->_socket_fd);
             this->_socket_fd = -1;
@@ -322,6 +483,7 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
         if (setsockopt(this->_socket_fd, IPPROTO_IPV6, IPV6_JOIN_GROUP,
                        reinterpret_cast<const char*>(&mreq6), sizeof(mreq6)) < 0)
         {
+            socket_config_unlock(mutable_config, lock_acquired);
             this->set_error(FT_ERR_SOCKET_JOIN_GROUP_FAILED);
             nw_close(this->_socket_fd);
             this->_socket_fd = -1;
@@ -330,11 +492,13 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
     }
     else
     {
+        socket_config_unlock(mutable_config, lock_acquired);
         this->set_error(FT_ERR_CONFIGURATION);
         nw_close(this->_socket_fd);
         this->_socket_fd = -1;
         return (this->_error_code);
     }
+    socket_config_unlock(mutable_config, lock_acquired);
     this->set_error(ER_SUCCESS);
     return (ER_SUCCESS);
 }
