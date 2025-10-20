@@ -120,8 +120,8 @@ bool api_request_stream(const char *ip, uint16_t port,
             int socket_error_code;
 
             socket_error_code = new_socket.get_error();
-            if (socket_error_code == FT_ERR_CONFIGURATION)
-                error_code = FT_ERR_CONFIGURATION;
+            if (api_is_configuration_socket_error(socket_error_code))
+                error_code = socket_error_code;
             else
                 error_code = FT_ERR_SOCKET_CONNECT_FAILED;
             return (false);
@@ -238,8 +238,8 @@ bool api_request_stream_http2(const char *ip, uint16_t port,
             int socket_error_code;
 
             socket_error_code = new_socket.get_error();
-            if (socket_error_code == FT_ERR_CONFIGURATION)
-                error_code = FT_ERR_CONFIGURATION;
+            if (api_is_configuration_socket_error(socket_error_code))
+                error_code = socket_error_code;
             else
                 error_code = FT_ERR_SOCKET_CONNECT_FAILED;
             return (false);
@@ -359,8 +359,8 @@ char *api_request_string(const char *ip, uint16_t port,
             int socket_error_code;
 
             socket_error_code = new_socket.get_error();
-            if (socket_error_code == FT_ERR_CONFIGURATION)
-                error_code = FT_ERR_CONFIGURATION;
+            if (api_is_configuration_socket_error(socket_error_code))
+                error_code = socket_error_code;
             else
                 error_code = FT_ERR_SOCKET_CONNECT_FAILED;
             return (ft_nullptr);
@@ -472,8 +472,8 @@ char *api_request_string_http2(const char *ip, uint16_t port,
             int socket_error_code;
 
             socket_error_code = new_socket.get_error();
-            if (socket_error_code == FT_ERR_CONFIGURATION)
-                error_code = FT_ERR_CONFIGURATION;
+            if (api_is_configuration_socket_error(socket_error_code))
+                error_code = socket_error_code;
             else
             {
                 error_code = FT_ERR_SOCKET_CONNECT_FAILED;

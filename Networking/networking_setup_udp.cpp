@@ -7,6 +7,7 @@
 # include <io.h>
 #else
 # include <arpa/inet.h>
+# include <netdb.h>
 # include <netinet/in.h>
 # include <sys/socket.h>
 # include <unistd.h>
@@ -240,6 +241,10 @@ int udp_socket::configure_address(const SocketConfig &config)
 {
     SocketConfig *mutable_config;
     bool          lock_acquired;
+    ft_string     host_copy;
+    uint16_t      port_value;
+    int           address_family;
+    int           protocol_value;
 
     mutable_config = const_cast<SocketConfig*>(&config);
     lock_acquired = false;
@@ -254,34 +259,54 @@ int udp_socket::configure_address(const SocketConfig &config)
         return (this->_error_code);
     }
     ft_bzero(&this->_address, sizeof(this->_address));
-    if (mutable_config->_address_family == AF_INET)
+    host_copy = mutable_config->_ip;
+    port_value = mutable_config->_port;
+    address_family = mutable_config->_address_family;
+    protocol_value = mutable_config->_protocol;
+    socket_config_unlock(mutable_config, lock_acquired);
+    if (host_copy.get_error() != ER_SUCCESS)
     {
-        struct sockaddr_in *addr;
-        addr = reinterpret_cast<struct sockaddr_in*>(&this->_address);
-        addr->sin_family = AF_INET;
-        addr->sin_port = htons(mutable_config->_port);
-        if (nw_inet_pton(AF_INET, mutable_config->_ip.c_str(), &addr->sin_addr) <= 0)
+        this->set_error(host_copy.get_error());
+        nw_close(this->_socket_fd);
+        this->_socket_fd = -1;
+        return (this->_error_code);
+    }
+    if (address_family == AF_INET)
+    {
+        struct sockaddr_in *addr_in;
+
+        addr_in = reinterpret_cast<struct sockaddr_in*>(&this->_address);
+        addr_in->sin_family = AF_INET;
+        addr_in->sin_port = htons(port_value);
+        if (host_copy.empty())
         {
-            this->set_error(FT_ERR_CONFIGURATION);
-            nw_close(this->_socket_fd);
-            this->_socket_fd = -1;
-            socket_config_unlock(mutable_config, lock_acquired);
-            return (this->_error_code);
+            addr_in->sin_addr.s_addr = htonl(INADDR_ANY);
+            this->set_error(ER_SUCCESS);
+            return (ER_SUCCESS);
+        }
+        if (nw_inet_pton(AF_INET, host_copy.c_str(), &addr_in->sin_addr) > 0)
+        {
+            this->set_error(ER_SUCCESS);
+            return (ER_SUCCESS);
         }
     }
-    else if (mutable_config->_address_family == AF_INET6)
+    else if (address_family == AF_INET6)
     {
-        struct sockaddr_in6 *addr6;
-        addr6 = reinterpret_cast<struct sockaddr_in6*>(&this->_address);
-        addr6->sin6_family = AF_INET6;
-        addr6->sin6_port = htons(mutable_config->_port);
-        if (nw_inet_pton(AF_INET6, mutable_config->_ip.c_str(), &addr6->sin6_addr) <= 0)
+        struct sockaddr_in6 *addr_in6;
+
+        addr_in6 = reinterpret_cast<struct sockaddr_in6*>(&this->_address);
+        addr_in6->sin6_family = AF_INET6;
+        addr_in6->sin6_port = htons(port_value);
+        if (host_copy.empty())
         {
-            this->set_error(FT_ERR_CONFIGURATION);
-            nw_close(this->_socket_fd);
-            this->_socket_fd = -1;
-            socket_config_unlock(mutable_config, lock_acquired);
-            return (this->_error_code);
+            addr_in6->sin6_addr = in6addr_any;
+            this->set_error(ER_SUCCESS);
+            return (ER_SUCCESS);
+        }
+        if (nw_inet_pton(AF_INET6, host_copy.c_str(), &addr_in6->sin6_addr) > 0)
+        {
+            this->set_error(ER_SUCCESS);
+            return (ER_SUCCESS);
         }
     }
     else
@@ -289,10 +314,56 @@ int udp_socket::configure_address(const SocketConfig &config)
         this->set_error(FT_ERR_CONFIGURATION);
         nw_close(this->_socket_fd);
         this->_socket_fd = -1;
-        socket_config_unlock(mutable_config, lock_acquired);
         return (this->_error_code);
     }
-    socket_config_unlock(mutable_config, lock_acquired);
+    ft_string port_string;
+    networking_resolved_address resolved_address;
+    int resolver_error;
+
+    port_string = ft_to_string(static_cast<long>(port_value));
+    if (port_string.get_error() != ER_SUCCESS)
+    {
+        this->set_error(port_string.get_error());
+        nw_close(this->_socket_fd);
+        this->_socket_fd = -1;
+        return (this->_error_code);
+    }
+    ft_memset(&resolved_address, 0, sizeof(resolved_address));
+    if (!networking_dns_resolve_first(host_copy.c_str(), port_string.c_str(), address_family,
+            SOCK_DGRAM, protocol_value, 0, resolved_address))
+    {
+        resolver_error = ft_errno;
+        if (resolver_error == ER_SUCCESS)
+            resolver_error = FT_ERR_SOCKET_RESOLVE_FAILED;
+        this->set_error(resolver_error);
+        nw_close(this->_socket_fd);
+        this->_socket_fd = -1;
+        return (this->_error_code);
+    }
+    if (resolved_address.length > sizeof(this->_address))
+    {
+        this->set_error(FT_ERR_SOCKET_RESOLVE_FAILED);
+        nw_close(this->_socket_fd);
+        this->_socket_fd = -1;
+        return (this->_error_code);
+    }
+    ft_memcpy(&this->_address, &resolved_address.address, resolved_address.length);
+    if (address_family == AF_INET)
+    {
+        struct sockaddr_in *addr_in;
+
+        addr_in = reinterpret_cast<struct sockaddr_in*>(&this->_address);
+        addr_in->sin_family = AF_INET;
+        addr_in->sin_port = htons(port_value);
+    }
+    else
+    {
+        struct sockaddr_in6 *addr_in6;
+
+        addr_in6 = reinterpret_cast<struct sockaddr_in6*>(&this->_address);
+        addr_in6->sin6_family = AF_INET6;
+        addr_in6->sin6_port = htons(port_value);
+    }
     this->set_error(ER_SUCCESS);
     return (ER_SUCCESS);
 }

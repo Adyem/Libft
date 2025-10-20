@@ -3,12 +3,14 @@
 
 #include "../CPP_class/class_string_class.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Template/vector.hpp"
 #include "ssl_wrapper.hpp"
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>
 #else
 # include <netinet/in.h>
+# include <sys/socket.h>
 #endif
 #include <cstdint>
 
@@ -40,6 +42,24 @@ int nw_set_nonblocking(int socket_fd);
 int nw_poll(int *read_file_descriptors, int read_count,
             int *write_file_descriptors, int write_count,
             int timeout_milliseconds);
+
+struct networking_resolved_address
+{
+    sockaddr_storage    address;
+    socklen_t           length;
+};
+
+bool networking_dns_resolve(const char *host, const char *service,
+    int family, int socktype, int protocol, int flags,
+    ft_vector<networking_resolved_address> &out_addresses) noexcept;
+
+bool networking_dns_resolve_first(const char *host, const char *service,
+    int family, int socktype, int protocol, int flags,
+    networking_resolved_address &out_address) noexcept;
+
+void networking_dns_clear_cache(void) noexcept;
+
+void networking_dns_set_error(int resolver_status) noexcept;
 
 struct event_loop
 {
