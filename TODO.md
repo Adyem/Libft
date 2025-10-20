@@ -315,7 +315,7 @@
 - [ ] Provide tooling that round-trips documents and highlights diffs to simplify regression testing.
 - [ ] Offer pluggable storage backends (file, HTTP, memory) for parsers to read from and serializers to write to.
 - [x] Publish style guides for canonical formatting so diffs remain readable across teams. (See `Docs/json_yaml_xml_style_guide.md`.)
-- [ ] Make `html_document` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `html_document` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `xml_document` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `yaml_value` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `html_node` thread safe (relies on the shared deadlock resolution routine described below).
