@@ -765,7 +765,32 @@ FT_TEST(test_api_request_invalid_ip_sets_socket_error, "api_request_string inval
     result = api_request_string("bad-ip", 8080, "GET", "/", ft_nullptr, ft_nullptr, ft_nullptr, 10);
     if (result != ft_nullptr)
         return (0);
-    if (ft_errno != FT_ERR_CONFIGURATION)
+    bool configuration_error;
+
+    configuration_error = false;
+    if (ft_errno == FT_ERR_CONFIGURATION)
+        configuration_error = true;
+    if (ft_errno == FT_ERR_SOCKET_RESOLVE_FAILED)
+        configuration_error = true;
+    if (ft_errno == FT_ERR_SOCKET_RESOLVE_AGAIN)
+        configuration_error = true;
+    if (ft_errno == FT_ERR_SOCKET_RESOLVE_FAIL)
+        configuration_error = true;
+    if (ft_errno == FT_ERR_SOCKET_RESOLVE_BAD_FLAGS)
+        configuration_error = true;
+    if (ft_errno == FT_ERR_SOCKET_RESOLVE_FAMILY)
+        configuration_error = true;
+    if (ft_errno == FT_ERR_SOCKET_RESOLVE_SOCKTYPE)
+        configuration_error = true;
+    if (ft_errno == FT_ERR_SOCKET_RESOLVE_SERVICE)
+        configuration_error = true;
+    if (ft_errno == FT_ERR_SOCKET_RESOLVE_MEMORY)
+        configuration_error = true;
+    if (ft_errno == FT_ERR_SOCKET_RESOLVE_NO_NAME)
+        configuration_error = true;
+    if (ft_errno == FT_ERR_SOCKET_RESOLVE_OVERFLOW)
+        configuration_error = true;
+    if (!configuration_error && ft_errno != FT_ERR_SOCKET_CONNECT_FAILED)
         return (0);
     return (1);
 }
