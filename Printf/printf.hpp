@@ -5,6 +5,8 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#include "../CPP_class/class_string_class.hpp"
+
 
 typedef FILE *(*t_pf_tmpfile_function)(void);
 typedef int (*t_pf_fflush_function)(FILE *);
@@ -22,5 +24,10 @@ void pf_set_fflush_function(t_pf_fflush_function function);
 void pf_reset_fflush_function(void);
 void pf_set_ftell_function(t_pf_ftell_function function);
 void pf_reset_ftell_function(void);
+
+typedef int (*t_pf_custom_formatter)(va_list *args, ft_string &output, void *context);
+
+int pf_register_custom_specifier(char specifier, t_pf_custom_formatter handler, void *context);
+int pf_unregister_custom_specifier(char specifier);
 
 #endif
