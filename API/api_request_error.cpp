@@ -103,3 +103,30 @@ void api_request_set_resolve_error(int resolver_status)
     ft_errno = FT_ERR_SOCKET_RESOLVE_FAILED;
     return ;
 }
+
+bool api_is_configuration_socket_error(int error_code)
+{
+    if (error_code == FT_ERR_CONFIGURATION)
+        return (true);
+    if (error_code == FT_ERR_SOCKET_RESOLVE_FAILED)
+        return (true);
+    if (error_code == FT_ERR_SOCKET_RESOLVE_AGAIN)
+        return (true);
+    if (error_code == FT_ERR_SOCKET_RESOLVE_FAIL)
+        return (true);
+    if (error_code == FT_ERR_SOCKET_RESOLVE_BAD_FLAGS)
+        return (true);
+    if (error_code == FT_ERR_SOCKET_RESOLVE_FAMILY)
+        return (true);
+    if (error_code == FT_ERR_SOCKET_RESOLVE_SOCKTYPE)
+        return (true);
+    if (error_code == FT_ERR_SOCKET_RESOLVE_SERVICE)
+        return (true);
+    if (error_code == FT_ERR_SOCKET_RESOLVE_MEMORY)
+        return (true);
+    if (error_code == FT_ERR_SOCKET_RESOLVE_NO_NAME)
+        return (true);
+    if (error_code == FT_ERR_SOCKET_RESOLVE_OVERFLOW)
+        return (true);
+    return (false);
+}
