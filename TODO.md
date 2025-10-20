@@ -318,7 +318,7 @@
 - [x] Make `html_document` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `xml_document` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `yaml_value` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `html_node` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `html_node` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `html_attr` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `xml_node` thread safe (relies on the shared deadlock resolution routine described below).
 
