@@ -6,6 +6,59 @@
 #include <cerrno>
 #include <cstring>
 
+FT_TEST(test_xml_document_thread_guard_preserves_errno,
+        "xml_document::thread_guard preserves errno when locking")
+{
+    xml_document document;
+
+    FT_ASSERT_EQ(true, document.is_thread_safe_enabled());
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    {
+        xml_document::thread_guard guard(&document);
+
+        FT_ASSERT_EQ(0, guard.get_status());
+        FT_ASSERT_EQ(true, guard.lock_acquired());
+        FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    }
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_xml_document_thread_guard_tolerates_null_document,
+        "xml_document::thread_guard allows null documents without locking")
+{
+    ft_errno = FT_ERR_INTERNAL;
+    xml_document::thread_guard guard(ft_nullptr);
+
+    FT_ASSERT_EQ(0, guard.get_status());
+    FT_ASSERT_EQ(false, guard.lock_acquired());
+    FT_ASSERT_EQ(FT_ERR_INTERNAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_xml_document_handles_mutex_allocation_failure,
+        "xml_document handles mutex allocation failures and remains usable")
+{
+    cma_set_alloc_limit(1);
+    xml_document failure_document;
+    cma_set_alloc_limit(0);
+
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, failure_document.get_error());
+    FT_ASSERT_EQ(false, failure_document.is_thread_safe_enabled());
+    ft_errno = FT_ERR_INTERNAL;
+    {
+        xml_document::thread_guard guard(&failure_document);
+
+        FT_ASSERT_EQ(0, guard.get_status());
+        FT_ASSERT_EQ(false, guard.lock_acquired());
+        FT_ASSERT_EQ(FT_ERR_INTERNAL, ft_errno);
+    }
+    FT_ASSERT_EQ(ER_SUCCESS, failure_document.load_from_string("<root/>"));
+    FT_ASSERT_EQ(ER_SUCCESS, failure_document.get_error());
+    FT_ASSERT(failure_document.get_root() != ft_nullptr);
+    return (1);
+}
+
 FT_TEST(test_xml_document_write_to_string_empty_document_sets_error, "xml_document::write_to_string reports FT_ERR_INVALID_ARGUMENT when empty")
 {
     xml_document document;

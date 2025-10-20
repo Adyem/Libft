@@ -1,9 +1,42 @@
 #include "xml.hpp"
+#include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/pthread.hpp"
 #include <cstdio>
 #include <cerrno>
 #include <new>
+
+xml_document::thread_guard::thread_guard(const xml_document *document) noexcept
+    : _document(document), _lock_acquired(false), _status(0), _entry_errno(ft_errno)
+{
+    if (!this->_document)
+        return ;
+    this->_status = this->_document->lock(&this->_lock_acquired);
+    if (this->_status == 0)
+        ft_errno = this->_entry_errno;
+    return ;
+}
+
+xml_document::thread_guard::~thread_guard() noexcept
+{
+    if (!this->_document)
+        return ;
+    this->_document->unlock(this->_lock_acquired);
+    return ;
+}
+
+int xml_document::thread_guard::get_status() const noexcept
+{
+    return (this->_status);
+}
+
+bool xml_document::thread_guard::lock_acquired() const noexcept
+{
+    return (this->_lock_acquired);
+}
 
 static const char *skip_whitespace(const char *string)
 {
@@ -249,19 +282,33 @@ static const char *parse_node(const char *string, xml_node **out_node)
 }
 
 xml_document::xml_document() noexcept
-    : _root(ft_nullptr), _error_code(ER_SUCCESS)
+    : _root(ft_nullptr), _mutex(ft_nullptr), _thread_safe_enabled(false), _error_code(ER_SUCCESS)
 {
+    this->set_error(ER_SUCCESS);
+    if (this->prepare_thread_safety() != 0)
+        return ;
     return ;
 }
 
 xml_document::~xml_document() noexcept
 {
-    if (this->_root)
-        delete this->_root;
+    {
+        thread_guard guard(this);
+
+        if (guard.get_status() == 0)
+        {
+            if (this->_root)
+            {
+                delete this->_root;
+                this->_root = ft_nullptr;
+            }
+        }
+    }
+    this->teardown_thread_safety();
     return ;
 }
 
-void xml_document::set_error(int error_code) const
+void xml_document::set_error(int error_code) const noexcept
 {
     this->_error_code = error_code;
     ft_errno = error_code;
@@ -270,6 +317,15 @@ void xml_document::set_error(int error_code) const
 
 int xml_document::load_from_string(const char *xml) noexcept
 {
+    thread_guard guard(this);
+    int          lock_error;
+
+    if (guard.get_status() != 0)
+    {
+        lock_error = ft_errno != ER_SUCCESS ? ft_errno : FT_ERR_INVALID_STATE;
+        this->set_error(lock_error);
+        return (lock_error);
+    }
     if (!xml)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -284,7 +340,9 @@ int xml_document::load_from_string(const char *xml) noexcept
     const char *end = parse_node(xml, &node);
     if (!end)
     {
-        int error_code = ft_errno ? ft_errno : FT_ERR_INVALID_ARGUMENT;
+        int error_code;
+
+        error_code = ft_errno != ER_SUCCESS ? ft_errno : FT_ERR_INVALID_ARGUMENT;
         this->set_error(error_code);
         return (error_code);
     }
@@ -358,17 +416,23 @@ static int read_file_content(const char *file_path, char **out_content)
 
 int xml_document::load_from_file(const char *file_path) noexcept
 {
-    char *content = ft_nullptr;
-    int result = read_file_content(file_path, &content);
+    char *content;
+    int   result;
+
+    content = ft_nullptr;
+    result = read_file_content(file_path, &content);
     if (result != ER_SUCCESS)
     {
-        this->set_error(result);
+        thread_guard guard(this);
+
+        if (guard.get_status() != 0)
+            this->set_error(ft_errno != ER_SUCCESS ? ft_errno : result);
+        else
+            this->set_error(result);
         return (result);
     }
     result = this->load_from_string(content);
     cma_free(content);
-    if (result == ER_SUCCESS)
-        this->set_error(ER_SUCCESS);
     return (result);
 }
 
@@ -409,6 +473,15 @@ static void write_node(const xml_node *node, ft_vector<char> &buffer)
 
 char *xml_document::write_to_string() const noexcept
 {
+    thread_guard guard(this);
+    int          lock_error;
+
+    if (guard.get_status() != 0)
+    {
+        lock_error = ft_errno != ER_SUCCESS ? ft_errno : FT_ERR_INVALID_STATE;
+        this->set_error(lock_error);
+        return (ft_nullptr);
+    }
     if (!this->_root)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -466,24 +539,48 @@ char *xml_document::write_to_string() const noexcept
 
 int xml_document::write_to_file(const char *file_path) const noexcept
 {
-    char *content = this->write_to_string();
+    char *content;
+    int   error_code;
+
+    content = this->write_to_string();
     if (!content)
     {
-        int error_code = this->get_error();
-        if (error_code == ER_SUCCESS)
+        int current_error;
+
+        current_error = this->get_error();
+        if (current_error == ER_SUCCESS)
         {
+            thread_guard guard(this);
+
+            if (guard.get_status() != 0)
+            {
+                error_code = ft_errno != ER_SUCCESS ? ft_errno : FT_ERR_INVALID_ARGUMENT;
+                this->set_error(error_code);
+                return (error_code);
+            }
             this->set_error(FT_ERR_INVALID_ARGUMENT);
-            error_code = FT_ERR_INVALID_ARGUMENT;
+            return (FT_ERR_INVALID_ARGUMENT);
         }
-        return (error_code);
+        return (current_error);
     }
     errno = 0;
     FILE *file = std::fopen(file_path, "wb");
     if (!file)
     {
-        int error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
+        error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
+        {
+            thread_guard guard(this);
+
+            if (guard.get_status() != 0)
+                this->set_error(ft_errno != ER_SUCCESS ? ft_errno : error_code);
+            else
+                this->set_error(error_code);
+        }
+        int preserved_errno;
+
+        preserved_errno = ft_errno;
         cma_free(content);
-        this->set_error(error_code);
+        ft_errno = preserved_errno;
         return (error_code);
     }
     size_t length = ft_strlen(content);
@@ -491,37 +588,196 @@ int xml_document::write_to_file(const char *file_path) const noexcept
     size_t written = std::fwrite(content, 1, length, file);
     if (written != length)
     {
-        int error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
+        error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
         std::fclose(file);
+        {
+            thread_guard guard(this);
+
+            if (guard.get_status() != 0)
+                this->set_error(ft_errno != ER_SUCCESS ? ft_errno : error_code);
+            else
+                this->set_error(error_code);
+        }
+        int preserved_errno;
+
+        preserved_errno = ft_errno;
         cma_free(content);
-        this->set_error(error_code);
+        ft_errno = preserved_errno;
         return (error_code);
     }
     errno = 0;
     if (std::fclose(file) != 0)
     {
-        int error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
+        error_code = errno ? ft_map_system_error(errno) : FT_ERR_INVALID_ARGUMENT;
+        {
+            thread_guard guard(this);
+
+            if (guard.get_status() != 0)
+                this->set_error(ft_errno != ER_SUCCESS ? ft_errno : error_code);
+            else
+                this->set_error(error_code);
+        }
+        int preserved_errno;
+
+        preserved_errno = ft_errno;
         cma_free(content);
-        this->set_error(error_code);
+        ft_errno = preserved_errno;
         return (error_code);
     }
     cma_free(content);
-    this->set_error(ER_SUCCESS);
+    {
+        thread_guard guard(this);
+
+        if (guard.get_status() != 0)
+        {
+            this->set_error(ft_errno != ER_SUCCESS ? ft_errno : ER_SUCCESS);
+            return (ft_errno != ER_SUCCESS ? ft_errno : ER_SUCCESS);
+        }
+        this->set_error(ER_SUCCESS);
+    }
     return (ER_SUCCESS);
 }
 
 xml_node *xml_document::get_root() const noexcept
 {
+    thread_guard guard(this);
+    int          lock_error;
+
+    if (guard.get_status() != 0)
+    {
+        lock_error = ft_errno != ER_SUCCESS ? ft_errno : FT_ERR_INVALID_STATE;
+        this->set_error(lock_error);
+        return (ft_nullptr);
+    }
+    this->set_error(ER_SUCCESS);
     return (this->_root);
 }
 
 int xml_document::get_error() const noexcept
 {
+    thread_guard guard(this);
+
+    if (guard.get_status() != 0)
+        return (ft_errno != ER_SUCCESS ? ft_errno : FT_ERR_INVALID_STATE);
     return (this->_error_code);
 }
 
 const char *xml_document::get_error_str() const noexcept
 {
-    return (ft_strerror(this->_error_code));
+    thread_guard guard(this);
+    const char *message;
+
+    if (guard.get_status() != 0)
+        return (ft_strerror(ft_errno != ER_SUCCESS ? ft_errno : FT_ERR_INVALID_STATE));
+    message = ft_strerror(this->_error_code);
+    return (message);
+}
+
+bool xml_document::is_thread_safe_enabled() const noexcept
+{
+    thread_guard guard(this);
+
+    if (guard.get_status() != 0)
+        return (false);
+    if (!this->_thread_safe_enabled || !this->_mutex)
+    {
+        this->set_error(ER_SUCCESS);
+        return (false);
+    }
+    this->set_error(ER_SUCCESS);
+    return (true);
+}
+
+int xml_document::prepare_thread_safety() noexcept
+{
+    pt_mutex *mutex_pointer;
+    void     *memory;
+
+    if (this->_thread_safe_enabled && this->_mutex)
+    {
+        this->set_error(ER_SUCCESS);
+        return (0);
+    }
+    memory = cma_malloc(sizeof(pt_mutex));
+    if (!memory)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return (-1);
+    }
+    mutex_pointer = new(memory) pt_mutex();
+    if (mutex_pointer->get_error() != ER_SUCCESS)
+    {
+        int mutex_error;
+
+        mutex_error = mutex_pointer->get_error();
+        mutex_pointer->~pt_mutex();
+        cma_free(memory);
+        this->set_error(mutex_error);
+        return (-1);
+    }
+    this->_mutex = mutex_pointer;
+    this->_thread_safe_enabled = true;
+    this->set_error(ER_SUCCESS);
+    return (0);
+}
+
+void xml_document::teardown_thread_safety() noexcept
+{
+    if (!this->_mutex)
+    {
+        this->_thread_safe_enabled = false;
+        return ;
+    }
+    this->_mutex->~pt_mutex();
+    cma_free(this->_mutex);
+    this->_mutex = ft_nullptr;
+    this->_thread_safe_enabled = false;
+    return ;
+}
+
+int xml_document::lock(bool *lock_acquired) const noexcept
+{
+    if (lock_acquired)
+        *lock_acquired = false;
+    if (!this->_thread_safe_enabled || !this->_mutex)
+    {
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    this->_mutex->lock(THREAD_ID);
+    if (this->_mutex->get_error() != ER_SUCCESS)
+    {
+        int mutex_error;
+
+        mutex_error = this->_mutex->get_error();
+        ft_errno = mutex_error;
+        const_cast<xml_document *>(this)->set_error(mutex_error);
+        return (-1);
+    }
+    if (lock_acquired)
+        *lock_acquired = true;
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+void xml_document::unlock(bool lock_acquired) const noexcept
+{
+    int entry_errno;
+
+    if (!lock_acquired || !this->_thread_safe_enabled || !this->_mutex)
+        return ;
+    entry_errno = ft_errno;
+    this->_mutex->unlock(THREAD_ID);
+    if (this->_mutex->get_error() != ER_SUCCESS)
+    {
+        int mutex_error;
+
+        mutex_error = this->_mutex->get_error();
+        ft_errno = mutex_error;
+        const_cast<xml_document *>(this)->set_error(mutex_error);
+        return ;
+    }
+    ft_errno = entry_errno;
+    return ;
 }
 
