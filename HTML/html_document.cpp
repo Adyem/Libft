@@ -6,11 +6,13 @@
 #include "../PThread/pthread.hpp"
 
 html_document::thread_guard::thread_guard(const html_document *document) noexcept
-    : _document(document), _lock_acquired(false), _status(0)
+    : _document(document), _lock_acquired(false), _status(0), _entry_errno(ft_errno)
 {
     if (!this->_document)
         return ;
     this->_status = this->_document->lock(&this->_lock_acquired);
+    if (this->_status == 0)
+        ft_errno = this->_entry_errno;
     return ;
 }
 
@@ -407,27 +409,21 @@ html_node *html_document::get_root() const noexcept
 
 int html_document::get_error() const noexcept
 {
-    bool lock_acquired;
-    int  error_code;
+    thread_guard guard(this);
 
-    lock_acquired = false;
-    if (this->lock(&lock_acquired) != 0)
+    if (guard.get_status() != 0)
         return (ft_errno);
-    error_code = this->_error_code;
-    this->unlock(lock_acquired);
-    return (error_code);
+    return (this->_error_code);
 }
 
 const char *html_document::get_error_str() const noexcept
 {
-    bool        lock_acquired;
+    thread_guard guard(this);
     const char *message;
 
-    lock_acquired = false;
-    if (this->lock(&lock_acquired) != 0)
+    if (guard.get_status() != 0)
         return (ft_strerror(ft_errno));
     message = ft_strerror(this->_error_code);
-    this->unlock(lock_acquired);
     return (message);
 }
 
