@@ -60,4 +60,6 @@ size_t api_debug_get_last_async_bytes_received(void);
 int api_debug_get_last_async_receive_state(void);
 int api_debug_get_last_async_receive_timeout(void);
 
+bool api_is_configuration_socket_error(int error_code);
+
 #endif

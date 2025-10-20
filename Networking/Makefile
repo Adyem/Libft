@@ -4,6 +4,7 @@ DEBUG_TARGET := networking_debug.a
 SRCS := networking_socket_class.cpp \
         networking_send_utils.cpp \
         networking.cpp \
+        networking_dns_resolver.cpp \
         networking_setup_server.cpp \
         networking_setup_client.cpp \
         networking_setup_udp.cpp \

@@ -202,8 +202,8 @@ static bool api_https_prepare_socket(api_connection_pool_handle &connection_hand
         int socket_error_code;
 
         socket_error_code = new_socket.get_error();
-        if (socket_error_code == FT_ERR_CONFIGURATION)
-            error_code = FT_ERR_CONFIGURATION;
+        if (api_is_configuration_socket_error(socket_error_code))
+            error_code = socket_error_code;
         else
             error_code = FT_ERR_SOCKET_CONNECT_FAILED;
         return (false);

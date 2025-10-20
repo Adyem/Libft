@@ -64,103 +64,6 @@ static int http_client_wait_for_socket_ready(int socket_fd, bool wait_for_write)
     return (0);
 }
 
-static void http_client_set_resolve_error(int resolver_status)
-{
-#ifdef EAI_BADFLAGS
-    if (resolver_status == EAI_BADFLAGS)
-    {
-        ft_errno = FT_ERR_SOCKET_RESOLVE_BAD_FLAGS;
-        return ;
-    }
-#endif
-#ifdef EAI_AGAIN
-    if (resolver_status == EAI_AGAIN)
-    {
-        ft_errno = FT_ERR_SOCKET_RESOLVE_AGAIN;
-        return ;
-    }
-#endif
-#ifdef EAI_FAIL
-    if (resolver_status == EAI_FAIL)
-    {
-        ft_errno = FT_ERR_SOCKET_RESOLVE_FAIL;
-        return ;
-    }
-#endif
-#ifdef EAI_FAMILY
-    if (resolver_status == EAI_FAMILY)
-    {
-        ft_errno = FT_ERR_SOCKET_RESOLVE_FAMILY;
-        return ;
-    }
-#endif
-#ifdef EAI_ADDRFAMILY
-    if (resolver_status == EAI_ADDRFAMILY)
-    {
-        ft_errno = FT_ERR_SOCKET_RESOLVE_FAMILY;
-        return ;
-    }
-#endif
-#ifdef EAI_SOCKTYPE
-    if (resolver_status == EAI_SOCKTYPE)
-    {
-        ft_errno = FT_ERR_SOCKET_RESOLVE_SOCKTYPE;
-        return ;
-    }
-#endif
-#ifdef EAI_SERVICE
-    if (resolver_status == EAI_SERVICE)
-    {
-        ft_errno = FT_ERR_SOCKET_RESOLVE_SERVICE;
-        return ;
-    }
-#endif
-#ifdef EAI_MEMORY
-    if (resolver_status == EAI_MEMORY)
-    {
-        ft_errno = FT_ERR_SOCKET_RESOLVE_MEMORY;
-        return ;
-    }
-#endif
-#ifdef EAI_NONAME
-    if (resolver_status == EAI_NONAME)
-    {
-        ft_errno = FT_ERR_SOCKET_RESOLVE_NO_NAME;
-        return ;
-    }
-#endif
-#ifdef EAI_NODATA
-    if (resolver_status == EAI_NODATA)
-    {
-        ft_errno = FT_ERR_SOCKET_RESOLVE_NO_NAME;
-        return ;
-    }
-#endif
-#ifdef EAI_OVERFLOW
-    if (resolver_status == EAI_OVERFLOW)
-    {
-        ft_errno = FT_ERR_SOCKET_RESOLVE_OVERFLOW;
-        return ;
-    }
-#endif
-#ifdef EAI_SYSTEM
-    if (resolver_status == EAI_SYSTEM)
-    {
-#ifdef _WIN32
-        ft_errno = ft_map_system_error(WSAGetLastError());
-#else
-        if (errno != 0)
-            ft_errno = ft_map_system_error(errno);
-        else
-            ft_errno = FT_ERR_SOCKET_RESOLVE_FAIL;
-#endif
-        return ;
-    }
-#endif
-    ft_errno = FT_ERR_SOCKET_RESOLVE_FAILED;
-    return ;
-}
-
 static int http_client_initialize_ssl(int socket_fd, const char *host, SSL_CTX **ssl_context, SSL **ssl_connection)
 {
     SSL_CTX *local_context;
@@ -690,7 +593,7 @@ int http_get_stream(const char *host, const char *path, http_response_handler ha
     resolver_status = getaddrinfo(host, port_string, &address_hints, &address_info);
     if (resolver_status != 0)
     {
-        http_client_set_resolve_error(resolver_status);
+        networking_dns_set_error(resolver_status);
         return (-1);
     }
     socket_fd = -1;
@@ -845,7 +748,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
     resolver_status = getaddrinfo(host, port_string, &address_hints, &address_info);
     if (resolver_status != 0)
     {
-        http_client_set_resolve_error(resolver_status);
+        networking_dns_set_error(resolver_status);
         http_client_reset_buffer_adapter_state();
         return (-1);
     }
