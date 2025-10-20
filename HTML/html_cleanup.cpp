@@ -45,10 +45,22 @@ void html_free_nodes(html_node *nodeList)
         while (currentAttribute)
         {
             html_attr *nextAttribute;
+            bool       attribute_lock_acquired;
+            int        lock_attribute_status;
 
-            nextAttribute = currentAttribute->next;
+            attribute_lock_acquired = false;
+            lock_attribute_status = html_attr_lock(currentAttribute, &attribute_lock_acquired);
+            if (lock_attribute_status == 0 && attribute_lock_acquired)
+            {
+                nextAttribute = currentAttribute->next;
+                currentAttribute->next = ft_nullptr;
+                html_attr_unlock(currentAttribute, attribute_lock_acquired);
+            }
+            else
+                nextAttribute = currentAttribute->next;
             release_html_string(currentAttribute->key);
             release_html_string(currentAttribute->value);
+            html_attr_teardown_thread_safety(currentAttribute);
             delete currentAttribute;
             currentAttribute = nextAttribute;
         }
@@ -160,14 +172,28 @@ void html_remove_nodes_by_attr(html_node **nodeList, const char *key, const char
         attributeNode = currentNode->attributes;
         while (attributeNode)
         {
+            bool       attribute_lock_acquired;
+            int        attribute_lock_status;
+            html_attr *next_attribute;
+
+            attribute_lock_acquired = false;
+            attribute_lock_status = html_attr_lock(attributeNode, &attribute_lock_acquired);
+            if (attribute_lock_status != 0)
+            {
+                attributeNode = attributeNode->next;
+                continue ;
+            }
+            next_attribute = attributeNode->next;
             if (attributeNode->key && attributeNode->value &&
                 ft_strcmp(attributeNode->key, key) == 0 &&
                 ft_strcmp(attributeNode->value, value) == 0)
             {
                 match_found = 1;
+                html_attr_unlock(attributeNode, attribute_lock_acquired);
                 break;
             }
-            attributeNode = attributeNode->next;
+            html_attr_unlock(attributeNode, attribute_lock_acquired);
+            attributeNode = next_attribute;
         }
         if (match_found)
         {
