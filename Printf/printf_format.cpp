@@ -12,7 +12,9 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
 {
     size_t count = 0;
     size_t index = 0;
+    va_list current_args;
 
+    va_copy(current_args, args);
     while (format[index])
     {
         if (count == SIZE_MAX)
@@ -54,24 +56,24 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
                 break ;
             if (spec == 'c')
             {
-                char character = (char)va_arg(args, int);
+                char character = (char)va_arg(current_args, int);
                 ft_putchar_fd(character, fd, &count);
             }
             else if (spec == 's')
             {
-                char *string = va_arg(args, char *);
+                char *string = va_arg(current_args, char *);
                 ft_putstr_fd(string, fd, &count);
             }
             else if (spec == 'd' || spec == 'i')
             {
                 if (len_mod == LEN_L)
                 {
-                    long number = va_arg(args, long);
+                    long number = va_arg(current_args, long);
                     ft_putnbr_fd(number, fd, &count);
                 }
                 else
                 {
-                    int number = va_arg(args, int);
+                    int number = va_arg(current_args, int);
                     ft_putnbr_fd(number, fd, &count);
                 }
             }
@@ -79,17 +81,17 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
             {
                 if (len_mod == LEN_L)
                 {
-                    uintmax_t number = va_arg(args, unsigned long);
+                    uintmax_t number = va_arg(current_args, unsigned long);
                     ft_putunsigned_fd(number, fd, &count);
                 }
                 else if (len_mod == LEN_Z)
                 {
-                    size_t number = va_arg(args, size_t);
+                    size_t number = va_arg(current_args, size_t);
                     ft_putunsigned_fd(number, fd, &count);
                 }
                 else
                 {
-                    unsigned int number = va_arg(args, unsigned int);
+                    unsigned int number = va_arg(current_args, unsigned int);
                     ft_putunsigned_fd(number, fd, &count);
                 }
             }
@@ -98,17 +100,17 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
                 bool uppercase = (spec == 'X');
                 if (len_mod == LEN_L)
                 {
-                    uintmax_t number = va_arg(args, unsigned long);
+                    uintmax_t number = va_arg(current_args, unsigned long);
                     ft_puthex_fd(number, fd, uppercase, &count);
                 }
                 else if (len_mod == LEN_Z)
                 {
-                    size_t number = va_arg(args, size_t);
+                    size_t number = va_arg(current_args, size_t);
                     ft_puthex_fd(number, fd, uppercase, &count);
                 }
                 else
                 {
-                    unsigned int number = va_arg(args, unsigned int);
+                    unsigned int number = va_arg(current_args, unsigned int);
                     ft_puthex_fd(number, fd, uppercase, &count);
                 }
             }
@@ -116,45 +118,45 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
             {
                 if (len_mod == LEN_L)
                 {
-                    uintmax_t number = va_arg(args, unsigned long);
+                    uintmax_t number = va_arg(current_args, unsigned long);
                     ft_putoctal_fd(number, fd, &count);
                 }
                 else if (len_mod == LEN_Z)
                 {
-                    size_t number = va_arg(args, size_t);
+                    size_t number = va_arg(current_args, size_t);
                     ft_putoctal_fd(number, fd, &count);
                 }
                 else
                 {
-                    unsigned int number = va_arg(args, unsigned int);
+                    unsigned int number = va_arg(current_args, unsigned int);
                     ft_putoctal_fd(number, fd, &count);
                 }
             }
             else if (spec == 'f')
             {
-                double number = va_arg(args, double);
+                double number = va_arg(current_args, double);
                 ft_putfloat_fd(number, fd, &count, precision);
             }
             else if (spec == 'e' || spec == 'E')
             {
                 bool uppercase = (spec == 'E');
-                double number = va_arg(args, double);
+                double number = va_arg(current_args, double);
                 ft_putscientific_fd(number, uppercase, fd, &count, precision);
             }
             else if (spec == 'g' || spec == 'G')
             {
                 bool uppercase = (spec == 'G');
-                double number = va_arg(args, double);
+                double number = va_arg(current_args, double);
                 ft_putgeneral_fd(number, uppercase, fd, &count, precision);
             }
             else if (spec == 'p')
             {
-                void *pointer = va_arg(args, void *);
+                void *pointer = va_arg(current_args, void *);
                 ft_putptr_fd(pointer, fd, &count);
             }
             else if (spec == 'b')
             {
-                int boolean_value = va_arg(args, int);
+                int boolean_value = va_arg(current_args, int);
                 if (boolean_value)
                     ft_putstr_fd("true", fd, &count);
                 else
@@ -166,19 +168,19 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
                 {
                     if (len_mod == LEN_L)
                     {
-                        long *out = va_arg(args, long *);
+                        long *out = va_arg(current_args, long *);
                         if (out)
                             *out = static_cast<long>(count);
                     }
                     else if (len_mod == LEN_Z)
                     {
-                        size_t *out = va_arg(args, size_t *);
+                        size_t *out = va_arg(current_args, size_t *);
                         if (out)
                             *out = count;
                     }
                     else
                     {
-                        int *out = va_arg(args, int *);
+                        int *out = va_arg(current_args, int *);
                         if (out)
                             *out = static_cast<int>(count);
                     }
@@ -188,14 +190,26 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
                 ft_putchar_fd('%', fd, &count);
             else
             {
-                ft_putchar_fd('%', fd, &count);
-                ft_putchar_fd(spec, fd, &count);
+                ft_string   custom_output;
+                int         custom_status;
+
+                custom_status = pf_try_format_custom_specifier(spec, &current_args, custom_output);
+                if (custom_status == 0)
+                    pf_write_ft_string_fd(custom_output, fd, &count);
+                else if (custom_status > 0)
+                {
+                    ft_putchar_fd('%', fd, &count);
+                    ft_putchar_fd(spec, fd, &count);
+                }
+                else
+                    count = SIZE_MAX;
             }
         }
         else
             ft_putchar_fd(format[index], fd, &count);
         index++;
     }
+    va_end(current_args);
     if (count == SIZE_MAX)
         return (-1);
     if (count > static_cast<size_t>(INT_MAX))

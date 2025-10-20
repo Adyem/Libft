@@ -302,7 +302,7 @@
 ### Printf
 - [ ] Bring the printf implementation up to C99 compliance (length modifiers, positional arguments, floating-point formatting).
 - [x] Add sandboxed formatting tests that ensure buffer boundaries and return values match the standard library behaviour.
-- [ ] Provide extension hooks for user-defined specifiers that integrate with `ft_string` and logging sinks.
+- [x] Provide extension hooks for user-defined specifiers that integrate with `ft_string` and logging sinks.
 - [ ] Optimize hot paths (integer/float formatting) using precomputed tables where possible.
 - [x] Document thread-safety guarantees and recommend locking strategies for shared formatters. (See `Docs/printf_thread_safety.md`.)
 - [x] Re-enable the `pf_vsnprintf matches std::vsnprintf output` regression after aligning `pf_vsnprintf` with the standard library results across truncation and zero-size scenarios.

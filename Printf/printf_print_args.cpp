@@ -281,3 +281,28 @@ void ft_putgeneral_fd(double number, bool uppercase, int fd, size_t *count, int 
     write_buffer_fd(formatted_output.c_str(), output_length, fd, count);
     return ;
 }
+
+void pf_write_ft_string_fd(const ft_string &output, int fd, size_t *count)
+{
+    const char  *buffer;
+    size_t      length;
+
+    if (count_has_error(count))
+        return ;
+    if (output.get_error() != ER_SUCCESS)
+    {
+        mark_count_error(count);
+        return ;
+    }
+    buffer = output.c_str();
+    if (buffer == ft_nullptr)
+    {
+        mark_count_error(count);
+        return ;
+    }
+    length = output.size();
+    if (length == 0)
+        return ;
+    write_buffer_fd(buffer, length, fd, count);
+    return ;
+}
