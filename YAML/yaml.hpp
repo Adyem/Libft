@@ -7,6 +7,8 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 
+class pt_mutex;
+
 enum yaml_type
 {
     YAML_SCALAR,
@@ -26,9 +28,38 @@ class yaml_value
         ft_map<ft_string, yaml_value*> _map;
         ft_vector<ft_string> _map_keys;
 
+        mutable pt_mutex *_mutex;
+        mutable bool _thread_safe_enabled;
+
+        int prepare_thread_safety() noexcept;
+        void teardown_thread_safety() noexcept;
+        int lock(bool *lock_acquired) const noexcept;
+        void unlock(bool lock_acquired) const noexcept;
+
     public:
+        class thread_guard
+        {
+            private:
+                const yaml_value *_value;
+                bool _lock_acquired;
+                int _status;
+                int _entry_errno;
+
+            public:
+                thread_guard(const yaml_value *value) noexcept;
+                ~thread_guard() noexcept;
+
+                int get_status() const noexcept;
+                bool lock_acquired() const noexcept;
+        };
+
         yaml_value() noexcept;
         ~yaml_value() noexcept;
+
+        yaml_value(const yaml_value &) = delete;
+        yaml_value &operator=(const yaml_value &) = delete;
+        yaml_value(yaml_value &&) = delete;
+        yaml_value &operator=(yaml_value &&) = delete;
 
         int get_error() const noexcept;
         const char *get_error_str() const noexcept;
@@ -45,6 +76,8 @@ class yaml_value
         void add_map_item(const ft_string &key, yaml_value *value) noexcept;
         const ft_map<ft_string, yaml_value*> &get_map() const noexcept;
         const ft_vector<ft_string> &get_map_keys() const noexcept;
+
+        bool is_thread_safe_enabled() const noexcept;
 };
 
 size_t      yaml_find_char(const ft_string &string, char character) noexcept;

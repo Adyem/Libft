@@ -231,3 +231,42 @@ FT_TEST(test_xml_document_load_from_string_handles_gt_in_attribute, "xml_documen
     return (1);
 }
 
+FT_TEST(test_xml_node_thread_safety_root_locking, "xml_node exposes locking helpers for root nodes")
+{
+    xml_document document;
+    xml_node *root_node;
+    bool lock_acquired;
+    int lock_status;
+
+    FT_ASSERT_EQ(ER_SUCCESS, document.load_from_string("<root><child/></root>"));
+    root_node = document.get_root();
+    FT_ASSERT(root_node != ft_nullptr);
+    FT_ASSERT_EQ(true, xml_node_is_thread_safe_enabled(root_node));
+    ft_errno = FT_ERR_INTERNAL;
+    lock_acquired = false;
+    lock_status = xml_node_lock(root_node, &lock_acquired);
+    FT_ASSERT_EQ(0, lock_status);
+    FT_ASSERT_EQ(true, lock_acquired);
+    FT_ASSERT_EQ(FT_ERR_INTERNAL, ft_errno);
+    xml_node_unlock(root_node, lock_acquired);
+    FT_ASSERT_EQ(FT_ERR_INTERNAL, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_xml_node_thread_safety_rejects_null_nodes, "xml_node locking rejects null nodes")
+{
+    bool lock_acquired;
+    int lock_status;
+
+    FT_ASSERT_EQ(false, xml_node_is_thread_safe_enabled(ft_nullptr));
+    ft_errno = ER_SUCCESS;
+    lock_acquired = true;
+    lock_status = xml_node_lock(ft_nullptr, &lock_acquired);
+    FT_ASSERT_EQ(-1, lock_status);
+    FT_ASSERT_EQ(false, lock_acquired);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    xml_node_unlock(ft_nullptr, true);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    return (1);
+}
+

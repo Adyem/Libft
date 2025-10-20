@@ -6,8 +6,12 @@
 #include "../Errno/errno.hpp"
 #include "../CMA/CMA.hpp"
 
+class pt_mutex;
+
 struct xml_node
 {
+    pt_mutex *mutex;
+    bool thread_safe_enabled;
     char *name;
     char *text;
     ft_vector<xml_node*> children;
@@ -16,8 +20,6 @@ struct xml_node
     xml_node() noexcept;
     ~xml_node() noexcept;
 };
-
-class pt_mutex;
 
 class xml_document
 {
@@ -62,5 +64,11 @@ class xml_document
         const char *get_error_str() const noexcept;
         bool is_thread_safe_enabled() const noexcept;
 };
+
+int  xml_node_prepare_thread_safety(xml_node *node) noexcept;
+void xml_node_teardown_thread_safety(xml_node *node) noexcept;
+int  xml_node_lock(const xml_node *node, bool *lock_acquired) noexcept;
+void xml_node_unlock(const xml_node *node, bool lock_acquired) noexcept;
+bool xml_node_is_thread_safe_enabled(const xml_node *node) noexcept;
 
 #endif

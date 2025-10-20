@@ -26,12 +26,21 @@ static void write_node(const yaml_value *value, ft_string &output, int indent) n
         ft_errno = ER_SUCCESS;
         return ;
     }
+    yaml_value::thread_guard guard(value);
+
+    if (guard.get_status() != 0)
+        return ;
     if (value->get_error() != ER_SUCCESS)
     {
         ft_errno = value->get_error();
         return ;
     }
-    if (value->get_type() == YAML_SCALAR)
+    yaml_type value_type;
+
+    value_type = value->get_type();
+    if (value->get_error() != ER_SUCCESS)
+        return ;
+    if (value_type == YAML_SCALAR)
     {
         write_indent(output, indent);
         if (output.get_error() != ER_SUCCESS)
@@ -54,7 +63,7 @@ static void write_node(const yaml_value *value, ft_string &output, int indent) n
         ft_errno = ER_SUCCESS;
         return ;
     }
-    if (value->get_type() == YAML_LIST)
+    if (value_type == YAML_LIST)
     {
         const ft_vector<yaml_value*> &list_ref = value->get_list();
         size_t index = 0;
@@ -122,7 +131,7 @@ static void write_node(const yaml_value *value, ft_string &output, int indent) n
         ft_errno = ER_SUCCESS;
         return ;
     }
-    if (value->get_type() == YAML_MAP)
+    if (value_type == YAML_MAP)
     {
         const ft_map<ft_string, yaml_value*> &map_ref = value->get_map();
         const ft_vector<ft_string> &keys = value->get_map_keys();

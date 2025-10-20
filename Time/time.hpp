@@ -58,6 +58,14 @@ long long   time_high_resolution_diff_ns(t_high_resolution_time_point start_poin
 double  time_high_resolution_diff_seconds(t_high_resolution_time_point start_point, t_high_resolution_time_point end_point);
 bool    time_get_local_offset(t_time time_value, int *offset_minutes, bool *is_daylight_saving);
 bool    time_convert_timezone(t_time time_value, int source_offset_minutes, int target_offset_minutes, t_time *converted_time);
+bool    time_get_monotonic_wall_anchor(t_monotonic_time_point &anchor_monotonic,
+            long long &anchor_wall_ms);
+bool    time_monotonic_to_wall_ms(t_monotonic_time_point monotonic_point,
+            t_monotonic_time_point anchor_monotonic, long long anchor_wall_ms,
+            long long &out_wall_ms);
+bool    time_wall_ms_to_monotonic(long long wall_time_ms,
+            t_monotonic_time_point anchor_monotonic, long long anchor_wall_ms,
+            t_monotonic_time_point &out_monotonic);
 
 typedef std::chrono::system_clock::time_point (*t_time_clock_now_hook)(void);
 
