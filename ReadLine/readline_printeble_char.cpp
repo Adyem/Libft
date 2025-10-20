@@ -8,6 +8,8 @@
 
 int rl_handle_printable_char(readline_state_t *state, char c, const char *prompt)
 {
+    bool lock_acquired;
+    int  result;
     int new_bufsize;
     char *resized_buffer;
     int length_after_cursor;
@@ -17,27 +19,31 @@ int rl_handle_printable_char(readline_state_t *state, char c, const char *prompt
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
+    lock_acquired = false;
+    result = -1;
+    if (rl_state_lock(state, &lock_acquired) != 0)
+        return (-1);
     if (state->buffer == ft_nullptr || state->bufsize <= 0)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
+        goto cleanup;
     }
     if (state->pos < 0 || state->pos > state->bufsize)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
+        goto cleanup;
     }
     if (state->pos >= state->bufsize - 1)
     {
         if (state->bufsize > INT_MAX / 2)
         {
             ft_errno = FT_ERR_OUT_OF_RANGE;
-            return (-1);
+            goto cleanup;
         }
         new_bufsize = state->bufsize * 2;
         resized_buffer = rl_resize_buffer(state->buffer, state->bufsize, new_bufsize);
         if (resized_buffer == ft_nullptr)
-            return (-1);
+            goto cleanup;
         state->buffer = resized_buffer;
         state->bufsize = new_bufsize;
     }
@@ -53,5 +59,8 @@ int rl_handle_printable_char(readline_state_t *state, char c, const char *prompt
         pf_printf("\033[%dD", length_after_cursor);
     fflush(stdout);
     ft_errno = ER_SUCCESS;
-    return (0);
+    result = 0;
+cleanup:
+    rl_state_unlock(state, lock_acquired);
+    return (result);
 }

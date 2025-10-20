@@ -122,6 +122,20 @@ static void rl_update_display(const char *prompt, readline_state_t *state)
 
 int rl_handle_tab_completion(readline_state_t *state, const char *prompt)
 {
+    bool        lock_acquired;
+    int         result;
+    const char *completion;
+
+    if (state == ft_nullptr || prompt == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (-1);
+    }
+    lock_acquired = false;
+    result = 0;
+    completion = ft_nullptr;
+    if (rl_state_lock(state, &lock_acquired) != 0)
+        return (-1);
     if (!state->in_completion_mode)
     {
         char prefix[INITIAL_BUFFER_SIZE];
@@ -130,28 +144,36 @@ int rl_handle_tab_completion(readline_state_t *state, const char *prompt)
 
         prefix_status = rl_find_word_start_and_prefix(state, prefix, &prefix_len, INITIAL_BUFFER_SIZE);
         if (prefix_status != 0)
-            return (-1);
+        {
+            result = -1;
+            goto cleanup;
+        }
         if (prefix_len == 0)
-            return (0);
+            goto cleanup_success;
         rl_gather_matching_suggestions(state, prefix, prefix_len);
         if (state->current_match_count == 0)
         {
             pf_printf("\a");
             fflush(stdout);
+            goto cleanup_success;
         }
-        else
-        {
-            state->in_completion_mode = 1;
-            state->current_match_index = 0;
-        }
+        state->in_completion_mode = 1;
+        state->current_match_index = 0;
     }
     if (state->in_completion_mode && state->current_match_count > 0)
     {
-        const char *completion = state->current_matches[state->current_match_index];
+        completion = state->current_matches[state->current_match_index];
         if (rl_apply_completion(state, completion))
-            return (-1);
+        {
+            result = -1;
+            goto cleanup;
+        }
         rl_update_display(prompt, state);
         state->current_match_index = (state->current_match_index + 1) % state->current_match_count;
     }
-    return (0);
+cleanup_success:
+    ft_errno = ER_SUCCESS;
+cleanup:
+    rl_state_unlock(state, lock_acquired);
+    return (result);
 }
