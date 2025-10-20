@@ -9,8 +9,19 @@ static void html_write_attrs(int fd, html_attr *attribute)
 {
     while (attribute)
     {
-        pf_printf_fd(fd, " %s=\"%s\"", attribute->key, attribute->value);
-        attribute = attribute->next;
+        bool       lock_acquired;
+        int        lock_status;
+        html_attr *next_attribute;
+
+        lock_acquired = false;
+        lock_status = html_attr_lock(attribute, &lock_acquired);
+        if (lock_status != 0)
+            return ;
+        next_attribute = attribute->next;
+        if (attribute->key && attribute->value)
+            pf_printf_fd(fd, " %s=\"%s\"", attribute->key, attribute->value);
+        html_attr_unlock(attribute, lock_acquired);
+        attribute = next_attribute;
     }
 }
 

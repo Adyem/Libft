@@ -86,7 +86,9 @@ static char *html_escape_attribute_value(const char *value)
 
 static char *html_attrs_to_string(html_attr *attribute)
 {
-    char *result = cma_strdup("");
+    char *result;
+
+    result = cma_strdup("");
     if (!result)
     {
         ft_errno = FT_ERR_NO_MEMORY;
@@ -94,16 +96,57 @@ static char *html_attrs_to_string(html_attr *attribute)
     }
     while (attribute)
     {
-        char *escaped_value;
-        char *attr;
+        bool       lock_acquired;
+        int        lock_status;
+        char      *escaped_value;
+        char      *attr;
+        char      *key_copy;
+        char      *value_copy;
+        html_attr *next_attribute;
 
-        escaped_value = html_escape_attribute_value(attribute->value);
-        if (!escaped_value)
+        lock_acquired = false;
+        lock_status = html_attr_lock(attribute, &lock_acquired);
+        if (lock_status != 0)
         {
             cma_free(result);
             return (ft_nullptr);
         }
-        attr = cma_strjoin_multiple(5, " ", attribute->key, "=\"", escaped_value, "\"");
+        if (!attribute->key || !attribute->value)
+        {
+            html_attr_unlock(attribute, lock_acquired);
+            cma_free(result);
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
+            return (ft_nullptr);
+        }
+        key_copy = cma_strdup(attribute->key);
+        if (!key_copy)
+        {
+            html_attr_unlock(attribute, lock_acquired);
+            cma_free(result);
+            ft_errno = FT_ERR_NO_MEMORY;
+            return (ft_nullptr);
+        }
+        value_copy = cma_strdup(attribute->value);
+        if (!value_copy)
+        {
+            cma_free(key_copy);
+            html_attr_unlock(attribute, lock_acquired);
+            cma_free(result);
+            ft_errno = FT_ERR_NO_MEMORY;
+            return (ft_nullptr);
+        }
+        next_attribute = attribute->next;
+        html_attr_unlock(attribute, lock_acquired);
+        escaped_value = html_escape_attribute_value(value_copy);
+        cma_free(value_copy);
+        if (!escaped_value)
+        {
+            cma_free(key_copy);
+            cma_free(result);
+            return (ft_nullptr);
+        }
+        attr = cma_strjoin_multiple(5, " ", key_copy, "=\"", escaped_value, "\"");
+        cma_free(key_copy);
         cma_free(escaped_value);
         if (!attr)
         {
@@ -111,7 +154,9 @@ static char *html_attrs_to_string(html_attr *attribute)
             ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
-        char *tmp = cma_strjoin(result, attr);
+        char *tmp;
+
+        tmp = cma_strjoin(result, attr);
         cma_free(result);
         cma_free(attr);
         if (!tmp)
@@ -120,7 +165,7 @@ static char *html_attrs_to_string(html_attr *attribute)
             return (ft_nullptr);
         }
         result = tmp;
-        attribute = attribute->next;
+        attribute = next_attribute;
     }
     ft_errno = ER_SUCCESS;
     return (result);
