@@ -1,7 +1,7 @@
 TARGET         := HTMLParser.a
 DEBUG_TARGET   := HTMLParser_debug.a
 
-SRCS := html_node.cpp html_writer.cpp html_cleanup.cpp html_search.cpp html_string_writer.cpp html_document.cpp
+SRCS := html_node.cpp html_writer.cpp html_cleanup.cpp html_search.cpp html_string_writer.cpp html_document.cpp html_node_thread_safety.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))

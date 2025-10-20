@@ -32,67 +32,141 @@ static int normalize_selector_value(char *value_string)
 
 html_node *html_find_by_tag(html_node *nodeList, const char *tagName)
 {
-    html_node *currentNode = nodeList;
-    while (currentNode)
+    html_node *current_node;
+
+    current_node = nodeList;
+    while (current_node)
     {
-        if (currentNode->tag && ft_strcmp(currentNode->tag, tagName) == 0)
-            return (currentNode);
-        html_node *found = html_find_by_tag(currentNode->children, tagName);
+        html_node *next_node;
+        bool       lock_acquired;
+        int        lock_status;
+
+        lock_acquired = false;
+        lock_status = html_node_lock(current_node, &lock_acquired);
+        next_node = current_node->next;
+        if (lock_status != 0)
+        {
+            current_node = next_node;
+            continue ;
+        }
+        if (current_node->tag && ft_strcmp(current_node->tag, tagName) == 0)
+        {
+            html_node_unlock(current_node, lock_acquired);
+            return (current_node);
+        }
+        html_node *found = html_find_by_tag(current_node->children, tagName);
+
+        html_node_unlock(current_node, lock_acquired);
         if (found)
             return (found);
-        currentNode = currentNode->next;
+        current_node = next_node;
     }
     return (ft_nullptr);
 }
 
 html_node *html_find_by_attr(html_node *nodeList, const char *key, const char *value)
 {
-    html_node *currentNode = nodeList;
-    while (currentNode)
+    html_node *current_node;
+
+    current_node = nodeList;
+    while (current_node)
     {
-        html_attr *attribute = currentNode->attributes;
+        html_node *next_node;
+        bool       lock_acquired;
+        int        lock_status;
+
+        lock_acquired = false;
+        lock_status = html_node_lock(current_node, &lock_acquired);
+        next_node = current_node->next;
+        if (lock_status != 0)
+        {
+            current_node = next_node;
+            continue ;
+        }
+        html_attr *attribute = current_node->attributes;
+
         while (attribute)
         {
             if (attribute->key && ft_strcmp(attribute->key, key) == 0)
             {
                 if (!value || (attribute->value && ft_strcmp(attribute->value, value) == 0))
-                    return (currentNode);
+                {
+                    html_node_unlock(current_node, lock_acquired);
+                    return (current_node);
+                }
             }
             attribute = attribute->next;
         }
-        html_node *found = html_find_by_attr(currentNode->children, key, value);
+        html_node *found = html_find_by_attr(current_node->children, key, value);
+
+        html_node_unlock(current_node, lock_acquired);
         if (found)
             return (found);
-        currentNode = currentNode->next;
+        current_node = next_node;
     }
     return (ft_nullptr);
 }
 
 html_node *html_find_by_text(html_node *nodeList, const char *textContent)
 {
-    html_node *currentNode = nodeList;
-    while (currentNode)
+    html_node *current_node;
+
+    current_node = nodeList;
+    while (current_node)
     {
-        if (currentNode->text && ft_strcmp(currentNode->text, textContent) == 0)
-            return (currentNode);
-        html_node *found = html_find_by_text(currentNode->children, textContent);
+        html_node *next_node;
+        bool       lock_acquired;
+        int        lock_status;
+
+        lock_acquired = false;
+        lock_status = html_node_lock(current_node, &lock_acquired);
+        next_node = current_node->next;
+        if (lock_status != 0)
+        {
+            current_node = next_node;
+            continue ;
+        }
+        if (current_node->text && ft_strcmp(current_node->text, textContent) == 0)
+        {
+            html_node_unlock(current_node, lock_acquired);
+            return (current_node);
+        }
+        html_node *found = html_find_by_text(current_node->children, textContent);
+
+        html_node_unlock(current_node, lock_acquired);
         if (found)
             return (found);
-        currentNode = currentNode->next;
+        current_node = next_node;
     }
     return (ft_nullptr);
 }
 
 size_t html_count_nodes_by_tag(html_node *nodeList, const char *tagName)
 {
-    size_t count = 0;
-    html_node *currentNode = nodeList;
-    while (currentNode)
+    size_t count;
+    html_node *current_node;
+
+    count = 0;
+    current_node = nodeList;
+    while (current_node)
     {
-        if (currentNode->tag && ft_strcmp(currentNode->tag, tagName) == 0)
+        html_node *next_node;
+        bool       lock_acquired;
+        int        lock_status;
+
+        lock_acquired = false;
+        lock_status = html_node_lock(current_node, &lock_acquired);
+        next_node = current_node->next;
+        if (lock_status != 0)
+        {
+            current_node = next_node;
+            continue ;
+        }
+        if (current_node->tag && ft_strcmp(current_node->tag, tagName) == 0)
             ++count;
-        count += html_count_nodes_by_tag(currentNode->children, tagName);
-        currentNode = currentNode->next;
+        count += html_count_nodes_by_tag(current_node->children, tagName);
+        html_node_unlock(current_node, lock_acquired);
+        current_node = next_node;
     }
     return (count);
 }

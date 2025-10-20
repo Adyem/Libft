@@ -20,12 +20,16 @@ static void html_release_string(char *string)
 
 html_node *html_create_node(const char *tagName, const char *textContent)
 {
-    html_node *newNode = new(std::nothrow) html_node;
+    html_node *newNode;
+
+    newNode = new(std::nothrow) html_node;
     if (!newNode)
     {
         ft_errno = HTML_MALLOC_FAIL;
         return (ft_nullptr);
     }
+    newNode->mutex = ft_nullptr;
+    newNode->thread_safe_enabled = false;
     newNode->tag = cma_strdup(tagName);
     if (!newNode->tag)
     {
@@ -47,6 +51,13 @@ html_node *html_create_node(const char *tagName, const char *textContent)
     newNode->attributes = ft_nullptr;
     newNode->children = ft_nullptr;
     newNode->next = ft_nullptr;
+    if (html_node_prepare_thread_safety(newNode) != 0)
+    {
+        html_release_string(newNode->tag);
+        html_release_string(newNode->text);
+        delete newNode;
+        return (ft_nullptr);
+    }
     return (newNode);
 }
 
@@ -79,65 +90,151 @@ html_attr *html_create_attr(const char *key, const char *value)
 
 void html_add_attr(html_node *targetNode, html_attr *newAttribute)
 {
+    bool lock_acquired;
+    int  lock_status;
+
+    lock_acquired = false;
+    lock_status = html_node_lock(targetNode, &lock_acquired);
+    if (lock_status != 0)
+        return ;
     if (!targetNode->attributes)
         targetNode->attributes = newAttribute;
     else
     {
-        html_attr *currentAttribute = targetNode->attributes;
+        html_attr *currentAttribute;
+
+        currentAttribute = targetNode->attributes;
         while (currentAttribute->next)
             currentAttribute = currentAttribute->next;
         currentAttribute->next = newAttribute;
     }
+    html_node_unlock(targetNode, lock_acquired);
     return ;
 }
 
 void html_remove_attr(html_node *targetNode, const char *key)
 {
-    html_attr *prev = ft_nullptr;
-    html_attr *current = targetNode->attributes;
-    while (current)
+    html_attr *previousAttribute;
+    html_attr *currentAttribute;
+    bool       lock_acquired;
+    int        lock_status;
+
+    lock_acquired = false;
+    lock_status = html_node_lock(targetNode, &lock_acquired);
+    if (lock_status != 0)
+        return ;
+    previousAttribute = ft_nullptr;
+    currentAttribute = targetNode->attributes;
+    while (currentAttribute)
     {
-        if (current->key && ft_strcmp(current->key, key) == 0)
+        if (currentAttribute->key && ft_strcmp(currentAttribute->key, key) == 0)
         {
-            if (prev)
-                prev->next = current->next;
+            if (previousAttribute)
+                previousAttribute->next = currentAttribute->next;
             else
-                targetNode->attributes = current->next;
-            html_release_string(current->key);
-            html_release_string(current->value);
-            delete current;
+                targetNode->attributes = currentAttribute->next;
+            html_release_string(currentAttribute->key);
+            html_release_string(currentAttribute->value);
+            delete currentAttribute;
+            html_node_unlock(targetNode, lock_acquired);
             return ;
         }
-        prev = current;
-        current = current->next;
+        previousAttribute = currentAttribute;
+        currentAttribute = currentAttribute->next;
     }
+    html_node_unlock(targetNode, lock_acquired);
     return ;
 }
 
 void html_add_child(html_node *parentNode, html_node *childNode)
 {
+    bool parent_lock_acquired;
+    int  lock_status;
+
+    parent_lock_acquired = false;
+    lock_status = html_node_lock(parentNode, &parent_lock_acquired);
+    if (lock_status != 0)
+        return ;
     if (!parentNode->children)
-        parentNode->children = childNode;
-    else
     {
-        html_node *lastChild = parentNode->children;
-        while (lastChild->next)
-            lastChild = lastChild->next;
-        lastChild->next = childNode;
+        parentNode->children = childNode;
+        html_node_unlock(parentNode, parent_lock_acquired);
+        return ;
     }
+    html_node *lastChild;
+    bool       child_lock_acquired;
+
+    lastChild = parentNode->children;
+    child_lock_acquired = false;
+    lock_status = html_node_lock(lastChild, &child_lock_acquired);
+    if (lock_status != 0)
+    {
+        html_node_unlock(parentNode, parent_lock_acquired);
+        return ;
+    }
+    while (lastChild->next)
+    {
+        html_node *nextChild;
+        bool       next_lock_acquired;
+
+        nextChild = lastChild->next;
+        next_lock_acquired = false;
+        lock_status = html_node_lock(nextChild, &next_lock_acquired);
+        if (lock_status != 0)
+        {
+            html_node_unlock(lastChild, child_lock_acquired);
+            html_node_unlock(parentNode, parent_lock_acquired);
+            return ;
+        }
+        html_node_unlock(lastChild, child_lock_acquired);
+        lastChild = nextChild;
+        child_lock_acquired = next_lock_acquired;
+    }
+    lastChild->next = childNode;
+    html_node_unlock(lastChild, child_lock_acquired);
+    html_node_unlock(parentNode, parent_lock_acquired);
     return ;
 }
 
 void html_append_node(html_node **headNode, html_node *newNode)
 {
-    if (!(*headNode))
-        *headNode = newNode;
-    else
+    html_node *currentNode;
+    bool       current_lock_acquired;
+    int        lock_status;
+
+    if (!headNode)
     {
-        html_node *lastNode = *headNode;
-        while (lastNode->next)
-            lastNode = lastNode->next;
-        lastNode->next = newNode;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return ;
     }
+    if (!(*headNode))
+    {
+        *headNode = newNode;
+        return ;
+    }
+    currentNode = *headNode;
+    current_lock_acquired = false;
+    lock_status = html_node_lock(currentNode, &current_lock_acquired);
+    if (lock_status != 0)
+        return ;
+    while (currentNode->next)
+    {
+        html_node *nextNode;
+        bool       next_lock_acquired;
+
+        nextNode = currentNode->next;
+        next_lock_acquired = false;
+        lock_status = html_node_lock(nextNode, &next_lock_acquired);
+        if (lock_status != 0)
+        {
+            html_node_unlock(currentNode, current_lock_acquired);
+            return ;
+        }
+        html_node_unlock(currentNode, current_lock_acquired);
+        currentNode = nextNode;
+        current_lock_acquired = next_lock_acquired;
+    }
+    currentNode->next = newNode;
+    html_node_unlock(currentNode, current_lock_acquired);
     return ;
 }
