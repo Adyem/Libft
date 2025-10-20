@@ -227,7 +227,7 @@
 
 ### Time utilities
 - [x] Provide high-resolution timers that wrap `clock_gettime`/`QueryPerformanceCounter` and document precision trade-offs.
-- [ ] Add timezone conversion helpers, daylight-saving awareness, and formatting options for ISO-8601 with offsets.
+- [x] Add timezone conversion helpers, daylight-saving awareness, and formatting options for ISO-8601 with offsets.
 - [ ] Implement async-friendly sleep primitives that integrate with event loops instead of blocking threads.
 - [ ] Supply benchmarking helpers that record rolling averages and jitter for repeated measurements.
 - [ ] Offer monotonic-to-wall-clock translation utilities to reconcile timestamps across modules.
