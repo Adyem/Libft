@@ -91,7 +91,7 @@
 - [x] Fix the Winsock error handling path in `ft_socket::setup_server` so the helper uses `WSAGetLastError()`/`ft_errno` instead of `errno`, otherwise Windows failures in `create_socket`, `set_reuse_address`, timeouts, bind, or listen propagate the wrong code. 【F:Networking/networking_setup_server.cpp†L18-L146】【F:Networking/networking_setup_server.cpp†L188-L237】
 - [x] Update the HTTP server response writer to translate `nw_send` failures via `ft_errno`/`WSAGetLastError()` instead of raw `errno`, which currently reports success on Windows because Winsock does not set `errno`. 【F:Networking/http_server.cpp†L1-L14】【F:Networking/http_server.cpp†L278-L307】
 - [x] Make `ft_socket::initialize` return an error when `setup_server`/`setup_client` fails so callers are not forced to poll `_error_code` after a `0` return. 【F:Networking/networking_socket_class.cpp†L395-L423】
-- [ ] Make `SocketConfig` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `SocketConfig` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_socket` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `udp_socket` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_websocket_server` thread safe (relies on the shared deadlock resolution routine described below).
@@ -293,11 +293,11 @@
 - [ ] Add UTF-8 aware cursor movement and rendering in ReadLine to match the Unicode helpers in Libft.
 - [ ] Provide pluggable history storage (SQLite, JSON) and search that respects multi-byte characters.
 - [x] Document terminal capability detection and fallback behaviour for minimal environments.
-- [ ] Make `ft_file_watch` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `file_dir` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `file_dirent` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `readline_state_t` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `terminal_dimensions` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_file_watch` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `file_dir` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `file_dirent` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `readline_state_t` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `terminal_dimensions` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Printf
 - [ ] Bring the printf implementation up to C99 compliance (length modifiers, positional arguments, floating-point formatting).

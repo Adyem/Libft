@@ -226,10 +226,28 @@ ft_socket::ft_socket(int fd, const sockaddr_storage &addr) : _address(addr), _so
 
 ft_socket::ft_socket(const SocketConfig &config) : _socket_fd(-1), _error_code(ER_SUCCESS)
 {
+    SocketConfig *mutable_config;
+    bool          lock_acquired;
+    SocketType    type;
+
     this->set_error(ER_SUCCESS);
-    if (config._type == SocketType::SERVER)
+    mutable_config = const_cast<SocketConfig*>(&config);
+    lock_acquired = false;
+    if (socket_config_prepare_thread_safety(mutable_config) != 0)
+    {
+        this->set_error(ft_errno);
+        return ;
+    }
+    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return ;
+    }
+    type = mutable_config->_type;
+    socket_config_unlock(mutable_config, lock_acquired);
+    if (type == SocketType::SERVER)
         setup_server(config);
-    else if (config._type == SocketType::CLIENT)
+    else if (type == SocketType::CLIENT)
         setup_client(config);
     else
     {

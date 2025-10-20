@@ -29,6 +29,10 @@ struct file_dir
     intptr_t fd;
     WIN32_FIND_DATAA w_find_data;
     bool first_read;
+    pthread_mutex_t mutex;
+    bool mutex_initialized;
+    file_dirent entry;
+    bool closed;
 };
 int cmp_open(const char *path_name);
 int cmp_open(const char *path_name, int flags);
@@ -47,6 +51,10 @@ struct file_dir
     size_t buffer_size;
     ssize_t buffer_used;
     size_t buffer_offset;
+    pthread_mutex_t mutex;
+    bool mutex_initialized;
+    file_dirent entry;
+    bool closed;
 };
 int cmp_open(const char *path_name);
 int cmp_open(const char *path_name, int flags);
@@ -80,6 +88,8 @@ int cmp_thread_wake_one_uint32(std::atomic<uint32_t> *address);
 int cmp_readline_enable_raw_mode(void);
 void cmp_readline_disable_raw_mode(void);
 int cmp_readline_terminal_width(void);
+int cmp_readline_terminal_dimensions(unsigned short *rows, unsigned short *cols,
+    unsigned short *x_pixels, unsigned short *y_pixels);
 
 int cmp_rng_secure_bytes(unsigned char *buffer, size_t length);
 
