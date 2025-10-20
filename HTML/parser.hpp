@@ -10,8 +10,12 @@ typedef struct html_attr
     struct html_attr *next;
 } html_attr;
 
+class pt_mutex;
+
 typedef struct html_node
 {
+    pt_mutex *mutex;
+    bool thread_safe_enabled;
     char *tag;
     char *text;
     html_attr *attributes;
@@ -38,5 +42,11 @@ html_node   *html_find_by_selector(html_node *node_list, const char *selector);
 
 html_node   *html_query_selector(html_node *node_list, const char *selector);
 size_t      html_count_nodes_by_tag(html_node *nodeList, const char *tagName);
+
+int         html_node_prepare_thread_safety(html_node *node);
+void        html_node_teardown_thread_safety(html_node *node);
+int         html_node_lock(const html_node *node, bool *lock_acquired);
+void        html_node_unlock(const html_node *node, bool lock_acquired);
+bool        html_node_is_thread_safe_enabled(const html_node *node);
 
 #endif

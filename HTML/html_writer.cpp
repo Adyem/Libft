@@ -16,7 +16,15 @@ static void html_write_attrs(int fd, html_attr *attribute)
 
 static void html_write_node(int fd, html_node *htmlNode, int indent)
 {
-    int indent_index = 0;
+    bool node_lock_acquired;
+    int  lock_status;
+    int  indent_index;
+
+    node_lock_acquired = false;
+    lock_status = html_node_lock(htmlNode, &node_lock_acquired);
+    if (lock_status != 0)
+        return ;
+    indent_index = 0;
     while (indent_index < indent)
     {
         pf_printf_fd(fd, "  ");
@@ -27,6 +35,7 @@ static void html_write_node(int fd, html_node *htmlNode, int indent)
     if (!htmlNode->text && !htmlNode->children)
     {
         pf_printf_fd(fd, "/>\n");
+        html_node_unlock(htmlNode, node_lock_acquired);
         return ;
     }
     pf_printf_fd(fd, ">");
@@ -34,8 +43,10 @@ static void html_write_node(int fd, html_node *htmlNode, int indent)
         pf_printf_fd(fd, "%s", htmlNode->text);
     if (htmlNode->children)
     {
+        html_node *childNode;
+
         pf_printf_fd(fd, "\n");
-        html_node *childNode = htmlNode->children;
+        childNode = htmlNode->children;
         while (childNode)
         {
             html_write_node(fd, childNode, indent + 1);
@@ -49,12 +60,16 @@ static void html_write_node(int fd, html_node *htmlNode, int indent)
         }
     }
     pf_printf_fd(fd, "</%s>\n", htmlNode->tag);
+    html_node_unlock(htmlNode, node_lock_acquired);
 }
 
 int html_write_to_file(const char *file_path, html_node *node_list)
 {
     int file_descriptor;
     html_node *current_node;
+    html_node *next_node;
+    bool       node_lock_acquired;
+    int        lock_status;
 
     if (!file_path)
     {
@@ -67,8 +82,17 @@ int html_write_to_file(const char *file_path, html_node *node_list)
     current_node = node_list;
     while (current_node)
     {
+        node_lock_acquired = false;
+        lock_status = html_node_lock(current_node, &node_lock_acquired);
+        if (lock_status == 0 && node_lock_acquired)
+        {
+            next_node = current_node->next;
+            html_node_unlock(current_node, node_lock_acquired);
+        }
+        else
+            next_node = current_node->next;
         html_write_node(file_descriptor, current_node, 0);
-        current_node = current_node->next;
+        current_node = next_node;
     }
     if (cmp_close(file_descriptor) != 0)
         return (-1);
