@@ -254,6 +254,183 @@ int logger_context_apply_plain(ft_string &text)
     return (0);
 }
 
+static bool logger_context_value_needs_quotes(const char *value)
+{
+    size_t index;
+
+    if (!value)
+        return (false);
+    index = 0;
+    while (value[index] != '\0')
+    {
+        unsigned char character;
+
+        character = static_cast<unsigned char>(value[index]);
+        if (character <= ' ' || character == '"' || character == '\\' || character == '=')
+            return (true);
+        index += 1;
+    }
+    return (false);
+}
+
+static int logger_context_append_flat_value(ft_string &output, const char *value)
+{
+    size_t index;
+    static const char hex_digits[] = "0123456789ABCDEF";
+
+    if (!value)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (-1);
+    }
+    if (!logger_context_value_needs_quotes(value))
+    {
+        output.append(value);
+        if (output.get_error() != ER_SUCCESS)
+        {
+            ft_errno = output.get_error();
+            return (-1);
+        }
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    output.append('"');
+    if (output.get_error() != ER_SUCCESS)
+    {
+        ft_errno = output.get_error();
+        return (-1);
+    }
+    index = 0;
+    while (value[index] != '\0')
+    {
+        char character;
+
+        character = value[index];
+        if (character == '"' || character == '\\')
+        {
+            output.append('\\');
+            if (output.get_error() != ER_SUCCESS)
+            {
+                ft_errno = output.get_error();
+                return (-1);
+            }
+            output.append(character);
+            if (output.get_error() != ER_SUCCESS)
+            {
+                ft_errno = output.get_error();
+                return (-1);
+            }
+        }
+        else if (static_cast<unsigned char>(character) < 0x20)
+        {
+            char escape_buffer[5];
+
+            escape_buffer[0] = '\\';
+            escape_buffer[1] = 'x';
+            escape_buffer[2] = hex_digits[(static_cast<unsigned char>(character) >> 4) & 0x0F];
+            escape_buffer[3] = hex_digits[static_cast<unsigned char>(character) & 0x0F];
+            escape_buffer[4] = '\0';
+            output.append(escape_buffer);
+            if (output.get_error() != ER_SUCCESS)
+            {
+                ft_errno = output.get_error();
+                return (-1);
+            }
+        }
+        else
+        {
+            output.append(character);
+            if (output.get_error() != ER_SUCCESS)
+            {
+                ft_errno = output.get_error();
+                return (-1);
+            }
+        }
+        index += 1;
+    }
+    output.append('"');
+    if (output.get_error() != ER_SUCCESS)
+    {
+        ft_errno = output.get_error();
+        return (-1);
+    }
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+int logger_context_format_flat(ft_string &output)
+{
+    size_t count;
+    size_t index;
+    bool first_entry;
+
+    output.clear();
+    if (output.get_error() != ER_SUCCESS)
+    {
+        ft_errno = output.get_error();
+        return (-1);
+    }
+    count = g_log_context_entries.size();
+    if (g_log_context_entries.get_error() != ER_SUCCESS)
+    {
+        ft_errno = g_log_context_entries.get_error();
+        return (-1);
+    }
+    if (count == 0)
+    {
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    index = 0;
+    first_entry = true;
+    while (index < count)
+    {
+        const s_log_context_entry &entry = g_log_context_entries[index];
+
+        if (g_log_context_entries.get_error() != ER_SUCCESS)
+        {
+            ft_errno = g_log_context_entries.get_error();
+            return (-1);
+        }
+        if (!first_entry)
+        {
+            output.append(' ');
+            if (output.get_error() != ER_SUCCESS)
+            {
+                ft_errno = output.get_error();
+                return (-1);
+            }
+        }
+        else
+            first_entry = false;
+        output.append(entry.key);
+        if (output.get_error() != ER_SUCCESS)
+        {
+            ft_errno = output.get_error();
+            return (-1);
+        }
+        if (entry.has_value)
+        {
+            output.append('=');
+            if (output.get_error() != ER_SUCCESS)
+            {
+                ft_errno = output.get_error();
+                return (-1);
+            }
+            if (entry.value.get_error() != ER_SUCCESS)
+            {
+                ft_errno = entry.value.get_error();
+                return (-1);
+            }
+            if (logger_context_append_flat_value(output, entry.value.c_str()) != 0)
+                return (-1);
+        }
+        index += 1;
+    }
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
 int logger_context_snapshot(ft_vector<s_log_context_view> &snapshot)
 {
     size_t count;

@@ -116,3 +116,56 @@ FT_TEST(test_time_monotonic_point_now_is_monotonic,
     FT_ASSERT(elapsed >= 0);
     return (1);
 }
+
+FT_TEST(test_time_get_monotonic_wall_anchor_midpoint,
+        "time_get_monotonic_wall_anchor positions the midpoint between samples")
+{
+    t_monotonic_time_point before_point;
+    t_monotonic_time_point anchor_point;
+    t_monotonic_time_point after_point;
+    long long               anchor_wall_ms;
+    int                     compare_before;
+    int                     compare_after;
+
+    before_point = time_monotonic_point_now();
+    FT_ASSERT(time_get_monotonic_wall_anchor(anchor_point, anchor_wall_ms));
+    after_point = time_monotonic_point_now();
+    compare_before = time_monotonic_point_compare(before_point, anchor_point);
+    compare_after = time_monotonic_point_compare(after_point, anchor_point);
+    FT_ASSERT(compare_before <= 0);
+    FT_ASSERT(compare_after >= 0);
+    (void)anchor_wall_ms;
+    return (1);
+}
+
+FT_TEST(test_time_monotonic_to_wall_ms_translates_forward,
+        "time_monotonic_to_wall_ms applies positive offsets to the wall clock")
+{
+    t_monotonic_time_point anchor_point;
+    t_monotonic_time_point target_point;
+    long long               anchor_wall_ms;
+    long long               translated_wall_ms;
+
+    anchor_point.milliseconds = 1000;
+    anchor_wall_ms = 5000;
+    target_point = time_monotonic_point_add_ms(anchor_point, 250);
+    FT_ASSERT(time_monotonic_to_wall_ms(target_point, anchor_point,
+            anchor_wall_ms, translated_wall_ms));
+    FT_ASSERT_EQ(5250LL, translated_wall_ms);
+    return (1);
+}
+
+FT_TEST(test_time_wall_ms_to_monotonic_translates_backward,
+        "time_wall_ms_to_monotonic converts wall time deltas back to monotonic")
+{
+    t_monotonic_time_point anchor_point;
+    t_monotonic_time_point translated_point;
+    long long               anchor_wall_ms;
+
+    anchor_point.milliseconds = -2000;
+    anchor_wall_ms = -3000;
+    FT_ASSERT(time_wall_ms_to_monotonic(-2500, anchor_point, anchor_wall_ms,
+            translated_point));
+    FT_ASSERT_EQ(-1500LL, translated_point.milliseconds);
+    return (1);
+}

@@ -86,7 +86,7 @@ static int translate_vector_error(int error_code)
 }
 
 xml_node::xml_node() noexcept
-    : name(ft_nullptr), text(ft_nullptr), children(), attributes()
+    : mutex(ft_nullptr), thread_safe_enabled(false), name(ft_nullptr), text(ft_nullptr), children(), attributes()
 {
     return ;
 }
@@ -116,6 +116,7 @@ xml_node::~xml_node() noexcept
         cma_free(this->name);
     if (this->text)
         cma_free(this->text);
+    xml_node_teardown_thread_safety(this);
     return ;
 }
 
@@ -143,6 +144,11 @@ static const char *parse_node(const char *string, xml_node **out_node)
         return (ft_nullptr);
     }
     node->name = name;
+    if (xml_node_prepare_thread_safety(node) != 0)
+    {
+        delete node;
+        return (ft_nullptr);
+    }
     char quote_character;
 
     quote_character = '\0';
@@ -450,8 +456,22 @@ static void append_string(ft_vector<char> &buffer, const char *string)
     return ;
 }
 
-static void write_node(const xml_node *node, ft_vector<char> &buffer)
+static int write_node(const xml_node *node, ft_vector<char> &buffer)
 {
+    bool lock_acquired;
+    int lock_status;
+    int entry_errno;
+
+    if (!node)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (-1);
+    }
+    entry_errno = ft_errno;
+    lock_acquired = false;
+    lock_status = xml_node_lock(node, &lock_acquired);
+    if (lock_status != 0)
+        return (-1);
     buffer.push_back('<');
     append_string(buffer, node->name);
     buffer.push_back('>');
@@ -461,14 +481,23 @@ static void write_node(const xml_node *node, ft_vector<char> &buffer)
     size_t size = node->children.size();
     while (index < size)
     {
-        write_node(node->children[index], buffer);
+        int child_status;
+
+        child_status = write_node(node->children[index], buffer);
+        if (child_status != 0)
+        {
+            xml_node_unlock(node, lock_acquired);
+            return (-1);
+        }
         index++;
     }
     buffer.push_back('<');
     buffer.push_back('/');
     append_string(buffer, node->name);
     buffer.push_back('>');
-    return ;
+    xml_node_unlock(node, lock_acquired);
+    ft_errno = entry_errno;
+    return (0);
 }
 
 char *xml_document::write_to_string() const noexcept
@@ -491,10 +520,18 @@ char *xml_document::write_to_string() const noexcept
     int error_code = ER_SUCCESS;
     {
         ft_vector<char> buffer;
-        write_node(this->_root, buffer);
-        int buffer_error = buffer.get_error();
-        if (buffer_error != ER_SUCCESS)
-            error_code = translate_vector_error(buffer_error);
+        int write_status;
+        int buffer_error;
+
+        write_status = write_node(this->_root, buffer);
+        if (write_status != 0)
+            error_code = ft_errno != ER_SUCCESS ? ft_errno : FT_ERR_INVALID_STATE;
+        if (error_code == ER_SUCCESS)
+        {
+            buffer_error = buffer.get_error();
+            if (buffer_error != ER_SUCCESS)
+                error_code = translate_vector_error(buffer_error);
+        }
         if (error_code == ER_SUCCESS)
         {
             buffer.push_back('\n');

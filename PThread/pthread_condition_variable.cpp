@@ -7,6 +7,40 @@
 #include <cerrno>
 #include <time.h>
 
+static bool compute_wait_deadline(const struct timespec &relative_time, struct timespec *absolute_time, int *error_code)
+{
+    struct timespec current_time;
+
+    if (relative_time.tv_sec < 0)
+    {
+        *error_code = FT_ERR_INVALID_ARGUMENT;
+        return (false);
+    }
+    if (relative_time.tv_nsec < 0)
+    {
+        *error_code = FT_ERR_INVALID_ARGUMENT;
+        return (false);
+    }
+#if defined(CLOCK_MONOTONIC)
+    if (clock_gettime(CLOCK_MONOTONIC, &current_time) != 0)
+#else
+    if (clock_gettime(CLOCK_REALTIME, &current_time) != 0)
+#endif
+    {
+        *error_code = ft_map_system_error(errno);
+        return (false);
+    }
+    absolute_time->tv_sec = current_time.tv_sec + relative_time.tv_sec;
+    absolute_time->tv_nsec = current_time.tv_nsec + relative_time.tv_nsec;
+    while (absolute_time->tv_nsec >= 1000000000L)
+    {
+        absolute_time->tv_nsec -= 1000000000L;
+        absolute_time->tv_sec += 1;
+    }
+    *error_code = ER_SUCCESS;
+    return (true);
+}
+
 pt_condition_variable::pt_condition_variable()
     : _condition(), _mutex(), _condition_initialized(false), _mutex_initialized(false), _error_code(ER_SUCCESS)
 {
@@ -135,6 +169,19 @@ int pt_condition_variable::wait(pt_mutex &mutex)
     }
     this->set_error(ER_SUCCESS);
     return (0);
+}
+
+int pt_condition_variable::wait_for(pt_mutex &mutex, const struct timespec &relative_time)
+{
+    struct timespec absolute_time;
+    int conversion_error;
+
+    if (!compute_wait_deadline(relative_time, &absolute_time, &conversion_error))
+    {
+        this->set_error(conversion_error);
+        return (-1);
+    }
+    return (this->wait_until(mutex, absolute_time));
 }
 
 int pt_condition_variable::wait_until(pt_mutex &mutex, const struct timespec &absolute_time)

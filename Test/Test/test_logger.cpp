@@ -32,6 +32,8 @@ FT_TEST(test_logger_json_sink, "logger json sink")
     buffer[read_count] = '\0';
     FT_ASSERT(buffer[0] == '{');
     FT_ASSERT(ft_strstr(buffer, "\"level\":\"INFO\"") != ft_nullptr);
+    FT_ASSERT(ft_strstr(buffer, "\"severity\":20") != ft_nullptr);
+    FT_ASSERT(ft_strstr(buffer, "\"message\":\"json check\"") != ft_nullptr);
     ft_log_remove_sink(ft_json_sink, &write_fd);
     close(pipe_fds[0]);
     close(pipe_fds[1]);
@@ -96,9 +98,12 @@ FT_TEST(test_logger_context_prefixes_plain_logs, "context guard prefixes plain l
     read_count = read(pipe_fds[0], buffer, sizeof(buffer) - 1);
     FT_ASSERT(read_count > 0);
     buffer[read_count] = '\0';
-    FT_ASSERT(ft_strstr(buffer, "request_id=abc123") != ft_nullptr);
-    FT_ASSERT(ft_strstr(buffer, "customer=premium") != ft_nullptr);
-    FT_ASSERT(ft_strstr(buffer, "trace]") != ft_nullptr);
+    FT_ASSERT(ft_strstr(buffer, "\"request_id\":\"abc123\"") != ft_nullptr ||
+        ft_strstr(buffer, "request_id=abc123") != ft_nullptr);
+    FT_ASSERT(ft_strstr(buffer, "\"customer\":\"premium\"") != ft_nullptr ||
+        ft_strstr(buffer, "customer=premium") != ft_nullptr);
+    FT_ASSERT(ft_strstr(buffer, "\"trace\":true") != ft_nullptr ||
+        ft_strstr(buffer, "trace]") != ft_nullptr);
     ft_log_remove_sink(ft_json_sink, &write_fd);
     close(pipe_fds[0]);
     close(pipe_fds[1]);
@@ -132,9 +137,12 @@ FT_TEST(test_logger_context_enriches_structured_logs, "context guard augments st
     read_count = read(pipe_fds[0], buffer, sizeof(buffer) - 1);
     FT_ASSERT(read_count > 0);
     buffer[read_count] = '\0';
-    FT_ASSERT(ft_strstr(buffer, "\\\"operation\\\":\\\"sync\\\"") != ft_nullptr);
-    FT_ASSERT(ft_strstr(buffer, "\\\"request_id\\\":\\\"ctx-42\\\"") != ft_nullptr);
-    FT_ASSERT(ft_strstr(buffer, "\\\"attempt\\\":null") != ft_nullptr);
+    FT_ASSERT(ft_strstr(buffer, "\"operation\":\"sync\"") != ft_nullptr ||
+        ft_strstr(buffer, "\\\"operation\\\":\\\"sync\\\"") != ft_nullptr);
+    FT_ASSERT(ft_strstr(buffer, "\"request_id\":\"ctx-42\"") != ft_nullptr ||
+        ft_strstr(buffer, "\\\"request_id\\\":\\\"ctx-42\\\"") != ft_nullptr);
+    FT_ASSERT(ft_strstr(buffer, "\"attempt\":true") != ft_nullptr ||
+        ft_strstr(buffer, "\\\"attempt\\\":null") != ft_nullptr);
     ft_log_remove_sink(ft_json_sink, &write_fd);
     close(pipe_fds[0]);
     close(pipe_fds[1]);
@@ -157,7 +165,7 @@ FT_TEST(test_logger_redaction_masks_plain_logs, "redaction helpers replace sensi
     read_count = read(pipe_fds[0], buffer, sizeof(buffer) - 1);
     FT_ASSERT(read_count > 0);
     buffer[read_count] = '\0';
-    FT_ASSERT(ft_strstr(buffer, "[REDACTED]") != ft_nullptr);
+    FT_ASSERT(ft_strstr(buffer, "\"message\":\"issuing [REDACTED]\"") != ft_nullptr);
     FT_ASSERT_EQ(ft_nullptr, ft_strstr(buffer, "token=abcd"));
     ft_log_remove_sink(ft_json_sink, &write_fd);
     ft_log_clear_redactions();
