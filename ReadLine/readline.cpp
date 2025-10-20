@@ -17,11 +17,21 @@ int        suggestion_count = 0;
 
 static void rl_cleanup_state(readline_state_t *state)
 {
-    if (state->buffer)
+    bool lock_acquired;
+
+    if (state == ft_nullptr)
+        return ;
+    lock_acquired = false;
+    if (rl_state_lock(state, &lock_acquired) == 0)
     {
-        cma_free(state->buffer);
-        state->buffer = ft_nullptr;
+        if (state->buffer)
+        {
+            cma_free(state->buffer);
+            state->buffer = ft_nullptr;
+        }
+        rl_state_unlock(state, lock_acquired);
     }
+    rl_state_teardown_thread_safety(state);
     return ;
 }
 
@@ -84,6 +94,7 @@ char *rl_readline(const char *prompt)
     state.buffer[line_length] = '\0';
     rl_update_history(state.buffer);
     rl_disable_raw_mode();
+    rl_state_teardown_thread_safety(&state);
     if (DEBUG == 1)
         pf_printf("returning %s\n", state.buffer);
     ft_errno = ER_SUCCESS;

@@ -17,7 +17,8 @@ SRCS := networking_socket_class.cpp \
         http2_client.cpp \
         http_server.cpp \
         websocket_client.cpp \
-        websocket_server.cpp
+        websocket_server.cpp \
+        networking_socket_config_thread_safety.cpp
 
 ifeq ($(OS),Windows_NT)
     SRCS += networking_select.cpp

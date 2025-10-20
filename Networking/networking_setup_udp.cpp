@@ -111,7 +111,23 @@ void udp_socket::set_error(int error_code) const noexcept
 
 int udp_socket::create_socket(const SocketConfig &config)
 {
-    this->_socket_fd = nw_socket(config._address_family, SOCK_DGRAM, config._protocol);
+    SocketConfig *mutable_config;
+    bool          lock_acquired;
+
+    mutable_config = const_cast<SocketConfig*>(&config);
+    lock_acquired = false;
+    if (socket_config_prepare_thread_safety(mutable_config) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    this->_socket_fd = nw_socket(mutable_config->_address_family, SOCK_DGRAM, mutable_config->_protocol);
+    socket_config_unlock(mutable_config, lock_acquired);
     if (this->_socket_fd < 0)
     {
         int error_code;
@@ -128,8 +144,26 @@ int udp_socket::create_socket(const SocketConfig &config)
 
 int udp_socket::set_non_blocking(const SocketConfig &config)
 {
-    if (!config._non_blocking)
+    SocketConfig *mutable_config;
+    bool          lock_acquired;
+
+    mutable_config = const_cast<SocketConfig*>(&config);
+    lock_acquired = false;
+    if (socket_config_prepare_thread_safety(mutable_config) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    if (mutable_config->_non_blocking == false)
+    {
+        socket_config_unlock(mutable_config, lock_acquired);
         return (ER_SUCCESS);
+    }
     if (nw_set_nonblocking(this->_socket_fd) != 0)
     {
         int error_code;
@@ -140,17 +174,34 @@ int udp_socket::set_non_blocking(const SocketConfig &config)
         this->set_error(error_code);
         nw_close(this->_socket_fd);
         this->_socket_fd = -1;
+        socket_config_unlock(mutable_config, lock_acquired);
         return (this->_error_code);
     }
+    socket_config_unlock(mutable_config, lock_acquired);
     this->set_error(ER_SUCCESS);
     return (ER_SUCCESS);
 }
 
 int udp_socket::set_timeouts(const SocketConfig &config)
 {
-    if (config._recv_timeout > 0)
+    SocketConfig *mutable_config;
+    bool          lock_acquired;
+
+    mutable_config = const_cast<SocketConfig*>(&config);
+    lock_acquired = false;
+    if (socket_config_prepare_thread_safety(mutable_config) != 0)
     {
-        if (set_timeout_recv(this->_socket_fd, config._recv_timeout) < 0)
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    if (mutable_config->_recv_timeout > 0)
+    {
+        if (set_timeout_recv(this->_socket_fd, mutable_config->_recv_timeout) < 0)
         {
             int error_code;
 
@@ -160,12 +211,13 @@ int udp_socket::set_timeouts(const SocketConfig &config)
             this->set_error(error_code);
             nw_close(this->_socket_fd);
             this->_socket_fd = -1;
+            socket_config_unlock(mutable_config, lock_acquired);
             return (this->_error_code);
         }
     }
-    if (config._send_timeout > 0)
+    if (mutable_config->_send_timeout > 0)
     {
-        if (set_timeout_send(this->_socket_fd, config._send_timeout) < 0)
+        if (set_timeout_send(this->_socket_fd, mutable_config->_send_timeout) < 0)
         {
             int error_code;
 
@@ -175,41 +227,60 @@ int udp_socket::set_timeouts(const SocketConfig &config)
             this->set_error(error_code);
             nw_close(this->_socket_fd);
             this->_socket_fd = -1;
+            socket_config_unlock(mutable_config, lock_acquired);
             return (this->_error_code);
         }
     }
+    socket_config_unlock(mutable_config, lock_acquired);
     this->set_error(ER_SUCCESS);
     return (ER_SUCCESS);
 }
 
 int udp_socket::configure_address(const SocketConfig &config)
 {
+    SocketConfig *mutable_config;
+    bool          lock_acquired;
+
+    mutable_config = const_cast<SocketConfig*>(&config);
+    lock_acquired = false;
+    if (socket_config_prepare_thread_safety(mutable_config) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
     ft_bzero(&this->_address, sizeof(this->_address));
-    if (config._address_family == AF_INET)
+    if (mutable_config->_address_family == AF_INET)
     {
         struct sockaddr_in *addr;
         addr = reinterpret_cast<struct sockaddr_in*>(&this->_address);
         addr->sin_family = AF_INET;
-        addr->sin_port = htons(config._port);
-        if (nw_inet_pton(AF_INET, config._ip.c_str(), &addr->sin_addr) <= 0)
+        addr->sin_port = htons(mutable_config->_port);
+        if (nw_inet_pton(AF_INET, mutable_config->_ip.c_str(), &addr->sin_addr) <= 0)
         {
             this->set_error(FT_ERR_CONFIGURATION);
             nw_close(this->_socket_fd);
             this->_socket_fd = -1;
+            socket_config_unlock(mutable_config, lock_acquired);
             return (this->_error_code);
         }
     }
-    else if (config._address_family == AF_INET6)
+    else if (mutable_config->_address_family == AF_INET6)
     {
         struct sockaddr_in6 *addr6;
         addr6 = reinterpret_cast<struct sockaddr_in6*>(&this->_address);
         addr6->sin6_family = AF_INET6;
-        addr6->sin6_port = htons(config._port);
-        if (nw_inet_pton(AF_INET6, config._ip.c_str(), &addr6->sin6_addr) <= 0)
+        addr6->sin6_port = htons(mutable_config->_port);
+        if (nw_inet_pton(AF_INET6, mutable_config->_ip.c_str(), &addr6->sin6_addr) <= 0)
         {
             this->set_error(FT_ERR_CONFIGURATION);
             nw_close(this->_socket_fd);
             this->_socket_fd = -1;
+            socket_config_unlock(mutable_config, lock_acquired);
             return (this->_error_code);
         }
     }
@@ -218,18 +289,40 @@ int udp_socket::configure_address(const SocketConfig &config)
         this->set_error(FT_ERR_CONFIGURATION);
         nw_close(this->_socket_fd);
         this->_socket_fd = -1;
+        socket_config_unlock(mutable_config, lock_acquired);
         return (this->_error_code);
     }
+    socket_config_unlock(mutable_config, lock_acquired);
     this->set_error(ER_SUCCESS);
     return (ER_SUCCESS);
 }
 
 int udp_socket::bind_socket(const SocketConfig &config)
 {
-    if (config._type != SocketType::SERVER)
+    SocketConfig *mutable_config;
+    bool          lock_acquired;
+    SocketType    type;
+    int           address_family;
+    socklen_t     addr_len;
+
+    mutable_config = const_cast<SocketConfig*>(&config);
+    lock_acquired = false;
+    if (socket_config_prepare_thread_safety(mutable_config) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    type = mutable_config->_type;
+    address_family = mutable_config->_address_family;
+    socket_config_unlock(mutable_config, lock_acquired);
+    if (type != SocketType::SERVER)
         return (ER_SUCCESS);
-    socklen_t addr_len;
-    if (config._address_family == AF_INET)
+    if (address_family == AF_INET)
         addr_len = sizeof(struct sockaddr_in);
     else
         addr_len = sizeof(struct sockaddr_in6);
@@ -253,10 +346,30 @@ int udp_socket::bind_socket(const SocketConfig &config)
 
 int udp_socket::connect_socket(const SocketConfig &config)
 {
-    if (config._type != SocketType::CLIENT)
+    SocketConfig *mutable_config;
+    bool          lock_acquired;
+    SocketType    type;
+    int           address_family;
+    socklen_t     addr_len;
+
+    mutable_config = const_cast<SocketConfig*>(&config);
+    lock_acquired = false;
+    if (socket_config_prepare_thread_safety(mutable_config) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    type = mutable_config->_type;
+    address_family = mutable_config->_address_family;
+    socket_config_unlock(mutable_config, lock_acquired);
+    if (type != SocketType::CLIENT)
         return (ER_SUCCESS);
-    socklen_t addr_len;
-    if (config._address_family == AF_INET)
+    if (address_family == AF_INET)
         addr_len = sizeof(struct sockaddr_in);
     else
         addr_len = sizeof(struct sockaddr_in6);
@@ -280,17 +393,39 @@ int udp_socket::connect_socket(const SocketConfig &config)
 
 int udp_socket::initialize(const SocketConfig &config)
 {
+    SocketConfig *mutable_config;
+    bool          lock_acquired;
+    bool          non_blocking;
+    bool          has_timeout;
+    bool          reuse_address;
+
+    mutable_config = const_cast<SocketConfig*>(&config);
+    lock_acquired = false;
+    if (socket_config_prepare_thread_safety(mutable_config) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    if (socket_config_lock(mutable_config, &lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return (this->_error_code);
+    }
+    non_blocking = mutable_config->_non_blocking;
+    has_timeout = (mutable_config->_recv_timeout > 0 || mutable_config->_send_timeout > 0);
+    reuse_address = mutable_config->_reuse_address;
+    socket_config_unlock(mutable_config, lock_acquired);
     if (create_socket(config) != ER_SUCCESS)
         return (this->_error_code);
-    if (config._non_blocking)
+    if (non_blocking)
         if (set_non_blocking(config) != ER_SUCCESS)
             return (this->_error_code);
-    if (config._recv_timeout > 0 || config._send_timeout > 0)
+    if (has_timeout)
         if (set_timeouts(config) != ER_SUCCESS)
             return (this->_error_code);
     if (configure_address(config) != ER_SUCCESS)
         return (this->_error_code);
-    if (config._reuse_address)
+    if (reuse_address)
         if (setsockopt_reuse(this->_socket_fd, 1) < 0)
         {
             int error_code;

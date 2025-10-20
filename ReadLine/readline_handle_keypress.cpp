@@ -8,8 +8,22 @@
 
 int rl_handle_backspace(readline_state_t *state, const char *prompt)
 {
+    bool lock_acquired;
+    int  result;
+
+    if (state == ft_nullptr || prompt == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (-1);
+    }
+    lock_acquired = false;
+    result = 0;
+    if (rl_state_lock(state, &lock_acquired) != 0)
+        return (-1);
     if (state->pos > 0)
     {
+        int len_after_cursor;
+
         state->pos--;
         ft_memmove(&state->buffer[state->pos], &state->buffer[state->pos + 1],
            ft_strlen(state->buffer) - state->pos + 1);
@@ -17,15 +31,19 @@ int rl_handle_backspace(readline_state_t *state, const char *prompt)
         if (rl_clear_line(prompt, state->buffer) == -1)
         {
             state->error_file.printf("clear line failed");
-            return (-1);
+            result = -1;
+            goto cleanup;
         }
         pf_printf("%s%s", prompt, state->buffer);
-        int len_after_cursor = state->prev_buffer_length - state->pos;
+        len_after_cursor = state->prev_buffer_length - state->pos;
         if (len_after_cursor > 0)
             pf_printf("\033[%dD", len_after_cursor);
         fflush(stdout);
     }
-    return (0);
+    ft_errno = ER_SUCCESS;
+cleanup:
+    rl_state_unlock(state, lock_acquired);
+    return (result);
 }
 
 static void rl_handle_left_arrow(readline_state_t *state, const char *prompt)
@@ -84,11 +102,27 @@ static int rl_copy_history_entry_to_buffer(readline_state_t *state, const char *
     return (0);
 }
 
-void rl_reset_completion_mode(readline_state_t *state)
+static void rl_reset_completion_mode_locked(readline_state_t *state)
 {
+    if (state == ft_nullptr)
+        return ;
     state->in_completion_mode = 0;
     state->current_match_count = 0;
     state->current_match_index = 0;
+    return ;
+}
+
+void rl_reset_completion_mode(readline_state_t *state)
+{
+    bool lock_acquired;
+
+    if (state == ft_nullptr)
+        return ;
+    lock_acquired = false;
+    if (rl_state_lock(state, &lock_acquired) != 0)
+        return ;
+    rl_reset_completion_mode_locked(state);
+    rl_state_unlock(state, lock_acquired);
     return ;
 }
 
@@ -163,12 +197,26 @@ static int rl_handle_arrow_keys(readline_state_t *state, const char *prompt, cha
 
 int rl_handle_escape_sequence(readline_state_t *state, const char *prompt)
 {
-    if (state->in_completion_mode)
-        rl_reset_completion_mode(state);
+    bool lock_acquired;
+    int  result;
     char seq[2];
+
+    if (state == ft_nullptr || prompt == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (-1);
+    }
+    lock_acquired = false;
+    result = 0;
+    if (rl_state_lock(state, &lock_acquired) != 0)
+        return (-1);
+    if (state->in_completion_mode)
+        rl_reset_completion_mode_locked(state);
     if (!rl_read_escape_sequence(seq))
-        return (0);
+        goto cleanup;
     if (seq[0] == '[')
-        return (rl_handle_arrow_keys(state, prompt, seq[1]));
-    return (0);
+        result = rl_handle_arrow_keys(state, prompt, seq[1]);
+cleanup:
+    rl_state_unlock(state, lock_acquired);
+    return (result);
 }

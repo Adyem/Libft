@@ -2,6 +2,7 @@
 #define NETWORKING_HPP
 
 #include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include "ssl_wrapper.hpp"
 #ifdef _WIN32
 # include <winsock2.h>
@@ -75,11 +76,20 @@ enum class SocketType
     RAW
 };
 
+class pt_mutex;
+
 class SocketConfig
 {
     private:
         mutable int _error_code;
+        mutable bool _thread_safe_enabled;
+        mutable pt_mutex *_mutex;
         void set_error(int error_code) noexcept;
+
+        friend int socket_config_prepare_thread_safety(SocketConfig *config);
+        friend void socket_config_teardown_thread_safety(SocketConfig *config);
+        friend int socket_config_lock(const SocketConfig *config, bool *lock_acquired);
+        friend void socket_config_unlock(const SocketConfig *config, bool lock_acquired);
 
     public:
         SocketType _type;
@@ -106,6 +116,11 @@ class SocketConfig
         int get_error();
         const char *get_error_str();
 };
+
+int socket_config_prepare_thread_safety(SocketConfig *config);
+void socket_config_teardown_thread_safety(SocketConfig *config);
+int socket_config_lock(const SocketConfig *config, bool *lock_acquired);
+void socket_config_unlock(const SocketConfig *config, bool lock_acquired);
 
 #include "websocket_client.hpp"
 #include "websocket_server.hpp"
