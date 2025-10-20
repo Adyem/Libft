@@ -1,7 +1,8 @@
 TARGET         := XMLParser.a
 DEBUG_TARGET   := XMLParser_debug.a
 
-SRCS := xml_document.cpp
+SRCS := xml_document.cpp \
+        xml_node_thread_safety.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))

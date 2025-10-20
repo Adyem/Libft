@@ -247,15 +247,16 @@ void ft_log_enable_async(bool enable)
 
 void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
 {
-    char message_buffer[1024];
-    char time_buffer[32];
-    char final_buffer[1200];
-    t_time current_time;
-    t_time_info time_info;
-    int length;
+    ft_vector<s_redaction_rule> redaction_snapshot;
+    ft_string message_text;
+    ft_string context_fragment;
+    ft_string final_message;
     int queue_error;
     int signal_result;
     int unlock_result;
+    int final_error;
+    char message_buffer[1024];
+    va_list args_copy;
 
     if (!fmt)
     {
@@ -267,20 +268,46 @@ void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
         ft_errno = ER_SUCCESS;
         return ;
     }
-    pf_vsnprintf(message_buffer, sizeof(message_buffer), fmt, args);
-    current_time = time_now();
-    time_local(current_time, &time_info);
-    time_strftime(time_buffer, sizeof(time_buffer), "%Y-%m-%d %H:%M:%S", &time_info);
-    length = pf_snprintf(final_buffer, sizeof(final_buffer), "[%s] [%s] %s\n", time_buffer, ft_level_to_str(level), message_buffer);
-    if (length <= 0)
+    va_copy(args_copy, args);
+    pf_vsnprintf(message_buffer, sizeof(message_buffer), fmt, args_copy);
+    va_end(args_copy);
+    message_text = ft_string(message_buffer);
+    if (message_text.get_error() != ER_SUCCESS)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_errno = message_text.get_error();
         return ;
     }
-    ft_string message(final_buffer);
-    if (message.get_error() != ER_SUCCESS)
+    if (logger_lock_sinks() != 0)
+        return ;
+    if (logger_copy_redaction_rules(redaction_snapshot) != 0)
     {
-        ft_errno = message.get_error();
+        final_error = ft_errno;
+        if (logger_unlock_sinks() != 0)
+            return ;
+        ft_errno = final_error;
+        return ;
+    }
+    if (logger_unlock_sinks() != 0)
+        return ;
+    if (logger_apply_redactions(message_text, redaction_snapshot) != 0)
+        return ;
+    if (logger_context_format_flat(context_fragment) != 0)
+        return ;
+    if (context_fragment.get_error() != ER_SUCCESS)
+    {
+        ft_errno = context_fragment.get_error();
+        return ;
+    }
+    if (context_fragment.size() > 0)
+    {
+        if (logger_apply_redactions(context_fragment, redaction_snapshot) != 0)
+            return ;
+    }
+    if (logger_build_standard_message(level, message_text, context_fragment, final_message) != 0)
+        return ;
+    if (final_message.get_error() != ER_SUCCESS)
+    {
+        ft_errno = final_message.get_error();
         return ;
     }
     if (pthread_mutex_lock(&g_condition_mutex) != 0)
@@ -299,7 +326,7 @@ void ft_log_enqueue(t_log_level level, const char *fmt, va_list args)
         ft_errno = FT_ERR_FULL;
         return ;
     }
-    g_log_queue.enqueue(message);
+    g_log_queue.enqueue(final_message);
     queue_error = g_log_queue.get_error();
     if (queue_error == ER_SUCCESS)
     {

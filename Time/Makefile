@@ -15,6 +15,7 @@ SRCS := time_now.cpp \
         time_format.cpp \
         time_parse.cpp \
         time_high_resolution.cpp \
+        time_monotonic_translate.cpp \
         time_timezone.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))

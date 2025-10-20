@@ -98,3 +98,19 @@ FT_TEST(test_yaml_write_to_file_reports_write_failure, "yaml_write_to_file repor
     FT_ASSERT_EQ(FT_ERR_FULL, ft_errno);
     return (1);
 }
+
+FT_TEST(test_yaml_value_thread_safety_guard, "yaml_value thread guard handles nested locks")
+{
+    yaml_value value;
+    yaml_value::thread_guard guard(&value);
+    yaml_value::thread_guard nested_guard(&value);
+
+    if (value.get_error() != ER_SUCCESS)
+        return (0);
+    FT_ASSERT_EQ(true, value.is_thread_safe_enabled());
+    FT_ASSERT_EQ(0, guard.get_status());
+    FT_ASSERT_EQ(true, guard.lock_acquired());
+    FT_ASSERT_EQ(0, nested_guard.get_status());
+    FT_ASSERT_EQ(false, nested_guard.lock_acquired());
+    return (1);
+}

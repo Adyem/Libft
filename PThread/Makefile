@@ -4,6 +4,7 @@ DEBUG_TARGET := PThread_debug.a
 SRCS := pthread_lock_mutex.cpp \
         pthread_unlock_mutex.cpp \
         pthread_try_lock_mutex.cpp \
+        pthread_timed_lock_mutex.cpp \
         pthread_thread_join.cpp \
         pthread_thread_create.cpp \
         pthread_thread_detach.cpp \

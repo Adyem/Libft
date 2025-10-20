@@ -31,6 +31,7 @@ class pt_condition_variable
         pt_condition_variable &operator=(const pt_condition_variable&) = delete;
 
         int wait(pt_mutex &mutex);
+        int wait_for(pt_mutex &mutex, const struct timespec &relative_time);
         int wait_until(pt_mutex &mutex, const struct timespec &absolute_time);
         int signal();
         int broadcast();
