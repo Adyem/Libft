@@ -97,4 +97,20 @@ int     su_service_daemonize(const char *working_directory, const char *pid_file
 int     su_service_install_signal_handlers(t_su_service_signal_handler handler, void *user_context);
 void    su_service_clear_signal_handlers(void);
 
+typedef int (*t_su_health_check)(void *context, ft_string &detail);
+
+typedef struct s_su_health_check_result
+{
+    ft_string   name;
+    bool        healthy;
+    ft_string   detail;
+    int         error_code;
+}   t_su_health_check_result;
+
+int     su_health_register_check(const char *name, t_su_health_check check, void *context);
+int     su_health_unregister_check(const char *name);
+void    su_health_clear_checks(void);
+int     su_health_run_checks(t_su_health_check_result *results, size_t capacity, size_t *count);
+int     su_health_run_check(const char *name, t_su_health_check_result *result);
+
 #endif
