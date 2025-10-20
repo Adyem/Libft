@@ -1,6 +1,7 @@
 #ifndef PRINTF_INTERNAL_HPP
 # define PRINTF_INTERNAL_HPP
 
+#include "printf.hpp"
 #include <cstdarg>
 #include <unistd.h>
 #include <stdarg.h>
@@ -8,6 +9,7 @@
 #include <stdint.h>
 #include <limits.h>
 #include <stddef.h>
+#include <cstdio>
 
 typedef enum
 {
@@ -33,5 +35,8 @@ void ft_putfloat_fd(double number, int fd, size_t *count, int precision);
 void ft_putscientific_fd(double number, bool uppercase, int fd, size_t *count, int precision);
 void ft_putgeneral_fd(double number, bool uppercase, int fd, size_t *count, int precision);
 int pf_printf_fd_v(int fd, const char *format, va_list args);
+int pf_try_format_custom_specifier(char specifier, va_list *args, ft_string &output);
+void pf_write_ft_string_fd(const ft_string &output, int fd, size_t *count);
+void pf_write_ft_string_stream(const ft_string &output, FILE *stream, size_t *count);
 
 #endif

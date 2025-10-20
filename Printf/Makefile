@@ -5,6 +5,7 @@ SRCS := printf_printf.cpp \
                 printf_format.cpp \
                 printf_print_args.cpp \
                 printf_ft_fprintf.cpp \
+                printf_custom_specifier.cpp \
                 printf_snprintf.cpp \
                 printf_vsnprintf.cpp
 

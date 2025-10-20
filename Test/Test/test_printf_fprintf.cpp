@@ -11,6 +11,9 @@
 # include <io.h>
 #endif
 
+typedef int (*t_pf_snprintf_plain)(char *, size_t, const char *, ...);
+typedef int (*t_pf_printf_fd_plain)(int, const char *, ...);
+
 static int create_pipe(int pipe_fds[2])
 {
     if (pipe(pipe_fds) != 0)
@@ -33,6 +36,42 @@ static int read_pipe_into_buffer(int read_fd, char *buffer, size_t buffer_size, 
     if (*bytes_read < 0)
         return (0);
     return (1);
+}
+
+static int pf_test_custom_handler(va_list *args, ft_string &output, void *context)
+{
+    const char  *prefix;
+    const char  *value;
+
+    prefix = static_cast<const char *>(context);
+    if (args == ft_nullptr)
+        return (-1);
+    value = va_arg(*args, const char *);
+    output.clear();
+    if (output.get_error() != ER_SUCCESS)
+        return (-1);
+    if (prefix != ft_nullptr)
+    {
+        output.append(prefix);
+        if (output.get_error() != ER_SUCCESS)
+            return (-1);
+    }
+    if (value != ft_nullptr)
+        output.append(value);
+    else
+        output.append("(null)");
+    if (output.get_error() != ER_SUCCESS)
+        return (-1);
+    return (0);
+}
+
+static int pf_test_custom_handler_failure(va_list *args, ft_string &output, void *context)
+{
+    (void)args;
+    (void)output;
+    (void)context;
+    ft_errno = FT_ERR_INVALID_OPERATION;
+    return (-1);
 }
 
 static int call_ft_vfprintf(FILE *stream, const char *format, ...)
@@ -224,6 +263,74 @@ FT_TEST(test_pf_printf_writes_to_stdout, "pf_printf writes formatted output to S
     buffer[static_cast<size_t>(bytes_read)] = '\0';
     FT_ASSERT_EQ(0, ft_strcmp(buffer, "Sum=7 done"));
     FT_ASSERT(close_pipe_end(pipe_fds[0]));
+    return (1);
+}
+
+FT_TEST(test_pf_custom_specifier_formats_stream, "custom specifiers integrate with pf_snprintf")
+{
+    char    buffer[64];
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(0, pf_register_custom_specifier('T', pf_test_custom_handler, (void *)"tag:"));
+    t_pf_snprintf_plain plain_pf_snprintf = pf_snprintf;
+    int length = plain_pf_snprintf(buffer, sizeof(buffer), "%T", "value");
+    int unregister_status = pf_unregister_custom_specifier('T');
+    FT_ASSERT_EQ(0, unregister_status);
+    FT_ASSERT_EQ(9, length);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(0, ft_strcmp(buffer, "tag:value"));
+    return (1);
+}
+
+FT_TEST(test_pf_custom_specifier_formats_fd, "custom specifiers integrate with pf_printf_fd")
+{
+    int     pipe_fds[2];
+    ssize_t bytes_read;
+    char    buffer[64];
+
+    FT_ASSERT(create_pipe(pipe_fds));
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(0, pf_register_custom_specifier('Y', pf_test_custom_handler, (void *)"fd:"));
+    t_pf_printf_fd_plain plain_pf_printf_fd = pf_printf_fd;
+    int printed = plain_pf_printf_fd(pipe_fds[1], "%Y!", "output");
+    FT_ASSERT(close_pipe_end(pipe_fds[1]));
+    pipe_fds[1] = -1;
+    FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, sizeof(buffer) - 1, &bytes_read));
+    FT_ASSERT(bytes_read >= 0);
+    buffer[static_cast<size_t>(bytes_read)] = '\0';
+    FT_ASSERT(close_pipe_end(pipe_fds[0]));
+    int unregister_status = pf_unregister_custom_specifier('Y');
+    FT_ASSERT_EQ(0, unregister_status);
+    FT_ASSERT_EQ(10, printed);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(0, ft_strcmp(buffer, "fd:output!"));
+    return (1);
+}
+
+FT_TEST(test_pf_custom_specifier_duplicate_registration, "registering the same specifier twice fails")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(0, pf_register_custom_specifier('Q', pf_test_custom_handler, ft_nullptr));
+    int duplicate_status = pf_register_custom_specifier('Q', pf_test_custom_handler, ft_nullptr);
+    int unregister_status = pf_unregister_custom_specifier('Q');
+    FT_ASSERT_EQ(-1, duplicate_status);
+    FT_ASSERT_EQ(0, unregister_status);
+    FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_pf_custom_specifier_handler_error_propagates, "custom specifier errors bubble through pf_snprintf")
+{
+    char buffer[32];
+
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(0, pf_register_custom_specifier('R', pf_test_custom_handler_failure, ft_nullptr));
+    t_pf_snprintf_plain plain_pf_snprintf = pf_snprintf;
+    int result = plain_pf_snprintf(buffer, sizeof(buffer), "%R");
+    int unregister_status = pf_unregister_custom_specifier('R');
+    FT_ASSERT_EQ(0, unregister_status);
+    FT_ASSERT_EQ(-1, result);
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, ft_errno);
     return (1);
 }
 
