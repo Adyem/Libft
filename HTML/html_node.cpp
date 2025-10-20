@@ -69,6 +69,8 @@ html_attr *html_create_attr(const char *key, const char *value)
         ft_errno = HTML_MALLOC_FAIL;
         return (ft_nullptr);
     }
+    newAttr->mutex = ft_nullptr;
+    newAttr->thread_safe_enabled = false;
     newAttr->key = cma_strdup(key);
     if (!newAttr->key)
     {
@@ -85,6 +87,13 @@ html_attr *html_create_attr(const char *key, const char *value)
         return (ft_nullptr);
     }
     newAttr->next = ft_nullptr;
+    if (html_attr_prepare_thread_safety(newAttr) != 0)
+    {
+        html_release_string(newAttr->key);
+        html_release_string(newAttr->value);
+        delete newAttr;
+        return (ft_nullptr);
+    }
     return (newAttr);
 }
 
@@ -102,11 +111,37 @@ void html_add_attr(html_node *targetNode, html_attr *newAttribute)
     else
     {
         html_attr *currentAttribute;
+        bool       attribute_lock_acquired;
+        int        attribute_lock_status;
 
         currentAttribute = targetNode->attributes;
+        attribute_lock_acquired = false;
+        attribute_lock_status = html_attr_lock(currentAttribute, &attribute_lock_acquired);
+        if (attribute_lock_status != 0)
+        {
+            html_node_unlock(targetNode, lock_acquired);
+            return ;
+        }
         while (currentAttribute->next)
-            currentAttribute = currentAttribute->next;
+        {
+            html_attr *nextAttribute;
+            bool       next_lock_acquired;
+
+            nextAttribute = currentAttribute->next;
+            next_lock_acquired = false;
+            attribute_lock_status = html_attr_lock(nextAttribute, &next_lock_acquired);
+            if (attribute_lock_status != 0)
+            {
+                html_attr_unlock(currentAttribute, attribute_lock_acquired);
+                html_node_unlock(targetNode, lock_acquired);
+                return ;
+            }
+            html_attr_unlock(currentAttribute, attribute_lock_acquired);
+            currentAttribute = nextAttribute;
+            attribute_lock_acquired = next_lock_acquired;
+        }
         currentAttribute->next = newAttribute;
+        html_attr_unlock(currentAttribute, attribute_lock_acquired);
     }
     html_node_unlock(targetNode, lock_acquired);
     return ;
@@ -118,30 +153,56 @@ void html_remove_attr(html_node *targetNode, const char *key)
     html_attr *currentAttribute;
     bool       lock_acquired;
     int        lock_status;
+    bool       previous_lock_acquired;
 
     lock_acquired = false;
     lock_status = html_node_lock(targetNode, &lock_acquired);
     if (lock_status != 0)
         return ;
     previousAttribute = ft_nullptr;
+    previous_lock_acquired = false;
     currentAttribute = targetNode->attributes;
     while (currentAttribute)
     {
+        bool       current_lock_acquired;
+        int        attribute_lock_status;
+        html_attr *nextAttribute;
+
+        current_lock_acquired = false;
+        attribute_lock_status = html_attr_lock(currentAttribute, &current_lock_acquired);
+        if (attribute_lock_status != 0)
+        {
+            if (previousAttribute)
+                html_attr_unlock(previousAttribute, previous_lock_acquired);
+            html_node_unlock(targetNode, lock_acquired);
+            return ;
+        }
+        nextAttribute = currentAttribute->next;
         if (currentAttribute->key && ft_strcmp(currentAttribute->key, key) == 0)
         {
             if (previousAttribute)
-                previousAttribute->next = currentAttribute->next;
+            {
+                previousAttribute->next = nextAttribute;
+                html_attr_unlock(previousAttribute, previous_lock_acquired);
+            }
             else
-                targetNode->attributes = currentAttribute->next;
+                targetNode->attributes = nextAttribute;
+            html_attr_unlock(currentAttribute, current_lock_acquired);
+            html_attr_teardown_thread_safety(currentAttribute);
             html_release_string(currentAttribute->key);
             html_release_string(currentAttribute->value);
             delete currentAttribute;
             html_node_unlock(targetNode, lock_acquired);
             return ;
         }
+        if (previousAttribute)
+            html_attr_unlock(previousAttribute, previous_lock_acquired);
         previousAttribute = currentAttribute;
-        currentAttribute = currentAttribute->next;
+        previous_lock_acquired = current_lock_acquired;
+        currentAttribute = nextAttribute;
     }
+    if (previousAttribute)
+        html_attr_unlock(previousAttribute, previous_lock_acquired);
     html_node_unlock(targetNode, lock_acquired);
     return ;
 }

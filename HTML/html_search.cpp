@@ -87,15 +87,29 @@ html_node *html_find_by_attr(html_node *nodeList, const char *key, const char *v
 
         while (attribute)
         {
+            bool       attribute_lock_acquired;
+            int        attribute_lock_status;
+            html_attr *next_attribute;
+
+            attribute_lock_acquired = false;
+            attribute_lock_status = html_attr_lock(attribute, &attribute_lock_acquired);
+            if (attribute_lock_status != 0)
+            {
+                attribute = attribute->next;
+                continue ;
+            }
+            next_attribute = attribute->next;
             if (attribute->key && ft_strcmp(attribute->key, key) == 0)
             {
                 if (!value || (attribute->value && ft_strcmp(attribute->value, value) == 0))
                 {
+                    html_attr_unlock(attribute, attribute_lock_acquired);
                     html_node_unlock(current_node, lock_acquired);
                     return (current_node);
                 }
             }
-            attribute = attribute->next;
+            html_attr_unlock(attribute, attribute_lock_acquired);
+            attribute = next_attribute;
         }
         html_node *found = html_find_by_attr(current_node->children, key, value);
 

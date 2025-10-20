@@ -3,14 +3,16 @@
 
 #include <cstddef>
 
+class pt_mutex;
+
 typedef struct html_attr
 {
+    pt_mutex *mutex;
+    bool thread_safe_enabled;
     char *key;
     char *value;
     struct html_attr *next;
 } html_attr;
-
-class pt_mutex;
 
 typedef struct html_node
 {
@@ -48,5 +50,11 @@ void        html_node_teardown_thread_safety(html_node *node);
 int         html_node_lock(const html_node *node, bool *lock_acquired);
 void        html_node_unlock(const html_node *node, bool lock_acquired);
 bool        html_node_is_thread_safe_enabled(const html_node *node);
+
+int         html_attr_prepare_thread_safety(html_attr *attribute);
+void        html_attr_teardown_thread_safety(html_attr *attribute);
+int         html_attr_lock(const html_attr *attribute, bool *lock_acquired);
+void        html_attr_unlock(const html_attr *attribute, bool lock_acquired);
+bool        html_attr_is_thread_safe_enabled(const html_attr *attribute);
 
 #endif
