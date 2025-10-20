@@ -3,6 +3,7 @@
 
 #include <pthread.h>
 #include <atomic>
+#include <time.h>
 
 class pt_mutex
 {
@@ -30,6 +31,8 @@ class pt_mutex
         int     lock(pthread_t thread_id) const;
         int     unlock(pthread_t thread_id) const;
         int     try_lock(pthread_t thread_id) const;
+        int     try_lock_until(pthread_t thread_id, const struct timespec &absolute_time) const;
+        int     try_lock_for(pthread_t thread_id, const struct timespec &relative_time) const;
 
         int     get_error() const;
         const char *get_error_str() const;

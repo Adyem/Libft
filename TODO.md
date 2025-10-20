@@ -127,7 +127,7 @@
 
 ### PThread and concurrency utilities
 - [ ] Extend `task_scheduler` with work-stealing queues and task affinity controls to better utilize multi-core systems.
-- [ ] Implement timed wait variants for mutexes and condition variables mirroring `std::timed_mutex` semantics.
+- [x] Implement timed wait variants for mutexes and condition variables mirroring `std::timed_mutex` semantics.
 - [ ] Add reader-priority and writer-priority strategies to the RW lock implementation with accompanying benchmarks.
 - [ ] Offer cooperative cancellation tokens that integrate with `thread_pool` in `Template/` to unify async control flows.
 - [ ] Provide structured tracing of task lifecycles to aid debugging of scheduling stalls.
@@ -230,7 +230,7 @@
 - [x] Add timezone conversion helpers, daylight-saving awareness, and formatting options for ISO-8601 with offsets.
 - [ ] Implement async-friendly sleep primitives that integrate with event loops instead of blocking threads.
 - [ ] Supply benchmarking helpers that record rolling averages and jitter for repeated measurements.
-- [ ] Offer monotonic-to-wall-clock translation utilities to reconcile timestamps across modules.
+- [x] Offer monotonic-to-wall-clock translation utilities to reconcile timestamps across modules.
 - [ ] Integrate profiling markers compatible with Chrome tracing or perfetto for visualizing timelines.
 - [ ] Make `time_fps` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `time_timer` thread safe (relies on the shared deadlock resolution routine described below).
@@ -317,10 +317,10 @@
 - [x] Publish style guides for canonical formatting so diffs remain readable across teams. (See `Docs/json_yaml_xml_style_guide.md`.)
 - [x] Make `html_document` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `xml_document` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `yaml_value` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `yaml_value` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `html_node` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `html_attr` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `xml_node` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `xml_node` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Game module
 - [ ] Build deterministic simulation tests that cover combat, crafting, quest progression, and event scheduling.
@@ -369,7 +369,7 @@
 - [x] Provide secure coding checklists for contributors, including guidelines for handling secrets and memory safety. (See `Docs/secure_coding_checklist.md`.)
 
 ## Observability and operations
-- [ ] Standardize logging levels and message formats across modules for consistent ingestion by external systems.
+- [x] Standardize logging levels and message formats across modules for consistent ingestion by external systems.
 - [x] Expose health endpoints or self-test routines that downstream services can call for readiness checks (see `System_utils/system_utils_health.cpp`).
 - [ ] Integrate tracing instrumentation (OpenTelemetry spans) across async boundaries for end-to-end visibility.
 - [ ] Publish SLO dashboards that highlight latency, error, and saturation metrics for critical modules.

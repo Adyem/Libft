@@ -122,6 +122,9 @@ void logger_context_pop(size_t count);
 int logger_context_apply_plain(ft_string &text);
 int logger_context_snapshot(ft_vector<s_log_context_view> &snapshot);
 void logger_context_clear();
+int logger_context_format_flat(ft_string &output);
+int logger_build_standard_message(t_log_level level, const ft_string &message_text,
+        const ft_string &context_fragment, ft_string &formatted_message);
 
 void ft_log_rotate(s_file_sink *sink);
 int logger_prepare_rotation(s_file_sink *sink, bool *rotate_for_size, bool *rotate_for_age);
@@ -129,6 +132,7 @@ void logger_execute_rotation(s_file_sink *sink);
 void ft_file_sink(const char *message, void *user_data);
 void ft_network_sink(const char *message, void *user_data);
 const char *ft_level_to_str(t_log_level level);
+int ft_log_level_to_severity(t_log_level level);
 void ft_log_vwrite(t_log_level level, const char *fmt, va_list args);
 
 int log_sink_prepare_thread_safety(s_log_sink *sink);
