@@ -304,7 +304,7 @@
 - [x] Add sandboxed formatting tests that ensure buffer boundaries and return values match the standard library behaviour.
 - [ ] Provide extension hooks for user-defined specifiers that integrate with `ft_string` and logging sinks.
 - [ ] Optimize hot paths (integer/float formatting) using precomputed tables where possible.
-- [ ] Document thread-safety guarantees and recommend locking strategies for shared formatters.
+- [x] Document thread-safety guarantees and recommend locking strategies for shared formatters. (See `Docs/printf_thread_safety.md`.)
 - [x] Re-enable the `pf_vsnprintf matches std::vsnprintf output` regression after aligning `pf_vsnprintf` with the standard library results across truncation and zero-size scenarios.
 
 ### JSON / YAML / XML / HTML
@@ -314,7 +314,7 @@
 - [ ] Expand XPath/CSS selector support in HTML and ensure namespace-aware parsing in XML.
 - [ ] Provide tooling that round-trips documents and highlights diffs to simplify regression testing.
 - [ ] Offer pluggable storage backends (file, HTTP, memory) for parsers to read from and serializers to write to.
-- [ ] Publish style guides for canonical formatting so diffs remain readable across teams.
+- [x] Publish style guides for canonical formatting so diffs remain readable across teams. (See `Docs/json_yaml_xml_style_guide.md`.)
 - [ ] Make `html_document` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `xml_document` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `yaml_value` thread safe (relies on the shared deadlock resolution routine described below).
@@ -370,7 +370,7 @@
 
 ## Observability and operations
 - [ ] Standardize logging levels and message formats across modules for consistent ingestion by external systems.
-- [ ] Expose health endpoints or self-test routines that downstream services can call for readiness checks.
+- [x] Expose health endpoints or self-test routines that downstream services can call for readiness checks (see `System_utils/system_utils_health.cpp`).
 - [ ] Integrate tracing instrumentation (OpenTelemetry spans) across async boundaries for end-to-end visibility.
 - [ ] Publish SLO dashboards that highlight latency, error, and saturation metrics for critical modules.
 
