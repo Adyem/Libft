@@ -3,21 +3,32 @@
 #include "../Libft/libft.hpp"
 #include "../PThread/pthread.hpp"
 
+#include <chrono>
+#include <cstddef>
 #include <functional>
 #include <random>
 #include <utility>
+#include "../Template/move.hpp"
 
 static void geometry_circle_sleep_backoff()
 {
     static thread_local bool generator_initialized = false;
     static thread_local std::minstd_rand generator;
     std::uniform_int_distribution<int> distribution(1, 10);
-    std::random_device device;
+    unsigned long long time_seed;
+    std::size_t address_seed;
+    unsigned int combined_seed;
     int delay_ms;
 
     if (!generator_initialized)
     {
-        generator.seed(device());
+        time_seed = static_cast<unsigned long long>(
+            std::chrono::steady_clock::now().time_since_epoch().count());
+        address_seed = reinterpret_cast<std::size_t>(&generator);
+        combined_seed = static_cast<unsigned int>(time_seed ^ address_seed);
+        if (combined_seed == 0)
+            combined_seed = static_cast<unsigned int>(address_seed | 1U);
+        generator.seed(combined_seed);
         generator_initialized = true;
     }
     delay_ms = distribution(generator);
@@ -336,7 +347,7 @@ int circle::lock_pair(const circle &first, const circle &second,
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
-        first_guard = std::move(single_guard);
+        first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
         ft_errno = ER_SUCCESS;
         return (ER_SUCCESS);
@@ -369,13 +380,13 @@ int circle::lock_pair(const circle &first, const circle &second,
         {
             if (!swapped)
             {
-                first_guard = std::move(lower_guard);
-                second_guard = std::move(upper_guard);
+                first_guard = ft_move(lower_guard);
+                second_guard = ft_move(upper_guard);
             }
             else
             {
-                first_guard = std::move(upper_guard);
-                second_guard = std::move(lower_guard);
+                first_guard = ft_move(upper_guard);
+                second_guard = ft_move(lower_guard);
             }
             ft_errno = ER_SUCCESS;
             return (ER_SUCCESS);

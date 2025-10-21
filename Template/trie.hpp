@@ -9,14 +9,6 @@
 #include <cstddef>
 #include <new>
 
-/*
-** Complexity and iterator invalidation guarantees:
-** - insert: O(k) where k is key length; may allocate new nodes and invalidates raw node pointers returned earlier.
-** - search: O(k); read-only on success.
-** - clear/destructor: O(n) over stored keys; invalidates all outstanding references.
-** Single-threaded usage only; callers must provide their own synchronisation if sharing instances.
-*/
-
 template <typename ValueType>
 class ft_trie
 {

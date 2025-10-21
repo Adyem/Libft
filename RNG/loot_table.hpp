@@ -83,7 +83,6 @@ ElementType *ft_loot_table<ElementType>::getRandomLoot() const
     return (ft_nullptr);
 }
 
-
 template<typename ElementType>
 ElementType *ft_loot_table<ElementType>::popRandomLoot()
 {

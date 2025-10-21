@@ -332,7 +332,7 @@
 - [ ] Add telemetry hooks that emit gameplay metrics for balancing and analytics.
 - [ ] Make `ft_game_state` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_character` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_item` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_item` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_inventory` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_equipment` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_upgrade` thread safe (relies on the shared deadlock resolution routine described below).

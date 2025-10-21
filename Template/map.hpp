@@ -9,16 +9,8 @@
 #include <cstddef>
 #include "../Libft/libft.hpp"
 #include <utility>
+#include "move.hpp"
 
-/*
-** Complexity and iterator invalidation guarantees:
-** - size, empty: O(1) without invalidation.
-** - insert: O(n) due to linear search and potential reallocation; resizing invalidates all iterators.
-** - remove: O(n); invalidates iterators pointing to removed element and any iterators after compaction.
-** - find: O(n); does not invalidate iterators.
-** - clear: O(n); invalidates all iterators and references.
-** Thread safety: no internal synchronization; callers must coordinate externally.
-*/
 template <typename Key, typename MappedType>
 class ft_map
 {
@@ -258,7 +250,7 @@ void ft_map<Key, MappedType>::insert(const Key& key, MappedType&& value)
     size_t index = find_index(key);
     if (index != this->_size)
     {
-        this->_data[index].value = std::move(value);
+        this->_data[index].value = ft_move(value);
         this->set_error(ER_SUCCESS);
         return ;
     }
@@ -283,7 +275,7 @@ void ft_map<Key, MappedType>::insert(const Key& key, MappedType&& value)
         if (this->_error != ER_SUCCESS)
             return ;
     }
-    construct_at(&this->_data[this->_size], Pair<Key, MappedType>(key, std::move(value)));
+    construct_at(&this->_data[this->_size], Pair<Key, MappedType>(key, ft_move(value)));
     ++this->_size;
     this->set_error(ER_SUCCESS);
     return ;
@@ -336,7 +328,7 @@ void ft_map<Key, MappedType>::remove(const Key& key)
             ::destroy_at(&this->_data[index]);
             if (index != this->_size - 1)
             {
-                construct_at(&this->_data[index], std::move(this->_data[this->_size - 1]));
+                construct_at(&this->_data[index], ft_move(this->_data[this->_size - 1]));
                 ::destroy_at(&this->_data[this->_size - 1]);
             }
             --this->_size;
@@ -425,7 +417,7 @@ void ft_map<Key, MappedType>::resize(size_t new_capacity)
     size_t index = 0;
     while (index < this->_size)
     {
-        construct_at(&new_data[index], std::move(this->_data[index]));
+        construct_at(&new_data[index], ft_move(this->_data[index]));
         ::destroy_at(&this->_data[index]);
         index++;
     }

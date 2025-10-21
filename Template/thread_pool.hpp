@@ -16,7 +16,7 @@
 #include "../PThread/pthread.hpp"
 #include <utility>
 #include <atomic>
-
+#include "move.hpp"
 class ft_thread_pool
 {
     private:
@@ -155,7 +155,7 @@ inline ft_thread_pool::ft_thread_pool(size_t thread_count, size_t max_tasks)
     while (worker_index < thread_count)
     {
         ft_thread worker(&ft_thread_pool::worker, this);
-        this->_workers.push_back(std::move(worker));
+        this->_workers.push_back(ft_move(worker));
         if (this->_workers.get_error() != ER_SUCCESS)
         {
             this->set_error(FT_ERR_NO_MEMORY);
@@ -199,9 +199,9 @@ inline void ft_thread_pool::submit(Function &&function)
 
     enqueue_failed = false;
     {
-        ft_function<void()> wrapper(std::move(function));
+        ft_function<void()> wrapper(ft_move(function));
 
-        this->_tasks.enqueue(std::move(wrapper));
+        this->_tasks.enqueue(ft_move(wrapper));
         queue_error = this->_tasks.get_error();
         if (queue_error != ER_SUCCESS)
         {

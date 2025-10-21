@@ -7,6 +7,7 @@
 #include "../../CPP_class/class_nullptr.hpp"
 #include <cstddef>
 #include <cstdio>
+
 #if defined(_WIN32) || defined(_WIN64)
 # include <windows.h>
 #else

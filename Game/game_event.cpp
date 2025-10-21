@@ -1,6 +1,7 @@
 #include "game_event.hpp"
 #include <climits>
 #include <utility>
+#include "../Template/move.hpp"
 
 ft_event::ft_event() noexcept
     : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0), _callback(), _error(ER_SUCCESS)
@@ -54,7 +55,7 @@ ft_event &ft_event::operator=(const ft_event &other) noexcept
 }
 
 ft_event::ft_event(ft_event &&other) noexcept
-    : _id(other._id), _duration(other._duration), _modifier1(other._modifier1), _modifier2(other._modifier2), _modifier3(other._modifier3), _modifier4(other._modifier4), _callback(std::move(other._callback)), _error(other._error)
+    : _id(other._id), _duration(other._duration), _modifier1(other._modifier1), _modifier2(other._modifier2), _modifier3(other._modifier3), _modifier4(other._modifier4), _callback(ft_move(other._callback)), _error(other._error)
 {
     other._id = 0;
     other._duration = 0;
@@ -83,7 +84,7 @@ ft_event &ft_event::operator=(ft_event &&other) noexcept
         this->_modifier2 = other._modifier2;
         this->_modifier3 = other._modifier3;
         this->_modifier4 = other._modifier4;
-        this->_callback = std::move(other._callback);
+        this->_callback = ft_move(other._callback);
         if (this->_callback.get_error() != ER_SUCCESS)
         {
             this->set_error(this->_callback.get_error());
@@ -299,7 +300,7 @@ void ft_event::set_callback(ft_function<void(ft_world&, ft_event&)> &&callback) 
         this->set_error(callback.get_error());
         return ;
     }
-    this->_callback = std::move(callback);
+    this->_callback = ft_move(callback);
     if (this->_callback.get_error() != ER_SUCCESS)
     {
         this->set_error(this->_callback.get_error());

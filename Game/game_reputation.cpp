@@ -1,5 +1,6 @@
 #include "game_reputation.hpp"
 #include <utility>
+#include "../Template/move.hpp"
 
 ft_reputation::ft_reputation() noexcept
     : _milestones(), _reps(), _total_rep(0),
@@ -79,7 +80,7 @@ ft_reputation &ft_reputation::operator=(const ft_reputation &other) noexcept
 }
 
 ft_reputation::ft_reputation(ft_reputation &&other) noexcept
-    : _milestones(std::move(other._milestones)), _reps(std::move(other._reps)), _total_rep(other._total_rep),
+    : _milestones(ft_move(other._milestones)), _reps(ft_move(other._reps)), _total_rep(other._total_rep),
       _current_rep(other._current_rep), _error(other._error)
 {
     if (this->_milestones.get_error() != ER_SUCCESS)
@@ -105,8 +106,8 @@ ft_reputation &ft_reputation::operator=(ft_reputation &&other) noexcept
 {
     if (this != &other)
     {
-        this->_milestones = std::move(other._milestones);
-        this->_reps = std::move(other._reps);
+        this->_milestones = ft_move(other._milestones);
+        this->_reps = ft_move(other._reps);
         this->_total_rep = other._total_rep;
         this->_current_rep = other._current_rep;
         if (this->_milestones.get_error() != ER_SUCCESS)

@@ -535,4 +535,3 @@ cnfg_config *config_load_file(const char *filename)
     return (config);
 }
 
-

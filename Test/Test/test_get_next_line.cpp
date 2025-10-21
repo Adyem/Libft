@@ -238,4 +238,3 @@ FT_TEST(test_get_next_line_hash_map_allocation_failure_is_reported,
     return (1);
 }
 
-

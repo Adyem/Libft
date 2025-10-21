@@ -51,13 +51,10 @@ typedef struct {
     bool        thread_safe_enabled = false;
 } readline_state_t;
 
-
 int        rl_initialize_state(readline_state_t *state);
-
 
 void    rl_disable_raw_mode();
 int        rl_enable_raw_mode();
-
 
 int        rl_clear_line(const char *prompt, const char *buffer);
 char    *rl_resize_buffer(char *old_buffer, int current_size, int new_size);
@@ -65,7 +62,6 @@ int        rl_handle_escape_sequence(readline_state_t *state, const char *prompt
 int        rl_handle_backspace(readline_state_t *state, const char *prompt);
 int        rl_handle_tab_completion(readline_state_t *state, const char *prompt);
 int        rl_handle_printable_char(readline_state_t *state, char c, const char *prompt);
-
 
 int        rl_read_key(void);
 int        rl_get_terminal_width(void);

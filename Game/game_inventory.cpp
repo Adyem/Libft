@@ -1,5 +1,6 @@
 #include "game_inventory.hpp"
 #include <utility>
+#include "../Template/move.hpp"
 
 ft_inventory::ft_inventory(size_t capacity, int weight_limit) noexcept
     : _items(), _capacity(capacity), _used_slots(0),
@@ -41,7 +42,7 @@ ft_inventory &ft_inventory::operator=(const ft_inventory &other) noexcept
 }
 
 ft_inventory::ft_inventory(ft_inventory &&other) noexcept
-    : _items(std::move(other._items)), _capacity(other._capacity), _used_slots(other._used_slots),
+    : _items(ft_move(other._items)), _capacity(other._capacity), _used_slots(other._used_slots),
       _weight_limit(other._weight_limit), _current_weight(other._current_weight),
       _next_slot(other._next_slot), _error(other._error)
 {
@@ -62,7 +63,7 @@ ft_inventory &ft_inventory::operator=(ft_inventory &&other) noexcept
 {
     if (this != &other)
     {
-        this->_items = std::move(other._items);
+        this->_items = ft_move(other._items);
         this->_capacity = other._capacity;
         this->_used_slots = other._used_slots;
         this->_weight_limit = other._weight_limit;

@@ -9,16 +9,8 @@
 #include <functional>
 #include "../Libft/libft.hpp"
 #include <utility>
+#include "move.hpp"
 
-/*
-** Complexity and iterator invalidation guarantees:
-** - size, bucket_count, empty: O(1) with no invalidation.
-** - insert: average O(1), worst-case O(n); may trigger rehash which invalidates all iterators and references.
-** - erase: average O(1), worst-case O(n); invalidates iterators pointing to erased element only.
-** - find, at, operator[]: average O(1), worst-case O(n); do not invalidate iterators.
-** - clear: O(n); invalidates all iterators and references.
-** Single-threaded usage only; callers must synchronise externally if sharing an instance.
-*/
 template <typename Key, typename MappedType>
 struct ft_pair
 {
@@ -693,7 +685,7 @@ void ft_unordered_map<Key, MappedType>::erase(const Key& key)
         size_t h = hash_key(_data[next].first);
         if ((next > idx && (h <= idx || h > next)) || (next < idx && (h <= idx && h > next)))
         {
-            construct_at(&_data[idx], std::move(_data[next]));
+            construct_at(&_data[idx], ft_move(_data[next]));
             ::destroy_at(&_data[next]);
             _occupied[idx] = true;
             _occupied[next] = false;

@@ -9,7 +9,6 @@
 #include <cstddef>
 #include <climits>
 
-
 class ft_bitset
 {
     private:

@@ -21,16 +21,6 @@ struct api_streaming_handler
     void *user_data;
 };
 
-/*
-** When used with api_request_stream or api_request_stream_host, the
-** body_callback receives sequential segments of the response body. The
-** handler is invoked one final time with is_final_chunk set to true. If the
-** response body length is zero, the final callback is invoked with a zero
-** chunk_size and chunk_data equal to ft_nullptr. Chunked transfer encoding is
-** supported and chunk payload segments are delivered in order before the final
-** callback.
-*/
-
 struct api_retry_policy
 {
     int max_attempts;

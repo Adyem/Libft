@@ -8,6 +8,7 @@
 #include "../Template/vector.hpp"
 #include "../Template/function.hpp"
 #include <utility>
+#include "../Template/move.hpp"
 
 json_group *serialize_character(const ft_character &character);
 int deserialize_character(ft_character &character, json_group *group);
@@ -88,7 +89,7 @@ ft_world &ft_world::operator=(const ft_world &other) noexcept
 }
 
 ft_world::ft_world(ft_world &&other) noexcept
-    : _event_scheduler(std::move(other._event_scheduler)), _error(other._error)
+    : _event_scheduler(ft_move(other._event_scheduler)), _error(other._error)
 {
     if (this->propagate_scheduler_state_error() == true)
         return ;
@@ -101,7 +102,7 @@ ft_world &ft_world::operator=(ft_world &&other) noexcept
 {
     if (this != &other)
     {
-        this->_event_scheduler = std::move(other._event_scheduler);
+        this->_event_scheduler = ft_move(other._event_scheduler);
         if (this->propagate_scheduler_state_error() == true)
             return (*this);
         this->set_error(other._error);

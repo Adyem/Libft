@@ -3,13 +3,14 @@
 
 #ifdef _WIN32
     #include <windows.h>
+
 #endif
 #include <pthread.h>
 #include "../CPP_class/class_nullptr.hpp"
 #include <atomic>
 #include "condition.hpp"
 #include "../Time/time.hpp"
-
+#include "../Template/move.hpp"
 #ifdef _WIN32
     using pt_thread_id_type = DWORD;
     #define THREAD_ID GetCurrentThreadId()
@@ -84,7 +85,7 @@ int pt_async(ft_promise<ValueType>& promise, Function function)
         return (ft_nullptr);
     };
 
-    AsyncData* data = new AsyncData{&promise, std::move(function)};
+    AsyncData* data = new AsyncData{&promise, ft_move(function)};
     pthread_t thread;
     int ret = pt_thread_create(&thread, ft_nullptr, start_routine, data);
     if (ret != 0)
