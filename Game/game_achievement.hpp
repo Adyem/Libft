@@ -3,6 +3,8 @@
 
 #include "../Template/map.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 
 struct ft_goal
 {
@@ -16,12 +18,17 @@ class ft_achievement
         int _id;
         ft_map<int, ft_goal> _goals;
         mutable int         _error;
+        mutable pt_mutex    _mutex;
 
         void set_error(int err) const noexcept;
+        static int lock_pair(const ft_achievement &first,
+                const ft_achievement &second,
+                ft_unique_lock<pt_mutex> &first_guard,
+                ft_unique_lock<pt_mutex> &second_guard);
 
     public:
         ft_achievement() noexcept;
-        virtual ~ft_achievement() = default;
+        virtual ~ft_achievement() noexcept;
         ft_achievement(const ft_achievement &other) noexcept;
         ft_achievement &operator=(const ft_achievement &other) noexcept;
         ft_achievement(ft_achievement &&other) noexcept;
