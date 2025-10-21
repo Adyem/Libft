@@ -49,9 +49,6 @@ static void *create_stack_block(void)
     return (memory_block);
 }
 
-
-
-
 static void report_corrupted_block(Block *block, const char *context,
         void *user_pointer)
 {
@@ -136,14 +133,6 @@ static ft_size_t    minimum_split_payload(void)
         minimum_payload = static_cast<ft_size_t>(16);
     return (minimum_payload);
 }
-
-
-
-
-
-
-
-
 
 Block* split_block(Block* block, ft_size_t size)
 {
@@ -438,14 +427,6 @@ void free_page_if_empty(Page *page)
     ft_errno = entry_errno;
     return ;
 }
-
-
-
-
-
-
-
-
 
 void cma_get_extended_stats(ft_size_t *allocation_count,
         ft_size_t *free_count,

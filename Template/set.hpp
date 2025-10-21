@@ -8,18 +8,7 @@
 #include "../Libft/libft.hpp"
 #include <cstddef>
 #include <utility>
-
-/*
-** Complexity and iterator invalidation guarantees:
-** - size, empty: O(1) without invalidation.
-** - find: O(log n); does not invalidate iterators.
-** - insert: O(n) due to shifting to maintain order; invalidates iterators at or after insertion point.
-** - remove: O(n) with element compaction; invalidates iterators at or after removed position.
-** - clear: O(n); invalidates all iterators and references.
-** Thread safety: no internal synchronization; callers must guard shared access.
-*/
-
-
+#include "move.hpp"
 
 template <typename ElementType>
 class ft_set
@@ -149,7 +138,7 @@ bool ft_set<ElementType>::ensure_capacity(size_t desired_capacity)
     size_t index = 0;
     while (index < this->_size)
     {
-        construct_at(&new_data[index], std::move(this->_data[index]));
+        construct_at(&new_data[index], ft_move(this->_data[index]));
         destroy_at(&this->_data[index]);
         ++index;
     }
@@ -211,7 +200,7 @@ void ft_set<ElementType>::insert(const ElementType& value)
     index = this->_size;
     while (index > position)
     {
-        construct_at(&this->_data[index], std::move(this->_data[index - 1]));
+        construct_at(&this->_data[index], ft_move(this->_data[index - 1]));
         destroy_at(&this->_data[index - 1]);
         --index;
     }
@@ -238,11 +227,11 @@ void ft_set<ElementType>::insert(ElementType&& value)
     index = this->_size;
     while (index > position)
     {
-        construct_at(&this->_data[index], std::move(this->_data[index - 1]));
+        construct_at(&this->_data[index], ft_move(this->_data[index - 1]));
         destroy_at(&this->_data[index - 1]);
         --index;
     }
-    construct_at(&this->_data[position], std::move(value));
+    construct_at(&this->_data[position], ft_move(value));
     ++this->_size;
     this->set_error(ER_SUCCESS);
     return ;
@@ -300,7 +289,7 @@ void ft_set<ElementType>::remove(const ElementType& value)
     current_index = index;
     while (current_index + 1 < this->_size)
     {
-        construct_at(&this->_data[current_index], std::move(this->_data[current_index + 1]));
+        construct_at(&this->_data[current_index], ft_move(this->_data[current_index + 1]));
         destroy_at(&this->_data[current_index + 1]);
         ++current_index;
     }

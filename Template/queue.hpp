@@ -8,16 +8,8 @@
 #include "../Libft/libft.hpp"
 #include <cstddef>
 #include <utility>
+#include "move.hpp"
 
-/*
-** Complexity and iterator invalidation guarantees:
-** - size, empty: O(1) without invalidation.
-** - enqueue: O(1); invalidates only references to previous rear when queue was empty.
-** - dequeue: O(1); invalidates references to removed front element.
-** - front accessors: O(1); no invalidation.
-** - clear: O(n); invalidates all node references.
-** Thread safety: external synchronization required; mutex protects error propagation only.
-*/
 template <typename ElementType>
 class ft_queue
 {
@@ -147,7 +139,7 @@ void ft_queue<ElementType>::enqueue(ElementType&& value)
         this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
-    construct_at(&node->_data, std::move(value));
+    construct_at(&node->_data, ft_move(value));
     node->_next = ft_nullptr;
     if (this->_rear == ft_nullptr)
     {
@@ -176,7 +168,7 @@ ElementType ft_queue<ElementType>::dequeue()
     this->_front = node->_next;
     if (this->_front == ft_nullptr)
         this->_rear = ft_nullptr;
-    ElementType value = std::move(node->_data);
+    ElementType value = ft_move(node->_data);
     destroy_at(&node->_data);
     cma_free(node);
     --this->_size;

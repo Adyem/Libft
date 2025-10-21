@@ -25,8 +25,7 @@
 #include <type_traits>
 #include <utility>
 
-
-
+#include "../Template/move.hpp"
 template <typename ElementType>
 class ft_blocking_queue
 {
@@ -189,8 +188,6 @@ class ft_task_scheduler
         size_t get_worker_total_count() const;
 };
 
-
-
 template <typename ElementType>
 ft_blocking_queue<ElementType>::ft_blocking_queue()
     : _mutex(), _condition(), _shutdown(false), _storage(), _error_code(ER_SUCCESS)
@@ -237,7 +234,7 @@ void ft_blocking_queue<ElementType>::push(ElementType &&value)
         this->set_error(this->_storage.get_error());
         return ;
     }
-    this->_storage.enqueue(std::move(value));
+    this->_storage.enqueue(ft_move(value));
     if (this->_storage.get_error() != ER_SUCCESS)
     {
         this->_mutex.unlock(THREAD_ID);
@@ -309,7 +306,7 @@ bool ft_blocking_queue<ElementType>::pop(ElementType &result)
         this->set_error(this->_mutex.get_error());
         return (false);
     }
-    result = std::move(value);
+    result = ft_move(value);
     this->set_error(ER_SUCCESS);
     return (true);
 }
@@ -380,7 +377,7 @@ bool ft_blocking_queue<ElementType>::wait_pop(ElementType &result, const std::at
         this->set_error(this->_mutex.get_error());
         return (false);
     }
-    result = std::move(value);
+    result = ft_move(value);
     this->set_error(ER_SUCCESS);
     return (true);
 }
@@ -419,8 +416,6 @@ const char *ft_blocking_queue<ElementType>::get_error_str() const
 {
     return (ft_strerror(this->_error_code));
 }
-
-
 
 template <typename FunctionType, typename... Args>
 auto ft_task_scheduler::submit(FunctionType function, Args... args)
@@ -472,7 +467,7 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
             return_type result_value;
 
             result_value = function(args...);
-            promise_shared->set_value(std::move(result_value));
+            promise_shared->set_value(ft_move(result_value));
         }
         return ;
     };
@@ -490,13 +485,13 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
 
     parent_span = task_scheduler_trace_current_span();
     trace_id = task_scheduler_trace_generate_span_id();
-    queue_entry._function = std::move(wrapper);
+    queue_entry._function = ft_move(wrapper);
     queue_entry._trace_id = trace_id;
     queue_entry._parent_id = parent_span;
     queue_entry._label = g_ft_task_trace_label_async;
     this->trace_emit_event(FT_TASK_TRACE_PHASE_SUBMITTED, trace_id, parent_span,
             g_ft_task_trace_label_async, false);
-    this->_queue.push(std::move(queue_entry));
+    this->_queue.push(ft_move(queue_entry));
     if (this->_queue.get_error() != ER_SUCCESS)
     {
         this->set_error(this->_queue.get_error());
@@ -598,7 +593,7 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
             return_type result_value;
 
             result_value = function(args...);
-            promise_shared->set_value(std::move(result_value));
+            promise_shared->set_value(ft_move(result_value));
         }
         return ;
     };
@@ -626,7 +621,7 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     bool push_success;
     int scheduled_error;
 
-    push_success = this->scheduled_heap_push(std::move(task_entry));
+    push_success = this->scheduled_heap_push(ft_move(task_entry));
     if (!push_success)
     {
         scheduled_error = this->_scheduled.get_error();
@@ -719,7 +714,7 @@ ft_scheduled_task_handle ft_task_scheduler::schedule_every(std::chrono::duration
     bool push_success;
     int scheduled_error;
 
-    push_success = this->scheduled_heap_push(std::move(task_entry));
+    push_success = this->scheduled_heap_push(ft_move(task_entry));
     if (!push_success)
     {
         scheduled_error = this->_scheduled.get_error();

@@ -1,4 +1,5 @@
 #include "libft_config.hpp"
+
 #if LIBFT_ENABLE_FILE_IO_HELPERS
 #include "libft.hpp"
 #include "../CPP_class/class_nullptr.hpp"

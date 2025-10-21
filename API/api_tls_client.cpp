@@ -7,6 +7,8 @@
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Logger/logger.hpp"
+#include "../Template/move.hpp"
+
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>
@@ -433,7 +435,7 @@ static bool tls_append_certificate_diagnostic(
     if (!tls_fill_certificate_diagnostic(certificate, entry))
         return (false);
     size_before = diagnostics.certificates.size();
-    diagnostics.certificates.push_back(std::move(entry));
+    diagnostics.certificates.push_back(ft_move(entry));
     size_after = diagnostics.certificates.size();
     if (size_after < size_before + 1)
     {
@@ -1041,7 +1043,7 @@ bool api_tls_client::request_async(const char *method, const char *path,
     int vector_error;
 
     worker_count_before = this->_async_workers.size();
-    this->_async_workers.push_back(std::move(worker));
+    this->_async_workers.push_back(ft_move(worker));
     worker_count_after = this->_async_workers.size();
     if (worker_count_after < worker_count_before + 1)
     {

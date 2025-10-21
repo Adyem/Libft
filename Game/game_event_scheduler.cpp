@@ -5,6 +5,7 @@
 #include "game_world.hpp"
 #include <cstdio>
 #include <utility>
+#include "../Template/move.hpp"
 
 bool ft_event_compare_ptr::operator()(const ft_sharedptr<ft_event> &left, const ft_sharedptr<ft_event> &right) const noexcept
 {
@@ -67,7 +68,7 @@ ft_event_scheduler &ft_event_scheduler::operator=(const ft_event_scheduler &othe
 }
 
 ft_event_scheduler::ft_event_scheduler(ft_event_scheduler &&other) noexcept
-    : _events(std::move(other._events)), _error_code(other._error_code)
+    : _events(ft_move(other._events)), _error_code(other._error_code)
 {
     if (this->_events.get_error() != ER_SUCCESS)
         this->set_error(this->_events.get_error());
@@ -79,7 +80,7 @@ ft_event_scheduler &ft_event_scheduler::operator=(ft_event_scheduler &&other) no
 {
     if (this != &other)
     {
-        this->_events = std::move(other._events);
+        this->_events = ft_move(other._events);
         this->_error_code = other._error_code;
         if (this->_events.get_error() != ER_SUCCESS)
             this->set_error(this->_events.get_error());

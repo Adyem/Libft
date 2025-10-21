@@ -9,9 +9,7 @@
 #include <chrono>
 #include <utility>
 
-
-
-
+#include "move.hpp"
 template <typename ValueType>
 class ft_future
 {
@@ -92,7 +90,7 @@ ft_future<ValueType>::ft_future(const ft_future<ValueType> &other)
 
 template <typename ValueType>
 ft_future<ValueType>::ft_future(ft_future<ValueType> &&other)
-    : _promise(other._promise), _shared_promise(std::move(other._shared_promise)), _error_code(other._error_code)
+    : _promise(other._promise), _shared_promise(ft_move(other._shared_promise)), _error_code(other._error_code)
 {
     other._promise = ft_nullptr;
     other.set_error(ER_SUCCESS);
@@ -157,7 +155,7 @@ ft_future<ValueType> &ft_future<ValueType>::operator=(ft_future<ValueType> &&oth
         return (*this);
     }
     this->_promise = other._promise;
-    this->_shared_promise = std::move(other._shared_promise);
+    this->_shared_promise = ft_move(other._shared_promise);
     this->set_error(other._error_code);
     other._promise = ft_nullptr;
     other.set_error(ER_SUCCESS);
@@ -266,7 +264,7 @@ inline ft_future<void>::ft_future(const ft_future<void> &other)
 }
 
 inline ft_future<void>::ft_future(ft_future<void> &&other)
-    : _promise(other._promise), _shared_promise(std::move(other._shared_promise)), _error_code(other._error_code)
+    : _promise(other._promise), _shared_promise(ft_move(other._shared_promise)), _error_code(other._error_code)
 {
     other._promise = ft_nullptr;
     other.set_error(ER_SUCCESS);
@@ -326,7 +324,7 @@ inline ft_future<void> &ft_future<void>::operator=(ft_future<void> &&other)
         return (*this);
     }
     this->_promise = other._promise;
-    this->_shared_promise = std::move(other._shared_promise);
+    this->_shared_promise = ft_move(other._shared_promise);
     this->set_error(other._error_code);
     other._promise = ft_nullptr;
     other.set_error(ER_SUCCESS);

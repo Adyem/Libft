@@ -9,8 +9,7 @@
 #include <cstddef>
 #include <utility>
 
-
-
+#include "move.hpp"
 template <typename EventType, typename... Args>
 class ft_event_emitter
 {
@@ -161,7 +160,7 @@ bool ft_event_emitter<EventType, Args...>::ensure_capacity(size_t desired)
     size_t listener_index = 0;
     while (listener_index < this->_size)
     {
-        construct_at(&new_data[listener_index], std::move(this->_listeners[listener_index]));
+        construct_at(&new_data[listener_index], ft_move(this->_listeners[listener_index]));
         destroy_at(&this->_listeners[listener_index]);
         ++listener_index;
     }
@@ -228,7 +227,7 @@ void ft_event_emitter<EventType, Args...>::remove_listener(const EventType& even
             size_t shift_index = listener_index;
             while (shift_index + 1 < this->_size)
             {
-                construct_at(&this->_listeners[shift_index], std::move(this->_listeners[shift_index + 1]));
+                construct_at(&this->_listeners[shift_index], ft_move(this->_listeners[shift_index + 1]));
                 destroy_at(&this->_listeners[shift_index + 1]);
                 ++shift_index;
             }

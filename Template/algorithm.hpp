@@ -5,8 +5,6 @@
 #include "swap.hpp"
 #include "../RNG/rng.hpp"
 
-
-
 template <typename RandomIt, typename Compare>
 void ft_sort(RandomIt first, RandomIt last, Compare comp)
 {
@@ -32,8 +30,6 @@ void ft_sort(RandomIt first, RandomIt last)
     return ;
 }
 
-
-
 template <typename RandomIt, typename T, typename Compare>
 bool ft_binary_search(RandomIt first, RandomIt last, const T& value, Compare comp)
 {
@@ -57,7 +53,6 @@ bool ft_binary_search(RandomIt first, RandomIt last, const T& value)
           [](const auto& a, const auto& b){ return (a < b); }));
 }
 
-
 template <typename RandomIt>
 void ft_shuffle(RandomIt first, RandomIt last)
 {
@@ -73,7 +68,6 @@ void ft_shuffle(RandomIt first, RandomIt last)
     }
     return ;
 }
-
 
 template <typename BidirectionalIt>
 void ft_reverse(BidirectionalIt first, BidirectionalIt last)

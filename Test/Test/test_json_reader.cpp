@@ -74,7 +74,6 @@ FT_TEST(test_json_read_from_string_success_resets_errno, "json reader clears err
     return (1);
 }
 
-
 FT_TEST(test_json_read_from_string_decodes_escaped_strings, "json reader decodes escaped and unicode sequences")
 {
     std::string content_string = "{ \"config\": { \"value\": \"";

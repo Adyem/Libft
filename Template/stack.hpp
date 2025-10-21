@@ -10,18 +10,8 @@
 #include "../PThread/pthread.hpp"
 #include <cstddef>
 #include <utility>
+#include "move.hpp"
 
-/*
-** Complexity and iterator invalidation guarantees:
-** - size, empty: O(1) without invalidation.
-** - push: O(1); invalidates only the previous top reference.
-** - pop: O(1); invalidates references to removed top element.
-** - top accessors: O(1); no invalidation.
-** - clear: O(n); invalidates all node references.
-** Thread safety: disabled by default. Call enable_thread_safety to install
-**               an internal mutex before sharing instances across threads or
-**               coordinating with the global deadlock resolution helpers.
-*/
 template <typename ElementType>
 class ft_stack
 {
@@ -315,7 +305,7 @@ void ft_stack<ElementType>::push(ElementType&& value)
         this->unlock_internal(lock_acquired);
         return ;
     }
-    construct_at(&new_node->_data, std::move(value));
+    construct_at(&new_node->_data, ft_move(value));
     new_node->_next = this->_top;
     this->_top = new_node;
     this->_size += 1;
@@ -345,7 +335,7 @@ ElementType ft_stack<ElementType>::pop()
     }
     node = this->_top;
     this->_top = node->_next;
-    value = std::move(node->_data);
+    value = ft_move(node->_data);
     destroy_at(&node->_data);
     cma_free(node);
     this->_size -= 1;
