@@ -2,6 +2,8 @@
 # define TIME_TIMER_HPP
 
 #include <chrono>
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 
 class time_timer
 {
@@ -10,6 +12,7 @@ class time_timer
         std::chrono::steady_clock::time_point _start_time = std::chrono::steady_clock::time_point();
         bool    _running = false;
         mutable int _error_code;
+        mutable pt_mutex _mutex;
 
         void    set_error(int error_code) const noexcept;
 

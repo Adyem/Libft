@@ -232,8 +232,8 @@
 - [ ] Supply benchmarking helpers that record rolling averages and jitter for repeated measurements.
 - [x] Offer monotonic-to-wall-clock translation utilities to reconcile timestamps across modules.
 - [ ] Integrate profiling markers compatible with Chrome tracing or perfetto for visualizing timelines.
-- [ ] Make `time_fps` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `time_timer` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `time_fps` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `time_timer` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `s_monotonic_time_point` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `s_duration_milliseconds` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `s_time_info` thread safe (relies on the shared deadlock resolution routine described below).
