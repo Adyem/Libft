@@ -91,7 +91,7 @@ int ft_websocket_server::start(const char *ip, uint16_t port, int address_family
 
 int ft_websocket_server::perform_handshake(int client_fd)
 {
-    static const std::size_t MAX_HANDSHAKE_SIZE = 8192; // maximum accepted HTTP handshake size
+    static const std::size_t MAX_HANDSHAKE_SIZE = 8192; 
     char buffer[1024];
     ssize_t bytes_received;
     ft_string request;

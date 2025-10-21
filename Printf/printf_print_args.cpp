@@ -399,7 +399,6 @@ static int format_double_output(char specifier, int precision, double number, ft
     return (-1);
 }
 
-
 size_t ft_strlen_printf(const char *string)
 {
     size_t length = 0;

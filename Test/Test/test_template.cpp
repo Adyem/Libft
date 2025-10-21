@@ -168,7 +168,6 @@ int test_ft_unique_ptr_basic(void)
     return (!up.hasError() && *up == 7);
 }
 
-
 int test_ft_vector_reserve_resize(void)
 {
     ft_vector<int> v;
@@ -276,7 +275,6 @@ FT_TEST(test_ft_vector_erase_releases_resources, "ft_vector erase destroys overw
     FT_ASSERT_EQ(0, vector_destructor_tracker::live_count());
     return (1);
 }
-
 
 int test_ft_map_at(void)
 {
@@ -470,5 +468,4 @@ FT_TEST(test_ft_map_grows_from_zero_capacity, "ft_map grows when constructed wit
     FT_ASSERT_EQ(7, found_entry->value);
     return (1);
 }
-
 

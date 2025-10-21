@@ -6,7 +6,6 @@
 
 typedef unsigned long long ft_size_t;
 
-
 #include "libft_config.hpp"
 #include <cstddef>
 #include <unistd.h>

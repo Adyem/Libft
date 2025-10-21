@@ -8,14 +8,8 @@
 #include "../Libft/libft.hpp"
 #include <cstddef>
 #include <utility>
+#include "move.hpp"
 
-/*
-** Complexity and iterator invalidation guarantees:
-** - size, empty: O(1) without invalidation.
-** - push_front, push_back: O(1); only invalidates references to previous front/back respectively.
-** - pop_front, pop_back: O(1); invalidates references to removed element.
-** - clear: O(n); invalidates all node references.
-*/
 template <typename ElementType>
 class ft_deque
 {
@@ -149,7 +143,7 @@ void ft_deque<ElementType>::push_front(ElementType&& value)
         this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
-    construct_at(&node->_data, std::move(value));
+    construct_at(&node->_data, ft_move(value));
     node->_prev = ft_nullptr;
     node->_next = this->_front;
     if (this->_front == ft_nullptr)
@@ -193,7 +187,7 @@ void ft_deque<ElementType>::push_back(ElementType&& value)
         this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
-    construct_at(&node->_data, std::move(value));
+    construct_at(&node->_data, ft_move(value));
     node->_next = ft_nullptr;
     node->_prev = this->_back;
     if (this->_back == ft_nullptr)
@@ -220,7 +214,7 @@ ElementType ft_deque<ElementType>::pop_front()
         this->_back = ft_nullptr;
     else
         this->_front->_prev = ft_nullptr;
-    ElementType value = std::move(node->_data);
+    ElementType value = ft_move(node->_data);
     destroy_at(&node->_data);
     cma_free(node);
     --this->_size;
@@ -242,7 +236,7 @@ ElementType ft_deque<ElementType>::pop_back()
         this->_front = ft_nullptr;
     else
         this->_back->_next = ft_nullptr;
-    ElementType value = std::move(node->_data);
+    ElementType value = ft_move(node->_data);
     destroy_at(&node->_data);
     cma_free(node);
     --this->_size;

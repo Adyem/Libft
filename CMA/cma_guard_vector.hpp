@@ -9,11 +9,8 @@
 #include "../Errno/errno.hpp"
 #include "../Template/constructor.hpp"
 #include "../Libft/libft.hpp"
+#include "../Template/move.hpp"
 
-/*
-** cma_guard_vector mirrors ft_vector but uses malloc/free directly so that
-** cma_allocator_guard bookkeeping never re-enters the allocator hooks.
-*/
 template <typename t_element>
 class cma_guard_vector
 {
@@ -345,7 +342,7 @@ bool cma_guard_vector<t_element>::reserve_internal(size_t new_capacity)
     {
         try
         {
-            construct_at(&new_data[index], std::move(this->_data[index]));
+            construct_at(&new_data[index], ft_move(this->_data[index]));
         }
         catch (...)
         {

@@ -13,6 +13,7 @@
 #include <set>
 #include <new>
 #include "../Template/unique_ptr.hpp"
+#include "../Template/move.hpp"
 
 struct api_pooled_connection
 {
@@ -347,7 +348,7 @@ static void api_connection_pool_dispose_entry(api_pooled_connection &entry)
     {
         ft_socket empty_socket;
 
-        entry.socket = std::move(empty_socket);
+        entry.socket = ft_move(empty_socket);
     }
     return ;
 }
@@ -464,7 +465,7 @@ static void api_connection_pool_remove_oldest(t_api_connection_bucket &entries)
         return ;
     t_api_connection_entry entry_pointer;
 
-    entry_pointer = std::move(entries[0]);
+    entry_pointer = ft_move(entries[0]);
     entries.erase(entries.begin());
     if (entries.get_error() != ER_SUCCESS)
         return ;
@@ -553,13 +554,13 @@ bool api_connection_pool_acquire(api_connection_pool_handle &handle,
         api_pooled_connection *entry;
 
         last_index = iterator->bucket.size() - 1;
-        entry_pointer = std::move(iterator->bucket[last_index]);
+        entry_pointer = ft_move(iterator->bucket[last_index]);
         if (!api_connection_pool_bucket_erase(iterator->bucket, last_index))
             return (false);
         if (!entry_pointer)
             continue ;
         entry = entry_pointer.get();
-        handle.socket = std::move(entry->socket);
+        handle.socket = ft_move(entry->socket);
         entry->socket = ft_socket();
         handle.tls_session = entry->tls_session;
         handle.tls_context = entry->tls_context;
@@ -646,7 +647,7 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
         api_connection_bucket_entry new_entry;
 
         new_entry.key = map_key;
-        buckets.push_back(std::move(new_entry));
+        buckets.push_back(ft_move(new_entry));
         if (buckets.get_error() != ER_SUCCESS)
         {
             api_connection_pool_evict(handle);
@@ -678,7 +679,7 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
         return ;
     }
     entry_pointer.reset(new_entry, 1, false);
-    entry_pointer->socket = std::move(handle.socket);
+    entry_pointer->socket = ft_move(handle.socket);
     handle.socket = ft_socket();
     entry_pointer->tls_session = handle.tls_session;
     entry_pointer->tls_context = handle.tls_context;
@@ -708,7 +709,7 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
     api_pooled_connection *stored_entry;
 
     stored_entry = entry_pointer.get();
-    bucket->push_back(std::move(entry_pointer));
+    bucket->push_back(ft_move(entry_pointer));
     if (bucket->get_error() != ER_SUCCESS)
     {
         if (stored_entry)

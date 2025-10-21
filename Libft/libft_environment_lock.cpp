@@ -1,4 +1,5 @@
 #include "libft_config.hpp"
+
 #if LIBFT_ENABLE_ENVIRONMENT_HELPERS
 #include "libft_environment_lock.hpp"
 #include "../Errno/errno.hpp"

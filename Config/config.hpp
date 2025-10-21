@@ -23,7 +23,6 @@ struct cnfg_config
     bool                 thread_safe_enabled;
 };
 
-
 cnfg_config   *cnfg_config_create();
 int         cnfg_config_prepare_thread_safety(cnfg_config *config);
 void        cnfg_config_teardown_thread_safety(cnfg_config *config);

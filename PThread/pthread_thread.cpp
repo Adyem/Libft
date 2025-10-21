@@ -1,5 +1,6 @@
 #include "thread.hpp"
 #include <cerrno>
+#include "../Template/move.hpp"
 
 ft_thread::start_payload::start_payload()
     : function()
@@ -52,7 +53,7 @@ ft_thread::~ft_thread()
 
 ft_thread::ft_thread(ft_thread &&other)
     : _thread(other._thread), _joinable(other._joinable),
-      _error_code(other._error_code), _start_payload(std::move(other._start_payload))
+      _error_code(other._error_code), _start_payload(ft_move(other._start_payload))
 {
     other._joinable = false;
     other._error_code = ER_SUCCESS;
@@ -68,7 +69,7 @@ ft_thread &ft_thread::operator=(ft_thread &&other)
         this->_thread = other._thread;
         this->_joinable = other._joinable;
         this->_error_code = other._error_code;
-        this->_start_payload = std::move(other._start_payload);
+        this->_start_payload = ft_move(other._start_payload);
         other._joinable = false;
         other._error_code = ER_SUCCESS;
     }

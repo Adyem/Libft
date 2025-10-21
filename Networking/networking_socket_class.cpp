@@ -8,6 +8,8 @@
 #include <thread>
 #include <chrono>
 #include <utility>
+#include "../Template/move.hpp"
+
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>
@@ -136,7 +138,7 @@ int ft_socket::accept_connection()
     }
     ft_socket new_socket(new_fd, client_addr);
     size_t previous_size = this->_connected.size();
-    this->_connected.push_back(std::move(new_socket));
+    this->_connected.push_back(ft_move(new_socket));
     size_t current_size = this->_connected.size();
     if (current_size != previous_size + 1)
     {
@@ -166,7 +168,7 @@ bool ft_socket::disconnect_client(int fd)
         {
             size_t last = this->_connected.size() - 1;
             if (index != last)
-                    this->_connected[index] = std::move(this->_connected[last]);
+                    this->_connected[index] = ft_move(this->_connected[last]);
             this->_connected.pop_back();
             this->set_error(ER_SUCCESS);
             return (true);
@@ -182,7 +184,7 @@ void ft_socket::disconnect_all_clients()
     ft_vector<ft_socket> owned_clients;
     size_t index;
 
-    owned_clients = std::move(this->_connected);
+    owned_clients = ft_move(this->_connected);
     index = 0;
     while (index < owned_clients.size())
     {
@@ -416,7 +418,7 @@ void ft_socket::reset_to_empty_state()
 }
 
 ft_socket::ft_socket(ft_socket &&other) noexcept
-    : _address(other._address), _connected(std::move(other._connected)),
+    : _address(other._address), _connected(ft_move(other._connected)),
     _socket_fd(other._socket_fd), _error_code(other._error_code)
 {
     other.reset_to_empty_state();
@@ -440,7 +442,7 @@ ft_socket &ft_socket::operator=(ft_socket &&other) noexcept
         this->_connected.clear();
         this->close_socket();
         this->_address = other._address;
-        this->_connected = std::move(other._connected);
+        this->_connected = ft_move(other._connected);
         this->_socket_fd = other._socket_fd;
         moved_error_code = other._error_code;
         other.reset_to_empty_state();

@@ -12,7 +12,6 @@
 #include "../../Libft/limits.hpp"
 #include "../../Libft/libft.hpp"
 
-
 FT_TEST(test_readline_clear_line_null_prompt, "rl_clear_line rejects null prompts")
 {
     int clear_result;
@@ -38,7 +37,6 @@ FT_TEST(test_readline_clear_line_null_buffer, "rl_clear_line rejects null buffer
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
-
 
 FT_TEST(test_readline_initialize_state_null_pointer, "rl_initialize_state rejects null state pointers")
 {

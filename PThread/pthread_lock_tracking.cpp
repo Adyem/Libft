@@ -1,6 +1,7 @@
 #include "pthread_lock_tracking.hpp"
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
+
 static thread_local bool g_registry_mutex_owned = false;
 
 pthread_mutex_t *pt_lock_tracking::get_registry_mutex(void)

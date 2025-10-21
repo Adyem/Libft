@@ -8,6 +8,7 @@
 #include "../Libft/libft.hpp"
 #include <cstddef>
 #include <utility>
+#include "move.hpp"
 
 template <typename ElementType>
 class ft_circular_buffer
@@ -144,7 +145,7 @@ void ft_circular_buffer<ElementType>::push(ElementType&& value)
         this->set_error(FT_ERR_FULL);
         return ;
     }
-    construct_at(&this->_buffer[this->_tail], std::move(value));
+    construct_at(&this->_buffer[this->_tail], ft_move(value));
     this->_tail = (this->_tail + 1) % this->_capacity;
     ++this->_size;
     this->set_error(ER_SUCCESS);
@@ -159,7 +160,7 @@ ElementType ft_circular_buffer<ElementType>::pop()
         this->set_error(FT_ERR_EMPTY);
         return (ElementType());
     }
-    ElementType value = std::move(this->_buffer[this->_head]);
+    ElementType value = ft_move(this->_buffer[this->_head]);
     destroy_at(&this->_buffer[this->_head]);
     this->_head = (this->_head + 1) % this->_capacity;
     --this->_size;

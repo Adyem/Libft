@@ -2,6 +2,8 @@
 # define GAME_ITEM_HPP
 
 #include "../Errno/errno.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 
 struct ft_item_modifier
 {
@@ -23,8 +25,12 @@ class ft_item
         ft_item_modifier _modifier3;
         ft_item_modifier _modifier4;
         mutable int     _error_code;
+        mutable pt_mutex _mutex;
 
         void set_error(int err) const noexcept;
+        static int lock_pair(const ft_item &first, const ft_item &second,
+                ft_unique_lock<pt_mutex> &first_guard,
+                ft_unique_lock<pt_mutex> &second_guard);
 
     public:
         ft_item() noexcept;

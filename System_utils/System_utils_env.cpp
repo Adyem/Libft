@@ -7,6 +7,7 @@
 #include "../Errno/errno.hpp"
 #include <cstdlib>
 #include <utility>
+#include "../Template/move.hpp"
 
 static pt_mutex g_env_mutex;
 
@@ -196,7 +197,7 @@ int su_environment_snapshot_capture(t_su_environment_snapshot *snapshot)
 
             if (entry_copy.get_error() != ER_SUCCESS)
                 return (su_environment_unlock_with_error(entry_copy.get_error()));
-            snapshot->entries.push_back(std::move(entry_copy));
+            snapshot->entries.push_back(ft_move(entry_copy));
             if (snapshot->entries.get_error() != ER_SUCCESS)
                 return (su_environment_unlock_with_error(snapshot->entries.get_error()));
             index += 1;
@@ -236,7 +237,7 @@ int su_environment_snapshot_restore(const t_su_environment_snapshot *snapshot)
 
             if (entry_copy.get_error() != ER_SUCCESS)
                 return (su_environment_unlock_with_error(entry_copy.get_error()));
-            current_environment.push_back(std::move(entry_copy));
+            current_environment.push_back(ft_move(entry_copy));
             if (current_environment.get_error() != ER_SUCCESS)
                 return (su_environment_unlock_with_error(current_environment.get_error()));
             index += 1;

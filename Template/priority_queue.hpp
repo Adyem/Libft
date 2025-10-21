@@ -10,17 +10,7 @@
 #include <cstddef>
 #include <utility>
 #include <functional>
-
-/*
-** Complexity and iterator invalidation guarantees:
-** - size, empty, top: O(1) without invalidation.
-** - push: O(log n); reallocation invalidates all element references.
-** - pop: O(log n); invalidates references to removed top and any elements relocated during heapify.
-** - clear: O(n); invalidates all references.
-** Thread safety: none; callers must serialize access when sharing across threads.
-*/
-
-
+#include "move.hpp"
 
 template <typename ElementType, typename Compare = std::less<ElementType> >
 class ft_priority_queue
@@ -62,8 +52,6 @@ class ft_priority_queue
 
         void clear();
 };
-
-
 
 template <typename ElementType, typename Compare>
 ft_priority_queue<ElementType, Compare>::ft_priority_queue(size_t initialCapacity, const Compare& comp)
@@ -158,7 +146,7 @@ bool ft_priority_queue<ElementType, Compare>::ensure_capacity(size_t desired)
     size_t element_index = 0;
     while (element_index < this->_size)
     {
-        construct_at(&new_data[element_index], std::move(this->_data[element_index]));
+        construct_at(&new_data[element_index], ft_move(this->_data[element_index]));
         destroy_at(&this->_data[element_index]);
         element_index += 1;
     }
@@ -221,7 +209,7 @@ void ft_priority_queue<ElementType, Compare>::push(ElementType&& value)
 {
     if (!this->ensure_capacity(this->_size + 1))
         return ;
-    construct_at(&this->_data[this->_size], std::move(value));
+    construct_at(&this->_data[this->_size], ft_move(value));
     this->heapify_up(this->_size);
     ++this->_size;
     this->set_error(ER_SUCCESS);
@@ -236,12 +224,12 @@ ElementType ft_priority_queue<ElementType, Compare>::pop()
         this->set_error(FT_ERR_PRIORITY_QUEUE_EMPTY);
         return (ElementType());
     }
-    ElementType top_value = std::move(this->_data[0]);
+    ElementType top_value = ft_move(this->_data[0]);
     destroy_at(&this->_data[0]);
     --this->_size;
     if (this->_size > 0)
     {
-        construct_at(&this->_data[0], std::move(this->_data[this->_size]));
+        construct_at(&this->_data[0], ft_move(this->_data[this->_size]));
         destroy_at(&this->_data[this->_size]);
         this->heapify_down(0);
     }

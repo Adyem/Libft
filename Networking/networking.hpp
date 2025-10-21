@@ -5,6 +5,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Template/vector.hpp"
 #include "ssl_wrapper.hpp"
+
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>

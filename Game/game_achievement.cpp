@@ -1,5 +1,6 @@
 #include "game_achievement.hpp"
 #include <utility>
+#include "../Template/move.hpp"
 
 ft_achievement::ft_achievement() noexcept
     : _id(0), _goals(), _error(ER_SUCCESS)
@@ -43,7 +44,7 @@ ft_achievement &ft_achievement::operator=(const ft_achievement &other) noexcept
 }
 
 ft_achievement::ft_achievement(ft_achievement &&other) noexcept
-    : _id(other._id), _goals(std::move(other._goals)), _error(other._error)
+    : _id(other._id), _goals(ft_move(other._goals)), _error(other._error)
 {
     if (this->_goals.get_error() != ER_SUCCESS)
     {
@@ -63,7 +64,7 @@ ft_achievement &ft_achievement::operator=(ft_achievement &&other) noexcept
     {
         int other_error = other._error;
         this->_id = other._id;
-        this->_goals = std::move(other._goals);
+        this->_goals = ft_move(other._goals);
         if (this->_goals.get_error() != ER_SUCCESS)
         {
             this->set_error(this->_goals.get_error());
