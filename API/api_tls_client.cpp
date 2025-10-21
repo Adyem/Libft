@@ -19,6 +19,10 @@
 #endif
 #include <openssl/err.h>
 #include <openssl/x509v3.h>
+#include <openssl/x509.h>
+#include <openssl/bio.h>
+#include <openssl/asn1.h>
+#include <openssl/evp.h>
 #include <cstdint>
 #include <utility>
 
@@ -215,6 +219,261 @@ static ssize_t ssl_send_all(SSL *ssl, const void *data, size_t size)
     return (static_cast<ssize_t>(total));
 }
 
+static bool tls_copy_bio_to_string(BIO *memory, ft_string &output)
+{
+    char *memory_data;
+    long memory_length;
+
+    output.clear();
+    if (output.get_error() != ER_SUCCESS)
+        return (false);
+    if (memory == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (false);
+    }
+    memory_length = BIO_get_mem_data(memory, &memory_data);
+    if (memory_length < 0)
+    {
+        ft_errno = FT_ERR_CONFIGURATION;
+        return (false);
+    }
+    if (memory_length == 0)
+        return (true);
+    output.append(memory_data, static_cast<size_t>(memory_length));
+    if (output.get_error() != ER_SUCCESS)
+        return (false);
+    return (true);
+}
+
+static bool tls_extract_x509_name(X509_NAME *name, ft_string &output)
+{
+    BIO *memory;
+    bool copy_result;
+
+    if (name == ft_nullptr)
+    {
+        output.clear();
+        return (output.get_error() == ER_SUCCESS);
+    }
+    memory = BIO_new(BIO_s_mem());
+    if (memory == ft_nullptr)
+    {
+        ft_errno = FT_ERR_NO_MEMORY;
+        return (false);
+    }
+    if (X509_NAME_print_ex(memory, name, 0, XN_FLAG_RFC2253) < 0)
+    {
+        BIO_free(memory);
+        ft_errno = FT_ERR_CONFIGURATION;
+        return (false);
+    }
+    copy_result = tls_copy_bio_to_string(memory, output);
+    BIO_free(memory);
+    if (!copy_result)
+    {
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = FT_ERR_CONFIGURATION;
+        return (false);
+    }
+    return (true);
+}
+
+static bool tls_extract_asn1_time(const ASN1_TIME *time_value, ft_string &output)
+{
+    BIO *memory;
+    bool copy_result;
+
+    if (time_value == ft_nullptr)
+    {
+        output.clear();
+        return (output.get_error() == ER_SUCCESS);
+    }
+    memory = BIO_new(BIO_s_mem());
+    if (memory == ft_nullptr)
+    {
+        ft_errno = FT_ERR_NO_MEMORY;
+        return (false);
+    }
+    if (ASN1_TIME_print(memory, time_value) != 1)
+    {
+        BIO_free(memory);
+        ft_errno = FT_ERR_CONFIGURATION;
+        return (false);
+    }
+    copy_result = tls_copy_bio_to_string(memory, output);
+    BIO_free(memory);
+    if (!copy_result)
+    {
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = FT_ERR_CONFIGURATION;
+        return (false);
+    }
+    return (true);
+}
+
+static bool tls_extract_serial_number(const ASN1_INTEGER *serial_value,
+    ft_string &output)
+{
+    BIO *memory;
+    bool copy_result;
+
+    if (serial_value == ft_nullptr)
+    {
+        output.clear();
+        return (output.get_error() == ER_SUCCESS);
+    }
+    memory = BIO_new(BIO_s_mem());
+    if (memory == ft_nullptr)
+    {
+        ft_errno = FT_ERR_NO_MEMORY;
+        return (false);
+    }
+    if (i2a_ASN1_INTEGER(memory, const_cast<ASN1_INTEGER*>(serial_value)) <= 0)
+    {
+        BIO_free(memory);
+        ft_errno = FT_ERR_CONFIGURATION;
+        return (false);
+    }
+    copy_result = tls_copy_bio_to_string(memory, output);
+    BIO_free(memory);
+    if (!copy_result)
+    {
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = FT_ERR_CONFIGURATION;
+        return (false);
+    }
+    return (true);
+}
+
+static bool tls_compute_certificate_fingerprint(X509 *certificate,
+    ft_string &output)
+{
+    unsigned char digest[EVP_MAX_MD_SIZE];
+    unsigned int digest_length;
+    size_t index;
+    char byte_buffer[3];
+
+    output.clear();
+    if (output.get_error() != ER_SUCCESS)
+        return (false);
+    if (certificate == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (false);
+    }
+    if (X509_digest(certificate, EVP_sha256(), digest, &digest_length) != 1)
+    {
+        ft_errno = FT_ERR_CONFIGURATION;
+        return (false);
+    }
+    index = 0;
+    while (index < digest_length)
+    {
+        if (pf_snprintf(byte_buffer, sizeof(byte_buffer), "%02X",
+                digest[index]) < 0)
+        {
+            ft_errno = FT_ERR_CONFIGURATION;
+            return (false);
+        }
+        output.append(byte_buffer, 2);
+        if (output.get_error() != ER_SUCCESS)
+            return (false);
+        if (index + 1 < digest_length)
+        {
+            output.append(':');
+            if (output.get_error() != ER_SUCCESS)
+                return (false);
+        }
+        index++;
+    }
+    return (true);
+}
+
+static bool tls_fill_certificate_diagnostic(X509 *certificate,
+    api_tls_certificate_diagnostics &diagnostic)
+{
+    const ASN1_TIME *not_before;
+    const ASN1_TIME *not_after;
+    const ASN1_INTEGER *serial_number;
+
+    if (certificate == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (false);
+    }
+    if (!tls_extract_x509_name(X509_get_subject_name(certificate),
+            diagnostic.subject))
+        return (false);
+    if (!tls_extract_x509_name(X509_get_issuer_name(certificate),
+            diagnostic.issuer))
+        return (false);
+    serial_number = X509_get_serialNumber(certificate);
+    if (!tls_extract_serial_number(serial_number, diagnostic.serial_number))
+        return (false);
+    not_before = X509_get0_notBefore(certificate);
+    if (!tls_extract_asn1_time(not_before, diagnostic.not_before))
+        return (false);
+    not_after = X509_get0_notAfter(certificate);
+    if (!tls_extract_asn1_time(not_after, diagnostic.not_after))
+        return (false);
+    if (!tls_compute_certificate_fingerprint(certificate,
+            diagnostic.fingerprint_sha256))
+        return (false);
+    return (true);
+}
+
+static bool tls_append_certificate_diagnostic(
+    api_tls_handshake_diagnostics &diagnostics, X509 *certificate)
+{
+    api_tls_certificate_diagnostics entry;
+    size_t size_before;
+    size_t size_after;
+
+    if (!tls_fill_certificate_diagnostic(certificate, entry))
+        return (false);
+    size_before = diagnostics.certificates.size();
+    diagnostics.certificates.push_back(std::move(entry));
+    size_after = diagnostics.certificates.size();
+    if (size_after < size_before + 1)
+    {
+        if (diagnostics.certificates.get_error() == ER_SUCCESS)
+            ft_errno = FT_ERR_NO_MEMORY;
+        else
+            ft_errno = diagnostics.certificates.get_error();
+        return (false);
+    }
+    return (true);
+}
+
+static void tls_log_handshake_diagnostics(
+    const api_tls_handshake_diagnostics &diagnostics, const ft_string &host)
+{
+    size_t certificate_index;
+    size_t certificate_count;
+
+    if (!ft_log_get_api_logging())
+        return ;
+    ft_log_info("api_tls_client::handshake host=%s protocol=%s cipher=%s "
+                "certificate_count=%zu",
+        host.c_str(), diagnostics.protocol.c_str(),
+        diagnostics.cipher.c_str(), diagnostics.certificates.size());
+    certificate_index = 0;
+    certificate_count = diagnostics.certificates.size();
+    while (certificate_index < certificate_count)
+    {
+        const api_tls_certificate_diagnostics &entry =
+            diagnostics.certificates[certificate_index];
+        ft_log_info("api_tls_client::certificate[%zu] subject=%s issuer=%s "
+                    "serial=%s not_before=%s not_after=%s fingerprint_sha256=%s",
+            certificate_index, entry.subject.c_str(), entry.issuer.c_str(),
+            entry.serial_number.c_str(), entry.not_before.c_str(),
+            entry.not_after.c_str(), entry.fingerprint_sha256.c_str());
+        certificate_index++;
+    }
+    return ;
+}
+
 api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms)
 : _ctx(ft_nullptr), _ssl(ft_nullptr), _sock(-1), _host(""), _timeout(timeout_ms), _error_code(ER_SUCCESS)
 {
@@ -334,6 +593,22 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
         this->_sock = -1;
         this->set_error(FT_ERR_SOCKET_CONNECT_FAILED);
         return ;
+    }
+    if (!this->populate_handshake_diagnostics())
+    {
+        int diagnostics_error;
+        const char *error_message;
+
+        diagnostics_error = this->_error_code;
+        if (diagnostics_error == ER_SUCCESS)
+            diagnostics_error = ft_errno;
+        error_message = ft_strerror(diagnostics_error);
+        if (ft_log_get_api_logging())
+        {
+            ft_log_warn("api_tls_client::handshake diagnostics unavailable host=%s "
+                        "error=%d message=%s",
+                this->_host.c_str(), diagnostics_error, error_message);
+        }
     }
     this->set_error(ER_SUCCESS);
 }
@@ -798,5 +1073,130 @@ void api_tls_client::set_error(int error_code) const noexcept
     this->_error_code = error_code;
     ft_errno = error_code;
     return ;
+}
+
+bool api_tls_client::populate_handshake_diagnostics()
+{
+    const char *protocol_name;
+    const SSL_CIPHER *cipher;
+    const char *cipher_name;
+    STACK_OF(X509) *certificate_chain;
+    int certificate_count;
+    int certificate_index;
+    X509 *certificate;
+    X509 *leaf_certificate;
+    int vector_error;
+
+    if (this->_ssl == ft_nullptr)
+    {
+        this->set_error(FT_ERR_CONFIGURATION);
+        return (false);
+    }
+    this->_handshake_diagnostics.protocol.clear();
+    if (this->_handshake_diagnostics.protocol.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_handshake_diagnostics.protocol.get_error());
+        return (false);
+    }
+    this->_handshake_diagnostics.cipher.clear();
+    if (this->_handshake_diagnostics.cipher.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_handshake_diagnostics.cipher.get_error());
+        return (false);
+    }
+    this->_handshake_diagnostics.certificates.clear();
+    if (this->_handshake_diagnostics.certificates.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_handshake_diagnostics.certificates.get_error());
+        return (false);
+    }
+    protocol_name = SSL_get_version(this->_ssl);
+    if (protocol_name != ft_nullptr)
+    {
+        this->_handshake_diagnostics.protocol.append(protocol_name);
+        if (this->_handshake_diagnostics.protocol.get_error() != ER_SUCCESS)
+        {
+            this->set_error(this->_handshake_diagnostics.protocol.get_error());
+            return (false);
+        }
+    }
+    cipher = SSL_get_current_cipher(this->_ssl);
+    if (cipher != ft_nullptr)
+    {
+        cipher_name = SSL_CIPHER_get_name(cipher);
+        if (cipher_name != ft_nullptr)
+        {
+            this->_handshake_diagnostics.cipher.append(cipher_name);
+            if (this->_handshake_diagnostics.cipher.get_error() != ER_SUCCESS)
+            {
+                this->set_error(this->_handshake_diagnostics.cipher.get_error());
+                return (false);
+            }
+        }
+    }
+    certificate_chain = SSL_get_peer_cert_chain(this->_ssl);
+    if (certificate_chain != ft_nullptr)
+    {
+        certificate_count = sk_X509_num(certificate_chain);
+        certificate_index = 0;
+        while (certificate_index < certificate_count)
+        {
+            certificate = sk_X509_value(certificate_chain, certificate_index);
+            if (certificate != ft_nullptr)
+            {
+                if (!tls_append_certificate_diagnostic(this->_handshake_diagnostics,
+                        certificate))
+                {
+                    vector_error = this->_handshake_diagnostics.certificates.get_error();
+                    if (vector_error == ER_SUCCESS)
+                        vector_error = ft_errno;
+                    if (vector_error == ER_SUCCESS)
+                        vector_error = FT_ERR_CONFIGURATION;
+                    this->set_error(vector_error);
+                    return (false);
+                }
+            }
+            certificate_index++;
+        }
+    }
+    else
+    {
+        leaf_certificate = SSL_get1_peer_certificate(this->_ssl);
+        if (leaf_certificate == ft_nullptr)
+        {
+            this->set_error(FT_ERR_CONFIGURATION);
+            return (false);
+        }
+        if (!tls_append_certificate_diagnostic(this->_handshake_diagnostics,
+                leaf_certificate))
+        {
+            vector_error = this->_handshake_diagnostics.certificates.get_error();
+            if (vector_error == ER_SUCCESS)
+                vector_error = ft_errno;
+            if (vector_error == ER_SUCCESS)
+                vector_error = FT_ERR_CONFIGURATION;
+            this->set_error(vector_error);
+            X509_free(leaf_certificate);
+            return (false);
+        }
+        X509_free(leaf_certificate);
+    }
+    this->set_error(ER_SUCCESS);
+    tls_log_handshake_diagnostics(this->_handshake_diagnostics, this->_host);
+    return (true);
+}
+
+bool api_tls_client::refresh_handshake_diagnostics()
+{
+    if (!this->populate_handshake_diagnostics())
+        return (false);
+    this->set_error(ER_SUCCESS);
+    return (true);
+}
+
+const api_tls_handshake_diagnostics &api_tls_client::get_handshake_diagnostics() const noexcept
+{
+    this->set_error(ER_SUCCESS);
+    return (this->_handshake_diagnostics);
 }
 

@@ -1,76 +1,178 @@
-#include <stddef.h>
-#include "../CMA/CMA.hpp"
+#include <openssl/evp.h>
+#include <openssl/core_names.h>
+#include <openssl/params.h>
 #include "../Errno/errno.hpp"
 #include "encryption_hmac_sha256.hpp"
-#include "encryption_sha256.hpp"
 
-void hmac_sha256(const unsigned char *key, size_t key_len, const void *data, size_t len, unsigned char *digest)
+static void hmac_sha256_stream_reset_state(hmac_sha256_stream &stream)
 {
-    unsigned char key_block[64];
-    unsigned char inner_pad[64];
-    unsigned char outer_pad[64];
-    unsigned char hashed_key[32];
-    size_t current_index;
+    stream.mac = NULL;
+    stream.context = NULL;
+    stream.initialized = false;
+    stream.finished = false;
+    return ;
+}
 
-    if (key_len > 64)
+static void hmac_sha256_stream_release(hmac_sha256_stream &stream)
+{
+    if (stream.context != NULL)
+        EVP_MAC_CTX_free(stream.context);
+    stream.context = NULL;
+    if (stream.mac != NULL)
+        EVP_MAC_free(stream.mac);
+    stream.mac = NULL;
+    return ;
+}
+
+int hmac_sha256_stream_init(hmac_sha256_stream &stream, const unsigned char *key,
+    size_t key_length)
+{
+    OSSL_PARAM  parameters[2];
+    char        digest_name[7];
+
+    if (key_length > 0 && key == NULL)
     {
-        sha256_hash(key, key_len, hashed_key);
-        key = hashed_key;
-        key_len = 32;
+        ft_errno = FT_ERR_INVALID_POINTER;
+        return (-1);
     }
-    current_index = 0;
-    while (current_index < 64)
+    hmac_sha256_stream_reset_state(stream);
+    digest_name[0] = 'S';
+    digest_name[1] = 'H';
+    digest_name[2] = 'A';
+    digest_name[3] = '2';
+    digest_name[4] = '5';
+    digest_name[5] = '6';
+    digest_name[6] = '\0';
+    stream.mac = EVP_MAC_fetch(NULL, "HMAC", NULL);
+    if (stream.mac == NULL)
     {
-        unsigned char key_byte = 0;
-        if (current_index < key_len)
-            key_byte = key[current_index];
-        key_block[current_index] = key_byte;
-        inner_pad[current_index] = key_block[current_index] ^ 0x36;
-        outer_pad[current_index] = key_block[current_index] ^ 0x5c;
-        ++current_index;
+        ft_errno = FT_ERR_INITIALIZATION_FAILED;
+        return (-1);
     }
-    unsigned char *inner_data = static_cast<unsigned char *>(cma_malloc(64 + len));
-    if (!inner_data)
+    stream.context = EVP_MAC_CTX_new(stream.mac);
+    if (stream.context == NULL)
     {
+        hmac_sha256_stream_release(stream);
         ft_errno = FT_ERR_NO_MEMORY;
+        return (-1);
+    }
+    parameters[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST,
+        digest_name, 0);
+    parameters[1] = OSSL_PARAM_construct_end();
+    if (EVP_MAC_init(stream.context, key, key_length, parameters) != 1)
+    {
+        hmac_sha256_stream_release(stream);
+        ft_errno = FT_ERR_INITIALIZATION_FAILED;
+        return (-1);
+    }
+    stream.initialized = true;
+    stream.finished = false;
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+int hmac_sha256_stream_update(hmac_sha256_stream &stream, const void *data,
+    size_t length)
+{
+    if (stream.initialized == false || stream.context == NULL)
+    {
+        ft_errno = FT_ERR_INVALID_STATE;
+        return (-1);
+    }
+    if (stream.finished != false)
+    {
+        ft_errno = FT_ERR_INVALID_STATE;
+        return (-1);
+    }
+    if (length == 0)
+    {
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    if (data == NULL)
+    {
+        ft_errno = FT_ERR_INVALID_POINTER;
+        return (-1);
+    }
+    if (EVP_MAC_update(stream.context,
+            static_cast<const unsigned char *>(data), length) != 1)
+    {
+        ft_errno = FT_ERR_INTERNAL;
+        return (-1);
+    }
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+int hmac_sha256_stream_final(hmac_sha256_stream &stream, unsigned char *digest,
+    size_t digest_length)
+{
+    size_t output_length;
+
+    if (stream.initialized == false || stream.context == NULL)
+    {
+        ft_errno = FT_ERR_INVALID_STATE;
+        return (-1);
+    }
+    if (stream.finished != false)
+    {
+        ft_errno = FT_ERR_INVALID_STATE;
+        return (-1);
+    }
+    if (digest == NULL)
+    {
+        ft_errno = FT_ERR_INVALID_POINTER;
+        return (-1);
+    }
+    if (digest_length < 32)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (-1);
+    }
+    output_length = digest_length;
+    if (EVP_MAC_final(stream.context, digest, &output_length, digest_length) != 1)
+    {
+        ft_errno = FT_ERR_INTERNAL;
+        return (-1);
+    }
+    if (output_length != 32)
+    {
+        ft_errno = FT_ERR_INTERNAL;
+        return (-1);
+    }
+    hmac_sha256_stream_release(stream);
+    stream.initialized = false;
+    stream.finished = true;
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+void hmac_sha256_stream_cleanup(hmac_sha256_stream &stream)
+{
+    hmac_sha256_stream_release(stream);
+    stream.initialized = false;
+    stream.finished = true;
+    return ;
+}
+
+void hmac_sha256(const unsigned char *key, size_t key_len, const void *data,
+    size_t len, unsigned char *digest)
+{
+    hmac_sha256_stream    stream;
+
+    if (hmac_sha256_stream_init(stream, key, key_len) != 0)
+        return ;
+    if (hmac_sha256_stream_update(stream, data, len) != 0)
+    {
+        hmac_sha256_stream_cleanup(stream);
         return ;
     }
-    current_index = 0;
-    while (current_index < 64)
+    if (hmac_sha256_stream_final(stream, digest, 32) != 0)
     {
-        inner_data[current_index] = inner_pad[current_index];
-        ++current_index;
-    }
-    size_t data_index = 0;
-    const unsigned char *byte_data = static_cast<const unsigned char *>(data);
-    while (data_index < len)
-    {
-        inner_data[64 + data_index] = byte_data[data_index];
-        ++data_index;
-    }
-    unsigned char inner_digest[32];
-    sha256_hash(inner_data, 64 + len, inner_digest);
-    cma_free(inner_data);
-    unsigned char *outer_data = static_cast<unsigned char *>(cma_malloc(64 + 32));
-    if (!outer_data)
-    {
-        ft_errno = FT_ERR_NO_MEMORY;
+        hmac_sha256_stream_cleanup(stream);
         return ;
     }
-    current_index = 0;
-    while (current_index < 64)
-    {
-        outer_data[current_index] = outer_pad[current_index];
-        ++current_index;
-    }
-    current_index = 0;
-    while (current_index < 32)
-    {
-        outer_data[64 + current_index] = inner_digest[current_index];
-        ++current_index;
-    }
-    sha256_hash(outer_data, 96, digest);
-    cma_free(outer_data);
+    hmac_sha256_stream_cleanup(stream);
     ft_errno = ER_SUCCESS;
     return ;
 }

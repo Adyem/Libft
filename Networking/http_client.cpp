@@ -9,6 +9,8 @@
 #include <openssl/x509v3.h>
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
+#include "../Time/time.hpp"
+#include "../Observability/observability_networking_metrics.hpp"
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>
@@ -31,9 +33,11 @@ struct http_buffer_adapter_state
 {
     ft_string   *response;
     bool        header_appended;
+    size_t      body_bytes;
+    int         status_code;
 };
 
-static http_buffer_adapter_state g_http_buffer_adapter_state = { NULL, false };
+static http_buffer_adapter_state g_http_buffer_adapter_state = { NULL, false, 0, 0 };
 
 static int http_client_wait_for_socket_ready(int socket_fd, bool wait_for_write)
 {
@@ -540,17 +544,22 @@ static int http_client_receive_stream(int socket_fd, SSL *ssl_connection, bool u
 static void http_client_buffering_adapter(int status_code, const ft_string &headers,
     const char *body_chunk, size_t chunk_size, bool finished)
 {
-    (void)status_code;
-    (void)finished;
     if (g_http_buffer_adapter_state.response == NULL)
         return ;
+    if (status_code != 0)
+        g_http_buffer_adapter_state.status_code = status_code;
     if (g_http_buffer_adapter_state.header_appended == false && headers.empty() == false)
     {
         g_http_buffer_adapter_state.response->append(headers);
         g_http_buffer_adapter_state.header_appended = true;
     }
     if (chunk_size > 0)
+    {
         g_http_buffer_adapter_state.response->append(body_chunk);
+        g_http_buffer_adapter_state.body_bytes += chunk_size;
+    }
+    if (finished != false && status_code != 0)
+        g_http_buffer_adapter_state.status_code = status_code;
     return ;
 }
 
@@ -558,7 +567,49 @@ static void http_client_reset_buffer_adapter_state(void)
 {
     g_http_buffer_adapter_state.response = NULL;
     g_http_buffer_adapter_state.header_appended = false;
+    g_http_buffer_adapter_state.body_bytes = 0;
+    g_http_buffer_adapter_state.status_code = 0;
     return ;
+}
+
+static int http_client_finish_with_metrics(const char *method, const char *host,
+    const char *path, size_t request_bytes, int result,
+    t_monotonic_time_point start_time)
+{
+    ft_networking_observability_sample sample;
+    t_monotonic_time_point finish_time;
+    long long duration_ms;
+    int error_code;
+
+    finish_time = time_monotonic_point_now();
+    duration_ms = time_monotonic_point_diff_ms(start_time, finish_time);
+    if (duration_ms < 0)
+        duration_ms = 0;
+    error_code = ER_SUCCESS;
+    if (result != 0)
+        error_code = ft_errno;
+    sample.labels.component = "http_client";
+    sample.labels.operation = method;
+    sample.labels.target = host;
+    sample.labels.resource = path;
+    sample.duration_ms = duration_ms;
+    sample.request_bytes = request_bytes;
+    sample.response_bytes = g_http_buffer_adapter_state.body_bytes;
+    sample.status_code = g_http_buffer_adapter_state.status_code;
+    sample.error_code = error_code;
+    if (error_code == ER_SUCCESS)
+    {
+        sample.success = true;
+        sample.error_tag = "ok";
+    }
+    else
+    {
+        sample.success = false;
+        sample.error_tag = ft_strerror(error_code);
+    }
+    observability_networking_metrics_record(sample);
+    http_client_reset_buffer_adapter_state();
+    return (result);
 }
 
 int http_get_stream(const char *host, const char *path, http_response_handler handler,
@@ -708,18 +759,22 @@ int http_get_stream(const char *host, const char *path, http_response_handler ha
 
 int http_get(const char *host, const char *path, ft_string &response, bool use_ssl, const char *custom_port)
 {
+    t_monotonic_time_point start_time;
     int result;
 
+    start_time = time_monotonic_point_now();
     response.clear();
     g_http_buffer_adapter_state.response = &response;
     g_http_buffer_adapter_state.header_appended = false;
+    g_http_buffer_adapter_state.body_bytes = 0;
+    g_http_buffer_adapter_state.status_code = 0;
     result = http_get_stream(host, path, http_client_buffering_adapter, use_ssl, custom_port);
-    http_client_reset_buffer_adapter_state();
-    return (result);
+    return (http_client_finish_with_metrics("GET", host, path, 0, result, start_time));
 }
 
 int http_post(const char *host, const char *path, const ft_string &body, ft_string &response, bool use_ssl, const char *custom_port)
 {
+    t_monotonic_time_point start_time;
     struct addrinfo address_hints;
     struct addrinfo *address_info;
     struct addrinfo *current_info;
@@ -733,9 +788,12 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
     int resolver_status;
     int last_socket_error;
 
+    start_time = time_monotonic_point_now();
     response.clear();
     g_http_buffer_adapter_state.response = &response;
     g_http_buffer_adapter_state.header_appended = false;
+    g_http_buffer_adapter_state.body_bytes = 0;
+    g_http_buffer_adapter_state.status_code = 0;
     ft_memset(&address_hints, 0, sizeof(address_hints));
     address_hints.ai_family = AF_UNSPEC;
     address_hints.ai_socktype = SOCK_STREAM;
@@ -749,8 +807,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
     if (resolver_status != 0)
     {
         networking_dns_set_error(resolver_status);
-        http_client_reset_buffer_adapter_state();
-        return (-1);
+        return (http_client_finish_with_metrics("POST", host, path, body.size(), -1, start_time));
     }
     socket_fd = -1;
     result = -1;
@@ -791,8 +848,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
             ft_errno = ft_map_system_error(last_socket_error);
         else
             ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
-        http_client_reset_buffer_adapter_state();
-        return (-1);
+        return (http_client_finish_with_metrics("POST", host, path, body.size(), -1, start_time));
     }
     std::snprintf(length_string, sizeof(length_string), "%zu", body.size());
     request.append("POST ");
@@ -808,8 +864,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
         if (http_client_initialize_ssl(socket_fd, host, &ssl_context, &ssl_connection) != 0)
         {
             nw_close(socket_fd);
-            http_client_reset_buffer_adapter_state();
-            return (-1);
+            return (http_client_finish_with_metrics("POST", host, path, body.size(), -1, start_time));
         }
         result = SSL_connect(ssl_connection);
         if (result != 1)
@@ -818,8 +873,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
             SSL_free(ssl_connection);
             SSL_CTX_free(ssl_context);
             nw_close(socket_fd);
-            http_client_reset_buffer_adapter_state();
-            return (-1);
+            return (http_client_finish_with_metrics("POST", host, path, body.size(), -1, start_time));
         }
 #if OPENSSL_VERSION_NUMBER >= 0x10002000L
         if (SSL_get_verify_result(ssl_connection) != X509_V_OK)
@@ -829,8 +883,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
             SSL_free(ssl_connection);
             SSL_CTX_free(ssl_context);
             nw_close(socket_fd);
-            http_client_reset_buffer_adapter_state();
-            return (-1);
+            return (http_client_finish_with_metrics("POST", host, path, body.size(), -1, start_time));
         }
 #endif
         if (http_client_send_ssl_request(ssl_connection, request.c_str(), request.size()) != 0)
@@ -838,8 +891,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
             SSL_free(ssl_connection);
             SSL_CTX_free(ssl_context);
             nw_close(socket_fd);
-            http_client_reset_buffer_adapter_state();
-            return (-1);
+            return (http_client_finish_with_metrics("POST", host, path, body.size(), -1, start_time));
         }
         if (http_client_receive_stream(socket_fd, ssl_connection, true, http_client_buffering_adapter) != 0)
         {
@@ -847,8 +899,7 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
             SSL_free(ssl_connection);
             SSL_CTX_free(ssl_context);
             nw_close(socket_fd);
-            http_client_reset_buffer_adapter_state();
-            return (-1);
+            return (http_client_finish_with_metrics("POST", host, path, body.size(), -1, start_time));
         }
         SSL_shutdown(ssl_connection);
         SSL_free(ssl_connection);
@@ -859,19 +910,16 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
         if (http_client_send_plain_request(socket_fd, request.c_str(), request.size()) != 0)
         {
             nw_close(socket_fd);
-            http_client_reset_buffer_adapter_state();
-            return (-1);
+            return (http_client_finish_with_metrics("POST", host, path, body.size(), -1, start_time));
         }
         if (http_client_receive_stream(socket_fd, NULL, false, http_client_buffering_adapter) != 0)
         {
             nw_close(socket_fd);
-            http_client_reset_buffer_adapter_state();
-            return (-1);
+            return (http_client_finish_with_metrics("POST", host, path, body.size(), -1, start_time));
         }
     }
     nw_close(socket_fd);
-    http_client_reset_buffer_adapter_state();
     ft_errno = ER_SUCCESS;
-    return (0);
+    return (http_client_finish_with_metrics("POST", host, path, body.size(), 0, start_time));
 }
 

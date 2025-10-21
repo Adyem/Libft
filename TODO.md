@@ -86,7 +86,7 @@
 - [ ] Harden WebSocket handling with per-message deflate support and stricter frame validation (masking, RSV bits, control frame sizes).
 - [x] Provide non-blocking, event-loop-friendly wrappers for UDP sockets that integrate with epoll/kqueue abstractions already present.
 - [ ] Introduce QUIC/HTTP3 experimentation behind feature flags, reusing TLS primitives where possible.
-- [ ] Add observability hooks (latency histograms, error tagging) that integrate with Prometheus or OpenTelemetry exporters.
+- [x] Add observability hooks (latency histograms, error tagging) that integrate with Prometheus or OpenTelemetry exporters.
 - [x] Provide RAII socket handles that close file descriptors automatically and coordinate Windows `WSAStartup` lifecycle management.
 - [x] Fix the Winsock error handling path in `ft_socket::setup_server` so the helper uses `WSAGetLastError()`/`ft_errno` instead of `errno`, otherwise Windows failures in `create_socket`, `set_reuse_address`, timeouts, bind, or listen propagate the wrong code. 【F:Networking/networking_setup_server.cpp†L18-L146】【F:Networking/networking_setup_server.cpp†L188-L237】
 - [x] Update the HTTP server response writer to translate `nw_send` failures via `ft_errno`/`WSAGetLastError()` instead of raw `errno`, which currently reports success on Windows because Winsock does not set `errno`. 【F:Networking/http_server.cpp†L1-L14】【F:Networking/http_server.cpp†L278-L307】
@@ -109,7 +109,7 @@
 ### API (HTTP client facade)
 - [ ] Support HTTP/2 upgrades and streaming request/response bodies within `api_request` so large transfers do not buffer entirely in memory.
 - [ ] Add retry, backoff, and circuit-breaker policies that map transport failures into actionable error codes.
-- [ ] Surface detailed TLS handshake diagnostics (certificate chain, cipher selection) through `api_tls_client` for observability.
+- [x] Surface detailed TLS handshake diagnostics (certificate chain, cipher selection) through `api_tls_client` for observability.
 - [ ] Provide mockable interfaces or dependency injection hooks to simplify unit testing of API consumers.
 - [ ] Offer request signing helpers (HMAC, OAuth) for authenticated services, leveraging the Encryption module.
 - [ ] Emit structured metrics per endpoint (latency, throughput, error rate) suitable for dashboards.
@@ -271,7 +271,7 @@
 - [ ] Implement per-struct lock tracking for the Geometry shapes so mutex ownership, circular wait detection, randomized 1-10 millisecond sleeps, and lock reacquisition remain consistent (this is the deadlock resolution point the struct upgrades rely on).
 
 ### Encryption
-- [ ] Expand beyond SHA-1 by adding SHA-2/3, BLAKE2, and streaming HMAC helpers.
+- [x] Expand beyond SHA-1 by adding SHA-2/3, BLAKE2, and streaming HMAC helpers.
 - [ ] Introduce authenticated encryption (AEAD) wrappers that integrate with the Networking module's TLS stack.
 - [x] Document key management best practices and provide secure random key generation utilities.
 - [x] Add self-tests that verify algorithm outputs against known test vectors.
@@ -327,7 +327,7 @@
 - [ ] Add save/load persistence using the Storage module so world state can be serialized and restored.
 - [ ] Implement AI behavior trees or state machines for NPCs to replace ad-hoc logic.
 - [ ] Profile the event scheduler under heavy load and optimize shared-pointer churn.
-- [ ] Document extension points for mods or scripting integrations.
+- [x] Document extension points for mods or scripting integrations.
 - [ ] Introduce scripting bridges (Lua, Python) with sandboxing controls for user-generated content.
 - [ ] Add telemetry hooks that emit gameplay metrics for balancing and analytics.
 - [ ] Make `ft_game_state` thread safe (relies on the shared deadlock resolution routine described below).
@@ -372,7 +372,7 @@
 - [x] Standardize logging levels and message formats across modules for consistent ingestion by external systems.
 - [x] Expose health endpoints or self-test routines that downstream services can call for readiness checks (see `System_utils/system_utils_health.cpp`).
 - [x] Integrate tracing instrumentation (OpenTelemetry spans) across async boundaries for end-to-end visibility.
-- [ ] Publish SLO dashboards that highlight latency, error, and saturation metrics for critical modules.
+- [x] Publish SLO dashboards that highlight latency, error, and saturation metrics for critical modules.
 
 ## Community and support
 - [x] Create issue and PR templates that capture reproduction steps, environment info, and expected behaviour.
