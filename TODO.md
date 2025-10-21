@@ -92,7 +92,7 @@
 - [x] Update the HTTP server response writer to translate `nw_send` failures via `ft_errno`/`WSAGetLastError()` instead of raw `errno`, which currently reports success on Windows because Winsock does not set `errno`. 【F:Networking/http_server.cpp†L1-L14】【F:Networking/http_server.cpp†L278-L307】
 - [x] Make `ft_socket::initialize` return an error when `setup_server`/`setup_client` fails so callers are not forced to poll `_error_code` after a `0` return. 【F:Networking/networking_socket_class.cpp†L395-L423】
 - [x] Make `SocketConfig` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_socket` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_socket` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `udp_socket` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_websocket_server` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_websocket_client` thread safe (relies on the shared deadlock resolution routine described below).
@@ -334,8 +334,8 @@
 - [ ] Make `ft_character` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_item` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_inventory` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_equipment` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_upgrade` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_equipment` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_upgrade` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_world` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_event` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_event_scheduler` thread safe (relies on the shared deadlock resolution routine described below).
@@ -343,10 +343,10 @@
 - [ ] Make `ft_pathfinding` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_quest` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_reputation` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_buff` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_debuff` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_skill` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_achievement` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_buff` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_debuff` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_skill` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_achievement` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_crafting` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_experience_table` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_game_server` thread safe (relies on the shared deadlock resolution routine described below).

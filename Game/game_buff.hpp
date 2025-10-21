@@ -1,18 +1,25 @@
 #ifndef GAME_BUFF_HPP
 # define GAME_BUFF_HPP
 
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
+
 class ft_buff
 {
     private:
-        int _id;
-        int _duration;
-        int _modifier1;
-        int _modifier2;
-        int _modifier3;
-        int _modifier4;
-        mutable int _error;
+        int             _id;
+        int             _duration;
+        int             _modifier1;
+        int             _modifier2;
+        int             _modifier3;
+        int             _modifier4;
+        mutable int     _error;
+        mutable pt_mutex _mutex;
 
         void set_error(int err) const noexcept;
+        static int lock_pair(const ft_buff &first, const ft_buff &second,
+                ft_unique_lock<pt_mutex> &first_guard,
+                ft_unique_lock<pt_mutex> &second_guard);
 
     public:
         ft_buff() noexcept;
