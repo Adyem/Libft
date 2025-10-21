@@ -20,6 +20,7 @@ struct api_pooled_connection
     SSL *tls_session;
     SSL_CTX *tls_context;
     bool uses_tls;
+    bool negotiated_http2;
     long long idle_timestamp_ms;
 
     static void *operator new(size_t size) noexcept
@@ -333,6 +334,7 @@ static void api_connection_pool_dispose_entry(api_pooled_connection &entry)
     entry.tls_session = ft_nullptr;
     entry.tls_context = ft_nullptr;
     entry.uses_tls = false;
+    entry.negotiated_http2 = false;
     entry.idle_timestamp_ms = 0;
     api_connection_pool_record_dispose_snapshot(
         socket_cleanup_allowed,
@@ -520,6 +522,7 @@ bool api_connection_pool_acquire(api_connection_pool_handle &handle,
     handle.has_socket = false;
     handle.from_pool = false;
     handle.should_store = false;
+    handle.negotiated_http2 = false;
     g_api_connection_pool_acquire_calls++;
     if (!g_api_connection_pool_enabled)
     {
@@ -531,6 +534,7 @@ bool api_connection_pool_acquire(api_connection_pool_handle &handle,
     if (!api_connection_pool_key_is_valid(map_key))
     {
         handle.should_store = false;
+        handle.negotiated_http2 = false;
         g_api_connection_pool_acquire_misses++;
         return (false);
     }
@@ -562,11 +566,13 @@ bool api_connection_pool_acquire(api_connection_pool_handle &handle,
         handle.has_socket = true;
         handle.from_pool = true;
         handle.should_store = true;
+        handle.negotiated_http2 = entry->negotiated_http2;
         if (entry->uses_tls)
             api_connection_pool_tls_unregister(handle.tls_session);
         entry->tls_session = ft_nullptr;
         entry->tls_context = ft_nullptr;
         entry->uses_tls = false;
+        entry->negotiated_http2 = false;
         if (iterator->bucket.empty())
         {
             size_t bucket_offset;
@@ -677,6 +683,7 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
     entry_pointer->tls_session = handle.tls_session;
     entry_pointer->tls_context = handle.tls_context;
     entry_pointer->uses_tls = handle.security_mode == api_connection_security_mode::TLS;
+    entry_pointer->negotiated_http2 = handle.negotiated_http2;
     entry_pointer->idle_timestamp_ms = now_ms;
     if (!api_connection_pool_tls_register(entry_pointer->tls_session))
     {
@@ -694,6 +701,7 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
             handle.has_socket = false;
             handle.from_pool = false;
             handle.should_store = false;
+            handle.negotiated_http2 = false;
             return ;
         }
     }
@@ -711,12 +719,14 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
         handle.has_socket = false;
         handle.from_pool = false;
         handle.should_store = false;
+        handle.negotiated_http2 = false;
         return ;
     }
     handle.tls_session = ft_nullptr;
     handle.tls_context = ft_nullptr;
     handle.has_socket = false;
     handle.from_pool = false;
+    handle.negotiated_http2 = false;
     return ;
 }
 
@@ -739,12 +749,14 @@ void api_connection_pool_evict(api_connection_pool_handle &handle)
     handle.has_socket = false;
     handle.from_pool = false;
     handle.should_store = false;
+    handle.negotiated_http2 = false;
     return ;
 }
 
 void api_connection_pool_disable_store(api_connection_pool_handle &handle)
 {
     handle.should_store = false;
+    handle.negotiated_http2 = false;
     return ;
 }
 

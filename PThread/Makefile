@@ -25,7 +25,8 @@ SRCS := pthread_lock_mutex.cpp \
         pthread_condition_variable.cpp \
         pthread_rwlock.cpp \
         pthread_task_scheduler.cpp \
-        pthread_lock_tracking.cpp
+        pthread_lock_tracking.cpp \
+        pthread_task_scheduler_tracing.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
