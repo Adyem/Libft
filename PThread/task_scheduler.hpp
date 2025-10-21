@@ -13,6 +13,7 @@
 #include "thread.hpp"
 #include "../Time/time.hpp"
 #include "condition.hpp"
+#include "task_scheduler_tracing.hpp"
 
 #include <pthread.h>
 #include <cerrno>
@@ -103,15 +104,26 @@ class ft_scheduled_task_handle
 class ft_task_scheduler
 {
     private:
+        struct task_queue_entry
+        {
+            ft_function<void()> _function;
+            unsigned long long _trace_id;
+            unsigned long long _parent_id;
+            const char *_label;
+        };
+
         struct scheduled_task
         {
             t_monotonic_time_point _time;
             long long _interval_ms;
             ft_function<void()> _function;
             ft_sharedptr<ft_scheduled_task_state> _state;
+            unsigned long long _trace_id;
+            unsigned long long _parent_id;
+            const char *_label;
         };
 
-        ft_blocking_queue<ft_function<void()> > _queue;
+        ft_blocking_queue<task_queue_entry> _queue;
         ft_vector<ft_thread> _workers;
         ft_thread _timer_thread;
         ft_vector<scheduled_task> _scheduled;
@@ -139,6 +151,9 @@ class ft_task_scheduler
         bool update_queue_size(long long delta);
         bool update_worker_counters(long long active_delta, long long idle_delta);
         bool update_worker_total(long long delta);
+        void trace_emit_event(e_ft_task_trace_phase phase, unsigned long long trace_id,
+                unsigned long long parent_id, const char *label, bool timer_thread);
+        bool capture_metrics(ft_task_trace_event &event) const;
 
     public:
         friend class ft_scheduled_task_handle;
@@ -468,14 +483,32 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
         task_body();
         return (future_value);
     }
-    this->_queue.push(std::move(wrapper));
+    task_queue_entry queue_entry;
+    unsigned long long parent_span;
+    unsigned long long trace_id;
+    bool metrics_updated;
+
+    parent_span = task_scheduler_trace_current_span();
+    trace_id = task_scheduler_trace_generate_span_id();
+    queue_entry._function = std::move(wrapper);
+    queue_entry._trace_id = trace_id;
+    queue_entry._parent_id = parent_span;
+    queue_entry._label = g_ft_task_trace_label_async;
+    this->trace_emit_event(FT_TASK_TRACE_PHASE_SUBMITTED, trace_id, parent_span,
+            g_ft_task_trace_label_async, false);
+    this->_queue.push(std::move(queue_entry));
     if (this->_queue.get_error() != ER_SUCCESS)
     {
         this->set_error(this->_queue.get_error());
+        this->trace_emit_event(FT_TASK_TRACE_PHASE_CANCELLED, trace_id, parent_span,
+                g_ft_task_trace_label_async, false);
         task_body();
         return (future_value);
     }
-    if (!this->update_queue_size(1))
+    metrics_updated = this->update_queue_size(1);
+    this->trace_emit_event(FT_TASK_TRACE_PHASE_ENQUEUED, trace_id, parent_span,
+            g_ft_task_trace_label_async, false);
+    if (!metrics_updated)
         return (future_value);
     this->set_error(ER_SUCCESS);
     return (future_value);
@@ -576,6 +609,14 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
         task_body();
         return (result_pair);
     }
+    unsigned long long parent_span;
+    unsigned long long trace_id;
+
+    parent_span = task_scheduler_trace_current_span();
+    trace_id = task_scheduler_trace_generate_span_id();
+    task_entry._trace_id = trace_id;
+    task_entry._parent_id = parent_span;
+    task_entry._label = g_ft_task_trace_label_schedule_once;
     if (this->_scheduled_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(this->_scheduled_mutex.get_error());
@@ -593,6 +634,8 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
             this->set_error(this->_scheduled_mutex.get_error());
         else
             this->set_error(scheduled_error);
+        this->trace_emit_event(FT_TASK_TRACE_PHASE_CANCELLED, trace_id, parent_span,
+                g_ft_task_trace_label_schedule_once, false);
         task_body();
         return (result_pair);
     }
@@ -607,6 +650,8 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
         this->set_error(this->_scheduled_condition.get_error());
         return (result_pair);
     }
+    this->trace_emit_event(FT_TASK_TRACE_PHASE_TIMER_REGISTERED, trace_id, parent_span,
+            g_ft_task_trace_label_schedule_once, false);
     this->set_error(ER_SUCCESS);
     return (Pair<ft_future<return_type>, ft_scheduled_task_handle>(future_value, handle_instance));
 }
@@ -657,6 +702,14 @@ ft_scheduled_task_handle ft_task_scheduler::schedule_every(std::chrono::duration
         this->set_error(task_entry._function.get_error());
         return (handle_result);
     }
+    unsigned long long parent_span;
+    unsigned long long trace_id;
+
+    parent_span = task_scheduler_trace_current_span();
+    trace_id = task_scheduler_trace_generate_span_id();
+    task_entry._trace_id = trace_id;
+    task_entry._parent_id = parent_span;
+    task_entry._label = g_ft_task_trace_label_schedule_repeat;
     if (this->_scheduled_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(this->_scheduled_mutex.get_error());
@@ -674,6 +727,8 @@ ft_scheduled_task_handle ft_task_scheduler::schedule_every(std::chrono::duration
             this->set_error(this->_scheduled_mutex.get_error());
         else
             this->set_error(scheduled_error);
+        this->trace_emit_event(FT_TASK_TRACE_PHASE_CANCELLED, trace_id, parent_span,
+                g_ft_task_trace_label_schedule_repeat, false);
         task_entry._function();
         return (handle_result);
     }
@@ -688,6 +743,8 @@ ft_scheduled_task_handle ft_task_scheduler::schedule_every(std::chrono::duration
         this->set_error(this->_scheduled_condition.get_error());
         return (handle_result);
     }
+    this->trace_emit_event(FT_TASK_TRACE_PHASE_TIMER_REGISTERED, trace_id, parent_span,
+            g_ft_task_trace_label_schedule_repeat, false);
     this->set_error(ER_SUCCESS);
     return (handle_result);
 }

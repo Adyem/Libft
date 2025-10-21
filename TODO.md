@@ -80,7 +80,7 @@
 
 ### Networking
 - [ ] Complete HTTP/2 support by honoring SETTINGS frames, stream prioritization, and flow-control windows in `http2_client`.
-- [ ] Integrate ALPN negotiation into the higher-level API wrappers so HTTP/2 is automatically selected when the server supports it.
+- [x] Integrate ALPN negotiation into the higher-level API wrappers so HTTP/2 is automatically selected when the server supports it.
 - [x] Build a reusable DNS resolver (with caching and IPv6 support) that the socket helpers can share instead of assuming raw host strings.
 - [ ] Add connection pooling and keep-alive management for `http_client`/`http_server` to reduce socket churn under load.
 - [ ] Harden WebSocket handling with per-message deflate support and stricter frame validation (masking, RSV bits, control frame sizes).
@@ -130,7 +130,7 @@
 - [x] Implement timed wait variants for mutexes and condition variables mirroring `std::timed_mutex` semantics.
 - [ ] Add reader-priority and writer-priority strategies to the RW lock implementation with accompanying benchmarks.
 - [ ] Offer cooperative cancellation tokens that integrate with `thread_pool` in `Template/` to unify async control flows.
-- [ ] Provide structured tracing of task lifecycles to aid debugging of scheduling stalls.
+- [x] Provide structured tracing of task lifecycles to aid debugging of scheduling stalls.
 - [ ] Add lock contention diagnostics (sampling, priority inversion detection) exposed through the Logger module.
 - [ ] Make `pt_mutex` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `pt_condition_variable` thread safe (relies on the shared deadlock resolution routine described below).
@@ -303,7 +303,7 @@
 - [ ] Bring the printf implementation up to C99 compliance (length modifiers, positional arguments, floating-point formatting).
 - [x] Add sandboxed formatting tests that ensure buffer boundaries and return values match the standard library behaviour.
 - [x] Provide extension hooks for user-defined specifiers that integrate with `ft_string` and logging sinks.
-- [ ] Optimize hot paths (integer/float formatting) using precomputed tables where possible.
+- [x] Optimize hot paths (integer/float formatting) using precomputed tables where possible.
 - [x] Document thread-safety guarantees and recommend locking strategies for shared formatters. (See `Docs/printf_thread_safety.md`.)
 - [x] Re-enable the `pf_vsnprintf matches std::vsnprintf output` regression after aligning `pf_vsnprintf` with the standard library results across truncation and zero-size scenarios.
 
@@ -371,7 +371,7 @@
 ## Observability and operations
 - [x] Standardize logging levels and message formats across modules for consistent ingestion by external systems.
 - [x] Expose health endpoints or self-test routines that downstream services can call for readiness checks (see `System_utils/system_utils_health.cpp`).
-- [ ] Integrate tracing instrumentation (OpenTelemetry spans) across async boundaries for end-to-end visibility.
+- [x] Integrate tracing instrumentation (OpenTelemetry spans) across async boundaries for end-to-end visibility.
 - [ ] Publish SLO dashboards that highlight latency, error, and saturation metrics for critical modules.
 
 ## Community and support

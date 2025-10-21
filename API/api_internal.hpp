@@ -28,6 +28,7 @@ struct api_connection_pool_handle
     bool has_socket;
     bool from_pool;
     bool should_store;
+    bool negotiated_http2;
 };
 
 bool api_connection_pool_acquire(api_connection_pool_handle &handle,

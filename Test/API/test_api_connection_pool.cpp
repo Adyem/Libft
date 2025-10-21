@@ -1,4 +1,5 @@
 #include "../../API/api.hpp"
+#include "../../API/api_internal.hpp"
 #include "../../Networking/socket_class.hpp"
 #include "../../Networking/networking.hpp"
 #include "../../System_utils/test_runner.hpp"
@@ -228,5 +229,16 @@ FT_TEST(test_api_connection_pool_reuses_connections,
             api_debug_get_connection_pool_misses());
     FT_ASSERT_EQ(1, context.accept_count.load());
     FT_ASSERT_EQ(2, context.handled_requests.load());
+    return (1);
+}
+
+FT_TEST(test_api_connection_pool_disable_store_resets_http2_flag,
+    "api connection pool disable store clears negotiated http2 state")
+{
+    api_connection_pool_handle handle;
+
+    handle.negotiated_http2 = true;
+    api_connection_pool_disable_store(handle);
+    FT_ASSERT_EQ(false, handle.negotiated_http2);
     return (1);
 }

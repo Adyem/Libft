@@ -318,12 +318,13 @@ void ft_task_scheduler::worker_loop()
 {
     while (true)
     {
-        ft_function<void()> task;
+        task_queue_entry queue_entry;
         bool has_task;
+        unsigned long long previous_span;
 
         if (!this->_running.load())
             break;
-        has_task = this->_queue.wait_pop(task, this->_running);
+        has_task = this->_queue.wait_pop(queue_entry, this->_running);
         if (!has_task)
         {
             if (!this->_running.load())
@@ -335,11 +336,19 @@ void ft_task_scheduler::worker_loop()
             return ;
         if (!this->update_queue_size(-1))
             return ;
+        this->trace_emit_event(FT_TASK_TRACE_PHASE_DEQUEUED, queue_entry._trace_id,
+                queue_entry._parent_id, queue_entry._label, false);
+        this->trace_emit_event(FT_TASK_TRACE_PHASE_STARTED, queue_entry._trace_id,
+                queue_entry._parent_id, queue_entry._label, false);
+        previous_span = task_scheduler_trace_push_span(queue_entry._trace_id);
         this->set_error(ER_SUCCESS);
-        if (task)
-            task();
+        if (queue_entry._function)
+            queue_entry._function();
+        task_scheduler_trace_pop_span(previous_span);
         if (!this->update_worker_counters(-1, 1))
             return ;
+        this->trace_emit_event(FT_TASK_TRACE_PHASE_FINISHED, queue_entry._trace_id,
+                queue_entry._parent_id, queue_entry._label, false);
     }
     (void)this->update_worker_counters(0, -1);
     return ;
@@ -553,6 +562,10 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
     size_t index;
     ft_sharedptr<ft_scheduled_task_state> state_copy;
     ft_scheduled_task_state *state_pointer;
+    unsigned long long cancelled_trace_id;
+    unsigned long long cancelled_parent_id;
+    const char *cancelled_label;
+    bool should_emit_cancel;
 
     if (!state)
     {
@@ -584,6 +597,10 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
     }
     index = 0;
     removed_entry = false;
+    cancelled_trace_id = 0;
+    cancelled_parent_id = 0;
+    cancelled_label = ft_nullptr;
+    should_emit_cancel = false;
     while (true)
     {
         size_t size;
@@ -601,6 +618,9 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
             break;
         if (this->_scheduled[index]._state.get() == state_pointer)
         {
+            cancelled_trace_id = this->_scheduled[index]._trace_id;
+            cancelled_parent_id = this->_scheduled[index]._parent_id;
+            cancelled_label = this->_scheduled[index]._label;
             if (!this->scheduled_remove_index(index))
             {
                 if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
@@ -610,6 +630,7 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
                 return (false);
             }
             removed_entry = true;
+            should_emit_cancel = true;
             break;
         }
         index++;
@@ -628,6 +649,11 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
     {
         this->set_error(ER_SUCCESS);
         return (true);
+    }
+    if (should_emit_cancel)
+    {
+        this->trace_emit_event(FT_TASK_TRACE_PHASE_CANCELLED, cancelled_trace_id,
+                cancelled_parent_id, cancelled_label, false);
     }
     this->set_error(ER_SUCCESS);
     return (true);
@@ -795,6 +821,9 @@ void ft_task_scheduler::timer_loop()
                     this->set_error(this->_scheduled_mutex.get_error());
                     return ;
                 }
+                this->trace_emit_event(FT_TASK_TRACE_PHASE_CANCELLED,
+                        expired_task._trace_id, expired_task._parent_id,
+                        expired_task._label, true);
                 if (original_function)
                     original_function();
                 if (!this->_running.load())
@@ -831,26 +860,38 @@ void ft_task_scheduler::timer_loop()
                     if (should_reschedule)
                     {
                         t_monotonic_time_point updated_time;
+                        unsigned long long previous_trace_id;
+                        unsigned long long new_trace_id;
+                        const char *reschedule_label;
 
                         updated_time = time_monotonic_point_add_ms(time_monotonic_point_now(),
                                 expired_task._interval_ms);
                         expired_task._time = updated_time;
                         expired_task._function = std::move(original_function);
+                        previous_trace_id = expired_task._trace_id;
+                        new_trace_id = task_scheduler_trace_generate_span_id();
+                        reschedule_label = expired_task._label;
+                        expired_task._trace_id = new_trace_id;
+                        expired_task._parent_id = previous_trace_id;
+                        expired_task._label = reschedule_label;
                         if (!this->scheduled_heap_push(std::move(expired_task)))
                             this->set_error(this->_scheduled.get_error());
+                        else
+                            this->trace_emit_event(FT_TASK_TRACE_PHASE_TIMER_REGISTERED,
+                                    new_trace_id, previous_trace_id, reschedule_label, true);
                     }
                 }
                 continue;
             }
-            ft_function<void()> queue_function;
+            task_queue_entry queue_entry;
 
-            queue_function = expired_task._function;
-            if (queue_function.get_error() != ER_SUCCESS)
+            queue_entry._function = expired_task._function;
+            if (queue_entry._function.get_error() != ER_SUCCESS)
             {
                 int copy_error;
                 ft_function<void()> original_function;
 
-                copy_error = queue_function.get_error();
+                copy_error = queue_entry._function.get_error();
                 this->set_error(copy_error);
                 original_function = std::move(expired_task._function);
                 if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
@@ -910,16 +951,31 @@ void ft_task_scheduler::timer_loop()
                 this->set_error(this->_scheduled_mutex.get_error());
                 return ;
             }
-            this->_queue.push(std::move(queue_function));
+            queue_entry._trace_id = expired_task._trace_id;
+            queue_entry._parent_id = expired_task._parent_id;
+            queue_entry._label = expired_task._label;
+            this->trace_emit_event(FT_TASK_TRACE_PHASE_TIMER_TRIGGERED,
+                    queue_entry._trace_id, queue_entry._parent_id,
+                    queue_entry._label, true);
+            this->_queue.push(std::move(queue_entry));
             if (this->_queue.get_error() != ER_SUCCESS)
             {
                 this->set_error(this->_queue.get_error());
+                this->trace_emit_event(FT_TASK_TRACE_PHASE_CANCELLED,
+                        expired_task._trace_id, expired_task._parent_id,
+                        expired_task._label, true);
                 if (expired_task._function)
                     expired_task._function();
             }
             else
             {
-                if (!this->update_queue_size(1))
+                bool metrics_updated;
+
+                metrics_updated = this->update_queue_size(1);
+                this->trace_emit_event(FT_TASK_TRACE_PHASE_ENQUEUED,
+                        expired_task._trace_id, expired_task._parent_id,
+                        expired_task._label, true);
+                if (!metrics_updated)
                     return ;
                 this->set_error(ER_SUCCESS);
             }
@@ -957,12 +1013,24 @@ void ft_task_scheduler::timer_loop()
                 if (should_reschedule)
                 {
                     t_monotonic_time_point updated_time;
+                    unsigned long long previous_trace_id;
+                    unsigned long long new_trace_id;
+                    const char *reschedule_label;
 
                     updated_time = time_monotonic_point_add_ms(time_monotonic_point_now(),
                             expired_task._interval_ms);
                     expired_task._time = updated_time;
+                    previous_trace_id = expired_task._trace_id;
+                    new_trace_id = task_scheduler_trace_generate_span_id();
+                    reschedule_label = expired_task._label;
+                    expired_task._trace_id = new_trace_id;
+                    expired_task._parent_id = previous_trace_id;
+                    expired_task._label = reschedule_label;
                     if (!this->scheduled_heap_push(std::move(expired_task)))
                         this->set_error(this->_scheduled.get_error());
+                    else
+                        this->trace_emit_event(FT_TASK_TRACE_PHASE_TIMER_REGISTERED,
+                                new_trace_id, previous_trace_id, reschedule_label, true);
                 }
             }
             continue;
@@ -973,6 +1041,52 @@ void ft_task_scheduler::timer_loop()
             return ;
         }
     }
+    return ;
+}
+
+bool ft_task_scheduler::capture_metrics(ft_task_trace_event &event) const
+{
+    if (this->_queue_metrics_mutex.lock(THREAD_ID) != FT_SUCCESS)
+        return (false);
+    event.queue_depth = this->_queue_size_counter;
+    if (this->_queue_metrics_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+        return (false);
+    if (this->_scheduled_mutex.lock(THREAD_ID) != FT_SUCCESS)
+        return (false);
+    event.scheduled_depth = this->_scheduled_size_counter;
+    if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+        return (false);
+    if (this->_worker_metrics_mutex.lock(THREAD_ID) != FT_SUCCESS)
+        return (false);
+    event.worker_active_count = this->_worker_active_counter;
+    event.worker_idle_count = this->_worker_idle_counter;
+    if (this->_worker_metrics_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+        return (false);
+    return (true);
+}
+
+void ft_task_scheduler::trace_emit_event(e_ft_task_trace_phase phase, unsigned long long trace_id,
+        unsigned long long parent_id, const char *label, bool timer_thread)
+{
+    ft_task_trace_event event;
+    bool captured;
+    t_thread_id thread_identifier;
+
+    event.phase = phase;
+    event.trace_id = trace_id;
+    event.parent_id = parent_id;
+    event.label = label;
+    event.timestamp = time_monotonic_point_now();
+    thread_identifier = ft_this_thread_get_id();
+    event.thread_id = thread_identifier.native_id;
+    event.queue_depth = -1;
+    event.scheduled_depth = -1;
+    event.worker_active_count = -1;
+    event.worker_idle_count = -1;
+    event.timer_thread = timer_thread;
+    captured = this->capture_metrics(event);
+    (void)captured;
+    task_scheduler_trace_emit(event);
     return ;
 }
 
