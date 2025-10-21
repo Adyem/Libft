@@ -12,6 +12,23 @@
 
 typedef void (*api_callback)(char *body, int status, void *user_data);
 
+struct api_tls_certificate_diagnostics
+{
+    ft_string subject;
+    ft_string issuer;
+    ft_string serial_number;
+    ft_string not_before;
+    ft_string not_after;
+    ft_string fingerprint_sha256;
+};
+
+struct api_tls_handshake_diagnostics
+{
+    ft_string protocol;
+    ft_string cipher;
+    ft_vector<api_tls_certificate_diagnostics> certificates;
+};
+
 class api_tls_client
 {
     private:
@@ -22,8 +39,10 @@ class api_tls_client
         int _timeout;
         mutable int _error_code;
         ft_vector<ft_thread> _async_workers;
+        api_tls_handshake_diagnostics _handshake_diagnostics;
 
         void set_error(int error_code) const noexcept;
+        bool populate_handshake_diagnostics();
 
     public:
         api_tls_client(const char *host, uint16_t port, int timeout = 60000);
@@ -45,6 +64,8 @@ class api_tls_client
 
         int get_error() const noexcept;
         const char *get_error_str() const noexcept;
+        bool refresh_handshake_diagnostics();
+        const api_tls_handshake_diagnostics &get_handshake_diagnostics() const noexcept;
 };
 
 #endif

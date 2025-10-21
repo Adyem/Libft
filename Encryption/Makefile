@@ -7,6 +7,8 @@ SRCS := encryption_basic_encryption.cpp \
         encryption_rsa.cpp \
         encryption_secure_wipe.cpp \
         encryption_sha256.cpp \
+        encryption_sha3.cpp \
+        encryption_blake2.cpp \
         encryption_sha1.cpp \
         encryption_hmac_sha256.cpp \
         encryption_key_management.cpp
@@ -16,7 +18,10 @@ TOTAL_SRCS := $(words $(SRCS))
 
 HEADERS := basic_encryption.hpp \
         encryption_secure_wipe.hpp \
-        encryption_key_management.hpp
+        encryption_key_management.hpp \
+        encryption_sha3.hpp \
+        encryption_blake2.hpp \
+        encryption_hmac_sha256.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
