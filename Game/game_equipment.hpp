@@ -4,6 +4,8 @@
 #include "game_item.hpp"
 #include "../Template/shared_ptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 
 enum ft_equipment_slot
 {
@@ -19,9 +21,13 @@ class ft_equipment
         ft_sharedptr<ft_item> _chest;
         ft_sharedptr<ft_item> _weapon;
         mutable int           _error_code;
+        mutable pt_mutex      _mutex;
 
         void set_error(int err) const noexcept;
         bool validate_item(const ft_sharedptr<ft_item> &item) noexcept;
+        static int lock_pair(const ft_equipment &first, const ft_equipment &second,
+                ft_unique_lock<pt_mutex> &first_guard,
+                ft_unique_lock<pt_mutex> &second_guard);
 
     public:
         ft_equipment() noexcept;

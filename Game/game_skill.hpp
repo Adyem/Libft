@@ -2,6 +2,8 @@
 # define GAME_SKILL_HPP
 
 #include "../Errno/errno.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 
 class ft_skill
 {
@@ -14,8 +16,12 @@ class ft_skill
         int _modifier3;
         int _modifier4;
         mutable int _error;
+        mutable pt_mutex _mutex;
 
         void set_error(int err) const noexcept;
+        static int lock_pair(const ft_skill &first, const ft_skill &second,
+                ft_unique_lock<pt_mutex> &first_guard,
+                ft_unique_lock<pt_mutex> &second_guard);
 
     public:
         ft_skill() noexcept;

@@ -3,6 +3,8 @@
 
 #include <cstdint>
 #include "../Errno/errno.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 
 class ft_upgrade
 {
@@ -14,13 +16,17 @@ class ft_upgrade
         int      _modifier2;
         int      _modifier3;
         int      _modifier4;
-        mutable int _error;
+        mutable int     _error;
+        mutable pt_mutex _mutex;
 
         void set_error(int err) const noexcept;
+        static int lock_pair(const ft_upgrade &first, const ft_upgrade &second,
+                ft_unique_lock<pt_mutex> &first_guard,
+                ft_unique_lock<pt_mutex> &second_guard);
 
     public:
         ft_upgrade() noexcept;
-        virtual ~ft_upgrade() = default;
+        virtual ~ft_upgrade() noexcept;
         ft_upgrade(const ft_upgrade &other) noexcept;
         ft_upgrade &operator=(const ft_upgrade &other) noexcept;
         ft_upgrade(ft_upgrade &&other) noexcept;

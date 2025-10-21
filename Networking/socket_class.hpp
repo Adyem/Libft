@@ -3,6 +3,8 @@
 
 #include "networking.hpp"
 #include "../Template/vector.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 
 #ifdef _WIN32
 # include <winsock2.h>
@@ -28,11 +30,23 @@ class ft_socket
         int        accept_connection();
         void     set_error(int error_code) const noexcept;
         void     reset_to_empty_state();
+        void     reset_to_empty_state_locked();
+        static int lock_pair(const ft_socket &first, const ft_socket &second,
+                ft_unique_lock<pt_mutex> &first_guard,
+                ft_unique_lock<pt_mutex> &second_guard);
+        static void sleep_backoff();
+        static void restore_errno(ft_unique_lock<pt_mutex> &guard,
+                int entry_errno) noexcept;
+        ssize_t send_data_locked(const void *data, size_t size, int flags);
+        ssize_t send_all_locked(const void *data, size_t size, int flags);
+        ssize_t receive_data_locked(void *buffer, size_t size, int flags);
+        bool close_socket_locked();
 
         struct sockaddr_storage _address;
         ft_vector<ft_socket>     _connected;
         int                         _socket_fd;
         mutable int             _error_code;
+        mutable pt_mutex        _mutex;
 
         ft_socket(int fd, const sockaddr_storage &addr);
         ft_socket(const ft_socket &other) = delete;

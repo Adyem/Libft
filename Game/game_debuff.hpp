@@ -1,6 +1,9 @@
 #ifndef GAME_DEBUFF_HPP
 # define GAME_DEBUFF_HPP
 
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
+
 class ft_debuff
 {
     private:
@@ -11,8 +14,12 @@ class ft_debuff
         int _modifier3;
         int _modifier4;
         mutable int _error;
+        mutable pt_mutex _mutex;
 
         void set_error(int err) const noexcept;
+        static int lock_pair(const ft_debuff &first, const ft_debuff &second,
+                ft_unique_lock<pt_mutex> &first_guard,
+                ft_unique_lock<pt_mutex> &second_guard);
 
     public:
         ft_debuff() noexcept;
