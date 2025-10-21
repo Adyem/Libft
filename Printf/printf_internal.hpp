@@ -21,13 +21,9 @@ typedef enum
 size_t ft_strlen_printf(const char *string);
 void ft_putchar_fd(const char character, int fd, size_t *count);
 void ft_putstr_fd(const char *string, int fd, size_t *count);
-void ft_putnbr_fd_recursive(long number, int fd, size_t *count);
 void ft_putnbr_fd(long number, int fd, size_t *count);
-void ft_putunsigned_fd_recursive(uintmax_t number, int fd, size_t *count);
 void ft_putunsigned_fd(uintmax_t number, int fd, size_t *count);
-void ft_puthex_fd_recursive(uintmax_t number, int fd, bool uppercase, size_t *count);
 void ft_puthex_fd(uintmax_t number, int fd, bool uppercase, size_t *count);
-void ft_putoctal_fd_recursive(uintmax_t number, int fd, size_t *count);
 void ft_putoctal_fd(uintmax_t number, int fd, size_t *count);
 void ft_putptr_fd(void *pointer, int fd, size_t *count);
 

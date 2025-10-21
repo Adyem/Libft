@@ -64,6 +64,7 @@ SUBDIRS :=  CMA \
             Math \
             Geometry \
             Logger \
+            Observability \
             System_utils \
             Printf \
             ReadLine \
@@ -83,6 +84,7 @@ LIB_BASES := \
   Math/Math \
   Geometry/geometry \
   Logger/Logger \
+  Observability/Observability \
   System_utils/System_utils \
   Printf/Printf \
   ReadLine/ReadLine \

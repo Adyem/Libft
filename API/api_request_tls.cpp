@@ -167,14 +167,24 @@ char *api_request_https(const char *ip, uint16_t port,
         return (ft_nullptr);
     }
 
+    bool http2_used_local;
     char *result_body;
 
-    result_body = api_https_execute(connection_handle, method, path, ip,
+    http2_used_local = false;
+    result_body = api_https_execute_http2(connection_handle, method, path, ip,
             payload, headers, status, timeout, ca_certificate,
             verify_peer, ip, port, security_identity_pointer, retry_policy,
-            error_code);
+            http2_used_local, error_code);
     if (!result_body)
-        return (ft_nullptr);
+    {
+        error_code = ER_SUCCESS;
+        result_body = api_https_execute(connection_handle, method, path, ip,
+                payload, headers, status, timeout, ca_certificate,
+                verify_peer, ip, port, security_identity_pointer, retry_policy,
+                error_code);
+        if (!result_body)
+            return (ft_nullptr);
+    }
     connection_guard.set_success();
     return (result_body);
 }
@@ -435,14 +445,24 @@ bool api_request_stream_tls(const char *host, uint16_t port,
         error_code = FT_ERR_IO;
         return (false);
     }
+    bool http2_used_local;
     bool result;
 
-    result = api_https_execute_streaming(connection_handle, method, path, host,
-            payload, headers, timeout, ca_certificate, verify_peer, host,
-            port, security_identity_pointer, retry_policy, streaming_handler,
-            error_code);
+    http2_used_local = false;
+    result = api_https_execute_http2_streaming(connection_handle, method, path,
+            host, payload, headers, timeout, ca_certificate, verify_peer,
+            host, port, security_identity_pointer, retry_policy,
+            streaming_handler, http2_used_local, error_code);
     if (!result)
-        return (false);
+    {
+        error_code = ER_SUCCESS;
+        result = api_https_execute_streaming(connection_handle, method, path,
+                host, payload, headers, timeout, ca_certificate, verify_peer,
+                host, port, security_identity_pointer, retry_policy,
+                streaming_handler, error_code);
+        if (!result)
+            return (false);
+    }
     connection_guard.set_success();
     return (true);
 }
