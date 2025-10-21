@@ -38,6 +38,3 @@ int test_cma_checked_free_invalid(void)
     return (free_result == -1 && ft_errno == FT_ERR_INVALID_POINTER);
 }
 
-
-
-

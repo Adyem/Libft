@@ -1,5 +1,6 @@
 #include "game_quest.hpp"
 #include <utility>
+#include "../Template/move.hpp"
 
 ft_quest::ft_quest() noexcept
     : _id(0), _phases(0), _current_phase(0), _description(), _objective(), _reward_experience(0), _reward_items(), _error(ER_SUCCESS)
@@ -86,7 +87,7 @@ ft_quest &ft_quest::operator=(const ft_quest &other) noexcept
 }
 
 ft_quest::ft_quest(ft_quest &&other) noexcept
-    : _id(other._id), _phases(other._phases), _current_phase(other._current_phase), _description(std::move(other._description)), _objective(std::move(other._objective)), _reward_experience(other._reward_experience), _reward_items(std::move(other._reward_items)), _error(other._error)
+    : _id(other._id), _phases(other._phases), _current_phase(other._current_phase), _description(ft_move(other._description)), _objective(ft_move(other._objective)), _reward_experience(other._reward_experience), _reward_items(ft_move(other._reward_items)), _error(other._error)
 {
     if (this->_description.get_error() != ER_SUCCESS)
         this->set_error(this->_description.get_error());
@@ -114,20 +115,20 @@ ft_quest &ft_quest::operator=(ft_quest &&other) noexcept
         this->_id = other._id;
         this->_phases = other._phases;
         this->_current_phase = other._current_phase;
-        this->_description = std::move(other._description);
+        this->_description = ft_move(other._description);
         if (this->_description.get_error() != ER_SUCCESS)
         {
             this->set_error(this->_description.get_error());
             return (*this);
         }
-        this->_objective = std::move(other._objective);
+        this->_objective = ft_move(other._objective);
         if (this->_objective.get_error() != ER_SUCCESS)
         {
             this->set_error(this->_objective.get_error());
             return (*this);
         }
         this->_reward_experience = other._reward_experience;
-        this->_reward_items = std::move(other._reward_items);
+        this->_reward_items = ft_move(other._reward_items);
         if (this->_reward_items.get_error() != ER_SUCCESS)
         {
             this->set_error(this->_reward_items.get_error());

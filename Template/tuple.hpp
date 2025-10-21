@@ -11,8 +11,6 @@
 #include <new>
 #include <type_traits>
 
-
-
 template <typename... Types>
 class ft_tuple
 {
@@ -54,8 +52,6 @@ class ft_tuple
         const char* get_error_str() const;
 };
 
-
-
 template <typename... Types>
 ft_tuple<Types...>::ft_tuple()
     : _data(ft_nullptr), _error_code(ER_SUCCESS)
@@ -93,8 +89,6 @@ ft_tuple<Types...>& ft_tuple<Types...>::operator=(ft_tuple&& other) noexcept
     return (*this);
 }
 
-
-
 template <typename... Types>
 void ft_tuple<Types...>::set_error(int error) const
 {
@@ -102,8 +96,6 @@ void ft_tuple<Types...>::set_error(int error) const
     ft_errno = error;
     return ;
 }
-
-
 
 template <typename... Types>
 template <typename... Args>
@@ -117,8 +109,6 @@ ft_tuple<Types...>::ft_tuple(Args&&... args)
         construct_at(_data, std::forward<Args>(args)...);
     return ;
 }
-
-
 
 template <typename... Types>
 template <std::size_t I>
@@ -166,8 +156,6 @@ ft_tuple<Types...>::get() const
     return (ref);
 }
 
-
-
 template <typename... Types>
 template <typename T>
 T& ft_tuple<Types...>::get()
@@ -210,8 +198,6 @@ const T& ft_tuple<Types...>::get() const
     return (ref);
 }
 
-
-
 template <typename... Types>
 void ft_tuple<Types...>::reset()
 {
@@ -224,8 +210,6 @@ void ft_tuple<Types...>::reset()
     this->set_error(ER_SUCCESS);
     return ;
 }
-
-
 
 template <typename... Types>
 int ft_tuple<Types...>::get_error() const

@@ -10,8 +10,7 @@
 #include <type_traits>
 #include <new>
 
-
-
+#include "move.hpp"
 template <typename T>
 class ft_optional
 {
@@ -75,7 +74,7 @@ ft_optional<T>::ft_optional(T&& value)
         this->set_error(FT_ERR_NO_MEMORY);
     else
     {
-        construct_at(_value, std::move(value));
+        construct_at(_value, ft_move(value));
         this->set_error(ER_SUCCESS);
     }
     return ;

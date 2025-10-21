@@ -3,6 +3,7 @@
 #include "../Errno/errno.hpp"
 #include <cerrno>
 #include <fcntl.h>
+
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>
@@ -385,7 +386,6 @@ int ft_socket::bind_socket(const SocketConfig &config)
     this->set_error(ER_SUCCESS);
     return (ER_SUCCESS);
 }
-
 
 int ft_socket::listen_socket(const SocketConfig &config)
 {

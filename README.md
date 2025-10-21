@@ -5,7 +5,7 @@ It provides implementations of common libc functions, custom memory allocation h
 basic threading helpers, containers, string utilities, simple networking and more.
 The top level `Makefile` builds every submodule and links them into `Full_Libft.a`.
 The umbrella header `FullLibft.hpp` includes every component.
-Internal code uses custom replacements such as `ft_strlen`, `ft_strchr`, `ft_strstr`, and `pf_snprintf` instead of the standard library equivalents. Move semantics now rely directly on the standard `std::move` helper.
+Internal code uses custom replacements such as `ft_strlen`, `ft_strchr`, `ft_strstr`, and `pf_snprintf` instead of the standard library equivalents. Move semantics now rely on the in-house `ft_move` helper implemented in the Template module.
 All size counters rely on the `ft_size_t` typedef (aliasing `unsigned long long`) so modules share a consistent width for
 buffer lengths and digit counts.
 Header files now use class names or concise module names instead of module prefixes, except internal headers which retain their module prefix.
@@ -2255,7 +2255,7 @@ ft_crafting_ingredient ingredient_a = {1, 2, -1};
 ft_crafting_ingredient ingredient_b = {2, 1, 1};
 ingredients.push_back(ingredient_a);
 ingredients.push_back(ingredient_b);
-crafting.register_recipe(1, std::move(ingredients));
+crafting.register_recipe(1, ft_move(ingredients));
 ft_sharedptr<ft_item> sword(new ft_item());
 crafting.craft_item(inventory, 1, sword);
 ```

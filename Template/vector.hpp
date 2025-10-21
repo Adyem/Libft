@@ -8,16 +8,8 @@
 #include <cstddef>
 #include <utility>
 #include "../Libft/libft.hpp"
+#include "move.hpp"
 
-/*
-** Complexity and iterator invalidation guarantees:
-** - size, capacity, empty: O(1) without invalidation.
-** - push_back: amortized O(1); reallocation invalidates all iterators and references.
-** - pop_back: O(1); invalidates end() and references to removed element only.
-** - reserve, resize: O(n) due to element moves; reallocation invalidates all iterators and references.
-** - insert, erase: O(n) from insertion/erase position to end; invalidate iterators at or after position.
-** - clear: O(n); invalidates all iterators and references.
-*/
 template <typename ElementType>
 class ft_vector
 {
@@ -292,7 +284,7 @@ void ft_vector<ElementType>::reserve_internal(size_t new_capacity)
     {
         while (index < current_size)
         {
-            construct_at(&new_data[index], std::move(old_data[index]));
+            construct_at(&new_data[index], ft_move(old_data[index]));
             ++index;
         }
     }
@@ -402,7 +394,7 @@ typename ft_vector<ElementType>::iterator ft_vector<ElementType>::erase(iterator
     size_t shift_index = index;
     while (shift_index < this->_size - 1)
     {
-        construct_at(&this->_data[shift_index], std::move(this->_data[shift_index + 1]));
+        construct_at(&this->_data[shift_index], ft_move(this->_data[shift_index + 1]));
         destroy_at(&this->_data[shift_index + 1]);
         ++shift_index;
     }
@@ -424,11 +416,11 @@ ElementType ft_vector<ElementType>::release_at(size_t index)
         this->set_error(FT_ERR_INVALID_POINTER);
         return (ElementType());
     }
-    ElementType detached = std::move(this->_data[index]);
+    ElementType detached = ft_move(this->_data[index]);
     size_t i2 = index;
     while (i2 < this->_size - 1)
     {
-        this->_data[i2] = std::move(this->_data[i2 + 1]);
+        this->_data[i2] = ft_move(this->_data[i2 + 1]);
         ++i2;
     }
     --this->_size;

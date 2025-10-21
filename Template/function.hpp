@@ -7,6 +7,7 @@
 #include <new>
 #include <type_traits>
 #include <stdint.h>
+#include "move.hpp"
 
 template <typename Signature>
 class ft_function;
@@ -126,7 +127,7 @@ ft_function<ReturnType(Args...)>::ft_function(FunctionType function)
 {
     FunctionType *copy;
 
-    copy = new (std::nothrow) FunctionType(std::move(function));
+    copy = new (std::nothrow) FunctionType(ft_move(function));
     if (!copy)
     {
         this->set_error(FT_ERR_NO_MEMORY);

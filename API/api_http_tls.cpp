@@ -13,6 +13,8 @@
 #include "../Printf/printf.hpp"
 #include "../Time/time.hpp"
 #include <errno.h>
+#include "../Template/move.hpp"
+
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>
@@ -208,7 +210,7 @@ static bool api_https_prepare_socket(api_connection_pool_handle &connection_hand
             error_code = FT_ERR_SOCKET_CONNECT_FAILED;
         return (false);
     }
-    connection_handle.socket = std::move(new_socket);
+    connection_handle.socket = ft_move(new_socket);
     connection_handle.has_socket = true;
     connection_handle.from_pool = false;
     connection_handle.should_store = true;

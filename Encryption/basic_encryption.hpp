@@ -19,6 +19,4 @@ const char    *be_getEncryptionKey();
 void            be_set_save_game_hooks(t_be_open_function open_function,
                     t_be_write_function write_function);
 
-
-
 #endif

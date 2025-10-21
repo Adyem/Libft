@@ -12,8 +12,7 @@
 #include <new>
 #include <tuple>
 
-
-
+#include "move.hpp"
 template <typename T, typename... Ts>
 struct variant_index;
 
@@ -23,8 +22,6 @@ struct variant_index<T, T, Ts...> : std::integral_constant<size_t, 0> {};
 template <typename T, typename U, typename... Ts>
 struct variant_index<T, U, Ts...>
     : std::integral_constant<size_t, 1 + variant_index<T, Ts...>::value> {};
-
-
 
 template <size_t I, typename... Ts>
 struct variant_destroyer;
@@ -46,8 +43,6 @@ struct variant_destroyer<I, T, Ts...>
             variant_destroyer<I + 1, Ts...>::destroy(index, data);
     }
 };
-
-
 
 template <size_t I, typename... Ts>
 struct variant_visitor;
@@ -71,8 +66,6 @@ struct variant_visitor<I, T, Ts...>
             variant_visitor<I + 1, Ts...>::apply(index, data, std::forward<Visitor>(vis));
     }
 };
-
-
 
 template <typename... Types>
 class ft_variant
@@ -155,7 +148,7 @@ template <typename T>
 ft_variant<Types...>::ft_variant(T&& value)
     : ft_variant()
 {
-    this->emplace<T>(std::move(value));
+    this->emplace<T>(ft_move(value));
     return ;
 }
 

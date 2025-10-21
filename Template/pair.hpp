@@ -3,6 +3,7 @@
 
 #include <utility>
 #include "../Errno/errno.hpp"
+#include "move.hpp"
 
 template <typename KeyType, typename ValueType>
 class Pair
@@ -61,7 +62,7 @@ Pair<KeyType, ValueType>::Pair(const KeyType &input_key, const ValueType &input_
 
 template <typename KeyType, typename ValueType>
 Pair<KeyType, ValueType>::Pair(const KeyType &input_key, ValueType &&input_value)
-        : _error_code(ER_SUCCESS), key(input_key), value(std::move(input_value))
+        : _error_code(ER_SUCCESS), key(input_key), value(ft_move(input_value))
 {
     this->set_error(ER_SUCCESS);
     return ;
@@ -81,8 +82,8 @@ template <typename KeyType, typename ValueType>
 Pair<KeyType, ValueType>::Pair(Pair &&other)
         : _error_code(ER_SUCCESS), key(), value()
 {
-    this->key = std::move(other.key);
-    this->value = std::move(other.value);
+    this->key = ft_move(other.key);
+    this->value = ft_move(other.value);
     other.set_error(ER_SUCCESS);
     this->set_error(ER_SUCCESS);
     return ;
@@ -117,8 +118,8 @@ Pair<KeyType, ValueType> &Pair<KeyType, ValueType>::operator=(Pair &&other)
         this->set_error(ER_SUCCESS);
         return (*this);
     }
-    this->key = std::move(other.key);
-    this->value = std::move(other.value);
+    this->key = ft_move(other.key);
+    this->value = ft_move(other.value);
     other.set_error(ER_SUCCESS);
     this->set_error(ER_SUCCESS);
     return (*this);
@@ -151,7 +152,7 @@ void Pair<KeyType, ValueType>::set_key(const KeyType &input_key)
 template <typename KeyType, typename ValueType>
 void Pair<KeyType, ValueType>::set_key(KeyType &&input_key)
 {
-    this->key = std::move(input_key);
+    this->key = ft_move(input_key);
     this->set_error(ER_SUCCESS);
     return ;
 }
@@ -167,7 +168,7 @@ void Pair<KeyType, ValueType>::set_value(const ValueType &input_value)
 template <typename KeyType, typename ValueType>
 void Pair<KeyType, ValueType>::set_value(ValueType &&input_value)
 {
-    this->value = std::move(input_value);
+    this->value = ft_move(input_value);
     this->set_error(ER_SUCCESS);
     return ;
 }
@@ -194,24 +195,6 @@ struct ft_integral_constant
 
 typedef ft_integral_constant<bool, true> ft_true_type;
 typedef ft_integral_constant<bool, false> ft_false_type;
-
-template <typename Type>
-struct ft_remove_reference
-{
-    typedef Type type;
-};
-
-template <typename Type>
-struct ft_remove_reference<Type &>
-{
-    typedef Type type;
-};
-
-template <typename Type>
-struct ft_remove_reference<Type &&>
-{
-    typedef Type type;
-};
 
 template <typename Type>
 struct ft_remove_const

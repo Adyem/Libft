@@ -107,7 +107,6 @@ int test_game_simulation(void)
     return (1);
 }
 
-
 int test_item_basic(void)
 {
     ft_item item;

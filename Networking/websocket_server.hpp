@@ -3,6 +3,7 @@
 
 #include "../CPP_class/class_string_class.hpp"
 #include <cstdint>
+
 #ifdef _WIN32
 # include <winsock2.h>
 #else

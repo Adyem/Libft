@@ -7,7 +7,6 @@
 
 #include "../CPP_class/class_string_class.hpp"
 
-
 typedef FILE *(*t_pf_tmpfile_function)(void);
 typedef int (*t_pf_fflush_function)(FILE *);
 typedef long (*t_pf_ftell_function)(FILE *);

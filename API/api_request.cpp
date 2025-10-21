@@ -11,6 +11,8 @@
 #include "../Time/time.hpp"
 #include <errno.h>
 #include <utility>
+#include "../Template/move.hpp"
+
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>
@@ -126,7 +128,7 @@ bool api_request_stream(const char *ip, uint16_t port,
                 error_code = FT_ERR_SOCKET_CONNECT_FAILED;
             return (false);
         }
-        connection_handle.socket = std::move(new_socket);
+        connection_handle.socket = ft_move(new_socket);
         connection_handle.has_socket = true;
     }
     struct api_connection_return_guard
@@ -244,7 +246,7 @@ bool api_request_stream_http2(const char *ip, uint16_t port,
                 error_code = FT_ERR_SOCKET_CONNECT_FAILED;
             return (false);
         }
-        connection_handle.socket = std::move(new_socket);
+        connection_handle.socket = ft_move(new_socket);
         connection_handle.has_socket = true;
     }
     struct api_connection_return_guard
@@ -365,7 +367,7 @@ char *api_request_string(const char *ip, uint16_t port,
                 error_code = FT_ERR_SOCKET_CONNECT_FAILED;
             return (ft_nullptr);
         }
-        connection_handle.socket = std::move(new_socket);
+        connection_handle.socket = ft_move(new_socket);
         connection_handle.has_socket = true;
     }
     struct api_connection_return_guard
@@ -484,7 +486,7 @@ char *api_request_string_http2(const char *ip, uint16_t port,
         }
         if (!downgrade_due_to_connect_failure)
         {
-            connection_handle.socket = std::move(new_socket);
+            connection_handle.socket = ft_move(new_socket);
             connection_handle.has_socket = true;
         }
     }

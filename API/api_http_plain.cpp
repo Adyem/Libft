@@ -12,6 +12,8 @@
 #include "../Time/time.hpp"
 #include <errno.h>
 #include <utility>
+#include "../Template/move.hpp"
+
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>
@@ -121,7 +123,7 @@ bool api_http_prepare_plain_socket(
             error_code = FT_ERR_SOCKET_CONNECT_FAILED;
         return (false);
     }
-    connection_handle.socket = std::move(new_socket);
+    connection_handle.socket = ft_move(new_socket);
     connection_handle.has_socket = true;
     connection_handle.from_pool = false;
     connection_handle.should_store = true;

@@ -8,8 +8,6 @@
 #include "../Libft/libft.hpp"
 #include <cstddef>
 
-
-
 template <typename ElementType>
 class ft_matrix
 {
@@ -46,8 +44,6 @@ class ft_matrix
         const char* get_error_str() const;
         void clear();
 };
-
-
 
 template <typename ElementType>
 ft_matrix<ElementType>::ft_matrix(size_t rows, size_t cols)

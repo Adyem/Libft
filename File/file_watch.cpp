@@ -1,6 +1,8 @@
 #include "file_watch.hpp"
 #include <utility>
 #include "../PThread/unique_lock.hpp"
+#include "../Template/move.hpp"
+
 #ifdef __linux__
 #include <sys/inotify.h>
 #include <unistd.h>
@@ -167,7 +169,7 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
         ft_errno = new_thread.get_error();
         return (-1);
     }
-    this->_thread = ft_thread(std::move(new_thread));
+    this->_thread = ft_thread(ft_move(new_thread));
     this->set_error(ER_SUCCESS);
     mutex_guard.unlock();
     ft_errno = ER_SUCCESS;
@@ -194,7 +196,7 @@ void ft_file_watch::stop()
     this->_stopped = true;
     this->_running = false;
     this->close_handles_locked();
-    thread_to_join = ft_thread(std::move(this->_thread));
+    thread_to_join = ft_thread(ft_move(this->_thread));
     this->_thread = ft_thread();
     this->_callback = ft_nullptr;
     this->_user_data = ft_nullptr;

@@ -12,8 +12,7 @@
 #include <utility>
 #include "vector.hpp"
 
-
-
+#include "move.hpp"
 template <typename VertexType>
 class ft_graph
 {
@@ -165,7 +164,7 @@ bool ft_graph<VertexType>::ensure_node_capacity(size_t desired)
     size_t node_index = 0;
     while (node_index < this->_size)
     {
-        construct_at(&newNodes[node_index]._value, std::move(this->_nodes[node_index]._value));
+        construct_at(&newNodes[node_index]._value, ft_move(this->_nodes[node_index]._value));
         newNodes[node_index]._edges = this->_nodes[node_index]._edges;
         newNodes[node_index]._degree = this->_nodes[node_index]._degree;
         newNodes[node_index]._capacity = this->_nodes[node_index]._capacity;
@@ -235,7 +234,7 @@ size_t ft_graph<VertexType>::add_vertex(VertexType&& value)
 {
     if (!ensure_node_capacity(this->_size + 1))
         return (this->_size);
-    construct_at(&this->_nodes[this->_size]._value, std::move(value));
+    construct_at(&this->_nodes[this->_size]._value, ft_move(value));
     this->_nodes[this->_size]._edges = ft_nullptr;
     this->_nodes[this->_size]._degree = 0;
     this->_nodes[this->_size]._capacity = 0;

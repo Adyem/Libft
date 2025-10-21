@@ -12,6 +12,8 @@
 #include <cstring>
 #include <utility>
 #include <errno.h>
+#include "../Template/move.hpp"
+
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>
@@ -40,7 +42,7 @@ struct networking_dns_cache_entry
     networking_dns_cache_entry &operator=(const networking_dns_cache_entry&) = delete;
 
     networking_dns_cache_entry(networking_dns_cache_entry&& other) noexcept
-        : addresses(std::move(other.addresses)), expiration_ms(other.expiration_ms)
+        : addresses(ft_move(other.addresses)), expiration_ms(other.expiration_ms)
     {
         other.expiration_ms = 0;
         return ;
@@ -50,7 +52,7 @@ struct networking_dns_cache_entry
     {
         if (this != &other)
         {
-            this->addresses = std::move(other.addresses);
+            this->addresses = ft_move(other.addresses);
             this->expiration_ms = other.expiration_ms;
             other.expiration_ms = 0;
         }
@@ -427,7 +429,7 @@ bool networking_dns_resolve(const char *host, const char *service,
             if (update_lock.get_error() == ER_SUCCESS)
             {
                 g_networking_dns_cache.remove(cache_key);
-                g_networking_dns_cache.insert(cache_key, std::move(cache_value));
+                g_networking_dns_cache.insert(cache_key, ft_move(cache_value));
                 update_lock.unlock();
             }
         }
