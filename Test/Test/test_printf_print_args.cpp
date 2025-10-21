@@ -6,6 +6,8 @@
 #include <cstddef>
 #include <unistd.h>
 #include <cstdio>
+#include <climits>
+#include <limits>
 
 static int create_pipe(int pipe_fds[2])
 {
@@ -86,6 +88,32 @@ FT_TEST(test_ft_putnbr_fd_writes_negative_number, "ft_putnbr_fd prints negative 
     return (1);
 }
 
+FT_TEST(test_ft_putnbr_fd_handles_long_min, "ft_putnbr_fd prints LONG_MIN without overflow")
+{
+    int pipe_fds[2];
+    size_t write_count;
+    ssize_t bytes_read;
+    char buffer[64];
+    char expected[64];
+    int expected_length;
+    long value;
+
+    FT_ASSERT(create_pipe(pipe_fds));
+    value = LONG_MIN;
+    expected_length = std::snprintf(expected, sizeof(expected), "%ld", value);
+    FT_ASSERT(expected_length > 0);
+    write_count = 0;
+    ft_putnbr_fd(value, pipe_fds[1], &write_count);
+    FT_ASSERT_EQ(static_cast<size_t>(expected_length), write_count);
+    FT_ASSERT(close_pipe_end(pipe_fds[1]));
+    FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, sizeof(buffer) - 1, &bytes_read));
+    FT_ASSERT(bytes_read >= 0);
+    buffer[static_cast<size_t>(bytes_read)] = '\0';
+    FT_ASSERT_EQ(0, ft_strcmp(buffer, expected));
+    FT_ASSERT(close_pipe_end(pipe_fds[0]));
+    return (1);
+}
+
 FT_TEST(test_ft_puthex_fd_respects_uppercase_flag, "ft_puthex_fd selects uppercase digits when requested")
 {
     int pipe_fds[2];
@@ -122,6 +150,26 @@ FT_TEST(test_ft_puthex_fd_lowercase_output, "ft_puthex_fd emits lowercase digits
     FT_ASSERT(bytes_read >= 0);
     buffer[static_cast<size_t>(bytes_read)] = '\0';
     FT_ASSERT_EQ(0, ft_strcmp(buffer, "beef"));
+    FT_ASSERT(close_pipe_end(pipe_fds[0]));
+    return (1);
+}
+
+FT_TEST(test_ft_puthex_fd_zero_value, "ft_puthex_fd prints zero without extra digits")
+{
+    int pipe_fds[2];
+    size_t write_count;
+    ssize_t bytes_read;
+    char buffer[8];
+
+    FT_ASSERT(create_pipe(pipe_fds));
+    write_count = 0;
+    ft_puthex_fd(0, pipe_fds[1], false, &write_count);
+    FT_ASSERT_EQ(static_cast<size_t>(1), write_count);
+    FT_ASSERT(close_pipe_end(pipe_fds[1]));
+    FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, sizeof(buffer) - 1, &bytes_read));
+    FT_ASSERT(bytes_read >= 0);
+    buffer[static_cast<size_t>(bytes_read)] = '\0';
+    FT_ASSERT_EQ(0, ft_strcmp(buffer, "0"));
     FT_ASSERT(close_pipe_end(pipe_fds[0]));
     return (1);
 }
@@ -230,6 +278,32 @@ FT_TEST(test_ft_putunsigned_fd_prints_decimal, "ft_putunsigned_fd renders the fu
     FT_ASSERT(expected_length > 0);
     write_count = 0;
     ft_putunsigned_fd(1234567890, pipe_fds[1], &write_count);
+    FT_ASSERT_EQ(static_cast<size_t>(expected_length), write_count);
+    FT_ASSERT(close_pipe_end(pipe_fds[1]));
+    FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, sizeof(buffer) - 1, &bytes_read));
+    FT_ASSERT(bytes_read >= 0);
+    buffer[static_cast<size_t>(bytes_read)] = '\0';
+    FT_ASSERT_EQ(0, ft_strcmp(buffer, expected));
+    FT_ASSERT(close_pipe_end(pipe_fds[0]));
+    return (1);
+}
+
+FT_TEST(test_ft_putunsigned_fd_uintmax_max, "ft_putunsigned_fd prints UINTMAX_MAX accurately")
+{
+    int pipe_fds[2];
+    size_t write_count;
+    ssize_t bytes_read;
+    char buffer[128];
+    char expected[128];
+    int expected_length;
+    uintmax_t value;
+
+    FT_ASSERT(create_pipe(pipe_fds));
+    value = std::numeric_limits<uintmax_t>::max();
+    expected_length = std::snprintf(expected, sizeof(expected), "%ju", static_cast<uintmax_t>(value));
+    FT_ASSERT(expected_length > 0);
+    write_count = 0;
+    ft_putunsigned_fd(value, pipe_fds[1], &write_count);
     FT_ASSERT_EQ(static_cast<size_t>(expected_length), write_count);
     FT_ASSERT(close_pipe_end(pipe_fds[1]));
     FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, sizeof(buffer) - 1, &bytes_read));

@@ -52,6 +52,8 @@ Networking/networking.hpp
 Networking/socket_class.hpp
 Networking/ssl_wrapper.hpp
 Networking/udp_socket.hpp
+Observability/observability_task_scheduler_bridge.hpp
+PThread/lock_guard.hpp
 PThread/mutex.hpp
 PThread/pthread.hpp
 PThread/task_scheduler.hpp

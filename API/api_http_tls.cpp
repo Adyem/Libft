@@ -215,6 +215,7 @@ static bool api_https_prepare_socket(api_connection_pool_handle &connection_hand
     connection_handle.security_mode = api_connection_security_mode::TLS;
     connection_handle.tls_session = ft_nullptr;
     connection_handle.tls_context = ft_nullptr;
+    connection_handle.negotiated_http2 = false;
     return (true);
 }
 
@@ -334,6 +335,18 @@ static bool api_https_ensure_session(
         SSL_CTX_free(context);
         return (false);
     }
+    bool alpn_selected_http2;
+    int alpn_error_code;
+
+    alpn_selected_http2 = false;
+    alpn_error_code = ER_SUCCESS;
+    if (!http2_select_alpn_protocol(ssl_session, alpn_selected_http2,
+            alpn_error_code))
+    {
+        connection_handle.negotiated_http2 = false;
+        if (alpn_error_code != ER_SUCCESS)
+            ft_errno = alpn_error_code;
+    }
     if (SSL_set_fd(ssl_session, socket_wrapper.get_fd()) != 1)
     {
         api_request_set_ssl_error(ssl_session, 0);
@@ -353,8 +366,24 @@ static bool api_https_ensure_session(
         SSL_shutdown(ssl_session);
         SSL_free(ssl_session);
         SSL_CTX_free(context);
+        connection_handle.negotiated_http2 = false;
         return (false);
     }
+    const unsigned char *alpn_protocol;
+    unsigned int alpn_length;
+
+    alpn_protocol = ft_nullptr;
+    alpn_length = 0;
+    SSL_get0_alpn_selected(ssl_session, &alpn_protocol, &alpn_length);
+    if (alpn_protocol && alpn_length == 2)
+    {
+        if (alpn_protocol[0] == 'h' && alpn_protocol[1] == '2')
+            connection_handle.negotiated_http2 = true;
+        else
+            connection_handle.negotiated_http2 = false;
+    }
+    else
+        connection_handle.negotiated_http2 = false;
     connection_handle.tls_context = context;
     connection_handle.tls_session = ssl_session;
     if (!api_connection_pool_track_tls_session(connection_handle.tls_session))
@@ -364,6 +393,7 @@ static bool api_https_ensure_session(
         SSL_CTX_free(context);
         connection_handle.tls_context = ft_nullptr;
         connection_handle.tls_session = ft_nullptr;
+        connection_handle.negotiated_http2 = false;
         error_code = FT_ERR_IO;
         return (false);
     }
@@ -1161,10 +1191,23 @@ bool api_https_execute_http2_streaming(
     int &error_code)
 {
     used_http2 = false;
-    return (api_https_execute_streaming(connection_handle, method, path,
+    if (!api_https_ensure_session(connection_handle, timeout,
+            ca_certificate, verify_peer, error_code))
+        return (false);
+    if (!connection_handle.negotiated_http2)
+    {
+        error_code = ER_SUCCESS;
+        return (false);
+    }
+    bool result;
+
+    result = api_https_execute_streaming(connection_handle, method, path,
             host_header, payload, headers, timeout, ca_certificate,
             verify_peer, host, port, security_identity, retry_policy,
-            streaming_handler, error_code));
+            streaming_handler, error_code);
+    if (result)
+        used_http2 = true;
+    return (result);
 }
 
 static char *api_https_execute_http2_once(
@@ -1189,6 +1232,11 @@ static char *api_https_execute_http2_once(
         error_code = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
+    if (!api_https_ensure_session(connection_handle, timeout,
+            ca_certificate, verify_peer, error_code))
+        return (ft_nullptr);
+    if (!connection_handle.negotiated_http2)
+        return (ft_nullptr);
     field_entry.name = ":method";
     field_entry.value = method;
     header_fields.push_back(field_entry);
