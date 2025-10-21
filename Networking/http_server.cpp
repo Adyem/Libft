@@ -2,6 +2,8 @@
 #include "networking.hpp"
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
+#include "../Time/time.hpp"
+#include "../Observability/observability_networking_metrics.hpp"
 #include <cstring>
 #include <cstdio>
 #include <cerrno>
@@ -74,8 +76,48 @@ static int parse_request(const ft_string &request, ft_string &body, bool &is_pos
     return (ER_SUCCESS);
 }
 
+static void http_server_record_metrics(const char *method, size_t request_bytes,
+    size_t response_bytes, int status_code, int result,
+    t_monotonic_time_point start_time)
+{
+    ft_networking_observability_sample sample;
+    t_monotonic_time_point finish_time;
+    long long duration_ms;
+    int error_code;
+
+    finish_time = time_monotonic_point_now();
+    duration_ms = time_monotonic_point_diff_ms(start_time, finish_time);
+    if (duration_ms < 0)
+        duration_ms = 0;
+    error_code = ER_SUCCESS;
+    if (result != 0)
+        error_code = ft_errno;
+    sample.labels.component = "http_server";
+    sample.labels.operation = method;
+    sample.labels.target = "listener";
+    sample.labels.resource = NULL;
+    sample.duration_ms = duration_ms;
+    sample.request_bytes = request_bytes;
+    sample.response_bytes = response_bytes;
+    sample.status_code = status_code;
+    sample.error_code = error_code;
+    if (error_code == ER_SUCCESS)
+    {
+        sample.success = true;
+        sample.error_tag = "ok";
+    }
+    else
+    {
+        sample.success = false;
+        sample.error_tag = ft_strerror(error_code);
+    }
+    observability_networking_metrics_record(sample);
+    return ;
+}
+
 int ft_http_server::run_once()
 {
+    t_monotonic_time_point start_time;
     struct sockaddr_storage client_address;
     socklen_t address_length;
     int client_socket;
@@ -93,7 +135,14 @@ int ft_http_server::run_once()
     size_t expected_body_length;
     size_t header_length;
     const size_t max_request_size = 65536;
+    bool metrics_enabled;
+    const char *method_label;
+    size_t request_bytes;
+    size_t response_bytes;
+    int status_code_value;
+    int final_result;
 
+    start_time = time_monotonic_point_now();
     address_length = sizeof(client_address);
     client_socket = nw_accept(this->_server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&client_address), &address_length);
     if (client_socket < 0)
@@ -123,6 +172,12 @@ int ft_http_server::run_once()
 #endif
         return (1);
     }
+    metrics_enabled = true;
+    method_label = "UNKNOWN";
+    request_bytes = 0;
+    response_bytes = 0;
+    status_code_value = 0;
+    final_result = 1;
     header_complete = false;
     request_complete = false;
     has_content_length = false;
@@ -144,13 +199,17 @@ int ft_http_server::run_once()
 #else
             this->set_error(ft_map_system_error(errno));
 #endif
-            return (1);
+            request_bytes = request.size();
+            final_result = 1;
+            goto cleanup;
         }
         if (bytes_received == 0)
         {
             nw_close(client_socket);
             this->set_error(FT_ERR_SOCKET_RECEIVE_FAILED);
-            return (1);
+            request_bytes = request.size();
+            final_result = 1;
+            goto cleanup;
         }
         buffer[bytes_received] = '\0';
         request.append(buffer);
@@ -158,7 +217,9 @@ int ft_http_server::run_once()
         {
             nw_close(client_socket);
             this->set_error(FT_ERR_INVALID_ARGUMENT);
-            return (1);
+            request_bytes = request.size();
+            final_result = 1;
+            goto cleanup;
         }
         if (header_complete == false)
         {
@@ -195,7 +256,9 @@ int ft_http_server::run_once()
                     {
                         nw_close(client_socket);
                         this->set_error(FT_ERR_INVALID_ARGUMENT);
-                        return (1);
+                        request_bytes = request.size();
+                        final_result = 1;
+                        goto cleanup;
                     }
                     has_length_digits = false;
                     expected_body_length = 0;
@@ -210,7 +273,9 @@ int ft_http_server::run_once()
                         {
                             nw_close(client_socket);
                             this->set_error(FT_ERR_INVALID_ARGUMENT);
-                            return (1);
+                            request_bytes = request.size();
+                            final_result = 1;
+                            goto cleanup;
                         }
                         expected_body_length = expected_body_length * 10 + digit_value;
                         length_value_pointer++;
@@ -219,13 +284,17 @@ int ft_http_server::run_once()
                     {
                         nw_close(client_socket);
                         this->set_error(FT_ERR_INVALID_ARGUMENT);
-                        return (1);
+                        request_bytes = request.size();
+                        final_result = 1;
+                        goto cleanup;
                     }
                     if (expected_body_length > max_request_size)
                     {
                         nw_close(client_socket);
                         this->set_error(FT_ERR_INVALID_ARGUMENT);
-                        return (1);
+                        request_bytes = request.size();
+                        final_result = 1;
+                        goto cleanup;
                     }
                     has_content_length = true;
                 }
@@ -248,6 +317,7 @@ int ft_http_server::run_once()
                 request_complete = true;
         }
     }
+    request_bytes = request.size();
     if (has_content_length != false)
     {
         size_t total_expected_size;
@@ -261,8 +331,13 @@ int ft_http_server::run_once()
     {
         nw_close(client_socket);
         this->set_error(parse_error);
-        return (1);
+        final_result = 1;
+        goto cleanup;
     }
+    if (is_post)
+        method_label = "POST";
+    else
+        method_label = "GET";
     if (is_post && !body.empty())
     {
         std::snprintf(length_string, sizeof(length_string), "%zu", body.size());
@@ -281,6 +356,7 @@ int ft_http_server::run_once()
 
     response_data = response.c_str();
     total_sent = 0;
+    response_bytes = response.size();
     while (total_sent < response.size())
     {
         send_result = nw_send(client_socket, response_data + total_sent, response.size() - total_sent, 0);
@@ -298,7 +374,8 @@ int ft_http_server::run_once()
                 this->set_error(ft_map_system_error(last_socket_error));
             else
                 this->set_error(FT_ERR_SOCKET_SEND_FAILED);
-            return (1);
+            final_result = 1;
+            goto cleanup;
         }
         total_sent += static_cast<size_t>(send_result);
     }
@@ -306,12 +383,20 @@ int ft_http_server::run_once()
     {
         nw_close(client_socket);
         this->set_error(ft_errno);
-        return (1);
+        final_result = 1;
+        goto cleanup;
     }
     nw_close(client_socket);
     ft_errno = ER_SUCCESS;
     this->_error_code = ER_SUCCESS;
-    return (0);
+    status_code_value = 200;
+    final_result = 0;
+    goto cleanup;
+
+cleanup:
+    if (metrics_enabled != false)
+        http_server_record_metrics(method_label, request_bytes, response_bytes, status_code_value, final_result, start_time);
+    return (final_result);
 }
 
 int ft_http_server::get_error() const

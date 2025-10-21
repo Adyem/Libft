@@ -6,6 +6,8 @@
 #include "aes.hpp"
 #include "rsa.hpp"
 #include "encryption_sha256.hpp"
+#include "encryption_sha3.hpp"
+#include "encryption_blake2.hpp"
 #include "encryption_hmac_sha256.hpp"
 
 typedef int (*t_be_open_function)(const char *path_name, int flags, mode_t mode);

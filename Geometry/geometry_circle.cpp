@@ -3,6 +3,7 @@
 #include "../Libft/libft.hpp"
 #include "../PThread/pthread.hpp"
 
+#include <functional>
 #include <random>
 #include <utility>
 
@@ -340,10 +341,12 @@ int circle::lock_pair(const circle &first, const circle &second,
         ft_errno = ER_SUCCESS;
         return (ER_SUCCESS);
     }
+    std::less<const circle *> circle_less;
+
     ordered_first = &first;
     ordered_second = &second;
     swapped = false;
-    if (ordered_first > ordered_second)
+    if (circle_less(ordered_second, ordered_first))
     {
         const circle *temporary;
 
@@ -381,6 +384,15 @@ int circle::lock_pair(const circle &first, const circle &second,
         {
             ft_errno = upper_guard.get_error();
             return (upper_guard.get_error());
+        }
+        if (lower_guard.owns_lock())
+        {
+            lower_guard.unlock();
+            if (lower_guard.get_error() != ER_SUCCESS)
+            {
+                ft_errno = lower_guard.get_error();
+                return (lower_guard.get_error());
+            }
         }
         geometry_circle_sleep_backoff();
     }
