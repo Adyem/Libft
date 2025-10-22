@@ -74,8 +74,9 @@ SUBDIRS :=  CMA \
             Config \
             Networking \
             API \
-             Compatebility \
-             Compression Encryption RNG JSon YAML File HTML Game Time XML Storage
+            CrossProcess \
+            Compatebility \
+            Compression Encryption RNG JSon YAML File HTML Game Time XML Storage
 
 LIB_BASES := \
   CMA/CustomMemoryAllocator \
@@ -94,12 +95,13 @@ LIB_BASES := \
   Config/config \
   Networking/networking \
   API/API \
+  CrossProcess/CrossProcess \
   Compatebility/Compatebility \
   Compression/compression \
   Encryption/encryption \
   RNG/RNG \
   JSon/JSon \
-    YAML/YAML  \
+  YAML/YAML  \
   File/file \
   HTML/HTMLParser \
   Game/Game \
