@@ -8,6 +8,8 @@
 #include "../CPP_class/class_string_class.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 
 struct json_group;
 class ft_world;
@@ -22,8 +24,13 @@ class ft_event_scheduler
     private:
         mutable ft_priority_queue<ft_sharedptr<ft_event>, ft_event_compare_ptr> _events;
         mutable int _error_code;
+        mutable pt_mutex _mutex;
 
         void set_error(int error) const noexcept;
+        static int lock_pair(const ft_event_scheduler &first,
+                const ft_event_scheduler &second,
+                ft_unique_lock<pt_mutex> &first_guard,
+                ft_unique_lock<pt_mutex> &second_guard);
 
     public:
         ft_event_scheduler() noexcept;

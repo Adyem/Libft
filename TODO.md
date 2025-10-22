@@ -341,10 +341,10 @@
 - [x] Make `ft_inventory` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_equipment` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_upgrade` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_world` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_event` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_event_scheduler` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_map3d` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_world` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_event` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_event_scheduler` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_map3d` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_pathfinding` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_quest` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_reputation` thread safe (relies on the shared deadlock resolution routine described below).
@@ -358,7 +358,7 @@
 - [ ] Make `ft_goal` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_crafting_ingredient` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_item_modifier` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_event_compare_ptr` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_event_compare_ptr` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_resistance` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_path_step` thread safe (relies on the shared deadlock resolution routine described below).
 

@@ -3,6 +3,8 @@
 
 #include "../Template/function.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 
 class ft_world;
 
@@ -17,8 +19,14 @@ class ft_event
         int _modifier4;
         ft_function<void(ft_world&, ft_event&)> _callback;
         mutable int _error;
+        mutable pt_mutex _mutex;
 
         void set_error(int err) const noexcept;
+        static int lock_pair(const ft_event &first, const ft_event &second,
+                ft_unique_lock<pt_mutex> &first_guard,
+                ft_unique_lock<pt_mutex> &second_guard);
+
+        friend struct ft_event_compare_ptr;
 
     public:
         ft_event() noexcept;
