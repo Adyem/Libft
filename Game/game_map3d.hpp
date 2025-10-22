@@ -3,6 +3,9 @@
 
 #include <cstddef>
 #include "../CPP_class/class_nullptr.hpp"
+#include "../Errno/errno.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 
 class ft_pathfinding;
 
@@ -14,8 +17,16 @@ class ft_map3d
         size_t  _height;
         size_t  _depth;
         mutable int    _error;
+        mutable pt_mutex    _mutex;
 
-        void    set_error(int err) const;
+        void    set_error(int err) const noexcept;
+
+        static void restore_errno(ft_unique_lock<pt_mutex> &guard,
+                int entry_errno) noexcept;
+        static void sleep_backoff() noexcept;
+        static int lock_pair(const ft_map3d &first, const ft_map3d &second,
+                ft_unique_lock<pt_mutex> &first_guard,
+                ft_unique_lock<pt_mutex> &second_guard) noexcept;
 
         void    allocate(size_t width, size_t height, size_t depth, int value);
         void    deallocate();
