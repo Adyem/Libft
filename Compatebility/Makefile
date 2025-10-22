@@ -3,8 +3,9 @@ DEBUG_TARGET := Compatebility_debug.a
 
 .RECIPEPREFIX := >
 
-SRCS := Compatebility_file_io.cpp Compatebility_file_ops.cpp Compatebility_file_dir.cpp Compatebility_file_path.cpp Compatebility_rng.cpp Compatebility_readline.cpp Compatebility_pthread.cpp Compatebility_system.cpp Compatebility_write.cpp Compatebility_syslog.cpp Compatebility_networking.cpp Compatebility_time.cpp
-HEADERS := compatebility_internal.hpp
+SRCS := Compatebility_file_io.cpp Compatebility_file_ops.cpp Compatebility_file_dir.cpp Compatebility_file_path.cpp Compatebility_rng.cpp Compatebility_readline.cpp Compatebility_pthread.cpp Compatebility_system.cpp Compatebility_write.cpp Compatebility_syslog.cpp Compatebility_networking.cpp Compatebility_time.cpp Compatebility_cross_process_posix.cpp Compatebility_cross_process_windows.cpp
+HEADERS := compatebility_internal.hpp \
+        compatebility_cross_process.hpp
 ifeq ($(OS),Windows_NT)
 MKDIR   = mkdir
 RM      = del /F /Q

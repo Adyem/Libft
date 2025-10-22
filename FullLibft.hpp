@@ -17,6 +17,7 @@
 #include "CPP_class/class_string_class.hpp"
 #include "CPP_class/class_stringbuf.hpp"
 #include "Compression/compression.hpp"
+#include "CrossProcess/cross_process.hpp"
 #include "Config/config.hpp"
 #include "Config/flag_parser.hpp"
 #include "Encryption/basic_encryption.hpp"

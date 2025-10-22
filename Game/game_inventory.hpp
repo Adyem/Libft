@@ -13,6 +13,8 @@
 #include "../Template/map.hpp"
 #include "../Template/shared_ptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 
 class ft_inventory
 {
@@ -24,10 +26,14 @@ class ft_inventory
         int                 _current_weight;
         int                 _next_slot;
         mutable int         _error;
+        mutable pt_mutex    _mutex;
 
         void set_error(int err) const noexcept;
         bool handle_items_error() noexcept;
         bool check_item_errors(const ft_sharedptr<ft_item> &item) const noexcept;
+        static int lock_pair(const ft_inventory &first, const ft_inventory &second,
+                ft_unique_lock<pt_mutex> &first_guard,
+                ft_unique_lock<pt_mutex> &second_guard);
 
     public:
         ft_inventory(size_t capacity = 0, int weight_limit = 0) noexcept;
