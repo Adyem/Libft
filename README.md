@@ -65,6 +65,7 @@ The current suite exercises components across multiple modules:
   `ft_strnstr`, `ft_strstr`, `ft_strrchr`, `ft_strmapi`, `ft_striteri`, `ft_strtok`, `ft_strtol`, `ft_strtoul`, `ft_setenv`, `ft_unsetenv`, `ft_getenv`, `ft_to_lower`, `ft_to_upper`,
 `ft_fopen`, `ft_fclose`, `ft_fgets`, `ft_time_ms`, `ft_time_format`, `ft_to_string`
 - **PThread**: `ft_task_scheduler` joins the existing `ft_thread` and `ft_this_thread` helpers. The scheduler clears success paths, surfaces queue allocation or empty-pop failures through its `_error_code` mirror, routes timed callbacks through the Time module's `time_monotonic_point_*` helpers instead of constructing `std::chrono::steady_clock` points directly, stores worker state in `ft_vector<ft_thread>` so thread management and futures stay on the library's error-reporting abstractions, and releases the scheduled-task mutex before executing fallbacks when cloning scheduled callbacks or pushing them into the work queue fails so recursive scheduling never deadlocks. Delayed and periodic submissions return cancellation handles that broadcast the scheduler condition variable and mirror `_error_code` into `ft_errno` when tasks are removed.
+- **CrossProcess**: shared-memory descriptor send/receive helpers coordinate socket transport, platform-specific mapping, shared-mutex polling with bounded retries, payload acknowledgements that zero consumed buffers, and mirrored error-slot updates for both POSIX and Windows builds.
 - **Networking**: IPv4 and IPv6 send/receive paths, UDP datagrams, a simple HTTP server, and WebSocket client/server handshake
   coverage using the RFC 6455 GUID alongside a regression that splits the client handshake response across multiple receives to
   validate incremental parsing
@@ -1368,6 +1369,32 @@ const char *ft_strerror(int err);
 void        ft_perror(const char *msg);
 void        ft_exit(const char *msg, int code);
 ```
+
+#### CrossProcess
+`CrossProcess/cross_process.hpp` exposes descriptor-driven helpers for sharing memory between producer and consumer processes on both POSIX and Windows.
+
+```cpp
+struct cross_process_message {
+    uint64_t stack_base_address;
+    uint64_t remote_memory_address;
+    uint64_t remote_memory_size;
+    uint64_t shared_mutex_address;
+    uint64_t error_memory_address;
+    char     shared_memory_name[256];
+};
+
+int cp_send_descriptor(int socket_fd, const cross_process_message &message);
+int cp_receive_descriptor(int socket_fd, cross_process_message &message);
+int cp_receive_memory(int socket_fd, cross_process_read_result &result);
+int cp_write_memory(const cross_process_message &message,
+                    const unsigned char *payload,
+                    ft_size_t payload_length,
+                    int error_code);
+```
+
+Descriptors travel over a control socket using `cp_send_descriptor`/`cp_receive_descriptor`, which delegate to the Compatebility layer so EINTR retries, Windows `WSASend` behaviour, and POSIX `write`/`read` loops stay centralized. `cp_receive_memory` maps the named shared memory segment, polls the exported mutex with up to five `trylock` attempts spaced 50 ms apart, copies the payload into an `ft_string`, and zeroes both the payload bytes and optional error-slot so the sender can detect that the data was consumed. `cp_write_memory` follows the same guarded mapping flow to zero-fill the buffer, write a fresh payload, and update the error slot when provided.
+
+The Compatebility helpers wrap `shm_open`/`mmap` and `CreateFileMapping`/`MapViewOfFile`, ensuring every mapping is unmapped and each platform mutex handle is released even when locking or offset validation fails. Shared memory offsets are validated against the advertised size before any copy so mismatched layouts report `EINVAL`/`ERANGE` and leave the remote pages untouched.
 
 #### RNG
 Random helpers and containers in `RNG/`. `rng_secure_bytes` obtains

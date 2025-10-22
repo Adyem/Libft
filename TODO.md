@@ -106,6 +106,11 @@
 - [x] Restore the `websocket client detects invalid handshake` regression after fixing the crash in the websocket client handshake teardown path.
 - [x] Restore the `HTTP server echoes POST body` regression once the HTTP server request pipeline stops corrupting heap allocations during body echoing.
 
+### CrossProcess
+- [x] Introduce a CrossProcess communication module capable of sending shared memory descriptors between processes.
+- [x] Implement a CrossProcess receiver that maps remote shared memory, reads the payload under a mutex, and zeroes the region to acknowledge delivery.
+- [x] Add Windows shared memory and mutex support to the CrossProcess receiver to complete cross-platform compatibility.
+
 ### API (HTTP client facade)
 - [ ] Support HTTP/2 upgrades and streaming request/response bodies within `api_request` so large transfers do not buffer entirely in memory.
 - [ ] Add retry, backoff, and circuit-breaker policies that map transport failures into actionable error codes.
@@ -330,10 +335,10 @@
 - [x] Document extension points for mods or scripting integrations.
 - [ ] Introduce scripting bridges (Lua, Python) with sandboxing controls for user-generated content.
 - [ ] Add telemetry hooks that emit gameplay metrics for balancing and analytics.
-- [ ] Make `ft_game_state` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_game_state` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_character` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_item` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_inventory` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_inventory` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_equipment` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_upgrade` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_world` thread safe (relies on the shared deadlock resolution routine described below).

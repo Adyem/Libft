@@ -5,6 +5,8 @@
 #include "game_character.hpp"
 #include "../Template/vector.hpp"
 #include "../Template/shared_ptr.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 
 class ft_game_state
 {
@@ -12,8 +14,12 @@ class ft_game_state
         ft_vector<ft_sharedptr<ft_world> >     _worlds;
         ft_vector<ft_sharedptr<ft_character> > _characters;
         mutable int                            _error_code;
+        mutable pt_mutex                       _mutex;
 
         void set_error(int error) const noexcept;
+        static int lock_pair(const ft_game_state &first, const ft_game_state &second,
+                ft_unique_lock<pt_mutex> &first_guard,
+                ft_unique_lock<pt_mutex> &second_guard);
 
     public:
         ft_game_state() noexcept;
