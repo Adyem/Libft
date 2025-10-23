@@ -2,6 +2,8 @@
 #define WEBSOCKET_SERVER_HPP
 
 #include "../CPP_class/class_string_class.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 #include <cstdint>
 
 #ifdef _WIN32
@@ -17,11 +19,14 @@ class ft_websocket_server
     private:
         ft_socket *_server_socket;
         mutable int _error_code;
+        mutable pt_mutex _mutex;
+
+        static void restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept;
 
         void set_error(int error_code) const;
-        int perform_handshake(int client_fd);
-        int receive_frame(int client_fd, ft_string &message);
-        int send_pong(int client_fd, const unsigned char *payload, std::size_t length);
+        int perform_handshake_locked(int client_fd, ft_unique_lock<pt_mutex> &guard);
+        int receive_frame_locked(int client_fd, ft_string &message, ft_unique_lock<pt_mutex> &guard);
+        int send_pong_locked(int client_fd, const unsigned char *payload, std::size_t length, ft_unique_lock<pt_mutex> &guard);
 
     public:
         ft_websocket_server();

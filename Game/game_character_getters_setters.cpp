@@ -260,91 +260,168 @@ void ft_character::set_z(int z) noexcept
 
 ft_resistance ft_character::get_fire_res() const noexcept
 {
+    ft_resistance resistance_copy(this->_fire_res);
+
+    if (resistance_copy.get_error() != ER_SUCCESS)
+    {
+        this->set_error(resistance_copy.get_error());
+        return (resistance_copy);
+    }
     this->set_error(ER_SUCCESS);
-    return (this->_fire_res);
+    return (resistance_copy);
 }
 
 void ft_character::set_fire_res(int percent, int flat) noexcept
 {
-    this->_fire_res = {percent, flat};
+    int error_code;
+
+    error_code = this->_fire_res.set_values(percent, flat);
+    if (this->handle_component_error(error_code) == true)
+        return ;
     this->set_error(ER_SUCCESS);
     return ;
 }
 
 ft_resistance ft_character::get_frost_res() const noexcept
 {
+    ft_resistance resistance_copy(this->_frost_res);
+
+    if (resistance_copy.get_error() != ER_SUCCESS)
+    {
+        this->set_error(resistance_copy.get_error());
+        return (resistance_copy);
+    }
     this->set_error(ER_SUCCESS);
-    return (this->_frost_res);
+    return (resistance_copy);
 }
 
 void ft_character::set_frost_res(int percent, int flat) noexcept
 {
-    this->_frost_res = {percent, flat};
+    int error_code;
+
+    error_code = this->_frost_res.set_values(percent, flat);
+    if (this->handle_component_error(error_code) == true)
+        return ;
     this->set_error(ER_SUCCESS);
     return ;
 }
 
 ft_resistance ft_character::get_lightning_res() const noexcept
 {
+    ft_resistance resistance_copy(this->_lightning_res);
+
+    if (resistance_copy.get_error() != ER_SUCCESS)
+    {
+        this->set_error(resistance_copy.get_error());
+        return (resistance_copy);
+    }
     this->set_error(ER_SUCCESS);
-    return (this->_lightning_res);
+    return (resistance_copy);
 }
 
 void ft_character::set_lightning_res(int percent, int flat) noexcept
 {
-    this->_lightning_res = {percent, flat};
+    int error_code;
+
+    error_code = this->_lightning_res.set_values(percent, flat);
+    if (this->handle_component_error(error_code) == true)
+        return ;
     this->set_error(ER_SUCCESS);
     return ;
 }
 
 ft_resistance ft_character::get_air_res() const noexcept
 {
+    ft_resistance resistance_copy(this->_air_res);
+
+    if (resistance_copy.get_error() != ER_SUCCESS)
+    {
+        this->set_error(resistance_copy.get_error());
+        return (resistance_copy);
+    }
     this->set_error(ER_SUCCESS);
-    return (this->_air_res);
+    return (resistance_copy);
 }
 
 void ft_character::set_air_res(int percent, int flat) noexcept
 {
-    this->_air_res = {percent, flat};
+    int error_code;
+
+    error_code = this->_air_res.set_values(percent, flat);
+    if (this->handle_component_error(error_code) == true)
+        return ;
     this->set_error(ER_SUCCESS);
     return ;
 }
 
 ft_resistance ft_character::get_earth_res() const noexcept
 {
+    ft_resistance resistance_copy(this->_earth_res);
+
+    if (resistance_copy.get_error() != ER_SUCCESS)
+    {
+        this->set_error(resistance_copy.get_error());
+        return (resistance_copy);
+    }
     this->set_error(ER_SUCCESS);
-    return (this->_earth_res);
+    return (resistance_copy);
 }
 
 void ft_character::set_earth_res(int percent, int flat) noexcept
 {
-    this->_earth_res = {percent, flat};
+    int error_code;
+
+    error_code = this->_earth_res.set_values(percent, flat);
+    if (this->handle_component_error(error_code) == true)
+        return ;
     this->set_error(ER_SUCCESS);
     return ;
 }
 
 ft_resistance ft_character::get_chaos_res() const noexcept
 {
+    ft_resistance resistance_copy(this->_chaos_res);
+
+    if (resistance_copy.get_error() != ER_SUCCESS)
+    {
+        this->set_error(resistance_copy.get_error());
+        return (resistance_copy);
+    }
     this->set_error(ER_SUCCESS);
-    return (this->_chaos_res);
+    return (resistance_copy);
 }
 
 void ft_character::set_chaos_res(int percent, int flat) noexcept
 {
-    this->_chaos_res = {percent, flat};
+    int error_code;
+
+    error_code = this->_chaos_res.set_values(percent, flat);
+    if (this->handle_component_error(error_code) == true)
+        return ;
     this->set_error(ER_SUCCESS);
     return ;
 }
 
 ft_resistance ft_character::get_physical_res() const noexcept
 {
+    ft_resistance resistance_copy(this->_physical_res);
+
+    if (resistance_copy.get_error() != ER_SUCCESS)
+    {
+        this->set_error(resistance_copy.get_error());
+        return (resistance_copy);
+    }
     this->set_error(ER_SUCCESS);
-    return (this->_physical_res);
+    return (resistance_copy);
 }
 
 void ft_character::set_physical_res(int percent, int flat) noexcept
 {
-    this->_physical_res = {percent, flat};
+    int error_code;
+
+    error_code = this->_physical_res.set_values(percent, flat);
+    if (this->handle_component_error(error_code) == true)
+        return ;
     this->set_error(ER_SUCCESS);
     return ;
 }

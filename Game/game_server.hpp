@@ -11,23 +11,35 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 
 class ft_game_server
 {
     private:
-        ft_websocket_server _server;
+        ft_websocket_server *_server;
         ft_sharedptr<ft_world> _world;
         ft_map<int, int>   _clients;
         ft_string          _auth_token;
         void              (*_on_join)(int);
         void              (*_on_leave)(int);
         mutable int         _error_code;
+        mutable pt_mutex    _mutex;
 
         void set_error(int error) const noexcept;
-        int handle_message(int client_handle, const ft_string &message) noexcept;
-        int serialize_world(ft_string &out) const noexcept;
-        void join_client(int client_id, int client_handle) noexcept;
-        void leave_client(int client_id) noexcept;
+        static int lock_pair(const ft_game_server &first,
+                const ft_game_server &second,
+                ft_unique_lock<pt_mutex> &first_guard,
+                ft_unique_lock<pt_mutex> &second_guard);
+        int handle_message_locked(int client_handle,
+                const ft_string &message,
+                ft_unique_lock<pt_mutex> &guard) noexcept;
+        int serialize_world_locked(ft_string &out,
+                ft_unique_lock<pt_mutex> &guard) const noexcept;
+        void join_client_locked(int client_id, int client_handle,
+                ft_unique_lock<pt_mutex> &guard) noexcept;
+        void leave_client_locked(int client_id,
+                ft_unique_lock<pt_mutex> &guard) noexcept;
 
     public:
         ft_game_server(const ft_sharedptr<ft_world> &world, const char *auth_token = ft_nullptr) noexcept;

@@ -94,8 +94,8 @@
 - [x] Make `SocketConfig` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_socket` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `udp_socket` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_websocket_server` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_websocket_client` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_websocket_server` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_websocket_client` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_http_server` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `http2_stream_manager` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `event_loop` thread safe (relies on the shared deadlock resolution routine described below).
@@ -354,12 +354,12 @@
 - [x] Make `ft_achievement` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_crafting` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_experience_table` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_game_server` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_goal` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_game_server` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_goal` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_crafting_ingredient` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_item_modifier` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_event_compare_ptr` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_resistance` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_resistance` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_path_step` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Tools and ancillary utilities
