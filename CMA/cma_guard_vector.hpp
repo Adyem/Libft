@@ -11,6 +11,8 @@
 #include "../Libft/libft.hpp"
 #include "../Template/move.hpp"
 
+static const size_t CMA_GUARD_VECTOR_MIN_CAPACITY = 20;
+
 template <typename t_element>
 class cma_guard_vector
 {
@@ -55,13 +57,18 @@ template <typename t_element>
 cma_guard_vector<t_element>::cma_guard_vector(size_t initial_capacity)
     : _data(ft_nullptr), _size(0), _capacity(0), _error_code(ER_SUCCESS)
 {
-    if (initial_capacity > 0)
+    size_t target_capacity;
+
+    target_capacity = initial_capacity;
+    if (target_capacity < CMA_GUARD_VECTOR_MIN_CAPACITY)
+        target_capacity = CMA_GUARD_VECTOR_MIN_CAPACITY;
+    if (target_capacity > 0)
     {
-        this->_data = static_cast<t_element *>(std::malloc(initial_capacity * sizeof(t_element)));
+        this->_data = static_cast<t_element *>(std::malloc(target_capacity * sizeof(t_element)));
         if (this->_data == ft_nullptr)
             this->set_error(FT_ERR_NO_MEMORY);
         else
-            this->_capacity = initial_capacity;
+            this->_capacity = target_capacity;
     }
     return ;
 }

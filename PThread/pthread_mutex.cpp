@@ -47,9 +47,9 @@ bool pt_mutex::ensure_native_mutex() const
     return (true);
 }
 
-const volatile bool &pt_mutex::lockState() const
+bool pt_mutex::lockState() const
 {
-    return (this->_lock);
+    return (this->_lock.load(std::memory_order_acquire));
 }
 
 int pt_mutex::get_error() const

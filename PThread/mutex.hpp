@@ -9,7 +9,7 @@ class pt_mutex
 {
     private:
         mutable std::atomic<pthread_t>    _owner;
-        mutable bool                      _lock;
+        mutable std::atomic<bool>         _lock;
         mutable int                       _error;
         mutable pthread_mutex_t           _native_mutex;
         mutable bool                      _native_initialized;
@@ -26,7 +26,7 @@ class pt_mutex
         pt_mutex();
         ~pt_mutex();
 
-        const volatile bool &lockState() const;
+        bool    lockState() const;
 
         int     lock(pthread_t thread_id) const;
         int     unlock(pthread_t thread_id) const;

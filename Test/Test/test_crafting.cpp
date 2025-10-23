@@ -6,8 +6,8 @@ FT_TEST(test_crafting_success, "crafting succeeds")
 {
     ft_crafting crafting;
     ft_vector<ft_crafting_ingredient> ingredients;
-    ft_crafting_ingredient ingredient_a = {1, 1, -1};
-    ft_crafting_ingredient ingredient_b = {2, 1, -1};
+    ft_crafting_ingredient ingredient_a(1, 1, -1);
+    ft_crafting_ingredient ingredient_b(2, 1, -1);
     ingredients.push_back(ingredient_a);
     ingredients.push_back(ingredient_b);
     crafting.register_recipe(1, std::move(ingredients));
@@ -43,8 +43,8 @@ FT_TEST(test_crafting_missing_ingredient, "crafting fails with missing ingredien
 {
     ft_crafting crafting;
     ft_vector<ft_crafting_ingredient> ingredients;
-    ft_crafting_ingredient ingredient_a = {1, 1, -1};
-    ft_crafting_ingredient ingredient_b = {2, 1, -1};
+    ft_crafting_ingredient ingredient_a(1, 1, -1);
+    ft_crafting_ingredient ingredient_b(2, 1, -1);
     ingredients.push_back(ingredient_a);
     ingredients.push_back(ingredient_b);
     crafting.register_recipe(1, std::move(ingredients));

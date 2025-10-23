@@ -68,22 +68,28 @@ int ft_socket::setup_client(const SocketConfig &config)
     {
 #ifdef _WIN32
         int last_error;
+        int connect_error;
 
         last_error = WSAGetLastError();
         if (!(non_blocking && last_error == WSAEWOULDBLOCK))
         {
-            this->set_error(ft_map_system_error(last_error));
+            connect_error = ft_map_system_error(last_error);
+            this->set_error(connect_error);
             this->close_socket();
+            this->set_error(connect_error);
             return (this->_error_code);
         }
 #else
         int last_error;
+        int connect_error;
 
         last_error = errno;
         if (!(non_blocking && (last_error == EINPROGRESS || last_error == EWOULDBLOCK)))
         {
-            this->set_error(ft_map_system_error(last_error));
+            connect_error = ft_map_system_error(last_error);
+            this->set_error(connect_error);
             this->close_socket();
+            this->set_error(connect_error);
             return (this->_error_code);
         }
 #endif

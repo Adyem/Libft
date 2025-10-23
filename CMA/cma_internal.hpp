@@ -65,7 +65,7 @@ class cma_allocator_guard
         bool acquire_mutex(pthread_mutex_t *mutex_pointer);
         int release_all_mutexes();
         bool reacquire_mutexes(const cma_guard_vector<s_mutex_entry> &previous_mutexes);
-        void track_mutex_acquisition(pthread_mutex_t *mutex_pointer, bool lock_acquired);
+        bool track_mutex_acquisition(pthread_mutex_t *mutex_pointer, bool lock_acquired);
         pt_mutex_vector owned_mutex_pointers() const;
         cma_guard_vector<s_mutex_entry> snapshot_owned_mutexes() const;
         bool mutex_vector_contains(const pt_mutex_vector &mutexes, pthread_mutex_t *mutex_pointer) const;

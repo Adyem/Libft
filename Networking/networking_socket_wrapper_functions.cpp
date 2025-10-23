@@ -104,6 +104,17 @@ static inline ssize_t recv_platform(int sockfd, void *buf, size_t len, int flags
     return (ret);
 }
 
+static inline int shutdown_platform(int sockfd, int how)
+{
+    if (::shutdown(static_cast<SOCKET>(sockfd), how) == SOCKET_ERROR)
+    {
+        ft_errno = ft_map_system_error(WSAGetLastError());
+        return (-1);
+    }
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
 static inline ssize_t sendto_platform(int sockfd, const void *buf, size_t len, int flags,
                                       const struct sockaddr *dest_addr, socklen_t addrlen)
 {
@@ -215,6 +226,17 @@ static inline ssize_t recv_platform(int sockfd, void *buf, size_t len, int flags
     }
     ft_errno = ER_SUCCESS;
     return (result);
+}
+
+static inline int shutdown_platform(int sockfd, int how)
+{
+    if (::shutdown(sockfd, how) == -1)
+    {
+        ft_errno = ft_map_system_error(errno);
+        return (-1);
+    }
+    ft_errno = ER_SUCCESS;
+    return (0);
 }
 
 static inline ssize_t sendto_platform(int sockfd, const void *buf, size_t len, int flags,
@@ -352,6 +374,39 @@ int nw_close(int sockfd)
     if (close(sockfd) == -1)
     {
         ft_errno = ft_map_system_error(errno);
+        if (ft_errno == ER_SUCCESS)
+        {
+            ft_errno = FT_ERR_SOCKET_CLOSE_FAILED;
+        }
+        return (-1);
+    }
+    ft_errno = previous_error;
+    return (0);
+#endif
+}
+
+int nw_shutdown(int sockfd, int how)
+{
+#ifdef _WIN32
+    int previous_error;
+
+    previous_error = ft_errno;
+    if (shutdown_platform(sockfd, how) != 0)
+    {
+        if (ft_errno == ER_SUCCESS)
+        {
+            ft_errno = FT_ERR_SOCKET_CLOSE_FAILED;
+        }
+        return (-1);
+    }
+    ft_errno = previous_error;
+    return (0);
+#else
+    int previous_error;
+
+    previous_error = ft_errno;
+    if (shutdown_platform(sockfd, how) != 0)
+    {
         if (ft_errno == ER_SUCCESS)
         {
             ft_errno = FT_ERR_SOCKET_CLOSE_FAILED;

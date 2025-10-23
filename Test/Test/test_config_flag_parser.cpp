@@ -179,17 +179,34 @@ FT_TEST(test_cnfg_flag_parser_thread_safe_parse_operations, "cnfg_flag_parser se
         }
         return ;
     });
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
     size_t main_iteration;
 
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
     main_iteration = 0;
     while (main_iteration < 128)
     {
         bool parse_result = parser.parse(3, second_arguments);
 
-        FT_ASSERT(parse_result);
+        if (!parse_result && test_failed == 0)
+        {
+            test_failed = 1;
+            failure_expression = "parse_result";
+            failure_line = __LINE__;
+            break;
+        }
         main_iteration++;
     }
     parse_worker.join();
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        return (0);
+    }
     FT_ASSERT(!worker_failed.load());
     bool final_result = parser.parse(3, second_arguments);
 

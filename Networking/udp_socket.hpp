@@ -3,6 +3,8 @@
 
 #include "networking.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 
 #ifdef _WIN32
 # include <winsock2.h>
@@ -16,6 +18,8 @@
 class udp_socket
 {
     private:
+        static void restore_errno(ft_unique_lock<pt_mutex> &guard,
+                int entry_errno) noexcept;
         int     create_socket(const SocketConfig &config);
         int     set_non_blocking(const SocketConfig &config);
         int     set_timeouts(const SocketConfig &config);
@@ -27,6 +31,7 @@ class udp_socket
         struct sockaddr_storage _address;
         int     _socket_fd;
         mutable int _error_code;
+        mutable pt_mutex _mutex;
 
     public:
         udp_socket();
