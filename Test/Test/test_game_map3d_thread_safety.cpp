@@ -56,7 +56,15 @@ FT_TEST(test_game_map3d_concurrent_set_operations,
     size_t thread_index;
     int create_result;
     int join_result;
+    size_t created_thread_count;
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
 
+    created_thread_count = 0;
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
     thread_index = 0;
     while (thread_index < 4)
     {
@@ -64,21 +72,48 @@ FT_TEST(test_game_map3d_concurrent_set_operations,
         arguments[thread_index].start_layer = thread_index * 2;
         arguments[thread_index].end_layer = (thread_index + 1) * 2;
         arguments[thread_index].result_code = ER_SUCCESS;
-        create_result = pt_thread_create(&threads[thread_index], ft_nullptr,
-            game_map3d_set_task, &arguments[thread_index]);
-        if (create_result != 0)
-            return (0);
+        if (test_failed == 0)
+        {
+            create_result = pt_thread_create(&threads[thread_index], ft_nullptr,
+                game_map3d_set_task, &arguments[thread_index]);
+            if (create_result != 0 && test_failed == 0)
+            {
+                test_failed = 1;
+                failure_expression = "create_result == 0";
+                failure_line = __LINE__;
+            }
+            if (create_result == 0)
+                created_thread_count++;
+        }
+        else
+            threads[thread_index] = 0;
         thread_index++;
     }
     thread_index = 0;
-    while (thread_index < 4)
+    while (thread_index < created_thread_count)
     {
         join_result = pt_thread_join(threads[thread_index], ft_nullptr);
-        if (join_result != 0)
-            return (0);
-        if (arguments[thread_index].result_code != ER_SUCCESS)
-            return (0);
+        if (join_result != 0 && test_failed == 0)
+        {
+            test_failed = 1;
+            failure_expression = "join_result == 0";
+            failure_line = __LINE__;
+        }
+        if (join_result == 0)
+        {
+            if (arguments[thread_index].result_code != ER_SUCCESS && test_failed == 0)
+            {
+                test_failed = 1;
+                failure_expression = "arguments[thread_index].result_code == ER_SUCCESS";
+                failure_line = __LINE__;
+            }
+        }
         thread_index++;
+    }
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        return (0);
     }
     thread_index = 0;
     while (thread_index < 4)
@@ -153,28 +188,63 @@ FT_TEST(test_game_map3d_toggle_thread_safe,
     size_t thread_index;
     int create_result;
     int join_result;
+    size_t created_thread_count;
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
 
+    created_thread_count = 0;
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
     thread_index = 0;
     while (thread_index < 3)
     {
         arguments[thread_index].map_pointer = &map_instance;
         arguments[thread_index].iterations = 4000;
         arguments[thread_index].result_code = ER_SUCCESS;
-        create_result = pt_thread_create(&threads[thread_index], ft_nullptr,
-            game_map3d_toggle_task, &arguments[thread_index]);
-        if (create_result != 0)
-            return (0);
+        if (test_failed == 0)
+        {
+            create_result = pt_thread_create(&threads[thread_index], ft_nullptr,
+                game_map3d_toggle_task, &arguments[thread_index]);
+            if (create_result != 0 && test_failed == 0)
+            {
+                test_failed = 1;
+                failure_expression = "create_result == 0";
+                failure_line = __LINE__;
+            }
+            if (create_result == 0)
+                created_thread_count++;
+        }
+        else
+            threads[thread_index] = 0;
         thread_index++;
     }
     thread_index = 0;
-    while (thread_index < 3)
+    while (thread_index < created_thread_count)
     {
         join_result = pt_thread_join(threads[thread_index], ft_nullptr);
-        if (join_result != 0)
-            return (0);
-        if (arguments[thread_index].result_code != ER_SUCCESS)
-            return (0);
+        if (join_result != 0 && test_failed == 0)
+        {
+            test_failed = 1;
+            failure_expression = "join_result == 0";
+            failure_line = __LINE__;
+        }
+        if (join_result == 0)
+        {
+            if (arguments[thread_index].result_code != ER_SUCCESS && test_failed == 0)
+            {
+                test_failed = 1;
+                failure_expression = "arguments[thread_index].result_code == ER_SUCCESS";
+                failure_line = __LINE__;
+            }
+        }
         thread_index++;
+    }
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        return (0);
     }
     int final_value;
 

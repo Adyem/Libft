@@ -202,24 +202,48 @@ long long ft_character::apply_skill_modifiers(long long damage) const noexcept
 
 void ft_character::apply_modifier(const ft_item_modifier &mod, int sign) noexcept
 {
-    if (mod.id == 1)
-        this->set_physical_armor(this->_physical_armor + mod.value * sign);
-    else if (mod.id == 9)
-        this->set_magic_armor(this->_magic_armor + mod.value * sign);
-    else if (mod.id == 2)
-        this->_might += mod.value * sign;
-    else if (mod.id == 3)
-        this->_agility += mod.value * sign;
-    else if (mod.id == 4)
-        this->_endurance += mod.value * sign;
-    else if (mod.id == 5)
-        this->_reason += mod.value * sign;
-    else if (mod.id == 6)
-        this->_insigh += mod.value * sign;
-    else if (mod.id == 7)
-        this->_presence += mod.value * sign;
-    else if (mod.id == 8)
-        this->_hit_points += mod.value * sign;
+    int modifier_error;
+    int modifier_identifier;
+    int modifier_value;
+
+    modifier_error = mod.get_error();
+    if (modifier_error != ER_SUCCESS)
+    {
+        this->set_error(modifier_error);
+        return ;
+    }
+    modifier_identifier = mod.get_id();
+    modifier_error = mod.get_error();
+    if (modifier_error != ER_SUCCESS)
+    {
+        this->set_error(modifier_error);
+        return ;
+    }
+    modifier_value = mod.get_value();
+    modifier_error = mod.get_error();
+    if (modifier_error != ER_SUCCESS)
+    {
+        this->set_error(modifier_error);
+        return ;
+    }
+    if (modifier_identifier == 1)
+        this->set_physical_armor(this->_physical_armor + modifier_value * sign);
+    else if (modifier_identifier == 9)
+        this->set_magic_armor(this->_magic_armor + modifier_value * sign);
+    else if (modifier_identifier == 2)
+        this->_might += modifier_value * sign;
+    else if (modifier_identifier == 3)
+        this->_agility += modifier_value * sign;
+    else if (modifier_identifier == 4)
+        this->_endurance += modifier_value * sign;
+    else if (modifier_identifier == 5)
+        this->_reason += modifier_value * sign;
+    else if (modifier_identifier == 6)
+        this->_insigh += modifier_value * sign;
+    else if (modifier_identifier == 7)
+        this->_presence += modifier_value * sign;
+    else if (modifier_identifier == 8)
+        this->_hit_points += modifier_value * sign;
     this->set_error(ER_SUCCESS);
     return ;
 }

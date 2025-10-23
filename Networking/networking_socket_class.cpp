@@ -363,6 +363,8 @@ ssize_t ft_socket::send_all(const void *data, size_t size, int flags)
 ssize_t ft_socket::receive_data(void *buffer, size_t size, int flags)
 {
     int entry_errno;
+    int socket_fd;
+    int receive_errno;
     ssize_t result;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
@@ -372,7 +374,31 @@ ssize_t ft_socket::receive_data(void *buffer, size_t size, int flags)
         ft_errno = guard.get_error();
         return (-1);
     }
-    result = this->receive_data_locked(buffer, size, flags);
+    if (this->_socket_fd < 0)
+    {
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        ft_socket::restore_errno(guard, entry_errno);
+        return (-1);
+    }
+    socket_fd = this->_socket_fd;
+    guard.unlock();
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        ft_errno = guard.get_error();
+        return (-1);
+    }
+    result = nw_recv(socket_fd, buffer, size, flags);
+    receive_errno = ft_errno;
+    guard.lock();
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        ft_errno = guard.get_error();
+        return (-1);
+    }
+    if (result < 0)
+        this->set_error(receive_errno);
+    else
+        this->set_error(ER_SUCCESS);
     ft_socket::restore_errno(guard, entry_errno);
     return (result);
 }
@@ -380,7 +406,11 @@ ssize_t ft_socket::receive_data(void *buffer, size_t size, int flags)
 bool ft_socket::close_socket()
 {
     int entry_errno;
+    int socket_fd;
+    int close_errno;
+    int shutdown_errno;
     bool closed;
+    bool shutdown_success;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
     entry_errno = ft_errno;
@@ -389,9 +419,61 @@ bool ft_socket::close_socket()
         ft_errno = guard.get_error();
         return (false);
     }
-    closed = this->close_socket_locked();
+    if (this->_socket_fd < 0)
+    {
+        this->set_error(ER_SUCCESS);
+        ft_socket::restore_errno(guard, entry_errno);
+        return (true);
+    }
+    socket_fd = this->_socket_fd;
+    shutdown_success = true;
+    shutdown_errno = ER_SUCCESS;
+    guard.unlock();
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        ft_errno = guard.get_error();
+        return (false);
+    }
+#ifdef _WIN32
+    if (nw_shutdown(socket_fd, SD_BOTH) != 0)
+#else
+    if (nw_shutdown(socket_fd, SHUT_RDWR) != 0)
+#endif
+    {
+        shutdown_success = false;
+        shutdown_errno = ft_errno;
+    }
+    if (nw_close(socket_fd) == 0)
+    {
+        closed = true;
+        close_errno = ER_SUCCESS;
+    }
+    else
+    {
+        closed = false;
+        close_errno = ft_errno;
+    }
+    guard.lock();
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        ft_errno = guard.get_error();
+        return (closed);
+    }
+    if (closed)
+    {
+        if (this->_socket_fd == socket_fd)
+            this->_socket_fd = -1;
+        if (shutdown_success)
+            this->set_error(ER_SUCCESS);
+        else
+            this->set_error(shutdown_errno);
+    }
+    else
+        this->set_error(close_errno);
     ft_socket::restore_errno(guard, entry_errno);
-    return (closed);
+    if (closed && shutdown_success)
+        return (true);
+    return (false);
 }
 
 ssize_t ft_socket::send_data(const void *data, size_t size, int flags, int fd)

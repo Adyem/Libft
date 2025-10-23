@@ -14,6 +14,7 @@ static void *game_event_increment_duration(void *argument)
 {
     game_event_increment_args *arguments;
     int index;
+    int add_result;
 
     arguments = static_cast<game_event_increment_args *>(argument);
     if (arguments == ft_nullptr)
@@ -21,10 +22,10 @@ static void *game_event_increment_duration(void *argument)
     index = 0;
     while (index < arguments->iteration_count)
     {
-        arguments->event_pointer->add_duration(1);
-        if (arguments->event_pointer->get_error() != ER_SUCCESS)
+        add_result = arguments->event_pointer->add_duration(1);
+        if (add_result != ER_SUCCESS)
         {
-            arguments->result_code = arguments->event_pointer->get_error();
+            arguments->result_code = add_result;
             return (ft_nullptr);
         }
         index++;
@@ -42,26 +43,64 @@ FT_TEST(test_game_event_add_duration_thread_safe, "ft_event::add_duration remain
     int create_result;
     int join_result;
     int expected_duration;
+    int created_thread_count;
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
 
     event_instance.set_duration(0);
     FT_ASSERT_EQ(ER_SUCCESS, event_instance.get_error());
+    created_thread_count = 0;
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
     index = 0;
     while (index < 4)
     {
         arguments[index].event_pointer = &event_instance;
         arguments[index].iteration_count = 5000;
         arguments[index].result_code = ER_SUCCESS;
-        create_result = pt_thread_create(&threads[index], ft_nullptr, game_event_increment_duration, &arguments[index]);
-        FT_ASSERT_EQ(0, create_result);
+        if (test_failed == 0)
+        {
+            create_result = pt_thread_create(&threads[index], ft_nullptr, game_event_increment_duration, &arguments[index]);
+            if (create_result != 0 && test_failed == 0)
+            {
+                test_failed = 1;
+                failure_expression = "create_result == 0";
+                failure_line = __LINE__;
+            }
+            if (create_result == 0)
+                created_thread_count++;
+        }
+        else
+            threads[index] = 0;
         index++;
     }
     index = 0;
-    while (index < 4)
+    while (index < created_thread_count)
     {
         join_result = pt_thread_join(threads[index], ft_nullptr);
-        FT_ASSERT_EQ(0, join_result);
-        FT_ASSERT_EQ(ER_SUCCESS, arguments[index].result_code);
+        if (join_result != 0 && test_failed == 0)
+        {
+            test_failed = 1;
+            failure_expression = "join_result == 0";
+            failure_line = __LINE__;
+        }
+        if (join_result == 0)
+        {
+            if (arguments[index].result_code != ER_SUCCESS && test_failed == 0)
+            {
+                test_failed = 1;
+                failure_expression = "arguments[index].result_code == ER_SUCCESS";
+                failure_line = __LINE__;
+            }
+        }
         index++;
+    }
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        return (0);
     }
     expected_duration = 4 * 5000;
     FT_ASSERT_EQ(expected_duration, event_instance.get_duration());
@@ -107,6 +146,10 @@ FT_TEST(test_game_event_assignment_thread_safe, "ft_event copy assignment synchr
     int index;
     int create_result;
     int join_result;
+    int created_thread_count;
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
 
     source_event.set_id(42);
     source_event.set_duration(9);
@@ -122,6 +165,10 @@ FT_TEST(test_game_event_assignment_thread_safe, "ft_event copy assignment synchr
     destination_event.set_modifier3(1);
     destination_event.set_modifier4(1);
     FT_ASSERT_EQ(ER_SUCCESS, destination_event.get_error());
+    created_thread_count = 0;
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
     index = 0;
     while (index < 3)
     {
@@ -129,17 +176,47 @@ FT_TEST(test_game_event_assignment_thread_safe, "ft_event copy assignment synchr
         arguments[index].source_event = &source_event;
         arguments[index].iteration_count = 4000;
         arguments[index].result_code = ER_SUCCESS;
-        create_result = pt_thread_create(&threads[index], ft_nullptr, game_event_assignment_task, &arguments[index]);
-        FT_ASSERT_EQ(0, create_result);
+        if (test_failed == 0)
+        {
+            create_result = pt_thread_create(&threads[index], ft_nullptr, game_event_assignment_task, &arguments[index]);
+            if (create_result != 0 && test_failed == 0)
+            {
+                test_failed = 1;
+                failure_expression = "create_result == 0";
+                failure_line = __LINE__;
+            }
+            if (create_result == 0)
+                created_thread_count++;
+        }
+        else
+            threads[index] = 0;
         index++;
     }
     index = 0;
-    while (index < 3)
+    while (index < created_thread_count)
     {
         join_result = pt_thread_join(threads[index], ft_nullptr);
-        FT_ASSERT_EQ(0, join_result);
-        FT_ASSERT_EQ(ER_SUCCESS, arguments[index].result_code);
+        if (join_result != 0 && test_failed == 0)
+        {
+            test_failed = 1;
+            failure_expression = "join_result == 0";
+            failure_line = __LINE__;
+        }
+        if (join_result == 0)
+        {
+            if (arguments[index].result_code != ER_SUCCESS && test_failed == 0)
+            {
+                test_failed = 1;
+                failure_expression = "arguments[index].result_code == ER_SUCCESS";
+                failure_line = __LINE__;
+            }
+        }
         index++;
+    }
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        return (0);
     }
     FT_ASSERT_EQ(source_event.get_id(), destination_event.get_id());
     FT_ASSERT_EQ(source_event.get_duration(), destination_event.get_duration());

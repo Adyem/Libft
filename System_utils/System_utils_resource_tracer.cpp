@@ -1,12 +1,15 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../Logger/logger_internal.hpp"
-#include "../Template/vector.hpp"
+#include "../PThread/pthread_lock_tracking.hpp"
 #include "system_utils.hpp"
 #include <mutex>
+#include <new>
 #include <vector>
 
-static ft_vector<t_su_resource_tracer>    g_su_resource_tracers(4);
+typedef std::vector<t_su_resource_tracer, pt_system_allocator<t_su_resource_tracer> > t_tracer_vector;
+
+static t_tracer_vector    g_su_resource_tracers;
 static std::mutex                         g_su_resource_tracers_mutex;
 static const char                        *g_su_abort_reason = ft_nullptr;
 static std::mutex                         g_su_abort_reason_mutex;
@@ -41,10 +44,13 @@ int su_register_resource_tracer(t_su_resource_tracer tracer)
         }
         index += 1;
     }
-    g_su_resource_tracers.push_back(tracer);
-    if (g_su_resource_tracers.get_error() != ER_SUCCESS)
+    try
     {
-        ft_errno = g_su_resource_tracers.get_error();
+        g_su_resource_tracers.push_back(tracer);
+    }
+    catch (const std::bad_alloc &)
+    {
+        ft_errno = FT_ERR_NO_MEMORY;
         return (-1);
     }
     ft_errno = ER_SUCCESS;
@@ -65,12 +71,7 @@ int su_unregister_resource_tracer(t_su_resource_tracer tracer)
     {
         if (g_su_resource_tracers[index] == tracer)
         {
-            g_su_resource_tracers.erase(g_su_resource_tracers.begin() + index);
-            if (g_su_resource_tracers.get_error() != ER_SUCCESS)
-            {
-                ft_errno = g_su_resource_tracers.get_error();
-                return (-1);
-            }
+            g_su_resource_tracers.erase(g_su_resource_tracers.begin() + static_cast<t_tracer_vector::difference_type>(index));
             ft_errno = ER_SUCCESS;
             return (0);
         }
@@ -90,14 +91,31 @@ void su_clear_resource_tracers(void)
 
 void su_run_resource_tracers(const char *reason)
 {
-    std::vector<t_su_resource_tracer> local_tracers;
+    t_tracer_vector local_tracers;
     {
         std::lock_guard<std::mutex> guard(g_su_resource_tracers_mutex);
-        size_t index = 0;
         size_t count = g_su_resource_tracers.size();
+        try
+        {
+            local_tracers.reserve(count);
+        }
+        catch (const std::bad_alloc &)
+        {
+            ft_errno = FT_ERR_NO_MEMORY;
+            return ;
+        }
+        size_t index = 0;
         while (index < count)
         {
-            local_tracers.push_back(g_su_resource_tracers[index]);
+            try
+            {
+                local_tracers.push_back(g_su_resource_tracers[index]);
+            }
+            catch (const std::bad_alloc &)
+            {
+                ft_errno = FT_ERR_NO_MEMORY;
+                return ;
+            }
             index += 1;
         }
     }
