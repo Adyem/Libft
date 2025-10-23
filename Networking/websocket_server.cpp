@@ -37,19 +37,65 @@ static void compute_accept_key(const ft_string &key, ft_string &accept)
     return ;
 }
 
-ft_websocket_server::ft_websocket_server() : _server_socket(ft_nullptr), _error_code(ER_SUCCESS)
+void ft_websocket_server::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept
 {
+    int operation_errno;
+
+    operation_errno = ft_errno;
+    if (guard.owns_lock())
+        guard.unlock();
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        ft_errno = guard.get_error();
+        return ;
+    }
+    if (operation_errno != ER_SUCCESS)
+    {
+        ft_errno = operation_errno;
+        return ;
+    }
+    ft_errno = entry_errno;
+    return ;
+}
+
+ft_websocket_server::ft_websocket_server()
+    : _server_socket(ft_nullptr), _error_code(ER_SUCCESS), _mutex()
+{
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        ft_errno = guard.get_error();
+        return ;
+    }
+    this->_server_socket = ft_nullptr;
+    this->_error_code = ER_SUCCESS;
+    this->set_error(ER_SUCCESS);
+    ft_websocket_server::restore_errno(guard, entry_errno);
     return ;
 }
 
 ft_websocket_server::~ft_websocket_server()
 {
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        ft_errno = guard.get_error();
+        return ;
+    }
     if (this->_server_socket)
     {
         this->_server_socket->close_socket();
         delete this->_server_socket;
         this->_server_socket = ft_nullptr;
     }
+    this->set_error(ER_SUCCESS);
+    ft_websocket_server::restore_errno(guard, entry_errno);
     return ;
 }
 
@@ -62,8 +108,17 @@ void ft_websocket_server::set_error(int error_code) const
 
 int ft_websocket_server::start(const char *ip, uint16_t port, int address_family, bool non_blocking)
 {
-    SocketConfig configuration;
+    int entry_errno;
 
+    entry_errno = ft_errno;
+    SocketConfig configuration;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(guard.get_error());
+        ft_websocket_server::restore_errno(guard, entry_errno);
+        return (1);
+    }
     configuration._type = SocketType::SERVER;
     configuration._ip = ip;
     configuration._port = port;
@@ -73,25 +128,35 @@ int ft_websocket_server::start(const char *ip, uint16_t port, int address_family
     configuration._send_timeout = 5000;
     if (this->_server_socket)
     {
+        this->_server_socket->close_socket();
         delete this->_server_socket;
         this->_server_socket = ft_nullptr;
     }
     this->_server_socket = new ft_socket(configuration);
     if (!this->_server_socket || this->_server_socket->get_error() != ER_SUCCESS)
     {
+        int error_code;
+
         if (this->_server_socket)
-            this->set_error(this->_server_socket->get_error());
+        {
+            error_code = this->_server_socket->get_error();
+            delete this->_server_socket;
+            this->_server_socket = ft_nullptr;
+        }
         else
-            this->set_error(FT_ERR_INVALID_ARGUMENT);
+            error_code = FT_ERR_INVALID_ARGUMENT;
+        this->set_error(error_code);
+        ft_websocket_server::restore_errno(guard, entry_errno);
         return (1);
     }
     this->set_error(ER_SUCCESS);
+    ft_websocket_server::restore_errno(guard, entry_errno);
     return (0);
 }
 
-int ft_websocket_server::perform_handshake(int client_fd)
+int ft_websocket_server::perform_handshake_locked(int client_fd, ft_unique_lock<pt_mutex> &guard)
 {
-    static const std::size_t MAX_HANDSHAKE_SIZE = 8192; 
+    static const std::size_t MAX_HANDSHAKE_SIZE = 8192;
     char buffer[1024];
     ssize_t bytes_received;
     ft_string request;
@@ -102,6 +167,7 @@ int ft_websocket_server::perform_handshake(int client_fd)
     ft_string response;
     std::size_t request_size;
 
+    (void)guard;
     request.clear();
     while (true)
     {
@@ -143,7 +209,9 @@ int ft_websocket_server::perform_handshake(int client_fd)
     key.clear();
     if (line_end)
     {
-        std::size_t index_value = 0;
+        std::size_t index_value;
+
+        index_value = 0;
         while (key_line + index_value < line_end)
         {
             key.append(key_line[index_value]);
@@ -152,7 +220,9 @@ int ft_websocket_server::perform_handshake(int client_fd)
     }
     else
     {
-        std::size_t index_value = 0;
+        std::size_t index_value;
+
+        index_value = 0;
         while (key_line[index_value] != '\0')
         {
             key.append(key_line[index_value]);
@@ -172,11 +242,12 @@ int ft_websocket_server::perform_handshake(int client_fd)
     return (0);
 }
 
-int ft_websocket_server::send_pong(int client_fd, const unsigned char *payload, std::size_t length)
+int ft_websocket_server::send_pong_locked(int client_fd, const unsigned char *payload, std::size_t length, ft_unique_lock<pt_mutex> &guard)
 {
     ft_string frame;
     std::size_t index_value;
 
+    (void)guard;
     frame.append(static_cast<char>(0x8A));
     if (length <= 125)
         frame.append(static_cast<char>(static_cast<unsigned char>(length)));
@@ -211,7 +282,7 @@ int ft_websocket_server::send_pong(int client_fd, const unsigned char *payload, 
     return (0);
 }
 
-int ft_websocket_server::receive_frame(int client_fd, ft_string &message)
+int ft_websocket_server::receive_frame_locked(int client_fd, ft_string &message, ft_unique_lock<pt_mutex> &guard)
 {
     unsigned char header[2];
     unsigned char mask_key[4];
@@ -235,6 +306,7 @@ int ft_websocket_server::receive_frame(int client_fd, ft_string &message)
         if (payload_length == 126)
         {
             unsigned char extended[2];
+
             bytes_received = nw_recv(client_fd, extended, 2, 0);
             if (bytes_received <= 0)
             {
@@ -247,6 +319,7 @@ int ft_websocket_server::receive_frame(int client_fd, ft_string &message)
         {
             unsigned char extended[8];
             std::size_t shift_index;
+
             bytes_received = nw_recv(client_fd, extended, 8, 0);
             if (bytes_received <= 0)
             {
@@ -293,7 +366,11 @@ int ft_websocket_server::receive_frame(int client_fd, ft_string &message)
         }
         if (opcode == 0x9)
         {
-            this->send_pong(client_fd, payload, payload_length);
+            if (this->send_pong_locked(client_fd, payload, payload_length, guard) != 0)
+            {
+                cma_free(payload);
+                return (1);
+            }
             cma_free(payload);
             continue ;
         }
@@ -325,27 +402,54 @@ int ft_websocket_server::run_once(int &client_fd, ft_string &message)
 {
     struct sockaddr_storage client_address;
     socklen_t address_length;
+    int entry_errno;
     int result;
 
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(guard.get_error());
+        ft_websocket_server::restore_errno(guard, entry_errno);
+        return (1);
+    }
+    if (this->_server_socket == ft_nullptr)
+    {
+        this->set_error(FT_ERR_INVALID_STATE);
+        ft_websocket_server::restore_errno(guard, entry_errno);
+        return (1);
+    }
     address_length = sizeof(client_address);
     client_fd = nw_accept(this->_server_socket->get_fd(), reinterpret_cast<struct sockaddr*>(&client_address), &address_length);
     if (client_fd < 0)
     {
         this->set_error(ft_errno);
+        ft_websocket_server::restore_errno(guard, entry_errno);
         return (1);
     }
-    if (this->perform_handshake(client_fd) != 0)
+    if (this->perform_handshake_locked(client_fd, guard) != 0)
     {
+        int handshake_error;
+
+        handshake_error = this->_error_code;
         nw_close(client_fd);
+        this->set_error(handshake_error);
+        ft_websocket_server::restore_errno(guard, entry_errno);
         return (1);
     }
-    result = this->receive_frame(client_fd, message);
+    result = this->receive_frame_locked(client_fd, message, guard);
     if (result != 0)
     {
+        int receive_error;
+
+        receive_error = this->_error_code;
         nw_close(client_fd);
+        this->set_error(receive_error);
+        ft_websocket_server::restore_errno(guard, entry_errno);
         return (1);
     }
     this->set_error(ER_SUCCESS);
+    ft_websocket_server::restore_errno(guard, entry_errno);
     return (0);
 }
 
@@ -354,10 +458,20 @@ int ft_websocket_server::send_text(int client_fd, const ft_string &message)
     ft_string frame;
     std::size_t length;
     std::size_t index_value;
+    int entry_errno;
 
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(guard.get_error());
+        ft_websocket_server::restore_errno(guard, entry_errno);
+        return (1);
+    }
     if (client_fd < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
+        ft_websocket_server::restore_errno(guard, entry_errno);
         return (1);
     }
     frame.append(static_cast<char>(0x81));
@@ -391,9 +505,11 @@ int ft_websocket_server::send_text(int client_fd, const ft_string &message)
     if (nw_send(client_fd, frame.c_str(), frame.size(), 0) < 0)
     {
         this->set_error(ft_errno);
+        ft_websocket_server::restore_errno(guard, entry_errno);
         return (1);
     }
     this->set_error(ER_SUCCESS);
+    ft_websocket_server::restore_errno(guard, entry_errno);
     return (0);
 }
 
@@ -402,23 +518,35 @@ int ft_websocket_server::get_port(unsigned short &port_value) const
     struct sockaddr_storage local_address;
     socklen_t address_length;
     int server_fd;
+    int entry_errno;
 
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
     port_value = 0;
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        const_cast<ft_websocket_server *>(this)->set_error(guard.get_error());
+        ft_websocket_server::restore_errno(guard, entry_errno);
+        return (1);
+    }
     if (this->_server_socket == ft_nullptr)
     {
         this->set_error(FT_ERR_INVALID_STATE);
+        ft_websocket_server::restore_errno(guard, entry_errno);
         return (1);
     }
     server_fd = this->_server_socket->get_fd();
     if (server_fd < 0)
     {
         this->set_error(FT_ERR_INVALID_STATE);
+        ft_websocket_server::restore_errno(guard, entry_errno);
         return (1);
     }
     address_length = sizeof(local_address);
     if (getsockname(server_fd, reinterpret_cast<struct sockaddr*>(&local_address), &address_length) != 0)
     {
         this->set_error(ft_set_errno_from_system_error(errno));
+        ft_websocket_server::restore_errno(guard, entry_errno);
         return (1);
     }
     if (local_address.ss_family == AF_INET)
@@ -438,18 +566,46 @@ int ft_websocket_server::get_port(unsigned short &port_value) const
     else
     {
         this->set_error(FT_ERR_INVALID_STATE);
+        ft_websocket_server::restore_errno(guard, entry_errno);
         return (1);
     }
     this->set_error(ER_SUCCESS);
+    ft_websocket_server::restore_errno(guard, entry_errno);
     return (0);
 }
 
 int ft_websocket_server::get_error() const
 {
-    return (this->_error_code);
+    int entry_errno;
+    int error_value;
+
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        const_cast<ft_websocket_server *>(this)->set_error(guard.get_error());
+        ft_websocket_server::restore_errno(guard, entry_errno);
+        return (const_cast<ft_websocket_server *>(this)->_error_code);
+    }
+    error_value = this->_error_code;
+    ft_websocket_server::restore_errno(guard, entry_errno);
+    return (error_value);
 }
 
 const char *ft_websocket_server::get_error_str() const
 {
-    return (ft_strerror(this->_error_code));
+    int entry_errno;
+    const char *error_string;
+
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        const_cast<ft_websocket_server *>(this)->set_error(guard.get_error());
+        ft_websocket_server::restore_errno(guard, entry_errno);
+        return (ft_strerror(const_cast<ft_websocket_server *>(this)->_error_code));
+    }
+    error_string = ft_strerror(this->_error_code);
+    ft_websocket_server::restore_errno(guard, entry_errno);
+    return (error_string);
 }
