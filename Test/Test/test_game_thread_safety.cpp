@@ -2,6 +2,7 @@
 #include "../../Game/game_buff.hpp"
 #include "../../Game/game_debuff.hpp"
 #include "../../Game/game_equipment.hpp"
+#include "../../Game/game_experience_table.hpp"
 #include "../../Game/game_item.hpp"
 #include "../../Game/game_skill.hpp"
 #include "../../Game/game_upgrade.hpp"
@@ -164,6 +165,45 @@ static void run_upgrade_increment_task(ft_upgrade *upgrade, int iterations)
 
 static void run_upgrade_assignment_task(ft_upgrade *destination,
         ft_upgrade *source, int iterations, int *failure_flag)
+{
+    int index;
+
+    index = 0;
+    while (index < iterations)
+    {
+        *destination = *source;
+        if (destination->get_error() != ER_SUCCESS)
+        {
+            *failure_flag = 1;
+            return ;
+        }
+        index++;
+    }
+    *failure_flag = 0;
+    return ;
+}
+
+static void run_experience_set_levels_task(ft_experience_table *table,
+        const int *levels, int count, int iterations, int *failure_flag)
+{
+    int index;
+
+    index = 0;
+    while (index < iterations)
+    {
+        if (table->set_levels(levels, count) != ER_SUCCESS)
+        {
+            *failure_flag = 1;
+            return ;
+        }
+        index++;
+    }
+    *failure_flag = 0;
+    return ;
+}
+
+static void run_experience_assignment_task(ft_experience_table *destination,
+        ft_experience_table *source, int iterations, int *failure_flag)
 {
     int index;
 
@@ -759,6 +799,124 @@ FT_TEST(test_game_achievement_cross_assignment_deadlock_free,
     FT_ASSERT_EQ(left_achievement.is_complete(), right_achievement.is_complete());
     FT_ASSERT_EQ(ER_SUCCESS, left_achievement.get_error());
     FT_ASSERT_EQ(ER_SUCCESS, right_achievement.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_game_experience_table_concurrent_set_levels,
+        "ft_experience_table set_levels remains consistent under concurrency")
+{
+    ft_experience_table table;
+    ft_thread thread_one;
+    ft_thread thread_two;
+    int failure_one;
+    int failure_two;
+    int iterations;
+    int base_levels[4];
+    int alternate_levels[4];
+    int result;
+    int index;
+
+    ft_errno = ER_SUCCESS;
+    iterations = 128;
+    failure_one = -1;
+    failure_two = -1;
+    base_levels[0] = 0;
+    base_levels[1] = 90;
+    base_levels[2] = 270;
+    base_levels[3] = 540;
+    alternate_levels[0] = 0;
+    alternate_levels[1] = 120;
+    alternate_levels[2] = 320;
+    alternate_levels[3] = 700;
+    result = table.set_levels(base_levels, 4);
+    FT_ASSERT_EQ(ER_SUCCESS, result);
+    FT_ASSERT_EQ(ER_SUCCESS, table.get_error());
+    thread_one = ft_thread(run_experience_set_levels_task, &table, base_levels, 4,
+            iterations, &failure_one);
+    FT_ASSERT_EQ(ER_SUCCESS, thread_one.get_error());
+    thread_two = ft_thread(run_experience_set_levels_task, &table,
+            alternate_levels, 4, iterations, &failure_two);
+    FT_ASSERT_EQ(ER_SUCCESS, thread_two.get_error());
+    thread_one.join();
+    FT_ASSERT_EQ(ER_SUCCESS, thread_one.get_error());
+    thread_two.join();
+    FT_ASSERT_EQ(ER_SUCCESS, thread_two.get_error());
+    FT_ASSERT_EQ(0, failure_one);
+    FT_ASSERT_EQ(0, failure_two);
+    FT_ASSERT_EQ(4, table.get_count());
+    FT_ASSERT_EQ(ER_SUCCESS, table.get_error());
+    result = table.check_for_error();
+    FT_ASSERT_EQ(0, result);
+    FT_ASSERT_EQ(ER_SUCCESS, table.get_error());
+    index = 1;
+    while (index < 4)
+    {
+        FT_ASSERT(table.get_value(index) >= table.get_value(index - 1));
+        index++;
+    }
+    FT_ASSERT_EQ(ER_SUCCESS, table.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_game_experience_table_cross_assignment_deadlock_free,
+        "ft_experience_table assignment avoids deadlock and preserves mutex ordering")
+{
+    ft_experience_table left_table;
+    ft_experience_table right_table;
+    ft_thread left_thread;
+    ft_thread right_thread;
+    int left_levels[5];
+    int right_levels[5];
+    int left_failure_flag;
+    int right_failure_flag;
+    int iterations;
+    int index;
+
+    ft_errno = ER_SUCCESS;
+    iterations = 128;
+    left_failure_flag = -1;
+    right_failure_flag = -1;
+    left_levels[0] = 0;
+    left_levels[1] = 50;
+    left_levels[2] = 150;
+    left_levels[3] = 310;
+    left_levels[4] = 630;
+    right_levels[0] = 0;
+    right_levels[1] = 70;
+    right_levels[2] = 190;
+    right_levels[3] = 400;
+    right_levels[4] = 820;
+    FT_ASSERT_EQ(ER_SUCCESS, left_table.set_levels(left_levels, 5));
+    FT_ASSERT_EQ(ER_SUCCESS, left_table.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, right_table.set_levels(right_levels, 5));
+    FT_ASSERT_EQ(ER_SUCCESS, right_table.get_error());
+    left_thread = ft_thread(run_experience_assignment_task, &left_table,
+            &right_table, iterations, &left_failure_flag);
+    FT_ASSERT_EQ(ER_SUCCESS, left_thread.get_error());
+    right_thread = ft_thread(run_experience_assignment_task, &right_table,
+            &left_table, iterations, &right_failure_flag);
+    FT_ASSERT_EQ(ER_SUCCESS, right_thread.get_error());
+    left_thread.join();
+    FT_ASSERT_EQ(ER_SUCCESS, left_thread.get_error());
+    right_thread.join();
+    FT_ASSERT_EQ(ER_SUCCESS, right_thread.get_error());
+    FT_ASSERT_EQ(0, left_failure_flag);
+    FT_ASSERT_EQ(0, right_failure_flag);
+    FT_ASSERT_EQ(left_table.get_count(), right_table.get_count());
+    FT_ASSERT_EQ(ER_SUCCESS, left_table.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, right_table.get_error());
+    index = 0;
+    while (index < left_table.get_count())
+    {
+        FT_ASSERT_EQ(left_table.get_value(index), right_table.get_value(index));
+        FT_ASSERT_EQ(ER_SUCCESS, left_table.get_error());
+        FT_ASSERT_EQ(ER_SUCCESS, right_table.get_error());
+        index++;
+    }
+    FT_ASSERT_EQ(ER_SUCCESS, left_table.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, right_table.get_error());
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }

@@ -353,7 +353,7 @@
 - [x] Make `ft_skill` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_achievement` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_crafting` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_experience_table` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_experience_table` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_game_server` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_goal` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_crafting_ingredient` thread safe (relies on the shared deadlock resolution routine described below).

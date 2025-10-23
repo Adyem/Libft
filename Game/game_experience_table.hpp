@@ -1,15 +1,24 @@
 #ifndef GAME_EXPERIENCE_TABLE_HPP
 # define GAME_EXPERIENCE_TABLE_HPP
 
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
+
 class ft_experience_table
 {
     private:
-        int         *_levels;
-        int         _count;
-        mutable int _error;
+        int             *_levels;
+        int             _count;
+        mutable int     _error;
+        mutable pt_mutex _mutex;
 
         void set_error(int err) const noexcept;
         bool is_valid(int count, const int *array) const noexcept;
+        static int lock_pair(const ft_experience_table &first,
+                const ft_experience_table &second,
+                ft_unique_lock<pt_mutex> &first_guard,
+                ft_unique_lock<pt_mutex> &second_guard);
+        int resize_locked(int new_count, ft_unique_lock<pt_mutex> &guard) noexcept;
 
     public:
         ft_experience_table(int count = 0) noexcept;
