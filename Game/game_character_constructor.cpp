@@ -31,6 +31,20 @@ bool ft_character::check_internal_errors() noexcept
         return (true);
     if (this->handle_component_error(this->_equipment.get_error()) == true)
         return (true);
+    if (this->handle_component_error(this->_fire_res.get_error()) == true)
+        return (true);
+    if (this->handle_component_error(this->_frost_res.get_error()) == true)
+        return (true);
+    if (this->handle_component_error(this->_lightning_res.get_error()) == true)
+        return (true);
+    if (this->handle_component_error(this->_air_res.get_error()) == true)
+        return (true);
+    if (this->handle_component_error(this->_earth_res.get_error()) == true)
+        return (true);
+    if (this->handle_component_error(this->_chaos_res.get_error()) == true)
+        return (true);
+    if (this->handle_component_error(this->_physical_res.get_error()) == true)
+        return (true);
     return (false);
 }
 
@@ -41,9 +55,9 @@ ft_character::ft_character() noexcept
       _damage_rule(FT_DAMAGE_RULE_FLAT),
       _might(0), _agility(0), _endurance(0), _reason(0), _insigh(0), _presence(0),
       _coins(0), _valor(0), _experience(0), _x(0), _y(0), _z(0),
-      _fire_res{0, 0}, _frost_res{0, 0}, _lightning_res{0, 0},
-      _air_res{0, 0}, _earth_res{0, 0}, _chaos_res{0, 0},
-      _physical_res{0, 0}, _skills(), _buffs(), _debuffs(), _upgrades(), _quests(), _achievements(), _reputation(), _inventory(), _equipment(),
+      _fire_res(), _frost_res(), _lightning_res(),
+      _air_res(), _earth_res(), _chaos_res(),
+      _physical_res(), _skills(), _buffs(), _debuffs(), _upgrades(), _quests(), _achievements(), _reputation(), _inventory(), _equipment(),
       _error(ER_SUCCESS)
 {
     if (this->check_internal_errors() == true)
@@ -185,20 +199,13 @@ ft_character &ft_character::operator=(ft_character &&other) noexcept
         other._y = 0;
         other._z = 0;
         other._experience_table = ft_experience_table();
-        other._fire_res.dr_percent = 0;
-        other._fire_res.dr_flat = 0;
-        other._frost_res.dr_percent = 0;
-        other._frost_res.dr_flat = 0;
-        other._lightning_res.dr_percent = 0;
-        other._lightning_res.dr_flat = 0;
-        other._air_res.dr_percent = 0;
-        other._air_res.dr_flat = 0;
-        other._earth_res.dr_percent = 0;
-        other._earth_res.dr_flat = 0;
-        other._chaos_res.dr_percent = 0;
-        other._chaos_res.dr_flat = 0;
-        other._physical_res.dr_percent = 0;
-        other._physical_res.dr_flat = 0;
+        other._fire_res.reset();
+        other._frost_res.reset();
+        other._lightning_res.reset();
+        other._air_res.reset();
+        other._earth_res.reset();
+        other._chaos_res.reset();
+        other._physical_res.reset();
         other._skills.clear();
         other._buffs.clear();
         other._debuffs.clear();
