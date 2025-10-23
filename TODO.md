@@ -93,7 +93,7 @@
 - [x] Make `ft_socket::initialize` return an error when `setup_server`/`setup_client` fails so callers are not forced to poll `_error_code` after a `0` return. 【F:Networking/networking_socket_class.cpp†L395-L423】
 - [x] Make `SocketConfig` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_socket` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `udp_socket` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `udp_socket` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_websocket_server` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_websocket_client` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_http_server` thread safe (relies on the shared deadlock resolution routine described below).
@@ -352,12 +352,12 @@
 - [x] Make `ft_debuff` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_skill` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_achievement` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_crafting` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_crafting` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_experience_table` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_game_server` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_goal` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_crafting_ingredient` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_item_modifier` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_crafting_ingredient` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_item_modifier` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_event_compare_ptr` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_resistance` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_path_step` thread safe (relies on the shared deadlock resolution routine described below).

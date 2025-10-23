@@ -93,15 +93,46 @@ FT_TEST(test_intersect_aabb_parallel_access, "intersect_aabb handles concurrent 
 
     ft_errno = FT_ERR_ALREADY_EXISTS;
     iteration_index = 0;
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
+
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
     while (iteration_index < 256)
     {
-        FT_ASSERT(intersect_aabb(second, first));
-        FT_ASSERT_EQ(ER_SUCCESS, first.get_error());
-        FT_ASSERT_EQ(ER_SUCCESS, second.get_error());
+        if (!intersect_aabb(second, first) && test_failed == 0)
+        {
+            test_failed = 1;
+            failure_expression = "intersect_aabb(second, first)";
+            failure_line = __LINE__;
+            break;
+        }
+        if (first.get_error() != ER_SUCCESS && test_failed == 0)
+        {
+            test_failed = 1;
+            failure_expression = "first.get_error() == ER_SUCCESS";
+            failure_line = __LINE__;
+            break;
+        }
+        if (second.get_error() != ER_SUCCESS && test_failed == 0)
+        {
+            test_failed = 1;
+            failure_expression = "second.get_error() == ER_SUCCESS";
+            failure_line = __LINE__;
+            break;
+        }
         iteration_index = iteration_index + 1;
     }
 
     worker_thread.join();
+
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        return (0);
+    }
 
     FT_ASSERT(worker_completed.load());
     FT_ASSERT(worker_failed.load() == false);

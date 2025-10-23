@@ -71,9 +71,17 @@ FT_TEST(test_game_event_scheduler_concurrent_schedule,
     ft_vector<ft_sharedptr<ft_event> > events;
     ft_vector<int> identifier_counts;
     size_t event_index;
+    int created_thread_count;
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
 
     events_per_thread = 32;
     expected_total = 4 * events_per_thread;
+    created_thread_count = 0;
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
     thread_index = 0;
     while (thread_index < 4)
     {
@@ -81,18 +89,48 @@ FT_TEST(test_game_event_scheduler_concurrent_schedule,
         arguments[thread_index].thread_index = thread_index;
         arguments[thread_index].events_per_thread = events_per_thread;
         arguments[thread_index].result_code = ER_SUCCESS;
-        create_result = pt_thread_create(&threads[thread_index], ft_nullptr,
-                scheduler_schedule_task, &arguments[thread_index]);
-        FT_ASSERT_EQ(0, create_result);
+        if (test_failed == 0)
+        {
+            create_result = pt_thread_create(&threads[thread_index], ft_nullptr,
+                    scheduler_schedule_task, &arguments[thread_index]);
+            if (create_result != 0 && test_failed == 0)
+            {
+                test_failed = 1;
+                failure_expression = "create_result == 0";
+                failure_line = __LINE__;
+            }
+            if (create_result == 0)
+                created_thread_count += 1;
+        }
+        else
+            threads[thread_index] = 0;
         thread_index += 1;
     }
     thread_index = 0;
-    while (thread_index < 4)
+    while (thread_index < created_thread_count)
     {
         join_result = pt_thread_join(threads[thread_index], ft_nullptr);
-        FT_ASSERT_EQ(0, join_result);
-        FT_ASSERT_EQ(ER_SUCCESS, arguments[thread_index].result_code);
+        if (join_result != 0 && test_failed == 0)
+        {
+            test_failed = 1;
+            failure_expression = "join_result == 0";
+            failure_line = __LINE__;
+        }
+        if (join_result == 0)
+        {
+            if (arguments[thread_index].result_code != ER_SUCCESS && test_failed == 0)
+            {
+                test_failed = 1;
+                failure_expression = "arguments[thread_index].result_code == ER_SUCCESS";
+                failure_line = __LINE__;
+            }
+        }
         thread_index += 1;
+    }
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        return (0);
     }
     FT_ASSERT_EQ(static_cast<size_t>(expected_total), scheduler_instance.size());
     FT_ASSERT_EQ(ER_SUCCESS, scheduler_instance.get_error());
@@ -161,6 +199,10 @@ FT_TEST(test_game_event_scheduler_concurrent_reschedule,
     int iteration_count;
     ft_vector<ft_sharedptr<ft_event> > events;
     ft_vector<int> final_durations;
+    int created_thread_count;
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
 
     iteration_count = 64;
     preload_index = 0;
@@ -178,23 +220,49 @@ FT_TEST(test_game_event_scheduler_concurrent_reschedule,
         preload_index += 1;
     }
     FT_ASSERT_EQ(ER_SUCCESS, scheduler_instance.get_error());
+    created_thread_count = 0;
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
     preload_index = 0;
     while (preload_index < 3)
     {
         arguments[preload_index].scheduler_pointer = &scheduler_instance;
         arguments[preload_index].event_identifier = preload_index;
         arguments[preload_index].iteration_count = iteration_count;
-        create_result = pt_thread_create(&threads[preload_index], ft_nullptr,
-                scheduler_reschedule_task, &arguments[preload_index]);
-        FT_ASSERT_EQ(0, create_result);
+        if (test_failed == 0)
+        {
+            create_result = pt_thread_create(&threads[preload_index], ft_nullptr,
+                    scheduler_reschedule_task, &arguments[preload_index]);
+            if (create_result != 0 && test_failed == 0)
+            {
+                test_failed = 1;
+                failure_expression = "create_result == 0";
+                failure_line = __LINE__;
+            }
+            if (create_result == 0)
+                created_thread_count += 1;
+        }
+        else
+            threads[preload_index] = 0;
         preload_index += 1;
     }
     preload_index = 0;
-    while (preload_index < 3)
+    while (preload_index < created_thread_count)
     {
         join_result = pt_thread_join(threads[preload_index], ft_nullptr);
-        FT_ASSERT_EQ(0, join_result);
+        if (join_result != 0 && test_failed == 0)
+        {
+            test_failed = 1;
+            failure_expression = "join_result == 0";
+            failure_line = __LINE__;
+        }
         preload_index += 1;
+    }
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        return (0);
     }
     scheduler_instance.dump_events(events);
     FT_ASSERT_EQ(ER_SUCCESS, scheduler_instance.get_error());

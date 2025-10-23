@@ -67,7 +67,7 @@ static pthread_mutex_t *cma_allocator_mutex(void)
 
 cma_allocator_guard::cma_allocator_guard()
     : _lock_acquired(false), _active(false), _error_code(ER_SUCCESS),
-      _failure_logged(false)
+      _failure_logged(false), _owned_mutexes(CMA_GUARD_VECTOR_MIN_CAPACITY)
 {
     if (this->acquire_allocator_mutex() == false)
     {
@@ -247,7 +247,22 @@ bool cma_allocator_guard::acquire_mutex(pthread_mutex_t *mutex_pointer)
             return (false);
         }
         this->_lock_acquired = true;
-        this->track_mutex_acquisition(mutex_pointer, local_lock_acquired);
+        if (!this->track_mutex_acquisition(mutex_pointer, local_lock_acquired))
+        {
+            int vector_error;
+            int unlock_error;
+
+            vector_error = this->_owned_mutexes.get_error();
+            cma_unlock_allocator(local_lock_acquired);
+            unlock_error = ft_errno;
+            pt_lock_tracking::notify_released(thread_identifier, mutex_pointer);
+            this->_lock_acquired = false;
+            if (unlock_error != ER_SUCCESS)
+                this->set_error(unlock_error);
+            else
+                this->set_error(vector_error);
+            return (false);
+        }
         pt_lock_tracking::notify_acquired(thread_identifier, mutex_pointer);
         this->set_error(ER_SUCCESS);
         return (true);
@@ -301,7 +316,7 @@ bool cma_allocator_guard::reacquire_mutexes(const cma_guard_vector<s_mutex_entry
     return (true);
 }
 
-void cma_allocator_guard::track_mutex_acquisition(pthread_mutex_t *mutex_pointer, bool lock_acquired)
+bool cma_allocator_guard::track_mutex_acquisition(pthread_mutex_t *mutex_pointer, bool lock_acquired)
 {
     ft_size_t index;
     s_mutex_entry entry;
@@ -312,7 +327,7 @@ void cma_allocator_guard::track_mutex_acquisition(pthread_mutex_t *mutex_pointer
         if (this->_owned_mutexes[index].mutex_pointer == mutex_pointer)
         {
             this->_owned_mutexes[index].lock_acquired = lock_acquired;
-            return ;
+            return (true);
         }
         index += 1;
     }
@@ -323,8 +338,9 @@ void cma_allocator_guard::track_mutex_acquisition(pthread_mutex_t *mutex_pointer
     {
         this->_lock_acquired = false;
         this->set_error(this->_owned_mutexes.get_error());
+        return (false);
     }
-    return ;
+    return (true);
 }
 
 pt_mutex_vector cma_allocator_guard::owned_mutex_pointers() const
