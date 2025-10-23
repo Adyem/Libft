@@ -3,6 +3,8 @@
 
 #include "../Template/map.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 
 class ft_reputation
 {
@@ -12,8 +14,12 @@ class ft_reputation
         int             _total_rep;
         int             _current_rep;
         mutable int     _error;
+        mutable pt_mutex _mutex;
 
         void    set_error(int err) const noexcept;
+        static int lock_pair(const ft_reputation &first, const ft_reputation &second,
+                ft_unique_lock<pt_mutex> &first_guard,
+                ft_unique_lock<pt_mutex> &second_guard);
 
     public:
         ft_reputation() noexcept;
