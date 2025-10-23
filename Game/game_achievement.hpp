@@ -6,10 +6,36 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 
-struct ft_goal
+class ft_goal
 {
-    int goal;
-    int progress;
+    private:
+        int              _target;
+        int              _progress;
+        mutable int      _error;
+        mutable pt_mutex _mutex;
+
+        void set_error(int error) const noexcept;
+        static int lock_pair(const ft_goal &first,
+                const ft_goal &second,
+                ft_unique_lock<pt_mutex> &first_guard,
+                ft_unique_lock<pt_mutex> &second_guard);
+
+    public:
+        ft_goal() noexcept;
+        ~ft_goal() noexcept;
+        ft_goal(const ft_goal &other) noexcept;
+        ft_goal &operator=(const ft_goal &other) noexcept;
+        ft_goal(ft_goal &&other) noexcept;
+        ft_goal &operator=(ft_goal &&other) noexcept;
+
+        int  get_target() const noexcept;
+        void set_target(int target) noexcept;
+        int  get_progress() const noexcept;
+        void set_progress(int value) noexcept;
+        void add_progress(int delta) noexcept;
+
+        int         get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 };
 
 class ft_achievement

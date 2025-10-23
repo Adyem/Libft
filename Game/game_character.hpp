@@ -12,6 +12,7 @@
 #include "game_inventory.hpp"
 #include "game_equipment.hpp"
 #include "game_experience_table.hpp"
+#include "game_resistance.hpp"
 #include <cstdint>
 
 #define FT_DAMAGE_PHYSICAL 0
@@ -30,12 +31,6 @@
 #endif
 
 struct json_group;
-
-struct ft_resistance
-{
-    int dr_percent;
-    int dr_flat;
-};
 
 class ft_character
 {
