@@ -32,9 +32,48 @@ FT_TEST(test_pt_thread_create_updates_errno, "pt_thread_create updates ft_errno 
     FT_ASSERT_EQ(ft_map_system_error(failure_result), ft_errno);
     pthread_attr_destroy(&attributes);
     success_result = pt_thread_create(&thread, ft_nullptr, pthread_test_routine, &routine_started);
-    FT_ASSERT_EQ(0, success_result);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(0, pt_thread_join(thread, ft_nullptr));
+    int join_result;
+    int thread_started;
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
+
+    join_result = 0;
+    thread_started = 0;
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
+    if (success_result != 0)
+    {
+        test_failed = 1;
+        failure_expression = "success_result == 0";
+        failure_line = __LINE__;
+    }
+    else
+    {
+        thread_started = 1;
+        if (ft_errno != ER_SUCCESS)
+        {
+            test_failed = 1;
+            failure_expression = "ft_errno == ER_SUCCESS";
+            failure_line = __LINE__;
+        }
+    }
+    if (thread_started == 1)
+    {
+        join_result = pt_thread_join(thread, ft_nullptr);
+        if (join_result != 0 && test_failed == 0)
+        {
+            test_failed = 1;
+            failure_expression = "join_result == 0";
+            failure_line = __LINE__;
+        }
+    }
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        return (0);
+    }
     FT_ASSERT_EQ(1, routine_started);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
@@ -46,14 +85,36 @@ FT_TEST(test_pt_thread_join_updates_errno, "pt_thread_join updates ft_errno on f
     pthread_t thread;
     int failure_result;
     int routine_started;
+    int join_result;
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
 
     invalid_thread = 0;
     failure_result = pt_thread_join(invalid_thread, ft_nullptr);
     FT_ASSERT(failure_result != 0);
     FT_ASSERT_EQ(ft_map_system_error(failure_result), ft_errno);
     routine_started = 0;
-    FT_ASSERT_EQ(0, pt_thread_create(&thread, ft_nullptr, pthread_test_routine, &routine_started));
-    FT_ASSERT_EQ(0, pt_thread_join(thread, ft_nullptr));
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
+    if (pt_thread_create(&thread, ft_nullptr, pthread_test_routine, &routine_started) != 0)
+    {
+        ft_test_fail("pt_thread_create(&thread, ft_nullptr, pthread_test_routine, &routine_started) == 0", __FILE__, __LINE__);
+        return (0);
+    }
+    join_result = pt_thread_join(thread, ft_nullptr);
+    if (join_result != 0)
+    {
+        test_failed = 1;
+        failure_expression = "join_result == 0";
+        failure_line = __LINE__;
+    }
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        return (0);
+    }
     FT_ASSERT_EQ(1, routine_started);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);

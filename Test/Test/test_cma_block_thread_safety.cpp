@@ -67,16 +67,49 @@ FT_TEST(test_cma_block_lock_waits_for_existing_holder,
     std::chrono::steady_clock::time_point end_time;
     long long elapsed_ms;
 
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
+    int lock_result;
+
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
     lock_acquired = false;
     start_time = std::chrono::steady_clock::now();
-    FT_ASSERT_EQ(0, cma_block_lock(block, &lock_acquired));
+    lock_result = cma_block_lock(block, &lock_acquired);
     end_time = std::chrono::steady_clock::now();
-    FT_ASSERT(lock_acquired == true);
-    elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-            end_time - start_time).count();
-    FT_ASSERT(elapsed_ms >= 40);
-    cma_block_unlock(block, lock_acquired);
+    if (lock_result != 0 && test_failed == 0)
+    {
+        test_failed = 1;
+        failure_expression = "lock_result == 0";
+        failure_line = __LINE__;
+    }
+    if (lock_result == 0)
+    {
+        if (lock_acquired != true && test_failed == 0)
+        {
+            test_failed = 1;
+            failure_expression = "lock_acquired == true";
+            failure_line = __LINE__;
+        }
+        elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                end_time - start_time).count();
+        if (elapsed_ms < 40 && test_failed == 0)
+        {
+            test_failed = 1;
+            failure_expression = "elapsed_ms >= 40";
+            failure_line = __LINE__;
+        }
+        cma_block_unlock(block, lock_acquired);
+    }
     worker.join();
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        cma_metadata_release_block(block);
+        return (0);
+    }
     FT_ASSERT(worker_failed.load() == false);
     cma_metadata_release_block(block);
     return (1);
@@ -140,16 +173,49 @@ FT_TEST(test_cma_page_lock_blocks_until_unlocked,
     std::chrono::steady_clock::time_point end_time;
     long long elapsed_ms;
 
+    int test_failed;
+    const char *failure_expression;
+    int failure_line;
+    int lock_result;
+
+    test_failed = 0;
+    failure_expression = ft_nullptr;
+    failure_line = 0;
     lock_acquired = false;
     start_time = std::chrono::steady_clock::now();
-    FT_ASSERT_EQ(0, cma_page_lock(&page, &lock_acquired));
+    lock_result = cma_page_lock(&page, &lock_acquired);
     end_time = std::chrono::steady_clock::now();
-    FT_ASSERT(lock_acquired == true);
-    elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-            end_time - start_time).count();
-    FT_ASSERT(elapsed_ms >= 40);
-    cma_page_unlock(&page, lock_acquired);
+    if (lock_result != 0 && test_failed == 0)
+    {
+        test_failed = 1;
+        failure_expression = "lock_result == 0";
+        failure_line = __LINE__;
+    }
+    if (lock_result == 0)
+    {
+        if (lock_acquired != true && test_failed == 0)
+        {
+            test_failed = 1;
+            failure_expression = "lock_acquired == true";
+            failure_line = __LINE__;
+        }
+        elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                end_time - start_time).count();
+        if (elapsed_ms < 40 && test_failed == 0)
+        {
+            test_failed = 1;
+            failure_expression = "elapsed_ms >= 40";
+            failure_line = __LINE__;
+        }
+        cma_page_unlock(&page, lock_acquired);
+    }
     worker.join();
+    if (test_failed != 0)
+    {
+        ft_test_fail(failure_expression, __FILE__, failure_line);
+        cma_page_teardown_thread_safety(&page);
+        return (0);
+    }
     FT_ASSERT(worker_failed.load() == false);
     cma_page_teardown_thread_safety(&page);
     return (1);

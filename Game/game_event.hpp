@@ -41,7 +41,7 @@ class ft_event
 
         int get_duration() const noexcept;
         void set_duration(int duration) noexcept;
-        void add_duration(int duration) noexcept;
+        int add_duration(int duration) noexcept;
         void sub_duration(int duration) noexcept;
 
         int get_modifier1() const noexcept;

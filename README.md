@@ -2278,8 +2278,8 @@ finder.recalculate_path(grid, 0, 0, 0, 2, 2, 0, path);
 ```
 ft_crafting crafting;
 ft_vector<ft_crafting_ingredient> ingredients;
-ft_crafting_ingredient ingredient_a = {1, 2, -1};
-ft_crafting_ingredient ingredient_b = {2, 1, 1};
+ft_crafting_ingredient ingredient_a(1, 2, -1);
+ft_crafting_ingredient ingredient_b(2, 1, 1);
 ingredients.push_back(ingredient_a);
 ingredients.push_back(ingredient_b);
 crafting.register_recipe(1, ft_move(ingredients));

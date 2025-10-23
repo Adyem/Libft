@@ -5,10 +5,37 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 
-struct ft_item_modifier
+class ft_item_modifier
 {
-    int id;
-    int value;
+    private:
+        int             _id;
+        int             _value;
+        mutable int     _error_code;
+        mutable pt_mutex _mutex;
+
+        void set_error(int error_code) const noexcept;
+        static int lock_pair(const ft_item_modifier &first,
+                const ft_item_modifier &second,
+                ft_unique_lock<pt_mutex> &first_guard,
+                ft_unique_lock<pt_mutex> &second_guard);
+
+    public:
+        ft_item_modifier() noexcept;
+        ft_item_modifier(int id, int value) noexcept;
+        virtual ~ft_item_modifier() = default;
+        ft_item_modifier(const ft_item_modifier &other) noexcept;
+        ft_item_modifier &operator=(const ft_item_modifier &other) noexcept;
+        ft_item_modifier(ft_item_modifier &&other) noexcept;
+        ft_item_modifier &operator=(ft_item_modifier &&other) noexcept;
+
+        int get_id() const noexcept;
+        void set_id(int id) noexcept;
+
+        int get_value() const noexcept;
+        void set_value(int value) noexcept;
+
+        int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 };
 
 class ft_item
