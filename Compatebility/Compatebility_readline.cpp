@@ -5,6 +5,7 @@
 #if defined(_WIN32) || defined(_WIN64)
 # include <windows.h>
 static DWORD g_orig_mode;
+static bool g_raw_mode_active;
 
 static void cmp_set_errno_from_last_error()
 {
@@ -20,16 +21,30 @@ static void cmp_set_errno_from_last_error()
 
 int cmp_readline_enable_raw_mode()
 {
-    HANDLE handle = GetStdHandle(STD_INPUT_HANDLE);
+    HANDLE handle;
+    DWORD mode;
+
+    handle = GetStdHandle(STD_INPUT_HANDLE);
     if (handle == INVALID_HANDLE_VALUE)
     {
         cmp_set_errno_from_last_error();
+        if (ft_errno == FT_ERR_INVALID_HANDLE)
+        {
+            g_raw_mode_active = false;
+            ft_errno = ER_SUCCESS;
+            return (0);
+        }
         return (-1);
     }
-    DWORD mode;
     if (!GetConsoleMode(handle, &mode))
     {
         cmp_set_errno_from_last_error();
+        if (ft_errno == FT_ERR_INVALID_HANDLE)
+        {
+            g_raw_mode_active = false;
+            ft_errno = ER_SUCCESS;
+            return (0);
+        }
         return (-1);
     }
     g_orig_mode = mode;
@@ -37,15 +52,29 @@ int cmp_readline_enable_raw_mode()
     if (!SetConsoleMode(handle, mode))
     {
         cmp_set_errno_from_last_error();
+        if (ft_errno == FT_ERR_INVALID_HANDLE)
+        {
+            g_raw_mode_active = false;
+            ft_errno = ER_SUCCESS;
+            return (0);
+        }
         return (-1);
     }
+    g_raw_mode_active = true;
     ft_errno = ER_SUCCESS;
     return (0);
 }
 
 void cmp_readline_disable_raw_mode()
 {
-    HANDLE handle = GetStdHandle(STD_INPUT_HANDLE);
+    HANDLE handle;
+
+    if (g_raw_mode_active == false)
+    {
+        ft_errno = ER_SUCCESS;
+        return ;
+    }
+    handle = GetStdHandle(STD_INPUT_HANDLE);
     if (handle == INVALID_HANDLE_VALUE)
     {
         cmp_set_errno_from_last_error();
@@ -56,6 +85,7 @@ void cmp_readline_disable_raw_mode()
         cmp_set_errno_from_last_error();
         return ;
     }
+    g_raw_mode_active = false;
     ft_errno = ER_SUCCESS;
     return ;
 }
@@ -108,6 +138,7 @@ int cmp_readline_terminal_width()
 # include <sys/ioctl.h>
 # include <errno.h>
 static termios g_orig_termios;
+static bool g_raw_mode_active;
 
 static void cmp_set_errno_from_errno()
 {
@@ -121,6 +152,13 @@ static void cmp_set_errno_from_errno()
 int cmp_readline_enable_raw_mode()
 {
     struct termios raw;
+
+    if (isatty(STDIN_FILENO) == 0)
+    {
+        g_raw_mode_active = false;
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
     if (tcgetattr(STDIN_FILENO, &raw) == -1)
     {
         cmp_set_errno_from_errno();
@@ -133,17 +171,24 @@ int cmp_readline_enable_raw_mode()
         cmp_set_errno_from_errno();
         return (-1);
     }
+    g_raw_mode_active = true;
     ft_errno = ER_SUCCESS;
     return (0);
 }
 
 void cmp_readline_disable_raw_mode()
 {
+    if (g_raw_mode_active == false)
+    {
+        ft_errno = ER_SUCCESS;
+        return ;
+    }
     if (tcsetattr(STDIN_FILENO, TCSANOW, &g_orig_termios) == -1)
     {
         cmp_set_errno_from_errno();
         return ;
     }
+    g_raw_mode_active = false;
     ft_errno = ER_SUCCESS;
     return ;
 }

@@ -150,6 +150,7 @@ static void rl_reset_completion_mode_locked(readline_state_t *state)
     state->in_completion_mode = 0;
     state->current_match_count = 0;
     state->current_match_index = 0;
+    rl_completion_reset_dynamic_matches();
     return ;
 }
 

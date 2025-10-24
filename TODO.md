@@ -295,7 +295,7 @@
 
 ### File and ReadLine modules
 - [ ] Harmonize the File module with `ft_file` so both expose the same error-reporting surface and buffering strategies.
-- [ ] Extend ReadLine to support customizable key bindings, history persistence, and syntax-aware completion callbacks.
+- [x] Extend ReadLine to support customizable key bindings, history persistence, and syntax-aware completion callbacks.
 - [x] Add UTF-8 aware cursor movement and rendering in ReadLine to match the Unicode helpers in Libft.
 - [ ] Provide pluggable history storage (SQLite, JSON) and search that respects multi-byte characters.
 - [x] Document terminal capability detection and fallback behaviour for minimal environments.
