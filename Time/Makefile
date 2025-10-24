@@ -9,6 +9,7 @@ SRCS := time_now.cpp \
         time_local.cpp \
         time_sleep.cpp \
         time_sleep_ms.cpp \
+        time_sleep_async.cpp \
         time_fps.cpp \
         time_timer.cpp \
         time_strftime.cpp \
