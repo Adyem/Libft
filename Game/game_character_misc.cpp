@@ -38,6 +38,10 @@ void ft_character::take_damage(long long damage, uint8_t type) noexcept
 
 void ft_character::take_damage_flat(long long damage, uint8_t type) noexcept
 {
+    int previous_hit_points;
+    long long damage_applied;
+
+    previous_hit_points = this->_hit_points;
     damage = this->apply_skill_modifiers(damage);
     if (damage < 0)
         damage = 0;
@@ -50,12 +54,21 @@ void ft_character::take_damage_flat(long long damage, uint8_t type) noexcept
     this->_hit_points = this->_hit_points - static_cast<int>(damage);
     if (this->_hit_points < 0)
         this->_hit_points = 0;
+    damage_applied = static_cast<long long>(previous_hit_points - this->_hit_points);
+    if (damage_applied < 0)
+        damage_applied = 0;
+    this->emit_game_metric("character.damage_taken", "hit_points",
+        damage_applied, this->_hit_points, "hp");
     this->set_error(ER_SUCCESS);
     return ;
 }
 
 void ft_character::take_damage_scaled(long long damage, uint8_t type) noexcept
 {
+    int previous_hit_points;
+    long long damage_applied;
+
+    previous_hit_points = this->_hit_points;
     damage = this->apply_skill_modifiers(damage);
     if (damage < 0)
         damage = 0;
@@ -74,12 +87,21 @@ void ft_character::take_damage_scaled(long long damage, uint8_t type) noexcept
     this->_hit_points = this->_hit_points - static_cast<int>(damage);
     if (this->_hit_points < 0)
         this->_hit_points = 0;
+    damage_applied = static_cast<long long>(previous_hit_points - this->_hit_points);
+    if (damage_applied < 0)
+        damage_applied = 0;
+    this->emit_game_metric("character.damage_taken", "hit_points",
+        damage_applied, this->_hit_points, "hp");
     this->set_error(ER_SUCCESS);
     return ;
 }
 
 void ft_character::take_damage_buffer(long long damage, uint8_t type) noexcept
 {
+    int previous_hit_points;
+    long long damage_applied;
+
+    previous_hit_points = this->_hit_points;
     damage = this->apply_skill_modifiers(damage);
     if (damage < 0)
         damage = 0;
@@ -120,12 +142,21 @@ void ft_character::take_damage_buffer(long long damage, uint8_t type) noexcept
     this->_hit_points = this->_hit_points - static_cast<int>(damage);
     if (this->_hit_points < 0)
         this->_hit_points = 0;
+    damage_applied = static_cast<long long>(previous_hit_points - this->_hit_points);
+    if (damage_applied < 0)
+        damage_applied = 0;
+    this->emit_game_metric("character.damage_taken", "hit_points",
+        damage_applied, this->_hit_points, "hp");
     this->set_error(ER_SUCCESS);
     return ;
 }
 
 void ft_character::take_damage_magic_shield(long long damage, uint8_t type) noexcept
 {
+    int previous_hit_points;
+    long long damage_applied;
+
+    previous_hit_points = this->_hit_points;
     damage = this->apply_skill_modifiers(damage);
     if (damage < 0)
         damage = 0;
@@ -165,6 +196,11 @@ void ft_character::take_damage_magic_shield(long long damage, uint8_t type) noex
     this->_hit_points = this->_hit_points - static_cast<int>(damage);
     if (this->_hit_points < 0)
         this->_hit_points = 0;
+    damage_applied = static_cast<long long>(previous_hit_points - this->_hit_points);
+    if (damage_applied < 0)
+        damage_applied = 0;
+    this->emit_game_metric("character.damage_taken", "hit_points",
+        damage_applied, this->_hit_points, "hp");
     this->set_error(ER_SUCCESS);
     return ;
 }

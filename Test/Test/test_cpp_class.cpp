@@ -1,6 +1,11 @@
 #include "../../CPP_class/class_string_class.hpp"
 #include "../../CPP_class/class_data_buffer.hpp"
 #include "../../CPP_class/class_file.hpp"
+#include "../../CPP_class/class_nullptr.hpp"
+#include "../../PThread/thread.hpp"
+#include "../../Time/time.hpp"
+#include "../../Errno/errno.hpp"
+#include "../../System_utils/test_runner.hpp"
 #include <fcntl.h>
 #include <unistd.h>
 #include <cstring>
@@ -82,4 +87,71 @@ int test_ft_file_write_read(void)
         ::unlink(fname);
         return (std::strcmp(buf, "hello") == 0);
     }
+}
+
+struct ft_file_thread_context
+{
+    ft_file *file;
+    int final_error;
+};
+
+static void ft_file_poll_error(ft_file_thread_context *context)
+{
+    int iteration;
+
+    if (context == ft_nullptr)
+        return ;
+    if (context->file == ft_nullptr)
+        return ;
+    iteration = 0;
+    while (iteration < 1000)
+    {
+        context->final_error = context->file->get_error();
+        iteration++;
+    }
+    return ;
+}
+
+FT_TEST(test_ft_file_close_thread_safety,
+    "ft_file close remains safe while another thread reads errors")
+{
+    const char *filename;
+    ft_file file;
+    ft_file_thread_context context;
+    ft_thread reader;
+
+    filename = "tmp_ft_file_thread_safe.txt";
+    file = ft_file(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (file.get_fd() < 0)
+        return (0);
+    if (file.write("thread-safe") < 0)
+    {
+        file.close();
+        ::unlink(filename);
+        return (0);
+    }
+    context.file = &file;
+    context.final_error = -1;
+    reader = ft_thread(ft_file_poll_error, &context);
+    if (reader.get_error() != ER_SUCCESS)
+    {
+        file.close();
+        ::unlink(filename);
+        return (0);
+    }
+    time_sleep_ms(1);
+    file.close();
+    reader.join();
+    if (context.final_error != ER_SUCCESS)
+    {
+        ::unlink(filename);
+        return (0);
+    }
+    if (file.get_error() != ER_SUCCESS)
+    {
+        ::unlink(filename);
+        return (0);
+    }
+    ::unlink(filename);
+    return (1);
 }

@@ -9,14 +9,24 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <cstring>
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 
 class ft_file
 {
     private:
         int _fd;
         mutable int _error_code;
+        mutable pt_mutex _mutex;
 
         void        set_error(int error_code);
+        static int lock_pair(const ft_file &first, const ft_file &second,
+                ft_unique_lock<pt_mutex> &first_guard,
+                ft_unique_lock<pt_mutex> &second_guard);
+        static void restore_errno(ft_unique_lock<pt_mutex> &guard,
+                int entry_errno,
+                bool restore_previous_on_success = false) noexcept;
+        static void sleep_backoff();
 
     public:
         ft_file() noexcept;

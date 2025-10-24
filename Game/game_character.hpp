@@ -80,6 +80,9 @@ class ft_character
         long long apply_skill_modifiers(long long damage) const noexcept;
         bool    handle_component_error(int error) noexcept;
         bool    check_internal_errors() noexcept;
+        void    emit_game_metric(const char *event_name, const char *attribute,
+                long long delta_value, long long total_value,
+                const char *unit) const noexcept;
 
     public:
         ft_character() noexcept;

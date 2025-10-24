@@ -82,8 +82,8 @@
 - [ ] Complete HTTP/2 support by honoring SETTINGS frames, stream prioritization, and flow-control windows in `http2_client`.
 - [x] Integrate ALPN negotiation into the higher-level API wrappers so HTTP/2 is automatically selected when the server supports it.
 - [x] Build a reusable DNS resolver (with caching and IPv6 support) that the socket helpers can share instead of assuming raw host strings.
-- [ ] Add connection pooling and keep-alive management for `http_client`/`http_server` to reduce socket churn under load.
-- [ ] Harden WebSocket handling with per-message deflate support and stricter frame validation (masking, RSV bits, control frame sizes).
+- [x] Add connection pooling and keep-alive management for `http_client`/`http_server` to reduce socket churn under load.
+- [x] Harden WebSocket handling with per-message deflate support and stricter frame validation (masking, RSV bits, control frame sizes).
 - [x] Provide non-blocking, event-loop-friendly wrappers for UDP sockets that integrate with epoll/kqueue abstractions already present.
 - [ ] Introduce QUIC/HTTP3 experimentation behind feature flags, reusing TLS primitives where possible.
 - [x] Add observability hooks (latency histograms, error tagging) that integrate with Prometheus or OpenTelemetry exporters.
@@ -96,7 +96,7 @@
 - [x] Make `udp_socket` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_websocket_server` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_websocket_client` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_http_server` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_http_server` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `http2_stream_manager` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `event_loop` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `http2_header_field` thread safe (relies on the shared deadlock resolution routine described below).
@@ -203,7 +203,7 @@
 - [ ] Make `DataBuffer` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_string` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_stringbuf` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_file` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_file` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_ofstream` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_istream` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_fd_istream` thread safe (relies on the shared deadlock resolution routine described below).
@@ -335,7 +335,7 @@
 - [ ] Profile the event scheduler under heavy load and optimize shared-pointer churn.
 - [x] Document extension points for mods or scripting integrations.
 - [ ] Introduce scripting bridges (Lua, Python) with sandboxing controls for user-generated content.
-- [ ] Add telemetry hooks that emit gameplay metrics for balancing and analytics.
+- [x] Add telemetry hooks that emit gameplay metrics for balancing and analytics.
 - [x] Make `ft_game_state` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_character` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_item` thread safe (relies on the shared deadlock resolution routine described below).
