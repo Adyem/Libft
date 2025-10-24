@@ -13,6 +13,7 @@ SRCS := readline.cpp \
     readline_thread_safety.cpp \
     readline_terminal_dimensions.cpp \
     readline_get_terminal_width.cpp
+SRCS += readline_utf8.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))

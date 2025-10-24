@@ -22,23 +22,37 @@ int rl_handle_backspace(readline_state_t *state, const char *prompt)
         return (-1);
     if (state->pos > 0)
     {
+        int grapheme_start;
+        int grapheme_end;
+        int grapheme_columns;
         int len_after_cursor;
+        int tail_length;
 
-        state->pos--;
-        ft_memmove(&state->buffer[state->pos], &state->buffer[state->pos + 1],
-           ft_strlen(state->buffer) - state->pos + 1);
-        state->prev_buffer_length = ft_strlen(state->buffer);
-        if (rl_clear_line(prompt, state->buffer) == -1)
+        if (rl_utf8_find_previous_grapheme(state->buffer, state->pos,
+                &grapheme_start, &grapheme_end, &grapheme_columns) == 0)
         {
-            state->error_file.printf("clear line failed");
-            result = -1;
-            goto cleanup;
+            (void)grapheme_columns;
+            tail_length = ft_strlen(state->buffer) - grapheme_end + 1;
+            ft_memmove(&state->buffer[grapheme_start],
+                &state->buffer[grapheme_end], tail_length);
+            state->pos = grapheme_start;
+            if (rl_update_display_metrics(state) != 0)
+            {
+                result = -1;
+                goto cleanup;
+            }
+            if (rl_clear_line(prompt, state->buffer) == -1)
+            {
+                state->error_file.printf("clear line failed");
+                result = -1;
+                goto cleanup;
+            }
+            pf_printf("%s%s", prompt, state->buffer);
+            len_after_cursor = state->prev_display_columns - state->display_pos;
+            if (len_after_cursor > 0)
+                pf_printf("\033[%dD", len_after_cursor);
+            fflush(stdout);
         }
-        pf_printf("%s%s", prompt, state->buffer);
-        len_after_cursor = state->prev_buffer_length - state->pos;
-        if (len_after_cursor > 0)
-            pf_printf("\033[%dD", len_after_cursor);
-        fflush(stdout);
     }
     ft_errno = ER_SUCCESS;
 cleanup:
@@ -50,30 +64,57 @@ static void rl_handle_left_arrow(readline_state_t *state, const char *prompt)
 {
     if (state->pos > 0)
     {
-        state->pos--;
-        if (rl_clear_line(prompt, state->buffer) == -1)
-            return ;
-        pf_printf("%s%s", prompt, state->buffer);
-        int len_after_cursor = ft_strlen(state->buffer) - state->pos;
-        if (len_after_cursor > 0)
-            pf_printf("\033[%dD", len_after_cursor);
-        fflush(stdout);
+        int grapheme_start;
+        int grapheme_end;
+        int grapheme_columns;
+
+        if (rl_utf8_find_previous_grapheme(state->buffer, state->pos,
+                &grapheme_start, &grapheme_end, &grapheme_columns) == 0)
+        {
+            (void)grapheme_end;
+            (void)grapheme_columns;
+            state->pos = grapheme_start;
+            if (rl_update_display_metrics(state) != 0)
+                return ;
+            if (rl_clear_line(prompt, state->buffer) == -1)
+                return ;
+            pf_printf("%s%s", prompt, state->buffer);
+            int len_after_cursor = state->prev_display_columns - state->display_pos;
+            if (len_after_cursor > 0)
+                pf_printf("\033[%dD", len_after_cursor);
+            fflush(stdout);
+        }
     }
     return ;
 }
 
 static void rl_handle_right_arrow(readline_state_t *state, const char *prompt)
 {
-    if (state->pos < ft_strlen(state->buffer))
+    size_t buffer_length;
+
+    buffer_length = ft_strlen_size_t(state->buffer);
+    if (state->pos < static_cast<int>(buffer_length))
     {
-        state->pos++;
-        if (rl_clear_line(prompt, state->buffer) == -1)
-            return ;
-        pf_printf("%s%s", prompt, state->buffer);
-        int len_after_cursor = ft_strlen(state->buffer) - state->pos;
-        if (len_after_cursor > 0)
-            pf_printf("\033[%dD", len_after_cursor);
-        fflush(stdout);
+        int grapheme_start;
+        int grapheme_end;
+        int grapheme_columns;
+
+        if (rl_utf8_find_next_grapheme(state->buffer, state->pos,
+                &grapheme_start, &grapheme_end, &grapheme_columns) == 0)
+        {
+            (void)grapheme_start;
+            (void)grapheme_columns;
+            state->pos = grapheme_end;
+            if (rl_update_display_metrics(state) != 0)
+                return ;
+            if (rl_clear_line(prompt, state->buffer) == -1)
+                return ;
+            pf_printf("%s%s", prompt, state->buffer);
+            int len_after_cursor = state->prev_display_columns - state->display_pos;
+            if (len_after_cursor > 0)
+                pf_printf("\033[%dD", len_after_cursor);
+            fflush(stdout);
+        }
     }
     return ;
 }
@@ -147,7 +188,8 @@ static int rl_handle_up_arrow(readline_state_t *state, const char *prompt)
             return (-1);
         pf_printf("%s%s", prompt, state->buffer);
         state->pos = ft_strlen(state->buffer);
-        state->prev_buffer_length = state->pos;
+        if (rl_update_display_metrics(state) != 0)
+            return (-1);
         fflush(stdout);
     }
     return (0);
@@ -165,7 +207,8 @@ static int rl_handle_down_arrow(readline_state_t *state, const char *prompt)
             return (-1);
         pf_printf("%s%s", prompt, state->buffer);
         state->pos = ft_strlen(state->buffer);
-        state->prev_buffer_length = state->pos;
+        if (rl_update_display_metrics(state) != 0)
+            return (-1);
         fflush(stdout);
     }
     else if (state->history_index == history_count - 1)
@@ -176,6 +219,8 @@ static int rl_handle_down_arrow(readline_state_t *state, const char *prompt)
         state->pos = 0;
         state->buffer[0] = '\0';
         pf_printf("%s", prompt);
+        state->display_pos = 0;
+        state->prev_display_columns = 0;
         state->prev_buffer_length = 0;
         fflush(stdout);
     }

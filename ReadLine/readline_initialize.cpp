@@ -74,6 +74,8 @@ int rl_initialize_state(readline_state_t *state)
     }
     state->pos = 0;
     state->prev_buffer_length = 0;
+    state->display_pos = 0;
+    state->prev_display_columns = 0;
     state->history_index = history_count;
     state->in_completion_mode = 0;
     state->current_match_count = 0;

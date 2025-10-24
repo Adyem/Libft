@@ -4,10 +4,12 @@
 #include "../../Game/game_equipment.hpp"
 #include "../../Game/game_experience_table.hpp"
 #include "../../Game/game_reputation.hpp"
+#include "../../Game/game_quest.hpp"
 #include "../../Game/game_item.hpp"
 #include "../../Game/game_skill.hpp"
 #include "../../Game/game_upgrade.hpp"
 #include "../../Template/shared_ptr.hpp"
+#include "../../Template/vector.hpp"
 #include "../../PThread/thread.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
@@ -121,6 +123,195 @@ static void run_skill_assignment_task(ft_skill *destination, ft_skill *source,
     {
         *destination = *source;
         if (destination->get_error() != ER_SUCCESS)
+        {
+            *failure_flag = 1;
+            return ;
+        }
+        index++;
+    }
+    *failure_flag = 0;
+    return ;
+}
+
+static void run_quest_phase_task(ft_quest *quest, int iterations,
+        int phase_limit, int *failure_flag)
+{
+    int index;
+    int phase_value;
+
+    index = 0;
+    phase_value = 0;
+    while (index < iterations)
+    {
+        quest->set_current_phase(phase_value);
+        if (quest->get_error() != ER_SUCCESS)
+        {
+            *failure_flag = 1;
+            return ;
+        }
+        quest->advance_phase();
+        if (quest->get_error() == FT_ERR_GAME_GENERAL_ERROR)
+        {
+            quest->set_current_phase(0);
+            if (quest->get_error() != ER_SUCCESS)
+            {
+                *failure_flag = 1;
+                return ;
+            }
+            phase_value = 0;
+        }
+        else if (quest->get_error() == ER_SUCCESS)
+        {
+            phase_value = quest->get_current_phase();
+            if (quest->get_error() != ER_SUCCESS)
+            {
+                *failure_flag = 1;
+                return ;
+            }
+        }
+        else
+        {
+            *failure_flag = 1;
+            return ;
+        }
+        if (phase_value >= phase_limit)
+        {
+            quest->set_current_phase(0);
+            if (quest->get_error() != ER_SUCCESS)
+            {
+                *failure_flag = 1;
+                return ;
+            }
+            phase_value = 0;
+        }
+        index++;
+    }
+    *failure_flag = 0;
+    return ;
+}
+
+static void run_quest_reward_task(ft_quest *quest,
+        ft_sharedptr<ft_item> reward_one,
+        ft_sharedptr<ft_item> reward_two,
+        int iterations, int *failure_flag)
+{
+    int index;
+    bool toggle;
+    ft_vector<ft_sharedptr<ft_item> > items;
+
+    index = 0;
+    toggle = false;
+    while (index < iterations)
+    {
+        items = ft_vector<ft_sharedptr<ft_item> >();
+        if (items.get_error() != ER_SUCCESS)
+        {
+            *failure_flag = 1;
+            return ;
+        }
+        items.push_back(reward_one);
+        if (items.get_error() != ER_SUCCESS)
+        {
+            *failure_flag = 1;
+            return ;
+        }
+        if (toggle)
+        {
+            items.push_back(reward_two);
+            if (items.get_error() != ER_SUCCESS)
+            {
+                *failure_flag = 1;
+                return ;
+            }
+        }
+        quest->set_reward_items(items);
+        if (quest->get_error() != ER_SUCCESS)
+        {
+            *failure_flag = 1;
+            return ;
+        }
+        quest->get_reward_items();
+        if (quest->get_error() != ER_SUCCESS)
+        {
+            *failure_flag = 1;
+            return ;
+        }
+        toggle = !toggle;
+        index++;
+    }
+    *failure_flag = 0;
+    return ;
+}
+
+static void run_quest_text_task(ft_quest *quest, int iterations,
+        int *failure_flag)
+{
+    int index;
+    bool toggle;
+    ft_string description_text;
+    ft_string objective_text;
+
+    index = 0;
+    toggle = false;
+    while (index < iterations)
+    {
+        if (!toggle)
+        {
+            description_text = "Recover the lost artifact";
+            objective_text = "Search the northern ruins";
+        }
+        else
+        {
+            description_text = "Rescue the captured villager";
+            objective_text = "Escort them back to the village";
+        }
+        quest->set_description(description_text);
+        if (quest->get_error() != ER_SUCCESS)
+        {
+            *failure_flag = 1;
+            return ;
+        }
+        quest->set_objective(objective_text);
+        if (quest->get_error() != ER_SUCCESS)
+        {
+            *failure_flag = 1;
+            return ;
+        }
+        quest->get_description();
+        if (quest->get_error() != ER_SUCCESS)
+        {
+            *failure_flag = 1;
+            return ;
+        }
+        quest->get_objective();
+        if (quest->get_error() != ER_SUCCESS)
+        {
+            *failure_flag = 1;
+            return ;
+        }
+        toggle = !toggle;
+        index++;
+    }
+    *failure_flag = 0;
+    return ;
+}
+
+static void run_quest_copy_task(ft_quest *source, ft_quest *destination,
+        int iterations, int *failure_flag)
+{
+    int index;
+
+    index = 0;
+    while (index < iterations)
+    {
+        *destination = *source;
+        if (destination->get_error() != ER_SUCCESS)
+        {
+            *failure_flag = 1;
+            return ;
+        }
+        ft_quest local_copy(*source);
+        if (local_copy.get_error() != ER_SUCCESS)
         {
             *failure_flag = 1;
             return ;
@@ -1194,6 +1385,70 @@ FT_TEST(test_game_reputation_concurrent_milestone_updates,
         FT_ASSERT_EQ(ER_SUCCESS, reputation.get_error());
         index++;
     }
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_game_quest_concurrent_operations,
+        "ft_quest state updates remain mutex protected")
+{
+    ft_quest quest;
+    ft_quest mirror;
+    ft_thread phase_thread;
+    ft_thread reward_thread;
+    ft_thread text_thread;
+    ft_thread copy_thread;
+    ft_sharedptr<ft_item> reward_one;
+    ft_sharedptr<ft_item> reward_two;
+    int phase_failure;
+    int reward_failure;
+    int text_failure;
+    int copy_failure;
+    int iterations;
+    int phase_limit;
+
+    iterations = 128;
+    phase_limit = 6;
+    phase_failure = -1;
+    reward_failure = -1;
+    text_failure = -1;
+    copy_failure = -1;
+    ft_errno = ER_SUCCESS;
+    quest.set_phases(phase_limit);
+    FT_ASSERT_EQ(ER_SUCCESS, quest.get_error());
+    reward_one = ft_sharedptr<ft_item>(new ft_item());
+    reward_two = ft_sharedptr<ft_item>(new ft_item());
+    FT_ASSERT(reward_one.get() != ft_nullptr);
+    FT_ASSERT(reward_two.get() != ft_nullptr);
+    reward_one->set_item_id(11);
+    reward_two->set_item_id(12);
+    phase_thread = ft_thread(run_quest_phase_task, &quest, iterations,
+            phase_limit, &phase_failure);
+    FT_ASSERT_EQ(ER_SUCCESS, phase_thread.get_error());
+    reward_thread = ft_thread(run_quest_reward_task, &quest, reward_one,
+            reward_two, iterations, &reward_failure);
+    FT_ASSERT_EQ(ER_SUCCESS, reward_thread.get_error());
+    text_thread = ft_thread(run_quest_text_task, &quest, iterations,
+            &text_failure);
+    FT_ASSERT_EQ(ER_SUCCESS, text_thread.get_error());
+    copy_thread = ft_thread(run_quest_copy_task, &quest, &mirror,
+            iterations, &copy_failure);
+    FT_ASSERT_EQ(ER_SUCCESS, copy_thread.get_error());
+    phase_thread.join();
+    FT_ASSERT_EQ(ER_SUCCESS, phase_thread.get_error());
+    reward_thread.join();
+    FT_ASSERT_EQ(ER_SUCCESS, reward_thread.get_error());
+    text_thread.join();
+    FT_ASSERT_EQ(ER_SUCCESS, text_thread.get_error());
+    copy_thread.join();
+    FT_ASSERT_EQ(ER_SUCCESS, copy_thread.get_error());
+    FT_ASSERT_EQ(0, phase_failure);
+    FT_ASSERT_EQ(0, reward_failure);
+    FT_ASSERT_EQ(0, text_failure);
+    FT_ASSERT_EQ(0, copy_failure);
+    FT_ASSERT(quest.get_phases() >= 0);
+    FT_ASSERT_EQ(ER_SUCCESS, quest.get_error());
+    FT_ASSERT_EQ(mirror.get_error(), quest.get_error());
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }

@@ -98,7 +98,7 @@
 - [x] Make `ft_websocket_client` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_http_server` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `http2_stream_manager` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `event_loop` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `event_loop` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `http2_header_field` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `http2_frame` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Restore the `http2 stream manager tracks streams` regression once the stream manager no longer crashes when tracking concurrent streams.
@@ -151,7 +151,7 @@
 ### Template containers and utilities
 - [x] Review container naming (e.g., rename `unordened_map.hpp` to `unordered_map.hpp`) and ensure API parity with the standard library counterparts.
 - [x] Add iterator invalidation rules and complexity annotations to headers so users know when operations are safe in real-time systems.
-- [ ] Provide small-buffer optimizations or node pooling options for frequently-used containers (`vector`, `map`, `trie`).
+- [x] Provide small-buffer optimizations or node pooling options for frequently-used containers (`vector`, `map`, `trie`).
 - [ ] Expand constexpr support where possible so templates can be used in compile-time contexts.
 - [ ] Write exhaustive tests for allocator-aware paths, ensuring `_error_code` mirrors allocation failures.
 - [ ] Introduce serialization helpers that interoperate with JSON/YAML encoders for easy persistence of container contents.
@@ -277,7 +277,8 @@
 
 ### Encryption
 - [x] Expand beyond SHA-1 by adding SHA-2/3, BLAKE2, and streaming HMAC helpers.
-- [ ] Introduce authenticated encryption (AEAD) wrappers that integrate with the Networking module's TLS stack.
+- [x] Introduce authenticated encryption (AEAD) wrappers that integrate with the Networking module's TLS stack.
+- [x] Harden the AEAD finalize path so TLS-derived contexts produce authentication tags successfully in integration tests.
 - [x] Document key management best practices and provide secure random key generation utilities.
 - [x] Add self-tests that verify algorithm outputs against known test vectors.
 - [ ] Provide hardware acceleration hooks (AES-NI, ARMv8 crypto) with graceful fallback paths.
@@ -295,7 +296,7 @@
 ### File and ReadLine modules
 - [ ] Harmonize the File module with `ft_file` so both expose the same error-reporting surface and buffering strategies.
 - [ ] Extend ReadLine to support customizable key bindings, history persistence, and syntax-aware completion callbacks.
-- [ ] Add UTF-8 aware cursor movement and rendering in ReadLine to match the Unicode helpers in Libft.
+- [x] Add UTF-8 aware cursor movement and rendering in ReadLine to match the Unicode helpers in Libft.
 - [ ] Provide pluggable history storage (SQLite, JSON) and search that respects multi-byte characters.
 - [x] Document terminal capability detection and fallback behaviour for minimal environments.
 - [x] Make `ft_file_watch` thread safe (relies on the shared deadlock resolution routine described below).
@@ -345,8 +346,8 @@
 - [x] Make `ft_event` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_event_scheduler` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_map3d` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_pathfinding` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_quest` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_pathfinding` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_quest` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_reputation` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_buff` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_debuff` thread safe (relies on the shared deadlock resolution routine described below).
@@ -360,7 +361,7 @@
 - [x] Make `ft_item_modifier` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_event_compare_ptr` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_resistance` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_path_step` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_path_step` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Tools and ancillary utilities
 - [x] Provide a `make format` target that runs clang-format with a checked-in style file.
