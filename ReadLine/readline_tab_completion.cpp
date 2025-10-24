@@ -35,12 +35,33 @@ static int rl_find_word_start_and_prefix(readline_state_t *state, char *prefix, 
 
 static void rl_gather_matching_suggestions(readline_state_t *state, const char *prefix, int prefix_len)
 {
+    int dynamic_count;
+    int dynamic_index;
+    int index;
+
     state->current_match_count = 0;
-    int index = 0;
+    dynamic_count = rl_completion_get_dynamic_count();
+    dynamic_index = 0;
+    while (dynamic_index < dynamic_count)
+    {
+        char *candidate;
+
+        candidate = rl_completion_get_dynamic_match(dynamic_index);
+        if (candidate != ft_nullptr && ft_strncmp(candidate, prefix, prefix_len) == 0)
+        {
+            state->current_matches[state->current_match_count] = candidate;
+            state->current_match_count += 1;
+        }
+        dynamic_index++;
+    }
+    index = 0;
     while (index < suggestion_count)
     {
         if (ft_strncmp(suggestions[index], prefix, prefix_len) == 0)
-            state->current_matches[state->current_match_count++] = suggestions[index];
+        {
+            state->current_matches[state->current_match_count] = suggestions[index];
+            state->current_match_count += 1;
+        }
         index++;
     }
     return ;
@@ -157,6 +178,11 @@ int rl_handle_tab_completion(readline_state_t *state, const char *prompt)
         }
         if (prefix_len == 0)
             goto cleanup_success;
+        if (rl_completion_prepare_candidates(state->buffer, state->pos, prefix, prefix_len) != 0)
+        {
+            result = -1;
+            goto cleanup;
+        }
         rl_gather_matching_suggestions(state, prefix, prefix_len);
         if (state->current_match_count == 0)
         {
