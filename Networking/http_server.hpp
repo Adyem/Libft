@@ -3,6 +3,8 @@
 
 #include "socket_class.hpp"
 #include "../CPP_class/class_string_class.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 #include <cstdint>
 
 class ft_http_server
@@ -11,8 +13,11 @@ class ft_http_server
         ft_socket _server_socket;
         mutable int _error_code;
         bool _non_blocking;
+        mutable pt_mutex _mutex;
 
         void set_error(int error_code) const;
+        static void restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept;
+        int run_once_locked(ft_unique_lock<pt_mutex> &guard);
 
     public:
         ft_http_server();

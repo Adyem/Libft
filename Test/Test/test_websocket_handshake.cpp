@@ -1,30 +1,4 @@
-#include "../../Networking/websocket_server.hpp"
-#include "../../Networking/websocket_client.hpp"
-#include "../../Networking/networking.hpp"
-#include "../../Networking/socket_class.hpp"
-#include "../../Libft/libft.hpp"
-#include "../../System_utils/test_runner.hpp"
-#include "../../Errno/errno.hpp"
-#include "../../PThread/thread.hpp"
-#include <unistd.h>
-#include <cstring>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-
-struct websocket_server_context
-{
-    ft_websocket_server *server;
-    int result;
-    int client_fd;
-    ft_string message;
-};
-
-struct websocket_invalid_handshake_context
-{
-    int server_socket;
-    int result;
-};
+#include "websocket_test_utils.hpp"
 
 static bool get_server_socket_port(int socket_fd, unsigned short *port_value)
 {
@@ -51,17 +25,6 @@ static bool get_server_socket_port(int socket_fd, unsigned short *port_value)
     else
         return (false);
     return (true);
-}
-
-static void websocket_server_worker(websocket_server_context *context)
-{
-    if (context == ft_nullptr)
-        return ;
-    if (context->server == ft_nullptr)
-        return ;
-    context->client_fd = -1;
-    context->result = context->server->run_once(context->client_fd, context->message);
-    return ;
 }
 
 static void websocket_invalid_handshake_server(websocket_invalid_handshake_context *context)
@@ -98,7 +61,7 @@ static void websocket_invalid_handshake_server(websocket_invalid_handshake_conte
         buffer[bytes_received] = '\0';
         request.append(buffer);
         if (ft_strstr(request.c_str(), "\r\n\r\n"))
-            break;
+            break ;
     }
     response.append("HTTP/1.1 101 Switching Protocols\r\n");
     response.append("Upgrade: websocket\r\n");
@@ -146,6 +109,7 @@ FT_TEST(test_websocket_handshake_and_echo, "websocket server echoes message")
         return (0);
     }
     ft_string message;
+
     message = "ping";
     if (client.send_text(message) != 0)
     {
@@ -209,18 +173,21 @@ FT_TEST(test_websocket_server_handles_fragmented_handshake, "websocket server ha
     ft_string expected_message;
     unsigned char frame[64];
     size_t payload_length;
+    size_t frame_length;
     size_t index_value;
     size_t mask_index;
-    size_t frame_length;
+    unsigned short server_port;
 
-    if (server.start("127.0.0.1", 54355) != 0)
+    if (server.start("127.0.0.1", 0) != 0)
+        return (0);
+    if (server.get_port(server_port) != 0)
         return (0);
     client_socket = nw_socket(AF_INET, SOCK_STREAM, 0);
     if (client_socket < 0)
         return (0);
     std::memset(&server_address, 0, sizeof(server_address));
     server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(54355);
+    server_address.sin_port = htons(server_port);
     if (nw_inet_pton(AF_INET, "127.0.0.1", &server_address.sin_addr) != 1)
     {
         nw_close(client_socket);
@@ -240,24 +207,19 @@ FT_TEST(test_websocket_server_handles_fragmented_handshake, "websocket server ha
         nw_close(client_socket);
         return (0);
     }
-    handshake_request = "GET / HTTP/1.1\r\n";
+    handshake_request = "GET /chat HTTP/1.1\r\n";
     handshake_request.append("Host: 127.0.0.1\r\n");
     handshake_request.append("Upgrade: websocket\r\n");
     handshake_request.append("Connection: Upgrade\r\n");
     handshake_request.append("Sec-WebSocket-Version: 13\r\n");
-    handshake_request.append("Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n");
+    handshake_request.append("Sec-WebSocket-Key: fragmented==\r\n\r\n");
     handshake_data = handshake_request.c_str();
     handshake_length = handshake_request.size();
     total_sent = 0;
     while (total_sent < handshake_length)
     {
-        if (total_sent == 0)
-            send_length = 8;
-        else if (total_sent < 20)
-            send_length = 7;
-        else
-            send_length = handshake_length - total_sent;
-        if (send_length > handshake_length - total_sent)
+        send_length = 3;
+        if (handshake_length - total_sent < send_length)
             send_length = handshake_length - total_sent;
         send_result = nw_send(client_socket, handshake_data + total_sent, send_length, 0);
         if (send_result <= 0)

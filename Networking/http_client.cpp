@@ -6,11 +6,14 @@
 #include <cstring>
 #include <cstdio>
 #include <cerrno>
+#include <vector>
 #include <openssl/x509v3.h>
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
 #include "../Time/time.hpp"
 #include "../Observability/observability_networking_metrics.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 
 #ifdef _WIN32
 # include <winsock2.h>
@@ -23,10 +26,16 @@
 
 struct http_stream_state
 {
-    ft_string       header_buffer;
-    ft_string       headers;
-    int             status_code;
-    bool            headers_ready;
+    ft_string           header_buffer;
+    ft_string           headers;
+    int                 status_code;
+    bool                headers_ready;
+    bool                keep_alive_allowed;
+    bool                has_content_length;
+    size_t              expected_body_length;
+    size_t              received_body_length;
+    bool                saw_chunked_encoding;
+    bool                http_1_1;
     http_response_handler handler;
 };
 
@@ -39,6 +48,386 @@ struct http_buffer_adapter_state
 };
 
 static http_buffer_adapter_state g_http_buffer_adapter_state = { NULL, false, 0, 0 };
+
+struct http_client_connection_entry
+{
+    ft_string               host;
+    ft_string               port;
+    bool                    use_ssl;
+    int                     socket_fd;
+    SSL_CTX                 *ssl_context;
+    SSL                     *ssl_connection;
+    t_monotonic_time_point  last_used;
+};
+
+struct http_client_active_connection
+{
+    http_client_connection_entry   entry;
+    bool                            from_pool;
+    bool                            store_allowed;
+};
+
+static pt_mutex g_http_client_pool_mutex;
+static std::vector<http_client_connection_entry> g_http_client_pool_entries;
+static size_t g_http_client_pool_max_idle = 8;
+static long long g_http_client_pool_idle_timeout_ms = 30000;
+static size_t g_http_client_pool_acquire_calls = 0;
+static size_t g_http_client_pool_reuse_hits = 0;
+static size_t g_http_client_pool_acquire_misses = 0;
+
+static void http_client_pool_reset_active(http_client_active_connection &connection)
+{
+    connection.entry.socket_fd = -1;
+    connection.entry.ssl_context = NULL;
+    connection.entry.ssl_connection = NULL;
+    connection.entry.host.clear();
+    connection.entry.port.clear();
+    connection.entry.use_ssl = false;
+    connection.from_pool = false;
+    connection.store_allowed = true;
+    return ;
+}
+
+static void http_client_pool_dispose_entry(http_client_connection_entry &entry)
+{
+    if (entry.ssl_connection != NULL)
+    {
+        SSL_shutdown(entry.ssl_connection);
+        SSL_free(entry.ssl_connection);
+        entry.ssl_connection = NULL;
+    }
+    if (entry.ssl_context != NULL)
+    {
+        SSL_CTX_free(entry.ssl_context);
+        entry.ssl_context = NULL;
+    }
+    if (entry.socket_fd >= 0)
+    {
+        nw_close(entry.socket_fd);
+        entry.socket_fd = -1;
+    }
+    entry.host.clear();
+    entry.port.clear();
+    entry.use_ssl = false;
+    entry.last_used = time_monotonic_point_now();
+    return ;
+}
+
+static void http_client_pool_prune_locked(t_monotonic_time_point now)
+{
+    size_t index;
+
+    index = 0;
+    while (index < g_http_client_pool_entries.size())
+    {
+        http_client_connection_entry &candidate = g_http_client_pool_entries[index];
+        long long idle_time_ms;
+
+        idle_time_ms = time_monotonic_point_diff_ms(candidate.last_used, now);
+        if (idle_time_ms < 0)
+            idle_time_ms = 0;
+        if (idle_time_ms > g_http_client_pool_idle_timeout_ms)
+        {
+            http_client_pool_dispose_entry(candidate);
+            g_http_client_pool_entries.erase(g_http_client_pool_entries.begin() + index);
+            continue ;
+        }
+        index++;
+    }
+    return ;
+}
+
+static void http_client_pool_release_connection(http_client_active_connection &connection, bool allow_reuse)
+{
+    if (connection.entry.socket_fd < 0)
+    {
+        http_client_pool_reset_active(connection);
+        return ;
+    }
+    if (allow_reuse == false || connection.store_allowed == false)
+    {
+        http_client_pool_dispose_entry(connection.entry);
+        http_client_pool_reset_active(connection);
+        return ;
+    }
+    ft_unique_lock<pt_mutex> guard(g_http_client_pool_mutex);
+    t_monotonic_time_point now;
+
+    now = time_monotonic_point_now();
+    http_client_pool_prune_locked(now);
+    if (g_http_client_pool_entries.size() >= g_http_client_pool_max_idle)
+    {
+        guard.unlock();
+        http_client_pool_dispose_entry(connection.entry);
+        http_client_pool_reset_active(connection);
+        return ;
+    }
+    connection.entry.last_used = now;
+    g_http_client_pool_entries.push_back(connection.entry);
+    guard.unlock();
+    http_client_pool_reset_active(connection);
+    return ;
+}
+
+static void http_client_pool_disable_store(http_client_active_connection &connection)
+{
+    connection.store_allowed = false;
+    return ;
+}
+
+static int http_client_pool_acquire_connection(const char *host, const char *port,
+    bool use_ssl, http_client_active_connection &connection, bool &reused)
+{
+    ft_unique_lock<pt_mutex> guard(g_http_client_pool_mutex);
+    t_monotonic_time_point now;
+    size_t index;
+
+    now = time_monotonic_point_now();
+    http_client_pool_prune_locked(now);
+    g_http_client_pool_acquire_calls++;
+    index = 0;
+    while (index < g_http_client_pool_entries.size())
+    {
+        http_client_connection_entry &candidate = g_http_client_pool_entries[index];
+
+        if (candidate.use_ssl == use_ssl && candidate.host == host && candidate.port == port)
+        {
+            connection.entry = candidate;
+            connection.from_pool = true;
+            connection.store_allowed = true;
+            g_http_client_pool_entries.erase(g_http_client_pool_entries.begin() + index);
+            g_http_client_pool_reuse_hits++;
+            reused = true;
+            guard.unlock();
+            return (0);
+        }
+        index++;
+    }
+    g_http_client_pool_acquire_misses++;
+    guard.unlock();
+    connection.entry.host = host;
+    connection.entry.port = port;
+    connection.entry.use_ssl = use_ssl;
+    connection.entry.socket_fd = -1;
+    connection.entry.ssl_context = NULL;
+    connection.entry.ssl_connection = NULL;
+    connection.entry.last_used = now;
+    connection.from_pool = false;
+    connection.store_allowed = true;
+    reused = false;
+    return (0);
+}
+
+static void http_client_trim_string(ft_string &value)
+{
+    size_t start_index;
+    size_t end_index;
+
+    start_index = 0;
+    while (start_index < value.size()
+        && ft_isspace(static_cast<unsigned char>(value[start_index])) != 0)
+        start_index++;
+    if (start_index > 0)
+        value.erase(0, start_index);
+    end_index = value.size();
+    while (end_index > 0
+        && ft_isspace(static_cast<unsigned char>(value[end_index - 1])) != 0)
+        end_index--;
+    if (end_index < value.size())
+        value.erase(end_index, value.size() - end_index);
+    return ;
+}
+
+static void http_client_to_lower(ft_string &value)
+{
+    size_t index;
+    char *mutable_data;
+
+    index = 0;
+    mutable_data = value.data();
+    if (mutable_data == NULL)
+        return ;
+    while (index < value.size())
+    {
+        char character;
+
+        character = mutable_data[index];
+        if (character >= 'A' && character <= 'Z')
+            mutable_data[index] = static_cast<char>(character + 32);
+        index++;
+    }
+    return ;
+}
+
+static void http_client_parse_header_metadata(http_stream_state &state)
+{
+    const char  *header_data;
+    size_t      header_limit;
+    size_t      offset;
+    ft_string   status_prefix;
+
+    state.keep_alive_allowed = false;
+    state.has_content_length = false;
+    state.expected_body_length = 0;
+    state.received_body_length = 0;
+    state.saw_chunked_encoding = false;
+    state.http_1_1 = false;
+    header_limit = state.headers.size();
+    header_data = state.headers.c_str();
+    if (header_limit >= 8)
+    {
+        status_prefix.assign(header_data, 8);
+        if (status_prefix == "HTTP/1.1")
+        {
+            state.http_1_1 = true;
+            state.keep_alive_allowed = true;
+        }
+    }
+    offset = 0;
+    while (offset < header_limit)
+    {
+        size_t line_length;
+        const char *line_start;
+        size_t colon_index;
+        ft_string header_name;
+        ft_string header_value;
+        ft_string lowered_value;
+
+        line_start = header_data + offset;
+        line_length = 0;
+        while (offset + line_length + 1 < header_limit)
+        {
+            if (line_start[line_length] == '\r'
+                && line_start[line_length + 1] == '\n')
+                break;
+            line_length++;
+        }
+        if (offset + line_length + 1 >= header_limit)
+            break;
+        offset += line_length + 2;
+        if (line_length == 0)
+            continue ;
+        colon_index = 0;
+        while (colon_index < line_length && line_start[colon_index] != ':')
+            colon_index++;
+        if (colon_index >= line_length)
+            continue ;
+        header_name.assign(line_start, colon_index);
+        header_value.assign(line_start + colon_index + 1, line_length - colon_index - 1);
+        http_client_trim_string(header_name);
+        http_client_trim_string(header_value);
+        http_client_to_lower(header_name);
+        if (header_name == "connection")
+        {
+            lowered_value = header_value;
+            http_client_to_lower(lowered_value);
+            if (lowered_value.find("close") != ft_string::npos)
+                state.keep_alive_allowed = false;
+            else if (lowered_value.find("keep-alive") != ft_string::npos)
+                state.keep_alive_allowed = true;
+            continue ;
+        }
+        if (header_name == "content-length")
+        {
+            size_t digit_index;
+            unsigned long long parsed_length;
+
+            digit_index = 0;
+            parsed_length = 0;
+            while (digit_index < header_value.size()
+                && ft_isdigit(static_cast<unsigned char>(header_value[digit_index])) != 0)
+            {
+                parsed_length = (parsed_length * 10)
+                    + static_cast<unsigned long long>(header_value[digit_index] - '0');
+                digit_index++;
+            }
+            state.has_content_length = true;
+            state.expected_body_length = static_cast<size_t>(parsed_length);
+            continue ;
+        }
+        if (header_name == "transfer-encoding")
+        {
+            lowered_value = header_value;
+            http_client_to_lower(lowered_value);
+            if (lowered_value.find("chunked") != ft_string::npos)
+            {
+                state.saw_chunked_encoding = true;
+                state.keep_alive_allowed = false;
+            }
+        }
+    }
+    if (state.has_content_length == false)
+        state.keep_alive_allowed = false;
+    if (state.saw_chunked_encoding != false)
+        state.keep_alive_allowed = false;
+    return ;
+}
+
+void http_client_pool_flush(void)
+{
+    ft_unique_lock<pt_mutex> guard(g_http_client_pool_mutex);
+    size_t index;
+
+    index = 0;
+    while (index < g_http_client_pool_entries.size())
+    {
+        http_client_pool_dispose_entry(g_http_client_pool_entries[index]);
+        index++;
+    }
+    g_http_client_pool_entries.clear();
+    return ;
+}
+
+void http_client_pool_set_max_idle(size_t max_idle)
+{
+    ft_unique_lock<pt_mutex> guard(g_http_client_pool_mutex);
+
+    g_http_client_pool_max_idle = max_idle;
+    if (g_http_client_pool_entries.size() > g_http_client_pool_max_idle)
+    {
+        size_t index;
+
+        index = g_http_client_pool_max_idle;
+        while (index < g_http_client_pool_entries.size())
+        {
+            http_client_pool_dispose_entry(g_http_client_pool_entries[index]);
+            index++;
+        }
+        g_http_client_pool_entries.resize(g_http_client_pool_max_idle);
+    }
+    return ;
+}
+
+size_t http_client_pool_get_idle_count(void)
+{
+    ft_unique_lock<pt_mutex> guard(g_http_client_pool_mutex);
+
+    return (g_http_client_pool_entries.size());
+}
+
+void http_client_pool_debug_reset_counters(void)
+{
+    ft_unique_lock<pt_mutex> guard(g_http_client_pool_mutex);
+
+    g_http_client_pool_acquire_calls = 0;
+    g_http_client_pool_reuse_hits = 0;
+    g_http_client_pool_acquire_misses = 0;
+    return ;
+}
+
+size_t http_client_pool_debug_get_reuse_count(void)
+{
+    ft_unique_lock<pt_mutex> guard(g_http_client_pool_mutex);
+
+    return (g_http_client_pool_reuse_hits);
+}
+
+size_t http_client_pool_debug_get_miss_count(void)
+{
+    ft_unique_lock<pt_mutex> guard(g_http_client_pool_mutex);
+
+    return (g_http_client_pool_acquire_misses);
+}
 
 static int http_client_wait_for_socket_ready(int socket_fd, bool wait_for_write)
 {
@@ -152,6 +541,116 @@ static int http_client_initialize_ssl(int socket_fd, const char *host, SSL_CTX *
     }
     *ssl_context = local_context;
     *ssl_connection = local_connection;
+    return (0);
+}
+
+static int http_client_establish_connection(const char *host, const char *port_string,
+    bool use_ssl, http_client_active_connection &connection)
+{
+    struct addrinfo address_hints;
+    struct addrinfo *address_info;
+    struct addrinfo *current_info;
+    int socket_fd;
+    int result;
+    int resolver_status;
+    int last_socket_error;
+
+    if (connection.entry.socket_fd >= 0)
+        return (0);
+    ft_memset(&address_hints, 0, sizeof(address_hints));
+    address_hints.ai_family = AF_UNSPEC;
+    address_hints.ai_socktype = SOCK_STREAM;
+    resolver_status = getaddrinfo(host, port_string, &address_hints, &address_info);
+    if (resolver_status != 0)
+    {
+        networking_dns_set_error(resolver_status);
+        http_client_pool_disable_store(connection);
+        return (-1);
+    }
+    socket_fd = -1;
+    result = -1;
+    last_socket_error = 0;
+    current_info = address_info;
+    while (current_info != NULL)
+    {
+        socket_fd = nw_socket(current_info->ai_family, current_info->ai_socktype, current_info->ai_protocol);
+        if (socket_fd >= 0)
+        {
+            result = nw_connect(socket_fd, current_info->ai_addr, current_info->ai_addrlen);
+            if (result >= 0)
+                break;
+#ifdef _WIN32
+            last_socket_error = WSAGetLastError();
+#else
+            if (errno != 0)
+                last_socket_error = errno;
+#endif
+            nw_close(socket_fd);
+            socket_fd = -1;
+        }
+        else
+        {
+#ifdef _WIN32
+            last_socket_error = WSAGetLastError();
+#else
+            if (errno != 0)
+                last_socket_error = errno;
+#endif
+        }
+        current_info = current_info->ai_next;
+    }
+    freeaddrinfo(address_info);
+    if (socket_fd < 0 || result < 0)
+    {
+        if (last_socket_error != 0)
+            ft_errno = ft_map_system_error(last_socket_error);
+        else
+            ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
+        http_client_pool_disable_store(connection);
+        return (-1);
+    }
+    connection.entry.socket_fd = socket_fd;
+    connection.entry.use_ssl = use_ssl;
+    if (use_ssl != false)
+    {
+        if (http_client_initialize_ssl(socket_fd, host, &connection.entry.ssl_context,
+            &connection.entry.ssl_connection) != 0)
+        {
+            nw_close(socket_fd);
+            connection.entry.socket_fd = -1;
+            http_client_pool_disable_store(connection);
+            return (-1);
+        }
+        result = SSL_connect(connection.entry.ssl_connection);
+        if (result != 1)
+        {
+            ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
+            SSL_free(connection.entry.ssl_connection);
+            SSL_CTX_free(connection.entry.ssl_context);
+            connection.entry.ssl_connection = NULL;
+            connection.entry.ssl_context = NULL;
+            nw_close(socket_fd);
+            connection.entry.socket_fd = -1;
+            http_client_pool_disable_store(connection);
+            return (-1);
+        }
+#if OPENSSL_VERSION_NUMBER >= 0x10002000L
+        if (SSL_get_verify_result(connection.entry.ssl_connection) != X509_V_OK)
+        {
+            ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
+            SSL_shutdown(connection.entry.ssl_connection);
+            SSL_free(connection.entry.ssl_connection);
+            SSL_CTX_free(connection.entry.ssl_context);
+            connection.entry.ssl_connection = NULL;
+            connection.entry.ssl_context = NULL;
+            nw_close(socket_fd);
+            connection.entry.socket_fd = -1;
+            http_client_pool_disable_store(connection);
+            return (-1);
+        }
+#endif
+    }
+    ft_errno = ER_SUCCESS;
     return (0);
 }
 
@@ -292,6 +791,12 @@ static void http_client_stream_state_init(http_stream_state &state, http_respons
     state.headers.clear();
     state.status_code = 0;
     state.headers_ready = false;
+    state.keep_alive_allowed = false;
+    state.has_content_length = false;
+    state.expected_body_length = 0;
+    state.received_body_length = 0;
+    state.saw_chunked_encoding = false;
+    state.http_1_1 = false;
     state.handler = handler;
     return ;
 }
@@ -326,32 +831,60 @@ static int http_client_stream_handle_header(http_stream_state &state)
     if (state.headers.size() > header_length)
         state.headers.erase(header_length, state.headers.size() - header_length);
     state.status_code = http_client_parse_status(state.headers);
+    http_client_parse_header_metadata(state);
     body_length = state.header_buffer.size() - header_length;
     if (body_length > 0 && state.handler != NULL)
     {
         const char *body_ptr;
+        size_t deliver_length;
 
         body_ptr = state.header_buffer.c_str() + header_length;
-        state.handler(state.status_code, state.headers, body_ptr, body_length, false);
+        deliver_length = body_length;
+        if (state.has_content_length != false)
+        {
+            size_t remaining_bytes;
+
+            if (state.expected_body_length > state.received_body_length)
+                remaining_bytes = state.expected_body_length - state.received_body_length;
+            else
+                remaining_bytes = 0;
+            if (deliver_length > remaining_bytes)
+            {
+                deliver_length = remaining_bytes;
+                state.keep_alive_allowed = false;
+            }
+            state.received_body_length += deliver_length;
+        }
+        if (deliver_length > 0)
+            state.handler(state.status_code, state.headers, body_ptr, deliver_length, false);
+        if (deliver_length < body_length)
+            state.keep_alive_allowed = false;
     }
     state.header_buffer.clear();
     state.headers_ready = true;
     return (1);
 }
 
-static int http_client_receive_stream(int socket_fd, SSL *ssl_connection, bool use_ssl,
-    http_response_handler handler)
+static int http_client_receive_stream(http_client_active_connection &connection,
+    http_response_handler handler, bool &allow_keep_alive)
 {
     char                buffer[1024];
     ssize_t             bytes_received;
     http_stream_state   state;
+    int                 socket_fd;
+    SSL                 *ssl_connection;
+    bool                use_ssl;
 
+    allow_keep_alive = false;
     if (handler == NULL)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     http_client_stream_state_init(state, handler);
+    socket_fd = connection.entry.socket_fd;
+    ssl_connection = connection.entry.ssl_connection;
+    use_ssl = connection.entry.use_ssl;
     while (1)
     {
         if (use_ssl != false)
@@ -363,13 +896,41 @@ static int http_client_receive_stream(int socket_fd, SSL *ssl_connection, bool u
             buffer[bytes_received] = '\0';
             if (state.headers_ready == false)
             {
-                state.header_buffer.append(buffer);
+                state.header_buffer.append(buffer, static_cast<size_t>(bytes_received));
                 if (http_client_stream_handle_header(state) != 0)
+                {
+                    if (state.has_content_length != false
+                        && state.received_body_length >= state.expected_body_length)
+                        break;
                     continue ;
+                }
             }
             else
-                state.handler(state.status_code, state.headers, buffer,
-                    static_cast<size_t>(bytes_received), false);
+            {
+                size_t deliver_size;
+
+                deliver_size = static_cast<size_t>(bytes_received);
+                if (state.has_content_length != false)
+                {
+                    size_t remaining_bytes;
+
+                    if (state.expected_body_length > state.received_body_length)
+                        remaining_bytes = state.expected_body_length - state.received_body_length;
+                    else
+                        remaining_bytes = 0;
+                    if (deliver_size > remaining_bytes)
+                    {
+                        deliver_size = remaining_bytes;
+                        state.keep_alive_allowed = false;
+                    }
+                    state.received_body_length += deliver_size;
+                }
+                if (deliver_size > 0)
+                    state.handler(state.status_code, state.headers, buffer, deliver_size, false);
+            }
+            if (state.has_content_length != false
+                && state.received_body_length >= state.expected_body_length)
+                break;
         }
         else
         {
@@ -389,7 +950,10 @@ static int http_client_receive_stream(int socket_fd, SSL *ssl_connection, bool u
                         continue ;
                     }
                     if (ft_errno == FT_ERR_SSL_ZERO_RETURN)
+                    {
+                        state.keep_alive_allowed = false;
                         break;
+                    }
                     if (ft_errno == FT_ERR_SSL_SYSCALL_ERROR)
                     {
 #ifdef _WIN32
@@ -431,9 +995,11 @@ static int http_client_receive_stream(int socket_fd, SSL *ssl_connection, bool u
                         else
                             ft_errno = FT_ERR_SOCKET_RECEIVE_FAILED;
 #endif
+                        state.keep_alive_allowed = false;
                         return (-1);
                     }
                     ft_errno = FT_ERR_SOCKET_RECEIVE_FAILED;
+                    state.keep_alive_allowed = false;
                     return (-1);
                 }
                 if (ft_errno == FT_ERR_SSL_SYSCALL_ERROR)
@@ -472,12 +1038,13 @@ static int http_client_receive_stream(int socket_fd, SSL *ssl_connection, bool u
                             return (-1);
                         continue ;
                     }
-                    if (last_error != 0)
-                        ft_errno = ft_map_system_error(last_error);
-                    else
-                        ft_errno = FT_ERR_SOCKET_RECEIVE_FAILED;
+                        if (last_error != 0)
+                            ft_errno = ft_map_system_error(last_error);
+                        else
+                            ft_errno = FT_ERR_SOCKET_RECEIVE_FAILED;
 #endif
-                }
+                        state.keep_alive_allowed = false;
+                    }
                 return (-1);
             }
             if (bytes_received < 0)
@@ -525,8 +1092,10 @@ static int http_client_receive_stream(int socket_fd, SSL *ssl_connection, bool u
                 else
                     ft_errno = FT_ERR_SOCKET_RECEIVE_FAILED;
 #endif
+                state.keep_alive_allowed = false;
                 return (-1);
             }
+            state.keep_alive_allowed = false;
             break;
         }
     }
@@ -539,6 +1108,12 @@ static int http_client_receive_stream(int socket_fd, SSL *ssl_connection, bool u
             state.header_buffer.size(), false);
     }
     state.handler(state.status_code, state.headers, "", 0, true);
+    if (state.headers_ready != false && state.keep_alive_allowed != false
+        && state.has_content_length != false
+        && state.received_body_length >= state.expected_body_length)
+        allow_keep_alive = true;
+    else
+        allow_keep_alive = false;
     return (0);
 }
 
@@ -616,146 +1191,84 @@ static int http_client_finish_with_metrics(const char *method, const char *host,
 int http_get_stream(const char *host, const char *path, http_response_handler handler,
     bool use_ssl, const char *custom_port)
 {
-    struct addrinfo address_hints;
-    struct addrinfo *address_info;
-    struct addrinfo *current_info;
     const char *port_string;
-    int socket_fd;
     ft_string request;
-    SSL_CTX *ssl_context;
-    SSL *ssl_connection;
-    int result;
-    int resolver_status;
-    int last_socket_error;
+    http_client_active_connection connection;
+    bool allow_keep_alive;
+    int attempt;
 
     if (handler == NULL)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    ft_memset(&address_hints, 0, sizeof(address_hints));
-    address_hints.ai_family = AF_UNSPEC;
-    address_hints.ai_socktype = SOCK_STREAM;
     if (custom_port != NULL && custom_port[0] != '\0')
         port_string = custom_port;
     else if (use_ssl)
         port_string = "443";
     else
         port_string = "80";
-    resolver_status = getaddrinfo(host, port_string, &address_hints, &address_info);
-    if (resolver_status != 0)
+    http_client_pool_reset_active(connection);
+    attempt = 0;
+    while (attempt < 2)
     {
-        networking_dns_set_error(resolver_status);
-        return (-1);
-    }
-    socket_fd = -1;
-    result = -1;
-    last_socket_error = 0;
-    current_info = address_info;
-    while (current_info != NULL)
-    {
-        socket_fd = nw_socket(current_info->ai_family, current_info->ai_socktype, current_info->ai_protocol);
-        if (socket_fd >= 0)
+        bool reused_connection;
+        int send_result;
+        int receive_result;
+
+        if (http_client_pool_acquire_connection(host, port_string, use_ssl,
+            connection, reused_connection) != 0)
+            return (-1);
+        if (http_client_establish_connection(host, port_string, use_ssl, connection) != 0)
         {
-            result = nw_connect(socket_fd, current_info->ai_addr, current_info->ai_addrlen);
-            if (result >= 0)
-                break;
-#ifdef _WIN32
-            last_socket_error = WSAGetLastError();
-#else
-            if (errno != 0)
-                last_socket_error = errno;
-#endif
-            nw_close(socket_fd);
-            socket_fd = -1;
+            http_client_pool_release_connection(connection, false);
+            if (reused_connection != false)
+            {
+                attempt++;
+                continue ;
+            }
+            return (-1);
         }
+        request.clear();
+        request.append("GET ");
+        request.append(path);
+        request.append(" HTTP/1.1\r\nHost: ");
+        request.append(host);
+        request.append("\r\nConnection: keep-alive\r\n\r\n");
+        if (use_ssl != false)
+            send_result = http_client_send_ssl_request(connection.entry.ssl_connection,
+                request.c_str(), request.size());
         else
+            send_result = http_client_send_plain_request(connection.entry.socket_fd,
+                request.c_str(), request.size());
+        if (send_result != 0)
         {
-#ifdef _WIN32
-            last_socket_error = WSAGetLastError();
-#else
-            if (errno != 0)
-                last_socket_error = errno;
-#endif
+            http_client_pool_disable_store(connection);
+            http_client_pool_release_connection(connection, false);
+            if (reused_connection != false)
+            {
+                attempt++;
+                continue ;
+            }
+            return (-1);
         }
-        current_info = current_info->ai_next;
+        receive_result = http_client_receive_stream(connection, handler, allow_keep_alive);
+        if (receive_result != 0)
+        {
+            http_client_pool_disable_store(connection);
+            http_client_pool_release_connection(connection, false);
+            if (reused_connection != false)
+            {
+                attempt++;
+                continue ;
+            }
+            return (-1);
+        }
+        http_client_pool_release_connection(connection, allow_keep_alive);
+        ft_errno = ER_SUCCESS;
+        return (0);
     }
-    freeaddrinfo(address_info);
-    if (socket_fd < 0 || result < 0)
-    {
-        if (last_socket_error != 0)
-            ft_errno = ft_map_system_error(last_socket_error);
-        else
-            ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
-        return (-1);
-    }
-    request.append("GET ");
-    request.append(path);
-    request.append(" HTTP/1.1\r\nHost: ");
-    request.append(host);
-    request.append("\r\nConnection: close\r\n\r\n");
-    if (use_ssl)
-    {
-        if (http_client_initialize_ssl(socket_fd, host, &ssl_context, &ssl_connection) != 0)
-        {
-            nw_close(socket_fd);
-            return (-1);
-        }
-        result = SSL_connect(ssl_connection);
-        if (result != 1)
-        {
-            ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
-            SSL_free(ssl_connection);
-            SSL_CTX_free(ssl_context);
-            nw_close(socket_fd);
-            return (-1);
-        }
-#if OPENSSL_VERSION_NUMBER >= 0x10002000L
-        if (SSL_get_verify_result(ssl_connection) != X509_V_OK)
-        {
-            ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
-            SSL_shutdown(ssl_connection);
-            SSL_free(ssl_connection);
-            SSL_CTX_free(ssl_context);
-            nw_close(socket_fd);
-            return (-1);
-        }
-#endif
-        if (http_client_send_ssl_request(ssl_connection, request.c_str(), request.size()) != 0)
-        {
-            SSL_free(ssl_connection);
-            SSL_CTX_free(ssl_context);
-            nw_close(socket_fd);
-            return (-1);
-        }
-        if (http_client_receive_stream(socket_fd, ssl_connection, true, handler) != 0)
-        {
-            SSL_shutdown(ssl_connection);
-            SSL_free(ssl_connection);
-            SSL_CTX_free(ssl_context);
-            nw_close(socket_fd);
-            return (-1);
-        }
-        SSL_shutdown(ssl_connection);
-        SSL_free(ssl_connection);
-        SSL_CTX_free(ssl_context);
-    }
-    else
-    {
-        if (http_client_send_plain_request(socket_fd, request.c_str(), request.size()) != 0)
-        {
-            nw_close(socket_fd);
-            return (-1);
-        }
-        if (http_client_receive_stream(socket_fd, NULL, false, handler) != 0)
-        {
-            nw_close(socket_fd);
-            return (-1);
-        }
-    }
-    nw_close(socket_fd);
-    ft_errno = ER_SUCCESS;
-    return (0);
+    return (-1);
 }
 
 int http_get(const char *host, const char *path, ft_string &response, bool use_ssl, const char *custom_port)
@@ -776,18 +1289,13 @@ int http_get(const char *host, const char *path, ft_string &response, bool use_s
 int http_post(const char *host, const char *path, const ft_string &body, ft_string &response, bool use_ssl, const char *custom_port)
 {
     t_monotonic_time_point start_time;
-    struct addrinfo address_hints;
-    struct addrinfo *address_info;
-    struct addrinfo *current_info;
     const char *port_string;
-    int socket_fd;
     ft_string request;
     char length_string[32];
-    SSL_CTX *ssl_context;
-    SSL *ssl_connection;
-    int result;
-    int resolver_status;
-    int last_socket_error;
+    http_client_active_connection connection;
+    bool allow_keep_alive;
+    int attempt;
+    size_t body_length;
 
     start_time = time_monotonic_point_now();
     response.clear();
@@ -795,132 +1303,78 @@ int http_post(const char *host, const char *path, const ft_string &body, ft_stri
     g_http_buffer_adapter_state.header_appended = false;
     g_http_buffer_adapter_state.body_bytes = 0;
     g_http_buffer_adapter_state.status_code = 0;
-    ft_memset(&address_hints, 0, sizeof(address_hints));
-    address_hints.ai_family = AF_UNSPEC;
-    address_hints.ai_socktype = SOCK_STREAM;
     if (custom_port != NULL && custom_port[0] != '\0')
         port_string = custom_port;
     else if (use_ssl)
         port_string = "443";
     else
         port_string = "80";
-    resolver_status = getaddrinfo(host, port_string, &address_hints, &address_info);
-    if (resolver_status != 0)
+    http_client_pool_reset_active(connection);
+    body_length = body.size();
+    std::snprintf(length_string, sizeof(length_string), "%zu", body_length);
+    attempt = 0;
+    while (attempt < 2)
     {
-        networking_dns_set_error(resolver_status);
-        return (http_client_finish_with_metrics("POST", host, path, body.size(), -1, start_time));
-    }
-    socket_fd = -1;
-    result = -1;
-    last_socket_error = 0;
-    current_info = address_info;
-    while (current_info != NULL)
-    {
-        socket_fd = nw_socket(current_info->ai_family, current_info->ai_socktype, current_info->ai_protocol);
-        if (socket_fd >= 0)
+        bool reused_connection;
+        int send_result;
+        int receive_result;
+
+        if (http_client_pool_acquire_connection(host, port_string, use_ssl,
+            connection, reused_connection) != 0)
+            return (http_client_finish_with_metrics("POST", host, path, body_length, -1, start_time));
+        if (http_client_establish_connection(host, port_string, use_ssl, connection) != 0)
         {
-            result = nw_connect(socket_fd, current_info->ai_addr, current_info->ai_addrlen);
-            if (result >= 0)
-                break;
-#ifdef _WIN32
-            last_socket_error = WSAGetLastError();
-#else
-            if (errno != 0)
-                last_socket_error = errno;
-#endif
-            nw_close(socket_fd);
-            socket_fd = -1;
+            http_client_pool_release_connection(connection, false);
+            if (reused_connection != false)
+            {
+                attempt++;
+                continue ;
+            }
+            return (http_client_finish_with_metrics("POST", host, path, body_length, -1, start_time));
         }
+        request.clear();
+        request.append("POST ");
+        request.append(path);
+        request.append(" HTTP/1.1\r\nHost: ");
+        request.append(host);
+        request.append("\r\nContent-Length: ");
+        request.append(length_string);
+        request.append("\r\nConnection: keep-alive\r\n\r\n");
+        request.append(body);
+        if (use_ssl != false)
+            send_result = http_client_send_ssl_request(connection.entry.ssl_connection,
+                request.c_str(), request.size());
         else
+            send_result = http_client_send_plain_request(connection.entry.socket_fd,
+                request.c_str(), request.size());
+        if (send_result != 0)
         {
-#ifdef _WIN32
-            last_socket_error = WSAGetLastError();
-#else
-            if (errno != 0)
-                last_socket_error = errno;
-#endif
+            http_client_pool_disable_store(connection);
+            http_client_pool_release_connection(connection, false);
+            if (reused_connection != false)
+            {
+                attempt++;
+                continue ;
+            }
+            return (http_client_finish_with_metrics("POST", host, path, body_length, -1, start_time));
         }
-        current_info = current_info->ai_next;
+        receive_result = http_client_receive_stream(connection, http_client_buffering_adapter,
+            allow_keep_alive);
+        if (receive_result != 0)
+        {
+            http_client_pool_disable_store(connection);
+            http_client_pool_release_connection(connection, false);
+            if (reused_connection != false)
+            {
+                attempt++;
+                continue ;
+            }
+            return (http_client_finish_with_metrics("POST", host, path, body_length, -1, start_time));
+        }
+        http_client_pool_release_connection(connection, allow_keep_alive);
+        return (http_client_finish_with_metrics("POST", host, path, body_length, 0, start_time));
     }
-    freeaddrinfo(address_info);
-    if (socket_fd < 0 || result < 0)
-    {
-        if (last_socket_error != 0)
-            ft_errno = ft_map_system_error(last_socket_error);
-        else
-            ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
-        return (http_client_finish_with_metrics("POST", host, path, body.size(), -1, start_time));
-    }
-    std::snprintf(length_string, sizeof(length_string), "%zu", body.size());
-    request.append("POST ");
-    request.append(path);
-    request.append(" HTTP/1.1\r\nHost: ");
-    request.append(host);
-    request.append("\r\nContent-Length: ");
-    request.append(length_string);
-    request.append("\r\nConnection: close\r\n\r\n");
-    request.append(body);
-    if (use_ssl)
-    {
-        if (http_client_initialize_ssl(socket_fd, host, &ssl_context, &ssl_connection) != 0)
-        {
-            nw_close(socket_fd);
-            return (http_client_finish_with_metrics("POST", host, path, body.size(), -1, start_time));
-        }
-        result = SSL_connect(ssl_connection);
-        if (result != 1)
-        {
-            ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
-            SSL_free(ssl_connection);
-            SSL_CTX_free(ssl_context);
-            nw_close(socket_fd);
-            return (http_client_finish_with_metrics("POST", host, path, body.size(), -1, start_time));
-        }
-#if OPENSSL_VERSION_NUMBER >= 0x10002000L
-        if (SSL_get_verify_result(ssl_connection) != X509_V_OK)
-        {
-            ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
-            SSL_shutdown(ssl_connection);
-            SSL_free(ssl_connection);
-            SSL_CTX_free(ssl_context);
-            nw_close(socket_fd);
-            return (http_client_finish_with_metrics("POST", host, path, body.size(), -1, start_time));
-        }
-#endif
-        if (http_client_send_ssl_request(ssl_connection, request.c_str(), request.size()) != 0)
-        {
-            SSL_free(ssl_connection);
-            SSL_CTX_free(ssl_context);
-            nw_close(socket_fd);
-            return (http_client_finish_with_metrics("POST", host, path, body.size(), -1, start_time));
-        }
-        if (http_client_receive_stream(socket_fd, ssl_connection, true, http_client_buffering_adapter) != 0)
-        {
-            SSL_shutdown(ssl_connection);
-            SSL_free(ssl_connection);
-            SSL_CTX_free(ssl_context);
-            nw_close(socket_fd);
-            return (http_client_finish_with_metrics("POST", host, path, body.size(), -1, start_time));
-        }
-        SSL_shutdown(ssl_connection);
-        SSL_free(ssl_connection);
-        SSL_CTX_free(ssl_context);
-    }
-    else
-    {
-        if (http_client_send_plain_request(socket_fd, request.c_str(), request.size()) != 0)
-        {
-            nw_close(socket_fd);
-            return (http_client_finish_with_metrics("POST", host, path, body.size(), -1, start_time));
-        }
-        if (http_client_receive_stream(socket_fd, NULL, false, http_client_buffering_adapter) != 0)
-        {
-            nw_close(socket_fd);
-            return (http_client_finish_with_metrics("POST", host, path, body.size(), -1, start_time));
-        }
-    }
-    nw_close(socket_fd);
-    ft_errno = ER_SUCCESS;
-    return (http_client_finish_with_metrics("POST", host, path, body.size(), 0, start_time));
+    return (http_client_finish_with_metrics("POST", host, path, body_length, -1, start_time));
 }
+
 

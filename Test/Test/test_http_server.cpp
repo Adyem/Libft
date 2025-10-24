@@ -26,6 +26,22 @@ static void http_server_run_once(http_server_context *context)
     return ;
 }
 
+struct http_server_error_context
+{
+    ft_http_server *server;
+    int value;
+};
+
+static void http_server_read_error(http_server_error_context *context)
+{
+    if (context == ft_nullptr)
+        return ;
+    if (context->server == ft_nullptr)
+        return ;
+    context->value = context->server->get_error();
+    return ;
+}
+
 static int collect_response(int socket_fd, ft_string &response)
 {
     char buffer[256];
@@ -39,8 +55,6 @@ static int collect_response(int socket_fd, ft_string &response)
             break;
         buffer[bytes_received] = '\0';
         response.append(buffer);
-        if (bytes_received < static_cast<ssize_t>(sizeof(buffer) - 1))
-            break;
     }
     if (response.empty())
         return (0);
@@ -199,6 +213,125 @@ FT_TEST(test_http_server_post_echoes_body, "HTTP server echoes POST body")
         return (0);
     body_start += 4;
     if (ft_strncmp(body_start, body_content, body_length) != 0)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_http_server_keep_alive_multiple_requests, "HTTP server handles sequential keep-alive requests")
+{
+    ft_http_server server;
+    http_server_context context;
+    ft_thread server_thread;
+    SocketConfig client_configuration;
+    ft_socket client_socket;
+    ft_string request_string;
+    ft_string response;
+    const char *first_response;
+    const char *second_response;
+
+    if (server.start("127.0.0.1", 54334) != 0)
+        return (0);
+    context.server = &server;
+    context.result = -1;
+    server_thread = ft_thread(http_server_run_once, &context);
+    if (server_thread.get_error() != ER_SUCCESS)
+        return (0);
+    client_configuration._type = SocketType::CLIENT;
+    client_configuration._ip = "127.0.0.1";
+    client_configuration._port = 54334;
+    client_socket = ft_socket(client_configuration);
+    if (client_socket.get_error() != ER_SUCCESS)
+    {
+        server_thread.join();
+        return (0);
+    }
+    request_string = "GET /first HTTP/1.1\r\nHost: localhost\r\nConnection: keep-alive\r\n\r\n";
+    request_string.append("GET /second HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n");
+    if (client_socket.send_all(request_string.c_str(), request_string.size(), 0)
+        != static_cast<ssize_t>(request_string.size()))
+    {
+        server_thread.join();
+        return (0);
+    }
+    if (collect_response(client_socket.get_fd(), response) == 0)
+    {
+        server_thread.join();
+        return (0);
+    }
+    server_thread.join();
+    if (context.result != 0)
+        return (0);
+    first_response = ft_strnstr(response.c_str(), "Connection: keep-alive", response.size());
+    if (first_response == ft_nullptr)
+        return (0);
+    second_response = ft_strnstr(response.c_str() + (first_response - response.c_str()) + 1,
+        "Connection: close", response.size() - (first_response - response.c_str()) - 1);
+    if (second_response == ft_nullptr)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_http_server_thread_safe_get_error, "ft_http_server synchronizes get_error with run_once")
+{
+    ft_http_server server;
+    http_server_context run_context;
+    http_server_error_context error_context;
+    ft_thread server_thread;
+    ft_thread error_thread;
+    SocketConfig client_configuration;
+    ft_socket client_socket;
+    const char *request_string;
+    ft_string response;
+
+    if (server.start("127.0.0.1", 54336) != 0)
+        return (0);
+    run_context.server = &server;
+    run_context.result = -1;
+    server_thread = ft_thread(http_server_run_once, &run_context);
+    if (server_thread.get_error() != ER_SUCCESS)
+        return (0);
+    usleep(50000);
+    error_context.server = &server;
+    error_context.value = -1;
+    error_thread = ft_thread(http_server_read_error, &error_context);
+    if (error_thread.get_error() != ER_SUCCESS)
+    {
+        server_thread.join();
+        return (0);
+    }
+    client_configuration._type = SocketType::CLIENT;
+    client_configuration._ip = "127.0.0.1";
+    client_configuration._port = 54336;
+    client_socket = ft_socket(client_configuration);
+    if (client_socket.get_error() != ER_SUCCESS)
+    {
+        server_thread.join();
+        error_thread.join();
+        return (0);
+    }
+    request_string = "GET /thread HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
+    if (client_socket.send_all(request_string, ft_strlen(request_string), 0)
+        != static_cast<ssize_t>(ft_strlen(request_string)))
+    {
+        server_thread.join();
+        error_thread.join();
+        return (0);
+    }
+    if (collect_response(client_socket.get_fd(), response) == 0)
+    {
+        server_thread.join();
+        error_thread.join();
+        return (0);
+    }
+    server_thread.join();
+    error_thread.join();
+    if (run_context.result != 0)
+        return (0);
+    if (error_context.value != ER_SUCCESS)
+        return (0);
+    if (server.get_error() != ER_SUCCESS)
+        return (0);
+    if (ft_strnstr(response.c_str(), "HTTP/1.1 200 OK", response.size()) == ft_nullptr)
         return (0);
     return (1);
 }
