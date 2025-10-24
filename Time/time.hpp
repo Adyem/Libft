@@ -36,6 +36,14 @@ typedef struct s_time_info
     int is_daylight_saving;
 }   t_time_info;
 
+struct event_loop;
+
+typedef struct s_time_async_sleep
+{
+    t_monotonic_time_point deadline;
+    bool completed;
+}   t_time_async_sleep;
+
 t_time  time_now(void);
 long    time_now_ms(void);
 long    time_monotonic(void);
@@ -66,6 +74,11 @@ bool    time_monotonic_to_wall_ms(t_monotonic_time_point monotonic_point,
 bool    time_wall_ms_to_monotonic(long long wall_time_ms,
             t_monotonic_time_point anchor_monotonic, long long anchor_wall_ms,
             t_monotonic_time_point &out_monotonic);
+
+void    time_async_sleep_init(t_time_async_sleep *sleep_state, long long delay_milliseconds);
+bool    time_async_sleep_is_complete(const t_time_async_sleep *sleep_state);
+long long   time_async_sleep_remaining_ms(t_time_async_sleep *sleep_state);
+int     time_async_sleep_poll(event_loop *loop, t_time_async_sleep *sleep_state);
 
 typedef std::chrono::system_clock::time_point (*t_time_clock_now_hook)(void);
 
