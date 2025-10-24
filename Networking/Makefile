@@ -12,6 +12,7 @@ SRCS := networking_socket_class.cpp \
         networking_socket_wrapper_functions.cpp \
         socket_handle.cpp \
         networking_ssl_wrapper.cpp \
+        networking_tls_aead.cpp \
         networking_nonblocking.cpp \
         networking_event_loop.cpp \
         http_client.cpp \
@@ -47,6 +48,7 @@ HEADERS := socket_class.hpp \
            networking.hpp \
            udp_socket.hpp \
            ssl_wrapper.hpp \
+           networking_tls_aead.hpp \
            http_client.hpp \
            http2_client.hpp \
            http_server.hpp \

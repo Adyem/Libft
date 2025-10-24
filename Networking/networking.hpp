@@ -45,6 +45,8 @@ int nw_poll(int *read_file_descriptors, int read_count,
             int *write_file_descriptors, int write_count,
             int timeout_milliseconds);
 
+class pt_mutex;
+
 struct networking_resolved_address
 {
     sockaddr_storage    address;
@@ -69,6 +71,8 @@ struct event_loop
     int read_count;
     int *write_file_descriptors;
     int write_count;
+    pt_mutex *mutex;
+    bool thread_safe_enabled;
 };
 
 class udp_socket;
@@ -78,6 +82,10 @@ void event_loop_clear(event_loop *loop);
 int event_loop_add_socket(event_loop *loop, int socket_fd, bool is_write);
 int event_loop_remove_socket(event_loop *loop, int socket_fd, bool is_write);
 int event_loop_run(event_loop *loop, int timeout_milliseconds);
+int event_loop_prepare_thread_safety(event_loop *loop);
+void event_loop_teardown_thread_safety(event_loop *loop);
+int event_loop_lock(event_loop *loop, bool *lock_acquired);
+void event_loop_unlock(event_loop *loop, bool lock_acquired);
 
 int udp_event_loop_wait_read(event_loop *loop, udp_socket &socket, int timeout_milliseconds);
 int udp_event_loop_wait_write(event_loop *loop, udp_socket &socket, int timeout_milliseconds);
@@ -97,8 +105,6 @@ enum class SocketType
     CLIENT,
     RAW
 };
-
-class pt_mutex;
 
 class SocketConfig
 {

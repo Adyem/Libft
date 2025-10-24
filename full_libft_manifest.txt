@@ -18,6 +18,7 @@ Config/config.hpp
 Config/flag_parser.hpp
 CrossProcess/cross_process.hpp
 Encryption/basic_encryption.hpp
+Encryption/encryption_aead.hpp
 Encryption/encryption_key_management.hpp
 Encryption/encryption_secure_wipe.hpp
 Errno/errno.hpp
@@ -50,6 +51,7 @@ Logger/logger.hpp
 Math/math.hpp
 Math/roll.hpp
 Networking/networking.hpp
+Networking/networking_tls_aead.hpp
 Networking/socket_class.hpp
 Networking/ssl_wrapper.hpp
 Networking/udp_socket.hpp

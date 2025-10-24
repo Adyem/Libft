@@ -46,3 +46,39 @@ FT_TEST(test_ft_vector_ft_string_growth, "ft_vector preserves ft_string contents
     FT_ASSERT_EQ(allocation_delta, free_delta);
     return (1);
 }
+
+FT_TEST(test_ft_vector_small_buffer_inline_capacity, "ft_vector uses inline storage before allocating from CMA")
+{
+    ft_size_t allocation_count_before = 0;
+    ft_size_t free_count_before = 0;
+    cma_get_stats(&allocation_count_before, &free_count_before);
+    {
+        ft_vector<int> inline_vector;
+        size_t inline_capacity = inline_vector.capacity();
+        FT_ASSERT(inline_capacity > 0);
+        size_t push_index = 0;
+        while (push_index < inline_capacity)
+        {
+            inline_vector.push_back(static_cast<int>(push_index));
+            ++push_index;
+        }
+        ft_size_t allocation_count_mid = 0;
+        ft_size_t free_count_mid = 0;
+        cma_get_stats(&allocation_count_mid, &free_count_mid);
+        FT_ASSERT_EQ(allocation_count_before, allocation_count_mid);
+        FT_ASSERT_EQ(free_count_before, free_count_mid);
+        size_t verify_index = 0;
+        while (verify_index < inline_vector.size())
+        {
+            FT_ASSERT_EQ(static_cast<int>(verify_index), inline_vector[verify_index]);
+            ++verify_index;
+        }
+        FT_ASSERT_EQ(inline_vector.capacity(), inline_capacity);
+    }
+    ft_size_t allocation_count_after = 0;
+    ft_size_t free_count_after = 0;
+    cma_get_stats(&allocation_count_after, &free_count_after);
+    FT_ASSERT_EQ(allocation_count_before, allocation_count_after);
+    FT_ASSERT_EQ(free_count_before, free_count_after);
+    return (1);
+}

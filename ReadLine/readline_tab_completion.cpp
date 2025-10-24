@@ -113,9 +113,16 @@ static int rl_apply_completion(readline_state_t *state, const char *completion)
 
 static void rl_update_display(const char *prompt, readline_state_t *state)
 {
-    rl_clear_line(prompt, state->buffer);
+    int columns_after_cursor;
+
+    if (rl_update_display_metrics(state) != 0)
+        return ;
+    if (rl_clear_line(prompt, state->buffer) == -1)
+        return ;
     pf_printf("%s%s", prompt, state->buffer);
-    state->prev_buffer_length = ft_strlen(state->buffer);
+    columns_after_cursor = state->prev_display_columns - state->display_pos;
+    if (columns_after_cursor > 0)
+        pf_printf("\033[%dD", columns_after_cursor);
     fflush(stdout);
     return ;
 }

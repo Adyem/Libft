@@ -51,10 +51,11 @@ int rl_handle_printable_char(readline_state_t *state, char c, const char *prompt
                ft_strlen(&state->buffer[state->pos]) + 1);
     state->buffer[state->pos] = c;
     state->pos++;
-    state->prev_buffer_length = ft_strlen(state->buffer);
+    if (rl_update_display_metrics(state) != 0)
+        goto cleanup;
     rl_clear_line(prompt, state->buffer);
     pf_printf("%s%s", prompt, state->buffer);
-    length_after_cursor = state->prev_buffer_length - state->pos;
+    length_after_cursor = state->prev_display_columns - state->display_pos;
     if (length_after_cursor > 0)
         pf_printf("\033[%dD", length_after_cursor);
     fflush(stdout);
