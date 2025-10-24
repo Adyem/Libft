@@ -108,6 +108,7 @@ void rl_update_history(const char *buffer)
             return ;
         history[history_count] = duplicated_entry;
         history_count++;
+        rl_history_notify_updated();
         return ;
     }
     duplicated_entry = cma_strdup(buffer);
@@ -116,5 +117,6 @@ void rl_update_history(const char *buffer)
     cma_free(history[0]);
     ft_memmove(&history[0], &history[1], sizeof(char *) * (MAX_HISTORY - 1));
     history[MAX_HISTORY - 1] = duplicated_entry;
+    rl_history_notify_updated();
     return ;
 }

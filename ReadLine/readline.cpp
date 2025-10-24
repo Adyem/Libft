@@ -57,12 +57,19 @@ char *rl_readline(const char *prompt)
         if (key_result == -1)
             return (rl_error(&state));
         char character = static_cast<char>(key_result);
+        int custom_result = rl_dispatch_custom_key(&state, prompt, key_result);
+
+        if (custom_result == -1)
+            return (rl_error(&state));
+        if (custom_result == 1)
+            continue ;
 
         if (character != '\t' && state.in_completion_mode)
         {
             state.in_completion_mode = 0;
             state.current_match_count = 0;
             state.current_match_index = 0;
+            rl_completion_reset_dynamic_matches();
         }
         if (character == '\r' || character == '\n')
         {

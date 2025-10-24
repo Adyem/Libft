@@ -1,6 +1,8 @@
 #include <unistd.h>
+#include <fcntl.h>
 #include <atomic>
 #include <chrono>
+#include <climits>
 #include <cstring>
 #include <thread>
 #include "../../ReadLine/readline.hpp"
@@ -11,6 +13,93 @@
 #include "../../CMA/CMA.hpp"
 #include "../../Libft/limits.hpp"
 #include "../../Libft/libft.hpp"
+
+static void test_readline_cleanup_state(readline_state_t *state)
+{
+    bool lock_acquired;
+
+    if (state == ft_nullptr)
+        return ;
+    lock_acquired = false;
+    if (rl_state_lock(state, &lock_acquired) == 0)
+    {
+        if (lock_acquired == true && state->buffer != ft_nullptr)
+        {
+            cma_free(state->buffer);
+            state->buffer = ft_nullptr;
+        }
+        if (lock_acquired == true)
+            rl_state_unlock(state, lock_acquired);
+    }
+    rl_state_teardown_thread_safety(state);
+    return ;
+}
+
+static void test_readline_suppress_stderr(int *backup_descriptor)
+{
+    int null_descriptor;
+
+    if (backup_descriptor == ft_nullptr)
+        return ;
+    *backup_descriptor = -1;
+    null_descriptor = open("/dev/null", O_WRONLY);
+    if (null_descriptor == -1)
+        return ;
+    *backup_descriptor = dup(STDERR_FILENO);
+    if (*backup_descriptor == -1)
+    {
+        close(null_descriptor);
+        return ;
+    }
+    if (dup2(null_descriptor, STDERR_FILENO) == -1)
+    {
+        close(null_descriptor);
+        close(*backup_descriptor);
+        *backup_descriptor = -1;
+        return ;
+    }
+    close(null_descriptor);
+    return ;
+}
+
+static void test_readline_restore_stderr(int backup_descriptor)
+{
+    if (backup_descriptor == -1)
+        return ;
+    dup2(backup_descriptor, STDERR_FILENO);
+    close(backup_descriptor);
+    return ;
+}
+
+static int test_readline_custom_key_callback(readline_state_t *state, const char *prompt, void *user_data)
+{
+    int *counter_pointer;
+
+    (void)state;
+    (void)prompt;
+    counter_pointer = static_cast<int *>(user_data);
+    if (counter_pointer != ft_nullptr)
+        *counter_pointer += 1;
+    return (0);
+}
+
+static int test_readline_completion_callback(const char *buffer, int cursor_position,
+    const char *prefix, void *user_data)
+{
+    int *callback_counter_pointer;
+    int add_result;
+
+    (void)buffer;
+    (void)cursor_position;
+    (void)prefix;
+    callback_counter_pointer = static_cast<int *>(user_data);
+    if (callback_counter_pointer != ft_nullptr)
+        *callback_counter_pointer += 1;
+    add_result = rl_completion_add_candidate("custom-option");
+    if (add_result != 0)
+        return (-1);
+    return (0);
+}
 
 FT_TEST(test_readline_clear_line_null_prompt, "rl_clear_line rejects null prompts")
 {
@@ -195,6 +284,7 @@ FT_TEST(test_readline_printable_char_preserves_buffer_on_resize_failure, "rl_han
     const char *prompt;
     char *initial_buffer;
     int handle_result;
+    int stderr_backup_descriptor;
 
     prompt = "> ";
     initial_buffer = static_cast<char *>(cma_malloc(4));
@@ -214,9 +304,12 @@ FT_TEST(test_readline_printable_char_preserves_buffer_on_resize_failure, "rl_han
     state.current_match_index = 0;
     state.word_start = 0;
     ft_errno = ER_SUCCESS;
+    stderr_backup_descriptor = -1;
+    test_readline_suppress_stderr(&stderr_backup_descriptor);
     cma_set_alloc_limit(1);
     handle_result = rl_handle_printable_char(&state, 'a', prompt);
     cma_set_alloc_limit(0);
+    test_readline_restore_stderr(stderr_backup_descriptor);
     FT_ASSERT_EQ(-1, handle_result);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     FT_ASSERT_EQ(initial_buffer, state.buffer);
@@ -602,6 +695,111 @@ FT_TEST(test_readline_terminal_dimensions_thread_safety_lifecycle,
     rl_terminal_dimensions_teardown_thread_safety(&dimensions);
     FT_ASSERT(dimensions.thread_safe_enabled == false);
     FT_ASSERT(dimensions.mutex == ft_nullptr);
+    return (1);
+}
+
+FT_TEST(test_readline_custom_key_bindings_dispatch, "custom key bindings dispatch registered callbacks")
+{
+    readline_state_t state;
+    int initialize_result;
+    int bind_result;
+    int dispatch_result;
+    int unbind_result;
+    int callback_counter;
+
+    ft_bzero(&state, sizeof(state));
+    callback_counter = 0;
+    initialize_result = rl_initialize_state(&state);
+    if (initialize_result != 0)
+        return (0);
+    bind_result = rl_bind_key('x', test_readline_custom_key_callback, &callback_counter);
+    rl_disable_raw_mode();
+    FT_ASSERT_EQ(0, bind_result);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    dispatch_result = rl_dispatch_custom_key(&state, "> ", 'x');
+    FT_ASSERT_EQ(1, dispatch_result);
+    FT_ASSERT_EQ(1, callback_counter);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    callback_counter = 0;
+    unbind_result = rl_unbind_key('x');
+    FT_ASSERT_EQ(0, unbind_result);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    dispatch_result = rl_dispatch_custom_key(&state, "> ", 'x');
+    FT_ASSERT_EQ(0, dispatch_result);
+    FT_ASSERT_EQ(0, callback_counter);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    test_readline_cleanup_state(&state);
+    return (1);
+}
+
+FT_TEST(test_readline_state_insert_and_delete_text, "state helpers insert and delete graphemes")
+{
+    readline_state_t state;
+    int insert_result;
+    int delete_result;
+    const char *buffer_pointer;
+    int cursor_position;
+
+    ft_bzero(&state, sizeof(state));
+    state.buffer = static_cast<char *>(cma_calloc(4, sizeof(char)));
+    if (state.buffer == ft_nullptr)
+        return (0);
+    state.bufsize = 4;
+    state.pos = 0;
+    insert_result = rl_state_insert_text(&state, "hello");
+    FT_ASSERT_EQ(0, insert_result);
+    FT_ASSERT(state.bufsize >= 6);
+    FT_ASSERT_EQ(5, state.pos);
+    FT_ASSERT_EQ(0, ft_strcmp(state.buffer, "hello"));
+    state.pos = ft_strlen("h\xC3\xA9");
+    ft_strlcpy(state.buffer, "h\xC3\xA9", static_cast<size_t>(state.bufsize));
+    delete_result = rl_state_delete_previous_grapheme(&state);
+    FT_ASSERT_EQ(0, delete_result);
+    FT_ASSERT_EQ(1, state.pos);
+    FT_ASSERT_EQ(0, ft_strcmp(state.buffer, "h"));
+    delete_result = rl_state_delete_previous_grapheme(&state);
+    FT_ASSERT_EQ(0, delete_result);
+    FT_ASSERT_EQ(0, state.pos);
+    buffer_pointer = ft_nullptr;
+    FT_ASSERT_EQ(0, rl_state_get_buffer(&state, &buffer_pointer));
+    FT_ASSERT(buffer_pointer == state.buffer);
+    cursor_position = -1;
+    FT_ASSERT_EQ(0, rl_state_get_cursor(&state, &cursor_position));
+    FT_ASSERT_EQ(0, cursor_position);
+    FT_ASSERT_EQ(0, rl_state_set_cursor(&state, 0));
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(-1, rl_state_set_cursor(&state, INT_MAX));
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
+    cma_free(state.buffer);
+    state.buffer = ft_nullptr;
+    return (1);
+}
+
+FT_TEST(test_readline_completion_callbacks_register, "completion hooks invoke callbacks and store candidates")
+{
+    int set_result;
+    int prepare_result;
+    int callback_counter;
+    int suggestion_count;
+    char *match_pointer;
+
+    rl_completion_reset_dynamic_matches();
+    callback_counter = 0;
+    set_result = rl_set_completion_callback(test_readline_completion_callback, &callback_counter);
+    FT_ASSERT_EQ(0, set_result);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    prepare_result = rl_completion_prepare_candidates("input", 5, "input", 5);
+    FT_ASSERT_EQ(0, prepare_result);
+    FT_ASSERT_EQ(1, callback_counter);
+    suggestion_count = rl_completion_get_dynamic_count();
+    FT_ASSERT_EQ(1, suggestion_count);
+    match_pointer = rl_completion_get_dynamic_match(0);
+    FT_ASSERT(match_pointer != ft_nullptr);
+    FT_ASSERT_EQ(0, ft_strcmp(match_pointer, "custom-option"));
+    rl_completion_reset_dynamic_matches();
+    FT_ASSERT_EQ(0, rl_completion_get_dynamic_count());
+    rl_set_completion_callback(ft_nullptr, ft_nullptr);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
