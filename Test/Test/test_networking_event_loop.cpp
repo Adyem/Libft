@@ -1,5 +1,6 @@
 #include "../../Networking/networking.hpp"
 #include "../../CMA/CMA.hpp"
+#include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 
@@ -70,6 +71,57 @@ FT_TEST(test_event_loop_remove_socket_sets_errno_when_missing,
         return (0);
     }
     if (loop.read_file_descriptors[0] != 7)
+    {
+        event_loop_clear(&loop);
+        return (0);
+    }
+    event_loop_clear(&loop);
+    return (1);
+}
+
+FT_TEST(test_event_loop_init_sets_up_thread_safety,
+    "event_loop_init prepares thread safety primitives")
+{
+    event_loop loop;
+
+    event_loop_init(&loop);
+    if (!loop.thread_safe_enabled)
+    {
+        event_loop_clear(&loop);
+        return (0);
+    }
+    if (loop.mutex == ft_nullptr)
+    {
+        event_loop_clear(&loop);
+        return (0);
+    }
+    event_loop_clear(&loop);
+    return (1);
+}
+
+FT_TEST(test_event_loop_lock_and_unlock_preserve_errno,
+    "event_loop_lock acquires the mutex and unlock preserves errno")
+{
+    event_loop loop;
+    bool       lock_acquired;
+    int        lock_result;
+
+    event_loop_init(&loop);
+    lock_acquired = false;
+    lock_result = event_loop_lock(&loop, &lock_acquired);
+    if (lock_result != 0)
+    {
+        event_loop_clear(&loop);
+        return (0);
+    }
+    if (!lock_acquired)
+    {
+        event_loop_clear(&loop);
+        return (0);
+    }
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    event_loop_unlock(&loop, lock_acquired);
+    if (ft_errno != FT_ERR_INVALID_ARGUMENT)
     {
         event_loop_clear(&loop);
         return (0);

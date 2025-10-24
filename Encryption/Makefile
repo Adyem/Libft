@@ -2,6 +2,7 @@ TARGET := encryption.a
 DEBUG_TARGET := encryption_debug.a
 
 SRCS := encryption_basic_encryption.cpp \
+        encryption_aead.cpp \
         encryption_key.cpp \
         encryption_aes.cpp \
         encryption_rsa.cpp \
@@ -17,6 +18,7 @@ MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
 HEADERS := basic_encryption.hpp \
+        encryption_aead.hpp \
         encryption_secure_wipe.hpp \
         encryption_key_management.hpp \
         encryption_sha3.hpp \

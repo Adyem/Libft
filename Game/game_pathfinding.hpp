@@ -5,22 +5,57 @@
 #include "../Template/vector.hpp"
 #include "../Template/graph.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 
-struct ft_path_step
+class ft_path_step
 {
-    size_t  _x;
-    size_t  _y;
-    size_t  _z;
+    private:
+        size_t              _x;
+        size_t              _y;
+        size_t              _z;
+        mutable int         _error_code;
+        mutable pt_mutex    _mutex;
+
+        void    set_error(int error) const noexcept;
+        static int lock_pair(const ft_path_step &first, const ft_path_step &second,
+                ft_unique_lock<pt_mutex> &first_guard,
+                ft_unique_lock<pt_mutex> &second_guard) noexcept;
+
+    public:
+        ft_path_step() noexcept;
+        ~ft_path_step() noexcept;
+        ft_path_step(const ft_path_step &other) noexcept;
+        ft_path_step &operator=(const ft_path_step &other) noexcept;
+        ft_path_step(ft_path_step &&other) noexcept;
+        ft_path_step &operator=(ft_path_step &&other) noexcept;
+
+        int     set_coordinates(size_t x, size_t y, size_t z) noexcept;
+        int     set_x(size_t x) noexcept;
+        int     set_y(size_t y) noexcept;
+        int     set_z(size_t z) noexcept;
+        size_t  get_x() const noexcept;
+        size_t  get_y() const noexcept;
+        size_t  get_z() const noexcept;
+        int     get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 };
 
 class ft_pathfinding
 {
     private:
-        mutable int _error_code;
+        mutable int         _error_code;
         ft_vector<ft_path_step> _current_path;
-        bool _needs_replan;
+        bool                _needs_replan;
+        mutable pt_mutex    _mutex;
 
         void    set_error(int error) const noexcept;
+        static void restore_errno(ft_unique_lock<pt_mutex> &guard,
+                int entry_errno) noexcept;
+        static void sleep_backoff() noexcept;
+        static int lock_pair(const ft_pathfinding &first, const ft_pathfinding &second,
+                ft_unique_lock<pt_mutex> &first_guard,
+                ft_unique_lock<pt_mutex> &second_guard) noexcept;
 
     public:
         ft_pathfinding() noexcept;

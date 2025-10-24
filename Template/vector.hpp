@@ -7,6 +7,30 @@
 #include "constructor.hpp"
 #include <cstddef>
 #include <utility>
+#include <type_traits>
+
+template <typename Type, typename = void>
+struct ft_is_complete
+    : std::false_type
+{
+};
+
+template <typename Type>
+struct ft_is_complete<Type, std::void_t<decltype(sizeof(Type))> >
+    : std::true_type
+{
+};
+
+template <typename Type, size_t InlineCapacity, bool Enabled>
+struct ft_vector_inline_storage
+{
+};
+
+template <typename Type, size_t InlineCapacity>
+struct ft_vector_inline_storage<Type, InlineCapacity, true>
+{
+    alignas(Type) unsigned char buffer[sizeof(Type) * InlineCapacity];
+};
 #include "../Libft/libft.hpp"
 #include "move.hpp"
 
@@ -14,6 +38,10 @@ template <typename ElementType>
 class ft_vector
 {
     private:
+        static const size_t SMALL_CAPACITY = 8;
+        static const bool SMALL_BUFFER_AVAILABLE = ft_is_complete<ElementType>::value;
+
+        ft_vector_inline_storage<ElementType, SMALL_CAPACITY, SMALL_BUFFER_AVAILABLE> _inline_storage;
         ElementType    *_data;
         size_t        _size;
         size_t        _capacity;
@@ -21,6 +49,10 @@ class ft_vector
 
         void    destroy_elements(size_t from, size_t to);
         void    reserve_internal(size_t new_capacity);
+        ElementType    *small_data();
+        const ElementType  *small_data() const;
+        bool    using_small_buffer() const;
+        void    reset_to_small_buffer();
 
     protected:
         void    set_error(int error_code) const;
@@ -68,14 +100,12 @@ template <typename ElementType>
 ft_vector<ElementType>::ft_vector(size_t initial_capacity)
     : _data(ft_nullptr), _size(0), _capacity(0), _error_code(ER_SUCCESS)
 {
-    if (initial_capacity > 0)
+    this->reset_to_small_buffer();
+    if (initial_capacity > SMALL_CAPACITY)
     {
-        this->_data = static_cast<ElementType*>
-            (cma_malloc(initial_capacity * sizeof(ElementType)));
-        if (this->_data == ft_nullptr)
-            this->set_error(FT_ERR_NO_MEMORY);
-        else
-            this->_capacity = initial_capacity;
+        this->reserve_internal(initial_capacity);
+        if (this->_capacity < initial_capacity)
+            return ;
     }
     return ;
 }
@@ -84,21 +114,39 @@ template <typename ElementType>
 ft_vector<ElementType>::~ft_vector()
 {
     this->destroy_elements(0, this->_size);
-    if (this->_data != ft_nullptr)
+    if (this->_data != ft_nullptr && this->using_small_buffer() == false)
         cma_free(this->_data);
     return ;
 }
 
 template <typename ElementType>
 ft_vector<ElementType>::ft_vector(ft_vector<ElementType>&& other) noexcept
-    : _data(other._data),
-      _size(other._size),
-      _capacity(other._capacity),
-      _error_code(other._error_code)
+    : _data(ft_nullptr),
+      _size(0),
+      _capacity(0),
+      _error_code(ER_SUCCESS)
 {
-    other._data = ft_nullptr;
+    if (other.using_small_buffer() != false)
+    {
+        this->reset_to_small_buffer();
+        size_t move_index = 0;
+        while (move_index < other._size)
+        {
+            construct_at(&this->_data[move_index], ft_move(other._data[move_index]));
+            destroy_at(&other._data[move_index]);
+            ++move_index;
+        }
+        this->_size = other._size;
+    }
+    else
+    {
+        this->_data = other._data;
+        this->_size = other._size;
+        this->_capacity = other._capacity;
+    }
+    this->_error_code = other._error_code;
     other._size = 0;
-    other._capacity = 0;
+    other.reset_to_small_buffer();
     other._error_code = ER_SUCCESS;
 }
 
@@ -108,15 +156,30 @@ ft_vector<ElementType>& ft_vector<ElementType>::operator=(ft_vector<ElementType>
     if (this != &other)
     {
         this->destroy_elements(0, this->_size);
-        if (this->_data != ft_nullptr)
+        if (this->_data != ft_nullptr && this->using_small_buffer() == false)
             cma_free(this->_data);
-        this->_data = other._data;
-        this->_size = other._size;
-        this->_capacity = other._capacity;
+        if (other.using_small_buffer() != false)
+        {
+            this->reset_to_small_buffer();
+            this->_size = 0;
+            size_t move_index = 0;
+            while (move_index < other._size)
+            {
+                construct_at(&this->_data[move_index], ft_move(other._data[move_index]));
+                destroy_at(&other._data[move_index]);
+                ++move_index;
+                this->_size++;
+            }
+        }
+        else
+        {
+            this->_data = other._data;
+            this->_size = other._size;
+            this->_capacity = other._capacity;
+        }
         this->_error_code = other._error_code;
-        other._data = ft_nullptr;
         other._size = 0;
-        other._capacity = 0;
+        other.reset_to_small_buffer();
         other._error_code = ER_SUCCESS;
     }
     return (*this);
@@ -277,6 +340,7 @@ void ft_vector<ElementType>::reserve_internal(size_t new_capacity)
         this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
+    bool had_small_buffer = this->using_small_buffer();
     ElementType* old_data = this->_data;
     size_t current_size = this->_size;
     size_t index = 0;
@@ -304,10 +368,53 @@ void ft_vector<ElementType>::reserve_internal(size_t new_capacity)
         destroy_at(&old_data[destroy_index]);
         ++destroy_index;
     }
-    if (old_data != ft_nullptr)
+    if (had_small_buffer == false && old_data != ft_nullptr)
         cma_free(old_data);
     this->_data = new_data;
     this->_capacity = new_capacity;
+    return ;
+}
+
+template <typename ElementType>
+ElementType* ft_vector<ElementType>::small_data()
+{
+    if constexpr (SMALL_BUFFER_AVAILABLE != false)
+        return (reinterpret_cast<ElementType*>(this->_inline_storage.buffer));
+    return (ft_nullptr);
+}
+
+template <typename ElementType>
+const ElementType* ft_vector<ElementType>::small_data() const
+{
+    if constexpr (SMALL_BUFFER_AVAILABLE != false)
+        return (reinterpret_cast<const ElementType*>(this->_inline_storage.buffer));
+    return (ft_nullptr);
+}
+
+template <typename ElementType>
+bool ft_vector<ElementType>::using_small_buffer() const
+{
+    if constexpr (SMALL_BUFFER_AVAILABLE != false)
+    {
+        const ElementType* small_pointer = this->small_data();
+        return (this->_data == small_pointer);
+    }
+    return (false);
+}
+
+template <typename ElementType>
+void ft_vector<ElementType>::reset_to_small_buffer()
+{
+    if constexpr (SMALL_BUFFER_AVAILABLE != false)
+    {
+        this->_data = this->small_data();
+        this->_capacity = SMALL_CAPACITY;
+    }
+    else
+    {
+        this->_data = ft_nullptr;
+        this->_capacity = 0;
+    }
     return ;
 }
 

@@ -6,6 +6,8 @@
 #include "game_item.hpp"
 #include "../Template/shared_ptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 
 class ft_quest
 {
@@ -18,12 +20,16 @@ class ft_quest
         int _reward_experience;
         ft_vector<ft_sharedptr<ft_item> > _reward_items;
         mutable int _error;
+        mutable pt_mutex _mutex;
 
         void set_error(int err) const noexcept;
+        static int lock_pair(const ft_quest &first, const ft_quest &second,
+                ft_unique_lock<pt_mutex> &first_guard,
+                ft_unique_lock<pt_mutex> &second_guard);
 
     public:
         ft_quest() noexcept;
-        virtual ~ft_quest() = default;
+        virtual ~ft_quest() noexcept;
         ft_quest(const ft_quest &other) noexcept;
         ft_quest &operator=(const ft_quest &other) noexcept;
         ft_quest(ft_quest &&other) noexcept;
