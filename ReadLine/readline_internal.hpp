@@ -40,6 +40,8 @@ typedef struct {
     int            bufsize;
     int            pos;
     int            prev_buffer_length;
+    int            display_pos;
+    int            prev_display_columns;
     int            history_index;
     int            in_completion_mode;
     int            current_match_count;
@@ -62,6 +64,12 @@ int        rl_handle_escape_sequence(readline_state_t *state, const char *prompt
 int        rl_handle_backspace(readline_state_t *state, const char *prompt);
 int        rl_handle_tab_completion(readline_state_t *state, const char *prompt);
 int        rl_handle_printable_char(readline_state_t *state, char c, const char *prompt);
+int        rl_update_display_metrics(readline_state_t *state);
+int        rl_utf8_compute_columns(const char *string, int *columns);
+int        rl_utf8_find_previous_grapheme(const char *buffer, int cursor_pos,
+            int *start_byte, int *end_byte, int *display_width);
+int        rl_utf8_find_next_grapheme(const char *buffer, int cursor_pos,
+            int *start_byte, int *end_byte, int *display_width);
 
 int        rl_read_key(void);
 int        rl_get_terminal_width(void);

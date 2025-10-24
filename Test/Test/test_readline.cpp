@@ -123,6 +123,8 @@ FT_TEST(test_readline_history_recall_resizes_buffer, "history recall grows the a
     state.bufsize = 4;
     state.pos = 0;
     state.prev_buffer_length = 0;
+    state.display_pos = 0;
+    state.prev_display_columns = 0;
     state.history_index = history_count;
     state.in_completion_mode = 0;
     state.current_match_count = 0;
@@ -204,6 +206,8 @@ FT_TEST(test_readline_printable_char_preserves_buffer_on_resize_failure, "rl_han
     state.bufsize = 2;
     state.pos = state.bufsize - 1;
     state.prev_buffer_length = 1;
+    state.display_pos = 1;
+    state.prev_display_columns = 1;
     state.history_index = 0;
     state.in_completion_mode = 0;
     state.current_match_count = 0;
@@ -247,6 +251,8 @@ FT_TEST(test_readline_tab_completion_rejects_long_prefix, "rl_handle_tab_complet
     state.bufsize = buffer_length + 1;
     state.pos = buffer_length;
     state.prev_buffer_length = buffer_length;
+    state.display_pos = buffer_length;
+    state.prev_display_columns = buffer_length;
     state.history_index = 0;
     state.in_completion_mode = 0;
     state.current_match_count = 0;
@@ -294,6 +300,8 @@ FT_TEST(test_readline_tab_completion_preserves_suffix, "rl_handle_tab_completion
     state.bufsize = buffer_capacity;
     state.pos = 7;
     state.prev_buffer_length = ft_strlen(buffer);
+    state.display_pos = 7;
+    state.prev_display_columns = 7;
     state.history_index = 0;
     state.in_completion_mode = 0;
     state.current_match_count = 0;
@@ -313,6 +321,80 @@ FT_TEST(test_readline_tab_completion_preserves_suffix, "rl_handle_tab_completion
     FT_ASSERT_EQ(9, state.pos);
     FT_ASSERT_EQ(ft_strlen(state.buffer), state.prev_buffer_length);
     rl_clear_suggestions();
+    cma_free(buffer);
+    return (1);
+}
+
+FT_TEST(test_readline_utf8_backspace_removes_grapheme, "rl_handle_backspace erases entire utf8 grapheme")
+{
+    readline_state_t state;
+    const char *prompt;
+    char *buffer;
+    int handle_result;
+    const char initial_sequence[] = { 'A', static_cast<char>(0xC3), static_cast<char>(0xA9), 'B', '\0' };
+    const char expected_first[] = { 'A', static_cast<char>(0xC3), static_cast<char>(0xA9), '\0' };
+    const char expected_second[] = { 'A', '\0' };
+
+    prompt = "> ";
+    buffer = cma_strdup(initial_sequence);
+    if (buffer == ft_nullptr)
+        return (0);
+    state.buffer = buffer;
+    state.bufsize = static_cast<int>(ft_strlen(buffer)) + 1;
+    state.pos = ft_strlen(buffer);
+    state.prev_buffer_length = ft_strlen(buffer);
+    state.display_pos = 3;
+    state.prev_display_columns = 3;
+    state.history_index = 0;
+    state.in_completion_mode = 0;
+    state.current_match_count = 0;
+    state.current_match_index = 0;
+    state.word_start = 0;
+    ft_errno = ER_SUCCESS;
+    handle_result = rl_handle_backspace(&state, prompt);
+    FT_ASSERT_EQ(0, handle_result);
+    FT_ASSERT(std::memcmp(state.buffer, expected_first, sizeof(expected_first)) == 0);
+    FT_ASSERT_EQ(static_cast<int>(ft_strlen(state.buffer)), state.pos);
+    FT_ASSERT_EQ(2, state.prev_display_columns);
+    handle_result = rl_handle_backspace(&state, prompt);
+    FT_ASSERT_EQ(0, handle_result);
+    FT_ASSERT(std::memcmp(state.buffer, expected_second, sizeof(expected_second)) == 0);
+    FT_ASSERT_EQ(static_cast<int>(ft_strlen(state.buffer)), state.pos);
+    FT_ASSERT_EQ(1, state.prev_display_columns);
+    cma_free(buffer);
+    return (1);
+}
+
+FT_TEST(test_readline_utf8_printable_updates_display, "rl_handle_printable_char tracks utf8 display width")
+{
+    readline_state_t state;
+    const char *prompt;
+    char *buffer;
+
+    prompt = "> ";
+    buffer = static_cast<char *>(cma_calloc(16, sizeof(char)));
+    if (buffer == ft_nullptr)
+        return (0);
+    state.buffer = buffer;
+    state.bufsize = 16;
+    state.pos = 0;
+    state.prev_buffer_length = 0;
+    state.display_pos = 0;
+    state.prev_display_columns = 0;
+    state.history_index = 0;
+    state.in_completion_mode = 0;
+    state.current_match_count = 0;
+    state.current_match_index = 0;
+    state.word_start = 0;
+    FT_ASSERT_EQ(0, rl_handle_printable_char(&state, static_cast<char>(0xC3), prompt));
+    FT_ASSERT_EQ(1, state.pos);
+    FT_ASSERT(state.prev_display_columns >= 1);
+    FT_ASSERT_EQ(0, rl_handle_printable_char(&state, static_cast<char>(0xA9), prompt));
+    FT_ASSERT_EQ(2, state.pos);
+    FT_ASSERT_EQ(1, state.prev_display_columns);
+    FT_ASSERT_EQ(0, rl_handle_printable_char(&state, '!', prompt));
+    FT_ASSERT_EQ(3, state.pos);
+    FT_ASSERT_EQ(2, state.prev_display_columns);
     cma_free(buffer);
     return (1);
 }

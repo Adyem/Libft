@@ -45,11 +45,9 @@ int rl_clear_line(const char *prompt, const char *buffer)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    prompt_length = ft_strlen(prompt);
-    if (ft_errno != ER_SUCCESS)
+    if (rl_utf8_compute_columns(prompt, &prompt_length) != 0)
         return (-1);
-    buffer_length = ft_strlen(buffer);
-    if (ft_errno != ER_SUCCESS)
+    if (rl_utf8_compute_columns(buffer, &buffer_length) != 0)
         return (-1);
     total_length = prompt_length + buffer_length;
     pf_printf("\r");
