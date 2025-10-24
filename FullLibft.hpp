@@ -58,6 +58,7 @@
 #include "Networking/socket_class.hpp"
 #include "Networking/ssl_wrapper.hpp"
 #include "Networking/udp_socket.hpp"
+#include "Observability/observability_game_metrics.hpp"
 #include "Observability/observability_task_scheduler_bridge.hpp"
 #include "PThread/lock_guard.hpp"
 #include "PThread/mutex.hpp"

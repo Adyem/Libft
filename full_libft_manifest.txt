@@ -55,6 +55,7 @@ Networking/networking_tls_aead.hpp
 Networking/socket_class.hpp
 Networking/ssl_wrapper.hpp
 Networking/udp_socket.hpp
+Observability/observability_game_metrics.hpp
 Observability/observability_task_scheduler_bridge.hpp
 PThread/lock_guard.hpp
 PThread/mutex.hpp

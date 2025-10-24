@@ -2,11 +2,12 @@ TARGET := Game.a
 DEBUG_TARGET := Game_debug.a
 
 SRCS := game_map3d.cpp \
-	game_character_constructor.cpp \
-	game_character_getters_setters.cpp \
-	game_character_add_remove.cpp \
-	game_character_misc.cpp \
-	game_character_save_load.cpp \
+        game_character_constructor.cpp \
+        game_character_getters_setters.cpp \
+        game_character_add_remove.cpp \
+        game_character_misc.cpp \
+        game_character_metrics.cpp \
+        game_character_save_load.cpp \
 	game_quest.cpp \
 	game_achievement.cpp \
 	game_reputation.cpp \
