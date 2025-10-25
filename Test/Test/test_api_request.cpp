@@ -1228,10 +1228,14 @@ FT_TEST(test_http2_frame_roundtrip, "http2 frame encode decode roundtrip")
     size_t offset;
     int error_code;
 
-    input_frame.type = 0x1;
-    input_frame.flags = 0x5;
-    input_frame.stream_id = 3;
-    input_frame.payload = "Hello";
+    if (!input_frame.set_type(0x1))
+        return (0);
+    if (!input_frame.set_flags(0x5))
+        return (0);
+    if (!input_frame.set_stream_identifier(3))
+        return (0);
+    if (!input_frame.set_payload_from_buffer("Hello", 5))
+        return (0);
     error_code = ER_SUCCESS;
     if (!http2_encode_frame(input_frame, encoded, error_code))
         return (0);
@@ -1243,13 +1247,38 @@ FT_TEST(test_http2_frame_roundtrip, "http2 frame encode decode roundtrip")
         return (0);
     if (error_code != ER_SUCCESS)
         return (0);
-    if (decoded_frame.type != input_frame.type)
+    uint8_t decoded_type;
+    uint8_t input_type;
+    uint8_t decoded_flags;
+    uint8_t input_flags;
+    uint32_t decoded_stream_identifier;
+    uint32_t input_stream_identifier;
+    ft_string decoded_payload;
+    ft_string input_payload;
+
+    if (!decoded_frame.get_type(decoded_type))
         return (0);
-    if (decoded_frame.flags != input_frame.flags)
+    if (!input_frame.get_type(input_type))
         return (0);
-    if (decoded_frame.stream_id != input_frame.stream_id)
+    if (decoded_type != input_type)
         return (0);
-    if (!(decoded_frame.payload == input_frame.payload))
+    if (!decoded_frame.get_flags(decoded_flags))
+        return (0);
+    if (!input_frame.get_flags(input_flags))
+        return (0);
+    if (decoded_flags != input_flags)
+        return (0);
+    if (!decoded_frame.get_stream_identifier(decoded_stream_identifier))
+        return (0);
+    if (!input_frame.get_stream_identifier(input_stream_identifier))
+        return (0);
+    if (decoded_stream_identifier != input_stream_identifier)
+        return (0);
+    if (!decoded_frame.copy_payload(decoded_payload))
+        return (0);
+    if (!input_frame.copy_payload(input_payload))
+        return (0);
+    if (!(decoded_payload == input_payload))
         return (0);
     return (1);
 }
@@ -1264,23 +1293,23 @@ FT_TEST(test_http2_header_compression_roundtrip, "http2 header compression round
     size_t header_count;
     size_t index;
 
-    field_entry.name = ":method";
-    field_entry.value = "GET";
+    if (!field_entry.assign_from_cstr(":method", "GET"))
+        return (0);
     headers.push_back(field_entry);
     if (headers.get_error() != ER_SUCCESS)
         return (0);
-    field_entry.name = ":path";
-    field_entry.value = "/resource";
+    if (!field_entry.assign_from_cstr(":path", "/resource"))
+        return (0);
     headers.push_back(field_entry);
     if (headers.get_error() != ER_SUCCESS)
         return (0);
-    field_entry.name = "user-agent";
-    field_entry.value = "libft-tests";
+    if (!field_entry.assign_from_cstr("user-agent", "libft-tests"))
+        return (0);
     headers.push_back(field_entry);
     if (headers.get_error() != ER_SUCCESS)
         return (0);
-    field_entry.name = "accept";
-    field_entry.value = "*/*";
+    if (!field_entry.assign_from_cstr("accept", "*/*"))
+        return (0);
     headers.push_back(field_entry);
     if (headers.get_error() != ER_SUCCESS)
         return (0);
@@ -1303,9 +1332,22 @@ FT_TEST(test_http2_header_compression_roundtrip, "http2 header compression round
     index = 0;
     while (index < header_count)
     {
-        if (!(decoded_headers[index].name == headers[index].name))
+        ft_string decoded_name;
+        ft_string decoded_value;
+        ft_string original_name;
+        ft_string original_value;
+
+        if (!decoded_headers[index].copy_name(decoded_name))
             return (0);
-        if (!(decoded_headers[index].value == headers[index].value))
+        if (!headers[index].copy_name(original_name))
+            return (0);
+        if (!(decoded_name == original_name))
+            return (0);
+        if (!decoded_headers[index].copy_value(decoded_value))
+            return (0);
+        if (!headers[index].copy_value(original_value))
+            return (0);
+        if (!(decoded_value == original_value))
             return (0);
         index++;
     }
@@ -1431,17 +1473,19 @@ FT_TEST(test_http2_settings_apply_remote_settings, "http2 settings adjusts remot
 
     if (!manager.open_stream(1))
         return (0);
-    frame.type = 0x4;
-    frame.flags = 0x0;
-    frame.stream_id = 0;
+    if (!frame.set_type(0x4))
+        return (0);
+    if (!frame.set_flags(0x0))
+        return (0);
+    if (!frame.set_stream_identifier(0))
+        return (0);
     payload_bytes[0] = 0x00;
     payload_bytes[1] = 0x04;
     payload_bytes[2] = 0x00;
     payload_bytes[3] = 0x00;
     payload_bytes[4] = 0x04;
     payload_bytes[5] = 0x00;
-    frame.payload.assign(payload_bytes, 6);
-    if (frame.payload.get_error() != ER_SUCCESS)
+    if (!frame.set_payload_from_buffer(payload_bytes, 6))
         return (0);
     if (!settings.apply_remote_settings(frame, manager))
         return (0);

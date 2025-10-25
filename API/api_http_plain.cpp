@@ -1524,14 +1524,32 @@ static char *api_http_execute_plain_http2_once(
         api_connection_pool_evict(connection_handle);
         return (ft_nullptr);
     }
-    settings_frame.type = 0x4;
-    settings_frame.flags = 0x0;
-    settings_frame.stream_id = 0;
-    settings_frame.payload.clear();
-    if (settings_frame.payload.get_error() != ER_SUCCESS)
+    if (!settings_frame.set_type(0x4))
     {
         api_connection_pool_disable_store(connection_handle);
-        error_code = settings_frame.payload.get_error();
+        error_code = settings_frame.get_error();
+        api_connection_pool_evict(connection_handle);
+        return (ft_nullptr);
+    }
+    if (!settings_frame.set_flags(0x0))
+    {
+        api_connection_pool_disable_store(connection_handle);
+        error_code = settings_frame.get_error();
+        api_connection_pool_evict(connection_handle);
+        return (ft_nullptr);
+    }
+    if (!settings_frame.set_stream_identifier(0))
+    {
+        api_connection_pool_disable_store(connection_handle);
+        error_code = settings_frame.get_error();
+        api_connection_pool_evict(connection_handle);
+        return (ft_nullptr);
+    }
+    settings_frame.clear_payload();
+    if (settings_frame.get_error() != ER_SUCCESS)
+    {
+        api_connection_pool_disable_store(connection_handle);
+        error_code = settings_frame.get_error();
         api_connection_pool_evict(connection_handle);
         return (ft_nullptr);
     }
@@ -1627,9 +1645,26 @@ static char *api_http_execute_plain_http2_once(
                 api_connection_pool_evict(connection_handle);
                 return (ft_nullptr);
             }
-            if (incoming_frame.type == 0x4)
+            uint8_t incoming_type;
+            uint8_t incoming_flags;
+
+            if (!incoming_frame.get_type(incoming_type))
             {
-                if ((incoming_frame.flags & 0x1) != 0)
+                api_connection_pool_disable_store(connection_handle);
+                error_code = incoming_frame.get_error();
+                api_connection_pool_evict(connection_handle);
+                return (ft_nullptr);
+            }
+            if (!incoming_frame.get_flags(incoming_flags))
+            {
+                api_connection_pool_disable_store(connection_handle);
+                error_code = incoming_frame.get_error();
+                api_connection_pool_evict(connection_handle);
+                return (ft_nullptr);
+            }
+            if (incoming_type == 0x4)
+            {
+                if ((incoming_flags & 0x1) != 0)
                     received_settings_ack = true;
                 else
                 {
@@ -1641,14 +1676,32 @@ static char *api_http_execute_plain_http2_once(
                         ft_string ack_encoded;
                         ssize_t ack_bytes;
 
-                        ack_frame.type = 0x4;
-                        ack_frame.flags = 0x1;
-                        ack_frame.stream_id = 0;
-                        ack_frame.payload.clear();
-                        if (ack_frame.payload.get_error() != ER_SUCCESS)
+                        if (!ack_frame.set_type(0x4))
                         {
                             api_connection_pool_disable_store(connection_handle);
-                            error_code = ack_frame.payload.get_error();
+                            error_code = ack_frame.get_error();
+                            api_connection_pool_evict(connection_handle);
+                            return (ft_nullptr);
+                        }
+                        if (!ack_frame.set_flags(0x1))
+                        {
+                            api_connection_pool_disable_store(connection_handle);
+                            error_code = ack_frame.get_error();
+                            api_connection_pool_evict(connection_handle);
+                            return (ft_nullptr);
+                        }
+                        if (!ack_frame.set_stream_identifier(0))
+                        {
+                            api_connection_pool_disable_store(connection_handle);
+                            error_code = ack_frame.get_error();
+                            api_connection_pool_evict(connection_handle);
+                            return (ft_nullptr);
+                        }
+                        ack_frame.clear_payload();
+                        if (ack_frame.get_error() != ER_SUCCESS)
+                        {
+                            api_connection_pool_disable_store(connection_handle);
+                            error_code = ack_frame.get_error();
                             api_connection_pool_evict(connection_handle);
                             return (ft_nullptr);
                         }

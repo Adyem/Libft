@@ -2,10 +2,1028 @@
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
 #include <openssl/ssl.h>
+#include <cstdlib>
 
 static void http2_append_raw_byte(ft_string &target, unsigned char value)
 {
     target.append(static_cast<char>(value));
+    return ;
+}
+
+http2_header_field::http2_header_field() noexcept
+    : _name(), _value(), _error_code(ER_SUCCESS),
+      _thread_safe_enabled(false), _mutex(ft_nullptr)
+{
+    return ;
+}
+
+http2_header_field::~http2_header_field() noexcept
+{
+    this->clear();
+    this->teardown_thread_safety();
+    return ;
+}
+
+http2_header_field::http2_header_field(const http2_header_field &other) noexcept
+    : _name(), _value(), _error_code(ER_SUCCESS),
+      _thread_safe_enabled(false), _mutex(ft_nullptr)
+{
+    bool lock_acquired;
+    bool success_state;
+    ft_string other_name;
+    ft_string other_value;
+
+    success_state = true;
+    lock_acquired = false;
+    if (other.lock(&lock_acquired) != 0)
+        success_state = false;
+    if (success_state)
+    {
+        other_name = other._name;
+        if (other_name.get_error() != ER_SUCCESS)
+            success_state = false;
+    }
+    if (success_state)
+    {
+        other_value = other._value;
+        if (other_value.get_error() != ER_SUCCESS)
+            success_state = false;
+    }
+    if (lock_acquired)
+        const_cast<http2_header_field &>(other).unlock(lock_acquired);
+    if (success_state)
+    {
+        this->_name = other_name;
+        this->_value = other_value;
+        if (this->_name.get_error() != ER_SUCCESS)
+            success_state = false;
+        if (success_state && this->_value.get_error() != ER_SUCCESS)
+            success_state = false;
+    }
+    if (success_state)
+        this->set_error(ER_SUCCESS);
+    else
+        this->set_error(FT_ERR_NO_MEMORY);
+    return ;
+}
+
+http2_header_field::http2_header_field(http2_header_field &&other) noexcept
+    : _name(), _value(), _error_code(ER_SUCCESS),
+      _thread_safe_enabled(false), _mutex(ft_nullptr)
+{
+    bool lock_acquired;
+    bool success_state;
+
+    success_state = true;
+    lock_acquired = false;
+    if (other.lock(&lock_acquired) != 0)
+        success_state = false;
+    if (success_state)
+    {
+        this->_name = other._name;
+        this->_value = other._value;
+        if (this->_name.get_error() != ER_SUCCESS)
+            success_state = false;
+        if (success_state && this->_value.get_error() != ER_SUCCESS)
+            success_state = false;
+        if (success_state)
+        {
+            other._name.clear();
+            other._value.clear();
+            if (other._name.get_error() != ER_SUCCESS)
+                success_state = false;
+            if (success_state && other._value.get_error() != ER_SUCCESS)
+                success_state = false;
+        }
+    }
+    if (lock_acquired)
+        other.unlock(lock_acquired);
+    if (success_state)
+        this->set_error(ER_SUCCESS);
+    else
+        this->set_error(FT_ERR_NO_MEMORY);
+    return ;
+}
+
+http2_header_field &http2_header_field::operator=(const http2_header_field &other) noexcept
+{
+    if (this != &other)
+    {
+        bool lock_acquired;
+        bool success_state;
+        ft_string other_name;
+        ft_string other_value;
+
+        success_state = true;
+        lock_acquired = false;
+        if (other.lock(&lock_acquired) != 0)
+            success_state = false;
+        if (success_state)
+        {
+            other_name = other._name;
+            if (other_name.get_error() != ER_SUCCESS)
+                success_state = false;
+        }
+        if (success_state)
+        {
+            other_value = other._value;
+            if (other_value.get_error() != ER_SUCCESS)
+                success_state = false;
+        }
+        if (lock_acquired)
+            const_cast<http2_header_field &>(other).unlock(lock_acquired);
+        if (success_state)
+        {
+            this->_name = other_name;
+            this->_value = other_value;
+            if (this->_name.get_error() != ER_SUCCESS)
+                success_state = false;
+            if (success_state && this->_value.get_error() != ER_SUCCESS)
+                success_state = false;
+        }
+        if (success_state)
+            this->set_error(ER_SUCCESS);
+        else
+            this->set_error(FT_ERR_NO_MEMORY);
+    }
+    return (*this);
+}
+
+http2_header_field &http2_header_field::operator=(http2_header_field &&other) noexcept
+{
+    if (this != &other)
+    {
+        bool lock_acquired;
+        bool success_state;
+
+        success_state = true;
+        lock_acquired = false;
+        if (other.lock(&lock_acquired) != 0)
+            success_state = false;
+        if (success_state)
+        {
+            this->_name = other._name;
+            this->_value = other._value;
+            if (this->_name.get_error() != ER_SUCCESS)
+                success_state = false;
+            if (success_state && this->_value.get_error() != ER_SUCCESS)
+                success_state = false;
+            if (success_state)
+            {
+                other._name.clear();
+                other._value.clear();
+                if (other._name.get_error() != ER_SUCCESS)
+                    success_state = false;
+                if (success_state && other._value.get_error() != ER_SUCCESS)
+                    success_state = false;
+            }
+        }
+        if (lock_acquired)
+            other.unlock(lock_acquired);
+        if (success_state)
+            this->set_error(ER_SUCCESS);
+        else
+            this->set_error(FT_ERR_NO_MEMORY);
+    }
+    return (*this);
+}
+
+int http2_header_field::enable_thread_safety() noexcept
+{
+    void *memory_pointer;
+    pt_mutex *mutex_pointer;
+
+    if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
+    {
+        this->set_error(ER_SUCCESS);
+        return (0);
+    }
+    memory_pointer = std::malloc(sizeof(pt_mutex));
+    if (!memory_pointer)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return (-1);
+    }
+    mutex_pointer = new(memory_pointer) pt_mutex();
+    if (mutex_pointer->get_error() != ER_SUCCESS)
+    {
+        int mutex_error;
+
+        mutex_error = mutex_pointer->get_error();
+        mutex_pointer->~pt_mutex();
+        std::free(memory_pointer);
+        this->set_error(mutex_error);
+        return (-1);
+    }
+    this->_mutex = mutex_pointer;
+    this->_thread_safe_enabled = true;
+    this->set_error(ER_SUCCESS);
+    return (0);
+}
+
+void http2_header_field::teardown_thread_safety() noexcept
+{
+    if (this->_mutex != ft_nullptr)
+    {
+        this->_mutex->~pt_mutex();
+        std::free(this->_mutex);
+        this->_mutex = ft_nullptr;
+    }
+    this->_thread_safe_enabled = false;
+    this->set_error(ER_SUCCESS);
+    return ;
+}
+
+void http2_header_field::disable_thread_safety() noexcept
+{
+    this->teardown_thread_safety();
+    return ;
+}
+
+bool http2_header_field::is_thread_safe() const noexcept
+{
+    if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
+        return (true);
+    return (false);
+}
+
+int http2_header_field::lock(bool *lock_acquired) const noexcept
+{
+    http2_header_field *mutable_field;
+
+    if (lock_acquired)
+        *lock_acquired = false;
+    if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
+    {
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    mutable_field = const_cast<http2_header_field *>(this);
+    mutable_field->_mutex->lock(THREAD_ID);
+    if (mutable_field->_mutex->get_error() != ER_SUCCESS)
+    {
+        mutable_field->set_error(mutable_field->_mutex->get_error());
+        return (-1);
+    }
+    if (lock_acquired)
+        *lock_acquired = true;
+    mutable_field->set_error(ER_SUCCESS);
+    return (0);
+}
+
+void http2_header_field::unlock(bool lock_acquired) const noexcept
+{
+    http2_header_field *mutable_field;
+    int entry_errno;
+
+    if (!lock_acquired)
+        return ;
+    mutable_field = const_cast<http2_header_field *>(this);
+    if (mutable_field->_mutex == ft_nullptr)
+        return ;
+    entry_errno = ft_errno;
+    mutable_field->_mutex->unlock(THREAD_ID);
+    if (mutable_field->_mutex->get_error() != ER_SUCCESS)
+    {
+        mutable_field->set_error(mutable_field->_mutex->get_error());
+        return ;
+    }
+    ft_errno = entry_errno;
+    mutable_field->set_error(ER_SUCCESS);
+    return ;
+}
+
+bool http2_header_field::set_name(const ft_string &name_value) noexcept
+{
+    bool lock_acquired;
+    bool success_state;
+
+    success_state = true;
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
+    this->_name = name_value;
+    if (this->_name.get_error() != ER_SUCCESS)
+        success_state = false;
+    if (success_state)
+        this->set_error(ER_SUCCESS);
+    else
+        this->set_error(this->_name.get_error());
+    this->unlock(lock_acquired);
+    return (success_state);
+}
+
+bool http2_header_field::set_name_from_cstr(const char *name_value) noexcept
+{
+    if (name_value == ft_nullptr)
+    {
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return (false);
+    }
+    ft_string temporary_name;
+
+    temporary_name = name_value;
+    if (temporary_name.get_error() != ER_SUCCESS)
+    {
+        this->set_error(temporary_name.get_error());
+        return (false);
+    }
+    return (this->set_name(temporary_name));
+}
+
+bool http2_header_field::set_name_from_buffer(const char *buffer, size_t length) noexcept
+{
+    bool lock_acquired;
+    bool success_state;
+
+    if (!buffer && length > 0)
+    {
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return (false);
+    }
+    success_state = true;
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
+    this->_name.assign(buffer, length);
+    if (this->_name.get_error() != ER_SUCCESS)
+        success_state = false;
+    if (success_state)
+        this->set_error(ER_SUCCESS);
+    else
+        this->set_error(this->_name.get_error());
+    this->unlock(lock_acquired);
+    return (success_state);
+}
+
+bool http2_header_field::set_value(const ft_string &value_value) noexcept
+{
+    bool lock_acquired;
+    bool success_state;
+
+    success_state = true;
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
+    this->_value = value_value;
+    if (this->_value.get_error() != ER_SUCCESS)
+        success_state = false;
+    if (success_state)
+        this->set_error(ER_SUCCESS);
+    else
+        this->set_error(this->_value.get_error());
+    this->unlock(lock_acquired);
+    return (success_state);
+}
+
+bool http2_header_field::set_value_from_cstr(const char *value_value) noexcept
+{
+    if (value_value == ft_nullptr)
+    {
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return (false);
+    }
+    ft_string temporary_value;
+
+    temporary_value = value_value;
+    if (temporary_value.get_error() != ER_SUCCESS)
+    {
+        this->set_error(temporary_value.get_error());
+        return (false);
+    }
+    return (this->set_value(temporary_value));
+}
+
+bool http2_header_field::set_value_from_buffer(const char *buffer, size_t length) noexcept
+{
+    bool lock_acquired;
+    bool success_state;
+
+    if (!buffer && length > 0)
+    {
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return (false);
+    }
+    success_state = true;
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
+    this->_value.assign(buffer, length);
+    if (this->_value.get_error() != ER_SUCCESS)
+        success_state = false;
+    if (success_state)
+        this->set_error(ER_SUCCESS);
+    else
+        this->set_error(this->_value.get_error());
+    this->unlock(lock_acquired);
+    return (success_state);
+}
+
+bool http2_header_field::assign(const ft_string &name_value, const ft_string &value_value) noexcept
+{
+    bool lock_acquired;
+    bool success_state;
+
+    success_state = true;
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
+    this->_name = name_value;
+    if (this->_name.get_error() != ER_SUCCESS)
+        success_state = false;
+    if (success_state)
+    {
+        this->_value = value_value;
+        if (this->_value.get_error() != ER_SUCCESS)
+            success_state = false;
+    }
+    if (success_state)
+        this->set_error(ER_SUCCESS);
+    else if (this->_name.get_error() != ER_SUCCESS)
+        this->set_error(this->_name.get_error());
+    else
+        this->set_error(this->_value.get_error());
+    this->unlock(lock_acquired);
+    return (success_state);
+}
+
+bool http2_header_field::assign_from_cstr(const char *name_value, const char *value_value) noexcept
+{
+    ft_string name_string;
+    ft_string value_string;
+
+    if (name_value == ft_nullptr || value_value == ft_nullptr)
+    {
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return (false);
+    }
+    name_string = name_value;
+    if (name_string.get_error() != ER_SUCCESS)
+    {
+        this->set_error(name_string.get_error());
+        return (false);
+    }
+    value_string = value_value;
+    if (value_string.get_error() != ER_SUCCESS)
+    {
+        this->set_error(value_string.get_error());
+        return (false);
+    }
+    return (this->assign(name_string, value_string));
+}
+
+bool http2_header_field::assign_from_buffers(const char *name_buffer, size_t name_length,
+    const char *value_buffer, size_t value_length) noexcept
+{
+    bool lock_acquired;
+    bool success_state;
+
+    if ((!name_buffer && name_length > 0) || (!value_buffer && value_length > 0))
+    {
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return (false);
+    }
+    success_state = true;
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
+    this->_name.assign(name_buffer, name_length);
+    if (this->_name.get_error() != ER_SUCCESS)
+        success_state = false;
+    if (success_state)
+    {
+        this->_value.assign(value_buffer, value_length);
+        if (this->_value.get_error() != ER_SUCCESS)
+            success_state = false;
+    }
+    if (success_state)
+        this->set_error(ER_SUCCESS);
+    else if (this->_name.get_error() != ER_SUCCESS)
+        this->set_error(this->_name.get_error());
+    else
+        this->set_error(this->_value.get_error());
+    this->unlock(lock_acquired);
+    return (success_state);
+}
+
+bool http2_header_field::copy_name(ft_string &out_name) const noexcept
+{
+    bool lock_acquired;
+    bool success_state;
+
+    success_state = true;
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
+    out_name = this->_name;
+    if (out_name.get_error() != ER_SUCCESS)
+        success_state = false;
+    if (success_state)
+        const_cast<http2_header_field *>(this)->set_error(ER_SUCCESS);
+    else
+        const_cast<http2_header_field *>(this)->set_error(out_name.get_error());
+    this->unlock(lock_acquired);
+    return (success_state);
+}
+
+bool http2_header_field::copy_value(ft_string &out_value) const noexcept
+{
+    bool lock_acquired;
+    bool success_state;
+
+    success_state = true;
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
+    out_value = this->_value;
+    if (out_value.get_error() != ER_SUCCESS)
+        success_state = false;
+    if (success_state)
+        const_cast<http2_header_field *>(this)->set_error(ER_SUCCESS);
+    else
+        const_cast<http2_header_field *>(this)->set_error(out_value.get_error());
+    this->unlock(lock_acquired);
+    return (success_state);
+}
+
+void http2_header_field::clear() noexcept
+{
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != 0)
+        return ;
+    this->_name.clear();
+    this->_value.clear();
+    if (this->_name.get_error() != ER_SUCCESS)
+        this->set_error(this->_name.get_error());
+    else if (this->_value.get_error() != ER_SUCCESS)
+        this->set_error(this->_value.get_error());
+    else
+        this->set_error(ER_SUCCESS);
+    this->unlock(lock_acquired);
+    return ;
+}
+
+int http2_header_field::get_error() const noexcept
+{
+    return (this->_error_code);
+}
+
+const char *http2_header_field::get_error_str() const noexcept
+{
+    return (ft_strerror(this->_error_code));
+}
+
+http2_frame::http2_frame() noexcept
+    : _type(0), _flags(0), _stream_identifier(0), _payload(),
+      _error_code(ER_SUCCESS), _thread_safe_enabled(false), _mutex(ft_nullptr)
+{
+    return ;
+}
+
+http2_frame::~http2_frame() noexcept
+{
+    this->clear_payload();
+    this->teardown_thread_safety();
+    return ;
+}
+
+http2_frame::http2_frame(const http2_frame &other) noexcept
+    : _type(0), _flags(0), _stream_identifier(0), _payload(),
+      _error_code(ER_SUCCESS), _thread_safe_enabled(false), _mutex(ft_nullptr)
+{
+    bool lock_acquired;
+    bool success_state;
+
+    success_state = true;
+    lock_acquired = false;
+    if (other.lock(&lock_acquired) != 0)
+        success_state = false;
+    if (success_state)
+    {
+        this->_type = other._type;
+        this->_flags = other._flags;
+        this->_stream_identifier = other._stream_identifier;
+        this->_payload = other._payload;
+        if (this->_payload.get_error() != ER_SUCCESS)
+            success_state = false;
+    }
+    if (lock_acquired)
+        const_cast<http2_frame &>(other).unlock(lock_acquired);
+    if (success_state)
+        this->set_error(ER_SUCCESS);
+    else if (this->_payload.get_error() != ER_SUCCESS)
+        this->set_error(this->_payload.get_error());
+    else
+        this->set_error(FT_ERR_NO_MEMORY);
+    return ;
+}
+
+http2_frame::http2_frame(http2_frame &&other) noexcept
+    : _type(0), _flags(0), _stream_identifier(0), _payload(),
+      _error_code(ER_SUCCESS), _thread_safe_enabled(false), _mutex(ft_nullptr)
+{
+    bool lock_acquired;
+    bool success_state;
+
+    success_state = true;
+    lock_acquired = false;
+    if (other.lock(&lock_acquired) != 0)
+        success_state = false;
+    if (success_state)
+    {
+        this->_type = other._type;
+        this->_flags = other._flags;
+        this->_stream_identifier = other._stream_identifier;
+        this->_payload = other._payload;
+        if (this->_payload.get_error() != ER_SUCCESS)
+            success_state = false;
+        if (success_state)
+        {
+            other._payload.clear();
+            if (other._payload.get_error() != ER_SUCCESS)
+                success_state = false;
+            other._type = 0;
+            other._flags = 0;
+            other._stream_identifier = 0;
+        }
+    }
+    if (lock_acquired)
+        other.unlock(lock_acquired);
+    if (success_state)
+        this->set_error(ER_SUCCESS);
+    else if (this->_payload.get_error() != ER_SUCCESS)
+        this->set_error(this->_payload.get_error());
+    else
+        this->set_error(FT_ERR_NO_MEMORY);
+    return ;
+}
+
+http2_frame &http2_frame::operator=(const http2_frame &other) noexcept
+{
+    if (this != &other)
+    {
+        bool lock_acquired;
+        bool success_state;
+
+        success_state = true;
+        lock_acquired = false;
+        if (other.lock(&lock_acquired) != 0)
+            success_state = false;
+        if (success_state)
+        {
+            this->_type = other._type;
+            this->_flags = other._flags;
+            this->_stream_identifier = other._stream_identifier;
+            this->_payload = other._payload;
+            if (this->_payload.get_error() != ER_SUCCESS)
+                success_state = false;
+        }
+        if (lock_acquired)
+            const_cast<http2_frame &>(other).unlock(lock_acquired);
+        if (success_state)
+            this->set_error(ER_SUCCESS);
+        else if (this->_payload.get_error() != ER_SUCCESS)
+            this->set_error(this->_payload.get_error());
+        else
+            this->set_error(FT_ERR_NO_MEMORY);
+    }
+    return (*this);
+}
+
+http2_frame &http2_frame::operator=(http2_frame &&other) noexcept
+{
+    if (this != &other)
+    {
+        bool lock_acquired;
+        bool success_state;
+
+        success_state = true;
+        lock_acquired = false;
+        if (other.lock(&lock_acquired) != 0)
+            success_state = false;
+        if (success_state)
+        {
+            this->_type = other._type;
+            this->_flags = other._flags;
+            this->_stream_identifier = other._stream_identifier;
+            this->_payload = other._payload;
+            if (this->_payload.get_error() != ER_SUCCESS)
+                success_state = false;
+            if (success_state)
+            {
+                other._payload.clear();
+                if (other._payload.get_error() != ER_SUCCESS)
+                    success_state = false;
+                other._type = 0;
+                other._flags = 0;
+                other._stream_identifier = 0;
+            }
+        }
+        if (lock_acquired)
+            other.unlock(lock_acquired);
+        if (success_state)
+            this->set_error(ER_SUCCESS);
+        else if (this->_payload.get_error() != ER_SUCCESS)
+            this->set_error(this->_payload.get_error());
+        else
+            this->set_error(FT_ERR_NO_MEMORY);
+    }
+    return (*this);
+}
+
+int http2_frame::enable_thread_safety() noexcept
+{
+    void *memory_pointer;
+    pt_mutex *mutex_pointer;
+
+    if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
+    {
+        this->set_error(ER_SUCCESS);
+        return (0);
+    }
+    memory_pointer = std::malloc(sizeof(pt_mutex));
+    if (!memory_pointer)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return (-1);
+    }
+    mutex_pointer = new(memory_pointer) pt_mutex();
+    if (mutex_pointer->get_error() != ER_SUCCESS)
+    {
+        int mutex_error;
+
+        mutex_error = mutex_pointer->get_error();
+        mutex_pointer->~pt_mutex();
+        std::free(memory_pointer);
+        this->set_error(mutex_error);
+        return (-1);
+    }
+    this->_mutex = mutex_pointer;
+    this->_thread_safe_enabled = true;
+    this->set_error(ER_SUCCESS);
+    return (0);
+}
+
+void http2_frame::teardown_thread_safety() noexcept
+{
+    if (this->_mutex != ft_nullptr)
+    {
+        this->_mutex->~pt_mutex();
+        std::free(this->_mutex);
+        this->_mutex = ft_nullptr;
+    }
+    this->_thread_safe_enabled = false;
+    this->set_error(ER_SUCCESS);
+    return ;
+}
+
+void http2_frame::disable_thread_safety() noexcept
+{
+    this->teardown_thread_safety();
+    return ;
+}
+
+bool http2_frame::is_thread_safe() const noexcept
+{
+    if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
+        return (true);
+    return (false);
+}
+
+int http2_frame::lock(bool *lock_acquired) const noexcept
+{
+    http2_frame *mutable_frame;
+
+    if (lock_acquired)
+        *lock_acquired = false;
+    if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
+    {
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    mutable_frame = const_cast<http2_frame *>(this);
+    mutable_frame->_mutex->lock(THREAD_ID);
+    if (mutable_frame->_mutex->get_error() != ER_SUCCESS)
+    {
+        mutable_frame->set_error(mutable_frame->_mutex->get_error());
+        return (-1);
+    }
+    if (lock_acquired)
+        *lock_acquired = true;
+    mutable_frame->set_error(ER_SUCCESS);
+    return (0);
+}
+
+void http2_frame::unlock(bool lock_acquired) const noexcept
+{
+    http2_frame *mutable_frame;
+    int entry_errno;
+
+    if (!lock_acquired)
+        return ;
+    mutable_frame = const_cast<http2_frame *>(this);
+    if (mutable_frame->_mutex == ft_nullptr)
+        return ;
+    entry_errno = ft_errno;
+    mutable_frame->_mutex->unlock(THREAD_ID);
+    if (mutable_frame->_mutex->get_error() != ER_SUCCESS)
+    {
+        mutable_frame->set_error(mutable_frame->_mutex->get_error());
+        return ;
+    }
+    ft_errno = entry_errno;
+    mutable_frame->set_error(ER_SUCCESS);
+    return ;
+}
+
+bool http2_frame::set_type(uint8_t type_value) noexcept
+{
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
+    this->_type = type_value;
+    this->set_error(ER_SUCCESS);
+    this->unlock(lock_acquired);
+    return (true);
+}
+
+bool http2_frame::get_type(uint8_t &out_type) const noexcept
+{
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
+    out_type = this->_type;
+    const_cast<http2_frame *>(this)->set_error(ER_SUCCESS);
+    this->unlock(lock_acquired);
+    return (true);
+}
+
+bool http2_frame::set_flags(uint8_t flags_value) noexcept
+{
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
+    this->_flags = flags_value;
+    this->set_error(ER_SUCCESS);
+    this->unlock(lock_acquired);
+    return (true);
+}
+
+bool http2_frame::get_flags(uint8_t &out_flags) const noexcept
+{
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
+    out_flags = this->_flags;
+    const_cast<http2_frame *>(this)->set_error(ER_SUCCESS);
+    this->unlock(lock_acquired);
+    return (true);
+}
+
+bool http2_frame::set_stream_identifier(uint32_t stream_identifier_value) noexcept
+{
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
+    this->_stream_identifier = stream_identifier_value;
+    this->set_error(ER_SUCCESS);
+    this->unlock(lock_acquired);
+    return (true);
+}
+
+bool http2_frame::get_stream_identifier(uint32_t &out_stream_identifier) const noexcept
+{
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
+    out_stream_identifier = this->_stream_identifier;
+    const_cast<http2_frame *>(this)->set_error(ER_SUCCESS);
+    this->unlock(lock_acquired);
+    return (true);
+}
+
+bool http2_frame::set_payload(const ft_string &payload_value) noexcept
+{
+    bool lock_acquired;
+    bool success_state;
+
+    success_state = true;
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
+    this->_payload = payload_value;
+    if (this->_payload.get_error() != ER_SUCCESS)
+        success_state = false;
+    if (success_state)
+        this->set_error(ER_SUCCESS);
+    else
+        this->set_error(this->_payload.get_error());
+    this->unlock(lock_acquired);
+    return (success_state);
+}
+
+bool http2_frame::set_payload_from_buffer(const char *buffer, size_t length) noexcept
+{
+    bool lock_acquired;
+    bool success_state;
+
+    if (!buffer && length > 0)
+    {
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return (false);
+    }
+    success_state = true;
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
+    this->_payload.assign(buffer, length);
+    if (this->_payload.get_error() != ER_SUCCESS)
+        success_state = false;
+    if (success_state)
+        this->set_error(ER_SUCCESS);
+    else
+        this->set_error(this->_payload.get_error());
+    this->unlock(lock_acquired);
+    return (success_state);
+}
+
+bool http2_frame::copy_payload(ft_string &out_payload) const noexcept
+{
+    bool lock_acquired;
+    bool success_state;
+
+    success_state = true;
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
+    out_payload = this->_payload;
+    if (out_payload.get_error() != ER_SUCCESS)
+        success_state = false;
+    if (success_state)
+        const_cast<http2_frame *>(this)->set_error(ER_SUCCESS);
+    else
+        const_cast<http2_frame *>(this)->set_error(out_payload.get_error());
+    this->unlock(lock_acquired);
+    return (success_state);
+}
+
+void http2_frame::clear_payload() noexcept
+{
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock(&lock_acquired) != 0)
+        return ;
+    this->_payload.clear();
+    if (this->_payload.get_error() != ER_SUCCESS)
+        this->set_error(this->_payload.get_error());
+    else
+        this->set_error(ER_SUCCESS);
+    this->unlock(lock_acquired);
+    return ;
+}
+
+int http2_frame::get_error() const noexcept
+{
+    return (this->_error_code);
+}
+
+const char *http2_frame::get_error_str() const noexcept
+{
+    return (ft_strerror(this->_error_code));
+}
+
+void http2_header_field::set_error(int error_code) const noexcept
+{
+    http2_header_field *mutable_field;
+
+    mutable_field = const_cast<http2_header_field *>(this);
+    mutable_field->_error_code = error_code;
+    ft_errno = error_code;
+    return ;
+}
+
+void http2_frame::set_error(int error_code) const noexcept
+{
+    http2_frame *mutable_frame;
+
+    mutable_frame = const_cast<http2_frame *>(this);
+    mutable_frame->_error_code = error_code;
+    ft_errno = error_code;
     return ;
 }
 
@@ -728,19 +1746,37 @@ bool http2_settings_state::apply_remote_settings(const http2_frame &frame,
     size_t payload_length;
     const unsigned char *payload_bytes;
     size_t offset;
+    uint8_t frame_type;
+    uint8_t frame_flags;
+    ft_string payload_copy;
 
-    if (frame.type != 0x4)
+    if (!frame.get_type(frame_type))
+    {
+        this->set_error(frame.get_error());
+        return (false);
+    }
+    if (frame_type != 0x4)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
-    payload_length = frame.payload.size();
-    if (frame.payload.get_error() != ER_SUCCESS)
+    if (!frame.copy_payload(payload_copy))
     {
-        this->set_error(frame.payload.get_error());
+        this->set_error(frame.get_error());
         return (false);
     }
-    if ((frame.flags & 0x1) != 0)
+    payload_length = payload_copy.size();
+    if (payload_copy.get_error() != ER_SUCCESS)
+    {
+        this->set_error(payload_copy.get_error());
+        return (false);
+    }
+    if (!frame.get_flags(frame_flags))
+    {
+        this->set_error(frame.get_error());
+        return (false);
+    }
+    if ((frame_flags & 0x1) != 0)
     {
         if (payload_length != 0)
         {
@@ -755,7 +1791,12 @@ bool http2_settings_state::apply_remote_settings(const http2_frame &frame,
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
-    payload_bytes = reinterpret_cast<const unsigned char*>(frame.payload.c_str());
+    payload_bytes = reinterpret_cast<const unsigned char*>(payload_copy.c_str());
+    if (payload_copy.get_error() != ER_SUCCESS)
+    {
+        this->set_error(payload_copy.get_error());
+        return (false);
+    }
     offset = 0;
     while (offset < payload_length)
     {
@@ -870,7 +1911,11 @@ bool http2_encode_frame(const http2_frame &frame, ft_string &out_buffer,
     size_t payload_length;
     unsigned char header[9];
     size_t index;
+    ft_string payload_copy;
     const char *payload_data;
+    uint8_t frame_type;
+    uint8_t frame_flags;
+    uint32_t frame_stream_identifier;
 
     out_buffer.clear();
     if (out_buffer.get_error() != ER_SUCCESS)
@@ -878,21 +1923,46 @@ bool http2_encode_frame(const http2_frame &frame, ft_string &out_buffer,
         error_code = out_buffer.get_error();
         return (false);
     }
-    payload_length = frame.payload.size();
+    if (!frame.copy_payload(payload_copy))
+    {
+        error_code = frame.get_error();
+        return (false);
+    }
+    payload_length = payload_copy.size();
+    if (payload_copy.get_error() != ER_SUCCESS)
+    {
+        error_code = payload_copy.get_error();
+        return (false);
+    }
     if (payload_length > 0xFFFFFF)
     {
         error_code = FT_ERR_OUT_OF_RANGE;
         return (false);
     }
+    if (!frame.get_type(frame_type))
+    {
+        error_code = frame.get_error();
+        return (false);
+    }
+    if (!frame.get_flags(frame_flags))
+    {
+        error_code = frame.get_error();
+        return (false);
+    }
+    if (!frame.get_stream_identifier(frame_stream_identifier))
+    {
+        error_code = frame.get_error();
+        return (false);
+    }
     header[0] = static_cast<unsigned char>((payload_length >> 16) & 0xFF);
     header[1] = static_cast<unsigned char>((payload_length >> 8) & 0xFF);
     header[2] = static_cast<unsigned char>(payload_length & 0xFF);
-    header[3] = frame.type;
-    header[4] = frame.flags;
-    header[5] = static_cast<unsigned char>((frame.stream_id >> 24) & 0x7F);
-    header[6] = static_cast<unsigned char>((frame.stream_id >> 16) & 0xFF);
-    header[7] = static_cast<unsigned char>((frame.stream_id >> 8) & 0xFF);
-    header[8] = static_cast<unsigned char>(frame.stream_id & 0xFF);
+    header[3] = frame_type;
+    header[4] = frame_flags;
+    header[5] = static_cast<unsigned char>((frame_stream_identifier >> 24) & 0x7F);
+    header[6] = static_cast<unsigned char>((frame_stream_identifier >> 16) & 0xFF);
+    header[7] = static_cast<unsigned char>((frame_stream_identifier >> 8) & 0xFF);
+    header[8] = static_cast<unsigned char>(frame_stream_identifier & 0xFF);
     index = 0;
     while (index < sizeof(header))
     {
@@ -904,7 +1974,12 @@ bool http2_encode_frame(const http2_frame &frame, ft_string &out_buffer,
         }
         index++;
     }
-    payload_data = frame.payload.c_str();
+    payload_data = payload_copy.c_str();
+    if (payload_copy.get_error() != ER_SUCCESS)
+    {
+        error_code = payload_copy.get_error();
+        return (false);
+    }
     index = 0;
     while (index < payload_length)
     {
@@ -927,6 +2002,8 @@ bool http2_decode_frame(const unsigned char *buffer, size_t buffer_size,
     size_t remaining;
     size_t payload_length;
     size_t index;
+    uint32_t stream_identifier_value;
+    ft_string payload_copy;
 
     if (!buffer)
     {
@@ -947,34 +2024,52 @@ bool http2_decode_frame(const unsigned char *buffer, size_t buffer_size,
     payload_length = (static_cast<size_t>(buffer[offset]) << 16);
     payload_length |= (static_cast<size_t>(buffer[offset + 1]) << 8);
     payload_length |= static_cast<size_t>(buffer[offset + 2]);
-    out_frame.type = buffer[offset + 3];
-    out_frame.flags = buffer[offset + 4];
-    out_frame.stream_id = (static_cast<uint32_t>(buffer[offset + 5] & 0x7F) << 24);
-    out_frame.stream_id |= (static_cast<uint32_t>(buffer[offset + 6]) << 16);
-    out_frame.stream_id |= (static_cast<uint32_t>(buffer[offset + 7]) << 8);
-    out_frame.stream_id |= static_cast<uint32_t>(buffer[offset + 8]);
+    if (!out_frame.set_type(buffer[offset + 3]))
+    {
+        error_code = out_frame.get_error();
+        return (false);
+    }
+    if (!out_frame.set_flags(buffer[offset + 4]))
+    {
+        error_code = out_frame.get_error();
+        return (false);
+    }
+    stream_identifier_value = (static_cast<uint32_t>(buffer[offset + 5] & 0x7F) << 24);
+    stream_identifier_value |= (static_cast<uint32_t>(buffer[offset + 6]) << 16);
+    stream_identifier_value |= (static_cast<uint32_t>(buffer[offset + 7]) << 8);
+    stream_identifier_value |= static_cast<uint32_t>(buffer[offset + 8]);
+    if (!out_frame.set_stream_identifier(stream_identifier_value))
+    {
+        error_code = out_frame.get_error();
+        return (false);
+    }
     if (remaining < 9 + payload_length)
     {
         error_code = FT_ERR_OUT_OF_RANGE;
         return (false);
     }
-    out_frame.payload.clear();
-    if (out_frame.payload.get_error() != ER_SUCCESS)
+    payload_copy.clear();
+    if (payload_copy.get_error() != ER_SUCCESS)
     {
-        error_code = out_frame.payload.get_error();
+        error_code = payload_copy.get_error();
         return (false);
     }
     index = 0;
     while (index < payload_length)
     {
-        http2_append_raw_byte(out_frame.payload,
+        http2_append_raw_byte(payload_copy,
             static_cast<unsigned char>(buffer[offset + 9 + index]));
-        if (out_frame.payload.get_error() != ER_SUCCESS)
+        if (payload_copy.get_error() != ER_SUCCESS)
         {
-            error_code = out_frame.payload.get_error();
+            error_code = payload_copy.get_error();
             return (false);
         }
         index++;
+    }
+    if (!out_frame.set_payload(payload_copy))
+    {
+        error_code = out_frame.get_error();
+        return (false);
     }
     offset += 9 + payload_length;
     error_code = ER_SUCCESS;
@@ -1022,21 +2117,35 @@ bool http2_compress_headers(const ft_vector<http2_header_field> &headers,
     while (index < header_count)
     {
         const http2_header_field &field = headers[index];
+        ft_string field_name;
+        ft_string field_value;
         size_t name_length;
         size_t value_length;
         size_t name_index;
         size_t value_index;
+        const char *name_data;
+        const char *value_data;
 
-        name_length = field.name.size();
-        if (field.name.get_error() != ER_SUCCESS)
+        if (!field.copy_name(field_name))
         {
-            error_code = field.name.get_error();
+            error_code = field.get_error();
             return (false);
         }
-        value_length = field.value.size();
-        if (field.value.get_error() != ER_SUCCESS)
+        if (!field.copy_value(field_value))
         {
-            error_code = field.value.get_error();
+            error_code = field.get_error();
+            return (false);
+        }
+        name_length = field_name.size();
+        if (field_name.get_error() != ER_SUCCESS)
+        {
+            error_code = field_name.get_error();
+            return (false);
+        }
+        value_length = field_value.size();
+        if (field_value.get_error() != ER_SUCCESS)
+        {
+            error_code = field_value.get_error();
             return (false);
         }
         if (name_length > 0xFFFF || value_length > 0xFFFF)
@@ -1058,11 +2167,17 @@ bool http2_compress_headers(const ft_vector<http2_header_field> &headers,
             error_code = out_block.get_error();
             return (false);
         }
+        name_data = field_name.c_str();
+        if (field_name.get_error() != ER_SUCCESS)
+        {
+            error_code = field_name.get_error();
+            return (false);
+        }
         name_index = 0;
         while (name_index < name_length)
         {
             http2_append_raw_byte(out_block,
-                static_cast<unsigned char>(field.name.c_str()[name_index]));
+                static_cast<unsigned char>(name_data[name_index]));
             if (out_block.get_error() != ER_SUCCESS)
             {
                 error_code = out_block.get_error();
@@ -1084,11 +2199,17 @@ bool http2_compress_headers(const ft_vector<http2_header_field> &headers,
             error_code = out_block.get_error();
             return (false);
         }
+        value_data = field_value.c_str();
+        if (field_value.get_error() != ER_SUCCESS)
+        {
+            error_code = field_value.get_error();
+            return (false);
+        }
         value_index = 0;
         while (value_index < value_length)
         {
             http2_append_raw_byte(out_block,
-                static_cast<unsigned char>(field.value.c_str()[value_index]));
+                static_cast<unsigned char>(value_data[value_index]));
             if (out_block.get_error() != ER_SUCCESS)
             {
                 error_code = out_block.get_error();
@@ -1113,8 +2234,18 @@ bool http2_decompress_headers(const ft_string &block,
     size_t index;
 
     out_headers.clear();
-    buffer = reinterpret_cast<const unsigned char*>(block.c_str());
+    if (out_headers.get_error() != ER_SUCCESS)
+    {
+        error_code = out_headers.get_error();
+        return (false);
+    }
     buffer_length = block.size();
+    if (block.get_error() != ER_SUCCESS)
+    {
+        error_code = block.get_error();
+        return (false);
+    }
+    buffer = reinterpret_cast<const unsigned char*>(block.c_str());
     if (block.get_error() != ER_SUCCESS)
     {
         error_code = block.get_error();
@@ -1149,10 +2280,10 @@ bool http2_decompress_headers(const ft_string &block,
             error_code = FT_ERR_OUT_OF_RANGE;
             return (false);
         }
-        entry.name.assign(reinterpret_cast<const char*>(cursor), name_length);
-        if (entry.name.get_error() != ER_SUCCESS)
+        if (!entry.set_name_from_buffer(reinterpret_cast<const char*>(cursor),
+                name_length))
         {
-            error_code = entry.name.get_error();
+            error_code = entry.get_error();
             return (false);
         }
         cursor += name_length;
@@ -1164,10 +2295,10 @@ bool http2_decompress_headers(const ft_string &block,
             error_code = FT_ERR_OUT_OF_RANGE;
             return (false);
         }
-        entry.value.assign(reinterpret_cast<const char*>(cursor), value_length);
-        if (entry.value.get_error() != ER_SUCCESS)
+        if (!entry.set_value_from_buffer(reinterpret_cast<const char*>(cursor),
+                value_length))
         {
-            error_code = entry.value.get_error();
+            error_code = entry.get_error();
             return (false);
         }
         cursor += value_length;
