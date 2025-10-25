@@ -17,7 +17,9 @@ SRCS := time_now.cpp \
         time_parse.cpp \
         time_high_resolution.cpp \
         time_monotonic_translate.cpp \
-        time_timezone.cpp
+        time_timezone.cpp \
+        time_benchmark.cpp \
+        time_trace.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))

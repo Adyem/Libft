@@ -99,8 +99,8 @@
 - [x] Make `ft_http_server` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `http2_stream_manager` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `event_loop` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `http2_header_field` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `http2_frame` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `http2_header_field` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `http2_frame` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Restore the `http2 stream manager tracks streams` regression once the stream manager no longer crashes when tracking concurrent streams.
 - [x] Reintroduce the HTTP/2 header compression roundtrip regression once `http2_compress_headers`/`http2_decompress_headers` stop aborting the suite (current implementation trips an abort while the test runner executes "http2 header compression roundtrip").
 - [x] Restore the `websocket client detects invalid handshake` regression after fixing the crash in the websocket client handshake teardown path.
@@ -234,9 +234,9 @@
 - [x] Provide high-resolution timers that wrap `clock_gettime`/`QueryPerformanceCounter` and document precision trade-offs.
 - [x] Add timezone conversion helpers, daylight-saving awareness, and formatting options for ISO-8601 with offsets.
 - [x] Implement async-friendly sleep primitives that integrate with event loops instead of blocking threads.
-- [ ] Supply benchmarking helpers that record rolling averages and jitter for repeated measurements.
+- [x] Supply benchmarking helpers that record rolling averages and jitter for repeated measurements.
 - [x] Offer monotonic-to-wall-clock translation utilities to reconcile timestamps across modules.
-- [ ] Integrate profiling markers compatible with Chrome tracing or perfetto for visualizing timelines.
+- [x] Integrate profiling markers compatible with Chrome tracing or perfetto for visualizing timelines.
 - [x] Make `time_fps` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `time_timer` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `s_monotonic_time_point` thread safe (relies on the shared deadlock resolution routine described below).
@@ -318,7 +318,7 @@
 - [x] Add streaming encoders/decoders that operate on callbacks to avoid holding entire documents in memory.
 - [ ] Integrate schema evolution helpers (migrations, versioning) for configuration management.
 - [ ] Expand XPath/CSS selector support in HTML and ensure namespace-aware parsing in XML.
-- [ ] Provide tooling that round-trips documents and highlights diffs to simplify regression testing.
+- [x] Provide tooling that round-trips documents and highlights diffs to simplify regression testing.
 - [ ] Offer pluggable storage backends (file, HTTP, memory) for parsers to read from and serializers to write to.
 - [x] Publish style guides for canonical formatting so diffs remain readable across teams. (See `Docs/json_yaml_xml_style_guide.md`.)
 - [x] Make `html_document` thread safe (relies on the shared deadlock resolution routine described below).
@@ -329,8 +329,8 @@
 - [x] Make `xml_node` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Game module
-- [ ] Build deterministic simulation tests that cover combat, crafting, quest progression, and event scheduling.
-- [ ] Add save/load persistence using the Storage module so world state can be serialized and restored.
+- [x] Build deterministic simulation tests that cover combat, crafting, quest progression, and event scheduling.
+- [x] Add save/load persistence using the Storage module so world state can be serialized and restored.
 - [ ] Implement AI behavior trees or state machines for NPCs to replace ad-hoc logic.
 - [ ] Profile the event scheduler under heavy load and optimize shared-pointer churn.
 - [x] Document extension points for mods or scripting integrations.

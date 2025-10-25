@@ -9,6 +9,7 @@
 
 class ft_character;
 class ft_inventory;
+class kv_store;
 
 class ft_world
 {
@@ -18,6 +19,10 @@ class ft_world
 
         void set_error(int err) const noexcept;
         bool propagate_scheduler_state_error() const noexcept;
+        json_group *build_snapshot_groups(const ft_character &character,
+            const ft_inventory &inventory, int &error_code) const noexcept;
+        int restore_from_groups(json_group *groups, ft_character &character,
+            ft_inventory &inventory) noexcept;
 
     public:
         ft_world() noexcept;
@@ -35,6 +40,8 @@ class ft_world
 
         int save_to_file(const char *file_path, const ft_character &character, const ft_inventory &inventory) const noexcept;
         int load_from_file(const char *file_path, ft_character &character, ft_inventory &inventory) noexcept;
+        int save_to_store(kv_store &store, const char *slot_key, const ft_character &character, const ft_inventory &inventory) const noexcept;
+        int load_from_store(kv_store &store, const char *slot_key, ft_character &character, ft_inventory &inventory) noexcept;
 
         int plan_route(const ft_map3d &grid,
             size_t start_x, size_t start_y, size_t start_z,

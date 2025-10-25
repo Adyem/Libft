@@ -44,6 +44,25 @@ typedef struct s_time_async_sleep
     bool completed;
 }   t_time_async_sleep;
 
+typedef struct s_time_benchmark
+{
+    size_t  sample_count;
+    double  rolling_mean_ms;
+    double  rolling_m2_ms;
+    double  minimum_ms;
+    double  maximum_ms;
+    int     error_code;
+}   t_time_benchmark;
+
+typedef struct s_time_benchmark_snapshot
+{
+    size_t  sample_count;
+    double  average_ms;
+    double  jitter_ms;
+    double  minimum_ms;
+    double  maximum_ms;
+}   t_time_benchmark_snapshot;
+
 t_time  time_now(void);
 long    time_now_ms(void);
 long    time_monotonic(void);
@@ -84,4 +103,25 @@ typedef std::chrono::system_clock::time_point (*t_time_clock_now_hook)(void);
 
 void    time_set_clock_now_hook(t_time_clock_now_hook hook);
 void    time_reset_clock_now_hook(void);
+
+void    time_benchmark_init(t_time_benchmark *benchmark);
+void    time_benchmark_reset(t_time_benchmark *benchmark);
+int     time_benchmark_add_sample(t_time_benchmark *benchmark, double duration_ms);
+int     time_benchmark_add_duration(t_time_benchmark *benchmark,
+            t_duration_milliseconds duration);
+bool    time_benchmark_snapshot(const t_time_benchmark *benchmark,
+            t_time_benchmark_snapshot *out_snapshot);
+size_t  time_benchmark_get_sample_count(const t_time_benchmark *benchmark);
+double  time_benchmark_get_average_ms(const t_time_benchmark *benchmark);
+double  time_benchmark_get_jitter_ms(const t_time_benchmark *benchmark);
+double  time_benchmark_get_minimum_ms(const t_time_benchmark *benchmark);
+double  time_benchmark_get_maximum_ms(const t_time_benchmark *benchmark);
+int     time_benchmark_get_error(const t_time_benchmark *benchmark);
+const char  *time_benchmark_get_error_str(const t_time_benchmark *benchmark);
+
+bool    time_trace_begin_session(const char *file_path);
+bool    time_trace_end_session(void);
+bool    time_trace_begin_event(const char *name, const char *category);
+bool    time_trace_end_event(void);
+bool    time_trace_instant_event(const char *name, const char *category);
 #endif

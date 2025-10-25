@@ -1239,35 +1239,55 @@ static char *api_https_execute_http2_once(
         return (ft_nullptr);
     if (!connection_handle.negotiated_http2)
         return (ft_nullptr);
-    field_entry.name = ":method";
-    field_entry.value = method;
+    if (!field_entry.assign_from_cstr(":method", method))
+    {
+        error_code = field_entry.get_error();
+        return (ft_nullptr);
+    }
     header_fields.push_back(field_entry);
     if (header_fields.get_error() != ER_SUCCESS)
     {
         error_code = header_fields.get_error();
         return (ft_nullptr);
     }
-    field_entry.name = ":path";
-    field_entry.value = path;
+    if (!field_entry.assign_from_cstr(":path", path))
+    {
+        error_code = field_entry.get_error();
+        return (ft_nullptr);
+    }
     header_fields.push_back(field_entry);
     if (header_fields.get_error() != ER_SUCCESS)
     {
         error_code = header_fields.get_error();
         return (ft_nullptr);
     }
-    field_entry.name = ":scheme";
-    field_entry.value = "https";
+    if (!field_entry.assign_from_cstr(":scheme", "https"))
+    {
+        error_code = field_entry.get_error();
+        return (ft_nullptr);
+    }
     header_fields.push_back(field_entry);
     if (header_fields.get_error() != ER_SUCCESS)
     {
         error_code = header_fields.get_error();
         return (ft_nullptr);
     }
-    field_entry.name = ":authority";
     if (host_header)
-        field_entry.value = host_header;
+    {
+        if (!field_entry.assign_from_cstr(":authority", host_header))
+        {
+            error_code = field_entry.get_error();
+            return (ft_nullptr);
+        }
+    }
     else
-        field_entry.value = "";
+    {
+        if (!field_entry.assign_from_cstr(":authority", ""))
+        {
+            error_code = field_entry.get_error();
+            return (ft_nullptr);
+        }
+    }
     header_fields.push_back(field_entry);
     if (header_fields.get_error() != ER_SUCCESS)
     {
@@ -1312,8 +1332,11 @@ static char *api_https_execute_http2_once(
             }
             if (header_name.size() > 0)
             {
-                field_entry.name = header_name;
-                field_entry.value = header_value;
+                if (!field_entry.assign(header_name, header_value))
+                {
+                    error_code = field_entry.get_error();
+                    return (ft_nullptr);
+                }
                 header_fields.push_back(field_entry);
                 if (header_fields.get_error() != ER_SUCCESS)
                 {
@@ -1332,13 +1355,24 @@ static char *api_https_execute_http2_once(
             error_code = FT_ERR_IO;
         return (ft_nullptr);
     }
-    headers_frame.type = 0x1;
-    headers_frame.flags = 0x4;
-    headers_frame.stream_id = 1;
-    headers_frame.payload = compressed_headers;
-    if (headers_frame.payload.get_error() != ER_SUCCESS)
+    if (!headers_frame.set_type(0x1))
     {
-        error_code = headers_frame.payload.get_error();
+        error_code = headers_frame.get_error();
+        return (ft_nullptr);
+    }
+    if (!headers_frame.set_flags(0x4))
+    {
+        error_code = headers_frame.get_error();
+        return (ft_nullptr);
+    }
+    if (!headers_frame.set_stream_identifier(1))
+    {
+        error_code = headers_frame.get_error();
+        return (ft_nullptr);
+    }
+    if (!headers_frame.set_payload(compressed_headers))
+    {
+        error_code = headers_frame.get_error();
         return (ft_nullptr);
     }
     if (!http2_encode_frame(headers_frame, encoded_frame, error_code))

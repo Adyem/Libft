@@ -9,6 +9,7 @@
 #include "../Template/function.hpp"
 #include <utility>
 #include "../Template/move.hpp"
+#include "../Storage/kv_store.hpp"
 
 json_group *serialize_character(const ft_character &character);
 int deserialize_character(ft_character &character, json_group *group);
@@ -162,40 +163,15 @@ const ft_sharedptr<ft_event_scheduler> &ft_world::get_event_scheduler() const no
 
 int ft_world::save_to_file(const char *file_path, const ft_character &character, const ft_inventory &inventory) const noexcept
 {
-    json_group *groups = ft_nullptr;
+    json_group *groups;
+    int error_code;
+
     if (this->propagate_scheduler_state_error() == true)
         return (this->_error);
-    json_group *event_group = serialize_event_scheduler(this->_event_scheduler);
-    if (!event_group)
-    {
-        this->set_error(ft_errno);
+    error_code = ER_SUCCESS;
+    groups = this->build_snapshot_groups(character, inventory, error_code);
+    if (!groups)
         return (this->_error);
-    }
-    json_append_group(&groups, event_group);
-    json_group *character_group = serialize_character(character);
-    if (!character_group)
-    {
-        json_free_groups(groups);
-        this->set_error(ft_errno);
-        return (this->_error);
-    }
-    json_append_group(&groups, character_group);
-    json_group *inventory_group = serialize_inventory(inventory);
-    if (!inventory_group)
-    {
-        json_free_groups(groups);
-        this->set_error(ft_errno);
-        return (this->_error);
-    }
-    json_append_group(&groups, inventory_group);
-    json_group *equipment_group = serialize_equipment(character);
-    if (!equipment_group)
-    {
-        json_free_groups(groups);
-        this->set_error(ft_errno);
-        return (this->_error);
-    }
-    json_append_group(&groups, equipment_group);
     if (json_write_to_file(file_path, groups) != 0)
     {
         json_free_groups(groups);
@@ -209,73 +185,111 @@ int ft_world::save_to_file(const char *file_path, const ft_character &character,
 
 int ft_world::load_from_file(const char *file_path, ft_character &character, ft_inventory &inventory) noexcept
 {
-    json_group *groups = json_read_from_file(file_path);
+    json_group *groups;
+    int restore_result;
+
+    groups = json_read_from_file(file_path);
     if (!groups)
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return (this->_error);
     }
-    json_group *event_group = json_find_group(groups, "world");
-    json_group *character_group = json_find_group(groups, "character");
-    json_group *inventory_group = json_find_group(groups, "inventory");
-    json_group *equipment_group = json_find_group(groups, "equipment");
-    if (!event_group || !character_group || !inventory_group || !equipment_group)
-    {
-        json_free_groups(groups);
-        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
-        return (this->_error);
-    }
-    if (this->propagate_scheduler_state_error() == true)
-    {
-        json_free_groups(groups);
-        return (this->_error);
-    }
-    this->_event_scheduler->clear();
-    if (this->propagate_scheduler_state_error() == true)
-    {
-        json_free_groups(groups);
-        return (this->_error);
-    }
-    inventory.get_items().clear();
-    if (deserialize_event_scheduler(this->_event_scheduler, event_group) != ER_SUCCESS ||
-        deserialize_character(character, character_group) != ER_SUCCESS ||
-        deserialize_inventory(inventory, inventory_group) != ER_SUCCESS ||
-        deserialize_equipment(character, equipment_group) != ER_SUCCESS)
-    {
-        json_free_groups(groups);
-        this->set_error(ft_errno);
-        return (this->_error);
-    }
-    ft_vector<ft_sharedptr<ft_event> > scheduled_events;
-    this->_event_scheduler->dump_events(scheduled_events);
-    if (this->propagate_scheduler_state_error() == true)
-    {
-        json_free_groups(groups);
-        return (this->_error);
-    }
-    this->_event_scheduler->clear();
-    if (this->propagate_scheduler_state_error() == true)
-    {
-        json_free_groups(groups);
-        return (this->_error);
-    }
-    size_t event_index = 0;
-    size_t event_count = scheduled_events.size();
-    while (event_index < event_count)
-    {
-        ft_sharedptr<ft_event> &scheduled_event = scheduled_events[event_index];
-        scheduled_event->set_callback(get_callback_by_id(scheduled_event->get_id()));
-        this->_event_scheduler->schedule_event(scheduled_event);
-        if (this->propagate_scheduler_state_error() == true)
-        {
-            json_free_groups(groups);
-            return (this->_error);
-        }
-        event_index++;
-    }
+    restore_result = this->restore_from_groups(groups, character, inventory);
     json_free_groups(groups);
+    return (restore_result);
+}
+
+int ft_world::save_to_store(kv_store &store, const char *slot_key, const ft_character &character, const ft_inventory &inventory) const noexcept
+{
+    json_group *groups;
+    char *serialized_state;
+    int error_code;
+    int store_error;
+
+    if (slot_key == ft_nullptr)
+    {
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return (this->_error);
+    }
+    if (this->propagate_scheduler_state_error() == true)
+        return (this->_error);
+    error_code = ER_SUCCESS;
+    groups = this->build_snapshot_groups(character, inventory, error_code);
+    if (!groups)
+        return (this->_error);
+    serialized_state = json_write_to_string(groups);
+    json_free_groups(groups);
+    if (!serialized_state)
+    {
+        error_code = ft_errno;
+        if (error_code == ER_SUCCESS)
+            error_code = FT_ERR_NO_MEMORY;
+        this->set_error(error_code);
+        return (this->_error);
+    }
+    if (store.kv_set(slot_key, serialized_state) != 0)
+    {
+        store_error = store.get_error();
+        cma_free(serialized_state);
+        if (store_error == ER_SUCCESS)
+            store_error = FT_ERR_GAME_GENERAL_ERROR;
+        this->set_error(store_error);
+        return (this->_error);
+    }
+    store_error = store.get_error();
+    cma_free(serialized_state);
+    if (store_error != ER_SUCCESS)
+    {
+        this->set_error(store_error);
+        return (this->_error);
+    }
+    if (store.kv_flush() != 0)
+    {
+        store_error = store.get_error();
+        if (store_error == ER_SUCCESS)
+            store_error = FT_ERR_GAME_GENERAL_ERROR;
+        this->set_error(store_error);
+        return (this->_error);
+    }
     this->set_error(ER_SUCCESS);
     return (ER_SUCCESS);
+}
+
+int ft_world::load_from_store(kv_store &store, const char *slot_key, ft_character &character, ft_inventory &inventory) noexcept
+{
+    const char *serialized_state;
+    int store_error;
+    json_group *groups;
+    int restore_result;
+
+    if (slot_key == ft_nullptr)
+    {
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return (this->_error);
+    }
+    serialized_state = store.kv_get(slot_key);
+    store_error = store.get_error();
+    if (serialized_state == ft_nullptr)
+    {
+        if (store_error == ER_SUCCESS)
+            store_error = FT_ERR_GAME_GENERAL_ERROR;
+        this->set_error(store_error);
+        return (this->_error);
+    }
+    groups = json_read_from_string(serialized_state);
+    if (!groups)
+    {
+        int parse_error;
+
+        parse_error = ft_errno;
+        if (parse_error == ER_SUCCESS)
+            parse_error = FT_ERR_GAME_GENERAL_ERROR;
+        this->set_error(parse_error);
+        return (this->_error);
+    }
+    restore_result = this->restore_from_groups(groups, character, inventory);
+    json_free_groups(groups);
+    return (restore_result);
 }
 
 int ft_world::plan_route(const ft_map3d &grid,
@@ -310,3 +324,124 @@ void ft_world::set_error(int err) const noexcept
     this->_error = err;
     return ;
 }
+json_group *ft_world::build_snapshot_groups(const ft_character &character,
+    const ft_inventory &inventory, int &error_code) const noexcept
+{
+    json_group *groups;
+    json_group *event_group;
+    json_group *character_group;
+    json_group *inventory_group;
+    json_group *equipment_group;
+
+    groups = ft_nullptr;
+    error_code = ER_SUCCESS;
+    event_group = serialize_event_scheduler(this->_event_scheduler);
+    if (!event_group)
+    {
+        error_code = ft_errno;
+        if (error_code == ER_SUCCESS)
+            error_code = FT_ERR_GAME_GENERAL_ERROR;
+        this->set_error(error_code);
+        return (ft_nullptr);
+    }
+    json_append_group(&groups, event_group);
+    character_group = serialize_character(character);
+    if (!character_group)
+    {
+        json_free_groups(groups);
+        error_code = ft_errno;
+        if (error_code == ER_SUCCESS)
+            error_code = FT_ERR_GAME_GENERAL_ERROR;
+        this->set_error(error_code);
+        return (ft_nullptr);
+    }
+    json_append_group(&groups, character_group);
+    inventory_group = serialize_inventory(inventory);
+    if (!inventory_group)
+    {
+        json_free_groups(groups);
+        error_code = ft_errno;
+        if (error_code == ER_SUCCESS)
+            error_code = FT_ERR_GAME_GENERAL_ERROR;
+        this->set_error(error_code);
+        return (ft_nullptr);
+    }
+    json_append_group(&groups, inventory_group);
+    equipment_group = serialize_equipment(character);
+    if (!equipment_group)
+    {
+        json_free_groups(groups);
+        error_code = ft_errno;
+        if (error_code == ER_SUCCESS)
+            error_code = FT_ERR_GAME_GENERAL_ERROR;
+        this->set_error(error_code);
+        return (ft_nullptr);
+    }
+    json_append_group(&groups, equipment_group);
+    this->set_error(ER_SUCCESS);
+    error_code = ER_SUCCESS;
+    return (groups);
+}
+
+int ft_world::restore_from_groups(json_group *groups, ft_character &character,
+    ft_inventory &inventory) noexcept
+{
+    json_group *event_group;
+    json_group *character_group;
+    json_group *inventory_group;
+    json_group *equipment_group;
+
+    if (!groups)
+    {
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
+        return (this->_error);
+    }
+    event_group = json_find_group(groups, "world");
+    character_group = json_find_group(groups, "character");
+    inventory_group = json_find_group(groups, "inventory");
+    equipment_group = json_find_group(groups, "equipment");
+    if (!event_group || !character_group || !inventory_group || !equipment_group)
+    {
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
+        return (this->_error);
+    }
+    if (this->propagate_scheduler_state_error() == true)
+        return (this->_error);
+    this->_event_scheduler->clear();
+    if (this->propagate_scheduler_state_error() == true)
+        return (this->_error);
+    inventory.get_items().clear();
+    if (deserialize_event_scheduler(this->_event_scheduler, event_group) != ER_SUCCESS ||
+        deserialize_character(character, character_group) != ER_SUCCESS ||
+        deserialize_inventory(inventory, inventory_group) != ER_SUCCESS ||
+        deserialize_equipment(character, equipment_group) != ER_SUCCESS)
+    {
+        this->set_error(ft_errno);
+        return (this->_error);
+    }
+    ft_vector<ft_sharedptr<ft_event> > scheduled_events;
+    this->_event_scheduler->dump_events(scheduled_events);
+    if (this->propagate_scheduler_state_error() == true)
+        return (this->_error);
+    this->_event_scheduler->clear();
+    if (this->propagate_scheduler_state_error() == true)
+        return (this->_error);
+    size_t event_index;
+    size_t event_count;
+
+    event_index = 0;
+    event_count = scheduled_events.size();
+    while (event_index < event_count)
+    {
+        ft_sharedptr<ft_event> &scheduled_event = scheduled_events[event_index];
+
+        scheduled_event->set_callback(get_callback_by_id(scheduled_event->get_id()));
+        this->_event_scheduler->schedule_event(scheduled_event);
+        if (this->propagate_scheduler_state_error() == true)
+            return (this->_error);
+        event_index++;
+    }
+    this->set_error(ER_SUCCESS);
+    return (ER_SUCCESS);
+}
+
