@@ -67,7 +67,10 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
     {
         current_error = ft_errno;
         if (current_error == ER_SUCCESS)
-            current_error = FT_ERR_INVALID_ARGUMENT;
+        {
+            this->set_error(ER_SUCCESS);
+            return ;
+        }
         this->set_error(current_error);
         return ;
     }
