@@ -1,12 +1,23 @@
 #include "../../File/file_utils.hpp"
 #include "../../File/open_dir.hpp"
 #include "../../Libft/libft.hpp"
+#include "../../CPP_class/class_file.hpp"
+#include "../../CPP_class/class_file_stream.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Compatebility/compatebility_internal.hpp"
 #include "../Compatebility/compatebility_system_test_hooks.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include <cstddef>
 #include <cstdio>
+#include <cstring>
+
+#if defined(_WIN32) || defined(_WIN64)
+# include <fcntl.h>
+# define TEST_FILE_BINARY_FLAG O_BINARY
+#else
+# include <fcntl.h>
+# define TEST_FILE_BINARY_FLAG 0
+#endif
 
 #if defined(_WIN32) || defined(_WIN64)
 # include <windows.h>
@@ -37,6 +48,50 @@ static void create_cross_device_test_file(const char *path)
         ft_fclose(file_pointer);
     }
     return ;
+}
+
+static void write_payload(const char *path, const unsigned char *payload, size_t payload_size)
+{
+    FILE *file_pointer;
+    size_t total_written;
+    size_t chunk_written;
+
+    file_pointer = ft_fopen(path, "wb");
+    if (file_pointer == ft_nullptr)
+        return ;
+    total_written = 0;
+    while (total_written < payload_size)
+    {
+        chunk_written = std::fwrite(payload + total_written, 1, payload_size - total_written, file_pointer);
+        if (chunk_written == 0)
+            break ;
+        total_written += chunk_written;
+    }
+    ft_fclose(file_pointer);
+    return ;
+}
+
+static size_t read_payload(const char *path, unsigned char *buffer, size_t buffer_capacity)
+{
+    FILE *file_pointer;
+    size_t total_read;
+    size_t chunk_read;
+
+    if (buffer == ft_nullptr || buffer_capacity == 0)
+        return (0);
+    file_pointer = ft_fopen(path, "rb");
+    if (file_pointer == ft_nullptr)
+        return (0);
+    total_read = 0;
+    while (total_read < buffer_capacity)
+    {
+        chunk_read = std::fread(buffer + total_read, 1, buffer_capacity - total_read, file_pointer);
+        if (chunk_read == 0)
+            break ;
+        total_read += chunk_read;
+    }
+    ft_fclose(file_pointer);
+    return (total_read);
 }
 
 static void build_path_from_template(char *destination, const char *path_template, char separator)
@@ -198,6 +253,100 @@ FT_TEST(test_file_dir_exists_matches_file_exists_semantics, "file_dir_exists ret
     FT_ASSERT_EQ(1, file_dir_exists(directory_path));
     remove_directory_if_present(directory_path);
     FT_ASSERT_EQ(0, file_dir_exists(directory_path));
+    return (1);
+}
+
+FT_TEST(test_file_copy_buffer_size_matches_ft_file, "file_default_copy_buffer_size mirrors ft_file default")
+{
+    FT_ASSERT_EQ(ft_file_default_buffer_size(), file_default_copy_buffer_size());
+    return (1);
+}
+
+FT_TEST(test_file_copy_with_buffer_small_chunks, "file_copy_with_buffer streams data through ft_file")
+{
+    const char *source_path = "test_file_copy_with_buffer_small_chunks_source.bin";
+    const char *destination_path = "test_file_copy_with_buffer_small_chunks_destination.bin";
+    unsigned char payload[19] = {0};
+    unsigned char read_source[32];
+    unsigned char read_destination[32];
+    size_t index;
+    size_t source_size;
+    size_t destination_size;
+
+    index = 0;
+    while (index < sizeof(payload))
+    {
+        payload[index] = static_cast<unsigned char>(index * 7 + 3);
+        index += 1;
+    }
+    file_delete(source_path);
+    file_delete(destination_path);
+    write_payload(source_path, payload, sizeof(payload));
+    FT_ASSERT_EQ(0, file_copy_with_buffer(source_path, destination_path, 5));
+    source_size = read_payload(source_path, read_source, sizeof(read_source));
+    destination_size = read_payload(destination_path, read_destination, sizeof(read_destination));
+    FT_ASSERT_EQ(source_size, destination_size);
+    FT_ASSERT_EQ(0, ft_memcmp(read_source, read_destination, source_size));
+    file_delete(source_path);
+    file_delete(destination_path);
+    return (1);
+}
+
+FT_TEST(test_file_copy_with_buffer_rejects_null_paths, "file_copy_with_buffer validates inputs")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(-1, file_copy_with_buffer(ft_nullptr, "ignored.bin", 4));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(-1, file_copy_with_buffer("ignored.bin", ft_nullptr, 4));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_ft_file_copy_to_propagates_errors, "ft_file copy_to reports invalid handles and arguments")
+{
+    ft_file source_file;
+
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(-1, source_file.copy_to("ft_file_copy_to_destination.bin"));
+    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, ft_errno);
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(-1, source_file.copy_to(ft_nullptr));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_ft_file_copy_to_streams_payload, "ft_file copy_to streams using shared buffer helper")
+{
+    const char *source_path = "test_ft_file_copy_to_streams_payload_source.bin";
+    const char *destination_path = "test_ft_file_copy_to_streams_payload_destination.bin";
+    unsigned char payload[23] = {0};
+    unsigned char destination_payload[32];
+    unsigned char source_payload[32];
+    ft_file source_file;
+    size_t index;
+    size_t source_size;
+    size_t destination_size;
+    int open_flags;
+
+    index = 0;
+    while (index < sizeof(payload))
+    {
+        payload[index] = static_cast<unsigned char>(index * 5 + 11);
+        index += 1;
+    }
+    file_delete(source_path);
+    file_delete(destination_path);
+    write_payload(source_path, payload, sizeof(payload));
+    open_flags = O_RDONLY | TEST_FILE_BINARY_FLAG;
+    FT_ASSERT_EQ(0, source_file.open(source_path, open_flags));
+    FT_ASSERT_EQ(0, source_file.copy_to_with_buffer(destination_path, 8));
+    source_size = read_payload(source_path, source_payload, sizeof(source_payload));
+    destination_size = read_payload(destination_path, destination_payload, sizeof(destination_payload));
+    FT_ASSERT_EQ(source_size, destination_size);
+    FT_ASSERT_EQ(0, ft_memcmp(source_payload, destination_payload, source_size));
+    file_delete(source_path);
+    file_delete(destination_path);
     return (1);
 }
 

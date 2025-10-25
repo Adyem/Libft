@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <cstring>
+#include <cstddef>
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 
@@ -47,11 +48,14 @@ class ft_file
         int            open(const char* filename, int flags, mode_t mode) noexcept;
         int            open(const char* filename, int flags) noexcept;
         ssize_t        write(const char *string) noexcept;
+        ssize_t        write_buffer(const char *buffer, size_t length) noexcept;
         void        close() noexcept;
         int            seek(off_t offset, int whence) noexcept;
         ssize_t        read(char *buffer, int count) noexcept;
         int            printf(const char *format, ...)
                         __attribute__((format(printf, 2, 3), hot));
+        int            copy_to(const char *destination_path) noexcept;
+        int            copy_to_with_buffer(const char *destination_path, size_t buffer_size) noexcept;
 
         operator int() const;
 };

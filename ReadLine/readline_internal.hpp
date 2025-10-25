@@ -105,11 +105,15 @@ int        rl_completion_prepare_candidates(const char *buffer, int cursor_posit
 int        rl_completion_get_dynamic_count(void);
 char    *rl_completion_get_dynamic_match(int index);
 
+int        rl_history_set_backend(const char *backend_name, const char *location);
+const char    *rl_history_get_backend(void);
 int        rl_history_set_storage_path(const char *file_path);
 int        rl_history_enable_auto_save(bool enabled);
 int        rl_history_load(void);
 int        rl_history_save(void);
 void    rl_history_notify_updated(void);
+int        rl_history_search(const char *query, int start_index,
+            bool search_backward, int *match_index);
 
 int        rl_state_prepare_thread_safety(readline_state_t *state);
 void    rl_state_teardown_thread_safety(readline_state_t *state);

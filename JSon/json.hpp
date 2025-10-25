@@ -3,6 +3,7 @@
 
 #include "json_schema.hpp"
 #include "json_stream_reader.hpp"
+#include "json_stream_writer.hpp"
 
 class ft_big_number;
 

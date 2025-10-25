@@ -4,12 +4,13 @@ DEBUG_TARGET := geometry_debug.a
 SRCS := geometry_aabb.cpp \
         geometry_collision.cpp \
         geometry_circle.cpp \
+        geometry_lock_tracker.cpp \
         geometry_sphere.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
-HEADERS := geometry.hpp geometry_aabb.hpp geometry_circle.hpp geometry_sphere.hpp
+HEADERS := geometry.hpp geometry_aabb.hpp geometry_circle.hpp geometry_lock_tracker.hpp geometry_sphere.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

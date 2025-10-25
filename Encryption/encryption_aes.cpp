@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <cstddef>
 #include "aes.hpp"
+#include "encryption_hardware_acceleration.hpp"
 
 static const uint8_t s_box[256] = {
     0x63,0x7c,0x77,0x7b,0xf2,0x6b,0x6f,0xc5,0x30,0x01,0x67,0x2b,0xfe,0xd7,0xab,0x76,
@@ -104,11 +105,11 @@ static void inv_shift_rows(uint8_t *state)
     state[1] = temp;
 
     temp = state[2];
-    temp_two = state[10];
-    state[2] = state[6];
+    temp_two = state[6];
+    state[2] = state[10];
     state[6] = state[14];
-    state[14] = temp_two;
     state[10] = temp;
+    state[14] = temp_two;
 
     temp = state[3];
     state[3] = state[7];
@@ -257,6 +258,22 @@ static void key_expansion(const uint8_t *key, uint8_t *round_keys)
 
 void aes_encrypt(uint8_t *block, const uint8_t *key)
 {
+    if (encryption_try_hardware_aes_encrypt(block, key))
+        return ;
+    aes_encrypt_software(block, key);
+    return ;
+}
+
+void aes_decrypt(uint8_t *block, const uint8_t *key)
+{
+    if (encryption_try_hardware_aes_decrypt(block, key))
+        return ;
+    aes_decrypt_software(block, key);
+    return ;
+}
+
+void aes_encrypt_software(uint8_t *block, const uint8_t *key)
+{
     uint8_t round_keys[176];
     key_expansion(key, round_keys);
     add_round_key(block, round_keys);
@@ -275,23 +292,23 @@ void aes_encrypt(uint8_t *block, const uint8_t *key)
     return ;
 }
 
-void aes_decrypt(uint8_t *block, const uint8_t *key)
+void aes_decrypt_software(uint8_t *block, const uint8_t *key)
 {
     uint8_t round_keys[176];
+    int round;
+
     key_expansion(key, round_keys);
-    add_round_key(block, round_keys + 160);
-    uint8_t round = 9;
+    round = 10;
+    add_round_key(block, round_keys + round * 16);
     while (round > 0)
     {
         inv_shift_rows(block);
         inv_sub_bytes(block);
+        round -= 1;
         add_round_key(block, round_keys + round * 16);
-        inv_mix_columns(block);
-        --round;
+        if (round > 0)
+            inv_mix_columns(block);
     }
-    inv_shift_rows(block);
-    inv_sub_bytes(block);
-    add_round_key(block, round_keys);
     return ;
 }
 
