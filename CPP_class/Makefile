@@ -5,6 +5,7 @@ SRCS :=  cpp_class_string_constructors.cpp \
          cpp_class_string_methods.cpp \
          cpp_class_nullptr.cpp \
          cpp_class_file.cpp \
+         cpp_class_file_stream.cpp \
          cpp_class_data_buffer.cpp \
          cpp_class_stringbuf.cpp \
          cpp_class_istream.cpp \
@@ -20,6 +21,7 @@ TOTAL_SRCS := $(words $(SRCS))
 HEADERS := class_string_class.hpp \
           class_nullptr.hpp \
           class_file.hpp \
+          class_file_stream.hpp \
           class_data_buffer.hpp \
           class_stringbuf.hpp \
           class_istream.hpp \

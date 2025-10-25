@@ -8,6 +8,7 @@ CPP_class/class_big_number.hpp
 CPP_class/class_data_buffer.hpp
 CPP_class/class_fd_istream.hpp
 CPP_class/class_file.hpp
+CPP_class/class_file_stream.hpp
 CPP_class/class_istream.hpp
 CPP_class/class_istringstream.hpp
 CPP_class/class_nullptr.hpp
@@ -19,6 +20,7 @@ Config/flag_parser.hpp
 CrossProcess/cross_process.hpp
 Encryption/basic_encryption.hpp
 Encryption/encryption_aead.hpp
+Encryption/encryption_hardware_acceleration.hpp
 Encryption/encryption_key_management.hpp
 Encryption/encryption_secure_wipe.hpp
 Errno/errno.hpp
@@ -38,12 +40,15 @@ Game/game_reputation.hpp
 Game/game_upgrade.hpp
 Game/game_world.hpp
 Geometry/geometry.hpp
+Geometry/geometry_lock_tracker.hpp
 GetNextLine/get_next_line.hpp
 HTML/document.hpp
 HTML/parser.hpp
 JSon/document.hpp
 JSon/json.hpp
+JSon/json_stream_events.hpp
 JSon/json_stream_reader.hpp
+JSon/json_stream_writer.hpp
 Libft/libft.hpp
 Libft/libft_utf8.hpp
 Libft/limits.hpp
@@ -52,6 +57,7 @@ Math/math.hpp
 Math/roll.hpp
 Networking/networking.hpp
 Networking/networking_tls_aead.hpp
+Networking/networking_quic_experimental.hpp
 Networking/socket_class.hpp
 Networking/ssl_wrapper.hpp
 Networking/udp_socket.hpp

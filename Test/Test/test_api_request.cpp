@@ -1340,6 +1340,123 @@ FT_TEST(test_http2_stream_manager_concurrent_streams, "http2 stream manager trac
     return (1);
 }
 
+FT_TEST(test_http2_stream_manager_flow_control, "http2 stream manager enforces flow control windows")
+{
+    http2_stream_manager manager;
+    ft_string buffer;
+    uint32_t window_value;
+
+    if (!manager.update_local_initial_window(8))
+        return (0);
+    if (!manager.update_remote_initial_window(12))
+        return (0);
+    if (!manager.open_stream(1))
+        return (0);
+    if (manager.append_data(1, "0123456789", 10))
+        return (0);
+    if (manager.get_error() != FT_ERR_OUT_OF_RANGE)
+        return (0);
+    if (!manager.append_data(1, "ABCD", 4))
+        return (0);
+    window_value = manager.get_local_window(1);
+    if (manager.get_error() != ER_SUCCESS)
+        return (0);
+    if (window_value != 4)
+        return (0);
+    if (manager.reserve_send_window(1, 16))
+        return (0);
+    if (manager.get_error() != FT_ERR_OUT_OF_RANGE)
+        return (0);
+    if (!manager.reserve_send_window(1, 6))
+        return (0);
+    window_value = manager.get_remote_window(1);
+    if (manager.get_error() != ER_SUCCESS)
+        return (0);
+    if (window_value != 6)
+        return (0);
+    if (!manager.append_data(1, "EFGH", 4))
+        return (0);
+    if (!manager.get_stream_buffer(1, buffer))
+        return (0);
+    if (!(buffer == "ABCDEFGH"))
+        return (0);
+    if (!manager.close_stream(1))
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_http2_stream_manager_priority_reassignment, "http2 priority exclusive flag reassigns children")
+{
+    http2_stream_manager manager;
+    uint32_t dependency_identifier;
+    uint8_t weight_value;
+    bool exclusive_flag;
+
+    if (!manager.open_stream(1))
+        return (0);
+    if (!manager.open_stream(3))
+        return (0);
+    if (!manager.open_stream(5))
+        return (0);
+    if (!manager.update_priority(3, 0, 20, false))
+        return (0);
+    if (!manager.update_priority(5, 0, 10, false))
+        return (0);
+    if (!manager.update_priority(3, 0, 25, true))
+        return (0);
+    if (!manager.get_priority(5, dependency_identifier, weight_value, exclusive_flag))
+        return (0);
+    if (dependency_identifier != 3)
+        return (0);
+    if (!manager.get_priority(3, dependency_identifier, weight_value, exclusive_flag))
+        return (0);
+    if (dependency_identifier != 0)
+        return (0);
+    if (!manager.close_stream(5))
+        return (0);
+    if (!manager.close_stream(3))
+        return (0);
+    if (!manager.close_stream(1))
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_http2_settings_apply_remote_settings, "http2 settings adjusts remote initial window")
+{
+    http2_stream_manager manager;
+    http2_settings_state settings;
+    http2_frame frame;
+    char payload_bytes[6];
+    uint32_t window_value;
+
+    if (!manager.open_stream(1))
+        return (0);
+    frame.type = 0x4;
+    frame.flags = 0x0;
+    frame.stream_id = 0;
+    payload_bytes[0] = 0x00;
+    payload_bytes[1] = 0x04;
+    payload_bytes[2] = 0x00;
+    payload_bytes[3] = 0x00;
+    payload_bytes[4] = 0x04;
+    payload_bytes[5] = 0x00;
+    frame.payload.assign(payload_bytes, 6);
+    if (frame.payload.get_error() != ER_SUCCESS)
+        return (0);
+    if (!settings.apply_remote_settings(frame, manager))
+        return (0);
+    window_value = manager.get_remote_window(1);
+    if (manager.get_error() != ER_SUCCESS)
+        return (0);
+    if (window_value != 1024)
+        return (0);
+    if (settings.get_initial_remote_window() != 1024)
+        return (0);
+    if (!manager.close_stream(1))
+        return (0);
+    return (1);
+}
+
 FT_TEST(test_api_request_http2_plain_fallback, "api_request_string_http2 falls back to http1")
 {
     char *body;

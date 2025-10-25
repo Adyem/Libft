@@ -1,4 +1,5 @@
 #include "class_file.hpp"
+#include "class_file_stream.hpp"
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
 #include "../Printf/printf_internal.hpp"
@@ -467,6 +468,47 @@ ssize_t ft_file::write(const char *string) noexcept
     return (result);
 }
 
+ssize_t ft_file::write_buffer(const char *buffer, size_t length) noexcept
+{
+    int entry_errno;
+    ssize_t result;
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        ft_errno = guard.get_error();
+        return (-1);
+    }
+    if (buffer == ft_nullptr && length != 0)
+    {
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        ft_file::restore_errno(guard, entry_errno);
+        return (-1);
+    }
+    if (this->_fd < 0)
+    {
+        this->set_error(FT_ERR_INVALID_HANDLE);
+        ft_file::restore_errno(guard, entry_errno);
+        return (-1);
+    }
+    if (length == 0)
+    {
+        this->set_error(ER_SUCCESS);
+        ft_file::restore_errno(guard, entry_errno);
+        return (0);
+    }
+    result = su_write(this->_fd, buffer, length);
+    if (result == -1)
+    {
+        this->set_error(ft_map_system_error(errno));
+        ft_file::restore_errno(guard, entry_errno);
+        return (-1);
+    }
+    this->set_error(ER_SUCCESS);
+    ft_file::restore_errno(guard, entry_errno);
+    return (result);
+}
+
 int ft_file::seek(off_t offset, int whence) noexcept
 {
     int entry_errno;
@@ -532,6 +574,45 @@ int ft_file::printf(const char *format, ...)
     this->set_error(ER_SUCCESS);
     ft_file::restore_errno(guard, entry_errno);
     return (printed_chars);
+}
+
+int ft_file::copy_to(const char *destination_path) noexcept
+{
+    return (this->copy_to_with_buffer(destination_path, ft_file_default_buffer_size()));
+}
+
+int ft_file::copy_to_with_buffer(const char *destination_path, size_t buffer_size) noexcept
+{
+    int destination_flags;
+
+    if (destination_path == ft_nullptr)
+    {
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return (-1);
+    }
+    if (this->_fd < 0)
+    {
+        this->set_error(FT_ERR_INVALID_HANDLE);
+        return (-1);
+    }
+    ft_file destination_file;
+    destination_flags = O_WRONLY | O_CREAT | O_TRUNC;
+#if defined(_WIN32) || defined(_WIN64)
+    destination_flags |= O_BINARY;
+#endif
+    if (destination_file.open(destination_path, destination_flags, 0644) != 0)
+    {
+        this->set_error(destination_file.get_error());
+        return (-1);
+    }
+    if (ft_file_stream_copy(*this, destination_file, buffer_size) != 0)
+    {
+        this->set_error(ft_errno);
+        return (-1);
+    }
+    this->set_error(ER_SUCCESS);
+    ft_errno = ER_SUCCESS;
+    return (0);
 }
 
 ft_file::operator int() const

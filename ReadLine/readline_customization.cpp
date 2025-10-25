@@ -1,11 +1,13 @@
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sqlite3.h>
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../CPP_class/class_file.hpp"
 #include "../Errno/errno.hpp"
 #include "../GetNextLine/get_next_line.hpp"
 #include "../Libft/libft.hpp"
+#include "../JSon/json.hpp"
 #include "../Printf/printf.hpp"
 #include "../PThread/pthread.hpp"
 #include "readline_internal.hpp"
@@ -27,8 +29,35 @@ static t_rl_completion_callback g_completion_callback = ft_nullptr;
 static void *g_completion_user_data = ft_nullptr;
 static char *g_dynamic_suggestions[MAX_SUGGESTIONS];
 static int g_dynamic_suggestion_count = 0;
-static char *g_history_storage_path = ft_nullptr;
-static bool g_history_auto_save = false;
+
+struct rl_history_path_context
+{
+    char *path;
+};
+
+struct rl_history_sqlite_context
+{
+    char *path;
+    sqlite3 *database;
+};
+
+typedef struct s_rl_history_backend
+{
+    const char *name;
+    int (*configure)(void **context_pointer, const char *location);
+    void (*shutdown)(void *context_pointer);
+    int (*load)(void *context_pointer);
+    int (*save)(void *context_pointer);
+}   rl_history_backend;
+
+struct rl_history_backend_state
+{
+    const rl_history_backend *backend;
+    void *backend_context;
+    bool auto_save_enabled;
+};
+
+static rl_history_backend_state g_history_backend_state = {ft_nullptr, ft_nullptr, false};
 
 static int rl_customization_lock(bool *lock_acquired)
 {
@@ -57,6 +86,608 @@ static void rl_customization_unlock(bool lock_acquired)
         return ;
     }
     return ;
+}
+
+static int rl_history_assign_path(char **target_path, const char *location)
+{
+    char *new_path;
+
+    if (target_path == ft_nullptr || location == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (-1);
+    }
+    new_path = cma_strdup(location);
+    if (new_path == ft_nullptr)
+    {
+        ft_errno = FT_ERR_NO_MEMORY;
+        return (-1);
+    }
+    if (*target_path != ft_nullptr)
+        cma_free(*target_path);
+    *target_path = new_path;
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+static int rl_history_prepare_path_context(void **context_pointer, const char *location)
+{
+    rl_history_path_context *path_context;
+
+    if (context_pointer == ft_nullptr || location == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (-1);
+    }
+    path_context = static_cast<rl_history_path_context *>(*context_pointer);
+    if (path_context == ft_nullptr)
+    {
+        path_context = static_cast<rl_history_path_context *>(cma_malloc(sizeof(*path_context)));
+        if (path_context == ft_nullptr)
+        {
+            ft_errno = FT_ERR_NO_MEMORY;
+            return (-1);
+        }
+        path_context->path = ft_nullptr;
+        *context_pointer = path_context;
+    }
+    if (rl_history_assign_path(&path_context->path, location) != 0)
+        return (-1);
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+static int rl_history_plain_configure(void **context_pointer, const char *location)
+{
+    if (rl_history_prepare_path_context(context_pointer, location) != 0)
+        return (-1);
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+static void rl_history_plain_shutdown(void *context_pointer)
+{
+    rl_history_path_context *path_context;
+
+    if (context_pointer == ft_nullptr)
+        return ;
+    path_context = static_cast<rl_history_path_context *>(context_pointer);
+    if (path_context->path != ft_nullptr)
+        cma_free(path_context->path);
+    cma_free(path_context);
+    return ;
+}
+
+static int rl_history_plain_load(void *context_pointer)
+{
+    rl_history_path_context *path_context;
+    ft_file history_file;
+    int open_result;
+    int file_descriptor;
+
+    path_context = static_cast<rl_history_path_context *>(context_pointer);
+    if (path_context == ft_nullptr || path_context->path == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_STATE;
+        return (-1);
+    }
+    open_result = history_file.open(path_context->path, O_RDONLY);
+    if (open_result != 0)
+    {
+        int error_code;
+
+        error_code = history_file.get_error();
+        if (error_code == FT_ERR_NOT_FOUND)
+        {
+            ft_errno = ER_SUCCESS;
+            return (0);
+        }
+        ft_errno = error_code;
+        return (-1);
+    }
+    rl_clear_history();
+    file_descriptor = history_file.get_fd();
+    if (history_file.get_error() != ER_SUCCESS)
+    {
+        int error_code;
+
+        error_code = history_file.get_error();
+        history_file.close();
+        ft_errno = error_code;
+        return (-1);
+    }
+    while (1)
+    {
+        char *line_buffer;
+
+        line_buffer = get_next_line(file_descriptor, 1024);
+        if (line_buffer == ft_nullptr)
+            break ;
+        size_t line_length;
+
+        line_length = ft_strlen_size_t(line_buffer);
+        if (line_length > 0 && line_buffer[line_length - 1] == '\n')
+            line_buffer[line_length - 1] = '\0';
+        rl_update_history(line_buffer);
+        cma_free(line_buffer);
+    }
+    history_file.close();
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+static int rl_history_plain_save(void *context_pointer)
+{
+    rl_history_path_context *path_context;
+    ft_file history_file;
+    int open_result;
+    int history_index;
+
+    path_context = static_cast<rl_history_path_context *>(context_pointer);
+    if (path_context == ft_nullptr || path_context->path == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_STATE;
+        return (-1);
+    }
+    open_result = history_file.open(path_context->path,
+            O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+    if (open_result != 0)
+    {
+        ft_errno = history_file.get_error();
+        return (-1);
+    }
+    history_index = 0;
+    while (history_index < history_count)
+    {
+        if (history[history_index] != ft_nullptr)
+        {
+            if (history_file.printf("%s\n", history[history_index]) < 0)
+            {
+                int error_code;
+
+                error_code = history_file.get_error();
+                history_file.close();
+                ft_errno = error_code;
+                return (-1);
+            }
+        }
+        history_index += 1;
+    }
+    history_file.close();
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+static int rl_history_json_configure(void **context_pointer, const char *location)
+{
+    if (rl_history_prepare_path_context(context_pointer, location) != 0)
+        return (-1);
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+static void rl_history_json_shutdown(void *context_pointer)
+{
+    rl_history_plain_shutdown(context_pointer);
+    return ;
+}
+
+static int rl_history_json_load(void *context_pointer)
+{
+    rl_history_path_context *path_context;
+    json_group *group_head;
+    json_group *history_group;
+    json_item *item_pointer;
+
+    path_context = static_cast<rl_history_path_context *>(context_pointer);
+    if (path_context == ft_nullptr || path_context->path == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_STATE;
+        return (-1);
+    }
+    group_head = json_read_from_file(path_context->path);
+    if (group_head == ft_nullptr)
+    {
+        if (ft_errno == FT_ERR_NOT_FOUND)
+        {
+            ft_errno = ER_SUCCESS;
+            return (0);
+        }
+        return (-1);
+    }
+    history_group = json_find_group(group_head, "history");
+    if (history_group == ft_nullptr)
+    {
+        json_free_groups(group_head);
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    rl_clear_history();
+    item_pointer = history_group->items;
+    while (item_pointer != ft_nullptr)
+    {
+        if (item_pointer->value != ft_nullptr)
+            rl_update_history(item_pointer->value);
+        else
+            rl_update_history("");
+        item_pointer = item_pointer->next;
+    }
+    json_free_groups(group_head);
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+static int rl_history_json_save(void *context_pointer)
+{
+    rl_history_path_context *path_context;
+    json_group *history_group;
+    json_group *root_group;
+    int history_index;
+
+    path_context = static_cast<rl_history_path_context *>(context_pointer);
+    if (path_context == ft_nullptr || path_context->path == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_STATE;
+        return (-1);
+    }
+    history_group = json_create_json_group("history");
+    if (history_group == ft_nullptr)
+    {
+        ft_errno = FT_ERR_NO_MEMORY;
+        return (-1);
+    }
+    history_index = 0;
+    while (history_index < history_count)
+    {
+        const char *history_entry;
+        ft_string key_string;
+        json_item *item_pointer;
+
+        history_entry = history[history_index];
+        if (history_entry == ft_nullptr)
+            history_entry = "";
+        key_string = ft_to_string(history_index);
+        if (key_string.get_error() != ER_SUCCESS)
+        {
+            json_free_groups(history_group);
+            ft_errno = key_string.get_error();
+            return (-1);
+        }
+        item_pointer = json_create_item(key_string.c_str(), history_entry);
+        if (item_pointer == ft_nullptr)
+        {
+            json_free_groups(history_group);
+            ft_errno = FT_ERR_NO_MEMORY;
+            return (-1);
+        }
+        json_add_item_to_group(history_group, item_pointer);
+        history_index += 1;
+    }
+    root_group = ft_nullptr;
+    json_append_group(&root_group, history_group);
+    if (json_write_to_file(path_context->path, root_group) != 0)
+    {
+        int error_code;
+
+        error_code = ft_errno;
+        json_free_groups(root_group);
+        ft_errno = error_code;
+        return (-1);
+    }
+    json_free_groups(root_group);
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+static int rl_history_sqlite_configure(void **context_pointer, const char *location)
+{
+    rl_history_sqlite_context *sqlite_context;
+    sqlite3 *database_handle;
+    char *error_message;
+
+    if (context_pointer == ft_nullptr || location == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (-1);
+    }
+    sqlite_context = static_cast<rl_history_sqlite_context *>(*context_pointer);
+    if (sqlite_context == ft_nullptr)
+    {
+        sqlite_context = static_cast<rl_history_sqlite_context *>(cma_malloc(sizeof(*sqlite_context)));
+        if (sqlite_context == ft_nullptr)
+        {
+            ft_errno = FT_ERR_NO_MEMORY;
+            return (-1);
+        }
+        sqlite_context->path = ft_nullptr;
+        sqlite_context->database = ft_nullptr;
+        *context_pointer = sqlite_context;
+    }
+    if (rl_history_assign_path(&sqlite_context->path, location) != 0)
+        return (-1);
+    if (sqlite_context->database != ft_nullptr)
+    {
+        sqlite3_close(sqlite_context->database);
+        sqlite_context->database = ft_nullptr;
+    }
+    if (sqlite3_open(sqlite_context->path, &database_handle) != SQLITE_OK)
+    {
+        if (database_handle != ft_nullptr)
+            sqlite3_close(database_handle);
+        ft_errno = FT_ERR_IO;
+        return (-1);
+    }
+    error_message = ft_nullptr;
+    if (sqlite3_exec(database_handle,
+            "CREATE TABLE IF NOT EXISTS readline_history ("
+            "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+            "entry TEXT NOT NULL);",
+            ft_nullptr, ft_nullptr, &error_message) != SQLITE_OK)
+    {
+        if (error_message != ft_nullptr)
+            sqlite3_free(error_message);
+        sqlite3_close(database_handle);
+        ft_errno = FT_ERR_IO;
+        return (-1);
+    }
+    if (error_message != ft_nullptr)
+        sqlite3_free(error_message);
+    sqlite_context->database = database_handle;
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+static void rl_history_sqlite_shutdown(void *context_pointer)
+{
+    rl_history_sqlite_context *sqlite_context;
+
+    if (context_pointer == ft_nullptr)
+        return ;
+    sqlite_context = static_cast<rl_history_sqlite_context *>(context_pointer);
+    if (sqlite_context->database != ft_nullptr)
+        sqlite3_close(sqlite_context->database);
+    if (sqlite_context->path != ft_nullptr)
+        cma_free(sqlite_context->path);
+    cma_free(sqlite_context);
+    return ;
+}
+
+static int rl_history_sqlite_load(void *context_pointer)
+{
+    rl_history_sqlite_context *sqlite_context;
+    sqlite3_stmt *statement_handle;
+    int prepare_result;
+
+    sqlite_context = static_cast<rl_history_sqlite_context *>(context_pointer);
+    if (sqlite_context == ft_nullptr || sqlite_context->database == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_STATE;
+        return (-1);
+    }
+    prepare_result = sqlite3_prepare_v2(sqlite_context->database,
+            "SELECT entry FROM readline_history ORDER BY id ASC;",
+            -1, &statement_handle, ft_nullptr);
+    if (prepare_result != SQLITE_OK)
+    {
+        ft_errno = FT_ERR_IO;
+        return (-1);
+    }
+    rl_clear_history();
+    while (1)
+    {
+        int step_result;
+
+        step_result = sqlite3_step(statement_handle);
+        if (step_result == SQLITE_DONE)
+            break ;
+        if (step_result == SQLITE_ROW)
+        {
+            const unsigned char *text_pointer;
+            const char *entry_text;
+
+            text_pointer = sqlite3_column_text(statement_handle, 0);
+            if (text_pointer == ft_nullptr)
+                entry_text = "";
+            else
+                entry_text = reinterpret_cast<const char *>(text_pointer);
+            rl_update_history(entry_text);
+            continue ;
+        }
+        sqlite3_finalize(statement_handle);
+        ft_errno = FT_ERR_IO;
+        return (-1);
+    }
+    sqlite3_finalize(statement_handle);
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+static int rl_history_sqlite_save(void *context_pointer)
+{
+    rl_history_sqlite_context *sqlite_context;
+    char *error_message;
+    sqlite3_stmt *insert_statement;
+    int history_index;
+
+    sqlite_context = static_cast<rl_history_sqlite_context *>(context_pointer);
+    if (sqlite_context == ft_nullptr || sqlite_context->database == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_STATE;
+        return (-1);
+    }
+    error_message = ft_nullptr;
+    if (sqlite3_exec(sqlite_context->database, "BEGIN IMMEDIATE TRANSACTION;",
+            ft_nullptr, ft_nullptr, &error_message) != SQLITE_OK)
+    {
+        if (error_message != ft_nullptr)
+            sqlite3_free(error_message);
+        ft_errno = FT_ERR_IO;
+        return (-1);
+    }
+    if (error_message != ft_nullptr)
+        sqlite3_free(error_message);
+    error_message = ft_nullptr;
+    if (sqlite3_exec(sqlite_context->database,
+            "DELETE FROM readline_history;",
+            ft_nullptr, ft_nullptr, &error_message) != SQLITE_OK)
+    {
+        if (error_message != ft_nullptr)
+            sqlite3_free(error_message);
+        sqlite3_exec(sqlite_context->database, "ROLLBACK;", ft_nullptr, ft_nullptr, ft_nullptr);
+        ft_errno = FT_ERR_IO;
+        return (-1);
+    }
+    if (error_message != ft_nullptr)
+        sqlite3_free(error_message);
+    if (sqlite3_prepare_v2(sqlite_context->database,
+            "INSERT INTO readline_history(entry) VALUES (?1);",
+            -1, &insert_statement, ft_nullptr) != SQLITE_OK)
+    {
+        sqlite3_exec(sqlite_context->database, "ROLLBACK;", ft_nullptr, ft_nullptr, ft_nullptr);
+        ft_errno = FT_ERR_IO;
+        return (-1);
+    }
+    history_index = 0;
+    while (history_index < history_count)
+    {
+        const char *history_entry;
+        int bind_result;
+        int step_result;
+
+        history_entry = history[history_index];
+        if (history_entry == ft_nullptr)
+            history_entry = "";
+        sqlite3_reset(insert_statement);
+        sqlite3_clear_bindings(insert_statement);
+        bind_result = sqlite3_bind_text(insert_statement, 1, history_entry,
+                -1, SQLITE_TRANSIENT);
+        if (bind_result != SQLITE_OK)
+        {
+            sqlite3_finalize(insert_statement);
+            sqlite3_exec(sqlite_context->database, "ROLLBACK;", ft_nullptr, ft_nullptr, ft_nullptr);
+            ft_errno = FT_ERR_IO;
+            return (-1);
+        }
+        step_result = sqlite3_step(insert_statement);
+        if (step_result != SQLITE_DONE)
+        {
+            sqlite3_finalize(insert_statement);
+            sqlite3_exec(sqlite_context->database, "ROLLBACK;", ft_nullptr, ft_nullptr, ft_nullptr);
+            ft_errno = FT_ERR_IO;
+            return (-1);
+        }
+        history_index += 1;
+    }
+    sqlite3_finalize(insert_statement);
+    if (sqlite3_exec(sqlite_context->database, "COMMIT;",
+            ft_nullptr, ft_nullptr, &error_message) != SQLITE_OK)
+    {
+        if (error_message != ft_nullptr)
+            sqlite3_free(error_message);
+        sqlite3_exec(sqlite_context->database, "ROLLBACK;", ft_nullptr, ft_nullptr, ft_nullptr);
+        ft_errno = FT_ERR_IO;
+        return (-1);
+    }
+    if (error_message != ft_nullptr)
+        sqlite3_free(error_message);
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+static rl_history_backend g_history_plain_backend = {
+    "plain-text",
+    rl_history_plain_configure,
+    rl_history_plain_shutdown,
+    rl_history_plain_load,
+    rl_history_plain_save
+};
+
+static rl_history_backend g_history_json_backend = {
+    "json",
+    rl_history_json_configure,
+    rl_history_json_shutdown,
+    rl_history_json_load,
+    rl_history_json_save
+};
+
+static rl_history_backend g_history_sqlite_backend = {
+    "sqlite",
+    rl_history_sqlite_configure,
+    rl_history_sqlite_shutdown,
+    rl_history_sqlite_load,
+    rl_history_sqlite_save
+};
+
+static const rl_history_backend *g_history_backend_catalog[] = {
+    &g_history_plain_backend,
+    &g_history_json_backend,
+    &g_history_sqlite_backend
+};
+
+static const rl_history_backend *rl_history_find_backend(const char *backend_name)
+{
+    size_t backend_index;
+
+    if (backend_name == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (ft_nullptr);
+    }
+    backend_index = 0;
+    while (backend_index < sizeof(g_history_backend_catalog) / sizeof(g_history_backend_catalog[0]))
+    {
+        const rl_history_backend *candidate_backend;
+
+        candidate_backend = g_history_backend_catalog[backend_index];
+        if (candidate_backend != ft_nullptr
+            && candidate_backend->name != ft_nullptr
+            && ft_strcmp(candidate_backend->name, backend_name) == 0)
+        {
+            ft_errno = ER_SUCCESS;
+            return (candidate_backend);
+        }
+        backend_index += 1;
+    }
+    ft_errno = FT_ERR_NOT_FOUND;
+    return (ft_nullptr);
+}
+
+static int rl_history_configure_backend_locked(const rl_history_backend *backend,
+        const char *location)
+{
+    const rl_history_backend *existing_backend;
+    void *existing_context;
+    void *working_context;
+
+    if (backend == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (-1);
+    }
+    existing_backend = g_history_backend_state.backend;
+    existing_context = g_history_backend_state.backend_context;
+    working_context = existing_context;
+    if (backend != existing_backend)
+        working_context = ft_nullptr;
+    if (backend->configure != ft_nullptr)
+    {
+        if (backend->configure(&working_context, location) != 0)
+        {
+            if (backend != existing_backend && working_context != ft_nullptr
+                && backend->shutdown != ft_nullptr)
+                backend->shutdown(working_context);
+            return (-1);
+        }
+    }
+    if (backend != existing_backend)
+    {
+        if (existing_backend != ft_nullptr && existing_backend->shutdown != ft_nullptr)
+            existing_backend->shutdown(existing_context);
+    }
+    g_history_backend_state.backend = backend;
+    g_history_backend_state.backend_context = working_context;
+    ft_errno = ER_SUCCESS;
+    return (0);
 }
 
 static void rl_completion_reset_dynamic_matches_locked(void)
@@ -528,31 +1159,54 @@ char *rl_completion_get_dynamic_match(int index)
     return (result);
 }
 
-int rl_history_set_storage_path(const char *file_path)
+int rl_history_set_backend(const char *backend_name, const char *location)
 {
     bool lock_acquired;
-    char *new_path;
+    const rl_history_backend *backend_pointer;
+    int configure_result;
 
     lock_acquired = false;
-    new_path = ft_nullptr;
     if (rl_customization_lock(&lock_acquired) != 0)
         return (-1);
-    if (file_path != ft_nullptr)
+    backend_pointer = rl_history_find_backend(backend_name);
+    if (backend_pointer == ft_nullptr)
     {
-        new_path = cma_strdup(file_path);
-        if (new_path == ft_nullptr)
-        {
-            rl_customization_unlock(lock_acquired);
-            ft_errno = FT_ERR_NO_MEMORY;
-            return (-1);
-        }
+        rl_customization_unlock(lock_acquired);
+        return (-1);
     }
-    if (g_history_storage_path != ft_nullptr)
-        cma_free(g_history_storage_path);
-    g_history_storage_path = new_path;
+    configure_result = rl_history_configure_backend_locked(backend_pointer, location);
     rl_customization_unlock(lock_acquired);
+    if (configure_result != 0)
+        return (-1);
     ft_errno = ER_SUCCESS;
     return (0);
+}
+
+const char *rl_history_get_backend(void)
+{
+    bool lock_acquired;
+    const char *backend_name;
+
+    lock_acquired = false;
+    backend_name = ft_nullptr;
+    if (rl_customization_lock(&lock_acquired) != 0)
+        return (ft_nullptr);
+    if (g_history_backend_state.backend == ft_nullptr
+        || g_history_backend_state.backend->name == ft_nullptr)
+    {
+        rl_customization_unlock(lock_acquired);
+        ft_errno = FT_ERR_NOT_FOUND;
+        return (ft_nullptr);
+    }
+    backend_name = g_history_backend_state.backend->name;
+    rl_customization_unlock(lock_acquired);
+    ft_errno = ER_SUCCESS;
+    return (backend_name);
+}
+
+int rl_history_set_storage_path(const char *file_path)
+{
+    return (rl_history_set_backend("plain-text", file_path));
 }
 
 int rl_history_enable_auto_save(bool enabled)
@@ -562,7 +1216,7 @@ int rl_history_enable_auto_save(bool enabled)
     lock_acquired = false;
     if (rl_customization_lock(&lock_acquired) != 0)
         return (-1);
-    g_history_auto_save = enabled;
+    g_history_backend_state.auto_save_enabled = enabled;
     rl_customization_unlock(lock_acquired);
     ft_errno = ER_SUCCESS;
     return (0);
@@ -571,71 +1225,22 @@ int rl_history_enable_auto_save(bool enabled)
 int rl_history_load(void)
 {
     bool lock_acquired;
-    char *path_copy;
-    ft_file history_file;
-    int open_result;
-    int fd;
-    char *line;
+    const rl_history_backend *backend_pointer;
+    void *backend_context;
 
     lock_acquired = false;
-    path_copy = ft_nullptr;
     if (rl_customization_lock(&lock_acquired) != 0)
         return (-1);
-    if (g_history_storage_path == ft_nullptr)
+    backend_pointer = g_history_backend_state.backend;
+    backend_context = g_history_backend_state.backend_context;
+    rl_customization_unlock(lock_acquired);
+    if (backend_pointer == ft_nullptr || backend_pointer->load == ft_nullptr)
     {
-        rl_customization_unlock(lock_acquired);
         ft_errno = FT_ERR_INVALID_STATE;
         return (-1);
     }
-    path_copy = cma_strdup(g_history_storage_path);
-    rl_customization_unlock(lock_acquired);
-    if (path_copy == ft_nullptr)
-    {
-        ft_errno = FT_ERR_NO_MEMORY;
+    if (backend_pointer->load(backend_context) != 0)
         return (-1);
-    }
-    open_result = history_file.open(path_copy, O_RDONLY);
-    if (open_result != 0)
-    {
-        int error_code;
-
-        error_code = history_file.get_error();
-        cma_free(path_copy);
-        if (error_code == FT_ERR_NOT_FOUND)
-        {
-            ft_errno = ER_SUCCESS;
-            return (0);
-        }
-        ft_errno = error_code;
-        return (-1);
-    }
-    rl_clear_history();
-    fd = history_file.get_fd();
-    if (history_file.get_error() != ER_SUCCESS)
-    {
-        int error_code;
-
-        error_code = history_file.get_error();
-        history_file.close();
-        cma_free(path_copy);
-        ft_errno = error_code;
-        return (-1);
-    }
-    while (1)
-    {
-        line = get_next_line(fd, 1024);
-        if (line == ft_nullptr)
-            break ;
-        size_t length;
-
-        length = ft_strlen_size_t(line);
-        if (length > 0 && line[length - 1] == '\n')
-            line[length - 1] = '\0';
-        rl_update_history(line);
-        cma_free(line);
-    }
-    history_file.close();
-    cma_free(path_copy);
     ft_errno = ER_SUCCESS;
     return (0);
 }
@@ -643,58 +1248,22 @@ int rl_history_load(void)
 int rl_history_save(void)
 {
     bool lock_acquired;
-    char *path_copy;
-    ft_file history_file;
-    int open_result;
-    int index;
+    const rl_history_backend *backend_pointer;
+    void *backend_context;
 
     lock_acquired = false;
-    path_copy = ft_nullptr;
     if (rl_customization_lock(&lock_acquired) != 0)
         return (-1);
-    if (g_history_storage_path == ft_nullptr)
+    backend_pointer = g_history_backend_state.backend;
+    backend_context = g_history_backend_state.backend_context;
+    rl_customization_unlock(lock_acquired);
+    if (backend_pointer == ft_nullptr || backend_pointer->save == ft_nullptr)
     {
-        rl_customization_unlock(lock_acquired);
         ft_errno = FT_ERR_INVALID_STATE;
         return (-1);
     }
-    path_copy = cma_strdup(g_history_storage_path);
-    rl_customization_unlock(lock_acquired);
-    if (path_copy == ft_nullptr)
-    {
-        ft_errno = FT_ERR_NO_MEMORY;
+    if (backend_pointer->save(backend_context) != 0)
         return (-1);
-    }
-    open_result = history_file.open(path_copy, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-    if (open_result != 0)
-    {
-        int error_code;
-
-        error_code = history_file.get_error();
-        cma_free(path_copy);
-        ft_errno = error_code;
-        return (-1);
-    }
-    index = 0;
-    while (index < history_count)
-    {
-        if (history[index] != ft_nullptr)
-        {
-            if (history_file.printf("%s\n", history[index]) < 0)
-            {
-                int error_code;
-
-                error_code = history_file.get_error();
-                history_file.close();
-                cma_free(path_copy);
-                ft_errno = error_code;
-                return (-1);
-            }
-        }
-        index += 1;
-    }
-    history_file.close();
-    cma_free(path_copy);
     ft_errno = ER_SUCCESS;
     return (0);
 }
@@ -703,14 +1272,18 @@ void rl_history_notify_updated(void)
 {
     bool lock_acquired;
     bool auto_save_enabled;
+    const rl_history_backend *backend_pointer;
 
     lock_acquired = false;
     auto_save_enabled = false;
+    backend_pointer = ft_nullptr;
     if (rl_customization_lock(&lock_acquired) != 0)
         return ;
-    auto_save_enabled = g_history_auto_save;
+    auto_save_enabled = g_history_backend_state.auto_save_enabled;
+    backend_pointer = g_history_backend_state.backend;
     rl_customization_unlock(lock_acquired);
-    if (!auto_save_enabled)
+    if (!auto_save_enabled || backend_pointer == ft_nullptr
+        || backend_pointer->save == ft_nullptr)
         return ;
     (void)rl_history_save();
     return ;
