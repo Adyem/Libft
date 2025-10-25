@@ -7,6 +7,7 @@ SRCS := encryption_basic_encryption.cpp \
         encryption_aes.cpp \
         encryption_rsa.cpp \
         encryption_secure_wipe.cpp \
+        encryption_hardware_acceleration.cpp \
         encryption_sha256.cpp \
         encryption_sha3.cpp \
         encryption_blake2.cpp \
@@ -21,6 +22,7 @@ HEADERS := basic_encryption.hpp \
         encryption_aead.hpp \
         encryption_secure_wipe.hpp \
         encryption_key_management.hpp \
+        encryption_hardware_acceleration.hpp \
         encryption_sha3.hpp \
         encryption_blake2.hpp \
         encryption_hmac_sha256.hpp

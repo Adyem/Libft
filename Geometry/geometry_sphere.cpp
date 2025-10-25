@@ -2,38 +2,11 @@
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
 #include "../PThread/pthread.hpp"
+#include "geometry_lock_tracker.hpp"
 
-#include <chrono>
 #include <cstddef>
-#include <random>
 #include <utility>
 #include "../Template/move.hpp"
-
-static void geometry_sphere_sleep_backoff()
-{
-    static thread_local bool generator_initialized = false;
-    static thread_local std::minstd_rand generator;
-    std::uniform_int_distribution<int> distribution(1, 10);
-    unsigned long long time_seed;
-    std::size_t address_seed;
-    unsigned int combined_seed;
-    int delay_ms;
-
-    if (!generator_initialized)
-    {
-        time_seed = static_cast<unsigned long long>(
-            std::chrono::steady_clock::now().time_since_epoch().count());
-        address_seed = reinterpret_cast<std::size_t>(&generator);
-        combined_seed = static_cast<unsigned int>(time_seed ^ address_seed);
-        if (combined_seed == 0)
-            combined_seed = static_cast<unsigned int>(address_seed | 1U);
-        generator.seed(combined_seed);
-        generator_initialized = true;
-    }
-    delay_ms = distribution(generator);
-    pt_thread_sleep(static_cast<unsigned int>(delay_ms));
-    return ;
-}
 
 static void geometry_sphere_restore_errno(ft_unique_lock<pt_mutex> &guard,
         int entry_errno)
@@ -379,66 +352,9 @@ int sphere::lock_pair(const sphere &first, const sphere &second,
         ft_unique_lock<pt_mutex> &first_guard,
         ft_unique_lock<pt_mutex> &second_guard)
 {
-    const sphere *ordered_first;
-    const sphere *ordered_second;
-    bool swapped;
+    pt_mutex &first_mutex = first._mutex;
+    pt_mutex &second_mutex = second._mutex;
 
-    if (&first == &second)
-    {
-        ft_unique_lock<pt_mutex> single_guard(first._mutex);
-
-        if (single_guard.get_error() != ER_SUCCESS)
-        {
-            ft_errno = single_guard.get_error();
-            return (single_guard.get_error());
-        }
-        first_guard = ft_move(single_guard);
-        second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = ER_SUCCESS;
-        return (ER_SUCCESS);
-    }
-    ordered_first = &first;
-    ordered_second = &second;
-    swapped = false;
-    if (ordered_first > ordered_second)
-    {
-        const sphere *temporary;
-
-        temporary = ordered_first;
-        ordered_first = ordered_second;
-        ordered_second = temporary;
-        swapped = true;
-    }
-    while (true)
-    {
-        ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
-
-        if (lower_guard.get_error() != ER_SUCCESS)
-        {
-            ft_errno = lower_guard.get_error();
-            return (lower_guard.get_error());
-        }
-        ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == ER_SUCCESS)
-        {
-            if (!swapped)
-            {
-                first_guard = ft_move(lower_guard);
-                second_guard = ft_move(upper_guard);
-            }
-            else
-            {
-                first_guard = ft_move(upper_guard);
-                second_guard = ft_move(lower_guard);
-            }
-            ft_errno = ER_SUCCESS;
-            return (ER_SUCCESS);
-        }
-        if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
-        {
-            ft_errno = upper_guard.get_error();
-            return (upper_guard.get_error());
-        }
-        geometry_sphere_sleep_backoff();
-    }
+    return (geometry_lock_tracker_lock_pair(&first, &second,
+            first_mutex, second_mutex, first_guard, second_guard));
 }

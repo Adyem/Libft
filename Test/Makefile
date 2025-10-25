@@ -41,7 +41,7 @@ CXX       := g++
 
 COMPILE_FLAGS := -Wall -Wextra -Werror -std=c++17 $(OPT_FLAGS) -pthread -Wno-missing-declarations
 CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Libft\"
-LDFLAGS := -lz -lssl -lcrypto -ldl
+LDFLAGS := -lz -lssl -lcrypto -ldl -lsqlite3
 export COMPILE_FLAGS
 
 OBJDIR       := objs
@@ -64,6 +64,7 @@ $(OBJDIR)/Test/test_task_scheduler.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\
 $(OBJDIR)/Test/test_pthread_thread.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"PThread\"
 $(OBJDIR)/Test/test_pthread_lock_tracking.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"PThread\"
 $(OBJDIR)/Test/test_networking.o $(OBJDIR)/Test/test_http_server.o $(OBJDIR)/Test/test_websocket.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Networking\"
+$(OBJDIR)/Test/test_networking_quic.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Networking\"
 $(OBJDIR)/Test/test_logger.o $(OBJDIR)/Test/test_logger_async.o $(OBJDIR)/Test/test_logger_network.o \
 $(OBJDIR)/Test/test_logger_file.o $(OBJDIR)/Test/test_logger_control.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Logger\"
 $(OBJDIR)/Test/test_json_validate.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"JSon\"

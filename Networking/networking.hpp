@@ -152,5 +152,6 @@ void socket_config_unlock(const SocketConfig *config, bool lock_acquired);
 
 #include "websocket_client.hpp"
 #include "websocket_server.hpp"
+#include "networking_quic_experimental.hpp"
 
 #endif

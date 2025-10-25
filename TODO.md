@@ -79,13 +79,13 @@
 - [x] Make `s_network_sink` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Networking
-- [ ] Complete HTTP/2 support by honoring SETTINGS frames, stream prioritization, and flow-control windows in `http2_client`.
+- [x] Complete HTTP/2 support by honoring SETTINGS frames, stream prioritization, and flow-control windows in `http2_client`.
 - [x] Integrate ALPN negotiation into the higher-level API wrappers so HTTP/2 is automatically selected when the server supports it.
 - [x] Build a reusable DNS resolver (with caching and IPv6 support) that the socket helpers can share instead of assuming raw host strings.
 - [x] Add connection pooling and keep-alive management for `http_client`/`http_server` to reduce socket churn under load.
 - [x] Harden WebSocket handling with per-message deflate support and stricter frame validation (masking, RSV bits, control frame sizes).
 - [x] Provide non-blocking, event-loop-friendly wrappers for UDP sockets that integrate with epoll/kqueue abstractions already present.
-- [ ] Introduce QUIC/HTTP3 experimentation behind feature flags, reusing TLS primitives where possible.
+- [x] Introduce QUIC/HTTP3 experimentation behind feature flags, reusing TLS primitives where possible.
 - [x] Add observability hooks (latency histograms, error tagging) that integrate with Prometheus or OpenTelemetry exporters.
 - [x] Provide RAII socket handles that close file descriptors automatically and coordinate Windows `WSAStartup` lifecycle management.
 - [x] Fix the Winsock error handling path in `ft_socket::setup_server` so the helper uses `WSAGetLastError()`/`ft_errno` instead of `errno`, otherwise Windows failures in `create_socket`, `set_reuse_address`, timeouts, bind, or listen propagate the wrong code. 【F:Networking/networking_setup_server.cpp†L18-L146】【F:Networking/networking_setup_server.cpp†L188-L237】
@@ -273,7 +273,7 @@
 - [x] Make `aabb` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `circle` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `sphere` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Implement per-struct lock tracking for the Geometry shapes so mutex ownership, circular wait detection, randomized 1-10 millisecond sleeps, and lock reacquisition remain consistent (this is the deadlock resolution point the struct upgrades rely on).
+- [x] Implement per-struct lock tracking for the Geometry shapes so mutex ownership, circular wait detection, randomized 1-10 millisecond sleeps, and lock reacquisition remain consistent (this is the deadlock resolution point the struct upgrades rely on).
 
 ### Encryption
 - [x] Expand beyond SHA-1 by adding SHA-2/3, BLAKE2, and streaming HMAC helpers.
@@ -281,7 +281,7 @@
 - [x] Harden the AEAD finalize path so TLS-derived contexts produce authentication tags successfully in integration tests.
 - [x] Document key management best practices and provide secure random key generation utilities.
 - [x] Add self-tests that verify algorithm outputs against known test vectors.
-- [ ] Provide hardware acceleration hooks (AES-NI, ARMv8 crypto) with graceful fallback paths.
+- [x] Provide hardware acceleration hooks (AES-NI, ARMv8 crypto) with graceful fallback paths.
 - [x] Implement secure memory wiping utilities to prevent key material from lingering after use.
 
 ### System utilities
@@ -294,10 +294,10 @@
 - [x] Make `su_file` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### File and ReadLine modules
-- [ ] Harmonize the File module with `ft_file` so both expose the same error-reporting surface and buffering strategies.
+- [x] Harmonize the File module with `ft_file` so both expose the same error-reporting surface and buffering strategies.
 - [x] Extend ReadLine to support customizable key bindings, history persistence, and syntax-aware completion callbacks.
 - [x] Add UTF-8 aware cursor movement and rendering in ReadLine to match the Unicode helpers in Libft.
-- [ ] Provide pluggable history storage (SQLite, JSON) and search that respects multi-byte characters.
+- [x] Provide pluggable history storage (SQLite, JSON) and search that respects multi-byte characters.
 - [x] Document terminal capability detection and fallback behaviour for minimal environments.
 - [x] Make `ft_file_watch` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `file_dir` thread safe (relies on the shared deadlock resolution routine described below).
@@ -315,7 +315,7 @@
 
 ### JSON / YAML / XML / HTML
 - [ ] Share a common DOM and schema validation layer so parsers can reuse traversal logic across formats.
-- [ ] Add streaming encoders/decoders that operate on callbacks to avoid holding entire documents in memory.
+- [x] Add streaming encoders/decoders that operate on callbacks to avoid holding entire documents in memory.
 - [ ] Integrate schema evolution helpers (migrations, versioning) for configuration management.
 - [ ] Expand XPath/CSS selector support in HTML and ensure namespace-aware parsing in XML.
 - [ ] Provide tooling that round-trips documents and highlights diffs to simplify regression testing.

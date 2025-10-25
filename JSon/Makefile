@@ -5,6 +5,7 @@ SRCS :=         json_parsing.cpp \
                 json_create_item.cpp \
                 json_reader.cpp \
                 json_stream_reader.cpp \
+                json_stream_writer.cpp \
                 json_writer.cpp \
                 json_utils.cpp \
                 json_document.cpp \
@@ -13,7 +14,7 @@ SRCS :=         json_parsing.cpp \
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
-HEADERS := json.hpp document.hpp json_schema.hpp json_stream_reader.hpp
+HEADERS := json.hpp document.hpp json_schema.hpp json_stream_reader.hpp json_stream_writer.hpp json_stream_events.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
