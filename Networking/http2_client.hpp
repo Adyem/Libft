@@ -4,22 +4,108 @@
 #include "../CPP_class/class_string_class.hpp"
 #include "../Template/vector.hpp"
 #include "../Template/map.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/pthread.hpp"
+#include "../Errno/errno.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include "ssl_wrapper.hpp"
 #include <cstdint>
 #include <cstddef>
 
-struct http2_header_field
+class http2_header_field
 {
-    ft_string   name;
-    ft_string   value;
+    private:
+        ft_string           _name;
+        ft_string           _value;
+        mutable int         _error_code;
+        mutable bool        _thread_safe_enabled;
+        mutable pt_mutex   *_mutex;
+
+        void    set_error(int error_code) const noexcept;
+        int     lock(bool *lock_acquired) const noexcept;
+        void    unlock(bool lock_acquired) const noexcept;
+        void    teardown_thread_safety() noexcept;
+
+    public:
+        http2_header_field() noexcept;
+        ~http2_header_field() noexcept;
+
+        http2_header_field(const http2_header_field &other) noexcept;
+        http2_header_field(http2_header_field &&other) noexcept;
+        http2_header_field &operator=(const http2_header_field &other) noexcept;
+        http2_header_field &operator=(http2_header_field &&other) noexcept;
+
+        int     enable_thread_safety() noexcept;
+        void    disable_thread_safety() noexcept;
+        bool    is_thread_safe() const noexcept;
+
+        bool    set_name(const ft_string &name_value) noexcept;
+        bool    set_name_from_cstr(const char *name_value) noexcept;
+        bool    set_name_from_buffer(const char *buffer, size_t length) noexcept;
+
+        bool    set_value(const ft_string &value_value) noexcept;
+        bool    set_value_from_cstr(const char *value_value) noexcept;
+        bool    set_value_from_buffer(const char *buffer, size_t length) noexcept;
+
+        bool    assign(const ft_string &name_value, const ft_string &value_value) noexcept;
+        bool    assign_from_cstr(const char *name_value, const char *value_value) noexcept;
+        bool    assign_from_buffers(const char *name_buffer, size_t name_length,
+                    const char *value_buffer, size_t value_length) noexcept;
+
+        bool    copy_name(ft_string &out_name) const noexcept;
+        bool    copy_value(ft_string &out_value) const noexcept;
+
+        void    clear() noexcept;
+
+        int         get_error() const noexcept;
+        const char  *get_error_str() const noexcept;
 };
 
-struct http2_frame
+class http2_frame
 {
-    uint8_t     type;
-    uint8_t     flags;
-    uint32_t    stream_id;
-    ft_string   payload;
+    private:
+        uint8_t             _type;
+        uint8_t             _flags;
+        uint32_t            _stream_identifier;
+        ft_string           _payload;
+        mutable int         _error_code;
+        mutable bool        _thread_safe_enabled;
+        mutable pt_mutex   *_mutex;
+
+        void    set_error(int error_code) const noexcept;
+        int     lock(bool *lock_acquired) const noexcept;
+        void    unlock(bool lock_acquired) const noexcept;
+        void    teardown_thread_safety() noexcept;
+
+    public:
+        http2_frame() noexcept;
+        ~http2_frame() noexcept;
+
+        http2_frame(const http2_frame &other) noexcept;
+        http2_frame(http2_frame &&other) noexcept;
+        http2_frame &operator=(const http2_frame &other) noexcept;
+        http2_frame &operator=(http2_frame &&other) noexcept;
+
+        int     enable_thread_safety() noexcept;
+        void    disable_thread_safety() noexcept;
+        bool    is_thread_safe() const noexcept;
+
+        bool    set_type(uint8_t type_value) noexcept;
+        bool    get_type(uint8_t &out_type) const noexcept;
+
+        bool    set_flags(uint8_t flags_value) noexcept;
+        bool    get_flags(uint8_t &out_flags) const noexcept;
+
+        bool    set_stream_identifier(uint32_t stream_identifier_value) noexcept;
+        bool    get_stream_identifier(uint32_t &out_stream_identifier) const noexcept;
+
+        bool    set_payload(const ft_string &payload_value) noexcept;
+        bool    set_payload_from_buffer(const char *buffer, size_t length) noexcept;
+        bool    copy_payload(ft_string &out_payload) const noexcept;
+        void    clear_payload() noexcept;
+
+        int         get_error() const noexcept;
+        const char  *get_error_str() const noexcept;
 };
 
 struct http2_stream_state
