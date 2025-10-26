@@ -28,7 +28,8 @@ SRCS := game_map3d.cpp \
 	game_resistance.cpp \
 	game_pathfinding.cpp \
 	game_crafting.cpp \
-        game_state.cpp
+        game_state.cpp \
+        game_behavior_tree.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
@@ -53,7 +54,8 @@ HEADERS := game_map3d.hpp \
 	game_resistance.hpp \
 	game_pathfinding.hpp \
 	game_crafting.hpp \
-        game_state.hpp
+        game_state.hpp \
+        game_behavior_tree.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

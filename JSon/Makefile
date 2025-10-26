@@ -9,12 +9,13 @@ SRCS :=         json_parsing.cpp \
                 json_writer.cpp \
                 json_utils.cpp \
                 json_document.cpp \
-                json_schema.cpp
+                json_schema.cpp \
+                json_schema_evolution.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
-HEADERS := json.hpp document.hpp json_schema.hpp json_stream_reader.hpp json_stream_writer.hpp json_stream_events.hpp
+HEADERS := json.hpp document.hpp json_schema.hpp json_schema_evolution.hpp json_stream_reader.hpp json_stream_writer.hpp json_stream_events.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
