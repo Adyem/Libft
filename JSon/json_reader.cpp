@@ -1,5 +1,6 @@
 #include "../Libft/libft.hpp"
 #include "json.hpp"
+#include "document.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
@@ -649,6 +650,26 @@ json_group *json_read_from_file(const char *filename)
     cma_free(content);
     ft_errno = ER_SUCCESS;
     return (head);
+}
+
+json_group *json_read_from_backend(ft_document_source &source)
+{
+    ft_string content_buffer;
+    int read_result;
+
+    read_result = source.read_all(content_buffer);
+    if (read_result != ER_SUCCESS)
+    {
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = read_result;
+        return (ft_nullptr);
+    }
+    return (json_read_from_string(content_buffer.c_str()));
+}
+
+int json_document_read_from_backend(json_document &document, ft_document_source &source)
+{
+    return (document.read_from_backend(source));
 }
 
 json_group *json_read_from_string(const char *content)

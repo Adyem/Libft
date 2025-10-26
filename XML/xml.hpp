@@ -5,14 +5,21 @@
 #include "../Template/unordered_map.hpp"
 #include "../Errno/errno.hpp"
 #include "../CMA/CMA.hpp"
+#include "../Parser/document_backend.hpp"
 
 class pt_mutex;
+
+struct xml_namespace_entry;
 
 struct xml_node
 {
     pt_mutex *mutex;
     bool thread_safe_enabled;
     char *name;
+    char *namespace_prefix;
+    char *local_name;
+    const char *namespace_uri;
+    xml_namespace_entry *namespace_bindings;
     char *text;
     ft_vector<xml_node*> children;
     ft_unordered_map<char*, char*> attributes;
@@ -57,8 +64,10 @@ class xml_document
 
         int load_from_string(const char *xml) noexcept;
         int load_from_file(const char *file_path) noexcept;
+        int load_from_backend(ft_document_source &source) noexcept;
         char *write_to_string() const noexcept;
         int write_to_file(const char *file_path) const noexcept;
+        int write_to_backend(ft_document_sink &sink) const noexcept;
         xml_node *get_root() const noexcept;
         int get_error() const noexcept;
         const char *get_error_str() const noexcept;

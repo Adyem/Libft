@@ -76,7 +76,7 @@ SUBDIRS :=  CMA \
             API \
             CrossProcess \
             Compatebility \
-            Compression Encryption RNG JSon YAML File HTML Game Time XML Storage
+            Compression Encryption RNG JSon YAML File HTML Game Time XML Storage Parser
 
 LIB_BASES := \
   CMA/CustomMemoryAllocator \
@@ -107,7 +107,8 @@ LIB_BASES := \
   Game/Game \
   Time/time \
   XML/XMLParser \
-  Storage/storage
+  Storage/storage \
+  Parser/parser
 
 LIBS       := $(addsuffix .a, $(LIB_BASES))
 DEBUG_LIBS := $(addsuffix _debug.a, $(LIB_BASES))
