@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include "../CPP_class/class_nullptr.hpp"
 #include <atomic>
+#include <cstddef>
 #include "condition.hpp"
 #include "../Time/time.hpp"
 #include "../Template/move.hpp"
@@ -43,6 +44,33 @@ int pt_rwlock_rdlock(pthread_rwlock_t *rwlock);
 int pt_rwlock_wrlock(pthread_rwlock_t *rwlock);
 int pt_rwlock_unlock(pthread_rwlock_t *rwlock);
 int pt_rwlock_destroy(pthread_rwlock_t *rwlock);
+
+typedef enum e_pt_rwlock_strategy
+{
+    PT_RWLOCK_STRATEGY_READER_PRIORITY,
+    PT_RWLOCK_STRATEGY_WRITER_PRIORITY
+}   t_pt_rwlock_strategy;
+
+typedef struct s_pt_rwlock
+{
+    pthread_mutex_t          mutex;
+    pthread_cond_t           reader_condition;
+    pthread_cond_t           writer_condition;
+    size_t                   active_readers;
+    size_t                   waiting_readers;
+    size_t                   active_writers;
+    size_t                   waiting_writers;
+    t_pt_rwlock_strategy     strategy;
+    int                      error_code;
+}   t_pt_rwlock;
+
+int pt_rwlock_strategy_init(t_pt_rwlock *rwlock, t_pt_rwlock_strategy strategy);
+int pt_rwlock_strategy_rdlock(t_pt_rwlock *rwlock);
+int pt_rwlock_strategy_wrlock(t_pt_rwlock *rwlock);
+int pt_rwlock_strategy_unlock(t_pt_rwlock *rwlock);
+int pt_rwlock_strategy_destroy(t_pt_rwlock *rwlock);
+int pt_rwlock_strategy_get_error(const t_pt_rwlock *rwlock);
+const char *pt_rwlock_strategy_get_error_str(const t_pt_rwlock *rwlock);
 
 #define SLEEP_TIME 100
 #define MAX_SLEEP 10000

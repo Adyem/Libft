@@ -10,9 +10,23 @@
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
+#include "../Time/time.hpp"
+#include <cstddef>
 
 struct json_group;
 class ft_world;
+
+typedef struct s_event_scheduler_profile
+{
+    long long update_count;
+    long long events_processed;
+    long long events_rescheduled;
+    size_t max_queue_depth;
+    size_t max_ready_batch;
+    long long total_processing_ns;
+    long long last_update_processing_ns;
+    int last_error_code;
+}   t_event_scheduler_profile;
 
 struct ft_event_compare_ptr
 {
@@ -25,12 +39,27 @@ class ft_event_scheduler
         mutable ft_priority_queue<ft_sharedptr<ft_event>, ft_event_compare_ptr> _events;
         mutable int _error_code;
         mutable pt_mutex _mutex;
+        mutable bool _profiling_enabled;
+        mutable t_event_scheduler_profile _profile;
+        mutable ft_vector<ft_sharedptr<ft_event> > _ready_cache;
 
         void set_error(int error) const noexcept;
         static int lock_pair(const ft_event_scheduler &first,
                 const ft_event_scheduler &second,
                 ft_unique_lock<pt_mutex> &first_guard,
                 ft_unique_lock<pt_mutex> &second_guard);
+        void reset_profile_locked() const noexcept;
+        void record_profile_locked(size_t ready_count,
+                size_t rescheduled_count,
+                size_t queue_depth,
+                long long duration_ns) const noexcept;
+        void finalize_update(ft_vector<ft_sharedptr<ft_event> > &events,
+                size_t ready_count,
+                size_t rescheduled_count,
+                size_t queue_depth,
+                bool profiling_active,
+                bool start_valid,
+                t_high_resolution_time_point start_time) noexcept;
 
     public:
         ft_event_scheduler() noexcept;
@@ -44,6 +73,11 @@ class ft_event_scheduler
         void cancel_event(int id) noexcept;
         void reschedule_event(int id, int new_duration) noexcept;
         void update_events(ft_sharedptr<ft_world> &world, int ticks, const char *log_file_path = ft_nullptr, ft_string *log_buffer = ft_nullptr) noexcept;
+
+        void enable_profiling(bool enabled) noexcept;
+        bool profiling_enabled() const noexcept;
+        void reset_profile() noexcept;
+        void snapshot_profile(t_event_scheduler_profile &out) const noexcept;
 
         void dump_events(ft_vector<ft_sharedptr<ft_event> > &out) const noexcept;
         size_t size() const noexcept;

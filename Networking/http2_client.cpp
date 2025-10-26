@@ -1043,13 +1043,24 @@ http2_stream_state::~http2_stream_state() noexcept
 http2_stream_manager::http2_stream_manager() noexcept
     : _streams(), _stream_identifiers(), _initial_remote_window(65535),
       _initial_local_window(65535), _connection_remote_window(65535),
-      _connection_local_window(65535), _error_code(ER_SUCCESS)
+      _connection_local_window(65535), _error_code(ER_SUCCESS),
+      _thread_safe_enabled(false), _mutex(ft_nullptr)
 {
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    if (this->prepare_thread_safety() != 0)
+        return ;
+    this->set_error(ER_SUCCESS);
+    ft_errno = entry_errno;
     return ;
 }
 
 http2_stream_manager::~http2_stream_manager() noexcept
 {
+    int entry_errno;
+
+    entry_errno = ft_errno;
     this->_streams.clear();
     this->_stream_identifiers.clear();
     this->_initial_remote_window = 65535;
@@ -1057,7 +1068,117 @@ http2_stream_manager::~http2_stream_manager() noexcept
     this->_connection_remote_window = 65535;
     this->_connection_local_window = 65535;
     this->set_error(ER_SUCCESS);
+    this->teardown_thread_safety();
+    ft_errno = entry_errno;
     return ;
+}
+
+int http2_stream_manager::prepare_thread_safety() noexcept
+{
+    void *memory_pointer;
+    pt_mutex *mutex_pointer;
+
+    if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
+    {
+        this->set_error(ER_SUCCESS);
+        return (0);
+    }
+    memory_pointer = std::malloc(sizeof(pt_mutex));
+    if (!memory_pointer)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return (-1);
+    }
+    mutex_pointer = new(memory_pointer) pt_mutex();
+    if (mutex_pointer->get_error() != ER_SUCCESS)
+    {
+        int mutex_error;
+
+        mutex_error = mutex_pointer->get_error();
+        mutex_pointer->~pt_mutex();
+        std::free(memory_pointer);
+        this->set_error(mutex_error);
+        return (-1);
+    }
+    this->_mutex = mutex_pointer;
+    this->_thread_safe_enabled = true;
+    this->set_error(ER_SUCCESS);
+    return (0);
+}
+
+void http2_stream_manager::teardown_thread_safety() noexcept
+{
+    if (this->_mutex != ft_nullptr)
+    {
+        this->_mutex->~pt_mutex();
+        std::free(this->_mutex);
+        this->_mutex = ft_nullptr;
+    }
+    this->_thread_safe_enabled = false;
+    this->set_error(ER_SUCCESS);
+    return ;
+}
+
+int http2_stream_manager::lock(bool *lock_acquired) const noexcept
+{
+    http2_stream_manager *mutable_manager;
+
+    if (lock_acquired)
+        *lock_acquired = false;
+    if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
+    {
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    mutable_manager = const_cast<http2_stream_manager *>(this);
+    mutable_manager->_mutex->lock(THREAD_ID);
+    if (mutable_manager->_mutex->get_error() != ER_SUCCESS)
+    {
+        mutable_manager->set_error(mutable_manager->_mutex->get_error());
+        return (-1);
+    }
+    if (lock_acquired)
+        *lock_acquired = true;
+    return (0);
+}
+
+void http2_stream_manager::unlock(bool lock_acquired) const noexcept
+{
+    http2_stream_manager *mutable_manager;
+    int entry_errno;
+
+    if (!lock_acquired)
+        return ;
+    mutable_manager = const_cast<http2_stream_manager *>(this);
+    if (mutable_manager->_mutex == ft_nullptr)
+        return ;
+    entry_errno = ft_errno;
+    mutable_manager->_mutex->unlock(THREAD_ID);
+    if (mutable_manager->_mutex->get_error() != ER_SUCCESS)
+    {
+        mutable_manager->set_error(mutable_manager->_mutex->get_error());
+        return ;
+    }
+    ft_errno = entry_errno;
+    return ;
+}
+
+int http2_stream_manager::enable_thread_safety() noexcept
+{
+    return (this->prepare_thread_safety());
+}
+
+void http2_stream_manager::disable_thread_safety() noexcept
+{
+    this->teardown_thread_safety();
+    return ;
+}
+
+bool http2_stream_manager::is_thread_safe() const noexcept
+{
+    if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
+        return (true);
+    return (false);
 }
 
 void http2_stream_manager::set_error(int error_code) const noexcept
@@ -1170,30 +1291,44 @@ bool http2_stream_manager::open_stream(uint32_t stream_identifier) noexcept
 {
     Pair<uint32_t, http2_stream_state> *existing_entry;
     http2_stream_state new_state;
+    bool lock_acquired;
+    bool success_state;
 
+    lock_acquired = false;
+    success_state = true;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
     existing_entry = this->_streams.find(stream_identifier);
     if (existing_entry != ft_nullptr)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
-        return (false);
+        success_state = false;
     }
-    new_state.remote_window = this->_initial_remote_window;
-    new_state.local_window = this->_initial_local_window;
-    this->_streams.insert(stream_identifier, new_state);
-    if (this->_streams.get_error() != ER_SUCCESS)
+    if (success_state)
     {
-        this->set_error(this->_streams.get_error());
-        return (false);
+        new_state.remote_window = this->_initial_remote_window;
+        new_state.local_window = this->_initial_local_window;
+        this->_streams.insert(stream_identifier, new_state);
+        if (this->_streams.get_error() != ER_SUCCESS)
+        {
+            this->set_error(this->_streams.get_error());
+            success_state = false;
+        }
     }
-    this->_stream_identifiers.push_back(stream_identifier);
-    if (this->_stream_identifiers.get_error() != ER_SUCCESS)
+    if (success_state)
     {
-        this->_streams.remove(stream_identifier);
-        this->set_error(this->_stream_identifiers.get_error());
-        return (false);
+        this->_stream_identifiers.push_back(stream_identifier);
+        if (this->_stream_identifiers.get_error() != ER_SUCCESS)
+        {
+            this->_streams.remove(stream_identifier);
+            this->set_error(this->_stream_identifiers.get_error());
+            success_state = false;
+        }
     }
-    this->set_error(ER_SUCCESS);
-    return (true);
+    if (success_state)
+        this->set_error(ER_SUCCESS);
+    this->unlock(lock_acquired);
+    return (success_state);
 }
 
 bool http2_stream_manager::append_data(uint32_t stream_identifier, const char *data,
@@ -1202,83 +1337,128 @@ bool http2_stream_manager::append_data(uint32_t stream_identifier, const char *d
     Pair<uint32_t, http2_stream_state> *stream_entry;
     size_t index;
     uint32_t length_32;
+    bool lock_acquired;
+    bool success_state;
 
+    lock_acquired = false;
+    success_state = true;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
     if (!data && length > 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
-        return (false);
+        success_state = false;
     }
-    stream_entry = this->_streams.find(stream_identifier);
-    if (stream_entry == ft_nullptr)
+    stream_entry = ft_nullptr;
+    if (success_state)
     {
-        this->set_error(FT_ERR_NOT_FOUND);
-        return (false);
+        stream_entry = this->_streams.find(stream_identifier);
+        if (stream_entry == ft_nullptr)
+        {
+            this->set_error(FT_ERR_NOT_FOUND);
+            success_state = false;
+        }
     }
-    if (length > 0xFFFFFFFFu)
+    if (success_state && length > 0xFFFFFFFFu)
     {
         this->set_error(FT_ERR_OUT_OF_RANGE);
-        return (false);
+        success_state = false;
     }
-    length_32 = static_cast<uint32_t>(length);
-    if (!this->validate_receive_window(stream_identifier, length_32))
-        return (false);
-    index = 0;
-    while (index < length)
+    if (success_state)
     {
-        stream_entry->value.buffer.append(data[index]);
-        if (stream_entry->value.buffer.get_error() != ER_SUCCESS)
+        length_32 = static_cast<uint32_t>(length);
+        if (!this->validate_receive_window(stream_identifier, length_32))
+            success_state = false;
+        if (success_state)
         {
-            this->set_error(stream_entry->value.buffer.get_error());
-            return (false);
+            index = 0;
+            while (index < length)
+            {
+                stream_entry->value.buffer.append(data[index]);
+                if (stream_entry->value.buffer.get_error() != ER_SUCCESS)
+                {
+                    this->set_error(stream_entry->value.buffer.get_error());
+                    success_state = false;
+                    break ;
+                }
+                index++;
+            }
+            if (success_state)
+            {
+                if (!this->record_received_data(stream_identifier, length_32))
+                    success_state = false;
+            }
         }
-        index++;
     }
-    if (!this->record_received_data(stream_identifier, length_32))
-        return (false);
-    this->set_error(ER_SUCCESS);
-    return (true);
+    if (success_state)
+        this->set_error(ER_SUCCESS);
+    this->unlock(lock_acquired);
+    return (success_state);
 }
 
 bool http2_stream_manager::close_stream(uint32_t stream_identifier) noexcept
 {
     Pair<uint32_t, http2_stream_state> *stream_entry;
+    bool lock_acquired;
+    bool success_state;
 
+    lock_acquired = false;
+    success_state = true;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
     stream_entry = this->_streams.find(stream_identifier);
     if (stream_entry == ft_nullptr)
     {
         this->set_error(FT_ERR_NOT_FOUND);
-        return (false);
+        success_state = false;
     }
-    this->_streams.remove(stream_identifier);
-    if (this->_streams.get_error() != ER_SUCCESS)
+    if (success_state)
     {
-        this->set_error(this->_streams.get_error());
-        return (false);
+        this->_streams.remove(stream_identifier);
+        if (this->_streams.get_error() != ER_SUCCESS)
+        {
+            this->set_error(this->_streams.get_error());
+            success_state = false;
+        }
     }
-    this->remove_stream_identifier(stream_identifier);
-    this->set_error(ER_SUCCESS);
-    return (true);
+    if (success_state)
+        this->remove_stream_identifier(stream_identifier);
+    if (success_state)
+        this->set_error(ER_SUCCESS);
+    this->unlock(lock_acquired);
+    return (success_state);
 }
 
 bool http2_stream_manager::get_stream_buffer(uint32_t stream_identifier,
     ft_string &out_buffer) const noexcept
 {
     const Pair<uint32_t, http2_stream_state> *stream_entry;
+    bool lock_acquired;
+    bool success_state;
 
+    lock_acquired = false;
+    success_state = true;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
     stream_entry = this->_streams.find(stream_identifier);
     if (stream_entry == ft_nullptr)
     {
         this->set_error(FT_ERR_NOT_FOUND);
-        return (false);
+        success_state = false;
     }
-    out_buffer = stream_entry->value.buffer;
-    if (out_buffer.get_error() != ER_SUCCESS)
+    if (success_state)
     {
-        this->set_error(out_buffer.get_error());
-        return (false);
+        out_buffer = stream_entry->value.buffer;
+        if (out_buffer.get_error() != ER_SUCCESS)
+        {
+            this->set_error(out_buffer.get_error());
+            success_state = false;
+        }
     }
-    this->set_error(ER_SUCCESS);
-    return (true);
+    if (success_state)
+        this->set_error(ER_SUCCESS);
+    this->unlock(lock_acquired);
+    return (success_state);
 }
 
 bool http2_stream_manager::update_priority(uint32_t stream_identifier,
@@ -1288,75 +1468,102 @@ bool http2_stream_manager::update_priority(uint32_t stream_identifier,
     size_t identifier_count;
     ft_vector<uint32_t>::iterator iterator_value;
     size_t index;
+    bool lock_acquired;
+    bool success_state;
 
+    lock_acquired = false;
+    success_state = true;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
+    stream_entry = ft_nullptr;
     if (stream_identifier == dependency_identifier)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
-        return (false);
+        success_state = false;
     }
-    if (weight == 0)
+    if (success_state && weight == 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
-        return (false);
+        success_state = false;
     }
-    stream_entry = this->_streams.find(stream_identifier);
-    if (stream_entry == ft_nullptr)
+    if (success_state)
     {
-        this->set_error(FT_ERR_NOT_FOUND);
-        return (false);
+        stream_entry = this->_streams.find(stream_identifier);
+        if (stream_entry == ft_nullptr)
+        {
+            this->set_error(FT_ERR_NOT_FOUND);
+            success_state = false;
+        }
     }
-    if (exclusive)
+    if (success_state && exclusive)
     {
         identifier_count = this->_stream_identifiers.size();
         if (this->_stream_identifiers.get_error() != ER_SUCCESS)
         {
             this->set_error(this->_stream_identifiers.get_error());
-            return (false);
+            success_state = false;
         }
-        iterator_value = this->_stream_identifiers.begin();
-        index = 0;
-        while (index < identifier_count)
+        else
         {
-            uint32_t child_identifier;
-            Pair<uint32_t, http2_stream_state> *child_entry;
-
-            child_identifier = *iterator_value;
-            child_entry = this->_streams.find(child_identifier);
-            if (child_entry == ft_nullptr)
+            iterator_value = this->_stream_identifiers.begin();
+            index = 0;
+            while (index < identifier_count && success_state)
             {
-                this->set_error(this->_streams.get_error());
-                return (false);
+                uint32_t child_identifier;
+                Pair<uint32_t, http2_stream_state> *child_entry;
+
+                child_identifier = *iterator_value;
+                child_entry = this->_streams.find(child_identifier);
+                if (child_entry == ft_nullptr)
+                {
+                    this->set_error(this->_streams.get_error());
+                    success_state = false;
+                }
+                else if (child_identifier != stream_identifier
+                    && child_entry->value.dependency_identifier == dependency_identifier)
+                    child_entry->value.dependency_identifier = stream_identifier;
+                ++iterator_value;
+                ++index;
             }
-            if (child_identifier != stream_identifier
-                && child_entry->value.dependency_identifier == dependency_identifier)
-                child_entry->value.dependency_identifier = stream_identifier;
-            ++iterator_value;
-            ++index;
         }
     }
-    stream_entry->value.dependency_identifier = dependency_identifier;
-    stream_entry->value.weight = weight;
-    stream_entry->value.exclusive_dependency = exclusive;
-    this->set_error(ER_SUCCESS);
-    return (true);
+    if (success_state && stream_entry != ft_nullptr)
+    {
+        stream_entry->value.dependency_identifier = dependency_identifier;
+        stream_entry->value.weight = weight;
+        stream_entry->value.exclusive_dependency = exclusive;
+        this->set_error(ER_SUCCESS);
+    }
+    this->unlock(lock_acquired);
+    return (success_state);
 }
 
 bool http2_stream_manager::get_priority(uint32_t stream_identifier,
     uint32_t &dependency_identifier, uint8_t &weight, bool &exclusive) const noexcept
 {
     const Pair<uint32_t, http2_stream_state> *stream_entry;
+    bool lock_acquired;
+    bool success_state;
 
+    lock_acquired = false;
+    success_state = true;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
     stream_entry = this->_streams.find(stream_identifier);
     if (stream_entry == ft_nullptr)
     {
         this->set_error(FT_ERR_NOT_FOUND);
-        return (false);
+        success_state = false;
     }
-    dependency_identifier = stream_entry->value.dependency_identifier;
-    weight = stream_entry->value.weight;
-    exclusive = stream_entry->value.exclusive_dependency;
-    this->set_error(ER_SUCCESS);
-    return (true);
+    if (success_state)
+    {
+        dependency_identifier = stream_entry->value.dependency_identifier;
+        weight = stream_entry->value.weight;
+        exclusive = stream_entry->value.exclusive_dependency;
+        this->set_error(ER_SUCCESS);
+    }
+    this->unlock(lock_acquired);
+    return (success_state);
 }
 
 bool http2_stream_manager::update_remote_initial_window(uint32_t new_window) noexcept
@@ -1364,60 +1571,74 @@ bool http2_stream_manager::update_remote_initial_window(uint32_t new_window) noe
     uint32_t previous_window;
     size_t identifier_count;
     size_t index;
+    bool lock_acquired;
+    bool success_state;
 
+    lock_acquired = false;
+    success_state = true;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
+    previous_window = this->_initial_remote_window;
     if (new_window > 0x7FFFFFFFu)
     {
         this->set_error(FT_ERR_OUT_OF_RANGE);
-        return (false);
+        success_state = false;
     }
-    previous_window = this->_initial_remote_window;
-    this->_initial_remote_window = new_window;
-    identifier_count = this->_stream_identifiers.size();
-    if (this->_stream_identifiers.get_error() != ER_SUCCESS)
+    if (success_state)
     {
-        this->set_error(this->_stream_identifiers.get_error());
-        return (false);
-    }
-    index = 0;
-    while (index < identifier_count)
-    {
-        uint32_t identifier_value;
-        Pair<uint32_t, http2_stream_state> *stream_entry;
-
-        identifier_value = this->_stream_identifiers[index];
-        stream_entry = this->_streams.find(identifier_value);
-        if (stream_entry == ft_nullptr)
+        this->_initial_remote_window = new_window;
+        identifier_count = this->_stream_identifiers.size();
+        if (this->_stream_identifiers.get_error() != ER_SUCCESS)
         {
-            this->set_error(this->_streams.get_error());
-            return (false);
-        }
-        if (new_window >= previous_window)
-        {
-            uint32_t delta;
-            unsigned long long updated_window;
-
-            delta = new_window - previous_window;
-            updated_window = static_cast<unsigned long long>(stream_entry->value.remote_window)
-                + delta;
-            if (updated_window > 0x7FFFFFFFul)
-                stream_entry->value.remote_window = 0x7FFFFFFF;
-            else
-                stream_entry->value.remote_window = static_cast<uint32_t>(updated_window);
+            this->set_error(this->_stream_identifiers.get_error());
+            success_state = false;
         }
         else
         {
-            uint32_t delta;
+            index = 0;
+            while (index < identifier_count && success_state)
+            {
+                uint32_t identifier_value;
+                Pair<uint32_t, http2_stream_state> *stream_entry;
 
-            delta = previous_window - new_window;
-            if (stream_entry->value.remote_window > delta)
-                stream_entry->value.remote_window -= delta;
-            else
-                stream_entry->value.remote_window = 0;
+                identifier_value = this->_stream_identifiers[index];
+                stream_entry = this->_streams.find(identifier_value);
+                if (stream_entry == ft_nullptr)
+                {
+                    this->set_error(this->_streams.get_error());
+                    success_state = false;
+                }
+                else if (new_window >= previous_window)
+                {
+                    uint32_t delta;
+                    unsigned long long updated_window;
+
+                    delta = new_window - previous_window;
+                    updated_window = static_cast<unsigned long long>(stream_entry->value.remote_window)
+                        + delta;
+                    if (updated_window > 0x7FFFFFFFul)
+                        stream_entry->value.remote_window = 0x7FFFFFFF;
+                    else
+                        stream_entry->value.remote_window = static_cast<uint32_t>(updated_window);
+                }
+                else
+                {
+                    uint32_t delta;
+
+                    delta = previous_window - new_window;
+                    if (stream_entry->value.remote_window > delta)
+                        stream_entry->value.remote_window -= delta;
+                    else
+                        stream_entry->value.remote_window = 0;
+                }
+                index++;
+            }
         }
-        index++;
     }
-    this->set_error(ER_SUCCESS);
-    return (true);
+    if (success_state)
+        this->set_error(ER_SUCCESS);
+    this->unlock(lock_acquired);
+    return (success_state);
 }
 
 bool http2_stream_manager::update_local_initial_window(uint32_t new_window) noexcept
@@ -1425,88 +1646,132 @@ bool http2_stream_manager::update_local_initial_window(uint32_t new_window) noex
     uint32_t previous_window;
     size_t identifier_count;
     size_t index;
+    bool lock_acquired;
+    bool success_state;
 
+    lock_acquired = false;
+    success_state = true;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
+    previous_window = this->_initial_local_window;
     if (new_window > 0x7FFFFFFFu)
     {
         this->set_error(FT_ERR_OUT_OF_RANGE);
-        return (false);
+        success_state = false;
     }
-    previous_window = this->_initial_local_window;
-    this->_initial_local_window = new_window;
-    identifier_count = this->_stream_identifiers.size();
-    if (this->_stream_identifiers.get_error() != ER_SUCCESS)
+    if (success_state)
     {
-        this->set_error(this->_stream_identifiers.get_error());
-        return (false);
-    }
-    index = 0;
-    while (index < identifier_count)
-    {
-        uint32_t identifier_value;
-        Pair<uint32_t, http2_stream_state> *stream_entry;
-
-        identifier_value = this->_stream_identifiers[index];
-        stream_entry = this->_streams.find(identifier_value);
-        if (stream_entry == ft_nullptr)
+        this->_initial_local_window = new_window;
+        identifier_count = this->_stream_identifiers.size();
+        if (this->_stream_identifiers.get_error() != ER_SUCCESS)
         {
-            this->set_error(this->_streams.get_error());
-            return (false);
-        }
-        if (new_window >= previous_window)
-        {
-            uint32_t delta;
-            unsigned long long updated_window;
-
-            delta = new_window - previous_window;
-            updated_window = static_cast<unsigned long long>(stream_entry->value.local_window)
-                + delta;
-            if (updated_window > 0x7FFFFFFFul)
-                stream_entry->value.local_window = 0x7FFFFFFF;
-            else
-                stream_entry->value.local_window = static_cast<uint32_t>(updated_window);
+            this->set_error(this->_stream_identifiers.get_error());
+            success_state = false;
         }
         else
         {
-            uint32_t delta;
+            index = 0;
+            while (index < identifier_count && success_state)
+            {
+                uint32_t identifier_value;
+                Pair<uint32_t, http2_stream_state> *stream_entry;
 
-            delta = previous_window - new_window;
-            if (stream_entry->value.local_window > delta)
-                stream_entry->value.local_window -= delta;
-            else
-                stream_entry->value.local_window = 0;
+                identifier_value = this->_stream_identifiers[index];
+                stream_entry = this->_streams.find(identifier_value);
+                if (stream_entry == ft_nullptr)
+                {
+                    this->set_error(this->_streams.get_error());
+                    success_state = false;
+                }
+                else if (new_window >= previous_window)
+                {
+                    uint32_t delta;
+                    unsigned long long updated_window;
+
+                    delta = new_window - previous_window;
+                    updated_window = static_cast<unsigned long long>(stream_entry->value.local_window)
+                        + delta;
+                    if (updated_window > 0x7FFFFFFFul)
+                        stream_entry->value.local_window = 0x7FFFFFFF;
+                    else
+                        stream_entry->value.local_window = static_cast<uint32_t>(updated_window);
+                }
+                else
+                {
+                    uint32_t delta;
+
+                    delta = previous_window - new_window;
+                    if (stream_entry->value.local_window > delta)
+                        stream_entry->value.local_window -= delta;
+                    else
+                        stream_entry->value.local_window = 0;
+                }
+                index++;
+            }
         }
-        index++;
     }
-    this->set_error(ER_SUCCESS);
-    return (true);
+    if (success_state)
+        this->set_error(ER_SUCCESS);
+    this->unlock(lock_acquired);
+    return (success_state);
 }
 
 uint32_t http2_stream_manager::get_local_window(uint32_t stream_identifier) const noexcept
 {
     const Pair<uint32_t, http2_stream_state> *stream_entry;
+    bool lock_acquired;
+    bool success_state;
+    uint32_t window_value;
 
+    lock_acquired = false;
+    success_state = true;
+    window_value = 0;
+    if (this->lock(&lock_acquired) != 0)
+        return (0);
     stream_entry = this->_streams.find(stream_identifier);
     if (stream_entry == ft_nullptr)
     {
         this->set_error(FT_ERR_NOT_FOUND);
-        return (0);
+        success_state = false;
     }
-    this->set_error(ER_SUCCESS);
-    return (stream_entry->value.local_window);
+    if (success_state)
+    {
+        window_value = stream_entry->value.local_window;
+        this->set_error(ER_SUCCESS);
+    }
+    this->unlock(lock_acquired);
+    if (!success_state)
+        return (0);
+    return (window_value);
 }
 
 uint32_t http2_stream_manager::get_remote_window(uint32_t stream_identifier) const noexcept
 {
     const Pair<uint32_t, http2_stream_state> *stream_entry;
+    bool lock_acquired;
+    bool success_state;
+    uint32_t window_value;
 
+    lock_acquired = false;
+    success_state = true;
+    window_value = 0;
+    if (this->lock(&lock_acquired) != 0)
+        return (0);
     stream_entry = this->_streams.find(stream_identifier);
     if (stream_entry == ft_nullptr)
     {
         this->set_error(FT_ERR_NOT_FOUND);
-        return (0);
+        success_state = false;
     }
-    this->set_error(ER_SUCCESS);
-    return (stream_entry->value.remote_window);
+    if (success_state)
+    {
+        window_value = stream_entry->value.remote_window;
+        this->set_error(ER_SUCCESS);
+    }
+    this->unlock(lock_acquired);
+    if (!success_state)
+        return (0);
+    return (window_value);
 }
 
 bool http2_stream_manager::increase_local_window(uint32_t stream_identifier,
@@ -1514,28 +1779,45 @@ bool http2_stream_manager::increase_local_window(uint32_t stream_identifier,
 {
     Pair<uint32_t, http2_stream_state> *stream_entry;
     unsigned long long updated_window;
+    bool lock_acquired;
+    bool success_state;
 
+    lock_acquired = false;
+    success_state = true;
+    stream_entry = ft_nullptr;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
     if (increment > 0x7FFFFFFFu)
     {
         this->set_error(FT_ERR_OUT_OF_RANGE);
-        return (false);
+        success_state = false;
     }
-    stream_entry = this->_streams.find(stream_identifier);
-    if (stream_entry == ft_nullptr)
+    if (success_state)
     {
-        this->set_error(FT_ERR_NOT_FOUND);
-        return (false);
+        stream_entry = this->_streams.find(stream_identifier);
+        if (stream_entry == ft_nullptr)
+        {
+            this->set_error(FT_ERR_NOT_FOUND);
+            success_state = false;
+        }
     }
-    updated_window = static_cast<unsigned long long>(stream_entry->value.local_window)
-        + increment;
-    if (updated_window > 0x7FFFFFFFul)
+    if (success_state)
     {
-        this->set_error(FT_ERR_OUT_OF_RANGE);
-        return (false);
+        updated_window = static_cast<unsigned long long>(stream_entry->value.local_window)
+            + increment;
+        if (updated_window > 0x7FFFFFFFul)
+        {
+            this->set_error(FT_ERR_OUT_OF_RANGE);
+            success_state = false;
+        }
+        else
+        {
+            stream_entry->value.local_window = static_cast<uint32_t>(updated_window);
+            this->set_error(ER_SUCCESS);
+        }
     }
-    stream_entry->value.local_window = static_cast<uint32_t>(updated_window);
-    this->set_error(ER_SUCCESS);
-    return (true);
+    this->unlock(lock_acquired);
+    return (success_state);
 }
 
 bool http2_stream_manager::increase_remote_window(uint32_t stream_identifier,
@@ -1543,117 +1825,210 @@ bool http2_stream_manager::increase_remote_window(uint32_t stream_identifier,
 {
     Pair<uint32_t, http2_stream_state> *stream_entry;
     unsigned long long updated_window;
+    bool lock_acquired;
+    bool success_state;
 
+    lock_acquired = false;
+    success_state = true;
+    stream_entry = ft_nullptr;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
     if (increment > 0x7FFFFFFFu)
     {
         this->set_error(FT_ERR_OUT_OF_RANGE);
-        return (false);
+        success_state = false;
     }
-    stream_entry = this->_streams.find(stream_identifier);
-    if (stream_entry == ft_nullptr)
+    if (success_state)
     {
-        this->set_error(FT_ERR_NOT_FOUND);
-        return (false);
+        stream_entry = this->_streams.find(stream_identifier);
+        if (stream_entry == ft_nullptr)
+        {
+            this->set_error(FT_ERR_NOT_FOUND);
+            success_state = false;
+        }
     }
-    updated_window = static_cast<unsigned long long>(stream_entry->value.remote_window)
-        + increment;
-    if (updated_window > 0x7FFFFFFFul)
+    if (success_state)
     {
-        this->set_error(FT_ERR_OUT_OF_RANGE);
-        return (false);
+        updated_window = static_cast<unsigned long long>(stream_entry->value.remote_window)
+            + increment;
+        if (updated_window > 0x7FFFFFFFul)
+        {
+            this->set_error(FT_ERR_OUT_OF_RANGE);
+            success_state = false;
+        }
+        else
+        {
+            stream_entry->value.remote_window = static_cast<uint32_t>(updated_window);
+            this->set_error(ER_SUCCESS);
+        }
     }
-    stream_entry->value.remote_window = static_cast<uint32_t>(updated_window);
-    this->set_error(ER_SUCCESS);
-    return (true);
+    this->unlock(lock_acquired);
+    return (success_state);
 }
 
 bool http2_stream_manager::reserve_send_window(uint32_t stream_identifier,
     uint32_t length) noexcept
 {
     Pair<uint32_t, http2_stream_state> *stream_entry;
+    bool lock_acquired;
+    bool success_state;
 
+    lock_acquired = false;
+    success_state = true;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
     stream_entry = this->_streams.find(stream_identifier);
     if (stream_entry == ft_nullptr)
     {
         this->set_error(FT_ERR_NOT_FOUND);
-        return (false);
+        success_state = false;
     }
-    if (!this->reserve_remote_connection_window(length))
-        return (false);
-    if (stream_entry->value.remote_window < length)
+    if (success_state)
+    {
+        if (!this->reserve_remote_connection_window(length))
+            success_state = false;
+    }
+    if (success_state && stream_entry->value.remote_window < length)
     {
         this->set_error(FT_ERR_OUT_OF_RANGE);
-        return (false);
+        success_state = false;
     }
-    stream_entry->value.remote_window -= length;
-    if (!this->record_connection_send(length))
-        return (false);
-    this->set_error(ER_SUCCESS);
-    return (true);
+    if (success_state)
+    {
+        stream_entry->value.remote_window -= length;
+        if (!this->record_connection_send(length))
+            success_state = false;
+    }
+    if (success_state)
+        this->set_error(ER_SUCCESS);
+    this->unlock(lock_acquired);
+    return (success_state);
 }
 
 bool http2_stream_manager::update_connection_local_window(uint32_t increment) noexcept
 {
     unsigned long long updated_window;
+    bool lock_acquired;
+    bool success_state;
 
+    lock_acquired = false;
+    success_state = true;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
     if (increment > 0x7FFFFFFFu)
     {
         this->set_error(FT_ERR_OUT_OF_RANGE);
-        return (false);
+        success_state = false;
     }
-    updated_window = static_cast<unsigned long long>(this->_connection_local_window)
-        + increment;
-    if (updated_window > 0x7FFFFFFFul)
+    if (success_state)
     {
-        this->set_error(FT_ERR_OUT_OF_RANGE);
-        return (false);
+        updated_window = static_cast<unsigned long long>(this->_connection_local_window)
+            + increment;
+        if (updated_window > 0x7FFFFFFFul)
+        {
+            this->set_error(FT_ERR_OUT_OF_RANGE);
+            success_state = false;
+        }
+        else
+        {
+            this->_connection_local_window = static_cast<uint32_t>(updated_window);
+            this->set_error(ER_SUCCESS);
+        }
     }
-    this->_connection_local_window = static_cast<uint32_t>(updated_window);
-    this->set_error(ER_SUCCESS);
-    return (true);
+    this->unlock(lock_acquired);
+    return (success_state);
 }
 
 bool http2_stream_manager::update_connection_remote_window(uint32_t increment) noexcept
 {
     unsigned long long updated_window;
+    bool lock_acquired;
+    bool success_state;
 
+    lock_acquired = false;
+    success_state = true;
+    if (this->lock(&lock_acquired) != 0)
+        return (false);
     if (increment > 0x7FFFFFFFu)
     {
         this->set_error(FT_ERR_OUT_OF_RANGE);
-        return (false);
+        success_state = false;
     }
-    updated_window = static_cast<unsigned long long>(this->_connection_remote_window)
-        + increment;
-    if (updated_window > 0x7FFFFFFFul)
+    if (success_state)
     {
-        this->set_error(FT_ERR_OUT_OF_RANGE);
-        return (false);
+        updated_window = static_cast<unsigned long long>(this->_connection_remote_window)
+            + increment;
+        if (updated_window > 0x7FFFFFFFul)
+        {
+            this->set_error(FT_ERR_OUT_OF_RANGE);
+            success_state = false;
+        }
+        else
+        {
+            this->_connection_remote_window = static_cast<uint32_t>(updated_window);
+            this->set_error(ER_SUCCESS);
+        }
     }
-    this->_connection_remote_window = static_cast<uint32_t>(updated_window);
-    this->set_error(ER_SUCCESS);
-    return (true);
+    this->unlock(lock_acquired);
+    return (success_state);
 }
 
 uint32_t http2_stream_manager::get_connection_local_window() const noexcept
 {
+    bool lock_acquired;
+    uint32_t window_value;
+
+    lock_acquired = false;
+    window_value = 0;
+    if (this->lock(&lock_acquired) != 0)
+        return (0);
+    window_value = this->_connection_local_window;
     this->set_error(ER_SUCCESS);
-    return (this->_connection_local_window);
+    this->unlock(lock_acquired);
+    return (window_value);
 }
 
 uint32_t http2_stream_manager::get_connection_remote_window() const noexcept
 {
+    bool lock_acquired;
+    uint32_t window_value;
+
+    lock_acquired = false;
+    window_value = 0;
+    if (this->lock(&lock_acquired) != 0)
+        return (0);
+    window_value = this->_connection_remote_window;
     this->set_error(ER_SUCCESS);
-    return (this->_connection_remote_window);
+    this->unlock(lock_acquired);
+    return (window_value);
 }
 
 int http2_stream_manager::get_error() const noexcept
 {
-    return (this->_error_code);
+    bool lock_acquired;
+    int error_value;
+
+    lock_acquired = false;
+    error_value = this->_error_code;
+    if (this->lock(&lock_acquired) != 0)
+        return (error_value);
+    error_value = this->_error_code;
+    this->unlock(lock_acquired);
+    return (error_value);
 }
 
 const char *http2_stream_manager::get_error_str() const noexcept
 {
-    return (ft_strerror(this->_error_code));
+    bool lock_acquired;
+    int error_value;
+
+    lock_acquired = false;
+    error_value = this->_error_code;
+    if (this->lock(&lock_acquired) != 0)
+        return (ft_strerror(error_value));
+    error_value = this->_error_code;
+    this->unlock(lock_acquired);
+    return (ft_strerror(error_value));
 }
 
 void http2_settings_state::set_error(int error_code) const noexcept

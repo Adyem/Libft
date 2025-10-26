@@ -8,6 +8,7 @@
 
 #include "vector.hpp"
 #include "queue.hpp"
+#include "cancellation.hpp"
 #include "../PThread/thread.hpp"
 #include "function.hpp"
 #include <cstddef>
@@ -15,6 +16,7 @@
 #include <pthread.h>
 #include "../PThread/pthread.hpp"
 #include <utility>
+#include <type_traits>
 #include <atomic>
 #include "move.hpp"
 class ft_thread_pool
@@ -45,6 +47,9 @@ class ft_thread_pool
 
         template <typename Function>
         void submit(Function &&function);
+
+        template <typename Function>
+        void submit(Function &&function, const ft_cancellation_token &token);
 
         void wait();
         void destroy();
@@ -219,6 +224,35 @@ inline void ft_thread_pool::submit(Function &&function)
     this->set_error(ER_SUCCESS);
     pthread_mutex_unlock(&this->_mutex);
     pt_cond_signal(&this->_cond);
+}
+
+template <typename Function>
+inline void ft_thread_pool::submit(Function &&function, const ft_cancellation_token &token)
+{
+    using function_type = typename std::decay<Function>::type;
+    function_type task_function(std::forward<Function>(function));
+    ft_cancellation_token token_copy(token);
+
+    this->submit(ft_function<void()>([task_function = ft_move(task_function), token_copy]() mutable
+    {
+        if (token_copy.is_cancellation_requested())
+            return ;
+        if constexpr (std::is_invocable_v<function_type&, const ft_cancellation_token&>)
+        {
+            task_function(token_copy);
+            return ;
+        }
+        else if constexpr (std::is_invocable_v<function_type&>)
+        {
+            task_function();
+            return ;
+        }
+        else
+        {
+            static_assert(std::is_invocable_v<function_type&, const ft_cancellation_token&> || std::is_invocable_v<function_type&>,
+                "ft_thread_pool::submit requires a callable that accepts ft_cancellation_token or no arguments");
+        }
+    }));
 }
 
 inline void ft_thread_pool::wait()
