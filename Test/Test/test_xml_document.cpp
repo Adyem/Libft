@@ -224,6 +224,23 @@ FT_TEST(test_xml_document_load_from_string_handles_gt_in_attribute, "xml_documen
     FT_ASSERT(root_node != ft_nullptr);
     FT_ASSERT(root_node->text != ft_nullptr);
     FT_ASSERT_EQ(0, std::strcmp(root_node->text, "payload"));
+    ft_unordered_map<char*, char*>::iterator attribute_iterator = root_node->attributes.begin();
+    ft_unordered_map<char*, char*>::iterator attribute_end = root_node->attributes.end();
+    bool attribute_found;
+    attribute_found = false;
+    while (attribute_iterator != attribute_end)
+    {
+        if (attribute_iterator->first
+            && std::strcmp(attribute_iterator->first, "attr") == 0)
+        {
+            attribute_found = true;
+            FT_ASSERT(attribute_iterator->second != ft_nullptr);
+            FT_ASSERT_EQ(0, std::strcmp(attribute_iterator->second, "a>b"));
+            break ;
+        }
+        ++attribute_iterator;
+    }
+    FT_ASSERT(attribute_found);
     written_string = document.write_to_string();
     FT_ASSERT(written_string != ft_nullptr);
     FT_ASSERT_EQ(0, std::strcmp(written_string, "<root>payload</root>\n"));

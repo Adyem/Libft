@@ -476,6 +476,21 @@ yaml_value *yaml_read_from_file(const char *file_path) noexcept
     return (result);
 }
 
+yaml_value *yaml_read_from_backend(ft_document_source &source) noexcept
+{
+    ft_string content;
+    int read_result;
+
+    read_result = source.read_all(content);
+    if (read_result != ER_SUCCESS)
+    {
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = read_result;
+        return (ft_nullptr);
+    }
+    return (yaml_read_from_string(content));
+}
+
 void yaml_free(yaml_value *value) noexcept
 {
     delete value;

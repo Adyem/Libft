@@ -6,6 +6,8 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/thread.hpp"
+#include "../PThread/mutex.hpp"
+#include <atomic>
 #include <openssl/ssl.h>
 #include <cstdint>
 #include "../Template/vector.hpp"
@@ -37,7 +39,9 @@ class api_tls_client
         int _sock;
         ft_string _host;
         int _timeout;
-        mutable int _error_code;
+        mutable std::atomic<int> _error_code;
+        mutable pt_mutex _mutex;
+        bool _is_shutting_down;
         ft_vector<ft_thread> _async_workers;
         api_tls_handshake_diagnostics _handshake_diagnostics;
 

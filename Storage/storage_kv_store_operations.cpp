@@ -6,9 +6,67 @@
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
-#include <vector>
+
+#include "../Libft/libft.hpp"
 
 const char *g_kv_store_ttl_prefix = "__ttl__";
+
+int kv_store_init_set_operation(kv_store_operation &operation, const char *key_string, const char *value_string, long long ttl_seconds)
+{
+    if (key_string == ft_nullptr || value_string == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (-1);
+    }
+    operation._type = KV_STORE_OPERATION_TYPE_SET;
+    operation._key = key_string;
+    if (operation._key.get_error() != ER_SUCCESS)
+    {
+        ft_errno = operation._key.get_error();
+        return (-1);
+    }
+    operation._value = value_string;
+    if (operation._value.get_error() != ER_SUCCESS)
+    {
+        ft_errno = operation._value.get_error();
+        return (-1);
+    }
+    operation._has_value = true;
+    if (ttl_seconds >= 0)
+    {
+        operation._has_ttl = true;
+        operation._ttl_seconds = ttl_seconds;
+    }
+    else
+    {
+        operation._has_ttl = false;
+        operation._ttl_seconds = -1;
+    }
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+int kv_store_init_delete_operation(kv_store_operation &operation, const char *key_string)
+{
+    if (key_string == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (-1);
+    }
+    operation._type = KV_STORE_OPERATION_TYPE_DELETE;
+    operation._key = key_string;
+    if (operation._key.get_error() != ER_SUCCESS)
+    {
+        ft_errno = operation._key.get_error();
+        return (-1);
+    }
+    operation._value.clear();
+    operation._has_value = false;
+    operation._has_ttl = false;
+    operation._ttl_seconds = -1;
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
 
 void kv_store::set_error(int error_code) const
 {
@@ -74,7 +132,7 @@ int kv_store::prune_expired()
 {
     size_t map_size;
     long long current_time;
-    std::vector<ft_string> keys_to_remove;
+    size_t map_index;
 
     map_size = this->_data.size();
     if (this->_data.get_error() != ER_SUCCESS)
@@ -90,45 +148,38 @@ int kv_store::prune_expired()
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    Pair<ft_string, kv_store_entry> *map_end;
-    Pair<ft_string, kv_store_entry> *map_begin;
-    size_t map_index;
-
-    map_end = this->_data.end();
-    if (this->_data.get_error() != ER_SUCCESS)
-    {
-        this->set_error(this->_data.get_error());
-        return (-1);
-    }
-    map_begin = map_end - static_cast<std::ptrdiff_t>(map_size);
     map_index = 0;
     while (map_index < map_size)
     {
-        Pair<ft_string, kv_store_entry> &entry = map_begin[map_index];
+        Pair<ft_string, kv_store_entry> *map_end;
+        Pair<ft_string, kv_store_entry> *map_begin;
+        Pair<ft_string, kv_store_entry> *entry_pointer;
 
-        if (entry.value._has_expiration && entry.value._expiration_timestamp <= current_time)
-        {
-            keys_to_remove.push_back(entry.key);
-            if (keys_to_remove.back().get_error() != ER_SUCCESS)
-            {
-                this->set_error(keys_to_remove.back().get_error());
-                return (-1);
-            }
-        }
-        map_index++;
-    }
-    size_t removal_index;
-
-    removal_index = 0;
-    while (removal_index < keys_to_remove.size())
-    {
-        this->_data.remove(keys_to_remove[removal_index]);
+        map_end = this->_data.end();
         if (this->_data.get_error() != ER_SUCCESS)
         {
             this->set_error(this->_data.get_error());
             return (-1);
         }
-        removal_index++;
+        map_begin = map_end - static_cast<std::ptrdiff_t>(map_size);
+        entry_pointer = map_begin + map_index;
+        if (entry_pointer->value._has_expiration && entry_pointer->value._expiration_timestamp <= current_time)
+        {
+            this->_data.remove(entry_pointer->key);
+            if (this->_data.get_error() != ER_SUCCESS)
+            {
+                this->set_error(this->_data.get_error());
+                return (-1);
+            }
+            map_size = this->_data.size();
+            if (this->_data.get_error() != ER_SUCCESS)
+            {
+                this->set_error(this->_data.get_error());
+                return (-1);
+            }
+            continue;
+        }
+        map_index++;
     }
     return (0);
 }
@@ -422,6 +473,319 @@ int kv_store::kv_flush() const
         else
             this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
+    }
+    this->set_error(ER_SUCCESS);
+    return (0);
+}
+
+int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
+{
+    size_t operation_count;
+    size_t operation_index;
+
+    if (operations.get_error() != ER_SUCCESS)
+    {
+        this->set_error(operations.get_error());
+        return (-1);
+    }
+    if (this->prune_expired() != 0)
+        return (-1);
+    ft_map<ft_string, kv_store_entry> staged_map(this->_data);
+    if (staged_map.get_error() != ER_SUCCESS)
+    {
+        this->set_error(staged_map.get_error());
+        return (-1);
+    }
+    operation_count = operations.size();
+    operation_index = 0;
+    while (operation_index < operation_count)
+    {
+        const kv_store_operation &operation = operations[operation_index];
+
+        if (operation._key.c_str() == ft_nullptr || operation._key.size() == 0)
+        {
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
+            return (-1);
+        }
+        if (operation._type == KV_STORE_OPERATION_TYPE_DELETE)
+        {
+            Pair<ft_string, kv_store_entry> *existing_pair;
+
+            existing_pair = staged_map.find(operation._key);
+            if (staged_map.get_error() != ER_SUCCESS)
+            {
+                this->set_error(staged_map.get_error());
+                return (-1);
+            }
+            if (existing_pair == ft_nullptr)
+            {
+                this->set_error(FT_ERR_NOT_FOUND);
+                return (-1);
+            }
+            staged_map.remove(operation._key);
+            if (staged_map.get_error() != ER_SUCCESS)
+            {
+                this->set_error(staged_map.get_error());
+                return (-1);
+            }
+        }
+        else
+        {
+            Pair<ft_string, kv_store_entry> *existing_pair;
+            kv_store_entry new_entry;
+            bool has_expiration;
+            long long expiration_timestamp;
+
+            if (operation._has_value == false)
+            {
+                this->set_error(FT_ERR_INVALID_ARGUMENT);
+                return (-1);
+            }
+            new_entry._value = operation._value;
+            if (new_entry._value.get_error() != ER_SUCCESS)
+            {
+                this->set_error(new_entry._value.get_error());
+                return (-1);
+            }
+            existing_pair = staged_map.find(operation._key);
+            if (staged_map.get_error() != ER_SUCCESS)
+            {
+                this->set_error(staged_map.get_error());
+                return (-1);
+            }
+            has_expiration = false;
+            expiration_timestamp = 0;
+            if (operation._has_ttl)
+            {
+                if (this->compute_expiration(operation._ttl_seconds, has_expiration, expiration_timestamp) != 0)
+                    return (-1);
+                if (has_expiration)
+                {
+                    long long current_time;
+
+                    current_time = this->current_time_seconds();
+                    if (current_time < 0)
+                    {
+                        this->set_error(FT_ERR_INVALID_ARGUMENT);
+                        return (-1);
+                    }
+                    if (expiration_timestamp <= current_time)
+                    {
+                        staged_map.remove(operation._key);
+                        if (staged_map.get_error() != ER_SUCCESS)
+                        {
+                            this->set_error(staged_map.get_error());
+                            return (-1);
+                        }
+                        operation_index++;
+                        continue ;
+                    }
+                }
+            }
+            else if (existing_pair != ft_nullptr)
+            {
+                has_expiration = existing_pair->value._has_expiration;
+                expiration_timestamp = existing_pair->value._expiration_timestamp;
+            }
+            if (has_expiration)
+            {
+                long long current_time;
+
+                current_time = this->current_time_seconds();
+                if (current_time < 0)
+                {
+                    this->set_error(FT_ERR_INVALID_ARGUMENT);
+                    return (-1);
+                }
+                if (expiration_timestamp <= current_time)
+                {
+                    staged_map.remove(operation._key);
+                    if (staged_map.get_error() != ER_SUCCESS)
+                    {
+                        this->set_error(staged_map.get_error());
+                        return (-1);
+                    }
+                    operation_index++;
+                    continue ;
+                }
+            }
+            new_entry._has_expiration = has_expiration;
+            if (has_expiration)
+                new_entry._expiration_timestamp = expiration_timestamp;
+            else
+                new_entry._expiration_timestamp = 0;
+            if (existing_pair != ft_nullptr)
+            {
+                existing_pair->value = new_entry;
+                if (existing_pair->value._value.get_error() != ER_SUCCESS)
+                {
+                    this->set_error(existing_pair->value._value.get_error());
+                    return (-1);
+                }
+            }
+            else
+            {
+                staged_map.insert(operation._key, new_entry);
+                if (staged_map.get_error() != ER_SUCCESS)
+                {
+                    this->set_error(staged_map.get_error());
+                    return (-1);
+                }
+            }
+        }
+        operation_index++;
+    }
+    this->_data = ft_move(staged_map);
+    if (this->_data.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_data.get_error());
+        return (-1);
+    }
+    this->set_error(ER_SUCCESS);
+    return (0);
+}
+
+int kv_store::kv_compare_and_swap(const char *key_string, const char *expected_value, const char *new_value, long long ttl_seconds)
+{
+    ft_string key_storage;
+    Pair<ft_string, kv_store_entry> *existing_pair;
+    bool has_expiration;
+    long long expiration_timestamp;
+
+    if (key_string == ft_nullptr)
+    {
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return (-1);
+    }
+    if (expected_value == ft_nullptr && new_value == ft_nullptr)
+    {
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return (-1);
+    }
+    if (this->prune_expired() != 0)
+        return (-1);
+    key_storage = key_string;
+    if (key_storage.get_error() != ER_SUCCESS)
+    {
+        this->set_error(key_storage.get_error());
+        return (-1);
+    }
+    existing_pair = this->_data.find(key_storage);
+    if (this->_data.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_data.get_error());
+        return (-1);
+    }
+    if (expected_value == ft_nullptr)
+    {
+        if (existing_pair != ft_nullptr)
+        {
+            this->set_error(FT_ERR_ALREADY_EXISTS);
+            return (-1);
+        }
+    }
+    else
+    {
+        if (existing_pair == ft_nullptr)
+        {
+            this->set_error(FT_ERR_NOT_FOUND);
+            return (-1);
+        }
+        if (ft_strcmp(existing_pair->value._value.c_str(), expected_value) != 0)
+        {
+            this->set_error(FT_ERR_INVALID_OPERATION);
+            return (-1);
+        }
+    }
+    if (new_value == ft_nullptr)
+    {
+        if (existing_pair != ft_nullptr)
+        {
+            this->_data.remove(key_storage);
+            if (this->_data.get_error() != ER_SUCCESS)
+            {
+                this->set_error(this->_data.get_error());
+                return (-1);
+            }
+        }
+        this->set_error(ER_SUCCESS);
+        return (0);
+    }
+    if (ttl_seconds >= 0)
+    {
+        if (this->compute_expiration(ttl_seconds, has_expiration, expiration_timestamp) != 0)
+            return (-1);
+    }
+    else if (existing_pair != ft_nullptr)
+    {
+        has_expiration = existing_pair->value._has_expiration;
+        expiration_timestamp = existing_pair->value._expiration_timestamp;
+    }
+    else
+    {
+        has_expiration = false;
+        expiration_timestamp = 0;
+    }
+    if (has_expiration)
+    {
+        long long current_time;
+
+        current_time = this->current_time_seconds();
+        if (current_time < 0)
+        {
+            this->set_error(FT_ERR_INVALID_ARGUMENT);
+            return (-1);
+        }
+        if (expiration_timestamp <= current_time)
+        {
+            if (existing_pair != ft_nullptr)
+            {
+                this->_data.remove(key_storage);
+                if (this->_data.get_error() != ER_SUCCESS)
+                {
+                    this->set_error(this->_data.get_error());
+                    return (-1);
+                }
+            }
+            this->set_error(ER_SUCCESS);
+            return (0);
+        }
+    }
+    if (existing_pair != ft_nullptr)
+    {
+        existing_pair->value._value = new_value;
+        if (existing_pair->value._value.get_error() != ER_SUCCESS)
+        {
+            this->set_error(existing_pair->value._value.get_error());
+            return (-1);
+        }
+        existing_pair->value._has_expiration = has_expiration;
+        if (has_expiration)
+            existing_pair->value._expiration_timestamp = expiration_timestamp;
+        else
+            existing_pair->value._expiration_timestamp = 0;
+    }
+    else
+    {
+        kv_store_entry new_entry;
+
+        new_entry._value = new_value;
+        if (new_entry._value.get_error() != ER_SUCCESS)
+        {
+            this->set_error(new_entry._value.get_error());
+            return (-1);
+        }
+        new_entry._has_expiration = has_expiration;
+        if (has_expiration)
+            new_entry._expiration_timestamp = expiration_timestamp;
+        else
+            new_entry._expiration_timestamp = 0;
+        this->_data.insert(key_storage, new_entry);
+        if (this->_data.get_error() != ER_SUCCESS)
+        {
+            this->set_error(this->_data.get_error());
+            return (-1);
+        }
     }
     this->set_error(ER_SUCCESS);
     return (0);

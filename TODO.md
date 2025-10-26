@@ -1,5 +1,7 @@
 # TODO
 
+Remaining unchecked items: 94
+
 ## Library-wide priorities
 - [x] Publish a canonical error-code registry that documents each value exposed through `Errno/errno.hpp` and clarifies which modules set them, so cross-module error handling stays consistent.
 - [x] Re-audit the error code catalog to collapse redundant class-specific values into shared generic codes where possible so callers can rely on a simpler set of outcomes when handling failures.
@@ -125,7 +127,7 @@
 - [x] Make `api_string_promise` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `api_tls_promise` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `api_tls_string_promise` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `api_tls_client` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `api_tls_client` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `api_connection_pool_handle` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `api_streaming_handler` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `api_retry_policy` thread safe (relies on the shared deadlock resolution routine described below).
@@ -139,7 +141,7 @@
 - [ ] Add lock contention diagnostics (sampling, priority inversion detection) exposed through the Logger module.
 - [ ] Make `pt_mutex` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `pt_condition_variable` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_unique_lock` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_unique_lock` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_thread` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_blocking_queue` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_scheduled_task_state` thread safe (relies on the shared deadlock resolution routine described below).
@@ -153,7 +155,7 @@
 - [x] Add iterator invalidation rules and complexity annotations to headers so users know when operations are safe in real-time systems.
 - [x] Provide small-buffer optimizations or node pooling options for frequently-used containers (`vector`, `map`, `trie`).
 - [x] Expand constexpr support where possible so templates can be used in compile-time contexts.
-- [ ] Write exhaustive tests for allocator-aware paths, ensuring `_error_code` mirrors allocation failures.
+- [x] Write exhaustive tests for allocator-aware paths, ensuring `_error_code` mirrors allocation failures.
 - [ ] Introduce serialization helpers that interoperate with JSON/YAML encoders for easy persistence of container contents.
 - [ ] Add concept-constrained overloads in C++20 builds to improve diagnostic quality when templates are misused.
 - [x] Make `ft_stack` thread safe (relies on the shared deadlock resolution routine described below).
@@ -174,7 +176,7 @@
 - [ ] Make `ft_tuple` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_trie` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `Iterator` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_queue` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_queue` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_deque` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_uniqueptr` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_circular_buffer` thread safe (relies on the shared deadlock resolution routine described below).
@@ -211,8 +213,8 @@
 - [ ] Make `ft_nullptr` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Storage
-- [ ] Optimize TTL pruning in `kv_store` to avoid copying keys into a `std::vector` during every sweep.
-- [ ] Introduce transactional batch operations (multi-set, compare-and-swap) so clients can update related keys atomically.
+- [x] Optimize TTL pruning in `kv_store` to avoid copying keys into a `std::vector` during every sweep.
+- [x] Introduce transactional batch operations (multi-set, compare-and-swap) so clients can update related keys atomically.
 - [ ] Add persistence backends (JSON lines, SQLite, memory-mapped files) selectable at runtime.
 - [ ] Create background compaction or vacuum routines that reclaim expired data without blocking callers.
 - [ ] Implement snapshot/export tooling for backups and debugging.
@@ -317,9 +319,11 @@
 - [ ] Share a common DOM and schema validation layer so parsers can reuse traversal logic across formats.
 - [x] Add streaming encoders/decoders that operate on callbacks to avoid holding entire documents in memory.
 - [x] Integrate schema evolution helpers (migrations, versioning) for configuration management.
-- [ ] Expand XPath/CSS selector support in HTML and ensure namespace-aware parsing in XML.
+- [x] Expand XPath/CSS selector support in HTML and ensure namespace-aware parsing in XML.
+- [x] Normalize XML serialization so legacy writers drop attribute markup when emitting stored documents.
+- [x] Ensure XML serialization preserves namespace prefixes while omitting declaration attributes in output.
 - [x] Provide tooling that round-trips documents and highlights diffs to simplify regression testing.
-- [ ] Offer pluggable storage backends (file, HTTP, memory) for parsers to read from and serializers to write to.
+- [x] Offer pluggable storage backends (file, HTTP, memory) for parsers to read from and serializers to write to.
 - [x] Publish style guides for canonical formatting so diffs remain readable across teams. (See `Docs/json_yaml_xml_style_guide.md`.)
 - [x] Make `html_document` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `xml_document` thread safe (relies on the shared deadlock resolution routine described below).
@@ -337,7 +341,7 @@
 - [ ] Introduce scripting bridges (Lua, Python) with sandboxing controls for user-generated content.
 - [x] Add telemetry hooks that emit gameplay metrics for balancing and analytics.
 - [x] Make `ft_game_state` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_character` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_character` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_item` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_inventory` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_equipment` thread safe (relies on the shared deadlock resolution routine described below).

@@ -4,6 +4,7 @@
 #include "json_schema.hpp"
 #include "json_stream_reader.hpp"
 #include "json_stream_writer.hpp"
+#include "../Parser/document_backend.hpp"
 
 class ft_big_number;
 
@@ -34,13 +35,17 @@ json_item    *json_create_item(const char *key, const bool value);
 void         json_item_refresh_numeric_state(json_item *item);
 void         json_append_group(json_group **head, json_group *new_group);
 int         json_write_to_file(const char *filename, json_group *groups);
+int         json_write_to_backend(ft_document_sink &sink, json_group *groups);
 char        *json_write_to_string(json_group *groups);
 int         json_document_write_to_file(const char *file_path, const json_document &document);
+int         json_document_write_to_backend(ft_document_sink &sink, const json_document &document);
 char        *json_document_write_to_string(const json_document &document);
 json_group  *json_read_from_file(const char *filename);
+json_group  *json_read_from_backend(ft_document_source &source);
 json_group  *json_read_from_string(const char *content);
 json_group  *json_read_from_file_stream(FILE *file, size_t buffer_capacity);
 json_group  *json_read_from_stream(json_stream_read_callback callback, void *user_data, size_t buffer_capacity);
+int         json_document_read_from_backend(json_document &document, ft_document_source &source);
 void         json_free_items(json_item *item);
 void         json_free_groups(json_group *group);
 json_group  *json_find_group(json_group *head, const char *name);

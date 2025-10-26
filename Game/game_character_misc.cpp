@@ -1,48 +1,171 @@
 #include "game_character.hpp"
 #include "../Errno/errno.hpp"
 
+static void game_character_restore_errno(ft_unique_lock<pt_mutex> &guard,
+    int entry_errno)
+{
+    if (guard.owns_lock())
+        guard.unlock();
+    ft_errno = entry_errno;
+    return ;
+}
+
 void ft_character::restore_physical_armor() noexcept
 {
-    this->_current_physical_armor = this->_physical_armor;
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(guard.get_error());
+        game_character_restore_errno(guard, entry_errno);
+        return ;
+    }
+    this->restore_physical_armor_internal();
     this->set_error(ER_SUCCESS);
+    game_character_restore_errno(guard, entry_errno);
     return ;
 }
 
 void ft_character::restore_magic_armor() noexcept
 {
-    this->_current_magic_armor = this->_magic_armor;
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(guard.get_error());
+        game_character_restore_errno(guard, entry_errno);
+        return ;
+    }
+    this->restore_magic_armor_internal();
     this->set_error(ER_SUCCESS);
+    game_character_restore_errno(guard, entry_errno);
     return ;
 }
 
 void ft_character::restore_armor() noexcept
 {
-    this->restore_physical_armor();
-    this->restore_magic_armor();
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(guard.get_error());
+        game_character_restore_errno(guard, entry_errno);
+        return ;
+    }
+    this->restore_physical_armor_internal();
+    this->restore_magic_armor_internal();
     this->set_error(ER_SUCCESS);
+    game_character_restore_errno(guard, entry_errno);
     return ;
 }
+
 void ft_character::take_damage(long long damage, uint8_t type) noexcept
 {
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(guard.get_error());
+        game_character_restore_errno(guard, entry_errno);
+        return ;
+    }
     if (this->_damage_rule == FT_DAMAGE_RULE_FLAT)
-        this->take_damage_flat(damage, type);
+        this->take_damage_flat_internal(damage, type);
     else if (this->_damage_rule == FT_DAMAGE_RULE_SCALED)
-        this->take_damage_scaled(damage, type);
+        this->take_damage_scaled_internal(damage, type);
     else if (this->_damage_rule == FT_DAMAGE_RULE_BUFFER)
-        this->take_damage_buffer(damage, type);
+        this->take_damage_buffer_internal(damage, type);
     else if (this->_damage_rule == FT_DAMAGE_RULE_MAGIC_SHIELD)
-        this->take_damage_magic_shield(damage, type);
-    this->set_error(ER_SUCCESS);
+        this->take_damage_magic_shield_internal(damage, type);
+    else
+        this->take_damage_flat_internal(damage, type);
+    game_character_restore_errno(guard, entry_errno);
     return ;
 }
 
 void ft_character::take_damage_flat(long long damage, uint8_t type) noexcept
 {
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(guard.get_error());
+        game_character_restore_errno(guard, entry_errno);
+        return ;
+    }
+    this->take_damage_flat_internal(damage, type);
+    game_character_restore_errno(guard, entry_errno);
+    return ;
+}
+
+void ft_character::take_damage_scaled(long long damage, uint8_t type) noexcept
+{
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(guard.get_error());
+        game_character_restore_errno(guard, entry_errno);
+        return ;
+    }
+    this->take_damage_scaled_internal(damage, type);
+    game_character_restore_errno(guard, entry_errno);
+    return ;
+}
+
+void ft_character::take_damage_buffer(long long damage, uint8_t type) noexcept
+{
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(guard.get_error());
+        game_character_restore_errno(guard, entry_errno);
+        return ;
+    }
+    this->take_damage_buffer_internal(damage, type);
+    game_character_restore_errno(guard, entry_errno);
+    return ;
+}
+
+void ft_character::take_damage_magic_shield(long long damage, uint8_t type) noexcept
+{
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(guard.get_error());
+        game_character_restore_errno(guard, entry_errno);
+        return ;
+    }
+    this->take_damage_magic_shield_internal(damage, type);
+    game_character_restore_errno(guard, entry_errno);
+    return ;
+}
+
+void ft_character::take_damage_flat_internal(long long damage, uint8_t type) noexcept
+{
     int previous_hit_points;
     long long damage_applied;
 
     previous_hit_points = this->_hit_points;
-    damage = this->apply_skill_modifiers(damage);
+    damage = this->apply_skill_modifiers_internal(damage);
     if (damage < 0)
         damage = 0;
     if (type == FT_DAMAGE_PHYSICAL)
@@ -63,13 +186,13 @@ void ft_character::take_damage_flat(long long damage, uint8_t type) noexcept
     return ;
 }
 
-void ft_character::take_damage_scaled(long long damage, uint8_t type) noexcept
+void ft_character::take_damage_scaled_internal(long long damage, uint8_t type) noexcept
 {
     int previous_hit_points;
     long long damage_applied;
 
     previous_hit_points = this->_hit_points;
-    damage = this->apply_skill_modifiers(damage);
+    damage = this->apply_skill_modifiers_internal(damage);
     if (damage < 0)
         damage = 0;
     if (type == FT_DAMAGE_PHYSICAL)
@@ -96,13 +219,13 @@ void ft_character::take_damage_scaled(long long damage, uint8_t type) noexcept
     return ;
 }
 
-void ft_character::take_damage_buffer(long long damage, uint8_t type) noexcept
+void ft_character::take_damage_buffer_internal(long long damage, uint8_t type) noexcept
 {
     int previous_hit_points;
     long long damage_applied;
 
     previous_hit_points = this->_hit_points;
-    damage = this->apply_skill_modifiers(damage);
+    damage = this->apply_skill_modifiers_internal(damage);
     if (damage < 0)
         damage = 0;
     if (type == FT_DAMAGE_PHYSICAL)
@@ -151,13 +274,13 @@ void ft_character::take_damage_buffer(long long damage, uint8_t type) noexcept
     return ;
 }
 
-void ft_character::take_damage_magic_shield(long long damage, uint8_t type) noexcept
+void ft_character::take_damage_magic_shield_internal(long long damage, uint8_t type) noexcept
 {
     int previous_hit_points;
     long long damage_applied;
 
     previous_hit_points = this->_hit_points;
-    damage = this->apply_skill_modifiers(damage);
+    damage = this->apply_skill_modifiers_internal(damage);
     if (damage < 0)
         damage = 0;
     if (this->_current_magic_armor > 0)
@@ -204,18 +327,53 @@ void ft_character::take_damage_magic_shield(long long damage, uint8_t type) noex
     this->set_error(ER_SUCCESS);
     return ;
 }
+
 void ft_character::move(int dx, int dy, int dz) noexcept
 {
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(guard.get_error());
+        game_character_restore_errno(guard, entry_errno);
+        return ;
+    }
     this->_x += dx;
     this->_y += dy;
     this->_z += dz;
     this->set_error(ER_SUCCESS);
+    game_character_restore_errno(guard, entry_errno);
     return ;
 }
+
 long long ft_character::apply_skill_modifiers(long long damage) const noexcept
 {
-    const Pair<int, ft_skill> *skill_ptr = this->_skills.end() - this->_skills.size();
-    const Pair<int, ft_skill> *skill_end = this->_skills.end();
+    int entry_errno;
+    long long result;
+
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        const_cast<ft_character *>(this)->set_error(guard.get_error());
+        game_character_restore_errno(guard, entry_errno);
+        return (0);
+    }
+    result = this->apply_skill_modifiers_internal(damage);
+    const_cast<ft_character *>(this)->set_error(ER_SUCCESS);
+    game_character_restore_errno(guard, entry_errno);
+    return (result);
+}
+
+long long ft_character::apply_skill_modifiers_internal(long long damage) const noexcept
+{
+    const Pair<int, ft_skill> *skill_ptr;
+    const Pair<int, ft_skill> *skill_end;
+
+    skill_end = this->_skills.end();
+    skill_ptr = skill_end - this->_skills.size();
     while (skill_ptr != skill_end)
     {
         if (skill_ptr->value.get_cooldown() == 0)
@@ -232,11 +390,27 @@ long long ft_character::apply_skill_modifiers(long long damage) const noexcept
     }
     if (damage < 0)
         damage = 0;
-    this->set_error(ER_SUCCESS);
     return (damage);
 }
 
 void ft_character::apply_modifier(const ft_item_modifier &mod, int sign) noexcept
+{
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(guard.get_error());
+        game_character_restore_errno(guard, entry_errno);
+        return ;
+    }
+    this->apply_modifier_internal(mod, sign);
+    game_character_restore_errno(guard, entry_errno);
+    return ;
+}
+
+void ft_character::apply_modifier_internal(const ft_item_modifier &mod, int sign) noexcept
 {
     int modifier_error;
     int modifier_identifier;
@@ -263,9 +437,9 @@ void ft_character::apply_modifier(const ft_item_modifier &mod, int sign) noexcep
         return ;
     }
     if (modifier_identifier == 1)
-        this->set_physical_armor(this->_physical_armor + modifier_value * sign);
+        this->set_physical_armor_internal(this->_physical_armor + modifier_value * sign);
     else if (modifier_identifier == 9)
-        this->set_magic_armor(this->_magic_armor + modifier_value * sign);
+        this->set_magic_armor_internal(this->_magic_armor + modifier_value * sign);
     else if (modifier_identifier == 2)
         this->_might += modifier_value * sign;
     else if (modifier_identifier == 3)
@@ -286,43 +460,79 @@ void ft_character::apply_modifier(const ft_item_modifier &mod, int sign) noexcep
 
 int ft_character::equip_item(int slot, const ft_sharedptr<ft_item> &item) noexcept
 {
-    ft_sharedptr<ft_item> current = this->_equipment.get_item(slot);
-    if (this->handle_component_error(this->_equipment.get_error()) == true)
+    int entry_errno;
+    ft_sharedptr<ft_item> current;
+    int equip_error;
+
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(guard.get_error());
+        game_character_restore_errno(guard, entry_errno);
         return (this->_error);
-    int equip_error = this->_equipment.equip(slot, item);
+    }
+    current = this->_equipment.get_item(slot);
+    if (this->handle_component_error(this->_equipment.get_error()) == true)
+    {
+        game_character_restore_errno(guard, entry_errno);
+        return (this->_error);
+    }
+    equip_error = this->_equipment.equip(slot, item);
     if (equip_error != ER_SUCCESS)
     {
         this->handle_component_error(equip_error);
+        game_character_restore_errno(guard, entry_errno);
         return (this->_error);
     }
     if (current)
     {
-        this->apply_modifier(current->get_modifier1(), -1);
-        this->apply_modifier(current->get_modifier2(), -1);
-        this->apply_modifier(current->get_modifier3(), -1);
-        this->apply_modifier(current->get_modifier4(), -1);
+        this->apply_modifier_internal(current->get_modifier1(), -1);
+        this->apply_modifier_internal(current->get_modifier2(), -1);
+        this->apply_modifier_internal(current->get_modifier3(), -1);
+        this->apply_modifier_internal(current->get_modifier4(), -1);
     }
-    this->apply_modifier(item->get_modifier1(), 1);
-    this->apply_modifier(item->get_modifier2(), 1);
-    this->apply_modifier(item->get_modifier3(), 1);
-    this->apply_modifier(item->get_modifier4(), 1);
+    if (item)
+    {
+        this->apply_modifier_internal(item->get_modifier1(), 1);
+        this->apply_modifier_internal(item->get_modifier2(), 1);
+        this->apply_modifier_internal(item->get_modifier3(), 1);
+        this->apply_modifier_internal(item->get_modifier4(), 1);
+    }
     this->set_error(ER_SUCCESS);
+    game_character_restore_errno(guard, entry_errno);
     return (ER_SUCCESS);
 }
 
 void ft_character::unequip_item(int slot) noexcept
 {
-    ft_sharedptr<ft_item> item = this->_equipment.get_item(slot);
+    int entry_errno;
+    ft_sharedptr<ft_item> item;
+
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(guard.get_error());
+        game_character_restore_errno(guard, entry_errno);
+        return ;
+    }
+    item = this->_equipment.get_item(slot);
     if (item)
     {
-        this->apply_modifier(item->get_modifier1(), -1);
-        this->apply_modifier(item->get_modifier2(), -1);
-        this->apply_modifier(item->get_modifier3(), -1);
-        this->apply_modifier(item->get_modifier4(), -1);
+        this->apply_modifier_internal(item->get_modifier1(), -1);
+        this->apply_modifier_internal(item->get_modifier2(), -1);
+        this->apply_modifier_internal(item->get_modifier3(), -1);
+        this->apply_modifier_internal(item->get_modifier4(), -1);
     }
     this->_equipment.unequip(slot);
     if (this->handle_component_error(this->_equipment.get_error()) == true)
+    {
+        game_character_restore_errno(guard, entry_errno);
         return ;
+    }
     this->set_error(ER_SUCCESS);
+    game_character_restore_errno(guard, entry_errno);
     return ;
 }
+
