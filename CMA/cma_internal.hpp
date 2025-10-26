@@ -50,6 +50,7 @@ class cma_allocator_guard
     private:
         bool _lock_acquired;
         bool _active;
+        bool _was_active;
         mutable int _error_code;
         mutable bool _failure_logged;
         struct s_mutex_entry
@@ -138,7 +139,7 @@ ft_size_t    cma_backend_block_size(const void *memory_pointer)
 int     cma_backend_checked_block_size(const void *memory_pointer,
             ft_size_t *block_size) __attribute__ ((warn_unused_result, hot));
 #ifndef CMA_ENABLE_METADATA_PROTECTION
-# define CMA_ENABLE_METADATA_PROTECTION 0
+# define CMA_ENABLE_METADATA_PROTECTION 1
 #endif
 
 int     cma_metadata_make_writable(void);

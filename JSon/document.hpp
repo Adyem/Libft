@@ -23,9 +23,11 @@ class json_document
         void         add_item(json_group *group, json_item *item) noexcept;
         void         append_group(json_group *group) noexcept;
         int          write_to_file(const char *file_path) const noexcept;
+        int          write_to_backend(ft_document_sink &sink) const noexcept;
         char         *write_to_string() const noexcept;
         int          read_from_file(const char *file_path) noexcept;
         int          read_from_file_streaming(const char *file_path, size_t buffer_capacity) noexcept;
+        int          read_from_backend(ft_document_source &source) noexcept;
         int          read_from_string(const char *content) noexcept;
         json_group   *find_group(const char *name) const noexcept;
         json_item    *find_item(json_group *group, const char *key) const noexcept;

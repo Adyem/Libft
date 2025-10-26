@@ -1,4 +1,6 @@
 #include <cstdlib>
+#include <cstring>
+#include <dlfcn.h>
 #include <pthread.h>
 #include <random>
 #include "CMA.hpp"
@@ -66,15 +68,20 @@ static pthread_mutex_t *cma_allocator_mutex(void)
 }
 
 cma_allocator_guard::cma_allocator_guard()
-    : _lock_acquired(false), _active(false), _error_code(ER_SUCCESS),
-      _failure_logged(false), _owned_mutexes(CMA_GUARD_VECTOR_MIN_CAPACITY)
+    : _lock_acquired(false), _active(false), _was_active(false),
+      _error_code(ER_SUCCESS), _failure_logged(false),
+      _owned_mutexes(CMA_GUARD_VECTOR_MIN_CAPACITY)
 {
     if (this->acquire_allocator_mutex() == false)
     {
         this->_active = false;
-        this->set_error(ft_errno);
+        if (ft_errno == ER_SUCCESS)
+            this->set_error(FT_ERR_INVALID_STATE);
+        else
+            this->set_error(ft_errno);
         return ;
     }
+    this->_was_active = true;
     this->_active = true;
     this->set_error(ER_SUCCESS);
     return ;
@@ -88,12 +95,16 @@ cma_allocator_guard::~cma_allocator_guard()
 
 bool cma_allocator_guard::is_active() const
 {
-    if (!this->_active && !this->_failure_logged)
+    if (!this->_active && !this->_was_active && !this->_failure_logged)
     {
-        void *return_address;
+        if (this->_error_code != FT_ERR_INVALID_STATE
+            && this->_error_code != FT_ERR_INITIALIZATION_FAILED)
+        {
+            void *return_address;
 
-        return_address = __builtin_return_address(0);
-        this->log_inactive_guard(return_address);
+            return_address = __builtin_return_address(0);
+            this->log_inactive_guard(return_address);
+        }
     }
     return (this->_active);
 }
@@ -140,14 +151,46 @@ void cma_allocator_guard::log_inactive_guard(void *return_address) const
 {
     pt_thread_id_type thread_identifier;
     int previous_errno;
+    int errno_snapshot;
+    int lock_state;
+    int active_state;
+    ft_size_t owned_mutex_count;
+    int error_code;
+    const char *error_string;
+    Dl_info symbol_info;
+    const char *symbol_name;
+    int dl_result;
 
     if (this->_failure_logged)
         return ;
     this->_failure_logged = true;
     previous_errno = ft_errno;
+    errno_snapshot = previous_errno;
     thread_identifier = pt_thread_self();
-    ft_log_error("cma_allocator_guard inactive thread=%p return_address=%p",
-        reinterpret_cast<void *>(thread_identifier), return_address);
+    if (this->_lock_acquired)
+        lock_state = 1;
+    else
+        lock_state = 0;
+    if (this->_active)
+        active_state = 1;
+    else
+        active_state = 0;
+    owned_mutex_count = this->_owned_mutexes.size();
+    error_code = this->_error_code;
+    error_string = ft_strerror(error_code);
+    symbol_name = "unknown";
+    std::memset(&symbol_info, 0, sizeof(symbol_info));
+    dl_result = dladdr(return_address, &symbol_info);
+    if (dl_result != 0)
+    {
+        if (symbol_info.dli_sname != ft_nullptr)
+            symbol_name = symbol_info.dli_sname;
+    }
+    ft_log_error("cma_allocator_guard inactive thread=%p return_address=%p symbol=%s guard=%p active=%d lock_acquired=%d owned_mutexes=%zu error=%d (%s) errno_snapshot=%d",
+        reinterpret_cast<void *>(thread_identifier), return_address,
+        symbol_name, this, active_state, lock_state,
+        static_cast<size_t>(owned_mutex_count), error_code,
+        error_string, errno_snapshot);
     ft_errno = previous_errno;
     return ;
 }

@@ -78,7 +78,7 @@ template <typename Key, typename MappedType>
 ft_map<Key, MappedType>::ft_map(const ft_map<Key, MappedType>& other)
     : _capacity(other._capacity), _size(other._size), _error(other._error)
 {
-    if (other._data != ft_nullptr && this->_size > 0)
+    if (this->_capacity > 0)
     {
         void* raw_memory = cma_malloc(sizeof(Pair<Key, MappedType>) * this->_capacity);
         if (!raw_memory)
@@ -90,12 +90,17 @@ ft_map<Key, MappedType>::ft_map(const ft_map<Key, MappedType>& other)
             return ;
         }
         this->_data = static_cast<Pair<Key, MappedType>*>(raw_memory);
-        size_t index = 0;
-        while (index < this->_size)
+        if (other._data != ft_nullptr)
         {
-            construct_at(&this->_data[index], other._data[index]);
-            index++;
+            size_t index = 0;
+            while (index < this->_size)
+            {
+                construct_at(&this->_data[index], other._data[index]);
+                index++;
+            }
         }
+        else
+            this->_size = 0;
     }
     else
         this->_data = ft_nullptr;
@@ -121,7 +126,7 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(const ft_map<Key, Ma
         this->_capacity = other._capacity;
         this->_size = other._size;
         this->_error = other._error;
-        if (other._data != ft_nullptr && other._size > 0)
+        if (other._capacity > 0)
         {
             void* raw_memory = cma_malloc(sizeof(Pair<Key, MappedType>) * other._capacity);
             if (!raw_memory)
@@ -133,12 +138,17 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(const ft_map<Key, Ma
                 return (*this);
             }
             this->_data = static_cast<Pair<Key, MappedType>*>(raw_memory);
-            size_t index = 0;
-            while (index < other._size)
+            if (other._data != ft_nullptr)
             {
-                construct_at(&this->_data[index], other._data[index]);
-                index++;
+                size_t index = 0;
+                while (index < other._size)
+                {
+                    construct_at(&this->_data[index], other._data[index]);
+                    index++;
+                }
             }
+            else
+                this->_size = 0;
         }
         else
             this->_data = ft_nullptr;

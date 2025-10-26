@@ -30,6 +30,22 @@ struct s_compress_stream_options_snapshot
     int                                     strategy;
 };
 
+static void compression_stream_init_snapshot(struct s_compress_stream_options_snapshot *snapshot)
+{
+    if (snapshot == ft_nullptr)
+        return ;
+    snapshot->input_buffer_size = 0;
+    snapshot->output_buffer_size = 0;
+    snapshot->progress_callback = ft_nullptr;
+    snapshot->cancel_callback = ft_nullptr;
+    snapshot->callback_user_data = ft_nullptr;
+    snapshot->compression_level = Z_DEFAULT_COMPRESSION;
+    snapshot->window_bits = 0;
+    snapshot->memory_level = 0;
+    snapshot->strategy = Z_DEFAULT_STRATEGY;
+    return ;
+}
+
 t_compress_stream_options::t_compress_stream_options(void)
 {
     this->_input_buffer_size = 0;
@@ -512,6 +528,7 @@ static int  compression_stream_validate_tuning(const t_compress_stream_options *
 {
     s_compress_stream_options_snapshot snapshot;
 
+    compression_stream_init_snapshot(&snapshot);
     if (options == ft_nullptr)
         return (0);
     if (options->snapshot(&snapshot) != ER_SUCCESS)
@@ -560,6 +577,7 @@ static int  compression_stream_begin_deflate(z_stream *stream, const t_compress_
     {
         s_compress_stream_options_snapshot snapshot;
 
+        compression_stream_init_snapshot(&snapshot);
         if (options->snapshot(&snapshot) != ER_SUCCESS)
             return (FT_ERR_INVALID_ARGUMENT);
         compression_level = snapshot.compression_level;
@@ -627,6 +645,7 @@ static int  compression_stream_allocate_buffers(const t_compress_stream_options 
     {
         s_compress_stream_options_snapshot snapshot;
 
+        compression_stream_init_snapshot(&snapshot);
         if (options->snapshot(&snapshot) != ER_SUCCESS)
             return (1);
         resolved_input_size = snapshot.input_buffer_size;
@@ -702,6 +721,7 @@ static int  compression_stream_dispatch_progress(const t_compress_stream_options
     int callback_result;
     s_compress_stream_options_snapshot snapshot;
 
+    compression_stream_init_snapshot(&snapshot);
     if (options == ft_nullptr || progress == ft_nullptr)
         return (0);
     if (options->snapshot(&snapshot) != ER_SUCCESS)
@@ -722,6 +742,7 @@ static int  compression_stream_check_cancel(const t_compress_stream_options *opt
     int callback_result;
     s_compress_stream_options_snapshot snapshot;
 
+    compression_stream_init_snapshot(&snapshot);
     if (options == ft_nullptr || progress == ft_nullptr)
         return (0);
     if (options->snapshot(&snapshot) != ER_SUCCESS)
