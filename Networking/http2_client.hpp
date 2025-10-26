@@ -140,10 +140,26 @@ class http2_stream_manager
         uint32_t                                _connection_remote_window;
         uint32_t                                _connection_local_window;
         mutable int                              _error_code;
+        mutable bool                             _thread_safe_enabled;
+        mutable pt_mutex                        *_mutex;
+
+        int         prepare_thread_safety() noexcept;
+        void        teardown_thread_safety() noexcept;
+        int         lock(bool *lock_acquired) const noexcept;
+        void        unlock(bool lock_acquired) const noexcept;
 
     public:
         http2_stream_manager() noexcept;
         ~http2_stream_manager() noexcept;
+
+        http2_stream_manager(const http2_stream_manager &other) = delete;
+        http2_stream_manager &operator=(const http2_stream_manager &other) = delete;
+        http2_stream_manager(http2_stream_manager &&other) = delete;
+        http2_stream_manager &operator=(http2_stream_manager &&other) = delete;
+
+        int         enable_thread_safety() noexcept;
+        void        disable_thread_safety() noexcept;
+        bool        is_thread_safe() const noexcept;
 
         bool        open_stream(uint32_t stream_identifier) noexcept;
         bool        append_data(uint32_t stream_identifier, const char *data,

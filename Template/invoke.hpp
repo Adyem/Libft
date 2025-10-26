@@ -13,7 +13,7 @@ namespace ft_invoke_detail
     };
 
     template <typename InstanceType>
-    auto access(InstanceType &&instance)
+    constexpr auto access(InstanceType &&instance)
         -> typename std::enable_if<is_pointer<InstanceType>::value,
             decltype(*std::forward<InstanceType>(instance))>::type
     {
@@ -21,7 +21,7 @@ namespace ft_invoke_detail
     }
 
     template <typename InstanceType>
-    auto access(InstanceType &&instance)
+    constexpr auto access(InstanceType &&instance)
         -> typename std::enable_if<!is_pointer<InstanceType>::value,
             InstanceType &&>::type
     {
@@ -30,7 +30,7 @@ namespace ft_invoke_detail
 }
 
 template <typename MemberFunction, typename InstanceType, typename... Args>
-auto ft_invoke(MemberFunction &&member_function, InstanceType &&instance, Args&&... args)
+constexpr auto ft_invoke(MemberFunction &&member_function, InstanceType &&instance, Args&&... args)
     -> typename std::enable_if<
         std::is_member_function_pointer<typename std::decay<MemberFunction>::type>::value,
         decltype((ft_invoke_detail::access(std::forward<InstanceType>(instance)).*
@@ -43,7 +43,7 @@ auto ft_invoke(MemberFunction &&member_function, InstanceType &&instance, Args&&
 }
 
 template <typename MemberObject, typename InstanceType>
-auto ft_invoke(MemberObject &&member_object, InstanceType &&instance)
+constexpr auto ft_invoke(MemberObject &&member_object, InstanceType &&instance)
     -> typename std::enable_if<
         std::is_member_object_pointer<typename std::decay<MemberObject>::type>::value,
         decltype(ft_invoke_detail::access(std::forward<InstanceType>(instance)).*
@@ -54,7 +54,7 @@ auto ft_invoke(MemberObject &&member_object, InstanceType &&instance)
 }
 
 template <typename FunctionType, typename... Args>
-auto ft_invoke(FunctionType &&function, Args&&... args)
+constexpr auto ft_invoke(FunctionType &&function, Args&&... args)
     -> typename std::enable_if<
         !std::is_member_pointer<typename std::decay<FunctionType>::type>::value,
         decltype(std::forward<FunctionType>(function)(std::forward<Args>(args)...))>::type

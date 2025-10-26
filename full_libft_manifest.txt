@@ -26,6 +26,7 @@ Encryption/encryption_secure_wipe.hpp
 Errno/errno.hpp
 File/open_dir.hpp
 Game/game_achievement.hpp
+Game/game_behavior_tree.hpp
 Game/game_buff.hpp
 Game/game_character.hpp
 Game/game_debuff.hpp
@@ -46,6 +47,7 @@ HTML/document.hpp
 HTML/parser.hpp
 JSon/document.hpp
 JSon/json.hpp
+JSon/json_schema_evolution.hpp
 JSon/json_stream_events.hpp
 JSon/json_stream_reader.hpp
 JSon/json_stream_writer.hpp
@@ -79,6 +81,7 @@ ReadLine/readline_internal.hpp
 System_utils/system_utils.hpp
 Template/algorithm.hpp
 Template/bitset.hpp
+Template/cancellation.hpp
 Template/circular_buffer.hpp
 Template/constructor.hpp
 Template/deque.hpp

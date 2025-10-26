@@ -2,6 +2,7 @@
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
 #include "../JSon/json.hpp"
+#include "../Time/time.hpp"
 #include "game_world.hpp"
 #include <cstdio>
 #include <utility>
@@ -11,6 +12,19 @@
 static void event_scheduler_sleep_backoff()
 {
     pt_thread_sleep(1);
+    return ;
+}
+
+static void event_scheduler_profile_reset_struct(t_event_scheduler_profile &profile)
+{
+    profile.update_count = 0;
+    profile.events_processed = 0;
+    profile.events_rescheduled = 0;
+    profile.max_queue_depth = 0;
+    profile.max_ready_batch = 0;
+    profile.total_processing_ns = 0;
+    profile.last_update_processing_ns = 0;
+    profile.last_error_code = ER_SUCCESS;
     return ;
 }
 
@@ -94,6 +108,82 @@ int ft_event_scheduler::lock_pair(const ft_event_scheduler &first,
     }
 }
 
+void ft_event_scheduler::reset_profile_locked() const noexcept
+{
+    event_scheduler_profile_reset_struct(this->_profile);
+    this->_profile.last_error_code = this->_error_code;
+    return ;
+}
+
+void ft_event_scheduler::record_profile_locked(size_t ready_count,
+        size_t rescheduled_count,
+        size_t queue_depth,
+        long long duration_ns) const noexcept
+{
+    long long non_negative_duration;
+
+    non_negative_duration = duration_ns;
+    if (non_negative_duration < 0)
+        non_negative_duration = 0;
+    this->_profile.update_count += 1;
+    this->_profile.events_processed += static_cast<long long>(ready_count);
+    this->_profile.events_rescheduled += static_cast<long long>(rescheduled_count);
+    if (queue_depth > this->_profile.max_queue_depth)
+        this->_profile.max_queue_depth = queue_depth;
+    if (ready_count > this->_profile.max_ready_batch)
+        this->_profile.max_ready_batch = ready_count;
+    this->_profile.total_processing_ns += non_negative_duration;
+    this->_profile.last_update_processing_ns = non_negative_duration;
+    this->_profile.last_error_code = this->_error_code;
+    return ;
+}
+
+void ft_event_scheduler::finalize_update(ft_vector<ft_sharedptr<ft_event> > &events,
+        size_t ready_count,
+        size_t rescheduled_count,
+        size_t queue_depth,
+        bool profiling_active,
+        bool start_valid,
+        t_high_resolution_time_point start_time) noexcept
+{
+    int entry_errno;
+    bool end_valid;
+    t_high_resolution_time_point end_time;
+    long long duration_ns;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+
+    entry_errno = ft_errno;
+    end_valid = false;
+    duration_ns = 0;
+    if (profiling_active && start_valid)
+    {
+        if (time_high_resolution_now(&end_time))
+        {
+            duration_ns = time_high_resolution_diff_ns(start_time, end_time);
+            end_valid = true;
+        }
+        else
+            profiling_active = false;
+    }
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(guard.get_error());
+        event_scheduler_restore_errno(guard, entry_errno);
+        return ;
+    }
+    this->_ready_cache = ft_move(events);
+    if (this->_ready_cache.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_ready_cache.get_error());
+        event_scheduler_restore_errno(guard, entry_errno);
+        return ;
+    }
+    if (profiling_active && start_valid && end_valid && this->_profiling_enabled)
+        this->record_profile_locked(ready_count, rescheduled_count, queue_depth, duration_ns);
+    event_scheduler_restore_errno(guard, entry_errno);
+    return ;
+}
+
 bool ft_event_compare_ptr::operator()(const ft_sharedptr<ft_event> &left,
         const ft_sharedptr<ft_event> &right) const noexcept
 {
@@ -145,8 +235,9 @@ bool ft_event_compare_ptr::operator()(const ft_sharedptr<ft_event> &left,
 }
 
 ft_event_scheduler::ft_event_scheduler() noexcept
-    : _events(), _error_code(ER_SUCCESS), _mutex()
+    : _events(), _error_code(ER_SUCCESS), _mutex(), _profiling_enabled(false), _profile(), _ready_cache()
 {
+    event_scheduler_profile_reset_struct(this->_profile);
     if (this->_events.get_error() != ER_SUCCESS)
         this->set_error(this->_events.get_error());
     else
@@ -160,7 +251,7 @@ ft_event_scheduler::~ft_event_scheduler()
 }
 
 ft_event_scheduler::ft_event_scheduler(const ft_event_scheduler &other) noexcept
-    : _events(), _error_code(ER_SUCCESS), _mutex()
+    : _events(), _error_code(ER_SUCCESS), _mutex(), _profiling_enabled(false), _profile(), _ready_cache()
 {
     int entry_errno;
     ft_vector<ft_sharedptr<ft_event> > events;
@@ -168,6 +259,7 @@ ft_event_scheduler::ft_event_scheduler(const ft_event_scheduler &other) noexcept
     size_t count;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
+    event_scheduler_profile_reset_struct(this->_profile);
     entry_errno = ft_errno;
     if (guard.get_error() != ER_SUCCESS)
     {
@@ -181,6 +273,18 @@ ft_event_scheduler::ft_event_scheduler(const ft_event_scheduler &other) noexcept
         this->set_error(other.get_error());
         event_scheduler_restore_errno(guard, entry_errno);
         return ;
+    }
+    this->_profiling_enabled = other._profiling_enabled;
+    this->_profile = other._profile;
+    if (other._ready_cache.capacity() > 0)
+    {
+        this->_ready_cache.reserve(other._ready_cache.capacity());
+        if (this->_ready_cache.get_error() != ER_SUCCESS)
+        {
+            this->set_error(this->_ready_cache.get_error());
+            event_scheduler_restore_errno(guard, entry_errno);
+            return ;
+        }
     }
     index = 0;
     count = events.size();
@@ -226,6 +330,27 @@ ft_event_scheduler &ft_event_scheduler::operator=(const ft_event_scheduler &othe
         this->set_error(lock_error);
         return (*this);
     }
+    this->_profiling_enabled = other._profiling_enabled;
+    this->_profile = other._profile;
+    this->_ready_cache.clear();
+    if (this->_ready_cache.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_ready_cache.get_error());
+        event_scheduler_restore_errno(this_guard, entry_errno);
+        event_scheduler_restore_errno(other_guard, entry_errno);
+        return (*this);
+    }
+    if (other._ready_cache.capacity() > 0)
+    {
+        this->_ready_cache.reserve(other._ready_cache.capacity());
+        if (this->_ready_cache.get_error() != ER_SUCCESS)
+        {
+            this->set_error(this->_ready_cache.get_error());
+            event_scheduler_restore_errno(this_guard, entry_errno);
+            event_scheduler_restore_errno(other_guard, entry_errno);
+            return (*this);
+        }
+    }
     this->_events.clear();
     if (this->_events.get_error() != ER_SUCCESS)
     {
@@ -255,11 +380,12 @@ ft_event_scheduler &ft_event_scheduler::operator=(const ft_event_scheduler &othe
 }
 
 ft_event_scheduler::ft_event_scheduler(ft_event_scheduler &&other) noexcept
-    : _events(), _error_code(ER_SUCCESS), _mutex()
+    : _events(), _error_code(ER_SUCCESS), _mutex(), _profiling_enabled(false), _profile(), _ready_cache()
 {
     int entry_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
 
+    event_scheduler_profile_reset_struct(this->_profile);
     entry_errno = ft_errno;
     if (other_guard.get_error() != ER_SUCCESS)
     {
@@ -275,9 +401,21 @@ ft_event_scheduler::ft_event_scheduler(ft_event_scheduler &&other) noexcept
         event_scheduler_restore_errno(other_guard, entry_errno);
         return ;
     }
+    this->_ready_cache = ft_move(other._ready_cache);
+    if (this->_ready_cache.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_ready_cache.get_error());
+        other.set_error(ER_SUCCESS);
+        event_scheduler_restore_errno(other_guard, entry_errno);
+        return ;
+    }
     this->_error_code = other._error_code;
+    this->_profiling_enabled = other._profiling_enabled;
+    this->_profile = other._profile;
     this->set_error(this->_error_code);
     other._error_code = ER_SUCCESS;
+    other._profiling_enabled = false;
+    event_scheduler_profile_reset_struct(other._profile);
     other.set_error(ER_SUCCESS);
     event_scheduler_restore_errno(other_guard, entry_errno);
     return ;
@@ -309,9 +447,22 @@ ft_event_scheduler &ft_event_scheduler::operator=(ft_event_scheduler &&other) no
         event_scheduler_restore_errno(other_guard, entry_errno);
         return (*this);
     }
+    this->_ready_cache = ft_move(other._ready_cache);
+    if (this->_ready_cache.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_ready_cache.get_error());
+        other.set_error(ER_SUCCESS);
+        event_scheduler_restore_errno(this_guard, entry_errno);
+        event_scheduler_restore_errno(other_guard, entry_errno);
+        return (*this);
+    }
     this->_error_code = other._error_code;
+    this->_profiling_enabled = other._profiling_enabled;
+    this->_profile = other._profile;
     this->set_error(this->_error_code);
     other._error_code = ER_SUCCESS;
+    other._profiling_enabled = false;
+    event_scheduler_profile_reset_struct(other._profile);
     other.set_error(ER_SUCCESS);
     event_scheduler_restore_errno(this_guard, entry_errno);
     event_scheduler_restore_errno(other_guard, entry_errno);
@@ -504,10 +655,15 @@ void ft_event_scheduler::update_events(ft_sharedptr<ft_world> &world,
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     ft_priority_queue<ft_sharedptr<ft_event>, ft_event_compare_ptr> temporary_queue;
     ft_sharedptr<ft_event> current_event;
-    ft_vector<ft_sharedptr<ft_event> > ready_events;
     ft_vector<ft_sharedptr<ft_event> > events_to_process;
+    ft_vector<ft_sharedptr<ft_event> > &ready_cache = this->_ready_cache;
     size_t ready_index;
     size_t ready_count;
+    size_t rescheduled_count;
+    size_t queue_depth;
+    bool profiling_active;
+    bool start_valid;
+    t_high_resolution_time_point start_time;
 
     entry_errno = ft_errno;
     if (guard.get_error() != ER_SUCCESS)
@@ -523,6 +679,23 @@ void ft_event_scheduler::update_events(ft_sharedptr<ft_world> &world,
         event_scheduler_restore_errno(guard, entry_errno);
         return ;
     }
+    ready_cache.clear();
+    if (ready_cache.get_error() != ER_SUCCESS)
+    {
+        this->set_error(ready_cache.get_error());
+        event_scheduler_restore_errno(guard, entry_errno);
+        return ;
+    }
+    profiling_active = this->_profiling_enabled;
+    start_valid = false;
+    if (profiling_active)
+    {
+        if (time_high_resolution_now(&start_time))
+            start_valid = true;
+        else
+            profiling_active = false;
+    }
+    rescheduled_count = 0;
     while (!this->_events.empty())
     {
         current_event = this->_events.pop();
@@ -547,10 +720,10 @@ void ft_event_scheduler::update_events(ft_sharedptr<ft_world> &world,
         }
         if (current_event->get_duration() <= 0)
         {
-            ready_events.push_back(current_event);
-            if (ready_events.get_error() != ER_SUCCESS)
+            ready_cache.push_back(current_event);
+            if (ready_cache.get_error() != ER_SUCCESS)
             {
-                this->set_error(ready_events.get_error());
+                this->set_error(ready_cache.get_error());
                 event_scheduler_restore_errno(guard, entry_errno);
                 return ;
             }
@@ -588,12 +761,14 @@ void ft_event_scheduler::update_events(ft_sharedptr<ft_world> &world,
             event_scheduler_restore_errno(guard, entry_errno);
             return ;
         }
+        rescheduled_count += 1;
     }
-    events_to_process = ft_move(ready_events);
+    queue_depth = this->_events.size();
+    events_to_process = ft_move(ready_cache);
+    ready_count = events_to_process.size();
     this->set_error(ER_SUCCESS);
     event_scheduler_restore_errno(guard, entry_errno);
     ready_index = 0;
-    ready_count = events_to_process.size();
     while (ready_index < ready_count)
     {
         ft_sharedptr<ft_event> &processed_event = events_to_process[ready_index];
@@ -618,6 +793,7 @@ void ft_event_scheduler::update_events(ft_sharedptr<ft_world> &world,
                 this->set_error(error_guard.get_error());
                 event_scheduler_restore_errno(error_guard, callback_entry_errno);
             }
+            this->finalize_update(events_to_process, ready_count, rescheduled_count, queue_depth, profiling_active, start_valid, start_time);
             return ;
         }
         if (callback)
@@ -625,6 +801,7 @@ void ft_event_scheduler::update_events(ft_sharedptr<ft_world> &world,
         if (log_file_path)
         {
             int log_result;
+
             log_result = log_event_to_file(*processed_event, log_file_path);
             if (log_result != ER_SUCCESS)
             {
@@ -643,6 +820,7 @@ void ft_event_scheduler::update_events(ft_sharedptr<ft_world> &world,
                     this->set_error(error_guard.get_error());
                     event_scheduler_restore_errno(error_guard, callback_entry_errno);
                 }
+                this->finalize_update(events_to_process, ready_count, rescheduled_count, queue_depth, profiling_active, start_valid, start_time);
                 return ;
             }
         }
@@ -666,11 +844,88 @@ void ft_event_scheduler::update_events(ft_sharedptr<ft_world> &world,
                     this->set_error(error_guard.get_error());
                     event_scheduler_restore_errno(error_guard, callback_entry_errno);
                 }
+                this->finalize_update(events_to_process, ready_count, rescheduled_count, queue_depth, profiling_active, start_valid, start_time);
                 return ;
             }
         }
         ready_index += 1;
     }
+    this->finalize_update(events_to_process, ready_count, rescheduled_count, queue_depth, profiling_active, start_valid, start_time);
+    return ;
+}
+
+void ft_event_scheduler::enable_profiling(bool enabled) noexcept
+{
+    int entry_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+
+    entry_errno = ft_errno;
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(guard.get_error());
+        event_scheduler_restore_errno(guard, entry_errno);
+        return ;
+    }
+    this->_profiling_enabled = enabled;
+    this->reset_profile_locked();
+    this->set_error(ER_SUCCESS);
+    event_scheduler_restore_errno(guard, entry_errno);
+    return ;
+}
+
+bool ft_event_scheduler::profiling_enabled() const noexcept
+{
+    int entry_errno;
+    bool enabled;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+
+    entry_errno = ft_errno;
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        const_cast<ft_event_scheduler *>(this)->set_error(guard.get_error());
+        event_scheduler_restore_errno(guard, entry_errno);
+        return (false);
+    }
+    enabled = this->_profiling_enabled;
+    const_cast<ft_event_scheduler *>(this)->set_error(this->_error_code);
+    event_scheduler_restore_errno(guard, entry_errno);
+    return (enabled);
+}
+
+void ft_event_scheduler::reset_profile() noexcept
+{
+    int entry_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+
+    entry_errno = ft_errno;
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(guard.get_error());
+        event_scheduler_restore_errno(guard, entry_errno);
+        return ;
+    }
+    this->reset_profile_locked();
+    this->set_error(ER_SUCCESS);
+    event_scheduler_restore_errno(guard, entry_errno);
+    return ;
+}
+
+void ft_event_scheduler::snapshot_profile(t_event_scheduler_profile &out) const noexcept
+{
+    int entry_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+
+    entry_errno = ft_errno;
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        event_scheduler_profile_reset_struct(out);
+        const_cast<ft_event_scheduler *>(this)->set_error(guard.get_error());
+        event_scheduler_restore_errno(guard, entry_errno);
+        return ;
+    }
+    out = this->_profile;
+    const_cast<ft_event_scheduler *>(this)->set_error(this->_error_code);
+    event_scheduler_restore_errno(guard, entry_errno);
     return ;
 }
 
