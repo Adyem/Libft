@@ -304,3 +304,25 @@ int yaml_write_to_file(const char *file_path, const yaml_value *value) noexcept
     ft_errno = final_error;
     return (result);
 }
+
+int yaml_write_to_backend(ft_document_sink &sink, const yaml_value *value) noexcept
+{
+    ft_string serialized;
+    int write_result;
+
+    serialized = yaml_write_to_string(value);
+    if (serialized.get_error() != ER_SUCCESS)
+    {
+        ft_errno = serialized.get_error();
+        return (-1);
+    }
+    write_result = sink.write_all(serialized.c_str(), serialized.size());
+    if (write_result != ER_SUCCESS)
+    {
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = write_result;
+        return (-1);
+    }
+    ft_errno = ER_SUCCESS;
+    return (0);
+}

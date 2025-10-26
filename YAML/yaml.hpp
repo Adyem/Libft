@@ -6,6 +6,7 @@
 #include "../Template/map.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "../Parser/document_backend.hpp"
 
 class pt_mutex;
 
@@ -89,8 +90,10 @@ int         yaml_split_lines(const ft_string &content, ft_vector<ft_string> &lin
 
 yaml_value    *yaml_read_from_string(const ft_string &content) noexcept;
 yaml_value    *yaml_read_from_file(const char *file_path) noexcept;
+yaml_value    *yaml_read_from_backend(ft_document_source &source) noexcept;
 ft_string      yaml_write_to_string(const yaml_value *value) noexcept;
 int           yaml_write_to_file(const char *file_path, const yaml_value *value) noexcept;
+int           yaml_write_to_backend(ft_document_sink &sink, const yaml_value *value) noexcept;
 void          yaml_free(yaml_value *value) noexcept;
 
 #endif

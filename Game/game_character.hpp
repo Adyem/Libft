@@ -13,6 +13,8 @@
 #include "game_equipment.hpp"
 #include "game_experience_table.hpp"
 #include "game_resistance.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 #include <cstdint>
 
 #define FT_DAMAGE_PHYSICAL 0
@@ -74,15 +76,29 @@ class ft_character
         ft_inventory            _inventory;
         ft_equipment            _equipment;
         mutable int               _error;
+        mutable pt_mutex          _mutex;
 
         void    set_error(int err) const noexcept;
         void    apply_modifier(const ft_item_modifier &mod, int sign) noexcept;
+        void    apply_modifier_internal(const ft_item_modifier &mod, int sign) noexcept;
         long long apply_skill_modifiers(long long damage) const noexcept;
+        long long apply_skill_modifiers_internal(long long damage) const noexcept;
         bool    handle_component_error(int error) noexcept;
         bool    check_internal_errors() noexcept;
         void    emit_game_metric(const char *event_name, const char *attribute,
                 long long delta_value, long long total_value,
                 const char *unit) const noexcept;
+        void    set_physical_armor_internal(int armor) noexcept;
+        void    set_magic_armor_internal(int armor) noexcept;
+        void    restore_physical_armor_internal() noexcept;
+        void    restore_magic_armor_internal() noexcept;
+        void    take_damage_flat_internal(long long damage, uint8_t type) noexcept;
+        void    take_damage_scaled_internal(long long damage, uint8_t type) noexcept;
+        void    take_damage_buffer_internal(long long damage, uint8_t type) noexcept;
+        void    take_damage_magic_shield_internal(long long damage, uint8_t type) noexcept;
+        static int lock_pair(const ft_character &first, const ft_character &second,
+                ft_unique_lock<pt_mutex> &first_guard,
+                ft_unique_lock<pt_mutex> &second_guard);
 
     public:
         ft_character() noexcept;

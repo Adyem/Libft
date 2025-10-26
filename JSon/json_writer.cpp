@@ -78,6 +78,28 @@ int json_write_to_file(const char *file_path, json_group *groups)
     return (0);
 }
 
+int json_write_to_backend(ft_document_sink &sink, json_group *groups)
+{
+    char *serialized_content;
+    size_t serialized_length;
+    int write_result;
+
+    serialized_content = json_write_to_string(groups);
+    if (!serialized_content)
+        return (-1);
+    serialized_length = ft_strlen(serialized_content);
+    write_result = sink.write_all(serialized_content, serialized_length);
+    cma_free(serialized_content);
+    if (write_result != ER_SUCCESS)
+    {
+        if (ft_errno == ER_SUCCESS)
+            ft_errno = write_result;
+        return (-1);
+    }
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
 char *json_write_to_string(json_group *groups)
 {
     char *result = cma_strdup("{\n");
@@ -176,5 +198,10 @@ int json_document_write_to_file(const char *file_path, const json_document &docu
 char *json_document_write_to_string(const json_document &document)
 {
     return (document.write_to_string());
+}
+
+int json_document_write_to_backend(ft_document_sink &sink, const json_document &document)
+{
+    return (document.write_to_backend(sink));
 }
 

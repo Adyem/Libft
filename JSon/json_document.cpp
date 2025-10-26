@@ -216,6 +216,31 @@ int json_document::write_to_file(const char *file_path) const noexcept
     return (0);
 }
 
+int json_document::write_to_backend(ft_document_sink &sink) const noexcept
+{
+    char *serialized_content;
+    size_t serialized_length;
+    int write_result;
+    int sink_error;
+
+    serialized_content = this->write_to_string();
+    if (!serialized_content)
+        return (-1);
+    serialized_length = ft_strlen(serialized_content);
+    write_result = sink.write_all(serialized_content, serialized_length);
+    sink_error = sink.get_error();
+    cma_free(serialized_content);
+    if (write_result != ER_SUCCESS)
+    {
+        if (sink_error != ER_SUCCESS)
+            write_result = sink_error;
+        this->set_error(write_result);
+        return (-1);
+    }
+    this->set_error(ER_SUCCESS);
+    return (0);
+}
+
 char *json_document::write_to_string() const noexcept
 {
     char *result = json_write_to_string(this->_groups);
@@ -247,6 +272,28 @@ int json_document::read_from_file(const char *file_path) noexcept
         if (current_error == ER_SUCCESS)
             current_error = FT_ERR_INVALID_ARGUMENT;
         this->set_error(current_error);
+        return (-1);
+    }
+    this->_groups = groups;
+    this->set_error(ER_SUCCESS);
+    return (0);
+}
+
+int json_document::read_from_backend(ft_document_source &source) noexcept
+{
+    json_group *groups;
+    int error_code;
+
+    this->clear();
+    groups = json_read_from_backend(source);
+    if (!groups)
+    {
+        error_code = ft_errno;
+        if (error_code == ER_SUCCESS)
+            error_code = source.get_error();
+        if (error_code == ER_SUCCESS)
+            error_code = FT_ERR_INVALID_ARGUMENT;
+        this->set_error(error_code);
         return (-1);
     }
     this->_groups = groups;

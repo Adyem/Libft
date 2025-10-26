@@ -8,6 +8,7 @@
 #include "../CMA/CMA.hpp"
 #include "../Logger/logger.hpp"
 #include "../Template/move.hpp"
+#include "../PThread/unique_lock.hpp"
 
 #ifdef _WIN32
 # include <winsock2.h>
@@ -479,6 +480,7 @@ static void tls_log_handshake_diagnostics(
 api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms)
 : _ctx(ft_nullptr), _ssl(ft_nullptr), _sock(-1), _host(""), _timeout(timeout_ms), _error_code(ER_SUCCESS)
 {
+    this->_is_shutting_down = false;
     this->set_error(ER_SUCCESS);
     if (!host_c)
     {
@@ -617,29 +619,67 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
 
 api_tls_client::~api_tls_client()
 {
+    ft_vector<ft_thread> workers_local;
+    SSL *ssl_pointer;
+    SSL_CTX *ctx_pointer;
+    int socket_fd;
+    ft_unique_lock<pt_mutex> state_lock(this->_mutex);
+
+    if (state_lock.get_error() != ER_SUCCESS)
+        return ;
+    this->_is_shutting_down = true;
+    workers_local = ft_move(this->_async_workers);
+    ssl_pointer = this->_ssl;
+    ctx_pointer = this->_ctx;
+    socket_fd = this->_sock;
+    this->_ssl = ft_nullptr;
+    this->_ctx = ft_nullptr;
+    this->_sock = -1;
+    state_lock.unlock();
+    if (state_lock.get_error() != ER_SUCCESS)
+    {
+        if (ssl_pointer != ft_nullptr)
+        {
+            SSL_shutdown(ssl_pointer);
+            SSL_free(ssl_pointer);
+        }
+        if (socket_fd >= 0)
+            nw_close(socket_fd);
+        if (ctx_pointer != ft_nullptr)
+            SSL_CTX_free(ctx_pointer);
+        return ;
+    }
     size_t worker_index;
 
     worker_index = 0;
-    while (worker_index < this->_async_workers.size())
+    while (worker_index < workers_local.size())
     {
-        if (this->_async_workers[worker_index].joinable())
-            this->_async_workers[worker_index].join();
+        if (workers_local[worker_index].joinable())
+            workers_local[worker_index].join();
         worker_index += 1;
     }
-    this->_async_workers.clear();
-    if (this->_ssl)
+    workers_local.clear();
+    if (ssl_pointer != ft_nullptr)
     {
-        SSL_shutdown(this->_ssl);
-        SSL_free(this->_ssl);
+        SSL_shutdown(ssl_pointer);
+        SSL_free(ssl_pointer);
     }
-    if (this->_sock >= 0)
-        nw_close(this->_sock);
-    if (this->_ctx)
-        SSL_CTX_free(this->_ctx);
+    if (socket_fd >= 0)
+        nw_close(socket_fd);
+    if (ctx_pointer != ft_nullptr)
+        SSL_CTX_free(ctx_pointer);
+    return ;
 }
 
 bool api_tls_client::is_valid() const
 {
+    ft_unique_lock<pt_mutex> state_lock(this->_mutex);
+
+    if (state_lock.get_error() != ER_SUCCESS)
+    {
+        this->set_error(state_lock.get_error());
+        return (false);
+    }
     if (this->_ssl != ft_nullptr)
     {
         this->set_error(ER_SUCCESS);
@@ -652,9 +692,21 @@ bool api_tls_client::is_valid() const
 char *api_tls_client::request(const char *method, const char *path, json_group *payload,
                               const char *headers, int *status)
 {
-    if (!method || !path)
+    ft_unique_lock<pt_mutex> state_lock(this->_mutex);
+
+    if (method == ft_nullptr || path == ft_nullptr)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return (ft_nullptr);
+    }
+    if (state_lock.get_error() != ER_SUCCESS)
+    {
+        this->set_error(state_lock.get_error());
+        return (ft_nullptr);
+    }
+    if (this->_is_shutting_down)
+    {
+        this->set_error(FT_ERR_INVALID_STATE);
         return (ft_nullptr);
     }
     if (this->_ssl == ft_nullptr)
@@ -1022,9 +1074,27 @@ bool api_tls_client::request_async(const char *method, const char *path,
                                    api_callback callback,
                                    void *user_data)
 {
+    ft_unique_lock<pt_mutex> state_lock(this->_mutex);
+
     if (!callback)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return (false);
+    }
+    if (state_lock.get_error() != ER_SUCCESS)
+    {
+        this->set_error(state_lock.get_error());
+        return (false);
+    }
+    if (this->_is_shutting_down)
+    {
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (false);
+    }
+    state_lock.unlock();
+    if (state_lock.get_error() != ER_SUCCESS)
+    {
+        this->set_error(state_lock.get_error());
         return (false);
     }
     ft_thread worker([this, method, path, payload, headers, callback, user_data]()
@@ -1038,6 +1108,29 @@ bool api_tls_client::request_async(const char *method, const char *path,
         this->set_error(worker.get_error());
         return (false);
     }
+    state_lock.lock();
+    if (state_lock.get_error() != ER_SUCCESS)
+    {
+        if (worker.joinable())
+            worker.join();
+        this->set_error(state_lock.get_error());
+        return (false);
+    }
+    if (this->_is_shutting_down)
+    {
+        state_lock.unlock();
+        if (state_lock.get_error() != ER_SUCCESS)
+        {
+            if (worker.joinable())
+                worker.join();
+            this->set_error(state_lock.get_error());
+            return (false);
+        }
+        if (worker.joinable())
+            worker.join();
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (false);
+    }
     size_t worker_count_before;
     size_t worker_count_after;
     int vector_error;
@@ -1047,12 +1140,26 @@ bool api_tls_client::request_async(const char *method, const char *path,
     worker_count_after = this->_async_workers.size();
     if (worker_count_after < worker_count_before + 1)
     {
-        if (worker.joinable())
-            worker.join();
         vector_error = this->_async_workers.get_error();
         if (vector_error == ER_SUCCESS)
             vector_error = FT_ERR_NO_MEMORY;
+        state_lock.unlock();
+        if (state_lock.get_error() != ER_SUCCESS)
+        {
+            if (worker.joinable())
+                worker.join();
+            this->set_error(state_lock.get_error());
+            return (false);
+        }
+        if (worker.joinable())
+            worker.join();
         this->set_error(vector_error);
+        return (false);
+    }
+    state_lock.unlock();
+    if (state_lock.get_error() != ER_SUCCESS)
+    {
+        this->set_error(state_lock.get_error());
         return (false);
     }
     this->set_error(ER_SUCCESS);
@@ -1061,24 +1168,31 @@ bool api_tls_client::request_async(const char *method, const char *path,
 
 int api_tls_client::get_error() const noexcept
 {
-    ft_errno = this->_error_code;
-    return (this->_error_code);
+    int value;
+
+    value = this->_error_code.load(std::memory_order_relaxed);
+    ft_errno = value;
+    return (value);
 }
 
 const char *api_tls_client::get_error_str() const noexcept
 {
-    return (ft_strerror(this->_error_code));
+    int value;
+
+    value = this->_error_code.load(std::memory_order_relaxed);
+    return (ft_strerror(value));
 }
 
 void api_tls_client::set_error(int error_code) const noexcept
 {
-    this->_error_code = error_code;
+    this->_error_code.store(error_code, std::memory_order_relaxed);
     ft_errno = error_code;
     return ;
 }
 
 bool api_tls_client::populate_handshake_diagnostics()
 {
+    ft_unique_lock<pt_mutex> state_lock(this->_mutex);
     const char *protocol_name;
     const SSL_CIPHER *cipher;
     const char *cipher_name;
@@ -1089,6 +1203,16 @@ bool api_tls_client::populate_handshake_diagnostics()
     X509 *leaf_certificate;
     int vector_error;
 
+    if (state_lock.get_error() != ER_SUCCESS)
+    {
+        this->set_error(state_lock.get_error());
+        return (false);
+    }
+    if (this->_is_shutting_down)
+    {
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (false);
+    }
     if (this->_ssl == ft_nullptr)
     {
         this->set_error(FT_ERR_CONFIGURATION);
@@ -1190,6 +1314,24 @@ bool api_tls_client::populate_handshake_diagnostics()
 
 bool api_tls_client::refresh_handshake_diagnostics()
 {
+    ft_unique_lock<pt_mutex> state_lock(this->_mutex);
+
+    if (state_lock.get_error() != ER_SUCCESS)
+    {
+        this->set_error(state_lock.get_error());
+        return (false);
+    }
+    if (this->_is_shutting_down)
+    {
+        this->set_error(FT_ERR_INVALID_STATE);
+        return (false);
+    }
+    state_lock.unlock();
+    if (state_lock.get_error() != ER_SUCCESS)
+    {
+        this->set_error(state_lock.get_error());
+        return (false);
+    }
     if (!this->populate_handshake_diagnostics())
         return (false);
     this->set_error(ER_SUCCESS);
@@ -1198,7 +1340,12 @@ bool api_tls_client::refresh_handshake_diagnostics()
 
 const api_tls_handshake_diagnostics &api_tls_client::get_handshake_diagnostics() const noexcept
 {
-    this->set_error(ER_SUCCESS);
+    ft_unique_lock<pt_mutex> state_lock(this->_mutex);
+
+    if (state_lock.get_error() != ER_SUCCESS)
+        this->set_error(state_lock.get_error());
+    else
+        this->set_error(ER_SUCCESS);
     return (this->_handshake_diagnostics);
 }
 
