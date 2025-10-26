@@ -8,7 +8,7 @@
 constexpr auto* placement_new_ref = static_cast<void* (*)(std::size_t, void*)>(&::operator new);
 
 template <typename T, typename... Args>
-T* construct_at(T* destination, Args&&... args)
+constexpr T* construct_at(T* destination, Args&&... args)
 {
     if constexpr (std::is_trivially_constructible_v<T, Args...>)
         *destination = T(std::forward<Args>(args)...);
@@ -18,7 +18,7 @@ T* construct_at(T* destination, Args&&... args)
 }
 
 template <typename T>
-T* construct_default_at(T* destination)
+constexpr T* construct_default_at(T* destination)
 {
     if constexpr (std::is_trivially_default_constructible_v<T>)
         *destination = T();
@@ -28,7 +28,7 @@ T* construct_default_at(T* destination)
 }
 
 template <typename T>
-void destroy_at(T* object)
+constexpr void destroy_at(T* object)
 {
     if constexpr (!std::is_trivially_destructible_v<T>)
         object->~T();

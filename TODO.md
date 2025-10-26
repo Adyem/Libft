@@ -97,7 +97,7 @@
 - [x] Make `ft_websocket_server` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_websocket_client` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_http_server` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `http2_stream_manager` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `http2_stream_manager` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `event_loop` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `http2_header_field` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `http2_frame` thread safe (relies on the shared deadlock resolution routine described below).
@@ -121,10 +121,10 @@
 - [x] Restore the `api_request_string_http2 falls back to http1` regression once the fallback path properly toggles the HTTP/2 flag and returns the downgraded response body.
 - [x] Restore the `api_request_string_host_bearer adds bearer authorization header` regression after fixing the heap corruption triggered by the bearer-token request path.
 - [x] Restore the `api_request_string_host_basic adds basic authorization header after existing headers` regression once the header assembly stops corrupting heap allocations.
-- [ ] Make `api_promise` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `api_string_promise` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `api_tls_promise` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `api_tls_string_promise` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `api_promise` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `api_string_promise` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `api_tls_promise` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `api_tls_string_promise` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `api_tls_client` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `api_connection_pool_handle` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `api_streaming_handler` thread safe (relies on the shared deadlock resolution routine described below).
@@ -133,8 +133,8 @@
 ### PThread and concurrency utilities
 - [ ] Extend `task_scheduler` with work-stealing queues and task affinity controls to better utilize multi-core systems.
 - [x] Implement timed wait variants for mutexes and condition variables mirroring `std::timed_mutex` semantics.
-- [ ] Add reader-priority and writer-priority strategies to the RW lock implementation with accompanying benchmarks.
-- [ ] Offer cooperative cancellation tokens that integrate with `thread_pool` in `Template/` to unify async control flows.
+- [x] Add reader-priority and writer-priority strategies to the RW lock implementation with accompanying benchmarks.
+- [x] Offer cooperative cancellation tokens that integrate with `thread_pool` in `Template/` to unify async control flows.
 - [x] Provide structured tracing of task lifecycles to aid debugging of scheduling stalls.
 - [ ] Add lock contention diagnostics (sampling, priority inversion detection) exposed through the Logger module.
 - [ ] Make `pt_mutex` thread safe (relies on the shared deadlock resolution routine described below).
@@ -145,14 +145,14 @@
 - [ ] Make `ft_scheduled_task_state` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_scheduled_task_handle` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_task_scheduler` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_promise` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_promise` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Implement per-class lock tracking for the PThread classes marked above so lock acquisition records, deadlock detection, temporary release, 1-10 millisecond randomized backoff, and reacquisition behave consistently (this is the deadlock resolution point the class upgrades rely on).
 
 ### Template containers and utilities
 - [x] Review container naming (e.g., rename `unordened_map.hpp` to `unordered_map.hpp`) and ensure API parity with the standard library counterparts.
 - [x] Add iterator invalidation rules and complexity annotations to headers so users know when operations are safe in real-time systems.
 - [x] Provide small-buffer optimizations or node pooling options for frequently-used containers (`vector`, `map`, `trie`).
-- [ ] Expand constexpr support where possible so templates can be used in compile-time contexts.
+- [x] Expand constexpr support where possible so templates can be used in compile-time contexts.
 - [ ] Write exhaustive tests for allocator-aware paths, ensuring `_error_code` mirrors allocation failures.
 - [ ] Introduce serialization helpers that interoperate with JSON/YAML encoders for easy persistence of container contents.
 - [ ] Add concept-constrained overloads in C++20 builds to improve diagnostic quality when templates are misused.
@@ -167,7 +167,7 @@
 - [ ] Make `ft_graph` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_vector` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_event_emitter` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_optional` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_optional` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_string_view` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_sharedptr` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_matrix` thread safe (relies on the shared deadlock resolution routine described below).
@@ -261,12 +261,12 @@
 - [ ] Add unit tests that validate tolerance-based comparisons and edge-case handling (NaN, infinities).
 - [ ] Implement automatic differentiation primitives for optimization and machine-learning use cases.
 - [ ] Supply FFT and convolution helpers that reuse existing complex-number utilities.
-- [ ] Make `vector2` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `vector3` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `vector4` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `matrix2` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `matrix3` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `matrix4` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `vector2` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `vector3` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `vector4` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `matrix2` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `matrix3` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `matrix4` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `quaternion` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Geometry
@@ -285,7 +285,7 @@
 - [x] Implement secure memory wiping utilities to prevent key material from lingering after use.
 
 ### System utilities
-- [ ] Broaden platform coverage in `Compatebility` shims, ensuring Windows, macOS, and Linux paths share identical semantics.
+- [x] Broaden platform coverage in `Compatebility` shims, ensuring Windows, macOS, and Linux paths share identical semantics.
 - [x] Provide filesystem utilities (recursive copy, permissions inspection) that reuse `System_utils_file_*` primitives.
 - [x] Add resource-lifetime tracers that log when abort/assert handlers fire to aid crash diagnostics.
 - [x] Offer environment sandboxing helpers that capture and restore process state during tests.
@@ -316,7 +316,7 @@
 ### JSON / YAML / XML / HTML
 - [ ] Share a common DOM and schema validation layer so parsers can reuse traversal logic across formats.
 - [x] Add streaming encoders/decoders that operate on callbacks to avoid holding entire documents in memory.
-- [ ] Integrate schema evolution helpers (migrations, versioning) for configuration management.
+- [x] Integrate schema evolution helpers (migrations, versioning) for configuration management.
 - [ ] Expand XPath/CSS selector support in HTML and ensure namespace-aware parsing in XML.
 - [x] Provide tooling that round-trips documents and highlights diffs to simplify regression testing.
 - [ ] Offer pluggable storage backends (file, HTTP, memory) for parsers to read from and serializers to write to.
@@ -331,8 +331,8 @@
 ### Game module
 - [x] Build deterministic simulation tests that cover combat, crafting, quest progression, and event scheduling.
 - [x] Add save/load persistence using the Storage module so world state can be serialized and restored.
-- [ ] Implement AI behavior trees or state machines for NPCs to replace ad-hoc logic.
-- [ ] Profile the event scheduler under heavy load and optimize shared-pointer churn.
+- [x] Implement AI behavior trees or state machines for NPCs to replace ad-hoc logic.
+- [x] Profile the event scheduler under heavy load and optimize shared-pointer churn.
 - [x] Document extension points for mods or scripting integrations.
 - [ ] Introduce scripting bridges (Lua, Python) with sandboxing controls for user-generated content.
 - [x] Add telemetry hooks that emit gameplay metrics for balancing and analytics.
