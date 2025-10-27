@@ -3,6 +3,7 @@
 
 #include "../JSon/json.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "api_request_signing.hpp"
 #include <cstdint>
 #include <cstddef>
 
@@ -27,7 +28,85 @@ struct api_retry_policy
     int initial_delay_ms;
     int max_delay_ms;
     int backoff_multiplier;
+    int circuit_breaker_threshold;
+    int circuit_breaker_cooldown_ms;
+    int circuit_breaker_half_open_successes;
 };
+
+struct api_transport_hooks
+{
+    bool (*request_stream)(const char *ip, uint16_t port,
+            const char *method, const char *path,
+            const api_streaming_handler *streaming_handler,
+            json_group *payload, const char *headers, int timeout,
+            const api_retry_policy *retry_policy, void *user_data);
+    bool (*request_stream_http2)(const char *ip, uint16_t port,
+            const char *method, const char *path,
+            const api_streaming_handler *streaming_handler,
+            json_group *payload, const char *headers, int timeout,
+            bool *used_http2, const api_retry_policy *retry_policy,
+            void *user_data);
+    bool (*request_stream_host)(const char *host, uint16_t port,
+            const char *method, const char *path,
+            const api_streaming_handler *streaming_handler,
+            json_group *payload, const char *headers, int timeout,
+            const api_retry_policy *retry_policy, void *user_data);
+    bool (*request_stream_tls)(const char *host, uint16_t port,
+            const char *method, const char *path,
+            const api_streaming_handler *streaming_handler,
+            json_group *payload, const char *headers, int timeout,
+            const char *ca_certificate, bool verify_peer,
+            const api_retry_policy *retry_policy, void *user_data);
+    bool (*request_stream_tls_http2)(const char *host, uint16_t port,
+            const char *method, const char *path,
+            const api_streaming_handler *streaming_handler,
+            json_group *payload, const char *headers, int timeout,
+            const char *ca_certificate, bool verify_peer, bool *used_http2,
+            const api_retry_policy *retry_policy, void *user_data);
+    char *(*request_string)(const char *ip, uint16_t port,
+            const char *method, const char *path, json_group *payload,
+            const char *headers, int *status, int timeout,
+            const api_retry_policy *retry_policy, void *user_data);
+    char *(*request_string_http2)(const char *ip, uint16_t port,
+            const char *method, const char *path, json_group *payload,
+            const char *headers, int *status, int timeout, bool *used_http2,
+            const api_retry_policy *retry_policy, void *user_data);
+    char *(*request_string_host)(const char *host, uint16_t port,
+            const char *method, const char *path, json_group *payload,
+            const char *headers, int *status, int timeout,
+            const api_retry_policy *retry_policy, void *user_data);
+    char *(*request_string_tls)(const char *host, uint16_t port,
+            const char *method, const char *path, json_group *payload,
+            const char *headers, int *status, int timeout,
+            const api_retry_policy *retry_policy, void *user_data);
+    char *(*request_string_tls_http2)(const char *host, uint16_t port,
+            const char *method, const char *path, json_group *payload,
+            const char *headers, int *status, int timeout, bool *used_http2,
+            const api_retry_policy *retry_policy, void *user_data);
+    char *(*request_https)(const char *ip, uint16_t port,
+            const char *method, const char *path, json_group *payload,
+            const char *headers, int *status, int timeout,
+            const char *ca_certificate, bool verify_peer,
+            const api_retry_policy *retry_policy, void *user_data);
+    char *(*request_https_http2)(const char *ip, uint16_t port,
+            const char *method, const char *path, json_group *payload,
+            const char *headers, int *status, int timeout,
+            const char *ca_certificate, bool verify_peer, bool *used_http2,
+            const api_retry_policy *retry_policy, void *user_data);
+    bool (*request_string_async)(const char *ip, uint16_t port,
+            const char *method, const char *path, api_callback callback,
+            void *user_data, json_group *payload, const char *headers,
+            int timeout, void *transport_user_data);
+    bool (*request_string_tls_async)(const char *host, uint16_t port,
+            const char *method, const char *path, api_callback callback,
+            void *user_data, json_group *payload, const char *headers,
+            int timeout, void *transport_user_data);
+    void *user_data;
+};
+
+void    api_set_transport_hooks(const api_transport_hooks *hooks);
+void    api_clear_transport_hooks(void);
+const api_transport_hooks    *api_get_transport_hooks(void);
 
 bool    api_request_string_async(const char *ip, uint16_t port,
         const char *method, const char *path, api_callback callback,

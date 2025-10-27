@@ -24,7 +24,7 @@ class ft_big_number
         ft_big_number() noexcept;
         ft_big_number(const ft_big_number& other) noexcept;
         ft_big_number(ft_big_number&& other) noexcept;
-        ~ft_big_number();
+        ~ft_big_number() noexcept;
 
         ft_big_number& operator=(const ft_big_number& other) noexcept;
         ft_big_number& operator=(ft_big_number&& other) noexcept;

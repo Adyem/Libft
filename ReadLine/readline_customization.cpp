@@ -870,14 +870,12 @@ int rl_state_insert_text(readline_state_t *state, const char *text)
             }
             new_bufsize *= 2;
         }
-        resized_buffer = rl_resize_buffer(state->buffer, state->bufsize, new_bufsize);
+        resized_buffer = rl_resize_buffer(&state->buffer, &state->bufsize, new_bufsize);
         if (resized_buffer == ft_nullptr)
         {
             result = -1;
             goto cleanup;
         }
-        state->buffer = resized_buffer;
-        state->bufsize = new_bufsize;
     }
     ft_memmove(&state->buffer[state->pos + text_length], &state->buffer[state->pos], static_cast<size_t>(suffix_length) + 1);
     ft_memcpy(&state->buffer[state->pos], text, static_cast<size_t>(text_length));

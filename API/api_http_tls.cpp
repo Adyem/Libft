@@ -995,6 +995,9 @@ char *api_https_execute_http2(api_connection_pool_handle &connection_handle,
     http2_used_local = false;
     while (attempt_index < max_attempts)
     {
+        if (!api_retry_circuit_allow(connection_handle, retry_policy,
+                error_code))
+            return (ft_nullptr);
         bool socket_ready;
         bool should_retry;
 
@@ -1011,12 +1014,15 @@ char *api_https_execute_http2(api_connection_pool_handle &connection_handle,
             if (result_body)
             {
                 used_http2 = http2_used_local;
+                api_retry_circuit_record_success(connection_handle,
+                    retry_policy);
                 return (result_body);
             }
         }
         should_retry = api_https_should_retry(error_code);
         if (!should_retry)
             break ;
+        api_retry_circuit_record_failure(connection_handle, retry_policy);
         api_connection_pool_evict(connection_handle);
         attempt_index++;
         if (attempt_index >= max_attempts)
@@ -1063,6 +1069,9 @@ char *api_https_execute(api_connection_pool_handle &connection_handle,
     attempt_index = 0;
     while (attempt_index < max_attempts)
     {
+        if (!api_retry_circuit_allow(connection_handle, retry_policy,
+                error_code))
+            return (ft_nullptr);
         bool socket_ready;
         bool should_retry;
 
@@ -1076,11 +1085,16 @@ char *api_https_execute(api_connection_pool_handle &connection_handle,
                     host_header, payload, headers, status, timeout,
                     ca_certificate, verify_peer, error_code);
             if (result_body)
+            {
+                api_retry_circuit_record_success(connection_handle,
+                    retry_policy);
                 return (result_body);
+            }
         }
         should_retry = api_https_should_retry(error_code);
         if (!should_retry)
             return (ft_nullptr);
+        api_retry_circuit_record_failure(connection_handle, retry_policy);
         api_connection_pool_evict(connection_handle);
         attempt_index++;
         if (attempt_index >= max_attempts)
@@ -1131,6 +1145,9 @@ bool api_https_execute_streaming(api_connection_pool_handle &connection_handle,
     implicit_retry_added = false;
     while (attempt_index < allowed_attempts)
     {
+        if (!api_retry_circuit_allow(connection_handle, retry_policy,
+                error_code))
+            return (false);
         bool socket_ready;
         bool should_retry;
 
@@ -1148,6 +1165,8 @@ bool api_https_execute_streaming(api_connection_pool_handle &connection_handle,
                     connection_close, error_code);
             if (success)
             {
+                api_retry_circuit_record_success(connection_handle,
+                    retry_policy);
                 if (connection_close)
                     api_connection_pool_disable_store(connection_handle);
                 return (true);
@@ -1156,6 +1175,7 @@ bool api_https_execute_streaming(api_connection_pool_handle &connection_handle,
         should_retry = api_https_should_retry(error_code);
         if (!should_retry)
             return (false);
+        api_retry_circuit_record_failure(connection_handle, retry_policy);
         if (!implicit_retry_added && retry_policy == ft_nullptr)
         {
             allowed_attempts = 2;

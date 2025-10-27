@@ -132,12 +132,10 @@ static int rl_copy_history_entry_to_buffer(readline_state_t *state, const char *
             new_bufsize = 1;
         while (new_bufsize < required_size)
             new_bufsize *= 2;
-        char *resized_buffer = rl_resize_buffer(state->buffer, state->bufsize, new_bufsize);
+        char *resized_buffer = rl_resize_buffer(&state->buffer, &state->bufsize, new_bufsize);
 
         if (!resized_buffer)
             return (-1);
-        state->buffer = resized_buffer;
-        state->bufsize = new_bufsize;
     }
     ft_strlcpy(state->buffer, history_entry, state->bufsize);
     return (0);

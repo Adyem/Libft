@@ -11,13 +11,6 @@
 #include <stddef.h>
 #include <cstdio>
 
-typedef enum
-{
-    LEN_NONE,
-    LEN_L,
-    LEN_Z
-} LengthModifier;
-
 size_t ft_strlen_printf(const char *string);
 void ft_putchar_fd(const char character, int fd, size_t *count);
 void ft_putstr_fd(const char *string, int fd, size_t *count);
@@ -34,5 +27,6 @@ int pf_printf_fd_v(int fd, const char *format, va_list args);
 int pf_try_format_custom_specifier(char specifier, va_list *args, ft_string &output);
 void pf_write_ft_string_fd(const ft_string &output, int fd, size_t *count);
 void pf_write_ft_string_stream(const ft_string &output, FILE *stream, size_t *count);
+int pf_flush_stream(FILE *stream);
 
 #endif
