@@ -1,6 +1,7 @@
 #include "api.hpp"
 #include "api_internal.hpp"
 #include "api_http_internal.hpp"
+#include "api_request_metrics.hpp"
 #include "../Networking/socket_class.hpp"
 #include "../Networking/ssl_wrapper.hpp"
 #include "../Networking/networking.hpp"
@@ -77,6 +78,44 @@ char *api_request_https(const char *ip, uint16_t port,
         ft_log_debug("api_request_https %s:%u %s %s",
             log_ip, port, log_method, log_path);
     }
+    const api_transport_hooks *hooks;
+
+    hooks = api_get_transport_hooks();
+    if (hooks && hooks->request_https)
+    {
+        return (hooks->request_https(ip, port, method, path, payload, headers,
+                status, timeout, ca_certificate, verify_peer, retry_policy,
+                hooks->user_data));
+    }
+    size_t metrics_request_bytes;
+    int metrics_entry_errno;
+    char *metrics_payload_string;
+
+    metrics_request_bytes = 0;
+    if (method)
+        metrics_request_bytes += ft_strlen(method);
+    if (path)
+        metrics_request_bytes += ft_strlen(path);
+    if (headers && headers[0])
+        metrics_request_bytes += ft_strlen(headers);
+    if (ip)
+        metrics_request_bytes += ft_strlen(ip);
+    if (payload)
+    {
+        metrics_entry_errno = ft_errno;
+        metrics_payload_string = json_write_to_string(payload);
+    }
+    else
+    {
+        metrics_entry_errno = ft_errno;
+        metrics_payload_string = ft_nullptr;
+    }
+    if (metrics_payload_string)
+    {
+        metrics_request_bytes += ft_strlen(metrics_payload_string);
+        cma_free(metrics_payload_string);
+    }
+    ft_errno = metrics_entry_errno;
     int error_code = ER_SUCCESS;
     struct api_request_errno_guard
     {
@@ -92,6 +131,19 @@ char *api_request_https(const char *ip, uint16_t port,
             return ;
         }
     } guard(&error_code);
+    char *metrics_result_body;
+    int metrics_status_storage;
+    int *metrics_status_pointer;
+
+    metrics_result_body = ft_nullptr;
+    metrics_status_storage = -1;
+    if (status)
+        metrics_status_pointer = status;
+    else
+        metrics_status_pointer = &metrics_status_storage;
+    api_request_metrics_guard metrics_guard(ip, port, method, path,
+        metrics_request_bytes, &metrics_result_body, metrics_status_pointer,
+        &error_code);
 
     SocketConfig config;
     config._type = SocketType::CLIENT;
@@ -170,25 +222,23 @@ char *api_request_https(const char *ip, uint16_t port,
     }
 
     bool http2_used_local;
-    char *result_body;
-
     http2_used_local = false;
-    result_body = api_https_execute_http2(connection_handle, method, path, ip,
-            payload, headers, status, timeout, ca_certificate,
+    metrics_result_body = api_https_execute_http2(connection_handle, method,
+            path, ip, payload, headers, status, timeout, ca_certificate,
             verify_peer, ip, port, security_identity_pointer, retry_policy,
             http2_used_local, error_code);
-    if (!result_body)
+    if (!metrics_result_body)
     {
         error_code = ER_SUCCESS;
-        result_body = api_https_execute(connection_handle, method, path, ip,
-                payload, headers, status, timeout, ca_certificate,
+        metrics_result_body = api_https_execute(connection_handle, method,
+                path, ip, payload, headers, status, timeout, ca_certificate,
                 verify_peer, ip, port, security_identity_pointer, retry_policy,
                 error_code);
-        if (!result_body)
+        if (!metrics_result_body)
             return (ft_nullptr);
     }
     connection_guard.set_success();
-    return (result_body);
+    return (metrics_result_body);
 }
 
 char *api_request_https_http2(const char *ip, uint16_t port,
@@ -213,6 +263,44 @@ char *api_request_https_http2(const char *ip, uint16_t port,
         ft_log_debug("api_request_https_http2 %s:%u %s %s",
             log_ip, port, log_method, log_path);
     }
+    const api_transport_hooks *hooks;
+
+    hooks = api_get_transport_hooks();
+    if (hooks && hooks->request_https_http2)
+    {
+        return (hooks->request_https_http2(ip, port, method, path, payload,
+                headers, status, timeout, ca_certificate, verify_peer,
+                used_http2, retry_policy, hooks->user_data));
+    }
+    size_t metrics_request_bytes;
+    int metrics_entry_errno;
+    char *metrics_payload_string;
+
+    metrics_request_bytes = 0;
+    if (method)
+        metrics_request_bytes += ft_strlen(method);
+    if (path)
+        metrics_request_bytes += ft_strlen(path);
+    if (headers && headers[0])
+        metrics_request_bytes += ft_strlen(headers);
+    if (ip)
+        metrics_request_bytes += ft_strlen(ip);
+    if (payload)
+    {
+        metrics_entry_errno = ft_errno;
+        metrics_payload_string = json_write_to_string(payload);
+    }
+    else
+    {
+        metrics_entry_errno = ft_errno;
+        metrics_payload_string = ft_nullptr;
+    }
+    if (metrics_payload_string)
+    {
+        metrics_request_bytes += ft_strlen(metrics_payload_string);
+        cma_free(metrics_payload_string);
+    }
+    ft_errno = metrics_entry_errno;
     int error_code = ER_SUCCESS;
     struct api_request_errno_guard
     {
@@ -228,6 +316,19 @@ char *api_request_https_http2(const char *ip, uint16_t port,
             return ;
         }
     } guard(&error_code);
+    char *metrics_result_body;
+    int metrics_status_storage;
+    int *metrics_status_pointer;
+
+    metrics_result_body = ft_nullptr;
+    metrics_status_storage = -1;
+    if (status)
+        metrics_status_pointer = status;
+    else
+        metrics_status_pointer = &metrics_status_storage;
+    api_request_metrics_guard metrics_guard(ip, port, method, path,
+        metrics_request_bytes, &metrics_result_body, metrics_status_pointer,
+        &error_code);
 
     SocketConfig config;
     config._type = SocketType::CLIENT;
@@ -306,28 +407,27 @@ char *api_request_https_http2(const char *ip, uint16_t port,
     }
 
     bool http2_used_local;
-    char *result_body;
 
     http2_used_local = false;
-    result_body = api_https_execute_http2(connection_handle, method, path, ip,
-            payload, headers, status, timeout, ca_certificate,
+    metrics_result_body = api_https_execute_http2(connection_handle, method,
+            path, ip, payload, headers, status, timeout, ca_certificate,
             verify_peer, ip, port, security_identity_pointer, retry_policy,
             http2_used_local, error_code);
-    if (!result_body)
+    if (!metrics_result_body)
     {
         error_code = ER_SUCCESS;
-        result_body = api_https_execute(connection_handle, method, path, ip,
-                payload, headers, status, timeout, ca_certificate,
+        metrics_result_body = api_https_execute(connection_handle, method,
+                path, ip, payload, headers, status, timeout, ca_certificate,
                 verify_peer, ip, port, security_identity_pointer, retry_policy,
                 error_code);
-        if (!result_body)
+        if (!metrics_result_body)
             return (ft_nullptr);
         http2_used_local = false;
     }
     connection_guard.set_success();
     if (used_http2)
         *used_http2 = http2_used_local;
-    return (result_body);
+    return (metrics_result_body);
 }
 
 bool api_request_stream_tls(const char *host, uint16_t port,
@@ -355,6 +455,15 @@ bool api_request_stream_tls(const char *host, uint16_t port,
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (false);
+    }
+    const api_transport_hooks *hooks;
+
+    hooks = api_get_transport_hooks();
+    if (hooks && hooks->request_stream_tls)
+    {
+        return (hooks->request_stream_tls(host, port, method, path,
+                streaming_handler, payload, headers, timeout, ca_certificate,
+                verify_peer, retry_policy, hooks->user_data));
     }
     int error_code = ER_SUCCESS;
     struct api_request_errno_guard
@@ -496,6 +605,15 @@ bool api_request_stream_tls_http2(const char *host, uint16_t port,
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (false);
+    }
+    const api_transport_hooks *hooks;
+
+    hooks = api_get_transport_hooks();
+    if (hooks && hooks->request_stream_tls_http2)
+    {
+        return (hooks->request_stream_tls_http2(host, port, method, path,
+                streaming_handler, payload, headers, timeout, ca_certificate,
+                verify_peer, used_http2, retry_policy, hooks->user_data));
     }
     int error_code = ER_SUCCESS;
     struct api_request_errno_guard
@@ -653,6 +771,43 @@ char *api_request_string_tls(const char *host, uint16_t port,
         error_code = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
+    const api_transport_hooks *hooks;
+
+    hooks = api_get_transport_hooks();
+    if (hooks && hooks->request_string_tls)
+    {
+        return (hooks->request_string_tls(host, port, method, path, payload,
+                headers, status, timeout, retry_policy, hooks->user_data));
+    }
+
+    size_t metrics_request_bytes;
+    int metrics_entry_errno;
+    char *metrics_payload_string;
+
+    metrics_request_bytes = 0;
+    metrics_request_bytes += ft_strlen(host);
+    if (method)
+        metrics_request_bytes += ft_strlen(method);
+    if (path)
+        metrics_request_bytes += ft_strlen(path);
+    if (headers && headers[0])
+        metrics_request_bytes += ft_strlen(headers);
+    if (payload)
+    {
+        metrics_entry_errno = ft_errno;
+        metrics_payload_string = json_write_to_string(payload);
+    }
+    else
+    {
+        metrics_entry_errno = ft_errno;
+        metrics_payload_string = ft_nullptr;
+    }
+    if (metrics_payload_string)
+    {
+        metrics_request_bytes += ft_strlen(metrics_payload_string);
+        cma_free(metrics_payload_string);
+    }
+    ft_errno = metrics_entry_errno;
 
     SocketConfig config;
     config._type = SocketType::CLIENT;
@@ -712,15 +867,27 @@ char *api_request_string_tls(const char *host, uint16_t port,
         return (ft_nullptr);
     }
 
-    char *result_body;
+    char *metrics_result_body;
+    int metrics_status_storage;
+    int *metrics_status_pointer;
 
-    result_body = api_https_execute(connection_handle, method, path, host,
+    metrics_result_body = ft_nullptr;
+    metrics_status_storage = -1;
+    if (status)
+        metrics_status_pointer = status;
+    else
+        metrics_status_pointer = &metrics_status_storage;
+    api_request_metrics_guard metrics_guard(host, port, method, path,
+        metrics_request_bytes, &metrics_result_body, metrics_status_pointer,
+        &error_code);
+
+    metrics_result_body = api_https_execute(connection_handle, method, path, host,
             payload, headers, status, timeout, ft_nullptr, false, host, port,
             ft_nullptr, retry_policy, error_code);
-    if (!result_body)
+    if (!metrics_result_body)
         return (ft_nullptr);
     connection_guard.set_success();
-    return (result_body);
+    return (metrics_result_body);
 }
 
 char *api_request_string_tls_http2(const char *host, uint16_t port,
@@ -765,6 +932,44 @@ char *api_request_string_tls_http2(const char *host, uint16_t port,
         error_code = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
+    const api_transport_hooks *hooks;
+
+    hooks = api_get_transport_hooks();
+    if (hooks && hooks->request_string_tls_http2)
+    {
+        return (hooks->request_string_tls_http2(host, port, method, path,
+                payload, headers, status, timeout, used_http2, retry_policy,
+                hooks->user_data));
+    }
+
+    size_t metrics_request_bytes;
+    int metrics_entry_errno;
+    char *metrics_payload_string;
+
+    metrics_request_bytes = 0;
+    metrics_request_bytes += ft_strlen(host);
+    if (method)
+        metrics_request_bytes += ft_strlen(method);
+    if (path)
+        metrics_request_bytes += ft_strlen(path);
+    if (headers && headers[0])
+        metrics_request_bytes += ft_strlen(headers);
+    if (payload)
+    {
+        metrics_entry_errno = ft_errno;
+        metrics_payload_string = json_write_to_string(payload);
+    }
+    else
+    {
+        metrics_entry_errno = ft_errno;
+        metrics_payload_string = ft_nullptr;
+    }
+    if (metrics_payload_string)
+    {
+        metrics_request_bytes += ft_strlen(metrics_payload_string);
+        cma_free(metrics_payload_string);
+    }
+    ft_errno = metrics_entry_errno;
 
     SocketConfig config;
     config._type = SocketType::CLIENT;
@@ -824,26 +1029,38 @@ char *api_request_string_tls_http2(const char *host, uint16_t port,
         return (ft_nullptr);
     }
     bool http2_used_local;
-    char *result_body;
+    char *metrics_result_body;
+    int metrics_status_storage;
+    int *metrics_status_pointer;
+
+    metrics_result_body = ft_nullptr;
+    metrics_status_storage = -1;
+    if (status)
+        metrics_status_pointer = status;
+    else
+        metrics_status_pointer = &metrics_status_storage;
+    api_request_metrics_guard metrics_guard(host, port, method, path,
+        metrics_request_bytes, &metrics_result_body, metrics_status_pointer,
+        &error_code);
 
     http2_used_local = false;
-    result_body = api_https_execute_http2(connection_handle, method, path, host,
+    metrics_result_body = api_https_execute_http2(connection_handle, method, path, host,
             payload, headers, status, timeout, ft_nullptr, true, host, port,
             ft_nullptr, retry_policy, http2_used_local, error_code);
-    if (!result_body)
+    if (!metrics_result_body)
     {
         error_code = ER_SUCCESS;
-        result_body = api_https_execute(connection_handle, method, path, host,
+        metrics_result_body = api_https_execute(connection_handle, method, path, host,
                 payload, headers, status, timeout, ft_nullptr, true, host,
                 port, ft_nullptr, retry_policy, error_code);
-        if (!result_body)
+        if (!metrics_result_body)
             return (ft_nullptr);
         http2_used_local = false;
     }
     connection_guard.set_success();
     if (used_http2)
         *used_http2 = http2_used_local;
-    return (result_body);
+    return (metrics_result_body);
 }
 
 json_group *api_request_json_tls(const char *host, uint16_t port,
@@ -1341,6 +1558,15 @@ bool    api_request_string_tls_async(const char *host, uint16_t port,
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (false);
+    }
+    const api_transport_hooks *hooks;
+
+    hooks = api_get_transport_hooks();
+    if (hooks && hooks->request_string_tls_async)
+    {
+        return (hooks->request_string_tls_async(host, port, method, path,
+                callback, user_data, payload, headers, timeout,
+                hooks->user_data));
     }
     api_tls_async_request *data = static_cast<api_tls_async_request*>(cma_malloc(sizeof(api_tls_async_request)));
     if (!data)

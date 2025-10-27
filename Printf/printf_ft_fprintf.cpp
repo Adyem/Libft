@@ -1,316 +1,50 @@
-
 #include "printf.hpp"
 #include "printf_internal.hpp"
+#include "printf_engine.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../Libft/libft.hpp"
-#include "../CPP_class/class_string_class.hpp"
 #include <cstdio>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stddef.h>
-#include <limits.h>
-#include <errno.h>
+#include <cstdarg>
+#include <climits>
+#include <cerrno>
 
-static bool count_has_error(size_t *count)
+struct pf_stream_writer_context
 {
-    if (!count)
-        return (true);
-    if (*count == SIZE_MAX)
-        return (true);
-    return (false);
-}
+    FILE *stream;
+};
 
-static void mark_count_error(size_t *count)
+static int pf_stream_writer(const char *data_pointer, size_t data_length, void *context, size_t *written_count)
 {
-    if (!count)
-        return ;
-    *count = SIZE_MAX;
-    return ;
-}
+    pf_stream_writer_context *writer_context;
 
-static void set_stream_error(void)
-{
-    int saved_errno;
-
-    saved_errno = errno;
-    if (saved_errno != 0)
+    writer_context = static_cast<pf_stream_writer_context*>(context);
+    if (!writer_context || !writer_context->stream || !written_count)
     {
-        ft_errno = ft_map_system_error(saved_errno);
-        return ;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (-1);
     }
-    ft_errno = FT_ERR_IO;
-    return ;
-}
-
-static void write_buffer_stream(const char *buffer, size_t length, FILE *stream, size_t *count)
-{
-    if (count_has_error(count))
-        return ;
-    if (length == 0)
-        return ;
-    size_t written = fwrite(buffer, 1, length, stream);
-    if (written != length)
+    if (data_length == 0)
+        return (0);
+    if (*written_count > SIZE_MAX - data_length)
     {
-        mark_count_error(count);
-        set_stream_error();
-        return ;
+        ft_errno = FT_ERR_OUT_OF_RANGE;
+        *written_count = SIZE_MAX;
+        return (-1);
     }
-    *count += written;
-    return ;
-}
-
-static int format_double_output(char specifier, int precision, double number, ft_string &output)
-{
-    if (precision < 0)
-        precision = 6;
-    if ((specifier == 'g' || specifier == 'G') && precision == 0)
-        precision = 1;
-#define FORMAT_DOUBLE_CASE(character, literal) \
-    if (specifier == character) \
-    { \
-        int required_length = std::snprintf(ft_nullptr, 0, literal, precision, number); \
-        if (required_length < 0) \
-        { \
-            ft_errno = FT_ERR_IO; \
-            return (-1); \
-        } \
-        output.clear(); \
-        output.resize_length(static_cast<size_t>(required_length)); \
-        if (output.get_error() != ER_SUCCESS) \
-        { \
-            ft_errno = FT_ERR_IO; \
-            return (-1); \
-        } \
-        int written_length = std::snprintf(output.print(), static_cast<size_t>(required_length) + 1, literal, precision, number); \
-        if (written_length < 0) \
-        { \
-            ft_errno = FT_ERR_IO; \
-            return (-1); \
-        } \
-        output.resize_length(static_cast<size_t>(written_length)); \
-        return (0); \
-    }
-
-    FORMAT_DOUBLE_CASE('f', "%.*f");
-    FORMAT_DOUBLE_CASE('F', "%.*F");
-    FORMAT_DOUBLE_CASE('e', "%.*e");
-    FORMAT_DOUBLE_CASE('E', "%.*E");
-    FORMAT_DOUBLE_CASE('g', "%.*g");
-    FORMAT_DOUBLE_CASE('G', "%.*G");
-#undef FORMAT_DOUBLE_CASE
-    return (-1);
-}
-
-static void ft_putchar_stream(const char character, FILE *stream, size_t *count)
-{
-    if (count_has_error(count))
-        return ;
-    if (fputc(static_cast<unsigned char>(character), stream) == EOF)
+    size_t written;
+    errno = 0;
+    written = fwrite(data_pointer, 1, data_length, writer_context->stream);
+    if (written != data_length)
     {
-        mark_count_error(count);
-        set_stream_error();
-        return ;
-    }
-    (*count)++;
-}
-
-static void ft_putstr_stream(const char *string, FILE *stream, size_t *count)
-{
-    if (count_has_error(count))
-        return ;
-    if (!string)
-    {
-        write_buffer_stream("(null)", 6, stream, count);
-        return ;
-    }
-    size_t length = ft_strlen(string);
-    write_buffer_stream(string, length, stream, count);
-}
-
-static void ft_putnbr_stream_recursive(long number, FILE *stream, size_t *count)
-{
-    if (count_has_error(count))
-        return ;
-    if (number < 0)
-    {
-        ft_putchar_stream('-', stream, count);
-        if (count_has_error(count))
-            return ;
-        number = -number;
-    }
-    if (number >= 10)
-        ft_putnbr_stream_recursive(number / 10, stream, count);
-    if (count_has_error(count))
-        return ;
-    ft_putchar_stream(static_cast<char>('0' + (number % 10)), stream, count);
-}
-
-static void ft_putnbr_stream(long number, FILE *stream, size_t *count)
-{
-    ft_putnbr_stream_recursive(number, stream, count);
-}
-
-static void ft_putunsigned_stream_recursive(uintmax_t number, FILE *stream, size_t *count)
-{
-    if (count_has_error(count))
-        return ;
-    if (number >= 10)
-        ft_putunsigned_stream_recursive(number / 10, stream, count);
-    if (count_has_error(count))
-        return ;
-    ft_putchar_stream(static_cast<char>('0' + (number % 10)), stream, count);
-}
-
-static void ft_putunsigned_stream(uintmax_t number, FILE *stream, size_t *count)
-{
-    ft_putunsigned_stream_recursive(number, stream, count);
-}
-
-static void ft_puthex_stream_recursive(uintmax_t number, FILE *stream, bool uppercase, size_t *count)
-{
-    if (count_has_error(count))
-        return ;
-    if (number >= 16)
-        ft_puthex_stream_recursive(number / 16, stream, uppercase, count);
-    if (count_has_error(count))
-        return ;
-    uintmax_t digit = number % 16;
-    char character;
-    if (digit < 10)
-        character = static_cast<char>('0' + digit);
-    else
-    {
-        char base_char;
-        if (uppercase)
-            base_char = 'A';
+        if (errno != 0)
+            ft_errno = ft_map_system_error(errno);
         else
-            base_char = 'a';
-        character = static_cast<char>(base_char + (digit - 10));
+            ft_errno = FT_ERR_IO;
+        *written_count = SIZE_MAX;
+        return (-1);
     }
-    ft_putchar_stream(character, stream, count);
-}
-
-static void ft_puthex_stream(uintmax_t number, FILE *stream, bool uppercase, size_t *count)
-{
-    ft_puthex_stream_recursive(number, stream, uppercase, count);
-}
-
-static void ft_putoctal_stream_recursive(uintmax_t number, FILE *stream, size_t *count)
-{
-    if (count_has_error(count))
-        return ;
-    if (number >= 8)
-        ft_putoctal_stream_recursive(number / 8, stream, count);
-    if (count_has_error(count))
-        return ;
-    ft_putchar_stream(static_cast<char>('0' + (number % 8)), stream, count);
-}
-
-static void ft_putoctal_stream(uintmax_t number, FILE *stream, size_t *count)
-{
-    ft_putoctal_stream_recursive(number, stream, count);
-}
-
-static void ft_putptr_stream(void *pointer, FILE *stream, size_t *count)
-{
-    if (count_has_error(count))
-        return ;
-    ft_putstr_stream("0x", stream, count);
-    if (count_has_error(count))
-        return ;
-    ft_puthex_stream(reinterpret_cast<uintptr_t>(pointer), stream, false, count);
-}
-
-static void ft_putfloat_stream(double number, FILE *stream, size_t *count, int precision)
-{
-    if (count_has_error(count))
-        return ;
-    ft_string formatted_output;
-    if (format_double_output('f', precision, number, formatted_output) != 0)
-    {
-        mark_count_error(count);
-        set_stream_error();
-        return ;
-    }
-    size_t output_length = formatted_output.size();
-    if (output_length == 0)
-        return ;
-    write_buffer_stream(formatted_output.c_str(), output_length, stream, count);
-}
-
-static void ft_putscientific_stream(double number, bool uppercase, FILE *stream, size_t *count, int precision)
-{
-    if (count_has_error(count))
-        return ;
-    char specifier;
-
-    if (uppercase)
-        specifier = 'E';
-    else
-        specifier = 'e';
-    ft_string formatted_output;
-    if (format_double_output(specifier, precision, number, formatted_output) != 0)
-    {
-        mark_count_error(count);
-        set_stream_error();
-        return ;
-    }
-    size_t output_length = formatted_output.size();
-    if (output_length == 0)
-        return ;
-    write_buffer_stream(formatted_output.c_str(), output_length, stream, count);
-}
-
-static void ft_putgeneral_stream(double number, bool uppercase, FILE *stream, size_t *count, int precision)
-{
-    if (count_has_error(count))
-        return ;
-    char specifier;
-
-    if (uppercase)
-        specifier = 'G';
-    else
-        specifier = 'g';
-    ft_string formatted_output;
-    if (format_double_output(specifier, precision, number, formatted_output) != 0)
-    {
-        mark_count_error(count);
-        set_stream_error();
-        return ;
-    }
-    size_t output_length = formatted_output.size();
-    if (output_length == 0)
-        return ;
-    write_buffer_stream(formatted_output.c_str(), output_length, stream, count);
-}
-
-void pf_write_ft_string_stream(const ft_string &output, FILE *stream, size_t *count)
-{
-    const char  *buffer;
-    size_t      length;
-
-    if (count_has_error(count))
-        return ;
-    if (output.get_error() != ER_SUCCESS)
-    {
-        mark_count_error(count);
-        set_stream_error();
-        return ;
-    }
-    buffer = output.c_str();
-    if (buffer == ft_nullptr)
-    {
-        mark_count_error(count);
-        set_stream_error();
-        return ;
-    }
-    length = output.size();
-    if (length == 0)
-        return ;
-    write_buffer_stream(buffer, length, stream, count);
-    return ;
+    *written_count += data_length;
+    return (0);
 }
 
 int ft_vfprintf(FILE *stream, const char *format, va_list args)
@@ -320,224 +54,50 @@ int ft_vfprintf(FILE *stream, const char *format, va_list args)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    size_t count = 0;
-    size_t index = 0;
+    pf_stream_writer_context context;
+    context.stream = stream;
+    size_t written_count;
+    written_count = 0;
     va_list current_args;
-
     va_copy(current_args, args);
-    while (format[index])
+    int engine_status;
+    engine_status = pf_engine_format(format, current_args, pf_stream_writer, &context, &written_count);
+    if (engine_status != 0)
     {
-        if (count == SIZE_MAX)
-            break ;
-        if (format[index] == '%')
-        {
-            index++;
-            if (format[index] == '\0')
-                break;
-            LengthModifier len_mod = LEN_NONE;
-            if (format[index] == 'l')
-            {
-                len_mod = LEN_L;
-                index++;
-            }
-            else if (format[index] == 'z')
-            {
-                len_mod = LEN_Z;
-                index++;
-            }
-            char spec = format[index];
-            if (spec == '\0')
-                break;
-            if (spec == 'c')
-            {
-                char character = static_cast<char>(va_arg(current_args, int));
-                ft_putchar_stream(character, stream, &count);
-            }
-            else if (spec == 's')
-            {
-                char *string = va_arg(current_args, char *);
-                ft_putstr_stream(string, stream, &count);
-            }
-            else if (spec == 'd' || spec == 'i')
-            {
-                if (len_mod == LEN_L)
-                {
-                    long number = va_arg(current_args, long);
-                    ft_putnbr_stream(number, stream, &count);
-                }
-                else
-                {
-                    int number = va_arg(current_args, int);
-                    ft_putnbr_stream(number, stream, &count);
-                }
-            }
-            else if (spec == 'u')
-            {
-                if (len_mod == LEN_L)
-                {
-                    uintmax_t number = va_arg(current_args, unsigned long);
-                    ft_putunsigned_stream(number, stream, &count);
-                }
-                else if (len_mod == LEN_Z)
-                {
-                    size_t number = va_arg(current_args, size_t);
-                    ft_putunsigned_stream(number, stream, &count);
-                }
-                else
-                {
-                    unsigned int number = va_arg(current_args, unsigned int);
-                    ft_putunsigned_stream(number, stream, &count);
-                }
-            }
-            else if (spec == 'x' || spec == 'X')
-            {
-                bool uppercase = (spec == 'X');
-                if (len_mod == LEN_L)
-                {
-                    uintmax_t number = va_arg(current_args, unsigned long);
-                    ft_puthex_stream(number, stream, uppercase, &count);
-                }
-                else if (len_mod == LEN_Z)
-                {
-                    size_t number = va_arg(current_args, size_t);
-                    ft_puthex_stream(number, stream, uppercase, &count);
-                }
-                else
-                {
-                    unsigned int number = va_arg(current_args, unsigned int);
-                    ft_puthex_stream(number, stream, uppercase, &count);
-                }
-            }
-            else if (spec == 'o')
-            {
-                if (len_mod == LEN_L)
-                {
-                    uintmax_t number = va_arg(current_args, unsigned long);
-                    ft_putoctal_stream(number, stream, &count);
-                }
-                else if (len_mod == LEN_Z)
-                {
-                    size_t number = va_arg(current_args, size_t);
-                    ft_putoctal_stream(number, stream, &count);
-                }
-                else
-                {
-                    unsigned int number = va_arg(current_args, unsigned int);
-                    ft_putoctal_stream(number, stream, &count);
-                }
-            }
-            else if (spec == 'f')
-            {
-                double number = va_arg(current_args, double);
-                ft_putfloat_stream(number, stream, &count, 6);
-            }
-            else if (spec == 'e' || spec == 'E')
-            {
-                bool uppercase = (spec == 'E');
-                double number = va_arg(current_args, double);
-                ft_putscientific_stream(number, uppercase, stream, &count, 6);
-            }
-            else if (spec == 'g' || spec == 'G')
-            {
-                bool uppercase = (spec == 'G');
-                double number = va_arg(current_args, double);
-                ft_putgeneral_stream(number, uppercase, stream, &count, 6);
-            }
-            else if (spec == 'p')
-            {
-                void *pointer = va_arg(current_args, void *);
-                ft_putptr_stream(pointer, stream, &count);
-            }
-            else if (spec == 'b')
-            {
-                int boolean_value = va_arg(current_args, int);
-                if (boolean_value)
-                    ft_putstr_stream("true", stream, &count);
-                else
-                    ft_putstr_stream("false", stream, &count);
-            }
-            else if (spec == 'n')
-            {
-                if (count != SIZE_MAX)
-                {
-                    if (len_mod == LEN_L)
-                    {
-                        long *out = va_arg(current_args, long *);
-                        if (out)
-                            *out = static_cast<long>(count);
-                    }
-                    else if (len_mod == LEN_Z)
-                    {
-                        size_t *out = va_arg(current_args, size_t *);
-                        if (out)
-                            *out = count;
-                    }
-                    else
-                    {
-                        int *out = va_arg(current_args, int *);
-                        if (out)
-                            *out = static_cast<int>(count);
-                    }
-                }
-            }
-            else if (spec == '%')
-            {
-                ft_putchar_stream('%', stream, &count);
-            }
-            else
-            {
-                ft_string   custom_output;
-                int         custom_status;
+        int format_error;
 
-                custom_status = pf_try_format_custom_specifier(spec, &current_args, custom_output);
-                if (custom_status == 0)
-                    pf_write_ft_string_stream(custom_output, stream, &count);
-                else if (custom_status > 0)
-                {
-                    ft_putchar_stream('%', stream, &count);
-                    ft_putchar_stream(spec, stream, &count);
-                }
-                else
-                    mark_count_error(&count);
-            }
-        }
-        else
-        {
-            ft_putchar_stream(format[index], stream, &count);
-        }
-        index++;
-    }
-    if (count != SIZE_MAX)
-    {
-        if (fflush(stream) == EOF)
-        {
-            mark_count_error(&count);
-            set_stream_error();
-        }
+        format_error = ft_errno;
+        va_end(current_args);
+        ft_errno = format_error;
+        if (written_count != SIZE_MAX && ft_errno == ER_SUCCESS)
+            ft_errno = FT_ERR_IO;
+        return (-1);
     }
     va_end(current_args);
-    if (count == SIZE_MAX)
+    if (pf_flush_stream(stream) != 0)
         return (-1);
-    if (count > static_cast<size_t>(INT_MAX))
+    if (written_count > static_cast<size_t>(INT_MAX))
     {
         ft_errno = FT_ERR_OUT_OF_RANGE;
         return (-1);
     }
     ft_errno = ER_SUCCESS;
-    return (static_cast<int>(count));
+    return (static_cast<int>(written_count));
 }
 
 int ft_fprintf(FILE *stream, const char *format, ...)
 {
+    va_list args;
+    int result;
+
     if (stream == ft_nullptr || format == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    va_list args;
     va_start(args, format);
-    int printed = ft_vfprintf(stream, format, args);
+    result = ft_vfprintf(stream, format, args);
     va_end(args);
-    return (printed);
+    return (result);
 }
 

@@ -41,11 +41,9 @@ int rl_handle_printable_char(readline_state_t *state, char c, const char *prompt
             goto cleanup;
         }
         new_bufsize = state->bufsize * 2;
-        resized_buffer = rl_resize_buffer(state->buffer, state->bufsize, new_bufsize);
+        resized_buffer = rl_resize_buffer(&state->buffer, &state->bufsize, new_bufsize);
         if (resized_buffer == ft_nullptr)
             goto cleanup;
-        state->buffer = resized_buffer;
-        state->bufsize = new_bufsize;
     }
     ft_memmove(&state->buffer[state->pos + 1], &state->buffer[state->pos],
                ft_strlen(&state->buffer[state->pos]) + 1);

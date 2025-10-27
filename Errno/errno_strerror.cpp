@@ -64,7 +64,8 @@ static const t_ft_error_string g_error_strings[] =
     {FT_ERR_PRIORITY_QUEUE_EMPTY, "Priority queue is empty"},
     {FT_ERR_PRIORITY_QUEUE_NO_MEMORY, "Priority queue memory allocation failed"},
     {FT_ERR_SSL_SYSCALL_ERROR, "SSL system call error"},
-    {FT_ERR_HTTP_PROTOCOL_MISMATCH, "HTTP protocol mismatch"}
+    {FT_ERR_HTTP_PROTOCOL_MISMATCH, "HTTP protocol mismatch"},
+    {FT_ERR_API_CIRCUIT_OPEN, "API circuit breaker is open"}
 };
 
 static const char *ft_find_custom_error(int error_code)

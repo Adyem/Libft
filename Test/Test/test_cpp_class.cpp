@@ -1,5 +1,6 @@
 #include "../../CPP_class/class_string_class.hpp"
 #include "../../CPP_class/class_data_buffer.hpp"
+#include "../../CPP_class/class_big_number.hpp"
 #include "../../CPP_class/class_file.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../PThread/thread.hpp"
@@ -10,6 +11,18 @@
 #include <unistd.h>
 #include <cstring>
 #include <utility>
+#include <type_traits>
+
+static_assert(std::is_nothrow_move_constructible<DataBuffer>::value,
+    "DataBuffer move constructor must be noexcept");
+static_assert(std::is_nothrow_move_assignable<DataBuffer>::value,
+    "DataBuffer move assignment must be noexcept");
+static_assert(std::is_nothrow_destructible<DataBuffer>::value,
+    "DataBuffer destructor must be noexcept");
+static_assert(std::is_nothrow_move_constructible<ft_big_number>::value,
+    "ft_big_number move constructor must be noexcept");
+static_assert(std::is_nothrow_destructible<ft_big_number>::value,
+    "ft_big_number destructor must be noexcept");
 
 int test_ft_string_append(void)
 {

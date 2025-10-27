@@ -59,6 +59,7 @@ This registry enumerates every error code defined in [`Errno/errno.hpp`](errno.h
 | `FT_ERR_PRIORITY_QUEUE_NO_MEMORY` | 52 | Priority queue allocation failed. | Template priority queue |
 | `FT_ERR_SSL_SYSCALL_ERROR` | 2005 | SSL syscall failure propagated from platform `errno`. | Networking TLS wrappers |
 | `FT_ERR_HTTP_PROTOCOL_MISMATCH` | 2006 | Server replied with a different HTTP version than requested. | API HTTP clients |
+| `FT_ERR_API_CIRCUIT_OPEN` | 2007 | API circuit breaker prevented request execution. | API HTTP clients |
 
 ## Usage guidance
 

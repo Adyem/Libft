@@ -1,6 +1,6 @@
 # TODO
 
-Remaining unchecked items: 94
+Remaining unchecked items: 86
 
 ## Library-wide priorities
 - [x] Publish a canonical error-code registry that documents each value exposed through `Errno/errno.hpp` and clarifies which modules set them, so cross-module error handling stays consistent.
@@ -115,11 +115,11 @@ Remaining unchecked items: 94
 
 ### API (HTTP client facade)
 - [ ] Support HTTP/2 upgrades and streaming request/response bodies within `api_request` so large transfers do not buffer entirely in memory.
-- [ ] Add retry, backoff, and circuit-breaker policies that map transport failures into actionable error codes.
+- [x] Add retry, backoff, and circuit-breaker policies that map transport failures into actionable error codes.
 - [x] Surface detailed TLS handshake diagnostics (certificate chain, cipher selection) through `api_tls_client` for observability.
-- [ ] Provide mockable interfaces or dependency injection hooks to simplify unit testing of API consumers.
-- [ ] Offer request signing helpers (HMAC, OAuth) for authenticated services, leveraging the Encryption module.
-- [ ] Emit structured metrics per endpoint (latency, throughput, error rate) suitable for dashboards.
+- [x] Provide mockable interfaces or dependency injection hooks to simplify unit testing of API consumers.
+- [x] Offer request signing helpers (HMAC, OAuth) for authenticated services, leveraging the Encryption module.
+- [x] Emit structured metrics per endpoint (latency, throughput, error rate) suitable for dashboards.
 - [x] Restore the `api_request_string_http2 falls back to http1` regression once the fallback path properly toggles the HTTP/2 flag and returns the downgraded response body.
 - [x] Restore the `api_request_string_host_bearer adds bearer authorization header` regression after fixing the heap corruption triggered by the bearer-token request path.
 - [x] Restore the `api_request_string_host_basic adds basic authorization header after existing headers` regression once the header assembly stops corrupting heap allocations.
@@ -168,9 +168,9 @@ Remaining unchecked items: 94
 - [ ] Make `ft_thread_pool` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_graph` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_vector` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_event_emitter` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_event_emitter` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_optional` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_string_view` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_string_view` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_sharedptr` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_matrix` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_tuple` thread safe (relies on the shared deadlock resolution routine described below).
@@ -195,7 +195,7 @@ Remaining unchecked items: 94
 - [x] Restore the `get_next_line surfaces hash map allocation failures` regression after the leftovers cache can safely recover from map allocation errors without leaking entries.
 
 ### CPP_class (utility classes)
-- [ ] Add move-aware and noexcept constructors/destructors to complex classes like `ft_big_number` and `DataBuffer` to improve performance guarantees.
+- [x] Add move-aware and noexcept constructors/destructors to complex classes like `ft_big_number` and `DataBuffer` to improve performance guarantees.
 - [ ] Ensure all classes expose serialization helpers compatible with the Storage and Networking modules.
 - [ ] Provide unit tests that exercise error propagation on `_error_code` members across copy/move operations.
 - [x] Document ownership semantics for wrappers like `ft_file` to avoid double-close mistakes.
@@ -308,7 +308,7 @@ Remaining unchecked items: 94
 - [x] Make `terminal_dimensions` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Printf
-- [ ] Bring the printf implementation up to C99 compliance (length modifiers, positional arguments, floating-point formatting).
+- [x] Bring the printf implementation up to C99 compliance (length modifiers, positional arguments, floating-point formatting).
 - [x] Add sandboxed formatting tests that ensure buffer boundaries and return values match the standard library behaviour.
 - [x] Provide extension hooks for user-defined specifiers that integrate with `ft_string` and logging sinks.
 - [x] Optimize hot paths (integer/float formatting) using precomputed tables where possible.
