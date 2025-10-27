@@ -628,6 +628,18 @@ void json_document::clear() noexcept
     return ;
 }
 
+json_group *json_document::get_groups() const noexcept
+{
+    this->set_error(ER_SUCCESS);
+    return (this->_groups);
+}
+
+void json_document::set_manual_error(int error_code) noexcept
+{
+    this->set_error(error_code);
+    return ;
+}
+
 int json_document::get_error() const noexcept
 {
     return (this->_error_code);
