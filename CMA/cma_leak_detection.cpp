@@ -348,7 +348,7 @@ ft_string cma_leak_detection_report(bool clear_after)
                 cma_leak_tracker_resume(false, true);
                 return (report);
             }
-            index_string = ft_to_string(static_cast<unsigned long>(record_index));
+            index_string = ft_to_string(record_index);
             if (index_string.get_error() != ER_SUCCESS)
             {
                 cma_leak_tracker_resume(was_enabled, error_state);

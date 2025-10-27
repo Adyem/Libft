@@ -153,7 +153,7 @@ static int logger_prepare_rotation_internal(s_file_sink *sink, bool *rotate_for_
         current_time = time_now();
         if (current_time == static_cast<t_time>(-1))
             return (-1);
-        if (current_time >= static_cast<t_time>(file_stats.st_mtime))
+        if (current_time >= file_stats.st_mtime)
         {
             age_seconds = static_cast<long long>(current_time) - static_cast<long long>(file_stats.st_mtime);
             if (age_seconds >= static_cast<long long>(sink->max_age_seconds))

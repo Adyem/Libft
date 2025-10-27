@@ -28,7 +28,7 @@ void* ft_memcpy(void* destination, const void* source, size_t size)
     if (size > UINTPTR_MAX)
         range_size = UINTPTR_MAX;
     else
-        range_size = static_cast<uintptr_t>(size);
+        range_size = size;
     dest_limit = dest_address + range_size;
     if (dest_limit < dest_address)
         dest_limit = UINTPTR_MAX;
