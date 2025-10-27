@@ -1,6 +1,6 @@
 # TODO
 
-Remaining unchecked items: 86
+Remaining unchecked items: 84
 
 ## Library-wide priorities
 - [x] Publish a canonical error-code registry that documents each value exposed through `Errno/errno.hpp` and clarifies which modules set them, so cross-module error handling stays consistent.
@@ -156,7 +156,7 @@ Remaining unchecked items: 86
 - [x] Provide small-buffer optimizations or node pooling options for frequently-used containers (`vector`, `map`, `trie`).
 - [x] Expand constexpr support where possible so templates can be used in compile-time contexts.
 - [x] Write exhaustive tests for allocator-aware paths, ensuring `_error_code` mirrors allocation failures.
-- [ ] Introduce serialization helpers that interoperate with JSON/YAML encoders for easy persistence of container contents.
+- [x] Introduce serialization helpers that interoperate with JSON/YAML encoders for easy persistence of container contents.
 - [ ] Add concept-constrained overloads in C++20 builds to improve diagnostic quality when templates are misused.
 - [x] Make `ft_stack` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_unordered_map` thread safe (relies on the shared deadlock resolution routine described below).
@@ -316,7 +316,7 @@ Remaining unchecked items: 86
 - [x] Re-enable the `pf_vsnprintf matches std::vsnprintf output` regression after aligning `pf_vsnprintf` with the standard library results across truncation and zero-size scenarios.
 
 ### JSON / YAML / XML / HTML
-- [ ] Share a common DOM and schema validation layer so parsers can reuse traversal logic across formats.
+- [x] Share a common DOM and schema validation layer so parsers can reuse traversal logic across formats.
 - [x] Add streaming encoders/decoders that operate on callbacks to avoid holding entire documents in memory.
 - [x] Integrate schema evolution helpers (migrations, versioning) for configuration management.
 - [x] Expand XPath/CSS selector support in HTML and ensure namespace-aware parsing in XML.

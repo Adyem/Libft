@@ -69,6 +69,7 @@ class xml_document
         int write_to_file(const char *file_path) const noexcept;
         int write_to_backend(ft_document_sink &sink) const noexcept;
         xml_node *get_root() const noexcept;
+        void set_manual_error(int error_code) noexcept;
         int get_error() const noexcept;
         const char *get_error_str() const noexcept;
         bool is_thread_safe_enabled() const noexcept;

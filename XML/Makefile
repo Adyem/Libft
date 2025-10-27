@@ -2,12 +2,13 @@ TARGET         := XMLParser.a
 DEBUG_TARGET   := XMLParser_debug.a
 
 SRCS := xml_document.cpp \
-        xml_node_thread_safety.cpp
+        xml_node_thread_safety.cpp \
+        xml_dom_bridge.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
-HEADERS := xml.hpp
+HEADERS := xml.hpp xml_dom_bridge.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

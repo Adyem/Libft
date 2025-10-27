@@ -1,12 +1,13 @@
 TARGET := parser.a
 DEBUG_TARGET := parser_debug.a
 
-SRCS :=         parser_document_backend.cpp
+SRCS :=         parser_document_backend.cpp \
+                dom.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
-HEADERS := document_backend.hpp
+HEADERS := document_backend.hpp dom.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

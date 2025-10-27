@@ -1092,6 +1092,12 @@ xml_node *xml_document::get_root() const noexcept
     return (this->_root);
 }
 
+void xml_document::set_manual_error(int error_code) noexcept
+{
+    this->set_error(error_code);
+    return ;
+}
+
 int xml_document::get_error() const noexcept
 {
     thread_guard guard(this);
