@@ -25,11 +25,12 @@ SRCS := game_map3d.cpp \
 	game_save.cpp \
 	game_load.cpp \
 	game_experience_table.cpp \
-	game_resistance.cpp \
-	game_pathfinding.cpp \
-	game_crafting.cpp \
+        game_resistance.cpp \
+        game_pathfinding.cpp \
+        game_crafting.cpp \
         game_state.cpp \
-        game_behavior_tree.cpp
+        game_behavior_tree.cpp \
+        game_scripting_bridge.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
@@ -53,9 +54,10 @@ HEADERS := game_map3d.hpp \
 	game_experience_table.hpp \
 	game_resistance.hpp \
 	game_pathfinding.hpp \
-	game_crafting.hpp \
+        game_crafting.hpp \
         game_state.hpp \
-        game_behavior_tree.hpp
+        game_behavior_tree.hpp \
+        game_scripting_bridge.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
@@ -79,7 +81,7 @@ DEBUG_OBJDIR   := objs_debug
 OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
 DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
 
-CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17
+CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17 -Wuseless-cast
 
 all: $(TARGET)
 

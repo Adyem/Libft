@@ -7,6 +7,7 @@
 #include "../../System_utils/test_runner.hpp"
 #include <fcntl.h>
 #include <unistd.h>
+#include <ios>
 
 FT_TEST(test_ft_file_error_resets, "ft_file resets error state after success")
 {
@@ -86,7 +87,7 @@ FT_TEST(test_ft_fd_istream_error_resets, "ft_fd_istream preserves su_read errno 
     stream.read(read_buffer, sizeof(message) - 1);
     FT_ASSERT_EQ(ER_SUCCESS, stream.get_error());
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(static_cast<std::size_t>(sizeof(message) - 1), stream.gcount());
+    FT_ASSERT_EQ(static_cast<std::streamsize>(sizeof(message) - 1), stream.gcount());
     FT_ASSERT_EQ('g', read_buffer[0]);
     FT_ASSERT_EQ('o', read_buffer[1]);
     FT_ASSERT_EQ(0, ::close(target_descriptor));
@@ -108,7 +109,7 @@ FT_TEST(test_ft_istringstream_error_resets, "ft_istringstream resets error state
     FT_ASSERT_EQ(ER_SUCCESS, stream.get_error());
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(false, stream.bad());
-    FT_ASSERT_EQ(static_cast<std::size_t>(5), stream.gcount());
+    FT_ASSERT_EQ(static_cast<std::streamsize>(5), stream.gcount());
     FT_ASSERT_EQ('r', read_buffer[0]);
     FT_ASSERT_EQ('e', read_buffer[1]);
     FT_ASSERT_EQ('s', read_buffer[2]);

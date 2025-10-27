@@ -398,13 +398,20 @@ bool api_http_stream_invoke_body(
     size_t chunk_size, bool is_final_chunk, int &error_code)
 {
     bool callback_result;
+    bool invocation_success;
 
     if (!streaming_handler)
         return (true);
-    if (!streaming_handler->body_callback)
-        return (true);
-    callback_result = streaming_handler->body_callback(chunk_data, chunk_size,
-            is_final_chunk, streaming_handler->user_data);
+    callback_result = true;
+    invocation_success = streaming_handler->invoke_body_callback(chunk_data,
+            chunk_size, is_final_chunk, callback_result);
+    if (!invocation_success)
+    {
+        error_code = streaming_handler->get_error();
+        if (error_code == ER_SUCCESS)
+            error_code = FT_ERR_IO;
+        return (false);
+    }
     if (!callback_result)
     {
         error_code = FT_ERR_IO;
@@ -419,10 +426,7 @@ void api_http_stream_invoke_headers(
 {
     if (!streaming_handler)
         return ;
-    if (!streaming_handler->headers_callback)
-        return ;
-    streaming_handler->headers_callback(status_code, headers,
-        streaming_handler->user_data);
+    streaming_handler->invoke_headers_callback(status_code, headers);
     return ;
 }
 

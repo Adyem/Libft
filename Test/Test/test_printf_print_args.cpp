@@ -468,7 +468,7 @@ FT_TEST(test_ft_putstr_fd_skips_when_count_in_error, "ft_putstr_fd does not writ
     FT_ASSERT(create_pipe(pipe_fds));
     write_count = SIZE_MAX;
     ft_putstr_fd("ignored", pipe_fds[1], &write_count);
-    FT_ASSERT_EQ(static_cast<size_t>(SIZE_MAX), write_count);
+    FT_ASSERT_EQ(SIZE_MAX, write_count);
     FT_ASSERT(close_pipe_end(pipe_fds[1]));
     FT_ASSERT(read_pipe_into_buffer(pipe_fds[0], buffer, sizeof(buffer) - 1, &bytes_read));
     FT_ASSERT_EQ(static_cast<ssize_t>(0), bytes_read);
@@ -483,7 +483,7 @@ FT_TEST(test_ft_putnbr_fd_marks_error_on_failed_write, "ft_putnbr_fd marks count
     write_count = 0;
     ft_errno = ER_SUCCESS;
     ft_putnbr_fd(42, -1, &write_count);
-    FT_ASSERT_EQ(static_cast<size_t>(SIZE_MAX), write_count);
+    FT_ASSERT_EQ(SIZE_MAX, write_count);
     FT_ASSERT(ft_errno != ER_SUCCESS);
     ft_errno = ER_SUCCESS;
     return (1);

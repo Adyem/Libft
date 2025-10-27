@@ -433,7 +433,7 @@ FT_TEST(test_readline_utf8_backspace_removes_grapheme, "rl_handle_backspace eras
     if (buffer == ft_nullptr)
         return (0);
     state.buffer = buffer;
-    state.bufsize = static_cast<int>(ft_strlen(buffer)) + 1;
+    state.bufsize = ft_strlen(buffer) + 1;
     state.pos = ft_strlen(buffer);
     state.prev_buffer_length = ft_strlen(buffer);
     state.display_pos = 3;
@@ -447,12 +447,12 @@ FT_TEST(test_readline_utf8_backspace_removes_grapheme, "rl_handle_backspace eras
     handle_result = rl_handle_backspace(&state, prompt);
     FT_ASSERT_EQ(0, handle_result);
     FT_ASSERT(std::memcmp(state.buffer, expected_first, sizeof(expected_first)) == 0);
-    FT_ASSERT_EQ(static_cast<int>(ft_strlen(state.buffer)), state.pos);
+    FT_ASSERT_EQ(ft_strlen(state.buffer), state.pos);
     FT_ASSERT_EQ(2, state.prev_display_columns);
     handle_result = rl_handle_backspace(&state, prompt);
     FT_ASSERT_EQ(0, handle_result);
     FT_ASSERT(std::memcmp(state.buffer, expected_second, sizeof(expected_second)) == 0);
-    FT_ASSERT_EQ(static_cast<int>(ft_strlen(state.buffer)), state.pos);
+    FT_ASSERT_EQ(ft_strlen(state.buffer), state.pos);
     FT_ASSERT_EQ(1, state.prev_display_columns);
     cma_free(buffer);
     return (1);

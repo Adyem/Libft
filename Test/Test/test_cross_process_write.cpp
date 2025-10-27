@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
+#include <limits>
 
 #ifndef _WIN32
 #include "../../CPP_class/class_nullptr.hpp"
@@ -18,6 +19,20 @@
 
 namespace
 {
+    static size_t cross_process_available_length(uint64_t total_size, size_t offset) noexcept
+    {
+        uint64_t remaining;
+
+        if (total_size < offset)
+            return (0);
+        remaining = total_size - offset;
+        if constexpr (sizeof(size_t) >= sizeof(uint64_t))
+            return (remaining);
+        if (remaining > std::numeric_limits<size_t>::max())
+            return (std::numeric_limits<size_t>::max());
+        return (static_cast<size_t>(remaining));
+    }
+
     static int create_shared_memory(const char *name_prefix, size_t payload_length, cross_process_message &message,
         void *&mapping_ptr, unsigned char *&mapping, size_t &data_offset, size_t &error_offset)
     {
@@ -66,10 +81,10 @@ namespace
             return (-1);
         std::memset(&message, 0, sizeof(message));
         message.stack_base_address = reinterpret_cast<uint64_t>(mapping);
-        message.remote_memory_address = message.stack_base_address + static_cast<uint64_t>(data_offset);
-        message.remote_memory_size = static_cast<uint64_t>(total_size);
+        message.remote_memory_address = message.stack_base_address + data_offset;
+        message.remote_memory_size = total_size;
         message.shared_mutex_address = message.stack_base_address;
-        message.error_memory_address = message.stack_base_address + static_cast<uint64_t>(error_offset);
+        message.error_memory_address = message.stack_base_address + error_offset;
         std::snprintf(message.shared_memory_name, sizeof(message.shared_memory_name), "%s", shared_memory_name);
         return (0);
     }
@@ -127,7 +142,8 @@ FT_TEST(test_cross_process_write_memory_basic, "cross process write memory basic
     receive_result = cp_receive_memory(sockets[1], result);
     FT_ASSERT_EQ(0, receive_result);
     FT_ASSERT(result.shared_memory_name == message.shared_memory_name);
-    FT_ASSERT_EQ(static_cast<size_t>(message.remote_memory_size - static_cast<uint64_t>(data_offset)), result.payload.size());
+    FT_ASSERT_EQ(cross_process_available_length(message.remote_memory_size, data_offset),
+        result.payload.size());
     FT_ASSERT(std::memcmp(result.payload.data(), written_payload, written_payload_length) == 0);
     int captured_error;
 
@@ -148,7 +164,7 @@ FT_TEST(test_cross_process_write_memory_basic, "cross process write memory basic
     close_result = ::close(sockets[1]);
     FT_ASSERT_EQ(0, close_result);
     FT_ASSERT_EQ(0, pthread_mutex_destroy(reinterpret_cast<pthread_mutex_t *>(mapping)));
-    FT_ASSERT_EQ(0, munmap(mapping_ptr, static_cast<size_t>(message.remote_memory_size)));
+    FT_ASSERT_EQ(0, munmap(mapping_ptr, cross_process_available_length(message.remote_memory_size, 0)));
     FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
     return (1);
 }
@@ -186,9 +202,9 @@ FT_TEST(test_cross_process_write_memory_length_error, "cross process write memor
     int error_region_snapshot;
 
     std::memcpy(&error_region_snapshot, mapping + error_offset, sizeof(int));
-    FT_ASSERT_EQ(static_cast<int>(0x7f7f7f7f), error_region_snapshot);
+    FT_ASSERT_EQ(0x7f7f7f7f, error_region_snapshot);
     FT_ASSERT_EQ(0, pthread_mutex_destroy(reinterpret_cast<pthread_mutex_t *>(mapping)));
-    FT_ASSERT_EQ(0, munmap(mapping_ptr, static_cast<size_t>(message.remote_memory_size)));
+    FT_ASSERT_EQ(0, munmap(mapping_ptr, cross_process_available_length(message.remote_memory_size, 0)));
     FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
     return (1);
 }
@@ -212,7 +228,7 @@ FT_TEST(test_cross_process_write_memory_null_payload, "cross process write memor
     FT_ASSERT_EQ(-1, write_result);
     FT_ASSERT_EQ(EINVAL, errno);
     FT_ASSERT_EQ(0, pthread_mutex_destroy(reinterpret_cast<pthread_mutex_t *>(mapping)));
-    FT_ASSERT_EQ(0, munmap(mapping_ptr, static_cast<size_t>(message.remote_memory_size)));
+    FT_ASSERT_EQ(0, munmap(mapping_ptr, cross_process_available_length(message.remote_memory_size, 0)));
     FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
     return (1);
 }
@@ -248,9 +264,9 @@ FT_TEST(test_cross_process_write_memory_invalid_payload_offset, "cross process w
     int error_snapshot;
 
     std::memcpy(&error_snapshot, mapping + error_offset, sizeof(int));
-    FT_ASSERT_EQ(static_cast<int>(0x7f7f7f7f), error_snapshot);
+    FT_ASSERT_EQ(0x7f7f7f7f, error_snapshot);
     FT_ASSERT_EQ(0, pthread_mutex_destroy(reinterpret_cast<pthread_mutex_t *>(mapping)));
-    FT_ASSERT_EQ(0, munmap(mapping_ptr, static_cast<size_t>(message.remote_memory_size)));
+    FT_ASSERT_EQ(0, munmap(mapping_ptr, cross_process_available_length(message.remote_memory_size, 0)));
     FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
     return (1);
 }
@@ -284,7 +300,7 @@ FT_TEST(test_cross_process_write_memory_invalid_error_offset, "cross process wri
         index++;
     }
     FT_ASSERT_EQ(0, pthread_mutex_destroy(reinterpret_cast<pthread_mutex_t *>(mapping)));
-    FT_ASSERT_EQ(0, munmap(mapping_ptr, static_cast<size_t>(message.remote_memory_size)));
+    FT_ASSERT_EQ(0, munmap(mapping_ptr, cross_process_available_length(message.remote_memory_size, 0)));
     FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
     return (1);
 }
@@ -317,7 +333,7 @@ FT_TEST(test_cross_process_write_memory_zero_length_payload, "cross process writ
     std::memcpy(&stored_error_value, mapping + error_offset, sizeof(int));
     FT_ASSERT_EQ(64, stored_error_value);
     FT_ASSERT_EQ(0, pthread_mutex_destroy(reinterpret_cast<pthread_mutex_t *>(mapping)));
-    FT_ASSERT_EQ(0, munmap(mapping_ptr, static_cast<size_t>(message.remote_memory_size)));
+    FT_ASSERT_EQ(0, munmap(mapping_ptr, cross_process_available_length(message.remote_memory_size, 0)));
     FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
     return (1);
 }
@@ -345,7 +361,7 @@ FT_TEST(test_cross_process_write_memory_mutex_timeout, "cross process write memo
     write_result = cp_write_memory(message, reinterpret_cast<const unsigned char *>("timeout"), 7, 91);
     FT_ASSERT_EQ(-1, write_result);
     FT_ASSERT_EQ(ETIMEDOUT, errno);
-    available_length = static_cast<size_t>(message.remote_memory_size - static_cast<uint64_t>(data_offset));
+    available_length = cross_process_available_length(message.remote_memory_size, data_offset);
     index = 0;
     while (index < available_length)
     {
@@ -354,7 +370,7 @@ FT_TEST(test_cross_process_write_memory_mutex_timeout, "cross process write memo
     }
     FT_ASSERT_EQ(0, pthread_mutex_unlock(shared_mutex));
     FT_ASSERT_EQ(0, pthread_mutex_destroy(shared_mutex));
-    FT_ASSERT_EQ(0, munmap(mapping_ptr, static_cast<size_t>(message.remote_memory_size)));
+    FT_ASSERT_EQ(0, munmap(mapping_ptr, cross_process_available_length(message.remote_memory_size, 0)));
     FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
     return (1);
 }
@@ -380,13 +396,13 @@ FT_TEST(test_cross_process_write_memory_open_failure, "cross process write memor
     FT_ASSERT_EQ(-1, write_result);
     FT_ASSERT_EQ(ENOENT, errno);
     index = 0;
-    while (index < static_cast<size_t>(message.remote_memory_size - static_cast<uint64_t>(data_offset)))
+    while (index < cross_process_available_length(message.remote_memory_size, data_offset))
     {
         FT_ASSERT_EQ(static_cast<unsigned char>(0x7f), mapping[data_offset + index]);
         index++;
     }
     FT_ASSERT_EQ(0, pthread_mutex_destroy(reinterpret_cast<pthread_mutex_t *>(mapping)));
-    FT_ASSERT_EQ(0, munmap(mapping_ptr, static_cast<size_t>(message.remote_memory_size)));
+    FT_ASSERT_EQ(0, munmap(mapping_ptr, cross_process_available_length(message.remote_memory_size, 0)));
     return (1);
 }
 
@@ -414,7 +430,7 @@ FT_TEST(test_cross_process_write_memory_invalid_mutex_offset, "cross process wri
     write_result = cp_write_memory(message, reinterpret_cast<const unsigned char *>("payload"), 7, 31);
     FT_ASSERT_EQ(-1, write_result);
     FT_ASSERT_EQ(EINVAL, errno);
-    available_length = static_cast<size_t>(message.remote_memory_size - static_cast<uint64_t>(data_offset));
+    available_length = cross_process_available_length(message.remote_memory_size, data_offset);
     index = 0;
     while (index < available_length)
     {
@@ -422,7 +438,7 @@ FT_TEST(test_cross_process_write_memory_invalid_mutex_offset, "cross process wri
         index++;
     }
     FT_ASSERT_EQ(0, pthread_mutex_destroy(shared_mutex));
-    FT_ASSERT_EQ(0, munmap(mapping_ptr, static_cast<size_t>(message.remote_memory_size)));
+    FT_ASSERT_EQ(0, munmap(mapping_ptr, cross_process_available_length(message.remote_memory_size, 0)));
     FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
     return (1);
 }
@@ -459,7 +475,7 @@ FT_TEST(test_cross_process_write_memory_without_error_slot, "cross process write
         FT_ASSERT_EQ(static_cast<unsigned char>(payload[index]), mapping[data_offset + index]);
         index++;
     }
-    while (index < static_cast<size_t>(message.remote_memory_size - static_cast<uint64_t>(data_offset)))
+    while (index < cross_process_available_length(message.remote_memory_size, data_offset))
     {
         FT_ASSERT_EQ(0, mapping[data_offset + index]);
         index++;
@@ -467,7 +483,7 @@ FT_TEST(test_cross_process_write_memory_without_error_slot, "cross process write
     std::memcpy(&stored_error_value, mapping + error_offset, sizeof(int));
     FT_ASSERT_EQ(0, stored_error_value);
     FT_ASSERT_EQ(0, pthread_mutex_destroy(reinterpret_cast<pthread_mutex_t *>(mapping)));
-    FT_ASSERT_EQ(0, munmap(mapping_ptr, static_cast<size_t>(message.remote_memory_size)));
+    FT_ASSERT_EQ(0, munmap(mapping_ptr, cross_process_available_length(message.remote_memory_size, 0)));
     FT_ASSERT_EQ(0, shm_unlink(message.shared_memory_name));
     return (1);
 }
