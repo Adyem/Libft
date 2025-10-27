@@ -102,7 +102,7 @@ static bool websocket_permessage_deflate_decompress(const unsigned char *payload
         index_value++;
     }
     ft_memset(&stream, 0, sizeof(stream));
-    stream.next_in = const_cast<Bytef *>(input_buffer.begin());
+    stream.next_in = input_buffer.begin();
     stream.avail_in = static_cast<uInt>(input_buffer.size());
     zlib_result = inflateInit2(&stream, -15);
     if (zlib_result != Z_OK)

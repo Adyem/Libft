@@ -83,65 +83,86 @@ void api_request_set_ssl_error(SSL *ssl_session, int operation_result);
 
 inline int api_retry_get_max_attempts(const api_retry_policy *retry_policy)
 {
+    int attempts;
+
     if (!retry_policy)
         return (1);
-    if (retry_policy->max_attempts <= 0)
+    attempts = retry_policy->get_max_attempts();
+    if (attempts <= 0)
         return (1);
-    return (retry_policy->max_attempts);
+    return (attempts);
 }
 
 inline int api_retry_get_initial_delay(const api_retry_policy *retry_policy)
 {
+    int initial_delay;
+
     if (!retry_policy)
         return (0);
-    if (retry_policy->initial_delay_ms <= 0)
+    initial_delay = retry_policy->get_initial_delay_ms();
+    if (initial_delay <= 0)
         return (0);
-    return (retry_policy->initial_delay_ms);
+    return (initial_delay);
 }
 
 inline int api_retry_get_max_delay(const api_retry_policy *retry_policy)
 {
+    int max_delay;
+
     if (!retry_policy)
         return (0);
-    if (retry_policy->max_delay_ms <= 0)
+    max_delay = retry_policy->get_max_delay_ms();
+    if (max_delay <= 0)
         return (0);
-    return (retry_policy->max_delay_ms);
+    return (max_delay);
 }
 
 inline int api_retry_get_multiplier(const api_retry_policy *retry_policy)
 {
+    int multiplier;
+
     if (!retry_policy)
         return (2);
-    if (retry_policy->backoff_multiplier <= 0)
+    multiplier = retry_policy->get_backoff_multiplier();
+    if (multiplier <= 0)
         return (2);
-    return (retry_policy->backoff_multiplier);
+    return (multiplier);
 }
 
 inline int api_retry_get_circuit_threshold(const api_retry_policy *retry_policy)
 {
+    int threshold;
+
     if (!retry_policy)
         return (0);
-    if (retry_policy->circuit_breaker_threshold <= 0)
+    threshold = retry_policy->get_circuit_breaker_threshold();
+    if (threshold <= 0)
         return (0);
-    return (retry_policy->circuit_breaker_threshold);
+    return (threshold);
 }
 
 inline int api_retry_get_circuit_cooldown(const api_retry_policy *retry_policy)
 {
+    int cooldown;
+
     if (!retry_policy)
         return (0);
-    if (retry_policy->circuit_breaker_cooldown_ms <= 0)
+    cooldown = retry_policy->get_circuit_breaker_cooldown_ms();
+    if (cooldown <= 0)
         return (0);
-    return (retry_policy->circuit_breaker_cooldown_ms);
+    return (cooldown);
 }
 
 inline int api_retry_get_half_open_successes(const api_retry_policy *retry_policy)
 {
+    int half_open_successes;
+
     if (!retry_policy)
         return (1);
-    if (retry_policy->circuit_breaker_half_open_successes <= 0)
+    half_open_successes = retry_policy->get_circuit_breaker_half_open_successes();
+    if (half_open_successes <= 0)
         return (1);
-    return (retry_policy->circuit_breaker_half_open_successes);
+    return (half_open_successes);
 }
 
 inline int api_retry_prepare_delay(int delay, int max_delay)

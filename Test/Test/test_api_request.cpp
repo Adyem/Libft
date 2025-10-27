@@ -1120,9 +1120,9 @@ FT_TEST(test_api_request_stream_large_response,
     context.headers_received = false;
     context.final_received = false;
     context.status_code = 0;
-    handler.headers_callback = api_request_stream_headers_callback;
-    handler.body_callback = api_request_stream_body_callback;
-    handler.user_data = &context;
+    handler.set_headers_callback(api_request_stream_headers_callback);
+    handler.set_body_callback(api_request_stream_body_callback);
+    handler.set_user_data(&context);
     server_thread = ft_thread(api_request_stream_large_response_server);
     if (server_thread.get_error() != ER_SUCCESS)
         return (0);
@@ -1169,9 +1169,9 @@ FT_TEST(test_api_request_stream_chunked_response,
     context.headers_received = false;
     context.final_received = false;
     context.status_code = 0;
-    handler.headers_callback = api_request_stream_headers_callback;
-    handler.body_callback = api_request_stream_body_callback;
-    handler.user_data = &context;
+    handler.set_headers_callback(api_request_stream_headers_callback);
+    handler.set_body_callback(api_request_stream_body_callback);
+    handler.set_user_data(&context);
     server_thread = ft_thread(api_request_stream_chunked_response_server);
     if (server_thread.get_error() != ER_SUCCESS)
         return (0);
@@ -1686,10 +1686,10 @@ FT_TEST(test_api_request_retry_policy_success, "api_request_string retries recov
     if (server_thread.get_error() != ER_SUCCESS)
         return (0);
     api_request_small_delay();
-    retry_policy.max_attempts = 3;
-    retry_policy.initial_delay_ms = 10;
-    retry_policy.max_delay_ms = 0;
-    retry_policy.backoff_multiplier = 1;
+    retry_policy.set_max_attempts(3);
+    retry_policy.set_initial_delay_ms(10);
+    retry_policy.set_max_delay_ms(0);
+    retry_policy.set_backoff_multiplier(1);
     status_value = -123;
     body = api_request_string("127.0.0.1", 54339, "GET", "/", ft_nullptr,
             ft_nullptr, &status_value, 100, &retry_policy);
@@ -1726,10 +1726,10 @@ FT_TEST(test_api_request_retry_policy_exhaustion, "api_request_string stops afte
     if (server_thread.get_error() != ER_SUCCESS)
         return (0);
     api_request_small_delay();
-    retry_policy.max_attempts = 2;
-    retry_policy.initial_delay_ms = 5;
-    retry_policy.max_delay_ms = 0;
-    retry_policy.backoff_multiplier = 1;
+    retry_policy.set_max_attempts(2);
+    retry_policy.set_initial_delay_ms(5);
+    retry_policy.set_max_delay_ms(0);
+    retry_policy.set_backoff_multiplier(1);
     status_value = 777;
     body = api_request_string("127.0.0.1", 54340, "GET", "/", ft_nullptr,
             ft_nullptr, &status_value, 100, &retry_policy);
@@ -1766,10 +1766,10 @@ FT_TEST(test_api_request_retry_policy_timeout, "api_request_string retries until
     if (server_thread.get_error() != ER_SUCCESS)
         return (0);
     api_request_small_delay();
-    retry_policy.max_attempts = 3;
-    retry_policy.initial_delay_ms = 5;
-    retry_policy.max_delay_ms = 10;
-    retry_policy.backoff_multiplier = 2;
+    retry_policy.set_max_attempts(3);
+    retry_policy.set_initial_delay_ms(5);
+    retry_policy.set_max_delay_ms(10);
+    retry_policy.set_backoff_multiplier(2);
     status_value = -45;
     body = api_request_string("127.0.0.1", 54341, "GET", "/", ft_nullptr,
             ft_nullptr, &status_value, 50, &retry_policy);
@@ -1802,13 +1802,13 @@ FT_TEST(test_api_request_circuit_breaker_blocks_after_threshold,
     int wait_attempts;
 
     api_retry_circuit_reset();
-    retry_policy.max_attempts = 1;
-    retry_policy.initial_delay_ms = 0;
-    retry_policy.max_delay_ms = 0;
-    retry_policy.backoff_multiplier = 1;
-    retry_policy.circuit_breaker_threshold = 2;
-    retry_policy.circuit_breaker_cooldown_ms = 200;
-    retry_policy.circuit_breaker_half_open_successes = 1;
+    retry_policy.set_max_attempts(1);
+    retry_policy.set_initial_delay_ms(0);
+    retry_policy.set_max_delay_ms(0);
+    retry_policy.set_backoff_multiplier(1);
+    retry_policy.set_circuit_breaker_threshold(2);
+    retry_policy.set_circuit_breaker_cooldown_ms(200);
+    retry_policy.set_circuit_breaker_half_open_successes(1);
     status_value = 0;
     body = api_request_string("127.0.0.1", 55310, "GET", "/", ft_nullptr,
             ft_nullptr, &status_value, 50, &retry_policy);
@@ -1884,13 +1884,13 @@ FT_TEST(test_api_request_circuit_breaker_half_open_recovers,
     int wait_attempts;
 
     api_retry_circuit_reset();
-    retry_policy.max_attempts = 1;
-    retry_policy.initial_delay_ms = 0;
-    retry_policy.max_delay_ms = 0;
-    retry_policy.backoff_multiplier = 1;
-    retry_policy.circuit_breaker_threshold = 2;
-    retry_policy.circuit_breaker_cooldown_ms = 100;
-    retry_policy.circuit_breaker_half_open_successes = 1;
+    retry_policy.set_max_attempts(1);
+    retry_policy.set_initial_delay_ms(0);
+    retry_policy.set_max_delay_ms(0);
+    retry_policy.set_backoff_multiplier(1);
+    retry_policy.set_circuit_breaker_threshold(2);
+    retry_policy.set_circuit_breaker_cooldown_ms(100);
+    retry_policy.set_circuit_breaker_half_open_successes(1);
     status_value = 0;
     body = api_request_string("127.0.0.1", 55311, "GET", "/", ft_nullptr,
             ft_nullptr, &status_value, 50, &retry_policy);

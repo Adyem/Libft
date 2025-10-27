@@ -110,7 +110,7 @@ FT_TEST(test_cross_process_receive_memory_basic, "cross process receive memory b
     close_result = ::close(sockets[1]);
     FT_ASSERT_EQ(0, close_result);
     FT_ASSERT(result.shared_memory_name == message.shared_memory_name);
-    FT_ASSERT_EQ(static_cast<size_t>(message.remote_memory_size - static_cast<uint64_t>(data_offset)), result.payload.size());
+    FT_ASSERT_EQ(message.remote_memory_size - data_offset, result.payload.size());
     FT_ASSERT(std::memcmp(result.payload.data(), payload, payload_length) == 0);
     int captured_error_value;
 

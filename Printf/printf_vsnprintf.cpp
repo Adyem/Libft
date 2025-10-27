@@ -1,6 +1,7 @@
 #include "printf.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
+#include "printf_internal.hpp"
 #include <stdarg.h>
 #include <stdio.h>
 #include <errno.h>

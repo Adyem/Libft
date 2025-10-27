@@ -31,8 +31,7 @@ FT_TEST(test_cma_global_new_preserves_alignment,
     if (instance == ft_nullptr)
         return (0);
     instance_address = reinterpret_cast<std::uintptr_t>(instance);
-    alignment_mask = static_cast<std::uintptr_t>(alignof(aligned_trivial_type))
-        - 1;
+    alignment_mask = alignof(aligned_trivial_type) - 1;
     FT_ASSERT_EQ(instance_address & alignment_mask, 0);
     FT_ASSERT_EQ(ft_errno, FT_ERR_INVALID_ARGUMENT);
     delete instance;
