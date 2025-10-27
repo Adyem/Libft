@@ -7,7 +7,8 @@ SRCS := printf_printf.cpp \
                 printf_ft_fprintf.cpp \
                 printf_custom_specifier.cpp \
                 printf_snprintf.cpp \
-                printf_vsnprintf.cpp
+                printf_vsnprintf.cpp \
+                printf_engine.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))

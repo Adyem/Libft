@@ -1,5 +1,6 @@
 #include "../../API/api.hpp"
 #include "../../API/api_internal.hpp"
+#include "../../API/api_http_internal.hpp"
 #include "../../Networking/socket_class.hpp"
 #include "../../Networking/networking.hpp"
 #include "../../Networking/http2_client.hpp"
@@ -29,6 +30,73 @@ static void api_request_noop_callback(char *body, int status, void *user_data)
     return ;
 }
 
+FT_TEST(test_api_request_hmac_signature_basic,
+    "api_sign_request_hmac_sha256 produces expected digest")
+{
+    api_hmac_signature_input input;
+    unsigned char key_buffer[6];
+    ft_string signature;
+    size_t index;
+
+    input.method = "POST";
+    input.path = "/v1/resource";
+    input.canonical_headers = "content-type:application/json";
+    input.canonical_query = ft_nullptr;
+    input.body = "{\"ok\":true}";
+    index = 0;
+    while (index < sizeof(key_buffer))
+    {
+        key_buffer[index] = "secret"[index];
+        index += 1;
+    }
+    signature = "";
+    if (api_sign_request_hmac_sha256(input, key_buffer,
+            sizeof(key_buffer), signature) != 0)
+        return (0);
+    if (ft_strcmp(signature.c_str(),
+            "jyahK7KdXeTAsWB9y99qdzuUS5V6UK8fdyx51G18uBY=") != 0)
+        return (0);
+    if (ft_errno != ER_SUCCESS)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_api_request_oauth1_header_hmac_sha256,
+    "api_build_oauth1_authorization_header emits oauth signature")
+{
+    api_oauth1_parameter extras[1];
+    api_oauth1_parameters params;
+    ft_string header;
+
+    extras[0].key = "status";
+    extras[0].value = "active";
+    params.method = "POST";
+    params.url = "https://api.example.com/resource";
+    params.consumer_key = "key123";
+    params.consumer_secret = "secret456";
+    params.token = "token789";
+    params.token_secret = "tokensecret";
+    params.timestamp = "1700000000";
+    params.nonce = "randomstring";
+    params.signature_method = "HMAC-SHA256";
+    params.version = "1.0";
+    params.additional_parameters = extras;
+    params.additional_parameter_count = 1;
+    header = "";
+    if (api_build_oauth1_authorization_header(params, header) != 0)
+        return (0);
+    if (ft_strcmp(header.c_str(),
+            "Authorization: OAuth oauth_consumer_key=\"key123\", "
+            "oauth_nonce=\"randomstring\", oauth_signature_method=\"HMAC-SHA256\", "
+            "oauth_timestamp=\"1700000000\", oauth_token=\"token789\", "
+            "oauth_version=\"1.0\", status=\"active\", "
+            "oauth_signature=\"Lih20ttr%2Fmuyb8m5AqpjPKa%2FNzc%2BYT%2FRvRZKId3RS2o%3D\"") != 0)
+        return (0);
+    if (ft_errno != ER_SUCCESS)
+        return (0);
+    return (1);
+}
+
 struct api_stream_test_context
 {
     size_t total_bytes;
@@ -55,6 +123,13 @@ struct api_request_basic_server_context
     std::atomic<int> result;
     int client_fd;
     ft_string request_data;
+};
+
+struct api_request_circuit_server_context
+{
+    std::atomic<bool> ready;
+    uint16_t port;
+    int responses;
 };
 
 static void api_request_stream_headers_callback(int status_code,
@@ -533,6 +608,61 @@ static void api_request_retry_failure_server(void)
             continue ;
         accepted_count++;
         nw_close(client_fd);
+    }
+    return ;
+}
+
+static void api_request_circuit_success_server(
+    api_request_circuit_server_context *context)
+{
+    SocketConfig server_configuration;
+    ft_socket server_socket;
+    struct sockaddr_storage address_storage;
+    socklen_t address_length;
+    int served_count;
+
+    if (!context)
+        return ;
+    server_configuration._type = SocketType::SERVER;
+    server_configuration._ip = "127.0.0.1";
+    server_configuration._port = context->port;
+    server_socket = ft_socket(server_configuration);
+    if (server_socket.get_error() != ER_SUCCESS)
+    {
+        context->ready.store(true, std::memory_order_release);
+        return ;
+    }
+    served_count = 0;
+    context->ready.store(true, std::memory_order_release);
+    while (served_count < context->responses)
+    {
+        int client_fd;
+
+        address_length = sizeof(address_storage);
+        client_fd = nw_accept(server_socket.get_fd(),
+                reinterpret_cast<struct sockaddr*>(&address_storage),
+                &address_length);
+        if (client_fd < 0)
+            continue ;
+        const char *response;
+        size_t response_length;
+        size_t total_sent;
+
+        response = "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK";
+        response_length = ft_strlen(response);
+        total_sent = 0;
+        while (total_sent < response_length)
+        {
+            ssize_t bytes_sent;
+
+            bytes_sent = nw_send(client_fd, response + total_sent,
+                    response_length - total_sent, 0);
+            if (bytes_sent <= 0)
+                break ;
+            total_sent += static_cast<size_t>(bytes_sent);
+        }
+        nw_close(client_fd);
+        served_count++;
     }
     return ;
 }
@@ -1657,6 +1787,190 @@ FT_TEST(test_api_request_retry_policy_timeout, "api_request_string retries until
         return (0);
     if (request_errno != FT_ERR_SOCKET_RECEIVE_FAILED && request_errno != FT_ERR_IO)
         return (0);
+    return (1);
+}
+
+FT_TEST(test_api_request_circuit_breaker_blocks_after_threshold,
+    "api_request circuit breaker blocks after repeated failures")
+{
+    api_retry_policy retry_policy;
+    char *body;
+    int status_value;
+    int request_errno;
+    api_request_circuit_server_context server_context;
+    ft_thread server_thread;
+    int wait_attempts;
+
+    api_retry_circuit_reset();
+    retry_policy.max_attempts = 1;
+    retry_policy.initial_delay_ms = 0;
+    retry_policy.max_delay_ms = 0;
+    retry_policy.backoff_multiplier = 1;
+    retry_policy.circuit_breaker_threshold = 2;
+    retry_policy.circuit_breaker_cooldown_ms = 200;
+    retry_policy.circuit_breaker_half_open_successes = 1;
+    status_value = 0;
+    body = api_request_string("127.0.0.1", 55310, "GET", "/", ft_nullptr,
+            ft_nullptr, &status_value, 50, &retry_policy);
+    if (body)
+    {
+        cma_free(body);
+        return (0);
+    }
+    status_value = 0;
+    body = api_request_string("127.0.0.1", 55310, "GET", "/", ft_nullptr,
+            ft_nullptr, &status_value, 50, &retry_policy);
+    if (body)
+    {
+        cma_free(body);
+        return (0);
+    }
+    status_value = 0;
+    body = api_request_string("127.0.0.1", 55310, "GET", "/", ft_nullptr,
+            ft_nullptr, &status_value, 50, &retry_policy);
+    request_errno = ft_errno;
+    if (body)
+    {
+        cma_free(body);
+        return (0);
+    }
+    if (request_errno != FT_ERR_API_CIRCUIT_OPEN)
+        return (0);
+    api_retry_circuit_reset();
+    server_context.ready.store(false, std::memory_order_relaxed);
+    server_context.port = 55310;
+    server_context.responses = 1;
+    server_thread = ft_thread(api_request_circuit_success_server,
+            &server_context);
+    if (server_thread.get_error() != ER_SUCCESS)
+        return (0);
+    wait_attempts = 0;
+    while (!server_context.ready.load(std::memory_order_acquire)
+        && wait_attempts < 100)
+    {
+        time_sleep_ms(10);
+        wait_attempts++;
+    }
+    status_value = 0;
+    body = api_request_string("127.0.0.1", 55310, "GET", "/", ft_nullptr,
+            ft_nullptr, &status_value, 200, &retry_policy);
+    request_errno = ft_errno;
+    server_thread.join();
+    ft_errno = request_errno;
+    if (!body)
+        return (0);
+    if (ft_strcmp(body, "OK") != 0)
+    {
+        cma_free(body);
+        return (0);
+    }
+    cma_free(body);
+    if (status_value != 200)
+        return (0);
+    if (request_errno != ER_SUCCESS)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_api_request_circuit_breaker_half_open_recovers,
+    "api_request circuit breaker recovers after cooldown")
+{
+    api_retry_policy retry_policy;
+    char *body;
+    int status_value;
+    int request_errno;
+    api_request_circuit_server_context server_context;
+    ft_thread server_thread;
+    int wait_attempts;
+
+    api_retry_circuit_reset();
+    retry_policy.max_attempts = 1;
+    retry_policy.initial_delay_ms = 0;
+    retry_policy.max_delay_ms = 0;
+    retry_policy.backoff_multiplier = 1;
+    retry_policy.circuit_breaker_threshold = 2;
+    retry_policy.circuit_breaker_cooldown_ms = 100;
+    retry_policy.circuit_breaker_half_open_successes = 1;
+    status_value = 0;
+    body = api_request_string("127.0.0.1", 55311, "GET", "/", ft_nullptr,
+            ft_nullptr, &status_value, 50, &retry_policy);
+    if (body)
+    {
+        cma_free(body);
+        return (0);
+    }
+    status_value = 0;
+    body = api_request_string("127.0.0.1", 55311, "GET", "/", ft_nullptr,
+            ft_nullptr, &status_value, 50, &retry_policy);
+    if (body)
+    {
+        cma_free(body);
+        return (0);
+    }
+    time_sleep_ms(150);
+    server_context.ready.store(false, std::memory_order_relaxed);
+    server_context.port = 55311;
+    server_context.responses = 2;
+    server_thread = ft_thread(api_request_circuit_success_server,
+            &server_context);
+    if (server_thread.get_error() != ER_SUCCESS)
+        return (0);
+    wait_attempts = 0;
+    while (!server_context.ready.load(std::memory_order_acquire)
+        && wait_attempts < 100)
+    {
+        time_sleep_ms(10);
+        wait_attempts++;
+    }
+    status_value = 0;
+    body = api_request_string("127.0.0.1", 55311, "GET", "/", ft_nullptr,
+            ft_nullptr, &status_value, 200, &retry_policy);
+    request_errno = ft_errno;
+    if (!body)
+    {
+        server_thread.join();
+        ft_errno = request_errno;
+        return (0);
+    }
+    if (ft_strcmp(body, "OK") != 0)
+    {
+        cma_free(body);
+        server_thread.join();
+        ft_errno = request_errno;
+        return (0);
+    }
+    cma_free(body);
+    if (status_value != 200)
+    {
+        server_thread.join();
+        ft_errno = request_errno;
+        return (0);
+    }
+    if (request_errno != ER_SUCCESS)
+    {
+        server_thread.join();
+        ft_errno = request_errno;
+        return (0);
+    }
+    status_value = 0;
+    body = api_request_string("127.0.0.1", 55311, "GET", "/", ft_nullptr,
+            ft_nullptr, &status_value, 200, &retry_policy);
+    request_errno = ft_errno;
+    server_thread.join();
+    ft_errno = request_errno;
+    if (!body)
+        return (0);
+    if (ft_strcmp(body, "OK") != 0)
+    {
+        cma_free(body);
+        return (0);
+    }
+    cma_free(body);
+    if (status_value != 200)
+        return (0);
+    if (request_errno != ER_SUCCESS)
+        return (0);
+    api_retry_circuit_reset();
     return (1);
 }
 

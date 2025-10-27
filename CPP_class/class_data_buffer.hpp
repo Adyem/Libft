@@ -20,12 +20,12 @@ class DataBuffer
         void set_error(int error_code) const noexcept;
 
     public:
-        DataBuffer();
-        DataBuffer(const DataBuffer& other);
+        DataBuffer() noexcept;
+        DataBuffer(const DataBuffer& other) noexcept;
         DataBuffer(DataBuffer&& other) noexcept;
-        DataBuffer& operator=(const DataBuffer& other);
+        DataBuffer& operator=(const DataBuffer& other) noexcept;
         DataBuffer& operator=(DataBuffer&& other) noexcept;
-        ~DataBuffer();
+        ~DataBuffer() noexcept;
         void clear() noexcept;
         size_t size() const noexcept;
         const ft_vector<uint8_t>& data() const noexcept;

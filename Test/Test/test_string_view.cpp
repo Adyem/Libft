@@ -2,6 +2,43 @@
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../CMA/CMA.hpp"
+#include "../../PThread/pthread.hpp"
+#include <atomic>
+
+struct string_view_thread_data
+{
+    ft_string_view<char> *shared;
+    const ft_string_view<char> *source;
+    std::atomic<bool> *running;
+};
+
+static void *string_view_assignment_worker(void *argument)
+{
+    string_view_thread_data *data;
+    size_t index;
+
+    data = static_cast<string_view_thread_data*>(argument);
+    index = 0;
+    while (index < 1000)
+    {
+        *(data->shared) = *(data->source);
+        index += 1;
+    }
+    data->running->store(false, std::memory_order_relaxed);
+    return (ft_nullptr);
+}
+
+static void *string_view_comparison_worker(void *argument)
+{
+    string_view_thread_data *data;
+
+    data = static_cast<string_view_thread_data*>(argument);
+    while (data->running->load(std::memory_order_relaxed))
+    {
+        data->shared->compare(*(data->source));
+    }
+    return (ft_nullptr);
+}
 
 FT_TEST(test_string_view_basic, "ft_string_view basic")
 {
@@ -38,5 +75,34 @@ FT_TEST(test_string_view_substr_oob, "ft_string_view substr out of bounds")
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, substring.get_error());
     FT_ASSERT_EQ(0u, substring.size());
     cma_free(buffer);
+    return (1);
+}
+
+FT_TEST(test_string_view_thread_safety, "ft_string_view thread safe copy and compare")
+{
+    ft_string_view<char> shared("initial");
+    ft_string_view<char> source("updated");
+    std::atomic<bool> running(true);
+    string_view_thread_data data;
+    pthread_t assign_thread;
+    pthread_t compare_thread;
+
+    data.shared = &shared;
+    data.source = &source;
+    data.running = &running;
+    if (pt_thread_create(&assign_thread, ft_nullptr,
+            string_view_assignment_worker, &data) != 0)
+        return (0);
+    if (pt_thread_create(&compare_thread, ft_nullptr,
+            string_view_comparison_worker, &data) != 0)
+    {
+        pt_thread_join(assign_thread, ft_nullptr);
+        return (0);
+    }
+    pt_thread_join(assign_thread, ft_nullptr);
+    pt_thread_join(compare_thread, ft_nullptr);
+    FT_ASSERT_EQ(0, shared.compare(source));
+    FT_ASSERT_EQ(ER_SUCCESS, shared.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
     return (1);
 }

@@ -1,6 +1,7 @@
 #include "api.hpp"
 #include "api_internal.hpp"
 #include "api_http_internal.hpp"
+#include "api_request_metrics.hpp"
 #include "../Networking/socket_class.hpp"
 #include "../CPP_class/class_string_class.hpp"
 #include "../CMA/CMA.hpp"
@@ -85,6 +86,14 @@ bool api_request_stream(const char *ip, uint16_t port,
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (false);
     }
+    const api_transport_hooks *hooks;
+
+    hooks = api_get_transport_hooks();
+    if (hooks && hooks->request_stream)
+    {
+        return (hooks->request_stream(ip, port, method, path, streaming_handler,
+                payload, headers, timeout, retry_policy, hooks->user_data));
+    }
     int error_code = ER_SUCCESS;
     struct api_request_errno_guard
     {
@@ -115,6 +124,9 @@ bool api_request_stream(const char *ip, uint16_t port,
             api_connection_security_mode::PLAIN, ft_nullptr);
     if (!pooled_connection)
     {
+        if (!api_retry_circuit_allow(connection_handle, retry_policy,
+                error_code))
+            return (false);
         ft_socket new_socket(config);
 
         if (new_socket.get_error())
@@ -126,6 +138,7 @@ bool api_request_stream(const char *ip, uint16_t port,
                 error_code = socket_error_code;
             else
                 error_code = FT_ERR_SOCKET_CONNECT_FAILED;
+            api_retry_circuit_record_failure(connection_handle, retry_policy);
             return (false);
         }
         connection_handle.socket = ft_move(new_socket);
@@ -203,6 +216,15 @@ bool api_request_stream_http2(const char *ip, uint16_t port,
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (false);
     }
+    const api_transport_hooks *hooks;
+
+    hooks = api_get_transport_hooks();
+    if (hooks && hooks->request_stream_http2)
+    {
+        return (hooks->request_stream_http2(ip, port, method, path,
+                streaming_handler, payload, headers, timeout, used_http2,
+                retry_policy, hooks->user_data));
+    }
     int error_code = ER_SUCCESS;
     struct api_request_errno_guard
     {
@@ -233,6 +255,9 @@ bool api_request_stream_http2(const char *ip, uint16_t port,
             api_connection_security_mode::PLAIN, ft_nullptr);
     if (!pooled_connection)
     {
+        if (!api_retry_circuit_allow(connection_handle, retry_policy,
+                error_code))
+            return (false);
         ft_socket new_socket(config);
 
         if (new_socket.get_error())
@@ -244,6 +269,7 @@ bool api_request_stream_http2(const char *ip, uint16_t port,
                 error_code = socket_error_code;
             else
                 error_code = FT_ERR_SOCKET_CONNECT_FAILED;
+            api_retry_circuit_record_failure(connection_handle, retry_policy);
             return (false);
         }
         connection_handle.socket = ft_move(new_socket);
@@ -324,6 +350,43 @@ char *api_request_string(const char *ip, uint16_t port,
         ft_log_debug("api_request_string %s:%u %s %s",
             log_ip, port, log_method, log_path);
     }
+    const api_transport_hooks *hooks;
+
+    hooks = api_get_transport_hooks();
+    if (hooks && hooks->request_string)
+    {
+        return (hooks->request_string(ip, port, method, path, payload,
+                headers, status, timeout, retry_policy, hooks->user_data));
+    }
+    size_t metrics_request_bytes;
+    int metrics_entry_errno;
+    char *metrics_payload_string;
+
+    metrics_request_bytes = 0;
+    if (method)
+        metrics_request_bytes += ft_strlen(method);
+    if (path)
+        metrics_request_bytes += ft_strlen(path);
+    if (headers && headers[0])
+        metrics_request_bytes += ft_strlen(headers);
+    if (ip)
+        metrics_request_bytes += ft_strlen(ip);
+    if (payload)
+    {
+        metrics_entry_errno = ft_errno;
+        metrics_payload_string = json_write_to_string(payload);
+    }
+    else
+    {
+        metrics_entry_errno = ft_errno;
+        metrics_payload_string = ft_nullptr;
+    }
+    if (metrics_payload_string)
+    {
+        metrics_request_bytes += ft_strlen(metrics_payload_string);
+        cma_free(metrics_payload_string);
+    }
+    ft_errno = metrics_entry_errno;
     int error_code = ER_SUCCESS;
     struct api_request_errno_guard
     {
@@ -339,6 +402,19 @@ char *api_request_string(const char *ip, uint16_t port,
             return ;
         }
     } guard(&error_code);
+    char *metrics_result_body;
+    int metrics_status_storage;
+    int *metrics_status_pointer;
+
+    metrics_result_body = ft_nullptr;
+    metrics_status_storage = -1;
+    if (status)
+        metrics_status_pointer = status;
+    else
+        metrics_status_pointer = &metrics_status_storage;
+    api_request_metrics_guard metrics_guard(ip, port, method, path,
+        metrics_request_bytes, &metrics_result_body, metrics_status_pointer,
+        &error_code);
 
     SocketConfig config;
     config._type = SocketType::CLIENT;
@@ -354,6 +430,9 @@ char *api_request_string(const char *ip, uint16_t port,
             api_connection_security_mode::PLAIN, ft_nullptr);
     if (!pooled_connection)
     {
+        if (!api_retry_circuit_allow(connection_handle, retry_policy,
+                error_code))
+            return (ft_nullptr);
         ft_socket new_socket(config);
 
         if (new_socket.get_error())
@@ -365,6 +444,7 @@ char *api_request_string(const char *ip, uint16_t port,
                 error_code = socket_error_code;
             else
                 error_code = FT_ERR_SOCKET_CONNECT_FAILED;
+            api_retry_circuit_record_failure(connection_handle, retry_policy);
             return (ft_nullptr);
         }
         connection_handle.socket = ft_move(new_socket);
@@ -403,15 +483,13 @@ char *api_request_string(const char *ip, uint16_t port,
         error_code = FT_ERR_IO;
         return (ft_nullptr);
     }
-    char *result_body;
-
-    result_body = api_http_execute_plain(connection_handle, method, path, ip,
-            payload, headers, status, timeout, ip, port, retry_policy,
-            error_code);
-    if (!result_body)
+    metrics_result_body = api_http_execute_plain(connection_handle, method,
+            path, ip, payload, headers, status, timeout, ip, port,
+            retry_policy, error_code);
+    if (!metrics_result_body)
         return (ft_nullptr);
     connection_guard.set_success();
-    return (result_body);
+    return (metrics_result_body);
 }
 
 char *api_request_string_http2(const char *ip, uint16_t port,
@@ -435,6 +513,44 @@ char *api_request_string_http2(const char *ip, uint16_t port,
         ft_log_debug("api_request_string_http2 %s:%u %s %s",
             log_ip, port, log_method, log_path);
     }
+    const api_transport_hooks *hooks;
+
+    hooks = api_get_transport_hooks();
+    if (hooks && hooks->request_string_http2)
+    {
+        return (hooks->request_string_http2(ip, port, method, path, payload,
+                headers, status, timeout, used_http2, retry_policy,
+                hooks->user_data));
+    }
+    size_t metrics_request_bytes;
+    int metrics_entry_errno;
+    char *metrics_payload_string;
+
+    metrics_request_bytes = 0;
+    if (method)
+        metrics_request_bytes += ft_strlen(method);
+    if (path)
+        metrics_request_bytes += ft_strlen(path);
+    if (headers && headers[0])
+        metrics_request_bytes += ft_strlen(headers);
+    if (ip)
+        metrics_request_bytes += ft_strlen(ip);
+    if (payload)
+    {
+        metrics_entry_errno = ft_errno;
+        metrics_payload_string = json_write_to_string(payload);
+    }
+    else
+    {
+        metrics_entry_errno = ft_errno;
+        metrics_payload_string = ft_nullptr;
+    }
+    if (metrics_payload_string)
+    {
+        metrics_request_bytes += ft_strlen(metrics_payload_string);
+        cma_free(metrics_payload_string);
+    }
+    ft_errno = metrics_entry_errno;
     int error_code = ER_SUCCESS;
     struct api_request_errno_guard
     {
@@ -450,6 +566,19 @@ char *api_request_string_http2(const char *ip, uint16_t port,
             return ;
         }
     } guard(&error_code);
+    char *metrics_result_body;
+    int metrics_status_storage;
+    int *metrics_status_pointer;
+
+    metrics_result_body = ft_nullptr;
+    metrics_status_storage = -1;
+    if (status)
+        metrics_status_pointer = status;
+    else
+        metrics_status_pointer = &metrics_status_storage;
+    api_request_metrics_guard metrics_guard(ip, port, method, path,
+        metrics_request_bytes, &metrics_result_body, metrics_status_pointer,
+        &error_code);
 
     SocketConfig config;
     config._type = SocketType::CLIENT;
@@ -467,6 +596,9 @@ char *api_request_string_http2(const char *ip, uint16_t port,
             api_connection_security_mode::PLAIN, ft_nullptr);
     if (!pooled_connection)
     {
+        if (!api_retry_circuit_allow(connection_handle, retry_policy,
+                error_code))
+            return (ft_nullptr);
         ft_socket new_socket(config);
 
         if (new_socket.get_error())
@@ -481,6 +613,7 @@ char *api_request_string_http2(const char *ip, uint16_t port,
                 error_code = FT_ERR_SOCKET_CONNECT_FAILED;
                 downgrade_due_to_connect_failure = true;
             }
+            api_retry_circuit_record_failure(connection_handle, retry_policy);
             if (!downgrade_due_to_connect_failure)
                 return (ft_nullptr);
         }
@@ -520,7 +653,6 @@ char *api_request_string_http2(const char *ip, uint16_t port,
     } connection_guard(connection_handle);
     if (downgrade_due_to_connect_failure)
     {
-        char *fallback_body;
         bool socket_ready;
 
         if (g_api_request_wait_hook)
@@ -552,15 +684,15 @@ char *api_request_string_http2(const char *ip, uint16_t port,
         }
         if (!socket_ready)
             return (ft_nullptr);
-        fallback_body = api_http_execute_plain(connection_handle, method, path,
-                ip, payload, headers, status, timeout, ip, port, retry_policy,
-                error_code);
-        if (!fallback_body)
+        metrics_result_body = api_http_execute_plain(connection_handle, method,
+                path, ip, payload, headers, status, timeout, ip, port,
+                retry_policy, error_code);
+        if (!metrics_result_body)
             return (ft_nullptr);
         connection_guard.set_success();
         if (used_http2)
             *used_http2 = false;
-        return (fallback_body);
+        return (metrics_result_body);
     }
     if (!connection_handle.has_socket)
     {
@@ -568,26 +700,25 @@ char *api_request_string_http2(const char *ip, uint16_t port,
         return (ft_nullptr);
     }
     bool http2_used_local;
-    char *result_body;
 
     http2_used_local = false;
-    result_body = api_http_execute_plain_http2(connection_handle, method, path,
-            ip, payload, headers, status, timeout, ip, port, retry_policy,
-            http2_used_local, error_code);
-    if (!result_body)
+    metrics_result_body = api_http_execute_plain_http2(connection_handle,
+            method, path, ip, payload, headers, status, timeout, ip, port,
+            retry_policy, http2_used_local, error_code);
+    if (!metrics_result_body)
     {
         error_code = ER_SUCCESS;
-        result_body = api_http_execute_plain(connection_handle, method, path, ip,
-                payload, headers, status, timeout, ip, port, retry_policy,
-                error_code);
-        if (!result_body)
+        metrics_result_body = api_http_execute_plain(connection_handle, method,
+                path, ip, payload, headers, status, timeout, ip, port,
+                retry_policy, error_code);
+        if (!metrics_result_body)
             return (ft_nullptr);
         http2_used_local = false;
     }
     connection_guard.set_success();
     if (used_http2)
         *used_http2 = http2_used_local;
-    return (result_body);
+    return (metrics_result_body);
 }
 
 json_group *api_request_json(const char *ip, uint16_t port,
@@ -661,6 +792,15 @@ bool api_request_stream_host(const char *host, uint16_t port,
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (false);
+    }
+    const api_transport_hooks *hooks;
+
+    hooks = api_get_transport_hooks();
+    if (hooks && hooks->request_stream_host)
+    {
+        return (hooks->request_stream_host(host, port, method, path,
+                streaming_handler, payload, headers, timeout, retry_policy,
+                hooks->user_data));
     }
     char port_string[6];
     struct addrinfo hints;
@@ -754,6 +894,14 @@ char *api_request_string_host(const char *host, uint16_t port,
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
+    }
+    const api_transport_hooks *hooks;
+
+    hooks = api_get_transport_hooks();
+    if (hooks && hooks->request_string_host)
+    {
+        return (hooks->request_string_host(host, port, method, path, payload,
+                headers, status, timeout, retry_policy, hooks->user_data));
     }
     char port_string[6];
     struct addrinfo hints;

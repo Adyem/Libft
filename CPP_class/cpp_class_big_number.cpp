@@ -107,7 +107,7 @@ ft_big_number::ft_big_number(ft_big_number&& other) noexcept
     return ;
 }
 
-ft_big_number::~ft_big_number()
+ft_big_number::~ft_big_number() noexcept
 {
     cma_free(this->_digits);
     return ;

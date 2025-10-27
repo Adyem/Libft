@@ -422,6 +422,14 @@ bool    api_request_string_async(const char *ip, uint16_t port,
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (false);
     }
+    const api_transport_hooks *hooks;
+
+    hooks = api_get_transport_hooks();
+    if (hooks && hooks->request_string_async)
+    {
+        return (hooks->request_string_async(ip, port, method, path, callback,
+                user_data, payload, headers, timeout, hooks->user_data));
+    }
     api_async_request *data = static_cast<api_async_request*>(cma_malloc(sizeof(api_async_request)));
     if (!data)
     {

@@ -1219,6 +1219,9 @@ bool api_http_execute_plain_streaming(
     implicit_retry_added = false;
     while (attempt_index < allowed_attempts)
     {
+        if (!api_retry_circuit_allow(connection_handle, retry_policy,
+                error_code))
+            return (false);
         bool socket_ready;
         bool should_retry;
 
@@ -1236,6 +1239,8 @@ bool api_http_execute_plain_streaming(
                     error_code);
             if (success)
             {
+                api_retry_circuit_record_success(connection_handle,
+                    retry_policy);
                 if (connection_close)
                     api_connection_pool_disable_store(connection_handle);
                 return (true);
@@ -1244,6 +1249,7 @@ bool api_http_execute_plain_streaming(
         should_retry = api_http_should_retry_plain(error_code);
         if (!should_retry)
             return (false);
+        api_retry_circuit_record_failure(connection_handle, retry_policy);
         if (!implicit_retry_added && retry_policy == ft_nullptr)
         {
             allowed_attempts = 2;
@@ -1310,6 +1316,9 @@ char *api_http_execute_plain_http2(api_connection_pool_handle &connection_handle
     downgrade_due_to_connect_refused = false;
     while (attempt_index < max_attempts)
     {
+        if (!api_retry_circuit_allow(connection_handle, retry_policy,
+                error_code))
+            return (ft_nullptr);
         bool socket_ready;
         bool should_retry;
 
@@ -1326,6 +1335,8 @@ char *api_http_execute_plain_http2(api_connection_pool_handle &connection_handle
             if (result_body)
             {
                 used_http2 = http2_used_local;
+                api_retry_circuit_record_success(connection_handle,
+                    retry_policy);
                 return (result_body);
             }
             if (error_code == FT_ERR_HTTP_PROTOCOL_MISMATCH)
@@ -1348,6 +1359,8 @@ char *api_http_execute_plain_http2(api_connection_pool_handle &connection_handle
             if (connect_refused)
             {
                 downgrade_due_to_connect_refused = true;
+                api_retry_circuit_record_failure(connection_handle,
+                    retry_policy);
                 break ;
             }
         }
@@ -1356,6 +1369,7 @@ char *api_http_execute_plain_http2(api_connection_pool_handle &connection_handle
             break ;
         if (error_code == FT_ERR_HTTP_PROTOCOL_MISMATCH)
             break ;
+        api_retry_circuit_record_failure(connection_handle, retry_policy);
         api_connection_pool_evict(connection_handle);
         attempt_index++;
         if (attempt_index >= max_attempts)
@@ -1417,6 +1431,9 @@ char *api_http_execute_plain(api_connection_pool_handle &connection_handle,
     attempt_index = 0;
     while (attempt_index < max_attempts)
     {
+        if (!api_retry_circuit_allow(connection_handle, retry_policy,
+                error_code))
+            return (ft_nullptr);
         bool socket_ready;
         bool should_retry;
 
@@ -1430,11 +1447,16 @@ char *api_http_execute_plain(api_connection_pool_handle &connection_handle,
                     path, host_header, payload, headers, status, timeout,
                     error_code, ft_nullptr, false);
             if (result_body)
+            {
+                api_retry_circuit_record_success(connection_handle,
+                    retry_policy);
                 return (result_body);
+            }
         }
         should_retry = api_http_should_retry_plain(error_code);
         if (!should_retry)
             return (ft_nullptr);
+        api_retry_circuit_record_failure(connection_handle, retry_policy);
         api_connection_pool_evict(connection_handle);
         attempt_index++;
         if (attempt_index >= max_attempts)

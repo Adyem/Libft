@@ -67,7 +67,7 @@ void    rl_disable_raw_mode();
 int        rl_enable_raw_mode();
 
 int        rl_clear_line(const char *prompt, const char *buffer);
-char    *rl_resize_buffer(char *old_buffer, int current_size, int new_size);
+char    *rl_resize_buffer(char **buffer_pointer, int *current_size_pointer, int new_size);
 int        rl_handle_escape_sequence(readline_state_t *state, const char *prompt);
 int        rl_handle_backspace(readline_state_t *state, const char *prompt);
 int        rl_handle_tab_completion(readline_state_t *state, const char *prompt);
