@@ -3,6 +3,8 @@
 
 #include "../JSon/json.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 #include "api_request_signing.hpp"
 #include <cstdint>
 #include <cstddef>
@@ -15,22 +17,91 @@ typedef void (*api_stream_headers_callback)(int status_code,
 typedef bool (*api_stream_body_callback)(const char *chunk_data,
         size_t chunk_size, bool is_final_chunk, void *user_data);
 
-struct api_streaming_handler
+class api_streaming_handler
 {
-    api_stream_headers_callback headers_callback;
-    api_stream_body_callback body_callback;
-    void *user_data;
+    private:
+        api_stream_headers_callback _headers_callback;
+        api_stream_body_callback _body_callback;
+        void *_user_data;
+        mutable int _error_code;
+        mutable pt_mutex _mutex;
+
+        void set_error(int error) const noexcept;
+        static int lock_pair(const api_streaming_handler &first,
+            const api_streaming_handler &second,
+            ft_unique_lock<pt_mutex> &first_guard,
+            ft_unique_lock<pt_mutex> &second_guard) noexcept;
+
+    public:
+        api_streaming_handler() noexcept;
+        api_streaming_handler(const api_streaming_handler &other) noexcept;
+        api_streaming_handler &operator=(const api_streaming_handler &other) noexcept;
+        api_streaming_handler(api_streaming_handler &&other) noexcept;
+        api_streaming_handler &operator=(api_streaming_handler &&other) noexcept;
+        ~api_streaming_handler();
+
+        void reset() noexcept;
+
+        void set_headers_callback(api_stream_headers_callback callback) noexcept;
+        void set_body_callback(api_stream_body_callback callback) noexcept;
+        void set_user_data(void *user_data) noexcept;
+
+        bool invoke_headers_callback(int status_code,
+            const char *headers) const noexcept;
+        bool invoke_body_callback(const char *chunk_data, size_t chunk_size,
+            bool is_final_chunk, bool &should_continue) const noexcept;
+
+        int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 };
 
-struct api_retry_policy
+class api_retry_policy
 {
-    int max_attempts;
-    int initial_delay_ms;
-    int max_delay_ms;
-    int backoff_multiplier;
-    int circuit_breaker_threshold;
-    int circuit_breaker_cooldown_ms;
-    int circuit_breaker_half_open_successes;
+    private:
+        int _max_attempts;
+        int _initial_delay_ms;
+        int _max_delay_ms;
+        int _backoff_multiplier;
+        int _circuit_breaker_threshold;
+        int _circuit_breaker_cooldown_ms;
+        int _circuit_breaker_half_open_successes;
+        mutable int _error_code;
+        mutable pt_mutex _mutex;
+
+        void set_error(int error) const noexcept;
+        static int lock_pair(const api_retry_policy &first,
+            const api_retry_policy &second,
+            ft_unique_lock<pt_mutex> &first_guard,
+            ft_unique_lock<pt_mutex> &second_guard) noexcept;
+
+    public:
+        api_retry_policy() noexcept;
+        api_retry_policy(const api_retry_policy &other) noexcept;
+        api_retry_policy &operator=(const api_retry_policy &other) noexcept;
+        api_retry_policy(api_retry_policy &&other) noexcept;
+        api_retry_policy &operator=(api_retry_policy &&other) noexcept;
+        ~api_retry_policy();
+
+        void reset() noexcept;
+
+        void set_max_attempts(int value) noexcept;
+        void set_initial_delay_ms(int value) noexcept;
+        void set_max_delay_ms(int value) noexcept;
+        void set_backoff_multiplier(int value) noexcept;
+        void set_circuit_breaker_threshold(int value) noexcept;
+        void set_circuit_breaker_cooldown_ms(int value) noexcept;
+        void set_circuit_breaker_half_open_successes(int value) noexcept;
+
+        int get_max_attempts() const noexcept;
+        int get_initial_delay_ms() const noexcept;
+        int get_max_delay_ms() const noexcept;
+        int get_backoff_multiplier() const noexcept;
+        int get_circuit_breaker_threshold() const noexcept;
+        int get_circuit_breaker_cooldown_ms() const noexcept;
+        int get_circuit_breaker_half_open_successes() const noexcept;
+
+        int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
 };
 
 struct api_transport_hooks

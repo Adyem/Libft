@@ -1,6 +1,6 @@
 # TODO
 
-Remaining unchecked items: 84
+Remaining unchecked items: 81
 
 ## Library-wide priorities
 - [x] Publish a canonical error-code registry that documents each value exposed through `Errno/errno.hpp` and clarifies which modules set them, so cross-module error handling stays consistent.
@@ -129,8 +129,8 @@ Remaining unchecked items: 84
 - [x] Make `api_tls_string_promise` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `api_tls_client` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `api_connection_pool_handle` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `api_streaming_handler` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `api_retry_policy` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `api_streaming_handler` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `api_retry_policy` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### PThread and concurrency utilities
 - [ ] Extend `task_scheduler` with work-stealing queues and task affinity controls to better utilize multi-core systems.
@@ -338,7 +338,7 @@ Remaining unchecked items: 84
 - [x] Implement AI behavior trees or state machines for NPCs to replace ad-hoc logic.
 - [x] Profile the event scheduler under heavy load and optimize shared-pointer churn.
 - [x] Document extension points for mods or scripting integrations.
-- [ ] Introduce scripting bridges (Lua, Python) with sandboxing controls for user-generated content.
+- [x] Introduce scripting bridges (Lua, Python) with sandboxing controls for user-generated content.
 - [x] Add telemetry hooks that emit gameplay metrics for balancing and analytics.
 - [x] Make `ft_game_state` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_character` thread safe (relies on the shared deadlock resolution routine described below).

@@ -4,7 +4,7 @@ DEBUG_TARGET   := API_debug.a
 SRCS := api_request.cpp api_request_tls.cpp api_request_async.cpp api_promise.cpp api_tls_client.cpp \
         api_content_length.cpp api_connection_pool.cpp api_http_common.cpp api_http_plain.cpp \
         api_http_tls.cpp api_request_error.cpp api_transport_hooks.cpp api_retry.cpp \
-        api_request_signing.cpp
+        api_request_signing.cpp api_streaming_handler.cpp api_retry_policy.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
@@ -34,7 +34,7 @@ DEBUG_OBJDIR   := objs_debug
 OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
 DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
 
-CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17
+CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17 -Wuseless-cast
 
 all: $(TARGET)
 

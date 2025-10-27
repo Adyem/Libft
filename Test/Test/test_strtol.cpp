@@ -113,7 +113,7 @@ FT_TEST(test_strtol_positive_overflow, "ft_strtol clamps positive overflow and r
     FT_ASSERT_EQ(FT_LONG_MAX, ft_strtol(overflow_string.c_str(), &end, 10));
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
     FT_ASSERT_EQ('\0', *end);
-    FT_ASSERT_EQ(static_cast<size_t>(overflow_string.size()),
+    FT_ASSERT_EQ(overflow_string.size(),
         static_cast<size_t>(end - overflow_string.c_str()));
     return (1);
 }
@@ -129,7 +129,7 @@ FT_TEST(test_strtol_negative_overflow, "ft_strtol clamps negative overflow and r
     FT_ASSERT_EQ(FT_LONG_MIN, ft_strtol(underflow_string.c_str(), &end, 10));
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
     FT_ASSERT_EQ('\0', *end);
-    FT_ASSERT_EQ(static_cast<size_t>(underflow_string.size()),
+    FT_ASSERT_EQ(underflow_string.size(),
         static_cast<size_t>(end - underflow_string.c_str()));
     return (1);
 }

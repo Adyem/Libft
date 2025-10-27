@@ -1162,7 +1162,6 @@ int ft_dom_find_path(const ft_dom_node *root, const ft_string &path, const ft_do
         return (-1);
     }
     *out_node = ft_nullptr;
-    ft_errno = ER_SUCCESS;
     const char *raw_path;
 
     raw_path = path.c_str();
@@ -1177,54 +1176,75 @@ int ft_dom_find_path(const ft_dom_node *root, const ft_string &path, const ft_do
     if (path_length == 0)
     {
         *out_node = root;
+        ft_errno = ER_SUCCESS;
         return (0);
     }
     const ft_dom_node *current_node;
+    size_t start_index;
+    int status;
+    int error_code;
 
     current_node = root;
-    size_t start_index;
-
     start_index = 0;
-    while (start_index < path_length)
+    status = 0;
+    error_code = ER_SUCCESS;
+    while (start_index < path_length && status == 0)
     {
         size_t end_index;
+        size_t segment_length;
 
         end_index = start_index;
         while (end_index < path_length && raw_path[end_index] != '/')
             end_index += 1;
-        size_t segment_length;
-
         segment_length = end_index - start_index;
         if (segment_length == 0)
         {
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
-            return (-1);
+            status = -1;
+            error_code = FT_ERR_INVALID_ARGUMENT;
         }
-        ft_string segment;
+        else
+        {
+            ft_string segment;
 
-        segment.assign(raw_path + start_index, segment_length);
-        if (segment.get_error() != ER_SUCCESS)
-        {
-            ft_errno = segment.get_error();
-            return (-1);
-        }
-        ft_dom_node *child_node;
+            segment.assign(raw_path + start_index, segment_length);
+            if (segment.get_error() != ER_SUCCESS)
+            {
+                status = -1;
+                error_code = segment.get_error();
+            }
+            else
+            {
+                ft_dom_node *child_node;
 
-        child_node = current_node->find_child(segment);
-        if (current_node->get_error() != ER_SUCCESS)
-        {
-            ft_errno = current_node->get_error();
-            return (-1);
+                child_node = current_node->find_child(segment);
+                int node_error;
+
+                node_error = current_node->get_error();
+                if (node_error != ER_SUCCESS)
+                {
+                    status = -1;
+                    error_code = node_error;
+                }
+                else if (!child_node)
+                {
+                    status = -1;
+                    error_code = FT_ERR_NOT_FOUND;
+                }
+                else
+                {
+                    current_node = child_node;
+                    if (end_index >= path_length)
+                        start_index = path_length;
+                    else
+                        start_index = end_index + 1;
+                }
+            }
         }
-        if (!child_node)
-        {
-            ft_errno = FT_ERR_NOT_FOUND;
-            return (-1);
-        }
-        current_node = child_node;
-        if (end_index >= path_length)
-            break ;
-        start_index = end_index + 1;
+    }
+    if (status != 0)
+    {
+        ft_errno = error_code;
+        return (-1);
     }
     *out_node = current_node;
     ft_errno = ER_SUCCESS;
