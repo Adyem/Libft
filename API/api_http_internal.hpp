@@ -30,6 +30,13 @@ bool api_http_execute_plain_streaming(api_connection_pool_handle &connection_han
     const char *host, uint16_t port,
     const api_retry_policy *retry_policy,
     const api_streaming_handler *streaming_handler, int &error_code);
+bool api_retry_circuit_allow(const api_connection_pool_handle &handle,
+    const api_retry_policy *retry_policy, int &error_code);
+void api_retry_circuit_record_success(const api_connection_pool_handle &handle,
+    const api_retry_policy *retry_policy);
+void api_retry_circuit_record_failure(const api_connection_pool_handle &handle,
+    const api_retry_policy *retry_policy);
+void api_retry_circuit_reset(void);
 bool api_http_prepare_plain_socket(api_connection_pool_handle &connection_handle,
     const char *host, uint16_t port, int timeout, int &error_code);
 bool api_http_execute_plain_http2_streaming(
@@ -108,6 +115,33 @@ inline int api_retry_get_multiplier(const api_retry_policy *retry_policy)
     if (retry_policy->backoff_multiplier <= 0)
         return (2);
     return (retry_policy->backoff_multiplier);
+}
+
+inline int api_retry_get_circuit_threshold(const api_retry_policy *retry_policy)
+{
+    if (!retry_policy)
+        return (0);
+    if (retry_policy->circuit_breaker_threshold <= 0)
+        return (0);
+    return (retry_policy->circuit_breaker_threshold);
+}
+
+inline int api_retry_get_circuit_cooldown(const api_retry_policy *retry_policy)
+{
+    if (!retry_policy)
+        return (0);
+    if (retry_policy->circuit_breaker_cooldown_ms <= 0)
+        return (0);
+    return (retry_policy->circuit_breaker_cooldown_ms);
+}
+
+inline int api_retry_get_half_open_successes(const api_retry_policy *retry_policy)
+{
+    if (!retry_policy)
+        return (1);
+    if (retry_policy->circuit_breaker_half_open_successes <= 0)
+        return (1);
+    return (retry_policy->circuit_breaker_half_open_successes);
 }
 
 inline int api_retry_prepare_delay(int delay, int max_delay)

@@ -43,6 +43,30 @@ void pf_reset_fflush_function(void)
     return ;
 }
 
+int pf_flush_stream(FILE *stream)
+{
+    int flush_status;
+    int saved_errno;
+
+    if (stream == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (-1);
+    }
+    errno = 0;
+    flush_status = g_pf_fflush_function(stream);
+    if (flush_status != 0)
+    {
+        saved_errno = errno;
+        if (saved_errno != 0)
+            ft_errno = ft_map_system_error(saved_errno);
+        else
+            ft_errno = FT_ERR_IO;
+        return (-1);
+    }
+    return (0);
+}
+
 void pf_set_ftell_function(t_pf_ftell_function function)
 {
     if (function == ft_nullptr)
@@ -84,11 +108,8 @@ int pf_vsnprintf(char *string, size_t size, const char *format, va_list args)
         fclose(stream);
         return (printed);
     }
-    int flush_status = g_pf_fflush_function(stream);
-    if (flush_status != 0)
+    if (pf_flush_stream(stream) != 0)
     {
-        int saved_errno = errno;
-        ft_errno = ft_map_system_error(saved_errno);
         fclose(stream);
         if (string != ft_nullptr && size > 0)
             string[0] = '\0';

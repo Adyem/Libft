@@ -8,11 +8,25 @@
 #include "../Errno/errno.hpp"
 #include "readline_internal.hpp"
 
-char *rl_resize_buffer(char *old_buffer, int current_size, int new_size)
+char *rl_resize_buffer(char **buffer_pointer, int *current_size_pointer, int new_size)
 {
+    char *old_buffer;
+    int current_size;
     size_t copy_size;
     char *new_buffer;
 
+    if (buffer_pointer == ft_nullptr || current_size_pointer == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (ft_nullptr);
+    }
+    if (new_size <= 0)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (ft_nullptr);
+    }
+    old_buffer = *buffer_pointer;
+    current_size = *current_size_pointer;
     copy_size = 0;
     if (current_size > 0)
     {
@@ -20,16 +34,21 @@ char *rl_resize_buffer(char *old_buffer, int current_size, int new_size)
         if (current_size > new_size)
             copy_size = static_cast<size_t>(new_size);
     }
-    new_buffer = static_cast<char *>(cma_malloc(new_size));
+    new_buffer = static_cast<char *>(cma_malloc(static_cast<ft_size_t>(new_size)));
     if (!new_buffer)
     {
-        pf_printf_fd(2, "Allocation error\n");
+        su_write(2, "Allocation error\n", 17);
         ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
-    if (copy_size > 0)
+    if (copy_size > 0 && old_buffer != ft_nullptr)
         ft_memcpy(new_buffer, old_buffer, copy_size);
-    cma_free(old_buffer);
+    if (old_buffer != ft_nullptr)
+        cma_free(old_buffer);
+    if (copy_size < static_cast<size_t>(new_size))
+        ft_bzero(new_buffer + copy_size, static_cast<size_t>(new_size) - copy_size);
+    *buffer_pointer = new_buffer;
+    *current_size_pointer = new_size;
     ft_errno = ER_SUCCESS;
     return (new_buffer);
 }

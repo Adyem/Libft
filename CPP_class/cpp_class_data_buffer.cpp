@@ -3,13 +3,13 @@
 #include <utility>
 #include "../Template/move.hpp"
 
-DataBuffer::DataBuffer()
+DataBuffer::DataBuffer() noexcept
     : _buffer(), _read_pos(0), _ok(true), _error_code(ER_SUCCESS)
 {
     return ;
 }
 
-DataBuffer::DataBuffer(const DataBuffer& other)
+DataBuffer::DataBuffer(const DataBuffer& other) noexcept
     : _buffer(other._buffer.size()), _read_pos(other._read_pos), _ok(other._ok), _error_code(other._error_code)
 {
     size_t index = 0;
@@ -39,7 +39,7 @@ DataBuffer::DataBuffer(DataBuffer&& other) noexcept
     return ;
 }
 
-DataBuffer& DataBuffer::operator=(const DataBuffer& other)
+DataBuffer& DataBuffer::operator=(const DataBuffer& other) noexcept
 {
     if (this != &other)
     {
@@ -81,7 +81,7 @@ DataBuffer& DataBuffer::operator=(DataBuffer&& other) noexcept
     return (*this);
 }
 
-DataBuffer::~DataBuffer()
+DataBuffer::~DataBuffer() noexcept
 {
     return ;
 }

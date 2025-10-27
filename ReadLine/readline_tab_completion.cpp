@@ -86,11 +86,9 @@ static int rl_resize_buffer_if_needed(readline_state_t *state, int required_size
             }
             new_bufsize *= 2;
         }
-        resized_buffer = rl_resize_buffer(state->buffer, state->bufsize, new_bufsize);
+        resized_buffer = rl_resize_buffer(&state->buffer, &state->bufsize, new_bufsize);
         if (resized_buffer == ft_nullptr)
             return (-1);
-        state->buffer = resized_buffer;
-        state->bufsize = new_bufsize;
     }
     return (0);
 }
