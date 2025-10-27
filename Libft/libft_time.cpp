@@ -22,8 +22,8 @@ int64_t ft_time_ms(void)
             ft_errno = FT_ERR_TERMINATED;
         return (-1);
     }
-    milliseconds = static_cast<int64_t>(time_value.tv_sec) * 1000;
-    milliseconds += static_cast<int64_t>(time_value.tv_usec) / 1000;
+    milliseconds = time_value.tv_sec * 1000;
+    milliseconds += time_value.tv_usec / 1000;
     return (milliseconds);
 }
 
