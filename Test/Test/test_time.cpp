@@ -3,6 +3,7 @@
 #include "../../System_utils/test_runner.hpp"
 #include <climits>
 #include <chrono>
+#include <type_traits>
 
 static std::chrono::system_clock::time_point    g_mock_time_now;
 
@@ -22,7 +23,16 @@ FT_TEST(test_time_now_ms_returns_hooked_value, "time_now_ms returns hooked milli
     result = time_now_ms();
     time_reset_clock_now_hook();
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(static_cast<long>(expected_duration.count()), result);
+    {
+        const auto expected_count = expected_duration.count();
+        long expected_value;
+
+        if constexpr (std::is_same_v<decltype(expected_count), long>)
+            expected_value = expected_count;
+        else
+            expected_value = static_cast<long>(expected_count);
+        FT_ASSERT_EQ(expected_value, result);
+    }
     return (1);
 }
 

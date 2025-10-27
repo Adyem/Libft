@@ -131,23 +131,18 @@ int xml_document_to_dom(const xml_document &document, ft_dom_document &dom) noex
     dom.clear();
     if (dom.get_error() != ER_SUCCESS)
         return (-1);
-    xml_document::thread_guard guard(&document);
-
-    if (guard.get_status() != 0)
-    {
-        dom.clear();
-        if (guard.get_status() != 0)
-            ft_errno = ft_errno != ER_SUCCESS ? ft_errno : FT_ERR_INVALID_STATE;
-        return (-1);
-    }
     xml_node *root_node;
 
     root_node = document.get_root();
-    if (document.get_error() != ER_SUCCESS)
-        return (-1);
     if (!root_node)
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        int document_error;
+
+        document_error = document.get_error();
+        if (document_error != ER_SUCCESS)
+            ft_errno = document_error;
+        else
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     ft_dom_node *dom_root;
@@ -382,12 +377,6 @@ int xml_document_from_dom(const ft_dom_document &dom, xml_document &document) no
     ft_string serialized;
 
     serialized = "";
-    if (serialized.get_error() != ER_SUCCESS)
-    {
-        document.set_manual_error(serialized.get_error());
-        return (-1);
-    }
-    serialized += "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
     if (serialized.get_error() != ER_SUCCESS)
     {
         document.set_manual_error(serialized.get_error());

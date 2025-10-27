@@ -82,10 +82,10 @@ bool fetch_profile(const char *host, uint16_t port)
     }
 
     api_retry_policy retry_policy;
-    retry_policy.max_attempts = 3;
-    retry_policy.initial_delay_ms = 200;
-    retry_policy.max_delay_ms = 2000;
-    retry_policy.backoff_multiplier = 2;
+    retry_policy.set_max_attempts(3);
+    retry_policy.set_initial_delay_ms(200);
+    retry_policy.set_max_delay_ms(2000);
+    retry_policy.set_backoff_multiplier(2);
 
     int status = 0;
     char *body = api_request_string_tls(host, port, "GET", "/v1/profile",

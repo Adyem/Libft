@@ -55,7 +55,7 @@ DEBUG_OBJDIR   := objs_debug
 OBJS       := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
 DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
 
-CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17
+CFLAGS   ?= -Wall -Wextra -Werror -g -O0 -std=c++17 -Wuseless-cast
 
 all: $(TARGET)
 

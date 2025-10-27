@@ -86,7 +86,7 @@ FT_TEST(test_su_service_install_signal_handlers_dispatches,
         ft_nullptr));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     std::raise(SIGTERM);
-    FT_ASSERT_EQ(static_cast<sig_atomic_t>(SIGTERM), g_su_service_signal_value);
+    FT_ASSERT_EQ(SIGTERM, g_su_service_signal_value);
     su_service_clear_signal_handlers();
     return (1);
 }
