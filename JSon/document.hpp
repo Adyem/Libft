@@ -40,6 +40,8 @@ class json_document
         void         update_item(json_group *group, const char *key, const bool value) noexcept;
         void         update_item(json_group *group, const char *key, const ft_big_number &value) noexcept;
         void         clear() noexcept;
+        json_group   *get_groups() const noexcept;
+        void         set_manual_error(int error_code) noexcept;
         int          get_error() const noexcept;
         const char   *get_error_str() const noexcept;
 };

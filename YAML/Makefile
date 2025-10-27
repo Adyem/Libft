@@ -4,12 +4,13 @@ DEBUG_TARGET := YAML_debug.a
 SRCS := yaml_reader.cpp \
         yaml_value.cpp \
         yaml_reader_utils.cpp \
-        yaml_writer.cpp
+        yaml_writer.cpp \
+        yaml_dom_bridge.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
-HEADERS := yaml.hpp
+HEADERS := yaml.hpp yaml_dom_bridge.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
