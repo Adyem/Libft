@@ -5,6 +5,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "math.hpp"
 #include "swap.hpp"
+#include "template_concepts.hpp"
 #include <cstddef>
 #include <utility>
 #include <type_traits>
@@ -23,11 +24,18 @@ class ft_uniqueptr
         void destroy();
 
     public:
+#if FT_TEMPLATE_HAS_CONCEPTS
+        template <typename... Args>
+        ft_uniqueptr(Args&&... args)
+            requires (!is_single_convertible_to_size_t<Args...>::value &&
+                ft_constructible_from<ManagedType, Args&&...>);
+#else
         template <typename... Args, typename = std::enable_if_t<
             !(is_single_convertible_to_size_t<Args...>::value) &&
             std::is_constructible_v<ManagedType, Args&&...>
             >>
         ft_uniqueptr(Args&&... args);
+#endif
 
         ft_uniqueptr(ManagedType* pointer, bool isArray = false, size_t arraySize = 1);
         ft_uniqueptr();
@@ -58,6 +66,22 @@ class ft_uniqueptr
         void set_error(int error) const;
 };
 
+#if FT_TEMPLATE_HAS_CONCEPTS
+template <typename ManagedType>
+template <typename... Args>
+ft_uniqueptr<ManagedType>::ft_uniqueptr(Args&&... args)
+    requires (!is_single_convertible_to_size_t<Args...>::value &&
+        ft_constructible_from<ManagedType, Args&&...>)
+    : _managedPointer(new (std::nothrow) ManagedType(std::forward<Args>(args)...)),
+      _arraySize(1),
+      _isArrayType(false),
+      _error_code(ER_SUCCESS)
+{
+    if (!_managedPointer)
+        this->set_error(FT_ERR_NO_MEMORY);
+    return ;
+}
+#else
 template <typename ManagedType>
 template <typename... Args, typename>
 ft_uniqueptr<ManagedType>::ft_uniqueptr(Args&&... args)
@@ -70,6 +94,7 @@ ft_uniqueptr<ManagedType>::ft_uniqueptr(Args&&... args)
         this->set_error(FT_ERR_NO_MEMORY);
     return ;
 }
+#endif
 
 template <typename ManagedType>
 ft_uniqueptr<ManagedType>::ft_uniqueptr(ManagedType* pointer, bool isArray,

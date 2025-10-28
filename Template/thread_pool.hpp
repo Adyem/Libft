@@ -2,6 +2,7 @@
 #define FT_THREAD_POOL_HPP
 
 #include "constructor.hpp"
+#include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
@@ -15,6 +16,7 @@
 #include <cerrno>
 #include <pthread.h>
 #include "../PThread/pthread.hpp"
+#include "../PThread/mutex.hpp"
 #include <utility>
 #include <type_traits>
 #include <atomic>
@@ -32,9 +34,14 @@ class ft_thread_pool
         pthread_cond_t                _cond;
         bool                          _mutex_initialized;
         bool                          _cond_initialized;
+        mutable pt_mutex*             _external_mutex;
+        bool                          _thread_safe_enabled;
 
         void set_error(int error) const;
         void worker();
+        int  lock_internal(bool *lock_acquired) const;
+        void unlock_internal(bool lock_acquired) const;
+        void teardown_thread_safety();
 
     public:
         ft_thread_pool(size_t thread_count = 0, size_t max_tasks = 0);
@@ -53,6 +60,12 @@ class ft_thread_pool
 
         void wait();
         void destroy();
+
+        int  enable_thread_safety();
+        void disable_thread_safety();
+        bool is_thread_safe() const;
+        int  lock(bool *lock_acquired) const;
+        void unlock(bool lock_acquired) const;
 
         int get_error() const;
         const char* get_error_str() const;
@@ -134,7 +147,8 @@ inline void ft_thread_pool::set_error(int error) const
 
 inline ft_thread_pool::ft_thread_pool(size_t thread_count, size_t max_tasks)
     : _workers(), _tasks(), _max_tasks(max_tasks), _stop(false), _active(0), _error_code(ER_SUCCESS),
-      _mutex(), _cond(), _mutex_initialized(false), _cond_initialized(false)
+      _mutex(), _cond(), _mutex_initialized(false), _cond_initialized(false),
+      _external_mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     if (pthread_mutex_init(&this->_mutex, ft_nullptr) != 0)
     {
@@ -178,25 +192,37 @@ inline ft_thread_pool::~ft_thread_pool()
         pt_cond_destroy(&this->_cond);
     if (this->_mutex_initialized)
         pthread_mutex_destroy(&this->_mutex);
+    this->teardown_thread_safety();
 }
 
 template <typename Function>
 inline void ft_thread_pool::submit(Function &&function)
 {
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return ;
+    }
     if (pthread_mutex_lock(&this->_mutex) != 0)
     {
         this->set_error(ft_map_system_error(errno));
+        this->unlock_internal(lock_acquired);
         return ;
     }
     if (this->_stop)
     {
         pthread_mutex_unlock(&this->_mutex);
+        this->unlock_internal(lock_acquired);
         return ;
     }
     if (this->_max_tasks != 0 && this->_tasks.size() >= this->_max_tasks)
     {
         this->set_error(FT_ERR_FULL);
         pthread_mutex_unlock(&this->_mutex);
+        this->unlock_internal(lock_acquired);
         return ;
     }
     int queue_error;
@@ -219,11 +245,13 @@ inline void ft_thread_pool::submit(Function &&function)
         this->set_error(queue_error);
         pthread_mutex_unlock(&this->_mutex);
         ft_errno = queue_error;
+        this->unlock_internal(lock_acquired);
         return ;
     }
     this->set_error(ER_SUCCESS);
     pthread_mutex_unlock(&this->_mutex);
     pt_cond_signal(&this->_cond);
+    this->unlock_internal(lock_acquired);
 }
 
 template <typename Function>
@@ -257,9 +285,18 @@ inline void ft_thread_pool::submit(Function &&function, const ft_cancellation_to
 
 inline void ft_thread_pool::wait()
 {
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return ;
+    }
     if (pthread_mutex_lock(&this->_mutex) != 0)
     {
         this->set_error(ft_map_system_error(errno));
+        this->unlock_internal(lock_acquired);
         return ;
     }
     bool tasks_empty;
@@ -268,6 +305,7 @@ inline void ft_thread_pool::wait()
     {
         pthread_mutex_unlock(&this->_mutex);
         this->set_error(this->_tasks.get_error());
+        this->unlock_internal(lock_acquired);
         return ;
     }
     while (!tasks_empty || this->_active != 0)
@@ -276,6 +314,7 @@ inline void ft_thread_pool::wait()
         {
             pthread_mutex_unlock(&this->_mutex);
             this->set_error(ft_errno);
+            this->unlock_internal(lock_acquired);
             return ;
         }
         tasks_empty = this->_tasks.empty();
@@ -283,18 +322,29 @@ inline void ft_thread_pool::wait()
         {
             pthread_mutex_unlock(&this->_mutex);
             this->set_error(this->_tasks.get_error());
+            this->unlock_internal(lock_acquired);
             return ;
         }
     }
     pthread_mutex_unlock(&this->_mutex);
     this->set_error(ER_SUCCESS);
+    this->unlock_internal(lock_acquired);
 }
 
 inline void ft_thread_pool::destroy()
 {
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return ;
+    }
     if (pthread_mutex_lock(&this->_mutex) != 0)
     {
         this->set_error(ft_map_system_error(errno));
+        this->unlock_internal(lock_acquired);
         return ;
     }
     this->_stop = true;
@@ -309,6 +359,7 @@ inline void ft_thread_pool::destroy()
     }
     this->_workers.clear();
     this->set_error(ER_SUCCESS);
+    this->unlock_internal(lock_acquired);
 }
 
 inline int ft_thread_pool::get_error() const
@@ -323,6 +374,133 @@ inline int ft_thread_pool::get_error() const
 inline const char* ft_thread_pool::get_error_str() const
 {
       return (ft_strerror(this->_error_code.load(std::memory_order_relaxed)));
+}
+
+inline int ft_thread_pool::enable_thread_safety()
+{
+    void     *memory;
+    pt_mutex *mutex_pointer;
+
+    if (this->_thread_safe_enabled && this->_external_mutex != ft_nullptr)
+    {
+        this->set_error(ER_SUCCESS);
+        return (0);
+    }
+    memory = cma_malloc(sizeof(pt_mutex));
+    if (memory == ft_nullptr)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return (-1);
+    }
+    mutex_pointer = new(memory) pt_mutex();
+    if (mutex_pointer->get_error() != ER_SUCCESS)
+    {
+        int mutex_error;
+
+        mutex_error = mutex_pointer->get_error();
+        mutex_pointer->~pt_mutex();
+        cma_free(memory);
+        this->set_error(mutex_error);
+        return (-1);
+    }
+    this->_external_mutex = mutex_pointer;
+    this->_thread_safe_enabled = true;
+    this->set_error(ER_SUCCESS);
+    return (0);
+}
+
+inline void ft_thread_pool::disable_thread_safety()
+{
+    this->teardown_thread_safety();
+    this->set_error(ER_SUCCESS);
+    return ;
+}
+
+inline bool ft_thread_pool::is_thread_safe() const
+{
+    bool enabled;
+
+    enabled = (this->_thread_safe_enabled && this->_external_mutex != ft_nullptr);
+    const_cast<ft_thread_pool *>(this)->set_error(ER_SUCCESS);
+    return (enabled);
+}
+
+inline int ft_thread_pool::lock(bool *lock_acquired) const
+{
+    int result;
+
+    result = this->lock_internal(lock_acquired);
+    if (result != 0)
+        const_cast<ft_thread_pool *>(this)->set_error(ft_errno);
+    else
+        const_cast<ft_thread_pool *>(this)->set_error(ER_SUCCESS);
+    return (result);
+}
+
+inline void ft_thread_pool::unlock(bool lock_acquired) const
+{
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    this->unlock_internal(lock_acquired);
+    if (this->_external_mutex != ft_nullptr && this->_external_mutex->get_error() != ER_SUCCESS)
+        const_cast<ft_thread_pool *>(this)->set_error(this->_external_mutex->get_error());
+    else
+    {
+        ft_errno = entry_errno;
+        const_cast<ft_thread_pool *>(this)->set_error(ft_errno);
+    }
+    return ;
+}
+
+inline int ft_thread_pool::lock_internal(bool *lock_acquired) const
+{
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = false;
+    if (!this->_thread_safe_enabled || this->_external_mutex == ft_nullptr)
+    {
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    this->_external_mutex->lock(THREAD_ID);
+    if (this->_external_mutex->get_error() != ER_SUCCESS)
+    {
+        ft_errno = this->_external_mutex->get_error();
+        return (-1);
+    }
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = true;
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+inline void ft_thread_pool::unlock_internal(bool lock_acquired) const
+{
+    int entry_errno;
+
+    if (!lock_acquired || this->_external_mutex == ft_nullptr)
+        return ;
+    entry_errno = ft_errno;
+    this->_external_mutex->unlock(THREAD_ID);
+    if (this->_external_mutex->get_error() != ER_SUCCESS)
+    {
+        ft_errno = this->_external_mutex->get_error();
+        return ;
+    }
+    ft_errno = entry_errno;
+    return ;
+}
+
+inline void ft_thread_pool::teardown_thread_safety()
+{
+    if (this->_external_mutex != ft_nullptr)
+    {
+        this->_external_mutex->~pt_mutex();
+        cma_free(this->_external_mutex);
+        this->_external_mutex = ft_nullptr;
+    }
+    this->_thread_safe_enabled = false;
+    return ;
 }
 
 #endif 

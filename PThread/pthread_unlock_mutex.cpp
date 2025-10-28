@@ -19,7 +19,18 @@ int pt_mutex::unlock(pthread_t thread_id) const
     tracking_reports_owned = false;
     should_notify_release = false;
     result = FT_SUCCESS;
-    if (!this->_native_initialized)
+    bool state_lock_acquired;
+    bool native_initialized;
+
+    state_lock_acquired = false;
+    if (this->lock_internal(&state_lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        goto cleanup;
+    }
+    native_initialized = this->_native_initialized;
+    this->unlock_internal(state_lock_acquired);
+    if (!native_initialized)
     {
         this->set_error(FT_ERR_INVALID_STATE);
         goto cleanup;
@@ -111,7 +122,16 @@ int pt_mutex::unlock(pthread_t thread_id) const
         {
             this->set_error(FT_ERR_INVALID_STATE);
         }
-        this->_native_initialized = false;
+        bool reset_lock_acquired;
+
+        reset_lock_acquired = false;
+        if (this->lock_internal(&reset_lock_acquired) == 0 && reset_lock_acquired)
+        {
+            this->_native_initialized = false;
+            this->unlock_internal(reset_lock_acquired);
+        }
+        else
+            this->unlock_internal(reset_lock_acquired);
         goto cleanup;
     }
     if (should_notify_release)

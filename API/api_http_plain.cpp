@@ -58,6 +58,8 @@ static bool api_http_is_recoverable_send_error(int error_code)
 {
     if (error_code == FT_ERR_SOCKET_SEND_FAILED)
         return (true);
+    if (error_code == FT_ERR_IO)
+        return (true);
 #ifdef _WIN32
     if (error_code == (ft_map_system_error(WSAECONNRESET)))
         return (true);
@@ -135,7 +137,7 @@ static char *api_http_execute_plain_http2_once(
     api_connection_pool_handle &connection_handle,
     const char *method, const char *path, const char *host_header,
     json_group *payload, const char *headers, int *status, int timeout,
-    bool &used_http2, int &error_code);
+    const char *host, uint16_t port, bool &used_http2, int &error_code);
 
 static char *api_http_finalize_downgrade_response(
     api_connection_pool_handle &connection_handle,
@@ -146,10 +148,10 @@ static char *api_http_finalize_downgrade_response(
     const char *status_line;
     const char *body_start;
     size_t body_length;
-    ft_string decoded_body;
     const char *result_source;
     size_t result_length;
     char *result_body;
+    ft_string decoded_body;
 
     status_line = handshake_buffer.c_str();
     if (status)
@@ -189,7 +191,6 @@ static char *api_http_finalize_downgrade_response(
     else if (has_length)
     {
         size_t expected_length;
-        size_t index;
 
         if (content_length < 0)
             expected_length = 0;
@@ -201,38 +202,17 @@ static char *api_http_finalize_downgrade_response(
             error_code = FT_ERR_IO;
             return (ft_nullptr);
         }
-        decoded_body.clear();
-        index = 0;
-        while (index < expected_length)
-        {
-            decoded_body.append(body_start[index]);
-            if (decoded_body.get_error())
-            {
-                api_connection_pool_disable_store(connection_handle);
-                error_code = decoded_body.get_error();
-                return (ft_nullptr);
-            }
-            index++;
-        }
-        result_source = decoded_body.c_str();
-        result_length = decoded_body.size();
+        result_source = body_start;
+        result_length = expected_length;
     }
     else
     {
-        decoded_body.clear();
-        decoded_body.append(body_start);
-        if (decoded_body.get_error())
-        {
-            api_connection_pool_disable_store(connection_handle);
-            error_code = decoded_body.get_error();
-            return (ft_nullptr);
-        }
-        result_source = decoded_body.c_str();
-        result_length = decoded_body.size();
+        result_source = body_start;
+        result_length = body_length;
     }
+    (void)connection_close;
     api_connection_pool_disable_store(connection_handle);
-    if (connection_close)
-        api_connection_pool_evict(connection_handle);
+    api_connection_pool_evict(connection_handle);
     result_body = static_cast<char*>(cma_malloc(result_length + 1));
     if (!result_body)
     {
@@ -687,12 +667,20 @@ static bool api_http_receive_response(ft_socket &socket_wrapper,
             }
             if (!streaming_enabled)
             {
+                size_t body_size;
+
+                body_size = 0;
+                if (response.size() > header_length)
+                    body_size = response.size() - header_length;
                 if (!chunked_encoding && has_length)
                 {
                     size_t expected_size;
 
-                    expected_size = static_cast<size_t>(content_length);
-                    if (response.size() < header_length + expected_size)
+                    if (content_length <= 0)
+                        expected_size = 0;
+                    else
+                        expected_size = static_cast<size_t>(content_length);
+                    if (body_size < expected_size)
                     {
                         error_code = FT_ERR_IO;
                         return (false);
@@ -704,12 +692,13 @@ static bool api_http_receive_response(ft_socket &socket_wrapper,
 
                     if (!api_http_chunked_body_complete(
                             response.c_str() + header_length,
-                            response.size() - header_length, consumed_length))
+                            body_size, consumed_length))
                     {
                         error_code = FT_ERR_IO;
                         return (false);
                     }
                 }
+                connection_close = true;
                 break ;
             }
             if (!api_http_streaming_flush_buffer(streaming_body_buffer,
@@ -1335,7 +1324,7 @@ char *api_http_execute_plain_http2(api_connection_pool_handle &connection_handle
 
             result_body = api_http_execute_plain_http2_once(connection_handle,
                     method, path, host_header, payload, headers, status,
-                    timeout, http2_used_local, error_code);
+                    timeout, host, port, http2_used_local, error_code);
             if (result_body)
             {
                 used_http2 = http2_used_local;
@@ -1488,7 +1477,7 @@ static char *api_http_execute_plain_http2_once(
     api_connection_pool_handle &connection_handle,
     const char *method, const char *path, const char *host_header,
     json_group *payload, const char *headers, int *status, int timeout,
-    bool &used_http2, int &error_code)
+    const char *host, uint16_t port, bool &used_http2, int &error_code)
 {
     ft_socket &socket_wrapper = connection_handle.socket;
     const char *client_preface;
@@ -1542,11 +1531,21 @@ static char *api_http_execute_plain_http2_once(
     {
         api_connection_pool_disable_store(connection_handle);
         if (socket_wrapper.get_error())
+        {
             error_code = socket_wrapper.get_error();
+            if (error_code == FT_ERR_IO)
+                error_code = FT_ERR_SOCKET_SEND_FAILED;
+        }
         else if (ft_errno != ER_SUCCESS)
+        {
             error_code = ft_errno;
+            if (error_code == FT_ERR_IO)
+                error_code = FT_ERR_SOCKET_SEND_FAILED;
+        }
         else
             error_code = FT_ERR_SOCKET_SEND_FAILED;
+        if (error_code == FT_ERR_SOCKET_SEND_FAILED)
+            ft_errno = error_code;
         api_connection_pool_evict(connection_handle);
         return (ft_nullptr);
     }
@@ -1643,6 +1642,7 @@ static char *api_http_execute_plain_http2_once(
         {
             if (ft_strncmp(handshake_buffer.c_str(), "HTTP/", 5) == 0)
             {
+                api_connection_pool_disable_store(connection_handle);
                 protocol_downgrade = true;
                 break ;
             }
@@ -1772,6 +1772,7 @@ static char *api_http_execute_plain_http2_once(
         bool downgrade_has_length;
         long long downgrade_content_length;
         bool downgrade_connection_close;
+        bool downgrade_fully_buffered;
 
         downgrade_headers_ready = false;
         downgrade_complete = false;
@@ -1780,6 +1781,7 @@ static char *api_http_execute_plain_http2_once(
         downgrade_has_length = false;
         downgrade_content_length = 0;
         downgrade_connection_close = false;
+        downgrade_fully_buffered = false;
         while (!downgrade_complete)
         {
             const char *headers_start;
@@ -1835,7 +1837,9 @@ static char *api_http_execute_plain_http2_once(
             }
             if (downgrade_headers_ready && body_ready)
             {
+                downgrade_connection_close = true;
                 downgrade_complete = true;
+                downgrade_fully_buffered = true;
                 break ;
             }
             char receive_buffer[1024];
@@ -1875,20 +1879,28 @@ static char *api_http_execute_plain_http2_once(
                     if (downgrade_has_length)
                     {
                         size_t expected_length;
+                        size_t body_size;
 
                         expected_length = 0;
                         if (downgrade_content_length > 0)
                             expected_length = static_cast<size_t>(downgrade_content_length);
-                        if (handshake_buffer.size() < downgrade_header_length + expected_length)
+                        body_size = 0;
+                        if (handshake_buffer.size() > downgrade_header_length)
+                            body_size = handshake_buffer.size() - downgrade_header_length;
+                        if (body_size < expected_length)
                         {
                             api_connection_pool_disable_store(connection_handle);
                             error_code = FT_ERR_IO;
                             api_connection_pool_evict(connection_handle);
                             return (ft_nullptr);
                         }
+                        body_ready = true;
                     }
                 }
+                downgrade_connection_close = true;
                 downgrade_complete = true;
+                if (body_ready)
+                    downgrade_fully_buffered = true;
                 break ;
             }
             handshake_buffer.append(receive_buffer, static_cast<size_t>(received_bytes));
@@ -1905,27 +1917,53 @@ static char *api_http_execute_plain_http2_once(
         {
             int fallback_error_code;
 
-            fallback_body = api_http_execute_plain_once(connection_handle, method,
-                    path, host_header, payload, headers, status, timeout,
-                    error_code, &handshake_buffer, true);
-            if (fallback_body)
+            if (downgrade_fully_buffered)
             {
-                used_http2 = false;
-                return (fallback_body);
+                fallback_body = api_http_finalize_downgrade_response(connection_handle,
+                        handshake_buffer, downgrade_header_length,
+                        downgrade_chunked_encoding, downgrade_has_length,
+                        downgrade_content_length, downgrade_connection_close,
+                        status, error_code);
+                if (fallback_body)
+                {
+                    used_http2 = false;
+                    return (fallback_body);
+                }
+                if (error_code == ER_SUCCESS)
+                    error_code = FT_ERR_HTTP_PROTOCOL_MISMATCH;
             }
-            fallback_error_code = error_code;
-            fallback_body = api_http_finalize_downgrade_response(connection_handle,
-                    handshake_buffer, downgrade_header_length,
-                    downgrade_chunked_encoding, downgrade_has_length,
-                    downgrade_content_length, downgrade_connection_close,
-                    status, error_code);
-            if (fallback_body)
+            else
             {
-                used_http2 = false;
-                return (fallback_body);
+                fallback_body = api_http_execute_plain_once(connection_handle, method,
+                        path, host_header, payload, headers, status, timeout,
+                        error_code, &handshake_buffer, true);
+                if (fallback_body)
+                {
+                    used_http2 = false;
+                    return (fallback_body);
+                }
+                api_connection_pool_evict(connection_handle);
+                fallback_error_code = error_code;
+                fallback_body = api_http_finalize_downgrade_response(connection_handle,
+                        handshake_buffer, downgrade_header_length,
+                        downgrade_chunked_encoding, downgrade_has_length,
+                        downgrade_content_length, downgrade_connection_close,
+                        status, error_code);
+                if (fallback_body)
+                {
+                    used_http2 = false;
+                    return (fallback_body);
+                }
+                if (error_code == ER_SUCCESS)
+                    error_code = fallback_error_code;
+                if (error_code == ER_SUCCESS)
+                    error_code = FT_ERR_HTTP_PROTOCOL_MISMATCH;
             }
-            if (error_code == ER_SUCCESS)
-                error_code = fallback_error_code;
+        }
+        api_connection_pool_evict(connection_handle);
+        if (!api_http_prepare_plain_socket(connection_handle, host, port, timeout,
+                error_code))
+        {
             if (error_code == ER_SUCCESS)
                 error_code = FT_ERR_HTTP_PROTOCOL_MISMATCH;
             api_connection_pool_disable_store(connection_handle);
@@ -1933,12 +1971,13 @@ static char *api_http_execute_plain_http2_once(
         }
         fallback_body = api_http_execute_plain_once(connection_handle, method,
                 path, host_header, payload, headers, status, timeout,
-                error_code, &handshake_buffer, false);
+                error_code, ft_nullptr, false);
         if (fallback_body)
         {
             used_http2 = false;
             return (fallback_body);
         }
+        api_connection_pool_evict(connection_handle);
         if (error_code == ER_SUCCESS)
             error_code = FT_ERR_HTTP_PROTOCOL_MISMATCH;
         api_connection_pool_disable_store(connection_handle);

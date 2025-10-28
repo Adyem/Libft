@@ -6,6 +6,8 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/pthread.hpp"
 #include "swap.hpp"
 #include <cstddef>
 #include <utility>
@@ -16,16 +18,21 @@ template <typename ElementType, typename Compare = std::less<ElementType> >
 class ft_priority_queue
 {
     private:
-        ElementType*   _data;
-        size_t         _capacity;
-        size_t         _size;
-        Compare        _comp;
-        mutable int    _error_code;
+        ElementType*         _data;
+        size_t               _capacity;
+        size_t               _size;
+        Compare              _comp;
+        mutable int          _error_code;
+        mutable pt_mutex*    _mutex;
+        bool                 _thread_safe_enabled;
 
         void    set_error(int error) const;
         bool    ensure_capacity(size_t desired);
         void    heapify_up(size_t index);
         void    heapify_down(size_t index);
+        int     lock_internal(bool *lock_acquired) const;
+        void    unlock_internal(bool lock_acquired) const;
+        void    teardown_thread_safety();
 
     public:
         ft_priority_queue(size_t initialCapacity = 0, const Compare& comp = Compare());
@@ -36,6 +43,12 @@ class ft_priority_queue
 
         ft_priority_queue(ft_priority_queue&& other) noexcept;
         ft_priority_queue& operator=(ft_priority_queue&& other) noexcept;
+
+        int     enable_thread_safety();
+        void    disable_thread_safety();
+        bool    is_thread_safe() const;
+        int     lock(bool *lock_acquired) const;
+        void    unlock(bool lock_acquired) const;
 
         void push(const ElementType& value);
         void push(ElementType&& value);
@@ -55,7 +68,8 @@ class ft_priority_queue
 
 template <typename ElementType, typename Compare>
 ft_priority_queue<ElementType, Compare>::ft_priority_queue(size_t initialCapacity, const Compare& comp)
-    : _data(ft_nullptr), _capacity(0), _size(0), _comp(comp), _error_code(ER_SUCCESS)
+    : _data(ft_nullptr), _capacity(0), _size(0), _comp(comp), _error_code(ER_SUCCESS),
+      _mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     if (initialCapacity > 0)
     {
@@ -77,17 +91,22 @@ ft_priority_queue<ElementType, Compare>::~ft_priority_queue()
     this->clear();
     if (this->_data != ft_nullptr)
         cma_free(this->_data);
+    this->teardown_thread_safety();
     return ;
 }
 
 template <typename ElementType, typename Compare>
 ft_priority_queue<ElementType, Compare>::ft_priority_queue(ft_priority_queue&& other) noexcept
-    : _data(other._data), _capacity(other._capacity), _size(other._size), _comp(other._comp), _error_code(other._error_code)
+    : _data(other._data), _capacity(other._capacity), _size(other._size), _comp(other._comp),
+      _error_code(other._error_code), _mutex(other._mutex),
+      _thread_safe_enabled(other._thread_safe_enabled)
 {
     other._data = ft_nullptr;
     other._capacity = 0;
     other._size = 0;
     other._error_code = ER_SUCCESS;
+    other._mutex = ft_nullptr;
+    other._thread_safe_enabled = false;
     this->set_error(this->_error_code);
     return ;
 }
@@ -100,15 +119,20 @@ ft_priority_queue<ElementType, Compare>& ft_priority_queue<ElementType, Compare>
         this->clear();
         if (this->_data != ft_nullptr)
             cma_free(this->_data);
+        this->teardown_thread_safety();
         this->_data = other._data;
         this->_capacity = other._capacity;
         this->_size = other._size;
         this->_comp = other._comp;
         this->_error_code = other._error_code;
+        this->_mutex = other._mutex;
+        this->_thread_safe_enabled = other._thread_safe_enabled;
         other._data = ft_nullptr;
         other._capacity = 0;
         other._size = 0;
         other._error_code = ER_SUCCESS;
+        other._mutex = ft_nullptr;
+        other._thread_safe_enabled = false;
     }
     this->set_error(this->_error_code);
     return (*this);
@@ -119,6 +143,141 @@ void ft_priority_queue<ElementType, Compare>::set_error(int error) const
 {
     this->_error_code = error;
     ft_errno = error;
+    return ;
+}
+
+template <typename ElementType, typename Compare>
+int ft_priority_queue<ElementType, Compare>::enable_thread_safety()
+{
+    void     *memory;
+    pt_mutex *mutex_pointer;
+
+    if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
+    {
+        this->set_error(ER_SUCCESS);
+        return (0);
+    }
+    memory = cma_malloc(sizeof(pt_mutex));
+    if (memory == ft_nullptr)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return (-1);
+    }
+    mutex_pointer = new(memory) pt_mutex();
+    if (mutex_pointer->get_error() != ER_SUCCESS)
+    {
+        int mutex_error;
+
+        mutex_error = mutex_pointer->get_error();
+        mutex_pointer->~pt_mutex();
+        cma_free(memory);
+        this->set_error(mutex_error);
+        return (-1);
+    }
+    this->_mutex = mutex_pointer;
+    this->_thread_safe_enabled = true;
+    this->set_error(ER_SUCCESS);
+    return (0);
+}
+
+template <typename ElementType, typename Compare>
+void ft_priority_queue<ElementType, Compare>::disable_thread_safety()
+{
+    this->teardown_thread_safety();
+    this->set_error(ER_SUCCESS);
+    return ;
+}
+
+template <typename ElementType, typename Compare>
+bool ft_priority_queue<ElementType, Compare>::is_thread_safe() const
+{
+    bool enabled;
+
+    enabled = (this->_thread_safe_enabled && this->_mutex != ft_nullptr);
+    const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(ER_SUCCESS);
+    return (enabled);
+}
+
+template <typename ElementType, typename Compare>
+int ft_priority_queue<ElementType, Compare>::lock(bool *lock_acquired) const
+{
+    int result;
+
+    result = this->lock_internal(lock_acquired);
+    if (result != 0)
+        const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(ft_errno);
+    else
+        const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(ER_SUCCESS);
+    return (result);
+}
+
+template <typename ElementType, typename Compare>
+void ft_priority_queue<ElementType, Compare>::unlock(bool lock_acquired) const
+{
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    this->unlock_internal(lock_acquired);
+    if (this->_mutex != ft_nullptr && this->_mutex->get_error() != ER_SUCCESS)
+        const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(this->_mutex->get_error());
+    else
+    {
+        ft_errno = entry_errno;
+        const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(ft_errno);
+    }
+    return ;
+}
+
+template <typename ElementType, typename Compare>
+int ft_priority_queue<ElementType, Compare>::lock_internal(bool *lock_acquired) const
+{
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = false;
+    if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
+    {
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    this->_mutex->lock(THREAD_ID);
+    if (this->_mutex->get_error() != ER_SUCCESS)
+    {
+        ft_errno = this->_mutex->get_error();
+        return (-1);
+    }
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = true;
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+template <typename ElementType, typename Compare>
+void ft_priority_queue<ElementType, Compare>::unlock_internal(bool lock_acquired) const
+{
+    int entry_errno;
+
+    if (!lock_acquired || this->_mutex == ft_nullptr)
+        return ;
+    entry_errno = ft_errno;
+    this->_mutex->unlock(THREAD_ID);
+    if (this->_mutex->get_error() != ER_SUCCESS)
+    {
+        ft_errno = this->_mutex->get_error();
+        return ;
+    }
+    ft_errno = entry_errno;
+    return ;
+}
+
+template <typename ElementType, typename Compare>
+void ft_priority_queue<ElementType, Compare>::teardown_thread_safety()
+{
+    if (this->_mutex != ft_nullptr)
+    {
+        this->_mutex->~pt_mutex();
+        cma_free(this->_mutex);
+        this->_mutex = ft_nullptr;
+    }
+    this->_thread_safe_enabled = false;
     return ;
 }
 
@@ -195,36 +354,70 @@ void ft_priority_queue<ElementType, Compare>::heapify_down(size_t index)
 template <typename ElementType, typename Compare>
 void ft_priority_queue<ElementType, Compare>::push(const ElementType& value)
 {
-    if (!this->ensure_capacity(this->_size + 1))
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
         return ;
+    }
+    if (!this->ensure_capacity(this->_size + 1))
+    {
+        this->unlock_internal(lock_acquired);
+        return ;
+    }
     construct_at(&this->_data[this->_size], value);
     this->heapify_up(this->_size);
     ++this->_size;
     this->set_error(ER_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 template <typename ElementType, typename Compare>
 void ft_priority_queue<ElementType, Compare>::push(ElementType&& value)
 {
-    if (!this->ensure_capacity(this->_size + 1))
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
         return ;
+    }
+    if (!this->ensure_capacity(this->_size + 1))
+    {
+        this->unlock_internal(lock_acquired);
+        return ;
+    }
     construct_at(&this->_data[this->_size], ft_move(value));
     this->heapify_up(this->_size);
     ++this->_size;
     this->set_error(ER_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 template <typename ElementType, typename Compare>
 ElementType ft_priority_queue<ElementType, Compare>::pop()
 {
+    ElementType value;
+    bool        lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return (ElementType());
+    }
     if (this->_size == 0)
     {
         this->set_error(FT_ERR_PRIORITY_QUEUE_EMPTY);
+        this->unlock_internal(lock_acquired);
         return (ElementType());
     }
-    ElementType top_value = ft_move(this->_data[0]);
+    value = ft_move(this->_data[0]);
     destroy_at(&this->_data[0]);
     --this->_size;
     if (this->_size > 0)
@@ -234,50 +427,93 @@ ElementType ft_priority_queue<ElementType, Compare>::pop()
         this->heapify_down(0);
     }
     this->set_error(ER_SUCCESS);
-    return (top_value);
+    this->unlock_internal(lock_acquired);
+    return (value);
 }
 
 template <typename ElementType, typename Compare>
 ElementType& ft_priority_queue<ElementType, Compare>::top()
 {
     static ElementType error_element = ElementType();
+    ElementType       *value;
+    bool               lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return (error_element);
+    }
     if (this->_size == 0)
     {
         this->set_error(FT_ERR_PRIORITY_QUEUE_EMPTY);
+        this->unlock_internal(lock_acquired);
         return (error_element);
     }
-    ElementType& value = this->_data[0];
+    value = &this->_data[0];
     this->set_error(ER_SUCCESS);
-    return (value);
+    this->unlock_internal(lock_acquired);
+    return (*value);
 }
 
 template <typename ElementType, typename Compare>
 const ElementType& ft_priority_queue<ElementType, Compare>::top() const
 {
     static ElementType error_element = ElementType();
-    if (this->_size == 0)
+    const ElementType *value;
+    bool               lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
     {
-        this->set_error(FT_ERR_PRIORITY_QUEUE_EMPTY);
+        const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(ft_errno);
         return (error_element);
     }
-    const ElementType& value = this->_data[0];
-    this->set_error(ER_SUCCESS);
-    return (value);
+    if (this->_size == 0)
+    {
+        const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(FT_ERR_PRIORITY_QUEUE_EMPTY);
+        this->unlock_internal(lock_acquired);
+        return (error_element);
+    }
+    value = &this->_data[0];
+    const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(ER_SUCCESS);
+    this->unlock_internal(lock_acquired);
+    return (*value);
 }
 
 template <typename ElementType, typename Compare>
 size_t ft_priority_queue<ElementType, Compare>::size() const
 {
-    size_t current_size = this->_size;
-    this->set_error(ER_SUCCESS);
+    size_t current_size;
+    bool   lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
+    {
+        const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(ft_errno);
+        return (0);
+    }
+    current_size = this->_size;
+    const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(ER_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return (current_size);
 }
 
 template <typename ElementType, typename Compare>
 bool ft_priority_queue<ElementType, Compare>::empty() const
 {
-    bool result = (this->_size == 0);
-    this->set_error(ER_SUCCESS);
+    bool result;
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
+    {
+        const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(ft_errno);
+        return (true);
+    }
+    result = (this->_size == 0);
+    const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(ER_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return (result);
 }
 
@@ -298,7 +534,16 @@ const char* ft_priority_queue<ElementType, Compare>::get_error_str() const
 template <typename ElementType, typename Compare>
 void ft_priority_queue<ElementType, Compare>::clear()
 {
-    size_t element_index = 0;
+    size_t element_index;
+    bool   lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return ;
+    }
+    element_index = 0;
     while (element_index < this->_size)
     {
         destroy_at(&this->_data[element_index]);
@@ -306,6 +551,7 @@ void ft_priority_queue<ElementType, Compare>::clear()
     }
     this->_size = 0;
     this->set_error(ER_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
