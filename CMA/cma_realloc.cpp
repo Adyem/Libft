@@ -197,12 +197,15 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         g_cma_current_bytes += block->size;
         if (g_cma_current_bytes > g_cma_peak_bytes)
             g_cma_peak_bytes = g_cma_current_bytes;
+        void *user_pointer;
+
+        user_pointer = cma_block_user_pointer(block);
         cma_leak_tracker_record_free(ptr);
         cma_leak_tracker_record_allocation(ptr, cma_block_user_size(block));
         ft_errno = ER_SUCCESS;
         allocator_guard.unlock();
         ft_errno = ER_SUCCESS;
-        return (cma_block_user_pointer(block));
+        return (user_pointer);
     }
     Block *old_block;
     ft_size_t copy_size;

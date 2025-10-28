@@ -5,6 +5,7 @@
 #include "../CPP_class/class_nullptr.hpp"
 #include "math.hpp"
 #include "swap.hpp"
+#include "template_concepts.hpp"
 #include <stdint.h>
 #include <cstddef>
 #include <utility>
@@ -27,11 +28,18 @@ class ft_sharedptr
     public:
         template <typename U> friend class ft_sharedptr;
 
+#if FT_TEMPLATE_HAS_CONCEPTS
+        template <typename... Args>
+        ft_sharedptr(Args&&... args)
+            requires (!is_single_convertible_to_size_t<Args...>::value &&
+                ft_constructible_from<ManagedType, Args&&...>);
+#else
         template <typename... Args, typename = std::enable_if_t<
             !(is_single_convertible_to_size_t<Args...>::value) &&
             std::is_constructible_v<ManagedType, Args&&...>
             >>
         ft_sharedptr(Args&&... args);
+#endif
 
         ft_sharedptr(ManagedType* pointer, bool isArray = false, size_t arraySize = 1);
         ft_sharedptr();
@@ -43,6 +51,15 @@ class ft_sharedptr
         ft_sharedptr<ManagedType>& operator=(ft_sharedptr<ManagedType>&& other) noexcept;
         ft_sharedptr<ManagedType>& operator=(const ft_sharedptr<ManagedType>& other);
 
+#if FT_TEMPLATE_HAS_CONCEPTS
+        template <typename Other>
+        ft_sharedptr(const ft_sharedptr<Other>& other)
+            requires ft_convertible_to<Other*, ManagedType*>;
+
+        template <typename Other>
+        ft_sharedptr(ft_sharedptr<Other>&& other) noexcept
+            requires ft_convertible_to<Other*, ManagedType*>;
+#else
         template <typename Other, typename = std::enable_if_t<std::is_convertible_v<Other*,
                  ManagedType*>>>
         ft_sharedptr(const ft_sharedptr<Other>& other);
@@ -50,6 +67,7 @@ class ft_sharedptr
         template <typename Other, typename = std::enable_if_t<std::is_convertible_v<Other*,
                  ManagedType*>>>
         ft_sharedptr(ft_sharedptr<Other>&& other) noexcept;
+#endif
 
         ManagedType& operator*();
         const ManagedType& operator*() const;
@@ -76,6 +94,42 @@ class ft_sharedptr
         void add(const ManagedType& element);
 };
 
+#if FT_TEMPLATE_HAS_CONCEPTS
+template <typename ManagedType>
+template <typename... Args>
+ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args)
+    requires (!is_single_convertible_to_size_t<Args...>::value &&
+        ft_constructible_from<ManagedType, Args&&...>)
+    : _managedPointer(ft_nullptr),
+      _referenceCount(ft_nullptr),
+      _arraySize(0),
+      _isArrayType(false),
+      _error_code(ER_SUCCESS)
+{
+    int* reference_count;
+
+    reference_count = new (std::nothrow) int;
+    if (!reference_count)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return ;
+    }
+    ManagedType* pointer = new (std::nothrow) ManagedType(std::forward<Args>(args)...);
+    if (!pointer)
+    {
+        delete reference_count;
+        this->set_error(FT_ERR_NO_MEMORY);
+        return ;
+    }
+    *reference_count = 1;
+    this->_managedPointer = pointer;
+    this->_referenceCount = reference_count;
+    this->_arraySize = 1;
+    this->_isArrayType = false;
+    this->set_error(ER_SUCCESS);
+    return ;
+}
+#else
 template <typename ManagedType>
 template <typename... Args, typename>
 ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args)
@@ -108,6 +162,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args)
     this->set_error(ER_SUCCESS);
     return ;
 }
+#endif
 
 template <typename ManagedType>
 ft_sharedptr<ManagedType>::ft_sharedptr(ManagedType* pointer, bool isArray, size_t arraySize)
@@ -304,6 +359,27 @@ ft_sharedptr<ManagedType>& ft_sharedptr<ManagedType>::operator=(const ft_sharedp
     return (*this);
 }
 
+#if FT_TEMPLATE_HAS_CONCEPTS
+template <typename ManagedType>
+template <typename Other>
+ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<Other>& other)
+    requires ft_convertible_to<Other*, ManagedType*>
+    : _managedPointer(other._managedPointer),
+      _referenceCount(other._referenceCount),
+      _arraySize(other._arraySize),
+      _isArrayType(other._isArrayType),
+      _error_code(other._error_code)
+{
+    if (this->_referenceCount)
+    {
+        ++(*this->_referenceCount);
+        this->set_error(ER_SUCCESS);
+    }
+    else
+        this->set_error(other._error_code);
+    return ;
+}
+#else
 template <typename ManagedType>
 template <typename Other, typename>
 ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<Other>& other)
@@ -322,7 +398,28 @@ ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<Other>& other)
         this->set_error(other._error_code);
     return ;
 }
+#endif
 
+#if FT_TEMPLATE_HAS_CONCEPTS
+template <typename ManagedType>
+template <typename Other>
+ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<Other>&& other) noexcept
+    requires ft_convertible_to<Other*, ManagedType*>
+    : _managedPointer(other._managedPointer),
+      _referenceCount(other._referenceCount),
+      _arraySize(other._arraySize),
+      _isArrayType(other._isArrayType),
+      _error_code(other._error_code)
+{
+    other._managedPointer = ft_nullptr;
+    other._referenceCount = ft_nullptr;
+    other._arraySize = 0;
+    other._isArrayType = false;
+    other._error_code = ER_SUCCESS;
+    this->set_error(ER_SUCCESS);
+    return ;
+}
+#else
 template <typename ManagedType>
 template <typename Other, typename>
 ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<Other>&& other) noexcept
@@ -339,6 +436,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<Other>&& other) noexcept
     other._error_code = ER_SUCCESS;
     return ;
 }
+#endif
 
 template <typename ManagedType>
 ManagedType& ft_sharedptr<ManagedType>::operator*()

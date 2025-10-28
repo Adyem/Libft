@@ -6,6 +6,7 @@
 #include "../CMA/CMA.hpp"
 #include "../Template/vector.hpp"
 #include "../Logger/logger.hpp"
+#include "../Networking/networking.hpp"
 #include <chrono>
 #include <utility>
 #include <cstddef>
@@ -14,6 +15,14 @@
 #include <new>
 #include "../Template/unique_ptr.hpp"
 #include "../Template/move.hpp"
+
+#ifdef _WIN32
+# include <winsock2.h>
+# include <ws2tcpip.h>
+#else
+# include <sys/socket.h>
+# include <sys/types.h>
+#endif
 
 struct api_pooled_connection
 {
@@ -66,6 +75,7 @@ struct api_connection_bucket_entry
 typedef ft_vector<api_connection_bucket_entry> t_api_connection_map;
 
 static void api_connection_pool_dispose_entry(api_pooled_connection &entry);
+static bool api_connection_pool_socket_is_alive(ft_socket &socket);
 
 static t_api_connection_map &api_connection_pool_get_buckets(void)
 {
@@ -115,6 +125,45 @@ static bool api_connection_pool_tls_unregister(SSL *tls_session)
         return (false);
     tls_registry.erase(iterator);
     return (true);
+}
+
+static bool api_connection_pool_socket_is_alive(ft_socket &socket)
+{
+    int poll_descriptor;
+    int poll_result;
+    char peek_byte;
+    ssize_t peek_result;
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    poll_descriptor = socket.get_fd();
+    if (poll_descriptor < 0)
+    {
+        ft_errno = entry_errno;
+        return (false);
+    }
+    poll_result = nw_poll(&poll_descriptor, 1, ft_nullptr, 0, 0);
+    if (poll_result < 0)
+    {
+        ft_errno = entry_errno;
+        return (false);
+    }
+    if (poll_result == 0)
+    {
+        ft_errno = entry_errno;
+        return (true);
+    }
+    if (poll_descriptor == -1)
+    {
+        ft_errno = entry_errno;
+        return (false);
+    }
+    // Treat descriptors with pending bytes as stale so only drained sockets are reused.
+    peek_byte = 0;
+    peek_result = socket.receive_data(&peek_byte, 1, MSG_PEEK);
+    (void)peek_result;
+    ft_errno = entry_errno;
+    return (false);
 }
 
 bool api_connection_pool_track_tls_session(SSL *tls_session)
@@ -514,6 +563,13 @@ bool api_connection_pool_acquire(api_connection_pool_handle &handle,
     ft_unique_lock<pt_mutex> guard(api_connection_pool_get_mutex());
     t_api_connection_map::iterator iterator;
     long long now_ms;
+    api_connection_pool_handle_lock_guard handle_guard(handle);
+
+    if (!handle_guard.is_locked())
+    {
+        g_api_connection_pool_acquire_misses++;
+        return (false);
+    }
 
     key = api_connection_pool_build_key(host, port, security_mode, security_identity);
     handle.key = key;
@@ -560,6 +616,11 @@ bool api_connection_pool_acquire(api_connection_pool_handle &handle,
         if (!entry_pointer)
             continue ;
         entry = entry_pointer.get();
+        if (!api_connection_pool_socket_is_alive(entry->socket))
+        {
+            api_connection_pool_dispose_entry(*entry);
+            continue ;
+        }
         handle.socket = ft_move(entry->socket);
         entry->socket = ft_socket();
         handle.tls_session = entry->tls_session;
@@ -603,44 +664,63 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
     t_api_connection_map::iterator iterator;
     t_api_connection_bucket *bucket;
     std::string map_key;
+    bool handle_lock_acquired;
 
-    if (!handle.has_socket)
+    handle_lock_acquired = false;
+    if (handle.lock(&handle_lock_acquired) != 0)
         return ;
+    if (!handle.has_socket)
+    {
+        handle.unlock(handle_lock_acquired);
+        return ;
+    }
     if (!handle.should_store)
     {
+        handle.unlock(handle_lock_acquired);
         api_connection_pool_evict(handle);
         return ;
     }
     if (!g_api_connection_pool_enabled)
     {
+        handle.unlock(handle_lock_acquired);
         api_connection_pool_evict(handle);
         return ;
     }
     if (handle.security_mode == api_connection_security_mode::TLS)
     {
+        handle.unlock(handle_lock_acquired);
         api_connection_pool_evict(handle);
         return ;
     }
     if (g_api_connection_max_idle == 0)
     {
+        handle.unlock(handle_lock_acquired);
         api_connection_pool_evict(handle);
         return ;
     }
     if (handle.socket.get_error() != ER_SUCCESS)
     {
+        handle.unlock(handle_lock_acquired);
+        api_connection_pool_evict(handle);
+        return ;
+    }
+    if (!api_connection_pool_socket_is_alive(handle.socket))
+    {
+        handle.unlock(handle_lock_acquired);
         api_connection_pool_evict(handle);
         return ;
     }
     now_ms = api_connection_pool_now_ms();
-    t_api_connection_map &buckets = api_connection_pool_get_buckets();
-    ft_unique_lock<pt_mutex> guard(api_connection_pool_get_mutex());
-
     map_key = api_connection_pool_to_std_key(handle.key);
     if (!api_connection_pool_key_is_valid(map_key))
     {
+        handle.unlock(handle_lock_acquired);
         api_connection_pool_evict(handle);
         return ;
     }
+    t_api_connection_map &buckets = api_connection_pool_get_buckets();
+    ft_unique_lock<pt_mutex> guard(api_connection_pool_get_mutex());
+
     iterator = api_connection_pool_find_entry(buckets, map_key);
     if (iterator == buckets.end())
     {
@@ -650,6 +730,7 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
         buckets.push_back(ft_move(new_entry));
         if (buckets.get_error() != ER_SUCCESS)
         {
+            handle.unlock(handle_lock_acquired);
             api_connection_pool_evict(handle);
             return ;
         }
@@ -675,6 +756,7 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
     if (!new_entry)
     {
         ft_errno = FT_ERR_NO_MEMORY;
+        handle.unlock(handle_lock_acquired);
         api_connection_pool_evict(handle);
         return ;
     }
@@ -703,6 +785,7 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
             handle.from_pool = false;
             handle.should_store = false;
             handle.negotiated_http2 = false;
+            handle.unlock(handle_lock_acquired);
             return ;
         }
     }
@@ -721,18 +804,25 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
         handle.from_pool = false;
         handle.should_store = false;
         handle.negotiated_http2 = false;
+        handle.unlock(handle_lock_acquired);
         return ;
     }
     handle.tls_session = ft_nullptr;
     handle.tls_context = ft_nullptr;
     handle.has_socket = false;
     handle.from_pool = false;
+    handle.should_store = false;
     handle.negotiated_http2 = false;
+    handle.unlock(handle_lock_acquired);
     return ;
 }
 
 void api_connection_pool_evict(api_connection_pool_handle &handle)
 {
+    api_connection_pool_handle_lock_guard handle_guard(handle);
+
+    if (!handle_guard.is_locked())
+        return ;
     if (!handle.has_socket)
         return ;
     if (handle.security_mode == api_connection_security_mode::TLS)
@@ -756,6 +846,10 @@ void api_connection_pool_evict(api_connection_pool_handle &handle)
 
 void api_connection_pool_disable_store(api_connection_pool_handle &handle)
 {
+    api_connection_pool_handle_lock_guard handle_guard(handle);
+
+    if (!handle_guard.is_locked())
+        return ;
     handle.should_store = false;
     handle.negotiated_http2 = false;
     return ;

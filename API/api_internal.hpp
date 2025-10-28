@@ -2,8 +2,10 @@
 #define API_INTERNAL_HPP
 
 #include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include "../Networking/socket_class.hpp"
 #include "../Networking/ssl_wrapper.hpp"
+#include "../PThread/mutex.hpp"
 #include <cstddef>
 #include <cstdint>
 
@@ -18,17 +20,59 @@ enum class api_connection_security_mode
     TLS
 };
 
-struct api_connection_pool_handle
+class api_connection_pool_handle
 {
-    ft_string key;
-    ft_socket socket;
-    SSL *tls_session;
-    SSL_CTX *tls_context;
-    api_connection_security_mode security_mode;
-    bool has_socket;
-    bool from_pool;
-    bool should_store;
-    bool negotiated_http2;
+    private:
+        mutable int                 _error_code;
+        mutable pt_mutex            *_mutex;
+        bool                        _thread_safe_enabled;
+
+        void set_error(int error) const;
+        int lock_internal(bool *lock_acquired) const;
+        void unlock_internal(bool lock_acquired) const;
+        void teardown_thread_safety();
+
+    public:
+        ft_string key;
+        ft_socket socket;
+        SSL *tls_session;
+        SSL_CTX *tls_context;
+        api_connection_security_mode security_mode;
+        bool has_socket;
+        bool from_pool;
+        bool should_store;
+        bool negotiated_http2;
+
+        api_connection_pool_handle();
+        api_connection_pool_handle(const api_connection_pool_handle &other) = delete;
+        api_connection_pool_handle(api_connection_pool_handle &&other);
+        ~api_connection_pool_handle();
+
+        api_connection_pool_handle &operator=(const api_connection_pool_handle &other) = delete;
+        api_connection_pool_handle &operator=(api_connection_pool_handle &&other);
+
+        int enable_thread_safety();
+        void disable_thread_safety();
+        bool is_thread_safe() const;
+        int lock(bool *lock_acquired) const;
+        void unlock(bool lock_acquired) const;
+
+        int get_error() const;
+        const char *get_error_str() const;
+};
+
+class api_connection_pool_handle_lock_guard
+{
+    private:
+        api_connection_pool_handle &_handle;
+        bool                        _lock_acquired;
+        int                         _lock_result;
+
+    public:
+        api_connection_pool_handle_lock_guard(api_connection_pool_handle &handle);
+        ~api_connection_pool_handle_lock_guard();
+
+        bool is_locked() const;
 };
 
 bool api_connection_pool_acquire(api_connection_pool_handle &handle,
