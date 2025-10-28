@@ -269,19 +269,25 @@ static yaml_value *yaml_dom_build_value(ft_dom_node *node, int *status) noexcept
         result->set_type(YAML_SCALAR);
         if (result->get_error() != ER_SUCCESS)
         {
+            int result_error;
+
+            result_error = result->get_error();
             if (status)
-                *status = result->get_error();
+                *status = result_error;
             delete result;
-            ft_errno = result->get_error();
+            ft_errno = result_error;
             return (ft_nullptr);
         }
         result->set_scalar(scalar);
         if (result->get_error() != ER_SUCCESS)
         {
+            int result_error;
+
+            result_error = result->get_error();
             if (status)
-                *status = result->get_error();
+                *status = result_error;
             delete result;
-            ft_errno = result->get_error();
+            ft_errno = result_error;
             return (ft_nullptr);
         }
         return (result);
@@ -329,11 +335,14 @@ static yaml_value *yaml_dom_build_value(ft_dom_node *node, int *status) noexcept
             result->add_list_item(child_value);
             if (result->get_error() != ER_SUCCESS)
             {
+                int result_error;
+
+                result_error = result->get_error();
                 if (status)
-                    *status = result->get_error();
+                    *status = result_error;
                 yaml_free(child_value);
                 delete result;
-                ft_errno = result->get_error();
+                ft_errno = result_error;
                 return (ft_nullptr);
             }
             index += 1;
@@ -393,11 +402,14 @@ static yaml_value *yaml_dom_build_value(ft_dom_node *node, int *status) noexcept
             result->add_map_item(child_name, child_value);
             if (result->get_error() != ER_SUCCESS)
             {
+                int result_error;
+
+                result_error = result->get_error();
                 if (status)
-                    *status = result->get_error();
+                    *status = result_error;
                 yaml_free(child_value);
                 delete result;
-                ft_errno = result->get_error();
+                ft_errno = result_error;
                 return (ft_nullptr);
             }
             index += 1;

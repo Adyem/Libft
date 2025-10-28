@@ -20,8 +20,13 @@ class pt_condition_variable
         bool _condition_initialized;
         bool _mutex_initialized;
         mutable int _error_code;
+        mutable pt_mutex *_state_mutex;
+        bool _thread_safe_enabled;
 
         void set_error(int error) const;
+        int lock_internal(bool *lock_acquired) const;
+        void unlock_internal(bool lock_acquired) const;
+        void teardown_thread_safety();
 
     public:
         pt_condition_variable();
@@ -29,6 +34,12 @@ class pt_condition_variable
 
         pt_condition_variable(const pt_condition_variable&) = delete;
         pt_condition_variable &operator=(const pt_condition_variable&) = delete;
+
+        int enable_thread_safety();
+        void disable_thread_safety();
+        bool is_thread_safe() const;
+        int lock_state(bool *lock_acquired) const;
+        void unlock_state(bool lock_acquired) const;
 
         int wait(pt_mutex &mutex);
         int wait_for(pt_mutex &mutex, const struct timespec &relative_time);

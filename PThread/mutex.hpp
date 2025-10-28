@@ -13,9 +13,14 @@ class pt_mutex
         mutable int                       _error;
         mutable pthread_mutex_t           _native_mutex;
         mutable bool                      _native_initialized;
+        mutable pt_mutex                  *_state_mutex;
+        bool                              _thread_safe_enabled;
 
         void    set_error(int error) const;
         bool    ensure_native_mutex() const;
+        int     lock_internal(bool *lock_acquired) const;
+        void    unlock_internal(bool lock_acquired) const;
+        void    teardown_thread_safety();
 
         pt_mutex(const pt_mutex&) = delete;
         pt_mutex& operator=(const pt_mutex&) = delete;
@@ -27,6 +32,12 @@ class pt_mutex
         ~pt_mutex();
 
         bool    lockState() const;
+
+        int     enable_thread_safety();
+        void    disable_thread_safety();
+        bool    is_thread_safe() const;
+        int     lock_state(bool *lock_acquired) const;
+        void    unlock_state(bool lock_acquired) const;
 
         int     lock(pthread_t thread_id) const;
         int     unlock(pthread_t thread_id) const;

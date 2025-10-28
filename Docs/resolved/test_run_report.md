@@ -183,3 +183,32 @@
 - Command: `./Test/libft_tests` (run 8 of 8, log captured to `/tmp/libft_run8.log`)
   - Status: Succeeded.
   - Observed behavior: Final verification run matched prior iterations and closed out the stress sequence without hangs or regressions.
+
+- Command: `make -C Test`
+  - Status: Succeeded.
+  - Observed behavior: Incremental rebuild confirmed the suite artifacts were already current; no modules required recompilation before rerunning the tests.【84599b†L1-L5】
+- Command: `./Test/libft_tests`
+  - Status: Failed (1 KO, abort on test #29).
+  - Observed behavior: `api_request_string_http2 falls back to http1` reported `KO`, leaving `ft_errno` at `FT_ERR_IO` because the HTTP/2 downgrade path reused a pooled plain-HTTP connection that the server had already closed, so the fallback saw a null body instead of `"Hello"`.【3aa9da†L1-L33】【e315e5†L1-L2】
+  - Potential fixes to investigate:
+    - Add a liveness probe when reacquiring pooled sockets (for example `recv(..., MSG_PEEK)` or a zero-timeout poll) so entries where the peer has already closed the connection are discarded rather than handed to the HTTP/2 path.
+    - When `api_http_execute_plain_http2` bails out before writing any bytes, treat the handle as tainted: close the socket, skip pooling, and let the plain HTTP fallback establish a fresh connection instead of reusing the potentially severed one.
+    - On successful HTTP/1 fallbacks, mark the connection handle to avoid being reinserted into the pool unless a response body was actually read, keeping the cache from filling with sockets that were closed mid-flight by the origin.
+- Command: `valgrind --tool=memcheck --track-origins=yes ./Test/libft_tests`
+  - Status: Aborted manually after interrupting the hang during test #30.
+  - Observed behavior: Valgrind flags repeated "Invalid read of size 8" reports inside `cma_realloc` while the HTTP client builds request strings and buffers downgrade responses, pointing to CMA metadata access while `ft_string::append` and `ft_string::operator+=` grow their backing allocations.【2cb46c†L1-L6】【cd7b4c†L1-L17】【400ec0†L1-L80】【f8a5e5†L1-L14】 The suite still fails test #29 with a null downgrade body and then stalls on the retry case, matching the native run but now tied to allocator guard activity in the downgrade helpers.【f8a5e5†L1-L14】【25c8cc†L1-L25】
+  - Suggested follow-up: Avoid funneling downgrade bytes through `ft_string` so the fallback path no longer depends on CMA reallocation. For example, once `api_http_execute_plain_http2_once` confirms the HTTP/1 headers, allocate the final body buffer directly with `cma_malloc` and copy from `handshake_buffer`/chunk decoder into that block instead of pushing through `decoded_body`/`ft_string`. That keeps the downgrade path from exercising the `cma_realloc` guard and should eliminate the null-body regression without reopening the stale-socket issue.
+- Command: `valgrind --tool=memcheck --track-origins=yes ./Test/libft_tests` (run after guarding `cma_realloc` returns)
+  - Status: Aborted manually after the known KO at test #29 and the hang at test #30.
+  - Observed behavior: The HTTP/2 downgrade test still reports `KO 29`, and the retry scenario continues to block, but Valgrind no longer emits any "Invalid read" diagnostics—`memcheck` exits with `ERROR SUMMARY: 0 errors from 0 contexts`, confirming that capturing the user pointer before releasing the CMA metadata guard eliminated the prior allocator faults.【4be742†L1-L16】【127087†L1-L1】【3b2baf†L1-L24】
+  - Suggested follow-up: With the allocator instrumentation quiet, refocus on the HTTP downgrade logic (for example, why the plain HTTP fallback still returns a null body) without the distraction of CMA guard violations.
+- Command: `valgrind --tool=memcheck --track-origins=yes ./Test/libft_tests` (current run)
+  - Status: Aborted manually after the downgrade KO and retry hang.
+  - Observed behavior: Tests progressed cleanly through case 28 before `api_request_string_http2 falls back to http1` still reported `KO`, leaving the runner stuck on the retry scenario until it was interrupted; Memcheck’s summary remained at `0 errors from 0 contexts`, so the CMA guard fixes continue to hold even though the null-body regression persists.【4412e9†L1-L16】【a3bb52†L1-L1】【5ae686†L1-L2】【214beb†L1-L24】
+  - Additional diagnostics: A matching debugger run shows the retry path raising `SIGPIPE` as soon as it attempts to resend over the downgraded socket, confirming the client is still writing to a descriptor the origin has already closed.【23128e†L1-L9】
+  - Suggested follow-up: When the downgrade handshake already buffered a complete HTTP/1 response, finalize that buffer immediately, flag the handle as closed, and skip issuing another plain-HTTP request on the same socket; if more data is required, evict the entry and establish a fresh connection before retrying so the fallback no longer writes to a dead descriptor.
+
+- Command: `./Test/libft_tests` (instrumented run with fallback logging)
+  - Status: Failed (KO at test 29, hang at test 30).
+  - Observed behavior: The new instrumentation shows the plain-HTTP fallback returns `FT_ERR_IO` (`error_code=12`) even though `ft_errno` has already been reset to `ER_SUCCESS`, so callers still see a null body without an error code while the suite wedges waiting on the retry scenario.【e58ef4†L1-L1】【7932a5†L1-L3】
+  - Suggested follow-up: Propagate the fallback’s `FT_ERR_IO` status back through `api_request_string_http2` (instead of zeroing the error code before returning) so the regression test fails with a meaningful errno and the retry harness can bail out cleanly.
