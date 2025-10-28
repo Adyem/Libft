@@ -1,6 +1,6 @@
 # TODO
 
-Remaining unchecked items: 81
+Remaining unchecked items: 69
 
 ## Library-wide priorities
 - [x] Publish a canonical error-code registry that documents each value exposed through `Errno/errno.hpp` and clarifies which modules set them, so cross-module error handling stays consistent.
@@ -128,7 +128,7 @@ Remaining unchecked items: 81
 - [x] Make `api_tls_promise` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `api_tls_string_promise` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `api_tls_client` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `api_connection_pool_handle` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `api_connection_pool_handle` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `api_streaming_handler` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `api_retry_policy` thread safe (relies on the shared deadlock resolution routine described below).
 
@@ -139,8 +139,8 @@ Remaining unchecked items: 81
 - [x] Offer cooperative cancellation tokens that integrate with `thread_pool` in `Template/` to unify async control flows.
 - [x] Provide structured tracing of task lifecycles to aid debugging of scheduling stalls.
 - [ ] Add lock contention diagnostics (sampling, priority inversion detection) exposed through the Logger module.
-- [ ] Make `pt_mutex` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `pt_condition_variable` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `pt_mutex` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `pt_condition_variable` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_unique_lock` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_thread` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_blocking_queue` thread safe (relies on the shared deadlock resolution routine described below).
@@ -157,16 +157,16 @@ Remaining unchecked items: 81
 - [x] Expand constexpr support where possible so templates can be used in compile-time contexts.
 - [x] Write exhaustive tests for allocator-aware paths, ensuring `_error_code` mirrors allocation failures.
 - [x] Introduce serialization helpers that interoperate with JSON/YAML encoders for easy persistence of container contents.
-- [ ] Add concept-constrained overloads in C++20 builds to improve diagnostic quality when templates are misused.
+- [x] Add concept-constrained overloads in C++20 builds to improve diagnostic quality when templates are misused.
 - [x] Make `ft_stack` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_unordered_map` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_unordered_map::iterator` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_unordered_map::const_iterator` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_set` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_priority_queue` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `Pair` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_thread_pool` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_graph` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_unordered_map` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_unordered_map::iterator` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_unordered_map::const_iterator` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_set` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_priority_queue` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `Pair` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_thread_pool` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_graph` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_vector` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_event_emitter` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_optional` thread safe (relies on the shared deadlock resolution routine described below).
