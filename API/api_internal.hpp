@@ -42,6 +42,8 @@ class api_connection_pool_handle
         bool from_pool;
         bool should_store;
         bool negotiated_http2;
+        bool plain_socket_timed_out;
+        bool plain_socket_validated;
 
         api_connection_pool_handle();
         api_connection_pool_handle(const api_connection_pool_handle &other) = delete;
@@ -52,7 +54,6 @@ class api_connection_pool_handle
         api_connection_pool_handle &operator=(api_connection_pool_handle &&other);
 
         int enable_thread_safety();
-        void disable_thread_safety();
         bool is_thread_safe() const;
         int lock(bool *lock_acquired) const;
         void unlock(bool lock_acquired) const;
