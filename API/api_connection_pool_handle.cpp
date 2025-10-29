@@ -9,8 +9,13 @@ api_connection_pool_handle::api_connection_pool_handle()
         _thread_safe_enabled(false), key(), socket(),
         tls_session(ft_nullptr), tls_context(ft_nullptr),
         security_mode(api_connection_security_mode::PLAIN), has_socket(false),
-        from_pool(false), should_store(false), negotiated_http2(false)
+        from_pool(false), should_store(false), negotiated_http2(false),
+        plain_socket_timed_out(false), plain_socket_validated(false)
 {
+    if (this->enable_thread_safety() != 0)
+    {
+        return ;
+    }
     this->set_error(ER_SUCCESS);
     return ;
 }
@@ -21,7 +26,8 @@ api_connection_pool_handle::api_connection_pool_handle(
         _thread_safe_enabled(false), key(), socket(),
         tls_session(ft_nullptr), tls_context(ft_nullptr),
         security_mode(api_connection_security_mode::PLAIN), has_socket(false),
-        from_pool(false), should_store(false), negotiated_http2(false)
+        from_pool(false), should_store(false), negotiated_http2(false),
+        plain_socket_timed_out(false), plain_socket_validated(false)
 {
     bool other_lock_acquired;
 
@@ -40,6 +46,8 @@ api_connection_pool_handle::api_connection_pool_handle(
     this->from_pool = other.from_pool;
     this->should_store = other.should_store;
     this->negotiated_http2 = other.negotiated_http2;
+    this->plain_socket_timed_out = other.plain_socket_timed_out;
+    this->plain_socket_validated = other.plain_socket_validated;
     other.unlock_internal(other_lock_acquired);
     this->_mutex = other._mutex;
     this->_thread_safe_enabled = other._thread_safe_enabled;
@@ -51,6 +59,8 @@ api_connection_pool_handle::api_connection_pool_handle(
     other.from_pool = false;
     other.should_store = false;
     other.negotiated_http2 = false;
+    other.plain_socket_timed_out = false;
+    other.plain_socket_validated = false;
     other.set_error(ER_SUCCESS);
     this->set_error(ER_SUCCESS);
     return ;
@@ -65,6 +75,8 @@ api_connection_pool_handle::~api_connection_pool_handle()
     this->from_pool = false;
     this->should_store = false;
     this->negotiated_http2 = false;
+    this->plain_socket_timed_out = false;
+    this->plain_socket_validated = false;
     this->set_error(ER_SUCCESS);
     return ;
 }
@@ -102,6 +114,8 @@ api_connection_pool_handle &api_connection_pool_handle::operator=(
     this->from_pool = other.from_pool;
     this->should_store = other.should_store;
     this->negotiated_http2 = other.negotiated_http2;
+    this->plain_socket_timed_out = other.plain_socket_timed_out;
+    this->plain_socket_validated = other.plain_socket_validated;
     this->unlock_internal(this_lock_acquired);
     other.unlock_internal(other_lock_acquired);
     if (this->_thread_safe_enabled)
@@ -116,6 +130,8 @@ api_connection_pool_handle &api_connection_pool_handle::operator=(
     other.from_pool = false;
     other.should_store = false;
     other.negotiated_http2 = false;
+    other.plain_socket_timed_out = false;
+    other.plain_socket_validated = false;
     other.set_error(ER_SUCCESS);
     this->set_error(ER_SUCCESS);
     return (*this);
@@ -152,13 +168,6 @@ int api_connection_pool_handle::enable_thread_safety()
     this->_thread_safe_enabled = true;
     this->set_error(ER_SUCCESS);
     return (0);
-}
-
-void api_connection_pool_handle::disable_thread_safety()
-{
-    this->teardown_thread_safety();
-    this->set_error(ER_SUCCESS);
-    return ;
 }
 
 bool api_connection_pool_handle::is_thread_safe() const

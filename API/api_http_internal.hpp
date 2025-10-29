@@ -39,6 +39,7 @@ void api_retry_circuit_record_failure(const api_connection_pool_handle &handle,
 void api_retry_circuit_reset(void);
 bool api_http_prepare_plain_socket(api_connection_pool_handle &connection_handle,
     const char *host, uint16_t port, int timeout, int &error_code);
+bool api_http_plain_socket_is_alive(api_connection_pool_handle &connection_handle);
 bool api_http_execute_plain_http2_streaming(
     api_connection_pool_handle &connection_handle, const char *method,
     const char *path, const char *host_header, json_group *payload,

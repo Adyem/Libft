@@ -2,6 +2,7 @@
 #include "api.hpp"
 #include "api_http_common.hpp"
 #include "../Networking/socket_class.hpp"
+#include "../Networking/networking.hpp"
 #include "../Networking/http2_client.hpp"
 #include "../CPP_class/class_string_class.hpp"
 #include "../CMA/CMA.hpp"
@@ -94,6 +95,166 @@ static bool api_http_should_retry_plain(int error_code)
     return (false);
 }
 
+static bool api_http_http2_failure_requires_eviction(int error_code)
+{
+    if (error_code == FT_ERR_SOCKET_RECEIVE_FAILED)
+        return (true);
+    if (error_code == FT_ERR_SOCKET_SEND_FAILED)
+        return (true);
+    if (error_code == FT_ERR_SOCKET_CONNECT_FAILED)
+        return (true);
+    if (error_code == FT_ERR_IO)
+        return (true);
+    return (false);
+}
+
+static void api_http_reset_plain_socket(api_connection_pool_handle &connection_handle)
+{
+    bool should_store;
+
+    should_store = connection_handle.should_store;
+    connection_handle.socket.close_socket();
+    connection_handle.socket = ft_socket();
+    connection_handle.has_socket = false;
+    connection_handle.from_pool = false;
+    connection_handle.negotiated_http2 = false;
+    connection_handle.tls_session = ft_nullptr;
+    connection_handle.tls_context = ft_nullptr;
+    connection_handle.should_store = should_store;
+    connection_handle.plain_socket_timed_out = false;
+    connection_handle.plain_socket_validated = false;
+    return ;
+}
+
+static bool api_http_plain_socket_is_connected(int descriptor)
+{
+    int result;
+    int entry_errno;
+    struct sockaddr_storage peer;
+#ifdef _WIN32
+    int peer_length;
+#else
+    socklen_t peer_length;
+#endif
+
+    entry_errno = ft_errno;
+    if (descriptor < 0)
+    {
+        ft_errno = entry_errno;
+        return (false);
+    }
+    ft_bzero(&peer, sizeof(peer));
+#ifdef _WIN32
+    peer_length = static_cast<int>(sizeof(peer));
+    result = getpeername(descriptor, reinterpret_cast<sockaddr*>(&peer), &peer_length);
+#else
+    peer_length = static_cast<socklen_t>(sizeof(peer));
+    result = getpeername(descriptor, reinterpret_cast<sockaddr*>(&peer), &peer_length);
+#endif
+    ft_errno = entry_errno;
+    if (result == 0)
+        return (true);
+    return (false);
+}
+
+bool api_http_plain_socket_is_alive(api_connection_pool_handle &connection_handle)
+{
+    int poll_descriptor;
+    int poll_result;
+    char peek_byte;
+    ssize_t peek_result;
+    int entry_errno;
+    int socket_error;
+
+    entry_errno = ft_errno;
+    if (connection_handle.plain_socket_timed_out)
+    {
+        ft_errno = entry_errno;
+        return (false);
+    }
+    poll_descriptor = connection_handle.socket.get_fd();
+    if (poll_descriptor < 0)
+    {
+        ft_errno = entry_errno;
+        return (false);
+    }
+    poll_result = nw_poll(&poll_descriptor, 1, ft_nullptr, 0, 50);
+    if (poll_result < 0)
+    {
+        ft_errno = entry_errno;
+        return (false);
+    }
+    if (poll_result == 0)
+    {
+        ft_errno = entry_errno;
+        return (true);
+    }
+    if (poll_descriptor == -1)
+    {
+        ft_errno = entry_errno;
+        return (false);
+    }
+    peek_byte = 0;
+#ifdef _WIN32
+    peek_result = connection_handle.socket.receive_data(&peek_byte, 1, MSG_PEEK);
+#else
+    peek_result = connection_handle.socket.receive_data(&peek_byte, 1, MSG_PEEK | MSG_DONTWAIT);
+#endif
+    socket_error = connection_handle.socket.get_error();
+    if (peek_result > 0)
+    {
+        ft_errno = entry_errno;
+        return (true);
+    }
+    if (peek_result == 0)
+    {
+        bool socket_connected;
+
+        socket_connected = api_http_plain_socket_is_connected(poll_descriptor);
+        if (!socket_connected)
+        {
+            ft_errno = entry_errno;
+            return (false);
+        }
+#ifdef _WIN32
+        if (socket_error == ft_map_system_error(WSAEWOULDBLOCK)
+            || socket_error == ft_map_system_error(WSAEINTR))
+        {
+            ft_errno = entry_errno;
+            return (true);
+        }
+#else
+        if (socket_error == ft_map_system_error(EWOULDBLOCK)
+            || socket_error == ft_map_system_error(EAGAIN)
+            || socket_error == ft_map_system_error(EINTR))
+        {
+            ft_errno = entry_errno;
+            return (true);
+        }
+#endif
+        ft_errno = entry_errno;
+        return (false);
+    }
+#ifdef _WIN32
+    if (socket_error == ft_map_system_error(WSAEWOULDBLOCK)
+        || socket_error == ft_map_system_error(WSAEINTR))
+    {
+        ft_errno = entry_errno;
+        return (true);
+    }
+#else
+    if (socket_error == ft_map_system_error(EWOULDBLOCK)
+        || socket_error == ft_map_system_error(EAGAIN)
+        || socket_error == ft_map_system_error(EINTR))
+    {
+        ft_errno = entry_errno;
+        return (true);
+    }
+#endif
+    ft_errno = entry_errno;
+    return (false);
+}
+
 bool api_http_prepare_plain_socket(
     api_connection_pool_handle &connection_handle, const char *host,
     uint16_t port, int timeout, int &error_code)
@@ -101,11 +262,28 @@ bool api_http_prepare_plain_socket(
     bool pooled_connection;
 
     if (connection_handle.has_socket)
-        return (true);
+    {
+        if (!connection_handle.plain_socket_validated)
+        {
+            connection_handle.plain_socket_validated = true;
+            connection_handle.plain_socket_timed_out = false;
+            return (true);
+        }
+        if (api_http_plain_socket_is_alive(connection_handle))
+        {
+            connection_handle.plain_socket_timed_out = false;
+            return (true);
+        }
+        api_http_reset_plain_socket(connection_handle);
+    }
     pooled_connection = api_connection_pool_acquire(connection_handle, host, port,
             api_connection_security_mode::PLAIN, ft_nullptr);
     if (pooled_connection)
+    {
+        connection_handle.plain_socket_timed_out = false;
+        connection_handle.plain_socket_validated = true;
         return (true);
+    }
     SocketConfig config;
 
     config._type = SocketType::CLIENT;
@@ -130,6 +308,8 @@ bool api_http_prepare_plain_socket(
     connection_handle.from_pool = false;
     connection_handle.should_store = true;
     connection_handle.security_mode = api_connection_security_mode::PLAIN;
+    connection_handle.plain_socket_timed_out = false;
+    connection_handle.plain_socket_validated = false;
     return (true);
 }
 
@@ -566,7 +746,8 @@ static bool api_http_streaming_flush_buffer(ft_string &streaming_body_buffer,
     return (true);
 }
 
-static bool api_http_receive_response(ft_socket &socket_wrapper,
+static bool api_http_receive_response(api_connection_pool_handle &connection_handle,
+    ft_socket &socket_wrapper,
     ft_string &response, size_t &header_length, bool &connection_close,
     bool &chunked_encoding, bool &has_length, long long &content_length,
     int &error_code, const api_streaming_handler *streaming_handler,
@@ -603,6 +784,7 @@ static bool api_http_receive_response(ft_socket &socket_wrapper,
     chunked_encoding = false;
     has_length = false;
     content_length = 0;
+    connection_handle.plain_socket_timed_out = false;
     while (true)
     {
         received = -1;
@@ -656,6 +838,8 @@ static bool api_http_receive_response(ft_socket &socket_wrapper,
             if (error_code == FT_ERR_IO && socket_error_code == ER_SUCCESS
                 && ft_errno == ER_SUCCESS)
                 error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
+            if (error_code == FT_ERR_SOCKET_RECEIVE_FAILED)
+                connection_handle.plain_socket_timed_out = true;
             return (false);
         }
         if (received == 0)
@@ -1001,7 +1185,7 @@ static char *api_http_execute_plain_once(
 
     if (send_failed)
         error_code = ER_SUCCESS;
-    if (!api_http_receive_response(socket_wrapper, response, header_length,
+    if (!api_http_receive_response(connection_handle, socket_wrapper, response, header_length,
             connection_close, chunked_encoding, has_length, content_length,
             error_code, ft_nullptr, prefetched_response))
     {
@@ -1172,7 +1356,7 @@ static bool api_http_execute_plain_streaming_once(
     content_length = 0;
     if (send_failed)
         error_code = ER_SUCCESS;
-    if (!api_http_receive_response(socket_wrapper, response, header_length,
+    if (!api_http_receive_response(connection_handle, socket_wrapper, response, header_length,
             connection_close, chunked_encoding, has_length, content_length,
             error_code, streaming_handler, ft_nullptr))
     {
@@ -1363,7 +1547,8 @@ char *api_http_execute_plain_http2(api_connection_pool_handle &connection_handle
         if (error_code == FT_ERR_HTTP_PROTOCOL_MISMATCH)
             break ;
         api_retry_circuit_record_failure(connection_handle, retry_policy);
-        api_connection_pool_evict(connection_handle);
+        if (api_http_http2_failure_requires_eviction(error_code))
+            api_connection_pool_evict(connection_handle);
         attempt_index++;
         if (attempt_index >= max_attempts)
             break;
@@ -1415,6 +1600,8 @@ char *api_http_execute_plain(api_connection_pool_handle &connection_handle,
     int current_delay;
     int max_delay;
     int multiplier;
+    int last_meaningful_error;
+    bool has_meaningful_error;
 
     max_attempts = api_retry_get_max_attempts(retry_policy);
     initial_delay = api_retry_get_initial_delay(retry_policy);
@@ -1422,6 +1609,8 @@ char *api_http_execute_plain(api_connection_pool_handle &connection_handle,
     multiplier = api_retry_get_multiplier(retry_policy);
     current_delay = api_retry_prepare_delay(initial_delay, max_delay);
     attempt_index = 0;
+    last_meaningful_error = ER_SUCCESS;
+    has_meaningful_error = false;
     while (attempt_index < max_attempts)
     {
         if (!api_retry_circuit_allow(connection_handle, retry_policy,
@@ -1450,8 +1639,28 @@ char *api_http_execute_plain(api_connection_pool_handle &connection_handle,
         if (!should_retry)
             return (ft_nullptr);
         api_retry_circuit_record_failure(connection_handle, retry_policy);
+        if (error_code != FT_ERR_SOCKET_CONNECT_FAILED
+            && error_code != ER_SUCCESS)
+        {
+            last_meaningful_error = error_code;
+            has_meaningful_error = true;
+        }
         api_connection_pool_evict(connection_handle);
         attempt_index++;
+        if (error_code == FT_ERR_SOCKET_CONNECT_FAILED)
+        {
+            if (attempt_index >= max_attempts)
+            {
+                if (has_meaningful_error)
+                {
+                    error_code = last_meaningful_error;
+                    ft_errno = last_meaningful_error;
+                }
+                break ;
+            }
+            time_sleep_ms(50);
+            continue ;
+        }
         if (attempt_index >= max_attempts)
             break;
         if (current_delay > 0)
