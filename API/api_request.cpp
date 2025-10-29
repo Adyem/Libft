@@ -671,8 +671,10 @@ char *api_request_string_http2(const char *ip, uint16_t port,
             int remaining_attempts;
             unsigned int retry_delay_ms;
 
-            remaining_attempts = 2;
-            retry_delay_ms = 100;
+            remaining_attempts = api_retry_get_max_attempts(retry_policy);
+            if (remaining_attempts > 0)
+                remaining_attempts = remaining_attempts - 1;
+            retry_delay_ms = 50;
             while (!socket_ready && remaining_attempts > 0)
             {
                 time_sleep_ms(retry_delay_ms);
@@ -707,12 +709,38 @@ char *api_request_string_http2(const char *ip, uint16_t port,
             retry_policy, http2_used_local, error_code);
     if (!metrics_result_body)
     {
+        bool fallback_socket_alive;
+        int previous_error_code;
+
+        fallback_socket_alive = false;
+        if (connection_handle.has_socket)
+            fallback_socket_alive = api_http_plain_socket_is_alive(connection_handle);
+        if (!fallback_socket_alive)
+        {
+            connection_handle.socket.close_socket();
+            connection_handle.socket = ft_socket();
+            connection_handle.has_socket = false;
+            connection_handle.from_pool = false;
+        }
+        connection_handle.should_store = pooled_connection;
+        connection_handle.negotiated_http2 = false;
+        connection_handle.tls_session = ft_nullptr;
+        connection_handle.tls_context = ft_nullptr;
+        previous_error_code = error_code;
         error_code = ER_SUCCESS;
         metrics_result_body = api_http_execute_plain(connection_handle, method,
                 path, ip, payload, headers, status, timeout, ip, port,
                 retry_policy, error_code);
         if (!metrics_result_body)
+        {
+            if (previous_error_code != ER_SUCCESS
+                && previous_error_code != FT_ERR_SOCKET_CONNECT_FAILED
+                && error_code == FT_ERR_SOCKET_CONNECT_FAILED)
+            {
+                error_code = previous_error_code;
+            }
             return (ft_nullptr);
+        }
         http2_used_local = false;
     }
     connection_guard.set_success();
