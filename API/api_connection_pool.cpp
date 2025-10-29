@@ -13,6 +13,7 @@
 #include <string>
 #include <set>
 #include <new>
+#include <errno.h>
 #include "../Template/unique_ptr.hpp"
 #include "../Template/move.hpp"
 
@@ -134,6 +135,7 @@ static bool api_connection_pool_socket_is_alive(ft_socket &socket)
     char peek_byte;
     ssize_t peek_result;
     int entry_errno;
+    int socket_error;
 
     entry_errno = ft_errno;
     poll_descriptor = socket.get_fd();
@@ -142,7 +144,7 @@ static bool api_connection_pool_socket_is_alive(ft_socket &socket)
         ft_errno = entry_errno;
         return (false);
     }
-    poll_result = nw_poll(&poll_descriptor, 1, ft_nullptr, 0, 0);
+    poll_result = nw_poll(&poll_descriptor, 1, ft_nullptr, 0, 50);
     if (poll_result < 0)
     {
         ft_errno = entry_errno;
@@ -160,8 +162,38 @@ static bool api_connection_pool_socket_is_alive(ft_socket &socket)
     }
     // Treat descriptors with pending bytes as stale so only drained sockets are reused.
     peek_byte = 0;
+#ifdef _WIN32
     peek_result = socket.receive_data(&peek_byte, 1, MSG_PEEK);
-    (void)peek_result;
+#else
+    peek_result = socket.receive_data(&peek_byte, 1, MSG_PEEK | MSG_DONTWAIT);
+#endif
+    socket_error = socket.get_error();
+    if (peek_result > 0)
+    {
+        ft_errno = entry_errno;
+        return (false);
+    }
+    if (peek_result == 0)
+    {
+        ft_errno = entry_errno;
+        return (false);
+    }
+#ifdef _WIN32
+    if (socket_error == ft_map_system_error(WSAEWOULDBLOCK)
+        || socket_error == ft_map_system_error(WSAEINTR))
+    {
+        ft_errno = entry_errno;
+        return (true);
+    }
+#else
+    if (socket_error == ft_map_system_error(EWOULDBLOCK)
+        || socket_error == ft_map_system_error(EAGAIN)
+        || socket_error == ft_map_system_error(EINTR))
+    {
+        ft_errno = entry_errno;
+        return (true);
+    }
+#endif
     ft_errno = entry_errno;
     return (false);
 }
@@ -580,6 +612,7 @@ bool api_connection_pool_acquire(api_connection_pool_handle &handle,
     handle.from_pool = false;
     handle.should_store = false;
     handle.negotiated_http2 = false;
+    handle.plain_socket_validated = false;
     g_api_connection_pool_acquire_calls++;
     if (!g_api_connection_pool_enabled)
     {
@@ -629,6 +662,8 @@ bool api_connection_pool_acquire(api_connection_pool_handle &handle,
         handle.from_pool = true;
         handle.should_store = true;
         handle.negotiated_http2 = entry->negotiated_http2;
+        handle.plain_socket_timed_out = false;
+        handle.plain_socket_validated = true;
         if (entry->uses_tls)
             api_connection_pool_tls_unregister(handle.tls_session);
         entry->tls_session = ft_nullptr;
@@ -672,6 +707,12 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
     if (!handle.has_socket)
     {
         handle.unlock(handle_lock_acquired);
+        return ;
+    }
+    if (handle.plain_socket_timed_out)
+    {
+        handle.unlock(handle_lock_acquired);
+        api_connection_pool_evict(handle);
         return ;
     }
     if (!handle.should_store)
@@ -785,6 +826,8 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
             handle.from_pool = false;
             handle.should_store = false;
             handle.negotiated_http2 = false;
+            handle.plain_socket_timed_out = false;
+            handle.plain_socket_validated = false;
             handle.unlock(handle_lock_acquired);
             return ;
         }
@@ -804,6 +847,8 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
         handle.from_pool = false;
         handle.should_store = false;
         handle.negotiated_http2 = false;
+        handle.plain_socket_timed_out = false;
+        handle.plain_socket_validated = false;
         handle.unlock(handle_lock_acquired);
         return ;
     }
@@ -813,6 +858,8 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
     handle.from_pool = false;
     handle.should_store = false;
     handle.negotiated_http2 = false;
+    handle.plain_socket_timed_out = false;
+    handle.plain_socket_validated = false;
     handle.unlock(handle_lock_acquired);
     return ;
 }
@@ -841,6 +888,8 @@ void api_connection_pool_evict(api_connection_pool_handle &handle)
     handle.from_pool = false;
     handle.should_store = false;
     handle.negotiated_http2 = false;
+    handle.plain_socket_timed_out = false;
+    handle.plain_socket_validated = false;
     return ;
 }
 
