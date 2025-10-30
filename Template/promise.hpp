@@ -580,24 +580,60 @@ inline bool ft_promise<void>::is_thread_safe() const
 template <typename ValueType>
 int ft_promise<ValueType>::lock(bool *lock_acquired) const
 {
-    return (this->lock_internal(lock_acquired));
+    int result;
+
+    result = this->lock_internal(lock_acquired);
+    if (result != 0)
+    {
+        const_cast<ft_promise<ValueType> *>(this)->set_error(ft_errno);
+        return (result);
+    }
+    const_cast<ft_promise<ValueType> *>(this)->set_error_unlocked(ER_SUCCESS);
+    return (result);
 }
 
 inline int ft_promise<void>::lock(bool *lock_acquired) const
 {
-    return (this->lock_internal(lock_acquired));
+    int result;
+
+    result = this->lock_internal(lock_acquired);
+    if (result != 0)
+    {
+        const_cast<ft_promise<void> *>(this)->set_error(ft_errno);
+        return (result);
+    }
+    const_cast<ft_promise<void> *>(this)->set_error_unlocked(ER_SUCCESS);
+    return (result);
 }
 
 template <typename ValueType>
 void ft_promise<ValueType>::unlock(bool lock_acquired) const
 {
+    int entry_errno;
+
+    entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
+    if (lock_acquired && this->_mutex != ft_nullptr && this->_mutex->get_error() != ER_SUCCESS)
+    {
+        const_cast<ft_promise<ValueType> *>(this)->set_error_unlocked(this->_mutex->get_error());
+        return ;
+    }
+    const_cast<ft_promise<ValueType> *>(this)->set_error_unlocked(entry_errno);
     return ;
 }
 
 inline void ft_promise<void>::unlock(bool lock_acquired) const
 {
+    int entry_errno;
+
+    entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
+    if (lock_acquired && this->_mutex != ft_nullptr && this->_mutex->get_error() != ER_SUCCESS)
+    {
+        const_cast<ft_promise<void> *>(this)->set_error_unlocked(this->_mutex->get_error());
+        return ;
+    }
+    const_cast<ft_promise<void> *>(this)->set_error_unlocked(entry_errno);
     return ;
 }
 

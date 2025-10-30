@@ -62,7 +62,12 @@ $(OBJDIR)/%.o: %.cpp
 $(OBJDIR)/Test/test_promise.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Template\"
 $(OBJDIR)/Test/test_task_scheduler.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"PThread\"
 $(OBJDIR)/Test/test_pthread_thread.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"PThread\"
+$(OBJDIR)/Test/test_pthread_thread_thread_safety.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"PThread\"
+$(OBJDIR)/Test/test_pthread_blocking_queue_thread_safety.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"PThread\"
+$(OBJDIR)/Test/test_pthread_task_scheduler_thread_safety.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"PThread\"
 $(OBJDIR)/Test/test_pthread_lock_tracking.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"PThread\"
+$(OBJDIR)/Test/test_template_future_thread_safety.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Template\"
+$(OBJDIR)/Test/test_template_pool_thread_safety.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Template\"
 $(OBJDIR)/Test/test_networking.o $(OBJDIR)/Test/test_http_server.o $(OBJDIR)/Test/test_websocket.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Networking\"
 $(OBJDIR)/Test/test_networking_quic.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Networking\"
 $(OBJDIR)/Test/test_logger.o $(OBJDIR)/Test/test_logger_async.o $(OBJDIR)/Test/test_logger_network.o \

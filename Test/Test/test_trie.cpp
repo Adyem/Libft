@@ -29,3 +29,32 @@ FT_TEST(test_trie_insert_nullptr_sets_errno, "ft_trie insert nullptr key sets FT
     FT_ASSERT_EQ(&stored_value, stored_node->_value_pointer);
     return (1);
 }
+
+FT_TEST(test_trie_thread_safety_controls,
+        "ft_trie optional mutex guard toggles and guards operations")
+{
+    ft_trie<int> trie;
+    bool lock_acquired;
+    int saved_errno;
+
+    FT_ASSERT_EQ(false, trie.is_thread_safe_enabled());
+    FT_ASSERT_EQ(0, trie.enable_thread_safety());
+    FT_ASSERT_EQ(true, trie.is_thread_safe_enabled());
+    saved_errno = FT_ERR_INVALID_ARGUMENT;
+    ft_errno = saved_errno;
+    lock_acquired = false;
+    FT_ASSERT_EQ(0, trie.lock(&lock_acquired));
+    FT_ASSERT_EQ(true, lock_acquired);
+    FT_ASSERT_EQ(saved_errno, ft_errno);
+    trie.unlock(lock_acquired);
+    FT_ASSERT_EQ(saved_errno, ft_errno);
+    int stored_value = 7;
+    FT_ASSERT_EQ(0, trie.insert("key", &stored_value));
+    FT_ASSERT_EQ(ER_SUCCESS, trie.get_error());
+    const auto *node = trie.search("key");
+    FT_ASSERT(node != ft_nullptr);
+    FT_ASSERT_EQ(&stored_value, node->_value_pointer);
+    trie.disable_thread_safety();
+    FT_ASSERT_EQ(false, trie.is_thread_safe_enabled());
+    return (1);
+}

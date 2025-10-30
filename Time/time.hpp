@@ -6,16 +6,22 @@
 #include <chrono>
 #include "../CPP_class/class_string_class.hpp"
 
+class pt_mutex;
+
 typedef long t_time;
 
 typedef struct s_monotonic_time_point
 {
-    long long milliseconds;
+    pt_mutex    *mutex;
+    bool        thread_safe_enabled;
+    long long   milliseconds;
 }   t_monotonic_time_point;
 
 typedef struct s_duration_milliseconds
 {
-    long long milliseconds;
+    pt_mutex    *mutex;
+    bool        thread_safe_enabled;
+    long long   milliseconds;
 }   t_duration_milliseconds;
 
 typedef struct s_high_resolution_time_point
@@ -70,7 +76,18 @@ t_monotonic_time_point   time_monotonic_point_now(void);
 t_monotonic_time_point   time_monotonic_point_add_ms(t_monotonic_time_point time_point, long long milliseconds);
 long long   time_monotonic_point_diff_ms(t_monotonic_time_point start_point, t_monotonic_time_point end_point);
 int     time_monotonic_point_compare(t_monotonic_time_point first_point, t_monotonic_time_point second_point);
+t_monotonic_time_point   time_monotonic_point_create(long long milliseconds);
+int     time_monotonic_point_prepare_thread_safety(t_monotonic_time_point *time_point);
+void    time_monotonic_point_teardown_thread_safety(t_monotonic_time_point *time_point);
+int     time_monotonic_point_lock(const t_monotonic_time_point *time_point, bool *lock_acquired);
+void    time_monotonic_point_unlock(const t_monotonic_time_point *time_point, bool lock_acquired);
+bool    time_monotonic_point_is_thread_safe_enabled(const t_monotonic_time_point *time_point);
 t_duration_milliseconds  time_duration_ms_create(long long milliseconds);
+int     time_duration_ms_prepare_thread_safety(t_duration_milliseconds *duration);
+void    time_duration_ms_teardown_thread_safety(t_duration_milliseconds *duration);
+int     time_duration_ms_lock(const t_duration_milliseconds *duration, bool *lock_acquired);
+void    time_duration_ms_unlock(const t_duration_milliseconds *duration, bool lock_acquired);
+bool    time_duration_ms_is_thread_safe_enabled(const t_duration_milliseconds *duration);
 void    time_local(t_time time_value, t_time_info *out);
 void    time_sleep(unsigned int seconds);
 void    time_sleep_ms(unsigned int milliseconds);
