@@ -31,15 +31,17 @@ typedef struct s_high_resolution_time_point
 
 typedef struct s_time_info
 {
-    int seconds;
-    int minutes;
-    int hours;
-    int month_day;
-    int month;
-    int year;
-    int week_day;
-    int year_day;
-    int is_daylight_saving;
+    pt_mutex    *mutex;
+    bool        thread_safe_enabled;
+    int         seconds;
+    int         minutes;
+    int         hours;
+    int         month_day;
+    int         month;
+    int         year;
+    int         week_day;
+    int         year_day;
+    int         is_daylight_saving;
 }   t_time_info;
 
 struct event_loop;
@@ -88,6 +90,11 @@ void    time_duration_ms_teardown_thread_safety(t_duration_milliseconds *duratio
 int     time_duration_ms_lock(const t_duration_milliseconds *duration, bool *lock_acquired);
 void    time_duration_ms_unlock(const t_duration_milliseconds *duration, bool lock_acquired);
 bool    time_duration_ms_is_thread_safe_enabled(const t_duration_milliseconds *duration);
+int     time_info_prepare_thread_safety(t_time_info *time_info);
+void    time_info_teardown_thread_safety(t_time_info *time_info);
+int     time_info_lock(const t_time_info *time_info, bool *lock_acquired);
+void    time_info_unlock(const t_time_info *time_info, bool lock_acquired);
+bool    time_info_is_thread_safe_enabled(const t_time_info *time_info);
 void    time_local(t_time time_value, t_time_info *out);
 void    time_sleep(unsigned int seconds);
 void    time_sleep_ms(unsigned int milliseconds);
