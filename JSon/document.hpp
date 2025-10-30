@@ -2,14 +2,23 @@
 #define JSON_DOCUMENT_HPP
 
 #include "json.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 
 class json_document
 {
     private:
         json_group *_groups;
         mutable int _error_code;
+        mutable pt_mutex _mutex;
 
+        void set_error_unlocked(int error_code) const noexcept;
         void set_error(int error_code) const noexcept;
+        int lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept;
+        static void restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept;
+        void clear_unlocked() noexcept;
+        char *write_to_string_unlocked() const noexcept;
+        json_item *find_item_by_pointer_unlocked(const char *pointer) const noexcept;
 
     public:
         json_document() noexcept;

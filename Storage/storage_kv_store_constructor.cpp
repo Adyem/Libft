@@ -5,7 +5,12 @@
 #include <ctime>
 
 kv_store::kv_store(const char *file_path, const char *encryption_key, bool enable_encryption)
-    : _data(), _file_path(), _encryption_key(), _encryption_enabled(false), _error_code(ER_SUCCESS)
+    : _data()
+    , _file_path()
+    , _encryption_key()
+    , _encryption_enabled(false)
+    , _error_code(ER_SUCCESS)
+    , _mutex()
 {
     json_group *group_head;
     json_group *store_group;
@@ -140,8 +145,12 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
             this->set_error(key_storage.get_error());
             return ;
         }
-        entry._has_expiration = false;
-        entry._expiration_timestamp = 0;
+        if (entry.configure_expiration(false, 0) != 0)
+        {
+            json_free_groups(group_head);
+            this->set_error(entry.get_error());
+            return ;
+        }
         if (this->_encryption_enabled)
         {
             ft_string encoded_value(item_pointer->value);
@@ -158,7 +167,12 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
                 json_free_groups(group_head);
                 return ;
             }
-            entry._value = decrypted_value;
+            if (entry.set_value(decrypted_value) != 0)
+            {
+                json_free_groups(group_head);
+                this->set_error(entry.get_error());
+                return ;
+            }
         }
         else
         {
@@ -170,13 +184,12 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
                 this->set_error(plain_value.get_error());
                 return ;
             }
-            entry._value = plain_value;
-        }
-        if (entry._value.get_error() != ER_SUCCESS)
-        {
-            json_free_groups(group_head);
-            this->set_error(entry._value.get_error());
-            return ;
+            if (entry.set_value(plain_value) != 0)
+            {
+                json_free_groups(group_head);
+                this->set_error(entry.get_error());
+                return ;
+            }
         }
         this->_data.insert(key_storage, entry);
         if (this->_data.get_error() != ER_SUCCESS)
@@ -225,8 +238,12 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
             }
             if (data_pair != ft_nullptr)
             {
-                data_pair->value._has_expiration = true;
-                data_pair->value._expiration_timestamp = ttl_entry.value;
+                if (data_pair->value.configure_expiration(true, ttl_entry.value) != 0)
+                {
+                    json_free_groups(group_head);
+                    this->set_error(data_pair->value.get_error());
+                    return ;
+                }
             }
             ttl_index++;
         }
