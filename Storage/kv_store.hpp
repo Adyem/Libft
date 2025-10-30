@@ -7,15 +7,44 @@
 #include "../CPP_class/class_string_class.hpp"
 #include "../Template/map.hpp"
 #include "../Template/vector.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 
 extern const char *g_kv_store_ttl_prefix;
 
-typedef struct s_kv_store_entry
+class kv_store_entry
 {
-    ft_string _value;
-    bool _has_expiration;
-    long long _expiration_timestamp;
-}   kv_store_entry;
+    private:
+        ft_string _value;
+        bool _has_expiration;
+        long long _expiration_timestamp;
+        mutable int _error_code;
+        mutable pt_mutex _mutex;
+
+        void set_error_unlocked(int error_code) const noexcept;
+        void set_error(int error_code) const noexcept;
+        int lock_entry(ft_unique_lock<pt_mutex> &guard) const noexcept;
+        static void restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept;
+
+    public:
+        kv_store_entry() noexcept;
+        kv_store_entry(const kv_store_entry &other) noexcept;
+        kv_store_entry &operator=(const kv_store_entry &other) noexcept;
+        ~kv_store_entry() noexcept;
+
+        int set_value(const ft_string &value) noexcept;
+        int set_value(const char *value_string) noexcept;
+        int copy_value(ft_string &destination) const noexcept;
+        int get_value_pointer(const char **value_pointer) const noexcept;
+
+        int configure_expiration(bool has_expiration, long long expiration_timestamp) noexcept;
+        int has_expiration(bool &has_expiration) const noexcept;
+        int get_expiration(long long &expiration_timestamp) const noexcept;
+        int is_expired(long long current_time, bool &expired) const noexcept;
+
+        int get_error() const noexcept;
+        const char *get_error_str() const noexcept;
+};
 
 typedef enum e_kv_store_operation_type
 {
@@ -41,11 +70,15 @@ class kv_store
         ft_string _encryption_key;
         bool _encryption_enabled;
         mutable int _error_code;
+        mutable pt_mutex _mutex;
 
-        void set_error(int error_code) const;
+        void set_error_unlocked(int error_code) const noexcept;
+        void set_error(int error_code) const noexcept;
+        int lock_store(ft_unique_lock<pt_mutex> &guard) const noexcept;
+        static void restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept;
         int encrypt_value(const ft_string &plain_string, ft_string &encoded_string) const;
         int decrypt_value(const ft_string &encoded_string, ft_string &plain_string) const;
-        int prune_expired();
+        int prune_expired_locked(ft_unique_lock<pt_mutex> &guard);
         int compute_expiration(long long ttl_seconds, bool &has_expiration, long long &expiration_timestamp) const;
         long long current_time_seconds() const;
         int parse_expiration_timestamp(const char *value_string, long long &expiration_timestamp) const;
@@ -54,6 +87,7 @@ class kv_store
         kv_store(const char *file_path, const char *encryption_key = ft_nullptr, bool enable_encryption = false);
         ~kv_store();
 
+        int prune_expired();
         int kv_set(const char *key_string, const char *value_string, long long ttl_seconds = -1);
         const char *kv_get(const char *key_string) const;
         int kv_delete(const char *key_string);

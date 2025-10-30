@@ -8,6 +8,7 @@
 #include <ctime>
 
 #include "../Libft/libft.hpp"
+#include "../Template/move.hpp"
 
 const char *g_kv_store_ttl_prefix = "__ttl__";
 
@@ -68,10 +69,66 @@ int kv_store_init_delete_operation(kv_store_operation &operation, const char *ke
     return (0);
 }
 
-void kv_store::set_error(int error_code) const
+void kv_store::set_error_unlocked(int error_code) const noexcept
 {
-    this->_error_code = error_code;
     ft_errno = error_code;
+    this->_error_code = error_code;
+    return ;
+}
+
+void kv_store::set_error(int error_code) const noexcept
+{
+    ft_unique_lock<pt_mutex> guard;
+    int entry_errno;
+    int lock_error;
+
+    entry_errno = ft_errno;
+    lock_error = this->lock_store(guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        ft_errno = lock_error;
+        return ;
+    }
+    this->set_error_unlocked(error_code);
+    kv_store::restore_errno(guard, entry_errno);
+    return ;
+}
+
+int kv_store::lock_store(ft_unique_lock<pt_mutex> &guard) const noexcept
+{
+    int entry_errno;
+    ft_unique_lock<pt_mutex> local_guard(this->_mutex);
+
+    entry_errno = ft_errno;
+    if (local_guard.get_error() != ER_SUCCESS)
+    {
+        ft_errno = entry_errno;
+        guard = ft_unique_lock<pt_mutex>();
+        return (local_guard.get_error());
+    }
+    ft_errno = entry_errno;
+    guard = ft_move(local_guard);
+    return (ER_SUCCESS);
+}
+
+void kv_store::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept
+{
+    int current_errno;
+
+    current_errno = ft_errno;
+    if (guard.owns_lock())
+        guard.unlock();
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        ft_errno = guard.get_error();
+        return ;
+    }
+    if (current_errno != ER_SUCCESS)
+    {
+        ft_errno = current_errno;
+        return ;
+    }
+    ft_errno = entry_errno;
     return ;
 }
 
@@ -130,22 +187,50 @@ int kv_store::parse_expiration_timestamp(const char *value_string, long long &ex
 
 int kv_store::prune_expired()
 {
+    ft_unique_lock<pt_mutex> guard;
+    int entry_errno;
+    int lock_error;
+    int prune_result;
+
+    entry_errno = ft_errno;
+    lock_error = this->lock_store(guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        this->set_error_unlocked(lock_error);
+        kv_store::restore_errno(guard, entry_errno);
+        return (-1);
+    }
+    prune_result = this->prune_expired_locked(guard);
+    kv_store::restore_errno(guard, entry_errno);
+    return (prune_result);
+}
+
+int kv_store::prune_expired_locked(ft_unique_lock<pt_mutex> &guard)
+{
     size_t map_size;
     long long current_time;
     size_t map_index;
 
+    if (guard.owns_lock() == false)
+    {
+        this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
+        return (-1);
+    }
     map_size = this->_data.size();
     if (this->_data.get_error() != ER_SUCCESS)
     {
-        this->set_error(this->_data.get_error());
+        this->set_error_unlocked(this->_data.get_error());
         return (-1);
     }
     if (map_size == 0)
+    {
+        this->set_error_unlocked(ER_SUCCESS);
         return (0);
+    }
     current_time = this->current_time_seconds();
     if (current_time < 0)
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
     map_index = 0;
@@ -154,33 +239,56 @@ int kv_store::prune_expired()
         Pair<ft_string, kv_store_entry> *map_end;
         Pair<ft_string, kv_store_entry> *map_begin;
         Pair<ft_string, kv_store_entry> *entry_pointer;
+        bool has_expiration;
 
         map_end = this->_data.end();
         if (this->_data.get_error() != ER_SUCCESS)
         {
-            this->set_error(this->_data.get_error());
+            this->set_error_unlocked(this->_data.get_error());
             return (-1);
         }
         map_begin = map_end - static_cast<std::ptrdiff_t>(map_size);
         entry_pointer = map_begin + map_index;
-        if (entry_pointer->value._has_expiration && entry_pointer->value._expiration_timestamp <= current_time)
+        if (entry_pointer == ft_nullptr)
         {
-            this->_data.remove(entry_pointer->key);
-            if (this->_data.get_error() != ER_SUCCESS)
+            this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
+            return (-1);
+        }
+        has_expiration = false;
+        if (entry_pointer->value.has_expiration(has_expiration) != 0)
+        {
+            this->set_error_unlocked(entry_pointer->value.get_error());
+            return (-1);
+        }
+        if (has_expiration)
+        {
+            long long expiration_timestamp;
+
+            if (entry_pointer->value.get_expiration(expiration_timestamp) != 0)
             {
-                this->set_error(this->_data.get_error());
+                this->set_error_unlocked(entry_pointer->value.get_error());
                 return (-1);
             }
-            map_size = this->_data.size();
-            if (this->_data.get_error() != ER_SUCCESS)
+            if (expiration_timestamp <= current_time)
             {
-                this->set_error(this->_data.get_error());
-                return (-1);
+                this->_data.remove(entry_pointer->key);
+                if (this->_data.get_error() != ER_SUCCESS)
+                {
+                    this->set_error_unlocked(this->_data.get_error());
+                    return (-1);
+                }
+                map_size = this->_data.size();
+                if (this->_data.get_error() != ER_SUCCESS)
+                {
+                    this->set_error_unlocked(this->_data.get_error());
+                    return (-1);
+                }
+                continue ;
             }
-            continue;
         }
         map_index++;
     }
+    this->set_error_unlocked(ER_SUCCESS);
     return (0);
 }
 
@@ -188,9 +296,12 @@ int kv_store::kv_set(const char *key_string, const char *value_string, long long
 {
     ft_string key_storage;
     ft_string value_storage;
+    ft_unique_lock<pt_mutex> guard;
     Pair<ft_string, kv_store_entry> *existing_pair;
     bool has_expiration;
     long long expiration_timestamp;
+    int entry_errno;
+    int lock_error;
 
     if (key_string == ft_nullptr || value_string == ft_nullptr)
     {
@@ -209,50 +320,84 @@ int kv_store::kv_set(const char *key_string, const char *value_string, long long
         this->set_error(value_storage.get_error());
         return (-1);
     }
-    if (this->prune_expired() != 0)
+    entry_errno = ft_errno;
+    lock_error = this->lock_store(guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        this->set_error_unlocked(lock_error);
+        kv_store::restore_errno(guard, entry_errno);
         return (-1);
-    if (this->compute_expiration(ttl_seconds, has_expiration, expiration_timestamp) != 0)
+    }
+    if (this->prune_expired_locked(guard) != 0)
+    {
+        kv_store::restore_errno(guard, entry_errno);
         return (-1);
+    }
     existing_pair = this->_data.find(key_storage);
     if (this->_data.get_error() != ER_SUCCESS)
     {
-        this->set_error(this->_data.get_error());
+        this->set_error_unlocked(this->_data.get_error());
+        kv_store::restore_errno(guard, entry_errno);
         return (-1);
     }
-    if (existing_pair != ft_nullptr)
+    has_expiration = false;
+    expiration_timestamp = 0;
+    if (ttl_seconds >= 0)
     {
-        existing_pair->value._value = value_storage;
-        if (existing_pair->value._value.get_error() != ER_SUCCESS)
+        if (this->compute_expiration(ttl_seconds, has_expiration, expiration_timestamp) != 0)
         {
-            this->set_error(existing_pair->value._value.get_error());
+            kv_store::restore_errno(guard, entry_errno);
             return (-1);
         }
-        existing_pair->value._has_expiration = has_expiration;
         if (has_expiration)
-            existing_pair->value._expiration_timestamp = expiration_timestamp;
-        else
-            existing_pair->value._expiration_timestamp = 0;
-    }
-    else
-    {
-        kv_store_entry new_entry;
+        {
+            long long current_time;
 
-        new_entry._value = value_storage;
-        if (new_entry._value.get_error() != ER_SUCCESS)
+            current_time = this->current_time_seconds();
+            if (current_time < 0)
+            {
+                this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
+                kv_store::restore_errno(guard, entry_errno);
+                return (-1);
+            }
+            if (expiration_timestamp <= current_time)
+            {
+                if (existing_pair != ft_nullptr)
+                {
+                    this->_data.remove(key_storage);
+                    if (this->_data.get_error() != ER_SUCCESS)
+                    {
+                        this->set_error_unlocked(this->_data.get_error());
+                        kv_store::restore_errno(guard, entry_errno);
+                        return (-1);
+                    }
+                }
+                this->set_error_unlocked(ER_SUCCESS);
+                kv_store::restore_errno(guard, entry_errno);
+                return (0);
+            }
+        }
+    }
+    else if (existing_pair != ft_nullptr)
+    {
+        bool existing_has_expiration;
+
+        existing_has_expiration = false;
+        if (existing_pair->value.has_expiration(existing_has_expiration) != 0)
         {
-            this->set_error(new_entry._value.get_error());
+            this->set_error_unlocked(existing_pair->value.get_error());
+            kv_store::restore_errno(guard, entry_errno);
             return (-1);
         }
-        new_entry._has_expiration = has_expiration;
-        if (has_expiration)
-            new_entry._expiration_timestamp = expiration_timestamp;
-        else
-            new_entry._expiration_timestamp = 0;
-        this->_data.insert(key_storage, new_entry);
-        if (this->_data.get_error() != ER_SUCCESS)
+        if (existing_has_expiration)
         {
-            this->set_error(this->_data.get_error());
-            return (-1);
+            if (existing_pair->value.get_expiration(expiration_timestamp) != 0)
+            {
+                this->set_error_unlocked(existing_pair->value.get_error());
+                kv_store::restore_errno(guard, entry_errno);
+                return (-1);
+            }
+            has_expiration = true;
         }
     }
     if (has_expiration)
@@ -262,16 +407,68 @@ int kv_store::kv_set(const char *key_string, const char *value_string, long long
         current_time = this->current_time_seconds();
         if (current_time < 0)
         {
-            this->set_error(FT_ERR_INVALID_ARGUMENT);
+            this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
+            kv_store::restore_errno(guard, entry_errno);
             return (-1);
         }
         if (expiration_timestamp <= current_time)
         {
-            if (this->prune_expired() != 0)
-                return (-1);
+            if (existing_pair != ft_nullptr)
+            {
+                this->_data.remove(key_storage);
+                if (this->_data.get_error() != ER_SUCCESS)
+                {
+                    this->set_error_unlocked(this->_data.get_error());
+                    kv_store::restore_errno(guard, entry_errno);
+                    return (-1);
+                }
+            }
+            this->set_error_unlocked(ER_SUCCESS);
+            kv_store::restore_errno(guard, entry_errno);
+            return (0);
         }
     }
-    this->set_error(ER_SUCCESS);
+    if (existing_pair != ft_nullptr)
+    {
+        if (existing_pair->value.set_value(value_storage) != 0)
+        {
+            this->set_error_unlocked(existing_pair->value.get_error());
+            kv_store::restore_errno(guard, entry_errno);
+            return (-1);
+        }
+        if (existing_pair->value.configure_expiration(has_expiration, expiration_timestamp) != 0)
+        {
+            this->set_error_unlocked(existing_pair->value.get_error());
+            kv_store::restore_errno(guard, entry_errno);
+            return (-1);
+        }
+    }
+    else
+    {
+        kv_store_entry entry;
+
+        if (entry.set_value(value_storage) != 0)
+        {
+            this->set_error_unlocked(entry.get_error());
+            kv_store::restore_errno(guard, entry_errno);
+            return (-1);
+        }
+        if (entry.configure_expiration(has_expiration, expiration_timestamp) != 0)
+        {
+            this->set_error_unlocked(entry.get_error());
+            kv_store::restore_errno(guard, entry_errno);
+            return (-1);
+        }
+        this->_data.insert(key_storage, entry);
+        if (this->_data.get_error() != ER_SUCCESS)
+        {
+            this->set_error_unlocked(this->_data.get_error());
+            kv_store::restore_errno(guard, entry_errno);
+            return (-1);
+        }
+    }
+    this->set_error_unlocked(ER_SUCCESS);
+    kv_store::restore_errno(guard, entry_errno);
     return (0);
 }
 
@@ -279,73 +476,117 @@ const char *kv_store::kv_get(const char *key_string) const
 {
     ft_string key_storage;
     const Pair<ft_string, kv_store_entry> *map_pair;
+    ft_unique_lock<pt_mutex> guard;
     kv_store *mutable_this;
+    int entry_errno;
+    int lock_error;
+    const char *value_pointer;
 
     if (key_string == ft_nullptr)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
-    mutable_this = const_cast<kv_store *>(this);
-    if (mutable_this->prune_expired() != 0)
-        return (ft_nullptr);
     key_storage = key_string;
     if (key_storage.get_error() != ER_SUCCESS)
     {
         this->set_error(key_storage.get_error());
         return (ft_nullptr);
     }
+    entry_errno = ft_errno;
+    lock_error = this->lock_store(guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        mutable_this = const_cast<kv_store *>(this);
+        mutable_this->set_error_unlocked(lock_error);
+        kv_store::restore_errno(guard, entry_errno);
+        return (ft_nullptr);
+    }
+    mutable_this = const_cast<kv_store *>(this);
+    if (mutable_this->prune_expired_locked(guard) != 0)
+    {
+        kv_store::restore_errno(guard, entry_errno);
+        return (ft_nullptr);
+    }
     map_pair = this->_data.find(key_storage);
     if (this->_data.get_error() != ER_SUCCESS)
     {
-        this->set_error(this->_data.get_error());
+        mutable_this->set_error_unlocked(this->_data.get_error());
+        kv_store::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     if (map_pair == ft_nullptr)
     {
-        this->set_error(FT_ERR_NOT_FOUND);
+        mutable_this->set_error_unlocked(FT_ERR_NOT_FOUND);
+        kv_store::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
-    this->set_error(ER_SUCCESS);
-    return (map_pair->value._value.c_str());
+    value_pointer = ft_nullptr;
+    if (map_pair->value.get_value_pointer(&value_pointer) != 0)
+    {
+        mutable_this->set_error_unlocked(map_pair->value.get_error());
+        kv_store::restore_errno(guard, entry_errno);
+        return (ft_nullptr);
+    }
+    mutable_this->set_error_unlocked(ER_SUCCESS);
+    kv_store::restore_errno(guard, entry_errno);
+    return (value_pointer);
 }
 
 int kv_store::kv_delete(const char *key_string)
 {
     ft_string key_storage;
     const Pair<ft_string, kv_store_entry> *map_pair;
+    ft_unique_lock<pt_mutex> guard;
+    int entry_errno;
+    int lock_error;
 
     if (key_string == ft_nullptr)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    if (this->prune_expired() != 0)
-        return (-1);
     key_storage = key_string;
     if (key_storage.get_error() != ER_SUCCESS)
     {
         this->set_error(key_storage.get_error());
         return (-1);
     }
+    entry_errno = ft_errno;
+    lock_error = this->lock_store(guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        this->set_error_unlocked(lock_error);
+        kv_store::restore_errno(guard, entry_errno);
+        return (-1);
+    }
+    if (this->prune_expired_locked(guard) != 0)
+    {
+        kv_store::restore_errno(guard, entry_errno);
+        return (-1);
+    }
     map_pair = this->_data.find(key_storage);
     if (this->_data.get_error() != ER_SUCCESS)
     {
-        this->set_error(this->_data.get_error());
+        this->set_error_unlocked(this->_data.get_error());
+        kv_store::restore_errno(guard, entry_errno);
         return (-1);
     }
     if (map_pair == ft_nullptr)
     {
-        this->set_error(FT_ERR_NOT_FOUND);
+        this->set_error_unlocked(FT_ERR_NOT_FOUND);
+        kv_store::restore_errno(guard, entry_errno);
         return (-1);
     }
     this->_data.remove(key_storage);
     if (this->_data.get_error() != ER_SUCCESS)
     {
-        this->set_error(this->_data.get_error());
+        this->set_error_unlocked(this->_data.get_error());
+        kv_store::restore_errno(guard, entry_errno);
         return (-1);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error_unlocked(ER_SUCCESS);
+    kv_store::restore_errno(guard, entry_errno);
     return (0);
 }
 
@@ -355,6 +596,7 @@ int kv_store::kv_flush() const
     json_group *head_group;
     json_item *item_pointer;
     ft_string stored_value;
+    ft_string plain_value;
     const Pair<ft_string, kv_store_entry> *map_end;
     const Pair<ft_string, kv_store_entry> *map_begin;
     size_t map_size;
@@ -362,14 +604,29 @@ int kv_store::kv_flush() const
     int result;
     int error_code;
     kv_store *mutable_this;
+    ft_unique_lock<pt_mutex> guard;
+    int entry_errno;
+    int lock_error;
 
     mutable_this = const_cast<kv_store *>(this);
-    if (mutable_this->prune_expired() != 0)
+    entry_errno = ft_errno;
+    lock_error = this->lock_store(guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        mutable_this->set_error_unlocked(lock_error);
+        kv_store::restore_errno(guard, entry_errno);
         return (-1);
+    }
+    if (mutable_this->prune_expired_locked(guard) != 0)
+    {
+        kv_store::restore_errno(guard, entry_errno);
+        return (-1);
+    }
     store_group = json_create_json_group("kv_store");
     if (store_group == ft_nullptr)
     {
-        this->set_error(FT_ERR_NO_MEMORY);
+        mutable_this->set_error_unlocked(FT_ERR_NO_MEMORY);
+        kv_store::restore_errno(guard, entry_errno);
         return (-1);
     }
     if (this->_encryption_enabled)
@@ -378,7 +635,8 @@ int kv_store::kv_flush() const
         if (item_pointer == ft_nullptr)
         {
             json_free_groups(store_group);
-            this->set_error(FT_ERR_NO_MEMORY);
+            mutable_this->set_error_unlocked(FT_ERR_NO_MEMORY);
+            kv_store::restore_errno(guard, entry_errno);
             return (-1);
         }
         json_add_item_to_group(store_group, item_pointer);
@@ -387,14 +645,16 @@ int kv_store::kv_flush() const
     if (this->_data.get_error() != ER_SUCCESS)
     {
         json_free_groups(store_group);
-        this->set_error(this->_data.get_error());
+        mutable_this->set_error_unlocked(this->_data.get_error());
+        kv_store::restore_errno(guard, entry_errno);
         return (-1);
     }
     map_end = this->_data.end();
     if (this->_data.get_error() != ER_SUCCESS)
     {
         json_free_groups(store_group);
-        this->set_error(this->_data.get_error());
+        mutable_this->set_error_unlocked(this->_data.get_error());
+        kv_store::restore_errno(guard, entry_errno);
         return (-1);
     }
     map_begin = map_end - static_cast<std::ptrdiff_t>(map_size);
@@ -403,58 +663,103 @@ int kv_store::kv_flush() const
     {
         const Pair<ft_string, kv_store_entry> &entry = map_begin[map_index];
         const kv_store_entry &entry_value = entry.value;
+        bool entry_has_expiration;
+        long long expiration_timestamp;
 
+        plain_value.clear();
+        if (plain_value.get_error() != ER_SUCCESS)
+        {
+            json_free_groups(store_group);
+            mutable_this->set_error_unlocked(plain_value.get_error());
+            kv_store::restore_errno(guard, entry_errno);
+            return (-1);
+        }
+        if (const_cast<kv_store_entry &>(entry_value).copy_value(plain_value) != 0)
+        {
+            json_free_groups(store_group);
+            mutable_this->set_error_unlocked(entry_value.get_error());
+            kv_store::restore_errno(guard, entry_errno);
+            return (-1);
+        }
         if (this->_encryption_enabled)
         {
             stored_value.clear();
-            if (this->encrypt_value(entry_value._value, stored_value) != 0)
+            if (stored_value.get_error() != ER_SUCCESS)
             {
                 json_free_groups(store_group);
+                mutable_this->set_error_unlocked(stored_value.get_error());
+                kv_store::restore_errno(guard, entry_errno);
+                return (-1);
+            }
+            if (this->encrypt_value(plain_value, stored_value) != 0)
+            {
+                json_free_groups(store_group);
+                kv_store::restore_errno(guard, entry_errno);
                 return (-1);
             }
             item_pointer = json_create_item(entry.key.c_str(), stored_value.c_str());
         }
         else
-            item_pointer = json_create_item(entry.key.c_str(), entry_value._value.c_str());
+            item_pointer = json_create_item(entry.key.c_str(), plain_value.c_str());
         if (item_pointer == ft_nullptr)
         {
             json_free_groups(store_group);
-            this->set_error(FT_ERR_NO_MEMORY);
+            mutable_this->set_error_unlocked(FT_ERR_NO_MEMORY);
+            kv_store::restore_errno(guard, entry_errno);
             return (-1);
         }
         json_add_item_to_group(store_group, item_pointer);
-        if (entry_value._has_expiration)
+        entry_has_expiration = false;
+        if (entry_value.has_expiration(entry_has_expiration) != 0)
+        {
+            json_free_groups(store_group);
+            mutable_this->set_error_unlocked(entry_value.get_error());
+            kv_store::restore_errno(guard, entry_errno);
+            return (-1);
+        }
+        if (entry_has_expiration)
         {
             ft_string ttl_key;
             char expiration_buffer[32];
             int written_length;
 
+            if (entry_value.get_expiration(expiration_timestamp) != 0)
+            {
+                json_free_groups(store_group);
+                mutable_this->set_error_unlocked(entry_value.get_error());
+                kv_store::restore_errno(guard, entry_errno);
+                return (-1);
+            }
             ttl_key = g_kv_store_ttl_prefix;
             if (ttl_key.get_error() != ER_SUCCESS)
             {
                 json_free_groups(store_group);
-                this->set_error(ttl_key.get_error());
+                mutable_this->set_error_unlocked(ttl_key.get_error());
+                kv_store::restore_errno(guard, entry_errno);
                 return (-1);
             }
             ttl_key += entry.key;
             if (ttl_key.get_error() != ER_SUCCESS)
             {
                 json_free_groups(store_group);
-                this->set_error(ttl_key.get_error());
+                mutable_this->set_error_unlocked(ttl_key.get_error());
+                kv_store::restore_errno(guard, entry_errno);
                 return (-1);
             }
-            written_length = std::snprintf(expiration_buffer, sizeof(expiration_buffer), "%lld", entry_value._expiration_timestamp);
+            written_length = std::snprintf(expiration_buffer, sizeof(expiration_buffer), "%lld", expiration_timestamp);
             if (written_length < 0 || static_cast<size_t>(written_length) >= sizeof(expiration_buffer))
             {
                 json_free_groups(store_group);
-                this->set_error(FT_ERR_INVALID_ARGUMENT);
+                mutable_this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
+                kv_store::restore_errno(guard, entry_errno);
                 return (-1);
             }
             item_pointer = json_create_item(ttl_key.c_str(), expiration_buffer);
             if (item_pointer == ft_nullptr)
             {
                 json_free_groups(store_group);
-                this->set_error(FT_ERR_NO_MEMORY);
+                mutable_this->set_error_unlocked(FT_ERR_NO_MEMORY);
+                kv_store::restore_errno(guard, entry_errno);
                 return (-1);
             }
             json_add_item_to_group(store_group, item_pointer);
@@ -469,31 +774,49 @@ int kv_store::kv_flush() const
     if (result != 0)
     {
         if (error_code != ER_SUCCESS)
-            this->set_error(error_code);
+            mutable_this->set_error_unlocked(error_code);
         else
-            this->set_error(FT_ERR_INVALID_ARGUMENT);
+            mutable_this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
+        kv_store::restore_errno(guard, entry_errno);
         return (-1);
     }
-    this->set_error(ER_SUCCESS);
+    mutable_this->set_error_unlocked(ER_SUCCESS);
+    kv_store::restore_errno(guard, entry_errno);
     return (0);
 }
 
 int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
 {
+    ft_unique_lock<pt_mutex> guard;
+    ft_map<ft_string, kv_store_entry> staged_map;
     size_t operation_count;
     size_t operation_index;
+    int entry_errno;
+    int lock_error;
 
     if (operations.get_error() != ER_SUCCESS)
     {
         this->set_error(operations.get_error());
         return (-1);
     }
-    if (this->prune_expired() != 0)
+    entry_errno = ft_errno;
+    lock_error = this->lock_store(guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        this->set_error_unlocked(lock_error);
+        kv_store::restore_errno(guard, entry_errno);
         return (-1);
-    ft_map<ft_string, kv_store_entry> staged_map(this->_data);
+    }
+    if (this->prune_expired_locked(guard) != 0)
+    {
+        kv_store::restore_errno(guard, entry_errno);
+        return (-1);
+    }
+    staged_map = ft_map<ft_string, kv_store_entry>(this->_data);
     if (staged_map.get_error() != ER_SUCCESS)
     {
-        this->set_error(staged_map.get_error());
+        this->set_error_unlocked(staged_map.get_error());
+        kv_store::restore_errno(guard, entry_errno);
         return (-1);
     }
     operation_count = operations.size();
@@ -504,7 +827,8 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
 
         if (operation._key.c_str() == ft_nullptr || operation._key.size() == 0)
         {
-            this->set_error(FT_ERR_INVALID_ARGUMENT);
+            this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
+            kv_store::restore_errno(guard, entry_errno);
             return (-1);
         }
         if (operation._type == KV_STORE_OPERATION_TYPE_DELETE)
@@ -514,18 +838,21 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
             existing_pair = staged_map.find(operation._key);
             if (staged_map.get_error() != ER_SUCCESS)
             {
-                this->set_error(staged_map.get_error());
+                this->set_error_unlocked(staged_map.get_error());
+                kv_store::restore_errno(guard, entry_errno);
                 return (-1);
             }
             if (existing_pair == ft_nullptr)
             {
-                this->set_error(FT_ERR_NOT_FOUND);
+                this->set_error_unlocked(FT_ERR_NOT_FOUND);
+                kv_store::restore_errno(guard, entry_errno);
                 return (-1);
             }
             staged_map.remove(operation._key);
             if (staged_map.get_error() != ER_SUCCESS)
             {
-                this->set_error(staged_map.get_error());
+                this->set_error_unlocked(staged_map.get_error());
+                kv_store::restore_errno(guard, entry_errno);
                 return (-1);
             }
         }
@@ -538,19 +865,21 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
 
             if (operation._has_value == false)
             {
-                this->set_error(FT_ERR_INVALID_ARGUMENT);
+                this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
+                kv_store::restore_errno(guard, entry_errno);
                 return (-1);
             }
-            new_entry._value = operation._value;
-            if (new_entry._value.get_error() != ER_SUCCESS)
+            if (new_entry.set_value(operation._value) != 0)
             {
-                this->set_error(new_entry._value.get_error());
+                this->set_error_unlocked(new_entry.get_error());
+                kv_store::restore_errno(guard, entry_errno);
                 return (-1);
             }
             existing_pair = staged_map.find(operation._key);
             if (staged_map.get_error() != ER_SUCCESS)
             {
-                this->set_error(staged_map.get_error());
+                this->set_error_unlocked(staged_map.get_error());
+                kv_store::restore_errno(guard, entry_errno);
                 return (-1);
             }
             has_expiration = false;
@@ -558,7 +887,10 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
             if (operation._has_ttl)
             {
                 if (this->compute_expiration(operation._ttl_seconds, has_expiration, expiration_timestamp) != 0)
+                {
+                    kv_store::restore_errno(guard, entry_errno);
                     return (-1);
+                }
                 if (has_expiration)
                 {
                     long long current_time;
@@ -566,7 +898,8 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
                     current_time = this->current_time_seconds();
                     if (current_time < 0)
                     {
-                        this->set_error(FT_ERR_INVALID_ARGUMENT);
+                        this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
+                        kv_store::restore_errno(guard, entry_errno);
                         return (-1);
                     }
                     if (expiration_timestamp <= current_time)
@@ -574,7 +907,8 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
                         staged_map.remove(operation._key);
                         if (staged_map.get_error() != ER_SUCCESS)
                         {
-                            this->set_error(staged_map.get_error());
+                            this->set_error_unlocked(staged_map.get_error());
+                            kv_store::restore_errno(guard, entry_errno);
                             return (-1);
                         }
                         operation_index++;
@@ -584,8 +918,25 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
             }
             else if (existing_pair != ft_nullptr)
             {
-                has_expiration = existing_pair->value._has_expiration;
-                expiration_timestamp = existing_pair->value._expiration_timestamp;
+                bool existing_has_expiration;
+
+                existing_has_expiration = false;
+                if (existing_pair->value.has_expiration(existing_has_expiration) != 0)
+                {
+                    this->set_error_unlocked(existing_pair->value.get_error());
+                    kv_store::restore_errno(guard, entry_errno);
+                    return (-1);
+                }
+                if (existing_has_expiration)
+                {
+                    if (existing_pair->value.get_expiration(expiration_timestamp) != 0)
+                    {
+                        this->set_error_unlocked(existing_pair->value.get_error());
+                        kv_store::restore_errno(guard, entry_errno);
+                        return (-1);
+                    }
+                    has_expiration = true;
+                }
             }
             if (has_expiration)
             {
@@ -594,7 +945,8 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
                 current_time = this->current_time_seconds();
                 if (current_time < 0)
                 {
-                    this->set_error(FT_ERR_INVALID_ARGUMENT);
+                    this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
+                    kv_store::restore_errno(guard, entry_errno);
                     return (-1);
                 }
                 if (expiration_timestamp <= current_time)
@@ -602,24 +954,27 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
                     staged_map.remove(operation._key);
                     if (staged_map.get_error() != ER_SUCCESS)
                     {
-                        this->set_error(staged_map.get_error());
+                        this->set_error_unlocked(staged_map.get_error());
+                        kv_store::restore_errno(guard, entry_errno);
                         return (-1);
                     }
                     operation_index++;
                     continue ;
                 }
             }
-            new_entry._has_expiration = has_expiration;
-            if (has_expiration)
-                new_entry._expiration_timestamp = expiration_timestamp;
-            else
-                new_entry._expiration_timestamp = 0;
+            if (new_entry.configure_expiration(has_expiration, expiration_timestamp) != 0)
+            {
+                this->set_error_unlocked(new_entry.get_error());
+                kv_store::restore_errno(guard, entry_errno);
+                return (-1);
+            }
             if (existing_pair != ft_nullptr)
             {
                 existing_pair->value = new_entry;
-                if (existing_pair->value._value.get_error() != ER_SUCCESS)
+                if (existing_pair->value.get_error() != ER_SUCCESS)
                 {
-                    this->set_error(existing_pair->value._value.get_error());
+                    this->set_error_unlocked(existing_pair->value.get_error());
+                    kv_store::restore_errno(guard, entry_errno);
                     return (-1);
                 }
             }
@@ -628,7 +983,8 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
                 staged_map.insert(operation._key, new_entry);
                 if (staged_map.get_error() != ER_SUCCESS)
                 {
-                    this->set_error(staged_map.get_error());
+                    this->set_error_unlocked(staged_map.get_error());
+                    kv_store::restore_errno(guard, entry_errno);
                     return (-1);
                 }
             }
@@ -638,10 +994,12 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
     this->_data = ft_move(staged_map);
     if (this->_data.get_error() != ER_SUCCESS)
     {
-        this->set_error(this->_data.get_error());
+        this->set_error_unlocked(this->_data.get_error());
+        kv_store::restore_errno(guard, entry_errno);
         return (-1);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error_unlocked(ER_SUCCESS);
+    kv_store::restore_errno(guard, entry_errno);
     return (0);
 }
 
@@ -649,8 +1007,11 @@ int kv_store::kv_compare_and_swap(const char *key_string, const char *expected_v
 {
     ft_string key_storage;
     Pair<ft_string, kv_store_entry> *existing_pair;
+    ft_unique_lock<pt_mutex> guard;
     bool has_expiration;
     long long expiration_timestamp;
+    int entry_errno;
+    int lock_error;
 
     if (key_string == ft_nullptr)
     {
@@ -662,38 +1023,62 @@ int kv_store::kv_compare_and_swap(const char *key_string, const char *expected_v
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    if (this->prune_expired() != 0)
-        return (-1);
     key_storage = key_string;
     if (key_storage.get_error() != ER_SUCCESS)
     {
         this->set_error(key_storage.get_error());
         return (-1);
     }
+    entry_errno = ft_errno;
+    lock_error = this->lock_store(guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        this->set_error_unlocked(lock_error);
+        kv_store::restore_errno(guard, entry_errno);
+        return (-1);
+    }
+    if (this->prune_expired_locked(guard) != 0)
+    {
+        kv_store::restore_errno(guard, entry_errno);
+        return (-1);
+    }
     existing_pair = this->_data.find(key_storage);
     if (this->_data.get_error() != ER_SUCCESS)
     {
-        this->set_error(this->_data.get_error());
+        this->set_error_unlocked(this->_data.get_error());
+        kv_store::restore_errno(guard, entry_errno);
         return (-1);
     }
     if (expected_value == ft_nullptr)
     {
         if (existing_pair != ft_nullptr)
         {
-            this->set_error(FT_ERR_ALREADY_EXISTS);
+            this->set_error_unlocked(FT_ERR_ALREADY_EXISTS);
+            kv_store::restore_errno(guard, entry_errno);
             return (-1);
         }
     }
     else
     {
+        ft_string existing_value;
+
         if (existing_pair == ft_nullptr)
         {
-            this->set_error(FT_ERR_NOT_FOUND);
+            this->set_error_unlocked(FT_ERR_NOT_FOUND);
+            kv_store::restore_errno(guard, entry_errno);
             return (-1);
         }
-        if (ft_strcmp(existing_pair->value._value.c_str(), expected_value) != 0)
+        existing_value = ft_string();
+        if (existing_pair->value.copy_value(existing_value) != 0)
         {
-            this->set_error(FT_ERR_INVALID_OPERATION);
+            this->set_error_unlocked(existing_pair->value.get_error());
+            kv_store::restore_errno(guard, entry_errno);
+            return (-1);
+        }
+        if (existing_value.c_str() == ft_nullptr || ft_strcmp(existing_value.c_str(), expected_value) != 0)
+        {
+            this->set_error_unlocked(FT_ERR_INVALID_OPERATION);
+            kv_store::restore_errno(guard, entry_errno);
             return (-1);
         }
     }
@@ -704,22 +1089,49 @@ int kv_store::kv_compare_and_swap(const char *key_string, const char *expected_v
             this->_data.remove(key_storage);
             if (this->_data.get_error() != ER_SUCCESS)
             {
-                this->set_error(this->_data.get_error());
+                this->set_error_unlocked(this->_data.get_error());
+                kv_store::restore_errno(guard, entry_errno);
                 return (-1);
             }
         }
-        this->set_error(ER_SUCCESS);
+        this->set_error_unlocked(ER_SUCCESS);
+        kv_store::restore_errno(guard, entry_errno);
         return (0);
     }
     if (ttl_seconds >= 0)
     {
         if (this->compute_expiration(ttl_seconds, has_expiration, expiration_timestamp) != 0)
+        {
+            kv_store::restore_errno(guard, entry_errno);
             return (-1);
+        }
     }
     else if (existing_pair != ft_nullptr)
     {
-        has_expiration = existing_pair->value._has_expiration;
-        expiration_timestamp = existing_pair->value._expiration_timestamp;
+        bool existing_has_expiration;
+
+        existing_has_expiration = false;
+        if (existing_pair->value.has_expiration(existing_has_expiration) != 0)
+        {
+            this->set_error_unlocked(existing_pair->value.get_error());
+            kv_store::restore_errno(guard, entry_errno);
+            return (-1);
+        }
+        if (existing_has_expiration)
+        {
+            if (existing_pair->value.get_expiration(expiration_timestamp) != 0)
+            {
+                this->set_error_unlocked(existing_pair->value.get_error());
+                kv_store::restore_errno(guard, entry_errno);
+                return (-1);
+            }
+            has_expiration = true;
+        }
+        else
+        {
+            has_expiration = false;
+            expiration_timestamp = 0;
+        }
     }
     else
     {
@@ -733,7 +1145,8 @@ int kv_store::kv_compare_and_swap(const char *key_string, const char *expected_v
         current_time = this->current_time_seconds();
         if (current_time < 0)
         {
-            this->set_error(FT_ERR_INVALID_ARGUMENT);
+            this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
+            kv_store::restore_errno(guard, entry_errno);
             return (-1);
         }
         if (expiration_timestamp <= current_time)
@@ -743,51 +1156,57 @@ int kv_store::kv_compare_and_swap(const char *key_string, const char *expected_v
                 this->_data.remove(key_storage);
                 if (this->_data.get_error() != ER_SUCCESS)
                 {
-                    this->set_error(this->_data.get_error());
+                    this->set_error_unlocked(this->_data.get_error());
+                    kv_store::restore_errno(guard, entry_errno);
                     return (-1);
                 }
             }
-            this->set_error(ER_SUCCESS);
+            this->set_error_unlocked(ER_SUCCESS);
+            kv_store::restore_errno(guard, entry_errno);
             return (0);
         }
     }
     if (existing_pair != ft_nullptr)
     {
-        existing_pair->value._value = new_value;
-        if (existing_pair->value._value.get_error() != ER_SUCCESS)
+        if (existing_pair->value.set_value(new_value) != 0)
         {
-            this->set_error(existing_pair->value._value.get_error());
+            this->set_error_unlocked(existing_pair->value.get_error());
+            kv_store::restore_errno(guard, entry_errno);
             return (-1);
         }
-        existing_pair->value._has_expiration = has_expiration;
-        if (has_expiration)
-            existing_pair->value._expiration_timestamp = expiration_timestamp;
-        else
-            existing_pair->value._expiration_timestamp = 0;
+        if (existing_pair->value.configure_expiration(has_expiration, expiration_timestamp) != 0)
+        {
+            this->set_error_unlocked(existing_pair->value.get_error());
+            kv_store::restore_errno(guard, entry_errno);
+            return (-1);
+        }
     }
     else
     {
         kv_store_entry new_entry;
 
-        new_entry._value = new_value;
-        if (new_entry._value.get_error() != ER_SUCCESS)
+        if (new_entry.set_value(new_value) != 0)
         {
-            this->set_error(new_entry._value.get_error());
+            this->set_error_unlocked(new_entry.get_error());
+            kv_store::restore_errno(guard, entry_errno);
             return (-1);
         }
-        new_entry._has_expiration = has_expiration;
-        if (has_expiration)
-            new_entry._expiration_timestamp = expiration_timestamp;
-        else
-            new_entry._expiration_timestamp = 0;
+        if (new_entry.configure_expiration(has_expiration, expiration_timestamp) != 0)
+        {
+            this->set_error_unlocked(new_entry.get_error());
+            kv_store::restore_errno(guard, entry_errno);
+            return (-1);
+        }
         this->_data.insert(key_storage, new_entry);
         if (this->_data.get_error() != ER_SUCCESS)
         {
-            this->set_error(this->_data.get_error());
+            this->set_error_unlocked(this->_data.get_error());
+            kv_store::restore_errno(guard, entry_errno);
             return (-1);
         }
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error_unlocked(ER_SUCCESS);
+    kv_store::restore_errno(guard, entry_errno);
     return (0);
 }
 
