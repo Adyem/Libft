@@ -88,14 +88,23 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
     char    number_buffer[16];
     size_t  length;
     int     value;
+    bool    lock_acquired;
+    int     lock_error;
+    bool    format_failed;
+    size_t  formatted_length;
 
     if (!buffer || size == 0 || !format || !time_info)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
+    lock_acquired = false;
+    lock_error = time_info_lock(time_info, &lock_acquired);
+    if (lock_error != 0)
+        return (0);
     format_index = 0;
     output_index = 0;
+    format_failed = false;
     while (format[format_index] && output_index + 1 < size)
     {
         if (format[format_index] == '%' && format[format_index + 1])
@@ -108,6 +117,9 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
             }
             else
             {
+                int minimum_width;
+                size_t number_index;
+
                 if (format[format_index + 1] == 'Y')
                     value = time_info->year + 1900;
                 else if (format[format_index + 1] == 'm')
@@ -125,8 +137,6 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
                     format_index++;
                     continue;
                 }
-                int minimum_width;
-
                 if (format[format_index + 1] == 'Y')
                     minimum_width = 4;
                 else
@@ -138,10 +148,9 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
                         buffer[output_index] = '\0';
                     else if (size > 0)
                         buffer[size - 1] = '\0';
-                    return (0);
+                    format_failed = true;
+                    break;
                 }
-                size_t number_index;
-
                 number_index = 0;
                 while (number_index < length && output_index + 1 < size)
                 {
@@ -159,8 +168,15 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
             format_index++;
         }
     }
-    buffer[output_index] = '\0';
-    ft_errno = ER_SUCCESS;
-    return (output_index);
+    if (!format_failed)
+    {
+        buffer[output_index] = '\0';
+        ft_errno = ER_SUCCESS;
+        formatted_length = output_index;
+    }
+    else
+        formatted_length = 0;
+    time_info_unlock(time_info, lock_acquired);
+    return (formatted_length);
 }
 

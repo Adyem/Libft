@@ -8,6 +8,8 @@ static t_time_info create_sample_time_info(void)
 {
     t_time_info sample_time_info;
 
+    sample_time_info.mutex = ft_nullptr;
+    sample_time_info.thread_safe_enabled = false;
     sample_time_info.seconds = 0;
     sample_time_info.minutes = 0;
     sample_time_info.hours = 0;
