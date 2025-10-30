@@ -3,12 +3,14 @@
 #include <cstddef>
 #include <cerrno>
 #include <climits>
+#include <limits>
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
 
 #include "../Libft/libft.hpp"
 #include "../Template/move.hpp"
+#include "../Time/time.hpp"
 
 const char *g_kv_store_ttl_prefix = "__ttl__";
 
@@ -185,6 +187,145 @@ int kv_store::parse_expiration_timestamp(const char *value_string, long long &ex
     return (0);
 }
 
+void kv_store::record_set_operation() const noexcept
+{
+    this->_metrics_set_operations = this->_metrics_set_operations + 1;
+    return ;
+}
+
+void kv_store::record_delete_operation() const noexcept
+{
+    this->_metrics_delete_operations = this->_metrics_delete_operations + 1;
+    return ;
+}
+
+void kv_store::record_get_hit() const noexcept
+{
+    this->_metrics_get_hits = this->_metrics_get_hits + 1;
+    return ;
+}
+
+void kv_store::record_get_miss() const noexcept
+{
+    this->_metrics_get_misses = this->_metrics_get_misses + 1;
+    return ;
+}
+
+void kv_store::record_prune_metrics(long long removed_entries, long long duration_ms) const noexcept
+{
+    long long normalized_duration;
+
+    normalized_duration = duration_ms;
+    if (normalized_duration < 0)
+        normalized_duration = 0;
+    this->_metrics_prune_operations = this->_metrics_prune_operations + 1;
+    this->_metrics_pruned_entries = this->_metrics_pruned_entries + removed_entries;
+    this->_metrics_last_prune_duration_ms = normalized_duration;
+    this->_metrics_total_prune_duration_ms = this->_metrics_total_prune_duration_ms + normalized_duration;
+    return ;
+}
+
+int kv_store::lock_background(ft_unique_lock<pt_mutex> &guard) const noexcept
+{
+    int entry_errno;
+    ft_unique_lock<pt_mutex> local_guard(this->_background_mutex);
+
+    entry_errno = ft_errno;
+    if (local_guard.get_error() != ER_SUCCESS)
+    {
+        ft_errno = entry_errno;
+        guard = ft_unique_lock<pt_mutex>();
+        return (local_guard.get_error());
+    }
+    ft_errno = entry_errno;
+    guard = ft_move(local_guard);
+    return (ER_SUCCESS);
+}
+
+int kv_store::start_background_thread_locked(long long interval_seconds) noexcept
+{
+    ft_thread background_instance;
+
+    if (interval_seconds <= 0)
+    {
+        this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
+        return (-1);
+    }
+    if (this->_background_thread_active)
+    {
+        this->_background_interval_seconds = interval_seconds;
+        this->set_error_unlocked(ER_SUCCESS);
+        return (0);
+    }
+    this->_background_stop_requested = false;
+    this->_background_interval_seconds = interval_seconds;
+    background_instance = ft_thread(&kv_store::background_compaction_worker, this);
+    if (background_instance.get_error() != ER_SUCCESS)
+    {
+        this->set_error_unlocked(background_instance.get_error());
+        return (-1);
+    }
+    this->_background_thread = ft_move(background_instance);
+    this->_background_thread_active = true;
+    this->set_error_unlocked(ER_SUCCESS);
+    return (0);
+}
+
+void kv_store::stop_background_thread_locked(ft_thread &thread_holder) noexcept
+{
+    if (this->_background_thread_active == false)
+    {
+        this->set_error_unlocked(ER_SUCCESS);
+        return ;
+    }
+    this->_background_stop_requested = true;
+    this->_background_interval_seconds = 0;
+    thread_holder = ft_move(this->_background_thread);
+    this->_background_thread_active = false;
+    this->set_error_unlocked(ER_SUCCESS);
+    return ;
+}
+
+void kv_store::background_compaction_worker(kv_store *store) noexcept
+{
+    if (store == ft_nullptr)
+        return ;
+    while (true)
+    {
+        ft_unique_lock<pt_mutex> guard;
+        int entry_errno;
+        bool stop_requested;
+        long long interval_seconds;
+        long long sleep_milliseconds;
+
+        entry_errno = ft_errno;
+        if (store->lock_background(guard) != ER_SUCCESS)
+        {
+            ft_errno = entry_errno;
+            return ;
+        }
+        stop_requested = store->_background_stop_requested;
+        interval_seconds = store->_background_interval_seconds;
+        kv_store::restore_errno(guard, entry_errno);
+        if (stop_requested)
+            break;
+        if (interval_seconds <= 0)
+            interval_seconds = 1;
+        if (interval_seconds > std::numeric_limits<long long>::max() / 1000)
+            interval_seconds = std::numeric_limits<long long>::max() / 1000;
+        sleep_milliseconds = interval_seconds * 1000;
+        if (sleep_milliseconds <= 0)
+            sleep_milliseconds = 1000;
+        if (sleep_milliseconds > static_cast<long long>(std::numeric_limits<unsigned int>::max()))
+            sleep_milliseconds = static_cast<long long>(std::numeric_limits<unsigned int>::max());
+        pt_thread_sleep(static_cast<unsigned int>(sleep_milliseconds));
+        entry_errno = ft_errno;
+        store->prune_expired();
+        ft_errno = entry_errno;
+    }
+    return ;
+}
+
 int kv_store::prune_expired()
 {
     ft_unique_lock<pt_mutex> guard;
@@ -210,12 +351,16 @@ int kv_store::prune_expired_locked(ft_unique_lock<pt_mutex> &guard)
     size_t map_size;
     long long current_time;
     size_t map_index;
+    t_monotonic_time_point start_time;
+    long long removed_entries;
 
     if (guard.owns_lock() == false)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
+    start_time = time_monotonic_point_now();
+    removed_entries = 0;
     map_size = this->_data.size();
     if (this->_data.get_error() != ER_SUCCESS)
     {
@@ -283,11 +428,18 @@ int kv_store::prune_expired_locked(ft_unique_lock<pt_mutex> &guard)
                     this->set_error_unlocked(this->_data.get_error());
                     return (-1);
                 }
+                removed_entries = removed_entries + 1;
                 continue ;
             }
         }
         map_index++;
     }
+    t_monotonic_time_point finish_time;
+    long long duration_ms;
+
+    finish_time = time_monotonic_point_now();
+    duration_ms = time_monotonic_point_diff_ms(start_time, finish_time);
+    this->record_prune_metrics(removed_entries, duration_ms);
     this->set_error_unlocked(ER_SUCCESS);
     return (0);
 }
@@ -373,6 +525,7 @@ int kv_store::kv_set(const char *key_string, const char *value_string, long long
                     }
                 }
                 this->set_error_unlocked(ER_SUCCESS);
+                this->record_set_operation();
                 kv_store::restore_errno(guard, entry_errno);
                 return (0);
             }
@@ -424,6 +577,7 @@ int kv_store::kv_set(const char *key_string, const char *value_string, long long
                 }
             }
             this->set_error_unlocked(ER_SUCCESS);
+            this->record_set_operation();
             kv_store::restore_errno(guard, entry_errno);
             return (0);
         }
@@ -468,6 +622,7 @@ int kv_store::kv_set(const char *key_string, const char *value_string, long long
         }
     }
     this->set_error_unlocked(ER_SUCCESS);
+    this->record_set_operation();
     kv_store::restore_errno(guard, entry_errno);
     return (0);
 }
@@ -518,6 +673,7 @@ const char *kv_store::kv_get(const char *key_string) const
     if (map_pair == ft_nullptr)
     {
         mutable_this->set_error_unlocked(FT_ERR_NOT_FOUND);
+        mutable_this->record_get_miss();
         kv_store::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
@@ -529,6 +685,7 @@ const char *kv_store::kv_get(const char *key_string) const
         return (ft_nullptr);
     }
     mutable_this->set_error_unlocked(ER_SUCCESS);
+    mutable_this->record_get_hit();
     kv_store::restore_errno(guard, entry_errno);
     return (value_pointer);
 }
@@ -586,6 +743,7 @@ int kv_store::kv_delete(const char *key_string)
         return (-1);
     }
     this->set_error_unlocked(ER_SUCCESS);
+    this->record_delete_operation();
     kv_store::restore_errno(guard, entry_errno);
     return (0);
 }
@@ -791,6 +949,8 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
     ft_map<ft_string, kv_store_entry> staged_map;
     size_t operation_count;
     size_t operation_index;
+    size_t metrics_set_count;
+    size_t metrics_delete_count;
     int entry_errno;
     int lock_error;
 
@@ -821,6 +981,8 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
     }
     operation_count = operations.size();
     operation_index = 0;
+    metrics_set_count = 0;
+    metrics_delete_count = 0;
     while (operation_index < operation_count)
     {
         const kv_store_operation &operation = operations[operation_index];
@@ -855,6 +1017,7 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
                 kv_store::restore_errno(guard, entry_errno);
                 return (-1);
             }
+            metrics_delete_count = metrics_delete_count + 1;
         }
         else
         {
@@ -911,6 +1074,7 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
                             kv_store::restore_errno(guard, entry_errno);
                             return (-1);
                         }
+                        metrics_set_count = metrics_set_count + 1;
                         operation_index++;
                         continue ;
                     }
@@ -958,6 +1122,7 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
                         kv_store::restore_errno(guard, entry_errno);
                         return (-1);
                     }
+                    metrics_set_count = metrics_set_count + 1;
                     operation_index++;
                     continue ;
                 }
@@ -988,6 +1153,7 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
                     return (-1);
                 }
             }
+            metrics_set_count = metrics_set_count + 1;
         }
         operation_index++;
     }
@@ -997,6 +1163,20 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
         this->set_error_unlocked(this->_data.get_error());
         kv_store::restore_errno(guard, entry_errno);
         return (-1);
+    }
+    size_t metrics_index;
+
+    metrics_index = 0;
+    while (metrics_index < metrics_set_count)
+    {
+        this->record_set_operation();
+        metrics_index++;
+    }
+    metrics_index = 0;
+    while (metrics_index < metrics_delete_count)
+    {
+        this->record_delete_operation();
+        metrics_index++;
     }
     this->set_error_unlocked(ER_SUCCESS);
     kv_store::restore_errno(guard, entry_errno);
@@ -1095,6 +1275,7 @@ int kv_store::kv_compare_and_swap(const char *key_string, const char *expected_v
             }
         }
         this->set_error_unlocked(ER_SUCCESS);
+        this->record_delete_operation();
         kv_store::restore_errno(guard, entry_errno);
         return (0);
     }
@@ -1162,6 +1343,7 @@ int kv_store::kv_compare_and_swap(const char *key_string, const char *expected_v
                 }
             }
             this->set_error_unlocked(ER_SUCCESS);
+            this->record_set_operation();
             kv_store::restore_errno(guard, entry_errno);
             return (0);
         }
@@ -1206,6 +1388,7 @@ int kv_store::kv_compare_and_swap(const char *key_string, const char *expected_v
         }
     }
     this->set_error_unlocked(ER_SUCCESS);
+    this->record_set_operation();
     kv_store::restore_errno(guard, entry_errno);
     return (0);
 }
@@ -1218,5 +1401,433 @@ int kv_store::get_error() const
 const char *kv_store::get_error_str() const
 {
     return (ft_strerror(this->_error_code));
+}
+
+int kv_store::get_metrics(kv_store_metrics &out_metrics) const
+{
+    ft_unique_lock<pt_mutex> guard;
+    kv_store *mutable_this;
+    int entry_errno;
+    int lock_error;
+
+    entry_errno = ft_errno;
+    lock_error = this->lock_store(guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        mutable_this = const_cast<kv_store *>(this);
+        mutable_this->set_error_unlocked(lock_error);
+        kv_store::restore_errno(guard, entry_errno);
+        return (-1);
+    }
+    out_metrics.set_operations = this->_metrics_set_operations;
+    out_metrics.delete_operations = this->_metrics_delete_operations;
+    out_metrics.get_hits = this->_metrics_get_hits;
+    out_metrics.get_misses = this->_metrics_get_misses;
+    out_metrics.prune_operations = this->_metrics_prune_operations;
+    out_metrics.pruned_entries = this->_metrics_pruned_entries;
+    out_metrics.total_prune_duration_ms = this->_metrics_total_prune_duration_ms;
+    out_metrics.last_prune_duration_ms = this->_metrics_last_prune_duration_ms;
+    mutable_this = const_cast<kv_store *>(this);
+    mutable_this->set_error_unlocked(ER_SUCCESS);
+    kv_store::restore_errno(guard, entry_errno);
+    return (0);
+}
+
+int kv_store::export_snapshot(ft_vector<kv_store_snapshot_entry> &out_entries) const
+{
+    ft_unique_lock<pt_mutex> guard;
+    kv_store *mutable_this;
+    int entry_errno;
+    int lock_error;
+    size_t map_size;
+    const Pair<ft_string, kv_store_entry> *map_begin;
+    const Pair<ft_string, kv_store_entry> *map_end;
+    size_t map_index;
+
+    mutable_this = const_cast<kv_store *>(this);
+    entry_errno = ft_errno;
+    lock_error = this->lock_store(guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        mutable_this->set_error_unlocked(lock_error);
+        kv_store::restore_errno(guard, entry_errno);
+        return (-1);
+    }
+    if (mutable_this->prune_expired_locked(guard) != 0)
+    {
+        kv_store::restore_errno(guard, entry_errno);
+        return (-1);
+    }
+    out_entries.clear();
+    if (out_entries.get_error() != ER_SUCCESS)
+    {
+        mutable_this->set_error_unlocked(out_entries.get_error());
+        kv_store::restore_errno(guard, entry_errno);
+        return (-1);
+    }
+    map_size = this->_data.size();
+    if (this->_data.get_error() != ER_SUCCESS)
+    {
+        mutable_this->set_error_unlocked(this->_data.get_error());
+        kv_store::restore_errno(guard, entry_errno);
+        return (-1);
+    }
+    map_end = this->_data.end();
+    if (this->_data.get_error() != ER_SUCCESS)
+    {
+        mutable_this->set_error_unlocked(this->_data.get_error());
+        kv_store::restore_errno(guard, entry_errno);
+        return (-1);
+    }
+    map_begin = map_end - static_cast<std::ptrdiff_t>(map_size);
+    map_index = 0;
+    while (map_index < map_size)
+    {
+        const Pair<ft_string, kv_store_entry> &entry = map_begin[map_index];
+        const kv_store_entry &entry_value = entry.value;
+        kv_store_snapshot_entry snapshot_entry;
+        ft_string plain_value;
+        bool has_expiration;
+        long long expiration_timestamp;
+
+        plain_value = ft_string();
+        if (plain_value.get_error() != ER_SUCCESS)
+        {
+            mutable_this->set_error_unlocked(plain_value.get_error());
+            kv_store::restore_errno(guard, entry_errno);
+            return (-1);
+        }
+        if (entry_value.copy_value(plain_value) != 0)
+        {
+            mutable_this->set_error_unlocked(entry_value.get_error());
+            kv_store::restore_errno(guard, entry_errno);
+            return (-1);
+        }
+        snapshot_entry.key = entry.key;
+        if (snapshot_entry.key.get_error() != ER_SUCCESS)
+        {
+            mutable_this->set_error_unlocked(snapshot_entry.key.get_error());
+            kv_store::restore_errno(guard, entry_errno);
+            return (-1);
+        }
+        snapshot_entry.value = plain_value;
+        if (snapshot_entry.value.get_error() != ER_SUCCESS)
+        {
+            mutable_this->set_error_unlocked(snapshot_entry.value.get_error());
+            kv_store::restore_errno(guard, entry_errno);
+            return (-1);
+        }
+        has_expiration = false;
+        expiration_timestamp = 0;
+        if (entry_value.has_expiration(has_expiration) != 0)
+        {
+            mutable_this->set_error_unlocked(entry_value.get_error());
+            kv_store::restore_errno(guard, entry_errno);
+            return (-1);
+        }
+        if (has_expiration)
+        {
+            if (entry_value.get_expiration(expiration_timestamp) != 0)
+            {
+                mutable_this->set_error_unlocked(entry_value.get_error());
+                kv_store::restore_errno(guard, entry_errno);
+                return (-1);
+            }
+        }
+        snapshot_entry.has_expiration = has_expiration;
+        snapshot_entry.expiration_timestamp = expiration_timestamp;
+        out_entries.push_back(ft_move(snapshot_entry));
+        if (out_entries.get_error() != ER_SUCCESS)
+        {
+            mutable_this->set_error_unlocked(out_entries.get_error());
+            kv_store::restore_errno(guard, entry_errno);
+            return (-1);
+        }
+        map_index++;
+    }
+    mutable_this->set_error_unlocked(ER_SUCCESS);
+    kv_store::restore_errno(guard, entry_errno);
+    return (0);
+}
+
+int kv_store::export_snapshot_to_file(const char *file_path) const
+{
+    ft_vector<kv_store_snapshot_entry> entries;
+    kv_store *mutable_this;
+    json_group *snapshot_group;
+    json_group *head_group;
+    kv_store_snapshot_entry *entry_begin;
+    kv_store_snapshot_entry *entry_end;
+    kv_store_snapshot_entry *entry_cursor;
+    json_item *value_item;
+    int write_result;
+    int error_code;
+
+    mutable_this = const_cast<kv_store *>(this);
+    if (file_path == ft_nullptr)
+    {
+        mutable_this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return (-1);
+    }
+    entries = ft_vector<kv_store_snapshot_entry>();
+    if (entries.get_error() != ER_SUCCESS)
+    {
+        mutable_this->set_error(entries.get_error());
+        return (-1);
+    }
+    if (mutable_this->export_snapshot(entries) != 0)
+        return (-1);
+    snapshot_group = json_create_json_group("kv_store_snapshot");
+    if (snapshot_group == ft_nullptr)
+    {
+        mutable_this->set_error(FT_ERR_NO_MEMORY);
+        return (-1);
+    }
+    entry_begin = entries.begin();
+    if (entries.get_error() != ER_SUCCESS)
+    {
+        json_free_groups(snapshot_group);
+        mutable_this->set_error(entries.get_error());
+        return (-1);
+    }
+    entry_end = entries.end();
+    if (entries.get_error() != ER_SUCCESS)
+    {
+        json_free_groups(snapshot_group);
+        mutable_this->set_error(entries.get_error());
+        return (-1);
+    }
+    entry_cursor = entry_begin;
+    while (entry_cursor != entry_end)
+    {
+        if (entry_cursor->key.c_str() == ft_nullptr || entry_cursor->value.c_str() == ft_nullptr)
+        {
+            json_free_groups(snapshot_group);
+            mutable_this->set_error(FT_ERR_INVALID_ARGUMENT);
+            return (-1);
+        }
+        value_item = json_create_item(entry_cursor->key.c_str(), entry_cursor->value.c_str());
+        if (value_item == ft_nullptr)
+        {
+            json_free_groups(snapshot_group);
+            mutable_this->set_error(FT_ERR_NO_MEMORY);
+            return (-1);
+        }
+        json_add_item_to_group(snapshot_group, value_item);
+        if (entry_cursor->has_expiration)
+        {
+            ft_string ttl_key;
+            char expiration_buffer[32];
+            int written_length;
+
+            ttl_key = g_kv_store_ttl_prefix;
+            if (ttl_key.get_error() != ER_SUCCESS)
+            {
+                json_free_groups(snapshot_group);
+                mutable_this->set_error(ttl_key.get_error());
+                return (-1);
+            }
+            ttl_key += entry_cursor->key;
+            if (ttl_key.get_error() != ER_SUCCESS)
+            {
+                json_free_groups(snapshot_group);
+                mutable_this->set_error(ttl_key.get_error());
+                return (-1);
+            }
+            written_length = std::snprintf(expiration_buffer, sizeof(expiration_buffer), "%lld", entry_cursor->expiration_timestamp);
+            if (written_length < 0 || static_cast<size_t>(written_length) >= sizeof(expiration_buffer))
+            {
+                json_free_groups(snapshot_group);
+                mutable_this->set_error(FT_ERR_INVALID_ARGUMENT);
+                return (-1);
+            }
+            value_item = json_create_item(ttl_key.c_str(), expiration_buffer);
+            if (value_item == ft_nullptr)
+            {
+                json_free_groups(snapshot_group);
+                mutable_this->set_error(FT_ERR_NO_MEMORY);
+                return (-1);
+            }
+            json_add_item_to_group(snapshot_group, value_item);
+        }
+        entry_cursor++;
+    }
+    head_group = ft_nullptr;
+    json_append_group(&head_group, snapshot_group);
+    write_result = json_write_to_file(file_path, head_group);
+    error_code = ft_errno;
+    json_free_groups(head_group);
+    if (write_result != 0)
+    {
+        if (error_code != ER_SUCCESS)
+            mutable_this->set_error(error_code);
+        else
+            mutable_this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return (-1);
+    }
+    mutable_this->set_error(ER_SUCCESS);
+    return (0);
+}
+
+int kv_store::import_snapshot(const ft_vector<kv_store_snapshot_entry> &entries)
+{
+    ft_unique_lock<pt_mutex> guard;
+    ft_map<ft_string, kv_store_entry> staged_map;
+    const kv_store_snapshot_entry *entry_begin;
+    const kv_store_snapshot_entry *entry_end;
+    const kv_store_snapshot_entry *entry_cursor;
+    int entry_errno;
+    int lock_error;
+
+    if (entries.get_error() != ER_SUCCESS)
+    {
+        this->set_error(entries.get_error());
+        return (-1);
+    }
+    entry_errno = ft_errno;
+    lock_error = this->lock_store(guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        this->set_error_unlocked(lock_error);
+        kv_store::restore_errno(guard, entry_errno);
+        return (-1);
+    }
+    staged_map = ft_map<ft_string, kv_store_entry>();
+    if (staged_map.get_error() != ER_SUCCESS)
+    {
+        this->set_error_unlocked(staged_map.get_error());
+        kv_store::restore_errno(guard, entry_errno);
+        return (-1);
+    }
+    entry_begin = entries.begin();
+    if (entries.get_error() != ER_SUCCESS)
+    {
+        this->set_error_unlocked(entries.get_error());
+        kv_store::restore_errno(guard, entry_errno);
+        return (-1);
+    }
+    entry_end = entries.end();
+    if (entries.get_error() != ER_SUCCESS)
+    {
+        this->set_error_unlocked(entries.get_error());
+        kv_store::restore_errno(guard, entry_errno);
+        return (-1);
+    }
+    entry_cursor = entry_begin;
+    while (entry_cursor != entry_end)
+    {
+        kv_store_entry entry_value;
+
+        if (entry_cursor->key.c_str() == ft_nullptr)
+        {
+            this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
+            kv_store::restore_errno(guard, entry_errno);
+            return (-1);
+        }
+        if (entry_value.set_value(entry_cursor->value) != 0)
+        {
+            this->set_error_unlocked(entry_value.get_error());
+            kv_store::restore_errno(guard, entry_errno);
+            return (-1);
+        }
+        if (entry_value.configure_expiration(entry_cursor->has_expiration, entry_cursor->expiration_timestamp) != 0)
+        {
+            this->set_error_unlocked(entry_value.get_error());
+            kv_store::restore_errno(guard, entry_errno);
+            return (-1);
+        }
+        staged_map.insert(entry_cursor->key, entry_value);
+        if (staged_map.get_error() != ER_SUCCESS)
+        {
+            this->set_error_unlocked(staged_map.get_error());
+            kv_store::restore_errno(guard, entry_errno);
+            return (-1);
+        }
+        entry_cursor++;
+    }
+    this->_data = ft_move(staged_map);
+    if (this->_data.get_error() != ER_SUCCESS)
+    {
+        this->set_error_unlocked(this->_data.get_error());
+        kv_store::restore_errno(guard, entry_errno);
+        return (-1);
+    }
+    this->_metrics_set_operations = 0;
+    this->_metrics_delete_operations = 0;
+    this->_metrics_get_hits = 0;
+    this->_metrics_get_misses = 0;
+    this->_metrics_prune_operations = 0;
+    this->_metrics_pruned_entries = 0;
+    this->_metrics_total_prune_duration_ms = 0;
+    this->_metrics_last_prune_duration_ms = 0;
+    this->set_error_unlocked(ER_SUCCESS);
+    kv_store::restore_errno(guard, entry_errno);
+    return (0);
+}
+
+int kv_store::start_background_compaction(long long interval_seconds)
+{
+    ft_unique_lock<pt_mutex> guard;
+    kv_store *mutable_this;
+    int entry_errno;
+    int lock_error;
+    int start_result;
+
+    mutable_this = this;
+    entry_errno = ft_errno;
+    lock_error = this->lock_background(guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        mutable_this->set_error_unlocked(lock_error);
+        kv_store::restore_errno(guard, entry_errno);
+        return (-1);
+    }
+    start_result = mutable_this->start_background_thread_locked(interval_seconds);
+    kv_store::restore_errno(guard, entry_errno);
+    if (start_result != 0)
+        return (-1);
+    return (0);
+}
+
+int kv_store::stop_background_compaction()
+{
+    ft_unique_lock<pt_mutex> guard;
+    kv_store *mutable_this;
+    ft_thread thread_holder;
+    int entry_errno;
+    int lock_error;
+
+    mutable_this = this;
+    entry_errno = ft_errno;
+    lock_error = this->lock_background(guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        mutable_this->set_error_unlocked(lock_error);
+        kv_store::restore_errno(guard, entry_errno);
+        return (-1);
+    }
+    mutable_this->stop_background_thread_locked(thread_holder);
+    kv_store::restore_errno(guard, entry_errno);
+    if (thread_holder.joinable())
+    {
+        thread_holder.join();
+        if (thread_holder.get_error() != ER_SUCCESS)
+        {
+            mutable_this->set_error(thread_holder.get_error());
+            return (-1);
+        }
+    }
+    entry_errno = ft_errno;
+    lock_error = this->lock_background(guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        mutable_this->set_error_unlocked(lock_error);
+        kv_store::restore_errno(guard, entry_errno);
+        return (-1);
+    }
+    this->_background_stop_requested = false;
+    mutable_this->set_error_unlocked(ER_SUCCESS);
+    kv_store::restore_errno(guard, entry_errno);
+    return (0);
 }
 

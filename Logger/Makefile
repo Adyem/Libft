@@ -24,6 +24,7 @@ SRCS := \
     logger_network_sink_thread_safety.cpp \
     logger_log_close.cpp \
     logger_log_health.cpp \
+    logger_lock_contention.cpp \
     logger_log_async_metrics_thread_safety.cpp \
     logger_log_debug.cpp \
     logger_log_info.cpp \
