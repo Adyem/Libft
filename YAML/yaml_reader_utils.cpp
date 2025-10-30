@@ -28,8 +28,10 @@ ft_string yaml_substr(const ft_string &string, size_t start, size_t length) noex
 {
     if (string.get_error() != ER_SUCCESS)
     {
+        ft_string error_string(string.get_error());
+
         ft_errno = string.get_error();
-        return (ft_string(string.get_error()));
+        return (error_string);
     }
     ft_string result;
     const char *data = string.c_str();
@@ -39,8 +41,10 @@ ft_string yaml_substr(const ft_string &string, size_t start, size_t length) noex
         result.append(data[start + index]);
         if (result.get_error() != ER_SUCCESS)
         {
+            ft_string error_string(result.get_error());
+
             ft_errno = result.get_error();
-            return (ft_string(result.get_error()));
+            return (error_string);
         }
         index++;
     }
@@ -52,8 +56,10 @@ ft_string yaml_substr_from(const ft_string &string, size_t start) noexcept
 {
     if (string.get_error() != ER_SUCCESS)
     {
+        ft_string error_string(string.get_error());
+
         ft_errno = string.get_error();
-        return (ft_string(string.get_error()));
+        return (error_string);
     }
     if (start >= string.size())
     {
@@ -63,8 +69,10 @@ ft_string yaml_substr_from(const ft_string &string, size_t start) noexcept
     ft_string part = yaml_substr(string, start, string.size() - start);
     if (part.get_error() != ER_SUCCESS)
     {
+        ft_string error_string(part.get_error());
+
         ft_errno = part.get_error();
-        return (ft_string(part.get_error()));
+        return (error_string);
     }
     ft_errno = ER_SUCCESS;
     return (part);

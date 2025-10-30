@@ -61,3 +61,61 @@ FT_TEST(test_math_acos_success_clears_errno, "math_acos clears errno on success"
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_math_acos_tolerance_clamps_slightly_above_one,
+        "math_acos treats near-one inputs within tolerance as one")
+{
+    double result;
+    double input_value;
+
+    input_value = 1.0 + 5e-14;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    result = math_acos(input_value);
+    FT_ASSERT(math_fabs(result) <= 1e-12);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_math_acos_tolerance_clamps_slightly_below_negative_one,
+        "math_acos treats near-negative-one inputs within tolerance as negative one")
+{
+    double result;
+    double input_value;
+    double pi_value;
+
+    input_value = -1.0 - 5e-14;
+    pi_value = 3.14159265358979323846;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    result = math_acos(input_value);
+    FT_ASSERT(math_fabs(result - pi_value) <= 1e-12);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_math_acos_tolerance_handles_near_zero,
+        "math_acos maps near-zero inputs to half pi within tolerance")
+{
+    double result;
+    double expected;
+
+    expected = 3.14159265358979323846 * 0.5;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    result = math_acos(5e-14);
+    FT_ASSERT(math_fabs(result - expected) <= 1e-12);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_math_acos_value_beyond_tolerance_sets_errno,
+        "math_acos rejects inputs just outside the tolerance window")
+{
+    double result;
+    double input_value;
+
+    input_value = 1.0 + 1e-9;
+    ft_errno = ER_SUCCESS;
+    result = math_acos(input_value);
+    FT_ASSERT(math_isnan(result));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    return (1);
+}

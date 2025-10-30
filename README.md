@@ -299,6 +299,8 @@ double      ft_median(const double *values, int array_size);
 double      ft_mode(const double *values, int array_size);
 double      ft_variance(const double *values, int array_size);
 double      ft_stddev(const double *values, int array_size);
+double      ft_geometric_mean(const double *values, int array_size);
+double      ft_harmonic_mean(const double *values, int array_size);
 ```
 
 `math_big_gcd` and `math_big_lcm` bridge the `Math` helpers with the
@@ -317,6 +319,8 @@ double median = ft_median(numbers, 4);
 double mode = ft_mode(numbers, 4);
 double variance = ft_variance(numbers, 4);
 double standard_deviation = ft_stddev(numbers, 4);
+double geometric_mean = ft_geometric_mean(numbers, 4);
+double harmonic_mean = ft_harmonic_mean(numbers, 4);
 ```
 
 Basic linear algebra types are provided in `linear_algebra.hpp`.
