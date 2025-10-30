@@ -129,3 +129,62 @@ FT_TEST(test_math_stddev_is_square_root_of_variance, "ft_stddev matches sqrt of 
         return (0);
     return (1);
 }
+
+FT_TEST(test_math_geometric_mean_positive_values, "ft_geometric_mean uses logarithms for stability")
+{
+    double values[3];
+    double result;
+
+    values[0] = 1.0;
+    values[1] = 4.0;
+    values[2] = 9.0;
+    result = ft_geometric_mean(values, 3);
+    if (!assert_near(3.301927, result, 0.0001))
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_math_geometric_mean_invalid_values_return_zero, "ft_geometric_mean rejects non-positive inputs")
+{
+    double values[3];
+
+    values[0] = 1.0;
+    values[1] = 0.0;
+    values[2] = 3.0;
+    FT_ASSERT_EQ(0.0, ft_geometric_mean(values, 3));
+    FT_ASSERT_EQ(0.0, ft_geometric_mean(values, 0));
+    values[1] = -2.0;
+    FT_ASSERT_EQ(0.0, ft_geometric_mean(values, 3));
+    return (1);
+}
+
+FT_TEST(test_math_harmonic_mean_handles_basic_values, "ft_harmonic_mean averages reciprocals")
+{
+    double values[3];
+    double result;
+
+    values[0] = 1.0;
+    values[1] = 2.0;
+    values[2] = 4.0;
+    result = ft_harmonic_mean(values, 3);
+    if (!assert_near(1.714285, result, 0.0001))
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_math_harmonic_mean_rejects_zero_entries, "ft_harmonic_mean returns zero when reciprocals diverge")
+{
+    double values[2];
+    double result;
+
+    values[0] = 1.0;
+    values[1] = 0.0;
+    FT_ASSERT_EQ(0.0, ft_harmonic_mean(values, 2));
+    FT_ASSERT_EQ(0.0, ft_harmonic_mean(values, 0));
+    values[0] = -1.0;
+    values[1] = -2.0;
+    result = ft_harmonic_mean(values, 2);
+    if (!assert_near(-1.333333, result, 0.0001))
+        return (0);
+    return (1);
+}

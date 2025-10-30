@@ -1,4 +1,5 @@
 #include "math.hpp"
+#include <cfloat>
 
 static void copy_array(double *destination, const double *source, int array_size)
 {
@@ -144,4 +145,42 @@ double ft_stddev(const double *values, int array_size)
 
     variance_value = ft_variance(values, array_size);
     return (math_sqrt(variance_value));
+}
+
+double ft_geometric_mean(const double *values, int array_size)
+{
+    int array_index;
+    double log_sum;
+
+    if (array_size <= 0)
+        return (0.0);
+    array_index = 0;
+    log_sum = 0.0;
+    while (array_index < array_size)
+    {
+        if (values[array_index] <= 0.0)
+            return (0.0);
+        log_sum = log_sum + math_log(values[array_index]);
+        array_index++;
+    }
+    return (math_exp(log_sum / array_size));
+}
+
+double ft_harmonic_mean(const double *values, int array_size)
+{
+    int array_index;
+    double reciprocal_sum;
+
+    if (array_size <= 0)
+        return (0.0);
+    array_index = 0;
+    reciprocal_sum = 0.0;
+    while (array_index < array_size)
+    {
+        if (math_fabs(values[array_index]) <= DBL_EPSILON)
+            return (0.0);
+        reciprocal_sum = reciprocal_sum + (1.0 / values[array_index]);
+        array_index++;
+    }
+    return ((static_cast<double>(array_size)) / reciprocal_sum);
 }
