@@ -11,6 +11,8 @@
 #include "../Errno/errno.hpp"
 #include "../CMA/cma_internal.hpp"
 
+class pt_mutex;
+
 class ft_thread
 {
     private:
@@ -26,9 +28,15 @@ class ft_thread
         bool _joinable;
         mutable int _error_code;
         std::shared_ptr<start_payload> _start_payload;
+        mutable pt_mutex *_state_mutex;
+        bool _thread_safe_enabled;
 
         static void *start_routine(void *data);
         void set_error(int error) const;
+        int lock_internal(bool *lock_acquired) const;
+        void unlock_internal(bool lock_acquired) const;
+        void teardown_thread_safety();
+        int detach_locked();
 
     public:
         ft_thread();
@@ -47,11 +55,17 @@ class ft_thread
 
         int get_error() const;
         const char *get_error_str() const;
+        int enable_thread_safety();
+        void disable_thread_safety();
+        bool is_thread_safe_enabled() const;
+        int lock(bool *lock_acquired) const;
+        void unlock(bool lock_acquired) const;
 };
 
 template <typename FunctionType, typename... Args>
 ft_thread::ft_thread(FunctionType function, Args... args)
-    : _thread(), _joinable(false), _error_code(ER_SUCCESS), _start_payload()
+    : _thread(), _joinable(false), _error_code(ER_SUCCESS), _start_payload(),
+      _state_mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     start_payload *payload_raw;
     std::shared_ptr<start_payload> payload;

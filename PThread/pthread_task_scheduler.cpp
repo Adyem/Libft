@@ -1,11 +1,13 @@
 #include "task_scheduler.hpp"
 #include "pthread.hpp"
 #include "../System_utils/system_utils.hpp"
+#include "../CMA/CMA.hpp"
 #include <utility>
 #include "../Template/move.hpp"
 
 ft_scheduled_task_state::ft_scheduled_task_state()
-    : _cancelled(false), _error_code(ER_SUCCESS)
+    : _cancelled(false), _error_code(ER_SUCCESS), _state_mutex(ft_nullptr),
+      _thread_safe_enabled(false)
 {
     this->set_error(ER_SUCCESS);
     return ;
@@ -13,6 +15,7 @@ ft_scheduled_task_state::ft_scheduled_task_state()
 
 ft_scheduled_task_state::~ft_scheduled_task_state()
 {
+    this->teardown_thread_safety();
     this->set_error(ER_SUCCESS);
     return ;
 }
@@ -26,18 +29,112 @@ void ft_scheduled_task_state::set_error(int error) const
 
 void ft_scheduled_task_state::cancel()
 {
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return ;
+    }
     this->_cancelled.store(true);
     this->set_error(ER_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return ;
 }
 
 bool ft_scheduled_task_state::is_cancelled() const
 {
     bool cancelled_value;
+    bool lock_acquired;
 
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
+    {
+        const_cast<ft_scheduled_task_state *>(this)->set_error(ft_errno);
+        return (false);
+    }
     cancelled_value = this->_cancelled.load();
-    this->set_error(ER_SUCCESS);
+    const_cast<ft_scheduled_task_state *>(this)->set_error(ER_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return (cancelled_value);
+}
+
+int ft_scheduled_task_state::enable_thread_safety()
+{
+    void *memory;
+    pt_mutex *state_mutex;
+
+    if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
+    {
+        this->set_error(ER_SUCCESS);
+        return (0);
+    }
+    memory = cma_malloc(sizeof(pt_mutex));
+    if (memory == ft_nullptr)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return (-1);
+    }
+    state_mutex = new(memory) pt_mutex();
+    if (state_mutex->get_error() != ER_SUCCESS)
+    {
+        int mutex_error;
+
+        mutex_error = state_mutex->get_error();
+        state_mutex->~pt_mutex();
+        cma_free(memory);
+        this->set_error(mutex_error);
+        return (-1);
+    }
+    this->_state_mutex = state_mutex;
+    this->_thread_safe_enabled = true;
+    this->set_error(ER_SUCCESS);
+    return (0);
+}
+
+void ft_scheduled_task_state::disable_thread_safety()
+{
+    this->teardown_thread_safety();
+    this->set_error(ER_SUCCESS);
+    return ;
+}
+
+bool ft_scheduled_task_state::is_thread_safe_enabled() const
+{
+    bool enabled;
+
+    enabled = (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr);
+    const_cast<ft_scheduled_task_state *>(this)->set_error(ER_SUCCESS);
+    return (enabled);
+}
+
+int ft_scheduled_task_state::lock(bool *lock_acquired) const
+{
+    int result;
+
+    result = this->lock_internal(lock_acquired);
+    if (result != 0)
+        const_cast<ft_scheduled_task_state *>(this)->set_error(ft_errno);
+    else
+        const_cast<ft_scheduled_task_state *>(this)->set_error(ER_SUCCESS);
+    return (result);
+}
+
+void ft_scheduled_task_state::unlock(bool lock_acquired) const
+{
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    this->unlock_internal(lock_acquired);
+    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != ER_SUCCESS)
+        const_cast<ft_scheduled_task_state *>(this)->set_error(this->_state_mutex->get_error());
+    else
+    {
+        ft_errno = entry_errno;
+        const_cast<ft_scheduled_task_state *>(this)->set_error(ft_errno);
+    }
+    return ;
 }
 
 int ft_scheduled_task_state::get_error() const
@@ -50,8 +147,70 @@ const char *ft_scheduled_task_state::get_error_str() const
     return (ft_strerror(this->_error_code));
 }
 
+int ft_scheduled_task_state::lock_internal(bool *lock_acquired) const
+{
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = false;
+    if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
+    {
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    this->_state_mutex->lock(THREAD_ID);
+    if (this->_state_mutex->get_error() != ER_SUCCESS)
+    {
+        if (this->_state_mutex->get_error() == FT_ERR_MUTEX_ALREADY_LOCKED)
+        {
+            bool state_lock_acquired;
+
+            state_lock_acquired = false;
+            ft_errno = ER_SUCCESS;
+            if (this->_state_mutex->lock_state(&state_lock_acquired) == 0)
+                this->_state_mutex->unlock_state(state_lock_acquired);
+            ft_errno = ER_SUCCESS;
+            return (0);
+        }
+        ft_errno = this->_state_mutex->get_error();
+        return (-1);
+    }
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = true;
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+void ft_scheduled_task_state::unlock_internal(bool lock_acquired) const
+{
+    int entry_errno;
+
+    if (!lock_acquired || this->_state_mutex == ft_nullptr)
+        return ;
+    entry_errno = ft_errno;
+    this->_state_mutex->unlock(THREAD_ID);
+    if (this->_state_mutex->get_error() != ER_SUCCESS)
+    {
+        ft_errno = this->_state_mutex->get_error();
+        return ;
+    }
+    ft_errno = entry_errno;
+    return ;
+}
+
+void ft_scheduled_task_state::teardown_thread_safety()
+{
+    if (this->_state_mutex != ft_nullptr)
+    {
+        this->_state_mutex->~pt_mutex();
+        cma_free(this->_state_mutex);
+        this->_state_mutex = ft_nullptr;
+    }
+    this->_thread_safe_enabled = false;
+    return ;
+}
+
 ft_scheduled_task_handle::ft_scheduled_task_handle()
-    : _state(), _scheduler(ft_nullptr), _error_code(ER_SUCCESS)
+    : _state(), _scheduler(ft_nullptr), _error_code(ER_SUCCESS),
+      _state_mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     this->set_error(ER_SUCCESS);
     return ;
@@ -59,7 +218,8 @@ ft_scheduled_task_handle::ft_scheduled_task_handle()
 
 ft_scheduled_task_handle::ft_scheduled_task_handle(ft_task_scheduler *scheduler,
         const ft_sharedptr<ft_scheduled_task_state> &state)
-    : _state(state), _scheduler(scheduler), _error_code(ER_SUCCESS)
+    : _state(state), _scheduler(scheduler), _error_code(ER_SUCCESS),
+      _state_mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     if (!scheduler || !state)
     {
@@ -78,14 +238,37 @@ ft_scheduled_task_handle::ft_scheduled_task_handle(ft_task_scheduler *scheduler,
 }
 
 ft_scheduled_task_handle::ft_scheduled_task_handle(const ft_scheduled_task_handle &other)
-    : _state(other._state), _scheduler(other._scheduler), _error_code(ER_SUCCESS)
+    : _state(), _scheduler(ft_nullptr), _error_code(ER_SUCCESS),
+      _state_mutex(ft_nullptr), _thread_safe_enabled(false)
 {
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (other.lock_internal(&lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return ;
+    }
+    this->_state = other._state;
+    this->_scheduler = other._scheduler;
+    if (other._thread_safe_enabled && other._state_mutex != ft_nullptr)
+    {
+        if (this->enable_thread_safety() != 0)
+        {
+            this->set_error(this->get_error());
+            other.unlock_internal(lock_acquired);
+            return ;
+        }
+    }
     if (this->_state.hasError())
     {
+        this->_scheduler = ft_nullptr;
         this->set_error(this->_state.get_error());
+        other.unlock_internal(lock_acquired);
         return ;
     }
     this->set_error(other._error_code);
+    other.unlock_internal(lock_acquired);
     return ;
 }
 
@@ -96,21 +279,61 @@ ft_scheduled_task_handle &ft_scheduled_task_handle::operator=(const ft_scheduled
         this->set_error(ER_SUCCESS);
         return (*this);
     }
+    bool this_lock_acquired;
+    bool other_lock_acquired;
+
+    this_lock_acquired = false;
+    if (this->lock_internal(&this_lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return (*this);
+    }
+    other_lock_acquired = false;
+    if (other.lock_internal(&other_lock_acquired) != 0)
+    {
+        this->unlock_internal(this_lock_acquired);
+        this->set_error(ft_errno);
+        return (*this);
+    }
     this->_state = other._state;
     this->_scheduler = other._scheduler;
+    this->teardown_thread_safety();
+    if (other._thread_safe_enabled && other._state_mutex != ft_nullptr)
+    {
+        if (this->enable_thread_safety() != 0)
+        {
+            other.unlock_internal(other_lock_acquired);
+            this->unlock_internal(this_lock_acquired);
+            return (*this);
+        }
+    }
     if (this->_state.hasError())
     {
         this->_scheduler = ft_nullptr;
         this->set_error(this->_state.get_error());
+        other.unlock_internal(other_lock_acquired);
+        this->unlock_internal(this_lock_acquired);
         return (*this);
     }
     this->set_error(other._error_code);
+    other.unlock_internal(other_lock_acquired);
+    this->unlock_internal(this_lock_acquired);
     return (*this);
 }
 
 ft_scheduled_task_handle::~ft_scheduled_task_handle()
 {
-    this->_scheduler = ft_nullptr;
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) == 0)
+    {
+        this->_scheduler = ft_nullptr;
+        this->unlock_internal(lock_acquired);
+    }
+    else
+        this->_scheduler = ft_nullptr;
+    this->teardown_thread_safety();
     this->set_error(ER_SUCCESS);
     return ;
 }
@@ -125,39 +348,72 @@ void ft_scheduled_task_handle::set_error(int error) const
 bool ft_scheduled_task_handle::cancel()
 {
     bool cancel_result;
+    bool lock_acquired;
 
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return (false);
+    }
     if (!this->_scheduler || !this->_state)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
+        this->unlock_internal(lock_acquired);
         return (false);
     }
     cancel_result = this->_scheduler->cancel_task_state(this->_state);
     if (!cancel_result)
     {
         this->set_error(this->_scheduler->get_error());
+        this->unlock_internal(lock_acquired);
         return (false);
     }
     this->set_error(ER_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return (true);
 }
 
 bool ft_scheduled_task_handle::valid() const
 {
     bool state_valid;
+    bool lock_acquired;
 
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
+    {
+        const_cast<ft_scheduled_task_handle *>(this)->set_error(ft_errno);
+        return (false);
+    }
     state_valid = static_cast<bool>(this->_state);
     if (!this->_scheduler || !state_valid)
     {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        const_cast<ft_scheduled_task_handle *>(this)->set_error(FT_ERR_INVALID_ARGUMENT);
+        this->unlock_internal(lock_acquired);
         return (false);
     }
-    this->set_error(ER_SUCCESS);
+    const_cast<ft_scheduled_task_handle *>(this)->set_error(ER_SUCCESS);
+    this->unlock_internal(lock_acquired);
     return (true);
 }
 
 ft_sharedptr<ft_scheduled_task_state> ft_scheduled_task_handle::get_state() const
 {
-    return (this->_state);
+    ft_sharedptr<ft_scheduled_task_state> state_copy;
+    bool lock_acquired;
+
+    lock_acquired = false;
+    if (this->lock_internal(&lock_acquired) != 0)
+    {
+        const_cast<ft_scheduled_task_handle *>(this)->set_error(ft_errno);
+        ft_sharedptr<ft_scheduled_task_state> empty_state;
+
+        return (empty_state);
+    }
+    state_copy = this->_state;
+    const_cast<ft_scheduled_task_handle *>(this)->set_error(ER_SUCCESS);
+    this->unlock_internal(lock_acquired);
+    return (state_copy);
 }
 
 int ft_scheduled_task_handle::get_error() const
@@ -170,12 +426,151 @@ const char *ft_scheduled_task_handle::get_error_str() const
     return (ft_strerror(this->_error_code));
 }
 
+int ft_scheduled_task_handle::enable_thread_safety()
+{
+    void *memory;
+    pt_mutex *state_mutex;
+
+    if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
+    {
+        this->set_error(ER_SUCCESS);
+        return (0);
+    }
+    memory = cma_malloc(sizeof(pt_mutex));
+    if (memory == ft_nullptr)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return (-1);
+    }
+    state_mutex = new(memory) pt_mutex();
+    if (state_mutex->get_error() != ER_SUCCESS)
+    {
+        int mutex_error;
+
+        mutex_error = state_mutex->get_error();
+        state_mutex->~pt_mutex();
+        cma_free(memory);
+        this->set_error(mutex_error);
+        return (-1);
+    }
+    this->_state_mutex = state_mutex;
+    this->_thread_safe_enabled = true;
+    this->set_error(ER_SUCCESS);
+    return (0);
+}
+
+void ft_scheduled_task_handle::disable_thread_safety()
+{
+    this->teardown_thread_safety();
+    this->set_error(ER_SUCCESS);
+    return ;
+}
+
+bool ft_scheduled_task_handle::is_thread_safe_enabled() const
+{
+    bool enabled;
+
+    enabled = (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr);
+    const_cast<ft_scheduled_task_handle *>(this)->set_error(ER_SUCCESS);
+    return (enabled);
+}
+
+int ft_scheduled_task_handle::lock(bool *lock_acquired) const
+{
+    int result;
+
+    result = this->lock_internal(lock_acquired);
+    if (result != 0)
+        const_cast<ft_scheduled_task_handle *>(this)->set_error(ft_errno);
+    else
+        const_cast<ft_scheduled_task_handle *>(this)->set_error(ER_SUCCESS);
+    return (result);
+}
+
+void ft_scheduled_task_handle::unlock(bool lock_acquired) const
+{
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    this->unlock_internal(lock_acquired);
+    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != ER_SUCCESS)
+        const_cast<ft_scheduled_task_handle *>(this)->set_error(this->_state_mutex->get_error());
+    else
+    {
+        ft_errno = entry_errno;
+        const_cast<ft_scheduled_task_handle *>(this)->set_error(ft_errno);
+    }
+    return ;
+}
+
+int ft_scheduled_task_handle::lock_internal(bool *lock_acquired) const
+{
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = false;
+    if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
+    {
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    this->_state_mutex->lock(THREAD_ID);
+    if (this->_state_mutex->get_error() != ER_SUCCESS)
+    {
+        if (this->_state_mutex->get_error() == FT_ERR_MUTEX_ALREADY_LOCKED)
+        {
+            bool state_lock_acquired;
+
+            state_lock_acquired = false;
+            ft_errno = ER_SUCCESS;
+            if (this->_state_mutex->lock_state(&state_lock_acquired) == 0)
+                this->_state_mutex->unlock_state(state_lock_acquired);
+            ft_errno = ER_SUCCESS;
+            return (0);
+        }
+        ft_errno = this->_state_mutex->get_error();
+        return (-1);
+    }
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = true;
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+void ft_scheduled_task_handle::unlock_internal(bool lock_acquired) const
+{
+    int entry_errno;
+
+    if (!lock_acquired || this->_state_mutex == ft_nullptr)
+        return ;
+    entry_errno = ft_errno;
+    this->_state_mutex->unlock(THREAD_ID);
+    if (this->_state_mutex->get_error() != ER_SUCCESS)
+    {
+        ft_errno = this->_state_mutex->get_error();
+        return ;
+    }
+    ft_errno = entry_errno;
+    return ;
+}
+
+void ft_scheduled_task_handle::teardown_thread_safety()
+{
+    if (this->_state_mutex != ft_nullptr)
+    {
+        this->_state_mutex->~pt_mutex();
+        cma_free(this->_state_mutex);
+        this->_state_mutex = ft_nullptr;
+    }
+    this->_thread_safe_enabled = false;
+    return ;
+}
+
 ft_task_scheduler::ft_task_scheduler(size_t thread_count)
     : _queue(), _workers(), _timer_thread(), _scheduled(), _scheduled_mutex(),
       _scheduled_condition(), _running(true), _queue_metrics_mutex(),
       _worker_metrics_mutex(), _queue_size_counter(0),
       _scheduled_size_counter(0), _worker_active_counter(0),
-      _worker_idle_counter(0), _worker_total_count(0), _error_code(ER_SUCCESS)
+      _worker_idle_counter(0), _worker_total_count(0), _error_code(ER_SUCCESS),
+      _state_mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     size_t index;
     unsigned int cpu_count;
@@ -304,14 +699,41 @@ ft_task_scheduler::~ft_task_scheduler()
     }
     if (this->_timer_thread.joinable())
         this->_timer_thread.join();
+    this->teardown_thread_safety();
     this->set_error(ER_SUCCESS);
     return ;
 }
 
 void ft_task_scheduler::set_error(int error) const
 {
+    bool state_locked;
+
+    state_locked = false;
+    if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
+    {
+        this->_state_mutex->lock(THREAD_ID);
+        if (this->_state_mutex->get_error() == ER_SUCCESS)
+            state_locked = true;
+        else if (this->_state_mutex->get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
+        {
+            this->_error_code = error;
+            ft_errno = this->_state_mutex->get_error();
+            return ;
+        }
+    }
     this->_error_code = error;
     ft_errno = error;
+    if (state_locked)
+    {
+        this->_state_mutex->unlock(THREAD_ID);
+        if (this->_state_mutex->get_error() != ER_SUCCESS)
+        {
+            ft_errno = this->_state_mutex->get_error();
+            this->_error_code = this->_state_mutex->get_error();
+            return ;
+        }
+        ft_errno = error;
+    }
     return ;
 }
 
@@ -567,33 +989,45 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
     unsigned long long cancelled_parent_id;
     const char *cancelled_label;
     bool should_emit_cancel;
+    bool scheduler_lock_acquired;
 
+    scheduler_lock_acquired = false;
+    if (this->lock_internal(&scheduler_lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return (false);
+    }
     if (!state)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
+        this->unlock_internal(scheduler_lock_acquired);
         return (false);
     }
     state_copy = state;
     if (state_copy.hasError())
     {
         this->set_error(state_copy.get_error());
+        this->unlock_internal(scheduler_lock_acquired);
         return (false);
     }
     state_pointer = state_copy.get();
     if (!state_pointer)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
+        this->unlock_internal(scheduler_lock_acquired);
         return (false);
     }
     state_pointer->cancel();
     if (state_pointer->get_error() != ER_SUCCESS)
     {
         this->set_error(state_pointer->get_error());
+        this->unlock_internal(scheduler_lock_acquired);
         return (false);
     }
     if (this->_scheduled_mutex.lock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(this->_scheduled_mutex.get_error());
+        this->unlock_internal(scheduler_lock_acquired);
         return (false);
     }
     index = 0;
@@ -610,10 +1044,17 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
         if (this->_scheduled.get_error() != ER_SUCCESS)
         {
             if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+            {
                 this->set_error(this->_scheduled_mutex.get_error());
+                this->unlock_internal(scheduler_lock_acquired);
+                return (false);
+            }
             else
+            {
                 this->set_error(this->_scheduled.get_error());
-            return (false);
+                this->unlock_internal(scheduler_lock_acquired);
+                return (false);
+            }
         }
         if (index >= size)
             break;
@@ -625,10 +1066,17 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
             if (!this->scheduled_remove_index(index))
             {
                 if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+                {
                     this->set_error(this->_scheduled_mutex.get_error());
+                    this->unlock_internal(scheduler_lock_acquired);
+                    return (false);
+                }
                 else
+                {
                     this->set_error(this->_scheduled.get_error());
-                return (false);
+                    this->unlock_internal(scheduler_lock_acquired);
+                    return (false);
+                }
             }
             removed_entry = true;
             should_emit_cancel = true;
@@ -639,16 +1087,19 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
     if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
     {
         this->set_error(this->_scheduled_mutex.get_error());
+        this->unlock_internal(scheduler_lock_acquired);
         return (false);
     }
     if (this->_scheduled_condition.broadcast() != 0)
     {
         this->set_error(this->_scheduled_condition.get_error());
+        this->unlock_internal(scheduler_lock_acquired);
         return (false);
     }
     if (!removed_entry)
     {
         this->set_error(ER_SUCCESS);
+        this->unlock_internal(scheduler_lock_acquired);
         return (true);
     }
     if (should_emit_cancel)
@@ -657,6 +1108,7 @@ bool ft_task_scheduler::cancel_task_state(const ft_sharedptr<ft_scheduled_task_s
                 cancelled_parent_id, cancelled_label, false);
     }
     this->set_error(ER_SUCCESS);
+    this->unlock_internal(scheduler_lock_acquired);
     return (true);
 }
 
@@ -1194,5 +1646,218 @@ size_t ft_task_scheduler::get_worker_total_count() const
     }
     this->set_error(ER_SUCCESS);
     return (total_count);
+}
+
+int ft_task_scheduler::enable_thread_safety()
+{
+    void *memory;
+    pt_mutex *state_mutex;
+
+    if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
+    {
+        if (this->_queue.enable_thread_safety() != 0)
+        {
+            this->set_error(this->_queue.get_error());
+            return (-1);
+        }
+        if (this->_scheduled_mutex.enable_thread_safety() != 0)
+        {
+            this->set_error(this->_scheduled_mutex.get_error());
+            return (-1);
+        }
+        if (this->_scheduled_condition.enable_thread_safety() != 0)
+        {
+            this->set_error(this->_scheduled_condition.get_error());
+            return (-1);
+        }
+        if (this->_queue_metrics_mutex.enable_thread_safety() != 0)
+        {
+            this->set_error(this->_queue_metrics_mutex.get_error());
+            return (-1);
+        }
+        if (this->_worker_metrics_mutex.enable_thread_safety() != 0)
+        {
+            this->set_error(this->_worker_metrics_mutex.get_error());
+            return (-1);
+        }
+        this->set_error(ER_SUCCESS);
+        return (0);
+    }
+    memory = cma_malloc(sizeof(pt_mutex));
+    if (memory == ft_nullptr)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return (-1);
+    }
+    state_mutex = new(memory) pt_mutex();
+    if (state_mutex->get_error() != ER_SUCCESS)
+    {
+        int mutex_error;
+
+        mutex_error = state_mutex->get_error();
+        state_mutex->~pt_mutex();
+        cma_free(memory);
+        this->set_error(mutex_error);
+        return (-1);
+    }
+    this->_state_mutex = state_mutex;
+    this->_thread_safe_enabled = true;
+    if (this->_queue.enable_thread_safety() != 0)
+    {
+        int queue_error;
+
+        queue_error = this->_queue.get_error();
+        this->teardown_thread_safety();
+        this->set_error(queue_error);
+        return (-1);
+    }
+    if (this->_scheduled_mutex.enable_thread_safety() != 0)
+    {
+        int scheduled_error;
+
+        scheduled_error = this->_scheduled_mutex.get_error();
+        this->teardown_thread_safety();
+        this->set_error(scheduled_error);
+        return (-1);
+    }
+    if (this->_scheduled_condition.enable_thread_safety() != 0)
+    {
+        int condition_error;
+
+        condition_error = this->_scheduled_condition.get_error();
+        this->teardown_thread_safety();
+        this->set_error(condition_error);
+        return (-1);
+    }
+    if (this->_queue_metrics_mutex.enable_thread_safety() != 0)
+    {
+        int queue_metric_error;
+
+        queue_metric_error = this->_queue_metrics_mutex.get_error();
+        this->teardown_thread_safety();
+        this->set_error(queue_metric_error);
+        return (-1);
+    }
+    if (this->_worker_metrics_mutex.enable_thread_safety() != 0)
+    {
+        int worker_metric_error;
+
+        worker_metric_error = this->_worker_metrics_mutex.get_error();
+        this->teardown_thread_safety();
+        this->set_error(worker_metric_error);
+        return (-1);
+    }
+    this->set_error(ER_SUCCESS);
+    return (0);
+}
+
+void ft_task_scheduler::disable_thread_safety()
+{
+    this->teardown_thread_safety();
+    this->set_error(ER_SUCCESS);
+    return ;
+}
+
+bool ft_task_scheduler::is_thread_safe_enabled() const
+{
+    bool enabled;
+
+    enabled = (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr);
+    const_cast<ft_task_scheduler *>(this)->set_error(ER_SUCCESS);
+    return (enabled);
+}
+
+int ft_task_scheduler::lock(bool *lock_acquired) const
+{
+    int result;
+
+    result = this->lock_internal(lock_acquired);
+    if (result != 0)
+        const_cast<ft_task_scheduler *>(this)->set_error(ft_errno);
+    else
+        const_cast<ft_task_scheduler *>(this)->set_error(ER_SUCCESS);
+    return (result);
+}
+
+void ft_task_scheduler::unlock(bool lock_acquired) const
+{
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    this->unlock_internal(lock_acquired);
+    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != ER_SUCCESS)
+        const_cast<ft_task_scheduler *>(this)->set_error(this->_state_mutex->get_error());
+    else
+    {
+        ft_errno = entry_errno;
+        const_cast<ft_task_scheduler *>(this)->set_error(ft_errno);
+    }
+    return ;
+}
+
+int ft_task_scheduler::lock_internal(bool *lock_acquired) const
+{
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = false;
+    if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
+    {
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    this->_state_mutex->lock(THREAD_ID);
+    if (this->_state_mutex->get_error() != ER_SUCCESS)
+    {
+        if (this->_state_mutex->get_error() == FT_ERR_MUTEX_ALREADY_LOCKED)
+        {
+            bool state_lock_acquired;
+
+            state_lock_acquired = false;
+            ft_errno = ER_SUCCESS;
+            if (this->_state_mutex->lock_state(&state_lock_acquired) == 0)
+                this->_state_mutex->unlock_state(state_lock_acquired);
+            ft_errno = ER_SUCCESS;
+            return (0);
+        }
+        ft_errno = this->_state_mutex->get_error();
+        return (-1);
+    }
+    if (lock_acquired != ft_nullptr)
+        *lock_acquired = true;
+    ft_errno = ER_SUCCESS;
+    return (0);
+}
+
+void ft_task_scheduler::unlock_internal(bool lock_acquired) const
+{
+    int entry_errno;
+
+    if (!lock_acquired || this->_state_mutex == ft_nullptr)
+        return ;
+    entry_errno = ft_errno;
+    this->_state_mutex->unlock(THREAD_ID);
+    if (this->_state_mutex->get_error() != ER_SUCCESS)
+    {
+        ft_errno = this->_state_mutex->get_error();
+        return ;
+    }
+    ft_errno = entry_errno;
+    return ;
+}
+
+void ft_task_scheduler::teardown_thread_safety()
+{
+    this->_queue.disable_thread_safety();
+    this->_scheduled_mutex.disable_thread_safety();
+    this->_scheduled_condition.disable_thread_safety();
+    this->_queue_metrics_mutex.disable_thread_safety();
+    this->_worker_metrics_mutex.disable_thread_safety();
+    if (this->_state_mutex != ft_nullptr)
+    {
+        this->_state_mutex->~pt_mutex();
+        cma_free(this->_state_mutex);
+        this->_state_mutex = ft_nullptr;
+    }
+    this->_thread_safe_enabled = false;
+    return ;
 }
 
