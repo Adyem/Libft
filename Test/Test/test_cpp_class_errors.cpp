@@ -1,13 +1,128 @@
+#include "../../CPP_class/class_data_buffer.hpp"
 #include "../../CPP_class/class_file.hpp"
 #include "../../CPP_class/class_fd_istream.hpp"
 #include "../../CPP_class/class_istringstream.hpp"
 #include "../../CPP_class/class_ofstream.hpp"
+#include "../../CPP_class/class_string_class.hpp"
+#include "../../CPP_class/class_big_number.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <fcntl.h>
 #include <unistd.h>
 #include <ios>
+#include <utility>
+
+FT_TEST(test_data_buffer_error_state_copy_move,
+        "DataBuffer copy and move preserve error codes")
+{
+    DataBuffer error_buffer;
+    DataBuffer assigned_buffer;
+    DataBuffer move_assigned_buffer;
+
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(false, error_buffer.seek(1));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_buffer.get_error());
+
+    DataBuffer copy_constructed_buffer(error_buffer);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, copy_constructed_buffer.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_buffer.get_error());
+
+    assigned_buffer = error_buffer;
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, assigned_buffer.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_buffer.get_error());
+
+    DataBuffer move_constructor_source;
+
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(false, move_constructor_source.seek(1));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, move_constructor_source.get_error());
+
+    DataBuffer moved_buffer(std::move(move_constructor_source));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, moved_buffer.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, move_constructor_source.get_error());
+
+    DataBuffer move_assignment_source;
+
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(false, move_assignment_source.seek(1));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, move_assignment_source.get_error());
+    move_assigned_buffer = std::move(move_assignment_source);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, move_assigned_buffer.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, move_assignment_source.get_error());
+    return (1);
+}
+
+FT_TEST(test_ft_string_error_state_copy_move,
+        "ft_string copy and move propagate error state")
+{
+    ft_string error_string(FT_ERR_INVALID_ARGUMENT);
+    ft_string copy_string(error_string);
+    ft_string assigned_string;
+
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_string.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, copy_string.get_error());
+    assigned_string = error_string;
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, assigned_string.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_string.get_error());
+
+    ft_string move_constructor_source(FT_ERR_INVALID_ARGUMENT);
+
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, move_constructor_source.get_error());
+
+    ft_string moved_string(std::move(move_constructor_source));
+
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, moved_string.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, move_constructor_source.get_error());
+
+    ft_string move_assignment_source(FT_ERR_INVALID_ARGUMENT);
+    ft_string move_assigned_string;
+
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, move_assignment_source.get_error());
+    move_assigned_string = std::move(move_assignment_source);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, move_assigned_string.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, move_assignment_source.get_error());
+    return (1);
+}
+
+FT_TEST(test_ft_big_number_error_state_copy_move,
+        "ft_big_number copy and move preserve error state")
+{
+    ft_big_number error_number;
+    ft_big_number assigned_number;
+    ft_big_number move_assigned_number;
+
+    error_number.append_digit('X');
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_number.get_error());
+
+    ft_big_number copy_number(error_number);
+
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, copy_number.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_number.get_error());
+
+    assigned_number = error_number;
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, assigned_number.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_number.get_error());
+
+    ft_big_number move_constructor_source;
+
+    move_constructor_source.append_digit('X');
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, move_constructor_source.get_error());
+
+    ft_big_number moved_number(std::move(move_constructor_source));
+
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, moved_number.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, move_constructor_source.get_error());
+
+    ft_big_number move_assignment_source;
+
+    move_assignment_source.append_digit('X');
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, move_assignment_source.get_error());
+    move_assigned_number = std::move(move_assignment_source);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, move_assigned_number.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, move_assignment_source.get_error());
+    return (1);
+}
 
 FT_TEST(test_ft_file_error_resets, "ft_file resets error state after success")
 {
