@@ -1,6 +1,6 @@
 # TODO
 
-Remaining unchecked items: 61
+Remaining unchecked items: 45
 
 ## Library-wide priorities
 - [x] Publish a canonical error-code registry that documents each value exposed through `Errno/errno.hpp` and clarifies which modules set them, so cross-module error handling stays consistent.
@@ -146,11 +146,11 @@ Remaining unchecked items: 61
 - [x] Make `pt_mutex` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `pt_condition_variable` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_unique_lock` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_thread` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_blocking_queue` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_scheduled_task_state` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_scheduled_task_handle` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_task_scheduler` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_thread` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_blocking_queue` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_scheduled_task_state` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_scheduled_task_handle` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_task_scheduler` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_promise` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Implement per-class lock tracking for the PThread classes marked above so lock acquisition records, deadlock detection, temporary release, 1-10 millisecond randomized backoff, and reacquisition behave consistently (this is the deadlock resolution point the class upgrades rely on).
 
@@ -178,19 +178,19 @@ Remaining unchecked items: 61
 - [x] Make `ft_sharedptr` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_matrix` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_tuple` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_trie` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `Iterator` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_trie` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `Iterator` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_queue` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_deque` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_uniqueptr` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_circular_buffer` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_variant` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_future` (including `ft_future<void>`) thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `Pool` (including `Pool<T>::Object`) thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_function` (including callable specializations) thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_bitset` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_promise` (including `ft_promise<void>`) thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_map` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_variant` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_future` (including `ft_future<void>`) thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `Pool` (including `Pool<T>::Object`) thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_function` (including callable specializations) thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_bitset` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_promise` (including `ft_promise<void>`) thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_map` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### GetNextLine
 - [ ] Design and implement a custom STREAM abstraction that the streaming helpers can rely on instead of the standard library facilities.
@@ -245,8 +245,8 @@ Remaining unchecked items: 61
 - [x] Integrate profiling markers compatible with Chrome tracing or perfetto for visualizing timelines.
 - [x] Make `time_fps` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `time_timer` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `s_monotonic_time_point` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `s_duration_milliseconds` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `s_monotonic_time_point` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `s_duration_milliseconds` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `s_time_info` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### RNG

@@ -39,8 +39,8 @@ static ft_otel_span_state observability_span_state_create(void)
     state.timer_thread = false;
     state.label = ft_nullptr;
     state.parent_id = 0;
-    state.submit_timestamp.milliseconds = 0;
-    state.start_timestamp.milliseconds = 0;
+    state.submit_timestamp = time_monotonic_point_create(0);
+    state.start_timestamp = time_monotonic_point_create(0);
     state.thread_id = 0;
     return (state);
 }
@@ -52,9 +52,9 @@ static ft_otel_span_metrics observability_span_metrics_create(void)
     metrics.span_id = 0;
     metrics.parent_span_id = 0;
     metrics.label = ft_nullptr;
-    metrics.submit_timestamp.milliseconds = 0;
-    metrics.start_timestamp.milliseconds = 0;
-    metrics.finish_timestamp.milliseconds = 0;
+    metrics.submit_timestamp = time_monotonic_point_create(0);
+    metrics.start_timestamp = time_monotonic_point_create(0);
+    metrics.finish_timestamp = time_monotonic_point_create(0);
     metrics.queue_duration_ms = 0;
     metrics.execution_duration_ms = 0;
     metrics.total_duration_ms = 0;
