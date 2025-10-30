@@ -1,6 +1,6 @@
 # TODO
 
-Remaining unchecked items: 45
+Remaining unchecked items: 37
 
 ## Library-wide priorities
 - [x] Publish a canonical error-code registry that documents each value exposed through `Errno/errno.hpp` and clarifies which modules set them, so cross-module error handling stays consistent.
@@ -201,19 +201,19 @@ Remaining unchecked items: 45
 ### CPP_class (utility classes)
 - [x] Add move-aware and noexcept constructors/destructors to complex classes like `ft_big_number` and `DataBuffer` to improve performance guarantees.
 - [ ] Ensure all classes expose serialization helpers compatible with the Storage and Networking modules.
-- [ ] Provide unit tests that exercise error propagation on `_error_code` members across copy/move operations.
+- [x] Provide unit tests that exercise error propagation on `_error_code` members across copy/move operations.
 - [x] Document ownership semantics for wrappers like `ft_file` to avoid double-close mistakes.
 - [ ] Audit exception safety for each class and document the strong/weak guarantees they provide.
 - [ ] Supply sample adapters showing how to embed these classes into user-defined types with RAII expectations.
 - [ ] Make `ft_big_number` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `DataBuffer` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_string` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_stringbuf` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `DataBuffer` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_string` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_stringbuf` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_file` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_ofstream` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_istream` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_ofstream` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_istream` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_fd_istream` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_istringstream` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_istringstream` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_nullptr` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Storage
@@ -247,7 +247,7 @@ Remaining unchecked items: 45
 - [x] Make `time_timer` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `s_monotonic_time_point` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `s_duration_milliseconds` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `s_time_info` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `s_time_info` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### RNG
 - [x] Add cryptographically secure RNG wrappers that rely on system entropy sources with clear fallbacks.

@@ -3,6 +3,8 @@
 
 #include <cstddef>
 #include "../Errno/errno.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 
 class ft_istream
 {
@@ -10,10 +12,15 @@ class ft_istream
         std::size_t _gcount;
         bool _bad;
         mutable int _error_code;
+        mutable pt_mutex _mutex;
+
+        void set_error_unlocked(int error_code) const noexcept;
+        int lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept;
+        static void restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept;
 
     protected:
         ft_istream() noexcept;
-        void set_error(int error_code) const;
+        void set_error(int error_code) const noexcept;
         virtual std::size_t do_read(char *buffer, std::size_t count) = 0;
 
     public:

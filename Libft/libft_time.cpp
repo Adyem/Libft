@@ -38,6 +38,7 @@ char *ft_time_format(char *buffer, size_t buffer_size)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
+    ft_bzero(&time_info, sizeof(time_info));
     ft_errno = ER_SUCCESS;
     current_time = time_now();
     if (current_time == static_cast<t_time>(-1) && ft_errno != ER_SUCCESS)
