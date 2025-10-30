@@ -1,6 +1,6 @@
 # TODO
 
-Remaining unchecked items: 26
+Remaining unchecked items: 20
 
 ## Library-wide priorities
 - [x] Publish a canonical error-code registry that documents each value exposed through `Errno/errno.hpp` and clarifies which modules set them, so cross-module error handling stays consistent.
@@ -142,7 +142,7 @@ Remaining unchecked items: 26
 - [x] Add reader-priority and writer-priority strategies to the RW lock implementation with accompanying benchmarks.
 - [x] Offer cooperative cancellation tokens that integrate with `thread_pool` in `Template/` to unify async control flows.
 - [x] Provide structured tracing of task lifecycles to aid debugging of scheduling stalls.
-- [ ] Add lock contention diagnostics (sampling, priority inversion detection) exposed through the Logger module.
+- [x] Add lock contention diagnostics (sampling, priority inversion detection) exposed through the Logger module.
 - [x] Make `pt_mutex` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `pt_condition_variable` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_unique_lock` thread safe (relies on the shared deadlock resolution routine described below).
@@ -204,7 +204,7 @@ Remaining unchecked items: 26
 - [x] Provide unit tests that exercise error propagation on `_error_code` members across copy/move operations.
 - [x] Document ownership semantics for wrappers like `ft_file` to avoid double-close mistakes.
 - [ ] Audit exception safety for each class and document the strong/weak guarantees they provide.
-- [ ] Supply sample adapters showing how to embed these classes into user-defined types with RAII expectations.
+- [x] Supply sample adapters showing how to embed these classes into user-defined types with RAII expectations.
 - [ ] Make `ft_big_number` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `DataBuffer` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_string` thread safe (relies on the shared deadlock resolution routine described below).
@@ -220,10 +220,10 @@ Remaining unchecked items: 26
 - [x] Optimize TTL pruning in `kv_store` to avoid copying keys into a `std::vector` during every sweep.
 - [x] Introduce transactional batch operations (multi-set, compare-and-swap) so clients can update related keys atomically.
 - [ ] Add persistence backends (JSON lines, SQLite, memory-mapped files) selectable at runtime.
-- [ ] Create background compaction or vacuum routines that reclaim expired data without blocking callers.
-- [ ] Implement snapshot/export tooling for backups and debugging.
+- [x] Create background compaction or vacuum routines that reclaim expired data without blocking callers.
+- [x] Implement snapshot/export tooling for backups and debugging.
 - [ ] Provide replication hooks (write-ahead log shipping, follower sync) for high-availability deployments.
-- [ ] Surface observability metrics (hit ratio, compaction duration) for integration with dashboards.
+- [x] Surface observability metrics (hit ratio, compaction duration) for integration with dashboards.
 - [x] Make `kv_store` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `kv_store_entry` thread safe (relies on the shared deadlock resolution routine described below).
 
@@ -257,7 +257,7 @@ Remaining unchecked items: 26
 - [x] Supply vectorized sampling routines that take advantage of SIMD when available.
 - [x] Publish guidance on combining RNG streams safely to avoid correlation in parallel workloads.
 - [x] Make `ft_loot_table` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_deck` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_deck` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_loot_entry` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Math

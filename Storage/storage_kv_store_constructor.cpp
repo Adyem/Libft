@@ -9,8 +9,21 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
     , _file_path()
     , _encryption_key()
     , _encryption_enabled(false)
+    , _background_thread_active(false)
+    , _background_stop_requested(false)
+    , _background_interval_seconds(0)
+    , _background_thread()
+    , _background_mutex()
     , _error_code(ER_SUCCESS)
     , _mutex()
+    , _metrics_set_operations(0)
+    , _metrics_delete_operations(0)
+    , _metrics_get_hits(0)
+    , _metrics_get_misses(0)
+    , _metrics_prune_operations(0)
+    , _metrics_pruned_entries(0)
+    , _metrics_total_prune_duration_ms(0)
+    , _metrics_last_prune_duration_ms(0)
 {
     json_group *group_head;
     json_group *store_group;
@@ -260,6 +273,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
 
 kv_store::~kv_store()
 {
+    this->stop_background_compaction();
     return ;
 }
 

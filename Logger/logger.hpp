@@ -5,6 +5,7 @@
 #include <cstdarg>
 #include "../Time/time.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "../PThread/pthread.hpp"
 
 class pt_mutex;
 
@@ -69,6 +70,38 @@ int     log_async_metrics_prepare_thread_safety(s_log_async_metrics *metrics);
 void    log_async_metrics_teardown_thread_safety(s_log_async_metrics *metrics);
 int     log_async_metrics_lock(s_log_async_metrics *metrics, bool *lock_acquired);
 void    log_async_metrics_unlock(s_log_async_metrics *metrics, bool lock_acquired);
+
+struct s_log_lock_contention_sample
+{
+    pthread_mutex_t   *mutex_pointer;
+    pt_thread_id_type owner_thread;
+    pt_thread_id_type waiting_thread;
+    long              wait_duration_ms;
+    bool              priority_inversion;
+
+    s_log_lock_contention_sample()
+        : mutex_pointer(ft_nullptr), owner_thread(0), waiting_thread(0),
+          wait_duration_ms(0), priority_inversion(false)
+    {
+        return ;
+    }
+};
+
+struct s_log_lock_contention_statistics
+{
+    size_t total_samples;
+    size_t priority_inversions;
+    size_t skipped_samples;
+    long longest_wait_ms;
+    double average_wait_ms;
+
+    s_log_lock_contention_statistics()
+        : total_samples(0), priority_inversions(0), skipped_samples(0),
+          longest_wait_ms(0), average_wait_ms(0.0)
+    {
+        return ;
+    }
+};
 
 void    ft_log_set_level(t_log_level level);
 int     ft_log_set_file(const char *path, size_t max_size);
@@ -147,6 +180,12 @@ void ft_log_warn_structured(const char *message, const s_log_field *fields,
                             size_t field_count);
 void ft_log_error_structured(const char *message, const s_log_field *fields,
                              size_t field_count);
+void ft_log_enable_lock_contention_sampling(bool enable);
+void ft_log_set_lock_contention_sampling_interval(unsigned int interval_ms);
+void ft_log_set_lock_contention_priority_threshold(long threshold_ms);
+int  ft_log_sample_lock_contention(s_log_lock_contention_sample *samples, size_t capacity, size_t *count);
+int  ft_log_lock_contention_get_statistics(s_log_lock_contention_statistics *statistics);
+void ft_log_lock_contention_reset_statistics();
 
 class ft_logger
 {
