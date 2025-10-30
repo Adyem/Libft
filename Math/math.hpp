@@ -56,6 +56,8 @@ double      ft_median(const double *values, int array_size);
 double      ft_mode(const double *values, int array_size);
 double      ft_variance(const double *values, int array_size);
 double      ft_stddev(const double *values, int array_size);
+double      ft_geometric_mean(const double *values, int array_size);
+double      ft_harmonic_mean(const double *values, int array_size);
 
 # include "linear_algebra.hpp"
 
