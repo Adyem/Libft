@@ -39,11 +39,22 @@ bool operator!=(const pt_system_allocator<t_type> &left, const pt_system_allocat
 typedef std::vector<pthread_mutex_t *, pt_system_allocator<pthread_mutex_t *> > pt_mutex_vector;
 typedef std::vector<pt_thread_id_type, pt_system_allocator<pt_thread_id_type> > pt_thread_vector;
 
+struct s_pt_lock_wait_snapshot
+{
+    pthread_mutex_t    *mutex_pointer;
+    pt_thread_id_type  owner_thread;
+    pt_thread_id_type  waiting_thread;
+    long               wait_started_ms;
+};
+
+typedef std::vector<s_pt_lock_wait_snapshot, pt_system_allocator<s_pt_lock_wait_snapshot> > pt_lock_wait_snapshot_vector;
+
 struct s_pt_thread_lock_info
 {
     pt_thread_id_type thread_identifier;
     pt_mutex_vector owned_mutexes;
     pthread_mutex_t *waiting_mutex;
+    long wait_started_ms;
 };
 
 class pt_lock_tracking
@@ -67,6 +78,7 @@ class pt_lock_tracking
         static bool notify_wait(pt_thread_id_type thread_identifier, pthread_mutex_t *requested_mutex, const pt_mutex_vector &owned_mutexes);
         static void notify_acquired(pt_thread_id_type thread_identifier, pthread_mutex_t *mutex_pointer);
         static void notify_released(pt_thread_id_type thread_identifier, pthread_mutex_t *mutex_pointer);
+        static bool snapshot_waiters(pt_lock_wait_snapshot_vector &snapshot);
 };
 
 #include "pthread_lock_tracking.tpp"
