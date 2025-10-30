@@ -405,15 +405,22 @@ yaml_value *yaml_read_from_string(const ft_string &content) noexcept
     int parse_error = ER_SUCCESS;
     {
         ft_vector<ft_string> lines;
-        int split_error = yaml_split_lines(content, lines);
+        int split_error;
+
+        split_error = yaml_split_lines(content, lines);
         if (split_error != ER_SUCCESS)
         {
-            ft_errno = split_error;
-            return (ft_nullptr);
+            parse_error = split_error;
+            root = ft_nullptr;
         }
-        size_t local_index = 0;
-        root = parse_value(lines, local_index, 0);
-        parse_error = ft_errno;
+        else
+        {
+            size_t local_index;
+
+            local_index = 0;
+            root = parse_value(lines, local_index, 0);
+            parse_error = ft_errno;
+        }
     }
     if (root == ft_nullptr)
     {

@@ -1,6 +1,6 @@
 # TODO
 
-Remaining unchecked items: 69
+Remaining unchecked items: 61
 
 ## Library-wide priorities
 - [x] Publish a canonical error-code registry that documents each value exposed through `Errno/errno.hpp` and clarifies which modules set them, so cross-module error handling stays consistent.
@@ -48,6 +48,10 @@ Remaining unchecked items: 69
 - [x] Make `Block` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `Page` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Implement per-class lock tracking for the CMA guards by wiring them into the PThread lock tracking routine.
+
+### Math module
+- [x] Add a geometric mean helper that avoids intermediate overflow by summing logarithms.
+- [x] Add a harmonic mean helper that protects against zero inputs while handling signed values.
 
 ### Compression
 - [x] Allow callers to configure input/output buffer sizes in `ft_compress_stream` and `ft_decompress_stream` instead of hard-coding 4096-byte stacks.
@@ -167,19 +171,19 @@ Remaining unchecked items: 69
 - [x] Make `Pair` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_thread_pool` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_graph` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_vector` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_vector` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_event_emitter` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_optional` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_string_view` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_sharedptr` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_matrix` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_tuple` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_sharedptr` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_matrix` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_tuple` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_trie` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `Iterator` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_queue` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_deque` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_uniqueptr` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_circular_buffer` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_deque` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_uniqueptr` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_circular_buffer` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_variant` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_future` (including `ft_future<void>`) thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `Pool` (including `Pool<T>::Object`) thread safe (relies on the shared deadlock resolution routine described below).
@@ -260,7 +264,7 @@ Remaining unchecked items: 69
 - [ ] Complete the linear algebra module with vector, matrix, and quaternion operations optimized using SIMD when available.
 - [ ] Introduce polynomial solvers, interpolation (Bezier, spline), and numerical integration helpers.
 - [ ] Provide interval arithmetic and error-propagation utilities for robust scientific calculations.
-- [ ] Add unit tests that validate tolerance-based comparisons and edge-case handling (NaN, infinities).
+- [x] Add unit tests that validate tolerance-based comparisons and edge-case handling (NaN, infinities).
 - [ ] Implement automatic differentiation primitives for optimization and machine-learning use cases.
 - [ ] Supply FFT and convolution helpers that reuse existing complex-number utilities.
 - [x] Make `vector2` thread safe (relies on the shared deadlock resolution routine described below).
