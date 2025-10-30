@@ -1,6 +1,6 @@
 # TODO
 
-Remaining unchecked items: 37
+Remaining unchecked items: 26
 
 ## Library-wide priorities
 - [x] Publish a canonical error-code registry that documents each value exposed through `Errno/errno.hpp` and clarifies which modules set them, so cross-module error handling stays consistent.
@@ -212,9 +212,9 @@ Remaining unchecked items: 37
 - [x] Make `ft_file` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_ofstream` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_istream` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_fd_istream` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_fd_istream` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_istringstream` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_nullptr` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_nullptr` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Storage
 - [x] Optimize TTL pruning in `kv_store` to avoid copying keys into a `std::vector` during every sweep.
@@ -224,12 +224,12 @@ Remaining unchecked items: 37
 - [ ] Implement snapshot/export tooling for backups and debugging.
 - [ ] Provide replication hooks (write-ahead log shipping, follower sync) for high-availability deployments.
 - [ ] Surface observability metrics (hit ratio, compaction duration) for integration with dashboards.
-- [ ] Make `kv_store` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `kv_store_entry` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `kv_store` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `kv_store_entry` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### JSon
 - [x] Restore the `json reader reports io errors` regression once file-based reads surface missing files without corrupting allocator state.
-- [ ] Make `json_document` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `json_document` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `json_group` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `json_item` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `json_schema` thread safe (relies on the shared deadlock resolution routine described below).
@@ -252,13 +252,13 @@ Remaining unchecked items: 37
 ### RNG
 - [x] Add cryptographically secure RNG wrappers that rely on system entropy sources with clear fallbacks.
 - [x] Provide deterministic PRNG seeds and stream splitting utilities for reproducible simulations.
-- [ ] Expand distribution coverage (gamma, beta, chi-squared) and ensure PDF/CDF helpers are available.
-- [ ] Document statistical quality guarantees and include tests that run chi-squared or KS checks.
-- [ ] Supply vectorized sampling routines that take advantage of SIMD when available.
-- [ ] Publish guidance on combining RNG streams safely to avoid correlation in parallel workloads.
-- [ ] Make `ft_loot_table` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Expand distribution coverage (gamma, beta, chi-squared) and ensure PDF/CDF helpers are available.
+- [x] Document statistical quality guarantees and include tests that run chi-squared or KS checks.
+- [x] Supply vectorized sampling routines that take advantage of SIMD when available.
+- [x] Publish guidance on combining RNG streams safely to avoid correlation in parallel workloads.
+- [x] Make `ft_loot_table` thread safe (relies on the shared deadlock resolution routine described below).
 - [ ] Make `ft_deck` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `ft_loot_entry` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_loot_entry` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Math
 - [ ] Complete the linear algebra module with vector, matrix, and quaternion operations optimized using SIMD when available.

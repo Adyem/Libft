@@ -2,8 +2,10 @@ TARGET := RNG.a
 DEBUG_TARGET := RNG_debug.a
 
 SRCS := rng_dice_roll.cpp rng_engine.cpp rng_random_int.cpp rng_random_float.cpp \
+       rng_random_vector.cpp \
        rng_random_normal.cpp rng_random_exponential.cpp rng_random_poisson.cpp \
-       rng_random_binomial.cpp rng_random_geometric.cpp \
+       rng_random_binomial.cpp rng_random_geometric.cpp rng_random_gamma.cpp \
+       rng_random_beta.cpp rng_random_chi_squared.cpp rng_distribution_functions.cpp \
        rng_random_seed.cpp rng_secure_bytes.cpp rng_secure_wrappers.cpp \
        rng_stream_split.cpp rng_uuid.cpp
 
