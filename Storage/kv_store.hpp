@@ -7,10 +7,19 @@
 #include "../CPP_class/class_string_class.hpp"
 #include "../Template/map.hpp"
 #include "../Template/vector.hpp"
+#include "../Parser/document_backend.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 #include "../PThread/thread.hpp"
 #include "../PThread/pthread.hpp"
+
+typedef enum e_kv_store_backend_type
+{
+    KV_STORE_BACKEND_JSON,
+    KV_STORE_BACKEND_JSON_LINES,
+    KV_STORE_BACKEND_SQLITE,
+    KV_STORE_BACKEND_MEMORY_MAPPED
+}   kv_store_backend_type;
 
 extern const char *g_kv_store_ttl_prefix;
 
@@ -84,6 +93,16 @@ typedef struct s_kv_store_operation
     long long _ttl_seconds;
 }   kv_store_operation;
 
+typedef int (*kv_store_replication_operations_callback)(const ft_vector<kv_store_operation> &operations, void *user_data);
+typedef int (*kv_store_replication_snapshot_callback)(const ft_vector<kv_store_snapshot_entry> &entries, void *user_data);
+
+typedef struct s_kv_store_replication_sink
+{
+    kv_store_replication_operations_callback _operations_callback;
+    kv_store_replication_snapshot_callback _snapshot_callback;
+    void *_user_data;
+}   kv_store_replication_sink;
+
 class kv_store
 {
     private:
@@ -91,6 +110,7 @@ class kv_store
         ft_string _file_path;
         ft_string _encryption_key;
         bool _encryption_enabled;
+        kv_store_backend_type _backend_type;
         bool _background_thread_active;
         bool _background_stop_requested;
         long long _background_interval_seconds;
@@ -106,6 +126,8 @@ class kv_store
         mutable long long _metrics_pruned_entries;
         mutable long long _metrics_total_prune_duration_ms;
         mutable long long _metrics_last_prune_duration_ms;
+        ft_vector<kv_store_replication_sink> _replication_sinks;
+        mutable pt_mutex _replication_mutex;
 
         void set_error_unlocked(int error_code) const noexcept;
         void set_error(int error_code) const noexcept;
@@ -126,6 +148,22 @@ class kv_store
         int start_background_thread_locked(long long interval_seconds) noexcept;
         void stop_background_thread_locked(ft_thread &thread_holder) noexcept;
         static void background_compaction_worker(kv_store *store) noexcept;
+        int apply_snapshot_locked(const ft_vector<kv_store_snapshot_entry> &entries);
+        int load_json_entries(const char *location, ft_vector<kv_store_snapshot_entry> &out_entries);
+        int parse_json_groups(json_group *group_head, ft_vector<kv_store_snapshot_entry> &out_entries);
+        int flush_json_entries(const ft_vector<kv_store_snapshot_entry> &entries) const;
+        int load_json_lines_entries(const char *location, ft_vector<kv_store_snapshot_entry> &out_entries);
+        int flush_json_lines_entries(const ft_vector<kv_store_snapshot_entry> &entries) const;
+        int load_sqlite_entries(const char *location, ft_vector<kv_store_snapshot_entry> &out_entries);
+        int flush_sqlite_entries(const ft_vector<kv_store_snapshot_entry> &entries) const;
+        int load_memory_mapped_entries(const char *location, ft_vector<kv_store_snapshot_entry> &out_entries);
+        int flush_memory_mapped_entries(const ft_vector<kv_store_snapshot_entry> &entries) const;
+        int flush_backend_entries(const ft_vector<kv_store_snapshot_entry> &entries) const;
+        int load_backend_entries(kv_store_backend_type backend_type, const char *location, ft_vector<kv_store_snapshot_entry> &out_entries);
+        int assign_backend_location(const char *location);
+        int lock_replication(ft_unique_lock<pt_mutex> &guard) const noexcept;
+        int notify_replication_listeners(const ft_vector<kv_store_operation> &operations) const;
+        int dispatch_snapshot_to_sink(kv_store_replication_snapshot_callback snapshot_callback, void *user_data) const;
 
     public:
         kv_store(const char *file_path, const char *encryption_key = ft_nullptr, bool enable_encryption = false);
@@ -137,6 +175,8 @@ class kv_store
         int kv_delete(const char *key_string);
         int kv_flush() const;
         int configure_encryption(const char *encryption_key, bool enable_encryption);
+        int set_backend(kv_store_backend_type backend_type, const char *location);
+        kv_store_backend_type get_backend() const;
         int kv_apply(const ft_vector<kv_store_operation> &operations);
         int kv_compare_and_swap(const char *key_string, const char *expected_value, const char *new_value, long long ttl_seconds = -1);
         int get_error() const;
@@ -145,8 +185,16 @@ class kv_store
         int export_snapshot(ft_vector<kv_store_snapshot_entry> &out_entries) const;
         int export_snapshot_to_file(const char *file_path) const;
         int import_snapshot(const ft_vector<kv_store_snapshot_entry> &entries);
+        int write_snapshot(ft_document_sink &sink) const;
+        int read_snapshot(ft_document_source &source);
         int start_background_compaction(long long interval_seconds);
         int stop_background_compaction();
+        int register_replication_sink(kv_store_replication_operations_callback operations_callback,
+            kv_store_replication_snapshot_callback snapshot_callback, void *user_data,
+            bool ship_initial_snapshot);
+        int unregister_replication_sink(kv_store_replication_operations_callback operations_callback,
+            kv_store_replication_snapshot_callback snapshot_callback, void *user_data);
+        int ship_replication_snapshot(kv_store_replication_snapshot_callback snapshot_callback, void *user_data) const;
 };
 
 int kv_store_init_set_operation(kv_store_operation &operation, const char *key_string, const char *value_string, long long ttl_seconds = -1);

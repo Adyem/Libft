@@ -4,6 +4,12 @@
 
 namespace ft
 {
+    static const nullptr_t *get_nullptr_address(const nullptr_t &value) noexcept
+    {
+        return (reinterpret_cast<const nullptr_t*>(
+            &const_cast<char&>(reinterpret_cast<const volatile char&>(value))));
+    }
+
     nullptr_t::mutex_guard::mutex_guard() noexcept
         : _mutex(static_cast<pt_mutex*>(nullptr))
         , _owns_lock(false)
@@ -140,8 +146,10 @@ namespace ft
         int entry_errno;
         int lock_error;
         int other_error;
+        const nullptr_t *other_address;
 
-        if (this == &other)
+        other_address = get_nullptr_address(other);
+        if (this == other_address)
             return (*this);
         entry_errno = ft_errno;
         lock_error = guard.lock(this->_mutex);

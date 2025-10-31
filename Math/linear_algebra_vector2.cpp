@@ -4,6 +4,10 @@
 #include "../PThread/pthread.hpp"
 #include "../Template/move.hpp"
 
+#if defined(__SSE2__)
+# include <immintrin.h>
+#endif
+
 static void vector2_sleep_backoff()
 {
     pt_thread_sleep(1);
@@ -18,6 +22,31 @@ static void vector2_restore_errno(ft_unique_lock<pt_mutex> &guard,
     ft_errno = entry_errno;
     return ;
 }
+
+#if defined(__SSE2__)
+static double vector2_compute_dot(double first_x, double first_y,
+    double second_x, double second_y)
+{
+    __m128d first_vector;
+    __m128d second_vector;
+    __m128d product;
+    __m128d swapped;
+    __m128d sum;
+
+    first_vector = _mm_set_pd(first_y, first_x);
+    second_vector = _mm_set_pd(second_y, second_x);
+    product = _mm_mul_pd(first_vector, second_vector);
+    swapped = _mm_shuffle_pd(product, product, 0x1);
+    sum = _mm_add_sd(product, swapped);
+    return (_mm_cvtsd_f64(sum));
+}
+#else
+static double vector2_compute_dot(double first_x, double first_y,
+    double second_x, double second_y)
+{
+    return (first_x * second_x + first_y * second_y);
+}
+#endif
 
 int vector2::lock_self(ft_unique_lock<pt_mutex> &guard) const
 {
@@ -295,7 +324,7 @@ double vector2::dot(const vector2 &other) const
         ft_errno = entry_errno;
         return (0.0);
     }
-    result = this->_x * other._x + this->_y * other._y;
+    result = vector2_compute_dot(this->_x, this->_y, other._x, other._y);
     this->set_error_unlocked(ER_SUCCESS);
     vector2_restore_errno(this_guard, entry_errno);
     vector2_restore_errno(other_guard, entry_errno);
@@ -317,7 +346,7 @@ double vector2::length() const
         ft_errno = entry_errno;
         return (0.0);
     }
-    squared = this->_x * this->_x + this->_y * this->_y;
+    squared = vector2_compute_dot(this->_x, this->_y, this->_x, this->_y);
     this->set_error_unlocked(ER_SUCCESS);
     vector2_restore_errno(guard, entry_errno);
     return (math_sqrt(squared));
