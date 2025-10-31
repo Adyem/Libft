@@ -39,6 +39,10 @@ SRCS := math_abs.cpp \
         math_roll_validate_string.cpp \
         math_roll_validate_utils.cpp \
         math_validate_int.cpp \
+        math_autodiff.cpp \
+        math_fft.cpp \
+        math_interval.cpp \
+        math_polynomial.cpp \
         linear_algebra.cpp \
         linear_algebra_constructors.cpp \
         linear_algebra_vector2.cpp \
@@ -49,7 +53,7 @@ SRCS := math_abs.cpp \
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
-HEADERS := math.hpp roll.hpp math_internal.hpp linear_algebra.hpp linear_algebra_quaternion.hpp
+HEADERS := math.hpp roll.hpp math_internal.hpp linear_algebra.hpp linear_algebra_quaternion.hpp math_autodiff.hpp math_fft.hpp math_interval.hpp math_polynomial.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

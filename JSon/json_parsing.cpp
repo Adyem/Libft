@@ -61,59 +61,92 @@ static bool json_string_exceeds_signed_long_long(const char *value)
 
 void json_item_refresh_numeric_state(json_item *item)
 {
+    ft_unique_lock<pt_mutex> guard;
+    int entry_errno;
+    int lock_error;
+    int result_code;
+    ft_big_number *allocated_number;
+
     if (!item)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
+    if (json_item_enable_thread_safety(item) != 0)
+        return ;
+    entry_errno = ft_errno;
+    lock_error = json_item_lock(item, guard);
+    if (lock_error != ER_SUCCESS)
+        return ;
+    result_code = ER_SUCCESS;
     if (item->big_number)
     {
         delete item->big_number;
         item->big_number = ft_nullptr;
     }
     item->is_big_number = false;
-    if (!item->value)
+    if (item->value)
     {
+        if (json_string_exceeds_signed_long_long(item->value) == true)
+        {
+            allocated_number = new(std::nothrow) ft_big_number;
+            if (!allocated_number)
+            {
+                result_code = FT_ERR_NO_MEMORY;
+            }
+            else
+            {
+                allocated_number->assign(item->value);
+                if (allocated_number->get_error() != ER_SUCCESS)
+                {
+                    result_code = allocated_number->get_error();
+                    delete allocated_number;
+                }
+                else
+                {
+                    item->big_number = allocated_number;
+                    item->is_big_number = true;
+                }
+            }
+        }
+    }
+    json_item_set_error_unlocked(item, result_code);
+    json_item_restore_errno(item, guard, entry_errno);
+    if (result_code != ER_SUCCESS)
+    {
+        ft_errno = result_code;
+        return ;
+    }
+    if (ft_errno == entry_errno)
         ft_errno = ER_SUCCESS;
-        return ;
-    }
-    if (json_string_exceeds_signed_long_long(item->value) == false)
-    {
-        ft_errno = ER_SUCCESS;
-        return ;
-    }
-    ft_big_number *allocated_number = new(std::nothrow) ft_big_number;
-    if (!allocated_number)
-    {
-        ft_errno = FT_ERR_NO_MEMORY;
-        return ;
-    }
-    allocated_number->assign(item->value);
-    if (allocated_number->get_error() != ER_SUCCESS)
-    {
-        int error_code = allocated_number->get_error();
-
-        delete allocated_number;
-        ft_errno = error_code;
-        return ;
-    }
-    item->big_number = allocated_number;
-    item->is_big_number = true;
-    ft_errno = ER_SUCCESS;
     return ;
 }
 
 void json_add_item_to_group(json_group *group, json_item *item)
 {
+    ft_unique_lock<pt_mutex> guard;
+    int entry_errno;
+
+    if (group == ft_nullptr || item == ft_nullptr)
+    {
+        json_group_set_error(group, FT_ERR_INVALID_ARGUMENT);
+        return ;
+    }
+    entry_errno = ft_errno;
+    if (json_group_lock(group, guard) != ER_SUCCESS)
+        return ;
     if (!group->items)
         group->items = item;
     else
     {
         json_item *current_item = group->items;
+
         while (current_item->next)
             current_item = current_item->next;
         current_item->next = item;
     }
+    json_group_set_error_unlocked(group, ER_SUCCESS);
+    json_group_restore_errno(group, guard, entry_errno);
     return ;
 }
 
@@ -134,21 +167,41 @@ json_group* json_create_json_group(const char *name)
     }
     group->items = ft_nullptr;
     group->next = ft_nullptr;
+    if (json_group_enable_thread_safety(group) != 0)
+    {
+        cma_free(group->name);
+        delete group;
+        return (ft_nullptr);
+    }
     ft_errno = ER_SUCCESS;
     return (group);
 }
 
 void json_append_group(json_group **head, json_group *new_group)
 {
+    ft_unique_lock<pt_mutex> guard;
+    int entry_errno;
+
+    if (head == ft_nullptr || new_group == ft_nullptr)
+    {
+        json_group_set_error(new_group, FT_ERR_INVALID_ARGUMENT);
+        return ;
+    }
+    entry_errno = ft_errno;
+    if (json_group_list_lock(guard) != ER_SUCCESS)
+        return ;
     if (!(*head))
         *head = new_group;
     else
     {
         json_group *current_group = *head;
+
         while (current_group->next)
             current_group = current_group->next;
         current_group->next = new_group;
     }
+    json_group_list_restore(guard, entry_errno);
+    json_group_set_error(new_group, ER_SUCCESS);
     return ;
 }
 
@@ -171,14 +224,22 @@ void json_free_items(json_item *item)
 
 void json_free_groups(json_group *group)
 {
+    ft_unique_lock<pt_mutex> guard;
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    if (json_group_list_lock(guard) != ER_SUCCESS)
+        return ;
     while (group)
     {
         json_group *next_group = group->next;
+
         if (group->name)
             cma_free(group->name);
         json_free_items(group->items);
         delete group;
         group = next_group;
     }
+    json_group_list_restore(guard, entry_errno);
     return ;
 }

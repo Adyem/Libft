@@ -2,6 +2,11 @@
 # define MATH_MATH_HPP
 
 # include "../CPP_class/class_big_number.hpp"
+# include "../Template/vector.hpp"
+# include "math_autodiff.hpp"
+# include "math_fft.hpp"
+# include "math_interval.hpp"
+# include "math_polynomial.hpp"
 
 int         math_abs(int number);
 long        math_abs(long number);
@@ -58,6 +63,17 @@ double      ft_variance(const double *values, int array_size);
 double      ft_stddev(const double *values, int array_size);
 double      ft_geometric_mean(const double *values, int array_size);
 double      ft_harmonic_mean(const double *values, int array_size);
+int         math_fft(const ft_vector<double> &input_real,
+                const ft_vector<double> &input_imag,
+                ft_vector<double> &output_real,
+                ft_vector<double> &output_imag) noexcept;
+int         math_ifft(const ft_vector<double> &input_real,
+                const ft_vector<double> &input_imag,
+                ft_vector<double> &output_real,
+                ft_vector<double> &output_imag) noexcept;
+int         math_convolution(const ft_vector<double> &first,
+                const ft_vector<double> &second,
+                ft_vector<double> &result) noexcept;
 
 # include "linear_algebra.hpp"
 

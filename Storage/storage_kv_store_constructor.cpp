@@ -24,6 +24,8 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
     , _metrics_pruned_entries(0)
     , _metrics_total_prune_duration_ms(0)
     , _metrics_last_prune_duration_ms(0)
+    , _replication_sinks()
+    , _replication_mutex()
 {
     json_group *group_head;
     json_group *store_group;

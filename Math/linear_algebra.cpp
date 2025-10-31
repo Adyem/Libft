@@ -4,6 +4,10 @@
 #include "../PThread/pthread.hpp"
 #include "../Template/move.hpp"
 
+#if defined(__SSE2__)
+# include <immintrin.h>
+#endif
+
 static void matrix2_sleep_backoff()
 {
     pt_thread_sleep(1);
@@ -684,6 +688,46 @@ static void matrix4_restore_errno(ft_unique_lock<pt_mutex> &guard,
     return ;
 }
 
+#if defined(__SSE2__)
+static double matrix4_compute_row_column_simd(const double *row,
+    const double *column)
+{
+    __m128d row_first;
+    __m128d column_first;
+    __m128d product_first;
+    __m128d row_second;
+    __m128d column_second;
+    __m128d product_second;
+    __m128d sum;
+    __m128d swapped;
+    __m128d total;
+
+    row_first = _mm_set_pd(row[1], row[0]);
+    column_first = _mm_set_pd(column[1], column[0]);
+    product_first = _mm_mul_pd(row_first, column_first);
+    row_second = _mm_set_pd(row[3], row[2]);
+    column_second = _mm_set_pd(column[3], column[2]);
+    product_second = _mm_mul_pd(row_second, column_second);
+    sum = _mm_add_pd(product_first, product_second);
+    swapped = _mm_shuffle_pd(sum, sum, 0x1);
+    total = _mm_add_sd(sum, swapped);
+    return (_mm_cvtsd_f64(total));
+}
+#else
+static double matrix4_compute_row_column_simd(const double *row,
+    const double *column)
+{
+    return (row[0] * column[0] + row[1] * column[1]
+        + row[2] * column[2] + row[3] * column[3]);
+}
+#endif
+
+static double matrix4_compute_row_column(const double *row,
+    const double *column)
+{
+    return (matrix4_compute_row_column_simd(row, column));
+}
+
 int matrix4::lock_self(ft_unique_lock<pt_mutex> &guard) const
 {
     int entry_errno;
@@ -925,22 +969,25 @@ matrix4 matrix4::multiply(const matrix4 &other) const
         this->set_error_unlocked(lock_error);
         return (result);
     }
-    result._m[0][0] = this->_m[0][0] * other._m[0][0] + this->_m[0][1] * other._m[1][0] + this->_m[0][2] * other._m[2][0] + this->_m[0][3] * other._m[3][0];
-    result._m[0][1] = this->_m[0][0] * other._m[0][1] + this->_m[0][1] * other._m[1][1] + this->_m[0][2] * other._m[2][1] + this->_m[0][3] * other._m[3][1];
-    result._m[0][2] = this->_m[0][0] * other._m[0][2] + this->_m[0][1] * other._m[1][2] + this->_m[0][2] * other._m[2][2] + this->_m[0][3] * other._m[3][2];
-    result._m[0][3] = this->_m[0][0] * other._m[0][3] + this->_m[0][1] * other._m[1][3] + this->_m[0][2] * other._m[2][3] + this->_m[0][3] * other._m[3][3];
-    result._m[1][0] = this->_m[1][0] * other._m[0][0] + this->_m[1][1] * other._m[1][0] + this->_m[1][2] * other._m[2][0] + this->_m[1][3] * other._m[3][0];
-    result._m[1][1] = this->_m[1][0] * other._m[0][1] + this->_m[1][1] * other._m[1][1] + this->_m[1][2] * other._m[2][1] + this->_m[1][3] * other._m[3][1];
-    result._m[1][2] = this->_m[1][0] * other._m[0][2] + this->_m[1][1] * other._m[1][2] + this->_m[1][2] * other._m[2][2] + this->_m[1][3] * other._m[3][2];
-    result._m[1][3] = this->_m[1][0] * other._m[0][3] + this->_m[1][1] * other._m[1][3] + this->_m[1][2] * other._m[2][3] + this->_m[1][3] * other._m[3][3];
-    result._m[2][0] = this->_m[2][0] * other._m[0][0] + this->_m[2][1] * other._m[1][0] + this->_m[2][2] * other._m[2][0] + this->_m[2][3] * other._m[3][0];
-    result._m[2][1] = this->_m[2][0] * other._m[0][1] + this->_m[2][1] * other._m[1][1] + this->_m[2][2] * other._m[2][1] + this->_m[2][3] * other._m[3][1];
-    result._m[2][2] = this->_m[2][0] * other._m[0][2] + this->_m[2][1] * other._m[1][2] + this->_m[2][2] * other._m[2][2] + this->_m[2][3] * other._m[3][2];
-    result._m[2][3] = this->_m[2][0] * other._m[0][3] + this->_m[2][1] * other._m[1][3] + this->_m[2][2] * other._m[2][3] + this->_m[2][3] * other._m[3][3];
-    result._m[3][0] = this->_m[3][0] * other._m[0][0] + this->_m[3][1] * other._m[1][0] + this->_m[3][2] * other._m[2][0] + this->_m[3][3] * other._m[3][0];
-    result._m[3][1] = this->_m[3][0] * other._m[0][1] + this->_m[3][1] * other._m[1][1] + this->_m[3][2] * other._m[2][1] + this->_m[3][3] * other._m[3][1];
-    result._m[3][2] = this->_m[3][0] * other._m[0][2] + this->_m[3][1] * other._m[1][2] + this->_m[3][2] * other._m[2][2] + this->_m[3][3] * other._m[3][2];
-    result._m[3][3] = this->_m[3][0] * other._m[0][3] + this->_m[3][1] * other._m[1][3] + this->_m[3][2] * other._m[2][3] + this->_m[3][3] * other._m[3][3];
+    size_t column_index;
+    size_t row_index;
+    double column_values[4];
+
+    column_index = 0;
+    while (column_index < 4)
+    {
+        column_values[0] = other._m[0][column_index];
+        column_values[1] = other._m[1][column_index];
+        column_values[2] = other._m[2][column_index];
+        column_values[3] = other._m[3][column_index];
+        row_index = 0;
+        while (row_index < 4)
+        {
+            result._m[row_index][column_index] = matrix4_compute_row_column(this->_m[row_index], column_values);
+            row_index++;
+        }
+        column_index++;
+    }
     result.set_error_unlocked(ER_SUCCESS);
     this->set_error_unlocked(ER_SUCCESS);
     matrix4_restore_errno(this_guard, entry_errno);
