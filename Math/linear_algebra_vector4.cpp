@@ -4,6 +4,10 @@
 #include "../PThread/pthread.hpp"
 #include "../Template/move.hpp"
 
+#if defined(__SSE2__)
+# include <immintrin.h>
+#endif
+
 static void vector4_sleep_backoff()
 {
     pt_thread_sleep(1);
@@ -18,6 +22,44 @@ static void vector4_restore_errno(ft_unique_lock<pt_mutex> &guard,
     ft_errno = entry_errno;
     return ;
 }
+
+#if defined(__SSE2__)
+static double vector4_compute_dot(double first_x, double first_y,
+    double first_z, double first_w,
+    double second_x, double second_y,
+    double second_z, double second_w)
+{
+    __m128d first_xy;
+    __m128d second_xy;
+    __m128d product_xy;
+    __m128d first_zw;
+    __m128d second_zw;
+    __m128d product_zw;
+    __m128d sum;
+    __m128d swapped;
+    __m128d total;
+
+    first_xy = _mm_set_pd(first_y, first_x);
+    second_xy = _mm_set_pd(second_y, second_x);
+    product_xy = _mm_mul_pd(first_xy, second_xy);
+    first_zw = _mm_set_pd(first_w, first_z);
+    second_zw = _mm_set_pd(second_w, second_z);
+    product_zw = _mm_mul_pd(first_zw, second_zw);
+    sum = _mm_add_pd(product_xy, product_zw);
+    swapped = _mm_shuffle_pd(sum, sum, 0x1);
+    total = _mm_add_sd(sum, swapped);
+    return (_mm_cvtsd_f64(total));
+}
+#else
+static double vector4_compute_dot(double first_x, double first_y,
+    double first_z, double first_w,
+    double second_x, double second_y,
+    double second_z, double second_w)
+{
+    return (first_x * second_x + first_y * second_y
+        + first_z * second_z + first_w * second_w);
+}
+#endif
 
 int vector4::lock_self(ft_unique_lock<pt_mutex> &guard) const
 {
@@ -347,8 +389,8 @@ double vector4::dot(const vector4 &other) const
         ft_errno = entry_errno;
         return (0.0);
     }
-    result = this->_x * other._x + this->_y * other._y + this->_z * other._z
-        + this->_w * other._w;
+    result = vector4_compute_dot(this->_x, this->_y, this->_z, this->_w,
+            other._x, other._y, other._z, other._w);
     this->set_error_unlocked(ER_SUCCESS);
     vector4_restore_errno(this_guard, entry_errno);
     vector4_restore_errno(other_guard, entry_errno);
@@ -370,8 +412,8 @@ double vector4::length() const
         ft_errno = entry_errno;
         return (0.0);
     }
-    squared = this->_x * this->_x + this->_y * this->_y + this->_z * this->_z
-        + this->_w * this->_w;
+    squared = vector4_compute_dot(this->_x, this->_y, this->_z, this->_w,
+            this->_x, this->_y, this->_z, this->_w);
     this->set_error_unlocked(ER_SUCCESS);
     vector4_restore_errno(guard, entry_errno);
     return (math_sqrt(squared));

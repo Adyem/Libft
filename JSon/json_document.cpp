@@ -1172,10 +1172,3 @@ const char *json_document::get_error_str() const noexcept
     return (error_string);
 }
 
-void json_document::set_error(int error_code) const noexcept
-{
-    this->_error_code = error_code;
-    ft_errno = error_code;
-    return ;
-}
-

@@ -1,12 +1,12 @@
 TARGET := GetNextLine.a
 DEBUG_TARGET := GetNextLine_debug.a
 
-SRCS := get_next_line.cpp
+SRCS := get_next_line.cpp gnl_stream.cpp get_next_line_stream_helpers.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
-HEADERS := get_next_line.hpp
+HEADERS := get_next_line.hpp gnl_stream.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

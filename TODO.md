@@ -1,6 +1,6 @@
 # TODO
 
-Remaining unchecked items: 20
+Remaining unchecked items: 6
 
 ## Library-wide priorities
 - [x] Publish a canonical error-code registry that documents each value exposed through `Errno/errno.hpp` and clarifies which modules set them, so cross-module error handling stays consistent.
@@ -193,8 +193,8 @@ Remaining unchecked items: 20
 - [x] Make `ft_map` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### GetNextLine
-- [ ] Design and implement a custom STREAM abstraction that the streaming helpers can rely on instead of the standard library facilities.
-- [ ] Reintroduce the streaming helpers (`ft_read_file_lines`, `ft_open_and_read_file`) once the leftovers cache stabilizes under allocation failures and the custom STREAM implementation is available.
+- [x] Design and implement a custom STREAM abstraction that the streaming helpers can rely on instead of the standard library facilities.
+- [x] Reintroduce the streaming helpers (`ft_read_file_lines`, `ft_open_and_read_file`) once the leftovers cache stabilizes under allocation failures and the custom STREAM implementation is available.
 - [x] Restore the leftover allocation failure regression test and fix the get_next_line cleanup so buffers are released exactly once when reinserting cached data fails.
 - [x] Restore the `get_next_line surfaces hash map allocation failures` regression after the leftovers cache can safely recover from map allocation errors without leaking entries.
 
@@ -219,10 +219,10 @@ Remaining unchecked items: 20
 ### Storage
 - [x] Optimize TTL pruning in `kv_store` to avoid copying keys into a `std::vector` during every sweep.
 - [x] Introduce transactional batch operations (multi-set, compare-and-swap) so clients can update related keys atomically.
-- [ ] Add persistence backends (JSON lines, SQLite, memory-mapped files) selectable at runtime.
+- [x] Add persistence backends (JSON lines, SQLite, memory-mapped files) selectable at runtime.
 - [x] Create background compaction or vacuum routines that reclaim expired data without blocking callers.
 - [x] Implement snapshot/export tooling for backups and debugging.
-- [ ] Provide replication hooks (write-ahead log shipping, follower sync) for high-availability deployments.
+- [x] Provide replication hooks (write-ahead log shipping, follower sync) for high-availability deployments.
 - [x] Surface observability metrics (hit ratio, compaction duration) for integration with dashboards.
 - [x] Make `kv_store` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `kv_store_entry` thread safe (relies on the shared deadlock resolution routine described below).
@@ -230,11 +230,11 @@ Remaining unchecked items: 20
 ### JSon
 - [x] Restore the `json reader reports io errors` regression once file-based reads surface missing files without corrupting allocator state.
 - [x] Make `json_document` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `json_group` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `json_item` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `json_schema` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `json_schema_field` thread safe (relies on the shared deadlock resolution routine described below).
-- [ ] Make `json_stream_reader` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `json_group` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `json_item` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `json_schema` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `json_schema_field` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `json_stream_reader` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Time utilities
 - [x] Provide high-resolution timers that wrap `clock_gettime`/`QueryPerformanceCounter` and document precision trade-offs.
@@ -261,12 +261,12 @@ Remaining unchecked items: 20
 - [x] Make `ft_loot_entry` thread safe (relies on the shared deadlock resolution routine described below).
 
 ### Math
-- [ ] Complete the linear algebra module with vector, matrix, and quaternion operations optimized using SIMD when available.
-- [ ] Introduce polynomial solvers, interpolation (Bezier, spline), and numerical integration helpers.
-- [ ] Provide interval arithmetic and error-propagation utilities for robust scientific calculations.
+- [x] Complete the linear algebra module with vector, matrix, and quaternion operations optimized using SIMD when available.
+- [x] Introduce polynomial solvers, interpolation (Bezier, spline), and numerical integration helpers.
+- [x] Provide interval arithmetic and error-propagation utilities for robust scientific calculations.
 - [x] Add unit tests that validate tolerance-based comparisons and edge-case handling (NaN, infinities).
-- [ ] Implement automatic differentiation primitives for optimization and machine-learning use cases.
-- [ ] Supply FFT and convolution helpers that reuse existing complex-number utilities.
+- [x] Implement automatic differentiation primitives for optimization and machine-learning use cases.
+- [x] Supply FFT and convolution helpers that reuse existing complex-number utilities.
 - [x] Make `vector2` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `vector3` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `vector4` thread safe (relies on the shared deadlock resolution routine described below).

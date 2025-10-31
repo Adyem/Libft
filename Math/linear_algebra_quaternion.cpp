@@ -2,6 +2,36 @@
 #include "math.hpp"
 #include "../Errno/errno.hpp"
 
+#if defined(__SSE2__)
+# include <immintrin.h>
+#endif
+
+static double quaternion_compute_dot(double first_w, double first_x,
+    double first_y, double first_z,
+    double second_w, double second_x,
+    double second_y, double second_z);
+
+static void quaternion_compute_product_components(quaternion &result,
+    double first_w, double first_x, double first_y, double first_z,
+    double second_w, double second_x, double second_y, double second_z)
+{
+    double w_value;
+    double x_value;
+    double y_value;
+    double z_value;
+    w_value = quaternion_compute_dot(first_w, first_x, first_y, first_z,
+            second_w, -second_x, -second_y, -second_z);
+    x_value = quaternion_compute_dot(first_w, first_x, first_y, first_z,
+            second_x, second_w, second_z, -second_y);
+    y_value = quaternion_compute_dot(first_w, first_x, first_y, first_z,
+            second_y, -second_z, second_w, second_x);
+    z_value = quaternion_compute_dot(first_w, first_x, first_y, first_z,
+            second_z, second_y, -second_x, second_w);
+    quaternion composed_values_temp(w_value, x_value, y_value, z_value);
+    result = composed_values_temp;
+    return ;
+}
+
 quaternion::quaternion()
 {
     this->_w = 1.0;
@@ -170,14 +200,9 @@ quaternion  quaternion::multiply(const quaternion &other) const
     {
         std::lock_guard<std::mutex> this_lock(this->_mutex);
 
-        result._w = this->_w * this->_w - this->_x * this->_x
-            - this->_y * this->_y - this->_z * this->_z;
-        result._x = this->_w * this->_x + this->_x * this->_w
-            + this->_y * this->_z - this->_z * this->_y;
-        result._y = this->_w * this->_y - this->_x * this->_z
-            + this->_y * this->_w + this->_z * this->_x;
-        result._z = this->_w * this->_z + this->_x * this->_y
-            - this->_y * this->_x + this->_z * this->_w;
+        quaternion_compute_product_components(result,
+            this->_w, this->_x, this->_y, this->_z,
+            this->_w, this->_x, this->_y, this->_z);
     }
     else
     {
@@ -185,14 +210,9 @@ quaternion  quaternion::multiply(const quaternion &other) const
         std::lock_guard<std::mutex> this_lock(this->_mutex, std::adopt_lock);
         std::lock_guard<std::mutex> other_lock(other._mutex, std::adopt_lock);
 
-        result._w = this->_w * other._w - this->_x * other._x
-            - this->_y * other._y - this->_z * other._z;
-        result._x = this->_w * other._x + this->_x * other._w
-            + this->_y * other._z - this->_z * other._y;
-        result._y = this->_w * other._y - this->_x * other._z
-            + this->_y * other._w + this->_z * other._x;
-        result._z = this->_w * other._z + this->_x * other._y
-            - this->_y * other._x + this->_z * other._w;
+        quaternion_compute_product_components(result,
+            this->_w, this->_x, this->_y, this->_z,
+            other._w, other._x, other._y, other._z);
     }
     result.set_error(ER_SUCCESS);
     this->set_error(ER_SUCCESS);
@@ -223,8 +243,9 @@ double  quaternion::length() const
     {
         std::lock_guard<std::mutex> lock_guard(this->_mutex);
 
-        length_value = this->_w * this->_w + this->_x * this->_x
-            + this->_y * this->_y + this->_z * this->_z;
+        length_value = quaternion_compute_dot(this->_w, this->_x,
+            this->_y, this->_z,
+            this->_w, this->_x, this->_y, this->_z);
     }
     this->set_error(ER_SUCCESS);
     return (math_sqrt(length_value));
@@ -296,3 +317,40 @@ const char  *quaternion::get_error_str() const
     return (ft_strerror(error_code));
 }
 
+#if defined(__SSE2__)
+static double quaternion_compute_dot(double first_w, double first_x,
+    double first_y, double first_z,
+    double second_w, double second_x,
+    double second_y, double second_z)
+{
+    __m128d first_low;
+    __m128d second_low;
+    __m128d product_low;
+    __m128d first_high;
+    __m128d second_high;
+    __m128d product_high;
+    __m128d sum;
+    __m128d swapped;
+    __m128d total;
+
+    first_low = _mm_set_pd(first_x, first_w);
+    second_low = _mm_set_pd(second_x, second_w);
+    product_low = _mm_mul_pd(first_low, second_low);
+    first_high = _mm_set_pd(first_z, first_y);
+    second_high = _mm_set_pd(second_z, second_y);
+    product_high = _mm_mul_pd(first_high, second_high);
+    sum = _mm_add_pd(product_low, product_high);
+    swapped = _mm_shuffle_pd(sum, sum, 0x1);
+    total = _mm_add_sd(sum, swapped);
+    return (_mm_cvtsd_f64(total));
+}
+#else
+static double quaternion_compute_dot(double first_w, double first_x,
+    double first_y, double first_z,
+    double second_w, double second_x,
+    double second_y, double second_z)
+{
+    return (first_w * second_w + first_x * second_x
+        + first_y * second_y + first_z * second_z);
+}
+#endif

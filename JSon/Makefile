@@ -11,7 +11,8 @@ SRCS :=         json_parsing.cpp \
                 json_document.cpp \
                 json_schema.cpp \
                 json_schema_evolution.cpp \
-                json_dom_bridge.cpp
+                json_dom_bridge.cpp \
+                json_thread_safety.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
