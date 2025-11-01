@@ -205,7 +205,7 @@ Remaining unchecked items: 6
 - [x] Document ownership semantics for wrappers like `ft_file` to avoid double-close mistakes.
 - [ ] Audit exception safety for each class and document the strong/weak guarantees they provide.
 - [x] Supply sample adapters showing how to embed these classes into user-defined types with RAII expectations.
-- [ ] Make `ft_big_number` thread safe (relies on the shared deadlock resolution routine described below).
+- [x] Make `ft_big_number` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `DataBuffer` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_string` thread safe (relies on the shared deadlock resolution routine described below).
 - [x] Make `ft_stringbuf` thread safe (relies on the shared deadlock resolution routine described below).
