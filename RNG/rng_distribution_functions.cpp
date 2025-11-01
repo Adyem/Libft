@@ -109,6 +109,7 @@ double rng_gamma_pdf(double shape, double scale, double value)
 {
     double log_component;
     double result;
+    double epsilon;
 
     if (shape <= 0.0 || scale <= 0.0)
     {
@@ -120,14 +121,15 @@ double rng_gamma_pdf(double shape, double scale, double value)
         ft_errno = ER_SUCCESS;
         return (0.0);
     }
-    if (value == 0.0)
+    epsilon = 0.000000000001;
+    if (std::fabs(value) <= epsilon)
     {
         if (shape < 1.0)
         {
             ft_errno = ER_SUCCESS;
             return (std::numeric_limits<double>::infinity());
         }
-        if (shape == 1.0)
+        if (std::fabs(shape - 1.0) <= epsilon)
         {
             ft_errno = ER_SUCCESS;
             return (1.0 / scale);
@@ -190,12 +192,14 @@ double rng_beta_pdf(double alpha, double beta, double value)
     double log_denominator;
     double log_component;
     double result;
+    double epsilon;
 
     if (alpha <= 0.0 || beta <= 0.0)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0.0);
     }
+    epsilon = 0.000000000001;
     if (value <= 0.0)
     {
         if (alpha < 1.0)
@@ -203,7 +207,7 @@ double rng_beta_pdf(double alpha, double beta, double value)
             ft_errno = ER_SUCCESS;
             return (std::numeric_limits<double>::infinity());
         }
-        if (alpha == 1.0)
+        if (std::fabs(alpha - 1.0) <= epsilon)
         {
             ft_errno = ER_SUCCESS;
             return (beta);
@@ -218,7 +222,7 @@ double rng_beta_pdf(double alpha, double beta, double value)
             ft_errno = ER_SUCCESS;
             return (std::numeric_limits<double>::infinity());
         }
-        if (beta == 1.0)
+        if (std::fabs(beta - 1.0) <= epsilon)
         {
             ft_errno = ER_SUCCESS;
             return (alpha);
