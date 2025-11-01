@@ -16,7 +16,7 @@ class ft_istream
 
         void set_error_unlocked(int error_code) const noexcept;
         int lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept;
-        static void restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept;
+        static void restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno, bool restore_previous_on_success = true) noexcept;
 
     protected:
         ft_istream() noexcept;

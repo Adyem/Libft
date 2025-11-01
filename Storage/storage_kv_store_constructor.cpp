@@ -9,6 +9,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
     , _file_path()
     , _encryption_key()
     , _encryption_enabled(false)
+    , _backend_type(KV_STORE_BACKEND_JSON)
     , _background_thread_active(false)
     , _background_stop_requested(false)
     , _background_interval_seconds(0)

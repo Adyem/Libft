@@ -285,11 +285,14 @@ void ft_unordered_map<Key, MappedType>::iterator::advance_to_valid_index_unlocke
 template <typename Key, typename MappedType>
 int ft_unordered_map<Key, MappedType>::iterator::lock_internal(bool *lock_acquired) const
 {
+    int entry_errno;
+
+    entry_errno = ft_errno;
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = entry_errno;
         return (0);
     }
     this->_mutex->lock(THREAD_ID);
@@ -300,7 +303,7 @@ int ft_unordered_map<Key, MappedType>::iterator::lock_internal(bool *lock_acquir
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = ER_SUCCESS;
+    ft_errno = entry_errno;
     return (0);
 }
 
@@ -498,13 +501,18 @@ bool ft_unordered_map<Key, MappedType>::iterator::is_thread_safe() const
 template <typename Key, typename MappedType>
 int ft_unordered_map<Key, MappedType>::iterator::lock(bool *lock_acquired) const
 {
+    int entry_errno;
     int result;
 
+    entry_errno = ft_errno;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
+    {
         this->set_error(ft_errno);
-    else
-        this->set_error(ER_SUCCESS);
+        return (result);
+    }
+    this->_error_code = ER_SUCCESS;
+    ft_errno = entry_errno;
     return (result);
 }
 
@@ -515,13 +523,13 @@ void ft_unordered_map<Key, MappedType>::iterator::unlock(bool lock_acquired) con
 
     entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
-    if (this->_mutex != ft_nullptr && this->_mutex->get_error() != ER_SUCCESS)
-        this->set_error(this->_mutex->get_error());
-    else
+    if (lock_acquired && this->_mutex != ft_nullptr && this->_mutex->get_error() != ER_SUCCESS)
     {
-        ft_errno = entry_errno;
-        this->set_error(ft_errno);
+        this->set_error(this->_mutex->get_error());
+        return ;
     }
+    this->_error_code = ER_SUCCESS;
+    ft_errno = entry_errno;
     return ;
 }
 
@@ -655,11 +663,14 @@ void ft_unordered_map<Key, MappedType>::const_iterator::advance_to_valid_index_u
 template <typename Key, typename MappedType>
 int ft_unordered_map<Key, MappedType>::const_iterator::lock_internal(bool *lock_acquired) const
 {
+    int entry_errno;
+
+    entry_errno = ft_errno;
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = entry_errno;
         return (0);
     }
     this->_mutex->lock(THREAD_ID);
@@ -670,7 +681,7 @@ int ft_unordered_map<Key, MappedType>::const_iterator::lock_internal(bool *lock_
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = ER_SUCCESS;
+    ft_errno = entry_errno;
     return (0);
 }
 
@@ -868,13 +879,18 @@ bool ft_unordered_map<Key, MappedType>::const_iterator::is_thread_safe() const
 template <typename Key, typename MappedType>
 int ft_unordered_map<Key, MappedType>::const_iterator::lock(bool *lock_acquired) const
 {
+    int entry_errno;
     int result;
 
+    entry_errno = ft_errno;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
+    {
         this->set_error(ft_errno);
-    else
-        this->set_error(ER_SUCCESS);
+        return (result);
+    }
+    this->_error_code = ER_SUCCESS;
+    ft_errno = entry_errno;
     return (result);
 }
 
@@ -885,13 +901,13 @@ void ft_unordered_map<Key, MappedType>::const_iterator::unlock(bool lock_acquire
 
     entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
-    if (this->_mutex != ft_nullptr && this->_mutex->get_error() != ER_SUCCESS)
-        this->set_error(this->_mutex->get_error());
-    else
+    if (lock_acquired && this->_mutex != ft_nullptr && this->_mutex->get_error() != ER_SUCCESS)
     {
-        ft_errno = entry_errno;
-        this->set_error(ft_errno);
+        this->set_error(this->_mutex->get_error());
+        return ;
     }
+    this->_error_code = ER_SUCCESS;
+    ft_errno = entry_errno;
     return ;
 }
 

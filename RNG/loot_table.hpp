@@ -222,7 +222,11 @@ ft_loot_entry<ElementType> &ft_loot_entry<ElementType>::operator=(const ft_loot_
 template<typename ElementType>
 ft_loot_entry<ElementType>::~ft_loot_entry() noexcept
 {
+    int entry_errno;
+
+    entry_errno = ft_errno;
     this->set_error_unlocked(ER_SUCCESS);
+    ft_errno = entry_errno;
     return ;
 }
 

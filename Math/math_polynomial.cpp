@@ -490,11 +490,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
     size_t segment_count;
     ft_vector<double> h;
     ft_vector<double> alpha;
-    ft_vector<double> l;
-    ft_vector<double> mu;
-    ft_vector<double> z;
     size_t index;
-    double denominator;
     int error_code;
 
     if (x_values.get_error() != ER_SUCCESS)
@@ -574,48 +570,142 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
             - 3.0 * (spline.a_coefficients[index] - spline.a_coefficients[index - 1]) / h[index - 1];
         index++;
     }
-    l.resize(count, 0.0);
-    if (l.get_error() != ER_SUCCESS)
+    if (segment_count == 1)
     {
-        spline.set_error(l.get_error());
+        double slope;
+
+        slope = (spline.a_coefficients[1] - spline.a_coefficients[0]) / h[0];
+        spline.b_coefficients[0] = slope;
+        spline.c_coefficients[0] = 0.0;
+        spline.c_coefficients[1] = 0.0;
+        spline.d_coefficients[0] = 0.0;
+        spline.set_error(ER_SUCCESS);
         return (spline);
     }
-    mu.resize(count, 0.0);
-    if (mu.get_error() != ER_SUCCESS)
+    if (segment_count == 2)
     {
-        spline.set_error(mu.get_error());
-        return (spline);
-    }
-    z.resize(count, 0.0);
-    if (z.get_error() != ER_SUCCESS)
-    {
-        spline.set_error(z.get_error());
-        return (spline);
-    }
-    l[0] = 1.0;
-    mu[0] = 0.0;
-    z[0] = 0.0;
-    index = 1;
-    while (index < segment_count)
-    {
-        denominator = 2.0 * (spline.x_values[index + 1] - spline.x_values[index - 1]) - h[index - 1] * mu[index - 1];
-        if (denominator == 0.0)
+        double denominator_two_segments;
+
+        denominator_two_segments = 2.0 * (h[0] + h[1]);
+        if (denominator_two_segments == 0.0)
         {
             spline.set_error(FT_ERR_INVALID_ARGUMENT);
             return (spline);
         }
-        l[index] = denominator;
-        mu[index] = h[index] / denominator;
-        z[index] = (alpha[index] - h[index - 1] * z[index - 1]) / denominator;
-        index++;
+        spline.c_coefficients[0] = 0.0;
+        spline.c_coefficients[1] = alpha[1] / denominator_two_segments;
+        spline.c_coefficients[2] = 0.0;
     }
-    l[count - 1] = 1.0;
-    z[count - 1] = 0.0;
-    spline.c_coefficients[count - 1] = 0.0;
+    else
+    {
+        ft_vector<double> lower;
+        ft_vector<double> diagonal;
+        ft_vector<double> upper;
+        ft_vector<double> rhs;
+        ft_vector<double> interior_c;
+        size_t equation_count;
+        size_t equation_index;
+        size_t last_index;
+        size_t current_index;
+        double pivot;
+        double factor;
+        double value;
+
+        equation_count = count - 2;
+        lower.resize(equation_count, 0.0);
+        if (lower.get_error() != ER_SUCCESS)
+        {
+            spline.set_error(lower.get_error());
+            return (spline);
+        }
+        diagonal.resize(equation_count, 0.0);
+        if (diagonal.get_error() != ER_SUCCESS)
+        {
+            spline.set_error(diagonal.get_error());
+            return (spline);
+        }
+        upper.resize(equation_count, 0.0);
+        if (upper.get_error() != ER_SUCCESS)
+        {
+            spline.set_error(upper.get_error());
+            return (spline);
+        }
+        rhs.resize(equation_count, 0.0);
+        if (rhs.get_error() != ER_SUCCESS)
+        {
+            spline.set_error(rhs.get_error());
+            return (spline);
+        }
+        interior_c.resize(equation_count, 0.0);
+        if (interior_c.get_error() != ER_SUCCESS)
+        {
+            spline.set_error(interior_c.get_error());
+            return (spline);
+        }
+        diagonal[0] = (h[0] + h[1]) * (h[0] + 2.0 * h[1]);
+        upper[0] = (h[1] * h[1]) - (h[0] * h[0]);
+        rhs[0] = alpha[1] * h[1];
+        equation_index = 1;
+        while (equation_index + 1 < equation_count)
+        {
+            size_t alpha_index;
+
+            alpha_index = equation_index + 1;
+            lower[equation_index] = h[alpha_index - 1];
+            diagonal[equation_index] = 2.0 * (h[alpha_index - 1] + h[alpha_index]);
+            upper[equation_index] = h[alpha_index];
+            rhs[equation_index] = alpha[alpha_index];
+            equation_index++;
+        }
+        last_index = equation_count - 1;
+        lower[last_index] = (h[segment_count - 2] * h[segment_count - 2]) - (h[segment_count - 1] * h[segment_count - 1]);
+        diagonal[last_index] = (h[segment_count - 2] + h[segment_count - 1]) * (2.0 * h[segment_count - 2] + h[segment_count - 1]);
+        rhs[last_index] = alpha[count - 2] * h[segment_count - 2];
+        equation_index = 1;
+        while (equation_index < equation_count)
+        {
+            pivot = diagonal[equation_index - 1];
+            if (pivot == 0.0)
+            {
+                spline.set_error(FT_ERR_INVALID_ARGUMENT);
+                return (spline);
+            }
+            factor = lower[equation_index] / pivot;
+            diagonal[equation_index] -= factor * upper[equation_index - 1];
+            rhs[equation_index] -= factor * rhs[equation_index - 1];
+            lower[equation_index] = 0.0;
+            equation_index++;
+        }
+        equation_index = equation_count;
+        while (equation_index > 0)
+        {
+            equation_index--;
+            current_index = equation_index;
+            pivot = diagonal[current_index];
+            if (pivot == 0.0)
+            {
+                spline.set_error(FT_ERR_INVALID_ARGUMENT);
+                return (spline);
+            }
+            value = rhs[current_index];
+            if (current_index + 1 < equation_count)
+                value -= upper[current_index] * interior_c[current_index + 1];
+            value /= pivot;
+            interior_c[current_index] = value;
+        }
+        spline.c_coefficients[0] = ((h[0] + h[1]) * interior_c[0] - h[0] * interior_c[1]) / h[1];
+        equation_index = 0;
+        while (equation_index < equation_count)
+        {
+            spline.c_coefficients[equation_index + 1] = interior_c[equation_index];
+            equation_index++;
+        }
+        spline.c_coefficients[count - 1] = ((h[segment_count - 2] + h[segment_count - 1]) * interior_c[equation_count - 1]
+                - h[segment_count - 1] * interior_c[equation_count - 2]) / h[segment_count - 2];
+    }
     index = segment_count;
     while (index > 0)
     {
-        spline.c_coefficients[index - 1] = z[index - 1] - mu[index - 1] * spline.c_coefficients[index];
         spline.b_coefficients[index - 1] = (spline.a_coefficients[index] - spline.a_coefficients[index - 1]) / h[index - 1]
             - h[index - 1] * (spline.c_coefficients[index] + 2.0 * spline.c_coefficients[index - 1]) / 3.0;
         spline.d_coefficients[index - 1] = (spline.c_coefficients[index] - spline.c_coefficients[index - 1]) / (3.0 * h[index - 1]);

@@ -69,13 +69,13 @@ void ft_stringbuf::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errn
 
 std::size_t ft_stringbuf::read(char *buffer, std::size_t count)
 {
-    ft_unique_lock<pt_mutex> guard;
     int entry_errno;
     int lock_error;
     std::size_t index;
     bool failure_occurred;
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard;
     lock_error = this->lock_self(guard);
     if (lock_error != ER_SUCCESS)
     {
@@ -114,12 +114,12 @@ std::size_t ft_stringbuf::read(char *buffer, std::size_t count)
 
 bool ft_stringbuf::is_bad() const noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int entry_errno;
     int lock_error;
     bool result;
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard;
     lock_error = this->lock_self(guard);
     if (lock_error != ER_SUCCESS)
     {
@@ -128,18 +128,19 @@ bool ft_stringbuf::is_bad() const noexcept
         return (true);
     }
     result = (this->_error_code != ER_SUCCESS);
+    ft_errno = entry_errno;
     ft_stringbuf::restore_errno(guard, entry_errno);
     return (result);
 }
 
 int ft_stringbuf::get_error() const noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int entry_errno;
     int lock_error;
     int error_value;
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard;
     lock_error = this->lock_self(guard);
     if (lock_error != ER_SUCCESS)
     {
@@ -148,18 +149,19 @@ int ft_stringbuf::get_error() const noexcept
         return (lock_error);
     }
     error_value = this->_error_code;
+    ft_errno = error_value;
     ft_stringbuf::restore_errno(guard, entry_errno);
     return (error_value);
 }
 
 const char *ft_stringbuf::get_error_str() const noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int entry_errno;
     int lock_error;
     const char *error_string;
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard;
     lock_error = this->lock_self(guard);
     if (lock_error != ER_SUCCESS)
     {
@@ -168,19 +170,20 @@ const char *ft_stringbuf::get_error_str() const noexcept
         return (ft_strerror(lock_error));
     }
     error_string = ft_strerror(this->_error_code);
+    ft_errno = this->_error_code;
     ft_stringbuf::restore_errno(guard, entry_errno);
     return (error_string);
 }
 
 ft_string ft_stringbuf::str() const
 {
-    ft_unique_lock<pt_mutex> guard;
     int entry_errno;
     int lock_error;
     const char *start;
     ft_string result;
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard;
     lock_error = this->lock_self(guard);
     if (lock_error != ER_SUCCESS)
     {

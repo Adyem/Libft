@@ -7,6 +7,7 @@ bool api_append_content_length_header(ft_string &request, size_t content_length)
     char reversed_buffer[32];
     size_t reversed_length;
     size_t index;
+    int request_error;
 
     reversed_length = 0;
     do
@@ -29,10 +30,19 @@ bool api_append_content_length_header(ft_string &request, size_t content_length)
     }
     content_length_buffer[reversed_length] = '\0';
     request += "\r\nContent-Length: ";
-    if (request.get_error() != ER_SUCCESS)
+    request_error = request.get_error();
+    if (request_error != ER_SUCCESS)
+    {
+        ft_errno = request_error;
         return (false);
+    }
     request += content_length_buffer;
-    if (request.get_error() != ER_SUCCESS)
+    request_error = request.get_error();
+    if (request_error != ER_SUCCESS)
+    {
+        ft_errno = request_error;
         return (false);
+    }
+    ft_errno = ER_SUCCESS;
     return (true);
 }

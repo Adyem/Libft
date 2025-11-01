@@ -245,10 +245,10 @@ ft_function<ReturnType(Args...)>::ft_function(ft_function &&other)
     other._invoke = ft_nullptr;
     other._destroy = ft_nullptr;
     other._clone = ft_nullptr;
+    other.unlock_internal(other_lock_acquired);
     other._state_mutex = ft_nullptr;
     other._thread_safe_enabled = false;
     other._error_code = ER_SUCCESS;
-    other.unlock_internal(other_lock_acquired);
     this->_callable = transferred_callable;
     this->_invoke = transferred_invoke;
     this->_destroy = transferred_destroy;
@@ -391,10 +391,10 @@ ft_function<ReturnType(Args...)> &ft_function<ReturnType(Args...)>::operator=(ft
     other._invoke = ft_nullptr;
     other._destroy = ft_nullptr;
     other._clone = ft_nullptr;
+    other.unlock_internal(other_lock_acquired);
     other._state_mutex = ft_nullptr;
     other._thread_safe_enabled = false;
     other._error_code = ER_SUCCESS;
-    other.unlock_internal(other_lock_acquired);
     previous_mutex = this->_state_mutex;
     this->_callable = transferred_callable;
     this->_invoke = transferred_invoke;
@@ -549,13 +549,18 @@ bool ft_function<ReturnType(Args...)>::is_thread_safe_enabled() const
 template <typename ReturnType, typename... Args>
 int ft_function<ReturnType(Args...)>::lock(bool *lock_acquired) const
 {
+    int entry_errno;
     int result;
 
+    entry_errno = ft_errno;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
+    {
         const_cast<ft_function<ReturnType(Args...)> *>(this)->set_error(ft_errno);
-    else
-        const_cast<ft_function<ReturnType(Args...)> *>(this)->set_error(ER_SUCCESS);
+        return (result);
+    }
+    this->_error_code = ER_SUCCESS;
+    ft_errno = entry_errno;
     return (result);
 }
 
@@ -563,13 +568,24 @@ template <typename ReturnType, typename... Args>
 void ft_function<ReturnType(Args...)>::unlock(bool lock_acquired) const
 {
     int entry_errno;
+    int mutex_error;
 
     entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
-    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != ER_SUCCESS)
-        const_cast<ft_function<ReturnType(Args...)> *>(this)->set_error(this->_state_mutex->get_error());
-    else
-        const_cast<ft_function<ReturnType(Args...)> *>(this)->set_error(entry_errno);
+    if (!lock_acquired || this->_state_mutex == ft_nullptr)
+    {
+        this->_error_code = ER_SUCCESS;
+        ft_errno = entry_errno;
+        return ;
+    }
+    mutex_error = this->_state_mutex->get_error();
+    if (mutex_error != ER_SUCCESS)
+    {
+        const_cast<ft_function<ReturnType(Args...)> *>(this)->set_error(mutex_error);
+        return ;
+    }
+    this->_error_code = ER_SUCCESS;
+    ft_errno = entry_errno;
     return ;
 }
 
