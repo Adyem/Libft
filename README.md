@@ -818,17 +818,15 @@ dedicated tests in [`Test/Test/test_big_number.cpp`](Test/Test/test_big_number.c
 
 #### `ft_nullptr`
 ```
-namespace ft {
-    struct nullptr_t {
-        template <typename PointerType>
-        operator PointerType*() const { return nullptr; }
-        template <typename ClassType, typename MemberType>
-        operator MemberType ClassType::*() const { return nullptr; }
-        void operator&() const; /* deleted */
-    };
-    extern const nullptr_t ft_nullptr_instance;
-}
-#define ft_nullptr (ft::ft_nullptr_instance)
+struct ft_nullptr_t {
+    template <typename PointerType>
+    operator PointerType*() const { return nullptr; }
+    template <typename ClassType, typename MemberType>
+    operator MemberType ClassType::*() const { return nullptr; }
+    void operator&() const; /* deleted */
+};
+extern const ft_nullptr_t ft_nullptr_instance;
+#define ft_nullptr (ft_nullptr_instance)
 ```
 
 ### Networking

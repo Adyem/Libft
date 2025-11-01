@@ -136,6 +136,10 @@ ft_string& ft_string::operator=(const ft_string& other) noexcept
         ft_string::restore_errno(self_guard, entry_errno);
         if (other_guard.owns_lock())
             other_guard.unlock();
+        if (this->_error_code != ER_SUCCESS)
+        {
+            ft_errno = this->_error_code;
+        }
         return (*this);
     }
     if (other._data)
@@ -149,6 +153,10 @@ ft_string& ft_string::operator=(const ft_string& other) noexcept
             ft_string::restore_errno(self_guard, entry_errno);
             if (other_guard.owns_lock())
                 other_guard.unlock();
+            if (this->_error_code != ER_SUCCESS)
+            {
+                ft_errno = this->_error_code;
+            }
             return (*this);
         }
         ft_memcpy(this->_data, other._data, this->_length + 1);
@@ -226,6 +234,10 @@ ft_string& ft_string::operator=(ft_string&& other) noexcept
     ft_string::restore_errno(self_guard, entry_errno);
     if (other_guard.owns_lock())
         other_guard.unlock();
+    if (this->_error_code != ER_SUCCESS)
+    {
+        ft_errno = this->_error_code;
+    }
     return (*this);
 }
 

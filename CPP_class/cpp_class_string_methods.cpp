@@ -286,6 +286,33 @@ void ft_string::clear_unlocked() noexcept
     return ;
 }
 
+void ft_string::ensure_empty_buffer_unlocked() noexcept
+{
+    char *new_data;
+
+    if (this->_data)
+    {
+        this->_data[0] = '\0';
+        if (this->_capacity == 0)
+            this->_capacity = 1;
+        this->_length = 0;
+        this->set_error_unlocked(ER_SUCCESS);
+        return ;
+    }
+    new_data = static_cast<char*>(cma_calloc(1, sizeof(char)));
+    if (!new_data)
+    {
+        this->set_error_unlocked(FT_ERR_NO_MEMORY);
+        return ;
+    }
+    this->_data = new_data;
+    this->_capacity = 1;
+    this->_length = 0;
+    this->_data[0] = '\0';
+    this->set_error_unlocked(ER_SUCCESS);
+    return ;
+}
+
 void ft_string::assign_unlocked(size_t count, char character) noexcept
 {
     size_t index;
@@ -294,7 +321,10 @@ void ft_string::assign_unlocked(size_t count, char character) noexcept
     if (this->_error_code != ER_SUCCESS)
         return ;
     if (count == 0)
+    {
+        this->ensure_empty_buffer_unlocked();
         return ;
+    }
     this->resize_length_unlocked(count);
     if (this->_error_code != ER_SUCCESS)
         return ;
@@ -312,7 +342,15 @@ void ft_string::assign_unlocked(size_t count, char character) noexcept
 
 void ft_string::assign_unlocked(const char *string, size_t length) noexcept
 {
-    if (!string || length == 0)
+    if (length == 0)
+    {
+        this->clear_unlocked();
+        if (this->_error_code != ER_SUCCESS)
+            return ;
+        this->ensure_empty_buffer_unlocked();
+        return ;
+    }
+    if (!string)
     {
         this->set_error_unlocked(ER_SUCCESS);
         return ;

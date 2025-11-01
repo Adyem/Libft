@@ -150,9 +150,9 @@ inline ft_bitset::ft_bitset(ft_bitset&& other) noexcept
     other._blockCount = 0;
     other._data = ft_nullptr;
     other._error_code = ER_SUCCESS;
+    other.unlock_internal(other_lock_acquired);
     other._state_mutex = ft_nullptr;
     other._thread_safe_enabled = false;
-    other.unlock_internal(other_lock_acquired);
     this->_size = transferred_size;
     this->_blockCount = transferred_block_count;
     this->_data = transferred_data;
@@ -197,9 +197,9 @@ inline ft_bitset& ft_bitset::operator=(ft_bitset&& other) noexcept
     other._blockCount = 0;
     other._data = ft_nullptr;
     other._error_code = ER_SUCCESS;
+    other.unlock_internal(other_lock_acquired);
     other._state_mutex = ft_nullptr;
     other._thread_safe_enabled = false;
-    other.unlock_internal(other_lock_acquired);
     this->unlock_internal(this_lock_acquired);
     if (previous_data != ft_nullptr && previous_data != this->_data)
         cma_free(previous_data);
@@ -401,26 +401,42 @@ inline bool ft_bitset::is_thread_safe_enabled() const
 
 inline int ft_bitset::lock(bool *lock_acquired) const
 {
+    int entry_errno;
     int result;
 
+    entry_errno = ft_errno;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
-        const_cast<ft_bitset*>(this)->set_error(ft_errno);
-    else
-        const_cast<ft_bitset*>(this)->set_error(ER_SUCCESS);
+    {
+        this->set_error(ft_errno);
+        return (result);
+    }
+    this->_error_code = ER_SUCCESS;
+    ft_errno = entry_errno;
     return (result);
 }
 
 inline void ft_bitset::unlock(bool lock_acquired) const
 {
     int entry_errno;
+    int mutex_error;
 
     entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
-    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != ER_SUCCESS)
-        const_cast<ft_bitset*>(this)->set_error(this->_state_mutex->get_error());
-    else
-        const_cast<ft_bitset*>(this)->set_error(entry_errno);
+    if (!lock_acquired || this->_state_mutex == ft_nullptr)
+    {
+        this->_error_code = ER_SUCCESS;
+        ft_errno = entry_errno;
+        return ;
+    }
+    mutex_error = this->_state_mutex->get_error();
+    if (mutex_error != ER_SUCCESS)
+    {
+        const_cast<ft_bitset*>(this)->set_error(mutex_error);
+        return ;
+    }
+    this->_error_code = ER_SUCCESS;
+    ft_errno = entry_errno;
     return ;
 }
 
