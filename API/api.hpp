@@ -219,6 +219,13 @@ bool    api_request_json_tls_http2_async(const char *host, uint16_t port,
         const char *headers = ft_nullptr, int timeout = 60000,
         bool *used_http2 = ft_nullptr);
 
+bool    api_request(const char *ip, uint16_t port,
+        const char *method, const char *path,
+        const api_streaming_handler *streaming_handler,
+        json_group *payload = ft_nullptr, const char *headers = ft_nullptr,
+        int timeout = 60000, bool enable_http2 = true,
+        bool *used_http2 = ft_nullptr,
+        const api_retry_policy *retry_policy = ft_nullptr);
 bool    api_request_stream(const char *ip, uint16_t port,
         const char *method, const char *path,
         const api_streaming_handler *streaming_handler,

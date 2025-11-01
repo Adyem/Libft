@@ -1,6 +1,7 @@
 #include "api_http_common.hpp"
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
+#include "../CPP_class/class_big_number.hpp"
 #include <cstddef>
 #include <climits>
 
@@ -465,4 +466,262 @@ bool api_http_decode_chunked(const char *body_start, size_t body_size,
         offset += 2;
     }
     return (false);
+}
+
+static bool api_http_measure_add(size_t &total, size_t increment)
+{
+    if (SIZE_MAX - total < increment)
+    {
+        ft_errno = FT_ERR_OUT_OF_RANGE;
+        return (false);
+    }
+    total += increment;
+    return (true);
+}
+
+bool api_http_measure_json_payload(json_group *payload,
+    size_t &payload_length)
+{
+    size_t total_length;
+    json_group *group_iterator;
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    payload_length = 0;
+    if (!payload)
+    {
+        ft_errno = entry_errno;
+        return (true);
+    }
+    total_length = 0;
+    if (!api_http_measure_add(total_length, 2))
+        return (false);
+    group_iterator = payload;
+    while (group_iterator)
+    {
+        const char *group_name;
+        size_t name_length;
+        json_item *item_iterator;
+
+        group_name = group_iterator->name;
+        if (!group_name)
+            group_name = "";
+        name_length = ft_strlen(group_name);
+        if (!api_http_measure_add(total_length, 3))
+            return (false);
+        if (!api_http_measure_add(total_length, name_length))
+            return (false);
+        if (!api_http_measure_add(total_length, 5))
+            return (false);
+        item_iterator = group_iterator->items;
+        while (item_iterator)
+        {
+            const char *item_key;
+            size_t key_length;
+            bool big_number_value;
+            const char *value_text;
+            size_t value_length;
+
+            item_key = item_iterator->key;
+            if (!item_key)
+                item_key = "";
+            key_length = ft_strlen(item_key);
+            if (!api_http_measure_add(total_length, 5))
+                return (false);
+            if (!api_http_measure_add(total_length, key_length))
+                return (false);
+            if (!api_http_measure_add(total_length, 3))
+                return (false);
+            big_number_value = (item_iterator->is_big_number == true)
+                && (item_iterator->big_number != ft_nullptr);
+            if (big_number_value)
+                value_text = item_iterator->big_number->c_str();
+            else
+                value_text = item_iterator->value;
+            if (!value_text)
+                value_text = "";
+            value_length = ft_strlen(value_text);
+            if (!big_number_value)
+            {
+                if (!api_http_measure_add(total_length, 1))
+                    return (false);
+            }
+            if (!api_http_measure_add(total_length, value_length))
+                return (false);
+            if (!big_number_value)
+            {
+                if (!api_http_measure_add(total_length, 1))
+                    return (false);
+            }
+            if (item_iterator->next)
+            {
+                if (!api_http_measure_add(total_length, 2))
+                    return (false);
+            }
+            else
+            {
+                if (!api_http_measure_add(total_length, 1))
+                    return (false);
+            }
+            item_iterator = item_iterator->next;
+        }
+        if (group_iterator->next)
+        {
+            if (!api_http_measure_add(total_length, 5))
+                return (false);
+        }
+        else
+        {
+            if (!api_http_measure_add(total_length, 4))
+                return (false);
+        }
+        group_iterator = group_iterator->next;
+    }
+    if (!api_http_measure_add(total_length, 2))
+        return (false);
+    payload_length = total_length;
+    ft_errno = entry_errno;
+    return (true);
+}
+
+static bool api_http_stream_literal(api_http_send_callback send_callback,
+    void *context, const char *literal, size_t literal_length, int &error_code)
+{
+    if (literal_length == 0)
+        return (true);
+    if (!send_callback)
+    {
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (false);
+    }
+    if (!send_callback(literal, literal_length, context, error_code))
+        return (false);
+    return (true);
+}
+
+bool api_http_stream_json_payload(json_group *payload,
+    api_http_send_callback send_callback, void *context, int &error_code)
+{
+    json_group *group_iterator;
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    error_code = ER_SUCCESS;
+    if (!payload)
+    {
+        ft_errno = entry_errno;
+        return (true);
+    }
+    if (!api_http_stream_literal(send_callback, context, "{\n",
+            ft_strlen("{\n"), error_code))
+        return (false);
+    group_iterator = payload;
+    while (group_iterator)
+    {
+        const char *group_name;
+        size_t group_name_length;
+        json_item *item_iterator;
+
+        group_name = group_iterator->name;
+        if (!group_name)
+            group_name = "";
+        group_name_length = ft_strlen(group_name);
+        if (!api_http_stream_literal(send_callback, context, "  \"",
+                ft_strlen("  \""), error_code))
+            return (false);
+        if (group_name_length > 0)
+        {
+            if (!api_http_stream_literal(send_callback, context, group_name,
+                    group_name_length, error_code))
+                return (false);
+        }
+        if (!api_http_stream_literal(send_callback, context, "\": {\n",
+                ft_strlen("\": {\n"), error_code))
+            return (false);
+        item_iterator = group_iterator->items;
+        while (item_iterator)
+        {
+            const char *item_key;
+            size_t item_key_length;
+            bool big_number_value;
+            const char *value_text;
+            size_t value_length;
+
+            item_key = item_iterator->key;
+            if (!item_key)
+                item_key = "";
+            item_key_length = ft_strlen(item_key);
+            if (!api_http_stream_literal(send_callback, context, "    \"",
+                    ft_strlen("    \""), error_code))
+                return (false);
+            if (item_key_length > 0)
+            {
+                if (!api_http_stream_literal(send_callback, context, item_key,
+                        item_key_length, error_code))
+                    return (false);
+            }
+            if (!api_http_stream_literal(send_callback, context, "\": ",
+                    ft_strlen("\": "), error_code))
+                return (false);
+            big_number_value = (item_iterator->is_big_number == true)
+                && (item_iterator->big_number != ft_nullptr);
+            if (big_number_value)
+                value_text = item_iterator->big_number->c_str();
+            else
+                value_text = item_iterator->value;
+            if (!value_text)
+                value_text = "";
+            value_length = ft_strlen(value_text);
+            if (!big_number_value)
+            {
+                if (!api_http_stream_literal(send_callback, context, "\"",
+                        ft_strlen("\""), error_code))
+                    return (false);
+            }
+            if (value_length > 0)
+            {
+                if (!api_http_stream_literal(send_callback, context, value_text,
+                        value_length, error_code))
+                    return (false);
+            }
+            if (!big_number_value)
+            {
+                if (!api_http_stream_literal(send_callback, context, "\"",
+                        ft_strlen("\""), error_code))
+                    return (false);
+            }
+            if (item_iterator->next)
+            {
+                if (!api_http_stream_literal(send_callback, context, ",\n",
+                        ft_strlen(",\n"), error_code))
+                    return (false);
+            }
+            else
+            {
+                if (!api_http_stream_literal(send_callback, context, "\n",
+                        ft_strlen("\n"), error_code))
+                    return (false);
+            }
+            item_iterator = item_iterator->next;
+        }
+        if (group_iterator->next)
+        {
+            if (!api_http_stream_literal(send_callback, context, "  },\n",
+                    ft_strlen("  },\n"), error_code))
+                return (false);
+        }
+        else
+        {
+            if (!api_http_stream_literal(send_callback, context, "  }\n",
+                    ft_strlen("  }\n"), error_code))
+                return (false);
+        }
+        group_iterator = group_iterator->next;
+    }
+    if (!api_http_stream_literal(send_callback, context, "}\n",
+            ft_strlen("}\n"), error_code))
+        return (false);
+    ft_errno = entry_errno;
+    return (true);
 }
