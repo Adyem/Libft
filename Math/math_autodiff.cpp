@@ -146,8 +146,10 @@ ft_dual_number ft_dual_number::operator*(const ft_dual_number &other) const noex
 ft_dual_number ft_dual_number::operator/(const ft_dual_number &other) const noexcept
 {
     ft_dual_number result;
+    double epsilon;
 
-    if (other._value == 0.0)
+    epsilon = 0.000000000001;
+    if (std::fabs(other._value) <= epsilon)
     {
         result._value = 0.0;
         result._derivative = 0.0;

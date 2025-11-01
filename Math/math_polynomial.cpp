@@ -283,6 +283,7 @@ int math_polynomial_lagrange_interpolate(const ft_vector<double> &x_values,
     size_t inner_index;
     double term;
     double denominator;
+    double epsilon;
 
     if (x_values.get_error() != ER_SUCCESS)
     {
@@ -303,6 +304,7 @@ int math_polynomial_lagrange_interpolate(const ft_vector<double> &x_values,
         return (FT_ERR_INVALID_ARGUMENT);
     }
     count = x_values.size();
+    epsilon = 0.000000000001;
     result = 0.0;
     index = 0;
     while (index < count)
@@ -314,7 +316,7 @@ int math_polynomial_lagrange_interpolate(const ft_vector<double> &x_values,
             if (inner_index != index)
             {
                 denominator = x_values[index] - x_values[inner_index];
-                if (denominator == 0.0)
+                if (std::fabs(denominator) <= epsilon)
                 {
                     ft_errno = FT_ERR_INVALID_ARGUMENT;
                     result = 0.0;
@@ -492,6 +494,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
     ft_vector<double> alpha;
     size_t index;
     int error_code;
+    double epsilon;
 
     if (x_values.get_error() != ER_SUCCESS)
     {
@@ -509,6 +512,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
         return (spline);
     }
     count = x_values.size();
+    epsilon = 0.000000000001;
     segment_count = count - 1;
     math_polynomial_copy_vector(x_values, spline.x_values, count, error_code);
     if (error_code != ER_SUCCESS)
@@ -587,7 +591,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
         double denominator_two_segments;
 
         denominator_two_segments = 2.0 * (h[0] + h[1]);
-        if (denominator_two_segments == 0.0)
+        if (std::fabs(denominator_two_segments) <= epsilon)
         {
             spline.set_error(FT_ERR_INVALID_ARGUMENT);
             return (spline);
@@ -665,7 +669,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
         while (equation_index < equation_count)
         {
             pivot = diagonal[equation_index - 1];
-            if (pivot == 0.0)
+            if (std::fabs(pivot) <= epsilon)
             {
                 spline.set_error(FT_ERR_INVALID_ARGUMENT);
                 return (spline);
@@ -682,7 +686,7 @@ ft_cubic_spline ft_cubic_spline_build(const ft_vector<double> &x_values,
             equation_index--;
             current_index = equation_index;
             pivot = diagonal[current_index];
-            if (pivot == 0.0)
+            if (std::fabs(pivot) <= epsilon)
             {
                 spline.set_error(FT_ERR_INVALID_ARGUMENT);
                 return (spline);
@@ -794,6 +798,7 @@ int math_integrate_trapezoidal(math_unary_function function,
     double local_result;
     int step_error;
     double orientation;
+    double epsilon;
 
     if (function == ft_nullptr)
     {
@@ -801,7 +806,8 @@ int math_integrate_trapezoidal(math_unary_function function,
         result = 0.0;
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    if (lower_bound == upper_bound)
+    epsilon = 0.000000000001;
+    if (std::fabs(lower_bound - upper_bound) <= epsilon)
     {
         result = 0.0;
         ft_errno = ER_SUCCESS;
@@ -900,7 +906,8 @@ int math_integrate_simpson(math_unary_function function,
         result = 0.0;
         return (FT_ERR_INVALID_ARGUMENT);
     }
-    if (lower_bound == upper_bound)
+    epsilon = 0.000000000001;
+    if (std::fabs(lower_bound - upper_bound) <= epsilon)
     {
         result = 0.0;
         ft_errno = ER_SUCCESS;
