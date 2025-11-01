@@ -309,10 +309,14 @@ ssize_t gnl_stream::read(char *buffer, size_t max_size) noexcept
     }
     if (read_result < 0)
     {
-        if (ft_errno == ER_SUCCESS)
-            this->set_error_unlocked(FT_ERR_IO);
-        else
-            this->set_error_unlocked(ft_errno);
+        int read_error;
+
+        read_error = ft_errno;
+        if (read_error == ER_SUCCESS)
+            read_error = FT_ERR_IO;
+        else if (read_error == FT_ERR_INVALID_HANDLE)
+            read_error = FT_ERR_IO;
+        this->set_error_unlocked(read_error);
         gnl_stream::restore_errno(guard, entry_errno);
         return (-1);
     }

@@ -42,169 +42,203 @@ void ft_file_watch::set_error(int error) const
 
 int ft_file_watch::watch_directory(const char *path, void (*callback)(const char *, int, void *), void *user_data)
 {
-    ft_thread new_thread;
-    int entry_errno;
+    int final_errno;
+    int result;
+    int status;
 
-    entry_errno = ft_errno;
-    ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
-    if (mutex_guard.get_error() != ER_SUCCESS)
+    final_errno = ER_SUCCESS;
+    result = -1;
+    status = ER_SUCCESS;
     {
-        this->set_error(mutex_guard.get_error());
-        return (-1);
-    }
-    if (path == ft_nullptr || callback == ft_nullptr)
-    {
-        this->set_error(FT_ERR_INVALID_ARGUMENT);
-        mutex_guard.unlock();
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
-    }
-    if (this->_stopped == false)
-    {
-        mutex_guard.unlock();
-        ft_errno = entry_errno;
-        this->stop();
-        mutex_guard = ft_unique_lock<pt_mutex>(this->_mutex);
+        ft_thread new_thread;
+        int entry_errno;
+
+        entry_errno = ft_errno;
+        ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
         if (mutex_guard.get_error() != ER_SUCCESS)
         {
-            this->set_error(mutex_guard.get_error());
-            return (-1);
+            status = mutex_guard.get_error();
+            this->set_error(status);
         }
-    }
-    this->_path = ft_string(path);
-    if (this->_path.get_error() != ER_SUCCESS)
-    {
-        int assign_error;
-
-        assign_error = this->_path.get_error();
-        this->_callback = ft_nullptr;
-        this->_user_data = ft_nullptr;
-        this->_path.clear();
-        this->set_error(assign_error);
-        mutex_guard.unlock();
-        ft_errno = assign_error;
-        return (-1);
-    }
-    this->_callback = callback;
-    this->_user_data = user_data;
+        else
+        {
+            if (path == ft_nullptr || callback == ft_nullptr)
+            {
+                status = FT_ERR_INVALID_ARGUMENT;
+                this->set_error(status);
+            }
+            else
+            {
+                if (this->_stopped == false)
+                {
+                    mutex_guard.unlock();
+                    ft_errno = entry_errno;
+                    this->stop();
+                    mutex_guard = ft_unique_lock<pt_mutex>(this->_mutex);
+                    if (mutex_guard.get_error() != ER_SUCCESS)
+                    {
+                        status = mutex_guard.get_error();
+                        this->set_error(status);
+                    }
+                }
+                if (status == ER_SUCCESS)
+                {
+                    this->_path = ft_string(path);
+                    if (this->_path.get_error() != ER_SUCCESS)
+                    {
+                        status = this->_path.get_error();
+                        this->_callback = ft_nullptr;
+                        this->_user_data = ft_nullptr;
+                        this->_path.clear();
+                        this->set_error(status);
+                    }
+                    else
+                    {
+                        this->_callback = callback;
+                        this->_user_data = user_data;
 #ifdef __linux__
-    this->_fd = inotify_init();
-    if (this->_fd < 0)
-    {
-        this->_callback = ft_nullptr;
-        this->_user_data = ft_nullptr;
-        this->_path.clear();
-        this->set_error(FT_ERR_INVALID_HANDLE);
-        mutex_guard.unlock();
-        ft_errno = FT_ERR_INVALID_HANDLE;
-        return (-1);
-    }
-    this->_watch = inotify_add_watch(this->_fd, path, IN_CREATE | IN_MODIFY | IN_DELETE);
-    if (this->_watch < 0)
-    {
-        close(this->_fd);
-        this->_fd = -1;
-        this->_callback = ft_nullptr;
-        this->_user_data = ft_nullptr;
-        this->_path.clear();
-        this->set_error(FT_ERR_INVALID_HANDLE);
-        mutex_guard.unlock();
-        ft_errno = FT_ERR_INVALID_HANDLE;
-        return (-1);
-    }
+                        this->_fd = inotify_init();
+                        if (this->_fd < 0)
+                        {
+                            this->_callback = ft_nullptr;
+                            this->_user_data = ft_nullptr;
+                            this->_path.clear();
+                            status = FT_ERR_INVALID_HANDLE;
+                            this->set_error(status);
+                        }
+                        else
+                        {
+                            this->_watch = inotify_add_watch(this->_fd, path, IN_CREATE | IN_MODIFY | IN_DELETE);
+                            if (this->_watch < 0)
+                            {
+                                close(this->_fd);
+                                this->_fd = -1;
+                                this->_callback = ft_nullptr;
+                                this->_user_data = ft_nullptr;
+                                this->_path.clear();
+                                status = FT_ERR_INVALID_HANDLE;
+                                this->set_error(status);
+                            }
+                        }
 #elif defined(__APPLE__) || defined(__FreeBSD__)
-    this->_fd = open(path, O_EVTONLY);
-    if (this->_fd < 0)
-    {
-        this->_callback = ft_nullptr;
-        this->_user_data = ft_nullptr;
-        this->_path.clear();
-        this->set_error(FT_ERR_INVALID_HANDLE);
-        mutex_guard.unlock();
-        ft_errno = FT_ERR_INVALID_HANDLE;
-        return (-1);
-    }
-    this->_kqueue = kqueue();
-    if (this->_kqueue < 0)
-    {
-        close(this->_fd);
-        this->_fd = -1;
-        this->_callback = ft_nullptr;
-        this->_user_data = ft_nullptr;
-        this->_path.clear();
-        this->set_error(FT_ERR_INVALID_HANDLE);
-        mutex_guard.unlock();
-        ft_errno = FT_ERR_INVALID_HANDLE;
-        return (-1);
-    }
+                        this->_fd = open(path, O_EVTONLY);
+                        if (this->_fd < 0)
+                        {
+                            this->_callback = ft_nullptr;
+                            this->_user_data = ft_nullptr;
+                            this->_path.clear();
+                            status = FT_ERR_INVALID_HANDLE;
+                            this->set_error(status);
+                        }
+                        else
+                        {
+                            this->_kqueue = kqueue();
+                            if (this->_kqueue < 0)
+                            {
+                                close(this->_fd);
+                                this->_fd = -1;
+                                this->_callback = ft_nullptr;
+                                this->_user_data = ft_nullptr;
+                                this->_path.clear();
+                                status = FT_ERR_INVALID_HANDLE;
+                                this->set_error(status);
+                            }
+                        }
 #elif defined(_WIN32)
-    this->_handle = CreateFileA(path, FILE_LIST_DIRECTORY,
-        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-        ft_nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, ft_nullptr);
-    if (this->_handle == INVALID_HANDLE_VALUE)
-    {
-        this->_handle = ft_nullptr;
-        this->_callback = ft_nullptr;
-        this->_user_data = ft_nullptr;
-        this->_path.clear();
-        this->set_error(FT_ERR_INVALID_HANDLE);
-        mutex_guard.unlock();
-        ft_errno = FT_ERR_INVALID_HANDLE;
-        return (-1);
-    }
+                        this->_handle = CreateFileA(path, FILE_LIST_DIRECTORY,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                            ft_nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, ft_nullptr);
+                        if (this->_handle == INVALID_HANDLE_VALUE)
+                        {
+                            this->_handle = ft_nullptr;
+                            this->_callback = ft_nullptr;
+                            this->_user_data = ft_nullptr;
+                            this->_path.clear();
+                            status = FT_ERR_INVALID_HANDLE;
+                            this->set_error(status);
+                        }
 #endif
-    this->_running = true;
-    this->_stopped = false;
-    new_thread = ft_thread(&ft_file_watch::event_loop, this);
-    if (new_thread.get_error() != ER_SUCCESS)
-    {
-        this->_running = false;
-        this->_stopped = true;
-        this->close_handles_locked();
-        this->_callback = ft_nullptr;
-        this->_user_data = ft_nullptr;
-        this->_path.clear();
-        this->set_error(new_thread.get_error());
-        mutex_guard.unlock();
-        ft_errno = new_thread.get_error();
-        return (-1);
+                        if (status == ER_SUCCESS)
+                        {
+                            this->_running = true;
+                            this->_stopped = false;
+                            new_thread = ft_thread(&ft_file_watch::event_loop, this);
+                            if (new_thread.get_error() != ER_SUCCESS)
+                            {
+                                status = new_thread.get_error();
+                                this->_running = false;
+                                this->_stopped = true;
+                                this->close_handles_locked();
+                                this->_callback = ft_nullptr;
+                                this->_user_data = ft_nullptr;
+                                this->_path.clear();
+                                this->set_error(status);
+                            }
+                            else
+                            {
+                                this->_thread = ft_thread(ft_move(new_thread));
+                                this->set_error(ER_SUCCESS);
+                                result = 0;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (mutex_guard.owns_lock())
+            mutex_guard.unlock();
     }
-    this->_thread = ft_thread(ft_move(new_thread));
-    this->set_error(ER_SUCCESS);
-    mutex_guard.unlock();
-    ft_errno = ER_SUCCESS;
-    return (0);
+    if (status != ER_SUCCESS)
+        final_errno = status;
+    else
+        final_errno = ER_SUCCESS;
+    ft_errno = final_errno;
+    return (result);
 }
 
 void ft_file_watch::stop()
 {
-    ft_thread thread_to_join;
     int entry_errno;
+    int final_errno;
+    int status;
+
     entry_errno = ft_errno;
-    ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
-    if (mutex_guard.get_error() != ER_SUCCESS)
+    final_errno = entry_errno;
+    status = ER_SUCCESS;
     {
-        this->set_error(mutex_guard.get_error());
-        return ;
+        ft_thread thread_to_join;
+        ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
+        if (mutex_guard.get_error() != ER_SUCCESS)
+        {
+            status = mutex_guard.get_error();
+            this->set_error(status);
+        }
+        else if (this->_stopped)
+        {
+            if (mutex_guard.owns_lock())
+                mutex_guard.unlock();
+        }
+        else
+        {
+            this->_stopped = true;
+            this->_running = false;
+            this->close_handles_locked();
+            thread_to_join = ft_thread(ft_move(this->_thread));
+            this->_thread = ft_thread();
+            this->_callback = ft_nullptr;
+            this->_user_data = ft_nullptr;
+            this->_path.clear();
+            if (mutex_guard.owns_lock())
+                mutex_guard.unlock();
+            if (thread_to_join.joinable())
+                thread_to_join.join();
+        }
     }
-    if (this->_stopped)
-    {
-        mutex_guard.unlock();
-        ft_errno = entry_errno;
-        return ;
-    }
-    this->_stopped = true;
-    this->_running = false;
-    this->close_handles_locked();
-    thread_to_join = ft_thread(ft_move(this->_thread));
-    this->_thread = ft_thread();
-    this->_callback = ft_nullptr;
-    this->_user_data = ft_nullptr;
-    this->_path.clear();
-    mutex_guard.unlock();
-    ft_errno = entry_errno;
-    if (thread_to_join.joinable())
-        thread_to_join.join();
+    if (status != ER_SUCCESS)
+        final_errno = status;
+    else
+        final_errno = entry_errno;
+    ft_errno = final_errno;
     return ;
 }
 

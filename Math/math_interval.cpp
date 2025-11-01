@@ -109,30 +109,52 @@ static double ft_interval_max(double first_value, double second_value)
     return (second_value);
 }
 
+static int ft_interval_spans_zero(const ft_interval &interval)
+{
+    if (interval.lower > 0.0)
+        return (0);
+    if (interval.upper < 0.0)
+        return (0);
+    return (1);
+}
+
 ft_interval ft_interval_multiply(const ft_interval &left_interval, const ft_interval &right_interval) noexcept
 {
     ft_interval input_error;
     ft_interval result;
-    double product_ll;
-    double product_lu;
-    double product_ul;
-    double product_uu;
     double minimum_value;
     double maximum_value;
+    double products[6];
+    size_t product_count;
+    size_t product_index;
 
     input_error = ft_interval_propagate_input_error(left_interval, right_interval);
     if (input_error._error_code != ER_SUCCESS)
         return (input_error);
-    product_ll = left_interval.lower * right_interval.lower;
-    product_lu = left_interval.lower * right_interval.upper;
-    product_ul = left_interval.upper * right_interval.lower;
-    product_uu = left_interval.upper * right_interval.upper;
-    minimum_value = ft_interval_min(product_ll, product_lu);
-    minimum_value = ft_interval_min(minimum_value, product_ul);
-    minimum_value = ft_interval_min(minimum_value, product_uu);
-    maximum_value = ft_interval_max(product_ll, product_lu);
-    maximum_value = ft_interval_max(maximum_value, product_ul);
-    maximum_value = ft_interval_max(maximum_value, product_uu);
+    products[0] = left_interval.lower * right_interval.lower;
+    products[1] = left_interval.lower * right_interval.upper;
+    products[2] = left_interval.upper * right_interval.lower;
+    products[3] = left_interval.upper * right_interval.upper;
+    product_count = 4;
+    if (ft_interval_spans_zero(left_interval))
+    {
+        products[product_count] = right_interval.lower * right_interval.upper;
+        product_count++;
+    }
+    if (ft_interval_spans_zero(right_interval))
+    {
+        products[product_count] = left_interval.lower * left_interval.upper;
+        product_count++;
+    }
+    minimum_value = products[0];
+    maximum_value = products[0];
+    product_index = 1;
+    while (product_index < product_count)
+    {
+        minimum_value = ft_interval_min(minimum_value, products[product_index]);
+        maximum_value = ft_interval_max(maximum_value, products[product_index]);
+        product_index++;
+    }
     result = ft_interval_create(minimum_value, maximum_value);
     ft_errno = result._error_code;
     return (result);

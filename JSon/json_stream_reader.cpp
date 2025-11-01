@@ -1374,19 +1374,34 @@ json_group *json_read_from_file_stream(FILE *file, size_t buffer_capacity)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
-    json_stream_reader reader;
-    if (json_stream_reader_init_file(&reader, file, buffer_capacity) != 0)
-        return (ft_nullptr);
-    json_group *groups = json_stream_reader_parse(&reader);
-    int error_code = reader.error_code;
-    json_stream_reader_destroy(&reader);
-    if (!groups)
+    json_group *groups;
+    int result_errno;
+
+    groups = ft_nullptr;
+    result_errno = ER_SUCCESS;
     {
-        if (error_code != ER_SUCCESS)
-            ft_errno = error_code;
-        else if (ft_errno == ER_SUCCESS)
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+        json_stream_reader reader;
+
+        if (json_stream_reader_init_file(&reader, file, buffer_capacity) != 0)
+            return (ft_nullptr);
+        groups = json_stream_reader_parse(&reader);
+        if (!groups)
+        {
+            int parse_errno;
+            int error_code;
+
+            parse_errno = ft_errno;
+            error_code = reader.error_code;
+            result_errno = error_code;
+            if (result_errno == ER_SUCCESS)
+                result_errno = parse_errno;
+            if (result_errno == ER_SUCCESS)
+                result_errno = FT_ERR_INVALID_ARGUMENT;
+        }
+        json_stream_reader_destroy(&reader);
     }
+    if (!groups)
+        ft_errno = result_errno;
     return (groups);
 }
 
@@ -1397,19 +1412,34 @@ json_group *json_read_from_stream(json_stream_read_callback callback, void *user
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
-    json_stream_reader reader;
-    if (json_stream_reader_init_callback(&reader, callback, user_data, buffer_capacity) != 0)
-        return (ft_nullptr);
-    json_group *groups = json_stream_reader_parse(&reader);
-    int error_code = reader.error_code;
-    json_stream_reader_destroy(&reader);
-    if (!groups)
+    json_group *groups;
+    int result_errno;
+
+    groups = ft_nullptr;
+    result_errno = ER_SUCCESS;
     {
-        if (error_code != ER_SUCCESS)
-            ft_errno = error_code;
-        else if (ft_errno == ER_SUCCESS)
-            ft_errno = FT_ERR_INVALID_ARGUMENT;
+        json_stream_reader reader;
+
+        if (json_stream_reader_init_callback(&reader, callback, user_data, buffer_capacity) != 0)
+            return (ft_nullptr);
+        groups = json_stream_reader_parse(&reader);
+        if (!groups)
+        {
+            int parse_errno;
+            int error_code;
+
+            parse_errno = ft_errno;
+            error_code = reader.error_code;
+            result_errno = error_code;
+            if (result_errno == ER_SUCCESS)
+                result_errno = parse_errno;
+            if (result_errno == ER_SUCCESS)
+                result_errno = FT_ERR_INVALID_ARGUMENT;
+        }
+        json_stream_reader_destroy(&reader);
     }
+    if (!groups)
+        ft_errno = result_errno;
     return (groups);
 }
 

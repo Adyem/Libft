@@ -46,7 +46,7 @@ int ft_istream::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
     return (ER_SUCCESS);
 }
 
-void ft_istream::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept
+void ft_istream::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno, bool restore_previous_on_success) noexcept
 {
     int operation_errno;
 
@@ -63,18 +63,24 @@ void ft_istream::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno)
         ft_errno = operation_errno;
         return ;
     }
-    ft_errno = entry_errno;
+    if (restore_previous_on_success)
+    {
+        ft_errno = entry_errno;
+        return ;
+    }
+    ft_errno = ER_SUCCESS;
     return ;
 }
 
 void ft_istream::read(char *buffer, std::size_t count)
 {
-    ft_unique_lock<pt_mutex> guard;
     int entry_errno;
     int lock_error;
     std::size_t readed;
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard;
+    ft_errno = entry_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != ER_SUCCESS)
     {
@@ -98,18 +104,19 @@ void ft_istream::read(char *buffer, std::size_t count)
     this->_gcount = readed;
     if (this->_error_code != ER_SUCCESS)
         this->_bad = true;
-    ft_istream::restore_errno(guard, entry_errno);
+    ft_istream::restore_errno(guard, entry_errno, false);
     return ;
 }
 
 std::size_t ft_istream::gcount() const noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int entry_errno;
     int lock_error;
     std::size_t count_value;
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard;
+    ft_errno = entry_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != ER_SUCCESS)
     {
@@ -124,12 +131,13 @@ std::size_t ft_istream::gcount() const noexcept
 
 bool ft_istream::bad() const noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int entry_errno;
     int lock_error;
     bool is_bad_result;
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard;
+    ft_errno = entry_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != ER_SUCCESS)
     {
@@ -144,12 +152,13 @@ bool ft_istream::bad() const noexcept
 
 int ft_istream::get_error() const noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int entry_errno;
     int lock_error;
     int error_code;
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard;
+    ft_errno = entry_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != ER_SUCCESS)
     {
@@ -164,12 +173,13 @@ int ft_istream::get_error() const noexcept
 
 const char *ft_istream::get_error_str() const noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int entry_errno;
     int lock_error;
     const char *error_string;
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard;
+    ft_errno = entry_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != ER_SUCCESS)
     {

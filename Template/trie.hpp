@@ -31,6 +31,7 @@ class ft_trie
 
         int insert_helper(const char *key, int unset_value, ValueType *value_pointer);
         void set_error(int error) const;
+        void set_success_preserve_errno(int entry_errno) const;
         int lock_internal(bool *lock_acquired) const;
         void unlock_internal(bool lock_acquired) const;
         void teardown_thread_safety();
@@ -251,6 +252,15 @@ void ft_trie<ValueType>::set_error(int error) const
 }
 
 template <typename ValueType>
+void ft_trie<ValueType>::set_success_preserve_errno(int entry_errno) const
+{
+    this->_last_error = ER_SUCCESS;
+    this->_error_code = ER_SUCCESS;
+    ft_errno = entry_errno;
+    return ;
+}
+
+template <typename ValueType>
 int ft_trie<ValueType>::enable_thread_safety()
 {
     void     *memory;
@@ -321,13 +331,17 @@ bool ft_trie<ValueType>::is_thread_safe_enabled() const
 template <typename ValueType>
 int ft_trie<ValueType>::lock(bool *lock_acquired) const
 {
+    int entry_errno;
     int result;
 
+    entry_errno = ft_errno;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
         const_cast<ft_trie<ValueType> *>(this)->set_error(ft_errno);
     else
-        const_cast<ft_trie<ValueType> *>(this)->set_error(ER_SUCCESS);
+    {
+        this->set_success_preserve_errno(entry_errno);
+    }
     return (result);
 }
 
@@ -335,13 +349,19 @@ template <typename ValueType>
 void ft_trie<ValueType>::unlock(bool lock_acquired) const
 {
     int entry_errno;
+    int mutex_error;
 
     entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
-    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != ER_SUCCESS)
-        const_cast<ft_trie<ValueType> *>(this)->set_error(this->_state_mutex->get_error());
+    mutex_error = ER_SUCCESS;
+    if (this->_state_mutex != ft_nullptr)
+        mutex_error = this->_state_mutex->get_error();
+    if (mutex_error != ER_SUCCESS)
+        const_cast<ft_trie<ValueType> *>(this)->set_error(mutex_error);
     else
-        const_cast<ft_trie<ValueType> *>(this)->set_error(entry_errno);
+    {
+        this->set_success_preserve_errno(entry_errno);
+    }
     return ;
 }
 

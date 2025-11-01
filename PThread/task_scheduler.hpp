@@ -405,13 +405,18 @@ bool ft_blocking_queue<ElementType>::is_thread_safe_enabled() const
 template <typename ElementType>
 int ft_blocking_queue<ElementType>::lock(bool *lock_acquired) const
 {
+    int entry_errno;
     int result;
 
+    entry_errno = ft_errno;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
+    {
         const_cast<ft_blocking_queue<ElementType> *>(this)->set_error(ft_errno);
-    else
-        const_cast<ft_blocking_queue<ElementType> *>(this)->set_error(ER_SUCCESS);
+        return (result);
+    }
+    const_cast<ft_blocking_queue<ElementType> *>(this)->set_error(ER_SUCCESS);
+    ft_errno = entry_errno;
     return (result);
 }
 
@@ -419,16 +424,21 @@ template <typename ElementType>
 void ft_blocking_queue<ElementType>::unlock(bool lock_acquired) const
 {
     int entry_errno;
+    int state_error;
 
     entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
-    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != ER_SUCCESS)
-        const_cast<ft_blocking_queue<ElementType> *>(this)->set_error(this->_state_mutex->get_error());
-    else
+    if (this->_state_mutex != ft_nullptr)
     {
-        ft_errno = entry_errno;
-        const_cast<ft_blocking_queue<ElementType> *>(this)->set_error(ft_errno);
+        state_error = this->_state_mutex->get_error();
+        if (state_error != ER_SUCCESS)
+        {
+            const_cast<ft_blocking_queue<ElementType> *>(this)->set_error(state_error);
+            return ;
+        }
     }
+    const_cast<ft_blocking_queue<ElementType> *>(this)->set_error(ER_SUCCESS);
+    ft_errno = entry_errno;
     return ;
 }
 

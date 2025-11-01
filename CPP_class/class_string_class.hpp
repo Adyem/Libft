@@ -50,6 +50,7 @@ class ft_string
         void    append_char_unlocked(char c) noexcept;
         void    append_unlocked(const char *string, size_t length) noexcept;
         void    clear_unlocked() noexcept;
+        void    ensure_empty_buffer_unlocked() noexcept;
         void    assign_unlocked(size_t count, char character) noexcept;
         void    assign_unlocked(const char *string, size_t length) noexcept;
         void    erase_unlocked(std::size_t index, std::size_t count) noexcept;

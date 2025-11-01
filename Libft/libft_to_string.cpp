@@ -5,6 +5,17 @@
 static ft_string create_string_from_buffer(const char *buffer)
 {
     ft_string result(buffer);
+    int result_error;
+
+    result_error = result.get_error();
+    if (result_error != ER_SUCCESS)
+    {
+        ft_errno = result_error;
+    }
+    else
+    {
+        ft_errno = ER_SUCCESS;
+    }
     return (result);
 }
 
