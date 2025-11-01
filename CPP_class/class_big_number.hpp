@@ -2,6 +2,12 @@
 #define FT_BIG_NUMBER_HPP
 
 #include "../Libft/libft.hpp"
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
+
+class ft_big_number;
+
+typedef ft_unique_lock<pt_mutex>    ft_big_number_mutex_guard;
 
 class ft_big_number
 {
@@ -11,10 +17,24 @@ class ft_big_number
         ft_size_t       _capacity;
         bool            _is_negative;
         mutable int     _error_code;
+        mutable pt_mutex    _mutex;
 
         void    reserve(ft_size_t new_capacity) noexcept;
         void    shrink_capacity() noexcept;
-        void    set_error(int error_code) noexcept;
+        void    set_error_unlocked(int error_code) const noexcept;
+        void    set_error(int error_code) const noexcept;
+        int     lock_self(ft_big_number_mutex_guard &guard) const noexcept;
+        static int  lock_pair(const ft_big_number &first, const ft_big_number &second,
+                ft_big_number_mutex_guard &first_guard,
+                ft_big_number_mutex_guard &second_guard) noexcept;
+        static void sleep_backoff() noexcept;
+        static void restore_errno(ft_big_number_mutex_guard &guard, int entry_errno) noexcept;
+        void    clear_unlocked() noexcept;
+        void    append_digit_unlocked(char digit) noexcept;
+        void    append_unlocked(const char* digits) noexcept;
+        void    append_unsigned_unlocked(unsigned long value) noexcept;
+        void    trim_leading_zeros_unlocked() noexcept;
+        void    reduce_to_unlocked(ft_size_t new_size) noexcept;
         bool    is_zero_value() const noexcept;
         int     compare_magnitude(const ft_big_number& other) const noexcept;
         ft_big_number    add_magnitude(const ft_big_number& other) const noexcept;
