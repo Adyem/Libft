@@ -144,9 +144,9 @@ Iterator<ValueType>::Iterator(Iterator&& other) noexcept
     transferred_thread_safe = other._thread_safe_enabled;
     other._ptr = ft_nullptr;
     other._error_code = ER_SUCCESS;
+    other.unlock_internal(other_lock_acquired);
     other._state_mutex = ft_nullptr;
     other._thread_safe_enabled = false;
-    other.unlock_internal(other_lock_acquired);
     this->_state_mutex = transferred_mutex;
     this->_thread_safe_enabled = transferred_thread_safe;
     this->set_error(other_error_code);
@@ -186,9 +186,9 @@ Iterator<ValueType>& Iterator<ValueType>::operator=(Iterator&& other) noexcept
     transferred_thread_safe = other._thread_safe_enabled;
     other._ptr = ft_nullptr;
     other._error_code = ER_SUCCESS;
+    other.unlock_internal(other_lock_acquired);
     other._state_mutex = ft_nullptr;
     other._thread_safe_enabled = false;
-    other.unlock_internal(other_lock_acquired);
     this->unlock_internal(this_lock_acquired);
     if (this->_state_mutex != ft_nullptr && this->_state_mutex != transferred_mutex)
         this->teardown_thread_safety();
@@ -373,13 +373,18 @@ bool Iterator<ValueType>::is_thread_safe_enabled() const noexcept
 template <typename ValueType>
 int Iterator<ValueType>::lock(bool *lock_acquired) const
 {
+    int entry_errno;
     int result;
 
+    entry_errno = ft_errno;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
+    {
         const_cast<Iterator<ValueType> *>(this)->set_error(ft_errno);
-    else
-        const_cast<Iterator<ValueType> *>(this)->set_error(ER_SUCCESS);
+        return (result);
+    }
+    this->_error_code = ER_SUCCESS;
+    ft_errno = entry_errno;
     return (result);
 }
 
@@ -390,10 +395,13 @@ void Iterator<ValueType>::unlock(bool lock_acquired) const
 
     entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
-    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != ER_SUCCESS)
+    if (lock_acquired && this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != ER_SUCCESS)
+    {
         const_cast<Iterator<ValueType> *>(this)->set_error(this->_state_mutex->get_error());
-    else
-        const_cast<Iterator<ValueType> *>(this)->set_error(entry_errno);
+        return ;
+    }
+    this->_error_code = ER_SUCCESS;
+    ft_errno = entry_errno;
     return ;
 }
 
@@ -408,11 +416,14 @@ void Iterator<ValueType>::set_error(int error_code) const noexcept
 template <typename ValueType>
 int Iterator<ValueType>::lock_internal(bool *lock_acquired) const
 {
+    int entry_errno;
+
+    entry_errno = ft_errno;
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = entry_errno;
         return (0);
     }
     this->_state_mutex->lock(THREAD_ID);
@@ -423,7 +434,7 @@ int Iterator<ValueType>::lock_internal(bool *lock_acquired) const
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = ER_SUCCESS;
+    ft_errno = entry_errno;
     return (0);
 }
 

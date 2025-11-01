@@ -2693,7 +2693,8 @@ int kv_store::kv_flush() const
     ft_unique_lock<pt_mutex> guard;
     int entry_errno;
     int lock_error;
-    ft_vector<kv_store_snapshot_entry> entries;
+    int flush_result;
+    int flush_error;
 
     mutable_this = const_cast<kv_store *>(this);
     entry_errno = ft_errno;
@@ -2710,15 +2711,29 @@ int kv_store::kv_flush() const
         return (-1);
     }
     kv_store::restore_errno(guard, entry_errno);
-    entries = ft_vector<kv_store_snapshot_entry>();
-    if (entries.get_error() != ER_SUCCESS)
+    flush_result = 0;
+    flush_error = ER_SUCCESS;
     {
-        mutable_this->set_error(entries.get_error());
-        return (-1);
+        ft_vector<kv_store_snapshot_entry> entries;
+
+        entries = ft_vector<kv_store_snapshot_entry>();
+        if (entries.get_error() != ER_SUCCESS)
+        {
+            mutable_this->set_error(entries.get_error());
+            return (-1);
+        }
+        if (mutable_this->export_snapshot(entries) != 0)
+            return (-1);
+        flush_result = this->flush_backend_entries(entries);
+        if (flush_result != 0)
+            flush_error = ft_errno;
     }
-    if (mutable_this->export_snapshot(entries) != 0)
-        return (-1);
-    return (this->flush_backend_entries(entries));
+    if (flush_result != 0)
+    {
+        ft_errno = flush_error;
+        return (flush_result);
+    }
+    return (flush_result);
 }
 int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
 {

@@ -509,19 +509,25 @@ bool ft_variant<Types...>::is_thread_safe_enabled() const
     bool enabled;
 
     enabled = (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr);
+    this->set_error(ER_SUCCESS);
     return (enabled);
 }
 
 template <typename... Types>
 int ft_variant<Types...>::lock(bool *lock_acquired) const
 {
+    int entry_errno;
     int result;
 
+    entry_errno = ft_errno;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
+    {
         const_cast<ft_variant*>(this)->set_error(ft_errno);
-    else
-        const_cast<ft_variant*>(this)->set_error(ER_SUCCESS);
+        return (result);
+    }
+    this->_error_code = ER_SUCCESS;
+    ft_errno = entry_errno;
     return (result);
 }
 
@@ -529,13 +535,24 @@ template <typename... Types>
 void ft_variant<Types...>::unlock(bool lock_acquired) const
 {
     int entry_errno;
+    int mutex_error;
 
     entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
-    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != ER_SUCCESS)
-        const_cast<ft_variant*>(this)->set_error(this->_state_mutex->get_error());
-    else
-        const_cast<ft_variant*>(this)->set_error(entry_errno);
+    if (!lock_acquired || this->_state_mutex == ft_nullptr)
+    {
+        this->_error_code = ER_SUCCESS;
+        ft_errno = entry_errno;
+        return ;
+    }
+    mutex_error = this->_state_mutex->get_error();
+    if (mutex_error != ER_SUCCESS)
+    {
+        const_cast<ft_variant*>(this)->set_error(mutex_error);
+        return ;
+    }
+    this->_error_code = ER_SUCCESS;
+    ft_errno = entry_errno;
     return ;
 }
 

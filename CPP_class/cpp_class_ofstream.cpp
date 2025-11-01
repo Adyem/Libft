@@ -44,11 +44,10 @@ int ft_ofstream::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
     return (ER_SUCCESS);
 }
 
-void ft_ofstream::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept
+void ft_ofstream::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno, bool restore_previous_on_success) noexcept
 {
     int operation_errno;
 
-    (void)entry_errno;
     operation_errno = ft_errno;
     if (guard.owns_lock())
         guard.unlock();
@@ -60,6 +59,11 @@ void ft_ofstream::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno
     if (operation_errno != ER_SUCCESS)
     {
         ft_errno = operation_errno;
+        return ;
+    }
+    if (restore_previous_on_success)
+    {
+        ft_errno = entry_errno;
         return ;
     }
     ft_errno = ER_SUCCESS;
@@ -166,12 +170,12 @@ void ft_ofstream::close() noexcept
 
 int ft_ofstream::get_error() const noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int entry_errno;
     int lock_error;
     int error_value;
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard;
     lock_error = this->lock_self(guard);
     if (lock_error != ER_SUCCESS)
     {
@@ -180,18 +184,18 @@ int ft_ofstream::get_error() const noexcept
         return (lock_error);
     }
     error_value = this->_error_code;
-    ft_ofstream::restore_errno(guard, entry_errno);
+    ft_ofstream::restore_errno(guard, entry_errno, true);
     return (error_value);
 }
 
 const char *ft_ofstream::get_error_str() const noexcept
 {
-    ft_unique_lock<pt_mutex> guard;
     int entry_errno;
     int lock_error;
     const char *error_string;
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard;
     lock_error = this->lock_self(guard);
     if (lock_error != ER_SUCCESS)
     {
@@ -200,6 +204,6 @@ const char *ft_ofstream::get_error_str() const noexcept
         return (ft_strerror(lock_error));
     }
     error_string = ft_strerror(this->_error_code);
-    ft_ofstream::restore_errno(guard, entry_errno);
+    ft_ofstream::restore_errno(guard, entry_errno, true);
     return (error_string);
 }

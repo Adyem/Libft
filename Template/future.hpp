@@ -188,9 +188,9 @@ ft_future<ValueType>::ft_future(ft_future<ValueType> &&other)
     this->_thread_safe_enabled = transferred_thread_safe;
     other._promise = ft_nullptr;
     other._error_code = ER_SUCCESS;
+    other.unlock_internal(lock_acquired);
     other._state_mutex = ft_nullptr;
     other._thread_safe_enabled = false;
-    other.unlock_internal(lock_acquired);
     other._shared_promise = ft_sharedptr<ft_promise<ValueType> >();
     this->set_error(transferred_error);
     return ;
@@ -287,6 +287,7 @@ ft_future<ValueType> &ft_future<ValueType>::operator=(const ft_future<ValueType>
 template <typename ValueType>
 ft_future<ValueType> &ft_future<ValueType>::operator=(ft_future<ValueType> &&other)
 {
+    int entry_errno;
     bool this_lock_acquired;
     bool other_lock_acquired;
     pt_mutex *previous_mutex;
@@ -302,6 +303,7 @@ ft_future<ValueType> &ft_future<ValueType>::operator=(ft_future<ValueType> &&oth
         this->set_error(ER_SUCCESS);
         return (*this);
     }
+    entry_errno = ft_errno;
     this_lock_acquired = false;
     if (this->lock_internal(&this_lock_acquired) != 0)
     {
@@ -325,21 +327,22 @@ ft_future<ValueType> &ft_future<ValueType>::operator=(ft_future<ValueType> &&oth
     this->_promise = transferred_promise;
     this->_shared_promise = ft_move(transferred_shared);
     this->_error_code = transferred_error;
-    this->_state_mutex = transferred_mutex;
-    this->_thread_safe_enabled = transferred_thread_safe;
     other._promise = ft_nullptr;
     other._error_code = ER_SUCCESS;
+    other.unlock_internal(other_lock_acquired);
     other._state_mutex = ft_nullptr;
     other._thread_safe_enabled = false;
-    other.unlock_internal(other_lock_acquired);
-    this->unlock_internal(this_lock_acquired);
     other._shared_promise = ft_sharedptr<ft_promise<ValueType> >();
+    this->unlock_internal(this_lock_acquired);
+    this->_state_mutex = transferred_mutex;
+    this->_thread_safe_enabled = transferred_thread_safe;
     if (previous_thread_safe && previous_mutex != ft_nullptr && previous_mutex != transferred_mutex)
     {
         previous_mutex->~pt_mutex();
         cma_free(previous_mutex);
     }
-    this->set_error(transferred_error);
+    this->_error_code = transferred_error;
+    ft_errno = entry_errno;
     return (*this);
 }
 
@@ -551,9 +554,9 @@ inline ft_future<void>::ft_future(ft_future<void> &&other)
     this->_thread_safe_enabled = transferred_thread_safe;
     other._promise = ft_nullptr;
     other._error_code = ER_SUCCESS;
+    other.unlock_internal(lock_acquired);
     other._state_mutex = ft_nullptr;
     other._thread_safe_enabled = false;
-    other.unlock_internal(lock_acquired);
     other._shared_promise = ft_sharedptr<ft_promise<void> >();
     this->set_error(transferred_error);
     return ;
@@ -645,6 +648,7 @@ inline ft_future<void> &ft_future<void>::operator=(const ft_future<void> &other)
 
 inline ft_future<void> &ft_future<void>::operator=(ft_future<void> &&other)
 {
+    int entry_errno;
     bool this_lock_acquired;
     bool other_lock_acquired;
     pt_mutex *previous_mutex;
@@ -660,6 +664,7 @@ inline ft_future<void> &ft_future<void>::operator=(ft_future<void> &&other)
         this->set_error(ER_SUCCESS);
         return (*this);
     }
+    entry_errno = ft_errno;
     this_lock_acquired = false;
     if (this->lock_internal(&this_lock_acquired) != 0)
     {
@@ -683,21 +688,22 @@ inline ft_future<void> &ft_future<void>::operator=(ft_future<void> &&other)
     this->_promise = transferred_promise;
     this->_shared_promise = ft_move(transferred_shared);
     this->_error_code = transferred_error;
-    this->_state_mutex = transferred_mutex;
-    this->_thread_safe_enabled = transferred_thread_safe;
     other._promise = ft_nullptr;
     other._error_code = ER_SUCCESS;
+    other.unlock_internal(other_lock_acquired);
     other._state_mutex = ft_nullptr;
     other._thread_safe_enabled = false;
-    other.unlock_internal(other_lock_acquired);
-    this->unlock_internal(this_lock_acquired);
     other._shared_promise = ft_sharedptr<ft_promise<void> >();
+    this->unlock_internal(this_lock_acquired);
+    this->_state_mutex = transferred_mutex;
+    this->_thread_safe_enabled = transferred_thread_safe;
     if (previous_thread_safe && previous_mutex != ft_nullptr && previous_mutex != transferred_mutex)
     {
         previous_mutex->~pt_mutex();
         cma_free(previous_mutex);
     }
-    this->set_error(transferred_error);
+    this->_error_code = transferred_error;
+    ft_errno = entry_errno;
     return (*this);
 }
 
@@ -870,13 +876,18 @@ bool ft_future<ValueType>::is_thread_safe_enabled() const
 template <typename ValueType>
 int ft_future<ValueType>::lock(bool *lock_acquired) const
 {
+    int entry_errno;
     int result;
 
+    entry_errno = ft_errno;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
+    {
         const_cast<ft_future<ValueType> *>(this)->set_error(ft_errno);
-    else
-        const_cast<ft_future<ValueType> *>(this)->set_error(ER_SUCCESS);
+        return (result);
+    }
+    const_cast<ft_future<ValueType> *>(this)->_error_code = ER_SUCCESS;
+    ft_errno = entry_errno;
     return (result);
 }
 
@@ -884,13 +895,24 @@ template <typename ValueType>
 void ft_future<ValueType>::unlock(bool lock_acquired) const
 {
     int entry_errno;
+    int mutex_error;
 
     entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
-    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != ER_SUCCESS)
-        const_cast<ft_future<ValueType> *>(this)->set_error(this->_state_mutex->get_error());
-    else
-        const_cast<ft_future<ValueType> *>(this)->set_error(entry_errno);
+    if (!lock_acquired || this->_state_mutex == ft_nullptr)
+    {
+        const_cast<ft_future<ValueType> *>(this)->_error_code = ER_SUCCESS;
+        ft_errno = entry_errno;
+        return ;
+    }
+    mutex_error = this->_state_mutex->get_error();
+    if (mutex_error != ER_SUCCESS)
+    {
+        const_cast<ft_future<ValueType> *>(this)->set_error(mutex_error);
+        return ;
+    }
+    const_cast<ft_future<ValueType> *>(this)->_error_code = ER_SUCCESS;
+    ft_errno = entry_errno;
     return ;
 }
 
@@ -1007,26 +1029,42 @@ inline bool ft_future<void>::is_thread_safe_enabled() const
 
 inline int ft_future<void>::lock(bool *lock_acquired) const
 {
+    int entry_errno;
     int result;
 
+    entry_errno = ft_errno;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
+    {
         const_cast<ft_future<void> *>(this)->set_error(ft_errno);
-    else
-        const_cast<ft_future<void> *>(this)->set_error(ER_SUCCESS);
+        return (result);
+    }
+    const_cast<ft_future<void> *>(this)->_error_code = ER_SUCCESS;
+    ft_errno = entry_errno;
     return (result);
 }
 
 inline void ft_future<void>::unlock(bool lock_acquired) const
 {
     int entry_errno;
+    int mutex_error;
 
     entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
-    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != ER_SUCCESS)
-        const_cast<ft_future<void> *>(this)->set_error(this->_state_mutex->get_error());
-    else
-        const_cast<ft_future<void> *>(this)->set_error(entry_errno);
+    if (!lock_acquired || this->_state_mutex == ft_nullptr)
+    {
+        const_cast<ft_future<void> *>(this)->_error_code = ER_SUCCESS;
+        ft_errno = entry_errno;
+        return ;
+    }
+    mutex_error = this->_state_mutex->get_error();
+    if (mutex_error != ER_SUCCESS)
+    {
+        const_cast<ft_future<void> *>(this)->set_error(mutex_error);
+        return ;
+    }
+    const_cast<ft_future<void> *>(this)->_error_code = ER_SUCCESS;
+    ft_errno = entry_errno;
     return ;
 }
 
