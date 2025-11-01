@@ -32,7 +32,7 @@
 
 static bool api_https_prepare_request(const char *method, const char *path,
     const char *host_header, json_group *payload, const char *headers,
-    ft_string &request, ft_string &body_string, int &error_code);
+    ft_string &request, int &error_code);
 
 void api_request_set_ssl_error(SSL *ssl_session, int operation_result)
 {
@@ -251,6 +251,43 @@ static bool api_https_send_request(SSL *ssl_session, const ft_string &request,
             error_code = FT_ERR_SOCKET_SEND_FAILED;
         return (false);
     }
+    return (true);
+}
+
+static bool api_https_send_callback(const char *data_pointer,
+    size_t data_length, void *context, int &error_code)
+{
+    SSL *ssl_session;
+
+    if (!context)
+    {
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (false);
+    }
+    ssl_session = static_cast<SSL *>(context);
+    if (data_length == 0)
+        return (true);
+    if (ssl_send_all(ssl_session, data_pointer, data_length) < 0)
+    {
+        if (ft_errno == ER_SUCCESS)
+            api_request_set_ssl_error(ssl_session, -1);
+        error_code = ft_errno;
+        if (error_code == ER_SUCCESS)
+            error_code = FT_ERR_SOCKET_SEND_FAILED;
+        return (false);
+    }
+    return (true);
+}
+
+static bool api_https_send_payload(SSL *ssl_session, json_group *payload,
+    int &error_code)
+{
+    if (!payload)
+        return (true);
+    if (!api_http_stream_json_payload(payload, api_https_send_callback,
+            ssl_session, error_code))
+        return (false);
     return (true);
 }
 
@@ -745,12 +782,13 @@ static bool api_https_execute_streaming_once(
     SSL *ssl_session = connection_handle.tls_session;
 
     ft_string request;
-    ft_string body_string;
 
     if (!api_https_prepare_request(method, path, host_header, payload,
-            headers, request, body_string, error_code))
+            headers, request, error_code))
         return (false);
     if (!api_https_send_request(ssl_session, request, error_code))
+        return (false);
+    if (!api_https_send_payload(ssl_session, payload, error_code))
         return (false);
 
     ft_string response;
@@ -772,9 +810,9 @@ static bool api_https_execute_streaming_once(
 
 static bool api_https_prepare_request(const char *method, const char *path,
     const char *host_header, json_group *payload, const char *headers,
-    ft_string &request, ft_string &body_string, int &error_code)
+    ft_string &request, int &error_code)
 {
-    char *temporary_string;
+    size_t payload_length;
 
     if (!method || !path || !host_header)
     {
@@ -782,7 +820,6 @@ static bool api_https_prepare_request(const char *method, const char *path,
         return (false);
     }
     request.clear();
-    body_string.clear();
     request += method;
     request += " ";
     request += path;
@@ -805,20 +842,12 @@ static bool api_https_prepare_request(const char *method, const char *path,
     }
     if (payload)
     {
-        temporary_string = json_write_to_string(payload);
-        if (!temporary_string)
+        if (!api_http_measure_json_payload(payload, payload_length))
         {
             if (ft_errno == ER_SUCCESS)
-                error_code = FT_ERR_NO_MEMORY;
+                error_code = FT_ERR_IO;
             else
                 error_code = ft_errno;
-            return (false);
-        }
-        body_string = temporary_string;
-        cma_free(temporary_string);
-        if (body_string.get_error())
-        {
-            error_code = body_string.get_error();
             return (false);
         }
         request += "\r\nContent-Type: application/json";
@@ -827,7 +856,7 @@ static bool api_https_prepare_request(const char *method, const char *path,
             error_code = request.get_error();
             return (false);
         }
-        if (!api_append_content_length_header(request, body_string.size()))
+        if (!api_append_content_length_header(request, payload_length))
         {
             if (ft_errno == ER_SUCCESS)
                 error_code = FT_ERR_IO;
@@ -841,15 +870,6 @@ static bool api_https_prepare_request(const char *method, const char *path,
     {
         error_code = request.get_error();
         return (false);
-    }
-    if (payload)
-    {
-        request += body_string.c_str();
-        if (request.get_error())
-        {
-            error_code = request.get_error();
-            return (false);
-        }
     }
     return (true);
 }
@@ -866,12 +886,13 @@ static char *api_https_execute_once(
     SSL *ssl_session = connection_handle.tls_session;
 
     ft_string request;
-    ft_string body_string;
 
     if (!api_https_prepare_request(method, path, host_header, payload,
-            headers, request, body_string, error_code))
+            headers, request, error_code))
         return (ft_nullptr);
     if (!api_https_send_request(ssl_session, request, error_code))
+        return (ft_nullptr);
+    if (!api_https_send_payload(ssl_session, payload, error_code))
         return (ft_nullptr);
 
     ft_string response;
