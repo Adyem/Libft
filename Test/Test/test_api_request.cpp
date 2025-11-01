@@ -106,6 +106,119 @@ struct api_stream_test_context
     int status_code;
 };
 
+static bool g_api_request_test_http2_called = false;
+static bool g_api_request_test_http1_called = false;
+
+static bool api_request_test_stream_http2_hook(const char *ip, uint16_t port,
+    const char *method, const char *path,
+    const api_streaming_handler *streaming_handler, json_group *payload,
+    const char *headers, int timeout, bool *used_http2,
+    const api_retry_policy *retry_policy, void *user_data)
+{
+    (void)ip;
+    (void)port;
+    (void)method;
+    (void)path;
+    (void)streaming_handler;
+    (void)payload;
+    (void)headers;
+    (void)timeout;
+    (void)retry_policy;
+    (void)user_data;
+    g_api_request_test_http2_called = true;
+    if (used_http2)
+        *used_http2 = true;
+    ft_errno = ER_SUCCESS;
+    return (true);
+}
+
+static bool api_request_test_stream_http1_hook(const char *ip, uint16_t port,
+    const char *method, const char *path,
+    const api_streaming_handler *streaming_handler, json_group *payload,
+    const char *headers, int timeout,
+    const api_retry_policy *retry_policy, void *user_data)
+{
+    (void)ip;
+    (void)port;
+    (void)method;
+    (void)path;
+    (void)streaming_handler;
+    (void)payload;
+    (void)headers;
+    (void)timeout;
+    (void)retry_policy;
+    (void)user_data;
+    g_api_request_test_http1_called = true;
+    ft_errno = ER_SUCCESS;
+    return (true);
+}
+
+FT_TEST(test_api_request_prefers_http2_streaming,
+    "api_request routes to http2 stream hook when enabled")
+{
+    api_transport_hooks hooks;
+    api_streaming_handler handler;
+    bool used_http2;
+    bool request_result;
+
+    ft_memset(&hooks, 0, sizeof(hooks));
+    hooks.request_stream = api_request_test_stream_http1_hook;
+    hooks.request_stream_http2 = api_request_test_stream_http2_hook;
+    hooks.user_data = ft_nullptr;
+    api_set_transport_hooks(&hooks);
+    g_api_request_test_http1_called = false;
+    g_api_request_test_http2_called = false;
+    handler.reset();
+    ft_errno = ER_SUCCESS;
+    request_result = api_request("127.0.0.1", 8080, "GET", "/", &handler,
+            ft_nullptr, ft_nullptr, 0, true, &used_http2, ft_nullptr);
+    api_clear_transport_hooks();
+    if (!request_result)
+        return (0);
+    if (!g_api_request_test_http2_called)
+        return (0);
+    if (g_api_request_test_http1_called)
+        return (0);
+    if (!used_http2)
+        return (0);
+    if (ft_errno != ER_SUCCESS)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_api_request_disables_http2_streaming,
+    "api_request routes to http1 stream hook when http2 disabled")
+{
+    api_transport_hooks hooks;
+    api_streaming_handler handler;
+    bool used_http2;
+    bool request_result;
+
+    ft_memset(&hooks, 0, sizeof(hooks));
+    hooks.request_stream = api_request_test_stream_http1_hook;
+    hooks.request_stream_http2 = api_request_test_stream_http2_hook;
+    hooks.user_data = ft_nullptr;
+    api_set_transport_hooks(&hooks);
+    g_api_request_test_http1_called = false;
+    g_api_request_test_http2_called = false;
+    handler.reset();
+    ft_errno = ER_SUCCESS;
+    request_result = api_request("127.0.0.1", 8080, "GET", "/", &handler,
+            ft_nullptr, ft_nullptr, 0, false, &used_http2, ft_nullptr);
+    api_clear_transport_hooks();
+    if (!request_result)
+        return (0);
+    if (!g_api_request_test_http1_called)
+        return (0);
+    if (g_api_request_test_http2_called)
+        return (0);
+    if (used_http2)
+        return (0);
+    if (ft_errno != ER_SUCCESS)
+        return (0);
+    return (1);
+}
+
 struct api_request_bearer_server_context
 {
     std::atomic<bool> ready;
@@ -170,6 +283,10 @@ static std::atomic<int> g_api_async_retry_server_last_recv_result(0);
 static std::atomic<int> g_api_async_retry_server_last_errno(0);
 static std::atomic<bool> g_api_request_success_server_ready(false);
 static std::atomic<int> g_api_request_success_server_start_error(ER_SUCCESS);
+static std::atomic<bool> g_api_request_stream_large_server_ready(false);
+static std::atomic<int> g_api_request_stream_large_server_start_error(ER_SUCCESS);
+static std::atomic<bool> g_api_request_stream_chunked_server_ready(false);
+static std::atomic<int> g_api_request_stream_chunked_server_start_error(ER_SUCCESS);
 
 static void api_request_log_async_transfer_stats(void)
 {
@@ -249,6 +366,68 @@ static void api_request_success_server_signal_ready(int error_code)
     g_api_request_success_server_start_error.store(error_code, std::memory_order_relaxed);
     g_api_request_success_server_ready.store(true, std::memory_order_release);
     return ;
+}
+
+static void api_request_stream_large_server_reset_state(void)
+{
+    g_api_request_stream_large_server_ready.store(false, std::memory_order_relaxed);
+    g_api_request_stream_large_server_start_error.store(ER_SUCCESS, std::memory_order_relaxed);
+    return ;
+}
+
+static void api_request_stream_large_server_signal_ready(int error_code)
+{
+    g_api_request_stream_large_server_start_error.store(error_code, std::memory_order_relaxed);
+    g_api_request_stream_large_server_ready.store(true, std::memory_order_release);
+    return ;
+}
+
+static bool api_request_stream_large_server_wait_until_ready(void)
+{
+    size_t wait_iterations;
+
+    wait_iterations = 0;
+    while (!g_api_request_stream_large_server_ready.load(std::memory_order_acquire))
+    {
+        if (wait_iterations >= 50)
+            return (false);
+        api_request_small_delay();
+        wait_iterations += 1;
+    }
+    if (g_api_request_stream_large_server_start_error.load(std::memory_order_acquire) != ER_SUCCESS)
+        return (false);
+    return (true);
+}
+
+static void api_request_stream_chunked_server_reset_state(void)
+{
+    g_api_request_stream_chunked_server_ready.store(false, std::memory_order_relaxed);
+    g_api_request_stream_chunked_server_start_error.store(ER_SUCCESS, std::memory_order_relaxed);
+    return ;
+}
+
+static void api_request_stream_chunked_server_signal_ready(int error_code)
+{
+    g_api_request_stream_chunked_server_start_error.store(error_code, std::memory_order_relaxed);
+    g_api_request_stream_chunked_server_ready.store(true, std::memory_order_release);
+    return ;
+}
+
+static bool api_request_stream_chunked_server_wait_until_ready(void)
+{
+    size_t wait_iterations;
+
+    wait_iterations = 0;
+    while (!g_api_request_stream_chunked_server_ready.load(std::memory_order_acquire))
+    {
+        if (wait_iterations >= 50)
+            return (false);
+        api_request_small_delay();
+        wait_iterations += 1;
+    }
+    if (g_api_request_stream_chunked_server_start_error.load(std::memory_order_acquire) != ER_SUCCESS)
+        return (false);
+    return (true);
 }
 
 static void api_request_bearer_server(api_request_bearer_server_context *context)
@@ -449,13 +628,20 @@ static void api_request_stream_large_response_server(void)
     server_configuration._port = 54358;
     server_socket = ft_socket(server_configuration);
     if (server_socket.get_error() != ER_SUCCESS)
+    {
+        api_request_stream_large_server_signal_ready(server_socket.get_error());
         return ;
+    }
+    api_request_stream_large_server_signal_ready(ER_SUCCESS);
     address_length = sizeof(address_storage);
     client_fd = nw_accept(server_socket.get_fd(),
             reinterpret_cast<struct sockaddr*>(&address_storage),
             &address_length);
     if (client_fd < 0)
+    {
+        g_api_request_stream_large_server_start_error.store(FT_ERR_SOCKET_ACCEPT_FAILED, std::memory_order_relaxed);
         return ;
+    }
     char drain_buffer[512];
     const char *header_terminator;
     size_t header_match_index;
@@ -765,13 +951,20 @@ static void api_request_stream_chunked_response_server(void)
     server_configuration._port = 54359;
     server_socket = ft_socket(server_configuration);
     if (server_socket.get_error() != ER_SUCCESS)
+    {
+        api_request_stream_chunked_server_signal_ready(server_socket.get_error());
         return ;
+    }
+    api_request_stream_chunked_server_signal_ready(ER_SUCCESS);
     address_length = sizeof(address_storage);
     client_fd = nw_accept(server_socket.get_fd(),
             reinterpret_cast<struct sockaddr*>(&address_storage),
             &address_length);
     if (client_fd < 0)
+    {
+        g_api_request_stream_chunked_server_start_error.store(FT_ERR_SOCKET_ACCEPT_FAILED, std::memory_order_relaxed);
         return ;
+    }
     response = "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n"
         "10\r\n0123456789ABCDEF\r\n"
         "08\r\nABCDEFGH\r\n"
@@ -1123,16 +1316,18 @@ FT_TEST(test_api_request_stream_large_response,
     handler.set_headers_callback(api_request_stream_headers_callback);
     handler.set_body_callback(api_request_stream_body_callback);
     handler.set_user_data(&context);
+    api_request_stream_large_server_reset_state();
     server_thread = ft_thread(api_request_stream_large_response_server);
     if (server_thread.get_error() != ER_SUCCESS)
         return (0);
-    api_request_small_delay();
+    if (!api_request_stream_large_server_wait_until_ready())
+    {
+        server_thread.join();
+        return (0);
+    }
     expected_size = 2 * 1024 * 1024;
     result = api_request_stream("127.0.0.1", 54358, "GET", "/", &handler,
             ft_nullptr, ft_nullptr, 5000, ft_nullptr);
-    printf("debug result=%d ft_errno=%d total=%zu final=%d chunk_count=%zu\n",
-        result ? 1 : 0, ft_errno, context.total_bytes,
-        context.final_received ? 1 : 0, context.chunk_count);
     server_thread.join();
     if (!result)
         return (0);
@@ -1172,10 +1367,15 @@ FT_TEST(test_api_request_stream_chunked_response,
     handler.set_headers_callback(api_request_stream_headers_callback);
     handler.set_body_callback(api_request_stream_body_callback);
     handler.set_user_data(&context);
+    api_request_stream_chunked_server_reset_state();
     server_thread = ft_thread(api_request_stream_chunked_response_server);
     if (server_thread.get_error() != ER_SUCCESS)
         return (0);
-    api_request_small_delay();
+    if (!api_request_stream_chunked_server_wait_until_ready())
+    {
+        server_thread.join();
+        return (0);
+    }
     expected_size = 24;
     result = api_request_stream("127.0.0.1", 54359, "GET", "/", &handler,
             ft_nullptr, ft_nullptr, 2000, ft_nullptr);

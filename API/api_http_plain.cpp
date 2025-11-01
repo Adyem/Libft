@@ -436,14 +436,69 @@ static bool api_http_send_request(ft_socket &socket_wrapper,
     return (true);
 }
 
+static bool api_http_socket_send_callback(const char *data_pointer,
+    size_t data_length, void *context, int &error_code)
+{
+    ft_socket *socket_pointer;
+    ssize_t sent_bytes;
+
+    if (!context)
+    {
+        error_code = FT_ERR_INVALID_ARGUMENT;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (false);
+    }
+    socket_pointer = static_cast<ft_socket *>(context);
+    if (data_length == 0)
+        return (true);
+    sent_bytes = socket_pointer->send_all(data_pointer, data_length);
+    if (sent_bytes < 0)
+    {
+        if (socket_pointer->get_error())
+            error_code = socket_pointer->get_error();
+        else if (ft_errno != ER_SUCCESS)
+            error_code = ft_errno;
+        else
+            error_code = FT_ERR_IO;
+        return (false);
+    }
+    return (true);
+}
+
+static bool api_http_send_payload(ft_socket &socket_wrapper,
+    json_group *payload, int &error_code)
+{
+    if (!payload)
+        return (true);
+    if (!api_http_stream_json_payload(payload, api_http_socket_send_callback,
+            &socket_wrapper, error_code))
+        return (false);
+    return (true);
+}
+
+static void api_http_map_send_error(int &send_error_code)
+{
+#ifdef _WIN32
+    if (send_error_code == (ft_map_system_error(WSAECONNRESET)))
+        send_error_code = FT_ERR_SOCKET_SEND_FAILED;
+    if (send_error_code == (ft_map_system_error(WSAECONNABORTED)))
+        send_error_code = FT_ERR_SOCKET_SEND_FAILED;
+#else
+    if (send_error_code == (ft_map_system_error(ECONNRESET)))
+        send_error_code = FT_ERR_SOCKET_SEND_FAILED;
+    if (send_error_code == (ft_map_system_error(EPIPE)))
+        send_error_code = FT_ERR_SOCKET_SEND_FAILED;
+#endif
+    return ;
+}
+
 static bool api_http_prepare_request(const char *method, const char *path,
     const char *host_header, json_group *payload, const char *headers,
-    ft_string &request, ft_string &body_string, int &error_code)
+    ft_string &request, int &error_code)
 {
-    char *temporary_string;
+    size_t payload_length;
 
     request.clear();
-    body_string.clear();
     if (!method || !path)
     {
         error_code = FT_ERR_INVALID_ARGUMENT;
@@ -504,20 +559,12 @@ static bool api_http_prepare_request(const char *method, const char *path,
     }
     if (payload)
     {
-        temporary_string = json_write_to_string(payload);
-        if (!temporary_string)
+        if (!api_http_measure_json_payload(payload, payload_length))
         {
             if (ft_errno == ER_SUCCESS)
-                error_code = FT_ERR_NO_MEMORY;
+                error_code = FT_ERR_IO;
             else
                 error_code = ft_errno;
-            return (false);
-        }
-        body_string = temporary_string;
-        cma_free(temporary_string);
-        if (body_string.get_error())
-        {
-            error_code = body_string.get_error();
             return (false);
         }
         request += "\r\nContent-Type: application/json";
@@ -526,7 +573,7 @@ static bool api_http_prepare_request(const char *method, const char *path,
             error_code = request.get_error();
             return (false);
         }
-        if (!api_append_content_length_header(request, body_string.size()))
+        if (!api_append_content_length_header(request, payload_length))
         {
             if (ft_errno == ER_SUCCESS)
                 error_code = FT_ERR_IO;
@@ -540,15 +587,6 @@ static bool api_http_prepare_request(const char *method, const char *path,
     {
         error_code = request.get_error();
         return (false);
-    }
-    if (payload)
-    {
-        request += body_string.c_str();
-        if (request.get_error())
-        {
-            error_code = request.get_error();
-            return (false);
-        }
     }
     return (true);
 }
@@ -1150,27 +1188,25 @@ static char *api_http_execute_plain_once(
     if (!skip_send)
     {
         ft_string request;
-        ft_string body_string;
 
         if (!api_http_prepare_request(method, path, host_header, payload,
-                headers, request, body_string, error_code))
+                headers, request, error_code))
             return (ft_nullptr);
         if (!api_http_send_request(socket_wrapper, request, error_code))
         {
             send_failed = true;
             send_error_code = error_code;
             api_connection_pool_disable_store(connection_handle);
-#ifdef _WIN32
-            if (send_error_code == (ft_map_system_error(WSAECONNRESET)))
-                send_error_code = FT_ERR_SOCKET_SEND_FAILED;
-            if (send_error_code == (ft_map_system_error(WSAECONNABORTED)))
-                send_error_code = FT_ERR_SOCKET_SEND_FAILED;
-#else
-            if (send_error_code == (ft_map_system_error(ECONNRESET)))
-                send_error_code = FT_ERR_SOCKET_SEND_FAILED;
-            if (send_error_code == (ft_map_system_error(EPIPE)))
-                send_error_code = FT_ERR_SOCKET_SEND_FAILED;
-#endif
+            api_http_map_send_error(send_error_code);
+            if (!api_http_is_recoverable_send_error(send_error_code))
+                return (ft_nullptr);
+        }
+        else if (!api_http_send_payload(socket_wrapper, payload, error_code))
+        {
+            send_failed = true;
+            send_error_code = error_code;
+            api_connection_pool_disable_store(connection_handle);
+            api_http_map_send_error(send_error_code);
             if (!api_http_is_recoverable_send_error(send_error_code))
                 return (ft_nullptr);
         }
@@ -1316,9 +1352,8 @@ static bool api_http_execute_plain_streaming_once(
     }
 
     ft_string request;
-    ft_string body_string;
     if (!api_http_prepare_request(method, path, host_header, payload, headers,
-            request, body_string, error_code))
+            request, error_code))
         return (false);
     bool send_failed;
     int send_error_code;
@@ -1330,17 +1365,16 @@ static bool api_http_execute_plain_streaming_once(
         send_failed = true;
         send_error_code = error_code;
         api_connection_pool_disable_store(connection_handle);
-#ifdef _WIN32
-        if (send_error_code == (ft_map_system_error(WSAECONNRESET)))
-            send_error_code = FT_ERR_SOCKET_SEND_FAILED;
-        if (send_error_code == (ft_map_system_error(WSAECONNABORTED)))
-            send_error_code = FT_ERR_SOCKET_SEND_FAILED;
-#else
-        if (send_error_code == (ft_map_system_error(ECONNRESET)))
-            send_error_code = FT_ERR_SOCKET_SEND_FAILED;
-        if (send_error_code == (ft_map_system_error(EPIPE)))
-            send_error_code = FT_ERR_SOCKET_SEND_FAILED;
-#endif
+        api_http_map_send_error(send_error_code);
+        if (!api_http_is_recoverable_send_error(send_error_code))
+            return (false);
+    }
+    else if (!api_http_send_payload(socket_wrapper, payload, error_code))
+    {
+        send_failed = true;
+        send_error_code = error_code;
+        api_connection_pool_disable_store(connection_handle);
+        api_http_map_send_error(send_error_code);
         if (!api_http_is_recoverable_send_error(send_error_code))
             return (false);
     }
