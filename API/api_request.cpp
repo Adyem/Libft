@@ -60,6 +60,43 @@ void api_request_set_downgrade_wait_hook(
     return ;
 }
 
+bool api_request(const char *ip, uint16_t port,
+    const char *method, const char *path,
+    const api_streaming_handler *streaming_handler, json_group *payload,
+    const char *headers, int timeout, bool enable_http2,
+    bool *used_http2, const api_retry_policy *retry_policy)
+{
+    bool http2_used_local;
+    bool request_success;
+
+    if (used_http2)
+        *used_http2 = false;
+    if (!streaming_handler)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        return (false);
+    }
+    http2_used_local = false;
+    if (enable_http2)
+    {
+        request_success = api_request_stream_http2(ip, port, method, path,
+                streaming_handler, payload, headers, timeout,
+                &http2_used_local, retry_policy);
+        if (!request_success)
+            return (false);
+        if (used_http2)
+            *used_http2 = http2_used_local;
+        return (true);
+    }
+    request_success = api_request_stream(ip, port, method, path,
+            streaming_handler, payload, headers, timeout, retry_policy);
+    if (!request_success)
+        return (false);
+    if (used_http2)
+        *used_http2 = false;
+    return (true);
+}
+
 bool api_request_stream(const char *ip, uint16_t port,
     const char *method, const char *path,
     const api_streaming_handler *streaming_handler, json_group *payload,
