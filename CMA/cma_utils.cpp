@@ -227,13 +227,6 @@ Page *create_page(ft_size_t size)
         return (ft_nullptr);
     }
     std::memset(page, 0, sizeof(Page));
-    if (cma_page_prepare_thread_safety(page) != 0)
-    {
-        if (use_heap)
-            std::free(ptr);
-        std::free(page);
-        return (ft_nullptr);
-    }
     page->heap = use_heap;
     page->start = ptr;
     page->size = page_size;
@@ -242,7 +235,6 @@ Page *create_page(ft_size_t size)
     page->blocks = cma_metadata_allocate_block();
     if (page->blocks == ft_nullptr)
     {
-        cma_page_teardown_thread_safety(page);
         if (use_heap)
             std::free(ptr);
         std::free(page);
@@ -395,14 +387,11 @@ Page *find_page_of_block(Block *block)
 
 void free_page_if_empty(Page *page)
 {
-    bool lock_acquired;
     int entry_errno;
 
     if (!page || page->heap == false)
         return ;
     entry_errno = ft_errno;
-    if (cma_page_lock(page, &lock_acquired) != 0)
-        return ;
     if (page->blocks && cma_block_is_free(page->blocks) &&
         page->blocks->next == ft_nullptr &&
         page->blocks->prev == ft_nullptr)
@@ -413,17 +402,12 @@ void free_page_if_empty(Page *page)
             page->next->prev = page->prev;
         if (page_list == page)
             page_list = page->next;
-        if (lock_acquired)
-            cma_page_unlock(page, lock_acquired);
         std::free(page->start);
         cma_metadata_release_block(page->blocks);
-        cma_page_teardown_thread_safety(page);
         std::free(page);
         ft_errno = entry_errno;
         return ;
     }
-    if (lock_acquired)
-        cma_page_unlock(page, lock_acquired);
     ft_errno = entry_errno;
     return ;
 }

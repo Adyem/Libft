@@ -8,8 +8,6 @@
 #include <cstdint>
 #include <stdint.h>
 
-class pt_mutex;
-
 #define PAGE_SIZE 131072
 #define BYPASS_ALLOC DEBUG
 #define MAGIC_NUMBER_ALLOCATED 0xDEADBEEF
@@ -85,8 +83,6 @@ class cma_allocator_guard
 
 struct Block
 {
-    pt_mutex            *mutex;
-    bool                thread_safe_enabled;
     uint32_t            magic;
     ft_size_t           size;
     bool                free;
@@ -101,8 +97,6 @@ struct Block
 
 struct Page
 {
-    pt_mutex            *mutex;
-    bool                thread_safe_enabled;
     void                *start;
     ft_size_t           size;
     Page                *next;
@@ -218,16 +212,6 @@ inline ft_size_t cma_block_user_size(const Block *block)
 {
     return (cma_debug_user_size(block));
 }
-
-int     cma_block_prepare_thread_safety(Block *block);
-void    cma_block_teardown_thread_safety(Block *block);
-int     cma_block_lock(Block *block, bool *lock_acquired);
-void    cma_block_unlock(Block *block, bool lock_acquired);
-
-int     cma_page_prepare_thread_safety(Page *page);
-void    cma_page_teardown_thread_safety(Page *page);
-int     cma_page_lock(Page *page, bool *lock_acquired);
-void    cma_page_unlock(Page *page, bool lock_acquired);
 
 inline __attribute__((always_inline, hot)) ft_size_t align16(ft_size_t size)
 {
