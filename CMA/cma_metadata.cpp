@@ -233,13 +233,6 @@ Block    *cma_metadata_allocate_block(void)
         block = g_cma_metadata_free_list;
         g_cma_metadata_free_list = block->next;
         std::memset(block, 0, sizeof(Block));
-        if (cma_block_prepare_thread_safety(block) != 0)
-        {
-            block->next = g_cma_metadata_free_list;
-            block->prev = ft_nullptr;
-            g_cma_metadata_free_list = block;
-            return (ft_nullptr);
-        }
         ft_errno = ER_SUCCESS;
         return (block);
     }
@@ -260,12 +253,6 @@ Block    *cma_metadata_allocate_block(void)
             block = reinterpret_cast<Block *>(chunk->memory + chunk->used);
             chunk->used += stride;
             std::memset(block, 0, sizeof(Block));
-            if (cma_block_prepare_thread_safety(block) != 0)
-            {
-                chunk->used -= stride;
-                ft_errno = FT_ERR_INITIALIZATION_FAILED;
-                return (ft_nullptr);
-            }
             ft_errno = ER_SUCCESS;
             return (block);
         }
@@ -289,7 +276,6 @@ void    cma_metadata_release_block(Block *block)
 {
     if (block == ft_nullptr)
         return ;
-    cma_block_teardown_thread_safety(block);
     block->next = g_cma_metadata_free_list;
     block->prev = ft_nullptr;
     block->size = 0;

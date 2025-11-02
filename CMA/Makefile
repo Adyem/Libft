@@ -23,8 +23,6 @@ SRCS := cma_alloc_limit_guard.cpp \
         cma_substr.cpp \
         cma_strtrim.cpp \
         cma_free_double.cpp \
-        cma_block_thread_safety.cpp \
-        cma_page_thread_safety.cpp \
         cma_globals.cpp \
         cma_allocator_guard.cpp \
         cma_metadata.cpp \
