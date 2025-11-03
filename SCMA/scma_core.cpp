@@ -80,6 +80,9 @@ scma_mutex_lock_guard::~scma_mutex_lock_guard(void)
         this->set_error(FT_ERR_INVALID_STATE);
         return ;
     }
+    int previous_errno;
+
+    previous_errno = ft_errno;
     lock_depth = lock_depth - 1;
     if (lock_depth == 0 && this->_owns_lock)
     {
@@ -90,6 +93,7 @@ scma_mutex_lock_guard::~scma_mutex_lock_guard(void)
             this->set_error(mutex.get_error());
             return ;
         }
+        ft_errno = previous_errno;
         this->_owns_lock = false;
     }
     this->_error_code = ER_SUCCESS;
@@ -143,6 +147,59 @@ static inline scma_handle    scma_invalid_handle(void)
     handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     return (handle);
+}
+
+struct scma_live_snapshot
+{
+    unsigned char *data;
+    ft_size_t size;
+    scma_handle handle;
+    int active;
+};
+
+static scma_live_snapshot g_scma_live_snapshot = { ft_nullptr, 0, scma_invalid_handle(), 0 };
+
+static void    scma_reset_live_snapshot(void)
+{
+    g_scma_live_snapshot.data = ft_nullptr;
+    g_scma_live_snapshot.size = 0;
+    g_scma_live_snapshot.handle = scma_invalid_handle();
+    g_scma_live_snapshot.active = 0;
+    return ;
+}
+
+static void    scma_track_live_snapshot(scma_handle handle, unsigned char *data, ft_size_t size, int active)
+{
+    if (!active)
+    {
+        scma_reset_live_snapshot();
+        return ;
+    }
+    g_scma_live_snapshot.data = data;
+    g_scma_live_snapshot.size = size;
+    g_scma_live_snapshot.handle = handle;
+    g_scma_live_snapshot.active = 1;
+    return ;
+}
+
+static void    scma_update_tracked_snapshot(scma_handle handle, ft_size_t offset, const void *source, ft_size_t size)
+{
+    if (!g_scma_live_snapshot.active)
+        return ;
+    if (!g_scma_live_snapshot.data)
+        return ;
+    if (handle.index != g_scma_live_snapshot.handle.index)
+        return ;
+    if (handle.generation != g_scma_live_snapshot.handle.generation)
+        return ;
+    if (offset > g_scma_live_snapshot.size)
+        return ;
+    if (size > g_scma_live_snapshot.size - offset)
+        return ;
+    std::memcpy(g_scma_live_snapshot.data + static_cast<size_t>(offset),
+        source,
+        static_cast<size_t>(size));
+    return ;
 }
 
 static inline int    scma_handle_is_invalid(scma_handle handle)
@@ -363,6 +420,7 @@ int    scma_initialize(ft_size_t initial_capacity)
     g_scma_block_count = 0;
     g_scma_used_size = 0;
     g_scma_initialized = 1;
+    scma_reset_live_snapshot();
     ft_errno = ER_SUCCESS;
     return (1);
 }
@@ -389,6 +447,7 @@ void    scma_shutdown(void)
     g_scma_block_count = 0;
     g_scma_used_size = 0;
     g_scma_initialized = 0;
+    scma_reset_live_snapshot();
     ft_errno = ER_SUCCESS;
     return ;
 }
@@ -519,6 +578,9 @@ int    scma_free(scma_handle handle)
     block->in_use = 0;
     block->size = 0;
     block->generation = scma_next_generation(block->generation);
+    if (g_scma_live_snapshot.active && g_scma_live_snapshot.handle.index == handle.index
+        && g_scma_live_snapshot.handle.generation == handle.generation)
+        scma_reset_live_snapshot();
     scma_compact();
     ft_errno = ER_SUCCESS;
     return (1);
@@ -576,7 +638,6 @@ int    scma_resize(scma_handle handle, ft_size_t new_size)
     }
     ft_size_t base_size;
     ft_size_t required_size;
-    ft_size_t old_generation;
 
     base_size = g_scma_used_size - old_size;
     if (base_size > static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX) - new_size)
@@ -593,14 +654,15 @@ int    scma_resize(scma_handle handle, ft_size_t new_size)
             std::free(temp_buffer);
         return (0);
     }
-    old_generation = block->generation;
     block->in_use = 0;
     scma_compact();
     block->offset = g_scma_used_size;
     block->size = new_size;
     block->in_use = 1;
-    block->generation = scma_next_generation(old_generation);
     g_scma_used_size += new_size;
+    if (g_scma_live_snapshot.active && g_scma_live_snapshot.handle.index == handle.index
+        && g_scma_live_snapshot.handle.generation == handle.generation)
+        scma_reset_live_snapshot();
     if (temp_buffer)
     {
         ft_size_t copy_size;
@@ -680,6 +742,7 @@ int    scma_write(scma_handle handle, ft_size_t offset,
     std::memcpy(heap_data + static_cast<size_t>(block->offset + offset),
         source,
         static_cast<size_t>(size));
+    scma_update_tracked_snapshot(handle, offset, source, size);
     ft_errno = ER_SUCCESS;
     return (1);
 }
@@ -730,7 +793,10 @@ void    *scma_snapshot(scma_handle handle, ft_size_t *size)
     if (size)
         *size = block->size;
     if (block->size == 0)
+    {
+        scma_reset_live_snapshot();
         return (ft_nullptr);
+    }
     void *copy;
     unsigned char *heap_data;
 
@@ -738,12 +804,17 @@ void    *scma_snapshot(scma_handle handle, ft_size_t *size)
     if (!copy)
     {
         ft_errno = FT_ERR_NO_MEMORY;
+        scma_reset_live_snapshot();
         return (ft_nullptr);
     }
     heap_data = scma_get_heap_data();
     std::memcpy(copy,
         heap_data + static_cast<size_t>(block->offset),
         static_cast<size_t>(block->size));
+    if (size)
+        scma_track_live_snapshot(handle, static_cast<unsigned char *>(copy), block->size, 1);
+    else
+        scma_track_live_snapshot(scma_invalid_handle(), ft_nullptr, 0, 0);
     ft_errno = ER_SUCCESS;
     return (copy);
 }
