@@ -59,6 +59,7 @@ else
 endif
 
 SUBDIRS :=  CMA \
+            SCMA \
             GetNextLine \
             Libft \
             Math \
@@ -80,6 +81,7 @@ SUBDIRS :=  CMA \
 
 LIB_BASES := \
   CMA/CustomMemoryAllocator \
+  SCMA/SCMA \
   GetNextLine/GetNextLine \
   Libft/LibFT \
   Math/Math \
