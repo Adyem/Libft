@@ -66,3 +66,14 @@ FT_TEST(test_scma_free_invalid_handle_reports_error, "scma free reports invalid 
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, ft_errno);
     return (1);
 }
+
+FT_TEST(test_scma_allocate_requires_runtime_online, "scma allocation rejects offline runtime")
+{
+    scma_handle handle;
+
+    scma_test_reset();
+    handle = scma_allocate(static_cast<ft_size_t>(sizeof(int)));
+    FT_ASSERT_EQ(0, scma_handle_is_valid(handle));
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, ft_errno);
+    return (1);
+}
