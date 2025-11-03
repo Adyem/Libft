@@ -6,6 +6,7 @@ LIBFT_DEBUG_ARCHIVE := Full_Libft_debug.a
 EFF_SRCS := $(wildcard Efficiency/*.cpp)
 
 SRCS := main.cpp $(wildcard Test/*.cpp) $(wildcard API/*.cpp)
+TOTAL_SRCS := $(words $(SRCS))
 
 MAKEFLAGS += --no-print-directory
 
@@ -53,13 +54,21 @@ DEBUG_OBJS := $(patsubst %.cpp,$(DEBUG_OBJDIR)/%.o,$(SRCS))
 all: $(TARGET)
 
 $(TARGET): $(OBJS) ../Full_Libft.a
-	@echo "Linking $@"
-	$(CXX) $(CFLAGS) -o $@ $(OBJS) ../Full_Libft.a $(LDFLAGS)
+	@echo "Linking final executable ($(TARGET))"
+	@$(CXX) $(CFLAGS) -o $@ $(OBJS) ../Full_Libft.a $(LDFLAGS)
 
 $(OBJDIR)/%.o: %.cpp
 	@$(MKDIR) $(dir $@)
-	@echo "Compiling $<"
-	$(CXX) $(CFLAGS) -c $< -o $@
+	@total=$(TOTAL_SRCS); \
+	current=1; \
+	for src in $(SRCS); do \
+	        if [ "$$src" = "$<" ]; then \
+	                break; \
+	        fi; \
+	        current=$$((current + 1)); \
+	done; \
+	echo "Compiling test file $$current/$$total";
+	@$(CXX) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/Test/test_promise.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Template\"
 $(OBJDIR)/Test/test_task_scheduler.o: CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"PThread\"
@@ -91,13 +100,21 @@ debug: CXXFLAGS += -DDEBUG=1
 debug: $(DEBUG_TARGET)
 
 $(DEBUG_TARGET): $(DEBUG_OBJS) ../Full_Libft_debug.a
-	@echo "Linking $@"
-	$(CXX) $(CFLAGS) -o $@ $(DEBUG_OBJS) ../Full_Libft_debug.a $(LDFLAGS)
+	@echo "Linking final executable ($(DEBUG_TARGET))"
+	@$(CXX) $(CFLAGS) -o $@ $(DEBUG_OBJS) ../Full_Libft_debug.a $(LDFLAGS)
 
 $(DEBUG_OBJDIR)/%.o: %.cpp
 	@$(MKDIR) $(dir $@)
-	@echo "Compiling $<"
-	$(CXX) $(CFLAGS) -c $< -o $@
+	@total=$(TOTAL_SRCS); \
+	current=1; \
+	for src in $(SRCS); do \
+	        if [ "$$src" = "$<" ]; then \
+	                break; \
+	        fi; \
+	        current=$$((current + 1)); \
+	done; \
+	echo "Compiling test file $$current/$$total";
+	@$(CXX) $(CFLAGS) -c $< -o $@
 
 ../Full_Libft.a:
 	@need_build=0; \
@@ -147,12 +164,14 @@ clean:
 	if ! $(RM) $(CLEAN_FILES); then \
 	        status=1; \
 	fi; \
-	if ! $(MAKE) -C .. clean COMPILE_FLAGS="$(COMPILE_FLAGS)"; then \
+	if ! $(MAKE) -s -C .. clean COMPILE_FLAGS="$(COMPILE_FLAGS)"; then \
 	        status=1; \
 	fi; \
 	if [ $$status -ne 0 ]; then \
+	        echo "Clean failed"; \
 	        exit 1; \
-	fi
+	fi; \
+	echo "Clean completed successfully"
 
 fclean:
 	@echo "Removing test artifacts"
@@ -163,12 +182,14 @@ fclean:
 	if ! $(RM) $(TARGET) $(DEBUG_TARGET); then \
 	        status=1; \
 	fi; \
-	if ! $(MAKE) -C .. fclean COMPILE_FLAGS="$(COMPILE_FLAGS)"; then \
+	if ! $(MAKE) -s -C .. fclean COMPILE_FLAGS="$(COMPILE_FLAGS)"; then \
 	        status=1; \
 	fi; \
 	if [ $$status -ne 0 ]; then \
+	        echo "Full clean failed"; \
 	        exit 1; \
-	fi
+	fi; \
+	echo "Full clean completed successfully"
 
 re: fclean all
 
