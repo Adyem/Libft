@@ -258,3 +258,38 @@ FT_TEST(test_scma_accessor_detects_stale_handle, "scma accessor detects when bou
     scma_shutdown();
     return (1);
 }
+
+FT_TEST(test_scma_accessor_get_count_matches_capacity, "scma accessor reports element count")
+{
+    scma_handle handle;
+    scma_handle_accessor<int> accessor;
+
+    FT_ASSERT_EQ(1, scma_test_initialize(static_cast<ft_size_t>(sizeof(int) * 4)));
+    handle = scma_allocate(static_cast<ft_size_t>(sizeof(int) * 4));
+    FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
+    FT_ASSERT_EQ(1, accessor.bind(handle));
+    accessor[0] = 3;
+    accessor[1] = 6;
+    accessor[2] = 9;
+    accessor[3] = 12;
+    FT_ASSERT_EQ(static_cast<ft_size_t>(4), accessor.get_count());
+    scma_shutdown();
+    return (1);
+}
+
+FT_TEST(test_scma_accessor_operations_require_binding, "scma accessor rejects operations when unbound")
+{
+    scma_handle_accessor<int> accessor;
+    int value;
+
+    scma_test_reset();
+    FT_ASSERT_EQ(0, accessor.is_bound());
+    value = 0;
+    FT_ASSERT_EQ(0, accessor.read_struct(value));
+    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, accessor.get_error());
+    FT_ASSERT_EQ(0, accessor.write_struct(value));
+    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, accessor.get_error());
+    FT_ASSERT_EQ(static_cast<ft_size_t>(0), accessor.get_count());
+    FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, accessor.get_error());
+    return (1);
+}
