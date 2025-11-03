@@ -1,6 +1,7 @@
 #include "test_scma_shared.hpp"
 
-FT_TEST(test_scma_initialize_cycle, "scma initialization cycle handles double init and shutdown")
+FT_TEST(test_scma_initialize_cycle,
+        "scma initialization cycle handles double init and shutdown")
 {
     scma_test_reset();
     FT_ASSERT_EQ(1, scma_initialize(64));
@@ -23,7 +24,8 @@ FT_TEST(test_scma_allocate_zero_size_rejected, "scma rejects zero-sized allocati
     return (1);
 }
 
-FT_TEST(test_scma_double_free_and_bounds_errors, "scma reports bounds violations and double free")
+FT_TEST(test_scma_double_free_and_bounds_errors,
+        "scma reports bounds violations and double free")
 {
     scma_handle handle;
     int value;
@@ -33,7 +35,8 @@ FT_TEST(test_scma_double_free_and_bounds_errors, "scma reports bounds violations
     FT_ASSERT_EQ(1, scma_handle_is_valid(handle));
     value = 42;
     FT_ASSERT_EQ(1, scma_write(handle, 0, &value, static_cast<ft_size_t>(sizeof(int))));
-    FT_ASSERT_EQ(0, scma_write(handle, static_cast<ft_size_t>(sizeof(int) * 2), &value, static_cast<ft_size_t>(sizeof(int))));
+    FT_ASSERT_EQ(0, scma_write(handle, static_cast<ft_size_t>(sizeof(int) * 2),
+                &value, static_cast<ft_size_t>(sizeof(int))));
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
     FT_ASSERT_EQ(1, scma_free(handle));
     FT_ASSERT_EQ(0, scma_free(handle));
@@ -42,7 +45,8 @@ FT_TEST(test_scma_double_free_and_bounds_errors, "scma reports bounds violations
     return (1);
 }
 
-FT_TEST(test_scma_handle_invalid_after_shutdown, "scma invalidates handles once shutdown")
+FT_TEST(test_scma_handle_invalid_after_shutdown,
+        "scma invalidates handles once shutdown")
 {
     scma_handle handle;
 
@@ -55,7 +59,8 @@ FT_TEST(test_scma_handle_invalid_after_shutdown, "scma invalidates handles once 
     return (1);
 }
 
-FT_TEST(test_scma_free_invalid_handle_reports_error, "scma free reports invalid handle when runtime offline")
+FT_TEST(test_scma_free_invalid_handle_reports_error,
+        "scma free reports invalid handle when runtime offline")
 {
     scma_handle handle;
 
@@ -67,7 +72,8 @@ FT_TEST(test_scma_free_invalid_handle_reports_error, "scma free reports invalid 
     return (1);
 }
 
-FT_TEST(test_scma_allocate_requires_runtime_online, "scma allocation rejects offline runtime")
+FT_TEST(test_scma_allocate_requires_runtime_online,
+        "scma allocation rejects offline runtime")
 {
     scma_handle handle;
 
