@@ -495,6 +495,35 @@ void    cma_get_extended_stats(ft_size_t *allocation_count,
             ft_size_t *peak_bytes);
 ```
 
+### Safe Compacted Memory Allocator (SCMA)
+
+Located in `SCMA/`. Header: `SCMA.hpp`. SCMA manages relocatable heap
+storage through opaque `scma_handle` identifiers instead of raw
+pointers. Each handle stores a block index and generation counter so the
+runtime can detect stale references when slots are recycled. Live bytes
+reside in a single `ft_vector<unsigned char>` buffer that is compacted on
+every allocation, after each free, and midway through resizes. The
+compactor walks the metadata table, uses `std::memmove` to close gaps,
+and updates offsets and the global used-size tracker before new blocks
+are appended.
+
+All public entry points validate the handle and synchronize through the
+module mutex to keep relocations atomic. Allocation helpers grow the
+backing heap as needed, reuse freed slots when available, and bump the
+generation so callers holding an outdated handle see `FT_ERR_INVALID_HANDLE`
+instead of mutating recycled storage. The API surface mirrors
+`ft_errno` for error reporting and exposes convenience helpers for
+reading, writing, resizing, snapshotting, and querying allocation sizes.
+
+For structured access, the `scma_handle_accessor<T>` template wraps a
+handle and requires trivially copyable types. It revalidates the handle
+before each operation, offers `read_struct` / `write_struct`, indexed
+`read_at` / `write_at` helpers, and reports how many `T` elements fit in
+the block via `get_count`. Both the accessor and the guard object
+`scma_mutex_lock_guard` expose `get_error` / `get_error_str` accessors so
+callers can diagnose failures while SCMA continues compacting the heap
+behind the scenes.
+
 ### GetNextLine
 
 `GetNextLine/get_next_line.hpp` implements a simple file reader that operates on POSIX file descriptors with a configurable buffer size. It stores per-descriptor leftovers in the custom `ft_unordered_map`, allowing error reporting through `ft_errno` without relying on the `CPP_class` stream wrappers.
