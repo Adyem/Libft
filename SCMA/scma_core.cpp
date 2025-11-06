@@ -35,23 +35,13 @@ static ft_size_t    &scma_runtime_lock_depth(void)
     return (g_scma_lock_depth);
 }
 
-void    scma_mutex_lock_guard::set_error(int error_code) const
+int     scma_mutex_lock(void)
 {
-    this->_error_code = error_code;
-    ft_errno = error_code;
-    return ;
-}
-
-scma_mutex_lock_guard::scma_mutex_lock_guard(void)
-{
-    this->_owns_lock = false;
-    this->_entered = false;
-    this->_error_code = ER_SUCCESS;
     ft_size_t &lock_depth = scma_runtime_lock_depth();
     if (lock_depth == static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX))
     {
-        this->set_error(FT_ERR_NO_MEMORY);
-        return ;
+        ft_errno = FT_ERR_NO_MEMORY;
+        return (-1);
     }
     if (lock_depth == 0)
     {
@@ -59,60 +49,47 @@ scma_mutex_lock_guard::scma_mutex_lock_guard(void)
         mutex.lock(THREAD_ID);
         if (mutex.get_error() != ER_SUCCESS)
         {
-            this->set_error(mutex.get_error());
-            return ;
+            ft_errno = mutex.get_error();
+            return (-1);
         }
-        this->_owns_lock = true;
     }
     lock_depth = lock_depth + 1;
-    this->_entered = true;
-    this->_error_code = ER_SUCCESS;
-    return ;
+    ft_errno = ER_SUCCESS;
+    return (0);
 }
 
-scma_mutex_lock_guard::~scma_mutex_lock_guard(void)
+int     scma_mutex_unlock(void)
 {
-    if (!this->_entered)
-        return ;
     ft_size_t &lock_depth = scma_runtime_lock_depth();
     if (lock_depth == 0)
     {
-        this->set_error(FT_ERR_INVALID_STATE);
-        return ;
+        ft_errno = FT_ERR_INVALID_STATE;
+        return (-1);
     }
     int previous_errno;
 
     previous_errno = ft_errno;
     lock_depth = lock_depth - 1;
-    if (lock_depth == 0 && this->_owns_lock)
+    if (lock_depth == 0)
     {
         pt_mutex &mutex = scma_runtime_mutex();
         mutex.unlock(THREAD_ID);
         if (mutex.get_error() != ER_SUCCESS)
         {
-            this->set_error(mutex.get_error());
-            return ;
+            ft_errno = mutex.get_error();
+            return (-1);
         }
-        ft_errno = previous_errno;
-        this->_owns_lock = false;
     }
-    this->_error_code = ER_SUCCESS;
-    return ;
+    ft_errno = previous_errno;
+    return (0);
 }
 
-bool    scma_mutex_lock_guard::owns_lock(void) const
+ft_size_t    scma_mutex_lock_count(void)
 {
-    return (this->_owns_lock);
-}
+    ft_size_t lock_depth;
 
-int     scma_mutex_lock_guard::get_error(void) const
-{
-    return (this->_error_code);
-}
-
-const char  *scma_mutex_lock_guard::get_error_str(void) const
-{
-    return (ft_strerror(this->_error_code));
+    lock_depth = scma_runtime_lock_depth();
+    return (lock_depth);
 }
 
 struct scma_block_span
@@ -213,21 +190,20 @@ static inline int    scma_handle_is_invalid(scma_handle handle)
 
 static void    scma_compact(void)
 {
-    scma_mutex_lock_guard mutex_guard;
-    if (mutex_guard.get_error() != ER_SUCCESS)
-        return ;
-    if (!g_scma_initialized)
-        return ;
     scma_block_span span;
     unsigned char *heap_data;
     ft_size_t new_offset;
     ft_size_t index;
 
+    if (scma_mutex_lock() != 0)
+        return ;
+    if (!g_scma_initialized)
+        goto cleanup;
     span = scma_get_block_span();
     if (span.count == 0)
     {
         g_scma_used_size = 0;
-        return ;
+        goto cleanup;
     }
     heap_data = scma_get_heap_data();
     new_offset = 0;
@@ -251,51 +227,58 @@ static void    scma_compact(void)
         index++;
     }
     g_scma_used_size = new_offset;
+
+cleanup:
+    if (scma_mutex_unlock() != 0)
+        return ;
     return ;
 }
 
 static int    scma_validate_handle(scma_handle handle, scma_block **out_block)
 {
-    scma_mutex_lock_guard mutex_guard;
-    if (mutex_guard.get_error() != ER_SUCCESS)
-    {
-        ft_errno = mutex_guard.get_error();
+    int validation_result;
+    scma_block_span span;
+    scma_block *block;
+
+    validation_result = 0;
+    if (scma_mutex_lock() != 0)
         return (0);
-    }
     if (!g_scma_initialized)
     {
         ft_errno = FT_ERR_INVALID_STATE;
-        return (0);
+        goto cleanup;
     }
     if (scma_handle_is_invalid(handle))
     {
         ft_errno = FT_ERR_INVALID_HANDLE;
-        return (0);
+        goto cleanup;
     }
-    scma_block_span span;
-    scma_block *block;
-
     span = scma_get_block_span();
     if (handle.index >= span.count)
     {
         ft_errno = FT_ERR_INVALID_HANDLE;
-        return (0);
+        goto cleanup;
     }
     block = &span.data[static_cast<size_t>(handle.index)];
     if (!block->in_use)
     {
         ft_errno = FT_ERR_INVALID_HANDLE;
-        return (0);
+        goto cleanup;
     }
     if (block->generation != handle.generation)
     {
         ft_errno = FT_ERR_INVALID_HANDLE;
-        return (0);
+        goto cleanup;
     }
     if (out_block)
         *out_block = block;
     ft_errno = ER_SUCCESS;
-    return (1);
+    validation_result = 1;
+
+cleanup:
+    if (scma_mutex_unlock() != 0)
+        validation_result = 0;
+    return (validation_result);
 }
 
 static int    scma_ensure_block_capacity(ft_size_t required_count)
@@ -383,20 +366,22 @@ static int    scma_ensure_capacity(ft_size_t required_size)
 
 int    scma_initialize(ft_size_t initial_capacity)
 {
-    scma_mutex_lock_guard mutex_guard;
-    if (mutex_guard.get_error() != ER_SUCCESS)
+    int initialization_result;
+
+    initialization_result = 0;
+    if (scma_mutex_lock() != 0)
         return (0);
     if (g_scma_initialized)
     {
         ft_errno = FT_ERR_ALREADY_INITIALIZED;
-        return (0);
+        goto cleanup;
     }
     if (initial_capacity == 0)
         initial_capacity = 1024;
     if (initial_capacity > static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX))
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (0);
+        goto cleanup;
     }
     if (g_scma_heap_data)
     {
@@ -408,7 +393,7 @@ int    scma_initialize(ft_size_t initial_capacity)
     if (!g_scma_heap_data)
     {
         ft_errno = FT_ERR_NO_MEMORY;
-        return (0);
+        goto cleanup;
     }
     g_scma_heap_capacity = initial_capacity;
     if (g_scma_blocks_data)
@@ -422,16 +407,20 @@ int    scma_initialize(ft_size_t initial_capacity)
     g_scma_initialized = 1;
     scma_reset_live_snapshot();
     ft_errno = ER_SUCCESS;
-    return (1);
+    initialization_result = 1;
+
+cleanup:
+    if (scma_mutex_unlock() != 0)
+        initialization_result = 0;
+    return (initialization_result);
 }
 
 void    scma_shutdown(void)
 {
-    scma_mutex_lock_guard mutex_guard;
-    if (mutex_guard.get_error() != ER_SUCCESS)
+    if (scma_mutex_lock() != 0)
         return ;
     if (!g_scma_initialized)
-        return ;
+        goto cleanup;
     if (g_scma_heap_data)
     {
         std::free(g_scma_heap_data);
@@ -449,17 +438,32 @@ void    scma_shutdown(void)
     g_scma_initialized = 0;
     scma_reset_live_snapshot();
     ft_errno = ER_SUCCESS;
+
+cleanup:
+    if (scma_mutex_unlock() != 0)
+        return ;
     return ;
 }
 
 int    scma_is_initialized(void)
 {
-    scma_mutex_lock_guard mutex_guard;
-    if (mutex_guard.get_error() != ER_SUCCESS)
+    int initialized;
+
+    initialized = 0;
+    if (scma_mutex_lock() != 0)
         return (0);
     if (g_scma_initialized)
-        return (1);
-    return (0);
+    {
+        ft_errno = ER_SUCCESS;
+        initialized = 1;
+    }
+    else
+    {
+        ft_errno = ER_SUCCESS;
+    }
+    if (scma_mutex_unlock() != 0)
+        return (0);
+    return (initialized);
 }
 
 static ft_size_t    scma_next_generation(ft_size_t generation)
@@ -476,44 +480,45 @@ static ft_size_t    scma_next_generation(ft_size_t generation)
 
 scma_handle    scma_allocate(ft_size_t size)
 {
-    scma_mutex_lock_guard mutex_guard;
-    if (mutex_guard.get_error() != ER_SUCCESS)
-        return (scma_invalid_handle());
+    scma_handle result_handle;
+    ft_size_t required_size;
+    scma_block_span span;
+    ft_size_t index;
+    int found_slot;
+    scma_block *block;
+
+    result_handle = scma_invalid_handle();
+    if (scma_mutex_lock() != 0)
+        return (result_handle);
     if (!g_scma_initialized)
     {
         ft_errno = FT_ERR_INVALID_STATE;
-        return (scma_invalid_handle());
+        goto cleanup;
     }
     if (size == 0)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (scma_invalid_handle());
+        goto cleanup;
     }
     scma_compact();
     if (size > static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX))
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (scma_invalid_handle());
+        goto cleanup;
     }
-    ft_size_t required_size;
-
     required_size = g_scma_used_size + size;
     if (required_size < g_scma_used_size)
     {
         ft_errno = FT_ERR_NO_MEMORY;
-        return (scma_invalid_handle());
+        goto cleanup;
     }
     if (required_size > static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX))
     {
         ft_errno = FT_ERR_NO_MEMORY;
-        return (scma_invalid_handle());
+        goto cleanup;
     }
     if (!scma_ensure_capacity(required_size))
-        return (scma_invalid_handle());
-    scma_block_span span;
-    ft_size_t index;
-    int found_slot;
-
+        goto cleanup;
     span = scma_get_block_span();
     index = 0;
     found_slot = 0;
@@ -532,11 +537,10 @@ scma_handle    scma_allocate(ft_size_t size)
     if (!found_slot)
     {
         scma_block *new_block;
-        scma_handle handle;
         ft_size_t new_index;
 
         if (!scma_ensure_block_capacity(g_scma_block_count + 1))
-            return (scma_invalid_handle());
+            goto cleanup;
         new_index = g_scma_block_count;
         new_block = &g_scma_blocks_data[static_cast<size_t>(new_index)];
         new_block->offset = g_scma_used_size;
@@ -545,36 +549,37 @@ scma_handle    scma_allocate(ft_size_t size)
         new_block->generation = 1;
         g_scma_block_count = g_scma_block_count + 1;
         g_scma_used_size += size;
-        handle.index = new_index;
-        handle.generation = new_block->generation;
+        result_handle.index = new_index;
+        result_handle.generation = new_block->generation;
         ft_errno = ER_SUCCESS;
-        return (handle);
+        goto cleanup;
     }
-    scma_block *block;
-
     block = &span.data[static_cast<size_t>(index)];
     block->offset = g_scma_used_size;
     block->size = size;
     block->in_use = 1;
     block->generation = scma_next_generation(block->generation);
-    scma_handle handle;
-
-    handle.index = index;
-    handle.generation = block->generation;
+    result_handle.index = index;
+    result_handle.generation = block->generation;
     g_scma_used_size += size;
     ft_errno = ER_SUCCESS;
-    return (handle);
+
+cleanup:
+    if (scma_mutex_unlock() != 0)
+        return (scma_invalid_handle());
+    return (result_handle);
 }
 
 int    scma_free(scma_handle handle)
 {
-    scma_mutex_lock_guard mutex_guard;
-    if (mutex_guard.get_error() != ER_SUCCESS)
-        return (0);
+    int free_result;
     scma_block *block;
 
-    if (!scma_validate_handle(handle, &block))
+    free_result = 0;
+    if (scma_mutex_lock() != 0)
         return (0);
+    if (!scma_validate_handle(handle, &block))
+        goto cleanup;
     block->in_use = 0;
     block->size = 0;
     block->generation = scma_next_generation(block->generation);
@@ -583,35 +588,41 @@ int    scma_free(scma_handle handle)
         scma_reset_live_snapshot();
     scma_compact();
     ft_errno = ER_SUCCESS;
-    return (1);
+    free_result = 1;
+
+cleanup:
+    if (scma_mutex_unlock() != 0)
+        return (0);
+    return (free_result);
 }
 
 int    scma_resize(scma_handle handle, ft_size_t new_size)
 {
-    scma_mutex_lock_guard mutex_guard;
-    if (mutex_guard.get_error() != ER_SUCCESS)
-        return (0);
+    int resize_result;
     scma_block *block;
     ft_size_t old_size;
+    unsigned char *temp_buffer;
+    ft_size_t base_size;
+    ft_size_t required_size;
 
+    resize_result = 0;
+    temp_buffer = ft_nullptr;
+    if (scma_mutex_lock() != 0)
+        return (0);
     if (new_size == 0)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (0);
+        goto cleanup;
     }
     if (!scma_validate_handle(handle, &block))
-        return (0);
+        goto cleanup;
     old_size = block->size;
-    unsigned char *temp_buffer;
-
     if (old_size > 0)
         temp_buffer = static_cast<unsigned char *>(std::malloc(static_cast<size_t>(old_size)));
-    else
-        temp_buffer = ft_nullptr;
     if (old_size != 0 && !temp_buffer)
     {
         ft_errno = FT_ERR_NO_MEMORY;
-        return (0);
+        goto cleanup;
     }
     if (old_size != 0)
     {
@@ -624,36 +635,23 @@ int    scma_resize(scma_handle handle, ft_size_t new_size)
     }
     if (new_size > static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX))
     {
-        if (temp_buffer)
-            std::free(temp_buffer);
         ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (0);
+        goto cleanup;
     }
     if (g_scma_used_size < old_size)
     {
-        if (temp_buffer)
-            std::free(temp_buffer);
         ft_errno = FT_ERR_INVALID_STATE;
-        return (0);
+        goto cleanup;
     }
-    ft_size_t base_size;
-    ft_size_t required_size;
-
     base_size = g_scma_used_size - old_size;
     if (base_size > static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX) - new_size)
     {
-        if (temp_buffer)
-            std::free(temp_buffer);
         ft_errno = FT_ERR_NO_MEMORY;
-        return (0);
+        goto cleanup;
     }
     required_size = base_size + new_size;
     if (!scma_ensure_capacity(required_size))
-    {
-        if (temp_buffer)
-            std::free(temp_buffer);
-        return (0);
-    }
+        goto cleanup;
     block->in_use = 0;
     scma_compact();
     block->offset = g_scma_used_size;
@@ -679,64 +677,80 @@ int    scma_resize(scma_handle handle, ft_size_t new_size)
                 static_cast<size_t>(copy_size));
         }
         std::free(temp_buffer);
+        temp_buffer = ft_nullptr;
     }
     ft_errno = ER_SUCCESS;
-    return (1);
+    resize_result = 1;
+
+cleanup:
+    if (temp_buffer)
+        std::free(temp_buffer);
+    if (scma_mutex_unlock() != 0)
+        return (0);
+    return (resize_result);
 }
 
 ft_size_t    scma_get_size(scma_handle handle)
 {
-    scma_mutex_lock_guard mutex_guard;
-    if (mutex_guard.get_error() != ER_SUCCESS)
-        return (0);
+    ft_size_t size_result;
     scma_block *block;
 
-    if (!scma_validate_handle(handle, &block))
+    size_result = 0;
+    if (scma_mutex_lock() != 0)
         return (0);
-    return (block->size);
+    if (!scma_validate_handle(handle, &block))
+        goto cleanup;
+    size_result = block->size;
+
+cleanup:
+    if (scma_mutex_unlock() != 0)
+        return (0);
+    return (size_result);
 }
 
 int    scma_handle_is_valid(scma_handle handle)
 {
-    scma_mutex_lock_guard mutex_guard;
-    if (mutex_guard.get_error() != ER_SUCCESS)
-    {
-        ft_errno = mutex_guard.get_error();
+    int valid;
+
+    valid = 0;
+    if (scma_mutex_lock() != 0)
         return (0);
-    }
     if (scma_validate_handle(handle, ft_nullptr))
     {
         ft_errno = ER_SUCCESS;
-        return (1);
+        valid = 1;
     }
-    return (0);
+    if (scma_mutex_unlock() != 0)
+        return (0);
+    return (valid);
 }
 
 int    scma_write(scma_handle handle, ft_size_t offset,
             const void *source, ft_size_t size)
 {
-    scma_mutex_lock_guard mutex_guard;
-    if (mutex_guard.get_error() != ER_SUCCESS)
-        return (0);
+    int write_result;
     scma_block *block;
     unsigned char *heap_data;
 
-    if (!scma_validate_handle(handle, &block))
+    write_result = 0;
+    if (scma_mutex_lock() != 0)
         return (0);
+    if (!scma_validate_handle(handle, &block))
+        goto cleanup;
     if (!source)
     {
         ft_errno = FT_ERR_INVALID_POINTER;
-        return (0);
+        goto cleanup;
     }
     if (offset > block->size)
     {
         ft_errno = FT_ERR_OUT_OF_RANGE;
-        return (0);
+        goto cleanup;
     }
     if (size > block->size - offset)
     {
         ft_errno = FT_ERR_OUT_OF_RANGE;
-        return (0);
+        goto cleanup;
     }
     heap_data = scma_get_heap_data();
     std::memcpy(heap_data + static_cast<size_t>(block->offset + offset),
@@ -744,68 +758,80 @@ int    scma_write(scma_handle handle, ft_size_t offset,
         static_cast<size_t>(size));
     scma_update_tracked_snapshot(handle, offset, source, size);
     ft_errno = ER_SUCCESS;
-    return (1);
+    write_result = 1;
+
+cleanup:
+    if (scma_mutex_unlock() != 0)
+        return (0);
+    return (write_result);
 }
 
 int    scma_read(scma_handle handle, ft_size_t offset,
             void *destination, ft_size_t size)
 {
-    scma_mutex_lock_guard mutex_guard;
-    if (mutex_guard.get_error() != ER_SUCCESS)
-        return (0);
+    int read_result;
     scma_block *block;
     unsigned char *heap_data;
 
-    if (!scma_validate_handle(handle, &block))
+    read_result = 0;
+    if (scma_mutex_lock() != 0)
         return (0);
+    if (!scma_validate_handle(handle, &block))
+        goto cleanup;
     if (!destination)
     {
         ft_errno = FT_ERR_INVALID_POINTER;
-        return (0);
+        goto cleanup;
     }
     if (offset > block->size)
     {
         ft_errno = FT_ERR_OUT_OF_RANGE;
-        return (0);
+        goto cleanup;
     }
     if (size > block->size - offset)
     {
         ft_errno = FT_ERR_OUT_OF_RANGE;
-        return (0);
+        goto cleanup;
     }
     heap_data = scma_get_heap_data();
     std::memcpy(destination,
         heap_data + static_cast<size_t>(block->offset + offset),
         static_cast<size_t>(size));
     ft_errno = ER_SUCCESS;
-    return (1);
+    read_result = 1;
+
+cleanup:
+    if (scma_mutex_unlock() != 0)
+        return (0);
+    return (read_result);
 }
 
 void    *scma_snapshot(scma_handle handle, ft_size_t *size)
 {
-    scma_mutex_lock_guard mutex_guard;
-    if (mutex_guard.get_error() != ER_SUCCESS)
-        return (ft_nullptr);
     scma_block *block;
+    void *copy;
+    void *snapshot_result;
+    unsigned char *heap_data;
 
-    if (!scma_validate_handle(handle, &block))
+    copy = ft_nullptr;
+    snapshot_result = ft_nullptr;
+    if (scma_mutex_lock() != 0)
         return (ft_nullptr);
+    if (!scma_validate_handle(handle, &block))
+        goto cleanup;
     if (size)
         *size = block->size;
     if (block->size == 0)
     {
         scma_reset_live_snapshot();
-        return (ft_nullptr);
+        goto cleanup;
     }
-    void *copy;
-    unsigned char *heap_data;
-
     copy = std::malloc(static_cast<size_t>(block->size));
     if (!copy)
     {
         ft_errno = FT_ERR_NO_MEMORY;
         scma_reset_live_snapshot();
-        return (ft_nullptr);
+        goto cleanup;
     }
     heap_data = scma_get_heap_data();
     std::memcpy(copy,
@@ -816,23 +842,37 @@ void    *scma_snapshot(scma_handle handle, ft_size_t *size)
     else
         scma_track_live_snapshot(scma_invalid_handle(), ft_nullptr, 0, 0);
     ft_errno = ER_SUCCESS;
-    return (copy);
+    snapshot_result = copy;
+    copy = ft_nullptr;
+
+cleanup:
+    if (copy)
+        std::free(copy);
+    if (scma_mutex_unlock() != 0)
+    {
+        if (snapshot_result)
+        {
+            std::free(snapshot_result);
+            snapshot_result = ft_nullptr;
+        }
+        return (ft_nullptr);
+    }
+    return (snapshot_result);
 }
 
 void    scma_debug_dump(void)
 {
-    scma_mutex_lock_guard mutex_guard;
-    if (mutex_guard.get_error() != ER_SUCCESS)
-        return ;
-    if (!g_scma_initialized)
-    {
-        std::printf("[scma] not initialized\n");
-        return ;
-    }
     scma_block_span span;
     ft_size_t index;
     size_t heap_capacity;
 
+    if (scma_mutex_lock() != 0)
+        return ;
+    if (!g_scma_initialized)
+    {
+        std::printf("[scma] not initialized\n");
+        goto cleanup;
+    }
     span = scma_get_block_span();
     heap_capacity = static_cast<size_t>(g_scma_heap_capacity);
     std::printf("[scma] blocks=%llu used=%llu capacity=%zu\n",
@@ -853,5 +893,9 @@ void    scma_debug_dump(void)
             static_cast<unsigned long long>(block->generation));
         index++;
     }
+
+cleanup:
+    if (scma_mutex_unlock() != 0)
+        return ;
     return ;
 }
