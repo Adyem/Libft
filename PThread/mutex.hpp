@@ -45,6 +45,8 @@ class pt_mutex
         int     try_lock_until(pthread_t thread_id, const struct timespec &absolute_time) const;
         int     try_lock_for(pthread_t thread_id, const struct timespec &relative_time) const;
 
+        bool    is_owned_by_thread(pthread_t thread_id) const;
+
         int     get_error() const;
         const char *get_error_str() const;
 };
