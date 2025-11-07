@@ -3,6 +3,7 @@
 #include "../Errno/errno.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include "pthread_lock_tracking.hpp"
 
 pt_mutex::pt_mutex()
     : _owner(0), _lock(false), _error(ER_SUCCESS), _native_initialized(false),
@@ -199,6 +200,50 @@ void pt_mutex::unlock_state(bool lock_acquired) const
     else
         const_cast<pt_mutex *>(this)->set_error(entry_errno);
     return ;
+}
+
+bool pt_mutex::is_owned_by_thread(pthread_t thread_id) const
+{
+    pthread_t owner_thread;
+    pt_mutex_vector owned_mutexes;
+    ft_size_t index;
+    bool lock_flag;
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    lock_flag = this->_lock.load(std::memory_order_acquire);
+    if (!lock_flag)
+    {
+        ft_errno = entry_errno;
+        return (false);
+    }
+    owner_thread = this->_owner.load(std::memory_order_relaxed);
+    if (owner_thread != 0)
+    {
+        bool matches_owner;
+
+        matches_owner = (pt_thread_equal(owner_thread, thread_id) != 0);
+        ft_errno = entry_errno;
+        return (matches_owner);
+    }
+    owned_mutexes = pt_lock_tracking::get_owned_mutexes(thread_id);
+    if (ft_errno != ER_SUCCESS)
+    {
+        ft_errno = entry_errno;
+        return (false);
+    }
+    index = 0;
+    while (index < owned_mutexes.size())
+    {
+        if (owned_mutexes[index] == &this->_native_mutex)
+        {
+            ft_errno = entry_errno;
+            return (true);
+        }
+        index += 1;
+    }
+    ft_errno = entry_errno;
+    return (false);
 }
 
 int pt_mutex::get_error() const
