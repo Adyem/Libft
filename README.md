@@ -519,10 +519,11 @@ For structured access, the `scma_handle_accessor<T>` template wraps a
 handle and requires trivially copyable types. It revalidates the handle
 before each operation, offers `read_struct` / `write_struct`, indexed
 `read_at` / `write_at` helpers, and reports how many `T` elements fit in
-the block via `get_count`. Both the accessor and the guard object
-`scma_mutex_lock_guard` expose `get_error` / `get_error_str` accessors so
-callers can diagnose failures while SCMA continues compacting the heap
-behind the scenes.
+the block via `get_count`. The accessor exposes `get_error` /
+`get_error_str` accessors so callers can diagnose failures while SCMA
+continues compacting the heap behind the scenes, and the module exposes
+manual `scma_mutex_lock` / `scma_mutex_unlock` helpers together with
+`scma_mutex_lock_count` for nested synchronization.
 
 ### GetNextLine
 
