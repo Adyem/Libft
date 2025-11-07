@@ -1511,22 +1511,75 @@ void ft_task_scheduler::timer_loop()
 
 bool ft_task_scheduler::capture_metrics(ft_task_trace_event &event) const
 {
-    if (this->_queue_metrics_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    pthread_t current_thread_id;
+    bool queue_locked;
+    int queue_lock_error;
+
+    current_thread_id = THREAD_ID;
+    queue_locked = false;
+    if (this->_queue_metrics_mutex.lock(current_thread_id) != FT_SUCCESS)
+        return (false);
+    queue_lock_error = this->_queue_metrics_mutex.get_error();
+    if (queue_lock_error == ER_SUCCESS)
+        queue_locked = true;
+    else if (queue_lock_error == FT_ERR_MUTEX_ALREADY_LOCKED)
+    {
+        if (!this->_queue_metrics_mutex.is_owned_by_thread(current_thread_id))
+            return (false);
+    }
+    else
         return (false);
     event.queue_depth = this->_queue_size_counter;
-    if (this->_queue_metrics_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    if (queue_locked)
+    {
+        if (this->_queue_metrics_mutex.unlock(current_thread_id) != FT_SUCCESS)
+            return (false);
+    }
+    bool scheduled_locked;
+    int scheduled_lock_error;
+
+    scheduled_locked = false;
+    if (this->_scheduled_mutex.lock(current_thread_id) != FT_SUCCESS)
         return (false);
-    if (this->_scheduled_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    scheduled_lock_error = this->_scheduled_mutex.get_error();
+    if (scheduled_lock_error == ER_SUCCESS)
+        scheduled_locked = true;
+    else if (scheduled_lock_error == FT_ERR_MUTEX_ALREADY_LOCKED)
+    {
+        if (!this->_scheduled_mutex.is_owned_by_thread(current_thread_id))
+            return (false);
+    }
+    else
         return (false);
     event.scheduled_depth = this->_scheduled_size_counter;
-    if (this->_scheduled_mutex.unlock(THREAD_ID) != FT_SUCCESS)
+    if (scheduled_locked)
+    {
+        if (this->_scheduled_mutex.unlock(current_thread_id) != FT_SUCCESS)
+            return (false);
+    }
+    bool worker_locked;
+    int worker_lock_error;
+
+    worker_locked = false;
+    if (this->_worker_metrics_mutex.lock(current_thread_id) != FT_SUCCESS)
         return (false);
-    if (this->_worker_metrics_mutex.lock(THREAD_ID) != FT_SUCCESS)
+    worker_lock_error = this->_worker_metrics_mutex.get_error();
+    if (worker_lock_error == ER_SUCCESS)
+        worker_locked = true;
+    else if (worker_lock_error == FT_ERR_MUTEX_ALREADY_LOCKED)
+    {
+        if (!this->_worker_metrics_mutex.is_owned_by_thread(current_thread_id))
+            return (false);
+    }
+    else
         return (false);
     event.worker_active_count = this->_worker_active_counter;
     event.worker_idle_count = this->_worker_idle_counter;
-    if (this->_worker_metrics_mutex.unlock(THREAD_ID) != FT_SUCCESS)
-        return (false);
+    if (worker_locked)
+    {
+        if (this->_worker_metrics_mutex.unlock(current_thread_id) != FT_SUCCESS)
+            return (false);
+    }
     return (true);
 }
 
