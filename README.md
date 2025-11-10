@@ -1,103 +1,157 @@
 # FullLibft
 
-Libft is a collection of C and C++ utilities grouped into multiple small libraries.
-It provides implementations of common libc functions, custom memory allocation helpers,
-basic threading helpers, containers, string utilities, simple networking and more.
-The top level `Makefile` builds every submodule and links them into `Full_Libft.a`.
-The umbrella header `FullLibft.hpp` includes every component.
-Internal code uses custom replacements such as `ft_strlen`, `ft_strchr`, `ft_strstr`, and `pf_snprintf` instead of the standard library equivalents. Move semantics now rely on the in-house `ft_move` helper implemented in the Template module.
-All size counters rely on the `ft_size_t` typedef (aliasing `unsigned long long`) so modules share a consistent width for
-buffer lengths and digit counts.
-Header files now use class names or concise module names instead of module prefixes, except internal headers which retain their module prefix.
+FullLibft packages every `ft_*` helper that the rest of the project depends on.
+The tree still mirrors the original libft split: the classic string and memory
+utilities stay close to their C counterparts, while neighbouring modules add
+custom allocators, schedulers, parsers, math helpers, and larger subsystems such
+as networking, logging, and game mechanics. Each public surface keeps the
+`ft_*` prefix so the C++ wrappers feel like their C equivalents while providing
+richer types and consistent error handling.
 
-This document briefly lists the main headers and the interfaces they expose. The
-summaries below only outline the available functions and classes. See the header
-files for detailed information. High-level design notes for each subsystem now
-live in `Docs/module_overviews.md` with per-module invariants and error-handling
-conventions referenced by the summaries below.
+### Library layout
 
-All classes report errors through a mutable `_error_code` member with `get_error` and `get_error_str` accessors so `const` methods can update the error state. A thread-local `ft_errno` variable mirrors the last error for cross-module access.
+- `Libft/` holds the foundational C helpers: string inspection, locale-aware
+  comparisons, memory copying, time utilities, and environment wrappers.
+- `CMA/`, `Storage/`, and `Compression/` supply allocation and data-handling
+  building blocks that higher modules compose.
+- Concurrency directories—`PThread/`, `CrossProcess/`, and `System_utils/`—wrap
+  threads, locks, and shared memory using the shared `_error_code` contract.
+- Parsers (`Parser/`, `JSon/`, `XML/`, `YAML/`, `Config/`) and data models
+  (`Template/`, `CPP_class/`) translate structured inputs into the types the
+  rest of the project consumes.
+- Application modules (`Networking/`, `Logger/`, `API/`, `Game/`, `HTML/`,
+  `Encryption/`, and others) build higher-level behaviours on top of the same
+  primitives.
+
+Running `make` from the repository root produces the static archive
+`Full_Libft.a`. Including `FullLibft.hpp` pulls in every public header, while
+per-module headers stay available when only a subset of helpers is required.
+Shared templates rely on `ft_move` so ownership rules remain predictable no
+matter which container or algorithm supplies the underlying objects.
+
+Libft centralises typedefs so callers interact with portable aliases. A common
+example is `ft_size_t`, which maps to `unsigned long long`. Public headers
+export the shorter names used by callers, and module-specific headers keep their
+prefixes so the origin of each helper is obvious.
+
+This README highlights the entry points you are most likely to use during daily
+development. Consult the headers for exact prototypes and inline documentation.
+Longer-form design notes live in `Docs/module_overviews.md` and describe the
+invariants, concurrency rules, and error-handling decisions that each module
+follows.
+
+All classes share the same failure-reporting pattern. A mutable `_error_code`
+records the most recent status, `get_error` and `get_error_str` expose the
+details, and state changes mirror into `ft_errno`. The uniform approach keeps
+const member functions and cross-module callers aligned on the current error.
 
 ## Building
+
+Run the default `make` target from the repository root to assemble the full
+archive:
 
 ```bash
 make
 ```
 
+Use the debug target when you need extra diagnostics:
+
+```bash
+make debug
+```
+
+Each module ships its own `Makefile`, so you can rebuild an individual component
+by running `make` inside that directory.
+
 ## Testing
+
+Build the suite and run the generated binary with:
 
 ```bash
 make tests
 ./Test/libft_tests
 ```
 
-Functional tests reside in `Test/Test` and performance benchmarks in `Test/Efficiency`. The test suite is currently incomplete
-and some files may fail to compile until they are updated for recent interface changes.
+### Test layout
+
+- Functional checks live in `Test/Test`.
+- Performance benchmarks live in `Test/Efficiency`.
+- A few files are still migrating to the latest interfaces and may be skipped
+  until their helpers match the new signatures.
+
+### Runner output
+
+The runner prints `OK` or `KO` for each registered case, then reports the
+aggregated totals. Failing assertions write an entry to `test_failures.log`
+showing the source file, line, and message. Cases register through the `FT_TEST`
+macro at program startup, so linking the suite is enough to execute every test.
+
+### Coverage snapshot
+
+Recent runs exercise the following areas:
+
+- **Libft** covers the character, string, memory, environment, and time
+  utilities, including formatting helpers such as `ft_to_string`,
+  `ft_time_format`, and `ft_time_ms`.
+- **PThread** exercises `ft_thread`, `ft_this_thread`, and the
+  `ft_task_scheduler`, including timed callbacks, worker reuse, cancellation
+  handles, and `_error_code` propagation into `ft_errno`.
+- **CrossProcess** validates shared-memory descriptor exchange, socket
+  transports, shared-mutex polling, and payload acknowledgements on POSIX and
+  Windows builds.
+- **Networking** runs IPv4 and IPv6 paths, UDP datagrams, the HTTP server, and
+  WebSocket handshakes, including incremental parsing regressions.
+- **Logger** checks color toggling, JSON sinks, asynchronous logging, and the
+  `ft_logger` façade while confirming `_error_code` keeps `ft_errno`
+  synchronized.
+- **Math** covers vector, matrix, and quaternion helpers, expression evaluation
+  through `math_roll`, and floating-point utilities that rely on tolerance
+  comparisons.
+- **RNG** touches normal, exponential, Poisson, binomial, and geometric
+  distributions.
+- **String** checks `ft_string_view` behaviours.
+- **CPP_class** exercises `ft_big_number`, `DataBuffer`, and `ft_file`, including
+  allocator and stream failures routed through `_error_code` and
+  `System_utils`.
+- **Template** validates iterators, pools, and object handles that surface
+  invalid dereferences, pool exhaustion, and container failures while mirroring
+  results through `_error_code` and `ft_errno`.
+- **JSon** walks the schema validation paths.
+- **HTML** covers `html_document` node, attribute, and selector validation, plus
+  serialization helpers that clear success states before returning.
+- **API** runs TLS clients and promise adapters that validate inputs, propagate
+  socket and allocation failures, and clear success paths so synchronous and
+  asynchronous requests agree on the reported status.
+- **YAML** runs round-trip parsing.
+- **Game** covers `ft_game_state`, `ft_world`, the shared-pointer-based
+  `ft_event_scheduler`, equipment, inventory, quests, crafting, pathfinding,
+  combat (including `FT_DAMAGE_RULE_MAGIC_SHIELD`), and timer utilities, all of
+  which mirror results through `_error_code`.
+- **Encryption** verifies key generation helpers and SHA-1 hashing for
+  WebSocket accept keys.
+
+Additional tests cover whitespace parsing, overlapping ranges, truncating
+copies, partial zeroing, empty needles, zero-length operations, null pointers,
+zero-size buffers, terminating-character searches, prefix comparisons, boundary
+digits, non-letter characters, embedded null bytes, unsigned-byte comparisons,
+empty strings, repeated delimiters, index-based mapping, zero padding, empty
+haystacks, negative fill values, overflow bytes, and both-null comparisons.
 
 ## API reference documentation
 
-Libft ships with a Doxygen configuration that emits browsable API documentation
-covering the public headers across every module. Install Doxygen locally and run
-the helper script to validate the configuration or build the docs directly:
+Libft ships with a Doxygen configuration that generates browsable
+documentation for every public header. Install Doxygen locally and run the
+helper script to validate the configuration or build the docs directly:
 
 ```bash
 tools/run_doxygen.py --check   # verifies that referenced modules exist
 tools/run_doxygen.py           # runs doxygen when the executable is available
 ```
 
-Generated artifacts are written beneath `Docs/api/html`. The warning log lives at
-`Docs/api/doxygen-warnings.log` so new diagnostics are easy to triage. The
-configuration treats the module overview as the main page to connect the
-high-level design notes with the generated reference.
-
-The test runner prints `OK` or `KO` for each registered case and
-summarizes the total. Detailed assertion failures are written to
-`test_failures.log` with the source file and line number of the failing
-check. Output is grouped by module so related tests appear together.
-
-Each test uses the `FT_TEST` macro, which registers the case at program
-startup so all linked test files run automatically.
-
-The current suite exercises components across multiple modules:
-
-- **Libft**: `ft_atoi`, `ft_atol`, `ft_bzero`, `ft_isdigit`, `ft_isalpha`, `ft_isalnum`, `ft_islower`, `ft_isupper`, `ft_isprint`, `ft_isspace`, `ft_memchr`,
-  `ft_memcmp`, `ft_memcpy`, `ft_memdup`, `ft_memmove`, `ft_memset`, `ft_strchr`, `ft_strcmp`, `ft_strlcat`, `ft_strlcpy`, `ft_strncpy`, `ft_strlen`, `ft_strncmp`,
-  `ft_strnstr`, `ft_strstr`, `ft_strrchr`, `ft_strmapi`, `ft_striteri`, `ft_strtok`, `ft_strtol`, `ft_strtoul`, `ft_setenv`, `ft_unsetenv`, `ft_getenv`, `ft_to_lower`, `ft_to_upper`,
-`ft_fopen`, `ft_fclose`, `ft_fgets`, `ft_time_ms`, `ft_time_format`, `ft_to_string`
-- **PThread**: `ft_task_scheduler` joins the existing `ft_thread` and `ft_this_thread` helpers. The scheduler clears success paths, surfaces queue allocation or empty-pop failures through its `_error_code` mirror, routes timed callbacks through the Time module's `time_monotonic_point_*` helpers instead of constructing `std::chrono::steady_clock` points directly, stores worker state in `ft_vector<ft_thread>` so thread management and futures stay on the library's error-reporting abstractions, and releases the scheduled-task mutex before executing fallbacks when cloning scheduled callbacks or pushing them into the work queue fails so recursive scheduling never deadlocks. Delayed and periodic submissions return cancellation handles that broadcast the scheduler condition variable and mirror `_error_code` into `ft_errno` when tasks are removed.
-- **CrossProcess**: shared-memory descriptor send/receive helpers coordinate socket transport, platform-specific mapping, shared-mutex polling with bounded retries, payload acknowledgements that zero consumed buffers, and mirrored error-slot updates for both POSIX and Windows builds.
-- **Networking**: IPv4 and IPv6 send/receive paths, UDP datagrams, a simple HTTP server, and WebSocket client/server handshake
-  coverage using the RFC 6455 GUID alongside a regression that splits the client handshake response across multiple receives to
-  validate incremental parsing
-- **Logger**: color toggling, JSON sink, asynchronous logging, and the `ft_logger` façade propagates sink, file, syslog, and remote target failures through its `_error_code` mirror so configuration helpers always synchronize `ft_errno`.
-- **Math**: vector, matrix, and quaternion helpers plus expression evaluation via `math_roll` (arithmetic, unary negatives, precedence, dice, lengthy expressions, and error handling) and tolerance-based floating-point helpers that avoid exact equality comparisons when validating modulus and cosine inputs
-- **RNG**: normal, exponential, Poisson, binomial, and geometric distributions
-- **String**: `ft_string_view`
-- **CPP_class**: `ft_big_number` assignment, arithmetic, comparisons, error handling, and the `DataBuffer` utility now propagates allocator and stream failures through `_error_code` while clearing successful reads and writes. The `ft_file` wrapper routes all descriptor I/O through the `System_utils` helpers (`su_open`, `su_read`, `su_write`, `su_close`), defers closing the active descriptor until a new open succeeds, and reports failures through `_error_code` while leaving the previous handle untouched when replacements fail.
-- **Template**: Iterators, pools, and object handles surface invalid dereferences, pool exhaustion, and container failures through `_error_code` so range helpers and pooled resources synchronize `ft_errno` after every operation.
-- **JSon**: schema validation
-- **HTML**: the `html_document` helper validates node, attribute, and selector inputs, mirrors allocation and serialization failures into `_error_code`, and clears successes before returning so DOM operations leave `ft_errno` authoritative.
-- **API**: TLS clients and promise adapters validate inputs, propagate socket, allocation, and JSON parsing failures through `_error_code`, and clear success paths so synchronous and asynchronous requests leave `ft_errno` authoritative.
-- **YAML**: round-trip parsing
-- **Game**: `ft_game_state` centralizes worlds and character data with vectors of shared pointers for RAII cleanup, `ft_world` persistence and a shared-pointer-based `ft_event_scheduler` for timed actions via `ft_world::schedule_event` and `ft_world::update_events`, `ft_equipment`, `ft_inventory`, and `ft_quest` store items through shared pointers, `ft_crafting` consumes and produces shared items, `ft_world::plan_route`, `ft_pathfinding`, and copy/move constructors across game classes
-- The combat system introduces `FT_DAMAGE_RULE_MAGIC_SHIELD`, which treats magic armor as a shield. Armor-based reduction is applied only to the damage that reaches health after the shield is exhausted and uses the `FT_PHYSICAL_DAMAGE_REDUCTION` and `FT_MAGIC_DAMAGE_REDUCTION` macros.
-- Shared pointers expose their own `get_error` while managed objects may define their own; call `shared_ptr.get_error()` for allocation issues and `shared_ptr->get_error()` for object-specific errors.
-- Game classes validate both the shared pointer and its managed object for errors before use so failures surface consistently.
-- `ft_item` tracks its own error code so equipment, inventory, and crafting verify both the item pointer and the item itself before applying modifiers or stacking quantities.
-- Buffs, debuffs, upgrades, events, and quests expose explicit `get_error` / `get_error_str` helpers, clear their state on success through their setters, and translate invalid inputs or container failures into `ft_errno` updates so callers can detect misconfiguration without stale success paths leaving the errno mirror untouched.
-- Inventory, experience tables, map grids, reputations, skills, achievements, and world orchestration share the same error-clearing discipline, validating identifiers and container mutations before synchronizing `ft_errno` so downstream systems see authoritative status codes after each operation.
-- JSON document helpers validate group and item mutations before committing them, surface parser and allocation failures through `_error_code`, and clear successful read/write operations so file serialization keeps `ft_errno` synchronized with the latest result.
-- The `time_timer` utility now tracks `_error_code` as it starts, updates, and adjusts running timers, rejecting negative durations or paused states and mirroring the resulting status codes to `ft_errno` for callers.
-- **Encryption**: key generation utilities and a SHA-1 hashing helper used to compute WebSocket accept keys
-
-Additional cases verify whitespace parsing, overlapping ranges, truncating copies, partial zeroing, empty needles,
-zero-length operations, null pointers, zero-size buffers, searches for the terminating character,
-prefix comparisons, boundary digits, non-letter characters, embedded null bytes,
-unsigned-byte comparisons, empty strings, repeated delimiters, index-based mapping, zero padding, empty haystacks,
-negative fill values, overflow bytes and both-null comparisons.
-
-To build the debug version use `make debug`. Individual sub-modules can be built by
-entering their directory and running `make`.
+Generated files land in `Docs/api/html`, and warnings are collected in
+`Docs/api/doxygen-warnings.log` so new diagnostics stand out. The configuration
+sets the module overview as the main page so the high-level design notes lead
+straight into the generated reference.
 
 ## Modules
 
@@ -122,10 +176,10 @@ branch on availability without repeating preprocessor checks.
 
 #### Coordinating with CMA string helpers
 
-Libft’s duplication helpers are implemented on top of the CMA allocator so projects can
-mix the higher-level `ft_*` APIs with the lower-level `cma_*` entry points without
-switching error-handling conventions. The overlapping functions now share the same
-`ft_errno` outcomes for their core failure paths:
+Libft’s duplication helpers sit on top of the CMA allocator so projects can mix the
+higher-level `ft_*` APIs with the lower-level `cma_*` entry points without switching
+error-handling conventions. The overlapping functions share the same `ft_errno`
+outcomes for their core failure paths:
 
 | Scenario | Libft helper | CMA helper | `ft_errno` |
 | --- | --- | --- | --- |
@@ -133,12 +187,12 @@ switching error-handling conventions. The overlapping functions now share the sa
 | Zero-length span | `ft_memdup`, `ft_span_dup` | `cma_memdup` | `ER_SUCCESS` |
 | Allocation failure | `ft_memdup`, `ft_span_dup` | `cma_memdup` | `FT_ERR_NO_MEMORY` |
 
-Formatting wrappers follow the same pattern: `ft_to_string` mirrors allocator failures
-as `FT_ERR_NO_MEMORY`, just like `cma_itoa`, while also reporting conversion issues as
+Formatting wrappers follow the same pattern. `ft_to_string` mirrors allocator failures
+as `FT_ERR_NO_MEMORY`, matching `cma_itoa`, and reports conversion issues as
 `FT_ERR_INTERNAL`. CMA helpers that accept optional pointers, such as `cma_strdup`, leave
-`ft_errno` untouched when invoked with `ft_nullptr`. Libft callers expecting
+`ft_errno` untouched when called with `ft_nullptr`. Libft callers that expect
 `FT_ERR_INVALID_ARGUMENT` for null inputs should validate their pointers before choosing
-between the two surfaces, keeping mixed code paths predictable.
+between the two surfaces so mixed call paths stay predictable.
 
 ```
 typedef uint32_t (*ft_utf8_case_hook)(uint32_t code_point);
@@ -203,25 +257,26 @@ int     ft_utf8_duplicate_grapheme(const char *string, size_t string_length,
 `ft_strtol` clamps values that exceed `FT_LONG_MAX` or `FT_LONG_MIN` and sets
 `ft_errno` to `FT_ERR_OUT_OF_RANGE` when overflow is detected.
 
-`ft_utf8_next` and `ft_utf8_count` decode UTF-8 sequences while mirroring invalid
-byte sequences through `FT_ERR_INVALID_ARGUMENT`. The transformation helpers keep ASCII case
-conversion on the existing hooks, set `FT_ERR_OUT_OF_RANGE` if the destination buffer is
-too small, and surface allocation failures as `FT_ERR_NO_MEMORY`. Optional grapheme
-wrappers reuse the CMA allocation utilities to duplicate composed characters
-while leaving successful iterations with `ER_SUCCESS` so callers can detect the
-end of input without spurious errors.
+`ft_utf8_next` and `ft_utf8_count` decode UTF-8 sequences and mirror invalid
+byte sequences through `FT_ERR_INVALID_ARGUMENT`. The transformation helpers keep
+ASCII case conversion on the existing hooks, set `FT_ERR_OUT_OF_RANGE` when the
+destination buffer is too small, and surface allocation failures as
+`FT_ERR_NO_MEMORY`. Optional grapheme wrappers reuse the CMA allocation
+utilities to duplicate composed characters while leaving successful iterations
+with `ER_SUCCESS`, so callers can detect the end of input without spurious
+errors.
 
 `ft_fgets` sets `ft_errno` to `FT_ERR_END_OF_FILE` when the stream reaches end of
 file without an input error, allowing callers to differentiate EOF from other
 failures.
 
-`ft_setenv`, `ft_unsetenv`, and `ft_getenv` serialize every environment
-mutation through an internal mutex so concurrent threads do not corrupt the
-process-wide state. Because these helpers still operate on the shared
-environment for the entire process, callers should coordinate updates and clean
-up temporary overrides once the surrounding work completes.
+`ft_setenv`, `ft_unsetenv`, and `ft_getenv` serialize every environment mutation
+through an internal mutex so concurrent threads do not corrupt the process-wide
+state. Because these helpers still operate on shared process data, callers
+should coordinate updates and clean up temporary overrides once the surrounding
+work completes.
 
-`ft_locale_compare` and `ft_locale_casefold` wrap the new System_utils locale
+`ft_locale_compare` and `ft_locale_casefold` wrap the System_utils locale
 helpers so callers can perform collation-aware comparisons and lowercasing
 without constructing `std::locale` instances directly. When no locale name is
 provided the helpers fall back to the process default and then to the classic C
@@ -428,42 +483,43 @@ bool    intersect_sphere(const sphere &first, const sphere &second);
 ### Custom Memory Allocator (CMA)
 
 Located in `CMA/`. Header: `CMA.hpp`. Provides memory helpers such as
-`cma_malloc`, `cma_free`, aligned allocations, allocation-size queries,
-and string helpers. Aligned allocations round the block size up to the
-specified power-of-two (e.g., requesting 100 bytes with alignment 32
-returns a 128-byte block) and are released with `cma_free`. Allocation
-sizes can be inspected directly through `cma_block_size`, or safely with
-`cma_checked_block_size`, which reports invalid pointers via `ft_errno`.
-The `cma_atoi` helper validates its input before conversion and returns a
-CMA-allocated integer on success or `ft_nullptr` on failure.
-When allocation logging is enabled via the logger, the allocator emits debug messages for each `cma_malloc` and `cma_free`.
-The allocator enforces an optional global allocation limit that can be
-changed at runtime with `cma_set_alloc_limit`. A limit of `0` disables the
-check. When thread safety is enabled, limit updates acquire the allocator
-mutex so concurrent callers never observe torn writes, and they preserve the
-incoming `ft_errno` value on both success and failure. Disabling thread
-safety via `cma_set_thread_safety(false)` skips the mutex entirely, which
-keeps single-threaded tests cheap but requires the caller to avoid mixing
-limit updates with concurrent allocator traffic.
+`cma_malloc`, `cma_free`, aligned allocations, allocation-size queries, and
+string utilities.
 
-The limit check runs before the allocator touches shared state, letting
-tests inject deterministic failures by setting a small cap and attempting an
-oversized allocation. Pair the toggle with `cma_set_thread_safety(false)`
-when failure injection must run without synchronization overhead, and
-restore both settings during teardown so the allocator returns to its
-default invariants. See
-[`Docs/cma_allocation_controls.md`](Docs/cma_allocation_controls.md) for a
-focused walkthrough and ready-to-copy helper routines.
+- Aligned allocations round the block size up to the requested power of two.
+  Asking for 100 bytes with alignment 32 returns a 128-byte block, and you
+  release it with `cma_free`.
+- Allocation sizes are available through `cma_block_size`, or through
+  `cma_checked_block_size` when the caller wants `ft_errno` to flag invalid
+  pointers.
+- `cma_atoi` validates its input before conversion and returns a
+  CMA-allocated integer on success or `ft_nullptr` on failure.
+- When allocation logging is enabled, the allocator emits a debug message for
+  each `cma_malloc` and `cma_free` call.
 
-The allocator also tracks allocation and free counts, accessible through
-`cma_get_stats`, and exposes live plus peak byte usage via
-`cma_get_extended_stats`.
-`cma_calloc` now validates multiplication overflow by ensuring the element
-count is zero or the product of `count` and `size` stays within `SIZE_MAX`.
-Overflowing requests return `ft_nullptr` without incrementing the allocation
-counter, and a regression test exercises the guard to ensure the allocator
-never zero-initializes past the allocated buffer.
-Thread safety can be enabled or disabled with `cma_set_thread_safety`.
+The allocator can enforce a global allocation limit via `cma_set_alloc_limit`.
+A limit of `0` disables the check. With thread safety enabled, limit updates
+lock the allocator mutex and preserve the incoming `ft_errno` on success and
+failure. Turning thread safety off with `cma_set_thread_safety(false)` skips
+the mutex entirely, which keeps single-threaded tests cheap but requires the
+caller to avoid mixing limit updates with concurrent traffic.
+
+The limit check runs before shared state changes, letting tests inject
+deterministic failures by setting a small cap and requesting a larger block.
+Pair the limit toggle with `cma_set_thread_safety(false)` when failure
+injection must run without synchronization overhead, and restore both settings
+during teardown so the allocator returns to its defaults. The document
+[`Docs/cma_allocation_controls.md`](Docs/cma_allocation_controls.md) walks
+through the controls and includes ready-to-copy helpers.
+
+The allocator tracks allocation and free counts through `cma_get_stats`, and it
+reports live plus peak byte usage via `cma_get_extended_stats`. `cma_calloc`
+validates multiplication overflow by ensuring the element count is zero or the
+`count * size` product fits in `SIZE_MAX`. Overflowing requests return
+`ft_nullptr` without incrementing the allocation counter, and a regression test
+covers the guard to ensure the allocator never zero-initializes past the
+allocated buffer. Thread safety remains configurable through
+`cma_set_thread_safety`.
 
 ```
 void   *cma_malloc(ft_size_t size);
@@ -1327,6 +1383,38 @@ the project's error handling strategy.
 
 ### Additional Modules
 
+#### Compatebility
+`Compatebility/` centralises the platform abstractions that keep the rest of the
+library portable. File primitives such as `cmp_open`, `cmp_read`, `cmp_write`,
+and `cmp_close` wrap the native POSIX or Win32 calls while normalising
+`ft_errno` and preserving the caller’s descriptor on failure. Directory helpers
+(`cmp_dir_open`, `cmp_dir_read`, `cmp_dir_close`, `cmp_directory_exists`) hide
+the platform-specific bookkeeping needed for `DIR*` equivalents and reuse the
+shared `file_dirent` layout already referenced by the `File/` module. Path
+utilities (`cmp_path_separator`, `cmp_normalize_slashes`,
+`cmp_file_move`/`cmp_file_copy`) ensure mixed separators, wide Windows handles,
+and POSIX permissions are handled consistently before `System_utils` exposes the
+operations.
+
+Environment and process helpers (`cmp_setenv`, `cmp_unsetenv`, `cmp_putenv`,
+`cmp_get_environ_entries`, `cmp_system_strerror`,
+`cmp_map_system_error_to_ft`, `cmp_normalize_ft_errno`, `cmp_get_home_directory`,
+`cmp_get_cpu_count`, `cmp_get_total_memory`) feed directly into `System_utils`
+and `Libft` so callers never touch platform-specific APIs. Time helpers bridge
+`timegm`, `localtime`, high-resolution timers, and `gettimeofday` semantics for
+modules such as `Time/` and the task scheduler.
+
+Threading shims (`cmp_thread_equal`, `cmp_thread_cancel`, `cmp_thread_yield`,
+`cmp_thread_sleep`, and the atomic wait/wake helpers) back the `PThread/`
+wrappers, and `cmp_socket_send_all` plus the networking glue keep socket loops
+identical across operating systems. ReadLine toggles (`cmp_readline_enable_raw_mode`,
+`cmp_readline_disable_raw_mode`, `cmp_readline_terminal_dimensions`) provide the
+terminal control that `ReadLine/` depends on, while `cmp_rng_secure_bytes` and
+`cmp_secure_memzero` expose cryptographically secure randomness and explicit
+zeroing to the RNG and Encryption modules. Cross-process helpers
+(`cmp_cross_process_open_mapping`, `cmp_cross_process_lock_mutex`, and
+companions) wrap shared-memory handles for both POSIX and Windows so the
+`CrossProcess/` API can ship a single interface.
 
 #### PThread Scheduler
 `PThread/pthread.hpp` provides helpers for the current thread using the
@@ -1590,6 +1678,11 @@ unsigned char *ft_base64_decode(const unsigned char *input_buffer, std::size_t i
 
 The streaming functions operate on file descriptors using `su_read` and `su_write`, and the Base64 helpers encode or decode buffers.
 `ft_base64_decode` validates every character; when an invalid character is detected it frees any allocated memory, sets the decoded size to `0`, and returns `ft_nullptr` to signal the error.
+
+#### Parser
+`Parser/` exposes a lightweight DOM for structured documents together with pluggable backends for reading and writing content. `dom.hpp` defines `ft_dom_node` and `ft_dom_document`, both of which keep a mutable `_error_code`, optional thread-safety guards, and `thread_guard` helpers that lock a lazily created `pt_mutex` while attributes or children are inspected. Nodes carry a name, value, attribute vectors, and nested child pointers, and they expose search helpers like `find_child` together with attribute lookups so callers can treat the tree as either JSON-like objects or XML-style elements. `ft_dom_schema` pairs the tree with validation rules; each rule marks a path as required or optional and enforces an expected node type. The validator reports failures through `ft_dom_validation_report`, which records every offending path while keeping `_error_code` synchronized with `ft_errno` so CLI tools or tests can surface the first schema error quickly.
+
+`document_backend.hpp` contributes the transport layer. Abstract `ft_document_source` and `ft_document_sink` classes track their own `_error_code` and define `read_all`/`write_all` entry points, and concrete implementations load from disk (`ft_file_document_source` / `ft_file_document_sink`), in-memory buffers (`ft_memory_document_source` / `ft_memory_document_sink`), or HTTP endpoints (`ft_http_document_source` / `ft_http_document_sink`). Each backend mirrors failures through `ft_errno` and gives direct accessors for the configured path, buffer, or host so higher-level parsers can report which payload failed without duplicating context gathering.
 
 #### JSon
 Creation, reading and manipulation helpers in `JSon/json.hpp`:
@@ -2107,6 +2200,31 @@ bool request_async(const char *method, const char *path,
                    api_callback callback = ft_nullptr,
                    void *user_data = ft_nullptr);
 ```
+
+#### Observability
+`Observability/` wires the library’s internals into external telemetry systems. The task-scheduler bridge registers the shared
+trace sink from `PThread/task_scheduler_tracing.hpp` and emits fully populated `ft_otel_span_metrics` structures whenever a
+scheduled task finishes or is cancelled. Initialization installs the exporter callback via
+`observability_task_scheduler_bridge_initialize`, clears any cached span state, and returns errors through `ft_errno` if the
+caller forgets to supply a callback or if the scheduler refuses the trace hook. Each trace event is buffered in an
+`ft_unordered_map` keyed by the trace identifier so submission, start, dequeue, and finish phases can be merged into a single
+span. When a task completes, the bridge computes queue, execution, and total durations in milliseconds, records worker and
+queue depth counters, tags timer-thread activity, and finally invokes the exporter outside the mutex so observers can hand off
+to OpenTelemetry or custom sinks without stalling the scheduler. Shutdown removes the trace sink and clears cached spans to keep
+subsequent runs from reusing stale state.
+
+`observability_networking_metrics_*` exposes a global exporter slot for connection-level telemetry. After
+`observability_networking_metrics_initialize` installs a callback, helpers such as `observability_networking_metrics_record`
+accept labels (component, operation, target, resource), bytes transferred, status codes, and success flags. The module guards
+the exporter with a mutex and normalizes `error_tag` / `error_code` pairs—defaulting to `"ok"` for successful samples and
+promoting missing error codes to `FT_ERR_INTERNAL` when `success` is false—before handing the sample to the caller-provided
+exporter.
+
+`observability_game_metrics_*` mirrors the same pattern for gameplay counters. Records carry event, entity, and attribute labels
+together with delta and total values. Inputs are validated so required strings are never null, the mutex-protected exporter slot
+is respected, and any missing error tag is expanded to the `ft_strerror` string that matches the reported `error_code`. Both the
+networking and game helpers leave `ft_errno` set to the previous value once they release their locks, keeping telemetry emission
+side-effect free for surrounding gameplay or networking code.
 
 #### HTML
 Minimal node creation and searching utilities (`HTML/parser.hpp`):
@@ -2722,7 +2840,6 @@ void sub_modifier4(int mod) noexcept;
 int get_error() const noexcept;
 const char *get_error_str() const noexcept;
 ```
-
 
 #### `ft_achievement`
 ```
