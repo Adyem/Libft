@@ -1,12 +1,17 @@
 TARGET         := SCMA.a
 DEBUG_TARGET   := SCMA_debug.a
 
-SRCS := scma_core.cpp
+SRCS := scma_allocator.cpp \
+scma_debug.cpp \
+scma_io.cpp \
+scma_mutex.cpp \
+scma_snapshot.cpp \
+scma_state.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
-HEADERS := SCMA.hpp
+HEADERS := SCMA.hpp scma_internal.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir
