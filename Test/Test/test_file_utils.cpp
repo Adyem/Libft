@@ -396,3 +396,73 @@ FT_TEST(test_file_closedir_clears_error_on_success, "file_closedir sets ER_SUCCE
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_file_copy_with_buffer_zero_size_uses_default,
+        "file_copy_with_buffer accepts zero buffer size and still copies data")
+{
+    const char  *source_path;
+    const char  *destination_path;
+    const char  *payload_string;
+    FILE        *file_stream;
+    char        read_buffer[32];
+    size_t      payload_length;
+    size_t      bytes_written;
+    size_t      bytes_read;
+
+    source_path = "test_file_copy_with_buffer_zero_size_source.txt";
+    destination_path = "test_file_copy_with_buffer_zero_size_destination.txt";
+    payload_string = "bufferless copy payload";
+    payload_length = ft_strlen_size_t(payload_string);
+    file_delete(source_path);
+    file_delete(destination_path);
+    file_stream = std::fopen(source_path, "wb");
+    if (file_stream == ft_nullptr)
+        return (0);
+    bytes_written = std::fwrite(payload_string, 1, payload_length, file_stream);
+    std::fclose(file_stream);
+    if (bytes_written != payload_length)
+    {
+        file_delete(source_path);
+        file_delete(destination_path);
+        return (0);
+    }
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    if (file_copy_with_buffer(source_path, destination_path, 0) != 0)
+    {
+        file_delete(source_path);
+        file_delete(destination_path);
+        return (0);
+    }
+    if (ft_errno != ER_SUCCESS)
+    {
+        file_delete(source_path);
+        file_delete(destination_path);
+        return (0);
+    }
+    file_stream = std::fopen(destination_path, "rb");
+    if (file_stream == ft_nullptr)
+    {
+        file_delete(source_path);
+        file_delete(destination_path);
+        return (0);
+    }
+    std::memset(read_buffer, 0, sizeof(read_buffer));
+    bytes_read = std::fread(read_buffer, 1, payload_length, file_stream);
+    std::fclose(file_stream);
+    if (bytes_read != payload_length)
+    {
+        file_delete(source_path);
+        file_delete(destination_path);
+        return (0);
+    }
+    if (std::memcmp(read_buffer, payload_string, payload_length) != 0)
+    {
+        file_delete(source_path);
+        file_delete(destination_path);
+        return (0);
+    }
+    file_delete(source_path);
+    file_delete(destination_path);
+    return (1);
+}
+

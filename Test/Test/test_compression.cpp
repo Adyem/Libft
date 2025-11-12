@@ -362,3 +362,23 @@ FT_TEST(test_base64_invalid_character, "base64 invalid character")
         return (0);
     return (1);
 }
+
+FT_TEST(test_ft_compress_null_size_pointer_sets_errno,
+        "ft_compress rejects null compressed_size pointers")
+{
+    unsigned char   input_byte;
+    unsigned char   *compressed_buffer;
+
+    input_byte = 0x42;
+    ft_errno = ER_SUCCESS;
+    compressed_buffer = ft_compress(&input_byte, 1, ft_nullptr);
+    if (compressed_buffer != ft_nullptr)
+    {
+        cma_free(compressed_buffer);
+        return (0);
+    }
+    if (ft_errno != FT_ERR_INVALID_ARGUMENT)
+        return (0);
+    return (1);
+}
+
