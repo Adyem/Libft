@@ -620,8 +620,13 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
                         && (last_error == WSAECONNRESET || last_error == WSAECONNABORTED
                             || last_error == WSAESHUTDOWN)))
                 {
-                    ft_errno = ER_SUCCESS;
-                    this->_error_code = ER_SUCCESS;
+                    this->set_error(FT_ERR_SOCKET_SEND_FAILED);
+                    overall_result = 1;
+                    last_error_code = this->_error_code;
+                    request_result = 1;
+                    if (metrics_enabled != false)
+                        http_server_record_metrics(method_label, request_bytes, response_bytes, status_code_value, request_result, request_start_time);
+                    connection_active = false;
                     remote_closed_during_send = true;
                     break;
                 }
@@ -632,8 +637,13 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
                 if (send_result == 0
                     || (send_result < 0 && (last_error == EPIPE || last_error == ECONNRESET)))
                 {
-                    ft_errno = ER_SUCCESS;
-                    this->_error_code = ER_SUCCESS;
+                    this->set_error(FT_ERR_SOCKET_SEND_FAILED);
+                    overall_result = 1;
+                    last_error_code = this->_error_code;
+                    request_result = 1;
+                    if (metrics_enabled != false)
+                        http_server_record_metrics(method_label, request_bytes, response_bytes, status_code_value, request_result, request_start_time);
+                    connection_active = false;
                     remote_closed_during_send = true;
                     break;
                 }
@@ -654,7 +664,7 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
             total_sent += static_cast<size_t>(send_result);
         }
         if (remote_closed_during_send != false)
-            should_keep_alive = false;
+            break;
         else if (connection_active == false)
             break;
         if (networking_check_socket_after_send(client_socket) != 0)
@@ -664,9 +674,14 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
             post_send_error = ft_errno;
             if (post_send_error == FT_ERR_SOCKET_SEND_FAILED)
             {
-                ft_errno = ER_SUCCESS;
-                this->_error_code = ER_SUCCESS;
-                should_keep_alive = false;
+                this->set_error(post_send_error);
+                overall_result = 1;
+                last_error_code = this->_error_code;
+                request_result = 1;
+                if (metrics_enabled != false)
+                    http_server_record_metrics(method_label, request_bytes, response_bytes, status_code_value, request_result, request_start_time);
+                connection_active = false;
+                break;
             }
             else
             {

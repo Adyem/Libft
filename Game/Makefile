@@ -28,6 +28,7 @@ SRCS := game_map3d.cpp \
         game_resistance.cpp \
         game_pathfinding.cpp \
         game_crafting.cpp \
+        game_hooks.cpp \
         game_state.cpp \
         game_behavior_tree.cpp \
         game_scripting_bridge.cpp
@@ -55,6 +56,7 @@ HEADERS := game_map3d.hpp \
 	game_resistance.hpp \
 	game_pathfinding.hpp \
         game_crafting.hpp \
+        game_hooks.hpp \
         game_state.hpp \
         game_behavior_tree.hpp \
         game_scripting_bridge.hpp
