@@ -118,3 +118,40 @@ FT_TEST(test_su_health_run_check_targets_single_entry,
     su_health_clear_checks();
     return (1);
 }
+
+FT_TEST(test_su_health_unregister_check_validates_name,
+        "su_health_unregister_check rejects null identifiers")
+{
+    su_health_clear_checks();
+    ft_errno = ER_SUCCESS;
+    if (su_health_unregister_check(ft_nullptr) != -1)
+        return (0);
+    if (ft_errno != FT_ERR_INVALID_ARGUMENT)
+        return (0);
+    return (1);
+}
+
+FT_TEST(test_su_health_unregister_check_removes_registered_entry,
+        "su_health_unregister_check removes existing health checks")
+{
+    t_su_health_check_result result;
+
+    su_health_clear_checks();
+    if (su_health_register_check("cache", &su_test_health_success, ft_nullptr) != 0)
+        return (0);
+    if (su_health_run_check("cache", &result) != 0)
+        return (0);
+    if (!(result.name == "cache"))
+        return (0);
+    if (su_health_unregister_check("cache") != 0)
+        return (0);
+    if (ft_errno != ER_SUCCESS)
+        return (0);
+    if (su_health_run_check("cache", &result) != -1)
+        return (0);
+    if (ft_errno != FT_ERR_NOT_FOUND)
+        return (0);
+    su_health_clear_checks();
+    return (1);
+}
+

@@ -478,7 +478,7 @@ int cmp_map_system_error_to_ft(int error_code)
 
 int cmp_normalize_ft_errno(int error_code)
 {
-    if (error_code <= ERRNO_OFFSET)
+    if (error_code < ERRNO_OFFSET)
         return (error_code);
     return (cmp_map_system_error_to_ft(error_code - ERRNO_OFFSET));
 }

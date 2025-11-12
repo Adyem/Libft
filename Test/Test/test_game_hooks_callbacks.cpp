@@ -1,0 +1,54 @@
+#include "../../Game/game_hooks.hpp"
+#include "../../Game/game_character.hpp"
+#include "../../Game/game_item.hpp"
+#include "../../Game/game_world.hpp"
+#include "../../Game/game_event.hpp"
+#include "../../System_utils/test_runner.hpp"
+#include "../../Errno/errno.hpp"
+#include <cstdint>
+
+FT_TEST(test_game_hooks_invoke_callbacks, "Game: hooks dispatch registered callbacks")
+{
+    ft_game_hooks hooks;
+    ft_character character;
+    ft_item item;
+    ft_world world;
+    ft_event event;
+    int crafted_invocations;
+    int damaged_invocations;
+    int event_invocations;
+
+    crafted_invocations = 0;
+    damaged_invocations = 0;
+    event_invocations = 0;
+    hooks.set_on_item_crafted(ft_function<void(ft_character&, ft_item&)>([&crafted_invocations](ft_character &character_ref, ft_item &item_ref)
+    {
+        (void)character_ref;
+        (void)item_ref;
+        crafted_invocations = crafted_invocations + 1;
+        return ;
+    }));
+    hooks.set_on_character_damaged(ft_function<void(ft_character&, int, uint8_t)>([&damaged_invocations](ft_character &character_ref, int damage, uint8_t type)
+    {
+        (void)character_ref;
+        (void)damage;
+        (void)type;
+        damaged_invocations = damaged_invocations + 1;
+        return ;
+    }));
+    hooks.set_on_event_triggered(ft_function<void(ft_world&, ft_event&)>([&event_invocations](ft_world &world_ref, ft_event &event_ref)
+    {
+        (void)world_ref;
+        (void)event_ref;
+        event_invocations = event_invocations + 1;
+        return ;
+    }));
+    hooks.invoke_on_item_crafted(character, item);
+    hooks.invoke_on_character_damaged(character, 5, static_cast<uint8_t>(2));
+    hooks.invoke_on_event_triggered(world, event);
+    FT_ASSERT_EQ(1, crafted_invocations);
+    FT_ASSERT_EQ(1, damaged_invocations);
+    FT_ASSERT_EQ(1, event_invocations);
+    FT_ASSERT_EQ(ER_SUCCESS, hooks.get_error());
+    return (1);
+}
