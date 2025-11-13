@@ -581,6 +581,16 @@ continues compacting the heap behind the scenes, and the module exposes
 manual `scma_mutex_lock` / `scma_mutex_unlock` helpers together with
 `scma_mutex_lock_count` for nested synchronization.
 
+Runtime tooling rounds out the allocator. The public `scma_get_stats`
+helper fills an `scma_stats` struct with block counts, heap usage, and a
+flag describing whether a snapshot buffer is currently pinned. When you
+need to inspect the heap directly, `scma_debug_dump` logs the block table
+and compaction decisions, and `scma_snapshot` / `scma_release_snapshot`
+expose a temporary, read-only pointer to a block without leaking the
+underlying storage. Modules that must coordinate their own locking can
+borrow the internal mutex through `scma_runtime_mutex()` or close it with
+`scma_mutex_close()` once teardown finishes.
+
 ### GetNextLine
 
 `GetNextLine/get_next_line.hpp` implements a simple file reader that operates on POSIX file descriptors with a configurable buffer size. It stores per-descriptor leftovers in the custom `ft_unordered_map`, allowing error reporting through `ft_errno` without relying on the `CPP_class` stream wrappers.
@@ -2302,6 +2312,17 @@ Game headers are prefixed with `game_` to align with their source filenames.
 All core classes define explicit copy and move constructors and assignments to manage resources safely.
 
 Core classes include `ft_character`, `ft_item`, `ft_inventory`, `ft_equipment`, `ft_upgrade`, `ft_world`, `ft_game_state`, `ft_event`, `ft_event_scheduler`, `ft_map3d`, `ft_quest`, `ft_reputation`, `ft_buff`, `ft_debuff`, `ft_skill`, `ft_achievement`, `ft_experience_table`, and `ft_crafting`. Each class is summarized below. The `ft_character` implementation is divided across dedicated source files for constructors, accessors, mutation helpers, save/load logic, and other behavior.
+
+The new `ft_game_hooks` façade wires optional callbacks into the crafting
+and combat loops without leaking synchronization details. Consumers can
+register lambdas for crafted items, post-damage resolution, and event
+dispatch using `set_on_item_crafted`, `set_on_character_damaged`, and
+`set_on_event_triggered`. Accessors copy the current hook while holding an
+internal mutex, and the invoke helpers (`invoke_on_*`) release the lock
+before executing user code so the game loop does not deadlock if the
+callback re-enters the engine. Each setter mirrors failures through
+`ft_errno`, and `lock_pair` lets two hook tables synchronize safely when
+world objects exchange ownership.
 
 The `ft_world` class can persist game state using JSON files and track timed events through a shared-pointer-owned scheduler.
 Methods interacting with the scheduler verify the shared pointer and the scheduler itself for errors before proceeding.
