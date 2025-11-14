@@ -68,7 +68,7 @@ static int capture_event(void *user_data, const json_stream_event *event)
 static int gather_events(const char *json_text, ft_vector<captured_event> &events)
 {
     memory_stream stream;
-    json_stream_reader reader;
+    json_stream_reader reader = json_stream_reader();
     int status;
 
     events.clear();
