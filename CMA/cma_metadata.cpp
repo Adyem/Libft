@@ -161,6 +161,12 @@ int cma_metadata_make_writable(void)
         {
             if (!chunk->protected_state)
             {
+                if (mprotect(chunk->memory, chunk->size,
+                        PROT_READ | PROT_WRITE) != 0)
+                {
+                    ft_errno = FT_ERR_INVALID_STATE;
+                    return (-1);
+                }
                 UNPROTECT_METADATA(chunk->memory, chunk->size);
                 chunk->protected_state = true;
             }
