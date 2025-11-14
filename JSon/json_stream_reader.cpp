@@ -1064,7 +1064,7 @@ int json_stream_read_from_file_events(FILE *file,
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    json_stream_reader reader;
+    json_stream_reader reader = json_stream_reader();
     if (json_stream_reader_init_file(&reader, file, buffer_capacity) != 0)
         return (-1);
     int status = json_stream_reader_traverse(&reader, callback, user_data);
@@ -1093,7 +1093,7 @@ int json_stream_read_from_stream_events(json_stream_read_callback callback,
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    json_stream_reader reader;
+    json_stream_reader reader = json_stream_reader();
     if (json_stream_reader_init_callback(&reader, callback, user_data, buffer_capacity) != 0)
         return (-1);
     int status = json_stream_reader_traverse(&reader, event_callback, event_user_data);
@@ -1380,7 +1380,7 @@ json_group *json_read_from_file_stream(FILE *file, size_t buffer_capacity)
     groups = ft_nullptr;
     result_errno = ER_SUCCESS;
     {
-        json_stream_reader reader;
+        json_stream_reader reader = json_stream_reader();
 
         if (json_stream_reader_init_file(&reader, file, buffer_capacity) != 0)
             return (ft_nullptr);
@@ -1418,7 +1418,7 @@ json_group *json_read_from_stream(json_stream_read_callback callback, void *user
     groups = ft_nullptr;
     result_errno = ER_SUCCESS;
     {
-        json_stream_reader reader;
+        json_stream_reader reader = json_stream_reader();
 
         if (json_stream_reader_init_callback(&reader, callback, user_data, buffer_capacity) != 0)
             return (ft_nullptr);
