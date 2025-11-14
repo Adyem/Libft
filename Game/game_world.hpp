@@ -42,6 +42,8 @@ class ft_world
         int load_from_file(const char *file_path, ft_character &character, ft_inventory &inventory) noexcept;
         int save_to_store(kv_store &store, const char *slot_key, const ft_character &character, const ft_inventory &inventory) const noexcept;
         int load_from_store(kv_store &store, const char *slot_key, ft_character &character, ft_inventory &inventory) noexcept;
+        int save_to_buffer(ft_string &out_buffer, const ft_character &character, const ft_inventory &inventory) const noexcept;
+        int load_from_buffer(const char *buffer, ft_character &character, ft_inventory &inventory) noexcept;
 
         int plan_route(const ft_map3d &grid,
             size_t start_x, size_t start_y, size_t start_z,
