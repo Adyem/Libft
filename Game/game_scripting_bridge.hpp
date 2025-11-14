@@ -79,6 +79,10 @@ class ft_game_script_bridge
 
         int execute(const ft_string &script, ft_game_state &state) noexcept;
 
+        int check_sandbox_capabilities(const ft_string &script, ft_vector<ft_string> &violations) noexcept;
+        int validate_dry_run(const ft_string &script, ft_vector<ft_string> &warnings) noexcept;
+        int inspect_bytecode_budget(const ft_string &script, int &required_operations) noexcept;
+
         int get_error() const noexcept;
         const char *get_error_str() const noexcept;
 };

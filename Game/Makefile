@@ -15,11 +15,13 @@ SRCS := game_map3d.cpp \
 	game_debuff.cpp \
 	game_skill.cpp \
 	game_upgrade.cpp \
-	game_event.cpp \
-	game_event_scheduler.cpp \
-	game_world.cpp \
-	game_server.cpp \
-	game_item.cpp \
+        game_event.cpp \
+        game_event_scheduler.cpp \
+        game_event_scheduler_telemetry.cpp \
+        game_world.cpp \
+        game_world_replay.cpp \
+        game_server.cpp \
+        game_item.cpp \
 	game_inventory.cpp \
 	game_equipment.cpp \
 	game_save.cpp \
@@ -46,9 +48,11 @@ HEADERS := game_map3d.hpp \
 	game_skill.hpp \
 	game_upgrade.hpp \
 	game_event.hpp \
-	game_event_scheduler.hpp \
-	game_world.hpp \
-	game_server.hpp \
+        game_event_scheduler.hpp \
+        game_event_scheduler_telemetry.hpp \
+        game_world.hpp \
+        game_world_replay.hpp \
+        game_server.hpp \
 	game_item.hpp \
 	game_inventory.hpp \
 	game_equipment.hpp \
