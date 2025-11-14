@@ -417,7 +417,7 @@ void ft_game_hooks::remove_listener_unlocked(const ft_string &hook_identifier, c
         this->set_error(this->_listener_catalog.get_error());
         return ;
     }
-    if (listeners_pair == this->_listener_catalog.end())
+    if (listeners_pair == ft_nullptr)
     {
         this->set_error(ER_SUCCESS);
         return ;
@@ -471,7 +471,7 @@ void ft_game_hooks::insert_listener_unlocked(const ft_game_hook_listener_entry &
         this->set_error(this->_listener_catalog.get_error());
         return ;
     }
-    if (listeners_pair == this->_listener_catalog.end())
+    if (listeners_pair == ft_nullptr)
     {
         new_listeners = ft_vector<ft_game_hook_listener_entry>();
         new_listeners.push_back(entry);
@@ -529,7 +529,7 @@ void ft_game_hooks::collect_listeners_unlocked(const ft_string &hook_identifier,
         const_cast<ft_game_hooks *>(this)->set_error(const_cast<ft_game_hooks *>(this)->_listener_catalog.get_error());
         return ;
     }
-    if (listeners_pair == const_cast<ft_game_hooks *>(this)->_listener_catalog.end())
+    if (listeners_pair == ft_nullptr)
     {
         const_cast<ft_game_hooks *>(this)->set_error(ER_SUCCESS);
         return ;
@@ -585,7 +585,7 @@ void ft_game_hooks::clone_catalog_from(const ft_game_hooks &other) noexcept
             this->set_error(const_cast<ft_game_hooks &>(other)._listener_catalog.get_error());
             return ;
         }
-        if (listeners_pair != const_cast<ft_game_hooks &>(other)._listener_catalog.end())
+        if (listeners_pair != ft_nullptr)
         {
             listener_index = 0;
             while (listener_index < listeners_pair->value.size())
