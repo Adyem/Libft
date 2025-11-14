@@ -148,3 +148,88 @@ FT_TEST(test_game_script_bridge_operation_limit,
 
     return (1);
 }
+
+FT_TEST(test_game_script_bridge_sandbox_helper,
+    "ft_game_script_bridge reports unsupported commands during sandbox checks")
+{
+    ft_sharedptr<ft_world> world_pointer(new ft_world());
+    ft_game_script_bridge bridge(world_pointer);
+    ft_vector<ft_string> violations;
+    ft_string script;
+    int inspection_result;
+
+    FT_ASSERT(world_pointer);
+    FT_ASSERT_EQ(ER_SUCCESS, world_pointer.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, bridge.get_error());
+
+    script = "set score 4\nteleport player base\ncall adjust_score 1\n";
+    FT_ASSERT_EQ(ER_SUCCESS, script.get_error());
+
+    inspection_result = bridge.check_sandbox_capabilities(script, violations);
+    FT_ASSERT_EQ(ER_SUCCESS, inspection_result);
+    FT_ASSERT_EQ(ER_SUCCESS, bridge.get_error());
+    FT_ASSERT(violations.size() == 1);
+    FT_ASSERT(violations[0] == "unsupported command: teleport");
+
+    return (1);
+}
+
+FT_TEST(test_game_script_bridge_dry_run_helper,
+    "ft_game_script_bridge dry-run validation collects callback and argument warnings")
+{
+    ft_sharedptr<ft_world> world_pointer(new ft_world());
+    ft_game_script_bridge bridge(world_pointer);
+    ft_vector<ft_string> warnings;
+    ft_string script;
+    int validation_result;
+
+    FT_ASSERT(world_pointer);
+    FT_ASSERT_EQ(ER_SUCCESS, world_pointer.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, bridge.get_error());
+
+    script = "call missing\nset score\nunset\n";
+    FT_ASSERT_EQ(ER_SUCCESS, script.get_error());
+
+    validation_result = bridge.validate_dry_run(script, warnings);
+    FT_ASSERT_EQ(ER_SUCCESS, validation_result);
+    FT_ASSERT_EQ(ER_SUCCESS, bridge.get_error());
+    FT_ASSERT(warnings.size() == 3);
+    FT_ASSERT(warnings[0] == "unregistered callback: missing");
+    FT_ASSERT(warnings[1] == "set missing value for key: score");
+    FT_ASSERT(warnings[2] == "unset missing key");
+
+    return (1);
+}
+
+FT_TEST(test_game_script_bridge_bytecode_budget_helper,
+    "ft_game_script_bridge inspector reports operation counts before execution")
+{
+    ft_sharedptr<ft_world> world_pointer(new ft_world());
+    ft_game_script_bridge bridge(world_pointer);
+    ft_string script;
+    int required_operations;
+    int inspection_result;
+
+    FT_ASSERT(world_pointer);
+    FT_ASSERT_EQ(ER_SUCCESS, world_pointer.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, bridge.get_error());
+
+    script = "set score 10\ncall adjust_score 2\nunset score\n";
+    FT_ASSERT_EQ(ER_SUCCESS, script.get_error());
+
+    required_operations = 0;
+    inspection_result = bridge.inspect_bytecode_budget(script, required_operations);
+    FT_ASSERT_EQ(ER_SUCCESS, inspection_result);
+    FT_ASSERT_EQ(ER_SUCCESS, bridge.get_error());
+    FT_ASSERT_EQ(3, required_operations);
+
+    bridge.set_max_operations(2);
+    FT_ASSERT_EQ(ER_SUCCESS, bridge.get_error());
+
+    inspection_result = bridge.inspect_bytecode_budget(script, required_operations);
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, inspection_result);
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, bridge.get_error());
+    FT_ASSERT_EQ(3, required_operations);
+
+    return (1);
+}

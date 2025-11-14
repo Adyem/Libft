@@ -2322,10 +2322,92 @@ internal mutex, and the invoke helpers (`invoke_on_*`) release the lock
 before executing user code so the game loop does not deadlock if the
 callback re-enters the engine. Each setter mirrors failures through
 `ft_errno`, and `lock_pair` lets two hook tables synchronize safely when
-world objects exchange ownership.
+world objects exchange ownership. A listener catalog now accompanies the
+legacy hooks: `register_listener` accepts metadata (identifier, listener
+name, description, and argument contract) along with a priority, stores the
+listener in priority order, and exposes it through
+`get_catalog_metadata()`/`get_catalog_metadata_for()`. Games can query the
+catalog when wiring optional systems, unregister listeners by name, and
+invoke ad-hoc hooks with `invoke_hook` while reusing the same argument
+adapter helpers that bridge structured contexts back into legacy
+signatures.
+
+Scheduler profiling data now flows into the same observability pipeline
+through a lightweight telemetry bridge. `game_event_scheduler_telemetry_*`
+helpers hold rolling counters keyed by a human-readable scheduler name and
+translate `t_event_scheduler_profile` snapshots into throughput, queue
+depth, and latency samples. Callers initialize a telemetry state once,
+enable scheduler profiling, and periodically invoke
+`game_event_scheduler_publish_telemetry` to export events to their
+configured `observability_game_metrics` exporter without manually parsing
+the profiler struct.
+
+```cpp
+ft_event_scheduler scheduler;
+ft_event_scheduler_telemetry_state telemetry;
+
+scheduler.enable_profiling(true);
+game_event_scheduler_telemetry_state_initialize(telemetry, "world.loop");
+observability_game_metrics_initialize(exporter_callback);
+
+game_event_scheduler_publish_telemetry(scheduler, telemetry);
+```
+
+```cpp
+ft_game_hooks hooks;
+ft_game_hook_metadata metadata;
+ft_function<void(ft_world&, ft_event&)> telemetry_callback;
+
+metadata.hook_identifier = ft_game_hook_event_triggered_identifier;
+metadata.listener_name = "telemetry.event_latency";
+metadata.description = "Records queue latency for monitoring";
+metadata.argument_contract = "ft_world&,ft_event&";
+
+telemetry_callback = ft_function<void(ft_world&, ft_event&)>([](ft_world &world, ft_event &event) mutable
+{
+    (void)world;
+    (void)event;
+    return ;
+});
+
+hooks.register_listener(metadata, 10,
+    ft_game_hook_make_world_event_adapter(ft_move(telemetry_callback)));
+```
+
+Catalog queries return `ft_vector<ft_game_hook_metadata>`, letting callers
+present optional listeners inside configuration UIs or automation tools.
+
+The scripting bridge exposes the same diagnostics-first approach. In
+addition to `execute`, `ft_game_script_bridge` now includes:
+
+- `check_sandbox_capabilities` to scan scripts for unsupported commands
+  before sandboxing them inside the host application.
+- `validate_dry_run` to replay the parser without invoking callbacks,
+  collecting warnings for missing hooks or malformed arguments.
+- `inspect_bytecode_budget` to compute the number of operations a script
+  will consume relative to the current `_max_operations` ceiling.
+
+```cpp
+ft_sharedptr<ft_world> world(new ft_world());
+ft_game_script_bridge bridge(world);
+ft_vector<ft_string> warnings;
+ft_vector<ft_string> violations;
+int required_operations;
+
+bridge.check_sandbox_capabilities(script_source, violations);
+bridge.validate_dry_run(script_source, warnings);
+bridge.inspect_bytecode_budget(script_source, required_operations);
+```
+
+All helpers reuse the bridge mutex and error-reporting pattern so tooling
+can inspect scripts without executing quest logic.
 
 The `ft_world` class can persist game state using JSON files and track timed events through a shared-pointer-owned scheduler.
-Methods interacting with the scheduler verify the shared pointer and the scheduler itself for errors before proceeding.
+Methods interacting with the scheduler verify the shared pointer and the scheduler itself for errors before proceeding. For
+deterministic simulations, use `ft_world_replay_session` to capture an in-memory snapshot, restore it into a fresh
+`ft_sharedptr<ft_world>`, replay a deterministic number of ticks (optionally logging scheduler output), or re-run pathfinding
+requests against the captured world state. Sessions can also import/export serialized snapshots for storage alongside AI test
+fixtures and are cleared explicitly when the experiment completes.
 
 ```
 ft_sharedptr<ft_world> world(new ft_world());

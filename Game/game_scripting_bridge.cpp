@@ -658,6 +658,568 @@ int ft_game_script_bridge::execute(const ft_string &script, ft_game_state &state
     return (ER_SUCCESS);
 }
 
+int ft_game_script_bridge::check_sandbox_capabilities(const ft_string &script, ft_vector<ft_string> &violations) noexcept
+{
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    const char *data;
+    size_t length;
+    size_t start;
+    int operations;
+
+    violations.clear();
+    if (violations.get_error() != ER_SUCCESS)
+    {
+        this->set_error(violations.get_error());
+        return (violations.get_error());
+    }
+    data = script.c_str();
+    length = script.size();
+    start = 0;
+    operations = 0;
+    while (start <= length)
+    {
+        size_t index;
+        size_t count;
+        ft_string line;
+        const char *line_data;
+
+        if (start >= length)
+            break;
+        index = start;
+        while (index < length
+            && data[index] != '\n'
+            && data[index] != '\r')
+            index++;
+        count = index - start;
+        line = script.substr(start, count);
+        if (line.get_error() != ER_SUCCESS)
+        {
+            this->set_error(line.get_error());
+            return (line.get_error());
+        }
+        trim_whitespace(line);
+        if (line.get_error() != ER_SUCCESS)
+        {
+            this->set_error(line.get_error());
+            return (line.get_error());
+        }
+        if (!line.empty())
+        {
+            line_data = line.c_str();
+            if (!(line.size() >= 2 && line_data[0] == '-' && line_data[1] == '-')
+                && !(line_data[0] == '#')
+                && !(line_data[0] == ';'))
+            {
+                ft_vector<ft_string> tokens;
+                ft_string command_original;
+                ft_string command_normalized;
+                char *command_data;
+
+                operations++;
+                this->tokenize_line(line, tokens);
+                if (tokens.get_error() != ER_SUCCESS)
+                {
+                    this->set_error(tokens.get_error());
+                    return (tokens.get_error());
+                }
+                if (!tokens.empty())
+                {
+                    command_original = tokens[0];
+                    if (command_original.get_error() != ER_SUCCESS)
+                    {
+                        this->set_error(command_original.get_error());
+                        return (command_original.get_error());
+                    }
+                    command_normalized = command_original;
+                    if (command_normalized.get_error() != ER_SUCCESS)
+                    {
+                        this->set_error(command_normalized.get_error());
+                        return (command_normalized.get_error());
+                    }
+                    command_data = command_normalized.data();
+                    if (command_data)
+                        ft_to_lower(command_data);
+                    if (!(command_normalized == "call"
+                        || command_normalized == "set"
+                        || command_normalized == "unset"))
+                    {
+                        ft_string violation("unsupported command: ");
+                        if (violation.get_error() != ER_SUCCESS)
+                        {
+                            this->set_error(violation.get_error());
+                            return (violation.get_error());
+                        }
+                        violation.append(command_original);
+                        if (violation.get_error() != ER_SUCCESS)
+                        {
+                            this->set_error(violation.get_error());
+                            return (violation.get_error());
+                        }
+                        violations.push_back(ft_move(violation));
+                        if (violations.get_error() != ER_SUCCESS)
+                        {
+                            this->set_error(violations.get_error());
+                            return (violations.get_error());
+                        }
+                    }
+                }
+            }
+        }
+        if (index >= length)
+            break;
+        while (index < length
+            && (data[index] == '\n' || data[index] == '\r'))
+            index++;
+        start = index;
+    }
+    if (this->_max_operations > 0 && operations > this->_max_operations)
+    {
+        ft_string violation("operation budget exceeded: ");
+        ft_string operation_text;
+        ft_string limit_text;
+
+        if (violation.get_error() != ER_SUCCESS)
+        {
+            this->set_error(violation.get_error());
+            return (violation.get_error());
+        }
+        operation_text = ft_to_string(static_cast<long>(operations));
+        if (operation_text.get_error() != ER_SUCCESS)
+        {
+            this->set_error(operation_text.get_error());
+            return (operation_text.get_error());
+        }
+        violation.append(operation_text);
+        if (violation.get_error() != ER_SUCCESS)
+        {
+            this->set_error(violation.get_error());
+            return (violation.get_error());
+        }
+        violation.append(" > ");
+        if (violation.get_error() != ER_SUCCESS)
+        {
+            this->set_error(violation.get_error());
+            return (violation.get_error());
+        }
+        limit_text = ft_to_string(static_cast<long>(this->_max_operations));
+        if (limit_text.get_error() != ER_SUCCESS)
+        {
+            this->set_error(limit_text.get_error());
+            return (limit_text.get_error());
+        }
+        violation.append(limit_text);
+        if (violation.get_error() != ER_SUCCESS)
+        {
+            this->set_error(violation.get_error());
+            return (violation.get_error());
+        }
+        violations.push_back(ft_move(violation));
+        if (violations.get_error() != ER_SUCCESS)
+        {
+            this->set_error(violations.get_error());
+            return (violations.get_error());
+        }
+    }
+    this->set_error(ER_SUCCESS);
+    return (ER_SUCCESS);
+}
+
+int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<ft_string> &warnings) noexcept
+{
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    const char *data;
+    size_t length;
+    size_t start;
+    int operations;
+
+    warnings.clear();
+    if (warnings.get_error() != ER_SUCCESS)
+    {
+        this->set_error(warnings.get_error());
+        return (warnings.get_error());
+    }
+    data = script.c_str();
+    length = script.size();
+    start = 0;
+    operations = 0;
+    while (start <= length)
+    {
+        size_t index;
+        size_t count;
+        ft_string line;
+        const char *line_data;
+
+        if (start >= length)
+            break;
+        index = start;
+        while (index < length
+            && data[index] != '\n'
+            && data[index] != '\r')
+            index++;
+        count = index - start;
+        line = script.substr(start, count);
+        if (line.get_error() != ER_SUCCESS)
+        {
+            this->set_error(line.get_error());
+            return (line.get_error());
+        }
+        trim_whitespace(line);
+        if (line.get_error() != ER_SUCCESS)
+        {
+            this->set_error(line.get_error());
+            return (line.get_error());
+        }
+        if (!line.empty())
+        {
+            line_data = line.c_str();
+            if (!(line.size() >= 2 && line_data[0] == '-' && line_data[1] == '-')
+                && !(line_data[0] == '#')
+                && !(line_data[0] == ';'))
+            {
+                ft_vector<ft_string> tokens;
+                ft_string command_original;
+                ft_string command_normalized;
+                char *command_data;
+
+                operations++;
+                this->tokenize_line(line, tokens);
+                if (tokens.get_error() != ER_SUCCESS)
+                {
+                    this->set_error(tokens.get_error());
+                    return (tokens.get_error());
+                }
+                if (!tokens.empty())
+                {
+                    command_original = tokens[0];
+                    if (command_original.get_error() != ER_SUCCESS)
+                    {
+                        this->set_error(command_original.get_error());
+                        return (command_original.get_error());
+                    }
+                    command_normalized = command_original;
+                    if (command_normalized.get_error() != ER_SUCCESS)
+                    {
+                        this->set_error(command_normalized.get_error());
+                        return (command_normalized.get_error());
+                    }
+                    command_data = command_normalized.data();
+                    if (command_data)
+                        ft_to_lower(command_data);
+                    if (command_normalized == "call")
+                    {
+                        if (tokens.size() < 2)
+                        {
+                            ft_string warning("call missing target");
+
+                            if (warning.get_error() != ER_SUCCESS)
+                            {
+                                this->set_error(warning.get_error());
+                                return (warning.get_error());
+                            }
+                            warnings.push_back(ft_move(warning));
+                            if (warnings.get_error() != ER_SUCCESS)
+                            {
+                                this->set_error(warnings.get_error());
+                                return (warnings.get_error());
+                            }
+                        }
+                        else
+                        {
+                            ft_string callback_name;
+                            Pair<ft_string, ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> > *entry;
+
+                            callback_name = tokens[1];
+                            if (callback_name.get_error() != ER_SUCCESS)
+                            {
+                                this->set_error(callback_name.get_error());
+                                return (callback_name.get_error());
+                            }
+                            entry = this->_callbacks.find(callback_name);
+                            if (this->_callbacks.get_error() != ER_SUCCESS)
+                            {
+                                this->set_error(this->_callbacks.get_error());
+                                return (this->_callbacks.get_error());
+                            }
+                            if (entry == ft_nullptr)
+                            {
+                                ft_string warning("unregistered callback: ");
+
+                                if (warning.get_error() != ER_SUCCESS)
+                                {
+                                    this->set_error(warning.get_error());
+                                    return (warning.get_error());
+                                }
+                                warning.append(callback_name);
+                                if (warning.get_error() != ER_SUCCESS)
+                                {
+                                    this->set_error(warning.get_error());
+                                    return (warning.get_error());
+                                }
+                                warnings.push_back(ft_move(warning));
+                                if (warnings.get_error() != ER_SUCCESS)
+                                {
+                                    this->set_error(warnings.get_error());
+                                    return (warnings.get_error());
+                                }
+                            }
+                            else if (!entry->value)
+                            {
+                                ft_string warning("callback missing target: ");
+
+                                if (warning.get_error() != ER_SUCCESS)
+                                {
+                                    this->set_error(warning.get_error());
+                                    return (warning.get_error());
+                                }
+                                warning.append(callback_name);
+                                if (warning.get_error() != ER_SUCCESS)
+                                {
+                                    this->set_error(warning.get_error());
+                                    return (warning.get_error());
+                                }
+                                warnings.push_back(ft_move(warning));
+                                if (warnings.get_error() != ER_SUCCESS)
+                                {
+                                    this->set_error(warnings.get_error());
+                                    return (warnings.get_error());
+                                }
+                            }
+                        }
+                    }
+                    else if (command_normalized == "set")
+                    {
+                        if (tokens.size() < 2)
+                        {
+                            ft_string warning("set missing key");
+
+                            if (warning.get_error() != ER_SUCCESS)
+                            {
+                                this->set_error(warning.get_error());
+                                return (warning.get_error());
+                            }
+                            warnings.push_back(ft_move(warning));
+                            if (warnings.get_error() != ER_SUCCESS)
+                            {
+                                this->set_error(warnings.get_error());
+                                return (warnings.get_error());
+                            }
+                        }
+                        else if (tokens.size() < 3)
+                        {
+                            ft_string warning("set missing value for key: ");
+                            ft_string missing_key;
+
+                            if (warning.get_error() != ER_SUCCESS)
+                            {
+                                this->set_error(warning.get_error());
+                                return (warning.get_error());
+                            }
+                            missing_key = tokens[1];
+                            if (missing_key.get_error() != ER_SUCCESS)
+                            {
+                                this->set_error(missing_key.get_error());
+                                return (missing_key.get_error());
+                            }
+                            warning.append(missing_key);
+                            if (warning.get_error() != ER_SUCCESS)
+                            {
+                                this->set_error(warning.get_error());
+                                return (warning.get_error());
+                            }
+                            warnings.push_back(ft_move(warning));
+                            if (warnings.get_error() != ER_SUCCESS)
+                            {
+                                this->set_error(warnings.get_error());
+                                return (warnings.get_error());
+                            }
+                        }
+                    }
+                    else if (command_normalized == "unset")
+                    {
+                        if (tokens.size() < 2)
+                        {
+                            ft_string warning("unset missing key");
+
+                            if (warning.get_error() != ER_SUCCESS)
+                            {
+                                this->set_error(warning.get_error());
+                                return (warning.get_error());
+                            }
+                            warnings.push_back(ft_move(warning));
+                            if (warnings.get_error() != ER_SUCCESS)
+                            {
+                                this->set_error(warnings.get_error());
+                                return (warnings.get_error());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (index >= length)
+            break;
+        while (index < length
+            && (data[index] == '\n' || data[index] == '\r'))
+            index++;
+        start = index;
+    }
+    if (this->_max_operations > 0 && operations > this->_max_operations)
+    {
+        ft_string warning("operation budget exceeded: ");
+        ft_string operation_text;
+        ft_string limit_text;
+
+        if (warning.get_error() != ER_SUCCESS)
+        {
+            this->set_error(warning.get_error());
+            return (warning.get_error());
+        }
+        operation_text = ft_to_string(static_cast<long>(operations));
+        if (operation_text.get_error() != ER_SUCCESS)
+        {
+            this->set_error(operation_text.get_error());
+            return (operation_text.get_error());
+        }
+        warning.append(operation_text);
+        if (warning.get_error() != ER_SUCCESS)
+        {
+            this->set_error(warning.get_error());
+            return (warning.get_error());
+        }
+        warning.append(" > ");
+        if (warning.get_error() != ER_SUCCESS)
+        {
+            this->set_error(warning.get_error());
+            return (warning.get_error());
+        }
+        limit_text = ft_to_string(static_cast<long>(this->_max_operations));
+        if (limit_text.get_error() != ER_SUCCESS)
+        {
+            this->set_error(limit_text.get_error());
+            return (limit_text.get_error());
+        }
+        warning.append(limit_text);
+        if (warning.get_error() != ER_SUCCESS)
+        {
+            this->set_error(warning.get_error());
+            return (warning.get_error());
+        }
+        warnings.push_back(ft_move(warning));
+        if (warnings.get_error() != ER_SUCCESS)
+        {
+            this->set_error(warnings.get_error());
+            return (warnings.get_error());
+        }
+    }
+    this->set_error(ER_SUCCESS);
+    return (ER_SUCCESS);
+}
+
+int ft_game_script_bridge::inspect_bytecode_budget(const ft_string &script, int &required_operations) noexcept
+{
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    const char *data;
+    size_t length;
+    size_t start;
+    int operations;
+
+    data = script.c_str();
+    length = script.size();
+    start = 0;
+    operations = 0;
+    while (start <= length)
+    {
+        size_t index;
+        size_t count;
+        ft_string line;
+        const char *line_data;
+
+        if (start >= length)
+            break;
+        index = start;
+        while (index < length
+            && data[index] != '\n'
+            && data[index] != '\r')
+            index++;
+        count = index - start;
+        line = script.substr(start, count);
+        if (line.get_error() != ER_SUCCESS)
+        {
+            this->set_error(line.get_error());
+            return (line.get_error());
+        }
+        trim_whitespace(line);
+        if (line.get_error() != ER_SUCCESS)
+        {
+            this->set_error(line.get_error());
+            return (line.get_error());
+        }
+        if (!line.empty())
+        {
+            line_data = line.c_str();
+            if (!(line.size() >= 2 && line_data[0] == '-' && line_data[1] == '-')
+                && !(line_data[0] == '#')
+                && !(line_data[0] == ';'))
+            {
+                ft_vector<ft_string> tokens;
+                ft_string command_original;
+                ft_string command_normalized;
+                char *command_data;
+
+                this->tokenize_line(line, tokens);
+                if (tokens.get_error() != ER_SUCCESS)
+                {
+                    this->set_error(tokens.get_error());
+                    return (tokens.get_error());
+                }
+                if (!tokens.empty())
+                {
+                    command_original = tokens[0];
+                    if (command_original.get_error() != ER_SUCCESS)
+                    {
+                        this->set_error(command_original.get_error());
+                        return (command_original.get_error());
+                    }
+                    command_normalized = command_original;
+                    if (command_normalized.get_error() != ER_SUCCESS)
+                    {
+                        this->set_error(command_normalized.get_error());
+                        return (command_normalized.get_error());
+                    }
+                    command_data = command_normalized.data();
+                    if (command_data)
+                        ft_to_lower(command_data);
+                    if (command_normalized == "call"
+                        || command_normalized == "set"
+                        || command_normalized == "unset")
+                    {
+                        operations++;
+                    }
+                    else
+                    {
+                        this->set_error(FT_ERR_INVALID_ARGUMENT);
+                        return (FT_ERR_INVALID_ARGUMENT);
+                    }
+                }
+            }
+        }
+        if (index >= length)
+            break;
+        while (index < length
+            && (data[index] == '\n' || data[index] == '\r'))
+            index++;
+        start = index;
+    }
+    required_operations = operations;
+    if (this->_max_operations > 0 && operations > this->_max_operations)
+    {
+        this->set_error(FT_ERR_INVALID_OPERATION);
+        return (FT_ERR_INVALID_OPERATION);
+    }
+    this->set_error(ER_SUCCESS);
+    return (ER_SUCCESS);
+}
+
 int ft_game_script_bridge::get_error() const noexcept
 {
     return (this->_error_code);

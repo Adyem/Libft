@@ -292,6 +292,68 @@ int ft_world::load_from_store(kv_store &store, const char *slot_key, ft_characte
     return (restore_result);
 }
 
+int ft_world::save_to_buffer(ft_string &out_buffer, const ft_character &character, const ft_inventory &inventory) const noexcept
+{
+    json_group *groups;
+    char *serialized_state;
+    int error_code;
+
+    if (this->propagate_scheduler_state_error() == true)
+        return (this->_error);
+    error_code = ER_SUCCESS;
+    groups = this->build_snapshot_groups(character, inventory, error_code);
+    if (!groups)
+        return (this->_error);
+    serialized_state = json_write_to_string(groups);
+    json_free_groups(groups);
+    if (!serialized_state)
+    {
+        error_code = ft_errno;
+        if (error_code == ER_SUCCESS)
+            error_code = FT_ERR_GAME_GENERAL_ERROR;
+        this->set_error(error_code);
+        return (this->_error);
+    }
+    out_buffer = serialized_state;
+    if (out_buffer.get_error() != ER_SUCCESS)
+    {
+        int assign_error;
+
+        assign_error = out_buffer.get_error();
+        cma_free(serialized_state);
+        this->set_error(assign_error);
+        return (this->_error);
+    }
+    cma_free(serialized_state);
+    this->set_error(ER_SUCCESS);
+    return (ER_SUCCESS);
+}
+
+int ft_world::load_from_buffer(const char *buffer, ft_character &character, ft_inventory &inventory) noexcept
+{
+    json_group *groups;
+    int restore_result;
+    int parse_error;
+
+    if (buffer == ft_nullptr)
+    {
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return (this->_error);
+    }
+    groups = json_read_from_string(buffer);
+    if (!groups)
+    {
+        parse_error = ft_errno;
+        if (parse_error == ER_SUCCESS)
+            parse_error = FT_ERR_GAME_GENERAL_ERROR;
+        this->set_error(parse_error);
+        return (this->_error);
+    }
+    restore_result = this->restore_from_groups(groups, character, inventory);
+    json_free_groups(groups);
+    return (restore_result);
+}
+
 int ft_world::plan_route(const ft_map3d &grid,
     size_t start_x, size_t start_y, size_t start_z,
     size_t goal_x, size_t goal_y, size_t goal_z,
