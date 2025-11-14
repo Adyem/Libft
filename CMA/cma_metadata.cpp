@@ -144,11 +144,6 @@ static int cma_metadata_apply_protection(int protection)
 
 int cma_metadata_make_writable(void)
 {
-    if (g_cma_metadata_access_depth != 0)
-    {
-        ft_errno = ER_SUCCESS;
-        return (0);
-    }
     if (g_cma_metadata_chunks == ft_nullptr)
     {
         if (!cma_metadata_add_chunk())
@@ -156,6 +151,23 @@ int cma_metadata_make_writable(void)
             ft_errno = FT_ERR_NO_MEMORY;
             return (-1);
         }
+    }
+    if (g_cma_metadata_access_depth != 0)
+    {
+        cma_metadata_chunk    *chunk;
+
+        chunk = g_cma_metadata_chunks;
+        while (chunk)
+        {
+            if (!chunk->protected_state)
+            {
+                UNPROTECT_METADATA(chunk->memory, chunk->size);
+                chunk->protected_state = true;
+            }
+            chunk = chunk->next;
+        }
+        ft_errno = ER_SUCCESS;
+        return (0);
     }
     if (cma_metadata_apply_protection(PROT_READ | PROT_WRITE) != 0)
         return (-1);
