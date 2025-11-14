@@ -140,8 +140,17 @@ Block* split_block(Block* block, ft_size_t size)
     ft_size_t    available_size;
     ft_size_t    remaining_size;
     ft_size_t    minimum_payload;
+    Block       *result_block;
+    bool         metadata_guarded;
 
+    result_block = block;
+    metadata_guarded = false;
     cma_validate_block(block, "split_block", ft_nullptr);
+    metadata_guarded = cma_metadata_guard_increment();
+    if (!metadata_guarded)
+        goto split_block_cleanup;
+    if (cma_metadata_make_writable() != 0)
+        goto split_block_cleanup;
     available_size = block->size;
     if (size >= available_size)
     {
@@ -149,7 +158,7 @@ Block* split_block(Block* block, ft_size_t size)
             cma_mark_block_free(block);
         else
             cma_mark_block_allocated(block);
-        return (block);
+        goto split_block_cleanup;
     }
     remaining_size = available_size - size;
     minimum_payload = minimum_split_payload();
@@ -159,7 +168,7 @@ Block* split_block(Block* block, ft_size_t size)
             cma_mark_block_free(block);
         else
             cma_mark_block_allocated(block);
-        return (block);
+        goto split_block_cleanup;
     }
     new_block = cma_metadata_allocate_block();
     if (new_block == ft_nullptr)
@@ -168,7 +177,7 @@ Block* split_block(Block* block, ft_size_t size)
             cma_mark_block_free(block);
         else
             cma_mark_block_allocated(block);
-        return (block);
+        goto split_block_cleanup;
     }
     new_block->size = remaining_size;
     new_block->payload = block->payload + size;
@@ -188,7 +197,11 @@ Block* split_block(Block* block, ft_size_t size)
     else
         cma_mark_block_allocated(block);
     cma_debug_initialize_block(block);
-    return (block);
+    result_block = block;
+split_block_cleanup:
+    if (metadata_guarded)
+        cma_metadata_guard_decrement();
+    return (result_block);
 }
 
 Page *create_page(ft_size_t size)
