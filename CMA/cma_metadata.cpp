@@ -228,6 +228,8 @@ Block    *cma_metadata_allocate_block(void)
     Block                *block;
     ft_size_t            stride;
 
+    if (cma_metadata_make_writable() != 0)
+        return (ft_nullptr);
     if (g_cma_metadata_free_list != ft_nullptr)
     {
         block = g_cma_metadata_free_list;
@@ -275,6 +277,8 @@ Block    *cma_metadata_allocate_block(void)
 void    cma_metadata_release_block(Block *block)
 {
     if (block == ft_nullptr)
+        return ;
+    if (cma_metadata_make_writable() != 0)
         return ;
     block->next = g_cma_metadata_free_list;
     block->prev = ft_nullptr;
