@@ -189,7 +189,12 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         ft_errno = FT_ERR_OUT_OF_RANGE;
         return (ft_nullptr);
     }
-    if (g_cma_alloc_limit != 0 && request_size > g_cma_alloc_limit)
+    ft_size_t   limit_check_size;
+
+    limit_check_size = backend_aligned_size;
+    if (alignment > limit_check_size)
+        limit_check_size = alignment;
+    if (g_cma_alloc_limit != 0 && limit_check_size > g_cma_alloc_limit)
     {
         ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);

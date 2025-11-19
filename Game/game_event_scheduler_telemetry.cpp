@@ -2,6 +2,7 @@
 #include "../Observability/observability_game_metrics.hpp"
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
+#include <limits>
 
 static const long long g_event_scheduler_ns_per_second = 1000000000LL;
 
@@ -97,6 +98,27 @@ void game_event_scheduler_telemetry_record(ft_event_scheduler_telemetry_state &s
     delta_processing_ns = profile.total_processing_ns - state.last_total_processing_ns;
     if (delta_processing_ns < 0)
         delta_processing_ns = profile.total_processing_ns;
+    long long adjusted_processing_ns;
+
+    adjusted_processing_ns = delta_processing_ns;
+    if (delta_updates > 0
+        && profile.last_update_processing_ns > 0
+        && state.last_last_update_ns > 0
+        && profile.last_update_processing_ns < state.last_last_update_ns)
+    {
+        long long maximum_value;
+        long long projected_processing_ns;
+
+        maximum_value = std::numeric_limits<long long>::max();
+        if (profile.last_update_processing_ns > 0
+            && delta_updates > maximum_value / profile.last_update_processing_ns)
+            projected_processing_ns = maximum_value;
+        else
+            projected_processing_ns = delta_updates * profile.last_update_processing_ns;
+        if (projected_processing_ns > adjusted_processing_ns)
+            adjusted_processing_ns = projected_processing_ns;
+    }
+    delta_processing_ns = adjusted_processing_ns;
     metrics_changed = false;
     if (delta_updates > 0)
         metrics_changed = true;
