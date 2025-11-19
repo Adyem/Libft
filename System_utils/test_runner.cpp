@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstring>
 #include <csignal>
+#include <cstdlib>
 #include <execinfo.h>
 #include <unistd.h>
 
@@ -35,6 +36,7 @@ struct s_test_case
     t_test_func func;
     const char *description;
     const char *module;
+    const char *name;
 };
 
 static s_test_case *get_tests(void)
@@ -78,7 +80,52 @@ static void sort_tests(void)
     return ;
 }
 
-int ft_register_test(t_test_func func, const char *description, const char *module)
+static const char *get_name_filter(void)
+{
+    const char *filter;
+
+    filter = getenv("FT_TEST_NAME_FILTER");
+    if (!filter)
+        return (NULL);
+    if (!filter[0])
+        return (NULL);
+    return (filter);
+}
+
+static int name_matches_filter(const char *filter, const char *name)
+{
+    const char *cursor;
+    const char *start;
+    size_t length;
+
+    cursor = filter;
+    while (*cursor)
+    {
+        while (*cursor == ' ' || *cursor == ',')
+            cursor++;
+        start = cursor;
+        while (*cursor && *cursor != ',')
+            cursor++;
+        length = (size_t)(cursor - start);
+        if (length > 0 && std::strncmp(start, name, length) == 0 && name[length] == '\0')
+            return (1);
+        if (*cursor == ',')
+            cursor++;
+    }
+    return (0);
+}
+
+static int test_is_selected(const s_test_case *test)
+{
+    const char *name_filter;
+
+    name_filter = get_name_filter();
+    if (name_filter && !name_matches_filter(name_filter, test->name))
+        return (0);
+    return (1);
+}
+
+int ft_register_test(t_test_func func, const char *description, const char *module, const char *name)
 {
     s_test_case test_case;
     s_test_case *tests;
@@ -87,6 +134,7 @@ int ft_register_test(t_test_func func, const char *description, const char *modu
     test_case.func = func;
     test_case.description = description;
     test_case.module = module;
+    test_case.name = name;
     tests = get_tests();
     test_count = get_test_count();
     if (*test_count >= get_test_capacity())
@@ -117,6 +165,7 @@ int ft_run_registered_tests(void)
     s_test_case *tests;
     int *test_count;
     int total_tests;
+    int selected_tests;
     int output_is_terminal;
 
     log_file = fopen("test_failures.log", "w");
@@ -128,21 +177,28 @@ int ft_run_registered_tests(void)
     tests = get_tests();
     test_count = get_test_count();
     total_tests = *test_count;
+    selected_tests = 0;
     index = 0;
     passed = 0;
     output_is_terminal = isatty(STDOUT_FILENO);
     while (index < total_tests)
     {
+        if (!test_is_selected(&tests[index]))
+        {
+            index++;
+            continue;
+        }
+        selected_tests++;
         if (output_is_terminal)
-            printf("Running test %d \"%s\"", index + 1, tests[index].description);
+            printf("Running test %d \"%s\"", selected_tests, tests[index].description);
         else
-            printf("Running test %d \"%s\"\n", index + 1, tests[index].description);
+            printf("Running test %d \"%s\"\n", selected_tests, tests[index].description);
         fflush(stdout);
         if (tests[index].func())
         {
             if (output_is_terminal)
                 printf("\r\033[K");
-            printf("OK %d %s\n", index + 1, tests[index].description);
+            printf("OK %d %s\n", selected_tests, tests[index].description);
             fflush(stdout);
             passed++;
         }
@@ -150,14 +206,20 @@ int ft_run_registered_tests(void)
         {
             if (output_is_terminal)
                 printf("\r\033[K");
-            printf("KO %d %s\n", index + 1, tests[index].description);
+            printf("KO %d %s\n", selected_tests, tests[index].description);
             fflush(stdout);
         }
         index++;
     }
-    printf("%d/%d tests passed\n", passed, total_tests);
+    if (selected_tests == 0)
+    {
+        printf("0/0 tests passed\n");
+        fflush(stdout);
+        return (1);
+    }
+    printf("%d/%d tests passed\n", passed, selected_tests);
     fflush(stdout);
-    if (passed != total_tests)
+    if (passed != selected_tests)
         return (1);
     return (0);
 }
