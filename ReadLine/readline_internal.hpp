@@ -37,6 +37,9 @@ struct terminal_dimensions {
 
 struct s_readline_state
 {
+    s_readline_state(void);
+    ~s_readline_state(void);
+
     char        *buffer;
     int            bufsize;
     int            pos;
@@ -50,8 +53,8 @@ struct s_readline_state
     int            word_start;
     char        *current_matches[MAX_SUGGESTIONS];
     ft_file        error_file;
-    pt_mutex    *mutex = ft_nullptr;
-    bool        thread_safe_enabled = false;
+    pt_mutex    *mutex;
+    bool        thread_safe_enabled;
 };
 
 typedef struct s_readline_state readline_state_t;
