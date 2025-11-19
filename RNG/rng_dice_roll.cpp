@@ -6,7 +6,7 @@
 
 int ft_dice_roll(int number, int faces)
 {
-    ft_init_srand();
+    ft_init_random_engine();
     if (faces == 0 && number == 0)
     {
         ft_errno = ER_SUCCESS;

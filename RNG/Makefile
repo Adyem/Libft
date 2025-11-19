@@ -7,12 +7,13 @@ SRCS := rng_dice_roll.cpp rng_engine.cpp rng_random_int.cpp rng_random_float.cpp
        rng_random_binomial.cpp rng_random_geometric.cpp rng_random_gamma.cpp \
        rng_random_beta.cpp rng_random_chi_squared.cpp rng_distribution_functions.cpp \
        rng_random_seed.cpp rng_secure_bytes.cpp rng_secure_wrappers.cpp \
+       rng_stream.cpp \
        rng_stream_split.cpp rng_uuid.cpp
 
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
-HEADERS := rng.hpp rng_internal.hpp deck.hpp loot_table.hpp
+HEADERS := rng.hpp rng_internal.hpp deck.hpp loot_table.hpp rng_stream.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

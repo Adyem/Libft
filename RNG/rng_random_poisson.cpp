@@ -10,7 +10,7 @@ int ft_random_poisson(double lambda_value)
     int count_value;
     double random_value;
 
-    ft_init_srand();
+    ft_init_random_engine();
     if (lambda_value <= 0.0)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
