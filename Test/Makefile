@@ -5,7 +5,11 @@ LIBFT_DEBUG_ARCHIVE := Full_Libft_debug.a
 
 EFF_SRCS := $(wildcard Efficiency/*.cpp)
 
+ifneq ($(strip $(FILES)),)
+SRCS := main.cpp $(FILES)
+else
 SRCS := main.cpp $(wildcard Test/*.cpp) $(wildcard API/*.cpp)
+endif
 TOTAL_SRCS := $(words $(SRCS))
 
 MAKEFLAGS += --no-print-directory
