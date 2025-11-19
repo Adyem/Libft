@@ -6,7 +6,7 @@
 
 float ft_random_float(void)
 {
-    ft_init_srand();
+    ft_init_random_engine();
     std::uniform_real_distribution<float> distribution(0.0f, 1.0f);
     float random_value;
 

@@ -13,7 +13,7 @@ extern std::atomic<bool> g_random_engine_seeded;
 void ft_seed_random_engine(uint32_t seed_value);
 void ft_seed_random_engine_with_entropy(void);
 
-inline __attribute__((always_inline)) void ft_init_srand(void)
+inline __attribute__((always_inline)) void ft_init_random_engine(void)
 {
     if (g_random_engine_seeded.load(std::memory_order_acquire) == false)
         ft_seed_random_engine_with_entropy();

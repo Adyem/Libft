@@ -8,7 +8,7 @@ float ft_random_exponential(float lambda_value)
     float uniform_value;
     float result;
 
-    ft_init_srand();
+    ft_init_random_engine();
     if (lambda_value <= 0.0f)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;

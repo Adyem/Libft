@@ -13,7 +13,7 @@ float ft_random_beta(float alpha, float beta)
     float sum;
     float result;
 
-    ft_init_srand();
+    ft_init_random_engine();
     if (alpha <= 0.0f || beta <= 0.0f)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;

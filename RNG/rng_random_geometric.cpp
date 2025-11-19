@@ -8,7 +8,7 @@ int ft_random_geometric(double success_probability)
     int trial_count;
     double random_value;
 
-    ft_init_srand();
+    ft_init_random_engine();
     if (success_probability <= 0.0)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
