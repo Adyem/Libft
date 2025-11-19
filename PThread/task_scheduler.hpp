@@ -788,6 +788,8 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
     queue_entry._label = g_ft_task_trace_label_async;
     this->trace_emit_event(FT_TASK_TRACE_PHASE_SUBMITTED, trace_id, parent_span,
             g_ft_task_trace_label_async, false);
+    this->trace_emit_event(FT_TASK_TRACE_PHASE_ENQUEUED, trace_id, parent_span,
+            g_ft_task_trace_label_async, false);
     this->_queue.push(ft_move(queue_entry));
     if (this->_queue.get_error() != ER_SUCCESS)
     {
@@ -798,8 +800,6 @@ auto ft_task_scheduler::submit(FunctionType function, Args... args)
         return (future_value);
     }
     metrics_updated = this->update_queue_size(1);
-    this->trace_emit_event(FT_TASK_TRACE_PHASE_ENQUEUED, trace_id, parent_span,
-            g_ft_task_trace_label_async, false);
     if (!metrics_updated)
         return (future_value);
     this->set_error(ER_SUCCESS);

@@ -1422,6 +1422,9 @@ void ft_task_scheduler::timer_loop()
             this->trace_emit_event(FT_TASK_TRACE_PHASE_TIMER_TRIGGERED,
                     queue_entry._trace_id, queue_entry._parent_id,
                     queue_entry._label, true);
+            this->trace_emit_event(FT_TASK_TRACE_PHASE_ENQUEUED,
+                    expired_task._trace_id, expired_task._parent_id,
+                    expired_task._label, true);
             this->_queue.push(ft_move(queue_entry));
             if (this->_queue.get_error() != ER_SUCCESS)
             {
@@ -1437,9 +1440,6 @@ void ft_task_scheduler::timer_loop()
                 bool metrics_updated;
 
                 metrics_updated = this->update_queue_size(1);
-                this->trace_emit_event(FT_TASK_TRACE_PHASE_ENQUEUED,
-                        expired_task._trace_id, expired_task._parent_id,
-                        expired_task._label, true);
                 if (!metrics_updated)
                     return ;
                 this->set_error(ER_SUCCESS);
