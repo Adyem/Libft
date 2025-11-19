@@ -10,7 +10,7 @@ int ft_random_binomial(int trial_count, double success_probability)
     int success_count;
     double random_value;
 
-    ft_init_srand();
+    ft_init_random_engine();
     if (trial_count < 0)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;

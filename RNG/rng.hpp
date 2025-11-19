@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <cstdint>
 #include "../CPP_class/class_nullptr.hpp"
+#include "rng_stream.hpp"
 
 int ft_random_int(void);
 int ft_dice_roll(int number, int faces);

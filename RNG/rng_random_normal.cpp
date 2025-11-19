@@ -12,7 +12,7 @@ float ft_random_normal(void)
     float angle;
     float result;
 
-    ft_init_srand();
+    ft_init_random_engine();
     uniform_one = ft_random_float();
     if (ft_errno != ER_SUCCESS)
         return (0.0f);
