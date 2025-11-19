@@ -6,28 +6,6 @@
 #include "SCMA.hpp"
 #include "scma_internal.hpp"
 
-static int    scma_is_double_free(scma_handle handle)
-{
-    scma_block_span span;
-    scma_block *block;
-    ft_size_t expected_generation;
-
-    span = scma_get_block_span();
-    if (span.count == 0)
-        return (0);
-    if (!span.data)
-        return (0);
-    if (handle.index >= span.count)
-        return (0);
-    block = &span.data[static_cast<size_t>(handle.index)];
-    if (block->in_use)
-        return (0);
-    expected_generation = scma_next_generation(handle.generation);
-    if (block->generation != expected_generation)
-        return (0);
-    return (1);
-}
-
 int    scma_initialize(ft_size_t initial_capacity)
 {
     int initialization_result;
@@ -239,17 +217,7 @@ int    scma_free(scma_handle handle)
     if (scma_mutex_lock() != 0)
         return (0);
     if (!scma_validate_handle(handle, &block))
-    {
-        if (ft_errno == FT_ERR_INVALID_HANDLE)
-        {
-            if (scma_is_double_free(handle))
-            {
-                ft_errno = ER_SUCCESS;
-                return (scma_unlock_and_return_int(1));
-            }
-        }
         return (scma_unlock_and_return_int(0));
-    }
     block->in_use = 0;
     block->size = 0;
     block->generation = scma_next_generation(block->generation);

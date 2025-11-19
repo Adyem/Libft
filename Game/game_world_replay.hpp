@@ -9,11 +9,13 @@
 #include "../CPP_class/class_string_class.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Template/vector.hpp"
+#include "../Template/function.hpp"
 
 class ft_world_replay_session
 {
     private:
         ft_string   _snapshot_payload;
+        ft_vector<ft_function<void(ft_world&, ft_event&)> > _event_callbacks;
         mutable int _error_code;
 
         void set_error(int error_code) const noexcept;
