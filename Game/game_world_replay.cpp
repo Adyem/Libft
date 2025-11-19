@@ -4,8 +4,75 @@
 #include "../Libft/libft.hpp"
 #include "../Template/move.hpp"
 
+static int  world_replay_collect_callbacks(ft_world &world,
+        ft_vector<ft_function<void(ft_world&, ft_event&)> > &callbacks) noexcept
+{
+    ft_sharedptr<ft_event_scheduler> &scheduler = world.get_event_scheduler();
+
+    if (!scheduler)
+        return (FT_ERR_GAME_GENERAL_ERROR);
+    ft_vector<ft_sharedptr<ft_event> > scheduled_events;
+
+    scheduler->dump_events(scheduled_events);
+    if (scheduler->get_error() != ER_SUCCESS)
+        return (scheduler->get_error());
+    size_t  event_index;
+    size_t  event_count;
+
+    event_index = 0;
+    event_count = scheduled_events.size();
+    while (event_index < event_count)
+    {
+        const ft_function<void(ft_world&, ft_event&)> &event_callback =
+            scheduled_events[event_index]->get_callback();
+
+        if (scheduled_events[event_index]->get_error() != ER_SUCCESS)
+            return (scheduled_events[event_index]->get_error());
+        callbacks.push_back(event_callback);
+        if (callbacks.get_error() != ER_SUCCESS)
+            return (callbacks.get_error());
+        event_index++;
+    }
+    return (ER_SUCCESS);
+}
+
+static int  world_replay_restore_callbacks(ft_world &world,
+        const ft_vector<ft_function<void(ft_world&, ft_event&)> > &callbacks) noexcept
+{
+    ft_sharedptr<ft_event_scheduler> &scheduler = world.get_event_scheduler();
+
+    if (!scheduler)
+        return (FT_ERR_GAME_GENERAL_ERROR);
+    if (callbacks.size() == 0)
+        return (ER_SUCCESS);
+    ft_vector<ft_sharedptr<ft_event> > scheduled_events;
+
+    scheduler->dump_events(scheduled_events);
+    if (scheduler->get_error() != ER_SUCCESS)
+        return (scheduler->get_error());
+    size_t  event_index;
+    size_t  event_count;
+    size_t  callback_count;
+
+    callback_count = callbacks.size();
+    event_index = 0;
+    event_count = scheduled_events.size();
+    if (callback_count != event_count)
+        return (FT_ERR_GAME_GENERAL_ERROR);
+    while (event_index < event_count)
+    {
+        ft_function<void(ft_world&, ft_event&)> callback_copy(callbacks[event_index]);
+
+        scheduled_events[event_index]->set_callback(ft_move(callback_copy));
+        if (scheduled_events[event_index]->get_error() != ER_SUCCESS)
+            return (scheduled_events[event_index]->get_error());
+        event_index++;
+    }
+    return (ER_SUCCESS);
+}
+
 ft_world_replay_session::ft_world_replay_session() noexcept
-    : _snapshot_payload(), _error_code(ER_SUCCESS)
+    : _snapshot_payload(), _event_callbacks(), _error_code(ER_SUCCESS)
 {
     return ;
 }
@@ -17,11 +84,17 @@ ft_world_replay_session::~ft_world_replay_session() noexcept
 }
 
 ft_world_replay_session::ft_world_replay_session(const ft_world_replay_session &other) noexcept
-    : _snapshot_payload(other._snapshot_payload), _error_code(other._error_code)
+    : _snapshot_payload(other._snapshot_payload),
+      _event_callbacks(other._event_callbacks), _error_code(other._error_code)
 {
     if (this->_snapshot_payload.get_error() != ER_SUCCESS)
     {
         this->set_error(this->_snapshot_payload.get_error());
+        return ;
+    }
+    if (this->_event_callbacks.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_event_callbacks.get_error());
         return ;
     }
     this->set_error(other._error_code);
@@ -38,17 +111,30 @@ ft_world_replay_session &ft_world_replay_session::operator=(const ft_world_repla
             this->set_error(this->_snapshot_payload.get_error());
             return (*this);
         }
+        this->_event_callbacks = other._event_callbacks;
+        if (this->_event_callbacks.get_error() != ER_SUCCESS)
+        {
+            this->set_error(this->_event_callbacks.get_error());
+            return (*this);
+        }
         this->set_error(other._error_code);
     }
     return (*this);
 }
 
 ft_world_replay_session::ft_world_replay_session(ft_world_replay_session &&other) noexcept
-    : _snapshot_payload(ft_move(other._snapshot_payload)), _error_code(other._error_code)
+    : _snapshot_payload(ft_move(other._snapshot_payload)),
+      _event_callbacks(ft_move(other._event_callbacks)), _error_code(other._error_code)
 {
     if (this->_snapshot_payload.get_error() != ER_SUCCESS)
     {
         this->set_error(this->_snapshot_payload.get_error());
+        other.set_error(ER_SUCCESS);
+        return ;
+    }
+    if (this->_event_callbacks.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_event_callbacks.get_error());
         other.set_error(ER_SUCCESS);
         return ;
     }
@@ -65,6 +151,12 @@ ft_world_replay_session &ft_world_replay_session::operator=(ft_world_replay_sess
         if (this->_snapshot_payload.get_error() != ER_SUCCESS)
         {
             this->set_error(this->_snapshot_payload.get_error());
+            return (*this);
+        }
+        this->_event_callbacks = ft_move(other._event_callbacks);
+        if (this->_event_callbacks.get_error() != ER_SUCCESS)
+        {
+            this->set_error(this->_event_callbacks.get_error());
             return (*this);
         }
         this->set_error(other._error_code);
@@ -84,6 +176,8 @@ int ft_world_replay_session::capture_snapshot(ft_world &world, const ft_characte
 {
     ft_string snapshot_buffer;
     int result;
+    ft_vector<ft_function<void(ft_world&, ft_event&)> > callback_snapshot;
+    int callback_result;
 
     result = world.save_to_buffer(snapshot_buffer, character, inventory);
     if (result != ER_SUCCESS)
@@ -91,10 +185,22 @@ int ft_world_replay_session::capture_snapshot(ft_world &world, const ft_characte
         this->set_error(world.get_error());
         return (this->_error_code);
     }
+    callback_result = world_replay_collect_callbacks(world, callback_snapshot);
+    if (callback_result != ER_SUCCESS)
+    {
+        this->set_error(callback_result);
+        return (this->_error_code);
+    }
     this->_snapshot_payload = snapshot_buffer;
     if (this->_snapshot_payload.get_error() != ER_SUCCESS)
     {
         this->set_error(this->_snapshot_payload.get_error());
+        return (this->_error_code);
+    }
+    this->_event_callbacks = ft_move(callback_snapshot);
+    if (this->_event_callbacks.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_event_callbacks.get_error());
         return (this->_error_code);
     }
     this->set_error(ER_SUCCESS);
@@ -120,6 +226,17 @@ int ft_world_replay_session::restore_snapshot(ft_sharedptr<ft_world> &world_ptr,
     {
         this->set_error(world_ptr->get_error());
         return (this->_error_code);
+    }
+    if (this->_event_callbacks.size() > 0)
+    {
+        int callback_result;
+
+        callback_result = world_replay_restore_callbacks(*world_ptr, this->_event_callbacks);
+        if (callback_result != ER_SUCCESS)
+        {
+            this->set_error(callback_result);
+            return (this->_error_code);
+        }
     }
     this->set_error(ER_SUCCESS);
     return (ER_SUCCESS);
@@ -170,6 +287,12 @@ int ft_world_replay_session::import_snapshot(const ft_string &snapshot_payload) 
         this->set_error(this->_snapshot_payload.get_error());
         return (this->_error_code);
     }
+    this->_event_callbacks.clear();
+    if (this->_event_callbacks.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_event_callbacks.get_error());
+        return (this->_error_code);
+    }
     this->set_error(ER_SUCCESS);
     return (ER_SUCCESS);
 }
@@ -192,6 +315,12 @@ void ft_world_replay_session::clear_snapshot() noexcept
     if (this->_snapshot_payload.get_error() != ER_SUCCESS)
     {
         this->set_error(this->_snapshot_payload.get_error());
+        return ;
+    }
+    this->_event_callbacks.clear();
+    if (this->_event_callbacks.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_event_callbacks.get_error());
         return ;
     }
     this->set_error(ER_SUCCESS);
