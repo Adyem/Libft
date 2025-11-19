@@ -7,7 +7,7 @@
 
 int ft_random_int(void)
 {
-    ft_init_srand();
+    ft_init_random_engine();
     std::uniform_int_distribution<int> distribution(0, std::numeric_limits<int>::max());
     int random_value;
 

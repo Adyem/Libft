@@ -9,7 +9,7 @@ float ft_random_chi_squared(float degrees_of_freedom)
     float sample_value;
     std::gamma_distribution<float> distribution;
 
-    ft_init_srand();
+    ft_init_random_engine();
     if (degrees_of_freedom <= 0.0f)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;

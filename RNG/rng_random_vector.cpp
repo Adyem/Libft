@@ -65,7 +65,7 @@ int ft_random_int_vector(int minimum_value, int maximum_value, int *output_value
         ft_errno = ER_SUCCESS;
         return (0);
     }
-    ft_init_srand();
+    ft_init_random_engine();
     std::uniform_int_distribution<int> distribution(minimum_value, maximum_value);
     ft_unique_lock<pt_mutex> guard(g_random_engine_mutex);
     if (guard.get_error() != ER_SUCCESS)
@@ -108,7 +108,7 @@ int ft_random_float_vector(float *output_values, size_t output_count)
         ft_errno = ER_SUCCESS;
         return (0);
     }
-    ft_init_srand();
+    ft_init_random_engine();
     std::uniform_real_distribution<float> distribution(0.0f, 1.0f);
     ft_unique_lock<pt_mutex> guard(g_random_engine_mutex);
     if (guard.get_error() != ER_SUCCESS)
