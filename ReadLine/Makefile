@@ -11,6 +11,7 @@ SRCS := readline.cpp \
     readline_printeble_char.cpp \
     readline_raw_mode.cpp \
     readline_initialize.cpp \
+    readline_state.cpp \
     readline_thread_safety.cpp \
     readline_terminal_dimensions.cpp \
     readline_get_terminal_width.cpp
