@@ -85,8 +85,11 @@ ft_world_replay_session::~ft_world_replay_session() noexcept
 
 ft_world_replay_session::ft_world_replay_session(const ft_world_replay_session &other) noexcept
     : _snapshot_payload(other._snapshot_payload),
-      _event_callbacks(other._event_callbacks), _error_code(other._error_code)
+      _event_callbacks(), _error_code(other._error_code)
 {
+    size_t  callback_index;
+    size_t  callback_count;
+
     if (this->_snapshot_payload.get_error() != ER_SUCCESS)
     {
         this->set_error(this->_snapshot_payload.get_error());
@@ -96,6 +99,18 @@ ft_world_replay_session::ft_world_replay_session(const ft_world_replay_session &
     {
         this->set_error(this->_event_callbacks.get_error());
         return ;
+    }
+    callback_index = 0;
+    callback_count = other._event_callbacks.size();
+    while (callback_index < callback_count)
+    {
+        this->_event_callbacks.push_back(other._event_callbacks[callback_index]);
+        if (this->_event_callbacks.get_error() != ER_SUCCESS)
+        {
+            this->set_error(this->_event_callbacks.get_error());
+            return ;
+        }
+        callback_index++;
     }
     this->set_error(other._error_code);
     return ;
@@ -111,11 +126,26 @@ ft_world_replay_session &ft_world_replay_session::operator=(const ft_world_repla
             this->set_error(this->_snapshot_payload.get_error());
             return (*this);
         }
-        this->_event_callbacks = other._event_callbacks;
+        this->_event_callbacks.clear();
         if (this->_event_callbacks.get_error() != ER_SUCCESS)
         {
             this->set_error(this->_event_callbacks.get_error());
             return (*this);
+        }
+        size_t  callback_index;
+        size_t  callback_count;
+
+        callback_index = 0;
+        callback_count = other._event_callbacks.size();
+        while (callback_index < callback_count)
+        {
+            this->_event_callbacks.push_back(other._event_callbacks[callback_index]);
+            if (this->_event_callbacks.get_error() != ER_SUCCESS)
+            {
+                this->set_error(this->_event_callbacks.get_error());
+                return (*this);
+            }
+            callback_index++;
         }
         this->set_error(other._error_code);
     }
