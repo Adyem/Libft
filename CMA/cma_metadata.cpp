@@ -89,10 +89,18 @@ static bool cma_metadata_add_chunk(void)
     }
     chunk->size = chunk_size;
     chunk->used = 0;
-    chunk->protected_state = false;
     chunk->next = g_cma_metadata_chunks;
     g_cma_metadata_chunks = chunk;
-    PROTECT_METADATA(chunk->memory, chunk->size);
+    if (g_cma_metadata_access_depth == 0)
+    {
+        chunk->protected_state = false;
+        PROTECT_METADATA(chunk->memory, chunk->size);
+    }
+    else
+    {
+        chunk->protected_state = true;
+        UNPROTECT_METADATA(chunk->memory, chunk->size);
+    }
     ft_errno = ER_SUCCESS;
     return (true);
 }
