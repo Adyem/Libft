@@ -1,6 +1,6 @@
-# Targeted Test Prototype
+# Targeted Test Runner
 
-The `tools/test_prototype.py` helper allows building and executing only the
+The `tools/test_runner.py` helper allows building and executing only the
 selected test translation units instead of compiling the entire suite.  The
 tool searches for the requested sources, triggers the `Test/Makefile` with the
 `FILES` override, and propagates the requested test names to the runtime
@@ -10,16 +10,16 @@ filter.
 
 ```bash
 # Build and run every FT_TEST contained in Test/Test/test_strlen.cpp
-python3 tools/test_prototype.py Test/Test/test_strlen.cpp
+python3 tools/test_runner.py Test/Test/test_strlen.cpp
 
 # Compile the file that owns `test_strlen_basic` and execute only that test
-python3 tools/test_prototype.py test_strlen_basic
+python3 tools/test_runner.py test_strlen_basic
 
 # Combine filters or build the debug variant
-python3 tools/test_prototype.py test_strlen.cpp test_strlen_basic --debug
+python3 tools/test_runner.py test_strlen.cpp test_strlen_basic --debug
 
 # Target a heavy multi-test class such as API request
-python3 tools/test_prototype.py test_api_request_invalid_ip_sets_socket_error
+python3 tools/test_runner.py test_api_request_invalid_ip_sets_socket_error
 ```
 
 The script automatically scans every test translation unit for `FT_TEST`

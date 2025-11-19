@@ -86,6 +86,24 @@ aggregated totals. Failing assertions write an entry to `test_failures.log`
 showing the source file, line, and message. Cases register through the `FT_TEST`
 macro at program startup, so linking the suite is enough to execute every test.
 
+### Targeted test runner
+
+Rebuilding the entire suite is not always necessary when iterating on a single
+translation unit. The permanent `tools/test_runner.py` helper accepts either
+test source paths or `FT_TEST` identifiers, rebuilds only the requested objects,
+and forwards optional name filters to the runtime. Typical invocations include:
+
+```bash
+python3 tools/test_runner.py Test/Test/test_strlen.cpp
+python3 tools/test_runner.py test_strlen_basic
+python3 tools/test_runner.py test_strlen.cpp test_strlen_basic --debug
+```
+
+The script validates each identifier, prints which files will be compiled, and
+invokes `make` inside `Test/` with the appropriate `FILES` override before
+running the filtered binary. Refer to `Docs/test_runner.md` for more examples
+and background.
+
 ### Coverage snapshot
 
 Recent runs exercise the following areas:
