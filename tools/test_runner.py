@@ -5,6 +5,9 @@ The script accepts either test source file names or FT_TEST identifiers and
 only builds the objects that are required for the selected tests.  The regular
 Full_Libft archive is still used for linking, so the core library build is
 reused while the test-side build cost is restricted to the provided files.
+
+This helper replaces the previous prototype version and is meant to be kept in
+sync with the repository as a supported workflow for targeted test runs.
 """
 from __future__ import annotations
 
