@@ -9,7 +9,7 @@ typedef int (*t_test_func)(void);
 #define TEST_MODULE "Libft"
 #endif
 
-int ft_register_test(t_test_func func, const char *description, const char *module);
+int ft_register_test(t_test_func func, const char *description, const char *module, const char *name);
 void ft_test_fail(const char *expression, const char *file, int line);
 int ft_run_registered_tests(void);
 
@@ -18,7 +18,7 @@ int ft_run_registered_tests(void);
     static void register_##name(void) __attribute__((constructor)); \
     static void register_##name(void) \
     { \
-        ft_register_test(name, description, TEST_MODULE); \
+        ft_register_test(name, description, TEST_MODULE, #name); \
         return ; \
     } \
     static int name(void)
