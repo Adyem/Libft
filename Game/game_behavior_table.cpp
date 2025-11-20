@@ -261,9 +261,21 @@ int ft_behavior_table::fetch_profile(int profile_id, ft_behavior_profile &profil
         return (FT_ERR_NOT_FOUND);
     }
     ft_behavior_profile temporary;
+    int source_errno;
+
+    source_errno = ft_errno;
+    ft_unique_lock<pt_mutex> source_guard(entry->value._mutex);
+    if (source_guard.get_error() != ER_SUCCESS)
+    {
+        const_cast<ft_behavior_table *>(self)->set_error(source_guard.get_error());
+        game_behavior_restore_errno(source_guard, source_errno);
+        game_behavior_restore_errno(guard, entry_errno);
+        return (source_guard.get_error());
+    }
 
     temporary.clone_from_unlocked(entry->value);
     const_cast<ft_behavior_table *>(self)->set_error(temporary.get_error());
+    game_behavior_restore_errno(source_guard, source_errno);
     game_behavior_restore_errno(guard, entry_errno);
     if (temporary.get_error() != ER_SUCCESS)
         return (temporary.get_error());
