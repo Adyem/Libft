@@ -20,6 +20,34 @@ static void game_behavior_copy_action_vector(const ft_vector<ft_behavior_action>
     return ;
 }
 
+void ft_behavior_profile::clone_from_unlocked(const ft_behavior_profile &other) noexcept
+{
+    this->_profile_id = other._profile_id;
+    this->_aggression_weight = other._aggression_weight;
+    this->_caution_weight = other._caution_weight;
+    game_behavior_copy_action_vector(other._actions, this->_actions);
+    this->_error_code = other._error_code;
+    this->set_error(this->_actions.get_error());
+    return ;
+}
+
+void ft_behavior_profile::move_from_unlocked(ft_behavior_profile &other) noexcept
+{
+    this->_profile_id = other._profile_id;
+    this->_aggression_weight = other._aggression_weight;
+    this->_caution_weight = other._caution_weight;
+    this->_actions = ft_move(other._actions);
+    this->_error_code = other._error_code;
+    other._profile_id = 0;
+    other._aggression_weight = 0.0;
+    other._caution_weight = 0.0;
+    other._actions.clear();
+    other._error_code = ER_SUCCESS;
+    this->set_error(this->_actions.get_error());
+    other.set_error(ER_SUCCESS);
+    return ;
+}
+
 int ft_behavior_profile::lock_pair(const ft_behavior_profile &first, const ft_behavior_profile &second,
         ft_unique_lock<pt_mutex> &first_guard,
         ft_unique_lock<pt_mutex> &second_guard)
@@ -121,12 +149,7 @@ ft_behavior_profile::ft_behavior_profile(const ft_behavior_profile &other) noexc
         game_behavior_restore_errno(other_guard, entry_errno);
         return ;
     }
-    this->_profile_id = other._profile_id;
-    this->_aggression_weight = other._aggression_weight;
-    this->_caution_weight = other._caution_weight;
-    game_behavior_copy_action_vector(other._actions, this->_actions);
-    this->_error_code = other._error_code;
-    this->set_error(this->_actions.get_error());
+    this->clone_from_unlocked(other);
     game_behavior_restore_errno(other_guard, entry_errno);
     return ;
 }
@@ -147,19 +170,14 @@ ft_behavior_profile &ft_behavior_profile::operator=(const ft_behavior_profile &o
         this->set_error(lock_error);
         return (*this);
     }
-    this->_profile_id = other._profile_id;
-    this->_aggression_weight = other._aggression_weight;
-    this->_caution_weight = other._caution_weight;
-    game_behavior_copy_action_vector(other._actions, this->_actions);
-    this->_error_code = other._error_code;
-    this->set_error(this->_actions.get_error());
+    this->clone_from_unlocked(other);
     game_behavior_restore_errno(this_guard, entry_errno);
     game_behavior_restore_errno(other_guard, entry_errno);
     return (*this);
 }
 
 ft_behavior_profile::ft_behavior_profile(ft_behavior_profile &&other) noexcept
-    : _profile_id(0), _aggression_weight(0.0), _caution_weight(0.0), _actions(ft_move(other._actions)),
+    : _profile_id(0), _aggression_weight(0.0), _caution_weight(0.0), _actions(),
     _error_code(ER_SUCCESS), _mutex()
 {
     int entry_errno;
@@ -172,17 +190,7 @@ ft_behavior_profile::ft_behavior_profile(ft_behavior_profile &&other) noexcept
         game_behavior_restore_errno(other_guard, entry_errno);
         return ;
     }
-    this->_profile_id = other._profile_id;
-    this->_aggression_weight = other._aggression_weight;
-    this->_caution_weight = other._caution_weight;
-    this->_error_code = other._error_code;
-    other._profile_id = 0;
-    other._aggression_weight = 0.0;
-    other._caution_weight = 0.0;
-    other._actions.clear();
-    other._error_code = ER_SUCCESS;
-    this->set_error(this->_actions.get_error());
-    other.set_error(ER_SUCCESS);
+    this->move_from_unlocked(other);
     game_behavior_restore_errno(other_guard, entry_errno);
     return ;
 }
@@ -203,18 +211,7 @@ ft_behavior_profile &ft_behavior_profile::operator=(ft_behavior_profile &&other)
         this->set_error(lock_error);
         return (*this);
     }
-    this->_profile_id = other._profile_id;
-    this->_aggression_weight = other._aggression_weight;
-    this->_caution_weight = other._caution_weight;
-    this->_actions = ft_move(other._actions);
-    this->_error_code = other._error_code;
-    other._profile_id = 0;
-    other._aggression_weight = 0.0;
-    other._caution_weight = 0.0;
-    other._actions.clear();
-    other._error_code = ER_SUCCESS;
-    this->set_error(this->_actions.get_error());
-    other.set_error(ER_SUCCESS);
+    this->move_from_unlocked(other);
     game_behavior_restore_errno(this_guard, entry_errno);
     game_behavior_restore_errno(other_guard, entry_errno);
     return (*this);
