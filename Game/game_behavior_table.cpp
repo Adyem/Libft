@@ -73,7 +73,7 @@ int ft_behavior_table::lock_pair(const ft_behavior_table &first, const ft_behavi
 }
 
 ft_behavior_table::ft_behavior_table() noexcept
-    : _profiles(), _error_code(ER_SUCCESS)
+    : _profiles(), _error_code(ER_SUCCESS), _mutex()
 {
     return ;
 }
@@ -84,7 +84,7 @@ ft_behavior_table::~ft_behavior_table() noexcept
 }
 
 ft_behavior_table::ft_behavior_table(const ft_behavior_table &other) noexcept
-    : _profiles(), _error_code(ER_SUCCESS)
+    : _profiles(), _error_code(ER_SUCCESS), _mutex()
 {
     int entry_errno;
 
@@ -128,7 +128,7 @@ ft_behavior_table &ft_behavior_table::operator=(const ft_behavior_table &other) 
 }
 
 ft_behavior_table::ft_behavior_table(ft_behavior_table &&other) noexcept
-    : _profiles(ft_move(other._profiles)), _error_code(ER_SUCCESS)
+    : _profiles(ft_move(other._profiles)), _error_code(ER_SUCCESS), _mutex()
 {
     int entry_errno;
 
