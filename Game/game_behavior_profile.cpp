@@ -90,28 +90,6 @@ int ft_behavior_profile::lock_pair(const ft_behavior_profile &first, const ft_be
     }
 }
 
-int ft_behavior_profile::copy_without_lock(ft_behavior_profile &destination, const ft_behavior_profile &source) noexcept
-{
-    int entry_errno;
-
-    entry_errno = ft_errno;
-    ft_unique_lock<pt_mutex> destination_guard(destination._mutex);
-    if (destination_guard.get_error() != ER_SUCCESS)
-    {
-        destination.set_error(destination_guard.get_error());
-        game_behavior_restore_errno(destination_guard, entry_errno);
-        return (destination_guard.get_error());
-    }
-    destination._profile_id = source._profile_id;
-    destination._aggression_weight = source._aggression_weight;
-    destination._caution_weight = source._caution_weight;
-    game_behavior_copy_action_vector(source._actions, destination._actions);
-    destination._error_code = source._error_code;
-    destination.set_error(destination._actions.get_error());
-    game_behavior_restore_errno(destination_guard, entry_errno);
-    return (destination._error_code);
-}
-
 ft_behavior_profile::ft_behavior_profile() noexcept
     : _profile_id(0), _aggression_weight(0.0), _caution_weight(0.0), _actions(), _error_code(ER_SUCCESS),
     _mutex()
