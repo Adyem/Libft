@@ -18,6 +18,8 @@ class ft_behavior_profile
         mutable pt_mutex                _mutex;
 
         void set_error(int error_code) const noexcept;
+        void clone_from_unlocked(const ft_behavior_profile &other) noexcept;
+        void move_from_unlocked(ft_behavior_profile &other) noexcept;
         static int lock_pair(const ft_behavior_profile &first, const ft_behavior_profile &second,
                 ft_unique_lock<pt_mutex> &first_guard,
                 ft_unique_lock<pt_mutex> &second_guard);
