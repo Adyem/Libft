@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <atomic>
 #include <time.h>
+#include <type_traits>
 
 class pt_mutex
 {
@@ -50,5 +51,8 @@ class pt_mutex
         int     get_error() const;
         const char *get_error_str() const;
 };
+
+static_assert(!std::is_copy_constructible<pt_mutex>::value, "pt_mutex cannot be copied");
+static_assert(!std::is_copy_assignable<pt_mutex>::value, "pt_mutex cannot be copy assigned");
 
 #endif
