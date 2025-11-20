@@ -260,8 +260,9 @@ int ft_behavior_table::fetch_profile(int profile_id, ft_behavior_profile &profil
         game_behavior_restore_errno(guard, entry_errno);
         return (FT_ERR_NOT_FOUND);
     }
-    ft_behavior_profile temporary(entry->value);
+    ft_behavior_profile temporary;
 
+    temporary.clone_from_unlocked(entry->value);
     const_cast<ft_behavior_table *>(self)->set_error(temporary.get_error());
     game_behavior_restore_errno(guard, entry_errno);
     if (temporary.get_error() != ER_SUCCESS)
@@ -276,12 +277,7 @@ int ft_behavior_table::fetch_profile(int profile_id, ft_behavior_profile &profil
         game_behavior_restore_errno(destination_guard, destination_errno);
         return (destination_guard.get_error());
     }
-    profile._profile_id = temporary._profile_id;
-    profile._aggression_weight = temporary._aggression_weight;
-    profile._caution_weight = temporary._caution_weight;
-    profile._actions = ft_move(temporary._actions);
-    profile._error_code = temporary._error_code;
-    profile.set_error(profile._actions.get_error());
+    profile.move_from_unlocked(temporary);
     game_behavior_restore_errno(destination_guard, destination_errno);
     return (profile._error_code);
 }
