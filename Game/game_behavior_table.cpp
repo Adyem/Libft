@@ -279,7 +279,7 @@ int ft_behavior_table::fetch_profile(int profile_id, ft_behavior_profile &profil
     profile._profile_id = temporary._profile_id;
     profile._aggression_weight = temporary._aggression_weight;
     profile._caution_weight = temporary._caution_weight;
-    profile._actions = temporary._actions;
+    profile._actions = ft_move(temporary._actions);
     profile._error_code = temporary._error_code;
     profile.set_error(profile._actions.get_error());
     game_behavior_restore_errno(destination_guard, destination_errno);
