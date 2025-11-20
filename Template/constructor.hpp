@@ -10,20 +10,14 @@ constexpr auto* placement_new_ref = static_cast<void* (*)(std::size_t, void*)>(&
 template <typename T, typename... Args>
 constexpr T* construct_at(T* destination, Args&&... args)
 {
-    if constexpr (std::is_trivially_constructible_v<T, Args...>)
-        *destination = T(std::forward<Args>(args)...);
-    else
-        ::new (static_cast<void*>(destination)) T(std::forward<Args>(args)...);
+    ::new (static_cast<void*>(destination)) T(std::forward<Args>(args)...);
     return (destination);
 }
 
 template <typename T>
 constexpr T* construct_default_at(T* destination)
 {
-    if constexpr (std::is_trivially_default_constructible_v<T>)
-        *destination = T();
-    else
-        ::new (static_cast<void*>(destination)) T();
+    ::new (static_cast<void*>(destination)) T();
     return (destination);
 }
 
