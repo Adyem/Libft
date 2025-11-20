@@ -640,7 +640,10 @@ Pair<Key, MappedType>* ft_map<Key, MappedType>::end()
         this->set_error(ft_errno);
         return (ft_nullptr);
     }
-    result = this->_data + this->_size;
+    if (this->_data == ft_nullptr || this->_size == 0)
+        result = ft_nullptr;
+    else
+        result = this->_data + this->_size;
     this->set_error(ER_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (result);
@@ -658,7 +661,10 @@ const Pair<Key, MappedType>* ft_map<Key, MappedType>::end() const
         const_cast<ft_map<Key, MappedType> *>(this)->set_error(ft_errno);
         return (ft_nullptr);
     }
-    result = this->_data + this->_size;
+    if (this->_data == ft_nullptr || this->_size == 0)
+        result = ft_nullptr;
+    else
+        result = this->_data + this->_size;
     const_cast<ft_map<Key, MappedType> *>(this)->set_error(ER_SUCCESS);
     const_cast<ft_map<Key, MappedType> *>(this)->unlock_internal(lock_acquired);
     return (result);
