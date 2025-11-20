@@ -128,7 +128,7 @@ ft_behavior_table &ft_behavior_table::operator=(const ft_behavior_table &other) 
 }
 
 ft_behavior_table::ft_behavior_table(ft_behavior_table &&other) noexcept
-    : _profiles(ft_move(other._profiles)), _error_code(ER_SUCCESS), _mutex()
+    : _profiles(), _error_code(ER_SUCCESS), _mutex()
 {
     int entry_errno;
 
@@ -140,6 +140,7 @@ ft_behavior_table::ft_behavior_table(ft_behavior_table &&other) noexcept
         game_behavior_restore_errno(other_guard, entry_errno);
         return ;
     }
+    this->_profiles = ft_move(other._profiles);
     this->_error_code = other._error_code;
     other._profiles.clear();
     other._error_code = ER_SUCCESS;
