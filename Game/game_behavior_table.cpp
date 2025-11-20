@@ -260,10 +260,16 @@ int ft_behavior_table::fetch_profile(int profile_id, ft_behavior_profile &profil
         game_behavior_restore_errno(guard, entry_errno);
         return (FT_ERR_NOT_FOUND);
     }
-    profile = entry->value;
-    const_cast<ft_behavior_table *>(self)->set_error(entry->value.get_error());
+    ft_behavior_profile temporary;
+    int copy_error;
+
+    copy_error = ft_behavior_profile::copy_without_lock(temporary, entry->value);
+    const_cast<ft_behavior_table *>(self)->set_error(temporary.get_error());
     game_behavior_restore_errno(guard, entry_errno);
-    return (entry->value.get_error());
+    if (copy_error != ER_SUCCESS)
+        return (copy_error);
+    profile = ft_move(temporary);
+    return (profile.get_error());
 }
 
 int ft_behavior_table::get_error() const noexcept
