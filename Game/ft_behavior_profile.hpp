@@ -21,6 +21,9 @@ class ft_behavior_profile
         static int lock_pair(const ft_behavior_profile &first, const ft_behavior_profile &second,
                 ft_unique_lock<pt_mutex> &first_guard,
                 ft_unique_lock<pt_mutex> &second_guard);
+        static int copy_without_lock(ft_behavior_profile &destination, const ft_behavior_profile &source) noexcept;
+
+        friend class ft_behavior_table;
 
     public:
         ft_behavior_profile() noexcept;
