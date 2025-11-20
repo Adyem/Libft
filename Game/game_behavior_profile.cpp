@@ -1,6 +1,7 @@
 #include "ft_behavior_profile.hpp"
 #include "game_behavior_helpers.hpp"
 #include "../Template/move.hpp"
+#include <new>
 
 static void game_behavior_copy_action_vector(const ft_vector<ft_behavior_action> &source,
         ft_vector<ft_behavior_action> &destination)
@@ -90,7 +91,8 @@ int ft_behavior_profile::lock_pair(const ft_behavior_profile &first, const ft_be
 }
 
 ft_behavior_profile::ft_behavior_profile() noexcept
-    : _profile_id(0), _aggression_weight(0.0), _caution_weight(0.0), _actions(), _error_code(ER_SUCCESS)
+    : _profile_id(0), _aggression_weight(0.0), _caution_weight(0.0), _actions(), _error_code(ER_SUCCESS),
+    _mutex()
 {
     return ;
 }
@@ -98,7 +100,7 @@ ft_behavior_profile::ft_behavior_profile() noexcept
 ft_behavior_profile::ft_behavior_profile(int profile_id, double aggression_weight, double caution_weight,
         const ft_vector<ft_behavior_action> &actions) noexcept
     : _profile_id(profile_id), _aggression_weight(aggression_weight), _caution_weight(caution_weight),
-    _actions(), _error_code(ER_SUCCESS)
+    _actions(), _error_code(ER_SUCCESS), _mutex()
 {
     game_behavior_copy_action_vector(actions, this->_actions);
     this->set_error(this->_actions.get_error());
@@ -106,7 +108,8 @@ ft_behavior_profile::ft_behavior_profile(int profile_id, double aggression_weigh
 }
 
 ft_behavior_profile::ft_behavior_profile(const ft_behavior_profile &other) noexcept
-    : _profile_id(0), _aggression_weight(0.0), _caution_weight(0.0), _actions(), _error_code(ER_SUCCESS)
+    : _profile_id(0), _aggression_weight(0.0), _caution_weight(0.0), _actions(), _error_code(ER_SUCCESS),
+    _mutex()
 {
     int entry_errno;
 
@@ -157,7 +160,7 @@ ft_behavior_profile &ft_behavior_profile::operator=(const ft_behavior_profile &o
 
 ft_behavior_profile::ft_behavior_profile(ft_behavior_profile &&other) noexcept
     : _profile_id(0), _aggression_weight(0.0), _caution_weight(0.0), _actions(ft_move(other._actions)),
-    _error_code(ER_SUCCESS)
+    _error_code(ER_SUCCESS), _mutex()
 {
     int entry_errno;
 
