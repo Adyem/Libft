@@ -30,6 +30,25 @@ SRCS := game_map3d.cpp \
         game_resistance.cpp \
         game_pathfinding.cpp \
         game_crafting.cpp \
+        game_data_catalog.cpp \
+        game_narrative_helpers.cpp \
+        game_dialogue_line.cpp \
+        game_dialogue_script.cpp \
+        game_dialogue_table.cpp \
+        game_behavior_helpers.cpp \
+        game_behavior_action.cpp \
+        game_behavior_profile.cpp \
+        game_behavior_table.cpp \
+        game_region_definition.cpp \
+        game_world_region.cpp \
+        game_world_registry.cpp \
+        game_economy_helpers.cpp \
+        game_price_definition.cpp \
+        game_rarity_band.cpp \
+        game_vendor_profile.cpp \
+        game_currency_rate.cpp \
+        game_economy_table.cpp \
+        game_progress_tracker.cpp \
         game_hooks.cpp \
         game_state.cpp \
         game_behavior_tree.cpp \
@@ -56,10 +75,29 @@ HEADERS := game_map3d.hpp \
 	game_item.hpp \
 	game_inventory.hpp \
 	game_equipment.hpp \
-	game_experience_table.hpp \
-	game_resistance.hpp \
-	game_pathfinding.hpp \
+        game_experience_table.hpp \
+        game_resistance.hpp \
+        game_pathfinding.hpp \
         game_crafting.hpp \
+        game_data_catalog.hpp \
+        game_narrative_helpers.hpp \
+        ft_dialogue_line.hpp \
+        ft_dialogue_script.hpp \
+        game_dialogue_table.hpp \
+        game_behavior_helpers.hpp \
+        ft_behavior_action.hpp \
+        ft_behavior_profile.hpp \
+        game_behavior_table.hpp \
+        ft_region_definition.hpp \
+        ft_world_region.hpp \
+        game_world_registry.hpp \
+        game_economy_helpers.hpp \
+        ft_price_definition.hpp \
+        ft_rarity_band.hpp \
+        ft_vendor_profile.hpp \
+        ft_currency_rate.hpp \
+        game_economy_table.hpp \
+        game_progress_tracker.hpp \
         game_hooks.hpp \
         game_state.hpp \
         game_behavior_tree.hpp \
