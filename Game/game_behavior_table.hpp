@@ -15,6 +15,7 @@ class ft_behavior_table
         mutable pt_mutex                 _mutex;
 
         void set_error(int error_code) const noexcept;
+        int clone_profiles_from(const ft_behavior_table &other) noexcept;
         static int lock_pair(const ft_behavior_table &first, const ft_behavior_table &second,
                 ft_unique_lock<pt_mutex> &first_guard,
                 ft_unique_lock<pt_mutex> &second_guard);
