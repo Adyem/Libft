@@ -224,7 +224,7 @@ void ft_economy_table::set_rarity_bands(const ft_map<int, ft_rarity_band> &rarit
     return ;
 }
 
-void ft_economy_table::set_vendor_profiles(const ft_map<int, ft_vendor_profile> &vendor_profiles) noexcept
+void ft_economy_table::set_vendor_profiles(ft_map<int, ft_vendor_profile> &&vendor_profiles) noexcept
 {
     int entry_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
@@ -236,7 +236,7 @@ void ft_economy_table::set_vendor_profiles(const ft_map<int, ft_vendor_profile> 
         game_economy_restore_errno(guard, entry_errno);
         return ;
     }
-    this->_vendor_profiles = vendor_profiles;
+    this->_vendor_profiles = ft_move(vendor_profiles);
     this->set_error(this->_vendor_profiles.get_error());
     game_economy_restore_errno(guard, entry_errno);
     return ;
@@ -328,6 +328,7 @@ int ft_economy_table::register_vendor_profile(const ft_vendor_profile &profile) 
 {
     int entry_errno;
     int identifier;
+    ft_vendor_profile stored_profile;
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
@@ -344,7 +345,11 @@ int ft_economy_table::register_vendor_profile(const ft_vendor_profile &profile) 
         return (profile.get_error());
     }
     identifier = profile.get_vendor_id();
-    this->_vendor_profiles.insert(identifier, profile);
+    stored_profile.set_vendor_id(identifier);
+    stored_profile.set_buy_markup(profile.get_buy_markup());
+    stored_profile.set_sell_multiplier(profile.get_sell_multiplier());
+    stored_profile.set_tax_rate(profile.get_tax_rate());
+    this->_vendor_profiles.insert(identifier, ft_move(stored_profile));
     if (this->_vendor_profiles.get_error() != ER_SUCCESS)
     {
         this->set_error(this->_vendor_profiles.get_error());
@@ -466,7 +471,10 @@ int ft_economy_table::fetch_vendor_profile(int vendor_id, ft_vendor_profile &pro
         game_economy_restore_errno(guard, entry_errno);
         return (FT_ERR_NOT_FOUND);
     }
-    profile = entry->value;
+    profile.set_vendor_id(entry->value.get_vendor_id());
+    profile.set_buy_markup(entry->value.get_buy_markup());
+    profile.set_sell_multiplier(entry->value.get_sell_multiplier());
+    profile.set_tax_rate(entry->value.get_tax_rate());
     const_cast<ft_economy_table *>(self)->set_error(entry->value.get_error());
     game_economy_restore_errno(guard, entry_errno);
     return (entry->value.get_error());

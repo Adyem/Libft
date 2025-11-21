@@ -45,7 +45,7 @@ class ft_economy_table
 
         void set_price_definitions(const ft_map<int, ft_price_definition> &price_definitions) noexcept;
         void set_rarity_bands(const ft_map<int, ft_rarity_band> &rarity_bands) noexcept;
-        void set_vendor_profiles(const ft_map<int, ft_vendor_profile> &vendor_profiles) noexcept;
+        void set_vendor_profiles(ft_map<int, ft_vendor_profile> &&vendor_profiles) noexcept;
         void set_currency_rates(const ft_map<int, ft_currency_rate> &currency_rates) noexcept;
 
         int register_price_definition(const ft_price_definition &definition) noexcept;
