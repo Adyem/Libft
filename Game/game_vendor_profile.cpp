@@ -118,20 +118,19 @@ ft_vendor_profile::ft_vendor_profile(ft_vendor_profile &&other) noexcept
 ft_vendor_profile &ft_vendor_profile::operator=(ft_vendor_profile &&other) noexcept
 {
     int entry_errno;
+    ft_unique_lock<pt_mutex> self_guard;
     ft_unique_lock<pt_mutex> other_guard;
 
     if (this == &other)
         return (*this);
     entry_errno = ft_errno;
-    other_guard = ft_unique_lock<pt_mutex>(other._mutex);
-    if (other_guard.get_error() != ER_SUCCESS)
+    if (ft_vendor_profile::lock_pair(*this, other, self_guard, other_guard) != ER_SUCCESS)
     {
-        this->set_error(other_guard.get_error());
+        this->set_error(self_guard.get_error());
+        game_economy_restore_errno(self_guard, entry_errno);
         game_economy_restore_errno(other_guard, entry_errno);
         return (*this);
     }
-    this->_mutex.~pt_mutex();
-    new (&this->_mutex) pt_mutex();
     this->_vendor_id = other._vendor_id;
     this->_buy_markup = other._buy_markup;
     this->_sell_multiplier = other._sell_multiplier;
@@ -144,6 +143,7 @@ ft_vendor_profile &ft_vendor_profile::operator=(ft_vendor_profile &&other) noexc
     other._error_code = ER_SUCCESS;
     this->set_error(this->_error_code);
     other.set_error(ER_SUCCESS);
+    game_economy_restore_errno(self_guard, entry_errno);
     game_economy_restore_errno(other_guard, entry_errno);
     return (*this);
 }
