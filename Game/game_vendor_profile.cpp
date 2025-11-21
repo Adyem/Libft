@@ -89,10 +89,9 @@ ft_vendor_profile::ft_vendor_profile(ft_vendor_profile &&other) noexcept
     : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(ER_SUCCESS)
 {
     int entry_errno;
-    ft_unique_lock<pt_mutex> other_guard;
+    ft_unique_lock<pt_mutex> other_guard(other._mutex);
 
     entry_errno = ft_errno;
-    other_guard = ft_unique_lock<pt_mutex>(other._mutex);
     if (other_guard.get_error() != ER_SUCCESS)
     {
         this->set_error(other_guard.get_error());
