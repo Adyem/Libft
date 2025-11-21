@@ -1,5 +1,6 @@
 #include "../../Game/game_economy_table.hpp"
 #include "../../System_utils/test_runner.hpp"
+#include "../../Template/move.hpp"
 
 static int assert_price_definition_values(const ft_price_definition &definition, int item_id,
         int rarity, int base_value, int minimum_value, int maximum_value)
@@ -44,7 +45,7 @@ FT_TEST(test_economy_table_setters_copy_maps, "setters copy maps without aliasin
     currency_map.insert(8, currency_entry);
     table.set_price_definitions(price_map);
     table.set_rarity_bands(rarity_map);
-    table.set_vendor_profiles(vendor_map);
+    table.set_vendor_profiles(ft_move(vendor_map));
     table.set_currency_rates(currency_map);
     price_map.clear();
     rarity_map.clear();
@@ -88,11 +89,11 @@ FT_TEST(test_economy_table_setters_replace_records, "setters replace previous en
     assert_price_definition_values(fetched_price, 2, 3, 800, 500, 1200);
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.fetch_price_definition(1, fetched_price));
     initial_vendors.insert(4, original_vendor);
-    table.set_vendor_profiles(initial_vendors);
+    table.set_vendor_profiles(ft_move(initial_vendors));
     FT_ASSERT_EQ(ER_SUCCESS, table.fetch_vendor_profile(4, fetched_vendor));
     assert_vendor_profile_values(fetched_vendor, 4, 1.20, 0.55, 0.07);
     replacement_vendors.insert(9, new_vendor);
-    table.set_vendor_profiles(replacement_vendors);
+    table.set_vendor_profiles(ft_move(replacement_vendors));
     FT_ASSERT_EQ(ER_SUCCESS, table.fetch_vendor_profile(9, fetched_vendor));
     assert_vendor_profile_values(fetched_vendor, 9, 1.35, 0.60, 0.06);
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.fetch_vendor_profile(4, fetched_vendor));
