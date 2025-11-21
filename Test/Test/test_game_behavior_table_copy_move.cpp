@@ -34,3 +34,38 @@ FT_TEST(test_behavior_table_move_semantics, "move constructor and assignment tra
     FT_ASSERT_EQ(ER_SUCCESS, moved.get_error());
     return (1);
 }
+
+FT_TEST(test_behavior_table_copy_constructor, "copy constructor clones profiles and preserves error code")
+{
+    ft_behavior_table source;
+    ft_behavior_profile fetched;
+
+    FT_ASSERT_EQ(ER_SUCCESS, register_profile(source, 30, 0.8, 0.2));
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, source.fetch_profile(99, fetched));
+
+    ft_behavior_table copy(source);
+    FT_ASSERT_EQ(ER_SUCCESS, copy.fetch_profile(30, fetched));
+    FT_ASSERT_EQ(30, fetched.get_profile_id());
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, copy.get_error());
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, source.get_error());
+    return (1);
+}
+
+FT_TEST(test_behavior_table_copy_assignment, "copy assignment replaces profiles and error state")
+{
+    ft_behavior_table source;
+    ft_behavior_table destination;
+    ft_behavior_profile fetched;
+
+    FT_ASSERT_EQ(ER_SUCCESS, register_profile(source, 44, 0.25, 0.75));
+    FT_ASSERT_EQ(ER_SUCCESS, register_profile(destination, 50, 0.6, 0.4));
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, source.fetch_profile(77, fetched));
+
+    destination = source;
+    FT_ASSERT_EQ(ER_SUCCESS, destination.fetch_profile(44, fetched));
+    FT_ASSERT_EQ(44, fetched.get_profile_id());
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, destination.fetch_profile(50, fetched));
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, destination.get_error());
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, source.get_error());
+    return (1);
+}

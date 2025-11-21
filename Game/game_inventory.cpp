@@ -647,7 +647,7 @@ void ft_inventory::remove_item(int slot) noexcept
         return ;
     }
     entry = this->_items.find(slot);
-    if (entry && entry->value)
+    if (entry != this->_items.end() && entry->value)
     {
         this->_current_weight -= entry->value->get_stack_size();
 #if USE_INVENTORY_SLOTS

@@ -29,8 +29,8 @@ class ft_economy_table
     public:
         ft_economy_table() noexcept;
         ~ft_economy_table() noexcept;
-        ft_economy_table(const ft_economy_table &other) = delete;
-        ft_economy_table &operator=(const ft_economy_table &other) = delete;
+        ft_economy_table(const ft_economy_table &other) noexcept;
+        ft_economy_table &operator=(const ft_economy_table &other) noexcept;
         ft_economy_table(ft_economy_table &&other) noexcept;
         ft_economy_table &operator=(ft_economy_table &&other) noexcept;
 

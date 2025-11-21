@@ -1095,7 +1095,7 @@ ft_skill *ft_character::get_skill(int id) noexcept
         game_character_restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
-    if (found == ft_nullptr)
+    if (found == this->_skills.end())
     {
         this->set_error(FT_ERR_NOT_FOUND);
         game_character_restore_errno(guard, entry_errno);
@@ -1128,7 +1128,7 @@ const ft_skill *ft_character::get_skill(int id) const noexcept
         game_character_restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
-    if (found == ft_nullptr)
+    if (found == this->_skills.end())
     {
         const_cast<ft_character *>(this)->set_error(FT_ERR_NOT_FOUND);
         game_character_restore_errno(guard, entry_errno);

@@ -113,7 +113,7 @@ void ft_game_script_context::set_variable(const ft_string &key, const ft_string 
         this->set_error(this->_variables.get_error());
         return ;
     }
-    if (entry != ft_nullptr)
+    if (entry != this->_variables.end())
     {
         entry->value = value;
         this->set_error(ER_SUCCESS);
@@ -139,7 +139,7 @@ const ft_string *ft_game_script_context::get_variable(const ft_string &key) cons
         this->set_error(this->_variables.get_error());
         return (ft_nullptr);
     }
-    if (entry == ft_nullptr)
+    if (entry == this->_variables.end())
     {
         this->set_error(FT_ERR_NOT_FOUND);
         return (ft_nullptr);
@@ -497,7 +497,7 @@ int ft_game_script_bridge::handle_call(ft_game_script_context &context, const ft
         this->set_error(this->_callbacks.get_error());
         return (this->_callbacks.get_error());
     }
-    if (entry == ft_nullptr)
+    if (entry == this->_callbacks.end())
     {
         this->set_error(FT_ERR_NOT_FOUND);
         return (FT_ERR_NOT_FOUND);
@@ -940,7 +940,7 @@ int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<f
                                 this->set_error(this->_callbacks.get_error());
                                 return (this->_callbacks.get_error());
                             }
-                            if (entry == ft_nullptr)
+                            if (entry == this->_callbacks.end())
                             {
                                 ft_string warning("unregistered callback: ");
 
