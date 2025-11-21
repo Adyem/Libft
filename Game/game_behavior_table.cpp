@@ -86,12 +86,20 @@ ft_behavior_table::~ft_behavior_table() noexcept
 int ft_behavior_table::clone_profiles_from(const ft_behavior_table &other) noexcept
 {
     ft_map<int, ft_behavior_profile> copied;
+    ft_map<int, ft_behavior_profile>::const_iterator entry;
+    ft_map<int, ft_behavior_profile>::const_iterator end;
 
-    copied = other._profiles;
-    if (copied.get_error() != ER_SUCCESS)
+    entry = other._profiles.begin();
+    end = other._profiles.end();
+    while (entry != end)
     {
-        this->set_error(copied.get_error());
-        return (copied.get_error());
+        copied.insert(entry->key, entry->value);
+        if (copied.get_error() != ER_SUCCESS)
+        {
+            this->set_error(copied.get_error());
+            return (copied.get_error());
+        }
+        ++entry;
     }
     this->_profiles = ft_move(copied);
     this->set_error(this->_profiles.get_error());
