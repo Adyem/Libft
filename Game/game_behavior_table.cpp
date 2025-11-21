@@ -114,22 +114,11 @@ int ft_behavior_table::clone_profiles_from(const ft_behavior_table &other) noexc
     while (entry != other_end)
     {
         ft_behavior_profile profile_copy;
-        const ft_vector<ft_behavior_action> *source_actions;
-        ft_vector<ft_behavior_action>::const_iterator action_entry;
-        ft_vector<ft_behavior_action>::const_iterator action_end;
 
         profile_copy._profile_id = entry->value._profile_id;
         profile_copy._aggression_weight = entry->value._aggression_weight;
         profile_copy._caution_weight = entry->value._caution_weight;
-        source_actions = &entry->value._actions;
-        action_entry = source_actions->begin();
-        action_end = source_actions->end();
-        profile_copy._actions.clear();
-        while (action_entry != action_end)
-        {
-            profile_copy._actions.push_back(*action_entry);
-            ++action_entry;
-        }
+        profile_copy._actions = entry->value._actions;
         profile_copy._error_code = entry->value._error_code;
         profile_copy.set_error(profile_copy._actions.get_error());
         profiles_copy.insert(entry->key, ft_move(profile_copy));
