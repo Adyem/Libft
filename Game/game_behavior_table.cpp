@@ -258,7 +258,7 @@ int ft_behavior_table::fetch_profile(int profile_id, ft_behavior_profile &profil
     int entry_errno;
     const ft_behavior_table *self;
     const Pair<int, ft_behavior_profile> *entry;
-    ft_behavior_profile entry_profile;
+    ft_behavior_profile entry_profile(entry->value);
 
     self = this;
     entry_errno = ft_errno;
@@ -276,7 +276,6 @@ int ft_behavior_table::fetch_profile(int profile_id, ft_behavior_profile &profil
         game_behavior_restore_errno(guard, entry_errno);
         return (FT_ERR_NOT_FOUND);
     }
-    entry_profile = entry->value;
     const_cast<ft_behavior_table *>(self)->set_error(entry_profile.get_error());
     game_behavior_restore_errno(guard, entry_errno);
     if (entry_profile.get_error() != ER_SUCCESS)
