@@ -405,7 +405,7 @@ void ft_map<Key, MappedType>::insert(const Key& key, const MappedType& value)
             return ;
         }
     }
-    construct_at(&this->_data[this->_size], Pair<Key, MappedType>(key, value));
+    construct_at(&this->_data[this->_size], Pair<Key, MappedType>(key, ft_move(value)));
     this->_size++;
     this->set_error(ER_SUCCESS);
     this->unlock_internal(lock_acquired);
