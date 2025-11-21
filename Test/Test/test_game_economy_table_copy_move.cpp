@@ -15,7 +15,51 @@ static int register_all_records(ft_economy_table &table)
     return (1);
 }
 
-// DELETED: copy semantics are no longer supported for ft_economy_table.
+FT_TEST(test_economy_table_copy_constructor, "copy constructor duplicates records and error state")
+{
+    ft_economy_table source;
+    ft_price_definition price;
+    ft_rarity_band rarity;
+    ft_vendor_profile vendor;
+    ft_currency_rate currency;
+
+    register_all_records(source);
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, source.fetch_vendor_profile(77, vendor));
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, source.get_error());
+
+    ft_economy_table copy(source);
+    FT_ASSERT_EQ(ER_SUCCESS, copy.fetch_price_definition(4, price));
+    FT_ASSERT_EQ(ER_SUCCESS, copy.fetch_rarity_band(7, rarity));
+    FT_ASSERT_EQ(ER_SUCCESS, copy.fetch_vendor_profile(11, vendor));
+    FT_ASSERT_EQ(ER_SUCCESS, copy.fetch_currency_rate(5, currency));
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, copy.get_error());
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, source.get_error());
+    return (1);
+}
+
+FT_TEST(test_economy_table_copy_assignment, "copy assignment replaces state and error code")
+{
+    ft_economy_table source;
+    ft_economy_table destination;
+    ft_price_definition price;
+    ft_rarity_band rarity;
+    ft_vendor_profile vendor;
+    ft_currency_rate currency;
+
+    register_all_records(source);
+    register_all_records(destination);
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, source.fetch_price_definition(999, price));
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, source.get_error());
+    destination = source;
+
+    FT_ASSERT_EQ(ER_SUCCESS, destination.fetch_price_definition(4, price));
+    FT_ASSERT_EQ(ER_SUCCESS, destination.fetch_rarity_band(7, rarity));
+    FT_ASSERT_EQ(ER_SUCCESS, destination.fetch_vendor_profile(11, vendor));
+    FT_ASSERT_EQ(ER_SUCCESS, destination.fetch_currency_rate(5, currency));
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, destination.get_error());
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, source.get_error());
+    return (1);
+}
 
 FT_TEST(test_economy_table_move_semantics, "move constructor and assignment transfer state")
 {

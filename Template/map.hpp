@@ -30,6 +30,8 @@ class ft_map
         int     lock_internal(bool *lock_acquired) const;
         void    unlock_internal(bool lock_acquired) const;
         void    teardown_thread_safety();
+        Pair<Key, MappedType>*  get_end_pointer_unlocked();
+        const Pair<Key, MappedType>* get_end_pointer_unlocked() const;
 
     public:
         ft_map(size_t initial_capacity = 10);
@@ -476,14 +478,16 @@ Pair<Key, MappedType>* ft_map<Key, MappedType>::find(const Key& key)
     if (this->lock_internal(&lock_acquired) != 0)
     {
         this->set_error(ft_errno);
-        return (ft_nullptr);
+        result = this->get_end_pointer_unlocked();
+        return (result);
     }
     index = this->find_index_unlocked(key);
     if (index == this->_size)
     {
+        result = this->get_end_pointer_unlocked();
         this->set_error(ER_SUCCESS);
         this->unlock_internal(lock_acquired);
-        return (ft_nullptr);
+        return (result);
     }
     result = &this->_data[index];
     this->set_error(ER_SUCCESS);
@@ -502,14 +506,16 @@ const Pair<Key, MappedType>* ft_map<Key, MappedType>::find(const Key& key) const
     if (const_cast<ft_map<Key, MappedType> *>(this)->lock_internal(&lock_acquired) != 0)
     {
         const_cast<ft_map<Key, MappedType> *>(this)->set_error(ft_errno);
-        return (ft_nullptr);
+        result = this->get_end_pointer_unlocked();
+        return (result);
     }
     index = this->find_index_unlocked(key);
     if (index == this->_size)
     {
+        result = this->get_end_pointer_unlocked();
         const_cast<ft_map<Key, MappedType> *>(this)->set_error(ER_SUCCESS);
         const_cast<ft_map<Key, MappedType> *>(this)->unlock_internal(lock_acquired);
-        return (ft_nullptr);
+        return (result);
     }
     result = &this->_data[index];
     const_cast<ft_map<Key, MappedType> *>(this)->set_error(ER_SUCCESS);
@@ -656,12 +662,10 @@ Pair<Key, MappedType>* ft_map<Key, MappedType>::end()
     if (this->lock_internal(&lock_acquired) != 0)
     {
         this->set_error(ft_errno);
-        return (ft_nullptr);
+        result = this->get_end_pointer_unlocked();
+        return (result);
     }
-    if (this->_data == ft_nullptr || this->_size == 0)
-        result = ft_nullptr;
-    else
-        result = this->_data + this->_size;
+    result = this->get_end_pointer_unlocked();
     this->set_error(ER_SUCCESS);
     this->unlock_internal(lock_acquired);
     return (result);
@@ -677,14 +681,36 @@ const Pair<Key, MappedType>* ft_map<Key, MappedType>::end() const
     if (const_cast<ft_map<Key, MappedType> *>(this)->lock_internal(&lock_acquired) != 0)
     {
         const_cast<ft_map<Key, MappedType> *>(this)->set_error(ft_errno);
-        return (ft_nullptr);
+        result = this->get_end_pointer_unlocked();
+        return (result);
     }
-    if (this->_data == ft_nullptr || this->_size == 0)
-        result = ft_nullptr;
-    else
-        result = this->_data + this->_size;
+    result = this->get_end_pointer_unlocked();
     const_cast<ft_map<Key, MappedType> *>(this)->set_error(ER_SUCCESS);
     const_cast<ft_map<Key, MappedType> *>(this)->unlock_internal(lock_acquired);
+    return (result);
+}
+
+template <typename Key, typename MappedType>
+Pair<Key, MappedType>* ft_map<Key, MappedType>::get_end_pointer_unlocked()
+{
+    Pair<Key, MappedType> *result;
+
+    if (this->_data == ft_nullptr)
+        result = reinterpret_cast<Pair<Key, MappedType> *>(this);
+    else
+        result = this->_data + this->_size;
+    return (result);
+}
+
+template <typename Key, typename MappedType>
+const Pair<Key, MappedType>* ft_map<Key, MappedType>::get_end_pointer_unlocked() const
+{
+    const Pair<Key, MappedType> *result;
+
+    if (this->_data == ft_nullptr)
+        result = reinterpret_cast<const Pair<Key, MappedType> *>(this);
+    else
+        result = this->_data + this->_size;
     return (result);
 }
 

@@ -699,7 +699,7 @@ int ft_achievement::get_goal(int id) const noexcept
         return (0);
     }
     entry = this->_goals.find(id);
-    if (!entry)
+    if (entry == this->_goals.end())
     {
         const_cast<ft_achievement *>(this)->set_error(FT_ERR_NOT_FOUND);
         game_achievement_restore_errno(guard, entry_errno);
@@ -736,7 +736,7 @@ void ft_achievement::set_goal(int id, int goal) noexcept
         return ;
     }
     entry = this->_goals.find(id);
-    if (!entry)
+    if (entry == this->_goals.end())
     {
         ft_goal new_goal;
 
@@ -797,7 +797,7 @@ int ft_achievement::get_progress(int id) const noexcept
         return (0);
     }
     entry = this->_goals.find(id);
-    if (!entry)
+    if (entry == this->_goals.end())
     {
         const_cast<ft_achievement *>(this)->set_error(FT_ERR_NOT_FOUND);
         game_achievement_restore_errno(guard, entry_errno);
@@ -834,7 +834,7 @@ void ft_achievement::set_progress(int id, int progress) noexcept
         return ;
     }
     entry = this->_goals.find(id);
-    if (!entry)
+    if (entry == this->_goals.end())
     {
         ft_goal new_goal;
 
@@ -894,7 +894,7 @@ void ft_achievement::add_progress(int id, int value) noexcept
         return ;
     }
     entry = this->_goals.find(id);
-    if (!entry)
+    if (entry == this->_goals.end())
     {
         ft_goal new_goal;
 
@@ -954,7 +954,7 @@ bool ft_achievement::is_goal_complete(int id) const noexcept
         return (false);
     }
     entry = this->_goals.find(id);
-    if (!entry)
+    if (entry == this->_goals.end())
     {
         const_cast<ft_achievement *>(this)->set_error(FT_ERR_NOT_FOUND);
         game_achievement_restore_errno(guard, entry_errno);
