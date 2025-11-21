@@ -2,6 +2,8 @@
 #include "game_economy_helpers.hpp"
 #include "../Template/move.hpp"
 
+#include <new>
+
 int ft_economy_table::lock_pair(const ft_economy_table &first, const ft_economy_table &second,
         ft_unique_lock<pt_mutex> &first_guard,
         ft_unique_lock<pt_mutex> &second_guard)
@@ -85,6 +87,7 @@ ft_economy_table::~ft_economy_table() noexcept
 
 ft_economy_table::ft_economy_table(ft_economy_table &&other) noexcept
     : _error_code(ER_SUCCESS)
+    , _mutex()
 {
     int entry_errno;
 
@@ -107,11 +110,20 @@ ft_economy_table::ft_economy_table(ft_economy_table &&other) noexcept
 
 ft_economy_table &ft_economy_table::operator=(ft_economy_table &&other) noexcept
 {
+    ft_unique_lock<pt_mutex> this_guard;
+    ft_unique_lock<pt_mutex> other_guard;
     int entry_errno;
+    int lock_error;
 
     if (this == &other)
         return (*this);
     entry_errno = ft_errno;
+    lock_error = ft_economy_table::lock_pair(*this, other, this_guard, other_guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        this->set_error(lock_error);
+        return (*this);
+    }
     this->_price_definitions = ft_move(other._price_definitions);
     this->_rarity_bands = ft_move(other._rarity_bands);
     this->_vendor_profiles = ft_move(other._vendor_profiles);
@@ -124,7 +136,8 @@ ft_economy_table &ft_economy_table::operator=(ft_economy_table &&other) noexcept
     other._error_code = ER_SUCCESS;
     this->set_error(this->_error_code);
     other.set_error(ER_SUCCESS);
-    ft_errno = entry_errno;
+    game_economy_restore_errno(this_guard, entry_errno);
+    game_economy_restore_errno(other_guard, entry_errno);
     return (*this);
 }
 
