@@ -7,5 +7,6 @@
 
 void game_economy_sleep_backoff() noexcept;
 void game_economy_restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept;
+int game_economy_restore_errno(pt_mutex &mutex, int entry_errno, bool lock_acquired) noexcept;
 
 #endif

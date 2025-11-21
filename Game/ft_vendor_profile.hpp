@@ -3,7 +3,6 @@
 
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
-#include "../PThread/unique_lock.hpp"
 
 class ft_vendor_profile
 {
@@ -16,9 +15,6 @@ class ft_vendor_profile
         mutable pt_mutex _mutex;
 
         void set_error(int error_code) const noexcept;
-        static int lock_pair(const ft_vendor_profile &first, const ft_vendor_profile &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard);
 
     public:
         ft_vendor_profile() noexcept;
