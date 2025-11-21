@@ -219,26 +219,30 @@ ft_map<Key, MappedType>::ft_map(ft_map<Key, MappedType>&& other) noexcept
       _state_mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     bool other_lock_acquired;
+    bool other_thread_safe;
 
     other_lock_acquired = false;
+    other_thread_safe = false;
     if (other.lock_internal(&other_lock_acquired) != 0)
     {
         this->set_error(ft_errno);
         return ;
     }
+    other_thread_safe = (other._thread_safe_enabled && other._state_mutex != ft_nullptr);
     this->_data = other._data;
     this->_capacity = other._capacity;
     this->_size = other._size;
     this->_error_code = other._error_code;
-    this->_state_mutex = other._state_mutex;
-    this->_thread_safe_enabled = other._thread_safe_enabled;
     other._data = ft_nullptr;
     other._capacity = 0;
     other._size = 0;
     other._error_code = ER_SUCCESS;
     other.unlock_internal(other_lock_acquired);
-    other._state_mutex = ft_nullptr;
-    other._thread_safe_enabled = false;
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+            return ;
+    }
     this->set_error(ER_SUCCESS);
     return ;
 }
@@ -252,6 +256,7 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(ft_map<Key, MappedTy
     size_t previous_size;
     pt_mutex *previous_mutex;
     bool previous_thread_safe;
+    bool other_thread_safe;
 
     if (this == &other)
         return (*this);
@@ -272,19 +277,32 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(ft_map<Key, MappedTy
     previous_size = this->_size;
     previous_mutex = this->_state_mutex;
     previous_thread_safe = this->_thread_safe_enabled;
+    other_thread_safe = (other._thread_safe_enabled && other._state_mutex != ft_nullptr);
     this->_data = other._data;
     this->_capacity = other._capacity;
     this->_size = other._size;
     this->_error_code = other._error_code;
-    this->_state_mutex = other._state_mutex;
-    this->_thread_safe_enabled = other._thread_safe_enabled;
+    this->_state_mutex = ft_nullptr;
+    this->_thread_safe_enabled = false;
     other._data = ft_nullptr;
     other._capacity = 0;
     other._size = 0;
     other._error_code = ER_SUCCESS;
     other.unlock_internal(other_lock_acquired);
-    other._state_mutex = ft_nullptr;
-    other._thread_safe_enabled = false;
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+        {
+            if (previous_thread_safe && previous_mutex != ft_nullptr)
+            {
+                previous_mutex->~pt_mutex();
+                cma_free(previous_mutex);
+            }
+            this->set_error(ft_errno);
+            this->unlock_internal(this_lock_acquired);
+            return (*this);
+        }
+    }
     this->unlock_internal(this_lock_acquired);
     if (previous_data != ft_nullptr && previous_data != this->_data)
     {
