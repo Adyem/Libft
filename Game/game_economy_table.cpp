@@ -87,17 +87,8 @@ ft_economy_table::ft_economy_table(ft_economy_table &&other) noexcept
     : _error_code(ER_SUCCESS)
 {
     int entry_errno;
-    ft_unique_lock<pt_mutex> self_guard;
-    ft_unique_lock<pt_mutex> other_guard;
 
     entry_errno = ft_errno;
-    if (ft_economy_table::lock_pair(*this, other, self_guard, other_guard) != ER_SUCCESS)
-    {
-        this->set_error(self_guard.get_error());
-        game_economy_restore_errno(self_guard, entry_errno);
-        game_economy_restore_errno(other_guard, entry_errno);
-        return ;
-    }
     this->_price_definitions = ft_move(other._price_definitions);
     this->_rarity_bands = ft_move(other._rarity_bands);
     this->_vendor_profiles = ft_move(other._vendor_profiles);
@@ -110,27 +101,17 @@ ft_economy_table::ft_economy_table(ft_economy_table &&other) noexcept
     other._error_code = ER_SUCCESS;
     this->set_error(this->_error_code);
     other.set_error(ER_SUCCESS);
-    game_economy_restore_errno(self_guard, entry_errno);
-    game_economy_restore_errno(other_guard, entry_errno);
+    ft_errno = entry_errno;
     return ;
 }
 
 ft_economy_table &ft_economy_table::operator=(ft_economy_table &&other) noexcept
 {
     int entry_errno;
-    ft_unique_lock<pt_mutex> self_guard;
-    ft_unique_lock<pt_mutex> other_guard;
 
     if (this == &other)
         return (*this);
     entry_errno = ft_errno;
-    if (ft_economy_table::lock_pair(*this, other, self_guard, other_guard) != ER_SUCCESS)
-    {
-        this->set_error(self_guard.get_error());
-        game_economy_restore_errno(self_guard, entry_errno);
-        game_economy_restore_errno(other_guard, entry_errno);
-        return (*this);
-    }
     this->_price_definitions = ft_move(other._price_definitions);
     this->_rarity_bands = ft_move(other._rarity_bands);
     this->_vendor_profiles = ft_move(other._vendor_profiles);
@@ -143,8 +124,7 @@ ft_economy_table &ft_economy_table::operator=(ft_economy_table &&other) noexcept
     other._error_code = ER_SUCCESS;
     this->set_error(this->_error_code);
     other.set_error(ER_SUCCESS);
-    game_economy_restore_errno(self_guard, entry_errno);
-    game_economy_restore_errno(other_guard, entry_errno);
+    ft_errno = entry_errno;
     return (*this);
 }
 
