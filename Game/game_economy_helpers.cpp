@@ -14,3 +14,15 @@ void game_economy_restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno
     ft_errno = entry_errno;
     return ;
 }
+
+int game_economy_restore_errno(pt_mutex &mutex, int entry_errno, bool lock_acquired) noexcept
+{
+    if (lock_acquired)
+    {
+        mutex.unlock(THREAD_ID);
+        if (mutex.get_error() != ER_SUCCESS)
+            return (mutex.get_error());
+    }
+    ft_errno = entry_errno;
+    return (ER_SUCCESS);
+}
