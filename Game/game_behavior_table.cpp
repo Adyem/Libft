@@ -207,8 +207,12 @@ ft_behavior_table::ft_behavior_table(ft_behavior_table &&other) noexcept
         game_behavior_restore_errno(other_guard, entry_errno);
         return ;
     }
-    this->_profiles = ft_move(other._profiles);
     this->_error_code = other._error_code;
+    if (this->clone_profiles_from(other) != ER_SUCCESS)
+    {
+        game_behavior_restore_errno(other_guard, entry_errno);
+        return ;
+    }
     other._profiles.clear();
     other._error_code = ER_SUCCESS;
     this->set_error(this->_profiles.get_error());
@@ -233,8 +237,13 @@ ft_behavior_table &ft_behavior_table::operator=(ft_behavior_table &&other) noexc
         this->set_error(lock_error);
         return (*this);
     }
-    this->_profiles = ft_move(other._profiles);
     this->_error_code = other._error_code;
+    if (this->clone_profiles_from(other) != ER_SUCCESS)
+    {
+        game_behavior_restore_errno(this_guard, entry_errno);
+        game_behavior_restore_errno(other_guard, entry_errno);
+        return (*this);
+    }
     other._profiles.clear();
     other._error_code = ER_SUCCESS;
     this->set_error(this->_profiles.get_error());
@@ -328,8 +337,18 @@ int ft_behavior_table::fetch_profile(int profile_id, ft_behavior_profile &profil
         game_behavior_restore_errno(guard, entry_errno);
         return (FT_ERR_NOT_FOUND);
     }
-    ft_behavior_profile entry_profile(entry->value);
+    ft_unique_lock<pt_mutex> entry_guard(entry->value._mutex);
+    if (entry_guard.get_error() != ER_SUCCESS)
+    {
+        const_cast<ft_behavior_table *>(self)->set_error(entry_guard.get_error());
+        game_behavior_restore_errno(entry_guard, entry_errno);
+        game_behavior_restore_errno(guard, entry_errno);
+        return (entry_guard.get_error());
+    }
+    ft_behavior_profile entry_profile;
+    entry_profile.clone_from_unlocked(entry->value);
     const_cast<ft_behavior_table *>(self)->set_error(entry_profile.get_error());
+    game_behavior_restore_errno(entry_guard, entry_errno);
     game_behavior_restore_errno(guard, entry_errno);
     if (entry_profile.get_error() != ER_SUCCESS)
         return (entry_profile.get_error());
