@@ -402,7 +402,7 @@ int ft_economy_table::fetch_price_definition(int item_id, ft_price_definition &d
         return (guard.get_error());
     }
     entry = self->_price_definitions.find(item_id);
-    if (entry == self->_price_definitions.end())
+    if (entry == ft_nullptr)
     {
         const_cast<ft_economy_table *>(self)->set_error(FT_ERR_NOT_FOUND);
         game_economy_restore_errno(guard, entry_errno);
@@ -430,7 +430,7 @@ int ft_economy_table::fetch_rarity_band(int rarity, ft_rarity_band &band) const 
         return (guard.get_error());
     }
     entry = self->_rarity_bands.find(rarity);
-    if (entry == self->_rarity_bands.end())
+    if (entry == ft_nullptr)
     {
         const_cast<ft_economy_table *>(self)->set_error(FT_ERR_NOT_FOUND);
         game_economy_restore_errno(guard, entry_errno);
@@ -458,7 +458,7 @@ int ft_economy_table::fetch_vendor_profile(int vendor_id, ft_vendor_profile &pro
         return (guard.get_error());
     }
     entry = self->_vendor_profiles.find(vendor_id);
-    if (entry == self->_vendor_profiles.end())
+    if (entry == ft_nullptr)
     {
         const_cast<ft_economy_table *>(self)->set_error(FT_ERR_NOT_FOUND);
         game_economy_restore_errno(guard, entry_errno);
@@ -489,7 +489,7 @@ int ft_economy_table::fetch_currency_rate(int currency_id, ft_currency_rate &rat
         return (guard.get_error());
     }
     entry = self->_currency_rates.find(currency_id);
-    if (entry == self->_currency_rates.end())
+    if (entry == ft_nullptr)
     {
         const_cast<ft_economy_table *>(self)->set_error(FT_ERR_NOT_FOUND);
         game_economy_restore_errno(guard, entry_errno);
