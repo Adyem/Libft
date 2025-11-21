@@ -84,59 +84,6 @@ ft_vendor_profile::ft_vendor_profile(int vendor_id, double buy_markup, double se
     return ;
 }
 
-ft_vendor_profile::ft_vendor_profile(const ft_vendor_profile &other) noexcept
-    : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(ER_SUCCESS)
-{
-    int entry_errno;
-    ft_unique_lock<pt_mutex> self_guard;
-    ft_unique_lock<pt_mutex> other_guard;
-
-    entry_errno = ft_errno;
-    if (ft_vendor_profile::lock_pair(*this, other, self_guard, other_guard) != ER_SUCCESS)
-    {
-        this->set_error(self_guard.get_error());
-        game_economy_restore_errno(self_guard, entry_errno);
-        game_economy_restore_errno(other_guard, entry_errno);
-        return ;
-    }
-    this->_vendor_id = other._vendor_id;
-    this->_buy_markup = other._buy_markup;
-    this->_sell_multiplier = other._sell_multiplier;
-    this->_tax_rate = other._tax_rate;
-    this->_error_code = other._error_code;
-    this->set_error(this->_error_code);
-    game_economy_restore_errno(self_guard, entry_errno);
-    game_economy_restore_errno(other_guard, entry_errno);
-    return ;
-}
-
-ft_vendor_profile &ft_vendor_profile::operator=(const ft_vendor_profile &other) noexcept
-{
-    int entry_errno;
-    ft_unique_lock<pt_mutex> self_guard;
-    ft_unique_lock<pt_mutex> other_guard;
-
-    if (this == &other)
-        return (*this);
-    entry_errno = ft_errno;
-    if (ft_vendor_profile::lock_pair(*this, other, self_guard, other_guard) != ER_SUCCESS)
-    {
-        this->set_error(self_guard.get_error());
-        game_economy_restore_errno(self_guard, entry_errno);
-        game_economy_restore_errno(other_guard, entry_errno);
-        return (*this);
-    }
-    this->_vendor_id = other._vendor_id;
-    this->_buy_markup = other._buy_markup;
-    this->_sell_multiplier = other._sell_multiplier;
-    this->_tax_rate = other._tax_rate;
-    this->_error_code = other._error_code;
-    this->set_error(this->_error_code);
-    game_economy_restore_errno(self_guard, entry_errno);
-    game_economy_restore_errno(other_guard, entry_errno);
-    return (*this);
-}
-
 ft_vendor_profile::ft_vendor_profile(ft_vendor_profile &&other) noexcept
     : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(ER_SUCCESS)
 {

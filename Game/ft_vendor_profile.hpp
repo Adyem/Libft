@@ -24,8 +24,8 @@ class ft_vendor_profile
         ft_vendor_profile() noexcept;
         ft_vendor_profile(int vendor_id, double buy_markup, double sell_multiplier, double tax_rate) noexcept;
         virtual ~ft_vendor_profile() = default;
-        ft_vendor_profile(const ft_vendor_profile &other) noexcept;
-        ft_vendor_profile &operator=(const ft_vendor_profile &other) noexcept;
+        ft_vendor_profile(const ft_vendor_profile &other) noexcept = delete;
+        ft_vendor_profile &operator=(const ft_vendor_profile &other) noexcept = delete;
         ft_vendor_profile(ft_vendor_profile &&other) noexcept;
         ft_vendor_profile &operator=(ft_vendor_profile &&other) noexcept;
 
