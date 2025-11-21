@@ -266,6 +266,7 @@ int ft_behavior_table::fetch_profile(int profile_id, ft_behavior_profile &profil
     int entry_errno;
     const ft_behavior_table *self;
     const Pair<int, ft_behavior_profile> *entry;
+    ft_behavior_profile entry_profile;
 
     self = this;
     entry_errno = ft_errno;
@@ -283,25 +284,11 @@ int ft_behavior_table::fetch_profile(int profile_id, ft_behavior_profile &profil
         game_behavior_restore_errno(guard, entry_errno);
         return (FT_ERR_NOT_FOUND);
     }
-    ft_behavior_profile temporary;
-    int source_errno;
-
-    source_errno = ft_errno;
-    ft_unique_lock<pt_mutex> source_guard(entry->value._mutex);
-    if (source_guard.get_error() != ER_SUCCESS)
-    {
-        const_cast<ft_behavior_table *>(self)->set_error(source_guard.get_error());
-        game_behavior_restore_errno(source_guard, source_errno);
-        game_behavior_restore_errno(guard, entry_errno);
-        return (source_guard.get_error());
-    }
-
-    temporary.clone_from_unlocked(entry->value);
-    const_cast<ft_behavior_table *>(self)->set_error(temporary.get_error());
-    game_behavior_restore_errno(source_guard, source_errno);
+    entry_profile = entry->value;
+    const_cast<ft_behavior_table *>(self)->set_error(entry_profile.get_error());
     game_behavior_restore_errno(guard, entry_errno);
-    if (temporary.get_error() != ER_SUCCESS)
-        return (temporary.get_error());
+    if (entry_profile.get_error() != ER_SUCCESS)
+        return (entry_profile.get_error());
     int destination_errno;
 
     destination_errno = ft_errno;
@@ -312,7 +299,7 @@ int ft_behavior_table::fetch_profile(int profile_id, ft_behavior_profile &profil
         game_behavior_restore_errno(destination_guard, destination_errno);
         return (destination_guard.get_error());
     }
-    profile.move_from_unlocked(temporary);
+    profile.move_from_unlocked(entry_profile);
     game_behavior_restore_errno(destination_guard, destination_errno);
     return (profile._error_code);
 }
