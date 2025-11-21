@@ -108,7 +108,7 @@ FT_TEST(test_game_deterministic_simulation_scenarios,
             Pair<int, ft_quest> *quest_entry;
 
             quest_entry = hero_character.get_quests().find(quest_identifier);
-            if (quest_entry != ft_nullptr)
+            if (quest_entry != hero_character.get_quests().end())
             {
                 quest_entry->value.advance_phase();
             }
@@ -142,7 +142,7 @@ FT_TEST(test_game_deterministic_simulation_scenarios,
         Pair<int, ft_quest> *quest_entry;
 
         quest_entry = hero_character.get_quests().find(quest_identifier);
-        if (quest_entry != ft_nullptr)
+        if (quest_entry != hero_character.get_quests().end())
         {
             bool was_complete;
 

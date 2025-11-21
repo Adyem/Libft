@@ -23,8 +23,8 @@ class ft_behavior_table
     public:
         ft_behavior_table() noexcept;
         ~ft_behavior_table() noexcept;
-        ft_behavior_table(const ft_behavior_table &other) noexcept = delete;
-        ft_behavior_table &operator=(const ft_behavior_table &other) noexcept = delete;
+        ft_behavior_table(const ft_behavior_table &other) noexcept;
+        ft_behavior_table &operator=(const ft_behavior_table &other) noexcept;
         ft_behavior_table(ft_behavior_table &&other) noexcept;
         ft_behavior_table &operator=(ft_behavior_table &&other) noexcept;
 
