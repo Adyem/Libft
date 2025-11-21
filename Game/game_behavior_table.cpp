@@ -85,7 +85,51 @@ ft_behavior_table::~ft_behavior_table() noexcept
 
 int ft_behavior_table::clone_profiles_from(const ft_behavior_table &other) noexcept
 {
-    this->_profiles = other._profiles;
+    size_t profile_count;
+    ft_map<int, ft_behavior_profile> profiles_copy(other._profiles.capacity());
+    const Pair<int, ft_behavior_profile> *other_end;
+    const Pair<int, ft_behavior_profile> *entry;
+
+    profile_count = other._profiles.size();
+    if (other._profiles.get_error() != ER_SUCCESS)
+    {
+        this->set_error(other._profiles.get_error());
+        return (other._profiles.get_error());
+    }
+    if (profiles_copy.get_error() != ER_SUCCESS)
+    {
+        this->set_error(profiles_copy.get_error());
+        return (profiles_copy.get_error());
+    }
+    other_end = other._profiles.end();
+    if (other_end == ft_nullptr && profile_count != 0)
+    {
+        this->set_error(FT_ERR_INTERNAL);
+        return (FT_ERR_INTERNAL);
+    }
+    if (profile_count == 0)
+        entry = other_end;
+    else
+        entry = other_end - profile_count;
+    while (entry != other_end)
+    {
+        ft_behavior_profile profile_copy;
+
+        profile_copy._profile_id = entry->value._profile_id;
+        profile_copy._aggression_weight = entry->value._aggression_weight;
+        profile_copy._caution_weight = entry->value._caution_weight;
+        profile_copy._actions = entry->value._actions;
+        profile_copy._error_code = entry->value._error_code;
+        profile_copy.set_error(profile_copy._actions.get_error());
+        profiles_copy.insert(entry->key, ft_move(profile_copy));
+        if (profiles_copy.get_error() != ER_SUCCESS)
+        {
+            this->set_error(profiles_copy.get_error());
+            return (profiles_copy.get_error());
+        }
+        ++entry;
+    }
+    this->_profiles = ft_move(profiles_copy);
     this->set_error(this->_profiles.get_error());
     return (this->_error_code);
 }
