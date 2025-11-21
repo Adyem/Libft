@@ -143,57 +143,6 @@ int ft_behavior_table::clone_profiles_from(const ft_behavior_table &other) noexc
     return (this->_error_code);
 }
 
-ft_behavior_table::ft_behavior_table(const ft_behavior_table &other) noexcept
-    : _profiles(), _error_code(ER_SUCCESS), _mutex()
-{
-    int entry_errno;
-
-    entry_errno = ft_errno;
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != ER_SUCCESS)
-    {
-        this->set_error(other_guard.get_error());
-        game_behavior_restore_errno(other_guard, entry_errno);
-        return ;
-    }
-    this->_error_code = other._error_code;
-    if (this->clone_profiles_from(other) != ER_SUCCESS)
-    {
-        game_behavior_restore_errno(other_guard, entry_errno);
-        return ;
-    }
-    game_behavior_restore_errno(other_guard, entry_errno);
-    return ;
-}
-
-ft_behavior_table &ft_behavior_table::operator=(const ft_behavior_table &other) noexcept
-{
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
-    int lock_error;
-
-    if (this == &other)
-        return (*this);
-    entry_errno = ft_errno;
-    lock_error = ft_behavior_table::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
-    {
-        this->set_error(lock_error);
-        return (*this);
-    }
-    this->_error_code = other._error_code;
-    if (this->clone_profiles_from(other) != ER_SUCCESS)
-    {
-        game_behavior_restore_errno(this_guard, entry_errno);
-        game_behavior_restore_errno(other_guard, entry_errno);
-        return (*this);
-    }
-    game_behavior_restore_errno(this_guard, entry_errno);
-    game_behavior_restore_errno(other_guard, entry_errno);
-    return (*this);
-}
-
 ft_behavior_table::ft_behavior_table(ft_behavior_table &&other) noexcept
     : _profiles(), _error_code(ER_SUCCESS), _mutex()
 {
