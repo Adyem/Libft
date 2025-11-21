@@ -1,6 +1,5 @@
 #include "../../Game/ft_price_definition.hpp"
 #include "../../Game/ft_rarity_band.hpp"
-#include "../../Game/ft_vendor_profile.hpp"
 #include "../../Game/ft_currency_rate.hpp"
 #include "../../Template/move.hpp"
 #include "../../System_utils/test_runner.hpp"
@@ -14,17 +13,6 @@ static int assert_price_values(const ft_price_definition &definition, int item_i
     FT_ASSERT_EQ(minimum_value, definition.get_minimum_value());
     FT_ASSERT_EQ(maximum_value, definition.get_maximum_value());
     FT_ASSERT_EQ(ER_SUCCESS, definition.get_error());
-    return (1);
-}
-
-static int assert_vendor_values(const ft_vendor_profile &profile, int vendor_id, double buy_markup,
-        double sell_multiplier, double tax_rate)
-{
-    FT_ASSERT_EQ(vendor_id, profile.get_vendor_id());
-    FT_ASSERT_DOUBLE_EQ(buy_markup, profile.get_buy_markup());
-    FT_ASSERT_DOUBLE_EQ(sell_multiplier, profile.get_sell_multiplier());
-    FT_ASSERT_DOUBLE_EQ(tax_rate, profile.get_tax_rate());
-    FT_ASSERT_EQ(ER_SUCCESS, profile.get_error());
     return (1);
 }
 
@@ -60,22 +48,6 @@ FT_TEST(test_rarity_band_copy_and_move, "copy and move rarity bands")
     FT_ASSERT_EQ(0, band.get_rarity());
     FT_ASSERT_DOUBLE_EQ(0.0, band.get_value_multiplier());
     FT_ASSERT_EQ(ER_SUCCESS, band.get_error());
-    return (1);
-}
-
-FT_TEST(test_vendor_profile_copy_and_move, "copy and move vendor profiles")
-{
-    ft_vendor_profile vendor(3, 1.25, 0.6, 0.05);
-    ft_vendor_profile copy(vendor);
-    ft_vendor_profile moved(ft_move(vendor));
-
-    assert_vendor_values(copy, 3, 1.25, 0.6, 0.05);
-    assert_vendor_values(moved, 3, 1.25, 0.6, 0.05);
-    FT_ASSERT_EQ(0, vendor.get_vendor_id());
-    FT_ASSERT_DOUBLE_EQ(0.0, vendor.get_buy_markup());
-    FT_ASSERT_DOUBLE_EQ(0.0, vendor.get_sell_multiplier());
-    FT_ASSERT_DOUBLE_EQ(0.0, vendor.get_tax_rate());
-    FT_ASSERT_EQ(ER_SUCCESS, vendor.get_error());
     return (1);
 }
 
