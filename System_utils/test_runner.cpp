@@ -106,7 +106,7 @@ static int name_matches_filter(const char *filter, const char *name)
         start = cursor;
         while (*cursor && *cursor != ',')
             cursor++;
-        length = (size_t)(cursor - start);
+        length = static_cast<size_t>(cursor - start);
         if (length > 0 && std::strncmp(start, name, length) == 0 && name[length] == '\0')
             return (1);
         if (*cursor == ',')
