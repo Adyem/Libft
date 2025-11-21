@@ -83,59 +83,6 @@ ft_economy_table::~ft_economy_table() noexcept
     return ;
 }
 
-ft_economy_table::ft_economy_table(const ft_economy_table &other) noexcept
-    : _error_code(ER_SUCCESS)
-{
-    int entry_errno;
-    ft_unique_lock<pt_mutex> self_guard;
-    ft_unique_lock<pt_mutex> other_guard;
-
-    entry_errno = ft_errno;
-    if (ft_economy_table::lock_pair(*this, other, self_guard, other_guard) != ER_SUCCESS)
-    {
-        this->set_error(self_guard.get_error());
-        game_economy_restore_errno(self_guard, entry_errno);
-        game_economy_restore_errno(other_guard, entry_errno);
-        return ;
-    }
-    this->_price_definitions = other._price_definitions;
-    this->_rarity_bands = other._rarity_bands;
-    this->_vendor_profiles = other._vendor_profiles;
-    this->_currency_rates = other._currency_rates;
-    this->_error_code = other._error_code;
-    this->set_error(this->_error_code);
-    game_economy_restore_errno(self_guard, entry_errno);
-    game_economy_restore_errno(other_guard, entry_errno);
-    return ;
-}
-
-ft_economy_table &ft_economy_table::operator=(const ft_economy_table &other) noexcept
-{
-    int entry_errno;
-    ft_unique_lock<pt_mutex> self_guard;
-    ft_unique_lock<pt_mutex> other_guard;
-
-    if (this == &other)
-        return (*this);
-    entry_errno = ft_errno;
-    if (ft_economy_table::lock_pair(*this, other, self_guard, other_guard) != ER_SUCCESS)
-    {
-        this->set_error(self_guard.get_error());
-        game_economy_restore_errno(self_guard, entry_errno);
-        game_economy_restore_errno(other_guard, entry_errno);
-        return (*this);
-    }
-    this->_price_definitions = other._price_definitions;
-    this->_rarity_bands = other._rarity_bands;
-    this->_vendor_profiles = other._vendor_profiles;
-    this->_currency_rates = other._currency_rates;
-    this->_error_code = other._error_code;
-    this->set_error(this->_error_code);
-    game_economy_restore_errno(self_guard, entry_errno);
-    game_economy_restore_errno(other_guard, entry_errno);
-    return (*this);
-}
-
 ft_economy_table::ft_economy_table(ft_economy_table &&other) noexcept
     : _error_code(ER_SUCCESS)
 {

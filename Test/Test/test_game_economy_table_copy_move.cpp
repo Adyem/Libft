@@ -15,34 +15,7 @@ static int register_all_records(ft_economy_table &table)
     return (1);
 }
 
-FT_TEST(test_economy_table_copy_semantics, "copy constructor and assignment clone tables")
-{
-    ft_economy_table original;
-    ft_price_definition price;
-    ft_rarity_band rarity;
-    ft_vendor_profile vendor;
-    ft_currency_rate currency;
-
-    register_all_records(original);
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, original.fetch_currency_rate(99, currency));
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, original.get_error());
-
-    ft_economy_table copy(original);
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, copy.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, copy.fetch_price_definition(4, price));
-    FT_ASSERT_EQ(4, price.get_item_id());
-    FT_ASSERT_EQ(ER_SUCCESS, copy.fetch_rarity_band(7, rarity));
-    FT_ASSERT_EQ(ER_SUCCESS, copy.fetch_vendor_profile(11, vendor));
-    FT_ASSERT_EQ(ER_SUCCESS, copy.fetch_currency_rate(5, currency));
-
-    ft_economy_table assigned;
-    assigned = original;
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, assigned.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, assigned.fetch_currency_rate(5, currency));
-    FT_ASSERT_EQ(5, currency.get_currency_id());
-    FT_ASSERT(copy.get_price_definitions().find(999) == copy.get_price_definitions().end());
-    return (1);
-}
+// DELETED: copy semantics are no longer supported for ft_economy_table.
 
 FT_TEST(test_economy_table_move_semantics, "move constructor and assignment transfer state")
 {
