@@ -51,7 +51,7 @@ int test_game_simulation(void)
     upgrade.set_modifier1(3);
     hero.get_upgrades().insert(upgrade.get_id(), upgrade);
     Pair<int, ft_upgrade>* uentry = hero.get_upgrades().find(1);
-    if (!uentry)
+    if (uentry == hero.get_upgrades().end())
         return (0);
     hero.set_might(hero.get_might() + uentry->value.get_modifier1());
     if (hero.get_might() != 18)
@@ -62,7 +62,7 @@ int test_game_simulation(void)
     quest.set_phases(2);
     hero.get_quests().insert(quest.get_id(), quest);
     Pair<int, ft_quest>* qentry = hero.get_quests().find(1);
-    if (!qentry)
+    if (qentry == hero.get_quests().end())
         return (0);
     qentry->value.set_current_phase(1);
     if (qentry->value.get_current_phase() != 1)
@@ -98,7 +98,7 @@ int test_game_simulation(void)
     more->set_stack_size(3);
     pack.add_item(more);
     Pair<int, ft_sharedptr<ft_item> > *ientry = pack.get_items().find(0);
-    if (!ientry || ientry->value->get_stack_size() != 8)
+    if (ientry == pack.get_items().end() || ientry->value->get_stack_size() != 8)
         return (0);
 
     if (grid.get(hero.get_x(), hero.get_y(), hero.get_z()) != 1)

@@ -324,7 +324,7 @@ bool networking_dns_resolve(const char *host, const char *service,
     if (cache_lock.get_error() != ER_SUCCESS)
         return (false);
     cache_entry = g_networking_dns_cache.find(cache_key);
-    if (cache_entry != ft_nullptr)
+    if (cache_entry != g_networking_dns_cache.end())
     {
         entry_valid = true;
         if (lookup_start_valid)

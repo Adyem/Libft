@@ -85,6 +85,60 @@ ft_economy_table::~ft_economy_table() noexcept
     return ;
 }
 
+ft_economy_table::ft_economy_table(const ft_economy_table &other) noexcept
+    : _error_code(ER_SUCCESS)
+    , _mutex()
+{
+    int entry_errno;
+    ft_unique_lock<pt_mutex> this_guard;
+    ft_unique_lock<pt_mutex> other_guard;
+
+    entry_errno = ft_errno;
+    if (ft_economy_table::lock_pair(*this, other, this_guard, other_guard) != ER_SUCCESS)
+    {
+        this->set_error(this_guard.get_error());
+        game_economy_restore_errno(this_guard, entry_errno);
+        game_economy_restore_errno(other_guard, entry_errno);
+        return ;
+    }
+    this->_price_definitions = other._price_definitions;
+    this->_rarity_bands = other._rarity_bands;
+    this->_vendor_profiles = other._vendor_profiles;
+    this->_currency_rates = other._currency_rates;
+    this->_error_code = other._error_code;
+    this->set_error(this->_error_code);
+    game_economy_restore_errno(this_guard, entry_errno);
+    game_economy_restore_errno(other_guard, entry_errno);
+    return ;
+}
+
+ft_economy_table &ft_economy_table::operator=(const ft_economy_table &other) noexcept
+{
+    ft_unique_lock<pt_mutex> this_guard;
+    ft_unique_lock<pt_mutex> other_guard;
+    int entry_errno;
+
+    if (this == &other)
+        return (*this);
+    entry_errno = ft_errno;
+    if (ft_economy_table::lock_pair(*this, other, this_guard, other_guard) != ER_SUCCESS)
+    {
+        this->set_error(this_guard.get_error());
+        game_economy_restore_errno(this_guard, entry_errno);
+        game_economy_restore_errno(other_guard, entry_errno);
+        return (*this);
+    }
+    this->_price_definitions = other._price_definitions;
+    this->_rarity_bands = other._rarity_bands;
+    this->_vendor_profiles = other._vendor_profiles;
+    this->_currency_rates = other._currency_rates;
+    this->_error_code = other._error_code;
+    this->set_error(this->_error_code);
+    game_economy_restore_errno(this_guard, entry_errno);
+    game_economy_restore_errno(other_guard, entry_errno);
+    return (*this);
+}
+
 ft_economy_table::ft_economy_table(ft_economy_table &&other) noexcept
     : _error_code(ER_SUCCESS)
     , _mutex()
@@ -402,7 +456,7 @@ int ft_economy_table::fetch_price_definition(int item_id, ft_price_definition &d
         return (guard.get_error());
     }
     entry = self->_price_definitions.find(item_id);
-    if (entry == ft_nullptr)
+    if (entry == self->_price_definitions.end())
     {
         const_cast<ft_economy_table *>(self)->set_error(FT_ERR_NOT_FOUND);
         game_economy_restore_errno(guard, entry_errno);
@@ -430,7 +484,7 @@ int ft_economy_table::fetch_rarity_band(int rarity, ft_rarity_band &band) const 
         return (guard.get_error());
     }
     entry = self->_rarity_bands.find(rarity);
-    if (entry == ft_nullptr)
+    if (entry == self->_rarity_bands.end())
     {
         const_cast<ft_economy_table *>(self)->set_error(FT_ERR_NOT_FOUND);
         game_economy_restore_errno(guard, entry_errno);
@@ -458,7 +512,7 @@ int ft_economy_table::fetch_vendor_profile(int vendor_id, ft_vendor_profile &pro
         return (guard.get_error());
     }
     entry = self->_vendor_profiles.find(vendor_id);
-    if (entry == ft_nullptr)
+    if (entry == self->_vendor_profiles.end())
     {
         const_cast<ft_economy_table *>(self)->set_error(FT_ERR_NOT_FOUND);
         game_economy_restore_errno(guard, entry_errno);
@@ -489,7 +543,7 @@ int ft_economy_table::fetch_currency_rate(int currency_id, ft_currency_rate &rat
         return (guard.get_error());
     }
     entry = self->_currency_rates.find(currency_id);
-    if (entry == ft_nullptr)
+    if (entry == self->_currency_rates.end())
     {
         const_cast<ft_economy_table *>(self)->set_error(FT_ERR_NOT_FOUND);
         game_economy_restore_errno(guard, entry_errno);

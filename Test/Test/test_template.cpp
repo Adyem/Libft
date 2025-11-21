@@ -144,7 +144,7 @@ int test_ft_map_insert_find(void)
     ft_map<int, const char*> m;
     m.insert(1, "one");
     auto p = m.find(1);
-    return (p && std::strcmp(p->value, "one") == 0);
+    return (p != m.end() && std::strcmp(p->value, "one") == 0);
 }
 
 int test_ft_map_remove(void)
@@ -153,7 +153,7 @@ int test_ft_map_remove(void)
     m.insert(1, 10);
     m.insert(2, 20);
     m.remove(1);
-    return (m.find(1) == ft_nullptr && m.size() == 1);
+    return (m.find(1) == m.end() && m.size() == 1);
 }
 
 int test_ft_shared_ptr_basic(void)
@@ -463,7 +463,7 @@ FT_TEST(test_ft_map_grows_from_zero_capacity, "ft_map grows when constructed wit
     FT_ASSERT_EQ(ER_SUCCESS, map_instance.get_error());
     FT_ASSERT_EQ(static_cast<size_t>(1), map_instance.size());
     Pair<int, int> *found_entry = map_instance.find(42);
-    FT_ASSERT(found_entry != ft_nullptr);
+    FT_ASSERT(found_entry != map_instance.end());
     FT_ASSERT_EQ(ER_SUCCESS, map_instance.get_error());
     FT_ASSERT_EQ(7, found_entry->value);
     return (1);

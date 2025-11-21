@@ -472,7 +472,7 @@ int ft_reputation::get_milestone(int id) const noexcept
         return (0);
     }
     entry = this->_milestones.find(id);
-    if (!entry)
+    if (entry == this->_milestones.end())
     {
         const_cast<ft_reputation *>(this)->set_error(FT_ERR_NOT_FOUND);
         game_reputation_restore_errno(guard, entry_errno);
@@ -503,7 +503,7 @@ void ft_reputation::set_milestone(int id, int value) noexcept
         return ;
     }
     entry = this->_milestones.find(id);
-    if (!entry)
+    if (entry == this->_milestones.end())
     {
         this->_milestones.insert(id, value);
         if (this->_milestones.get_error() != ER_SUCCESS)
@@ -598,7 +598,7 @@ int ft_reputation::get_rep(int id) const noexcept
         return (0);
     }
     entry = this->_reps.find(id);
-    if (!entry)
+    if (entry == this->_reps.end())
     {
         const_cast<ft_reputation *>(this)->set_error(FT_ERR_NOT_FOUND);
         game_reputation_restore_errno(guard, entry_errno);
@@ -629,7 +629,7 @@ void ft_reputation::set_rep(int id, int value) noexcept
         return ;
     }
     entry = this->_reps.find(id);
-    if (!entry)
+    if (entry == this->_reps.end())
     {
         this->_reps.insert(id, value);
         if (this->_reps.get_error() != ER_SUCCESS)

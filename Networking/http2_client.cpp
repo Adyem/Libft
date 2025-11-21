@@ -1194,7 +1194,7 @@ bool http2_stream_manager::validate_receive_window(uint32_t stream_identifier,
     Pair<uint32_t, http2_stream_state> *stream_entry;
 
     stream_entry = this->_streams.find(stream_identifier);
-    if (stream_entry == ft_nullptr)
+    if (stream_entry == this->_streams.end())
     {
         this->set_error(FT_ERR_NOT_FOUND);
         return (false);
@@ -1219,7 +1219,7 @@ bool http2_stream_manager::record_received_data(uint32_t stream_identifier,
     Pair<uint32_t, http2_stream_state> *stream_entry;
 
     stream_entry = this->_streams.find(stream_identifier);
-    if (stream_entry == ft_nullptr)
+    if (stream_entry == this->_streams.end())
     {
         this->set_error(FT_ERR_NOT_FOUND);
         return (false);
@@ -1299,7 +1299,7 @@ bool http2_stream_manager::open_stream(uint32_t stream_identifier) noexcept
     if (this->lock(&lock_acquired) != 0)
         return (false);
     existing_entry = this->_streams.find(stream_identifier);
-    if (existing_entry != ft_nullptr)
+    if (existing_entry != this->_streams.end())
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         success_state = false;
@@ -1353,7 +1353,7 @@ bool http2_stream_manager::append_data(uint32_t stream_identifier, const char *d
     if (success_state)
     {
         stream_entry = this->_streams.find(stream_identifier);
-        if (stream_entry == ft_nullptr)
+        if (stream_entry == this->_streams.end())
         {
             this->set_error(FT_ERR_NOT_FOUND);
             success_state = false;
@@ -1407,7 +1407,7 @@ bool http2_stream_manager::close_stream(uint32_t stream_identifier) noexcept
     if (this->lock(&lock_acquired) != 0)
         return (false);
     stream_entry = this->_streams.find(stream_identifier);
-    if (stream_entry == ft_nullptr)
+    if (stream_entry == this->_streams.end())
     {
         this->set_error(FT_ERR_NOT_FOUND);
         success_state = false;
@@ -1441,7 +1441,7 @@ bool http2_stream_manager::get_stream_buffer(uint32_t stream_identifier,
     if (this->lock(&lock_acquired) != 0)
         return (false);
     stream_entry = this->_streams.find(stream_identifier);
-    if (stream_entry == ft_nullptr)
+    if (stream_entry == this->_streams.end())
     {
         this->set_error(FT_ERR_NOT_FOUND);
         success_state = false;
@@ -1489,7 +1489,7 @@ bool http2_stream_manager::update_priority(uint32_t stream_identifier,
     if (success_state)
     {
         stream_entry = this->_streams.find(stream_identifier);
-        if (stream_entry == ft_nullptr)
+        if (stream_entry == this->_streams.end())
         {
             this->set_error(FT_ERR_NOT_FOUND);
             success_state = false;
@@ -1514,7 +1514,7 @@ bool http2_stream_manager::update_priority(uint32_t stream_identifier,
 
                 child_identifier = *iterator_value;
                 child_entry = this->_streams.find(child_identifier);
-                if (child_entry == ft_nullptr)
+                if (child_entry == this->_streams.end())
                 {
                     this->set_error(this->_streams.get_error());
                     success_state = false;
@@ -1527,7 +1527,7 @@ bool http2_stream_manager::update_priority(uint32_t stream_identifier,
             }
         }
     }
-    if (success_state && stream_entry != ft_nullptr)
+    if (success_state && stream_entry != this->_streams.end())
     {
         stream_entry->value.dependency_identifier = dependency_identifier;
         stream_entry->value.weight = weight;
@@ -1550,7 +1550,7 @@ bool http2_stream_manager::get_priority(uint32_t stream_identifier,
     if (this->lock(&lock_acquired) != 0)
         return (false);
     stream_entry = this->_streams.find(stream_identifier);
-    if (stream_entry == ft_nullptr)
+    if (stream_entry == this->_streams.end())
     {
         this->set_error(FT_ERR_NOT_FOUND);
         success_state = false;
@@ -1603,7 +1603,7 @@ bool http2_stream_manager::update_remote_initial_window(uint32_t new_window) noe
 
                 identifier_value = this->_stream_identifiers[index];
                 stream_entry = this->_streams.find(identifier_value);
-                if (stream_entry == ft_nullptr)
+                if (stream_entry == this->_streams.end())
                 {
                     this->set_error(this->_streams.get_error());
                     success_state = false;
@@ -1678,7 +1678,7 @@ bool http2_stream_manager::update_local_initial_window(uint32_t new_window) noex
 
                 identifier_value = this->_stream_identifiers[index];
                 stream_entry = this->_streams.find(identifier_value);
-                if (stream_entry == ft_nullptr)
+                if (stream_entry == this->_streams.end())
                 {
                     this->set_error(this->_streams.get_error());
                     success_state = false;
@@ -1729,7 +1729,7 @@ uint32_t http2_stream_manager::get_local_window(uint32_t stream_identifier) cons
     if (this->lock(&lock_acquired) != 0)
         return (0);
     stream_entry = this->_streams.find(stream_identifier);
-    if (stream_entry == ft_nullptr)
+    if (stream_entry == this->_streams.end())
     {
         this->set_error(FT_ERR_NOT_FOUND);
         success_state = false;
@@ -1758,7 +1758,7 @@ uint32_t http2_stream_manager::get_remote_window(uint32_t stream_identifier) con
     if (this->lock(&lock_acquired) != 0)
         return (0);
     stream_entry = this->_streams.find(stream_identifier);
-    if (stream_entry == ft_nullptr)
+    if (stream_entry == this->_streams.end())
     {
         this->set_error(FT_ERR_NOT_FOUND);
         success_state = false;
@@ -1795,7 +1795,7 @@ bool http2_stream_manager::increase_local_window(uint32_t stream_identifier,
     if (success_state)
     {
         stream_entry = this->_streams.find(stream_identifier);
-        if (stream_entry == ft_nullptr)
+        if (stream_entry == this->_streams.end())
         {
             this->set_error(FT_ERR_NOT_FOUND);
             success_state = false;
@@ -1841,7 +1841,7 @@ bool http2_stream_manager::increase_remote_window(uint32_t stream_identifier,
     if (success_state)
     {
         stream_entry = this->_streams.find(stream_identifier);
-        if (stream_entry == ft_nullptr)
+        if (stream_entry == this->_streams.end())
         {
             this->set_error(FT_ERR_NOT_FOUND);
             success_state = false;
@@ -1878,7 +1878,7 @@ bool http2_stream_manager::reserve_send_window(uint32_t stream_identifier,
     if (this->lock(&lock_acquired) != 0)
         return (false);
     stream_entry = this->_streams.find(stream_identifier);
-    if (stream_entry == ft_nullptr)
+    if (stream_entry == this->_streams.end())
     {
         this->set_error(FT_ERR_NOT_FOUND);
         success_state = false;

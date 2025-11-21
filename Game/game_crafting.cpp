@@ -758,7 +758,7 @@ int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id,
         return (this->_error_code);
     }
     recipe_entry = this->_recipes.find(recipe_id);
-    if (!recipe_entry)
+    if (recipe_entry == this->_recipes.end())
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         game_crafting_restore_errno(guard, entry_errno);

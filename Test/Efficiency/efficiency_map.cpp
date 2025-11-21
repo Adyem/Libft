@@ -35,7 +35,7 @@ int test_efficiency_map_insert_find(void)
     for (int i = 0; i < iterations; ++i)
     {
         Pair<int, int>* p = ftm.find(i);
-        if (p)
+        if (p != ftm.end())
             sum += p->value;
     }
     auto end_ft = clock_type::now();
