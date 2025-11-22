@@ -5,14 +5,22 @@
 #include "class_nullptr.hpp"
 
 ft_string::ft_string() noexcept
-    : _data(ft_nullptr), _length(0), _capacity(0), _error_code(0)
+    : _data(ft_nullptr)
+    , _length(0)
+    , _capacity(0)
+    , _error_code(0)
+    , _mutex()
 {
     this->set_error_unlocked(ER_SUCCESS);
     return ;
 }
 
 ft_string::ft_string(const char* init_str) noexcept
-    : _data(ft_nullptr), _length(0), _capacity(0), _error_code(0)
+    : _data(ft_nullptr)
+    , _length(0)
+    , _capacity(0)
+    , _error_code(0)
+    , _mutex()
 {
     this->set_error_unlocked(ER_SUCCESS);
     if (init_str)
@@ -21,7 +29,11 @@ ft_string::ft_string(const char* init_str) noexcept
 }
 
 ft_string::ft_string(size_t count, char character) noexcept
-    : _data(ft_nullptr), _length(0), _capacity(0), _error_code(0)
+    : _data(ft_nullptr)
+    , _length(0)
+    , _capacity(0)
+    , _error_code(0)
+    , _mutex()
 {
     this->set_error_unlocked(ER_SUCCESS);
     this->assign(count, character);
@@ -29,7 +41,11 @@ ft_string::ft_string(size_t count, char character) noexcept
 }
 
 ft_string::ft_string(const ft_string& other) noexcept
-    : _data(ft_nullptr), _length(0), _capacity(0), _error_code(0)
+    : _data(ft_nullptr)
+    , _length(0)
+    , _capacity(0)
+    , _error_code(0)
+    , _mutex()
 {
     ft_string::mutex_guard other_guard;
     int entry_errno;
@@ -75,10 +91,11 @@ ft_string::ft_string(const ft_string& other) noexcept
 }
 
 ft_string::ft_string(ft_string&& other) noexcept
-    : _data(ft_nullptr),
-      _length(0),
-      _capacity(0),
-      _error_code(0)
+    : _data(ft_nullptr)
+    , _length(0)
+    , _capacity(0)
+    , _error_code(0)
+    , _mutex()
 {
     ft_string::mutex_guard other_guard;
     int entry_errno;
@@ -283,6 +300,7 @@ ft_string::ft_string(int error_code) noexcept
     , _length(0)
     , _capacity(0)
     , _error_code(error_code)
+    , _mutex()
 {
     this->set_error_unlocked(error_code);
     return ;
