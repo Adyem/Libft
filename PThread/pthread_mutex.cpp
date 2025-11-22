@@ -9,6 +9,7 @@ pt_mutex::pt_mutex()
     : _owner(0), _lock(false), _error(ER_SUCCESS), _native_initialized(false),
     _state_mutex(ft_nullptr), _thread_safe_enabled(false)
 {
+    ft_bzero(&this->_native_mutex, sizeof(pthread_mutex_t));
     if (pthread_mutex_init(&this->_native_mutex, ft_nullptr) != 0)
     {
         this->_native_initialized = false;
