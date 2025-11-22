@@ -329,6 +329,11 @@ int ft_game_script_bridge::get_max_operations() const noexcept
     return (this->_max_operations);
 }
 
+size_t ft_game_script_bridge::get_callback_count() const noexcept
+{
+    return (this->_callbacks.size());
+}
+
 int ft_game_script_bridge::register_function(const ft_string &name, const ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> &callback) noexcept
 {
     ft_unique_lock<pt_mutex> guard(this->_mutex);
@@ -345,7 +350,7 @@ int ft_game_script_bridge::register_function(const ft_string &name, const ft_fun
         this->set_error(this->_callbacks.get_error());
         return (this->_callbacks.get_error());
     }
-    if (entry != ft_nullptr)
+    if (entry != this->_callbacks.end())
     {
         entry->value = callback;
         this->set_error(ER_SUCCESS);
@@ -490,6 +495,11 @@ int ft_game_script_bridge::handle_call(ft_game_script_context &context, const ft
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (FT_ERR_INVALID_ARGUMENT);
+    }
+    if (tokens[1].get_error() != ER_SUCCESS)
+    {
+        this->set_error(tokens[1].get_error());
+        return (tokens[1].get_error());
     }
     entry = this->_callbacks.find(tokens[1]);
     if (this->_callbacks.get_error() != ER_SUCCESS)
