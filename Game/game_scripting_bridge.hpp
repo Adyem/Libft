@@ -74,6 +74,8 @@ class ft_game_script_bridge
         void set_max_operations(int limit) noexcept;
         int get_max_operations() const noexcept;
 
+        size_t get_callback_count() const noexcept;
+
         int register_function(const ft_string &name, const ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> &callback) noexcept;
         int remove_function(const ft_string &name) noexcept;
 
