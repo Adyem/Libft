@@ -49,15 +49,7 @@ static void json_stream_reader_initialize_error(json_stream_reader *reader) noex
 int json_group_list_lock(ft_unique_lock<pt_mutex> &guard)
 {
     ft_unique_lock<pt_mutex> local_guard;
-    int enable_error;
 
-    enable_error = g_json_group_list_mutex.enable_thread_safety();
-    if (enable_error != 0 && g_json_group_list_mutex.get_error() != ER_SUCCESS)
-    {
-        ft_errno = g_json_group_list_mutex.get_error();
-        guard = ft_unique_lock<pt_mutex>();
-        return (ft_errno);
-    }
     local_guard = ft_unique_lock<pt_mutex>(g_json_group_list_mutex);
     if (local_guard.get_error() != ER_SUCCESS)
     {
@@ -126,20 +118,12 @@ void json_group_set_error(json_group *group, int error_code)
 
 int json_group_enable_thread_safety(json_group *group)
 {
-    int enable_error;
-
     if (group == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     json_group_initialize_error(group);
-    enable_error = group->_mutex.enable_thread_safety();
-    if (enable_error != 0)
-    {
-        json_group_set_error_unlocked(group, group->_mutex.get_error());
-        return (-1);
-    }
     json_group_set_error_unlocked(group, ER_SUCCESS);
     return (0);
 }
@@ -244,25 +228,12 @@ void json_item_set_error(json_item *item, int error_code)
 
 int json_item_enable_thread_safety(json_item *item)
 {
-    int enable_error;
-
     if (item == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     json_item_initialize_error(item);
-    if (item->_mutex.is_thread_safe())
-    {
-        json_item_set_error_unlocked(item, ER_SUCCESS);
-        return (0);
-    }
-    enable_error = item->_mutex.enable_thread_safety();
-    if (enable_error != 0)
-    {
-        json_item_set_error_unlocked(item, item->_mutex.get_error());
-        return (-1);
-    }
     json_item_set_error_unlocked(item, ER_SUCCESS);
     return (0);
 }
@@ -372,25 +343,12 @@ void json_schema_field_set_error(json_schema_field *field, int error_code)
 
 int json_schema_field_enable_thread_safety(json_schema_field *field)
 {
-    int enable_error;
-
     if (field == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     json_schema_field_initialize_error(field);
-    if (field->_mutex.is_thread_safe())
-    {
-        json_schema_field_set_error_unlocked(field, ER_SUCCESS);
-        return (0);
-    }
-    enable_error = field->_mutex.enable_thread_safety();
-    if (enable_error != 0)
-    {
-        json_schema_field_set_error_unlocked(field, field->_mutex.get_error());
-        return (-1);
-    }
     json_schema_field_set_error_unlocked(field, ER_SUCCESS);
     return (0);
 }
@@ -500,25 +458,12 @@ void json_schema_set_error(json_schema *schema, int error_code)
 
 int json_schema_enable_thread_safety(json_schema *schema)
 {
-    int enable_error;
-
     if (schema == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     json_schema_initialize_error(schema);
-    if (schema->_mutex.is_thread_safe())
-    {
-        json_schema_set_error_unlocked(schema, ER_SUCCESS);
-        return (0);
-    }
-    enable_error = schema->_mutex.enable_thread_safety();
-    if (enable_error != 0)
-    {
-        json_schema_set_error_unlocked(schema, schema->_mutex.get_error());
-        return (-1);
-    }
     json_schema_set_error_unlocked(schema, ER_SUCCESS);
     return (0);
 }
@@ -628,25 +573,12 @@ void json_stream_reader_set_error(json_stream_reader *reader, int error_code)
 
 int json_stream_reader_enable_thread_safety(json_stream_reader *reader)
 {
-    int enable_error;
-
     if (reader == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
     json_stream_reader_initialize_error(reader);
-    if (reader->_mutex.is_thread_safe())
-    {
-        json_stream_reader_set_error_unlocked(reader, ER_SUCCESS);
-        return (0);
-    }
-    enable_error = reader->_mutex.enable_thread_safety();
-    if (enable_error != 0)
-    {
-        json_stream_reader_set_error_unlocked(reader, reader->_mutex.get_error());
-        return (-1);
-    }
     json_stream_reader_set_error_unlocked(reader, ER_SUCCESS);
     return (0);
 }
