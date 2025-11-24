@@ -1,6 +1,130 @@
 # TODO
 
-Remaining unchecked items: 0
+Remaining unchecked items: 121
 
-All tasks on the TODO list have been completed.
+## Mutex reinitialization audit
 
+Add a review task for every class to confirm copy and move constructors create fresh mutexes instead of copying or moving existing synchronization primitives; mutexes must be reinitialized and cannot be copied or moved.
+
+- class_big_number: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex. (completed)
+- class_data_buffer: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- class_fd_istream: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- class_file: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- class_file_stream: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- class_istream: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- class_istringstream: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- class_nullptr: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- class_string_class: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- class_stringbuf: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- API module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- CMA module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- Compression module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- Compatebility module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- Config module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- CrossProcess module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- Encryption module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- Errno module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- File module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_behavior_action: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_price_definition: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_game_hooks: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_resistance: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_world_replay_session: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_progress_tracker: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_event: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_event_scheduler: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_quest: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_map3d: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_experience_table: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_item_definition: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_recipe_blueprint: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_loadout_entry: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_loadout_blueprint: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_data_catalog: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_reputation: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_equipment: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_debuff: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_economy_table: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_vendor_profile: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_inventory: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_path_step: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_pathfinding: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_item_modifier: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_item: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_world_region: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_goal: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_achievement: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_currency_rate: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_game_server: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_character: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_crafting: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_behavior_context: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_behavior_node: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_behavior_composite: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_behavior_selector: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_behavior_sequence: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_behavior_tree: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_upgrade: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_dialogue_script: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_buff: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_world_registry: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_rarity_band: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_behavior_profile: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_world: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_behavior_table: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_region_definition: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_game_script_context: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_game_script_bridge: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_game_state: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_skill: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_dialogue_table: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_dialogue_line: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- Geometry module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- GetNextLine module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- HTML module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- JSon module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- Libft module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- Logger module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- Math module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- Networking module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- Observability module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- Parser module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- PThread module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- Printf module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- RNG module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ReadLine module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- SCMA module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- Storage module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- System_utils module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- Pool: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_variant: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- Pair: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_optional: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_set: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_cancellation_source: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_cancellation_token: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_uniqueptr: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_map: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_sharedptr: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_graph: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_function: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_bitset: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_stack: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_event_emitter: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_string_view: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_deque: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_unordered_map: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_thread_pool: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_matrix: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_future: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_circular_buffer: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_promise: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_priority_queue: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- Iterator: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_queue: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_tuple: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_vector: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- ft_trie: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- Time module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- XML module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
+- YAML module: check the move and copy constructors so the mutex is properly reinitialized for the new object and never copied or moved from an existing mutex.
