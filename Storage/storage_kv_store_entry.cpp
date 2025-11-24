@@ -1,5 +1,7 @@
 #include "kv_store.hpp"
 
+#include <new>
+
 #include "../Libft/libft.hpp"
 #include "../Template/move.hpp"
 
@@ -13,6 +15,13 @@ void kv_store_entry::set_error_unlocked(int error_code) const noexcept
 void kv_store_entry::set_error(int error_code) const noexcept
 {
     this->set_error_unlocked(error_code);
+    return ;
+}
+
+void kv_store_entry::reinitialize_mutex() noexcept
+{
+    this->_mutex.~pt_mutex();
+    new (&this->_mutex) pt_mutex();
     return ;
 }
 
@@ -98,6 +107,49 @@ kv_store_entry::kv_store_entry(const kv_store_entry &other) noexcept
     return ;
 }
 
+kv_store_entry::kv_store_entry(kv_store_entry &&other) noexcept
+    : _value()
+    , _has_expiration(false)
+    , _expiration_timestamp(0)
+    , _error_code(ER_SUCCESS)
+    , _mutex()
+{
+    ft_unique_lock<pt_mutex> other_guard;
+    int entry_errno;
+    int lock_error;
+
+    entry_errno = ft_errno;
+    lock_error = other.lock_entry(other_guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        this->set_error_unlocked(lock_error);
+        kv_store_entry::restore_errno(other_guard, entry_errno);
+        return ;
+    }
+    this->_value = ft_move(other._value);
+    if (this->_value.get_error() != ER_SUCCESS)
+    {
+        this->set_error_unlocked(this->_value.get_error());
+        kv_store_entry::restore_errno(other_guard, entry_errno);
+        return ;
+    }
+    this->_has_expiration = other._has_expiration;
+    this->_expiration_timestamp = other._expiration_timestamp;
+    other._has_expiration = false;
+    other._expiration_timestamp = 0;
+    other._value = ft_string();
+    if (other._value.get_error() != ER_SUCCESS)
+    {
+        other.set_error_unlocked(other._value.get_error());
+        kv_store_entry::restore_errno(other_guard, entry_errno);
+        return ;
+    }
+    other.set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(ER_SUCCESS);
+    kv_store_entry::restore_errno(other_guard, entry_errno);
+    return ;
+}
+
 kv_store_entry &kv_store_entry::operator=(const kv_store_entry &other) noexcept
 {
     ft_unique_lock<pt_mutex> this_guard;
@@ -139,6 +191,73 @@ kv_store_entry &kv_store_entry::operator=(const kv_store_entry &other) noexcept
     this->set_error_unlocked(ER_SUCCESS);
     kv_store_entry::restore_errno(other_guard, entry_errno);
     kv_store_entry::restore_errno(this_guard, entry_errno);
+    return (*this);
+}
+
+kv_store_entry &kv_store_entry::operator=(kv_store_entry &&other) noexcept
+{
+    ft_unique_lock<pt_mutex> other_guard;
+    ft_unique_lock<pt_mutex> new_guard;
+    ft_string moved_value;
+    bool moved_has_expiration;
+    long long moved_expiration_timestamp;
+    int entry_errno;
+    int lock_error;
+
+    if (this == &other)
+    {
+        this->set_error_unlocked(ER_SUCCESS);
+        return (*this);
+    }
+    entry_errno = ft_errno;
+    lock_error = other.lock_entry(other_guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        this->set_error_unlocked(lock_error);
+        kv_store_entry::restore_errno(other_guard, entry_errno);
+        return (*this);
+    }
+    moved_value = ft_move(other._value);
+    if (moved_value.get_error() != ER_SUCCESS)
+    {
+        this->set_error_unlocked(moved_value.get_error());
+        kv_store_entry::restore_errno(other_guard, entry_errno);
+        return (*this);
+    }
+    moved_has_expiration = other._has_expiration;
+    moved_expiration_timestamp = other._expiration_timestamp;
+    other._has_expiration = false;
+    other._expiration_timestamp = 0;
+    other._value = ft_string();
+    if (other._value.get_error() != ER_SUCCESS)
+    {
+        other.set_error_unlocked(other._value.get_error());
+        kv_store_entry::restore_errno(other_guard, entry_errno);
+        return (*this);
+    }
+    other.set_error_unlocked(ER_SUCCESS);
+    this->reinitialize_mutex();
+    lock_error = this->lock_entry(new_guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        this->set_error_unlocked(lock_error);
+        kv_store_entry::restore_errno(other_guard, entry_errno);
+        kv_store_entry::restore_errno(new_guard, entry_errno);
+        return (*this);
+    }
+    this->_value = ft_move(moved_value);
+    if (this->_value.get_error() != ER_SUCCESS)
+    {
+        this->set_error_unlocked(this->_value.get_error());
+        kv_store_entry::restore_errno(other_guard, entry_errno);
+        kv_store_entry::restore_errno(new_guard, entry_errno);
+        return (*this);
+    }
+    this->_has_expiration = moved_has_expiration;
+    this->_expiration_timestamp = moved_expiration_timestamp;
+    this->set_error_unlocked(ER_SUCCESS);
+    kv_store_entry::restore_errno(other_guard, entry_errno);
+    kv_store_entry::restore_errno(new_guard, entry_errno);
     return (*this);
 }
 
