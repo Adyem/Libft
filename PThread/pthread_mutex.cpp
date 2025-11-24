@@ -7,7 +7,7 @@
 
 pt_mutex::pt_mutex()
     : _owner(0), _lock(false), _error(ER_SUCCESS), _native_initialized(false),
-    _state_mutex(ft_nullptr), _thread_safe_enabled(false)
+    _state_mutex(ft_nullptr)
 {
     ft_bzero(&this->_native_mutex, sizeof(pthread_mutex_t));
     if (pthread_mutex_init(&this->_native_mutex, ft_nullptr) != 0)
@@ -83,7 +83,7 @@ int pt_mutex::lock_internal(bool *lock_acquired) const
 {
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
-    if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
+    if (this->_state_mutex == ft_nullptr)
     {
         ft_errno = ER_SUCCESS;
         return (0);
@@ -125,57 +125,7 @@ void pt_mutex::teardown_thread_safety()
         cma_free(this->_state_mutex);
         this->_state_mutex = ft_nullptr;
     }
-    this->_thread_safe_enabled = false;
     return ;
-}
-
-int pt_mutex::enable_thread_safety()
-{
-    void *memory;
-    pt_mutex *state_mutex;
-
-    if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
-    {
-        this->set_error(ER_SUCCESS);
-        return (0);
-    }
-    memory = cma_malloc(sizeof(pt_mutex));
-    if (memory == ft_nullptr)
-    {
-        this->set_error(FT_ERR_NO_MEMORY);
-        return (-1);
-    }
-    state_mutex = new(memory) pt_mutex();
-    if (state_mutex->get_error() != ER_SUCCESS)
-    {
-        int mutex_error;
-
-        mutex_error = state_mutex->get_error();
-        state_mutex->~pt_mutex();
-        cma_free(memory);
-        this->set_error(mutex_error);
-        return (-1);
-    }
-    this->_state_mutex = state_mutex;
-    this->_thread_safe_enabled = true;
-    this->set_error(ER_SUCCESS);
-    return (0);
-}
-
-void pt_mutex::disable_thread_safety()
-{
-    this->teardown_thread_safety();
-    this->set_error(ER_SUCCESS);
-    return ;
-}
-
-bool pt_mutex::is_thread_safe() const
-{
-    bool enabled;
-
-    enabled = (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr);
-    const_cast<pt_mutex *>(this)->set_error(ER_SUCCESS);
-    return (enabled);
 }
 
 int pt_mutex::lock_state(bool *lock_acquired) const

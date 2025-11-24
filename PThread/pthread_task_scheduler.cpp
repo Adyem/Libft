@@ -1725,24 +1725,9 @@ int ft_task_scheduler::enable_thread_safety()
             this->set_error(this->_queue.get_error());
             return (-1);
         }
-        if (this->_scheduled_mutex.enable_thread_safety() != 0)
-        {
-            this->set_error(this->_scheduled_mutex.get_error());
-            return (-1);
-        }
         if (this->_scheduled_condition.enable_thread_safety() != 0)
         {
             this->set_error(this->_scheduled_condition.get_error());
-            return (-1);
-        }
-        if (this->_queue_metrics_mutex.enable_thread_safety() != 0)
-        {
-            this->set_error(this->_queue_metrics_mutex.get_error());
-            return (-1);
-        }
-        if (this->_worker_metrics_mutex.enable_thread_safety() != 0)
-        {
-            this->set_error(this->_worker_metrics_mutex.get_error());
             return (-1);
         }
         this->set_error(ER_SUCCESS);
@@ -1776,15 +1761,6 @@ int ft_task_scheduler::enable_thread_safety()
         this->set_error(queue_error);
         return (-1);
     }
-    if (this->_scheduled_mutex.enable_thread_safety() != 0)
-    {
-        int scheduled_error;
-
-        scheduled_error = this->_scheduled_mutex.get_error();
-        this->teardown_thread_safety();
-        this->set_error(scheduled_error);
-        return (-1);
-    }
     if (this->_scheduled_condition.enable_thread_safety() != 0)
     {
         int condition_error;
@@ -1792,24 +1768,6 @@ int ft_task_scheduler::enable_thread_safety()
         condition_error = this->_scheduled_condition.get_error();
         this->teardown_thread_safety();
         this->set_error(condition_error);
-        return (-1);
-    }
-    if (this->_queue_metrics_mutex.enable_thread_safety() != 0)
-    {
-        int queue_metric_error;
-
-        queue_metric_error = this->_queue_metrics_mutex.get_error();
-        this->teardown_thread_safety();
-        this->set_error(queue_metric_error);
-        return (-1);
-    }
-    if (this->_worker_metrics_mutex.enable_thread_safety() != 0)
-    {
-        int worker_metric_error;
-
-        worker_metric_error = this->_worker_metrics_mutex.get_error();
-        this->teardown_thread_safety();
-        this->set_error(worker_metric_error);
         return (-1);
     }
     this->set_error(ER_SUCCESS);
@@ -1918,10 +1876,7 @@ void ft_task_scheduler::unlock_internal(bool lock_acquired) const
 void ft_task_scheduler::teardown_thread_safety()
 {
     this->_queue.disable_thread_safety();
-    this->_scheduled_mutex.disable_thread_safety();
     this->_scheduled_condition.disable_thread_safety();
-    this->_queue_metrics_mutex.disable_thread_safety();
-    this->_worker_metrics_mutex.disable_thread_safety();
     if (this->_state_mutex != ft_nullptr)
     {
         this->_state_mutex->~pt_mutex();
