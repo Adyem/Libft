@@ -317,7 +317,6 @@ void ft_blocking_queue<ElementType>::teardown_thread_safety()
         this->_state_mutex = ft_nullptr;
     }
     this->_thread_safe_enabled = false;
-    this->_mutex.disable_thread_safety();
     this->_condition.disable_thread_safety();
     return ;
 }
@@ -330,11 +329,6 @@ int ft_blocking_queue<ElementType>::enable_thread_safety()
 
     if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
     {
-        if (this->_mutex.enable_thread_safety() != 0)
-        {
-            this->set_error(this->_mutex.get_error());
-            return (-1);
-        }
         if (this->_condition.enable_thread_safety() != 0)
         {
             this->set_error(this->_condition.get_error());
@@ -362,15 +356,6 @@ int ft_blocking_queue<ElementType>::enable_thread_safety()
     }
     this->_state_mutex = state_mutex;
     this->_thread_safe_enabled = true;
-    if (this->_mutex.enable_thread_safety() != 0)
-    {
-        int mutex_error;
-
-        mutex_error = this->_mutex.get_error();
-        this->teardown_thread_safety();
-        this->set_error(mutex_error);
-        return (-1);
-    }
     if (this->_condition.enable_thread_safety() != 0)
     {
         int condition_error;
