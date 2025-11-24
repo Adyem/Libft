@@ -1,4 +1,3 @@
-#include <vector>
 #include "pthread.hpp"
 #include "mutex.hpp"
 #include "pthread_lock_tracking.hpp"
