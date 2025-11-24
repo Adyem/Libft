@@ -2788,6 +2788,7 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
         if (operation._type == KV_STORE_OPERATION_TYPE_DELETE)
         {
             Pair<ft_string, kv_store_entry> *existing_pair;
+            Pair<ft_string, kv_store_entry> *end_pair;
 
             existing_pair = staged_map.find(operation._key);
             if (staged_map.get_error() != ER_SUCCESS)
@@ -2796,7 +2797,14 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
                 kv_store::restore_errno(guard, entry_errno);
                 return (-1);
             }
-            if (existing_pair == ft_nullptr)
+            end_pair = staged_map.end();
+            if (staged_map.get_error() != ER_SUCCESS)
+            {
+                this->set_error_unlocked(staged_map.get_error());
+                kv_store::restore_errno(guard, entry_errno);
+                return (-1);
+            }
+            if (existing_pair == end_pair)
             {
                 this->set_error_unlocked(FT_ERR_NOT_FOUND);
                 kv_store::restore_errno(guard, entry_errno);
@@ -2814,6 +2822,7 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
         else
         {
             Pair<ft_string, kv_store_entry> *existing_pair;
+            Pair<ft_string, kv_store_entry> *end_pair;
             kv_store_entry new_entry;
             bool has_expiration;
             long long expiration_timestamp;
@@ -2831,6 +2840,13 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
                 return (-1);
             }
             existing_pair = staged_map.find(operation._key);
+            if (staged_map.get_error() != ER_SUCCESS)
+            {
+                this->set_error_unlocked(staged_map.get_error());
+                kv_store::restore_errno(guard, entry_errno);
+                return (-1);
+            }
+            end_pair = staged_map.end();
             if (staged_map.get_error() != ER_SUCCESS)
             {
                 this->set_error_unlocked(staged_map.get_error());
@@ -2872,7 +2888,7 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
                     }
                 }
             }
-            else if (existing_pair != ft_nullptr)
+            else if (existing_pair != end_pair)
             {
                 bool existing_has_expiration;
 
@@ -2925,7 +2941,7 @@ int kv_store::kv_apply(const ft_vector<kv_store_operation> &operations)
                 kv_store::restore_errno(guard, entry_errno);
                 return (-1);
             }
-            if (existing_pair != ft_nullptr)
+            if (existing_pair != end_pair)
             {
                 existing_pair->value = new_entry;
                 if (existing_pair->value.get_error() != ER_SUCCESS)
