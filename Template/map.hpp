@@ -9,8 +9,6 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
 #include <cstddef>
-#include "../Libft/libft.hpp"
-#include <utility>
 #include "move.hpp"
 
 template <typename Key, typename MappedType>
@@ -693,25 +691,13 @@ const Pair<Key, MappedType>* ft_map<Key, MappedType>::end() const
 template <typename Key, typename MappedType>
 Pair<Key, MappedType>* ft_map<Key, MappedType>::get_end_pointer_unlocked()
 {
-    Pair<Key, MappedType> *result;
-
-    if (this->_data == ft_nullptr)
-        result = reinterpret_cast<Pair<Key, MappedType> *>(this);
-    else
-        result = this->_data + this->_size;
-    return (result);
+    return (this->_data + this->_size);
 }
 
 template <typename Key, typename MappedType>
 const Pair<Key, MappedType>* ft_map<Key, MappedType>::get_end_pointer_unlocked() const
 {
-    const Pair<Key, MappedType> *result;
-
-    if (this->_data == ft_nullptr)
-        result = reinterpret_cast<const Pair<Key, MappedType> *>(this);
-    else
-        result = this->_data + this->_size;
-    return (result);
+    return (this->_data + this->_size);
 }
 
 template <typename Key, typename MappedType>
