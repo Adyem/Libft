@@ -54,13 +54,16 @@ class kv_store_entry
 
         void set_error_unlocked(int error_code) const noexcept;
         void set_error(int error_code) const noexcept;
+        void reinitialize_mutex() noexcept;
         int lock_entry(ft_unique_lock<pt_mutex> &guard) const noexcept;
         static void restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept;
 
     public:
         kv_store_entry() noexcept;
         kv_store_entry(const kv_store_entry &other) noexcept;
+        kv_store_entry(kv_store_entry &&other) noexcept;
         kv_store_entry &operator=(const kv_store_entry &other) noexcept;
+        kv_store_entry &operator=(kv_store_entry &&other) noexcept;
         ~kv_store_entry() noexcept;
 
         int set_value(const ft_string &value) noexcept;
