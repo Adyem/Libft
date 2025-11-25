@@ -117,8 +117,12 @@ Pair<KeyType, ValueType>::Pair(Pair &&other)
         _thread_safe_enabled(false), key(), value()
 {
     bool other_lock_acquired;
+    pt_mutex *other_mutex;
+    bool other_thread_safe;
 
     other_lock_acquired = false;
+    other_mutex = ft_nullptr;
+    other_thread_safe = false;
     if (other.lock_internal(&other_lock_acquired) != 0)
     {
         this->set_error(ft_errno);
@@ -126,11 +130,25 @@ Pair<KeyType, ValueType>::Pair(Pair &&other)
     }
     this->key = ft_move(other.key);
     this->value = ft_move(other.value);
+    other_thread_safe = other._thread_safe_enabled;
+    other_mutex = other._mutex;
     other.unlock_internal(other_lock_acquired);
-    this->_mutex = other._mutex;
-    this->_thread_safe_enabled = other._thread_safe_enabled;
     other._mutex = ft_nullptr;
     other._thread_safe_enabled = false;
+    if (other_thread_safe && other_mutex != ft_nullptr)
+    {
+        other_mutex->~pt_mutex();
+        cma_free(other_mutex);
+    }
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+        {
+            this->_thread_safe_enabled = false;
+            this->set_error(this->_error_code);
+            return ;
+        }
+    }
     other.set_error(ER_SUCCESS);
     this->set_error(ER_SUCCESS);
     return ;
@@ -191,6 +209,8 @@ Pair<KeyType, ValueType> &Pair<KeyType, ValueType>::operator=(Pair &&other)
 {
     bool this_lock_acquired;
     bool other_lock_acquired;
+    pt_mutex *other_mutex;
+    bool other_thread_safe;
 
     if (this == &other)
     {
@@ -210,13 +230,31 @@ Pair<KeyType, ValueType> &Pair<KeyType, ValueType>::operator=(Pair &&other)
         this->set_error(ft_errno);
         return (*this);
     }
+    other_mutex = ft_nullptr;
+    other_thread_safe = false;
     this->key = ft_move(other.key);
     this->value = ft_move(other.value);
     this->unlock_internal(this_lock_acquired);
     other.unlock_internal(other_lock_acquired);
     this->teardown_thread_safety();
-    this->_mutex = other._mutex;
-    this->_thread_safe_enabled = other._thread_safe_enabled;
+    other_thread_safe = other._thread_safe_enabled;
+    other_mutex = other._mutex;
+    other._mutex = ft_nullptr;
+    other._thread_safe_enabled = false;
+    if (other_thread_safe && other_mutex != ft_nullptr)
+    {
+        other_mutex->~pt_mutex();
+        cma_free(other_mutex);
+    }
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+        {
+            this->_thread_safe_enabled = false;
+            this->set_error(this->_error_code);
+            return (*this);
+        }
+    }
     other._mutex = ft_nullptr;
     other._thread_safe_enabled = false;
     other.set_error(ER_SUCCESS);

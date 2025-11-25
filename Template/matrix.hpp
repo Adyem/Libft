@@ -96,6 +96,7 @@ ft_matrix<ElementType>::ft_matrix(ft_matrix&& other) noexcept
       _thread_safe_enabled(false)
 {
     bool other_lock_acquired;
+    bool other_thread_safe;
 
     other_lock_acquired = false;
     if (other.lock_internal(&other_lock_acquired) != 0)
@@ -103,24 +104,25 @@ ft_matrix<ElementType>::ft_matrix(ft_matrix&& other) noexcept
         this->set_error(ft_errno);
         return ;
     }
+    other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
     this->_data = other._data;
     this->_rows = other._rows;
     this->_cols = other._cols;
     this->_error_code = other._error_code;
-    if (other._thread_safe_enabled && other._mutex != ft_nullptr)
-    {
-        this->_mutex = other._mutex;
-        this->_thread_safe_enabled = true;
-        other._mutex = ft_nullptr;
-        other._thread_safe_enabled = false;
-    }
     other._data = ft_nullptr;
     other._rows = 0;
     other._cols = 0;
     other._error_code = ER_SUCCESS;
+    other.unlock_internal(other_lock_acquired);
+    other.teardown_thread_safety();
+    other._thread_safe_enabled = false;
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+            return ;
+    }
     this->set_error(this->_error_code);
     other.set_error(ER_SUCCESS);
-    other.unlock_internal(other_lock_acquired);
     return ;
 }
 
@@ -131,10 +133,7 @@ ft_matrix<ElementType>& ft_matrix<ElementType>::operator=(ft_matrix&& other) noe
     {
         bool this_lock_acquired;
         bool other_lock_acquired;
-        pt_mutex *old_mutex;
-        bool      had_old_mutex;
-        pt_mutex *new_mutex;
-        bool      new_thread_safe;
+        bool other_thread_safe;
 
         this_lock_acquired = false;
         if (this->lock_internal(&this_lock_acquired) != 0)
@@ -149,15 +148,7 @@ ft_matrix<ElementType>& ft_matrix<ElementType>::operator=(ft_matrix&& other) noe
             this->set_error(ft_errno);
             return (*this);
         }
-        old_mutex = this->_mutex;
-        had_old_mutex = (this->_thread_safe_enabled && this->_mutex != ft_nullptr);
-        new_mutex = ft_nullptr;
-        new_thread_safe = false;
-        if (other._thread_safe_enabled && other._mutex != ft_nullptr)
-        {
-            new_mutex = other._mutex;
-            new_thread_safe = true;
-        }
+        other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
         this->clear_unlocked();
         this->_data = other._data;
         this->_rows = other._rows;
@@ -167,18 +158,20 @@ ft_matrix<ElementType>& ft_matrix<ElementType>::operator=(ft_matrix&& other) noe
         other._rows = 0;
         other._cols = 0;
         other._error_code = ER_SUCCESS;
-        other.set_error(ER_SUCCESS);
         other.unlock_internal(other_lock_acquired);
-        this->unlock_internal(this_lock_acquired);
-        if (had_old_mutex && old_mutex != ft_nullptr)
-        {
-            old_mutex->~pt_mutex();
-            cma_free(old_mutex);
-        }
-        this->_thread_safe_enabled = new_thread_safe;
-        this->_mutex = new_mutex;
+        other.teardown_thread_safety();
         other._thread_safe_enabled = false;
-        other._mutex = ft_nullptr;
+        this->unlock_internal(this_lock_acquired);
+        this->teardown_thread_safety();
+        if (other_thread_safe)
+        {
+            if (this->enable_thread_safety() != 0)
+            {
+                other.set_error(ER_SUCCESS);
+                return (*this);
+            }
+        }
+        other.set_error(ER_SUCCESS);
         this->set_error(this->_error_code);
         return (*this);
     }

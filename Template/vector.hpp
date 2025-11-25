@@ -163,13 +163,11 @@ ft_vector<ElementType>::ft_vector(ft_vector<ElementType>&& other) noexcept
       _mutex(ft_nullptr),
       _thread_safe_enabled(false)
 {
+    bool other_thread_safe;
+
+    other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
     if (other._thread_safe_enabled && other._mutex != ft_nullptr)
-    {
-        this->_mutex = other._mutex;
-        this->_thread_safe_enabled = true;
-        other._mutex = ft_nullptr;
-        other._thread_safe_enabled = false;
-    }
+        other.teardown_thread_safety();
     if (other.using_small_buffer() != false)
     {
         this->reset_to_small_buffer();
@@ -189,6 +187,11 @@ ft_vector<ElementType>::ft_vector(ft_vector<ElementType>&& other) noexcept
         this->_capacity = other._capacity;
     }
     this->_error_code = other._error_code;
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+            return ;
+    }
     other._size = 0;
     other.reset_to_small_buffer();
     other._error_code = ER_SUCCESS;
@@ -200,6 +203,7 @@ ft_vector<ElementType>& ft_vector<ElementType>::operator=(ft_vector<ElementType>
     if (this != &other)
     {
         bool lock_acquired;
+        bool other_thread_safe;
 
         lock_acquired = false;
         if (this->lock_internal(&lock_acquired) != 0)
@@ -217,13 +221,9 @@ ft_vector<ElementType>& ft_vector<ElementType>::operator=(ft_vector<ElementType>
         this->teardown_thread_safety();
         this->_mutex = ft_nullptr;
         this->_thread_safe_enabled = false;
-        if (other._thread_safe_enabled && other._mutex != ft_nullptr)
-        {
-            this->_mutex = other._mutex;
-            this->_thread_safe_enabled = true;
-            other._mutex = ft_nullptr;
-            other._thread_safe_enabled = false;
-        }
+        other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
+        if (other_thread_safe)
+            other.teardown_thread_safety();
         if (other.using_small_buffer() != false)
         {
             this->reset_to_small_buffer();
@@ -244,6 +244,16 @@ ft_vector<ElementType>& ft_vector<ElementType>::operator=(ft_vector<ElementType>
             this->_capacity = other._capacity;
         }
         this->_error_code = other._error_code;
+        if (other_thread_safe)
+        {
+            if (this->enable_thread_safety() != 0)
+            {
+                other._size = 0;
+                other.reset_to_small_buffer();
+                other._error_code = ER_SUCCESS;
+                return (*this);
+            }
+        }
         other._size = 0;
         other.reset_to_small_buffer();
         other._error_code = ER_SUCCESS;

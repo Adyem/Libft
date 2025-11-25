@@ -84,39 +84,72 @@ ft_queue<ElementType>::~ft_queue()
 
 template <typename ElementType>
 ft_queue<ElementType>::ft_queue(ft_queue&& other) noexcept
-    : _front(other._front), _rear(other._rear), _size(other._size),
-      _error_code(other._error_code), _mutex(other._mutex),
-      _thread_safe_enabled(other._thread_safe_enabled)
+    : _front(ft_nullptr), _rear(ft_nullptr), _size(0),
+      _error_code(ER_SUCCESS), _mutex(ft_nullptr),
+      _thread_safe_enabled(false)
 {
+    bool other_lock_acquired;
+    bool other_thread_safe;
+
+    other_lock_acquired = false;
+    if (other.lock_internal(&other_lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return ;
+    }
+    this->_front = other._front;
+    this->_rear = other._rear;
+    this->_size = other._size;
+    this->_error_code = other._error_code;
+    other_thread_safe = other._thread_safe_enabled;
     other._front = ft_nullptr;
     other._rear = ft_nullptr;
     other._size = 0;
     other._error_code = ER_SUCCESS;
-    other._mutex = ft_nullptr;
-    other._thread_safe_enabled = false;
+    other.unlock_internal(other_lock_acquired);
+    other.teardown_thread_safety();
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+            return ;
+    }
+    this->set_error(this->_error_code);
     return ;
 }
 
 template <typename ElementType>
 ft_queue<ElementType>& ft_queue<ElementType>::operator=(ft_queue&& other) noexcept
 {
-    if (this != &other)
+    bool other_lock_acquired;
+    bool other_thread_safe;
+
+    if (this == &other)
+        return (*this);
+    this->clear();
+    this->teardown_thread_safety();
+    other_lock_acquired = false;
+    if (other.lock_internal(&other_lock_acquired) != 0)
     {
-        this->clear();
-        this->teardown_thread_safety();
-        this->_front = other._front;
-        this->_rear = other._rear;
-        this->_size = other._size;
-        this->_error_code = other._error_code;
-        this->_mutex = other._mutex;
-        this->_thread_safe_enabled = other._thread_safe_enabled;
-        other._front = ft_nullptr;
-        other._rear = ft_nullptr;
-        other._size = 0;
-        other._error_code = ER_SUCCESS;
-        other._mutex = ft_nullptr;
-        other._thread_safe_enabled = false;
+        this->set_error(ft_errno);
+        return (*this);
     }
+    this->_front = other._front;
+    this->_rear = other._rear;
+    this->_size = other._size;
+    this->_error_code = other._error_code;
+    other_thread_safe = other._thread_safe_enabled;
+    other._front = ft_nullptr;
+    other._rear = ft_nullptr;
+    other._size = 0;
+    other._error_code = ER_SUCCESS;
+    other.unlock_internal(other_lock_acquired);
+    other.teardown_thread_safety();
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+            return (*this);
+    }
+    this->set_error(this->_error_code);
     return (*this);
 }
 

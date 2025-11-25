@@ -130,8 +130,7 @@ inline ft_bitset::ft_bitset(ft_bitset&& other) noexcept
     size_t transferred_size;
     size_t transferred_block_count;
     size_t *transferred_data;
-    int other_error_code;
-    pt_mutex *transferred_mutex;
+    int transferred_error_code;
     bool transferred_thread_safe;
 
     other_lock_acquired = false;
@@ -143,23 +142,26 @@ inline ft_bitset::ft_bitset(ft_bitset&& other) noexcept
     transferred_size = other._size;
     transferred_block_count = other._blockCount;
     transferred_data = other._data;
-    other_error_code = other._error_code;
-    transferred_mutex = other._state_mutex;
+    transferred_error_code = other._error_code;
     transferred_thread_safe = other._thread_safe_enabled;
     other._size = 0;
     other._blockCount = 0;
     other._data = ft_nullptr;
     other._error_code = ER_SUCCESS;
     other.unlock_internal(other_lock_acquired);
-    other._state_mutex = ft_nullptr;
-    other._thread_safe_enabled = false;
+    other.teardown_thread_safety();
     this->_size = transferred_size;
     this->_blockCount = transferred_block_count;
     this->_data = transferred_data;
-    this->_state_mutex = transferred_mutex;
-    this->_thread_safe_enabled = transferred_thread_safe;
-    this->_error_code = other_error_code;
-    this->set_error(ER_SUCCESS);
+    this->_state_mutex = ft_nullptr;
+    this->_thread_safe_enabled = false;
+    this->_error_code = transferred_error_code;
+    if (transferred_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+            return ;
+    }
+    this->set_error(transferred_error_code);
     return ;
 }
 
@@ -169,6 +171,12 @@ inline ft_bitset& ft_bitset::operator=(ft_bitset&& other) noexcept
     bool other_lock_acquired;
     size_t *previous_data;
     pt_mutex *previous_mutex;
+    bool previous_thread_safe;
+    size_t transferred_size;
+    size_t transferred_block_count;
+    size_t *transferred_data;
+    int transferred_error_code;
+    bool transferred_thread_safe;
 
     if (this == &other)
         return (*this);
@@ -187,28 +195,38 @@ inline ft_bitset& ft_bitset::operator=(ft_bitset&& other) noexcept
     }
     previous_data = this->_data;
     previous_mutex = this->_state_mutex;
-    this->_size = other._size;
-    this->_blockCount = other._blockCount;
-    this->_data = other._data;
-    this->_error_code = other._error_code;
-    this->_state_mutex = other._state_mutex;
-    this->_thread_safe_enabled = other._thread_safe_enabled;
+    previous_thread_safe = this->_thread_safe_enabled;
+    transferred_size = other._size;
+    transferred_block_count = other._blockCount;
+    transferred_data = other._data;
+    transferred_error_code = other._error_code;
+    transferred_thread_safe = other._thread_safe_enabled;
+    this->_size = transferred_size;
+    this->_blockCount = transferred_block_count;
+    this->_data = transferred_data;
+    this->_error_code = transferred_error_code;
+    this->_state_mutex = ft_nullptr;
+    this->_thread_safe_enabled = false;
     other._size = 0;
     other._blockCount = 0;
     other._data = ft_nullptr;
     other._error_code = ER_SUCCESS;
     other.unlock_internal(other_lock_acquired);
-    other._state_mutex = ft_nullptr;
-    other._thread_safe_enabled = false;
+    other.teardown_thread_safety();
     this->unlock_internal(this_lock_acquired);
     if (previous_data != ft_nullptr && previous_data != this->_data)
         cma_free(previous_data);
-    if (previous_mutex != ft_nullptr && previous_mutex != this->_state_mutex)
+    if (previous_thread_safe && previous_mutex != ft_nullptr && previous_mutex != this->_state_mutex)
     {
         previous_mutex->~pt_mutex();
         cma_free(previous_mutex);
     }
-    this->set_error(ER_SUCCESS);
+    if (transferred_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+            return (*this);
+    }
+    this->set_error(transferred_error_code);
     return (*this);
 }
 

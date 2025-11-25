@@ -92,16 +92,40 @@ ft_deque<ElementType>::~ft_deque()
 
 template <typename ElementType>
 ft_deque<ElementType>::ft_deque(ft_deque&& other) noexcept
-    : _front(other._front), _back(other._back), _size(other._size),
-      _error_code(other._error_code), _mutex(other._mutex),
-      _thread_safe_enabled(other._thread_safe_enabled)
+    : _front(ft_nullptr), _back(ft_nullptr), _size(0),
+      _error_code(ER_SUCCESS), _mutex(ft_nullptr),
+      _thread_safe_enabled(false)
 {
+    bool other_lock_acquired;
+    bool other_thread_safe;
+    int  other_error_code;
+
+    other_lock_acquired = false;
+    other_thread_safe = false;
+    other_error_code = ER_SUCCESS;
+    if (other.lock_internal(&other_lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return ;
+    }
+    other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
+    other_error_code = other._error_code;
+    this->_front = other._front;
+    this->_back = other._back;
+    this->_size = other._size;
     other._front = ft_nullptr;
     other._back = ft_nullptr;
     other._size = 0;
     other._error_code = ER_SUCCESS;
-    other._mutex = ft_nullptr;
-    other._thread_safe_enabled = false;
+    other.unlock_internal(other_lock_acquired);
+    other.teardown_thread_safety();
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+            return ;
+    }
+    this->_error_code = other_error_code;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -110,20 +134,49 @@ ft_deque<ElementType>& ft_deque<ElementType>::operator=(ft_deque&& other) noexce
 {
     if (this != &other)
     {
+        bool this_lock_acquired;
+        bool other_lock_acquired;
+        bool other_thread_safe;
+        int  other_error_code;
+
+        this_lock_acquired = false;
+        other_lock_acquired = false;
+        other_thread_safe = false;
+        other_error_code = ER_SUCCESS;
+        if (this->lock_internal(&this_lock_acquired) != 0)
+        {
+            this->set_error(ft_errno);
+            return (*this);
+        }
         this->clear();
+        this->_front = ft_nullptr;
+        this->_back = ft_nullptr;
+        this->_size = 0;
+        this->_error_code = ER_SUCCESS;
+        this->unlock_internal(this_lock_acquired);
         this->teardown_thread_safety();
+        if (other.lock_internal(&other_lock_acquired) != 0)
+        {
+            this->set_error(ft_errno);
+            return (*this);
+        }
+        other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
+        other_error_code = other._error_code;
         this->_front = other._front;
         this->_back = other._back;
         this->_size = other._size;
-        this->_error_code = other._error_code;
-        this->_mutex = other._mutex;
-        this->_thread_safe_enabled = other._thread_safe_enabled;
         other._front = ft_nullptr;
         other._back = ft_nullptr;
         other._size = 0;
         other._error_code = ER_SUCCESS;
-        other._mutex = ft_nullptr;
-        other._thread_safe_enabled = false;
+        other.unlock_internal(other_lock_acquired);
+        other.teardown_thread_safety();
+        if (other_thread_safe)
+        {
+            if (this->enable_thread_safety() != 0)
+                return (*this);
+        }
+        this->_error_code = other_error_code;
     }
     this->set_error(ER_SUCCESS);
     return (*this);

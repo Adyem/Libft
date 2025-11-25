@@ -277,8 +277,10 @@ ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<ManagedType>& other)
       _thread_safe_enabled(false)
 {
     bool other_lock_acquired;
+    bool other_thread_safe;
 
     other_lock_acquired = false;
+    other_thread_safe = false;
     if (other.lock_internal(&other_lock_acquired) != 0)
     {
         this->set_error_unlocked(ft_errno);
@@ -289,6 +291,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<ManagedType>& other)
     this->_arraySize = other._arraySize;
     this->_isArrayType = other._isArrayType;
     this->_error_code = other._error_code;
+    other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
     if (this->_referenceCount)
     {
         ++(*this->_referenceCount);
@@ -297,6 +300,16 @@ ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<ManagedType>& other)
     else
         this->set_error_unlocked(other._error_code);
     other.unlock_internal(other_lock_acquired);
+    if (other_thread_safe)
+    {
+        if (this->prepare_thread_safety() != 0)
+        {
+            this->release_current_locked();
+            this->set_error_unlocked(ft_errno);
+            return ;
+        }
+    }
+    this->_thread_safe_enabled = other_thread_safe;
     return ;
 }
 
@@ -311,8 +324,10 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<ManagedType>&& other) noexc
       _thread_safe_enabled(false)
 {
     bool other_lock_acquired;
+    bool other_thread_safe;
 
     other_lock_acquired = false;
+    other_thread_safe = false;
     if (other.lock_internal(&other_lock_acquired) != 0)
     {
         this->set_error_unlocked(ft_errno);
@@ -323,6 +338,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<ManagedType>&& other) noexc
     this->_arraySize = other._arraySize;
     this->_isArrayType = other._isArrayType;
     this->_error_code = other._error_code;
+    other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
     other._managedPointer = ft_nullptr;
     other._referenceCount = ft_nullptr;
     other._arraySize = 0;
@@ -331,6 +347,17 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<ManagedType>&& other) noexc
     this->set_error_unlocked(ER_SUCCESS);
     other.set_error_unlocked(ER_SUCCESS);
     other.unlock_internal(other_lock_acquired);
+    other.teardown_thread_safety();
+    if (other_thread_safe)
+    {
+        if (this->prepare_thread_safety() != 0)
+        {
+            this->set_error_unlocked(ft_errno);
+            other.set_error_unlocked(ft_errno);
+            return ;
+        }
+        this->_thread_safe_enabled = true;
+    }
     return ;
 }
 
@@ -401,37 +428,65 @@ ft_sharedptr<ManagedType>& ft_sharedptr<ManagedType>::operator=(ft_sharedptr<Man
             this->set_error_unlocked(ft_errno);
         return (*this);
     }
-    bool this_lock_acquired;
-    bool other_lock_acquired;
+    ft_sharedptr<ManagedType> *first;
+    ft_sharedptr<ManagedType> *second;
+    bool first_lock_acquired;
+    bool second_lock_acquired;
+    bool other_thread_safe;
 
-    this_lock_acquired = false;
-    if (this->lock_internal(&this_lock_acquired) != 0)
+    first = this;
+    second = &other;
+    if (first > second)
+    {
+        ft_sharedptr<ManagedType> *temp;
+
+        temp = first;
+        first = second;
+        second = temp;
+    }
+    first_lock_acquired = false;
+    if (first->lock_internal(&first_lock_acquired) != 0)
     {
         this->set_error_unlocked(ft_errno);
         return (*this);
     }
-    other_lock_acquired = false;
-    if (other.lock_internal(&other_lock_acquired) != 0)
+    second_lock_acquired = false;
+    if (second->lock_internal(&second_lock_acquired) != 0)
     {
-        this->unlock_internal(this_lock_acquired);
+        first->unlock_internal(first_lock_acquired);
         this->set_error_unlocked(ft_errno);
+        other.set_error_unlocked(ft_errno);
         return (*this);
     }
+    other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
     this->release_current_locked();
     this->_managedPointer = other._managedPointer;
     this->_referenceCount = other._referenceCount;
     this->_arraySize = other._arraySize;
     this->_isArrayType = other._isArrayType;
     this->_error_code = other._error_code;
+    this->_thread_safe_enabled = other_thread_safe;
     other._managedPointer = ft_nullptr;
     other._referenceCount = ft_nullptr;
     other._arraySize = 0;
     other._isArrayType = false;
     other._error_code = ER_SUCCESS;
+    other._thread_safe_enabled = false;
+    other.unlock_internal(second_lock_acquired);
+    this->unlock_internal(first_lock_acquired);
+    this->teardown_thread_safety();
+    other.teardown_thread_safety();
+    if (other_thread_safe)
+    {
+        if (this->prepare_thread_safety() != 0)
+        {
+            this->set_error_unlocked(ft_errno);
+            other.set_error_unlocked(ft_errno);
+            return (*this);
+        }
+    }
     this->set_error_unlocked(ER_SUCCESS);
     other.set_error_unlocked(ER_SUCCESS);
-    other.unlock_internal(other_lock_acquired);
-    this->unlock_internal(this_lock_acquired);
     return (*this);
 }
 
@@ -454,6 +509,7 @@ ft_sharedptr<ManagedType>& ft_sharedptr<ManagedType>::operator=(const ft_sharedp
     }
     bool this_lock_acquired;
     bool other_lock_acquired;
+    bool other_thread_safe;
 
     this_lock_acquired = false;
     if (this->lock_internal(&this_lock_acquired) != 0)
@@ -468,6 +524,7 @@ ft_sharedptr<ManagedType>& ft_sharedptr<ManagedType>::operator=(const ft_sharedp
         this->set_error_unlocked(ft_errno);
         return (*this);
     }
+    other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
     this->release_current_locked();
     this->_managedPointer = other._managedPointer;
     this->_referenceCount = other._referenceCount;
@@ -483,6 +540,19 @@ ft_sharedptr<ManagedType>& ft_sharedptr<ManagedType>::operator=(const ft_sharedp
         this->set_error_unlocked(other._error_code);
     other.unlock_internal(other_lock_acquired);
     this->unlock_internal(this_lock_acquired);
+    this->teardown_thread_safety();
+    if (other_thread_safe)
+    {
+        if (this->prepare_thread_safety() != 0)
+        {
+            this->release_current_locked();
+            this->set_error_unlocked(ft_errno);
+            other.set_error_unlocked(ft_errno);
+            return (*this);
+        }
+    }
+    this->_thread_safe_enabled = other_thread_safe;
+    other.set_error_unlocked(ER_SUCCESS);
     return (*this);
 }
 

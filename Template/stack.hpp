@@ -83,35 +83,67 @@ ft_stack<ElementType>::~ft_stack()
 
 template <typename ElementType>
 ft_stack<ElementType>::ft_stack(ft_stack&& other) noexcept
-    : _top(other._top), _size(other._size), _error_code(other._error_code),
-      _mutex(other._mutex), _thread_safe_enabled(other._thread_safe_enabled)
+    : _top(ft_nullptr), _size(0), _error_code(ER_SUCCESS),
+      _mutex(ft_nullptr), _thread_safe_enabled(false)
 {
+    bool other_lock_acquired;
+    bool other_thread_safe;
+
+    other_lock_acquired = false;
+    if (other.lock_internal(&other_lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return ;
+    }
+    this->_top = other._top;
+    this->_size = other._size;
+    this->_error_code = other._error_code;
+    other_thread_safe = other._thread_safe_enabled;
     other._top = ft_nullptr;
     other._size = 0;
     other._error_code = ER_SUCCESS;
-    other._mutex = ft_nullptr;
-    other._thread_safe_enabled = false;
+    other.unlock_internal(other_lock_acquired);
+    other.teardown_thread_safety();
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+            return ;
+    }
+    this->set_error(this->_error_code);
     return ;
 }
 
 template <typename ElementType>
 ft_stack<ElementType>& ft_stack<ElementType>::operator=(ft_stack&& other) noexcept
 {
-    if (this != &other)
+    bool other_lock_acquired;
+    bool other_thread_safe;
+
+    if (this == &other)
+        return (*this);
+    this->clear();
+    this->teardown_thread_safety();
+    other_lock_acquired = false;
+    if (other.lock_internal(&other_lock_acquired) != 0)
     {
-        this->clear();
-        this->teardown_thread_safety();
-        this->_top = other._top;
-        this->_size = other._size;
-        this->_error_code = other._error_code;
-        this->_mutex = other._mutex;
-        this->_thread_safe_enabled = other._thread_safe_enabled;
-        other._top = ft_nullptr;
-        other._size = 0;
-        other._error_code = ER_SUCCESS;
-        other._mutex = ft_nullptr;
-        other._thread_safe_enabled = false;
+        this->set_error(ft_errno);
+        return (*this);
     }
+    this->_top = other._top;
+    this->_size = other._size;
+    this->_error_code = other._error_code;
+    other_thread_safe = other._thread_safe_enabled;
+    other._top = ft_nullptr;
+    other._size = 0;
+    other._error_code = ER_SUCCESS;
+    other.unlock_internal(other_lock_acquired);
+    other.teardown_thread_safety();
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+            return (*this);
+    }
+    this->set_error(this->_error_code);
     return (*this);
 }
 

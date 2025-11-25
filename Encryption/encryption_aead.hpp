@@ -3,6 +3,8 @@
 
 #include <cstddef>
 #include <openssl/evp.h>
+#include "../PThread/mutex.hpp"
+#include "../PThread/unique_lock.hpp"
 
 class encryption_aead_context
 {
@@ -13,8 +15,11 @@ class encryption_aead_context
         bool _initialized;
         size_t _iv_length;
         mutable int _error_code;
+        mutable pt_mutex _mutex;
 
+        void    set_error_unlocked(int error_code) const;
         void    set_error(int error_code) const;
+        int     lock_self(ft_unique_lock<pt_mutex> &guard) const;
         int     configure_cipher(const unsigned char *key, size_t key_length,
                     const unsigned char *iv, size_t iv_length, bool encrypt_mode);
 

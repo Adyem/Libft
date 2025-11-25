@@ -131,33 +131,46 @@ ft_circular_buffer<ElementType>::ft_circular_buffer(ft_circular_buffer&& other) 
       _thread_safe_enabled(false)
 {
     bool other_lock_acquired;
+    pt_mutex *transferred_mutex;
+    bool other_thread_safe;
 
     other_lock_acquired = false;
+    transferred_mutex = ft_nullptr;
+    other_thread_safe = false;
     if (other.lock_internal(&other_lock_acquired) != 0)
     {
         this->set_error_unlocked(ft_errno);
         return ;
     }
+    transferred_mutex = other._mutex;
+    other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
     this->_buffer = other._buffer;
     this->_capacity = other._capacity;
     this->_head = other._head;
     this->_tail = other._tail;
     this->_size = other._size;
     this->_error_code = other._error_code;
-    this->_mutex = other._mutex;
-    this->_thread_safe_enabled = other._thread_safe_enabled;
+    this->_mutex = ft_nullptr;
+    this->_thread_safe_enabled = false;
     other._buffer = ft_nullptr;
     other._capacity = 0;
     other._head = 0;
     other._tail = 0;
     other._size = 0;
     other._error_code = ER_SUCCESS;
-    if (this->_mutex != ft_nullptr)
-    {
-        other._mutex = ft_nullptr;
-        other._thread_safe_enabled = false;
-    }
+    other._mutex = ft_nullptr;
+    other._thread_safe_enabled = false;
     other.unlock_internal(other_lock_acquired);
+    if (transferred_mutex != ft_nullptr)
+    {
+        transferred_mutex->~pt_mutex();
+        cma_free(transferred_mutex);
+    }
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+            return ;
+    }
     this->set_error_unlocked(ER_SUCCESS);
     return ;
 }
@@ -171,6 +184,10 @@ ft_circular_buffer<ElementType>& ft_circular_buffer<ElementType>::operator=(ft_c
         ft_circular_buffer<ElementType>* second;
         bool first_lock_acquired;
         bool second_lock_acquired;
+        pt_mutex *previous_mutex;
+        bool previous_thread_safe;
+        pt_mutex *transferred_mutex;
+        bool other_thread_safe;
 
         first = this;
         second = &other;
@@ -197,6 +214,10 @@ ft_circular_buffer<ElementType>& ft_circular_buffer<ElementType>::operator=(ft_c
             other.set_error_unlocked(ft_errno);
             return (*this);
         }
+        previous_mutex = this->_mutex;
+        previous_thread_safe = this->_thread_safe_enabled;
+        transferred_mutex = other._mutex;
+        other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
         this->destroy_elements_locked();
         this->release_buffer_locked();
         this->_buffer = other._buffer;
@@ -205,25 +226,33 @@ ft_circular_buffer<ElementType>& ft_circular_buffer<ElementType>::operator=(ft_c
         this->_tail = other._tail;
         this->_size = other._size;
         this->_error_code = other._error_code;
-        if (this->_mutex != other._mutex)
-        {
-            this->teardown_thread_safety();
-            this->_mutex = other._mutex;
-            this->_thread_safe_enabled = other._thread_safe_enabled;
-        }
+        this->_mutex = ft_nullptr;
+        this->_thread_safe_enabled = false;
         other._buffer = ft_nullptr;
         other._capacity = 0;
         other._head = 0;
         other._tail = 0;
         other._size = 0;
         other._error_code = ER_SUCCESS;
+        other._mutex = ft_nullptr;
+        other._thread_safe_enabled = false;
         other.unlock_internal(second_lock_acquired);
-        if (this->_mutex != ft_nullptr)
-        {
-            other._mutex = ft_nullptr;
-            other._thread_safe_enabled = false;
-        }
         this->unlock_internal(first_lock_acquired);
+        if (previous_thread_safe && previous_mutex != ft_nullptr)
+        {
+            previous_mutex->~pt_mutex();
+            cma_free(previous_mutex);
+        }
+        if (transferred_mutex != ft_nullptr)
+        {
+            transferred_mutex->~pt_mutex();
+            cma_free(transferred_mutex);
+        }
+        if (other_thread_safe)
+        {
+            if (this->enable_thread_safety() != 0)
+                return (*this);
+        }
         this->set_error_unlocked(ER_SUCCESS);
         other.set_error_unlocked(ER_SUCCESS);
     }

@@ -98,14 +98,30 @@ ft_priority_queue<ElementType, Compare>::~ft_priority_queue()
 template <typename ElementType, typename Compare>
 ft_priority_queue<ElementType, Compare>::ft_priority_queue(ft_priority_queue&& other) noexcept
     : _data(other._data), _capacity(other._capacity), _size(other._size), _comp(other._comp),
-      _error_code(other._error_code), _mutex(other._mutex),
-      _thread_safe_enabled(other._thread_safe_enabled)
+      _error_code(other._error_code), _mutex(ft_nullptr),
+      _thread_safe_enabled(false)
 {
+    bool other_thread_safe;
+
+    other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+        {
+            other.teardown_thread_safety();
+            other._data = ft_nullptr;
+            other._capacity = 0;
+            other._size = 0;
+            other._error_code = ER_SUCCESS;
+            other._thread_safe_enabled = false;
+            return ;
+        }
+    }
     other._data = ft_nullptr;
     other._capacity = 0;
     other._size = 0;
     other._error_code = ER_SUCCESS;
-    other._mutex = ft_nullptr;
+    other.teardown_thread_safety();
     other._thread_safe_enabled = false;
     this->set_error(this->_error_code);
     return ;
@@ -116,6 +132,8 @@ ft_priority_queue<ElementType, Compare>& ft_priority_queue<ElementType, Compare>
 {
     if (this != &other)
     {
+        bool other_thread_safe;
+
         this->clear();
         if (this->_data != ft_nullptr)
             cma_free(this->_data);
@@ -125,13 +143,27 @@ ft_priority_queue<ElementType, Compare>& ft_priority_queue<ElementType, Compare>
         this->_size = other._size;
         this->_comp = other._comp;
         this->_error_code = other._error_code;
-        this->_mutex = other._mutex;
-        this->_thread_safe_enabled = other._thread_safe_enabled;
+        this->_mutex = ft_nullptr;
+        this->_thread_safe_enabled = false;
+        other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
+        if (other_thread_safe)
+        {
+            if (this->enable_thread_safety() != 0)
+            {
+                other.teardown_thread_safety();
+                other._data = ft_nullptr;
+                other._capacity = 0;
+                other._size = 0;
+                other._error_code = ER_SUCCESS;
+                other._thread_safe_enabled = false;
+                return (*this);
+            }
+        }
         other._data = ft_nullptr;
         other._capacity = 0;
         other._size = 0;
         other._error_code = ER_SUCCESS;
-        other._mutex = ft_nullptr;
+        other.teardown_thread_safety();
         other._thread_safe_enabled = false;
     }
     this->set_error(this->_error_code);

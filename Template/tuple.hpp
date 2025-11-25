@@ -104,25 +104,38 @@ ft_tuple<Types...>::ft_tuple(ft_tuple&& other) noexcept
       _thread_safe_enabled(false)
 {
     bool other_lock_acquired;
+    pt_mutex *transferred_mutex;
+    bool other_thread_safe;
 
     other_lock_acquired = false;
+    transferred_mutex = ft_nullptr;
+    other_thread_safe = false;
     if (other.lock_internal(&other_lock_acquired) != 0)
     {
         this->set_error_unlocked(ft_errno);
         return ;
     }
+    transferred_mutex = other._mutex;
+    other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
     this->_data = other._data;
     this->_error_code = other._error_code;
-    this->_mutex = other._mutex;
-    this->_thread_safe_enabled = other._thread_safe_enabled;
+    this->_mutex = ft_nullptr;
+    this->_thread_safe_enabled = false;
     other._data = ft_nullptr;
     other._error_code = ER_SUCCESS;
-    if (this->_mutex != ft_nullptr)
-    {
-        other._mutex = ft_nullptr;
-        other._thread_safe_enabled = false;
-    }
+    other._mutex = ft_nullptr;
+    other._thread_safe_enabled = false;
     other.unlock_internal(other_lock_acquired);
+    if (transferred_mutex != ft_nullptr)
+    {
+        transferred_mutex->~pt_mutex();
+        cma_free(transferred_mutex);
+    }
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+            return ;
+    }
     this->set_error_unlocked(ER_SUCCESS);
     return ;
 }
@@ -136,6 +149,10 @@ ft_tuple<Types...>& ft_tuple<Types...>::operator=(ft_tuple&& other) noexcept
         ft_tuple<Types...>* second;
         bool first_lock_acquired;
         bool second_lock_acquired;
+        pt_mutex *previous_mutex;
+        bool previous_thread_safe;
+        pt_mutex *transferred_mutex;
+        bool other_thread_safe;
 
         first = this;
         second = &other;
@@ -162,24 +179,36 @@ ft_tuple<Types...>& ft_tuple<Types...>::operator=(ft_tuple&& other) noexcept
             other.set_error_unlocked(ft_errno);
             return (*this);
         }
+        previous_mutex = this->_mutex;
+        previous_thread_safe = this->_thread_safe_enabled;
+        transferred_mutex = other._mutex;
+        other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
         this->destroy_locked();
         this->_data = other._data;
         this->_error_code = other._error_code;
-        if (this->_mutex != other._mutex)
-        {
-            this->teardown_thread_safety();
-            this->_mutex = other._mutex;
-            this->_thread_safe_enabled = other._thread_safe_enabled;
-        }
+        this->_mutex = ft_nullptr;
+        this->_thread_safe_enabled = false;
         other._data = ft_nullptr;
         other._error_code = ER_SUCCESS;
+        other._mutex = ft_nullptr;
+        other._thread_safe_enabled = false;
         other.unlock_internal(second_lock_acquired);
-        if (this->_mutex != ft_nullptr)
-        {
-            other._mutex = ft_nullptr;
-            other._thread_safe_enabled = false;
-        }
         this->unlock_internal(first_lock_acquired);
+        if (previous_thread_safe && previous_mutex != ft_nullptr)
+        {
+            previous_mutex->~pt_mutex();
+            cma_free(previous_mutex);
+        }
+        if (transferred_mutex != ft_nullptr)
+        {
+            transferred_mutex->~pt_mutex();
+            cma_free(transferred_mutex);
+        }
+        if (other_thread_safe)
+        {
+            if (this->enable_thread_safety() != 0)
+                return (*this);
+        }
         this->set_error_unlocked(ER_SUCCESS);
         other.set_error_unlocked(ER_SUCCESS);
     }

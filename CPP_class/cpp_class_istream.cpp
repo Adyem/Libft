@@ -1,6 +1,7 @@
 #include "class_istream.hpp"
 #include "class_nullptr.hpp"
 #include "../Template/move.hpp"
+#include "../PThread/pthread.hpp"
 
 ft_istream::ft_istream() noexcept
     : _gcount(0)
@@ -8,6 +9,62 @@ ft_istream::ft_istream() noexcept
     , _error_code(ER_SUCCESS)
     , _mutex()
 {
+    return ;
+}
+
+ft_istream::ft_istream(const ft_istream &other) noexcept
+    : _gcount(0)
+    , _bad(false)
+    , _error_code(ER_SUCCESS)
+    , _mutex()
+{
+    ft_unique_lock<pt_mutex> other_guard;
+    int entry_errno;
+    int lock_error;
+
+    entry_errno = ft_errno;
+    lock_error = other.lock_self(other_guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        this->set_error_unlocked(lock_error);
+        ft_istream::restore_errno(other_guard, entry_errno);
+        return ;
+    }
+    this->_gcount = other._gcount;
+    this->_bad = other._bad;
+    this->_error_code = other._error_code;
+    this->set_error_unlocked(other._error_code);
+    ft_istream::restore_errno(other_guard, entry_errno);
+    return ;
+}
+
+ft_istream::ft_istream(ft_istream &&other) noexcept
+    : _gcount(0)
+    , _bad(false)
+    , _error_code(ER_SUCCESS)
+    , _mutex()
+{
+    ft_unique_lock<pt_mutex> other_guard;
+    int entry_errno;
+    int lock_error;
+
+    entry_errno = ft_errno;
+    lock_error = other.lock_self(other_guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        this->set_error_unlocked(lock_error);
+        ft_istream::restore_errno(other_guard, entry_errno);
+        return ;
+    }
+    this->_gcount = other._gcount;
+    this->_bad = other._bad;
+    this->_error_code = other._error_code;
+    this->set_error_unlocked(other._error_code);
+    other._gcount = 0;
+    other._bad = false;
+    other._error_code = ER_SUCCESS;
+    other.set_error_unlocked(ER_SUCCESS);
+    ft_istream::restore_errno(other_guard, entry_errno);
     return ;
 }
 
@@ -70,6 +127,129 @@ void ft_istream::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno,
     }
     ft_errno = ER_SUCCESS;
     return ;
+}
+
+int ft_istream::lock_pair(const ft_istream &first, const ft_istream &second,
+    ft_unique_lock<pt_mutex> &first_guard, ft_unique_lock<pt_mutex> &second_guard) noexcept
+{
+    const ft_istream *ordered_first;
+    const ft_istream *ordered_second;
+    bool swapped;
+
+    if (&first == &second)
+    {
+        ft_unique_lock<pt_mutex> single_guard(first._mutex);
+
+        if (single_guard.get_error() != ER_SUCCESS)
+        {
+            ft_errno = single_guard.get_error();
+            return (single_guard.get_error());
+        }
+        first_guard = ft_move(single_guard);
+        second_guard = ft_unique_lock<pt_mutex>();
+        ft_errno = ER_SUCCESS;
+        return (ER_SUCCESS);
+    }
+    ordered_first = &first;
+    ordered_second = &second;
+    swapped = false;
+    if (ordered_first > ordered_second)
+    {
+        const ft_istream *temporary;
+
+        temporary = ordered_first;
+        ordered_first = ordered_second;
+        ordered_second = temporary;
+        swapped = true;
+    }
+    while (true)
+    {
+        ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
+
+        if (lower_guard.get_error() != ER_SUCCESS)
+        {
+            ft_errno = lower_guard.get_error();
+            return (lower_guard.get_error());
+        }
+        ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
+        if (upper_guard.get_error() == ER_SUCCESS)
+        {
+            if (!swapped)
+            {
+                first_guard = ft_move(lower_guard);
+                second_guard = ft_move(upper_guard);
+            }
+            else
+            {
+                first_guard = ft_move(upper_guard);
+                second_guard = ft_move(lower_guard);
+            }
+            ft_errno = ER_SUCCESS;
+            return (ER_SUCCESS);
+        }
+        if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
+        {
+            ft_errno = upper_guard.get_error();
+            return (upper_guard.get_error());
+        }
+        if (lower_guard.owns_lock())
+            lower_guard.unlock();
+        pt_thread_sleep(1);
+    }
+}
+
+ft_istream &ft_istream::operator=(const ft_istream &other) noexcept
+{
+    ft_unique_lock<pt_mutex> this_guard;
+    ft_unique_lock<pt_mutex> other_guard;
+    int entry_errno;
+    int lock_error;
+
+    if (this == &other)
+        return (*this);
+    entry_errno = ft_errno;
+    lock_error = ft_istream::lock_pair(*this, other, this_guard, other_guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        this->set_error_unlocked(lock_error);
+        return (*this);
+    }
+    this->_gcount = other._gcount;
+    this->_bad = other._bad;
+    this->_error_code = other._error_code;
+    this->set_error_unlocked(other._error_code);
+    ft_istream::restore_errno(this_guard, entry_errno);
+    ft_istream::restore_errno(other_guard, entry_errno);
+    return (*this);
+}
+
+ft_istream &ft_istream::operator=(ft_istream &&other) noexcept
+{
+    ft_unique_lock<pt_mutex> this_guard;
+    ft_unique_lock<pt_mutex> other_guard;
+    int entry_errno;
+    int lock_error;
+
+    if (this == &other)
+        return (*this);
+    entry_errno = ft_errno;
+    lock_error = ft_istream::lock_pair(*this, other, this_guard, other_guard);
+    if (lock_error != ER_SUCCESS)
+    {
+        this->set_error_unlocked(lock_error);
+        return (*this);
+    }
+    this->_gcount = other._gcount;
+    this->_bad = other._bad;
+    this->_error_code = other._error_code;
+    this->set_error_unlocked(other._error_code);
+    other._gcount = 0;
+    other._bad = false;
+    other._error_code = ER_SUCCESS;
+    other.set_error_unlocked(ER_SUCCESS);
+    ft_istream::restore_errno(this_guard, entry_errno);
+    ft_istream::restore_errno(other_guard, entry_errno);
+    return (*this);
 }
 
 void ft_istream::read(char *buffer, std::size_t count)

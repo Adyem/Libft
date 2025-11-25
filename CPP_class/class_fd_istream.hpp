@@ -16,7 +16,12 @@ class ft_fd_istream : public ft_istream
 
     public:
         ft_fd_istream(int fd) noexcept;
+        ft_fd_istream(const ft_fd_istream &other) noexcept;
+        ft_fd_istream(ft_fd_istream &&other) noexcept;
         ~ft_fd_istream() noexcept;
+
+        ft_fd_istream &operator=(const ft_fd_istream &other) noexcept;
+        ft_fd_istream &operator=(ft_fd_istream &&other) noexcept;
 
         void set_fd(int fd) noexcept;
         int get_fd() const noexcept;

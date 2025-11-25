@@ -195,14 +195,32 @@ template <typename Key, typename MappedType>
 ft_unordered_map<Key, MappedType>::iterator::iterator(iterator&& other) noexcept
     : _data(other._data), _occupied(other._occupied), _index(other._index),
       _capacity(other._capacity), _error_code(other._error_code),
-      _mutex(other._mutex), _thread_safe_enabled(other._thread_safe_enabled)
+      _mutex(ft_nullptr), _thread_safe_enabled(false)
 {
+    bool other_thread_safe;
+
+    other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+        {
+            other.teardown_thread_safety();
+            other._thread_safe_enabled = false;
+            other._data = ft_nullptr;
+            other._occupied = ft_nullptr;
+            other._index = 0;
+            other._capacity = 0;
+            other._error_code = ER_SUCCESS;
+            return ;
+        }
+    }
+    this->set_error(other._error_code);
+    other.teardown_thread_safety();
     other._data = ft_nullptr;
     other._occupied = ft_nullptr;
     other._index = 0;
     other._capacity = 0;
     other._error_code = ER_SUCCESS;
-    other._mutex = ft_nullptr;
     other._thread_safe_enabled = false;
     return ;
 }
@@ -238,20 +256,37 @@ ft_unordered_map<Key, MappedType>::iterator::operator=(iterator&& other) noexcep
 {
     if (this != &other)
     {
+        bool other_thread_safe;
+
         this->teardown_thread_safety();
         this->_data = other._data;
         this->_occupied = other._occupied;
         this->_index = other._index;
         this->_capacity = other._capacity;
         this->_error_code = other._error_code;
-        this->_mutex = other._mutex;
-        this->_thread_safe_enabled = other._thread_safe_enabled;
+        this->_mutex = ft_nullptr;
+        this->_thread_safe_enabled = false;
+        other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
+        if (other_thread_safe)
+        {
+            if (this->enable_thread_safety() != 0)
+            {
+                other.teardown_thread_safety();
+                other._thread_safe_enabled = false;
+                other._data = ft_nullptr;
+                other._occupied = ft_nullptr;
+                other._index = 0;
+                other._capacity = 0;
+                other._error_code = ER_SUCCESS;
+                return (*this);
+            }
+        }
         other._data = ft_nullptr;
         other._occupied = ft_nullptr;
         other._index = 0;
         other._capacity = 0;
         other._error_code = ER_SUCCESS;
-        other._mutex = ft_nullptr;
+        other.teardown_thread_safety();
         other._thread_safe_enabled = false;
     }
     return (*this);
@@ -573,14 +608,32 @@ template <typename Key, typename MappedType>
 ft_unordered_map<Key, MappedType>::const_iterator::const_iterator(const_iterator&& other) noexcept
     : _data(other._data), _occupied(other._occupied), _index(other._index),
       _capacity(other._capacity), _error_code(other._error_code),
-      _mutex(other._mutex), _thread_safe_enabled(other._thread_safe_enabled)
+      _mutex(ft_nullptr), _thread_safe_enabled(false)
 {
+    bool other_thread_safe;
+
+    other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+        {
+            other.teardown_thread_safety();
+            other._thread_safe_enabled = false;
+            other._data = ft_nullptr;
+            other._occupied = ft_nullptr;
+            other._index = 0;
+            other._capacity = 0;
+            other._error_code = ER_SUCCESS;
+            return ;
+        }
+    }
+    this->set_error(other._error_code);
+    other.teardown_thread_safety();
     other._data = ft_nullptr;
     other._occupied = ft_nullptr;
     other._index = 0;
     other._capacity = 0;
     other._error_code = ER_SUCCESS;
-    other._mutex = ft_nullptr;
     other._thread_safe_enabled = false;
     return ;
 }
@@ -616,20 +669,37 @@ ft_unordered_map<Key, MappedType>::const_iterator::operator=(const_iterator&& ot
 {
     if (this != &other)
     {
+        bool other_thread_safe;
+
         this->teardown_thread_safety();
         this->_data = other._data;
         this->_occupied = other._occupied;
         this->_index = other._index;
         this->_capacity = other._capacity;
         this->_error_code = other._error_code;
-        this->_mutex = other._mutex;
-        this->_thread_safe_enabled = other._thread_safe_enabled;
+        this->_mutex = ft_nullptr;
+        this->_thread_safe_enabled = false;
+        other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
+        if (other_thread_safe)
+        {
+            if (this->enable_thread_safety() != 0)
+            {
+                other.teardown_thread_safety();
+                other._thread_safe_enabled = false;
+                other._data = ft_nullptr;
+                other._occupied = ft_nullptr;
+                other._index = 0;
+                other._capacity = 0;
+                other._error_code = ER_SUCCESS;
+                return (*this);
+            }
+        }
         other._data = ft_nullptr;
         other._occupied = ft_nullptr;
         other._index = 0;
         other._capacity = 0;
         other._error_code = ER_SUCCESS;
-        other._mutex = ft_nullptr;
+        other.teardown_thread_safety();
         other._thread_safe_enabled = false;
     }
     return (*this);
@@ -1098,15 +1168,32 @@ ft_unordered_map<Key, MappedType>& ft_unordered_map<Key, MappedType>::operator=(
 template <typename Key, typename MappedType>
 ft_unordered_map<Key, MappedType>::ft_unordered_map(ft_unordered_map<Key, MappedType>&& other) noexcept
     : _data(other._data), _occupied(other._occupied), _capacity(other._capacity),
-      _size(other._size), _error(other._error), _mutex(other._mutex),
-      _thread_safe_enabled(other._thread_safe_enabled)
+      _size(other._size), _error(other._error), _mutex(ft_nullptr),
+      _thread_safe_enabled(false)
 {
+    bool other_thread_safe;
+
+    other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+        {
+            other.teardown_thread_safety();
+            other._data = ft_nullptr;
+            other._occupied = ft_nullptr;
+            other._capacity = 0;
+            other._size = 0;
+            other._error = ER_SUCCESS;
+            other._thread_safe_enabled = false;
+            return ;
+        }
+    }
     other._data = ft_nullptr;
     other._occupied = ft_nullptr;
     other._capacity = 0;
     other._size = 0;
     other._error = ER_SUCCESS;
-    other._mutex = ft_nullptr;
+    other.teardown_thread_safety();
     other._thread_safe_enabled = false;
 }
 
@@ -1115,6 +1202,8 @@ ft_unordered_map<Key, MappedType>& ft_unordered_map<Key, MappedType>::operator=(
 {
     if (this != &other)
     {
+        bool other_thread_safe;
+
         if (this->_data != ft_nullptr)
         {
             size_t i = 0;
@@ -1137,14 +1226,29 @@ ft_unordered_map<Key, MappedType>& ft_unordered_map<Key, MappedType>::operator=(
         this->_capacity = other._capacity;
         this->_size = other._size;
         this->_error = other._error;
-        this->_mutex = other._mutex;
-        this->_thread_safe_enabled = other._thread_safe_enabled;
+        this->_mutex = ft_nullptr;
+        this->_thread_safe_enabled = false;
+        other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
+        if (other_thread_safe)
+        {
+            if (this->enable_thread_safety() != 0)
+            {
+                other.teardown_thread_safety();
+                other._data = ft_nullptr;
+                other._occupied = ft_nullptr;
+                other._capacity = 0;
+                other._size = 0;
+                other._error = ER_SUCCESS;
+                other._thread_safe_enabled = false;
+                return (*this);
+            }
+        }
         other._data = ft_nullptr;
         other._occupied = ft_nullptr;
         other._capacity = 0;
         other._size = 0;
         other._error = ER_SUCCESS;
-        other._mutex = ft_nullptr;
+        other.teardown_thread_safety();
         other._thread_safe_enabled = false;
     }
     return (*this);
