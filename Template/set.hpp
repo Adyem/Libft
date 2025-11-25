@@ -128,7 +128,6 @@ ft_set<ElementType>& ft_set<ElementType>::operator=(ft_set&& other) noexcept
     bool other_lock_acquired;
     ElementType *previous_data;
     size_t previous_size;
-    size_t previous_capacity;
     pt_mutex *previous_mutex;
     bool previous_thread_safe;
     bool other_thread_safe;
@@ -150,7 +149,6 @@ ft_set<ElementType>& ft_set<ElementType>::operator=(ft_set&& other) noexcept
     }
     previous_data = this->_data;
     previous_size = this->_size;
-    previous_capacity = this->_capacity;
     previous_mutex = this->_mutex;
     previous_thread_safe = this->_thread_safe_enabled;
     other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
