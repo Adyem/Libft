@@ -55,4 +55,14 @@ int ft_run_registered_tests(void);
         } \
     } while (0)
 
+#define FT_ASSERT_NE(unexpected, actual) \
+    do \
+    { \
+        if ((unexpected) == (actual)) \
+        { \
+            ft_test_fail(#unexpected " != " #actual, __FILE__, __LINE__); \
+            return (0); \
+        } \
+    } while (0)
+
 #endif
