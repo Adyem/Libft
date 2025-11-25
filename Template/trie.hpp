@@ -40,6 +40,11 @@ class ft_trie
         ft_trie();
         ~ft_trie();
 
+        ft_trie(const ft_trie &other) = delete;
+        ft_trie &operator=(const ft_trie &other) = delete;
+        ft_trie(ft_trie &&other) = delete;
+        ft_trie &operator=(ft_trie &&other) = delete;
+
         int insert(const char *key, ValueType *value_pointer, int unset_value = 0);
         const node_value *search(const char *key) const;
         int get_error() const;

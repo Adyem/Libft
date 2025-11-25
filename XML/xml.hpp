@@ -26,6 +26,11 @@ struct xml_node
 
     xml_node() noexcept;
     ~xml_node() noexcept;
+
+    xml_node(const xml_node &other) noexcept = delete;
+    xml_node &operator=(const xml_node &other) noexcept = delete;
+    xml_node(xml_node &&other) noexcept = delete;
+    xml_node &operator=(xml_node &&other) noexcept = delete;
 };
 
 class xml_document
@@ -73,6 +78,11 @@ class xml_document
         int get_error() const noexcept;
         const char *get_error_str() const noexcept;
         bool is_thread_safe_enabled() const noexcept;
+
+        xml_document(const xml_document &other) noexcept = delete;
+        xml_document &operator=(const xml_document &other) noexcept = delete;
+        xml_document(xml_document &&other) noexcept = delete;
+        xml_document &operator=(xml_document &&other) noexcept = delete;
 };
 
 int  xml_node_prepare_thread_safety(xml_node *node) noexcept;
