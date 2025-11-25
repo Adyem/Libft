@@ -90,43 +90,114 @@ ft_set<ElementType>::~ft_set()
 
 template <typename ElementType>
 ft_set<ElementType>::ft_set(ft_set&& other) noexcept
-    : _data(other._data), _capacity(other._capacity), _size(other._size),
-      _error_code(other._error_code), _mutex(other._mutex),
-      _thread_safe_enabled(other._thread_safe_enabled)
+    : _data(ft_nullptr), _capacity(0), _size(0), _error_code(ER_SUCCESS),
+      _mutex(ft_nullptr), _thread_safe_enabled(false)
 {
+    bool other_lock_acquired;
+    bool other_thread_safe;
+
+    other_lock_acquired = false;
+    if (other.lock_internal(&other_lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return ;
+    }
+    other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
+    this->_data = other._data;
+    this->_capacity = other._capacity;
+    this->_size = other._size;
+    this->_error_code = other._error_code;
     other._data = ft_nullptr;
     other._capacity = 0;
     other._size = 0;
     other._error_code = ER_SUCCESS;
-    other._mutex = ft_nullptr;
-    other._thread_safe_enabled = false;
-    this->set_error(this->_error_code);
+    other.unlock_internal(other_lock_acquired);
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+            return ;
+    }
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
 template <typename ElementType>
 ft_set<ElementType>& ft_set<ElementType>::operator=(ft_set&& other) noexcept
 {
-    if (this != &other)
+    bool this_lock_acquired;
+    bool other_lock_acquired;
+    ElementType *previous_data;
+    size_t previous_size;
+    size_t previous_capacity;
+    pt_mutex *previous_mutex;
+    bool previous_thread_safe;
+    bool other_thread_safe;
+
+    if (this == &other)
+        return (*this);
+    this_lock_acquired = false;
+    if (this->lock_internal(&this_lock_acquired) != 0)
     {
-        this->clear();
-        if (this->_data != ft_nullptr)
-            cma_free(this->_data);
-        this->teardown_thread_safety();
-        this->_data = other._data;
-        this->_capacity = other._capacity;
-        this->_size = other._size;
-        this->_error_code = other._error_code;
-        this->_mutex = other._mutex;
-        this->_thread_safe_enabled = other._thread_safe_enabled;
-        other._data = ft_nullptr;
-        other._capacity = 0;
-        other._size = 0;
-        other._error_code = ER_SUCCESS;
-        other._mutex = ft_nullptr;
-        other._thread_safe_enabled = false;
+        this->set_error(ft_errno);
+        return (*this);
     }
-    this->set_error(this->_error_code);
+    other_lock_acquired = false;
+    if (other.lock_internal(&other_lock_acquired) != 0)
+    {
+        this->unlock_internal(this_lock_acquired);
+        this->set_error(ft_errno);
+        return (*this);
+    }
+    previous_data = this->_data;
+    previous_size = this->_size;
+    previous_capacity = this->_capacity;
+    previous_mutex = this->_mutex;
+    previous_thread_safe = this->_thread_safe_enabled;
+    other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
+    this->_data = other._data;
+    this->_capacity = other._capacity;
+    this->_size = other._size;
+    this->_error_code = other._error_code;
+    this->_mutex = ft_nullptr;
+    this->_thread_safe_enabled = false;
+    other._data = ft_nullptr;
+    other._capacity = 0;
+    other._size = 0;
+    other._error_code = ER_SUCCESS;
+    other.unlock_internal(other_lock_acquired);
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+        {
+            if (previous_thread_safe && previous_mutex != ft_nullptr)
+            {
+                previous_mutex->~pt_mutex();
+                cma_free(previous_mutex);
+            }
+            this->set_error(ft_errno);
+            this->unlock_internal(this_lock_acquired);
+            return (*this);
+        }
+    }
+    this->unlock_internal(this_lock_acquired);
+    if (previous_data != ft_nullptr && previous_data != this->_data)
+    {
+        size_t index;
+
+        index = 0;
+        while (index < previous_size)
+        {
+            ::destroy_at(&previous_data[index]);
+            index++;
+        }
+        cma_free(previous_data);
+    }
+    if (previous_thread_safe && previous_mutex != ft_nullptr && previous_mutex != this->_mutex)
+    {
+        previous_mutex->~pt_mutex();
+        cma_free(previous_mutex);
+    }
+    this->set_error(ER_SUCCESS);
     return (*this);
 }
 

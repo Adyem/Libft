@@ -141,15 +141,47 @@ Pool<T>::Pool()
 
 template<typename T>
 Pool<T>::Pool(Pool&& other)
-    : _buffer(ft_move(other._buffer))
-    , _freeIndices(ft_move(other._freeIndices))
-    , _error_code(other._error_code)
-    , _state_mutex(other._state_mutex)
-    , _thread_safe_enabled(other._thread_safe_enabled)
+    : _buffer()
+    , _freeIndices()
+    , _error_code(ER_SUCCESS)
+    , _state_mutex(ft_nullptr)
+    , _thread_safe_enabled(false)
 {
+    bool lock_acquired;
+    pt_mutex *other_mutex;
+    bool other_thread_safe;
+
+    lock_acquired = false;
+    other_mutex = ft_nullptr;
+    other_thread_safe = false;
+    if (other.lock_internal(&lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return ;
+    }
+    this->_buffer = ft_move(other._buffer);
+    this->_freeIndices = ft_move(other._freeIndices);
+    this->_error_code = other._error_code;
+    other_thread_safe = other._thread_safe_enabled;
+    other_mutex = other._state_mutex;
     other._error_code = ER_SUCCESS;
     other._state_mutex = ft_nullptr;
     other._thread_safe_enabled = false;
+    other.unlock_internal(lock_acquired);
+    if (other_thread_safe && other_mutex != ft_nullptr)
+    {
+        other_mutex->~pt_mutex();
+        cma_free(other_mutex);
+    }
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+        {
+            this->_thread_safe_enabled = false;
+            this->set_error(this->_error_code);
+            return ;
+        }
+    }
     this->set_error(this->_error_code);
     return ;
 }
@@ -161,6 +193,8 @@ Pool<T>& Pool<T>::operator=(Pool&& other)
     bool other_lock_acquired;
     pt_mutex *previous_mutex;
     bool previous_thread_safe;
+    pt_mutex *other_mutex;
+    bool other_thread_safe;
 
     if (this != &other)
     {
@@ -179,10 +213,12 @@ Pool<T>& Pool<T>::operator=(Pool&& other)
         }
         previous_mutex = this->_state_mutex;
         previous_thread_safe = this->_thread_safe_enabled;
+        other_mutex = other._state_mutex;
+        other_thread_safe = other._thread_safe_enabled;
         this->_buffer = ft_move(other._buffer);
         this->_freeIndices = ft_move(other._freeIndices);
         this->_error_code = other._error_code;
-        this->_state_mutex = other._state_mutex;
+        this->_state_mutex = ft_nullptr;
         this->_thread_safe_enabled = other._thread_safe_enabled;
         other._error_code = ER_SUCCESS;
         other._state_mutex = ft_nullptr;
@@ -193,6 +229,20 @@ Pool<T>& Pool<T>::operator=(Pool&& other)
         {
             previous_mutex->~pt_mutex();
             cma_free(previous_mutex);
+        }
+        if (other_thread_safe && other_mutex != ft_nullptr)
+        {
+            other_mutex->~pt_mutex();
+            cma_free(other_mutex);
+        }
+        if (other_thread_safe)
+        {
+            if (this->enable_thread_safety() != 0)
+            {
+                this->_thread_safe_enabled = false;
+                this->set_error(this->_error_code);
+                return (*this);
+            }
         }
     }
     this->set_error(this->_error_code);

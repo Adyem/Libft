@@ -21,6 +21,10 @@ class ft_stringbuf
 
     public:
         ft_stringbuf(const ft_string &string) noexcept;
+        ft_stringbuf(const ft_stringbuf &other) noexcept;
+        ft_stringbuf &operator=(const ft_stringbuf &other) noexcept;
+        ft_stringbuf(ft_stringbuf &&other) noexcept;
+        ft_stringbuf &operator=(ft_stringbuf &&other) noexcept;
         ~ft_stringbuf() noexcept;
 
         std::size_t read(char *buffer, std::size_t count);

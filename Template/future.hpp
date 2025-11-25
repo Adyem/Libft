@@ -166,11 +166,11 @@ ft_future<ValueType>::ft_future(ft_future<ValueType> &&other)
     ft_sharedptr<ft_promise<ValueType> > transferred_shared;
     int transferred_error;
     pt_mutex *transferred_mutex;
-    bool transferred_thread_safe;
+    bool other_thread_safe;
 
     lock_acquired = false;
     transferred_promise = ft_nullptr;
-    transferred_thread_safe = false;
+    other_thread_safe = false;
     if (other.lock_internal(&lock_acquired) != 0)
     {
         this->set_error(ft_errno);
@@ -180,18 +180,28 @@ ft_future<ValueType>::ft_future(ft_future<ValueType> &&other)
     transferred_shared = ft_move(other._shared_promise);
     transferred_error = other._error_code;
     transferred_mutex = other._state_mutex;
-    transferred_thread_safe = other._thread_safe_enabled;
+    other_thread_safe = (other._thread_safe_enabled && other._state_mutex != ft_nullptr);
     this->_promise = transferred_promise;
     this->_shared_promise = ft_move(transferred_shared);
     this->_error_code = transferred_error;
-    this->_state_mutex = transferred_mutex;
-    this->_thread_safe_enabled = transferred_thread_safe;
+    this->_state_mutex = ft_nullptr;
+    this->_thread_safe_enabled = false;
     other._promise = ft_nullptr;
     other._error_code = ER_SUCCESS;
     other.unlock_internal(lock_acquired);
     other._state_mutex = ft_nullptr;
     other._thread_safe_enabled = false;
     other._shared_promise = ft_sharedptr<ft_promise<ValueType> >();
+    if (transferred_mutex != ft_nullptr)
+    {
+        transferred_mutex->~pt_mutex();
+        cma_free(transferred_mutex);
+    }
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+            return ;
+    }
     this->set_error(transferred_error);
     return ;
 }
@@ -296,7 +306,7 @@ ft_future<ValueType> &ft_future<ValueType>::operator=(ft_future<ValueType> &&oth
     ft_sharedptr<ft_promise<ValueType> > transferred_shared;
     int transferred_error;
     pt_mutex *transferred_mutex;
-    bool transferred_thread_safe;
+    bool other_thread_safe;
 
     if (this == &other)
     {
@@ -323,7 +333,7 @@ ft_future<ValueType> &ft_future<ValueType>::operator=(ft_future<ValueType> &&oth
     transferred_shared = ft_move(other._shared_promise);
     transferred_error = other._error_code;
     transferred_mutex = other._state_mutex;
-    transferred_thread_safe = other._thread_safe_enabled;
+    other_thread_safe = (other._thread_safe_enabled && other._state_mutex != ft_nullptr);
     this->_promise = transferred_promise;
     this->_shared_promise = ft_move(transferred_shared);
     this->_error_code = transferred_error;
@@ -334,12 +344,26 @@ ft_future<ValueType> &ft_future<ValueType>::operator=(ft_future<ValueType> &&oth
     other._thread_safe_enabled = false;
     other._shared_promise = ft_sharedptr<ft_promise<ValueType> >();
     this->unlock_internal(this_lock_acquired);
-    this->_state_mutex = transferred_mutex;
-    this->_thread_safe_enabled = transferred_thread_safe;
-    if (previous_thread_safe && previous_mutex != ft_nullptr && previous_mutex != transferred_mutex)
+    this->_state_mutex = ft_nullptr;
+    this->_thread_safe_enabled = false;
+    if (previous_thread_safe && previous_mutex != ft_nullptr)
     {
         previous_mutex->~pt_mutex();
         cma_free(previous_mutex);
+    }
+    if (transferred_mutex != ft_nullptr)
+    {
+        transferred_mutex->~pt_mutex();
+        cma_free(transferred_mutex);
+    }
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+        {
+            this->_error_code = ft_errno;
+            ft_errno = entry_errno;
+            return (*this);
+        }
     }
     this->_error_code = transferred_error;
     ft_errno = entry_errno;
@@ -532,11 +556,11 @@ inline ft_future<void>::ft_future(ft_future<void> &&other)
     ft_sharedptr<ft_promise<void> > transferred_shared;
     int transferred_error;
     pt_mutex *transferred_mutex;
-    bool transferred_thread_safe;
+    bool other_thread_safe;
 
     lock_acquired = false;
     transferred_promise = ft_nullptr;
-    transferred_thread_safe = false;
+    other_thread_safe = false;
     if (other.lock_internal(&lock_acquired) != 0)
     {
         this->set_error(ft_errno);
@@ -546,18 +570,28 @@ inline ft_future<void>::ft_future(ft_future<void> &&other)
     transferred_shared = ft_move(other._shared_promise);
     transferred_error = other._error_code;
     transferred_mutex = other._state_mutex;
-    transferred_thread_safe = other._thread_safe_enabled;
+    other_thread_safe = (other._thread_safe_enabled && other._state_mutex != ft_nullptr);
     this->_promise = transferred_promise;
     this->_shared_promise = ft_move(transferred_shared);
     this->_error_code = transferred_error;
-    this->_state_mutex = transferred_mutex;
-    this->_thread_safe_enabled = transferred_thread_safe;
+    this->_state_mutex = ft_nullptr;
+    this->_thread_safe_enabled = false;
     other._promise = ft_nullptr;
     other._error_code = ER_SUCCESS;
     other.unlock_internal(lock_acquired);
     other._state_mutex = ft_nullptr;
     other._thread_safe_enabled = false;
     other._shared_promise = ft_sharedptr<ft_promise<void> >();
+    if (transferred_mutex != ft_nullptr)
+    {
+        transferred_mutex->~pt_mutex();
+        cma_free(transferred_mutex);
+    }
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+            return ;
+    }
     this->set_error(transferred_error);
     return ;
 }
@@ -657,7 +691,7 @@ inline ft_future<void> &ft_future<void>::operator=(ft_future<void> &&other)
     ft_sharedptr<ft_promise<void> > transferred_shared;
     int transferred_error;
     pt_mutex *transferred_mutex;
-    bool transferred_thread_safe;
+    bool other_thread_safe;
 
     if (this == &other)
     {
@@ -684,7 +718,7 @@ inline ft_future<void> &ft_future<void>::operator=(ft_future<void> &&other)
     transferred_shared = ft_move(other._shared_promise);
     transferred_error = other._error_code;
     transferred_mutex = other._state_mutex;
-    transferred_thread_safe = other._thread_safe_enabled;
+    other_thread_safe = (other._thread_safe_enabled && other._state_mutex != ft_nullptr);
     this->_promise = transferred_promise;
     this->_shared_promise = ft_move(transferred_shared);
     this->_error_code = transferred_error;
@@ -695,12 +729,26 @@ inline ft_future<void> &ft_future<void>::operator=(ft_future<void> &&other)
     other._thread_safe_enabled = false;
     other._shared_promise = ft_sharedptr<ft_promise<void> >();
     this->unlock_internal(this_lock_acquired);
-    this->_state_mutex = transferred_mutex;
-    this->_thread_safe_enabled = transferred_thread_safe;
-    if (previous_thread_safe && previous_mutex != ft_nullptr && previous_mutex != transferred_mutex)
+    this->_state_mutex = ft_nullptr;
+    this->_thread_safe_enabled = false;
+    if (previous_thread_safe && previous_mutex != ft_nullptr)
     {
         previous_mutex->~pt_mutex();
         cma_free(previous_mutex);
+    }
+    if (transferred_mutex != ft_nullptr)
+    {
+        transferred_mutex->~pt_mutex();
+        cma_free(transferred_mutex);
+    }
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+        {
+            this->_error_code = ft_errno;
+            ft_errno = entry_errno;
+            return (*this);
+        }
     }
     this->_error_code = transferred_error;
     ft_errno = entry_errno;
