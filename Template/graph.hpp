@@ -116,16 +116,39 @@ ft_graph<VertexType>::~ft_graph()
 
 template <typename VertexType>
 ft_graph<VertexType>::ft_graph(ft_graph&& other) noexcept
-    : _nodes(other._nodes), _capacity(other._capacity), _size(other._size), _error_code(other._error_code),
-      _mutex(other._mutex), _thread_safe_enabled(other._thread_safe_enabled)
+    : _nodes(ft_nullptr), _capacity(0), _size(0), _error_code(ER_SUCCESS),
+      _mutex(ft_nullptr), _thread_safe_enabled(false)
 {
+    bool   other_lock_acquired;
+    bool   other_thread_safe;
+    int    other_error_code;
+
+    other_lock_acquired = false;
+    other_thread_safe = false;
+    other_error_code = ER_SUCCESS;
+    if (other.lock_internal(&other_lock_acquired) != 0)
+    {
+        this->set_error(ft_errno);
+        return ;
+    }
+    other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
+    other_error_code = other._error_code;
+    this->_nodes = other._nodes;
+    this->_capacity = other._capacity;
+    this->_size = other._size;
     other._nodes = ft_nullptr;
     other._capacity = 0;
     other._size = 0;
     other._error_code = ER_SUCCESS;
-    other._mutex = ft_nullptr;
-    other._thread_safe_enabled = false;
-    this->set_error(this->_error_code);
+    other.unlock_internal(other_lock_acquired);
+    other.teardown_thread_safety();
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+            return ;
+    }
+    this->_error_code = other_error_code;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
@@ -134,24 +157,53 @@ ft_graph<VertexType>& ft_graph<VertexType>::operator=(ft_graph&& other) noexcept
 {
     if (this != &other)
     {
+        bool   this_lock_acquired;
+        bool   other_lock_acquired;
+        bool   other_thread_safe;
+        int    other_error_code;
+
+        this_lock_acquired = false;
+        other_lock_acquired = false;
+        other_thread_safe = false;
+        other_error_code = ER_SUCCESS;
+        if (this->lock_internal(&this_lock_acquired) != 0)
+        {
+            this->set_error(ft_errno);
+            return (*this);
+        }
         this->clear();
         if (this->_nodes != ft_nullptr)
             cma_free(this->_nodes);
+        this->_nodes = ft_nullptr;
+        this->_capacity = 0;
+        this->_size = 0;
+        this->_error_code = ER_SUCCESS;
+        this->unlock_internal(this_lock_acquired);
         this->teardown_thread_safety();
+        if (other.lock_internal(&other_lock_acquired) != 0)
+        {
+            this->set_error(ft_errno);
+            return (*this);
+        }
+        other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
+        other_error_code = other._error_code;
         this->_nodes = other._nodes;
         this->_capacity = other._capacity;
         this->_size = other._size;
-        this->_error_code = other._error_code;
-        this->_mutex = other._mutex;
-        this->_thread_safe_enabled = other._thread_safe_enabled;
         other._nodes = ft_nullptr;
         other._capacity = 0;
         other._size = 0;
         other._error_code = ER_SUCCESS;
-        other._mutex = ft_nullptr;
-        other._thread_safe_enabled = false;
+        other.unlock_internal(other_lock_acquired);
+        other.teardown_thread_safety();
+        if (other_thread_safe)
+        {
+            if (this->enable_thread_safety() != 0)
+                return (*this);
+        }
+        this->_error_code = other_error_code;
     }
-    this->set_error(this->_error_code);
+    this->set_error(ER_SUCCESS);
     return (*this);
 }
 

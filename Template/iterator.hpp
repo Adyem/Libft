@@ -129,8 +129,7 @@ Iterator<ValueType>::Iterator(Iterator&& other) noexcept
 {
     bool other_lock_acquired;
     int other_error_code;
-    pt_mutex *transferred_mutex;
-    bool transferred_thread_safe;
+    bool other_thread_safe;
 
     other_lock_acquired = false;
     if (other.lock_internal(&other_lock_acquired) != 0)
@@ -140,15 +139,16 @@ Iterator<ValueType>::Iterator(Iterator&& other) noexcept
     }
     other_error_code = other._error_code;
     this->_ptr = other._ptr;
-    transferred_mutex = other._state_mutex;
-    transferred_thread_safe = other._thread_safe_enabled;
+    other_thread_safe = (other._thread_safe_enabled && other._state_mutex != ft_nullptr);
     other._ptr = ft_nullptr;
     other._error_code = ER_SUCCESS;
     other.unlock_internal(other_lock_acquired);
-    other._state_mutex = ft_nullptr;
-    other._thread_safe_enabled = false;
-    this->_state_mutex = transferred_mutex;
-    this->_thread_safe_enabled = transferred_thread_safe;
+    other.teardown_thread_safety();
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+            return ;
+    }
     this->set_error(other_error_code);
     return ;
 }
@@ -159,8 +159,7 @@ Iterator<ValueType>& Iterator<ValueType>::operator=(Iterator&& other) noexcept
     bool this_lock_acquired;
     bool other_lock_acquired;
     int other_error_code;
-    pt_mutex *transferred_mutex;
-    bool transferred_thread_safe;
+    bool other_thread_safe;
 
     if (this == &other)
     {
@@ -182,18 +181,17 @@ Iterator<ValueType>& Iterator<ValueType>::operator=(Iterator&& other) noexcept
     }
     other_error_code = other._error_code;
     this->_ptr = other._ptr;
-    transferred_mutex = other._state_mutex;
-    transferred_thread_safe = other._thread_safe_enabled;
+    other_thread_safe = (other._thread_safe_enabled && other._state_mutex != ft_nullptr);
     other._ptr = ft_nullptr;
     other._error_code = ER_SUCCESS;
     other.unlock_internal(other_lock_acquired);
-    other._state_mutex = ft_nullptr;
-    other._thread_safe_enabled = false;
     this->unlock_internal(this_lock_acquired);
-    if (this->_state_mutex != ft_nullptr && this->_state_mutex != transferred_mutex)
-        this->teardown_thread_safety();
-    this->_state_mutex = transferred_mutex;
-    this->_thread_safe_enabled = transferred_thread_safe;
+    this->teardown_thread_safety();
+    if (other_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+            return (*this);
+    }
     this->set_error(other_error_code);
     return (*this);
 }

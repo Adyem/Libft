@@ -197,10 +197,15 @@ ft_variant<Types...>::ft_variant(ft_variant&& other) noexcept
     storage_t *transferred_data;
     size_t transferred_index;
     int transferred_error;
-    pt_mutex *transferred_mutex;
     bool transferred_thread_safe;
+    pt_mutex *other_mutex;
 
     lock_acquired = false;
+    transferred_data = ft_nullptr;
+    transferred_index = npos;
+    transferred_error = ER_SUCCESS;
+    transferred_thread_safe = false;
+    other_mutex = ft_nullptr;
     if (other.lock_internal(&lock_acquired) != 0)
     {
         this->set_error(ft_errno);
@@ -209,19 +214,31 @@ ft_variant<Types...>::ft_variant(ft_variant&& other) noexcept
     transferred_data = other._data;
     transferred_index = other._index;
     transferred_error = other._error_code;
-    transferred_mutex = other._state_mutex;
     transferred_thread_safe = other._thread_safe_enabled;
+    other_mutex = other._state_mutex;
     this->_data = transferred_data;
     this->_index = transferred_index;
     this->_error_code = transferred_error;
-    this->_state_mutex = transferred_mutex;
-    this->_thread_safe_enabled = transferred_thread_safe;
     other._data = ft_nullptr;
     other._index = npos;
     other._error_code = ER_SUCCESS;
+    other._state_mutex = ft_nullptr;
     other._thread_safe_enabled = false;
     other.unlock_internal(lock_acquired);
-    other._state_mutex = ft_nullptr;
+    if (transferred_thread_safe && other_mutex != ft_nullptr)
+    {
+        other_mutex->~pt_mutex();
+        cma_free(other_mutex);
+    }
+    if (transferred_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+        {
+            this->_thread_safe_enabled = false;
+            this->set_error(this->_error_code);
+            return ;
+        }
+    }
     this->set_error(ER_SUCCESS);
     return ;
 }
@@ -237,8 +254,8 @@ ft_variant<Types...>& ft_variant<Types...>::operator=(ft_variant&& other) noexce
     storage_t *transferred_data;
     size_t transferred_index;
     int transferred_error;
-    pt_mutex *transferred_mutex;
     bool transferred_thread_safe;
+    pt_mutex *other_mutex;
 
     if (this == &other)
     {
@@ -265,8 +282,8 @@ ft_variant<Types...>& ft_variant<Types...>::operator=(ft_variant&& other) noexce
     transferred_data = other._data;
     transferred_index = other._index;
     transferred_error = other._error_code;
-    transferred_mutex = other._state_mutex;
     transferred_thread_safe = other._thread_safe_enabled;
+    other_mutex = other._state_mutex;
     this->_data = transferred_data;
     this->_index = transferred_index;
     this->_error_code = transferred_error;
@@ -280,12 +297,25 @@ ft_variant<Types...>& ft_variant<Types...>::operator=(ft_variant&& other) noexce
     this->unlock_internal(this_lock_acquired);
     if (previous_data != ft_nullptr && previous_data != this->_data)
         cma_free(previous_data);
-    if (previous_thread_safe && previous_mutex != ft_nullptr && previous_mutex != transferred_mutex)
+    if (previous_thread_safe && previous_mutex != ft_nullptr && previous_mutex != other_mutex)
     {
         previous_mutex->~pt_mutex();
         cma_free(previous_mutex);
     }
-    this->_state_mutex = transferred_mutex;
+    if (transferred_thread_safe && other_mutex != ft_nullptr)
+    {
+        other_mutex->~pt_mutex();
+        cma_free(other_mutex);
+    }
+    if (transferred_thread_safe)
+    {
+        if (this->enable_thread_safety() != 0)
+        {
+            this->_thread_safe_enabled = false;
+            this->set_error(this->_error_code);
+            return (*this);
+        }
+    }
     this->_thread_safe_enabled = transferred_thread_safe;
     this->set_error(transferred_error);
     return (*this);

@@ -10,6 +10,149 @@ ft_stringbuf::ft_stringbuf(const ft_string &string) noexcept
     return ;
 }
 
+ft_stringbuf::ft_stringbuf(const ft_stringbuf &other) noexcept
+    : _storage(other._storage), _position(0), _error_code(ER_SUCCESS), _mutex()
+{
+    int entry_errno;
+    ft_unique_lock<pt_mutex> other_guard(other._mutex);
+
+    entry_errno = ft_errno;
+    if (other_guard.get_error() != ER_SUCCESS)
+    {
+        this->_position = 0;
+        this->_error_code = other_guard.get_error();
+        ft_errno = entry_errno;
+        return ;
+    }
+    this->_position = other._position;
+    this->_error_code = other._error_code;
+    if (this->_storage.get_error() != ER_SUCCESS)
+        this->_error_code = this->_storage.get_error();
+    ft_stringbuf::restore_errno(other_guard, entry_errno);
+    return ;
+}
+
+ft_stringbuf &ft_stringbuf::operator=(const ft_stringbuf &other) noexcept
+{
+    if (this == &other)
+    {
+        this->set_error(other._error_code);
+        return (*this);
+    }
+    int entry_errno;
+    const ft_stringbuf *first;
+    const ft_stringbuf *second;
+    ft_unique_lock<pt_mutex> first_guard;
+    ft_unique_lock<pt_mutex> second_guard;
+
+    entry_errno = ft_errno;
+    first = this;
+    second = &other;
+    if (first > second)
+    {
+        const ft_stringbuf *temporary;
+
+        temporary = first;
+        first = second;
+        second = temporary;
+    }
+    first_guard = ft_unique_lock<pt_mutex>(first->_mutex);
+    if (first_guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(first_guard.get_error());
+        ft_stringbuf::restore_errno(first_guard, entry_errno);
+        return (*this);
+    }
+    second_guard = ft_unique_lock<pt_mutex>(second->_mutex);
+    if (second_guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(second_guard.get_error());
+        ft_stringbuf::restore_errno(second_guard, entry_errno);
+        ft_stringbuf::restore_errno(first_guard, entry_errno);
+        return (*this);
+    }
+    this->_storage = other._storage;
+    this->_position = other._position;
+    this->_error_code = other._error_code;
+    if (this->_storage.get_error() != ER_SUCCESS)
+        this->_error_code = this->_storage.get_error();
+    ft_stringbuf::restore_errno(second_guard, entry_errno);
+    ft_stringbuf::restore_errno(first_guard, entry_errno);
+    return (*this);
+}
+
+ft_stringbuf::ft_stringbuf(ft_stringbuf &&other) noexcept
+    : _storage(ft_move(other._storage)), _position(0), _error_code(ER_SUCCESS), _mutex()
+{
+    int entry_errno;
+    ft_unique_lock<pt_mutex> other_guard(other._mutex);
+
+    entry_errno = ft_errno;
+    if (other_guard.get_error() != ER_SUCCESS)
+    {
+        this->_position = 0;
+        this->_error_code = other_guard.get_error();
+        ft_errno = entry_errno;
+        return ;
+    }
+    this->_position = other._position;
+    this->_error_code = other._error_code;
+    other._position = 0;
+    other._error_code = ER_SUCCESS;
+    if (this->_storage.get_error() != ER_SUCCESS)
+        this->_error_code = this->_storage.get_error();
+    ft_stringbuf::restore_errno(other_guard, entry_errno);
+    return ;
+}
+
+ft_stringbuf &ft_stringbuf::operator=(ft_stringbuf &&other) noexcept
+{
+    if (this == &other)
+        return (*this);
+    int entry_errno;
+    const ft_stringbuf *first;
+    const ft_stringbuf *second;
+    ft_unique_lock<pt_mutex> first_guard;
+    ft_unique_lock<pt_mutex> second_guard;
+
+    entry_errno = ft_errno;
+    first = this;
+    second = &other;
+    if (first > second)
+    {
+        const ft_stringbuf *temporary;
+
+        temporary = first;
+        first = second;
+        second = temporary;
+    }
+    first_guard = ft_unique_lock<pt_mutex>(first->_mutex);
+    if (first_guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(first_guard.get_error());
+        ft_stringbuf::restore_errno(first_guard, entry_errno);
+        return (*this);
+    }
+    second_guard = ft_unique_lock<pt_mutex>(second->_mutex);
+    if (second_guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(second_guard.get_error());
+        ft_stringbuf::restore_errno(second_guard, entry_errno);
+        ft_stringbuf::restore_errno(first_guard, entry_errno);
+        return (*this);
+    }
+    this->_storage = ft_move(other._storage);
+    this->_position = other._position;
+    this->_error_code = other._error_code;
+    other._position = 0;
+    other._error_code = ER_SUCCESS;
+    if (this->_storage.get_error() != ER_SUCCESS)
+        this->_error_code = this->_storage.get_error();
+    ft_stringbuf::restore_errno(second_guard, entry_errno);
+    ft_stringbuf::restore_errno(first_guard, entry_errno);
+    return (*this);
+}
+
 ft_stringbuf::~ft_stringbuf() noexcept
 {
     return ;

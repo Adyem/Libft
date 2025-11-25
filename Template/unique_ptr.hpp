@@ -164,28 +164,34 @@ ft_uniqueptr<ManagedType>::ft_uniqueptr(ft_uniqueptr&& other) noexcept
       _thread_safe_enabled(false)
 {
     bool other_lock_acquired;
+    bool enable_thread_safety;
 
     other_lock_acquired = false;
+    enable_thread_safety = false;
     if (other.lock_internal(&other_lock_acquired) != 0)
     {
         this->set_error_unlocked(ft_errno);
         return ;
     }
+    enable_thread_safety = (other._thread_safe_enabled && other._mutex != ft_nullptr);
     this->_managedPointer = other._managedPointer;
     this->_arraySize = other._arraySize;
     this->_isArrayType = other._isArrayType;
     this->_error_code = other._error_code;
-    this->_mutex = other._mutex;
-    this->_thread_safe_enabled = other._thread_safe_enabled;
     other._managedPointer = ft_nullptr;
     other._arraySize = 0;
     other._isArrayType = false;
     other._error_code = ER_SUCCESS;
     other.unlock_internal(other_lock_acquired);
-    if (this->_mutex != ft_nullptr)
+    other.teardown_thread_safety();
+    if (enable_thread_safety)
     {
-        other._mutex = ft_nullptr;
-        other._thread_safe_enabled = false;
+        if (this->prepare_thread_safety() != 0)
+        {
+            this->set_error_unlocked(ft_errno);
+            other.set_error_unlocked(ft_errno);
+            return ;
+        }
     }
     this->set_error_unlocked(ER_SUCCESS);
     other.set_error_unlocked(ER_SUCCESS);
@@ -202,6 +208,7 @@ ft_uniqueptr<ManagedType>& ft_uniqueptr<ManagedType>::operator=(ft_uniqueptr&& o
         ft_uniqueptr<ManagedType>* second;
         bool first_lock_acquired;
         bool second_lock_acquired;
+        bool other_thread_safety_enabled;
 
         first = this;
         second = &other;
@@ -228,28 +235,31 @@ ft_uniqueptr<ManagedType>& ft_uniqueptr<ManagedType>::operator=(ft_uniqueptr&& o
             other.set_error_unlocked(ft_errno);
             return (*this);
         }
+        other_thread_safety_enabled = (other._thread_safe_enabled && other._mutex != ft_nullptr);
         this->destroy_locked();
         this->_managedPointer = other._managedPointer;
         this->_arraySize = other._arraySize;
         this->_isArrayType = other._isArrayType;
         this->_error_code = other._error_code;
-        if (this->_mutex != other._mutex)
-        {
-            this->teardown_thread_safety();
-            this->_mutex = other._mutex;
-            this->_thread_safe_enabled = other._thread_safe_enabled;
-        }
+        this->_thread_safe_enabled = other_thread_safety_enabled;
         other._managedPointer = ft_nullptr;
         other._arraySize = 0;
         other._isArrayType = false;
         other._error_code = ER_SUCCESS;
+        other._thread_safe_enabled = false;
         other.unlock_internal(second_lock_acquired);
-        if (this->_mutex != ft_nullptr)
-        {
-            other._mutex = ft_nullptr;
-            other._thread_safe_enabled = false;
-        }
         this->unlock_internal(first_lock_acquired);
+        other.teardown_thread_safety();
+        this->teardown_thread_safety();
+        if (other_thread_safety_enabled)
+        {
+            if (this->prepare_thread_safety() != 0)
+            {
+                this->set_error_unlocked(ft_errno);
+                other.set_error_unlocked(ft_errno);
+                return (*this);
+            }
+        }
         this->set_error_unlocked(ER_SUCCESS);
         other.set_error_unlocked(ER_SUCCESS);
     }
