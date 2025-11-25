@@ -40,7 +40,7 @@ struct variant_destroyer<I, T, Ts...>
     static void destroy(size_t index, void* data)
     {
         if (index == I)
-            destroy_at(reinterpret_cast<T*>(data));
+            ::destroy_at(reinterpret_cast<T*>(data));
         else
             variant_destroyer<I + 1, Ts...>::destroy(index, data);
     }
