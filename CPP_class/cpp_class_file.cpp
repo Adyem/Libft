@@ -114,13 +114,13 @@ int ft_file::lock_pair(const ft_file &first, const ft_file &second,
 }
 
 ft_file::ft_file() noexcept
-    : _fd(-1), _error_code(0), _mutex()
+    : _fd(-1), _error_code(0), _mutex(), _is_open(false)
 {
     return ;
 }
 
 ft_file::ft_file(const char* filename, int flags, mode_t mode) noexcept
-    : _fd(-1), _error_code(0), _mutex()
+    : _fd(-1), _error_code(0), _mutex(), _is_open(false)
 {
     int new_fd;
 
@@ -133,12 +133,13 @@ ft_file::ft_file(const char* filename, int flags, mode_t mode) noexcept
         return ;
     }
     this->_fd = new_fd;
+    this->_is_open = true;
     this->set_error(ER_SUCCESS);
     return ;
 }
 
 ft_file::ft_file(const char* filename, int flags) noexcept
-    : _fd(-1), _error_code(0), _mutex()
+    : _fd(-1), _error_code(0), _mutex(), _is_open(false)
 {
     int new_fd;
 
@@ -149,12 +150,13 @@ ft_file::ft_file(const char* filename, int flags) noexcept
         return ;
     }
     this->_fd = new_fd;
+    this->_is_open = true;
     this->set_error(ER_SUCCESS);
     return ;
 }
 
 ft_file::ft_file(int fd) noexcept
-    : _fd(fd), _error_code(0), _mutex()
+    : _fd(fd), _error_code(0), _mutex(), _is_open(fd >= 0)
 {
     return ;
 }
@@ -169,13 +171,13 @@ ft_file::~ft_file() noexcept
         ft_errno = guard.get_error();
         return ;
     }
-    if (this->_fd >= 0)
+    if (this->_is_open && this->_fd >= 0)
     {
         if (su_close(this->_fd) == -1)
             this->set_error(ft_map_system_error(errno));
         else
             this->set_error(ER_SUCCESS);
-        this->_fd = -1;
+        this->_is_open = false;
     }
     else
         this->set_error(ER_SUCCESS);
@@ -184,7 +186,7 @@ ft_file::~ft_file() noexcept
 }
 
 ft_file::ft_file(ft_file&& other) noexcept
-    : _fd(-1), _error_code(0), _mutex()
+    : _fd(-1), _error_code(0), _mutex(), _is_open(false)
 {
     int entry_errno;
     entry_errno = ft_errno;
@@ -197,8 +199,10 @@ ft_file::ft_file(ft_file&& other) noexcept
     }
     this->_fd = other._fd;
     this->_error_code = other._error_code;
+    this->_is_open = other._is_open;
     other._fd = -1;
     other._error_code = ER_SUCCESS;
+    other._is_open = false;
     other.set_error(ER_SUCCESS);
     ft_file::restore_errno(other_guard, entry_errno);
     return ;
@@ -223,7 +227,7 @@ ft_file& ft_file::operator=(ft_file&& other) noexcept
         int final_error;
 
         final_error = other._error_code;
-        if (this->_fd >= 0)
+        if (this->_is_open && this->_fd >= 0)
         {
             if (su_close(this->_fd) == -1)
             {
@@ -232,8 +236,10 @@ ft_file& ft_file::operator=(ft_file&& other) noexcept
         }
         this->_fd = other._fd;
         this->_error_code = final_error;
+        this->_is_open = other._is_open;
         other._fd = -1;
         other._error_code = ER_SUCCESS;
+        other._is_open = false;
         this->set_error(final_error);
         other.set_error(ER_SUCCESS);
         ft_file::restore_errno(other_guard, entry_errno);
@@ -252,6 +258,12 @@ void    ft_file::close() noexcept
         ft_errno = guard.get_error();
         return ;
     }
+    if (!this->_is_open || this->_fd < 0)
+    {
+        this->set_error(FT_ERR_INVALID_HANDLE);
+        ft_file::restore_errno(guard, entry_errno);
+        return ;
+    }
     if (this->_fd >= 0)
     {
         if (su_close(this->_fd) == -1)
@@ -260,7 +272,7 @@ void    ft_file::close() noexcept
             ft_file::restore_errno(guard, entry_errno);
             return ;
         }
-        this->_fd = -1;
+        this->_is_open = false;
     }
     this->set_error(ER_SUCCESS);
     ft_file::restore_errno(guard, entry_errno);
@@ -287,7 +299,7 @@ int ft_file::open(const char* filename, int flags, mode_t mode) noexcept
         ft_file::restore_errno(guard, entry_errno);
         return (1);
     }
-    if (this->_fd != -1)
+    if (this->_is_open && this->_fd != -1)
     {
         if (su_close(this->_fd) == -1)
         {
@@ -301,6 +313,7 @@ int ft_file::open(const char* filename, int flags, mode_t mode) noexcept
         }
     }
     this->_fd = new_fd;
+    this->_is_open = true;
     this->set_error(ER_SUCCESS);
     ft_file::restore_errno(guard, entry_errno);
     return (0);
@@ -324,7 +337,7 @@ int ft_file::open(const char* filename, int flags) noexcept
         ft_file::restore_errno(guard, entry_errno);
         return (1);
     }
-    if (this->_fd != -1)
+    if (this->_is_open && this->_fd != -1)
     {
         if (su_close(this->_fd) == -1)
         {
@@ -338,12 +351,13 @@ int ft_file::open(const char* filename, int flags) noexcept
         }
     }
     this->_fd = new_fd;
+    this->_is_open = true;
     this->set_error(ER_SUCCESS);
     ft_file::restore_errno(guard, entry_errno);
     return (0);
 }
 
-void    ft_file::set_error(int error_code)
+void    ft_file::set_error(int error_code) const
 {
     ft_errno = error_code;
     this->_error_code = error_code;
@@ -359,6 +373,12 @@ int ft_file::get_fd() const
     if (guard.get_error() != ER_SUCCESS)
     {
         ft_errno = guard.get_error();
+        return (-1);
+    }
+    if (!this->_is_open || this->_fd < 0)
+    {
+        this->set_error(FT_ERR_INVALID_HANDLE);
+        ft_file::restore_errno(guard, entry_errno, true);
         return (-1);
     }
     descriptor = this->_fd;
@@ -415,7 +435,7 @@ ssize_t ft_file::read(char *buffer, int count) noexcept
         ft_file::restore_errno(guard, entry_errno);
         return (-1);
     }
-    if (this->_fd < 0)
+    if (!this->_is_open || this->_fd < 0)
     {
         this->set_error(FT_ERR_INVALID_HANDLE);
         ft_file::restore_errno(guard, entry_errno);
@@ -450,7 +470,7 @@ ssize_t ft_file::write(const char *string) noexcept
         ft_file::restore_errno(guard, entry_errno);
         return (-1);
     }
-    if (this->_fd < 0)
+    if (!this->_is_open || this->_fd < 0)
     {
         this->set_error(FT_ERR_INVALID_HANDLE);
         ft_file::restore_errno(guard, entry_errno);
@@ -485,7 +505,7 @@ ssize_t ft_file::write_buffer(const char *buffer, size_t length) noexcept
         ft_file::restore_errno(guard, entry_errno);
         return (-1);
     }
-    if (this->_fd < 0)
+    if (!this->_is_open || this->_fd < 0)
     {
         this->set_error(FT_ERR_INVALID_HANDLE);
         ft_file::restore_errno(guard, entry_errno);
@@ -520,7 +540,7 @@ int ft_file::seek(off_t offset, int whence) noexcept
         ft_errno = guard.get_error();
         return (-1);
     }
-    if (this->_fd < 0)
+    if (!this->_is_open || this->_fd < 0)
     {
         this->set_error(FT_ERR_INVALID_HANDLE);
         ft_file::restore_errno(guard, entry_errno);
@@ -556,7 +576,7 @@ int ft_file::printf(const char *format, ...)
         ft_file::restore_errno(guard, entry_errno);
         return (0);
     }
-    if (this->_fd == -1)
+    if (!this->_is_open || this->_fd == -1)
     {
         this->set_error(FT_ERR_INVALID_HANDLE);
         ft_file::restore_errno(guard, entry_errno);
@@ -590,7 +610,7 @@ int ft_file::copy_to_with_buffer(const char *destination_path, size_t buffer_siz
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    if (this->_fd < 0)
+    if (!this->_is_open || this->_fd < 0)
     {
         this->set_error(FT_ERR_INVALID_HANDLE);
         return (-1);

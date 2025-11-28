@@ -19,8 +19,9 @@ class ft_file
         int _fd;
         mutable int _error_code;
         mutable pt_mutex _mutex;
+        bool _is_open;
 
-        void        set_error(int error_code);
+        void        set_error(int error_code) const;
         static int lock_pair(const ft_file &first, const ft_file &second,
                 ft_unique_lock<pt_mutex> &first_guard,
                 ft_unique_lock<pt_mutex> &second_guard);

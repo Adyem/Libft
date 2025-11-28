@@ -1,13 +1,6 @@
 #include "game_world_registry.hpp"
 #include "game_narrative_helpers.hpp"
 
-static void game_world_copy_registry(const ft_world_registry &source, ft_world_registry &destination)
-{
-    destination.set_regions(source.get_regions());
-    destination.set_world_regions(source.get_world_regions());
-    return ;
-}
-
 ft_world_registry::ft_world_registry() noexcept
     : _regions(), _world_regions(), _error_code(ER_SUCCESS)
 {
@@ -16,6 +9,19 @@ ft_world_registry::ft_world_registry() noexcept
 
 ft_world_registry::~ft_world_registry() noexcept
 {
+    return ;
+}
+
+void ft_world_registry::copy_registry_unlocked(const ft_world_registry &other) noexcept
+{
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    this->_regions = other._regions;
+    this->_world_regions = other._world_regions;
+    this->_error_code = other._error_code;
+    this->set_error(this->_error_code);
+    ft_errno = entry_errno;
     return ;
 }
 
@@ -32,8 +38,7 @@ ft_world_registry::ft_world_registry(const ft_world_registry &other) noexcept
         game_narrative_restore_errno(other_guard, entry_errno);
         return ;
     }
-    game_world_copy_registry(other, *this);
-    this->_error_code = other._error_code;
+    this->copy_registry_unlocked(other);
     game_narrative_restore_errno(other_guard, entry_errno);
     return ;
 }
@@ -51,6 +56,7 @@ ft_world_registry &ft_world_registry::operator=(const ft_world_registry &other) 
     if (this_guard.get_error() != ER_SUCCESS)
     {
         this->set_error(this_guard.get_error());
+        game_narrative_restore_errno(this_guard, entry_errno);
         return (*this);
     }
     other_guard = ft_unique_lock<pt_mutex>(other._mutex);
@@ -58,10 +64,10 @@ ft_world_registry &ft_world_registry::operator=(const ft_world_registry &other) 
     {
         this->set_error(other_guard.get_error());
         game_narrative_restore_errno(this_guard, entry_errno);
+        game_narrative_restore_errno(other_guard, entry_errno);
         return (*this);
     }
-    game_world_copy_registry(other, *this);
-    this->_error_code = other._error_code;
+    this->copy_registry_unlocked(other);
     game_narrative_restore_errno(this_guard, entry_errno);
     game_narrative_restore_errno(other_guard, entry_errno);
     return (*this);
@@ -80,11 +86,12 @@ ft_world_registry::ft_world_registry(ft_world_registry &&other) noexcept
         game_narrative_restore_errno(other_guard, entry_errno);
         return ;
     }
-    game_world_copy_registry(other, *this);
-    this->_error_code = other._error_code;
+    this->copy_registry_unlocked(other);
     other._regions.clear();
     other._world_regions.clear();
     other._error_code = ER_SUCCESS;
+    this->set_error(this->_error_code);
+    other.set_error(ER_SUCCESS);
     game_narrative_restore_errno(other_guard, entry_errno);
     return ;
 }
@@ -102,6 +109,7 @@ ft_world_registry &ft_world_registry::operator=(ft_world_registry &&other) noexc
     if (this_guard.get_error() != ER_SUCCESS)
     {
         this->set_error(this_guard.get_error());
+        game_narrative_restore_errno(this_guard, entry_errno);
         return (*this);
     }
     other_guard = ft_unique_lock<pt_mutex>(other._mutex);
@@ -109,13 +117,15 @@ ft_world_registry &ft_world_registry::operator=(ft_world_registry &&other) noexc
     {
         this->set_error(other_guard.get_error());
         game_narrative_restore_errno(this_guard, entry_errno);
+        game_narrative_restore_errno(other_guard, entry_errno);
         return (*this);
     }
-    game_world_copy_registry(other, *this);
-    this->_error_code = other._error_code;
+    this->copy_registry_unlocked(other);
     other._regions.clear();
     other._world_regions.clear();
     other._error_code = ER_SUCCESS;
+    this->set_error(this->_error_code);
+    other.set_error(ER_SUCCESS);
     game_narrative_restore_errno(this_guard, entry_errno);
     game_narrative_restore_errno(other_guard, entry_errno);
     return (*this);
@@ -131,6 +141,7 @@ int ft_world_registry::register_region(const ft_region_definition &region) noexc
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
+        game_narrative_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     if (region.get_error() != ER_SUCCESS)
@@ -156,6 +167,7 @@ int ft_world_registry::register_world(const ft_world_region &world_region) noexc
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
+        game_narrative_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     if (world_region.get_error() != ER_SUCCESS)
@@ -181,6 +193,7 @@ int ft_world_registry::fetch_region(int region_id, ft_region_definition &out_reg
     if (guard.get_error() != ER_SUCCESS)
     {
         const_cast<ft_world_registry *>(this)->set_error(guard.get_error());
+        game_narrative_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     entry = this->_regions.find(region_id);
@@ -206,6 +219,7 @@ int ft_world_registry::fetch_world(int world_id, ft_world_region &out_world) con
     if (guard.get_error() != ER_SUCCESS)
     {
         const_cast<ft_world_registry *>(this)->set_error(guard.get_error());
+        game_narrative_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     entry = this->_world_regions.find(world_id);

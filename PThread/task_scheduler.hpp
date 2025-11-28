@@ -807,35 +807,48 @@ auto ft_task_scheduler::schedule_after(std::chrono::duration<Rep, Period> delay,
     ft_scheduled_task_state *state_raw;
     ft_sharedptr<ft_scheduled_task_state> state_shared;
     ft_scheduled_task_handle handle_instance;
+    auto raw_task_body = [function, args...]() mutable
+    {
+        if constexpr (std::is_void_v<return_type>)
+            function(args...);
+        else
+            (void)function(args...);
+        return ;
+    };
 
     promise_raw = new (std::nothrow) promise_type();
     if (!promise_raw)
     {
         this->set_error(FT_ERR_NO_MEMORY);
+        raw_task_body();
         return (result_pair);
     }
     promise_shared.reset(promise_raw, 1, false);
     if (promise_shared.hasError())
     {
         this->set_error(promise_shared.get_error());
+        raw_task_body();
         return (result_pair);
     }
     future_value = ft_future<return_type>(promise_shared);
     if (future_value.get_error() != ER_SUCCESS)
     {
         this->set_error(future_value.get_error());
+        raw_task_body();
         return (result_pair);
     }
     state_raw = new (std::nothrow) ft_scheduled_task_state();
     if (!state_raw)
     {
         this->set_error(FT_ERR_NO_MEMORY);
+        raw_task_body();
         return (result_pair);
     }
     state_shared.reset(state_raw, 1, false);
     if (state_shared.hasError())
     {
         this->set_error(state_shared.get_error());
+        raw_task_body();
         return (result_pair);
     }
     handle_instance = ft_scheduled_task_handle(this, state_shared);

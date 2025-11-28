@@ -152,7 +152,7 @@ ft_rarity_band::ft_rarity_band(ft_rarity_band &&other) noexcept
     this->_value_multiplier = other._value_multiplier;
     this->_error_code = other._error_code;
     other._rarity = 0;
-    other._value_multiplier = 1.0;
+    other._value_multiplier = 0.0;
     other._error_code = ER_SUCCESS;
     this->set_error(this->_error_code);
     other.set_error(ER_SUCCESS);
@@ -181,7 +181,7 @@ ft_rarity_band &ft_rarity_band::operator=(ft_rarity_band &&other) noexcept
     this->_value_multiplier = other._value_multiplier;
     this->_error_code = other._error_code;
     other._rarity = 0;
-    other._value_multiplier = 1.0;
+    other._value_multiplier = 0.0;
     other._error_code = ER_SUCCESS;
     this->set_error(this->_error_code);
     other.set_error(ER_SUCCESS);
