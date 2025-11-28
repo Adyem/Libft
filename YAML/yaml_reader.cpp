@@ -320,6 +320,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     if (map_value->get_error() != ER_SUCCESS)
                     {
                         error_code = map_value->get_error();
+                        delete child;
                         goto map_cleanup;
                     }
                 }
@@ -342,6 +343,7 @@ static yaml_value *parse_value(const ft_vector<ft_string> &lines, size_t &index,
                     if (map_value->get_error() != ER_SUCCESS)
                     {
                         error_code = map_value->get_error();
+                        delete child;
                         goto map_cleanup;
                     }
                     index++;
