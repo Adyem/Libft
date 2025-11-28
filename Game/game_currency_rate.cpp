@@ -155,8 +155,8 @@ ft_currency_rate::ft_currency_rate(ft_currency_rate &&other) noexcept
     this->_display_precision = other._display_precision;
     this->_error_code = other._error_code;
     other._currency_id = 0;
-    other._rate_to_base = 1.0;
-    other._display_precision = 2;
+    other._rate_to_base = 0.0;
+    other._display_precision = 0;
     other._error_code = ER_SUCCESS;
     this->set_error(this->_error_code);
     other.set_error(ER_SUCCESS);
@@ -186,8 +186,8 @@ ft_currency_rate &ft_currency_rate::operator=(ft_currency_rate &&other) noexcept
     this->_display_precision = other._display_precision;
     this->_error_code = other._error_code;
     other._currency_id = 0;
-    other._rate_to_base = 1.0;
-    other._display_precision = 2;
+    other._rate_to_base = 0.0;
+    other._display_precision = 0;
     other._error_code = ER_SUCCESS;
     this->set_error(this->_error_code);
     other.set_error(ER_SUCCESS);

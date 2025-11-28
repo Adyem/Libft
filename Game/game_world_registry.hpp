@@ -17,6 +17,7 @@ class ft_world_registry
         mutable pt_mutex _mutex;
 
         void set_error(int error_code) const noexcept;
+        void copy_registry_unlocked(const ft_world_registry &other) noexcept;
 
     public:
         ft_world_registry() noexcept;

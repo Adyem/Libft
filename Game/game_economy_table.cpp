@@ -90,13 +90,15 @@ ft_economy_table::ft_economy_table(const ft_economy_table &other) noexcept
     , _mutex()
 {
     int entry_errno;
+    int lock_error;
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
 
     entry_errno = ft_errno;
-    if (ft_economy_table::lock_pair(*this, other, this_guard, other_guard) != ER_SUCCESS)
+    lock_error = ft_economy_table::lock_pair(*this, other, this_guard, other_guard);
+    if (lock_error != ER_SUCCESS)
     {
-        this->set_error(this_guard.get_error());
+        this->set_error(lock_error);
         game_economy_restore_errno(this_guard, entry_errno);
         game_economy_restore_errno(other_guard, entry_errno);
         return ;
@@ -117,13 +119,15 @@ ft_economy_table &ft_economy_table::operator=(const ft_economy_table &other) noe
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
     int entry_errno;
+    int lock_error;
 
     if (this == &other)
         return (*this);
     entry_errno = ft_errno;
-    if (ft_economy_table::lock_pair(*this, other, this_guard, other_guard) != ER_SUCCESS)
+    lock_error = ft_economy_table::lock_pair(*this, other, this_guard, other_guard);
+    if (lock_error != ER_SUCCESS)
     {
-        this->set_error(this_guard.get_error());
+        this->set_error(lock_error);
         game_economy_restore_errno(this_guard, entry_errno);
         game_economy_restore_errno(other_guard, entry_errno);
         return (*this);
@@ -176,6 +180,8 @@ ft_economy_table &ft_economy_table::operator=(ft_economy_table &&other) noexcept
     if (lock_error != ER_SUCCESS)
     {
         this->set_error(lock_error);
+        game_economy_restore_errno(this_guard, entry_errno);
+        game_economy_restore_errno(other_guard, entry_errno);
         return (*this);
     }
     this->_price_definitions = ft_move(other._price_definitions);
@@ -463,7 +469,12 @@ int ft_economy_table::fetch_price_definition(int item_id, ft_price_definition &d
         return (FT_ERR_NOT_FOUND);
     }
     definition = entry->value;
-    const_cast<ft_economy_table *>(self)->set_error(entry->value.get_error());
+    if (entry->value.get_error() != ER_SUCCESS)
+    {
+        const_cast<ft_economy_table *>(self)->set_error(entry->value.get_error());
+        game_economy_restore_errno(guard, entry_errno);
+        return (entry->value.get_error());
+    }
     game_economy_restore_errno(guard, entry_errno);
     return (entry->value.get_error());
 }
@@ -491,7 +502,12 @@ int ft_economy_table::fetch_rarity_band(int rarity, ft_rarity_band &band) const 
         return (FT_ERR_NOT_FOUND);
     }
     band = entry->value;
-    const_cast<ft_economy_table *>(self)->set_error(entry->value.get_error());
+    if (entry->value.get_error() != ER_SUCCESS)
+    {
+        const_cast<ft_economy_table *>(self)->set_error(entry->value.get_error());
+        game_economy_restore_errno(guard, entry_errno);
+        return (entry->value.get_error());
+    }
     game_economy_restore_errno(guard, entry_errno);
     return (entry->value.get_error());
 }
@@ -522,7 +538,12 @@ int ft_economy_table::fetch_vendor_profile(int vendor_id, ft_vendor_profile &pro
     profile.set_buy_markup(entry->value.get_buy_markup());
     profile.set_sell_multiplier(entry->value.get_sell_multiplier());
     profile.set_tax_rate(entry->value.get_tax_rate());
-    const_cast<ft_economy_table *>(self)->set_error(entry->value.get_error());
+    if (entry->value.get_error() != ER_SUCCESS)
+    {
+        const_cast<ft_economy_table *>(self)->set_error(entry->value.get_error());
+        game_economy_restore_errno(guard, entry_errno);
+        return (entry->value.get_error());
+    }
     game_economy_restore_errno(guard, entry_errno);
     return (entry->value.get_error());
 }
@@ -550,7 +571,12 @@ int ft_economy_table::fetch_currency_rate(int currency_id, ft_currency_rate &rat
         return (FT_ERR_NOT_FOUND);
     }
     rate = entry->value;
-    const_cast<ft_economy_table *>(self)->set_error(entry->value.get_error());
+    if (entry->value.get_error() != ER_SUCCESS)
+    {
+        const_cast<ft_economy_table *>(self)->set_error(entry->value.get_error());
+        game_economy_restore_errno(guard, entry_errno);
+        return (entry->value.get_error());
+    }
     game_economy_restore_errno(guard, entry_errno);
     return (entry->value.get_error());
 }
