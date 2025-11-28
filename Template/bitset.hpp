@@ -151,7 +151,6 @@ inline ft_bitset::ft_bitset(ft_bitset&& other) noexcept
     other._error_code = ER_SUCCESS;
     other.unlock_internal(other_lock_acquired);
     other.teardown_thread_safety();
-    other.reset_storage(transferred_size);
     this->_size = transferred_size;
     this->_blockCount = transferred_block_count;
     this->_data = transferred_data;
@@ -215,7 +214,6 @@ inline ft_bitset& ft_bitset::operator=(ft_bitset&& other) noexcept
     other._error_code = ER_SUCCESS;
     other.unlock_internal(other_lock_acquired);
     other.teardown_thread_safety();
-    other.reset_storage(transferred_size);
     this->unlock_internal(this_lock_acquired);
     if (previous_data != ft_nullptr && previous_data != this->_data)
         cma_free(previous_data);
