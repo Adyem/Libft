@@ -163,7 +163,7 @@ inline ft_bitset::ft_bitset(ft_bitset&& other) noexcept
             return ;
     }
     this->set_error(transferred_error_code);
-    other.reset_storage(transferred_size);
+    other.reset_storage(0);
     return ;
 }
 
@@ -216,7 +216,7 @@ inline ft_bitset& ft_bitset::operator=(ft_bitset&& other) noexcept
     other.unlock_internal(other_lock_acquired);
     other.teardown_thread_safety();
     this->unlock_internal(this_lock_acquired);
-    other.reset_storage(transferred_size);
+    other.reset_storage(0);
     if (previous_data != ft_nullptr && previous_data != this->_data)
         cma_free(previous_data);
     if (previous_thread_safe && previous_mutex != ft_nullptr && previous_mutex != this->_state_mutex)
