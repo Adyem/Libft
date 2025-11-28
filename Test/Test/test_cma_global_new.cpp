@@ -42,12 +42,21 @@ FT_TEST(test_cma_global_new_alignment_failure_sets_errno,
     "global operator new propagates allocator failures for over-aligned types")
 {
     aligned_large_type *instance;
+    bool allocation_failed;
+    int error_state;
 
     cma_set_alloc_limit(16);
     ft_errno = ER_SUCCESS;
     instance = new (std::nothrow) aligned_large_type;
     cma_set_alloc_limit(0);
-    FT_ASSERT_EQ(instance, ft_nullptr);
-    FT_ASSERT_EQ(ft_errno, FT_ERR_NO_MEMORY);
+    allocation_failed = (instance == ft_nullptr);
+    error_state = ft_errno;
+    if (instance != ft_nullptr)
+    {
+        ::operator delete(instance, std::align_val_t(alignof(aligned_large_type)));
+        instance = ft_nullptr;
+    }
+    FT_ASSERT(allocation_failed);
+    FT_ASSERT_EQ(error_state, FT_ERR_NO_MEMORY);
     return (1);
 }
