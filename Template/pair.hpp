@@ -102,11 +102,8 @@ Pair<KeyType, ValueType>::Pair(const Pair &other)
     this->key = other.key;
     this->value = other.value;
     other.unlock_internal(other_lock_acquired);
-    if (other._thread_safe_enabled && other._mutex != ft_nullptr)
-    {
-        if (this->enable_thread_safety() != 0)
-            return ;
-    }
+    if (this->enable_thread_safety() != 0)
+        return ;
     this->set_error(ER_SUCCESS);
     return ;
 }

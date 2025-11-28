@@ -185,6 +185,7 @@ Iterator<ValueType>& Iterator<ValueType>::operator=(Iterator&& other) noexcept
     other._ptr = ft_nullptr;
     other._error_code = ER_SUCCESS;
     other.unlock_internal(other_lock_acquired);
+    other.teardown_thread_safety();
     this->unlock_internal(this_lock_acquired);
     this->teardown_thread_safety();
     if (other_thread_safe)

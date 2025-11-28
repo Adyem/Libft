@@ -231,13 +231,13 @@ ft_map<Key, MappedType>::ft_map(ft_map<Key, MappedType>&& other) noexcept
     this->_error_code = other._error_code;
     this->_state_mutex = other._state_mutex;
     this->_thread_safe_enabled = other._thread_safe_enabled;
+    other.unlock_internal(other_lock_acquired);
     other._data = ft_nullptr;
     other._capacity = 0;
     other._size = 0;
     other._error_code = ER_SUCCESS;
     other._state_mutex = ft_nullptr;
     other._thread_safe_enabled = false;
-    other.unlock_internal(other_lock_acquired);
     this->set_error(ER_SUCCESS);
     return ;
 }
@@ -279,14 +279,14 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(ft_map<Key, MappedTy
     this->_error_code = other._error_code;
     this->_state_mutex = other._state_mutex;
     this->_thread_safe_enabled = other._thread_safe_enabled;
+    other.unlock_internal(other_lock_acquired);
+    this->unlock_internal(this_lock_acquired);
     other._data = ft_nullptr;
     other._capacity = 0;
     other._size = 0;
     other._error_code = ER_SUCCESS;
     other._state_mutex = ft_nullptr;
     other._thread_safe_enabled = false;
-    other.unlock_internal(other_lock_acquired);
-    this->unlock_internal(this_lock_acquired);
     if (previous_data != ft_nullptr && previous_data != this->_data)
     {
         size_t index;
