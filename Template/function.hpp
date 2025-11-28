@@ -295,6 +295,7 @@ ft_function<ReturnType(Args...)> &ft_function<ReturnType(Args...)>::operator=(co
     void *(*new_clone)(void *);
     int other_error_code;
     bool other_thread_safe;
+    pt_mutex *previous_mutex;
 
     this_lock_acquired = false;
     if (this->lock_internal(&this_lock_acquired) != 0)
@@ -327,6 +328,7 @@ ft_function<ReturnType(Args...)> &ft_function<ReturnType(Args...)>::operator=(co
     other_error_code = other._error_code;
     other_thread_safe = (other._thread_safe_enabled && other._state_mutex != ft_nullptr);
     other.unlock_internal(other_lock_acquired);
+    previous_mutex = this->_state_mutex;
     this->clear_callable_unlocked();
     this->_callable = new_callable;
     this->_invoke = new_invoke;
@@ -334,11 +336,25 @@ ft_function<ReturnType(Args...)> &ft_function<ReturnType(Args...)>::operator=(co
     this->_clone = new_clone;
     this->_error_code = other_error_code;
     this->unlock_internal(this_lock_acquired);
+    this->_state_mutex = ft_nullptr;
+    this->_thread_safe_enabled = false;
     this->teardown_thread_safety();
     if (other_thread_safe)
     {
         if (this->enable_thread_safety() != 0)
+        {
+            if (previous_mutex != ft_nullptr)
+            {
+                previous_mutex->~pt_mutex();
+                cma_free(previous_mutex);
+            }
             return (*this);
+        }
+    }
+    if (previous_mutex != ft_nullptr)
+    {
+        previous_mutex->~pt_mutex();
+        cma_free(previous_mutex);
     }
     this->set_error(ER_SUCCESS);
     return (*this);
@@ -360,6 +376,7 @@ ft_function<ReturnType(Args...)> &ft_function<ReturnType(Args...)>::operator=(ft
     void *(*transferred_clone)(void *);
     int other_error_code;
     bool other_thread_safe;
+    pt_mutex *previous_mutex;
 
     this_lock_acquired = false;
     if (this->lock_internal(&this_lock_acquired) != 0)
@@ -389,19 +406,32 @@ ft_function<ReturnType(Args...)> &ft_function<ReturnType(Args...)>::operator=(ft
     other.teardown_thread_safety();
     other._thread_safe_enabled = false;
     other._error_code = ER_SUCCESS;
+    previous_mutex = this->_state_mutex;
     this->_callable = transferred_callable;
     this->_invoke = transferred_invoke;
     this->_destroy = transferred_destroy;
     this->_clone = transferred_clone;
-    this->_state_mutex = ft_nullptr;
-    this->_thread_safe_enabled = false;
     this->_error_code = other_error_code;
     this->unlock_internal(this_lock_acquired);
+    this->_state_mutex = ft_nullptr;
+    this->_thread_safe_enabled = false;
     this->teardown_thread_safety();
     if (other_thread_safe)
     {
         if (this->enable_thread_safety() != 0)
+        {
+            if (previous_mutex != ft_nullptr)
+            {
+                previous_mutex->~pt_mutex();
+                cma_free(previous_mutex);
+            }
             return (*this);
+        }
+    }
+    if (previous_mutex != ft_nullptr)
+    {
+        previous_mutex->~pt_mutex();
+        cma_free(previous_mutex);
     }
     this->set_error(ER_SUCCESS);
     return (*this);
@@ -589,6 +619,11 @@ int ft_function<ReturnType(Args...)>::lock_internal(bool *lock_acquired) const
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
+    {
+        ft_errno = ER_SUCCESS;
+        return (0);
+    }
+    if (this->_state_mutex->is_owned_by_thread(THREAD_ID))
     {
         ft_errno = ER_SUCCESS;
         return (0);
