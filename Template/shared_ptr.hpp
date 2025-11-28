@@ -450,6 +450,10 @@ void ft_sharedptr<ManagedType>::release_current_locked()
         else
             delete this->_managedPointer;
     }
+    else if (this->_shared_thread_safe_flag)
+    {
+        delete this->_shared_thread_safe_flag;
+    }
     this->_managedPointer = ft_nullptr;
     this->_referenceCount = ft_nullptr;
     this->_shared_thread_safe_flag = ft_nullptr;
