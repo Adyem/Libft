@@ -9,7 +9,6 @@
 #include "../PThread/mutex.hpp"
 #include "../PThread/pthread.hpp"
 #include <chrono>
-#include <utility>
 
 #include "move.hpp"
 template <typename ValueType>
@@ -130,11 +129,9 @@ ft_future<ValueType>::ft_future(const ft_future<ValueType> &other)
     ft_promise<ValueType> *other_promise;
     ft_sharedptr<ft_promise<ValueType> > other_shared;
     int other_error;
-    bool other_thread_safe;
 
     lock_acquired = false;
     other_promise = ft_nullptr;
-    other_thread_safe = false;
     if (other.lock_internal(&lock_acquired) != 0)
     {
         this->set_error(ft_errno);
@@ -143,7 +140,6 @@ ft_future<ValueType>::ft_future(const ft_future<ValueType> &other)
     other_promise = other._promise;
     other_shared = other._shared_promise;
     other_error = other._error_code;
-    other_thread_safe = (other._thread_safe_enabled && other._state_mutex != ft_nullptr);
     other.unlock_internal(lock_acquired);
     this->_promise = other_promise;
     this->_shared_promise = other_shared;
