@@ -367,8 +367,10 @@ template <typename MutexType>
 bool ft_unique_lock<MutexType>::owns_lock() const
 {
     bool owns_lock_value;
+    int entry_errno;
 
     owns_lock_value = false;
+    entry_errno = ft_errno;
     this->_state_mutex.lock(THREAD_ID);
     if (this->_state_mutex.get_error() != ER_SUCCESS)
     {
@@ -382,7 +384,8 @@ bool ft_unique_lock<MutexType>::owns_lock() const
         this->set_error(this->_state_mutex.get_error());
         return (false);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error_no_errno(ER_SUCCESS);
+    ft_errno = entry_errno;
     return (owns_lock_value);
 }
 
