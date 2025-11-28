@@ -233,16 +233,15 @@ ft_map<Key, MappedType>::ft_map(ft_map<Key, MappedType>&& other) noexcept
     this->_capacity = other._capacity;
     this->_size = other._size;
     this->_error_code = other._error_code;
+    this->_state_mutex = other._state_mutex;
+    this->_thread_safe_enabled = other._thread_safe_enabled;
     other._data = ft_nullptr;
     other._capacity = 0;
     other._size = 0;
     other._error_code = ER_SUCCESS;
+    other._state_mutex = ft_nullptr;
+    other._thread_safe_enabled = false;
     other.unlock_internal(other_lock_acquired);
-    if (other_thread_safe)
-    {
-        if (this->enable_thread_safety() != 0)
-            return ;
-    }
     this->set_error(ER_SUCCESS);
     return ;
 }
@@ -282,27 +281,15 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(ft_map<Key, MappedTy
     this->_capacity = other._capacity;
     this->_size = other._size;
     this->_error_code = other._error_code;
-    this->_state_mutex = ft_nullptr;
-    this->_thread_safe_enabled = false;
+    this->_state_mutex = other._state_mutex;
+    this->_thread_safe_enabled = other._thread_safe_enabled;
     other._data = ft_nullptr;
     other._capacity = 0;
     other._size = 0;
     other._error_code = ER_SUCCESS;
+    other._state_mutex = ft_nullptr;
+    other._thread_safe_enabled = false;
     other.unlock_internal(other_lock_acquired);
-    if (other_thread_safe)
-    {
-        if (this->enable_thread_safety() != 0)
-        {
-            if (previous_thread_safe && previous_mutex != ft_nullptr)
-            {
-                previous_mutex->~pt_mutex();
-                cma_free(previous_mutex);
-            }
-            this->set_error(ft_errno);
-            this->unlock_internal(this_lock_acquired);
-            return (*this);
-        }
-    }
     this->unlock_internal(this_lock_acquired);
     if (previous_data != ft_nullptr && previous_data != this->_data)
     {
@@ -320,6 +307,11 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(ft_map<Key, MappedTy
     {
         previous_mutex->~pt_mutex();
         cma_free(previous_mutex);
+    }
+    if (other_thread_safe && this->_state_mutex == ft_nullptr)
+    {
+        if (this->enable_thread_safety() != 0)
+            return (*this);
     }
     this->set_error(ER_SUCCESS);
     return (*this);
