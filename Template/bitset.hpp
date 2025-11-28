@@ -29,6 +29,7 @@ class ft_bitset
         int     lock_internal(bool *lock_acquired) const;
         void    unlock_internal(bool lock_acquired) const;
         void    teardown_thread_safety();
+        void    reset_storage(size_t size) noexcept;
 
     public:
         explicit ft_bitset(size_t bits = 0);
@@ -150,6 +151,7 @@ inline ft_bitset::ft_bitset(ft_bitset&& other) noexcept
     other._error_code = ER_SUCCESS;
     other.unlock_internal(other_lock_acquired);
     other.teardown_thread_safety();
+    other.reset_storage(transferred_size);
     this->_size = transferred_size;
     this->_blockCount = transferred_block_count;
     this->_data = transferred_data;
@@ -213,6 +215,7 @@ inline ft_bitset& ft_bitset::operator=(ft_bitset&& other) noexcept
     other._error_code = ER_SUCCESS;
     other.unlock_internal(other_lock_acquired);
     other.teardown_thread_safety();
+    other.reset_storage(transferred_size);
     this->unlock_internal(this_lock_acquired);
     if (previous_data != ft_nullptr && previous_data != this->_data)
         cma_free(previous_data);
@@ -510,6 +513,40 @@ inline void ft_bitset::teardown_thread_safety()
         this->_state_mutex = ft_nullptr;
     }
     this->_thread_safe_enabled = false;
+    return ;
+}
+
+inline void ft_bitset::reset_storage(size_t size) noexcept
+{
+    size_t index;
+
+    index = 0;
+    this->teardown_thread_safety();
+    if (this->_data != ft_nullptr)
+        cma_free(this->_data);
+    this->_data = ft_nullptr;
+    this->_size = size;
+    this->_blockCount = (size + BITS_PER_BLOCK - 1) / BITS_PER_BLOCK;
+    if (this->_blockCount == 0)
+    {
+        this->set_error(ER_SUCCESS);
+        return ;
+    }
+    this->_data = static_cast<size_t *>(cma_malloc(sizeof(size_t) * this->_blockCount));
+    if (this->_data == ft_nullptr)
+    {
+        this->_size = 0;
+        this->_blockCount = 0;
+        this->set_error(FT_ERR_BITSET_NO_MEMORY);
+        return ;
+    }
+    while (index < this->_blockCount)
+    {
+        this->_data[index] = 0;
+        index = index + 1;
+    }
+    this->_thread_safe_enabled = false;
+    this->set_error(ER_SUCCESS);
     return ;
 }
 
