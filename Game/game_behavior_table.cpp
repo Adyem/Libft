@@ -344,11 +344,13 @@ int ft_behavior_table::fetch_profile(int profile_id, ft_behavior_profile &profil
     }
     ft_behavior_profile entry_profile;
     entry_profile.clone_from_unlocked(entry->value);
-    const_cast<ft_behavior_table *>(self)->set_error(entry_profile.get_error());
-    game_behavior_restore_errno(entry_guard, entry_errno);
-    game_behavior_restore_errno(guard, entry_errno);
     if (entry_profile.get_error() != ER_SUCCESS)
+    {
+        const_cast<ft_behavior_table *>(self)->set_error(entry_profile.get_error());
+        game_behavior_restore_errno(entry_guard, entry_errno);
+        game_behavior_restore_errno(guard, entry_errno);
         return (entry_profile.get_error());
+    }
     int destination_errno;
 
     destination_errno = ft_errno;
@@ -360,6 +362,7 @@ int ft_behavior_table::fetch_profile(int profile_id, ft_behavior_profile &profil
         return (destination_guard.get_error());
     }
     profile.move_from_unlocked(entry_profile);
+    const_cast<ft_behavior_table *>(self)->set_error(self->_error_code);
     game_behavior_restore_errno(destination_guard, destination_errno);
     return (profile._error_code);
 }
