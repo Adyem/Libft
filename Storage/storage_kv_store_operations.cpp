@@ -3136,7 +3136,7 @@ int kv_store::kv_compare_and_swap(const char *key_string, const char *expected_v
             return (-1);
         }
     }
-    else if (existing_pair != ft_nullptr)
+    else if (existing_pair != map_end)
     {
         bool existing_has_expiration;
 
