@@ -139,7 +139,6 @@ int ft_behavior_table::clone_profiles_from(const ft_behavior_table &other) noexc
         ++entry;
     }
     this->_profiles = ft_move(profiles_copy);
-    this->set_error(this->_profiles.get_error());
     return (this->_error_code);
 }
 
@@ -189,7 +188,6 @@ ft_behavior_table &ft_behavior_table::operator=(const ft_behavior_table &other) 
         game_behavior_restore_errno(other_guard, entry_errno);
         return (*this);
     }
-    this->set_error(this->_profiles.get_error());
     game_behavior_restore_errno(this_guard, entry_errno);
     game_behavior_restore_errno(other_guard, entry_errno);
     return (*this);
@@ -216,7 +214,6 @@ ft_behavior_table::ft_behavior_table(ft_behavior_table &&other) noexcept
     }
     other._profiles.clear();
     other._error_code = ER_SUCCESS;
-    this->set_error(this->_profiles.get_error());
     other.set_error(ER_SUCCESS);
     game_behavior_restore_errno(other_guard, entry_errno);
     return ;
@@ -247,7 +244,6 @@ ft_behavior_table &ft_behavior_table::operator=(ft_behavior_table &&other) noexc
     }
     other._profiles.clear();
     other._error_code = ER_SUCCESS;
-    this->set_error(this->_profiles.get_error());
     other.set_error(ER_SUCCESS);
     game_behavior_restore_errno(this_guard, entry_errno);
     game_behavior_restore_errno(other_guard, entry_errno);

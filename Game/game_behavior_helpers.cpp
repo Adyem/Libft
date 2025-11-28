@@ -3,7 +3,11 @@
 
 void game_behavior_sleep_backoff() noexcept
 {
+    int entry_errno;
+
+    entry_errno = ft_errno;
     pt_thread_sleep(1);
+    ft_errno = entry_errno;
     return ;
 }
 
