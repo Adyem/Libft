@@ -68,8 +68,8 @@ FT_TEST(test_ft_bitset_move_preserves_bit_data_without_thread_safety,
     return (1);
 }
 
-FT_TEST(test_ft_bitset_move_allows_reenabling_mutex_after_transfer,
-        "ft_bitset moved-from instance can enable thread-safety and be reused")
+FT_TEST(test_ft_bitset_move_reports_out_of_range_when_reused_without_resize,
+        "ft_bitset moved-from instance stays valid but empty until resized")
 {
     ft_bitset source_bits(3);
     ft_bitset moved_bits(1);
@@ -83,10 +83,12 @@ FT_TEST(test_ft_bitset_move_allows_reenabling_mutex_after_transfer,
     FT_ASSERT(moved_bits.is_thread_safe_enabled());
     FT_ASSERT_EQ(false, source_bits.is_thread_safe_enabled());
     FT_ASSERT_EQ(true, moved_bits.test(2));
+    FT_ASSERT_EQ(0UL, source_bits.size());
     FT_ASSERT_EQ(0, source_bits.enable_thread_safety());
     FT_ASSERT(source_bits.is_thread_safe_enabled());
     source_bits.set(0);
-    FT_ASSERT_EQ(true, source_bits.test(0));
-    FT_ASSERT_EQ(ER_SUCCESS, source_bits.get_error());
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, source_bits.get_error());
+    FT_ASSERT_EQ(false, source_bits.test(0));
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, source_bits.get_error());
     return (1);
 }
