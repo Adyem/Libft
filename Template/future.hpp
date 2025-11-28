@@ -147,11 +147,8 @@ ft_future<ValueType>::ft_future(const ft_future<ValueType> &other)
     other.unlock_internal(lock_acquired);
     this->_promise = other_promise;
     this->_shared_promise = other_shared;
-    if (other_thread_safe)
-    {
-        if (this->enable_thread_safety() != 0)
-            return ;
-    }
+    if (this->enable_thread_safety() != 0)
+        return ;
     this->set_error(other_error);
     return ;
 }
