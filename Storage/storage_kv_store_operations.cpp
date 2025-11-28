@@ -3181,7 +3181,7 @@ int kv_store::kv_compare_and_swap(const char *key_string, const char *expected_v
         }
         if (expiration_timestamp <= current_time)
         {
-            if (existing_pair != ft_nullptr)
+            if (existing_pair != map_end)
             {
                 this->_data.remove(key_storage);
                 if (this->_data.get_error() != ER_SUCCESS)
@@ -3194,7 +3194,7 @@ int kv_store::kv_compare_and_swap(const char *key_string, const char *expected_v
             this->set_error_unlocked(ER_SUCCESS);
             this->record_set_operation();
             kv_store::restore_errno(guard, entry_errno);
-            if (existing_pair != ft_nullptr)
+            if (existing_pair != map_end)
             {
                 ft_vector<kv_store_operation> replication_operations;
                 kv_store_operation replication_operation;
@@ -3222,7 +3222,7 @@ int kv_store::kv_compare_and_swap(const char *key_string, const char *expected_v
             return (0);
         }
     }
-    if (existing_pair != ft_nullptr)
+    if (existing_pair != map_end)
     {
         if (existing_pair->value.set_value(new_value) != 0)
         {
