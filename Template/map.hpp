@@ -219,16 +219,12 @@ ft_map<Key, MappedType>::ft_map(ft_map<Key, MappedType>&& other) noexcept
       _state_mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     bool other_lock_acquired;
-    bool other_thread_safe;
-
     other_lock_acquired = false;
-    other_thread_safe = false;
     if (other.lock_internal(&other_lock_acquired) != 0)
     {
         this->set_error(ft_errno);
         return ;
     }
-    other_thread_safe = (other._thread_safe_enabled && other._state_mutex != ft_nullptr);
     this->_data = other._data;
     this->_capacity = other._capacity;
     this->_size = other._size;
