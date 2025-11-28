@@ -1,10 +1,21 @@
 #include "game_dialogue_table.hpp"
 #include "game_narrative_helpers.hpp"
 
-static int game_dialogue_copy_table(const ft_dialogue_table &source, ft_dialogue_table &destination)
+int ft_dialogue_table::clone_from(const ft_dialogue_table &other) noexcept
 {
-    destination.set_lines(source.get_lines());
-    destination.set_scripts(source.get_scripts());
+    this->_lines = other._lines;
+    if (this->_lines.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_lines.get_error());
+        return (this->_lines.get_error());
+    }
+    this->_scripts = other._scripts;
+    if (this->_scripts.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_scripts.get_error());
+        return (this->_scripts.get_error());
+    }
+    this->set_error(ER_SUCCESS);
     return (ER_SUCCESS);
 }
 
@@ -23,6 +34,7 @@ ft_dialogue_table::ft_dialogue_table(const ft_dialogue_table &other) noexcept
     : _lines(), _scripts(), _error_code(ER_SUCCESS)
 {
     int entry_errno;
+    int other_error_code;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
 
     entry_errno = ft_errno;
@@ -32,8 +44,14 @@ ft_dialogue_table::ft_dialogue_table(const ft_dialogue_table &other) noexcept
         game_narrative_restore_errno(other_guard, entry_errno);
         return ;
     }
-    game_dialogue_copy_table(other, *this);
-    this->_error_code = other._error_code;
+    other_error_code = other._error_code;
+    if (this->clone_from(other) != ER_SUCCESS)
+    {
+        game_narrative_restore_errno(other_guard, entry_errno);
+        return ;
+    }
+    this->_error_code = other_error_code;
+    this->set_error(this->_error_code);
     game_narrative_restore_errno(other_guard, entry_errno);
     return ;
 }
@@ -43,6 +61,7 @@ ft_dialogue_table &ft_dialogue_table::operator=(const ft_dialogue_table &other) 
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
     int entry_errno;
+    int other_error_code;
 
     if (this == &other)
         return (*this);
@@ -60,8 +79,15 @@ ft_dialogue_table &ft_dialogue_table::operator=(const ft_dialogue_table &other) 
         game_narrative_restore_errno(this_guard, entry_errno);
         return (*this);
     }
-    game_dialogue_copy_table(other, *this);
-    this->_error_code = other._error_code;
+    other_error_code = other._error_code;
+    if (this->clone_from(other) != ER_SUCCESS)
+    {
+        game_narrative_restore_errno(this_guard, entry_errno);
+        game_narrative_restore_errno(other_guard, entry_errno);
+        return (*this);
+    }
+    this->_error_code = other_error_code;
+    this->set_error(this->_error_code);
     game_narrative_restore_errno(this_guard, entry_errno);
     game_narrative_restore_errno(other_guard, entry_errno);
     return (*this);
@@ -71,6 +97,7 @@ ft_dialogue_table::ft_dialogue_table(ft_dialogue_table &&other) noexcept
     : _lines(), _scripts(), _error_code(ER_SUCCESS)
 {
     int entry_errno;
+    int other_error_code;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
 
     entry_errno = ft_errno;
@@ -80,11 +107,18 @@ ft_dialogue_table::ft_dialogue_table(ft_dialogue_table &&other) noexcept
         game_narrative_restore_errno(other_guard, entry_errno);
         return ;
     }
-    game_dialogue_copy_table(other, *this);
-    this->_error_code = other._error_code;
+    other_error_code = other._error_code;
+    if (this->clone_from(other) != ER_SUCCESS)
+    {
+        game_narrative_restore_errno(other_guard, entry_errno);
+        return ;
+    }
+    this->_error_code = other_error_code;
     other._lines.clear();
     other._scripts.clear();
     other._error_code = ER_SUCCESS;
+    other.set_error(ER_SUCCESS);
+    this->set_error(this->_error_code);
     game_narrative_restore_errno(other_guard, entry_errno);
     return ;
 }
@@ -94,6 +128,7 @@ ft_dialogue_table &ft_dialogue_table::operator=(ft_dialogue_table &&other) noexc
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
     int entry_errno;
+    int other_error_code;
 
     if (this == &other)
         return (*this);
@@ -111,11 +146,19 @@ ft_dialogue_table &ft_dialogue_table::operator=(ft_dialogue_table &&other) noexc
         game_narrative_restore_errno(this_guard, entry_errno);
         return (*this);
     }
-    game_dialogue_copy_table(other, *this);
-    this->_error_code = other._error_code;
+    other_error_code = other._error_code;
+    if (this->clone_from(other) != ER_SUCCESS)
+    {
+        game_narrative_restore_errno(this_guard, entry_errno);
+        game_narrative_restore_errno(other_guard, entry_errno);
+        return (*this);
+    }
+    this->_error_code = other_error_code;
     other._lines.clear();
     other._scripts.clear();
     other._error_code = ER_SUCCESS;
+    other.set_error(ER_SUCCESS);
+    this->set_error(this->_error_code);
     game_narrative_restore_errno(this_guard, entry_errno);
     game_narrative_restore_errno(other_guard, entry_errno);
     return (*this);

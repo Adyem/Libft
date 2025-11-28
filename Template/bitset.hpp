@@ -144,31 +144,9 @@ inline ft_bitset::ft_bitset(ft_bitset&& other) noexcept
     transferred_data = other._data;
     transferred_error_code = other._error_code;
     transferred_thread_safe = other._thread_safe_enabled;
-    size_t *replacement_data;
-
-    replacement_data = ft_nullptr;
-    if (transferred_size > 0)
-    {
-        replacement_data = static_cast<size_t *>(cma_malloc(sizeof(size_t) * transferred_block_count));
-        if (replacement_data == ft_nullptr)
-        {
-            other.unlock_internal(other_lock_acquired);
-            other.teardown_thread_safety();
-            this->set_error(FT_ERR_NO_MEMORY);
-            return ;
-        }
-        size_t replacement_index;
-
-        replacement_index = 0;
-        while (replacement_index < transferred_block_count)
-        {
-            replacement_data[replacement_index] = 0;
-            replacement_index++;
-        }
-    }
-    other._size = transferred_size;
-    other._blockCount = transferred_block_count;
-    other._data = replacement_data;
+    other._size = 0;
+    other._blockCount = 0;
+    other._data = ft_nullptr;
     other._error_code = ER_SUCCESS;
     other.unlock_internal(other_lock_acquired);
     other.teardown_thread_safety();
@@ -229,31 +207,9 @@ inline ft_bitset& ft_bitset::operator=(ft_bitset&& other) noexcept
     this->_error_code = transferred_error_code;
     this->_state_mutex = ft_nullptr;
     this->_thread_safe_enabled = false;
-    size_t *replacement_data;
-
-    replacement_data = ft_nullptr;
-    if (transferred_size > 0)
-    {
-        replacement_data = static_cast<size_t *>(cma_malloc(sizeof(size_t) * transferred_block_count));
-        if (replacement_data == ft_nullptr)
-        {
-            other.unlock_internal(other_lock_acquired);
-            this->unlock_internal(this_lock_acquired);
-            this->set_error(FT_ERR_NO_MEMORY);
-            return (*this);
-        }
-        size_t replacement_index;
-
-        replacement_index = 0;
-        while (replacement_index < transferred_block_count)
-        {
-            replacement_data[replacement_index] = 0;
-            replacement_index++;
-        }
-    }
-    other._size = transferred_size;
-    other._blockCount = transferred_block_count;
-    other._data = replacement_data;
+    other._size = 0;
+    other._blockCount = 0;
+    other._data = ft_nullptr;
     other._error_code = ER_SUCCESS;
     other.unlock_internal(other_lock_acquired);
     other.teardown_thread_safety();

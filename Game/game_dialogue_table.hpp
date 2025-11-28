@@ -17,6 +17,7 @@ class ft_dialogue_table
         mutable pt_mutex _mutex;
 
         void set_error(int error_code) const noexcept;
+        int clone_from(const ft_dialogue_table &other) noexcept;
 
     public:
         ft_dialogue_table() noexcept;
