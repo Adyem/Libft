@@ -1081,6 +1081,10 @@ ft_unordered_map<Key, MappedType>::ft_unordered_map(const ft_unordered_map<Key, 
         _data = ft_nullptr;
         _occupied = ft_nullptr;
     }
+    if (other._thread_safe_enabled && other._mutex != ft_nullptr)
+    {
+        this->enable_thread_safety();
+    }
 }
 
 template <typename Key, typename MappedType>
@@ -1160,6 +1164,10 @@ ft_unordered_map<Key, MappedType>& ft_unordered_map<Key, MappedType>::operator=(
         {
             this->_data = ft_nullptr;
             this->_occupied = ft_nullptr;
+        }
+        if (other._thread_safe_enabled && other._mutex != ft_nullptr)
+        {
+            this->enable_thread_safety();
         }
     }
     return (*this);

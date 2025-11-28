@@ -139,7 +139,7 @@ int ft_behavior_table::clone_profiles_from(const ft_behavior_table &other) noexc
         ++entry;
     }
     this->_profiles = ft_move(profiles_copy);
-    return (this->_error_code);
+    return (ER_SUCCESS);
 }
 
 ft_behavior_table::ft_behavior_table(const ft_behavior_table &other) noexcept

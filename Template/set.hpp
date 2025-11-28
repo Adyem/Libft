@@ -112,6 +112,7 @@ ft_set<ElementType>::ft_set(ft_set&& other) noexcept
     other._size = 0;
     other._error_code = ER_SUCCESS;
     other.unlock_internal(other_lock_acquired);
+    other.teardown_thread_safety();
     if (other_thread_safe)
     {
         if (this->enable_thread_safety() != 0)
@@ -163,6 +164,7 @@ ft_set<ElementType>& ft_set<ElementType>::operator=(ft_set&& other) noexcept
     other._size = 0;
     other._error_code = ER_SUCCESS;
     other.unlock_internal(other_lock_acquired);
+    other.teardown_thread_safety();
     if (other_thread_safe)
     {
         if (this->enable_thread_safety() != 0)
