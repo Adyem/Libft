@@ -26,6 +26,7 @@ class ft_sharedptr
         mutable int _error_code;
         mutable pt_mutex *_mutex;
         bool _thread_safe_enabled;
+        bool *_shared_thread_safe_flag;
 
         void release_current_locked();
         void set_error_unlocked(int error) const;
@@ -121,13 +122,18 @@ ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args)
       _isArrayType(false),
       _error_code(ER_SUCCESS),
       _mutex(ft_nullptr),
-      _thread_safe_enabled(false)
+      _thread_safe_enabled(false),
+      _shared_thread_safe_flag(ft_nullptr)
 {
     int* reference_count;
+    bool* shared_thread_safe_flag;
 
     reference_count = new (std::nothrow) int;
-    if (!reference_count)
+    shared_thread_safe_flag = new (std::nothrow) bool;
+    if (!reference_count || !shared_thread_safe_flag)
     {
+        if (shared_thread_safe_flag)
+            delete shared_thread_safe_flag;
         this->set_error_unlocked(FT_ERR_NO_MEMORY);
         return ;
     }
@@ -135,12 +141,15 @@ ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args)
     if (!pointer)
     {
         delete reference_count;
+        delete shared_thread_safe_flag;
         this->set_error_unlocked(FT_ERR_NO_MEMORY);
         return ;
     }
     *reference_count = 1;
+    *shared_thread_safe_flag = false;
     this->_managedPointer = pointer;
     this->_referenceCount = reference_count;
+    this->_shared_thread_safe_flag = shared_thread_safe_flag;
     this->_arraySize = 1;
     this->_isArrayType = false;
     this->set_error_unlocked(ER_SUCCESS);
@@ -156,13 +165,18 @@ ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args)
       _isArrayType(false),
       _error_code(ER_SUCCESS),
       _mutex(ft_nullptr),
-      _thread_safe_enabled(false)
+      _thread_safe_enabled(false),
+      _shared_thread_safe_flag(ft_nullptr)
 {
     int* reference_count;
+    bool* shared_thread_safe_flag;
 
     reference_count = new (std::nothrow) int;
-    if (!reference_count)
+    shared_thread_safe_flag = new (std::nothrow) bool;
+    if (!reference_count || !shared_thread_safe_flag)
     {
+        if (shared_thread_safe_flag)
+            delete shared_thread_safe_flag;
         this->set_error_unlocked(FT_ERR_NO_MEMORY);
         return ;
     }
@@ -170,12 +184,15 @@ ft_sharedptr<ManagedType>::ft_sharedptr(Args&&... args)
     if (!pointer)
     {
         delete reference_count;
+        delete shared_thread_safe_flag;
         this->set_error_unlocked(FT_ERR_NO_MEMORY);
         return ;
     }
     *reference_count = 1;
+    *shared_thread_safe_flag = false;
     this->_managedPointer = pointer;
     this->_referenceCount = reference_count;
+    this->_shared_thread_safe_flag = shared_thread_safe_flag;
     this->_arraySize = 1;
     this->_isArrayType = false;
     this->set_error_unlocked(ER_SUCCESS);
@@ -191,12 +208,14 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ManagedType* pointer, bool isArray, size
       _isArrayType(isArray),
       _error_code(ER_SUCCESS),
       _mutex(ft_nullptr),
-      _thread_safe_enabled(false)
+      _thread_safe_enabled(false),
+      _shared_thread_safe_flag(ft_nullptr)
 {
     if (pointer)
     {
         this->_referenceCount = new (std::nothrow) int;
-        if (!this->_referenceCount)
+        this->_shared_thread_safe_flag = new (std::nothrow) bool;
+        if (!this->_referenceCount || !this->_shared_thread_safe_flag)
         {
             if (isArray)
                 delete[] pointer;
@@ -205,10 +224,16 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ManagedType* pointer, bool isArray, size
             this->_managedPointer = ft_nullptr;
             this->_arraySize = 0;
             this->_isArrayType = false;
+            if (this->_shared_thread_safe_flag)
+            {
+                delete this->_shared_thread_safe_flag;
+                this->_shared_thread_safe_flag = ft_nullptr;
+            }
             this->set_error_unlocked(FT_ERR_NO_MEMORY);
             return ;
         }
         *this->_referenceCount = 1;
+        *this->_shared_thread_safe_flag = false;
     }
     this->set_error_unlocked(ER_SUCCESS);
     return ;
@@ -222,7 +247,8 @@ ft_sharedptr<ManagedType>::ft_sharedptr()
       _isArrayType(false),
       _error_code(ER_SUCCESS),
       _mutex(ft_nullptr),
-      _thread_safe_enabled(false)
+      _thread_safe_enabled(false),
+      _shared_thread_safe_flag(ft_nullptr)
 {
     this->set_error_unlocked(ER_SUCCESS);
     return ;
@@ -236,7 +262,8 @@ ft_sharedptr<ManagedType>::ft_sharedptr(size_t size)
       _isArrayType(true),
       _error_code(ER_SUCCESS),
       _mutex(ft_nullptr),
-      _thread_safe_enabled(false)
+      _thread_safe_enabled(false),
+      _shared_thread_safe_flag(ft_nullptr)
 {
     if (size == 0)
     {
@@ -244,10 +271,16 @@ ft_sharedptr<ManagedType>::ft_sharedptr(size_t size)
         return ;
     }
     this->_referenceCount = new (std::nothrow) int;
-    if (!this->_referenceCount)
+    this->_shared_thread_safe_flag = new (std::nothrow) bool;
+    if (!this->_referenceCount || !this->_shared_thread_safe_flag)
     {
         this->_arraySize = 0;
         this->_isArrayType = false;
+        if (this->_shared_thread_safe_flag)
+        {
+            delete this->_shared_thread_safe_flag;
+            this->_shared_thread_safe_flag = ft_nullptr;
+        }
         this->set_error_unlocked(FT_ERR_NO_MEMORY);
         return ;
     }
@@ -256,12 +289,15 @@ ft_sharedptr<ManagedType>::ft_sharedptr(size_t size)
     {
         delete this->_referenceCount;
         this->_referenceCount = ft_nullptr;
+        delete this->_shared_thread_safe_flag;
+        this->_shared_thread_safe_flag = ft_nullptr;
         this->_arraySize = 0;
         this->_isArrayType = false;
         this->set_error_unlocked(FT_ERR_NO_MEMORY);
         return ;
     }
     *this->_referenceCount = 1;
+    *this->_shared_thread_safe_flag = false;
     this->set_error_unlocked(ER_SUCCESS);
     return ;
 }
@@ -274,7 +310,8 @@ ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<ManagedType>& other)
       _isArrayType(false),
       _error_code(ER_SUCCESS),
       _mutex(ft_nullptr),
-      _thread_safe_enabled(false)
+      _thread_safe_enabled(false),
+      _shared_thread_safe_flag(ft_nullptr)
 {
     bool other_lock_acquired;
     bool other_thread_safe;
@@ -291,7 +328,8 @@ ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<ManagedType>& other)
     this->_arraySize = other._arraySize;
     this->_isArrayType = other._isArrayType;
     this->_error_code = other._error_code;
-    other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
+    this->_shared_thread_safe_flag = other._shared_thread_safe_flag;
+    other_thread_safe = (this->_shared_thread_safe_flag && *this->_shared_thread_safe_flag);
     if (this->_referenceCount)
     {
         ++(*this->_referenceCount);
@@ -310,6 +348,8 @@ ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<ManagedType>& other)
         }
     }
     this->_thread_safe_enabled = other_thread_safe;
+    if (this->_shared_thread_safe_flag)
+        *this->_shared_thread_safe_flag = other_thread_safe;
     return ;
 }
 
@@ -321,7 +361,8 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<ManagedType>&& other) noexc
       _isArrayType(false),
       _error_code(ER_SUCCESS),
       _mutex(ft_nullptr),
-      _thread_safe_enabled(false)
+      _thread_safe_enabled(false),
+      _shared_thread_safe_flag(ft_nullptr)
 {
     bool other_lock_acquired;
     bool other_thread_safe;
@@ -338,12 +379,14 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<ManagedType>&& other) noexc
     this->_arraySize = other._arraySize;
     this->_isArrayType = other._isArrayType;
     this->_error_code = other._error_code;
-    other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
+    this->_shared_thread_safe_flag = other._shared_thread_safe_flag;
+    other_thread_safe = (this->_shared_thread_safe_flag && *this->_shared_thread_safe_flag);
     other._managedPointer = ft_nullptr;
     other._referenceCount = ft_nullptr;
     other._arraySize = 0;
     other._isArrayType = false;
     other._error_code = ER_SUCCESS;
+    other._shared_thread_safe_flag = ft_nullptr;
     this->set_error_unlocked(ER_SUCCESS);
     other.set_error_unlocked(ER_SUCCESS);
     other.unlock_internal(other_lock_acquired);
@@ -357,6 +400,8 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<ManagedType>&& other) noexc
             return ;
         }
         this->_thread_safe_enabled = true;
+        if (this->_shared_thread_safe_flag)
+            *this->_shared_thread_safe_flag = true;
     }
     return ;
 }
@@ -394,6 +439,8 @@ void ft_sharedptr<ManagedType>::release_current_locked()
                     delete this->_managedPointer;
             }
             delete this->_referenceCount;
+            if (this->_shared_thread_safe_flag)
+                delete this->_shared_thread_safe_flag;
         }
     }
     else if (this->_managedPointer)
@@ -405,6 +452,7 @@ void ft_sharedptr<ManagedType>::release_current_locked()
     }
     this->_managedPointer = ft_nullptr;
     this->_referenceCount = ft_nullptr;
+    this->_shared_thread_safe_flag = ft_nullptr;
     this->_arraySize = 0;
     this->_isArrayType = false;
     this->set_error_unlocked(ER_SUCCESS);
@@ -458,19 +506,21 @@ ft_sharedptr<ManagedType>& ft_sharedptr<ManagedType>::operator=(ft_sharedptr<Man
         other.set_error_unlocked(ft_errno);
         return (*this);
     }
-    other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
+    other_thread_safe = (other._shared_thread_safe_flag && *other._shared_thread_safe_flag);
     this->release_current_locked();
     this->_managedPointer = other._managedPointer;
     this->_referenceCount = other._referenceCount;
     this->_arraySize = other._arraySize;
     this->_isArrayType = other._isArrayType;
     this->_error_code = other._error_code;
+    this->_shared_thread_safe_flag = other._shared_thread_safe_flag;
     this->_thread_safe_enabled = other_thread_safe;
     other._managedPointer = ft_nullptr;
     other._referenceCount = ft_nullptr;
     other._arraySize = 0;
     other._isArrayType = false;
     other._error_code = ER_SUCCESS;
+    other._shared_thread_safe_flag = ft_nullptr;
     other._thread_safe_enabled = false;
     other.unlock_internal(second_lock_acquired);
     this->unlock_internal(first_lock_acquired);
@@ -486,6 +536,8 @@ ft_sharedptr<ManagedType>& ft_sharedptr<ManagedType>::operator=(ft_sharedptr<Man
         }
     }
     this->set_error_unlocked(ER_SUCCESS);
+    if (this->_shared_thread_safe_flag)
+        *this->_shared_thread_safe_flag = other_thread_safe;
     other.set_error_unlocked(ER_SUCCESS);
     return (*this);
 }
@@ -524,13 +576,14 @@ ft_sharedptr<ManagedType>& ft_sharedptr<ManagedType>::operator=(const ft_sharedp
         this->set_error_unlocked(ft_errno);
         return (*this);
     }
-    other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
+    other_thread_safe = (other._shared_thread_safe_flag && *other._shared_thread_safe_flag);
     this->release_current_locked();
     this->_managedPointer = other._managedPointer;
     this->_referenceCount = other._referenceCount;
     this->_arraySize = other._arraySize;
     this->_isArrayType = other._isArrayType;
     this->_error_code = other._error_code;
+    this->_shared_thread_safe_flag = other._shared_thread_safe_flag;
     if (this->_referenceCount)
     {
         ++(*this->_referenceCount);
@@ -552,6 +605,8 @@ ft_sharedptr<ManagedType>& ft_sharedptr<ManagedType>::operator=(const ft_sharedp
         }
     }
     this->_thread_safe_enabled = other_thread_safe;
+    if (this->_shared_thread_safe_flag)
+        *this->_shared_thread_safe_flag = other_thread_safe;
     other.set_error_unlocked(ER_SUCCESS);
     return (*this);
 }
@@ -567,7 +622,8 @@ ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<Other>& other)
       _isArrayType(false),
       _error_code(ER_SUCCESS),
       _mutex(ft_nullptr),
-      _thread_safe_enabled(false)
+      _thread_safe_enabled(false),
+      _shared_thread_safe_flag(ft_nullptr)
 {
     bool other_lock_acquired;
 
@@ -582,6 +638,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<Other>& other)
     this->_arraySize = other._arraySize;
     this->_isArrayType = other._isArrayType;
     this->_error_code = other._error_code;
+    this->_shared_thread_safe_flag = other._shared_thread_safe_flag;
     if (this->_referenceCount)
     {
         ++(*this->_referenceCount);
@@ -602,7 +659,8 @@ ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<Other>& other)
       _isArrayType(false),
       _error_code(ER_SUCCESS),
       _mutex(ft_nullptr),
-      _thread_safe_enabled(false)
+      _thread_safe_enabled(false),
+      _shared_thread_safe_flag(ft_nullptr)
 {
     bool other_lock_acquired;
 
@@ -617,6 +675,7 @@ ft_sharedptr<ManagedType>::ft_sharedptr(const ft_sharedptr<Other>& other)
     this->_arraySize = other._arraySize;
     this->_isArrayType = other._isArrayType;
     this->_error_code = other._error_code;
+    this->_shared_thread_safe_flag = other._shared_thread_safe_flag;
     if (this->_referenceCount)
     {
         ++(*this->_referenceCount);
@@ -640,7 +699,8 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<Other>&& other) noexcept
       _isArrayType(false),
       _error_code(ER_SUCCESS),
       _mutex(ft_nullptr),
-      _thread_safe_enabled(false)
+      _thread_safe_enabled(false),
+      _shared_thread_safe_flag(ft_nullptr)
 {
     bool other_lock_acquired;
 
@@ -655,11 +715,13 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<Other>&& other) noexcept
     this->_arraySize = other._arraySize;
     this->_isArrayType = other._isArrayType;
     this->_error_code = other._error_code;
+    this->_shared_thread_safe_flag = other._shared_thread_safe_flag;
     other._managedPointer = ft_nullptr;
     other._referenceCount = ft_nullptr;
     other._arraySize = 0;
     other._isArrayType = false;
     other._error_code = ER_SUCCESS;
+    other._shared_thread_safe_flag = ft_nullptr;
     this->set_error_unlocked(ER_SUCCESS);
     other.set_error_unlocked(ER_SUCCESS);
     other.unlock_internal(other_lock_acquired);
@@ -675,7 +737,8 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<Other>&& other) noexcept
       _isArrayType(false),
       _error_code(ER_SUCCESS),
       _mutex(ft_nullptr),
-      _thread_safe_enabled(false)
+      _thread_safe_enabled(false),
+      _shared_thread_safe_flag(ft_nullptr)
 {
     bool other_lock_acquired;
 
@@ -690,11 +753,13 @@ ft_sharedptr<ManagedType>::ft_sharedptr(ft_sharedptr<Other>&& other) noexcept
     this->_arraySize = other._arraySize;
     this->_isArrayType = other._isArrayType;
     this->_error_code = other._error_code;
+    this->_shared_thread_safe_flag = other._shared_thread_safe_flag;
     other._managedPointer = ft_nullptr;
     other._referenceCount = ft_nullptr;
     other._arraySize = 0;
     other._isArrayType = false;
     other._error_code = ER_SUCCESS;
+    other._shared_thread_safe_flag = ft_nullptr;
     this->set_error_unlocked(ER_SUCCESS);
     other.set_error_unlocked(ER_SUCCESS);
     other.unlock_internal(other_lock_acquired);
@@ -1437,6 +1502,16 @@ int ft_sharedptr<ManagedType>::prepare_thread_safety()
     void *memory_pointer;
     pt_mutex *mutex_pointer;
 
+    if (!this->_shared_thread_safe_flag)
+    {
+        this->_shared_thread_safe_flag = new (std::nothrow) bool;
+        if (!this->_shared_thread_safe_flag)
+        {
+            this->set_error_unlocked(FT_ERR_NO_MEMORY);
+            return (-1);
+        }
+        *this->_shared_thread_safe_flag = false;
+    }
     if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
     {
         this->set_error_unlocked(ER_SUCCESS);
@@ -1461,6 +1536,7 @@ int ft_sharedptr<ManagedType>::prepare_thread_safety()
     }
     this->_mutex = mutex_pointer;
     this->_thread_safe_enabled = true;
+    *this->_shared_thread_safe_flag = true;
     this->set_error_unlocked(ER_SUCCESS);
     return (0);
 }
@@ -1488,6 +1564,8 @@ template <typename ManagedType>
 void ft_sharedptr<ManagedType>::disable_thread_safety()
 {
     this->teardown_thread_safety();
+    if (this->_shared_thread_safe_flag)
+        *this->_shared_thread_safe_flag = false;
     this->set_error_unlocked(ER_SUCCESS);
     return ;
 }
@@ -1497,6 +1575,11 @@ bool ft_sharedptr<ManagedType>::is_thread_safe() const
 {
     bool enabled;
 
+    if (this->_shared_thread_safe_flag && *this->_shared_thread_safe_flag
+        && (!this->_thread_safe_enabled || this->_mutex == ft_nullptr))
+    {
+        const_cast<ft_sharedptr<ManagedType>*>(this)->prepare_thread_safety();
+    }
     enabled = (this->_thread_safe_enabled && this->_mutex != ft_nullptr);
     const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(ER_SUCCESS);
     return (enabled);

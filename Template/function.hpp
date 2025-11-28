@@ -334,16 +334,12 @@ ft_function<ReturnType(Args...)> &ft_function<ReturnType(Args...)>::operator=(co
     this->_clone = new_clone;
     this->_error_code = other_error_code;
     this->unlock_internal(this_lock_acquired);
+    this->teardown_thread_safety();
     if (other_thread_safe)
     {
-        if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
-        {
-            if (this->enable_thread_safety() != 0)
-                return (*this);
-        }
+        if (this->enable_thread_safety() != 0)
+            return (*this);
     }
-    else if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
-        this->disable_thread_safety();
     this->set_error(ER_SUCCESS);
     return (*this);
 }
