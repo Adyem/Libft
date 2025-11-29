@@ -111,9 +111,7 @@ int    scma_is_initialized(void)
         initialized = 1;
     }
     else
-    {
         ft_errno = ER_SUCCESS;
-    }
     return (scma_unlock_and_return_int(initialized));
 }
 
