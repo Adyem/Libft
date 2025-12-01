@@ -1,4 +1,5 @@
 #include "../../Math/math.hpp"
+#include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 
 FT_TEST(test_math_fabs_negative_value_returns_positive, "math_fabs converts negative double to positive")
@@ -36,5 +37,30 @@ FT_TEST(test_math_fabs_propagates_nan, "math_fabs propagates NaN inputs")
 
     result = math_fabs(math_nan());
     FT_ASSERT(math_isnan(result));
+    return (1);
+}
+
+FT_TEST(test_math_fabs_preserves_infinity, "math_fabs returns infinity unchanged")
+{
+    double result;
+
+    result = math_fabs(math_infinity());
+    FT_ASSERT(math_isinf(result));
+    FT_ASSERT(result > 0.0);
+    return (1);
+}
+
+FT_TEST(test_math_fabs_clears_errno_after_nan, "math_fabs resets errno once given finite input")
+{
+    double result;
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    result = math_fabs(math_nan());
+    FT_ASSERT(math_isnan(result));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    result = math_fabs(-42.0);
+    FT_ASSERT(math_fabs(result - 42.0) < 0.000001);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }

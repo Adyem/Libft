@@ -149,6 +149,25 @@ FT_TEST(test_strtoul_null_input, "ft_strtoul null input sets errno and end point
     return (1);
 }
 
+FT_TEST(test_strtoul_recovers_after_null_input, "ft_strtoul clears errno after a subsequent valid parse")
+{
+    char *end_pointer;
+    unsigned long parsed_value;
+
+    end_pointer = reinterpret_cast<char *>(0x1);
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(0UL, ft_strtoul(ft_nullptr, &end_pointer, 0));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(ft_nullptr, end_pointer);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    end_pointer = reinterpret_cast<char *>(0x1);
+    parsed_value = ft_strtoul("42", &end_pointer, 10);
+    FT_ASSERT_EQ(static_cast<unsigned long>(42), parsed_value);
+    FT_ASSERT_EQ('\0', *end_pointer);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_strtoul_base_eight_rejects_invalid_digit,
         "ft_strtoul stops consuming digits outside the specified base")
 {

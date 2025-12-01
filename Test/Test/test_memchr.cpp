@@ -115,3 +115,34 @@ FT_TEST(test_memchr_miss_clears_errno, "ft_memchr clears errno when byte missing
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_memchr_recovers_after_null_failure, "ft_memchr clears errno after null pointer failure")
+{
+    char buffer[3];
+
+    buffer[0] = 'q';
+    buffer[1] = 'w';
+    buffer[2] = '\0';
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(ft_nullptr, ft_memchr(ft_nullptr, 'q', 2));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(buffer, ft_memchr(buffer, 'q', 2));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_memchr_matches_last_byte, "ft_memchr can find values at the end of the range")
+{
+    char buffer[5];
+
+    buffer[0] = 'a';
+    buffer[1] = 'b';
+    buffer[2] = 'c';
+    buffer[3] = 'd';
+    buffer[4] = 'e';
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(buffer + 4, ft_memchr(buffer, 'e', 5));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

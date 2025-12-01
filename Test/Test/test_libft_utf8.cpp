@@ -89,6 +89,56 @@ FT_TEST(test_utf8_next_invalid_sequence_sets_errno, "ft_utf8_next reports invali
     return (1);
 }
 
+FT_TEST(test_utf8_next_recovers_after_invalid_sequence, "ft_utf8_next clears errno after failure")
+{
+    char invalid_sequence[3];
+    const char *valid_string;
+    size_t string_length;
+    size_t index_pointer;
+    uint32_t code_point_value;
+    size_t sequence_length;
+
+    invalid_sequence[0] = static_cast<char>(0xC1);
+    invalid_sequence[1] = static_cast<char>(0xBF);
+    invalid_sequence[2] = '\0';
+    string_length = static_cast<size_t>(2);
+    index_pointer = 0;
+    code_point_value = 0;
+    sequence_length = 0;
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(FT_FAILURE, ft_utf8_next(invalid_sequence, string_length,
+            &index_pointer, &code_point_value, &sequence_length));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    valid_string = "A";
+    string_length = ft_strlen_size_t(valid_string);
+    index_pointer = 0;
+    code_point_value = 0;
+    sequence_length = 0;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(FT_SUCCESS, ft_utf8_next(valid_string, string_length,
+            &index_pointer, &code_point_value, &sequence_length));
+    FT_ASSERT_EQ(static_cast<uint32_t>('A'), code_point_value);
+    FT_ASSERT_EQ(static_cast<size_t>(1), sequence_length);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_utf8_count_null_pointer_sets_errno, "ft_utf8_count rejects null inputs and recovers")
+{
+    size_t code_point_count;
+
+    code_point_count = 1;
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(FT_FAILURE, ft_utf8_count(ft_nullptr, &code_point_count));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(static_cast<size_t>(1), code_point_count);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(FT_SUCCESS, ft_utf8_count("ok", &code_point_count));
+    FT_ASSERT_EQ(static_cast<size_t>(2), code_point_count);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 static uint32_t ft_utf8_test_invalid_hook(uint32_t code_point)
 {
     (void)code_point;

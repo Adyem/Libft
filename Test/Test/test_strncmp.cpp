@@ -113,3 +113,46 @@ FT_TEST(test_strncmp_embedded_nulls_stop_comparison, "ft_strncmp stops comparing
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_strncmp_recovers_after_null_failure, "ft_strncmp clears errno after null pointer failure")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(-1, ft_strncmp(ft_nullptr, "abc", 2));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT(ft_strncmp("abc", "abd", 3) < 0);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strncmp_limit_blocks_mismatch_after_error, "ft_strncmp respects length after prior failure")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(-1, ft_strncmp("abc", ft_nullptr, 2));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(0, ft_strncmp("prefix", "prelude", 3));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strncmp_stops_at_null_within_limit, "ft_strncmp treats early terminator as end of comparison")
+{
+    char left[5];
+    char right[5];
+
+    left[0] = 'a';
+    left[1] = 'b';
+    left[2] = '\0';
+    left[3] = 'x';
+    left[4] = '\0';
+    right[0] = 'a';
+    right[1] = 'b';
+    right[2] = 'c';
+    right[3] = 'd';
+    right[4] = '\0';
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT(ft_strncmp(left, right, 4) < 0);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

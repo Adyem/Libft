@@ -139,3 +139,22 @@ FT_TEST(test_memmove_errno_recovers_after_failure, "ft_memmove resets errno afte
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_memmove_single_byte_overlap, "ft_memmove handles single-byte overlap")
+{
+    char buffer[5];
+
+    buffer[0] = 'x';
+    buffer[1] = 'y';
+    buffer[2] = 'z';
+    buffer[3] = 'w';
+    buffer[4] = '\0';
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(buffer + 1, ft_memmove(buffer + 1, buffer, 3));
+    FT_ASSERT_EQ('x', buffer[1]);
+    FT_ASSERT_EQ('y', buffer[2]);
+    FT_ASSERT_EQ('z', buffer[3]);
+    FT_ASSERT_EQ('\0', buffer[4]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

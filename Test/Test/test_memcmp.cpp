@@ -116,3 +116,18 @@ FT_TEST(test_memcmp_null_pointer_sets_errno, "ft_memcmp null pointer sets FT_ERR
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
+
+FT_TEST(test_memcmp_errno_recovers_after_null_pointer, "ft_memcmp clears errno after null input failure")
+{
+    char buffer[3];
+
+    buffer[0] = 'a';
+    buffer[1] = 'b';
+    buffer[2] = '\0';
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(0, ft_memcmp(buffer, ft_nullptr, 1));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(0, ft_memcmp(buffer, buffer, 1));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

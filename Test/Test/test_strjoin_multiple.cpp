@@ -72,3 +72,17 @@ FT_TEST(test_strjoin_multiple_retains_empty_segments, "cma_strjoin_multiple pres
     cma_free(joined);
     return (result);
 }
+
+FT_TEST(test_strjoin_multiple_null_segment_recovers_errno, "cma_strjoin_multiple clears errno with null segments")
+{
+    char *joined;
+    int result;
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    joined = cma_strjoin_multiple(3, "alpha", static_cast<const char *>(ft_nullptr), "beta");
+    if (joined == ft_nullptr)
+        return (0);
+    result = (ft_errno == ER_SUCCESS && ft_strcmp(joined, "alphabeta") == 0);
+    cma_free(joined);
+    return (result);
+}

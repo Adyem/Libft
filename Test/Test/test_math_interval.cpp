@@ -92,3 +92,16 @@ FT_TEST(test_interval_midpoint_and_radius_report_geometry, "ft_interval_midpoint
     FT_ASSERT_EQ(0, ft_interval_contains(interval, 11.0));
     return (1);
 }
+
+FT_TEST(test_interval_widen_expands_bounds_symmetrically, "ft_interval_widen enlarges an interval by the given error")
+{
+    ft_interval interval;
+    ft_interval widened_interval;
+
+    interval = ft_interval_create(2.0, 4.0);
+    widened_interval = ft_interval_widen(interval, 1.5);
+    FT_ASSERT_EQ(ER_SUCCESS, widened_interval._error_code);
+    FT_ASSERT_DOUBLE_EQ(0.5, widened_interval.lower);
+    FT_ASSERT_DOUBLE_EQ(5.5, widened_interval.upper);
+    return (1);
+}

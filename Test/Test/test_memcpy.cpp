@@ -106,6 +106,33 @@ FT_TEST(test_memcpy_overlapping_regions, "ft_memcpy overlapping regions")
     return (1);
 }
 
+FT_TEST(test_memcpy_recovers_after_overlap_error, "ft_memcpy clears errno after overlap warning")
+{
+    char source[4];
+    char destination[4];
+
+    source[0] = 'd';
+    source[1] = 'a';
+    source[2] = 't';
+    source[3] = 'a';
+    destination[0] = 'x';
+    destination[1] = 'x';
+    destination[2] = 'x';
+    destination[3] = '\0';
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(destination + 1, ft_memcpy(destination + 1, destination, 2));
+    FT_ASSERT_EQ(FT_ERR_OVERLAP, ft_errno);
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(destination, ft_memcpy(destination, source, 3));
+    FT_ASSERT_EQ('d', destination[0]);
+    FT_ASSERT_EQ('a', destination[1]);
+    FT_ASSERT_EQ('t', destination[2]);
+    FT_ASSERT_EQ('\0', destination[3]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_memcpy_null_sets_errno, "ft_memcpy null arguments set errno")
 {
     char source[2];
@@ -139,6 +166,35 @@ FT_TEST(test_memcpy_success_clears_errno, "ft_memcpy success clears ft_errno")
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(destination, ft_memcpy(destination, source, 5));
     FT_ASSERT_EQ(0, ft_strcmp(destination, source));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_memcpy_partial_copy_preserves_tail, "ft_memcpy leaves bytes beyond count unchanged")
+{
+    char source[6];
+    char destination[6];
+
+    source[0] = 's';
+    source[1] = 'o';
+    source[2] = 'u';
+    source[3] = 'r';
+    source[4] = 'c';
+    source[5] = 'e';
+    destination[0] = 'd';
+    destination[1] = 'e';
+    destination[2] = 's';
+    destination[3] = 't';
+    destination[4] = '!';
+    destination[5] = '\0';
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(destination, ft_memcpy(destination, source, 3));
+    FT_ASSERT_EQ('s', destination[0]);
+    FT_ASSERT_EQ('o', destination[1]);
+    FT_ASSERT_EQ('u', destination[2]);
+    FT_ASSERT_EQ('t', destination[3]);
+    FT_ASSERT_EQ('!', destination[4]);
+    FT_ASSERT_EQ('\0', destination[5]);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }

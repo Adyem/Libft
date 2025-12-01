@@ -149,6 +149,28 @@ FT_TEST(test_ft_to_string_double_special_values,
     return (1);
 }
 
+FT_TEST(test_ft_to_string_recovers_after_allocation_failure,
+        "ft_to_string clears errno after retrying following allocation failure")
+{
+    ft_string failed_result;
+    ft_string recovered_result;
+    std::string recovered_text;
+
+    cma_set_alloc_limit(1);
+    ft_errno = ER_SUCCESS;
+    failed_result = ft_to_string(321L);
+    cma_set_alloc_limit(0);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, failed_result.get_error());
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    recovered_result = ft_to_string(-321L);
+    recovered_text = recovered_result.c_str();
+    FT_ASSERT(recovered_text == "-321");
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_ft_to_string_allocation_failure,
         "ft_to_string propagates allocation failures from ft_string")
 {
@@ -160,5 +182,19 @@ FT_TEST(test_ft_to_string_allocation_failure,
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, failed_result.get_error());
+    return (1);
+}
+
+FT_TEST(test_ft_to_string_unsigned_zero_clears_errno,
+        "ft_to_string formats unsigned zero while resetting errno")
+{
+    ft_string converted_value;
+    std::string actual_value;
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    converted_value = ft_to_string(static_cast<unsigned int>(0));
+    actual_value = converted_value.c_str();
+    FT_ASSERT(actual_value == "0");
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }

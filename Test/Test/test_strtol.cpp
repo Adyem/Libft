@@ -145,6 +145,17 @@ FT_TEST(test_strtol_uppercase_hex_prefix, "ft_strtol accepts uppercase hex prefi
     return (1);
 }
 
+FT_TEST(test_strtol_base_auto_allows_leading_plus, "ft_strtol parses prefixed hex after a plus sign")
+{
+    char *end_pointer;
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(255, ft_strtol("+0XFF", &end_pointer, 0));
+    FT_ASSERT_EQ('\0', *end_pointer);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_strtol_base36_mixed_case, "ft_strtol parses base 36 digits in any case")
 {
     char *end_pointer;

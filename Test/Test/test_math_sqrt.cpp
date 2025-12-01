@@ -72,3 +72,17 @@ FT_TEST(test_math_sqrt_small_positive_input, "math_sqrt returns precise result f
     FT_ASSERT(math_fabs(result - 1e-7) < 1e-12);
     return (1);
 }
+
+FT_TEST(test_math_sqrt_recovers_after_nan, "math_sqrt clears errno after nan failure")
+{
+    double result;
+
+    ft_errno = ER_SUCCESS;
+    result = math_sqrt(math_nan());
+    FT_ASSERT(math_isnan(result));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    result = math_sqrt(81.0);
+    FT_ASSERT(math_fabs(result - 9.0) < 0.000001);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

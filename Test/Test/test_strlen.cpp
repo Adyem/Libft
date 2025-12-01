@@ -18,6 +18,22 @@ FT_TEST(test_strlen_nullptr_sets_errno, "ft_strlen nullptr sets FT_ERR_INVALID_A
     return (1);
 }
 
+FT_TEST(test_strlen_stops_at_embedded_null, "ft_strlen stops counting at first null byte")
+{
+    char buffer[6];
+
+    buffer[0] = 'a';
+    buffer[1] = 'b';
+    buffer[2] = '\0';
+    buffer[3] = 'c';
+    buffer[4] = 'd';
+    buffer[5] = '\0';
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(static_cast<size_t>(2), ft_strlen(buffer));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_strlen_simple, "ft_strlen basic")
 {
     FT_ASSERT_EQ(4, ft_strlen("test"));
@@ -130,6 +146,25 @@ FT_TEST(test_strlen_size_t_handles_unaligned_pointers,
     return (1);
 }
 
+FT_TEST(test_strlen_size_t_recovers_after_nullptr, "ft_strlen_size_t clears errno after null input")
+{
+    char buffer[6];
+
+    buffer[0] = 'v';
+    buffer[1] = 'a';
+    buffer[2] = 'l';
+    buffer[3] = 'u';
+    buffer[4] = 'e';
+    buffer[5] = '\0';
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(static_cast<size_t>(0), ft_strlen_size_t(ft_nullptr));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(static_cast<size_t>(5), ft_strlen_size_t(buffer));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_strnlen_nullptr_sets_errno, "ft_strnlen nullptr sets FT_ERR_INVALID_ARGUMENT")
 {
     ft_errno = ER_SUCCESS;
@@ -159,6 +194,18 @@ FT_TEST(test_strnlen_returns_full_length_when_smaller_than_bound,
     ft_errno = FT_ERR_OUT_OF_RANGE;
     measured_length = ft_strnlen(source, 32);
     FT_ASSERT_EQ(static_cast<size_t>(5), measured_length);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strnlen_zero_bound_resets_errno, "ft_strnlen zero bound clears errno")
+{
+    static const char *source = "unchanged";
+    size_t measured_length;
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    measured_length = ft_strnlen(source, 0);
+    FT_ASSERT_EQ(static_cast<size_t>(0), measured_length);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }

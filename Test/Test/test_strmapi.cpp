@@ -92,3 +92,21 @@ FT_TEST(test_strmapi_success_after_failure_resets_errno, "ft_strmapi clears errn
     cma_free(result);
     return (1);
 }
+
+FT_TEST(test_strmapi_allocates_new_buffer, "ft_strmapi returns a distinct, transformed string")
+{
+    const char *source;
+    char *result;
+
+    source = "copy";
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    result = ft_strmapi(source, to_upper_map);
+    if (result == ft_nullptr)
+        return (0);
+    FT_ASSERT(result != source);
+    FT_ASSERT_EQ(0, ft_strcmp("COPY", result));
+    FT_ASSERT_EQ('c', source[0]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    cma_free(result);
+    return (1);
+}

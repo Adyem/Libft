@@ -76,3 +76,21 @@ FT_TEST(test_toupper_stops_at_terminator, "ft_to_upper stops at first null byte"
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_toupper_recovers_after_nullptr, "ft_to_upper clears errno after null input")
+{
+    char string[4];
+
+    string[0] = 'l';
+    string[1] = 'o';
+    string[2] = 'w';
+    string[3] = '\0';
+    ft_errno = ER_SUCCESS;
+    ft_to_upper(ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    ft_to_upper(string);
+    FT_ASSERT_EQ(0, ft_strcmp(string, "LOW"));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

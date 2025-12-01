@@ -58,3 +58,31 @@ FT_TEST(test_math_pow_handles_int_min_exponent, "math_pow handles the smallest i
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_math_pow_unity_base_stable, "math_pow preserves unity base for varied exponents")
+{
+    double positive_exponent_result;
+    double negative_exponent_result;
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    positive_exponent_result = math_pow(1.0, 12345);
+    FT_ASSERT(math_fabs(positive_exponent_result - 1.0) < 0.000001);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    negative_exponent_result = math_pow(1.0, -9876);
+    FT_ASSERT(math_fabs(negative_exponent_result - 1.0) < 0.000001);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_math_pow_negative_base_odd_exponent, "math_pow preserves sign for odd exponents")
+{
+    double result;
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    result = math_pow(-2.0, 3);
+    FT_ASSERT(math_fabs(result + 8.0) < 0.000001);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

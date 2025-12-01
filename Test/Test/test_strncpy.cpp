@@ -170,3 +170,23 @@ FT_TEST(test_strncpy_pads_with_null_bytes, "ft_strncpy pads destination when sou
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_strncpy_partial_copy_preserves_tail, "ft_strncpy leaves bytes beyond length unchanged")
+{
+    char destination[5];
+
+    destination[0] = 'x';
+    destination[1] = 'y';
+    destination[2] = 'z';
+    destination[3] = 'w';
+    destination[4] = '\0';
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(destination, ft_strncpy(destination, "hi", 1));
+    FT_ASSERT_EQ('h', destination[0]);
+    FT_ASSERT_EQ('y', destination[1]);
+    FT_ASSERT_EQ('z', destination[2]);
+    FT_ASSERT_EQ('w', destination[3]);
+    FT_ASSERT_EQ('\0', destination[4]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

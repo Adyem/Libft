@@ -120,6 +120,26 @@ FT_TEST(test_strlcpy_preserves_tail, "ft_strlcpy preserves bytes beyond terminat
     return (1);
 }
 
+FT_TEST(test_strlcpy_resets_errno_after_null_source, "ft_strlcpy clears errno after null source failure")
+{
+    char destination[6];
+
+    destination[0] = 'x';
+    destination[1] = 'y';
+    destination[2] = 'z';
+    destination[3] = 'w';
+    destination[4] = 'v';
+    destination[5] = '\0';
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(0u, ft_strlcpy(destination, ft_nullptr, sizeof(destination)));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(4u, ft_strlcpy(destination, "test", sizeof(destination)));
+    FT_ASSERT_EQ(0, ft_strcmp(destination, "test"));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_strlcpy_resets_errno, "ft_strlcpy resets errno on success")
 {
     char destination[6];
