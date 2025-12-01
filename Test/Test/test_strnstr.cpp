@@ -84,6 +84,20 @@ FT_TEST(test_strnstr_null_arguments, "ft_strnstr null arguments return nullptr")
     return (1);
 }
 
+FT_TEST(test_strnstr_recovers_after_null_haystack, "ft_strnstr clears errno after null haystack failure")
+{
+    const char *haystack;
+
+    haystack = "searchable";
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(ft_nullptr, ft_strnstr(ft_nullptr, "search", 7));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(haystack + 4, ft_strnstr(haystack, "ch", 8));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_strnstr_errno_resets_on_success, "ft_strnstr resets errno on success")
 {
     const char *haystack = "prefix";
@@ -110,6 +124,16 @@ FT_TEST(test_strnstr_same_buffer_with_length_limit, "ft_strnstr same buffer resp
 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(ft_nullptr, ft_strnstr(buffer, buffer, 3));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strnstr_match_at_limit_boundary, "ft_strnstr finds match ending at search limit")
+{
+    const char *haystack = "abcd";
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(haystack + 3, ft_strnstr(haystack, "d", 4));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }

@@ -89,3 +89,18 @@ FT_TEST(test_math_factorial_long_long_overflow_sets_errno, "math_factorial detec
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
     return (1);
 }
+
+FT_TEST(test_math_factorial_recovers_after_invalid_input, "math_factorial clears errno after failure")
+{
+    long result;
+
+    ft_errno = ER_SUCCESS;
+    result = math_factorial(-5L);
+    FT_ASSERT_EQ(0L, result);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    result = math_factorial(6L);
+    FT_ASSERT_EQ(720L, result);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

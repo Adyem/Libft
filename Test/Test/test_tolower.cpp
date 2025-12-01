@@ -93,3 +93,20 @@ FT_TEST(test_tolower_stops_at_terminator, "ft_to_lower stops when encountering t
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_tolower_recovers_after_nullptr, "ft_to_lower clears errno after null input")
+{
+    char string[4];
+
+    string[0] = 'Q';
+    string[1] = 'R';
+    string[2] = 'S';
+    string[3] = '\0';
+    ft_errno = ER_SUCCESS;
+    ft_to_lower(ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    ft_to_lower(string);
+    FT_ASSERT_EQ(0, ft_strcmp(string, "qrs"));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

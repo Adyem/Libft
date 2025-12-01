@@ -63,3 +63,15 @@ FT_TEST(test_math_absdiff_extreme_integers, "math_absdiff prevents overflow for 
     FT_ASSERT_EQ(FT_LLONG_MAX, long_long_difference);
     return (1);
 }
+
+FT_TEST(test_math_absdiff_zero_inputs, "math_absdiff returns zero for identical values")
+{
+    int int_difference;
+    long long_difference;
+
+    int_difference = math_absdiff(0, 0);
+    long_difference = math_absdiff(-12345L, -12345L);
+    FT_ASSERT_EQ(0, int_difference);
+    FT_ASSERT_EQ(0L, long_difference);
+    return (1);
+}

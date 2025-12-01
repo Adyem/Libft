@@ -26,3 +26,13 @@ FT_TEST(test_math_swap_null_pointer_safe, "math_swap ignores null pointers")
     FT_ASSERT_EQ(11, value);
     return (1);
 }
+
+FT_TEST(test_math_swap_same_pointer_noop, "math_swap leaves value unchanged when both pointers match")
+{
+    int value;
+
+    value = 7;
+    math_swap(&value, &value);
+    FT_ASSERT_EQ(7, value);
+    return (1);
+}

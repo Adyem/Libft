@@ -79,3 +79,17 @@ FT_TEST(test_strchr_terminator_clears_errno, "ft_strchr terminator search resets
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_strchr_recovers_after_null_input, "ft_strchr clears errno after null failure")
+{
+    const char *string;
+
+    string = "recover";
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(ft_nullptr, ft_strchr(ft_nullptr, 'r'));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(string + 2, ft_strchr(string, 'c'));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

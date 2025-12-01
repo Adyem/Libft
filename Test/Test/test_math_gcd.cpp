@@ -34,3 +34,30 @@ FT_TEST(test_math_gcd_zero_arguments, "math_gcd handles zeros and clears errno")
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_math_gcd_one_zero_argument, "math_gcd returns absolute value when one argument is zero")
+{
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(25, math_gcd(0, -25));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(9L, math_gcd(9L, 0L));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_math_gcd_mixed_signs_match_positive_result, "math_gcd ignores sign ordering")
+{
+    long result_first_sign;
+    long result_second_sign;
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    result_first_sign = math_gcd(-84L, 30L);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    result_second_sign = math_gcd(84L, -30L);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(result_first_sign, result_second_sign);
+    FT_ASSERT_EQ(6L, result_first_sign);
+    return (1);
+}

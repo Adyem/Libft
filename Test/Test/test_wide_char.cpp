@@ -146,6 +146,27 @@ FT_TEST(test_utf8_to_utf16_invalid_sequence_sets_errno, "ft_utf8_to_utf16 report
     return (1);
 }
 
+FT_TEST(test_utf8_to_utf32_invalid_sequence_resets_errno, "ft_utf8_to_utf32 clears errno after handling invalid input")
+{
+    char invalid_utf8[2];
+    char32_t *utf32_output;
+    size_t utf32_length;
+
+    invalid_utf8[0] = static_cast<char>(0xC2);
+    invalid_utf8[1] = '\0';
+    ft_errno = ER_SUCCESS;
+    utf32_output = ft_utf8_to_utf32(invalid_utf8, 0, &utf32_length);
+    FT_ASSERT_EQ(ft_nullptr, utf32_output);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    utf32_output = ft_utf8_to_utf32("OK", 0, &utf32_length);
+    FT_ASSERT(utf32_output != ft_nullptr);
+    FT_ASSERT_EQ(static_cast<size_t>(2), utf32_length);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    cma_free(utf32_output);
+    return (1);
+}
+
 FT_TEST(test_utf8_to_utf32_round_trip, "ft_utf8_to_utf32 decodes multi-byte sequences")
 {
     char utf8_input[8];

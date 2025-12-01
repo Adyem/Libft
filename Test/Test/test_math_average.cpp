@@ -40,3 +40,15 @@ FT_TEST(test_math_average_double_values, "math_average averages doubles")
     FT_ASSERT_EQ(1.0, result);
     return (1);
 }
+
+FT_TEST(test_math_average_balances_large_opposites, "math_average cancels symmetric extremes")
+{
+    int result_int;
+    long result_long;
+
+    result_int = math_average(1000000000, -1000000000);
+    result_long = math_average(5000000000L, -5000000000L);
+    FT_ASSERT_EQ(0, result_int);
+    FT_ASSERT_EQ(0L, result_long);
+    return (1);
+}

@@ -54,3 +54,16 @@ FT_TEST(test_strrchr_high_bit, "ft_strrchr locates high-bit character")
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_strrchr_recovers_after_null_failure, "ft_strrchr clears errno after null input")
+{
+    const char *string = "resume";
+
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(ft_nullptr, ft_strrchr(ft_nullptr, 'e'));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(string + 5, ft_strrchr(string, 'e'));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
