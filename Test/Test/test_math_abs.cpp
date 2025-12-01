@@ -37,3 +37,21 @@ FT_TEST(test_math_abs_long_long_min_value_clamps_to_max, "math_abs clamps long l
     FT_ASSERT_EQ(FT_LLONG_MAX, result);
     return (1);
 }
+
+FT_TEST(test_math_abs_zero_is_neutral, "math_abs leaves zero unchanged")
+{
+    int result;
+
+    result = math_abs(0);
+    FT_ASSERT_EQ(0, result);
+    return (1);
+}
+
+FT_TEST(test_math_abs_int_min_clamps_to_max, "math_abs clamps FT_INT_MIN to FT_INT_MAX")
+{
+    int result;
+
+    result = math_abs(FT_INT_MIN);
+    FT_ASSERT_EQ(FT_INT_MAX, result);
+    return (1);
+}

@@ -67,3 +67,14 @@ FT_TEST(test_math_max_double_positive_inputs, "math_max handles positive double 
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_math_max_infinity_dominates, "math_max prefers finite values over negative infinity")
+{
+    double result;
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    result = math_max(-math_infinity(), 2.5);
+    FT_ASSERT(math_fabs(result - 2.5) < 0.000001);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

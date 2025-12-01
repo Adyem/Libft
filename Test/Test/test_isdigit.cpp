@@ -40,3 +40,14 @@ FT_TEST(test_isdigit_extended_ascii, "ft_isdigit rejects extended ASCII")
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_isdigit_resets_errno_after_invalid_state, "ft_isdigit clears errno after prior error state")
+{
+    ft_errno = FT_ERR_OUT_OF_RANGE;
+    FT_ASSERT_EQ(0, ft_isdigit(' '));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(1, ft_isdigit('2'));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

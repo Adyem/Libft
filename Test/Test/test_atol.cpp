@@ -91,3 +91,13 @@ FT_TEST(test_atol_skips_leading_whitespace_and_sign, "ft_atol trims whitespace b
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_atol_errno_recovers_after_invalid, "ft_atol clears errno after invalid input")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(0L, ft_atol("invalid"));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(27L, ft_atol("27"));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

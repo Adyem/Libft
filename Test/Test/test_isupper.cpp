@@ -38,3 +38,14 @@ FT_TEST(test_isupper_rejects_adjacent_ascii, "ft_isupper rejects punctuation and
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_isupper_clears_errno_after_digit, "ft_isupper resets errno after non-letter input")
+{
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(0, ft_isupper('9'));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(1, ft_isupper('B'));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

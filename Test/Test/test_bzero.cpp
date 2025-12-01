@@ -91,3 +91,30 @@ FT_TEST(test_bzero_recovers_errno_after_error, "ft_bzero clears errno after reco
     return (1);
 }
 
+FT_TEST(test_bzero_repeated_zero_length_keeps_errno_cleared, "ft_bzero zero length leaves errno at success")
+{
+    char buffer[2];
+
+    buffer[0] = 'a';
+    buffer[1] = '\0';
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    ft_bzero(buffer, 0);
+    FT_ASSERT_EQ('a', buffer[0]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    ft_bzero(buffer, 0);
+    FT_ASSERT_EQ('a', buffer[0]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_bzero_null_zero_length_recovers_after_error, "ft_bzero zero length clears prior errors")
+{
+    ft_errno = ER_SUCCESS;
+    ft_bzero(ft_nullptr, 3);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    ft_bzero(ft_nullptr, 0);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+

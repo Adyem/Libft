@@ -51,6 +51,19 @@ FT_TEST(test_math_cos_success_resets_errno, "math_cos clears ft_errno after prio
     return (1);
 }
 
+FT_TEST(test_math_cos_pi_returns_negative_one, "math_cos returns minus one at pi radians")
+{
+    double angle;
+    double result;
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    angle = math_deg2rad(180.0);
+    result = math_cos(angle);
+    FT_ASSERT(math_fabs(result + 1.0) < 0.000001);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_ft_tan_zero, "ft_tan returns zero for zero input")
 {
     double result;
@@ -81,5 +94,18 @@ FT_TEST(test_ft_tan_near_pi_over_two_sets_errno, "ft_tan near pi over two report
     result = ft_tan(angle);
     FT_ASSERT(math_isnan(result));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_ft_tan_recovers_after_invalid_argument, "ft_tan clears errno after handling asymptote")
+{
+    double result;
+
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT(math_isnan(ft_tan(math_deg2rad(90.0))));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    result = ft_tan(0.0);
+    FT_ASSERT(math_fabs(result) < 0.000001);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }

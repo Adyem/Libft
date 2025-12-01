@@ -129,3 +129,13 @@ FT_TEST(test_atoi_digits_only_clears_errno, "ft_atoi digits clear ft_errno")
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_atoi_errno_recovers_after_invalid, "ft_atoi clears errno after invalid input")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(0, ft_atoi("invalid"));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(81, ft_atoi("81"));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

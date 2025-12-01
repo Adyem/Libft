@@ -45,3 +45,14 @@ FT_TEST(test_math_deg2rad_handles_fractional_degrees, "math_deg2rad supports fra
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
+
+FT_TEST(test_math_rad2deg_zero_angle, "math_rad2deg returns zero for zero input and clears errno")
+{
+    double result;
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    result = math_rad2deg(0.0);
+    FT_ASSERT(math_fabs(result - 0.0) < 0.000001);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

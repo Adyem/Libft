@@ -130,6 +130,20 @@ FT_TEST(test_math_stddev_is_square_root_of_variance, "ft_stddev matches sqrt of 
     return (1);
 }
 
+FT_TEST(test_math_stddev_uniform_values_returns_zero, "ft_stddev returns zero for identical elements")
+{
+    double values[3];
+    double result;
+
+    values[0] = 4.0;
+    values[1] = 4.0;
+    values[2] = 4.0;
+    result = ft_stddev(values, 3);
+    if (!assert_near(0.0, result, 0.000001))
+        return (0);
+    return (1);
+}
+
 FT_TEST(test_math_geometric_mean_positive_values, "ft_geometric_mean uses logarithms for stability")
 {
     double values[3];

@@ -143,3 +143,21 @@ FT_TEST(test_strlcat_unterminated_buffer_exact_size, "ft_strlcat avoids writing 
     return (1);
 }
 
+FT_TEST(test_strlcat_recovers_after_null_source, "ft_strlcat clears errno after null source failure")
+{
+    char destination[8];
+
+    destination[0] = 'A';
+    destination[1] = '\0';
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(0u, ft_strlcat(destination, ft_nullptr, 4));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    destination[0] = 'B';
+    destination[1] = '\0';
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(4u, ft_strlcat(destination, "test", 8));
+    FT_ASSERT_EQ(0, ft_strcmp("Btest", destination));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
