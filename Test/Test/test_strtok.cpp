@@ -140,3 +140,38 @@ FT_TEST(test_strtok_empty_delimiter_returns_full_string, "ft_strtok treats empty
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_strtok_recovers_after_null_delimiter, "ft_strtok clears errno after delimiter error")
+{
+    char buffer[16] = "alpha beta";
+    char *token;
+
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(ft_nullptr, ft_strtok(buffer, ft_nullptr));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    token = ft_strtok(buffer, " ");
+    FT_ASSERT(token != ft_nullptr);
+    FT_ASSERT_EQ(0, ft_strcmp("alpha", token));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    token = ft_strtok(ft_nullptr, " ");
+    FT_ASSERT(token != ft_nullptr);
+    FT_ASSERT_EQ(0, ft_strcmp("beta", token));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_strtok_trailing_delimiter_yields_single_token, "ft_strtok ignores empty trailing segments")
+{
+    char buffer[16] = "token,";
+    char *token;
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    token = ft_strtok(buffer, ",");
+    FT_ASSERT(token != ft_nullptr);
+    FT_ASSERT_EQ(0, ft_strcmp("token", token));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(ft_nullptr, ft_strtok(ft_nullptr, ","));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

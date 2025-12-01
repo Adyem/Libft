@@ -32,3 +32,14 @@ FT_TEST(test_isprint_extended_ascii, "ft_isprint rejects bytes above ASCII")
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_isprint_recovers_errno_after_control_input, "ft_isprint clears errno after control characters")
+{
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(0, ft_isprint('\t'));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(1, ft_isprint('~'));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

@@ -32,3 +32,14 @@ FT_TEST(test_isalpha_high_bit, "ft_isalpha rejects high-bit characters")
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_isalpha_clears_errno_after_invalid_flag, "ft_isalpha clears errno after non-alpha input")
+{
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(0, ft_isalpha('4'));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(1, ft_isalpha('q'));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

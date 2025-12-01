@@ -93,3 +93,14 @@ FT_TEST(test_strcmp_high_bit_ordering, "ft_strcmp treats bytes as unsigned")
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_strcmp_recovers_after_null_failure, "ft_strcmp resets errno after null input")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(-1, ft_strcmp(ft_nullptr, "abc"));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(0, ft_strcmp("match", "match"));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

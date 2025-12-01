@@ -61,3 +61,18 @@ FT_TEST(test_math_fmod_success_clears_errno, "math_fmod clears errno on success"
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_math_fmod_recovers_after_zero_modulus, "math_fmod resets errno following zero divisor")
+{
+    double result;
+
+    ft_errno = ER_SUCCESS;
+    result = math_fmod(3.0, 0.0);
+    FT_ASSERT(math_isnan(result));
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    result = math_fmod(9.0, 4.0);
+    FT_ASSERT(math_fabs(result - 1.0) < 0.000001);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

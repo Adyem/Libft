@@ -119,3 +119,20 @@ FT_TEST(test_math_acos_value_beyond_tolerance_sets_errno,
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
+
+FT_TEST(test_math_acos_recovers_after_invalid_input, "math_acos clears errno after failure")
+{
+    double result;
+    double expected;
+
+    ft_errno = ER_SUCCESS;
+    result = math_acos(2.0);
+    FT_ASSERT(math_isnan(result));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    expected = 3.14159265358979323846 * 0.25;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    result = math_acos(0.7071067811865475);
+    FT_ASSERT(math_fabs(result - expected) <= 1e-12);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

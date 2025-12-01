@@ -99,3 +99,66 @@ FT_TEST(test_memset_overflow, "ft_memset overflow value")
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_memset_partial_preserves_unwritten_bytes, "ft_memset leaves trailing bytes unchanged")
+{
+    char buffer[5];
+
+    buffer[0] = 'a';
+    buffer[1] = 'b';
+    buffer[2] = 'c';
+    buffer[3] = 'd';
+    buffer[4] = '\0';
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    ft_memset(buffer + 1, 'z', 2);
+    FT_ASSERT_EQ('a', buffer[0]);
+    FT_ASSERT_EQ('z', buffer[1]);
+    FT_ASSERT_EQ('z', buffer[2]);
+    FT_ASSERT_EQ('d', buffer[3]);
+    FT_ASSERT_EQ('\0', buffer[4]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_memset_recovers_after_null_failure, "ft_memset clears errno after null pointer error")
+{
+    char buffer[4];
+
+    buffer[0] = 'r';
+    buffer[1] = 'e';
+    buffer[2] = 's';
+    buffer[3] = 't';
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(ft_nullptr, ft_memset(ft_nullptr, 'x', 2));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(buffer, ft_memset(buffer, 'q', 3));
+    FT_ASSERT_EQ('q', buffer[0]);
+    FT_ASSERT_EQ('q', buffer[1]);
+    FT_ASSERT_EQ('q', buffer[2]);
+    FT_ASSERT_EQ('t', buffer[3]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_memset_returns_destination_pointer, "ft_memset returns destination address on success")
+{
+    char buffer[6];
+
+    buffer[0] = 'j';
+    buffer[1] = 'k';
+    buffer[2] = 'l';
+    buffer[3] = 'm';
+    buffer[4] = 'n';
+    buffer[5] = '\0';
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(buffer + 1, ft_memset(buffer + 1, 'x', 3));
+    FT_ASSERT_EQ('j', buffer[0]);
+    FT_ASSERT_EQ('x', buffer[1]);
+    FT_ASSERT_EQ('x', buffer[2]);
+    FT_ASSERT_EQ('x', buffer[3]);
+    FT_ASSERT_EQ('n', buffer[4]);
+    FT_ASSERT_EQ('\0', buffer[5]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

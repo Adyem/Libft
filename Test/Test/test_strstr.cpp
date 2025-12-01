@@ -69,3 +69,17 @@ FT_TEST(test_strstr_overlapping_partial_match, "ft_strstr restarts after overlap
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_strstr_recovers_after_missing_match, "ft_strstr clears errno after prior miss")
+{
+    const char *haystack;
+
+    haystack = "pattern";
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(ft_nullptr, ft_strstr(haystack, "xyz"));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(haystack + 3, ft_strstr(haystack, "tern"));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

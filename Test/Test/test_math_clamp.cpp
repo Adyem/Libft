@@ -36,3 +36,12 @@ FT_TEST(test_math_clamp_equal_bounds, "math_clamp respects identical bounds")
     FT_ASSERT_EQ(15, result);
     return (1);
 }
+
+FT_TEST(test_math_clamp_double_upper_edge, "math_clamp returns maximum when value matches upper bound")
+{
+    double result;
+
+    result = math_clamp(4.5, -2.0, 4.5);
+    FT_ASSERT(math_fabs(result - 4.5) < 0.000001);
+    return (1);
+}

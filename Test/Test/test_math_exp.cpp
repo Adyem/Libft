@@ -19,3 +19,31 @@ FT_TEST(test_math_exp_clears_errno_after_previous_failure, "math_exp resets errn
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_math_exp_zero_input, "math_exp returns one for zero input")
+{
+    double result;
+    double difference;
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    result = math_exp(0.0);
+    difference = math_fabs(result - 1.0);
+    FT_ASSERT(difference < 0.0000000001);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
+FT_TEST(test_math_exp_negative_input_produces_fraction, "math_exp handles negative exponents")
+{
+    double result;
+    double expected;
+    double difference;
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    result = math_exp(-2.0);
+    expected = 0.13533528323661269189;
+    difference = math_fabs(result - expected);
+    FT_ASSERT(difference < 0.0000000001);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

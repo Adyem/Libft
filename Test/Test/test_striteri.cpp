@@ -125,3 +125,16 @@ FT_TEST(test_striteri_null_function_sets_errno, "ft_striteri sets FT_ERR_INVALID
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
+
+FT_TEST(test_striteri_empty_string_clears_errno, "ft_striteri handles empty string without invoking callback")
+{
+    char buffer[1];
+
+    buffer[0] = '\0';
+    g_striteri_call_count = 0;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    ft_striteri(buffer, record_index_iter);
+    FT_ASSERT_EQ(0u, g_striteri_call_count);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

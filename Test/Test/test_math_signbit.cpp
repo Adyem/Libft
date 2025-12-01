@@ -36,3 +36,25 @@ FT_TEST(test_math_signbit_negative_numbers, "math_signbit returns one for negati
     FT_ASSERT_EQ(1, result);
     return (1);
 }
+
+FT_TEST(test_math_signbit_positive_infinity, "math_signbit treats positive infinity as non-negative")
+{
+    int result;
+    double positive_infinity;
+
+    positive_infinity = std::numeric_limits<double>::infinity();
+    result = math_signbit(positive_infinity);
+    FT_ASSERT_EQ(0, result);
+    return (1);
+}
+
+FT_TEST(test_math_signbit_nan_reports_non_negative, "math_signbit treats NaN as unsigned")
+{
+    int result;
+    double not_a_number;
+
+    not_a_number = math_nan();
+    result = math_signbit(not_a_number);
+    FT_ASSERT_EQ(0, result);
+    return (1);
+}
