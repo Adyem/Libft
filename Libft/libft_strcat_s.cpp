@@ -43,7 +43,7 @@ int ft_strcat_s(char *destination, size_t destination_size, const char *source)
         zero_buffer(destination, destination_size);
         return (-1);
     }
-    if (destination_length + source_length + 1 >= destination_size)
+    if (destination_length + source_length + 1 > destination_size)
     {
         zero_buffer(destination, destination_size);
         ft_errno = FT_ERR_OUT_OF_RANGE;
