@@ -6,9 +6,11 @@ FT_TEST(test_math_fabs_negative_value_returns_positive, "math_fabs converts nega
 {
     double result;
 
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     result = math_fabs(-123.5);
     FT_ASSERT(result > 0.0);
     FT_ASSERT(math_fabs(result - 123.5) < 0.000001);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -50,7 +52,7 @@ FT_TEST(test_math_fabs_preserves_infinity, "math_fabs returns infinity unchanged
     return (1);
 }
 
-FT_TEST(test_math_fabs_clears_errno_after_nan, "math_fabs resets errno once given finite input")
+FT_TEST(test_math_fabs_sets_errno_to_success, "math_fabs updates errno to ER_SUCCESS")
 {
     double result;
 
