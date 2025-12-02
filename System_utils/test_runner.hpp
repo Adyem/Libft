@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <cmath>
+#include <cstring>
 
 typedef int (*t_test_func)(void);
 #ifndef TEST_MODULE
@@ -61,6 +62,18 @@ int ft_run_registered_tests(void);
         if ((unexpected) == (actual)) \
         { \
             ft_test_fail(#unexpected " != " #actual, __FILE__, __LINE__); \
+            return (0); \
+        } \
+    } while (0)
+
+#define FT_ASSERT_STR_EQ(expected, actual) \
+    do \
+    { \
+        const char *ft_expected_value = (expected); \
+        const char *ft_actual_value = (actual); \
+        if (std::strcmp(ft_expected_value, ft_actual_value) != 0) \
+        { \
+            ft_test_fail(#expected " == " #actual, __FILE__, __LINE__); \
             return (0); \
         } \
     } while (0)
