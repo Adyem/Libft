@@ -93,3 +93,14 @@ FT_TEST(test_strchr_recovers_after_null_input, "ft_strchr clears errno after nul
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_strchr_empty_string_returns_null_for_non_terminator, "ft_strchr returns nullptr when searching empty strings")
+{
+    const char *string;
+
+    string = "";
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(ft_nullptr, ft_strchr(string, 'x'));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
