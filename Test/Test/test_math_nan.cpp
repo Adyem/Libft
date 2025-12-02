@@ -33,3 +33,13 @@ FT_TEST(test_math_nan_leaves_errno_unchanged, "math_nan does not alter errno sta
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
+
+FT_TEST(test_math_indeterminate_from_zero_division, "math_indeterminate creates a NaN from 0 / 0")
+{
+    double value;
+
+    value = math_indeterminate();
+    FT_ASSERT(math_isnan(value));
+    FT_ASSERT_EQ(0, math_isinf(value));
+    return (1);
+}

@@ -6,7 +6,11 @@ SRCS := math_abs.cpp \
         math_fmod.cpp \
         math_signbit.cpp \
         math_isnan.cpp \
+        math_isinf.cpp \
         math_nan.cpp \
+        math_infinity.cpp \
+        math_negative_infinity.cpp \
+        math_indeterminate.cpp \
         math_swap.cpp \
         math_clamp.cpp \
         math_gcd.cpp \
