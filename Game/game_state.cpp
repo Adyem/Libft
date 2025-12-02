@@ -427,7 +427,6 @@ ft_vector<ft_sharedptr<ft_world> > &ft_game_state::get_worlds() noexcept
         game_state_restore_errno(guard, entry_errno);
         return (this->_worlds);
     }
-    this->set_error(ER_SUCCESS);
     game_state_restore_errno(guard, entry_errno);
     return (this->_worlds);
 }
@@ -444,7 +443,6 @@ ft_vector<ft_sharedptr<ft_character> > &ft_game_state::get_characters() noexcept
         game_state_restore_errno(guard, entry_errno);
         return (this->_characters);
     }
-    this->set_error(ER_SUCCESS);
     game_state_restore_errno(guard, entry_errno);
     return (this->_characters);
 }

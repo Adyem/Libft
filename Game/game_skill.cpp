@@ -274,6 +274,7 @@ void ft_skill::set_id(int id) noexcept
     if (id < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
+        this->_id = 0;
         game_skill_restore_errno(guard, entry_errno);
         return ;
     }

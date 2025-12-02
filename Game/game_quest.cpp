@@ -907,6 +907,7 @@ void ft_quest::advance_phase() noexcept
     if (this->_phases <= 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
+        this->_current_phase = 0;
         game_quest_restore_errno(guard, entry_errno);
         return ;
     }

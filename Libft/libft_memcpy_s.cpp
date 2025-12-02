@@ -22,19 +22,31 @@ static void zero_buffer(void *buffer, size_t buffer_size)
 int ft_memcpy_s(void *destination, size_t destination_size, const void *source, size_t number_of_bytes)
 {
     void *copy_result;
+    char *destination_bytes;
+    const char *source_bytes;
 
     ft_errno = ER_SUCCESS;
     if (number_of_bytes == 0)
         return (0);
     if (destination == ft_nullptr || source == ft_nullptr)
     {
+        zero_buffer(destination, destination_size);
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
+    destination_bytes = static_cast<char *>(destination);
+    source_bytes = static_cast<const char *>(source);
     if (destination_size < number_of_bytes)
     {
         zero_buffer(destination, destination_size);
         ft_errno = FT_ERR_OUT_OF_RANGE;
+        return (-1);
+    }
+    if ((destination_bytes < source_bytes + number_of_bytes)
+        && (source_bytes < destination_bytes + number_of_bytes))
+    {
+        zero_buffer(destination, destination_size);
+        ft_errno = FT_ERR_OVERLAP;
         return (-1);
     }
     copy_result = ft_memcpy(destination, source, number_of_bytes);
