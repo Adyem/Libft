@@ -174,3 +174,29 @@ FT_TEST(test_time_timer_sleep_remaining_preserves_error_on_inactive_timer, "time
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
+
+FT_TEST(test_time_timer_restart_after_completion, "time_timer can be restarted after reaching zero")
+{
+    time_timer timer;
+    long result_after_restart;
+
+    ft_errno = ER_SUCCESS;
+    timer.start(10);
+    time_sleep_ms(20);
+    FT_ASSERT_EQ(static_cast<long>(0), timer.update());
+    FT_ASSERT_EQ(ER_SUCCESS, timer.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    timer.start(30);
+    result_after_restart = timer.update();
+    FT_ASSERT(result_after_restart > 0);
+    FT_ASSERT_EQ(ER_SUCCESS, timer.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+
+    time_sleep_ms(40);
+    FT_ASSERT_EQ(static_cast<long>(0), timer.update());
+    FT_ASSERT_EQ(ER_SUCCESS, timer.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
