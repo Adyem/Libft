@@ -41,7 +41,7 @@ FT_TEST(test_game_state_propagates_character_error, "Game: add_character surface
     int result;
 
     FT_ASSERT(static_cast<bool>(hero));
-    hero->set_error(FT_ERR_GAME_GENERAL_ERROR);
+    hero.set_error(FT_ERR_GAME_GENERAL_ERROR);
     result = state.add_character(hero);
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, result);
     FT_ASSERT_EQ(0, state.get_characters().size());
