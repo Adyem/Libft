@@ -254,7 +254,7 @@ int ft_skill::get_id() const noexcept
         return (0);
     }
     identifier = this->_id;
-    const_cast<ft_skill *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_skill *>(this)->set_error(this->_error);
     game_skill_restore_errno(guard, entry_errno);
     return (identifier);
 }
