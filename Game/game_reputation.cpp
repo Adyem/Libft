@@ -369,7 +369,6 @@ void ft_reputation::add_current_rep(int rep) noexcept
         return ;
     }
     this->_current_rep += rep;
-    this->_total_rep += rep;
     this->set_error(ER_SUCCESS);
     game_reputation_restore_errno(guard, entry_errno);
     return ;
@@ -388,7 +387,6 @@ void ft_reputation::sub_current_rep(int rep) noexcept
         return ;
     }
     this->_current_rep -= rep;
-    this->_total_rep -= rep;
     this->set_error(ER_SUCCESS);
     game_reputation_restore_errno(guard, entry_errno);
     return ;
