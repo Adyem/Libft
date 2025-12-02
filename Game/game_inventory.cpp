@@ -416,6 +416,7 @@ int ft_inventory::get_current_weight() const noexcept
 {
     int entry_errno;
     int weight_value;
+    int current_error;
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
@@ -425,8 +426,9 @@ int ft_inventory::get_current_weight() const noexcept
         game_inventory_restore_errno(guard, entry_errno);
         return (0);
     }
+    current_error = this->_error;
     weight_value = this->_current_weight;
-    const_cast<ft_inventory *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_inventory *>(this)->set_error(current_error);
     game_inventory_restore_errno(guard, entry_errno);
     return (weight_value);
 }
