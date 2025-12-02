@@ -82,6 +82,14 @@ FT_TEST(test_atoi_trailing_chars_sets_einval, "ft_atoi stops at non-digit")
     return (1);
 }
 
+FT_TEST(test_atoi_leading_whitespace_sets_einval, "ft_atoi ignores leading whitespace but reports it")
+{
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(77, ft_atoi("   77"));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_atoi_plus_sign_success, "ft_atoi plus sign")
 {
     ft_errno = FT_ERR_OUT_OF_RANGE;

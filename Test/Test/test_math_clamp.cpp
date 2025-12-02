@@ -45,3 +45,12 @@ FT_TEST(test_math_clamp_double_upper_edge, "math_clamp returns maximum when valu
     FT_ASSERT(math_fabs(result - 4.5) < 0.000001);
     return (1);
 }
+
+FT_TEST(test_math_clamp_double_below_minimum, "math_clamp clamps double values below the minimum bound")
+{
+    double result;
+
+    result = math_clamp(-7.25, -3.5, 9.0);
+    FT_ASSERT(math_fabs(result + 3.5) < 0.000001);
+    return (1);
+}

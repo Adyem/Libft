@@ -82,6 +82,26 @@ FT_TEST(test_memset_negative, "ft_memset negative value")
     return (1);
 }
 
+FT_TEST(test_memset_partial_fill_preserves_tail, "ft_memset writes only the requested byte count")
+{
+    char buffer[5];
+
+    buffer[0] = 'u';
+    buffer[1] = 'v';
+    buffer[2] = 'w';
+    buffer[3] = 'x';
+    buffer[4] = '\0';
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    ft_memset(buffer, 'a', 2);
+    FT_ASSERT_EQ('a', buffer[0]);
+    FT_ASSERT_EQ('a', buffer[1]);
+    FT_ASSERT_EQ('w', buffer[2]);
+    FT_ASSERT_EQ('x', buffer[3]);
+    FT_ASSERT_EQ('\0', buffer[4]);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 FT_TEST(test_memset_overflow, "ft_memset overflow value")
 {
     char buffer[4];

@@ -41,6 +41,18 @@ FT_TEST(test_memdup_zero_size, "ft_memdup zero size")
     return (1);
 }
 
+FT_TEST(test_memdup_zero_size_null_source_allocates, "ft_memdup allocates even when size is zero and source is null")
+{
+    void *duplicate;
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    duplicate = ft_memdup(ft_nullptr, 0);
+    FT_ASSERT(duplicate != ft_nullptr);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    cma_free(duplicate);
+    return (1);
+}
+
 FT_TEST(test_memdup_null_source, "ft_memdup null source")
 {
     ft_errno = ER_SUCCESS;
