@@ -110,6 +110,18 @@ class ft_sharedptr
         void unlock(bool lock_acquired) const;
 };
 
+template <typename LeftType, typename RightType>
+bool operator==(const ft_sharedptr<LeftType> &left, const ft_sharedptr<RightType> &right)
+{
+    return (left.get() == right.get());
+}
+
+template <typename LeftType, typename RightType>
+bool operator!=(const ft_sharedptr<LeftType> &left, const ft_sharedptr<RightType> &right)
+{
+    return (!(left == right));
+}
+
 #if FT_TEMPLATE_HAS_CONCEPTS
 template <typename ManagedType>
 template <typename... Args>
