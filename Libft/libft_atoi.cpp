@@ -11,6 +11,7 @@ int    ft_atoi(const char *string)
     const unsigned long long positive_limit = static_cast<unsigned long long>(FT_INT_MAX);
     const unsigned long long negative_limit = static_cast<unsigned long long>(FT_INT_MAX) + 1ULL;
     bool    digit_found = false;
+    bool    whitespace_found = false;
 
     if (string == ft_nullptr)
     {
@@ -20,7 +21,10 @@ int    ft_atoi(const char *string)
     ft_errno = ER_SUCCESS;
     while (string[index] == ' ' || ((string[index] >= '\t')
                 && (string[index] <= '\r')))
+    {
+        whitespace_found = true;
         index++;
+    }
     if (string[index] == '+' || string[index] == '-')
     {
         if (string[index] == '-')
@@ -70,6 +74,8 @@ int    ft_atoi(const char *string)
         return (0);
     }
     if (string[index] != '\0')
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
+    if (whitespace_found == true && ft_errno == ER_SUCCESS)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
     if (sign == -1)
     {
