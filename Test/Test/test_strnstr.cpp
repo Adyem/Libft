@@ -137,3 +137,13 @@ FT_TEST(test_strnstr_match_at_limit_boundary, "ft_strnstr finds match ending at 
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
+
+FT_TEST(test_strnstr_limit_blocks_partial_match, "ft_strnstr does not return matches truncated by size")
+{
+    const char *haystack = "foobar";
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(ft_nullptr, ft_strnstr(haystack, "bar", 5));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}

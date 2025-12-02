@@ -39,6 +39,37 @@ FT_TEST(test_ft_random_seed_empty_string_returns_offset_basis, "ft_random_seed r
     return (1);
 }
 
+FT_TEST(test_ft_random_seed_separates_similar_strings, "ft_random_seed hashes similar strings differently")
+{
+    const char *first_seed = "alpha";
+    const char *second_seed = "alphb";
+    uint32_t first_hash = 2166136261u;
+    uint32_t second_hash = 2166136261u;
+    int index = 0;
+
+    while (first_seed[index] != '\0')
+    {
+        first_hash ^= static_cast<unsigned char>(first_seed[index]);
+        first_hash *= 16777619u;
+        index = index + 1;
+    }
+    index = 0;
+    while (second_seed[index] != '\0')
+    {
+        second_hash ^= static_cast<unsigned char>(second_seed[index]);
+        second_hash *= 16777619u;
+        index = index + 1;
+    }
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(first_hash, ft_random_seed(first_seed));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(second_hash, ft_random_seed(second_seed));
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT(first_hash != second_hash);
+    return (1);
+}
+
 FT_TEST(test_ft_random_seed_null_seed_uses_random_device, "ft_random_seed clears errno when using random_device")
 {
     ft_errno = FT_ERR_INVALID_ARGUMENT;

@@ -48,6 +48,15 @@ FT_TEST(test_string_view_basic, "ft_string_view basic")
     return (1);
 }
 
+FT_TEST(test_string_view_default_constructed_empty, "ft_string_view default constructor yields empty view")
+{
+    ft_string_view<char> view;
+
+    FT_ASSERT_EQ(0u, view.size());
+    FT_ASSERT(view.empty());
+    return (1);
+}
+
 FT_TEST(test_string_view_compare_substr, "ft_string_view compare and substr")
 {
     ft_string_view<char> view("hello");

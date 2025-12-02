@@ -33,3 +33,14 @@ FT_TEST(test_ft_string_plus_equals_appends_string, "ft_string operator+= appends
     FT_ASSERT(suffix == " World");
     return (1);
 }
+
+FT_TEST(test_ft_string_char_prefix_concatenation, "ft_string supports prefixing with a character")
+{
+    ft_string base("core");
+    ft_string prefixed;
+
+    prefixed = '!' + base;
+    FT_ASSERT(prefixed == "!core");
+    FT_ASSERT(base == "core");
+    return (1);
+}
