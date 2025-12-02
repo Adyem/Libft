@@ -18,7 +18,8 @@ class ft_experience_table
                 const ft_experience_table &second,
                 ft_unique_lock<pt_mutex> &first_guard,
                 ft_unique_lock<pt_mutex> &second_guard);
-        int resize_locked(int new_count, ft_unique_lock<pt_mutex> &guard) noexcept;
+        int resize_locked(int new_count, ft_unique_lock<pt_mutex> &guard,
+                          bool validate_existing = true) noexcept;
 
     public:
         ft_experience_table(int count = 0) noexcept;

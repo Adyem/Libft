@@ -31,7 +31,7 @@ FT_TEST(test_math_deg2rad_converts_full_rotation, "math_deg2rad converts degrees
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     result = math_deg2rad(180.0);
     FT_ASSERT(math_fabs(result - 3.14159265358979323846) < 0.000001);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -42,7 +42,7 @@ FT_TEST(test_math_deg2rad_handles_fractional_degrees, "math_deg2rad supports fra
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     result = math_deg2rad(22.5);
     FT_ASSERT(math_fabs(result - 0.39269908169872414) < 0.000001);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
