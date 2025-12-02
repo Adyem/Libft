@@ -582,7 +582,7 @@ int ft_quest::get_current_phase() const noexcept
         return (0);
     }
     phase_value = this->_current_phase;
-    const_cast<ft_quest *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_quest *>(this)->set_error(this->_error);
     game_quest_restore_errno(guard, entry_errno);
     return (phase_value);
 }

@@ -310,7 +310,8 @@ bool ft_experience_table::is_valid(int count, const int *array) const noexcept
     return (true);
 }
 
-int ft_experience_table::resize_locked(int new_count, ft_unique_lock<pt_mutex> &guard) noexcept
+int ft_experience_table::resize_locked(int new_count, ft_unique_lock<pt_mutex> &guard,
+        bool validate_existing) noexcept
 {
     (void)guard;
     this->set_error(ER_SUCCESS);
@@ -346,15 +347,18 @@ int ft_experience_table::resize_locked(int new_count, ft_unique_lock<pt_mutex> &
     }
     this->_levels = new_levels;
     this->_count = new_count;
-    int check_count;
-
-    check_count = old_count;
-    if (old_count > new_count)
-        check_count = new_count;
-    if (!this->is_valid(check_count, this->_levels))
+    if (validate_existing)
     {
-        this->set_error(FT_ERR_CONFIGURATION);
-        return (this->_error);
+        int check_count;
+
+        check_count = old_count;
+        if (old_count > new_count)
+            check_count = new_count;
+        if (!this->is_valid(check_count, this->_levels))
+        {
+            this->set_error(FT_ERR_CONFIGURATION);
+            return (this->_error);
+        }
     }
     this->set_error(ER_SUCCESS);
     return (ER_SUCCESS);
@@ -374,7 +378,7 @@ int ft_experience_table::get_count() const noexcept
         return (0);
     }
     count_value = this->_count;
-    const_cast<ft_experience_table *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_experience_table *>(this)->set_error(this->_error);
     game_experience_table_restore_errno(guard, entry_errno);
     return (count_value);
 }
@@ -500,7 +504,7 @@ int ft_experience_table::set_levels(const int *levels, int count) noexcept
         game_experience_table_restore_errno(guard, entry_errno);
         return (resize_result);
     }
-    resize_result = this->resize_locked(count, guard);
+    resize_result = this->resize_locked(count, guard, false);
     if (resize_result != ER_SUCCESS)
     {
         game_experience_table_restore_errno(guard, entry_errno);
@@ -548,7 +552,7 @@ int ft_experience_table::generate_levels_total(int count, int base,
         game_experience_table_restore_errno(guard, entry_errno);
         return (resize_result);
     }
-    resize_result = this->resize_locked(count, guard);
+    resize_result = this->resize_locked(count, guard, false);
     if (resize_result != ER_SUCCESS)
     {
         game_experience_table_restore_errno(guard, entry_errno);
@@ -597,7 +601,7 @@ int ft_experience_table::generate_levels_scaled(int count, int base,
         game_experience_table_restore_errno(guard, entry_errno);
         return (resize_result);
     }
-    resize_result = this->resize_locked(count, guard);
+    resize_result = this->resize_locked(count, guard, false);
     if (resize_result != ER_SUCCESS)
     {
         game_experience_table_restore_errno(guard, entry_errno);
