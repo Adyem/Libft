@@ -547,7 +547,10 @@ int ft_inventory::add_item(const ft_sharedptr<ft_item> &item) noexcept
     }
     remaining = item->get_stack_size();
 #if USE_INVENTORY_WEIGHT
-    if (this->_weight_limit != 0 && this->_current_weight + remaining > this->_weight_limit)
+    int projected_weight;
+
+    projected_weight = item->get_stack_size() * item->get_width() * item->get_height();
+    if (this->_weight_limit != 0 && this->_current_weight + projected_weight > this->_weight_limit)
     {
         this->set_error(FT_ERR_FULL);
         game_inventory_restore_errno(guard, entry_errno);

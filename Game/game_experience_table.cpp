@@ -543,6 +543,8 @@ int ft_experience_table::generate_levels_total(int count, int base,
     if (count <= 0)
     {
         resize_result = this->resize_locked(0, guard);
+        if (resize_result == ER_SUCCESS)
+            this->set_error(ER_SUCCESS);
         game_experience_table_restore_errno(guard, entry_errno);
         return (resize_result);
     }

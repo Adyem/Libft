@@ -22,6 +22,7 @@ double      math_negative_infinity(void);
 double      math_indeterminate(void);
 void        math_swap(int *first_number, int *second_number);
 int         math_clamp(int value, int minimum, int maximum);
+double      math_clamp(double value, double minimum, double maximum);
 int         math_gcd(int first_number, int second_number);
 long        math_gcd(long first_number, long second_number);
 long long   math_gcd(long long first_number, long long second_number);
