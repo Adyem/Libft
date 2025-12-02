@@ -126,14 +126,14 @@ FT_TEST(test_strcat_s_recovers_after_truncation, "ft_strcat_s clears errno after
     destination[1] = 'k';
     destination[2] = '\0';
     ft_errno = ER_SUCCESS;
-    FT_ASSERT_EQ(-1, ft_strcat_s(destination, sizeof(destination), "ay"));
+    FT_ASSERT_EQ(-1, ft_strcat_s(destination, sizeof(destination), "world"));
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
-    destination[0] = 'h';
-    destination[1] = 'i';
+    destination[0] = 'o';
+    destination[1] = 'k';
     destination[2] = '\0';
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
-    FT_ASSERT_EQ(0, ft_strcat_s(destination, sizeof(destination), "!"));
-    FT_ASSERT_EQ(0, ft_strcmp(destination, "hi!"));
+    ft_errno = FT_ERR_OUT_OF_RANGE;
+    FT_ASSERT_EQ(0, ft_strcat_s(destination, sizeof(destination), "ay"));
+    FT_ASSERT_EQ(0, ft_strcmp(destination, "okay"));
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
