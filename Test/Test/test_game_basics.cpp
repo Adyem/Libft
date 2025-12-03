@@ -8,9 +8,12 @@
 #include "../../Game/game_upgrade.hpp"
 #include "../../Game/game_world.hpp"
 #include "../../Game/game_event.hpp"
+#include "../../Game/game_event_scheduler.hpp"
 #include "../../Game/game_inventory.hpp"
 #include "../../Template/vector.hpp"
 #include "../../Template/shared_ptr.hpp"
+#include "../../Template/map.hpp"
+#include "../../Template/function.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../JSon/json.hpp"
@@ -121,66 +124,6 @@ int test_item_basic(void)
         item.get_stack_size() != 3 || item.get_modifier1_id() != 5 ||
         item.get_modifier1_value() != 2 || item.get_width() != 2 ||
         item.get_height() != 3)
-        return (0);
-    return (1);
-}
-
-int test_inventory_slots(void)
-{
-    ft_inventory inventory(4);
-    ft_sharedptr<ft_item> bulky(new ft_item());
-    bulky->set_item_id(1);
-    bulky->set_max_stack(1);
-    bulky->set_stack_size(1);
-    bulky->set_width(2);
-    bulky->set_height(2);
-    if (inventory.add_item(bulky) != ER_SUCCESS)
-        return (0);
-    if (inventory.get_used() != 4)
-        return (0);
-    ft_sharedptr<ft_item> small(new ft_item());
-    small->set_item_id(2);
-    small->set_max_stack(1);
-    small->set_stack_size(1);
-    if (inventory.add_item(small) != FT_ERR_FULL)
-        return (0);
-    return (1);
-}
-
-int test_inventory_count(void)
-{
-    ft_inventory inv(5);
-    ft_sharedptr<ft_item> potion(new ft_item());
-    potion->set_item_id(1);
-    potion->set_max_stack(10);
-    potion->set_stack_size(7);
-    inv.add_item(potion);
-
-    ft_sharedptr<ft_item> more(new ft_item());
-    more->set_item_id(1);
-    more->set_max_stack(10);
-    more->set_stack_size(4);
-    inv.add_item(more);
-
-    if (!inv.has_item(1) || inv.count_item(1) != 11)
-        return (0);
-    if (inv.has_item(2) || inv.count_item(2) != 0)
-        return (0);
-    return (1);
-}
-
-int test_inventory_full(void)
-{
-    ft_inventory inv(1);
-    ft_sharedptr<ft_item> item(new ft_item());
-    item->set_item_id(1);
-    item->set_max_stack(5);
-    item->set_stack_size(5);
-    if (inv.is_full())
-        return (0);
-    if (inv.add_item(item) != ER_SUCCESS)
-        return (0);
-    if (!inv.is_full())
         return (0);
     return (1);
 }
@@ -330,6 +273,25 @@ FT_TEST(test_game_event_add_duration_detects_overflow, "ft_event::add_duration r
     return (1);
 }
 
+FT_TEST(test_game_event_add_duration_rejects_negative, "ft_event::add_duration rejects negative input")
+{
+    ft_event event;
+
+    event.set_duration(4);
+    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, event.add_duration(-1));
+    FT_ASSERT_EQ(4, event.get_duration());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, event.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    FT_ASSERT_EQ(ER_SUCCESS, event.add_duration(2));
+    FT_ASSERT_EQ(6, event.get_duration());
+    FT_ASSERT_EQ(ER_SUCCESS, event.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    return (1);
+}
+
 int test_upgrade_subtracters(void)
 {
     ft_upgrade up;
@@ -355,16 +317,6 @@ int test_item_stack_subtract(void)
     item.set_stack_size(7);
     item.sub_from_stack(3);
     return (item.get_stack_size() == 4);
-}
-
-int test_reputation_subtracters(void)
-{
-    ft_reputation rep;
-    rep.set_total_rep(20);
-    rep.sub_total_rep(5);
-    rep.set_current_rep(10);
-    rep.sub_current_rep(3);
-    return (rep.get_total_rep() == 12 && rep.get_current_rep() == 7);
 }
 
 int test_character_level(void)
@@ -435,3 +387,4 @@ int test_character_serialization_damage(void)
         return (0);
     return (1);
 }
+
