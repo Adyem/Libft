@@ -1,6 +1,11 @@
 #include "game_world.hpp"
 #include "game_character.hpp"
 #include "game_inventory.hpp"
+#include "game_world_registry.hpp"
+#include "game_world_replay.hpp"
+#include "game_economy_table.hpp"
+#include "game_crafting.hpp"
+#include "game_dialogue_table.hpp"
 #include "../JSon/json.hpp"
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
@@ -60,18 +65,50 @@ bool ft_world::propagate_scheduler_state_error() const noexcept
 }
 
 ft_world::ft_world() noexcept
-    : _event_scheduler(new ft_event_scheduler()), _error(ER_SUCCESS)
+    : _event_scheduler(new ft_event_scheduler()),
+    _world_registry(new ft_world_registry()),
+    _replay_session(new ft_world_replay_session()),
+    _economy_table(new ft_economy_table()),
+    _crafting(new ft_crafting()),
+    _dialogue_table(new ft_dialogue_table()),
+    _error(ER_SUCCESS)
 {
     if (this->propagate_scheduler_state_error() == true)
+        return ;
+    if (this->propagate_registry_state_error() == true)
+        return ;
+    if (this->propagate_replay_state_error() == true)
+        return ;
+    if (this->propagate_economy_state_error() == true)
+        return ;
+    if (this->propagate_crafting_state_error() == true)
+        return ;
+    if (this->propagate_dialogue_state_error() == true)
         return ;
     this->set_error(ER_SUCCESS);
     return ;
 }
 
 ft_world::ft_world(const ft_world &other) noexcept
-    : _event_scheduler(other._event_scheduler), _error(other._error)
+    : _event_scheduler(other._event_scheduler),
+    _world_registry(other._world_registry),
+    _replay_session(other._replay_session),
+    _economy_table(other._economy_table),
+    _crafting(other._crafting),
+    _dialogue_table(other._dialogue_table),
+    _error(other._error)
 {
     if (this->propagate_scheduler_state_error() == true)
+        return ;
+    if (this->propagate_registry_state_error() == true)
+        return ;
+    if (this->propagate_replay_state_error() == true)
+        return ;
+    if (this->propagate_economy_state_error() == true)
+        return ;
+    if (this->propagate_crafting_state_error() == true)
+        return ;
+    if (this->propagate_dialogue_state_error() == true)
         return ;
     this->set_error(other._error);
     return ;
@@ -82,7 +119,22 @@ ft_world &ft_world::operator=(const ft_world &other) noexcept
     if (this != &other)
     {
         this->_event_scheduler = other._event_scheduler;
+        this->_world_registry = other._world_registry;
+        this->_replay_session = other._replay_session;
+        this->_economy_table = other._economy_table;
+        this->_crafting = other._crafting;
+        this->_dialogue_table = other._dialogue_table;
         if (this->propagate_scheduler_state_error() == true)
+            return (*this);
+        if (this->propagate_registry_state_error() == true)
+            return (*this);
+        if (this->propagate_replay_state_error() == true)
+            return (*this);
+        if (this->propagate_economy_state_error() == true)
+            return (*this);
+        if (this->propagate_crafting_state_error() == true)
+            return (*this);
+        if (this->propagate_dialogue_state_error() == true)
             return (*this);
         this->set_error(other._error);
     }
@@ -90,9 +142,25 @@ ft_world &ft_world::operator=(const ft_world &other) noexcept
 }
 
 ft_world::ft_world(ft_world &&other) noexcept
-    : _event_scheduler(ft_move(other._event_scheduler)), _error(other._error)
+    : _event_scheduler(ft_move(other._event_scheduler)),
+    _world_registry(ft_move(other._world_registry)),
+    _replay_session(ft_move(other._replay_session)),
+    _economy_table(ft_move(other._economy_table)),
+    _crafting(ft_move(other._crafting)),
+    _dialogue_table(ft_move(other._dialogue_table)),
+    _error(other._error)
 {
     if (this->propagate_scheduler_state_error() == true)
+        return ;
+    if (this->propagate_registry_state_error() == true)
+        return ;
+    if (this->propagate_replay_state_error() == true)
+        return ;
+    if (this->propagate_economy_state_error() == true)
+        return ;
+    if (this->propagate_crafting_state_error() == true)
+        return ;
+    if (this->propagate_dialogue_state_error() == true)
         return ;
     this->set_error(this->_error);
     other.set_error(ER_SUCCESS);
@@ -104,7 +172,22 @@ ft_world &ft_world::operator=(ft_world &&other) noexcept
     if (this != &other)
     {
         this->_event_scheduler = ft_move(other._event_scheduler);
+        this->_world_registry = ft_move(other._world_registry);
+        this->_replay_session = ft_move(other._replay_session);
+        this->_economy_table = ft_move(other._economy_table);
+        this->_crafting = ft_move(other._crafting);
+        this->_dialogue_table = ft_move(other._dialogue_table);
         if (this->propagate_scheduler_state_error() == true)
+            return (*this);
+        if (this->propagate_registry_state_error() == true)
+            return (*this);
+        if (this->propagate_replay_state_error() == true)
+            return (*this);
+        if (this->propagate_economy_state_error() == true)
+            return (*this);
+        if (this->propagate_crafting_state_error() == true)
+            return (*this);
+        if (this->propagate_dialogue_state_error() == true)
             return (*this);
         this->set_error(other._error);
         other.set_error(ER_SUCCESS);
@@ -159,6 +242,86 @@ const ft_sharedptr<ft_event_scheduler> &ft_world::get_event_scheduler() const no
 {
     this->set_error(ER_SUCCESS);
     return (this->_event_scheduler);
+}
+
+ft_sharedptr<ft_world_registry> &ft_world::get_world_registry() noexcept
+{
+    if (this->propagate_registry_state_error() == true)
+        return (this->_world_registry);
+    this->set_error(ER_SUCCESS);
+    return (this->_world_registry);
+}
+
+const ft_sharedptr<ft_world_registry> &ft_world::get_world_registry() const noexcept
+{
+    if (this->propagate_registry_state_error() == true)
+        return (this->_world_registry);
+    this->set_error(ER_SUCCESS);
+    return (this->_world_registry);
+}
+
+ft_sharedptr<ft_world_replay_session> &ft_world::get_replay_session() noexcept
+{
+    if (this->propagate_replay_state_error() == true)
+        return (this->_replay_session);
+    this->set_error(ER_SUCCESS);
+    return (this->_replay_session);
+}
+
+const ft_sharedptr<ft_world_replay_session> &ft_world::get_replay_session() const noexcept
+{
+    if (this->propagate_replay_state_error() == true)
+        return (this->_replay_session);
+    this->set_error(ER_SUCCESS);
+    return (this->_replay_session);
+}
+
+ft_sharedptr<ft_economy_table> &ft_world::get_economy_table() noexcept
+{
+    if (this->propagate_economy_state_error() == true)
+        return (this->_economy_table);
+    this->set_error(ER_SUCCESS);
+    return (this->_economy_table);
+}
+
+const ft_sharedptr<ft_economy_table> &ft_world::get_economy_table() const noexcept
+{
+    if (this->propagate_economy_state_error() == true)
+        return (this->_economy_table);
+    this->set_error(ER_SUCCESS);
+    return (this->_economy_table);
+}
+
+ft_sharedptr<ft_crafting> &ft_world::get_crafting() noexcept
+{
+    if (this->propagate_crafting_state_error() == true)
+        return (this->_crafting);
+    this->set_error(ER_SUCCESS);
+    return (this->_crafting);
+}
+
+const ft_sharedptr<ft_crafting> &ft_world::get_crafting() const noexcept
+{
+    if (this->propagate_crafting_state_error() == true)
+        return (this->_crafting);
+    this->set_error(ER_SUCCESS);
+    return (this->_crafting);
+}
+
+ft_sharedptr<ft_dialogue_table> &ft_world::get_dialogue_table() noexcept
+{
+    if (this->propagate_dialogue_state_error() == true)
+        return (this->_dialogue_table);
+    this->set_error(ER_SUCCESS);
+    return (this->_dialogue_table);
+}
+
+const ft_sharedptr<ft_dialogue_table> &ft_world::get_dialogue_table() const noexcept
+{
+    if (this->propagate_dialogue_state_error() == true)
+        return (this->_dialogue_table);
+    this->set_error(ER_SUCCESS);
+    return (this->_dialogue_table);
 }
 
 int ft_world::save_to_file(const char *file_path, const ft_character &character, const ft_inventory &inventory) const noexcept
@@ -385,6 +548,136 @@ void ft_world::set_error(int err) const noexcept
     ft_errno = err;
     this->_error = err;
     return ;
+}
+
+bool ft_world::propagate_registry_state_error() const noexcept
+{
+    if (!this->_world_registry)
+    {
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
+        return (true);
+    }
+    int pointer_error;
+
+    pointer_error = this->_world_registry.get_error();
+    if (pointer_error != ER_SUCCESS)
+    {
+        this->set_error(pointer_error);
+        return (true);
+    }
+    int registry_error;
+
+    registry_error = this->_world_registry->get_error();
+    if (registry_error != ER_SUCCESS)
+    {
+        this->set_error(registry_error);
+        return (true);
+    }
+    return (false);
+}
+
+bool ft_world::propagate_replay_state_error() const noexcept
+{
+    if (!this->_replay_session)
+    {
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
+        return (true);
+    }
+    int pointer_error;
+
+    pointer_error = this->_replay_session.get_error();
+    if (pointer_error != ER_SUCCESS)
+    {
+        this->set_error(pointer_error);
+        return (true);
+    }
+    int replay_error;
+
+    replay_error = this->_replay_session->get_error();
+    if (replay_error != ER_SUCCESS)
+    {
+        this->set_error(replay_error);
+        return (true);
+    }
+    return (false);
+}
+
+bool ft_world::propagate_economy_state_error() const noexcept
+{
+    if (!this->_economy_table)
+    {
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
+        return (true);
+    }
+    int pointer_error;
+
+    pointer_error = this->_economy_table.get_error();
+    if (pointer_error != ER_SUCCESS)
+    {
+        this->set_error(pointer_error);
+        return (true);
+    }
+    int economy_error;
+
+    economy_error = this->_economy_table->get_error();
+    if (economy_error != ER_SUCCESS)
+    {
+        this->set_error(economy_error);
+        return (true);
+    }
+    return (false);
+}
+
+bool ft_world::propagate_crafting_state_error() const noexcept
+{
+    if (!this->_crafting)
+    {
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
+        return (true);
+    }
+    int pointer_error;
+
+    pointer_error = this->_crafting.get_error();
+    if (pointer_error != ER_SUCCESS)
+    {
+        this->set_error(pointer_error);
+        return (true);
+    }
+    int crafting_error;
+
+    crafting_error = this->_crafting->get_error();
+    if (crafting_error != ER_SUCCESS)
+    {
+        this->set_error(crafting_error);
+        return (true);
+    }
+    return (false);
+}
+
+bool ft_world::propagate_dialogue_state_error() const noexcept
+{
+    if (!this->_dialogue_table)
+    {
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
+        return (true);
+    }
+    int pointer_error;
+
+    pointer_error = this->_dialogue_table.get_error();
+    if (pointer_error != ER_SUCCESS)
+    {
+        this->set_error(pointer_error);
+        return (true);
+    }
+    int dialogue_error;
+
+    dialogue_error = this->_dialogue_table->get_error();
+    if (dialogue_error != ER_SUCCESS)
+    {
+        this->set_error(dialogue_error);
+        return (true);
+    }
+    return (false);
 }
 json_group *ft_world::build_snapshot_groups(const ft_character &character,
     const ft_inventory &inventory, int &error_code) const noexcept
