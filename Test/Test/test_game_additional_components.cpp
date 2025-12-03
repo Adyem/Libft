@@ -87,3 +87,58 @@ FT_TEST(test_region_definition_assignment_isolated_from_source, "Game: region de
     FT_ASSERT_EQ(ER_SUCCESS, assigned.get_error());
     return (1);
 }
+
+FT_TEST(test_price_definition_move_assignment_resets_source, "Game: moving price definitions clears the origin values")
+{
+    ft_price_definition source(4, 3, 180, 90, 240);
+    ft_price_definition destination(9, 1, 50, 25, 100);
+
+    destination = ft_move(source);
+    FT_ASSERT_EQ(4, destination.get_item_id());
+    FT_ASSERT_EQ(3, destination.get_rarity());
+    FT_ASSERT_EQ(180, destination.get_base_value());
+    FT_ASSERT_EQ(90, destination.get_minimum_value());
+    FT_ASSERT_EQ(240, destination.get_maximum_value());
+    FT_ASSERT_EQ(0, source.get_item_id());
+    FT_ASSERT_EQ(0, source.get_rarity());
+    FT_ASSERT_EQ(0, source.get_base_value());
+    FT_ASSERT_EQ(0, source.get_minimum_value());
+    FT_ASSERT_EQ(0, source.get_maximum_value());
+    FT_ASSERT_EQ(ER_SUCCESS, destination.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
+    return (1);
+}
+
+FT_TEST(test_currency_rate_copy_remains_unchanged_after_source_update, "Game: currency rate copies stay stable when source mutate")
+{
+    ft_currency_rate original(6, 1.75, 5);
+    ft_currency_rate duplicate(original);
+
+    original.set_currency_id(2);
+    original.set_rate_to_base(3.5);
+    original.set_display_precision(1);
+    FT_ASSERT_EQ(6, duplicate.get_currency_id());
+    FT_ASSERT_DOUBLE_EQ(1.75, duplicate.get_rate_to_base());
+    FT_ASSERT_EQ(5, duplicate.get_display_precision());
+    FT_ASSERT_EQ(ER_SUCCESS, duplicate.get_error());
+    return (1);
+}
+
+FT_TEST(test_region_definition_move_assignment_clears_source, "Game: region definition move assignment resets origin fields")
+{
+    ft_region_definition source(8, ft_string("Harbor"), ft_string("Dockyards"), 7);
+    ft_region_definition destination;
+
+    destination = ft_move(source);
+    FT_ASSERT_EQ(8, destination.get_region_id());
+    FT_ASSERT_EQ(ft_string("Harbor"), destination.get_name());
+    FT_ASSERT_EQ(ft_string("Dockyards"), destination.get_description());
+    FT_ASSERT_EQ(7, destination.get_recommended_level());
+    FT_ASSERT_EQ(0, source.get_region_id());
+    FT_ASSERT_EQ(ft_string(""), source.get_name());
+    FT_ASSERT_EQ(ft_string(""), source.get_description());
+    FT_ASSERT_EQ(0, source.get_recommended_level());
+    FT_ASSERT_EQ(ER_SUCCESS, destination.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
+    return (1);
+}

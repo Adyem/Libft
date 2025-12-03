@@ -10,15 +10,30 @@
 class ft_character;
 class ft_inventory;
 class kv_store;
+class ft_world_registry;
+class ft_world_replay_session;
+class ft_economy_table;
+class ft_crafting;
+class ft_dialogue_table;
 
 class ft_world
 {
     private:
         ft_sharedptr<ft_event_scheduler> _event_scheduler;
+        ft_sharedptr<ft_world_registry> _world_registry;
+        ft_sharedptr<ft_world_replay_session> _replay_session;
+        ft_sharedptr<ft_economy_table> _economy_table;
+        ft_sharedptr<ft_crafting> _crafting;
+        ft_sharedptr<ft_dialogue_table> _dialogue_table;
         mutable int        _error;
 
         void set_error(int err) const noexcept;
         bool propagate_scheduler_state_error() const noexcept;
+        bool propagate_registry_state_error() const noexcept;
+        bool propagate_replay_state_error() const noexcept;
+        bool propagate_economy_state_error() const noexcept;
+        bool propagate_crafting_state_error() const noexcept;
+        bool propagate_dialogue_state_error() const noexcept;
         json_group *build_snapshot_groups(const ft_character &character,
             const ft_inventory &inventory, int &error_code) const noexcept;
         int restore_from_groups(json_group *groups, ft_character &character,
@@ -37,6 +52,16 @@ class ft_world
 
         ft_sharedptr<ft_event_scheduler>       &get_event_scheduler() noexcept;
         const ft_sharedptr<ft_event_scheduler> &get_event_scheduler() const noexcept;
+        ft_sharedptr<ft_world_registry>       &get_world_registry() noexcept;
+        const ft_sharedptr<ft_world_registry> &get_world_registry() const noexcept;
+        ft_sharedptr<ft_world_replay_session>       &get_replay_session() noexcept;
+        const ft_sharedptr<ft_world_replay_session> &get_replay_session() const noexcept;
+        ft_sharedptr<ft_economy_table>       &get_economy_table() noexcept;
+        const ft_sharedptr<ft_economy_table> &get_economy_table() const noexcept;
+        ft_sharedptr<ft_crafting>       &get_crafting() noexcept;
+        const ft_sharedptr<ft_crafting> &get_crafting() const noexcept;
+        ft_sharedptr<ft_dialogue_table>       &get_dialogue_table() noexcept;
+        const ft_sharedptr<ft_dialogue_table> &get_dialogue_table() const noexcept;
 
         int save_to_file(const char *file_path, const ft_character &character, const ft_inventory &inventory) const noexcept;
         int load_from_file(const char *file_path, ft_character &character, ft_inventory &inventory) noexcept;
