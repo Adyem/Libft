@@ -105,6 +105,12 @@ void ft_game_script_context::set_world(const ft_sharedptr<ft_world> &world) noex
 
 void ft_game_script_context::set_variable(const ft_string &key, const ft_string &value) noexcept
 {
+    if (this->_state)
+    {
+        this->_state->set_variable(key, value);
+        this->set_error(this->_state->get_error());
+        return ;
+    }
     Pair<ft_string, ft_string> *entry;
 
     entry = this->_variables.find(key);
@@ -131,6 +137,14 @@ void ft_game_script_context::set_variable(const ft_string &key, const ft_string 
 
 const ft_string *ft_game_script_context::get_variable(const ft_string &key) const noexcept
 {
+    if (this->_state)
+    {
+        const ft_string *value;
+
+        value = this->_state->get_variable(key);
+        this->set_error(this->_state->get_error());
+        return (value);
+    }
     const Pair<ft_string, ft_string> *entry;
 
     entry = this->_variables.find(key);
@@ -150,6 +164,12 @@ const ft_string *ft_game_script_context::get_variable(const ft_string &key) cons
 
 void ft_game_script_context::remove_variable(const ft_string &key) noexcept
 {
+    if (this->_state)
+    {
+        this->_state->remove_variable(key);
+        this->set_error(this->_state->get_error());
+        return ;
+    }
     this->_variables.remove(key);
     if (this->_variables.get_error() != ER_SUCCESS)
     {
@@ -162,6 +182,12 @@ void ft_game_script_context::remove_variable(const ft_string &key) noexcept
 
 void ft_game_script_context::clear_variables() noexcept
 {
+    if (this->_state)
+    {
+        this->_state->clear_variables();
+        this->set_error(this->_state->get_error());
+        return ;
+    }
     this->_variables.clear();
     if (this->_variables.get_error() != ER_SUCCESS)
     {
