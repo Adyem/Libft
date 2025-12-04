@@ -6,6 +6,10 @@
 #include "game_economy_table.hpp"
 #include "game_crafting.hpp"
 #include "game_dialogue_table.hpp"
+#include "ft_world_region.hpp"
+#include "game_quest.hpp"
+#include "ft_vendor_profile.hpp"
+#include "game_upgrade.hpp"
 #include "../JSon/json.hpp"
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
@@ -71,6 +75,10 @@ ft_world::ft_world() noexcept
     _economy_table(new ft_economy_table()),
     _crafting(new ft_crafting()),
     _dialogue_table(new ft_dialogue_table()),
+    _world_region(new ft_world_region()),
+    _quest(new ft_quest()),
+    _vendor_profile(new ft_vendor_profile()),
+    _upgrade(new ft_upgrade()),
     _error(ER_SUCCESS)
 {
     if (this->propagate_scheduler_state_error() == true)
@@ -85,6 +93,14 @@ ft_world::ft_world() noexcept
         return ;
     if (this->propagate_dialogue_state_error() == true)
         return ;
+    if (this->propagate_region_state_error() == true)
+        return ;
+    if (this->propagate_quest_state_error() == true)
+        return ;
+    if (this->propagate_vendor_profile_state_error() == true)
+        return ;
+    if (this->propagate_upgrade_state_error() == true)
+        return ;
     this->set_error(ER_SUCCESS);
     return ;
 }
@@ -96,6 +112,10 @@ ft_world::ft_world(const ft_world &other) noexcept
     _economy_table(other._economy_table),
     _crafting(other._crafting),
     _dialogue_table(other._dialogue_table),
+    _world_region(other._world_region),
+    _quest(other._quest),
+    _vendor_profile(other._vendor_profile),
+    _upgrade(other._upgrade),
     _error(other._error)
 {
     if (this->propagate_scheduler_state_error() == true)
@@ -109,6 +129,14 @@ ft_world::ft_world(const ft_world &other) noexcept
     if (this->propagate_crafting_state_error() == true)
         return ;
     if (this->propagate_dialogue_state_error() == true)
+        return ;
+    if (this->propagate_region_state_error() == true)
+        return ;
+    if (this->propagate_quest_state_error() == true)
+        return ;
+    if (this->propagate_vendor_profile_state_error() == true)
+        return ;
+    if (this->propagate_upgrade_state_error() == true)
         return ;
     this->set_error(other._error);
     return ;
@@ -124,6 +152,10 @@ ft_world &ft_world::operator=(const ft_world &other) noexcept
         this->_economy_table = other._economy_table;
         this->_crafting = other._crafting;
         this->_dialogue_table = other._dialogue_table;
+        this->_world_region = other._world_region;
+        this->_quest = other._quest;
+        this->_vendor_profile = other._vendor_profile;
+        this->_upgrade = other._upgrade;
         if (this->propagate_scheduler_state_error() == true)
             return (*this);
         if (this->propagate_registry_state_error() == true)
@@ -135,6 +167,14 @@ ft_world &ft_world::operator=(const ft_world &other) noexcept
         if (this->propagate_crafting_state_error() == true)
             return (*this);
         if (this->propagate_dialogue_state_error() == true)
+            return (*this);
+        if (this->propagate_region_state_error() == true)
+            return (*this);
+        if (this->propagate_quest_state_error() == true)
+            return (*this);
+        if (this->propagate_vendor_profile_state_error() == true)
+            return (*this);
+        if (this->propagate_upgrade_state_error() == true)
             return (*this);
         this->set_error(other._error);
     }
@@ -148,6 +188,10 @@ ft_world::ft_world(ft_world &&other) noexcept
     _economy_table(ft_move(other._economy_table)),
     _crafting(ft_move(other._crafting)),
     _dialogue_table(ft_move(other._dialogue_table)),
+    _world_region(ft_move(other._world_region)),
+    _quest(ft_move(other._quest)),
+    _vendor_profile(ft_move(other._vendor_profile)),
+    _upgrade(ft_move(other._upgrade)),
     _error(other._error)
 {
     if (this->propagate_scheduler_state_error() == true)
@@ -161,6 +205,14 @@ ft_world::ft_world(ft_world &&other) noexcept
     if (this->propagate_crafting_state_error() == true)
         return ;
     if (this->propagate_dialogue_state_error() == true)
+        return ;
+    if (this->propagate_region_state_error() == true)
+        return ;
+    if (this->propagate_quest_state_error() == true)
+        return ;
+    if (this->propagate_vendor_profile_state_error() == true)
+        return ;
+    if (this->propagate_upgrade_state_error() == true)
         return ;
     this->set_error(this->_error);
     other.set_error(ER_SUCCESS);
@@ -177,6 +229,10 @@ ft_world &ft_world::operator=(ft_world &&other) noexcept
         this->_economy_table = ft_move(other._economy_table);
         this->_crafting = ft_move(other._crafting);
         this->_dialogue_table = ft_move(other._dialogue_table);
+        this->_world_region = ft_move(other._world_region);
+        this->_quest = ft_move(other._quest);
+        this->_vendor_profile = ft_move(other._vendor_profile);
+        this->_upgrade = ft_move(other._upgrade);
         if (this->propagate_scheduler_state_error() == true)
             return (*this);
         if (this->propagate_registry_state_error() == true)
@@ -188,6 +244,14 @@ ft_world &ft_world::operator=(ft_world &&other) noexcept
         if (this->propagate_crafting_state_error() == true)
             return (*this);
         if (this->propagate_dialogue_state_error() == true)
+            return (*this);
+        if (this->propagate_region_state_error() == true)
+            return (*this);
+        if (this->propagate_quest_state_error() == true)
+            return (*this);
+        if (this->propagate_vendor_profile_state_error() == true)
+            return (*this);
+        if (this->propagate_upgrade_state_error() == true)
             return (*this);
         this->set_error(other._error);
         other.set_error(ER_SUCCESS);
@@ -322,6 +386,70 @@ const ft_sharedptr<ft_dialogue_table> &ft_world::get_dialogue_table() const noex
         return (this->_dialogue_table);
     this->set_error(ER_SUCCESS);
     return (this->_dialogue_table);
+}
+
+ft_sharedptr<ft_world_region> &ft_world::get_world_region() noexcept
+{
+    if (this->propagate_region_state_error() == true)
+        return (this->_world_region);
+    this->set_error(ER_SUCCESS);
+    return (this->_world_region);
+}
+
+const ft_sharedptr<ft_world_region> &ft_world::get_world_region() const noexcept
+{
+    if (this->propagate_region_state_error() == true)
+        return (this->_world_region);
+    this->set_error(ER_SUCCESS);
+    return (this->_world_region);
+}
+
+ft_sharedptr<ft_quest> &ft_world::get_quest() noexcept
+{
+    if (this->propagate_quest_state_error() == true)
+        return (this->_quest);
+    this->set_error(ER_SUCCESS);
+    return (this->_quest);
+}
+
+const ft_sharedptr<ft_quest> &ft_world::get_quest() const noexcept
+{
+    if (this->propagate_quest_state_error() == true)
+        return (this->_quest);
+    this->set_error(ER_SUCCESS);
+    return (this->_quest);
+}
+
+ft_sharedptr<ft_vendor_profile> &ft_world::get_vendor_profile() noexcept
+{
+    if (this->propagate_vendor_profile_state_error() == true)
+        return (this->_vendor_profile);
+    this->set_error(ER_SUCCESS);
+    return (this->_vendor_profile);
+}
+
+const ft_sharedptr<ft_vendor_profile> &ft_world::get_vendor_profile() const noexcept
+{
+    if (this->propagate_vendor_profile_state_error() == true)
+        return (this->_vendor_profile);
+    this->set_error(ER_SUCCESS);
+    return (this->_vendor_profile);
+}
+
+ft_sharedptr<ft_upgrade> &ft_world::get_upgrade() noexcept
+{
+    if (this->propagate_upgrade_state_error() == true)
+        return (this->_upgrade);
+    this->set_error(ER_SUCCESS);
+    return (this->_upgrade);
+}
+
+const ft_sharedptr<ft_upgrade> &ft_world::get_upgrade() const noexcept
+{
+    if (this->propagate_upgrade_state_error() == true)
+        return (this->_upgrade);
+    this->set_error(ER_SUCCESS);
+    return (this->_upgrade);
 }
 
 int ft_world::save_to_file(const char *file_path, const ft_character &character, const ft_inventory &inventory) const noexcept
@@ -675,6 +803,110 @@ bool ft_world::propagate_dialogue_state_error() const noexcept
     if (dialogue_error != ER_SUCCESS)
     {
         this->set_error(dialogue_error);
+        return (true);
+    }
+    return (false);
+}
+
+bool ft_world::propagate_region_state_error() const noexcept
+{
+    if (!this->_world_region)
+    {
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
+        return (true);
+    }
+    int pointer_error;
+
+    pointer_error = this->_world_region.get_error();
+    if (pointer_error != ER_SUCCESS)
+    {
+        this->set_error(pointer_error);
+        return (true);
+    }
+    int region_error;
+
+    region_error = this->_world_region->get_error();
+    if (region_error != ER_SUCCESS)
+    {
+        this->set_error(region_error);
+        return (true);
+    }
+    return (false);
+}
+
+bool ft_world::propagate_quest_state_error() const noexcept
+{
+    if (!this->_quest)
+    {
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
+        return (true);
+    }
+    int pointer_error;
+
+    pointer_error = this->_quest.get_error();
+    if (pointer_error != ER_SUCCESS)
+    {
+        this->set_error(pointer_error);
+        return (true);
+    }
+    int quest_error;
+
+    quest_error = this->_quest->get_error();
+    if (quest_error != ER_SUCCESS)
+    {
+        this->set_error(quest_error);
+        return (true);
+    }
+    return (false);
+}
+
+bool ft_world::propagate_vendor_profile_state_error() const noexcept
+{
+    if (!this->_vendor_profile)
+    {
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
+        return (true);
+    }
+    int pointer_error;
+
+    pointer_error = this->_vendor_profile.get_error();
+    if (pointer_error != ER_SUCCESS)
+    {
+        this->set_error(pointer_error);
+        return (true);
+    }
+    int vendor_error;
+
+    vendor_error = this->_vendor_profile->get_error();
+    if (vendor_error != ER_SUCCESS)
+    {
+        this->set_error(vendor_error);
+        return (true);
+    }
+    return (false);
+}
+
+bool ft_world::propagate_upgrade_state_error() const noexcept
+{
+    if (!this->_upgrade)
+    {
+        this->set_error(FT_ERR_GAME_GENERAL_ERROR);
+        return (true);
+    }
+    int pointer_error;
+
+    pointer_error = this->_upgrade.get_error();
+    if (pointer_error != ER_SUCCESS)
+    {
+        this->set_error(pointer_error);
+        return (true);
+    }
+    int upgrade_error;
+
+    upgrade_error = this->_upgrade->get_error();
+    if (upgrade_error != ER_SUCCESS)
+    {
+        this->set_error(upgrade_error);
         return (true);
     }
     return (false);
