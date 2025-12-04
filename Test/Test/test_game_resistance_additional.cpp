@@ -83,9 +83,9 @@ FT_TEST(test_game_resistance_get_error_preserves_errno, "Game: get_error leaves 
     ft_resistance resistance;
 
     resistance.set_values(5, 2);
-    ft_errno = FT_ERR_NULL_POINTER;
+    ft_errno = FT_ERR_INVALID_POINTER;
     FT_ASSERT_EQ(ER_SUCCESS, resistance.get_error());
-    FT_ASSERT_EQ(FT_ERR_NULL_POINTER, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_POINTER, ft_errno);
     return (1);
 }
 
