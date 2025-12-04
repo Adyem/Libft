@@ -7,6 +7,7 @@
 #include "../../Game/game_item.hpp"
 #include "../../Game/game_upgrade.hpp"
 #include "../../Game/game_world.hpp"
+#include "../../Game/game_world_registry.hpp"
 #include "../../Game/game_event.hpp"
 #include "../../Game/game_event_scheduler.hpp"
 #include "../../Game/game_inventory.hpp"
@@ -292,6 +293,102 @@ FT_TEST(test_game_event_add_duration_rejects_negative, "ft_event::add_duration r
     return (1);
 }
 
+FT_TEST(test_inventory_remove_item_releases_usage, "Game: removing items releases slots and weight")
+{
+    ft_inventory inventory(3, 20);
+    ft_sharedptr<ft_item> stack(new ft_item());
+
+    stack->set_item_id(7);
+    stack->set_max_stack(10);
+    stack->set_stack_size(3);
+    stack->set_width(2);
+    stack->set_height(1);
+    FT_ASSERT_EQ(ER_SUCCESS, inventory.add_item(stack));
+    FT_ASSERT_EQ(2u, inventory.get_used());
+    FT_ASSERT_EQ(3, inventory.get_current_weight());
+    inventory.remove_item(0);
+    FT_ASSERT_EQ(0u, inventory.get_used());
+    FT_ASSERT_EQ(0, inventory.get_current_weight());
+    FT_ASSERT_EQ(false, inventory.has_item(7));
+    FT_ASSERT_EQ(ER_SUCCESS, inventory.get_error());
+    return (1);
+}
+
+FT_TEST(test_inventory_count_rarity_sums_stacks, "Game: count_rarity returns total stacked quantity")
+{
+    ft_inventory inventory(4, 20);
+    ft_sharedptr<ft_item> first(new ft_item());
+    ft_sharedptr<ft_item> second(new ft_item());
+
+    first->set_item_id(1);
+    first->set_rarity(2);
+    first->set_max_stack(10);
+    first->set_stack_size(2);
+    second->set_item_id(2);
+    second->set_rarity(2);
+    second->set_max_stack(10);
+    second->set_stack_size(5);
+    FT_ASSERT_EQ(ER_SUCCESS, inventory.add_item(first));
+    FT_ASSERT_EQ(ER_SUCCESS, inventory.add_item(second));
+    FT_ASSERT_EQ(7, inventory.count_rarity(2));
+    FT_ASSERT_EQ(true, inventory.has_rarity(2));
+    FT_ASSERT_EQ(false, inventory.has_rarity(3));
+    return (1);
+}
+
+FT_TEST(test_character_move_updates_coordinates, "Game: move updates character coordinates relative to current position")
+{
+    ft_character hero;
+
+    hero.set_x(1);
+    hero.set_y(2);
+    hero.set_z(3);
+    hero.move(2, -1, 1);
+    FT_ASSERT_EQ(3, hero.get_x());
+    FT_ASSERT_EQ(1, hero.get_y());
+    FT_ASSERT_EQ(4, hero.get_z());
+    return (1);
+}
+
+FT_TEST(test_character_restore_armor_recovers_all, "Game: restore_armor brings both armor pools back to base values")
+{
+    ft_character hero;
+
+    hero.set_physical_armor(12);
+    hero.set_magic_armor(9);
+    hero.set_damage_rule(FT_DAMAGE_RULE_BUFFER);
+    hero.take_damage(5, FT_DAMAGE_PHYSICAL);
+    hero.take_damage(3, FT_DAMAGE_MAGICAL);
+    FT_ASSERT_EQ(7, hero.get_current_physical_armor());
+    FT_ASSERT_EQ(6, hero.get_current_magic_armor());
+    hero.restore_armor();
+    FT_ASSERT_EQ(12, hero.get_current_physical_armor());
+    FT_ASSERT_EQ(9, hero.get_current_magic_armor());
+    return (1);
+}
+
+FT_TEST(test_inventory_copy_preserves_stacks, "Game: copying inventories keeps item stacks intact")
+{
+    ft_inventory original(5, 15);
+    ft_sharedptr<ft_item> stack(new ft_item());
+
+    stack->set_item_id(3);
+    stack->set_max_stack(10);
+    stack->set_stack_size(4);
+    stack->set_width(1);
+    stack->set_height(1);
+    FT_ASSERT_EQ(ER_SUCCESS, original.add_item(stack));
+    FT_ASSERT_EQ(4, original.count_item(3));
+    ft_inventory duplicate(original);
+    original.remove_item(0);
+    FT_ASSERT_EQ(0, original.count_item(3));
+    FT_ASSERT_EQ(4, duplicate.count_item(3));
+    FT_ASSERT_EQ(0, original.get_current_weight());
+    FT_ASSERT_EQ(4, duplicate.get_current_weight());
+    FT_ASSERT_EQ(ER_SUCCESS, duplicate.get_error());
+    return (1);
+}
+
 int test_upgrade_subtracters(void)
 {
     ft_upgrade up;
@@ -385,6 +482,217 @@ int test_character_serialization_damage(void)
         return (0);
     if (clone.get_damage_rule() != FT_DAMAGE_RULE_BUFFER)
         return (0);
+    return (1);
+}
+
+FT_TEST(test_world_region_setters_replace_ids, "Game: set_region_ids overwrites stored identifiers")
+{
+    ft_world_region world_region;
+    ft_vector<int> first_ids;
+    ft_vector<int> second_ids;
+
+    first_ids.push_back(3);
+    first_ids.push_back(7);
+    first_ids.push_back(9);
+    world_region.set_world_id(12);
+    world_region.set_region_ids(first_ids);
+    FT_ASSERT_EQ(12, world_region.get_world_id());
+    FT_ASSERT_EQ(3u, world_region.get_region_ids().size());
+    FT_ASSERT_EQ(3, world_region.get_region_ids()[0]);
+    FT_ASSERT_EQ(7, world_region.get_region_ids()[1]);
+    FT_ASSERT_EQ(9, world_region.get_region_ids()[2]);
+
+    second_ids.push_back(42);
+    world_region.set_region_ids(second_ids);
+    FT_ASSERT_EQ(1u, world_region.get_region_ids().size());
+    FT_ASSERT_EQ(42, world_region.get_region_ids()[0]);
+    FT_ASSERT_EQ(ER_SUCCESS, world_region.get_error());
+    return (1);
+}
+
+FT_TEST(test_world_region_move_assignment_clears_source, "Game: moving a world_region resets the source")
+{
+    ft_vector<int> source_ids;
+    ft_world_region source_region;
+    ft_world_region target_region;
+
+    source_ids.push_back(5);
+    source_ids.push_back(8);
+    source_region.set_world_id(4);
+    source_region.set_region_ids(source_ids);
+    target_region.set_world_id(1);
+    target_region = ft_move(source_region);
+    FT_ASSERT_EQ(4, target_region.get_world_id());
+    FT_ASSERT_EQ(2u, target_region.get_region_ids().size());
+    FT_ASSERT_EQ(5, target_region.get_region_ids()[0]);
+    FT_ASSERT_EQ(8, target_region.get_region_ids()[1]);
+    FT_ASSERT_EQ(0, source_region.get_world_id());
+    FT_ASSERT_EQ(0u, source_region.get_region_ids().size());
+    FT_ASSERT_EQ(ER_SUCCESS, source_region.get_error());
+    return (1);
+}
+
+FT_TEST(test_world_region_copy_assignment_preserves_content, "Game: copying world_region retains identifiers")
+{
+    ft_vector<int> original_ids;
+    ft_world_region original_region;
+    ft_world_region copied_region;
+
+    original_ids.push_back(15);
+    original_ids.push_back(27);
+    original_region.set_world_id(6);
+    original_region.set_region_ids(original_ids);
+    copied_region.set_world_id(2);
+    copied_region = original_region;
+    FT_ASSERT_EQ(6, copied_region.get_world_id());
+    FT_ASSERT_EQ(2u, copied_region.get_region_ids().size());
+    FT_ASSERT_EQ(15, copied_region.get_region_ids()[0]);
+    FT_ASSERT_EQ(27, copied_region.get_region_ids()[1]);
+    FT_ASSERT_EQ(2u, original_region.get_region_ids().size());
+    FT_ASSERT_EQ(ER_SUCCESS, copied_region.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, original_region.get_error());
+    return (1);
+}
+
+FT_TEST(test_world_default_region_pointer_available, "Game: world exposes default world_region pointer")
+{
+    ft_world world;
+    ft_sharedptr<ft_world_region> &region_pointer = world.get_world_region();
+
+    FT_ASSERT_EQ(true, static_cast<bool>(region_pointer));
+    FT_ASSERT_EQ(0, region_pointer->get_world_id());
+    FT_ASSERT_EQ(0u, region_pointer->get_region_ids().size());
+    FT_ASSERT_EQ(ER_SUCCESS, region_pointer->get_error());
+    return (1);
+}
+
+FT_TEST(test_world_registry_registers_and_fetches_regions, "Game: registry stores and retrieves world regions")
+{
+    ft_world_registry registry;
+    ft_world_region stored_region;
+    ft_world_region fetched_region;
+    ft_vector<int> region_ids;
+
+    region_ids.push_back(101);
+    region_ids.push_back(202);
+    stored_region.set_world_id(3);
+    stored_region.set_region_ids(region_ids);
+    FT_ASSERT_EQ(ER_SUCCESS, registry.register_world(stored_region));
+    FT_ASSERT_EQ(ER_SUCCESS, registry.fetch_world(3, fetched_region));
+    FT_ASSERT_EQ(3, fetched_region.get_world_id());
+    FT_ASSERT_EQ(2u, fetched_region.get_region_ids().size());
+    FT_ASSERT_EQ(101, fetched_region.get_region_ids()[0]);
+    FT_ASSERT_EQ(202, fetched_region.get_region_ids()[1]);
+    FT_ASSERT_EQ(ER_SUCCESS, fetched_region.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, registry.get_error());
+    return (1);
+}
+
+FT_TEST(test_inventory_add_item_rejects_weight_overflow, "Game: inventory blocks inserts that exceed weight limit")
+{
+    ft_inventory inventory(0, 5);
+    ft_sharedptr<ft_item> heavy(new ft_item());
+
+    heavy->set_item_id(11);
+    heavy->set_width(2);
+    heavy->set_height(2);
+    heavy->set_max_stack(5);
+    heavy->set_stack_size(2);
+    FT_ASSERT_EQ(FT_ERR_FULL, inventory.add_item(heavy));
+    FT_ASSERT_EQ(0, inventory.count_item(11));
+    FT_ASSERT_EQ(0, inventory.get_current_weight());
+    FT_ASSERT_EQ(FT_ERR_FULL, inventory.get_error());
+    return (1);
+}
+
+FT_TEST(test_inventory_is_full_checks_capacity, "Game: is_full reflects slot usage when capacity is limited")
+{
+    ft_inventory inventory(2, 50);
+    ft_sharedptr<ft_item> first(new ft_item());
+    ft_sharedptr<ft_item> second(new ft_item());
+    ft_sharedptr<ft_item> third(new ft_item());
+
+    first->set_item_id(1);
+    first->set_width(1);
+    first->set_height(1);
+    first->set_max_stack(5);
+    first->set_stack_size(1);
+    second->set_item_id(2);
+    second->set_width(1);
+    second->set_height(1);
+    second->set_max_stack(5);
+    second->set_stack_size(1);
+    third->set_item_id(3);
+    third->set_width(1);
+    third->set_height(1);
+    third->set_max_stack(5);
+    third->set_stack_size(1);
+    FT_ASSERT_EQ(ER_SUCCESS, inventory.add_item(first));
+    FT_ASSERT_EQ(ER_SUCCESS, inventory.add_item(second));
+    FT_ASSERT_EQ(true, inventory.is_full());
+    FT_ASSERT_EQ(FT_ERR_FULL, inventory.add_item(third));
+    FT_ASSERT_EQ(2u, inventory.get_used());
+    FT_ASSERT_EQ(true, inventory.has_item(1));
+    FT_ASSERT_EQ(true, inventory.has_item(2));
+    FT_ASSERT_EQ(false, inventory.has_item(3));
+    return (1);
+}
+
+FT_TEST(test_inventory_partial_stack_before_capacity_error, "Game: adding beyond capacity still merges into existing stack")
+{
+    ft_inventory inventory(1, 50);
+    ft_sharedptr<ft_item> base(new ft_item());
+    ft_sharedptr<ft_item> extra(new ft_item());
+
+    base->set_item_id(5);
+    base->set_width(1);
+    base->set_height(1);
+    base->set_max_stack(5);
+    base->set_stack_size(3);
+    extra->set_item_id(5);
+    extra->set_width(1);
+    extra->set_height(1);
+    extra->set_max_stack(5);
+    extra->set_stack_size(4);
+    FT_ASSERT_EQ(ER_SUCCESS, inventory.add_item(base));
+    FT_ASSERT_EQ(FT_ERR_FULL, inventory.add_item(extra));
+    FT_ASSERT_EQ(5, inventory.count_item(5));
+    FT_ASSERT_EQ(5, inventory.get_current_weight());
+    FT_ASSERT_EQ(1u, inventory.get_used());
+    FT_ASSERT_EQ(FT_ERR_FULL, inventory.get_error());
+    return (1);
+}
+
+FT_TEST(test_world_region_parameterized_constructor_copies_values, "Game: parameterized world_region copies identifiers")
+{
+    ft_vector<int> region_ids;
+    ft_world_region region;
+
+    region_ids.push_back(4);
+    region_ids.push_back(6);
+    region_ids.push_back(8);
+    region = ft_world_region(12, region_ids);
+    region_ids.push_back(10);
+    FT_ASSERT_EQ(12, region.get_world_id());
+    FT_ASSERT_EQ(3u, region.get_region_ids().size());
+    FT_ASSERT_EQ(4, region.get_region_ids()[0]);
+    FT_ASSERT_EQ(6, region.get_region_ids()[1]);
+    FT_ASSERT_EQ(8, region.get_region_ids()[2]);
+    FT_ASSERT_EQ(ER_SUCCESS, region.get_error());
+    return (1);
+}
+
+FT_TEST(test_world_region_mutable_ids_reference_updates_state, "Game: mutable get_region_ids enables in-place edits")
+{
+    ft_world_region region;
+    ft_vector<int> &ids = region.get_region_ids();
+
+    ids.push_back(14);
+    ids.push_back(16);
+    FT_ASSERT_EQ(2u, region.get_region_ids().size());
+    FT_ASSERT_EQ(14, region.get_region_ids()[0]);
+    FT_ASSERT_EQ(16, region.get_region_ids()[1]);
+    FT_ASSERT_EQ(ER_SUCCESS, region.get_error());
     return (1);
 }
 
