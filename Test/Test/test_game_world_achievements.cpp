@@ -1,5 +1,4 @@
 #include "../../Game/game_achievement.hpp"
-#include "../../Game/game_goal.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 
