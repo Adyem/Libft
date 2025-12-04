@@ -91,7 +91,7 @@ int ft_game_state::lock_pair(const ft_game_state &first, const ft_game_state &se
 }
 
 ft_game_state::ft_game_state() noexcept
-    : _worlds(), _characters(), _hooks(), _error_code(ER_SUCCESS), _mutex()
+    : _worlds(), _characters(), _variables(), _hooks(), _error_code(ER_SUCCESS), _mutex()
 {
     ft_sharedptr<ft_world> world(new (std::nothrow) ft_world());
 
@@ -117,7 +117,7 @@ ft_game_state::~ft_game_state() noexcept
 }
 
 ft_game_state::ft_game_state(const ft_game_state &other) noexcept
-    : _worlds(), _characters(), _hooks(), _error_code(other._error_code), _mutex()
+    : _worlds(), _characters(), _variables(), _hooks(), _error_code(other._error_code), _mutex()
 {
     int entry_errno;
 
@@ -183,6 +183,13 @@ ft_game_state::ft_game_state(const ft_game_state &other) noexcept
             return ;
         }
         character_index++;
+    }
+    this->_variables = other._variables;
+    if (this->_variables.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_variables.get_error());
+        game_state_restore_errno(other_guard, entry_errno);
+        return ;
     }
     if (other._hooks.get_error() != ER_SUCCESS)
     {
@@ -278,6 +285,14 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
         }
         character_index++;
     }
+    this->_variables = other._variables;
+    if (this->_variables.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_variables.get_error());
+        game_state_restore_errno(this_guard, entry_errno);
+        game_state_restore_errno(other_guard, entry_errno);
+        return (*this);
+    }
     if (other._hooks.get_error() != ER_SUCCESS)
     {
         this->set_error(other._hooks.get_error());
@@ -303,6 +318,7 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
 ft_game_state::ft_game_state(ft_game_state &&other) noexcept
     : _worlds(),
     _characters(),
+    _variables(),
     _hooks(),
     _error_code(ER_SUCCESS),
     _mutex()
@@ -322,6 +338,13 @@ ft_game_state::ft_game_state(ft_game_state &&other) noexcept
     }
     this->_worlds = ft_move(other._worlds);
     this->_characters = ft_move(other._characters);
+    this->_variables = ft_move(other._variables);
+    if (this->_variables.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_variables.get_error());
+        game_state_restore_errno(other_guard, entry_errno);
+        return ;
+    }
     if (other._hooks.get_error() != ER_SUCCESS)
     {
         this->set_error(other._hooks.get_error());
@@ -376,6 +399,14 @@ ft_game_state &ft_game_state::operator=(ft_game_state &&other) noexcept
     }
     this->_worlds = ft_move(other._worlds);
     this->_characters = ft_move(other._characters);
+    this->_variables = ft_move(other._variables);
+    if (this->_variables.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_variables.get_error());
+        game_state_restore_errno(this_guard, entry_errno);
+        game_state_restore_errno(other_guard, entry_errno);
+        return (*this);
+    }
     if (other._hooks.get_error() != ER_SUCCESS)
     {
         this->set_error(other._hooks.get_error());
@@ -445,6 +476,116 @@ ft_vector<ft_sharedptr<ft_character> > &ft_game_state::get_characters() noexcept
     }
     game_state_restore_errno(guard, entry_errno);
     return (this->_characters);
+}
+
+void ft_game_state::set_variable(const ft_string &key, const ft_string &value) noexcept
+{
+    int entry_errno;
+    Pair<ft_string, ft_string> *entry;
+
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(guard.get_error());
+        game_state_restore_errno(guard, entry_errno);
+        return ;
+    }
+    entry = this->_variables.find(key);
+    if (this->_variables.get_error() != ER_SUCCESS)
+    {
+        this->set_error(this->_variables.get_error());
+        game_state_restore_errno(guard, entry_errno);
+        return ;
+    }
+    if (entry != this->_variables.end())
+        entry->value = value;
+    else
+    {
+        this->_variables.insert(key, value);
+        if (this->_variables.get_error() != ER_SUCCESS)
+        {
+            this->set_error(this->_variables.get_error());
+            game_state_restore_errno(guard, entry_errno);
+            return ;
+        }
+    }
+    this->set_error(ER_SUCCESS);
+    game_state_restore_errno(guard, entry_errno);
+    return ;
+}
+
+const ft_string *ft_game_state::get_variable(const ft_string &key) const noexcept
+{
+    int entry_errno;
+    const Pair<ft_string, ft_string> *entry;
+
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        const_cast<ft_game_state *>(this)->set_error(guard.get_error());
+        game_state_restore_errno(guard, entry_errno);
+        return (ft_nullptr);
+    }
+    entry = this->_variables.find(key);
+    if (this->_variables.get_error() != ER_SUCCESS)
+    {
+        const_cast<ft_game_state *>(this)->set_error(this->_variables.get_error());
+        game_state_restore_errno(guard, entry_errno);
+        return (ft_nullptr);
+    }
+    if (entry == this->_variables.end())
+    {
+        const_cast<ft_game_state *>(this)->set_error(FT_ERR_NOT_FOUND);
+        game_state_restore_errno(guard, entry_errno);
+        return (ft_nullptr);
+    }
+    const_cast<ft_game_state *>(this)->set_error(ER_SUCCESS);
+    game_state_restore_errno(guard, entry_errno);
+    return (&entry->value);
+}
+
+void ft_game_state::remove_variable(const ft_string &key) noexcept
+{
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(guard.get_error());
+        game_state_restore_errno(guard, entry_errno);
+        return ;
+    }
+    this->_variables.remove(key);
+    if (this->_variables.get_error() != ER_SUCCESS)
+        this->set_error(this->_variables.get_error());
+    else
+        this->set_error(ER_SUCCESS);
+    game_state_restore_errno(guard, entry_errno);
+    return ;
+}
+
+void ft_game_state::clear_variables() noexcept
+{
+    int entry_errno;
+
+    entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != ER_SUCCESS)
+    {
+        this->set_error(guard.get_error());
+        game_state_restore_errno(guard, entry_errno);
+        return ;
+    }
+    this->_variables.clear();
+    if (this->_variables.get_error() != ER_SUCCESS)
+        this->set_error(this->_variables.get_error());
+    else
+        this->set_error(ER_SUCCESS);
+    game_state_restore_errno(guard, entry_errno);
+    return ;
 }
 
 int ft_game_state::add_character(const ft_sharedptr<ft_character> &character) noexcept
