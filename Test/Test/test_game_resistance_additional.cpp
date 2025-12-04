@@ -94,9 +94,9 @@ FT_TEST(test_game_resistance_get_error_str_reports_success, "Game: get_error_str
     ft_resistance resistance;
 
     resistance.set_values(3, 1);
-    ft_errno = FT_ERR_OVERFLOW;
+    ft_errno = FT_ERR_GAME_INVALID_MOVE;
     FT_ASSERT_STR_EQ(ft_strerror(ER_SUCCESS), resistance.get_error_str());
-    FT_ASSERT_EQ(FT_ERR_OVERFLOW, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_GAME_INVALID_MOVE, ft_errno);
     return (1);
 }
 

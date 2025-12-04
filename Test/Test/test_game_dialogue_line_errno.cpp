@@ -36,9 +36,9 @@ FT_TEST(test_dialogue_line_set_line_id_preserves_errno, "set_line_id updates ide
 {
     ft_dialogue_line line(1, ft_string("ally"), ft_string("start"), ft_vector<int>());
 
-    ft_errno = FT_ERR_TIMEOUT;
+    ft_errno = FT_ERR_TERMINATED;
     line.set_line_id(7);
-    FT_ASSERT_EQ(FT_ERR_TIMEOUT, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_TERMINATED, ft_errno);
     FT_ASSERT_EQ(7, line.get_line_id());
     FT_ASSERT_EQ(ER_SUCCESS, line.get_error());
     return (1);
@@ -60,9 +60,9 @@ FT_TEST(test_dialogue_line_set_text_preserves_errno, "set_text updates dialogue 
 {
     ft_dialogue_line line(1, ft_string("ally"), ft_string("start"), ft_vector<int>());
 
-    ft_errno = FT_ERR_MUTEX_LOCKED_BY_ANOTHER_THREAD;
+    ft_errno = FT_ERR_MUTEX_NOT_OWNER;
     line.set_text(ft_string("updated"));
-    FT_ASSERT_EQ(FT_ERR_MUTEX_LOCKED_BY_ANOTHER_THREAD, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_MUTEX_NOT_OWNER, ft_errno);
     FT_ASSERT_EQ(ft_string("updated"), line.get_text());
     FT_ASSERT_EQ(ER_SUCCESS, line.get_error());
     return (1);
@@ -75,10 +75,10 @@ FT_TEST(test_dialogue_line_set_next_line_ids_copies_values, "set_next_line_ids c
 
     next_lines.push_back(2);
     next_lines.push_back(4);
-    ft_errno = FT_ERR_EOF;
+    ft_errno = FT_ERR_END_OF_FILE;
     line.set_next_line_ids(next_lines);
     next_lines.push_back(6);
-    FT_ASSERT_EQ(FT_ERR_EOF, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_END_OF_FILE, ft_errno);
     FT_ASSERT_EQ(2ul, line.get_next_line_ids().size());
     FT_ASSERT_EQ(2, line.get_next_line_ids()[0]);
     FT_ASSERT_EQ(4, line.get_next_line_ids()[1]);
@@ -153,13 +153,13 @@ FT_TEST(test_dialogue_line_getters_leave_errno_unchanged, "getters restore incom
 
     next_lines.push_back(21);
     line = ft_dialogue_line(13, ft_string("guide"), ft_string("tip"), next_lines);
-    ft_errno = FT_ERR_BUFFER_TOO_SMALL;
+    ft_errno = FT_ERR_CONFIGURATION;
     FT_ASSERT_EQ(13, line.get_line_id());
     FT_ASSERT_EQ(ft_string("guide"), line.get_speaker());
     FT_ASSERT_EQ(ft_string("tip"), line.get_text());
     FT_ASSERT_EQ(1ul, line.get_next_line_ids().size());
     FT_ASSERT_EQ(21, line.get_next_line_ids()[0]);
-    FT_ASSERT_EQ(FT_ERR_BUFFER_TOO_SMALL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_CONFIGURATION, ft_errno);
     FT_ASSERT_EQ(ER_SUCCESS, line.get_error());
     return (1);
 }
