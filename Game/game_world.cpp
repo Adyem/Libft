@@ -215,6 +215,12 @@ ft_world::ft_world(ft_world &&other) noexcept
     if (this->propagate_upgrade_state_error() == true)
         return ;
     this->set_error(this->_error);
+    other._event_scheduler = ft_sharedptr<ft_event_scheduler>(new ft_event_scheduler());
+    if (other._event_scheduler->get_error() != ER_SUCCESS)
+    {
+        other.set_error(other._event_scheduler->get_error());
+        return ;
+    }
     other.set_error(ER_SUCCESS);
     return ;
 }
@@ -254,6 +260,12 @@ ft_world &ft_world::operator=(ft_world &&other) noexcept
         if (this->propagate_upgrade_state_error() == true)
             return (*this);
         this->set_error(other._error);
+        other._event_scheduler = ft_sharedptr<ft_event_scheduler>(new ft_event_scheduler());
+        if (other._event_scheduler->get_error() != ER_SUCCESS)
+        {
+            other.set_error(other._event_scheduler->get_error());
+            return (*this);
+        }
         other.set_error(ER_SUCCESS);
     }
     return (*this);
