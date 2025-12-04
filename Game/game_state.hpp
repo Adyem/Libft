@@ -6,6 +6,7 @@
 #include "game_item.hpp"
 #include "game_event.hpp"
 #include "../Template/vector.hpp"
+#include "../Template/map.hpp"
 #include "../Template/shared_ptr.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
@@ -17,6 +18,7 @@ class ft_game_state
     private:
         ft_vector<ft_sharedptr<ft_world> >     _worlds;
         ft_vector<ft_sharedptr<ft_character> > _characters;
+        ft_map<ft_string, ft_string>           _variables;
         ft_sharedptr<ft_game_hooks>            _hooks;
         mutable int                            _error_code;
         mutable pt_mutex                       _mutex;
@@ -37,6 +39,11 @@ class ft_game_state
         ft_vector<ft_sharedptr<ft_world> > &get_worlds() noexcept;
 
         ft_vector<ft_sharedptr<ft_character> > &get_characters() noexcept;
+
+        void set_variable(const ft_string &key, const ft_string &value) noexcept;
+        const ft_string *get_variable(const ft_string &key) const noexcept;
+        void remove_variable(const ft_string &key) noexcept;
+        void clear_variables() noexcept;
 
         int add_character(const ft_sharedptr<ft_character> &character) noexcept;
         void remove_character(size_t index) noexcept;
