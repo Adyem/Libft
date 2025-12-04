@@ -87,9 +87,9 @@ FT_TEST(test_behavior_table_set_profiles_restores_errno, "set_profiles restores 
     ft_map<int, ft_behavior_profile> profiles;
 
     profiles.insert(3, build_profile(3, 0.3, 0.7, 8));
-    ft_errno = FT_ERR_BUSY;
+    ft_errno = FT_ERR_INVALID_OPERATION;
     table.set_profiles(profiles);
-    FT_ASSERT_EQ(FT_ERR_BUSY, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, ft_errno);
     FT_ASSERT_EQ(ER_SUCCESS, table.get_error());
     return (1);
 }
@@ -138,9 +138,9 @@ FT_TEST(test_behavior_table_fetch_not_found_restores_errno,
     ft_behavior_table table;
     ft_behavior_profile fetched;
 
-    ft_errno = FT_ERR_NOT_IMPLEMENTED;
+    ft_errno = FT_ERR_UNSUPPORTED_TYPE;
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.fetch_profile(77, fetched));
-    FT_ASSERT_EQ(FT_ERR_NOT_IMPLEMENTED, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_UNSUPPORTED_TYPE, ft_errno);
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.get_error());
     return (1);
 }
@@ -192,11 +192,11 @@ FT_TEST(test_behavior_table_copy_constructor_preserves_error,
 
     table.register_profile(build_profile(18, 0.7, 0.3, 22));
     table.fetch_profile(99, fetched);
-    ft_errno = FT_ERR_CLOSED;
+    ft_errno = FT_ERR_INVALID_STATE;
     copy = ft_behavior_table(table);
     FT_ASSERT_EQ(ER_SUCCESS, copy.fetch_profile(18, fetched));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, copy.get_error());
-    FT_ASSERT_EQ(FT_ERR_CLOSED, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, ft_errno);
     return (1);
 }
 
@@ -210,11 +210,11 @@ FT_TEST(test_behavior_table_copy_assignment_preserves_error,
     source.register_profile(build_profile(25, 0.45, 0.55, 30));
     source.fetch_profile(200, fetched);
     destination.register_profile(build_profile(31, 0.2, 0.8, 40));
-    ft_errno = FT_ERR_TOO_LARGE;
+    ft_errno = FT_ERR_CONFIGURATION;
     destination = source;
     FT_ASSERT_EQ(ER_SUCCESS, destination.fetch_profile(25, fetched));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, destination.get_error());
-    FT_ASSERT_EQ(FT_ERR_TOO_LARGE, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_CONFIGURATION, ft_errno);
     return (1);
 }
 
@@ -227,12 +227,12 @@ FT_TEST(test_behavior_table_move_constructor_clears_source,
 
     source.register_profile(build_profile(41, 0.33, 0.67, 55));
     source.fetch_profile(404, fetched);
-    ft_errno = FT_ERR_INTERRUPTED;
+    ft_errno = FT_ERR_TERMINATED;
     moved = ft_behavior_table(ft_move(source));
     FT_ASSERT_EQ(ER_SUCCESS, moved.fetch_profile(41, fetched));
     FT_ASSERT_EQ(true, source.get_profiles().empty());
     FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
-    FT_ASSERT_EQ(FT_ERR_INTERRUPTED, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_TERMINATED, ft_errno);
     return (1);
 }
 
@@ -245,12 +245,12 @@ FT_TEST(test_behavior_table_move_assignment_clears_source,
 
     source.register_profile(build_profile(52, 0.15, 0.85, 61));
     destination.register_profile(build_profile(60, 0.9, 0.1, 70));
-    ft_errno = FT_ERR_OVERFLOW;
+    ft_errno = FT_ERR_GAME_GENERAL_ERROR;
     destination = ft_move(source);
     FT_ASSERT_EQ(ER_SUCCESS, destination.fetch_profile(52, fetched));
     FT_ASSERT_EQ(true, source.get_profiles().empty());
     FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
-    FT_ASSERT_EQ(FT_ERR_OVERFLOW, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, ft_errno);
     return (1);
 }
 
@@ -278,10 +278,10 @@ FT_TEST(test_behavior_table_self_move_assignment_noop,
 
     table.register_profile(build_profile(91, 0.22, 0.78, 99));
     table.fetch_profile(910, fetched);
-    ft_errno = FT_ERR_EXISTING_DATA;
+    ft_errno = FT_ERR_ALREADY_INITIALIZED;
     table = ft_move(table);
     FT_ASSERT_EQ(ER_SUCCESS, table.fetch_profile(91, fetched));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.get_error());
-    FT_ASSERT_EQ(FT_ERR_EXISTING_DATA, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_ALREADY_INITIALIZED, ft_errno);
     return (1);
 }

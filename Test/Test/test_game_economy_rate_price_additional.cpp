@@ -30,10 +30,10 @@ FT_TEST(test_currency_rate_copy_constructor_restores_errno_and_keeps_source, "Cu
 {
     ft_currency_rate original(8, 1.35, 5);
 
-    ft_errno = FT_ERR_OVERFLOW;
+    ft_errno = FT_ERR_GAME_INVALID_MOVE;
     ft_currency_rate copy(original);
 
-    FT_ASSERT_EQ(FT_ERR_OVERFLOW, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_GAME_INVALID_MOVE, ft_errno);
     FT_ASSERT_EQ(8, copy.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(1.35, copy.get_rate_to_base());
     FT_ASSERT_EQ(5, copy.get_display_precision());
