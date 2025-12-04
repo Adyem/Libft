@@ -86,9 +86,9 @@ FT_TEST(test_game_region_definition_get_name_preserves_errno, "Region name gette
 {
     ft_region_definition region(21, ft_string("plateau"), ft_string("broad rise"), 7);
 
-    ft_errno = FT_ERR_OVERFLOW;
+    ft_errno = FT_ERR_GAME_INVALID_MOVE;
     FT_ASSERT_EQ(ft_string("plateau"), region.get_name());
-    FT_ASSERT_EQ(FT_ERR_OVERFLOW, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_GAME_INVALID_MOVE, ft_errno);
     return (1);
 }
 
