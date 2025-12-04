@@ -76,9 +76,9 @@ FT_TEST(test_game_region_definition_get_region_id_preserves_errno, "Region id ge
 {
     ft_region_definition region(10, ft_string("gorge"), ft_string("steep cliffs"), 12);
 
-    ft_errno = FT_ERR_ALLOC;
+    ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
     FT_ASSERT_EQ(10, region.get_region_id());
-    FT_ASSERT_EQ(FT_ERR_ALLOC, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, ft_errno);
     return (1);
 }
 
@@ -96,10 +96,10 @@ FT_TEST(test_game_region_definition_set_region_id_preserves_errno, "Region id se
 {
     ft_region_definition region;
 
-    ft_errno = FT_ERR_LOCKED;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     region.set_region_id(18);
     FT_ASSERT_EQ(18, region.get_region_id());
-    FT_ASSERT_EQ(FT_ERR_LOCKED, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -107,10 +107,10 @@ FT_TEST(test_game_region_definition_set_description_preserves_errno, "Region des
 {
     ft_region_definition region;
 
-    ft_errno = FT_ERR_PERMISSION;
+    ft_errno = FT_ERR_MUTEX_NOT_OWNER;
     region.set_description(ft_string("ancient ruins"));
     FT_ASSERT_EQ(ft_string("ancient ruins"), region.get_description());
-    FT_ASSERT_EQ(FT_ERR_PERMISSION, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_MUTEX_NOT_OWNER, ft_errno);
     return (1);
 }
 
