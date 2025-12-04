@@ -6,6 +6,15 @@
 #include "../Errno/errno.hpp"
 #include "game_pathfinding.hpp"
 #include "../CPP_class/class_string_class.hpp"
+#include "game_world_replay.hpp"
+#include "game_economy_table.hpp"
+#include "game_crafting.hpp"
+#include "game_dialogue_table.hpp"
+#include "ft_world_region.hpp"
+#include "game_quest.hpp"
+#include "ft_vendor_profile.hpp"
+#include "game_world_registry.hpp"
+#include "game_upgrade.hpp"
 
 class ft_character;
 class ft_inventory;
