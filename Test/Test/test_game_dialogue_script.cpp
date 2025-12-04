@@ -65,10 +65,10 @@ FT_TEST(test_dialogue_script_set_lines_copies_entries, "set_lines duplicates pro
     ft_dialogue_script script;
 
     lines.push_back(create_dialogue_line(5, ft_string("npc"), ft_string("question")));
-    ft_errno = FT_ERR_INTERNAL_TIMEOUT;
+    ft_errno = FT_ERR_INTERNAL;
     script.set_lines(lines);
     lines[0].set_line_id(15);
-    FT_ASSERT_EQ(FT_ERR_INTERNAL_TIMEOUT, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INTERNAL, ft_errno);
     FT_ASSERT_EQ(1ul, script.get_lines().size());
     FT_ASSERT_EQ(5, script.get_lines()[0].get_line_id());
     FT_ASSERT_EQ(ER_SUCCESS, script.get_error());
@@ -149,9 +149,9 @@ FT_TEST(test_dialogue_script_move_assignment_clears_source, "move assignment rep
     other_lines.push_back(create_dialogue_line(12, ft_string("ally"), ft_string("hint")));
     destination = ft_dialogue_script(1, ft_string("dest"), ft_string("sum"), 8, lines);
     source = ft_dialogue_script(5, ft_string("src"), ft_string("summary"), 12, other_lines);
-    ft_errno = FT_ERR_DELETED_NO_ACCESS;
+    ft_errno = FT_ERR_INVALID_STATE;
     destination = ft_move(source);
-    FT_ASSERT_EQ(FT_ERR_DELETED_NO_ACCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, ft_errno);
     FT_ASSERT_EQ(5, destination.get_script_id());
     FT_ASSERT_EQ(ft_string("src"), destination.get_title());
     FT_ASSERT_EQ(ft_string("summary"), destination.get_summary());
@@ -188,9 +188,9 @@ FT_TEST(test_dialogue_script_self_move_assignment_no_change, "self move assignme
 
     lines.push_back(create_dialogue_line(4, ft_string("npc"), ft_string("note")));
     script = ft_dialogue_script(13, ft_string("keep"), ft_string("move"), 4, lines);
-    ft_errno = FT_ERR_BUFFER_TOO_SMALL;
+    ft_errno = FT_ERR_INVALID_OPERATION;
     script = ft_move(script);
-    FT_ASSERT_EQ(FT_ERR_BUFFER_TOO_SMALL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, ft_errno);
     FT_ASSERT_EQ(13, script.get_script_id());
     FT_ASSERT_EQ(ft_string("keep"), script.get_title());
     FT_ASSERT_EQ(ft_string("move"), script.get_summary());
@@ -224,9 +224,9 @@ FT_TEST(test_dialogue_script_non_const_lines_reference, "non-const lines getter 
 
     lines.push_back(create_dialogue_line(25, ft_string("npc"), ft_string("text")));
     script = ft_dialogue_script(30, ft_string("mutable"), ft_string("lines"), 25, lines);
-    ft_errno = FT_ERR_EOF;
+    ft_errno = FT_ERR_END_OF_FILE;
     script.get_lines().push_back(create_dialogue_line(40, ft_string("npc"), ft_string("extra")));
-    FT_ASSERT_EQ(FT_ERR_EOF, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_END_OF_FILE, ft_errno);
     FT_ASSERT_EQ(2ul, script.get_lines().size());
     FT_ASSERT_EQ(40, script.get_lines()[1].get_line_id());
     return (1);
