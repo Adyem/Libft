@@ -3,6 +3,12 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 
+static void force_ft_errno(int error_code)
+{
+    ft_errno = error_code;
+    return ;
+}
+
 FT_TEST(test_game_reputation_copy_constructor_transfers_values, "ft_reputation copy constructor copies state")
 {
     ft_map<int, int> milestones;
@@ -117,7 +123,7 @@ FT_TEST(test_game_reputation_copy_assignment_preserves_source_errno, "ft_reputat
     ft_reputation source;
     ft_reputation destination;
 
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    force_ft_errno(FT_ERR_INVALID_ARGUMENT);
     destination = source;
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(ER_SUCCESS, destination.get_error());
@@ -155,7 +161,7 @@ FT_TEST(test_game_reputation_move_assignment_preserves_errno, "ft_reputation mov
     ft_reputation source;
     ft_reputation destination;
 
-    ft_errno = FT_ERR_NOT_FOUND;
+    force_ft_errno(FT_ERR_NOT_FOUND);
     destination = ft_move(source);
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_errno);
     FT_ASSERT_EQ(ER_SUCCESS, destination.get_error());
@@ -199,7 +205,7 @@ FT_TEST(test_game_reputation_total_getter_preserves_errno, "ft_reputation::get_t
     ft_reputation reputation;
 
     reputation.set_total_rep(6);
-    ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
+    force_ft_errno(FT_ERR_MUTEX_ALREADY_LOCKED);
     FT_ASSERT_EQ(6, reputation.get_total_rep());
     FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, ft_errno);
     return (1);
@@ -210,7 +216,7 @@ FT_TEST(test_game_reputation_current_getter_preserves_errno, "ft_reputation::get
     ft_reputation reputation;
 
     reputation.set_current_rep(4);
-    ft_errno = FT_ERR_ALREADY_EXISTS;
+    force_ft_errno(FT_ERR_ALREADY_EXISTS);
     FT_ASSERT_EQ(4, reputation.get_current_rep());
     FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, ft_errno);
     return (1);
@@ -223,7 +229,7 @@ FT_TEST(test_game_reputation_get_milestone_preserves_errno, "ft_reputation::get_
 
     milestones.insert(25, 60);
     reputation.set_milestones(milestones);
-    ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
+    force_ft_errno(FT_ERR_MUTEX_ALREADY_LOCKED);
     FT_ASSERT_EQ(60, reputation.get_milestone(25));
     FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, ft_errno);
     return (1);
@@ -233,7 +239,7 @@ FT_TEST(test_game_reputation_get_milestone_invalid_sets_error, "ft_reputation::g
 {
     ft_reputation reputation;
 
-    ft_errno = ER_SUCCESS;
+    force_ft_errno(ER_SUCCESS);
     FT_ASSERT_EQ(0, reputation.get_milestone(-3));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, reputation.get_error());
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -244,7 +250,7 @@ FT_TEST(test_game_reputation_get_milestone_missing_sets_not_found, "ft_reputatio
 {
     ft_reputation reputation;
 
-    ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
+    force_ft_errno(FT_ERR_MUTEX_ALREADY_LOCKED);
     FT_ASSERT_EQ(0, reputation.get_milestone(90));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, reputation.get_error());
     FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, ft_errno);
@@ -258,7 +264,7 @@ FT_TEST(test_game_reputation_get_rep_preserves_errno, "ft_reputation::get_rep ke
 
     reps.insert(32, 70);
     reputation.set_reps(reps);
-    ft_errno = FT_ERR_ALREADY_EXISTS;
+    force_ft_errno(FT_ERR_ALREADY_EXISTS);
     FT_ASSERT_EQ(70, reputation.get_rep(32));
     FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, ft_errno);
     return (1);
@@ -268,7 +274,7 @@ FT_TEST(test_game_reputation_get_rep_invalid_sets_error, "ft_reputation::get_rep
 {
     ft_reputation reputation;
 
-    ft_errno = ER_SUCCESS;
+    force_ft_errno(ER_SUCCESS);
     FT_ASSERT_EQ(0, reputation.get_rep(-5));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, reputation.get_error());
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -279,7 +285,7 @@ FT_TEST(test_game_reputation_get_rep_missing_sets_not_found, "ft_reputation::get
 {
     ft_reputation reputation;
 
-    ft_errno = FT_ERR_ALREADY_EXISTS;
+    force_ft_errno(FT_ERR_ALREADY_EXISTS);
     FT_ASSERT_EQ(0, reputation.get_rep(77));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, reputation.get_error());
     FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, ft_errno);
@@ -290,8 +296,8 @@ FT_TEST(test_game_reputation_get_error_preserves_errno, "ft_reputation::get_erro
 {
     ft_reputation reputation;
 
-    reputation.set_error(FT_ERR_NOT_FOUND);
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    reputation.get_milestone(90);
+    force_ft_errno(FT_ERR_INVALID_ARGUMENT);
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, reputation.get_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -301,10 +307,10 @@ FT_TEST(test_game_reputation_get_error_str_preserves_errno, "ft_reputation::get_
 {
     ft_reputation reputation;
 
-    reputation.set_error(FT_ERR_ALREADY_EXISTS);
-    ft_errno = FT_ERR_NOT_FOUND;
-    FT_ASSERT_STR_EQ("Operation not allowed, object already exists", reputation.get_error_str());
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_errno);
+    reputation.get_rep(-5);
+    force_ft_errno(FT_ERR_ALREADY_EXISTS);
+    FT_ASSERT_STR_EQ("Invalid argument", reputation.get_error_str());
+    FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, ft_errno);
     return (1);
 }
 
@@ -314,7 +320,7 @@ FT_TEST(test_game_reputation_set_milestones_preserves_errno, "ft_reputation::set
     ft_reputation reputation;
 
     milestones.insert(100, 200);
-    ft_errno = FT_ERR_ALREADY_EXISTS;
+    force_ft_errno(FT_ERR_ALREADY_EXISTS);
     reputation.set_milestones(milestones);
     FT_ASSERT_EQ(200, reputation.get_milestone(100));
     FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, ft_errno);
@@ -327,7 +333,7 @@ FT_TEST(test_game_reputation_set_reps_preserves_errno, "ft_reputation::set_reps 
     ft_reputation reputation;
 
     reps.insert(120, 220);
-    ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
+    force_ft_errno(FT_ERR_MUTEX_ALREADY_LOCKED);
     reputation.set_reps(reps);
     FT_ASSERT_EQ(220, reputation.get_rep(120));
     FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, ft_errno);
