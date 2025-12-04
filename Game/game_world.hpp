@@ -15,6 +15,10 @@ class ft_world_replay_session;
 class ft_economy_table;
 class ft_crafting;
 class ft_dialogue_table;
+class ft_world_region;
+class ft_quest;
+class ft_vendor_profile;
+class ft_upgrade;
 
 class ft_world
 {
@@ -25,6 +29,10 @@ class ft_world
         ft_sharedptr<ft_economy_table> _economy_table;
         ft_sharedptr<ft_crafting> _crafting;
         ft_sharedptr<ft_dialogue_table> _dialogue_table;
+        ft_sharedptr<ft_world_region> _world_region;
+        ft_sharedptr<ft_quest> _quest;
+        ft_sharedptr<ft_vendor_profile> _vendor_profile;
+        ft_sharedptr<ft_upgrade> _upgrade;
         mutable int        _error;
 
         void set_error(int err) const noexcept;
@@ -34,6 +42,10 @@ class ft_world
         bool propagate_economy_state_error() const noexcept;
         bool propagate_crafting_state_error() const noexcept;
         bool propagate_dialogue_state_error() const noexcept;
+        bool propagate_region_state_error() const noexcept;
+        bool propagate_quest_state_error() const noexcept;
+        bool propagate_vendor_profile_state_error() const noexcept;
+        bool propagate_upgrade_state_error() const noexcept;
         json_group *build_snapshot_groups(const ft_character &character,
             const ft_inventory &inventory, int &error_code) const noexcept;
         int restore_from_groups(json_group *groups, ft_character &character,
@@ -62,6 +74,14 @@ class ft_world
         const ft_sharedptr<ft_crafting> &get_crafting() const noexcept;
         ft_sharedptr<ft_dialogue_table>       &get_dialogue_table() noexcept;
         const ft_sharedptr<ft_dialogue_table> &get_dialogue_table() const noexcept;
+        ft_sharedptr<ft_world_region>       &get_world_region() noexcept;
+        const ft_sharedptr<ft_world_region> &get_world_region() const noexcept;
+        ft_sharedptr<ft_quest>       &get_quest() noexcept;
+        const ft_sharedptr<ft_quest> &get_quest() const noexcept;
+        ft_sharedptr<ft_vendor_profile>       &get_vendor_profile() noexcept;
+        const ft_sharedptr<ft_vendor_profile> &get_vendor_profile() const noexcept;
+        ft_sharedptr<ft_upgrade>       &get_upgrade() noexcept;
+        const ft_sharedptr<ft_upgrade> &get_upgrade() const noexcept;
 
         int save_to_file(const char *file_path, const ft_character &character, const ft_inventory &inventory) const noexcept;
         int load_from_file(const char *file_path, ft_character &character, ft_inventory &inventory) noexcept;
