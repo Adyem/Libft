@@ -83,9 +83,9 @@ FT_TEST(test_rarity_band_get_multiplier_preserves_errno, "Game: get_value_multip
     ft_rarity_band rarity_band;
 
     rarity_band.set_value_multiplier(6.5);
-    ft_errno = FT_ERR_OVERFLOW;
+    ft_errno = FT_ERR_GAME_INVALID_MOVE;
     FT_ASSERT_EQ(6.5, rarity_band.get_value_multiplier());
-    FT_ASSERT_EQ(FT_ERR_OVERFLOW, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_GAME_INVALID_MOVE, ft_errno);
     return (1);
 }
 
