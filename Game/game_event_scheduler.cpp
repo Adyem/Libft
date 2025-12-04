@@ -5,7 +5,6 @@
 #include "../Time/time.hpp"
 #include "game_world.hpp"
 #include <cstdio>
-#include <utility>
 #include "../Template/move.hpp"
 #include "../PThread/pthread.hpp"
 
