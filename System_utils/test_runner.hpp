@@ -56,6 +56,16 @@ int ft_run_registered_tests(void);
         } \
     } while (0)
 
+#define FT_ASSERT_NEQ(expected, actual) \
+    do \
+    { \
+        if ((expected) == (actual)) \
+        { \
+            ft_test_fail(#expected " != " #actual, __FILE__, __LINE__); \
+            return (0); \
+        } \
+    } while (0)
+
 #define FT_ASSERT_NE(unexpected, actual) \
     do \
     { \
