@@ -102,6 +102,7 @@ ft_behavior_action::ft_behavior_action(const ft_behavior_action &other) noexcept
     this->_cooldown_seconds = other._cooldown_seconds;
     this->_error_code = other._error_code;
     game_behavior_restore_errno(other_guard, entry_errno);
+    ft_errno = entry_errno;
     return ;
 }
 
@@ -127,6 +128,7 @@ ft_behavior_action &ft_behavior_action::operator=(const ft_behavior_action &othe
     this->_error_code = other._error_code;
     game_behavior_restore_errno(this_guard, entry_errno);
     game_behavior_restore_errno(other_guard, entry_errno);
+    ft_errno = entry_errno;
     return (*this);
 }
 
@@ -152,6 +154,7 @@ ft_behavior_action::ft_behavior_action(ft_behavior_action &&other) noexcept
     other._cooldown_seconds = 0.0;
     other._error_code = ER_SUCCESS;
     game_behavior_restore_errno(other_guard, entry_errno);
+    ft_errno = entry_errno;
     return ;
 }
 
@@ -183,6 +186,7 @@ ft_behavior_action &ft_behavior_action::operator=(ft_behavior_action &&other) no
     other.set_error(ER_SUCCESS);
     game_behavior_restore_errno(this_guard, entry_errno);
     game_behavior_restore_errno(other_guard, entry_errno);
+    ft_errno = entry_errno;
     return (*this);
 }
 
