@@ -92,17 +92,23 @@ ft_reputation::ft_reputation() noexcept
     : _milestones(), _reps(), _total_rep(0),
       _current_rep(0), _error(ER_SUCCESS), _mutex()
 {
+    int entry_errno;
+
+    entry_errno = ft_errno;
     if (this->_milestones.get_error() != ER_SUCCESS)
     {
         this->set_error(this->_milestones.get_error());
+        ft_errno = entry_errno;
         return ;
     }
     if (this->_reps.get_error() != ER_SUCCESS)
     {
         this->set_error(this->_reps.get_error());
+        ft_errno = entry_errno;
         return ;
     }
     this->set_error(ER_SUCCESS);
+    ft_errno = entry_errno;
     return ;
 }
 
@@ -110,17 +116,23 @@ ft_reputation::ft_reputation(const ft_map<int, int> &milestones, int total) noex
     : _milestones(milestones), _reps(), _total_rep(total),
       _current_rep(0), _error(ER_SUCCESS), _mutex()
 {
+    int entry_errno;
+
+    entry_errno = ft_errno;
     if (this->_milestones.get_error() != ER_SUCCESS)
     {
         this->set_error(this->_milestones.get_error());
+        ft_errno = entry_errno;
         return ;
     }
     if (this->_reps.get_error() != ER_SUCCESS)
     {
         this->set_error(this->_reps.get_error());
+        ft_errno = entry_errno;
         return ;
     }
     this->set_error(ER_SUCCESS);
+    ft_errno = entry_errno;
     return ;
 }
 
@@ -166,6 +178,8 @@ ft_reputation &ft_reputation::operator=(const ft_reputation &other) noexcept
     if (lock_error != ER_SUCCESS)
     {
         this->set_error(lock_error);
+        game_reputation_restore_errno(this_guard, entry_errno);
+        game_reputation_restore_errno(other_guard, entry_errno);
         return (*this);
     }
     this->_milestones = other._milestones;
@@ -227,6 +241,8 @@ ft_reputation &ft_reputation::operator=(ft_reputation &&other) noexcept
     if (lock_error != ER_SUCCESS)
     {
         this->set_error(lock_error);
+        game_reputation_restore_errno(this_guard, entry_errno);
+        game_reputation_restore_errno(other_guard, entry_errno);
         return (*this);
     }
     this->_milestones = ft_move(other._milestones);

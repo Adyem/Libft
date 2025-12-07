@@ -127,6 +127,8 @@ ft_region_definition &ft_region_definition::operator=(const ft_region_definition
     if (lock_error != ER_SUCCESS)
     {
         this->set_error(lock_error);
+        game_narrative_restore_errno(this_guard, entry_errno);
+        game_narrative_restore_errno(other_guard, entry_errno);
         return (*this);
     }
     this->_region_id = other._region_id;
@@ -180,6 +182,8 @@ ft_region_definition &ft_region_definition::operator=(ft_region_definition &&oth
     if (lock_error != ER_SUCCESS)
     {
         this->set_error(lock_error);
+        game_narrative_restore_errno(this_guard, entry_errno);
+        game_narrative_restore_errno(other_guard, entry_errno);
         return (*this);
     }
     this->_region_id = other._region_id;
@@ -207,6 +211,7 @@ int ft_region_definition::get_region_id() const noexcept
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
+        game_narrative_restore_errno(guard, entry_errno);
         return (0);
     }
     region_id = this->_region_id;
@@ -223,6 +228,7 @@ void ft_region_definition::set_region_id(int region_id) noexcept
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
+        game_narrative_restore_errno(guard, entry_errno);
         return ;
     }
     this->_region_id = region_id;
@@ -241,6 +247,7 @@ const ft_string &ft_region_definition::get_name() const noexcept
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
+        game_narrative_restore_errno(guard, entry_errno);
         return (this->_name);
     }
     name = &this->_name;
@@ -257,6 +264,7 @@ void ft_region_definition::set_name(const ft_string &name) noexcept
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
+        game_narrative_restore_errno(guard, entry_errno);
         return ;
     }
     this->_name = name;
@@ -275,6 +283,7 @@ const ft_string &ft_region_definition::get_description() const noexcept
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
+        game_narrative_restore_errno(guard, entry_errno);
         return (this->_description);
     }
     description = &this->_description;
@@ -291,6 +300,7 @@ void ft_region_definition::set_description(const ft_string &description) noexcep
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
+        game_narrative_restore_errno(guard, entry_errno);
         return ;
     }
     this->_description = description;
@@ -309,6 +319,7 @@ int ft_region_definition::get_recommended_level() const noexcept
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
+        game_narrative_restore_errno(guard, entry_errno);
         return (0);
     }
     recommended_level = this->_recommended_level;
@@ -325,6 +336,7 @@ void ft_region_definition::set_recommended_level(int recommended_level) noexcept
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
+        game_narrative_restore_errno(guard, entry_errno);
         return ;
     }
     this->_recommended_level = recommended_level;

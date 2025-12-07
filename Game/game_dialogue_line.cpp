@@ -4,9 +4,11 @@
 
 static void game_dialogue_copy_int_vector(const ft_vector<int> &source, ft_vector<int> &destination)
 {
+    int entry_errno;
     ft_vector<int>::const_iterator entry;
     ft_vector<int>::const_iterator end;
 
+    entry_errno = ft_errno;
     destination.clear();
     entry = source.begin();
     end = source.end();
@@ -15,6 +17,7 @@ static void game_dialogue_copy_int_vector(const ft_vector<int> &source, ft_vecto
         destination.push_back(*entry);
         ++entry;
     }
+    ft_errno = entry_errno;
     return ;
 }
 
