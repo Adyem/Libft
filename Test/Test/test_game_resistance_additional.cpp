@@ -124,8 +124,8 @@ FT_TEST(test_game_resistance_copy_assignment_overwrites_destination, "Game: copy
     destination = source;
     FT_ASSERT_EQ(22, destination.get_percent());
     FT_ASSERT_EQ(5, destination.get_flat());
-    FT_ASSERT_EQ(4, source.get_percent());
-    FT_ASSERT_EQ(1, source.get_flat());
+    FT_ASSERT_EQ(22, source.get_percent());
+    FT_ASSERT_EQ(5, source.get_flat());
     return (1);
 }
 
