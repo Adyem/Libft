@@ -265,9 +265,10 @@ const ft_map<int, ft_behavior_profile> &ft_behavior_table::get_profiles() const 
 void ft_behavior_table::set_profiles(const ft_map<int, ft_behavior_profile> &profiles) noexcept
 {
     int entry_errno;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    ft_unique_lock<pt_mutex> guard;
 
     entry_errno = ft_errno;
+    guard = ft_unique_lock<pt_mutex>(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
@@ -292,6 +293,12 @@ int ft_behavior_table::register_profile(const ft_behavior_profile &profile) noex
         this->set_error(guard.get_error());
         game_behavior_restore_errno(guard, entry_errno);
         return (guard.get_error());
+    }
+    if (this->_profiles.find(profile.get_profile_id()) != this->_profiles.end())
+    {
+        this->set_error(FT_ERR_ALREADY_EXISTS);
+        game_behavior_restore_errno(guard, entry_errno);
+        return (FT_ERR_ALREADY_EXISTS);
     }
     if (profile.get_error() != ER_SUCCESS)
     {

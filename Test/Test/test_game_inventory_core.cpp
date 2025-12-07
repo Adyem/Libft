@@ -167,7 +167,7 @@ FT_TEST(test_game_inventory_add_item_respects_weight_limit, "ft_inventory::add_i
     FT_ASSERT_EQ(FT_ERR_FULL, inventory.add_item(heavy));
     FT_ASSERT_EQ(0, inventory.get_current_weight());
     FT_ASSERT_EQ(FT_ERR_FULL, inventory.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_FULL, ft_errno);
     return (1);
 }
 
@@ -181,7 +181,7 @@ FT_TEST(test_game_inventory_rejects_null_item, "ft_inventory::add_item handles n
     FT_ASSERT_EQ((size_t)0, inventory.get_used());
     FT_ASSERT_EQ(0, inventory.get_current_weight());
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, inventory.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, ft_errno);
     return (1);
 }
 
@@ -231,7 +231,7 @@ FT_TEST(test_game_inventory_full_addition_preserves_items, "ft_inventory leaves 
     FT_ASSERT_EQ(0, inventory.count_item(4));
     FT_ASSERT_EQ(1, inventory.get_current_weight());
     FT_ASSERT_EQ(FT_ERR_FULL, inventory.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_FULL, ft_errno);
     return (1);
 }
 
