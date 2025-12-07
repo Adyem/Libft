@@ -314,6 +314,7 @@ void ft_dialogue_table::set_lines(const ft_map<int, ft_dialogue_line> &lines) no
         this->set_error(guard.get_error());
         return ;
     }
+    ft_errno = entry_errno;
     this->_lines = lines;
     this->_error_code = this->_lines.get_error();
     game_dialogue_table_unlock_set_errno(guard, this->_error_code);
@@ -351,6 +352,7 @@ void ft_dialogue_table::set_scripts(const ft_map<int, ft_dialogue_script> &scrip
         this->set_error(guard.get_error());
         return ;
     }
+    ft_errno = entry_errno;
     this->_scripts = scripts;
     this->_error_code = this->_scripts.get_error();
     game_dialogue_table_unlock_set_errno(guard, this->_error_code);
