@@ -294,8 +294,8 @@ FT_TEST(test_game_script_bridge_inspect_budget_handles_empty_script,
     return (1);
 }
 
-FT_TEST(test_game_script_bridge_inspect_budget_preserves_existing_errno_on_success,
-    "Game: inspect_bytecode_budget leaves previous errno when succeeding")
+FT_TEST(test_game_script_bridge_inspect_budget_resets_errno_on_success,
+    "Game: inspect_bytecode_budget clears errno on success")
 {
     ft_sharedptr<ft_world> world_pointer(new ft_world());
     ft_game_script_bridge bridge(world_pointer);
@@ -309,7 +309,7 @@ FT_TEST(test_game_script_bridge_inspect_budget_preserves_existing_errno_on_succe
     FT_ASSERT_EQ(ER_SUCCESS, result);
     FT_ASSERT_EQ(ER_SUCCESS, bridge.get_error());
     FT_ASSERT_EQ(1, operations);
-    FT_ASSERT_EQ(FT_ERR_INTERNAL, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 

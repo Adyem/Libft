@@ -118,8 +118,8 @@ FT_TEST(test_behavior_table_duplicate_registration_returns_error,
     return (1);
 }
 
-FT_TEST(test_behavior_table_fetch_restores_errno_on_success,
-    "fetch_profile restores entry errno when profile exists")
+FT_TEST(test_behavior_table_fetch_sets_errno_on_success,
+    "fetch_profile sets errno to success when profile exists")
 {
     ft_behavior_table table;
     ft_behavior_profile fetched;
@@ -127,20 +127,20 @@ FT_TEST(test_behavior_table_fetch_restores_errno_on_success,
     table.register_profile(build_profile(6, 0.1, 0.9, 7));
     ft_errno = FT_ERR_INTERNAL;
     FT_ASSERT_EQ(ER_SUCCESS, table.fetch_profile(6, fetched));
-    FT_ASSERT_EQ(FT_ERR_INTERNAL, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(6, fetched.get_profile_id());
     return (1);
 }
 
-FT_TEST(test_behavior_table_fetch_not_found_restores_errno,
-    "fetch_profile not found leaves entry errno intact")
+FT_TEST(test_behavior_table_fetch_not_found_sets_errno,
+    "fetch_profile not found sets errno to error code")
 {
     ft_behavior_table table;
     ft_behavior_profile fetched;
 
     ft_errno = FT_ERR_UNSUPPORTED_TYPE;
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.fetch_profile(77, fetched));
-    FT_ASSERT_EQ(FT_ERR_UNSUPPORTED_TYPE, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_errno);
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.get_error());
     return (1);
 }
@@ -170,8 +170,8 @@ FT_TEST(test_behavior_table_get_error_after_failure, "get_error exposes last err
     return (1);
 }
 
-FT_TEST(test_behavior_table_get_error_str_after_failure,
-    "get_error_str exposes not found string and preserves errno")
+FT_TEST(test_behavior_table_get_error_str_after_failure_sets_errno,
+    "get_error_str exposes not found string and updates errno")
 {
     ft_behavior_table table;
     ft_behavior_profile fetched;
@@ -179,12 +179,12 @@ FT_TEST(test_behavior_table_get_error_str_after_failure,
     ft_errno = FT_ERR_FULL;
     table.fetch_profile(21, fetched);
     FT_ASSERT_STR_EQ("Object not found", table.get_error_str());
-    FT_ASSERT_EQ(FT_ERR_FULL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_errno);
     return (1);
 }
 
-FT_TEST(test_behavior_table_copy_constructor_preserves_error,
-    "copy construction preserves stored profiles and errno")
+FT_TEST(test_behavior_table_copy_constructor_sets_errno_to_success,
+    "copy construction preserves stored profiles and sets errno to success")
 {
     ft_behavior_table table;
     ft_behavior_table copy;
@@ -196,12 +196,12 @@ FT_TEST(test_behavior_table_copy_constructor_preserves_error,
     copy = ft_behavior_table(table);
     FT_ASSERT_EQ(ER_SUCCESS, copy.fetch_profile(18, fetched));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, copy.get_error());
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
-FT_TEST(test_behavior_table_copy_assignment_preserves_error,
-    "copy assignment replaces data and restores errno")
+FT_TEST(test_behavior_table_copy_assignment_sets_errno_to_success,
+    "copy assignment replaces data and sets errno to success")
 {
     ft_behavior_table source;
     ft_behavior_table destination;
@@ -214,12 +214,12 @@ FT_TEST(test_behavior_table_copy_assignment_preserves_error,
     destination = source;
     FT_ASSERT_EQ(ER_SUCCESS, destination.fetch_profile(25, fetched));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, destination.get_error());
-    FT_ASSERT_EQ(FT_ERR_CONFIGURATION, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
-FT_TEST(test_behavior_table_move_constructor_clears_source,
-    "move construction transfers profiles and clears origin without altering errno")
+FT_TEST(test_behavior_table_move_constructor_sets_errno_success,
+    "move construction transfers profiles, clears origin, and resets errno")
 {
     ft_behavior_table source;
     ft_behavior_table moved;
@@ -232,12 +232,12 @@ FT_TEST(test_behavior_table_move_constructor_clears_source,
     FT_ASSERT_EQ(ER_SUCCESS, moved.fetch_profile(41, fetched));
     FT_ASSERT_EQ(true, source.get_profiles().empty());
     FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
-    FT_ASSERT_EQ(FT_ERR_TERMINATED, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
-FT_TEST(test_behavior_table_move_assignment_clears_source,
-    "move assignment transfers profiles and restores errno")
+FT_TEST(test_behavior_table_move_assignment_sets_errno_success,
+    "move assignment transfers profiles, clears origin, and resets errno")
 {
     ft_behavior_table source;
     ft_behavior_table destination;
@@ -250,12 +250,12 @@ FT_TEST(test_behavior_table_move_assignment_clears_source,
     FT_ASSERT_EQ(ER_SUCCESS, destination.fetch_profile(52, fetched));
     FT_ASSERT_EQ(true, source.get_profiles().empty());
     FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
-FT_TEST(test_behavior_table_self_copy_assignment_noop,
-    "self copy assignment keeps profiles and errno")
+FT_TEST(test_behavior_table_self_copy_assignment_sets_errno_success,
+    "self copy assignment keeps profiles but resets errno")
 {
     ft_behavior_table table;
     ft_behavior_profile fetched;
@@ -266,12 +266,12 @@ FT_TEST(test_behavior_table_self_copy_assignment_noop,
     table = table;
     FT_ASSERT_EQ(ER_SUCCESS, table.fetch_profile(73, fetched));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.get_error());
-    FT_ASSERT_EQ(FT_ERR_EMPTY, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
-FT_TEST(test_behavior_table_self_move_assignment_noop,
-    "self move assignment keeps profiles and errno")
+FT_TEST(test_behavior_table_self_move_assignment_sets_errno_success,
+    "self move assignment keeps profiles but resets errno")
 {
     ft_behavior_table table;
     ft_behavior_profile fetched;
@@ -282,6 +282,6 @@ FT_TEST(test_behavior_table_self_move_assignment_noop,
     table = ft_move(table);
     FT_ASSERT_EQ(ER_SUCCESS, table.fetch_profile(91, fetched));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.get_error());
-    FT_ASSERT_EQ(FT_ERR_ALREADY_INITIALIZED, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
