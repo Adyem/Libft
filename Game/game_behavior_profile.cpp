@@ -8,7 +8,9 @@ static void game_behavior_copy_action_vector(const ft_vector<ft_behavior_action>
 {
     ft_vector<ft_behavior_action>::const_iterator entry;
     ft_vector<ft_behavior_action>::const_iterator end;
+    int entry_errno;
 
+    entry_errno = ft_errno;
     destination.clear();
     entry = source.begin();
     end = source.end();
@@ -17,6 +19,7 @@ static void game_behavior_copy_action_vector(const ft_vector<ft_behavior_action>
         destination.push_back(*entry);
         ++entry;
     }
+    ft_errno = entry_errno;
     return ;
 }
 
@@ -130,8 +133,12 @@ ft_behavior_profile::ft_behavior_profile(int profile_id, double aggression_weigh
     : _profile_id(profile_id), _aggression_weight(aggression_weight), _caution_weight(caution_weight),
     _actions(), _error_code(ER_SUCCESS), _mutex()
 {
+    int entry_errno;
+
+    entry_errno = ft_errno;
     game_behavior_copy_action_vector(actions, this->_actions);
     this->set_error(this->_actions.get_error());
+    ft_errno = entry_errno;
     return ;
 }
 
@@ -239,9 +246,9 @@ int ft_behavior_profile::get_profile_id() const noexcept
 void ft_behavior_profile::set_profile_id(int profile_id) noexcept
 {
     int entry_errno;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
@@ -276,9 +283,9 @@ double ft_behavior_profile::get_aggression_weight() const noexcept
 void ft_behavior_profile::set_aggression_weight(double aggression_weight) noexcept
 {
     int entry_errno;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
@@ -313,9 +320,9 @@ double ft_behavior_profile::get_caution_weight() const noexcept
 void ft_behavior_profile::set_caution_weight(double caution_weight) noexcept
 {
     int entry_errno;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
@@ -330,22 +337,30 @@ void ft_behavior_profile::set_caution_weight(double caution_weight) noexcept
 
 ft_vector<ft_behavior_action> &ft_behavior_profile::get_actions() noexcept
 {
+    int entry_errno;
+
+    entry_errno = ft_errno;
     this->set_error(ER_SUCCESS);
+    ft_errno = entry_errno;
     return (this->_actions);
 }
 
 const ft_vector<ft_behavior_action> &ft_behavior_profile::get_actions() const noexcept
 {
+    int entry_errno;
+
+    entry_errno = ft_errno;
     const_cast<ft_behavior_profile *>(this)->set_error(ER_SUCCESS);
+    ft_errno = entry_errno;
     return (this->_actions);
 }
 
 void ft_behavior_profile::set_actions(const ft_vector<ft_behavior_action> &actions) noexcept
 {
     int entry_errno;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());

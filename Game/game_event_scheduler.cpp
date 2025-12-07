@@ -931,18 +931,17 @@ void ft_event_scheduler::snapshot_profile(t_event_scheduler_profile &out) const 
 void ft_event_scheduler::dump_events(ft_vector<ft_sharedptr<ft_event> > &out) const noexcept
 {
     int entry_errno;
+    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     ft_priority_queue<ft_sharedptr<ft_event>, ft_event_compare_ptr> temporary_queue;
     ft_sharedptr<ft_event> current_event;
 
-    entry_errno = ft_errno;
     if (guard.get_error() != ER_SUCCESS)
     {
         const_cast<ft_event_scheduler *>(this)->set_error(guard.get_error());
         event_scheduler_restore_errno(guard, entry_errno);
         return ;
     }
-    const_cast<ft_event_scheduler *>(this)->set_error(ER_SUCCESS);
     while (!this->_events.empty())
     {
         current_event = this->_events.pop();
@@ -983,7 +982,6 @@ void ft_event_scheduler::dump_events(ft_vector<ft_sharedptr<ft_event> > &out) co
             return ;
         }
     }
-    const_cast<ft_event_scheduler *>(this)->set_error(ER_SUCCESS);
     event_scheduler_restore_errno(guard, entry_errno);
     return ;
 }
@@ -992,9 +990,9 @@ size_t ft_event_scheduler::size() const noexcept
 {
     int entry_errno;
     size_t event_count;
+    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (guard.get_error() != ER_SUCCESS)
     {
         const_cast<ft_event_scheduler *>(this)->set_error(guard.get_error());
@@ -1002,7 +1000,6 @@ size_t ft_event_scheduler::size() const noexcept
         return (0);
     }
     event_count = this->_events.size();
-    const_cast<ft_event_scheduler *>(this)->set_error(ER_SUCCESS);
     event_scheduler_restore_errno(guard, entry_errno);
     return (event_count);
 }
@@ -1035,9 +1032,9 @@ int ft_event_scheduler::get_error() const noexcept
 {
     int entry_errno;
     int error_code;
+    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (guard.get_error() != ER_SUCCESS)
     {
         const_cast<ft_event_scheduler *>(this)->set_error(guard.get_error());
@@ -1054,9 +1051,9 @@ const char *ft_event_scheduler::get_error_str() const noexcept
 {
     int entry_errno;
     int error_code;
+    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (guard.get_error() != ER_SUCCESS)
     {
         const_cast<ft_event_scheduler *>(this)->set_error(guard.get_error());

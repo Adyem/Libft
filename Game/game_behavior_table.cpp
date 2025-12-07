@@ -351,19 +351,20 @@ int ft_behavior_table::fetch_profile(int profile_id, ft_behavior_profile &profil
         game_behavior_restore_errno(guard, entry_errno);
         return (entry_profile.get_error());
     }
-    int destination_errno;
-
-    destination_errno = ft_errno;
     ft_unique_lock<pt_mutex> destination_guard(profile._mutex);
     if (destination_guard.get_error() != ER_SUCCESS)
     {
         profile.set_error(destination_guard.get_error());
-        game_behavior_restore_errno(destination_guard, destination_errno);
+        game_behavior_restore_errno(destination_guard, entry_errno);
+        game_behavior_restore_errno(entry_guard, entry_errno);
+        game_behavior_restore_errno(guard, entry_errno);
         return (destination_guard.get_error());
     }
     profile.move_from_unlocked(entry_profile);
     const_cast<ft_behavior_table *>(self)->set_error(self->_error_code);
-    game_behavior_restore_errno(destination_guard, destination_errno);
+    game_behavior_restore_errno(destination_guard, entry_errno);
+    game_behavior_restore_errno(entry_guard, entry_errno);
+    game_behavior_restore_errno(guard, entry_errno);
     return (profile._error_code);
 }
 
