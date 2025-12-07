@@ -98,20 +98,17 @@ int rl_terminal_dimensions_lock(terminal_dimensions *dimensions, bool *lock_acqu
 
 void rl_terminal_dimensions_unlock(terminal_dimensions *dimensions, bool lock_acquired)
 {
-    int entry_errno;
-
     if (dimensions == ft_nullptr || lock_acquired == false)
         return ;
     if (dimensions->mutex == ft_nullptr)
         return ;
-    entry_errno = ft_errno;
     dimensions->mutex->unlock(THREAD_ID);
     if (dimensions->mutex->get_error() != ER_SUCCESS)
     {
         ft_errno = dimensions->mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = ER_SUCCESS;
     return ;
 }
 
