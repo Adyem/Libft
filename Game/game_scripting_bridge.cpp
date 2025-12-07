@@ -970,28 +970,6 @@ int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<f
                                 this->set_error(callback_name.get_error());
                                 return (callback_name.get_error());
                             }
-                            if (tokens.size() < 3)
-                            {
-                                ft_string warning("call missing arguments: ");
-
-                                if (warning.get_error() != ER_SUCCESS)
-                                {
-                                    this->set_error(warning.get_error());
-                                    return (warning.get_error());
-                                }
-                                warning.append(callback_name);
-                                if (warning.get_error() != ER_SUCCESS)
-                                {
-                                    this->set_error(warning.get_error());
-                                    return (warning.get_error());
-                                }
-                                warnings.push_back(ft_move(warning));
-                                if (warnings.get_error() != ER_SUCCESS)
-                                {
-                                    this->set_error(warnings.get_error());
-                                    return (warnings.get_error());
-                                }
-                            }
                             entry = this->_callbacks.find(callback_name);
                             if (this->_callbacks.get_error() != ER_SUCCESS)
                             {
@@ -1023,6 +1001,28 @@ int ft_game_script_bridge::validate_dry_run(const ft_string &script, ft_vector<f
                             else if (!entry->value)
                             {
                                 ft_string warning("callback missing target: ");
+
+                                if (warning.get_error() != ER_SUCCESS)
+                                {
+                                    this->set_error(warning.get_error());
+                                    return (warning.get_error());
+                                }
+                                warning.append(callback_name);
+                                if (warning.get_error() != ER_SUCCESS)
+                                {
+                                    this->set_error(warning.get_error());
+                                    return (warning.get_error());
+                                }
+                                warnings.push_back(ft_move(warning));
+                                if (warnings.get_error() != ER_SUCCESS)
+                                {
+                                    this->set_error(warnings.get_error());
+                                    return (warnings.get_error());
+                                }
+                            }
+                            else if (tokens.size() < 3)
+                            {
+                                ft_string warning("call missing arguments: ");
 
                                 if (warning.get_error() != ER_SUCCESS)
                                 {
@@ -1180,7 +1180,9 @@ int ft_game_script_bridge::inspect_bytecode_budget(const ft_string &script, int 
     size_t length;
     size_t start;
     int operations;
+    int entry_errno;
 
+    entry_errno = ft_errno;
     data = script.c_str();
     length = script.size();
     start = 0;
@@ -1276,6 +1278,7 @@ int ft_game_script_bridge::inspect_bytecode_budget(const ft_string &script, int 
         return (FT_ERR_INVALID_OPERATION);
     }
     this->set_error(ER_SUCCESS);
+    ft_errno = entry_errno;
     return (ER_SUCCESS);
 }
 

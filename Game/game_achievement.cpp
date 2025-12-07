@@ -685,25 +685,25 @@ int ft_achievement::get_goal(int id) const noexcept
     int goal_value;
     const Pair<int, ft_goal> *entry;
 
+    entry_errno = ft_errno;
     if (id < 0)
     {
         const_cast<ft_achievement *>(this)->set_error(FT_ERR_INVALID_ARGUMENT);
-        return (0);
+        return (FT_ERR_INVALID_ARGUMENT);
     }
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         const_cast<ft_achievement *>(this)->set_error(guard.get_error());
         game_achievement_restore_errno(guard, entry_errno);
-        return (0);
+        return (guard.get_error());
     }
     entry = this->_goals.find(id);
     if (entry == this->_goals.end())
     {
         const_cast<ft_achievement *>(this)->set_error(FT_ERR_NOT_FOUND);
         game_achievement_restore_errno(guard, entry_errno);
-        return (0);
+        return (FT_ERR_NOT_FOUND);
     }
     goal_value = entry->value.get_target();
     if (entry->value.get_error() != ER_SUCCESS)
