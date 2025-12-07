@@ -131,14 +131,14 @@ FT_TEST(test_game_reputation_copy_assignment_transfers_entries, "ft_reputation c
     return (1);
 }
 
-FT_TEST(test_game_reputation_copy_assignment_preserves_source_errno, "ft_reputation copy assignment keeps errno")
+FT_TEST(test_game_reputation_copy_assignment_sets_errno_success, "ft_reputation copy assignment sets errno to success")
 {
     ft_reputation source;
     ft_reputation destination;
 
     set_errno_from_reputation(FT_ERR_INVALID_ARGUMENT);
     destination = source;
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(ER_SUCCESS, destination.get_error());
     return (1);
 }
@@ -169,14 +169,14 @@ FT_TEST(test_game_reputation_move_assignment_transfers_and_clears, "ft_reputatio
     return (1);
 }
 
-FT_TEST(test_game_reputation_move_assignment_preserves_errno, "ft_reputation move assignment keeps errno value")
+FT_TEST(test_game_reputation_move_assignment_sets_errno_success, "ft_reputation move assignment sets errno to success")
 {
     ft_reputation source;
     ft_reputation destination;
 
     set_errno_from_reputation(FT_ERR_NOT_FOUND);
     destination = ft_move(source);
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(ER_SUCCESS, destination.get_error());
     return (1);
 }
@@ -213,29 +213,29 @@ FT_TEST(test_game_reputation_self_move_assignment_noop, "ft_reputation self move
     return (1);
 }
 
-FT_TEST(test_game_reputation_total_getter_preserves_errno, "ft_reputation::get_total_rep keeps ft_errno")
+FT_TEST(test_game_reputation_total_getter_sets_errno_success, "ft_reputation::get_total_rep sets errno to success")
 {
     ft_reputation reputation;
 
     reputation.set_total_rep(6);
     set_errno_from_reputation(FT_ERR_INVALID_ARGUMENT);
     FT_ASSERT_EQ(6, reputation.get_total_rep());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
-FT_TEST(test_game_reputation_current_getter_preserves_errno, "ft_reputation::get_current_rep keeps ft_errno")
+FT_TEST(test_game_reputation_current_getter_sets_errno_success, "ft_reputation::get_current_rep sets errno to success")
 {
     ft_reputation reputation;
 
     reputation.set_current_rep(4);
     set_errno_from_reputation(FT_ERR_NOT_FOUND);
     FT_ASSERT_EQ(4, reputation.get_current_rep());
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
-FT_TEST(test_game_reputation_get_milestone_preserves_errno, "ft_reputation::get_milestone keeps errno")
+FT_TEST(test_game_reputation_get_milestone_sets_errno_success, "ft_reputation::get_milestone sets errno to success")
 {
     ft_map<int, int> milestones;
     ft_reputation reputation;
@@ -244,7 +244,7 @@ FT_TEST(test_game_reputation_get_milestone_preserves_errno, "ft_reputation::get_
     reputation.set_milestones(milestones);
     set_errno_from_reputation(FT_ERR_INVALID_ARGUMENT);
     FT_ASSERT_EQ(60, reputation.get_milestone(25));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -255,7 +255,7 @@ FT_TEST(test_game_reputation_get_milestone_invalid_sets_error, "ft_reputation::g
     set_errno_from_reputation(ER_SUCCESS);
     FT_ASSERT_EQ(0, reputation.get_milestone(-3));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, reputation.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -266,11 +266,11 @@ FT_TEST(test_game_reputation_get_milestone_missing_sets_not_found, "ft_reputatio
     set_errno_from_reputation(FT_ERR_INVALID_ARGUMENT);
     FT_ASSERT_EQ(0, reputation.get_milestone(90));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, reputation.get_error());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_errno);
     return (1);
 }
 
-FT_TEST(test_game_reputation_get_rep_preserves_errno, "ft_reputation::get_rep keeps errno")
+FT_TEST(test_game_reputation_get_rep_sets_errno_success, "ft_reputation::get_rep sets errno to success")
 {
     ft_map<int, int> reps;
     ft_reputation reputation;
@@ -279,7 +279,7 @@ FT_TEST(test_game_reputation_get_rep_preserves_errno, "ft_reputation::get_rep ke
     reputation.set_reps(reps);
     set_errno_from_reputation(FT_ERR_NOT_FOUND);
     FT_ASSERT_EQ(70, reputation.get_rep(32));
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -290,7 +290,7 @@ FT_TEST(test_game_reputation_get_rep_invalid_sets_error, "ft_reputation::get_rep
     set_errno_from_reputation(ER_SUCCESS);
     FT_ASSERT_EQ(0, reputation.get_rep(-5));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, reputation.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
@@ -301,33 +301,33 @@ FT_TEST(test_game_reputation_get_rep_missing_sets_not_found, "ft_reputation::get
     set_errno_from_reputation(FT_ERR_INVALID_ARGUMENT);
     FT_ASSERT_EQ(0, reputation.get_rep(77));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, reputation.get_error());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_errno);
     return (1);
 }
 
-FT_TEST(test_game_reputation_get_error_preserves_errno, "ft_reputation::get_error keeps existing ft_errno")
+FT_TEST(test_game_reputation_get_error_sets_errno_from_state, "ft_reputation::get_error sets errno based on state")
 {
     ft_reputation reputation;
 
     reputation.get_milestone(90);
     set_errno_from_reputation(FT_ERR_INVALID_ARGUMENT);
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, reputation.get_error());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_errno);
     return (1);
 }
 
-FT_TEST(test_game_reputation_get_error_str_preserves_errno, "ft_reputation::get_error_str keeps errno and string")
+FT_TEST(test_game_reputation_get_error_str_sets_errno_from_state, "ft_reputation::get_error_str sets errno and returns string")
 {
     ft_reputation reputation;
 
     reputation.get_rep(-5);
     set_errno_from_reputation(FT_ERR_NOT_FOUND);
     FT_ASSERT_STR_EQ("Invalid argument", reputation.get_error_str());
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
 }
 
-FT_TEST(test_game_reputation_set_milestones_preserves_errno, "ft_reputation::set_milestones keeps ft_errno")
+FT_TEST(test_game_reputation_set_milestones_sets_errno_success, "ft_reputation::set_milestones sets errno to success")
 {
     ft_map<int, int> milestones;
     ft_reputation reputation;
@@ -336,11 +336,11 @@ FT_TEST(test_game_reputation_set_milestones_preserves_errno, "ft_reputation::set
     set_errno_from_reputation(FT_ERR_INVALID_ARGUMENT);
     reputation.set_milestones(milestones);
     FT_ASSERT_EQ(200, reputation.get_milestone(100));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
-FT_TEST(test_game_reputation_set_reps_preserves_errno, "ft_reputation::set_reps keeps ft_errno value")
+FT_TEST(test_game_reputation_set_reps_sets_errno_success, "ft_reputation::set_reps sets errno to success")
 {
     ft_map<int, int> reps;
     ft_reputation reputation;
@@ -349,7 +349,7 @@ FT_TEST(test_game_reputation_set_reps_preserves_errno, "ft_reputation::set_reps 
     set_errno_from_reputation(FT_ERR_NOT_FOUND);
     reputation.set_reps(reps);
     FT_ASSERT_EQ(220, reputation.get_rep(120));
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 

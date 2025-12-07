@@ -45,47 +45,47 @@ FT_TEST(test_rarity_band_set_value_multiplier_overwrites_previous, "Game: set_va
     return (1);
 }
 
-FT_TEST(test_rarity_band_set_rarity_preserves_errno, "Game: set_rarity keeps incoming errno intact")
+FT_TEST(test_rarity_band_set_rarity_sets_errno_success, "Game: set_rarity sets errno to success on update")
 {
     ft_rarity_band rarity_band;
 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     rarity_band.set_rarity(9);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(9, rarity_band.get_rarity());
     return (1);
 }
 
-FT_TEST(test_rarity_band_set_multiplier_preserves_errno, "Game: set_value_multiplier keeps incoming errno intact")
+FT_TEST(test_rarity_band_set_multiplier_sets_errno_success, "Game: set_value_multiplier sets errno to success on update")
 {
     ft_rarity_band rarity_band;
 
     ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
     rarity_band.set_value_multiplier(3.25);
-    FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(3.25, rarity_band.get_value_multiplier());
     return (1);
 }
 
-FT_TEST(test_rarity_band_get_rarity_preserves_errno, "Game: get_rarity restores errno after read")
+FT_TEST(test_rarity_band_get_rarity_sets_errno_success, "Game: get_rarity clears errno to success after read")
 {
     ft_rarity_band rarity_band;
 
     rarity_band.set_rarity(4);
     ft_errno = FT_ERR_INVALID_POINTER;
     FT_ASSERT_EQ(4, rarity_band.get_rarity());
-    FT_ASSERT_EQ(FT_ERR_INVALID_POINTER, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
-FT_TEST(test_rarity_band_get_multiplier_preserves_errno, "Game: get_value_multiplier restores errno after read")
+FT_TEST(test_rarity_band_get_multiplier_sets_errno_success, "Game: get_value_multiplier clears errno to success after read")
 {
     ft_rarity_band rarity_band;
 
     rarity_band.set_value_multiplier(6.5);
     ft_errno = FT_ERR_GAME_INVALID_MOVE;
     FT_ASSERT_EQ(6.5, rarity_band.get_value_multiplier());
-    FT_ASSERT_EQ(FT_ERR_GAME_INVALID_MOVE, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -98,14 +98,14 @@ FT_TEST(test_rarity_band_get_error_reports_current_state, "Game: get_error retur
     return (1);
 }
 
-FT_TEST(test_rarity_band_get_error_str_reports_success, "Game: get_error_str describes success without altering errno")
+FT_TEST(test_rarity_band_get_error_str_reports_success, "Game: get_error_str describes success and resets errno")
 {
     ft_rarity_band rarity_band;
 
     rarity_band.set_value_multiplier(1.1);
     ft_errno = FT_ERR_NOT_FOUND;
     FT_ASSERT_STR_EQ(ft_strerror(ER_SUCCESS), rarity_band.get_error_str());
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
