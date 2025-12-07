@@ -18,6 +18,15 @@ static void game_inventory_set_errno(ft_unique_lock<pt_mutex> &guard,
     return ;
 }
 
+static void game_inventory_restore_errno(ft_unique_lock<pt_mutex> &guard,
+    int entry_errno)
+{
+    if (guard.owns_lock())
+        guard.unlock();
+    ft_errno = entry_errno;
+    return ;
+}
+
 int ft_inventory::lock_pair(const ft_inventory &first, const ft_inventory &second,
     ft_unique_lock<pt_mutex> &first_guard,
     ft_unique_lock<pt_mutex> &second_guard)
@@ -104,8 +113,10 @@ ft_inventory::ft_inventory(const ft_inventory &other) noexcept
       _weight_limit(0), _current_weight(0),
       _next_slot(0), _error(ER_SUCCESS), _mutex()
 {
+    int entry_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
 
+    entry_errno = ft_errno;
     if (other_guard.get_error() != ER_SUCCESS)
     {
         this->_items = ft_map<int, ft_sharedptr<ft_item> >();
@@ -115,7 +126,7 @@ ft_inventory::ft_inventory(const ft_inventory &other) noexcept
         this->_current_weight = 0;
         this->_next_slot = 0;
         this->set_error(other_guard.get_error());
-        game_inventory_set_errno(other_guard, other_guard.get_error());
+        game_inventory_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_items = other._items;
@@ -126,7 +137,7 @@ ft_inventory::ft_inventory(const ft_inventory &other) noexcept
     this->_next_slot = other._next_slot;
     this->_error = other._error;
     this->set_error(other._error);
-    game_inventory_set_errno(other_guard, ER_SUCCESS);
+    game_inventory_restore_errno(other_guard, entry_errno);
     return ;
 }
 
@@ -135,13 +146,17 @@ ft_inventory &ft_inventory::operator=(const ft_inventory &other) noexcept
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
     int lock_error;
+    int entry_errno;
 
     if (this == &other)
         return (*this);
+    entry_errno = ft_errno;
     lock_error = ft_inventory::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != ER_SUCCESS)
     {
         this->set_error(lock_error);
+        game_inventory_restore_errno(this_guard, entry_errno);
+        game_inventory_restore_errno(other_guard, entry_errno);
         return (*this);
     }
     this->_items = other._items;
@@ -152,8 +167,8 @@ ft_inventory &ft_inventory::operator=(const ft_inventory &other) noexcept
     this->_next_slot = other._next_slot;
     this->_error = other._error;
     this->set_error(other._error);
-    game_inventory_set_errno(this_guard, ER_SUCCESS);
-    game_inventory_set_errno(other_guard, ER_SUCCESS);
+    game_inventory_restore_errno(this_guard, entry_errno);
+    game_inventory_restore_errno(other_guard, entry_errno);
     return (*this);
 }
 
@@ -162,7 +177,10 @@ ft_inventory::ft_inventory(ft_inventory &&other) noexcept
       _weight_limit(0), _current_weight(0),
       _next_slot(0), _error(ER_SUCCESS), _mutex()
 {
+    int entry_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
+
+    entry_errno = ft_errno;
     if (other_guard.get_error() != ER_SUCCESS)
     {
         this->_items = ft_map<int, ft_sharedptr<ft_item> >();
@@ -172,7 +190,7 @@ ft_inventory::ft_inventory(ft_inventory &&other) noexcept
         this->_current_weight = 0;
         this->_next_slot = 0;
         this->set_error(other_guard.get_error());
-        game_inventory_set_errno(other_guard, other_guard.get_error());
+        game_inventory_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_items = ft_move(other._items);
@@ -190,7 +208,7 @@ ft_inventory::ft_inventory(ft_inventory &&other) noexcept
     other._error = ER_SUCCESS;
     this->set_error(this->_error);
     other.set_error(ER_SUCCESS);
-    game_inventory_set_errno(other_guard, ER_SUCCESS);
+    game_inventory_restore_errno(other_guard, entry_errno);
     return ;
 }
 
@@ -199,13 +217,17 @@ ft_inventory &ft_inventory::operator=(ft_inventory &&other) noexcept
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
     int lock_error;
+    int entry_errno;
 
     if (this == &other)
         return (*this);
+    entry_errno = ft_errno;
     lock_error = ft_inventory::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != ER_SUCCESS)
     {
         this->set_error(lock_error);
+        game_inventory_restore_errno(this_guard, entry_errno);
+        game_inventory_restore_errno(other_guard, entry_errno);
         return (*this);
     }
     this->_items = ft_move(other._items);
@@ -223,8 +245,8 @@ ft_inventory &ft_inventory::operator=(ft_inventory &&other) noexcept
     other._error = ER_SUCCESS;
     this->set_error(this->_error);
     other.set_error(ER_SUCCESS);
-    game_inventory_set_errno(this_guard, ER_SUCCESS);
-    game_inventory_set_errno(other_guard, ER_SUCCESS);
+    game_inventory_restore_errno(this_guard, entry_errno);
+    game_inventory_restore_errno(other_guard, entry_errno);
     return (*this);
 }
 

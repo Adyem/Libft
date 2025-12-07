@@ -310,12 +310,22 @@ void ft_world::update_events(ft_sharedptr<ft_world> &self, int ticks, const char
 
 ft_sharedptr<ft_event_scheduler> &ft_world::get_event_scheduler() noexcept
 {
+    int previous_error;
+
+    previous_error = this->_error;
+    if (previous_error != ER_SUCCESS)
+        return (this->_event_scheduler);
     this->set_error(ER_SUCCESS);
     return (this->_event_scheduler);
 }
 
 const ft_sharedptr<ft_event_scheduler> &ft_world::get_event_scheduler() const noexcept
 {
+    int previous_error;
+
+    previous_error = this->_error;
+    if (previous_error != ER_SUCCESS)
+        return (this->_event_scheduler);
     this->set_error(ER_SUCCESS);
     return (this->_event_scheduler);
 }
@@ -418,7 +428,12 @@ const ft_sharedptr<ft_world_region> &ft_world::get_world_region() const noexcept
 
 ft_sharedptr<ft_quest> &ft_world::get_quest() noexcept
 {
+    int previous_error;
+
+    previous_error = this->_error;
     if (this->propagate_quest_state_error() == true)
+        return (this->_quest);
+    if (previous_error != ER_SUCCESS)
         return (this->_quest);
     this->set_error(ER_SUCCESS);
     return (this->_quest);
@@ -426,7 +441,12 @@ ft_sharedptr<ft_quest> &ft_world::get_quest() noexcept
 
 const ft_sharedptr<ft_quest> &ft_world::get_quest() const noexcept
 {
+    int previous_error;
+
+    previous_error = this->_error;
     if (this->propagate_quest_state_error() == true)
+        return (this->_quest);
+    if (previous_error != ER_SUCCESS)
         return (this->_quest);
     this->set_error(ER_SUCCESS);
     return (this->_quest);
@@ -434,7 +454,12 @@ const ft_sharedptr<ft_quest> &ft_world::get_quest() const noexcept
 
 ft_sharedptr<ft_vendor_profile> &ft_world::get_vendor_profile() noexcept
 {
+    int previous_error;
+
+    previous_error = this->_error;
     if (this->propagate_vendor_profile_state_error() == true)
+        return (this->_vendor_profile);
+    if (previous_error != ER_SUCCESS)
         return (this->_vendor_profile);
     this->set_error(ER_SUCCESS);
     return (this->_vendor_profile);
@@ -442,7 +467,12 @@ ft_sharedptr<ft_vendor_profile> &ft_world::get_vendor_profile() noexcept
 
 const ft_sharedptr<ft_vendor_profile> &ft_world::get_vendor_profile() const noexcept
 {
+    int previous_error;
+
+    previous_error = this->_error;
     if (this->propagate_vendor_profile_state_error() == true)
+        return (this->_vendor_profile);
+    if (previous_error != ER_SUCCESS)
         return (this->_vendor_profile);
     this->set_error(ER_SUCCESS);
     return (this->_vendor_profile);

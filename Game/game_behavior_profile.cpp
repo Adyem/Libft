@@ -25,17 +25,29 @@ static void game_behavior_copy_action_vector(const ft_vector<ft_behavior_action>
 
 void ft_behavior_profile::clone_from_unlocked(const ft_behavior_profile &other) noexcept
 {
+    int entry_errno;
+    int actions_error;
+
+    entry_errno = ft_errno;
     this->_profile_id = other._profile_id;
     this->_aggression_weight = other._aggression_weight;
     this->_caution_weight = other._caution_weight;
     game_behavior_copy_action_vector(other._actions, this->_actions);
     this->_error_code = other._error_code;
-    this->set_error(this->_actions.get_error());
+    actions_error = this->_actions.get_error();
+    if (actions_error != ER_SUCCESS)
+        this->_error_code = actions_error;
+    this->set_error(this->_error_code);
+    ft_errno = entry_errno;
     return ;
 }
 
 void ft_behavior_profile::move_from_unlocked(ft_behavior_profile &other) noexcept
 {
+    int entry_errno;
+    int actions_error;
+
+    entry_errno = ft_errno;
     this->_profile_id = other._profile_id;
     this->_aggression_weight = other._aggression_weight;
     this->_caution_weight = other._caution_weight;
@@ -46,8 +58,12 @@ void ft_behavior_profile::move_from_unlocked(ft_behavior_profile &other) noexcep
     other._caution_weight = 0.0;
     other._actions.clear();
     other._error_code = ER_SUCCESS;
-    this->set_error(this->_actions.get_error());
+    actions_error = this->_actions.get_error();
+    if (actions_error != ER_SUCCESS)
+        this->_error_code = actions_error;
+    this->set_error(this->_error_code);
     other.set_error(ER_SUCCESS);
+    ft_errno = entry_errno;
     return ;
 }
 
