@@ -26,6 +26,8 @@ void game_behavior_restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errn
         ft_errno = unlock_error;
         return ;
     }
+    if (ft_errno != ER_SUCCESS)
+        return ;
     ft_errno = entry_errno;
     return ;
 }
