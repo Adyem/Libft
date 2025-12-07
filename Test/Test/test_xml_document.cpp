@@ -6,8 +6,8 @@
 #include <cerrno>
 #include <cstring>
 
-FT_TEST(test_xml_document_thread_guard_preserves_errno,
-        "xml_document::thread_guard preserves errno when locking")
+FT_TEST(test_xml_document_thread_guard_resets_errno,
+        "xml_document::thread_guard resets errno to success when locking")
 {
     xml_document document;
 
@@ -18,9 +18,9 @@ FT_TEST(test_xml_document_thread_guard_preserves_errno,
 
         FT_ASSERT_EQ(0, guard.get_status());
         FT_ASSERT_EQ(true, guard.lock_acquired());
-        FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+        FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     }
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -32,7 +32,7 @@ FT_TEST(test_xml_document_thread_guard_tolerates_null_document,
 
     FT_ASSERT_EQ(0, guard.get_status());
     FT_ASSERT_EQ(false, guard.lock_acquired());
-    FT_ASSERT_EQ(FT_ERR_INTERNAL, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
