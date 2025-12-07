@@ -337,12 +337,13 @@ int ft_region_definition::get_error() const noexcept
 {
     int entry_errno;
     int error_code;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
-        ft_errno = entry_errno;
+        const_cast<ft_region_definition *>(this)->set_error(guard.get_error());
+        game_narrative_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     error_code = this->_error_code;

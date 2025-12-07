@@ -7,6 +7,7 @@ static void set_errno_from_reputation(int error_code)
 {
     ft_reputation reputation;
 
+    ft_errno = error_code;
     if (error_code == ER_SUCCESS)
     {
         reputation.set_total_rep(0);
