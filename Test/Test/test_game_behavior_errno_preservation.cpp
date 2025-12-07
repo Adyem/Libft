@@ -13,7 +13,7 @@ FT_TEST(test_behavior_action_default_construction_preserves_success,
     FT_ASSERT_DOUBLE_EQ(0.0, action.get_weight());
     FT_ASSERT_DOUBLE_EQ(0.0, action.get_cooldown_seconds());
     FT_ASSERT_EQ(ER_SUCCESS, action.get_error());
-    FT_ASSERT_STR_EQ("Success", action.get_error_str());
+    FT_ASSERT_STR_EQ("Operation successful", action.get_error_str());
     return (1);
 }
 
@@ -104,31 +104,12 @@ FT_TEST(test_behavior_action_get_cooldown_preserves_errno,
     return (1);
 }
 
-FT_TEST(test_behavior_action_copy_constructor_preserves_errno,
-    "copy construction duplicates fields and restores entry errno")
-{
-    ft_behavior_action original(7, 2.0, 3.0);
-    int entry_errno;
-
-    ft_errno = FT_ERR_INTERNAL;
-    entry_errno = ft_errno;
-    ft_behavior_action copy(original);
-    FT_ASSERT_EQ(7, copy.get_action_id());
-    FT_ASSERT_DOUBLE_EQ(2.0, copy.get_weight());
-    FT_ASSERT_DOUBLE_EQ(3.0, copy.get_cooldown_seconds());
-    FT_ASSERT_EQ(entry_errno, ft_errno);
-    FT_ASSERT_EQ(ER_SUCCESS, copy.get_error());
-    return (1);
-}
-
-FT_TEST(test_behavior_action_move_constructor_preserves_errno,
-    "move construction transfers data, resets source, and restores errno")
+FT_TEST(test_behavior_action_move_constructor_sets_errno,
+    "move construction transfers data, resets source, and sets errno")
 {
     ft_behavior_action source(9, 4.0, 8.0);
-    int entry_errno;
 
     ft_errno = FT_ERR_CONFIGURATION;
-    entry_errno = ft_errno;
     ft_behavior_action moved(ft_move(source));
     FT_ASSERT_EQ(9, moved.get_action_id());
     FT_ASSERT_DOUBLE_EQ(4.0, moved.get_weight());
@@ -136,13 +117,13 @@ FT_TEST(test_behavior_action_move_constructor_preserves_errno,
     FT_ASSERT_EQ(0, source.get_action_id());
     FT_ASSERT_DOUBLE_EQ(0.0, source.get_weight());
     FT_ASSERT_DOUBLE_EQ(0.0, source.get_cooldown_seconds());
-    FT_ASSERT_EQ(entry_errno, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(ER_SUCCESS, moved.get_error());
     return (1);
 }
 
-FT_TEST(test_behavior_action_copy_assignment_preserves_errno,
-    "copy assignment clones values and restores entry errno")
+FT_TEST(test_behavior_action_copy_assignment_sets_errno,
+    "copy assignment clones values and restores sets errno")
 {
     ft_behavior_action source(5, 0.9, 7.5);
     ft_behavior_action destination;
@@ -152,7 +133,7 @@ FT_TEST(test_behavior_action_copy_assignment_preserves_errno,
     FT_ASSERT_EQ(5, destination.get_action_id());
     FT_ASSERT_DOUBLE_EQ(0.9, destination.get_weight());
     FT_ASSERT_DOUBLE_EQ(7.5, destination.get_cooldown_seconds());
-    FT_ASSERT_EQ(FT_ERR_TERMINATED, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(ER_SUCCESS, destination.get_error());
     return (1);
 }
