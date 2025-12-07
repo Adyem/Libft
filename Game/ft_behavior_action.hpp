@@ -1,7 +1,6 @@
 #ifndef FT_BEHAVIOR_ACTION_HPP
 # define FT_BEHAVIOR_ACTION_HPP
 
-#include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 
