@@ -32,10 +32,10 @@ FT_TEST(test_game_economy_restore_errno_without_lock, "restore errno when guard 
     return (1);
 }
 
-FT_TEST(test_game_economy_sleep_backoff_preserves_errno, "sleep backoff does not modify errno")
+FT_TEST(test_game_economy_sleep_backoff_resets_errno, "sleep backoff clears errno to success")
 {
     ft_errno = FT_ERR_NOT_FOUND;
     game_economy_sleep_backoff();
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }

@@ -72,55 +72,55 @@ FT_TEST(test_game_region_definition_error_string_reports_success, "Region defini
     return (1);
 }
 
-FT_TEST(test_game_region_definition_get_region_id_preserves_errno, "Region id getter does not modify incoming errno")
+FT_TEST(test_game_region_definition_get_region_id_sets_errno_success, "Region id getter resets errno to success")
 {
     ft_region_definition region(10, ft_string("gorge"), ft_string("steep cliffs"), 12);
 
     ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
     FT_ASSERT_EQ(10, region.get_region_id());
-    FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
-FT_TEST(test_game_region_definition_get_name_preserves_errno, "Region name getter maintains existing errno value")
+FT_TEST(test_game_region_definition_get_name_sets_errno_success, "Region name getter clears errno to success")
 {
     ft_region_definition region(21, ft_string("plateau"), ft_string("broad rise"), 7);
 
     ft_errno = FT_ERR_GAME_INVALID_MOVE;
     FT_ASSERT_EQ(ft_string("plateau"), region.get_name());
-    FT_ASSERT_EQ(FT_ERR_GAME_INVALID_MOVE, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
-FT_TEST(test_game_region_definition_set_region_id_preserves_errno, "Region id setter restores prior errno after success")
+FT_TEST(test_game_region_definition_set_region_id_sets_errno_success, "Region id setter updates errno to success")
 {
     ft_region_definition region;
 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     region.set_region_id(18);
     FT_ASSERT_EQ(18, region.get_region_id());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
-FT_TEST(test_game_region_definition_set_description_preserves_errno, "Region description setter does not clobber errno")
+FT_TEST(test_game_region_definition_set_description_sets_errno_success, "Region description setter resets errno to success")
 {
     ft_region_definition region;
 
     ft_errno = FT_ERR_MUTEX_NOT_OWNER;
     region.set_description(ft_string("ancient ruins"));
     FT_ASSERT_EQ(ft_string("ancient ruins"), region.get_description());
-    FT_ASSERT_EQ(FT_ERR_MUTEX_NOT_OWNER, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
-FT_TEST(test_game_region_definition_get_error_preserves_errno, "Region definition get_error restores entry errno")
+FT_TEST(test_game_region_definition_get_error_sets_errno_success, "Region definition get_error clears errno to success")
 {
     ft_region_definition region(30, ft_string("crater"), ft_string("impact site"), 25);
 
     ft_errno = FT_ERR_OUT_OF_RANGE;
     FT_ASSERT_EQ(ER_SUCCESS, region.get_error());
-    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
