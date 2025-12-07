@@ -249,7 +249,6 @@ ft_map<int, ft_sharedptr<ft_item> > &ft_inventory::get_items() noexcept
         game_inventory_restore_errno(guard, entry_errno);
         return (this->_items);
     }
-    this->set_error(ER_SUCCESS);
     game_inventory_restore_errno(guard, entry_errno);
     return (this->_items);
 }
@@ -266,7 +265,6 @@ const ft_map<int, ft_sharedptr<ft_item> > &ft_inventory::get_items() const noexc
         game_inventory_restore_errno(guard, entry_errno);
         return (this->_items);
     }
-    const_cast<ft_inventory *>(this)->set_error(ER_SUCCESS);
     game_inventory_restore_errno(guard, entry_errno);
     return (this->_items);
 }
@@ -285,7 +283,6 @@ size_t ft_inventory::get_capacity() const noexcept
         return (0);
     }
     capacity_value = this->_capacity;
-    const_cast<ft_inventory *>(this)->set_error(ER_SUCCESS);
     game_inventory_restore_errno(guard, entry_errno);
     return (capacity_value);
 }
@@ -303,7 +300,6 @@ void ft_inventory::resize(size_t capacity) noexcept
         return ;
     }
     this->_capacity = capacity;
-    this->set_error(ER_SUCCESS);
     game_inventory_restore_errno(guard, entry_errno);
     return ;
 }
@@ -322,7 +318,6 @@ size_t ft_inventory::get_used() const noexcept
         return (0);
     }
     used_value = this->_used_slots;
-    const_cast<ft_inventory *>(this)->set_error(ER_SUCCESS);
     game_inventory_restore_errno(guard, entry_errno);
     return (used_value);
 }
@@ -340,7 +335,6 @@ void ft_inventory::set_used_slots(size_t used) noexcept
         return ;
     }
     this->_used_slots = used;
-    this->set_error(ER_SUCCESS);
     game_inventory_restore_errno(guard, entry_errno);
     return ;
 }
@@ -370,7 +364,6 @@ bool ft_inventory::is_full() const noexcept
             result = true;
     }
 #endif
-    const_cast<ft_inventory *>(this)->set_error(ER_SUCCESS);
     game_inventory_restore_errno(guard, entry_errno);
     return (result);
 }
@@ -389,7 +382,6 @@ int ft_inventory::get_weight_limit() const noexcept
         return (0);
     }
     limit_value = this->_weight_limit;
-    const_cast<ft_inventory *>(this)->set_error(ER_SUCCESS);
     game_inventory_restore_errno(guard, entry_errno);
     return (limit_value);
 }
@@ -407,7 +399,6 @@ void ft_inventory::set_weight_limit(int limit) noexcept
         return ;
     }
     this->_weight_limit = limit;
-    this->set_error(ER_SUCCESS);
     game_inventory_restore_errno(guard, entry_errno);
     return ;
 }
@@ -416,7 +407,6 @@ int ft_inventory::get_current_weight() const noexcept
 {
     int entry_errno;
     int weight_value;
-    int current_error;
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
@@ -426,9 +416,7 @@ int ft_inventory::get_current_weight() const noexcept
         game_inventory_restore_errno(guard, entry_errno);
         return (0);
     }
-    current_error = this->_error;
     weight_value = this->_current_weight;
-    const_cast<ft_inventory *>(this)->set_error(current_error);
     game_inventory_restore_errno(guard, entry_errno);
     return (weight_value);
 }
@@ -446,7 +434,6 @@ void ft_inventory::set_current_weight(int weight) noexcept
         return ;
     }
     this->_current_weight = weight;
-    this->set_error(ER_SUCCESS);
     game_inventory_restore_errno(guard, entry_errno);
     return ;
 }
@@ -465,7 +452,6 @@ int ft_inventory::get_error() const noexcept
         return (guard.get_error());
     }
     error_code = this->_error;
-    const_cast<ft_inventory *>(this)->set_error(error_code);
     game_inventory_restore_errno(guard, entry_errno);
     return (error_code);
 }
@@ -484,7 +470,6 @@ const char *ft_inventory::get_error_str() const noexcept
         return (ft_strerror(guard.get_error()));
     }
     error_code = this->_error;
-    const_cast<ft_inventory *>(this)->set_error(error_code);
     game_inventory_restore_errno(guard, entry_errno);
     return (ft_strerror(error_code));
 }
@@ -697,7 +682,6 @@ int ft_inventory::count_item(int item_id) const noexcept
         }
         ++item_ptr;
     }
-    const_cast<ft_inventory *>(this)->set_error(ER_SUCCESS);
     game_inventory_restore_errno(guard, entry_errno);
     return (total);
 }
@@ -734,7 +718,6 @@ int ft_inventory::count_rarity(int rarity) const noexcept
         }
         ++item_ptr;
     }
-    const_cast<ft_inventory *>(this)->set_error(ER_SUCCESS);
     game_inventory_restore_errno(guard, entry_errno);
     return (total);
 }

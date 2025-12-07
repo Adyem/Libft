@@ -208,9 +208,9 @@ int ft_behavior_action::get_action_id() const noexcept
 void ft_behavior_action::set_action_id(int action_id) noexcept
 {
     int entry_errno;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
@@ -245,9 +245,9 @@ double ft_behavior_action::get_weight() const noexcept
 void ft_behavior_action::set_weight(double weight) noexcept
 {
     int entry_errno;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
@@ -282,9 +282,9 @@ double ft_behavior_action::get_cooldown_seconds() const noexcept
 void ft_behavior_action::set_cooldown_seconds(double cooldown_seconds) noexcept
 {
     int entry_errno;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
