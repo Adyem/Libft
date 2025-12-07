@@ -21,23 +21,23 @@ FT_TEST(test_behavior_table_default_state_success, "default behavior table start
     return (1);
 }
 
-FT_TEST(test_behavior_table_get_error_preserves_entry_errno, "get_error restores entry errno")
+FT_TEST(test_behavior_table_get_error_resets_errno, "get_error clears entry errno")
 {
     ft_behavior_table table;
 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(ER_SUCCESS, table.get_error());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
-FT_TEST(test_behavior_table_get_error_str_preserves_errno, "get_error_str leaves ft_errno unchanged")
+FT_TEST(test_behavior_table_get_error_str_resets_errno, "get_error_str resets ft_errno to success")
 {
     ft_behavior_table table;
 
     ft_errno = FT_ERR_OUT_OF_RANGE;
     FT_ASSERT_STR_EQ("Success", table.get_error_str());
-    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -81,7 +81,7 @@ FT_TEST(test_behavior_table_set_profiles_replaces_contents, "set_profiles swaps 
     return (1);
 }
 
-FT_TEST(test_behavior_table_set_profiles_restores_errno, "set_profiles restores caller errno")
+FT_TEST(test_behavior_table_set_profiles_resets_errno, "set_profiles resets caller errno on success")
 {
     ft_behavior_table table;
     ft_map<int, ft_behavior_profile> profiles;
@@ -89,31 +89,31 @@ FT_TEST(test_behavior_table_set_profiles_restores_errno, "set_profiles restores 
     profiles.insert(3, build_profile(3, 0.3, 0.7, 8));
     ft_errno = FT_ERR_INVALID_OPERATION;
     table.set_profiles(profiles);
-    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(ER_SUCCESS, table.get_error());
     return (1);
 }
 
-FT_TEST(test_behavior_table_register_profile_restores_errno,
-    "register_profile restores incoming errno on success")
+FT_TEST(test_behavior_table_register_profile_resets_errno,
+    "register_profile resets incoming errno on success")
 {
     ft_behavior_table table;
 
     ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
     FT_ASSERT_EQ(ER_SUCCESS, table.register_profile(build_profile(12, 0.9, 0.1, 4)));
-    FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
 FT_TEST(test_behavior_table_duplicate_registration_returns_error,
-    "register_profile reports already exists without clobbering errno")
+    "register_profile reports already exists and updates errno")
 {
     ft_behavior_table table;
 
     table.register_profile(build_profile(2, 0.4, 0.6, 10));
     ft_errno = FT_ERR_IO;
     FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, table.register_profile(build_profile(2, 0.4, 0.6, 10)));
-    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, ft_errno);
     FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, table.get_error());
     return (1);
 }

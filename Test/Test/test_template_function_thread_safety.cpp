@@ -8,24 +8,22 @@ static int increment_value(int value)
     return (value + 1);
 }
 
-FT_TEST(test_function_thread_safety_controls,
-        "ft_function toggles optional mutex guard and preserves errno")
+FT_TEST(test_function_thread_safety_resets_errno,
+        "ft_function toggles optional mutex guard and resets errno to success")
 {
     ft_function<int(int)> function_value(increment_value);
     bool lock_acquired;
-    int saved_errno;
 
     FT_ASSERT_EQ(false, function_value.is_thread_safe_enabled());
     FT_ASSERT_EQ(0, function_value.enable_thread_safety());
     FT_ASSERT_EQ(true, function_value.is_thread_safe_enabled());
-    saved_errno = FT_ERR_INVALID_OPERATION;
-    ft_errno = saved_errno;
+    ft_errno = FT_ERR_INVALID_OPERATION;
     lock_acquired = false;
     FT_ASSERT_EQ(0, function_value.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(saved_errno, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     function_value.unlock(lock_acquired);
-    FT_ASSERT_EQ(saved_errno, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(3, function_value(2));
     function_value.disable_thread_safety();
     FT_ASSERT_EQ(false, function_value.is_thread_safe_enabled());

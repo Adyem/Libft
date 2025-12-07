@@ -519,7 +519,7 @@ FT_TEST(test_readline_state_thread_safety_lock_without_prepare,
 }
 
 FT_TEST(test_readline_state_thread_safety_unlock_without_lock,
-    "rl_state_unlock preserves errno when lock not held")
+    "rl_state_unlock resets errno when lock not held")
 {
     readline_state_t state;
 
@@ -528,12 +528,12 @@ FT_TEST(test_readline_state_thread_safety_unlock_without_lock,
     state.mutex = ft_nullptr;
     ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
     rl_state_unlock(&state, false);
-    FT_ASSERT_EQ(FT_ERR_SOCKET_CONNECT_FAILED, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
 FT_TEST(test_readline_state_thread_safety_lifecycle,
-    "rl_state thread safety guards serialize access and preserve errno")
+    "rl_state thread safety guards serialize access and reset errno")
 {
     readline_state_t state;
     bool main_lock_acquired;
@@ -586,7 +586,7 @@ FT_TEST(test_readline_state_thread_safety_lifecycle,
     FT_ASSERT(relock_acquired);
     ft_errno = FT_ERR_NO_MEMORY;
     rl_state_unlock(&state, relock_acquired);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
 
     rl_state_teardown_thread_safety(&state);
     FT_ASSERT(state.thread_safe_enabled == false);
@@ -621,7 +621,7 @@ FT_TEST(test_readline_terminal_dimensions_thread_safety_lock_without_prepare,
 }
 
 FT_TEST(test_readline_terminal_dimensions_thread_safety_unlock_without_lock,
-    "rl_terminal_dimensions_unlock preserves errno when lock not held")
+    "rl_terminal_dimensions_unlock resets errno when lock not held")
 {
     terminal_dimensions dimensions;
 
@@ -630,12 +630,12 @@ FT_TEST(test_readline_terminal_dimensions_thread_safety_unlock_without_lock,
     dimensions.mutex = ft_nullptr;
     ft_errno = FT_ERR_SOCKET_ACCEPT_FAILED;
     rl_terminal_dimensions_unlock(&dimensions, false);
-    FT_ASSERT_EQ(FT_ERR_SOCKET_ACCEPT_FAILED, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
 FT_TEST(test_readline_terminal_dimensions_thread_safety_lifecycle,
-    "terminal_dimensions thread safety guards serialize access and preserve errno")
+    "terminal_dimensions thread safety guards serialize access and reset errno")
 {
     terminal_dimensions dimensions;
     bool main_lock_acquired;
@@ -679,7 +679,7 @@ FT_TEST(test_readline_terminal_dimensions_thread_safety_lifecycle,
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     rl_terminal_dimensions_unlock(&dimensions, main_lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     worker.join();
 
     FT_ASSERT_EQ(1, worker_result.load());
@@ -690,7 +690,7 @@ FT_TEST(test_readline_terminal_dimensions_thread_safety_lifecycle,
     FT_ASSERT(relock_acquired);
     ft_errno = FT_ERR_IO;
     rl_terminal_dimensions_unlock(&dimensions, relock_acquired);
-    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
 
     rl_terminal_dimensions_teardown_thread_safety(&dimensions);
     FT_ASSERT(dimensions.thread_safe_enabled == false);

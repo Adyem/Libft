@@ -99,8 +99,8 @@ FT_TEST(test_event_loop_init_sets_up_thread_safety,
     return (1);
 }
 
-FT_TEST(test_event_loop_lock_and_unlock_preserve_errno,
-    "event_loop_lock acquires the mutex and unlock preserves errno")
+FT_TEST(test_event_loop_lock_and_unlock_reset_errno,
+    "event_loop_lock acquires the mutex and unlock resets errno to success")
 {
     event_loop loop;
     bool       lock_acquired;
@@ -121,7 +121,7 @@ FT_TEST(test_event_loop_lock_and_unlock_preserve_errno,
     }
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     event_loop_unlock(&loop, lock_acquired);
-    if (ft_errno != FT_ERR_INVALID_ARGUMENT)
+    if (ft_errno != ER_SUCCESS)
     {
         event_loop_clear(&loop);
         return (0);
