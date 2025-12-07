@@ -191,9 +191,9 @@ int ft_dialogue_table::register_line(const ft_dialogue_line &line) noexcept
 {
     int entry_errno;
     int identifier;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
+    
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
@@ -216,9 +216,9 @@ int ft_dialogue_table::register_script(const ft_dialogue_script &script) noexcep
 {
     int entry_errno;
     int identifier;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
@@ -241,9 +241,9 @@ int ft_dialogue_table::fetch_line(int line_id, ft_dialogue_line &out_line) const
 {
     int entry_errno;
     const Pair<int, ft_dialogue_line> *entry;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         const_cast<ft_dialogue_table *>(this)->set_error(guard.get_error());
@@ -266,9 +266,9 @@ int ft_dialogue_table::fetch_script(int script_id, ft_dialogue_script &out_scrip
 {
     int entry_errno;
     const Pair<int, ft_dialogue_script> *entry;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         const_cast<ft_dialogue_table *>(this)->set_error(guard.get_error());
@@ -310,9 +310,9 @@ const ft_map<int, ft_dialogue_line> &ft_dialogue_table::get_lines() const noexce
 void ft_dialogue_table::set_lines(const ft_map<int, ft_dialogue_line> &lines) noexcept
 {
     int entry_errno;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
@@ -348,9 +348,9 @@ const ft_map<int, ft_dialogue_script> &ft_dialogue_table::get_scripts() const no
 void ft_dialogue_table::set_scripts(const ft_map<int, ft_dialogue_script> &scripts) noexcept
 {
     int entry_errno;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
 
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
@@ -367,9 +367,9 @@ int ft_dialogue_table::get_error() const noexcept
 {
     int entry_errno;
     int error_code;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
+    
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         ft_errno = entry_errno;

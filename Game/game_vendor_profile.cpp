@@ -223,6 +223,11 @@ void ft_vendor_profile::set_vendor_id(int vendor_id) noexcept
 {
     int entry_errno;
 
+    if (vendor_id < 0)
+    {
+        this->set_error(FT_ERR_INVALID_ARGUMENT);
+        return ;
+    }
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
