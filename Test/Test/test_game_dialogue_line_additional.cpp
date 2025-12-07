@@ -31,20 +31,20 @@ FT_TEST(test_dialogue_line_nonconst_getter_allows_modification, "non-const gette
     return (1);
 }
 
-FT_TEST(test_dialogue_line_nonconst_getter_preserves_errno, "non-const getter keeps incoming errno unchanged on success")
+FT_TEST(test_dialogue_line_nonconst_getter_resets_errno, "non-const getter clears errno to success on access")
 {
     ft_dialogue_line line(4, ft_string("ally"), ft_string("guide"), ft_vector<int>());
     ft_vector<int> &editable = line.get_next_line_ids();
 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     editable.push_back(13);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(1ul, line.get_next_line_ids().size());
     FT_ASSERT_EQ(13, line.get_next_line_ids()[0]);
     return (1);
 }
 
-FT_TEST(test_dialogue_line_const_getter_preserves_errno, "const getter restores errno after reading next line ids")
+FT_TEST(test_dialogue_line_const_getter_resets_errno, "const getter sets errno to success after reading next line ids")
 {
     ft_vector<int> ids;
     ft_dialogue_line line;
@@ -54,7 +54,7 @@ FT_TEST(test_dialogue_line_const_getter_preserves_errno, "const getter restores 
     line = ft_dialogue_line(2, ft_string("guide"), ft_string("path"), ids);
     ft_errno = FT_ERR_INVALID_POINTER;
     const ft_vector<int> &readonly = line.get_next_line_ids();
-    FT_ASSERT_EQ(FT_ERR_INVALID_POINTER, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(2ul, readonly.size());
     FT_ASSERT_EQ(5, readonly[0]);
     FT_ASSERT_EQ(6, readonly[1]);

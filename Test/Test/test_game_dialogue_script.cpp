@@ -41,7 +41,7 @@ FT_TEST(test_dialogue_script_parameterized_copies_lines, "parameterized construc
     return (1);
 }
 
-FT_TEST(test_dialogue_script_setters_preserve_errno, "setters update values while keeping incoming errno")
+FT_TEST(test_dialogue_script_setters_reset_errno, "setters update values and set errno to success")
 {
     ft_dialogue_script script(4, ft_string("title"), ft_string("summary"), 10, ft_vector<ft_dialogue_line>());
 
@@ -50,7 +50,7 @@ FT_TEST(test_dialogue_script_setters_preserve_errno, "setters update values whil
     script.set_title(ft_string("new title"));
     script.set_summary(ft_string("new summary"));
     script.set_start_line_id(12);
-    FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(9, script.get_script_id());
     FT_ASSERT_EQ(ft_string("new title"), script.get_title());
     FT_ASSERT_EQ(ft_string("new summary"), script.get_summary());
