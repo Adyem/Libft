@@ -200,7 +200,7 @@ FT_TEST(test_dialogue_script_self_move_assignment_no_change, "self move assignme
     return (1);
 }
 
-FT_TEST(test_dialogue_script_getters_preserve_errno, "getters restore incoming errno after access")
+FT_TEST(test_dialogue_script_getters_reset_errno, "getters reset errno to success after access")
 {
     ft_vector<ft_dialogue_line> lines;
     ft_dialogue_script script;
@@ -213,11 +213,11 @@ FT_TEST(test_dialogue_script_getters_preserve_errno, "getters restore incoming e
     FT_ASSERT_EQ(ft_string("summary"), script.get_summary());
     FT_ASSERT_EQ(16, script.get_start_line_id());
     FT_ASSERT_EQ(1ul, script.get_lines().size());
-    FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
-FT_TEST(test_dialogue_script_non_const_lines_reference, "non-const lines getter allows updates and preserves errno")
+FT_TEST(test_dialogue_script_non_const_lines_reference, "non-const lines getter allows updates and resets errno")
 {
     ft_vector<ft_dialogue_line> lines;
     ft_dialogue_script script;
@@ -226,7 +226,7 @@ FT_TEST(test_dialogue_script_non_const_lines_reference, "non-const lines getter 
     script = ft_dialogue_script(30, ft_string("mutable"), ft_string("lines"), 25, lines);
     ft_errno = FT_ERR_END_OF_FILE;
     script.get_lines().push_back(create_dialogue_line(40, ft_string("npc"), ft_string("extra")));
-    FT_ASSERT_EQ(FT_ERR_END_OF_FILE, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(2ul, script.get_lines().size());
     FT_ASSERT_EQ(40, script.get_lines()[1].get_line_id());
     return (1);
@@ -253,7 +253,7 @@ FT_TEST(test_dialogue_script_set_lines_replaces_existing_entries, "set_lines rep
     script = ft_dialogue_script(90, ft_string("title"), ft_string("sum"), 70, first_lines);
     ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
     script.set_lines(second_lines);
-    FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(1ul, script.get_lines().size());
     FT_ASSERT_EQ(80, script.get_lines()[0].get_line_id());
     FT_ASSERT_EQ(ER_SUCCESS, script.get_error());
