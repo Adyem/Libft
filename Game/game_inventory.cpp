@@ -9,12 +9,12 @@ static void game_inventory_sleep_backoff()
     return ;
 }
 
-static void game_inventory_restore_errno(ft_unique_lock<pt_mutex> &guard,
-    int entry_errno)
+static void game_inventory_set_errno(ft_unique_lock<pt_mutex> &guard,
+    int errno_value)
 {
     if (guard.owns_lock())
         guard.unlock();
-    ft_errno = entry_errno;
+    ft_errno = errno_value;
     return ;
 }
 
@@ -104,10 +104,8 @@ ft_inventory::ft_inventory(const ft_inventory &other) noexcept
       _weight_limit(0), _current_weight(0),
       _next_slot(0), _error(ER_SUCCESS), _mutex()
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
+
     if (other_guard.get_error() != ER_SUCCESS)
     {
         this->_items = ft_map<int, ft_sharedptr<ft_item> >();
@@ -117,7 +115,7 @@ ft_inventory::ft_inventory(const ft_inventory &other) noexcept
         this->_current_weight = 0;
         this->_next_slot = 0;
         this->set_error(other_guard.get_error());
-        game_inventory_restore_errno(other_guard, entry_errno);
+        game_inventory_set_errno(other_guard, other_guard.get_error());
         return ;
     }
     this->_items = other._items;
@@ -128,7 +126,7 @@ ft_inventory::ft_inventory(const ft_inventory &other) noexcept
     this->_next_slot = other._next_slot;
     this->_error = other._error;
     this->set_error(other._error);
-    game_inventory_restore_errno(other_guard, entry_errno);
+    game_inventory_set_errno(other_guard, ER_SUCCESS);
     return ;
 }
 
@@ -136,12 +134,10 @@ ft_inventory &ft_inventory::operator=(const ft_inventory &other) noexcept
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_inventory::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != ER_SUCCESS)
     {
@@ -156,8 +152,8 @@ ft_inventory &ft_inventory::operator=(const ft_inventory &other) noexcept
     this->_next_slot = other._next_slot;
     this->_error = other._error;
     this->set_error(other._error);
-    game_inventory_restore_errno(this_guard, entry_errno);
-    game_inventory_restore_errno(other_guard, entry_errno);
+    game_inventory_set_errno(this_guard, ER_SUCCESS);
+    game_inventory_set_errno(other_guard, ER_SUCCESS);
     return (*this);
 }
 
@@ -166,9 +162,6 @@ ft_inventory::ft_inventory(ft_inventory &&other) noexcept
       _weight_limit(0), _current_weight(0),
       _next_slot(0), _error(ER_SUCCESS), _mutex()
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != ER_SUCCESS)
     {
@@ -179,7 +172,7 @@ ft_inventory::ft_inventory(ft_inventory &&other) noexcept
         this->_current_weight = 0;
         this->_next_slot = 0;
         this->set_error(other_guard.get_error());
-        game_inventory_restore_errno(other_guard, entry_errno);
+        game_inventory_set_errno(other_guard, other_guard.get_error());
         return ;
     }
     this->_items = ft_move(other._items);
@@ -197,7 +190,7 @@ ft_inventory::ft_inventory(ft_inventory &&other) noexcept
     other._error = ER_SUCCESS;
     this->set_error(this->_error);
     other.set_error(ER_SUCCESS);
-    game_inventory_restore_errno(other_guard, entry_errno);
+    game_inventory_set_errno(other_guard, ER_SUCCESS);
     return ;
 }
 
@@ -205,12 +198,10 @@ ft_inventory &ft_inventory::operator=(ft_inventory &&other) noexcept
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_inventory::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != ER_SUCCESS)
     {
@@ -232,124 +223,106 @@ ft_inventory &ft_inventory::operator=(ft_inventory &&other) noexcept
     other._error = ER_SUCCESS;
     this->set_error(this->_error);
     other.set_error(ER_SUCCESS);
-    game_inventory_restore_errno(this_guard, entry_errno);
-    game_inventory_restore_errno(other_guard, entry_errno);
+    game_inventory_set_errno(this_guard, ER_SUCCESS);
+    game_inventory_set_errno(other_guard, ER_SUCCESS);
     return (*this);
 }
 
 ft_map<int, ft_sharedptr<ft_item> > &ft_inventory::get_items() noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
-        game_inventory_restore_errno(guard, entry_errno);
+        game_inventory_set_errno(guard, guard.get_error());
         return (this->_items);
     }
-    game_inventory_restore_errno(guard, entry_errno);
+    game_inventory_set_errno(guard, ER_SUCCESS);
     return (this->_items);
 }
 
 const ft_map<int, ft_sharedptr<ft_item> > &ft_inventory::get_items() const noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         const_cast<ft_inventory *>(this)->set_error(guard.get_error());
-        game_inventory_restore_errno(guard, entry_errno);
+        game_inventory_set_errno(guard, guard.get_error());
         return (this->_items);
     }
-    game_inventory_restore_errno(guard, entry_errno);
+    game_inventory_set_errno(guard, ER_SUCCESS);
     return (this->_items);
 }
 
 size_t ft_inventory::get_capacity() const noexcept
 {
-    int entry_errno;
     size_t capacity_value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         const_cast<ft_inventory *>(this)->set_error(guard.get_error());
-        game_inventory_restore_errno(guard, entry_errno);
+        game_inventory_set_errno(guard, guard.get_error());
         return (0);
     }
     capacity_value = this->_capacity;
-    game_inventory_restore_errno(guard, entry_errno);
+    game_inventory_set_errno(guard, ER_SUCCESS);
     return (capacity_value);
 }
 
 void ft_inventory::resize(size_t capacity) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
-        game_inventory_restore_errno(guard, entry_errno);
+        game_inventory_set_errno(guard, guard.get_error());
         return ;
     }
     this->_capacity = capacity;
-    game_inventory_restore_errno(guard, entry_errno);
+    game_inventory_set_errno(guard, ER_SUCCESS);
     return ;
 }
 
 size_t ft_inventory::get_used() const noexcept
 {
-    int entry_errno;
     size_t used_value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         const_cast<ft_inventory *>(this)->set_error(guard.get_error());
-        game_inventory_restore_errno(guard, entry_errno);
+        game_inventory_set_errno(guard, guard.get_error());
         return (0);
     }
     used_value = this->_used_slots;
-    game_inventory_restore_errno(guard, entry_errno);
+    game_inventory_set_errno(guard, ER_SUCCESS);
     return (used_value);
 }
 
 void ft_inventory::set_used_slots(size_t used) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
-        game_inventory_restore_errno(guard, entry_errno);
+        game_inventory_set_errno(guard, guard.get_error());
         return ;
     }
     this->_used_slots = used;
-    game_inventory_restore_errno(guard, entry_errno);
+    game_inventory_set_errno(guard, ER_SUCCESS);
     return ;
 }
 
 bool ft_inventory::is_full() const noexcept
 {
-    int entry_errno;
     bool result;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         const_cast<ft_inventory *>(this)->set_error(guard.get_error());
-        game_inventory_restore_errno(guard, entry_errno);
+        game_inventory_set_errno(guard, guard.get_error());
         return (false);
     }
     result = false;
@@ -364,113 +337,99 @@ bool ft_inventory::is_full() const noexcept
             result = true;
     }
 #endif
-    game_inventory_restore_errno(guard, entry_errno);
+    game_inventory_set_errno(guard, ER_SUCCESS);
     return (result);
 }
 
 int ft_inventory::get_weight_limit() const noexcept
 {
-    int entry_errno;
     int limit_value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         const_cast<ft_inventory *>(this)->set_error(guard.get_error());
-        game_inventory_restore_errno(guard, entry_errno);
+        game_inventory_set_errno(guard, guard.get_error());
         return (0);
     }
     limit_value = this->_weight_limit;
-    game_inventory_restore_errno(guard, entry_errno);
+    game_inventory_set_errno(guard, ER_SUCCESS);
     return (limit_value);
 }
 
 void ft_inventory::set_weight_limit(int limit) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
-        game_inventory_restore_errno(guard, entry_errno);
+        game_inventory_set_errno(guard, guard.get_error());
         return ;
     }
     this->_weight_limit = limit;
-    game_inventory_restore_errno(guard, entry_errno);
+    game_inventory_set_errno(guard, ER_SUCCESS);
     return ;
 }
 
 int ft_inventory::get_current_weight() const noexcept
 {
-    int entry_errno;
     int weight_value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         const_cast<ft_inventory *>(this)->set_error(guard.get_error());
-        game_inventory_restore_errno(guard, entry_errno);
+        game_inventory_set_errno(guard, guard.get_error());
         return (0);
     }
     weight_value = this->_current_weight;
-    game_inventory_restore_errno(guard, entry_errno);
+    game_inventory_set_errno(guard, ER_SUCCESS);
     return (weight_value);
 }
 
 void ft_inventory::set_current_weight(int weight) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
-        game_inventory_restore_errno(guard, entry_errno);
+        game_inventory_set_errno(guard, guard.get_error());
         return ;
     }
     this->_current_weight = weight;
-    game_inventory_restore_errno(guard, entry_errno);
+    game_inventory_set_errno(guard, ER_SUCCESS);
     return ;
 }
 
 int ft_inventory::get_error() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         const_cast<ft_inventory *>(this)->set_error(guard.get_error());
-        game_inventory_restore_errno(guard, entry_errno);
+        game_inventory_set_errno(guard, guard.get_error());
         return (guard.get_error());
     }
     error_code = this->_error;
-    game_inventory_restore_errno(guard, entry_errno);
+    game_inventory_set_errno(guard, ER_SUCCESS);
     return (error_code);
 }
 
 const char *ft_inventory::get_error_str() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         const_cast<ft_inventory *>(this)->set_error(guard.get_error());
-        game_inventory_restore_errno(guard, entry_errno);
+        game_inventory_set_errno(guard, guard.get_error());
         return (ft_strerror(guard.get_error()));
     }
     error_code = this->_error;
-    game_inventory_restore_errno(guard, entry_errno);
+    game_inventory_set_errno(guard, ER_SUCCESS);
     return (ft_strerror(error_code));
 }
 
@@ -514,22 +473,20 @@ bool ft_inventory::check_item_errors(const ft_sharedptr<ft_item> &item) const no
 
 int ft_inventory::add_item(const ft_sharedptr<ft_item> &item) noexcept
 {
-    int entry_errno;
     int remaining;
     int item_id;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
-        game_inventory_restore_errno(guard, entry_errno);
+        game_inventory_set_errno(guard, guard.get_error());
         return (guard.get_error());
     }
     this->set_error(ER_SUCCESS);
     if (this->check_item_errors(item) == true)
     {
-        game_inventory_restore_errno(guard, entry_errno);
+        game_inventory_set_errno(guard, this->_error);
         return (this->_error);
     }
     remaining = item->get_stack_size();
@@ -540,7 +497,7 @@ int ft_inventory::add_item(const ft_sharedptr<ft_item> &item) noexcept
     if (this->_weight_limit != 0 && this->_current_weight + projected_weight > this->_weight_limit)
     {
         this->set_error(FT_ERR_FULL);
-        game_inventory_restore_errno(guard, entry_errno);
+        game_inventory_set_errno(guard, FT_ERR_FULL);
         return (FT_ERR_FULL);
     }
 #endif
@@ -581,7 +538,7 @@ int ft_inventory::add_item(const ft_sharedptr<ft_item> &item) noexcept
         if (this->_capacity != 0 && this->_used_slots + slot_usage > this->_capacity)
         {
             this->set_error(FT_ERR_FULL);
-            game_inventory_restore_errno(guard, entry_errno);
+            game_inventory_set_errno(guard, FT_ERR_FULL);
             return (FT_ERR_FULL);
         }
 #endif
@@ -595,7 +552,7 @@ int ft_inventory::add_item(const ft_sharedptr<ft_item> &item) noexcept
                 this->set_error(FT_ERR_GAME_GENERAL_ERROR);
             else
                 this->set_error(new_item_error);
-            game_inventory_restore_errno(guard, entry_errno);
+            game_inventory_set_errno(guard, this->_error);
             return (this->_error);
         }
         int to_add;
@@ -608,7 +565,7 @@ int ft_inventory::add_item(const ft_sharedptr<ft_item> &item) noexcept
         this->_items.insert(this->_next_slot, new_item);
         if (this->handle_items_error() == true)
         {
-            game_inventory_restore_errno(guard, entry_errno);
+            game_inventory_set_errno(guard, this->_error);
             return (this->_error);
         }
         ++this->_next_slot;
@@ -619,21 +576,19 @@ int ft_inventory::add_item(const ft_sharedptr<ft_item> &item) noexcept
         remaining -= to_add;
     }
     this->set_error(ER_SUCCESS);
-    game_inventory_restore_errno(guard, entry_errno);
+    game_inventory_set_errno(guard, ER_SUCCESS);
     return (ER_SUCCESS);
 }
 
 void ft_inventory::remove_item(int slot) noexcept
 {
-    int entry_errno;
     Pair<int, ft_sharedptr<ft_item> > *entry;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
-        game_inventory_restore_errno(guard, entry_errno);
+        game_inventory_set_errno(guard, guard.get_error());
         return ;
     }
     entry = this->_items.find(slot);
@@ -647,27 +602,25 @@ void ft_inventory::remove_item(int slot) noexcept
     this->_items.remove(slot);
     if (this->handle_items_error() == true)
     {
-        game_inventory_restore_errno(guard, entry_errno);
+        game_inventory_set_errno(guard, this->_error);
         return ;
     }
     this->set_error(ER_SUCCESS);
-    game_inventory_restore_errno(guard, entry_errno);
+    game_inventory_set_errno(guard, ER_SUCCESS);
     return ;
 }
 
 int ft_inventory::count_item(int item_id) const noexcept
 {
-    int entry_errno;
     int total;
     const Pair<int, ft_sharedptr<ft_item> > *item_ptr;
     const Pair<int, ft_sharedptr<ft_item> > *item_end;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         const_cast<ft_inventory *>(this)->set_error(guard.get_error());
-        game_inventory_restore_errno(guard, entry_errno);
+        game_inventory_set_errno(guard, guard.get_error());
         return (0);
     }
     total = 0;
@@ -682,7 +635,7 @@ int ft_inventory::count_item(int item_id) const noexcept
         }
         ++item_ptr;
     }
-    game_inventory_restore_errno(guard, entry_errno);
+    game_inventory_set_errno(guard, ER_SUCCESS);
     return (total);
 }
 
@@ -693,17 +646,15 @@ bool ft_inventory::has_item(int item_id) const noexcept
 
 int ft_inventory::count_rarity(int rarity) const noexcept
 {
-    int entry_errno;
     int total;
     const Pair<int, ft_sharedptr<ft_item> > *item_ptr;
     const Pair<int, ft_sharedptr<ft_item> > *item_end;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         const_cast<ft_inventory *>(this)->set_error(guard.get_error());
-        game_inventory_restore_errno(guard, entry_errno);
+        game_inventory_set_errno(guard, guard.get_error());
         return (0);
     }
     total = 0;
@@ -718,7 +669,7 @@ int ft_inventory::count_rarity(int rarity) const noexcept
         }
         ++item_ptr;
     }
-    game_inventory_restore_errno(guard, entry_errno);
+    game_inventory_set_errno(guard, ER_SUCCESS);
     return (total);
 }
 

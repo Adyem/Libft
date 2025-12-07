@@ -22,6 +22,9 @@ static void game_dialogue_table_unlock_set_errno(ft_unique_lock<pt_mutex> &guard
 
 int ft_dialogue_table::clone_from(const ft_dialogue_table &other) noexcept
 {
+    int entry_errno;
+
+    entry_errno = ft_errno;
     this->_lines = other._lines;
     if (this->_lines.get_error() != ER_SUCCESS)
     {
@@ -35,6 +38,7 @@ int ft_dialogue_table::clone_from(const ft_dialogue_table &other) noexcept
         return (this->_scripts.get_error());
     }
     this->set_error(ER_SUCCESS);
+    ft_errno = entry_errno;
     return (ER_SUCCESS);
 }
 

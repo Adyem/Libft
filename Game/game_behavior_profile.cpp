@@ -180,6 +180,7 @@ ft_behavior_profile &ft_behavior_profile::operator=(const ft_behavior_profile &o
     this->clone_from_unlocked(other);
     game_behavior_restore_errno(this_guard, entry_errno);
     game_behavior_restore_errno(other_guard, entry_errno);
+    ft_errno = entry_errno;
     return (*this);
 }
 
@@ -221,6 +222,7 @@ ft_behavior_profile &ft_behavior_profile::operator=(ft_behavior_profile &&other)
     this->move_from_unlocked(other);
     game_behavior_restore_errno(this_guard, entry_errno);
     game_behavior_restore_errno(other_guard, entry_errno);
+    ft_errno = entry_errno;
     return (*this);
 }
 
@@ -370,6 +372,7 @@ void ft_behavior_profile::set_actions(const ft_vector<ft_behavior_action> &actio
     game_behavior_copy_action_vector(actions, this->_actions);
     this->set_error(this->_actions.get_error());
     game_behavior_restore_errno(guard, entry_errno);
+    ft_errno = entry_errno;
     return ;
 }
 
