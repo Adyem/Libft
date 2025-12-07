@@ -3,25 +3,23 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 
-FT_TEST(test_map_thread_safety_controls,
-        "ft_map toggles optional mutex guard and preserves errno during locks")
+FT_TEST(test_map_thread_safety_resets_errno,
+        "ft_map toggles optional mutex guard and resets errno to success during locks")
 {
     ft_map<int, int> map_instance;
     bool lock_acquired;
-    int saved_errno;
 
     FT_ASSERT_EQ(false, map_instance.is_thread_safe_enabled());
     FT_ASSERT_EQ(0, map_instance.enable_thread_safety());
     FT_ASSERT_EQ(true, map_instance.is_thread_safe_enabled());
     map_instance.insert(1, 2);
-    saved_errno = FT_ERR_INVALID_OPERATION;
-    ft_errno = saved_errno;
+    ft_errno = FT_ERR_INVALID_OPERATION;
     lock_acquired = false;
     FT_ASSERT_EQ(0, map_instance.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(saved_errno, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     map_instance.unlock(lock_acquired);
-    FT_ASSERT_EQ(saved_errno, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     map_instance.disable_thread_safety();
     FT_ASSERT_EQ(false, map_instance.is_thread_safe_enabled());
     return (1);

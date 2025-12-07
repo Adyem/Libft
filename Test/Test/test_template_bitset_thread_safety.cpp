@@ -3,25 +3,23 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 
-FT_TEST(test_bitset_thread_safety_controls,
-        "ft_bitset installs optional mutex guard and preserves errno")
+FT_TEST(test_bitset_thread_safety_resets_errno,
+        "ft_bitset installs optional mutex guard and resets errno to success")
 {
     ft_bitset bits(8);
     bool lock_acquired;
-    int saved_errno;
 
     FT_ASSERT_EQ(false, bits.is_thread_safe_enabled());
     FT_ASSERT_EQ(0, bits.enable_thread_safety());
     FT_ASSERT_EQ(true, bits.is_thread_safe_enabled());
     bits.set(3);
-    saved_errno = FT_ERR_INVALID_OPERATION;
-    ft_errno = saved_errno;
+    ft_errno = FT_ERR_INVALID_OPERATION;
     lock_acquired = false;
     FT_ASSERT_EQ(0, bits.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(saved_errno, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     bits.unlock(lock_acquired);
-    FT_ASSERT_EQ(saved_errno, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(true, bits.test(3));
     bits.disable_thread_safety();
     FT_ASSERT_EQ(false, bits.is_thread_safe_enabled());
