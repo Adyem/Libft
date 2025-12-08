@@ -124,7 +124,7 @@ FT_TEST(test_currency_rate_setters_update_fields, "Currency rate setters mutate 
 }
 
 
-FT_TEST(test_currency_rate_getters_preserve_errno, "Currency rate getters restore incoming errno after access")
+FT_TEST(test_currency_rate_getters_reset_errno, "Currency rate getters set errno to success after access")
 {
     ft_currency_rate rate(3, 1.1, 4);
 
@@ -132,7 +132,7 @@ FT_TEST(test_currency_rate_getters_preserve_errno, "Currency rate getters restor
     FT_ASSERT_EQ(3, rate.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(1.1, rate.get_rate_to_base());
     FT_ASSERT_EQ(4, rate.get_display_precision());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(ER_SUCCESS, rate.get_error());
     return (1);
 }

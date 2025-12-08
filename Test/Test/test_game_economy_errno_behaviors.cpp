@@ -5,7 +5,7 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 
-FT_TEST(test_price_definition_errno_preservation_during_getters_and_setters, "Price definition getters and setters preserve entry errno")
+FT_TEST(test_price_definition_errno_sets_to_success_during_operations, "Price definition getters and setters set errno to success")
 {
     ft_price_definition definition(3, 4, 120, 60, 240);
 
@@ -16,27 +16,27 @@ FT_TEST(test_price_definition_errno_preservation_during_getters_and_setters, "Pr
     definition.set_minimum_value(80);
     definition.set_maximum_value(500);
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     ft_errno = FT_ERR_ALREADY_EXISTS;
     FT_ASSERT_EQ(7, definition.get_item_id());
     FT_ASSERT_EQ(6, definition.get_rarity());
     FT_ASSERT_EQ(300, definition.get_base_value());
     FT_ASSERT_EQ(80, definition.get_minimum_value());
     FT_ASSERT_EQ(500, definition.get_maximum_value());
-    FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(ER_SUCCESS, definition.get_error());
     return (1);
 }
 
 
-FT_TEST(test_price_definition_copy_constructor_restores_errno, "Price definition copy constructor restores entry errno")
+FT_TEST(test_price_definition_copy_constructor_sets_errno_success, "Price definition copy constructor sets errno to success")
 {
     ft_price_definition original(9, 2, 150, 90, 210);
 
     ft_errno = FT_ERR_CONFIGURATION;
     ft_price_definition copy(original);
 
-    FT_ASSERT_EQ(FT_ERR_CONFIGURATION, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(9, copy.get_item_id());
     FT_ASSERT_EQ(2, copy.get_rarity());
     FT_ASSERT_EQ(150, copy.get_base_value());
@@ -48,7 +48,7 @@ FT_TEST(test_price_definition_copy_constructor_restores_errno, "Price definition
 }
 
 
-FT_TEST(test_price_definition_move_assignment_restores_errno_and_clears_source, "Price definition move assignment restores errno and clears source")
+FT_TEST(test_price_definition_move_assignment_sets_errno_and_clears_source, "Price definition move assignment sets errno to success and clears source")
 {
     ft_price_definition source(12, 7, 640, 120, 980);
     ft_price_definition destination;
@@ -56,7 +56,7 @@ FT_TEST(test_price_definition_move_assignment_restores_errno_and_clears_source, 
     ft_errno = FT_ERR_INTERNAL;
     destination = ft_move(source);
 
-    FT_ASSERT_EQ(FT_ERR_INTERNAL, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(12, destination.get_item_id());
     FT_ASSERT_EQ(7, destination.get_rarity());
     FT_ASSERT_EQ(640, destination.get_base_value());
@@ -82,7 +82,7 @@ FT_TEST(test_price_definition_get_error_str_reports_success_message, "Price defi
 }
 
 
-FT_TEST(test_currency_rate_errno_preservation_during_getters_and_setters, "Currency rate getters and setters preserve entry errno")
+FT_TEST(test_currency_rate_errno_sets_to_success_during_operations, "Currency rate getters and setters set errno to success")
 {
     ft_currency_rate rate(5, 2.25, 3);
 
@@ -91,25 +91,25 @@ FT_TEST(test_currency_rate_errno_preservation_during_getters_and_setters, "Curre
     rate.set_rate_to_base(0.85);
     rate.set_display_precision(6);
 
-    FT_ASSERT_EQ(FT_ERR_PRIORITY_QUEUE_EMPTY, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     ft_errno = FT_ERR_ALREADY_INITIALIZED;
     FT_ASSERT_EQ(11, rate.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(0.85, rate.get_rate_to_base());
     FT_ASSERT_EQ(6, rate.get_display_precision());
-    FT_ASSERT_EQ(FT_ERR_ALREADY_INITIALIZED, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(ER_SUCCESS, rate.get_error());
     return (1);
 }
 
 
-FT_TEST(test_currency_rate_move_constructor_restores_errno_and_resets_source, "Currency rate move constructor restores errno and resets source")
+FT_TEST(test_currency_rate_move_constructor_sets_errno_and_resets_source, "Currency rate move constructor sets errno to success and resets source")
 {
     ft_currency_rate original(18, 4.5, 1);
 
     ft_errno = FT_ERR_SOCKET_RECEIVE_FAILED;
     ft_currency_rate moved(ft_move(original));
 
-    FT_ASSERT_EQ(FT_ERR_SOCKET_RECEIVE_FAILED, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(18, moved.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(4.5, moved.get_rate_to_base());
     FT_ASSERT_EQ(1, moved.get_display_precision());
@@ -131,7 +131,7 @@ FT_TEST(test_currency_rate_get_error_str_reports_success_message, "Currency rate
 }
 
 
-FT_TEST(test_rarity_band_errno_preservation_during_getters_and_setters, "Rarity band getters and setters preserve entry errno")
+FT_TEST(test_rarity_band_errno_sets_to_success_during_operations, "Rarity band getters and setters set errno to success")
 {
     ft_rarity_band band(6, 3.25);
 
@@ -139,17 +139,17 @@ FT_TEST(test_rarity_band_errno_preservation_during_getters_and_setters, "Rarity 
     band.set_rarity(9);
     band.set_value_multiplier(1.1);
 
-    FT_ASSERT_EQ(FT_ERR_HTTP_PROTOCOL_MISMATCH, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     ft_errno = FT_ERR_SOCKET_LISTEN_FAILED;
     FT_ASSERT_EQ(9, band.get_rarity());
     FT_ASSERT_DOUBLE_EQ(1.1, band.get_value_multiplier());
-    FT_ASSERT_EQ(FT_ERR_SOCKET_LISTEN_FAILED, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(ER_SUCCESS, band.get_error());
     return (1);
 }
 
 
-FT_TEST(test_rarity_band_move_assignment_restores_errno_and_resets_source, "Rarity band move assignment restores errno and resets source")
+FT_TEST(test_rarity_band_move_assignment_sets_errno_and_resets_source, "Rarity band move assignment sets errno to success and resets source")
 {
     ft_rarity_band source(14, 2.8);
     ft_rarity_band destination(3, 0.9);
@@ -157,7 +157,7 @@ FT_TEST(test_rarity_band_move_assignment_restores_errno_and_resets_source, "Rari
     ft_errno = FT_ERR_SOCKET_ACCEPT_FAILED;
     destination = ft_move(source);
 
-    FT_ASSERT_EQ(FT_ERR_SOCKET_ACCEPT_FAILED, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(14, destination.get_rarity());
     FT_ASSERT_DOUBLE_EQ(2.8, destination.get_value_multiplier());
     FT_ASSERT_EQ(0, source.get_rarity());

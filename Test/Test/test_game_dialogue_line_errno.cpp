@@ -32,43 +32,43 @@ FT_TEST(test_dialogue_line_parameterized_stores_fields, "parameterized construct
     return (1);
 }
 
-FT_TEST(test_dialogue_line_set_line_id_preserves_errno, "set_line_id updates identifier and preserves incoming errno")
+FT_TEST(test_dialogue_line_set_line_id_sets_errno_success, "set_line_id updates identifier and clears errno on success")
 {
     ft_dialogue_line line(1, ft_string("ally"), ft_string("start"), ft_vector<int>());
 
     ft_errno = FT_ERR_TERMINATED;
     line.set_line_id(7);
-    FT_ASSERT_EQ(FT_ERR_TERMINATED, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(7, line.get_line_id());
     FT_ASSERT_EQ(ER_SUCCESS, line.get_error());
     return (1);
 }
 
-FT_TEST(test_dialogue_line_set_speaker_preserves_errno, "set_speaker updates value while keeping errno unchanged")
+FT_TEST(test_dialogue_line_set_speaker_sets_errno_success, "set_speaker updates value while setting errno to success")
 {
     ft_dialogue_line line(1, ft_string("ally"), ft_string("start"), ft_vector<int>());
 
     ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
     line.set_speaker(ft_string("guide"));
-    FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(ft_string("guide"), line.get_speaker());
     FT_ASSERT_EQ(ER_SUCCESS, line.get_error());
     return (1);
 }
 
-FT_TEST(test_dialogue_line_set_text_preserves_errno, "set_text updates dialogue text while preserving errno")
+FT_TEST(test_dialogue_line_set_text_sets_errno_success, "set_text updates dialogue text while setting errno to success")
 {
     ft_dialogue_line line(1, ft_string("ally"), ft_string("start"), ft_vector<int>());
 
     ft_errno = FT_ERR_MUTEX_NOT_OWNER;
     line.set_text(ft_string("updated"));
-    FT_ASSERT_EQ(FT_ERR_MUTEX_NOT_OWNER, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(ft_string("updated"), line.get_text());
     FT_ASSERT_EQ(ER_SUCCESS, line.get_error());
     return (1);
 }
 
-FT_TEST(test_dialogue_line_set_next_line_ids_copies_values, "set_next_line_ids copies entries and leaves errno intact")
+FT_TEST(test_dialogue_line_set_next_line_ids_copies_values_and_clears_errno, "set_next_line_ids copies entries and resets errno to success")
 {
     ft_vector<int> next_lines;
     ft_dialogue_line line(1, ft_string("ally"), ft_string("start"), ft_vector<int>());
@@ -78,7 +78,7 @@ FT_TEST(test_dialogue_line_set_next_line_ids_copies_values, "set_next_line_ids c
     ft_errno = FT_ERR_END_OF_FILE;
     line.set_next_line_ids(next_lines);
     next_lines.push_back(6);
-    FT_ASSERT_EQ(FT_ERR_END_OF_FILE, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(2ul, line.get_next_line_ids().size());
     FT_ASSERT_EQ(2, line.get_next_line_ids()[0]);
     FT_ASSERT_EQ(4, line.get_next_line_ids()[1]);
