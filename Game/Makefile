@@ -35,7 +35,6 @@ SRCS := game_map3d.cpp \
         game_dialogue_line.cpp \
         game_dialogue_script.cpp \
         game_dialogue_table.cpp \
-        game_behavior_helpers.cpp \
         game_behavior_action.cpp \
         game_behavior_profile.cpp \
         game_behavior_table.cpp \
@@ -84,7 +83,6 @@ HEADERS := game_map3d.hpp \
         ft_dialogue_line.hpp \
         ft_dialogue_script.hpp \
         game_dialogue_table.hpp \
-        game_behavior_helpers.hpp \
         ft_behavior_action.hpp \
         ft_behavior_profile.hpp \
         game_behavior_table.hpp \
