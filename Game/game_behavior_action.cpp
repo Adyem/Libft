@@ -1,5 +1,4 @@
 #include "ft_behavior_action.hpp"
-#include "game_behavior_helpers.hpp"
 #include "../Template/move.hpp"
 
 int ft_behavior_action::lock_pair(const ft_behavior_action &first, const ft_behavior_action &second,
@@ -68,7 +67,7 @@ int ft_behavior_action::lock_pair(const ft_behavior_action &first, const ft_beha
         }
         if (lower_guard.owns_lock())
             lower_guard.unlock();
-        game_behavior_sleep_backoff();
+        pt_thread_sleep(1);
     }
 }
 
@@ -87,22 +86,18 @@ ft_behavior_action::ft_behavior_action(int action_id, double weight, double cool
 ft_behavior_action::ft_behavior_action(const ft_behavior_action &other) noexcept
     : _action_id(0), _weight(0.0), _cooldown_seconds(0.0), _error_code(ER_SUCCESS)
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != ER_SUCCESS)
     {
         this->set_error(other_guard.get_error());
-        game_behavior_restore_errno(other_guard, entry_errno);
+        ft_errno = other_guard.get_error();
         return ;
     }
     this->_action_id = other._action_id;
     this->_weight = other._weight;
     this->_cooldown_seconds = other._cooldown_seconds;
     this->_error_code = other._error_code;
-    game_behavior_restore_errno(other_guard, entry_errno);
-    ft_errno = entry_errno;
+    ft_errno = ER_SUCCESS;
     return ;
 }
 
@@ -110,12 +105,10 @@ ft_behavior_action &ft_behavior_action::operator=(const ft_behavior_action &othe
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_behavior_action::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != ER_SUCCESS)
     {
@@ -126,23 +119,18 @@ ft_behavior_action &ft_behavior_action::operator=(const ft_behavior_action &othe
     this->_weight = other._weight;
     this->_cooldown_seconds = other._cooldown_seconds;
     this->_error_code = other._error_code;
-    game_behavior_restore_errno(this_guard, entry_errno);
-    game_behavior_restore_errno(other_guard, entry_errno);
-    ft_errno = entry_errno;
+    ft_errno = ER_SUCCESS;
     return (*this);
 }
 
 ft_behavior_action::ft_behavior_action(ft_behavior_action &&other) noexcept
     : _action_id(0), _weight(0.0), _cooldown_seconds(0.0), _error_code(ER_SUCCESS)
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != ER_SUCCESS)
     {
         this->set_error(other_guard.get_error());
-        game_behavior_restore_errno(other_guard, entry_errno);
+        ft_errno = other_guard.get_error();
         return ;
     }
     this->_action_id = other._action_id;
@@ -153,8 +141,7 @@ ft_behavior_action::ft_behavior_action(ft_behavior_action &&other) noexcept
     other._weight = 0.0;
     other._cooldown_seconds = 0.0;
     other._error_code = ER_SUCCESS;
-    game_behavior_restore_errno(other_guard, entry_errno);
-    ft_errno = entry_errno;
+    ft_errno = ER_SUCCESS;
     return ;
 }
 
@@ -162,12 +149,10 @@ ft_behavior_action &ft_behavior_action::operator=(ft_behavior_action &&other) no
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_behavior_action::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != ER_SUCCESS)
     {
@@ -184,149 +169,127 @@ ft_behavior_action &ft_behavior_action::operator=(ft_behavior_action &&other) no
     other._error_code = ER_SUCCESS;
     this->set_error(this->_error_code);
     other.set_error(ER_SUCCESS);
-    game_behavior_restore_errno(this_guard, entry_errno);
-    game_behavior_restore_errno(other_guard, entry_errno);
-    ft_errno = entry_errno;
+    ft_errno = ER_SUCCESS;
     return (*this);
 }
 
 int ft_behavior_action::get_action_id() const noexcept
 {
-    int entry_errno;
     int action_id;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         const_cast<ft_behavior_action *>(this)->set_error(guard.get_error());
-        game_behavior_restore_errno(guard, entry_errno);
+        ft_errno = guard.get_error();
         return (0);
     }
     action_id = this->_action_id;
     const_cast<ft_behavior_action *>(this)->set_error(this->_error_code);
-    game_behavior_restore_errno(guard, entry_errno);
+    ft_errno = ER_SUCCESS;
     return (action_id);
 }
 
 void ft_behavior_action::set_action_id(int action_id) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
-        game_behavior_restore_errno(guard, entry_errno);
+        ft_errno = guard.get_error();
         return ;
     }
     this->_action_id = action_id;
     this->set_error(ER_SUCCESS);
-    game_behavior_restore_errno(guard, entry_errno);
+    ft_errno = ER_SUCCESS;
     return ;
 }
 
 double ft_behavior_action::get_weight() const noexcept
 {
-    int entry_errno;
     double weight;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         const_cast<ft_behavior_action *>(this)->set_error(guard.get_error());
-        game_behavior_restore_errno(guard, entry_errno);
+        ft_errno = guard.get_error();
         return (0.0);
     }
     weight = this->_weight;
     const_cast<ft_behavior_action *>(this)->set_error(this->_error_code);
-    game_behavior_restore_errno(guard, entry_errno);
+    ft_errno = ER_SUCCESS;
     return (weight);
 }
 
 void ft_behavior_action::set_weight(double weight) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
-        game_behavior_restore_errno(guard, entry_errno);
+        ft_errno = guard.get_error();
         return ;
     }
     this->_weight = weight;
     this->set_error(ER_SUCCESS);
-    game_behavior_restore_errno(guard, entry_errno);
+    ft_errno = ER_SUCCESS;
     return ;
 }
 
 double ft_behavior_action::get_cooldown_seconds() const noexcept
 {
-    int entry_errno;
     double cooldown_seconds;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         const_cast<ft_behavior_action *>(this)->set_error(guard.get_error());
-        game_behavior_restore_errno(guard, entry_errno);
+        ft_errno = guard.get_error();
         return (0.0);
     }
     cooldown_seconds = this->_cooldown_seconds;
     const_cast<ft_behavior_action *>(this)->set_error(this->_error_code);
-    game_behavior_restore_errno(guard, entry_errno);
+    ft_errno = ER_SUCCESS;
     return (cooldown_seconds);
 }
 
 void ft_behavior_action::set_cooldown_seconds(double cooldown_seconds) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         this->set_error(guard.get_error());
-        game_behavior_restore_errno(guard, entry_errno);
+        ft_errno = guard.get_error();
         return ;
     }
     this->_cooldown_seconds = cooldown_seconds;
     this->set_error(ER_SUCCESS);
-    game_behavior_restore_errno(guard, entry_errno);
+    ft_errno = ER_SUCCESS;
     return ;
 }
 
 int ft_behavior_action::get_error() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != ER_SUCCESS)
     {
         const_cast<ft_behavior_action *>(this)->set_error(guard.get_error());
-        game_behavior_restore_errno(guard, entry_errno);
+        ft_errno = guard.get_error();
         return (guard.get_error());
     }
     error_code = this->_error_code;
-    game_behavior_restore_errno(guard, entry_errno);
+    ft_errno = ER_SUCCESS;
     return (error_code);
 }
 
 const char *ft_behavior_action::get_error_str() const noexcept
 {
     int error_code;
-    int entry_errno;
 
-    entry_errno = ft_errno;
     error_code = this->get_error();
-    ft_errno = entry_errno;
     return (ft_strerror(error_code));
 }
 

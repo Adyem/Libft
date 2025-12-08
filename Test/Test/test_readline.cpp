@@ -11,7 +11,6 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../CMA/CMA.hpp"
-#include "../../Libft/limits.hpp"
 #include "../../Libft/libft.hpp"
 
 static void test_readline_cleanup_state(readline_state_t *state)
