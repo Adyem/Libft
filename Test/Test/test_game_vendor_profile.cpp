@@ -116,17 +116,17 @@ FT_TEST(test_game_vendor_profile_setters_replace_values, "Vendor profile setters
 }
 
 
-FT_TEST(test_game_vendor_profile_getters_preserve_errno, "Vendor profile getters do not clobber existing errno values")
+FT_TEST(test_game_vendor_profile_getters_reset_errno, "Vendor profile getters set errno to success")
 {
     ft_vendor_profile profile(3, 1.7, 0.9, 0.03);
 
     ft_errno = FT_ERR_GAME_GENERAL_ERROR;
     FT_ASSERT_EQ(1.7, profile.get_buy_markup());
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(0.9, profile.get_sell_multiplier());
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(0.03, profile.get_tax_rate());
-    FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(ER_SUCCESS, profile.get_error());
     return (1);
 }
