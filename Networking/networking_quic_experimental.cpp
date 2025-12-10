@@ -35,14 +35,14 @@ quic_datagram_plaintext::~quic_datagram_plaintext() noexcept
 bool    networking_quic_enable_experimental() noexcept
 {
     g_quic_experimental_enabled.store(true);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (true);
 }
 
 bool    networking_quic_disable_experimental() noexcept
 {
     g_quic_experimental_enabled.store(false);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (true);
 }
 
@@ -51,7 +51,7 @@ bool    networking_quic_is_experimental_enabled() noexcept
     bool enabled;
 
     enabled = g_quic_experimental_enabled.load();
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (enabled);
 }
 
@@ -62,9 +62,9 @@ quic_experimental_session::quic_experimental_session() noexcept
     this->_configured = false;
     this->_send_sequence = 0;
     this->_receive_sequence = 0;
-    this->_error_code = ER_SUCCESS;
+    this->_error_code = FT_ER_SUCCESSS;
     this->_feature_configuration = quic_feature_configuration();
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -128,7 +128,7 @@ bool    quic_experimental_session::derive_keys(SSL *ssl_session, bool outbound) 
         int export_error;
 
         export_error = ft_errno;
-        this->set_error(export_error != ER_SUCCESS ? export_error : FT_ERR_INTERNAL);
+        this->set_error(export_error != FT_ER_SUCCESSS ? export_error : FT_ERR_INTERNAL);
         return (false);
     }
     if (this->_send_key.size() == 0 || this->_receive_key.size() == 0)
@@ -154,14 +154,14 @@ bool    quic_experimental_session::prepare_nonce(uint64_t sequence_number,
         return (false);
     }
     out_nonce.resize(base_iv.size(), 0);
-    if (out_nonce.get_error() != ER_SUCCESS)
+    if (out_nonce.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(out_nonce.get_error());
         return (false);
     }
     ft_vector<unsigned char> sequence_bytes;
     sequence_bytes.resize(base_iv.size(), 0);
-    if (sequence_bytes.get_error() != ER_SUCCESS)
+    if (sequence_bytes.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(sequence_bytes.get_error());
         return (false);
@@ -193,7 +193,7 @@ bool    quic_experimental_session::prepare_nonce(uint64_t sequence_number,
         out_nonce[index] = base_iv[index] ^ sequence_bytes[index];
         index++;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (true);
 }
 
@@ -222,7 +222,7 @@ bool    quic_experimental_session::configure(SSL *ssl_session,
     this->_feature_configuration = configuration;
     this->_send_sequence = 0;
     this->_receive_sequence = 0;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (true);
 }
 
@@ -258,7 +258,7 @@ bool    quic_experimental_session::encrypt_datagram(const quic_datagram_plaintex
 
     ciphertext_size = payload_length + QUIC_EXPERIMENTAL_TAG_LENGTH;
     out_ciphertext.resize(ciphertext_size, 0);
-    if (out_ciphertext.get_error() != ER_SUCCESS)
+    if (out_ciphertext.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(out_ciphertext.get_error());
         return (false);
@@ -278,11 +278,11 @@ bool    quic_experimental_session::encrypt_datagram(const quic_datagram_plaintex
         int encryption_error;
 
         encryption_error = ft_errno;
-        this->set_error(encryption_error != ER_SUCCESS ? encryption_error : FT_ERR_INTERNAL);
+        this->set_error(encryption_error != FT_ER_SUCCESSS ? encryption_error : FT_ERR_INTERNAL);
         return (false);
     }
     this->_send_sequence += 1;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (true);
 }
 
@@ -319,7 +319,7 @@ bool    quic_experimental_session::decrypt_datagram(const ft_vector<unsigned cha
         return (false);
     payload_length = ciphertext_length - QUIC_EXPERIMENTAL_TAG_LENGTH;
     out_plaintext.resize(payload_length, 0);
-    if (out_plaintext.get_error() != ER_SUCCESS)
+    if (out_plaintext.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(out_plaintext.get_error());
         return (false);
@@ -337,11 +337,11 @@ bool    quic_experimental_session::decrypt_datagram(const ft_vector<unsigned cha
         int decryption_error;
 
         decryption_error = ft_errno;
-        this->set_error(decryption_error != ER_SUCCESS ? decryption_error : FT_ERR_INTERNAL);
+        this->set_error(decryption_error != FT_ER_SUCCESSS ? decryption_error : FT_ERR_INTERNAL);
         return (false);
     }
     this->_receive_sequence += 1;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (true);
 }
 
@@ -350,7 +350,7 @@ bool    quic_experimental_session::get_feature_configuration(quic_feature_config
     if (!this->ensure_configured())
         return (false);
     out_configuration = this->_feature_configuration;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (true);
 }
 

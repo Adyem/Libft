@@ -62,7 +62,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
 
         select_error = WSAGetLastError();
         if (ready_descriptors == 0)
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
         else
             ft_errno = ft_map_system_error(select_error);
         return (ready_descriptors);
@@ -88,7 +88,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
             total_ready++;
         index++;
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (total_ready);
 #else
     fd_set read_set;
@@ -139,7 +139,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
 
         select_error = errno;
         if (ready_descriptors == 0)
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
         else
             ft_errno = ft_map_system_error(select_error);
         return (ready_descriptors);
@@ -165,7 +165,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
             total_ready++;
         index++;
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (total_ready);
 #endif
 }

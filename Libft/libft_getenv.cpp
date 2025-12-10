@@ -12,7 +12,7 @@ char    *ft_getenv(const char *name)
     char    *value;
     int     stored_errno;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     if (name == ft_nullptr || *name == '\0')
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;

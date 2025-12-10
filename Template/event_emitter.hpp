@@ -57,7 +57,7 @@ class ft_event_emitter
 
 template <typename EventType, typename... Args>
 ft_event_emitter<EventType, Args...>::ft_event_emitter(size_t initial_capacity)
-    : _listeners(ft_nullptr), _capacity(0), _size(0), _error_code(ER_SUCCESS), _mutex()
+    : _listeners(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ER_SUCCESSS), _mutex()
 {
     if (initial_capacity > 0)
     {
@@ -69,10 +69,10 @@ ft_event_emitter<EventType, Args...>::ft_event_emitter(size_t initial_capacity)
             return ;
         }
         this->_capacity = initial_capacity;
-        this->set_error_unlocked(ER_SUCCESS);
+        this->set_error_unlocked(FT_ER_SUCCESSS);
         return ;
     }
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -86,14 +86,14 @@ ft_event_emitter<EventType, Args...>::~ft_event_emitter()
     this->_listeners = ft_nullptr;
     this->_capacity = 0;
     this->_size = 0;
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     return ;
 }
 
 template <typename EventType, typename... Args>
 ft_event_emitter<EventType, Args...>::ft_event_emitter(ft_event_emitter&& other) noexcept
     : _listeners(ft_nullptr), _capacity(0), _size(0),
-      _error_code(ER_SUCCESS), _mutex()
+      _error_code(FT_ER_SUCCESSS), _mutex()
 {
     std::lock_guard<std::mutex> other_guard(other._mutex);
     this->_listeners = other._listeners;
@@ -103,7 +103,7 @@ ft_event_emitter<EventType, Args...>::ft_event_emitter(ft_event_emitter&& other)
     other._listeners = ft_nullptr;
     other._capacity = 0;
     other._size = 0;
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     return ;
 }
 
@@ -123,7 +123,7 @@ ft_event_emitter<EventType, Args...>& ft_event_emitter<EventType, Args...>::oper
         other._listeners = ft_nullptr;
         other._capacity = 0;
         other._size = 0;
-        other._error_code = ER_SUCCESS;
+        other._error_code = FT_ER_SUCCESSS;
     }
     return (*this);
 }
@@ -192,7 +192,7 @@ bool ft_event_emitter<EventType, Args...>::ensure_capacity_unlocked(size_t desir
         cma_free(this->_listeners);
     this->_listeners = new_data;
     this->_capacity = new_capacity;
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     return (true);
 }
 
@@ -214,7 +214,7 @@ void ft_event_emitter<EventType, Args...>::on(const EventType& event, void (*cal
         return ;
     construct_at(&this->_listeners[this->_size], Listener{event, callback});
     ++this->_size;
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -238,7 +238,7 @@ void ft_event_emitter<EventType, Args...>::emit(const EventType& event, Args... 
         this->set_error_unlocked(FT_ERR_NOT_FOUND);
         return ;
     }
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -260,7 +260,7 @@ void ft_event_emitter<EventType, Args...>::remove_listener(const EventType& even
                 ++shift_index;
             }
             --this->_size;
-            this->set_error_unlocked(ER_SUCCESS);
+            this->set_error_unlocked(FT_ER_SUCCESSS);
             return ;
         }
         ++listener_index;
@@ -273,7 +273,7 @@ template <typename EventType, typename... Args>
 size_t ft_event_emitter<EventType, Args...>::size() const
 {
     std::lock_guard<std::mutex> mutex_guard(this->_mutex);
-    const_cast<ft_event_emitter<EventType, Args...> *>(this)->set_error_unlocked(ER_SUCCESS);
+    const_cast<ft_event_emitter<EventType, Args...> *>(this)->set_error_unlocked(FT_ER_SUCCESSS);
     return (this->_size);
 }
 
@@ -281,7 +281,7 @@ template <typename EventType, typename... Args>
 bool ft_event_emitter<EventType, Args...>::empty() const
 {
     std::lock_guard<std::mutex> mutex_guard(this->_mutex);
-    const_cast<ft_event_emitter<EventType, Args...> *>(this)->set_error_unlocked(ER_SUCCESS);
+    const_cast<ft_event_emitter<EventType, Args...> *>(this)->set_error_unlocked(FT_ER_SUCCESSS);
     return (this->_size == 0);
 }
 
@@ -304,7 +304,7 @@ void ft_event_emitter<EventType, Args...>::clear()
 {
     std::lock_guard<std::mutex> mutex_guard(this->_mutex);
     this->clear_unlocked();
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     return ;
 }
 

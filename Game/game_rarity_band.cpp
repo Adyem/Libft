@@ -14,15 +14,15 @@ int ft_rarity_band::lock_pair(const ft_rarity_band &first, const ft_rarity_band 
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != ER_SUCCESS)
+        if (single_guard.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = ER_SUCCESS;
-        return (ER_SUCCESS);
+        ft_errno = FT_ER_SUCCESSS;
+        return (FT_ER_SUCCESSS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -40,13 +40,13 @@ int ft_rarity_band::lock_pair(const ft_rarity_band &first, const ft_rarity_band 
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != ER_SUCCESS)
+        if (lower_guard.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == ER_SUCCESS)
+        if (upper_guard.get_error() == FT_ER_SUCCESSS)
         {
             if (!swapped)
             {
@@ -58,8 +58,8 @@ int ft_rarity_band::lock_pair(const ft_rarity_band &first, const ft_rarity_band 
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = ER_SUCCESS;
-            return (ER_SUCCESS);
+            ft_errno = FT_ER_SUCCESSS;
+            return (FT_ER_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -73,26 +73,26 @@ int ft_rarity_band::lock_pair(const ft_rarity_band &first, const ft_rarity_band 
 }
 
 ft_rarity_band::ft_rarity_band() noexcept
-    : _rarity(0), _value_multiplier(1.0), _error_code(ER_SUCCESS)
+    : _rarity(0), _value_multiplier(1.0), _error_code(FT_ER_SUCCESSS)
 {
     return ;
 }
 
 ft_rarity_band::ft_rarity_band(int rarity, double value_multiplier) noexcept
-    : _rarity(rarity), _value_multiplier(value_multiplier), _error_code(ER_SUCCESS)
+    : _rarity(rarity), _value_multiplier(value_multiplier), _error_code(FT_ER_SUCCESSS)
 {
     return ;
 }
 
 ft_rarity_band::ft_rarity_band(const ft_rarity_band &other) noexcept
-    : _rarity(0), _value_multiplier(1.0), _error_code(ER_SUCCESS)
+    : _rarity(0), _value_multiplier(1.0), _error_code(FT_ER_SUCCESSS)
 {
     int entry_errno;
     ft_unique_lock<pt_mutex> self_guard;
     ft_unique_lock<pt_mutex> other_guard;
 
     entry_errno = ft_errno;
-    if (ft_rarity_band::lock_pair(*this, other, self_guard, other_guard) != ER_SUCCESS)
+    if (ft_rarity_band::lock_pair(*this, other, self_guard, other_guard) != FT_ER_SUCCESSS)
     {
         this->set_error(self_guard.get_error());
         game_economy_restore_errno(self_guard, entry_errno);
@@ -117,7 +117,7 @@ ft_rarity_band &ft_rarity_band::operator=(const ft_rarity_band &other) noexcept
     if (this == &other)
         return (*this);
     entry_errno = ft_errno;
-    if (ft_rarity_band::lock_pair(*this, other, self_guard, other_guard) != ER_SUCCESS)
+    if (ft_rarity_band::lock_pair(*this, other, self_guard, other_guard) != FT_ER_SUCCESSS)
     {
         this->set_error(self_guard.get_error());
         game_economy_restore_errno(self_guard, entry_errno);
@@ -134,14 +134,14 @@ ft_rarity_band &ft_rarity_band::operator=(const ft_rarity_band &other) noexcept
 }
 
 ft_rarity_band::ft_rarity_band(ft_rarity_band &&other) noexcept
-    : _rarity(0), _value_multiplier(1.0), _error_code(ER_SUCCESS)
+    : _rarity(0), _value_multiplier(1.0), _error_code(FT_ER_SUCCESSS)
 {
     int entry_errno;
     ft_unique_lock<pt_mutex> self_guard;
     ft_unique_lock<pt_mutex> other_guard;
 
     entry_errno = ft_errno;
-    if (ft_rarity_band::lock_pair(*this, other, self_guard, other_guard) != ER_SUCCESS)
+    if (ft_rarity_band::lock_pair(*this, other, self_guard, other_guard) != FT_ER_SUCCESSS)
     {
         this->set_error(self_guard.get_error());
         game_economy_restore_errno(self_guard, entry_errno);
@@ -153,9 +153,9 @@ ft_rarity_band::ft_rarity_band(ft_rarity_band &&other) noexcept
     this->_error_code = other._error_code;
     other._rarity = 0;
     other._value_multiplier = 0.0;
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     this->set_error(this->_error_code);
-    other.set_error(ER_SUCCESS);
+    other.set_error(FT_ER_SUCCESSS);
     game_economy_restore_errno(self_guard, entry_errno);
     game_economy_restore_errno(other_guard, entry_errno);
     return ;
@@ -170,7 +170,7 @@ ft_rarity_band &ft_rarity_band::operator=(ft_rarity_band &&other) noexcept
     if (this == &other)
         return (*this);
     entry_errno = ft_errno;
-    if (ft_rarity_band::lock_pair(*this, other, self_guard, other_guard) != ER_SUCCESS)
+    if (ft_rarity_band::lock_pair(*this, other, self_guard, other_guard) != FT_ER_SUCCESSS)
     {
         this->set_error(self_guard.get_error());
         game_economy_restore_errno(self_guard, entry_errno);
@@ -182,9 +182,9 @@ ft_rarity_band &ft_rarity_band::operator=(ft_rarity_band &&other) noexcept
     this->_error_code = other._error_code;
     other._rarity = 0;
     other._value_multiplier = 0.0;
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     this->set_error(this->_error_code);
-    other.set_error(ER_SUCCESS);
+    other.set_error(FT_ER_SUCCESSS);
     game_economy_restore_errno(self_guard, entry_errno);
     game_economy_restore_errno(other_guard, entry_errno);
     return (*this);
@@ -197,7 +197,7 @@ int ft_rarity_band::get_rarity() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_rarity_band *>(this)->set_error(guard.get_error());
         game_economy_restore_errno(guard, entry_errno);
@@ -215,14 +215,14 @@ void ft_rarity_band::set_rarity(int rarity) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_economy_restore_errno(guard, entry_errno);
         return ;
     }
     this->_rarity = rarity;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_economy_restore_errno(guard, entry_errno);
     return ;
 }
@@ -234,7 +234,7 @@ double ft_rarity_band::get_value_multiplier() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_rarity_band *>(this)->set_error(guard.get_error());
         game_economy_restore_errno(guard, entry_errno);
@@ -252,14 +252,14 @@ void ft_rarity_band::set_value_multiplier(double value_multiplier) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_economy_restore_errno(guard, entry_errno);
         return ;
     }
     this->_value_multiplier = value_multiplier;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_economy_restore_errno(guard, entry_errno);
     return ;
 }
@@ -271,7 +271,7 @@ int ft_rarity_band::get_error() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_rarity_band *>(this)->set_error(guard.get_error());
         game_economy_restore_errno(guard, entry_errno);

@@ -147,7 +147,7 @@ void game_event_scheduler_telemetry_record(ft_event_scheduler_telemetry_state &s
     }
     queue_depth_value = static_cast<long long>(profile.max_queue_depth);
     latency_value = profile.last_update_processing_ns;
-    success = profile.last_error_code == ER_SUCCESS;
+    success = profile.last_error_code == FT_ER_SUCCESSS;
     game_event_scheduler_telemetry_emit("event_scheduler.throughput",
         "events_per_update",
         events_per_update,
@@ -193,7 +193,7 @@ void game_event_scheduler_publish_telemetry(ft_event_scheduler &scheduler,
 
     entry_errno = ft_errno;
     scheduler.snapshot_profile(profile);
-    if (scheduler.get_error() != ER_SUCCESS)
+    if (scheduler.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = entry_errno;
         return ;

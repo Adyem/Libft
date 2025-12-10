@@ -21,12 +21,12 @@ static void game_item_modifier_restore_errno(ft_unique_lock<pt_mutex> &guard,
 static int game_item_reset_modifier(ft_item_modifier &modifier)
 {
     modifier.set_id(0);
-    if (modifier.get_error() != ER_SUCCESS)
+    if (modifier.get_error() != FT_ER_SUCCESSS)
         return (modifier.get_error());
     modifier.set_value(0);
-    if (modifier.get_error() != ER_SUCCESS)
+    if (modifier.get_error() != FT_ER_SUCCESSS)
         return (modifier.get_error());
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 int ft_item_modifier::lock_pair(const ft_item_modifier &first,
@@ -42,15 +42,15 @@ int ft_item_modifier::lock_pair(const ft_item_modifier &first,
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != ER_SUCCESS)
+        if (single_guard.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = ER_SUCCESS;
-        return (ER_SUCCESS);
+        ft_errno = FT_ER_SUCCESSS;
+        return (FT_ER_SUCCESSS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -68,13 +68,13 @@ int ft_item_modifier::lock_pair(const ft_item_modifier &first,
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != ER_SUCCESS)
+        if (lower_guard.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == ER_SUCCESS)
+        if (upper_guard.get_error() == FT_ER_SUCCESSS)
         {
             if (!swapped)
             {
@@ -86,8 +86,8 @@ int ft_item_modifier::lock_pair(const ft_item_modifier &first,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = ER_SUCCESS;
-            return (ER_SUCCESS);
+            ft_errno = FT_ER_SUCCESSS;
+            return (FT_ER_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -101,27 +101,27 @@ int ft_item_modifier::lock_pair(const ft_item_modifier &first,
 }
 
 ft_item_modifier::ft_item_modifier() noexcept
-    : _id(0), _value(0), _error_code(ER_SUCCESS), _mutex()
+    : _id(0), _value(0), _error_code(FT_ER_SUCCESSS), _mutex()
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
 ft_item_modifier::ft_item_modifier(int id, int value) noexcept
-    : _id(id), _value(value), _error_code(ER_SUCCESS), _mutex()
+    : _id(id), _value(value), _error_code(FT_ER_SUCCESSS), _mutex()
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
 ft_item_modifier::ft_item_modifier(const ft_item_modifier &other) noexcept
-    : _id(0), _value(0), _error_code(ER_SUCCESS), _mutex()
+    : _id(0), _value(0), _error_code(FT_ER_SUCCESSS), _mutex()
 {
     int entry_errno;
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != ER_SUCCESS)
+    if (other_guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
         game_item_modifier_restore_errno(other_guard, entry_errno);
@@ -147,7 +147,7 @@ ft_item_modifier &ft_item_modifier::operator=(const ft_item_modifier &other) noe
     entry_errno = ft_errno;
     lock_error = ft_item_modifier::lock_pair(*this, other,
             this_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -162,13 +162,13 @@ ft_item_modifier &ft_item_modifier::operator=(const ft_item_modifier &other) noe
 }
 
 ft_item_modifier::ft_item_modifier(ft_item_modifier &&other) noexcept
-    : _id(0), _value(0), _error_code(ER_SUCCESS), _mutex()
+    : _id(0), _value(0), _error_code(FT_ER_SUCCESSS), _mutex()
 {
     int entry_errno;
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != ER_SUCCESS)
+    if (other_guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
         game_item_modifier_restore_errno(other_guard, entry_errno);
@@ -179,9 +179,9 @@ ft_item_modifier::ft_item_modifier(ft_item_modifier &&other) noexcept
     this->_error_code = other._error_code;
     other._id = 0;
     other._value = 0;
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     this->set_error(this->_error_code);
-    other.set_error(ER_SUCCESS);
+    other.set_error(FT_ER_SUCCESSS);
     game_item_modifier_restore_errno(other_guard, entry_errno);
     return ;
 }
@@ -198,7 +198,7 @@ ft_item_modifier &ft_item_modifier::operator=(ft_item_modifier &&other) noexcept
     entry_errno = ft_errno;
     lock_error = ft_item_modifier::lock_pair(*this, other,
             this_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -208,9 +208,9 @@ ft_item_modifier &ft_item_modifier::operator=(ft_item_modifier &&other) noexcept
     this->_error_code = other._error_code;
     other._id = 0;
     other._value = 0;
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     this->set_error(this->_error_code);
-    other.set_error(ER_SUCCESS);
+    other.set_error(FT_ER_SUCCESSS);
     game_item_modifier_restore_errno(this_guard, entry_errno);
     game_item_modifier_restore_errno(other_guard, entry_errno);
     return (*this);
@@ -223,14 +223,14 @@ int ft_item_modifier::get_id() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item_modifier *>(this)->set_error(guard.get_error());
         game_item_modifier_restore_errno(guard, entry_errno);
         return (0);
     }
     modifier_id = this->_id;
-    const_cast<ft_item_modifier *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_item_modifier *>(this)->set_error(FT_ER_SUCCESSS);
     game_item_modifier_restore_errno(guard, entry_errno);
     return (modifier_id);
 }
@@ -241,14 +241,14 @@ void ft_item_modifier::set_id(int id) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_item_modifier_restore_errno(guard, entry_errno);
         return ;
     }
     this->_id = id;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_item_modifier_restore_errno(guard, entry_errno);
     return ;
 }
@@ -260,14 +260,14 @@ int ft_item_modifier::get_value() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item_modifier *>(this)->set_error(guard.get_error());
         game_item_modifier_restore_errno(guard, entry_errno);
         return (0);
     }
     modifier_value = this->_value;
-    const_cast<ft_item_modifier *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_item_modifier *>(this)->set_error(FT_ER_SUCCESSS);
     game_item_modifier_restore_errno(guard, entry_errno);
     return (modifier_value);
 }
@@ -278,14 +278,14 @@ void ft_item_modifier::set_value(int value) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_item_modifier_restore_errno(guard, entry_errno);
         return ;
     }
     this->_value = value;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_item_modifier_restore_errno(guard, entry_errno);
     return ;
 }
@@ -297,7 +297,7 @@ int ft_item_modifier::get_error() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item_modifier *>(this)->set_error(guard.get_error());
         game_item_modifier_restore_errno(guard, entry_errno);
@@ -316,7 +316,7 @@ const char *ft_item_modifier::get_error_str() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item_modifier *>(this)->set_error(guard.get_error());
         game_item_modifier_restore_errno(guard, entry_errno);
@@ -362,15 +362,15 @@ int ft_item::lock_pair(const ft_item &first, const ft_item &second,
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != ER_SUCCESS)
+        if (single_guard.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = ER_SUCCESS;
-        return (ER_SUCCESS);
+        ft_errno = FT_ER_SUCCESSS;
+        return (FT_ER_SUCCESSS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -388,13 +388,13 @@ int ft_item::lock_pair(const ft_item &first, const ft_item &second,
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != ER_SUCCESS)
+        if (lower_guard.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == ER_SUCCESS)
+        if (upper_guard.get_error() == FT_ER_SUCCESSS)
         {
             if (!swapped)
             {
@@ -406,8 +406,8 @@ int ft_item::lock_pair(const ft_item &first, const ft_item &second,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = ER_SUCCESS;
-            return (ER_SUCCESS);
+            ft_errno = FT_ER_SUCCESSS;
+            return (FT_ER_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -423,22 +423,22 @@ int ft_item::lock_pair(const ft_item &first, const ft_item &second,
 ft_item::ft_item() noexcept
     : _max_stack(0), _stack_size(0), _item_id(0), _rarity(0),
       _width(1), _height(1), _modifier1(), _modifier2(),
-      _modifier3(), _modifier4(), _error_code(ER_SUCCESS), _mutex()
+      _modifier3(), _modifier4(), _error_code(FT_ER_SUCCESSS), _mutex()
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
 ft_item::ft_item(const ft_item &other) noexcept
     : _max_stack(0), _stack_size(0), _item_id(0), _rarity(0),
       _width(1), _height(1), _modifier1(), _modifier2(),
-      _modifier3(), _modifier4(), _error_code(ER_SUCCESS), _mutex()
+      _modifier3(), _modifier4(), _error_code(FT_ER_SUCCESSS), _mutex()
 {
     int entry_errno;
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != ER_SUCCESS)
+    if (other_guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
         game_item_restore_errno(other_guard, entry_errno);
@@ -471,7 +471,7 @@ ft_item &ft_item::operator=(const ft_item &other) noexcept
         return (*this);
     entry_errno = ft_errno;
     lock_error = ft_item::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -496,13 +496,13 @@ ft_item &ft_item::operator=(const ft_item &other) noexcept
 ft_item::ft_item(ft_item &&other) noexcept
     : _max_stack(0), _stack_size(0), _item_id(0), _rarity(0),
       _width(1), _height(1), _modifier1(), _modifier2(),
-      _modifier3(), _modifier4(), _error_code(ER_SUCCESS), _mutex()
+      _modifier3(), _modifier4(), _error_code(FT_ER_SUCCESSS), _mutex()
 {
     int entry_errno;
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != ER_SUCCESS)
+    if (other_guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
         game_item_restore_errno(other_guard, entry_errno);
@@ -528,36 +528,36 @@ ft_item::ft_item(ft_item &&other) noexcept
     int modifier_error;
 
     modifier_error = game_item_reset_modifier(other._modifier1);
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(other_guard, entry_errno);
         return ;
     }
     modifier_error = game_item_reset_modifier(other._modifier2);
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(other_guard, entry_errno);
         return ;
     }
     modifier_error = game_item_reset_modifier(other._modifier3);
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(other_guard, entry_errno);
         return ;
     }
     modifier_error = game_item_reset_modifier(other._modifier4);
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(other_guard, entry_errno);
         return ;
     }
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     this->set_error(this->_error_code);
-    other.set_error(ER_SUCCESS);
+    other.set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(other_guard, entry_errno);
     return ;
 }
@@ -573,7 +573,7 @@ ft_item &ft_item::operator=(ft_item &&other) noexcept
         return (*this);
     entry_errno = ft_errno;
     lock_error = ft_item::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -598,7 +598,7 @@ ft_item &ft_item::operator=(ft_item &&other) noexcept
     int modifier_error;
 
     modifier_error = game_item_reset_modifier(other._modifier1);
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(this_guard, entry_errno);
@@ -606,7 +606,7 @@ ft_item &ft_item::operator=(ft_item &&other) noexcept
         return (*this);
     }
     modifier_error = game_item_reset_modifier(other._modifier2);
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(this_guard, entry_errno);
@@ -614,7 +614,7 @@ ft_item &ft_item::operator=(ft_item &&other) noexcept
         return (*this);
     }
     modifier_error = game_item_reset_modifier(other._modifier3);
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(this_guard, entry_errno);
@@ -622,16 +622,16 @@ ft_item &ft_item::operator=(ft_item &&other) noexcept
         return (*this);
     }
     modifier_error = game_item_reset_modifier(other._modifier4);
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(this_guard, entry_errno);
         game_item_restore_errno(other_guard, entry_errno);
         return (*this);
     }
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     this->set_error(this->_error_code);
-    other.set_error(ER_SUCCESS);
+    other.set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(this_guard, entry_errno);
     game_item_restore_errno(other_guard, entry_errno);
     return (*this);
@@ -644,14 +644,14 @@ int ft_item::get_max_stack() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
         return (0);
     }
     max_stack_value = this->_max_stack;
-    const_cast<ft_item *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_item *>(this)->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return (max_stack_value);
 }
@@ -662,14 +662,14 @@ void ft_item::set_max_stack(int max) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
         return ;
     }
     this->_max_stack = max;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return ;
 }
@@ -681,14 +681,14 @@ int ft_item::get_stack_size() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
         return (0);
     }
     stack_size_value = this->_stack_size;
-    const_cast<ft_item *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_item *>(this)->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return (stack_size_value);
 }
@@ -699,14 +699,14 @@ void ft_item::set_stack_size(int amount) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
         return ;
     }
     this->_stack_size = amount;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return ;
 }
@@ -717,7 +717,7 @@ void ft_item::add_to_stack(int amount) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
@@ -726,7 +726,7 @@ void ft_item::add_to_stack(int amount) noexcept
     this->_stack_size += amount;
     if (this->_stack_size > this->_max_stack)
         this->_stack_size = this->_max_stack;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return ;
 }
@@ -737,7 +737,7 @@ void ft_item::sub_from_stack(int amount) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
@@ -746,7 +746,7 @@ void ft_item::sub_from_stack(int amount) noexcept
     this->_stack_size -= amount;
     if (this->_stack_size < 0)
         this->_stack_size = 0;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return ;
 }
@@ -758,14 +758,14 @@ int ft_item::get_item_id() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
         return (0);
     }
     item_identifier = this->_item_id;
-    const_cast<ft_item *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_item *>(this)->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return (item_identifier);
 }
@@ -776,14 +776,14 @@ void ft_item::set_item_id(int id) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
         return ;
     }
     this->_item_id = id;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return ;
 }
@@ -795,14 +795,14 @@ int ft_item::get_width() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
         return (0);
     }
     width_value = this->_width;
-    const_cast<ft_item *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_item *>(this)->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return (width_value);
 }
@@ -813,14 +813,14 @@ void ft_item::set_width(int width) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
         return ;
     }
     this->_width = width;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return ;
 }
@@ -832,14 +832,14 @@ int ft_item::get_height() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
         return (0);
     }
     height_value = this->_height;
-    const_cast<ft_item *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_item *>(this)->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return (height_value);
 }
@@ -850,14 +850,14 @@ void ft_item::set_height(int height) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
         return ;
     }
     this->_height = height;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return ;
 }
@@ -869,14 +869,14 @@ int ft_item::get_rarity() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
         return (0);
     }
     rarity_value = this->_rarity;
-    const_cast<ft_item *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_item *>(this)->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return (rarity_value);
 }
@@ -887,14 +887,14 @@ void ft_item::set_rarity(int rarity) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
         return ;
     }
     this->_rarity = rarity;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return ;
 }
@@ -907,7 +907,7 @@ ft_item_modifier ft_item::get_modifier1() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
@@ -915,13 +915,13 @@ ft_item_modifier ft_item::get_modifier1() const noexcept
     }
     modifier = this->_modifier1;
     modifier_error = modifier.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return (ft_item_modifier());
     }
-    const_cast<ft_item *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_item *>(this)->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return (modifier);
 }
@@ -933,14 +933,14 @@ void ft_item::set_modifier1(const ft_item_modifier &mod) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
         return ;
     }
     modifier_error = mod.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
@@ -948,13 +948,13 @@ void ft_item::set_modifier1(const ft_item_modifier &mod) noexcept
     }
     this->_modifier1 = mod;
     modifier_error = this->_modifier1.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return ;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return ;
 }
@@ -967,7 +967,7 @@ int ft_item::get_modifier1_id() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
@@ -975,13 +975,13 @@ int ft_item::get_modifier1_id() const noexcept
     }
     modifier_identifier = this->_modifier1.get_id();
     modifier_error = this->_modifier1.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return (0);
     }
-    const_cast<ft_item *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_item *>(this)->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return (modifier_identifier);
 }
@@ -993,7 +993,7 @@ void ft_item::set_modifier1_id(int id) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
@@ -1001,13 +1001,13 @@ void ft_item::set_modifier1_id(int id) noexcept
     }
     this->_modifier1.set_id(id);
     modifier_error = this->_modifier1.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return ;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return ;
 }
@@ -1020,7 +1020,7 @@ int ft_item::get_modifier1_value() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
@@ -1028,13 +1028,13 @@ int ft_item::get_modifier1_value() const noexcept
     }
     modifier_value = this->_modifier1.get_value();
     modifier_error = this->_modifier1.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return (0);
     }
-    const_cast<ft_item *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_item *>(this)->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return (modifier_value);
 }
@@ -1046,7 +1046,7 @@ void ft_item::set_modifier1_value(int value) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
@@ -1054,13 +1054,13 @@ void ft_item::set_modifier1_value(int value) noexcept
     }
     this->_modifier1.set_value(value);
     modifier_error = this->_modifier1.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return ;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return ;
 }
@@ -1073,7 +1073,7 @@ ft_item_modifier ft_item::get_modifier2() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
@@ -1081,13 +1081,13 @@ ft_item_modifier ft_item::get_modifier2() const noexcept
     }
     modifier = this->_modifier2;
     modifier_error = modifier.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return (ft_item_modifier());
     }
-    const_cast<ft_item *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_item *>(this)->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return (modifier);
 }
@@ -1099,14 +1099,14 @@ void ft_item::set_modifier2(const ft_item_modifier &mod) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
         return ;
     }
     modifier_error = mod.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
@@ -1114,13 +1114,13 @@ void ft_item::set_modifier2(const ft_item_modifier &mod) noexcept
     }
     this->_modifier2 = mod;
     modifier_error = this->_modifier2.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return ;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return ;
 }
@@ -1133,7 +1133,7 @@ int ft_item::get_modifier2_id() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
@@ -1141,13 +1141,13 @@ int ft_item::get_modifier2_id() const noexcept
     }
     modifier_identifier = this->_modifier2.get_id();
     modifier_error = this->_modifier2.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return (0);
     }
-    const_cast<ft_item *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_item *>(this)->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return (modifier_identifier);
 }
@@ -1159,7 +1159,7 @@ void ft_item::set_modifier2_id(int id) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
@@ -1167,13 +1167,13 @@ void ft_item::set_modifier2_id(int id) noexcept
     }
     this->_modifier2.set_id(id);
     modifier_error = this->_modifier2.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return ;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return ;
 }
@@ -1186,7 +1186,7 @@ int ft_item::get_modifier2_value() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
@@ -1194,13 +1194,13 @@ int ft_item::get_modifier2_value() const noexcept
     }
     modifier_value = this->_modifier2.get_value();
     modifier_error = this->_modifier2.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return (0);
     }
-    const_cast<ft_item *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_item *>(this)->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return (modifier_value);
 }
@@ -1212,7 +1212,7 @@ void ft_item::set_modifier2_value(int value) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
@@ -1220,13 +1220,13 @@ void ft_item::set_modifier2_value(int value) noexcept
     }
     this->_modifier2.set_value(value);
     modifier_error = this->_modifier2.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return ;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return ;
 }
@@ -1239,7 +1239,7 @@ ft_item_modifier ft_item::get_modifier3() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
@@ -1247,13 +1247,13 @@ ft_item_modifier ft_item::get_modifier3() const noexcept
     }
     modifier = this->_modifier3;
     modifier_error = modifier.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return (ft_item_modifier());
     }
-    const_cast<ft_item *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_item *>(this)->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return (modifier);
 }
@@ -1265,14 +1265,14 @@ void ft_item::set_modifier3(const ft_item_modifier &mod) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
         return ;
     }
     modifier_error = mod.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
@@ -1280,13 +1280,13 @@ void ft_item::set_modifier3(const ft_item_modifier &mod) noexcept
     }
     this->_modifier3 = mod;
     modifier_error = this->_modifier3.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return ;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return ;
 }
@@ -1299,7 +1299,7 @@ int ft_item::get_modifier3_id() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
@@ -1307,13 +1307,13 @@ int ft_item::get_modifier3_id() const noexcept
     }
     modifier_identifier = this->_modifier3.get_id();
     modifier_error = this->_modifier3.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return (0);
     }
-    const_cast<ft_item *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_item *>(this)->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return (modifier_identifier);
 }
@@ -1325,7 +1325,7 @@ void ft_item::set_modifier3_id(int id) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
@@ -1333,13 +1333,13 @@ void ft_item::set_modifier3_id(int id) noexcept
     }
     this->_modifier3.set_id(id);
     modifier_error = this->_modifier3.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return ;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return ;
 }
@@ -1352,7 +1352,7 @@ int ft_item::get_modifier3_value() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
@@ -1360,13 +1360,13 @@ int ft_item::get_modifier3_value() const noexcept
     }
     modifier_value = this->_modifier3.get_value();
     modifier_error = this->_modifier3.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return (0);
     }
-    const_cast<ft_item *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_item *>(this)->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return (modifier_value);
 }
@@ -1378,7 +1378,7 @@ void ft_item::set_modifier3_value(int value) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
@@ -1386,13 +1386,13 @@ void ft_item::set_modifier3_value(int value) noexcept
     }
     this->_modifier3.set_value(value);
     modifier_error = this->_modifier3.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return ;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return ;
 }
@@ -1405,7 +1405,7 @@ ft_item_modifier ft_item::get_modifier4() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
@@ -1413,13 +1413,13 @@ ft_item_modifier ft_item::get_modifier4() const noexcept
     }
     modifier = this->_modifier4;
     modifier_error = modifier.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return (ft_item_modifier());
     }
-    const_cast<ft_item *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_item *>(this)->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return (modifier);
 }
@@ -1431,14 +1431,14 @@ void ft_item::set_modifier4(const ft_item_modifier &mod) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
         return ;
     }
     modifier_error = mod.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
@@ -1446,13 +1446,13 @@ void ft_item::set_modifier4(const ft_item_modifier &mod) noexcept
     }
     this->_modifier4 = mod;
     modifier_error = this->_modifier4.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return ;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return ;
 }
@@ -1465,7 +1465,7 @@ int ft_item::get_modifier4_id() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
@@ -1473,13 +1473,13 @@ int ft_item::get_modifier4_id() const noexcept
     }
     modifier_identifier = this->_modifier4.get_id();
     modifier_error = this->_modifier4.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return (0);
     }
-    const_cast<ft_item *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_item *>(this)->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return (modifier_identifier);
 }
@@ -1491,7 +1491,7 @@ void ft_item::set_modifier4_id(int id) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
@@ -1499,13 +1499,13 @@ void ft_item::set_modifier4_id(int id) noexcept
     }
     this->_modifier4.set_id(id);
     modifier_error = this->_modifier4.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return ;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return ;
 }
@@ -1518,7 +1518,7 @@ int ft_item::get_modifier4_value() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
@@ -1526,13 +1526,13 @@ int ft_item::get_modifier4_value() const noexcept
     }
     modifier_value = this->_modifier4.get_value();
     modifier_error = this->_modifier4.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return (0);
     }
-    const_cast<ft_item *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_item *>(this)->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return (modifier_value);
 }
@@ -1544,7 +1544,7 @@ void ft_item::set_modifier4_value(int value) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
@@ -1552,13 +1552,13 @@ void ft_item::set_modifier4_value(int value) noexcept
     }
     this->_modifier4.set_value(value);
     modifier_error = this->_modifier4.get_error();
-    if (modifier_error != ER_SUCCESS)
+    if (modifier_error != FT_ER_SUCCESSS)
     {
         this->set_error(modifier_error);
         game_item_restore_errno(guard, entry_errno);
         return ;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_item_restore_errno(guard, entry_errno);
     return ;
 }
@@ -1577,7 +1577,7 @@ int ft_item::get_error() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);
@@ -1596,7 +1596,7 @@ const char *ft_item::get_error_str() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_item *>(this)->set_error(guard.get_error());
         game_item_restore_errno(guard, entry_errno);

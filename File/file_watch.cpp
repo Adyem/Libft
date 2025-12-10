@@ -15,7 +15,7 @@
 #endif
 
 ft_file_watch::ft_file_watch()
-    : _path(), _callback(ft_nullptr), _user_data(ft_nullptr), _thread(), _running(false), _stopped(true), _error_code(ER_SUCCESS), _mutex()
+    : _path(), _callback(ft_nullptr), _user_data(ft_nullptr), _thread(), _running(false), _stopped(true), _error_code(FT_ER_SUCCESSS), _mutex()
 #ifdef __linux__
     , _fd(-1), _watch(-1)
 #elif defined(__APPLE__) || defined(__FreeBSD__)
@@ -46,16 +46,16 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
     int result;
     int status;
 
-    final_errno = ER_SUCCESS;
+    final_errno = FT_ER_SUCCESSS;
     result = -1;
-    status = ER_SUCCESS;
+    status = FT_ER_SUCCESSS;
     {
         ft_thread new_thread;
         int entry_errno;
 
         entry_errno = ft_errno;
         ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
-        if (mutex_guard.get_error() != ER_SUCCESS)
+        if (mutex_guard.get_error() != FT_ER_SUCCESSS)
         {
             status = mutex_guard.get_error();
             this->set_error(status);
@@ -75,16 +75,16 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
                     ft_errno = entry_errno;
                     this->stop();
                     mutex_guard = ft_unique_lock<pt_mutex>(this->_mutex);
-                    if (mutex_guard.get_error() != ER_SUCCESS)
+                    if (mutex_guard.get_error() != FT_ER_SUCCESSS)
                     {
                         status = mutex_guard.get_error();
                         this->set_error(status);
                     }
                 }
-                if (status == ER_SUCCESS)
+                if (status == FT_ER_SUCCESSS)
                 {
                     this->_path = ft_string(path);
-                    if (this->_path.get_error() != ER_SUCCESS)
+                    if (this->_path.get_error() != FT_ER_SUCCESSS)
                     {
                         status = this->_path.get_error();
                         this->_callback = ft_nullptr;
@@ -158,12 +158,12 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
                             this->set_error(status);
                         }
 #endif
-                        if (status == ER_SUCCESS)
+                        if (status == FT_ER_SUCCESSS)
                         {
                             this->_running = true;
                             this->_stopped = false;
                             new_thread = ft_thread(&ft_file_watch::event_loop, this);
-                            if (new_thread.get_error() != ER_SUCCESS)
+                            if (new_thread.get_error() != FT_ER_SUCCESSS)
                             {
                                 status = new_thread.get_error();
                                 this->_running = false;
@@ -177,7 +177,7 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
                             else
                             {
                                 this->_thread = ft_thread(ft_move(new_thread));
-                                this->set_error(ER_SUCCESS);
+                                this->set_error(FT_ER_SUCCESSS);
                                 result = 0;
                             }
                         }
@@ -188,10 +188,10 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
         if (mutex_guard.owns_lock())
             mutex_guard.unlock();
     }
-    if (status != ER_SUCCESS)
+    if (status != FT_ER_SUCCESSS)
         final_errno = status;
     else
-        final_errno = ER_SUCCESS;
+        final_errno = FT_ER_SUCCESSS;
     ft_errno = final_errno;
     return (result);
 }
@@ -204,11 +204,11 @@ void ft_file_watch::stop()
 
     entry_errno = ft_errno;
     final_errno = entry_errno;
-    status = ER_SUCCESS;
+    status = FT_ER_SUCCESSS;
     {
         ft_thread thread_to_join;
         ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
-        if (mutex_guard.get_error() != ER_SUCCESS)
+        if (mutex_guard.get_error() != FT_ER_SUCCESSS)
         {
             status = mutex_guard.get_error();
             this->set_error(status);
@@ -234,7 +234,7 @@ void ft_file_watch::stop()
                 thread_to_join.join();
         }
     }
-    if (status != ER_SUCCESS)
+    if (status != FT_ER_SUCCESSS)
         final_errno = status;
     else
         final_errno = entry_errno;
@@ -273,7 +273,7 @@ bool ft_file_watch::snapshot_callback(void (**callback)(const char *, int, void 
     bool running;
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
-    if (mutex_guard.get_error() != ER_SUCCESS)
+    if (mutex_guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_file_watch *>(this)->set_error(mutex_guard.get_error());
         return (false);
@@ -291,7 +291,7 @@ bool ft_file_watch::snapshot_callback(void (**callback)(const char *, int, void 
     *callback = this->_callback;
     user_data = this->_user_data;
     path_snapshot = this->_path;
-    if (path_snapshot.get_error() != ER_SUCCESS)
+    if (path_snapshot.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_file_watch *>(this)->set_error(path_snapshot.get_error());
         path_snapshot.clear();
@@ -308,7 +308,7 @@ bool ft_file_watch::get_linux_handles(int &fd) const
     bool running;
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
-    if (mutex_guard.get_error() != ER_SUCCESS)
+    if (mutex_guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_file_watch *>(this)->set_error(mutex_guard.get_error());
         return (false);
@@ -332,7 +332,7 @@ bool ft_file_watch::get_bsd_handles(int &kqueue_handle, int &fd) const
     bool running;
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
-    if (mutex_guard.get_error() != ER_SUCCESS)
+    if (mutex_guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_file_watch *>(this)->set_error(mutex_guard.get_error());
         return (false);
@@ -357,7 +357,7 @@ bool ft_file_watch::get_windows_handle(void *&handle) const
     bool running;
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
-    if (mutex_guard.get_error() != ER_SUCCESS)
+    if (mutex_guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_file_watch *>(this)->set_error(mutex_guard.get_error());
         return (false);
@@ -382,7 +382,7 @@ int ft_file_watch::get_error() const
     int error_code;
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
-    if (mutex_guard.get_error() != ER_SUCCESS)
+    if (mutex_guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_file_watch *>(this)->set_error(mutex_guard.get_error());
         return (mutex_guard.get_error());
@@ -400,7 +400,7 @@ const char *ft_file_watch::get_error_str() const
     const char *error_string;
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
-    if (mutex_guard.get_error() != ER_SUCCESS)
+    if (mutex_guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_file_watch *>(this)->set_error(mutex_guard.get_error());
         return (ft_strerror(mutex_guard.get_error()));

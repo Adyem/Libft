@@ -4,7 +4,7 @@
 
 void ft_striteri(char *string, void (*function)(unsigned int, char *))
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     if (string == ft_nullptr || function == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;

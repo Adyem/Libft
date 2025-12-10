@@ -4,7 +4,7 @@
 
 int    ft_strcmp(const char *string1, const char *string2)
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     if (string1 == ft_nullptr || string2 == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;

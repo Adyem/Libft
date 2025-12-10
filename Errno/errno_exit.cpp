@@ -4,11 +4,11 @@
 
 void    ft_exit(const char *error_msg, int exit_code)
 {
-    if (error_msg && ft_errno != ER_SUCCESS)
+    if (error_msg && ft_errno != FT_ER_SUCCESSS)
         pf_printf_fd(2, "%s: %s\n", error_msg, ft_strerror(ft_errno));
     else if (error_msg)
         pf_printf_fd(2, "%s\n", error_msg);
-    else if (ft_errno != ER_SUCCESS)
+    else if (ft_errno != FT_ER_SUCCESSS)
         pf_printf_fd(2, "%s\n", ft_strerror(ft_errno));
     std::_Exit(exit_code);
     return ;

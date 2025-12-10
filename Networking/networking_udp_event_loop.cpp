@@ -72,15 +72,15 @@ static int udp_event_loop_wait_internal(event_loop *loop, udp_socket &socket,
     }
     if (poll_result == 0)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     if (!descriptor_ready)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (1);
 }
 

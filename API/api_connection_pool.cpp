@@ -53,7 +53,7 @@ struct api_pooled_connection
     {
         if (pointer)
             cma_free(pointer);
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return ;
     }
 
@@ -292,7 +292,7 @@ static api_connection_pool_dispose_snapshot g_api_connection_pool_last_dispose_s
 {
     false,
     false,
-    ER_SUCCESS,
+    FT_ER_SUCCESSS,
     0
 };
 
@@ -381,12 +381,12 @@ static void api_connection_pool_dispose_entry(api_pooled_connection &entry)
     socket_has_clients = false;
     socket_cleanup_allowed = true;
     client_count = 0;
-    socket_error = ER_SUCCESS;
+    socket_error = FT_ER_SUCCESSS;
     if (socket_is_open)
     {
         client_count = entry.socket.get_client_count();
         socket_error = entry.socket.get_error();
-        if (socket_error != ER_SUCCESS)
+        if (socket_error != FT_ER_SUCCESSS)
         {
             socket_cleanup_allowed = false;
         }
@@ -395,14 +395,14 @@ static void api_connection_pool_dispose_entry(api_pooled_connection &entry)
     }
     if (!socket_cleanup_allowed)
     {
-        if (socket_error != ER_SUCCESS)
+        if (socket_error != FT_ER_SUCCESSS)
             ft_errno = socket_error;
     }
     else if (socket_has_clients)
     {
         entry.socket.disconnect_all_clients();
         socket_error = entry.socket.get_error();
-        if (socket_error != ER_SUCCESS)
+        if (socket_error != FT_ER_SUCCESSS)
         {
             socket_cleanup_allowed = false;
             ft_errno = socket_error;
@@ -439,7 +439,7 @@ static bool api_connection_pool_bucket_erase(t_api_connection_bucket &entries, s
     if (index >= entries.size())
         return (false);
     entries.erase(entries.begin() + index);
-    if (entries.get_error() != ER_SUCCESS)
+    if (entries.get_error() != FT_ER_SUCCESSS)
         return (false);
     return (true);
 }
@@ -449,7 +449,7 @@ static bool api_connection_pool_map_erase(t_api_connection_map &buckets, size_t 
     if (index >= buckets.size())
         return (false);
     buckets.erase(buckets.begin() + index);
-    if (buckets.get_error() != ER_SUCCESS)
+    if (buckets.get_error() != FT_ER_SUCCESSS)
         return (false);
     return (true);
 }
@@ -526,7 +526,7 @@ static void api_connection_pool_prune_expired(t_api_connection_bucket &entries,
             if (age >= g_api_connection_idle_timeout_ms)
                 remove_entry = true;
         }
-        if (entry->socket.get_error() != ER_SUCCESS)
+        if (entry->socket.get_error() != FT_ER_SUCCESSS)
             remove_entry = true;
         if (remove_entry)
         {
@@ -548,7 +548,7 @@ static void api_connection_pool_remove_oldest(t_api_connection_bucket &entries)
 
     entry_pointer = ft_move(entries[0]);
     entries.erase(entries.begin());
-    if (entries.get_error() != ER_SUCCESS)
+    if (entries.get_error() != FT_ER_SUCCESSS)
         return ;
     if (!entry_pointer)
         return ;
@@ -739,7 +739,7 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
         api_connection_pool_evict(handle);
         return ;
     }
-    if (handle.socket.get_error() != ER_SUCCESS)
+    if (handle.socket.get_error() != FT_ER_SUCCESSS)
     {
         handle.unlock(handle_lock_acquired);
         api_connection_pool_evict(handle);
@@ -769,7 +769,7 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
 
         new_entry.key = map_key;
         buckets.push_back(ft_move(new_entry));
-        if (buckets.get_error() != ER_SUCCESS)
+        if (buckets.get_error() != FT_ER_SUCCESSS)
         {
             handle.unlock(handle_lock_acquired);
             api_connection_pool_evict(handle);
@@ -785,7 +785,7 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
 
         previous_size = bucket->size();
         api_connection_pool_remove_oldest(*bucket);
-        if (bucket->get_error() != ER_SUCCESS)
+        if (bucket->get_error() != FT_ER_SUCCESSS)
             break ;
         if (bucket->size() >= previous_size)
             break ;
@@ -836,7 +836,7 @@ void api_connection_pool_mark_idle(api_connection_pool_handle &handle)
 
     stored_entry = entry_pointer.get();
     bucket->push_back(ft_move(entry_pointer));
-    if (bucket->get_error() != ER_SUCCESS)
+    if (bucket->get_error() != FT_ER_SUCCESSS)
     {
         if (stored_entry)
             api_connection_pool_dispose_entry(*stored_entry);

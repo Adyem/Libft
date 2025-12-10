@@ -13,11 +13,11 @@ FT_TEST(test_experience_table_generate_total_resets_zero, "Game: generate_levels
     initial_levels[1] = 10;
     initial_levels[2] = 20;
     result = table.set_levels(initial_levels, 3);
-    FT_ASSERT_EQ(ER_SUCCESS, result);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, result);
     result = table.generate_levels_total(0, 50, 2.0);
-    FT_ASSERT_EQ(ER_SUCCESS, result);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, result);
     FT_ASSERT_EQ(0, table.get_count());
-    FT_ASSERT_EQ(ER_SUCCESS, table.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
     return (1);
 }
 
@@ -45,12 +45,12 @@ FT_TEST(test_experience_table_copy_isolation, "Game: copy construction duplicate
     base_levels[0] = 10;
     base_levels[1] = 20;
     base_levels[2] = 40;
-    FT_ASSERT_EQ(ER_SUCCESS, table.set_levels(base_levels, 3));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.set_levels(base_levels, 3));
     ft_experience_table duplicate(table);
     table.set_value(1, 30);
     FT_ASSERT_EQ(3, duplicate.get_count());
     FT_ASSERT_EQ(20, duplicate.get_value(1));
-    FT_ASSERT_EQ(ER_SUCCESS, duplicate.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, duplicate.get_error());
     return (1);
 }
 
@@ -59,11 +59,11 @@ FT_TEST(test_experience_table_move_clears_source, "Game: move construction trans
     ft_experience_table source;
     ft_experience_table destination;
 
-    FT_ASSERT_EQ(ER_SUCCESS, source.generate_levels_total(2, 50, 2.0));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.generate_levels_total(2, 50, 2.0));
     destination = ft_move(source);
     FT_ASSERT_EQ(2, destination.get_count());
     FT_ASSERT_EQ(0, source.get_count());
-    FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
     return (1);
 }
 
@@ -71,11 +71,11 @@ FT_TEST(test_experience_table_get_level_boundaries, "Game: get_level returns ind
 {
     ft_experience_table table;
 
-    FT_ASSERT_EQ(ER_SUCCESS, table.generate_levels_scaled(3, 100, 2.0));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.generate_levels_scaled(3, 100, 2.0));
     FT_ASSERT_EQ(0, table.get_level(50));
     FT_ASSERT_EQ(1, table.get_level(100));
     FT_ASSERT_EQ(2, table.get_level(350));
     FT_ASSERT_EQ(3, table.get_level(800));
-    FT_ASSERT_EQ(ER_SUCCESS, table.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
     return (1);
 }

@@ -28,7 +28,7 @@ FT_TEST(test_cnfg_parse_flags_collects_unique_alpha, "cnfg_parse_flags collects 
     ft_errno = FT_ERR_NO_MEMORY;
     char *parsed_flags = cnfg_parse_flags(7, arguments);
     FT_ASSERT(parsed_flags != ft_nullptr);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT(parsed_flags[0] == 'a');
     FT_ASSERT(parsed_flags[1] == 'v');
     FT_ASSERT(parsed_flags[2] == 'b');
@@ -40,7 +40,7 @@ FT_TEST(test_cnfg_parse_flags_collects_unique_alpha, "cnfg_parse_flags collects 
 
 FT_TEST(test_cnfg_parse_flags_null_arguments_set_errno, "cnfg_parse_flags rejects null argument arrays")
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     char *parsed_flags = cnfg_parse_flags(2, ft_nullptr);
     FT_ASSERT(parsed_flags == ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -64,7 +64,7 @@ FT_TEST(test_cnfg_parse_long_flags_deduplicates, "cnfg_parse_long_flags ignores 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     char **parsed_flags = cnfg_parse_long_flags(5, arguments);
     FT_ASSERT(parsed_flags != ft_nullptr);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT(parsed_flags[0] != ft_nullptr);
     FT_ASSERT(ft_strcmp(parsed_flags[0], "alpha") == 0);
     FT_ASSERT(parsed_flags[1] != ft_nullptr);
@@ -82,7 +82,7 @@ FT_TEST(test_cnfg_parse_long_flags_deduplicates, "cnfg_parse_long_flags ignores 
 
 FT_TEST(test_cnfg_parse_long_flags_null_arguments_set_errno, "cnfg_parse_long_flags rejects null argument arrays")
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     char **parsed_flags = cnfg_parse_long_flags(2, ft_nullptr);
     FT_ASSERT(parsed_flags == ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -107,8 +107,8 @@ FT_TEST(test_cnfg_flag_parser_parse_populates_counts, "cnfg_flag_parser parses a
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     bool parse_result = parser.parse(5, arguments);
     FT_ASSERT(parse_result);
-    FT_ASSERT_EQ(ER_SUCCESS, parser.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, parser.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT(parser.get_short_flag_count() == 2);
     FT_ASSERT(parser.get_long_flag_count() == 2);
     FT_ASSERT(parser.get_total_flag_count() == 4);
@@ -213,6 +213,6 @@ FT_TEST(test_cnfg_flag_parser_thread_safe_parse_operations, "cnfg_flag_parser se
     FT_ASSERT(final_result);
     FT_ASSERT(parser.has_short_flag('b'));
     FT_ASSERT(parser.has_long_flag("beta"));
-    FT_ASSERT(parser.get_error() == ER_SUCCESS);
+    FT_ASSERT(parser.get_error() == FT_ER_SUCCESSS);
     return (1);
 }

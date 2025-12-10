@@ -22,21 +22,21 @@ FT_TEST(test_ft_graph_enable_thread_safety_controls,
     FT_ASSERT_EQ(0, graph_instance.lock(&lock_acquired));
     FT_ASSERT(lock_acquired);
     graph_instance.unlock(lock_acquired);
-    FT_ASSERT_EQ(ER_SUCCESS, graph_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, graph_instance.get_error());
 
     vertex_a = graph_instance.add_vertex(10);
     vertex_b = graph_instance.add_vertex(20);
     graph_instance.add_edge(vertex_a, vertex_b);
-    FT_ASSERT_EQ(ER_SUCCESS, graph_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, graph_instance.get_error());
 
     graph_instance.neighbors(vertex_a, neighbor_list);
-    FT_ASSERT_EQ(ER_SUCCESS, graph_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, graph_instance.get_error());
     FT_ASSERT(neighbor_list.size() == 1);
     FT_ASSERT(neighbor_list[0] == vertex_b);
 
     graph_instance.disable_thread_safety();
     FT_ASSERT(graph_instance.is_thread_safe() == false);
-    FT_ASSERT_EQ(ER_SUCCESS, graph_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, graph_instance.get_error());
 
     graph_instance.clear();
     return (1);
@@ -95,7 +95,7 @@ FT_TEST(test_ft_graph_lock_blocks_until_release,
 
     graph_instance.disable_thread_safety();
     FT_ASSERT(graph_instance.is_thread_safe() == false);
-    FT_ASSERT_EQ(ER_SUCCESS, graph_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, graph_instance.get_error());
 
     graph_instance.clear();
     return (1);

@@ -28,11 +28,11 @@ FT_TEST(test_logger_async_backpressure_metrics, "async logger reports queue drop
 
     ft_log_enable_async(false);
     original_limit = ft_log_get_async_queue_limit();
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     ft_log_set_async_queue_limit(2);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     ft_log_reset_async_metrics();
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     logger_enqueue_message("backpressure-1");
     logger_enqueue_message("backpressure-2");
     logger_enqueue_message("backpressure-3");
@@ -56,7 +56,7 @@ FT_TEST(test_ft_log_set_level_updates_global_threshold, "ft_log_set_level update
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     ft_log_set_level(LOG_LEVEL_ERROR);
     FT_ASSERT_EQ(LOG_LEVEL_ERROR, g_level);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     g_level = previous_level;
     return (1);
 }
@@ -70,10 +70,10 @@ FT_TEST(test_ft_log_alloc_logging_without_global_logger, "ft_log_set_alloc_loggi
     g_logger = ft_nullptr;
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     ft_log_set_alloc_logging(true);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(false, ft_log_get_alloc_logging());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     g_logger = previous_logger;
     return (1);
 }
@@ -91,20 +91,20 @@ FT_TEST(test_ft_log_global_helpers_forward_to_logger, "ft_log_* helpers forward 
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         ft_log_set_alloc_logging(true);
         FT_ASSERT_EQ(true, logger_instance.get_alloc_logging());
-        FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+        FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
 
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         FT_ASSERT_EQ(true, ft_log_get_alloc_logging());
-        FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+        FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
 
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         ft_log_set_api_logging(true);
         FT_ASSERT_EQ(true, logger_instance.get_api_logging());
-        FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+        FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
 
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         FT_ASSERT_EQ(true, ft_log_get_api_logging());
-        FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+        FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
 
         ft_log_set_alloc_logging(false);
         FT_ASSERT_EQ(false, logger_instance.get_alloc_logging());

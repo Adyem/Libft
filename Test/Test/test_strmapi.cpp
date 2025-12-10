@@ -68,10 +68,10 @@ FT_TEST(test_strmapi_uses_index_values, "ft_strmapi forwards index values to cal
 
 FT_TEST(test_strmapi_null_arguments_set_errno, "ft_strmapi null inputs set FT_ERR_INVALID_ARGUMENT")
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(ft_nullptr, ft_strmapi(ft_nullptr, to_upper_map));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(ft_nullptr, ft_strmapi("sample", ft_nullptr));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -81,14 +81,14 @@ FT_TEST(test_strmapi_success_after_failure_resets_errno, "ft_strmapi clears errn
 {
     char *result;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(ft_nullptr, ft_strmapi(ft_nullptr, to_upper_map));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     result = ft_strmapi("abc", to_upper_map);
     if (result == ft_nullptr)
         return (0);
     FT_ASSERT_EQ(0, ft_strcmp("ABC", result));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     cma_free(result);
     return (1);
 }
@@ -106,7 +106,7 @@ FT_TEST(test_strmapi_allocates_new_buffer, "ft_strmapi returns a distinct, trans
     FT_ASSERT(result != source);
     FT_ASSERT_EQ(0, ft_strcmp("COPY", result));
     FT_ASSERT_EQ('c', source[0]);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     cma_free(result);
     return (1);
 }

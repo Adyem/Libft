@@ -6,7 +6,7 @@ size_t ft_strlcpy(char *destination, const char *source, size_t buffer_size)
 {
     size_t source_length;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     if (source == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;

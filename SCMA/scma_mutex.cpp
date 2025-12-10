@@ -31,14 +31,14 @@ int    scma_mutex_lock(void)
         pt_mutex &mutex = scma_runtime_mutex();
 
         mutex.lock(THREAD_ID);
-        if (mutex.get_error() != ER_SUCCESS)
+        if (mutex.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = mutex.get_error();
             return (-1);
         }
     }
     lock_depth = lock_depth + 1;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -60,7 +60,7 @@ int    scma_mutex_unlock(void)
         pt_mutex &mutex = scma_runtime_mutex();
 
         mutex.unlock(THREAD_ID);
-        if (mutex.get_error() != ER_SUCCESS)
+        if (mutex.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = mutex.get_error();
             return (-1);

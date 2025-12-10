@@ -12,13 +12,13 @@ FT_TEST(test_wstrlen_counts_length, "ft_wstrlen counts wide characters")
     wide_text = L"hello";
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(static_cast<size_t>(5), ft_wstrlen(wide_text));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
 FT_TEST(test_wstrlen_null_pointer_sets_errno, "ft_wstrlen validates null pointers")
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(static_cast<size_t>(0), ft_wstrlen(ft_nullptr));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -34,8 +34,8 @@ FT_TEST(test_utf16_to_utf8_ascii_roundtrip, "ft_utf16_to_utf8 converts ascii inp
     input[2] = static_cast<char16_t>(0);
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     utf8_result = ft_utf16_to_utf8(input, 0);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(ER_SUCCESS, utf8_result.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, utf8_result.get_error());
     FT_ASSERT(utf8_result == "AB");
     return (1);
 }
@@ -51,8 +51,8 @@ FT_TEST(test_utf16_to_utf8_surrogate_pair, "ft_utf16_to_utf8 handles surrogate p
     input[2] = static_cast<char16_t>(0);
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     utf8_result = ft_utf16_to_utf8(input, 2);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(ER_SUCCESS, utf8_result.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, utf8_result.get_error());
     expected[0] = static_cast<char>(0xF0);
     expected[1] = static_cast<char>(0x9F);
     expected[2] = static_cast<char>(0x98);
@@ -70,7 +70,7 @@ FT_TEST(test_utf16_to_utf8_invalid_surrogate_reports_error, "ft_utf16_to_utf8 re
 
     input[0] = static_cast<char16_t>(0xD83D);
     input[1] = static_cast<char16_t>(0);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     utf8_result = ft_utf16_to_utf8(input, 2);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, utf8_result.get_error());
@@ -87,10 +87,10 @@ FT_TEST(test_utf32_to_utf8_mixed_sequence, "ft_utf32_to_utf8 encodes code points
     input[1] = static_cast<char32_t>(0x1F642);
     input[2] = static_cast<char32_t>('B');
     input[3] = static_cast<char32_t>(0);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     utf8_result = ft_utf32_to_utf8(input, 0);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(ER_SUCCESS, utf8_result.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, utf8_result.get_error());
     expected[0] = 'A';
     expected[1] = static_cast<char>(0xF0);
     expected[2] = static_cast<char>(0x9F);
@@ -118,14 +118,14 @@ FT_TEST(test_utf8_to_utf16_round_trip, "ft_utf8_to_utf16 converts and preserves 
     utf8_input[6] = '\0';
     utf16_output = ft_utf8_to_utf16(utf8_input, 0, &utf16_length);
     FT_ASSERT(utf16_output != ft_nullptr);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(static_cast<size_t>(4), utf16_length);
     FT_ASSERT_EQ(static_cast<char16_t>('A'), utf16_output[0]);
     FT_ASSERT_EQ(static_cast<char16_t>(0xD83D), utf16_output[1]);
     FT_ASSERT_EQ(static_cast<char16_t>(0xDE00), utf16_output[2]);
     FT_ASSERT_EQ(static_cast<char16_t>('B'), utf16_output[3]);
     round_trip = ft_utf16_to_utf8(utf16_output, utf16_length);
-    FT_ASSERT_EQ(ER_SUCCESS, round_trip.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, round_trip.get_error());
     FT_ASSERT_EQ(0, ft_strcmp(utf8_input, round_trip.c_str()));
     cma_free(utf16_output);
     return (1);
@@ -139,7 +139,7 @@ FT_TEST(test_utf8_to_utf16_invalid_sequence_sets_errno, "ft_utf8_to_utf16 report
     invalid_utf8[0] = static_cast<char>(0xE0);
     invalid_utf8[1] = static_cast<char>(0x80);
     invalid_utf8[2] = '\0';
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     utf16_output = ft_utf8_to_utf16(invalid_utf8, 2, ft_nullptr);
     FT_ASSERT_EQ(ft_nullptr, utf16_output);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -154,7 +154,7 @@ FT_TEST(test_utf8_to_utf32_invalid_sequence_resets_errno, "ft_utf8_to_utf32 clea
 
     invalid_utf8[0] = static_cast<char>(0xC2);
     invalid_utf8[1] = '\0';
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     utf32_output = ft_utf8_to_utf32(invalid_utf8, 0, &utf32_length);
     FT_ASSERT_EQ(ft_nullptr, utf32_output);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -162,7 +162,7 @@ FT_TEST(test_utf8_to_utf32_invalid_sequence_resets_errno, "ft_utf8_to_utf32 clea
     utf32_output = ft_utf8_to_utf32("OK", 0, &utf32_length);
     FT_ASSERT(utf32_output != ft_nullptr);
     FT_ASSERT_EQ(static_cast<size_t>(2), utf32_length);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     cma_free(utf32_output);
     return (1);
 }
@@ -184,7 +184,7 @@ FT_TEST(test_utf8_to_utf32_round_trip, "ft_utf8_to_utf32 decodes multi-byte sequ
     utf8_input[7] = '\0';
     utf32_output = ft_utf8_to_utf32(utf8_input, 0, &utf32_length);
     FT_ASSERT(utf32_output != ft_nullptr);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(static_cast<size_t>(2), utf32_length);
     index = 0;
     while (index < utf32_length)
@@ -206,7 +206,7 @@ FT_TEST(test_utf8_to_utf32_invalid_sequence_sets_errno, "ft_utf8_to_utf32 mirror
 
     invalid_utf8[0] = static_cast<char>(0xC0);
     invalid_utf8[1] = '\0';
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     utf32_output = ft_utf8_to_utf32(invalid_utf8, 1, ft_nullptr);
     FT_ASSERT_EQ(ft_nullptr, utf32_output);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);

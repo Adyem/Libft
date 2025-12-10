@@ -29,7 +29,7 @@ int ft_fclose(FILE *stream)
             ft_errno = FT_ERR_INVALID_HANDLE;
         return (EOF);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (FT_SUCCESS);
 }
 #endif

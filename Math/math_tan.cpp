@@ -15,6 +15,6 @@ double ft_tan(double value)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (math_nan());
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (sin_value / cos_value);
 }

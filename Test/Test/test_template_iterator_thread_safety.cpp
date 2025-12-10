@@ -17,9 +17,9 @@ FT_TEST(test_iterator_thread_safety_resets_errno,
     lock_acquired = false;
     FT_ASSERT_EQ(0, iterator.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     iterator.unlock(lock_acquired);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     iterator.disable_thread_safety();
     FT_ASSERT_EQ(false, iterator.is_thread_safe_enabled());
     return (1);

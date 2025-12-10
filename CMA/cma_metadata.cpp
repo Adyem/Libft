@@ -51,7 +51,7 @@ static ft_size_t cma_metadata_compute_page_size(void)
         return (0);
     }
     g_cma_metadata_page_size = static_cast<ft_size_t>(system_page_size);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (g_cma_metadata_page_size);
 }
 
@@ -101,7 +101,7 @@ static bool cma_metadata_add_chunk(void)
         chunk->protected_state = true;
         UNPROTECT_METADATA(chunk->memory, chunk->size);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (true);
 }
 
@@ -146,7 +146,7 @@ static int cma_metadata_apply_protection(int protection)
         }
         chunk = chunk->next;
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -180,12 +180,12 @@ int cma_metadata_make_writable(void)
             }
             chunk = chunk->next;
         }
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     if (cma_metadata_apply_protection(PROT_READ | PROT_WRITE) != 0)
         return (-1);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -220,7 +220,7 @@ bool cma_metadata_guard_decrement(void)
 
 int cma_metadata_make_writable(void)
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -261,7 +261,7 @@ Block    *cma_metadata_allocate_block(void)
         block = g_cma_metadata_free_list;
         g_cma_metadata_free_list = block->next;
         std::memset(block, 0, sizeof(Block));
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (block);
     }
     if (g_cma_metadata_chunks == ft_nullptr)
@@ -281,7 +281,7 @@ Block    *cma_metadata_allocate_block(void)
             block = reinterpret_cast<Block *>(chunk->memory + chunk->used);
             chunk->used += stride;
             std::memset(block, 0, sizeof(Block));
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             return (block);
         }
         if (chunk->next == ft_nullptr)

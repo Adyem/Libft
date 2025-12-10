@@ -30,15 +30,15 @@ int ft_reputation::lock_pair(const ft_reputation &first, const ft_reputation &se
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != ER_SUCCESS)
+        if (single_guard.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = ER_SUCCESS;
-        return (ER_SUCCESS);
+        ft_errno = FT_ER_SUCCESSS;
+        return (FT_ER_SUCCESSS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -56,13 +56,13 @@ int ft_reputation::lock_pair(const ft_reputation &first, const ft_reputation &se
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != ER_SUCCESS)
+        if (lower_guard.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == ER_SUCCESS)
+        if (upper_guard.get_error() == FT_ER_SUCCESSS)
         {
             if (!swapped)
             {
@@ -74,8 +74,8 @@ int ft_reputation::lock_pair(const ft_reputation &first, const ft_reputation &se
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = ER_SUCCESS;
-            return (ER_SUCCESS);
+            ft_errno = FT_ER_SUCCESSS;
+            return (FT_ER_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -90,61 +90,61 @@ int ft_reputation::lock_pair(const ft_reputation &first, const ft_reputation &se
 
 ft_reputation::ft_reputation() noexcept
     : _milestones(), _reps(), _total_rep(0),
-      _current_rep(0), _error(ER_SUCCESS), _mutex()
+      _current_rep(0), _error(FT_ER_SUCCESSS), _mutex()
 {
     int entry_errno;
 
     entry_errno = ft_errno;
-    if (this->_milestones.get_error() != ER_SUCCESS)
+    if (this->_milestones.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(this->_milestones.get_error());
         ft_errno = entry_errno;
         return ;
     }
-    if (this->_reps.get_error() != ER_SUCCESS)
+    if (this->_reps.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(this->_reps.get_error());
         ft_errno = entry_errno;
         return ;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     ft_errno = entry_errno;
     return ;
 }
 
 ft_reputation::ft_reputation(const ft_map<int, int> &milestones, int total) noexcept
     : _milestones(milestones), _reps(), _total_rep(total),
-      _current_rep(0), _error(ER_SUCCESS), _mutex()
+      _current_rep(0), _error(FT_ER_SUCCESSS), _mutex()
 {
     int entry_errno;
 
     entry_errno = ft_errno;
-    if (this->_milestones.get_error() != ER_SUCCESS)
+    if (this->_milestones.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(this->_milestones.get_error());
         ft_errno = entry_errno;
         return ;
     }
-    if (this->_reps.get_error() != ER_SUCCESS)
+    if (this->_reps.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(this->_reps.get_error());
         ft_errno = entry_errno;
         return ;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     ft_errno = entry_errno;
     return ;
 }
 
 ft_reputation::ft_reputation(const ft_reputation &other) noexcept
     : _milestones(), _reps(), _total_rep(0),
-      _current_rep(0), _error(ER_SUCCESS), _mutex()
+      _current_rep(0), _error(FT_ER_SUCCESSS), _mutex()
 {
     int entry_errno;
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != ER_SUCCESS)
+    if (other_guard.get_error() != FT_ER_SUCCESSS)
     {
         this->_milestones = ft_map<int, int>();
         this->_reps = ft_map<int, int>();
@@ -175,7 +175,7 @@ ft_reputation &ft_reputation::operator=(const ft_reputation &other) noexcept
         return (*this);
     entry_errno = ft_errno;
     lock_error = ft_reputation::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         game_reputation_restore_errno(this_guard, entry_errno);
@@ -195,13 +195,13 @@ ft_reputation &ft_reputation::operator=(const ft_reputation &other) noexcept
 
 ft_reputation::ft_reputation(ft_reputation &&other) noexcept
     : _milestones(), _reps(), _total_rep(0),
-      _current_rep(0), _error(ER_SUCCESS), _mutex()
+      _current_rep(0), _error(FT_ER_SUCCESSS), _mutex()
 {
     int entry_errno;
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != ER_SUCCESS)
+    if (other_guard.get_error() != FT_ER_SUCCESSS)
     {
         this->_milestones = ft_map<int, int>();
         this->_reps = ft_map<int, int>();
@@ -218,11 +218,11 @@ ft_reputation::ft_reputation(ft_reputation &&other) noexcept
     this->_error = other._error;
     other._total_rep = 0;
     other._current_rep = 0;
-    other._error = ER_SUCCESS;
+    other._error = FT_ER_SUCCESSS;
     other._milestones.clear();
     other._reps.clear();
     this->set_error(this->_error);
-    other.set_error(ER_SUCCESS);
+    other.set_error(FT_ER_SUCCESSS);
     game_reputation_restore_errno(other_guard, entry_errno);
     return ;
 }
@@ -238,7 +238,7 @@ ft_reputation &ft_reputation::operator=(ft_reputation &&other) noexcept
         return (*this);
     entry_errno = ft_errno;
     lock_error = ft_reputation::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         game_reputation_restore_errno(this_guard, entry_errno);
@@ -252,11 +252,11 @@ ft_reputation &ft_reputation::operator=(ft_reputation &&other) noexcept
     this->_error = other._error;
     other._total_rep = 0;
     other._current_rep = 0;
-    other._error = ER_SUCCESS;
+    other._error = FT_ER_SUCCESSS;
     other._milestones.clear();
     other._reps.clear();
     this->set_error(this->_error);
-    other.set_error(ER_SUCCESS);
+    other.set_error(FT_ER_SUCCESSS);
     game_reputation_restore_errno(this_guard, entry_errno);
     game_reputation_restore_errno(other_guard, entry_errno);
     return (*this);
@@ -269,14 +269,14 @@ int ft_reputation::get_total_rep() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_reputation *>(this)->set_error(guard.get_error());
         game_reputation_restore_errno(guard, entry_errno);
         return (0);
     }
     total_value = this->_total_rep;
-    const_cast<ft_reputation *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_reputation *>(this)->set_error(FT_ER_SUCCESSS);
     game_reputation_restore_errno(guard, entry_errno);
     return (total_value);
 }
@@ -287,14 +287,14 @@ void ft_reputation::set_total_rep(int rep) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_reputation_restore_errno(guard, entry_errno);
         return ;
     }
     this->_total_rep = rep;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_reputation_restore_errno(guard, entry_errno);
     return ;
 }
@@ -305,14 +305,14 @@ void ft_reputation::add_total_rep(int rep) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_reputation_restore_errno(guard, entry_errno);
         return ;
     }
     this->_total_rep += rep;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_reputation_restore_errno(guard, entry_errno);
     return ;
 }
@@ -323,14 +323,14 @@ void ft_reputation::sub_total_rep(int rep) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_reputation_restore_errno(guard, entry_errno);
         return ;
     }
     this->_total_rep -= rep;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_reputation_restore_errno(guard, entry_errno);
     return ;
 }
@@ -342,14 +342,14 @@ int ft_reputation::get_current_rep() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_reputation *>(this)->set_error(guard.get_error());
         game_reputation_restore_errno(guard, entry_errno);
         return (0);
     }
     current_value = this->_current_rep;
-    const_cast<ft_reputation *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_reputation *>(this)->set_error(FT_ER_SUCCESSS);
     game_reputation_restore_errno(guard, entry_errno);
     return (current_value);
 }
@@ -360,14 +360,14 @@ void ft_reputation::set_current_rep(int rep) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_reputation_restore_errno(guard, entry_errno);
         return ;
     }
     this->_current_rep = rep;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_reputation_restore_errno(guard, entry_errno);
     return ;
 }
@@ -378,7 +378,7 @@ void ft_reputation::add_current_rep(int rep) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_reputation_restore_errno(guard, entry_errno);
@@ -386,7 +386,7 @@ void ft_reputation::add_current_rep(int rep) noexcept
     }
     this->_current_rep += rep;
     this->_total_rep += rep;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_reputation_restore_errno(guard, entry_errno);
     return ;
 }
@@ -397,7 +397,7 @@ void ft_reputation::sub_current_rep(int rep) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_reputation_restore_errno(guard, entry_errno);
@@ -405,7 +405,7 @@ void ft_reputation::sub_current_rep(int rep) noexcept
     }
     this->_current_rep -= rep;
     this->_total_rep -= rep;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_reputation_restore_errno(guard, entry_errno);
     return ;
 }
@@ -416,13 +416,13 @@ ft_map<int, int> &ft_reputation::get_milestones() noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_reputation_restore_errno(guard, entry_errno);
         return (this->_milestones);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_reputation_restore_errno(guard, entry_errno);
     return (this->_milestones);
 }
@@ -433,13 +433,13 @@ const ft_map<int, int> &ft_reputation::get_milestones() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_reputation *>(this)->set_error(guard.get_error());
         game_reputation_restore_errno(guard, entry_errno);
         return (this->_milestones);
     }
-    const_cast<ft_reputation *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_reputation *>(this)->set_error(FT_ER_SUCCESSS);
     game_reputation_restore_errno(guard, entry_errno);
     return (this->_milestones);
 }
@@ -450,20 +450,20 @@ void ft_reputation::set_milestones(const ft_map<int, int> &milestones) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_reputation_restore_errno(guard, entry_errno);
         return ;
     }
     this->_milestones = milestones;
-    if (this->_milestones.get_error() != ER_SUCCESS)
+    if (this->_milestones.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(this->_milestones.get_error());
         game_reputation_restore_errno(guard, entry_errno);
         return ;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_reputation_restore_errno(guard, entry_errno);
     return ;
 }
@@ -475,7 +475,7 @@ int ft_reputation::get_milestone(int id) const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_reputation *>(this)->set_error(guard.get_error());
         game_reputation_restore_errno(guard, entry_errno);
@@ -494,7 +494,7 @@ int ft_reputation::get_milestone(int id) const noexcept
         game_reputation_restore_errno(guard, entry_errno);
         return (0);
     }
-    const_cast<ft_reputation *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_reputation *>(this)->set_error(FT_ER_SUCCESSS);
     game_reputation_restore_errno(guard, entry_errno);
     return (entry->value);
 }
@@ -506,7 +506,7 @@ void ft_reputation::set_milestone(int id, int value) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_reputation_restore_errno(guard, entry_errno);
@@ -522,7 +522,7 @@ void ft_reputation::set_milestone(int id, int value) noexcept
     if (entry == this->_milestones.end())
     {
         this->_milestones.insert(id, value);
-        if (this->_milestones.get_error() != ER_SUCCESS)
+        if (this->_milestones.get_error() != FT_ER_SUCCESSS)
         {
             this->set_error(this->_milestones.get_error());
             game_reputation_restore_errno(guard, entry_errno);
@@ -531,7 +531,7 @@ void ft_reputation::set_milestone(int id, int value) noexcept
     }
     else
         entry->value = value;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_reputation_restore_errno(guard, entry_errno);
     return ;
 }
@@ -542,13 +542,13 @@ ft_map<int, int> &ft_reputation::get_reps() noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_reputation_restore_errno(guard, entry_errno);
         return (this->_reps);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_reputation_restore_errno(guard, entry_errno);
     return (this->_reps);
 }
@@ -559,13 +559,13 @@ const ft_map<int, int> &ft_reputation::get_reps() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_reputation *>(this)->set_error(guard.get_error());
         game_reputation_restore_errno(guard, entry_errno);
         return (this->_reps);
     }
-    const_cast<ft_reputation *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_reputation *>(this)->set_error(FT_ER_SUCCESSS);
     game_reputation_restore_errno(guard, entry_errno);
     return (this->_reps);
 }
@@ -576,20 +576,20 @@ void ft_reputation::set_reps(const ft_map<int, int> &reps) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_reputation_restore_errno(guard, entry_errno);
         return ;
     }
     this->_reps = reps;
-    if (this->_reps.get_error() != ER_SUCCESS)
+    if (this->_reps.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(this->_reps.get_error());
         game_reputation_restore_errno(guard, entry_errno);
         return ;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_reputation_restore_errno(guard, entry_errno);
     return ;
 }
@@ -601,7 +601,7 @@ int ft_reputation::get_rep(int id) const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_reputation *>(this)->set_error(guard.get_error());
         game_reputation_restore_errno(guard, entry_errno);
@@ -620,7 +620,7 @@ int ft_reputation::get_rep(int id) const noexcept
         game_reputation_restore_errno(guard, entry_errno);
         return (0);
     }
-    const_cast<ft_reputation *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_reputation *>(this)->set_error(FT_ER_SUCCESSS);
     game_reputation_restore_errno(guard, entry_errno);
     return (entry->value);
 }
@@ -632,7 +632,7 @@ void ft_reputation::set_rep(int id, int value) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_reputation_restore_errno(guard, entry_errno);
@@ -648,7 +648,7 @@ void ft_reputation::set_rep(int id, int value) noexcept
     if (entry == this->_reps.end())
     {
         this->_reps.insert(id, value);
-        if (this->_reps.get_error() != ER_SUCCESS)
+        if (this->_reps.get_error() != FT_ER_SUCCESSS)
         {
             this->set_error(this->_reps.get_error());
             game_reputation_restore_errno(guard, entry_errno);
@@ -657,7 +657,7 @@ void ft_reputation::set_rep(int id, int value) noexcept
     }
     else
         entry->value = value;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_reputation_restore_errno(guard, entry_errno);
     return ;
 }
@@ -669,7 +669,7 @@ int ft_reputation::get_error() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_reputation *>(this)->set_error(guard.get_error());
         game_reputation_restore_errno(guard, entry_errno);
@@ -688,7 +688,7 @@ const char *ft_reputation::get_error_str() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_reputation *>(this)->set_error(guard.get_error());
         game_reputation_restore_errno(guard, entry_errno);

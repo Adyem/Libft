@@ -49,7 +49,7 @@ char *rl_resize_buffer(char **buffer_pointer, int *current_size_pointer, int new
         ft_bzero(new_buffer + copy_size, static_cast<size_t>(new_size) - copy_size);
     *buffer_pointer = new_buffer;
     *current_size_pointer = new_size;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (new_buffer);
 }
 
@@ -74,7 +74,7 @@ int rl_clear_line(const char *prompt, const char *buffer)
     if (term_width <= 0)
     {
         term_width = 1;
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
     }
     int line_count = (total_length / term_width) + 1;
     int index = 0;
@@ -86,7 +86,7 @@ int rl_clear_line(const char *prompt, const char *buffer)
         index++;
     }
     pf_printf("\r");
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -100,7 +100,7 @@ int rl_read_key(void)
         bytes_read = su_read(0, &character, 1);
         if (bytes_read == 1)
         {
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             return (character);
         }
         if (bytes_read == 0)
@@ -240,7 +240,7 @@ int rl_history_search(const char *query, int start_index,
             {
                 *match_index = current_index;
                 cma_free(query_code_points);
-                ft_errno = ER_SUCCESS;
+                ft_errno = FT_ER_SUCCESSS;
                 return (0);
             }
             current_index -= 1;
@@ -288,7 +288,7 @@ int rl_history_search(const char *query, int start_index,
             {
                 *match_index = current_index;
                 cma_free(query_code_points);
-                ft_errno = ER_SUCCESS;
+                ft_errno = FT_ER_SUCCESSS;
                 return (0);
             }
             current_index += 1;

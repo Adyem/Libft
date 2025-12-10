@@ -10,7 +10,7 @@ ft_string file_path_normalize(const char *path)
     {
         ft_string empty_result;
 
-        if (empty_result.get_error() != ER_SUCCESS)
+        if (empty_result.get_error() != FT_ER_SUCCESSS)
             return (empty_result);
         return (empty_result);
     }

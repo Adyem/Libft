@@ -21,9 +21,9 @@ FT_TEST(test_function_thread_safety_resets_errno,
     lock_acquired = false;
     FT_ASSERT_EQ(0, function_value.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     function_value.unlock(lock_acquired);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(3, function_value(2));
     function_value.disable_thread_safety();
     FT_ASSERT_EQ(false, function_value.is_thread_safe_enabled());

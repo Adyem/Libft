@@ -2,7 +2,7 @@
 
 int    ft_isdigit(int character)
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     if (character >= '0' && character <= '9')
         return (1);
     return (0);

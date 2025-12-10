@@ -11,7 +11,7 @@ FT_TEST(test_ft_promise_set_get, "ft_promise set and get")
     promise_instance.set_value(42);
     FT_ASSERT(promise_instance.is_ready());
     FT_ASSERT_EQ(42, promise_instance.get());
-    FT_ASSERT_EQ(ER_SUCCESS, promise_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, promise_instance.get_error());
     return (1);
 }
 

@@ -12,7 +12,7 @@ int rng_secure_bytes(unsigned char *buffer, size_t length)
     int result = cmp_rng_secure_bytes(buffer, length);
     if (result == 0)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     return (result);

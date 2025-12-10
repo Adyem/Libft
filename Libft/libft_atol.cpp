@@ -17,7 +17,7 @@ long ft_atol(const char *string)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     while (string[index] == ' ' || ((string[index] >= '\t')
             && (string[index] <= '\r')))
         index++;

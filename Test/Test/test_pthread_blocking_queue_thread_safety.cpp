@@ -26,9 +26,9 @@ FT_TEST(test_ft_blocking_queue_lock_cycle_resets_errno,
     lock_acquired = false;
     FT_ASSERT_EQ(0, queue.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     queue.unlock(lock_acquired);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     queue.disable_thread_safety();
     return (1);
 }

@@ -23,10 +23,10 @@ FT_TEST(test_ft_optional_holds_value_and_resets, "ft_optional stores values and 
 
     FT_ASSERT(optional_value.has_value());
     FT_ASSERT_EQ(42, optional_value.value());
-    FT_ASSERT_EQ(ER_SUCCESS, optional_value.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, optional_value.get_error());
     optional_value.reset();
     FT_ASSERT_EQ(false, optional_value.has_value());
-    FT_ASSERT_EQ(ER_SUCCESS, optional_value.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, optional_value.get_error());
     return (1);
 }
 
@@ -39,8 +39,8 @@ FT_TEST(test_ft_optional_move_transfers_state, "ft_optional move assignment tran
     FT_ASSERT(destination_optional.has_value());
     FT_ASSERT_EQ(99, destination_optional.value());
     FT_ASSERT_EQ(false, source_optional.has_value());
-    FT_ASSERT_EQ(ER_SUCCESS, destination_optional.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, source_optional.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination_optional.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, source_optional.get_error());
     return (1);
 }
 
@@ -51,7 +51,7 @@ FT_TEST(test_ft_variant_emplace_and_get, "ft_variant emplace selects alternative
     variant_value.emplace<int>(17);
     FT_ASSERT(variant_value.holds_alternative<int>());
     FT_ASSERT_EQ(17, variant_value.get<int>());
-    FT_ASSERT_EQ(ER_SUCCESS, variant_value.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, variant_value.get_error());
     variant_value.emplace<const char*>("hello");
     FT_ASSERT(variant_value.holds_alternative<const char*>());
     const char *string_value = variant_value.get<const char*>();
@@ -69,7 +69,7 @@ FT_TEST(test_ft_variant_visit_and_reset, "ft_variant visit dispatches to active 
 
     variant_value.visit([&visit_sum](const auto &value){ visit_sum += value; });
     FT_ASSERT_EQ(12L, visit_sum);
-    FT_ASSERT_EQ(ER_SUCCESS, variant_value.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, variant_value.get_error());
     variant_value.reset();
     FT_ASSERT_EQ(false, variant_value.holds_alternative<int>());
     visit_sum = 5;

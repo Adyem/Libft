@@ -106,7 +106,7 @@ FT_TEST(test_readline_clear_line_null_prompt, "rl_clear_line rejects null prompt
     const char *buffer;
 
     buffer = "";
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     clear_result = rl_clear_line(ft_nullptr, buffer);
     FT_ASSERT_EQ(-1, clear_result);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -119,7 +119,7 @@ FT_TEST(test_readline_clear_line_null_buffer, "rl_clear_line rejects null buffer
     const char *prompt;
 
     prompt = "> ";
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     clear_result = rl_clear_line(prompt, ft_nullptr);
     FT_ASSERT_EQ(-1, clear_result);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -130,7 +130,7 @@ FT_TEST(test_readline_initialize_state_null_pointer, "rl_initialize_state reject
 {
     int init_result;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     init_result = rl_initialize_state(ft_nullptr);
     FT_ASSERT_EQ(1, init_result);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -142,7 +142,7 @@ FT_TEST(test_readline_initialize_state_allocation_failure, "rl_initialize_state 
     readline_state_t state;
     int init_result;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     cma_set_alloc_limit(1);
     init_result = rl_initialize_state(&state);
     cma_set_alloc_limit(0);
@@ -161,7 +161,7 @@ FT_TEST(test_readline_initialize_state_success, "rl_initialize_state sets up the
     int buffer_history_index;
     int initialize_errno;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     init_result = rl_initialize_state(&state);
     allocated_buffer = state.buffer;
     buffer_size = state.bufsize;
@@ -172,7 +172,7 @@ FT_TEST(test_readline_initialize_state_success, "rl_initialize_state sets up the
     if (allocated_buffer != ft_nullptr)
         cma_free(allocated_buffer);
     FT_ASSERT_EQ(0, init_result);
-    FT_ASSERT_EQ(ER_SUCCESS, initialize_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, initialize_errno);
     FT_ASSERT(allocated_buffer != ft_nullptr);
     FT_ASSERT_EQ(INITIAL_BUFFER_SIZE, buffer_size);
     FT_ASSERT_EQ(0, buffer_position);
@@ -302,7 +302,7 @@ FT_TEST(test_readline_printable_char_preserves_buffer_on_resize_failure, "rl_han
     state.current_match_count = 0;
     state.current_match_index = 0;
     state.word_start = 0;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     stderr_backup_descriptor = -1;
     test_readline_suppress_stderr(&stderr_backup_descriptor);
     cma_set_alloc_limit(1);
@@ -357,7 +357,7 @@ FT_TEST(test_readline_tab_completion_rejects_long_prefix, "rl_handle_tab_complet
         index++;
     }
     suggestion_count = 0;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     result = rl_handle_tab_completion(&state, "> ");
     FT_ASSERT_EQ(-1, result);
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
@@ -405,7 +405,7 @@ FT_TEST(test_readline_tab_completion_preserves_suffix, "rl_handle_tab_completion
         state.current_matches[index] = ft_nullptr;
         index++;
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     result = rl_handle_tab_completion(&state, "> ");
     FT_ASSERT_EQ(0, result);
     FT_ASSERT_EQ(1, state.in_completion_mode);
@@ -442,7 +442,7 @@ FT_TEST(test_readline_utf8_backspace_removes_grapheme, "rl_handle_backspace eras
     state.current_match_count = 0;
     state.current_match_index = 0;
     state.word_start = 0;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     handle_result = rl_handle_backspace(&state, prompt);
     FT_ASSERT_EQ(0, handle_result);
     FT_ASSERT(std::memcmp(state.buffer, expected_first, sizeof(expected_first)) == 0);
@@ -494,7 +494,7 @@ FT_TEST(test_readline_utf8_printable_updates_display, "rl_handle_printable_char 
 FT_TEST(test_readline_state_thread_safety_prepare_null,
     "rl_state_prepare_thread_safety validates null arguments")
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(-1, rl_state_prepare_thread_safety(ft_nullptr));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -513,7 +513,7 @@ FT_TEST(test_readline_state_thread_safety_lock_without_prepare,
     ft_errno = FT_ERR_SOCKET_ACCEPT_FAILED;
     FT_ASSERT_EQ(0, rl_state_lock(&state, &lock_acquired));
     FT_ASSERT_EQ(false, lock_acquired);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -527,7 +527,7 @@ FT_TEST(test_readline_state_thread_safety_unlock_without_lock,
     state.mutex = ft_nullptr;
     ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
     rl_state_unlock(&state, false);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -543,9 +543,9 @@ FT_TEST(test_readline_state_thread_safety_lifecycle,
     std::thread worker;
 
     ft_bzero(&state, sizeof(state));
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(0, rl_state_prepare_thread_safety(&state));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT(state.thread_safe_enabled);
     FT_ASSERT(state.mutex != ft_nullptr);
 
@@ -585,7 +585,7 @@ FT_TEST(test_readline_state_thread_safety_lifecycle,
     FT_ASSERT(relock_acquired);
     ft_errno = FT_ERR_NO_MEMORY;
     rl_state_unlock(&state, relock_acquired);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
 
     rl_state_teardown_thread_safety(&state);
     FT_ASSERT(state.thread_safe_enabled == false);
@@ -596,7 +596,7 @@ FT_TEST(test_readline_state_thread_safety_lifecycle,
 FT_TEST(test_readline_terminal_dimensions_thread_safety_prepare_null,
     "rl_terminal_dimensions_prepare_thread_safety validates null arguments")
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(-1, rl_terminal_dimensions_prepare_thread_safety(ft_nullptr));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -615,7 +615,7 @@ FT_TEST(test_readline_terminal_dimensions_thread_safety_lock_without_prepare,
     ft_errno = FT_ERR_SOCKET_LISTEN_FAILED;
     FT_ASSERT_EQ(0, rl_terminal_dimensions_lock(&dimensions, &lock_acquired));
     FT_ASSERT_EQ(false, lock_acquired);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -629,7 +629,7 @@ FT_TEST(test_readline_terminal_dimensions_thread_safety_unlock_without_lock,
     dimensions.mutex = ft_nullptr;
     ft_errno = FT_ERR_SOCKET_ACCEPT_FAILED;
     rl_terminal_dimensions_unlock(&dimensions, false);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -645,9 +645,9 @@ FT_TEST(test_readline_terminal_dimensions_thread_safety_lifecycle,
     std::thread worker;
 
     ft_bzero(&dimensions, sizeof(dimensions));
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(0, rl_terminal_dimensions_prepare_thread_safety(&dimensions));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT(dimensions.thread_safe_enabled);
     FT_ASSERT(dimensions.mutex != ft_nullptr);
 
@@ -678,7 +678,7 @@ FT_TEST(test_readline_terminal_dimensions_thread_safety_lifecycle,
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     rl_terminal_dimensions_unlock(&dimensions, main_lock_acquired);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     worker.join();
 
     FT_ASSERT_EQ(1, worker_result.load());
@@ -689,7 +689,7 @@ FT_TEST(test_readline_terminal_dimensions_thread_safety_lifecycle,
     FT_ASSERT(relock_acquired);
     ft_errno = FT_ERR_IO;
     rl_terminal_dimensions_unlock(&dimensions, relock_acquired);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
 
     rl_terminal_dimensions_teardown_thread_safety(&dimensions);
     FT_ASSERT(dimensions.thread_safe_enabled == false);
@@ -714,19 +714,19 @@ FT_TEST(test_readline_custom_key_bindings_dispatch, "custom key bindings dispatc
     bind_result = rl_bind_key('x', test_readline_custom_key_callback, &callback_counter);
     rl_disable_raw_mode();
     FT_ASSERT_EQ(0, bind_result);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     dispatch_result = rl_dispatch_custom_key(&state, "> ", 'x');
     FT_ASSERT_EQ(1, dispatch_result);
     FT_ASSERT_EQ(1, callback_counter);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     callback_counter = 0;
     unbind_result = rl_unbind_key('x');
     FT_ASSERT_EQ(0, unbind_result);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     dispatch_result = rl_dispatch_custom_key(&state, "> ", 'x');
     FT_ASSERT_EQ(0, dispatch_result);
     FT_ASSERT_EQ(0, callback_counter);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     test_readline_cleanup_state(&state);
     return (1);
 }
@@ -766,7 +766,7 @@ FT_TEST(test_readline_state_insert_and_delete_text, "state helpers insert and de
     FT_ASSERT_EQ(0, rl_state_get_cursor(&state, &cursor_position));
     FT_ASSERT_EQ(0, cursor_position);
     FT_ASSERT_EQ(0, rl_state_set_cursor(&state, 0));
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(-1, rl_state_set_cursor(&state, INT_MAX));
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
     cma_free(state.buffer);
@@ -786,7 +786,7 @@ FT_TEST(test_readline_completion_callbacks_register, "completion hooks invoke ca
     callback_counter = 0;
     set_result = rl_set_completion_callback(test_readline_completion_callback, &callback_counter);
     FT_ASSERT_EQ(0, set_result);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     prepare_result = rl_completion_prepare_candidates("input", 5, "input", 5);
     FT_ASSERT_EQ(0, prepare_result);
     FT_ASSERT_EQ(1, callback_counter);
@@ -798,7 +798,7 @@ FT_TEST(test_readline_completion_callbacks_register, "completion hooks invoke ca
     rl_completion_reset_dynamic_matches();
     FT_ASSERT_EQ(0, rl_completion_get_dynamic_count());
     rl_set_completion_callback(ft_nullptr, ft_nullptr);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 

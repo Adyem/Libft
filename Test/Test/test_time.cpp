@@ -22,7 +22,7 @@ FT_TEST(test_time_now_ms_returns_hooked_value, "time_now_ms returns hooked milli
     ft_errno = FT_ERR_OUT_OF_RANGE;
     result = time_now_ms();
     time_reset_clock_now_hook();
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     {
         const auto expected_count = expected_duration.count();
         long expected_value;
@@ -45,7 +45,7 @@ FT_TEST(test_time_now_ms_detects_overflow, "time_now_ms detects overflow and rep
     overflow_count = static_cast<std::chrono::milliseconds::rep>(LONG_MAX) + 1;
     g_mock_time_now = std::chrono::system_clock::time_point(std::chrono::milliseconds(overflow_count));
     time_set_clock_now_hook(test_time_now_hook);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     result = time_now_ms();
     time_reset_clock_now_hook();
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);

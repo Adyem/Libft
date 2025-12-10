@@ -8,7 +8,7 @@ time_fps::time_fps(long frames_per_second)
     this->_frame_duration_ms = 0.0;
     this->_frames_per_second = 0;
     this->_last_frame_time = std::chrono::steady_clock::now();
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     if (frames_per_second < 24)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -30,11 +30,11 @@ long    time_fps::get_frames_per_second()
     int final_error;
 
     frames_per_second_value = 0;
-    final_error = ER_SUCCESS;
+    final_error = FT_ER_SUCCESSS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != ER_SUCCESS)
+        if (guard.get_error() != FT_ER_SUCCESSS)
         {
             this->set_error(guard.get_error());
             final_error = this->_error_code;
@@ -47,7 +47,7 @@ long    time_fps::get_frames_per_second()
         else
         {
             frames_per_second_value = this->_frames_per_second;
-            this->set_error(ER_SUCCESS);
+            this->set_error(FT_ER_SUCCESSS);
             final_error = this->_error_code;
         }
     }
@@ -60,12 +60,12 @@ int     time_fps::set_frames_per_second(long frames_per_second)
     int final_error;
     int result;
 
-    final_error = ER_SUCCESS;
+    final_error = FT_ER_SUCCESSS;
     result = -1;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != ER_SUCCESS)
+        if (guard.get_error() != FT_ER_SUCCESSS)
         {
             this->set_error(guard.get_error());
             final_error = this->_error_code;
@@ -85,7 +85,7 @@ int     time_fps::set_frames_per_second(long frames_per_second)
             this->_frames_per_second = frames_per_second;
             this->_frame_duration_ms = 1000.0 / static_cast<double>(frames_per_second);
             this->_last_frame_time = std::chrono::steady_clock::now();
-            this->set_error(ER_SUCCESS);
+            this->set_error(FT_ER_SUCCESSS);
             final_error = this->_error_code;
             result = 0;
         }
@@ -98,11 +98,11 @@ void    time_fps::sleep_to_next_frame()
 {
     int final_error;
 
-    final_error = ER_SUCCESS;
+    final_error = FT_ER_SUCCESSS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != ER_SUCCESS)
+        if (guard.get_error() != FT_ER_SUCCESSS)
         {
             this->set_error(guard.get_error());
             final_error = this->_error_code;
@@ -124,7 +124,7 @@ void    time_fps::sleep_to_next_frame()
             if (remaining_ms > 0.0)
                 time_sleep_ms(static_cast<unsigned int>(remaining_ms));
             this->_last_frame_time = std::chrono::steady_clock::now();
-            this->set_error(ER_SUCCESS);
+            this->set_error(FT_ER_SUCCESSS);
             final_error = this->_error_code;
         }
     }
@@ -144,12 +144,12 @@ int     time_fps::get_error() const
     int error_code_value;
     int final_error;
 
-    error_code_value = ER_SUCCESS;
-    final_error = ER_SUCCESS;
+    error_code_value = FT_ER_SUCCESSS;
+    final_error = FT_ER_SUCCESSS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != ER_SUCCESS)
+        if (guard.get_error() != FT_ER_SUCCESSS)
         {
             const_cast<time_fps *>(this)->set_error(guard.get_error());
             error_code_value = guard.get_error();
@@ -170,12 +170,12 @@ const char  *time_fps::get_error_str() const
     const char  *error_string;
     int final_error;
 
-    error_string = ft_strerror(ER_SUCCESS);
-    final_error = ER_SUCCESS;
+    error_string = ft_strerror(FT_ER_SUCCESSS);
+    final_error = FT_ER_SUCCESSS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != ER_SUCCESS)
+        if (guard.get_error() != FT_ER_SUCCESSS)
         {
             const_cast<time_fps *>(this)->set_error(guard.get_error());
             error_string = ft_strerror(guard.get_error());

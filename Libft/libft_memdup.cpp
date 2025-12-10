@@ -19,7 +19,7 @@ void *ft_memdup(const void *source, size_t size)
 {
     void *duplicate;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     if (size == 0)
     {
         return (allocate_duplicate(0));

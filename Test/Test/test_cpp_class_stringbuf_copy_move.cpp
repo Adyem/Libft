@@ -52,11 +52,11 @@ FT_TEST(test_ft_stringbuf_copy_constructor_mutex_is_fresh,
 
     lock_acquired.store(false);
     release_lock.store(false);
-    lock_result.store(ER_SUCCESS);
+    lock_result.store(FT_ER_SUCCESSS);
     locker_thread = std::thread([&original, &lock_acquired, &release_lock, &lock_result]() {
         lock_result.store(original._mutex.lock(THREAD_ID));
         lock_acquired.store(true);
-        if (lock_result.load() != ER_SUCCESS)
+        if (lock_result.load() != FT_ER_SUCCESSS)
             return ;
         while (!release_lock.load())
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -66,11 +66,11 @@ FT_TEST(test_ft_stringbuf_copy_constructor_mutex_is_fresh,
     duration_ms = measure_read_duration(copied, character);
     release_lock.store(true);
     locker_thread.join();
-    FT_ASSERT_EQ(ER_SUCCESS, lock_result.load());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, lock_result.load());
     FT_ASSERT(duration_ms < 40);
     FT_ASSERT_EQ('m', character);
     FT_ASSERT_EQ(false, copied.is_bad());
-    FT_ASSERT_EQ(ER_SUCCESS, copied.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, copied.get_error());
     return (1);
 }
 
@@ -89,11 +89,11 @@ FT_TEST(test_ft_stringbuf_move_constructor_mutex_is_fresh,
 
     lock_acquired.store(false);
     release_lock.store(false);
-    lock_result.store(ER_SUCCESS);
+    lock_result.store(FT_ER_SUCCESSS);
     locker_thread = std::thread([&original, &lock_acquired, &release_lock, &lock_result]() {
         lock_result.store(original._mutex.lock(THREAD_ID));
         lock_acquired.store(true);
-        if (lock_result.load() != ER_SUCCESS)
+        if (lock_result.load() != FT_ER_SUCCESSS)
             return ;
         while (!release_lock.load())
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -103,11 +103,11 @@ FT_TEST(test_ft_stringbuf_move_constructor_mutex_is_fresh,
     duration_ms = measure_read_duration(moved, character);
     release_lock.store(true);
     locker_thread.join();
-    FT_ASSERT_EQ(ER_SUCCESS, lock_result.load());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, lock_result.load());
     FT_ASSERT(duration_ms < 40);
     FT_ASSERT_EQ('m', character);
     FT_ASSERT_EQ(false, moved.is_bad());
-    FT_ASSERT_EQ(ER_SUCCESS, moved.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.get_error());
     return (1);
 }
 
@@ -128,11 +128,11 @@ FT_TEST(test_ft_stringbuf_copy_assignment_mutex_is_fresh,
     target = source;
     lock_acquired.store(false);
     release_lock.store(false);
-    lock_result.store(ER_SUCCESS);
+    lock_result.store(FT_ER_SUCCESSS);
     locker_thread = std::thread([&source, &lock_acquired, &release_lock, &lock_result]() {
         lock_result.store(source._mutex.lock(THREAD_ID));
         lock_acquired.store(true);
-        if (lock_result.load() != ER_SUCCESS)
+        if (lock_result.load() != FT_ER_SUCCESSS)
             return ;
         while (!release_lock.load())
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -142,11 +142,11 @@ FT_TEST(test_ft_stringbuf_copy_assignment_mutex_is_fresh,
     duration_ms = measure_read_duration(target, character);
     release_lock.store(true);
     locker_thread.join();
-    FT_ASSERT_EQ(ER_SUCCESS, lock_result.load());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, lock_result.load());
     FT_ASSERT(duration_ms < 40);
     FT_ASSERT_EQ('a', character);
     FT_ASSERT_EQ(false, target.is_bad());
-    FT_ASSERT_EQ(ER_SUCCESS, target.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, target.get_error());
     return (1);
 }
 
@@ -167,11 +167,11 @@ FT_TEST(test_ft_stringbuf_move_assignment_mutex_is_fresh,
     target = ft_move(source);
     lock_acquired.store(false);
     release_lock.store(false);
-    lock_result.store(ER_SUCCESS);
+    lock_result.store(FT_ER_SUCCESSS);
     locker_thread = std::thread([&source, &lock_acquired, &release_lock, &lock_result]() {
         lock_result.store(source._mutex.lock(THREAD_ID));
         lock_acquired.store(true);
-        if (lock_result.load() != ER_SUCCESS)
+        if (lock_result.load() != FT_ER_SUCCESSS)
             return ;
         while (!release_lock.load())
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -181,10 +181,10 @@ FT_TEST(test_ft_stringbuf_move_assignment_mutex_is_fresh,
     duration_ms = measure_read_duration(target, character);
     release_lock.store(true);
     locker_thread.join();
-    FT_ASSERT_EQ(ER_SUCCESS, lock_result.load());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, lock_result.load());
     FT_ASSERT(duration_ms < 40);
     FT_ASSERT_EQ('m', character);
     FT_ASSERT_EQ(false, target.is_bad());
-    FT_ASSERT_EQ(ER_SUCCESS, target.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, target.get_error());
     return (1);
 }

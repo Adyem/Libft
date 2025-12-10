@@ -12,9 +12,9 @@ FT_TEST(test_vendor_profile_mutex_survives_moves,
     Pair<int, ft_vendor_profile> *second_entry;
 
     container.insert(3, ft_move(first_vendor));
-    FT_ASSERT_EQ(ER_SUCCESS, container.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, container.get_error());
     container.insert(7, ft_move(second_vendor));
-    FT_ASSERT_EQ(ER_SUCCESS, container.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, container.get_error());
 
     first_entry = container.find(3);
     second_entry = container.find(7);

@@ -33,19 +33,19 @@ static void *scheduler_schedule_task(void *argument)
             arguments->result_code = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
-        if (event_instance.get_error() != ER_SUCCESS)
+        if (event_instance.get_error() != FT_ER_SUCCESSS)
         {
             arguments->result_code = event_instance.get_error();
             return (ft_nullptr);
         }
         event_instance->set_id(base_identifier + index);
-        if (event_instance->get_error() != ER_SUCCESS)
+        if (event_instance->get_error() != FT_ER_SUCCESSS)
         {
             arguments->result_code = event_instance->get_error();
             return (ft_nullptr);
         }
         event_instance->set_duration(index + 1);
-        if (event_instance->get_error() != ER_SUCCESS)
+        if (event_instance->get_error() != FT_ER_SUCCESSS)
         {
             arguments->result_code = event_instance->get_error();
             return (ft_nullptr);
@@ -53,7 +53,7 @@ static void *scheduler_schedule_task(void *argument)
         arguments->scheduler_pointer->schedule_event(event_instance);
         index += 1;
     }
-    arguments->result_code = ER_SUCCESS;
+    arguments->result_code = FT_ER_SUCCESSS;
     return (ft_nullptr);
 }
 
@@ -88,7 +88,7 @@ FT_TEST(test_game_event_scheduler_concurrent_schedule,
         arguments[thread_index].scheduler_pointer = &scheduler_instance;
         arguments[thread_index].thread_index = thread_index;
         arguments[thread_index].events_per_thread = events_per_thread;
-        arguments[thread_index].result_code = ER_SUCCESS;
+        arguments[thread_index].result_code = FT_ER_SUCCESSS;
         if (test_failed == 0)
         {
             create_result = pt_thread_create(&threads[thread_index], ft_nullptr,
@@ -118,10 +118,10 @@ FT_TEST(test_game_event_scheduler_concurrent_schedule,
         }
         if (join_result == 0)
         {
-            if (arguments[thread_index].result_code != ER_SUCCESS && test_failed == 0)
+            if (arguments[thread_index].result_code != FT_ER_SUCCESSS && test_failed == 0)
             {
                 test_failed = 1;
-                failure_expression = "arguments[thread_index].result_code == ER_SUCCESS";
+                failure_expression = "arguments[thread_index].result_code == FT_ER_SUCCESSS";
                 failure_line = __LINE__;
             }
         }
@@ -133,12 +133,12 @@ FT_TEST(test_game_event_scheduler_concurrent_schedule,
         return (0);
     }
     FT_ASSERT_EQ(static_cast<size_t>(expected_total), scheduler_instance.size());
-    FT_ASSERT_EQ(ER_SUCCESS, scheduler_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, scheduler_instance.get_error());
     scheduler_instance.dump_events(events);
-    FT_ASSERT_EQ(ER_SUCCESS, scheduler_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, scheduler_instance.get_error());
     FT_ASSERT_EQ(static_cast<size_t>(expected_total), events.size());
     identifier_counts.resize(expected_total, 0);
-    FT_ASSERT_EQ(ER_SUCCESS, identifier_counts.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, identifier_counts.get_error());
     event_index = 0;
     while (event_index < events.size())
     {
@@ -158,7 +158,7 @@ FT_TEST(test_game_event_scheduler_concurrent_schedule,
         FT_ASSERT_EQ(1, identifier_counts[event_index]);
         event_index += 1;
     }
-    FT_ASSERT_EQ(ER_SUCCESS, scheduler_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, scheduler_instance.get_error());
     return (1);
 }
 
@@ -211,15 +211,15 @@ FT_TEST(test_game_event_scheduler_concurrent_reschedule,
         ft_sharedptr<ft_event> event_instance(new (std::nothrow) ft_event());
 
         FT_ASSERT_EQ(1, static_cast<int>(static_cast<bool>(event_instance)));
-        FT_ASSERT_EQ(ER_SUCCESS, event_instance.get_error());
+        FT_ASSERT_EQ(FT_ER_SUCCESSS, event_instance.get_error());
         event_instance->set_id(preload_index);
-        FT_ASSERT_EQ(ER_SUCCESS, event_instance->get_error());
+        FT_ASSERT_EQ(FT_ER_SUCCESSS, event_instance->get_error());
         event_instance->set_duration(1);
-        FT_ASSERT_EQ(ER_SUCCESS, event_instance->get_error());
+        FT_ASSERT_EQ(FT_ER_SUCCESSS, event_instance->get_error());
         scheduler_instance.schedule_event(event_instance);
         preload_index += 1;
     }
-    FT_ASSERT_EQ(ER_SUCCESS, scheduler_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, scheduler_instance.get_error());
     created_thread_count = 0;
     test_failed = 0;
     failure_expression = ft_nullptr;
@@ -265,10 +265,10 @@ FT_TEST(test_game_event_scheduler_concurrent_reschedule,
         return (0);
     }
     scheduler_instance.dump_events(events);
-    FT_ASSERT_EQ(ER_SUCCESS, scheduler_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, scheduler_instance.get_error());
     FT_ASSERT_EQ(static_cast<size_t>(3), events.size());
     final_durations.resize(3, 0);
-    FT_ASSERT_EQ(ER_SUCCESS, final_durations.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, final_durations.get_error());
     size_t event_index = 0;
     while (event_index < events.size())
     {
@@ -291,6 +291,6 @@ FT_TEST(test_game_event_scheduler_concurrent_reschedule,
         FT_ASSERT_EQ(expected_duration, final_durations[preload_index]);
         preload_index += 1;
     }
-    FT_ASSERT_EQ(ER_SUCCESS, scheduler_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, scheduler_instance.get_error());
     return (1);
 }

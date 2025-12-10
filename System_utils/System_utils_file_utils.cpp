@@ -60,7 +60,7 @@ static int su_copy_file_streams(su_file *source_stream, su_file *destination_str
         size_t bytes_read = su_fread(buffer, 1, sizeof(buffer), source_stream);
         if (bytes_read == 0)
         {
-            if (ft_errno == ER_SUCCESS)
+            if (ft_errno == FT_ER_SUCCESSS)
                 break;
             result = -1;
             break;
@@ -68,7 +68,7 @@ static int su_copy_file_streams(su_file *source_stream, su_file *destination_str
         size_t bytes_written = su_fwrite(buffer, 1, bytes_read, destination_stream);
         if (bytes_written != bytes_read)
         {
-            if (ft_errno == ER_SUCCESS)
+            if (ft_errno == FT_ER_SUCCESSS)
                 ft_errno = FT_ERR_IO;
             result = -1;
         }
@@ -105,7 +105,7 @@ int su_copy_file(const char *source_path, const char *destination_path)
     if (close_error != 0 && result == 0)
         result = -1;
     if (result == 0)
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
     return (result);
 }
 
@@ -116,17 +116,17 @@ static int su_ensure_directory_exists(const char *path)
     directory_status = cmp_directory_exists(path);
     if (directory_status == 1)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
-    if (directory_status == 0 && ft_errno == ER_SUCCESS)
+    if (directory_status == 0 && ft_errno == FT_ER_SUCCESSS)
     {
         ft_errno = FT_ERR_ALREADY_EXISTS;
         return (-1);
     }
     if (cmp_file_create_directory(path, 0755) != 0)
         return (-1);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -144,7 +144,7 @@ static int su_copy_directory_contents(const char *source_path, const char *desti
         file_dirent *directory_entry = cmp_dir_read(directory_stream);
         if (directory_entry == ft_nullptr)
         {
-            if (ft_errno == ER_SUCCESS)
+            if (ft_errno == FT_ER_SUCCESSS)
                 break;
             result = -1;
             break;
@@ -171,7 +171,7 @@ static int su_copy_directory_contents(const char *source_path, const char *desti
             int destination_status = cmp_directory_exists(destination_child.c_str());
             if (destination_status == 0)
             {
-                if (ft_errno == ER_SUCCESS)
+                if (ft_errno == FT_ER_SUCCESSS)
                 {
                     ft_errno = FT_ERR_ALREADY_EXISTS;
                     result = -1;
@@ -182,7 +182,7 @@ static int su_copy_directory_contents(const char *source_path, const char *desti
                     result = -1;
                     break;
                 }
-                ft_errno = ER_SUCCESS;
+                ft_errno = FT_ER_SUCCESSS;
             }
             else if (destination_status != 1)
             {
@@ -197,7 +197,7 @@ static int su_copy_directory_contents(const char *source_path, const char *desti
         }
         else if (child_is_directory == 0)
         {
-            if (ft_errno != ER_SUCCESS)
+            if (ft_errno != FT_ER_SUCCESSS)
             {
                 result = -1;
                 break;
@@ -216,7 +216,7 @@ static int su_copy_directory_contents(const char *source_path, const char *desti
     }
     cmp_dir_close(directory_stream);
     if (result == 0)
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
     return (result);
 }
 
@@ -233,7 +233,7 @@ int su_copy_directory_recursive(const char *source_path, const char *destination
         return (-1);
     if (su_copy_directory_contents(source_path, destination_path) != 0)
         return (-1);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -249,6 +249,6 @@ int su_inspect_permissions(const char *path, mode_t *permissions_out)
     if (cmp_file_get_permissions(path, &permissions) != 0)
         return (-1);
     *permissions_out = permissions;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }

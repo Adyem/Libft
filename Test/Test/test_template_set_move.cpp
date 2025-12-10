@@ -48,7 +48,7 @@ FT_TEST(test_ft_set_move_assignment_rebuilds_mutex,
     FT_ASSERT_EQ(ft_nullptr, destination_set.find(4));
     FT_ASSERT_NE(ft_nullptr, destination_set.find(11));
     FT_ASSERT_NE(ft_nullptr, destination_set.find(18));
-    FT_ASSERT_EQ(ER_SUCCESS, destination_set.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination_set.get_error());
     return (1);
 }
 

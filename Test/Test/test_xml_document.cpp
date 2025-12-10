@@ -18,9 +18,9 @@ FT_TEST(test_xml_document_thread_guard_resets_errno,
 
         FT_ASSERT_EQ(0, guard.get_status());
         FT_ASSERT_EQ(true, guard.lock_acquired());
-        FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+        FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     }
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -32,7 +32,7 @@ FT_TEST(test_xml_document_thread_guard_tolerates_null_document,
 
     FT_ASSERT_EQ(0, guard.get_status());
     FT_ASSERT_EQ(false, guard.lock_acquired());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -53,8 +53,8 @@ FT_TEST(test_xml_document_handles_mutex_allocation_failure,
         FT_ASSERT_EQ(false, guard.lock_acquired());
         FT_ASSERT_EQ(FT_ERR_INTERNAL, ft_errno);
     }
-    FT_ASSERT_EQ(ER_SUCCESS, failure_document.load_from_string("<root/>"));
-    FT_ASSERT_EQ(ER_SUCCESS, failure_document.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, failure_document.load_from_string("<root/>"));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, failure_document.get_error());
     FT_ASSERT(failure_document.get_root() != ft_nullptr);
     return (1);
 }
@@ -64,7 +64,7 @@ FT_TEST(test_xml_document_write_to_string_empty_document_sets_error, "xml_docume
     xml_document document;
     char *result;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     result = document.write_to_string();
     FT_ASSERT(result == ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, document.get_error());
@@ -77,7 +77,7 @@ FT_TEST(test_xml_document_write_to_file_empty_document_sets_error, "xml_document
     xml_document document;
     int result;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     result = document.write_to_file("Test");
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, document.get_error());
@@ -90,8 +90,8 @@ FT_TEST(test_xml_document_write_to_string_allocation_failure_sets_error, "xml_do
     xml_document document;
     char *result;
 
-    FT_ASSERT_EQ(ER_SUCCESS, document.load_from_string("<root/>"));
-    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, document.load_from_string("<root/>"));
+    ft_errno = FT_ER_SUCCESSS;
     cma_set_alloc_limit(1);
     result = document.write_to_string();
     cma_set_alloc_limit(0);
@@ -107,12 +107,12 @@ FT_TEST(test_xml_document_write_to_file_fopen_failure_sets_errno_offset, "xml_do
     int result;
     int open_errno;
 
-    FT_ASSERT_EQ(ER_SUCCESS, document.load_from_string("<root/>"));
-    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, document.load_from_string("<root/>"));
+    ft_errno = FT_ER_SUCCESSS;
     errno = 0;
     result = document.write_to_file("Test");
     open_errno = errno;
-    FT_ASSERT(result != ER_SUCCESS);
+    FT_ASSERT(result != FT_ER_SUCCESSS);
     FT_ASSERT_EQ(result, document.get_error());
     FT_ASSERT_EQ(result, ft_errno);
     if (open_errno != 0)
@@ -128,12 +128,12 @@ FT_TEST(test_xml_document_write_to_file_fwrite_failure_sets_errno_offset, "xml_d
     int result;
     int write_errno;
 
-    FT_ASSERT_EQ(ER_SUCCESS, document.load_from_string("<root/>"));
-    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, document.load_from_string("<root/>"));
+    ft_errno = FT_ER_SUCCESSS;
     errno = 0;
     result = document.write_to_file("/dev/full");
     write_errno = errno;
-    FT_ASSERT(result != ER_SUCCESS);
+    FT_ASSERT(result != FT_ER_SUCCESSS);
     FT_ASSERT_EQ(result, document.get_error());
     FT_ASSERT_EQ(result, ft_errno);
     if (write_errno != 0)
@@ -148,7 +148,7 @@ FT_TEST(test_xml_document_load_from_string_malformed_sets_errno, "xml_document::
     xml_document document;
     int result;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     result = document.load_from_string("<root>");
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, document.get_error());
@@ -161,7 +161,7 @@ FT_TEST(test_xml_document_load_from_string_detects_mismatched_closing_tag, "xml_
     xml_document document;
     int result;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     result = document.load_from_string("<root><child></rood>");
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, document.get_error());
@@ -174,7 +174,7 @@ FT_TEST(test_xml_document_load_from_string_rejects_trailing_characters, "xml_doc
     xml_document document;
     int result;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     result = document.load_from_string("<root/>extra");
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, document.get_error());
@@ -189,7 +189,7 @@ FT_TEST(test_xml_document_load_from_string_allocation_failure_sets_errno, "xml_d
     int result;
 
     cma_set_alloc_limit(1);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     result = document.load_from_string("<root><child/></root>");
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, result);
@@ -205,9 +205,9 @@ FT_TEST(test_xml_document_load_from_string_success_clears_errno, "xml_document::
 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     result = document.load_from_string("<root/>");
-    FT_ASSERT_EQ(ER_SUCCESS, result);
-    FT_ASSERT_EQ(ER_SUCCESS, document.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, result);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, document.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -219,7 +219,7 @@ FT_TEST(test_xml_document_load_from_string_handles_gt_in_attribute, "xml_documen
     char *written_string;
 
     xml_input = "<root attr=\"a>b\">payload</root>";
-    FT_ASSERT_EQ(ER_SUCCESS, document.load_from_string(xml_input));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, document.load_from_string(xml_input));
     root_node = document.get_root();
     FT_ASSERT(root_node != ft_nullptr);
     FT_ASSERT(root_node->text != ft_nullptr);
@@ -255,7 +255,7 @@ FT_TEST(test_xml_node_thread_safety_root_locking, "xml_node exposes locking help
     bool lock_acquired;
     int lock_status;
 
-    FT_ASSERT_EQ(ER_SUCCESS, document.load_from_string("<root><child/></root>"));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, document.load_from_string("<root><child/></root>"));
     root_node = document.get_root();
     FT_ASSERT(root_node != ft_nullptr);
     FT_ASSERT_EQ(true, xml_node_is_thread_safe_enabled(root_node));
@@ -276,7 +276,7 @@ FT_TEST(test_xml_node_thread_safety_rejects_null_nodes, "xml_node locking reject
     int lock_status;
 
     FT_ASSERT_EQ(false, xml_node_is_thread_safe_enabled(ft_nullptr));
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     lock_acquired = true;
     lock_status = xml_node_lock(ft_nullptr, &lock_acquired);
     FT_ASSERT_EQ(-1, lock_status);

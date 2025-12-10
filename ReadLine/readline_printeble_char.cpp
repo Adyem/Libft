@@ -57,7 +57,7 @@ int rl_handle_printable_char(readline_state_t *state, char c, const char *prompt
     if (length_after_cursor > 0)
         pf_printf("\033[%dD", length_after_cursor);
     fflush(stdout);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     result = 0;
 cleanup:
     rl_state_unlock(state, lock_acquired);

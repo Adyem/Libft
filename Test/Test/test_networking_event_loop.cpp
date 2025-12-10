@@ -11,7 +11,7 @@ FT_TEST(test_event_loop_add_socket_reports_allocation_failure,
     int add_result;
 
     event_loop_init(&loop);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     cma_set_alloc_limit(1);
     add_result = event_loop_add_socket(&loop, 42, false);
     cma_set_alloc_limit(0);
@@ -42,14 +42,14 @@ FT_TEST(test_event_loop_remove_socket_sets_errno_when_missing,
     int remove_result;
 
     event_loop_init(&loop);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     add_result = event_loop_add_socket(&loop, 7, false);
     if (add_result != 0)
     {
         event_loop_clear(&loop);
         return (0);
     }
-    if (ft_errno != ER_SUCCESS)
+    if (ft_errno != FT_ER_SUCCESSS)
     {
         event_loop_clear(&loop);
         return (0);
@@ -121,7 +121,7 @@ FT_TEST(test_event_loop_lock_and_unlock_reset_errno,
     }
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     event_loop_unlock(&loop, lock_acquired);
-    if (ft_errno != ER_SUCCESS)
+    if (ft_errno != FT_ER_SUCCESSS)
     {
         event_loop_clear(&loop);
         return (0);

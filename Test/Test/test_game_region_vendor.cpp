@@ -20,7 +20,7 @@ FT_TEST(test_region_definition_setters_update_fields, "Game: region definition s
     FT_ASSERT_STR_EQ(region_name.c_str(), region.get_name().c_str());
     FT_ASSERT_STR_EQ(region_description.c_str(), region.get_description().c_str());
     FT_ASSERT_EQ(18, region.get_recommended_level());
-    FT_ASSERT_EQ(ER_SUCCESS, region.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, region.get_error());
     return (1);
 }
 
@@ -37,8 +37,8 @@ FT_TEST(test_region_definition_move_clears_source, "Game: moving region definiti
     FT_ASSERT_STR_EQ("", original.get_name().c_str());
     FT_ASSERT_STR_EQ("", original.get_description().c_str());
     FT_ASSERT_EQ(0, original.get_recommended_level());
-    FT_ASSERT_EQ(ER_SUCCESS, moved.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, original.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, original.get_error());
     return (1);
 }
 
@@ -51,7 +51,7 @@ FT_TEST(test_vendor_profile_copy_preserves_values, "Game: vendor profile copy ke
     FT_ASSERT_DOUBLE_EQ(1.2, copy.get_buy_markup());
     FT_ASSERT_DOUBLE_EQ(0.8, copy.get_sell_multiplier());
     FT_ASSERT_DOUBLE_EQ(0.05, copy.get_tax_rate());
-    FT_ASSERT_EQ(ER_SUCCESS, copy.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, copy.get_error());
     return (1);
 }
 
@@ -68,8 +68,8 @@ FT_TEST(test_vendor_profile_move_resets_original, "Game: vendor profile move tra
     FT_ASSERT_DOUBLE_EQ(1.0, vendor.get_buy_markup());
     FT_ASSERT_DOUBLE_EQ(1.0, vendor.get_sell_multiplier());
     FT_ASSERT_DOUBLE_EQ(0.0, vendor.get_tax_rate());
-    FT_ASSERT_EQ(ER_SUCCESS, moved.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, vendor.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, vendor.get_error());
     return (1);
 }
 
@@ -82,6 +82,6 @@ FT_TEST(test_rarity_band_setters_overwrite_previous_values, "Game: rarity band s
 
     FT_ASSERT_EQ(2, band.get_rarity());
     FT_ASSERT_DOUBLE_EQ(2.25, band.get_value_multiplier());
-    FT_ASSERT_EQ(ER_SUCCESS, band.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, band.get_error());
     return (1);
 }

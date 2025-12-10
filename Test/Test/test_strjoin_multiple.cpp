@@ -55,7 +55,7 @@ FT_TEST(test_strjoin_multiple_resets_errno_before_joining, "cma_strjoin_multiple
     joined_string = cma_strjoin_multiple(2, "foo", "bar");
     if (joined_string == ft_nullptr)
         return (0);
-    result = (ft_errno == ER_SUCCESS && ft_strcmp(joined_string, "foobar") == 0);
+    result = (ft_errno == FT_ER_SUCCESSS && ft_strcmp(joined_string, "foobar") == 0);
     cma_free(joined_string);
     return (result);
 }
@@ -82,7 +82,7 @@ FT_TEST(test_strjoin_multiple_null_segment_recovers_errno, "cma_strjoin_multiple
     joined = cma_strjoin_multiple(3, "alpha", static_cast<const char *>(ft_nullptr), "beta");
     if (joined == ft_nullptr)
         return (0);
-    result = (ft_errno == ER_SUCCESS && ft_strcmp(joined, "alphabeta") == 0);
+    result = (ft_errno == FT_ER_SUCCESSS && ft_strcmp(joined, "alphabeta") == 0);
     cma_free(joined);
     return (result);
 }

@@ -35,7 +35,7 @@ static void *game_map3d_set_task(void *argument)
                 arguments->map_pointer->set(column_index, row_index, layer_index,
                     static_cast<int>(arguments->start_layer + 1));
                 arguments->result_code = arguments->map_pointer->get_error();
-                if (arguments->result_code != ER_SUCCESS)
+                if (arguments->result_code != FT_ER_SUCCESSS)
                     return (ft_nullptr);
                 column_index++;
             }
@@ -43,7 +43,7 @@ static void *game_map3d_set_task(void *argument)
         }
         layer_index++;
     }
-    arguments->result_code = ER_SUCCESS;
+    arguments->result_code = FT_ER_SUCCESSS;
     return (ft_nullptr);
 }
 
@@ -71,7 +71,7 @@ FT_TEST(test_game_map3d_concurrent_set_operations,
         arguments[thread_index].map_pointer = &map_instance;
         arguments[thread_index].start_layer = thread_index * 2;
         arguments[thread_index].end_layer = (thread_index + 1) * 2;
-        arguments[thread_index].result_code = ER_SUCCESS;
+        arguments[thread_index].result_code = FT_ER_SUCCESSS;
         if (test_failed == 0)
         {
             create_result = pt_thread_create(&threads[thread_index], ft_nullptr,
@@ -101,10 +101,10 @@ FT_TEST(test_game_map3d_concurrent_set_operations,
         }
         if (join_result == 0)
         {
-            if (arguments[thread_index].result_code != ER_SUCCESS && test_failed == 0)
+            if (arguments[thread_index].result_code != FT_ER_SUCCESSS && test_failed == 0)
             {
                 test_failed = 1;
-                failure_expression = "arguments[thread_index].result_code == ER_SUCCESS";
+                failure_expression = "arguments[thread_index].result_code == FT_ER_SUCCESSS";
                 failure_line = __LINE__;
             }
         }
@@ -136,7 +136,7 @@ FT_TEST(test_game_map3d_concurrent_set_operations,
                     int cell_value;
 
                     cell_value = map_instance.get(column_index, row_index, layer_index);
-                    if (map_instance.get_error() != ER_SUCCESS)
+                    if (map_instance.get_error() != FT_ER_SUCCESSS)
                         return (0);
                     if (cell_value != static_cast<int>(arguments[thread_index].start_layer + 1))
                         return (0);
@@ -171,11 +171,11 @@ static void *game_map3d_toggle_task(void *argument)
     {
         arguments->map_pointer->toggle_obstacle(3, 3, 3, ft_nullptr);
         arguments->result_code = arguments->map_pointer->get_error();
-        if (arguments->result_code != ER_SUCCESS)
+        if (arguments->result_code != FT_ER_SUCCESSS)
             return (ft_nullptr);
         iteration_index++;
     }
-    arguments->result_code = ER_SUCCESS;
+    arguments->result_code = FT_ER_SUCCESSS;
     return (ft_nullptr);
 }
 
@@ -202,7 +202,7 @@ FT_TEST(test_game_map3d_toggle_thread_safe,
     {
         arguments[thread_index].map_pointer = &map_instance;
         arguments[thread_index].iterations = 4000;
-        arguments[thread_index].result_code = ER_SUCCESS;
+        arguments[thread_index].result_code = FT_ER_SUCCESSS;
         if (test_failed == 0)
         {
             create_result = pt_thread_create(&threads[thread_index], ft_nullptr,
@@ -232,10 +232,10 @@ FT_TEST(test_game_map3d_toggle_thread_safe,
         }
         if (join_result == 0)
         {
-            if (arguments[thread_index].result_code != ER_SUCCESS && test_failed == 0)
+            if (arguments[thread_index].result_code != FT_ER_SUCCESSS && test_failed == 0)
             {
                 test_failed = 1;
-                failure_expression = "arguments[thread_index].result_code == ER_SUCCESS";
+                failure_expression = "arguments[thread_index].result_code == FT_ER_SUCCESSS";
                 failure_line = __LINE__;
             }
         }
@@ -249,7 +249,7 @@ FT_TEST(test_game_map3d_toggle_thread_safe,
     int final_value;
 
     final_value = map_instance.get(3, 3, 3);
-    if (map_instance.get_error() != ER_SUCCESS)
+    if (map_instance.get_error() != FT_ER_SUCCESSS)
         return (0);
     if (final_value != 0 && final_value != 1)
         return (0);

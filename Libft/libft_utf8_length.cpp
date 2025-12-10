@@ -9,7 +9,7 @@ int ft_utf8_count(const char *string, size_t *code_point_count_pointer)
     size_t byte_index;
     size_t decoded_count;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     if (string == ft_nullptr || code_point_count_pointer == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;

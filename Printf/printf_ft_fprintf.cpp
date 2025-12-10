@@ -69,7 +69,7 @@ int ft_vfprintf(FILE *stream, const char *format, va_list args)
         format_error = ft_errno;
         va_end(current_args);
         ft_errno = format_error;
-        if (written_count != SIZE_MAX && ft_errno == ER_SUCCESS)
+        if (written_count != SIZE_MAX && ft_errno == FT_ER_SUCCESSS)
             ft_errno = FT_ERR_IO;
         return (-1);
     }
@@ -81,7 +81,7 @@ int ft_vfprintf(FILE *stream, const char *format, va_list args)
         ft_errno = FT_ERR_OUT_OF_RANGE;
         return (-1);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (static_cast<int>(written_count));
 }
 

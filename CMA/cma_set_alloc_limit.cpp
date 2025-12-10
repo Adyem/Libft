@@ -13,7 +13,7 @@ void    cma_set_alloc_limit(ft_size_t limit)
     if (!allocator_guard.is_active())
     {
         g_cma_alloc_limit = limit;
-        if (allocator_guard.get_error() == ER_SUCCESS)
+        if (allocator_guard.get_error() == FT_ER_SUCCESSS)
             ft_errno = entry_errno;
         return ;
     }

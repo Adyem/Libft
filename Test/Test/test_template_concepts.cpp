@@ -28,16 +28,16 @@ class variadic_constructible
 };
 
 variadic_constructible::variadic_constructible()
-    : _first(0), _second(0.0), _error_code(ER_SUCCESS)
+    : _first(0), _second(0.0), _error_code(FT_ER_SUCCESSS)
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
 variadic_constructible::variadic_constructible(int first, double second)
-    : _first(first), _second(second), _error_code(ER_SUCCESS)
+    : _first(first), _second(second), _error_code(FT_ER_SUCCESSS)
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -62,7 +62,7 @@ variadic_constructible &variadic_constructible::operator=(const variadic_constru
 
 variadic_constructible::~variadic_constructible()
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -75,13 +75,13 @@ void variadic_constructible::set_error(int error) const
 
 int variadic_constructible::first() const
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (this->_first);
 }
 
 double variadic_constructible::second() const
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (this->_second);
 }
 
@@ -118,16 +118,16 @@ class shared_ptr_base_type
 };
 
 shared_ptr_base_type::shared_ptr_base_type()
-    : _marker(0), _error_code(ER_SUCCESS)
+    : _marker(0), _error_code(FT_ER_SUCCESSS)
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
 shared_ptr_base_type::shared_ptr_base_type(int marker)
-    : _marker(marker), _error_code(ER_SUCCESS)
+    : _marker(marker), _error_code(FT_ER_SUCCESSS)
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -151,7 +151,7 @@ shared_ptr_base_type &shared_ptr_base_type::operator=(const shared_ptr_base_type
 
 shared_ptr_base_type::~shared_ptr_base_type()
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -164,7 +164,7 @@ void shared_ptr_base_type::set_error(int error) const
 
 int shared_ptr_base_type::get_marker() const
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (this->_marker);
 }
 
@@ -199,16 +199,16 @@ class shared_ptr_derived_type : public shared_ptr_base_type
 };
 
 shared_ptr_derived_type::shared_ptr_derived_type()
-    : shared_ptr_base_type(), _error_code(ER_SUCCESS)
+    : shared_ptr_base_type(), _error_code(FT_ER_SUCCESSS)
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
 shared_ptr_derived_type::shared_ptr_derived_type(int marker)
-    : shared_ptr_base_type(marker), _error_code(ER_SUCCESS)
+    : shared_ptr_base_type(marker), _error_code(FT_ER_SUCCESSS)
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -232,7 +232,7 @@ shared_ptr_derived_type &shared_ptr_derived_type::operator=(const shared_ptr_der
 
 shared_ptr_derived_type::~shared_ptr_derived_type()
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 

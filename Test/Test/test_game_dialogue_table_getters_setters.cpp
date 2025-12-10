@@ -27,10 +27,10 @@ FT_TEST(test_dialogue_table_register_line_sets_success, "register line stores en
 
     build_dialogue_entries(line, script);
     ft_errno = FT_ERR_INVALID_STATE;
-    FT_ASSERT_EQ(ER_SUCCESS, table.register_line(line));
-    FT_ASSERT_EQ(ER_SUCCESS, table.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(ER_SUCCESS, table.fetch_line(3, fetched));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.register_line(line));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.fetch_line(3, fetched));
     FT_ASSERT_EQ(ft_string("welcome"), fetched.get_text());
     return (1);
 }
@@ -44,10 +44,10 @@ FT_TEST(test_dialogue_table_register_script_sets_success, "register script store
 
     build_dialogue_entries(line, script);
     ft_errno = FT_ERR_INVALID_STATE;
-    FT_ASSERT_EQ(ER_SUCCESS, table.register_script(script));
-    FT_ASSERT_EQ(ER_SUCCESS, table.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(ER_SUCCESS, table.fetch_script(6, fetched));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.register_script(script));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.fetch_script(6, fetched));
     FT_ASSERT_EQ(ft_string("greeting"), fetched.get_title());
     return (1);
 }
@@ -57,7 +57,7 @@ FT_TEST(test_dialogue_table_fetch_line_missing_sets_not_found, "missing line upd
     ft_dialogue_table table;
     ft_dialogue_line missing;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.fetch_line(90, missing));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.get_error());
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_errno);
@@ -69,7 +69,7 @@ FT_TEST(test_dialogue_table_fetch_script_missing_sets_not_found, "missing script
     ft_dialogue_table table;
     ft_dialogue_script missing;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.fetch_script(45, missing));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.get_error());
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_errno);
@@ -90,9 +90,9 @@ FT_TEST(test_dialogue_table_set_lines_replaces_entries, "set_lines replaces stor
     lines.insert(10, ft_dialogue_line(10, ft_string("npc"), ft_string("hello"), ft_vector<int>()));
     ft_errno = FT_ERR_INVALID_STATE;
     table.set_lines(lines);
-    FT_ASSERT_EQ(ER_SUCCESS, table.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(ER_SUCCESS, table.fetch_line(10, fetched));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.fetch_line(10, fetched));
     FT_ASSERT_EQ(ft_string("hello"), fetched.get_text());
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.fetch_line(3, fetched));
     return (1);
@@ -112,9 +112,9 @@ FT_TEST(test_dialogue_table_set_scripts_replaces_entries, "set_scripts swaps sto
     scripts.insert(11, ft_dialogue_script(11, ft_string("quest"), ft_string("desc"), 0, ft_vector<ft_dialogue_line>()));
     ft_errno = FT_ERR_INVALID_STATE;
     table.set_scripts(scripts);
-    FT_ASSERT_EQ(ER_SUCCESS, table.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(ER_SUCCESS, table.fetch_script(11, fetched));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.fetch_script(11, fetched));
     FT_ASSERT_EQ(ft_string("quest"), fetched.get_title());
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.fetch_script(6, fetched));
     return (1);
@@ -131,8 +131,8 @@ FT_TEST(test_dialogue_table_get_lines_sets_success_errno, "get_lines sets succes
     lines.insert(7, line);
     ft_errno = FT_ERR_INVALID_STATE;
     const ft_map<int, ft_dialogue_line> &const_lines = table.get_lines();
-    FT_ASSERT_EQ(ER_SUCCESS, table.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(1, const_lines.size());
     return (1);
 }
@@ -147,8 +147,8 @@ FT_TEST(test_dialogue_table_get_scripts_sets_success_errno, "get_scripts sets su
     scripts.insert(1, script);
     ft_errno = FT_ERR_INVALID_STATE;
     const ft_map<int, ft_dialogue_script> &const_scripts = table.get_scripts();
-    FT_ASSERT_EQ(ER_SUCCESS, table.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(1, const_scripts.size());
     return (1);
 }
@@ -160,8 +160,8 @@ FT_TEST(test_dialogue_table_get_error_str_success, "get_error_str returns succes
 
     ft_errno = FT_ERR_INVALID_STATE;
     message = table.get_error_str();
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    FT_ASSERT(ft_strcmp(ft_strerror(ER_SUCCESS), message) == 0);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT(ft_strcmp(ft_strerror(FT_ER_SUCCESSS), message) == 0);
     return (1);
 }
 

@@ -12,9 +12,9 @@ int ft_random_int(void)
     int random_value;
 
     ft_unique_lock<pt_mutex> guard(g_random_engine_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
         return (0);
     random_value = distribution(g_random_engine);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (random_value);
 }

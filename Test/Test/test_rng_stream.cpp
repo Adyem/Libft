@@ -37,7 +37,7 @@ FT_TEST(test_rng_stream_reseed_from_string, "rng_stream can reseed from string a
     initial_value = stream_instance.random_int();
     stream_instance.reseed_from_string("example-seed");
     reseeded_value = stream_instance.random_int();
-    if (stream_instance.get_error() != ER_SUCCESS)
+    if (stream_instance.get_error() != FT_ER_SUCCESSS)
         return (0);
     if (initial_value == reseeded_value)
         return (0);

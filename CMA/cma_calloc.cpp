@@ -33,6 +33,6 @@ void    *cma_calloc(ft_size_t count, ft_size_t size)
         character_pointer[index] = 0;
         index++;
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (memory_pointer);
 }

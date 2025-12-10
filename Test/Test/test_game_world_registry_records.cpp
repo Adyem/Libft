@@ -25,7 +25,7 @@ FT_TEST(test_region_definition_copy_move, "copy and move region definitions")
     FT_ASSERT_EQ(ft_string("forest"), moved.get_name());
     FT_ASSERT(region.get_name().empty());
     FT_ASSERT_EQ(0, region.get_region_id());
-    FT_ASSERT_EQ(ER_SUCCESS, region.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, region.get_error());
 
     moved_assigned = ft_region_definition();
     moved_assigned = ft_move(moved);
@@ -66,6 +66,6 @@ FT_TEST(test_world_region_copy_move, "copy and move world regions")
     FT_ASSERT_EQ(3, moved_assigned.get_region_ids()[0]);
     FT_ASSERT(moved.get_region_ids().empty());
     FT_ASSERT_EQ(0, moved.get_world_id());
-    FT_ASSERT_EQ(ER_SUCCESS, moved.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.get_error());
     return (1);
 }

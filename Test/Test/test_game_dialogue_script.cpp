@@ -19,7 +19,7 @@ FT_TEST(test_dialogue_script_default_initializes_success, "default constructor i
     FT_ASSERT_EQ(ft_string(), script.get_summary());
     FT_ASSERT_EQ(0, script.get_start_line_id());
     FT_ASSERT_EQ(0ul, script.get_lines().size());
-    FT_ASSERT_EQ(ER_SUCCESS, script.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, script.get_error());
     return (1);
 }
 
@@ -50,12 +50,12 @@ FT_TEST(test_dialogue_script_setters_reset_errno, "setters update values and set
     script.set_title(ft_string("new title"));
     script.set_summary(ft_string("new summary"));
     script.set_start_line_id(12);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(9, script.get_script_id());
     FT_ASSERT_EQ(ft_string("new title"), script.get_title());
     FT_ASSERT_EQ(ft_string("new summary"), script.get_summary());
     FT_ASSERT_EQ(12, script.get_start_line_id());
-    FT_ASSERT_EQ(ER_SUCCESS, script.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, script.get_error());
     return (1);
 }
 
@@ -71,7 +71,7 @@ FT_TEST(test_dialogue_script_set_lines_copies_entries, "set_lines duplicates pro
     FT_ASSERT_EQ(FT_ERR_INTERNAL, ft_errno);
     FT_ASSERT_EQ(1ul, script.get_lines().size());
     FT_ASSERT_EQ(5, script.get_lines()[0].get_line_id());
-    FT_ASSERT_EQ(ER_SUCCESS, script.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, script.get_error());
     return (1);
 }
 
@@ -107,7 +107,7 @@ FT_TEST(test_dialogue_script_copy_assignment_resets_errno, "copy assignment repl
     source = ft_dialogue_script(9, ft_string("new"), ft_string("news"), 20, other_lines);
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     destination = source;
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(9, destination.get_script_id());
     FT_ASSERT_EQ(ft_string("new"), destination.get_title());
     FT_ASSERT_EQ(ft_string("news"), destination.get_summary());
@@ -177,7 +177,7 @@ FT_TEST(test_dialogue_script_self_assignment_no_change, "self copy assignment le
     FT_ASSERT_EQ(ft_string("assign"), script.get_summary());
     FT_ASSERT_EQ(2, script.get_start_line_id());
     FT_ASSERT_EQ(1ul, script.get_lines().size());
-    FT_ASSERT_EQ(ER_SUCCESS, script.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, script.get_error());
     return (1);
 }
 
@@ -196,7 +196,7 @@ FT_TEST(test_dialogue_script_self_move_assignment_no_change, "self move assignme
     FT_ASSERT_EQ(ft_string("move"), script.get_summary());
     FT_ASSERT_EQ(4, script.get_start_line_id());
     FT_ASSERT_EQ(1ul, script.get_lines().size());
-    FT_ASSERT_EQ(ER_SUCCESS, script.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, script.get_error());
     return (1);
 }
 
@@ -213,7 +213,7 @@ FT_TEST(test_dialogue_script_getters_reset_errno, "getters reset errno to succes
     FT_ASSERT_EQ(ft_string("summary"), script.get_summary());
     FT_ASSERT_EQ(16, script.get_start_line_id());
     FT_ASSERT_EQ(1ul, script.get_lines().size());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -226,7 +226,7 @@ FT_TEST(test_dialogue_script_non_const_lines_reference, "non-const lines getter 
     script = ft_dialogue_script(30, ft_string("mutable"), ft_string("lines"), 25, lines);
     ft_errno = FT_ERR_END_OF_FILE;
     script.get_lines().push_back(create_dialogue_line(40, ft_string("npc"), ft_string("extra")));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(2ul, script.get_lines().size());
     FT_ASSERT_EQ(40, script.get_lines()[1].get_line_id());
     return (1);
@@ -237,8 +237,8 @@ FT_TEST(test_dialogue_script_error_reporting_matches_errno, "get_error_str match
     ft_dialogue_script script;
 
     script.set_script_id(2);
-    FT_ASSERT_EQ(ER_SUCCESS, script.get_error());
-    FT_ASSERT_EQ(ft_string(ft_strerror(ER_SUCCESS)), ft_string(script.get_error_str()));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, script.get_error());
+    FT_ASSERT_EQ(ft_string(ft_strerror(FT_ER_SUCCESSS)), ft_string(script.get_error_str()));
     return (1);
 }
 
@@ -253,10 +253,10 @@ FT_TEST(test_dialogue_script_set_lines_replaces_existing_entries, "set_lines rep
     script = ft_dialogue_script(90, ft_string("title"), ft_string("sum"), 70, first_lines);
     ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
     script.set_lines(second_lines);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(1ul, script.get_lines().size());
     FT_ASSERT_EQ(80, script.get_lines()[0].get_line_id());
-    FT_ASSERT_EQ(ER_SUCCESS, script.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, script.get_error());
     return (1);
 }
 

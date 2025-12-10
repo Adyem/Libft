@@ -2,7 +2,7 @@
 
 int ft_isspace(int character)
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (character == ' ' || character == '\f' || character == '\n' ||
             character == '\r' || character == '\t' || character == '\v');
 }

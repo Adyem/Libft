@@ -18,14 +18,14 @@ static std::mutex                          g_su_health_checks_mutex;
 static int  su_health_copy_entry(const s_su_health_check_entry &source, s_su_health_check_entry &destination)
 {
     destination.name = source.name;
-    if (destination.name.get_error() != ER_SUCCESS)
+    if (destination.name.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = destination.name.get_error();
         return (-1);
     }
     destination.callback = source.callback;
     destination.context = source.context;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -36,7 +36,7 @@ static int  su_health_execute_entry(const s_su_health_check_entry &entry, t_su_h
     int         error_code;
 
     healthy = true;
-    error_code = ER_SUCCESS;
+    error_code = FT_ER_SUCCESSS;
     if (entry.callback == ft_nullptr)
     {
         healthy = false;
@@ -45,13 +45,13 @@ static int  su_health_execute_entry(const s_su_health_check_entry &entry, t_su_h
     }
     else
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         int callback_result;
         int detail_error;
 
         callback_result = entry.callback(entry.context, detail);
         detail_error = detail.get_error();
-        if (detail_error != ER_SUCCESS)
+        if (detail_error != FT_ER_SUCCESSS)
         {
             healthy = false;
             error_code = detail_error;
@@ -61,24 +61,24 @@ static int  su_health_execute_entry(const s_su_health_check_entry &entry, t_su_h
         {
             healthy = false;
             error_code = ft_errno;
-            if (error_code == ER_SUCCESS)
+            if (error_code == FT_ER_SUCCESSS)
                 error_code = FT_ERR_INTERNAL;
             ft_errno = error_code;
         }
         else
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
     }
     if (result)
     {
         result->name = entry.name;
-        if (result->name.get_error() != ER_SUCCESS)
+        if (result->name.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = result->name.get_error();
             return (-1);
         }
         result->healthy = healthy;
         result->detail = detail;
-        if (result->detail.get_error() != ER_SUCCESS)
+        if (result->detail.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = result->detail.get_error();
             return (-1);
@@ -87,13 +87,13 @@ static int  su_health_execute_entry(const s_su_health_check_entry &entry, t_su_h
     }
     if (!healthy)
     {
-        if (ft_errno == ER_SUCCESS)
+        if (ft_errno == FT_ER_SUCCESSS)
             ft_errno = error_code;
-        if (ft_errno == ER_SUCCESS)
+        if (ft_errno == FT_ER_SUCCESSS)
             ft_errno = FT_ERR_INTERNAL;
         return (-1);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -128,7 +128,7 @@ int su_health_register_check(const char *name, t_su_health_check check, void *co
     stored_entry.callback = check;
     stored_entry.context = context;
     stored_entry.name = name;
-    if (stored_entry.name.get_error() != ER_SUCCESS)
+    if (stored_entry.name.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = stored_entry.name.get_error();
         return (-1);
@@ -142,7 +142,7 @@ int su_health_register_check(const char *name, t_su_health_check check, void *co
         ft_errno = FT_ERR_NO_MEMORY;
         return (-1);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -163,7 +163,7 @@ int su_health_unregister_check(const char *name)
         if (existing.name == name)
         {
             g_su_health_checks.erase(g_su_health_checks.begin() + index);
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             return (0);
         }
         index += 1;
@@ -177,7 +177,7 @@ void    su_health_clear_checks(void)
     std::lock_guard<std::mutex> guard(g_su_health_checks_mutex);
 
     g_su_health_checks.clear();
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 
@@ -188,7 +188,7 @@ int su_health_run_checks(t_su_health_check_result *results, size_t capacity, siz
     size_t  produced_count;
 
     final_result = 0;
-    final_error = ER_SUCCESS;
+    final_error = FT_ER_SUCCESSS;
     produced_count = 0;
     {
         std::vector<s_su_health_check_entry> local_checks;
@@ -259,7 +259,7 @@ int su_health_run_checks(t_su_health_check_result *results, size_t capacity, siz
 
             index = 0;
             has_failure = false;
-            first_error = ER_SUCCESS;
+            first_error = FT_ER_SUCCESSS;
             while (index < local_checks.size())
             {
                 t_su_health_check_result *slot;
@@ -277,9 +277,9 @@ int su_health_run_checks(t_su_health_check_result *results, size_t capacity, siz
                         int execution_error;
 
                         execution_error = ft_errno;
-                        if (execution_error == ER_SUCCESS && slot != ft_nullptr)
+                        if (execution_error == FT_ER_SUCCESSS && slot != ft_nullptr)
                             execution_error = slot->error_code;
-                        if (execution_error == ER_SUCCESS)
+                        if (execution_error == FT_ER_SUCCESSS)
                             execution_error = FT_ERR_INTERNAL;
                         first_error = execution_error;
                     }
@@ -297,12 +297,12 @@ int su_health_run_checks(t_su_health_check_result *results, size_t capacity, siz
         *count = produced_count;
     if (final_result != 0)
     {
-        if (final_error == ER_SUCCESS)
+        if (final_error == FT_ER_SUCCESSS)
             final_error = FT_ERR_INTERNAL;
         ft_errno = final_error;
         return (-1);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -317,7 +317,7 @@ int su_health_run_check(const char *name, t_su_health_check_result *result)
         return (-1);
     }
     final_result = 0;
-    final_error = ER_SUCCESS;
+    final_error = FT_ER_SUCCESSS;
     bool found;
     s_su_health_check_entry found_entry;
 
@@ -365,7 +365,7 @@ int su_health_run_check(const char *name, t_su_health_check_result *result)
             else
             {
                 final_error = ft_errno;
-                if (final_error == ER_SUCCESS)
+                if (final_error == FT_ER_SUCCESSS)
                     final_error = FT_ERR_INTERNAL;
             }
         }
@@ -375,6 +375,6 @@ int su_health_run_check(const char *name, t_su_health_check_result *result)
         ft_errno = final_error;
         return (-1);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }

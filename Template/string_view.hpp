@@ -55,19 +55,19 @@ const size_t ft_string_view<CharType>::npos = static_cast<size_t>(-1);
 
 template <typename CharType>
 ft_string_view<CharType>::ft_string_view()
-    : _data(ft_nullptr), _size(0), _error_code(ER_SUCCESS), _mutex()
+    : _data(ft_nullptr), _size(0), _error_code(FT_ER_SUCCESSS), _mutex()
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
 template <typename CharType>
 ft_string_view<CharType>::ft_string_view(const CharType* string)
-    : _data(string), _size(0), _error_code(ER_SUCCESS), _mutex()
+    : _data(string), _size(0), _error_code(FT_ER_SUCCESSS), _mutex()
 {
     if (string == ft_nullptr)
     {
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
         return ;
     }
     size_t index;
@@ -77,21 +77,21 @@ ft_string_view<CharType>::ft_string_view(const CharType* string)
         index++;
     }
     _size = index;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
 template <typename CharType>
 ft_string_view<CharType>::ft_string_view(const CharType* string, size_t size)
-    : _data(string), _size(size), _error_code(ER_SUCCESS), _mutex()
+    : _data(string), _size(size), _error_code(FT_ER_SUCCESSS), _mutex()
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
 template <typename CharType>
 ft_string_view<CharType>::ft_string_view(const ft_string_view& other)
-    : _data(ft_nullptr), _size(0), _error_code(ER_SUCCESS), _mutex()
+    : _data(ft_nullptr), _size(0), _error_code(FT_ER_SUCCESSS), _mutex()
 {
     int entry_errno;
     ft_unique_lock<pt_mutex> other_guard;
@@ -99,7 +99,7 @@ ft_string_view<CharType>::ft_string_view(const ft_string_view& other)
 
     entry_errno = ft_errno;
     lock_error = other.lock_self(other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->_data = ft_nullptr;
         this->_size = 0;
@@ -132,7 +132,7 @@ ft_string_view<CharType>& ft_string_view<CharType>::operator=(const ft_string_vi
     entry_errno = ft_errno;
     lock_error = ft_string_view<CharType>::lock_pair(*this, other,
             this_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_string_view<CharType>::restore_errno(this_guard, entry_errno);
@@ -164,14 +164,14 @@ const CharType* ft_string_view<CharType>::data() const
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         const_cast<ft_string_view*>(this)->set_error(lock_error);
         ft_string_view<CharType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     result = this->_data;
-    const_cast<ft_string_view*>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_string_view*>(this)->set_error(FT_ER_SUCCESSS);
     ft_string_view<CharType>::restore_errno(guard, entry_errno);
     return (result);
 }
@@ -186,14 +186,14 @@ size_t ft_string_view<CharType>::size() const
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         const_cast<ft_string_view*>(this)->set_error(lock_error);
         ft_string_view<CharType>::restore_errno(guard, entry_errno);
         return (0);
     }
     size_value = this->_size;
-    const_cast<ft_string_view*>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_string_view*>(this)->set_error(FT_ER_SUCCESSS);
     ft_string_view<CharType>::restore_errno(guard, entry_errno);
     return (size_value);
 }
@@ -208,14 +208,14 @@ bool ft_string_view<CharType>::empty() const
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         const_cast<ft_string_view*>(this)->set_error(lock_error);
         ft_string_view<CharType>::restore_errno(guard, entry_errno);
         return (true);
     }
     result = (this->_size == 0);
-    const_cast<ft_string_view*>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_string_view*>(this)->set_error(FT_ER_SUCCESSS);
     ft_string_view<CharType>::restore_errno(guard, entry_errno);
     return (result);
 }
@@ -230,7 +230,7 @@ CharType ft_string_view<CharType>::operator[](size_t index) const
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         const_cast<ft_string_view*>(this)->set_error(lock_error);
         ft_string_view<CharType>::restore_errno(guard, entry_errno);
@@ -243,7 +243,7 @@ CharType ft_string_view<CharType>::operator[](size_t index) const
         return (CharType());
     }
     value = this->_data[index];
-    const_cast<ft_string_view*>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_string_view*>(this)->set_error(FT_ER_SUCCESSS);
     ft_string_view<CharType>::restore_errno(guard, entry_errno);
     return (value);
 }
@@ -265,7 +265,7 @@ int ft_string_view<CharType>::compare(const ft_string_view& other) const
     entry_errno = ft_errno;
     lock_error = ft_string_view<CharType>::lock_pair(*this, other,
             first_guard, second_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         const_cast<ft_string_view*>(this)->set_error(lock_error);
         const_cast<ft_string_view*>(&other)->set_error(lock_error);
@@ -300,8 +300,8 @@ int ft_string_view<CharType>::compare(const ft_string_view& other) const
         else
             result = 1;
     }
-    const_cast<ft_string_view*>(this)->set_error(ER_SUCCESS);
-    const_cast<ft_string_view*>(&other)->set_error(ER_SUCCESS);
+    const_cast<ft_string_view*>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_string_view*>(&other)->set_error(FT_ER_SUCCESSS);
     ft_string_view<CharType>::restore_errno(second_guard, entry_errno);
     ft_string_view<CharType>::restore_errno(first_guard, entry_errno);
     return (result);
@@ -317,7 +317,7 @@ ft_string_view<CharType> ft_string_view<CharType>::substr(size_t position, size_
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         result.set_error(lock_error);
         const_cast<ft_string_view*>(this)->set_error(lock_error);
@@ -343,9 +343,9 @@ ft_string_view<CharType> ft_string_view<CharType>::substr(size_t position, size_
     const CharType* new_data;
 
     new_data = reinterpret_cast<const CharType*>(byte_ptr);
-    const_cast<ft_string_view*>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_string_view*>(this)->set_error(FT_ER_SUCCESSS);
     result = ft_string_view<CharType>(new_data, count);
-    result.set_error(ER_SUCCESS);
+    result.set_error(FT_ER_SUCCESSS);
     ft_string_view<CharType>::restore_errno(guard, entry_errno);
     return (result);
 }
@@ -379,13 +379,13 @@ template <typename CharType>
 int ft_string_view<CharType>::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
 {
     guard = ft_unique_lock<pt_mutex>(const_cast<pt_mutex&>(this->_mutex));
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (guard.get_error());
     }
-    ft_errno = ER_SUCCESS;
-    return (ER_SUCCESS);
+    ft_errno = FT_ER_SUCCESSS;
+    return (FT_ER_SUCCESSS);
 }
 
 template <typename CharType>
@@ -402,15 +402,15 @@ int ft_string_view<CharType>::lock_pair(const ft_string_view &first,
         ft_unique_lock<pt_mutex> single_guard(
             const_cast<pt_mutex&>(first._mutex));
 
-        if (single_guard.get_error() != ER_SUCCESS)
+        if (single_guard.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = ER_SUCCESS;
-        return (ER_SUCCESS);
+        ft_errno = FT_ER_SUCCESSS;
+        return (FT_ER_SUCCESSS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -429,14 +429,14 @@ int ft_string_view<CharType>::lock_pair(const ft_string_view &first,
         ft_unique_lock<pt_mutex> lower_guard(
             const_cast<pt_mutex&>(ordered_first->_mutex));
 
-        if (lower_guard.get_error() != ER_SUCCESS)
+        if (lower_guard.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(
             const_cast<pt_mutex&>(ordered_second->_mutex));
-        if (upper_guard.get_error() == ER_SUCCESS)
+        if (upper_guard.get_error() == FT_ER_SUCCESSS)
         {
             if (!swapped)
             {
@@ -448,8 +448,8 @@ int ft_string_view<CharType>::lock_pair(const ft_string_view &first,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = ER_SUCCESS;
-            return (ER_SUCCESS);
+            ft_errno = FT_ER_SUCCESSS;
+            return (FT_ER_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -472,7 +472,7 @@ int ft_string_view<CharType>::get_error() const
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         const_cast<ft_string_view*>(this)->set_error(lock_error);
         ft_string_view<CharType>::restore_errno(guard, entry_errno);
@@ -495,7 +495,7 @@ const char* ft_string_view<CharType>::get_error_str() const
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         const_cast<ft_string_view*>(this)->set_error(lock_error);
         ft_string_view<CharType>::restore_errno(guard, entry_errno);

@@ -24,7 +24,7 @@ FT_TEST(test_strncpy_s_copies_within_bounds, "ft_strncpy_s copies strings when w
     ft_memset(destination, 'X', sizeof(destination));
     FT_ASSERT_EQ(0, ft_strncpy_s(destination, sizeof(destination), source, 10));
     FT_ASSERT_EQ(0, ft_strcmp(source, destination));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -50,7 +50,7 @@ FT_TEST(test_strncat_s_appends_without_truncation, "ft_strncat_s appends when bo
     FT_ASSERT_EQ(0, ft_strcpy_s(buffer, sizeof(buffer), "foo"));
     FT_ASSERT_EQ(0, ft_strncat_s(buffer, sizeof(buffer), "bar", 8));
     FT_ASSERT_EQ(0, ft_strcmp("foobar", buffer));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 

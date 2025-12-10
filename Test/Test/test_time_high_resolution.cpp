@@ -22,7 +22,7 @@ FT_TEST(test_time_high_resolution_now_reports_success,
 
     result = time_high_resolution_now(&first_point);
     FT_ASSERT(result == true);
-    FT_ASSERT(ft_errno == ER_SUCCESS);
+    FT_ASSERT(ft_errno == FT_ER_SUCCESSS);
     return (1);
 }
 

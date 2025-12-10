@@ -57,7 +57,7 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
     if (pf_engine_format(format, current_args, pf_fd_writer, &context, &written_count) != 0)
     {
         va_end(current_args);
-        if (ft_errno == ER_SUCCESS)
+        if (ft_errno == FT_ER_SUCCESSS)
             ft_errno = FT_ERR_IO;
         return (-1);
     }
@@ -67,7 +67,7 @@ int pf_printf_fd_v(int fd, const char *format, va_list args)
         ft_errno = FT_ERR_OUT_OF_RANGE;
         return (-1);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (static_cast<int>(written_count));
 }
 

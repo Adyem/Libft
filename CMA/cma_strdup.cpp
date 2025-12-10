@@ -13,9 +13,9 @@ char    *cma_strdup(const char *string)
 
     if (!string)
         return (ft_nullptr);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     measured_length_raw = ft_strlen_size_t(string);
-    if (ft_errno != ER_SUCCESS)
+    if (ft_errno != FT_ER_SUCCESSS)
     {
         ft_errno = FT_ERR_OUT_OF_RANGE;
         return (ft_nullptr);

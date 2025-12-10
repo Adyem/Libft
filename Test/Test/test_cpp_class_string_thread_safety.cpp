@@ -11,8 +11,8 @@ FT_TEST(test_ft_string_append_resets_errno,
     ft_string string_value;
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     string_value.append('x');
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(ER_SUCCESS, string_value.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, string_value.get_error());
     FT_ASSERT_EQ(1u, string_value.size());
     return (1);
 }
@@ -57,7 +57,7 @@ FT_TEST(test_ft_string_concurrent_appends_are_serialized,
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     worker.join();
 
-    FT_ASSERT_EQ(ER_SUCCESS, shared_string.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, shared_string.get_error());
     FT_ASSERT_EQ(1000u, shared_string.size());
 
     const char *contents;

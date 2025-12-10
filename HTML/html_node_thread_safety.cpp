@@ -19,7 +19,7 @@ int html_node_prepare_thread_safety(html_node *node)
     }
     if (node->thread_safe_enabled && node->mutex)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     memory = std::malloc(sizeof(pt_mutex));
@@ -29,7 +29,7 @@ int html_node_prepare_thread_safety(html_node *node)
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != ER_SUCCESS)
+    if (mutex_pointer->get_error() != FT_ER_SUCCESSS)
     {
         int mutex_error;
 
@@ -41,7 +41,7 @@ int html_node_prepare_thread_safety(html_node *node)
     }
     node->mutex = mutex_pointer;
     node->thread_safe_enabled = true;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -79,7 +79,7 @@ int html_node_lock(const html_node *node, bool *lock_acquired)
         return (0);
     }
     mutable_node->mutex->lock(THREAD_ID);
-    if (mutable_node->mutex->get_error() != ER_SUCCESS)
+    if (mutable_node->mutex->get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = mutable_node->mutex->get_error();
         return (-1);
@@ -102,7 +102,7 @@ void html_node_unlock(const html_node *node, bool lock_acquired)
         return ;
     entry_errno = ft_errno;
     mutable_node->mutex->unlock(THREAD_ID);
-    if (mutable_node->mutex->get_error() != ER_SUCCESS)
+    if (mutable_node->mutex->get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = mutable_node->mutex->get_error();
         return ;

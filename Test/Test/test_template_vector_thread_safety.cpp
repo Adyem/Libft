@@ -12,35 +12,35 @@ FT_TEST(test_ft_vector_enable_thread_safety_installs_mutex,
     bool           lock_acquired;
 
     FT_ASSERT_EQ(0, vector_instance.enable_thread_safety());
-    FT_ASSERT_EQ(ER_SUCCESS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, vector_instance.get_error());
     FT_ASSERT(vector_instance.is_thread_safe());
-    FT_ASSERT_EQ(ER_SUCCESS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, vector_instance.get_error());
 
     vector_instance.push_back(5);
-    FT_ASSERT_EQ(ER_SUCCESS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, vector_instance.get_error());
     vector_instance.push_back(7);
-    FT_ASSERT_EQ(ER_SUCCESS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, vector_instance.get_error());
     FT_ASSERT_EQ(2u, vector_instance.size());
-    FT_ASSERT_EQ(ER_SUCCESS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, vector_instance.get_error());
 
     lock_acquired = false;
     FT_ASSERT_EQ(0, vector_instance.lock(&lock_acquired));
     FT_ASSERT(lock_acquired);
     vector_instance.push_back(11);
-    FT_ASSERT_EQ(ER_SUCCESS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, vector_instance.get_error());
     vector_instance.unlock(lock_acquired);
-    FT_ASSERT_EQ(ER_SUCCESS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, vector_instance.get_error());
 
     vector_instance.disable_thread_safety();
-    FT_ASSERT_EQ(ER_SUCCESS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, vector_instance.get_error());
     FT_ASSERT(vector_instance.is_thread_safe() == false);
-    FT_ASSERT_EQ(ER_SUCCESS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, vector_instance.get_error());
 
     lock_acquired = false;
     FT_ASSERT_EQ(0, vector_instance.lock(&lock_acquired));
     FT_ASSERT(lock_acquired == false);
     vector_instance.unlock(lock_acquired);
-    FT_ASSERT_EQ(ER_SUCCESS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, vector_instance.get_error());
     return (1);
 }
 
@@ -55,7 +55,7 @@ FT_TEST(test_ft_vector_lock_blocks_until_release,
     std::thread                     worker;
 
     FT_ASSERT_EQ(0, vector_instance.enable_thread_safety());
-    FT_ASSERT_EQ(ER_SUCCESS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, vector_instance.get_error());
 
     main_lock_acquired = false;
     FT_ASSERT_EQ(0, vector_instance.lock(&main_lock_acquired));
@@ -97,6 +97,6 @@ FT_TEST(test_ft_vector_lock_blocks_until_release,
     FT_ASSERT(wait_duration_ms.load() >= 40);
 
     vector_instance.disable_thread_safety();
-    FT_ASSERT_EQ(ER_SUCCESS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, vector_instance.get_error());
     return (1);
 }

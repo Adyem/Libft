@@ -386,7 +386,7 @@ static char *json_stream_parse_string(json_stream_reader *reader)
         return (ft_nullptr);
     }
     result[length] = '\0';
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (result);
 }
 
@@ -409,7 +409,7 @@ static int json_stream_match_literal(json_stream_reader *reader, const char *lit
         }
         index += 1;
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -534,7 +534,7 @@ static char *json_stream_parse_number(json_stream_reader *reader)
         return (ft_nullptr);
     }
     number[length] = '\0';
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (number);
 }
 
@@ -565,7 +565,7 @@ static char *json_stream_parse_value(json_stream_reader *reader)
             ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (value);
     }
     if (current_char == 'f')
@@ -578,7 +578,7 @@ static char *json_stream_parse_value(json_stream_reader *reader)
             ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (value);
     }
     if (ft_isdigit(static_cast<unsigned char>(current_char))
@@ -705,7 +705,7 @@ static json_item *json_stream_parse_items(json_stream_reader *reader)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (head);
 }
 
@@ -745,7 +745,7 @@ static int json_stream_dispatch_event(json_stream_event_callback callback,
     }
     else if (string_value != ft_nullptr)
         cma_free(string_value);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -1002,9 +1002,9 @@ int json_stream_reader_traverse(json_stream_reader *reader,
         return (-1);
     entry_errno = ft_errno;
     lock_error = json_stream_reader_lock(reader, guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
         return (-1);
-    reader->error_code = ER_SUCCESS;
+    reader->error_code = FT_ER_SUCCESSS;
     if (json_stream_dispatch_event(callback,
             user_data,
             JSON_STREAM_EVENT_BEGIN_DOCUMENT,
@@ -1017,7 +1017,7 @@ int json_stream_reader_traverse(json_stream_reader *reader,
     }
     if (json_stream_read_value(reader, callback, user_data) != 0)
     {
-        if (reader->error_code == ER_SUCCESS)
+        if (reader->error_code == FT_ER_SUCCESSS)
             reader->error_code = ft_errno;
         json_stream_reader_restore_errno(reader, guard, entry_errno);
         return (-1);
@@ -1025,7 +1025,7 @@ int json_stream_reader_traverse(json_stream_reader *reader,
     status = json_stream_skip_whitespace(reader);
     if (status == JSON_STREAM_STATUS_ERROR)
     {
-        if (reader->error_code == ER_SUCCESS)
+        if (reader->error_code == FT_ER_SUCCESSS)
             reader->error_code = ft_errno;
         json_stream_reader_restore_errno(reader, guard, entry_errno);
         return (-1);
@@ -1043,13 +1043,13 @@ int json_stream_reader_traverse(json_stream_reader *reader,
             ft_nullptr,
             false) != 0)
     {
-        if (reader->error_code == ER_SUCCESS)
+        if (reader->error_code == FT_ER_SUCCESSS)
             reader->error_code = ft_errno;
         json_stream_reader_restore_errno(reader, guard, entry_errno);
         return (-1);
     }
-    reader->error_code = ER_SUCCESS;
-    ft_errno = ER_SUCCESS;
+    reader->error_code = FT_ER_SUCCESSS;
+    ft_errno = FT_ER_SUCCESSS;
     json_stream_reader_restore_errno(reader, guard, entry_errno);
     return (0);
 }
@@ -1072,13 +1072,13 @@ int json_stream_read_from_file_events(FILE *file,
     json_stream_reader_destroy(&reader);
     if (status != 0)
     {
-        if (error_code != ER_SUCCESS)
+        if (error_code != FT_ER_SUCCESSS)
             ft_errno = error_code;
-        else if (ft_errno == ER_SUCCESS)
+        else if (ft_errno == FT_ER_SUCCESSS)
             ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -1101,13 +1101,13 @@ int json_stream_read_from_stream_events(json_stream_read_callback callback,
     json_stream_reader_destroy(&reader);
     if (status != 0)
     {
-        if (error_code != ER_SUCCESS)
+        if (error_code != FT_ER_SUCCESSS)
             ft_errno = error_code;
-        else if (ft_errno == ER_SUCCESS)
+        else if (ft_errno == FT_ER_SUCCESSS)
             ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -1130,9 +1130,9 @@ json_group *json_stream_reader_parse(json_stream_reader *reader)
         return (ft_nullptr);
     entry_errno = ft_errno;
     lock_error = json_stream_reader_lock(reader, guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
         return (ft_nullptr);
-    reader->error_code = ER_SUCCESS;
+    reader->error_code = FT_ER_SUCCESSS;
     status = json_stream_skip_whitespace(reader);
     if (status != JSON_STREAM_STATUS_OK)
     {
@@ -1280,8 +1280,8 @@ json_group *json_stream_reader_parse(json_stream_reader *reader)
         json_stream_reader_restore_errno(reader, guard, entry_errno);
         return (ft_nullptr);
     }
-    reader->error_code = ER_SUCCESS;
-    ft_errno = ER_SUCCESS;
+    reader->error_code = FT_ER_SUCCESSS;
+    ft_errno = FT_ER_SUCCESSS;
     json_stream_reader_restore_errno(reader, guard, entry_errno);
     return (head);
 }
@@ -1302,7 +1302,7 @@ int json_stream_reader_init_callback(json_stream_reader *reader, json_stream_rea
         return (-1);
     entry_errno = ft_errno;
     lock_error = json_stream_reader_lock(reader, guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
         return (-1);
     new_buffer = static_cast<char *>(cma_malloc(buffer_capacity));
     if (!new_buffer)
@@ -1322,8 +1322,8 @@ int json_stream_reader_init_callback(json_stream_reader *reader, json_stream_rea
     reader->buffer_size = 0;
     reader->buffer_index = 0;
     reader->end_of_stream = false;
-    reader->error_code = ER_SUCCESS;
-    json_stream_reader_set_error_unlocked(reader, ER_SUCCESS);
+    reader->error_code = FT_ER_SUCCESSS;
+    json_stream_reader_set_error_unlocked(reader, FT_ER_SUCCESSS);
     json_stream_reader_restore_errno(reader, guard, entry_errno);
     return (0);
 }
@@ -1350,7 +1350,7 @@ void json_stream_reader_destroy(json_stream_reader *reader)
         return ;
     entry_errno = ft_errno;
     lock_error = json_stream_reader_lock(reader, guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
         return ;
     if (reader->buffer)
         cma_free(reader->buffer);
@@ -1359,10 +1359,10 @@ void json_stream_reader_destroy(json_stream_reader *reader)
     reader->buffer_size = 0;
     reader->buffer_index = 0;
     reader->end_of_stream = false;
-    reader->error_code = ER_SUCCESS;
+    reader->error_code = FT_ER_SUCCESSS;
     reader->read_callback = ft_nullptr;
     reader->user_data = ft_nullptr;
-    json_stream_reader_set_error_unlocked(reader, ER_SUCCESS);
+    json_stream_reader_set_error_unlocked(reader, FT_ER_SUCCESSS);
     json_stream_reader_restore_errno(reader, guard, entry_errno);
     return ;
 }
@@ -1378,7 +1378,7 @@ json_group *json_read_from_file_stream(FILE *file, size_t buffer_capacity)
     int result_errno;
 
     groups = ft_nullptr;
-    result_errno = ER_SUCCESS;
+    result_errno = FT_ER_SUCCESSS;
     {
         json_stream_reader reader = json_stream_reader();
 
@@ -1393,9 +1393,9 @@ json_group *json_read_from_file_stream(FILE *file, size_t buffer_capacity)
             parse_errno = ft_errno;
             error_code = reader.error_code;
             result_errno = error_code;
-            if (result_errno == ER_SUCCESS)
+            if (result_errno == FT_ER_SUCCESSS)
                 result_errno = parse_errno;
-            if (result_errno == ER_SUCCESS)
+            if (result_errno == FT_ER_SUCCESSS)
                 result_errno = FT_ERR_INVALID_ARGUMENT;
         }
         json_stream_reader_destroy(&reader);
@@ -1416,7 +1416,7 @@ json_group *json_read_from_stream(json_stream_read_callback callback, void *user
     int result_errno;
 
     groups = ft_nullptr;
-    result_errno = ER_SUCCESS;
+    result_errno = FT_ER_SUCCESSS;
     {
         json_stream_reader reader = json_stream_reader();
 
@@ -1431,9 +1431,9 @@ json_group *json_read_from_stream(json_stream_read_callback callback, void *user
             parse_errno = ft_errno;
             error_code = reader.error_code;
             result_errno = error_code;
-            if (result_errno == ER_SUCCESS)
+            if (result_errno == FT_ER_SUCCESSS)
                 result_errno = parse_errno;
-            if (result_errno == ER_SUCCESS)
+            if (result_errno == FT_ER_SUCCESSS)
                 result_errno = FT_ERR_INVALID_ARGUMENT;
         }
         json_stream_reader_destroy(&reader);

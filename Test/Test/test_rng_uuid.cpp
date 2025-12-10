@@ -14,7 +14,7 @@ static int is_lower_hexadecimal_character(char value)
 
 FT_TEST(test_ft_generate_uuid_null_out_sets_errno, "ft_generate_uuid null output sets errno")
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     ft_generate_uuid(ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -27,7 +27,7 @@ FT_TEST(test_ft_generate_uuid_success_sets_errno_success, "ft_generate_uuid succ
 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     ft_generate_uuid(output);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     index = 0;
     while (index < 36)
     {

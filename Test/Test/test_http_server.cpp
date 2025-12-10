@@ -76,13 +76,13 @@ FT_TEST(test_http_server_get_response, "HTTP server handles GET requests")
     context.server = &server;
     context.result = -1;
     server_thread = ft_thread(http_server_run_once, &context);
-    if (server_thread.get_error() != ER_SUCCESS)
+    if (server_thread.get_error() != FT_ER_SUCCESSS)
         return (0);
     client_configuration._type = SocketType::CLIENT;
     client_configuration._ip = "127.0.0.1";
     client_configuration._port = 54330;
     client_socket = ft_socket(client_configuration);
-    if (client_socket.get_error() != ER_SUCCESS)
+    if (client_socket.get_error() != FT_ER_SUCCESSS)
     {
         server_thread.join();
         return (0);
@@ -102,7 +102,7 @@ FT_TEST(test_http_server_get_response, "HTTP server handles GET requests")
     server_thread.join();
     if (context.result != 0)
         return (0);
-    if (server.get_error() != ER_SUCCESS)
+    if (server.get_error() != FT_ER_SUCCESSS)
         return (0);
     if (ft_strnstr(response.c_str(), "HTTP/1.1 200 OK", response.size()) == ft_nullptr)
         return (0);
@@ -126,13 +126,13 @@ FT_TEST(test_http_server_short_write_sets_error, "HTTP server detects closed cli
     context.server = &server;
     context.result = -1;
     server_thread = ft_thread(http_server_run_once, &context);
-    if (server_thread.get_error() != ER_SUCCESS)
+    if (server_thread.get_error() != FT_ER_SUCCESSS)
         return (0);
     client_configuration._type = SocketType::CLIENT;
     client_configuration._ip = "127.0.0.1";
     client_configuration._port = 54332;
     client_socket = ft_socket(client_configuration);
-    if (client_socket.get_error() != ER_SUCCESS)
+    if (client_socket.get_error() != FT_ER_SUCCESSS)
     {
         server_thread.join();
         return (0);
@@ -171,13 +171,13 @@ FT_TEST(test_http_server_post_echoes_body, "HTTP server echoes POST body")
     context.server = &server;
     context.result = -1;
     server_thread = ft_thread(http_server_run_once, &context);
-    if (server_thread.get_error() != ER_SUCCESS)
+    if (server_thread.get_error() != FT_ER_SUCCESSS)
         return (0);
     client_configuration._type = SocketType::CLIENT;
     client_configuration._ip = "127.0.0.1";
     client_configuration._port = 54331;
     client_socket = ft_socket(client_configuration);
-    if (client_socket.get_error() != ER_SUCCESS)
+    if (client_socket.get_error() != FT_ER_SUCCESSS)
     {
         server_thread.join();
         return (0);
@@ -203,7 +203,7 @@ FT_TEST(test_http_server_post_echoes_body, "HTTP server echoes POST body")
     server_thread.join();
     if (context.result != 0)
         return (0);
-    if (server.get_error() != ER_SUCCESS)
+    if (server.get_error() != FT_ER_SUCCESSS)
         return (0);
     status_match = ft_strnstr(response.c_str(), "HTTP/1.1 200 OK", response.size());
     if (status_match == ft_nullptr)
@@ -234,13 +234,13 @@ FT_TEST(test_http_server_keep_alive_multiple_requests, "HTTP server handles sequ
     context.server = &server;
     context.result = -1;
     server_thread = ft_thread(http_server_run_once, &context);
-    if (server_thread.get_error() != ER_SUCCESS)
+    if (server_thread.get_error() != FT_ER_SUCCESSS)
         return (0);
     client_configuration._type = SocketType::CLIENT;
     client_configuration._ip = "127.0.0.1";
     client_configuration._port = 54334;
     client_socket = ft_socket(client_configuration);
-    if (client_socket.get_error() != ER_SUCCESS)
+    if (client_socket.get_error() != FT_ER_SUCCESSS)
     {
         server_thread.join();
         return (0);
@@ -288,13 +288,13 @@ FT_TEST(test_http_server_thread_safe_get_error, "ft_http_server synchronizes get
     run_context.server = &server;
     run_context.result = -1;
     server_thread = ft_thread(http_server_run_once, &run_context);
-    if (server_thread.get_error() != ER_SUCCESS)
+    if (server_thread.get_error() != FT_ER_SUCCESSS)
         return (0);
     usleep(50000);
     error_context.server = &server;
     error_context.value = -1;
     error_thread = ft_thread(http_server_read_error, &error_context);
-    if (error_thread.get_error() != ER_SUCCESS)
+    if (error_thread.get_error() != FT_ER_SUCCESSS)
     {
         server_thread.join();
         return (0);
@@ -303,7 +303,7 @@ FT_TEST(test_http_server_thread_safe_get_error, "ft_http_server synchronizes get
     client_configuration._ip = "127.0.0.1";
     client_configuration._port = 54336;
     client_socket = ft_socket(client_configuration);
-    if (client_socket.get_error() != ER_SUCCESS)
+    if (client_socket.get_error() != FT_ER_SUCCESSS)
     {
         server_thread.join();
         error_thread.join();
@@ -327,9 +327,9 @@ FT_TEST(test_http_server_thread_safe_get_error, "ft_http_server synchronizes get
     error_thread.join();
     if (run_context.result != 0)
         return (0);
-    if (error_context.value != ER_SUCCESS)
+    if (error_context.value != FT_ER_SUCCESSS)
         return (0);
-    if (server.get_error() != ER_SUCCESS)
+    if (server.get_error() != FT_ER_SUCCESSS)
         return (0);
     if (ft_strnstr(response.c_str(), "HTTP/1.1 200 OK", response.size()) == ft_nullptr)
         return (0);

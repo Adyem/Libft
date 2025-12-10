@@ -19,7 +19,7 @@ int ft_memmove_s(void *destination, size_t destination_size, const void *source,
 {
     void *move_result;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     if (number_of_bytes == 0)
         return (0);
     if (destination == ft_nullptr || source == ft_nullptr)
@@ -34,7 +34,7 @@ int ft_memmove_s(void *destination, size_t destination_size, const void *source,
         return (-1);
     }
     move_result = ft_memmove(destination, source, number_of_bytes);
-    if (ft_errno != ER_SUCCESS)
+    if (ft_errno != FT_ER_SUCCESSS)
     {
         zero_buffer(destination, destination_size);
         return (-1);

@@ -8,7 +8,7 @@ static ssize_t ssl_translate_result(SSL *ssl, int result)
 
     if (result > 0)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (result);
     }
     ssl_error = SSL_get_error(ssl, result);

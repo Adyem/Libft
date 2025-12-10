@@ -23,8 +23,8 @@ aabb::aabb()
     this->_minimum_y = 0.0;
     this->_maximum_x = 0.0;
     this->_maximum_y = 0.0;
-    this->_error_code = ER_SUCCESS;
-    this->set_error(ER_SUCCESS);
+    this->_error_code = FT_ER_SUCCESSS;
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -35,13 +35,13 @@ aabb::aabb(double minimum_x, double minimum_y,
     this->_minimum_y = minimum_y;
     this->_maximum_x = maximum_x;
     this->_maximum_y = maximum_y;
-    this->_error_code = ER_SUCCESS;
+    this->_error_code = FT_ER_SUCCESSS;
     if (minimum_x > maximum_x || minimum_y > maximum_y)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -53,8 +53,8 @@ aabb::aabb(const aabb &other)
     this->_minimum_y = 0.0;
     this->_maximum_x = 0.0;
     this->_maximum_y = 0.0;
-    this->_error_code = ER_SUCCESS;
-    if (other_guard.get_error() != ER_SUCCESS)
+    this->_error_code = FT_ER_SUCCESSS;
+    if (other_guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
         return ;
@@ -64,7 +64,7 @@ aabb::aabb(const aabb &other)
     this->_maximum_x = other._maximum_x;
     this->_maximum_y = other._maximum_y;
     this->_error_code = other._error_code;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -77,7 +77,7 @@ aabb &aabb::operator=(const aabb &other)
     if (this == &other)
         return (*this);
     lock_error = aabb::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -87,7 +87,7 @@ aabb &aabb::operator=(const aabb &other)
     this->_maximum_x = other._maximum_x;
     this->_maximum_y = other._maximum_y;
     this->_error_code = other._error_code;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (*this);
 }
 
@@ -99,8 +99,8 @@ aabb::aabb(aabb &&other) noexcept
     this->_minimum_y = 0.0;
     this->_maximum_x = 0.0;
     this->_maximum_y = 0.0;
-    this->_error_code = ER_SUCCESS;
-    if (other_guard.get_error() != ER_SUCCESS)
+    this->_error_code = FT_ER_SUCCESSS;
+    if (other_guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
         return ;
@@ -114,8 +114,8 @@ aabb::aabb(aabb &&other) noexcept
     other._minimum_y = 0.0;
     other._maximum_x = 0.0;
     other._maximum_y = 0.0;
-    other._error_code = ER_SUCCESS;
-    this->set_error(ER_SUCCESS);
+    other._error_code = FT_ER_SUCCESSS;
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -128,7 +128,7 @@ aabb &aabb::operator=(aabb &&other) noexcept
     if (this == &other)
         return (*this);
     lock_error = aabb::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -142,8 +142,8 @@ aabb &aabb::operator=(aabb &&other) noexcept
     other._minimum_y = 0.0;
     other._maximum_x = 0.0;
     other._maximum_y = 0.0;
-    other._error_code = ER_SUCCESS;
-    this->set_error(ER_SUCCESS);
+    other._error_code = FT_ER_SUCCESSS;
+    this->set_error(FT_ER_SUCCESSS);
     return (*this);
 }
 
@@ -159,7 +159,7 @@ int aabb::set_bounds(double minimum_x, double minimum_y,
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         return (guard.get_error());
@@ -174,9 +174,9 @@ int aabb::set_bounds(double minimum_x, double minimum_y,
     this->_minimum_y = minimum_y;
     this->_maximum_x = maximum_x;
     this->_maximum_y = maximum_y;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     geometry_aabb_restore_errno(guard, entry_errno);
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 int aabb::set_minimum(double minimum_x, double minimum_y)
@@ -185,7 +185,7 @@ int aabb::set_minimum(double minimum_x, double minimum_y)
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         return (guard.get_error());
@@ -198,9 +198,9 @@ int aabb::set_minimum(double minimum_x, double minimum_y)
     }
     this->_minimum_x = minimum_x;
     this->_minimum_y = minimum_y;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     geometry_aabb_restore_errno(guard, entry_errno);
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 int aabb::set_minimum_x(double minimum_x)
@@ -209,7 +209,7 @@ int aabb::set_minimum_x(double minimum_x)
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         return (guard.get_error());
@@ -221,9 +221,9 @@ int aabb::set_minimum_x(double minimum_x)
         return (FT_ERR_INVALID_ARGUMENT);
     }
     this->_minimum_x = minimum_x;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     geometry_aabb_restore_errno(guard, entry_errno);
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 int aabb::set_minimum_y(double minimum_y)
@@ -232,7 +232,7 @@ int aabb::set_minimum_y(double minimum_y)
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         return (guard.get_error());
@@ -244,9 +244,9 @@ int aabb::set_minimum_y(double minimum_y)
         return (FT_ERR_INVALID_ARGUMENT);
     }
     this->_minimum_y = minimum_y;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     geometry_aabb_restore_errno(guard, entry_errno);
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 int aabb::set_maximum(double maximum_x, double maximum_y)
@@ -255,7 +255,7 @@ int aabb::set_maximum(double maximum_x, double maximum_y)
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         return (guard.get_error());
@@ -268,9 +268,9 @@ int aabb::set_maximum(double maximum_x, double maximum_y)
     }
     this->_maximum_x = maximum_x;
     this->_maximum_y = maximum_y;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     geometry_aabb_restore_errno(guard, entry_errno);
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 int aabb::set_maximum_x(double maximum_x)
@@ -279,7 +279,7 @@ int aabb::set_maximum_x(double maximum_x)
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         return (guard.get_error());
@@ -291,9 +291,9 @@ int aabb::set_maximum_x(double maximum_x)
         return (FT_ERR_INVALID_ARGUMENT);
     }
     this->_maximum_x = maximum_x;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     geometry_aabb_restore_errno(guard, entry_errno);
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 int aabb::set_maximum_y(double maximum_y)
@@ -302,7 +302,7 @@ int aabb::set_maximum_y(double maximum_y)
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         return (guard.get_error());
@@ -314,9 +314,9 @@ int aabb::set_maximum_y(double maximum_y)
         return (FT_ERR_INVALID_ARGUMENT);
     }
     this->_maximum_y = maximum_y;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     geometry_aabb_restore_errno(guard, entry_errno);
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 double  aabb::get_minimum_x() const
@@ -326,13 +326,13 @@ double  aabb::get_minimum_x() const
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<aabb *>(this)->set_error(guard.get_error());
         return (0.0);
     }
     value = this->_minimum_x;
-    const_cast<aabb *>(this)->set_error(ER_SUCCESS);
+    const_cast<aabb *>(this)->set_error(FT_ER_SUCCESSS);
     geometry_aabb_restore_errno(guard, entry_errno);
     return (value);
 }
@@ -344,13 +344,13 @@ double  aabb::get_minimum_y() const
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<aabb *>(this)->set_error(guard.get_error());
         return (0.0);
     }
     value = this->_minimum_y;
-    const_cast<aabb *>(this)->set_error(ER_SUCCESS);
+    const_cast<aabb *>(this)->set_error(FT_ER_SUCCESSS);
     geometry_aabb_restore_errno(guard, entry_errno);
     return (value);
 }
@@ -362,13 +362,13 @@ double  aabb::get_maximum_x() const
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<aabb *>(this)->set_error(guard.get_error());
         return (0.0);
     }
     value = this->_maximum_x;
-    const_cast<aabb *>(this)->set_error(ER_SUCCESS);
+    const_cast<aabb *>(this)->set_error(FT_ER_SUCCESSS);
     geometry_aabb_restore_errno(guard, entry_errno);
     return (value);
 }
@@ -380,13 +380,13 @@ double  aabb::get_maximum_y() const
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<aabb *>(this)->set_error(guard.get_error());
         return (0.0);
     }
     value = this->_maximum_y;
-    const_cast<aabb *>(this)->set_error(ER_SUCCESS);
+    const_cast<aabb *>(this)->set_error(FT_ER_SUCCESSS);
     geometry_aabb_restore_errno(guard, entry_errno);
     return (value);
 }
@@ -398,7 +398,7 @@ int aabb::get_error() const
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<aabb *>(this)->set_error(guard.get_error());
         return (guard.get_error());
@@ -416,7 +416,7 @@ const char  *aabb::get_error_str() const
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<aabb *>(this)->set_error(guard.get_error());
         return (ft_strerror(guard.get_error()));

@@ -7,7 +7,7 @@ void ft_log_set_alloc_logging(bool enable)
         g_logger->set_alloc_logging(enable);
         return ;
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 

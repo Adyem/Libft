@@ -40,7 +40,7 @@ int pf_register_custom_specifier(char specifier, t_pf_custom_formatter handler, 
     }
     entry->handler = handler;
     entry->context = context;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -77,17 +77,17 @@ int pf_try_format_custom_specifier(char specifier, va_list *args, ft_string &out
     if (handler == ft_nullptr)
         return (1);
     output.clear();
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     if (handler(args, output, context) != 0)
     {
-        if (ft_errno == ER_SUCCESS)
+        if (ft_errno == FT_ER_SUCCESSS)
             ft_errno = FT_ERR_INTERNAL;
         return (-1);
     }
     int output_error = output.get_error();
-    if (output_error != ER_SUCCESS)
+    if (output_error != FT_ER_SUCCESSS)
     {
-        if (ft_errno == ER_SUCCESS)
+        if (ft_errno == FT_ER_SUCCESSS)
             ft_errno = output_error;
         return (-1);
     }

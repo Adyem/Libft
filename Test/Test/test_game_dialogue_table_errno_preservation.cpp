@@ -26,9 +26,9 @@ FT_TEST(test_dialogue_table_register_line_sets_errno_on_success, "register line 
 
     populate_dialogue_records(line, script);
     ft_errno = FT_ERR_NOT_FOUND;
-    FT_ASSERT_EQ(ER_SUCCESS, table.register_line(line));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(ER_SUCCESS, table.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.register_line(line));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
     return (1);
 }
 
@@ -40,9 +40,9 @@ FT_TEST(test_dialogue_table_register_script_sets_errno_on_success, "register scr
 
     populate_dialogue_records(line, script);
     ft_errno = FT_ERR_NOT_FOUND;
-    FT_ASSERT_EQ(ER_SUCCESS, table.register_script(script));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(ER_SUCCESS, table.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.register_script(script));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
     return (1);
 }
 
@@ -56,9 +56,9 @@ FT_TEST(test_dialogue_table_fetch_line_sets_errno_on_success, "fetch line sets e
     populate_dialogue_records(line, script);
     table.register_line(line);
     ft_errno = FT_ERR_NOT_FOUND;
-    FT_ASSERT_EQ(ER_SUCCESS, table.fetch_line(1, fetched));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(ER_SUCCESS, table.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.fetch_line(1, fetched));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
     FT_ASSERT_EQ(1, fetched.get_line_id());
     return (1);
 }
@@ -73,9 +73,9 @@ FT_TEST(test_dialogue_table_fetch_script_sets_errno_on_success, "fetch script se
     populate_dialogue_records(line, script);
     table.register_script(script);
     ft_errno = FT_ERR_NOT_FOUND;
-    FT_ASSERT_EQ(ER_SUCCESS, table.fetch_script(5, fetched));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(ER_SUCCESS, table.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.fetch_script(5, fetched));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
     FT_ASSERT_EQ(ft_string("intro"), fetched.get_title());
     return (1);
 }
@@ -92,7 +92,7 @@ FT_TEST(test_dialogue_table_fetch_line_returns_copy, "fetch line returns indepen
     table.register_line(line);
     table.fetch_line(1, fetched_first);
     fetched_first.set_text(ft_string("updated"));
-    FT_ASSERT_EQ(ER_SUCCESS, table.fetch_line(1, fetched_second));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.fetch_line(1, fetched_second));
     FT_ASSERT_EQ(ft_string("hello"), fetched_second.get_text());
     return (1);
 }
@@ -109,7 +109,7 @@ FT_TEST(test_dialogue_table_fetch_script_returns_copy, "fetch script returns ind
     table.register_script(script);
     table.fetch_script(5, fetched_first);
     fetched_first.get_lines()[0].set_text(ft_string("changed"));
-    FT_ASSERT_EQ(ER_SUCCESS, table.fetch_script(5, fetched_second));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.fetch_script(5, fetched_second));
     FT_ASSERT_EQ(ft_string("hello"), fetched_second.get_lines()[0].get_text());
     return (1);
 }
@@ -123,11 +123,11 @@ FT_TEST(test_dialogue_table_move_constructor_sets_errno_success, "move construct
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.fetch_line(42, missing));
     ft_errno = FT_ERR_FILE_OPEN_FAILED;
     moved = ft_dialogue_table(ft_move(table));
-    FT_ASSERT_EQ(ER_SUCCESS, moved.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, table.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
     FT_ASSERT_EQ(true, moved.get_lines().empty());
     FT_ASSERT_EQ(true, moved.get_scripts().empty());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -140,11 +140,11 @@ FT_TEST(test_dialogue_table_move_assignment_sets_errno_success, "move assignment
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.fetch_line(99, missing));
     ft_errno = FT_ERR_SOCKET_LISTEN_FAILED;
     destination = ft_move(table);
-    FT_ASSERT_EQ(ER_SUCCESS, destination.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, table.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
     FT_ASSERT_EQ(true, destination.get_lines().empty());
     FT_ASSERT_EQ(true, destination.get_scripts().empty());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -157,9 +157,9 @@ FT_TEST(test_dialogue_table_copy_constructor_sets_errno_success, "copy construct
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.fetch_line(7, missing));
     ft_errno = FT_ERR_DATABASE_UNAVAILABLE;
     copied = ft_dialogue_table(table);
-    FT_ASSERT_EQ(ER_SUCCESS, copied.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, copied.get_error());
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -172,9 +172,9 @@ FT_TEST(test_dialogue_table_copy_assignment_sets_errno_success, "copy assignment
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.fetch_line(8, missing));
     ft_errno = FT_ERR_SOCKET_RECEIVE_FAILED;
     assigned = table;
-    FT_ASSERT_EQ(ER_SUCCESS, assigned.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, assigned.get_error());
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 

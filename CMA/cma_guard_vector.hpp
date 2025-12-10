@@ -55,7 +55,7 @@ class cma_guard_vector
 
 template <typename t_element>
 cma_guard_vector<t_element>::cma_guard_vector(size_t initial_capacity)
-    : _data(ft_nullptr), _size(0), _capacity(0), _error_code(ER_SUCCESS)
+    : _data(ft_nullptr), _size(0), _capacity(0), _error_code(FT_ER_SUCCESSS)
 {
     size_t target_capacity;
 
@@ -84,7 +84,7 @@ cma_guard_vector<t_element>::~cma_guard_vector()
 
 template <typename t_element>
 cma_guard_vector<t_element>::cma_guard_vector(const cma_guard_vector<t_element> &other)
-    : _data(ft_nullptr), _size(0), _capacity(0), _error_code(ER_SUCCESS)
+    : _data(ft_nullptr), _size(0), _capacity(0), _error_code(FT_ER_SUCCESSS)
 {
     if (other._size > 0)
     {
@@ -115,7 +115,7 @@ cma_guard_vector<t_element>::cma_guard_vector(const cma_guard_vector<t_element> 
         }
         this->_size = other._size;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -125,7 +125,7 @@ cma_guard_vector<t_element> &cma_guard_vector<t_element>::operator=(const cma_gu
     if (this == &other)
         return (*this);
     cma_guard_vector<t_element> temp(other);
-    if (temp.get_error() != ER_SUCCESS && other._size > 0)
+    if (temp.get_error() != FT_ER_SUCCESSS && other._size > 0)
     {
         this->set_error(temp.get_error());
         return (*this);
@@ -140,8 +140,8 @@ cma_guard_vector<t_element> &cma_guard_vector<t_element>::operator=(const cma_gu
     temp._data = ft_nullptr;
     temp._size = 0;
     temp._capacity = 0;
-    temp._error_code = ER_SUCCESS;
-    this->set_error(ER_SUCCESS);
+    temp._error_code = FT_ER_SUCCESSS;
+    this->set_error(FT_ER_SUCCESSS);
     return (*this);
 }
 
@@ -152,7 +152,7 @@ cma_guard_vector<t_element>::cma_guard_vector(cma_guard_vector<t_element> &&othe
     other._data = ft_nullptr;
     other._size = 0;
     other._capacity = 0;
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     return ;
 }
 
@@ -171,7 +171,7 @@ cma_guard_vector<t_element> &cma_guard_vector<t_element>::operator=(cma_guard_ve
         other._data = ft_nullptr;
         other._size = 0;
         other._capacity = 0;
-        other._error_code = ER_SUCCESS;
+        other._error_code = FT_ER_SUCCESSS;
     }
     return (*this);
 }
@@ -179,21 +179,21 @@ cma_guard_vector<t_element> &cma_guard_vector<t_element>::operator=(cma_guard_ve
 template <typename t_element>
 size_t cma_guard_vector<t_element>::size() const
 {
-    const_cast<cma_guard_vector<t_element> *>(this)->set_error(ER_SUCCESS);
+    const_cast<cma_guard_vector<t_element> *>(this)->set_error(FT_ER_SUCCESSS);
     return (this->_size);
 }
 
 template <typename t_element>
 size_t cma_guard_vector<t_element>::capacity() const
 {
-    const_cast<cma_guard_vector<t_element> *>(this)->set_error(ER_SUCCESS);
+    const_cast<cma_guard_vector<t_element> *>(this)->set_error(FT_ER_SUCCESSS);
     return (this->_capacity);
 }
 
 template <typename t_element>
 bool cma_guard_vector<t_element>::empty() const
 {
-    const_cast<cma_guard_vector<t_element> *>(this)->set_error(ER_SUCCESS);
+    const_cast<cma_guard_vector<t_element> *>(this)->set_error(FT_ER_SUCCESSS);
     return (this->_size == 0);
 }
 
@@ -232,7 +232,7 @@ void cma_guard_vector<t_element>::push_back(const t_element &value)
         return ;
     }
     this->_size += 1;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -259,7 +259,7 @@ void cma_guard_vector<t_element>::push_back(t_element &&value)
         return ;
     }
     this->_size += 1;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -273,7 +273,7 @@ void cma_guard_vector<t_element>::pop_back()
     }
     destroy_at(&this->_data[this->_size - 1]);
     this->_size -= 1;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -286,7 +286,7 @@ t_element &cma_guard_vector<t_element>::operator[](size_t index)
         this->set_error(FT_ERR_OUT_OF_RANGE);
         return (default_instance);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (this->_data[index]);
 }
 
@@ -299,7 +299,7 @@ const t_element &cma_guard_vector<t_element>::operator[](size_t index) const
         const_cast<cma_guard_vector<t_element> *>(this)->set_error(FT_ERR_OUT_OF_RANGE);
         return (default_instance);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (this->_data[index]);
 }
 
@@ -308,7 +308,7 @@ void cma_guard_vector<t_element>::clear()
 {
     this->destroy_elements(0, this->_size);
     this->_size = 0;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -317,7 +317,7 @@ bool cma_guard_vector<t_element>::reserve(size_t new_capacity)
 {
     if (!this->reserve_internal(new_capacity))
         return (false);
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (true);
 }
 

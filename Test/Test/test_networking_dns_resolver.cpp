@@ -19,11 +19,11 @@ FT_TEST(test_dns_resolve_numeric_host_returns_address,
     resolve_result = networking_dns_resolve("127.0.0.1", "80", AF_INET, SOCK_STREAM,
         IPPROTO_TCP, AI_NUMERICHOST, resolved_addresses);
     FT_ASSERT_EQ(true, resolve_result);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     address_count = resolved_addresses.size();
     FT_ASSERT(address_count > 0);
     first_address = resolved_addresses[0];
-    FT_ASSERT_EQ(ER_SUCCESS, resolved_addresses.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, resolved_addresses.get_error());
     ipv4_address = reinterpret_cast<const struct sockaddr_in*>(&first_address.address);
     FT_ASSERT(ipv4_address != ft_nullptr);
     FT_ASSERT_EQ(AF_INET, ipv4_address->sin_family);
@@ -56,7 +56,7 @@ FT_TEST(test_dns_resolve_first_returns_populated_address,
     resolve_first_result = networking_dns_resolve_first("127.0.0.1", "443", AF_INET,
         SOCK_STREAM, IPPROTO_TCP, AI_NUMERICHOST, resolved_address);
     FT_ASSERT_EQ(true, resolve_first_result);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     ipv4_address = reinterpret_cast<const struct sockaddr_in*>(&resolved_address.address);
     FT_ASSERT(ipv4_address != ft_nullptr);
     FT_ASSERT_EQ(AF_INET, ipv4_address->sin_family);
@@ -69,18 +69,18 @@ FT_TEST(test_dns_clear_cache_resets_error_state,
 {
     ft_errno = FT_ERR_SOCKET_RESOLVE_FAILED;
     networking_dns_clear_cache();
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
 FT_TEST(test_dns_set_error_unknown_status_maps_to_failed,
     "networking_dns_set_error maps unknown resolver codes to generic failure")
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     networking_dns_set_error(12345);
     FT_ASSERT_EQ(FT_ERR_SOCKET_RESOLVE_FAILED, ft_errno);
 #ifdef EAI_AGAIN
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     networking_dns_set_error(EAI_AGAIN);
     FT_ASSERT_EQ(FT_ERR_SOCKET_RESOLVE_AGAIN, ft_errno);
 #endif

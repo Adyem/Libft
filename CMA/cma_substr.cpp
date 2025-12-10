@@ -12,9 +12,9 @@ char    *cma_substr(const char *source, unsigned int start, size_t length)
 
     if (!source)
         return (ft_nullptr);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     source_length = ft_strlen_size_t(source);
-    if (ft_errno != ER_SUCCESS)
+    if (ft_errno != FT_ER_SUCCESSS)
     {
         ft_errno = FT_ERR_OUT_OF_RANGE;
         return (ft_nullptr);

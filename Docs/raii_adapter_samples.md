@@ -156,7 +156,7 @@ class client_socket_guard
             config._recv_timeout = timeout_ms;
             config._send_timeout = timeout_ms;
             this->_socket = ft_socket(config);
-            if (this->_socket.get_error() != ER_SUCCESS)
+            if (this->_socket.get_error() != FT_ER_SUCCESSS)
                 return (false);
             this->_connected = true;
             return (true);

@@ -49,7 +49,7 @@ FT_TEST(test_pt_cond_wait_updates_errno, "pt_cond_wait updates ft_errno on failu
     {
         wait_result = pt_cond_wait(&condition, &mutex);
         FT_ASSERT_EQ(0, wait_result);
-        FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+        FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     }
     int test_failed;
     const char *failure_expression;
@@ -81,6 +81,6 @@ FT_TEST(test_pt_cond_wait_updates_errno, "pt_cond_wait updates ft_errno on failu
         ft_test_fail(failure_expression, __FILE__, failure_line);
         return (0);
     }
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }

@@ -15,9 +15,9 @@ FT_TEST(test_world_registry_register_world_sets_errno_success, "register_world r
     region_ids.push_back(5);
     world = ft_world_region(4, region_ids);
     ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
-    FT_ASSERT_EQ(ER_SUCCESS, registry.register_world(world));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(ER_SUCCESS, registry.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, registry.register_world(world));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, registry.get_error());
     return (1);
 }
 
@@ -37,9 +37,9 @@ FT_TEST(test_world_registry_copy_constructor_copies_entries_and_error, "copy con
     registry.register_world(world);
     registry.fetch_world(33, fetched_world);
     copied = ft_world_registry(registry);
-    FT_ASSERT_EQ(ER_SUCCESS, copied.fetch_region(9, fetched_region));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, copied.fetch_region(9, fetched_region));
     FT_ASSERT_EQ(ft_string("gorge"), fetched_region.get_name());
-    FT_ASSERT_EQ(ER_SUCCESS, copied.fetch_world(3, fetched_world));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, copied.fetch_world(3, fetched_world));
     FT_ASSERT_EQ(9, fetched_world.get_region_ids()[0]);
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, copied.get_error());
     return (1);
@@ -61,11 +61,11 @@ FT_TEST(test_world_registry_move_constructor_transfers_entries_and_clears_source
     registry.fetch_region(90, fetched_region);
 
     ft_world_registry moved(ft_move(registry));
-    FT_ASSERT_EQ(ER_SUCCESS, moved.fetch_region(4, fetched_region));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.fetch_region(4, fetched_region));
     FT_ASSERT_EQ(ft_string("tower"), fetched_region.get_name());
-    FT_ASSERT_EQ(ER_SUCCESS, moved.fetch_world(2, fetched_world));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.fetch_world(2, fetched_world));
     FT_ASSERT_EQ(4, fetched_world.get_region_ids()[0]);
-    FT_ASSERT_EQ(ER_SUCCESS, registry.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, registry.get_error());
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, registry.fetch_region(4, fetched_region));
     return (1);
 }
@@ -94,9 +94,9 @@ FT_TEST(test_world_registry_copy_assignment_overwrites_entries_and_error, "copy 
     destination.register_world(destination_world);
 
     destination = source;
-    FT_ASSERT_EQ(ER_SUCCESS, destination.fetch_region(12, fetched_region));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.fetch_region(12, fetched_region));
     FT_ASSERT_EQ(ft_string("harbor"), fetched_region.get_name());
-    FT_ASSERT_EQ(ER_SUCCESS, destination.fetch_world(8, fetched_world));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.fetch_world(8, fetched_world));
     FT_ASSERT_EQ(12, fetched_world.get_region_ids()[0]);
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, destination.get_error());
     return (1);
@@ -119,11 +119,11 @@ FT_TEST(test_world_registry_move_assignment_transfers_entries_and_resets_source_
     destination.fetch_region(3, fetched_region);
 
     destination = ft_move(source);
-    FT_ASSERT_EQ(ER_SUCCESS, destination.fetch_region(16, fetched_region));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.fetch_region(16, fetched_region));
     FT_ASSERT_EQ(ft_string("desert"), fetched_region.get_name());
-    FT_ASSERT_EQ(ER_SUCCESS, destination.fetch_world(6, fetched_world));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.fetch_world(6, fetched_world));
     FT_ASSERT_EQ(16, fetched_world.get_region_ids()[0]);
-    FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, source.fetch_world(6, fetched_world));
     return (1);
 }

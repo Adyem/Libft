@@ -1,10 +1,10 @@
 # Libft Error Code Registry
 
-This registry enumerates every error code defined in [`Errno/errno.hpp`](errno.hpp) and summarizes the modules that are expected to set each value. All codes are relative to `ERRNO_OFFSET` (2000) when mirroring `errno` symbols. Helpers must restore `ER_SUCCESS` after success paths to avoid leaking stale failures.
+This registry enumerates every error code defined in [`Errno/errno.hpp`](errno.hpp) and summarizes the modules that are expected to set each value. All codes are relative to `ERRNO_OFFSET` (2000) when mirroring `errno` symbols. Helpers must restore `FT_ER_SUCCESSS` after success paths to avoid leaking stale failures.
 
 | Code | Value | Summary | Primary modules |
 | --- | --- | --- | --- |
-| `ER_SUCCESS` | 0 | Operation completed successfully. | All modules |
+| `FT_ER_SUCCESSS` | 0 | Operation completed successfully. | All modules |
 | `FT_ERR_NO_MEMORY` | 1 | Memory allocation failed or resources were exhausted. | Libft allocation helpers, CMA allocators, containers |
 | `FT_ERR_INVALID_ARGUMENT` | 2 | Arguments failed validation (null pointers, invalid flags, etc.). | Libft string/memory helpers, System_utils, Networking |
 | `FT_ERR_INVALID_POINTER` | 3 | Pointer values were malformed or not owned by the caller. | Libft memory helpers, CMA guard checks |

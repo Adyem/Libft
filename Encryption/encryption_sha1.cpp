@@ -146,6 +146,6 @@ void sha1_hash(const void *data, size_t length, unsigned char *digest)
         length_index++;
     }
     cma_free(message);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }

@@ -3,7 +3,7 @@
 void ft_log_set_color(bool enable)
 {
     g_use_color = enable;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 

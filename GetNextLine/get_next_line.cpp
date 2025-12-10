@@ -15,9 +15,9 @@ static bool map_has_new_error(ft_unordered_map<int, char*> &map, int previous_er
     updated_error = map.get_error();
     if (current_error)
         *current_error = updated_error;
-    if (updated_error != ER_SUCCESS)
+    if (updated_error != FT_ER_SUCCESSS)
     {
-        if (previous_error == ER_SUCCESS)
+        if (previous_error == FT_ER_SUCCESSS)
             return (true);
         if (updated_error != previous_error)
             return (true);
@@ -36,9 +36,9 @@ static bool stream_map_has_new_error(ft_unordered_map<int, gnl_stream*> &map,
     updated_error = map.get_error();
     if (current_error)
         *current_error = updated_error;
-    if (updated_error != ER_SUCCESS)
+    if (updated_error != FT_ER_SUCCESSS)
     {
-        if (previous_error == ER_SUCCESS)
+        if (previous_error == FT_ER_SUCCESSS)
             return (true);
         if (updated_error != previous_error)
             return (true);
@@ -57,7 +57,7 @@ static gnl_stream *gnl_acquire_stream(int fd, int *stream_error)
     int init_error;
 
     if (stream_error)
-        *stream_error = ER_SUCCESS;
+        *stream_error = FT_ER_SUCCESSS;
     if (fd < 0)
     {
         if (stream_error)
@@ -86,7 +86,7 @@ static gnl_stream *gnl_acquire_stream(int fd, int *stream_error)
     }
     new_stream = new(memory) gnl_stream();
     init_error = new_stream->init_from_fd(fd);
-    if (init_error != ER_SUCCESS)
+    if (init_error != FT_ER_SUCCESSS)
     {
         new_stream->~gnl_stream();
         cma_free(memory);
@@ -109,8 +109,8 @@ static gnl_stream *gnl_acquire_stream(int fd, int *stream_error)
     }
     existing_stream = new_stream;
     if (stream_error)
-        *stream_error = ER_SUCCESS;
-    ft_errno = ER_SUCCESS;
+        *stream_error = FT_ER_SUCCESSS;
+    ft_errno = FT_ER_SUCCESSS;
     return (existing_stream);
 }
 
@@ -227,7 +227,7 @@ static char* leftovers(char* readed_string, bool *buffer_was_freed, int *leftove
     if (buffer_was_freed)
         *buffer_was_freed = false;
     if (leftover_error)
-        *leftover_error = ER_SUCCESS;
+        *leftover_error = FT_ER_SUCCESSS;
     while (readed_string[read_index] && readed_string[read_index] != '\n')
         read_index++;
     if (!readed_string[read_index])
@@ -351,7 +351,7 @@ static char* read_stream(gnl_stream *stream, char* readed_string, std::size_t bu
             int stream_error_code;
 
             stream_error_code = stream->get_error();
-            if (stream_error_code == ER_SUCCESS)
+            if (stream_error_code == FT_ER_SUCCESSS)
                 stream_error_code = FT_ERR_IO;
             cma_free(buffer);
             if (readed_string)
@@ -407,7 +407,7 @@ int gnl_clear_stream(int fd)
     if (map_it == g_gnl_leftovers.end())
     {
         ft_errno = entry_errno;
-        return (ER_SUCCESS);
+        return (FT_ER_SUCCESSS);
     }
     leftover = map_it->second;
     map_error_before = g_gnl_leftovers.get_error();
@@ -446,7 +446,7 @@ int gnl_clear_stream(int fd)
         }
     }
     ft_errno = entry_errno;
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 char    *get_next_line(int fd, std::size_t buffer_size)
@@ -472,7 +472,7 @@ char    *get_next_line(int fd, std::size_t buffer_size)
     stream = gnl_acquire_stream(fd, &stream_error);
     if (!stream)
     {
-        if (stream_error != ER_SUCCESS)
+        if (stream_error != FT_ER_SUCCESSS)
             ft_errno = stream_error;
         return (ft_nullptr);
     }
@@ -503,7 +503,7 @@ char    *get_next_line(int fd, std::size_t buffer_size)
     int line_error = ft_errno;
     combined_buffer_was_freed = false;
     leftover_string = leftovers(combined_buffer, &combined_buffer_was_freed, &leftovers_error);
-    if (leftovers_error != ER_SUCCESS)
+    if (leftovers_error != FT_ER_SUCCESSS)
     {
         if (line)
             cma_free(line);
@@ -532,7 +532,7 @@ char    *get_next_line(int fd, std::size_t buffer_size)
                 return (ft_nullptr);
             }
         }
-        if (line_error != ER_SUCCESS)
+        if (line_error != FT_ER_SUCCESSS)
             ft_errno = line_error;
         return (ft_nullptr);
     }
@@ -548,6 +548,6 @@ char    *get_next_line(int fd, std::size_t buffer_size)
             return (ft_nullptr);
         }
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (line);
 }

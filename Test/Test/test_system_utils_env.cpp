@@ -8,7 +8,7 @@
 
 FT_TEST(test_su_putenv_null_sets_ft_einval, "su_putenv null argument assigns FT_ERR_INVALID_ARGUMENT")
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(-1, su_putenv(ft_nullptr));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -21,7 +21,7 @@ FT_TEST(test_su_putenv_success_clears_error, "su_putenv success clears ft_errno"
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     cmp_clear_force_putenv_result();
     FT_ASSERT_EQ(0, su_putenv(environment_entry));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     cmp_unsetenv("FT_TEST_SU_PUTENV");
     return (1);
 }

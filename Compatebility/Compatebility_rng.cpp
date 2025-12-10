@@ -37,7 +37,7 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
             ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 #else
@@ -166,7 +166,7 @@ int cmp_rng_secure_bytes(unsigned char *buffer, size_t length)
         ft_errno = ft_map_system_error(errno);
         return (-1);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 #endif

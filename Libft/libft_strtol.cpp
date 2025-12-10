@@ -40,7 +40,7 @@ long ft_strtol(const char *input_string, char **end_pointer, int numeric_base)
             *end_pointer = const_cast<char *>(input_string);
         return (0L);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     while (*current_character == ' ' || (*current_character >= '\t'
                 && *current_character <= '\r'))
         ++current_character;

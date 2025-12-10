@@ -104,7 +104,7 @@ namespace ft_cancellation_detail
     }
 
     inline ft_cancellation_state::ft_cancellation_state() noexcept
-        : _error_code(ER_SUCCESS),
+        : _error_code(FT_ER_SUCCESSS),
           _cancelled(false),
           _callbacks(),
           _mutex(),
@@ -116,7 +116,7 @@ namespace ft_cancellation_detail
             return ;
         }
         this->_mutex_initialized = true;
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
         return ;
     }
 
@@ -124,7 +124,7 @@ namespace ft_cancellation_detail
     {
         if (this->_mutex_initialized)
             pthread_mutex_destroy(&this->_mutex);
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
         return ;
     }
 
@@ -146,7 +146,7 @@ namespace ft_cancellation_detail
         if (already_cancelled == false)
         {
             this->_callbacks.push_back(callback);
-            if (this->_callbacks.get_error() != ER_SUCCESS)
+            if (this->_callbacks.get_error() != FT_ER_SUCCESSS)
             {
                 int push_error;
 
@@ -167,15 +167,15 @@ namespace ft_cancellation_detail
 
             callback_copy();
         }
-        this->set_error(ER_SUCCESS);
-        return (ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
+        return (FT_ER_SUCCESSS);
     }
 
     inline void ft_cancellation_state::request_cancel() noexcept
     {
         if (this->_cancelled.exchange(true, std::memory_order_acq_rel))
         {
-            this->set_error(ER_SUCCESS);
+            this->set_error(FT_ER_SUCCESSS);
             return ;
         }
         ft_vector<ft_function<void()> > callbacks_to_run;
@@ -193,7 +193,7 @@ namespace ft_cancellation_detail
             while (callback_index < this->_callbacks.size())
             {
                 callbacks_to_run.push_back(this->_callbacks[callback_index]);
-                if (callbacks_to_run.get_error() != ER_SUCCESS)
+                if (callbacks_to_run.get_error() != FT_ER_SUCCESSS)
                 {
                     int copy_error;
 
@@ -205,7 +205,7 @@ namespace ft_cancellation_detail
                 ++callback_index;
             }
             this->_callbacks.clear();
-            if (this->_callbacks.get_error() != ER_SUCCESS)
+            if (this->_callbacks.get_error() != FT_ER_SUCCESSS)
             {
                 int clear_error;
 
@@ -228,7 +228,7 @@ namespace ft_cancellation_detail
             callbacks_to_run[invoke_index]();
             ++invoke_index;
         }
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
         return ;
     }
 
@@ -257,22 +257,22 @@ inline void ft_cancellation_token::set_error(int error_code) const noexcept
 }
 
 inline ft_cancellation_token::ft_cancellation_token() noexcept
-    : _state(), _error_code(ER_SUCCESS)
+    : _state(), _error_code(FT_ER_SUCCESSS)
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
 inline ft_cancellation_token::~ft_cancellation_token() noexcept
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
 inline ft_cancellation_token::ft_cancellation_token(const ft_cancellation_token &other) noexcept
-    : _state(other._state), _error_code(ER_SUCCESS)
+    : _state(other._state), _error_code(FT_ER_SUCCESSS)
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -280,14 +280,14 @@ inline ft_cancellation_token &ft_cancellation_token::operator=(const ft_cancella
 {
     if (this != &other)
         this->_state = other._state;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (*this);
 }
 
 inline ft_cancellation_token::ft_cancellation_token(ft_cancellation_token &&other) noexcept
-    : _state(ft_move(other._state)), _error_code(ER_SUCCESS)
+    : _state(ft_move(other._state)), _error_code(FT_ER_SUCCESSS)
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -295,7 +295,7 @@ inline ft_cancellation_token &ft_cancellation_token::operator=(ft_cancellation_t
 {
     if (this != &other)
         this->_state = ft_move(other._state);
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (*this);
 }
 
@@ -304,7 +304,7 @@ inline bool ft_cancellation_token::is_valid() const noexcept
     bool valid_state;
 
     valid_state = static_cast<bool>(this->_state);
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (valid_state);
 }
 
@@ -326,7 +326,7 @@ inline bool ft_cancellation_token::is_cancellation_requested() const noexcept
     bool cancelled;
 
     cancelled = state_pointer->is_cancelled();
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (cancelled);
 }
 
@@ -373,7 +373,7 @@ inline void ft_cancellation_source::set_error(int error_code) const noexcept
 }
 
 inline ft_cancellation_source::ft_cancellation_source() noexcept
-    : _state(), _error_code(ER_SUCCESS)
+    : _state(), _error_code(FT_ER_SUCCESSS)
 {
     ft_cancellation_detail::ft_cancellation_state *state_pointer;
 
@@ -384,7 +384,7 @@ inline ft_cancellation_source::ft_cancellation_source() noexcept
         return ;
     }
     this->_state.reset(state_pointer, 1, false);
-    if (this->_state.get_error() != ER_SUCCESS)
+    if (this->_state.get_error() != FT_ER_SUCCESSS)
     {
         int allocation_error;
 
@@ -392,7 +392,7 @@ inline ft_cancellation_source::ft_cancellation_source() noexcept
         this->set_error(allocation_error);
         return ;
     }
-    if (state_pointer->get_error() != ER_SUCCESS)
+    if (state_pointer->get_error() != FT_ER_SUCCESSS)
     {
         int state_error;
 
@@ -401,20 +401,20 @@ inline ft_cancellation_source::ft_cancellation_source() noexcept
         this->set_error(state_error);
         return ;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
 inline ft_cancellation_source::~ft_cancellation_source() noexcept
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
 inline ft_cancellation_source::ft_cancellation_source(const ft_cancellation_source &other) noexcept
-    : _state(other._state), _error_code(ER_SUCCESS)
+    : _state(other._state), _error_code(FT_ER_SUCCESSS)
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -422,14 +422,14 @@ inline ft_cancellation_source &ft_cancellation_source::operator=(const ft_cancel
 {
     if (this != &other)
         this->_state = other._state;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (*this);
 }
 
 inline ft_cancellation_source::ft_cancellation_source(ft_cancellation_source &&other) noexcept
-    : _state(ft_move(other._state)), _error_code(ER_SUCCESS)
+    : _state(ft_move(other._state)), _error_code(FT_ER_SUCCESSS)
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -437,7 +437,7 @@ inline ft_cancellation_source &ft_cancellation_source::operator=(ft_cancellation
 {
     if (this != &other)
         this->_state = ft_move(other._state);
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (*this);
 }
 
@@ -453,8 +453,8 @@ inline ft_cancellation_token ft_cancellation_source::get_token() const noexcept
         return (token);
     }
     token._state = this->_state;
-    token.set_error(ER_SUCCESS);
-    this->set_error(ER_SUCCESS);
+    token.set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ER_SUCCESSS);
     return (token);
 }
 
@@ -496,7 +496,7 @@ inline bool ft_cancellation_source::is_cancellation_requested() const noexcept
     bool cancelled;
 
     cancelled = state_pointer->is_cancelled();
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (cancelled);
 }
 

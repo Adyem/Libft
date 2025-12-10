@@ -61,7 +61,7 @@ class ft_set
 
 template <typename ElementType>
 ft_set<ElementType>::ft_set(size_t initial_capacity)
-    : _data(ft_nullptr), _capacity(0), _size(0), _error_code(ER_SUCCESS),
+    : _data(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ER_SUCCESSS),
       _mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     if (initial_capacity > 0)
@@ -74,7 +74,7 @@ ft_set<ElementType>::ft_set(size_t initial_capacity)
         }
         this->_capacity = initial_capacity;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -90,7 +90,7 @@ ft_set<ElementType>::~ft_set()
 
 template <typename ElementType>
 ft_set<ElementType>::ft_set(ft_set&& other) noexcept
-    : _data(ft_nullptr), _capacity(0), _size(0), _error_code(ER_SUCCESS),
+    : _data(ft_nullptr), _capacity(0), _size(0), _error_code(FT_ER_SUCCESSS),
       _mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     bool other_lock_acquired;
@@ -110,7 +110,7 @@ ft_set<ElementType>::ft_set(ft_set&& other) noexcept
     other._data = ft_nullptr;
     other._capacity = 0;
     other._size = 0;
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     other.unlock_internal(other_lock_acquired);
     other.teardown_thread_safety();
     if (other_thread_safe)
@@ -118,7 +118,7 @@ ft_set<ElementType>::ft_set(ft_set&& other) noexcept
         if (this->enable_thread_safety() != 0)
             return ;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -162,7 +162,7 @@ ft_set<ElementType>& ft_set<ElementType>::operator=(ft_set&& other) noexcept
     other._data = ft_nullptr;
     other._capacity = 0;
     other._size = 0;
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     other.unlock_internal(other_lock_acquired);
     other.teardown_thread_safety();
     if (other_thread_safe)
@@ -197,7 +197,7 @@ ft_set<ElementType>& ft_set<ElementType>::operator=(ft_set&& other) noexcept
         previous_mutex->~pt_mutex();
         cma_free(previous_mutex);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (*this);
 }
 
@@ -217,7 +217,7 @@ int ft_set<ElementType>::enable_thread_safety()
 
     if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
     {
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
         return (0);
     }
     memory = cma_malloc(sizeof(pt_mutex));
@@ -227,7 +227,7 @@ int ft_set<ElementType>::enable_thread_safety()
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != ER_SUCCESS)
+    if (mutex_pointer->get_error() != FT_ER_SUCCESSS)
     {
         int mutex_error;
 
@@ -239,7 +239,7 @@ int ft_set<ElementType>::enable_thread_safety()
     }
     this->_mutex = mutex_pointer;
     this->_thread_safe_enabled = true;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (0);
 }
 
@@ -247,7 +247,7 @@ template <typename ElementType>
 void ft_set<ElementType>::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -257,7 +257,7 @@ bool ft_set<ElementType>::is_thread_safe() const
     bool enabled;
 
     enabled = (this->_thread_safe_enabled && this->_mutex != ft_nullptr);
-    const_cast<ft_set<ElementType> *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_set<ElementType> *>(this)->set_error(FT_ER_SUCCESSS);
     return (enabled);
 }
 
@@ -270,7 +270,7 @@ int ft_set<ElementType>::lock(bool *lock_acquired) const
     if (result != 0)
         const_cast<ft_set<ElementType> *>(this)->set_error(ft_errno);
     else
-        const_cast<ft_set<ElementType> *>(this)->set_error(ER_SUCCESS);
+        const_cast<ft_set<ElementType> *>(this)->set_error(FT_ER_SUCCESSS);
     return (result);
 }
 
@@ -281,7 +281,7 @@ void ft_set<ElementType>::unlock(bool lock_acquired) const
 
     entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
-    if (this->_mutex != ft_nullptr && this->_mutex->get_error() != ER_SUCCESS)
+    if (this->_mutex != ft_nullptr && this->_mutex->get_error() != FT_ER_SUCCESSS)
         const_cast<ft_set<ElementType> *>(this)->set_error(this->_mutex->get_error());
     else
     {
@@ -296,7 +296,7 @@ bool ft_set<ElementType>::ensure_capacity(size_t desired_capacity)
 {
     if (desired_capacity <= this->_capacity)
     {
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
         return (true);
     }
     size_t new_capacity;
@@ -323,7 +323,7 @@ bool ft_set<ElementType>::ensure_capacity(size_t desired_capacity)
         cma_free(this->_data);
     this->_data = new_data;
     this->_capacity = new_capacity;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (true);
 }
 
@@ -368,18 +368,18 @@ int ft_set<ElementType>::lock_internal(bool *lock_acquired) const
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     this->_mutex->lock(THREAD_ID);
-    if (this->_mutex->get_error() != ER_SUCCESS)
+    if (this->_mutex->get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = this->_mutex->get_error();
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -392,7 +392,7 @@ void ft_set<ElementType>::unlock_internal(bool lock_acquired) const
         return ;
     entry_errno = ft_errno;
     this->_mutex->unlock(THREAD_ID);
-    if (this->_mutex->get_error() != ER_SUCCESS)
+    if (this->_mutex->get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = this->_mutex->get_error();
         return ;
@@ -430,7 +430,7 @@ void ft_set<ElementType>::insert(const ElementType& value)
     position = lower_bound(value);
     if (position < this->_size && !(value < this->_data[position]) && !(this->_data[position] < value))
     {
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
         this->unlock_internal(lock_acquired);
         return ;
     }
@@ -448,7 +448,7 @@ void ft_set<ElementType>::insert(const ElementType& value)
     }
     construct_at(&this->_data[position], value);
     ++this->_size;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -469,7 +469,7 @@ void ft_set<ElementType>::insert(ElementType&& value)
     position = lower_bound(value);
     if (position < this->_size && !(value < this->_data[position]) && !(this->_data[position] < value))
     {
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
         this->unlock_internal(lock_acquired);
         return ;
     }
@@ -487,7 +487,7 @@ void ft_set<ElementType>::insert(ElementType&& value)
     }
     construct_at(&this->_data[position], ft_move(value));
     ++this->_size;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -513,7 +513,7 @@ ElementType* ft_set<ElementType>::find(const ElementType& value)
         return (ft_nullptr);
     }
     result = &this->_data[index];
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (result);
 }
@@ -539,7 +539,7 @@ const ElementType* ft_set<ElementType>::find(const ElementType& value) const
         return (ft_nullptr);
     }
     result = &this->_data[index];
-    const_cast<ft_set<ElementType> *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_set<ElementType> *>(this)->set_error(FT_ER_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (result);
 }
@@ -573,7 +573,7 @@ void ft_set<ElementType>::remove(const ElementType& value)
         ++current_index;
     }
     --this->_size;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -591,7 +591,7 @@ size_t ft_set<ElementType>::size() const
         return (0);
     }
     current_size = this->_size;
-    const_cast<ft_set<ElementType> *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_set<ElementType> *>(this)->set_error(FT_ER_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (current_size);
 }
@@ -609,7 +609,7 @@ bool ft_set<ElementType>::empty() const
         return (true);
     }
     result = (this->_size == 0);
-    const_cast<ft_set<ElementType> *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_set<ElementType> *>(this)->set_error(FT_ER_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (result);
 }
@@ -645,7 +645,7 @@ void ft_set<ElementType>::clear()
         ++index;
     }
     this->_size = 0;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return ;
 }

@@ -16,6 +16,6 @@ void rl_clear_history()
         index++;
     }
     history_count = 0;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }

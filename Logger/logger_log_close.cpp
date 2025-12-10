@@ -15,7 +15,7 @@ void ft_log_close()
     if (logger_lock_sinks() != 0)
         return ;
     sink_count = g_sinks.size();
-    if (g_sinks.get_error() != ER_SUCCESS)
+    if (g_sinks.get_error() != FT_ER_SUCCESSS)
     {
         final_error = g_sinks.get_error();
         if (logger_unlock_sinks() != 0)
@@ -29,7 +29,7 @@ void ft_log_close()
         s_log_sink entry;
 
         entry = g_sinks[index];
-        if (g_sinks.get_error() != ER_SUCCESS)
+        if (g_sinks.get_error() != FT_ER_SUCCESSS)
         {
             final_error = g_sinks.get_error();
             if (logger_unlock_sinks() != 0)
@@ -38,7 +38,7 @@ void ft_log_close()
             return ;
         }
         sinks_snapshot.push_back(entry);
-        if (sinks_snapshot.get_error() != ER_SUCCESS)
+        if (sinks_snapshot.get_error() != FT_ER_SUCCESSS)
         {
             final_error = sinks_snapshot.get_error();
             if (logger_unlock_sinks() != 0)
@@ -52,7 +52,7 @@ void ft_log_close()
     clear_error = g_sinks.get_error();
     if (logger_unlock_sinks() != 0)
         return ;
-    if (clear_error != ER_SUCCESS)
+    if (clear_error != FT_ER_SUCCESSS)
     {
         ft_errno = clear_error;
         return ;
@@ -60,7 +60,7 @@ void ft_log_close()
     size_t snapshot_count;
 
     snapshot_count = sinks_snapshot.size();
-    if (sinks_snapshot.get_error() != ER_SUCCESS)
+    if (sinks_snapshot.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = sinks_snapshot.get_error();
         return ;
@@ -71,7 +71,7 @@ void ft_log_close()
         s_log_sink entry;
 
         entry = sinks_snapshot[index];
-        if (sinks_snapshot.get_error() != ER_SUCCESS)
+        if (sinks_snapshot.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = sinks_snapshot.get_error();
             return ;
@@ -80,7 +80,7 @@ void ft_log_close()
         int  sink_error;
 
         sink_lock_acquired = false;
-        sink_error = ER_SUCCESS;
+        sink_error = FT_ER_SUCCESSS;
         if (log_sink_lock(&entry, &sink_lock_acquired) != 0)
             sink_error = ft_errno;
         else if (entry.function == ft_file_sink)
@@ -126,13 +126,13 @@ void ft_log_close()
         if (sink_lock_acquired)
             log_sink_unlock(&entry, sink_lock_acquired);
         log_sink_teardown_thread_safety(&entry);
-        if (sink_error != ER_SUCCESS)
+        if (sink_error != FT_ER_SUCCESSS)
         {
             ft_errno = sink_error;
             return ;
         }
         index++;
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }

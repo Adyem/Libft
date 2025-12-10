@@ -36,7 +36,7 @@ FT_TEST(test_price_definition_copy_independent_after_mutation, "Game: price defi
     FT_ASSERT_EQ(120, duplicate.get_base_value());
     FT_ASSERT_EQ(80, duplicate.get_minimum_value());
     FT_ASSERT_EQ(200, duplicate.get_maximum_value());
-    FT_ASSERT_EQ(ER_SUCCESS, duplicate.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, duplicate.get_error());
     return (1);
 }
 
@@ -52,8 +52,8 @@ FT_TEST(test_currency_rate_move_assignment_clears_source, "Game: moving currency
     FT_ASSERT_EQ(0, source.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(0.0, source.get_rate_to_base());
     FT_ASSERT_EQ(0, source.get_display_precision());
-    FT_ASSERT_EQ(ER_SUCCESS, destination.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
     return (1);
 }
 
@@ -67,7 +67,7 @@ FT_TEST(test_behavior_action_setters_update_values, "Game: behavior action sette
     FT_ASSERT_EQ(9, action.get_action_id());
     FT_ASSERT_DOUBLE_EQ(1.75, action.get_weight());
     FT_ASSERT_DOUBLE_EQ(3.5, action.get_cooldown_seconds());
-    FT_ASSERT_EQ(ER_SUCCESS, action.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, action.get_error());
     return (1);
 }
 
@@ -84,7 +84,7 @@ FT_TEST(test_region_definition_assignment_isolated_from_source, "Game: region de
     FT_ASSERT_STR_EQ("Highlands", assigned.get_name().c_str());
     FT_ASSERT_STR_EQ("Jagged peaks", assigned.get_description().c_str());
     FT_ASSERT_EQ(15, assigned.get_recommended_level());
-    FT_ASSERT_EQ(ER_SUCCESS, assigned.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, assigned.get_error());
     return (1);
 }
 
@@ -104,8 +104,8 @@ FT_TEST(test_price_definition_move_assignment_resets_source, "Game: moving price
     FT_ASSERT_EQ(0, source.get_base_value());
     FT_ASSERT_EQ(0, source.get_minimum_value());
     FT_ASSERT_EQ(0, source.get_maximum_value());
-    FT_ASSERT_EQ(ER_SUCCESS, destination.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
     return (1);
 }
 
@@ -120,7 +120,7 @@ FT_TEST(test_currency_rate_copy_remains_unchanged_after_source_update, "Game: cu
     FT_ASSERT_EQ(6, duplicate.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(1.75, duplicate.get_rate_to_base());
     FT_ASSERT_EQ(5, duplicate.get_display_precision());
-    FT_ASSERT_EQ(ER_SUCCESS, duplicate.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, duplicate.get_error());
     return (1);
 }
 
@@ -138,7 +138,7 @@ FT_TEST(test_region_definition_move_assignment_clears_source, "Game: region defi
     FT_ASSERT_EQ(ft_string(""), source.get_name());
     FT_ASSERT_EQ(ft_string(""), source.get_description());
     FT_ASSERT_EQ(0, source.get_recommended_level());
-    FT_ASSERT_EQ(ER_SUCCESS, destination.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
     return (1);
 }

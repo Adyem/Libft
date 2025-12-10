@@ -19,7 +19,7 @@ int encryption_fill_secure_buffer(unsigned char *buffer, size_t buffer_length)
     }
     if (rng_secure_bytes(buffer, buffer_length) != 0)
         return (-1);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -67,7 +67,7 @@ unsigned char *encryption_generate_symmetric_key(size_t key_length)
         encryption_discard_key(key_buffer, key_length, generation_error);
         return (ft_nullptr);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (key_buffer);
 }
 

@@ -36,11 +36,11 @@ static void *game_resistance_update_task(void *argument)
         percent_value = index % 100;
         flat_value = index;
         arguments->result_code = arguments->resistance_pointer->set_values(percent_value, flat_value);
-        if (arguments->result_code != ER_SUCCESS)
+        if (arguments->result_code != FT_ER_SUCCESSS)
             return (ft_nullptr);
         index += 1;
     }
-    arguments->result_code = ER_SUCCESS;
+    arguments->result_code = FT_ER_SUCCESSS;
     return (ft_nullptr);
 }
 
@@ -59,14 +59,14 @@ static void *game_resistance_read_task(void *argument)
         int flat_value;
 
         percent_value = arguments->resistance_pointer->get_percent();
-        if (arguments->resistance_pointer->get_error() != ER_SUCCESS)
+        if (arguments->resistance_pointer->get_error() != FT_ER_SUCCESSS)
         {
             (void)percent_value;
             arguments->result_code = arguments->resistance_pointer->get_error();
             return (ft_nullptr);
         }
         flat_value = arguments->resistance_pointer->get_flat();
-        if (arguments->resistance_pointer->get_error() != ER_SUCCESS)
+        if (arguments->resistance_pointer->get_error() != FT_ER_SUCCESSS)
         {
             (void)flat_value;
             arguments->result_code = arguments->resistance_pointer->get_error();
@@ -74,7 +74,7 @@ static void *game_resistance_read_task(void *argument)
         }
         index += 1;
     }
-    arguments->result_code = ER_SUCCESS;
+    arguments->result_code = FT_ER_SUCCESSS;
     return (ft_nullptr);
 }
 
@@ -102,10 +102,10 @@ FT_TEST(test_game_resistance_thread_safety,
     failure_line = 0;
     update_arguments.resistance_pointer = &primary_resistance;
     update_arguments.iterations = 1024;
-    update_arguments.result_code = ER_SUCCESS;
+    update_arguments.result_code = FT_ER_SUCCESSS;
     read_arguments.resistance_pointer = &primary_resistance;
     read_arguments.iterations = 1024;
-    read_arguments.result_code = ER_SUCCESS;
+    read_arguments.result_code = FT_ER_SUCCESSS;
     create_update_result = pt_thread_create(&update_thread, ft_nullptr,
             game_resistance_update_task, &update_arguments);
     if (create_update_result != 0)
@@ -129,39 +129,39 @@ FT_TEST(test_game_resistance_thread_safety,
         ft_resistance moved_constructed(ft_move(constructed));
 
         copy_target = moved_constructed;
-        if (copy_target.get_error() != ER_SUCCESS)
+        if (copy_target.get_error() != FT_ER_SUCCESSS)
         {
             test_failed = 1;
-            failure_expression = "copy_target.get_error() == ER_SUCCESS";
+            failure_expression = "copy_target.get_error() == FT_ER_SUCCESSS";
             failure_line = __LINE__;
         }
         if (test_failed == 0)
         {
             assign_target = copy_target;
-            if (assign_target.get_error() != ER_SUCCESS)
+            if (assign_target.get_error() != FT_ER_SUCCESSS)
             {
                 test_failed = 1;
-                failure_expression = "assign_target.get_error() == ER_SUCCESS";
+                failure_expression = "assign_target.get_error() == FT_ER_SUCCESSS";
                 failure_line = __LINE__;
             }
         }
         if (test_failed == 0)
         {
             move_target = ft_move(assign_target);
-            if (move_target.get_error() != ER_SUCCESS)
+            if (move_target.get_error() != FT_ER_SUCCESSS)
             {
                 test_failed = 1;
-                failure_expression = "move_target.get_error() == ER_SUCCESS";
+                failure_expression = "move_target.get_error() == FT_ER_SUCCESSS";
                 failure_line = __LINE__;
             }
         }
         if (test_failed == 0)
         {
             primary_resistance = ft_move(move_target);
-            if (primary_resistance.get_error() != ER_SUCCESS)
+            if (primary_resistance.get_error() != FT_ER_SUCCESSS)
             {
                 test_failed = 1;
-                failure_expression = "primary_resistance.get_error() == ER_SUCCESS";
+                failure_expression = "primary_resistance.get_error() == FT_ER_SUCCESSS";
                 failure_line = __LINE__;
             }
         }
@@ -187,16 +187,16 @@ FT_TEST(test_game_resistance_thread_safety,
             failure_line = __LINE__;
         }
     }
-    if (update_arguments.result_code != ER_SUCCESS && test_failed == 0)
+    if (update_arguments.result_code != FT_ER_SUCCESSS && test_failed == 0)
     {
         test_failed = 1;
-        failure_expression = "update_arguments.result_code == ER_SUCCESS";
+        failure_expression = "update_arguments.result_code == FT_ER_SUCCESSS";
         failure_line = __LINE__;
     }
-    if (read_arguments.result_code != ER_SUCCESS && test_failed == 0)
+    if (read_arguments.result_code != FT_ER_SUCCESSS && test_failed == 0)
     {
         test_failed = 1;
-        failure_expression = "read_arguments.result_code == ER_SUCCESS";
+        failure_expression = "read_arguments.result_code == FT_ER_SUCCESSS";
         failure_line = __LINE__;
     }
     if (test_failed != 0)

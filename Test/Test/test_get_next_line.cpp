@@ -133,7 +133,7 @@ FT_TEST(test_get_next_line_zero_buffer_sets_errno, "get_next_line reports FT_ERR
 
     file_descriptor = create_temp_fd_with_content("Hello\n");
     FT_ASSERT(file_descriptor >= 0);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     line = get_next_line(file_descriptor, 0);
     FT_ASSERT(line == ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -149,7 +149,7 @@ FT_TEST(test_get_next_line_stream_error_sets_errno, "get_next_line propagates st
     file_descriptor = create_temp_fd_with_content("data\n");
     FT_ASSERT(file_descriptor >= 0);
     close(file_descriptor);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     line = get_next_line(file_descriptor, 4);
     FT_ASSERT(line == ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
@@ -164,7 +164,7 @@ FT_TEST(test_get_next_line_allocator_failure_sets_errno, "get_next_line reports 
 
     file_descriptor = create_temp_fd_with_content("data\n");
     FT_ASSERT(file_descriptor >= 0);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     cma_set_alloc_limit(4);
     line = get_next_line(file_descriptor, 4);
     cma_set_alloc_limit(0);
@@ -183,12 +183,12 @@ FT_TEST(test_get_next_line_leftover_allocation_failure_is_safe,
     file_descriptor = create_temp_fd_with_content("line one\nline two\n");
     FT_ASSERT(file_descriptor >= 0);
     gnl_set_leftover_alloc_hook(failing_leftover_allocator);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     line = get_next_line(file_descriptor, 8);
     gnl_reset_leftover_alloc_hook();
     FT_ASSERT(line == ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
-    FT_ASSERT_EQ(ER_SUCCESS, gnl_clear_stream(file_descriptor));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, gnl_clear_stream(file_descriptor));
     close(file_descriptor);
     return (1);
 }
@@ -209,10 +209,10 @@ FT_TEST(test_get_next_line_hash_map_allocation_failure_is_reported,
     {
         filler_descriptors[filler_count] = create_temp_fd_with_content("alpha\nbeta\n");
         FT_ASSERT(filler_descriptors[filler_count] >= 0);
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         filler_line = get_next_line(filler_descriptors[filler_count], 8);
         FT_ASSERT(filler_line != ft_nullptr);
-        FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+        FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
         cma_free(filler_line);
         filler_count++;
     }
@@ -220,13 +220,13 @@ FT_TEST(test_get_next_line_hash_map_allocation_failure_is_reported,
     FT_ASSERT(file_descriptor >= 0);
     cma_set_alloc_limit(0);
     gnl_set_leftover_alloc_hook(leftover_allocator_that_limits_map);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     line = get_next_line(file_descriptor, 8);
     gnl_reset_leftover_alloc_hook();
     cma_set_alloc_limit(0);
     FT_ASSERT(line == ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
-    FT_ASSERT_EQ(ER_SUCCESS, gnl_clear_stream(file_descriptor));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, gnl_clear_stream(file_descriptor));
     close(file_descriptor);
     cleanup_index = 0;
     while (cleanup_index < filler_count)

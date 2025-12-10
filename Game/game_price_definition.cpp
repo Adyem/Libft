@@ -14,15 +14,15 @@ int ft_price_definition::lock_pair(const ft_price_definition &first, const ft_pr
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != ER_SUCCESS)
+        if (single_guard.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = ER_SUCCESS;
-        return (ER_SUCCESS);
+        ft_errno = FT_ER_SUCCESSS;
+        return (FT_ER_SUCCESSS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -40,13 +40,13 @@ int ft_price_definition::lock_pair(const ft_price_definition &first, const ft_pr
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != ER_SUCCESS)
+        if (lower_guard.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == ER_SUCCESS)
+        if (upper_guard.get_error() == FT_ER_SUCCESSS)
         {
             if (!swapped)
             {
@@ -58,8 +58,8 @@ int ft_price_definition::lock_pair(const ft_price_definition &first, const ft_pr
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = ER_SUCCESS;
-            return (ER_SUCCESS);
+            ft_errno = FT_ER_SUCCESSS;
+            return (FT_ER_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -73,27 +73,27 @@ int ft_price_definition::lock_pair(const ft_price_definition &first, const ft_pr
 }
 
 ft_price_definition::ft_price_definition() noexcept
-    : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0), _maximum_value(0), _error_code(ER_SUCCESS)
+    : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0), _maximum_value(0), _error_code(FT_ER_SUCCESSS)
 {
     return ;
 }
 
 ft_price_definition::ft_price_definition(int item_id, int rarity, int base_value, int minimum_value, int maximum_value) noexcept
     : _item_id(item_id), _rarity(rarity), _base_value(base_value), _minimum_value(minimum_value), _maximum_value(maximum_value),
-    _error_code(ER_SUCCESS)
+    _error_code(FT_ER_SUCCESSS)
 {
     return ;
 }
 
 ft_price_definition::ft_price_definition(const ft_price_definition &other) noexcept
-    : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0), _maximum_value(0), _error_code(ER_SUCCESS)
+    : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0), _maximum_value(0), _error_code(FT_ER_SUCCESSS)
 {
     int entry_errno;
     ft_unique_lock<pt_mutex> self_guard;
     ft_unique_lock<pt_mutex> other_guard;
 
     entry_errno = ft_errno;
-    if (ft_price_definition::lock_pair(*this, other, self_guard, other_guard) != ER_SUCCESS)
+    if (ft_price_definition::lock_pair(*this, other, self_guard, other_guard) != FT_ER_SUCCESSS)
     {
         this->set_error(self_guard.get_error());
         game_economy_restore_errno(self_guard, entry_errno);
@@ -121,7 +121,7 @@ ft_price_definition &ft_price_definition::operator=(const ft_price_definition &o
     if (this == &other)
         return (*this);
     entry_errno = ft_errno;
-    if (ft_price_definition::lock_pair(*this, other, self_guard, other_guard) != ER_SUCCESS)
+    if (ft_price_definition::lock_pair(*this, other, self_guard, other_guard) != FT_ER_SUCCESSS)
     {
         this->set_error(self_guard.get_error());
         game_economy_restore_errno(self_guard, entry_errno);
@@ -141,14 +141,14 @@ ft_price_definition &ft_price_definition::operator=(const ft_price_definition &o
 }
 
 ft_price_definition::ft_price_definition(ft_price_definition &&other) noexcept
-    : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0), _maximum_value(0), _error_code(ER_SUCCESS)
+    : _item_id(0), _rarity(0), _base_value(0), _minimum_value(0), _maximum_value(0), _error_code(FT_ER_SUCCESSS)
 {
     int entry_errno;
     ft_unique_lock<pt_mutex> self_guard;
     ft_unique_lock<pt_mutex> other_guard;
 
     entry_errno = ft_errno;
-    if (ft_price_definition::lock_pair(*this, other, self_guard, other_guard) != ER_SUCCESS)
+    if (ft_price_definition::lock_pair(*this, other, self_guard, other_guard) != FT_ER_SUCCESSS)
     {
         this->set_error(self_guard.get_error());
         game_economy_restore_errno(self_guard, entry_errno);
@@ -166,9 +166,9 @@ ft_price_definition::ft_price_definition(ft_price_definition &&other) noexcept
     other._base_value = 0;
     other._minimum_value = 0;
     other._maximum_value = 0;
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     this->set_error(this->_error_code);
-    other.set_error(ER_SUCCESS);
+    other.set_error(FT_ER_SUCCESSS);
     game_economy_restore_errno(self_guard, entry_errno);
     game_economy_restore_errno(other_guard, entry_errno);
     return ;
@@ -183,7 +183,7 @@ ft_price_definition &ft_price_definition::operator=(ft_price_definition &&other)
     if (this == &other)
         return (*this);
     entry_errno = ft_errno;
-    if (ft_price_definition::lock_pair(*this, other, self_guard, other_guard) != ER_SUCCESS)
+    if (ft_price_definition::lock_pair(*this, other, self_guard, other_guard) != FT_ER_SUCCESSS)
     {
         this->set_error(self_guard.get_error());
         game_economy_restore_errno(self_guard, entry_errno);
@@ -201,9 +201,9 @@ ft_price_definition &ft_price_definition::operator=(ft_price_definition &&other)
     other._base_value = 0;
     other._minimum_value = 0;
     other._maximum_value = 0;
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     this->set_error(this->_error_code);
-    other.set_error(ER_SUCCESS);
+    other.set_error(FT_ER_SUCCESSS);
     game_economy_restore_errno(self_guard, entry_errno);
     game_economy_restore_errno(other_guard, entry_errno);
     return (*this);
@@ -216,7 +216,7 @@ int ft_price_definition::get_item_id() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_price_definition *>(this)->set_error(guard.get_error());
         game_economy_restore_errno(guard, entry_errno);
@@ -234,14 +234,14 @@ void ft_price_definition::set_item_id(int item_id) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_economy_restore_errno(guard, entry_errno);
         return ;
     }
     this->_item_id = item_id;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_economy_restore_errno(guard, entry_errno);
     return ;
 }
@@ -253,7 +253,7 @@ int ft_price_definition::get_rarity() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_price_definition *>(this)->set_error(guard.get_error());
         game_economy_restore_errno(guard, entry_errno);
@@ -271,14 +271,14 @@ void ft_price_definition::set_rarity(int rarity) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_economy_restore_errno(guard, entry_errno);
         return ;
     }
     this->_rarity = rarity;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_economy_restore_errno(guard, entry_errno);
     return ;
 }
@@ -290,7 +290,7 @@ int ft_price_definition::get_base_value() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_price_definition *>(this)->set_error(guard.get_error());
         game_economy_restore_errno(guard, entry_errno);
@@ -308,14 +308,14 @@ void ft_price_definition::set_base_value(int base_value) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_economy_restore_errno(guard, entry_errno);
         return ;
     }
     this->_base_value = base_value;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_economy_restore_errno(guard, entry_errno);
     return ;
 }
@@ -327,7 +327,7 @@ int ft_price_definition::get_minimum_value() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_price_definition *>(this)->set_error(guard.get_error());
         game_economy_restore_errno(guard, entry_errno);
@@ -345,14 +345,14 @@ void ft_price_definition::set_minimum_value(int minimum_value) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_economy_restore_errno(guard, entry_errno);
         return ;
     }
     this->_minimum_value = minimum_value;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_economy_restore_errno(guard, entry_errno);
     return ;
 }
@@ -364,7 +364,7 @@ int ft_price_definition::get_maximum_value() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_price_definition *>(this)->set_error(guard.get_error());
         game_economy_restore_errno(guard, entry_errno);
@@ -382,14 +382,14 @@ void ft_price_definition::set_maximum_value(int maximum_value) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_economy_restore_errno(guard, entry_errno);
         return ;
     }
     this->_maximum_value = maximum_value;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_economy_restore_errno(guard, entry_errno);
     return ;
 }
@@ -401,7 +401,7 @@ int ft_price_definition::get_error() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_price_definition *>(this)->set_error(guard.get_error());
         game_economy_restore_errno(guard, entry_errno);

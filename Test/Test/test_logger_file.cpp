@@ -46,7 +46,7 @@ FT_TEST(test_logger_file_sink_prepare_thread_safety_initializes_mutex,
     FT_ASSERT(temp_fd >= 0);
     sink.fd = temp_fd;
     sink.path = ft_string(template_path);
-    FT_ASSERT_EQ(ER_SUCCESS, sink.path.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, sink.path.get_error());
     sink.max_size = 0;
     sink.retention_count = 1;
     sink.max_age_seconds = 0;
@@ -77,7 +77,7 @@ FT_TEST(test_logger_file_sink_lock_blocks_until_release,
     FT_ASSERT(temp_fd >= 0);
     sink.fd = temp_fd;
     sink.path = ft_string(template_path);
-    FT_ASSERT_EQ(ER_SUCCESS, sink.path.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, sink.path.get_error());
     sink.max_size = 0;
     sink.retention_count = 1;
     sink.max_age_seconds = 0;
@@ -163,11 +163,11 @@ FT_TEST(test_logger_set_file_missing_directory, "ft_log_set_file returns errno f
     file_path = "/tmp/libft_logger_missing_dir/log.txt";
     (void)rmdir(directory_path);
     errno = 0;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     result = ft_log_set_file(file_path, 1024);
     FT_ASSERT_EQ(-1, result);
     FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (1);
 }
 
@@ -177,10 +177,10 @@ FT_TEST(test_logger_rotate_fstat_failure_sets_errno, "ft_log_rotate reports fsta
 
     sink.fd = -1;
     sink.path = ft_string("/tmp/libft_logger_invalid_fd");
-    FT_ASSERT_EQ(ER_SUCCESS, sink.path.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, sink.path.get_error());
     sink.max_size = 1;
     errno = 0;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     ft_log_rotate(&sink);
     FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, ft_errno);
     return (1);
@@ -200,15 +200,15 @@ FT_TEST(test_logger_rotate_success_clears_errno, "ft_log_rotate clears errno aft
     FT_ASSERT_EQ(13, write_result);
     sink.fd = temp_fd;
     sink.path = ft_string(template_path);
-    FT_ASSERT_EQ(ER_SUCCESS, sink.path.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, sink.path.get_error());
     sink.max_size = 4;
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     errno = 0;
     ft_log_rotate(&sink);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT(sink.fd >= 0);
     rotated_path = sink.path + ".1";
-    FT_ASSERT_EQ(ER_SUCCESS, rotated_path.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, rotated_path.get_error());
     FT_ASSERT_EQ(0, access(rotated_path.c_str(), F_OK));
     close(sink.fd);
     unlink(template_path);
@@ -229,23 +229,23 @@ FT_TEST(test_logger_rotate_rename_failure_reopens_file, "ft_log_rotate reopens o
     directory_path = mkdtemp(directory_template);
     FT_ASSERT(directory_path != ft_nullptr);
     file_path = directory_path;
-    FT_ASSERT_EQ(ER_SUCCESS, file_path.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, file_path.get_error());
     file_path += "/";
-    FT_ASSERT_EQ(ER_SUCCESS, file_path.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, file_path.get_error());
     long_name = ft_string(255, 'a');
-    FT_ASSERT_EQ(ER_SUCCESS, long_name.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, long_name.get_error());
     file_path += long_name;
-    FT_ASSERT_EQ(ER_SUCCESS, file_path.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, file_path.get_error());
     file_descriptor = open(file_path.c_str(), O_CREAT | O_WRONLY | O_APPEND, 0644);
     FT_ASSERT(file_descriptor >= 0);
     write_result = write(file_descriptor, "trigger", 7);
     FT_ASSERT_EQ(7, write_result);
     sink.fd = file_descriptor;
     sink.path = ft_string(file_path);
-    FT_ASSERT_EQ(ER_SUCCESS, sink.path.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, sink.path.get_error());
     sink.max_size = 4;
     errno = 0;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     ft_log_rotate(&sink);
     FT_ASSERT_EQ(ENAMETOOLONG, errno);
     FT_ASSERT_EQ(file_descriptor, sink.fd);
@@ -261,7 +261,7 @@ FT_TEST(test_logger_set_rotation_without_file_sink,
         "ft_log_set_rotation reports missing file sinks")
 {
     ft_log_close();
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(-1, ft_log_set_rotation(1024, 2, 60));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, ft_errno);
     return (1);
@@ -292,9 +292,9 @@ FT_TEST(test_logger_rotation_by_age, "age-based rotation creates an archive")
     ft_log_info("age-rotation-test");
     ft_log_close();
     rotated_path = ft_string(template_path);
-    FT_ASSERT_EQ(ER_SUCCESS, rotated_path.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, rotated_path.get_error());
     rotated_path += ".1";
-    FT_ASSERT_EQ(ER_SUCCESS, rotated_path.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, rotated_path.get_error());
     log_fd = open(rotated_path.c_str(), O_RDONLY);
     FT_ASSERT(log_fd >= 0);
     read_count = read(log_fd, buffer, sizeof(buffer) - 1);
@@ -362,17 +362,17 @@ FT_TEST(test_logger_rotation_retention_limit,
     ft_log_info("retention-third");
     ft_log_close();
     rotated_one_path = ft_string(template_path);
-    FT_ASSERT_EQ(ER_SUCCESS, rotated_one_path.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, rotated_one_path.get_error());
     rotated_one_path += ".1";
-    FT_ASSERT_EQ(ER_SUCCESS, rotated_one_path.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, rotated_one_path.get_error());
     rotated_two_path = ft_string(template_path);
-    FT_ASSERT_EQ(ER_SUCCESS, rotated_two_path.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, rotated_two_path.get_error());
     rotated_two_path += ".2";
-    FT_ASSERT_EQ(ER_SUCCESS, rotated_two_path.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, rotated_two_path.get_error());
     rotated_three_path = ft_string(template_path);
-    FT_ASSERT_EQ(ER_SUCCESS, rotated_three_path.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, rotated_three_path.get_error());
     rotated_three_path += ".3";
-    FT_ASSERT_EQ(ER_SUCCESS, rotated_three_path.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, rotated_three_path.get_error());
     fd = open(rotated_one_path.c_str(), O_RDONLY);
     FT_ASSERT(fd >= 0);
     read_count = read(fd, buffer, sizeof(buffer) - 1);

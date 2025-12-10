@@ -10,8 +10,9 @@ typedef struct s_ft_error_string
 
 static const t_ft_error_string g_error_strings[] =
 {
-    {ER_SUCCESS, "Operation successful"},
+    {FT_ER_SUCCESSS, "Operation successful"},
     {FT_ERR_NO_MEMORY, "Memory allocation failed"},
+    {FT_ERR_FILE_OPEN_FAILED, "File open failed"},
     {FT_ERR_INVALID_ARGUMENT, "Invalid argument"},
     {FT_ERR_INVALID_POINTER, "Invalid pointer"},
     {FT_ERR_INVALID_HANDLE, "Invalid handle"},
@@ -67,6 +68,7 @@ static const t_ft_error_string g_error_strings[] =
     {FT_ERR_PRIORITY_QUEUE_EMPTY, "Priority queue is empty"},
     {FT_ERR_PRIORITY_QUEUE_NO_MEMORY, "Priority queue memory allocation failed"},
     {FT_ERR_CRYPTO_INVALID_PADDING, "Invalid cryptographic padding"},
+    {FT_ERR_DATABASE_UNAVAILABLE, "Database unavailable"},
     {FT_ERR_SSL_SYSCALL_ERROR, "SSL system call error"},
     {FT_ERR_HTTP_PROTOCOL_MISMATCH, "HTTP protocol mismatch"},
     {FT_ERR_API_CIRCUIT_OPEN, "API circuit breaker is open"}

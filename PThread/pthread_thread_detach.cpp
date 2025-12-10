@@ -12,6 +12,6 @@ int pt_thread_detach(pthread_t thread)
         ft_errno = ft_map_system_error(return_value);
         return (return_value);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (return_value);
 }

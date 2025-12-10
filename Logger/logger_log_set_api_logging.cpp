@@ -7,7 +7,7 @@ void ft_log_set_api_logging(bool enable)
         g_logger->set_api_logging(enable);
         return ;
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 

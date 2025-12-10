@@ -40,8 +40,8 @@ inline ft_nullptr_t::operator PointerType*() const noexcept
     int entry_errno;
 
     entry_errno = ft_errno;
-    this->set_error_internal(ER_SUCCESS);
-    ft_nullptr_t::restore_errno(entry_errno, ER_SUCCESS);
+    this->set_error_internal(FT_ER_SUCCESSS);
+    ft_nullptr_t::restore_errno(entry_errno, FT_ER_SUCCESSS);
     return (static_cast<PointerType*>(nullptr));
 }
 
@@ -51,8 +51,8 @@ inline ft_nullptr_t::operator MemberType ClassType::*() const noexcept
     int entry_errno;
 
     entry_errno = ft_errno;
-    this->set_error_internal(ER_SUCCESS);
-    ft_nullptr_t::restore_errno(entry_errno, ER_SUCCESS);
+    this->set_error_internal(FT_ER_SUCCESSS);
+    ft_nullptr_t::restore_errno(entry_errno, FT_ER_SUCCESSS);
     return (static_cast<MemberType ClassType::*>(nullptr));
 }
 

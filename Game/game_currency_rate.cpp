@@ -14,15 +14,15 @@ int ft_currency_rate::lock_pair(const ft_currency_rate &first, const ft_currency
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != ER_SUCCESS)
+        if (single_guard.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = ER_SUCCESS;
-        return (ER_SUCCESS);
+        ft_errno = FT_ER_SUCCESSS;
+        return (FT_ER_SUCCESSS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -40,13 +40,13 @@ int ft_currency_rate::lock_pair(const ft_currency_rate &first, const ft_currency
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != ER_SUCCESS)
+        if (lower_guard.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == ER_SUCCESS)
+        if (upper_guard.get_error() == FT_ER_SUCCESSS)
         {
             if (!swapped)
             {
@@ -58,8 +58,8 @@ int ft_currency_rate::lock_pair(const ft_currency_rate &first, const ft_currency
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = ER_SUCCESS;
-            return (ER_SUCCESS);
+            ft_errno = FT_ER_SUCCESSS;
+            return (FT_ER_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -73,26 +73,26 @@ int ft_currency_rate::lock_pair(const ft_currency_rate &first, const ft_currency
 }
 
 ft_currency_rate::ft_currency_rate() noexcept
-    : _currency_id(0), _rate_to_base(1.0), _display_precision(2), _error_code(ER_SUCCESS)
+    : _currency_id(0), _rate_to_base(1.0), _display_precision(2), _error_code(FT_ER_SUCCESSS)
 {
     return ;
 }
 
 ft_currency_rate::ft_currency_rate(int currency_id, double rate_to_base, int display_precision) noexcept
-    : _currency_id(currency_id), _rate_to_base(rate_to_base), _display_precision(display_precision), _error_code(ER_SUCCESS)
+    : _currency_id(currency_id), _rate_to_base(rate_to_base), _display_precision(display_precision), _error_code(FT_ER_SUCCESSS)
 {
     return ;
 }
 
 ft_currency_rate::ft_currency_rate(const ft_currency_rate &other) noexcept
-    : _currency_id(0), _rate_to_base(1.0), _display_precision(2), _error_code(ER_SUCCESS)
+    : _currency_id(0), _rate_to_base(1.0), _display_precision(2), _error_code(FT_ER_SUCCESSS)
 {
     int entry_errno;
     ft_unique_lock<pt_mutex> self_guard;
     ft_unique_lock<pt_mutex> other_guard;
 
     entry_errno = ft_errno;
-    if (ft_currency_rate::lock_pair(*this, other, self_guard, other_guard) != ER_SUCCESS)
+    if (ft_currency_rate::lock_pair(*this, other, self_guard, other_guard) != FT_ER_SUCCESSS)
     {
         this->set_error(self_guard.get_error());
         game_economy_restore_errno(self_guard, entry_errno);
@@ -118,7 +118,7 @@ ft_currency_rate &ft_currency_rate::operator=(const ft_currency_rate &other) noe
     if (this == &other)
         return (*this);
     entry_errno = ft_errno;
-    if (ft_currency_rate::lock_pair(*this, other, self_guard, other_guard) != ER_SUCCESS)
+    if (ft_currency_rate::lock_pair(*this, other, self_guard, other_guard) != FT_ER_SUCCESSS)
     {
         this->set_error(self_guard.get_error());
         game_economy_restore_errno(self_guard, entry_errno);
@@ -136,14 +136,14 @@ ft_currency_rate &ft_currency_rate::operator=(const ft_currency_rate &other) noe
 }
 
 ft_currency_rate::ft_currency_rate(ft_currency_rate &&other) noexcept
-    : _currency_id(0), _rate_to_base(1.0), _display_precision(2), _error_code(ER_SUCCESS)
+    : _currency_id(0), _rate_to_base(1.0), _display_precision(2), _error_code(FT_ER_SUCCESSS)
 {
     int entry_errno;
     ft_unique_lock<pt_mutex> self_guard;
     ft_unique_lock<pt_mutex> other_guard;
 
     entry_errno = ft_errno;
-    if (ft_currency_rate::lock_pair(*this, other, self_guard, other_guard) != ER_SUCCESS)
+    if (ft_currency_rate::lock_pair(*this, other, self_guard, other_guard) != FT_ER_SUCCESSS)
     {
         this->set_error(self_guard.get_error());
         game_economy_restore_errno(self_guard, entry_errno);
@@ -157,9 +157,9 @@ ft_currency_rate::ft_currency_rate(ft_currency_rate &&other) noexcept
     other._currency_id = 0;
     other._rate_to_base = 0.0;
     other._display_precision = 0;
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     this->set_error(this->_error_code);
-    other.set_error(ER_SUCCESS);
+    other.set_error(FT_ER_SUCCESSS);
     game_economy_restore_errno(self_guard, entry_errno);
     game_economy_restore_errno(other_guard, entry_errno);
     return ;
@@ -174,7 +174,7 @@ ft_currency_rate &ft_currency_rate::operator=(ft_currency_rate &&other) noexcept
     if (this == &other)
         return (*this);
     entry_errno = ft_errno;
-    if (ft_currency_rate::lock_pair(*this, other, self_guard, other_guard) != ER_SUCCESS)
+    if (ft_currency_rate::lock_pair(*this, other, self_guard, other_guard) != FT_ER_SUCCESSS)
     {
         this->set_error(self_guard.get_error());
         game_economy_restore_errno(self_guard, entry_errno);
@@ -188,9 +188,9 @@ ft_currency_rate &ft_currency_rate::operator=(ft_currency_rate &&other) noexcept
     other._currency_id = 0;
     other._rate_to_base = 0.0;
     other._display_precision = 0;
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     this->set_error(this->_error_code);
-    other.set_error(ER_SUCCESS);
+    other.set_error(FT_ER_SUCCESSS);
     game_economy_restore_errno(self_guard, entry_errno);
     game_economy_restore_errno(other_guard, entry_errno);
     return (*this);
@@ -203,7 +203,7 @@ int ft_currency_rate::get_currency_id() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_currency_rate *>(this)->set_error(guard.get_error());
         game_economy_restore_errno(guard, entry_errno);
@@ -221,14 +221,14 @@ void ft_currency_rate::set_currency_id(int currency_id) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_economy_restore_errno(guard, entry_errno);
         return ;
     }
     this->_currency_id = currency_id;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_economy_restore_errno(guard, entry_errno);
     return ;
 }
@@ -240,7 +240,7 @@ double ft_currency_rate::get_rate_to_base() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_currency_rate *>(this)->set_error(guard.get_error());
         game_economy_restore_errno(guard, entry_errno);
@@ -258,14 +258,14 @@ void ft_currency_rate::set_rate_to_base(double rate_to_base) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_economy_restore_errno(guard, entry_errno);
         return ;
     }
     this->_rate_to_base = rate_to_base;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_economy_restore_errno(guard, entry_errno);
     return ;
 }
@@ -277,7 +277,7 @@ int ft_currency_rate::get_display_precision() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_currency_rate *>(this)->set_error(guard.get_error());
         game_economy_restore_errno(guard, entry_errno);
@@ -295,14 +295,14 @@ void ft_currency_rate::set_display_precision(int display_precision) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_economy_restore_errno(guard, entry_errno);
         return ;
     }
     this->_display_precision = display_precision;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_economy_restore_errno(guard, entry_errno);
     return ;
 }
@@ -314,7 +314,7 @@ int ft_currency_rate::get_error() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_currency_rate *>(this)->set_error(guard.get_error());
         game_economy_restore_errno(guard, entry_errno);

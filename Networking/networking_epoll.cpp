@@ -88,14 +88,14 @@ int nw_poll(int *read_file_descriptors, int read_count,
             index++;
         }
         close(epoll_descriptor);
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     events = static_cast<epoll_event *>(cma_malloc(sizeof(epoll_event) * maximum_events));
     if (!events)
     {
         close(epoll_descriptor);
-        if (ft_errno == ER_SUCCESS)
+        if (ft_errno == FT_ER_SUCCESSS)
             ft_errno = FT_ERR_NO_MEMORY;
         return (-1);
     }
@@ -108,7 +108,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
         {
             cma_free(events);
             close(epoll_descriptor);
-            if (ft_errno == ER_SUCCESS)
+            if (ft_errno == FT_ER_SUCCESSS)
                 ft_errno = FT_ERR_NO_MEMORY;
             return (-1);
         }
@@ -150,7 +150,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
         cma_free(events);
         close(epoll_descriptor);
         if (ready_descriptors == 0)
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
         else
             ft_errno = ft_map_system_error(wait_error);
         return (ready_descriptors);
@@ -207,6 +207,6 @@ int nw_poll(int *read_file_descriptors, int read_count,
     if (write_ready_flags)
         cma_free(write_ready_flags);
     close(epoll_descriptor);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (ready_descriptors);
 }

@@ -118,7 +118,7 @@ unsigned char    *ft_base64_encode(const unsigned char *input_buffer, std::size_
     }
     output_buffer[output_index] = '\0';
     *encoded_size = output_index;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (output_buffer);
 }
 
@@ -166,7 +166,7 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
             return (ft_nullptr);
         }
         output_buffer[0] = '\0';
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (output_buffer);
     }
     if (sanitized_length % 4 == 1)
@@ -300,6 +300,6 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
         }
     }
     *decoded_size = output_index;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (output_buffer);
 }

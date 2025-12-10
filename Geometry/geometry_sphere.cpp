@@ -23,8 +23,8 @@ sphere::sphere()
     this->_center_y = 0.0;
     this->_center_z = 0.0;
     this->_radius = 0.0;
-    this->_error_code = ER_SUCCESS;
-    this->set_error(ER_SUCCESS);
+    this->_error_code = FT_ER_SUCCESSS;
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -34,8 +34,8 @@ sphere::sphere(double center_x, double center_y, double center_z, double radius)
     this->_center_y = center_y;
     this->_center_z = center_z;
     this->_radius = radius;
-    this->_error_code = ER_SUCCESS;
-    this->set_error(ER_SUCCESS);
+    this->_error_code = FT_ER_SUCCESSS;
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -47,8 +47,8 @@ sphere::sphere(const sphere &other)
     this->_center_y = 0.0;
     this->_center_z = 0.0;
     this->_radius = 0.0;
-    this->_error_code = ER_SUCCESS;
-    if (other_guard.get_error() != ER_SUCCESS)
+    this->_error_code = FT_ER_SUCCESSS;
+    if (other_guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
         return ;
@@ -58,7 +58,7 @@ sphere::sphere(const sphere &other)
     this->_center_z = other._center_z;
     this->_radius = other._radius;
     this->_error_code = other._error_code;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -71,7 +71,7 @@ sphere &sphere::operator=(const sphere &other)
     if (this == &other)
         return (*this);
     lock_error = sphere::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -81,7 +81,7 @@ sphere &sphere::operator=(const sphere &other)
     this->_center_z = other._center_z;
     this->_radius = other._radius;
     this->_error_code = other._error_code;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (*this);
 }
 
@@ -93,8 +93,8 @@ sphere::sphere(sphere &&other) noexcept
     this->_center_y = 0.0;
     this->_center_z = 0.0;
     this->_radius = 0.0;
-    this->_error_code = ER_SUCCESS;
-    if (other_guard.get_error() != ER_SUCCESS)
+    this->_error_code = FT_ER_SUCCESSS;
+    if (other_guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
         return ;
@@ -108,8 +108,8 @@ sphere::sphere(sphere &&other) noexcept
     other._center_y = 0.0;
     other._center_z = 0.0;
     other._radius = 0.0;
-    other._error_code = ER_SUCCESS;
-    this->set_error(ER_SUCCESS);
+    other._error_code = FT_ER_SUCCESSS;
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -122,7 +122,7 @@ sphere &sphere::operator=(sphere &&other) noexcept
     if (this == &other)
         return (*this);
     lock_error = sphere::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -136,8 +136,8 @@ sphere &sphere::operator=(sphere &&other) noexcept
     other._center_y = 0.0;
     other._center_z = 0.0;
     other._radius = 0.0;
-    other._error_code = ER_SUCCESS;
-    this->set_error(ER_SUCCESS);
+    other._error_code = FT_ER_SUCCESSS;
+    this->set_error(FT_ER_SUCCESSS);
     return (*this);
 }
 
@@ -152,7 +152,7 @@ int sphere::set_center(double center_x, double center_y, double center_z)
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         return (guard.get_error());
@@ -160,9 +160,9 @@ int sphere::set_center(double center_x, double center_y, double center_z)
     this->_center_x = center_x;
     this->_center_y = center_y;
     this->_center_z = center_z;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     geometry_sphere_restore_errno(guard, entry_errno);
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 int sphere::set_center_x(double center_x)
@@ -171,15 +171,15 @@ int sphere::set_center_x(double center_x)
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         return (guard.get_error());
     }
     this->_center_x = center_x;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     geometry_sphere_restore_errno(guard, entry_errno);
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 int sphere::set_center_y(double center_y)
@@ -188,15 +188,15 @@ int sphere::set_center_y(double center_y)
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         return (guard.get_error());
     }
     this->_center_y = center_y;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     geometry_sphere_restore_errno(guard, entry_errno);
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 int sphere::set_center_z(double center_z)
@@ -205,15 +205,15 @@ int sphere::set_center_z(double center_z)
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         return (guard.get_error());
     }
     this->_center_z = center_z;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     geometry_sphere_restore_errno(guard, entry_errno);
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 int sphere::set_radius(double radius)
@@ -222,15 +222,15 @@ int sphere::set_radius(double radius)
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         return (guard.get_error());
     }
     this->_radius = radius;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     geometry_sphere_restore_errno(guard, entry_errno);
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 double  sphere::get_center_x() const
@@ -240,13 +240,13 @@ double  sphere::get_center_x() const
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<sphere *>(this)->set_error(guard.get_error());
         return (0.0);
     }
     value = this->_center_x;
-    const_cast<sphere *>(this)->set_error(ER_SUCCESS);
+    const_cast<sphere *>(this)->set_error(FT_ER_SUCCESSS);
     geometry_sphere_restore_errno(guard, entry_errno);
     return (value);
 }
@@ -258,13 +258,13 @@ double  sphere::get_center_y() const
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<sphere *>(this)->set_error(guard.get_error());
         return (0.0);
     }
     value = this->_center_y;
-    const_cast<sphere *>(this)->set_error(ER_SUCCESS);
+    const_cast<sphere *>(this)->set_error(FT_ER_SUCCESSS);
     geometry_sphere_restore_errno(guard, entry_errno);
     return (value);
 }
@@ -276,13 +276,13 @@ double  sphere::get_center_z() const
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<sphere *>(this)->set_error(guard.get_error());
         return (0.0);
     }
     value = this->_center_z;
-    const_cast<sphere *>(this)->set_error(ER_SUCCESS);
+    const_cast<sphere *>(this)->set_error(FT_ER_SUCCESSS);
     geometry_sphere_restore_errno(guard, entry_errno);
     return (value);
 }
@@ -294,13 +294,13 @@ double  sphere::get_radius() const
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<sphere *>(this)->set_error(guard.get_error());
         return (0.0);
     }
     value = this->_radius;
-    const_cast<sphere *>(this)->set_error(ER_SUCCESS);
+    const_cast<sphere *>(this)->set_error(FT_ER_SUCCESSS);
     geometry_sphere_restore_errno(guard, entry_errno);
     return (value);
 }
@@ -312,7 +312,7 @@ int sphere::get_error() const
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<sphere *>(this)->set_error(guard.get_error());
         return (guard.get_error());
@@ -330,7 +330,7 @@ const char  *sphere::get_error_str() const
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<sphere *>(this)->set_error(guard.get_error());
         return (ft_strerror(guard.get_error()));

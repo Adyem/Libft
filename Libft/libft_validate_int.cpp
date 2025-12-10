@@ -17,7 +17,7 @@ int ft_validate_int(const char *input)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (FT_FAILURE);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     result = 0;
     maximum_value = static_cast<long>(FT_INT_MAX);
     minimum_value = static_cast<long>(FT_INT_MIN);

@@ -41,28 +41,28 @@ class vector_destructor_tracker
 int vector_destructor_tracker::_live_count = 0;
 
 vector_destructor_tracker::vector_destructor_tracker()
-    : _value(0), _error_code(ER_SUCCESS)
+    : _value(0), _error_code(FT_ER_SUCCESSS)
 {
     ++_live_count;
     return ;
 }
 
 vector_destructor_tracker::vector_destructor_tracker(int value)
-    : _value(value), _error_code(ER_SUCCESS)
+    : _value(value), _error_code(FT_ER_SUCCESSS)
 {
     ++_live_count;
     return ;
 }
 
 vector_destructor_tracker::vector_destructor_tracker(const vector_destructor_tracker &other)
-    : _value(other._value), _error_code(ER_SUCCESS)
+    : _value(other._value), _error_code(FT_ER_SUCCESSS)
 {
     ++_live_count;
     return ;
 }
 
 vector_destructor_tracker::vector_destructor_tracker(vector_destructor_tracker &&other) noexcept
-    : _value(other._value), _error_code(ER_SUCCESS)
+    : _value(other._value), _error_code(FT_ER_SUCCESSS)
 {
     ++_live_count;
     return ;
@@ -72,7 +72,7 @@ vector_destructor_tracker &vector_destructor_tracker::operator=(const vector_des
 {
     if (this != &other)
         this->_value = other._value;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (*this);
 }
 
@@ -80,21 +80,21 @@ vector_destructor_tracker &vector_destructor_tracker::operator=(vector_destructo
 {
     if (this != &other)
         this->_value = other._value;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (*this);
 }
 
 vector_destructor_tracker::~vector_destructor_tracker()
 {
     --_live_count;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
 void vector_destructor_tracker::reset()
 {
     _live_count = 0;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 
@@ -409,15 +409,15 @@ FT_TEST(test_ft_vector_resets_errno_after_successful_push, "ft_vector clears err
 {
     ft_vector<int> vector_instance;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     vector_instance[0];
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, vector_instance.get_error());
     vector_instance.push_back(5);
-    FT_ASSERT_EQ(ER_SUCCESS, vector_instance.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(5, vector_instance[0]);
-    FT_ASSERT_EQ(ER_SUCCESS, vector_instance.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, vector_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -425,16 +425,16 @@ FT_TEST(test_ft_set_resets_errno_after_successful_insert, "ft_set clears errno a
 {
     ft_set<int> set_instance;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(ft_nullptr, set_instance.find(42));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, set_instance.get_error());
     set_instance.insert(42);
-    FT_ASSERT_EQ(ER_SUCCESS, set_instance.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, set_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     int *found = set_instance.find(42);
     FT_ASSERT(found != ft_nullptr);
-    FT_ASSERT_EQ(ER_SUCCESS, set_instance.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, set_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -442,15 +442,15 @@ FT_TEST(test_ft_stack_resets_errno_after_successful_push, "ft_stack clears errno
 {
     ft_stack<int> stack_instance;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     stack_instance.pop();
     FT_ASSERT_EQ(FT_ERR_EMPTY, stack_instance.get_error());
     stack_instance.push(7);
-    FT_ASSERT_EQ(ER_SUCCESS, stack_instance.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, stack_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(7, stack_instance.top());
-    FT_ASSERT_EQ(ER_SUCCESS, stack_instance.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, stack_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -458,13 +458,13 @@ FT_TEST(test_ft_map_grows_from_zero_capacity, "ft_map grows when constructed wit
 {
     ft_map<int, int> map_instance(0);
 
-    FT_ASSERT_EQ(ER_SUCCESS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, map_instance.get_error());
     map_instance.insert(42, 7);
-    FT_ASSERT_EQ(ER_SUCCESS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, map_instance.get_error());
     FT_ASSERT_EQ(static_cast<size_t>(1), map_instance.size());
     Pair<int, int> *found_entry = map_instance.find(42);
     FT_ASSERT(found_entry != map_instance.end());
-    FT_ASSERT_EQ(ER_SUCCESS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, map_instance.get_error());
     FT_ASSERT_EQ(7, found_entry->value);
     return (1);
 }

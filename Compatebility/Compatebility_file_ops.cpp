@@ -35,7 +35,7 @@ int cmp_file_exists(const char *path)
     {
         if ((file_attributes & FILE_ATTRIBUTE_DIRECTORY) == 0)
         {
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             return (1);
         }
         ft_errno = FT_ERR_INVALID_ARGUMENT;
@@ -60,7 +60,7 @@ int cmp_file_delete(const char *path)
     }
     if (DeleteFileA(path) != 0)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     last_error = GetLastError();
@@ -86,7 +86,7 @@ int cmp_file_move(const char *source_path, const char *destination_path)
         if (MoveFileExA(source_path, destination_path,
                 MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING))
         {
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             return (0);
         }
         last_error = GetLastError();
@@ -99,7 +99,7 @@ int cmp_file_move(const char *source_path, const char *destination_path)
         {
             if (cmp_file_delete(source_path) == 0)
             {
-                ft_errno = ER_SUCCESS;
+                ft_errno = FT_ER_SUCCESSS;
                 return (0);
             }
             stored_error = ft_errno;
@@ -125,7 +125,7 @@ int cmp_file_copy(const char *source_path, const char *destination_path)
     }
     if (CopyFileA(source_path, destination_path, 0))
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     last_error = GetLastError();
@@ -148,7 +148,7 @@ int cmp_file_create_directory(const char *path, mode_t mode)
     }
     if (CreateDirectoryA(path, ft_nullptr))
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     last_error = GetLastError();
@@ -171,7 +171,7 @@ int cmp_file_get_permissions(const char *path, mode_t *mode_out)
     if (_stat(path, &file_info) == 0)
     {
         *mode_out = static_cast<mode_t>(file_info.st_mode);
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     if (errno != 0)
@@ -211,7 +211,7 @@ int cmp_file_exists(const char *path)
     {
         if (S_ISREG(stat_buffer.st_mode))
         {
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             return (1);
         }
         ft_errno = FT_ERR_INVALID_ARGUMENT;
@@ -230,7 +230,7 @@ int cmp_file_delete(const char *path)
     }
     if (unlink(path) == 0)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     ft_errno = cmp_map_system_error_to_ft(errno);
@@ -253,7 +253,7 @@ int cmp_file_move(const char *source_path, const char *destination_path)
     {
         if (rename(source_path, destination_path) == 0)
         {
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             return (0);
         }
         if (errno != EXDEV)
@@ -268,7 +268,7 @@ int cmp_file_move(const char *source_path, const char *destination_path)
     {
         if (unlink(source_path) == 0)
         {
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             return (0);
         }
         delete_errno = errno;
@@ -300,7 +300,7 @@ int cmp_file_copy(const char *source_path, const char *destination_path)
         std::filesystem::copy_options::overwrite_existing, copy_error_code);
     if (copy_error_code.value() == 0)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     if (copy_error_code.value() != 0)
@@ -322,7 +322,7 @@ int cmp_file_create_directory(const char *path, mode_t mode)
     }
     if (mkdir(path, mode) == 0)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     ft_errno = cmp_map_system_error_to_ft(errno);
@@ -341,7 +341,7 @@ int cmp_file_get_permissions(const char *path, mode_t *mode_out)
     if (stat(path, &file_info) == 0)
     {
         *mode_out = file_info.st_mode;
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     ft_errno = cmp_map_system_error_to_ft(errno);
