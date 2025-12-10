@@ -3,11 +3,8 @@
 
 void game_economy_sleep_backoff() noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     pt_thread_sleep(1);
-    ft_errno = entry_errno;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 
@@ -26,6 +23,6 @@ void game_economy_restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno
         ft_errno = unlock_error;
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }

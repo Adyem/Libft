@@ -478,9 +478,16 @@ int cmp_map_system_error_to_ft(int error_code)
 
 int cmp_normalize_ft_errno(int error_code)
 {
+    int normalized_error;
+
     if (error_code < ERRNO_OFFSET)
+    {
+        ft_errno = FT_ER_SUCCESSS;
         return (error_code);
-    return (cmp_map_system_error_to_ft(error_code - ERRNO_OFFSET));
+    }
+    normalized_error = cmp_map_system_error_to_ft(error_code - ERRNO_OFFSET);
+    ft_errno = FT_ER_SUCCESSS;
+    return (normalized_error);
 }
 
 void cmp_set_force_unsetenv_result(int result, int errno_value)

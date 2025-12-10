@@ -49,6 +49,7 @@ unsigned char    *ft_base64_encode(const unsigned char *input_buffer, std::size_
     int             has_byte_two;
     int             has_byte_three;
 
+    ft_errno = FT_ER_SUCCESSS;
     if (encoded_size == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
@@ -142,6 +143,7 @@ unsigned char    *ft_base64_decode(const unsigned char *input_buffer, std::size_
     int             has_char_three;
     int             has_char_four;
 
+    ft_errno = FT_ER_SUCCESSS;
     if (!input_buffer || !decoded_size)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;

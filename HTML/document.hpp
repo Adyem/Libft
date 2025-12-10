@@ -27,7 +27,6 @@ class html_document
                 const html_document *_document;
                 bool _lock_acquired;
                 int _status;
-                int _entry_errno;
 
             public:
                 thread_guard(const html_document *document) noexcept;

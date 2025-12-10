@@ -12,9 +12,9 @@ static void game_quest_sleep_backoff()
 static void game_quest_restore_errno(ft_unique_lock<pt_mutex> &guard,
         int entry_errno)
 {
+    (void)entry_errno;
     if (guard.owns_lock())
         guard.unlock();
-    ft_errno = entry_errno;
     return ;
 }
 

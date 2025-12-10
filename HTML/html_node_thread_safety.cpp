@@ -64,6 +64,7 @@ int html_node_lock(const html_node *node, bool *lock_acquired)
     html_node *mutable_node;
     int        entry_errno;
 
+    ft_errno = FT_ER_SUCCESSS;
     if (lock_acquired)
         *lock_acquired = false;
     if (!node)
@@ -71,7 +72,7 @@ int html_node_lock(const html_node *node, bool *lock_acquired)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    entry_errno = ft_errno;
+    entry_errno = FT_ER_SUCCESSS;
     mutable_node = const_cast<html_node *>(node);
     if (!mutable_node->thread_safe_enabled || !mutable_node->mutex)
     {
@@ -95,12 +96,16 @@ void html_node_unlock(const html_node *node, bool lock_acquired)
     html_node *mutable_node;
     int        entry_errno;
 
+    ft_errno = FT_ER_SUCCESSS;
     if (!node || !lock_acquired)
+    {
+        ft_errno = FT_ER_SUCCESSS;
         return ;
+    }
     mutable_node = const_cast<html_node *>(node);
     if (!mutable_node->mutex)
         return ;
-    entry_errno = ft_errno;
+    entry_errno = FT_ER_SUCCESSS;
     mutable_node->mutex->unlock(THREAD_ID);
     if (mutable_node->mutex->get_error() != FT_ER_SUCCESSS)
     {
