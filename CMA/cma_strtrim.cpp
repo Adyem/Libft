@@ -16,7 +16,10 @@ static bool is_in_set(char character, const char *set)
 char    *cma_strtrim(const char *input_string, const char *set)
 {
     if (!input_string || !set)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
+    }
     size_t start = 0;
     size_t end = ft_strlen_size_t(input_string);
     while (input_string[start] && is_in_set(input_string[start], set))

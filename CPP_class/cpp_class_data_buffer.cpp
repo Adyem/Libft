@@ -10,11 +10,11 @@ void DataBuffer::sleep_backoff() noexcept
     return ;
 }
 
-void DataBuffer::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept
+void DataBuffer::restore_errno(ft_unique_lock<pt_mutex> &guard, int target_errno) noexcept
 {
     if (guard.owns_lock())
         guard.unlock();
-    ft_errno = entry_errno;
+    ft_errno = target_errno;
     return ;
 }
 
@@ -168,14 +168,12 @@ DataBuffer& DataBuffer::operator=(const DataBuffer& other) noexcept
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
     size_t index;
     size_t other_size;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = DataBuffer::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ER_SUCCESSS)
     {
@@ -192,8 +190,8 @@ DataBuffer& DataBuffer::operator=(const DataBuffer& other) noexcept
         {
             this->_ok = false;
             this->set_error_unlocked(this->_buffer.get_error());
-            DataBuffer::restore_errno(this_guard, entry_errno);
-            DataBuffer::restore_errno(other_guard, entry_errno);
+            DataBuffer::restore_errno(this_guard, ft_errno);
+            DataBuffer::restore_errno(other_guard, ft_errno);
             return (*this);
         }
         ++index;
@@ -202,8 +200,8 @@ DataBuffer& DataBuffer::operator=(const DataBuffer& other) noexcept
     this->_ok = other._ok;
     this->_error_code = other._error_code;
     this->set_error_unlocked(other._error_code);
-    DataBuffer::restore_errno(this_guard, entry_errno);
-    DataBuffer::restore_errno(other_guard, entry_errno);
+    DataBuffer::restore_errno(this_guard, FT_ER_SUCCESSS);
+    DataBuffer::restore_errno(other_guard, FT_ER_SUCCESSS);
     return (*this);
 }
 
@@ -211,12 +209,10 @@ DataBuffer& DataBuffer::operator=(DataBuffer&& other) noexcept
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = DataBuffer::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ER_SUCCESSS)
     {
@@ -232,8 +228,8 @@ DataBuffer& DataBuffer::operator=(DataBuffer&& other) noexcept
     other._ok = true;
     other._error_code = FT_ER_SUCCESSS;
     other.set_error_unlocked(FT_ER_SUCCESSS);
-    DataBuffer::restore_errno(this_guard, entry_errno);
-    DataBuffer::restore_errno(other_guard, entry_errno);
+    DataBuffer::restore_errno(this_guard, FT_ER_SUCCESSS);
+    DataBuffer::restore_errno(other_guard, FT_ER_SUCCESSS);
     return (*this);
 }
 
@@ -260,7 +256,7 @@ void DataBuffer::clear() noexcept
     this->_read_pos = 0;
     this->_ok = true;
     this->set_error_unlocked(FT_ER_SUCCESSS);
-    DataBuffer::restore_errno(guard, entry_errno);
+    DataBuffer::restore_errno(guard, FT_ER_SUCCESSS);
     return ;
 }
 
@@ -281,7 +277,7 @@ size_t DataBuffer::size() const noexcept
     }
     result = this->_buffer.size();
     this->set_error_unlocked(FT_ER_SUCCESSS);
-    DataBuffer::restore_errno(guard, entry_errno);
+    DataBuffer::restore_errno(guard, FT_ER_SUCCESSS);
     return (result);
 }
 
@@ -302,7 +298,7 @@ const ft_vector<uint8_t>& DataBuffer::data() const noexcept
     }
     buffer_reference = &this->_buffer;
     this->set_error_unlocked(FT_ER_SUCCESSS);
-    DataBuffer::restore_errno(guard, entry_errno);
+    DataBuffer::restore_errno(guard, FT_ER_SUCCESSS);
     return (*buffer_reference);
 }
 
@@ -323,7 +319,7 @@ size_t DataBuffer::tell() const noexcept
     }
     position = this->_read_pos;
     this->set_error_unlocked(FT_ER_SUCCESSS);
-    DataBuffer::restore_errno(guard, entry_errno);
+    DataBuffer::restore_errno(guard, FT_ER_SUCCESSS);
     return (position);
 }
 
@@ -346,12 +342,12 @@ bool DataBuffer::seek(size_t pos) noexcept
         this->_read_pos = pos;
         this->_ok = true;
         this->set_error_unlocked(FT_ER_SUCCESSS);
-        DataBuffer::restore_errno(guard, entry_errno);
+        DataBuffer::restore_errno(guard, FT_ER_SUCCESSS);
         return (true);
     }
     this->_ok = false;
     this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-    DataBuffer::restore_errno(guard, entry_errno);
+    DataBuffer::restore_errno(guard, ft_errno);
     return (false);
 }
 
@@ -373,7 +369,7 @@ DataBuffer::operator bool() const noexcept
     state = this->_ok;
     if (state)
         this->set_error_unlocked(FT_ER_SUCCESSS);
-    DataBuffer::restore_errno(guard, entry_errno);
+    DataBuffer::restore_errno(guard, state ? FT_ER_SUCCESSS : ft_errno);
     return (state);
 }
 
@@ -395,7 +391,7 @@ bool DataBuffer::good() const noexcept
     state = this->_ok;
     if (state)
         this->set_error_unlocked(FT_ER_SUCCESSS);
-    DataBuffer::restore_errno(guard, entry_errno);
+    DataBuffer::restore_errno(guard, state ? FT_ER_SUCCESSS : ft_errno);
     return (state);
 }
 
@@ -417,11 +413,11 @@ bool DataBuffer::bad() const noexcept
     if (this->_ok)
     {
         this->set_error_unlocked(FT_ER_SUCCESSS);
-        DataBuffer::restore_errno(guard, entry_errno);
+        DataBuffer::restore_errno(guard, FT_ER_SUCCESSS);
         return (false);
     }
     is_bad = true;
-    DataBuffer::restore_errno(guard, entry_errno);
+    DataBuffer::restore_errno(guard, FT_ER_SUCCESSS);
     return (is_bad);
 }
 
@@ -445,12 +441,12 @@ DataBuffer& DataBuffer::operator<<(size_t len)
     {
         this->_ok = false;
         this->set_error_unlocked(write_error);
-        DataBuffer::restore_errno(guard, entry_errno);
+        DataBuffer::restore_errno(guard, ft_errno);
         return (*this);
     }
     this->_ok = true;
     this->set_error_unlocked(FT_ER_SUCCESSS);
-    DataBuffer::restore_errno(guard, entry_errno);
+    DataBuffer::restore_errno(guard, FT_ER_SUCCESSS);
     return (*this);
 }
 
@@ -474,12 +470,12 @@ DataBuffer& DataBuffer::operator>>(size_t& len)
     {
         this->_ok = false;
         this->set_error_unlocked(read_error);
-        DataBuffer::restore_errno(guard, entry_errno);
+        DataBuffer::restore_errno(guard, ft_errno);
         return (*this);
     }
     this->_ok = true;
     this->set_error_unlocked(FT_ER_SUCCESSS);
-    DataBuffer::restore_errno(guard, entry_errno);
+    DataBuffer::restore_errno(guard, FT_ER_SUCCESSS);
     return (*this);
 }
 
@@ -499,7 +495,7 @@ int DataBuffer::get_error() const noexcept
         return (lock_error);
     }
     error_value = this->_error_code;
-    DataBuffer::restore_errno(guard, entry_errno);
+    DataBuffer::restore_errno(guard, FT_ER_SUCCESSS);
     return (error_value);
 }
 

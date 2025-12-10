@@ -91,7 +91,8 @@ ft_currency_rate::ft_currency_rate(const ft_currency_rate &other) noexcept
     ft_unique_lock<pt_mutex> self_guard;
     ft_unique_lock<pt_mutex> other_guard;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     if (ft_currency_rate::lock_pair(*this, other, self_guard, other_guard) != FT_ER_SUCCESSS)
     {
         this->set_error(self_guard.get_error());
@@ -117,7 +118,8 @@ ft_currency_rate &ft_currency_rate::operator=(const ft_currency_rate &other) noe
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     if (ft_currency_rate::lock_pair(*this, other, self_guard, other_guard) != FT_ER_SUCCESSS)
     {
         this->set_error(self_guard.get_error());
@@ -142,7 +144,8 @@ ft_currency_rate::ft_currency_rate(ft_currency_rate &&other) noexcept
     ft_unique_lock<pt_mutex> self_guard;
     ft_unique_lock<pt_mutex> other_guard;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     if (ft_currency_rate::lock_pair(*this, other, self_guard, other_guard) != FT_ER_SUCCESSS)
     {
         this->set_error(self_guard.get_error());
@@ -173,7 +176,8 @@ ft_currency_rate &ft_currency_rate::operator=(ft_currency_rate &&other) noexcept
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     if (ft_currency_rate::lock_pair(*this, other, self_guard, other_guard) != FT_ER_SUCCESSS)
     {
         this->set_error(self_guard.get_error());
@@ -201,7 +205,8 @@ int ft_currency_rate::get_currency_id() const noexcept
     int entry_errno;
     int identifier;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ER_SUCCESSS)
     {
@@ -219,7 +224,8 @@ void ft_currency_rate::set_currency_id(int currency_id) noexcept
 {
     int entry_errno;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ER_SUCCESSS)
     {
@@ -238,7 +244,8 @@ double ft_currency_rate::get_rate_to_base() const noexcept
     int entry_errno;
     double rate_value;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ER_SUCCESSS)
     {
@@ -256,7 +263,8 @@ void ft_currency_rate::set_rate_to_base(double rate_to_base) noexcept
 {
     int entry_errno;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ER_SUCCESSS)
     {
@@ -275,7 +283,8 @@ int ft_currency_rate::get_display_precision() const noexcept
     int entry_errno;
     int precision;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ER_SUCCESSS)
     {
@@ -293,7 +302,8 @@ void ft_currency_rate::set_display_precision(int display_precision) noexcept
 {
     int entry_errno;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ER_SUCCESSS)
     {
@@ -312,7 +322,8 @@ int ft_currency_rate::get_error() const noexcept
     int entry_errno;
     int error_value;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ER_SUCCESSS)
     {

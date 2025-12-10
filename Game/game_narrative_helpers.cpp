@@ -4,11 +4,8 @@
 
 void game_narrative_sleep_backoff()
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     pt_thread_sleep(1);
-    ft_errno = entry_errno;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 

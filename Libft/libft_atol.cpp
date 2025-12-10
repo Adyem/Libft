@@ -12,12 +12,12 @@ long ft_atol(const char *string)
     const unsigned long long negative_limit = static_cast<unsigned long long>(FT_LONG_MAX) + 1ULL;
     bool digit_found = false;
 
+    ft_errno = FT_ER_SUCCESSS;
     if (string == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
-    ft_errno = FT_ER_SUCCESSS;
     while (string[index] == ' ' || ((string[index] >= '\t')
             && (string[index] <= '\r')))
         index++;
@@ -71,6 +71,18 @@ long ft_atol(const char *string)
     }
     if (string[index] != '\0')
         ft_errno = FT_ERR_INVALID_ARGUMENT;
+    if (ft_errno != FT_ER_SUCCESSS)
+    {
+        if (sign == -1)
+        {
+            if (result == negative_limit)
+                return (FT_LONG_MIN);
+            long signed_result = -static_cast<long>(result);
+
+            return (signed_result);
+        }
+        return (static_cast<long>(result));
+    }
     if (sign == -1)
     {
         if (result == negative_limit)

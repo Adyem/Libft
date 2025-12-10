@@ -70,8 +70,8 @@ void    time_info_teardown_thread_safety(t_time_info *time_info)
 int time_info_lock(const t_time_info *time_info, bool *lock_acquired)
 {
     t_time_info *mutable_info;
-    int          entry_errno;
 
+    ft_errno = FT_ER_SUCCESSS;
     if (lock_acquired)
         *lock_acquired = false;
     if (!time_info)
@@ -79,11 +79,9 @@ int time_info_lock(const t_time_info *time_info, bool *lock_acquired)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    entry_errno = ft_errno;
     mutable_info = const_cast<t_time_info *>(time_info);
     if (!mutable_info->thread_safe_enabled || !mutable_info->mutex)
     {
-        ft_errno = entry_errno;
         return (0);
     }
     mutable_info->mutex->lock(THREAD_ID);
@@ -94,28 +92,25 @@ int time_info_lock(const t_time_info *time_info, bool *lock_acquired)
     }
     if (lock_acquired)
         *lock_acquired = true;
-    ft_errno = entry_errno;
     return (0);
 }
 
 void    time_info_unlock(const t_time_info *time_info, bool lock_acquired)
 {
     t_time_info *mutable_info;
-    int          entry_errno;
 
     if (!time_info || !lock_acquired)
         return ;
     mutable_info = const_cast<t_time_info *>(time_info);
     if (!mutable_info->mutex)
         return ;
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
     mutable_info->mutex->unlock(THREAD_ID);
     if (mutable_info->mutex->get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = mutable_info->mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
     return ;
 }
 

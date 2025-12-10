@@ -793,10 +793,9 @@ bool ft_map<Key, MappedType>::is_thread_safe_enabled() const
 template <typename Key, typename MappedType>
 int ft_map<Key, MappedType>::lock(bool *lock_acquired) const
 {
-    int entry_errno;
     int result;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
     {
@@ -804,16 +803,13 @@ int ft_map<Key, MappedType>::lock(bool *lock_acquired) const
         return (result);
     }
     this->_error_code = FT_ER_SUCCESSS;
-    ft_errno = entry_errno;
     return (result);
 }
 
 template <typename Key, typename MappedType>
 void ft_map<Key, MappedType>::unlock(bool lock_acquired) const
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
     this->unlock_internal(lock_acquired);
     if (lock_acquired && this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != FT_ER_SUCCESSS)
     {
@@ -821,7 +817,6 @@ void ft_map<Key, MappedType>::unlock(bool lock_acquired) const
         return ;
     }
     this->_error_code = FT_ER_SUCCESSS;
-    ft_errno = entry_errno;
     return ;
 }
 
@@ -878,14 +873,11 @@ size_t ft_map<Key, MappedType>::find_index_unlocked(const Key& key) const
 template <typename Key, typename MappedType>
 int ft_map<Key, MappedType>::lock_internal(bool *lock_acquired) const
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
     {
-        ft_errno = entry_errno;
         return (0);
     }
     this->_state_mutex->lock(THREAD_ID);
@@ -896,25 +888,21 @@ int ft_map<Key, MappedType>::lock_internal(bool *lock_acquired) const
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = entry_errno;
     return (0);
 }
 
 template <typename Key, typename MappedType>
 void ft_map<Key, MappedType>::unlock_internal(bool lock_acquired) const
 {
-    int entry_errno;
-
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
         return ;
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
     this->_state_mutex->unlock(THREAD_ID);
     if (this->_state_mutex->get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = this->_state_mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
     return ;
 }
 

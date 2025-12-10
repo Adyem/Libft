@@ -259,9 +259,10 @@ void ft_trie<ValueType>::set_error(int error) const
 template <typename ValueType>
 void ft_trie<ValueType>::set_success_preserve_errno(int entry_errno) const
 {
+    (void)entry_errno;
     this->_last_error = FT_ER_SUCCESSS;
     this->_error_code = FT_ER_SUCCESSS;
-    ft_errno = entry_errno;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 
@@ -336,16 +337,15 @@ bool ft_trie<ValueType>::is_thread_safe_enabled() const
 template <typename ValueType>
 int ft_trie<ValueType>::lock(bool *lock_acquired) const
 {
-    int entry_errno;
     int result;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
         const_cast<ft_trie<ValueType> *>(this)->set_error(ft_errno);
     else
     {
-        this->set_success_preserve_errno(entry_errno);
+        this->set_success_preserve_errno(ft_errno);
     }
     return (result);
 }
@@ -353,10 +353,9 @@ int ft_trie<ValueType>::lock(bool *lock_acquired) const
 template <typename ValueType>
 void ft_trie<ValueType>::unlock(bool lock_acquired) const
 {
-    int entry_errno;
     int mutex_error;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
     this->unlock_internal(lock_acquired);
     mutex_error = FT_ER_SUCCESSS;
     if (this->_state_mutex != ft_nullptr)
@@ -365,7 +364,7 @@ void ft_trie<ValueType>::unlock(bool lock_acquired) const
         const_cast<ft_trie<ValueType> *>(this)->set_error(mutex_error);
     else
     {
-        this->set_success_preserve_errno(entry_errno);
+        this->set_success_preserve_errno(ft_errno);
     }
     return ;
 }
@@ -395,18 +394,15 @@ int ft_trie<ValueType>::lock_internal(bool *lock_acquired) const
 template <typename ValueType>
 void ft_trie<ValueType>::unlock_internal(bool lock_acquired) const
 {
-    int entry_errno;
-
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
         return ;
-    entry_errno = ft_errno;
     this->_state_mutex->unlock(THREAD_ID);
     if (this->_state_mutex->get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = this->_state_mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 
