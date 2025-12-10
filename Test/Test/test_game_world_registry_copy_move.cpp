@@ -6,7 +6,7 @@
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
 
-FT_TEST(test_world_registry_register_world_restores_errno, "register_world keeps incoming errno unchanged on success")
+FT_TEST(test_world_registry_register_world_sets_errno_success, "register_world resets incoming errno to success on success")
 {
     ft_world_registry registry;
     ft_vector<int> region_ids;
@@ -16,7 +16,7 @@ FT_TEST(test_world_registry_register_world_restores_errno, "register_world keeps
     world = ft_world_region(4, region_ids);
     ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
     FT_ASSERT_EQ(ER_SUCCESS, registry.register_world(world));
-    FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(ER_SUCCESS, registry.get_error());
     return (1);
 }

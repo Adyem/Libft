@@ -54,23 +54,21 @@ FT_TEST(test_html_attr_prepare_thread_safety_restores_mutex,
     return (1);
 }
 
-FT_TEST(test_html_attr_lock_preserves_errno,
-        "html_attr_lock unlock cycle preserves ft_errno")
+FT_TEST(test_html_attr_lock_resets_errno,
+        "html_attr_lock unlock cycle sets ft_errno to success")
 {
     html_attr *attribute;
     bool       lock_acquired;
-    int        saved_errno;
 
     attribute = html_create_attr("data", "value");
     FT_ASSERT(attribute != ft_nullptr);
-    saved_errno = FT_ERR_INVALID_ARGUMENT;
-    ft_errno = saved_errno;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     lock_acquired = false;
     FT_ASSERT_EQ(0, html_attr_lock(attribute, &lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(saved_errno, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     html_attr_unlock(attribute, lock_acquired);
-    FT_ASSERT_EQ(saved_errno, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     release_html_attribute(attribute);
     return (1);
 }
@@ -125,12 +123,12 @@ FT_TEST(test_html_attr_lock_null_sets_errno,
     return (1);
 }
 
-FT_TEST(test_html_attr_unlock_null_keeps_errno,
-        "html_attr_unlock ignores null attributes without mutating ft_errno")
+FT_TEST(test_html_attr_unlock_null_resets_errno,
+        "html_attr_unlock null attribute resets ft_errno to success")
 {
     ft_errno = FT_ERR_INVALID_OPERATION;
     html_attr_unlock(ft_nullptr, true);
-    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 

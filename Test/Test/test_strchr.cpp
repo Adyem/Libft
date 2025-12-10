@@ -61,7 +61,7 @@ FT_TEST(test_strchr_negative_value, "ft_strchr handles negative search values")
     return (1);
 }
 
-FT_TEST(test_strchr_not_found_preserves_errno, "ft_strchr clears errno when character missing")
+FT_TEST(test_strchr_not_found_resets_errno, "ft_strchr clears errno when character missing")
 {
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(ft_nullptr, ft_strchr("sample", 'z'));

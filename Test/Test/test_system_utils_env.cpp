@@ -26,11 +26,11 @@ FT_TEST(test_su_putenv_success_clears_error, "su_putenv success clears ft_errno"
     return (1);
 }
 
-FT_TEST(test_su_putenv_forced_failure_propagates_error, "su_putenv forced failure keeps cmp_putenv errno")
+FT_TEST(test_su_putenv_forced_failure_overwrites_errno, "su_putenv forced failure sets errno from cmp_putenv")
 {
     static char environment_entry[] = "FT_TEST_SU_PUTENV_FAIL=1";
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     cmp_set_force_putenv_result(-1, EACCES);
     FT_ASSERT_EQ(-1, su_putenv(environment_entry));
     FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, ft_errno);

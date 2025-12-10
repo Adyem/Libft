@@ -4,17 +4,14 @@
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_runner.hpp"
 
-FT_TEST(test_cma_set_alloc_limit_preserves_errno,
-        "cma_set_alloc_limit keeps ft_errno intact when locking")
+FT_TEST(test_cma_set_alloc_limit_resets_errno,
+        "cma_set_alloc_limit sets ft_errno to success when locking")
 {
-    int original_errno;
-
     cma_set_thread_safety(true);
     cma_set_alloc_limit(0);
     ft_errno = FT_ERR_INVALID_ARGUMENT;
-    original_errno = ft_errno;
     cma_set_alloc_limit(64);
-    FT_ASSERT_EQ(original_errno, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     cma_set_alloc_limit(0);
     return (1);
 }

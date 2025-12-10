@@ -3,7 +3,7 @@
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 
-FT_TEST(test_time_fps_get_frames_restores_errno, "time_fps get_frames_per_second restores ft_errno")
+FT_TEST(test_time_fps_get_frames_sets_errno_success, "time_fps get_frames_per_second resets ft_errno to success")
 {
     time_fps    frames_per_second(30);
     long        value;
