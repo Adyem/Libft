@@ -6,13 +6,14 @@
 #include "../PThread/pthread.hpp"
 
 html_document::thread_guard::thread_guard(const html_document *document) noexcept
-    : _document(document), _lock_acquired(false), _status(0), _entry_errno(ft_errno)
+    : _document(document), _lock_acquired(false), _status(0)
 {
+    ft_errno = FT_ER_SUCCESSS;
     if (!this->_document)
         return ;
     this->_status = this->_document->lock(&this->_lock_acquired);
     if (this->_status == 0)
-        ft_errno = this->_entry_errno;
+        ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 
@@ -540,9 +541,13 @@ void html_document::unlock(bool lock_acquired) const noexcept
 {
     int entry_errno;
 
+    ft_errno = FT_ER_SUCCESSS;
     if (!lock_acquired || !this->_thread_safe_enabled || !this->_mutex)
+    {
+        ft_errno = FT_ER_SUCCESSS;
         return ;
-    entry_errno = ft_errno;
+    }
+    entry_errno = FT_ER_SUCCESSS;
     this->_mutex->unlock(THREAD_ID);
     if (this->_mutex->get_error() != FT_ER_SUCCESSS)
     {

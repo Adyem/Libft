@@ -70,8 +70,8 @@ void    time_duration_ms_teardown_thread_safety(t_duration_milliseconds *duratio
 int time_duration_ms_lock(const t_duration_milliseconds *duration, bool *lock_acquired)
 {
     t_duration_milliseconds  *mutable_duration;
-    int                        entry_errno;
 
+    ft_errno = FT_ER_SUCCESSS;
     if (lock_acquired)
         *lock_acquired = false;
     if (!duration)
@@ -79,11 +79,9 @@ int time_duration_ms_lock(const t_duration_milliseconds *duration, bool *lock_ac
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    entry_errno = ft_errno;
     mutable_duration = const_cast<t_duration_milliseconds *>(duration);
     if (!mutable_duration->thread_safe_enabled || !mutable_duration->mutex)
     {
-        ft_errno = entry_errno;
         return (0);
     }
     mutable_duration->mutex->lock(THREAD_ID);
@@ -94,28 +92,25 @@ int time_duration_ms_lock(const t_duration_milliseconds *duration, bool *lock_ac
     }
     if (lock_acquired)
         *lock_acquired = true;
-    ft_errno = entry_errno;
     return (0);
 }
 
 void    time_duration_ms_unlock(const t_duration_milliseconds *duration, bool lock_acquired)
 {
     t_duration_milliseconds  *mutable_duration;
-    int                        entry_errno;
 
     if (!duration || !lock_acquired)
         return ;
     mutable_duration = const_cast<t_duration_milliseconds *>(duration);
     if (!mutable_duration->mutex)
         return ;
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
     mutable_duration->mutex->unlock(THREAD_ID);
     if (mutable_duration->mutex->get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = mutable_duration->mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
     return ;
 }
 

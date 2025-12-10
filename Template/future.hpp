@@ -917,10 +917,9 @@ bool ft_future<ValueType>::is_thread_safe_enabled() const
 template <typename ValueType>
 int ft_future<ValueType>::lock(bool *lock_acquired) const
 {
-    int entry_errno;
     int result;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
     {
@@ -928,22 +927,20 @@ int ft_future<ValueType>::lock(bool *lock_acquired) const
         return (result);
     }
     const_cast<ft_future<ValueType> *>(this)->_error_code = FT_ER_SUCCESSS;
-    ft_errno = entry_errno;
     return (result);
 }
 
 template <typename ValueType>
 void ft_future<ValueType>::unlock(bool lock_acquired) const
 {
-    int entry_errno;
     int mutex_error;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
     this->unlock_internal(lock_acquired);
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
     {
         const_cast<ft_future<ValueType> *>(this)->_error_code = FT_ER_SUCCESSS;
-        ft_errno = entry_errno;
+        ft_errno = FT_ER_SUCCESSS;
         return ;
     }
     mutex_error = this->_state_mutex->get_error();
@@ -953,7 +950,7 @@ void ft_future<ValueType>::unlock(bool lock_acquired) const
         return ;
     }
     const_cast<ft_future<ValueType> *>(this)->_error_code = FT_ER_SUCCESSS;
-    ft_errno = entry_errno;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 
@@ -1070,10 +1067,9 @@ inline bool ft_future<void>::is_thread_safe_enabled() const
 
 inline int ft_future<void>::lock(bool *lock_acquired) const
 {
-    int entry_errno;
     int result;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
     {
@@ -1081,21 +1077,19 @@ inline int ft_future<void>::lock(bool *lock_acquired) const
         return (result);
     }
     const_cast<ft_future<void> *>(this)->_error_code = FT_ER_SUCCESSS;
-    ft_errno = entry_errno;
     return (result);
 }
 
 inline void ft_future<void>::unlock(bool lock_acquired) const
 {
-    int entry_errno;
     int mutex_error;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
     this->unlock_internal(lock_acquired);
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
     {
         const_cast<ft_future<void> *>(this)->_error_code = FT_ER_SUCCESSS;
-        ft_errno = entry_errno;
+        ft_errno = FT_ER_SUCCESSS;
         return ;
     }
     mutex_error = this->_state_mutex->get_error();
@@ -1105,7 +1099,7 @@ inline void ft_future<void>::unlock(bool lock_acquired) const
         return ;
     }
     const_cast<ft_future<void> *>(this)->_error_code = FT_ER_SUCCESSS;
-    ft_errno = entry_errno;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 

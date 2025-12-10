@@ -10,6 +10,7 @@ int socket_config_prepare_thread_safety(SocketConfig *config)
     pt_mutex *mutex_pointer;
     void     *memory;
 
+    ft_errno = FT_ER_SUCCESSS;
     if (config == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
@@ -45,6 +46,7 @@ int socket_config_prepare_thread_safety(SocketConfig *config)
 
 void socket_config_teardown_thread_safety(SocketConfig *config)
 {
+    ft_errno = FT_ER_SUCCESSS;
     if (config == ft_nullptr)
         return ;
     if (config->_mutex != ft_nullptr)
@@ -61,6 +63,7 @@ int socket_config_lock(const SocketConfig *config, bool *lock_acquired)
 {
     SocketConfig *mutable_config;
 
+    ft_errno = FT_ER_SUCCESSS;
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (config == ft_nullptr)
@@ -91,6 +94,7 @@ void socket_config_unlock(const SocketConfig *config, bool lock_acquired)
     SocketConfig *mutable_config;
     int           entry_errno;
 
+    ft_errno = FT_ER_SUCCESSS;
     if (config == ft_nullptr || lock_acquired == false)
         return ;
     mutable_config = const_cast<SocketConfig *>(config);

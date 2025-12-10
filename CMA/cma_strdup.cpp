@@ -12,7 +12,10 @@ char    *cma_strdup(const char *string)
     ft_size_t   allocation_size;
 
     if (!string)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
+    }
     ft_errno = FT_ER_SUCCESSS;
     measured_length_raw = ft_strlen_size_t(string);
     if (ft_errno != FT_ER_SUCCESSS)

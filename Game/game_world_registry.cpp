@@ -16,7 +16,7 @@ void ft_world_registry::copy_registry_unlocked(const ft_world_registry &other) n
 {
     int entry_errno;
 
-    entry_errno = ft_errno;
+    entry_errno = FT_ER_SUCCESSS;
     this->_regions = other._regions;
     this->_world_regions = other._world_regions;
     this->_error_code = other._error_code;
@@ -30,7 +30,7 @@ ft_world_registry::ft_world_registry(const ft_world_registry &other) noexcept
 {
     int entry_errno;
 
-    entry_errno = ft_errno;
+    entry_errno = FT_ER_SUCCESSS;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ER_SUCCESSS)
     {
@@ -51,7 +51,7 @@ ft_world_registry &ft_world_registry::operator=(const ft_world_registry &other) 
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
+    entry_errno = FT_ER_SUCCESSS;
     this_guard = ft_unique_lock<pt_mutex>(this->_mutex);
     if (this_guard.get_error() != FT_ER_SUCCESSS)
     {
@@ -78,7 +78,7 @@ ft_world_registry::ft_world_registry(ft_world_registry &&other) noexcept
 {
     int entry_errno;
 
-    entry_errno = ft_errno;
+    entry_errno = FT_ER_SUCCESSS;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ER_SUCCESSS)
     {
@@ -104,7 +104,7 @@ ft_world_registry &ft_world_registry::operator=(ft_world_registry &&other) noexc
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
+    entry_errno = FT_ER_SUCCESSS;
     this_guard = ft_unique_lock<pt_mutex>(this->_mutex);
     if (this_guard.get_error() != FT_ER_SUCCESSS)
     {
@@ -136,7 +136,7 @@ int ft_world_registry::register_region(const ft_region_definition &region) noexc
     int entry_errno;
     int identifier;
 
-    entry_errno = ft_errno;
+    entry_errno = FT_ER_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ER_SUCCESSS)
     {
@@ -162,7 +162,7 @@ int ft_world_registry::register_world(const ft_world_region &world_region) noexc
     int entry_errno;
     int identifier;
 
-    entry_errno = ft_errno;
+    entry_errno = FT_ER_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ER_SUCCESSS)
     {
@@ -292,9 +292,6 @@ const ft_map<int, ft_world_region> &ft_world_registry::get_world_regions() const
 
 void ft_world_registry::set_world_regions(const ft_map<int, ft_world_region> &world_regions) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ER_SUCCESSS)
     {
@@ -303,7 +300,7 @@ void ft_world_registry::set_world_regions(const ft_map<int, ft_world_region> &wo
     }
     this->_world_regions = world_regions;
     this->_error_code = this->_world_regions.get_error();
-    game_narrative_restore_errno(guard, entry_errno);
+    this->set_error(this->_error_code);
     return ;
 }
 

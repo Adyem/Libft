@@ -126,7 +126,7 @@ void cma_allocator_guard::unlock()
     this->_active = false;
     this->set_error(release_error);
     if (release_error == FT_ER_SUCCESSS)
-        ft_errno = entry_errno;
+        ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 

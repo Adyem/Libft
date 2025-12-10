@@ -54,7 +54,6 @@ class xml_document
                 const xml_document *_document;
                 bool _lock_acquired;
                 int _status;
-                int _entry_errno;
 
             public:
                 thread_guard(const xml_document *document) noexcept;
