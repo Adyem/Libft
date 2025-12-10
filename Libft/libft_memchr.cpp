@@ -8,7 +8,7 @@ void* ft_memchr(const void* pointer, int number, size_t size)
     const unsigned char *string;
     unsigned char character;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     if (size == 0)
         return (ft_nullptr);
     if (pointer == ft_nullptr)

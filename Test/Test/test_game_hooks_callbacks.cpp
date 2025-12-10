@@ -89,6 +89,6 @@ FT_TEST(test_game_hooks_invoke_callbacks, "Game: hooks dispatch registered callb
     FT_ASSERT_EQ(1, high_priority_step);
     FT_ASSERT_EQ(2, legacy_step);
     FT_ASSERT_EQ(3, low_priority_step);
-    FT_ASSERT_EQ(ER_SUCCESS, hooks.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, hooks.get_error());
     return (1);
 }

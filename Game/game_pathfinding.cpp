@@ -27,9 +27,9 @@ static void game_pathfinding_restore_errno(ft_unique_lock<pt_mutex> &guard,
 }
 
 ft_path_step::ft_path_step() noexcept
-    : _x(0), _y(0), _z(0), _error_code(ER_SUCCESS), _mutex()
+    : _x(0), _y(0), _z(0), _error_code(FT_ER_SUCCESSS), _mutex()
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -51,15 +51,15 @@ int ft_path_step::lock_pair(const ft_path_step &first,
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != ER_SUCCESS)
+        if (single_guard.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = ER_SUCCESS;
-        return (ER_SUCCESS);
+        ft_errno = FT_ER_SUCCESSS;
+        return (FT_ER_SUCCESSS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -77,13 +77,13 @@ int ft_path_step::lock_pair(const ft_path_step &first,
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != ER_SUCCESS)
+        if (lower_guard.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == ER_SUCCESS)
+        if (upper_guard.get_error() == FT_ER_SUCCESSS)
         {
             if (!swapped)
             {
@@ -95,8 +95,8 @@ int ft_path_step::lock_pair(const ft_path_step &first,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = ER_SUCCESS;
-            return (ER_SUCCESS);
+            ft_errno = FT_ER_SUCCESSS;
+            return (FT_ER_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -110,13 +110,13 @@ int ft_path_step::lock_pair(const ft_path_step &first,
 }
 
 ft_path_step::ft_path_step(const ft_path_step &other) noexcept
-    : _x(0), _y(0), _z(0), _error_code(ER_SUCCESS), _mutex()
+    : _x(0), _y(0), _z(0), _error_code(FT_ER_SUCCESSS), _mutex()
 {
     int entry_errno;
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != ER_SUCCESS)
+    if (other_guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
         game_pathfinding_restore_errno(other_guard, entry_errno);
@@ -142,7 +142,7 @@ ft_path_step &ft_path_step::operator=(const ft_path_step &other) noexcept
         return (*this);
     entry_errno = ft_errno;
     lock_error = ft_path_step::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -158,13 +158,13 @@ ft_path_step &ft_path_step::operator=(const ft_path_step &other) noexcept
 }
 
 ft_path_step::ft_path_step(ft_path_step &&other) noexcept
-    : _x(0), _y(0), _z(0), _error_code(ER_SUCCESS), _mutex()
+    : _x(0), _y(0), _z(0), _error_code(FT_ER_SUCCESSS), _mutex()
 {
     int entry_errno;
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != ER_SUCCESS)
+    if (other_guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
         game_pathfinding_restore_errno(other_guard, entry_errno);
@@ -177,9 +177,9 @@ ft_path_step::ft_path_step(ft_path_step &&other) noexcept
     other._x = 0;
     other._y = 0;
     other._z = 0;
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     this->set_error(this->_error_code);
-    other.set_error(ER_SUCCESS);
+    other.set_error(FT_ER_SUCCESSS);
     game_pathfinding_restore_errno(other_guard, entry_errno);
     return ;
 }
@@ -195,7 +195,7 @@ ft_path_step &ft_path_step::operator=(ft_path_step &&other) noexcept
         return (*this);
     entry_errno = ft_errno;
     lock_error = ft_path_step::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -207,9 +207,9 @@ ft_path_step &ft_path_step::operator=(ft_path_step &&other) noexcept
     other._x = 0;
     other._y = 0;
     other._z = 0;
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     this->set_error(this->_error_code);
-    other.set_error(ER_SUCCESS);
+    other.set_error(FT_ER_SUCCESSS);
     game_pathfinding_restore_errno(this_guard, entry_errno);
     game_pathfinding_restore_errno(other_guard, entry_errno);
     return (*this);
@@ -221,7 +221,7 @@ int ft_path_step::set_coordinates(size_t x, size_t y, size_t z) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_pathfinding_restore_errno(guard, entry_errno);
@@ -230,9 +230,9 @@ int ft_path_step::set_coordinates(size_t x, size_t y, size_t z) noexcept
     this->_x = x;
     this->_y = y;
     this->_z = z;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_pathfinding_restore_errno(guard, entry_errno);
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 int ft_path_step::set_x(size_t x) noexcept
@@ -241,16 +241,16 @@ int ft_path_step::set_x(size_t x) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_pathfinding_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     this->_x = x;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_pathfinding_restore_errno(guard, entry_errno);
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 int ft_path_step::set_y(size_t y) noexcept
@@ -259,16 +259,16 @@ int ft_path_step::set_y(size_t y) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_pathfinding_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     this->_y = y;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_pathfinding_restore_errno(guard, entry_errno);
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 int ft_path_step::set_z(size_t z) noexcept
@@ -277,16 +277,16 @@ int ft_path_step::set_z(size_t z) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_pathfinding_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     this->_z = z;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     game_pathfinding_restore_errno(guard, entry_errno);
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 size_t ft_path_step::get_x() const noexcept
@@ -296,14 +296,14 @@ size_t ft_path_step::get_x() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_path_step *>(this)->set_error(guard.get_error());
         game_pathfinding_restore_errno(guard, entry_errno);
         return (0);
     }
     value = this->_x;
-    const_cast<ft_path_step *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_path_step *>(this)->set_error(FT_ER_SUCCESSS);
     game_pathfinding_restore_errno(guard, entry_errno);
     return (value);
 }
@@ -315,14 +315,14 @@ size_t ft_path_step::get_y() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_path_step *>(this)->set_error(guard.get_error());
         game_pathfinding_restore_errno(guard, entry_errno);
         return (0);
     }
     value = this->_y;
-    const_cast<ft_path_step *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_path_step *>(this)->set_error(FT_ER_SUCCESSS);
     game_pathfinding_restore_errno(guard, entry_errno);
     return (value);
 }
@@ -334,14 +334,14 @@ size_t ft_path_step::get_z() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_path_step *>(this)->set_error(guard.get_error());
         game_pathfinding_restore_errno(guard, entry_errno);
         return (0);
     }
     value = this->_z;
-    const_cast<ft_path_step *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_path_step *>(this)->set_error(FT_ER_SUCCESSS);
     game_pathfinding_restore_errno(guard, entry_errno);
     return (value);
 }
@@ -353,7 +353,7 @@ int ft_path_step::get_error() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_path_step *>(this)->set_error(guard.get_error());
         game_pathfinding_restore_errno(guard, entry_errno);
@@ -372,7 +372,7 @@ const char *ft_path_step::get_error_str() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_path_step *>(this)->set_error(guard.get_error());
         game_pathfinding_restore_errno(guard, entry_errno);
@@ -392,9 +392,9 @@ void ft_path_step::set_error(int error) const noexcept
 }
 
 ft_pathfinding::ft_pathfinding() noexcept
-    : _error_code(ER_SUCCESS), _current_path(), _needs_replan(false), _mutex()
+    : _error_code(FT_ER_SUCCESSS), _current_path(), _needs_replan(false), _mutex()
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -429,15 +429,15 @@ int ft_pathfinding::lock_pair(const ft_pathfinding &first,
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != ER_SUCCESS)
+        if (single_guard.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = ER_SUCCESS;
-        return (ER_SUCCESS);
+        ft_errno = FT_ER_SUCCESSS;
+        return (FT_ER_SUCCESSS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -455,13 +455,13 @@ int ft_pathfinding::lock_pair(const ft_pathfinding &first,
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != ER_SUCCESS)
+        if (lower_guard.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == ER_SUCCESS)
+        if (upper_guard.get_error() == FT_ER_SUCCESSS)
         {
             if (!swapped)
             {
@@ -473,8 +473,8 @@ int ft_pathfinding::lock_pair(const ft_pathfinding &first,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = ER_SUCCESS;
-            return (ER_SUCCESS);
+            ft_errno = FT_ER_SUCCESSS;
+            return (FT_ER_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -488,14 +488,14 @@ int ft_pathfinding::lock_pair(const ft_pathfinding &first,
 }
 
 ft_pathfinding::ft_pathfinding(const ft_pathfinding &other) noexcept
-    : _error_code(ER_SUCCESS), _current_path(), _needs_replan(false), _mutex()
+    : _error_code(FT_ER_SUCCESSS), _current_path(), _needs_replan(false), _mutex()
 {
     int entry_errno;
     size_t index;
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != ER_SUCCESS)
+    if (other_guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
         ft_pathfinding::restore_errno(other_guard, entry_errno);
@@ -505,7 +505,7 @@ ft_pathfinding::ft_pathfinding(const ft_pathfinding &other) noexcept
     while (index < other._current_path.size())
     {
         this->_current_path.push_back(other._current_path[index]);
-        if (this->_current_path.get_error() != ER_SUCCESS)
+        if (this->_current_path.get_error() != FT_ER_SUCCESSS)
         {
             this->set_error(this->_current_path.get_error());
             ft_pathfinding::restore_errno(other_guard, entry_errno);
@@ -532,7 +532,7 @@ ft_pathfinding &ft_pathfinding::operator=(const ft_pathfinding &other) noexcept
         return (*this);
     entry_errno = ft_errno;
     lock_error = ft_pathfinding::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -542,7 +542,7 @@ ft_pathfinding &ft_pathfinding::operator=(const ft_pathfinding &other) noexcept
     while (index < other._current_path.size())
     {
         this->_current_path.push_back(other._current_path[index]);
-        if (this->_current_path.get_error() != ER_SUCCESS)
+        if (this->_current_path.get_error() != FT_ER_SUCCESSS)
         {
             this->set_error(this->_current_path.get_error());
             ft_pathfinding::restore_errno(this_guard, entry_errno);
@@ -560,20 +560,20 @@ ft_pathfinding &ft_pathfinding::operator=(const ft_pathfinding &other) noexcept
 }
 
 ft_pathfinding::ft_pathfinding(ft_pathfinding &&other) noexcept
-    : _error_code(ER_SUCCESS), _current_path(), _needs_replan(false), _mutex()
+    : _error_code(FT_ER_SUCCESSS), _current_path(), _needs_replan(false), _mutex()
 {
     int entry_errno;
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != ER_SUCCESS)
+    if (other_guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
         ft_pathfinding::restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_current_path = ft_move(other._current_path);
-    if (this->_current_path.get_error() != ER_SUCCESS)
+    if (this->_current_path.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(this->_current_path.get_error());
         other.set_error(this->_current_path.get_error());
@@ -582,10 +582,10 @@ ft_pathfinding::ft_pathfinding(ft_pathfinding &&other) noexcept
     }
     this->_error_code = other._error_code;
     this->_needs_replan = other._needs_replan;
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     other._needs_replan = false;
     this->set_error(this->_error_code);
-    other.set_error(ER_SUCCESS);
+    other.set_error(FT_ER_SUCCESSS);
     ft_pathfinding::restore_errno(other_guard, entry_errno);
     return ;
 }
@@ -601,13 +601,13 @@ ft_pathfinding &ft_pathfinding::operator=(ft_pathfinding &&other) noexcept
         return (*this);
     entry_errno = ft_errno;
     lock_error = ft_pathfinding::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         return (*this);
     }
     this->_current_path = ft_move(other._current_path);
-    if (this->_current_path.get_error() != ER_SUCCESS)
+    if (this->_current_path.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(this->_current_path.get_error());
         other.set_error(this->_current_path.get_error());
@@ -617,10 +617,10 @@ ft_pathfinding &ft_pathfinding::operator=(ft_pathfinding &&other) noexcept
     }
     this->_error_code = other._error_code;
     this->_needs_replan = other._needs_replan;
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     other._needs_replan = false;
     this->set_error(this->_error_code);
-    other.set_error(ER_SUCCESS);
+    other.set_error(FT_ER_SUCCESSS);
     ft_pathfinding::restore_errno(this_guard, entry_errno);
     ft_pathfinding::restore_errno(other_guard, entry_errno);
     return (*this);
@@ -641,7 +641,7 @@ void ft_pathfinding::update_obstacle(size_t x, size_t y, size_t z, int value) no
     (void)value;
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         ft_pathfinding::restore_errno(guard, entry_errno);
@@ -656,21 +656,21 @@ void ft_pathfinding::update_obstacle(size_t x, size_t y, size_t z, int value) no
         size_t step_z;
 
         step_x = step.get_x();
-        if (step.get_error() != ER_SUCCESS)
+        if (step.get_error() != FT_ER_SUCCESSS)
         {
             this->set_error(step.get_error());
             ft_pathfinding::restore_errno(guard, entry_errno);
             return ;
         }
         step_y = step.get_y();
-        if (step.get_error() != ER_SUCCESS)
+        if (step.get_error() != FT_ER_SUCCESSS)
         {
             this->set_error(step.get_error());
             ft_pathfinding::restore_errno(guard, entry_errno);
             return ;
         }
         step_z = step.get_z();
-        if (step.get_error() != ER_SUCCESS)
+        if (step.get_error() != FT_ER_SUCCESSS)
         {
             this->set_error(step.get_error());
             ft_pathfinding::restore_errno(guard, entry_errno);
@@ -680,7 +680,7 @@ void ft_pathfinding::update_obstacle(size_t x, size_t y, size_t z, int value) no
             this->_needs_replan = true;
         index += 1;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     ft_pathfinding::restore_errno(guard, entry_errno);
     return ;
 }
@@ -697,7 +697,7 @@ int ft_pathfinding::recalculate_path(const ft_map3d &grid,
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         ft_pathfinding::restore_errno(guard, entry_errno);
@@ -710,7 +710,7 @@ int ft_pathfinding::recalculate_path(const ft_map3d &grid,
         while (index < this->_current_path.size())
         {
             out_path.push_back(this->_current_path[index]);
-            if (out_path.get_error() != ER_SUCCESS)
+            if (out_path.get_error() != FT_ER_SUCCESSS)
             {
                 this->set_error(out_path.get_error());
                 ft_pathfinding::restore_errno(guard, entry_errno);
@@ -718,17 +718,17 @@ int ft_pathfinding::recalculate_path(const ft_map3d &grid,
             }
             index += 1;
         }
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
         ft_pathfinding::restore_errno(guard, entry_errno);
-        return (ER_SUCCESS);
+        return (FT_ER_SUCCESSS);
     }
-    unlock_error = ER_SUCCESS;
+    unlock_error = FT_ER_SUCCESSS;
     if (guard.owns_lock())
     {
         guard.unlock();
         unlock_error = guard.get_error();
     }
-    if (unlock_error != ER_SUCCESS)
+    if (unlock_error != FT_ER_SUCCESSS)
     {
         this->set_error(unlock_error);
         ft_errno = entry_errno;
@@ -738,20 +738,20 @@ int ft_pathfinding::recalculate_path(const ft_map3d &grid,
     result = this->astar_grid(grid, start_x, start_y, start_z,
             goal_x, goal_y, goal_z, out_path);
     guard.lock();
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(guard.get_error());
         ft_pathfinding::restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
-    if (result == ER_SUCCESS)
+    if (result == FT_ER_SUCCESSS)
     {
         this->_current_path.clear();
         index = 0;
         while (index < out_path.size())
         {
             this->_current_path.push_back(out_path[index]);
-            if (this->_current_path.get_error() != ER_SUCCESS)
+            if (this->_current_path.get_error() != FT_ER_SUCCESSS)
             {
                 this->_needs_replan = true;
                 this->set_error(this->_current_path.get_error());
@@ -761,7 +761,7 @@ int ft_pathfinding::recalculate_path(const ft_map3d &grid,
             index += 1;
         }
         this->_needs_replan = false;
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
     }
     else
     {
@@ -784,7 +784,7 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_pathfinding *>(this)->set_error(guard.get_error());
         ft_pathfinding::restore_errno(guard, entry_errno);
@@ -827,14 +827,14 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
     start.f = static_cast<int>(dx + dy + dz);
     start.parent = -1;
     nodes.push_back(start);
-    if (nodes.get_error() != ER_SUCCESS)
+    if (nodes.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_pathfinding *>(this)->set_error(nodes.get_error());
         ft_pathfinding::restore_errno(guard, entry_errno);
         return (nodes.get_error());
     }
     open_set.push_back(0);
-    if (open_set.get_error() != ER_SUCCESS)
+    if (open_set.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_pathfinding *>(this)->set_error(open_set.get_error());
         ft_pathfinding::restore_errno(guard, entry_errno);
@@ -863,7 +863,7 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
         }
         current_index = open_set[best_open];
         if (current_step.set_coordinates(nodes[current_index].x,
-                nodes[current_index].y, nodes[current_index].z) != ER_SUCCESS)
+                nodes[current_index].y, nodes[current_index].z) != FT_ER_SUCCESSS)
         {
             const_cast<ft_pathfinding *>(this)->set_error(current_step.get_error());
             ft_pathfinding::restore_errno(guard, entry_errno);
@@ -872,7 +872,7 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
         found_goal = false;
         if (current_step.get_x() == goal_x)
         {
-            if (current_step.get_error() != ER_SUCCESS)
+            if (current_step.get_error() != FT_ER_SUCCESSS)
             {
                 const_cast<ft_pathfinding *>(this)->set_error(current_step.get_error());
                 ft_pathfinding::restore_errno(guard, entry_errno);
@@ -880,7 +880,7 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
             }
             if (current_step.get_y() == goal_y)
             {
-                if (current_step.get_error() != ER_SUCCESS)
+                if (current_step.get_error() != FT_ER_SUCCESSS)
                 {
                     const_cast<ft_pathfinding *>(this)->set_error(current_step.get_error());
                     ft_pathfinding::restore_errno(guard, entry_errno);
@@ -888,7 +888,7 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
                 }
                 if (current_step.get_z() == goal_z)
                 {
-                    if (current_step.get_error() != ER_SUCCESS)
+                    if (current_step.get_error() != FT_ER_SUCCESSS)
                     {
                         const_cast<ft_pathfinding *>(this)->set_error(current_step.get_error());
                         ft_pathfinding::restore_errno(guard, entry_errno);
@@ -909,14 +909,14 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
                 ft_path_step step;
 
                 if (step.set_coordinates(nodes[trace_index].x,
-                        nodes[trace_index].y, nodes[trace_index].z) != ER_SUCCESS)
+                        nodes[trace_index].y, nodes[trace_index].z) != FT_ER_SUCCESSS)
                 {
                     const_cast<ft_pathfinding *>(this)->set_error(step.get_error());
                     ft_pathfinding::restore_errno(guard, entry_errno);
                     return (step.get_error());
                 }
                 reverse_path.push_back(step);
-                if (reverse_path.get_error() != ER_SUCCESS)
+                if (reverse_path.get_error() != FT_ER_SUCCESSS)
                 {
                     const_cast<ft_pathfinding *>(this)->set_error(reverse_path.get_error());
                     ft_pathfinding::restore_errno(guard, entry_errno);
@@ -936,19 +936,19 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
                 rev_index -= 1;
                 step = reverse_path[rev_index];
                 out_path.push_back(step);
-                if (out_path.get_error() != ER_SUCCESS)
+                if (out_path.get_error() != FT_ER_SUCCESSS)
                 {
                     const_cast<ft_pathfinding *>(this)->set_error(out_path.get_error());
                     ft_pathfinding::restore_errno(guard, entry_errno);
                     return (out_path.get_error());
                 }
             }
-            const_cast<ft_pathfinding *>(this)->set_error(ER_SUCCESS);
+            const_cast<ft_pathfinding *>(this)->set_error(FT_ER_SUCCESSS);
             ft_pathfinding::restore_errno(guard, entry_errno);
-            return (ER_SUCCESS);
+            return (FT_ER_SUCCESSS);
         }
         open_set.erase(open_set.begin() + best_open);
-        if (open_set.get_error() != ER_SUCCESS)
+        if (open_set.get_error() != FT_ER_SUCCESSS)
         {
             const_cast<ft_pathfinding *>(this)->set_error(open_set.get_error());
             ft_pathfinding::restore_errno(guard, entry_errno);
@@ -1030,7 +1030,7 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
                         if (!in_open)
                         {
                             open_set.push_back(search_index);
-                            if (open_set.get_error() != ER_SUCCESS)
+                            if (open_set.get_error() != FT_ER_SUCCESSS)
                             {
                                 const_cast<ft_pathfinding *>(this)->set_error(open_set.get_error());
                                 ft_pathfinding::restore_errno(guard, entry_errno);
@@ -1056,14 +1056,14 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
                     new_node.f = tentative_g + static_cast<int>(ndx + ndy + ndz);
                     new_node.parent = static_cast<int>(current_index);
                     nodes.push_back(new_node);
-                    if (nodes.get_error() != ER_SUCCESS)
+                    if (nodes.get_error() != FT_ER_SUCCESSS)
                     {
                         const_cast<ft_pathfinding *>(this)->set_error(nodes.get_error());
                         ft_pathfinding::restore_errno(guard, entry_errno);
                         return (nodes.get_error());
                     }
                     open_set.push_back(nodes.size() - 1);
-                    if (open_set.get_error() != ER_SUCCESS)
+                    if (open_set.get_error() != FT_ER_SUCCESSS)
                     {
                         const_cast<ft_pathfinding *>(this)->set_error(open_set.get_error());
                         ft_pathfinding::restore_errno(guard, entry_errno);
@@ -1088,7 +1088,7 @@ int ft_pathfinding::dijkstra_graph(const ft_graph<int> &graph,
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_pathfinding *>(this)->set_error(guard.get_error());
         ft_pathfinding::restore_errno(guard, entry_errno);
@@ -1108,21 +1108,21 @@ int ft_pathfinding::dijkstra_graph(const ft_graph<int> &graph,
     size_t neighbor_index;
 
     distance.resize(graph_size, -1);
-    if (distance.get_error() != ER_SUCCESS)
+    if (distance.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_pathfinding *>(this)->set_error(distance.get_error());
         ft_pathfinding::restore_errno(guard, entry_errno);
         return (distance.get_error());
     }
     previous.resize(graph_size, -1);
-    if (previous.get_error() != ER_SUCCESS)
+    if (previous.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_pathfinding *>(this)->set_error(previous.get_error());
         ft_pathfinding::restore_errno(guard, entry_errno);
         return (previous.get_error());
     }
     queue.push_back(start_vertex);
-    if (queue.get_error() != ER_SUCCESS)
+    if (queue.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_pathfinding *>(this)->set_error(queue.get_error());
         ft_pathfinding::restore_errno(guard, entry_errno);
@@ -1145,7 +1145,7 @@ int ft_pathfinding::dijkstra_graph(const ft_graph<int> &graph,
         }
         current = queue[best_queue];
         queue.erase(queue.begin() + best_queue);
-        if (queue.get_error() != ER_SUCCESS)
+        if (queue.get_error() != FT_ER_SUCCESSS)
         {
             const_cast<ft_pathfinding *>(this)->set_error(queue.get_error());
             ft_pathfinding::restore_errno(guard, entry_errno);
@@ -1156,7 +1156,7 @@ int ft_pathfinding::dijkstra_graph(const ft_graph<int> &graph,
         ft_vector<size_t> neighbors;
 
         graph.neighbors(current, neighbors);
-        if (neighbors.get_error() != ER_SUCCESS)
+        if (neighbors.get_error() != FT_ER_SUCCESSS)
         {
             const_cast<ft_pathfinding *>(this)->set_error(neighbors.get_error());
             ft_pathfinding::restore_errno(guard, entry_errno);
@@ -1188,7 +1188,7 @@ int ft_pathfinding::dijkstra_graph(const ft_graph<int> &graph,
                 if (!found)
                 {
                     queue.push_back(neighbor);
-                    if (queue.get_error() != ER_SUCCESS)
+                    if (queue.get_error() != FT_ER_SUCCESSS)
                     {
                         const_cast<ft_pathfinding *>(this)->set_error(queue.get_error());
                         ft_pathfinding::restore_errno(guard, entry_errno);
@@ -1212,7 +1212,7 @@ int ft_pathfinding::dijkstra_graph(const ft_graph<int> &graph,
     while (true)
     {
         reverse_path.push_back(vertex);
-        if (reverse_path.get_error() != ER_SUCCESS)
+        if (reverse_path.get_error() != FT_ER_SUCCESSS)
         {
             const_cast<ft_pathfinding *>(this)->set_error(reverse_path.get_error());
             ft_pathfinding::restore_errno(guard, entry_errno);
@@ -1229,16 +1229,16 @@ int ft_pathfinding::dijkstra_graph(const ft_graph<int> &graph,
     {
         rev_index -= 1;
         out_path.push_back(reverse_path[rev_index]);
-        if (out_path.get_error() != ER_SUCCESS)
+        if (out_path.get_error() != FT_ER_SUCCESSS)
         {
             const_cast<ft_pathfinding *>(this)->set_error(out_path.get_error());
             ft_pathfinding::restore_errno(guard, entry_errno);
             return (out_path.get_error());
         }
     }
-    const_cast<ft_pathfinding *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_pathfinding *>(this)->set_error(FT_ER_SUCCESSS);
     ft_pathfinding::restore_errno(guard, entry_errno);
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 int ft_pathfinding::get_error() const noexcept
@@ -1248,7 +1248,7 @@ int ft_pathfinding::get_error() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_pathfinding *>(this)->set_error(guard.get_error());
         ft_pathfinding::restore_errno(guard, entry_errno);
@@ -1267,7 +1267,7 @@ const char *ft_pathfinding::get_error_str() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         const_cast<ft_pathfinding *>(this)->set_error(guard.get_error());
         ft_pathfinding::restore_errno(guard, entry_errno);

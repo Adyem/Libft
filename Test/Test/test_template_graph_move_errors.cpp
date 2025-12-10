@@ -14,8 +14,8 @@ FT_TEST(test_ft_graph_move_constructor_clears_error_state,
 
     ft_graph<int> moved_graph(ft_move(source_graph));
 
-    FT_ASSERT_EQ(ER_SUCCESS, moved_graph.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, source_graph.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved_graph.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, source_graph.get_error());
     moved_graph.add_vertex(1);
     moved_graph.add_vertex(2);
     moved_graph.add_edge(0, 1);
@@ -45,8 +45,8 @@ FT_TEST(test_ft_graph_move_assignment_clears_error_state,
 
     destination_graph = ft_move(source_graph);
 
-    FT_ASSERT_EQ(ER_SUCCESS, destination_graph.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, source_graph.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination_graph.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, source_graph.get_error());
     destination_graph.add_vertex(3);
     destination_graph.add_vertex(4);
     destination_graph.add_edge(0, 1);

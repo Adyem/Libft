@@ -5,14 +5,14 @@
 
 char *ft_strmapi(const char *string, char (*function)(unsigned int, char))
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     if (string == ft_nullptr || function == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
     size_t length = ft_strlen_size_t(string);
-    if (ft_errno != ER_SUCCESS)
+    if (ft_errno != FT_ER_SUCCESSS)
         return (ft_nullptr);
     char *result = static_cast<char*>(cma_malloc(length + 1));
     if (result == ft_nullptr)

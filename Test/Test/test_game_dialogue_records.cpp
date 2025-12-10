@@ -80,12 +80,12 @@ FT_TEST(test_dialogue_script_copy_move, "copy and move dialogue scripts")
     moved = ft_dialogue_script(ft_move(script));
     FT_ASSERT_EQ(3, moved.get_lines().size());
     FT_ASSERT(script.get_lines().empty());
-    FT_ASSERT_EQ(ER_SUCCESS, script.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, script.get_error());
 
     moved_assigned = ft_dialogue_script();
     moved_assigned = ft_move(moved);
     FT_ASSERT_EQ(ft_string("intro"), moved_assigned.get_title());
     FT_ASSERT(moved.get_lines().empty());
-    FT_ASSERT_EQ(ER_SUCCESS, moved.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.get_error());
     return (1);
 }

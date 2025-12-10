@@ -12,7 +12,7 @@
 
 int test_strlen_size_t_null(void)
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     if (ft_strlen_size_t(ft_nullptr) != 0)
     {
         return (0);

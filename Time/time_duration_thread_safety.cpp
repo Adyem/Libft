@@ -33,7 +33,7 @@ int time_duration_ms_prepare_thread_safety(t_duration_milliseconds *duration)
     }
     if (duration->thread_safe_enabled && duration->mutex)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     memory = std::malloc(sizeof(pt_mutex));
@@ -43,7 +43,7 @@ int time_duration_ms_prepare_thread_safety(t_duration_milliseconds *duration)
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != ER_SUCCESS)
+    if (mutex_pointer->get_error() != FT_ER_SUCCESSS)
     {
         int mutex_error;
 
@@ -55,7 +55,7 @@ int time_duration_ms_prepare_thread_safety(t_duration_milliseconds *duration)
     }
     duration->mutex = mutex_pointer;
     duration->thread_safe_enabled = true;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -87,7 +87,7 @@ int time_duration_ms_lock(const t_duration_milliseconds *duration, bool *lock_ac
         return (0);
     }
     mutable_duration->mutex->lock(THREAD_ID);
-    if (mutable_duration->mutex->get_error() != ER_SUCCESS)
+    if (mutable_duration->mutex->get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = mutable_duration->mutex->get_error();
         return (-1);
@@ -110,7 +110,7 @@ void    time_duration_ms_unlock(const t_duration_milliseconds *duration, bool lo
         return ;
     entry_errno = ft_errno;
     mutable_duration->mutex->unlock(THREAD_ID);
-    if (mutable_duration->mutex->get_error() != ER_SUCCESS)
+    if (mutable_duration->mutex->get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = mutable_duration->mutex->get_error();
         return ;

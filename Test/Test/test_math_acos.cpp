@@ -7,7 +7,7 @@ FT_TEST(test_math_acos_nan_sets_errno, "math_acos returns nan and sets errno for
 {
     double result;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     result = math_acos(math_nan());
     FT_ASSERT(math_isnan(result));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -20,7 +20,7 @@ FT_TEST(test_math_acos_infinite_sets_errno, "math_acos returns nan and sets errn
     double infinite_value;
 
     infinite_value = std::numeric_limits<double>::infinity();
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     result = math_acos(infinite_value);
     FT_ASSERT(math_isnan(result));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -31,7 +31,7 @@ FT_TEST(test_math_acos_above_one_sets_errno, "math_acos rejects inputs greater t
 {
     double result;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     result = math_acos(1.5);
     FT_ASSERT(math_isnan(result));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -42,7 +42,7 @@ FT_TEST(test_math_acos_below_negative_one_sets_errno, "math_acos rejects inputs 
 {
     double result;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     result = math_acos(-1.5);
     FT_ASSERT(math_isnan(result));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -58,7 +58,7 @@ FT_TEST(test_math_acos_success_clears_errno, "math_acos clears errno on success"
     expected = 1.0471975511965979;
     result = math_acos(0.5);
     FT_ASSERT(math_fabs(result - expected) < 0.000001);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -72,7 +72,7 @@ FT_TEST(test_math_acos_tolerance_clamps_slightly_above_one,
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     result = math_acos(input_value);
     FT_ASSERT(math_fabs(result) <= 1e-12);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -88,7 +88,7 @@ FT_TEST(test_math_acos_tolerance_clamps_slightly_below_negative_one,
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     result = math_acos(input_value);
     FT_ASSERT(math_fabs(result - pi_value) <= 1e-12);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -102,7 +102,7 @@ FT_TEST(test_math_acos_tolerance_handles_near_zero,
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     result = math_acos(5e-14);
     FT_ASSERT(math_fabs(result - expected) <= 1e-12);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -113,7 +113,7 @@ FT_TEST(test_math_acos_value_beyond_tolerance_sets_errno,
     double input_value;
 
     input_value = 1.0 + 1e-9;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     result = math_acos(input_value);
     FT_ASSERT(math_isnan(result));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -125,7 +125,7 @@ FT_TEST(test_math_acos_recovers_after_invalid_input, "math_acos clears errno aft
     double result;
     double expected;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     result = math_acos(2.0);
     FT_ASSERT(math_isnan(result));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -133,6 +133,6 @@ FT_TEST(test_math_acos_recovers_after_invalid_input, "math_acos clears errno aft
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     result = math_acos(0.7071067811865475);
     FT_ASSERT(math_fabs(result - expected) <= 1e-12);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }

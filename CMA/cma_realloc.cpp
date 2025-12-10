@@ -74,7 +74,7 @@ static void *allocate_block_locked(ft_size_t aligned_size, ft_size_t user_size)
     g_cma_current_bytes += block->size;
     if (g_cma_current_bytes > g_cma_peak_bytes)
         g_cma_peak_bytes = g_cma_current_bytes;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     void *result;
 
     cma_debug_prepare_allocation(block, user_size);
@@ -134,17 +134,17 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         if (!ptr && result)
         {
             g_cma_allocation_count++;
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
         }
         else if (ptr && new_size == 0)
         {
             g_cma_free_count++;
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
         }
         else if (!result && new_size != 0)
             ft_errno = FT_ERR_NO_MEMORY;
         else
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
         return (result);
     }
     cma_allocator_guard allocator_guard;
@@ -160,7 +160,7 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
     {
         allocator_guard.unlock();
         cma_free(ptr);
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (ft_nullptr);
     }
     ft_size_t instrumented_size = cma_debug_allocation_size(new_size);
@@ -202,9 +202,9 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
         user_pointer = cma_block_user_pointer(block);
         cma_leak_tracker_record_free(ptr);
         cma_leak_tracker_record_allocation(ptr, cma_block_user_size(block));
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         allocator_guard.unlock();
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (user_pointer);
     }
     Block *old_block;
@@ -230,8 +230,8 @@ void *cma_realloc(void* ptr, ft_size_t new_size)
     }
     ft_memcpy(new_ptr, ptr, static_cast<size_t>(copy_size));
     release_block_locked(old_block);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     allocator_guard.unlock();
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (new_ptr);
 }

@@ -21,7 +21,7 @@ FT_TEST(test_game_upgrade_add_level_clamps_to_max, "Game upgrade clamps added le
     upgrade.set_max_level(4);
     upgrade.add_level(6);
     FT_ASSERT_EQ((uint16_t)4, upgrade.get_current_level());
-    FT_ASSERT_EQ(ER_SUCCESS, upgrade.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, upgrade.get_error());
     return (1);
 }
 
@@ -33,7 +33,7 @@ FT_TEST(test_game_upgrade_sub_level_clamps_to_zero, "Game upgrade prevents negat
     upgrade.set_current_level(2);
     upgrade.sub_level(5);
     FT_ASSERT_EQ((uint16_t)0, upgrade.get_current_level());
-    FT_ASSERT_EQ(ER_SUCCESS, upgrade.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, upgrade.get_error());
     return (1);
 }
 
@@ -50,7 +50,7 @@ FT_TEST(test_game_upgrade_sets_all_modifiers, "Game upgrade stores modifier valu
     FT_ASSERT_EQ(-4, upgrade.get_modifier2());
     FT_ASSERT_EQ(7, upgrade.get_modifier3());
     FT_ASSERT_EQ(0, upgrade.get_modifier4());
-    FT_ASSERT_EQ(ER_SUCCESS, upgrade.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, upgrade.get_error());
     return (1);
 }
 
@@ -63,7 +63,7 @@ FT_TEST(test_game_upgrade_modifier_add_and_subtract_accumulate, "Game upgrade ac
     upgrade.add_modifier1(5);
     upgrade.sub_modifier1(2);
     FT_ASSERT_EQ(4, upgrade.get_modifier1());
-    FT_ASSERT_EQ(ER_SUCCESS, upgrade.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, upgrade.get_error());
     return (1);
 }
 
@@ -79,7 +79,7 @@ FT_TEST(test_game_upgrade_copy_preserves_modifiers, "Game upgrade copy construct
     FT_ASSERT_EQ(6, copied.get_modifier2());
     FT_ASSERT_EQ(-2, copied.get_modifier3());
     FT_ASSERT_EQ(9, copied.get_modifier4());
-    FT_ASSERT_EQ(ER_SUCCESS, copied.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, copied.get_error());
     return (1);
 }
 
@@ -101,8 +101,8 @@ FT_TEST(test_game_upgrade_move_resets_modifiers_in_source, "Game upgrade move co
     FT_ASSERT_EQ(0, source.get_modifier2());
     FT_ASSERT_EQ(0, source.get_modifier3());
     FT_ASSERT_EQ(0, source.get_modifier4());
-    FT_ASSERT_EQ(ER_SUCCESS, moved.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
     return (1);
 }
 
@@ -129,8 +129,8 @@ FT_TEST(test_game_upgrade_move_assignment_transfers_modifiers, "Game upgrade mov
     FT_ASSERT_EQ(0, source.get_modifier2());
     FT_ASSERT_EQ(0, source.get_modifier3());
     FT_ASSERT_EQ(0, source.get_modifier4());
-    FT_ASSERT_EQ(ER_SUCCESS, destination.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
     return (1);
 }
 
@@ -145,7 +145,7 @@ FT_TEST(test_game_upgrade_clears_error_after_valid_level_set, "Game upgrade rese
     upgrade.set_max_level(5);
     upgrade.set_current_level(4);
     FT_ASSERT_EQ((uint16_t)4, upgrade.get_current_level());
-    FT_ASSERT_EQ(ER_SUCCESS, upgrade.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, upgrade.get_error());
     return (1);
 }
 

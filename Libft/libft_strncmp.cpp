@@ -7,7 +7,7 @@ int ft_strncmp(const char *string_1, const char *string_2, size_t max_len)
 {
     ft_size_t current_index = 0;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     if (max_len == 0)
         return (0);
     if (string_1 == ft_nullptr || string_2 == ft_nullptr)

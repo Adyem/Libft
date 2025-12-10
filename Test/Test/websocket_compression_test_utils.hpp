@@ -32,7 +32,7 @@ static bool websocket_permessage_deflate_compress(const ft_string &message,
         while (index_value < produced_bytes)
         {
             compressed.push_back(chunk[index_value]);
-            if (compressed.get_error() != ER_SUCCESS)
+            if (compressed.get_error() != FT_ER_SUCCESSS)
             {
                 deflateEnd(&stream);
                 return (false);
@@ -58,7 +58,7 @@ static bool websocket_permessage_deflate_compress(const ft_string &message,
     while (trim_index < 4)
     {
         compressed.pop_back();
-        if (compressed.get_error() != ER_SUCCESS)
+        if (compressed.get_error() != FT_ER_SUCCESSS)
             return (false);
         trim_index++;
     }
@@ -81,7 +81,7 @@ static bool websocket_permessage_deflate_decompress(const unsigned char *payload
     tail_bytes[2] = 0xFF;
     tail_bytes[3] = 0xFF;
     input_buffer.reserve(payload_length + 4);
-    if (input_buffer.get_error() != ER_SUCCESS)
+    if (input_buffer.get_error() != FT_ER_SUCCESSS)
         return (false);
     std::size_t index_value;
 
@@ -89,7 +89,7 @@ static bool websocket_permessage_deflate_decompress(const unsigned char *payload
     while (index_value < payload_length)
     {
         input_buffer.push_back(payload[index_value]);
-        if (input_buffer.get_error() != ER_SUCCESS)
+        if (input_buffer.get_error() != FT_ER_SUCCESSS)
             return (false);
         index_value++;
     }
@@ -97,7 +97,7 @@ static bool websocket_permessage_deflate_decompress(const unsigned char *payload
     while (index_value < 4)
     {
         input_buffer.push_back(tail_bytes[index_value]);
-        if (input_buffer.get_error() != ER_SUCCESS)
+        if (input_buffer.get_error() != FT_ER_SUCCESSS)
             return (false);
         index_value++;
     }
@@ -120,7 +120,7 @@ static bool websocket_permessage_deflate_decompress(const unsigned char *payload
         while (index_value < produced_bytes)
         {
             output_buffer.push_back(chunk[index_value]);
-            if (output_buffer.get_error() != ER_SUCCESS)
+            if (output_buffer.get_error() != FT_ER_SUCCESSS)
             {
                 inflateEnd(&stream);
                 return (false);
@@ -139,7 +139,7 @@ static bool websocket_permessage_deflate_decompress(const unsigned char *payload
     }
     inflateEnd(&stream);
     message.assign(reinterpret_cast<const char *>(output_buffer.begin()), output_buffer.size());
-    if (message.get_error() != ER_SUCCESS)
+    if (message.get_error() != FT_ER_SUCCESSS)
         return (false);
     return (true);
 }

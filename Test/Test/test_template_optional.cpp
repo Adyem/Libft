@@ -25,9 +25,9 @@ class no_default_optional_value
 };
 
 no_default_optional_value::no_default_optional_value(int value)
-    : _value(value), _error_code(ER_SUCCESS)
+    : _value(value), _error_code(FT_ER_SUCCESSS)
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -51,7 +51,7 @@ no_default_optional_value &no_default_optional_value::operator=(const no_default
 
 no_default_optional_value::~no_default_optional_value()
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -64,7 +64,7 @@ void no_default_optional_value::set_error(int error) const
 
 int no_default_optional_value::get_value() const
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (this->_value);
 }
 
@@ -90,18 +90,18 @@ FT_TEST(test_ft_optional_non_default_constructible, "ft_optional stores and retr
     ft_optional<no_default_optional_value> value_optional(no_default_optional_value(42));
     FT_ASSERT(value_optional.has_value() == true);
     FT_ASSERT_EQ(42, value_optional.value().get_value());
-    FT_ASSERT_EQ(ER_SUCCESS, value_optional.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, value_optional.get_error());
 
     ft_optional<no_default_optional_value> moved_optional(no_default_optional_value(64));
     value_optional = std::move(moved_optional);
     FT_ASSERT(value_optional.has_value() == true);
     FT_ASSERT_EQ(64, value_optional.value().get_value());
-    FT_ASSERT_EQ(ER_SUCCESS, value_optional.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, value_optional.get_error());
     FT_ASSERT(moved_optional.has_value() == false);
-    FT_ASSERT_EQ(ER_SUCCESS, moved_optional.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved_optional.get_error());
 
     value_optional.reset();
     FT_ASSERT(value_optional.has_value() == false);
-    FT_ASSERT_EQ(ER_SUCCESS, value_optional.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, value_optional.get_error());
     return (1);
 }

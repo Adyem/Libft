@@ -18,8 +18,8 @@ FT_TEST(test_file_watch_error_resets_after_success, "ft_file_watch resets error 
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, file_watch.get_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(0, file_watch.watch_directory(".", &file_watch_noop_callback, ft_nullptr));
-    FT_ASSERT_EQ(ER_SUCCESS, file_watch.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, file_watch.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     file_watch.stop();
     return (1);
 }
@@ -31,7 +31,7 @@ FT_TEST(test_file_watch_stop_resets_errno_when_inactive,
 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     file_watch.stop();
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -43,8 +43,8 @@ FT_TEST(test_file_watch_get_error_resets_errno,
 
     ft_errno = FT_ERR_SOCKET_ACCEPT_FAILED;
     error_value = file_watch.get_error();
-    FT_ASSERT_EQ(ER_SUCCESS, error_value);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, error_value);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -57,6 +57,6 @@ FT_TEST(test_file_watch_get_error_str_resets_errno,
     ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
     error_string = file_watch.get_error_str();
     FT_ASSERT(error_string != ft_nullptr);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }

@@ -20,7 +20,7 @@ FT_TEST(test_data_buffer_error_state_copy_move_reset_errno,
     DataBuffer assigned_buffer;
     DataBuffer move_assigned_buffer;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(false, error_buffer.seek(1));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_buffer.get_error());
 
@@ -28,35 +28,35 @@ FT_TEST(test_data_buffer_error_state_copy_move_reset_errno,
     DataBuffer copy_constructed_buffer(error_buffer);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, copy_constructed_buffer.get_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_buffer.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
 
     ft_errno = FT_ERR_CONFIGURATION;
     assigned_buffer = error_buffer;
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, assigned_buffer.get_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_buffer.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
 
     DataBuffer move_constructor_source;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(false, move_constructor_source.seek(1));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, move_constructor_source.get_error());
 
     DataBuffer moved_buffer(std::move(move_constructor_source));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, moved_buffer.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, move_constructor_source.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, move_constructor_source.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
 
     DataBuffer move_assignment_source;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(false, move_assignment_source.seek(1));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, move_assignment_source.get_error());
     ft_errno = FT_ERR_GAME_GENERAL_ERROR;
     move_assigned_buffer = std::move(move_assignment_source);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, move_assigned_buffer.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, move_assignment_source.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, move_assignment_source.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -70,12 +70,12 @@ FT_TEST(test_ft_string_error_state_copy_move_reset_errno,
     ft_errno = FT_ERR_INVALID_OPERATION;
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_string.get_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, copy_string.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     ft_errno = FT_ERR_SYSTEM;
     assigned_string = error_string;
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, assigned_string.get_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_string.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
 
     ft_string move_constructor_source(FT_ERR_INVALID_ARGUMENT);
 
@@ -85,8 +85,8 @@ FT_TEST(test_ft_string_error_state_copy_move_reset_errno,
     ft_string moved_string(std::move(move_constructor_source));
 
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, moved_string.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, move_constructor_source.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, move_constructor_source.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
 
     ft_string move_assignment_source(FT_ERR_INVALID_ARGUMENT);
     ft_string move_assigned_string;
@@ -95,8 +95,8 @@ FT_TEST(test_ft_string_error_state_copy_move_reset_errno,
     ft_errno = FT_ERR_THREAD_BUSY;
     move_assigned_string = std::move(move_assignment_source);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, move_assigned_string.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, move_assignment_source.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, move_assignment_source.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -115,13 +115,13 @@ FT_TEST(test_ft_big_number_error_state_copy_move_reset_errno,
 
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, copy_number.get_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_number.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
 
     ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
     assigned_number = error_number;
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, assigned_number.get_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_number.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
 
     ft_big_number move_constructor_source;
 
@@ -132,8 +132,8 @@ FT_TEST(test_ft_big_number_error_state_copy_move_reset_errno,
     ft_big_number moved_number(std::move(move_constructor_source));
 
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, moved_number.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, move_constructor_source.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, move_constructor_source.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
 
     ft_big_number move_assignment_source;
 
@@ -142,8 +142,8 @@ FT_TEST(test_ft_big_number_error_state_copy_move_reset_errno,
     ft_errno = FT_ERR_CRYPTO_INVALID_PADDING;
     move_assigned_number = std::move(move_assignment_source);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, move_assigned_number.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, move_assignment_source.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, move_assignment_source.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -152,13 +152,13 @@ FT_TEST(test_ft_file_error_resets, "ft_file resets error state after success")
     const char *filename = "test_ft_file_error_resets.txt";
     ft_file file;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(-1, file.read(ft_nullptr, 1));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, file.get_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(0, file.open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644));
-    FT_ASSERT_EQ(ER_SUCCESS, file.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, file.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     file.close();
     ::unlink(filename);
     return (1);
@@ -169,19 +169,19 @@ FT_TEST(test_ft_ofstream_error_resets, "ft_ofstream resets error state after suc
     const char *filename = "test_ft_ofstream_error_resets.txt";
     ft_ofstream stream;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(1, stream.open(ft_nullptr));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, stream.get_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(0, stream.open(filename));
-    FT_ASSERT_EQ(ER_SUCCESS, stream.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, stream.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(5, stream.write("reset"));
-    FT_ASSERT_EQ(ER_SUCCESS, stream.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, stream.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     stream.close();
-    FT_ASSERT_EQ(ER_SUCCESS, stream.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, stream.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     ::unlink(filename);
     return (1);
 }
@@ -207,7 +207,7 @@ FT_TEST(test_ft_fd_istream_error_resets, "ft_fd_istream sets su_read errno and c
     ft_errno = FT_ERR_CONFIGURATION;
     stream.read(read_buffer, sizeof(read_buffer));
     failure_error = ft_errno;
-    FT_ASSERT(failure_error != ER_SUCCESS);
+    FT_ASSERT(failure_error != FT_ER_SUCCESSS);
     FT_ASSERT_NE(FT_ERR_CONFIGURATION, failure_error);
     FT_ASSERT_EQ(failure_error, stream.get_error());
 
@@ -225,8 +225,8 @@ FT_TEST(test_ft_fd_istream_error_resets, "ft_fd_istream sets su_read errno and c
     FT_ASSERT_EQ(0, ::close(write_descriptor));
 
     stream.read(read_buffer, sizeof(message) - 1);
-    FT_ASSERT_EQ(ER_SUCCESS, stream.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, stream.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(static_cast<std::streamsize>(sizeof(message) - 1), stream.gcount());
     FT_ASSERT_EQ('g', read_buffer[0]);
     FT_ASSERT_EQ('o', read_buffer[1]);
@@ -239,15 +239,15 @@ FT_TEST(test_ft_istringstream_error_resets, "ft_istringstream resets error state
     ft_istringstream stream("reset");
     char read_buffer[6] = {0};
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     stream.read(ft_nullptr, 1);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, stream.get_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT(stream.bad());
 
     stream.read(read_buffer, 5);
-    FT_ASSERT_EQ(ER_SUCCESS, stream.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, stream.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(false, stream.bad());
     FT_ASSERT_EQ(static_cast<std::streamsize>(5), stream.gcount());
     FT_ASSERT_EQ('r', read_buffer[0]);

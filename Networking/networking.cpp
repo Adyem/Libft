@@ -11,7 +11,7 @@
 #endif
 
 SocketConfig::SocketConfig()
-    : _error_code(ER_SUCCESS),
+    : _error_code(FT_ER_SUCCESSS),
       _thread_safe_enabled(false),
       _mutex(ft_nullptr),
       _type(SocketType::SERVER),
@@ -27,12 +27,12 @@ SocketConfig::SocketConfig()
       _multicast_group(""),
       _multicast_interface("")
 {
-    this->set_error(ER_SUCCESS);
-    if (this->_error_code == ER_SUCCESS && _ip.get_error())
+    this->set_error(FT_ER_SUCCESSS);
+    if (this->_error_code == FT_ER_SUCCESSS && _ip.get_error())
         this->set_error(_ip.get_error());
-    if (this->_error_code == ER_SUCCESS && _multicast_group.get_error())
+    if (this->_error_code == FT_ER_SUCCESSS && _multicast_group.get_error())
         this->set_error(_multicast_group.get_error());
-    if (this->_error_code == ER_SUCCESS && _multicast_interface.get_error())
+    if (this->_error_code == FT_ER_SUCCESSS && _multicast_interface.get_error())
         this->set_error(_multicast_interface.get_error());
     if (socket_config_prepare_thread_safety(this) != 0)
         this->set_error(ft_errno);
@@ -40,7 +40,7 @@ SocketConfig::SocketConfig()
 }
 
 SocketConfig::SocketConfig(const SocketConfig& other) noexcept
-    : _error_code(ER_SUCCESS),
+    : _error_code(FT_ER_SUCCESSS),
       _thread_safe_enabled(false),
       _mutex(ft_nullptr),
       _type(SocketType::SERVER),
@@ -80,11 +80,11 @@ SocketConfig::SocketConfig(const SocketConfig& other) noexcept
         this->_multicast_interface = other._multicast_interface;
         socket_config_unlock(mutable_other, other_locked);
     }
-    if (this->_error_code == ER_SUCCESS && _ip.get_error())
+    if (this->_error_code == FT_ER_SUCCESSS && _ip.get_error())
         this->set_error(_ip.get_error());
-    if (this->_error_code == ER_SUCCESS && _multicast_group.get_error())
+    if (this->_error_code == FT_ER_SUCCESSS && _multicast_group.get_error())
         this->set_error(_multicast_group.get_error());
-    if (this->_error_code == ER_SUCCESS && _multicast_interface.get_error())
+    if (this->_error_code == FT_ER_SUCCESSS && _multicast_interface.get_error())
         this->set_error(_multicast_interface.get_error());
     if (socket_config_prepare_thread_safety(this) != 0)
         this->set_error(ft_errno);
@@ -143,11 +143,11 @@ SocketConfig& SocketConfig::operator=(const SocketConfig& other) noexcept
         socket_config_unlock(second, second_locked);
         socket_config_unlock(first, first_locked);
     }
-    if (this->_error_code == ER_SUCCESS && _ip.get_error())
+    if (this->_error_code == FT_ER_SUCCESSS && _ip.get_error())
         this->set_error(_ip.get_error());
-    if (this->_error_code == ER_SUCCESS && _multicast_group.get_error())
+    if (this->_error_code == FT_ER_SUCCESSS && _multicast_group.get_error())
         this->set_error(_multicast_group.get_error());
-    if (this->_error_code == ER_SUCCESS && _multicast_interface.get_error())
+    if (this->_error_code == FT_ER_SUCCESSS && _multicast_interface.get_error())
         this->set_error(_multicast_interface.get_error());
     if (socket_config_prepare_thread_safety(this) != 0)
         this->set_error(ft_errno);
@@ -155,7 +155,7 @@ SocketConfig& SocketConfig::operator=(const SocketConfig& other) noexcept
 }
 
 SocketConfig::SocketConfig(SocketConfig&& other) noexcept
-    : _error_code(ER_SUCCESS),
+    : _error_code(FT_ER_SUCCESSS),
       _thread_safe_enabled(false),
       _mutex(ft_nullptr),
       _type(SocketType::SERVER),
@@ -203,14 +203,14 @@ SocketConfig::SocketConfig(SocketConfig&& other) noexcept
         other._send_timeout = 0;
         other._multicast_group.clear();
         other._multicast_interface.clear();
-        other.set_error(ER_SUCCESS);
+        other.set_error(FT_ER_SUCCESSS);
         socket_config_unlock(&other, other_locked);
     }
-    if (this->_error_code == ER_SUCCESS && _ip.get_error())
+    if (this->_error_code == FT_ER_SUCCESSS && _ip.get_error())
         this->set_error(_ip.get_error());
-    if (this->_error_code == ER_SUCCESS && _multicast_group.get_error())
+    if (this->_error_code == FT_ER_SUCCESSS && _multicast_group.get_error())
         this->set_error(_multicast_group.get_error());
-    if (this->_error_code == ER_SUCCESS && _multicast_interface.get_error())
+    if (this->_error_code == FT_ER_SUCCESSS && _multicast_interface.get_error())
         this->set_error(_multicast_interface.get_error());
     if (socket_config_prepare_thread_safety(this) != 0)
         this->set_error(ft_errno);
@@ -276,15 +276,15 @@ SocketConfig& SocketConfig::operator=(SocketConfig&& other) noexcept
         other._send_timeout = 0;
         other._multicast_group.clear();
         other._multicast_interface.clear();
-        other.set_error(ER_SUCCESS);
+        other.set_error(FT_ER_SUCCESSS);
         socket_config_unlock(second, second_locked);
         socket_config_unlock(first, first_locked);
     }
-    if (this->_error_code == ER_SUCCESS && _ip.get_error())
+    if (this->_error_code == FT_ER_SUCCESSS && _ip.get_error())
         this->set_error(_ip.get_error());
-    if (this->_error_code == ER_SUCCESS && _multicast_group.get_error())
+    if (this->_error_code == FT_ER_SUCCESSS && _multicast_group.get_error())
         this->set_error(_multicast_group.get_error());
-    if (this->_error_code == ER_SUCCESS && _multicast_interface.get_error())
+    if (this->_error_code == FT_ER_SUCCESSS && _multicast_interface.get_error())
         this->set_error(_multicast_interface.get_error());
     if (socket_config_prepare_thread_safety(this) != 0)
         this->set_error(ft_errno);

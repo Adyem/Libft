@@ -380,7 +380,7 @@ static int format_double_output(char specifier, int precision, double number, ft
             return (-1); \
         output.clear(); \
         output.resize_length(static_cast<size_t>(required_length)); \
-        if (output.get_error() != ER_SUCCESS) \
+        if (output.get_error() != FT_ER_SUCCESSS) \
             return (-1); \
         int written_length = std::snprintf(output.print(), static_cast<size_t>(required_length) + 1, literal, precision, number); \
         if (written_length < 0) \
@@ -550,7 +550,7 @@ void pf_write_ft_string_fd(const ft_string &output, int fd, size_t *count)
 
     if (count_has_error(count))
         return ;
-    if (output.get_error() != ER_SUCCESS)
+    if (output.get_error() != FT_ER_SUCCESSS)
     {
         mark_count_error(count);
         return ;

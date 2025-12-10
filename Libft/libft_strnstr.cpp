@@ -9,7 +9,7 @@ char    *ft_strnstr(const char *haystack, const char *needle, size_t max_length)
     char    *haystack_pointer;
     size_t  needle_length;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     if (needle == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
@@ -17,7 +17,7 @@ char    *ft_strnstr(const char *haystack, const char *needle, size_t max_length)
     }
     if (max_length == 0)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         if (needle[0] == '\0')
             return (const_cast<char *>(haystack));
         return (ft_nullptr);
@@ -28,7 +28,7 @@ char    *ft_strnstr(const char *haystack, const char *needle, size_t max_length)
         return (ft_nullptr);
     }
     needle_length = ft_strlen_size_t(needle);
-    if (ft_errno != ER_SUCCESS)
+    if (ft_errno != FT_ER_SUCCESSS)
         return (ft_nullptr);
     haystack_pointer = const_cast<char *>(haystack);
     if (needle_length > max_length)

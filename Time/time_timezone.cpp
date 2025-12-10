@@ -30,7 +30,7 @@ static bool load_utc_time(std::time_t standard_time, std::tm *utc_out)
         mutex_result = g_gmtime_mutex.unlock(THREAD_ID);
         if (mutex_result != FT_SUCCESS)
             ft_errno = g_gmtime_mutex.get_error();
-        if (ft_errno == ER_SUCCESS)
+        if (ft_errno == FT_ER_SUCCESSS)
             ft_errno = FT_ERR_OUT_OF_RANGE;
         return (false);
     }
@@ -97,7 +97,7 @@ bool    time_get_local_offset(t_time time_value, int *offset_minutes, bool *is_d
         else
             *is_daylight_saving = false;
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (true);
 }
 
@@ -130,7 +130,7 @@ bool    time_convert_timezone(t_time time_value, int source_offset_minutes, int 
         return (false);
     }
     *converted_time = static_cast<t_time>(converted_seconds);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (true);
 }
 

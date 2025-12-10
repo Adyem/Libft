@@ -5,7 +5,7 @@
 
 void* ft_memcpy(void* destination, const void* source, size_t size)
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     if (size == 0)
         return (destination);
     if (destination == ft_nullptr || source == ft_nullptr)

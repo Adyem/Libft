@@ -11,11 +11,11 @@
 static int cnfg_config_lock_if_enabled(cnfg_config *config, ft_unique_lock<pt_mutex> &mutex_guard)
 {
     if (!config || !config->thread_safe_enabled || !config->mutex)
-        return (ER_SUCCESS);
+        return (FT_ER_SUCCESSS);
     mutex_guard = ft_unique_lock<pt_mutex>(*config->mutex);
-    if (mutex_guard.get_error() != ER_SUCCESS)
+    if (mutex_guard.get_error() != FT_ER_SUCCESSS)
         return (mutex_guard.get_error());
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 static void cnfg_config_unlock_guard(ft_unique_lock<pt_mutex> &mutex_guard)
@@ -41,7 +41,7 @@ cnfg_config *cnfg_config_create()
         cma_free(config);
         return (ft_nullptr);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (config);
 }
 
@@ -57,7 +57,7 @@ int cnfg_config_prepare_thread_safety(cnfg_config *config)
     }
     if (config->thread_safe_enabled && config->mutex)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     memory = cma_malloc(sizeof(pt_mutex));
@@ -67,7 +67,7 @@ int cnfg_config_prepare_thread_safety(cnfg_config *config)
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != ER_SUCCESS)
+    if (mutex_pointer->get_error() != FT_ER_SUCCESSS)
     {
         int mutex_error;
 
@@ -79,7 +79,7 @@ int cnfg_config_prepare_thread_safety(cnfg_config *config)
     }
     config->mutex = mutex_pointer;
     config->thread_safe_enabled = true;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -121,7 +121,7 @@ void cnfg_free(cnfg_config *config)
     entry_errno = ft_errno;
     bool already_owned = false;
     int lock_result = cnfg_config_lock_if_enabled(config, mutex_guard);
-    if (lock_result != ER_SUCCESS)
+    if (lock_result != FT_ER_SUCCESSS)
     {
         if (lock_result == FT_ERR_MUTEX_ALREADY_LOCKED && config->mutex)
         {
@@ -150,7 +150,7 @@ void cnfg_free(cnfg_config *config)
     if (already_owned)
     {
         config->mutex->unlock(THREAD_ID);
-        if (config->mutex->get_error() != ER_SUCCESS)
+        if (config->mutex->get_error() != FT_ER_SUCCESSS)
             ft_errno = config->mutex->get_error();
     }
     else
@@ -315,7 +315,7 @@ cnfg_config *cnfg_parse(const char *filename)
     if (current_section)
         cma_free(current_section);
     ft_fclose(file);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (config);
 }
 
@@ -426,7 +426,7 @@ static cnfg_config *cnfg_parse_json(const char *filename)
     }
     config->entry_count = count;
     json_free_groups(groups);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (config);
 }
 
@@ -444,7 +444,7 @@ cnfg_config *config_load_env()
     }
     if (!count)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (config);
     }
     config->entries = static_cast<cnfg_entry*>(cma_calloc(count, sizeof(cnfg_entry)));
@@ -510,7 +510,7 @@ cnfg_config *config_load_env()
         ++index;
     }
     config->entry_count = count;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (config);
 }
 
@@ -526,12 +526,12 @@ cnfg_config *config_load_file(const char *filename)
     {
         cnfg_config *config = cnfg_parse_json(filename);
         if (config)
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
         return (config);
     }
     cnfg_config *config = cnfg_parse(filename);
     if (config)
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
     return (config);
 }
 

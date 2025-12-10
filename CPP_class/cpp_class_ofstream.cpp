@@ -4,7 +4,7 @@
 #include <fcntl.h>
 
 ft_ofstream::ft_ofstream() noexcept
-    : _file(), _error_code(ER_SUCCESS), _mutex()
+    : _file(), _error_code(FT_ER_SUCCESSS), _mutex()
 {
     return ;
 }
@@ -33,7 +33,7 @@ int ft_ofstream::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
 
     entry_errno = ft_errno;
-    if (local_guard.get_error() != ER_SUCCESS)
+    if (local_guard.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = entry_errno;
         guard = ft_unique_lock<pt_mutex>();
@@ -41,7 +41,7 @@ int ft_ofstream::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
     }
     ft_errno = entry_errno;
     guard = ft_move(local_guard);
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 void ft_ofstream::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno, bool restore_previous_on_success) noexcept
@@ -51,12 +51,12 @@ void ft_ofstream::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno
     operation_errno = ft_errno;
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return ;
     }
-    if (operation_errno != ER_SUCCESS)
+    if (operation_errno != FT_ER_SUCCESSS)
     {
         ft_errno = operation_errno;
         return ;
@@ -66,7 +66,7 @@ void ft_ofstream::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno
         ft_errno = entry_errno;
         return ;
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 
@@ -79,7 +79,7 @@ int ft_ofstream::open(const char *filename) noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_ofstream::restore_errno(guard, entry_errno);
@@ -98,7 +98,7 @@ int ft_ofstream::open(const char *filename) noexcept
         ft_ofstream::restore_errno(guard, entry_errno);
         return (1);
     }
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     ft_ofstream::restore_errno(guard, entry_errno);
     return (0);
 }
@@ -112,7 +112,7 @@ ssize_t ft_ofstream::write(const char *string) noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_ofstream::restore_errno(guard, entry_errno);
@@ -131,7 +131,7 @@ ssize_t ft_ofstream::write(const char *string) noexcept
         ft_ofstream::restore_errno(guard, entry_errno);
         return (-1);
     }
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     ft_ofstream::restore_errno(guard, entry_errno);
     return (result);
 }
@@ -147,7 +147,7 @@ void ft_ofstream::close() noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_ofstream::restore_errno(guard, entry_errno);
@@ -157,13 +157,13 @@ void ft_ofstream::close() noexcept
     this->_file.close();
     current_fd = this->_file.get_fd();
     file_error = this->_file.get_error();
-    if (previous_fd >= 0 && current_fd == previous_fd && file_error != ER_SUCCESS)
+    if (previous_fd >= 0 && current_fd == previous_fd && file_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(file_error);
         ft_ofstream::restore_errno(guard, entry_errno);
         return ;
     }
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     ft_ofstream::restore_errno(guard, entry_errno);
     return ;
 }
@@ -177,7 +177,7 @@ int ft_ofstream::get_error() const noexcept
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_ofstream::restore_errno(guard, entry_errno);
@@ -197,7 +197,7 @@ const char *ft_ofstream::get_error_str() const noexcept
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_ofstream::restore_errno(guard, entry_errno);

@@ -87,7 +87,7 @@ FT_TEST(test_ft_strerror_sets_success_errno, "ft_strerror returns message and re
     FT_ASSERT(actual_message != NULL);
     FT_ASSERT_EQ(0, std::strcmp(expected_message, actual_message));
     FT_ASSERT_NE(previous_errno, ft_errno);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -97,14 +97,14 @@ FT_TEST(test_ft_errno_memcpy_tracks_error_state, "ft_memcpy updates ft_errno on 
     char        destination_buffer[5];
     void       *copy_result;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     copy_result = ft_memcpy(ft_nullptr, source_buffer, sizeof(source_buffer));
     FT_ASSERT(copy_result == ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
 
     copy_result = ft_memcpy(destination_buffer, source_buffer, sizeof(source_buffer));
     FT_ASSERT(copy_result == destination_buffer);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(0, std::memcmp(destination_buffer, source_buffer, sizeof(source_buffer)));
     return (1);
 }
@@ -115,14 +115,14 @@ FT_TEST(test_ft_errno_strlen_resets_after_failure, "ft_strlen resets ft_errno to
     int         string_length;
 
     valid_string = "example";
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     string_length = ft_strlen(ft_nullptr);
     FT_ASSERT_EQ(0, string_length);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
 
     string_length = ft_strlen(valid_string);
     FT_ASSERT_EQ(7, string_length);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -131,12 +131,12 @@ FT_TEST(test_ft_errno_is_thread_local, "ft_errno maintains independent values pe
     std::atomic<int> thread_errno_value;
     std::thread      worker_thread;
 
-    thread_errno_value.store(ER_SUCCESS);
+    thread_errno_value.store(FT_ER_SUCCESSS);
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     worker_thread = std::thread(
         [&thread_errno_value]()
         {
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             ft_errno = FT_ERR_OUT_OF_RANGE;
             thread_errno_value.store(ft_errno);
             return ;
@@ -169,7 +169,7 @@ FT_TEST(test_ft_perror_null_message_resets_errno, "ft_perror prints strerror whe
     FT_ASSERT(read_count > 0);
     buffer[read_count] = '\0';
     FT_ASSERT(std::strstr(buffer, expected_message) != ft_nullptr);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
 
     FT_ASSERT(dup2(saved_stderr, 2) >= 0);
     close(saved_stderr);
@@ -201,7 +201,7 @@ FT_TEST(test_ft_perror_prefixes_custom_message_resets_errno,
     buffer[read_count] = '\0';
     FT_ASSERT(std::strstr(buffer, "custom context: ") != ft_nullptr);
     FT_ASSERT(std::strstr(buffer, expected_message) != ft_nullptr);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
 
     FT_ASSERT(dup2(saved_stderr, 2) >= 0);
     close(saved_stderr);
@@ -215,7 +215,7 @@ FT_TEST(test_ft_map_system_error_normalizes_common_codes,
     int mapped_error;
 
     mapped_error = ft_map_system_error(0);
-    FT_ASSERT_EQ(ER_SUCCESS, mapped_error);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, mapped_error);
 #if defined(_WIN32) || defined(_WIN64)
     mapped_error = ft_map_system_error(WSAEWOULDBLOCK);
     FT_ASSERT_EQ(FT_ERR_INVALID_STATE, mapped_error);
@@ -315,7 +315,7 @@ FT_TEST(test_ft_set_errno_from_system_error_updates_global,
 {
     int mapped_error;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
 #if defined(_WIN32) || defined(_WIN64)
     mapped_error = ft_set_errno_from_system_error(ERROR_DISK_FULL);
     FT_ASSERT_EQ(FT_ERR_FULL, mapped_error);
@@ -326,8 +326,8 @@ FT_TEST(test_ft_set_errno_from_system_error_updates_global,
     FT_ASSERT_EQ(FT_ERR_FULL, ft_errno);
 #endif
     mapped_error = ft_set_errno_from_system_error(0);
-    FT_ASSERT_EQ(ER_SUCCESS, mapped_error);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, mapped_error);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -338,11 +338,11 @@ FT_TEST(test_ft_exit_message_without_errno_sets_success,
     int         child_status;
 
     ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
-    FT_ASSERT(capture_ft_exit_output("shutting down", ER_SUCCESS, 23, captured_output, child_status));
+    FT_ASSERT(capture_ft_exit_output("shutting down", FT_ER_SUCCESSS, 23, captured_output, child_status));
     FT_ASSERT(WIFEXITED(child_status));
     FT_ASSERT_EQ(23, WEXITSTATUS(child_status));
     FT_ASSERT_EQ(std::string("shutting down\n"), captured_output);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -362,7 +362,7 @@ FT_TEST(test_ft_exit_message_with_errno_sets_success,
     FT_ASSERT(captured_output.find("fatal failure: ") != std::string::npos);
     FT_ASSERT(captured_output.find(expected_error_message) != std::string::npos);
     FT_ASSERT_EQ('\n', captured_output.back());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -382,6 +382,6 @@ FT_TEST(test_ft_exit_without_message_sets_success,
     FT_ASSERT(WIFEXITED(child_status));
     FT_ASSERT_EQ(7, WEXITSTATUS(child_status));
     FT_ASSERT_EQ(expected_output, captured_output);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }

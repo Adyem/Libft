@@ -67,7 +67,7 @@ int vector4::lock_self(ft_unique_lock<pt_mutex> &guard) const
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
-    if (local_guard.get_error() != ER_SUCCESS)
+    if (local_guard.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = entry_errno;
         guard = ft_unique_lock<pt_mutex>();
@@ -75,7 +75,7 @@ int vector4::lock_self(ft_unique_lock<pt_mutex> &guard) const
     }
     ft_errno = entry_errno;
     guard = ft_move(local_guard);
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 int vector4::lock_pair(const vector4 &first, const vector4 &second,
@@ -90,15 +90,15 @@ int vector4::lock_pair(const vector4 &first, const vector4 &second,
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != ER_SUCCESS)
+        if (single_guard.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = ER_SUCCESS;
-        return (ER_SUCCESS);
+        ft_errno = FT_ER_SUCCESSS;
+        return (FT_ER_SUCCESSS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -116,13 +116,13 @@ int vector4::lock_pair(const vector4 &first, const vector4 &second,
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != ER_SUCCESS)
+        if (lower_guard.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == ER_SUCCESS)
+        if (upper_guard.get_error() == FT_ER_SUCCESSS)
         {
             if (!swapped)
             {
@@ -134,8 +134,8 @@ int vector4::lock_pair(const vector4 &first, const vector4 &second,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = ER_SUCCESS;
-            return (ER_SUCCESS);
+            ft_errno = FT_ER_SUCCESSS;
+            return (FT_ER_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -162,7 +162,7 @@ void vector4::set_error(int error_code) const
 }
 
 vector4::vector4(const vector4 &other)
-    : _x(0.0), _y(0.0), _z(0.0), _w(0.0), _error_code(ER_SUCCESS), _mutex()
+    : _x(0.0), _y(0.0), _z(0.0), _w(0.0), _error_code(FT_ER_SUCCESSS), _mutex()
 {
     *this = other;
     return ;
@@ -179,7 +179,7 @@ vector4 &vector4::operator=(const vector4 &other)
         return (*this);
     entry_errno = ft_errno;
     lock_error = vector4::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         return (*this);
@@ -196,7 +196,7 @@ vector4 &vector4::operator=(const vector4 &other)
 }
 
 vector4::vector4(vector4 &&other)
-    : _x(0.0), _y(0.0), _z(0.0), _w(0.0), _error_code(ER_SUCCESS), _mutex()
+    : _x(0.0), _y(0.0), _z(0.0), _w(0.0), _error_code(FT_ER_SUCCESSS), _mutex()
 {
     *this = ft_move(other);
     return ;
@@ -213,7 +213,7 @@ vector4 &vector4::operator=(vector4 &&other)
         return (*this);
     entry_errno = ft_errno;
     lock_error = vector4::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         return (*this);
@@ -228,8 +228,8 @@ vector4 &vector4::operator=(vector4 &&other)
     other._y = 0.0;
     other._z = 0.0;
     other._w = 0.0;
-    other._error_code = ER_SUCCESS;
-    other.set_error_unlocked(ER_SUCCESS);
+    other._error_code = FT_ER_SUCCESSS;
+    other.set_error_unlocked(FT_ER_SUCCESSS);
     vector4_restore_errno(this_guard, entry_errno);
     vector4_restore_errno(other_guard, entry_errno);
     return (*this);
@@ -244,14 +244,14 @@ double vector4::get_x() const
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
         return (0.0);
     }
     value = this->_x;
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     vector4_restore_errno(guard, entry_errno);
     return (value);
 }
@@ -265,14 +265,14 @@ double vector4::get_y() const
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
         return (0.0);
     }
     value = this->_y;
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     vector4_restore_errno(guard, entry_errno);
     return (value);
 }
@@ -286,14 +286,14 @@ double vector4::get_z() const
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
         return (0.0);
     }
     value = this->_z;
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     vector4_restore_errno(guard, entry_errno);
     return (value);
 }
@@ -307,14 +307,14 @@ double vector4::get_w() const
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
         return (0.0);
     }
     value = this->_w;
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     vector4_restore_errno(guard, entry_errno);
     return (value);
 }
@@ -329,7 +329,7 @@ vector4 vector4::add(const vector4 &other) const
 
     entry_errno = ft_errno;
     lock_error = vector4::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         result.set_error_unlocked(lock_error);
         this->set_error_unlocked(lock_error);
@@ -339,8 +339,8 @@ vector4 vector4::add(const vector4 &other) const
     result._y = this->_y + other._y;
     result._z = this->_z + other._z;
     result._w = this->_w + other._w;
-    result.set_error_unlocked(ER_SUCCESS);
-    this->set_error_unlocked(ER_SUCCESS);
+    result.set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     vector4_restore_errno(this_guard, entry_errno);
     vector4_restore_errno(other_guard, entry_errno);
     return (result);
@@ -356,7 +356,7 @@ vector4 vector4::subtract(const vector4 &other) const
 
     entry_errno = ft_errno;
     lock_error = vector4::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         result.set_error_unlocked(lock_error);
         this->set_error_unlocked(lock_error);
@@ -366,8 +366,8 @@ vector4 vector4::subtract(const vector4 &other) const
     result._y = this->_y - other._y;
     result._z = this->_z - other._z;
     result._w = this->_w - other._w;
-    result.set_error_unlocked(ER_SUCCESS);
-    this->set_error_unlocked(ER_SUCCESS);
+    result.set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     vector4_restore_errno(this_guard, entry_errno);
     vector4_restore_errno(other_guard, entry_errno);
     return (result);
@@ -383,7 +383,7 @@ double vector4::dot(const vector4 &other) const
 
     entry_errno = ft_errno;
     lock_error = vector4::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
@@ -391,7 +391,7 @@ double vector4::dot(const vector4 &other) const
     }
     result = vector4_compute_dot(this->_x, this->_y, this->_z, this->_w,
             other._x, other._y, other._z, other._w);
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     vector4_restore_errno(this_guard, entry_errno);
     vector4_restore_errno(other_guard, entry_errno);
     return (result);
@@ -406,7 +406,7 @@ double vector4::length() const
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
@@ -414,7 +414,7 @@ double vector4::length() const
     }
     squared = vector4_compute_dot(this->_x, this->_y, this->_z, this->_w,
             this->_x, this->_y, this->_z, this->_w);
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     vector4_restore_errno(guard, entry_errno);
     return (math_sqrt(squared));
 }
@@ -431,7 +431,7 @@ vector4 vector4::normalize() const
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         result.set_error_unlocked(lock_error);
         this->set_error_unlocked(lock_error);
@@ -452,8 +452,8 @@ vector4 vector4::normalize() const
     result._y = this->_y / length_value;
     result._z = this->_z / length_value;
     result._w = this->_w / length_value;
-    result.set_error_unlocked(ER_SUCCESS);
-    this->set_error_unlocked(ER_SUCCESS);
+    result.set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     vector4_restore_errno(guard, entry_errno);
     return (result);
 }
@@ -467,7 +467,7 @@ int vector4::get_error() const
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;

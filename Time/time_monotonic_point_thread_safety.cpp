@@ -33,7 +33,7 @@ int time_monotonic_point_prepare_thread_safety(t_monotonic_time_point *time_poin
     }
     if (time_point->thread_safe_enabled && time_point->mutex)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     memory = std::malloc(sizeof(pt_mutex));
@@ -43,7 +43,7 @@ int time_monotonic_point_prepare_thread_safety(t_monotonic_time_point *time_poin
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != ER_SUCCESS)
+    if (mutex_pointer->get_error() != FT_ER_SUCCESSS)
     {
         int mutex_error;
 
@@ -55,7 +55,7 @@ int time_monotonic_point_prepare_thread_safety(t_monotonic_time_point *time_poin
     }
     time_point->mutex = mutex_pointer;
     time_point->thread_safe_enabled = true;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -87,7 +87,7 @@ int time_monotonic_point_lock(const t_monotonic_time_point *time_point, bool *lo
         return (0);
     }
     mutable_point->mutex->lock(THREAD_ID);
-    if (mutable_point->mutex->get_error() != ER_SUCCESS)
+    if (mutable_point->mutex->get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = mutable_point->mutex->get_error();
         return (-1);
@@ -110,7 +110,7 @@ void    time_monotonic_point_unlock(const t_monotonic_time_point *time_point, bo
         return ;
     entry_errno = ft_errno;
     mutable_point->mutex->unlock(THREAD_ID);
-    if (mutable_point->mutex->get_error() != ER_SUCCESS)
+    if (mutable_point->mutex->get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = mutable_point->mutex->get_error();
         return ;

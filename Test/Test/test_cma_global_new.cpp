@@ -46,7 +46,7 @@ FT_TEST(test_cma_global_new_alignment_failure_sets_errno,
     int error_state;
 
     cma_set_alloc_limit(16);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     instance = new (std::nothrow) aligned_large_type;
     cma_set_alloc_limit(0);
     allocation_failed = (instance == ft_nullptr);

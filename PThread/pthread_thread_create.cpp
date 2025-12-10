@@ -15,6 +15,6 @@ int pt_thread_create(pthread_t *thread, const pthread_attr_t *attr,
         ft_errno = ft_map_system_error(return_value);
         return (return_value);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (return_value);
 }

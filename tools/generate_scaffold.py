@@ -58,7 +58,7 @@ def build_module_source(name: str) -> str:
         + name
         + "::"
         + name
-        + "()\n    : _error_code(ER_SUCCESS)\n{\n    this->set_error(ER_SUCCESS);\n    return ;\n}\n\n"
+        + "()\n    : _error_code(FT_ER_SUCCESSS)\n{\n    this->set_error(FT_ER_SUCCESSS);\n    return ;\n}\n\n"
         + name
         + "::~"
         + name
@@ -78,7 +78,7 @@ def build_test_source(name: str, description: str) -> str:
         + name
         + ", \""
         + description
-        + "\")\n{\n    FT_ASSERT_EQ(ER_SUCCESS, ER_SUCCESS);\n    return (1);\n}\n"
+        + "\")\n{\n    FT_ASSERT_EQ(FT_ER_SUCCESSS, FT_ER_SUCCESSS);\n    return (1);\n}\n"
     )
 
 

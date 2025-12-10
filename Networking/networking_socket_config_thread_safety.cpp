@@ -17,7 +17,7 @@ int socket_config_prepare_thread_safety(SocketConfig *config)
     }
     if (config->_thread_safe_enabled == true && config->_mutex != ft_nullptr)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     memory = std::malloc(sizeof(pt_mutex));
@@ -27,7 +27,7 @@ int socket_config_prepare_thread_safety(SocketConfig *config)
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != ER_SUCCESS)
+    if (mutex_pointer->get_error() != FT_ER_SUCCESSS)
     {
         int mutex_error;
 
@@ -39,7 +39,7 @@ int socket_config_prepare_thread_safety(SocketConfig *config)
     }
     config->_mutex = mutex_pointer;
     config->_thread_safe_enabled = true;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -71,18 +71,18 @@ int socket_config_lock(const SocketConfig *config, bool *lock_acquired)
     mutable_config = const_cast<SocketConfig *>(config);
     if (mutable_config->_thread_safe_enabled == false || mutable_config->_mutex == ft_nullptr)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     mutable_config->_mutex->lock(THREAD_ID);
-    if (mutable_config->_mutex->get_error() != ER_SUCCESS)
+    if (mutable_config->_mutex->get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = mutable_config->_mutex->get_error();
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -98,7 +98,7 @@ void socket_config_unlock(const SocketConfig *config, bool lock_acquired)
         return ;
     entry_errno = ft_errno;
     mutable_config->_mutex->unlock(THREAD_ID);
-    if (mutable_config->_mutex->get_error() != ER_SUCCESS)
+    if (mutable_config->_mutex->get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = mutable_config->_mutex->get_error();
         return ;

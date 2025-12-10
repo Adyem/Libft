@@ -22,7 +22,7 @@ void    time_async_sleep_init(t_time_async_sleep *sleep_state, long long delay_m
         sleep_state->completed = true;
     else
         sleep_state->completed = false;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 
@@ -33,7 +33,7 @@ bool    time_async_sleep_is_complete(const t_time_async_sleep *sleep_state)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (true);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (sleep_state->completed);
 }
 
@@ -49,7 +49,7 @@ long long   time_async_sleep_remaining_ms(t_time_async_sleep *sleep_state)
     }
     if (sleep_state->completed)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     now_point = time_monotonic_point_now();
@@ -57,10 +57,10 @@ long long   time_async_sleep_remaining_ms(t_time_async_sleep *sleep_state)
     if (remaining <= 0)
     {
         sleep_state->completed = true;
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (remaining);
 }
 
@@ -78,7 +78,7 @@ int time_async_sleep_poll(event_loop *loop, t_time_async_sleep *sleep_state)
     remaining = time_async_sleep_remaining_ms(sleep_state);
     if (sleep_state->completed)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     if (remaining > static_cast<long long>(INT_MAX))
@@ -93,11 +93,11 @@ int time_async_sleep_poll(event_loop *loop, t_time_async_sleep *sleep_state)
         remaining = time_async_sleep_remaining_ms(sleep_state);
         if (sleep_state->completed)
         {
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             return (0);
         }
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (1);
 }
 

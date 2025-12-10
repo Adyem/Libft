@@ -43,15 +43,15 @@ int ft_socket::setup_client(const SocketConfig &config)
     has_multicast = (mutable_config->_multicast_group.empty() == false);
     address_family = mutable_config->_address_family;
     socket_config_unlock(mutable_config, lock_acquired);
-    if (this->create_socket(config) != ER_SUCCESS)
+    if (this->create_socket(config) != FT_ER_SUCCESSS)
         return (this->_error_code);
     if (non_blocking)
-        if (this->set_non_blocking(config) != ER_SUCCESS)
+        if (this->set_non_blocking(config) != FT_ER_SUCCESSS)
             return (this->_error_code);
     if (has_timeout)
-        if (this->set_timeouts(config) != ER_SUCCESS)
+        if (this->set_timeouts(config) != FT_ER_SUCCESSS)
             return (this->_error_code);
-    if (this->configure_address(config) != ER_SUCCESS)
+    if (this->configure_address(config) != FT_ER_SUCCESSS)
         return (this->_error_code);
     if (address_family == AF_INET)
         addr_len = sizeof(struct sockaddr_in);
@@ -95,8 +95,8 @@ int ft_socket::setup_client(const SocketConfig &config)
 #endif
     }
     if (has_multicast)
-        if (this->join_multicast_group(config) != ER_SUCCESS)
+        if (this->join_multicast_group(config) != FT_ER_SUCCESSS)
             return (this->_error_code);
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (this->_error_code);
 }

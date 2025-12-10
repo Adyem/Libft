@@ -68,7 +68,7 @@ class ft_priority_queue
 
 template <typename ElementType, typename Compare>
 ft_priority_queue<ElementType, Compare>::ft_priority_queue(size_t initialCapacity, const Compare& comp)
-    : _data(ft_nullptr), _capacity(0), _size(0), _comp(comp), _error_code(ER_SUCCESS),
+    : _data(ft_nullptr), _capacity(0), _size(0), _comp(comp), _error_code(FT_ER_SUCCESSS),
       _mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     if (initialCapacity > 0)
@@ -81,7 +81,7 @@ ft_priority_queue<ElementType, Compare>::ft_priority_queue(size_t initialCapacit
         }
         this->_capacity = initialCapacity;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -112,7 +112,7 @@ ft_priority_queue<ElementType, Compare>::ft_priority_queue(ft_priority_queue&& o
             other._data = ft_nullptr;
             other._capacity = 0;
             other._size = 0;
-            other._error_code = ER_SUCCESS;
+            other._error_code = FT_ER_SUCCESSS;
             other._thread_safe_enabled = false;
             return ;
         }
@@ -120,7 +120,7 @@ ft_priority_queue<ElementType, Compare>::ft_priority_queue(ft_priority_queue&& o
     other._data = ft_nullptr;
     other._capacity = 0;
     other._size = 0;
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     other.teardown_thread_safety();
     other._thread_safe_enabled = false;
     this->set_error(this->_error_code);
@@ -154,7 +154,7 @@ ft_priority_queue<ElementType, Compare>& ft_priority_queue<ElementType, Compare>
                 other._data = ft_nullptr;
                 other._capacity = 0;
                 other._size = 0;
-                other._error_code = ER_SUCCESS;
+                other._error_code = FT_ER_SUCCESSS;
                 other._thread_safe_enabled = false;
                 return (*this);
             }
@@ -162,7 +162,7 @@ ft_priority_queue<ElementType, Compare>& ft_priority_queue<ElementType, Compare>
         other._data = ft_nullptr;
         other._capacity = 0;
         other._size = 0;
-        other._error_code = ER_SUCCESS;
+        other._error_code = FT_ER_SUCCESSS;
         other.teardown_thread_safety();
         other._thread_safe_enabled = false;
     }
@@ -186,7 +186,7 @@ int ft_priority_queue<ElementType, Compare>::enable_thread_safety()
 
     if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
     {
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
         return (0);
     }
     memory = cma_malloc(sizeof(pt_mutex));
@@ -196,7 +196,7 @@ int ft_priority_queue<ElementType, Compare>::enable_thread_safety()
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != ER_SUCCESS)
+    if (mutex_pointer->get_error() != FT_ER_SUCCESSS)
     {
         int mutex_error;
 
@@ -208,7 +208,7 @@ int ft_priority_queue<ElementType, Compare>::enable_thread_safety()
     }
     this->_mutex = mutex_pointer;
     this->_thread_safe_enabled = true;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (0);
 }
 
@@ -216,7 +216,7 @@ template <typename ElementType, typename Compare>
 void ft_priority_queue<ElementType, Compare>::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -226,7 +226,7 @@ bool ft_priority_queue<ElementType, Compare>::is_thread_safe() const
     bool enabled;
 
     enabled = (this->_thread_safe_enabled && this->_mutex != ft_nullptr);
-    const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(FT_ER_SUCCESSS);
     return (enabled);
 }
 
@@ -239,7 +239,7 @@ int ft_priority_queue<ElementType, Compare>::lock(bool *lock_acquired) const
     if (result != 0)
         const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(ft_errno);
     else
-        const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(ER_SUCCESS);
+        const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(FT_ER_SUCCESSS);
     return (result);
 }
 
@@ -250,7 +250,7 @@ void ft_priority_queue<ElementType, Compare>::unlock(bool lock_acquired) const
 
     entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
-    if (this->_mutex != ft_nullptr && this->_mutex->get_error() != ER_SUCCESS)
+    if (this->_mutex != ft_nullptr && this->_mutex->get_error() != FT_ER_SUCCESSS)
         const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(this->_mutex->get_error());
     else
     {
@@ -267,18 +267,18 @@ int ft_priority_queue<ElementType, Compare>::lock_internal(bool *lock_acquired) 
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     this->_mutex->lock(THREAD_ID);
-    if (this->_mutex->get_error() != ER_SUCCESS)
+    if (this->_mutex->get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = this->_mutex->get_error();
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -291,7 +291,7 @@ void ft_priority_queue<ElementType, Compare>::unlock_internal(bool lock_acquired
         return ;
     entry_errno = ft_errno;
     this->_mutex->unlock(THREAD_ID);
-    if (this->_mutex->get_error() != ER_SUCCESS)
+    if (this->_mutex->get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = this->_mutex->get_error();
         return ;
@@ -318,7 +318,7 @@ bool ft_priority_queue<ElementType, Compare>::ensure_capacity(size_t desired)
 {
     if (desired <= this->_capacity)
     {
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
         return (true);
     }
     size_t new_capacity;
@@ -345,7 +345,7 @@ bool ft_priority_queue<ElementType, Compare>::ensure_capacity(size_t desired)
         cma_free(this->_data);
     this->_data = new_data;
     this->_capacity = new_capacity;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (true);
 }
 
@@ -402,7 +402,7 @@ void ft_priority_queue<ElementType, Compare>::push(const ElementType& value)
     construct_at(&this->_data[this->_size], value);
     this->heapify_up(this->_size);
     ++this->_size;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -426,7 +426,7 @@ void ft_priority_queue<ElementType, Compare>::push(ElementType&& value)
     construct_at(&this->_data[this->_size], ft_move(value));
     this->heapify_up(this->_size);
     ++this->_size;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -458,7 +458,7 @@ ElementType ft_priority_queue<ElementType, Compare>::pop()
         destroy_at(&this->_data[this->_size]);
         this->heapify_down(0);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (value);
 }
@@ -483,7 +483,7 @@ ElementType& ft_priority_queue<ElementType, Compare>::top()
         return (error_element);
     }
     value = &this->_data[0];
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (*value);
 }
@@ -508,7 +508,7 @@ const ElementType& ft_priority_queue<ElementType, Compare>::top() const
         return (error_element);
     }
     value = &this->_data[0];
-    const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(FT_ER_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (*value);
 }
@@ -526,7 +526,7 @@ size_t ft_priority_queue<ElementType, Compare>::size() const
         return (0);
     }
     current_size = this->_size;
-    const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(FT_ER_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (current_size);
 }
@@ -544,7 +544,7 @@ bool ft_priority_queue<ElementType, Compare>::empty() const
         return (true);
     }
     result = (this->_size == 0);
-    const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_priority_queue<ElementType, Compare> *>(this)->set_error(FT_ER_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (result);
 }
@@ -582,7 +582,7 @@ void ft_priority_queue<ElementType, Compare>::clear()
         element_index += 1;
     }
     this->_size = 0;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return ;
 }

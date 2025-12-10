@@ -64,14 +64,14 @@ static int rl_customization_lock(bool *lock_acquired)
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     g_customization_mutex.lock(THREAD_ID);
-    if (g_customization_mutex.get_error() != ER_SUCCESS)
+    if (g_customization_mutex.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = g_customization_mutex.get_error();
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -80,7 +80,7 @@ static void rl_customization_unlock(bool lock_acquired)
     if (lock_acquired == false)
         return ;
     g_customization_mutex.unlock(THREAD_ID);
-    if (g_customization_mutex.get_error() != ER_SUCCESS)
+    if (g_customization_mutex.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = g_customization_mutex.get_error();
         return ;
@@ -106,7 +106,7 @@ static int rl_history_assign_path(char **target_path, const char *location)
     if (*target_path != ft_nullptr)
         cma_free(*target_path);
     *target_path = new_path;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -133,7 +133,7 @@ static int rl_history_prepare_path_context(void **context_pointer, const char *l
     }
     if (rl_history_assign_path(&path_context->path, location) != 0)
         return (-1);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -141,7 +141,7 @@ static int rl_history_plain_configure(void **context_pointer, const char *locati
 {
     if (rl_history_prepare_path_context(context_pointer, location) != 0)
         return (-1);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -179,7 +179,7 @@ static int rl_history_plain_load(void *context_pointer)
         error_code = history_file.get_error();
         if (error_code == FT_ERR_NOT_FOUND)
         {
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             return (0);
         }
         ft_errno = error_code;
@@ -187,7 +187,7 @@ static int rl_history_plain_load(void *context_pointer)
     }
     rl_clear_history();
     file_descriptor = history_file.get_fd();
-    if (history_file.get_error() != ER_SUCCESS)
+    if (history_file.get_error() != FT_ER_SUCCESSS)
     {
         int error_code;
 
@@ -212,7 +212,7 @@ static int rl_history_plain_load(void *context_pointer)
         cma_free(line_buffer);
     }
     history_file.close();
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -254,7 +254,7 @@ static int rl_history_plain_save(void *context_pointer)
         history_index += 1;
     }
     history_file.close();
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -262,7 +262,7 @@ static int rl_history_json_configure(void **context_pointer, const char *locatio
 {
     if (rl_history_prepare_path_context(context_pointer, location) != 0)
         return (-1);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -290,7 +290,7 @@ static int rl_history_json_load(void *context_pointer)
     {
         if (ft_errno == FT_ERR_NOT_FOUND)
         {
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             return (0);
         }
         return (-1);
@@ -299,7 +299,7 @@ static int rl_history_json_load(void *context_pointer)
     if (history_group == ft_nullptr)
     {
         json_free_groups(group_head);
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     rl_clear_history();
@@ -313,7 +313,7 @@ static int rl_history_json_load(void *context_pointer)
         item_pointer = item_pointer->next;
     }
     json_free_groups(group_head);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -347,7 +347,7 @@ static int rl_history_json_save(void *context_pointer)
         if (history_entry == ft_nullptr)
             history_entry = "";
         key_string = ft_to_string(history_index);
-        if (key_string.get_error() != ER_SUCCESS)
+        if (key_string.get_error() != FT_ER_SUCCESSS)
         {
             json_free_groups(history_group);
             ft_errno = key_string.get_error();
@@ -375,7 +375,7 @@ static int rl_history_json_save(void *context_pointer)
         return (-1);
     }
     json_free_groups(root_group);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -433,7 +433,7 @@ static int rl_history_sqlite_configure(void **context_pointer, const char *locat
     if (error_message != ft_nullptr)
         sqlite3_free(error_message);
     sqlite_context->database = database_handle;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -498,7 +498,7 @@ static int rl_history_sqlite_load(void *context_pointer)
         return (-1);
     }
     sqlite3_finalize(statement_handle);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -590,7 +590,7 @@ static int rl_history_sqlite_save(void *context_pointer)
     }
     if (error_message != ft_nullptr)
         sqlite3_free(error_message);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -643,7 +643,7 @@ static const rl_history_backend *rl_history_find_backend(const char *backend_nam
             && candidate_backend->name != ft_nullptr
             && ft_strcmp(candidate_backend->name, backend_name) == 0)
         {
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             return (candidate_backend);
         }
         backend_index += 1;
@@ -686,7 +686,7 @@ static int rl_history_configure_backend_locked(const rl_history_backend *backend
     }
     g_history_backend_state.backend = backend;
     g_history_backend_state.backend_context = working_context;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -729,7 +729,7 @@ int rl_bind_key(int key, t_rl_key_binding_callback callback, void *user_data)
             g_key_bindings[index].callback = callback;
             g_key_bindings[index].user_data = user_data;
             rl_customization_unlock(lock_acquired);
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             return (0);
         }
         index += 1;
@@ -745,7 +745,7 @@ int rl_bind_key(int key, t_rl_key_binding_callback callback, void *user_data)
     g_key_bindings[g_key_binding_count].user_data = user_data;
     g_key_binding_count += 1;
     rl_customization_unlock(lock_acquired);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -772,7 +772,7 @@ int rl_unbind_key(int key)
             }
             g_key_binding_count -= 1;
             rl_customization_unlock(lock_acquired);
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             return (0);
         }
         index += 1;
@@ -810,13 +810,13 @@ int rl_dispatch_custom_key(readline_state_t *state, const char *prompt, int key)
     rl_customization_unlock(lock_acquired);
     if (callback == ft_nullptr)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     result = callback(state, prompt, user_data);
     if (result != 0)
         return (-1);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (1);
 }
 
@@ -837,7 +837,7 @@ int rl_state_insert_text(readline_state_t *state, const char *text)
     text_length = ft_strlen(text);
     if (text_length == 0)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     lock_acquired = false;
@@ -884,7 +884,7 @@ int rl_state_insert_text(readline_state_t *state, const char *text)
 cleanup:
     rl_state_unlock(state, lock_acquired);
     if (result == 0)
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
     return (result);
 }
 
@@ -921,7 +921,7 @@ int rl_state_delete_previous_grapheme(readline_state_t *state)
 cleanup:
     rl_state_unlock(state, lock_acquired);
     if (result == 0)
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
     return (result);
 }
 
@@ -952,7 +952,7 @@ int rl_state_set_cursor(readline_state_t *state, int new_position)
     }
     state->pos = new_position;
     rl_state_unlock(state, lock_acquired);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -970,7 +970,7 @@ int rl_state_get_cursor(readline_state_t *state, int *out_position)
         return (-1);
     *out_position = state->pos;
     rl_state_unlock(state, lock_acquired);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -988,7 +988,7 @@ int rl_state_get_buffer(readline_state_t *state, const char **out_buffer)
         return (-1);
     *out_buffer = state->buffer;
     rl_state_unlock(state, lock_acquired);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -1025,7 +1025,7 @@ int rl_state_refresh_display(readline_state_t *state, const char *prompt)
 cleanup:
     rl_state_unlock(state, lock_acquired);
     if (result == 0)
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
     return (result);
 }
 
@@ -1040,7 +1040,7 @@ int rl_set_completion_callback(t_rl_completion_callback callback, void *user_dat
     g_completion_user_data = user_data;
     rl_completion_reset_dynamic_matches_locked();
     rl_customization_unlock(lock_acquired);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -1073,7 +1073,7 @@ int rl_completion_add_candidate(const char *candidate)
     g_dynamic_suggestions[g_dynamic_suggestion_count] = duplicated;
     g_dynamic_suggestion_count += 1;
     rl_customization_unlock(lock_acquired);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -1086,7 +1086,7 @@ void rl_completion_reset_dynamic_matches(void)
         return ;
     rl_completion_reset_dynamic_matches_locked();
     rl_customization_unlock(lock_acquired);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 
@@ -1113,13 +1113,13 @@ int rl_completion_prepare_candidates(const char *buffer, int cursor_position,
     rl_customization_unlock(lock_acquired);
     if (callback == ft_nullptr)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     callback_result = callback(buffer, cursor_position, prefix, user_data);
     if (callback_result != 0)
         return (-1);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -1133,7 +1133,7 @@ int rl_completion_get_dynamic_count(void)
         return (0);
     count = g_dynamic_suggestion_count;
     rl_customization_unlock(lock_acquired);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (count);
 }
 
@@ -1153,7 +1153,7 @@ char *rl_completion_get_dynamic_match(int index)
     }
     result = g_dynamic_suggestions[index];
     rl_customization_unlock(lock_acquired);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (result);
 }
 
@@ -1176,7 +1176,7 @@ int rl_history_set_backend(const char *backend_name, const char *location)
     rl_customization_unlock(lock_acquired);
     if (configure_result != 0)
         return (-1);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -1198,7 +1198,7 @@ const char *rl_history_get_backend(void)
     }
     backend_name = g_history_backend_state.backend->name;
     rl_customization_unlock(lock_acquired);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (backend_name);
 }
 
@@ -1216,7 +1216,7 @@ int rl_history_enable_auto_save(bool enabled)
         return (-1);
     g_history_backend_state.auto_save_enabled = enabled;
     rl_customization_unlock(lock_acquired);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -1239,7 +1239,7 @@ int rl_history_load(void)
     }
     if (backend_pointer->load(backend_context) != 0)
         return (-1);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -1262,7 +1262,7 @@ int rl_history_save(void)
     }
     if (backend_pointer->save(backend_context) != 0)
         return (-1);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 

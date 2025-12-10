@@ -20,7 +20,7 @@ static void skip_whitespace(const char *json_string, size_t &index)
 static void json_reader_set_io_error(void)
 {
     ft_errno = cmp_normalize_ft_errno(ft_errno);
-    if (ft_errno == ER_SUCCESS)
+    if (ft_errno == FT_ER_SUCCESSS)
         ft_errno = FT_ERR_IO;
     return ;
 }
@@ -88,7 +88,7 @@ static char    *json_read_file_content(const char *filename)
         json_reader_set_io_error();
         return (ft_nullptr);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (content);
 }
 
@@ -366,7 +366,7 @@ static char *parse_string(const char *json_string, size_t &index)
         return (ft_nullptr);
     }
     result[out_length] = '\0';
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (result);
 }
 
@@ -434,7 +434,7 @@ static char *parse_number(const char *json_string, size_t &index)
         ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (number);
 }
 
@@ -458,7 +458,7 @@ static char *parse_value(const char *json_string, size_t &index)
             ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (value);
     }
     if (length - index >= 5 && ft_strncmp(json_string + index, "false", 5) == 0)
@@ -470,7 +470,7 @@ static char *parse_value(const char *json_string, size_t &index)
             ft_errno = FT_ERR_NO_MEMORY;
             return (ft_nullptr);
         }
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (value);
     }
     if (ft_isdigit(static_cast<unsigned char>(json_string[index]))
@@ -553,7 +553,7 @@ static json_item *parse_items(const char *json_string, size_t &index)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (head);
 }
 
@@ -648,7 +648,7 @@ json_group *json_read_from_file(const char *filename)
         return (ft_nullptr);
     }
     cma_free(content);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (head);
 }
 
@@ -658,9 +658,9 @@ json_group *json_read_from_backend(ft_document_source &source)
     int read_result;
 
     read_result = source.read_all(content_buffer);
-    if (read_result != ER_SUCCESS)
+    if (read_result != FT_ER_SUCCESSS)
     {
-        if (ft_errno == ER_SUCCESS)
+        if (ft_errno == FT_ER_SUCCESSS)
             ft_errno = read_result;
         return (ft_nullptr);
     }
@@ -707,7 +707,7 @@ json_group *json_read_from_string(const char *content)
 
             error_code = ft_errno;
             json_free_groups(head);
-            if (error_code == ER_SUCCESS)
+            if (error_code == FT_ER_SUCCESSS)
                 ft_errno = FT_ERR_INVALID_ARGUMENT;
             else
                 ft_errno = error_code;
@@ -730,7 +730,7 @@ json_group *json_read_from_string(const char *content)
             error_code = ft_errno;
             cma_free(group_name);
             json_free_groups(head);
-            if (error_code == ER_SUCCESS)
+            if (error_code == FT_ER_SUCCESSS)
                 ft_errno = FT_ERR_INVALID_ARGUMENT;
             else
                 ft_errno = error_code;
@@ -765,13 +765,13 @@ json_group *json_read_from_string(const char *content)
 
         error_code = ft_errno;
         json_free_groups(head);
-        if (error_code == ER_SUCCESS)
+        if (error_code == FT_ER_SUCCESSS)
             ft_errno = FT_ERR_INVALID_ARGUMENT;
         else
             ft_errno = error_code;
         return (ft_nullptr);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (head);
 }
 

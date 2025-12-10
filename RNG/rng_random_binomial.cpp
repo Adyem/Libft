@@ -23,7 +23,7 @@ int ft_random_binomial(int trial_count, double success_probability)
     }
     if (trial_count == 0)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     if (success_probability > 1.0)
@@ -34,12 +34,12 @@ int ft_random_binomial(int trial_count, double success_probability)
     const double probability_epsilon = std::numeric_limits<double>::epsilon();
     if (success_probability <= probability_epsilon)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     if ((1.0 - success_probability) <= probability_epsilon)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (trial_count);
     }
     trial_index = 0;
@@ -47,12 +47,12 @@ int ft_random_binomial(int trial_count, double success_probability)
     while (trial_index < trial_count)
     {
         random_value = static_cast<double>(ft_random_float());
-        if (ft_errno != ER_SUCCESS)
+        if (ft_errno != FT_ER_SUCCESSS)
             return (0);
         if (random_value < success_probability)
             success_count = success_count + 1;
         trial_index = trial_index + 1;
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (success_count);
 }

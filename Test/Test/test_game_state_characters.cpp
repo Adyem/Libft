@@ -13,11 +13,11 @@ FT_TEST(test_game_state_adds_valid_character, "Game: add_character stores valid 
 
     FT_ASSERT(static_cast<bool>(hero));
     result = state.add_character(hero);
-    FT_ASSERT_EQ(ER_SUCCESS, result);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, result);
     characters = &state.get_characters();
     FT_ASSERT_EQ(1, characters->size());
     FT_ASSERT((*characters)[0] == hero);
-    FT_ASSERT_EQ(ER_SUCCESS, state.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, state.get_error());
     return (1);
 }
 
@@ -55,7 +55,7 @@ FT_TEST(test_game_state_remove_invalid_index_sets_error, "Game: remove_character
     ft_sharedptr<ft_character> hero(new (std::nothrow) ft_character());
 
     FT_ASSERT(static_cast<bool>(hero));
-    FT_ASSERT_EQ(ER_SUCCESS, state.add_character(hero));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, state.add_character(hero));
     state.remove_character(5);
     FT_ASSERT_EQ(1, state.get_characters().size());
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, state.get_error());
@@ -70,11 +70,11 @@ FT_TEST(test_game_state_remove_character_shrinks_vector, "Game: remove_character
 
     FT_ASSERT(static_cast<bool>(first));
     FT_ASSERT(static_cast<bool>(second));
-    FT_ASSERT_EQ(ER_SUCCESS, state.add_character(first));
-    FT_ASSERT_EQ(ER_SUCCESS, state.add_character(second));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, state.add_character(first));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, state.add_character(second));
     state.remove_character(0);
     FT_ASSERT_EQ(1, state.get_characters().size());
     FT_ASSERT(state.get_characters()[0] == second);
-    FT_ASSERT_EQ(ER_SUCCESS, state.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, state.get_error());
     return (1);
 }

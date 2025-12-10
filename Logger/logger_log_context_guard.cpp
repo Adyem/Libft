@@ -3,19 +3,19 @@
 #include "../Libft/libft.hpp"
 
 ft_log_context_guard::ft_log_context_guard() noexcept
-    : _pushed_count(0), _active(false), _error_code(ER_SUCCESS)
+    : _pushed_count(0), _active(false), _error_code(FT_ER_SUCCESSS)
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
 ft_log_context_guard::ft_log_context_guard(const s_log_field *fields,
         size_t field_count) noexcept
-    : _pushed_count(0), _active(false), _error_code(ER_SUCCESS)
+    : _pushed_count(0), _active(false), _error_code(FT_ER_SUCCESSS)
 {
     size_t pushed_count;
 
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     if (logger_context_push(fields, field_count, &pushed_count) != 0)
     {
         this->_active = false;
@@ -28,7 +28,7 @@ ft_log_context_guard::ft_log_context_guard(const s_log_field *fields,
         this->_active = true;
     else
         this->_active = false;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -40,7 +40,7 @@ ft_log_context_guard::~ft_log_context_guard() noexcept
     if (this->_active)
     {
         logger_context_pop(this->_pushed_count);
-        if (ft_errno != ER_SUCCESS)
+        if (ft_errno != FT_ER_SUCCESSS)
         {
             this->_active = false;
             this->set_error(ft_errno);
@@ -49,7 +49,7 @@ ft_log_context_guard::~ft_log_context_guard() noexcept
         }
     }
     this->_active = false;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     ft_errno = entry_errno;
     return ;
 }
@@ -62,8 +62,8 @@ ft_log_context_guard::ft_log_context_guard(ft_log_context_guard &&other) noexcep
     entry_errno = ft_errno;
     other._pushed_count = 0;
     other._active = false;
-    other._error_code = ER_SUCCESS;
-    other.set_error(ER_SUCCESS);
+    other._error_code = FT_ER_SUCCESSS;
+    other.set_error(FT_ER_SUCCESSS);
     this->set_error(this->_error_code);
     ft_errno = entry_errno;
     return ;
@@ -79,7 +79,7 @@ ft_log_context_guard &ft_log_context_guard::operator=(ft_log_context_guard &&oth
         if (this->_active)
         {
             logger_context_pop(this->_pushed_count);
-            if (ft_errno != ER_SUCCESS)
+            if (ft_errno != FT_ER_SUCCESSS)
             {
                 this->_active = false;
                 this->set_error(ft_errno);
@@ -92,8 +92,8 @@ ft_log_context_guard &ft_log_context_guard::operator=(ft_log_context_guard &&oth
         this->_error_code = other._error_code;
         other._pushed_count = 0;
         other._active = false;
-        other._error_code = ER_SUCCESS;
-        other.set_error(ER_SUCCESS);
+        other._error_code = FT_ER_SUCCESSS;
+        other.set_error(FT_ER_SUCCESSS);
         this->set_error(this->_error_code);
         ft_errno = entry_errno;
     }
@@ -111,18 +111,18 @@ void ft_log_context_guard::release() noexcept
 {
     if (!this->_active)
     {
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
         return ;
     }
     logger_context_pop(this->_pushed_count);
-    if (ft_errno != ER_SUCCESS)
+    if (ft_errno != FT_ER_SUCCESSS)
     {
         this->_active = false;
         this->set_error(ft_errno);
         return ;
     }
     this->_active = false;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -131,7 +131,7 @@ bool ft_log_context_guard::is_active() const noexcept
     bool guard_active;
 
     guard_active = this->_active;
-    const_cast<ft_log_context_guard *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_log_context_guard *>(this)->set_error(FT_ER_SUCCESSS);
     return (guard_active);
 }
 

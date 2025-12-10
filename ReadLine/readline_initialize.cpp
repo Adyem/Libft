@@ -89,6 +89,6 @@ int rl_initialize_state(readline_state_t *state)
     }
     rl_open_log_file(state);
     rl_state_unlock(state, lock_acquired);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }

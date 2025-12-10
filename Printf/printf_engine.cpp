@@ -586,7 +586,7 @@ static int pf_engine_format_with_snprintf(const ft_string &format_string, t_pf_e
         return (-1);
     ft_string output;
     output.resize_length(static_cast<size_t>(required_length));
-    if (output.get_error() != ER_SUCCESS)
+    if (output.get_error() != FT_ER_SUCCESSS)
         return (-1);
     va_start(args, written_count);
     int written_length;
@@ -901,7 +901,7 @@ static int pf_engine_process_sequential(const std::vector<pf_engine_token> &toke
     int status;
     status = 0;
     int stored_error;
-    stored_error = ER_SUCCESS;
+    stored_error = FT_ER_SUCCESSS;
     bool has_stored_error;
     has_stored_error = false;
     bool mark_overflow;
@@ -1449,7 +1449,7 @@ int pf_engine_format(const char *format, va_list args, t_pf_engine_write_callbac
         pf_errno_guard()
         {
             this->restore = false;
-            this->error = ER_SUCCESS;
+            this->error = FT_ER_SUCCESSS;
             return ;
         }
 
@@ -1486,13 +1486,13 @@ int pf_engine_format(const char *format, va_list args, t_pf_engine_write_callbac
     if (status != 0)
     {
         errno_guard.restore = true;
-        if (ft_errno == ER_SUCCESS)
+        if (ft_errno == FT_ER_SUCCESSS)
             errno_guard.error = FT_ERR_INVALID_ARGUMENT;
         else
             errno_guard.error = ft_errno;
         return (-1);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     if (*written_count < initial_count)
     {
         errno_guard.restore = true;

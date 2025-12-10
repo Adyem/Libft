@@ -104,6 +104,6 @@ char *rl_readline(const char *prompt)
     rl_state_teardown_thread_safety(&state);
     if (DEBUG == 1)
         pf_printf("returning %s\n", state.buffer);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (state.buffer);
 }

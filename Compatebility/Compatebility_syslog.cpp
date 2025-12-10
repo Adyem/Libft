@@ -26,21 +26,21 @@ void cmp_syslog_close(void)
 int cmp_syslog_open(const char *identifier)
 {
     openlog(identifier, LOG_PID | LOG_CONS, LOG_USER);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
 void cmp_syslog_write(const char *message)
 {
     syslog(LOG_INFO, "%s", message);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 
 void cmp_syslog_close(void)
 {
     closelog();
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 #endif

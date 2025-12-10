@@ -30,8 +30,8 @@ static int cma_allocation_guard_release_locked(void *memory_pointer,
     else
         g_cma_current_bytes = 0;
     g_cma_free_count += 1;
-    ft_errno = ER_SUCCESS;
-    return (ER_SUCCESS);
+    ft_errno = FT_ER_SUCCESSS;
+    return (FT_ER_SUCCESSS);
 }
 
 static int cma_allocation_guard_release_allocation(void *memory_pointer,
@@ -43,8 +43,8 @@ static int cma_allocation_guard_release_allocation(void *memory_pointer,
     *invalid_state_detected = false;
     if (memory_pointer == ft_nullptr)
     {
-        ft_errno = ER_SUCCESS;
-        return (ER_SUCCESS);
+        ft_errno = FT_ER_SUCCESSS;
+        return (FT_ER_SUCCESSS);
     }
     if (cma_backend_is_enabled() && cma_backend_owns_pointer(memory_pointer))
     {
@@ -67,16 +67,16 @@ static int cma_allocation_guard_release_allocation(void *memory_pointer,
 }
 
 cma_allocation_guard::cma_allocation_guard()
-    : _pointer(ft_nullptr), _error_code(ER_SUCCESS)
+    : _pointer(ft_nullptr), _error_code(FT_ER_SUCCESSS)
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
 cma_allocation_guard::cma_allocation_guard(void *memory_pointer)
-    : _pointer(memory_pointer), _error_code(ER_SUCCESS)
+    : _pointer(memory_pointer), _error_code(FT_ER_SUCCESSS)
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -97,11 +97,11 @@ cma_allocation_guard::~cma_allocation_guard()
         this->set_error(release_error);
         su_sigabrt();
     }
-    if (managed_pointer != ft_nullptr && release_error == ER_SUCCESS
+    if (managed_pointer != ft_nullptr && release_error == FT_ER_SUCCESSS
         && ft_log_get_alloc_logging())
         ft_log_debug("cma_free %p", managed_pointer);
     this->set_error(release_error);
-    if (release_error == ER_SUCCESS)
+    if (release_error == FT_ER_SUCCESSS)
         ft_errno = entry_errno;
     return ;
 }
@@ -110,8 +110,8 @@ cma_allocation_guard::cma_allocation_guard(cma_allocation_guard &&other) noexcep
     : _pointer(other._pointer), _error_code(other._error_code)
 {
     other._pointer = ft_nullptr;
-    other._error_code = ER_SUCCESS;
-    other.set_error(ER_SUCCESS);
+    other._error_code = FT_ER_SUCCESSS;
+    other.set_error(FT_ER_SUCCESSS);
     this->set_error(this->_error_code);
     return ;
 }
@@ -136,7 +136,7 @@ cma_allocation_guard &cma_allocation_guard::operator=(cma_allocation_guard &&oth
                 this->set_error(release_error);
                 su_sigabrt();
             }
-            if (release_error != ER_SUCCESS)
+            if (release_error != FT_ER_SUCCESSS)
             {
                 this->set_error(release_error);
                 return (*this);
@@ -147,10 +147,10 @@ cma_allocation_guard &cma_allocation_guard::operator=(cma_allocation_guard &&oth
         this->_pointer = other._pointer;
         this->_error_code = other._error_code;
         other._pointer = ft_nullptr;
-        other._error_code = ER_SUCCESS;
-        other.set_error(ER_SUCCESS);
+        other._error_code = FT_ER_SUCCESSS;
+        other.set_error(FT_ER_SUCCESSS);
         this->set_error(this->_error_code);
-        if (this->_error_code == ER_SUCCESS)
+        if (this->_error_code == FT_ER_SUCCESSS)
             ft_errno = entry_errno;
     }
     return (*this);
@@ -173,7 +173,7 @@ void cma_allocation_guard::reset(void *memory_pointer)
     entry_errno = ft_errno;
     if (this->_pointer == memory_pointer)
     {
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
         ft_errno = entry_errno;
         return ;
     }
@@ -187,7 +187,7 @@ void cma_allocation_guard::reset(void *memory_pointer)
             this->set_error(release_error);
             su_sigabrt();
         }
-        if (release_error != ER_SUCCESS)
+        if (release_error != FT_ER_SUCCESSS)
         {
             this->set_error(release_error);
             return ;
@@ -196,7 +196,7 @@ void cma_allocation_guard::reset(void *memory_pointer)
             ft_log_debug("cma_free %p", previous_pointer);
     }
     this->_pointer = memory_pointer;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     ft_errno = entry_errno;
     return ;
 }
@@ -207,13 +207,13 @@ void *cma_allocation_guard::release()
 
     released_pointer = this->_pointer;
     this->_pointer = ft_nullptr;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (released_pointer);
 }
 
 void *cma_allocation_guard::get() const
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (this->_pointer);
 }
 
@@ -222,7 +222,7 @@ bool cma_allocation_guard::owns_allocation() const
     bool owns_memory;
 
     owns_memory = (this->_pointer != ft_nullptr);
-    const_cast<cma_allocation_guard *>(this)->set_error(ER_SUCCESS);
+    const_cast<cma_allocation_guard *>(this)->set_error(FT_ER_SUCCESSS);
     return (owns_memory);
 }
 

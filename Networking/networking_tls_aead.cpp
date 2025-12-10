@@ -24,7 +24,7 @@ static bool networking_tls_prepare_buffer(ft_vector<unsigned char> &buffer,
         size_t length)
 {
     buffer.resize(length, 0);
-    if (buffer.get_error() != ER_SUCCESS)
+    if (buffer.get_error() != FT_ER_SUCCESSS)
         return (false);
     return (true);
 }
@@ -146,7 +146,7 @@ bool    networking_tls_export_aead_keys(SSL *ssl_session, bool outbound,
             ft_memcpy(receive_iv.begin(), first_iv, iv_length);
         }
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (true);
 }
 
@@ -173,11 +173,11 @@ bool    networking_tls_initialize_aead_contexts(SSL *ssl_session, bool outbound,
         return (false);
     }
     if (send_context.initialize_encrypt(send_key.begin(), send_key.size(),
-            send_iv.begin(), send_iv.size()) != ER_SUCCESS)
+            send_iv.begin(), send_iv.size()) != FT_ER_SUCCESSS)
         return (false);
     if (receive_context.initialize_decrypt(receive_key.begin(),
-            receive_key.size(), receive_iv.begin(), receive_iv.size()) != ER_SUCCESS)
+            receive_key.size(), receive_iv.begin(), receive_iv.size()) != FT_ER_SUCCESSS)
         return (false);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (true);
 }

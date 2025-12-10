@@ -31,14 +31,14 @@ static void *game_goal_increment_task(void *argument)
     while (index < arguments->iterations)
     {
         arguments->goal_pointer->add_progress(1);
-        if (arguments->goal_pointer->get_error() != ER_SUCCESS)
+        if (arguments->goal_pointer->get_error() != FT_ER_SUCCESSS)
         {
             arguments->result_code = arguments->goal_pointer->get_error();
             return (ft_nullptr);
         }
         index += 1;
     }
-    arguments->result_code = ER_SUCCESS;
+    arguments->result_code = FT_ER_SUCCESSS;
     return (ft_nullptr);
 }
 
@@ -57,14 +57,14 @@ static void *game_goal_read_task(void *argument)
         int target_value;
 
         progress_value = arguments->goal_pointer->get_progress();
-        if (arguments->goal_pointer->get_error() != ER_SUCCESS)
+        if (arguments->goal_pointer->get_error() != FT_ER_SUCCESSS)
         {
             arguments->result_code = arguments->goal_pointer->get_error();
             return (ft_nullptr);
         }
         (void)progress_value;
         target_value = arguments->goal_pointer->get_target();
-        if (arguments->goal_pointer->get_error() != ER_SUCCESS)
+        if (arguments->goal_pointer->get_error() != FT_ER_SUCCESSS)
         {
             arguments->result_code = arguments->goal_pointer->get_error();
             return (ft_nullptr);
@@ -72,7 +72,7 @@ static void *game_goal_read_task(void *argument)
         (void)target_value;
         index += 1;
     }
-    arguments->result_code = ER_SUCCESS;
+    arguments->result_code = FT_ER_SUCCESSS;
     return (ft_nullptr);
 }
 
@@ -99,17 +99,17 @@ FT_TEST(test_game_goal_thread_safety,
     failure_expression = ft_nullptr;
     failure_line = 0;
     primary_goal.set_target(128);
-    if (primary_goal.get_error() != ER_SUCCESS)
+    if (primary_goal.get_error() != FT_ER_SUCCESSS)
         return (0);
     primary_goal.set_progress(0);
-    if (primary_goal.get_error() != ER_SUCCESS)
+    if (primary_goal.get_error() != FT_ER_SUCCESSS)
         return (0);
     increment_arguments.goal_pointer = &primary_goal;
     increment_arguments.iterations = 1024;
-    increment_arguments.result_code = ER_SUCCESS;
+    increment_arguments.result_code = FT_ER_SUCCESSS;
     read_arguments.goal_pointer = &primary_goal;
     read_arguments.iterations = 1024;
-    read_arguments.result_code = ER_SUCCESS;
+    read_arguments.result_code = FT_ER_SUCCESSS;
     create_increment_result = pt_thread_create(&increment_thread, ft_nullptr,
             game_goal_increment_task, &increment_arguments);
     if (create_increment_result != 0)
@@ -133,39 +133,39 @@ FT_TEST(test_game_goal_thread_safety,
         ft_goal moved_constructed(ft_move(constructed));
 
         copy_target = moved_constructed;
-        if (copy_target.get_error() != ER_SUCCESS)
+        if (copy_target.get_error() != FT_ER_SUCCESSS)
         {
             test_failed = 1;
-            failure_expression = "copy_target.get_error() == ER_SUCCESS";
+            failure_expression = "copy_target.get_error() == FT_ER_SUCCESSS";
             failure_line = __LINE__;
         }
         if (test_failed == 0)
         {
             assign_target = copy_target;
-            if (assign_target.get_error() != ER_SUCCESS)
+            if (assign_target.get_error() != FT_ER_SUCCESSS)
             {
                 test_failed = 1;
-                failure_expression = "assign_target.get_error() == ER_SUCCESS";
+                failure_expression = "assign_target.get_error() == FT_ER_SUCCESSS";
                 failure_line = __LINE__;
             }
         }
         if (test_failed == 0)
         {
             move_target = ft_move(assign_target);
-            if (move_target.get_error() != ER_SUCCESS)
+            if (move_target.get_error() != FT_ER_SUCCESSS)
             {
                 test_failed = 1;
-                failure_expression = "move_target.get_error() == ER_SUCCESS";
+                failure_expression = "move_target.get_error() == FT_ER_SUCCESSS";
                 failure_line = __LINE__;
             }
         }
         if (test_failed == 0)
         {
             primary_goal = ft_move(move_target);
-            if (primary_goal.get_error() != ER_SUCCESS)
+            if (primary_goal.get_error() != FT_ER_SUCCESSS)
             {
                 test_failed = 1;
-                failure_expression = "primary_goal.get_error() == ER_SUCCESS";
+                failure_expression = "primary_goal.get_error() == FT_ER_SUCCESSS";
                 failure_line = __LINE__;
             }
         }
@@ -191,16 +191,16 @@ FT_TEST(test_game_goal_thread_safety,
             failure_line = __LINE__;
         }
     }
-    if (increment_arguments.result_code != ER_SUCCESS && test_failed == 0)
+    if (increment_arguments.result_code != FT_ER_SUCCESSS && test_failed == 0)
     {
         test_failed = 1;
-        failure_expression = "increment_arguments.result_code == ER_SUCCESS";
+        failure_expression = "increment_arguments.result_code == FT_ER_SUCCESSS";
         failure_line = __LINE__;
     }
-    if (read_arguments.result_code != ER_SUCCESS && test_failed == 0)
+    if (read_arguments.result_code != FT_ER_SUCCESSS && test_failed == 0)
     {
         test_failed = 1;
-        failure_expression = "read_arguments.result_code == ER_SUCCESS";
+        failure_expression = "read_arguments.result_code == FT_ER_SUCCESSS";
         failure_line = __LINE__;
     }
     if (test_failed != 0)

@@ -20,7 +20,7 @@ FT_TEST(test_ft_thread_pool_enable_thread_safety_controls,
     FT_ASSERT_EQ(0, pool_instance.lock(&lock_acquired));
     FT_ASSERT(lock_acquired);
     pool_instance.unlock(lock_acquired);
-    FT_ASSERT_EQ(ER_SUCCESS, pool_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, pool_instance.get_error());
 
     task_index = 0;
     while (task_index < 4)
@@ -31,11 +31,11 @@ FT_TEST(test_ft_thread_pool_enable_thread_safety_controls,
 
     pool_instance.wait();
     FT_ASSERT_EQ(4, task_count.load());
-    FT_ASSERT_EQ(ER_SUCCESS, pool_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, pool_instance.get_error());
 
     pool_instance.disable_thread_safety();
     FT_ASSERT(pool_instance.is_thread_safe() == false);
-    FT_ASSERT_EQ(ER_SUCCESS, pool_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, pool_instance.get_error());
 
     pool_instance.destroy();
     return (1);
@@ -94,7 +94,7 @@ FT_TEST(test_ft_thread_pool_lock_blocks_until_release,
 
     pool_instance.disable_thread_safety();
     FT_ASSERT(pool_instance.is_thread_safe() == false);
-    FT_ASSERT_EQ(ER_SUCCESS, pool_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, pool_instance.get_error());
 
     pool_instance.destroy();
     return (1);

@@ -20,7 +20,7 @@ int ft_strcat_s(char *destination, size_t destination_size, const char *source)
     size_t destination_length;
     size_t source_length;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     if (destination == ft_nullptr || source == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
@@ -32,13 +32,13 @@ int ft_strcat_s(char *destination, size_t destination_size, const char *source)
         return (-1);
     }
     destination_length = static_cast<size_t>(ft_strlen(destination));
-    if (ft_errno != ER_SUCCESS)
+    if (ft_errno != FT_ER_SUCCESSS)
     {
         zero_buffer(destination, destination_size);
         return (-1);
     }
     source_length = static_cast<size_t>(ft_strlen(source));
-    if (ft_errno != ER_SUCCESS)
+    if (ft_errno != FT_ER_SUCCESSS)
     {
         zero_buffer(destination, destination_size);
         return (-1);
@@ -54,7 +54,7 @@ int ft_strcat_s(char *destination, size_t destination_size, const char *source)
         zero_buffer(destination, destination_size);
         return (-1);
     }
-    if (ft_errno != ER_SUCCESS)
+    if (ft_errno != FT_ER_SUCCESSS)
     {
         zero_buffer(destination, destination_size);
         return (-1);

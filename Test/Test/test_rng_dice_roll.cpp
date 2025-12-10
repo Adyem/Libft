@@ -17,7 +17,7 @@ FT_TEST(test_ft_dice_roll_deterministic_sum, "ft_dice_roll produces reproducible
     ft_rng_test_seed_engine(1337u, "rng_dice_roll_sequence");
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     actual_result = ft_dice_roll(4, 6);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
 
     ft_rng_test_seed_engine(1337u, "rng_dice_roll_sequence");
     expected_result = 0;
@@ -41,7 +41,7 @@ FT_TEST(test_ft_dice_roll_zero_arguments_success, "ft_dice_roll returns zero whe
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     result = ft_dice_roll(0, 0);
     FT_ASSERT_EQ(0, result);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -49,12 +49,12 @@ FT_TEST(test_ft_dice_roll_invalid_arguments, "ft_dice_roll rejects counts or fac
 {
     int result;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     result = ft_dice_roll(0, 6);
     FT_ASSERT_EQ(-1, result);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     result = ft_dice_roll(2, 0);
     FT_ASSERT_EQ(-1, result);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -68,6 +68,6 @@ FT_TEST(test_ft_dice_roll_single_face_returns_number, "ft_dice_roll returns the 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     result = ft_dice_roll(5, 1);
     FT_ASSERT_EQ(5, result);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }

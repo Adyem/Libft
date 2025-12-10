@@ -333,7 +333,7 @@ FT_TEST(test_scma_snapshot_allows_null_size_pointer, "scma snapshot succeeds wit
     FT_ASSERT_EQ(1, scma_write(handle, 0, payload, 3));
     copy = scma_snapshot(handle, ft_nullptr);
     FT_ASSERT(copy != ft_nullptr);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     copied_bytes = static_cast<unsigned char *>(copy);
     FT_ASSERT_EQ(payload[0], copied_bytes[0]);
     FT_ASSERT_EQ(payload[1], copied_bytes[1]);

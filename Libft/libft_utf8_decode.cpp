@@ -55,7 +55,7 @@ int ft_utf8_next(const char *string, size_t string_length,
     size_t processed_bytes;
     uint32_t minimum_value;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     if (string == ft_nullptr || index_pointer == ft_nullptr
         || code_point_pointer == ft_nullptr)
     {

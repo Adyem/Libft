@@ -50,6 +50,6 @@ FT_TEST(test_game_hooks_reset_clears_callbacks, "Game: hooks reset clears regist
     FT_ASSERT_EQ(0, crafted_invocations);
     FT_ASSERT_EQ(0, damaged_invocations);
     FT_ASSERT_EQ(0, event_invocations);
-    FT_ASSERT_EQ(ER_SUCCESS, hooks.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, hooks.get_error());
     return (1);
 }

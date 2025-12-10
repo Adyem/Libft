@@ -27,7 +27,7 @@ FT_TEST(test_time_trace_writes_events,
     FT_ASSERT_EQ(true, result);
     result = time_trace_end_session();
     FT_ASSERT_EQ(true, result);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     input.open(file_path, std::ios::binary);
     FT_ASSERT_EQ(true, input.good());
     contents.assign((std::istreambuf_iterator<char>(input)),
@@ -61,7 +61,7 @@ FT_TEST(test_time_trace_detects_unbalanced_events,
     FT_ASSERT_EQ(true, result);
     result = time_trace_end_session();
     FT_ASSERT_EQ(true, result);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     std::remove(file_path);
     return (1);
 }

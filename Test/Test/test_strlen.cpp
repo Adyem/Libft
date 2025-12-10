@@ -12,7 +12,7 @@ FT_TEST(test_strlen_nullptr, "ft_strlen nullptr")
 
 FT_TEST(test_strlen_nullptr_sets_errno, "ft_strlen nullptr sets FT_ERR_INVALID_ARGUMENT")
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(0, ft_strlen(ft_nullptr));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -30,7 +30,7 @@ FT_TEST(test_strlen_stops_at_embedded_null, "ft_strlen stops counting at first n
     buffer[5] = '\0';
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(static_cast<size_t>(2), ft_strlen(buffer));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -80,7 +80,7 @@ FT_TEST(test_strlen_resets_errno_on_success, "ft_strlen clears ft_errno before m
 {
     ft_errno = FT_ERR_OUT_OF_RANGE;
     FT_ASSERT_EQ(3, ft_strlen("abc"));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -93,7 +93,7 @@ FT_TEST(test_strlen_counts_non_ascii_bytes, "ft_strlen counts bytes beyond ascii
     string[2] = '\0';
     ft_errno = FT_ERR_OUT_OF_RANGE;
     FT_ASSERT_EQ(2, ft_strlen(string));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -111,13 +111,13 @@ FT_TEST(test_strlen_size_t_large_buffer, "ft_strlen_size_t handles wide buffers"
     buffer[2048] = '\0';
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(static_cast<size_t>(2048), ft_strlen_size_t(buffer));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
 FT_TEST(test_strlen_size_t_nullptr_sets_errno, "ft_strlen_size_t nullptr sets FT_ERR_INVALID_ARGUMENT")
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(static_cast<size_t>(0), ft_strlen_size_t(ft_nullptr));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -142,7 +142,7 @@ FT_TEST(test_strlen_size_t_handles_unaligned_pointers,
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     measured_length = ft_strlen_size_t(start_pointer);
     FT_ASSERT_EQ(static_cast<size_t>(5), measured_length);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -156,18 +156,18 @@ FT_TEST(test_strlen_size_t_recovers_after_nullptr, "ft_strlen_size_t clears errn
     buffer[3] = 'u';
     buffer[4] = 'e';
     buffer[5] = '\0';
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(static_cast<size_t>(0), ft_strlen_size_t(ft_nullptr));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(static_cast<size_t>(5), ft_strlen_size_t(buffer));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
 FT_TEST(test_strnlen_nullptr_sets_errno, "ft_strnlen nullptr sets FT_ERR_INVALID_ARGUMENT")
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(static_cast<size_t>(0), ft_strnlen(ft_nullptr, 8));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -181,7 +181,7 @@ FT_TEST(test_strnlen_truncates_to_maximum, "ft_strnlen caps measured length at m
     ft_errno = FT_ERR_OUT_OF_RANGE;
     measured_length = ft_strnlen(source, 6);
     FT_ASSERT_EQ(static_cast<size_t>(6), measured_length);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -194,7 +194,7 @@ FT_TEST(test_strnlen_returns_full_length_when_smaller_than_bound,
     ft_errno = FT_ERR_OUT_OF_RANGE;
     measured_length = ft_strnlen(source, 32);
     FT_ASSERT_EQ(static_cast<size_t>(5), measured_length);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -206,7 +206,7 @@ FT_TEST(test_strnlen_zero_bound_resets_errno, "ft_strnlen zero bound clears errn
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     measured_length = ft_strnlen(source, 0);
     FT_ASSERT_EQ(static_cast<size_t>(0), measured_length);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -214,7 +214,7 @@ FT_TEST(test_cma_strndup_nullptr_sets_errno, "cma_strndup nullptr sets FT_ERR_IN
 {
     char *duplicate;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     duplicate = cma_strndup(ft_nullptr, 4);
     FT_ASSERT_EQ(ft_nullptr, duplicate);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -225,12 +225,12 @@ FT_TEST(test_cma_strndup_truncates_copy_to_requested_length, "cma_strndup copies
 {
     char *duplicate;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     duplicate = cma_strndup("truncate-me", 3);
     FT_ASSERT(duplicate != ft_nullptr);
     FT_ASSERT_EQ(0, ft_strncmp(duplicate, "tru", 4));
     FT_ASSERT_EQ('\0', duplicate[3]);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     cma_free(duplicate);
     return (1);
 }
@@ -240,12 +240,12 @@ FT_TEST(test_cma_strndup_copies_full_string_when_shorter_than_bound,
 {
     char *duplicate;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     duplicate = cma_strndup("abc", 8);
     FT_ASSERT(duplicate != ft_nullptr);
     FT_ASSERT_EQ(0, ft_strncmp(duplicate, "abc", 4));
     FT_ASSERT_EQ('\0', duplicate[3]);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     cma_free(duplicate);
     return (1);
 }
@@ -263,7 +263,7 @@ FT_TEST(test_span_dup_copies_full_buffer_without_null, "ft_span_dup copies buffe
     FT_ASSERT(duplicate != ft_nullptr);
     FT_ASSERT_EQ(0, ft_strncmp(duplicate, "xyzw", 5));
     FT_ASSERT_EQ('\0', duplicate[4]);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     cma_free(duplicate);
     return (1);
 }
@@ -278,7 +278,7 @@ FT_TEST(test_span_dup_handles_zero_length, "ft_span_dup allocates empty strings 
     duplicate = ft_span_dup(buffer, 0);
     FT_ASSERT(duplicate != ft_nullptr);
     FT_ASSERT_EQ('\0', duplicate[0]);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     cma_free(duplicate);
     return (1);
 }
@@ -287,7 +287,7 @@ FT_TEST(test_span_dup_nullptr_with_length_sets_errno, "ft_span_dup nullptr with 
 {
     char *duplicate;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     duplicate = ft_span_dup(ft_nullptr, 3);
     FT_ASSERT_EQ(ft_nullptr, duplicate);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -306,7 +306,7 @@ FT_TEST(test_span_to_string_copies_span, "ft_span_to_string copies spans into ft
     buffer[4] = 'e';
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     span_string = ft_span_to_string(buffer, 5);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(static_cast<size_t>(5), span_string.size());
     FT_ASSERT(span_string == "abcde");
     return (1);
@@ -316,7 +316,7 @@ FT_TEST(test_span_to_string_nullptr_with_length_sets_errno, "ft_span_to_string n
 {
     ft_string span_string;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     span_string = ft_span_to_string(ft_nullptr, 2);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, span_string.get_error());
@@ -329,7 +329,7 @@ FT_TEST(test_span_to_string_allows_empty_nullptr, "ft_span_to_string accepts nul
 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     span_string = ft_span_to_string(ft_nullptr, 0);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(static_cast<size_t>(0), span_string.size());
     FT_ASSERT(span_string.empty());
     return (1);

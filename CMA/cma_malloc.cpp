@@ -36,7 +36,7 @@ void* cma_malloc(ft_size_t size)
         if (ptr)
         {
             g_cma_allocation_count++;
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
         }
         else
             ft_errno = FT_ERR_NO_MEMORY;
@@ -85,7 +85,7 @@ void* cma_malloc(ft_size_t size)
     void *result = static_cast<void *>(cma_block_user_pointer(block));
     cma_leak_tracker_record_allocation(result, cma_block_user_size(block));
     allocator_guard.unlock();
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     if (ft_log_get_alloc_logging())
     {
         if (request_size == size)

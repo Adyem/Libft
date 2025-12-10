@@ -2,7 +2,7 @@
 
 int ft_isalnum(int character)
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     if (ft_isdigit(character) || ft_isalpha(character))
         return (1);
     return (0);

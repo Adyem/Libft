@@ -17,7 +17,7 @@ FT_TEST(test_bzero_basic, "ft_bzero basic")
     FT_ASSERT_EQ(0, buffer[1]);
     FT_ASSERT_EQ(0, buffer[2]);
     FT_ASSERT_EQ(0, buffer[3]);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -37,7 +37,7 @@ FT_TEST(test_bzero_partial, "ft_bzero partial")
     FT_ASSERT_EQ(0, buffer[2]);
     FT_ASSERT_EQ(0, buffer[3]);
     FT_ASSERT_EQ('e', buffer[4]);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -53,7 +53,7 @@ FT_TEST(test_bzero_zero_length, "ft_bzero zero length")
     FT_ASSERT_EQ('x', buffer[0]);
     FT_ASSERT_EQ('y', buffer[1]);
     FT_ASSERT_EQ('\0', buffer[2]);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -61,13 +61,13 @@ FT_TEST(test_bzero_null_zero, "ft_bzero nullptr zero")
 {
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     ft_bzero(ft_nullptr, 0);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
 FT_TEST(test_bzero_null_sets_errno, "ft_bzero null pointer with length sets errno")
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     ft_bzero(ft_nullptr, 4);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -80,14 +80,14 @@ FT_TEST(test_bzero_recovers_errno_after_error, "ft_bzero clears errno after reco
     buffer[0] = 'x';
     buffer[1] = 'y';
     buffer[2] = 'z';
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     ft_bzero(ft_nullptr, 2);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     ft_bzero(buffer, 2);
     FT_ASSERT_EQ(0, buffer[0]);
     FT_ASSERT_EQ(0, buffer[1]);
     FT_ASSERT_EQ('z', buffer[2]);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -100,21 +100,21 @@ FT_TEST(test_bzero_repeated_zero_length_keeps_errno_cleared, "ft_bzero zero leng
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     ft_bzero(buffer, 0);
     FT_ASSERT_EQ('a', buffer[0]);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     ft_bzero(buffer, 0);
     FT_ASSERT_EQ('a', buffer[0]);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
 FT_TEST(test_bzero_null_zero_length_recovers_after_error, "ft_bzero zero length clears prior errors")
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     ft_bzero(ft_nullptr, 3);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     ft_bzero(ft_nullptr, 0);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 

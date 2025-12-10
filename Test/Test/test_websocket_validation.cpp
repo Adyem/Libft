@@ -43,7 +43,7 @@ FT_TEST(test_websocket_server_rejects_unmasked_frame, "websocket server rejects 
     context.result = -1;
     context.client_fd = -1;
     server_thread = ft_thread(websocket_server_worker, &context);
-    if (server_thread.get_error() != ER_SUCCESS)
+    if (server_thread.get_error() != FT_ER_SUCCESSS)
     {
         nw_close(client_socket);
         return (0);

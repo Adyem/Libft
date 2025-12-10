@@ -15,13 +15,13 @@ void game_economy_restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno
 {
     int unlock_error;
 
-    unlock_error = ER_SUCCESS;
+    unlock_error = FT_ER_SUCCESSS;
     if (guard.owns_lock())
     {
         guard.unlock();
         unlock_error = guard.get_error();
     }
-    if (unlock_error != ER_SUCCESS)
+    if (unlock_error != FT_ER_SUCCESSS)
     {
         ft_errno = unlock_error;
         return ;

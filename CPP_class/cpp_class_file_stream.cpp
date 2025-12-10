@@ -79,6 +79,6 @@ int ft_file_stream_copy(ft_file &source_file, ft_file &destination_file, size_t 
         }
     }
     ft_file_release_transfer_buffer(transfer_buffer);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }

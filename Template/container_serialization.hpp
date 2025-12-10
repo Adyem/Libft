@@ -22,15 +22,15 @@ namespace ft_container_serialization
         if constexpr (std::is_same<ElementType, ft_string>::value)
         {
             output = value;
-            if (output.get_error() != ER_SUCCESS)
+            if (output.get_error() != FT_ER_SUCCESSS)
             {
                 int error_code = output.get_error();
-                if (error_code == ER_SUCCESS)
+                if (error_code == FT_ER_SUCCESSS)
                     error_code = FT_ERR_NO_MEMORY;
                 ft_errno = error_code;
                 return (-1);
             }
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             return (0);
         }
         else if constexpr (std::is_same<ElementType, const char *>::value)
@@ -41,15 +41,15 @@ namespace ft_container_serialization
                 return (-1);
             }
             output = value;
-            if (output.get_error() != ER_SUCCESS)
+            if (output.get_error() != FT_ER_SUCCESSS)
             {
                 int error_code = output.get_error();
-                if (error_code == ER_SUCCESS)
+                if (error_code == FT_ER_SUCCESSS)
                     error_code = FT_ERR_NO_MEMORY;
                 ft_errno = error_code;
                 return (-1);
             }
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             return (0);
         }
         else if constexpr (std::is_integral<ElementType>::value)
@@ -67,71 +67,71 @@ namespace ft_container_serialization
                     return (-1);
                 }
                 ft_string serialized = ft_to_string(static_cast<long>(value));
-                if (serialized.get_error() != ER_SUCCESS)
+                if (serialized.get_error() != FT_ER_SUCCESSS)
                 {
                     int error_code = serialized.get_error();
-                    if (error_code == ER_SUCCESS)
+                    if (error_code == FT_ER_SUCCESSS)
                         error_code = FT_ERR_NO_MEMORY;
                     ft_errno = error_code;
                     return (-1);
                 }
                 output = serialized;
-                if (output.get_error() != ER_SUCCESS)
+                if (output.get_error() != FT_ER_SUCCESSS)
                 {
                     int error_code = output.get_error();
-                    if (error_code == ER_SUCCESS)
+                    if (error_code == FT_ER_SUCCESSS)
                         error_code = FT_ERR_NO_MEMORY;
                     ft_errno = error_code;
                     return (-1);
                 }
-                ft_errno = ER_SUCCESS;
+                ft_errno = FT_ER_SUCCESSS;
                 return (0);
             }
             else
             {
                 ft_string serialized = ft_to_string(static_cast<unsigned long long>(value));
-                if (serialized.get_error() != ER_SUCCESS)
+                if (serialized.get_error() != FT_ER_SUCCESSS)
                 {
                     int error_code = serialized.get_error();
-                    if (error_code == ER_SUCCESS)
+                    if (error_code == FT_ER_SUCCESSS)
                         error_code = FT_ERR_NO_MEMORY;
                     ft_errno = error_code;
                     return (-1);
                 }
                 output = serialized;
-                if (output.get_error() != ER_SUCCESS)
+                if (output.get_error() != FT_ER_SUCCESSS)
                 {
                     int error_code = output.get_error();
-                    if (error_code == ER_SUCCESS)
+                    if (error_code == FT_ER_SUCCESSS)
                         error_code = FT_ERR_NO_MEMORY;
                     ft_errno = error_code;
                     return (-1);
                 }
-                ft_errno = ER_SUCCESS;
+                ft_errno = FT_ER_SUCCESSS;
                 return (0);
             }
         }
         else if constexpr (std::is_floating_point<ElementType>::value)
         {
             ft_string serialized = ft_to_string(static_cast<double>(value));
-            if (serialized.get_error() != ER_SUCCESS)
+            if (serialized.get_error() != FT_ER_SUCCESSS)
             {
                 int error_code = serialized.get_error();
-                if (error_code == ER_SUCCESS)
+                if (error_code == FT_ER_SUCCESSS)
                     error_code = FT_ERR_NO_MEMORY;
                 ft_errno = error_code;
                 return (-1);
             }
             output = serialized;
-            if (output.get_error() != ER_SUCCESS)
+            if (output.get_error() != FT_ER_SUCCESSS)
             {
                 int error_code = output.get_error();
-                if (error_code == ER_SUCCESS)
+                if (error_code == FT_ER_SUCCESSS)
                     error_code = FT_ERR_NO_MEMORY;
                 ft_errno = error_code;
                 return (-1);
             }
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             return (0);
         }
         else
@@ -152,21 +152,21 @@ namespace ft_container_serialization
         if constexpr (std::is_same<ElementType, ft_string>::value)
         {
             output = value_string;
-            if (output.get_error() != ER_SUCCESS)
+            if (output.get_error() != FT_ER_SUCCESSS)
             {
                 int error_code = output.get_error();
-                if (error_code == ER_SUCCESS)
+                if (error_code == FT_ER_SUCCESSS)
                     error_code = FT_ERR_NO_MEMORY;
                 ft_errno = error_code;
                 return (-1);
             }
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             return (0);
         }
         else if constexpr (std::is_integral<ElementType>::value)
         {
             long parsed = ft_atol(value_string);
-            if (ft_errno != ER_SUCCESS)
+            if (ft_errno != FT_ER_SUCCESSS)
                 return (-1);
             if constexpr (std::numeric_limits<ElementType>::is_signed)
             {
@@ -176,7 +176,7 @@ namespace ft_container_serialization
                     return (-1);
                 }
                 output = static_cast<ElementType>(parsed);
-                ft_errno = ER_SUCCESS;
+                ft_errno = FT_ER_SUCCESSS;
                 return (0);
             }
             else
@@ -193,17 +193,17 @@ namespace ft_container_serialization
                     return (-1);
                 }
                 output = static_cast<ElementType>(converted);
-                ft_errno = ER_SUCCESS;
+                ft_errno = FT_ER_SUCCESSS;
                 return (0);
             }
         }
         else if constexpr (std::is_floating_point<ElementType>::value)
         {
             ft_string input_copy = value_string;
-            if (input_copy.get_error() != ER_SUCCESS)
+            if (input_copy.get_error() != FT_ER_SUCCESSS)
             {
                 int error_code = input_copy.get_error();
-                if (error_code == ER_SUCCESS)
+                if (error_code == FT_ER_SUCCESSS)
                     error_code = FT_ERR_NO_MEMORY;
                 ft_errno = error_code;
                 return (-1);
@@ -222,7 +222,7 @@ namespace ft_container_serialization
                 return (-1);
             }
             output = static_cast<ElementType>(parsed_value);
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             return (0);
         }
         else
@@ -252,7 +252,7 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
         return (-1);
     size_t index = 0;
     size_t total_size = values.size();
-    if (values.get_error() != ER_SUCCESS)
+    if (values.get_error() != FT_ER_SUCCESSS)
     {
         json_free_groups(group);
         ft_errno = values.get_error();
@@ -261,7 +261,7 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
     while (index < total_size)
     {
         const ElementType &element = values[index];
-        if (values.get_error() != ER_SUCCESS)
+        if (values.get_error() != FT_ER_SUCCESSS)
         {
             json_free_groups(group);
             ft_errno = values.get_error();
@@ -274,30 +274,30 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
             return (-1);
         }
         ft_string key_string(item_prefix);
-        if (key_string.get_error() != ER_SUCCESS)
+        if (key_string.get_error() != FT_ER_SUCCESSS)
         {
             int error_code = key_string.get_error();
-            if (error_code == ER_SUCCESS)
+            if (error_code == FT_ER_SUCCESSS)
                 error_code = FT_ERR_NO_MEMORY;
             json_free_groups(group);
             ft_errno = error_code;
             return (-1);
         }
         ft_string index_string = ft_to_string(static_cast<long>(index));
-        if (index_string.get_error() != ER_SUCCESS)
+        if (index_string.get_error() != FT_ER_SUCCESSS)
         {
             int error_code = index_string.get_error();
-            if (error_code == ER_SUCCESS)
+            if (error_code == FT_ER_SUCCESSS)
                 error_code = FT_ERR_NO_MEMORY;
             json_free_groups(group);
             ft_errno = error_code;
             return (-1);
         }
         key_string += index_string;
-        if (key_string.get_error() != ER_SUCCESS)
+        if (key_string.get_error() != FT_ER_SUCCESSS)
         {
             int error_code = key_string.get_error();
-            if (error_code == ER_SUCCESS)
+            if (error_code == FT_ER_SUCCESSS)
                 error_code = FT_ERR_NO_MEMORY;
             json_free_groups(group);
             ft_errno = error_code;
@@ -320,7 +320,7 @@ int ft_vector_serialize_json(const ft_vector<ElementType> &values,
     }
     json_add_item_to_group(group, count_item);
     output_group = group;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -355,7 +355,7 @@ int ft_vector_deserialize_json(json_group *group,
         return (-1);
     }
     long expected_count = ft_atol(count_item->value);
-    if (ft_errno != ER_SUCCESS)
+    if (ft_errno != FT_ER_SUCCESSS)
         return (-1);
     if (expected_count < 0)
     {
@@ -367,28 +367,28 @@ int ft_vector_deserialize_json(json_group *group,
     while (index < static_cast<size_t>(expected_count))
     {
         ft_string key_string(item_prefix);
-        if (key_string.get_error() != ER_SUCCESS)
+        if (key_string.get_error() != FT_ER_SUCCESSS)
         {
             int error_code = key_string.get_error();
-            if (error_code == ER_SUCCESS)
+            if (error_code == FT_ER_SUCCESSS)
                 error_code = FT_ERR_NO_MEMORY;
             ft_errno = error_code;
             return (-1);
         }
         ft_string index_string = ft_to_string(static_cast<long>(index));
-        if (index_string.get_error() != ER_SUCCESS)
+        if (index_string.get_error() != FT_ER_SUCCESSS)
         {
             int error_code = index_string.get_error();
-            if (error_code == ER_SUCCESS)
+            if (error_code == FT_ER_SUCCESSS)
                 error_code = FT_ERR_NO_MEMORY;
             ft_errno = error_code;
             return (-1);
         }
         key_string += index_string;
-        if (key_string.get_error() != ER_SUCCESS)
+        if (key_string.get_error() != FT_ER_SUCCESSS)
         {
             int error_code = key_string.get_error();
-            if (error_code == ER_SUCCESS)
+            if (error_code == FT_ER_SUCCESSS)
                 error_code = FT_ERR_NO_MEMORY;
             ft_errno = error_code;
             return (-1);
@@ -403,7 +403,7 @@ int ft_vector_deserialize_json(json_group *group,
         if (deserializer(value_item->value, element) != 0)
             return (-1);
         parsed_values.push_back(element);
-        if (parsed_values.get_error() != ER_SUCCESS)
+        if (parsed_values.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = parsed_values.get_error();
             return (-1);
@@ -411,7 +411,7 @@ int ft_vector_deserialize_json(json_group *group,
         index += 1;
     }
     output = ft_move(parsed_values);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -438,7 +438,7 @@ int ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
         return (-1);
     }
     list_value->set_type(YAML_LIST);
-    if (list_value->get_error() != ER_SUCCESS)
+    if (list_value->get_error() != FT_ER_SUCCESSS)
     {
         int error_code = list_value->get_error();
         delete list_value;
@@ -447,7 +447,7 @@ int ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
     }
     size_t index = 0;
     size_t total_size = values.size();
-    if (values.get_error() != ER_SUCCESS)
+    if (values.get_error() != FT_ER_SUCCESSS)
     {
         delete list_value;
         ft_errno = values.get_error();
@@ -456,7 +456,7 @@ int ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
     while (index < total_size)
     {
         const ElementType &element = values[index];
-        if (values.get_error() != ER_SUCCESS)
+        if (values.get_error() != FT_ER_SUCCESSS)
         {
             yaml_free(list_value);
             ft_errno = values.get_error();
@@ -470,7 +470,7 @@ int ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
             return (-1);
         }
         entry->set_type(YAML_SCALAR);
-        if (entry->get_error() != ER_SUCCESS)
+        if (entry->get_error() != FT_ER_SUCCESSS)
         {
             int error_code = entry->get_error();
             delete entry;
@@ -486,7 +486,7 @@ int ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
             return (-1);
         }
         entry->set_scalar(serialized_value);
-        if (entry->get_error() != ER_SUCCESS)
+        if (entry->get_error() != FT_ER_SUCCESSS)
         {
             int error_code = entry->get_error();
             delete entry;
@@ -495,7 +495,7 @@ int ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
             return (-1);
         }
         list_value->add_list_item(entry);
-        if (list_value->get_error() != ER_SUCCESS)
+        if (list_value->get_error() != FT_ER_SUCCESSS)
         {
             int error_code = list_value->get_error();
             yaml_free(list_value);
@@ -505,7 +505,7 @@ int ft_vector_serialize_yaml(const ft_vector<ElementType> &values,
         index += 1;
     }
     output_value = list_value;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -526,20 +526,20 @@ int ft_vector_deserialize_yaml(const yaml_value &value,
     if (value.get_type() != YAML_LIST)
     {
         int error_code = value.get_error();
-        if (error_code == ER_SUCCESS)
+        if (error_code == FT_ER_SUCCESSS)
             error_code = FT_ERR_UNSUPPORTED_TYPE;
         ft_errno = error_code;
         return (-1);
     }
     const ft_vector<yaml_value*> &children = value.get_list();
     int list_error = value.get_error();
-    if (list_error != ER_SUCCESS)
+    if (list_error != FT_ER_SUCCESSS)
     {
         ft_errno = list_error;
         return (-1);
     }
     size_t total = children.size();
-    if (children.get_error() != ER_SUCCESS)
+    if (children.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = children.get_error();
         return (-1);
@@ -549,7 +549,7 @@ int ft_vector_deserialize_yaml(const yaml_value &value,
     while (index < total)
     {
         yaml_value *child = children[index];
-        if (children.get_error() != ER_SUCCESS)
+        if (children.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = children.get_error();
             return (-1);
@@ -562,13 +562,13 @@ int ft_vector_deserialize_yaml(const yaml_value &value,
         if (child->get_type() != YAML_SCALAR)
         {
             int child_error = child->get_error();
-            if (child_error == ER_SUCCESS)
+            if (child_error == FT_ER_SUCCESSS)
                 child_error = FT_ERR_UNSUPPORTED_TYPE;
             ft_errno = child_error;
             return (-1);
         }
         const ft_string &scalar = child->get_scalar();
-        if (child->get_error() != ER_SUCCESS)
+        if (child->get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = child->get_error();
             return (-1);
@@ -577,7 +577,7 @@ int ft_vector_deserialize_yaml(const yaml_value &value,
         if (deserializer(scalar.c_str(), element) != 0)
             return (-1);
         parsed.push_back(element);
-        if (parsed.get_error() != ER_SUCCESS)
+        if (parsed.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = parsed.get_error();
             return (-1);
@@ -585,7 +585,7 @@ int ft_vector_deserialize_yaml(const yaml_value &value,
         index += 1;
     }
     output = ft_move(parsed);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 

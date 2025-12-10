@@ -32,7 +32,7 @@ FT_TEST(test_crafting_success, "crafting succeeds")
     crafted.set_stack_size(1);
     crafted.set_rarity(0);
 
-    FT_ASSERT_EQ(ER_SUCCESS, crafting.craft_item(inventory, 1, crafted));
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, crafting.craft_item(inventory, 1, crafted));
     FT_ASSERT_EQ(1, inventory.count_item(3));
     FT_ASSERT_EQ(0, inventory.count_item(1));
     FT_ASSERT_EQ(0, inventory.count_item(2));

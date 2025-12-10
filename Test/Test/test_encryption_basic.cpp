@@ -28,7 +28,7 @@ FT_TEST(test_be_get_encryption_key_allocation_failure_sets_errno,
 {
     const char *key;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     cma_set_alloc_limit(1);
     key = be_getEncryptionKey();
     cma_set_alloc_limit(0);
@@ -42,7 +42,7 @@ FT_TEST(test_be_save_game_allocation_failure_sets_errno,
 {
     int save_result;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     cma_set_alloc_limit(1);
     save_result = be_saveGame("be_save_game_alloc.txt", "data", "key");
     cma_set_alloc_limit(0);
@@ -88,10 +88,10 @@ FT_TEST(test_be_decrypt_data_null_input_sets_errno,
     char *missing_buffer = ft_nullptr;
     char **wrapper = &missing_buffer;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(ft_nullptr, be_DecryptData(ft_nullptr, "key"));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(ft_nullptr, be_DecryptData(wrapper, "key"));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);

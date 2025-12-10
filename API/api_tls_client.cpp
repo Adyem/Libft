@@ -228,7 +228,7 @@ static bool tls_copy_bio_to_string(BIO *memory, ft_string &output)
     long memory_length;
 
     output.clear();
-    if (output.get_error() != ER_SUCCESS)
+    if (output.get_error() != FT_ER_SUCCESSS)
         return (false);
     if (memory == ft_nullptr)
     {
@@ -244,7 +244,7 @@ static bool tls_copy_bio_to_string(BIO *memory, ft_string &output)
     if (memory_length == 0)
         return (true);
     output.append(memory_data, static_cast<size_t>(memory_length));
-    if (output.get_error() != ER_SUCCESS)
+    if (output.get_error() != FT_ER_SUCCESSS)
         return (false);
     return (true);
 }
@@ -257,7 +257,7 @@ static bool tls_extract_x509_name(X509_NAME *name, ft_string &output)
     if (name == ft_nullptr)
     {
         output.clear();
-        return (output.get_error() == ER_SUCCESS);
+        return (output.get_error() == FT_ER_SUCCESSS);
     }
     memory = BIO_new(BIO_s_mem());
     if (memory == ft_nullptr)
@@ -275,7 +275,7 @@ static bool tls_extract_x509_name(X509_NAME *name, ft_string &output)
     BIO_free(memory);
     if (!copy_result)
     {
-        if (ft_errno == ER_SUCCESS)
+        if (ft_errno == FT_ER_SUCCESSS)
             ft_errno = FT_ERR_CONFIGURATION;
         return (false);
     }
@@ -290,7 +290,7 @@ static bool tls_extract_asn1_time(const ASN1_TIME *time_value, ft_string &output
     if (time_value == ft_nullptr)
     {
         output.clear();
-        return (output.get_error() == ER_SUCCESS);
+        return (output.get_error() == FT_ER_SUCCESSS);
     }
     memory = BIO_new(BIO_s_mem());
     if (memory == ft_nullptr)
@@ -308,7 +308,7 @@ static bool tls_extract_asn1_time(const ASN1_TIME *time_value, ft_string &output
     BIO_free(memory);
     if (!copy_result)
     {
-        if (ft_errno == ER_SUCCESS)
+        if (ft_errno == FT_ER_SUCCESSS)
             ft_errno = FT_ERR_CONFIGURATION;
         return (false);
     }
@@ -324,7 +324,7 @@ static bool tls_extract_serial_number(const ASN1_INTEGER *serial_value,
     if (serial_value == ft_nullptr)
     {
         output.clear();
-        return (output.get_error() == ER_SUCCESS);
+        return (output.get_error() == FT_ER_SUCCESSS);
     }
     memory = BIO_new(BIO_s_mem());
     if (memory == ft_nullptr)
@@ -342,7 +342,7 @@ static bool tls_extract_serial_number(const ASN1_INTEGER *serial_value,
     BIO_free(memory);
     if (!copy_result)
     {
-        if (ft_errno == ER_SUCCESS)
+        if (ft_errno == FT_ER_SUCCESSS)
             ft_errno = FT_ERR_CONFIGURATION;
         return (false);
     }
@@ -358,7 +358,7 @@ static bool tls_compute_certificate_fingerprint(X509 *certificate,
     char byte_buffer[3];
 
     output.clear();
-    if (output.get_error() != ER_SUCCESS)
+    if (output.get_error() != FT_ER_SUCCESSS)
         return (false);
     if (certificate == ft_nullptr)
     {
@@ -380,12 +380,12 @@ static bool tls_compute_certificate_fingerprint(X509 *certificate,
             return (false);
         }
         output.append(byte_buffer, 2);
-        if (output.get_error() != ER_SUCCESS)
+        if (output.get_error() != FT_ER_SUCCESSS)
             return (false);
         if (index + 1 < digest_length)
         {
             output.append(':');
-            if (output.get_error() != ER_SUCCESS)
+            if (output.get_error() != FT_ER_SUCCESSS)
                 return (false);
         }
         index++;
@@ -440,7 +440,7 @@ static bool tls_append_certificate_diagnostic(
     size_after = diagnostics.certificates.size();
     if (size_after < size_before + 1)
     {
-        if (diagnostics.certificates.get_error() == ER_SUCCESS)
+        if (diagnostics.certificates.get_error() == FT_ER_SUCCESSS)
             ft_errno = FT_ERR_NO_MEMORY;
         else
             ft_errno = diagnostics.certificates.get_error();
@@ -478,10 +478,10 @@ static void tls_log_handshake_diagnostics(
 }
 
 api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms)
-: _ctx(ft_nullptr), _ssl(ft_nullptr), _sock(-1), _host(""), _timeout(timeout_ms), _error_code(ER_SUCCESS)
+: _ctx(ft_nullptr), _ssl(ft_nullptr), _sock(-1), _host(""), _timeout(timeout_ms), _error_code(FT_ER_SUCCESSS)
 {
     this->_is_shutting_down = false;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     if (!host_c)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
@@ -604,7 +604,7 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
         const char *error_message;
 
         diagnostics_error = this->_error_code;
-        if (diagnostics_error == ER_SUCCESS)
+        if (diagnostics_error == FT_ER_SUCCESSS)
             diagnostics_error = ft_errno;
         error_message = ft_strerror(diagnostics_error);
         if (ft_log_get_api_logging())
@@ -614,7 +614,7 @@ api_tls_client::api_tls_client(const char *host_c, uint16_t port, int timeout_ms
                 this->_host.c_str(), diagnostics_error, error_message);
         }
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
 }
 
 api_tls_client::~api_tls_client()
@@ -625,7 +625,7 @@ api_tls_client::~api_tls_client()
     int socket_fd;
     ft_unique_lock<pt_mutex> state_lock(this->_mutex);
 
-    if (state_lock.get_error() != ER_SUCCESS)
+    if (state_lock.get_error() != FT_ER_SUCCESSS)
         return ;
     this->_is_shutting_down = true;
     workers_local = ft_move(this->_async_workers);
@@ -636,7 +636,7 @@ api_tls_client::~api_tls_client()
     this->_ctx = ft_nullptr;
     this->_sock = -1;
     state_lock.unlock();
-    if (state_lock.get_error() != ER_SUCCESS)
+    if (state_lock.get_error() != FT_ER_SUCCESSS)
     {
         if (ssl_pointer != ft_nullptr)
         {
@@ -675,14 +675,14 @@ bool api_tls_client::is_valid() const
 {
     ft_unique_lock<pt_mutex> state_lock(this->_mutex);
 
-    if (state_lock.get_error() != ER_SUCCESS)
+    if (state_lock.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(state_lock.get_error());
         return (false);
     }
     if (this->_ssl != ft_nullptr)
     {
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
         return (true);
     }
     this->set_error(FT_ERR_CONFIGURATION);
@@ -699,7 +699,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
-    if (state_lock.get_error() != ER_SUCCESS)
+    if (state_lock.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(state_lock.get_error());
         return (ft_nullptr);
@@ -714,7 +714,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
         this->set_error(FT_ERR_CONFIGURATION);
         return (ft_nullptr);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     if (ft_log_get_api_logging())
     {
         const char *log_method = "(null)";
@@ -745,7 +745,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
         if (!temporary_string)
         {
             int json_error = ft_errno;
-            if (json_error == ER_SUCCESS)
+            if (json_error == FT_ER_SUCCESSS)
                 json_error = FT_ERR_NO_MEMORY;
             this->set_error(json_error);
             return (ft_nullptr);
@@ -833,10 +833,10 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
 
             header_value_cstr = header_value.c_str();
             header_parse_end = ft_nullptr;
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             parsed_length = ft_strtoul(header_value_cstr, &header_parse_end, 10);
             parse_error = ft_errno;
-            if (parse_error != ER_SUCCESS)
+            if (parse_error != FT_ER_SUCCESSS)
             {
                 this->set_error(parse_error);
                 return (ft_nullptr);
@@ -935,10 +935,10 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
                 size_string.erase(size_trim - 1, 1);
                 size_trim--;
             }
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             unsigned long chunk_length = ft_strtoul(size_string.c_str(), ft_nullptr, 16);
             int chunk_error = ft_errno;
-            if (chunk_error != ER_SUCCESS)
+            if (chunk_error != FT_ER_SUCCESSS)
             {
                 this->set_error(chunk_error);
                 return (ft_nullptr);
@@ -1043,7 +1043,7 @@ char *api_tls_client::request(const char *method, const char *path, json_group *
         this->set_error(FT_ERR_NO_MEMORY);
         return (ft_nullptr);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (result_body);
 }
 
@@ -1059,12 +1059,12 @@ json_group *api_tls_client::request_json(const char *method, const char *path,
     if (!result)
     {
         int json_error = ft_errno;
-        if (json_error == ER_SUCCESS)
+        if (json_error == FT_ER_SUCCESSS)
             json_error = FT_ERR_NO_MEMORY;
         this->set_error(json_error);
         return (ft_nullptr);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (result);
 }
 
@@ -1081,7 +1081,7 @@ bool api_tls_client::request_async(const char *method, const char *path,
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (false);
     }
-    if (state_lock.get_error() != ER_SUCCESS)
+    if (state_lock.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(state_lock.get_error());
         return (false);
@@ -1092,7 +1092,7 @@ bool api_tls_client::request_async(const char *method, const char *path,
         return (false);
     }
     state_lock.unlock();
-    if (state_lock.get_error() != ER_SUCCESS)
+    if (state_lock.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(state_lock.get_error());
         return (false);
@@ -1103,13 +1103,13 @@ bool api_tls_client::request_async(const char *method, const char *path,
         char *result_body = this->request(method, path, payload, headers, &status_local);
         callback(result_body, status_local, user_data);
     });
-    if (worker.get_error() != ER_SUCCESS)
+    if (worker.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(worker.get_error());
         return (false);
     }
     state_lock.lock();
-    if (state_lock.get_error() != ER_SUCCESS)
+    if (state_lock.get_error() != FT_ER_SUCCESSS)
     {
         if (worker.joinable())
             worker.join();
@@ -1119,7 +1119,7 @@ bool api_tls_client::request_async(const char *method, const char *path,
     if (this->_is_shutting_down)
     {
         state_lock.unlock();
-        if (state_lock.get_error() != ER_SUCCESS)
+        if (state_lock.get_error() != FT_ER_SUCCESSS)
         {
             if (worker.joinable())
                 worker.join();
@@ -1141,10 +1141,10 @@ bool api_tls_client::request_async(const char *method, const char *path,
     if (worker_count_after < worker_count_before + 1)
     {
         vector_error = this->_async_workers.get_error();
-        if (vector_error == ER_SUCCESS)
+        if (vector_error == FT_ER_SUCCESSS)
             vector_error = FT_ERR_NO_MEMORY;
         state_lock.unlock();
-        if (state_lock.get_error() != ER_SUCCESS)
+        if (state_lock.get_error() != FT_ER_SUCCESSS)
         {
             if (worker.joinable())
                 worker.join();
@@ -1157,12 +1157,12 @@ bool api_tls_client::request_async(const char *method, const char *path,
         return (false);
     }
     state_lock.unlock();
-    if (state_lock.get_error() != ER_SUCCESS)
+    if (state_lock.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(state_lock.get_error());
         return (false);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (true);
 }
 
@@ -1203,7 +1203,7 @@ bool api_tls_client::populate_handshake_diagnostics()
     X509 *leaf_certificate;
     int vector_error;
 
-    if (state_lock.get_error() != ER_SUCCESS)
+    if (state_lock.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(state_lock.get_error());
         return (false);
@@ -1219,19 +1219,19 @@ bool api_tls_client::populate_handshake_diagnostics()
         return (false);
     }
     this->_handshake_diagnostics.protocol.clear();
-    if (this->_handshake_diagnostics.protocol.get_error() != ER_SUCCESS)
+    if (this->_handshake_diagnostics.protocol.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(this->_handshake_diagnostics.protocol.get_error());
         return (false);
     }
     this->_handshake_diagnostics.cipher.clear();
-    if (this->_handshake_diagnostics.cipher.get_error() != ER_SUCCESS)
+    if (this->_handshake_diagnostics.cipher.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(this->_handshake_diagnostics.cipher.get_error());
         return (false);
     }
     this->_handshake_diagnostics.certificates.clear();
-    if (this->_handshake_diagnostics.certificates.get_error() != ER_SUCCESS)
+    if (this->_handshake_diagnostics.certificates.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(this->_handshake_diagnostics.certificates.get_error());
         return (false);
@@ -1240,7 +1240,7 @@ bool api_tls_client::populate_handshake_diagnostics()
     if (protocol_name != ft_nullptr)
     {
         this->_handshake_diagnostics.protocol.append(protocol_name);
-        if (this->_handshake_diagnostics.protocol.get_error() != ER_SUCCESS)
+        if (this->_handshake_diagnostics.protocol.get_error() != FT_ER_SUCCESSS)
         {
             this->set_error(this->_handshake_diagnostics.protocol.get_error());
             return (false);
@@ -1253,7 +1253,7 @@ bool api_tls_client::populate_handshake_diagnostics()
         if (cipher_name != ft_nullptr)
         {
             this->_handshake_diagnostics.cipher.append(cipher_name);
-            if (this->_handshake_diagnostics.cipher.get_error() != ER_SUCCESS)
+            if (this->_handshake_diagnostics.cipher.get_error() != FT_ER_SUCCESSS)
             {
                 this->set_error(this->_handshake_diagnostics.cipher.get_error());
                 return (false);
@@ -1274,9 +1274,9 @@ bool api_tls_client::populate_handshake_diagnostics()
                         certificate))
                 {
                     vector_error = this->_handshake_diagnostics.certificates.get_error();
-                    if (vector_error == ER_SUCCESS)
+                    if (vector_error == FT_ER_SUCCESSS)
                         vector_error = ft_errno;
-                    if (vector_error == ER_SUCCESS)
+                    if (vector_error == FT_ER_SUCCESSS)
                         vector_error = FT_ERR_CONFIGURATION;
                     this->set_error(vector_error);
                     return (false);
@@ -1297,9 +1297,9 @@ bool api_tls_client::populate_handshake_diagnostics()
                 leaf_certificate))
         {
             vector_error = this->_handshake_diagnostics.certificates.get_error();
-            if (vector_error == ER_SUCCESS)
+            if (vector_error == FT_ER_SUCCESSS)
                 vector_error = ft_errno;
-            if (vector_error == ER_SUCCESS)
+            if (vector_error == FT_ER_SUCCESSS)
                 vector_error = FT_ERR_CONFIGURATION;
             this->set_error(vector_error);
             X509_free(leaf_certificate);
@@ -1307,7 +1307,7 @@ bool api_tls_client::populate_handshake_diagnostics()
         }
         X509_free(leaf_certificate);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     tls_log_handshake_diagnostics(this->_handshake_diagnostics, this->_host);
     return (true);
 }
@@ -1316,7 +1316,7 @@ bool api_tls_client::refresh_handshake_diagnostics()
 {
     ft_unique_lock<pt_mutex> state_lock(this->_mutex);
 
-    if (state_lock.get_error() != ER_SUCCESS)
+    if (state_lock.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(state_lock.get_error());
         return (false);
@@ -1327,14 +1327,14 @@ bool api_tls_client::refresh_handshake_diagnostics()
         return (false);
     }
     state_lock.unlock();
-    if (state_lock.get_error() != ER_SUCCESS)
+    if (state_lock.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(state_lock.get_error());
         return (false);
     }
     if (!this->populate_handshake_diagnostics())
         return (false);
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (true);
 }
 
@@ -1342,10 +1342,10 @@ const api_tls_handshake_diagnostics &api_tls_client::get_handshake_diagnostics()
 {
     ft_unique_lock<pt_mutex> state_lock(this->_mutex);
 
-    if (state_lock.get_error() != ER_SUCCESS)
+    if (state_lock.get_error() != FT_ER_SUCCESSS)
         this->set_error(state_lock.get_error());
     else
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
     return (this->_handshake_diagnostics);
 }
 

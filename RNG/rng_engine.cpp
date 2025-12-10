@@ -11,11 +11,11 @@ std::atomic<bool> g_random_engine_seeded(false);
 void ft_seed_random_engine(uint32_t seed_value)
 {
     ft_unique_lock<pt_mutex> guard(g_random_engine_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
         return ;
     g_random_engine.seed(static_cast<std::mt19937::result_type>(seed_value));
     g_random_engine_seeded.store(true, std::memory_order_release);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 
@@ -23,7 +23,7 @@ void ft_seed_random_engine_with_entropy(void)
 {
     if (g_random_engine_seeded.load(std::memory_order_acquire) == true)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return ;
     }
     std::random_device random_device;
@@ -32,7 +32,7 @@ void ft_seed_random_engine_with_entropy(void)
     seed_value = random_device();
     if (g_random_engine_seeded.load(std::memory_order_acquire) == true)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return ;
     }
     ft_seed_random_engine(seed_value);

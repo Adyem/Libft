@@ -17,7 +17,7 @@ bool    intersect_aabb(const aabb &first, const aabb &second)
         bool separated;
 
         lock_error = aabb::lock_pair(first, second, first_guard, second_guard);
-        if (lock_error != ER_SUCCESS)
+        if (lock_error != FT_ER_SUCCESSS)
         {
             const_cast<aabb &>(first).set_error(lock_error);
             const_cast<aabb &>(second).set_error(lock_error);
@@ -32,8 +32,8 @@ bool    intersect_aabb(const aabb &first, const aabb &second)
             separated = true;
         else if (first._minimum_y > second._maximum_y)
             separated = true;
-        const_cast<aabb &>(first).set_error(ER_SUCCESS);
-        const_cast<aabb &>(second).set_error(ER_SUCCESS);
+        const_cast<aabb &>(first).set_error(FT_ER_SUCCESSS);
+        const_cast<aabb &>(second).set_error(FT_ER_SUCCESSS);
         result = true;
         if (separated)
             result = false;
@@ -61,7 +61,7 @@ bool    intersect_circle(const circle &first, const circle &second)
         double  distance_squared;
 
         lock_error = circle::lock_pair(first, second, first_guard, second_guard);
-        if (lock_error != ER_SUCCESS)
+        if (lock_error != FT_ER_SUCCESSS)
         {
             const_cast<circle &>(first).set_error(lock_error);
             const_cast<circle &>(second).set_error(lock_error);
@@ -71,8 +71,8 @@ bool    intersect_circle(const circle &first, const circle &second)
         delta_y = first._center_y - second._center_y;
         radius_sum = first._radius + second._radius;
         distance_squared = delta_x * delta_x + delta_y * delta_y;
-        const_cast<circle &>(first).set_error(ER_SUCCESS);
-        const_cast<circle &>(second).set_error(ER_SUCCESS);
+        const_cast<circle &>(first).set_error(FT_ER_SUCCESSS);
+        const_cast<circle &>(second).set_error(FT_ER_SUCCESSS);
         result = true;
         if (distance_squared > radius_sum * radius_sum)
             result = false;
@@ -101,7 +101,7 @@ bool    intersect_sphere(const sphere &first, const sphere &second)
         double  distance_squared;
 
         lock_error = sphere::lock_pair(first, second, first_guard, second_guard);
-        if (lock_error != ER_SUCCESS)
+        if (lock_error != FT_ER_SUCCESSS)
         {
             const_cast<sphere &>(first).set_error(lock_error);
             const_cast<sphere &>(second).set_error(lock_error);
@@ -112,8 +112,8 @@ bool    intersect_sphere(const sphere &first, const sphere &second)
         delta_z = first._center_z - second._center_z;
         radius_sum = first._radius + second._radius;
         distance_squared = delta_x * delta_x + delta_y * delta_y + delta_z * delta_z;
-        const_cast<sphere &>(first).set_error(ER_SUCCESS);
-        const_cast<sphere &>(second).set_error(ER_SUCCESS);
+        const_cast<sphere &>(first).set_error(FT_ER_SUCCESSS);
+        const_cast<sphere &>(second).set_error(FT_ER_SUCCESSS);
         result = true;
         if (distance_squared > radius_sum * radius_sum)
             result = false;

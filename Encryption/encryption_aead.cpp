@@ -20,13 +20,13 @@ encryption_aead_context::encryption_aead_context()
     this->_encrypt_mode = false;
     this->_initialized = false;
     this->_iv_length = 0;
-    this->_error_code = ER_SUCCESS;
+    this->_error_code = FT_ER_SUCCESSS;
     if (this->_context == NULL)
     {
         this->set_error(FT_ERR_NO_MEMORY);
         return ;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -51,7 +51,7 @@ void    encryption_aead_context::set_error(int error_code) const
 {
     ft_unique_lock<pt_mutex> guard;
 
-    if (this->lock_self(guard) != ER_SUCCESS)
+    if (this->lock_self(guard) != FT_ER_SUCCESSS)
         return ;
     this->set_error_unlocked(error_code);
     return ;
@@ -60,12 +60,12 @@ void    encryption_aead_context::set_error(int error_code) const
 int encryption_aead_context::lock_self(ft_unique_lock<pt_mutex> &guard) const
 {
     guard = ft_unique_lock<pt_mutex>(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(guard.get_error());
         return (guard.get_error());
     }
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 encryption_aead_context::encryption_aead_context(encryption_aead_context &&other) noexcept
@@ -78,9 +78,9 @@ encryption_aead_context::encryption_aead_context(encryption_aead_context &&other
     this->_encrypt_mode = false;
     this->_initialized = false;
     this->_iv_length = 0;
-    this->_error_code = ER_SUCCESS;
+    this->_error_code = FT_ER_SUCCESSS;
     lock_result = other.lock_self(other_guard);
-    if (lock_result != ER_SUCCESS)
+    if (lock_result != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_result);
         return ;
@@ -96,7 +96,7 @@ encryption_aead_context::encryption_aead_context(encryption_aead_context &&other
     other._encrypt_mode = false;
     other._initialized = false;
     other._iv_length = 0;
-    other.set_error_unlocked(ER_SUCCESS);
+    other.set_error_unlocked(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -109,10 +109,10 @@ encryption_aead_context &encryption_aead_context::operator=(encryption_aead_cont
     if (this == &other)
         return (*this);
     lock_result = this->lock_self(self_guard);
-    if (lock_result != ER_SUCCESS)
+    if (lock_result != FT_ER_SUCCESSS)
         return (*this);
     lock_result = other.lock_self(other_guard);
-    if (lock_result != ER_SUCCESS)
+    if (lock_result != FT_ER_SUCCESSS)
         return (*this);
     if (this->_context != NULL)
         EVP_CIPHER_CTX_free(this->_context);
@@ -127,7 +127,7 @@ encryption_aead_context &encryption_aead_context::operator=(encryption_aead_cont
     other._encrypt_mode = false;
     other._initialized = false;
     other._iv_length = 0;
-    other.set_error_unlocked(ER_SUCCESS);
+    other.set_error_unlocked(FT_ER_SUCCESSS);
     return (*this);
 }
 
@@ -144,7 +144,7 @@ int encryption_aead_context::configure_cipher(const unsigned char *key, size_t k
 
     encrypt_flag = 0;
     lock_result = this->lock_self(guard);
-    if (lock_result != ER_SUCCESS)
+    if (lock_result != FT_ER_SUCCESSS)
         return (lock_result);
     if (this->_context == NULL)
     {
@@ -196,8 +196,8 @@ int encryption_aead_context::configure_cipher(const unsigned char *key, size_t k
     this->_cipher = cipher;
     this->_encrypt_mode = encrypt_mode;
     this->_initialized = true;
-    this->set_error_unlocked(ER_SUCCESS);
-    return (ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
+    return (FT_ER_SUCCESSS);
 }
 
 int encryption_aead_context::initialize_encrypt(const unsigned char *key, size_t key_length,
@@ -221,7 +221,7 @@ int encryption_aead_context::update_aad(const unsigned char *aad, size_t aad_len
     ft_unique_lock<pt_mutex> guard;
 
     lock_result = this->lock_self(guard);
-    if (lock_result != ER_SUCCESS)
+    if (lock_result != FT_ER_SUCCESSS)
         return (lock_result);
     if (!this->_initialized)
     {
@@ -230,8 +230,8 @@ int encryption_aead_context::update_aad(const unsigned char *aad, size_t aad_len
     }
     if (aad_length == 0)
     {
-        this->set_error_unlocked(ER_SUCCESS);
-        return (ER_SUCCESS);
+        this->set_error_unlocked(FT_ER_SUCCESSS);
+        return (FT_ER_SUCCESSS);
     }
     update_result = EVP_CipherUpdate(this->_context, NULL, &out_length,
             aad, static_cast<int>(aad_length));
@@ -240,8 +240,8 @@ int encryption_aead_context::update_aad(const unsigned char *aad, size_t aad_len
         this->set_error_unlocked(FT_ERR_INTERNAL);
         return (FT_ERR_INTERNAL);
     }
-    this->set_error_unlocked(ER_SUCCESS);
-    return (ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
+    return (FT_ER_SUCCESSS);
 }
 
 int encryption_aead_context::update(const unsigned char *input, size_t input_length,
@@ -255,7 +255,7 @@ int encryption_aead_context::update(const unsigned char *input, size_t input_len
 
     output_length = 0;
     lock_result = this->lock_self(guard);
-    if (lock_result != ER_SUCCESS)
+    if (lock_result != FT_ER_SUCCESSS)
         return (lock_result);
     if (!this->_initialized)
     {
@@ -264,8 +264,8 @@ int encryption_aead_context::update(const unsigned char *input, size_t input_len
     }
     if (input_length == 0)
     {
-        this->set_error_unlocked(ER_SUCCESS);
-        return (ER_SUCCESS);
+        this->set_error_unlocked(FT_ER_SUCCESSS);
+        return (FT_ER_SUCCESSS);
     }
     update_result = EVP_CipherUpdate(this->_context, output, &local_length,
             input, static_cast<int>(input_length));
@@ -280,8 +280,8 @@ int encryption_aead_context::update(const unsigned char *input, size_t input_len
         return (FT_ERR_INTERNAL);
     }
     output_length = static_cast<size_t>(local_length);
-    this->set_error_unlocked(ER_SUCCESS);
-    return (ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
+    return (FT_ER_SUCCESSS);
 }
 
 int encryption_aead_context::finalize(unsigned char *tag, size_t tag_length)
@@ -294,7 +294,7 @@ int encryption_aead_context::finalize(unsigned char *tag, size_t tag_length)
     ft_unique_lock<pt_mutex> guard;
 
     lock_result = this->lock_self(guard);
-    if (lock_result != ER_SUCCESS)
+    if (lock_result != FT_ER_SUCCESSS)
         return (lock_result);
     if (!this->_initialized)
     {
@@ -327,8 +327,8 @@ int encryption_aead_context::finalize(unsigned char *tag, size_t tag_length)
     if (!this->_encrypt_mode)
     {
         this->_initialized = false;
-        this->set_error_unlocked(ER_SUCCESS);
-        return (ER_SUCCESS);
+        this->set_error_unlocked(FT_ER_SUCCESSS);
+        return (FT_ER_SUCCESSS);
     }
     if (tag == NULL)
     {
@@ -347,8 +347,8 @@ int encryption_aead_context::finalize(unsigned char *tag, size_t tag_length)
         return (FT_ERR_INTERNAL);
     }
     this->_initialized = false;
-    this->set_error_unlocked(ER_SUCCESS);
-    return (ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
+    return (FT_ER_SUCCESSS);
 }
 
 int encryption_aead_context::set_tag(const unsigned char *tag, size_t tag_length)
@@ -358,7 +358,7 @@ int encryption_aead_context::set_tag(const unsigned char *tag, size_t tag_length
     ft_unique_lock<pt_mutex> guard;
 
     lock_result = this->lock_self(guard);
-    if (lock_result != ER_SUCCESS)
+    if (lock_result != FT_ER_SUCCESSS)
         return (lock_result);
     if (!this->_initialized)
     {
@@ -386,8 +386,8 @@ int encryption_aead_context::set_tag(const unsigned char *tag, size_t tag_length
         this->set_error_unlocked(FT_ERR_INTERNAL);
         return (FT_ERR_INTERNAL);
     }
-    this->set_error_unlocked(ER_SUCCESS);
-    return (ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
+    return (FT_ER_SUCCESSS);
 }
 
 void    encryption_aead_context::reset()
@@ -397,7 +397,7 @@ void    encryption_aead_context::reset()
     ft_unique_lock<pt_mutex> guard;
 
     lock_result = this->lock_self(guard);
-    if (lock_result != ER_SUCCESS)
+    if (lock_result != FT_ER_SUCCESSS)
         return ;
     if (this->_context != NULL)
         EVP_CIPHER_CTX_reset(this->_context);
@@ -405,7 +405,7 @@ void    encryption_aead_context::reset()
     this->_encrypt_mode = false;
     this->_initialized = false;
     this->_iv_length = 0;
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -416,7 +416,7 @@ int encryption_aead_context::get_error() const
     int error_code;
 
     lock_result = this->lock_self(guard);
-    if (lock_result != ER_SUCCESS)
+    if (lock_result != FT_ER_SUCCESSS)
         return (lock_result);
     error_code = this->_error_code;
     this->set_error_unlocked(error_code);
@@ -430,7 +430,7 @@ const char  *encryption_aead_context::get_error_str() const
     const char *error_string;
 
     lock_result = this->lock_self(guard);
-    if (lock_result != ER_SUCCESS)
+    if (lock_result != FT_ER_SUCCESSS)
         return (ft_strerror(lock_result));
     error_string = ft_strerror(this->_error_code);
     this->set_error_unlocked(this->_error_code);
@@ -446,9 +446,9 @@ bool    encryption_aead_encrypt(const unsigned char *key, size_t key_length,
     encryption_aead_context context;
     size_t output_length;
 
-    if (context.initialize_encrypt(key, key_length, iv, iv_length) != ER_SUCCESS)
+    if (context.initialize_encrypt(key, key_length, iv, iv_length) != FT_ER_SUCCESSS)
         return (false);
-    if (context.update_aad(aad, aad_length) != ER_SUCCESS)
+    if (context.update_aad(aad, aad_length) != FT_ER_SUCCESSS)
         return (false);
     output_length = 0;
     if (plaintext_length > 0)
@@ -459,7 +459,7 @@ bool    encryption_aead_encrypt(const unsigned char *key, size_t key_length,
             return (false);
         }
         if (context.update(plaintext, plaintext_length, ciphertext,
-                output_length) != ER_SUCCESS)
+                output_length) != FT_ER_SUCCESSS)
             return (false);
         if (output_length != plaintext_length)
         {
@@ -467,9 +467,9 @@ bool    encryption_aead_encrypt(const unsigned char *key, size_t key_length,
             return (false);
         }
     }
-    if (context.finalize(tag, tag_length) != ER_SUCCESS)
+    if (context.finalize(tag, tag_length) != FT_ER_SUCCESSS)
         return (false);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (true);
 }
 
@@ -483,11 +483,11 @@ bool    encryption_aead_decrypt(const unsigned char *key, size_t key_length,
     encryption_aead_context context;
     size_t output_length;
 
-    if (context.initialize_decrypt(key, key_length, iv, iv_length) != ER_SUCCESS)
+    if (context.initialize_decrypt(key, key_length, iv, iv_length) != FT_ER_SUCCESSS)
         return (false);
-    if (context.set_tag(tag, tag_length) != ER_SUCCESS)
+    if (context.set_tag(tag, tag_length) != FT_ER_SUCCESSS)
         return (false);
-    if (context.update_aad(aad, aad_length) != ER_SUCCESS)
+    if (context.update_aad(aad, aad_length) != FT_ER_SUCCESSS)
         return (false);
     output_length = 0;
     if (ciphertext_length > 0)
@@ -498,7 +498,7 @@ bool    encryption_aead_decrypt(const unsigned char *key, size_t key_length,
             return (false);
         }
         if (context.update(ciphertext, ciphertext_length, plaintext,
-                output_length) != ER_SUCCESS)
+                output_length) != FT_ER_SUCCESSS)
             return (false);
         if (output_length != ciphertext_length)
         {
@@ -506,8 +506,8 @@ bool    encryption_aead_decrypt(const unsigned char *key, size_t key_length,
             return (false);
         }
     }
-    if (context.finalize(NULL, 0) != ER_SUCCESS)
+    if (context.finalize(NULL, 0) != FT_ER_SUCCESSS)
         return (false);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (true);
 }

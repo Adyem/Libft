@@ -17,9 +17,9 @@ FT_TEST(test_variant_thread_safety_resets_errno,
     lock_acquired = false;
     FT_ASSERT_EQ(0, variant_value.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     variant_value.unlock(lock_acquired);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     variant_value.disable_thread_safety();
     FT_ASSERT_EQ(false, variant_value.is_thread_safe_enabled());
     return (1);

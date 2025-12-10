@@ -33,7 +33,7 @@ void ft_generate_uuid(char out[37])
         byte_index++;
     }
     out[output_index] = '\0';
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 

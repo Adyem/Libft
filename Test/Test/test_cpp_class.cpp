@@ -146,7 +146,7 @@ FT_TEST(test_ft_file_close_thread_safety,
     context.file = &file;
     context.final_error = -1;
     reader = ft_thread(ft_file_poll_error, &context);
-    if (reader.get_error() != ER_SUCCESS)
+    if (reader.get_error() != FT_ER_SUCCESSS)
     {
         file.close();
         ::unlink(filename);
@@ -155,12 +155,12 @@ FT_TEST(test_ft_file_close_thread_safety,
     time_sleep_ms(1);
     file.close();
     reader.join();
-    if (context.final_error != ER_SUCCESS)
+    if (context.final_error != FT_ER_SUCCESSS)
     {
         ::unlink(filename);
         return (0);
     }
-    if (file.get_error() != ER_SUCCESS)
+    if (file.get_error() != FT_ER_SUCCESSS)
     {
         ::unlink(filename);
         return (0);

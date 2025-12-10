@@ -126,10 +126,10 @@ void *ft_function<ReturnType(Args...)>::clone(void *callable)
 template <typename ReturnType, typename... Args>
 ft_function<ReturnType(Args...)>::ft_function()
     : _callable(ft_nullptr), _invoke(ft_nullptr), _destroy(ft_nullptr),
-      _clone(ft_nullptr), _error_code(ER_SUCCESS), _state_mutex(ft_nullptr),
+      _clone(ft_nullptr), _error_code(FT_ER_SUCCESSS), _state_mutex(ft_nullptr),
       _thread_safe_enabled(false)
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -137,7 +137,7 @@ template <typename ReturnType, typename... Args>
 template <typename FunctionType>
 ft_function<ReturnType(Args...)>::ft_function(FunctionType function)
     : _callable(ft_nullptr), _invoke(ft_nullptr), _destroy(ft_nullptr),
-      _clone(ft_nullptr), _error_code(ER_SUCCESS), _state_mutex(ft_nullptr),
+      _clone(ft_nullptr), _error_code(FT_ER_SUCCESSS), _state_mutex(ft_nullptr),
       _thread_safe_enabled(false)
 {
     FunctionType *copy;
@@ -152,14 +152,14 @@ ft_function<ReturnType(Args...)>::ft_function(FunctionType function)
     this->_invoke = &ft_function<ReturnType(Args...)>::template invoke<FunctionType>;
     this->_destroy = &ft_function<ReturnType(Args...)>::template destroy<FunctionType>;
     this->_clone = &ft_function<ReturnType(Args...)>::template clone<FunctionType>;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
 template <typename ReturnType, typename... Args>
 ft_function<ReturnType(Args...)>::ft_function(const ft_function &other)
     : _callable(ft_nullptr), _invoke(ft_nullptr), _destroy(ft_nullptr),
-      _clone(ft_nullptr), _error_code(ER_SUCCESS), _state_mutex(ft_nullptr),
+      _clone(ft_nullptr), _error_code(FT_ER_SUCCESSS), _state_mutex(ft_nullptr),
       _thread_safe_enabled(false)
 {
     bool other_lock_acquired;
@@ -168,7 +168,7 @@ ft_function<ReturnType(Args...)>::ft_function(const ft_function &other)
     void *new_callable;
 
     other_lock_acquired = false;
-    other_error_code = ER_SUCCESS;
+    other_error_code = FT_ER_SUCCESSS;
     other_thread_safe = false;
     new_callable = ft_nullptr;
     if (other.lock_internal(&other_lock_acquired) != 0)
@@ -209,14 +209,14 @@ ft_function<ReturnType(Args...)>::ft_function(const ft_function &other)
         }
     }
     this->_error_code = other_error_code;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
 template <typename ReturnType, typename... Args>
 ft_function<ReturnType(Args...)>::ft_function(ft_function &&other)
     : _callable(ft_nullptr), _invoke(ft_nullptr),
-      _destroy(ft_nullptr), _clone(ft_nullptr), _error_code(ER_SUCCESS),
+      _destroy(ft_nullptr), _clone(ft_nullptr), _error_code(FT_ER_SUCCESSS),
       _state_mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     bool other_lock_acquired;
@@ -246,7 +246,7 @@ ft_function<ReturnType(Args...)>::ft_function(ft_function &&other)
     other.unlock_internal(other_lock_acquired);
     other.teardown_thread_safety();
     other._thread_safe_enabled = false;
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     this->_callable = transferred_callable;
     this->_invoke = transferred_invoke;
     this->_destroy = transferred_destroy;
@@ -257,7 +257,7 @@ ft_function<ReturnType(Args...)>::ft_function(ft_function &&other)
         if (this->enable_thread_safety() != 0)
             return ;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -275,7 +275,7 @@ ft_function<ReturnType(Args...)>::~ft_function()
     else
         this->clear_callable_unlocked();
     this->teardown_thread_safety();
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -284,7 +284,7 @@ ft_function<ReturnType(Args...)> &ft_function<ReturnType(Args...)>::operator=(co
 {
     if (this == &other)
     {
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
         return (*this);
     }
     bool this_lock_acquired;
@@ -356,7 +356,7 @@ ft_function<ReturnType(Args...)> &ft_function<ReturnType(Args...)>::operator=(co
         previous_mutex->~pt_mutex();
         cma_free(previous_mutex);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (*this);
 }
 
@@ -365,7 +365,7 @@ ft_function<ReturnType(Args...)> &ft_function<ReturnType(Args...)>::operator=(ft
 {
     if (this == &other)
     {
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
         return (*this);
     }
     bool this_lock_acquired;
@@ -405,7 +405,7 @@ ft_function<ReturnType(Args...)> &ft_function<ReturnType(Args...)>::operator=(ft
     other.unlock_internal(other_lock_acquired);
     other.teardown_thread_safety();
     other._thread_safe_enabled = false;
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     previous_mutex = this->_state_mutex;
     this->_callable = transferred_callable;
     this->_invoke = transferred_invoke;
@@ -433,7 +433,7 @@ ft_function<ReturnType(Args...)> &ft_function<ReturnType(Args...)>::operator=(ft
         previous_mutex->~pt_mutex();
         cma_free(previous_mutex);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (*this);
 }
 
@@ -468,7 +468,7 @@ ReturnType ft_function<ReturnType(Args...)>::operator()(Args... args) const
         }
         return (ReturnType());
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     this->unlock_internal(lock_acquired);
     if constexpr (std::is_void<ReturnType>::value)
     {
@@ -496,7 +496,7 @@ ft_function<ReturnType(Args...)>::operator bool() const
         has_callable = true;
     }
     this->unlock_internal(lock_acquired);
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (has_callable);
 }
 
@@ -526,7 +526,7 @@ int ft_function<ReturnType(Args...)>::enable_thread_safety()
 
     if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
     {
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
         return (0);
     }
     memory = cma_malloc(sizeof(pt_mutex));
@@ -536,7 +536,7 @@ int ft_function<ReturnType(Args...)>::enable_thread_safety()
         return (-1);
     }
     state_mutex = new(memory) pt_mutex();
-    if (state_mutex->get_error() != ER_SUCCESS)
+    if (state_mutex->get_error() != FT_ER_SUCCESSS)
     {
         int mutex_error;
 
@@ -548,7 +548,7 @@ int ft_function<ReturnType(Args...)>::enable_thread_safety()
     }
     this->_state_mutex = state_mutex;
     this->_thread_safe_enabled = true;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (0);
 }
 
@@ -556,7 +556,7 @@ template <typename ReturnType, typename... Args>
 void ft_function<ReturnType(Args...)>::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -566,7 +566,7 @@ bool ft_function<ReturnType(Args...)>::is_thread_safe_enabled() const
     bool enabled;
 
     enabled = (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr);
-    const_cast<ft_function<ReturnType(Args...)> *>(this)->set_error(ER_SUCCESS);
+    const_cast<ft_function<ReturnType(Args...)> *>(this)->set_error(FT_ER_SUCCESSS);
     return (enabled);
 }
 
@@ -583,7 +583,7 @@ int ft_function<ReturnType(Args...)>::lock(bool *lock_acquired) const
         const_cast<ft_function<ReturnType(Args...)> *>(this)->set_error(ft_errno);
         return (result);
     }
-    this->_error_code = ER_SUCCESS;
+    this->_error_code = FT_ER_SUCCESSS;
     ft_errno = entry_errno;
     return (result);
 }
@@ -598,17 +598,17 @@ void ft_function<ReturnType(Args...)>::unlock(bool lock_acquired) const
     this->unlock_internal(lock_acquired);
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
     {
-        this->_error_code = ER_SUCCESS;
+        this->_error_code = FT_ER_SUCCESSS;
         ft_errno = entry_errno;
         return ;
     }
     mutex_error = this->_state_mutex->get_error();
-    if (mutex_error != ER_SUCCESS)
+    if (mutex_error != FT_ER_SUCCESSS)
     {
         const_cast<ft_function<ReturnType(Args...)> *>(this)->set_error(mutex_error);
         return ;
     }
-    this->_error_code = ER_SUCCESS;
+    this->_error_code = FT_ER_SUCCESSS;
     ft_errno = entry_errno;
     return ;
 }
@@ -620,23 +620,23 @@ int ft_function<ReturnType(Args...)>::lock_internal(bool *lock_acquired) const
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     if (this->_state_mutex->is_owned_by_thread(THREAD_ID))
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     this->_state_mutex->lock(THREAD_ID);
-    if (this->_state_mutex->get_error() != ER_SUCCESS)
+    if (this->_state_mutex->get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = this->_state_mutex->get_error();
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -649,7 +649,7 @@ void ft_function<ReturnType(Args...)>::unlock_internal(bool lock_acquired) const
         return ;
     entry_errno = ft_errno;
     this->_state_mutex->unlock(THREAD_ID);
-    if (this->_state_mutex->get_error() != ER_SUCCESS)
+    if (this->_state_mutex->get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = this->_state_mutex->get_error();
         return ;

@@ -12,11 +12,11 @@ FT_TEST(test_su_locale_compare_default_ordering,
     comparison_result = 0;
     ft_errno = FT_ERR_INVALID_OPERATION;
     FT_ASSERT_EQ(0, su_locale_compare("apple", "banana", ft_nullptr, &comparison_result));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT(comparison_result < 0);
     ft_errno = FT_ERR_CONFIGURATION;
     FT_ASSERT_EQ(0, su_locale_compare("banana", "banana", ft_nullptr, &comparison_result));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(0, comparison_result);
     return (1);
 }
@@ -27,10 +27,10 @@ FT_TEST(test_su_locale_compare_rejects_invalid_arguments,
     int comparison_result;
 
     comparison_result = 99;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(-1, su_locale_compare(ft_nullptr, "banana", ft_nullptr, &comparison_result));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(-1, su_locale_compare("apple", "banana", ft_nullptr, ft_nullptr));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -42,7 +42,7 @@ FT_TEST(test_su_locale_compare_invalid_locale_sets_configuration_error,
     int comparison_result;
 
     comparison_result = 0;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(-1, su_locale_compare("apple", "banana", "invalid_locale_name", &comparison_result));
     FT_ASSERT_EQ(FT_ERR_CONFIGURATION, ft_errno);
     return (1);
@@ -55,7 +55,7 @@ FT_TEST(test_su_locale_casefold_lowercases_ascii_input,
 
     ft_errno = FT_ERR_TERMINATED;
     FT_ASSERT_EQ(0, su_locale_casefold("MiXeD CaSe", ft_nullptr, output));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT(output == "mixed case");
     return (1);
 }
@@ -65,7 +65,7 @@ FT_TEST(test_su_locale_casefold_rejects_null_input,
 {
     ft_string output;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(-1, su_locale_casefold(ft_nullptr, ft_nullptr, output));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -76,7 +76,7 @@ FT_TEST(test_su_locale_casefold_invalid_locale_sets_configuration_error,
 {
     ft_string output;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(-1, su_locale_casefold("Example", "invalid_locale_name", output));
     FT_ASSERT_EQ(FT_ERR_CONFIGURATION, ft_errno);
     return (1);

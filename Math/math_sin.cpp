@@ -25,6 +25,6 @@ double ft_sin(double value)
         sign = -sign;
         iteration = iteration + 1;
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (result);
 }

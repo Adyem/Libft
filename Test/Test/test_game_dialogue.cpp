@@ -42,7 +42,7 @@ FT_TEST(test_game_dialogue_line_assignment_deep_copies_successfully, "Game: dial
     FT_ASSERT_EQ(4, target.get_line_id());
     FT_ASSERT(target.get_speaker() == ft_string("guide"));
     FT_ASSERT_EQ(2U, target.get_next_line_ids().size());
-    FT_ASSERT_EQ(ER_SUCCESS, target.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, target.get_error());
     return (1);
 }
 

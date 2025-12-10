@@ -38,8 +38,8 @@ quaternion::quaternion()
     this->_x = 0.0;
     this->_y = 0.0;
     this->_z = 0.0;
-    this->_error_code = ER_SUCCESS;
-    this->set_error(ER_SUCCESS);
+    this->_error_code = FT_ER_SUCCESSS;
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -49,8 +49,8 @@ quaternion::quaternion(double w, double x, double y, double z)
     this->_x = x;
     this->_y = y;
     this->_z = z;
-    this->_error_code = ER_SUCCESS;
-    this->set_error(ER_SUCCESS);
+    this->_error_code = FT_ER_SUCCESSS;
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -63,7 +63,7 @@ quaternion::quaternion(const quaternion &other)
     this->_y = other._y;
     this->_z = other._z;
     this->_error_code = other._error_code;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 
@@ -79,7 +79,7 @@ quaternion &quaternion::operator=(const quaternion &other)
     this->_y = other._y;
     this->_z = other._z;
     this->_error_code = other._error_code;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (*this);
 }
 
@@ -96,8 +96,8 @@ quaternion::quaternion(quaternion &&other) noexcept
     other._x = 0.0;
     other._y = 0.0;
     other._z = 0.0;
-    other._error_code = ER_SUCCESS;
-    ft_errno = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 
@@ -117,8 +117,8 @@ quaternion &quaternion::operator=(quaternion &&other) noexcept
     other._x = 0.0;
     other._y = 0.0;
     other._z = 0.0;
-    other._error_code = ER_SUCCESS;
-    ft_errno = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
+    ft_errno = FT_ER_SUCCESSS;
     return (*this);
 }
 
@@ -187,8 +187,8 @@ quaternion  quaternion::add(const quaternion &other) const
         result._y = this->_y + other._y;
         result._z = this->_z + other._z;
     }
-    result.set_error(ER_SUCCESS);
-    this->set_error(ER_SUCCESS);
+    result.set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ER_SUCCESSS);
     return (result);
 }
 
@@ -214,8 +214,8 @@ quaternion  quaternion::multiply(const quaternion &other) const
             this->_w, this->_x, this->_y, this->_z,
             other._w, other._x, other._y, other._z);
     }
-    result.set_error(ER_SUCCESS);
-    this->set_error(ER_SUCCESS);
+    result.set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ER_SUCCESSS);
     return (result);
 }
 
@@ -231,8 +231,8 @@ quaternion  quaternion::conjugate() const
         result._y = -this->_y;
         result._z = -this->_z;
     }
-    result.set_error(ER_SUCCESS);
-    this->set_error(ER_SUCCESS);
+    result.set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ER_SUCCESSS);
     return (result);
 }
 
@@ -247,7 +247,7 @@ double  quaternion::length() const
             this->_y, this->_z,
             this->_w, this->_x, this->_y, this->_z);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (math_sqrt(length_value));
 }
 
@@ -282,8 +282,8 @@ quaternion  quaternion::normalize() const
     result._x = local_x / length_value;
     result._y = local_y / length_value;
     result._z = local_z / length_value;
-    result.set_error(ER_SUCCESS);
-    this->set_error(ER_SUCCESS);
+    result.set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ER_SUCCESSS);
     return (result);
 }
 

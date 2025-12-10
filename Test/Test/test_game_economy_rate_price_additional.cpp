@@ -11,7 +11,7 @@ FT_TEST(test_currency_rate_default_initialization_success, "Currency rate defaul
     FT_ASSERT_EQ(0, rate.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(1.0, rate.get_rate_to_base());
     FT_ASSERT_EQ(2, rate.get_display_precision());
-    FT_ASSERT_EQ(ER_SUCCESS, rate.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, rate.get_error());
     return (1);
 }
 
@@ -22,7 +22,7 @@ FT_TEST(test_currency_rate_parameterized_constructor_sets_fields, "Currency rate
     FT_ASSERT_EQ(4, rate.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(0.5, rate.get_rate_to_base());
     FT_ASSERT_EQ(6, rate.get_display_precision());
-    FT_ASSERT_EQ(ER_SUCCESS, rate.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, rate.get_error());
     return (1);
 }
 
@@ -33,15 +33,15 @@ FT_TEST(test_currency_rate_copy_constructor_resets_errno_and_keeps_source, "Curr
     ft_errno = FT_ERR_GAME_INVALID_MOVE;
     ft_currency_rate copy(original);
 
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(8, copy.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(1.35, copy.get_rate_to_base());
     FT_ASSERT_EQ(5, copy.get_display_precision());
     FT_ASSERT_EQ(8, original.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(1.35, original.get_rate_to_base());
     FT_ASSERT_EQ(5, original.get_display_precision());
-    FT_ASSERT_EQ(ER_SUCCESS, copy.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, original.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, copy.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, original.get_error());
     return (1);
 }
 
@@ -53,15 +53,15 @@ FT_TEST(test_currency_rate_move_assignment_transfers_values_and_errno_success, "
     ft_errno = FT_ERR_SOCKET_RECEIVE_FAILED;
     destination = ft_move(source);
 
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(11, destination.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(3.5, destination.get_rate_to_base());
     FT_ASSERT_EQ(1, destination.get_display_precision());
     FT_ASSERT_EQ(0, source.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(0.0, source.get_rate_to_base());
     FT_ASSERT_EQ(0, source.get_display_precision());
-    FT_ASSERT_EQ(ER_SUCCESS, destination.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
     return (1);
 }
 
@@ -76,7 +76,7 @@ FT_TEST(test_currency_rate_setters_update_fields, "Currency rate setters replace
     FT_ASSERT_EQ(13, rate.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(4.25, rate.get_rate_to_base());
     FT_ASSERT_EQ(0, rate.get_display_precision());
-    FT_ASSERT_EQ(ER_SUCCESS, rate.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, rate.get_error());
     return (1);
 }
 
@@ -89,7 +89,7 @@ FT_TEST(test_price_definition_default_initialization_success, "Price definition 
     FT_ASSERT_EQ(0, definition.get_base_value());
     FT_ASSERT_EQ(0, definition.get_minimum_value());
     FT_ASSERT_EQ(0, definition.get_maximum_value());
-    FT_ASSERT_EQ(ER_SUCCESS, definition.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, definition.get_error());
     return (1);
 }
 
@@ -102,7 +102,7 @@ FT_TEST(test_price_definition_parameterized_constructor_sets_fields, "Price defi
     FT_ASSERT_EQ(700, definition.get_base_value());
     FT_ASSERT_EQ(450, definition.get_minimum_value());
     FT_ASSERT_EQ(900, definition.get_maximum_value());
-    FT_ASSERT_EQ(ER_SUCCESS, definition.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, definition.get_error());
     return (1);
 }
 
@@ -113,7 +113,7 @@ FT_TEST(test_price_definition_copy_constructor_resets_errno_and_retains_source, 
     ft_errno = FT_ERR_ALREADY_INITIALIZED;
     ft_price_definition copy(original);
 
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(12, copy.get_item_id());
     FT_ASSERT_EQ(5, copy.get_rarity());
     FT_ASSERT_EQ(250, copy.get_base_value());
@@ -124,8 +124,8 @@ FT_TEST(test_price_definition_copy_constructor_resets_errno_and_retains_source, 
     FT_ASSERT_EQ(250, original.get_base_value());
     FT_ASSERT_EQ(100, original.get_minimum_value());
     FT_ASSERT_EQ(400, original.get_maximum_value());
-    FT_ASSERT_EQ(ER_SUCCESS, copy.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, original.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, copy.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, original.get_error());
     return (1);
 }
 
@@ -137,7 +137,7 @@ FT_TEST(test_price_definition_move_assignment_resets_errno_and_resets_source, "P
     ft_errno = FT_ERR_SOCKET_LISTEN_FAILED;
     destination = ft_move(source);
 
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(14, destination.get_item_id());
     FT_ASSERT_EQ(6, destination.get_rarity());
     FT_ASSERT_EQ(950, destination.get_base_value());
@@ -148,8 +148,8 @@ FT_TEST(test_price_definition_move_assignment_resets_errno_and_resets_source, "P
     FT_ASSERT_EQ(0, source.get_base_value());
     FT_ASSERT_EQ(0, source.get_minimum_value());
     FT_ASSERT_EQ(0, source.get_maximum_value());
-    FT_ASSERT_EQ(ER_SUCCESS, destination.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
     return (1);
 }
 
@@ -164,13 +164,13 @@ FT_TEST(test_price_definition_setters_update_all_fields_and_errno, "Price defini
     definition.set_minimum_value(1200);
     definition.set_maximum_value(1800);
 
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(21, definition.get_item_id());
     FT_ASSERT_EQ(7, definition.get_rarity());
     FT_ASSERT_EQ(1500, definition.get_base_value());
     FT_ASSERT_EQ(1200, definition.get_minimum_value());
     FT_ASSERT_EQ(1800, definition.get_maximum_value());
-    FT_ASSERT_EQ(ER_SUCCESS, definition.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, definition.get_error());
     return (1);
 }
 
@@ -178,6 +178,6 @@ FT_TEST(test_price_definition_error_string_reports_success, "Price definition er
 {
     ft_price_definition definition;
 
-    FT_ASSERT_STR_EQ(ft_strerror(ER_SUCCESS), definition.get_error_str());
+    FT_ASSERT_STR_EQ(ft_strerror(FT_ER_SUCCESSS), definition.get_error_str());
     return (1);
 }

@@ -13,8 +13,8 @@ FT_TEST(test_game_region_definition_copy_assignment_overwrites_values, "Region d
     FT_ASSERT_EQ(ft_string("canyon"), destination.get_name());
     FT_ASSERT_EQ(ft_string("rocky pass"), destination.get_description());
     FT_ASSERT_EQ(14, destination.get_recommended_level());
-    FT_ASSERT_EQ(ER_SUCCESS, destination.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
     return (1);
 }
 
@@ -32,8 +32,8 @@ FT_TEST(test_game_region_definition_move_assignment_transfers_state, "Region def
     FT_ASSERT_EQ(ft_string(), source.get_name());
     FT_ASSERT_EQ(ft_string(), source.get_description());
     FT_ASSERT_EQ(0, source.get_recommended_level());
-    FT_ASSERT_EQ(ER_SUCCESS, destination.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
     return (1);
 }
 
@@ -46,7 +46,7 @@ FT_TEST(test_game_region_definition_self_copy_assignment_no_change, "Self copy a
     FT_ASSERT_EQ(ft_string("tundra"), region.get_name());
     FT_ASSERT_EQ(ft_string("frozen wastes"), region.get_description());
     FT_ASSERT_EQ(16, region.get_recommended_level());
-    FT_ASSERT_EQ(ER_SUCCESS, region.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, region.get_error());
     return (1);
 }
 
@@ -59,7 +59,7 @@ FT_TEST(test_game_region_definition_self_move_assignment_no_change, "Self move a
     FT_ASSERT_EQ(ft_string("delta"), region.get_name());
     FT_ASSERT_EQ(ft_string("river maze"), region.get_description());
     FT_ASSERT_EQ(8, region.get_recommended_level());
-    FT_ASSERT_EQ(ER_SUCCESS, region.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, region.get_error());
     return (1);
 }
 
@@ -67,8 +67,8 @@ FT_TEST(test_game_region_definition_error_string_reports_success, "Region defini
 {
     ft_region_definition region(1, ft_string("marsh"), ft_string("foggy wetland"), 2);
 
-    FT_ASSERT_STR_EQ(ft_strerror(ER_SUCCESS), region.get_error_str());
-    FT_ASSERT_EQ(ER_SUCCESS, region.get_error());
+    FT_ASSERT_STR_EQ(ft_strerror(FT_ER_SUCCESSS), region.get_error_str());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, region.get_error());
     return (1);
 }
 
@@ -78,7 +78,7 @@ FT_TEST(test_game_region_definition_get_region_id_sets_errno_success, "Region id
 
     ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
     FT_ASSERT_EQ(10, region.get_region_id());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -88,7 +88,7 @@ FT_TEST(test_game_region_definition_get_name_sets_errno_success, "Region name ge
 
     ft_errno = FT_ERR_GAME_INVALID_MOVE;
     FT_ASSERT_EQ(ft_string("plateau"), region.get_name());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -99,7 +99,7 @@ FT_TEST(test_game_region_definition_set_region_id_sets_errno_success, "Region id
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     region.set_region_id(18);
     FT_ASSERT_EQ(18, region.get_region_id());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -110,7 +110,7 @@ FT_TEST(test_game_region_definition_set_description_sets_errno_success, "Region 
     ft_errno = FT_ERR_MUTEX_NOT_OWNER;
     region.set_description(ft_string("ancient ruins"));
     FT_ASSERT_EQ(ft_string("ancient ruins"), region.get_description());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -119,8 +119,8 @@ FT_TEST(test_game_region_definition_get_error_sets_errno_success, "Region defini
     ft_region_definition region(30, ft_string("crater"), ft_string("impact site"), 25);
 
     ft_errno = FT_ERR_OUT_OF_RANGE;
-    FT_ASSERT_EQ(ER_SUCCESS, region.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, region.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 

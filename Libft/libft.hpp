@@ -56,7 +56,7 @@ namespace ft_detail
 constexpr size_t ft_strlen_size_t(const char *string)
 {
     if (!ft_is_constant_evaluated())
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
     if (!string)
     {
         if (!ft_is_constant_evaluated())
@@ -74,7 +74,7 @@ constexpr int ft_strlen(const char *string)
     size_t length = 0;
 
     if (!ft_is_constant_evaluated())
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
     length = ft_strlen_size_t(string);
     if (length > static_cast<size_t>(FT_INT_MAX))
     {

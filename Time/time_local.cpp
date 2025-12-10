@@ -34,7 +34,7 @@ void    time_local(t_time time_value, t_time_info *out)
     out->week_day = temporary.tm_wday;
     out->year_day = temporary.tm_yday;
     out->is_daylight_saving = temporary.tm_isdst;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     time_info_unlock(out, lock_acquired);
     return ;
 }

@@ -9,12 +9,12 @@ int cma_checked_free(void* ptr)
     if (OFFSWITCH == 1)
     {
         std::free(ptr);
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     if (!ptr)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     cma_allocator_guard allocator_guard;
@@ -55,8 +55,8 @@ int cma_checked_free(void* ptr)
     else
         g_cma_current_bytes = 0;
     g_cma_free_count++;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     allocator_guard.unlock();
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }

@@ -27,7 +27,7 @@ static int rng_fill_from_random_device(unsigned char *buffer, size_t length)
         ft_errno = FT_ERR_INTERNAL;
         return (-1);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -47,7 +47,7 @@ int rng_secure_bytes_with_fallback(unsigned char *buffer, size_t length, int *fa
         return (0);
     if (length == 0)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     int fallback_result = rng_fill_from_random_device(buffer, length);
@@ -55,7 +55,7 @@ int rng_secure_bytes_with_fallback(unsigned char *buffer, size_t length, int *fa
         return (-1);
     if (fallback_used != ft_nullptr)
         *fallback_used = 1;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -82,7 +82,7 @@ int rng_secure_uint64(uint64_t *value, int *fallback_used)
         index++;
     }
     *value = assembled_value;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -100,6 +100,6 @@ int rng_secure_uint32(uint32_t *value, int *fallback_used)
     if (result != 0)
         return (-1);
     *value = static_cast<uint32_t>(wide_value & 0xFFFFFFFFu);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }

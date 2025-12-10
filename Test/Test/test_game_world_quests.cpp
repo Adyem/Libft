@@ -16,12 +16,12 @@ FT_TEST(test_game_quest_advance_progress_to_completion, "Game quest advances pha
     quest.advance_phase();
     FT_ASSERT_EQ(1, quest.get_current_phase());
     FT_ASSERT_EQ(false, quest.is_complete());
-    FT_ASSERT_EQ(ER_SUCCESS, quest.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, quest.get_error());
 
     quest.advance_phase();
     FT_ASSERT_EQ(2, quest.get_current_phase());
     FT_ASSERT_EQ(true, quest.is_complete());
-    FT_ASSERT_EQ(ER_SUCCESS, quest.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, quest.get_error());
     return (1);
 }
 
@@ -32,14 +32,14 @@ FT_TEST(test_game_quest_invalid_and_overflow_phases_report_errors, "Game quest v
 
     quest.set_phases(0);
     quest.set_current_phase(1);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     quest.advance_phase();
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, quest.get_error());
     FT_ASSERT_EQ(0, quest.get_current_phase());
 
     quest.set_phases(1);
     quest.set_current_phase(1);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     quest.advance_phase();
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, quest.get_error());
     FT_ASSERT_EQ(1, quest.get_current_phase());
@@ -65,10 +65,10 @@ FT_TEST(test_game_quest_clamps_current_phase_when_phases_shrink, "Game quest cla
 
     quest.set_phases(4);
     quest.set_current_phase(3);
-    FT_ASSERT_EQ(ER_SUCCESS, quest.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, quest.get_error());
     quest.set_phases(2);
     FT_ASSERT_EQ(2, quest.get_current_phase());
-    FT_ASSERT_EQ(ER_SUCCESS, quest.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, quest.get_error());
     return (1);
 }
 
@@ -89,7 +89,7 @@ FT_TEST(test_game_quest_copy_preserves_configuration, "Game quest copy construct
     FT_ASSERT_EQ(3, copy.get_phases());
     FT_ASSERT_EQ(1, copy.get_current_phase());
     FT_ASSERT_EQ(50, copy.get_reward_experience());
-    FT_ASSERT_EQ(ER_SUCCESS, copy.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, copy.get_error());
     return (1);
 }
 
@@ -103,7 +103,7 @@ FT_TEST(test_game_quest_clears_error_after_valid_phase_set, "Game quest resets e
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, quest.get_error());
     quest.set_current_phase(1);
     FT_ASSERT_EQ(1, quest.get_current_phase());
-    FT_ASSERT_EQ(ER_SUCCESS, quest.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, quest.get_error());
     return (1);
 }
 
@@ -150,8 +150,8 @@ FT_TEST(test_game_quest_move_assignment_resets_source, "Game quest move assignme
     FT_ASSERT_EQ(ft_string(""), source.get_description());
     FT_ASSERT_EQ(ft_string(""), source.get_objective());
     FT_ASSERT_EQ(0, source.get_reward_experience());
-    FT_ASSERT_EQ(ER_SUCCESS, destination.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
     return (1);
 }
 
@@ -161,7 +161,7 @@ FT_TEST(test_game_world_get_quest_propagates_reward_experience_error, "Game worl
     ft_world world;
     ft_sharedptr<ft_quest> quest = world.get_quest();
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     quest->set_reward_experience(-10);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, quest->get_error());
     world.get_quest();
@@ -178,8 +178,8 @@ FT_TEST(test_game_quest_set_reward_items_rejects_null_entry, "Game quest refuses
     ft_sharedptr<ft_item> null_item;
 
     rewards.push_back(null_item);
-    FT_ASSERT_EQ(ER_SUCCESS, rewards.get_error());
-    ft_errno = ER_SUCCESS;
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, rewards.get_error());
+    ft_errno = FT_ER_SUCCESSS;
     quest.set_reward_items(rewards);
     FT_ASSERT_EQ(FT_ERR_INVALID_POINTER, quest.get_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_POINTER, ft_errno);
@@ -198,7 +198,7 @@ FT_TEST(test_game_world_get_quest_propagates_reward_item_error, "Game world gett
     rewards.push_back(null_item);
     quest->set_reward_items(rewards);
     FT_ASSERT_EQ(FT_ERR_INVALID_POINTER, quest->get_error());
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     world.get_quest();
     FT_ASSERT_EQ(FT_ERR_INVALID_POINTER, world.get_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_POINTER, ft_errno);
@@ -223,7 +223,7 @@ FT_TEST(test_game_world_copy_preserves_quest_reward_items, "Game world copy reta
     FT_ASSERT_EQ((size_t)2, copy.get_quest()->get_reward_items().size());
     FT_ASSERT_EQ(301, copy.get_quest()->get_reward_items()[0]->get_item_id());
     FT_ASSERT_EQ(302, copy.get_quest()->get_reward_items()[1]->get_item_id());
-    FT_ASSERT_EQ(ER_SUCCESS, copy.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, copy.get_error());
     return (1);
 }
 
@@ -243,7 +243,7 @@ FT_TEST(test_game_world_move_transfers_quest_reward_items, "Game world move tran
     FT_ASSERT_EQ(404, moved.get_quest()->get_reward_items()[0]->get_item_id());
     source.get_quest();
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, source.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, moved.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.get_error());
     return (1);
 }
 
@@ -268,8 +268,8 @@ FT_TEST(test_game_world_quest_reward_items_recovery_clears_error, "Game world cl
     world.get_quest();
     FT_ASSERT_EQ((size_t)1, quest->get_reward_items().size());
     FT_ASSERT_EQ(505, quest->get_reward_items()[0]->get_item_id());
-    FT_ASSERT_EQ(ER_SUCCESS, quest->get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, world.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, quest->get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, world.get_error());
     return (1);
 }
 
@@ -288,8 +288,8 @@ FT_TEST(test_game_world_copy_assignment_preserves_quest_rewards, "Game world cop
     target = source;
     FT_ASSERT_EQ((size_t)1, target.get_quest()->get_reward_items().size());
     FT_ASSERT_EQ(606, target.get_quest()->get_reward_items()[0]->get_item_id());
-    FT_ASSERT_EQ(ER_SUCCESS, target.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, target.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
     return (1);
 }
 
@@ -310,7 +310,7 @@ FT_TEST(test_game_world_move_assignment_transfers_quest_rewards, "Game world mov
     FT_ASSERT_EQ(707, target.get_quest()->get_reward_items()[0]->get_item_id());
     source.get_quest();
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, source.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, target.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, target.get_error());
     return (1);
 }
 

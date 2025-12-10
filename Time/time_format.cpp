@@ -49,12 +49,12 @@ ft_string    time_format_iso8601(t_time time_value)
     strftime_result = std::strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%SZ", &time_storage);
     if (strftime_result == 0)
     {
-        if (ft_errno == ER_SUCCESS)
+        if (ft_errno == FT_ER_SUCCESSS)
             return (time_format_failure(FT_ERR_INVALID_ARGUMENT));
         return (time_format_failure(ft_errno));
     }
     formatted = ft_string(buffer);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (formatted);
 }
 
@@ -102,7 +102,7 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int offset_minut
     strftime_result = std::strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%S", &time_storage);
     if (strftime_result == 0)
     {
-        if (ft_errno == ER_SUCCESS)
+        if (ft_errno == FT_ER_SUCCESSS)
             return (time_format_failure(FT_ERR_INVALID_ARGUMENT));
         return (time_format_failure(ft_errno));
     }
@@ -121,6 +121,6 @@ ft_string    time_format_iso8601_with_offset(t_time time_value, int offset_minut
         return (time_format_failure(FT_ERR_INTERNAL));
     formatted = ft_string(buffer);
     formatted += offset_buffer;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (formatted);
 }

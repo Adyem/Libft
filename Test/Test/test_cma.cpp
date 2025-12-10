@@ -12,7 +12,7 @@ int test_cma_checked_free_basic(void)
     if (!memory_pointer)
         return (0);
     free_result = cma_checked_free(memory_pointer);
-    return (free_result == 0 && ft_errno == ER_SUCCESS);
+    return (free_result == 0 && ft_errno == FT_ER_SUCCESSS);
 }
 
 int test_cma_checked_free_offset(void)
@@ -25,7 +25,7 @@ int test_cma_checked_free_offset(void)
     if (!memory_pointer)
         return (0);
     free_result = cma_checked_free(memory_pointer + 10);
-    return (free_result == 0 && ft_errno == ER_SUCCESS);
+    return (free_result == 0 && ft_errno == FT_ER_SUCCESSS);
 }
 
 int test_cma_checked_free_invalid(void)

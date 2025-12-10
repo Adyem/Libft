@@ -35,9 +35,9 @@ bool html_document::thread_guard::lock_acquired() const noexcept
 }
 
 html_document::html_document() noexcept
-    : _root(ft_nullptr), _mutex(ft_nullptr), _thread_safe_enabled(false), _error_code(ER_SUCCESS)
+    : _root(ft_nullptr), _mutex(ft_nullptr), _thread_safe_enabled(false), _error_code(FT_ER_SUCCESSS)
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     if (this->prepare_thread_safety() != 0)
         return ;
     return ;
@@ -65,17 +65,17 @@ html_node *html_document::create_node(const char *tag_name, const char *text_con
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     node = html_create_node(tag_name, text_content);
     if (!node)
     {
-        if (ft_errno == ER_SUCCESS)
+        if (ft_errno == FT_ER_SUCCESSS)
             this->set_error(FT_ERR_NO_MEMORY);
         else
             this->set_error(ft_errno);
         return (ft_nullptr);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (node);
 }
 
@@ -94,17 +94,17 @@ html_attr *html_document::create_attr(const char *key, const char *value) noexce
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     attribute = html_create_attr(key, value);
     if (!attribute)
     {
-        if (ft_errno == ER_SUCCESS)
+        if (ft_errno == FT_ER_SUCCESSS)
             this->set_error(FT_ERR_NO_MEMORY);
         else
             this->set_error(ft_errno);
         return (ft_nullptr);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (attribute);
 }
 
@@ -123,7 +123,7 @@ void html_document::add_attr(html_node *target_node, html_attr *new_attribute) n
         return ;
     }
     html_add_attr(target_node, new_attribute);
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -142,7 +142,7 @@ void html_document::remove_attr(html_node *target_node, const char *key) noexcep
         return ;
     }
     html_remove_attr(target_node, key);
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -161,7 +161,7 @@ void html_document::add_child(html_node *parent_node, html_node *child_node) noe
         return ;
     }
     html_add_child(parent_node, child_node);
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -180,7 +180,7 @@ void html_document::append_node(html_node *new_node) noexcept
         return ;
     }
     html_append_node(&this->_root, new_node);
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -199,17 +199,17 @@ int html_document::write_to_file(const char *file_path) const noexcept
         const_cast<html_document *>(this)->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     result = html_write_to_file(file_path, this->_root);
     if (result != 0)
     {
-        if (ft_errno == ER_SUCCESS)
+        if (ft_errno == FT_ER_SUCCESSS)
             const_cast<html_document *>(this)->set_error(FT_ERR_INVALID_HANDLE);
         else
             const_cast<html_document *>(this)->set_error(ft_errno);
         return (-1);
     }
-    const_cast<html_document *>(this)->set_error(ER_SUCCESS);
+    const_cast<html_document *>(this)->set_error(FT_ER_SUCCESSS);
     return (0);
 }
 
@@ -223,17 +223,17 @@ char *html_document::write_to_string() const noexcept
         const_cast<html_document *>(this)->set_error(ft_errno);
         return (ft_nullptr);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     result = html_write_to_string(this->_root);
     if (!result)
     {
-        if (ft_errno == ER_SUCCESS)
+        if (ft_errno == FT_ER_SUCCESSS)
             const_cast<html_document *>(this)->set_error(FT_ERR_NO_MEMORY);
         else
             const_cast<html_document *>(this)->set_error(ft_errno);
         return (ft_nullptr);
     }
-    const_cast<html_document *>(this)->set_error(ER_SUCCESS);
+    const_cast<html_document *>(this)->set_error(FT_ER_SUCCESSS);
     return (result);
 }
 
@@ -252,7 +252,7 @@ void html_document::remove_nodes_by_tag(const char *tag_name) noexcept
         return ;
     }
     html_remove_nodes_by_tag(&this->_root, tag_name);
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -271,7 +271,7 @@ void html_document::remove_nodes_by_attr(const char *key, const char *value) noe
         return ;
     }
     html_remove_nodes_by_attr(&this->_root, key, value);
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -290,7 +290,7 @@ void html_document::remove_nodes_by_text(const char *text_content) noexcept
         return ;
     }
     html_remove_nodes_by_text(&this->_root, text_content);
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -310,7 +310,7 @@ html_node *html_document::find_by_tag(const char *tag_name) const noexcept
         return (ft_nullptr);
     }
     node = html_find_by_tag(this->_root, tag_name);
-    const_cast<html_document *>(this)->set_error(ER_SUCCESS);
+    const_cast<html_document *>(this)->set_error(FT_ER_SUCCESSS);
     return (node);
 }
 
@@ -330,7 +330,7 @@ html_node *html_document::find_by_attr(const char *key, const char *value) const
         return (ft_nullptr);
     }
     node = html_find_by_attr(this->_root, key, value);
-    const_cast<html_document *>(this)->set_error(ER_SUCCESS);
+    const_cast<html_document *>(this)->set_error(FT_ER_SUCCESSS);
     return (node);
 }
 
@@ -350,7 +350,7 @@ html_node *html_document::find_by_text(const char *text_content) const noexcept
         return (ft_nullptr);
     }
     node = html_find_by_text(this->_root, text_content);
-    const_cast<html_document *>(this)->set_error(ER_SUCCESS);
+    const_cast<html_document *>(this)->set_error(FT_ER_SUCCESSS);
     return (node);
 }
 
@@ -370,7 +370,7 @@ html_node *html_document::find_by_selector(const char *selector) const noexcept
         return (ft_nullptr);
     }
     node = html_find_by_selector(this->_root, selector);
-    const_cast<html_document *>(this)->set_error(ER_SUCCESS);
+    const_cast<html_document *>(this)->set_error(FT_ER_SUCCESSS);
     return (node);
 }
 
@@ -390,7 +390,7 @@ size_t html_document::count_nodes_by_tag(const char *tag_name) const noexcept
         return (0);
     }
     count = html_count_nodes_by_tag(this->_root, tag_name);
-    const_cast<html_document *>(this)->set_error(ER_SUCCESS);
+    const_cast<html_document *>(this)->set_error(FT_ER_SUCCESSS);
     return (count);
 }
 
@@ -403,7 +403,7 @@ html_node *html_document::get_root() const noexcept
         const_cast<html_document *>(this)->set_error(ft_errno);
         return (ft_nullptr);
     }
-    const_cast<html_document *>(this)->set_error(ER_SUCCESS);
+    const_cast<html_document *>(this)->set_error(FT_ER_SUCCESSS);
     return (this->_root);
 }
 
@@ -438,7 +438,7 @@ void html_document::clear() noexcept
     }
     html_free_nodes(this->_root);
     this->_root = ft_nullptr;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -450,10 +450,10 @@ bool html_document::is_thread_safe_enabled() const noexcept
         return (false);
     if (!this->_thread_safe_enabled || !this->_mutex)
     {
-        const_cast<html_document *>(this)->set_error(ER_SUCCESS);
+        const_cast<html_document *>(this)->set_error(FT_ER_SUCCESSS);
         return (false);
     }
-    const_cast<html_document *>(this)->set_error(ER_SUCCESS);
+    const_cast<html_document *>(this)->set_error(FT_ER_SUCCESSS);
     return (true);
 }
 
@@ -471,7 +471,7 @@ int html_document::prepare_thread_safety() noexcept
 
     if (this->_thread_safe_enabled && this->_mutex)
     {
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
         return (0);
     }
     memory = cma_malloc(sizeof(pt_mutex));
@@ -481,7 +481,7 @@ int html_document::prepare_thread_safety() noexcept
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != ER_SUCCESS)
+    if (mutex_pointer->get_error() != FT_ER_SUCCESSS)
     {
         int mutex_error;
 
@@ -493,7 +493,7 @@ int html_document::prepare_thread_safety() noexcept
     }
     this->_mutex = mutex_pointer;
     this->_thread_safe_enabled = true;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (0);
 }
 
@@ -517,11 +517,11 @@ int html_document::lock(bool *lock_acquired) const noexcept
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || !this->_mutex)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     this->_mutex->lock(THREAD_ID);
-    if (this->_mutex->get_error() != ER_SUCCESS)
+    if (this->_mutex->get_error() != FT_ER_SUCCESSS)
     {
         int mutex_error;
 
@@ -532,7 +532,7 @@ int html_document::lock(bool *lock_acquired) const noexcept
     }
     if (lock_acquired)
         *lock_acquired = true;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -544,7 +544,7 @@ void html_document::unlock(bool lock_acquired) const noexcept
         return ;
     entry_errno = ft_errno;
     this->_mutex->unlock(THREAD_ID);
-    if (this->_mutex->get_error() != ER_SUCCESS)
+    if (this->_mutex->get_error() != FT_ER_SUCCESSS)
     {
         int mutex_error;
 

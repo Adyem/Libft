@@ -15,7 +15,7 @@ int pt_mutex::unlock(pthread_t thread_id) const
     int result;
     pt_mutex_vector owned_mutexes;
 
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     tracking_reports_owned = false;
     should_notify_release = false;
     result = FT_SUCCESS;
@@ -43,7 +43,7 @@ int pt_mutex::unlock(pthread_t thread_id) const
         if (owner == 0)
         {
             owned_mutexes = pt_lock_tracking::get_owned_mutexes(thread_id);
-            if (ft_errno != ER_SUCCESS)
+            if (ft_errno != FT_ER_SUCCESSS)
             {
                 this->set_error(ft_errno);
                 goto cleanup;
@@ -83,7 +83,7 @@ int pt_mutex::unlock(pthread_t thread_id) const
         ft_size_t index;
 
         owned_mutexes = pt_lock_tracking::get_owned_mutexes(thread_id);
-        if (ft_errno != ER_SUCCESS)
+        if (ft_errno != FT_ER_SUCCESSS)
         {
             this->set_error(ft_errno);
             goto cleanup;
@@ -138,7 +138,7 @@ int pt_mutex::unlock(pthread_t thread_id) const
     {
         pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
 
 cleanup:
     this->_lock.store(false, std::memory_order_release);

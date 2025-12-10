@@ -61,14 +61,14 @@ int nw_poll(int *read_file_descriptors, int read_count,
     if (maximum_events == 0)
     {
         close(kqueue_descriptor);
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     event_list = static_cast<struct kevent *>(cma_malloc(sizeof(struct kevent) * maximum_events));
     if (!event_list)
     {
         close(kqueue_descriptor);
-        if (ft_errno == ER_SUCCESS)
+        if (ft_errno == FT_ER_SUCCESSS)
             ft_errno = FT_ERR_NO_MEMORY;
         return (-1);
     }
@@ -83,7 +83,7 @@ int nw_poll(int *read_file_descriptors, int read_count,
         cma_free(event_list);
         close(kqueue_descriptor);
         if (ready_descriptors == 0)
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
         else
             ft_errno = ft_map_system_error(wait_error);
         return (ready_descriptors);
@@ -114,6 +114,6 @@ int nw_poll(int *read_file_descriptors, int read_count,
     }
     cma_free(event_list);
     close(kqueue_descriptor);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (ready_descriptors);
 }

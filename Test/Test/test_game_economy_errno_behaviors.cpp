@@ -16,15 +16,15 @@ FT_TEST(test_price_definition_errno_sets_to_success_during_operations, "Price de
     definition.set_minimum_value(80);
     definition.set_maximum_value(500);
 
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     ft_errno = FT_ERR_ALREADY_EXISTS;
     FT_ASSERT_EQ(7, definition.get_item_id());
     FT_ASSERT_EQ(6, definition.get_rarity());
     FT_ASSERT_EQ(300, definition.get_base_value());
     FT_ASSERT_EQ(80, definition.get_minimum_value());
     FT_ASSERT_EQ(500, definition.get_maximum_value());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(ER_SUCCESS, definition.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, definition.get_error());
     return (1);
 }
 
@@ -36,14 +36,14 @@ FT_TEST(test_price_definition_copy_constructor_sets_errno_success, "Price defini
     ft_errno = FT_ERR_CONFIGURATION;
     ft_price_definition copy(original);
 
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(9, copy.get_item_id());
     FT_ASSERT_EQ(2, copy.get_rarity());
     FT_ASSERT_EQ(150, copy.get_base_value());
     FT_ASSERT_EQ(90, copy.get_minimum_value());
     FT_ASSERT_EQ(210, copy.get_maximum_value());
-    FT_ASSERT_EQ(ER_SUCCESS, copy.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, original.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, copy.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, original.get_error());
     return (1);
 }
 
@@ -56,7 +56,7 @@ FT_TEST(test_price_definition_move_assignment_sets_errno_and_clears_source, "Pri
     ft_errno = FT_ERR_INTERNAL;
     destination = ft_move(source);
 
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(12, destination.get_item_id());
     FT_ASSERT_EQ(7, destination.get_rarity());
     FT_ASSERT_EQ(640, destination.get_base_value());
@@ -67,8 +67,8 @@ FT_TEST(test_price_definition_move_assignment_sets_errno_and_clears_source, "Pri
     FT_ASSERT_EQ(0, source.get_base_value());
     FT_ASSERT_EQ(0, source.get_minimum_value());
     FT_ASSERT_EQ(0, source.get_maximum_value());
-    FT_ASSERT_EQ(ER_SUCCESS, destination.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
     return (1);
 }
 
@@ -77,7 +77,7 @@ FT_TEST(test_price_definition_get_error_str_reports_success_message, "Price defi
 {
     ft_price_definition definition;
 
-    FT_ASSERT_STR_EQ(ft_strerror(ER_SUCCESS), definition.get_error_str());
+    FT_ASSERT_STR_EQ(ft_strerror(FT_ER_SUCCESSS), definition.get_error_str());
     return (1);
 }
 
@@ -91,13 +91,13 @@ FT_TEST(test_currency_rate_errno_sets_to_success_during_operations, "Currency ra
     rate.set_rate_to_base(0.85);
     rate.set_display_precision(6);
 
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     ft_errno = FT_ERR_ALREADY_INITIALIZED;
     FT_ASSERT_EQ(11, rate.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(0.85, rate.get_rate_to_base());
     FT_ASSERT_EQ(6, rate.get_display_precision());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(ER_SUCCESS, rate.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, rate.get_error());
     return (1);
 }
 
@@ -109,15 +109,15 @@ FT_TEST(test_currency_rate_move_constructor_sets_errno_and_resets_source, "Curre
     ft_errno = FT_ERR_SOCKET_RECEIVE_FAILED;
     ft_currency_rate moved(ft_move(original));
 
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(18, moved.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(4.5, moved.get_rate_to_base());
     FT_ASSERT_EQ(1, moved.get_display_precision());
     FT_ASSERT_EQ(0, original.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(0.0, original.get_rate_to_base());
     FT_ASSERT_EQ(0, original.get_display_precision());
-    FT_ASSERT_EQ(ER_SUCCESS, moved.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, original.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, original.get_error());
     return (1);
 }
 
@@ -126,7 +126,7 @@ FT_TEST(test_currency_rate_get_error_str_reports_success_message, "Currency rate
 {
     ft_currency_rate rate;
 
-    FT_ASSERT_STR_EQ(ft_strerror(ER_SUCCESS), rate.get_error_str());
+    FT_ASSERT_STR_EQ(ft_strerror(FT_ER_SUCCESSS), rate.get_error_str());
     return (1);
 }
 
@@ -139,12 +139,12 @@ FT_TEST(test_rarity_band_errno_sets_to_success_during_operations, "Rarity band g
     band.set_rarity(9);
     band.set_value_multiplier(1.1);
 
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     ft_errno = FT_ERR_SOCKET_LISTEN_FAILED;
     FT_ASSERT_EQ(9, band.get_rarity());
     FT_ASSERT_DOUBLE_EQ(1.1, band.get_value_multiplier());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
-    FT_ASSERT_EQ(ER_SUCCESS, band.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, band.get_error());
     return (1);
 }
 
@@ -157,13 +157,13 @@ FT_TEST(test_rarity_band_move_assignment_sets_errno_and_resets_source, "Rarity b
     ft_errno = FT_ERR_SOCKET_ACCEPT_FAILED;
     destination = ft_move(source);
 
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(14, destination.get_rarity());
     FT_ASSERT_DOUBLE_EQ(2.8, destination.get_value_multiplier());
     FT_ASSERT_EQ(0, source.get_rarity());
     FT_ASSERT_DOUBLE_EQ(0.0, source.get_value_multiplier());
-    FT_ASSERT_EQ(ER_SUCCESS, destination.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
     return (1);
 }
 
@@ -172,6 +172,6 @@ FT_TEST(test_rarity_band_get_error_str_reports_success_message, "Rarity band get
 {
     ft_rarity_band band;
 
-    FT_ASSERT_STR_EQ(ft_strerror(ER_SUCCESS), band.get_error_str());
+    FT_ASSERT_STR_EQ(ft_strerror(FT_ER_SUCCESSS), band.get_error_str());
     return (1);
 }

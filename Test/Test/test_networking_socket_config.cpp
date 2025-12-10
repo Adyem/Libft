@@ -12,7 +12,7 @@ FT_TEST(test_socket_config_copy_detects_string_error,
 
     original._ip = ft_string(FT_ERR_INVALID_ARGUMENT);
     original._multicast_group = "239.1.1.1";
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     SocketConfig copy(original);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, copy.get_error());
     error_string = copy.get_error_str();
@@ -38,7 +38,7 @@ FT_TEST(test_socket_config_move_resets_source_fields,
     original._send_timeout = 2000;
     original._multicast_group = "239.0.0.1";
     original._multicast_interface = "eth0";
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     SocketConfig moved(std::move(original));
     FT_ASSERT_EQ(SocketType::CLIENT, moved._type);
     FT_ASSERT_EQ(0, ft_strcmp(moved._ip.c_str(), "10.1.2.3"));
@@ -63,7 +63,7 @@ FT_TEST(test_socket_config_move_resets_source_fields,
     FT_ASSERT_EQ(0, original._send_timeout);
     FT_ASSERT_EQ(0, ft_strcmp(original._multicast_group.c_str(), ""));
     FT_ASSERT_EQ(0, ft_strcmp(original._multicast_interface.c_str(), ""));
-    FT_ASSERT_EQ(ER_SUCCESS, moved.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }

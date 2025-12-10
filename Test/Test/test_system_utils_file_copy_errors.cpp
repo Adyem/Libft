@@ -13,7 +13,7 @@ FT_TEST(test_su_copy_file_rejects_null_source,
     destination_path = "su_copy_file_null_source.txt";
     std::remove(destination_path);
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(-1, su_copy_file(ft_nullptr, destination_path));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
 
@@ -37,9 +37,9 @@ FT_TEST(test_su_copy_file_missing_source_sets_error,
     std::remove(source_path);
     std::remove(destination_path);
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(-1, su_copy_file(source_path, destination_path));
-    FT_ASSERT(ft_errno != ER_SUCCESS);
+    FT_ASSERT(ft_errno != FT_ER_SUCCESSS);
 
     destination_file = std::fopen(destination_path, "r");
     FT_ASSERT(destination_file == ft_nullptr);

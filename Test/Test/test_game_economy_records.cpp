@@ -12,7 +12,7 @@ static int assert_price_values(const ft_price_definition &definition, int item_i
     FT_ASSERT_EQ(base_value, definition.get_base_value());
     FT_ASSERT_EQ(minimum_value, definition.get_minimum_value());
     FT_ASSERT_EQ(maximum_value, definition.get_maximum_value());
-    FT_ASSERT_EQ(ER_SUCCESS, definition.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, definition.get_error());
     return (1);
 }
 
@@ -29,7 +29,7 @@ FT_TEST(test_price_definition_copy_and_move, "copy and move price definitions")
     FT_ASSERT_EQ(0, original.get_base_value());
     FT_ASSERT_EQ(0, original.get_minimum_value());
     FT_ASSERT_EQ(0, original.get_maximum_value());
-    FT_ASSERT_EQ(ER_SUCCESS, original.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, original.get_error());
     return (1);
 }
 
@@ -41,13 +41,13 @@ FT_TEST(test_rarity_band_copy_and_move, "copy and move rarity bands")
 
     FT_ASSERT_EQ(4, copy.get_rarity());
     FT_ASSERT_DOUBLE_EQ(1.5, copy.get_value_multiplier());
-    FT_ASSERT_EQ(ER_SUCCESS, copy.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, copy.get_error());
     FT_ASSERT_EQ(4, moved.get_rarity());
     FT_ASSERT_DOUBLE_EQ(1.5, moved.get_value_multiplier());
-    FT_ASSERT_EQ(ER_SUCCESS, moved.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.get_error());
     FT_ASSERT_EQ(0, band.get_rarity());
     FT_ASSERT_DOUBLE_EQ(0.0, band.get_value_multiplier());
-    FT_ASSERT_EQ(ER_SUCCESS, band.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, band.get_error());
     return (1);
 }
 
@@ -60,14 +60,14 @@ FT_TEST(test_currency_rate_copy_and_move, "copy and move currency rates")
     FT_ASSERT_EQ(5, copy.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(0.5, copy.get_rate_to_base());
     FT_ASSERT_EQ(3, copy.get_display_precision());
-    FT_ASSERT_EQ(ER_SUCCESS, copy.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, copy.get_error());
     FT_ASSERT_EQ(5, moved.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(0.5, moved.get_rate_to_base());
     FT_ASSERT_EQ(3, moved.get_display_precision());
-    FT_ASSERT_EQ(ER_SUCCESS, moved.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.get_error());
     FT_ASSERT_EQ(0, rate.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(0.0, rate.get_rate_to_base());
     FT_ASSERT_EQ(0, rate.get_display_precision());
-    FT_ASSERT_EQ(ER_SUCCESS, rate.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, rate.get_error());
     return (1);
 }

@@ -5,7 +5,7 @@
 
 FT_TEST(test_memset_null, "ft_memset nullptr")
 {
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(ft_nullptr, ft_memset(ft_nullptr, 'A', 3));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -19,7 +19,7 @@ FT_TEST(test_memset_basic, "ft_memset basic")
     ft_memset(buffer, 'x', 3);
     buffer[3] = '\0';
     FT_ASSERT_EQ(0, ft_strcmp(buffer, "xxx"));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -37,7 +37,7 @@ FT_TEST(test_memset_large, "ft_memset large buffer")
             FT_ASSERT(0);
         index++;
     }
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -52,7 +52,7 @@ FT_TEST(test_memset_zero_length, "ft_memset zero length")
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(buffer, ft_memset(buffer, 'x', 0));
     FT_ASSERT_EQ(0, ft_strcmp(buffer, "abc"));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -60,7 +60,7 @@ FT_TEST(test_memset_null_zero_length_recovers_errno, "ft_memset nullptr zero len
 {
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(ft_nullptr, ft_memset(ft_nullptr, 'a', 0));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -78,7 +78,7 @@ FT_TEST(test_memset_negative, "ft_memset negative value")
             FT_ASSERT(0);
         index++;
     }
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -98,7 +98,7 @@ FT_TEST(test_memset_partial_fill_preserves_tail, "ft_memset writes only the requ
     FT_ASSERT_EQ('w', buffer[2]);
     FT_ASSERT_EQ('x', buffer[3]);
     FT_ASSERT_EQ('\0', buffer[4]);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -116,7 +116,7 @@ FT_TEST(test_memset_overflow, "ft_memset overflow value")
             FT_ASSERT(0);
         index++;
     }
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -136,7 +136,7 @@ FT_TEST(test_memset_partial_preserves_unwritten_bytes, "ft_memset leaves trailin
     FT_ASSERT_EQ('z', buffer[2]);
     FT_ASSERT_EQ('d', buffer[3]);
     FT_ASSERT_EQ('\0', buffer[4]);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -148,7 +148,7 @@ FT_TEST(test_memset_recovers_after_null_failure, "ft_memset clears errno after n
     buffer[1] = 'e';
     buffer[2] = 's';
     buffer[3] = 't';
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     FT_ASSERT_EQ(ft_nullptr, ft_memset(ft_nullptr, 'x', 2));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     ft_errno = FT_ERR_INVALID_ARGUMENT;
@@ -157,7 +157,7 @@ FT_TEST(test_memset_recovers_after_null_failure, "ft_memset clears errno after n
     FT_ASSERT_EQ('q', buffer[1]);
     FT_ASSERT_EQ('q', buffer[2]);
     FT_ASSERT_EQ('t', buffer[3]);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -179,6 +179,6 @@ FT_TEST(test_memset_returns_destination_pointer, "ft_memset returns destination 
     FT_ASSERT_EQ('x', buffer[3]);
     FT_ASSERT_EQ('n', buffer[4]);
     FT_ASSERT_EQ('\0', buffer[5]);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }

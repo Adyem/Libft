@@ -38,7 +38,7 @@ int file_copy_with_buffer(const char *source_path, const char *destination_path,
         return (-1);
     if (ft_file_stream_copy(source_file, destination_file, buffer_size) != 0)
         return (-1);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 

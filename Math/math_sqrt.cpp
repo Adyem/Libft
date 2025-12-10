@@ -42,15 +42,15 @@ double math_sqrt(double number)
     }
     if (math_is_infinite_internal(number) != 0)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (number);
     }
     if (math_fabs(number) <= DBL_MIN)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0.0);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     guess = number;
     iteration_count = 0;
     max_iterations = 1000;

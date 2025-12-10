@@ -26,12 +26,12 @@ void ft_file::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno,
     operation_errno = ft_errno;
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return ;
     }
-    if (operation_errno != ER_SUCCESS)
+    if (operation_errno != FT_ER_SUCCESSS)
     {
         ft_errno = operation_errno;
         return ;
@@ -41,7 +41,7 @@ void ft_file::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno,
         ft_errno = entry_errno;
         return ;
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 
@@ -56,15 +56,15 @@ int ft_file::lock_pair(const ft_file &first, const ft_file &second,
     if (&first == &second)
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
-        if (single_guard.get_error() != ER_SUCCESS)
+        if (single_guard.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = ER_SUCCESS;
-        return (ER_SUCCESS);
+        ft_errno = FT_ER_SUCCESSS;
+        return (FT_ER_SUCCESSS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -81,13 +81,13 @@ int ft_file::lock_pair(const ft_file &first, const ft_file &second,
     while (true)
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
-        if (lower_guard.get_error() != ER_SUCCESS)
+        if (lower_guard.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == ER_SUCCESS)
+        if (upper_guard.get_error() == FT_ER_SUCCESSS)
         {
             if (!swapped)
             {
@@ -99,8 +99,8 @@ int ft_file::lock_pair(const ft_file &first, const ft_file &second,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = ER_SUCCESS;
-            return (ER_SUCCESS);
+            ft_errno = FT_ER_SUCCESSS;
+            return (FT_ER_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -134,7 +134,7 @@ ft_file::ft_file(const char* filename, int flags, mode_t mode) noexcept
     }
     this->_fd = new_fd;
     this->_is_open = true;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -151,7 +151,7 @@ ft_file::ft_file(const char* filename, int flags) noexcept
     }
     this->_fd = new_fd;
     this->_is_open = true;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -166,7 +166,7 @@ ft_file::~ft_file() noexcept
     int entry_errno;
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return ;
@@ -176,11 +176,11 @@ ft_file::~ft_file() noexcept
         if (su_close(this->_fd) == -1)
             this->set_error(ft_map_system_error(errno));
         else
-            this->set_error(ER_SUCCESS);
+            this->set_error(FT_ER_SUCCESSS);
         this->_is_open = false;
     }
     else
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
     ft_file::restore_errno(guard, entry_errno);
     return ;
 }
@@ -191,7 +191,7 @@ ft_file::ft_file(ft_file&& other) noexcept
     int entry_errno;
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != ER_SUCCESS)
+    if (other_guard.get_error() != FT_ER_SUCCESSS)
     {
         this->_error_code = other_guard.get_error();
         ft_file::restore_errno(other_guard, entry_errno);
@@ -201,9 +201,9 @@ ft_file::ft_file(ft_file&& other) noexcept
     this->_error_code = other._error_code;
     this->_is_open = other._is_open;
     other._fd = -1;
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     other._is_open = false;
-    other.set_error(ER_SUCCESS);
+    other.set_error(FT_ER_SUCCESSS);
     ft_file::restore_errno(other_guard, entry_errno);
     return ;
 }
@@ -219,7 +219,7 @@ ft_file& ft_file::operator=(ft_file&& other) noexcept
 
         entry_errno = ft_errno;
         lock_error = ft_file::lock_pair(*this, other, this_guard, other_guard);
-        if (lock_error != ER_SUCCESS)
+        if (lock_error != FT_ER_SUCCESSS)
         {
             this->set_error(lock_error);
             return (*this);
@@ -238,10 +238,10 @@ ft_file& ft_file::operator=(ft_file&& other) noexcept
         this->_error_code = final_error;
         this->_is_open = other._is_open;
         other._fd = -1;
-        other._error_code = ER_SUCCESS;
+        other._error_code = FT_ER_SUCCESSS;
         other._is_open = false;
         this->set_error(final_error);
-        other.set_error(ER_SUCCESS);
+        other.set_error(FT_ER_SUCCESSS);
         ft_file::restore_errno(other_guard, entry_errno);
         ft_file::restore_errno(this_guard, entry_errno);
     }
@@ -253,7 +253,7 @@ void    ft_file::close() noexcept
     int entry_errno;
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return ;
@@ -274,7 +274,7 @@ void    ft_file::close() noexcept
         }
         this->_is_open = false;
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     ft_file::restore_errno(guard, entry_errno);
     return ;
 }
@@ -285,7 +285,7 @@ int ft_file::open(const char* filename, int flags, mode_t mode) noexcept
     int new_fd;
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (1);
@@ -314,7 +314,7 @@ int ft_file::open(const char* filename, int flags, mode_t mode) noexcept
     }
     this->_fd = new_fd;
     this->_is_open = true;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     ft_file::restore_errno(guard, entry_errno);
     return (0);
 }
@@ -325,7 +325,7 @@ int ft_file::open(const char* filename, int flags) noexcept
     int new_fd;
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (1);
@@ -352,7 +352,7 @@ int ft_file::open(const char* filename, int flags) noexcept
     }
     this->_fd = new_fd;
     this->_is_open = true;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     ft_file::restore_errno(guard, entry_errno);
     return (0);
 }
@@ -370,7 +370,7 @@ int ft_file::get_fd() const
     int descriptor;
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (-1);
@@ -392,7 +392,7 @@ int ft_file::get_error() const noexcept
     int error;
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (guard.get_error());
@@ -408,7 +408,7 @@ const char *ft_file::get_error_str() const noexcept
     const char *message;
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (ft_strerror(guard.get_error()));
@@ -424,7 +424,7 @@ ssize_t ft_file::read(char *buffer, int count) noexcept
     ssize_t bytes_read;
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (-1);
@@ -448,7 +448,7 @@ ssize_t ft_file::read(char *buffer, int count) noexcept
         ft_file::restore_errno(guard, entry_errno);
         return (-1);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     ft_file::restore_errno(guard, entry_errno);
     return (bytes_read);
 }
@@ -459,7 +459,7 @@ ssize_t ft_file::write(const char *string) noexcept
     ssize_t result;
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (-1);
@@ -483,7 +483,7 @@ ssize_t ft_file::write(const char *string) noexcept
         ft_file::restore_errno(guard, entry_errno);
         return (-1);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     ft_file::restore_errno(guard, entry_errno);
     return (result);
 }
@@ -494,7 +494,7 @@ ssize_t ft_file::write_buffer(const char *buffer, size_t length) noexcept
     ssize_t result;
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (-1);
@@ -513,7 +513,7 @@ ssize_t ft_file::write_buffer(const char *buffer, size_t length) noexcept
     }
     if (length == 0)
     {
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
         ft_file::restore_errno(guard, entry_errno);
         return (0);
     }
@@ -524,7 +524,7 @@ ssize_t ft_file::write_buffer(const char *buffer, size_t length) noexcept
         ft_file::restore_errno(guard, entry_errno);
         return (-1);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     ft_file::restore_errno(guard, entry_errno);
     return (result);
 }
@@ -535,7 +535,7 @@ int ft_file::seek(off_t offset, int whence) noexcept
     off_t result;
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (-1);
@@ -553,7 +553,7 @@ int ft_file::seek(off_t offset, int whence) noexcept
         ft_file::restore_errno(guard, entry_errno);
         return (-1);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     ft_file::restore_errno(guard, entry_errno);
     return (0);
 }
@@ -565,7 +565,7 @@ int ft_file::printf(const char *format, ...)
     va_list args;
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (0);
@@ -591,7 +591,7 @@ int ft_file::printf(const char *format, ...)
         ft_file::restore_errno(guard, entry_errno);
         return (printed_chars);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     ft_file::restore_errno(guard, entry_errno);
     return (printed_chars);
 }
@@ -630,8 +630,8 @@ int ft_file::copy_to_with_buffer(const char *destination_path, size_t buffer_siz
         this->set_error(ft_errno);
         return (-1);
     }
-    this->set_error(ER_SUCCESS);
-    ft_errno = ER_SUCCESS;
+    this->set_error(FT_ER_SUCCESSS);
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 

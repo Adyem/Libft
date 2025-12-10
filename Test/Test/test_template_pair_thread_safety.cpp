@@ -12,33 +12,33 @@ FT_TEST(test_pair_enable_thread_safety_installs_mutex,
     Pair<int, int> pair_instance;
 
     FT_ASSERT_EQ(0, pair_instance.enable_thread_safety());
-    FT_ASSERT_EQ(ER_SUCCESS, pair_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, pair_instance.get_error());
     FT_ASSERT(pair_instance.is_thread_safe());
-    FT_ASSERT_EQ(ER_SUCCESS, pair_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, pair_instance.get_error());
 
     pair_instance.set_key(5);
-    FT_ASSERT_EQ(ER_SUCCESS, pair_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, pair_instance.get_error());
     pair_instance.set_value(10);
-    FT_ASSERT_EQ(ER_SUCCESS, pair_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, pair_instance.get_error());
 
     int retrieved_key = pair_instance.get_key();
     FT_ASSERT_EQ(5, retrieved_key);
-    FT_ASSERT_EQ(ER_SUCCESS, pair_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, pair_instance.get_error());
 
     int retrieved_value = pair_instance.get_value();
     FT_ASSERT_EQ(10, retrieved_value);
-    FT_ASSERT_EQ(ER_SUCCESS, pair_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, pair_instance.get_error());
 
     pair_instance.disable_thread_safety();
-    FT_ASSERT_EQ(ER_SUCCESS, pair_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, pair_instance.get_error());
     FT_ASSERT(pair_instance.is_thread_safe() == false);
-    FT_ASSERT_EQ(ER_SUCCESS, pair_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, pair_instance.get_error());
 
     bool lock_acquired = false;
     FT_ASSERT_EQ(0, pair_instance.lock(&lock_acquired));
     FT_ASSERT(lock_acquired == false);
     pair_instance.unlock(lock_acquired);
-    FT_ASSERT_EQ(ER_SUCCESS, pair_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, pair_instance.get_error());
     return (1);
 }
 
@@ -53,7 +53,7 @@ FT_TEST(test_pair_lock_blocks_until_release,
     std::thread worker;
 
     FT_ASSERT_EQ(0, pair_instance.enable_thread_safety());
-    FT_ASSERT_EQ(ER_SUCCESS, pair_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, pair_instance.get_error());
 
     main_lock_acquired = false;
     FT_ASSERT_EQ(0, pair_instance.lock(&main_lock_acquired));
@@ -96,10 +96,10 @@ FT_TEST(test_pair_lock_blocks_until_release,
 
     int stored_value = pair_instance.get_value();
     FT_ASSERT_EQ(42, stored_value);
-    FT_ASSERT_EQ(ER_SUCCESS, pair_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, pair_instance.get_error());
 
     pair_instance.disable_thread_safety();
-    FT_ASSERT_EQ(ER_SUCCESS, pair_instance.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, pair_instance.get_error());
     return (1);
 }
 
@@ -109,41 +109,41 @@ FT_TEST(test_pair_copy_and_move_preserve_thread_safety,
     Pair<int, int> original;
 
     FT_ASSERT_EQ(0, original.enable_thread_safety());
-    FT_ASSERT_EQ(ER_SUCCESS, original.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, original.get_error());
     original.set_key(7);
-    FT_ASSERT_EQ(ER_SUCCESS, original.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, original.get_error());
     original.set_value(21);
-    FT_ASSERT_EQ(ER_SUCCESS, original.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, original.get_error());
 
     Pair<int, int> copied(original);
     FT_ASSERT(copied.is_thread_safe());
-    FT_ASSERT_EQ(ER_SUCCESS, copied.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, copied.get_error());
     FT_ASSERT_EQ(7, copied.get_key());
     FT_ASSERT_EQ(21, copied.get_value());
 
     Pair<int, int> assigned;
     assigned = original;
     FT_ASSERT(assigned.is_thread_safe());
-    FT_ASSERT_EQ(ER_SUCCESS, assigned.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, assigned.get_error());
     FT_ASSERT_EQ(7, assigned.get_key());
     FT_ASSERT_EQ(21, assigned.get_value());
 
     Pair<int, int> moved(ft_move(original));
     FT_ASSERT(moved.is_thread_safe());
-    FT_ASSERT_EQ(ER_SUCCESS, moved.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.get_error());
     FT_ASSERT_EQ(7, moved.get_key());
     FT_ASSERT_EQ(21, moved.get_value());
 
     Pair<int, int> move_assigned;
     FT_ASSERT_EQ(0, move_assigned.enable_thread_safety());
-    FT_ASSERT_EQ(ER_SUCCESS, move_assigned.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, move_assigned.get_error());
     move_assigned.set_key(1);
-    FT_ASSERT_EQ(ER_SUCCESS, move_assigned.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, move_assigned.get_error());
     move_assigned.set_value(2);
-    FT_ASSERT_EQ(ER_SUCCESS, move_assigned.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, move_assigned.get_error());
     move_assigned = ft_move(moved);
     FT_ASSERT(move_assigned.is_thread_safe());
-    FT_ASSERT_EQ(ER_SUCCESS, move_assigned.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, move_assigned.get_error());
     FT_ASSERT_EQ(7, move_assigned.get_key());
     FT_ASSERT_EQ(21, move_assigned.get_value());
 

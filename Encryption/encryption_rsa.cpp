@@ -112,7 +112,7 @@ int rsa_generate_key_pair(uint64_t *public_key, uint64_t *private_key, uint64_t 
     }
     *public_key = public_exponent;
     *private_key = private_exponent;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 

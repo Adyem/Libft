@@ -30,7 +30,7 @@ void    time_benchmark_reset(t_time_benchmark *benchmark)
     benchmark->rolling_m2_ms = 0.0;
     benchmark->minimum_ms = 0.0;
     benchmark->maximum_ms = 0.0;
-    time_benchmark_set_error(benchmark, ER_SUCCESS);
+    time_benchmark_set_error(benchmark, FT_ER_SUCCESSS);
     return ;
 }
 
@@ -80,7 +80,7 @@ int time_benchmark_add_sample(t_time_benchmark *benchmark, double duration_ms)
             benchmark->maximum_ms = duration_ms;
     }
     benchmark->sample_count = new_count;
-    time_benchmark_set_error(benchmark, ER_SUCCESS);
+    time_benchmark_set_error(benchmark, FT_ER_SUCCESSS);
     return (0);
 }
 
@@ -123,7 +123,7 @@ bool    time_benchmark_snapshot(const t_time_benchmark *benchmark,
     jitter_ms = time_benchmark_calculate_jitter(benchmark);
     out_snapshot->jitter_ms = jitter_ms;
     ft_errno = benchmark->error_code;
-    if (benchmark->error_code != ER_SUCCESS)
+    if (benchmark->error_code != FT_ER_SUCCESSS)
         return (false);
     return (true);
 }
@@ -158,7 +158,7 @@ double  time_benchmark_get_jitter_ms(const t_time_benchmark *benchmark)
         return (0.0);
     }
     ft_errno = benchmark->error_code;
-    if (benchmark->error_code != ER_SUCCESS)
+    if (benchmark->error_code != FT_ER_SUCCESSS)
         return (0.0);
     return (time_benchmark_calculate_jitter(benchmark));
 }

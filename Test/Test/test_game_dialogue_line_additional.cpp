@@ -38,7 +38,7 @@ FT_TEST(test_dialogue_line_nonconst_getter_resets_errno, "non-const getter clear
 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     editable.push_back(13);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(1ul, line.get_next_line_ids().size());
     FT_ASSERT_EQ(13, line.get_next_line_ids()[0]);
     return (1);
@@ -54,7 +54,7 @@ FT_TEST(test_dialogue_line_const_getter_resets_errno, "const getter sets errno t
     line = ft_dialogue_line(2, ft_string("guide"), ft_string("path"), ids);
     ft_errno = FT_ERR_INVALID_POINTER;
     const ft_vector<int> &readonly = line.get_next_line_ids();
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(2ul, readonly.size());
     FT_ASSERT_EQ(5, readonly[0]);
     FT_ASSERT_EQ(6, readonly[1]);
@@ -115,8 +115,8 @@ FT_TEST(test_dialogue_line_move_assignment_resets_error_state, "move assignment 
     ids.push_back(30);
     source = ft_dialogue_line(12, ft_string("ally"), ft_string("backup"), ids);
     destination = ft_move(source);
-    FT_ASSERT_EQ(ER_SUCCESS, destination.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
     return (1);
 }
 
@@ -177,7 +177,7 @@ FT_TEST(test_dialogue_line_get_error_reports_success_after_setters, "get_error r
     line.set_speaker(ft_string("mentor"));
     line.set_text(ft_string("direction"));
     line.set_next_line_ids(ids);
-    FT_ASSERT_EQ(ER_SUCCESS, line.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, line.get_error());
     return (1);
 }
 
@@ -185,7 +185,7 @@ FT_TEST(test_dialogue_line_get_error_str_matches_errno, "get_error_str returns s
 {
     ft_dialogue_line line(5, ft_string("narrator"), ft_string("description"), ft_vector<int>());
 
-    FT_ASSERT_EQ(ft_strerror(ER_SUCCESS), line.get_error_str());
+    FT_ASSERT_EQ(ft_strerror(FT_ER_SUCCESSS), line.get_error_str());
     return (1);
 }
 

@@ -27,6 +27,6 @@ int file_move(const char *source_path, const char *destination_path)
         ft_errno = delete_error;
         return (-1);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }

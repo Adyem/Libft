@@ -86,8 +86,8 @@ static char *duplicate_range(const char *start, size_t length)
 
 static int translate_vector_error(int error_code)
 {
-    if (error_code == ER_SUCCESS)
-        return (ER_SUCCESS);
+    if (error_code == FT_ER_SUCCESSS)
+        return (FT_ER_SUCCESSS);
     if (error_code == FT_ERR_NO_MEMORY)
         return (FT_ERR_NO_MEMORY);
     return (error_code);
@@ -308,7 +308,7 @@ static int xml_parse_attributes(xml_node *node, const char *start,
         }
         node->attributes.insert(attribute_name, attribute_value);
         int attribute_error = node->attributes.get_error();
-        if (attribute_error != ER_SUCCESS)
+        if (attribute_error != FT_ER_SUCCESSS)
         {
             if (attribute_value)
                 cma_free(attribute_value);
@@ -509,7 +509,7 @@ static const char *parse_node(const char *string, xml_node **out_node,
     if (self_closing)
     {
         *out_node = node;
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (string);
     }
     const char *text_start = string;
@@ -527,7 +527,7 @@ static const char *parse_node(const char *string, xml_node **out_node,
             }
             node->children.push_back(child);
             int children_error_code = node->children.get_error();
-            if (children_error_code != ER_SUCCESS)
+            if (children_error_code != FT_ER_SUCCESSS)
             {
                 delete child;
                 delete node;
@@ -600,14 +600,14 @@ static const char *parse_node(const char *string, xml_node **out_node,
     }
     string++;
     *out_node = node;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (string);
 }
 
 xml_document::xml_document() noexcept
-    : _root(ft_nullptr), _mutex(ft_nullptr), _thread_safe_enabled(false), _error_code(ER_SUCCESS)
+    : _root(ft_nullptr), _mutex(ft_nullptr), _thread_safe_enabled(false), _error_code(FT_ER_SUCCESSS)
 {
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     if (this->prepare_thread_safety() != 0)
         return ;
     return ;
@@ -645,7 +645,7 @@ int xml_document::load_from_string(const char *xml) noexcept
 
     if (guard.get_status() != 0)
     {
-        lock_error = ft_errno != ER_SUCCESS ? ft_errno : FT_ERR_INVALID_STATE;
+        lock_error = ft_errno != FT_ER_SUCCESSS ? ft_errno : FT_ERR_INVALID_STATE;
         this->set_error(lock_error);
         return (lock_error);
     }
@@ -665,7 +665,7 @@ int xml_document::load_from_string(const char *xml) noexcept
     {
         int error_code;
 
-        error_code = ft_errno != ER_SUCCESS ? ft_errno : FT_ERR_INVALID_ARGUMENT;
+        error_code = ft_errno != FT_ER_SUCCESSS ? ft_errno : FT_ERR_INVALID_ARGUMENT;
         this->set_error(error_code);
         return (error_code);
     }
@@ -677,8 +677,8 @@ int xml_document::load_from_string(const char *xml) noexcept
         return (FT_ERR_INVALID_ARGUMENT);
     }
     this->_root = node;
-    this->set_error(ER_SUCCESS);
-    return (ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
+    return (FT_ER_SUCCESSS);
 }
 
 static int read_file_content(const char *file_path, char **out_content)
@@ -733,8 +733,8 @@ static int read_file_content(const char *file_path, char **out_content)
     }
     buffer[size] = '\0';
     *out_content = buffer;
-    ft_errno = ER_SUCCESS;
-    return (ER_SUCCESS);
+    ft_errno = FT_ER_SUCCESSS;
+    return (FT_ER_SUCCESSS);
 }
 
 int xml_document::load_from_file(const char *file_path) noexcept
@@ -744,12 +744,12 @@ int xml_document::load_from_file(const char *file_path) noexcept
 
     content = ft_nullptr;
     result = read_file_content(file_path, &content);
-    if (result != ER_SUCCESS)
+    if (result != FT_ER_SUCCESSS)
     {
         thread_guard guard(this);
 
         if (guard.get_status() != 0)
-            this->set_error(ft_errno != ER_SUCCESS ? ft_errno : result);
+            this->set_error(ft_errno != FT_ER_SUCCESSS ? ft_errno : result);
         else
             this->set_error(result);
         return (result);
@@ -765,12 +765,12 @@ int xml_document::load_from_backend(ft_document_source &source) noexcept
     int read_result;
 
     read_result = source.read_all(content);
-    if (read_result != ER_SUCCESS)
+    if (read_result != FT_ER_SUCCESSS)
     {
         thread_guard guard(this);
 
         if (guard.get_status() != 0)
-            this->set_error(ft_errno != ER_SUCCESS ? ft_errno : read_result);
+            this->set_error(ft_errno != FT_ER_SUCCESSS ? ft_errno : read_result);
         else
             this->set_error(read_result);
         return (read_result);
@@ -863,7 +863,7 @@ char *xml_document::write_to_string() const noexcept
 
     if (guard.get_status() != 0)
     {
-        lock_error = ft_errno != ER_SUCCESS ? ft_errno : FT_ERR_INVALID_STATE;
+        lock_error = ft_errno != FT_ER_SUCCESSS ? ft_errno : FT_ERR_INVALID_STATE;
         this->set_error(lock_error);
         return (ft_nullptr);
     }
@@ -873,7 +873,7 @@ char *xml_document::write_to_string() const noexcept
         return (ft_nullptr);
     }
     char *result = ft_nullptr;
-    int error_code = ER_SUCCESS;
+    int error_code = FT_ER_SUCCESSS;
     {
         ft_vector<char> buffer;
         int write_status;
@@ -881,28 +881,28 @@ char *xml_document::write_to_string() const noexcept
 
         write_status = write_node(this->_root, buffer);
         if (write_status != 0)
-            error_code = ft_errno != ER_SUCCESS ? ft_errno : FT_ERR_INVALID_STATE;
-        if (error_code == ER_SUCCESS)
+            error_code = ft_errno != FT_ER_SUCCESSS ? ft_errno : FT_ERR_INVALID_STATE;
+        if (error_code == FT_ER_SUCCESSS)
         {
             buffer_error = buffer.get_error();
-            if (buffer_error != ER_SUCCESS)
+            if (buffer_error != FT_ER_SUCCESSS)
                 error_code = translate_vector_error(buffer_error);
         }
-        if (error_code == ER_SUCCESS)
+        if (error_code == FT_ER_SUCCESSS)
         {
             buffer.push_back('\n');
             buffer_error = buffer.get_error();
-            if (buffer_error != ER_SUCCESS)
+            if (buffer_error != FT_ER_SUCCESSS)
                 error_code = translate_vector_error(buffer_error);
         }
-        if (error_code == ER_SUCCESS)
+        if (error_code == FT_ER_SUCCESSS)
         {
             buffer.push_back('\0');
             buffer_error = buffer.get_error();
-            if (buffer_error != ER_SUCCESS)
+            if (buffer_error != FT_ER_SUCCESSS)
                 error_code = translate_vector_error(buffer_error);
         }
-        if (error_code == ER_SUCCESS)
+        if (error_code == FT_ER_SUCCESSS)
         {
             size_t length = buffer.size();
             result = static_cast<char *>(cma_malloc(length));
@@ -919,14 +919,14 @@ char *xml_document::write_to_string() const noexcept
             }
         }
     }
-    if (error_code != ER_SUCCESS)
+    if (error_code != FT_ER_SUCCESSS)
     {
         if (result)
             cma_free(result);
         this->set_error(error_code);
         return (ft_nullptr);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (result);
 }
 
@@ -941,13 +941,13 @@ int xml_document::write_to_file(const char *file_path) const noexcept
         int current_error;
 
         current_error = this->get_error();
-        if (current_error == ER_SUCCESS)
+        if (current_error == FT_ER_SUCCESSS)
         {
             thread_guard guard(this);
 
             if (guard.get_status() != 0)
             {
-                error_code = ft_errno != ER_SUCCESS ? ft_errno : FT_ERR_INVALID_ARGUMENT;
+                error_code = ft_errno != FT_ER_SUCCESSS ? ft_errno : FT_ERR_INVALID_ARGUMENT;
                 this->set_error(error_code);
                 return (error_code);
             }
@@ -965,7 +965,7 @@ int xml_document::write_to_file(const char *file_path) const noexcept
             thread_guard guard(this);
 
             if (guard.get_status() != 0)
-                this->set_error(ft_errno != ER_SUCCESS ? ft_errno : error_code);
+                this->set_error(ft_errno != FT_ER_SUCCESSS ? ft_errno : error_code);
             else
                 this->set_error(error_code);
         }
@@ -987,7 +987,7 @@ int xml_document::write_to_file(const char *file_path) const noexcept
             thread_guard guard(this);
 
             if (guard.get_status() != 0)
-                this->set_error(ft_errno != ER_SUCCESS ? ft_errno : error_code);
+                this->set_error(ft_errno != FT_ER_SUCCESSS ? ft_errno : error_code);
             else
                 this->set_error(error_code);
         }
@@ -1006,7 +1006,7 @@ int xml_document::write_to_file(const char *file_path) const noexcept
             thread_guard guard(this);
 
             if (guard.get_status() != 0)
-                this->set_error(ft_errno != ER_SUCCESS ? ft_errno : error_code);
+                this->set_error(ft_errno != FT_ER_SUCCESSS ? ft_errno : error_code);
             else
                 this->set_error(error_code);
         }
@@ -1023,12 +1023,12 @@ int xml_document::write_to_file(const char *file_path) const noexcept
 
         if (guard.get_status() != 0)
         {
-            this->set_error(ft_errno != ER_SUCCESS ? ft_errno : ER_SUCCESS);
-            return (ft_errno != ER_SUCCESS ? ft_errno : ER_SUCCESS);
+            this->set_error(ft_errno != FT_ER_SUCCESSS ? ft_errno : FT_ER_SUCCESSS);
+            return (ft_errno != FT_ER_SUCCESSS ? ft_errno : FT_ER_SUCCESSS);
         }
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
     }
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 int xml_document::write_to_backend(ft_document_sink &sink) const noexcept
@@ -1045,20 +1045,20 @@ int xml_document::write_to_backend(ft_document_sink &sink) const noexcept
     write_result = sink.write_all(content, length);
     sink_error = sink.get_error();
     cma_free(content);
-    if (write_result != ER_SUCCESS)
+    if (write_result != FT_ER_SUCCESSS)
     {
         int final_error;
 
         final_error = write_result;
-        if (sink_error != ER_SUCCESS)
+        if (sink_error != FT_ER_SUCCESSS)
             final_error = sink_error;
         {
             thread_guard guard(this);
 
             if (guard.get_status() != 0)
             {
-                this->set_error(ft_errno != ER_SUCCESS ? ft_errno : final_error);
-                return (ft_errno != ER_SUCCESS ? ft_errno : final_error);
+                this->set_error(ft_errno != FT_ER_SUCCESSS ? ft_errno : final_error);
+                return (ft_errno != FT_ER_SUCCESSS ? ft_errno : final_error);
             }
             this->set_error(final_error);
         }
@@ -1069,12 +1069,12 @@ int xml_document::write_to_backend(ft_document_sink &sink) const noexcept
 
         if (guard.get_status() != 0)
         {
-            this->set_error(ft_errno != ER_SUCCESS ? ft_errno : ER_SUCCESS);
-            return (ft_errno != ER_SUCCESS ? ft_errno : ER_SUCCESS);
+            this->set_error(ft_errno != FT_ER_SUCCESSS ? ft_errno : FT_ER_SUCCESSS);
+            return (ft_errno != FT_ER_SUCCESSS ? ft_errno : FT_ER_SUCCESSS);
         }
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
     }
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 xml_node *xml_document::get_root() const noexcept
@@ -1084,11 +1084,11 @@ xml_node *xml_document::get_root() const noexcept
 
     if (guard.get_status() != 0)
     {
-        lock_error = ft_errno != ER_SUCCESS ? ft_errno : FT_ERR_INVALID_STATE;
+        lock_error = ft_errno != FT_ER_SUCCESSS ? ft_errno : FT_ERR_INVALID_STATE;
         this->set_error(lock_error);
         return (ft_nullptr);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (this->_root);
 }
 
@@ -1103,7 +1103,7 @@ int xml_document::get_error() const noexcept
     thread_guard guard(this);
 
     if (guard.get_status() != 0)
-        return (ft_errno != ER_SUCCESS ? ft_errno : FT_ERR_INVALID_STATE);
+        return (ft_errno != FT_ER_SUCCESSS ? ft_errno : FT_ERR_INVALID_STATE);
     return (this->_error_code);
 }
 
@@ -1113,7 +1113,7 @@ const char *xml_document::get_error_str() const noexcept
     const char *message;
 
     if (guard.get_status() != 0)
-        return (ft_strerror(ft_errno != ER_SUCCESS ? ft_errno : FT_ERR_INVALID_STATE));
+        return (ft_strerror(ft_errno != FT_ER_SUCCESSS ? ft_errno : FT_ERR_INVALID_STATE));
     message = ft_strerror(this->_error_code);
     return (message);
 }
@@ -1126,10 +1126,10 @@ bool xml_document::is_thread_safe_enabled() const noexcept
         return (false);
     if (!this->_thread_safe_enabled || !this->_mutex)
     {
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
         return (false);
     }
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (true);
 }
 
@@ -1140,7 +1140,7 @@ int xml_document::prepare_thread_safety() noexcept
 
     if (this->_thread_safe_enabled && this->_mutex)
     {
-        this->set_error(ER_SUCCESS);
+        this->set_error(FT_ER_SUCCESSS);
         return (0);
     }
     memory = cma_malloc(sizeof(pt_mutex));
@@ -1150,7 +1150,7 @@ int xml_document::prepare_thread_safety() noexcept
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != ER_SUCCESS)
+    if (mutex_pointer->get_error() != FT_ER_SUCCESSS)
     {
         int mutex_error;
 
@@ -1162,7 +1162,7 @@ int xml_document::prepare_thread_safety() noexcept
     }
     this->_mutex = mutex_pointer;
     this->_thread_safe_enabled = true;
-    this->set_error(ER_SUCCESS);
+    this->set_error(FT_ER_SUCCESSS);
     return (0);
 }
 
@@ -1186,11 +1186,11 @@ int xml_document::lock(bool *lock_acquired) const noexcept
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || !this->_mutex)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     this->_mutex->lock(THREAD_ID);
-    if (this->_mutex->get_error() != ER_SUCCESS)
+    if (this->_mutex->get_error() != FT_ER_SUCCESSS)
     {
         int mutex_error;
 
@@ -1201,7 +1201,7 @@ int xml_document::lock(bool *lock_acquired) const noexcept
     }
     if (lock_acquired)
         *lock_acquired = true;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -1213,7 +1213,7 @@ void xml_document::unlock(bool lock_acquired) const noexcept
         return ;
     entry_errno = ft_errno;
     this->_mutex->unlock(THREAD_ID);
-    if (this->_mutex->get_error() != ER_SUCCESS)
+    if (this->_mutex->get_error() != FT_ER_SUCCESSS)
     {
         int mutex_error;
 

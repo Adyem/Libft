@@ -19,10 +19,10 @@ float ft_random_gamma(float shape, float scale)
     {
         ft_unique_lock<pt_mutex> guard(g_random_engine_mutex);
 
-        if (guard.get_error() != ER_SUCCESS)
+        if (guard.get_error() != FT_ER_SUCCESSS)
             return (0.0f);
         sample_value = distribution(g_random_engine);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (sample_value);
 }

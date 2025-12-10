@@ -37,7 +37,7 @@ FT_TEST(test_http_client_reuses_keep_alive_connection, "HTTP client reuses poole
     context.server = &server;
     context.result = -1;
     server_thread = ft_thread(http_client_server_run_once, &context);
-    if (server_thread.get_error() != ER_SUCCESS)
+    if (server_thread.get_error() != FT_ER_SUCCESSS)
     {
         return (0);
     }

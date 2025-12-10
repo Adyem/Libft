@@ -106,7 +106,7 @@ static int  su_service_redirect_standard_streams(void)
         ft_set_errno_from_system_error(errno);
         return (-1);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -120,7 +120,7 @@ static int  su_service_write_pid_file(const char *pid_file_path)
 
     if (!pid_file_path)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
 #if defined(_WIN32) || defined(_WIN64)
@@ -145,7 +145,7 @@ static int  su_service_write_pid_file(const char *pid_file_path)
     bytes_written = su_write(file_descriptor, buffer, length);
     if (bytes_written < 0 || static_cast<size_t>(bytes_written) != length)
     {
-        if (ft_errno == ER_SUCCESS)
+        if (ft_errno == FT_ER_SUCCESSS)
             ft_errno = FT_ERR_IO;
         su_close(file_descriptor);
         return (-1);
@@ -153,7 +153,7 @@ static int  su_service_write_pid_file(const char *pid_file_path)
     close_error = su_close(file_descriptor);
     if (close_error != 0)
         return (-1);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -187,7 +187,7 @@ int su_service_daemonize(const char *working_directory, const char *pid_file_pat
             return (-1);
         }
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 #else
     if (!g_su_service_force_no_fork)
@@ -202,7 +202,7 @@ int su_service_daemonize(const char *working_directory, const char *pid_file_pat
         }
         if (process_id > 0)
         {
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             return (1);
         }
         if (setsid() < 0)
@@ -235,7 +235,7 @@ int su_service_daemonize(const char *working_directory, const char *pid_file_pat
     }
     if (su_service_write_pid_file(pid_file_path) != 0)
         return (-1);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 #endif
 }
@@ -323,7 +323,7 @@ int su_service_install_signal_handlers(t_su_service_signal_handler handler,
     g_su_service_sighup_installed = true;
 #endif
 #endif
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 

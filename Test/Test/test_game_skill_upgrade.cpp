@@ -24,7 +24,7 @@ FT_TEST(test_game_skill_modifier_accumulation, "Game: skill modifier setters acc
     skill.sub_modifier1(2);
 
     FT_ASSERT_EQ(5, skill.get_modifier1());
-    FT_ASSERT_EQ(ER_SUCCESS, skill.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, skill.get_error());
     return (1);
 }
 
@@ -37,7 +37,7 @@ FT_TEST(test_game_upgrade_add_level_caps_at_max, "Game: upgrade add_level clamps
     upgrade.add_level(10);
 
     FT_ASSERT_EQ(5, upgrade.get_current_level());
-    FT_ASSERT_EQ(ER_SUCCESS, upgrade.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, upgrade.get_error());
     return (1);
 }
 
@@ -49,7 +49,7 @@ FT_TEST(test_game_upgrade_sub_level_floors_at_zero, "Game: upgrade sub_level flo
     upgrade.sub_level(7);
 
     FT_ASSERT_EQ(0, upgrade.get_current_level());
-    FT_ASSERT_EQ(ER_SUCCESS, upgrade.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, upgrade.get_error());
     return (1);
 }
 

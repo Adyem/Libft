@@ -14,7 +14,7 @@ void ft_string::sleep_backoff() noexcept
 }
 
 ft_string::mutex_guard::mutex_guard() noexcept
-    : _mutex(ft_nullptr), _owns_lock(false), _error_code(ER_SUCCESS)
+    : _mutex(ft_nullptr), _owns_lock(false), _error_code(FT_ER_SUCCESSS)
 {
     return ;
 }
@@ -30,7 +30,7 @@ ft_string::mutex_guard::mutex_guard(mutex_guard &&other) noexcept
 {
     other._mutex = ft_nullptr;
     other._owns_lock = false;
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     return ;
 }
 
@@ -44,7 +44,7 @@ ft_string::mutex_guard &ft_string::mutex_guard::operator=(mutex_guard &&other) n
         this->_error_code = other._error_code;
         other._mutex = ft_nullptr;
         other._owns_lock = false;
-        other._error_code = ER_SUCCESS;
+        other._error_code = FT_ER_SUCCESSS;
     }
     return (*this);
 }
@@ -55,11 +55,11 @@ int ft_string::mutex_guard::lock(pt_mutex &mutex) noexcept
 
     this->unlock();
     lock_error = mutex.lock(THREAD_ID);
-    if (lock_error == ER_SUCCESS)
+    if (lock_error == FT_ER_SUCCESSS)
     {
         this->_mutex = &mutex;
         this->_owns_lock = true;
-        this->_error_code = ER_SUCCESS;
+        this->_error_code = FT_ER_SUCCESSS;
     }
     else
     {
@@ -118,13 +118,13 @@ int ft_string::lock_self(mutex_guard &guard) const noexcept
 
     entry_errno = ft_errno;
     lock_error = guard.lock(this->_mutex);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         ft_errno = entry_errno;
         return (lock_error);
     }
     ft_errno = entry_errno;
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 int ft_string::lock_pair(const ft_string &first, const ft_string &second,
@@ -139,15 +139,15 @@ int ft_string::lock_pair(const ft_string &first, const ft_string &second,
     {
         mutex_guard single_guard;
 
-        if (single_guard.lock(first._mutex) != ER_SUCCESS)
+        if (single_guard.lock(first._mutex) != FT_ER_SUCCESSS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard.unlock();
-        ft_errno = ER_SUCCESS;
-        return (ER_SUCCESS);
+        ft_errno = FT_ER_SUCCESSS;
+        return (FT_ER_SUCCESSS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -165,13 +165,13 @@ int ft_string::lock_pair(const ft_string &first, const ft_string &second,
     {
         mutex_guard lower_guard;
 
-        if (lower_guard.lock(ordered_first->_mutex) != ER_SUCCESS)
+        if (lower_guard.lock(ordered_first->_mutex) != FT_ER_SUCCESSS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         mutex_guard upper_guard;
-        if (upper_guard.lock(ordered_second->_mutex) == ER_SUCCESS)
+        if (upper_guard.lock(ordered_second->_mutex) == FT_ER_SUCCESSS)
         {
             if (!swapped)
             {
@@ -183,8 +183,8 @@ int ft_string::lock_pair(const ft_string &first, const ft_string &second,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = ER_SUCCESS;
-            return (ER_SUCCESS);
+            ft_errno = FT_ER_SUCCESSS;
+            return (FT_ER_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -201,7 +201,7 @@ void ft_string::resize_unlocked(size_t new_capacity) noexcept
 {
     if (new_capacity <= this->_capacity)
     {
-        this->set_error_unlocked(ER_SUCCESS);
+        this->set_error_unlocked(FT_ER_SUCCESSS);
         return ;
     }
     char* new_data = static_cast<char*>(cma_realloc(this->_data, new_capacity + 1));
@@ -212,7 +212,7 @@ void ft_string::resize_unlocked(size_t new_capacity) noexcept
     }
     this->_data = new_data;
     this->_capacity = new_capacity;
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -228,12 +228,12 @@ void ft_string::append_char_unlocked(char c) noexcept
         else
             new_capacity *= 2;
         this->resize_unlocked(new_capacity);
-        if (this->_error_code != ER_SUCCESS)
+        if (this->_error_code != FT_ER_SUCCESSS)
             return ;
     }
     this->_data[this->_length++] = c;
     this->_data[this->_length] = '\0';
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -244,7 +244,7 @@ void ft_string::append_unlocked(const char *string, size_t length) noexcept
 
     if (!string || length == 0)
     {
-        this->set_error_unlocked(ER_SUCCESS);
+        this->set_error_unlocked(FT_ER_SUCCESSS);
         return ;
     }
     if (this->_length + length >= this->_capacity)
@@ -262,7 +262,7 @@ void ft_string::append_unlocked(const char *string, size_t length) noexcept
             new_capacity *= 2;
         }
         this->resize_unlocked(new_capacity);
-        if (this->_error_code != ER_SUCCESS)
+        if (this->_error_code != FT_ER_SUCCESSS)
             return ;
     }
     index = 0;
@@ -273,7 +273,7 @@ void ft_string::append_unlocked(const char *string, size_t length) noexcept
     }
     this->_length += length;
     this->_data[this->_length] = '\0';
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -282,7 +282,7 @@ void ft_string::clear_unlocked() noexcept
     this->_length = 0;
     if (this->_data)
         this->_data[0] = '\0';
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -296,7 +296,7 @@ void ft_string::ensure_empty_buffer_unlocked() noexcept
         if (this->_capacity == 0)
             this->_capacity = 1;
         this->_length = 0;
-        this->set_error_unlocked(ER_SUCCESS);
+        this->set_error_unlocked(FT_ER_SUCCESSS);
         return ;
     }
     new_data = static_cast<char*>(cma_calloc(1, sizeof(char)));
@@ -309,7 +309,7 @@ void ft_string::ensure_empty_buffer_unlocked() noexcept
     this->_capacity = 1;
     this->_length = 0;
     this->_data[0] = '\0';
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -318,7 +318,7 @@ void ft_string::assign_unlocked(size_t count, char character) noexcept
     size_t index;
 
     this->clear_unlocked();
-    if (this->_error_code != ER_SUCCESS)
+    if (this->_error_code != FT_ER_SUCCESSS)
         return ;
     if (count == 0)
     {
@@ -326,7 +326,7 @@ void ft_string::assign_unlocked(size_t count, char character) noexcept
         return ;
     }
     this->resize_length_unlocked(count);
-    if (this->_error_code != ER_SUCCESS)
+    if (this->_error_code != FT_ER_SUCCESSS)
         return ;
     index = 0;
     while (index < count)
@@ -336,7 +336,7 @@ void ft_string::assign_unlocked(size_t count, char character) noexcept
     }
     this->_length = count;
     this->_data[this->_length] = '\0';
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -345,23 +345,23 @@ void ft_string::assign_unlocked(const char *string, size_t length) noexcept
     if (length == 0)
     {
         this->clear_unlocked();
-        if (this->_error_code != ER_SUCCESS)
+        if (this->_error_code != FT_ER_SUCCESSS)
             return ;
         this->ensure_empty_buffer_unlocked();
         return ;
     }
     if (!string)
     {
-        this->set_error_unlocked(ER_SUCCESS);
+        this->set_error_unlocked(FT_ER_SUCCESSS);
         return ;
     }
     this->clear_unlocked();
-    if (this->_error_code != ER_SUCCESS)
+    if (this->_error_code != FT_ER_SUCCESSS)
         return ;
     if (this->_capacity < length)
     {
         this->resize_unlocked(length);
-        if (this->_error_code != ER_SUCCESS)
+        if (this->_error_code != FT_ER_SUCCESSS)
             return ;
     }
     this->append_unlocked(string, length);
@@ -384,7 +384,7 @@ void ft_string::erase_unlocked(std::size_t index, std::size_t count) noexcept
         this->_length -= count;
         this->_data[this->_length] = '\0';
     }
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -407,7 +407,7 @@ void ft_string::resize_length_unlocked(size_t new_length) noexcept
             new_capacity *= 2;
         }
         this->resize_unlocked(new_capacity);
-        if (this->_error_code != ER_SUCCESS)
+        if (this->_error_code != FT_ER_SUCCESSS)
             return ;
     }
     if (!this->_data && new_length > 0)
@@ -423,7 +423,7 @@ void ft_string::resize_length_unlocked(size_t new_length) noexcept
     if (!this->_data)
     {
         this->_length = 0;
-        this->set_error_unlocked(ER_SUCCESS);
+        this->set_error_unlocked(FT_ER_SUCCESSS);
         return ;
     }
     if (new_length > this->_length)
@@ -439,7 +439,7 @@ void ft_string::resize_length_unlocked(size_t new_length) noexcept
     }
     this->_length = new_length;
     this->_data[this->_length] = '\0';
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     return ;
 }
 
@@ -454,13 +454,13 @@ void ft_string::move_unlocked(ft_string &other) noexcept
     this->_data = ft_nullptr;
     this->_length = 0;
     this->_capacity = 0;
-    if (other_error_code != ER_SUCCESS)
+    if (other_error_code != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(other_error_code);
         other._data = ft_nullptr;
         other._length = 0;
         other._capacity = 0;
-        other._error_code = ER_SUCCESS;
+        other._error_code = FT_ER_SUCCESSS;
         return ;
     }
     this->_data = other._data;
@@ -470,7 +470,7 @@ void ft_string::move_unlocked(ft_string &other) noexcept
     other._data = ft_nullptr;
     other._length = 0;
     other._capacity = 0;
-    other._error_code = ER_SUCCESS;
+    other._error_code = FT_ER_SUCCESSS;
     return ;
 }
 
@@ -482,7 +482,7 @@ void ft_string::resize(size_t new_capacity) noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
@@ -501,13 +501,13 @@ void ft_string::append(char c) noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
         return ;
     }
-    if (this->_error_code != ER_SUCCESS)
+    if (this->_error_code != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(this->_error_code);
         ft_string::restore_errno(guard, entry_errno);
@@ -528,13 +528,13 @@ void ft_string::append(const ft_string& string) noexcept
 
     entry_errno = ft_errno;
     lock_error = ft_string::lock_pair(*this, string, self_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
         return ;
     }
-    if (this->_error_code != ER_SUCCESS)
+    if (this->_error_code != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(this->_error_code);
         ft_string::restore_errno(self_guard, entry_errno);
@@ -542,7 +542,7 @@ void ft_string::append(const ft_string& string) noexcept
             other_guard.unlock();
         return ;
     }
-    if (string._error_code != ER_SUCCESS)
+    if (string._error_code != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(string._error_code);
         ft_string::restore_errno(self_guard, entry_errno);
@@ -552,7 +552,7 @@ void ft_string::append(const ft_string& string) noexcept
     }
     if (string._length == 0)
     {
-        this->set_error_unlocked(ER_SUCCESS);
+        this->set_error_unlocked(FT_ER_SUCCESSS);
         ft_string::restore_errno(self_guard, entry_errno);
         if (other_guard.owns_lock())
             other_guard.unlock();
@@ -569,7 +569,7 @@ void ft_string::append(const ft_string& string) noexcept
         while (new_capacity <= new_length)
             new_capacity *= 2;
         this->resize_unlocked(new_capacity);
-        if (this->_error_code != ER_SUCCESS)
+        if (this->_error_code != FT_ER_SUCCESSS)
         {
             ft_string::restore_errno(self_guard, entry_errno);
             if (other_guard.owns_lock())
@@ -580,7 +580,7 @@ void ft_string::append(const ft_string& string) noexcept
     ft_memcpy(this->_data + this->_length, string._data, string._length);
     this->_length = new_length;
     this->_data[this->_length] = '\0';
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     ft_string::restore_errno(self_guard, entry_errno);
     if (other_guard.owns_lock())
         other_guard.unlock();
@@ -596,13 +596,13 @@ void ft_string::append(const char *string) noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
         return ;
     }
-    if (this->_error_code != ER_SUCCESS)
+    if (this->_error_code != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(this->_error_code);
         ft_string::restore_errno(guard, entry_errno);
@@ -610,7 +610,7 @@ void ft_string::append(const char *string) noexcept
     }
     if (!string)
     {
-        this->set_error_unlocked(ER_SUCCESS);
+        this->set_error_unlocked(FT_ER_SUCCESSS);
         ft_string::restore_errno(guard, entry_errno);
         return ;
     }
@@ -628,13 +628,13 @@ void ft_string::clear() noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
         return ;
     }
-    if (this->_error_code != ER_SUCCESS)
+    if (this->_error_code != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(this->_error_code);
         ft_string::restore_errno(guard, entry_errno);
@@ -654,7 +654,7 @@ const char* ft_string::at(size_t index) const noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         ft_errno = entry_errno;
         return (ft_nullptr);
@@ -678,7 +678,7 @@ const char* ft_string::c_str() const noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         ft_errno = entry_errno;
         return (const_cast<char *>(""));
@@ -700,7 +700,7 @@ char* ft_string::data() noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
@@ -730,7 +730,7 @@ size_t ft_string::size() const noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         ft_errno = entry_errno;
         return (0);
@@ -754,7 +754,7 @@ int ft_string::get_error() const noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         ft_errno = entry_errno;
         return (lock_error);
@@ -781,13 +781,13 @@ void ft_string::move(ft_string& other) noexcept
 
     entry_errno = ft_errno;
     lock_error = ft_string::lock_pair(*this, other, self_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
         return ;
     }
-    if (this->_error_code != ER_SUCCESS)
+    if (this->_error_code != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(this->_error_code);
         ft_string::restore_errno(self_guard, entry_errno);
@@ -816,13 +816,13 @@ ft_string& ft_string::operator+=(const char* cstr) noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
         return (*this);
     }
-    if (this->_error_code != ER_SUCCESS)
+    if (this->_error_code != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(this->_error_code);
         ft_string::restore_errno(guard, entry_errno);
@@ -836,7 +836,7 @@ ft_string& ft_string::operator+=(const char* cstr) noexcept
         while (cstr[index] != '\0')
         {
             this->append_char_unlocked(cstr[index]);
-            if (this->_error_code != ER_SUCCESS)
+            if (this->_error_code != FT_ER_SUCCESSS)
             {
                 ft_string::restore_errno(guard, entry_errno);
                 return (*this);
@@ -862,13 +862,13 @@ void ft_string::erase(std::size_t index, std::size_t count) noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
         return ;
     }
-    if (this->_error_code != ER_SUCCESS)
+    if (this->_error_code != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(this->_error_code);
         ft_string::restore_errno(guard, entry_errno);
@@ -887,13 +887,13 @@ void ft_string::append(const char *string, size_t length) noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
         return ;
     }
-    if (this->_error_code != ER_SUCCESS)
+    if (this->_error_code != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(this->_error_code);
         ft_string::restore_errno(guard, entry_errno);
@@ -912,13 +912,13 @@ void ft_string::assign(size_t count, char character) noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
         return ;
     }
-    if (this->_error_code != ER_SUCCESS)
+    if (this->_error_code != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(this->_error_code);
         ft_string::restore_errno(guard, entry_errno);
@@ -937,13 +937,13 @@ void ft_string::assign(const char *string, size_t length) noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
         return ;
     }
-    if (this->_error_code != ER_SUCCESS)
+    if (this->_error_code != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(this->_error_code);
         ft_string::restore_errno(guard, entry_errno);
@@ -962,13 +962,13 @@ void ft_string::resize_length(size_t new_length) noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
         return ;
     }
-    if (this->_error_code != ER_SUCCESS)
+    if (this->_error_code != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(this->_error_code);
         ft_string::restore_errno(guard, entry_errno);
@@ -994,13 +994,13 @@ char ft_string::back() noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
         return ('\0');
     }
-    if (this->_error_code != ER_SUCCESS)
+    if (this->_error_code != FT_ER_SUCCESSS)
     {
         this->set_error_unlocked(this->_error_code);
         ft_string::restore_errno(guard, entry_errno);
@@ -1013,7 +1013,7 @@ char ft_string::back() noexcept
         return ('\0');
     }
     value = this->_data[this->_length - 1];
-    this->set_error_unlocked(ER_SUCCESS);
+    this->set_error_unlocked(FT_ER_SUCCESSS);
     ft_string::restore_errno(guard, entry_errno);
     return (value);
 }
@@ -1030,12 +1030,12 @@ size_t ft_string::find(const char *substring) const noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         ft_errno = entry_errno;
         return (ft_string::npos);
     }
-    if (this->_error_code != ER_SUCCESS)
+    if (this->_error_code != FT_ER_SUCCESSS)
     {
         ft_string::restore_errno(guard, entry_errno);
         return (ft_string::npos);
@@ -1087,12 +1087,12 @@ size_t ft_string::find(const ft_string &substring) const noexcept
 
     entry_errno = ft_errno;
     lock_error = ft_string::lock_pair(*this, substring, self_guard, other_guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         ft_errno = entry_errno;
         return (ft_string::npos);
     }
-    if (this->_error_code != ER_SUCCESS || substring._error_code != ER_SUCCESS)
+    if (this->_error_code != FT_ER_SUCCESSS || substring._error_code != FT_ER_SUCCESSS)
     {
         if (other_guard.owns_lock())
             other_guard.unlock();
@@ -1145,13 +1145,13 @@ ft_string ft_string::substr(size_t index, size_t count) const noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         substring.set_error_unlocked(lock_error);
         ft_errno = entry_errno;
         return (substring);
     }
-    if (this->_error_code != ER_SUCCESS)
+    if (this->_error_code != FT_ER_SUCCESSS)
     {
         substring.set_error_unlocked(this->_error_code);
         ft_string::restore_errno(guard, entry_errno);

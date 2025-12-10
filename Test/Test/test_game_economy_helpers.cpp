@@ -12,9 +12,9 @@ FT_TEST(test_game_economy_restore_errno_unlocks_guard_and_sets_success, "restore
     entry_errno = FT_ERR_INVALID_ARGUMENT;
     ft_errno = FT_ERR_CONFIGURATION;
     game_economy_restore_errno(guard, entry_errno);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(false, guard.owns_lock());
-    FT_ASSERT_EQ(ER_SUCCESS, guard.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, guard.get_error());
     return (1);
 }
 
@@ -26,9 +26,9 @@ FT_TEST(test_game_economy_restore_errno_without_lock_sets_success, "restore errn
     entry_errno = FT_ERR_ALREADY_EXISTS;
     ft_errno = FT_ERR_IO;
     game_economy_restore_errno(guard, entry_errno);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(false, guard.owns_lock());
-    FT_ASSERT_EQ(ER_SUCCESS, guard.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, guard.get_error());
     return (1);
 }
 
@@ -36,6 +36,6 @@ FT_TEST(test_game_economy_sleep_backoff_resets_errno, "sleep backoff clears errn
 {
     ft_errno = FT_ERR_NOT_FOUND;
     game_economy_sleep_backoff();
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }

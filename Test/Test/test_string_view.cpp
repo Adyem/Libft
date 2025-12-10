@@ -111,7 +111,7 @@ FT_TEST(test_string_view_thread_safety, "ft_string_view thread safe copy and com
     pt_thread_join(assign_thread, ft_nullptr);
     pt_thread_join(compare_thread, ft_nullptr);
     FT_ASSERT_EQ(0, shared.compare(source));
-    FT_ASSERT_EQ(ER_SUCCESS, shared.get_error());
-    FT_ASSERT_EQ(ER_SUCCESS, source.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, shared.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
     return (1);
 }

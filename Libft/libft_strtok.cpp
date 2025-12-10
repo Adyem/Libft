@@ -20,7 +20,7 @@ char    *ft_strtok(char *string, const char *delimiters)
     size_t          new_delimiters_hash;
     unsigned char   delimiter_character_value;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     if (string != ft_nullptr)
     {
         saved_string = string;

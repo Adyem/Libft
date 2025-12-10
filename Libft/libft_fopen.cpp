@@ -34,7 +34,7 @@ FILE *ft_fopen(const char *filename, const char *mode)
             ft_errno = FT_ERR_INVALID_HANDLE;
         return (ft_nullptr);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (file_handle);
 }
 #endif

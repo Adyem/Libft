@@ -60,12 +60,12 @@ FT_TEST(test_observability_game_record_without_initialize_does_not_emit,
     sample.delta_value = 5;
     sample.total_value = 10;
     sample.unit = "unit";
-    sample.error_code = ER_SUCCESS;
+    sample.error_code = FT_ER_SUCCESSS;
     sample.error_tag = ft_nullptr;
     sample.success = true;
     observability_game_metrics_record(sample);
     FT_ASSERT_EQ(0, g_game_export_count);
-    FT_ASSERT_EQ(ER_SUCCESS, observability_game_metrics_get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, observability_game_metrics_get_error());
     return (1);
 }
 
@@ -84,12 +84,12 @@ FT_TEST(test_observability_game_record_populates_defaults,
     sample.delta_value = 8;
     sample.total_value = 12;
     sample.unit = "unit";
-    sample.error_code = ER_SUCCESS;
+    sample.error_code = FT_ER_SUCCESSS;
     sample.error_tag = ft_nullptr;
     sample.success = true;
     observability_game_metrics_record(sample);
     FT_ASSERT_EQ(1, g_game_export_count);
-    FT_ASSERT_EQ(ER_SUCCESS, g_game_last_sample.error_code);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, g_game_last_sample.error_code);
     FT_ASSERT(g_game_last_sample.success);
     FT_ASSERT(g_game_last_sample.error_tag != ft_nullptr);
     FT_ASSERT(observability_game_strings_equal("ok", g_game_last_sample.error_tag));

@@ -17,7 +17,7 @@ int rl_state_prepare_thread_safety(readline_state_t *state)
     }
     if (state->thread_safe_enabled == true && state->mutex != ft_nullptr)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     memory = cma_malloc(sizeof(pt_mutex));
@@ -27,7 +27,7 @@ int rl_state_prepare_thread_safety(readline_state_t *state)
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != ER_SUCCESS)
+    if (mutex_pointer->get_error() != FT_ER_SUCCESSS)
     {
         int mutex_error;
 
@@ -39,7 +39,7 @@ int rl_state_prepare_thread_safety(readline_state_t *state)
     }
     state->mutex = mutex_pointer;
     state->thread_safe_enabled = true;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -68,18 +68,18 @@ int rl_state_lock(readline_state_t *state, bool *lock_acquired)
     }
     if (state->thread_safe_enabled == false || state->mutex == ft_nullptr)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     state->mutex->lock(THREAD_ID);
-    if (state->mutex->get_error() != ER_SUCCESS)
+    if (state->mutex->get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = state->mutex->get_error();
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -93,7 +93,7 @@ void rl_state_unlock(readline_state_t *state, bool lock_acquired)
         return ;
     entry_errno = ft_errno;
     state->mutex->unlock(THREAD_ID);
-    if (state->mutex->get_error() != ER_SUCCESS)
+    if (state->mutex->get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = state->mutex->get_error();
         return ;

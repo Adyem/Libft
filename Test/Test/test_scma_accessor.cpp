@@ -221,7 +221,7 @@ FT_TEST(test_scma_accessor_dereference_reads_value, "scma accessor dereference r
     read_value = *accessor;
     FT_ASSERT_EQ(12, read_value);
     const scma_handle_accessor<int> const_accessor(accessor);
-    FT_ASSERT_EQ(ER_SUCCESS, const_accessor.get_error());
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, const_accessor.get_error());
     read_value = const_accessor[1];
     FT_ASSERT_EQ(34, read_value);
     scma_shutdown();

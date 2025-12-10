@@ -25,7 +25,7 @@ FT_TEST(test_ft_random_seed_hashes_string, "ft_random_seed hashes deterministic 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     uint32_t computed_hash = ft_random_seed(seed_string);
     FT_ASSERT_EQ(expected_hash, computed_hash);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -35,7 +35,7 @@ FT_TEST(test_ft_random_seed_empty_string_returns_offset_basis, "ft_random_seed r
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     uint32_t computed_hash = ft_random_seed(seed_string);
     FT_ASSERT_EQ(2166136261u, computed_hash);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -62,10 +62,10 @@ FT_TEST(test_ft_random_seed_separates_similar_strings, "ft_random_seed hashes si
     }
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(first_hash, ft_random_seed(first_seed));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(second_hash, ft_random_seed(second_seed));
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     FT_ASSERT(first_hash != second_hash);
     return (1);
 }
@@ -74,11 +74,11 @@ FT_TEST(test_ft_random_seed_null_seed_uses_random_device, "ft_random_seed clears
 {
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     (void)ft_random_seed(ft_nullptr);
-    if (ft_errno != ER_SUCCESS)
+    if (ft_errno != FT_ER_SUCCESSS)
         return (0);
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     (void)ft_random_seed(ft_nullptr);
-    if (ft_errno != ER_SUCCESS)
+    if (ft_errno != FT_ER_SUCCESSS)
         return (0);
     return (1);
 }
@@ -90,7 +90,7 @@ FT_TEST(test_ft_seed_random_engine_with_entropy_sets_flag, "ft_seed_random_engin
     ft_seed_random_engine_with_entropy();
     if (g_random_engine_seeded.load(std::memory_order_acquire) != true)
         return (0);
-    if (ft_errno != ER_SUCCESS)
+    if (ft_errno != FT_ER_SUCCESSS)
         return (0);
     g_random_engine_seeded.store(false, std::memory_order_release);
     return (1);
@@ -103,7 +103,7 @@ FT_TEST(test_ft_seed_random_engine_with_entropy_skips_when_seeded, "ft_seed_rand
     ft_seed_random_engine_with_entropy();
     if (g_random_engine_seeded.load(std::memory_order_acquire) != true)
         return (0);
-    if (ft_errno != ER_SUCCESS)
+    if (ft_errno != FT_ER_SUCCESSS)
         return (0);
     g_random_engine_seeded.store(false, std::memory_order_release);
     return (1);
@@ -113,7 +113,7 @@ FT_TEST(test_ft_random_uint32_success_clears_errno, "ft_random_uint32 propagates
 {
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     (void)ft_random_uint32();
-    if (ft_errno != ER_SUCCESS)
+    if (ft_errno != FT_ER_SUCCESSS)
         return (0);
     return (1);
 }
@@ -122,7 +122,7 @@ FT_TEST(test_ft_random_uint32_success_clears_errno, "ft_random_uint32 propagates
 FT_TEST(test_ft_random_uint32_failure_returns_zero, "ft_random_uint32 returns zero when secure bytes fail")
 {
     cmp_clear_force_rng_failures();
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     cmp_force_rng_open_failure(EACCES);
     uint32_t random_value = ft_random_uint32();
     cmp_clear_force_rng_failures();
@@ -136,7 +136,7 @@ FT_TEST(test_ft_random_uint32_failure_returns_zero, "ft_random_uint32 returns ze
 FT_TEST(test_ft_random_uint32_eof_returns_zero, "ft_random_uint32 treats unexpected EOF as an error")
 {
     cmp_clear_force_rng_failures();
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     cmp_force_rng_read_eof();
     uint32_t random_value = ft_random_uint32();
     cmp_clear_force_rng_failures();

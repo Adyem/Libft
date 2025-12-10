@@ -27,7 +27,7 @@ int rng_stream_seed(uint64_t base_seed, uint64_t stream_identifier, uint64_t *st
     }
     uint64_t state = rng_initialize_state(base_seed, stream_identifier);
     *stream_seed = rng_splitmix64_next(&state);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -40,7 +40,7 @@ int rng_stream_seed_sequence(uint64_t base_seed, uint64_t stream_identifier, uin
     }
     if (count == 0)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     uint64_t state = rng_initialize_state(base_seed, stream_identifier);
@@ -56,7 +56,7 @@ int rng_stream_seed_sequence(uint64_t base_seed, uint64_t stream_identifier, uin
             index++;
         }
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -68,7 +68,7 @@ int rng_stream_seed_from_string(const char *seed_string, uint64_t stream_identif
         return (-1);
     }
     uint32_t base_seed_32 = ft_random_seed(seed_string);
-    if (ft_errno != ER_SUCCESS)
+    if (ft_errno != FT_ER_SUCCESSS)
         return (-1);
     return (rng_stream_seed(static_cast<uint64_t>(base_seed_32), stream_identifier, stream_seed));
 }
@@ -81,7 +81,7 @@ int rng_stream_seed_sequence_from_string(const char *seed_string, uint64_t strea
         return (-1);
     }
     uint32_t base_seed_32 = ft_random_seed(seed_string);
-    if (ft_errno != ER_SUCCESS)
+    if (ft_errno != FT_ER_SUCCESSS)
         return (-1);
     return (rng_stream_seed_sequence(static_cast<uint64_t>(base_seed_32), stream_identifier, buffer, count));
 }

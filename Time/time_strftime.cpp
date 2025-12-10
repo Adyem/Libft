@@ -77,7 +77,7 @@ static size_t   format_time_component(char *destination, size_t destination_size
         index--;
         destination[index] = '0';
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (required_length);
 }
 
@@ -142,7 +142,7 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
                 else
                     minimum_width = 2;
                 length = format_time_component(number_buffer, sizeof(number_buffer), value, minimum_width);
-                if (length == 0 && ft_errno != ER_SUCCESS)
+                if (length == 0 && ft_errno != FT_ER_SUCCESSS)
                 {
                     if (output_index < size)
                         buffer[output_index] = '\0';
@@ -171,7 +171,7 @@ size_t  time_strftime(char *buffer, size_t size, const char *format, const t_tim
     if (!format_failed)
     {
         buffer[output_index] = '\0';
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         formatted_length = output_index;
     }
     else

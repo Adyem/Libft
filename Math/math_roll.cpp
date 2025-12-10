@@ -76,7 +76,7 @@ int *math_roll(const char *expression)
     int     *value;
     int     parse_error;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
 
     if (!expression)
     {
@@ -125,6 +125,6 @@ int *math_roll(const char *expression)
     }
     *value = ft_atoi(result);
     cma_free(result);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (value);
 }

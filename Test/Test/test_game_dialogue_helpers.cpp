@@ -15,13 +15,13 @@ FT_TEST(test_dialogue_helper_restore_errno_sets_success, "restore errno unlocks 
     ft_errno = original_errno;
     game_narrative_restore_errno(guard, 4);
     FT_ASSERT_EQ(0, guard.owns_lock());
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
 FT_TEST(test_dialogue_helper_sleep_backoff, "sleep backoff executes")
 {
     game_narrative_sleep_backoff();
-    FT_ASSERT_EQ(ER_SUCCESS, ER_SUCCESS);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, FT_ER_SUCCESSS);
     return (1);
 }

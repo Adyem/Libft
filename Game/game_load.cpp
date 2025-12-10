@@ -22,8 +22,8 @@ static int parse_item_field(json_group *group, const ft_string &key, int &out_va
         return (FT_ERR_GAME_GENERAL_ERROR);
     }
     out_value = ft_atoi(json_item_ptr->value);
-    ft_errno = ER_SUCCESS;
-    return (ER_SUCCESS);
+    ft_errno = FT_ER_SUCCESSS;
+    return (FT_ER_SUCCESSS);
 }
 
 static int build_item_from_group(ft_item &item, json_group *group, const ft_string &item_prefix)
@@ -31,71 +31,71 @@ static int build_item_from_group(ft_item &item, json_group *group, const ft_stri
     int value;
     ft_string key_max = item_prefix;
     key_max += "_max_stack";
-    if (parse_item_field(group, key_max, value) != ER_SUCCESS)
+    if (parse_item_field(group, key_max, value) != FT_ER_SUCCESSS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_max_stack(value);
     ft_string key_current = item_prefix;
     key_current += "_stack_size";
-    if (parse_item_field(group, key_current, value) != ER_SUCCESS)
+    if (parse_item_field(group, key_current, value) != FT_ER_SUCCESSS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_stack_size(value);
     ft_string key_id = item_prefix;
     key_id += "_id";
-    if (parse_item_field(group, key_id, value) != ER_SUCCESS)
+    if (parse_item_field(group, key_id, value) != FT_ER_SUCCESSS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_item_id(value);
     ft_string key_width = item_prefix;
     key_width += "_width";
-    if (parse_item_field(group, key_width, value) != ER_SUCCESS)
+    if (parse_item_field(group, key_width, value) != FT_ER_SUCCESSS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_width(value);
     ft_string key_height = item_prefix;
     key_height += "_height";
-    if (parse_item_field(group, key_height, value) != ER_SUCCESS)
+    if (parse_item_field(group, key_height, value) != FT_ER_SUCCESSS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_height(value);
     ft_string key_mod1_id = item_prefix;
     key_mod1_id += "_mod1_id";
-    if (parse_item_field(group, key_mod1_id, value) != ER_SUCCESS)
+    if (parse_item_field(group, key_mod1_id, value) != FT_ER_SUCCESSS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_modifier1_id(value);
     ft_string key_mod1_value = item_prefix;
     key_mod1_value += "_mod1_value";
-    if (parse_item_field(group, key_mod1_value, value) != ER_SUCCESS)
+    if (parse_item_field(group, key_mod1_value, value) != FT_ER_SUCCESSS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_modifier1_value(value);
     ft_string key_mod2_id = item_prefix;
     key_mod2_id += "_mod2_id";
-    if (parse_item_field(group, key_mod2_id, value) != ER_SUCCESS)
+    if (parse_item_field(group, key_mod2_id, value) != FT_ER_SUCCESSS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_modifier2_id(value);
     ft_string key_mod2_value = item_prefix;
     key_mod2_value += "_mod2_value";
-    if (parse_item_field(group, key_mod2_value, value) != ER_SUCCESS)
+    if (parse_item_field(group, key_mod2_value, value) != FT_ER_SUCCESSS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_modifier2_value(value);
     ft_string key_mod3_id = item_prefix;
     key_mod3_id += "_mod3_id";
-    if (parse_item_field(group, key_mod3_id, value) != ER_SUCCESS)
+    if (parse_item_field(group, key_mod3_id, value) != FT_ER_SUCCESSS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_modifier3_id(value);
     ft_string key_mod3_value = item_prefix;
     key_mod3_value += "_mod3_value";
-    if (parse_item_field(group, key_mod3_value, value) != ER_SUCCESS)
+    if (parse_item_field(group, key_mod3_value, value) != FT_ER_SUCCESSS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_modifier3_value(value);
     ft_string key_mod4_id = item_prefix;
     key_mod4_id += "_mod4_id";
-    if (parse_item_field(group, key_mod4_id, value) != ER_SUCCESS)
+    if (parse_item_field(group, key_mod4_id, value) != FT_ER_SUCCESSS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_modifier4_id(value);
     ft_string key_mod4_value = item_prefix;
     key_mod4_value += "_mod4_value";
-    if (parse_item_field(group, key_mod4_value, value) != ER_SUCCESS)
+    if (parse_item_field(group, key_mod4_value, value) != FT_ER_SUCCESSS)
         return (FT_ERR_GAME_GENERAL_ERROR);
     item.set_modifier4_value(value);
-    ft_errno = ER_SUCCESS;
-    return (ER_SUCCESS);
+    ft_errno = FT_ER_SUCCESSS;
+    return (FT_ER_SUCCESSS);
 }
 
 int deserialize_inventory(ft_inventory &inventory, json_group *group)
@@ -139,7 +139,7 @@ int deserialize_inventory(ft_inventory &inventory, json_group *group)
     }
     int item_count = ft_atoi(count_item->value);
     int item_index = 0;
-    int loop_error = ER_SUCCESS;
+    int loop_error = FT_ER_SUCCESSS;
     while (item_index < item_count)
     {
         char *item_index_string = cma_itoa(item_index);
@@ -152,7 +152,7 @@ int deserialize_inventory(ft_inventory &inventory, json_group *group)
         item_prefix += item_index_string;
         cma_free(item_index_string);
         ft_item item_temp;
-        if (build_item_from_group(item_temp, group, item_prefix) != ER_SUCCESS)
+        if (build_item_from_group(item_temp, group, item_prefix) != FT_ER_SUCCESSS)
         {
             loop_error = FT_ERR_GAME_GENERAL_ERROR;
             break ;
@@ -163,22 +163,22 @@ int deserialize_inventory(ft_inventory &inventory, json_group *group)
             ft_errno = FT_ERR_NO_MEMORY;
             return (FT_ERR_NO_MEMORY);
         }
-        if (inventory.add_item(item) != ER_SUCCESS)
+        if (inventory.add_item(item) != FT_ER_SUCCESSS)
         {
             loop_error = inventory.get_error();
             break ;
         }
         item_index++;
     }
-    if (loop_error != ER_SUCCESS)
+    if (loop_error != FT_ER_SUCCESSS)
     {
         ft_errno = loop_error;
         return (loop_error);
     }
     inventory.set_current_weight(serialized_weight);
     inventory.set_used_slots(serialized_slots);
-    ft_errno = ER_SUCCESS;
-    return (ER_SUCCESS);
+    ft_errno = FT_ER_SUCCESSS;
+    return (FT_ER_SUCCESSS);
 }
 
 int deserialize_equipment(ft_character &character, json_group *group)
@@ -187,10 +187,10 @@ int deserialize_equipment(ft_character &character, json_group *group)
     if (present && ft_atoi(present->value) == 1)
     {
         ft_item item_temp;
-        if (build_item_from_group(item_temp, group, "head") != ER_SUCCESS)
+        if (build_item_from_group(item_temp, group, "head") != FT_ER_SUCCESSS)
             return (FT_ERR_GAME_GENERAL_ERROR);
         ft_sharedptr<ft_item> item(new ft_item(item_temp));
-        if (character.equip_item(EQUIP_HEAD, item) != ER_SUCCESS)
+        if (character.equip_item(EQUIP_HEAD, item) != FT_ER_SUCCESSS)
             return (character.get_error());
     }
     else
@@ -199,10 +199,10 @@ int deserialize_equipment(ft_character &character, json_group *group)
     if (present && ft_atoi(present->value) == 1)
     {
         ft_item item_temp;
-        if (build_item_from_group(item_temp, group, "chest") != ER_SUCCESS)
+        if (build_item_from_group(item_temp, group, "chest") != FT_ER_SUCCESSS)
             return (FT_ERR_GAME_GENERAL_ERROR);
         ft_sharedptr<ft_item> item(new ft_item(item_temp));
-        if (character.equip_item(EQUIP_CHEST, item) != ER_SUCCESS)
+        if (character.equip_item(EQUIP_CHEST, item) != FT_ER_SUCCESSS)
             return (character.get_error());
     }
     else
@@ -211,16 +211,16 @@ int deserialize_equipment(ft_character &character, json_group *group)
     if (present && ft_atoi(present->value) == 1)
     {
         ft_item item_temp;
-        if (build_item_from_group(item_temp, group, "weapon") != ER_SUCCESS)
+        if (build_item_from_group(item_temp, group, "weapon") != FT_ER_SUCCESSS)
             return (FT_ERR_GAME_GENERAL_ERROR);
         ft_sharedptr<ft_item> item(new ft_item(item_temp));
-        if (character.equip_item(EQUIP_WEAPON, item) != ER_SUCCESS)
+        if (character.equip_item(EQUIP_WEAPON, item) != FT_ER_SUCCESSS)
             return (character.get_error());
     }
     else
         character.unequip_item(EQUIP_WEAPON);
-    ft_errno = ER_SUCCESS;
-    return (ER_SUCCESS);
+    ft_errno = FT_ER_SUCCESSS;
+    return (FT_ER_SUCCESSS);
 }
 
 int deserialize_quest(ft_quest &quest, json_group *group)
@@ -267,7 +267,7 @@ int deserialize_quest(ft_quest &quest, json_group *group)
             prefix += index_string;
             cma_free(index_string);
             ft_item reward_temp;
-            if (build_item_from_group(reward_temp, group, prefix) != ER_SUCCESS)
+            if (build_item_from_group(reward_temp, group, prefix) != FT_ER_SUCCESSS)
                 return (FT_ERR_GAME_GENERAL_ERROR);
             ft_sharedptr<ft_item> reward(new ft_item(reward_temp));
             if (!reward)
@@ -279,7 +279,7 @@ int deserialize_quest(ft_quest &quest, json_group *group)
             reward_index++;
         }
     }
-    ft_errno = ER_SUCCESS;
-    return (ER_SUCCESS);
+    ft_errno = FT_ER_SUCCESSS;
+    return (FT_ER_SUCCESSS);
 }
 

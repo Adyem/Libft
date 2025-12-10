@@ -43,13 +43,13 @@ int task_scheduler_register_trace_sink(task_scheduler_trace_sink sink)
             index += 1;
         }
         g_task_scheduler_trace_sinks.push_back(sink);
-        if (g_task_scheduler_trace_sinks.get_error() != ER_SUCCESS)
+        if (g_task_scheduler_trace_sinks.get_error() != FT_ER_SUCCESSS)
         {
             task_scheduler_trace_set_error(g_task_scheduler_trace_sinks.get_error());
             return (-1);
         }
     }
-    task_scheduler_trace_set_error(ER_SUCCESS);
+    task_scheduler_trace_set_error(FT_ER_SUCCESSS);
     return (0);
 }
 
@@ -72,12 +72,12 @@ int task_scheduler_unregister_trace_sink(task_scheduler_trace_sink sink)
             if (g_task_scheduler_trace_sinks[index] == sink)
             {
                 g_task_scheduler_trace_sinks.erase(g_task_scheduler_trace_sinks.begin() + index);
-                if (g_task_scheduler_trace_sinks.get_error() != ER_SUCCESS)
+                if (g_task_scheduler_trace_sinks.get_error() != FT_ER_SUCCESSS)
                 {
                     task_scheduler_trace_set_error(g_task_scheduler_trace_sinks.get_error());
                     return (-1);
                 }
-                task_scheduler_trace_set_error(ER_SUCCESS);
+                task_scheduler_trace_set_error(FT_ER_SUCCESSS);
                 return (0);
             }
             index += 1;
@@ -104,7 +104,7 @@ void task_scheduler_trace_emit(const ft_task_trace_event &event)
 
             sink_instance = g_task_scheduler_trace_sinks[index];
             sinks_copy.push_back(sink_instance);
-            if (sinks_copy.get_error() != ER_SUCCESS)
+            if (sinks_copy.get_error() != FT_ER_SUCCESSS)
             {
                 task_scheduler_trace_set_error(sinks_copy.get_error());
                 return ;
@@ -126,7 +126,7 @@ void task_scheduler_trace_emit(const ft_task_trace_event &event)
             sink_instance(event);
         call_index += 1;
     }
-    task_scheduler_trace_set_error(ER_SUCCESS);
+    task_scheduler_trace_set_error(FT_ER_SUCCESSS);
     return ;
 }
 

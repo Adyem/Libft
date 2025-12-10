@@ -52,10 +52,10 @@ FT_TEST(test_pt_thread_create_updates_errno, "pt_thread_create updates ft_errno 
     else
     {
         thread_started = 1;
-        if (ft_errno != ER_SUCCESS)
+        if (ft_errno != FT_ER_SUCCESSS)
         {
             test_failed = 1;
-            failure_expression = "ft_errno == ER_SUCCESS";
+            failure_expression = "ft_errno == FT_ER_SUCCESSS";
             failure_line = __LINE__;
         }
     }
@@ -75,7 +75,7 @@ FT_TEST(test_pt_thread_create_updates_errno, "pt_thread_create updates ft_errno 
         return (0);
     }
     FT_ASSERT_EQ(1, routine_started);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -116,7 +116,7 @@ FT_TEST(test_pt_thread_join_updates_errno, "pt_thread_join updates ft_errno on f
         return (0);
     }
     FT_ASSERT_EQ(1, routine_started);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -136,7 +136,7 @@ FT_TEST(test_pt_thread_detach_updates_errno, "pt_thread_detach updates ft_errno 
     FT_ASSERT_EQ(0, pt_thread_create(&thread, ft_nullptr, pthread_test_routine, &routine_started));
     detach_result = pt_thread_detach(thread);
     FT_ASSERT_EQ(0, detach_result);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
     while (routine_started == 0)
         pt_thread_sleep(10);
     return (1);

@@ -34,13 +34,13 @@ static int su_environment_snapshot_contains(
         return (-1);
     }
     snapshot_count = snapshot->entries.size();
-    if (snapshot->entries.get_error() != ER_SUCCESS)
+    if (snapshot->entries.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = snapshot->entries.get_error();
         return (-1);
     }
     target_length = name.size();
-    if (name.get_error() != ER_SUCCESS)
+    if (name.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = name.get_error();
         return (-1);
@@ -53,7 +53,7 @@ static int su_environment_snapshot_contains(
         const char      *equals_location;
         size_t          entry_length;
 
-        if (entry.get_error() != ER_SUCCESS)
+        if (entry.get_error() != FT_ER_SUCCESSS)
         {
             ft_errno = entry.get_error();
             return (-1);
@@ -68,13 +68,13 @@ static int su_environment_snapshot_contains(
             && ft_strncmp(entry_data, name.c_str(), target_length) == 0)
         {
             *is_present = 1;
-            ft_errno = ER_SUCCESS;
+            ft_errno = FT_ER_SUCCESSS;
             return (0);
         }
         index += 1;
     }
     *is_present = 0;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -96,27 +96,27 @@ static int su_environment_split_entry(
     if (equals_location == ft_nullptr)
     {
         name.assign(entry, ft_strlen_size_t(entry));
-        if (name.get_error() != ER_SUCCESS)
+        if (name.get_error() != FT_ER_SUCCESSS)
             return (-1);
         value.clear();
-        if (value.get_error() != ER_SUCCESS)
+        if (value.get_error() != FT_ER_SUCCESSS)
             return (-1);
         if (has_value != ft_nullptr)
             *has_value = 0;
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     name_length = static_cast<size_t>(equals_location - entry);
     name.assign(entry, name_length);
-    if (name.get_error() != ER_SUCCESS)
+    if (name.get_error() != FT_ER_SUCCESSS)
         return (-1);
     value.assign(equals_location + 1,
         ft_strlen_size_t(equals_location + 1));
-    if (value.get_error() != ER_SUCCESS)
+    if (value.get_error() != FT_ER_SUCCESSS)
         return (-1);
     if (has_value != ft_nullptr)
         *has_value = 1;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -156,14 +156,14 @@ int su_putenv(char *string)
     }
     if (g_env_mutex.lock(THREAD_ID) != FT_SUCCESS)
         return (-1);
-    cmp_error_code = ER_SUCCESS;
+    cmp_error_code = FT_ER_SUCCESSS;
     result = cmp_putenv(string);
     if (result != 0)
         cmp_error_code = ft_errno;
     if (g_env_mutex.unlock(THREAD_ID) != FT_SUCCESS)
         return (-1);
     if (result == 0)
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
     else
         ft_errno = cmp_error_code;
     return (result);
@@ -180,7 +180,7 @@ int su_environment_snapshot_capture(t_su_environment_snapshot *snapshot)
         return (-1);
     }
     snapshot->entries.clear();
-    if (snapshot->entries.get_error() != ER_SUCCESS)
+    if (snapshot->entries.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = snapshot->entries.get_error();
         return (-1);
@@ -195,17 +195,17 @@ int su_environment_snapshot_capture(t_su_environment_snapshot *snapshot)
         {
             ft_string entry_copy(environment_entries[index]);
 
-            if (entry_copy.get_error() != ER_SUCCESS)
+            if (entry_copy.get_error() != FT_ER_SUCCESSS)
                 return (su_environment_unlock_with_error(entry_copy.get_error()));
             snapshot->entries.push_back(ft_move(entry_copy));
-            if (snapshot->entries.get_error() != ER_SUCCESS)
+            if (snapshot->entries.get_error() != FT_ER_SUCCESSS)
                 return (su_environment_unlock_with_error(snapshot->entries.get_error()));
             index += 1;
         }
     }
     if (g_env_mutex.unlock(THREAD_ID) != FT_SUCCESS)
         return (-1);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -220,7 +220,7 @@ int su_environment_snapshot_restore(const t_su_environment_snapshot *snapshot)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    if (snapshot->entries.get_error() != ER_SUCCESS)
+    if (snapshot->entries.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = snapshot->entries.get_error();
         return (-1);
@@ -235,16 +235,16 @@ int su_environment_snapshot_restore(const t_su_environment_snapshot *snapshot)
         {
             ft_string entry_copy(environment_entries[index]);
 
-            if (entry_copy.get_error() != ER_SUCCESS)
+            if (entry_copy.get_error() != FT_ER_SUCCESSS)
                 return (su_environment_unlock_with_error(entry_copy.get_error()));
             current_environment.push_back(ft_move(entry_copy));
-            if (current_environment.get_error() != ER_SUCCESS)
+            if (current_environment.get_error() != FT_ER_SUCCESSS)
                 return (su_environment_unlock_with_error(current_environment.get_error()));
             index += 1;
         }
     }
     size_t current_count = current_environment.size();
-    if (current_environment.get_error() != ER_SUCCESS)
+    if (current_environment.get_error() != FT_ER_SUCCESSS)
         return (su_environment_unlock_with_error(current_environment.get_error()));
     index = 0;
     while (index < current_count)
@@ -254,11 +254,11 @@ int su_environment_snapshot_restore(const t_su_environment_snapshot *snapshot)
         ft_string value;
         int       is_present;
 
-        if (entry.get_error() != ER_SUCCESS)
+        if (entry.get_error() != FT_ER_SUCCESSS)
             return (su_environment_unlock_with_error(entry.get_error()));
         if (su_environment_split_entry(entry.c_str(), name, value, ft_nullptr) != 0)
             return (su_environment_unlock_with_error(ft_errno));
-        if (name.get_error() != ER_SUCCESS)
+        if (name.get_error() != FT_ER_SUCCESSS)
             return (su_environment_unlock_with_error(name.get_error()));
         if (su_environment_snapshot_contains(snapshot, name, &is_present) != 0)
             return (su_environment_unlock_with_error(ft_errno));
@@ -270,7 +270,7 @@ int su_environment_snapshot_restore(const t_su_environment_snapshot *snapshot)
         index += 1;
     }
     size_t snapshot_count = snapshot->entries.size();
-    if (snapshot->entries.get_error() != ER_SUCCESS)
+    if (snapshot->entries.get_error() != FT_ER_SUCCESSS)
         return (su_environment_unlock_with_error(snapshot->entries.get_error()));
     index = 0;
     while (index < snapshot_count)
@@ -280,11 +280,11 @@ int su_environment_snapshot_restore(const t_su_environment_snapshot *snapshot)
         ft_string        value;
         int              has_value;
 
-        if (entry.get_error() != ER_SUCCESS)
+        if (entry.get_error() != FT_ER_SUCCESSS)
             return (su_environment_unlock_with_error(entry.get_error()));
         if (su_environment_split_entry(entry.c_str(), name, value, &has_value) != 0)
             return (su_environment_unlock_with_error(ft_errno));
-        if (name.get_error() != ER_SUCCESS)
+        if (name.get_error() != FT_ER_SUCCESSS)
             return (su_environment_unlock_with_error(name.get_error()));
         if (has_value != 0)
         {
@@ -300,7 +300,7 @@ int su_environment_snapshot_restore(const t_su_environment_snapshot *snapshot)
     }
     if (g_env_mutex.unlock(THREAD_ID) != FT_SUCCESS)
         return (-1);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }
 
@@ -309,10 +309,10 @@ void su_environment_snapshot_dispose(t_su_environment_snapshot *snapshot)
     if (snapshot == ft_nullptr)
         return ;
     snapshot->entries.clear();
-    if (snapshot->entries.get_error() != ER_SUCCESS)
+    if (snapshot->entries.get_error() != FT_ER_SUCCESSS)
         ft_errno = snapshot->entries.get_error();
     else
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 
@@ -334,6 +334,6 @@ int su_environment_sandbox_end(t_su_environment_snapshot *snapshot)
         ft_errno = restore_errno;
         return (-1);
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (0);
 }

@@ -3,21 +3,21 @@
 #include "../Template/move.hpp"
 
 ft_stringbuf::ft_stringbuf(const ft_string &string) noexcept
-    : _storage(string), _position(0), _error_code(ER_SUCCESS), _mutex()
+    : _storage(string), _position(0), _error_code(FT_ER_SUCCESSS), _mutex()
 {
-    if (this->_storage.get_error() != ER_SUCCESS)
+    if (this->_storage.get_error() != FT_ER_SUCCESSS)
         this->set_error(this->_storage.get_error());
     return ;
 }
 
 ft_stringbuf::ft_stringbuf(const ft_stringbuf &other) noexcept
-    : _storage(other._storage), _position(0), _error_code(ER_SUCCESS), _mutex()
+    : _storage(other._storage), _position(0), _error_code(FT_ER_SUCCESSS), _mutex()
 {
     int entry_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
 
     entry_errno = ft_errno;
-    if (other_guard.get_error() != ER_SUCCESS)
+    if (other_guard.get_error() != FT_ER_SUCCESSS)
     {
         this->_position = 0;
         this->_error_code = other_guard.get_error();
@@ -26,7 +26,7 @@ ft_stringbuf::ft_stringbuf(const ft_stringbuf &other) noexcept
     }
     this->_position = other._position;
     this->_error_code = other._error_code;
-    if (this->_storage.get_error() != ER_SUCCESS)
+    if (this->_storage.get_error() != FT_ER_SUCCESSS)
         this->_error_code = this->_storage.get_error();
     ft_stringbuf::restore_errno(other_guard, entry_errno);
     return ;
@@ -57,14 +57,14 @@ ft_stringbuf &ft_stringbuf::operator=(const ft_stringbuf &other) noexcept
         second = temporary;
     }
     first_guard = ft_unique_lock<pt_mutex>(first->_mutex);
-    if (first_guard.get_error() != ER_SUCCESS)
+    if (first_guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(first_guard.get_error());
         ft_stringbuf::restore_errno(first_guard, entry_errno);
         return (*this);
     }
     second_guard = ft_unique_lock<pt_mutex>(second->_mutex);
-    if (second_guard.get_error() != ER_SUCCESS)
+    if (second_guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(second_guard.get_error());
         ft_stringbuf::restore_errno(second_guard, entry_errno);
@@ -74,7 +74,7 @@ ft_stringbuf &ft_stringbuf::operator=(const ft_stringbuf &other) noexcept
     this->_storage = other._storage;
     this->_position = other._position;
     this->_error_code = other._error_code;
-    if (this->_storage.get_error() != ER_SUCCESS)
+    if (this->_storage.get_error() != FT_ER_SUCCESSS)
         this->_error_code = this->_storage.get_error();
     ft_stringbuf::restore_errno(second_guard, entry_errno);
     ft_stringbuf::restore_errno(first_guard, entry_errno);
@@ -82,13 +82,13 @@ ft_stringbuf &ft_stringbuf::operator=(const ft_stringbuf &other) noexcept
 }
 
 ft_stringbuf::ft_stringbuf(ft_stringbuf &&other) noexcept
-    : _storage(ft_move(other._storage)), _position(0), _error_code(ER_SUCCESS), _mutex()
+    : _storage(ft_move(other._storage)), _position(0), _error_code(FT_ER_SUCCESSS), _mutex()
 {
     int entry_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
 
     entry_errno = ft_errno;
-    if (other_guard.get_error() != ER_SUCCESS)
+    if (other_guard.get_error() != FT_ER_SUCCESSS)
     {
         this->_position = 0;
         this->_error_code = other_guard.get_error();
@@ -98,8 +98,8 @@ ft_stringbuf::ft_stringbuf(ft_stringbuf &&other) noexcept
     this->_position = other._position;
     this->_error_code = other._error_code;
     other._position = 0;
-    other._error_code = ER_SUCCESS;
-    if (this->_storage.get_error() != ER_SUCCESS)
+    other._error_code = FT_ER_SUCCESSS;
+    if (this->_storage.get_error() != FT_ER_SUCCESSS)
         this->_error_code = this->_storage.get_error();
     ft_stringbuf::restore_errno(other_guard, entry_errno);
     return ;
@@ -127,14 +127,14 @@ ft_stringbuf &ft_stringbuf::operator=(ft_stringbuf &&other) noexcept
         second = temporary;
     }
     first_guard = ft_unique_lock<pt_mutex>(first->_mutex);
-    if (first_guard.get_error() != ER_SUCCESS)
+    if (first_guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(first_guard.get_error());
         ft_stringbuf::restore_errno(first_guard, entry_errno);
         return (*this);
     }
     second_guard = ft_unique_lock<pt_mutex>(second->_mutex);
-    if (second_guard.get_error() != ER_SUCCESS)
+    if (second_guard.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(second_guard.get_error());
         ft_stringbuf::restore_errno(second_guard, entry_errno);
@@ -145,8 +145,8 @@ ft_stringbuf &ft_stringbuf::operator=(ft_stringbuf &&other) noexcept
     this->_position = other._position;
     this->_error_code = other._error_code;
     other._position = 0;
-    other._error_code = ER_SUCCESS;
-    if (this->_storage.get_error() != ER_SUCCESS)
+    other._error_code = FT_ER_SUCCESSS;
+    if (this->_storage.get_error() != FT_ER_SUCCESSS)
         this->_error_code = this->_storage.get_error();
     ft_stringbuf::restore_errno(second_guard, entry_errno);
     ft_stringbuf::restore_errno(first_guard, entry_errno);
@@ -177,7 +177,7 @@ int ft_stringbuf::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
 
     entry_errno = ft_errno;
-    if (local_guard.get_error() != ER_SUCCESS)
+    if (local_guard.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = entry_errno;
         guard = ft_unique_lock<pt_mutex>();
@@ -185,7 +185,7 @@ int ft_stringbuf::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
     }
     ft_errno = entry_errno;
     guard = ft_move(local_guard);
-    return (ER_SUCCESS);
+    return (FT_ER_SUCCESSS);
 }
 
 void ft_stringbuf::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept
@@ -196,17 +196,17 @@ void ft_stringbuf::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errn
     operation_errno = ft_errno;
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != ER_SUCCESS)
+    if (guard.get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return ;
     }
-    if (operation_errno != ER_SUCCESS)
+    if (operation_errno != FT_ER_SUCCESSS)
     {
         ft_errno = operation_errno;
         return ;
     }
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 
@@ -220,7 +220,7 @@ std::size_t ft_stringbuf::read(char *buffer, std::size_t count)
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_stringbuf::restore_errno(guard, entry_errno);
@@ -250,7 +250,7 @@ std::size_t ft_stringbuf::read(char *buffer, std::size_t count)
         this->_position++;
     }
     if (!failure_occurred)
-        this->set_error_unlocked(ER_SUCCESS);
+        this->set_error_unlocked(FT_ER_SUCCESSS);
     ft_stringbuf::restore_errno(guard, entry_errno);
     return (index);
 }
@@ -264,13 +264,13 @@ bool ft_stringbuf::is_bad() const noexcept
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_stringbuf::restore_errno(guard, entry_errno);
         return (true);
     }
-    result = (this->_error_code != ER_SUCCESS);
+    result = (this->_error_code != FT_ER_SUCCESSS);
     ft_errno = entry_errno;
     ft_stringbuf::restore_errno(guard, entry_errno);
     return (result);
@@ -285,7 +285,7 @@ int ft_stringbuf::get_error() const noexcept
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_stringbuf::restore_errno(guard, entry_errno);
@@ -306,7 +306,7 @@ const char *ft_stringbuf::get_error_str() const noexcept
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_stringbuf::restore_errno(guard, entry_errno);
@@ -328,7 +328,7 @@ ft_string ft_stringbuf::str() const
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard;
     lock_error = this->lock_self(guard);
-    if (lock_error != ER_SUCCESS)
+    if (lock_error != FT_ER_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_stringbuf::restore_errno(guard, entry_errno);
@@ -336,10 +336,10 @@ ft_string ft_stringbuf::str() const
     }
     start = this->_storage.c_str();
     result = ft_string(start + this->_position);
-    if (result.get_error() != ER_SUCCESS)
+    if (result.get_error() != FT_ER_SUCCESSS)
         this->set_error_unlocked(result.get_error());
     else
-        this->set_error_unlocked(ER_SUCCESS);
+        this->set_error_unlocked(FT_ER_SUCCESSS);
     ft_stringbuf::restore_errno(guard, entry_errno);
     return (result);
 }

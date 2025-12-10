@@ -20,12 +20,12 @@ FT_TEST(test_time_parse_iso8601_positive_offset_aligns_with_utc,
     ft_errno = FT_ERR_CONFIGURATION;
     parse_result = time_parse_iso8601("2024-03-01T10:04:56Z", &base_time, &base_timestamp);
     FT_ASSERT(parse_result == true);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
 
     ft_errno = FT_ERR_TERMINATED;
     parse_result = time_parse_iso8601("2024-03-01T12:34:56+02:30", &offset_time, &offset_timestamp);
     FT_ASSERT(parse_result == true);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
 
     FT_ASSERT_EQ(base_timestamp, offset_timestamp);
     FT_ASSERT_EQ(base_time.tm_year, offset_time.tm_year);
@@ -54,12 +54,12 @@ FT_TEST(test_time_parse_iso8601_negative_offset_without_colon,
     ft_errno = FT_ERR_TERMINATED;
     parse_result = time_parse_iso8601("2024-03-01T10:04:56Z", &base_time, &base_timestamp);
     FT_ASSERT(parse_result == true);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
 
     ft_errno = FT_ERR_ALREADY_EXISTS;
     parse_result = time_parse_iso8601("2024-03-01T03:04:56-0700", &offset_time, &offset_timestamp);
     FT_ASSERT(parse_result == true);
-    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
 
     FT_ASSERT_EQ(base_timestamp, offset_timestamp);
     FT_ASSERT_EQ(base_time.tm_year, offset_time.tm_year);
@@ -81,12 +81,12 @@ FT_TEST(test_time_parse_iso8601_rejects_out_of_range_offset,
     ft_memset(&parsed_time, 0, sizeof(parsed_time));
     parsed_timestamp = 0;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     parse_result = time_parse_iso8601("2024-03-01T12:34:56+25:00", &parsed_time, &parsed_timestamp);
     FT_ASSERT_EQ(false, parse_result);
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     parse_result = time_parse_iso8601("2024-03-01T12:34:56-07:61", &parsed_time, &parsed_timestamp);
     FT_ASSERT_EQ(false, parse_result);
     FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);

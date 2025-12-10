@@ -7,7 +7,7 @@ double math_exp(double value)
     double result;
     int    iteration;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     current_term = 1.0;
     result = 1.0;
     iteration = 1;

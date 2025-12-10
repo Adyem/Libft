@@ -35,7 +35,7 @@ int math_lcm(int first_number, int second_number)
     greatest_common_divisor = math_gcd(first_number, second_number);
     if (greatest_common_divisor == 0)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     magnitude_first = math_lcm_magnitude(static_cast<long long>(first_number));
@@ -48,7 +48,7 @@ int math_lcm(int first_number, int second_number)
         return (0);
     }
     result_value = quotient * magnitude_second;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (static_cast<int>(result_value));
 }
 
@@ -64,7 +64,7 @@ long math_lcm(long first_number, long second_number)
     greatest_common_divisor = math_gcd(first_number, second_number);
     if (greatest_common_divisor == 0)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     magnitude_first = math_lcm_magnitude(static_cast<long long>(first_number));
@@ -77,7 +77,7 @@ long math_lcm(long first_number, long second_number)
         return (0);
     }
     result_value = quotient * magnitude_second;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (static_cast<long>(result_value));
 }
 
@@ -93,7 +93,7 @@ long long   math_lcm(long long first_number, long long second_number)
     greatest_common_divisor = math_gcd(first_number, second_number);
     if (greatest_common_divisor == 0)
     {
-        ft_errno = ER_SUCCESS;
+        ft_errno = FT_ER_SUCCESSS;
         return (0);
     }
     magnitude_first = math_lcm_magnitude(first_number);
@@ -106,7 +106,7 @@ long long   math_lcm(long long first_number, long long second_number)
         return (0);
     }
     result_value = quotient * magnitude_second;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ER_SUCCESSS;
     return (static_cast<long long>(result_value));
 }
 
