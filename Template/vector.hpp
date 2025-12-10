@@ -393,6 +393,7 @@ int ft_vector<ElementType>::lock(bool *lock_acquired) const
 {
     int result;
 
+    ft_errno = FT_ER_SUCCESSS;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
         const_cast<ft_vector<ElementType> *>(this)->set_error(ft_errno);
@@ -404,17 +405,12 @@ int ft_vector<ElementType>::lock(bool *lock_acquired) const
 template <typename ElementType>
 void ft_vector<ElementType>::unlock(bool lock_acquired) const
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
     this->unlock_internal(lock_acquired);
     if (this->_mutex != ft_nullptr && this->_mutex->get_error() != FT_ER_SUCCESSS)
         const_cast<ft_vector<ElementType> *>(this)->set_error(this->_mutex->get_error());
     else
-    {
-        ft_errno = entry_errno;
         const_cast<ft_vector<ElementType> *>(this)->set_error(ft_errno);
-    }
     return ;
 }
 
@@ -634,6 +630,7 @@ void ft_vector<ElementType>::reserve_internal_unlocked(size_t new_capacity)
 template <typename ElementType>
 int ft_vector<ElementType>::lock_internal(bool *lock_acquired) const
 {
+    ft_errno = FT_ER_SUCCESSS;
     if (lock_acquired)
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
@@ -667,18 +664,15 @@ int ft_vector<ElementType>::lock_internal(bool *lock_acquired) const
 template <typename ElementType>
 void ft_vector<ElementType>::unlock_internal(bool lock_acquired) const
 {
-    int entry_errno;
-
     if (!lock_acquired || this->_mutex == ft_nullptr)
         return ;
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
     this->_mutex->unlock(THREAD_ID);
     if (this->_mutex->get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = this->_mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
     return ;
 }
 

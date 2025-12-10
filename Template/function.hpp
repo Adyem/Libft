@@ -573,10 +573,9 @@ bool ft_function<ReturnType(Args...)>::is_thread_safe_enabled() const
 template <typename ReturnType, typename... Args>
 int ft_function<ReturnType(Args...)>::lock(bool *lock_acquired) const
 {
-    int entry_errno;
     int result;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
     {
@@ -584,22 +583,19 @@ int ft_function<ReturnType(Args...)>::lock(bool *lock_acquired) const
         return (result);
     }
     this->_error_code = FT_ER_SUCCESSS;
-    ft_errno = entry_errno;
     return (result);
 }
 
 template <typename ReturnType, typename... Args>
 void ft_function<ReturnType(Args...)>::unlock(bool lock_acquired) const
 {
-    int entry_errno;
     int mutex_error;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
     this->unlock_internal(lock_acquired);
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
     {
         this->_error_code = FT_ER_SUCCESSS;
-        ft_errno = entry_errno;
         return ;
     }
     mutex_error = this->_state_mutex->get_error();
@@ -609,13 +605,14 @@ void ft_function<ReturnType(Args...)>::unlock(bool lock_acquired) const
         return ;
     }
     this->_error_code = FT_ER_SUCCESSS;
-    ft_errno = entry_errno;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 
 template <typename ReturnType, typename... Args>
 int ft_function<ReturnType(Args...)>::lock_internal(bool *lock_acquired) const
 {
+    ft_errno = FT_ER_SUCCESSS;
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
@@ -643,18 +640,15 @@ int ft_function<ReturnType(Args...)>::lock_internal(bool *lock_acquired) const
 template <typename ReturnType, typename... Args>
 void ft_function<ReturnType(Args...)>::unlock_internal(bool lock_acquired) const
 {
-    int entry_errno;
-
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
         return ;
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
     this->_state_mutex->unlock(THREAD_ID);
     if (this->_state_mutex->get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = this->_state_mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
     return ;
 }
 

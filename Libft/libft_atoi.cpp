@@ -13,12 +13,12 @@ int    ft_atoi(const char *string)
     bool    digit_found = false;
     bool    whitespace_found = false;
 
+    ft_errno = FT_ER_SUCCESSS;
     if (string == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
-    ft_errno = FT_ER_SUCCESSS;
     while (string[index] == ' ' || ((string[index] >= '\t')
                 && (string[index] <= '\r')))
     {
@@ -77,6 +77,16 @@ int    ft_atoi(const char *string)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
     if (whitespace_found == true && ft_errno == FT_ER_SUCCESSS)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
+    if (ft_errno != FT_ER_SUCCESSS)
+    {
+        if (sign == -1)
+        {
+            long long signed_result = -static_cast<long long>(result);
+
+            return (static_cast<int>(signed_result));
+        }
+        return (static_cast<int>(result));
+    }
     if (sign == -1)
     {
         long long signed_result = -static_cast<long long>(result);

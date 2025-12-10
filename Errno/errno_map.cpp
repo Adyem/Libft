@@ -3,7 +3,11 @@
 
 int ft_map_system_error(int error_code)
 {
-    return (cmp_map_system_error_to_ft(error_code));
+    int mapped_error;
+
+    mapped_error = cmp_map_system_error_to_ft(error_code);
+    ft_errno = FT_ER_SUCCESSS;
+    return (mapped_error);
 }
 
 int ft_set_errno_from_system_error(int error_code)

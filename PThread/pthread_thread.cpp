@@ -267,10 +267,9 @@ bool ft_thread::is_thread_safe_enabled() const
 
 int ft_thread::lock(bool *lock_acquired) const
 {
-    int entry_errno;
     int result;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
     {
@@ -278,21 +277,19 @@ int ft_thread::lock(bool *lock_acquired) const
         return (result);
     }
     this->_error_code = FT_ER_SUCCESSS;
-    ft_errno = entry_errno;
     return (result);
 }
 
 void ft_thread::unlock(bool lock_acquired) const
 {
-    int entry_errno;
     int mutex_error;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
     this->unlock_internal(lock_acquired);
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
     {
         this->_error_code = FT_ER_SUCCESSS;
-        ft_errno = entry_errno;
+        ft_errno = FT_ER_SUCCESSS;
         return ;
     }
     mutex_error = this->_state_mutex->get_error();
@@ -303,7 +300,7 @@ void ft_thread::unlock(bool lock_acquired) const
         return ;
     }
     this->_error_code = FT_ER_SUCCESSS;
-    ft_errno = entry_errno;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 

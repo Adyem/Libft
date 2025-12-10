@@ -96,7 +96,8 @@ ft_region_definition::ft_region_definition(const ft_region_definition &other) no
 {
     int entry_errno;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ER_SUCCESSS)
     {
@@ -122,7 +123,8 @@ ft_region_definition &ft_region_definition::operator=(const ft_region_definition
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     lock_error = ft_region_definition::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ER_SUCCESSS)
     {
@@ -206,7 +208,8 @@ int ft_region_definition::get_region_id() const noexcept
     int entry_errno;
     int region_id;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ER_SUCCESSS)
     {
@@ -223,7 +226,8 @@ void ft_region_definition::set_region_id(int region_id) noexcept
 {
     int entry_errno;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ER_SUCCESSS)
     {
@@ -242,7 +246,8 @@ const ft_string &ft_region_definition::get_name() const noexcept
     int entry_errno;
     const ft_string *name;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ER_SUCCESSS)
     {
@@ -259,7 +264,8 @@ void ft_region_definition::set_name(const ft_string &name) noexcept
 {
     int entry_errno;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ER_SUCCESSS)
     {
@@ -278,7 +284,8 @@ const ft_string &ft_region_definition::get_description() const noexcept
     int entry_errno;
     const ft_string *description;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ER_SUCCESSS)
     {
@@ -295,7 +302,8 @@ void ft_region_definition::set_description(const ft_string &description) noexcep
 {
     int entry_errno;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ER_SUCCESSS)
     {
@@ -314,7 +322,8 @@ int ft_region_definition::get_recommended_level() const noexcept
     int entry_errno;
     int recommended_level;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ER_SUCCESSS)
     {
@@ -331,7 +340,8 @@ void ft_region_definition::set_recommended_level(int recommended_level) noexcept
 {
     int entry_errno;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ER_SUCCESSS)
     {
@@ -350,7 +360,8 @@ int ft_region_definition::get_error() const noexcept
     int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ER_SUCCESSS)
     {

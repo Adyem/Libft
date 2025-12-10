@@ -12,9 +12,22 @@ static void game_reputation_sleep_backoff()
 static void game_reputation_restore_errno(ft_unique_lock<pt_mutex> &guard,
         int entry_errno)
 {
+    int unlock_error;
+
+    (void)entry_errno;
+    unlock_error = FT_ER_SUCCESSS;
     if (guard.owns_lock())
+    {
         guard.unlock();
-    ft_errno = entry_errno;
+        unlock_error = guard.get_error();
+    }
+    if (unlock_error != FT_ER_SUCCESSS)
+    {
+        ft_errno = unlock_error;
+        return ;
+    }
+    if (ft_errno == FT_ER_SUCCESSS)
+        ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 
@@ -94,7 +107,8 @@ ft_reputation::ft_reputation() noexcept
 {
     int entry_errno;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     if (this->_milestones.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(this->_milestones.get_error());
@@ -118,7 +132,8 @@ ft_reputation::ft_reputation(const ft_map<int, int> &milestones, int total) noex
 {
     int entry_errno;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ER_SUCCESSS;
     if (this->_milestones.get_error() != FT_ER_SUCCESSS)
     {
         this->set_error(this->_milestones.get_error());
