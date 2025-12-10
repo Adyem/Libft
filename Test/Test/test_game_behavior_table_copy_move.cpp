@@ -1,4 +1,5 @@
 #include "../../Game/game_behavior_table.hpp"
+#include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
 
 static int register_profile(ft_behavior_table &table, int id, double aggression, double caution)
@@ -35,7 +36,8 @@ FT_TEST(test_behavior_table_move_semantics, "move constructor and assignment tra
     return (1);
 }
 
-FT_TEST(test_behavior_table_copy_constructor, "copy constructor clones profiles and preserves error code")
+FT_TEST(test_behavior_table_copy_constructor_reset_errno,
+        "copy constructor clones profiles and resets ft_errno to success")
 {
     ft_behavior_table source;
     ft_behavior_profile fetched;
@@ -43,15 +45,18 @@ FT_TEST(test_behavior_table_copy_constructor, "copy constructor clones profiles 
     FT_ASSERT_EQ(ER_SUCCESS, register_profile(source, 30, 0.8, 0.2));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, source.fetch_profile(99, fetched));
 
+    ft_errno = FT_ERR_ALREADY_INITIALIZED;
     ft_behavior_table copy(source);
     FT_ASSERT_EQ(ER_SUCCESS, copy.fetch_profile(30, fetched));
     FT_ASSERT_EQ(30, fetched.get_profile_id());
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, copy.get_error());
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, source.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
-FT_TEST(test_behavior_table_copy_assignment, "copy assignment replaces profiles and error state")
+FT_TEST(test_behavior_table_copy_assignment_reset_errno,
+        "copy assignment replaces profiles and resets ft_errno to success")
 {
     ft_behavior_table source;
     ft_behavior_table destination;
@@ -61,11 +66,13 @@ FT_TEST(test_behavior_table_copy_assignment, "copy assignment replaces profiles 
     FT_ASSERT_EQ(ER_SUCCESS, register_profile(destination, 50, 0.6, 0.4));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, source.fetch_profile(77, fetched));
 
+    ft_errno = FT_ERR_CRYPTO_INVALID_PADDING;
     destination = source;
     FT_ASSERT_EQ(ER_SUCCESS, destination.fetch_profile(44, fetched));
     FT_ASSERT_EQ(44, fetched.get_profile_id());
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, destination.fetch_profile(50, fetched));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, destination.get_error());
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, source.get_error());
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }

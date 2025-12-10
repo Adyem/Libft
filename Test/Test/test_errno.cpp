@@ -73,20 +73,21 @@ static bool capture_ft_exit_output(const char *message, int errno_value, int exi
     return (true);
 }
 
-FT_TEST(test_ft_strerror_errno_message, "ft_strerror returns standard errno message")
+FT_TEST(test_ft_strerror_sets_success_errno, "ft_strerror returns message and resets errno to success")
 {
     const char *expected_message;
     const char *actual_message;
     int         previous_errno;
 
     expected_message = strerror(EINVAL);
-    previous_errno = FT_ERR_INVALID_ARGUMENT;
+    previous_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
     ft_errno = previous_errno;
     actual_message = ft_strerror(FT_ERR_INVALID_ARGUMENT);
     FT_ASSERT(expected_message != NULL);
     FT_ASSERT(actual_message != NULL);
     FT_ASSERT_EQ(0, std::strcmp(expected_message, actual_message));
-    FT_ASSERT_EQ(previous_errno, ft_errno);
+    FT_ASSERT_NE(previous_errno, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -146,16 +147,14 @@ FT_TEST(test_ft_errno_is_thread_local, "ft_errno maintains independent values pe
     return (1);
 }
 
-FT_TEST(test_ft_perror_null_message_outputs_errno, "ft_perror prints strerror when message is null")
+FT_TEST(test_ft_perror_null_message_resets_errno, "ft_perror prints strerror when message is null and clears errno")
 {
     int     pipe_fds[2];
     int     saved_stderr;
     ssize_t read_count;
     char    buffer[256];
-    int     original_errno_value;
     const char *expected_message;
 
-    original_errno_value = ft_errno;
     expected_message = ft_strerror(FT_ERR_INVALID_ARGUMENT);
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(0, pipe(pipe_fds));
@@ -170,25 +169,23 @@ FT_TEST(test_ft_perror_null_message_outputs_errno, "ft_perror prints strerror wh
     FT_ASSERT(read_count > 0);
     buffer[read_count] = '\0';
     FT_ASSERT(std::strstr(buffer, expected_message) != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
 
     FT_ASSERT(dup2(saved_stderr, 2) >= 0);
     close(saved_stderr);
     close(pipe_fds[0]);
-    ft_errno = original_errno_value;
     return (1);
 }
 
-FT_TEST(test_ft_perror_prefixes_custom_message, "ft_perror prefixes custom text before strerror output")
+FT_TEST(test_ft_perror_prefixes_custom_message_resets_errno,
+    "ft_perror prefixes custom text before strerror output and clears errno")
 {
     int     pipe_fds[2];
     int     saved_stderr;
     ssize_t read_count;
     char    buffer[256];
-    int     original_errno_value;
     const char *expected_message;
 
-    original_errno_value = ft_errno;
     expected_message = ft_strerror(FT_ERR_IO);
     ft_errno = FT_ERR_IO;
     FT_ASSERT_EQ(0, pipe(pipe_fds));
@@ -204,12 +201,11 @@ FT_TEST(test_ft_perror_prefixes_custom_message, "ft_perror prefixes custom text 
     buffer[read_count] = '\0';
     FT_ASSERT(std::strstr(buffer, "custom context: ") != ft_nullptr);
     FT_ASSERT(std::strstr(buffer, expected_message) != ft_nullptr);
-    FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
 
     FT_ASSERT(dup2(saved_stderr, 2) >= 0);
     close(saved_stderr);
     close(pipe_fds[0]);
-    ft_errno = original_errno_value;
     return (1);
 }
 
@@ -335,29 +331,29 @@ FT_TEST(test_ft_set_errno_from_system_error_updates_global,
     return (1);
 }
 
-FT_TEST(test_ft_exit_message_without_errno, "ft_exit prints message without strerror when errno indicates success")
+FT_TEST(test_ft_exit_message_without_errno_sets_success,
+    "ft_exit prints message without strerror and resets errno to success")
 {
     std::string captured_output;
     int         child_status;
-    int         original_errno_value;
 
-    original_errno_value = ft_errno;
+    ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
     FT_ASSERT(capture_ft_exit_output("shutting down", ER_SUCCESS, 23, captured_output, child_status));
     FT_ASSERT(WIFEXITED(child_status));
     FT_ASSERT_EQ(23, WEXITSTATUS(child_status));
     FT_ASSERT_EQ(std::string("shutting down\n"), captured_output);
-    FT_ASSERT_EQ(original_errno_value, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
-FT_TEST(test_ft_exit_message_with_errno, "ft_exit appends strerror details when errno set")
+FT_TEST(test_ft_exit_message_with_errno_sets_success,
+    "ft_exit appends strerror details and resets errno to success")
 {
     std::string captured_output;
     int         child_status;
     const char *expected_error_message;
-    int         original_errno_value;
 
-    original_errno_value = ft_errno;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     expected_error_message = ft_strerror(FT_ERR_IO);
     FT_ASSERT(capture_ft_exit_output("fatal failure", FT_ERR_IO, 90, captured_output, child_status));
     FT_ASSERT(WIFEXITED(child_status));
@@ -366,19 +362,19 @@ FT_TEST(test_ft_exit_message_with_errno, "ft_exit appends strerror details when 
     FT_ASSERT(captured_output.find("fatal failure: ") != std::string::npos);
     FT_ASSERT(captured_output.find(expected_error_message) != std::string::npos);
     FT_ASSERT_EQ('\n', captured_output.back());
-    FT_ASSERT_EQ(original_errno_value, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
-FT_TEST(test_ft_exit_without_message_outputs_errno, "ft_exit prints strerror when no message provided")
+FT_TEST(test_ft_exit_without_message_sets_success,
+    "ft_exit prints strerror when no message is provided and resets errno to success")
 {
     std::string captured_output;
     int         child_status;
     const char *expected_error_message;
     std::string expected_output;
-    int         original_errno_value;
 
-    original_errno_value = ft_errno;
+    ft_errno = FT_ERR_FILE_OPEN_FAILED;
     expected_error_message = ft_strerror(FT_ERR_INVALID_ARGUMENT);
     expected_output = expected_error_message;
     expected_output.push_back('\n');
@@ -386,6 +382,6 @@ FT_TEST(test_ft_exit_without_message_outputs_errno, "ft_exit prints strerror whe
     FT_ASSERT(WIFEXITED(child_status));
     FT_ASSERT_EQ(7, WEXITSTATUS(child_status));
     FT_ASSERT_EQ(expected_output, captured_output);
-    FT_ASSERT_EQ(original_errno_value, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }

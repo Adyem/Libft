@@ -127,7 +127,7 @@ FT_TEST(test_dialogue_line_move_constructor_clears_source, "move constructor tra
     return (1);
 }
 
-FT_TEST(test_dialogue_line_self_assignment_retains_state, "self copy assignment preserves existing dialogue data")
+FT_TEST(test_dialogue_line_self_assignment_resets_errno, "self copy assignment retains dialogue data but resets errno to success")
 {
     ft_vector<int> next_lines;
     ft_dialogue_line line;
@@ -136,7 +136,7 @@ FT_TEST(test_dialogue_line_self_assignment_retains_state, "self copy assignment 
     line = ft_dialogue_line(8, ft_string("ally"), ft_string("hint"), next_lines);
     ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
     line = line;
-    FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(8, line.get_line_id());
     FT_ASSERT_EQ(ft_string("ally"), line.get_speaker());
     FT_ASSERT_EQ(ft_string("hint"), line.get_text());
@@ -146,7 +146,7 @@ FT_TEST(test_dialogue_line_self_assignment_retains_state, "self copy assignment 
     return (1);
 }
 
-FT_TEST(test_dialogue_line_getters_leave_errno_unchanged, "getters restore incoming errno after access")
+FT_TEST(test_dialogue_line_getters_reset_errno_to_success, "getters reset errno to success after access")
 {
     ft_vector<int> next_lines;
     ft_dialogue_line line;
@@ -159,7 +159,7 @@ FT_TEST(test_dialogue_line_getters_leave_errno_unchanged, "getters restore incom
     FT_ASSERT_EQ(ft_string("tip"), line.get_text());
     FT_ASSERT_EQ(1ul, line.get_next_line_ids().size());
     FT_ASSERT_EQ(21, line.get_next_line_ids()[0]);
-    FT_ASSERT_EQ(FT_ERR_CONFIGURATION, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(ER_SUCCESS, line.get_error());
     return (1);
 }
