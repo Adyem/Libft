@@ -14,7 +14,7 @@ static void game_equipment_restore_errno(ft_unique_lock<pt_mutex> &guard,
 {
     if (guard.owns_lock())
         guard.unlock();
-    ft_errno = entry_errno;
+    (void)entry_errno;
     return ;
 }
 

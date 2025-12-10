@@ -529,6 +529,7 @@ static int  compression_stream_validate_tuning(const t_compress_stream_options *
     s_compress_stream_options_snapshot snapshot;
 
     compression_stream_init_snapshot(&snapshot);
+    ft_errno = FT_ER_SUCCESSS;
     if (options == ft_nullptr)
         return (0);
     if (options->snapshot(&snapshot) != FT_ER_SUCCESSS)
@@ -806,6 +807,7 @@ int ft_compress_stream_with_options(int input_fd, int output_fd, const t_compres
     ssize_t         read_bytes;
     t_compress_stream_progress    progress;
 
+    ft_errno = FT_ER_SUCCESSS;
     if (input_fd < 0 || output_fd < 0)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
@@ -940,6 +942,7 @@ int ft_decompress_stream_with_options(int input_fd, int output_fd, const t_compr
     int             read_any_input;
     t_compress_stream_progress    progress;
 
+    ft_errno = FT_ER_SUCCESSS;
     if (input_fd < 0 || output_fd < 0)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;

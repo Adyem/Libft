@@ -237,7 +237,7 @@ void ft_file_watch::stop()
     if (status != FT_ER_SUCCESSS)
         final_errno = status;
     else
-        final_errno = entry_errno;
+        final_errno = FT_ER_SUCCESSS;
     ft_errno = final_errno;
     return ;
 }
@@ -389,7 +389,7 @@ int ft_file_watch::get_error() const
     }
     error_code = this->_error_code;
     mutex_guard.unlock();
-    ft_errno = entry_errno;
+    ft_errno = FT_ER_SUCCESSS;
     return (error_code);
 }
 
@@ -408,7 +408,7 @@ const char *ft_file_watch::get_error_str() const
     error_code = this->_error_code;
     error_string = ft_strerror(error_code);
     mutex_guard.unlock();
-    ft_errno = entry_errno;
+    ft_errno = FT_ER_SUCCESSS;
     return (error_string);
 }
 

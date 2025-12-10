@@ -64,6 +64,7 @@ int html_attr_lock(const html_attr *attribute, bool *lock_acquired)
     html_attr *mutable_attribute;
     int        entry_errno;
 
+    ft_errno = FT_ER_SUCCESSS;
     if (lock_acquired)
         *lock_acquired = false;
     if (!attribute)
@@ -71,7 +72,7 @@ int html_attr_lock(const html_attr *attribute, bool *lock_acquired)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    entry_errno = ft_errno;
+    entry_errno = FT_ER_SUCCESSS;
     mutable_attribute = const_cast<html_attr *>(attribute);
     if (!mutable_attribute->thread_safe_enabled || !mutable_attribute->mutex)
     {
@@ -95,12 +96,16 @@ void html_attr_unlock(const html_attr *attribute, bool lock_acquired)
     html_attr *mutable_attribute;
     int        entry_errno;
 
+    ft_errno = FT_ER_SUCCESSS;
     if (!attribute || !lock_acquired)
+    {
+        ft_errno = FT_ER_SUCCESSS;
         return ;
+    }
     mutable_attribute = const_cast<html_attr *>(attribute);
     if (!mutable_attribute->mutex)
         return ;
-    entry_errno = ft_errno;
+    entry_errno = FT_ER_SUCCESSS;
     mutable_attribute->mutex->unlock(THREAD_ID);
     if (mutable_attribute->mutex->get_error() != FT_ER_SUCCESSS)
     {

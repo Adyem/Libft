@@ -390,10 +390,9 @@ bool ft_blocking_queue<ElementType>::is_thread_safe_enabled() const
 template <typename ElementType>
 int ft_blocking_queue<ElementType>::lock(bool *lock_acquired) const
 {
-    int entry_errno;
     int result;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
     {
@@ -401,17 +400,15 @@ int ft_blocking_queue<ElementType>::lock(bool *lock_acquired) const
         return (result);
     }
     const_cast<ft_blocking_queue<ElementType> *>(this)->set_error(FT_ER_SUCCESSS);
-    ft_errno = entry_errno;
     return (result);
 }
 
 template <typename ElementType>
 void ft_blocking_queue<ElementType>::unlock(bool lock_acquired) const
 {
-    int entry_errno;
     int state_error;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
     this->unlock_internal(lock_acquired);
     if (this->_state_mutex != ft_nullptr)
     {
@@ -423,7 +420,7 @@ void ft_blocking_queue<ElementType>::unlock(bool lock_acquired) const
         }
     }
     const_cast<ft_blocking_queue<ElementType> *>(this)->set_error(FT_ER_SUCCESSS);
-    ft_errno = entry_errno;
+    ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 

@@ -18,13 +18,14 @@ struct xml_namespace_entry
 };
 
 xml_document::thread_guard::thread_guard(const xml_document *document) noexcept
-    : _document(document), _lock_acquired(false), _status(0), _entry_errno(ft_errno)
+    : _document(document), _lock_acquired(false), _status(0)
 {
+    ft_errno = FT_ER_SUCCESSS;
     if (!this->_document)
         return ;
     this->_status = this->_document->lock(&this->_lock_acquired);
     if (this->_status == 0)
-        ft_errno = this->_entry_errno;
+        ft_errno = FT_ER_SUCCESSS;
     return ;
 }
 

@@ -70,8 +70,8 @@ void    time_monotonic_point_teardown_thread_safety(t_monotonic_time_point *time
 int time_monotonic_point_lock(const t_monotonic_time_point *time_point, bool *lock_acquired)
 {
     t_monotonic_time_point  *mutable_point;
-    int                      entry_errno;
 
+    ft_errno = FT_ER_SUCCESSS;
     if (lock_acquired)
         *lock_acquired = false;
     if (!time_point)
@@ -79,11 +79,9 @@ int time_monotonic_point_lock(const t_monotonic_time_point *time_point, bool *lo
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    entry_errno = ft_errno;
     mutable_point = const_cast<t_monotonic_time_point *>(time_point);
     if (!mutable_point->thread_safe_enabled || !mutable_point->mutex)
     {
-        ft_errno = entry_errno;
         return (0);
     }
     mutable_point->mutex->lock(THREAD_ID);
@@ -94,28 +92,25 @@ int time_monotonic_point_lock(const t_monotonic_time_point *time_point, bool *lo
     }
     if (lock_acquired)
         *lock_acquired = true;
-    ft_errno = entry_errno;
     return (0);
 }
 
 void    time_monotonic_point_unlock(const t_monotonic_time_point *time_point, bool lock_acquired)
 {
     t_monotonic_time_point  *mutable_point;
-    int                      entry_errno;
 
     if (!time_point || !lock_acquired)
         return ;
     mutable_point = const_cast<t_monotonic_time_point *>(time_point);
     if (!mutable_point->mutex)
         return ;
-    entry_errno = ft_errno;
+    ft_errno = FT_ER_SUCCESSS;
     mutable_point->mutex->unlock(THREAD_ID);
     if (mutable_point->mutex->get_error() != FT_ER_SUCCESSS)
     {
         ft_errno = mutable_point->mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
     return ;
 }
 

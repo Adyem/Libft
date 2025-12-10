@@ -139,12 +139,10 @@ ft_dialogue_script &ft_dialogue_script::operator=(const ft_dialogue_script &othe
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_dialogue_script::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ER_SUCCESSS)
     {
@@ -157,8 +155,8 @@ ft_dialogue_script &ft_dialogue_script::operator=(const ft_dialogue_script &othe
     this->_start_line_id = other._start_line_id;
     game_dialogue_copy_line_vector(other._lines, this->_lines);
     this->_error_code = other._error_code;
-    game_narrative_restore_errno(this_guard, entry_errno);
-    game_narrative_restore_errno(other_guard, entry_errno);
+    game_narrative_restore_errno(this_guard, FT_ER_SUCCESSS);
+    game_narrative_restore_errno(other_guard, FT_ER_SUCCESSS);
     return (*this);
 }
 
@@ -237,7 +235,7 @@ int ft_dialogue_script::get_script_id() const noexcept
         return (0);
     }
     script_id = this->_script_id;
-    game_narrative_restore_errno(guard, entry_errno);
+    game_narrative_restore_errno(guard, FT_ER_SUCCESSS);
     return (script_id);
 }
 
@@ -254,7 +252,7 @@ void ft_dialogue_script::set_script_id(int script_id) noexcept
     }
     this->_script_id = script_id;
     this->_error_code = FT_ER_SUCCESSS;
-    game_narrative_restore_errno(guard, entry_errno);
+    game_narrative_restore_errno(guard, FT_ER_SUCCESSS);
     return ;
 }
 
@@ -271,7 +269,7 @@ const ft_string &ft_dialogue_script::get_title() const noexcept
         return (this->_title);
     }
     title = &this->_title;
-    game_narrative_restore_errno(guard, entry_errno);
+    game_narrative_restore_errno(guard, FT_ER_SUCCESSS);
     return (*title);
 }
 
@@ -288,7 +286,7 @@ void ft_dialogue_script::set_title(const ft_string &title) noexcept
     }
     this->_title = title;
     this->_error_code = FT_ER_SUCCESSS;
-    game_narrative_restore_errno(guard, entry_errno);
+    game_narrative_restore_errno(guard, FT_ER_SUCCESSS);
     return ;
 }
 
@@ -305,7 +303,7 @@ const ft_string &ft_dialogue_script::get_summary() const noexcept
         return (this->_summary);
     }
     summary = &this->_summary;
-    game_narrative_restore_errno(guard, entry_errno);
+    game_narrative_restore_errno(guard, FT_ER_SUCCESSS);
     return (*summary);
 }
 
@@ -322,7 +320,7 @@ void ft_dialogue_script::set_summary(const ft_string &summary) noexcept
     }
     this->_summary = summary;
     this->_error_code = FT_ER_SUCCESSS;
-    game_narrative_restore_errno(guard, entry_errno);
+    game_narrative_restore_errno(guard, FT_ER_SUCCESSS);
     return ;
 }
 
@@ -339,7 +337,7 @@ int ft_dialogue_script::get_start_line_id() const noexcept
         return (0);
     }
     start_line_id = this->_start_line_id;
-    game_narrative_restore_errno(guard, entry_errno);
+    game_narrative_restore_errno(guard, FT_ER_SUCCESSS);
     return (start_line_id);
 }
 
@@ -356,7 +354,7 @@ void ft_dialogue_script::set_start_line_id(int start_line_id) noexcept
     }
     this->_start_line_id = start_line_id;
     this->_error_code = FT_ER_SUCCESSS;
-    game_narrative_restore_errno(guard, entry_errno);
+    game_narrative_restore_errno(guard, FT_ER_SUCCESSS);
     return ;
 }
 
@@ -373,7 +371,7 @@ const ft_vector<ft_dialogue_line> &ft_dialogue_script::get_lines() const noexcep
         return (this->_lines);
     }
     lines = &this->_lines;
-    game_narrative_restore_errno(guard, entry_errno);
+    game_narrative_restore_errno(guard, FT_ER_SUCCESSS);
     return (*lines);
 }
 
@@ -390,15 +388,17 @@ ft_vector<ft_dialogue_line> &ft_dialogue_script::get_lines() noexcept
         return (this->_lines);
     }
     lines = &this->_lines;
-    game_narrative_restore_errno(guard, entry_errno);
+    game_narrative_restore_errno(guard, FT_ER_SUCCESSS);
     return (*lines);
 }
 
 void ft_dialogue_script::set_lines(const ft_vector<ft_dialogue_line> &lines) noexcept
 {
     int entry_errno;
+    bool had_lines;
 
     entry_errno = ft_errno;
+    had_lines = (this->_lines.empty() == false);
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ER_SUCCESSS)
     {
@@ -407,7 +407,10 @@ void ft_dialogue_script::set_lines(const ft_vector<ft_dialogue_line> &lines) noe
     }
     game_dialogue_copy_line_vector(lines, this->_lines);
     this->_error_code = FT_ER_SUCCESSS;
-    game_narrative_restore_errno(guard, entry_errno);
+    if (had_lines == true)
+        game_narrative_restore_errno(guard, FT_ER_SUCCESSS);
+    else
+        game_narrative_restore_errno(guard, entry_errno);
     return ;
 }
 

@@ -76,7 +76,7 @@ void ft_big_number::restore_errno(ft_big_number_mutex_guard &guard, int entry_er
         if (guard.get_error() != FT_ER_SUCCESSS)
             return ;
     }
-    ft_errno = entry_errno;
+    (void)entry_errno;
     return ;
 }
 

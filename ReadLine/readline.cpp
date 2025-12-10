@@ -46,6 +46,7 @@ char *rl_readline(const char *prompt)
 {
     readline_state_t     state;
 
+    ft_errno = FT_ER_SUCCESSS;
     if (rl_initialize_state(&state))
         return (ft_nullptr);
     pf_printf("%s", prompt);
