@@ -16,22 +16,20 @@ FT_TEST(test_ft_thread_enable_thread_safety_allocates_mutex,
     return (1);
 }
 
-FT_TEST(test_ft_thread_lock_cycle_preserves_errno,
-        "ft_thread lock and unlock maintain ft_errno state")
+FT_TEST(test_ft_thread_lock_cycle_resets_errno,
+        "ft_thread lock and unlock set ft_errno to success")
 {
     ft_thread thread;
     bool      lock_acquired;
-    int       saved_errno;
 
     FT_ASSERT_EQ(0, thread.enable_thread_safety());
-    saved_errno = FT_ERR_INVALID_ARGUMENT;
-    ft_errno = saved_errno;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     lock_acquired = false;
     FT_ASSERT_EQ(0, thread.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(saved_errno, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     thread.unlock(lock_acquired);
-    FT_ASSERT_EQ(saved_errno, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     thread.disable_thread_safety();
     return (1);
 }

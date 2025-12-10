@@ -82,15 +82,15 @@ FT_TEST(test_socket_config_lock_handles_disabled_safety,
     return (1);
 }
 
-FT_TEST(test_socket_config_unlock_preserves_errno_without_lock,
-    "socket_config_unlock keeps errno unchanged when lock not held")
+FT_TEST(test_socket_config_unlock_resets_errno_without_lock,
+    "socket_config_unlock sets errno to success when lock not held")
 {
     SocketConfig config;
 
     socket_config_teardown_thread_safety(&config);
     ft_errno = FT_ERR_SOCKET_ACCEPT_FAILED;
     socket_config_unlock(&config, false);
-    FT_ASSERT_EQ(FT_ERR_SOCKET_ACCEPT_FAILED, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
@@ -130,7 +130,7 @@ FT_TEST(test_socket_config_teardown_resets_state,
     FT_ASSERT_EQ(false, lock_acquired);
     ft_errno = FT_ERR_SOCKET_BIND_FAILED;
     socket_config_teardown_thread_safety(&config);
-    FT_ASSERT_EQ(FT_ERR_SOCKET_BIND_FAILED, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 

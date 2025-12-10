@@ -164,11 +164,11 @@ FT_TEST(test_time_timer_sleep_remaining_waits_until_finished, "time_timer::sleep
     return (1);
 }
 
-FT_TEST(test_time_timer_sleep_remaining_preserves_error_on_inactive_timer, "time_timer::sleep_remaining leaves errors when timer is inactive")
+FT_TEST(test_time_timer_sleep_remaining_sets_error_on_inactive_timer, "time_timer::sleep_remaining sets errno when timer is inactive")
 {
     time_timer timer;
 
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ERR_CONFIGURATION;
     timer.sleep_remaining();
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, timer.get_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);

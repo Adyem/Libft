@@ -35,23 +35,21 @@ FT_TEST(test_time_monotonic_point_prepare_thread_safety_enables_mutex,
     return (1);
 }
 
-FT_TEST(test_time_monotonic_point_lock_cycle_preserves_errno,
-        "time_monotonic_point lock and unlock maintain ft_errno state")
+FT_TEST(test_time_monotonic_point_lock_cycle_resets_errno,
+        "time_monotonic_point lock and unlock set ft_errno to success")
 {
     t_monotonic_time_point time_point;
     bool                   lock_acquired;
-    int                    saved_errno;
 
     time_point = time_monotonic_point_create(64);
     FT_ASSERT_EQ(0, time_monotonic_point_prepare_thread_safety(&time_point));
-    saved_errno = FT_ERR_INVALID_ARGUMENT;
-    ft_errno = saved_errno;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     lock_acquired = false;
     FT_ASSERT_EQ(0, time_monotonic_point_lock(&time_point, &lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(saved_errno, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     time_monotonic_point_unlock(&time_point, lock_acquired);
-    FT_ASSERT_EQ(saved_errno, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     time_monotonic_point_teardown_thread_safety(&time_point);
     return (1);
 }
@@ -70,23 +68,21 @@ FT_TEST(test_time_duration_prepare_thread_safety_enables_mutex,
     return (1);
 }
 
-FT_TEST(test_time_duration_lock_cycle_preserves_errno,
-        "time_duration_ms lock and unlock keep ft_errno unchanged")
+FT_TEST(test_time_duration_lock_cycle_resets_errno,
+        "time_duration_ms lock and unlock set ft_errno to success")
 {
     t_duration_milliseconds duration;
     bool                    lock_acquired;
-    int                     saved_errno;
 
     duration = time_duration_ms_create(250);
     FT_ASSERT_EQ(0, time_duration_ms_prepare_thread_safety(&duration));
-    saved_errno = FT_ERR_NO_MEMORY;
-    ft_errno = saved_errno;
+    ft_errno = FT_ERR_NO_MEMORY;
     lock_acquired = false;
     FT_ASSERT_EQ(0, time_duration_ms_lock(&duration, &lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(saved_errno, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     time_duration_ms_unlock(&duration, lock_acquired);
-    FT_ASSERT_EQ(saved_errno, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     time_duration_ms_teardown_thread_safety(&duration);
     return (1);
 }
@@ -105,23 +101,21 @@ FT_TEST(test_time_info_prepare_thread_safety_enables_mutex,
     return (1);
 }
 
-FT_TEST(test_time_info_lock_cycle_preserves_errno,
-        "time_info lock and unlock leave ft_errno unchanged")
+FT_TEST(test_time_info_lock_cycle_resets_errno,
+        "time_info lock and unlock set ft_errno to success")
 {
     t_time_info info;
     bool        lock_acquired;
-    int         saved_errno;
 
     info = create_thread_safe_time_info();
     FT_ASSERT_EQ(0, time_info_prepare_thread_safety(&info));
     lock_acquired = false;
-    saved_errno = FT_ERR_INVALID_STATE;
-    ft_errno = saved_errno;
+    ft_errno = FT_ERR_INVALID_STATE;
     FT_ASSERT_EQ(0, time_info_lock(&info, &lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(saved_errno, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     time_info_unlock(&info, lock_acquired);
-    FT_ASSERT_EQ(saved_errno, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     time_info_teardown_thread_safety(&info);
     return (1);
 }

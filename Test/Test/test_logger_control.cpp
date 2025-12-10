@@ -51,28 +51,23 @@ FT_TEST(test_logger_async_backpressure_metrics, "async logger reports queue drop
 FT_TEST(test_ft_log_set_level_updates_global_threshold, "ft_log_set_level updates g_level and clears errno")
 {
     t_log_level previous_level;
-    int         previous_errno_value;
 
     previous_level = g_level;
-    previous_errno_value = ft_errno;
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     ft_log_set_level(LOG_LEVEL_ERROR);
     FT_ASSERT_EQ(LOG_LEVEL_ERROR, g_level);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     g_level = previous_level;
-    ft_errno = previous_errno_value;
     return (1);
 }
 
 FT_TEST(test_ft_log_alloc_logging_without_global_logger, "ft_log_set_alloc_logging handles missing global logger")
 {
     ft_logger *previous_logger;
-    int         previous_errno_value;
 
     previous_logger = g_logger;
     FT_ASSERT(previous_logger == ft_nullptr);
     g_logger = ft_nullptr;
-    previous_errno_value = ft_errno;
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     ft_log_set_alloc_logging(true);
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
@@ -80,18 +75,15 @@ FT_TEST(test_ft_log_alloc_logging_without_global_logger, "ft_log_set_alloc_loggi
     FT_ASSERT_EQ(false, ft_log_get_alloc_logging());
     FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     g_logger = previous_logger;
-    ft_errno = previous_errno_value;
     return (1);
 }
 
 FT_TEST(test_ft_log_global_helpers_forward_to_logger, "ft_log_* helpers forward to the active logger instance")
 {
     ft_logger  *previous_logger;
-    int         previous_errno_value;
 
     previous_logger = g_logger;
     FT_ASSERT(previous_logger == ft_nullptr);
-    previous_errno_value = ft_errno;
     {
         ft_logger logger_instance;
 
@@ -121,7 +113,6 @@ FT_TEST(test_ft_log_global_helpers_forward_to_logger, "ft_log_* helpers forward 
 
         g_logger = previous_logger;
     }
-    ft_errno = previous_errno_value;
     return (1);
 }
 

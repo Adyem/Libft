@@ -26,14 +26,14 @@ FT_TEST(test_currency_rate_parameterized_constructor_sets_fields, "Currency rate
     return (1);
 }
 
-FT_TEST(test_currency_rate_copy_constructor_restores_errno_and_keeps_source, "Currency rate copy constructor restores errno and leaves source intact")
+FT_TEST(test_currency_rate_copy_constructor_resets_errno_and_keeps_source, "Currency rate copy constructor resets errno to success and leaves source intact")
 {
     ft_currency_rate original(8, 1.35, 5);
 
     ft_errno = FT_ERR_GAME_INVALID_MOVE;
     ft_currency_rate copy(original);
 
-    FT_ASSERT_EQ(FT_ERR_GAME_INVALID_MOVE, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(8, copy.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(1.35, copy.get_rate_to_base());
     FT_ASSERT_EQ(5, copy.get_display_precision());
@@ -45,7 +45,7 @@ FT_TEST(test_currency_rate_copy_constructor_restores_errno_and_keeps_source, "Cu
     return (1);
 }
 
-FT_TEST(test_currency_rate_move_assignment_transfers_values_and_errno, "Currency rate move assignment keeps errno and resets source")
+FT_TEST(test_currency_rate_move_assignment_transfers_values_and_errno_success, "Currency rate move assignment resets errno to success while clearing source")
 {
     ft_currency_rate source(11, 3.5, 1);
     ft_currency_rate destination;
@@ -53,7 +53,7 @@ FT_TEST(test_currency_rate_move_assignment_transfers_values_and_errno, "Currency
     ft_errno = FT_ERR_SOCKET_RECEIVE_FAILED;
     destination = ft_move(source);
 
-    FT_ASSERT_EQ(FT_ERR_SOCKET_RECEIVE_FAILED, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(11, destination.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(3.5, destination.get_rate_to_base());
     FT_ASSERT_EQ(1, destination.get_display_precision());
@@ -106,14 +106,14 @@ FT_TEST(test_price_definition_parameterized_constructor_sets_fields, "Price defi
     return (1);
 }
 
-FT_TEST(test_price_definition_copy_constructor_restores_errno_and_retains_source, "Price definition copy constructor restores errno and retains source values")
+FT_TEST(test_price_definition_copy_constructor_resets_errno_and_retains_source, "Price definition copy constructor resets errno to success and retains source values")
 {
     ft_price_definition original(12, 5, 250, 100, 400);
 
     ft_errno = FT_ERR_ALREADY_INITIALIZED;
     ft_price_definition copy(original);
 
-    FT_ASSERT_EQ(FT_ERR_ALREADY_INITIALIZED, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(12, copy.get_item_id());
     FT_ASSERT_EQ(5, copy.get_rarity());
     FT_ASSERT_EQ(250, copy.get_base_value());
@@ -129,7 +129,7 @@ FT_TEST(test_price_definition_copy_constructor_restores_errno_and_retains_source
     return (1);
 }
 
-FT_TEST(test_price_definition_move_assignment_transfers_values_and_resets_source, "Price definition move assignment moves values and clears origin")
+FT_TEST(test_price_definition_move_assignment_resets_errno_and_resets_source, "Price definition move assignment resets errno to success and clears origin")
 {
     ft_price_definition source(14, 6, 950, 600, 1200);
     ft_price_definition destination;
@@ -137,7 +137,7 @@ FT_TEST(test_price_definition_move_assignment_transfers_values_and_resets_source
     ft_errno = FT_ERR_SOCKET_LISTEN_FAILED;
     destination = ft_move(source);
 
-    FT_ASSERT_EQ(FT_ERR_SOCKET_LISTEN_FAILED, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(14, destination.get_item_id());
     FT_ASSERT_EQ(6, destination.get_rarity());
     FT_ASSERT_EQ(950, destination.get_base_value());
@@ -153,7 +153,7 @@ FT_TEST(test_price_definition_move_assignment_transfers_values_and_resets_source
     return (1);
 }
 
-FT_TEST(test_price_definition_setters_update_all_fields, "Price definition setters refresh identifiers and value bounds")
+FT_TEST(test_price_definition_setters_update_all_fields_and_errno, "Price definition setters refresh identifiers, value bounds, and reset errno")
 {
     ft_price_definition definition;
 
@@ -164,7 +164,7 @@ FT_TEST(test_price_definition_setters_update_all_fields, "Price definition sette
     definition.set_minimum_value(1200);
     definition.set_maximum_value(1800);
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(21, definition.get_item_id());
     FT_ASSERT_EQ(7, definition.get_rarity());
     FT_ASSERT_EQ(1500, definition.get_base_value());

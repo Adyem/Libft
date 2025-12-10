@@ -31,15 +31,16 @@ FT_TEST(test_json_write_to_string_initial_alloc_failure_sets_errno, "json_write_
     return (1);
 }
 
-FT_TEST(test_json_write_to_string_midway_failure_preserves_errno, "json_write_to_string keeps the allocator errno on intermediate failures")
+FT_TEST(test_json_write_to_string_midway_failure_sets_errno, "json_write_to_string sets allocator errno on intermediate failures")
 {
     json_group *group = create_sample_group();
     FT_ASSERT(group != ft_nullptr);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ERR_CONFIGURATION;
     cma_set_alloc_limit(16);
     char *result = json_write_to_string(group);
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(ft_nullptr, result);
+    FT_ASSERT_NE(FT_ERR_CONFIGURATION, ft_errno);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
     json_free_groups(group);
     return (1);

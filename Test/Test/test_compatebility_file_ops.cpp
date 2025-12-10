@@ -150,7 +150,7 @@ FT_TEST(test_cmp_file_move_missing_source_sets_errno, "cmp_file_move reports FT_
     return (1);
 }
 
-FT_TEST(test_cmp_file_move_cross_device_copy_failure_preserves_errno, "cmp_file_move preserves first failure during fallback")
+FT_TEST(test_cmp_file_move_cross_device_copy_failure_sets_errno, "cmp_file_move sets errno to the first fallback failure")
 {
     const char *source_path = "cmp_file_move_cross_device_failure_source.txt";
     const char *destination_directory = "cmp_file_move_cross_device_failure_dir";
@@ -166,8 +166,9 @@ FT_TEST(test_cmp_file_move_cross_device_copy_failure_preserves_errno, "cmp_file_
     FT_ASSERT_EQ(0, ::mkdir(destination_directory, 0700));
 #endif
     cmp_set_force_cross_device_move(1);
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ERR_CONFIGURATION;
     FT_ASSERT_EQ(-1, cmp_file_move(source_path, destination_directory));
+    FT_ASSERT_NE(FT_ERR_CONFIGURATION, ft_errno);
     FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, ft_errno);
     cmp_set_force_cross_device_move(0);
     remove_file_if_present(source_path);
