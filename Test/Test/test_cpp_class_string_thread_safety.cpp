@@ -5,16 +5,13 @@
 #include <chrono>
 #include <thread>
 
-FT_TEST(test_ft_string_append_preserves_errno,
-        "ft_string append restores ft_errno after completing")
+FT_TEST(test_ft_string_append_resets_errno,
+        "ft_string append sets ft_errno to success after completing")
 {
     ft_string string_value;
-    int       saved_errno;
-
-    saved_errno = FT_ERR_INVALID_ARGUMENT;
-    ft_errno = saved_errno;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     string_value.append('x');
-    FT_ASSERT_EQ(saved_errno, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(ER_SUCCESS, string_value.get_error());
     FT_ASSERT_EQ(1u, string_value.size());
     return (1);

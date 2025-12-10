@@ -376,9 +376,9 @@ FT_TEST(test_cma_strdup_copies_string, "cma_strdup duplicates the input string")
     return (1);
 }
 
-FT_TEST(test_cma_strdup_null_input_preserves_errno, "cma_strdup returns nullptr without touching errno when input is null")
+FT_TEST(test_cma_strdup_null_input_sets_errno, "cma_strdup returns nullptr and sets errno for null input")
 {
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
+    ft_errno = FT_ERR_NO_MEMORY;
     FT_ASSERT_EQ(ft_nullptr, cma_strdup(ft_nullptr));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);

@@ -94,7 +94,7 @@ FT_TEST(test_dialogue_script_copy_constructor_transfers_state, "copy constructor
     return (1);
 }
 
-FT_TEST(test_dialogue_script_copy_assignment_transfers_state, "copy assignment replaces data and keeps errno intact")
+FT_TEST(test_dialogue_script_copy_assignment_resets_errno, "copy assignment replaces data and resets errno to success")
 {
     ft_vector<ft_dialogue_line> lines;
     ft_vector<ft_dialogue_line> other_lines;
@@ -107,7 +107,7 @@ FT_TEST(test_dialogue_script_copy_assignment_transfers_state, "copy assignment r
     source = ft_dialogue_script(9, ft_string("new"), ft_string("news"), 20, other_lines);
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     destination = source;
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     FT_ASSERT_EQ(9, destination.get_script_id());
     FT_ASSERT_EQ(ft_string("new"), destination.get_title());
     FT_ASSERT_EQ(ft_string("news"), destination.get_summary());

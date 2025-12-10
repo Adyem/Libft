@@ -58,34 +58,31 @@ FT_TEST(test_cma_allocation_guard_move_transfers_ownership,
     return (1);
 }
 
-FT_TEST(test_cma_allocation_guard_destructor_preserves_errno,
-        "cma_allocation_guard destructor restores entry errno")
+FT_TEST(test_cma_allocation_guard_destructor_resets_errno,
+        "cma_allocation_guard destructor sets ft_errno to success")
 {
     void *allocation_pointer;
-    int sentinel_errno;
 
     cma_set_alloc_limit(0);
     allocation_pointer = cma_malloc(40);
     if (allocation_pointer == ft_nullptr)
         return (0);
-    sentinel_errno = FT_ERR_INVALID_OPERATION;
-    ft_errno = sentinel_errno;
+    ft_errno = FT_ERR_INVALID_OPERATION;
     {
         cma_allocation_guard allocation_guard(allocation_pointer);
 
-        ft_errno = sentinel_errno;
+        ft_errno = FT_ERR_INVALID_OPERATION;
     }
-    FT_ASSERT_EQ(sentinel_errno, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }
 
-FT_TEST(test_cma_allocation_guard_reset_preserves_errno,
-        "cma_allocation_guard reset keeps ft_errno unchanged on success")
+FT_TEST(test_cma_allocation_guard_reset_resets_errno,
+        "cma_allocation_guard reset sets ft_errno to success on success")
 {
     void *first_pointer;
     void *second_pointer;
     cma_allocation_guard allocation_guard;
-    int sentinel_errno;
 
     cma_set_alloc_limit(0);
     first_pointer = cma_malloc(32);
@@ -95,12 +92,11 @@ FT_TEST(test_cma_allocation_guard_reset_preserves_errno,
     second_pointer = cma_malloc(48);
     if (second_pointer == ft_nullptr)
         return (0);
-    sentinel_errno = FT_ERR_INVALID_ARGUMENT;
-    ft_errno = sentinel_errno;
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     allocation_guard.reset(second_pointer);
-    FT_ASSERT_EQ(sentinel_errno, ft_errno);
-    ft_errno = sentinel_errno;
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
+    ft_errno = FT_ERR_INVALID_ARGUMENT;
     allocation_guard.reset(ft_nullptr);
-    FT_ASSERT_EQ(sentinel_errno, ft_errno);
+    FT_ASSERT_EQ(ER_SUCCESS, ft_errno);
     return (1);
 }

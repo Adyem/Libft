@@ -112,7 +112,7 @@ FT_TEST(test_su_fclose_null_stream_sets_ft_einval, "su_fclose rejects null strea
     return (1);
 }
 
-FT_TEST(test_su_fclose_invalid_descriptor_propagates_error, "su_fclose preserves cmp_close error")
+FT_TEST(test_su_fclose_invalid_descriptor_sets_errno, "su_fclose sets errno when closing an invalid descriptor")
 {
     su_file *file_stream;
 
@@ -121,7 +121,7 @@ FT_TEST(test_su_fclose_invalid_descriptor_propagates_error, "su_fclose preserves
         return (0);
     std::memset(file_stream, 0, sizeof(su_file));
     file_stream->_descriptor = -1;
-    ft_errno = ER_SUCCESS;
+    ft_errno = FT_ERR_CONFIGURATION;
     FT_ASSERT_EQ(-1, su_fclose(file_stream));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     std::free(file_stream);
