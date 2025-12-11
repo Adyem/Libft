@@ -396,7 +396,6 @@ char *api_request_string(const char *ip, uint16_t port,
                 headers, status, timeout, retry_policy, hooks->user_data));
     }
     size_t metrics_request_bytes;
-    int metrics_entry_errno;
     char *metrics_payload_string;
 
     metrics_request_bytes = 0;
@@ -408,22 +407,15 @@ char *api_request_string(const char *ip, uint16_t port,
         metrics_request_bytes += ft_strlen(headers);
     if (ip)
         metrics_request_bytes += ft_strlen(ip);
+    ft_errno = FT_ERR_SUCCESSS;
+    metrics_payload_string = ft_nullptr;
     if (payload)
-    {
-        metrics_entry_errno = ft_errno;
         metrics_payload_string = json_write_to_string(payload);
-    }
-    else
-    {
-        metrics_entry_errno = ft_errno;
-        metrics_payload_string = ft_nullptr;
-    }
     if (metrics_payload_string)
     {
         metrics_request_bytes += ft_strlen(metrics_payload_string);
         cma_free(metrics_payload_string);
     }
-    ft_errno = metrics_entry_errno;
     int error_code = FT_ERR_SUCCESSS;
     struct api_request_errno_guard
     {
@@ -560,7 +552,6 @@ char *api_request_string_http2(const char *ip, uint16_t port,
                 hooks->user_data));
     }
     size_t metrics_request_bytes;
-    int metrics_entry_errno;
     char *metrics_payload_string;
 
     metrics_request_bytes = 0;
@@ -572,22 +563,15 @@ char *api_request_string_http2(const char *ip, uint16_t port,
         metrics_request_bytes += ft_strlen(headers);
     if (ip)
         metrics_request_bytes += ft_strlen(ip);
+    ft_errno = FT_ERR_SUCCESSS;
+    metrics_payload_string = ft_nullptr;
     if (payload)
-    {
-        metrics_entry_errno = ft_errno;
         metrics_payload_string = json_write_to_string(payload);
-    }
-    else
-    {
-        metrics_entry_errno = ft_errno;
-        metrics_payload_string = ft_nullptr;
-    }
     if (metrics_payload_string)
     {
         metrics_request_bytes += ft_strlen(metrics_payload_string);
         cma_free(metrics_payload_string);
     }
-    ft_errno = metrics_entry_errno;
     int error_code = FT_ERR_SUCCESSS;
     struct api_request_errno_guard
     {

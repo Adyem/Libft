@@ -1180,9 +1180,7 @@ int ft_game_script_bridge::inspect_bytecode_budget(const ft_string &script, int 
     size_t length;
     size_t start;
     int operations;
-    int entry_errno;
 
-    entry_errno = ft_errno;
     data = script.c_str();
     length = script.size();
     start = 0;
@@ -1278,7 +1276,6 @@ int ft_game_script_bridge::inspect_bytecode_budget(const ft_string &script, int 
         return (FT_ERR_INVALID_OPERATION);
     }
     this->set_error(FT_ERR_SUCCESSS);
-    ft_errno = entry_errno;
     return (FT_ERR_SUCCESSS);
 }
 

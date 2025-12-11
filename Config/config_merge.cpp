@@ -43,17 +43,17 @@ static void config_free_entry_contents_unlocked(cnfg_entry *entry)
 
 static void config_free_entry_contents(cnfg_entry *entry)
 {
-    bool entry_locked;
-    int entry_errno;
-
     if (!entry)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
-    entry_errno = ft_errno;
+    }
+    bool entry_locked;
     if (cnfg_entry_lock(entry, &entry_locked) != 0)
         return ;
     config_free_entry_contents_unlocked(entry);
     cnfg_entry_unlock(entry, entry_locked);
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -61,7 +61,6 @@ static int config_duplicate_entry(const cnfg_entry *source, cnfg_entry *destinat
 {
     cnfg_entry *mutable_source;
     bool source_locked;
-    int entry_errno;
 
     if (!source || !destination)
     {
@@ -74,7 +73,6 @@ static int config_duplicate_entry(const cnfg_entry *source, cnfg_entry *destinat
     destination->key = ft_nullptr;
     destination->value = ft_nullptr;
     mutable_source = const_cast<cnfg_entry*>(source);
-    entry_errno = ft_errno;
     if (cnfg_entry_lock(mutable_source, &source_locked) != 0)
         return (-1);
     if (source->section)
@@ -82,8 +80,8 @@ static int config_duplicate_entry(const cnfg_entry *source, cnfg_entry *destinat
         destination->section = cma_strdup(source->section);
         if (!destination->section)
         {
+            ft_errno = FT_ERR_NO_MEMORY;
             cnfg_entry_unlock(mutable_source, source_locked);
-            ft_errno = entry_errno;
             config_free_entry_contents(destination);
             return (-1);
         }
@@ -93,8 +91,8 @@ static int config_duplicate_entry(const cnfg_entry *source, cnfg_entry *destinat
         destination->key = cma_strdup(source->key);
         if (!destination->key)
         {
+            ft_errno = FT_ERR_NO_MEMORY;
             cnfg_entry_unlock(mutable_source, source_locked);
-            ft_errno = entry_errno;
             config_free_entry_contents(destination);
             return (-1);
         }
@@ -104,14 +102,14 @@ static int config_duplicate_entry(const cnfg_entry *source, cnfg_entry *destinat
         destination->value = cma_strdup(source->value);
         if (!destination->value)
         {
+            ft_errno = FT_ERR_NO_MEMORY;
             cnfg_entry_unlock(mutable_source, source_locked);
-            ft_errno = entry_errno;
             config_free_entry_contents(destination);
             return (-1);
         }
     }
     cnfg_entry_unlock(mutable_source, source_locked);
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -129,28 +127,31 @@ static int config_strings_equal(const char *left, const char *right)
 static cnfg_entry *config_find_matching_entry(cnfg_config *config, const cnfg_entry *entry)
 {
     size_t index;
-    int entry_errno;
 
     if (!config || !entry)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_nullptr);
+    }
     index = 0;
     while (index < config->entry_count)
     {
         cnfg_entry *candidate = &config->entries[index];
         bool candidate_locked;
         bool matches;
-
-        entry_errno = ft_errno;
         if (cnfg_entry_lock(candidate, &candidate_locked) != 0)
             return (ft_nullptr);
         matches = config_strings_equal(candidate->section, entry->section)
             && config_strings_equal(candidate->key, entry->key);
         cnfg_entry_unlock(candidate, candidate_locked);
-        ft_errno = entry_errno;
         if (matches)
+        {
+            ft_errno = FT_ERR_SUCCESSS;
             return (candidate);
+        }
         ++index;
     }
+    ft_errno = FT_ERR_SUCCESSS;
     return (ft_nullptr);
 }
 
@@ -287,7 +288,6 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
         {
             cnfg_entry replacement;
             bool existing_locked;
-            int entry_errno;
 
             if (config_duplicate_entry(override_entry, &replacement) != 0)
             {
@@ -295,7 +295,6 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
                 cnfg_free(result);
                 return (ft_nullptr);
             }
-            entry_errno = ft_errno;
             if (cnfg_entry_lock(existing, &existing_locked) != 0)
             {
                 config_free_entry_contents(&replacement);
@@ -311,7 +310,7 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
             replacement.key = ft_nullptr;
             replacement.value = ft_nullptr;
             cnfg_entry_unlock(existing, existing_locked);
-            ft_errno = entry_errno;
+            ft_errno = FT_ERR_SUCCESSS;
         }
         else
         {

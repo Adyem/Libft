@@ -25,8 +25,6 @@ class ft_optional
         void set_error(int error) const;
         static T &fallback_reference() noexcept;
         static void sleep_backoff() noexcept;
-        static void restore_errno(ft_unique_lock<pt_mutex> &guard,
-            int entry_errno) noexcept;
         int lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept;
         static int lock_pair(ft_optional &first, ft_optional &second,
             ft_unique_lock<pt_mutex> &first_guard,
@@ -102,18 +100,15 @@ template <typename T>
 ft_optional<T>::ft_optional(ft_optional&& other) noexcept
     : _value(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> other_guard;
     int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = other.lock_self(other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->_value = ft_nullptr;
         this->_error_code = lock_error;
         this->set_error(lock_error);
-        ft_optional<T>::restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_value = other._value;
@@ -122,7 +117,6 @@ ft_optional<T>::ft_optional(ft_optional&& other) noexcept
     other._error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_error_code);
     other.set_error(FT_ERR_SUCCESSS);
-    ft_optional<T>::restore_errno(other_guard, entry_errno);
     return ;
 }
 
@@ -131,7 +125,6 @@ ft_optional<T>& ft_optional<T>::operator=(ft_optional&& other) noexcept
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
@@ -139,13 +132,10 @@ ft_optional<T>& ft_optional<T>::operator=(ft_optional&& other) noexcept
         this->set_error(this->_error_code);
         return (*this);
     }
-    entry_errno = ft_errno;
     lock_error = ft_optional<T>::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_optional<T>::restore_errno(this_guard, entry_errno);
-        ft_optional<T>::restore_errno(other_guard, entry_errno);
         return (*this);
     }
     if (this->_value != ft_nullptr)
@@ -160,8 +150,6 @@ ft_optional<T>& ft_optional<T>::operator=(ft_optional&& other) noexcept
     other._error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_error_code);
     other.set_error(FT_ERR_SUCCESSS);
-    ft_optional<T>::restore_errno(this_guard, entry_errno);
-    ft_optional<T>::restore_errno(other_guard, entry_errno);
     return (*this);
 }
 
@@ -176,78 +164,64 @@ void ft_optional<T>::set_error(int error) const
 template <typename T>
 bool ft_optional<T>::has_value() const
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> guard;
     int lock_error;
     bool result;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         const_cast<ft_optional*>(this)->set_error(lock_error);
-        ft_optional<T>::restore_errno(guard, entry_errno);
         return (false);
     }
     result = (this->_value != ft_nullptr);
     const_cast<ft_optional*>(this)->set_error(FT_ERR_SUCCESSS);
-    ft_optional<T>::restore_errno(guard, entry_errno);
     return (result);
 }
 
 template <typename T>
 T& ft_optional<T>::value()
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> guard;
     int lock_error;
     T *reference_pointer;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_optional<T>::restore_errno(guard, entry_errno);
         return (ft_optional<T>::fallback_reference());
     }
     if (this->_value == ft_nullptr)
     {
         this->set_error(FT_ERR_EMPTY);
-        ft_optional<T>::restore_errno(guard, entry_errno);
         return (ft_optional<T>::fallback_reference());
     }
     reference_pointer = this->_value;
     this->set_error(FT_ERR_SUCCESSS);
-    ft_optional<T>::restore_errno(guard, entry_errno);
     return (*reference_pointer);
 }
 
 template <typename T>
 const T& ft_optional<T>::value() const
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> guard;
     int lock_error;
     const T *reference_pointer;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         const_cast<ft_optional*>(this)->set_error(lock_error);
-        ft_optional<T>::restore_errno(guard, entry_errno);
         return (ft_optional<T>::fallback_reference());
     }
     if (this->_value == ft_nullptr)
     {
         const_cast<ft_optional*>(this)->set_error(FT_ERR_EMPTY);
-        ft_optional<T>::restore_errno(guard, entry_errno);
         return (ft_optional<T>::fallback_reference());
     }
     reference_pointer = this->_value;
     const_cast<ft_optional*>(this)->set_error(FT_ERR_SUCCESSS);
-    ft_optional<T>::restore_errno(guard, entry_errno);
     return (*reference_pointer);
 }
 
@@ -270,16 +244,6 @@ template <typename T>
 void ft_optional<T>::sleep_backoff() noexcept
 {
     pt_thread_sleep(1);
-    return ;
-}
-
-template <typename T>
-void ft_optional<T>::restore_errno(ft_unique_lock<pt_mutex> &guard,
-    int entry_errno) noexcept
-{
-    if (guard.owns_lock())
-        guard.unlock();
-    ft_errno = entry_errno;
     return ;
 }
 
@@ -370,16 +334,13 @@ int ft_optional<T>::lock_pair(ft_optional &first, ft_optional &second,
 template <typename T>
 void ft_optional<T>::reset()
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> guard;
     int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_optional<T>::restore_errno(guard, entry_errno);
         return ;
     }
     if (this->_value != ft_nullptr)
@@ -389,53 +350,44 @@ void ft_optional<T>::reset()
         this->_value = ft_nullptr;
     }
     this->set_error(FT_ERR_SUCCESSS);
-    ft_optional<T>::restore_errno(guard, entry_errno);
     return ;
 }
 
 template <typename T>
 int ft_optional<T>::get_error() const
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> guard;
     int lock_error;
     int error_code;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         const_cast<ft_optional*>(this)->set_error(lock_error);
-        ft_optional<T>::restore_errno(guard, entry_errno);
         return (lock_error);
     }
     error_code = this->_error_code;
     const_cast<ft_optional*>(this)->set_error(error_code);
-    ft_optional<T>::restore_errno(guard, entry_errno);
     return (error_code);
 }
 
 template <typename T>
 const char* ft_optional<T>::get_error_str() const
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> guard;
     int lock_error;
     int error_code;
     const char *result;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         const_cast<ft_optional*>(this)->set_error(lock_error);
-        ft_optional<T>::restore_errno(guard, entry_errno);
         return (ft_strerror(lock_error));
     }
     error_code = this->_error_code;
     result = ft_strerror(error_code);
     const_cast<ft_optional*>(this)->set_error(error_code);
-    ft_optional<T>::restore_errno(guard, entry_errno);
     return (result);
 }
 
