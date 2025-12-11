@@ -666,16 +666,13 @@ int ft_graph<VertexType>::lock(bool *lock_acquired) const
 template <typename VertexType>
 void ft_graph<VertexType>::unlock(bool lock_acquired) const
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
     if (this->_mutex != ft_nullptr && this->_mutex->get_error() != FT_ERR_SUCCESSS)
         const_cast<ft_graph<VertexType> *>(this)->set_error(this->_mutex->get_error());
     else
     {
-        ft_errno = entry_errno;
-        const_cast<ft_graph<VertexType> *>(this)->set_error(ft_errno);
+        ft_errno = FT_ERR_SUCCESSS;
+        const_cast<ft_graph<VertexType> *>(this)->set_error(FT_ERR_SUCCESSS);
     }
     return ;
 }
@@ -705,18 +702,15 @@ int ft_graph<VertexType>::lock_internal(bool *lock_acquired) const
 template <typename VertexType>
 void ft_graph<VertexType>::unlock_internal(bool lock_acquired) const
 {
-    int entry_errno;
-
     if (!lock_acquired || this->_mutex == ft_nullptr)
         return ;
-    entry_errno = ft_errno;
     this->_mutex->unlock(THREAD_ID);
     if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
