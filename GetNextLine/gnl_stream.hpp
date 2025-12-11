@@ -26,7 +26,6 @@ class gnl_stream
         void set_error_unlocked(int error_code) const noexcept;
         void set_error(int error_code) const noexcept;
         int lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept;
-        static void restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept;
         ssize_t read_from_descriptor(int file_descriptor, char *buffer, size_t max_size) const noexcept;
         ssize_t read_from_file(FILE *file_handle, char *buffer, size_t max_size) const noexcept;
 

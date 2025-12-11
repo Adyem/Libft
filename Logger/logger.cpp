@@ -744,11 +744,11 @@ int ft_logger::lock(bool *lock_acquired) const noexcept
 
 void ft_logger::unlock(bool lock_acquired) const noexcept
 {
-    int entry_errno;
-
     if (!lock_acquired || !this->_thread_safe_enabled || !this->_mutex)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
-    entry_errno = ft_errno;
+    }
     this->_mutex->unlock(THREAD_ID);
     if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
@@ -759,6 +759,6 @@ void ft_logger::unlock(bool lock_acquired) const noexcept
         const_cast<ft_logger *>(this)->set_error(mutex_error);
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }

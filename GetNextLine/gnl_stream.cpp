@@ -74,57 +74,31 @@ void gnl_stream::set_error_unlocked(int error_code) const noexcept
 void gnl_stream::set_error(int error_code) const noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
-    {
-        ft_errno = entry_errno;
         return ;
-    }
     this->set_error_unlocked(error_code);
-    gnl_stream::restore_errno(guard, entry_errno);
+    if (guard.owns_lock())
+        guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+        ft_errno = guard.get_error();
     return ;
 }
 
 int gnl_stream::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
 {
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
-    int entry_errno;
-
-    entry_errno = ft_errno;
     if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = entry_errno;
         guard = ft_unique_lock<pt_mutex>();
-        return (local_guard.get_error());
+        ft_errno = local_guard.get_error();
+        return (ft_errno);
     }
-    ft_errno = entry_errno;
     guard = ft_move(local_guard);
+    ft_errno = FT_ERR_SUCCESSS;
     return (FT_ERR_SUCCESSS);
-}
-
-void gnl_stream::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept
-{
-    int operation_errno;
-
-    operation_errno = ft_errno;
-    if (guard.owns_lock())
-        guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-        return ;
-    }
-    if (operation_errno != FT_ERR_SUCCESSS)
-    {
-        ft_errno = operation_errno;
-        return ;
-    }
-    ft_errno = entry_errno;
-    return ;
 }
 
 gnl_stream::gnl_stream() noexcept
@@ -162,20 +136,18 @@ ssize_t gnl_stream::read_from_file(FILE *file_handle, char *buffer, size_t max_s
 int gnl_stream::init_from_fd(int file_descriptor) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
-    {
-        ft_errno = entry_errno;
         return (lock_error);
-    }
     if (file_descriptor < 0)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        gnl_stream::restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+            ft_errno = guard.get_error();
         return (this->_error_code);
     }
     this->_file_descriptor = file_descriptor;
@@ -184,27 +156,28 @@ int gnl_stream::init_from_fd(int file_descriptor) noexcept
     this->_read_callback = ft_nullptr;
     this->_close_on_reset = false;
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    gnl_stream::restore_errno(guard, entry_errno);
+    if (guard.owns_lock())
+        guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+        ft_errno = guard.get_error();
     return (FT_ERR_SUCCESSS);
 }
 
 int gnl_stream::init_from_file(FILE *file_handle, bool close_on_reset) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
-    {
-        ft_errno = entry_errno;
         return (lock_error);
-    }
     if (!file_handle)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        gnl_stream::restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+            ft_errno = guard.get_error();
         return (this->_error_code);
     }
     this->_file_handle = file_handle;
@@ -213,7 +186,10 @@ int gnl_stream::init_from_file(FILE *file_handle, bool close_on_reset) noexcept
     this->_read_callback = ft_nullptr;
     this->_close_on_reset = close_on_reset;
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    gnl_stream::restore_errno(guard, entry_errno);
+    if (guard.owns_lock())
+        guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+        ft_errno = guard.get_error();
     return (FT_ERR_SUCCESSS);
 }
 
@@ -221,20 +197,18 @@ int gnl_stream::init_from_callback(ssize_t (*callback)(void *user_data, char *bu
         void *user_data) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
-    {
-        ft_errno = entry_errno;
         return (lock_error);
-    }
     if (!callback)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        gnl_stream::restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+            ft_errno = guard.get_error();
         return (this->_error_code);
     }
     this->_read_callback = callback;
@@ -243,23 +217,21 @@ int gnl_stream::init_from_callback(ssize_t (*callback)(void *user_data, char *bu
     this->_file_handle = ft_nullptr;
     this->_close_on_reset = false;
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    gnl_stream::restore_errno(guard, entry_errno);
+    if (guard.owns_lock())
+        guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+        ft_errno = guard.get_error();
     return (FT_ERR_SUCCESSS);
 }
 
 void gnl_stream::reset() noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
-    {
-        ft_errno = entry_errno;
         return ;
-    }
     if (this->_close_on_reset && this->_file_handle)
     {
         fclose(this->_file_handle);
@@ -270,28 +242,29 @@ void gnl_stream::reset() noexcept
     this->_read_callback = ft_nullptr;
     this->_close_on_reset = false;
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    gnl_stream::restore_errno(guard, entry_errno);
+    if (guard.owns_lock())
+        guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+        ft_errno = guard.get_error();
     return ;
 }
 
 ssize_t gnl_stream::read(char *buffer, size_t max_size) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     ssize_t read_result;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
-    {
-        ft_errno = entry_errno;
         return (-1);
-    }
     if (!buffer || max_size == 0)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        gnl_stream::restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+            ft_errno = guard.get_error();
         return (-1);
     }
     read_result = -1;
@@ -304,7 +277,10 @@ ssize_t gnl_stream::read(char *buffer, size_t max_size) noexcept
     else
     {
         this->set_error_unlocked(FT_ERR_INVALID_STATE);
-        gnl_stream::restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+            ft_errno = guard.get_error();
         return (-1);
     }
     if (read_result < 0)
@@ -317,30 +293,36 @@ ssize_t gnl_stream::read(char *buffer, size_t max_size) noexcept
         else if (read_error == FT_ERR_INVALID_HANDLE)
             read_error = FT_ERR_IO;
         this->set_error_unlocked(read_error);
-        gnl_stream::restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+            ft_errno = guard.get_error();
         return (-1);
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    gnl_stream::restore_errno(guard, entry_errno);
+    if (guard.owns_lock())
+        guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+        ft_errno = guard.get_error();
     return (read_result);
 }
 
 int gnl_stream::get_error() const noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     int error_code;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
-    {
-        ft_errno = entry_errno;
         return (lock_error);
-    }
     error_code = this->_error_code;
-    gnl_stream::restore_errno(guard, entry_errno);
+    if (guard.owns_lock())
+        guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+        ft_errno = guard.get_error();
+    else
+        ft_errno = FT_ERR_SUCCESSS;
     return (error_code);
 }
 

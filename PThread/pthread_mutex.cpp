@@ -102,18 +102,18 @@ int pt_mutex::lock_internal(bool *lock_acquired) const
 
 void pt_mutex::unlock_internal(bool lock_acquired) const
 {
-    int entry_errno;
-
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
-    entry_errno = ft_errno;
+    }
     this->_state_mutex->unlock(THREAD_ID);
     if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_state_mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -142,14 +142,11 @@ int pt_mutex::lock_state(bool *lock_acquired) const
 
 void pt_mutex::unlock_state(bool lock_acquired) const
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
     if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
         const_cast<pt_mutex *>(this)->set_error(this->_state_mutex->get_error());
     else
-        const_cast<pt_mutex *>(this)->set_error(entry_errno);
+        const_cast<pt_mutex *>(this)->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -159,13 +156,11 @@ bool pt_mutex::is_owned_by_thread(pthread_t thread_id) const
     pt_mutex_vector owned_mutexes;
     ft_size_t index;
     bool lock_flag;
-    int entry_errno;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     lock_flag = this->_lock.load(std::memory_order_acquire);
     if (!lock_flag)
     {
-        ft_errno = entry_errno;
         return (false);
     }
     owner_thread = this->_owner.load(std::memory_order_relaxed);
@@ -174,26 +169,23 @@ bool pt_mutex::is_owned_by_thread(pthread_t thread_id) const
         bool matches_owner;
 
         matches_owner = (pt_thread_equal(owner_thread, thread_id) != 0);
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
         return (matches_owner);
     }
     owned_mutexes = pt_lock_tracking::get_owned_mutexes(thread_id);
     if (ft_errno != FT_ERR_SUCCESSS)
-    {
-        ft_errno = entry_errno;
         return (false);
-    }
     index = 0;
     while (index < owned_mutexes.size())
     {
         if (owned_mutexes[index] == &this->_native_mutex)
         {
-            ft_errno = entry_errno;
+            ft_errno = FT_ERR_SUCCESSS;
             return (true);
         }
         index += 1;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (false);
 }
 
