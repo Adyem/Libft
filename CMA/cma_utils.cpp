@@ -400,11 +400,11 @@ Page *find_page_of_block(Block *block)
 
 void free_page_if_empty(Page *page)
 {
-    int entry_errno;
-
     if (!page || page->heap == false)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
-    entry_errno = ft_errno;
+    }
     if (page->blocks && cma_block_is_free(page->blocks) &&
         page->blocks->next == ft_nullptr &&
         page->blocks->prev == ft_nullptr)
@@ -418,10 +418,10 @@ void free_page_if_empty(Page *page)
         std::free(page->start);
         cma_metadata_release_block(page->blocks);
         std::free(page);
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 

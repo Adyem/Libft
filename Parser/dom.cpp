@@ -6,20 +6,26 @@
 #include <new>
 
 ft_dom_node::thread_guard::thread_guard(const ft_dom_node *node) noexcept
-    : _node(node), _lock_acquired(false), _status(0), _entry_errno(ft_errno)
+    : _node(node), _lock_acquired(false), _status(0)
 {
     if (!this->_node)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
+    }
     this->_status = this->_node->lock(&this->_lock_acquired);
     if (this->_status == 0)
-        ft_errno = this->_entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
 ft_dom_node::thread_guard::~thread_guard() noexcept
 {
     if (!this->_node)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
+    }
     this->_node->unlock(this->_lock_acquired);
     return ;
 }
@@ -194,11 +200,11 @@ int ft_dom_node::lock(bool *lock_acquired) const noexcept
 
 void ft_dom_node::unlock(bool lock_acquired) const noexcept
 {
-    int entry_errno;
-
     if (!lock_acquired || !this->_thread_safe_enabled || !this->_mutex)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
-    entry_errno = ft_errno;
+    }
     this->_mutex->unlock(THREAD_ID);
     if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
@@ -209,7 +215,7 @@ void ft_dom_node::unlock(bool lock_acquired) const noexcept
         const_cast<ft_dom_node *>(this)->set_error(mutex_error);
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -618,20 +624,26 @@ int ft_dom_node::get_error() const noexcept
 }
 
 ft_dom_document::thread_guard::thread_guard(const ft_dom_document *document) noexcept
-    : _document(document), _lock_acquired(false), _status(0), _entry_errno(ft_errno)
+    : _document(document), _lock_acquired(false), _status(0)
 {
     if (!this->_document)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
+    }
     this->_status = this->_document->lock(&this->_lock_acquired);
     if (this->_status == 0)
-        ft_errno = this->_entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
 ft_dom_document::thread_guard::~thread_guard() noexcept
 {
     if (!this->_document)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
+    }
     this->_document->unlock(this->_lock_acquired);
     return ;
 }
@@ -753,11 +765,11 @@ int ft_dom_document::lock(bool *lock_acquired) const noexcept
 
 void ft_dom_document::unlock(bool lock_acquired) const noexcept
 {
-    int entry_errno;
-
     if (!lock_acquired || !this->_thread_safe_enabled || !this->_mutex)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
-    entry_errno = ft_errno;
+    }
     this->_mutex->unlock(THREAD_ID);
     if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
@@ -768,7 +780,7 @@ void ft_dom_document::unlock(bool lock_acquired) const noexcept
         const_cast<ft_dom_document *>(this)->set_error(mutex_error);
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 

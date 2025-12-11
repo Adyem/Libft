@@ -50,9 +50,6 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
     status = FT_ERR_SUCCESSS;
     {
         ft_thread new_thread;
-        int entry_errno;
-
-        entry_errno = ft_errno;
         ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
         if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
         {
@@ -71,7 +68,6 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
                 if (this->_stopped == false)
                 {
                     mutex_guard.unlock();
-                    ft_errno = entry_errno;
                     this->stop();
                     mutex_guard = ft_unique_lock<pt_mutex>(this->_mutex);
                     if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
@@ -197,12 +193,10 @@ int ft_file_watch::watch_directory(const char *path, void (*callback)(const char
 
 void ft_file_watch::stop()
 {
-    int entry_errno;
     int final_errno;
     int status;
 
-    entry_errno = ft_errno;
-    final_errno = entry_errno;
+    final_errno = FT_ERR_SUCCESSS;
     status = FT_ERR_SUCCESSS;
     {
         ft_thread thread_to_join;
@@ -268,9 +262,10 @@ void ft_file_watch::close_handles_locked()
 bool ft_file_watch::snapshot_callback(void (**callback)(const char *, int, void *),
     void *&user_data, ft_string &path_snapshot) const
 {
-    int entry_errno;
     bool running;
-    entry_errno = ft_errno;
+    int status;
+
+    status = FT_ERR_SUCCESSS;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
     if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
@@ -284,7 +279,7 @@ bool ft_file_watch::snapshot_callback(void (**callback)(const char *, int, void 
     if (!running)
     {
         mutex_guard.unlock();
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_INVALID_STATE;
         return (false);
     }
     *callback = this->_callback;
@@ -294,18 +289,20 @@ bool ft_file_watch::snapshot_callback(void (**callback)(const char *, int, void 
     {
         const_cast<ft_file_watch *>(this)->set_error(path_snapshot.get_error());
         path_snapshot.clear();
+        status = path_snapshot.get_error();
     }
     mutex_guard.unlock();
-    ft_errno = entry_errno;
+    if (status != FT_ERR_SUCCESSS)
+        ft_errno = status;
+    else
+        ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 
 #ifdef __linux__
 bool ft_file_watch::get_linux_handles(int &fd) const
 {
-    int entry_errno;
     bool running;
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
     if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
@@ -316,20 +313,18 @@ bool ft_file_watch::get_linux_handles(int &fd) const
     if (!running || this->_fd < 0)
     {
         mutex_guard.unlock();
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_INVALID_STATE;
         return (false);
     }
     fd = this->_fd;
     mutex_guard.unlock();
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 #elif defined(__APPLE__) || defined(__FreeBSD__)
 bool ft_file_watch::get_bsd_handles(int &kqueue_handle, int &fd) const
 {
-    int entry_errno;
     bool running;
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
     if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
@@ -340,21 +335,19 @@ bool ft_file_watch::get_bsd_handles(int &kqueue_handle, int &fd) const
     if (!running || this->_kqueue < 0 || this->_fd < 0)
     {
         mutex_guard.unlock();
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_INVALID_STATE;
         return (false);
     }
     kqueue_handle = this->_kqueue;
     fd = this->_fd;
     mutex_guard.unlock();
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 #elif defined(_WIN32)
 bool ft_file_watch::get_windows_handle(void *&handle) const
 {
-    int entry_errno;
     bool running;
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
     if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
@@ -365,12 +358,12 @@ bool ft_file_watch::get_windows_handle(void *&handle) const
     if (!running || this->_handle == ft_nullptr)
     {
         mutex_guard.unlock();
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_INVALID_STATE;
         return (false);
     }
     handle = this->_handle;
     mutex_guard.unlock();
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 #endif

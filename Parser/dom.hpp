@@ -43,7 +43,6 @@ class ft_dom_node
                 const ft_dom_node *_node;
                 bool _lock_acquired;
                 int _status;
-                int _entry_errno;
 
             public:
                 thread_guard(const ft_dom_node *node) noexcept;
@@ -103,7 +102,6 @@ class ft_dom_document
                 const ft_dom_document *_document;
                 bool _lock_acquired;
                 int _status;
-                int _entry_errno;
 
             public:
                 thread_guard(const ft_dom_document *document) noexcept;
