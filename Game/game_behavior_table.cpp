@@ -84,31 +84,29 @@ ft_behavior_table::~ft_behavior_table() noexcept
 
 int ft_behavior_table::clone_profiles_from(const ft_behavior_table &other) noexcept
 {
-    int entry_errno;
     size_t profile_count;
     ft_map<int, ft_behavior_profile> profiles_copy(other._profiles.capacity());
     const Pair<int, ft_behavior_profile> *other_end;
     const Pair<int, ft_behavior_profile> *entry;
 
-    entry_errno = ft_errno;
     profile_count = other._profiles.size();
     if (other._profiles.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other._profiles.get_error());
-        ft_errno = entry_errno;
+        ft_errno = other._profiles.get_error();
         return (other._profiles.get_error());
     }
     if (profiles_copy.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(profiles_copy.get_error());
-        ft_errno = entry_errno;
+        ft_errno = profiles_copy.get_error();
         return (profiles_copy.get_error());
     }
     other_end = other._profiles.end();
     if (other_end == ft_nullptr && profile_count != 0)
     {
         this->set_error(FT_ERR_INTERNAL);
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_INTERNAL;
         return (FT_ERR_INTERNAL);
     }
     if (profile_count == 0)
@@ -138,13 +136,13 @@ int ft_behavior_table::clone_profiles_from(const ft_behavior_table &other) noexc
         if (profiles_copy.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(profiles_copy.get_error());
-            ft_errno = entry_errno;
+            ft_errno = profiles_copy.get_error();
             return (profiles_copy.get_error());
         }
         ++entry;
     }
     this->_profiles = ft_move(profiles_copy);
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (FT_ERR_SUCCESSS);
 }
 

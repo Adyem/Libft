@@ -89,20 +89,18 @@ int network_sink_lock(const s_network_sink *sink, bool *lock_acquired)
 void network_sink_unlock(const s_network_sink *sink, bool lock_acquired)
 {
     s_network_sink *mutable_sink;
-    int             entry_errno;
 
     if (!sink || !lock_acquired)
         return ;
     mutable_sink = const_cast<s_network_sink *>(sink);
     if (!mutable_sink->mutex)
         return ;
-    entry_errno = ft_errno;
     mutable_sink->mutex->unlock(THREAD_ID);
     if (mutable_sink->mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = mutable_sink->mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
