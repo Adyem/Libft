@@ -6,9 +6,7 @@ static void game_behavior_copy_action_vector(const ft_vector<ft_behavior_action>
 {
     ft_vector<ft_behavior_action>::const_iterator entry;
     ft_vector<ft_behavior_action>::const_iterator end;
-    int entry_errno;
 
-    entry_errno = ft_errno;
     destination.clear();
     entry = source.begin();
     end = source.end();
@@ -17,16 +15,14 @@ static void game_behavior_copy_action_vector(const ft_vector<ft_behavior_action>
         destination.push_back(*entry);
         ++entry;
     }
-    ft_errno = entry_errno;
+    ft_errno = destination.get_error();
     return ;
 }
 
 void ft_behavior_profile::clone_from_unlocked(const ft_behavior_profile &other) noexcept
 {
-    int entry_errno;
     int actions_error;
 
-    entry_errno = ft_errno;
     this->_profile_id = other._profile_id;
     this->_aggression_weight = other._aggression_weight;
     this->_caution_weight = other._caution_weight;
@@ -36,16 +32,13 @@ void ft_behavior_profile::clone_from_unlocked(const ft_behavior_profile &other) 
     if (actions_error != FT_ERR_SUCCESSS)
         this->_error_code = actions_error;
     this->set_error(this->_error_code);
-    ft_errno = entry_errno;
     return ;
 }
 
 void ft_behavior_profile::move_from_unlocked(ft_behavior_profile &other) noexcept
 {
-    int entry_errno;
     int actions_error;
 
-    entry_errno = ft_errno;
     this->_profile_id = other._profile_id;
     this->_aggression_weight = other._aggression_weight;
     this->_caution_weight = other._caution_weight;
@@ -61,7 +54,6 @@ void ft_behavior_profile::move_from_unlocked(ft_behavior_profile &other) noexcep
         this->_error_code = actions_error;
     this->set_error(this->_error_code);
     other.set_error(FT_ERR_SUCCESSS);
-    ft_errno = entry_errno;
     return ;
 }
 
@@ -147,12 +139,8 @@ ft_behavior_profile::ft_behavior_profile(int profile_id, double aggression_weigh
     : _profile_id(profile_id), _aggression_weight(aggression_weight), _caution_weight(caution_weight),
     _actions(), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     game_behavior_copy_action_vector(actions, this->_actions);
     this->set_error(this->_actions.get_error());
-    ft_errno = entry_errno;
     return ;
 }
 
