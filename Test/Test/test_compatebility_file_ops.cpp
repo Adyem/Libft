@@ -177,6 +177,41 @@ FT_TEST(test_cmp_file_move_cross_device_copy_failure_sets_errno, "cmp_file_move 
     return (1);
 }
 
+FT_TEST(test_cmp_file_move_cross_device_directory_destination_sets_errno, "cmp_file_move reports FT_ERR_INVALID_OPERATION for directory destination in fallback")
+{
+    const char *source_path = "cmp_file_move_cross_device_directory_destination_source.txt";
+    const char *destination_directory = "cmp_file_move_cross_device_directory_destination_dir";
+    const char *stale_destination_path = "cmp_file_move_cross_device_directory_destination_dir/destination.txt";
+    FILE *file_pointer;
+
+    remove_file_if_present(source_path);
+    remove_file_if_present(stale_destination_path);
+    remove_directory_if_present(destination_directory);
+    write_test_file(source_path);
+#if defined(_WIN32) || defined(_WIN64)
+    FT_ASSERT_EQ(0, _mkdir(destination_directory));
+#else
+    FT_ASSERT_EQ(0, ::mkdir(destination_directory, 0700));
+#endif
+    cmp_set_force_cross_device_move(1);
+    ft_errno = FT_ERR_CONFIGURATION;
+    FT_ASSERT_EQ(-1, cmp_file_move(source_path, destination_directory));
+    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, ft_errno);
+    cmp_set_force_cross_device_move(0);
+    file_pointer = std::fopen(source_path, "r");
+    FT_ASSERT_NE(ft_nullptr, file_pointer);
+    if (file_pointer != ft_nullptr)
+        std::fclose(file_pointer);
+    file_pointer = std::fopen(stale_destination_path, "r");
+    FT_ASSERT_EQ(ft_nullptr, file_pointer);
+    if (file_pointer != ft_nullptr)
+        std::fclose(file_pointer);
+    remove_file_if_present(source_path);
+    remove_directory_if_present(destination_directory);
+    remove_file_if_present(stale_destination_path);
+    return (1);
+}
+
 FT_TEST(test_cmp_file_copy_null_pointer_sets_errno, "cmp_file_copy reports FT_ERR_INVALID_ARGUMENT for null source")
 {
     ft_errno = FT_ERR_SUCCESSS;
