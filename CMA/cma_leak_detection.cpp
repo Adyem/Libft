@@ -78,13 +78,17 @@ static void cma_leak_tracker_resume(bool was_enabled, bool error_state)
 void cma_leak_tracker_record_allocation(void *memory_pointer, ft_size_t size)
 {
     s_cma_leak_record record;
-    int entry_errno;
 
     if (!cma_leak_tracker_is_active())
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
+    }
     if (memory_pointer == ft_nullptr)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
-    entry_errno = ft_errno;
+    }
     record.pointer = memory_pointer;
     record.size = size;
     g_cma_leak_records.push_back(record);
@@ -94,21 +98,25 @@ void cma_leak_tracker_record_allocation(void *memory_pointer, ft_size_t size)
         return ;
     }
     g_cma_leak_outstanding_bytes += size;
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
 void cma_leak_tracker_record_free(void *memory_pointer)
 {
-    int entry_errno;
     size_t record_index;
     size_t record_count;
 
     if (!cma_leak_tracker_is_active())
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
+    }
     if (memory_pointer == ft_nullptr)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
-    entry_errno = ft_errno;
+    }
     record_count = g_cma_leak_records.size();
     record_index = 0;
     while (record_index < record_count)
@@ -132,7 +140,7 @@ void cma_leak_tracker_record_free(void *memory_pointer)
             last_index = g_cma_leak_records.size();
             if (last_index == 0)
             {
-                ft_errno = entry_errno;
+                ft_errno = FT_ERR_SUCCESSS;
                 return ;
             }
             last_index -= 1;
@@ -157,12 +165,12 @@ void cma_leak_tracker_record_free(void *memory_pointer)
                 cma_leak_tracker_handle_error(g_cma_leak_records.get_error());
                 return ;
             }
-            ft_errno = entry_errno;
+            ft_errno = FT_ERR_SUCCESSS;
             return ;
         }
         record_index += 1;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -183,12 +191,9 @@ void cma_leak_detection_disable(void)
 
 void cma_leak_detection_clear(void)
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     if (!cma_leak_tracker_clear_records(true))
         return ;
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -204,22 +209,16 @@ bool cma_leak_detection_is_enabled(void)
 ft_size_t cma_leak_detection_outstanding_allocations(void)
 {
     ft_size_t allocation_count;
-    int entry_errno;
-
-    entry_errno = ft_errno;
     allocation_count = static_cast<ft_size_t>(g_cma_leak_records.size());
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (allocation_count);
 }
 
 ft_size_t cma_leak_detection_outstanding_bytes(void)
 {
     ft_size_t outstanding_bytes;
-    int entry_errno;
-
-    entry_errno = ft_errno;
     outstanding_bytes = g_cma_leak_outstanding_bytes;
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (outstanding_bytes);
 }
 
@@ -232,9 +231,6 @@ ft_string cma_leak_detection_report(bool clear_after)
     size_t record_index;
     bool was_enabled;
     bool error_state;
-    int entry_errno;
-
-    entry_errno = ft_errno;
     was_enabled = g_cma_leak_detection_enabled;
     error_state = g_cma_leak_detection_error;
     g_cma_leak_detection_enabled = false;
@@ -406,6 +402,6 @@ ft_string cma_leak_detection_report(bool clear_after)
     }
     else
         cma_leak_tracker_resume(was_enabled, error_state);
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (report);
 }

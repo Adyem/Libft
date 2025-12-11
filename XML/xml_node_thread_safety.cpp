@@ -62,7 +62,6 @@ void xml_node_teardown_thread_safety(xml_node *node) noexcept
 int xml_node_lock(const xml_node *node, bool *lock_acquired) noexcept
 {
     xml_node *mutable_node;
-    int       entry_errno;
 
     if (lock_acquired)
         *lock_acquired = false;
@@ -71,11 +70,10 @@ int xml_node_lock(const xml_node *node, bool *lock_acquired) noexcept
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    entry_errno = ft_errno;
     mutable_node = const_cast<xml_node *>(node);
     if (!mutable_node->thread_safe_enabled || !mutable_node->mutex)
     {
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     mutable_node->mutex->lock(THREAD_ID);
@@ -89,21 +87,28 @@ int xml_node_lock(const xml_node *node, bool *lock_acquired) noexcept
     }
     if (lock_acquired)
         *lock_acquired = true;
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
 void xml_node_unlock(const xml_node *node, bool lock_acquired) noexcept
 {
     xml_node *mutable_node;
-    int       entry_errno;
 
     if (!node || !lock_acquired)
+    {
+        if (!node)
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
+        else
+            ft_errno = FT_ERR_SUCCESSS;
         return ;
+    }
     mutable_node = const_cast<xml_node *>(node);
     if (!mutable_node->mutex)
+    {
+        ft_errno = FT_ERR_INVALID_STATE;
         return ;
-    entry_errno = ft_errno;
+    }
     mutable_node->mutex->unlock(THREAD_ID);
     if (mutable_node->mutex->get_error() != FT_ERR_SUCCESSS)
     {
@@ -113,7 +118,7 @@ void xml_node_unlock(const xml_node *node, bool lock_acquired) noexcept
         ft_errno = mutex_error_code;
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 

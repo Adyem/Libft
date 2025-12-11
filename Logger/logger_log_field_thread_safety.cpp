@@ -89,20 +89,29 @@ int log_field_lock(const s_log_field *field, bool *lock_acquired)
 void log_field_unlock(const s_log_field *field, bool lock_acquired)
 {
     s_log_field *mutable_field;
-    int          entry_errno;
 
-    if (!field || !lock_acquired)
+    if (!field)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
+    }
+    if (!lock_acquired)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
+        return ;
+    }
     mutable_field = const_cast<s_log_field *>(field);
     if (!mutable_field->mutex)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
-    entry_errno = ft_errno;
+    }
     mutable_field->mutex->unlock(THREAD_ID);
     if (mutable_field->mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = mutable_field->mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
