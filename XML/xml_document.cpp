@@ -817,14 +817,12 @@ static int write_node(const xml_node *node, ft_vector<char> &buffer)
 {
     bool lock_acquired;
     int lock_status;
-    int entry_errno;
 
     if (!node)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    entry_errno = ft_errno;
     lock_acquired = false;
     lock_status = xml_node_lock(node, &lock_acquired);
     if (lock_status != 0)
@@ -853,7 +851,7 @@ static int write_node(const xml_node *node, ft_vector<char> &buffer)
     append_node_qualified_name(node, buffer);
     buffer.push_back('>');
     xml_node_unlock(node, lock_acquired);
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -1208,11 +1206,8 @@ int xml_document::lock(bool *lock_acquired) const noexcept
 
 void xml_document::unlock(bool lock_acquired) const noexcept
 {
-    int entry_errno;
-
     if (!lock_acquired || !this->_thread_safe_enabled || !this->_mutex)
         return ;
-    entry_errno = ft_errno;
     this->_mutex->unlock(THREAD_ID);
     if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
@@ -1223,7 +1218,7 @@ void xml_document::unlock(bool lock_acquired) const noexcept
         const_cast<xml_document *>(this)->set_error(mutex_error);
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
