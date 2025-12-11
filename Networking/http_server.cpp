@@ -20,10 +20,8 @@ ft_http_server::ft_http_server()
 
 ft_http_server::~ft_http_server()
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
@@ -32,7 +30,7 @@ ft_http_server::~ft_http_server()
     this->_server_socket.close_socket();
     this->_non_blocking = false;
     this->set_error(FT_ERR_SUCCESSS);
-    ft_http_server::restore_errno(guard, entry_errno);
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -46,14 +44,12 @@ void ft_http_server::set_error(int error_code) const
 int ft_http_server::start(const char *ip, uint16_t port, int address_family, bool non_blocking)
 {
     SocketConfig configuration;
-    int entry_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        ft_http_server::restore_errno(guard, entry_errno);
         return (1);
     }
 
@@ -68,12 +64,11 @@ int ft_http_server::start(const char *ip, uint16_t port, int address_family, boo
     if (this->_server_socket.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_server_socket.get_error());
-        ft_http_server::restore_errno(guard, entry_errno);
         return (1);
     }
     this->set_error(FT_ERR_SUCCESSS);
     this->_non_blocking = non_blocking;
-    ft_http_server::restore_errno(guard, entry_errno);
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -136,27 +131,6 @@ static void http_server_record_metrics(const char *method, size_t request_bytes,
         sample.error_tag = ft_strerror(error_code);
     }
     observability_networking_metrics_record(sample);
-    return ;
-}
-
-void ft_http_server::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept
-{
-    int operation_errno;
-
-    operation_errno = ft_errno;
-    if (guard.owns_lock())
-        guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-        return ;
-    }
-    if (operation_errno != FT_ERR_SUCCESSS)
-    {
-        ft_errno = operation_errno;
-        return ;
-    }
-    ft_errno = entry_errno;
     return ;
 }
 
@@ -257,19 +231,18 @@ static bool http_server_request_wants_keep_alive(const ft_string &request, size_
 
 int ft_http_server::run_once()
 {
-    int entry_errno;
     int result;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        ft_http_server::restore_errno(guard, entry_errno);
         return (1);
     }
     result = this->run_once_locked(guard);
-    ft_http_server::restore_errno(guard, entry_errno);
+    if (result == 0)
+        ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 
@@ -719,40 +692,38 @@ int ft_http_server::run_once_locked(ft_unique_lock<pt_mutex> &guard)
 
 int ft_http_server::get_error() const
 {
-    int entry_errno;
     int error_value;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_http_server::restore_errno(guard, entry_errno);
+        ft_errno = guard.get_error();
         return (this->_error_code);
     }
     error_value = this->_error_code;
-    ft_http_server::restore_errno(guard, entry_errno);
+    ft_errno = FT_ERR_SUCCESSS;
     return (error_value);
 }
 
 const char *ft_http_server::get_error_str() const
 {
-    int entry_errno;
     int error_value;
     const char *error_string;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const char *guard_error_string;
 
         guard_error_string = ft_strerror(guard.get_error());
-        ft_http_server::restore_errno(guard, entry_errno);
+        ft_errno = guard.get_error();
         return (guard_error_string);
     }
     error_value = this->_error_code;
     error_string = ft_strerror(error_value);
-    ft_http_server::restore_errno(guard, entry_errno);
+    ft_errno = FT_ERR_SUCCESSS;
     return (error_string);
 }
 

@@ -113,12 +113,13 @@ static char *trim_whitespace(char *string)
 void cnfg_free(cnfg_config *config)
 {
     if (!config)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
+    }
     ft_unique_lock<pt_mutex> mutex_guard;
-    int entry_errno;
     size_t entry_index;
 
-    entry_errno = ft_errno;
     bool already_owned = false;
     int lock_result = cnfg_config_lock_if_enabled(config, mutex_guard);
     if (lock_result != FT_ERR_SUCCESSS)
@@ -126,13 +127,11 @@ void cnfg_free(cnfg_config *config)
         if (lock_result == FT_ERR_MUTEX_ALREADY_LOCKED && config->mutex)
         {
             already_owned = true;
-            ft_errno = entry_errno;
         }
         else
         {
             cnfg_config_teardown_thread_safety(config);
             cma_free(config);
-            ft_errno = entry_errno;
             return ;
         }
     }
@@ -146,15 +145,19 @@ void cnfg_free(cnfg_config *config)
         ++entry_index;
     }
     cma_free(config->entries);
-    ft_errno = entry_errno;
     if (already_owned)
     {
         config->mutex->unlock(THREAD_ID);
         if (config->mutex->get_error() != FT_ERR_SUCCESSS)
             ft_errno = config->mutex->get_error();
+        else
+            ft_errno = FT_ERR_SUCCESSS;
     }
     else
+    {
         cnfg_config_unlock_guard(mutex_guard);
+        ft_errno = FT_ERR_SUCCESSS;
+    }
     cnfg_config_teardown_thread_safety(config);
     cma_free(config);
     return ;
