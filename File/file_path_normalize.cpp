@@ -6,10 +6,9 @@
 
 ft_string file_path_normalize(const char *path)
 {
+    ft_string empty_result;
     if (path == ft_nullptr)
     {
-        ft_string empty_result;
-
         if (empty_result.get_error() != FT_ERR_SUCCESSS)
             return (empty_result);
         return (empty_result);
@@ -18,6 +17,8 @@ ft_string file_path_normalize(const char *path)
     if (original.get_error())
         return (original);
     char *data = original.print();
+    if (!data)
+        return (empty_result);
     cmp_normalize_slashes(data);
     ft_string result;
     if (result.get_error())
