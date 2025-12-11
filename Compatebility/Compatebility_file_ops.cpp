@@ -186,6 +186,7 @@ int cmp_file_get_permissions(const char *path, mode_t *mode_out)
 # include <cstdio>
 # include <cerrno>
 # include <system_error>
+# include <new>
 
 void cmp_set_force_cross_device_move(int force_cross_device_move);
 
@@ -245,62 +246,73 @@ int cmp_file_move(const char *source_path, const char *destination_path)
     int delete_errno;
     bool destination_is_directory;
 
-    if (source_path == ft_nullptr || destination_path == ft_nullptr)
+    try
     {
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
-        return (-1);
-    }
-    if (global_force_cross_device_move != false)
-        errno = EXDEV;
-    if (global_force_cross_device_move == false)
-    {
-        if (rename(source_path, destination_path) == 0)
+        if (source_path == ft_nullptr || destination_path == ft_nullptr)
         {
-            ft_errno = FT_ERR_SUCCESSS;
-            return (0);
-        }
-        if (errno != EXDEV)
-        {
-            ft_errno = cmp_map_system_error_to_ft(errno);
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
             return (-1);
         }
-    }
-    destination_is_directory = std::filesystem::is_directory(destination_path,
-        directory_error_code);
-    if (directory_error_code.value() != 0
-        && directory_error_code.value()
-            != static_cast<int>(std::errc::not_a_directory))
-    {
-        ft_errno = cmp_map_system_error_to_ft(directory_error_code.value());
-        return (-1);
-    }
-    if (destination_is_directory != false)
-    {
-        ft_errno = FT_ERR_INVALID_OPERATION;
-        return (-1);
-    }
-    std::filesystem::copy_file(source_path, destination_path,
-        std::filesystem::copy_options::overwrite_existing, copy_error_code);
-    if (copy_error_code.value() == 0)
-    {
-        if (unlink(source_path) == 0)
+        if (global_force_cross_device_move != false)
+            errno = EXDEV;
+        if (global_force_cross_device_move == false)
         {
-            ft_errno = FT_ERR_SUCCESSS;
-            return (0);
+            if (rename(source_path, destination_path) == 0)
+            {
+                ft_errno = FT_ERR_SUCCESSS;
+                return (0);
+            }
+            if (errno != EXDEV)
+            {
+                ft_errno = cmp_map_system_error_to_ft(errno);
+                return (-1);
+            }
         }
-        delete_errno = errno;
-        std::error_code remove_error_code;
+        destination_is_directory = std::filesystem::is_directory(destination_path,
+            directory_error_code);
+        if (directory_error_code.value() != 0
+            && directory_error_code.value()
+                != static_cast<int>(std::errc::not_a_directory))
+        {
+            ft_errno = cmp_map_system_error_to_ft(directory_error_code.value());
+            return (-1);
+        }
+        if (destination_is_directory != false)
+        {
+            ft_errno = FT_ERR_INVALID_OPERATION;
+            return (-1);
+        }
+        std::filesystem::copy_file(source_path, destination_path,
+            std::filesystem::copy_options::overwrite_existing, copy_error_code);
+        if (copy_error_code.value() == 0)
+        {
+            if (unlink(source_path) == 0)
+            {
+                ft_errno = FT_ERR_SUCCESSS;
+                return (0);
+            }
+            delete_errno = errno;
+            std::error_code remove_error_code;
 
-        std::filesystem::remove(destination_path, remove_error_code);
-        ft_errno = cmp_map_system_error_to_ft(delete_errno);
-        return (-1);
+            std::filesystem::remove(destination_path, remove_error_code);
+            ft_errno = cmp_map_system_error_to_ft(delete_errno);
+            return (-1);
+        }
+        if (copy_error_code.value() != 0)
+        {
+            int copy_value;
+
+            copy_value = copy_error_code.value();
+            ft_errno = cmp_map_system_error_to_ft(copy_value);
+        }
     }
-    if (copy_error_code.value() != 0)
+    catch (const std::bad_alloc &)
     {
-        int copy_value;
-
-        copy_value = copy_error_code.value();
-        ft_errno = cmp_map_system_error_to_ft(copy_value);
+        ft_errno = FT_ERR_NO_MEMORY;
+    }
+    catch (...)
+    {
+        ft_errno = FT_ERR_INTERNAL;
     }
     return (-1);
 }
@@ -308,24 +320,36 @@ int cmp_file_move(const char *source_path, const char *destination_path)
 int cmp_file_copy(const char *source_path, const char *destination_path)
 {
     std::error_code copy_error_code;
+
     if (source_path == ft_nullptr || destination_path == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    std::filesystem::copy_file(source_path, destination_path,
-        std::filesystem::copy_options::overwrite_existing, copy_error_code);
-    if (copy_error_code.value() == 0)
+    try
     {
-        ft_errno = FT_ERR_SUCCESSS;
-        return (0);
-    }
-    if (copy_error_code.value() != 0)
-    {
-        int copy_value;
+        std::filesystem::copy_file(source_path, destination_path,
+            std::filesystem::copy_options::overwrite_existing, copy_error_code);
+        if (copy_error_code.value() == 0)
+        {
+            ft_errno = FT_ERR_SUCCESSS;
+            return (0);
+        }
+        if (copy_error_code.value() != 0)
+        {
+            int copy_value;
 
-        copy_value = copy_error_code.value();
-        ft_errno = cmp_map_system_error_to_ft(copy_value);
+            copy_value = copy_error_code.value();
+            ft_errno = cmp_map_system_error_to_ft(copy_value);
+        }
+    }
+    catch (const std::bad_alloc &)
+    {
+        ft_errno = FT_ERR_NO_MEMORY;
+    }
+    catch (...)
+    {
+        ft_errno = FT_ERR_INTERNAL;
     }
     return (-1);
 }
