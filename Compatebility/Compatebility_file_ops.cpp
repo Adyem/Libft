@@ -185,6 +185,7 @@ int cmp_file_get_permissions(const char *path, mode_t *mode_out)
 # include <filesystem>
 # include <cstdio>
 # include <cerrno>
+# include <system_error>
 
 void cmp_set_force_cross_device_move(int force_cross_device_move);
 
@@ -240,7 +241,9 @@ int cmp_file_delete(const char *path)
 int cmp_file_move(const char *source_path, const char *destination_path)
 {
     std::error_code copy_error_code;
+    std::error_code directory_error_code;
     int delete_errno;
+    bool destination_is_directory;
 
     if (source_path == ft_nullptr || destination_path == ft_nullptr)
     {
@@ -261,6 +264,20 @@ int cmp_file_move(const char *source_path, const char *destination_path)
             ft_errno = cmp_map_system_error_to_ft(errno);
             return (-1);
         }
+    }
+    destination_is_directory = std::filesystem::is_directory(destination_path,
+        directory_error_code);
+    if (directory_error_code.value() != 0
+        && directory_error_code.value()
+            != static_cast<int>(std::errc::not_a_directory))
+    {
+        ft_errno = cmp_map_system_error_to_ft(directory_error_code.value());
+        return (-1);
+    }
+    if (destination_is_directory != false)
+    {
+        ft_errno = FT_ERR_INVALID_OPERATION;
+        return (-1);
     }
     std::filesystem::copy_file(source_path, destination_path,
         std::filesystem::copy_options::overwrite_existing, copy_error_code);
