@@ -18,21 +18,21 @@ int cmp_thread_cancel(pthread_t thread)
         ft_errno = ft_map_system_error(GetLastError());
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
 int cmp_thread_yield()
 {
     SwitchToThread();
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
 int cmp_thread_sleep(unsigned int milliseconds)
 {
     Sleep(milliseconds);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -47,13 +47,13 @@ int cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_val
                 &expected_value, sizeof(uint32_t), INFINITE);
         if (wait_result != FALSE)
         {
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             return (0);
         }
         error_code = GetLastError();
         if (error_code == ERROR_SUCCESS)
         {
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             return (0);
         }
         if (error_code == ERROR_TIMEOUT)
@@ -66,7 +66,7 @@ int cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_val
 int cmp_thread_wake_one_uint32(std::atomic<uint32_t> *address)
 {
     WakeByAddressSingle(reinterpret_cast<volatile VOID *>(address));
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 #else
@@ -133,7 +133,7 @@ static int cmp_wait_create_entry(std::atomic<uint32_t> *address, cmp_wait_entry 
     }
     g_wait_list_head = new_entry;
     *entry_out = new_entry;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -165,13 +165,13 @@ static int cmp_wait_remove_entry(cmp_wait_entry *entry) noexcept
             else
                 previous_entry->next = current_entry->next;
             cma_free(current_entry);
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             return (0);
         }
         previous_entry = current_entry;
         current_entry = current_entry->next;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 # endif
@@ -191,7 +191,7 @@ int cmp_thread_cancel(pthread_t thread)
         ft_errno = ft_map_system_error(return_value);
         return (return_value);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (return_value);
 }
 
@@ -202,7 +202,7 @@ int cmp_thread_yield()
         ft_errno = ft_map_system_error(errno);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -213,7 +213,7 @@ int cmp_thread_sleep(unsigned int milliseconds)
         ft_errno = ft_map_system_error(errno);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -233,12 +233,12 @@ int cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_val
                 expected_value, NULL, NULL, 0);
         if (syscall_result == 0)
         {
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             return (0);
         }
         if (errno == EAGAIN)
         {
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             return (0);
         }
         if (errno == EINTR)
@@ -327,7 +327,7 @@ int cmp_thread_wait_uint32(std::atomic<uint32_t> *address, uint32_t expected_val
         ft_errno = ft_map_system_error(unlock_result);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 # endif
 }
@@ -349,7 +349,7 @@ int cmp_thread_wake_one_uint32(std::atomic<uint32_t> *address)
         ft_errno = ft_map_system_error(errno);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 # else
     int lock_result;
@@ -387,7 +387,7 @@ int cmp_thread_wake_one_uint32(std::atomic<uint32_t> *address)
         ft_errno = ft_map_system_error(unlock_result);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 # endif
 }

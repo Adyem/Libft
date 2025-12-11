@@ -104,10 +104,10 @@ void Pool<T>::release(size_t idx) noexcept
         return ;
     this->_freeIndices.push_back(idx);
     vector_error = this->_freeIndices.get_error();
-    if (vector_error != FT_ER_SUCCESSS)
+    if (vector_error != FT_ERR_SUCCESSS)
         this->set_error_unlocked(vector_error);
     else
-        this->set_error_unlocked(FT_ER_SUCCESSS);
+        this->set_error_unlocked(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -123,7 +123,7 @@ T* Pool<T>::ptrAt(size_t idx) noexcept
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
         return (ft_nullptr);
     }
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     return (reinterpret_cast<T*>(&this->_buffer[idx]));
 }
 
@@ -131,11 +131,11 @@ template<typename T>
 Pool<T>::Pool()
     : _buffer()
     , _freeIndices()
-    , _error_code(FT_ER_SUCCESSS)
+    , _error_code(FT_ERR_SUCCESSS)
     , _state_mutex(ft_nullptr)
     , _thread_safe_enabled(false)
 {
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -143,7 +143,7 @@ template<typename T>
 Pool<T>::Pool(Pool&& other)
     : _buffer()
     , _freeIndices()
-    , _error_code(FT_ER_SUCCESSS)
+    , _error_code(FT_ERR_SUCCESSS)
     , _state_mutex(ft_nullptr)
     , _thread_safe_enabled(false)
 {
@@ -164,7 +164,7 @@ Pool<T>::Pool(Pool&& other)
     this->_error_code = other._error_code;
     other_thread_safe = other._thread_safe_enabled;
     other_mutex = other._state_mutex;
-    other._error_code = FT_ER_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESSS;
     other._state_mutex = ft_nullptr;
     other._thread_safe_enabled = false;
     other.unlock_internal(lock_acquired);
@@ -220,7 +220,7 @@ Pool<T>& Pool<T>::operator=(Pool&& other)
         this->_error_code = other._error_code;
         this->_state_mutex = ft_nullptr;
         this->_thread_safe_enabled = other._thread_safe_enabled;
-        other._error_code = FT_ER_SUCCESSS;
+        other._error_code = FT_ERR_SUCCESSS;
         other._state_mutex = ft_nullptr;
         other._thread_safe_enabled = false;
         other.unlock_internal(other_lock_acquired);
@@ -253,7 +253,7 @@ template<typename T>
 Pool<T>::~Pool()
 {
     this->teardown_thread_safety();
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -273,7 +273,7 @@ void Pool<T>::resize(size_t new_size)
     }
     this->_buffer.resize(new_size);
     buffer_error = this->_buffer.get_error();
-    if (buffer_error != FT_ER_SUCCESSS)
+    if (buffer_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(buffer_error);
         this->unlock_internal(lock_acquired);
@@ -281,7 +281,7 @@ void Pool<T>::resize(size_t new_size)
     }
     this->_freeIndices.clear();
     free_error = this->_freeIndices.get_error();
-    if (free_error != FT_ER_SUCCESSS)
+    if (free_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(free_error);
         this->unlock_internal(lock_acquired);
@@ -289,7 +289,7 @@ void Pool<T>::resize(size_t new_size)
     }
     this->_freeIndices.reserve(new_size);
     free_error = this->_freeIndices.get_error();
-    if (free_error != FT_ER_SUCCESSS)
+    if (free_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(free_error);
         this->unlock_internal(lock_acquired);
@@ -302,7 +302,7 @@ void Pool<T>::resize(size_t new_size)
         int push_error;
 
         push_error = this->_freeIndices.get_error();
-        if (push_error != FT_ER_SUCCESSS)
+        if (push_error != FT_ERR_SUCCESSS)
         {
             this->set_error_unlocked(push_error);
             this->unlock_internal(lock_acquired);
@@ -310,7 +310,7 @@ void Pool<T>::resize(size_t new_size)
         }
         index++;
     }
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -346,7 +346,7 @@ typename Pool<T>::Object Pool<T>::acquire(Args&&... args)
     idx = this->_freeIndices[last];
     this->_freeIndices.pop_back();
     vector_error = this->_freeIndices.get_error();
-    if (vector_error != FT_ER_SUCCESSS)
+    if (vector_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(vector_error);
         this->unlock_internal(lock_acquired);
@@ -373,7 +373,7 @@ typename Pool<T>::Object Pool<T>::acquire(Args&&... args)
         {
             this->_freeIndices.push_back(idx);
             vector_error = this->_freeIndices.get_error();
-            if (vector_error != FT_ER_SUCCESSS)
+            if (vector_error != FT_ERR_SUCCESSS)
                 this->set_error_unlocked(vector_error);
             else
                 this->set_error_unlocked(result.get_error());
@@ -381,8 +381,8 @@ typename Pool<T>::Object Pool<T>::acquire(Args&&... args)
             return (result);
         }
     }
-    result.set_error(FT_ER_SUCCESSS);
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    result.set_error(FT_ERR_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (result);
 }
@@ -440,11 +440,11 @@ Pool<T>::Object::Object() noexcept
     : _pool(ft_nullptr)
     , _idx(0)
     , _ptr(ft_nullptr)
-    , _error_code(FT_ER_SUCCESSS)
+    , _error_code(FT_ERR_SUCCESSS)
     , _state_mutex(ft_nullptr)
     , _thread_safe_enabled(false)
 {
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -453,11 +453,11 @@ Pool<T>::Object::Object(Pool<T>* pool, size_t idx, T* ptr) noexcept
     : _pool(pool)
     , _idx(idx)
     , _ptr(ptr)
-    , _error_code(FT_ER_SUCCESSS)
+    , _error_code(FT_ERR_SUCCESSS)
     , _state_mutex(ft_nullptr)
     , _thread_safe_enabled(false)
 {
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -482,8 +482,8 @@ Pool<T>::Object::~Object() noexcept
     }
     this->_pool = ft_nullptr;
     this->_ptr = ft_nullptr;
-    if (this->_error_code == FT_ER_SUCCESSS)
-        this->set_error_unlocked(FT_ER_SUCCESSS);
+    if (this->_error_code == FT_ERR_SUCCESSS)
+        this->set_error_unlocked(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     this->teardown_thread_safety();
     return ;
@@ -503,7 +503,7 @@ T* Pool<T>::Object::operator->() const noexcept
         this->unlock_internal(lock_acquired);
         return (ft_nullptr);
     }
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (this->_ptr);
 }
@@ -518,7 +518,7 @@ Pool<T>::Object::operator bool() const noexcept
         return (false);
     if (this->_ptr != ft_nullptr)
     {
-        this->set_error_unlocked(FT_ER_SUCCESSS);
+        this->set_error_unlocked(FT_ERR_SUCCESSS);
         this->unlock_internal(lock_acquired);
         return (true);
     }
@@ -538,7 +538,7 @@ Pool<T>::Object::Object(Object&& o) noexcept
 {
     o._pool = ft_nullptr;
     o._ptr = ft_nullptr;
-    o._error_code = FT_ER_SUCCESSS;
+    o._error_code = FT_ERR_SUCCESSS;
     o._state_mutex = ft_nullptr;
     o._thread_safe_enabled = false;
     this->set_error(this->_error_code);
@@ -579,7 +579,7 @@ typename Pool<T>::Object& Pool<T>::Object::operator=(Object&& o) noexcept
         o._pool = ft_nullptr;
         o._idx = 0;
         o._ptr = ft_nullptr;
-        o._error_code = FT_ER_SUCCESSS;
+        o._error_code = FT_ERR_SUCCESSS;
         o._state_mutex = ft_nullptr;
         o._thread_safe_enabled = false;
         o.unlock_internal(other_lock_acquired);
@@ -650,7 +650,7 @@ int Pool<T>::enable_thread_safety() noexcept
 
     if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
     {
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
     memory = cma_malloc(sizeof(pt_mutex));
@@ -660,7 +660,7 @@ int Pool<T>::enable_thread_safety() noexcept
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ER_SUCCESSS)
+    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
@@ -672,7 +672,7 @@ int Pool<T>::enable_thread_safety() noexcept
     }
     this->_state_mutex = mutex_pointer;
     this->_thread_safe_enabled = true;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -680,7 +680,7 @@ template<typename T>
 void Pool<T>::disable_thread_safety() noexcept
 {
     this->teardown_thread_safety();
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -702,7 +702,7 @@ int Pool<T>::lock(bool *lock_acquired) const noexcept
     if (result != 0)
         const_cast<Pool<T> *>(this)->set_error(ft_errno);
     else
-        const_cast<Pool<T> *>(this)->set_error(FT_ER_SUCCESSS);
+        const_cast<Pool<T> *>(this)->set_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -713,7 +713,7 @@ void Pool<T>::unlock(bool lock_acquired) const noexcept
 
     entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
-    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
         const_cast<Pool<T> *>(this)->set_error(this->_state_mutex->get_error());
     else
         const_cast<Pool<T> *>(this)->set_error(entry_errno);
@@ -727,18 +727,18 @@ int Pool<T>::lock_internal(bool *lock_acquired) const noexcept
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     this->_state_mutex->lock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_state_mutex->get_error();
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -751,7 +751,7 @@ void Pool<T>::unlock_internal(bool lock_acquired) const noexcept
         return ;
     entry_errno = ft_errno;
     this->_state_mutex->unlock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_state_mutex->get_error();
         return ;
@@ -781,7 +781,7 @@ int Pool<T>::Object::enable_thread_safety() noexcept
 
     if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
     {
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
     memory = cma_malloc(sizeof(pt_mutex));
@@ -791,7 +791,7 @@ int Pool<T>::Object::enable_thread_safety() noexcept
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ER_SUCCESSS)
+    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
@@ -803,7 +803,7 @@ int Pool<T>::Object::enable_thread_safety() noexcept
     }
     this->_state_mutex = mutex_pointer;
     this->_thread_safe_enabled = true;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -811,7 +811,7 @@ template<typename T>
 void Pool<T>::Object::disable_thread_safety() noexcept
 {
     this->teardown_thread_safety();
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -833,7 +833,7 @@ int Pool<T>::Object::lock(bool *lock_acquired) const noexcept
     if (result != 0)
         const_cast<typename Pool<T>::Object *>(this)->set_error(ft_errno);
     else
-        const_cast<typename Pool<T>::Object *>(this)->set_error(FT_ER_SUCCESSS);
+        const_cast<typename Pool<T>::Object *>(this)->set_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -844,7 +844,7 @@ void Pool<T>::Object::unlock(bool lock_acquired) const noexcept
 
     entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
-    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
         const_cast<typename Pool<T>::Object *>(this)->set_error(this->_state_mutex->get_error());
     else
         const_cast<typename Pool<T>::Object *>(this)->set_error(entry_errno);
@@ -858,18 +858,18 @@ int Pool<T>::Object::lock_internal(bool *lock_acquired) const noexcept
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     this->_state_mutex->lock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_state_mutex->get_error();
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -882,7 +882,7 @@ void Pool<T>::Object::unlock_internal(bool lock_acquired) const noexcept
         return ;
     entry_errno = ft_errno;
     this->_state_mutex->unlock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_state_mutex->get_error();
         return ;

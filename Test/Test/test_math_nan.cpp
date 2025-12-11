@@ -30,7 +30,7 @@ FT_TEST(test_math_nan_resets_errno_to_success, "math_nan resets errno to success
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     value = math_nan();
     FT_ASSERT(math_isnan(value));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 

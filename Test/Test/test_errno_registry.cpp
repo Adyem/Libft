@@ -5,7 +5,7 @@
 FT_TEST(test_ft_strerror_covers_documented_codes, "ft_strerror returns descriptions for documented error codes")
 {
     static const int error_code_table[] = {
-        FT_ER_SUCCESSS,
+        FT_ERR_SUCCESSS,
         FT_ERR_NO_MEMORY,
         FT_ERR_INVALID_ARGUMENT,
         FT_ERR_INVALID_POINTER,
@@ -69,10 +69,10 @@ FT_TEST(test_ft_strerror_covers_documented_codes, "ft_strerror returns descripti
     {
         const char *error_message;
 
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         error_message = ft_strerror(error_code_table[code_index]);
         FT_ASSERT(error_message != ft_nullptr);
-        FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+        FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
         code_index++;
     }
     return (1);

@@ -91,7 +91,7 @@ int ft_loot_entry<ElementType>::lock_entry(ft_unique_lock<pt_mutex> &guard) cons
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
 
     entry_errno = ft_errno;
-    if (local_guard.get_error() != FT_ER_SUCCESSS)
+    if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = entry_errno;
         guard = ft_unique_lock<pt_mutex>();
@@ -99,7 +99,7 @@ int ft_loot_entry<ElementType>::lock_entry(ft_unique_lock<pt_mutex> &guard) cons
     }
     ft_errno = entry_errno;
     guard = ft_move(local_guard);
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 template<typename ElementType>
@@ -110,12 +110,12 @@ void ft_loot_entry<ElementType>::restore_errno(ft_unique_lock<pt_mutex> &guard, 
     current_errno = ft_errno;
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return ;
     }
-    if (current_errno != FT_ER_SUCCESSS)
+    if (current_errno != FT_ERR_SUCCESSS)
     {
         ft_errno = current_errno;
         return ;
@@ -129,10 +129,10 @@ ft_loot_entry<ElementType>::ft_loot_entry() noexcept
     : _item(ft_nullptr)
     , _weight(1)
     , _rarity(0)
-    , _error_code(FT_ER_SUCCESSS)
+    , _error_code(FT_ERR_SUCCESSS)
     , _mutex()
 {
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -141,15 +141,15 @@ ft_loot_entry<ElementType>::ft_loot_entry(ElementType *item, int weight, int rar
     : _item(item)
     , _weight(1)
     , _rarity(0)
-    , _error_code(FT_ER_SUCCESSS)
+    , _error_code(FT_ERR_SUCCESSS)
     , _mutex()
 {
     this->set_item(item);
     this->set_weight(weight);
     this->set_rarity(rarity);
-    if (this->_error_code != FT_ER_SUCCESSS)
+    if (this->_error_code != FT_ERR_SUCCESSS)
         return ;
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -158,7 +158,7 @@ ft_loot_entry<ElementType>::ft_loot_entry(const ft_loot_entry<ElementType> &othe
     : _item(ft_nullptr)
     , _weight(1)
     , _rarity(0)
-    , _error_code(FT_ER_SUCCESSS)
+    , _error_code(FT_ERR_SUCCESSS)
     , _mutex()
 {
     ft_unique_lock<pt_mutex> other_guard;
@@ -167,7 +167,7 @@ ft_loot_entry<ElementType>::ft_loot_entry(const ft_loot_entry<ElementType> &othe
 
     entry_errno = ft_errno;
     lock_error = other.lock_entry(other_guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_loot_entry<ElementType>::restore_errno(other_guard, entry_errno);
@@ -176,7 +176,7 @@ ft_loot_entry<ElementType>::ft_loot_entry(const ft_loot_entry<ElementType> &othe
     this->_item = other._item;
     this->_weight = other._weight;
     this->_rarity = other._rarity;
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     ft_loot_entry<ElementType>::restore_errno(other_guard, entry_errno);
     return ;
 }
@@ -191,19 +191,19 @@ ft_loot_entry<ElementType> &ft_loot_entry<ElementType>::operator=(const ft_loot_
 
     if (this == &other)
     {
-        this->set_error_unlocked(FT_ER_SUCCESSS);
+        this->set_error_unlocked(FT_ERR_SUCCESSS);
         return (*this);
     }
     entry_errno = ft_errno;
     lock_error = this->lock_entry(this_guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_loot_entry<ElementType>::restore_errno(this_guard, entry_errno);
         return (*this);
     }
     lock_error = other.lock_entry(other_guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_loot_entry<ElementType>::restore_errno(other_guard, entry_errno);
@@ -213,7 +213,7 @@ ft_loot_entry<ElementType> &ft_loot_entry<ElementType>::operator=(const ft_loot_
     this->_item = other._item;
     this->_weight = other._weight;
     this->_rarity = other._rarity;
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     ft_loot_entry<ElementType>::restore_errno(other_guard, entry_errno);
     ft_loot_entry<ElementType>::restore_errno(this_guard, entry_errno);
     return (*this);
@@ -225,7 +225,7 @@ ft_loot_entry<ElementType>::~ft_loot_entry() noexcept
     int entry_errno;
 
     entry_errno = ft_errno;
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     ft_errno = entry_errno;
     return ;
 }
@@ -239,14 +239,14 @@ void ft_loot_entry<ElementType>::set_item(ElementType *item) noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_entry(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_loot_entry<ElementType>::restore_errno(guard, entry_errno);
         return ;
     }
     this->_item = item;
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     ft_loot_entry<ElementType>::restore_errno(guard, entry_errno);
     return ;
 }
@@ -261,14 +261,14 @@ ElementType *ft_loot_entry<ElementType>::get_item() const noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_entry(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_loot_entry<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     item_pointer = this->_item;
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     ft_loot_entry<ElementType>::restore_errno(guard, entry_errno);
     return (item_pointer);
 }
@@ -288,14 +288,14 @@ void ft_loot_entry<ElementType>::set_weight(int weight) noexcept
     }
     entry_errno = ft_errno;
     lock_error = this->lock_entry(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_loot_entry<ElementType>::restore_errno(guard, entry_errno);
         return ;
     }
     this->_weight = weight;
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     ft_loot_entry<ElementType>::restore_errno(guard, entry_errno);
     return ;
 }
@@ -310,14 +310,14 @@ int ft_loot_entry<ElementType>::get_weight() const noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_entry(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_loot_entry<ElementType>::restore_errno(guard, entry_errno);
         return (0);
     }
     weight_value = this->_weight;
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     ft_loot_entry<ElementType>::restore_errno(guard, entry_errno);
     return (weight_value);
 }
@@ -333,14 +333,14 @@ void ft_loot_entry<ElementType>::set_rarity(int rarity) noexcept
         rarity = 0;
     entry_errno = ft_errno;
     lock_error = this->lock_entry(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_loot_entry<ElementType>::restore_errno(guard, entry_errno);
         return ;
     }
     this->_rarity = rarity;
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     ft_loot_entry<ElementType>::restore_errno(guard, entry_errno);
     return ;
 }
@@ -355,14 +355,14 @@ int ft_loot_entry<ElementType>::get_rarity() const noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_entry(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_loot_entry<ElementType>::restore_errno(guard, entry_errno);
         return (0);
     }
     rarity_value = this->_rarity;
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     ft_loot_entry<ElementType>::restore_errno(guard, entry_errno);
     return (rarity_value);
 }
@@ -377,7 +377,7 @@ int ft_loot_entry<ElementType>::get_effective_weight() const noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_entry(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_loot_entry<ElementType>::restore_errno(guard, entry_errno);
@@ -386,7 +386,7 @@ int ft_loot_entry<ElementType>::get_effective_weight() const noexcept
     effective_weight = this->_weight / (this->_rarity + 1);
     if (effective_weight < 1)
         effective_weight = 1;
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     ft_loot_entry<ElementType>::restore_errno(guard, entry_errno);
     return (effective_weight);
 }
@@ -401,14 +401,14 @@ int ft_loot_entry<ElementType>::get_error() const noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_entry(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_loot_entry<ElementType>::restore_errno(guard, entry_errno);
         return (lock_error);
     }
     current_error = this->_error_code;
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     ft_loot_entry<ElementType>::restore_errno(guard, entry_errno);
     return (current_error);
 }
@@ -423,14 +423,14 @@ const char *ft_loot_entry<ElementType>::get_error_str() const noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_entry(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_loot_entry<ElementType>::restore_errno(guard, entry_errno);
         return (ft_strerror(lock_error));
     }
     error_string = ft_strerror(this->_error_code);
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     ft_loot_entry<ElementType>::restore_errno(guard, entry_errno);
     return (error_string);
 }
@@ -456,7 +456,7 @@ int ft_loot_table<ElementType>::lock_table(ft_unique_lock<pt_mutex> &guard) cons
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
 
     entry_errno = ft_errno;
-    if (local_guard.get_error() != FT_ER_SUCCESSS)
+    if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = entry_errno;
         guard = ft_unique_lock<pt_mutex>();
@@ -464,7 +464,7 @@ int ft_loot_table<ElementType>::lock_table(ft_unique_lock<pt_mutex> &guard) cons
     }
     ft_errno = entry_errno;
     guard = ft_move(local_guard);
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 template<typename ElementType>
@@ -475,12 +475,12 @@ void ft_loot_table<ElementType>::restore_errno(ft_unique_lock<pt_mutex> &guard, 
     current_errno = ft_errno;
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return ;
     }
-    if (current_errno != FT_ER_SUCCESSS)
+    if (current_errno != FT_ERR_SUCCESSS)
     {
         ft_errno = current_errno;
         return ;
@@ -505,13 +505,13 @@ int ft_loot_table<ElementType>::compute_total_weight_locked(size_t entry_count, 
     while (index < entry_count)
     {
         const ft_loot_entry<ElementType> &entry = (*this)[index];
-        if (this->get_error() != FT_ER_SUCCESSS)
+        if (this->get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = this->get_error();
             return (this->get_error());
         }
         int effective_weight = entry.get_effective_weight();
-        if (entry.get_error() != FT_ER_SUCCESSS)
+        if (entry.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = entry.get_error();
             return (entry.get_error());
@@ -527,8 +527,8 @@ int ft_loot_table<ElementType>::compute_total_weight_locked(size_t entry_count, 
         index += 1;
     }
     *total_weight = computed_total;
-    ft_errno = FT_ER_SUCCESSS;
-    return (FT_ER_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESSS;
+    return (FT_ERR_SUCCESSS);
 }
 
 template<typename ElementType>
@@ -547,13 +547,13 @@ int ft_loot_table<ElementType>::locate_entry_by_roll_locked(int roll, size_t ent
     while (index < entry_count)
     {
         const ft_loot_entry<ElementType> &entry = (*this)[index];
-        if (this->get_error() != FT_ER_SUCCESSS)
+        if (this->get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = this->get_error();
             return (this->get_error());
         }
         int effective_weight = entry.get_effective_weight();
-        if (entry.get_error() != FT_ER_SUCCESSS)
+        if (entry.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = entry.get_error();
             return (entry.get_error());
@@ -569,8 +569,8 @@ int ft_loot_table<ElementType>::locate_entry_by_roll_locked(int roll, size_t ent
         if (roll <= accumulated)
         {
             *result_index = index;
-            ft_errno = FT_ER_SUCCESSS;
-            return (FT_ER_SUCCESSS);
+            ft_errno = FT_ERR_SUCCESSS;
+            return (FT_ERR_SUCCESSS);
         }
         index += 1;
     }
@@ -588,14 +588,14 @@ ft_loot_table<ElementType>::ft_loot_table() noexcept
         this->set_error_unlocked(ft_errno);
         return ;
     }
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
 template<typename ElementType>
 ft_loot_table<ElementType>::~ft_loot_table() noexcept
 {
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -615,25 +615,25 @@ void ft_loot_table<ElementType>::addElement(ElementType *elem, int weight, int r
     if (rarity < 0)
         rarity = 0;
     ft_loot_entry<ElementType> entry(elem, weight, rarity);
-    if (entry.get_error() != FT_ER_SUCCESSS)
+    if (entry.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(entry.get_error());
         return ;
     }
     lock_error = this->lock_table(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_loot_table<ElementType>::restore_errno(guard, entry_errno);
         return ;
     }
     this->push_back(entry);
-    if (this->get_error() != FT_ER_SUCCESSS)
+    if (this->get_error() != FT_ERR_SUCCESSS)
     {
         ft_loot_table<ElementType>::restore_errno(guard, entry_errno);
         return ;
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     ft_loot_table<ElementType>::restore_errno(guard, entry_errno);
     return ;
 }
@@ -651,14 +651,14 @@ ElementType *ft_loot_table<ElementType>::getRandomLoot() const
 
     entry_errno = ft_errno;
     lock_error = this->lock_table(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         const_cast<ft_loot_table<ElementType> *>(this)->set_error(lock_error);
         ft_loot_table<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     entry_count = this->size();
-    if (this->get_error() != FT_ER_SUCCESSS)
+    if (this->get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_loot_table<ElementType> *>(this)->set_error(this->get_error());
         ft_loot_table<ElementType>::restore_errno(guard, entry_errno);
@@ -673,41 +673,41 @@ ElementType *ft_loot_table<ElementType>::getRandomLoot() const
     }
     total_weight = 0;
     lock_error = this->compute_total_weight_locked(entry_count, &total_weight);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         const_cast<ft_loot_table<ElementType> *>(this)->set_error(lock_error);
         ft_loot_table<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     roll = ft_dice_roll(1, total_weight);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
     {
         const_cast<ft_loot_table<ElementType> *>(this)->set_error(ft_errno);
         ft_loot_table<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     lock_error = this->locate_entry_by_roll_locked(roll, entry_count, &selected_index);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         const_cast<ft_loot_table<ElementType> *>(this)->set_error(lock_error);
         ft_loot_table<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     const ft_loot_entry<ElementType> &selected_entry = (*this)[selected_index];
-    if (this->get_error() != FT_ER_SUCCESSS)
+    if (this->get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_loot_table<ElementType> *>(this)->set_error(this->get_error());
         ft_loot_table<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     ElementType *loot_item = selected_entry.get_item();
-    if (selected_entry.get_error() != FT_ER_SUCCESSS)
+    if (selected_entry.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_loot_table<ElementType> *>(this)->set_error(selected_entry.get_error());
         ft_loot_table<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
-    const_cast<ft_loot_table<ElementType> *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_loot_table<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
     ft_loot_table<ElementType>::restore_errno(guard, entry_errno);
     return (loot_item);
 }
@@ -727,14 +727,14 @@ ElementType *ft_loot_table<ElementType>::popRandomLoot()
 
     entry_errno = ft_errno;
     lock_error = this->lock_table(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_loot_table<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     entry_count = this->size();
-    if (this->get_error() != FT_ER_SUCCESSS)
+    if (this->get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->get_error());
         ft_loot_table<ElementType>::restore_errno(guard, entry_errno);
@@ -749,41 +749,41 @@ ElementType *ft_loot_table<ElementType>::popRandomLoot()
     }
     total_weight = 0;
     lock_error = this->compute_total_weight_locked(entry_count, &total_weight);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_loot_table<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     roll = ft_dice_roll(1, total_weight);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
     {
         this->set_error(ft_errno);
         ft_loot_table<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     lock_error = this->locate_entry_by_roll_locked(roll, entry_count, &selected_index);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_loot_table<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     removed_entry = this->release_at(selected_index);
-    if (this->get_error() != FT_ER_SUCCESSS)
+    if (this->get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->get_error());
         ft_loot_table<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     loot_item = removed_entry.get_item();
-    if (removed_entry.get_error() != FT_ER_SUCCESSS)
+    if (removed_entry.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(removed_entry.get_error());
         ft_loot_table<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     ft_loot_table<ElementType>::restore_errno(guard, entry_errno);
     return (loot_item);
 }

@@ -54,7 +54,7 @@ static double rng_simpson_integral(double start, double end, int segment_total, 
         else
             weight = 4.0;
         value = function(point, context);
-        if (ft_errno != FT_ER_SUCCESSS)
+        if (ft_errno != FT_ERR_SUCCESSS)
             return (0.0);
         if (std::isfinite(value) == false)
         {
@@ -78,7 +78,7 @@ static double rng_simpson_integral(double start, double end, int segment_total, 
                     adjusted_point = start;
             }
             value = function(adjusted_point, context);
-            if (ft_errno != FT_ER_SUCCESSS)
+            if (ft_errno != FT_ERR_SUCCESSS)
                 return (0.0);
             if (std::isfinite(value) == false)
                 value = 0.0;
@@ -118,7 +118,7 @@ double rng_gamma_pdf(double shape, double scale, double value)
     }
     if (value < 0.0)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0.0);
     }
     epsilon = 0.000000000001;
@@ -126,15 +126,15 @@ double rng_gamma_pdf(double shape, double scale, double value)
     {
         if (shape < 1.0)
         {
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             return (std::numeric_limits<double>::infinity());
         }
         if (std::fabs(shape - 1.0) <= epsilon)
         {
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             return (1.0 / scale);
         }
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0.0);
     }
     log_component = (shape - 1.0) * std::log(value) - (value / scale);
@@ -146,7 +146,7 @@ double rng_gamma_pdf(double shape, double scale, double value)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0.0);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 
@@ -165,7 +165,7 @@ double rng_gamma_cdf(double shape, double scale, double value)
     }
     if (value <= 0.0)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0.0);
     }
     context.shape = shape;
@@ -176,14 +176,14 @@ double rng_gamma_cdf(double shape, double scale, double value)
     segment_total = static_cast<int>(normalized_value * 128.0) + 256;
     segment_total = rng_adjust_segment_total(segment_total);
     integral = rng_simpson_integral(0.0, value, segment_total, rng_gamma_pdf_integrand, &context);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
         return (0.0);
     result = integral;
     if (result < 0.0)
         result = 0.0;
     if (result > 1.0)
         result = 1.0;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 
@@ -204,30 +204,30 @@ double rng_beta_pdf(double alpha, double beta, double value)
     {
         if (alpha < 1.0)
         {
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             return (std::numeric_limits<double>::infinity());
         }
         if (std::fabs(alpha - 1.0) <= epsilon)
         {
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             return (beta);
         }
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0.0);
     }
     if (value >= 1.0)
     {
         if (beta < 1.0)
         {
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             return (std::numeric_limits<double>::infinity());
         }
         if (std::fabs(beta - 1.0) <= epsilon)
         {
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             return (alpha);
         }
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0.0);
     }
     log_denominator = std::lgamma(alpha) + std::lgamma(beta) - std::lgamma(alpha + beta);
@@ -238,7 +238,7 @@ double rng_beta_pdf(double alpha, double beta, double value)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0.0);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 
@@ -257,12 +257,12 @@ double rng_beta_cdf(double alpha, double beta, double value)
     }
     if (value <= 0.0)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0.0);
     }
     if (value >= 1.0)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (1.0);
     }
     context.alpha = alpha;
@@ -271,14 +271,14 @@ double rng_beta_cdf(double alpha, double beta, double value)
     segment_total = rng_adjust_segment_total(segment_total);
     range_end = value;
     integral = rng_simpson_integral(0.0, range_end, segment_total, rng_beta_pdf_integrand, &context);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
         return (0.0);
     result = integral;
     if (result < 0.0)
         result = 0.0;
     if (result > 1.0)
         result = 1.0;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 

@@ -3,7 +3,7 @@
 #include "../JSon/json.hpp"
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 
 json_group *serialize_character(const ft_character &character)
 {
@@ -158,7 +158,7 @@ json_group *serialize_character(const ft_character &character)
     }
     json_add_item_to_group(group, item);
     const ft_map<int, ft_skill> &skills = character.get_skills();
-    if (skills.get_error() != FT_ER_SUCCESSS)
+    if (skills.get_error() != FT_ERR_SUCCESSS)
     {
         json_free_groups(group);
         ft_errno = FT_ERR_GAME_GENERAL_ERROR;
@@ -268,7 +268,7 @@ json_group *serialize_character(const ft_character &character)
         json_add_item_to_group(group, item);
         skill_index++;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (group);
 }
 
@@ -378,12 +378,12 @@ int deserialize_character(ft_character &character, json_group *group)
             skill.set_modifier2(ft_atoi(mod2_item->value));
             skill.set_modifier3(ft_atoi(mod3_item->value));
             skill.set_modifier4(ft_atoi(mod4_item->value));
-            if (character.add_skill(skill) != FT_ER_SUCCESSS)
+            if (character.add_skill(skill) != FT_ERR_SUCCESSS)
                 return (character.get_error());
             skill_index++;
         }
     }
-    ft_errno = FT_ER_SUCCESSS;
-    return (FT_ER_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESSS;
+    return (FT_ERR_SUCCESSS);
 }
 

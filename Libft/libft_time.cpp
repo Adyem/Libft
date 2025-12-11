@@ -13,7 +13,7 @@ int64_t ft_time_ms(void)
     struct timeval time_value;
     int64_t milliseconds;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (cmp_time_get_time_of_day(&time_value) != 0)
     {
         if (errno != 0)
@@ -39,14 +39,14 @@ char *ft_time_format(char *buffer, size_t buffer_size)
         return (ft_nullptr);
     }
     ft_bzero(&time_info, sizeof(time_info));
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     current_time = time_now();
-    if (current_time == static_cast<t_time>(-1) && ft_errno != FT_ER_SUCCESSS)
+    if (current_time == static_cast<t_time>(-1) && ft_errno != FT_ERR_SUCCESSS)
     {
         return (ft_nullptr);
     }
     time_local(current_time, &time_info);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
     {
         return (ft_nullptr);
     }

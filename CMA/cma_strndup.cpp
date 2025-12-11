@@ -8,7 +8,7 @@ char    *cma_strndup(const char *string, size_t maximum_length)
     char    *duplicate;
     size_t  index;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (string == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;

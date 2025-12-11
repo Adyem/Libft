@@ -1,7 +1,7 @@
 #ifndef FT_ISTRINGSTREAM_HPP
 #define FT_ISTRINGSTREAM_HPP
 
-#include "class_string_class.hpp"
+#include "class_string.hpp"
 #include "class_istream.hpp"
 #include "class_stringbuf.hpp"
 

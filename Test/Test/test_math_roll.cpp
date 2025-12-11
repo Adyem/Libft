@@ -30,7 +30,7 @@ FT_TEST(test_math_roll_empty_expression, "math_roll rejects empty expression")
         cma_free(value);
         return (0);
     }
-    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == FT_ER_SUCCESSS);
+    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == FT_ERR_SUCCESSS);
     return (1);
 }
 
@@ -45,7 +45,7 @@ FT_TEST(test_math_roll_invalid_character, "math_roll rejects invalid characters"
         cma_free(value);
         return (0);
     }
-    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == FT_ER_SUCCESSS);
+    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == FT_ERR_SUCCESSS);
     return (1);
 }
 
@@ -60,7 +60,7 @@ FT_TEST(test_math_roll_unbalanced_parentheses, "math_roll rejects unbalanced par
         cma_free(value);
         return (0);
     }
-    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == FT_ER_SUCCESSS);
+    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == FT_ERR_SUCCESSS);
     return (1);
 }
 
@@ -75,7 +75,7 @@ FT_TEST(test_math_roll_division_by_zero, "math_roll rejects division by zero")
         cma_free(value);
         return (0);
     }
-    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == FT_ER_SUCCESSS);
+    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == FT_ERR_SUCCESSS);
     return (1);
 }
 
@@ -90,7 +90,7 @@ FT_TEST(test_math_roll_detects_overflow, "math_roll rejects overflowing results"
         cma_free(value);
         return (0);
     }
-    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == FT_ER_SUCCESSS);
+    FT_ASSERT(ft_errno == FT_ERR_INVALID_ARGUMENT || ft_errno == FT_ERR_SUCCESSS);
     return (1);
 }
 

@@ -79,7 +79,7 @@ inline ft_bitset::ft_bitset(size_t bits)
     : _size(bits),
       _blockCount((bits + BITS_PER_BLOCK - 1) / BITS_PER_BLOCK),
       _data(ft_nullptr),
-      _error_code(FT_ER_SUCCESSS),
+      _error_code(FT_ERR_SUCCESSS),
       _state_mutex(ft_nullptr),
       _thread_safe_enabled(false)
 {
@@ -95,7 +95,7 @@ inline ft_bitset::ft_bitset(size_t bits)
         while (i < this->_blockCount)
             this->_data[i++] = 0;
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -123,7 +123,7 @@ inline ft_bitset::ft_bitset(ft_bitset&& other) noexcept
     : _size(0),
       _blockCount(0),
       _data(ft_nullptr),
-      _error_code(FT_ER_SUCCESSS),
+      _error_code(FT_ERR_SUCCESSS),
       _state_mutex(ft_nullptr),
       _thread_safe_enabled(false)
 {
@@ -148,7 +148,7 @@ inline ft_bitset::ft_bitset(ft_bitset&& other) noexcept
     other._size = 0;
     other._blockCount = 0;
     other._data = ft_nullptr;
-    other._error_code = FT_ER_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESSS;
     other.unlock_internal(other_lock_acquired);
     other.teardown_thread_safety();
     this->_size = transferred_size;
@@ -212,7 +212,7 @@ inline ft_bitset& ft_bitset::operator=(ft_bitset&& other) noexcept
     other._size = 0;
     other._blockCount = 0;
     other._data = ft_nullptr;
-    other._error_code = FT_ER_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESSS;
     other.unlock_internal(other_lock_acquired);
     other.teardown_thread_safety();
     this->unlock_internal(this_lock_acquired);
@@ -251,7 +251,7 @@ inline void ft_bitset::set(size_t pos)
     }
     this->_data[block_index(pos)] |= bit_mask(pos);
     this->unlock_internal(lock_acquired);
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -273,7 +273,7 @@ inline void ft_bitset::reset(size_t pos)
     }
     this->_data[block_index(pos)] &= ~bit_mask(pos);
     this->unlock_internal(lock_acquired);
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -295,7 +295,7 @@ inline void ft_bitset::flip(size_t pos)
     }
     this->_data[block_index(pos)] ^= bit_mask(pos);
     this->unlock_internal(lock_acquired);
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -318,7 +318,7 @@ inline bool ft_bitset::test(size_t pos) const
     }
     result = (this->_data[block_index(pos)] & bit_mask(pos)) != 0;
     const_cast<ft_bitset*>(this)->unlock_internal(lock_acquired);
-    const_cast<ft_bitset*>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_bitset*>(this)->set_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -335,7 +335,7 @@ inline size_t ft_bitset::size() const
     }
     current_size = this->_size;
     const_cast<ft_bitset*>(this)->unlock_internal(lock_acquired);
-    const_cast<ft_bitset*>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_bitset*>(this)->set_error(FT_ERR_SUCCESSS);
     return (current_size);
 }
 
@@ -357,7 +357,7 @@ inline void ft_bitset::clear()
         index = index + 1;
     }
     this->unlock_internal(lock_acquired);
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -378,7 +378,7 @@ inline int ft_bitset::enable_thread_safety()
 
     if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
     {
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
     memory = cma_malloc(sizeof(pt_mutex));
@@ -388,7 +388,7 @@ inline int ft_bitset::enable_thread_safety()
         return (-1);
     }
     state_mutex = new(memory) pt_mutex();
-    if (state_mutex->get_error() != FT_ER_SUCCESSS)
+    if (state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
@@ -400,14 +400,14 @@ inline int ft_bitset::enable_thread_safety()
     }
     this->_state_mutex = state_mutex;
     this->_thread_safe_enabled = true;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
 inline void ft_bitset::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -416,7 +416,7 @@ inline bool ft_bitset::is_thread_safe_enabled() const
     bool enabled;
 
     enabled = (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr);
-    const_cast<ft_bitset*>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_bitset*>(this)->set_error(FT_ERR_SUCCESSS);
     return (enabled);
 }
 
@@ -424,14 +424,14 @@ inline int ft_bitset::lock(bool *lock_acquired) const
 {
     int result;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
     {
         this->set_error(ft_errno);
         return (result);
     }
-    this->_error_code = FT_ER_SUCCESSS;
+    this->_error_code = FT_ERR_SUCCESSS;
     return (result);
 }
 
@@ -439,20 +439,20 @@ inline void ft_bitset::unlock(bool lock_acquired) const
 {
     int mutex_error;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     this->unlock_internal(lock_acquired);
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
     {
-        this->_error_code = FT_ER_SUCCESSS;
+        this->_error_code = FT_ERR_SUCCESSS;
         return ;
     }
     mutex_error = this->_state_mutex->get_error();
-    if (mutex_error != FT_ER_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
         const_cast<ft_bitset*>(this)->set_error(mutex_error);
         return ;
     }
-    this->_error_code = FT_ER_SUCCESSS;
+    this->_error_code = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -463,23 +463,23 @@ inline void *ft_bitset::get_mutex_address_debug() const
 
 inline int ft_bitset::lock_internal(bool *lock_acquired) const
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     this->_state_mutex->lock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_state_mutex->get_error();
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -487,9 +487,9 @@ inline void ft_bitset::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
         return ;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     this->_state_mutex->unlock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_state_mutex->get_error();
         return ;
@@ -522,7 +522,7 @@ inline void ft_bitset::reset_storage(size_t size) noexcept
     this->_blockCount = (size + BITS_PER_BLOCK - 1) / BITS_PER_BLOCK;
     if (this->_blockCount == 0)
     {
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         return ;
     }
     this->_data = static_cast<size_t *>(cma_malloc(sizeof(size_t) * this->_blockCount));
@@ -539,7 +539,7 @@ inline void ft_bitset::reset_storage(size_t size) noexcept
         index = index + 1;
     }
     this->_thread_safe_enabled = false;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 

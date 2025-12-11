@@ -97,7 +97,7 @@ static int cmp_open_internal(const char *path_name, int flags, int mode)
         return (-1);
     }
     g_file_mutex.unlock(GetCurrentThreadId());
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (file_descriptor);
 }
 
@@ -145,7 +145,7 @@ ssize_t cmp_read(int file_descriptor, void *buffer, unsigned int count)
         ft_errno = cmp_map_system_error_to_ft(static_cast<int>(last_error));
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (bytes_read);
 }
 
@@ -168,7 +168,7 @@ ssize_t cmp_write(int file_descriptor, const void *buffer, unsigned int count)
         ft_errno = cmp_map_system_error_to_ft(static_cast<int>(last_error));
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (bytes_written);
 }
 
@@ -191,7 +191,7 @@ int cmp_close(int file_descriptor)
     }
     cmp_clear_handle(file_descriptor);
     g_file_mutex.unlock(GetCurrentThreadId());
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -252,7 +252,7 @@ int cmp_open(const char *path_name)
         ft_errno = cmp_map_system_error_to_ft(errno);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (file_descriptor);
 }
 
@@ -264,7 +264,7 @@ int cmp_open(const char *path_name, int flags)
         ft_errno = cmp_map_system_error_to_ft(errno);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (file_descriptor);
 }
 
@@ -276,7 +276,7 @@ int cmp_open(const char *path_name, int flags, mode_t mode)
         ft_errno = cmp_map_system_error_to_ft(errno);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (file_descriptor);
 }
 
@@ -293,7 +293,7 @@ ssize_t cmp_read(int file_descriptor, void *buffer, size_t count)
         ft_errno = cmp_map_system_error_to_ft(errno);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (bytes_read);
 }
 
@@ -310,7 +310,7 @@ ssize_t cmp_write(int file_descriptor, const void *buffer, size_t count)
         ft_errno = cmp_map_system_error_to_ft(errno);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (bytes_written);
 }
 
@@ -326,7 +326,7 @@ int cmp_close(int file_descriptor)
         ft_errno = cmp_map_system_error_to_ft(errno);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 

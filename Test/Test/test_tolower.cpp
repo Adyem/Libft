@@ -14,7 +14,7 @@ FT_TEST(test_tolower_basic, "ft_to_lower basic")
     string[3] = '\0';
     ft_to_lower(string);
     FT_ASSERT_EQ(0, ft_strcmp(string, "abc"));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -31,7 +31,7 @@ FT_TEST(test_tolower_mixed, "ft_to_lower mixed characters")
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     ft_to_lower(string);
     FT_ASSERT_EQ(0, ft_strcmp(string, "a1b!c?"));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -42,13 +42,13 @@ FT_TEST(test_tolower_empty, "ft_to_lower empty string")
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     ft_to_lower(string);
     FT_ASSERT_EQ(0, ft_strcmp(string, ""));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
 FT_TEST(test_tolower_nullptr, "ft_to_lower nullptr")
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     ft_to_lower(ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -69,7 +69,7 @@ FT_TEST(test_tolower_non_ascii_preserved, "ft_to_lower leaves non-ASCII bytes un
     FT_ASSERT_EQ('a', string[1]);
     FT_ASSERT_EQ(static_cast<char>(0x80), string[2]);
     FT_ASSERT_EQ('z', string[3]);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -90,7 +90,7 @@ FT_TEST(test_tolower_stops_at_terminator, "ft_to_lower stops when encountering t
     FT_ASSERT_EQ('\0', string[2]);
     FT_ASSERT_EQ('X', string[3]);
     FT_ASSERT_EQ('Y', string[4]);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -102,11 +102,11 @@ FT_TEST(test_tolower_recovers_after_nullptr, "ft_to_lower clears errno after nul
     string[1] = 'R';
     string[2] = 'S';
     string[3] = '\0';
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     ft_to_lower(ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     ft_to_lower(string);
     FT_ASSERT_EQ(0, ft_strcmp(string, "qrs"));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }

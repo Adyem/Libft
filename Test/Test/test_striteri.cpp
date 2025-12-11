@@ -1,6 +1,7 @@
 #include "../../Libft/libft.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
+#include "../../CPP_class/class_nullptr.hpp"
 
 static void to_upper_iter(unsigned int index, char *character)
 {
@@ -102,13 +103,13 @@ FT_TEST(test_striteri_valid_arguments_reset_errno, "ft_striteri clears ft_errno 
     buffer[3] = '\0';
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     ft_striteri(buffer, to_upper_iter);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
 FT_TEST(test_striteri_null_string_sets_errno, "ft_striteri sets FT_ERR_INVALID_ARGUMENT when string is null")
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     ft_striteri(ft_nullptr, to_upper_iter);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -120,7 +121,7 @@ FT_TEST(test_striteri_null_function_sets_errno, "ft_striteri sets FT_ERR_INVALID
 
     buffer[0] = 'x';
     buffer[1] = '\0';
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     ft_striteri(buffer, ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -135,6 +136,6 @@ FT_TEST(test_striteri_empty_string_clears_errno, "ft_striteri handles empty stri
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     ft_striteri(buffer, record_index_iter);
     FT_ASSERT_EQ(0u, g_striteri_call_count);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }

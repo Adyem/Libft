@@ -28,7 +28,6 @@ class ft_big_number
                 ft_big_number_mutex_guard &first_guard,
                 ft_big_number_mutex_guard &second_guard) noexcept;
         static void sleep_backoff() noexcept;
-        static void restore_errno(ft_big_number_mutex_guard &guard, int entry_errno) noexcept;
         void    clear_unlocked() noexcept;
         void    append_digit_unlocked(char digit) noexcept;
         void    append_unlocked(const char* digits) noexcept;

@@ -3,7 +3,7 @@
 
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 
 #include "../PThread/thread.hpp"
 #include "../PThread/mutex.hpp"

@@ -92,7 +92,7 @@ FT_TEST(test_logger_context_prefixes_plain_logs, "context guard prefixes plain l
     {
         ft_log_context_guard guard(context_fields, 3);
 
-        FT_ASSERT_EQ(FT_ER_SUCCESSS, guard.get_error());
+        FT_ASSERT_EQ(FT_ERR_SUCCESSS, guard.get_error());
         ft_log_info("processing order");
     }
     read_count = read(pipe_fds[0], buffer, sizeof(buffer) - 1);
@@ -131,7 +131,7 @@ FT_TEST(test_logger_context_enriches_structured_logs, "context guard augments st
     {
         ft_log_context_guard guard(context_fields, 2);
 
-        FT_ASSERT_EQ(FT_ER_SUCCESSS, guard.get_error());
+        FT_ASSERT_EQ(FT_ERR_SUCCESSS, guard.get_error());
         ft_log_info_structured("sync", base_fields, 1);
     }
     read_count = read(pipe_fds[0], buffer, sizeof(buffer) - 1);

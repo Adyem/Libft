@@ -4,7 +4,7 @@
 
 char    *ft_strrchr(const char *string, int char_to_find)
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (!string)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;

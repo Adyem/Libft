@@ -18,7 +18,7 @@ int pf_snprintf(char *string, size_t size, const char *format, ...)
     va_end(args);
     if (printed < 0)
         return (printed);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (printed);
 }
 

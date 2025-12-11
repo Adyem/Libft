@@ -1,5 +1,5 @@
 #include "../../Template/pair.hpp"
-#include "../../CPP_class/class_string_class.hpp"
+#include "../../CPP_class/class_string.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include <type_traits>
 #include <utility>

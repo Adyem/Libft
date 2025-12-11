@@ -17,18 +17,18 @@ int ft_random_poisson(double lambda_value)
         return (0);
     }
     limit_value = math_exp(-lambda_value);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
         return (0);
     product_value = 1.0;
     count_value = 0;
     while (product_value > limit_value)
     {
         random_value = static_cast<double>(ft_random_float());
-        if (ft_errno != FT_ER_SUCCESSS)
+        if (ft_errno != FT_ERR_SUCCESSS)
             return (0);
         product_value = product_value * random_value;
         count_value = count_value + 1;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (count_value - 1);
 }

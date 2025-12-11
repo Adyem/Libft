@@ -45,10 +45,10 @@ class ft_test_counter_istream : public ft_istream
             }
             if (produced == 0)
             {
-                this->set_error(FT_ER_SUCCESSS);
+                this->set_error(FT_ERR_SUCCESSS);
                 return (0);
             }
-            this->set_error(FT_ER_SUCCESSS);
+            this->set_error(FT_ERR_SUCCESSS);
             return (produced);
         }
 };
@@ -103,7 +103,7 @@ FT_TEST(test_ft_istream_serializes_concurrent_reads,
     FT_ASSERT_EQ(true, worker_done.load());
     FT_ASSERT_EQ(400u, total_consumed.load());
     FT_ASSERT_EQ(false, stream.bad());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, stream.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, stream.get_error());
     FT_ASSERT_EQ(0u, stream.remaining());
     return (1);
 }
@@ -121,7 +121,7 @@ FT_TEST(test_ft_istringstream_concurrent_reads,
         repeated.append(pattern);
         repeat_index++;
     }
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, repeated.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, repeated.get_error());
 
     ft_istringstream stream(repeated);
     std::atomic<bool> start_flag(false);
@@ -189,7 +189,7 @@ FT_TEST(test_ft_istringstream_concurrent_reads,
         digit_index++;
     }
     FT_ASSERT_EQ(false, stream.bad());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, stream.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, stream.get_error());
     return (1);
 }
 

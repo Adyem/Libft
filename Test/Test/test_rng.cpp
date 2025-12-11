@@ -19,7 +19,7 @@ FT_TEST(test_rng_seed_override_from_environment, "ft_rng_test_seed_engine mixes 
     if (original_value != ft_nullptr && *original_value != '\0')
     {
         original_copy = original_value;
-        if (original_copy.get_error() != FT_ER_SUCCESSS)
+        if (original_copy.get_error() != FT_ERR_SUCCESSS)
             return (0);
         restore_original = true;
     }

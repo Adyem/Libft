@@ -80,7 +80,7 @@ static char *html_escape_attribute_value(const char *value)
         input_index += 1;
     }
     escaped_value[output_index] = '\0';
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (escaped_value);
 }
 
@@ -167,7 +167,7 @@ static char *html_attrs_to_string(html_attr *attribute)
         result = tmp;
         attribute = next_attribute;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 
@@ -186,7 +186,7 @@ static char *html_indent(int indent)
         result[index] = ' ';
         ++index;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 
@@ -263,7 +263,7 @@ static char *html_node_to_string(html_node *node, int indent)
             return (ft_nullptr);
         }
         result = tmp;
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         html_node_unlock(node, node_lock_acquired);
         return (result);
     }
@@ -378,7 +378,7 @@ static char *html_node_to_string(html_node *node, int indent)
         return (ft_nullptr);
     }
     result = tmp;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     html_node_unlock(node, node_lock_acquired);
     return (result);
 }
@@ -425,7 +425,7 @@ char *html_write_to_string(html_node *nodeList)
         result = tmp;
         current = next_node;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 

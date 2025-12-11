@@ -107,6 +107,6 @@ int html_write_to_file(const char *file_path, html_node *node_list)
     }
     if (cmp_close(file_descriptor) != 0)
         return (-1);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }

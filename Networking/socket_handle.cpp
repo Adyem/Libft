@@ -39,15 +39,15 @@ void ft_socket_handle::set_error(int error_code) const noexcept
     return ;
 }
 
-ft_socket_handle::ft_socket_handle() : _socket_fd(-1), _error_code(FT_ER_SUCCESSS)
+ft_socket_handle::ft_socket_handle() : _socket_fd(-1), _error_code(FT_ERR_SUCCESSS)
 {
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
-ft_socket_handle::ft_socket_handle(int socket_fd) : _socket_fd(-1), _error_code(FT_ER_SUCCESSS)
+ft_socket_handle::ft_socket_handle(int socket_fd) : _socket_fd(-1), _error_code(FT_ERR_SUCCESSS)
 {
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     this->reset(socket_fd);
     return ;
 }
@@ -62,7 +62,7 @@ ft_socket_handle::ft_socket_handle(ft_socket_handle &&other) noexcept
     : _socket_fd(other._socket_fd), _error_code(other._error_code)
 {
     other._socket_fd = -1;
-    other._error_code = FT_ER_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_error_code);
     return ;
 }
@@ -75,7 +75,7 @@ ft_socket_handle &ft_socket_handle::operator=(ft_socket_handle &&other) noexcept
         this->_socket_fd = other._socket_fd;
         this->_error_code = other._error_code;
         other._socket_fd = -1;
-        other._error_code = FT_ER_SUCCESSS;
+        other._error_code = FT_ERR_SUCCESSS;
         this->set_error(this->_error_code);
     }
     return (*this);
@@ -89,7 +89,7 @@ bool ft_socket_handle::reset(int socket_fd)
         {
             return (false);
         }
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         return (true);
     }
     if (this->_socket_fd >= 0)
@@ -100,7 +100,7 @@ bool ft_socket_handle::reset(int socket_fd)
         }
     }
     this->_socket_fd = socket_fd;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -108,7 +108,7 @@ bool ft_socket_handle::close()
 {
     if (this->_socket_fd < 0)
     {
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         return (true);
     }
     if (nw_close(this->_socket_fd) != 0)
@@ -116,7 +116,7 @@ bool ft_socket_handle::close()
         int close_error;
 
         close_error = ft_errno;
-        if (close_error == FT_ER_SUCCESSS)
+        if (close_error == FT_ERR_SUCCESSS)
         {
             close_error = FT_ERR_SOCKET_CLOSE_FAILED;
         }
@@ -124,7 +124,7 @@ bool ft_socket_handle::close()
         return (false);
     }
     this->_socket_fd = -1;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -163,7 +163,7 @@ int ft_socket_runtime_acquire()
         if (WSAStartup(MAKEWORD(2, 2), &data) != 0)
         {
             ft_errno = ft_map_system_error(WSAGetLastError());
-            if (ft_errno == FT_ER_SUCCESSS)
+            if (ft_errno == FT_ERR_SUCCESSS)
             {
                 ft_errno = FT_ERR_INITIALIZATION_FAILED;
             }
@@ -177,8 +177,8 @@ int ft_socket_runtime_acquire()
     }
     reference_count++;
 #endif
-    ft_errno = FT_ER_SUCCESSS;
-    return (FT_ER_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESSS;
+    return (FT_ERR_SUCCESSS);
 }
 
 void ft_socket_runtime_release()
@@ -195,20 +195,20 @@ void ft_socket_runtime_release()
             if (WSACleanup() != 0)
             {
                 ft_errno = ft_map_system_error(WSAGetLastError());
-                if (ft_errno == FT_ER_SUCCESSS)
+                if (ft_errno == FT_ERR_SUCCESSS)
                 {
                     ft_errno = FT_ERR_INTERNAL;
                 }
             }
             else
             {
-                ft_errno = FT_ER_SUCCESSS;
+                ft_errno = FT_ERR_SUCCESSS;
             }
             initialized = false;
             return ;
         }
     }
 #endif
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }

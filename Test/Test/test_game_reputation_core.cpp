@@ -7,10 +7,10 @@ FT_TEST(test_game_reputation_negative_milestone_sets_error, "ft_reputation rejec
 {
     ft_reputation reputation;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     reputation.set_milestone(-1, 5);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, reputation.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -23,7 +23,7 @@ FT_TEST(test_game_reputation_add_current_rep_updates_totals, "ft_reputation::add
     reputation.add_current_rep(3);
     FT_ASSERT_EQ(8, reputation.get_total_rep());
     FT_ASSERT_EQ(5, reputation.get_current_rep());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, reputation.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, reputation.get_error());
     return (1);
 }
 
@@ -34,7 +34,7 @@ FT_TEST(test_game_reputation_set_milestone_overwrites_value, "ft_reputation::set
     reputation.set_milestone(1, 10);
     reputation.set_milestone(1, 25);
     FT_ASSERT_EQ(25, reputation.get_milestone(1));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, reputation.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, reputation.get_error());
     return (1);
 }
 
@@ -42,10 +42,10 @@ FT_TEST(test_game_reputation_missing_milestone_sets_not_found, "ft_reputation re
 {
     ft_reputation reputation;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(0, reputation.get_milestone(3));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, reputation.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -53,13 +53,13 @@ FT_TEST(test_game_reputation_set_rep_rejects_negative_id, "ft_reputation::set_re
 {
     ft_reputation reputation;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     reputation.set_rep(-1, 5);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, reputation.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(0, reputation.get_rep(-1));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, reputation.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -67,10 +67,10 @@ FT_TEST(test_game_reputation_get_rep_invalid_id_sets_error, "ft_reputation::get_
 {
     ft_reputation reputation;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(0, reputation.get_rep(-2));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, reputation.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -80,11 +80,11 @@ FT_TEST(test_game_reputation_set_rep_inserts_and_updates, "ft_reputation::set_re
 
     reputation.set_rep(2, 3);
     FT_ASSERT_EQ(3, reputation.get_rep(2));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, reputation.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, reputation.get_error());
 
     reputation.set_rep(2, 9);
     FT_ASSERT_EQ(9, reputation.get_rep(2));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, reputation.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, reputation.get_error());
     return (1);
 }
 
@@ -97,7 +97,7 @@ FT_TEST(test_game_reputation_add_current_rep_allows_negative_values, "ft_reputat
     reputation.add_current_rep(-3);
     FT_ASSERT_EQ(7, reputation.get_total_rep());
     FT_ASSERT_EQ(1, reputation.get_current_rep());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, reputation.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, reputation.get_error());
     return (1);
 }
 
@@ -112,14 +112,14 @@ FT_TEST(test_game_reputation_set_reps_replaces_entries, "ft_reputation::set_reps
 
     reputation.set_reps(initial_reps);
     FT_ASSERT_EQ(4, reputation.get_rep(1));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, reputation.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, reputation.get_error());
 
     reputation.set_reps(replacement_reps);
     FT_ASSERT_EQ(6, reputation.get_rep(2));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, reputation.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, reputation.get_error());
     FT_ASSERT_EQ(0, reputation.get_rep(1));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, reputation.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 

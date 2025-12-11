@@ -49,12 +49,12 @@ FT_TEST(test_ft_event_emitter_invokes_registered_listeners, "ft_event_emitter em
     g_event_listener_two_total = 0;
 
     emitter_instance.on(7, event_listener_add_to_first);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, emitter_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, emitter_instance.get_error());
     emitter_instance.on(7, event_listener_add_to_second);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, emitter_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, emitter_instance.get_error());
 
     emitter_instance.emit(7, 5);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, emitter_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, emitter_instance.get_error());
 
     FT_ASSERT_EQ(5, g_event_listener_one_total);
     FT_ASSERT_EQ(5, g_event_listener_two_total);
@@ -75,11 +75,11 @@ FT_TEST(test_ft_event_emitter_remove_listener_stops_callback, "ft_event_emitter 
     FT_ASSERT_EQ(2UL, emitter_instance.size());
 
     emitter_instance.remove_listener(3, event_listener_add_to_first);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, emitter_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, emitter_instance.get_error());
     FT_ASSERT_EQ(1UL, emitter_instance.size());
 
     emitter_instance.emit(3, 4);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, emitter_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, emitter_instance.get_error());
 
     FT_ASSERT_EQ(0, g_event_listener_one_total);
     FT_ASSERT_EQ(4, g_event_listener_two_total);
@@ -122,14 +122,14 @@ FT_TEST(test_ft_event_emitter_growth_preserves_existing_listeners, "ft_event_emi
     g_event_listener_two_total = 0;
 
     emitter_instance.on(11, event_listener_add_to_first);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, emitter_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, emitter_instance.get_error());
     emitter_instance.on(12, event_listener_add_to_second);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, emitter_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, emitter_instance.get_error());
     emitter_instance.on(11, event_listener_add_to_second);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, emitter_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, emitter_instance.get_error());
 
     emitter_instance.emit(11, 2);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, emitter_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, emitter_instance.get_error());
 
     FT_ASSERT_EQ(2, g_event_listener_one_total);
     FT_ASSERT_EQ(2, g_event_listener_two_total);
@@ -162,7 +162,7 @@ FT_TEST(test_ft_event_emitter_supports_concurrent_emitters, "ft_event_emitter pr
 
     g_concurrent_listener_total.store(0, std::memory_order_relaxed);
     emitter_instance.on(99, event_listener_add_to_atomic);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, emitter_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, emitter_instance.get_error());
 
     emit_iterations = 1000;
     first_thread = std::thread(emit_in_thread, &emitter_instance, 99, emit_iterations, 1);
@@ -176,6 +176,6 @@ FT_TEST(test_ft_event_emitter_supports_concurrent_emitters, "ft_event_emitter pr
     fourth_thread.join();
 
     FT_ASSERT_EQ(4000, g_concurrent_listener_total.load(std::memory_order_relaxed));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, emitter_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, emitter_instance.get_error());
     return (1);
 }

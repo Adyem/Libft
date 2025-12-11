@@ -4,7 +4,7 @@
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../JSon/json.hpp"
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../Template/map.hpp"
 #include "../Template/vector.hpp"
 #include "../Parser/document_backend.hpp"

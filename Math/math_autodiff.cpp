@@ -7,7 +7,7 @@
 ft_dual_number::ft_dual_number() noexcept
     : _value(0.0)
     , _derivative(0.0)
-    , _error_code(FT_ER_SUCCESSS)
+    , _error_code(FT_ERR_SUCCESSS)
 {
     return ;
 }
@@ -15,7 +15,7 @@ ft_dual_number::ft_dual_number() noexcept
 ft_dual_number::ft_dual_number(double value, double derivative) noexcept
     : _value(value)
     , _derivative(derivative)
-    , _error_code(FT_ER_SUCCESSS)
+    , _error_code(FT_ERR_SUCCESSS)
 {
     return ;
 }
@@ -35,7 +35,7 @@ ft_dual_number::ft_dual_number(ft_dual_number &&other) noexcept
 {
     other._value = 0.0;
     other._derivative = 0.0;
-    other._error_code = FT_ER_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -63,7 +63,7 @@ ft_dual_number &ft_dual_number::operator=(ft_dual_number &&other) noexcept
     this->_error_code = other._error_code;
     other._value = 0.0;
     other._derivative = 0.0;
-    other._error_code = FT_ER_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESSS;
     return (*this);
 }
 
@@ -78,7 +78,7 @@ ft_dual_number ft_dual_number::constant(double value) noexcept
 {
     ft_dual_number result(value, 0.0);
 
-    result._error_code = FT_ER_SUCCESSS;
+    result._error_code = FT_ERR_SUCCESSS;
     return (result);
 }
 
@@ -86,7 +86,7 @@ ft_dual_number ft_dual_number::variable(double value) noexcept
 {
     ft_dual_number result(value, 1.0);
 
-    result._error_code = FT_ER_SUCCESSS;
+    result._error_code = FT_ERR_SUCCESSS;
     return (result);
 }
 
@@ -106,10 +106,10 @@ ft_dual_number ft_dual_number::operator+(const ft_dual_number &other) const noex
 
     result._value = this->_value + other._value;
     result._derivative = this->_derivative + other._derivative;
-    result._error_code = FT_ER_SUCCESSS;
-    if (this->_error_code != FT_ER_SUCCESSS)
+    result._error_code = FT_ERR_SUCCESSS;
+    if (this->_error_code != FT_ERR_SUCCESSS)
         result.set_error(this->_error_code);
-    if (other._error_code != FT_ER_SUCCESSS)
+    if (other._error_code != FT_ERR_SUCCESSS)
         result.set_error(other._error_code);
     return (result);
 }
@@ -120,10 +120,10 @@ ft_dual_number ft_dual_number::operator-(const ft_dual_number &other) const noex
 
     result._value = this->_value - other._value;
     result._derivative = this->_derivative - other._derivative;
-    result._error_code = FT_ER_SUCCESSS;
-    if (this->_error_code != FT_ER_SUCCESSS)
+    result._error_code = FT_ERR_SUCCESSS;
+    if (this->_error_code != FT_ERR_SUCCESSS)
         result.set_error(this->_error_code);
-    if (other._error_code != FT_ER_SUCCESSS)
+    if (other._error_code != FT_ERR_SUCCESSS)
         result.set_error(other._error_code);
     return (result);
 }
@@ -135,10 +135,10 @@ ft_dual_number ft_dual_number::operator*(const ft_dual_number &other) const noex
     result._value = this->_value * other._value;
     result._derivative = this->_value * other._derivative
         + this->_derivative * other._value;
-    result._error_code = FT_ER_SUCCESSS;
-    if (this->_error_code != FT_ER_SUCCESSS)
+    result._error_code = FT_ERR_SUCCESSS;
+    if (this->_error_code != FT_ERR_SUCCESSS)
         result.set_error(this->_error_code);
-    if (other._error_code != FT_ER_SUCCESSS)
+    if (other._error_code != FT_ERR_SUCCESSS)
         result.set_error(other._error_code);
     return (result);
 }
@@ -160,10 +160,10 @@ ft_dual_number ft_dual_number::operator/(const ft_dual_number &other) const noex
     result._derivative = (this->_derivative * other._value
         - this->_value * other._derivative)
         / (other._value * other._value);
-    result._error_code = FT_ER_SUCCESSS;
-    if (this->_error_code != FT_ER_SUCCESSS)
+    result._error_code = FT_ERR_SUCCESSS;
+    if (this->_error_code != FT_ERR_SUCCESSS)
         result.set_error(this->_error_code);
-    if (other._error_code != FT_ER_SUCCESSS)
+    if (other._error_code != FT_ERR_SUCCESSS)
         result.set_error(other._error_code);
     return (result);
 }
@@ -175,7 +175,7 @@ ft_dual_number ft_dual_number::apply_sin() const noexcept
     result._value = std::sin(this->_value);
     result._derivative = std::cos(this->_value) * this->_derivative;
     result._error_code = this->_error_code;
-    if (result._error_code != FT_ER_SUCCESSS)
+    if (result._error_code != FT_ERR_SUCCESSS)
         result.set_error(result._error_code);
     return (result);
 }
@@ -187,7 +187,7 @@ ft_dual_number ft_dual_number::apply_cos() const noexcept
     result._value = std::cos(this->_value);
     result._derivative = -std::sin(this->_value) * this->_derivative;
     result._error_code = this->_error_code;
-    if (result._error_code != FT_ER_SUCCESSS)
+    if (result._error_code != FT_ERR_SUCCESSS)
         result.set_error(result._error_code);
     return (result);
 }
@@ -201,7 +201,7 @@ ft_dual_number ft_dual_number::apply_exp() const noexcept
     result._value = exponential;
     result._derivative = exponential * this->_derivative;
     result._error_code = this->_error_code;
-    if (result._error_code != FT_ER_SUCCESSS)
+    if (result._error_code != FT_ERR_SUCCESSS)
         result.set_error(result._error_code);
     return (result);
 }
@@ -220,7 +220,7 @@ ft_dual_number ft_dual_number::apply_log() const noexcept
     result._value = std::log(this->_value);
     result._derivative = this->_derivative / this->_value;
     result._error_code = this->_error_code;
-    if (result._error_code != FT_ER_SUCCESSS)
+    if (result._error_code != FT_ERR_SUCCESSS)
         result.set_error(result._error_code);
     return (result);
 }
@@ -244,7 +244,7 @@ static int math_autodiff_prepare_inputs(const ft_vector<double> &point,
     dual_inputs.clear();
     dimension = point.size();
     dual_inputs.reserve(dimension);
-    if (dual_inputs.get_error() != FT_ER_SUCCESSS)
+    if (dual_inputs.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = dual_inputs.get_error();
         return (-1);
@@ -256,21 +256,21 @@ static int math_autodiff_prepare_inputs(const ft_vector<double> &point,
         double value;
 
         value = point[index];
-        if (dual_inputs.get_error() != FT_ER_SUCCESSS)
+        if (dual_inputs.get_error() != FT_ERR_SUCCESSS)
             return (-1);
         if (index == active_index)
             variable = ft_dual_number::variable(value);
         else
             variable = ft_dual_number::constant(value);
         dual_inputs.push_back(variable);
-        if (dual_inputs.get_error() != FT_ER_SUCCESSS)
+        if (dual_inputs.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = dual_inputs.get_error();
             return (-1);
         }
         index++;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -287,14 +287,14 @@ int math_autodiff_univariate(math_autodiff_univariate_function function,
     }
     variable = ft_dual_number::variable(point);
     result = function(variable, user_data);
-    if (result.get_error() != FT_ER_SUCCESSS)
+    if (result.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = result.get_error();
         return (-1);
     }
     *value = result.value();
     *derivative = result.derivative();
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -314,7 +314,7 @@ int math_autodiff_gradient(math_autodiff_multivariate_function function,
     dimension = point.size();
     gradient.clear();
     gradient.reserve(dimension);
-    if (gradient.get_error() != FT_ER_SUCCESSS)
+    if (gradient.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = gradient.get_error();
         return (-1);
@@ -332,7 +332,7 @@ int math_autodiff_gradient(math_autodiff_multivariate_function function,
             return (-1);
         }
         result = function(dual_inputs, user_data);
-        if (result.get_error() != FT_ER_SUCCESSS)
+        if (result.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = result.get_error();
             gradient.clear();
@@ -344,7 +344,7 @@ int math_autodiff_gradient(math_autodiff_multivariate_function function,
             value_set = true;
         }
         gradient.push_back(result.derivative());
-        if (gradient.get_error() != FT_ER_SUCCESSS)
+        if (gradient.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = gradient.get_error();
             gradient.clear();
@@ -352,6 +352,6 @@ int math_autodiff_gradient(math_autodiff_multivariate_function function,
         }
         index++;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }

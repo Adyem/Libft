@@ -78,7 +78,7 @@ FT_TEST(test_sha1_hash_matches_known_vectors,
 
     ft_errno = FT_ERR_IO;
     sha1_hash("", 0, digest);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     digest_index = 0;
     while (digest_index < 20)
     {
@@ -88,7 +88,7 @@ FT_TEST(test_sha1_hash_matches_known_vectors,
 
     ft_errno = FT_ERR_IO;
     sha1_hash("abc", 3, digest);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     digest_index = 0;
     while (digest_index < 20)
     {
@@ -98,7 +98,7 @@ FT_TEST(test_sha1_hash_matches_known_vectors,
 
     ft_errno = FT_ERR_IO;
     sha1_hash("The quick brown fox jumps over the lazy dog", 43, digest);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     digest_index = 0;
     while (digest_index < 20)
     {
@@ -218,7 +218,7 @@ FT_TEST(test_sha256_hash_matches_known_vectors,
 
     ft_errno = FT_ERR_IO;
     sha256_hash("", 0, digest);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     digest_index = 0;
     while (digest_index < 32)
     {
@@ -228,7 +228,7 @@ FT_TEST(test_sha256_hash_matches_known_vectors,
 
     ft_errno = FT_ERR_IO;
     sha256_hash("abc", 3, digest);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     digest_index = 0;
     while (digest_index < 32)
     {
@@ -238,7 +238,7 @@ FT_TEST(test_sha256_hash_matches_known_vectors,
 
     ft_errno = FT_ERR_IO;
     sha256_hash("The quick brown fox jumps over the lazy dog", 43, digest);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     digest_index = 0;
     while (digest_index < 32)
     {
@@ -294,7 +294,7 @@ FT_TEST(test_hmac_sha256_matches_known_vector,
     message = "The quick brown fox jumps over the lazy dog";
     ft_errno = FT_ERR_IO;
     hmac_sha256(key, 3, message, 43, digest);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     digest_index = 0;
     while (digest_index < 32)
     {

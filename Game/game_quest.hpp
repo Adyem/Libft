@@ -1,7 +1,7 @@
 #ifndef GAME_QUEST_HPP
 # define GAME_QUEST_HPP
 
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../Template/vector.hpp"
 #include "game_item.hpp"
 #include "../Template/shared_ptr.hpp"

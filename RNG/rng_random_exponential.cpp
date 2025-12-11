@@ -15,13 +15,13 @@ float ft_random_exponential(float lambda_value)
         return (0.0f);
     }
     uniform_value = ft_random_float();
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
         return (0.0f);
     if (uniform_value < 0.0000000001f)
         uniform_value = 0.0000000001f;
     result = static_cast<float>(-math_log(uniform_value)) / lambda_value;
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
         return (0.0f);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }

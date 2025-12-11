@@ -124,7 +124,7 @@ static bool time_trace_write_event_line(const std::string &line)
         return (false);
     if (g_trace_first_event)
         g_trace_first_event = false;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 
@@ -211,7 +211,7 @@ bool    time_trace_begin_session(const char *file_path)
     g_trace_session_active = true;
     g_trace_first_event = true;
     g_trace_stack.clear();
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 
@@ -251,7 +251,7 @@ bool    time_trace_end_session(void)
     g_trace_session_active = false;
     g_trace_first_event = true;
     g_trace_stack.clear();
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 
@@ -282,7 +282,7 @@ bool    time_trace_begin_event(const char *name, const char *category)
         ft_errno = FT_ERR_NO_MEMORY;
         return (false);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 
@@ -313,7 +313,7 @@ bool    time_trace_end_event(void)
     if (!time_trace_write_duration_event(frame.name, frame.category,
             start_us, duration_us))
         return (false);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 
@@ -342,6 +342,6 @@ bool    time_trace_instant_event(const char *name, const char *category)
     if (!time_trace_write_instant_event(event_name, event_category,
             timestamp_us))
         return (false);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }

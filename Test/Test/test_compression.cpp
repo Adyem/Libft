@@ -20,7 +20,7 @@ FT_TEST(test_compress_rejects_oversize_input, "compress rejects oversize input")
     oversize_length = compression_max_size;
     oversize_length++;
     compressed_length = 42;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     compressed_buffer = compress_buffer(&input_byte, oversize_length, &compressed_length);
     if (compressed_buffer)
     {
@@ -46,7 +46,7 @@ FT_TEST(test_decompress_rejects_oversize_payload, "decompress rejects oversize p
     ft_memset(header, 0, sizeof(uint32_t));
     fake_input_size = compression_max_size + sizeof(uint32_t) + 1;
     decompressed_length = 99;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     decompressed_buffer = decompress_buffer(header, fake_input_size, &decompressed_length);
     if (decompressed_buffer)
     {
@@ -77,7 +77,7 @@ FT_TEST(test_ft_compress_round_trip, "ft_compress round trip")
     compressed_buffer = ft_compress(reinterpret_cast<const unsigned char *>(input_string), input_length, &compressed_length);
     if (!compressed_buffer)
         return (0);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
     {
         cma_free(compressed_buffer);
         return (0);
@@ -88,7 +88,7 @@ FT_TEST(test_ft_compress_round_trip, "ft_compress round trip")
     cma_free(compressed_buffer);
     if (!decompressed_buffer)
         return (0);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
     {
         cma_free(decompressed_buffer);
         return (0);
@@ -370,7 +370,7 @@ FT_TEST(test_ft_compress_null_size_pointer_sets_errno,
     unsigned char   *compressed_buffer;
 
     input_byte = 0x42;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     compressed_buffer = ft_compress(&input_byte, 1, ft_nullptr);
     if (compressed_buffer != ft_nullptr)
     {

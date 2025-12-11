@@ -36,9 +36,9 @@ bool ft_logger::thread_guard::lock_acquired() const noexcept
 
 ft_logger::ft_logger(const char *path, size_t max_size, t_log_level level) noexcept
     : _mutex(ft_nullptr), _thread_safe_enabled(false), _alloc_logging(false),
-      _api_logging(false), _error_code(FT_ER_SUCCESSS)
+      _api_logging(false), _error_code(FT_ERR_SUCCESSS)
 {
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     if (this->prepare_thread_safety() != 0)
         return ;
     thread_guard guard(this);
@@ -52,7 +52,7 @@ ft_logger::ft_logger(const char *path, size_t max_size, t_log_level level) noexc
             int error_code;
 
             error_code = ft_errno;
-            if (error_code == FT_ER_SUCCESSS)
+            if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_INVALID_ARGUMENT;
             this->set_error(error_code);
             return ;
@@ -90,7 +90,7 @@ void ft_logger::set_global() noexcept
             return ;
     }
     g_logger = this;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -101,7 +101,7 @@ void ft_logger::set_level(t_log_level level) noexcept
     if (guard.get_status() != 0)
         return ;
     ft_log_set_level(level);
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -119,12 +119,12 @@ int ft_logger::set_file(const char *path, size_t max_size) noexcept
         int error_code;
 
         error_code = ft_errno;
-        if (error_code == FT_ER_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INVALID_ARGUMENT;
         this->set_error(error_code);
         return (-1);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -143,12 +143,12 @@ int ft_logger::set_rotation(size_t max_size, size_t retention_count,
         int error_code;
 
         error_code = ft_errno;
-        if (error_code == FT_ER_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INVALID_ARGUMENT;
         this->set_error(error_code);
         return (-1);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -167,12 +167,12 @@ int ft_logger::get_rotation(size_t *max_size, size_t *retention_count,
         int error_code;
 
         error_code = ft_errno;
-        if (error_code == FT_ER_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INVALID_ARGUMENT;
         this->set_error(error_code);
         return (-1);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -190,12 +190,12 @@ int ft_logger::add_sink(t_log_sink sink, void *user_data) noexcept
         int error_code;
 
         error_code = ft_errno;
-        if (error_code == FT_ER_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INVALID_ARGUMENT;
         this->set_error(error_code);
         return (-1);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -217,7 +217,7 @@ void ft_logger::set_alloc_logging(bool enable) noexcept
     if (guard.get_status() != 0)
         return ;
     this->_alloc_logging = enable;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -227,7 +227,7 @@ bool ft_logger::get_alloc_logging() const noexcept
 
     if (guard.get_status() != 0)
         return (false);
-    const_cast<ft_logger *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_logger *>(this)->set_error(FT_ERR_SUCCESSS);
     return (this->_alloc_logging);
 }
 
@@ -238,7 +238,7 @@ void ft_logger::set_api_logging(bool enable) noexcept
     if (guard.get_status() != 0)
         return ;
     this->_api_logging = enable;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -248,7 +248,7 @@ bool ft_logger::get_api_logging() const noexcept
 
     if (guard.get_status() != 0)
         return (false);
-    const_cast<ft_logger *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_logger *>(this)->set_error(FT_ERR_SUCCESSS);
     return (this->_api_logging);
 }
 
@@ -259,7 +259,7 @@ void ft_logger::set_color(bool enable) noexcept
     if (guard.get_status() != 0)
         return ;
     ft_log_set_color(enable);
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -272,7 +272,7 @@ bool ft_logger::get_color() const noexcept
         return (false);
 
     color_enabled = ft_log_get_color();
-    const_cast<ft_logger *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_logger *>(this)->set_error(FT_ERR_SUCCESSS);
     return (color_enabled);
 }
 
@@ -301,12 +301,12 @@ int ft_logger::set_syslog(const char *identifier) noexcept
         int error_code;
 
         error_code = ft_errno;
-        if (error_code == FT_ER_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INVALID_ARGUMENT;
         this->set_error(error_code);
         return (-1);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -325,12 +325,12 @@ int ft_logger::set_remote_sink(const char *host, unsigned short port,
         int error_code;
 
         error_code = ft_errno;
-        if (error_code == FT_ER_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INVALID_ARGUMENT;
         this->set_error(error_code);
         return (-1);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -341,7 +341,7 @@ int ft_logger::prepare_thread_safety() noexcept
 
     if (this->_thread_safe_enabled && this->_mutex)
     {
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
     memory = std::malloc(sizeof(pt_mutex));
@@ -351,7 +351,7 @@ int ft_logger::prepare_thread_safety() noexcept
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ER_SUCCESSS)
+    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
@@ -363,7 +363,7 @@ int ft_logger::prepare_thread_safety() noexcept
     }
     this->_mutex = mutex_pointer;
     this->_thread_safe_enabled = true;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -389,10 +389,10 @@ bool ft_logger::is_thread_safe_enabled() const noexcept
         return (false);
     if (!this->_thread_safe_enabled || !this->_mutex)
     {
-        const_cast<ft_logger *>(this)->set_error(FT_ER_SUCCESSS);
+        const_cast<ft_logger *>(this)->set_error(FT_ERR_SUCCESSS);
         return (false);
     }
-    const_cast<ft_logger *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_logger *>(this)->set_error(FT_ERR_SUCCESSS);
     return (true);
 }
 
@@ -434,7 +434,7 @@ int ft_logger::get_async_metrics(s_log_async_metrics *metrics) noexcept
         this->set_error(ft_errno);
         return (-1);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -485,7 +485,7 @@ int ft_logger::probe_remote_health() noexcept
         this->set_error(ft_errno);
         return (-1);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -503,7 +503,7 @@ int ft_logger::get_remote_health(s_log_remote_health *statuses, size_t capacity,
         this->set_error(ft_errno);
         return (-1);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -521,7 +521,7 @@ int ft_logger::push_context(const s_log_field *fields, size_t field_count) noexc
         this->set_error(ft_errno);
         return (-1);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -570,17 +570,17 @@ void ft_logger::debug(const char *fmt, ...) noexcept
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     va_start(args, fmt);
     if (g_async_running)
         ft_log_enqueue(LOG_LEVEL_DEBUG, fmt, args);
     else
         ft_log_vwrite(LOG_LEVEL_DEBUG, fmt, args);
     va_end(args);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
         this->set_error(ft_errno);
     else
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -597,17 +597,17 @@ void ft_logger::info(const char *fmt, ...) noexcept
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     va_start(args, fmt);
     if (g_async_running)
         ft_log_enqueue(LOG_LEVEL_INFO, fmt, args);
     else
         ft_log_vwrite(LOG_LEVEL_INFO, fmt, args);
     va_end(args);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
         this->set_error(ft_errno);
     else
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -624,17 +624,17 @@ void ft_logger::warn(const char *fmt, ...) noexcept
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     va_start(args, fmt);
     if (g_async_running)
         ft_log_enqueue(LOG_LEVEL_WARN, fmt, args);
     else
         ft_log_vwrite(LOG_LEVEL_WARN, fmt, args);
     va_end(args);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
         this->set_error(ft_errno);
     else
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -651,17 +651,17 @@ void ft_logger::error(const char *fmt, ...) noexcept
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     va_start(args, fmt);
     if (g_async_running)
         ft_log_enqueue(LOG_LEVEL_ERROR, fmt, args);
     else
         ft_log_vwrite(LOG_LEVEL_ERROR, fmt, args);
     va_end(args);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
         this->set_error(ft_errno);
     else
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -723,11 +723,11 @@ int ft_logger::lock(bool *lock_acquired) const noexcept
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || !this->_mutex)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     this->_mutex->lock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
@@ -738,7 +738,7 @@ int ft_logger::lock(bool *lock_acquired) const noexcept
     }
     if (lock_acquired)
         *lock_acquired = true;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -750,7 +750,7 @@ void ft_logger::unlock(bool lock_acquired) const noexcept
         return ;
     entry_errno = ft_errno;
     this->_mutex->unlock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 

@@ -6,7 +6,7 @@
 #include "../JSon/json.hpp"
 #include "../Libft/libft.hpp"
 #include "../CMA/CMA.hpp"
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../Template/vector.hpp"
 #include "../Template/shared_ptr.hpp"
 
@@ -24,64 +24,64 @@ static int add_item_field(json_group *group, const ft_string &key, int value)
         return (FT_ERR_NO_MEMORY);
     }
     json_add_item_to_group(group, json_item_ptr);
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 static int serialize_item_fields(json_group *group, const ft_item &item, const ft_string &item_prefix)
 {
     ft_string key_max = item_prefix;
     key_max += "_max_stack";
-    if (add_item_field(group, key_max, item.get_max_stack()) != FT_ER_SUCCESSS)
+    if (add_item_field(group, key_max, item.get_max_stack()) != FT_ERR_SUCCESSS)
         return (FT_ERR_NO_MEMORY);
     ft_string key_current = item_prefix;
     key_current += "_stack_size";
-    if (add_item_field(group, key_current, item.get_stack_size()) != FT_ER_SUCCESSS)
+    if (add_item_field(group, key_current, item.get_stack_size()) != FT_ERR_SUCCESSS)
         return (FT_ERR_NO_MEMORY);
     ft_string key_id = item_prefix;
     key_id += "_id";
-    if (add_item_field(group, key_id, item.get_item_id()) != FT_ER_SUCCESSS)
+    if (add_item_field(group, key_id, item.get_item_id()) != FT_ERR_SUCCESSS)
         return (FT_ERR_NO_MEMORY);
     ft_string key_width = item_prefix;
     key_width += "_width";
-    if (add_item_field(group, key_width, item.get_width()) != FT_ER_SUCCESSS)
+    if (add_item_field(group, key_width, item.get_width()) != FT_ERR_SUCCESSS)
         return (FT_ERR_NO_MEMORY);
     ft_string key_height = item_prefix;
     key_height += "_height";
-    if (add_item_field(group, key_height, item.get_height()) != FT_ER_SUCCESSS)
+    if (add_item_field(group, key_height, item.get_height()) != FT_ERR_SUCCESSS)
         return (FT_ERR_NO_MEMORY);
     ft_string key_mod1_id = item_prefix;
     key_mod1_id += "_mod1_id";
-    if (add_item_field(group, key_mod1_id, item.get_modifier1_id()) != FT_ER_SUCCESSS)
+    if (add_item_field(group, key_mod1_id, item.get_modifier1_id()) != FT_ERR_SUCCESSS)
         return (FT_ERR_NO_MEMORY);
     ft_string key_mod1_value = item_prefix;
     key_mod1_value += "_mod1_value";
-    if (add_item_field(group, key_mod1_value, item.get_modifier1_value()) != FT_ER_SUCCESSS)
+    if (add_item_field(group, key_mod1_value, item.get_modifier1_value()) != FT_ERR_SUCCESSS)
         return (FT_ERR_NO_MEMORY);
     ft_string key_mod2_id = item_prefix;
     key_mod2_id += "_mod2_id";
-    if (add_item_field(group, key_mod2_id, item.get_modifier2_id()) != FT_ER_SUCCESSS)
+    if (add_item_field(group, key_mod2_id, item.get_modifier2_id()) != FT_ERR_SUCCESSS)
         return (FT_ERR_NO_MEMORY);
     ft_string key_mod2_value = item_prefix;
     key_mod2_value += "_mod2_value";
-    if (add_item_field(group, key_mod2_value, item.get_modifier2_value()) != FT_ER_SUCCESSS)
+    if (add_item_field(group, key_mod2_value, item.get_modifier2_value()) != FT_ERR_SUCCESSS)
         return (FT_ERR_NO_MEMORY);
     ft_string key_mod3_id = item_prefix;
     key_mod3_id += "_mod3_id";
-    if (add_item_field(group, key_mod3_id, item.get_modifier3_id()) != FT_ER_SUCCESSS)
+    if (add_item_field(group, key_mod3_id, item.get_modifier3_id()) != FT_ERR_SUCCESSS)
         return (FT_ERR_NO_MEMORY);
     ft_string key_mod3_value = item_prefix;
     key_mod3_value += "_mod3_value";
-    if (add_item_field(group, key_mod3_value, item.get_modifier3_value()) != FT_ER_SUCCESSS)
+    if (add_item_field(group, key_mod3_value, item.get_modifier3_value()) != FT_ERR_SUCCESSS)
         return (FT_ERR_NO_MEMORY);
     ft_string key_mod4_id = item_prefix;
     key_mod4_id += "_mod4_id";
-    if (add_item_field(group, key_mod4_id, item.get_modifier4_id()) != FT_ER_SUCCESSS)
+    if (add_item_field(group, key_mod4_id, item.get_modifier4_id()) != FT_ERR_SUCCESSS)
         return (FT_ERR_NO_MEMORY);
     ft_string key_mod4_value = item_prefix;
     key_mod4_value += "_mod4_value";
-    if (add_item_field(group, key_mod4_value, item.get_modifier4_value()) != FT_ER_SUCCESSS)
+    if (add_item_field(group, key_mod4_value, item.get_modifier4_value()) != FT_ERR_SUCCESSS)
         return (FT_ERR_NO_MEMORY);
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 json_group *serialize_inventory(const ft_inventory &inventory)
@@ -93,7 +93,7 @@ json_group *serialize_inventory(const ft_inventory &inventory)
         return (ft_nullptr);
     }
     bool has_error = false;
-    int error_code = FT_ER_SUCCESSS;
+    int error_code = FT_ERR_SUCCESSS;
     do
     {
         json_item *capacity_item = json_create_item("capacity", static_cast<int>(inventory.get_capacity()));
@@ -168,7 +168,7 @@ json_group *serialize_inventory(const ft_inventory &inventory)
                 has_error = true;
                 break;
             }
-            if (serialize_item_fields(group, *item_start[item_index].value, item_prefix) != FT_ER_SUCCESSS)
+            if (serialize_item_fields(group, *item_start[item_index].value, item_prefix) != FT_ERR_SUCCESSS)
             {
                 error_code = FT_ERR_NO_MEMORY;
                 has_error = true;
@@ -185,7 +185,7 @@ json_group *serialize_inventory(const ft_inventory &inventory)
         ft_errno = error_code;
         return (ft_nullptr);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (group);
 }
 
@@ -206,7 +206,7 @@ json_group *serialize_equipment(const ft_character &character)
         return (ft_nullptr);
     }
     json_add_item_to_group(group, present);
-    if (head && serialize_item_fields(group, *head, "head") != FT_ER_SUCCESSS)
+    if (head && serialize_item_fields(group, *head, "head") != FT_ERR_SUCCESSS)
     {
         json_free_groups(group);
         ft_errno = FT_ERR_NO_MEMORY;
@@ -221,7 +221,7 @@ json_group *serialize_equipment(const ft_character &character)
         return (ft_nullptr);
     }
     json_add_item_to_group(group, present);
-    if (chest && serialize_item_fields(group, *chest, "chest") != FT_ER_SUCCESSS)
+    if (chest && serialize_item_fields(group, *chest, "chest") != FT_ERR_SUCCESSS)
     {
         json_free_groups(group);
         ft_errno = FT_ERR_NO_MEMORY;
@@ -236,13 +236,13 @@ json_group *serialize_equipment(const ft_character &character)
         return (ft_nullptr);
     }
     json_add_item_to_group(group, present);
-    if (weapon && serialize_item_fields(group, *weapon, "weapon") != FT_ER_SUCCESSS)
+    if (weapon && serialize_item_fields(group, *weapon, "weapon") != FT_ERR_SUCCESSS)
     {
         json_free_groups(group);
         ft_errno = FT_ERR_NO_MEMORY;
         return (ft_nullptr);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (group);
 }
 
@@ -255,7 +255,7 @@ json_group *serialize_quest(const ft_quest &quest)
         return (ft_nullptr);
     }
     bool has_error = false;
-    int error_code = FT_ER_SUCCESSS;
+    int error_code = FT_ERR_SUCCESSS;
     do
     {
         json_item *item = json_create_item("id", quest.get_id());
@@ -342,7 +342,7 @@ json_group *serialize_quest(const ft_quest &quest)
                 has_error = true;
                 break;
             }
-            if (serialize_item_fields(group, *item_start[item_index], item_prefix) != FT_ER_SUCCESSS)
+            if (serialize_item_fields(group, *item_start[item_index], item_prefix) != FT_ERR_SUCCESSS)
             {
                 error_code = FT_ERR_NO_MEMORY;
                 has_error = true;
@@ -359,7 +359,7 @@ json_group *serialize_quest(const ft_quest &quest)
         ft_errno = error_code;
         return (ft_nullptr);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (group);
 }
 

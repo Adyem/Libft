@@ -1,6 +1,7 @@
 #ifndef _WIN32
 
 #include "compatebility_cross_process.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 
 #include <cerrno>
 #include <cstring>

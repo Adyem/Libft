@@ -32,7 +32,7 @@ int    scma_get_stats(scma_stats *out_stats)
     else
         stats.snapshot_active = 0;
     *out_stats = stats;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (scma_unlock_and_return_int(1));
 }
 

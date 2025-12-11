@@ -17,7 +17,7 @@ static int rl_find_word_start_and_prefix(readline_state_t *state, char *prefix, 
     *prefix_len = state->pos - state->word_start;
     if (*prefix_len == 0)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     if (*prefix_len >= prefix_capacity)
@@ -29,7 +29,7 @@ static int rl_find_word_start_and_prefix(readline_state_t *state, char *prefix, 
     }
     ft_memcpy(prefix, &state->buffer[state->word_start], *prefix_len);
     prefix[*prefix_len] = '\0';
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -102,11 +102,11 @@ static int rl_apply_completion(readline_state_t *state, const char *completion)
     int required_size;
 
     completion_length = ft_strlen(completion);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
         return (-1);
     original_position = state->pos;
     suffix_length = ft_strlen(&state->buffer[original_position]);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
         return (-1);
     total_length = static_cast<long long>(state->word_start)
         + static_cast<long long>(completion_length)
@@ -203,7 +203,7 @@ int rl_handle_tab_completion(readline_state_t *state, const char *prompt)
         state->current_match_index = (state->current_match_index + 1) % state->current_match_count;
     }
 cleanup_success:
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
 cleanup:
     rl_state_unlock(state, lock_acquired);
     return (result);

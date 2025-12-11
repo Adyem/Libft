@@ -7,7 +7,7 @@
 #include "../JSon/json.hpp"
 #include "../Template/map.hpp"
 #include "../Template/shared_ptr.hpp"
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"

@@ -17,7 +17,7 @@ int cnfg_entry_prepare_thread_safety(cnfg_entry *entry)
     }
     if (entry->thread_safe_enabled && entry->mutex)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     memory = cma_malloc(sizeof(pt_mutex));
@@ -27,7 +27,7 @@ int cnfg_entry_prepare_thread_safety(cnfg_entry *entry)
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ER_SUCCESSS)
+    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
@@ -39,7 +39,7 @@ int cnfg_entry_prepare_thread_safety(cnfg_entry *entry)
     }
     entry->mutex = mutex_pointer;
     entry->thread_safe_enabled = true;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -68,18 +68,18 @@ int cnfg_entry_lock(cnfg_entry *entry, bool *lock_acquired)
     }
     if (!entry->thread_safe_enabled || !entry->mutex)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     entry->mutex->lock(THREAD_ID);
-    if (entry->mutex->get_error() != FT_ER_SUCCESSS)
+    if (entry->mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = entry->mutex->get_error();
         return (-1);
     }
     if (lock_acquired)
         *lock_acquired = true;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -91,7 +91,7 @@ void cnfg_entry_unlock(cnfg_entry *entry, bool lock_acquired)
         return ;
     entry_errno = ft_errno;
     entry->mutex->unlock(THREAD_ID);
-    if (entry->mutex->get_error() != FT_ER_SUCCESSS)
+    if (entry->mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = entry->mutex->get_error();
         return ;

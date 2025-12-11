@@ -1,5 +1,5 @@
 #include "../../YAML/yaml.hpp"
-#include "../../CPP_class/class_string_class.hpp"
+#include "../../CPP_class/class_string.hpp"
 #include "../../Libft/libft.hpp"
 #include "../../System_utils/test_runner.hpp"
 #include "../../Errno/errno.hpp"
@@ -30,10 +30,10 @@ FT_TEST(test_yaml_round_trip, "yaml round trip")
     if (name_value_guard.get() == ft_nullptr)
         return (0);
     name_value_guard->set_scalar("Alice");
-    if (name_value_guard->get_error() != FT_ER_SUCCESSS)
+    if (name_value_guard->get_error() != FT_ERR_SUCCESSS)
         return (0);
     root.add_map_item("name", name_value_guard.get());
-    if (root.get_error() != FT_ER_SUCCESSS)
+    if (root.get_error() != FT_ERR_SUCCESSS)
         return (0);
     name_value_guard.release();
 
@@ -41,17 +41,17 @@ FT_TEST(test_yaml_round_trip, "yaml round trip")
     if (numbers_value_guard.get() == ft_nullptr)
         return (0);
     numbers_value_guard->set_type(YAML_LIST);
-    if (numbers_value_guard->get_error() != FT_ER_SUCCESSS)
+    if (numbers_value_guard->get_error() != FT_ERR_SUCCESSS)
         return (0);
 
     number_one_guard.reset(new (std::nothrow) yaml_value());
     if (number_one_guard.get() == ft_nullptr)
         return (0);
     number_one_guard->set_scalar("one");
-    if (number_one_guard->get_error() != FT_ER_SUCCESSS)
+    if (number_one_guard->get_error() != FT_ERR_SUCCESSS)
         return (0);
     numbers_value_guard->add_list_item(number_one_guard.get());
-    if (numbers_value_guard->get_error() != FT_ER_SUCCESSS)
+    if (numbers_value_guard->get_error() != FT_ERR_SUCCESSS)
         return (0);
     number_one_guard.release();
 
@@ -59,30 +59,30 @@ FT_TEST(test_yaml_round_trip, "yaml round trip")
     if (number_two_guard.get() == ft_nullptr)
         return (0);
     number_two_guard->set_scalar("two");
-    if (number_two_guard->get_error() != FT_ER_SUCCESSS)
+    if (number_two_guard->get_error() != FT_ERR_SUCCESSS)
         return (0);
     numbers_value_guard->add_list_item(number_two_guard.get());
-    if (numbers_value_guard->get_error() != FT_ER_SUCCESSS)
+    if (numbers_value_guard->get_error() != FT_ERR_SUCCESSS)
         return (0);
     number_two_guard.release();
 
     root.add_map_item("numbers", numbers_value_guard.get());
-    if (root.get_error() != FT_ER_SUCCESSS)
+    if (root.get_error() != FT_ERR_SUCCESSS)
         return (0);
     numbers_value_guard.release();
 
     yaml_string = yaml_write_to_string(&root);
-    if (yaml_string.get_error() != FT_ER_SUCCESSS)
+    if (yaml_string.get_error() != FT_ERR_SUCCESSS)
         return (0);
 
     parsed_value_guard.reset(yaml_read_from_string(yaml_string));
     if (parsed_value_guard.get() == ft_nullptr)
         return (0);
-    if (parsed_value_guard->get_error() != FT_ER_SUCCESSS)
+    if (parsed_value_guard->get_error() != FT_ERR_SUCCESSS)
         return (0);
 
     round_trip_string = yaml_write_to_string(parsed_value_guard.get());
-    if (round_trip_string.get_error() != FT_ER_SUCCESSS)
+    if (round_trip_string.get_error() != FT_ERR_SUCCESSS)
         return (0);
     FT_ASSERT_EQ(0, ft_strcmp(yaml_string.c_str(), round_trip_string.c_str()));
     return (1);
@@ -93,7 +93,7 @@ FT_TEST(test_yaml_write_to_file_reports_write_failure, "yaml_write_to_file repor
     yaml_value scalar;
 
     scalar.set_scalar("content");
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(-1, yaml_write_to_file("/dev/full", &scalar));
     FT_ASSERT_EQ(FT_ERR_FULL, ft_errno);
     return (1);
@@ -105,7 +105,7 @@ FT_TEST(test_yaml_value_thread_safety_guard, "yaml_value thread guard handles ne
     yaml_value::thread_guard guard(&value);
     yaml_value::thread_guard nested_guard(&value);
 
-    if (value.get_error() != FT_ER_SUCCESSS)
+    if (value.get_error() != FT_ERR_SUCCESSS)
         return (0);
     FT_ASSERT_EQ(true, value.is_thread_safe_enabled());
     FT_ASSERT_EQ(0, guard.get_status());

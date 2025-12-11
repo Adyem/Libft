@@ -66,9 +66,9 @@ FT_TEST(test_html_attr_lock_resets_errno,
     lock_acquired = false;
     FT_ASSERT_EQ(0, html_attr_lock(attribute, &lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     html_attr_unlock(attribute, lock_acquired);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     release_html_attribute(attribute);
     return (1);
 }
@@ -115,7 +115,7 @@ FT_TEST(test_html_attr_lock_null_sets_errno,
     int  lock_result;
 
     lock_acquired = true;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     lock_result = html_attr_lock(ft_nullptr, &lock_acquired);
     FT_ASSERT_EQ(-1, lock_result);
     FT_ASSERT_EQ(false, lock_acquired);
@@ -128,7 +128,7 @@ FT_TEST(test_html_attr_unlock_null_resets_errno,
 {
     ft_errno = FT_ERR_INVALID_OPERATION;
     html_attr_unlock(ft_nullptr, true);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 

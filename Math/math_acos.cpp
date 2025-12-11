@@ -64,17 +64,17 @@ double math_acos(double dot)
     pi_value = 3.14159265358979323846;
     if (math_fabs(dot - 1.0) <= tolerance)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0.0);
     }
     if (math_fabs(dot + 1.0) <= tolerance)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (pi_value);
     }
     if (math_fabs(dot) <= tolerance)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (pi_value * 0.5);
     }
     lower_bound = 0.0;
@@ -86,7 +86,7 @@ double math_acos(double dot)
         cosine_middle = math_cos(middle_value);
         if (math_fabs(cosine_middle - dot) <= tolerance)
         {
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             return (middle_value);
         }
         if (cosine_middle > dot)
@@ -95,7 +95,7 @@ double math_acos(double dot)
             upper_bound = middle_value;
         iteration_count = iteration_count + 1;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return ((lower_bound + upper_bound) * 0.5);
 }
 

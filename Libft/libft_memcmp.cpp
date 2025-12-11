@@ -8,7 +8,7 @@ int    ft_memcmp(const void *pointer1, const void *pointer2, size_t size)
     const unsigned char    *string2;
     size_t                index;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (size == 0)
         return (0);
     if (pointer1 == ft_nullptr || pointer2 == ft_nullptr)

@@ -13,7 +13,7 @@ int    ft_atoi(const char *string)
     bool    digit_found = false;
     bool    whitespace_found = false;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (string == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
@@ -75,9 +75,9 @@ int    ft_atoi(const char *string)
     }
     if (string[index] != '\0')
         ft_errno = FT_ERR_INVALID_ARGUMENT;
-    if (whitespace_found == true && ft_errno == FT_ER_SUCCESSS)
+    if (whitespace_found == true && ft_errno == FT_ERR_SUCCESSS)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
     {
         if (sign == -1)
         {

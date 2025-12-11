@@ -1,7 +1,7 @@
 #ifndef API_HTTP_COMMON_HPP
 #define API_HTTP_COMMON_HPP
 
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../JSon/json.hpp"
 #include <cstddef>
 

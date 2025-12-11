@@ -60,7 +60,7 @@ FT_TEST(test_su_get_home_directory_windows_missing_guard_sets_errno,
     FT_ASSERT_EQ(0, cmp_unsetenv("USERPROFILE"));
     FT_ASSERT_EQ(0, cmp_setenv("HOMEDRIVE", "C:", 1));
     FT_ASSERT_EQ(0, cmp_unsetenv("HOMEPATH"));
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     home_directory = su_get_home_directory();
     FT_ASSERT_EQ(ft_nullptr, home_directory);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -108,7 +108,7 @@ FT_TEST(test_su_get_home_directory_windows_concatenates_success,
     FT_ASSERT(home_directory != ft_nullptr);
     FT_ASSERT_EQ(0, std::strcmp(home_directory,
                                 expected_home_directory.c_str()));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     cma_free(home_directory);
     restore_environment_value("USERPROFILE", original_userprofile,
                               original_userprofile_present);

@@ -13,7 +13,7 @@ bool    time_get_monotonic_wall_anchor(t_monotonic_time_point &anchor_monotonic,
 
     before_sample = time_monotonic_point_now();
     wall_now_ms = time_now_ms();
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
         return (false);
     after_sample = time_monotonic_point_now();
     midpoint_offset = time_monotonic_point_diff_ms(before_sample, after_sample);
@@ -31,7 +31,7 @@ bool    time_get_monotonic_wall_anchor(t_monotonic_time_point &anchor_monotonic,
     }
     anchor_monotonic = midpoint_sample;
     anchor_wall_ms = static_cast<long long>(wall_now_ms);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 
@@ -57,7 +57,7 @@ bool    time_monotonic_to_wall_ms(t_monotonic_time_point monotonic_point,
         return (false);
     }
     out_wall_ms = static_cast<long long>(wall_candidate);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 
@@ -88,6 +88,6 @@ bool    time_wall_ms_to_monotonic(long long wall_time_ms,
         return (false);
     }
     out_monotonic = translated_point;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }

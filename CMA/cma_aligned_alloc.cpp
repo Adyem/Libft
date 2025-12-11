@@ -128,7 +128,7 @@ static void    *aligned_alloc_offswitch(ft_size_t alignment, ft_size_t request_s
     if (pointer)
     {
         g_cma_allocation_count++;
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
     }
     else
         ft_errno = FT_ERR_NO_MEMORY;
@@ -137,7 +137,7 @@ static void    *aligned_alloc_offswitch(ft_size_t alignment, ft_size_t request_s
     if (error_code == 0 && pointer)
     {
         g_cma_allocation_count++;
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
     }
     else
         ft_errno = FT_ERR_NO_MEMORY;
@@ -209,7 +209,7 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
         int error_code;
 
         error_code = ft_errno;
-        if (error_code == FT_ER_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_NO_MEMORY;
         ft_errno = error_code;
         return (ft_nullptr);
@@ -305,7 +305,7 @@ void    *cma_aligned_alloc(ft_size_t alignment, ft_size_t size)
     result = static_cast<void *>(cma_block_user_pointer(block));
     cma_leak_tracker_record_allocation(result, cma_block_user_size(block));
     allocator_guard.unlock();
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (ft_log_get_alloc_logging())
         ft_log_debug("cma_aligned_alloc %llu (alignment %llu) -> %p",
             request_size, alignment, result);

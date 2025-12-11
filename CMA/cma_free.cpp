@@ -63,7 +63,7 @@ void cma_free(void* ptr)
         g_cma_current_bytes = 0;
     g_cma_free_count++;
     allocator_guard.unlock();
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (ft_log_get_alloc_logging())
         ft_log_debug("cma_free %p", ptr);
     return ;

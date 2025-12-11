@@ -36,7 +36,7 @@ int    scma_write(scma_handle handle, ft_size_t offset,
         source,
         static_cast<size_t>(size));
     scma_update_tracked_snapshot(handle, offset, source, size);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     write_result = 1;
     return (scma_unlock_and_return_int(write_result));
 }
@@ -72,7 +72,7 @@ int    scma_read(scma_handle handle, ft_size_t offset,
     std::memcpy(destination,
         heap_data + static_cast<size_t>(block->offset + offset),
         static_cast<size_t>(size));
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     read_result = 1;
     return (scma_unlock_and_return_int(read_result));
 }

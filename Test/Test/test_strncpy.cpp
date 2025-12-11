@@ -25,7 +25,7 @@ FT_TEST(test_strncpy_full_copy, "ft_strncpy full copy with padding")
     FT_ASSERT_EQ('\0', destination[3]);
     FT_ASSERT_EQ('\0', destination[4]);
     FT_ASSERT_EQ('\0', destination[5]);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -52,7 +52,7 @@ FT_TEST(test_strncpy_truncate, "ft_strncpy truncates without null")
     FT_ASSERT_EQ('e', destination[1]);
     FT_ASSERT_EQ('l', destination[2]);
     FT_ASSERT_EQ('X', destination[3]);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -67,7 +67,7 @@ FT_TEST(test_strncpy_zero_length, "ft_strncpy zero length")
     ft_errno = FT_ERR_OUT_OF_RANGE;
     FT_ASSERT_EQ(destination, ft_strncpy(destination, "xyz", 0));
     FT_ASSERT_EQ('a', destination[0]);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -75,7 +75,7 @@ FT_TEST(test_strncpy_zero_length_null_destination, "ft_strncpy zero length allow
 {
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(ft_nullptr, ft_strncpy(ft_nullptr, "abc", 0));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -88,7 +88,7 @@ FT_TEST(test_strncpy_zero_length_null_source, "ft_strncpy zero length allows nul
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(destination, ft_strncpy(destination, ft_nullptr, 0));
     FT_ASSERT_EQ('v', destination[0]);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -96,7 +96,7 @@ FT_TEST(test_strncpy_zero_length_both_null, "ft_strncpy zero length allows both 
 {
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(ft_nullptr, ft_strncpy(ft_nullptr, ft_nullptr, 0));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -108,10 +108,10 @@ FT_TEST(test_strncpy_null, "ft_strncpy with nullptr")
     buffer[1] = 'b';
     buffer[2] = 'c';
     buffer[3] = '\0';
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(ft_nullptr, ft_strncpy(ft_nullptr, buffer, 3));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(ft_nullptr, ft_strncpy(buffer, ft_nullptr, 3));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -123,10 +123,10 @@ FT_TEST(test_strncpy_null_sets_errno, "ft_strncpy null arguments set FT_ERR_INVA
 
     buffer[0] = 'z';
     buffer[1] = '\0';
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(ft_nullptr, ft_strncpy(ft_nullptr, buffer, 2));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(ft_nullptr, ft_strncpy(buffer, ft_nullptr, 2));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -141,7 +141,7 @@ FT_TEST(test_strncpy_zero_length_clears_errno, "ft_strncpy zero length clears er
     destination[2] = '\0';
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(destination, ft_strncpy(destination, "hi", 0));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     FT_ASSERT_EQ('x', destination[0]);
     FT_ASSERT_EQ('y', destination[1]);
     return (1);
@@ -167,7 +167,7 @@ FT_TEST(test_strncpy_pads_with_null_bytes, "ft_strncpy pads destination when sou
     FT_ASSERT_EQ('\0', destination[2]);
     FT_ASSERT_EQ('\0', destination[3]);
     FT_ASSERT_EQ('z', destination[4]);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -187,6 +187,6 @@ FT_TEST(test_strncpy_partial_copy_preserves_tail, "ft_strncpy leaves bytes beyon
     FT_ASSERT_EQ('z', destination[2]);
     FT_ASSERT_EQ('w', destination[3]);
     FT_ASSERT_EQ('\0', destination[4]);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }

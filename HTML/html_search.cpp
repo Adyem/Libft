@@ -12,7 +12,7 @@ static int normalize_selector_value(char *value_string)
     if (!value_string)
         return (0);
     value_length = ft_strlen_size_t(value_string);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
     {
         ft_errno = FT_ERR_OUT_OF_RANGE;
         return (-1);

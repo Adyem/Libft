@@ -12,7 +12,7 @@ CPP_class/class_file_stream.hpp
 CPP_class/class_istream.hpp
 CPP_class/class_istringstream.hpp
 CPP_class/class_nullptr.hpp
-CPP_class/class_string_class.hpp
+CPP_class/class_string.hpp
 CPP_class/class_stringbuf.hpp
 Compression/compression.hpp
 Config/config.hpp

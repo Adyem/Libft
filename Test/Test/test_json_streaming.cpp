@@ -1,7 +1,7 @@
 #include "../../JSon/json_stream_reader.hpp"
 #include "../../JSon/json_stream_writer.hpp"
 #include "../../System_utils/test_runner.hpp"
-#include "../../CPP_class/class_string_class.hpp"
+#include "../../CPP_class/class_string.hpp"
 #include "../../Template/vector.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Libft/libft.hpp"
@@ -60,7 +60,7 @@ static int capture_event(void *user_data, const json_stream_event *event)
     else
         record.value.clear();
     events->push_back(record);
-    if (events->get_error() != FT_ER_SUCCESSS)
+    if (events->get_error() != FT_ERR_SUCCESSS)
         return (-1);
     return (0);
 }
@@ -95,7 +95,7 @@ static size_t string_sink_write(void *user_data, const char *buffer, size_t size
         return (0);
     output = static_cast<ft_string *>(user_data);
     output->append(buffer, size);
-    if (output->get_error() != FT_ER_SUCCESSS)
+    if (output->get_error() != FT_ERR_SUCCESSS)
         return (0);
     return (size);
 }

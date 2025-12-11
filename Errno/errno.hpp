@@ -12,7 +12,7 @@ int ft_set_errno_from_system_error(int error_code);
 
 enum PTErrorCode
 {
-    FT_ER_SUCCESSS = 0,
+    FT_ERR_SUCCESSS = 0,
     FT_ERR_NO_MEMORY,
     FT_ERR_FILE_OPEN_FAILED,
     FT_ERR_INVALID_ARGUMENT,

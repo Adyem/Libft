@@ -27,9 +27,9 @@ FT_TEST(test_ft_thread_lock_cycle_resets_errno,
     lock_acquired = false;
     FT_ASSERT_EQ(0, thread.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     thread.unlock(lock_acquired);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     thread.disable_thread_safety();
     return (1);
 }
@@ -42,13 +42,13 @@ FT_TEST(test_ft_thread_join_respects_thread_safety,
         return ;
     });
 
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, worker.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, worker.get_error());
     FT_ASSERT_EQ(0, worker.enable_thread_safety());
     FT_ASSERT_EQ(true, worker.is_thread_safe_enabled());
     FT_ASSERT_EQ(true, worker.joinable());
     worker.join();
     FT_ASSERT_EQ(false, worker.joinable());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, worker.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, worker.get_error());
     worker.disable_thread_safety();
     return (1);
 }

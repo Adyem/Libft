@@ -14,8 +14,8 @@ FT_TEST(test_cma_allocator_guard_unlock_resets_errno,
     ft_errno = sentinel_errno;
     allocator_guard.unlock();
     FT_ASSERT_EQ(false, allocator_guard.is_active());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, allocator_guard.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, allocator_guard.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -33,6 +33,6 @@ FT_TEST(test_cma_allocator_guard_destructor_resets_errno,
             return (0);
         ft_errno = sentinel_errno;
     }
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }

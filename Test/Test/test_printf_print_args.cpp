@@ -481,11 +481,11 @@ FT_TEST(test_ft_putnbr_fd_marks_error_on_failed_write, "ft_putnbr_fd marks count
     size_t write_count;
 
     write_count = 0;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     ft_putnbr_fd(42, -1, &write_count);
     FT_ASSERT_EQ(SIZE_MAX, write_count);
-    FT_ASSERT(ft_errno != FT_ER_SUCCESSS);
-    ft_errno = FT_ER_SUCCESSS;
+    FT_ASSERT(ft_errno != FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESSS;
     return (1);
 }
 

@@ -33,7 +33,7 @@ int time_duration_ms_prepare_thread_safety(t_duration_milliseconds *duration)
     }
     if (duration->thread_safe_enabled && duration->mutex)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     memory = std::malloc(sizeof(pt_mutex));
@@ -43,7 +43,7 @@ int time_duration_ms_prepare_thread_safety(t_duration_milliseconds *duration)
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ER_SUCCESSS)
+    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
@@ -55,7 +55,7 @@ int time_duration_ms_prepare_thread_safety(t_duration_milliseconds *duration)
     }
     duration->mutex = mutex_pointer;
     duration->thread_safe_enabled = true;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -71,7 +71,7 @@ int time_duration_ms_lock(const t_duration_milliseconds *duration, bool *lock_ac
 {
     t_duration_milliseconds  *mutable_duration;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (lock_acquired)
         *lock_acquired = false;
     if (!duration)
@@ -85,7 +85,7 @@ int time_duration_ms_lock(const t_duration_milliseconds *duration, bool *lock_ac
         return (0);
     }
     mutable_duration->mutex->lock(THREAD_ID);
-    if (mutable_duration->mutex->get_error() != FT_ER_SUCCESSS)
+    if (mutable_duration->mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = mutable_duration->mutex->get_error();
         return (-1);
@@ -104,9 +104,9 @@ void    time_duration_ms_unlock(const t_duration_milliseconds *duration, bool lo
     mutable_duration = const_cast<t_duration_milliseconds *>(duration);
     if (!mutable_duration->mutex)
         return ;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     mutable_duration->mutex->unlock(THREAD_ID);
-    if (mutable_duration->mutex->get_error() != FT_ER_SUCCESSS)
+    if (mutable_duration->mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = mutable_duration->mutex->get_error();
         return ;

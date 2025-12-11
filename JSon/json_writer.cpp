@@ -15,7 +15,7 @@
 
 static char *json_writer_return_failure(void)
 {
-    if (ft_errno == FT_ER_SUCCESSS)
+    if (ft_errno == FT_ERR_SUCCESSS)
         ft_errno = FT_ERR_NO_MEMORY;
     return (ft_nullptr);
 }
@@ -74,7 +74,7 @@ int json_write_to_file(const char *file_path, json_group *groups)
     pf_printf_fd(file_descriptor, "}\n");
     if (cmp_close(file_descriptor) != 0)
         return (-1);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -90,13 +90,13 @@ int json_write_to_backend(ft_document_sink &sink, json_group *groups)
     serialized_length = ft_strlen(serialized_content);
     write_result = sink.write_all(serialized_content, serialized_length);
     cma_free(serialized_content);
-    if (write_result != FT_ER_SUCCESSS)
+    if (write_result != FT_ERR_SUCCESSS)
     {
-        if (ft_errno == FT_ER_SUCCESSS)
+        if (ft_errno == FT_ERR_SUCCESSS)
             ft_errno = write_result;
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -186,7 +186,7 @@ char *json_write_to_string(json_group *groups)
     if (!temporary)
         return (json_writer_return_failure());
     result = temporary;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 

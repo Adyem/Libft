@@ -10,7 +10,7 @@ FT_TEST(test_ft_function_default_empty_reports_error,
     int invocation_result;
 
     FT_ASSERT_EQ(false, static_cast<bool>(empty_function));
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     invocation_result = empty_function(7);
     FT_ASSERT_EQ(0, invocation_result);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, empty_function.get_error());
@@ -35,17 +35,17 @@ FT_TEST(test_ft_function_copies_stateful_lambda,
     ft_errno = FT_ERR_ALREADY_EXISTS;
     FT_ASSERT_EQ(3, stateful_callback(3));
     FT_ASSERT_EQ(3, accumulator);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, stateful_callback.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, stateful_callback.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
 
     copied_callback = stateful_callback;
     FT_ASSERT_EQ(true, static_cast<bool>(copied_callback));
     ft_errno = FT_ERR_CONFIGURATION;
     FT_ASSERT_EQ(6, copied_callback(3));
     FT_ASSERT_EQ(6, accumulator);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, copied_callback.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, stateful_callback.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, copied_callback.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, stateful_callback.get_error());
     return (1);
 }
 
@@ -67,8 +67,8 @@ FT_TEST(test_ft_function_move_assignment_transfers_callable,
 
     ft_errno = FT_ERR_TERMINATED;
     FT_ASSERT_EQ(10, destination(5));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source.get_error());
     return (1);
 }

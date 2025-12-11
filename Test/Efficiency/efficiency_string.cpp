@@ -1,4 +1,4 @@
-#include "../../CPP_class/class_string_class.hpp"
+#include "../../CPP_class/class_string.hpp"
 #include "utils.hpp"
 
 #include <string>

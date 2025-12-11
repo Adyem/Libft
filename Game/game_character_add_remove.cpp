@@ -18,7 +18,7 @@ void ft_character::add_coins(int coins) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_character_restore_errno(guard, entry_errno);
@@ -29,7 +29,7 @@ void ft_character::add_coins(int coins) noexcept
     delta_value = static_cast<long long>(this->_coins) - previous_total;
     this->emit_game_metric("character.coins_change", "coins",
         delta_value, this->_coins, "coins");
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_character_restore_errno(guard, entry_errno);
     return ;
 }
@@ -42,7 +42,7 @@ void ft_character::sub_coins(int coins) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_character_restore_errno(guard, entry_errno);
@@ -53,7 +53,7 @@ void ft_character::sub_coins(int coins) noexcept
     delta_value = static_cast<long long>(this->_coins) - previous_total;
     this->emit_game_metric("character.coins_change", "coins",
         delta_value, this->_coins, "coins");
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_character_restore_errno(guard, entry_errno);
     return ;
 }
@@ -66,7 +66,7 @@ void ft_character::add_valor(int valor) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_character_restore_errno(guard, entry_errno);
@@ -77,7 +77,7 @@ void ft_character::add_valor(int valor) noexcept
     delta_value = static_cast<long long>(this->_valor) - previous_total;
     this->emit_game_metric("character.valor_change", "valor",
         delta_value, this->_valor, "valor");
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_character_restore_errno(guard, entry_errno);
     return ;
 }
@@ -90,7 +90,7 @@ void ft_character::sub_valor(int valor) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_character_restore_errno(guard, entry_errno);
@@ -101,7 +101,7 @@ void ft_character::sub_valor(int valor) noexcept
     delta_value = static_cast<long long>(this->_valor) - previous_total;
     this->emit_game_metric("character.valor_change", "valor",
         delta_value, this->_valor, "valor");
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_character_restore_errno(guard, entry_errno);
     return ;
 }
@@ -114,7 +114,7 @@ void ft_character::add_experience(int experience) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_character_restore_errno(guard, entry_errno);
@@ -125,7 +125,7 @@ void ft_character::add_experience(int experience) noexcept
     delta_value = static_cast<long long>(this->_experience) - previous_total;
     this->emit_game_metric("character.experience_change", "experience",
         delta_value, this->_experience, "xp");
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_character_restore_errno(guard, entry_errno);
     return ;
 }
@@ -138,7 +138,7 @@ void ft_character::sub_experience(int experience) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_character_restore_errno(guard, entry_errno);
@@ -149,7 +149,7 @@ void ft_character::sub_experience(int experience) noexcept
     delta_value = static_cast<long long>(this->_experience) - previous_total;
     this->emit_game_metric("character.experience_change", "experience",
         delta_value, this->_experience, "xp");
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_character_restore_errno(guard, entry_errno);
     return ;
 }
@@ -161,7 +161,7 @@ int ft_character::add_skill(const ft_skill &skill) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_character_restore_errno(guard, entry_errno);
@@ -174,9 +174,9 @@ int ft_character::add_skill(const ft_skill &skill) noexcept
         game_character_restore_errno(guard, entry_errno);
         return (this->_error);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_character_restore_errno(guard, entry_errno);
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 void ft_character::remove_skill(int id) noexcept
@@ -186,7 +186,7 @@ void ft_character::remove_skill(int id) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_character_restore_errno(guard, entry_errno);
@@ -199,7 +199,7 @@ void ft_character::remove_skill(int id) noexcept
         game_character_restore_errno(guard, entry_errno);
         return ;
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_character_restore_errno(guard, entry_errno);
     return ;
 }

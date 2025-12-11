@@ -8,7 +8,7 @@ FT_TEST(test_goal_default_state, "Game: goals start with zeroed progress and suc
 
     FT_ASSERT_EQ(0, goal.get_target());
     FT_ASSERT_EQ(0, goal.get_progress());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, goal.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, goal.get_error());
     return (1);
 }
 
@@ -20,7 +20,7 @@ FT_TEST(test_goal_set_target_and_progress, "Game: goal setters store provided va
     goal.set_progress(2);
     FT_ASSERT_EQ(5, goal.get_target());
     FT_ASSERT_EQ(2, goal.get_progress());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, goal.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, goal.get_error());
     return (1);
 }
 
@@ -31,7 +31,7 @@ FT_TEST(test_goal_add_progress_accumulates, "Game: adding progress increases sto
     goal.set_progress(3);
     goal.add_progress(4);
     FT_ASSERT_EQ(7, goal.get_progress());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, goal.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, goal.get_error());
     return (1);
 }
 
@@ -45,7 +45,7 @@ FT_TEST(test_goal_copy_preserves_values, "Game: copied goals keep target and pro
     duplicate = original;
     FT_ASSERT_EQ(12, duplicate.get_target());
     FT_ASSERT_EQ(6, duplicate.get_progress());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, duplicate.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, duplicate.get_error());
     return (1);
 }
 
@@ -61,8 +61,8 @@ FT_TEST(test_goal_move_resets_source, "Game: moved goals clear source fields")
     FT_ASSERT_EQ(4, destination.get_progress());
     FT_ASSERT_EQ(0, original.get_target());
     FT_ASSERT_EQ(0, original.get_progress());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, original.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, original.get_error());
     return (1);
 }
 
@@ -72,7 +72,7 @@ FT_TEST(test_achievement_default_state, "Game: achievements start without goals 
 
     FT_ASSERT_EQ(0, achievement.get_id());
     FT_ASSERT_EQ(0, achievement.get_goals().size());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, achievement.get_error());
     return (1);
 }
 
@@ -82,7 +82,7 @@ FT_TEST(test_achievement_set_id, "Game: achievement identifier setter works")
 
     achievement.set_id(7);
     FT_ASSERT_EQ(7, achievement.get_id());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, achievement.get_error());
     return (1);
 }
 
@@ -93,7 +93,7 @@ FT_TEST(test_achievement_set_goal_inserts_entry, "Game: setting a goal creates a
     achievement.set_goal(3, 15);
     FT_ASSERT_EQ(1, achievement.get_goals().size());
     FT_ASSERT_EQ(15, achievement.get_goal(3));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, achievement.get_error());
     return (1);
 }
 
@@ -104,7 +104,7 @@ FT_TEST(test_achievement_set_goal_overwrites_target, "Game: updating existing go
     achievement.set_goal(5, 10);
     achievement.set_goal(5, 20);
     FT_ASSERT_EQ(20, achievement.get_goal(5));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, achievement.get_error());
     return (1);
 }
 
@@ -115,7 +115,7 @@ FT_TEST(test_achievement_set_progress_creates_goal, "Game: setting progress for 
     achievement.set_progress(2, 8);
     FT_ASSERT_EQ(1, achievement.get_goals().size());
     FT_ASSERT_EQ(8, achievement.get_progress(2));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, achievement.get_error());
     return (1);
 }
 
@@ -126,7 +126,7 @@ FT_TEST(test_achievement_set_progress_updates_existing_goal, "Game: setting prog
     achievement.set_goal(4, 10);
     achievement.set_progress(4, 6);
     FT_ASSERT_EQ(6, achievement.get_progress(4));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, achievement.get_error());
     return (1);
 }
 
@@ -137,7 +137,7 @@ FT_TEST(test_achievement_add_progress_creates_goal, "Game: adding progress inser
     achievement.add_progress(9, 3);
     FT_ASSERT_EQ(1, achievement.get_goals().size());
     FT_ASSERT_EQ(3, achievement.get_progress(9));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, achievement.get_error());
     return (1);
 }
 
@@ -149,7 +149,7 @@ FT_TEST(test_achievement_add_progress_updates_existing_goal, "Game: adding progr
     achievement.set_progress(1, 2);
     achievement.add_progress(1, 4);
     FT_ASSERT_EQ(6, achievement.get_progress(1));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, achievement.get_error());
     return (1);
 }
 
@@ -180,7 +180,7 @@ FT_TEST(test_achievement_is_goal_complete_checks_target, "Game: goal completion 
     FT_ASSERT_EQ(false, achievement.is_goal_complete(11));
     achievement.add_progress(11, 5);
     FT_ASSERT_EQ(true, achievement.is_goal_complete(11));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, achievement.get_error());
     return (1);
 }
 
@@ -202,7 +202,7 @@ FT_TEST(test_achievement_is_complete_false_when_any_goal_incomplete, "Game: achi
     achievement.set_goal(7, 2);
     achievement.set_progress(7, 1);
     FT_ASSERT_EQ(false, achievement.is_complete());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, achievement.get_error());
     return (1);
 }
 
@@ -215,7 +215,7 @@ FT_TEST(test_achievement_is_complete_true_when_all_goals_done, "Game: achievemen
     achievement.set_goal(7, 2);
     achievement.set_progress(7, 2);
     FT_ASSERT_EQ(true, achievement.is_complete());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, achievement.get_error());
     return (1);
 }
 
@@ -230,7 +230,7 @@ FT_TEST(test_achievement_copy_keeps_goals, "Game: copying achievements duplicate
     FT_ASSERT_EQ(1, duplicate.get_goals().size());
     FT_ASSERT_EQ(9, duplicate.get_goal(6));
     FT_ASSERT_EQ(6, duplicate.get_progress(6));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, duplicate.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, duplicate.get_error());
     return (1);
 }
 
@@ -246,7 +246,7 @@ FT_TEST(test_achievement_move_clears_source_goals, "Game: moving achievements tr
     FT_ASSERT_EQ(12, destination.get_goal(4));
     FT_ASSERT_EQ(10, destination.get_progress(4));
     FT_ASSERT_EQ(0, original.get_goals().size());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, original.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, original.get_error());
     return (1);
 }

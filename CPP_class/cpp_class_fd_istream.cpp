@@ -19,7 +19,7 @@ ft_fd_istream::ft_fd_istream(const ft_fd_istream &other) noexcept
 
     entry_errno = ft_errno;
     lock_error = other.lock_self(other_guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_fd_istream::restore_errno(other_guard, entry_errno);
@@ -41,7 +41,7 @@ ft_fd_istream::ft_fd_istream(ft_fd_istream &&other) noexcept
 
     entry_errno = ft_errno;
     lock_error = other.lock_self(other_guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_fd_istream::restore_errno(other_guard, entry_errno);
@@ -64,7 +64,7 @@ int ft_fd_istream::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
 
     entry_errno = ft_errno;
-    if (local_guard.get_error() != FT_ER_SUCCESSS)
+    if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = entry_errno;
         guard = ft_unique_lock<pt_mutex>();
@@ -72,7 +72,7 @@ int ft_fd_istream::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
     }
     ft_errno = entry_errno;
     guard = ft_move(local_guard);
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 void ft_fd_istream::restore_errno(ft_unique_lock<pt_mutex> &guard,
@@ -83,12 +83,12 @@ void ft_fd_istream::restore_errno(ft_unique_lock<pt_mutex> &guard,
     operation_errno = ft_errno;
     if (guard.owns_lock())
         guard.unlock();
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return ;
     }
-    if (operation_errno != FT_ER_SUCCESSS)
+    if (operation_errno != FT_ERR_SUCCESSS)
     {
         ft_errno = operation_errno;
         return ;
@@ -109,7 +109,7 @@ ft_fd_istream &ft_fd_istream::operator=(const ft_fd_istream &other) noexcept
     ft_istream::operator=(other);
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_fd_istream::restore_errno(guard, entry_errno);
@@ -133,7 +133,7 @@ ft_fd_istream &ft_fd_istream::operator=(ft_fd_istream &&other) noexcept
     ft_istream::operator=(ft_move(other));
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_fd_istream::restore_errno(guard, entry_errno);
@@ -154,7 +154,7 @@ void ft_fd_istream::set_fd(int fd) noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_fd_istream::restore_errno(guard, entry_errno);
@@ -174,7 +174,7 @@ int ft_fd_istream::get_fd() const noexcept
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_fd_istream::restore_errno(guard, entry_errno);
@@ -195,7 +195,7 @@ std::size_t ft_fd_istream::do_read(char *buffer, std::size_t count)
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         ft_fd_istream::restore_errno(guard, entry_errno);
@@ -209,11 +209,11 @@ std::size_t ft_fd_istream::do_read(char *buffer, std::size_t count)
         int read_error;
 
         read_error = ft_errno;
-        if (read_error == FT_ER_SUCCESSS)
+        if (read_error == FT_ERR_SUCCESSS)
             read_error = FT_ERR_INVALID_HANDLE;
         this->set_error(read_error);
         return (0);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (static_cast<std::size_t>(result));
 }

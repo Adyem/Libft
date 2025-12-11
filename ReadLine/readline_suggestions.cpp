@@ -14,7 +14,7 @@ void rl_add_suggestion(const char *word)
     {
         if (strcmp(suggestions[index], word) == 0)
         {
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             return ;
         }
         index++;
@@ -28,7 +28,7 @@ void rl_add_suggestion(const char *word)
             return ;
         suggestions[suggestion_count] = new_suggestion;
         suggestion_count++;
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
     }
     else
     {
@@ -47,6 +47,6 @@ void rl_clear_suggestions()
         index++;
     }
     suggestion_count = 0;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }

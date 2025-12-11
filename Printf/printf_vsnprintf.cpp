@@ -138,7 +138,7 @@ int pf_vsnprintf(char *string, size_t size, const char *format, va_list args)
         string[read_bytes] = '\0';
     }
     fclose(stream);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (printed);
 }
 

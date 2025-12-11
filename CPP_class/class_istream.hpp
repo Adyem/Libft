@@ -2,7 +2,6 @@
 #define FT_ISTREAM_HPP
 
 #include <cstddef>
-#include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 

@@ -1,8 +1,7 @@
 #ifndef FT_STRINGBUF_HPP
 #define FT_STRINGBUF_HPP
 
-#include "class_string_class.hpp"
-#include "../Errno/errno.hpp"
+#include "class_string.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 

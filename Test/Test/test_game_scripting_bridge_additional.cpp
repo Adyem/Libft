@@ -24,9 +24,9 @@ FT_TEST(test_game_script_bridge_defaults_to_lua_language, "Game: scripting bridg
     ft_game_script_bridge bridge(world_pointer, ft_nullptr);
 
     FT_ASSERT(world_pointer);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, world_pointer.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, world_pointer.get_error());
     FT_ASSERT_EQ(ft_string("lua"), bridge.get_language());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, bridge.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, bridge.get_error());
     FT_ASSERT_EQ(32, bridge.get_max_operations());
     return (1);
 }
@@ -37,7 +37,7 @@ FT_TEST(test_game_script_bridge_rejects_unsupported_language, "Game: scripting b
     ft_game_script_bridge bridge(world_pointer, "ruby");
 
     FT_ASSERT(world_pointer);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, world_pointer.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, world_pointer.get_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, bridge.get_error());
     FT_ASSERT_EQ(ft_string("ruby"), bridge.get_language());
     return (1);
@@ -50,7 +50,7 @@ FT_TEST(test_game_script_bridge_language_update_accepts_supported_value, "Game: 
 
     bridge.set_language("python");
     FT_ASSERT_EQ(ft_string("python"), bridge.get_language());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, bridge.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, bridge.get_error());
     return (1);
 }
 
@@ -61,7 +61,7 @@ FT_TEST(test_game_script_bridge_language_update_rejects_null, "Game: set_languag
 
     bridge.set_language("python");
     FT_ASSERT_EQ(ft_string("python"), bridge.get_language());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, bridge.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, bridge.get_error());
 
     bridge.set_language(ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, bridge.get_error());
@@ -77,11 +77,11 @@ FT_TEST(test_game_script_bridge_callback_count_tracks_overwrite, "Game: register
     ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> second_callback(script_set_score);
 
     FT_ASSERT_EQ(0u, bridge.get_callback_count());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, bridge.register_function("do", first_callback));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, bridge.register_function("do", first_callback));
     FT_ASSERT_EQ(1u, bridge.get_callback_count());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, bridge.register_function("do", second_callback));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, bridge.register_function("do", second_callback));
     FT_ASSERT_EQ(1u, bridge.get_callback_count());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, bridge.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, bridge.get_error());
     return (1);
 }
 
@@ -119,12 +119,12 @@ FT_TEST(test_game_script_bridge_remove_function_clears_existing_entry, "Game: re
     ft_game_script_bridge bridge(world_pointer);
     ft_function<int(ft_game_script_context &, const ft_vector<ft_string> &)> callback(script_noop);
 
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, bridge.register_function("noop", callback));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, bridge.register_function("noop", callback));
     FT_ASSERT_EQ(1u, bridge.get_callback_count());
 
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, bridge.remove_function("noop"));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, bridge.remove_function("noop"));
     FT_ASSERT_EQ(0u, bridge.get_callback_count());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, bridge.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, bridge.get_error());
     return (1);
 }
 
@@ -134,7 +134,7 @@ FT_TEST(test_game_script_bridge_set_max_operations_updates_limit, "Game: set_max
     ft_game_script_bridge bridge(world_pointer);
 
     bridge.set_max_operations(5);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, bridge.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, bridge.get_error());
     FT_ASSERT_EQ(5, bridge.get_max_operations());
     return (1);
 }
@@ -145,7 +145,7 @@ FT_TEST(test_game_script_bridge_set_max_operations_rejects_negative, "Game: set_
     ft_game_script_bridge bridge(world_pointer);
 
     bridge.set_max_operations(7);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, bridge.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, bridge.get_error());
     FT_ASSERT_EQ(7, bridge.get_max_operations());
 
     bridge.set_max_operations(-1);
@@ -213,10 +213,10 @@ FT_TEST(test_game_script_bridge_move_constructor_transfers_state, "Game: move co
     FT_ASSERT_EQ(ft_string("python"), moved.get_language());
     FT_ASSERT_EQ(4, moved.get_max_operations());
     FT_ASSERT_EQ(1u, moved.get_callback_count());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, moved.get_error());
     FT_ASSERT_EQ(0, original.get_max_operations());
     FT_ASSERT_EQ(0u, original.get_callback_count());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, original.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, original.get_error());
     return (1);
 }
 
@@ -238,10 +238,10 @@ FT_TEST(test_game_script_bridge_move_assignment_transfers_state, "Game: move ass
     FT_ASSERT_EQ(ft_string("python"), destination.get_language());
     FT_ASSERT_EQ(9, destination.get_max_operations());
     FT_ASSERT_EQ(1u, destination.get_callback_count());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination.get_error());
     FT_ASSERT_EQ(0, source.get_max_operations());
     FT_ASSERT_EQ(0u, source.get_callback_count());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source.get_error());
     return (1);
 }
 
@@ -270,12 +270,12 @@ FT_TEST(test_game_script_bridge_execute_with_registered_callback_runs_successful
 
     script = "call score 42\n";
     bridge.register_function("score", callback);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, bridge.execute(script, state));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, bridge.execute(script, state));
 
     score_value = state.get_variable("score");
     FT_ASSERT(score_value != ft_nullptr);
     FT_ASSERT_EQ(ft_string("42"), *score_value);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, bridge.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, bridge.get_error());
     return (1);
 }
 
@@ -289,8 +289,8 @@ FT_TEST(test_game_script_bridge_validate_dry_run_counts_operations, "Game: valid
 
     script = "# comment\nset score 1\n;another\ncall missing\n";
     result = bridge.validate_dry_run(script, warnings);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, result);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, bridge.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, result);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, bridge.get_error());
     FT_ASSERT(warnings.size() == 2);
     return (1);
 }

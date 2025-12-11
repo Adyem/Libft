@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <ctime>
 #include <chrono>
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 
 class pt_mutex;
 

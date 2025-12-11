@@ -1,11 +1,9 @@
 #ifndef YAML_HPP
 #define YAML_HPP
 
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../Template/vector.hpp"
 #include "../Template/map.hpp"
-#include "../CPP_class/class_nullptr.hpp"
-#include "../Errno/errno.hpp"
 #include "../Parser/document_backend.hpp"
 
 class pt_mutex;

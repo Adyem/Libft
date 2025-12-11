@@ -31,18 +31,18 @@ bool api_append_content_length_header(ft_string &request, size_t content_length)
     content_length_buffer[reversed_length] = '\0';
     request += "\r\nContent-Length: ";
     request_error = request.get_error();
-    if (request_error != FT_ER_SUCCESSS)
+    if (request_error != FT_ERR_SUCCESSS)
     {
         ft_errno = request_error;
         return (false);
     }
     request += content_length_buffer;
     request_error = request.get_error();
-    if (request_error != FT_ER_SUCCESSS)
+    if (request_error != FT_ERR_SUCCESSS)
     {
         ft_errno = request_error;
         return (false);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }

@@ -2,7 +2,7 @@
 
 int ft_isalpha(int character)
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if ((character >= 'a' && character <= 'z') ||
         (character >= 'A' && character <= 'Z'))
         return (1);

@@ -81,7 +81,7 @@ FT_TEST(test_task_scheduler_queue_failure_releases_mutex,
     cma_set_alloc_limit(1);
     completion_future.wait();
     cma_set_alloc_limit(0);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, completion_future.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, completion_future.get_error());
     FT_ASSERT_EQ(1, completion_future.get());
     FT_ASSERT_EQ(2, execution_count.load());
     return (1);

@@ -23,7 +23,7 @@
 
 FT_TEST(test_cmp_dir_open_null_path, "cmp_dir_open null path sets ft_errno")
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(ft_nullptr, cmp_dir_open(ft_nullptr));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -34,17 +34,17 @@ FT_TEST(test_cmp_dir_open_allocation_failure, "cmp_dir_open allocation failure p
     file_dir *directory_stream;
 
     cma_set_alloc_limit(1);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     directory_stream = cmp_dir_open(".");
-    cma_set_alloc_limit(0);
     FT_ASSERT_EQ(ft_nullptr, directory_stream);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
+    cma_set_alloc_limit(0);
     return (1);
 }
 
 FT_TEST(test_cmp_dir_open_os_error, "cmp_dir_open propagates operating system errors")
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(ft_nullptr, cmp_dir_open("cmp_dir_open_os_error_missing"));
     FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
@@ -52,7 +52,7 @@ FT_TEST(test_cmp_dir_open_os_error, "cmp_dir_open propagates operating system er
 
 FT_TEST(test_cmp_dir_read_null_stream, "cmp_dir_read null stream sets ft_errno")
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(ft_nullptr, cmp_dir_read(ft_nullptr));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -69,14 +69,14 @@ FT_TEST(test_cmp_dir_read_success_resets_errno, "cmp_dir_read success clears ft_
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     directory_entry = cmp_dir_read(directory_stream);
     FT_ASSERT(directory_entry != ft_nullptr);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     cmp_dir_close(directory_stream);
     return (1);
 }
 
 FT_TEST(test_cmp_directory_exists_null_path, "cmp_directory_exists null path sets ft_errno")
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(0, cmp_directory_exists(ft_nullptr));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -86,13 +86,13 @@ FT_TEST(test_cmp_directory_exists_existing_directory, "cmp_directory_exists find
 {
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(1, cmp_directory_exists("."));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
 FT_TEST(test_cmp_directory_exists_missing_directory, "cmp_directory_exists missing directory propagates error")
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(0, cmp_directory_exists("cmp_directory_exists_missing_directory"));
     FT_ASSERT_EQ(FT_ERR_IO, ft_errno);
     return (1);
@@ -109,7 +109,7 @@ FT_TEST(test_cmp_directory_exists_file_path, "cmp_directory_exists returns 0 for
     std::fclose(file_handle);
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(0, cmp_directory_exists(file_path));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     std::remove(file_path);
     return (1);
 }

@@ -20,8 +20,8 @@ FT_TEST(test_loot_table_get_random_success_sets_success, "ft_loot_table getRando
     if (result == ft_nullptr)
         return (0);
     FT_ASSERT_EQ(&treasure_value, result);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.get_error());
     return (1);
 }
 
@@ -56,8 +56,8 @@ FT_TEST(test_loot_table_pop_random_success_sets_success, "ft_loot_table popRando
     int *result = table.popRandomLoot();
     if (result != &loot_piece)
         return (0);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.get_error());
     FT_ASSERT_EQ(0u, table.size());
     return (1);
 }

@@ -49,19 +49,19 @@ static int pf_test_custom_handler(va_list *args, ft_string &output, void *contex
         return (-1);
     value = va_arg(*args, const char *);
     output.clear();
-    if (output.get_error() != FT_ER_SUCCESSS)
+    if (output.get_error() != FT_ERR_SUCCESSS)
         return (-1);
     if (prefix != ft_nullptr)
     {
         output.append(prefix);
-        if (output.get_error() != FT_ER_SUCCESSS)
+        if (output.get_error() != FT_ERR_SUCCESSS)
             return (-1);
     }
     if (value != ft_nullptr)
         output.append(value);
     else
         output.append("(null)");
-    if (output.get_error() != FT_ER_SUCCESSS)
+    if (output.get_error() != FT_ERR_SUCCESSS)
         return (-1);
     return (0);
 }
@@ -105,7 +105,7 @@ FT_TEST(test_ft_vfprintf_writes_output, "ft_vfprintf formats text into the provi
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     int printed = call_ft_vfprintf(stream, "Value:%d %s!", 42, word);
     FT_ASSERT_EQ(14, printed);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(0, fflush(stream));
     FT_ASSERT_EQ(0, fclose(stream));
     stream = static_cast<FILE *>(ft_nullptr);
@@ -123,7 +123,7 @@ FT_TEST(test_ft_vfprintf_null_arguments_return_error, "ft_vfprintf rejects null 
     int pipe_fds[2];
     FILE *stream;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(-1, call_ft_vfprintf(static_cast<FILE *>(ft_nullptr), "noop"));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT(create_pipe(pipe_fds));
@@ -134,7 +134,7 @@ FT_TEST(test_ft_vfprintf_null_arguments_return_error, "ft_vfprintf rejects null 
         close_pipe_end(pipe_fds[1]);
         return (0);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(-1, call_ft_vfprintf(stream, static_cast<const char *>(ft_nullptr)));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(0, fclose(stream));
@@ -159,7 +159,7 @@ FT_TEST(test_ft_vfprintf_write_failure_sets_errno, "ft_vfprintf propagates strea
     if (descriptor != -1)
         close(descriptor);
 #endif
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     int printed = call_ft_vfprintf(stream, "%s", "fail");
     FT_ASSERT_EQ(-1, printed);
     FT_ASSERT_EQ(FT_ERR_INVALID_HANDLE, ft_errno);
@@ -186,7 +186,7 @@ FT_TEST(test_ft_fprintf_writes_and_counts, "ft_fprintf forwards to ft_vfprintf a
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     int printed = ft_fprintf(stream, "Hello %s", name);
     FT_ASSERT_EQ(11, printed);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(0, fflush(stream));
     FT_ASSERT_EQ(0, fclose(stream));
     stream = static_cast<FILE *>(ft_nullptr);
@@ -206,7 +206,7 @@ FT_TEST(test_ft_fprintf_null_arguments_return_error, "ft_fprintf rejects null st
     typedef int (*t_ft_fprintf_plain)(FILE *, const char *, ...);
     t_ft_fprintf_plain plain_ft_fprintf;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(-1, ft_fprintf(static_cast<FILE *>(ft_nullptr), "noop"));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT(create_pipe(pipe_fds));
@@ -217,7 +217,7 @@ FT_TEST(test_ft_fprintf_null_arguments_return_error, "ft_fprintf rejects null st
         close_pipe_end(pipe_fds[1]);
         return (0);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     plain_ft_fprintf = ft_fprintf;
     FT_ASSERT_EQ(-1, plain_ft_fprintf(stream, static_cast<const char *>(ft_nullptr)));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -253,7 +253,7 @@ FT_TEST(test_pf_printf_writes_to_stdout, "pf_printf writes formatted output to S
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     int printed = pf_printf("Sum=%d %s", 7, status);
     FT_ASSERT_EQ(10, printed);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(0, fflush(stdout));
     FT_ASSERT(close_pipe_end(pipe_fds[1]));
     pipe_fds[1] = -1;
@@ -278,7 +278,7 @@ FT_TEST(test_pf_custom_specifier_formats_stream, "custom specifiers integrate wi
     int unregister_status = pf_unregister_custom_specifier('T');
     FT_ASSERT_EQ(0, unregister_status);
     FT_ASSERT_EQ(9, length);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(0, ft_strcmp(buffer, "tag:value"));
     return (1);
 }
@@ -303,14 +303,14 @@ FT_TEST(test_pf_custom_specifier_formats_fd, "custom specifiers integrate with p
     int unregister_status = pf_unregister_custom_specifier('Y');
     FT_ASSERT_EQ(0, unregister_status);
     FT_ASSERT_EQ(10, printed);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(0, ft_strcmp(buffer, "fd:output!"));
     return (1);
 }
 
 FT_TEST(test_pf_custom_specifier_duplicate_registration, "registering the same specifier twice fails")
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(0, pf_register_custom_specifier('Q', pf_test_custom_handler, ft_nullptr));
     int duplicate_status = pf_register_custom_specifier('Q', pf_test_custom_handler, ft_nullptr);
     int unregister_status = pf_unregister_custom_specifier('Q');
@@ -324,7 +324,7 @@ FT_TEST(test_pf_custom_specifier_handler_error_propagates, "custom specifier err
 {
     char buffer[32];
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(0, pf_register_custom_specifier('R', pf_test_custom_handler_failure, ft_nullptr));
     t_pf_snprintf_plain plain_pf_snprintf = pf_snprintf;
     int result = plain_pf_snprintf(buffer, sizeof(buffer), "%R");
@@ -340,7 +340,7 @@ FT_TEST(test_pf_printf_null_format_sets_errno, "pf_printf rejects null format st
     typedef int (*t_pf_printf_plain)(const char *, ...);
     t_pf_printf_plain plain_pf_printf;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     plain_pf_printf = pf_printf;
     FT_ASSERT_EQ(-1, plain_pf_printf(static_cast<const char *>(ft_nullptr)));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);

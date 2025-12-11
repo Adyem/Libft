@@ -19,7 +19,7 @@ FT_TEST(test_price_definition_setters, "update price definition fields")
     FT_ASSERT_EQ(750, definition.get_base_value());
     FT_ASSERT_EQ(500, definition.get_minimum_value());
     FT_ASSERT_EQ(1200, definition.get_maximum_value());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, definition.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, definition.get_error());
     return (1);
 }
 
@@ -32,7 +32,7 @@ FT_TEST(test_rarity_band_setters, "update rarity band multiplier")
 
     FT_ASSERT_EQ(6, band.get_rarity());
     FT_ASSERT_DOUBLE_EQ(2.25, band.get_value_multiplier());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, band.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, band.get_error());
     return (1);
 }
 
@@ -49,7 +49,7 @@ FT_TEST(test_vendor_profile_setters, "update vendor profile attributes")
     FT_ASSERT_DOUBLE_EQ(1.4, vendor.get_buy_markup());
     FT_ASSERT_DOUBLE_EQ(0.55, vendor.get_sell_multiplier());
     FT_ASSERT_DOUBLE_EQ(0.08, vendor.get_tax_rate());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, vendor.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, vendor.get_error());
     return (1);
 }
 
@@ -64,6 +64,6 @@ FT_TEST(test_currency_rate_setters, "update currency rate fields")
     FT_ASSERT_EQ(3, rate.get_currency_id());
     FT_ASSERT_DOUBLE_EQ(1.2, rate.get_rate_to_base());
     FT_ASSERT_EQ(4, rate.get_display_precision());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, rate.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, rate.get_error());
     return (1);
 }

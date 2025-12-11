@@ -45,11 +45,11 @@ void ft_lock_guard<MutexType>::set_error(int error) const
 
 template <typename MutexType>
 ft_lock_guard<MutexType>::ft_lock_guard(MutexType &mutex)
-    : _mutex(&mutex), _owns_lock(false), _error_code(FT_ER_SUCCESSS)
+    : _mutex(&mutex), _owns_lock(false), _error_code(FT_ERR_SUCCESSS)
 {
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     this->_mutex->lock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
@@ -60,7 +60,7 @@ ft_lock_guard<MutexType>::ft_lock_guard(MutexType &mutex)
         return ;
     }
     this->_owns_lock = true;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -70,13 +70,13 @@ ft_lock_guard<MutexType>::~ft_lock_guard()
     if (this->_owns_lock && this->_mutex != ft_nullptr)
     {
         this->_mutex->unlock(THREAD_ID);
-        if (this->_mutex->get_error() != FT_ER_SUCCESSS)
+        if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(this->_mutex->get_error());
             return ;
         }
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 

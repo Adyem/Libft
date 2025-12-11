@@ -14,12 +14,12 @@ bool    time_high_resolution_now(t_high_resolution_time_point *time_point)
     }
     if (cmp_high_resolution_time(&nanoseconds) != 0)
     {
-        if (ft_errno == FT_ER_SUCCESSS)
+        if (ft_errno == FT_ERR_SUCCESSS)
             ft_errno = FT_ERR_TERMINATED;
         return (false);
     }
     time_point->nanoseconds = nanoseconds;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 

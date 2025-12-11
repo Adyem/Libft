@@ -1,10 +1,8 @@
 #ifndef API_INTERNAL_HPP
 #define API_INTERNAL_HPP
 
-#include "../CPP_class/class_string_class.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../Networking/socket_class.hpp"
-#include "../Networking/ssl_wrapper.hpp"
 #include "../PThread/mutex.hpp"
 #include <cstddef>
 #include <cstdint>

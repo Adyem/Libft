@@ -9,7 +9,6 @@ SRCS := libft_atoi.cpp \
     libft_memcpy_s.cpp \
     libft_memmove.cpp \
     libft_memmove_s.cpp \
-    libft_memdup.cpp \
     libft_memset.cpp \
     libft_strchr.cpp \
     libft_strlcat.cpp \

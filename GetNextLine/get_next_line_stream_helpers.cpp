@@ -24,18 +24,18 @@ static int append_line_to_vector(ft_vector<ft_string> &lines, char *line_buffer)
     string_error = line_string.get_error();
     if (line_buffer)
         cma_free(line_buffer);
-    if (string_error != FT_ER_SUCCESSS)
+    if (string_error != FT_ERR_SUCCESSS)
     {
         ft_errno = string_error;
         return (-1);
     }
     lines.push_back(ft_move(line_string));
-    if (lines.get_error() != FT_ER_SUCCESSS)
+    if (lines.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = lines.get_error();
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -57,9 +57,9 @@ int ft_read_file_lines(int fd, ft_vector<ft_string> &lines, std::size_t buffer_s
         line_pointer = get_next_line(fd, buffer_size);
         if (!line_pointer)
         {
-            if (ft_errno == FT_ER_SUCCESSS || ft_errno == FT_ERR_END_OF_FILE)
+            if (ft_errno == FT_ERR_SUCCESSS || ft_errno == FT_ERR_END_OF_FILE)
             {
-                ft_errno = FT_ER_SUCCESSS;
+                ft_errno = FT_ERR_SUCCESSS;
                 finished = true;
             }
             else
@@ -79,9 +79,9 @@ int ft_read_file_lines(int fd, ft_vector<ft_string> &lines, std::size_t buffer_s
         }
     }
     clear_status = gnl_clear_stream(fd);
-    if (clear_status != FT_ER_SUCCESSS)
+    if (clear_status != FT_ERR_SUCCESSS)
         return (-1);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -117,7 +117,7 @@ int ft_open_and_read_file(const char *path, ft_vector<ft_string> &lines, std::si
     if (close_result != 0)
     {
         close_error = ft_set_errno_from_system_error(errno);
-        if (read_result != 0 && read_error != FT_ER_SUCCESSS)
+        if (read_result != 0 && read_error != FT_ERR_SUCCESSS)
             ft_errno = read_error;
         else
             ft_errno = close_error;
@@ -128,6 +128,6 @@ int ft_open_and_read_file(const char *path, ft_vector<ft_string> &lines, std::si
         ft_errno = read_error;
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }

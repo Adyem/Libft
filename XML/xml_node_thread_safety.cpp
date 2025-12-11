@@ -19,7 +19,7 @@ int xml_node_prepare_thread_safety(xml_node *node) noexcept
     }
     if (node->thread_safe_enabled && node->mutex)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     allocated_memory = cma_malloc(sizeof(pt_mutex));
@@ -29,7 +29,7 @@ int xml_node_prepare_thread_safety(xml_node *node) noexcept
         return (-1);
     }
     mutex_pointer = new(allocated_memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ER_SUCCESSS)
+    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error_code;
 
@@ -41,7 +41,7 @@ int xml_node_prepare_thread_safety(xml_node *node) noexcept
     }
     node->mutex = mutex_pointer;
     node->thread_safe_enabled = true;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -79,7 +79,7 @@ int xml_node_lock(const xml_node *node, bool *lock_acquired) noexcept
         return (0);
     }
     mutable_node->mutex->lock(THREAD_ID);
-    if (mutable_node->mutex->get_error() != FT_ER_SUCCESSS)
+    if (mutable_node->mutex->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error_code;
 
@@ -105,7 +105,7 @@ void xml_node_unlock(const xml_node *node, bool lock_acquired) noexcept
         return ;
     entry_errno = ft_errno;
     mutable_node->mutex->unlock(THREAD_ID);
-    if (mutable_node->mutex->get_error() != FT_ER_SUCCESSS)
+    if (mutable_node->mutex->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error_code;
 

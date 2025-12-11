@@ -21,6 +21,6 @@ int rl_get_terminal_width(void)
         ft_errno = FT_ERR_TERMINATED;
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (static_cast<int>(cols));
 }

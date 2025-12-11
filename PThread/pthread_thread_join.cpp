@@ -19,6 +19,6 @@ int pt_thread_join(pthread_t thread, void **retval)
         ft_errno = ft_map_system_error(return_value);
         return (return_value);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (return_value);
 }

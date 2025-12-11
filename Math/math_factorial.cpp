@@ -7,7 +7,7 @@ int math_factorial(int number)
     int result;
     int current_number;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (number < 0)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
@@ -33,7 +33,7 @@ long math_factorial(long number)
     long result;
     long current_number;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (number < 0)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
@@ -59,7 +59,7 @@ long long math_factorial(long long number)
     long long result;
     long long current_number;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (number < 0)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;

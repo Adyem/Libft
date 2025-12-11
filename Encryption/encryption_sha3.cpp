@@ -57,7 +57,7 @@ static void sha3_hash_internal(const EVP_MD *algorithm, const void *data,
         ft_errno = FT_ERR_INTERNAL;
         return ;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 

@@ -139,7 +139,7 @@ void ft_variant<Types...>::set_error(int error) const
 template <typename... Types>
 ft_variant<Types...>::ft_variant()
     : _data(static_cast<storage_t*>(cma_malloc(sizeof(storage_t)))),
-      _index(npos), _error_code(FT_ER_SUCCESSS), _state_mutex(ft_nullptr),
+      _index(npos), _error_code(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr),
       _thread_safe_enabled(false)
 {
     if (this->_data == ft_nullptr)
@@ -184,13 +184,13 @@ ft_variant<Types...>::~ft_variant()
     if (data_pointer != ft_nullptr)
         cma_free(data_pointer);
     this->teardown_thread_safety();
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
 template <typename... Types>
 ft_variant<Types...>::ft_variant(ft_variant&& other) noexcept
-    : _data(ft_nullptr), _index(npos), _error_code(FT_ER_SUCCESSS),
+    : _data(ft_nullptr), _index(npos), _error_code(FT_ERR_SUCCESSS),
       _state_mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     bool lock_acquired;
@@ -203,7 +203,7 @@ ft_variant<Types...>::ft_variant(ft_variant&& other) noexcept
     lock_acquired = false;
     transferred_data = ft_nullptr;
     transferred_index = npos;
-    transferred_error = FT_ER_SUCCESSS;
+    transferred_error = FT_ERR_SUCCESSS;
     transferred_thread_safe = false;
     other_mutex = ft_nullptr;
     if (other.lock_internal(&lock_acquired) != 0)
@@ -221,7 +221,7 @@ ft_variant<Types...>::ft_variant(ft_variant&& other) noexcept
     this->_error_code = transferred_error;
     other._data = ft_nullptr;
     other._index = npos;
-    other._error_code = FT_ER_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESSS;
     other._state_mutex = ft_nullptr;
     other._thread_safe_enabled = false;
     other.unlock_internal(lock_acquired);
@@ -239,7 +239,7 @@ ft_variant<Types...>::ft_variant(ft_variant&& other) noexcept
             return ;
         }
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -290,7 +290,7 @@ ft_variant<Types...>& ft_variant<Types...>::operator=(ft_variant&& other) noexce
     this->_thread_safe_enabled = false;
     other._data = ft_nullptr;
     other._index = npos;
-    other._error_code = FT_ER_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESSS;
     other._thread_safe_enabled = false;
     other.unlock_internal(other_lock_acquired);
     other._state_mutex = ft_nullptr;
@@ -347,7 +347,7 @@ void ft_variant<Types...>::emplace(T&& value)
     construct_at(reinterpret_cast<std::decay_t<T>*>(this->_data), std::forward<T>(value));
     this->_index = variant_index<std::decay_t<T>, Types...>::value;
     this->unlock_internal(lock_acquired);
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -368,7 +368,7 @@ bool ft_variant<Types...>::holds_alternative() const
     idx = variant_index<T, Types...>::value;
     result = (this->_index == idx);
     this->unlock_internal(lock_acquired);
-    const_cast<ft_variant*>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_variant*>(this)->set_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -396,7 +396,7 @@ T& ft_variant<Types...>::get()
     }
     value_pointer = reinterpret_cast<T*>(this->_data);
     this->unlock_internal(lock_acquired);
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (*value_pointer);
 }
 
@@ -424,7 +424,7 @@ const T& ft_variant<Types...>::get() const
     }
     value_pointer = reinterpret_cast<const T*>(this->_data);
     this->unlock_internal(lock_acquired);
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (*value_pointer);
 }
 
@@ -448,7 +448,7 @@ void ft_variant<Types...>::visit(Visitor&& vis)
     }
     variant_visitor<0, Types...>::apply(this->_index, this->_data, std::forward<Visitor>(vis));
     this->unlock_internal(lock_acquired);
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -465,7 +465,7 @@ void ft_variant<Types...>::reset()
     }
     this->destroy_unlocked();
     this->unlock_internal(lock_acquired);
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -499,7 +499,7 @@ int ft_variant<Types...>::enable_thread_safety()
 
     if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
     {
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
     memory = cma_malloc(sizeof(pt_mutex));
@@ -509,7 +509,7 @@ int ft_variant<Types...>::enable_thread_safety()
         return (-1);
     }
     state_mutex = new(memory) pt_mutex();
-    if (state_mutex->get_error() != FT_ER_SUCCESSS)
+    if (state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
@@ -521,7 +521,7 @@ int ft_variant<Types...>::enable_thread_safety()
     }
     this->_state_mutex = state_mutex;
     this->_thread_safe_enabled = true;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -529,7 +529,7 @@ template <typename... Types>
 void ft_variant<Types...>::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -539,7 +539,7 @@ bool ft_variant<Types...>::is_thread_safe_enabled() const
     bool enabled;
 
     enabled = (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr);
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (enabled);
 }
 
@@ -548,14 +548,14 @@ int ft_variant<Types...>::lock(bool *lock_acquired) const
 {
     int result;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
     {
         const_cast<ft_variant*>(this)->set_error(ft_errno);
         return (result);
     }
-    this->_error_code = FT_ER_SUCCESSS;
+    this->_error_code = FT_ERR_SUCCESSS;
     return (result);
 }
 
@@ -564,43 +564,43 @@ void ft_variant<Types...>::unlock(bool lock_acquired) const
 {
     int mutex_error;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     this->unlock_internal(lock_acquired);
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
     {
-        this->_error_code = FT_ER_SUCCESSS;
+        this->_error_code = FT_ERR_SUCCESSS;
         return ;
     }
     mutex_error = this->_state_mutex->get_error();
-    if (mutex_error != FT_ER_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
         const_cast<ft_variant*>(this)->set_error(mutex_error);
         return ;
     }
-    this->_error_code = FT_ER_SUCCESSS;
+    this->_error_code = FT_ERR_SUCCESSS;
     return ;
 }
 
 template <typename... Types>
 int ft_variant<Types...>::lock_internal(bool *lock_acquired) const
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     this->_state_mutex->lock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_state_mutex->get_error();
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -609,9 +609,9 @@ void ft_variant<Types...>::unlock_internal(bool lock_acquired) const
 {
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
         return ;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     this->_state_mutex->unlock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_state_mutex->get_error();
         return ;

@@ -10,7 +10,7 @@ int pt_mutex::lock(pthread_t thread_id) const
     int mutex_error;
     bool lock_flag;
 
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     if (!this->ensure_native_mutex())
         return (FT_SUCCESS);
     lock_flag = this->_lock.load(std::memory_order_acquire);
@@ -26,7 +26,7 @@ int pt_mutex::lock(pthread_t thread_id) const
         }
     }
     owned_mutexes = pt_lock_tracking::get_owned_mutexes(thread_id);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
     {
         this->set_error(ft_errno);
         return (FT_SUCCESS);
@@ -71,6 +71,6 @@ int pt_mutex::lock(pthread_t thread_id) const
     this->_owner.store(thread_id, std::memory_order_relaxed);
     this->_lock.store(true, std::memory_order_release);
     pt_lock_tracking::notify_acquired(thread_id, &this->_native_mutex);
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (FT_SUCCESS);
 }

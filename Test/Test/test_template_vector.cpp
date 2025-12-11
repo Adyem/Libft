@@ -1,5 +1,5 @@
 #include "../../Template/vector.hpp"
-#include "../../CPP_class/class_string_class.hpp"
+#include "../../CPP_class/class_string.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
@@ -34,7 +34,7 @@ FT_TEST(test_ft_vector_ft_string_growth, "ft_vector preserves ft_string contents
             FT_ASSERT(string_vector[verify_index] == sample_values[verify_index]);
             ++verify_index;
         }
-        FT_ASSERT_EQ(FT_ER_SUCCESSS, string_vector.get_error());
+        FT_ASSERT_EQ(FT_ERR_SUCCESSS, string_vector.get_error());
     }
     ft_size_t allocation_count_after = 0;
     ft_size_t free_count_after = 0;

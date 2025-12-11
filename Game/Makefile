@@ -31,7 +31,6 @@ SRCS := game_map3d.cpp \
         game_pathfinding.cpp \
         game_crafting.cpp \
         game_data_catalog.cpp \
-        game_narrative_helpers.cpp \
         game_dialogue_line.cpp \
         game_dialogue_script.cpp \
         game_dialogue_table.cpp \
@@ -41,7 +40,6 @@ SRCS := game_map3d.cpp \
         game_region_definition.cpp \
         game_world_region.cpp \
         game_world_registry.cpp \
-        game_economy_helpers.cpp \
         game_price_definition.cpp \
         game_rarity_band.cpp \
         game_vendor_profile.cpp \
@@ -79,7 +77,6 @@ HEADERS := game_map3d.hpp \
         game_pathfinding.hpp \
         game_crafting.hpp \
         game_data_catalog.hpp \
-        game_narrative_helpers.hpp \
         ft_dialogue_line.hpp \
         ft_dialogue_script.hpp \
         game_dialogue_table.hpp \
@@ -89,7 +86,6 @@ HEADERS := game_map3d.hpp \
         ft_region_definition.hpp \
         ft_world_region.hpp \
         game_world_registry.hpp \
-        game_economy_helpers.hpp \
         ft_price_definition.hpp \
         ft_rarity_band.hpp \
         ft_vendor_profile.hpp \

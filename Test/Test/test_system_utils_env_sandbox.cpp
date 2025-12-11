@@ -7,7 +7,7 @@
 FT_TEST(test_su_environment_snapshot_capture_rejects_null,
     "su_environment_snapshot_capture rejects null snapshot")
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (su_environment_snapshot_capture(ft_nullptr) != -1)
         return (0);
     if (ft_errno != FT_ERR_INVALID_ARGUMENT)

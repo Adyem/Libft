@@ -2,7 +2,7 @@
 
 #include <cerrno>
 #include <cstring>
-
+#include "../CPP_class/class_nullptr.hpp"
 #include "../Compatebility/compatebility_cross_process.hpp"
 #include "../Libft/libft.hpp"
 

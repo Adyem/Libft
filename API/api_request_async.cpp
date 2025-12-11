@@ -1,7 +1,7 @@
 #include "api.hpp"
 #include "api_internal.hpp"
 #include "../Networking/socket_class.hpp"
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../CMA/CMA.hpp"
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
@@ -131,7 +131,7 @@ static bool api_async_build_request(const api_async_request &data,
     ft_string body_string;
     char *temporary_string;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     request.clear();
     body_string.clear();
     if (!data.method || !data.path || !data.ip)
@@ -202,7 +202,7 @@ static bool api_async_build_request(const api_async_request &data,
         temporary_string = json_write_to_string(data.payload);
         if (!temporary_string)
         {
-            if (ft_errno == FT_ER_SUCCESSS)
+            if (ft_errno == FT_ERR_SUCCESSS)
                 ft_errno = FT_ERR_NO_MEMORY;
             request.clear();
             return (false);
@@ -224,7 +224,7 @@ static bool api_async_build_request(const api_async_request &data,
         }
         if (!api_append_content_length_header(request, body_string.size()))
         {
-            if (ft_errno == FT_ER_SUCCESSS)
+            if (ft_errno == FT_ERR_SUCCESSS)
                 ft_errno = FT_ERR_IO;
             request.clear();
             return (false);
@@ -247,7 +247,7 @@ static bool api_async_build_request(const api_async_request &data,
             return (false);
         }
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 
@@ -463,7 +463,7 @@ bool    api_request_string_async(const char *ip, uint16_t port,
     }
     ft_thread thread_worker(api_async_worker, data);
     thread_worker.detach();
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 
@@ -515,10 +515,10 @@ bool    api_request_json_async(const char *ip, uint16_t port,
             data, payload, headers, timeout))
     {
         cma_free(data);
-        ft_errno = ft_errno == FT_ER_SUCCESSS ? FT_ERR_NO_MEMORY : ft_errno;
+        ft_errno = ft_errno == FT_ERR_SUCCESSS ? FT_ERR_NO_MEMORY : ft_errno;
         return (false);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 

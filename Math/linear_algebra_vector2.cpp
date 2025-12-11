@@ -54,7 +54,7 @@ int vector2::lock_self(ft_unique_lock<pt_mutex> &guard) const
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
-    if (local_guard.get_error() != FT_ER_SUCCESSS)
+    if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = entry_errno;
         guard = ft_unique_lock<pt_mutex>();
@@ -62,7 +62,7 @@ int vector2::lock_self(ft_unique_lock<pt_mutex> &guard) const
     }
     ft_errno = entry_errno;
     guard = ft_move(local_guard);
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 int vector2::lock_pair(const vector2 &first, const vector2 &second,
@@ -77,15 +77,15 @@ int vector2::lock_pair(const vector2 &first, const vector2 &second,
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ER_SUCCESSS)
+        if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ER_SUCCESSS;
-        return (FT_ER_SUCCESSS);
+        ft_errno = FT_ERR_SUCCESSS;
+        return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -103,13 +103,13 @@ int vector2::lock_pair(const vector2 &first, const vector2 &second,
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != FT_ER_SUCCESSS)
+        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ER_SUCCESSS)
+        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
         {
             if (!swapped)
             {
@@ -121,8 +121,8 @@ int vector2::lock_pair(const vector2 &first, const vector2 &second,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ER_SUCCESSS;
-            return (FT_ER_SUCCESSS);
+            ft_errno = FT_ERR_SUCCESSS;
+            return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -149,7 +149,7 @@ void vector2::set_error(int error_code) const
 }
 
 vector2::vector2(const vector2 &other)
-    : _x(0.0), _y(0.0), _error_code(FT_ER_SUCCESSS), _mutex()
+    : _x(0.0), _y(0.0), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
     *this = other;
     return ;
@@ -166,7 +166,7 @@ vector2 &vector2::operator=(const vector2 &other)
         return (*this);
     entry_errno = ft_errno;
     lock_error = vector2::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         return (*this);
@@ -181,7 +181,7 @@ vector2 &vector2::operator=(const vector2 &other)
 }
 
 vector2::vector2(vector2 &&other)
-    : _x(0.0), _y(0.0), _error_code(FT_ER_SUCCESSS), _mutex()
+    : _x(0.0), _y(0.0), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
     *this = ft_move(other);
     return ;
@@ -198,7 +198,7 @@ vector2 &vector2::operator=(vector2 &&other)
         return (*this);
     entry_errno = ft_errno;
     lock_error = vector2::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         return (*this);
@@ -209,8 +209,8 @@ vector2 &vector2::operator=(vector2 &&other)
     this->set_error_unlocked(other._error_code);
     other._x = 0.0;
     other._y = 0.0;
-    other._error_code = FT_ER_SUCCESSS;
-    other.set_error_unlocked(FT_ER_SUCCESSS);
+    other._error_code = FT_ERR_SUCCESSS;
+    other.set_error_unlocked(FT_ERR_SUCCESSS);
     vector2_restore_errno(this_guard, entry_errno);
     vector2_restore_errno(other_guard, entry_errno);
     return (*this);
@@ -225,14 +225,14 @@ double vector2::get_x() const
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
         return (0.0);
     }
     value = this->_x;
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     vector2_restore_errno(guard, entry_errno);
     return (value);
 }
@@ -246,14 +246,14 @@ double vector2::get_y() const
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
         return (0.0);
     }
     value = this->_y;
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     vector2_restore_errno(guard, entry_errno);
     return (value);
 }
@@ -268,7 +268,7 @@ vector2 vector2::add(const vector2 &other) const
 
     entry_errno = ft_errno;
     lock_error = vector2::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         result.set_error_unlocked(lock_error);
         this->set_error_unlocked(lock_error);
@@ -276,8 +276,8 @@ vector2 vector2::add(const vector2 &other) const
     }
     result._x = this->_x + other._x;
     result._y = this->_y + other._y;
-    result.set_error_unlocked(FT_ER_SUCCESSS);
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    result.set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     vector2_restore_errno(this_guard, entry_errno);
     vector2_restore_errno(other_guard, entry_errno);
     return (result);
@@ -293,7 +293,7 @@ vector2 vector2::subtract(const vector2 &other) const
 
     entry_errno = ft_errno;
     lock_error = vector2::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         result.set_error_unlocked(lock_error);
         this->set_error_unlocked(lock_error);
@@ -301,8 +301,8 @@ vector2 vector2::subtract(const vector2 &other) const
     }
     result._x = this->_x - other._x;
     result._y = this->_y - other._y;
-    result.set_error_unlocked(FT_ER_SUCCESSS);
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    result.set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     vector2_restore_errno(this_guard, entry_errno);
     vector2_restore_errno(other_guard, entry_errno);
     return (result);
@@ -318,14 +318,14 @@ double vector2::dot(const vector2 &other) const
 
     entry_errno = ft_errno;
     lock_error = vector2::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
         return (0.0);
     }
     result = vector2_compute_dot(this->_x, this->_y, other._x, other._y);
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     vector2_restore_errno(this_guard, entry_errno);
     vector2_restore_errno(other_guard, entry_errno);
     return (result);
@@ -340,14 +340,14 @@ double vector2::length() const
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
         return (0.0);
     }
     squared = vector2_compute_dot(this->_x, this->_y, this->_x, this->_y);
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     vector2_restore_errno(guard, entry_errno);
     return (math_sqrt(squared));
 }
@@ -364,7 +364,7 @@ vector2 vector2::normalize() const
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         result.set_error_unlocked(lock_error);
         this->set_error_unlocked(lock_error);
@@ -382,8 +382,8 @@ vector2 vector2::normalize() const
     }
     result._x = this->_x / length_value;
     result._y = this->_y / length_value;
-    result.set_error_unlocked(FT_ER_SUCCESSS);
-    this->set_error_unlocked(FT_ER_SUCCESSS);
+    result.set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     vector2_restore_errno(guard, entry_errno);
     return (result);
 }
@@ -397,7 +397,7 @@ int vector2::get_error() const
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;

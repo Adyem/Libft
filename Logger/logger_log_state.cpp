@@ -43,7 +43,7 @@ int logger_lock_sinks()
         ft_errno = ft_map_system_error(lock_result);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -69,6 +69,6 @@ int logger_unlock_sinks()
         ft_errno = ft_map_system_error(unlock_result);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }

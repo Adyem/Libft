@@ -11,29 +11,29 @@ FT_TEST(test_ft_unordered_map_iterator_enable_thread_safety_controls,
     ft_unordered_map<int, int> map_instance;
 
     map_instance.insert(1, 10);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.get_error());
     map_instance.insert(2, 20);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.get_error());
 
     ft_unordered_map<int, int>::iterator iterator_instance = map_instance.begin();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.get_error());
 
     FT_ASSERT_EQ(0, iterator_instance.enable_thread_safety());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, iterator_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, iterator_instance.get_error());
     FT_ASSERT(iterator_instance.is_thread_safe());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, iterator_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, iterator_instance.get_error());
 
     bool lock_acquired = false;
     FT_ASSERT_EQ(0, iterator_instance.lock(&lock_acquired));
     FT_ASSERT(lock_acquired);
     iterator_instance.unlock(lock_acquired);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, iterator_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, iterator_instance.get_error());
 
     FT_ASSERT_EQ(1, (*iterator_instance).first);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, iterator_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, iterator_instance.get_error());
 
     iterator_instance.disable_thread_safety();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, iterator_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, iterator_instance.get_error());
     return (1);
 }
 
@@ -49,12 +49,12 @@ FT_TEST(test_ft_unordered_map_iterator_lock_blocks_until_release,
     std::thread worker;
 
     map_instance.insert(1, 1);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.get_error());
 
     iterator_instance = map_instance.begin();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.get_error());
     FT_ASSERT_EQ(0, iterator_instance.enable_thread_safety());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, iterator_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, iterator_instance.get_error());
 
     main_lock_acquired = false;
     FT_ASSERT_EQ(0, iterator_instance.lock(&main_lock_acquired));
@@ -95,7 +95,7 @@ FT_TEST(test_ft_unordered_map_iterator_lock_blocks_until_release,
     FT_ASSERT(wait_duration_ms.load() >= 40);
 
     iterator_instance.disable_thread_safety();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, iterator_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, iterator_instance.get_error());
     return (1);
 }
 
@@ -106,39 +106,39 @@ FT_TEST(test_ft_unordered_map_iterators_inherit_container_thread_safety,
 
     FT_ASSERT_EQ(0, map_instance.enable_thread_safety());
     FT_ASSERT(map_instance.is_thread_safe());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.get_error());
 
     map_instance.insert(42, 100);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.get_error());
 
     ft_unordered_map<int, int>::iterator iterator_instance = map_instance.begin();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.get_error());
     FT_ASSERT(iterator_instance.is_thread_safe());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, iterator_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, iterator_instance.get_error());
 
     bool iterator_lock_acquired = false;
     FT_ASSERT_EQ(0, iterator_instance.lock(&iterator_lock_acquired));
     FT_ASSERT(iterator_lock_acquired);
     iterator_instance.unlock(iterator_lock_acquired);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, iterator_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, iterator_instance.get_error());
 
     const ft_unordered_map<int, int>& const_map_ref = map_instance;
     ft_unordered_map<int, int>::const_iterator const_iterator_instance = const_map_ref.begin();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, const_map_ref.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, const_map_ref.get_error());
     FT_ASSERT(const_iterator_instance.is_thread_safe());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, const_iterator_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, const_iterator_instance.get_error());
 
     bool const_lock_acquired = false;
     FT_ASSERT_EQ(0, const_iterator_instance.lock(&const_lock_acquired));
     FT_ASSERT(const_lock_acquired);
     const_iterator_instance.unlock(const_lock_acquired);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, const_iterator_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, const_iterator_instance.get_error());
 
     iterator_instance.disable_thread_safety();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, iterator_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, iterator_instance.get_error());
     const_iterator_instance.disable_thread_safety();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, const_iterator_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, const_iterator_instance.get_error());
     map_instance.disable_thread_safety();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, map_instance.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, map_instance.get_error());
     return (1);
 }

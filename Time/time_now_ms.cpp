@@ -45,7 +45,7 @@ long    time_now_ms(void)
         ft_errno = FT_ERR_OUT_OF_RANGE;
         return (LONG_MIN);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (static_cast<long>(milliseconds_count));
 }
 

@@ -45,7 +45,6 @@ class ft_string
                 mutex_guard &first_guard,
                 mutex_guard &second_guard) noexcept;
         static void sleep_backoff() noexcept;
-        static void restore_errno(mutex_guard &guard, int entry_errno) noexcept;
         void    resize_unlocked(size_t new_capacity) noexcept;
         void    append_char_unlocked(char c) noexcept;
         void    append_unlocked(const char *string, size_t length) noexcept;

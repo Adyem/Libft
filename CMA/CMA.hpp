@@ -3,7 +3,6 @@
 
 #include <cstddef>
 #include "../Libft/libft.hpp"
-#include "../CPP_class/class_nullptr.hpp"
 
 typedef void    *(*cma_backend_allocate_function)(ft_size_t size, void *user_data);
 typedef void    *(*cma_backend_reallocate_function)(void *memory_pointer,

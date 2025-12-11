@@ -10,7 +10,7 @@ typedef struct s_ft_error_string
 
 static const t_ft_error_string g_error_strings[] =
 {
-    {FT_ER_SUCCESSS, "Success"},
+    {FT_ERR_SUCCESSS, "Success"},
     {FT_ERR_NO_MEMORY, "Memory allocation failed"},
     {FT_ERR_FILE_OPEN_FAILED, "File open failed"},
     {FT_ERR_INVALID_ARGUMENT, "Invalid argument"},
@@ -95,7 +95,7 @@ const char* ft_strerror(int error_code)
     const char *custom_message;
     const char *system_message;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     custom_message = ft_find_custom_error(error_code);
     if (custom_message != NULL)
         return (custom_message);

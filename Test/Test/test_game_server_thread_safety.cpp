@@ -29,7 +29,7 @@ static void *game_server_poll_task(void *argument)
         const char *message;
 
         error_code = arguments->server_pointer->get_error();
-        if (error_code != FT_ER_SUCCESSS)
+        if (error_code != FT_ERR_SUCCESSS)
         {
             arguments->result_code = error_code;
             return (ft_nullptr);
@@ -42,7 +42,7 @@ static void *game_server_poll_task(void *argument)
         }
         index += 1;
     }
-    arguments->result_code = FT_ER_SUCCESSS;
+    arguments->result_code = FT_ERR_SUCCESSS;
     return (ft_nullptr);
 }
 
@@ -71,15 +71,15 @@ FT_TEST(test_game_server_thread_safety,
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
-    if (!world_pointer || world_pointer.get_error() != FT_ER_SUCCESSS)
+    if (!world_pointer || world_pointer.get_error() != FT_ERR_SUCCESSS)
     {
         return (0);
     }
-    if (primary_server.get_error() != FT_ER_SUCCESSS)
+    if (primary_server.get_error() != FT_ERR_SUCCESSS)
         return (0);
     poll_arguments.server_pointer = &primary_server;
     poll_arguments.iterations = 4096;
-    poll_arguments.result_code = FT_ER_SUCCESSS;
+    poll_arguments.result_code = FT_ERR_SUCCESSS;
     create_result = pt_thread_create(&poll_thread, ft_nullptr,
             game_server_poll_task, &poll_arguments);
     if (create_result != 0)
@@ -95,59 +95,59 @@ FT_TEST(test_game_server_thread_safety,
         ft_game_server moved_constructed(ft_move(constructed));
 
         primary_server.set_join_callback(game_server_noop_callback);
-        if (primary_server.get_error() != FT_ER_SUCCESSS)
+        if (primary_server.get_error() != FT_ERR_SUCCESSS)
         {
             test_failed = 1;
-            failure_expression = "primary_server.get_error() == FT_ER_SUCCESSS";
+            failure_expression = "primary_server.get_error() == FT_ERR_SUCCESSS";
             failure_line = __LINE__;
         }
         if (test_failed == 0)
         {
             primary_server.set_leave_callback(game_server_noop_callback);
-            if (primary_server.get_error() != FT_ER_SUCCESSS)
+            if (primary_server.get_error() != FT_ERR_SUCCESSS)
             {
                 test_failed = 1;
-                failure_expression = "primary_server.get_error() == FT_ER_SUCCESSS";
+                failure_expression = "primary_server.get_error() == FT_ERR_SUCCESSS";
                 failure_line = __LINE__;
             }
         }
         if (test_failed == 0)
         {
             copy_target = moved_constructed;
-            if (copy_target.get_error() != FT_ER_SUCCESSS)
+            if (copy_target.get_error() != FT_ERR_SUCCESSS)
             {
                 test_failed = 1;
-                failure_expression = "copy_target.get_error() == FT_ER_SUCCESSS";
+                failure_expression = "copy_target.get_error() == FT_ERR_SUCCESSS";
                 failure_line = __LINE__;
             }
         }
         if (test_failed == 0)
         {
             assign_target = copy_target;
-            if (assign_target.get_error() != FT_ER_SUCCESSS)
+            if (assign_target.get_error() != FT_ERR_SUCCESSS)
             {
                 test_failed = 1;
-                failure_expression = "assign_target.get_error() == FT_ER_SUCCESSS";
+                failure_expression = "assign_target.get_error() == FT_ERR_SUCCESSS";
                 failure_line = __LINE__;
             }
         }
         if (test_failed == 0)
         {
             move_target = ft_move(assign_target);
-            if (move_target.get_error() != FT_ER_SUCCESSS)
+            if (move_target.get_error() != FT_ERR_SUCCESSS)
             {
                 test_failed = 1;
-                failure_expression = "move_target.get_error() == FT_ER_SUCCESSS";
+                failure_expression = "move_target.get_error() == FT_ERR_SUCCESSS";
                 failure_line = __LINE__;
             }
         }
         if (test_failed == 0)
         {
             primary_server = ft_move(move_target);
-            if (primary_server.get_error() != FT_ER_SUCCESSS)
+            if (primary_server.get_error() != FT_ERR_SUCCESSS)
             {
                 test_failed = 1;
-                failure_expression = "primary_server.get_error() == FT_ER_SUCCESSS";
+                failure_expression = "primary_server.get_error() == FT_ERR_SUCCESSS";
                 failure_line = __LINE__;
             }
         }
@@ -163,10 +163,10 @@ FT_TEST(test_game_server_thread_safety,
             failure_line = __LINE__;
         }
     }
-    if (poll_arguments.result_code != FT_ER_SUCCESSS && test_failed == 0)
+    if (poll_arguments.result_code != FT_ERR_SUCCESSS && test_failed == 0)
     {
         test_failed = 1;
-        failure_expression = "poll_arguments.result_code == FT_ER_SUCCESSS";
+        failure_expression = "poll_arguments.result_code == FT_ERR_SUCCESSS";
         failure_line = __LINE__;
     }
     if (test_failed != 0)

@@ -15,6 +15,7 @@ static bool is_in_set(char character, const char *set)
 
 char    *cma_strtrim(const char *input_string, const char *set)
 {
+    ft_errno = FT_ERR_SUCCESSS;
     if (!input_string || !set)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;

@@ -12,7 +12,7 @@ FT_TEST(test_behavior_action_copy_semantics, "copy constructor and assignment cl
     FT_ASSERT_EQ(8, copy.get_action_id());
     FT_ASSERT_DOUBLE_EQ(0.75, copy.get_weight());
     FT_ASSERT_DOUBLE_EQ(4.0, copy.get_cooldown_seconds());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, copy.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, copy.get_error());
 
     assigned = original;
     original.set_weight(2.25);
@@ -35,7 +35,7 @@ FT_TEST(test_behavior_action_move_semantics, "move constructor and assignment tr
     FT_ASSERT_EQ(0, source.get_action_id());
     FT_ASSERT_DOUBLE_EQ(0.0, source.get_weight());
     FT_ASSERT_DOUBLE_EQ(0.0, source.get_cooldown_seconds());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source.get_error());
 
     source = ft_behavior_action(9, 1.10, 1.5);
     reassigned = ft_move(source);
@@ -45,7 +45,7 @@ FT_TEST(test_behavior_action_move_semantics, "move constructor and assignment tr
     FT_ASSERT_EQ(0, source.get_action_id());
     FT_ASSERT_DOUBLE_EQ(0.0, source.get_weight());
     FT_ASSERT_DOUBLE_EQ(0.0, source.get_cooldown_seconds());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source.get_error());
     return (1);
 }
 
@@ -70,7 +70,7 @@ FT_TEST(test_behavior_profile_copy_semantics, "copy constructor and assignment d
     actions.push_back(ft_behavior_action(6, 0.6, 3.0));
     original = ft_behavior_profile(12, 0.7, 0.3, actions);
     copy = ft_behavior_profile(original);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, copy.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, copy.get_error());
     assert_profile_values(copy, 12, 0.7, 0.3, 4);
 
     assigned = original;
@@ -93,7 +93,7 @@ FT_TEST(test_behavior_profile_move_semantics, "move constructor and assignment t
     assert_profile_values(moved, 30, 0.9, 0.1, 1);
     FT_ASSERT_EQ(0, source.get_profile_id());
     FT_ASSERT_EQ(true, source.get_actions().empty());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source.get_error());
 
     actions.clear();
     actions.push_back(ft_behavior_action(2, 0.3, 4.0));
@@ -102,6 +102,6 @@ FT_TEST(test_behavior_profile_move_semantics, "move constructor and assignment t
     reassigned = ft_move(source);
     assert_profile_values(reassigned, 44, 0.55, 0.45, 2);
     FT_ASSERT_EQ(true, source.get_actions().empty());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source.get_error());
     return (1);
 }

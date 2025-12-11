@@ -179,13 +179,13 @@ FT_TEST(test_network_send_receive_ipv4, "nw_send/nw_recv IPv4")
     server_configuration._port = 54340;
     server_configuration._ip = "127.0.0.1";
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ER_SUCCESSS)
+    if (server_socket.get_error() != FT_ERR_SUCCESSS)
         return (0);
     client_configuration._type = SocketType::CLIENT;
     client_configuration._port = 54340;
     client_configuration._ip = "127.0.0.1";
     client_socket = ft_socket(client_configuration);
-    if (client_socket.get_error() != FT_ER_SUCCESSS)
+    if (client_socket.get_error() != FT_ERR_SUCCESSS)
         return (0);
     address_length = sizeof(address_storage);
     client_fd = nw_accept(server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
@@ -225,12 +225,12 @@ FT_TEST(test_udp_send_receive_ipv4, "nw_sendto/nw_recvfrom IPv4")
     server_configuration._type = SocketType::SERVER;
     server_configuration._protocol = IPPROTO_UDP;
     server_configuration._port = 54341;
-    if (server.initialize(server_configuration) != FT_ER_SUCCESSS)
+    if (server.initialize(server_configuration) != FT_ERR_SUCCESSS)
         return (0);
     client_configuration._type = SocketType::CLIENT;
     client_configuration._protocol = IPPROTO_UDP;
     client_configuration._port = 54341;
-    if (client.initialize(client_configuration) != FT_ER_SUCCESSS)
+    if (client.initialize(client_configuration) != FT_ERR_SUCCESSS)
         return (0);
     destination_address = server.get_address();
     message = "data";
@@ -264,14 +264,14 @@ FT_TEST(test_udp_socket_propagates_ft_errno_on_creation_failure,
     config._send_timeout = 0;
     config._port = 54355;
     config._ip = "127.0.0.1";
-    if (config._ip.get_error() != FT_ER_SUCCESSS)
+    if (config._ip.get_error() != FT_ERR_SUCCESSS)
         return (0);
     errno = 0;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     nw_set_socket_hook(socket_creation_failure_hook);
     initialize_result = socket_instance.initialize(config);
     nw_set_socket_hook(ft_nullptr);
-    FT_ASSERT(initialize_result != FT_ER_SUCCESSS);
+    FT_ASSERT(initialize_result != FT_ERR_SUCCESSS);
     FT_ASSERT_EQ(FT_ERR_SOCKET_CREATION_FAILED, socket_instance.get_error());
     FT_ASSERT_EQ(FT_ERR_SOCKET_CREATION_FAILED, ft_errno);
     FT_ASSERT_EQ(0, errno);
@@ -287,7 +287,7 @@ FT_TEST(test_network_invalid_ip_address, "invalid IPv4 address returns error")
     configuration._ip = "256.1.1.1";
     configuration._port = 54342;
     server_socket = ft_socket(configuration);
-    if (server_socket.get_error() == FT_ER_SUCCESSS)
+    if (server_socket.get_error() == FT_ERR_SUCCESSS)
         return (0);
     return (1);
 }
@@ -313,14 +313,14 @@ FT_TEST(test_network_poll_ipv6_ready, "nw_poll detects IPv6 readiness")
     server_configuration._address_family = AF_INET6;
     server_configuration._port = 54343;
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ER_SUCCESSS)
+    if (server_socket.get_error() != FT_ERR_SUCCESSS)
         return (0);
     client_configuration._type = SocketType::CLIENT;
     client_configuration._ip = "::1";
     client_configuration._address_family = AF_INET6;
     client_configuration._port = 54343;
     client_socket = ft_socket(client_configuration);
-    if (client_socket.get_error() != FT_ER_SUCCESSS)
+    if (client_socket.get_error() != FT_ERR_SUCCESSS)
         return (0);
     address_length = sizeof(address_storage);
     client_fd = nw_accept(server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
@@ -375,13 +375,13 @@ FT_TEST(test_http_client_streaming_chunks, "http_get_stream handles chunked resp
     server_configuration._ip = "127.0.0.1";
     server_configuration._port = 0;
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ER_SUCCESSS)
+    if (server_socket.get_error() != FT_ERR_SUCCESSS)
         return (0);
     if (get_socket_port_string(server_socket, port_string) == false)
         return (0);
     server_context.server_socket = &server_socket;
     server_thread = ft_thread(http_stream_test_server, &server_context);
-    if (server_thread.get_error() != FT_ER_SUCCESSS)
+    if (server_thread.get_error() != FT_ERR_SUCCESSS)
         return (0);
     usleep(50000);
     handler_state.status_code = 0;
@@ -426,7 +426,7 @@ FT_TEST(test_server_config_ipv4_any_address, "server accepts empty IPv4 address 
     configuration._port = 0;
     configuration._ip = "";
     server_socket = ft_socket(configuration);
-    if (server_socket.get_error() != FT_ER_SUCCESSS)
+    if (server_socket.get_error() != FT_ERR_SUCCESSS)
         return (0);
     address = &server_socket.get_address();
     address_ipv4 = reinterpret_cast<const struct sockaddr_in*>(address);
@@ -447,7 +447,7 @@ FT_TEST(test_server_config_ipv6_any_address, "server accepts empty IPv6 address 
     configuration._port = 0;
     configuration._ip = "";
     server_socket = ft_socket(configuration);
-    if (server_socket.get_error() != FT_ER_SUCCESSS)
+    if (server_socket.get_error() != FT_ERR_SUCCESSS)
         return (0);
     address = &server_socket.get_address();
     address_ipv6 = reinterpret_cast<const struct sockaddr_in6*>(address);
@@ -569,13 +569,13 @@ FT_TEST(test_networking_check_socket_after_send_detects_disconnect, "networking_
     server_configuration._port = 54344;
     server_configuration._ip = "127.0.0.1";
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ER_SUCCESSS)
+    if (server_socket.get_error() != FT_ERR_SUCCESSS)
         return (0);
     client_configuration._type = SocketType::CLIENT;
     client_configuration._port = 54344;
     client_configuration._ip = "127.0.0.1";
     client_socket = ft_socket(client_configuration);
-    if (client_socket.get_error() != FT_ER_SUCCESSS)
+    if (client_socket.get_error() != FT_ERR_SUCCESSS)
         return (0);
     address_length = sizeof(address_storage);
     accepted_fd = nw_accept(server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
@@ -596,7 +596,7 @@ FT_TEST(test_networking_check_socket_after_send_handles_invalid_descriptor, "net
 {
     int check_result;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     check_result = networking_check_socket_after_send(-1);
     if (check_result != -1)
         return (0);
@@ -620,13 +620,13 @@ FT_TEST(test_networking_check_socket_after_send_reports_success, "networking_che
     server_configuration._port = 54345;
     server_configuration._ip = "127.0.0.1";
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ER_SUCCESSS)
+    if (server_socket.get_error() != FT_ERR_SUCCESSS)
         return (0);
     client_configuration._type = SocketType::CLIENT;
     client_configuration._port = 54345;
     client_configuration._ip = "127.0.0.1";
     client_socket = ft_socket(client_configuration);
-    if (client_socket.get_error() != FT_ER_SUCCESSS)
+    if (client_socket.get_error() != FT_ERR_SUCCESSS)
         return (0);
     address_length = sizeof(address_storage);
     accepted_fd = nw_accept(server_socket.get_fd(), reinterpret_cast<struct sockaddr*>(&address_storage), &address_length);
@@ -639,7 +639,7 @@ FT_TEST(test_networking_check_socket_after_send_reports_success, "networking_che
     server_socket.close_socket();
     if (check_result != 0)
         return (0);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
         return (0);
     return (1);
 }
@@ -667,7 +667,7 @@ FT_TEST(test_nw_inet_pton_invalid_address_sets_einval, "nw_inet_pton invalid add
     struct in_addr address;
     int result;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     result = nw_inet_pton(AF_INET, "not-an-ip", &address);
     if (result != 0)
         return (0);
@@ -683,7 +683,7 @@ FT_TEST(test_nw_inet_pton_success_clears_errno, "nw_inet_pton success clears err
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     if (nw_inet_pton(AF_INET, "127.0.0.1", &address) != 1)
         return (0);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
         return (0);
     return (1);
 }

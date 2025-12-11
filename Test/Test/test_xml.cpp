@@ -7,7 +7,7 @@ int test_xml_parse_simple(void)
 {
     const char *xml = "<root><child>value</child></root>";
     xml_document doc;
-    if (doc.load_from_string(xml) != FT_ER_SUCCESSS)
+    if (doc.load_from_string(xml) != FT_ERR_SUCCESSS)
         return (0);
     xml_node *root = doc.get_root();
     if (!root)

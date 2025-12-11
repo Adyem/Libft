@@ -3,7 +3,7 @@
 static void logger_append_literal(ft_string &buffer, const char *literal,
     int &error_code)
 {
-    if (error_code != FT_ER_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESSS)
         return ;
     if (!literal)
     {
@@ -11,7 +11,7 @@ static void logger_append_literal(ft_string &buffer, const char *literal,
         return ;
     }
     buffer.append(literal);
-    if (buffer.get_error() != FT_ER_SUCCESSS)
+    if (buffer.get_error() != FT_ERR_SUCCESSS)
         error_code = buffer.get_error();
     return ;
 }
@@ -19,10 +19,10 @@ static void logger_append_literal(ft_string &buffer, const char *literal,
 static void logger_append_character_sequence(ft_string &buffer, const char *sequence,
     int &error_code)
 {
-    if (error_code != FT_ER_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESSS)
         return ;
     buffer.append(sequence);
-    if (buffer.get_error() != FT_ER_SUCCESSS)
+    if (buffer.get_error() != FT_ERR_SUCCESSS)
         error_code = buffer.get_error();
     return ;
 }
@@ -32,18 +32,18 @@ static void logger_append_json_escaped(ft_string &buffer, char character,
 {
     static const char hex_digits[] = "0123456789ABCDEF";
 
-    if (error_code != FT_ER_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESSS)
         return ;
     if (character == '\\' || character == '"')
     {
         buffer.append('\\');
-        if (buffer.get_error() != FT_ER_SUCCESSS)
+        if (buffer.get_error() != FT_ERR_SUCCESSS)
         {
             error_code = buffer.get_error();
             return ;
         }
         buffer.append(character);
-        if (buffer.get_error() != FT_ER_SUCCESSS)
+        if (buffer.get_error() != FT_ERR_SUCCESSS)
             error_code = buffer.get_error();
         return ;
     }
@@ -90,7 +90,7 @@ static void logger_append_json_escaped(ft_string &buffer, char character,
         return ;
     }
     buffer.append(character);
-    if (buffer.get_error() != FT_ER_SUCCESSS)
+    if (buffer.get_error() != FT_ERR_SUCCESSS)
         error_code = buffer.get_error();
     return ;
 }
@@ -100,7 +100,7 @@ static void logger_append_json_string(ft_string &buffer, const char *value,
 {
     size_t index;
 
-    if (error_code != FT_ER_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESSS)
         return ;
     if (!value)
     {
@@ -108,21 +108,21 @@ static void logger_append_json_string(ft_string &buffer, const char *value,
         return ;
     }
     buffer.append('"');
-    if (buffer.get_error() != FT_ER_SUCCESSS)
+    if (buffer.get_error() != FT_ERR_SUCCESSS)
     {
         error_code = buffer.get_error();
         return ;
     }
     index = 0;
-    while (value[index] != '\0' && error_code == FT_ER_SUCCESSS)
+    while (value[index] != '\0' && error_code == FT_ERR_SUCCESSS)
     {
         logger_append_json_escaped(buffer, value[index], error_code);
         index += 1;
     }
-    if (error_code != FT_ER_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESSS)
         return ;
     buffer.append('"');
-    if (buffer.get_error() != FT_ER_SUCCESSS)
+    if (buffer.get_error() != FT_ERR_SUCCESSS)
         error_code = buffer.get_error();
     return ;
 }
@@ -130,7 +130,7 @@ static void logger_append_json_string(ft_string &buffer, const char *value,
 static void logger_append_json_optional_string(ft_string &buffer,
     const char *value, int &error_code)
 {
-    if (error_code != FT_ER_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESSS)
         return ;
     if (!value)
     {
@@ -146,7 +146,7 @@ static void logger_append_field(ft_string &buffer, const s_log_field &field,
 {
     bool lock_acquired;
 
-    if (error_code != FT_ER_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESSS)
         return ;
     lock_acquired = false;
     if (log_field_lock(&field, &lock_acquired) != 0)
@@ -164,7 +164,7 @@ static void logger_append_field(ft_string &buffer, const s_log_field &field,
         logger_append_literal(buffer, ",", error_code);
     else
         first_field = false;
-    if (error_code != FT_ER_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESSS)
     {
         log_field_unlock(&field, lock_acquired);
         return ;
@@ -208,37 +208,37 @@ void ft_log_structured(t_log_level level, const char *message,
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
-    error_code = FT_ER_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
     logger_append_literal(payload, "{\"message\":", error_code);
     logger_append_json_string(payload, message, error_code);
     logger_append_literal(payload, ",\"fields\":{", error_code);
     first_field = true;
     index = 0;
-    while (index < field_count && error_code == FT_ER_SUCCESSS)
+    while (index < field_count && error_code == FT_ERR_SUCCESSS)
     {
         logger_append_field(payload, fields[index], first_field, error_code);
         index += 1;
     }
-    if (error_code == FT_ER_SUCCESSS)
+    if (error_code == FT_ERR_SUCCESSS)
     {
         if (logger_context_snapshot(context_snapshot) != 0)
             error_code = ft_errno;
     }
-    if (error_code == FT_ER_SUCCESSS)
+    if (error_code == FT_ERR_SUCCESSS)
     {
         size_t context_count;
         size_t context_index;
 
         context_count = context_snapshot.size();
-        if (context_snapshot.get_error() != FT_ER_SUCCESSS)
+        if (context_snapshot.get_error() != FT_ERR_SUCCESSS)
             error_code = context_snapshot.get_error();
         context_index = 0;
-        while (context_index < context_count && error_code == FT_ER_SUCCESSS)
+        while (context_index < context_count && error_code == FT_ERR_SUCCESSS)
         {
             const s_log_context_view &view = context_snapshot[context_index];
             s_log_field context_field;
 
-            if (context_snapshot.get_error() != FT_ER_SUCCESSS)
+            if (context_snapshot.get_error() != FT_ERR_SUCCESSS)
             {
                 error_code = context_snapshot.get_error();
                 break ;
@@ -253,12 +253,12 @@ void ft_log_structured(t_log_level level, const char *message,
         }
     }
     logger_append_literal(payload, "}}", error_code);
-    if (error_code != FT_ER_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESSS)
     {
         ft_errno = error_code;
         return ;
     }
-    if (payload.get_error() != FT_ER_SUCCESSS)
+    if (payload.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = payload.get_error();
         return ;

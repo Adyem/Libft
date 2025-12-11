@@ -8,14 +8,14 @@ size_t ft_strlcat(char *destination, const char *source, size_t buffer_size)
     size_t source_length;
     size_t copy_index;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (source == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (0);
     }
     source_length = ft_strlen_size_t(source);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
         return (0);
     if (buffer_size == 0)
     {

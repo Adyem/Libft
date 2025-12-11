@@ -24,7 +24,7 @@ float ft_random_beta(float alpha, float beta)
     {
         ft_unique_lock<pt_mutex> guard(g_random_engine_mutex);
 
-        if (guard.get_error() != FT_ER_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESSS)
             return (0.0f);
         alpha_sample = alpha_distribution(g_random_engine);
         beta_sample = beta_distribution(g_random_engine);
@@ -40,6 +40,6 @@ float ft_random_beta(float alpha, float beta)
         result = 0.0f;
     if (result > 1.0f)
         result = 1.0f;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }

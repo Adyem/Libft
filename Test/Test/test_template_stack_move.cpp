@@ -26,7 +26,7 @@ FT_TEST(test_ft_stack_move_constructor_rebuilds_mutex,
     second_value = moved_stack.pop();
     FT_ASSERT_EQ(7, second_value);
     FT_ASSERT(moved_stack.empty());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved_stack.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, moved_stack.get_error());
     return (1);
 }
 
@@ -58,7 +58,7 @@ FT_TEST(test_ft_stack_move_assignment_rebuilds_mutex,
     popped_value = destination_stack.pop();
     FT_ASSERT_EQ(21, popped_value);
     FT_ASSERT(destination_stack.empty());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination_stack.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination_stack.get_error());
     return (1);
 }
 
@@ -102,6 +102,6 @@ FT_TEST(test_ft_stack_move_allows_reinitializing_source_mutex,
     FT_ASSERT(source_stack.is_thread_safe());
     source_stack.push(1);
     FT_ASSERT_EQ(1, source_stack.pop());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, source_stack.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source_stack.get_error());
     return (1);
 }

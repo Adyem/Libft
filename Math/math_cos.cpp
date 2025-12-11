@@ -25,6 +25,6 @@ double math_cos(double value)
         sign = -sign;
         iteration = iteration + 1;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }

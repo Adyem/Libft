@@ -16,7 +16,7 @@ FT_TEST(test_ft_to_string_positive_number,
     converted_value = ft_to_string(12345);
     actual_value = converted_value.c_str();
     FT_ASSERT(actual_value == "12345");
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -26,11 +26,11 @@ FT_TEST(test_ft_to_string_negative_number,
     ft_string converted_value;
     std::string actual_value;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     converted_value = ft_to_string(-9876);
     actual_value = converted_value.c_str();
     FT_ASSERT(actual_value == "-9876");
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -56,7 +56,7 @@ FT_TEST(test_ft_to_string_extreme_values,
     minimum_result = minimum_string.c_str();
     FT_ASSERT(zero_result == "0");
     FT_ASSERT(minimum_result == minimum_expected);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -77,7 +77,7 @@ FT_TEST(test_ft_to_string_independent_instances,
     first_result.append('7');
     FT_ASSERT(std::string(first_result.c_str()) == "427");
     FT_ASSERT(std::string(second_result.c_str()) == "42");
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -98,7 +98,7 @@ FT_TEST(test_ft_to_string_unsigned_long,
     converted_value = ft_to_string(input_value);
     actual_value = converted_value.c_str();
     FT_ASSERT(actual_value == std::string(expected_buffer));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -119,7 +119,7 @@ FT_TEST(test_ft_to_string_double_precision,
     converted_value = ft_to_string(input_value);
     actual_value = converted_value.c_str();
     FT_ASSERT(actual_value == std::string(expected_buffer));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -135,11 +135,11 @@ FT_TEST(test_ft_to_string_double_special_values,
 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     positive_infinity = ft_to_string(std::numeric_limits<double>::infinity());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     negative_infinity = ft_to_string(-std::numeric_limits<double>::infinity());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     not_a_number = ft_to_string(std::numeric_limits<double>::quiet_NaN());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     positive_result = positive_infinity.c_str();
     negative_result = negative_infinity.c_str();
     nan_result = not_a_number.c_str();
@@ -157,7 +157,7 @@ FT_TEST(test_ft_to_string_recovers_after_allocation_failure,
     std::string recovered_text;
 
     cma_set_alloc_limit(1);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     failed_result = ft_to_string(321L);
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
@@ -167,7 +167,7 @@ FT_TEST(test_ft_to_string_recovers_after_allocation_failure,
     recovered_result = ft_to_string(-321L);
     recovered_text = recovered_result.c_str();
     FT_ASSERT(recovered_text == "-321");
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -177,7 +177,7 @@ FT_TEST(test_ft_to_string_allocation_failure,
     ft_string failed_result;
 
     cma_set_alloc_limit(1);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     failed_result = ft_to_string(12345L);
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
@@ -195,6 +195,6 @@ FT_TEST(test_ft_to_string_unsigned_zero_clears_errno,
     converted_value = ft_to_string(static_cast<unsigned int>(0));
     actual_value = converted_value.c_str();
     FT_ASSERT(actual_value == "0");
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }

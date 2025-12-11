@@ -8,7 +8,7 @@ static void set_errno_from_reputation(int error_code)
     ft_reputation reputation;
 
     ft_errno = error_code;
-    if (error_code == FT_ER_SUCCESSS)
+    if (error_code == FT_ERR_SUCCESSS)
     {
         reputation.set_total_rep(0);
         return ;
@@ -40,7 +40,7 @@ FT_TEST(test_game_reputation_copy_constructor_transfers_values, "ft_reputation c
     FT_ASSERT_EQ(5, copy.get_rep(2));
     FT_ASSERT_EQ(7, copy.get_total_rep());
     FT_ASSERT_EQ(3, copy.get_current_rep());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, copy.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, copy.get_error());
     return (1);
 }
 
@@ -83,7 +83,7 @@ FT_TEST(test_game_reputation_move_constructor_transfers_values, "ft_reputation m
     FT_ASSERT_EQ(20, moved.get_rep(9));
     FT_ASSERT_EQ(11, moved.get_total_rep());
     FT_ASSERT_EQ(5, moved.get_current_rep());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, moved.get_error());
     return (1);
 }
 
@@ -105,7 +105,7 @@ FT_TEST(test_game_reputation_move_constructor_clears_source, "ft_reputation move
     FT_ASSERT_EQ(0, source.get_current_rep());
     FT_ASSERT_EQ(0, source.get_milestones().size());
     FT_ASSERT_EQ(0, source.get_reps().size());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source.get_error());
     return (1);
 }
 
@@ -127,7 +127,7 @@ FT_TEST(test_game_reputation_copy_assignment_transfers_entries, "ft_reputation c
     FT_ASSERT_EQ(40, destination.get_rep(20));
     FT_ASSERT_EQ(25, destination.get_total_rep());
     FT_ASSERT_EQ(13, destination.get_current_rep());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination.get_error());
     return (1);
 }
 
@@ -138,8 +138,8 @@ FT_TEST(test_game_reputation_copy_assignment_sets_errno_success, "ft_reputation 
 
     set_errno_from_reputation(FT_ERR_INVALID_ARGUMENT);
     destination = source;
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination.get_error());
     return (1);
 }
 
@@ -165,7 +165,7 @@ FT_TEST(test_game_reputation_move_assignment_transfers_and_clears, "ft_reputatio
     FT_ASSERT_EQ(0, source.get_current_rep());
     FT_ASSERT_EQ(0, source.get_milestones().size());
     FT_ASSERT_EQ(0, source.get_reps().size());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source.get_error());
     return (1);
 }
 
@@ -176,8 +176,8 @@ FT_TEST(test_game_reputation_move_assignment_sets_errno_success, "ft_reputation 
 
     set_errno_from_reputation(FT_ERR_NOT_FOUND);
     destination = ft_move(source);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination.get_error());
     return (1);
 }
 
@@ -220,7 +220,7 @@ FT_TEST(test_game_reputation_total_getter_sets_errno_success, "ft_reputation::ge
     reputation.set_total_rep(6);
     set_errno_from_reputation(FT_ERR_INVALID_ARGUMENT);
     FT_ASSERT_EQ(6, reputation.get_total_rep());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -231,7 +231,7 @@ FT_TEST(test_game_reputation_current_getter_sets_errno_success, "ft_reputation::
     reputation.set_current_rep(4);
     set_errno_from_reputation(FT_ERR_NOT_FOUND);
     FT_ASSERT_EQ(4, reputation.get_current_rep());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -244,7 +244,7 @@ FT_TEST(test_game_reputation_get_milestone_sets_errno_success, "ft_reputation::g
     reputation.set_milestones(milestones);
     set_errno_from_reputation(FT_ERR_INVALID_ARGUMENT);
     FT_ASSERT_EQ(60, reputation.get_milestone(25));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -252,7 +252,7 @@ FT_TEST(test_game_reputation_get_milestone_invalid_sets_error, "ft_reputation::g
 {
     ft_reputation reputation;
 
-    set_errno_from_reputation(FT_ER_SUCCESSS);
+    set_errno_from_reputation(FT_ERR_SUCCESSS);
     FT_ASSERT_EQ(0, reputation.get_milestone(-3));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, reputation.get_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -279,7 +279,7 @@ FT_TEST(test_game_reputation_get_rep_sets_errno_success, "ft_reputation::get_rep
     reputation.set_reps(reps);
     set_errno_from_reputation(FT_ERR_NOT_FOUND);
     FT_ASSERT_EQ(70, reputation.get_rep(32));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -287,7 +287,7 @@ FT_TEST(test_game_reputation_get_rep_invalid_sets_error, "ft_reputation::get_rep
 {
     ft_reputation reputation;
 
-    set_errno_from_reputation(FT_ER_SUCCESSS);
+    set_errno_from_reputation(FT_ERR_SUCCESSS);
     FT_ASSERT_EQ(0, reputation.get_rep(-5));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, reputation.get_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
@@ -336,7 +336,7 @@ FT_TEST(test_game_reputation_set_milestones_sets_errno_success, "ft_reputation::
     set_errno_from_reputation(FT_ERR_INVALID_ARGUMENT);
     reputation.set_milestones(milestones);
     FT_ASSERT_EQ(200, reputation.get_milestone(100));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -349,7 +349,7 @@ FT_TEST(test_game_reputation_set_reps_sets_errno_success, "ft_reputation::set_re
     set_errno_from_reputation(FT_ERR_NOT_FOUND);
     reputation.set_reps(reps);
     FT_ASSERT_EQ(220, reputation.get_rep(120));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 

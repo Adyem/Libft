@@ -36,10 +36,10 @@ char *ft_fgets(char *string, int size, FILE *stream)
             ft_errno = FT_ERR_END_OF_FILE;
             return (ft_nullptr);
         }
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (ft_nullptr);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (result_string);
 }
 #endif

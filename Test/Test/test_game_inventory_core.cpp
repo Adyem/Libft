@@ -15,7 +15,7 @@ int test_inventory_slots(void)
     bulky->set_stack_size(1);
     bulky->set_width(2);
     bulky->set_height(2);
-    if (inventory.add_item(bulky) != FT_ER_SUCCESSS)
+    if (inventory.add_item(bulky) != FT_ERR_SUCCESSS)
         return (0);
     if (inventory.get_used() != 4)
         return (0);
@@ -59,7 +59,7 @@ int test_inventory_full(void)
     item->set_stack_size(5);
     if (inv.is_full())
         return (0);
-    if (inv.add_item(item) != FT_ER_SUCCESSS)
+    if (inv.add_item(item) != FT_ERR_SUCCESSS)
         return (0);
     if (!inv.is_full())
         return (0);
@@ -76,7 +76,7 @@ FT_TEST(test_game_inventory_remove_clears_usage, "ft_inventory::remove_item free
     shield->set_stack_size(2);
     shield->set_width(2);
     shield->set_height(2);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, inventory.add_item(shield));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, inventory.add_item(shield));
     FT_ASSERT_EQ((size_t)4, inventory.get_used());
     FT_ASSERT_EQ(2, inventory.get_current_weight());
 
@@ -84,7 +84,7 @@ FT_TEST(test_game_inventory_remove_clears_usage, "ft_inventory::remove_item free
     FT_ASSERT_EQ((size_t)0, inventory.get_used());
     FT_ASSERT_EQ(0, inventory.get_current_weight());
     FT_ASSERT_EQ(0, inventory.count_item(7));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, inventory.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, inventory.get_error());
     return (1);
 }
 
@@ -105,8 +105,8 @@ FT_TEST(test_game_inventory_merges_into_existing_stack, "ft_inventory merges ite
     refill->set_width(1);
     refill->set_height(1);
 
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, inventory.add_item(arrows));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, inventory.add_item(refill));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, inventory.add_item(arrows));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, inventory.add_item(refill));
     FT_ASSERT_EQ(8, inventory.count_item(12));
     Pair<int, ft_sharedptr<ft_item> > *first_slot = inventory.get_items().find(0);
     Pair<int, ft_sharedptr<ft_item> > *second_slot = inventory.get_items().find(1);
@@ -115,7 +115,7 @@ FT_TEST(test_game_inventory_merges_into_existing_stack, "ft_inventory merges ite
     FT_ASSERT_EQ(5, first_slot->value->get_stack_size());
     FT_ASSERT_EQ(3, second_slot->value->get_stack_size());
     FT_ASSERT_EQ(8, inventory.get_current_weight());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, inventory.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, inventory.get_error());
     return (1);
 }
 
@@ -134,8 +134,8 @@ FT_TEST(test_game_inventory_rarity_tracking, "ft_inventory counts rarity stacks"
     ore->set_max_stack(10);
     ore->set_stack_size(4);
 
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, inventory.add_item(gem));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, inventory.add_item(ore));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, inventory.add_item(gem));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, inventory.add_item(ore));
     FT_ASSERT_EQ(7, inventory.count_rarity(2));
     FT_ASSERT_EQ(true, inventory.has_rarity(2));
     FT_ASSERT_EQ(false, inventory.has_rarity(5));
@@ -149,7 +149,7 @@ FT_TEST(test_game_inventory_resize_updates_capacity, "ft_inventory::resize adjus
     FT_ASSERT_EQ((size_t)1, inventory.get_capacity());
     inventory.resize(3);
     FT_ASSERT_EQ((size_t)3, inventory.get_capacity());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, inventory.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, inventory.get_error());
     return (1);
 }
 
@@ -163,7 +163,7 @@ FT_TEST(test_game_inventory_add_item_respects_weight_limit, "ft_inventory::add_i
     heavy->set_stack_size(4);
     heavy->set_width(1);
     heavy->set_height(1);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(FT_ERR_FULL, inventory.add_item(heavy));
     FT_ASSERT_EQ(0, inventory.get_current_weight());
     FT_ASSERT_EQ(FT_ERR_FULL, inventory.get_error());
@@ -176,7 +176,7 @@ FT_TEST(test_game_inventory_rejects_null_item, "ft_inventory::add_item handles n
     ft_inventory inventory(2);
     ft_sharedptr<ft_item> none;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(FT_ERR_GAME_GENERAL_ERROR, inventory.add_item(none));
     FT_ASSERT_EQ((size_t)0, inventory.get_used());
     FT_ASSERT_EQ(0, inventory.get_current_weight());
@@ -196,13 +196,13 @@ FT_TEST(test_game_inventory_splits_large_stack, "ft_inventory splits stacks that
     arrows->set_width(1);
     arrows->set_height(1);
 
-    ft_errno = FT_ER_SUCCESSS;
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, inventory.add_item(arrows));
+    ft_errno = FT_ERR_SUCCESSS;
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, inventory.add_item(arrows));
     FT_ASSERT_EQ(7, inventory.count_item(9));
     FT_ASSERT_EQ((size_t)2, inventory.get_used());
     FT_ASSERT_EQ(7, inventory.get_current_weight());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, inventory.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, inventory.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -223,8 +223,8 @@ FT_TEST(test_game_inventory_full_addition_preserves_items, "ft_inventory leaves 
     elixir->set_width(1);
     elixir->set_height(1);
 
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, inventory.add_item(potion));
-    ft_errno = FT_ER_SUCCESSS;
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, inventory.add_item(potion));
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(FT_ERR_FULL, inventory.add_item(elixir));
     FT_ASSERT_EQ((size_t)1, inventory.get_used());
     FT_ASSERT_EQ(1, inventory.count_item(3));
@@ -246,14 +246,14 @@ FT_TEST(test_game_inventory_remove_missing_slot_noops, "ft_inventory ignores rem
     potion->set_width(1);
     potion->set_height(1);
 
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, inventory.add_item(potion));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, inventory.add_item(potion));
     FT_ASSERT_EQ(2, inventory.get_current_weight());
     inventory.remove_item(5);
     Pair<int, ft_sharedptr<ft_item> > *slot = inventory.get_items().find(0);
     FT_ASSERT_NEQ(slot, inventory.get_items().end());
     FT_ASSERT_EQ(2, slot->value->get_stack_size());
     FT_ASSERT_EQ(2, inventory.get_current_weight());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, inventory.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, inventory.get_error());
     return (1);
 }
 

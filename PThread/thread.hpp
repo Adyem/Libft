@@ -64,7 +64,7 @@ class ft_thread
 
 template <typename FunctionType, typename... Args>
 ft_thread::ft_thread(FunctionType function, Args... args)
-    : _thread(), _joinable(false), _error_code(FT_ER_SUCCESSS), _start_payload(),
+    : _thread(), _joinable(false), _error_code(FT_ERR_SUCCESSS), _start_payload(),
       _state_mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     start_payload *payload_raw;
@@ -84,7 +84,7 @@ ft_thread::ft_thread(FunctionType function, Args... args)
         ft_invoke(function, args...);
         return ;
     });
-    if (payload->function.get_error() != FT_ER_SUCCESSS)
+    if (payload->function.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(payload->function.get_error());
         this->_start_payload.reset();

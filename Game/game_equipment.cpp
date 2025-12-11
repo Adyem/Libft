@@ -30,15 +30,15 @@ int ft_equipment::lock_pair(const ft_equipment &first, const ft_equipment &secon
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ER_SUCCESSS)
+        if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ER_SUCCESSS;
-        return (FT_ER_SUCCESSS);
+        ft_errno = FT_ERR_SUCCESSS;
+        return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -56,13 +56,13 @@ int ft_equipment::lock_pair(const ft_equipment &first, const ft_equipment &secon
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != FT_ER_SUCCESSS)
+        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ER_SUCCESSS)
+        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
         {
             if (!swapped)
             {
@@ -74,8 +74,8 @@ int ft_equipment::lock_pair(const ft_equipment &first, const ft_equipment &secon
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ER_SUCCESSS;
-            return (FT_ER_SUCCESSS);
+            ft_errno = FT_ERR_SUCCESSS;
+            return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -90,21 +90,21 @@ int ft_equipment::lock_pair(const ft_equipment &first, const ft_equipment &secon
 
 ft_equipment::ft_equipment() noexcept
     : _head(ft_sharedptr<ft_item>()), _chest(ft_sharedptr<ft_item>()),
-      _weapon(ft_sharedptr<ft_item>()), _error_code(FT_ER_SUCCESSS), _mutex()
+      _weapon(ft_sharedptr<ft_item>()), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
 ft_equipment::ft_equipment(const ft_equipment &other) noexcept
     : _head(ft_sharedptr<ft_item>()), _chest(ft_sharedptr<ft_item>()),
-      _weapon(ft_sharedptr<ft_item>()), _error_code(FT_ER_SUCCESSS), _mutex()
+      _weapon(ft_sharedptr<ft_item>()), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
     int entry_errno;
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ER_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->_head = ft_sharedptr<ft_item>();
         this->_chest = ft_sharedptr<ft_item>();
@@ -133,7 +133,7 @@ ft_equipment &ft_equipment::operator=(const ft_equipment &other) noexcept
         return (*this);
     entry_errno = ft_errno;
     lock_error = ft_equipment::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -150,13 +150,13 @@ ft_equipment &ft_equipment::operator=(const ft_equipment &other) noexcept
 
 ft_equipment::ft_equipment(ft_equipment &&other) noexcept
     : _head(ft_sharedptr<ft_item>()), _chest(ft_sharedptr<ft_item>()),
-      _weapon(ft_sharedptr<ft_item>()), _error_code(FT_ER_SUCCESSS), _mutex()
+      _weapon(ft_sharedptr<ft_item>()), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
     int entry_errno;
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ER_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->_head = ft_sharedptr<ft_item>();
         this->_chest = ft_sharedptr<ft_item>();
@@ -172,9 +172,9 @@ ft_equipment::ft_equipment(ft_equipment &&other) noexcept
     other._head = ft_sharedptr<ft_item>();
     other._chest = ft_sharedptr<ft_item>();
     other._weapon = ft_sharedptr<ft_item>();
-    other._error_code = FT_ER_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_error_code);
-    other.set_error(FT_ER_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESSS);
     game_equipment_restore_errno(other_guard, entry_errno);
     return ;
 }
@@ -190,7 +190,7 @@ ft_equipment &ft_equipment::operator=(ft_equipment &&other) noexcept
         return (*this);
     entry_errno = ft_errno;
     lock_error = ft_equipment::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -202,9 +202,9 @@ ft_equipment &ft_equipment::operator=(ft_equipment &&other) noexcept
     other._head = ft_sharedptr<ft_item>();
     other._chest = ft_sharedptr<ft_item>();
     other._weapon = ft_sharedptr<ft_item>();
-    other._error_code = FT_ER_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_error_code);
-    other.set_error(FT_ER_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESSS);
     game_equipment_restore_errno(this_guard, entry_errno);
     game_equipment_restore_errno(other_guard, entry_errno);
     return (*this);
@@ -224,12 +224,12 @@ bool ft_equipment::validate_item(const ft_sharedptr<ft_item> &item) noexcept
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
         return (true);
     }
-    if (item.get_error() != FT_ER_SUCCESSS)
+    if (item.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(item.get_error());
         return (true);
     }
-    if (item->get_error() != FT_ER_SUCCESSS)
+    if (item->get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(item->get_error());
         return (true);
@@ -243,13 +243,13 @@ int ft_equipment::equip(int slot, const ft_sharedptr<ft_item> &item) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_equipment_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     if (this->validate_item(item) == true)
     {
         game_equipment_restore_errno(guard, entry_errno);
@@ -267,9 +267,9 @@ int ft_equipment::equip(int slot, const ft_sharedptr<ft_item> &item) noexcept
         game_equipment_restore_errno(guard, entry_errno);
         return (this->_error_code);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_equipment_restore_errno(guard, entry_errno);
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 void ft_equipment::unequip(int slot) noexcept
@@ -278,13 +278,13 @@ void ft_equipment::unequip(int slot) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_equipment_restore_errno(guard, entry_errno);
         return ;
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     if (slot == EQUIP_HEAD)
         this->_head = ft_sharedptr<ft_item>();
     else if (slot == EQUIP_CHEST)
@@ -304,13 +304,13 @@ ft_sharedptr<ft_item> ft_equipment::get_item(int slot) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_equipment_restore_errno(guard, entry_errno);
         return (ft_sharedptr<ft_item>());
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     if (slot == EQUIP_HEAD)
         result = this->_head;
     else if (slot == EQUIP_CHEST)
@@ -333,13 +333,13 @@ ft_sharedptr<ft_item> ft_equipment::get_item(int slot) const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_equipment *>(this)->set_error(guard.get_error());
         game_equipment_restore_errno(guard, entry_errno);
         return (ft_sharedptr<ft_item>());
     }
-    const_cast<ft_equipment *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_equipment *>(this)->set_error(FT_ERR_SUCCESSS);
     if (slot == EQUIP_HEAD)
         result = this->_head;
     else if (slot == EQUIP_CHEST)
@@ -362,7 +362,7 @@ int ft_equipment::get_error() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_equipment *>(this)->set_error(guard.get_error());
         game_equipment_restore_errno(guard, entry_errno);
@@ -381,7 +381,7 @@ const char *ft_equipment::get_error_str() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_equipment *>(this)->set_error(guard.get_error());
         game_equipment_restore_errno(guard, entry_errno);

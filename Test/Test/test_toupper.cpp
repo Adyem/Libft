@@ -14,7 +14,7 @@ FT_TEST(test_toupper_basic, "ft_to_upper basic")
     string[3] = '\0';
     ft_to_upper(string);
     FT_ASSERT_EQ(0, ft_strcmp(string, "ABC"));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -32,7 +32,7 @@ FT_TEST(test_toupper_mixed, "ft_to_upper mixed characters")
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     ft_to_upper(string);
     FT_ASSERT_EQ(0, ft_strcmp(string, "A1B!C?"));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -44,13 +44,13 @@ FT_TEST(test_toupper_empty, "ft_to_upper empty string")
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     ft_to_upper(string);
     FT_ASSERT_EQ(0, ft_strcmp(string, ""));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
 FT_TEST(test_toupper_nullptr, "ft_to_upper nullptr")
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     ft_to_upper(ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -73,7 +73,7 @@ FT_TEST(test_toupper_stops_at_terminator, "ft_to_upper stops at first null byte"
     FT_ASSERT_EQ('\0', string[2]);
     FT_ASSERT_EQ('x', string[3]);
     FT_ASSERT_EQ('y', string[4]);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -85,12 +85,12 @@ FT_TEST(test_toupper_recovers_after_nullptr, "ft_to_upper clears errno after nul
     string[1] = 'o';
     string[2] = 'w';
     string[3] = '\0';
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     ft_to_upper(ft_nullptr);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     ft_to_upper(string);
     FT_ASSERT_EQ(0, ft_strcmp(string, "LOW"));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }

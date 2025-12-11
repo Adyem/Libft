@@ -1,7 +1,5 @@
 #include "ft_vendor_profile.hpp"
-#include "game_economy_helpers.hpp"
 #include "../Template/move.hpp"
-#include <new>
 
 int ft_vendor_profile::lock_pair(const ft_vendor_profile &first, const ft_vendor_profile &second,
         ft_unique_lock<pt_mutex> &first_guard,
@@ -15,15 +13,15 @@ int ft_vendor_profile::lock_pair(const ft_vendor_profile &first, const ft_vendor
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ER_SUCCESSS)
+        if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ER_SUCCESSS;
-        return (FT_ER_SUCCESSS);
+        ft_errno = FT_ERR_SUCCESSS;
+        return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -41,13 +39,13 @@ int ft_vendor_profile::lock_pair(const ft_vendor_profile &first, const ft_vendor
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != FT_ER_SUCCESSS)
+        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ER_SUCCESSS)
+        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
         {
             if (!swapped)
             {
@@ -59,8 +57,8 @@ int ft_vendor_profile::lock_pair(const ft_vendor_profile &first, const ft_vendor
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ER_SUCCESSS;
-            return (FT_ER_SUCCESSS);
+            ft_errno = FT_ERR_SUCCESSS;
+            return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -69,35 +67,32 @@ int ft_vendor_profile::lock_pair(const ft_vendor_profile &first, const ft_vendor
         }
         if (lower_guard.owns_lock())
             lower_guard.unlock();
-        game_economy_sleep_backoff();
+        pt_thread_sleep(1);
     }
 }
 
 ft_vendor_profile::ft_vendor_profile() noexcept
-    : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(FT_ER_SUCCESSS)
+    : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0),
+    _error_code(FT_ERR_SUCCESSS)
 {
     return ;
 }
 
 ft_vendor_profile::ft_vendor_profile(int vendor_id, double buy_markup, double sell_multiplier, double tax_rate) noexcept
-    : _vendor_id(vendor_id), _buy_markup(buy_markup), _sell_multiplier(sell_multiplier), _tax_rate(tax_rate), _error_code(FT_ER_SUCCESSS)
+    : _vendor_id(vendor_id), _buy_markup(buy_markup), _sell_multiplier(sell_multiplier), _tax_rate(tax_rate), _error_code(FT_ERR_SUCCESSS)
 {
     return ;
 }
 
 ft_vendor_profile::ft_vendor_profile(const ft_vendor_profile &other) noexcept
-    : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(FT_ER_SUCCESSS)
+    : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(FT_ERR_SUCCESSS)
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> self_guard;
     ft_unique_lock<pt_mutex> other_guard;
 
-    entry_errno = ft_errno;
-    if (ft_vendor_profile::lock_pair(*this, other, self_guard, other_guard) != FT_ER_SUCCESSS)
+    if (ft_vendor_profile::lock_pair(*this, other, self_guard, other_guard) != FT_ERR_SUCCESSS)
     {
         this->set_error(self_guard.get_error());
-        game_economy_restore_errno(self_guard, entry_errno);
-        game_economy_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_vendor_id = other._vendor_id;
@@ -106,25 +101,19 @@ ft_vendor_profile::ft_vendor_profile(const ft_vendor_profile &other) noexcept
     this->_tax_rate = other._tax_rate;
     this->_error_code = other._error_code;
     this->set_error(this->_error_code);
-    game_economy_restore_errno(self_guard, entry_errno);
-    game_economy_restore_errno(other_guard, entry_errno);
     return ;
 }
 
 ft_vendor_profile &ft_vendor_profile::operator=(const ft_vendor_profile &other) noexcept
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> self_guard;
     ft_unique_lock<pt_mutex> other_guard;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
-    if (ft_vendor_profile::lock_pair(*this, other, self_guard, other_guard) != FT_ER_SUCCESSS)
+    if (ft_vendor_profile::lock_pair(*this, other, self_guard, other_guard) != FT_ERR_SUCCESSS)
     {
         this->set_error(self_guard.get_error());
-        game_economy_restore_errno(self_guard, entry_errno);
-        game_economy_restore_errno(other_guard, entry_errno);
         return (*this);
     }
     this->_vendor_id = other._vendor_id;
@@ -133,22 +122,17 @@ ft_vendor_profile &ft_vendor_profile::operator=(const ft_vendor_profile &other) 
     this->_tax_rate = other._tax_rate;
     this->_error_code = other._error_code;
     this->set_error(this->_error_code);
-    game_economy_restore_errno(self_guard, entry_errno);
-    game_economy_restore_errno(other_guard, entry_errno);
     return (*this);
 }
 
 ft_vendor_profile::ft_vendor_profile(ft_vendor_profile &&other) noexcept
-    : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(FT_ER_SUCCESSS)
+    : _vendor_id(0), _buy_markup(1.0), _sell_multiplier(1.0), _tax_rate(0.0), _error_code(FT_ERR_SUCCESSS)
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
 
-    entry_errno = ft_errno;
-    if (other_guard.get_error() != FT_ER_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        game_economy_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_vendor_id = other._vendor_id;
@@ -160,27 +144,22 @@ ft_vendor_profile::ft_vendor_profile(ft_vendor_profile &&other) noexcept
     other._buy_markup = 1.0;
     other._sell_multiplier = 1.0;
     other._tax_rate = 0.0;
-    other._error_code = FT_ER_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_error_code);
-    other.set_error(FT_ER_SUCCESSS);
-    game_economy_restore_errno(other_guard, entry_errno);
+    other.set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
 ft_vendor_profile &ft_vendor_profile::operator=(ft_vendor_profile &&other) noexcept
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> self_guard;
     ft_unique_lock<pt_mutex> other_guard;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
-    if (ft_vendor_profile::lock_pair(*this, other, self_guard, other_guard) != FT_ER_SUCCESSS)
+    if (ft_vendor_profile::lock_pair(*this, other, self_guard, other_guard) != FT_ERR_SUCCESSS)
     {
         this->set_error(self_guard.get_error());
-        game_economy_restore_errno(self_guard, entry_errno);
-        game_economy_restore_errno(other_guard, entry_errno);
         return (*this);
     }
     this->_vendor_id = other._vendor_id;
@@ -192,183 +171,141 @@ ft_vendor_profile &ft_vendor_profile::operator=(ft_vendor_profile &&other) noexc
     other._buy_markup = 1.0;
     other._sell_multiplier = 1.0;
     other._tax_rate = 0.0;
-    other._error_code = FT_ER_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_error_code);
-    other.set_error(FT_ER_SUCCESSS);
-    game_economy_restore_errno(self_guard, entry_errno);
-    game_economy_restore_errno(other_guard, entry_errno);
+    other.set_error(FT_ERR_SUCCESSS);
     return (*this);
 }
 
 int ft_vendor_profile::get_vendor_id() const noexcept
 {
-    int entry_errno;
     int identifier;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_vendor_profile *>(this)->set_error(guard.get_error());
-        game_economy_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     identifier = this->_vendor_id;
     const_cast<ft_vendor_profile *>(this)->set_error(this->_error_code);
-    game_economy_restore_errno(guard, entry_errno);
     return (identifier);
 }
 
 void ft_vendor_profile::set_vendor_id(int vendor_id) noexcept
 {
-    int entry_errno;
-
     if (vendor_id < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_economy_restore_errno(guard, entry_errno);
         return ;
     }
     this->_vendor_id = vendor_id;
-    this->set_error(FT_ER_SUCCESSS);
-    game_economy_restore_errno(guard, entry_errno);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
 double ft_vendor_profile::get_buy_markup() const noexcept
 {
-    int entry_errno;
     double markup;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_vendor_profile *>(this)->set_error(guard.get_error());
-        game_economy_restore_errno(guard, entry_errno);
         return (static_cast<double>(guard.get_error()));
     }
     markup = this->_buy_markup;
     const_cast<ft_vendor_profile *>(this)->set_error(this->_error_code);
-    game_economy_restore_errno(guard, entry_errno);
     return (markup);
 }
 
 void ft_vendor_profile::set_buy_markup(double buy_markup) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_economy_restore_errno(guard, entry_errno);
         return ;
     }
     this->_buy_markup = buy_markup;
-    this->set_error(FT_ER_SUCCESSS);
-    game_economy_restore_errno(guard, entry_errno);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
 double ft_vendor_profile::get_sell_multiplier() const noexcept
 {
-    int entry_errno;
     double multiplier;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_vendor_profile *>(this)->set_error(guard.get_error());
-        game_economy_restore_errno(guard, entry_errno);
         return (static_cast<double>(guard.get_error()));
     }
     multiplier = this->_sell_multiplier;
     const_cast<ft_vendor_profile *>(this)->set_error(this->_error_code);
-    game_economy_restore_errno(guard, entry_errno);
     return (multiplier);
 }
 
 void ft_vendor_profile::set_sell_multiplier(double sell_multiplier) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_economy_restore_errno(guard, entry_errno);
         return ;
     }
     this->_sell_multiplier = sell_multiplier;
-    this->set_error(FT_ER_SUCCESSS);
-    game_economy_restore_errno(guard, entry_errno);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
 double ft_vendor_profile::get_tax_rate() const noexcept
 {
-    int entry_errno;
     double tax_rate;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_vendor_profile *>(this)->set_error(guard.get_error());
-        game_economy_restore_errno(guard, entry_errno);
         return (static_cast<double>(guard.get_error()));
     }
     tax_rate = this->_tax_rate;
     const_cast<ft_vendor_profile *>(this)->set_error(this->_error_code);
-    game_economy_restore_errno(guard, entry_errno);
     return (tax_rate);
 }
 
 void ft_vendor_profile::set_tax_rate(double tax_rate) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_economy_restore_errno(guard, entry_errno);
         return ;
     }
     this->_tax_rate = tax_rate;
-    this->set_error(FT_ER_SUCCESSS);
-    game_economy_restore_errno(guard, entry_errno);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
 int ft_vendor_profile::get_error() const noexcept
 {
-    int entry_errno;
     int error_value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_vendor_profile *>(this)->set_error(guard.get_error());
-        game_economy_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     error_value = this->_error_code;
     const_cast<ft_vendor_profile *>(this)->set_error(error_value);
-    game_economy_restore_errno(guard, entry_errno);
     return (error_value);
 }
 

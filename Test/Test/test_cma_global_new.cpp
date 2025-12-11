@@ -2,21 +2,19 @@
 #include "../../Errno/errno.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/test_runner.hpp"
+#include "../../CPP_class/class_nullptr.hpp"
 #include <new>
 #include <cstdint>
 
-namespace
+struct alignas(64) aligned_trivial_type
 {
-    struct alignas(64) aligned_trivial_type
-    {
-        int value;
-    };
+    int value;
+};
 
-    struct alignas(128) aligned_large_type
-    {
-        int value;
-    };
-}
+struct alignas(128) aligned_large_type
+{
+    int value;
+};
 
 FT_TEST(test_cma_global_new_preserves_alignment,
     "global operator new respects over-aligned requirements")
@@ -42,21 +40,11 @@ FT_TEST(test_cma_global_new_alignment_failure_sets_errno,
     "global operator new propagates allocator failures for over-aligned types")
 {
     aligned_large_type *instance;
-    bool allocation_failed;
-    int error_state;
 
     cma_set_alloc_limit(16);
-    ft_errno = FT_ER_SUCCESSS;
     instance = new (std::nothrow) aligned_large_type;
+    FT_ASSERT_EQ(instance, ft_nullptr);
+    FT_ASSERT_EQ(ft_errno, FT_ERR_NO_MEMORY);
     cma_set_alloc_limit(0);
-    allocation_failed = (instance == ft_nullptr);
-    error_state = ft_errno;
-    if (instance != ft_nullptr)
-    {
-        ::operator delete(instance, std::align_val_t(alignof(aligned_large_type)));
-        instance = ft_nullptr;
-    }
-    FT_ASSERT(allocation_failed);
-    FT_ASSERT_EQ(error_state, FT_ERR_NO_MEMORY);
     return (1);
 }

@@ -29,15 +29,15 @@ int ft_upgrade::lock_pair(const ft_upgrade &first, const ft_upgrade &second,
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ER_SUCCESSS)
+        if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ER_SUCCESSS;
-        return (FT_ER_SUCCESSS);
+        ft_errno = FT_ERR_SUCCESSS;
+        return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -55,13 +55,13 @@ int ft_upgrade::lock_pair(const ft_upgrade &first, const ft_upgrade &second,
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != FT_ER_SUCCESSS)
+        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ER_SUCCESSS)
+        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
         {
             if (!swapped)
             {
@@ -73,8 +73,8 @@ int ft_upgrade::lock_pair(const ft_upgrade &first, const ft_upgrade &second,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ER_SUCCESSS;
-            return (FT_ER_SUCCESSS);
+            ft_errno = FT_ERR_SUCCESSS;
+            return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -90,9 +90,9 @@ int ft_upgrade::lock_pair(const ft_upgrade &first, const ft_upgrade &second,
 ft_upgrade::ft_upgrade() noexcept
     : _id(0), _current_level(0), _max_level(0),
       _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0),
-      _error(FT_ER_SUCCESSS), _mutex()
+      _error(FT_ERR_SUCCESSS), _mutex()
 {
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -104,13 +104,13 @@ ft_upgrade::~ft_upgrade() noexcept
 ft_upgrade::ft_upgrade(const ft_upgrade &other) noexcept
     : _id(0), _current_level(0), _max_level(0),
       _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0),
-      _error(FT_ER_SUCCESSS), _mutex()
+      _error(FT_ERR_SUCCESSS), _mutex()
 {
     int entry_errno;
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ER_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
         game_upgrade_restore_errno(other_guard, entry_errno);
@@ -140,7 +140,7 @@ ft_upgrade &ft_upgrade::operator=(const ft_upgrade &other) noexcept
         return (*this);
     entry_errno = ft_errno;
     lock_error = ft_upgrade::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -162,13 +162,13 @@ ft_upgrade &ft_upgrade::operator=(const ft_upgrade &other) noexcept
 ft_upgrade::ft_upgrade(ft_upgrade &&other) noexcept
     : _id(0), _current_level(0), _max_level(0),
       _modifier1(0), _modifier2(0), _modifier3(0), _modifier4(0),
-      _error(FT_ER_SUCCESSS), _mutex()
+      _error(FT_ERR_SUCCESSS), _mutex()
 {
     int entry_errno;
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ER_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
         game_upgrade_restore_errno(other_guard, entry_errno);
@@ -189,7 +189,7 @@ ft_upgrade::ft_upgrade(ft_upgrade &&other) noexcept
     other._modifier2 = 0;
     other._modifier3 = 0;
     other._modifier4 = 0;
-    other.set_error(FT_ER_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESSS);
     this->set_error(this->_error);
     game_upgrade_restore_errno(other_guard, entry_errno);
     return ;
@@ -206,7 +206,7 @@ ft_upgrade &ft_upgrade::operator=(ft_upgrade &&other) noexcept
         return (*this);
     entry_errno = ft_errno;
     lock_error = ft_upgrade::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -226,7 +226,7 @@ ft_upgrade &ft_upgrade::operator=(ft_upgrade &&other) noexcept
     other._modifier2 = 0;
     other._modifier3 = 0;
     other._modifier4 = 0;
-    other.set_error(FT_ER_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESSS);
     this->set_error(this->_error);
     game_upgrade_restore_errno(this_guard, entry_errno);
     game_upgrade_restore_errno(other_guard, entry_errno);
@@ -240,14 +240,14 @@ int ft_upgrade::get_id() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_upgrade *>(this)->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
         return (0);
     }
     identifier = this->_id;
-    const_cast<ft_upgrade *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_upgrade *>(this)->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return (identifier);
 }
@@ -263,14 +263,14 @@ void ft_upgrade::set_id(int id) noexcept
     }
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
         return ;
     }
     this->_id = id;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return ;
 }
@@ -282,14 +282,14 @@ uint16_t ft_upgrade::get_current_level() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_upgrade *>(this)->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
         return (0);
     }
     level = this->_current_level;
-    const_cast<ft_upgrade *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_upgrade *>(this)->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return (level);
 }
@@ -300,7 +300,7 @@ void ft_upgrade::set_current_level(uint16_t level) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
@@ -313,7 +313,7 @@ void ft_upgrade::set_current_level(uint16_t level) noexcept
         return ;
     }
     this->_current_level = level;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return ;
 }
@@ -324,7 +324,7 @@ void ft_upgrade::add_level(uint16_t level) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
@@ -333,7 +333,7 @@ void ft_upgrade::add_level(uint16_t level) noexcept
     this->_current_level += level;
     if (this->_max_level != 0 && this->_current_level > this->_max_level)
         this->_current_level = this->_max_level;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return ;
 }
@@ -344,7 +344,7 @@ void ft_upgrade::sub_level(uint16_t level) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
@@ -354,7 +354,7 @@ void ft_upgrade::sub_level(uint16_t level) noexcept
         this->_current_level = 0;
     else
         this->_current_level -= level;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return ;
 }
@@ -366,14 +366,14 @@ uint16_t ft_upgrade::get_max_level() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_upgrade *>(this)->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
         return (0);
     }
     level = this->_max_level;
-    const_cast<ft_upgrade *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_upgrade *>(this)->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return (level);
 }
@@ -384,7 +384,7 @@ void ft_upgrade::set_max_level(uint16_t level) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
@@ -393,7 +393,7 @@ void ft_upgrade::set_max_level(uint16_t level) noexcept
     this->_max_level = level;
     if (this->_max_level != 0 && this->_current_level > this->_max_level)
         this->_current_level = this->_max_level;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return ;
 }
@@ -405,14 +405,14 @@ int ft_upgrade::get_modifier1() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_upgrade *>(this)->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
         return (0);
     }
     modifier = this->_modifier1;
-    const_cast<ft_upgrade *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_upgrade *>(this)->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return (modifier);
 }
@@ -423,14 +423,14 @@ void ft_upgrade::set_modifier1(int mod) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
         return ;
     }
     this->_modifier1 = mod;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return ;
 }
@@ -441,14 +441,14 @@ void ft_upgrade::add_modifier1(int mod) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
         return ;
     }
     this->_modifier1 += mod;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return ;
 }
@@ -459,14 +459,14 @@ void ft_upgrade::sub_modifier1(int mod) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
         return ;
     }
     this->_modifier1 -= mod;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return ;
 }
@@ -478,14 +478,14 @@ int ft_upgrade::get_modifier2() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_upgrade *>(this)->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
         return (0);
     }
     modifier = this->_modifier2;
-    const_cast<ft_upgrade *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_upgrade *>(this)->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return (modifier);
 }
@@ -496,14 +496,14 @@ void ft_upgrade::set_modifier2(int mod) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
         return ;
     }
     this->_modifier2 = mod;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return ;
 }
@@ -514,14 +514,14 @@ void ft_upgrade::add_modifier2(int mod) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
         return ;
     }
     this->_modifier2 += mod;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return ;
 }
@@ -532,14 +532,14 @@ void ft_upgrade::sub_modifier2(int mod) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
         return ;
     }
     this->_modifier2 -= mod;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return ;
 }
@@ -551,14 +551,14 @@ int ft_upgrade::get_modifier3() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_upgrade *>(this)->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
         return (0);
     }
     modifier = this->_modifier3;
-    const_cast<ft_upgrade *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_upgrade *>(this)->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return (modifier);
 }
@@ -569,14 +569,14 @@ void ft_upgrade::set_modifier3(int mod) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
         return ;
     }
     this->_modifier3 = mod;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return ;
 }
@@ -587,14 +587,14 @@ void ft_upgrade::add_modifier3(int mod) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
         return ;
     }
     this->_modifier3 += mod;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return ;
 }
@@ -605,14 +605,14 @@ void ft_upgrade::sub_modifier3(int mod) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
         return ;
     }
     this->_modifier3 -= mod;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return ;
 }
@@ -624,14 +624,14 @@ int ft_upgrade::get_modifier4() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_upgrade *>(this)->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
         return (0);
     }
     modifier = this->_modifier4;
-    const_cast<ft_upgrade *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_upgrade *>(this)->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return (modifier);
 }
@@ -642,14 +642,14 @@ void ft_upgrade::set_modifier4(int mod) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
         return ;
     }
     this->_modifier4 = mod;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return ;
 }
@@ -660,14 +660,14 @@ void ft_upgrade::add_modifier4(int mod) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
         return ;
     }
     this->_modifier4 += mod;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return ;
 }
@@ -678,14 +678,14 @@ void ft_upgrade::sub_modifier4(int mod) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
         return ;
     }
     this->_modifier4 -= mod;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_upgrade_restore_errno(guard, entry_errno);
     return ;
 }
@@ -697,7 +697,7 @@ int ft_upgrade::get_error() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_upgrade *>(this)->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);
@@ -716,7 +716,7 @@ const char *ft_upgrade::get_error_str() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_upgrade *>(this)->set_error(guard.get_error());
         game_upgrade_restore_errno(guard, entry_errno);

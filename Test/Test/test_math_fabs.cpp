@@ -10,7 +10,7 @@ FT_TEST(test_math_fabs_negative_value_returns_positive, "math_fabs converts nega
     result = math_fabs(-123.5);
     FT_ASSERT(result > 0.0);
     FT_ASSERT(math_fabs(result - 123.5) < 0.000001);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -52,17 +52,17 @@ FT_TEST(test_math_fabs_preserves_infinity, "math_fabs returns infinity unchanged
     return (1);
 }
 
-FT_TEST(test_math_fabs_sets_errno_to_success, "math_fabs updates errno to FT_ER_SUCCESSS")
+FT_TEST(test_math_fabs_sets_errno_to_success, "math_fabs updates errno to FT_ERR_SUCCESSS")
 {
     double result;
 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     result = math_fabs(math_nan());
     FT_ASSERT(math_isnan(result));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     result = math_fabs(-42.0);
     FT_ASSERT(math_fabs(result - 42.0) < 0.000001);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }

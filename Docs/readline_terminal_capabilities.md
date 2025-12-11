@@ -40,7 +40,7 @@ scenarios and valid, albeit narrow, terminals.【F:ReadLine/readline_get_termina
 
 When the width cannot be determined, `rl_clear_line()` falls back to treating
 the terminal as a one column display so prompts and input buffers are still
-cleared correctly. The helper resets `ft_errno` to `FT_ER_SUCCESSS` so callers are
+cleared correctly. The helper resets `ft_errno` to `FT_ERR_SUCCESSS` so callers are
 not forced to special-case failures once the fallback is applied. This ensures
 minimal environments—such as logs captured to files or non-interactive CI
 sessions—continue to function even without full terminal capability
