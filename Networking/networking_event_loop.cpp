@@ -258,17 +258,22 @@ int event_loop_lock(event_loop *loop, bool *lock_acquired)
 
 void event_loop_unlock(event_loop *loop, bool lock_acquired)
 {
-    int entry_errno;
-
-    if (!loop || !lock_acquired || !loop->mutex)
+    if (!loop)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
-    entry_errno = ft_errno;
+    }
+    if (!lock_acquired || !loop->mutex)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
+        return ;
+    }
     loop->mutex->unlock(THREAD_ID);
     if (loop->mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = loop->mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }

@@ -78,20 +78,18 @@ static void observability_task_scheduler_bridge_trace_sink(const ft_task_trace_e
     exporter_copy = ft_nullptr;
     should_emit = false;
     {
-        int entry_errno;
         ft_unique_lock<pt_mutex> guard(g_observability_bridge_mutex);
 
-        entry_errno = ft_errno;
         if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             observability_bridge_set_error(guard.get_error());
-            ft_errno = entry_errno;
+            ft_errno = guard.get_error();
             return ;
         }
         if (!g_observability_bridge_initialized || g_observability_bridge_exporter == ft_nullptr)
         {
             observability_bridge_set_error(FT_ERR_SUCCESSS);
-            ft_errno = entry_errno;
+            ft_errno = FT_ERR_SUCCESSS;
             return ;
         }
         ft_otel_span_state new_state;
@@ -99,7 +97,7 @@ static void observability_task_scheduler_bridge_trace_sink(const ft_task_trace_e
         if (g_observability_span_states.get_error() != FT_ERR_SUCCESSS)
         {
             observability_bridge_set_error(g_observability_span_states.get_error());
-            ft_errno = entry_errno;
+            ft_errno = g_observability_span_states.get_error();
             return ;
         }
         if (iterator == g_observability_span_states.end())
@@ -109,14 +107,14 @@ static void observability_task_scheduler_bridge_trace_sink(const ft_task_trace_e
             if (g_observability_span_states.get_error() != FT_ERR_SUCCESSS)
             {
                 observability_bridge_set_error(g_observability_span_states.get_error());
-                ft_errno = entry_errno;
+                ft_errno = g_observability_span_states.get_error();
                 return ;
             }
             iterator = g_observability_span_states.find(event.trace_id);
             if (g_observability_span_states.get_error() != FT_ERR_SUCCESSS || iterator == g_observability_span_states.end())
             {
                 observability_bridge_set_error(FT_ERR_INTERNAL);
-                ft_errno = entry_errno;
+                ft_errno = FT_ERR_INTERNAL;
                 return ;
             }
         }
@@ -175,14 +173,14 @@ static void observability_task_scheduler_bridge_trace_sink(const ft_task_trace_e
             if (g_observability_span_states.get_error() != FT_ERR_SUCCESSS)
             {
                 observability_bridge_set_error(g_observability_span_states.get_error());
-                ft_errno = entry_errno;
+                ft_errno = g_observability_span_states.get_error();
                 return ;
             }
             exporter_copy = g_observability_bridge_exporter;
             should_emit = true;
         }
         observability_bridge_set_error(FT_ERR_SUCCESSS);
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
     }
     if (should_emit && exporter_copy != ft_nullptr)
         exporter_copy(completed_metrics);
@@ -197,55 +195,52 @@ int observability_task_scheduler_bridge_initialize(ft_otel_span_exporter exporte
         return (-1);
     }
     {
-        int entry_errno;
         ft_lock_guard<pt_mutex> guard(g_observability_bridge_mutex);
 
-        entry_errno = ft_errno;
         if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             observability_bridge_set_error(guard.get_error());
-            ft_errno = entry_errno;
+            ft_errno = guard.get_error();
             return (-1);
         }
         if (g_observability_bridge_initialized)
         {
             g_observability_bridge_exporter = exporter;
             observability_bridge_set_error(FT_ERR_SUCCESSS);
-            ft_errno = entry_errno;
+            ft_errno = FT_ERR_SUCCESSS;
             return (0);
         }
         g_observability_bridge_exporter = exporter;
         observability_bridge_set_error(FT_ERR_SUCCESSS);
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
     }
     if (task_scheduler_register_trace_sink(&observability_task_scheduler_bridge_trace_sink) != 0)
     {
         observability_bridge_set_error(ft_errno);
         {
-            int entry_errno;
             ft_lock_guard<pt_mutex> guard(g_observability_bridge_mutex);
 
-            entry_errno = ft_errno;
             if (guard.get_error() == FT_ERR_SUCCESSS)
             {
                 g_observability_bridge_exporter = ft_nullptr;
                 g_observability_bridge_initialized = false;
+                ft_errno = FT_ERR_SUCCESSS;
             }
             else
+            {
                 observability_bridge_set_error(guard.get_error());
-            ft_errno = entry_errno;
+                ft_errno = guard.get_error();
+            }
         }
         return (-1);
     }
     {
-        int entry_errno;
         ft_lock_guard<pt_mutex> guard(g_observability_bridge_mutex);
 
-        entry_errno = ft_errno;
         if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             observability_bridge_set_error(guard.get_error());
-            ft_errno = entry_errno;
+            ft_errno = guard.get_error();
             return (-1);
         }
         g_observability_span_states.clear();
@@ -254,12 +249,12 @@ int observability_task_scheduler_bridge_initialize(ft_otel_span_exporter exporte
             g_observability_bridge_exporter = ft_nullptr;
             g_observability_bridge_initialized = false;
             observability_bridge_set_error(g_observability_span_states.get_error());
-            ft_errno = entry_errno;
+            ft_errno = g_observability_span_states.get_error();
             return (-1);
         }
         g_observability_bridge_initialized = true;
         observability_bridge_set_error(FT_ERR_SUCCESSS);
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
     }
     observability_bridge_set_error(FT_ERR_SUCCESSS);
     return (0);
@@ -268,14 +263,12 @@ int observability_task_scheduler_bridge_initialize(ft_otel_span_exporter exporte
 int observability_task_scheduler_bridge_shutdown(void)
 {
     {
-        int entry_errno;
         ft_lock_guard<pt_mutex> guard(g_observability_bridge_mutex);
 
-        entry_errno = ft_errno;
         if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             observability_bridge_set_error(guard.get_error());
-            ft_errno = entry_errno;
+            ft_errno = guard.get_error();
             return (-1);
         }
         if (!g_observability_bridge_initialized)
@@ -285,14 +278,14 @@ int observability_task_scheduler_bridge_shutdown(void)
             if (g_observability_span_states.get_error() != FT_ERR_SUCCESSS)
             {
                 observability_bridge_set_error(g_observability_span_states.get_error());
-                ft_errno = entry_errno;
+                ft_errno = g_observability_span_states.get_error();
                 return (-1);
             }
             observability_bridge_set_error(FT_ERR_SUCCESSS);
-            ft_errno = entry_errno;
+            ft_errno = FT_ERR_SUCCESSS;
             return (0);
         }
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
     }
     if (task_scheduler_unregister_trace_sink(&observability_task_scheduler_bridge_trace_sink) != 0)
     {
@@ -300,14 +293,12 @@ int observability_task_scheduler_bridge_shutdown(void)
         return (-1);
     }
     {
-        int entry_errno;
         ft_lock_guard<pt_mutex> guard(g_observability_bridge_mutex);
 
-        entry_errno = ft_errno;
         if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             observability_bridge_set_error(guard.get_error());
-            ft_errno = entry_errno;
+            ft_errno = guard.get_error();
             return (-1);
         }
         g_observability_bridge_initialized = false;
@@ -316,11 +307,11 @@ int observability_task_scheduler_bridge_shutdown(void)
         if (g_observability_span_states.get_error() != FT_ERR_SUCCESSS)
         {
             observability_bridge_set_error(g_observability_span_states.get_error());
-            ft_errno = entry_errno;
+            ft_errno = g_observability_span_states.get_error();
             return (-1);
         }
         observability_bridge_set_error(FT_ERR_SUCCESSS);
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
     }
     observability_bridge_set_error(FT_ERR_SUCCESSS);
     return (0);

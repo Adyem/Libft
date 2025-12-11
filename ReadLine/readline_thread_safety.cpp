@@ -85,19 +85,22 @@ int rl_state_lock(readline_state_t *state, bool *lock_acquired)
 
 void rl_state_unlock(readline_state_t *state, bool lock_acquired)
 {
-    int entry_errno;
-
     if (state == ft_nullptr || lock_acquired == false)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
+    }
     if (state->mutex == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_STATE;
         return ;
-    entry_errno = ft_errno;
+    }
     state->mutex->unlock(THREAD_ID);
     if (state->mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = state->mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
