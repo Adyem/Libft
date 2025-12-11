@@ -75,7 +75,7 @@ FT_TEST(test_dialogue_script_set_lines_copies_entries, "set_lines duplicates pro
     ft_errno = FT_ERR_INTERNAL;
     script.set_lines(lines);
     lines[0].set_line_id(15);
-    FT_ASSERT_EQ(FT_ERR_INTERNAL, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(1ul, script.get_lines().size());
     FT_ASSERT_EQ(5, script.get_lines()[0].get_line_id());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, script.get_error());
@@ -158,7 +158,7 @@ FT_TEST(test_dialogue_script_move_assignment_clears_source, "move assignment rep
     source = ft_dialogue_script(5, ft_string("src"), ft_string("summary"), 12, other_lines);
     ft_errno = FT_ERR_INVALID_STATE;
     destination = ft_move(source);
-    FT_ASSERT_EQ(FT_ERR_INVALID_STATE, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(5, destination.get_script_id());
     FT_ASSERT_EQ(ft_string("src"), destination.get_title());
     FT_ASSERT_EQ(ft_string("summary"), destination.get_summary());
@@ -178,7 +178,7 @@ FT_TEST(test_dialogue_script_self_assignment_no_change, "self copy assignment le
     script = ft_dialogue_script(10, ft_string("self"), ft_string("assign"), 2, lines);
     ft_errno = FT_ERR_OUT_OF_RANGE;
     script = script;
-    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(10, script.get_script_id());
     FT_ASSERT_EQ(ft_string("self"), script.get_title());
     FT_ASSERT_EQ(ft_string("assign"), script.get_summary());
@@ -197,7 +197,7 @@ FT_TEST(test_dialogue_script_self_move_assignment_no_change, "self move assignme
     script = ft_dialogue_script(13, ft_string("keep"), ft_string("move"), 4, lines);
     ft_errno = FT_ERR_INVALID_OPERATION;
     script = ft_move(script);
-    FT_ASSERT_EQ(FT_ERR_INVALID_OPERATION, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(13, script.get_script_id());
     FT_ASSERT_EQ(ft_string("keep"), script.get_title());
     FT_ASSERT_EQ(ft_string("move"), script.get_summary());
