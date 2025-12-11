@@ -10,11 +10,11 @@
 static int cnfg_config_lock_if_enabled(cnfg_config *config, ft_unique_lock<pt_mutex> &mutex_guard)
 {
     if (!config || !config->thread_safe_enabled || !config->mutex)
-        return (FT_ER_SUCCESSS);
+        return (FT_ERR_SUCCESSS);
     mutex_guard = ft_unique_lock<pt_mutex>(*config->mutex);
-    if (mutex_guard.get_error() != FT_ER_SUCCESSS)
+    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
         return (mutex_guard.get_error());
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 static void cnfg_config_unlock_guard(ft_unique_lock<pt_mutex> &mutex_guard)
@@ -232,7 +232,7 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
     if (!result)
         return (ft_nullptr);
     lock_error = cnfg_config_lock_if_enabled(result, result_guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         cnfg_config_unlock_guard(result_guard);
         cnfg_free(result);
@@ -248,7 +248,7 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
     if (base_config)
     {
         lock_error = cnfg_config_lock_if_enabled(const_cast<cnfg_config*>(base_config), base_guard);
-        if (lock_error != FT_ER_SUCCESSS)
+        if (lock_error != FT_ERR_SUCCESSS)
         {
             cnfg_config_unlock_guard(result_guard);
             cnfg_free(result);
@@ -259,7 +259,7 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
     if (override_config)
     {
         lock_error = cnfg_config_lock_if_enabled(const_cast<cnfg_config*>(override_config), override_guard);
-        if (lock_error != FT_ER_SUCCESSS)
+        if (lock_error != FT_ERR_SUCCESSS)
         {
             cnfg_config_unlock_guard(result_guard);
             cnfg_free(result);
@@ -275,7 +275,7 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
     }
     if (!override_config)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (result);
     }
     index = 0;
@@ -324,7 +324,7 @@ cnfg_config *config_merge(const cnfg_config *base_config, const cnfg_config *ove
         }
         ++index;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 

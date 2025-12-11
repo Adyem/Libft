@@ -39,7 +39,7 @@ void ft_thread::set_error(int error) const
 }
 
 ft_thread::ft_thread()
-    : _thread(), _joinable(false), _error_code(FT_ER_SUCCESSS), _start_payload(),
+    : _thread(), _joinable(false), _error_code(FT_ERR_SUCCESSS), _start_payload(),
       _state_mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     return ;
@@ -65,7 +65,7 @@ ft_thread::~ft_thread()
 }
 
 ft_thread::ft_thread(ft_thread &&other)
-    : _thread(), _joinable(false), _error_code(FT_ER_SUCCESSS), _start_payload(),
+    : _thread(), _joinable(false), _error_code(FT_ERR_SUCCESSS), _start_payload(),
       _state_mutex(ft_nullptr), _thread_safe_enabled(false)
 {
     bool lock_acquired;
@@ -88,7 +88,7 @@ ft_thread::ft_thread(ft_thread &&other)
         other._thread_safe_enabled = false;
     }
     other._joinable = false;
-    other._error_code = FT_ER_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESSS;
     other.unlock_internal(lock_acquired);
     return ;
 }
@@ -128,7 +128,7 @@ ft_thread &ft_thread::operator=(ft_thread &&other)
             other._thread_safe_enabled = false;
         }
         other._joinable = false;
-        other._error_code = FT_ER_SUCCESSS;
+        other._error_code = FT_ERR_SUCCESSS;
         other._start_payload.reset();
         other.unlock_internal(other_lock_acquired);
         this->unlock_internal(this_lock_acquired);
@@ -148,7 +148,7 @@ bool ft_thread::joinable() const
         return (false);
     }
     joinable_state = this->_joinable;
-    const_cast<ft_thread *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_thread *>(this)->set_error(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (joinable_state);
 }
@@ -166,7 +166,7 @@ void ft_thread::join()
     if (!this->_joinable)
     {
         this->_start_payload.reset();
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         this->unlock_internal(lock_acquired);
         return ;
     }
@@ -186,7 +186,7 @@ void ft_thread::join()
     }
     this->_joinable = false;
     this->_start_payload.reset();
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -223,7 +223,7 @@ int ft_thread::enable_thread_safety()
 
     if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
     {
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
     memory = cma_malloc(sizeof(pt_mutex));
@@ -233,7 +233,7 @@ int ft_thread::enable_thread_safety()
         return (-1);
     }
     state_mutex = new(memory) pt_mutex();
-    if (state_mutex->get_error() != FT_ER_SUCCESSS)
+    if (state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
@@ -245,14 +245,14 @@ int ft_thread::enable_thread_safety()
     }
     this->_state_mutex = state_mutex;
     this->_thread_safe_enabled = true;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
 void ft_thread::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -261,7 +261,7 @@ bool ft_thread::is_thread_safe_enabled() const
     bool enabled;
 
     enabled = (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr);
-    const_cast<ft_thread *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_thread *>(this)->set_error(FT_ERR_SUCCESSS);
     return (enabled);
 }
 
@@ -269,14 +269,14 @@ int ft_thread::lock(bool *lock_acquired) const
 {
     int result;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
     {
         this->_error_code = ft_errno;
         return (result);
     }
-    this->_error_code = FT_ER_SUCCESSS;
+    this->_error_code = FT_ERR_SUCCESSS;
     return (result);
 }
 
@@ -284,23 +284,23 @@ void ft_thread::unlock(bool lock_acquired) const
 {
     int mutex_error;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     this->unlock_internal(lock_acquired);
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
     {
-        this->_error_code = FT_ER_SUCCESSS;
-        ft_errno = FT_ER_SUCCESSS;
+        this->_error_code = FT_ERR_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     mutex_error = this->_state_mutex->get_error();
-    if (mutex_error != FT_ER_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESSS)
     {
         this->_error_code = mutex_error;
         ft_errno = mutex_error;
         return ;
     }
-    this->_error_code = FT_ER_SUCCESSS;
-    ft_errno = FT_ER_SUCCESSS;
+    this->_error_code = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -310,21 +310,21 @@ int ft_thread::lock_internal(bool *lock_acquired) const
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     this->_state_mutex->lock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         if (this->_state_mutex->get_error() == FT_ERR_MUTEX_ALREADY_LOCKED)
         {
             bool state_lock_acquired;
 
             state_lock_acquired = false;
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             if (this->_state_mutex->lock_state(&state_lock_acquired) == 0)
                 this->_state_mutex->unlock_state(state_lock_acquired);
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             return (0);
         }
         ft_errno = this->_state_mutex->get_error();
@@ -332,7 +332,7 @@ int ft_thread::lock_internal(bool *lock_acquired) const
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -344,7 +344,7 @@ void ft_thread::unlock_internal(bool lock_acquired) const
         return ;
     entry_errno = ft_errno;
     this->_state_mutex->unlock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_state_mutex->get_error();
         return ;
@@ -370,7 +370,7 @@ int ft_thread::detach_locked()
     if (!this->_joinable)
     {
         this->_start_payload.reset();
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
     if (pt_thread_detach(this->_thread) != 0)
@@ -388,6 +388,6 @@ int ft_thread::detach_locked()
     }
     this->_joinable = false;
     this->_start_payload.reset();
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }

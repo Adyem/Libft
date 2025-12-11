@@ -13,7 +13,7 @@ static int  compression_store_in_vector(ft_vector<unsigned char> &destination, c
     unsigned char   *destination_data;
 
     vector_error = destination.get_error();
-    if (vector_error != FT_ER_SUCCESSS)
+    if (vector_error != FT_ERR_SUCCESSS)
     {
         ft_errno = vector_error;
         return (1);
@@ -22,12 +22,12 @@ static int  compression_store_in_vector(ft_vector<unsigned char> &destination, c
     {
         destination.clear();
         vector_error = destination.get_error();
-        if (vector_error != FT_ER_SUCCESSS)
+        if (vector_error != FT_ERR_SUCCESSS)
         {
             ft_errno = vector_error;
             return (1);
         }
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     if (buffer == ft_nullptr)
@@ -37,20 +37,20 @@ static int  compression_store_in_vector(ft_vector<unsigned char> &destination, c
     }
     destination.resize(size);
     vector_error = destination.get_error();
-    if (vector_error != FT_ER_SUCCESSS)
+    if (vector_error != FT_ERR_SUCCESSS)
     {
         ft_errno = vector_error;
         return (1);
     }
     destination_data = destination.begin();
     vector_error = destination.get_error();
-    if (vector_error != FT_ER_SUCCESSS)
+    if (vector_error != FT_ERR_SUCCESSS)
     {
         ft_errno = vector_error;
         return (1);
     }
     ft_memcpy(destination_data, buffer, size);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -59,7 +59,7 @@ static int  compression_assign_string(ft_string &destination, const unsigned cha
     int string_error;
 
     string_error = destination.get_error();
-    if (string_error != FT_ER_SUCCESSS)
+    if (string_error != FT_ERR_SUCCESSS)
     {
         ft_errno = string_error;
         return (1);
@@ -68,12 +68,12 @@ static int  compression_assign_string(ft_string &destination, const unsigned cha
     {
         destination.clear();
         string_error = destination.get_error();
-        if (string_error != FT_ER_SUCCESSS)
+        if (string_error != FT_ERR_SUCCESSS)
         {
             ft_errno = string_error;
             return (1);
         }
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     if (buffer == ft_nullptr)
@@ -83,12 +83,12 @@ static int  compression_assign_string(ft_string &destination, const unsigned cha
     }
     destination.assign(reinterpret_cast<const char *>(buffer), size);
     string_error = destination.get_error();
-    if (string_error != FT_ER_SUCCESSS)
+    if (string_error != FT_ERR_SUCCESSS)
     {
         ft_errno = string_error;
         return (1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -138,7 +138,7 @@ unsigned char    *compress_buffer(const unsigned char *input_buffer, std::size_t
     resized_buffer = static_cast<unsigned char *>(cma_realloc(result_buffer, *compressed_size));
     if (resized_buffer)
         result_buffer = resized_buffer;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (result_buffer);
 }
 
@@ -186,7 +186,7 @@ unsigned char    *decompress_buffer(const unsigned char *input_buffer, std::size
         return (ft_nullptr);
     }
     *decompressed_size = actual_size;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (result_buffer);
 }
 
@@ -208,7 +208,7 @@ int ft_compress_string_to_vector(const ft_string &input, ft_vector<unsigned char
     std::size_t           compressed_size;
     int                   store_status;
 
-    if (input.get_error() != FT_ER_SUCCESSS)
+    if (input.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = input.get_error();
         return (1);
@@ -223,7 +223,7 @@ int ft_compress_string_to_vector(const ft_string &input, ft_vector<unsigned char
     cma_free(compressed_buffer);
     if (store_status != 0)
         return (1);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -235,13 +235,13 @@ int ft_compress_vector_to_vector(const ft_vector<unsigned char> &input, ft_vecto
     std::size_t           compressed_size;
     int                   store_status;
 
-    if (input.get_error() != FT_ER_SUCCESSS)
+    if (input.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = input.get_error();
         return (1);
     }
     input_size = input.size();
-    if (input.get_error() != FT_ER_SUCCESSS)
+    if (input.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = input.get_error();
         return (1);
@@ -251,7 +251,7 @@ int ft_compress_vector_to_vector(const ft_vector<unsigned char> &input, ft_vecto
     else
     {
         input_buffer = input.begin();
-        if (input.get_error() != FT_ER_SUCCESSS)
+        if (input.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = input.get_error();
             return (1);
@@ -265,7 +265,7 @@ int ft_compress_vector_to_vector(const ft_vector<unsigned char> &input, ft_vecto
     cma_free(compressed_buffer);
     if (store_status != 0)
         return (1);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -277,13 +277,13 @@ int ft_decompress_vector_to_string(const ft_vector<unsigned char> &input, ft_str
     std::size_t           decompressed_size;
     int                   assign_status;
 
-    if (input.get_error() != FT_ER_SUCCESSS)
+    if (input.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = input.get_error();
         return (1);
     }
     input_size = input.size();
-    if (input.get_error() != FT_ER_SUCCESSS)
+    if (input.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = input.get_error();
         return (1);
@@ -293,7 +293,7 @@ int ft_decompress_vector_to_string(const ft_vector<unsigned char> &input, ft_str
     else
     {
         input_buffer = input.begin();
-        if (input.get_error() != FT_ER_SUCCESSS)
+        if (input.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = input.get_error();
             return (1);
@@ -307,7 +307,7 @@ int ft_decompress_vector_to_string(const ft_vector<unsigned char> &input, ft_str
     cma_free(decompressed_buffer);
     if (assign_status != 0)
         return (1);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -319,13 +319,13 @@ int ft_decompress_vector_to_vector(const ft_vector<unsigned char> &input, ft_vec
     std::size_t           decompressed_size;
     int                   store_status;
 
-    if (input.get_error() != FT_ER_SUCCESSS)
+    if (input.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = input.get_error();
         return (1);
     }
     input_size = input.size();
-    if (input.get_error() != FT_ER_SUCCESSS)
+    if (input.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = input.get_error();
         return (1);
@@ -335,7 +335,7 @@ int ft_decompress_vector_to_vector(const ft_vector<unsigned char> &input, ft_vec
     else
     {
         input_buffer = input.begin();
-        if (input.get_error() != FT_ER_SUCCESSS)
+        if (input.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = input.get_error();
             return (1);
@@ -349,6 +349,6 @@ int ft_decompress_vector_to_vector(const ft_vector<unsigned char> &input, ft_vec
     cma_free(decompressed_buffer);
     if (store_status != 0)
         return (1);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }

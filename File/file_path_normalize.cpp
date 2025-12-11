@@ -1,5 +1,5 @@
 #include "../CPP_class/class_nullptr.hpp"
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"
 #include "file_utils.hpp"
@@ -10,7 +10,7 @@ ft_string file_path_normalize(const char *path)
     {
         ft_string empty_result;
 
-        if (empty_result.get_error() != FT_ER_SUCCESSS)
+        if (empty_result.get_error() != FT_ERR_SUCCESSS)
             return (empty_result);
         return (empty_result);
     }

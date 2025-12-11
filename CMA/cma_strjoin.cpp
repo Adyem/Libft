@@ -13,9 +13,9 @@ static char    *allocate_new_string(const char *string_1, const char *string_2)
     {
         size_t  string_1_length;
 
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         string_1_length = ft_strlen_size_t(string_1);
-        if (ft_errno != FT_ER_SUCCESSS)
+        if (ft_errno != FT_ERR_SUCCESSS)
         {
             ft_errno = FT_ERR_OUT_OF_RANGE;
             return (ft_nullptr);
@@ -31,9 +31,9 @@ static char    *allocate_new_string(const char *string_1, const char *string_2)
     {
         size_t  string_2_length;
 
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         string_2_length = ft_strlen_size_t(string_2);
-        if (ft_errno != FT_ER_SUCCESSS)
+        if (ft_errno != FT_ERR_SUCCESSS)
         {
             ft_errno = FT_ERR_OUT_OF_RANGE;
             return (ft_nullptr);

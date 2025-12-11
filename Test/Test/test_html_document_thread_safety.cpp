@@ -16,9 +16,9 @@ FT_TEST(test_html_document_thread_guard_resets_errno,
 
         FT_ASSERT_EQ(0, guard.get_status());
         FT_ASSERT_EQ(true, guard.lock_acquired());
-        FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+        FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     }
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -30,7 +30,7 @@ FT_TEST(test_html_document_thread_guard_tolerates_null_document,
 
     FT_ASSERT_EQ(0, guard.get_status());
     FT_ASSERT_EQ(false, guard.lock_acquired());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -49,7 +49,7 @@ FT_TEST(test_html_document_handles_mutex_allocation_failure,
 
         FT_ASSERT_EQ(0, guard.get_status());
         FT_ASSERT_EQ(false, guard.lock_acquired());
-        FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+        FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     }
     html_node *node = failure_document.create_node("div", "text");
 

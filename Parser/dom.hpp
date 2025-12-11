@@ -1,7 +1,7 @@
 #ifndef PARSER_DOM_HPP
 #define PARSER_DOM_HPP
 
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../Template/vector.hpp"
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"

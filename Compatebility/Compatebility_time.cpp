@@ -37,7 +37,7 @@ static int  cmp_localtime_from_shared_state(const std::time_t *time_value, std::
     *output = *shared_result;
     if (localtime_mutex.unlock(THREAD_ID) != FT_SUCCESS)
         return (-1);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 #endif
@@ -55,7 +55,7 @@ int cmp_localtime(const std::time_t *time_value, std::tm *output)
     error_code = localtime_s(output, time_value);
     if (error_code == 0)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     ft_errno = ft_map_system_error(error_code);
@@ -64,7 +64,7 @@ int cmp_localtime(const std::time_t *time_value, std::tm *output)
 # if defined(_POSIX_VERSION)
     if (localtime_r(time_value, output) != ft_nullptr)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     if (errno != 0)
@@ -103,12 +103,12 @@ int cmp_time_get_time_of_day(struct timeval *time_value)
     microseconds_since_epoch = (file_time_value.QuadPart - 116444736000000000ULL) / 10ULL;
     time_value->tv_sec = static_cast<long>(microseconds_since_epoch / 1000000ULL);
     time_value->tv_usec = static_cast<long>(microseconds_since_epoch % 1000000ULL);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 #else
     if (gettimeofday(time_value, ft_nullptr) == 0)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     ft_errno = ft_map_system_error(errno);
@@ -185,7 +185,7 @@ int cmp_high_resolution_time(long long *nanoseconds_out)
         return (-1);
     }
     *nanoseconds_out = static_cast<long long>(scaled_value);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 #else
     struct timespec time_value;
@@ -227,7 +227,7 @@ int cmp_high_resolution_time(long long *nanoseconds_out)
 # endif
     if (cmp_timespec_to_nanoseconds(&time_value, nanoseconds_out) != 0)
         return (-1);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 #endif
 }

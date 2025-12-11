@@ -26,7 +26,7 @@ static int math_fft_copy_inputs(const ft_vector<double> &input,
     output.clear();
     length = input.size();
     output.reserve(length);
-    if (output.get_error() != FT_ER_SUCCESSS)
+    if (output.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = output.get_error();
         return (-1);
@@ -35,7 +35,7 @@ static int math_fft_copy_inputs(const ft_vector<double> &input,
     while (index < length)
     {
         output.push_back(input[index]);
-        if (output.get_error() != FT_ER_SUCCESSS)
+        if (output.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = output.get_error();
             output.clear();
@@ -43,7 +43,7 @@ static int math_fft_copy_inputs(const ft_vector<double> &input,
         }
         index++;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -95,7 +95,7 @@ static int math_fft_bit_reverse(ft_vector<double> &real,
             math_fft_swap(real, imag, index, reversed);
         index++;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -179,7 +179,7 @@ static int math_fft_iterative(ft_vector<double> &real,
             index++;
         }
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -221,7 +221,7 @@ static int math_fft_dispatch(const ft_vector<double> &input_real,
         output_imag.clear();
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -266,9 +266,9 @@ static int math_fft_prepare_padded(const ft_vector<double> &input,
     imag.clear();
     real.reserve(target_length);
     imag.reserve(target_length);
-    if (real.get_error() != FT_ER_SUCCESSS || imag.get_error() != FT_ER_SUCCESSS)
+    if (real.get_error() != FT_ERR_SUCCESSS || imag.get_error() != FT_ERR_SUCCESSS)
     {
-        if (real.get_error() != FT_ER_SUCCESSS)
+        if (real.get_error() != FT_ERR_SUCCESSS)
             ft_errno = real.get_error();
         else
             ft_errno = imag.get_error();
@@ -287,7 +287,7 @@ static int math_fft_prepare_padded(const ft_vector<double> &input,
         else
             value = 0.0;
         real.push_back(value);
-        if (real.get_error() != FT_ER_SUCCESSS)
+        if (real.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = real.get_error();
             real.clear();
@@ -295,7 +295,7 @@ static int math_fft_prepare_padded(const ft_vector<double> &input,
             return (-1);
         }
         imag.push_back(0.0);
-        if (imag.get_error() != FT_ER_SUCCESSS)
+        if (imag.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = imag.get_error();
             real.clear();
@@ -304,7 +304,7 @@ static int math_fft_prepare_padded(const ft_vector<double> &input,
         }
         index++;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -336,7 +336,7 @@ static int math_fft_pointwise_multiply(ft_vector<double> &first_real,
         first_imag[index] = result_imag;
         index++;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -379,7 +379,7 @@ int math_convolution(const ft_vector<double> &first,
         return (-1);
     result.clear();
     result.reserve(result_length);
-    if (result.get_error() != FT_ER_SUCCESSS)
+    if (result.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = result.get_error();
         result.clear();
@@ -394,7 +394,7 @@ int math_convolution(const ft_vector<double> &first,
         if (std::fabs(value) < 1e-12)
             value = 0.0;
         result.push_back(value);
-        if (result.get_error() != FT_ER_SUCCESSS)
+        if (result.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = result.get_error();
             result.clear();
@@ -402,6 +402,6 @@ int math_convolution(const ft_vector<double> &first,
         }
         index++;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }

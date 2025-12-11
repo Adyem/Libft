@@ -34,7 +34,7 @@ static void *pt_mutex_try_lock_for_thread(void *argument)
     else
     {
         state->unlock_result = FT_SUCCESS;
-        state->unlock_error = FT_ER_SUCCESSS;
+        state->unlock_error = FT_ERR_SUCCESSS;
     }
     return (ft_nullptr);
 }
@@ -51,15 +51,15 @@ FT_TEST(test_pt_mutex_try_lock_for_times_out_when_mutex_locked, "pt_mutex try_lo
     state.unlock_result = 0;
     state.unlock_error = 0;
     FT_ASSERT_EQ(FT_SUCCESS, mutex_object.lock(THREAD_ID));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, mutex_object.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, mutex_object.get_error());
     FT_ASSERT_EQ(0, pthread_create(&worker_thread, ft_nullptr, pt_mutex_try_lock_for_thread, &state));
     FT_ASSERT_EQ(0, pthread_join(worker_thread, ft_nullptr));
     FT_ASSERT_EQ(ETIMEDOUT, state.lock_result);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, state.lock_error);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, state.lock_error);
     FT_ASSERT_EQ(FT_SUCCESS, state.unlock_result);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, state.unlock_error);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, state.unlock_error);
     FT_ASSERT_EQ(FT_SUCCESS, mutex_object.unlock(THREAD_ID));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, mutex_object.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, mutex_object.get_error());
     return (1);
 }
 
@@ -73,10 +73,10 @@ FT_TEST(test_pt_mutex_try_lock_until_acquires_unlocked_mutex, "pt_mutex try_lock
     absolute_time.tv_sec += 1;
     lock_result = mutex_object.try_lock_until(THREAD_ID, absolute_time);
     FT_ASSERT_EQ(FT_SUCCESS, lock_result);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, mutex_object.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, mutex_object.get_error());
     FT_ASSERT(mutex_object.lockState());
     FT_ASSERT_EQ(FT_SUCCESS, mutex_object.unlock(THREAD_ID));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, mutex_object.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, mutex_object.get_error());
     return (1);
 }
 
@@ -92,9 +92,9 @@ FT_TEST(test_pt_condition_variable_wait_for_times_out_without_signal, "pt_condit
     relative_time.tv_nsec = 20000000L;
     wait_result = condition_variable.wait_for(mutex_object, relative_time);
     FT_ASSERT_EQ(ETIMEDOUT, wait_result);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, condition_variable.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, condition_variable.get_error());
     FT_ASSERT_EQ(FT_SUCCESS, mutex_object.unlock(THREAD_ID));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, mutex_object.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, mutex_object.get_error());
     return (1);
 }
 

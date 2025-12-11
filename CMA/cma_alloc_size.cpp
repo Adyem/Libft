@@ -59,9 +59,9 @@ int cma_checked_block_size(const void *memory_pointer, ft_size_t *block_size)
         return (-1);
     }
     *block_size = cma_block_user_size(block);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     allocator_guard.unlock();
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 

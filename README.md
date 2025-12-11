@@ -202,7 +202,7 @@ outcomes for their core failure paths:
 | Scenario | Libft helper | CMA helper | `ft_errno` |
 | --- | --- | --- | --- |
 | Null source with non-zero length | `ft_memdup`, `ft_span_dup` | `cma_memdup` | `FT_ERR_INVALID_ARGUMENT` |
-| Zero-length span | `ft_memdup`, `ft_span_dup` | `cma_memdup` | `FT_ER_SUCCESSS` |
+| Zero-length span | `ft_memdup`, `ft_span_dup` | `cma_memdup` | `FT_ERR_SUCCESSS` |
 | Allocation failure | `ft_memdup`, `ft_span_dup` | `cma_memdup` | `FT_ERR_NO_MEMORY` |
 
 Formatting wrappers follow the same pattern. `ft_to_string` mirrors allocator failures
@@ -281,7 +281,7 @@ ASCII case conversion on the existing hooks, set `FT_ERR_OUT_OF_RANGE` when the
 destination buffer is too small, and surface allocation failures as
 `FT_ERR_NO_MEMORY`. Optional grapheme wrappers reuse the CMA allocation
 utilities to duplicate composed characters while leaving successful iterations
-with `FT_ER_SUCCESSS`, so callers can detect the end of input without spurious
+with `FT_ERR_SUCCESSS`, so callers can detect the end of input without spurious
 errors.
 
 `ft_fgets` sets `ft_errno` to `FT_ERR_END_OF_FILE` when the stream reaches end of

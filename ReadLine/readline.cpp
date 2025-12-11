@@ -46,7 +46,7 @@ char *rl_readline(const char *prompt)
 {
     readline_state_t     state;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (rl_initialize_state(&state))
         return (ft_nullptr);
     pf_printf("%s", prompt);
@@ -105,6 +105,6 @@ char *rl_readline(const char *prompt)
     rl_state_teardown_thread_safety(&state);
     if (DEBUG == 1)
         pf_printf("returning %s\n", state.buffer);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (state.buffer);
 }

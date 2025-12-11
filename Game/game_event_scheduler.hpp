@@ -5,7 +5,7 @@
 #include "../Template/priority_queue.hpp"
 #include "../Template/vector.hpp"
 #include "../Template/shared_ptr.hpp"
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
 #include "../PThread/mutex.hpp"

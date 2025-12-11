@@ -1,7 +1,7 @@
 #ifndef FILE_FILE_UTILS_HPP
 # define FILE_FILE_UTILS_HPP
 
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include <cstddef>
 
 int       file_copy(const char *source_path, const char *destination_path);

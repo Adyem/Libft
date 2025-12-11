@@ -17,7 +17,7 @@ int ft_unsetenv(const char *name)
     int result;
     int stored_errno;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (name == ft_nullptr || *name == '\0' || ft_strchr(name, '=') != ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;

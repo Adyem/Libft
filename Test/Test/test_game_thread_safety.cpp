@@ -49,7 +49,7 @@ static void run_equipment_equip_task(ft_equipment *equipment, int slot,
     index = 0;
     while (index < iterations)
     {
-        if (equipment->equip(slot, item) != FT_ER_SUCCESSS)
+        if (equipment->equip(slot, item) != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
@@ -82,7 +82,7 @@ static void run_buff_assignment_task(ft_buff *destination, ft_buff *source,
     while (index < iterations)
     {
         *destination = *source;
-        if (destination->get_error() != FT_ER_SUCCESSS)
+        if (destination->get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
@@ -102,7 +102,7 @@ static void run_debuff_assignment_task(ft_debuff *destination,
     while (index < iterations)
     {
         *destination = *source;
-        if (destination->get_error() != FT_ER_SUCCESSS)
+        if (destination->get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
@@ -122,7 +122,7 @@ static void run_skill_assignment_task(ft_skill *destination, ft_skill *source,
     while (index < iterations)
     {
         *destination = *source;
-        if (destination->get_error() != FT_ER_SUCCESSS)
+        if (destination->get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
@@ -144,7 +144,7 @@ static void run_quest_phase_task(ft_quest *quest, int iterations,
     while (index < iterations)
     {
         quest->set_current_phase(phase_value);
-        if (quest->get_error() != FT_ER_SUCCESSS)
+        if (quest->get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
@@ -153,17 +153,17 @@ static void run_quest_phase_task(ft_quest *quest, int iterations,
         if (quest->get_error() == FT_ERR_GAME_GENERAL_ERROR)
         {
             quest->set_current_phase(0);
-            if (quest->get_error() != FT_ER_SUCCESSS)
+            if (quest->get_error() != FT_ERR_SUCCESSS)
             {
                 *failure_flag = 1;
                 return ;
             }
             phase_value = 0;
         }
-        else if (quest->get_error() == FT_ER_SUCCESSS)
+        else if (quest->get_error() == FT_ERR_SUCCESSS)
         {
             phase_value = quest->get_current_phase();
-            if (quest->get_error() != FT_ER_SUCCESSS)
+            if (quest->get_error() != FT_ERR_SUCCESSS)
             {
                 *failure_flag = 1;
                 return ;
@@ -177,7 +177,7 @@ static void run_quest_phase_task(ft_quest *quest, int iterations,
         if (phase_value >= phase_limit)
         {
             quest->set_current_phase(0);
-            if (quest->get_error() != FT_ER_SUCCESSS)
+            if (quest->get_error() != FT_ERR_SUCCESSS)
             {
                 *failure_flag = 1;
                 return ;
@@ -204,13 +204,13 @@ static void run_quest_reward_task(ft_quest *quest,
     while (index < iterations)
     {
         items = ft_vector<ft_sharedptr<ft_item> >();
-        if (items.get_error() != FT_ER_SUCCESSS)
+        if (items.get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
         }
         items.push_back(reward_one);
-        if (items.get_error() != FT_ER_SUCCESSS)
+        if (items.get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
@@ -218,20 +218,20 @@ static void run_quest_reward_task(ft_quest *quest,
         if (toggle)
         {
             items.push_back(reward_two);
-            if (items.get_error() != FT_ER_SUCCESSS)
+            if (items.get_error() != FT_ERR_SUCCESSS)
             {
                 *failure_flag = 1;
                 return ;
             }
         }
         quest->set_reward_items(items);
-        if (quest->get_error() != FT_ER_SUCCESSS)
+        if (quest->get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
         }
         quest->get_reward_items();
-        if (quest->get_error() != FT_ER_SUCCESSS)
+        if (quest->get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
@@ -266,25 +266,25 @@ static void run_quest_text_task(ft_quest *quest, int iterations,
             objective_text = "Escort them back to the village";
         }
         quest->set_description(description_text);
-        if (quest->get_error() != FT_ER_SUCCESSS)
+        if (quest->get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
         }
         quest->set_objective(objective_text);
-        if (quest->get_error() != FT_ER_SUCCESSS)
+        if (quest->get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
         }
         quest->get_description();
-        if (quest->get_error() != FT_ER_SUCCESSS)
+        if (quest->get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
         }
         quest->get_objective();
-        if (quest->get_error() != FT_ER_SUCCESSS)
+        if (quest->get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
@@ -305,13 +305,13 @@ static void run_quest_copy_task(ft_quest *source, ft_quest *destination,
     while (index < iterations)
     {
         *destination = *source;
-        if (destination->get_error() != FT_ER_SUCCESSS)
+        if (destination->get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
         }
         ft_quest local_copy(*source);
-        if (local_copy.get_error() != FT_ER_SUCCESSS)
+        if (local_copy.get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
@@ -331,7 +331,7 @@ static void run_equipment_assignment_task(ft_equipment *destination,
     while (index < iterations)
     {
         *destination = *source;
-        if (destination->get_error() != FT_ER_SUCCESSS)
+        if (destination->get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
@@ -364,7 +364,7 @@ static void run_upgrade_assignment_task(ft_upgrade *destination,
     while (index < iterations)
     {
         *destination = *source;
-        if (destination->get_error() != FT_ER_SUCCESSS)
+        if (destination->get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
@@ -384,7 +384,7 @@ static void run_reputation_add_total_task(ft_reputation *reputation,
     while (index < iterations)
     {
         reputation->add_total_rep(1);
-        if (reputation->get_error() != FT_ER_SUCCESSS)
+        if (reputation->get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
@@ -404,7 +404,7 @@ static void run_reputation_add_current_task(ft_reputation *reputation,
     while (index < iterations)
     {
         reputation->add_current_rep(1);
-        if (reputation->get_error() != FT_ER_SUCCESSS)
+        if (reputation->get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
@@ -424,12 +424,12 @@ static void run_reputation_assignment_task(ft_reputation *destination,
     while (index < iterations)
     {
         *destination = *source;
-        if (destination->get_error() != FT_ER_SUCCESSS)
+        if (destination->get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
         }
-        if (source->get_error() != FT_ER_SUCCESSS)
+        if (source->get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
@@ -449,7 +449,7 @@ static void run_reputation_set_milestones_task(ft_reputation *reputation,
     while (index < iterations)
     {
         reputation->set_milestone(id_base + index, index);
-        if (reputation->get_error() != FT_ER_SUCCESSS)
+        if (reputation->get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
@@ -468,7 +468,7 @@ static void run_experience_set_levels_task(ft_experience_table *table,
     index = 0;
     while (index < iterations)
     {
-        if (table->set_levels(levels, count) != FT_ER_SUCCESSS)
+        if (table->set_levels(levels, count) != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
@@ -488,7 +488,7 @@ static void run_experience_assignment_task(ft_experience_table *destination,
     while (index < iterations)
     {
         *destination = *source;
-        if (destination->get_error() != FT_ER_SUCCESSS)
+        if (destination->get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
@@ -508,7 +508,7 @@ static void run_achievement_progress_task(ft_achievement *achievement, int goal_
     while (index < iterations)
     {
         achievement->add_progress(goal_id, increment);
-        if (achievement->get_error() != FT_ER_SUCCESSS)
+        if (achievement->get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
@@ -528,7 +528,7 @@ static void run_achievement_assignment_task(ft_achievement *destination,
     while (index < iterations)
     {
         *destination = *source;
-        if (destination->get_error() != FT_ER_SUCCESSS)
+        if (destination->get_error() != FT_ERR_SUCCESSS)
         {
             *failure_flag = 1;
             return ;
@@ -548,19 +548,19 @@ FT_TEST(test_game_buff_concurrent_modifier_updates,
     int iterations;
 
     iterations = 2048;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     buff.set_modifier1(0);
     thread_one = ft_thread(run_buff_increment_task, &buff, iterations);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_one.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_one.get_error());
     thread_two = ft_thread(run_buff_increment_task, &buff, iterations);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_two.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_two.get_error());
     thread_one.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_one.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_one.get_error());
     thread_two.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_two.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_two.get_error());
     FT_ASSERT_EQ(iterations * 2, buff.get_modifier1());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, buff.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, buff.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -573,19 +573,19 @@ FT_TEST(test_game_debuff_concurrent_modifier_updates,
     int iterations;
 
     iterations = 1024;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     debuff.set_modifier1(0);
     thread_one = ft_thread(run_debuff_increment_task, &debuff, iterations);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_one.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_one.get_error());
     thread_two = ft_thread(run_debuff_increment_task, &debuff, iterations);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_two.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_two.get_error());
     thread_one.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_one.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_one.get_error());
     thread_two.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_two.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_two.get_error());
     FT_ASSERT_EQ(iterations * 2, debuff.get_modifier1());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, debuff.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, debuff.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -604,7 +604,7 @@ FT_TEST(test_game_equipment_concurrent_equips,
     iterations = 256;
     head_failure_flag = 0;
     chest_failure_flag = 0;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     head_item = ft_sharedptr<ft_item>(new ft_item());
     chest_item = ft_sharedptr<ft_item>(new ft_item());
     FT_ASSERT(head_item.get() != ft_nullptr);
@@ -613,20 +613,20 @@ FT_TEST(test_game_equipment_concurrent_equips,
     chest_item->set_item_id(2);
     head_thread = ft_thread(run_equipment_equip_task, &equipment, EQUIP_HEAD,
             head_item, iterations, &head_failure_flag);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, head_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, head_thread.get_error());
     chest_thread = ft_thread(run_equipment_equip_task, &equipment, EQUIP_CHEST,
             chest_item, iterations, &chest_failure_flag);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, chest_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, chest_thread.get_error());
     head_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, head_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, head_thread.get_error());
     chest_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, chest_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, chest_thread.get_error());
     FT_ASSERT_EQ(0, head_failure_flag);
     FT_ASSERT_EQ(0, chest_failure_flag);
     FT_ASSERT(equipment.get_item(EQUIP_HEAD).get() == head_item.get());
     FT_ASSERT(equipment.get_item(EQUIP_CHEST).get() == chest_item.get());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, equipment.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, equipment.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -639,24 +639,24 @@ FT_TEST(test_game_skill_concurrent_cooldown_updates,
     int iterations;
 
     iterations = 256;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     skill.set_cooldown(0);
     add_thread_one = ft_thread(run_skill_add_cooldown_task, &skill, iterations);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, add_thread_one.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, add_thread_one.get_error());
     add_thread_two = ft_thread(run_skill_add_cooldown_task, &skill, iterations);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, add_thread_two.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, add_thread_two.get_error());
     add_thread_one.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, add_thread_one.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, add_thread_one.get_error());
     add_thread_two.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, add_thread_two.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, add_thread_two.get_error());
     FT_ASSERT_EQ(iterations * 2, skill.get_cooldown());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, skill.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    ft_errno = FT_ER_SUCCESSS;
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, skill.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    ft_errno = FT_ERR_SUCCESSS;
     skill.sub_cooldown(skill.get_cooldown());
     FT_ASSERT_EQ(0, skill.get_cooldown());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, skill.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, skill.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -669,19 +669,19 @@ FT_TEST(test_game_upgrade_concurrent_modifier_updates,
     int iterations;
 
     iterations = 1024;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     upgrade.set_modifier1(0);
     thread_one = ft_thread(run_upgrade_increment_task, &upgrade, iterations);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_one.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_one.get_error());
     thread_two = ft_thread(run_upgrade_increment_task, &upgrade, iterations);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_two.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_two.get_error());
     thread_one.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_one.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_one.get_error());
     thread_two.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_two.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_two.get_error());
     FT_ASSERT_EQ(iterations * 2, upgrade.get_modifier1());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, upgrade.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, upgrade.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -700,24 +700,24 @@ FT_TEST(test_game_achievement_concurrent_progress_updates,
     goal_id = 42;
     failure_one = 0;
     failure_two = 0;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     achievement.set_goal(goal_id, iterations * 2);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, achievement.get_error());
     thread_one = ft_thread(run_achievement_progress_task, &achievement, goal_id,
             iterations, 1, &failure_one);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_one.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_one.get_error());
     thread_two = ft_thread(run_achievement_progress_task, &achievement, goal_id,
             iterations, 1, &failure_two);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_two.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_two.get_error());
     thread_one.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_one.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_one.get_error());
     thread_two.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_two.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_two.get_error());
     FT_ASSERT_EQ(0, failure_one);
     FT_ASSERT_EQ(0, failure_two);
     FT_ASSERT_EQ(iterations * 2, achievement.get_progress(goal_id));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, achievement.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -732,7 +732,7 @@ FT_TEST(test_game_buff_cross_assignment_deadlock_free,
     int left_failure_flag;
     int right_failure_flag;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     iterations = 256;
     left_failure_flag = -1;
     right_failure_flag = -1;
@@ -750,14 +750,14 @@ FT_TEST(test_game_buff_cross_assignment_deadlock_free,
     right_buff.set_modifier4(8);
     left_thread = ft_thread(run_buff_assignment_task, &left_buff, &right_buff,
             iterations, &left_failure_flag);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_thread.get_error());
     right_thread = ft_thread(run_buff_assignment_task, &right_buff, &left_buff,
             iterations, &right_failure_flag);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_thread.get_error());
     left_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_thread.get_error());
     right_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_thread.get_error());
     FT_ASSERT_EQ(0, left_failure_flag);
     FT_ASSERT_EQ(0, right_failure_flag);
     FT_ASSERT_EQ(left_buff.get_id(), right_buff.get_id());
@@ -766,9 +766,9 @@ FT_TEST(test_game_buff_cross_assignment_deadlock_free,
     FT_ASSERT_EQ(left_buff.get_modifier2(), right_buff.get_modifier2());
     FT_ASSERT_EQ(left_buff.get_modifier3(), right_buff.get_modifier3());
     FT_ASSERT_EQ(left_buff.get_modifier4(), right_buff.get_modifier4());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_buff.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_buff.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_buff.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_buff.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -783,7 +783,7 @@ FT_TEST(test_game_debuff_cross_assignment_deadlock_free,
     int left_failure_flag;
     int right_failure_flag;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     iterations = 256;
     left_failure_flag = -1;
     right_failure_flag = -1;
@@ -801,14 +801,14 @@ FT_TEST(test_game_debuff_cross_assignment_deadlock_free,
     right_debuff.set_modifier4(29);
     left_thread = ft_thread(run_debuff_assignment_task, &left_debuff,
             &right_debuff, iterations, &left_failure_flag);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_thread.get_error());
     right_thread = ft_thread(run_debuff_assignment_task, &right_debuff,
             &left_debuff, iterations, &right_failure_flag);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_thread.get_error());
     left_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_thread.get_error());
     right_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_thread.get_error());
     FT_ASSERT_EQ(0, left_failure_flag);
     FT_ASSERT_EQ(0, right_failure_flag);
     FT_ASSERT_EQ(left_debuff.get_id(), right_debuff.get_id());
@@ -817,9 +817,9 @@ FT_TEST(test_game_debuff_cross_assignment_deadlock_free,
     FT_ASSERT_EQ(left_debuff.get_modifier2(), right_debuff.get_modifier2());
     FT_ASSERT_EQ(left_debuff.get_modifier3(), right_debuff.get_modifier3());
     FT_ASSERT_EQ(left_debuff.get_modifier4(), right_debuff.get_modifier4());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_debuff.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_debuff.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_debuff.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_debuff.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -834,7 +834,7 @@ FT_TEST(test_game_skill_cross_assignment_deadlock_free,
     int left_failure_flag;
     int right_failure_flag;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     iterations = 256;
     left_failure_flag = -1;
     right_failure_flag = -1;
@@ -854,14 +854,14 @@ FT_TEST(test_game_skill_cross_assignment_deadlock_free,
     right_skill.set_modifier4(32);
     left_thread = ft_thread(run_skill_assignment_task, &left_skill,
             &right_skill, iterations, &left_failure_flag);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_thread.get_error());
     right_thread = ft_thread(run_skill_assignment_task, &right_skill,
             &left_skill, iterations, &right_failure_flag);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_thread.get_error());
     left_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_thread.get_error());
     right_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_thread.get_error());
     FT_ASSERT_EQ(0, left_failure_flag);
     FT_ASSERT_EQ(0, right_failure_flag);
     FT_ASSERT_EQ(left_skill.get_id(), right_skill.get_id());
@@ -871,9 +871,9 @@ FT_TEST(test_game_skill_cross_assignment_deadlock_free,
     FT_ASSERT_EQ(left_skill.get_modifier2(), right_skill.get_modifier2());
     FT_ASSERT_EQ(left_skill.get_modifier3(), right_skill.get_modifier3());
     FT_ASSERT_EQ(left_skill.get_modifier4(), right_skill.get_modifier4());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_skill.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_skill.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_skill.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_skill.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -895,7 +895,7 @@ FT_TEST(test_game_equipment_cross_assignment_deadlock_free,
     int right_failure_flag;
 
     iterations = 128;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     left_failure_flag = -1;
     right_failure_flag = -1;
     left_head_item = ft_sharedptr<ft_item>(new ft_item());
@@ -916,27 +916,27 @@ FT_TEST(test_game_equipment_cross_assignment_deadlock_free,
     right_head_item->set_item_id(201);
     right_chest_item->set_item_id(202);
     right_weapon_item->set_item_id(203);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_equipment.equip(EQUIP_HEAD, left_head_item));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_equipment.equip(EQUIP_CHEST,
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_equipment.equip(EQUIP_HEAD, left_head_item));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_equipment.equip(EQUIP_CHEST,
             left_chest_item));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_equipment.equip(EQUIP_WEAPON,
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_equipment.equip(EQUIP_WEAPON,
             left_weapon_item));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_equipment.equip(EQUIP_HEAD,
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_equipment.equip(EQUIP_HEAD,
             right_head_item));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_equipment.equip(EQUIP_CHEST,
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_equipment.equip(EQUIP_CHEST,
             right_chest_item));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_equipment.equip(EQUIP_WEAPON,
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_equipment.equip(EQUIP_WEAPON,
             right_weapon_item));
     left_thread = ft_thread(run_equipment_assignment_task, &left_equipment,
             &right_equipment, iterations, &left_failure_flag);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_thread.get_error());
     right_thread = ft_thread(run_equipment_assignment_task, &right_equipment,
             &left_equipment, iterations, &right_failure_flag);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_thread.get_error());
     left_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_thread.get_error());
     right_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_thread.get_error());
     FT_ASSERT_EQ(0, left_failure_flag);
     FT_ASSERT_EQ(0, right_failure_flag);
     FT_ASSERT(left_equipment.get_item(EQUIP_HEAD).get() ==
@@ -945,9 +945,9 @@ FT_TEST(test_game_equipment_cross_assignment_deadlock_free,
             right_equipment.get_item(EQUIP_CHEST).get());
     FT_ASSERT(left_equipment.get_item(EQUIP_WEAPON).get() ==
             right_equipment.get_item(EQUIP_WEAPON).get());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_equipment.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_equipment.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_equipment.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_equipment.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -962,7 +962,7 @@ FT_TEST(test_game_upgrade_cross_assignment_deadlock_free,
     int left_failure_flag;
     int right_failure_flag;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     iterations = 256;
     left_failure_flag = -1;
     right_failure_flag = -1;
@@ -982,32 +982,32 @@ FT_TEST(test_game_upgrade_cross_assignment_deadlock_free,
     right_upgrade.set_modifier4(37);
     left_thread = ft_thread(run_upgrade_assignment_task, &left_upgrade,
             &right_upgrade, iterations, &left_failure_flag);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_thread.get_error());
     right_thread = ft_thread(run_upgrade_assignment_task, &right_upgrade,
             &left_upgrade, iterations, &right_failure_flag);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_thread.get_error());
     left_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_thread.get_error());
     right_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_thread.get_error());
     FT_ASSERT_EQ(0, left_failure_flag);
     FT_ASSERT_EQ(0, right_failure_flag);
     FT_ASSERT_EQ(left_upgrade.get_id(), right_upgrade.get_id());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_upgrade.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_upgrade.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_upgrade.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_upgrade.get_error());
     FT_ASSERT_EQ(left_upgrade.get_current_level(), right_upgrade.get_current_level());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_upgrade.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_upgrade.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_upgrade.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_upgrade.get_error());
     FT_ASSERT_EQ(left_upgrade.get_max_level(), right_upgrade.get_max_level());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_upgrade.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_upgrade.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_upgrade.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_upgrade.get_error());
     FT_ASSERT_EQ(left_upgrade.get_modifier1(), right_upgrade.get_modifier1());
     FT_ASSERT_EQ(left_upgrade.get_modifier2(), right_upgrade.get_modifier2());
     FT_ASSERT_EQ(left_upgrade.get_modifier3(), right_upgrade.get_modifier3());
     FT_ASSERT_EQ(left_upgrade.get_modifier4(), right_upgrade.get_modifier4());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_upgrade.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_upgrade.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_upgrade.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_upgrade.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -1022,7 +1022,7 @@ FT_TEST(test_game_achievement_cross_assignment_deadlock_free,
     int left_failure_flag;
     int right_failure_flag;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     iterations = 256;
     left_failure_flag = -1;
     right_failure_flag = -1;
@@ -1042,41 +1042,41 @@ FT_TEST(test_game_achievement_cross_assignment_deadlock_free,
     right_achievement.set_progress(3, 5);
     left_thread = ft_thread(run_achievement_assignment_task, &left_achievement,
             &right_achievement, iterations, &left_failure_flag);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_thread.get_error());
     right_thread = ft_thread(run_achievement_assignment_task, &right_achievement,
             &left_achievement, iterations, &right_failure_flag);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_thread.get_error());
     left_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_thread.get_error());
     right_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_thread.get_error());
     FT_ASSERT_EQ(0, left_failure_flag);
     FT_ASSERT_EQ(0, right_failure_flag);
     FT_ASSERT_EQ(left_achievement.get_id(), right_achievement.get_id());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_achievement.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_achievement.get_error());
     FT_ASSERT_EQ(left_achievement.get_goal(1), right_achievement.get_goal(1));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_achievement.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_achievement.get_error());
     FT_ASSERT_EQ(left_achievement.get_progress(1), right_achievement.get_progress(1));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_achievement.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_achievement.get_error());
     FT_ASSERT_EQ(left_achievement.get_goal(2), right_achievement.get_goal(2));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_achievement.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_achievement.get_error());
     FT_ASSERT_EQ(left_achievement.get_progress(2), right_achievement.get_progress(2));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_achievement.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_achievement.get_error());
     FT_ASSERT_EQ(left_achievement.get_goal(3), right_achievement.get_goal(3));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_achievement.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_achievement.get_error());
     FT_ASSERT_EQ(left_achievement.get_progress(3), right_achievement.get_progress(3));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_achievement.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_achievement.get_error());
     FT_ASSERT_EQ(left_achievement.is_complete(), right_achievement.is_complete());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_achievement.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_achievement.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -1094,7 +1094,7 @@ FT_TEST(test_game_experience_table_concurrent_set_levels,
     int result;
     int index;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     iterations = 128;
     failure_one = -1;
     failure_two = -1;
@@ -1107,33 +1107,33 @@ FT_TEST(test_game_experience_table_concurrent_set_levels,
     alternate_levels[2] = 320;
     alternate_levels[3] = 700;
     result = table.set_levels(base_levels, 4);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, result);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, result);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.get_error());
     thread_one = ft_thread(run_experience_set_levels_task, &table, base_levels, 4,
             iterations, &failure_one);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_one.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_one.get_error());
     thread_two = ft_thread(run_experience_set_levels_task, &table,
             alternate_levels, 4, iterations, &failure_two);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_two.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_two.get_error());
     thread_one.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_one.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_one.get_error());
     thread_two.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_two.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_two.get_error());
     FT_ASSERT_EQ(0, failure_one);
     FT_ASSERT_EQ(0, failure_two);
     FT_ASSERT_EQ(4, table.get_count());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.get_error());
     result = table.check_for_error();
     FT_ASSERT_EQ(0, result);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.get_error());
     index = 1;
     while (index < 4)
     {
         FT_ASSERT(table.get_value(index) >= table.get_value(index - 1));
         index++;
     }
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -1151,7 +1151,7 @@ FT_TEST(test_game_experience_table_cross_assignment_deadlock_free,
     int iterations;
     int index;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     iterations = 128;
     left_failure_flag = -1;
     right_failure_flag = -1;
@@ -1165,36 +1165,36 @@ FT_TEST(test_game_experience_table_cross_assignment_deadlock_free,
     right_levels[2] = 190;
     right_levels[3] = 400;
     right_levels[4] = 820;
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_table.set_levels(left_levels, 5));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_table.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_table.set_levels(right_levels, 5));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_table.set_levels(left_levels, 5));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_table.set_levels(right_levels, 5));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_table.get_error());
     left_thread = ft_thread(run_experience_assignment_task, &left_table,
             &right_table, iterations, &left_failure_flag);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_thread.get_error());
     right_thread = ft_thread(run_experience_assignment_task, &right_table,
             &left_table, iterations, &right_failure_flag);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_thread.get_error());
     left_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_thread.get_error());
     right_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_thread.get_error());
     FT_ASSERT_EQ(0, left_failure_flag);
     FT_ASSERT_EQ(0, right_failure_flag);
     FT_ASSERT_EQ(left_table.get_count(), right_table.get_count());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_table.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_table.get_error());
     index = 0;
     while (index < left_table.get_count())
     {
         FT_ASSERT_EQ(left_table.get_value(index), right_table.get_value(index));
-        FT_ASSERT_EQ(FT_ER_SUCCESSS, left_table.get_error());
-        FT_ASSERT_EQ(FT_ER_SUCCESSS, right_table.get_error());
+        FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_table.get_error());
+        FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_table.get_error());
         index++;
     }
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_table.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_table.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -1220,40 +1220,40 @@ FT_TEST(test_game_reputation_concurrent_rep_updates,
     total_failure_two = -1;
     current_failure_one = -1;
     current_failure_two = -1;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     reputation.set_total_rep(0);
     reputation.set_current_rep(0);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, reputation.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, reputation.get_error());
     total_thread_one = ft_thread(run_reputation_add_total_task, &reputation,
             total_iterations, &total_failure_one);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, total_thread_one.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, total_thread_one.get_error());
     total_thread_two = ft_thread(run_reputation_add_total_task, &reputation,
             total_iterations, &total_failure_two);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, total_thread_two.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, total_thread_two.get_error());
     current_thread_one = ft_thread(run_reputation_add_current_task, &reputation,
             current_iterations, &current_failure_one);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, current_thread_one.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, current_thread_one.get_error());
     current_thread_two = ft_thread(run_reputation_add_current_task, &reputation,
             current_iterations, &current_failure_two);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, current_thread_two.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, current_thread_two.get_error());
     total_thread_one.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, total_thread_one.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, total_thread_one.get_error());
     total_thread_two.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, total_thread_two.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, total_thread_two.get_error());
     current_thread_one.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, current_thread_one.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, current_thread_one.get_error());
     current_thread_two.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, current_thread_two.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, current_thread_two.get_error());
     FT_ASSERT_EQ(0, total_failure_one);
     FT_ASSERT_EQ(0, total_failure_two);
     FT_ASSERT_EQ(0, current_failure_one);
     FT_ASSERT_EQ(0, current_failure_two);
     expected_total = (total_iterations * 2) + (current_iterations * 2);
     FT_ASSERT_EQ(expected_total, reputation.get_total_rep());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, reputation.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, reputation.get_error());
     FT_ASSERT_EQ(current_iterations * 2, reputation.get_current_rep());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, reputation.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, reputation.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -1269,7 +1269,7 @@ FT_TEST(test_game_reputation_cross_assignment_deadlock_free,
     int right_failure_flag;
 
     iterations = 256;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     left_failure_flag = -1;
     right_failure_flag = -1;
     left_reputation.set_total_rep(100);
@@ -1278,33 +1278,33 @@ FT_TEST(test_game_reputation_cross_assignment_deadlock_free,
     left_reputation.set_milestone(2, 20);
     left_reputation.set_rep(5, 500);
     left_reputation.set_rep(6, 600);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_reputation.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_reputation.get_error());
     right_reputation.set_total_rep(200);
     right_reputation.set_current_rep(20);
     right_reputation.set_milestone(3, 30);
     right_reputation.set_milestone(4, 40);
     right_reputation.set_rep(7, 700);
     right_reputation.set_rep(8, 800);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_reputation.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_reputation.get_error());
     left_thread = ft_thread(run_reputation_assignment_task, &left_reputation,
             &right_reputation, iterations, &left_failure_flag);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_thread.get_error());
     right_thread = ft_thread(run_reputation_assignment_task, &right_reputation,
             &left_reputation, iterations, &right_failure_flag);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_thread.get_error());
     left_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_thread.get_error());
     right_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_thread.get_error());
     FT_ASSERT_EQ(0, left_failure_flag);
     FT_ASSERT_EQ(0, right_failure_flag);
     FT_ASSERT_EQ(left_reputation.get_total_rep(), right_reputation.get_total_rep());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_reputation.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_reputation.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_reputation.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_reputation.get_error());
     FT_ASSERT_EQ(left_reputation.get_current_rep(),
             right_reputation.get_current_rep());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, left_reputation.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, right_reputation.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, left_reputation.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_reputation.get_error());
     int milestone_keys[4];
     int rep_keys[4];
     int index;
@@ -1325,7 +1325,7 @@ FT_TEST(test_game_reputation_cross_assignment_deadlock_free,
         right_value = right_reputation.get_milestone(milestone_keys[index]);
         right_error = right_reputation.get_error();
         FT_ASSERT_EQ(left_error, right_error);
-        if (left_error == FT_ER_SUCCESSS)
+        if (left_error == FT_ERR_SUCCESSS)
             FT_ASSERT_EQ(left_value, right_value);
         index++;
     }
@@ -1341,11 +1341,11 @@ FT_TEST(test_game_reputation_cross_assignment_deadlock_free,
         right_value = right_reputation.get_rep(rep_keys[index]);
         right_error = right_reputation.get_error();
         FT_ASSERT_EQ(left_error, right_error);
-        if (left_error == FT_ER_SUCCESSS)
+        if (left_error == FT_ERR_SUCCESSS)
             FT_ASSERT_EQ(left_value, right_value);
         index++;
     }
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -1363,29 +1363,29 @@ FT_TEST(test_game_reputation_concurrent_milestone_updates,
     iterations = 64;
     failure_one = -1;
     failure_two = -1;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     thread_one = ft_thread(run_reputation_set_milestones_task, &reputation, 0,
             iterations, &failure_one);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_one.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_one.get_error());
     thread_two = ft_thread(run_reputation_set_milestones_task, &reputation, 1000,
             iterations, &failure_two);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_two.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_two.get_error());
     thread_one.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_one.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_one.get_error());
     thread_two.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, thread_two.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, thread_two.get_error());
     FT_ASSERT_EQ(0, failure_one);
     FT_ASSERT_EQ(0, failure_two);
     index = 0;
     while (index < iterations)
     {
         FT_ASSERT_EQ(index, reputation.get_milestone(index));
-        FT_ASSERT_EQ(FT_ER_SUCCESSS, reputation.get_error());
+        FT_ASSERT_EQ(FT_ERR_SUCCESSS, reputation.get_error());
         FT_ASSERT_EQ(index, reputation.get_milestone(1000 + index));
-        FT_ASSERT_EQ(FT_ER_SUCCESSS, reputation.get_error());
+        FT_ASSERT_EQ(FT_ERR_SUCCESSS, reputation.get_error());
         index++;
     }
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -1413,9 +1413,9 @@ FT_TEST(test_game_quest_concurrent_operations,
     reward_failure = -1;
     text_failure = -1;
     copy_failure = -1;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     quest.set_phases(phase_limit);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, quest.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, quest.get_error());
     reward_one = ft_sharedptr<ft_item>(new ft_item());
     reward_two = ft_sharedptr<ft_item>(new ft_item());
     FT_ASSERT(reward_one.get() != ft_nullptr);
@@ -1424,31 +1424,31 @@ FT_TEST(test_game_quest_concurrent_operations,
     reward_two->set_item_id(12);
     phase_thread = ft_thread(run_quest_phase_task, &quest, iterations,
             phase_limit, &phase_failure);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, phase_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, phase_thread.get_error());
     reward_thread = ft_thread(run_quest_reward_task, &quest, reward_one,
             reward_two, iterations, &reward_failure);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, reward_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, reward_thread.get_error());
     text_thread = ft_thread(run_quest_text_task, &quest, iterations,
             &text_failure);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, text_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, text_thread.get_error());
     copy_thread = ft_thread(run_quest_copy_task, &quest, &mirror,
             iterations, &copy_failure);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, copy_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, copy_thread.get_error());
     phase_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, phase_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, phase_thread.get_error());
     reward_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, reward_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, reward_thread.get_error());
     text_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, text_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, text_thread.get_error());
     copy_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, copy_thread.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, copy_thread.get_error());
     FT_ASSERT_EQ(0, phase_failure);
     FT_ASSERT_EQ(0, reward_failure);
     FT_ASSERT_EQ(0, text_failure);
     FT_ASSERT_EQ(0, copy_failure);
     FT_ASSERT(quest.get_phases() >= 0);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, quest.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, quest.get_error());
     FT_ASSERT_EQ(mirror.get_error(), quest.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }

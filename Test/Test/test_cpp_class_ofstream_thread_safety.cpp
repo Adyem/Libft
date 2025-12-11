@@ -27,7 +27,7 @@ FT_TEST(test_ft_ofstream_concurrent_writes_are_serialized,
     worker_failed.store(false);
 
     FT_ASSERT_EQ(0, stream.open(filename));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, stream.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, stream.get_error());
 
     worker_thread = std::thread([&stream, &start_flag, &worker_done, &worker_failed]() {
         unsigned int iteration_local;
@@ -70,13 +70,13 @@ FT_TEST(test_ft_ofstream_concurrent_writes_are_serialized,
 
     FT_ASSERT_EQ(false, worker_failed.load());
     FT_ASSERT_EQ(200u, iteration);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, stream.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, stream.get_error());
 
     stream.close();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, stream.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, stream.get_error());
 
     ft_file reader(filename, O_RDONLY);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, reader.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, reader.get_error());
 
     char file_contents[401];
     ssize_t read_result;

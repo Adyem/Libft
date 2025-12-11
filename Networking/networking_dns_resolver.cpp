@@ -1,7 +1,7 @@
 #include "networking.hpp"
 #include "../Errno/errno.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../Template/map.hpp"
 #include "../Template/vector.hpp"
 #include "../PThread/mutex.hpp"
@@ -72,36 +72,36 @@ static bool networking_dns_append_literal(ft_string &target, const char *literal
     if (value == ft_nullptr)
         value = "";
     target.append(value);
-    if (target.get_error() != FT_ER_SUCCESSS)
+    if (target.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = target.get_error();
         return (false);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 
 static bool networking_dns_append_string(ft_string &target, const ft_string &value) noexcept
 {
     target.append(value);
-    if (target.get_error() != FT_ER_SUCCESSS)
+    if (target.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = target.get_error();
         return (false);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 
 static bool networking_dns_append_separator(ft_string &target) noexcept
 {
     target.append('|');
-    if (target.get_error() != FT_ER_SUCCESSS)
+    if (target.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = target.get_error();
         return (false);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 
@@ -112,13 +112,13 @@ static bool networking_dns_copy_addresses(const ft_vector<networking_resolved_ad
     size_t  count;
 
     destination.clear();
-    if (destination.get_error() != FT_ER_SUCCESSS)
+    if (destination.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = destination.get_error();
         return (false);
     }
     count = source.size();
-    if (source.get_error() != FT_ER_SUCCESSS)
+    if (source.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = source.get_error();
         return (false);
@@ -127,14 +127,14 @@ static bool networking_dns_copy_addresses(const ft_vector<networking_resolved_ad
     while (index < count)
     {
         destination.push_back(source[index]);
-        if (destination.get_error() != FT_ER_SUCCESSS)
+        if (destination.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = destination.get_error();
             return (false);
         }
         index++;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 
@@ -250,7 +250,7 @@ bool networking_dns_resolve(const char *host, const char *service,
     bool        entry_valid;
 
     out_addresses.clear();
-    if (out_addresses.get_error() != FT_ER_SUCCESSS)
+    if (out_addresses.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = out_addresses.get_error();
         return (false);
@@ -261,7 +261,7 @@ bool networking_dns_resolve(const char *host, const char *service,
         return (false);
     }
     cache_key = host;
-    if (cache_key.get_error() != FT_ER_SUCCESSS)
+    if (cache_key.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = cache_key.get_error();
         return (false);
@@ -276,7 +276,7 @@ bool networking_dns_resolve(const char *host, const char *service,
     if (!networking_dns_append_separator(cache_key))
         return (false);
     number_string = ft_to_string(static_cast<long>(family));
-    if (number_string.get_error() != FT_ER_SUCCESSS)
+    if (number_string.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = number_string.get_error();
         return (false);
@@ -286,7 +286,7 @@ bool networking_dns_resolve(const char *host, const char *service,
     if (!networking_dns_append_separator(cache_key))
         return (false);
     number_string = ft_to_string(static_cast<long>(socktype));
-    if (number_string.get_error() != FT_ER_SUCCESSS)
+    if (number_string.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = number_string.get_error();
         return (false);
@@ -296,7 +296,7 @@ bool networking_dns_resolve(const char *host, const char *service,
     if (!networking_dns_append_separator(cache_key))
         return (false);
     number_string = ft_to_string(static_cast<long>(protocol));
-    if (number_string.get_error() != FT_ER_SUCCESSS)
+    if (number_string.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = number_string.get_error();
         return (false);
@@ -306,7 +306,7 @@ bool networking_dns_resolve(const char *host, const char *service,
     if (!networking_dns_append_separator(cache_key))
         return (false);
     number_string = ft_to_string(static_cast<long>(flags));
-    if (number_string.get_error() != FT_ER_SUCCESSS)
+    if (number_string.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = number_string.get_error();
         return (false);
@@ -315,13 +315,13 @@ bool networking_dns_resolve(const char *host, const char *service,
         return (false);
     lookup_start_ms = time_now_ms();
     lookup_start_valid = true;
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
     {
         lookup_start_valid = false;
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
     }
     cache_lock = ft_unique_lock<pt_mutex>(g_networking_dns_cache_mutex);
-    if (cache_lock.get_error() != FT_ER_SUCCESSS)
+    if (cache_lock.get_error() != FT_ERR_SUCCESSS)
         return (false);
     cache_entry = g_networking_dns_cache.find(cache_key);
     if (cache_entry != g_networking_dns_cache.end())
@@ -340,7 +340,7 @@ bool networking_dns_resolve(const char *host, const char *service,
                 return (false);
             }
             cache_lock.unlock();
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             return (true);
         }
         g_networking_dns_cache.remove(cache_key);
@@ -379,7 +379,7 @@ bool networking_dns_resolve(const char *host, const char *service,
             ft_memcpy(&resolved.address, current->ai_addr, current->ai_addrlen);
             resolved.length = static_cast<socklen_t>(current->ai_addrlen);
             out_addresses.push_back(resolved);
-            if (out_addresses.get_error() != FT_ER_SUCCESSS)
+            if (out_addresses.get_error() != FT_ERR_SUCCESSS)
             {
                 freeaddrinfo(results);
                 ft_errno = out_addresses.get_error();
@@ -392,7 +392,7 @@ bool networking_dns_resolve(const char *host, const char *service,
     size_t result_count;
 
     result_count = out_addresses.size();
-    if (out_addresses.get_error() != FT_ER_SUCCESSS)
+    if (out_addresses.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = out_addresses.get_error();
         return (false);
@@ -407,10 +407,10 @@ bool networking_dns_resolve(const char *host, const char *service,
 
     cache_record_ms = time_now_ms();
     cache_record_valid = true;
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
     {
         cache_record_valid = false;
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
     }
     if (cache_record_valid)
     {
@@ -426,7 +426,7 @@ bool networking_dns_resolve(const char *host, const char *service,
         {
             ft_unique_lock<pt_mutex> update_lock(g_networking_dns_cache_mutex);
 
-            if (update_lock.get_error() == FT_ER_SUCCESSS)
+            if (update_lock.get_error() == FT_ERR_SUCCESSS)
             {
                 g_networking_dns_cache.remove(cache_key);
                 g_networking_dns_cache.insert(cache_key, ft_move(cache_value));
@@ -434,7 +434,7 @@ bool networking_dns_resolve(const char *host, const char *service,
             }
         }
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 
@@ -448,7 +448,7 @@ bool networking_dns_resolve_first(const char *host, const char *service,
     if (!networking_dns_resolve(host, service, family, socktype, protocol, flags, results))
         return (false);
     count = results.size();
-    if (results.get_error() != FT_ER_SUCCESSS)
+    if (results.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = results.get_error();
         return (false);
@@ -459,12 +459,12 @@ bool networking_dns_resolve_first(const char *host, const char *service,
         return (false);
     }
     out_address = results[0];
-    if (results.get_error() != FT_ER_SUCCESSS)
+    if (results.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = results.get_error();
         return (false);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 
@@ -472,9 +472,9 @@ void networking_dns_clear_cache(void) noexcept
 {
     ft_unique_lock<pt_mutex> cache_lock(g_networking_dns_cache_mutex);
 
-    if (cache_lock.get_error() != FT_ER_SUCCESSS)
+    if (cache_lock.get_error() != FT_ERR_SUCCESSS)
         return ;
     g_networking_dns_cache.clear();
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }

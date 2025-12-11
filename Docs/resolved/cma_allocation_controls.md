@@ -51,7 +51,7 @@ void    inject_failure_without_lock(ft_size_t request_size)
 
     cma_set_thread_safety(false);
     cma_set_alloc_limit(request_size - 1);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     allocation = cma_malloc(request_size);
     /* allocation is ft_nullptr and ft_errno is FT_ERR_NO_MEMORY */
     cma_set_thread_safety(true);

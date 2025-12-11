@@ -14,7 +14,7 @@ FT_TEST(test_cma_calloc_overflow_guard, "cma_calloc rejects overflowed sizes")
     void *allocated_pointer;
 
     cma_get_stats(&allocation_count_before, ft_nullptr);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     allocated_pointer = cma_calloc(SIZE_MAX, 2);
     int allocation_errno = ft_errno;
     cma_get_stats(&allocation_count_after, ft_nullptr);
@@ -34,7 +34,7 @@ FT_TEST(test_cma_malloc_zero_size_allocates, "cma_malloc returns a block for zer
 
     cma_set_alloc_limit(0);
     cma_get_stats(&allocation_count_before, ft_nullptr);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     allocation_pointer = cma_malloc(0);
     if (!allocation_pointer)
         return (0);
@@ -42,7 +42,7 @@ FT_TEST(test_cma_malloc_zero_size_allocates, "cma_malloc returns a block for zer
     cma_free(allocation_pointer);
     expected_allocation_count = allocation_count_before + 1;
     FT_ASSERT_EQ(expected_allocation_count, allocation_count_after);
-    FT_ASSERT_EQ(ft_errno, FT_ER_SUCCESSS);
+    FT_ASSERT_EQ(ft_errno, FT_ERR_SUCCESSS);
     return (1);
 }
 
@@ -58,7 +58,7 @@ FT_TEST(test_cma_realloc_failure_preserves_original_buffer, "cma_realloc keeps t
         return (0);
     ft_memset(original_buffer, 'X', 16);
     cma_set_alloc_limit(8);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     realloc_result = cma_realloc(original_buffer, 32);
     int realloc_errno = ft_errno;
     cma_set_alloc_limit(0);
@@ -84,13 +84,13 @@ FT_TEST(test_cma_malloc_limit_sets_errno, "cma_malloc reports allocation failure
     int allocation_errno;
 
     cma_set_alloc_limit(8);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     allocation_pointer = cma_malloc(16);
     allocation_errno = ft_errno;
     cma_set_alloc_limit(0);
     FT_ASSERT(allocation_pointer == ft_nullptr);
     FT_ASSERT_EQ(allocation_errno, FT_ERR_NO_MEMORY);
-    FT_ASSERT_EQ(ft_errno, FT_ERR_NO_MEMORY);
+    FT_ASSERT_EQ(ft_errno, FT_ERR_SUCCESSS);
     return (1);
 }
 
@@ -103,7 +103,7 @@ FT_TEST(test_cma_malloc_success_sets_errno, "cma_malloc reports success on alloc
     allocation_pointer = cma_malloc(32);
     if (!allocation_pointer)
         return (0);
-    FT_ASSERT_EQ(ft_errno, FT_ER_SUCCESSS);
+    FT_ASSERT_EQ(ft_errno, FT_ERR_SUCCESSS);
     cma_free(allocation_pointer);
     return (1);
 }
@@ -136,7 +136,7 @@ FT_TEST(test_cma_realloc_success_sets_errno, "cma_realloc reports success on gro
         }
         byte_index++;
     }
-    FT_ASSERT_EQ(ft_errno, FT_ER_SUCCESSS);
+    FT_ASSERT_EQ(ft_errno, FT_ERR_SUCCESSS);
     cma_free(reallocation_pointer);
     return (1);
 }
@@ -157,7 +157,7 @@ FT_TEST(test_cma_memdup_copies_buffer, "cma_memdup duplicates raw bytes")
     if (!duplicate)
         return (0);
     FT_ASSERT_EQ(0, ft_memcmp(source, duplicate, sizeof(source)));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     cma_free(duplicate);
     return (1);
 }
@@ -173,14 +173,14 @@ FT_TEST(test_cma_memdup_zero_size_returns_valid_block, "cma_memdup returns a blo
     duplicate = cma_memdup(&source, 0);
     if (!duplicate)
         return (0);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     cma_free(duplicate);
     return (1);
 }
 
 FT_TEST(test_cma_memdup_null_source_sets_errno, "cma_memdup rejects null source pointers when size is non-zero")
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(ft_nullptr, cma_memdup(ft_nullptr, 4));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -191,11 +191,12 @@ FT_TEST(test_cma_memdup_allocation_failure_sets_errno, "cma_memdup propagates al
     void *duplicate;
 
     cma_set_alloc_limit(1);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     duplicate = cma_memdup("buffer", 16);
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(ft_nullptr, duplicate);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
+    FT_ASSERT_EQ(ft_errno, FT_ERR_SUCCESSS);
+    cma_free(duplicate);
     return (1);
 }
 

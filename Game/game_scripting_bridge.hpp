@@ -7,7 +7,7 @@
 #include "../Template/map.hpp"
 #include "../Template/vector.hpp"
 #include "../Template/shared_ptr.hpp"
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../PThread/mutex.hpp"
 
 class ft_game_script_context

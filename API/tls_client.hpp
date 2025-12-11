@@ -2,9 +2,8 @@
 #define API_TLS_CLIENT_HPP
 
 #include "../JSon/json.hpp"
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../CPP_class/class_nullptr.hpp"
-#include "../Errno/errno.hpp"
 #include "../PThread/thread.hpp"
 #include "../PThread/mutex.hpp"
 #include <atomic>
@@ -53,12 +52,14 @@ class api_tls_client
         ~api_tls_client();
         bool is_valid() const;
 
-        char *request(const char *method, const char *path, json_group *payload = ft_nullptr,
+        char *request(const char *method, const char *path,
+                json_group *payload = ft_nullptr,
                       const char *headers = ft_nullptr, int *status = ft_nullptr);
 
         json_group *request_json(const char *method, const char *path,
                                  json_group *payload = ft_nullptr,
-                                 const char *headers = ft_nullptr, int *status = ft_nullptr);
+                                 const char *headers = ft_nullptr,
+                                 int *status = ft_nullptr);
 
         bool request_async(const char *method, const char *path,
                            json_group *payload = ft_nullptr,

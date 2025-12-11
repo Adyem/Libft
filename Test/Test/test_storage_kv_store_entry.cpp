@@ -22,26 +22,26 @@ FT_TEST(test_kv_store_entry_defaults_without_expiration,
     ft_errno = FT_ERR_ALREADY_EXISTS;
     FT_ASSERT_EQ(0, entry.copy_value(value_copy));
     FT_ASSERT(value_copy.empty());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, entry.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, entry.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
 
     FT_ASSERT_EQ(0, entry.has_expiration(has_expiration));
     FT_ASSERT_EQ(false, has_expiration);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, entry.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, entry.get_error());
 
     FT_ASSERT_EQ(0, entry.get_expiration(expiration_timestamp));
     FT_ASSERT_EQ(0, expiration_timestamp);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, entry.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, entry.get_error());
 
     FT_ASSERT_EQ(0, entry.get_value_pointer(&value_pointer));
     FT_ASSERT(value_pointer != ft_nullptr);
     FT_ASSERT(*value_pointer == '\0');
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, entry.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, entry.get_error());
 
     FT_ASSERT_EQ(0, entry.is_expired(42, expired));
     FT_ASSERT_EQ(false, expired);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, entry.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, entry.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -55,26 +55,26 @@ FT_TEST(test_kv_store_entry_set_value_validates_input,
     value_pointer = ft_nullptr;
 
     FT_ASSERT_EQ(0, entry.set_value("initial"));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, entry.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, entry.get_error());
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(-1, entry.set_value(static_cast<const char *>(ft_nullptr)));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, entry.get_error());
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
 
     FT_ASSERT_EQ(0, entry.copy_value(copied_value));
     FT_ASSERT(copied_value == "initial");
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, entry.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, entry.get_error());
 
     ft_errno = FT_ERR_CONFIGURATION;
     FT_ASSERT_EQ(0, entry.set_value(ft_string("updated")));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, entry.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, entry.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
 
     FT_ASSERT_EQ(0, entry.get_value_pointer(&value_pointer));
     FT_ASSERT(value_pointer != ft_nullptr);
     FT_ASSERT(ft_strcmp(value_pointer, "updated") == 0);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, entry.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, entry.get_error());
     return (1);
 }
 
@@ -92,8 +92,8 @@ FT_TEST(test_kv_store_entry_expiration_controls,
 
     ft_errno = FT_ERR_ALREADY_EXISTS;
     FT_ASSERT_EQ(0, entry.configure_expiration(true, 120));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, entry.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, entry.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
 
     FT_ASSERT_EQ(0, entry.has_expiration(has_expiration));
     FT_ASSERT_EQ(true, has_expiration);
@@ -103,17 +103,17 @@ FT_TEST(test_kv_store_entry_expiration_controls,
     ft_errno = FT_ERR_TERMINATED;
     FT_ASSERT_EQ(0, entry.is_expired(60, expired));
     FT_ASSERT_EQ(false, expired);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, entry.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, entry.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
 
     ft_errno = FT_ERR_CONFIGURATION;
     FT_ASSERT_EQ(0, entry.is_expired(180, expired));
     FT_ASSERT_EQ(true, expired);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, entry.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, entry.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
 
     expired = true;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(-1, entry.is_expired(-5, expired));
     FT_ASSERT_EQ(false, expired);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, entry.get_error());
@@ -121,13 +121,13 @@ FT_TEST(test_kv_store_entry_expiration_controls,
 
     ft_errno = FT_ERR_ALREADY_EXISTS;
     FT_ASSERT_EQ(0, entry.configure_expiration(false, 0));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, entry.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, entry.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
 
     expired = true;
     FT_ASSERT_EQ(0, entry.is_expired(300, expired));
     FT_ASSERT_EQ(false, expired);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, entry.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, entry.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }

@@ -19,20 +19,20 @@ FT_TEST(test_behavior_table_move_semantics, "move constructor and assignment tra
     ft_behavior_table moved;
     ft_behavior_table reassigned;
 
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, register_profile(source, 20, 0.7, 0.3));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.fetch_profile(20, fetched));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, register_profile(source, 20, 0.7, 0.3));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source.fetch_profile(20, fetched));
     FT_ASSERT_EQ(20, fetched.get_profile_id());
 
     moved = ft_behavior_table(ft_move(source));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.fetch_profile(20, fetched));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, moved.fetch_profile(20, fetched));
     FT_ASSERT_EQ(true, source.get_profiles().empty());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source.get_error());
 
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, register_profile(reassigned, 25, 0.4, 0.6));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, register_profile(reassigned, 25, 0.4, 0.6));
     reassigned = ft_move(moved);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, reassigned.fetch_profile(20, fetched));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, reassigned.fetch_profile(20, fetched));
     FT_ASSERT_EQ(true, moved.get_profiles().empty());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, moved.get_error());
     return (1);
 }
 
@@ -42,16 +42,16 @@ FT_TEST(test_behavior_table_copy_constructor_reset_errno,
     ft_behavior_table source;
     ft_behavior_profile fetched;
 
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, register_profile(source, 30, 0.8, 0.2));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, register_profile(source, 30, 0.8, 0.2));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, source.fetch_profile(99, fetched));
 
     ft_errno = FT_ERR_ALREADY_INITIALIZED;
     ft_behavior_table copy(source);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, copy.fetch_profile(30, fetched));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, copy.fetch_profile(30, fetched));
     FT_ASSERT_EQ(30, fetched.get_profile_id());
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, copy.get_error());
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, source.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -62,17 +62,17 @@ FT_TEST(test_behavior_table_copy_assignment_reset_errno,
     ft_behavior_table destination;
     ft_behavior_profile fetched;
 
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, register_profile(source, 44, 0.25, 0.75));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, register_profile(destination, 50, 0.6, 0.4));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, register_profile(source, 44, 0.25, 0.75));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, register_profile(destination, 50, 0.6, 0.4));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, source.fetch_profile(77, fetched));
 
     ft_errno = FT_ERR_CRYPTO_INVALID_PADDING;
     destination = source;
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.fetch_profile(44, fetched));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination.fetch_profile(44, fetched));
     FT_ASSERT_EQ(44, fetched.get_profile_id());
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, destination.fetch_profile(50, fetched));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, destination.get_error());
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, source.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }

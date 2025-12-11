@@ -15,7 +15,7 @@
 #include "CPP_class/class_istream.hpp"
 #include "CPP_class/class_istringstream.hpp"
 #include "CPP_class/class_nullptr.hpp"
-#include "CPP_class/class_string_class.hpp"
+#include "CPP_class/class_string.hpp"
 #include "CPP_class/class_stringbuf.hpp"
 #include "Compression/compression.hpp"
 #include "Config/config.hpp"

@@ -47,9 +47,9 @@ FT_TEST(test_time_monotonic_point_lock_cycle_resets_errno,
     lock_acquired = false;
     FT_ASSERT_EQ(0, time_monotonic_point_lock(&time_point, &lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     time_monotonic_point_unlock(&time_point, lock_acquired);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     time_monotonic_point_teardown_thread_safety(&time_point);
     return (1);
 }
@@ -80,9 +80,9 @@ FT_TEST(test_time_duration_lock_cycle_resets_errno,
     lock_acquired = false;
     FT_ASSERT_EQ(0, time_duration_ms_lock(&duration, &lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     time_duration_ms_unlock(&duration, lock_acquired);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     time_duration_ms_teardown_thread_safety(&duration);
     return (1);
 }
@@ -113,9 +113,9 @@ FT_TEST(test_time_info_lock_cycle_resets_errno,
     ft_errno = FT_ERR_INVALID_STATE;
     FT_ASSERT_EQ(0, time_info_lock(&info, &lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     time_info_unlock(&info, lock_acquired);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     time_info_teardown_thread_safety(&info);
     return (1);
 }

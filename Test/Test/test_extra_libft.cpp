@@ -4,7 +4,7 @@
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../System_utils/system_utils.hpp"
 #include "../../Time/time.hpp"
-#include "../../CPP_class/class_string_class.hpp"
+#include "../../CPP_class/class_string.hpp"
 #include "../../CMA/CMA.hpp"
 #include "../../Errno/errno.hpp"
 #include <cstring>
@@ -12,7 +12,7 @@
 
 int test_strlen_size_t_null(void)
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (ft_strlen_size_t(ft_nullptr) != 0)
     {
         return (0);

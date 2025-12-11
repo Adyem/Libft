@@ -25,7 +25,7 @@ void ft_nullptr_t::set_error(int error_code) const noexcept
 
 void ft_nullptr_t::restore_errno(int entry_errno, int operation_errno) noexcept
 {
-    if (operation_errno != FT_ER_SUCCESSS)
+    if (operation_errno != FT_ERR_SUCCESSS)
     {
         ft_errno = operation_errno;
         return ;
@@ -35,14 +35,14 @@ void ft_nullptr_t::restore_errno(int entry_errno, int operation_errno) noexcept
 }
 
 ft_nullptr_t::ft_nullptr_t() noexcept
-    : _error_code(FT_ER_SUCCESSS)
+    : _error_code(FT_ERR_SUCCESSS)
 {
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
 ft_nullptr_t::ft_nullptr_t(const ft_nullptr_t &other) noexcept
-    : _error_code(FT_ER_SUCCESSS)
+    : _error_code(FT_ERR_SUCCESSS)
 {
     int entry_errno;
     int other_error;
@@ -72,7 +72,7 @@ ft_nullptr_t &ft_nullptr_t::operator=(const ft_nullptr_t &other) noexcept
 
 ft_nullptr_t::~ft_nullptr_t() noexcept
 {
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 

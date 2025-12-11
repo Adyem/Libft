@@ -58,10 +58,10 @@ class ft_trie
 
 template <typename ValueType>
 ft_trie<ValueType>::ft_trie()
-        : _data(ft_nullptr), _children(), _error_code(FT_ER_SUCCESSS),
-        _last_error(FT_ER_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)
+        : _data(ft_nullptr), _children(), _error_code(FT_ERR_SUCCESSS),
+        _last_error(FT_ERR_SUCCESSS), _state_mutex(ft_nullptr), _thread_safe_enabled(false)
 {
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -82,7 +82,7 @@ ft_trie<ValueType>::~ft_trie()
         cma_free(this->_data);
         this->_data = ft_nullptr;
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -93,7 +93,7 @@ int ft_trie<ValueType>::insert_helper(const char *key, int unset_value, ValueTyp
     const char *key_iterator;
     size_t key_length;
 
-    if (this->_error_code != FT_ER_SUCCESSS)
+    if (this->_error_code != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_error_code);
         return (1);
@@ -104,7 +104,7 @@ int ft_trie<ValueType>::insert_helper(const char *key, int unset_value, ValueTyp
         return (1);
     }
     key_length = ft_strlen_size_t(key);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
     {
         this->set_error(ft_errno);
         return (1);
@@ -157,7 +157,7 @@ int ft_trie<ValueType>::insert_helper(const char *key, int unset_value, ValueTyp
     current_node->_data->_unset_value = unset_value;
     current_node->_data->_key_length = key_length;
     current_node->_data->_value_pointer = value_pointer;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -176,7 +176,7 @@ int ft_trie<ValueType>::insert(const char *key, ValueType *value_pointer, int un
     result = this->insert_helper(key, unset_value, value_pointer);
     this->unlock_internal(lock_acquired);
     if (result == 0)
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -208,13 +208,13 @@ const typename ft_trie<ValueType>::node_value *ft_trie<ValueType>::search(const 
         typename ft_unordered_map<char, ft_trie<ValueType>*>::const_iterator child_iterator(current_node->_children.find(*key_iterator));
         if (child_iterator == current_node->_children.end())
         {
-            this->set_error(FT_ER_SUCCESSS);
+            this->set_error(FT_ERR_SUCCESSS);
             key_found = false;
             break;
         }
         if (child_iterator->second == ft_nullptr)
         {
-            this->set_error(FT_ER_SUCCESSS);
+            this->set_error(FT_ERR_SUCCESSS);
             key_found = false;
             break;
         }
@@ -225,7 +225,7 @@ const typename ft_trie<ValueType>::node_value *ft_trie<ValueType>::search(const 
         result = current_node->_data;
     else
         result = ft_nullptr;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (result);
 }
@@ -247,9 +247,9 @@ void ft_trie<ValueType>::set_error(int error) const
 {
     this->_last_error = error;
     ft_errno = error;
-    if (error == FT_ER_SUCCESSS)
+    if (error == FT_ERR_SUCCESSS)
     {
-        this->_error_code = FT_ER_SUCCESSS;
+        this->_error_code = FT_ERR_SUCCESSS;
         return ;
     }
     this->_error_code = 1;
@@ -260,9 +260,9 @@ template <typename ValueType>
 void ft_trie<ValueType>::set_success_preserve_errno(int entry_errno) const
 {
     (void)entry_errno;
-    this->_last_error = FT_ER_SUCCESSS;
-    this->_error_code = FT_ER_SUCCESSS;
-    ft_errno = FT_ER_SUCCESSS;
+    this->_last_error = FT_ERR_SUCCESSS;
+    this->_error_code = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -274,7 +274,7 @@ int ft_trie<ValueType>::enable_thread_safety()
 
     if (this->_thread_safe_enabled && this->_state_mutex != ft_nullptr)
     {
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
     memory = cma_malloc(sizeof(pt_mutex));
@@ -284,7 +284,7 @@ int ft_trie<ValueType>::enable_thread_safety()
         return (-1);
     }
     state_mutex = new(memory) pt_mutex();
-    if (state_mutex->get_error() != FT_ER_SUCCESSS)
+    if (state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
@@ -313,7 +313,7 @@ int ft_trie<ValueType>::enable_thread_safety()
         }
         ++child_iterator;
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -321,7 +321,7 @@ template <typename ValueType>
 void ft_trie<ValueType>::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -339,7 +339,7 @@ int ft_trie<ValueType>::lock(bool *lock_acquired) const
 {
     int result;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
         const_cast<ft_trie<ValueType> *>(this)->set_error(ft_errno);
@@ -355,12 +355,12 @@ void ft_trie<ValueType>::unlock(bool lock_acquired) const
 {
     int mutex_error;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     this->unlock_internal(lock_acquired);
-    mutex_error = FT_ER_SUCCESSS;
+    mutex_error = FT_ERR_SUCCESSS;
     if (this->_state_mutex != ft_nullptr)
         mutex_error = this->_state_mutex->get_error();
-    if (mutex_error != FT_ER_SUCCESSS)
+    if (mutex_error != FT_ERR_SUCCESSS)
         const_cast<ft_trie<ValueType> *>(this)->set_error(mutex_error);
     else
     {
@@ -376,18 +376,18 @@ int ft_trie<ValueType>::lock_internal(bool *lock_acquired) const
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_state_mutex == ft_nullptr)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     this->_state_mutex->lock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_state_mutex->get_error();
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -397,12 +397,12 @@ void ft_trie<ValueType>::unlock_internal(bool lock_acquired) const
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
         return ;
     this->_state_mutex->unlock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_state_mutex->get_error();
         return ;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 

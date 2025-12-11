@@ -18,7 +18,7 @@ pthread_mutex_t *pt_lock_tracking::get_registry_mutex(void)
 bool pt_lock_tracking::ensure_registry_mutex_initialized(void)
 {
     pt_lock_tracking::get_registry_mutex();
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 
@@ -36,7 +36,7 @@ std::vector<s_pt_thread_lock_info, pt_system_allocator<s_pt_thread_lock_info> > 
         return (ft_nullptr);
     }
     thread_infos_pointer = new(memory_pointer) std::vector<s_pt_thread_lock_info, pt_system_allocator<s_pt_thread_lock_info> >();
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (thread_infos_pointer);
 }
 
@@ -103,7 +103,7 @@ pt_mutex_vector pt_lock_tracking::get_owned_mutexes(pt_thread_id_type thread_ide
         }
         g_registry_mutex_owned = false;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (owned_mutexes);
 }
 
@@ -289,7 +289,7 @@ bool pt_lock_tracking::notify_wait(pt_thread_id_type thread_identifier, pthread_
         ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
         return (false);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
 
@@ -342,7 +342,7 @@ void pt_lock_tracking::notify_acquired(pt_thread_id_type thread_identifier, pthr
         }
         g_registry_mutex_owned = false;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -407,7 +407,7 @@ void pt_lock_tracking::notify_released(pt_thread_id_type thread_identifier, pthr
         }
         g_registry_mutex_owned = false;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -495,6 +495,6 @@ bool pt_lock_tracking::snapshot_waiters(pt_lock_wait_snapshot_vector &snapshot)
         }
         g_registry_mutex_owned = false;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }

@@ -13,7 +13,7 @@ uint32_t ft_random_seed(const char *seed_string)
             hash ^= static_cast<unsigned char>(*seed_string++);
             hash *= 16777619u;
         }
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (hash);
     }
     std::random_device random_device;
@@ -21,6 +21,6 @@ uint32_t ft_random_seed(const char *seed_string)
     uint32_t random_value;
 
     random_value = distribution(random_device);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (random_value);
 }

@@ -6,7 +6,7 @@
 #include "pthread_lock_tracking.hpp"
 
 pt_mutex::pt_mutex()
-    : _owner(0), _lock(false), _error(FT_ER_SUCCESSS), _native_initialized(false),
+    : _owner(0), _lock(false), _error(FT_ERR_SUCCESSS), _native_initialized(false),
     _state_mutex(ft_nullptr)
 {
     ft_bzero(&this->_native_mutex, sizeof(pthread_mutex_t));
@@ -17,7 +17,7 @@ pt_mutex::pt_mutex()
         return ;
     }
     this->_native_initialized = true;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -85,18 +85,18 @@ int pt_mutex::lock_internal(bool *lock_acquired) const
         *lock_acquired = false;
     if (this->_state_mutex == ft_nullptr)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     this->_state_mutex->lock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_state_mutex->get_error();
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -108,7 +108,7 @@ void pt_mutex::unlock_internal(bool lock_acquired) const
         return ;
     entry_errno = ft_errno;
     this->_state_mutex->unlock(THREAD_ID);
-    if (this->_state_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_state_mutex->get_error();
         return ;
@@ -136,7 +136,7 @@ int pt_mutex::lock_state(bool *lock_acquired) const
     if (result != 0)
         const_cast<pt_mutex *>(this)->set_error(ft_errno);
     else
-        const_cast<pt_mutex *>(this)->set_error(FT_ER_SUCCESSS);
+        const_cast<pt_mutex *>(this)->set_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -146,7 +146,7 @@ void pt_mutex::unlock_state(bool lock_acquired) const
 
     entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
-    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
         const_cast<pt_mutex *>(this)->set_error(this->_state_mutex->get_error());
     else
         const_cast<pt_mutex *>(this)->set_error(entry_errno);
@@ -178,7 +178,7 @@ bool pt_mutex::is_owned_by_thread(pthread_t thread_id) const
         return (matches_owner);
     }
     owned_mutexes = pt_lock_tracking::get_owned_mutexes(thread_id);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
     {
         ft_errno = entry_errno;
         return (false);

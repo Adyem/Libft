@@ -6,35 +6,35 @@ FT_TEST(test_islower, "ft_islower")
 {
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(1, ft_islower('a'));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(1, ft_islower('z'));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    ft_errno = FT_ER_SUCCESSS;
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(0, ft_islower('A'));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    ft_errno = FT_ER_SUCCESSS;
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(0, ft_islower('0'));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    ft_errno = FT_ER_SUCCESSS;
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(0, ft_islower(-1));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
 FT_TEST(test_islower_rejects_adjacent_ascii, "ft_islower rejects punctuation and extended ASCII")
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(0, ft_islower('`'));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    ft_errno = FT_ER_SUCCESSS;
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(0, ft_islower('{'));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    ft_errno = FT_ER_SUCCESSS;
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(0, ft_islower(0xE1));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    ft_errno = FT_ER_SUCCESSS;
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(0, ft_islower(0x5F));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }

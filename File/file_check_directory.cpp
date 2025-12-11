@@ -1,5 +1,5 @@
 #include <cstdlib>
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../Errno/errno.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "open_dir.hpp"

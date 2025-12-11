@@ -22,7 +22,7 @@ static int create_pipe(int *read_end, int *write_end)
         return (FT_ERR_INVALID_HANDLE);
     *read_end = descriptors[0];
     *write_end = descriptors[1];
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 static void fill_pipe(int write_end, const char *data)
@@ -78,18 +78,18 @@ FT_TEST(test_ft_file_move_constructor_mutex_is_fresh,
     char character;
     long duration_ms;
 
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, create_pipe(&read_end, &write_end));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, create_pipe(&read_end, &write_end));
     fill_pipe(write_end, "m");
     su_close(write_end);
     source = ft_file(read_end);
     moved = ft_file(ft_move(source));
     lock_acquired.store(false);
     release_lock.store(false);
-    lock_result.store(FT_ER_SUCCESSS);
+    lock_result.store(FT_ERR_SUCCESSS);
     locker_thread = std::thread([&source, &lock_acquired, &release_lock, &lock_result]() {
         lock_result.store(source._mutex.lock(THREAD_ID));
         lock_acquired.store(true);
-        if (lock_result.load() != FT_ER_SUCCESSS)
+        if (lock_result.load() != FT_ERR_SUCCESSS)
             return ;
         while (!release_lock.load())
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -99,10 +99,10 @@ FT_TEST(test_ft_file_move_constructor_mutex_is_fresh,
     duration_ms = measure_read_duration(moved, character);
     release_lock.store(true);
     locker_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, lock_result.load());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, lock_result.load());
     FT_ASSERT(duration_ms < 40);
     FT_ASSERT_EQ('m', character);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, moved.get_error());
     return (1);
 }
 
@@ -116,7 +116,7 @@ FT_TEST(test_ft_file_move_constructor_releases_source_descriptor,
     char character;
     long duration_ms;
 
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, create_pipe(&read_end, &write_end));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, create_pipe(&read_end, &write_end));
     fill_pipe(write_end, "r");
     su_close(write_end);
     source = ft_file(read_end);
@@ -127,7 +127,7 @@ FT_TEST(test_ft_file_move_constructor_releases_source_descriptor,
     FT_ASSERT_EQ(read_end, moved._fd);
     FT_ASSERT(duration_ms < 40);
     FT_ASSERT_EQ('r', character);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, moved.get_error());
     return (1);
 }
 
@@ -147,8 +147,8 @@ FT_TEST(test_ft_file_move_assignment_mutex_is_fresh,
     char character;
     long duration_ms;
 
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, create_pipe(&source_read_end, &source_write_end));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, create_pipe(&target_read_end, &target_write_end));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, create_pipe(&source_read_end, &source_write_end));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, create_pipe(&target_read_end, &target_write_end));
     fill_pipe(source_write_end, "a");
     su_close(source_write_end);
     su_close(target_write_end);
@@ -157,11 +157,11 @@ FT_TEST(test_ft_file_move_assignment_mutex_is_fresh,
     target = ft_move(source);
     lock_acquired.store(false);
     release_lock.store(false);
-    lock_result.store(FT_ER_SUCCESSS);
+    lock_result.store(FT_ERR_SUCCESSS);
     locker_thread = std::thread([&source, &lock_acquired, &release_lock, &lock_result]() {
         lock_result.store(source._mutex.lock(THREAD_ID));
         lock_acquired.store(true);
-        if (lock_result.load() != FT_ER_SUCCESSS)
+        if (lock_result.load() != FT_ERR_SUCCESSS)
             return ;
         while (!release_lock.load())
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -171,10 +171,10 @@ FT_TEST(test_ft_file_move_assignment_mutex_is_fresh,
     duration_ms = measure_read_duration(target, character);
     release_lock.store(true);
     locker_thread.join();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, lock_result.load());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, lock_result.load());
     FT_ASSERT(duration_ms < 40);
     FT_ASSERT_EQ('a', character);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, target.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, target.get_error());
     return (1);
 }
 
@@ -190,8 +190,8 @@ FT_TEST(test_ft_file_move_assignment_resets_source_descriptor,
     char character;
     long duration_ms;
 
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, create_pipe(&source_read_end, &source_write_end));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, create_pipe(&target_read_end, &target_write_end));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, create_pipe(&source_read_end, &source_write_end));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, create_pipe(&target_read_end, &target_write_end));
     fill_pipe(source_write_end, "s");
     su_close(source_write_end);
     su_close(target_write_end);
@@ -204,6 +204,6 @@ FT_TEST(test_ft_file_move_assignment_resets_source_descriptor,
     FT_ASSERT_EQ(source_read_end, target._fd);
     FT_ASSERT(duration_ms < 40);
     FT_ASSERT_EQ('s', character);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, target.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, target.get_error());
     return (1);
 }

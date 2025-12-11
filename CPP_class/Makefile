@@ -18,7 +18,7 @@ SRCS :=  cpp_class_string_constructors.cpp \
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
-HEADERS := class_string_class.hpp \
+HEADERS := class_string.hpp \
           class_nullptr.hpp \
           class_file.hpp \
           class_file_stream.hpp \

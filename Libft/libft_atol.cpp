@@ -12,7 +12,7 @@ long ft_atol(const char *string)
     const unsigned long long negative_limit = static_cast<unsigned long long>(FT_LONG_MAX) + 1ULL;
     bool digit_found = false;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (string == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
@@ -71,7 +71,7 @@ long ft_atol(const char *string)
     }
     if (string[index] != '\0')
         ft_errno = FT_ERR_INVALID_ARGUMENT;
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
     {
         if (sign == -1)
         {

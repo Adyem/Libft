@@ -8,13 +8,13 @@ static ft_string create_string_from_buffer(const char *buffer)
     int result_error;
 
     result_error = result.get_error();
-    if (result_error != FT_ER_SUCCESSS)
+    if (result_error != FT_ERR_SUCCESSS)
     {
         ft_errno = result_error;
     }
     else
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
     }
     return (result);
 }
@@ -97,25 +97,25 @@ static ft_string format_unsigned_long_long(unsigned long long number)
 
 ft_string ft_to_string(long number)
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (format_signed_long(number));
 }
 
 ft_string ft_to_string(unsigned long number)
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (format_unsigned_long(number));
 }
 
 ft_string ft_to_string(unsigned long long number)
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (format_unsigned_long_long(number));
 }
 
 ft_string ft_to_string(double number)
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (format_double_value(number));
 }
 

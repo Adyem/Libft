@@ -5,15 +5,15 @@
 #include "../Errno/errno.hpp"
 
 time_timer::time_timer() noexcept
-    : _duration_ms(0), _start_time(std::chrono::steady_clock::time_point()), _running(false), _error_code(FT_ER_SUCCESSS)
+    : _duration_ms(0), _start_time(std::chrono::steady_clock::time_point()), _running(false), _error_code(FT_ERR_SUCCESSS)
 {
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
 time_timer::~time_timer() noexcept
 {
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -21,11 +21,11 @@ void    time_timer::start(long duration_ms) noexcept
 {
     int final_error;
 
-    final_error = FT_ER_SUCCESSS;
+    final_error = FT_ERR_SUCCESSS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ER_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(guard.get_error());
             final_error = this->_error_code;
@@ -41,7 +41,7 @@ void    time_timer::start(long duration_ms) noexcept
             this->_duration_ms = duration_ms;
             this->_start_time = std::chrono::steady_clock::now();
             this->_running = true;
-            this->set_error(FT_ER_SUCCESSS);
+            this->set_error(FT_ERR_SUCCESSS);
             final_error = this->_error_code;
         }
     }
@@ -55,11 +55,11 @@ long time_timer::update() noexcept
     int final_error;
 
     remaining = -1;
-    final_error = FT_ER_SUCCESSS;
+    final_error = FT_ERR_SUCCESSS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ER_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(guard.get_error());
             final_error = this->_error_code;
@@ -81,14 +81,14 @@ long time_timer::update() noexcept
             if (elapsed >= this->_duration_ms)
             {
                 this->_running = false;
-                this->set_error(FT_ER_SUCCESSS);
+                this->set_error(FT_ERR_SUCCESSS);
                 final_error = this->_error_code;
                 remaining = 0;
             }
             else
             {
                 remaining = this->_duration_ms - elapsed;
-                this->set_error(FT_ER_SUCCESSS);
+                this->set_error(FT_ERR_SUCCESSS);
                 final_error = this->_error_code;
             }
         }
@@ -103,11 +103,11 @@ long time_timer::add_time(long amount_ms) noexcept
     int final_error;
 
     result = -1;
-    final_error = FT_ER_SUCCESSS;
+    final_error = FT_ERR_SUCCESSS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ER_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(guard.get_error());
             final_error = this->_error_code;
@@ -136,14 +136,14 @@ long time_timer::add_time(long amount_ms) noexcept
             if (elapsed >= this->_duration_ms)
             {
                 this->_running = false;
-                this->set_error(FT_ER_SUCCESSS);
+                this->set_error(FT_ERR_SUCCESSS);
                 final_error = this->_error_code;
                 result = 0;
             }
             else
             {
                 result = this->_duration_ms - elapsed;
-                this->set_error(FT_ER_SUCCESSS);
+                this->set_error(FT_ERR_SUCCESSS);
                 final_error = this->_error_code;
             }
         }
@@ -158,11 +158,11 @@ long time_timer::remove_time(long amount_ms) noexcept
     int final_error;
 
     result = -1;
-    final_error = FT_ER_SUCCESSS;
+    final_error = FT_ERR_SUCCESSS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ER_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(guard.get_error());
             final_error = this->_error_code;
@@ -185,7 +185,7 @@ long time_timer::remove_time(long amount_ms) noexcept
             {
                 this->_duration_ms = elapsed;
                 this->_running = false;
-                this->set_error(FT_ER_SUCCESSS);
+                this->set_error(FT_ERR_SUCCESSS);
                 final_error = this->_error_code;
                 result = 0;
             }
@@ -193,7 +193,7 @@ long time_timer::remove_time(long amount_ms) noexcept
             {
                 this->_duration_ms -= amount_ms;
                 result = this->_duration_ms - elapsed;
-                this->set_error(FT_ER_SUCCESSS);
+                this->set_error(FT_ERR_SUCCESSS);
                 final_error = this->_error_code;
             }
         }
@@ -207,12 +207,12 @@ void    time_timer::sleep_remaining() noexcept
     int final_error;
     long remaining;
 
-    final_error = FT_ER_SUCCESSS;
+    final_error = FT_ERR_SUCCESSS;
     remaining = -1;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ER_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(guard.get_error());
             final_error = this->_error_code;
@@ -232,14 +232,14 @@ void    time_timer::sleep_remaining() noexcept
             if (elapsed >= this->_duration_ms)
             {
                 this->_running = false;
-                this->set_error(FT_ER_SUCCESSS);
+                this->set_error(FT_ERR_SUCCESSS);
                 final_error = this->_error_code;
                 remaining = 0;
             }
             else
             {
                 remaining = this->_duration_ms - elapsed;
-                this->set_error(FT_ER_SUCCESSS);
+                this->set_error(FT_ERR_SUCCESSS);
                 final_error = this->_error_code;
             }
         }
@@ -255,12 +255,12 @@ int time_timer::get_error() const noexcept
     int error_code_value;
     int final_error;
 
-    error_code_value = FT_ER_SUCCESSS;
-    final_error = FT_ER_SUCCESSS;
+    error_code_value = FT_ERR_SUCCESSS;
+    final_error = FT_ERR_SUCCESSS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ER_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             const_cast<time_timer *>(this)->set_error(guard.get_error());
             error_code_value = guard.get_error();
@@ -281,12 +281,12 @@ const char  *time_timer::get_error_str() const noexcept
     const char  *error_string;
     int final_error;
 
-    error_string = ft_strerror(FT_ER_SUCCESSS);
-    final_error = FT_ER_SUCCESSS;
+    error_string = ft_strerror(FT_ERR_SUCCESSS);
+    final_error = FT_ERR_SUCCESSS;
     {
         ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-        if (guard.get_error() != FT_ER_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             const_cast<time_timer *>(this)->set_error(guard.get_error());
             error_string = ft_strerror(guard.get_error());

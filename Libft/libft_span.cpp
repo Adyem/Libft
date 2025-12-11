@@ -8,7 +8,7 @@ char *ft_span_dup(const char *buffer, size_t length)
     char *duplicate;
     size_t index;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (buffer == ft_nullptr && length != 0)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
@@ -34,7 +34,7 @@ ft_string ft_span_to_string(const char *buffer, size_t length)
 {
     ft_string result;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (buffer == ft_nullptr && length != 0)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
@@ -42,14 +42,14 @@ ft_string ft_span_to_string(const char *buffer, size_t length)
     }
     if (length == 0)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (result);
     }
     result.assign(buffer, length);
-    if (result.get_error() != FT_ER_SUCCESSS)
+    if (result.get_error() != FT_ERR_SUCCESSS)
     {
         return (ft_string(result.get_error()));
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }

@@ -9,7 +9,7 @@ FT_TEST(test_strrchr_last, "ft_strrchr last occurrence")
 
     ft_errno = FT_ERR_OUT_OF_RANGE;
     FT_ASSERT_EQ(string + 5, ft_strrchr(string, 'a'));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -17,13 +17,13 @@ FT_TEST(test_strrchr_not_found, "ft_strrchr not found")
 {
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(ft_nullptr, ft_strrchr("hello", 'x'));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
 FT_TEST(test_strrchr_null, "ft_strrchr nullptr")
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(ft_nullptr, ft_strrchr(ft_nullptr, 'a'));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -35,7 +35,7 @@ FT_TEST(test_strrchr_terminator, "ft_strrchr terminator")
 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(string + 5, ft_strrchr(string, '\0'));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -51,7 +51,7 @@ FT_TEST(test_strrchr_high_bit, "ft_strrchr locates high-bit character")
     string[5] = '\0';
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(string + 3, ft_strrchr(string, 0xFF));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -59,11 +59,11 @@ FT_TEST(test_strrchr_recovers_after_null_failure, "ft_strrchr clears errno after
 {
     const char *string = "resume";
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(ft_nullptr, ft_strrchr(ft_nullptr, 'e'));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(string + 5, ft_strrchr(string, 'e'));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }

@@ -19,12 +19,12 @@ float ft_random_chi_squared(float degrees_of_freedom)
     {
         ft_unique_lock<pt_mutex> guard(g_random_engine_mutex);
 
-        if (guard.get_error() != FT_ER_SUCCESSS)
+        if (guard.get_error() != FT_ERR_SUCCESSS)
             return (0.0f);
         sample_value = distribution(g_random_engine);
     }
     if (sample_value < 0.0f)
         sample_value = 0.0f;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (sample_value);
 }

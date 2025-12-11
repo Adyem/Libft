@@ -27,7 +27,7 @@ const char *be_getEncryptionKey(void)
             index++;
         }
         key[key_length] = '\0';
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (key);
     }
     int secure_error = ft_errno;
@@ -40,11 +40,11 @@ const char *be_getEncryptionKey(void)
         index++;
     }
     key[key_length] = '\0';
-    if (secure_error != FT_ER_SUCCESSS)
+    if (secure_error != FT_ERR_SUCCESSS)
     {
         ft_errno = secure_error;
         return (key);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (key);
 }

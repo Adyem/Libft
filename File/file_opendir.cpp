@@ -1,5 +1,6 @@
-#include "../Libft/libft.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
+#include "../Errno/errno.hpp"
+#include "../CPP_class/class_nullptr.hpp"
 #include "open_dir.hpp"
 
 file_dir *file_opendir(const char *directory_path)
@@ -18,7 +19,7 @@ file_dirent *file_readdir(file_dir *directory_stream)
     }
     directory_entry = cmp_dir_read(directory_stream);
     if (directory_entry != ft_nullptr)
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
     return (directory_entry);
 }
 
@@ -33,7 +34,7 @@ int file_closedir(file_dir *directory_stream)
     }
     close_result = cmp_dir_close(directory_stream);
     if (close_result == 0)
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
     return (close_result);
 }
 

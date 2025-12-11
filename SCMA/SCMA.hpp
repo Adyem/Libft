@@ -100,7 +100,7 @@ inline scma_handle_accessor<TValue>::scma_handle_accessor(void)
 {
     this->_handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     this->_handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
-    this->_error_code = FT_ER_SUCCESSS;
+    this->_error_code = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -109,7 +109,7 @@ inline scma_handle_accessor<TValue>::scma_handle_accessor(scma_handle handle)
 {
     this->_handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     this->_handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
-    this->_error_code = FT_ER_SUCCESSS;
+    this->_error_code = FT_ERR_SUCCESSS;
     this->bind(handle);
     return ;
 }
@@ -119,7 +119,7 @@ inline scma_handle_accessor<TValue>::scma_handle_accessor(const scma_handle_acce
 {
     this->_handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     this->_handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
-    this->_error_code = FT_ER_SUCCESSS;
+    this->_error_code = FT_ERR_SUCCESSS;
     if (!other.is_bound())
     {
         this->set_error(other._error_code);
@@ -153,7 +153,7 @@ inline scma_handle_accessor<TValue>::scma_handle_accessor(scma_handle_accessor &
 {
     this->_handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     this->_handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
-    this->_error_code = FT_ER_SUCCESSS;
+    this->_error_code = FT_ERR_SUCCESSS;
     if (scma_mutex_lock() != 0)
     {
         this->set_error(ft_errno);
@@ -185,7 +185,7 @@ inline scma_handle_accessor<TValue>::scma_handle_accessor(scma_handle_accessor &
     this->set_error(other._error_code);
     other._handle.index = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
     other._handle.generation = static_cast<ft_size_t>(FT_SYSTEM_SIZE_MAX);
-    other._error_code = FT_ER_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESSS;
     if (scma_mutex_unlock() != 0)
     {
         this->set_error(ft_errno);
@@ -225,7 +225,7 @@ inline int    scma_handle_accessor<TValue>::bind(scma_handle handle)
     else
     {
         this->_handle = handle;
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         bind_result = 1;
     }
     if (scma_mutex_unlock() != 0)
@@ -374,7 +374,7 @@ inline int    scma_handle_accessor<TValue>::read_struct(TValue &destination) con
         this->set_error(ft_errno);
         goto cleanup;
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     read_result = 1;
 
 cleanup:
@@ -426,7 +426,7 @@ inline int    scma_handle_accessor<TValue>::write_struct(const TValue &source) c
         this->set_error(ft_errno);
         goto cleanup;
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     write_result = 1;
 
 cleanup:
@@ -492,7 +492,7 @@ inline int    scma_handle_accessor<TValue>::read_at(TValue &destination, ft_size
         this->set_error(ft_errno);
         goto cleanup;
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     read_result = 1;
 
 cleanup:
@@ -558,7 +558,7 @@ inline int    scma_handle_accessor<TValue>::write_at(const TValue &source, ft_si
         this->set_error(ft_errno);
         goto cleanup;
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     write_result = 1;
 
 cleanup:
@@ -611,7 +611,7 @@ inline ft_size_t    scma_handle_accessor<TValue>::get_count(void) const
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         goto cleanup;
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     element_count = block_size / element_size;
 
 cleanup:
@@ -705,7 +705,7 @@ inline scma_handle_accessor_element_proxy<TValue>::scma_handle_accessor_element_
     this->_parent = parent;
     this->_index = element_index;
     this->_should_write_back = 0;
-    this->_error_code = FT_ER_SUCCESSS;
+    this->_error_code = FT_ERR_SUCCESSS;
     if (!this->_parent)
         return ;
     if (!this->_parent->read_at(this->_value, this->_index))
@@ -715,7 +715,7 @@ inline scma_handle_accessor_element_proxy<TValue>::scma_handle_accessor_element_
         return ;
     }
     this->_should_write_back = 1;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -729,7 +729,7 @@ inline scma_handle_accessor_element_proxy<TValue>::scma_handle_accessor_element_
     this->_error_code = other._error_code;
     other._parent = ft_nullptr;
     other._should_write_back = 0;
-    other._error_code = FT_ER_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -745,7 +745,7 @@ inline scma_handle_accessor_element_proxy<TValue>    &scma_handle_accessor_eleme
     this->_error_code = other._error_code;
     other._parent = ft_nullptr;
     other._should_write_back = 0;
-    other._error_code = FT_ER_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESSS;
     return (*this);
 }
 
@@ -761,7 +761,7 @@ inline scma_handle_accessor_element_proxy<TValue>::~scma_handle_accessor_element
         this->set_error(this->_parent->get_error());
         return ;
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -792,7 +792,7 @@ inline scma_handle_accessor_element_proxy<TValue>    &scma_handle_accessor_eleme
         return (*this);
     }
     this->_should_write_back = 1;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -827,7 +827,7 @@ inline scma_handle_accessor_const_element_proxy<TValue>::scma_handle_accessor_co
 {
     this->_parent = parent;
     this->_index = element_index;
-    this->_error_code = FT_ER_SUCCESSS;
+    this->_error_code = FT_ERR_SUCCESSS;
     if (!this->_parent)
         return ;
     if (!this->_parent->read_at(this->_value, this->_index))
@@ -836,7 +836,7 @@ inline scma_handle_accessor_const_element_proxy<TValue>::scma_handle_accessor_co
         this->_parent = ft_nullptr;
         return ;
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -848,7 +848,7 @@ inline scma_handle_accessor_const_element_proxy<TValue>::scma_handle_accessor_co
     this->_value = other._value;
     this->_error_code = other._error_code;
     other._parent = ft_nullptr;
-    other._error_code = FT_ER_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -862,7 +862,7 @@ inline scma_handle_accessor_const_element_proxy<TValue>    &scma_handle_accessor
     this->_value = other._value;
     this->_error_code = other._error_code;
     other._parent = ft_nullptr;
-    other._error_code = FT_ER_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESSS;
     return (*this);
 }
 

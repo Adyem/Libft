@@ -16,7 +16,7 @@ FT_TEST(test_behavior_table_default_state_success, "default behavior table start
     ft_behavior_table table;
 
     FT_ASSERT_EQ(true, table.get_profiles().empty());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.get_error());
     FT_ASSERT_STR_EQ("Success", table.get_error_str());
     return (1);
 }
@@ -26,8 +26,8 @@ FT_TEST(test_behavior_table_get_error_resets_errno, "get_error clears entry errn
     ft_behavior_table table;
 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -37,7 +37,7 @@ FT_TEST(test_behavior_table_get_error_str_resets_errno, "get_error_str resets ft
 
     ft_errno = FT_ERR_OUT_OF_RANGE;
     FT_ASSERT_STR_EQ("Success", table.get_error_str());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -47,8 +47,8 @@ FT_TEST(test_behavior_table_get_profiles_sets_success, "get_profiles resets tabl
 
     ft_errno = FT_ERR_EMPTY;
     table.get_profiles();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -61,8 +61,8 @@ FT_TEST(test_behavior_table_const_get_profiles_sets_success,
     const_table = &table;
     ft_errno = FT_ERR_FULL;
     const_table->get_profiles();
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, const_table->get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, const_table->get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -76,7 +76,7 @@ FT_TEST(test_behavior_table_set_profiles_replaces_contents, "set_profiles swaps 
     profiles.insert(9, build_profile(9, 0.2, 0.8, 15));
     table.set_profiles(profiles);
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.fetch_profile(5, fetched));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.fetch_profile(9, fetched));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.fetch_profile(9, fetched));
     FT_ASSERT_EQ(9, fetched.get_profile_id());
     return (1);
 }
@@ -89,8 +89,8 @@ FT_TEST(test_behavior_table_set_profiles_resets_errno, "set_profiles resets call
     profiles.insert(3, build_profile(3, 0.3, 0.7, 8));
     ft_errno = FT_ERR_INVALID_OPERATION;
     table.set_profiles(profiles);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.get_error());
     return (1);
 }
 
@@ -100,8 +100,8 @@ FT_TEST(test_behavior_table_register_profile_resets_errno,
     ft_behavior_table table;
 
     ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.register_profile(build_profile(12, 0.9, 0.1, 4)));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.register_profile(build_profile(12, 0.9, 0.1, 4)));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -112,7 +112,8 @@ FT_TEST(test_behavior_table_duplicate_registration_returns_error,
 
     table.register_profile(build_profile(2, 0.4, 0.6, 10));
     ft_errno = FT_ERR_IO;
-    FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, table.register_profile(build_profile(2, 0.4, 0.6, 10)));
+    FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS,
+            table.register_profile(build_profile(2, 0.4, 0.6, 10)));
     FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, ft_errno);
     FT_ASSERT_EQ(FT_ERR_ALREADY_EXISTS, table.get_error());
     return (1);
@@ -126,8 +127,8 @@ FT_TEST(test_behavior_table_fetch_sets_errno_on_success,
 
     table.register_profile(build_profile(6, 0.1, 0.9, 7));
     ft_errno = FT_ERR_INTERNAL;
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.fetch_profile(6, fetched));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.fetch_profile(6, fetched));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     FT_ASSERT_EQ(6, fetched.get_profile_id());
     return (1);
 }
@@ -153,9 +154,9 @@ FT_TEST(test_behavior_table_fetch_returns_copy_isolated,
     ft_behavior_profile second_fetch;
 
     table.register_profile(build_profile(13, 0.5, 0.5, 16));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.fetch_profile(13, fetched));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.fetch_profile(13, fetched));
     fetched.get_actions()[0].set_weight(9.5);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.fetch_profile(13, second_fetch));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.fetch_profile(13, second_fetch));
     FT_ASSERT_DOUBLE_EQ(1.25, second_fetch.get_actions()[0].get_weight());
     return (1);
 }
@@ -194,9 +195,9 @@ FT_TEST(test_behavior_table_copy_constructor_sets_errno_to_success,
     table.fetch_profile(99, fetched);
     ft_errno = FT_ERR_INVALID_STATE;
     copy = ft_behavior_table(table);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, copy.fetch_profile(18, fetched));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, copy.fetch_profile(18, fetched));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, copy.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -212,9 +213,9 @@ FT_TEST(test_behavior_table_copy_assignment_sets_errno_to_success,
     destination.register_profile(build_profile(31, 0.2, 0.8, 40));
     ft_errno = FT_ERR_CONFIGURATION;
     destination = source;
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.fetch_profile(25, fetched));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination.fetch_profile(25, fetched));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, destination.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -229,10 +230,10 @@ FT_TEST(test_behavior_table_move_constructor_sets_errno_success,
     source.fetch_profile(404, fetched);
     ft_errno = FT_ERR_TERMINATED;
     moved = ft_behavior_table(ft_move(source));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.fetch_profile(41, fetched));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, moved.fetch_profile(41, fetched));
     FT_ASSERT_EQ(true, source.get_profiles().empty());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -247,10 +248,10 @@ FT_TEST(test_behavior_table_move_assignment_sets_errno_success,
     destination.register_profile(build_profile(60, 0.9, 0.1, 70));
     ft_errno = FT_ERR_GAME_GENERAL_ERROR;
     destination = ft_move(source);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.fetch_profile(52, fetched));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination.fetch_profile(52, fetched));
     FT_ASSERT_EQ(true, source.get_profiles().empty());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, source.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, source.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -264,9 +265,9 @@ FT_TEST(test_behavior_table_self_copy_assignment_sets_errno_success,
     table.fetch_profile(700, fetched);
     ft_errno = FT_ERR_EMPTY;
     table = table;
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.fetch_profile(73, fetched));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.fetch_profile(73, fetched));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -280,8 +281,8 @@ FT_TEST(test_behavior_table_self_move_assignment_sets_errno_success,
     table.fetch_profile(910, fetched);
     ft_errno = FT_ERR_ALREADY_INITIALIZED;
     table = ft_move(table);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, table.fetch_profile(91, fetched));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, table.fetch_profile(91, fetched));
     FT_ASSERT_EQ(FT_ERR_NOT_FOUND, table.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }

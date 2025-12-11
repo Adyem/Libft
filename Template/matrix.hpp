@@ -64,7 +64,7 @@ ft_matrix<ElementType>::ft_matrix(size_t rows, size_t cols)
     : _data(ft_nullptr),
       _rows(0),
       _cols(0),
-      _error_code(FT_ER_SUCCESSS),
+      _error_code(FT_ERR_SUCCESSS),
       _mutex(ft_nullptr),
       _thread_safe_enabled(false)
 {
@@ -73,7 +73,7 @@ ft_matrix<ElementType>::ft_matrix(size_t rows, size_t cols)
         if (!this->init(rows, cols))
             return ;
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -82,7 +82,7 @@ ft_matrix<ElementType>::~ft_matrix()
 {
     this->clear();
     this->teardown_thread_safety();
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -91,7 +91,7 @@ ft_matrix<ElementType>::ft_matrix(ft_matrix&& other) noexcept
     : _data(ft_nullptr),
       _rows(0),
       _cols(0),
-      _error_code(FT_ER_SUCCESSS),
+      _error_code(FT_ERR_SUCCESSS),
       _mutex(ft_nullptr),
       _thread_safe_enabled(false)
 {
@@ -112,7 +112,7 @@ ft_matrix<ElementType>::ft_matrix(ft_matrix&& other) noexcept
     other._data = ft_nullptr;
     other._rows = 0;
     other._cols = 0;
-    other._error_code = FT_ER_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESSS;
     other.unlock_internal(other_lock_acquired);
     other.teardown_thread_safety();
     other._thread_safe_enabled = false;
@@ -122,7 +122,7 @@ ft_matrix<ElementType>::ft_matrix(ft_matrix&& other) noexcept
             return ;
     }
     this->set_error(this->_error_code);
-    other.set_error(FT_ER_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -157,7 +157,7 @@ ft_matrix<ElementType>& ft_matrix<ElementType>::operator=(ft_matrix&& other) noe
         other._data = ft_nullptr;
         other._rows = 0;
         other._cols = 0;
-        other._error_code = FT_ER_SUCCESSS;
+        other._error_code = FT_ERR_SUCCESSS;
         other.unlock_internal(other_lock_acquired);
         other.teardown_thread_safety();
         other._thread_safe_enabled = false;
@@ -167,15 +167,15 @@ ft_matrix<ElementType>& ft_matrix<ElementType>::operator=(ft_matrix&& other) noe
         {
             if (this->enable_thread_safety() != 0)
             {
-                other.set_error(FT_ER_SUCCESSS);
+                other.set_error(FT_ERR_SUCCESSS);
                 return (*this);
             }
         }
-        other.set_error(FT_ER_SUCCESSS);
+        other.set_error(FT_ERR_SUCCESSS);
         this->set_error(this->_error_code);
         return (*this);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -187,7 +187,7 @@ int ft_matrix<ElementType>::enable_thread_safety()
 
     if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
     {
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
     memory = cma_malloc(sizeof(pt_mutex));
@@ -197,7 +197,7 @@ int ft_matrix<ElementType>::enable_thread_safety()
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ER_SUCCESSS)
+    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
@@ -209,7 +209,7 @@ int ft_matrix<ElementType>::enable_thread_safety()
     }
     this->_mutex = mutex_pointer;
     this->_thread_safe_enabled = true;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -217,7 +217,7 @@ template <typename ElementType>
 void ft_matrix<ElementType>::disable_thread_safety()
 {
     this->teardown_thread_safety();
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -227,7 +227,7 @@ bool ft_matrix<ElementType>::is_thread_safe() const
     bool enabled;
 
     enabled = (this->_thread_safe_enabled && this->_mutex != ft_nullptr);
-    const_cast<ft_matrix<ElementType> *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_matrix<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
     return (enabled);
 }
 
@@ -240,7 +240,7 @@ int ft_matrix<ElementType>::lock(bool *lock_acquired) const
     if (result != 0)
         const_cast<ft_matrix<ElementType> *>(this)->set_error(ft_errno);
     else
-        const_cast<ft_matrix<ElementType> *>(this)->set_error(FT_ER_SUCCESSS);
+        const_cast<ft_matrix<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -251,7 +251,7 @@ void ft_matrix<ElementType>::unlock(bool lock_acquired) const
 
     entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
-    if (this->_mutex != ft_nullptr && this->_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_mutex != ft_nullptr && this->_mutex->get_error() != FT_ERR_SUCCESSS)
         const_cast<ft_matrix<ElementType> *>(this)->set_error(this->_mutex->get_error());
     else
     {
@@ -281,7 +281,7 @@ bool ft_matrix<ElementType>::init(size_t rows, size_t cols)
     {
         this->_rows = rows;
         this->_cols = cols;
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         this->unlock_internal(lock_acquired);
         return (true);
     }
@@ -301,7 +301,7 @@ bool ft_matrix<ElementType>::init(size_t rows, size_t cols)
     this->_data = allocated_data;
     this->_rows = rows;
     this->_cols = cols;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (true);
 }
@@ -326,7 +326,7 @@ ElementType& ft_matrix<ElementType>::at(size_t r, size_t c)
         return (error_element);
     }
     element_pointer = &this->_data[r * this->_cols + c];
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (*element_pointer);
 }
@@ -351,7 +351,7 @@ const ElementType& ft_matrix<ElementType>::at(size_t r, size_t c) const
         return (error_element);
     }
     element_pointer = &this->_data[r * this->_cols + c];
-    const_cast<ft_matrix<ElementType> *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_matrix<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (*element_pointer);
 }
@@ -369,7 +369,7 @@ size_t ft_matrix<ElementType>::rows() const
         return (0);
     }
     current_rows = this->_rows;
-    const_cast<ft_matrix<ElementType> *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_matrix<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (current_rows);
 }
@@ -387,7 +387,7 @@ size_t ft_matrix<ElementType>::cols() const
         return (0);
     }
     current_cols = this->_cols;
-    const_cast<ft_matrix<ElementType> *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_matrix<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (current_cols);
 }
@@ -437,8 +437,8 @@ ft_matrix<ElementType> ft_matrix<ElementType>::add(const ft_matrix& other) const
         result._data[index] = this->_data[index] + other._data[index];
         ++index;
     }
-    const_cast<ft_matrix<ElementType> *>(this)->set_error(FT_ER_SUCCESSS);
-    const_cast<ft_matrix<ElementType> &>(other).set_error(FT_ER_SUCCESSS);
+    const_cast<ft_matrix<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_matrix<ElementType> &>(other).set_error(FT_ERR_SUCCESSS);
     other.unlock_internal(other_lock_acquired);
     this->unlock_internal(this_lock_acquired);
     return (result);
@@ -502,8 +502,8 @@ ft_matrix<ElementType> ft_matrix<ElementType>::multiply(const ft_matrix& other) 
         }
         ++row_index;
     }
-    const_cast<ft_matrix<ElementType> *>(this)->set_error(FT_ER_SUCCESSS);
-    const_cast<ft_matrix<ElementType> &>(other).set_error(FT_ER_SUCCESSS);
+    const_cast<ft_matrix<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
+    const_cast<ft_matrix<ElementType> &>(other).set_error(FT_ERR_SUCCESSS);
     other.unlock_internal(other_lock_acquired);
     this->unlock_internal(this_lock_acquired);
     return (result);
@@ -541,7 +541,7 @@ ft_matrix<ElementType> ft_matrix<ElementType>::transpose() const
         }
         ++row_index;
     }
-    const_cast<ft_matrix<ElementType> *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_matrix<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (result);
 }
@@ -639,7 +639,7 @@ ElementType ft_matrix<ElementType>::determinant() const
         ++pivot_row;
     }
     cma_free(temp);
-    const_cast<ft_matrix<ElementType> *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_matrix<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return (result);
 }
@@ -668,7 +668,7 @@ void ft_matrix<ElementType>::clear()
         return ;
     }
     this->clear_unlocked();
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
     return ;
 }
@@ -711,21 +711,21 @@ int ft_matrix<ElementType>::lock_internal(bool *lock_acquired) const
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     this->_mutex->lock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         if (this->_mutex->get_error() == FT_ERR_MUTEX_ALREADY_LOCKED)
         {
             bool state_lock_acquired;
 
             state_lock_acquired = false;
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             if (this->_mutex->lock_state(&state_lock_acquired) == 0)
                 this->_mutex->unlock_state(state_lock_acquired);
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             return (0);
         }
         ft_errno = this->_mutex->get_error();
@@ -733,7 +733,7 @@ int ft_matrix<ElementType>::lock_internal(bool *lock_acquired) const
     }
     if (lock_acquired)
         *lock_acquired = true;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -746,7 +746,7 @@ void ft_matrix<ElementType>::unlock_internal(bool lock_acquired) const
         return ;
     entry_errno = ft_errno;
     this->_mutex->unlock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_mutex->get_error();
         return ;

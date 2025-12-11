@@ -33,7 +33,7 @@ static bool compute_absolute_deadline(const struct timespec &relative_time, stru
         absolute_time->tv_nsec -= 1000000000L;
         absolute_time->tv_sec += 1;
     }
-    *error_code = FT_ER_SUCCESSS;
+    *error_code = FT_ERR_SUCCESSS;
     return (true);
 }
 
@@ -42,7 +42,7 @@ int pt_mutex::try_lock_until(pthread_t thread_id, const struct timespec &absolut
     pt_mutex_vector owned_mutexes;
     int mutex_error;
 
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     if (!this->ensure_native_mutex())
         return (FT_SUCCESS);
     if (this->_lock && pt_thread_equal(this->_owner.load(std::memory_order_relaxed), thread_id))
@@ -51,7 +51,7 @@ int pt_mutex::try_lock_until(pthread_t thread_id, const struct timespec &absolut
         return (FT_SUCCESS);
     }
     owned_mutexes = pt_lock_tracking::get_owned_mutexes(thread_id);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
     {
         this->set_error(ft_errno);
         return (FT_SUCCESS);
@@ -71,7 +71,7 @@ int pt_mutex::try_lock_until(pthread_t thread_id, const struct timespec &absolut
         pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
         if (mutex_error == ETIMEDOUT)
         {
-            this->set_error(FT_ER_SUCCESSS);
+            this->set_error(FT_ERR_SUCCESSS);
             return (ETIMEDOUT);
         }
         this->set_error(FT_ERR_INVALID_STATE);
@@ -80,7 +80,7 @@ int pt_mutex::try_lock_until(pthread_t thread_id, const struct timespec &absolut
     this->_owner.store(thread_id, std::memory_order_relaxed);
     this->_lock = true;
     pt_lock_tracking::notify_acquired(thread_id, &this->_native_mutex);
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (FT_SUCCESS);
 }
 

@@ -15,7 +15,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
     , _background_interval_seconds(0)
     , _background_thread()
     , _background_mutex()
-    , _error_code(FT_ER_SUCCESSS)
+    , _error_code(FT_ERR_SUCCESSS)
     , _mutex()
     , _metrics_set_operations(0)
     , _metrics_delete_operations(0)
@@ -42,7 +42,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
         return ;
     }
     this->_file_path = file_path;
-    if (this->_file_path.get_error() != FT_ER_SUCCESSS)
+    if (this->_file_path.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_file_path.get_error());
         return ;
@@ -55,7 +55,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
             return ;
         }
         this->_encryption_key = encryption_key;
-        if (this->_encryption_key.get_error() != FT_ER_SUCCESSS)
+        if (this->_encryption_key.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(this->_encryption_key.get_error());
             return ;
@@ -73,7 +73,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
         if (encryption_key != ft_nullptr)
         {
             this->_encryption_key = encryption_key;
-            if (this->_encryption_key.get_error() != FT_ER_SUCCESSS)
+            if (this->_encryption_key.get_error() != FT_ERR_SUCCESSS)
             {
                 this->set_error(this->_encryption_key.get_error());
                 return ;
@@ -87,9 +87,9 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
     if (group_head == ft_nullptr)
     {
         current_error = ft_errno;
-        if (current_error == FT_ER_SUCCESSS)
+        if (current_error == FT_ERR_SUCCESSS)
         {
-            this->set_error(FT_ER_SUCCESSS);
+            this->set_error(FT_ERR_SUCCESSS);
             return ;
         }
         this->set_error(current_error);
@@ -131,7 +131,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
             ft_string ttl_key(item_pointer->key + ttl_prefix_length);
             long long expiration_timestamp;
 
-            if (ttl_key.get_error() != FT_ER_SUCCESSS)
+            if (ttl_key.get_error() != FT_ERR_SUCCESSS)
             {
                 json_free_groups(group_head);
                 this->set_error(ttl_key.get_error());
@@ -143,7 +143,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
                 return ;
             }
             ttl_metadata.insert(ttl_key, expiration_timestamp);
-            if (ttl_metadata.get_error() != FT_ER_SUCCESSS)
+            if (ttl_metadata.get_error() != FT_ERR_SUCCESSS)
             {
                 json_free_groups(group_head);
                 this->set_error(ttl_metadata.get_error());
@@ -155,7 +155,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
         ft_string key_storage(item_pointer->key);
         kv_store_entry entry;
 
-        if (key_storage.get_error() != FT_ER_SUCCESSS)
+        if (key_storage.get_error() != FT_ERR_SUCCESSS)
         {
             json_free_groups(group_head);
             this->set_error(key_storage.get_error());
@@ -172,7 +172,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
             ft_string encoded_value(item_pointer->value);
             ft_string decrypted_value;
 
-            if (encoded_value.get_error() != FT_ER_SUCCESSS)
+            if (encoded_value.get_error() != FT_ERR_SUCCESSS)
             {
                 json_free_groups(group_head);
                 this->set_error(encoded_value.get_error());
@@ -194,7 +194,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
         {
             ft_string plain_value(item_pointer->value);
 
-            if (plain_value.get_error() != FT_ER_SUCCESSS)
+            if (plain_value.get_error() != FT_ERR_SUCCESSS)
             {
                 json_free_groups(group_head);
                 this->set_error(plain_value.get_error());
@@ -208,7 +208,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
             }
         }
         this->_data.insert(key_storage, entry);
-        if (this->_data.get_error() != FT_ER_SUCCESSS)
+        if (this->_data.get_error() != FT_ERR_SUCCESSS)
         {
             json_free_groups(group_head);
             this->set_error(this->_data.get_error());
@@ -219,7 +219,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
     size_t ttl_size;
 
     ttl_size = ttl_metadata.size();
-    if (ttl_metadata.get_error() != FT_ER_SUCCESSS)
+    if (ttl_metadata.get_error() != FT_ERR_SUCCESSS)
     {
         json_free_groups(group_head);
         this->set_error(ttl_metadata.get_error());
@@ -232,7 +232,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
         size_t ttl_index;
 
         ttl_end = ttl_metadata.end();
-        if (ttl_metadata.get_error() != FT_ER_SUCCESSS)
+        if (ttl_metadata.get_error() != FT_ERR_SUCCESSS)
         {
             json_free_groups(group_head);
             this->set_error(ttl_metadata.get_error());
@@ -246,7 +246,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
             Pair<ft_string, kv_store_entry> *data_pair;
 
             data_pair = this->_data.find(ttl_entry.key);
-            if (this->_data.get_error() != FT_ER_SUCCESSS)
+            if (this->_data.get_error() != FT_ERR_SUCCESSS)
             {
                 json_free_groups(group_head);
                 this->set_error(this->_data.get_error());
@@ -270,7 +270,7 @@ kv_store::kv_store(const char *file_path, const char *encryption_key, bool enabl
         return ;
     }
     json_free_groups(group_head);
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 

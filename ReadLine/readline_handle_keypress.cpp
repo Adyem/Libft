@@ -54,7 +54,7 @@ int rl_handle_backspace(readline_state_t *state, const char *prompt)
             fflush(stdout);
         }
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
 cleanup:
     rl_state_unlock(state, lock_acquired);
     return (result);

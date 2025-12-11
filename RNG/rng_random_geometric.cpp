@@ -22,18 +22,18 @@ int ft_random_geometric(double success_probability)
     const double probability_epsilon = std::numeric_limits<double>::epsilon();
     if ((1.0 - success_probability) <= probability_epsilon)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (1);
     }
     trial_count = 1;
     while (1)
     {
         random_value = static_cast<double>(ft_random_float());
-        if (ft_errno != FT_ER_SUCCESSS)
+        if (ft_errno != FT_ERR_SUCCESSS)
             return (0);
         if (random_value < success_probability)
         {
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             return (trial_count);
         }
         trial_count = trial_count + 1;

@@ -25,7 +25,7 @@ static inline int bind_platform(int sockfd, const struct sockaddr *addr, socklen
         ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -36,7 +36,7 @@ static inline int listen_platform(int sockfd, int backlog)
         ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -48,13 +48,13 @@ static inline int accept_platform(int sockfd, struct sockaddr *addr, socklen_t *
         ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (static_cast<int>(new_fd));
 }
 
 static inline int socket_platform(int domain, int type, int protocol)
 {
-    if (ft_socket_runtime_acquire() != FT_ER_SUCCESSS)
+    if (ft_socket_runtime_acquire() != FT_ERR_SUCCESSS)
     {
         return (-1);
     }
@@ -65,7 +65,7 @@ static inline int socket_platform(int domain, int type, int protocol)
         ft_socket_runtime_release();
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (static_cast<int>(sockfd));
 }
 
@@ -76,7 +76,7 @@ static inline int connect_platform(int sockfd, const struct sockaddr *addr, sock
         ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -88,7 +88,7 @@ static inline ssize_t send_platform(int sockfd, const void *buf, size_t len, int
         ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (ret);
 }
 
@@ -100,7 +100,7 @@ static inline ssize_t recv_platform(int sockfd, void *buf, size_t len, int flags
         ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (ret);
 }
 
@@ -111,7 +111,7 @@ static inline int shutdown_platform(int sockfd, int how)
         ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -125,7 +125,7 @@ static inline ssize_t sendto_platform(int sockfd, const void *buf, size_t len, i
         ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (ret);
 }
 
@@ -139,7 +139,7 @@ static inline ssize_t recvfrom_platform(int sockfd, void *buf, size_t len, int f
         ft_errno = ft_map_system_error(WSAGetLastError());
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (ret);
 }
 #else
@@ -150,7 +150,7 @@ static inline int bind_platform(int sockfd, const struct sockaddr *addr, socklen
         ft_errno = ft_map_system_error(errno);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -161,7 +161,7 @@ static inline int listen_platform(int sockfd, int backlog)
         ft_errno = ft_map_system_error(errno);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -173,7 +173,7 @@ static inline int accept_platform(int sockfd, struct sockaddr *addr, socklen_t *
         ft_errno = ft_map_system_error(errno);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (new_fd);
 }
 
@@ -185,7 +185,7 @@ static inline int socket_platform(int domain, int type, int protocol)
         ft_errno = ft_map_system_error(errno);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (sockfd);
 }
 
@@ -196,7 +196,7 @@ static inline int connect_platform(int sockfd, const struct sockaddr *addr, sock
         ft_errno = ft_map_system_error(errno);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -210,7 +210,7 @@ static inline ssize_t send_platform(int sockfd, const void *buf, size_t len, int
         ft_errno = ft_map_system_error(errno);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 
@@ -224,7 +224,7 @@ static inline ssize_t recv_platform(int sockfd, void *buf, size_t len, int flags
         ft_errno = ft_map_system_error(errno);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 
@@ -235,7 +235,7 @@ static inline int shutdown_platform(int sockfd, int how)
         ft_errno = ft_map_system_error(errno);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -250,7 +250,7 @@ static inline ssize_t sendto_platform(int sockfd, const void *buf, size_t len, i
         ft_errno = ft_map_system_error(errno);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 
@@ -265,7 +265,7 @@ static inline ssize_t recvfrom_platform(int sockfd, void *buf, size_t len, int f
         ft_errno = ft_map_system_error(errno);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 #endif
@@ -290,7 +290,7 @@ int nw_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
     {
         return (-1);
     }
-    if (ft_socket_runtime_acquire() != FT_ER_SUCCESSS)
+    if (ft_socket_runtime_acquire() != FT_ERR_SUCCESSS)
     {
         acquire_error = ft_errno;
         nw_close(accepted_fd);
@@ -354,14 +354,14 @@ int nw_close(int sockfd)
     if (closesocket(static_cast<SOCKET>(sockfd)) == SOCKET_ERROR)
     {
         ft_errno = ft_map_system_error(WSAGetLastError());
-        if (ft_errno == FT_ER_SUCCESSS)
+        if (ft_errno == FT_ERR_SUCCESSS)
         {
             ft_errno = FT_ERR_SOCKET_CLOSE_FAILED;
         }
         return (-1);
     }
     ft_socket_runtime_release();
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
     {
         return (-1);
     }
@@ -374,7 +374,7 @@ int nw_close(int sockfd)
     if (close(sockfd) == -1)
     {
         ft_errno = ft_map_system_error(errno);
-        if (ft_errno == FT_ER_SUCCESSS)
+        if (ft_errno == FT_ERR_SUCCESSS)
         {
             ft_errno = FT_ERR_SOCKET_CLOSE_FAILED;
         }
@@ -393,7 +393,7 @@ int nw_shutdown(int sockfd, int how)
     previous_error = ft_errno;
     if (shutdown_platform(sockfd, how) != 0)
     {
-        if (ft_errno == FT_ER_SUCCESSS)
+        if (ft_errno == FT_ERR_SUCCESSS)
         {
             ft_errno = FT_ERR_SOCKET_CLOSE_FAILED;
         }
@@ -407,7 +407,7 @@ int nw_shutdown(int sockfd, int how)
     previous_error = ft_errno;
     if (shutdown_platform(sockfd, how) != 0)
     {
-        if (ft_errno == FT_ER_SUCCESSS)
+        if (ft_errno == FT_ERR_SUCCESSS)
         {
             ft_errno = FT_ERR_SOCKET_CLOSE_FAILED;
         }
@@ -430,7 +430,7 @@ int nw_inet_pton(int family, const char *ip_address, void *destination)
     result = inet_pton(family, ip_address, destination);
     if (result == 1)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (1);
     }
     if (result == 0)

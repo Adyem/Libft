@@ -4,7 +4,7 @@
 #include <cstdarg>
 #include <pthread.h>
 #include "../Template/vector.hpp"
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "../Compatebility/compatebility_internal.hpp"
 #include "../Errno/errno.hpp"

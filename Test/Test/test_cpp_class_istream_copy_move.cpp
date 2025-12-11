@@ -40,7 +40,7 @@ class ft_test_timed_istream : public ft_istream
             if (this->_slow)
                 std::this_thread::sleep_for(std::chrono::milliseconds(75));
             buffer[0] = this->_fill_character;
-            this->set_error(FT_ER_SUCCESSS);
+            this->set_error(FT_ERR_SUCCESSS);
             return (1);
         }
 };
@@ -97,7 +97,7 @@ static int create_pipe(int *read_end, int *write_end)
         return (FT_ERR_INVALID_HANDLE);
     *read_end = descriptors[0];
     *write_end = descriptors[1];
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 static void fill_pipe(int write_end, const char *data)
@@ -134,7 +134,7 @@ FT_TEST(test_ft_istream_copy_constructor_mutex_is_fresh,
     worker.join();
     FT_ASSERT(copy_duration_ms < 60);
     FT_ASSERT_EQ(false, copied_stream.bad());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, copied_stream.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, copied_stream.get_error());
     return (1);
 }
 
@@ -159,7 +159,7 @@ FT_TEST(test_ft_istream_move_constructor_mutex_is_fresh,
     worker.join();
     FT_ASSERT(copy_duration_ms < 60);
     FT_ASSERT_EQ(false, moved_stream.bad());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved_stream.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, moved_stream.get_error());
     FT_ASSERT_EQ(false, slow_stream.bad());
     return (1);
 }
@@ -187,7 +187,7 @@ FT_TEST(test_ft_istream_copy_assignment_mutex_is_fresh,
     worker.join();
     FT_ASSERT(copy_duration_ms < 60);
     FT_ASSERT_EQ(false, target_stream.bad());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, target_stream.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, target_stream.get_error());
     return (1);
 }
 
@@ -214,7 +214,7 @@ FT_TEST(test_ft_istream_move_assignment_mutex_is_fresh,
     worker.join();
     FT_ASSERT(copy_duration_ms < 60);
     FT_ASSERT_EQ(false, target_stream.bad());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, target_stream.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, target_stream.get_error());
     FT_ASSERT_EQ(false, source_stream.bad());
     return (1);
 }
@@ -229,7 +229,7 @@ FT_TEST(test_ft_fd_istream_copy_constructor_mutex_is_fresh,
     long copy_duration_ms;
 
     pipe_error = create_pipe(&read_end, &write_end);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, pipe_error);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, pipe_error);
     ft_test_timed_fd_istream slow_stream(read_end, true);
     ft_test_timed_fd_istream copied_stream(slow_stream);
     copied_stream.set_slow(false);
@@ -248,7 +248,7 @@ FT_TEST(test_ft_fd_istream_copy_constructor_mutex_is_fresh,
     close(read_end);
     FT_ASSERT(copy_duration_ms < 60);
     FT_ASSERT_EQ(false, copied_stream.bad());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, copied_stream.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, copied_stream.get_error());
     return (1);
 }
 
@@ -262,7 +262,7 @@ FT_TEST(test_ft_fd_istream_move_constructor_mutex_is_fresh,
     long copy_duration_ms;
 
     pipe_error = create_pipe(&read_end, &write_end);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, pipe_error);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, pipe_error);
     ft_test_timed_fd_istream slow_stream(read_end, true);
     ft_test_timed_fd_istream moved_stream(ft_move(slow_stream));
     slow_stream.set_fd(read_end);
@@ -283,7 +283,7 @@ FT_TEST(test_ft_fd_istream_move_constructor_mutex_is_fresh,
     close(read_end);
     FT_ASSERT(copy_duration_ms < 60);
     FT_ASSERT_EQ(false, moved_stream.bad());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved_stream.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, moved_stream.get_error());
     FT_ASSERT_EQ(false, slow_stream.bad());
     return (1);
 }
@@ -300,7 +300,7 @@ FT_TEST(test_ft_fd_istream_copy_assignment_mutex_is_fresh,
     long copy_duration_ms;
 
     pipe_error = create_pipe(&read_end, &write_end);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, pipe_error);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, pipe_error);
     target_stream.set_fd(read_end);
     source_stream.set_fd(read_end);
     target_stream = source_stream;
@@ -321,7 +321,7 @@ FT_TEST(test_ft_fd_istream_copy_assignment_mutex_is_fresh,
     close(read_end);
     FT_ASSERT(copy_duration_ms < 60);
     FT_ASSERT_EQ(false, target_stream.bad());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, target_stream.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, target_stream.get_error());
     return (1);
 }
 
@@ -337,7 +337,7 @@ FT_TEST(test_ft_fd_istream_move_assignment_mutex_is_fresh,
     long copy_duration_ms;
 
     pipe_error = create_pipe(&read_end, &write_end);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, pipe_error);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, pipe_error);
     target_stream.set_fd(read_end);
     source_stream.set_fd(read_end);
     target_stream = ft_move(source_stream);
@@ -359,7 +359,7 @@ FT_TEST(test_ft_fd_istream_move_assignment_mutex_is_fresh,
     close(read_end);
     FT_ASSERT(copy_duration_ms < 60);
     FT_ASSERT_EQ(false, target_stream.bad());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, target_stream.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, target_stream.get_error());
     FT_ASSERT_EQ(false, source_stream.bad());
     return (1);
 }

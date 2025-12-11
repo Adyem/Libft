@@ -11,7 +11,7 @@ FT_TEST(test_locale_compare_basic_ordering, "ft_locale_compare orders strings wi
 
     comparison_result = ft_locale_compare("apple", "banana", ft_nullptr);
     FT_ASSERT(comparison_result < 0);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -34,9 +34,9 @@ FT_TEST(test_locale_casefold_basic_transformation, "ft_locale_casefold lowers mi
     ft_string folded;
 
     folded = ft_locale_casefold("MiXeD", "C");
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     FT_ASSERT(folded == "mixed");
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, folded.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, folded.get_error());
     return (1);
 }
 

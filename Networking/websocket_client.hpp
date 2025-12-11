@@ -1,7 +1,7 @@
 #ifndef WEBSOCKET_CLIENT_HPP
 #define WEBSOCKET_CLIENT_HPP
 
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 #include "socket_handle.hpp"

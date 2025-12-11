@@ -39,7 +39,7 @@ unsigned long ft_strtoul(const char *input_string, char **end_pointer, int numer
             *end_pointer = const_cast<char *>(input_string);
         return (0UL);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     while (*current_character == ' ' || (*current_character >= '\t'
                 && *current_character <= '\r'))
         ++current_character;

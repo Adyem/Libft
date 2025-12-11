@@ -6,7 +6,7 @@ char *ft_strncpy(char *destination, const char *source, size_t number_of_charact
 {
     size_t index;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (number_of_characters == 0)
         return (destination);
     if (destination == ft_nullptr || source == ft_nullptr)

@@ -11,7 +11,7 @@ int pt_cond_init(pthread_cond_t *condition, const pthread_condattr_t *attributes
         ft_errno = ft_map_system_error(return_value);
         return (return_value);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (return_value);
 }
 
@@ -23,7 +23,7 @@ int pt_cond_destroy(pthread_cond_t *condition)
         ft_errno = ft_map_system_error(return_value);
         return (return_value);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (return_value);
 }
 
@@ -42,7 +42,7 @@ int pt_cond_wait(pthread_cond_t *condition, pthread_mutex_t *mutex)
         ft_errno = ft_map_system_error(return_value);
         return (return_value);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (return_value);
 }
 
@@ -54,7 +54,7 @@ int pt_cond_signal(pthread_cond_t *condition)
         ft_errno = ft_map_system_error(return_value);
         return (return_value);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (return_value);
 }
 
@@ -66,7 +66,7 @@ int pt_cond_broadcast(pthread_cond_t *condition)
         ft_errno = ft_map_system_error(return_value);
         return (return_value);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (return_value);
 }
 

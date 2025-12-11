@@ -31,15 +31,15 @@ int ft_progress_tracker::lock_pair(const ft_progress_tracker &first, const ft_pr
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ER_SUCCESSS)
+        if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ER_SUCCESSS;
-        return (FT_ER_SUCCESSS);
+        ft_errno = FT_ERR_SUCCESSS;
+        return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -57,13 +57,13 @@ int ft_progress_tracker::lock_pair(const ft_progress_tracker &first, const ft_pr
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != FT_ER_SUCCESSS)
+        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ER_SUCCESSS)
+        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
         {
             if (!swapped)
             {
@@ -75,8 +75,8 @@ int ft_progress_tracker::lock_pair(const ft_progress_tracker &first, const ft_pr
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ER_SUCCESSS;
-            return (FT_ER_SUCCESSS);
+            ft_errno = FT_ERR_SUCCESSS;
+            return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -90,19 +90,19 @@ int ft_progress_tracker::lock_pair(const ft_progress_tracker &first, const ft_pr
 }
 
 ft_progress_tracker::ft_progress_tracker() noexcept
-    : _achievements(), _quests(), _error_code(FT_ER_SUCCESSS), _mutex()
+    : _achievements(), _quests(), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
-    if (this->_achievements.get_error() != FT_ER_SUCCESSS)
+    if (this->_achievements.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_achievements.get_error());
         return ;
     }
-    if (this->_quests.get_error() != FT_ER_SUCCESSS)
+    if (this->_quests.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_quests.get_error());
         return ;
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -112,27 +112,27 @@ ft_progress_tracker::~ft_progress_tracker() noexcept
 }
 
 ft_progress_tracker::ft_progress_tracker(const ft_progress_tracker &other) noexcept
-    : _achievements(), _quests(), _error_code(FT_ER_SUCCESSS), _mutex()
+    : _achievements(), _quests(), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
     int entry_errno;
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ER_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
         game_progress_tracker_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_achievements = other._achievements;
-    if (this->_achievements.get_error() != FT_ER_SUCCESSS)
+    if (this->_achievements.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_achievements.get_error());
         game_progress_tracker_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_quests = other._quests;
-    if (this->_quests.get_error() != FT_ER_SUCCESSS)
+    if (this->_quests.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_quests.get_error());
         game_progress_tracker_restore_errno(other_guard, entry_errno);
@@ -155,13 +155,13 @@ ft_progress_tracker &ft_progress_tracker::operator=(const ft_progress_tracker &o
         return (*this);
     entry_errno = ft_errno;
     lock_error = ft_progress_tracker::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         return (*this);
     }
     this->_achievements = other._achievements;
-    if (this->_achievements.get_error() != FT_ER_SUCCESSS)
+    if (this->_achievements.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_achievements.get_error());
         game_progress_tracker_restore_errno(this_guard, entry_errno);
@@ -169,7 +169,7 @@ ft_progress_tracker &ft_progress_tracker::operator=(const ft_progress_tracker &o
         return (*this);
     }
     this->_quests = other._quests;
-    if (this->_quests.get_error() != FT_ER_SUCCESSS)
+    if (this->_quests.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_quests.get_error());
         game_progress_tracker_restore_errno(this_guard, entry_errno);
@@ -184,36 +184,36 @@ ft_progress_tracker &ft_progress_tracker::operator=(const ft_progress_tracker &o
 }
 
 ft_progress_tracker::ft_progress_tracker(ft_progress_tracker &&other) noexcept
-    : _achievements(), _quests(), _error_code(FT_ER_SUCCESSS), _mutex()
+    : _achievements(), _quests(), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
     int entry_errno;
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ER_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
         game_progress_tracker_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_achievements = ft_move(other._achievements);
-    if (this->_achievements.get_error() != FT_ER_SUCCESSS)
+    if (this->_achievements.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_achievements.get_error());
         game_progress_tracker_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_quests = ft_move(other._quests);
-    if (this->_quests.get_error() != FT_ER_SUCCESSS)
+    if (this->_quests.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_quests.get_error());
         game_progress_tracker_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_error_code = other._error_code;
-    other._error_code = FT_ER_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_error_code);
-    other.set_error(FT_ER_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESSS);
     game_progress_tracker_restore_errno(other_guard, entry_errno);
     return ;
 }
@@ -229,13 +229,13 @@ ft_progress_tracker &ft_progress_tracker::operator=(ft_progress_tracker &&other)
         return (*this);
     entry_errno = ft_errno;
     lock_error = ft_progress_tracker::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         return (*this);
     }
     this->_achievements = ft_move(other._achievements);
-    if (this->_achievements.get_error() != FT_ER_SUCCESSS)
+    if (this->_achievements.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_achievements.get_error());
         game_progress_tracker_restore_errno(this_guard, entry_errno);
@@ -243,7 +243,7 @@ ft_progress_tracker &ft_progress_tracker::operator=(ft_progress_tracker &&other)
         return (*this);
     }
     this->_quests = ft_move(other._quests);
-    if (this->_quests.get_error() != FT_ER_SUCCESSS)
+    if (this->_quests.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_quests.get_error());
         game_progress_tracker_restore_errno(this_guard, entry_errno);
@@ -251,9 +251,9 @@ ft_progress_tracker &ft_progress_tracker::operator=(ft_progress_tracker &&other)
         return (*this);
     }
     this->_error_code = other._error_code;
-    other._error_code = FT_ER_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_error_code);
-    other.set_error(FT_ER_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESSS);
     game_progress_tracker_restore_errno(this_guard, entry_errno);
     game_progress_tracker_restore_errno(other_guard, entry_errno);
     return (*this);
@@ -285,20 +285,20 @@ void ft_progress_tracker::set_achievements(const ft_map<int, ft_achievement> &ac
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_progress_tracker_restore_errno(guard, entry_errno);
         return ;
     }
     this->_achievements = achievements;
-    if (this->_achievements.get_error() != FT_ER_SUCCESSS)
+    if (this->_achievements.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_achievements.get_error());
         game_progress_tracker_restore_errno(guard, entry_errno);
         return ;
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_progress_tracker_restore_errno(guard, entry_errno);
     return ;
 }
@@ -309,20 +309,20 @@ void ft_progress_tracker::set_quests(const ft_map<int, ft_quest> &quests) noexce
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_progress_tracker_restore_errno(guard, entry_errno);
         return ;
     }
     this->_quests = quests;
-    if (this->_quests.get_error() != FT_ER_SUCCESSS)
+    if (this->_quests.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_quests.get_error());
         game_progress_tracker_restore_errno(guard, entry_errno);
         return ;
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_progress_tracker_restore_errno(guard, entry_errno);
     return ;
 }
@@ -334,7 +334,7 @@ int ft_progress_tracker::register_achievement(const ft_achievement &achievement)
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_progress_tracker_restore_errno(guard, entry_errno);
@@ -342,15 +342,15 @@ int ft_progress_tracker::register_achievement(const ft_achievement &achievement)
     }
     identifier = achievement.get_id();
     this->_achievements.insert(identifier, achievement);
-    if (this->_achievements.get_error() != FT_ER_SUCCESSS)
+    if (this->_achievements.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_achievements.get_error());
         game_progress_tracker_restore_errno(guard, entry_errno);
         return (this->_achievements.get_error());
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_progress_tracker_restore_errno(guard, entry_errno);
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 int ft_progress_tracker::register_quest(const ft_quest &quest) noexcept
@@ -360,7 +360,7 @@ int ft_progress_tracker::register_quest(const ft_quest &quest) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_progress_tracker_restore_errno(guard, entry_errno);
@@ -368,15 +368,15 @@ int ft_progress_tracker::register_quest(const ft_quest &quest) noexcept
     }
     identifier = quest.get_id();
     this->_quests.insert(identifier, quest);
-    if (this->_quests.get_error() != FT_ER_SUCCESSS)
+    if (this->_quests.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_quests.get_error());
         game_progress_tracker_restore_errno(guard, entry_errno);
         return (this->_quests.get_error());
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_progress_tracker_restore_errno(guard, entry_errno);
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 int ft_progress_tracker::update_goal_target(int achievement_id, int goal_id, int target) noexcept
@@ -386,7 +386,7 @@ int ft_progress_tracker::update_goal_target(int achievement_id, int goal_id, int
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_progress_tracker_restore_errno(guard, entry_errno);
@@ -412,7 +412,7 @@ int ft_progress_tracker::update_goal_progress(int achievement_id, int goal_id, i
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_progress_tracker_restore_errno(guard, entry_errno);
@@ -438,7 +438,7 @@ int ft_progress_tracker::add_goal_progress(int achievement_id, int goal_id, int 
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_progress_tracker_restore_errno(guard, entry_errno);
@@ -465,7 +465,7 @@ bool ft_progress_tracker::is_achievement_complete(int achievement_id) const noex
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_progress_tracker *>(this)->set_error(guard.get_error());
         game_progress_tracker_restore_errno(guard, entry_errno);
@@ -491,7 +491,7 @@ int ft_progress_tracker::set_quest_phase(int quest_id, int phase) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_progress_tracker_restore_errno(guard, entry_errno);
@@ -517,7 +517,7 @@ int ft_progress_tracker::advance_quest_phase(int quest_id) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_progress_tracker_restore_errno(guard, entry_errno);
@@ -544,7 +544,7 @@ bool ft_progress_tracker::is_quest_complete(int quest_id) const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_progress_tracker *>(this)->set_error(guard.get_error());
         game_progress_tracker_restore_errno(guard, entry_errno);
@@ -570,14 +570,14 @@ int ft_progress_tracker::get_error() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_progress_tracker *>(this)->set_error(guard.get_error());
         game_progress_tracker_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     error_code = this->_error_code;
-    const_cast<ft_progress_tracker *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_progress_tracker *>(this)->set_error(FT_ERR_SUCCESSS);
     game_progress_tracker_restore_errno(guard, entry_errno);
     return (error_code);
 }
@@ -589,14 +589,14 @@ const char *ft_progress_tracker::get_error_str() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_progress_tracker *>(this)->set_error(guard.get_error());
         game_progress_tracker_restore_errno(guard, entry_errno);
         return (ft_strerror(guard.get_error()));
     }
     error_string = ft_strerror(this->_error_code);
-    const_cast<ft_progress_tracker *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<ft_progress_tracker *>(this)->set_error(FT_ERR_SUCCESSS);
     game_progress_tracker_restore_errno(guard, entry_errno);
     return (error_string);
 }

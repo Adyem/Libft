@@ -5,7 +5,7 @@
 #include "../Template/shared_ptr.hpp"
 #include "../Errno/errno.hpp"
 #include "game_pathfinding.hpp"
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "game_world_replay.hpp"
 #include "game_economy_table.hpp"
 #include "game_crafting.hpp"

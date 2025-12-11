@@ -46,6 +46,6 @@ FT_TEST(test_game_hooks_getters_clone_callbacks, "Game: hooks getters provide ca
     hooks.unregister_listener(ft_string(ft_game_hook_item_crafted_identifier), ft_string("getter.custom"));
     scoped_catalog = hooks.get_catalog_metadata_for(ft_string(ft_game_hook_item_crafted_identifier));
     FT_ASSERT_EQ(1, scoped_catalog.size());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, hooks.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, hooks.get_error());
     return (1);
 }

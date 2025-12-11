@@ -12,7 +12,7 @@ int    ft_locale_compare(const char *left, const char *right, const char *locale
     int status;
 
     comparison_result = 0;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     status = su_locale_compare(left, right, locale_name, &comparison_result);
     if (status != 0)
         return (-1);
@@ -25,7 +25,7 @@ ft_string    ft_locale_casefold(const char *input, const char *locale_name)
     int status;
     int error_code;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     status = su_locale_casefold(input, locale_name, folded_result);
     if (status != 0)
     {

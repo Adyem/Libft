@@ -607,7 +607,7 @@ bool api_http_stream_json_payload(json_group *payload,
     int entry_errno;
 
     entry_errno = ft_errno;
-    error_code = FT_ER_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
     if (!payload)
     {
         ft_errno = entry_errno;

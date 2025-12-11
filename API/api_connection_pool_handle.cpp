@@ -5,7 +5,7 @@
 #include "../Template/move.hpp"
 
 api_connection_pool_handle::api_connection_pool_handle()
-        : _error_code(FT_ER_SUCCESSS), _mutex(ft_nullptr),
+        : _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr),
         _thread_safe_enabled(false), key(), socket(),
         tls_session(ft_nullptr), tls_context(ft_nullptr),
         security_mode(api_connection_security_mode::PLAIN), has_socket(false),
@@ -16,13 +16,13 @@ api_connection_pool_handle::api_connection_pool_handle()
     {
         return ;
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
 api_connection_pool_handle::api_connection_pool_handle(
         api_connection_pool_handle &&other)
-        : _error_code(FT_ER_SUCCESSS), _mutex(ft_nullptr),
+        : _error_code(FT_ERR_SUCCESSS), _mutex(ft_nullptr),
         _thread_safe_enabled(false), key(), socket(),
         tls_session(ft_nullptr), tls_context(ft_nullptr),
         security_mode(api_connection_security_mode::PLAIN), has_socket(false),
@@ -61,8 +61,8 @@ api_connection_pool_handle::api_connection_pool_handle(
     other.negotiated_http2 = false;
     other.plain_socket_timed_out = false;
     other.plain_socket_validated = false;
-    other.set_error(FT_ER_SUCCESSS);
-    this->set_error(FT_ER_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -77,7 +77,7 @@ api_connection_pool_handle::~api_connection_pool_handle()
     this->negotiated_http2 = false;
     this->plain_socket_timed_out = false;
     this->plain_socket_validated = false;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -89,7 +89,7 @@ api_connection_pool_handle &api_connection_pool_handle::operator=(
 
     if (this == &other)
     {
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         return (*this);
     }
     this_lock_acquired = false;
@@ -132,8 +132,8 @@ api_connection_pool_handle &api_connection_pool_handle::operator=(
     other.negotiated_http2 = false;
     other.plain_socket_timed_out = false;
     other.plain_socket_validated = false;
-    other.set_error(FT_ER_SUCCESSS);
-    this->set_error(FT_ER_SUCCESSS);
+    other.set_error(FT_ERR_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -144,7 +144,7 @@ int api_connection_pool_handle::enable_thread_safety()
 
     if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
     {
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
     allocated_memory = cma_malloc(sizeof(pt_mutex));
@@ -154,7 +154,7 @@ int api_connection_pool_handle::enable_thread_safety()
         return (-1);
     }
     mutex_pointer = new(allocated_memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ER_SUCCESSS)
+    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error_code;
 
@@ -166,7 +166,7 @@ int api_connection_pool_handle::enable_thread_safety()
     }
     this->_mutex = mutex_pointer;
     this->_thread_safe_enabled = true;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -175,7 +175,7 @@ bool api_connection_pool_handle::is_thread_safe() const
     bool enabled;
 
     enabled = (this->_thread_safe_enabled && this->_mutex != ft_nullptr);
-    const_cast<api_connection_pool_handle *>(this)->set_error(FT_ER_SUCCESSS);
+    const_cast<api_connection_pool_handle *>(this)->set_error(FT_ERR_SUCCESSS);
     return (enabled);
 }
 
@@ -187,7 +187,7 @@ int api_connection_pool_handle::lock(bool *lock_acquired) const
     if (result != 0)
         const_cast<api_connection_pool_handle *>(this)->set_error(ft_errno);
     else
-        const_cast<api_connection_pool_handle *>(this)->set_error(FT_ER_SUCCESSS);
+        const_cast<api_connection_pool_handle *>(this)->set_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -197,7 +197,7 @@ void api_connection_pool_handle::unlock(bool lock_acquired) const
 
     entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
-    if (this->_mutex != ft_nullptr && this->_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_mutex != ft_nullptr && this->_mutex->get_error() != FT_ERR_SUCCESSS)
         const_cast<api_connection_pool_handle *>(this)->set_error(this->_mutex->get_error());
     else
         const_cast<api_connection_pool_handle *>(this)->set_error(entry_errno);
@@ -227,18 +227,18 @@ int api_connection_pool_handle::lock_internal(bool *lock_acquired) const
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     this->_mutex->lock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_mutex->get_error();
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -250,7 +250,7 @@ void api_connection_pool_handle::unlock_internal(bool lock_acquired) const
         return ;
     entry_errno = ft_errno;
     this->_mutex->unlock(THREAD_ID);
-    if (this->_mutex->get_error() != FT_ER_SUCCESSS)
+    if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_mutex->get_error();
         return ;

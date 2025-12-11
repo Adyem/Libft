@@ -1,5 +1,5 @@
 #include "api_http_internal.hpp"
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../Template/vector.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
@@ -102,7 +102,7 @@ static api_circuit_state *api_retry_circuit_get_state(
     new_state.half_open = false;
     new_state.half_open_success_count = 0;
     states.push_back(new_state);
-    if (states.get_error() != FT_ER_SUCCESSS)
+    if (states.get_error() != FT_ERR_SUCCESSS)
         return (ft_nullptr);
     size_t last_index;
 
@@ -126,7 +126,7 @@ bool api_retry_circuit_allow(const api_connection_pool_handle &handle,
         return (true);
     ft_unique_lock<pt_mutex> guard(api_retry_circuit_get_mutex());
 
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
         return (true);
     ft_vector<api_circuit_state> &states = api_retry_circuit_get_states();
     api_circuit_state *state;
@@ -167,7 +167,7 @@ void api_retry_circuit_record_success(const api_connection_pool_handle &handle,
         return ;
     ft_unique_lock<pt_mutex> guard(api_retry_circuit_get_mutex());
 
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
         return ;
     ft_vector<api_circuit_state> &states = api_retry_circuit_get_states();
     api_circuit_state *state;
@@ -210,7 +210,7 @@ void api_retry_circuit_record_failure(const api_connection_pool_handle &handle,
         return ;
     ft_unique_lock<pt_mutex> guard(api_retry_circuit_get_mutex());
 
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
         return ;
     ft_vector<api_circuit_state> &states = api_retry_circuit_get_states();
     api_circuit_state *state;
@@ -249,7 +249,7 @@ void api_retry_circuit_reset(void)
 {
     ft_unique_lock<pt_mutex> guard(api_retry_circuit_get_mutex());
 
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
         return ;
     ft_vector<api_circuit_state> &states = api_retry_circuit_get_states();
 

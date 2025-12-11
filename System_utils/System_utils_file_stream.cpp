@@ -10,7 +10,7 @@
 
 static bool g_force_file_stream_allocation_failure = false;
 static int g_force_fread_failure_enabled = 0;
-static int g_force_fread_failure_error = FT_ER_SUCCESSS;
+static int g_force_fread_failure_error = FT_ERR_SUCCESSS;
 
 int su_file_prepare_thread_safety(su_file *stream)
 {
@@ -24,7 +24,7 @@ int su_file_prepare_thread_safety(su_file *stream)
     }
     if (stream->thread_safe_enabled == true && stream->mutex != ft_nullptr)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     memory = std::malloc(sizeof(pt_mutex));
@@ -34,7 +34,7 @@ int su_file_prepare_thread_safety(su_file *stream)
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ER_SUCCESSS)
+    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
@@ -46,7 +46,7 @@ int su_file_prepare_thread_safety(su_file *stream)
     }
     stream->mutex = mutex_pointer;
     stream->thread_safe_enabled = true;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -75,18 +75,18 @@ int su_file_lock(su_file *stream, bool *lock_acquired)
     }
     if (stream->thread_safe_enabled == false || stream->mutex == ft_nullptr)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     stream->mutex->lock(THREAD_ID);
-    if (stream->mutex->get_error() != FT_ER_SUCCESSS)
+    if (stream->mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = stream->mutex->get_error();
         return (-1);
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -100,7 +100,7 @@ void su_file_unlock(su_file *stream, bool lock_acquired)
         return ;
     entry_errno = ft_errno;
     stream->mutex->unlock(THREAD_ID);
-    if (stream->mutex->get_error() != FT_ER_SUCCESSS)
+    if (stream->mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = stream->mutex->get_error();
         return ;
@@ -111,10 +111,10 @@ void su_file_unlock(su_file *stream, bool lock_acquired)
 
 void su_force_fread_failure(int error_code)
 {
-    if (error_code == FT_ER_SUCCESSS)
+    if (error_code == FT_ERR_SUCCESSS)
     {
         g_force_fread_failure_enabled = 0;
-        g_force_fread_failure_error = FT_ER_SUCCESSS;
+        g_force_fread_failure_error = FT_ERR_SUCCESSS;
         return ;
     }
     g_force_fread_failure_enabled = 1;
@@ -125,7 +125,7 @@ void su_force_fread_failure(int error_code)
 void su_clear_forced_fread_failure(void)
 {
     g_force_fread_failure_enabled = 0;
-    g_force_fread_failure_error = FT_ER_SUCCESSS;
+    g_force_fread_failure_error = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -167,7 +167,7 @@ static su_file *create_file_stream(int file_descriptor)
         cmp_close(file_descriptor);
         return (ft_nullptr);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (file_stream);
 }
 
@@ -227,7 +227,7 @@ int su_fclose(su_file *stream)
     result = cmp_close(stream->_descriptor);
     if (result == 0)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         su_file_unlock(stream, lock_acquired);
         su_file_teardown_thread_safety(stream);
         std::free(stream);
@@ -235,7 +235,7 @@ int su_fclose(su_file *stream)
     }
     stream->closed = false;
     su_file_unlock(stream, lock_acquired);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
     {
         ft_errno = cmp_normalize_ft_errno(ft_errno);
         return (result);
@@ -261,7 +261,7 @@ size_t su_fread(void *buffer, size_t size, size_t count, su_file *stream)
     }
     if (size == 0 || count == 0)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     lock_acquired = false;
@@ -279,8 +279,8 @@ size_t su_fread(void *buffer, size_t size, size_t count, su_file *stream)
 
         forced_error = g_force_fread_failure_error;
         g_force_fread_failure_enabled = 0;
-        g_force_fread_failure_error = FT_ER_SUCCESSS;
-        if (forced_error == FT_ER_SUCCESSS)
+        g_force_fread_failure_error = FT_ERR_SUCCESSS;
+        if (forced_error == FT_ERR_SUCCESSS)
             forced_error = FT_ERR_IO;
         ft_errno = forced_error;
         su_file_unlock(stream, lock_acquired);
@@ -306,7 +306,7 @@ size_t su_fread(void *buffer, size_t size, size_t count, su_file *stream)
         total_read += static_cast<size_t>(bytes_read);
     }
     if (bytes_read >= 0)
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
     su_file_unlock(stream, lock_acquired);
     return (total_read / size);
 }
@@ -325,7 +325,7 @@ size_t su_fwrite(const void *buffer, size_t size, size_t count, su_file *stream)
     }
     if (size == 0 || count == 0)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     lock_acquired = false;
@@ -351,7 +351,7 @@ size_t su_fwrite(const void *buffer, size_t size, size_t count, su_file *stream)
         su_file_unlock(stream, lock_acquired);
         return (0);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     su_file_unlock(stream, lock_acquired);
     return (static_cast<size_t>(bytes_written) / size);
 }
@@ -378,14 +378,14 @@ int su_fseek(su_file *stream, long offset, int origin)
     result = lseek(stream->_descriptor, offset, origin);
     if (result < 0)
     {
-        if (ft_errno != FT_ER_SUCCESSS)
+        if (ft_errno != FT_ERR_SUCCESSS)
             ft_errno = cmp_normalize_ft_errno(ft_errno);
         else if (errno != 0)
             ft_errno = cmp_map_system_error_to_ft(errno);
         su_file_unlock(stream, lock_acquired);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     su_file_unlock(stream, lock_acquired);
     return (0);
 }
@@ -412,14 +412,14 @@ long su_ftell(su_file *stream)
     position = lseek(stream->_descriptor, 0, SEEK_CUR);
     if (position < 0)
     {
-        if (ft_errno != FT_ER_SUCCESSS)
+        if (ft_errno != FT_ERR_SUCCESSS)
             ft_errno = cmp_normalize_ft_errno(ft_errno);
         else if (errno != 0)
             ft_errno = cmp_map_system_error_to_ft(errno);
         su_file_unlock(stream, lock_acquired);
         return (-1L);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     su_file_unlock(stream, lock_acquired);
     return (position);
 }

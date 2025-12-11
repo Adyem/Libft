@@ -2,7 +2,7 @@
 #define API_REQUEST_SIGNING_HPP
 
 #include <cstddef>
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 
 struct api_hmac_signature_input
 {

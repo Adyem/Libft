@@ -45,7 +45,7 @@ json_item* json_create_item(const char *key, const char *value)
         return (ft_nullptr);
     }
     json_item_refresh_numeric_state(item);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (item);
 }
 
@@ -86,7 +86,7 @@ json_item* json_create_item(const char *key, const bool value)
         return (ft_nullptr);
     }
     json_item_refresh_numeric_state(item);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (item);
 }
 
@@ -124,7 +124,7 @@ json_item* json_create_item(const char *key, const int value)
         return (ft_nullptr);
     }
     json_item_refresh_numeric_state(item);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (item);
 }
 

@@ -12,7 +12,7 @@ typedef SSIZE_T ssize_t;
 # include <unistd.h>
 #endif
 
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../Template/vector.hpp"
 
 class pt_mutex;
@@ -36,7 +36,8 @@ int     su_open(const char *path_name, int flags);
 int     su_open(const char *path_name, int flags, mode_t mode);
 ssize_t su_read(int file_descriptor, void *buffer, size_t count);
 ssize_t su_write(int file_descriptor, const void *buffer, size_t count);
-typedef ssize_t (*t_su_write_syscall_hook)(int file_descriptor, const void *buffer, size_t count);
+typedef ssize_t (*t_su_write_syscall_hook)(int file_descriptor,
+            const void *buffer, size_t count);
 void    su_set_write_syscall_hook(t_su_write_syscall_hook hook);
 void    su_reset_write_syscall_hook(void);
 int     su_close(int file_descriptor);
@@ -59,8 +60,10 @@ void    su_run_resource_tracers(const char *reason);
 void    su_internal_set_abort_reason(const char *reason);
 const char *su_internal_take_abort_reason(void);
 
-int     su_locale_compare(const char *left, const char *right, const char *locale_name, int *result);
-int     su_locale_casefold(const char *input, const char *locale_name, ft_string &output);
+int     su_locale_compare(const char *left, const char *right, const char *locale_name,
+            int *result);
+int     su_locale_casefold(const char *input, const char *locale_name,
+            ft_string &output);
 
 typedef struct su_file
 {
@@ -88,13 +91,16 @@ int     su_file_lock(su_file *stream, bool *lock_acquired);
 void    su_file_unlock(su_file *stream, bool lock_acquired);
 
 int     su_copy_file(const char *source_path, const char *destination_path);
-int     su_copy_directory_recursive(const char *source_path, const char *destination_path);
+int     su_copy_directory_recursive(const char *source_path,
+            const char *destination_path);
 int     su_inspect_permissions(const char *path, mode_t *permissions_out);
 
 typedef void (*t_su_service_signal_handler)(int signal_number, void *user_context);
 void    su_service_force_no_fork(bool enable);
-int     su_service_daemonize(const char *working_directory, const char *pid_file_path, bool redirect_standard_streams);
-int     su_service_install_signal_handlers(t_su_service_signal_handler handler, void *user_context);
+int     su_service_daemonize(const char *working_directory, const char *pid_file_path,
+            bool redirect_standard_streams);
+int     su_service_install_signal_handlers(t_su_service_signal_handler handler,
+            void *user_context);
 void    su_service_clear_signal_handlers(void);
 
 typedef int (*t_su_health_check)(void *context, ft_string &detail);
@@ -107,10 +113,12 @@ typedef struct s_su_health_check_result
     int         error_code;
 }   t_su_health_check_result;
 
-int     su_health_register_check(const char *name, t_su_health_check check, void *context);
+int     su_health_register_check(const char *name, t_su_health_check check,
+            void *context);
 int     su_health_unregister_check(const char *name);
 void    su_health_clear_checks(void);
-int     su_health_run_checks(t_su_health_check_result *results, size_t capacity, size_t *count);
+int     su_health_run_checks(t_su_health_check_result *results, size_t capacity,
+            size_t *count);
 int     su_health_run_check(const char *name, t_su_health_check_result *result);
 
 #endif

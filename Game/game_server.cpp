@@ -36,15 +36,15 @@ int ft_game_server::lock_pair(const ft_game_server &first,
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ER_SUCCESSS)
+        if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ER_SUCCESSS;
-        return (FT_ER_SUCCESSS);
+        ft_errno = FT_ERR_SUCCESSS;
+        return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -62,13 +62,13 @@ int ft_game_server::lock_pair(const ft_game_server &first,
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != FT_ER_SUCCESSS)
+        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ER_SUCCESSS)
+        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
         {
             if (!swapped)
             {
@@ -80,8 +80,8 @@ int ft_game_server::lock_pair(const ft_game_server &first,
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ER_SUCCESSS;
-            return (FT_ER_SUCCESSS);
+            ft_errno = FT_ERR_SUCCESSS;
+            return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -95,7 +95,7 @@ int ft_game_server::lock_pair(const ft_game_server &first,
 }
 
 ft_game_server::ft_game_server(const ft_sharedptr<ft_world> &world, const char *auth_token) noexcept
-    : _server(ft_nullptr), _world(world), _clients(), _auth_token(), _on_join(ft_nullptr), _on_leave(ft_nullptr), _error_code(FT_ER_SUCCESSS), _mutex()
+    : _server(ft_nullptr), _world(world), _clients(), _auth_token(), _on_join(ft_nullptr), _on_leave(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
     ft_websocket_server *server_instance;
 
@@ -109,7 +109,7 @@ ft_game_server::ft_game_server(const ft_sharedptr<ft_world> &world, const char *
     this->_server = server_instance;
     if (auth_token)
         this->_auth_token = auth_token;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -119,7 +119,7 @@ ft_game_server::~ft_game_server()
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_server_restore_errno(guard, entry_errno);
@@ -130,20 +130,20 @@ ft_game_server::~ft_game_server()
         delete this->_server;
         this->_server = ft_nullptr;
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_server_restore_errno(guard, entry_errno);
     return ;
 }
 
 ft_game_server::ft_game_server(const ft_game_server &other) noexcept
-    : _server(ft_nullptr), _world(), _clients(), _auth_token(), _on_join(ft_nullptr), _on_leave(ft_nullptr), _error_code(FT_ER_SUCCESSS), _mutex()
+    : _server(ft_nullptr), _world(), _clients(), _auth_token(), _on_join(ft_nullptr), _on_leave(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
     ft_websocket_server *server_instance;
     int entry_errno;
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ER_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
         game_server_restore_errno(other_guard, entry_errno);
@@ -158,14 +158,14 @@ ft_game_server::ft_game_server(const ft_game_server &other) noexcept
     }
     this->_server = server_instance;
     this->_world = other._world;
-    if (this->_world.get_error() != FT_ER_SUCCESSS)
+    if (this->_world.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_world.get_error());
         game_server_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_clients = other._clients;
-    if (this->_clients.get_error() != FT_ER_SUCCESSS)
+    if (this->_clients.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_clients.get_error());
         game_server_restore_errno(other_guard, entry_errno);
@@ -191,7 +191,7 @@ ft_game_server &ft_game_server::operator=(const ft_game_server &other) noexcept
         return (*this);
     entry_errno = ft_errno;
     lock_error = ft_game_server::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -211,7 +211,7 @@ ft_game_server &ft_game_server::operator=(const ft_game_server &other) noexcept
         this->_server = server_instance;
     }
     this->_world = other._world;
-    if (this->_world.get_error() != FT_ER_SUCCESSS)
+    if (this->_world.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_world.get_error());
         game_server_restore_errno(this_guard, entry_errno);
@@ -219,7 +219,7 @@ ft_game_server &ft_game_server::operator=(const ft_game_server &other) noexcept
         return (*this);
     }
     this->_clients = other._clients;
-    if (this->_clients.get_error() != FT_ER_SUCCESSS)
+    if (this->_clients.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_clients.get_error());
         game_server_restore_errno(this_guard, entry_errno);
@@ -237,13 +237,13 @@ ft_game_server &ft_game_server::operator=(const ft_game_server &other) noexcept
 }
 
 ft_game_server::ft_game_server(ft_game_server &&other) noexcept
-    : _server(ft_nullptr), _world(), _clients(), _auth_token(), _on_join(ft_nullptr), _on_leave(ft_nullptr), _error_code(FT_ER_SUCCESSS), _mutex()
+    : _server(ft_nullptr), _world(), _clients(), _auth_token(), _on_join(ft_nullptr), _on_leave(ft_nullptr), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
     int entry_errno;
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ER_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
         game_server_restore_errno(other_guard, entry_errno);
@@ -252,14 +252,14 @@ ft_game_server::ft_game_server(ft_game_server &&other) noexcept
     this->_server = other._server;
     other._server = ft_nullptr;
     this->_world = ft_move(other._world);
-    if (this->_world.get_error() != FT_ER_SUCCESSS)
+    if (this->_world.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_world.get_error());
         game_server_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_clients = ft_move(other._clients);
-    if (this->_clients.get_error() != FT_ER_SUCCESSS)
+    if (this->_clients.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_clients.get_error());
         game_server_restore_errno(other_guard, entry_errno);
@@ -273,22 +273,22 @@ ft_game_server::ft_game_server(ft_game_server &&other) noexcept
     other._on_leave = ft_nullptr;
     other._auth_token.clear();
     other._clients.clear();
-    if (other._clients.get_error() != FT_ER_SUCCESSS)
+    if (other._clients.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other._clients.get_error());
         game_server_restore_errno(other_guard, entry_errno);
         return ;
     }
     other._world = ft_sharedptr<ft_world>();
-    if (other._world.get_error() != FT_ER_SUCCESSS)
+    if (other._world.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other._world.get_error());
         game_server_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->set_error(this->_error_code);
-    other._error_code = FT_ER_SUCCESSS;
-    other.set_error(FT_ER_SUCCESSS);
+    other._error_code = FT_ERR_SUCCESSS;
+    other.set_error(FT_ERR_SUCCESSS);
     game_server_restore_errno(other_guard, entry_errno);
     return ;
 }
@@ -304,7 +304,7 @@ ft_game_server &ft_game_server::operator=(ft_game_server &&other) noexcept
         return (*this);
     entry_errno = ft_errno;
     lock_error = ft_game_server::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         return (*this);
@@ -317,7 +317,7 @@ ft_game_server &ft_game_server::operator=(ft_game_server &&other) noexcept
     this->_server = other._server;
     other._server = ft_nullptr;
     this->_world = ft_move(other._world);
-    if (this->_world.get_error() != FT_ER_SUCCESSS)
+    if (this->_world.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_world.get_error());
         game_server_restore_errno(this_guard, entry_errno);
@@ -325,7 +325,7 @@ ft_game_server &ft_game_server::operator=(ft_game_server &&other) noexcept
         return (*this);
     }
     this->_clients = ft_move(other._clients);
-    if (this->_clients.get_error() != FT_ER_SUCCESSS)
+    if (this->_clients.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_clients.get_error());
         game_server_restore_errno(this_guard, entry_errno);
@@ -340,7 +340,7 @@ ft_game_server &ft_game_server::operator=(ft_game_server &&other) noexcept
     other._on_leave = ft_nullptr;
     other._auth_token.clear();
     other._clients.clear();
-    if (other._clients.get_error() != FT_ER_SUCCESSS)
+    if (other._clients.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other._clients.get_error());
         game_server_restore_errno(this_guard, entry_errno);
@@ -348,7 +348,7 @@ ft_game_server &ft_game_server::operator=(ft_game_server &&other) noexcept
         return (*this);
     }
     other._world = ft_sharedptr<ft_world>();
-    if (other._world.get_error() != FT_ER_SUCCESSS)
+    if (other._world.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other._world.get_error());
         game_server_restore_errno(this_guard, entry_errno);
@@ -356,8 +356,8 @@ ft_game_server &ft_game_server::operator=(ft_game_server &&other) noexcept
         return (*this);
     }
     this->set_error(this->_error_code);
-    other._error_code = FT_ER_SUCCESSS;
-    other.set_error(FT_ER_SUCCESSS);
+    other._error_code = FT_ERR_SUCCESSS;
+    other.set_error(FT_ERR_SUCCESSS);
     game_server_restore_errno(this_guard, entry_errno);
     game_server_restore_errno(other_guard, entry_errno);
     return (*this);
@@ -376,7 +376,7 @@ int ft_game_server::start(const char *ip, uint16_t port) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_server_restore_errno(guard, entry_errno);
@@ -394,7 +394,7 @@ int ft_game_server::start(const char *ip, uint16_t port) noexcept
         game_server_restore_errno(guard, entry_errno);
         return (1);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_server_restore_errno(guard, entry_errno);
     return (0);
 }
@@ -405,14 +405,14 @@ void ft_game_server::set_join_callback(void (*callback)(int)) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_server_restore_errno(guard, entry_errno);
         return ;
     }
     this->_on_join = callback;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_server_restore_errno(guard, entry_errno);
     return ;
 }
@@ -423,14 +423,14 @@ void ft_game_server::set_leave_callback(void (*callback)(int)) noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_server_restore_errno(guard, entry_errno);
         return ;
     }
     this->_on_leave = callback;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_server_restore_errno(guard, entry_errno);
     return ;
 }
@@ -466,7 +466,7 @@ int ft_game_server::handle_message_locked(int client_handle, const ft_string &me
         }
         this->join_client_locked(ft_atoi(id_item->value), client_handle, guard);
         json_free_groups(groups);
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
     json_group *leave_group = json_find_group(groups, "leave");
@@ -482,7 +482,7 @@ int ft_game_server::handle_message_locked(int client_handle, const ft_string &me
         this->leave_client_locked(ft_atoi(id_item->value), guard);
         nw_close(client_handle);
         json_free_groups(groups);
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
     json_group *event_group = json_find_group(groups, "event");
@@ -501,7 +501,7 @@ int ft_game_server::handle_message_locked(int client_handle, const ft_string &me
         return (1);
     }
     ft_sharedptr<ft_event> event(new ft_event());
-    if (event.get_error() != FT_ER_SUCCESSS)
+    if (event.get_error() != FT_ERR_SUCCESSS)
     {
         json_free_groups(groups);
         this->set_error(event.get_error());
@@ -509,13 +509,13 @@ int ft_game_server::handle_message_locked(int client_handle, const ft_string &me
     }
     event->set_id(ft_atoi(id_item->value));
     event->set_duration(ft_atoi(duration_item->value));
-    if (this->_world.get_error() != FT_ER_SUCCESSS)
+    if (this->_world.get_error() != FT_ERR_SUCCESSS)
     {
         json_free_groups(groups);
         this->set_error(this->_world.get_error());
         return (1);
     }
-    else if (this->_world && this->_world->get_error() != FT_ER_SUCCESSS)
+    else if (this->_world && this->_world->get_error() != FT_ERR_SUCCESSS)
     {
         json_free_groups(groups);
         this->set_error(this->_world->get_error());
@@ -524,40 +524,40 @@ int ft_game_server::handle_message_locked(int client_handle, const ft_string &me
     this->_world->schedule_event(event);
     json_free_groups(groups);
     ft_sharedptr<ft_event_scheduler> scheduler = this->_world->get_event_scheduler();
-    if (scheduler.get_error() != FT_ER_SUCCESSS)
+    if (scheduler.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(scheduler.get_error());
         return (1);
     }
-    else if (scheduler && scheduler->get_error() != FT_ER_SUCCESSS)
+    else if (scheduler && scheduler->get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(scheduler->get_error());
         return (1);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
 int ft_game_server::serialize_world_locked(ft_string &out, ft_unique_lock<pt_mutex> &guard) const noexcept
 {
     (void)guard;
-    if (this->_world.get_error() != FT_ER_SUCCESSS)
+    if (this->_world.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_world.get_error());
         return (1);
     }
-    else if (this->_world && this->_world->get_error() != FT_ER_SUCCESSS)
+    else if (this->_world && this->_world->get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_world->get_error());
         return (1);
     }
     ft_sharedptr<ft_event_scheduler> scheduler = this->_world->get_event_scheduler();
-    if (scheduler.get_error() != FT_ER_SUCCESSS)
+    if (scheduler.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(scheduler.get_error());
         return (1);
     }
-    else if (scheduler && scheduler->get_error() != FT_ER_SUCCESSS)
+    else if (scheduler && scheduler->get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(scheduler->get_error());
         return (1);
@@ -578,7 +578,7 @@ int ft_game_server::serialize_world_locked(ft_string &out, ft_unique_lock<pt_mut
     }
     out = content;
     cma_free(content);
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (0);
 }
 
@@ -591,7 +591,7 @@ void ft_game_server::run_once() noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
         game_server_restore_errno(guard, entry_errno);
@@ -626,7 +626,7 @@ void ft_game_server::run_once() noexcept
         this->_server->send_text(client_ptr->value, update);
         client_ptr++;
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     game_server_restore_errno(guard, entry_errno);
     return ;
 }
@@ -635,14 +635,14 @@ void ft_game_server::join_client_locked(int client_id, int client_handle, ft_uni
 {
     (void)guard;
     this->_clients.insert(client_id, client_handle);
-    if (this->_clients.get_error() != FT_ER_SUCCESSS)
+    if (this->_clients.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_clients.get_error());
         return ;
     }
     if (this->_on_join)
         this->_on_join(client_id);
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -650,14 +650,14 @@ void ft_game_server::leave_client_locked(int client_id, ft_unique_lock<pt_mutex>
 {
     (void)guard;
     this->_clients.remove(client_id);
-    if (this->_clients.get_error() != FT_ER_SUCCESSS)
+    if (this->_clients.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_clients.get_error());
         return ;
     }
     if (this->_on_leave)
         this->_on_leave(client_id);
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -668,7 +668,7 @@ int ft_game_server::get_error() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_server *>(this)->set_error(guard.get_error());
         game_server_restore_errno(guard, entry_errno);
@@ -687,7 +687,7 @@ const char *ft_game_server::get_error_str() const noexcept
 
     entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_server *>(this)->set_error(guard.get_error());
         game_server_restore_errno(guard, entry_errno);

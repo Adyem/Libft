@@ -53,7 +53,7 @@ static int logger_lock_contention_lock()
         ft_errno = ft_map_system_error(lock_result);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -79,7 +79,7 @@ static int logger_lock_contention_unlock()
         ft_errno = ft_map_system_error(unlock_result);
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -90,7 +90,7 @@ void ft_log_enable_lock_contention_sampling(bool enable)
     g_lock_contention_sampling_enabled = enable;
     if (!g_lock_contention_sampling_enabled)
         g_lock_contention_last_sample_ms = 0;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     logger_lock_contention_unlock();
     return ;
 }
@@ -100,7 +100,7 @@ void ft_log_set_lock_contention_sampling_interval(unsigned int interval_ms)
     if (logger_lock_contention_lock() != 0)
         return ;
     g_lock_contention_sample_interval_ms = interval_ms;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     logger_lock_contention_unlock();
     return ;
 }
@@ -112,7 +112,7 @@ void ft_log_set_lock_contention_priority_threshold(long threshold_ms)
     if (logger_lock_contention_lock() != 0)
         return ;
     g_lock_contention_priority_threshold_ms = threshold_ms;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     logger_lock_contention_unlock();
     return ;
 }
@@ -149,7 +149,7 @@ int ft_log_sample_lock_contention(s_log_lock_contention_sample *samples, size_t 
         return (-1);
     if (!g_lock_contention_sampling_enabled)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         logger_lock_contention_unlock();
         return (0);
     }
@@ -161,7 +161,7 @@ int ft_log_sample_lock_contention(s_log_lock_contention_sample *samples, size_t 
         elapsed_ms = now_ms - g_lock_contention_last_sample_ms;
         if (elapsed_ms >= 0 && elapsed_ms < static_cast<long>(g_lock_contention_sample_interval_ms))
         {
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             logger_lock_contention_unlock();
             return (0);
         }
@@ -213,7 +213,7 @@ int ft_log_sample_lock_contention(s_log_lock_contention_sample *samples, size_t 
     }
     if (count)
         *count = output_index;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     logger_lock_contention_unlock();
     return (0);
 }
@@ -237,7 +237,7 @@ int ft_log_lock_contention_get_statistics(s_log_lock_contention_statistics *stat
     if (g_lock_contention_wait_observations > 0)
         average_ms = g_lock_contention_wait_total_ms / static_cast<double>(g_lock_contention_wait_observations);
     statistics->average_wait_ms = average_ms;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     logger_lock_contention_unlock();
     return (0);
 }
@@ -252,7 +252,7 @@ void ft_log_lock_contention_reset_statistics()
     g_lock_contention_wait_total_ms = 0.0;
     g_lock_contention_wait_observations = 0;
     g_lock_contention_longest_wait_ms = 0;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     logger_lock_contention_unlock();
     return ;
 }

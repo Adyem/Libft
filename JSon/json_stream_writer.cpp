@@ -29,7 +29,7 @@ static int json_stream_writer_write_chunk(json_stream_writer *writer,
         }
         offset += written;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -127,7 +127,7 @@ static int json_stream_writer_write_escaped_string(json_stream_writer *writer,
     }
     if (json_stream_writer_write_chunk(writer, "\"", 1) != 0)
         return (-1);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -233,7 +233,7 @@ static int json_stream_writer_push_context(json_stream_writer *writer,
     else
         context->expecting_key = false;
     writer->context_size += 1;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -259,7 +259,7 @@ static int json_stream_writer_pop_context(json_stream_writer *writer,
         return (-1);
     }
     writer->context_size -= 1;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -339,8 +339,8 @@ int json_stream_writer_init(json_stream_writer *writer,
     writer->began_document = false;
     writer->finished_document = false;
     writer->root_value_emitted = false;
-    writer->error_code = FT_ER_SUCCESSS;
-    ft_errno = FT_ER_SUCCESSS;
+    writer->error_code = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -358,7 +358,7 @@ void json_stream_writer_destroy(json_stream_writer *writer)
     writer->began_document = false;
     writer->finished_document = false;
     writer->root_value_emitted = false;
-    writer->error_code = FT_ER_SUCCESSS;
+    writer->error_code = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -386,7 +386,7 @@ int json_stream_writer_process(json_stream_writer *writer,
         writer->error_code = FT_ERR_INVALID_STATE;
         return (-1);
     }
-    if (writer->error_code != FT_ER_SUCCESSS)
+    if (writer->error_code != FT_ERR_SUCCESSS)
     {
         ft_errno = writer->error_code;
         return (-1);
@@ -402,7 +402,7 @@ int json_stream_writer_process(json_stream_writer *writer,
         writer->began_document = true;
         writer->finished_document = false;
         writer->root_value_emitted = false;
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     if (event->type == JSON_STREAM_EVENT_END_DOCUMENT)
@@ -420,7 +420,7 @@ int json_stream_writer_process(json_stream_writer *writer,
             return (-1);
         }
         writer->finished_document = true;
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     if (writer->began_document == false || writer->finished_document != false)
@@ -473,7 +473,7 @@ int json_stream_writer_process(json_stream_writer *writer,
             return (-1);
         }
         current->expecting_key = false;
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     if (event->type == JSON_STREAM_EVENT_BEGIN_OBJECT)
@@ -494,7 +494,7 @@ int json_stream_writer_process(json_stream_writer *writer,
             writer->error_code = ft_errno;
             return (-1);
         }
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     if (event->type == JSON_STREAM_EVENT_END_OBJECT)
@@ -509,7 +509,7 @@ int json_stream_writer_process(json_stream_writer *writer,
             writer->error_code = ft_errno;
             return (-1);
         }
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     if (event->type == JSON_STREAM_EVENT_BEGIN_ARRAY)
@@ -530,7 +530,7 @@ int json_stream_writer_process(json_stream_writer *writer,
             writer->error_code = ft_errno;
             return (-1);
         }
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     if (event->type == JSON_STREAM_EVENT_END_ARRAY)
@@ -545,7 +545,7 @@ int json_stream_writer_process(json_stream_writer *writer,
             writer->error_code = ft_errno;
             return (-1);
         }
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     if (event->type == JSON_STREAM_EVENT_STRING)
@@ -561,7 +561,7 @@ int json_stream_writer_process(json_stream_writer *writer,
             return (-1);
         }
         json_stream_writer_mark_parent_consumed(writer);
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     if (event->type == JSON_STREAM_EVENT_NUMBER)
@@ -577,7 +577,7 @@ int json_stream_writer_process(json_stream_writer *writer,
             return (-1);
         }
         json_stream_writer_mark_parent_consumed(writer);
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     if (event->type == JSON_STREAM_EVENT_BOOLEAN)
@@ -593,7 +593,7 @@ int json_stream_writer_process(json_stream_writer *writer,
             return (-1);
         }
         json_stream_writer_mark_parent_consumed(writer);
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     if (event->type == JSON_STREAM_EVENT_NULL)
@@ -609,7 +609,7 @@ int json_stream_writer_process(json_stream_writer *writer,
             return (-1);
         }
         json_stream_writer_mark_parent_consumed(writer);
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     ft_errno = FT_ERR_INVALID_ARGUMENT;
@@ -624,7 +624,7 @@ int json_stream_writer_finish(json_stream_writer *writer)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    if (writer->error_code != FT_ER_SUCCESSS)
+    if (writer->error_code != FT_ERR_SUCCESSS)
     {
         ft_errno = writer->error_code;
         return (-1);
@@ -639,6 +639,6 @@ int json_stream_writer_finish(json_stream_writer *writer)
         ft_errno = FT_ERR_INVALID_STATE;
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }

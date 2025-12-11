@@ -11,7 +11,7 @@ bool api_promise::request(const char *ip, uint16_t port,
     if (!resp)
     {
         int request_error = ft_errno;
-        if (request_error == FT_ER_SUCCESSS)
+        if (request_error == FT_ERR_SUCCESSS)
             request_error = FT_ERR_SOCKET_CONNECT_FAILED;
         this->set_error(request_error);
         return (false);
@@ -31,7 +31,7 @@ bool api_string_promise::request(const char *ip, uint16_t port,
     if (!resp)
     {
         int request_error = ft_errno;
-        if (request_error == FT_ER_SUCCESSS)
+        if (request_error == FT_ERR_SUCCESSS)
             request_error = FT_ERR_SOCKET_CONNECT_FAILED;
         this->set_error(request_error);
         return (false);
@@ -51,7 +51,7 @@ bool api_tls_promise::request(const char *host, uint16_t port,
     if (!resp)
     {
         int request_error = ft_errno;
-        if (request_error == FT_ER_SUCCESSS)
+        if (request_error == FT_ERR_SUCCESSS)
             request_error = FT_ERR_SOCKET_CONNECT_FAILED;
         this->set_error(request_error);
         return (false);
@@ -71,7 +71,7 @@ bool api_tls_string_promise::request(const char *host, uint16_t port,
     if (!resp)
     {
         int request_error = ft_errno;
-        if (request_error == FT_ER_SUCCESSS)
+        if (request_error == FT_ERR_SUCCESSS)
             request_error = FT_ERR_SOCKET_CONNECT_FAILED;
         this->set_error(request_error);
         return (false);

@@ -17,7 +17,7 @@ FT_TEST(test_memcpy_basic, "ft_memcpy basic")
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(destination, ft_memcpy(destination, source, 6));
     FT_ASSERT_EQ(0, ft_strcmp(destination, source));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -37,7 +37,7 @@ FT_TEST(test_memcpy_zero_length, "ft_memcpy zero length")
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(destination, ft_memcpy(destination, source, 0));
     FT_ASSERT_EQ(0, ft_strcmp(destination, "abc"));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -45,7 +45,7 @@ FT_TEST(test_memcpy_zero_length_nullptr, "ft_memcpy zero length with nullptr")
 {
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(ft_nullptr, ft_memcpy(ft_nullptr, ft_nullptr, 0));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -53,7 +53,7 @@ FT_TEST(test_memcpy_zero_length_clears_errno, "ft_memcpy zero length recovers er
 {
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(ft_nullptr, ft_memcpy(ft_nullptr, ft_nullptr, 0));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -61,10 +61,10 @@ FT_TEST(test_memcpy_null, "ft_memcpy with nullptr")
 {
     char source[1];
     source[0] = 'a';
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(ft_nullptr, ft_memcpy(ft_nullptr, source, 1));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(ft_nullptr, ft_memcpy(source, ft_nullptr, 1));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -78,13 +78,13 @@ FT_TEST(test_memcpy_same_pointer, "ft_memcpy same pointer")
     buffer[1] = 'b';
     buffer[2] = 'c';
     buffer[3] = 'd';
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(buffer, ft_memcpy(buffer, buffer, 4));
     FT_ASSERT_EQ('a', buffer[0]);
     FT_ASSERT_EQ('b', buffer[1]);
     FT_ASSERT_EQ('c', buffer[2]);
     FT_ASSERT_EQ('d', buffer[3]);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -98,7 +98,7 @@ FT_TEST(test_memcpy_overlapping_regions, "ft_memcpy overlapping regions")
     buffer[3] = '4';
     buffer[4] = '5';
     buffer[5] = '\0';
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(buffer + 1, ft_memcpy(buffer + 1, buffer, 4));
     FT_ASSERT_EQ('2', buffer[1]);
     FT_ASSERT_EQ('4', buffer[3]);
@@ -119,7 +119,7 @@ FT_TEST(test_memcpy_recovers_after_overlap_error, "ft_memcpy clears errno after 
     destination[1] = 'x';
     destination[2] = 'x';
     destination[3] = '\0';
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(destination + 1, ft_memcpy(destination + 1, destination, 2));
     FT_ASSERT_EQ(FT_ERR_OVERLAP, ft_errno);
 
@@ -129,7 +129,7 @@ FT_TEST(test_memcpy_recovers_after_overlap_error, "ft_memcpy clears errno after 
     FT_ASSERT_EQ('a', destination[1]);
     FT_ASSERT_EQ('t', destination[2]);
     FT_ASSERT_EQ('\0', destination[3]);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -139,10 +139,10 @@ FT_TEST(test_memcpy_null_sets_errno, "ft_memcpy null arguments set errno")
 
     source[0] = 'q';
     source[1] = '\0';
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(ft_nullptr, ft_memcpy(ft_nullptr, source, 1));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(ft_nullptr, ft_memcpy(source, ft_nullptr, 1));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);
@@ -166,7 +166,7 @@ FT_TEST(test_memcpy_success_clears_errno, "ft_memcpy success clears ft_errno")
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     FT_ASSERT_EQ(destination, ft_memcpy(destination, source, 5));
     FT_ASSERT_EQ(0, ft_strcmp(destination, source));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -195,6 +195,6 @@ FT_TEST(test_memcpy_partial_copy_preserves_tail, "ft_memcpy leaves bytes beyond 
     FT_ASSERT_EQ('t', destination[3]);
     FT_ASSERT_EQ('!', destination[4]);
     FT_ASSERT_EQ('\0', destination[5]);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }

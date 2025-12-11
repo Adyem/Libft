@@ -75,7 +75,7 @@ DataBuffer& DataBuffer::operator<<(const T& value)
     oss << value;
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
@@ -91,7 +91,7 @@ DataBuffer& DataBuffer::operator<<(const T& value)
     }
     len = ft_strlen_size_t(bytes);
     length_error = this->write_length_locked(len);
-    if (length_error != FT_ER_SUCCESSS)
+    if (length_error != FT_ERR_SUCCESSS)
     {
         this->_ok = false;
         this->set_error_unlocked(length_error);
@@ -103,7 +103,7 @@ DataBuffer& DataBuffer::operator<<(const T& value)
     while (index < len)
     {
         this->_buffer.push_back(static_cast<uint8_t>(bytes[index]));
-        if (this->_buffer.get_error() != FT_ER_SUCCESSS)
+        if (this->_buffer.get_error() != FT_ERR_SUCCESSS)
         {
             this->_ok = false;
             this->set_error_unlocked(this->_buffer.get_error());
@@ -115,8 +115,8 @@ DataBuffer& DataBuffer::operator<<(const T& value)
     }
     cma_free(bytes);
     this->_ok = true;
-    this->set_error_unlocked(FT_ER_SUCCESSS);
-    DataBuffer::restore_errno(guard, FT_ER_SUCCESSS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    DataBuffer::restore_errno(guard, FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -132,14 +132,14 @@ DataBuffer& DataBuffer::operator>>(T& value)
 
     entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
         ft_errno = entry_errno;
         return (*this);
     }
     length_error = this->read_length_locked(len);
-    if (length_error != FT_ER_SUCCESSS)
+    if (length_error != FT_ERR_SUCCESSS)
     {
         this->_ok = false;
         this->set_error_unlocked(length_error);
@@ -167,12 +167,12 @@ DataBuffer& DataBuffer::operator>>(T& value)
     ft_istringstream iss(string_value);
     iss >> value;
     cma_free(bytes);
-    this->_ok = (iss.get_error() == FT_ER_SUCCESSS);
+    this->_ok = (iss.get_error() == FT_ERR_SUCCESSS);
     if (this->_ok)
-        this->set_error_unlocked(FT_ER_SUCCESSS);
+        this->set_error_unlocked(FT_ERR_SUCCESSS);
     else
         this->set_error_unlocked(iss.get_error());
-    DataBuffer::restore_errno(guard, FT_ER_SUCCESSS);
+    DataBuffer::restore_errno(guard, FT_ERR_SUCCESSS);
     return (*this);
 }
 

@@ -1,7 +1,7 @@
 #ifndef API_REQUEST_METRICS_HPP
 #define API_REQUEST_METRICS_HPP
 
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../Observability/observability_networking_metrics.hpp"
 #include "../Time/time.hpp"
 #include "../Libft/libft.hpp"
@@ -36,7 +36,7 @@ struct api_request_metrics_guard
             _endpoint = host;
         else
             _endpoint = "(null)";
-        if (_endpoint.get_error() != FT_ER_SUCCESSS)
+        if (_endpoint.get_error() != FT_ERR_SUCCESSS)
         {
             _enabled = false;
             return ;
@@ -48,12 +48,12 @@ struct api_request_metrics_guard
             port_string = cma_itoa(static_cast<int>(port));
             if (!port_string)
             {
-                if (ft_errno != FT_ER_SUCCESSS)
+                if (ft_errno != FT_ERR_SUCCESSS)
                     _enabled = false;
                 return ;
             }
             _endpoint.append(':');
-            if (_endpoint.get_error() != FT_ER_SUCCESSS)
+            if (_endpoint.get_error() != FT_ERR_SUCCESSS)
             {
                 _enabled = false;
                 cma_free(port_string);
@@ -61,7 +61,7 @@ struct api_request_metrics_guard
             }
             _endpoint.append(port_string);
             cma_free(port_string);
-            if (_endpoint.get_error() != FT_ER_SUCCESSS)
+            if (_endpoint.get_error() != FT_ERR_SUCCESSS)
             {
                 _enabled = false;
                 return ;
@@ -92,7 +92,7 @@ struct api_request_metrics_guard
         status_value = -1;
         if (_status_pointer)
             status_value = *_status_pointer;
-        error_value = FT_ER_SUCCESSS;
+        error_value = FT_ERR_SUCCESSS;
         if (_error_pointer)
             error_value = *_error_pointer;
         sample.labels.component = "api";
@@ -110,7 +110,7 @@ struct api_request_metrics_guard
         sample.status_code = status_value;
         sample.error_code = error_value;
         sample.error_tag = ft_nullptr;
-        if (error_value == FT_ER_SUCCESSS)
+        if (error_value == FT_ERR_SUCCESSS)
             sample.success = true;
         else
             sample.success = false;

@@ -11,11 +11,11 @@
 static int cnfg_config_lock_if_enabled(cnfg_config *config, ft_unique_lock<pt_mutex> &mutex_guard)
 {
     if (!config || !config->thread_safe_enabled || !config->mutex)
-        return (FT_ER_SUCCESSS);
+        return (FT_ERR_SUCCESSS);
     mutex_guard = ft_unique_lock<pt_mutex>(*config->mutex);
-    if (mutex_guard.get_error() != FT_ER_SUCCESSS)
+    if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
         return (mutex_guard.get_error());
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 static void cnfg_config_unlock_guard(ft_unique_lock<pt_mutex> &mutex_guard)
@@ -33,7 +33,7 @@ static int config_handle_write_failure(FILE *file)
     error_code = ft_errno;
     if (file)
         ft_fclose(file);
-    if (error_code == FT_ER_SUCCESSS)
+    if (error_code == FT_ERR_SUCCESSS)
         error_code = FT_ERR_IO;
     ft_errno = error_code;
     return (-1);
@@ -90,7 +90,7 @@ static int config_write_ini(const cnfg_config *config, const char *filename)
     }
     if (ft_fclose(file) == EOF)
         return (-1);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -181,7 +181,7 @@ int config_write_file(const cnfg_config *config, const char *filename)
         return (-1);
     }
     lock_error = cnfg_config_lock_if_enabled(const_cast<cnfg_config*>(config), mutex_guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         ft_errno = lock_error;
         return (-1);

@@ -19,7 +19,7 @@ int html_node_prepare_thread_safety(html_node *node)
     }
     if (node->thread_safe_enabled && node->mutex)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     memory = std::malloc(sizeof(pt_mutex));
@@ -29,7 +29,7 @@ int html_node_prepare_thread_safety(html_node *node)
         return (-1);
     }
     mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ER_SUCCESSS)
+    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
     {
         int mutex_error;
 
@@ -41,7 +41,7 @@ int html_node_prepare_thread_safety(html_node *node)
     }
     node->mutex = mutex_pointer;
     node->thread_safe_enabled = true;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -64,7 +64,7 @@ int html_node_lock(const html_node *node, bool *lock_acquired)
     html_node *mutable_node;
     int        entry_errno;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (lock_acquired)
         *lock_acquired = false;
     if (!node)
@@ -72,7 +72,7 @@ int html_node_lock(const html_node *node, bool *lock_acquired)
         ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    entry_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ERR_SUCCESSS;
     mutable_node = const_cast<html_node *>(node);
     if (!mutable_node->thread_safe_enabled || !mutable_node->mutex)
     {
@@ -80,7 +80,7 @@ int html_node_lock(const html_node *node, bool *lock_acquired)
         return (0);
     }
     mutable_node->mutex->lock(THREAD_ID);
-    if (mutable_node->mutex->get_error() != FT_ER_SUCCESSS)
+    if (mutable_node->mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = mutable_node->mutex->get_error();
         return (-1);
@@ -96,18 +96,18 @@ void html_node_unlock(const html_node *node, bool lock_acquired)
     html_node *mutable_node;
     int        entry_errno;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (!node || !lock_acquired)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     mutable_node = const_cast<html_node *>(node);
     if (!mutable_node->mutex)
         return ;
-    entry_errno = FT_ER_SUCCESSS;
+    entry_errno = FT_ERR_SUCCESSS;
     mutable_node->mutex->unlock(THREAD_ID);
-    if (mutable_node->mutex->get_error() != FT_ER_SUCCESSS)
+    if (mutable_node->mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = mutable_node->mutex->get_error();
         return ;

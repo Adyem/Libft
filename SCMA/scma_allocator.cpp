@@ -55,7 +55,7 @@ int    scma_initialize(ft_size_t initial_capacity)
     used_size = 0;
     initialized = 1;
     scma_reset_live_snapshot();
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     initialization_result = 1;
     return (scma_unlock_and_return_int(initialization_result));
 }
@@ -93,7 +93,7 @@ void    scma_shutdown(void)
     used_size = 0;
     initialized = 0;
     scma_reset_live_snapshot();
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     scma_unlock_and_return_void();
     return ;
 }
@@ -107,11 +107,11 @@ int    scma_is_initialized(void)
         return (0);
     if (scma_initialized_ref())
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         initialized = 1;
     }
     else
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
     return (scma_unlock_and_return_int(initialized));
 }
 
@@ -190,7 +190,7 @@ scma_handle    scma_allocate(ft_size_t size)
         used_size += size;
         result_handle.index = new_index;
         result_handle.generation = block->generation;
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (scma_unlock_and_return_handle(result_handle));
     }
     block = &span.data[static_cast<size_t>(index)];
@@ -201,7 +201,7 @@ scma_handle    scma_allocate(ft_size_t size)
     result_handle.index = index;
     result_handle.generation = block->generation;
     used_size += size;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (scma_unlock_and_return_handle(result_handle));
 }
 
@@ -223,7 +223,7 @@ int    scma_free(scma_handle handle)
         && snapshot.handle.generation == handle.generation)
         scma_reset_live_snapshot();
     scma_compact();
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     free_result = 1;
     return (scma_unlock_and_return_int(free_result));
 }
@@ -335,7 +335,7 @@ int    scma_resize(scma_handle handle, ft_size_t new_size)
         std::free(temp_buffer);
         temp_buffer = ft_nullptr;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     resize_result = 1;
     return (scma_unlock_and_return_int(resize_result));
 }
@@ -363,7 +363,7 @@ int    scma_handle_is_valid(scma_handle handle)
         return (0);
     if (scma_validate_handle(handle, ft_nullptr))
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         valid = 1;
     }
     return (scma_unlock_and_return_int(valid));

@@ -25,7 +25,7 @@ int ft_memcpy_s(void *destination, size_t destination_size, const void *source, 
     char *destination_bytes;
     const char *source_bytes;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (number_of_bytes == 0)
         return (0);
     if (destination == ft_nullptr || source == ft_nullptr)
@@ -50,7 +50,7 @@ int ft_memcpy_s(void *destination, size_t destination_size, const void *source, 
         return (-1);
     }
     copy_result = ft_memcpy(destination, source, number_of_bytes);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
     {
         zero_buffer(destination, destination_size);
         return (-1);

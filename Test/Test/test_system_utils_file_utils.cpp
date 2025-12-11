@@ -1,6 +1,6 @@
 #include "../../Compatebility/compatebility_internal.hpp"
 #include "../../CPP_class/class_nullptr.hpp"
-#include "../../CPP_class/class_string_class.hpp"
+#include "../../CPP_class/class_string.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/system_utils.hpp"
 #include "../../System_utils/test_runner.hpp"
@@ -45,7 +45,7 @@ static int su_write_text_file(const char *path, const char *contents)
     text_length = std::strlen(contents);
     if (text_length == 0)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         su_fclose(file_stream);
         return (0);
     }
@@ -53,13 +53,13 @@ static int su_write_text_file(const char *path, const char *contents)
     if (written != text_length)
     {
         su_fclose(file_stream);
-        if (ft_errno == FT_ER_SUCCESSS)
+        if (ft_errno == FT_ERR_SUCCESSS)
             ft_errno = FT_ERR_IO;
         return (-1);
     }
     if (su_fclose(file_stream) != 0)
         return (-1);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -83,7 +83,7 @@ static ft_string su_read_text_file(const char *path)
         size_t bytes_read = su_fread(buffer, 1, sizeof(buffer), file_stream);
         if (bytes_read == 0)
         {
-            if (ft_errno == FT_ER_SUCCESSS)
+            if (ft_errno == FT_ERR_SUCCESSS)
                 break;
             result = ft_string(ft_errno);
             break;
@@ -180,18 +180,18 @@ FT_TEST(test_su_inspect_permissions_reports_mode_bits, "su_inspect_permissions r
 
 FT_TEST(test_su_copy_directory_handles_invalid_arguments, "su_copy_directory_recursive validates inputs")
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(-1, su_copy_directory_recursive(ft_nullptr, "target"));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(-1, su_copy_directory_recursive("missing", "target"));
-    FT_ASSERT(ft_errno != FT_ER_SUCCESSS);
+    FT_ASSERT(ft_errno != FT_ERR_SUCCESSS);
     return (1);
 }
 
 FT_TEST(test_su_inspect_permissions_rejects_null_output, "su_inspect_permissions rejects missing destination")
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     FT_ASSERT_EQ(-1, su_inspect_permissions("any", ft_nullptr));
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     return (1);

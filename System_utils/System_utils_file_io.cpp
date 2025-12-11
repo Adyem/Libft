@@ -46,21 +46,21 @@ ssize_t su_read(int file_descriptor, void *buffer, size_t count)
         ssize_t read_result = cmp_read(file_descriptor, buffer, count);
         if (read_result >= 0)
         {
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             return (read_result);
         }
         int stored_error = ft_errno;
-        if (stored_error != FT_ER_SUCCESSS)
+        if (stored_error != FT_ERR_SUCCESSS)
             stored_error = cmp_normalize_ft_errno(stored_error);
 #if defined(_WIN32) || defined(_WIN64)
-        if (stored_error == FT_ER_SUCCESSS)
+        if (stored_error == FT_ERR_SUCCESSS)
         {
             DWORD last_error = GetLastError();
             if (last_error != 0)
                 stored_error = cmp_map_system_error_to_ft(static_cast<int>(last_error));
         }
 #else
-        if (stored_error == FT_ER_SUCCESSS && errno != 0)
+        if (stored_error == FT_ERR_SUCCESSS && errno != 0)
             stored_error = cmp_map_system_error_to_ft(errno);
 #endif
         ft_errno = stored_error;
@@ -116,17 +116,17 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
                 return (-1);
             }
             int stored_error = ft_errno;
-            if (stored_error != FT_ER_SUCCESSS)
+            if (stored_error != FT_ERR_SUCCESSS)
                 stored_error = cmp_normalize_ft_errno(stored_error);
 #if defined(_WIN32) || defined(_WIN64)
-            if (stored_error == FT_ER_SUCCESSS)
+            if (stored_error == FT_ERR_SUCCESSS)
             {
                 DWORD last_error = GetLastError();
                 if (last_error != 0)
                     stored_error = cmp_map_system_error_to_ft(static_cast<int>(last_error));
             }
 #else
-            if (stored_error == FT_ER_SUCCESSS && errno != 0)
+            if (stored_error == FT_ERR_SUCCESSS && errno != 0)
                 stored_error = cmp_map_system_error_to_ft(errno);
 #endif
             ft_errno = stored_error;
@@ -155,7 +155,7 @@ ssize_t su_write(int file_descriptor, const void *buffer, size_t count)
 #endif
         }
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (total_written);
 }
 
@@ -165,23 +165,23 @@ int su_close(int file_descriptor)
     if (close_result != 0)
     {
         int stored_error = ft_errno;
-        if (stored_error != FT_ER_SUCCESSS)
+        if (stored_error != FT_ERR_SUCCESSS)
             stored_error = cmp_normalize_ft_errno(stored_error);
 #if defined(_WIN32) || defined(_WIN64)
-        if (stored_error == FT_ER_SUCCESSS)
+        if (stored_error == FT_ERR_SUCCESSS)
         {
             DWORD last_error = GetLastError();
             if (last_error != 0)
                 stored_error = cmp_map_system_error_to_ft(static_cast<int>(last_error));
         }
 #else
-        if (stored_error == FT_ER_SUCCESSS && errno != 0)
+        if (stored_error == FT_ERR_SUCCESSS && errno != 0)
             stored_error = cmp_map_system_error_to_ft(errno);
 #endif
         ft_errno = stored_error;
         return (close_result);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 

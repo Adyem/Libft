@@ -16,7 +16,7 @@ static ft_interval ft_interval_error(int error_code)
 
 static ft_interval ft_interval_propagate_input_error(const ft_interval &left_interval, const ft_interval &right_interval)
 {
-    if (left_interval._error_code != FT_ER_SUCCESSS)
+    if (left_interval._error_code != FT_ERR_SUCCESSS)
     {
         ft_interval interval;
 
@@ -26,7 +26,7 @@ static ft_interval ft_interval_propagate_input_error(const ft_interval &left_int
         ft_errno = interval._error_code;
         return (interval);
     }
-    if (right_interval._error_code != FT_ER_SUCCESSS)
+    if (right_interval._error_code != FT_ERR_SUCCESSS)
     {
         ft_interval interval;
 
@@ -45,12 +45,12 @@ ft_interval ft_interval_create(double lower, double upper) noexcept
 
     interval.lower = lower;
     interval.upper = upper;
-    interval._error_code = FT_ER_SUCCESSS;
+    interval._error_code = FT_ERR_SUCCESSS;
     if (std::isnan(lower) || std::isnan(upper))
         return (ft_interval_error(FT_ERR_INVALID_ARGUMENT));
     if (lower > upper)
         return (ft_interval_error(FT_ERR_INVALID_ARGUMENT));
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (interval);
 }
 
@@ -73,7 +73,7 @@ ft_interval ft_interval_add(const ft_interval &left_interval, const ft_interval 
     ft_interval result;
 
     input_error = ft_interval_propagate_input_error(left_interval, right_interval);
-    if (input_error._error_code != FT_ER_SUCCESSS)
+    if (input_error._error_code != FT_ERR_SUCCESSS)
         return (input_error);
     result = ft_interval_create(left_interval.lower + right_interval.lower,
             left_interval.upper + right_interval.upper);
@@ -87,7 +87,7 @@ ft_interval ft_interval_subtract(const ft_interval &left_interval, const ft_inte
     ft_interval result;
 
     input_error = ft_interval_propagate_input_error(left_interval, right_interval);
-    if (input_error._error_code != FT_ER_SUCCESSS)
+    if (input_error._error_code != FT_ERR_SUCCESSS)
         return (input_error);
     result = ft_interval_create(left_interval.lower - right_interval.upper,
             left_interval.upper - right_interval.lower);
@@ -129,7 +129,7 @@ ft_interval ft_interval_multiply(const ft_interval &left_interval, const ft_inte
     size_t product_index;
 
     input_error = ft_interval_propagate_input_error(left_interval, right_interval);
-    if (input_error._error_code != FT_ER_SUCCESSS)
+    if (input_error._error_code != FT_ERR_SUCCESSS)
         return (input_error);
     products[0] = left_interval.lower * right_interval.lower;
     products[1] = left_interval.lower * right_interval.upper;
@@ -166,7 +166,7 @@ ft_interval ft_interval_divide(const ft_interval &left_interval, const ft_interv
     ft_interval reciprocal;
 
     input_error = ft_interval_propagate_input_error(left_interval, right_interval);
-    if (input_error._error_code != FT_ER_SUCCESSS)
+    if (input_error._error_code != FT_ERR_SUCCESSS)
         return (input_error);
     if (right_interval.lower <= 0.0 && right_interval.upper >= 0.0)
         return (ft_interval_error(FT_ERR_INVALID_ARGUMENT));
@@ -175,7 +175,7 @@ ft_interval ft_interval_divide(const ft_interval &left_interval, const ft_interv
         reciprocal = ft_interval_create(1.0 / right_interval.upper, 1.0 / right_interval.lower);
     else
         reciprocal = ft_interval_create(1.0 / right_interval.upper, 1.0 / right_interval.lower);
-    if (reciprocal._error_code != FT_ER_SUCCESSS)
+    if (reciprocal._error_code != FT_ERR_SUCCESSS)
         return (reciprocal);
     return (ft_interval_multiply(left_interval, reciprocal));
 }
@@ -184,7 +184,7 @@ ft_interval ft_interval_widen(const ft_interval &interval, double absolute_error
 {
     ft_interval result;
 
-    if (interval._error_code != FT_ER_SUCCESSS)
+    if (interval._error_code != FT_ERR_SUCCESSS)
     {
         result = interval;
         ft_errno = result._error_code;
@@ -221,7 +221,7 @@ ft_interval ft_interval_propagate_linear(const ft_interval *components,
 
         current_component = &components[index];
         sensitivity = sensitivities[index];
-        if (current_component->_error_code != FT_ER_SUCCESSS)
+        if (current_component->_error_code != FT_ERR_SUCCESSS)
             return (ft_interval_error(current_component->_error_code));
         if (sensitivity >= 0.0)
         {
@@ -263,43 +263,43 @@ const char *ft_interval_get_error_str(const ft_interval *interval) noexcept
 
 double ft_interval_midpoint(const ft_interval &interval) noexcept
 {
-    if (interval._error_code != FT_ER_SUCCESSS)
+    if (interval._error_code != FT_ERR_SUCCESSS)
     {
         ft_errno = interval._error_code;
         return (0.0);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return ((interval.lower + interval.upper) / 2.0);
 }
 
 double ft_interval_radius(const ft_interval &interval) noexcept
 {
-    if (interval._error_code != FT_ER_SUCCESSS)
+    if (interval._error_code != FT_ERR_SUCCESSS)
     {
         ft_errno = interval._error_code;
         return (0.0);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return ((interval.upper - interval.lower) / 2.0);
 }
 
 int ft_interval_contains(const ft_interval &interval, double value) noexcept
 {
-    if (interval._error_code != FT_ER_SUCCESSS)
+    if (interval._error_code != FT_ERR_SUCCESSS)
     {
         ft_errno = interval._error_code;
         return (0);
     }
     if (value < interval.lower)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     if (value > interval.upper)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (1);
 }

@@ -8,6 +8,7 @@ After declaring a class, indent access specifiers (private, public, protected) b
 In class declarations, place private members above public members and separate the sections with an empty line.
 Function and variable names must use snake_case.
 Use full variable names instead of short ones or single letters, dont use s or str use string.
+Eevery function sets ft_errno to FT_ERR_SUCCESS upon succesfull completion setting relevant error values upon failure.
 
 Use Allman style braces (opening brace on a new line).
 In classes, member variable names must start with an underscore (_).

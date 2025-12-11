@@ -7,7 +7,7 @@
 #include <fcntl.h>
 
 ft_document_source::ft_document_source() noexcept
-    : _error_code(FT_ER_SUCCESSS)
+    : _error_code(FT_ERR_SUCCESSS)
 {
     return ;
 }
@@ -41,7 +41,7 @@ void ft_document_source::assign_error(int error_code) const noexcept
 }
 
 ft_document_sink::ft_document_sink() noexcept
-    : _error_code(FT_ER_SUCCESSS)
+    : _error_code(FT_ERR_SUCCESSS)
 {
     return ;
 }
@@ -117,7 +117,7 @@ int ft_file_document_source::read_all(ft_string &output)
     if (file_stream == ft_nullptr)
     {
         error_code = ft_errno;
-        if (error_code == FT_ER_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_IO;
         this->assign_error(error_code);
         return (error_code);
@@ -126,60 +126,60 @@ int ft_file_document_source::read_all(ft_string &output)
     file_size = 0;
     content_pointer = ft_nullptr;
     read_count = 0;
-    error_code = FT_ER_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
     if (su_fseek(file_stream, 0, SEEK_END) != 0)
     {
         error_code = ft_errno;
-        if (error_code == FT_ER_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_IO;
     }
-    if (error_code == FT_ER_SUCCESSS)
+    if (error_code == FT_ERR_SUCCESSS)
     {
         file_size_long = su_ftell(file_stream);
         if (file_size_long < 0)
             error_code = FT_ERR_IO;
     }
-    if (error_code == FT_ER_SUCCESSS)
+    if (error_code == FT_ERR_SUCCESSS)
     {
         if (su_fseek(file_stream, 0, SEEK_SET) != 0)
         {
             error_code = ft_errno;
-            if (error_code == FT_ER_SUCCESSS)
+            if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_IO;
         }
     }
-    if (error_code == FT_ER_SUCCESSS)
+    if (error_code == FT_ERR_SUCCESSS)
     {
         if (static_cast<unsigned long long>(file_size_long)
             > static_cast<unsigned long long>(static_cast<size_t>(-1)))
             error_code = FT_ERR_OUT_OF_RANGE;
     }
-    if (error_code == FT_ER_SUCCESSS)
+    if (error_code == FT_ERR_SUCCESSS)
     {
         file_size = static_cast<size_t>(file_size_long);
         content_pointer = static_cast<char *>(cma_malloc(file_size + 1));
         if (content_pointer == ft_nullptr)
             error_code = FT_ERR_NO_MEMORY;
     }
-    if (error_code == FT_ER_SUCCESSS)
+    if (error_code == FT_ERR_SUCCESSS)
     {
         read_count = su_fread(content_pointer, 1, file_size, file_stream);
         if (read_count != file_size)
         {
             error_code = ft_errno;
-            if (error_code == FT_ER_SUCCESSS)
+            if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_IO;
         }
     }
-    if (error_code == FT_ER_SUCCESSS)
+    if (error_code == FT_ERR_SUCCESSS)
         content_pointer[file_size] = '\0';
-    if (su_fclose(file_stream) != 0 && error_code == FT_ER_SUCCESSS)
+    if (su_fclose(file_stream) != 0 && error_code == FT_ERR_SUCCESSS)
     {
         error_code = ft_errno;
-        if (error_code == FT_ER_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_IO;
     }
-    if (error_code != FT_ER_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESSS)
     {
         if (content_pointer != ft_nullptr)
             cma_free(content_pointer);
@@ -187,7 +187,7 @@ int ft_file_document_source::read_all(ft_string &output)
         return (error_code);
     }
     output.assign(content_pointer, file_size);
-    if (output.get_error() != FT_ER_SUCCESSS)
+    if (output.get_error() != FT_ERR_SUCCESSS)
     {
         error_code = output.get_error();
         cma_free(content_pointer);
@@ -195,9 +195,9 @@ int ft_file_document_source::read_all(ft_string &output)
         return (error_code);
     }
     cma_free(content_pointer);
-    this->assign_error(FT_ER_SUCCESSS);
+    this->assign_error(FT_ERR_SUCCESSS);
     ft_errno = entry_errno;
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 ft_file_document_sink::ft_file_document_sink(const char *file_path) noexcept
@@ -245,37 +245,37 @@ int ft_file_document_sink::write_all(const char *data_pointer, size_t data_lengt
     if (file_stream == ft_nullptr)
     {
         error_code = ft_errno;
-        if (error_code == FT_ER_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_IO;
         this->assign_error(error_code);
         return (error_code);
     }
     written_count = 0;
-    error_code = FT_ER_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
     if (data_length > 0)
     {
         written_count = su_fwrite(data_pointer, 1, data_length, file_stream);
         if (written_count != data_length)
         {
             error_code = ft_errno;
-            if (error_code == FT_ER_SUCCESSS)
+            if (error_code == FT_ERR_SUCCESSS)
                 error_code = FT_ERR_IO;
         }
     }
-    if (su_fclose(file_stream) != 0 && error_code == FT_ER_SUCCESSS)
+    if (su_fclose(file_stream) != 0 && error_code == FT_ERR_SUCCESSS)
     {
         error_code = ft_errno;
-        if (error_code == FT_ER_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_IO;
     }
-    if (error_code != FT_ER_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESSS)
     {
         this->assign_error(error_code);
         return (error_code);
     }
-    this->assign_error(FT_ER_SUCCESSS);
+    this->assign_error(FT_ERR_SUCCESSS);
     ft_errno = entry_errno;
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 ft_memory_document_source::ft_memory_document_source() noexcept
@@ -325,14 +325,14 @@ int ft_memory_document_source::read_all(ft_string &output)
     }
     output.assign(this->_data_pointer, this->_data_length);
     error_code = output.get_error();
-    if (error_code != FT_ER_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESSS)
     {
         this->assign_error(error_code);
         return (error_code);
     }
-    this->assign_error(FT_ER_SUCCESSS);
+    this->assign_error(FT_ERR_SUCCESSS);
     ft_errno = entry_errno;
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 ft_memory_document_sink::ft_memory_document_sink() noexcept
@@ -381,14 +381,14 @@ int ft_memory_document_sink::write_all(const char *data_pointer, size_t data_len
     }
     this->_storage_pointer->assign(data_pointer, data_length);
     error_code = this->_storage_pointer->get_error();
-    if (error_code != FT_ER_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESSS)
     {
         this->assign_error(error_code);
         return (error_code);
     }
-    this->assign_error(FT_ER_SUCCESSS);
+    this->assign_error(FT_ERR_SUCCESSS);
     ft_errno = entry_errno;
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 ft_http_document_source::ft_http_document_source() noexcept
@@ -470,21 +470,21 @@ int ft_http_document_source::read_all(ft_string &output)
     if (request_status != 0)
     {
         error_code = ft_errno;
-        if (error_code == FT_ER_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESSS)
             error_code = request_status;
         this->assign_error(error_code);
         return (error_code);
     }
     output = response;
     error_code = output.get_error();
-    if (error_code != FT_ER_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESSS)
     {
         this->assign_error(error_code);
         return (error_code);
     }
-    this->assign_error(FT_ER_SUCCESSS);
+    this->assign_error(FT_ERR_SUCCESSS);
     ft_errno = entry_errno;
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 ft_http_document_sink::ft_http_document_sink() noexcept
@@ -567,7 +567,7 @@ int ft_http_document_sink::write_all(const char *data_pointer, size_t data_lengt
     }
     body.assign(data_pointer, data_length);
     error_code = body.get_error();
-    if (error_code != FT_ER_SUCCESSS)
+    if (error_code != FT_ERR_SUCCESSS)
     {
         this->assign_error(error_code);
         return (error_code);
@@ -579,12 +579,12 @@ int ft_http_document_sink::write_all(const char *data_pointer, size_t data_lengt
     if (request_status != 0)
     {
         error_code = ft_errno;
-        if (error_code == FT_ER_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESSS)
             error_code = request_status;
         this->assign_error(error_code);
         return (error_code);
     }
-    this->assign_error(FT_ER_SUCCESSS);
+    this->assign_error(FT_ERR_SUCCESSS);
     ft_errno = entry_errno;
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }

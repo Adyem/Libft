@@ -1,7 +1,7 @@
 #ifndef JSON_SCHEMA_EVOLUTION_HPP
 # define JSON_SCHEMA_EVOLUTION_HPP
 
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../Template/function.hpp"
 
 class json_document;

@@ -11,16 +11,16 @@ rng_stream::rng_stream()
     std::random_device random_device;
 
     this->_engine.seed(random_device());
-    this->_error_code = FT_ER_SUCCESSS;
-    this->set_error(FT_ER_SUCCESSS);
+    this->_error_code = FT_ERR_SUCCESSS;
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
 rng_stream::rng_stream(uint32_t seed_value)
 {
     this->_engine.seed(static_cast<std::mt19937::result_type>(seed_value));
-    this->_error_code = FT_ER_SUCCESSS;
-    this->set_error(FT_ER_SUCCESSS);
+    this->_error_code = FT_ERR_SUCCESSS;
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -30,7 +30,7 @@ rng_stream::rng_stream(const rng_stream &other)
 
     this->_engine = other._engine;
     this->_error_code = other._error_code;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -43,7 +43,7 @@ rng_stream &rng_stream::operator=(const rng_stream &other)
     std::lock_guard<std::mutex> other_lock(other._mutex, std::adopt_lock);
     this->_engine = other._engine;
     this->_error_code = other._error_code;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (*this);
 }
 
@@ -56,8 +56,8 @@ rng_stream::rng_stream(rng_stream &&other) noexcept
     std::mt19937 default_engine;
 
     other._engine = default_engine;
-    other._error_code = FT_ER_SUCCESSS;
-    ft_errno = FT_ER_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -73,8 +73,8 @@ rng_stream &rng_stream::operator=(rng_stream &&other) noexcept
     std::mt19937 default_engine;
 
     other._engine = default_engine;
-    other._error_code = FT_ER_SUCCESSS;
-    ft_errno = FT_ER_SUCCESSS;
+    other._error_code = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (*this);
 }
 
@@ -90,7 +90,7 @@ void    rng_stream::reseed(uint32_t seed_value)
 
         this->_engine.seed(static_cast<std::mt19937::result_type>(seed_value));
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -104,7 +104,7 @@ void    rng_stream::reseed_from_string(const char *seed_string)
     uint32_t derived_seed;
 
     derived_seed = ft_random_seed(seed_string);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
     {
         this->set_error(ft_errno);
         return ;
@@ -140,7 +140,7 @@ int rng_stream::random_int()
 
         value = this->random_int_unlocked();
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (value);
 }
 
@@ -148,7 +148,7 @@ int rng_stream::dice_roll(int number, int faces)
 {
     if (faces == 0 && number == 0)
     {
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
     if (faces < 1 || number < 1)
@@ -158,7 +158,7 @@ int rng_stream::dice_roll(int number, int faces)
     }
     if (faces == 1)
     {
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         return (number);
     }
     int result;
@@ -190,7 +190,7 @@ int rng_stream::dice_roll(int number, int faces)
         this->set_error(FT_ERR_OUT_OF_RANGE);
         return (-1);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -203,7 +203,7 @@ float   rng_stream::random_float()
 
         value = this->random_float_unlocked();
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (value);
 }
 
@@ -225,19 +225,19 @@ float   rng_stream::random_normal()
         uniform_two = this->random_float_unlocked();
     }
     radius = static_cast<float>(math_sqrt(-2.0 * math_log(uniform_one)));
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
     {
         this->set_error(ft_errno);
         return (0.0f);
     }
     angle = 2.0f * pi_value * uniform_two;
     result = radius * static_cast<float>(math_cos(angle));
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
     {
         this->set_error(ft_errno);
         return (0.0f);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -259,12 +259,12 @@ float   rng_stream::random_exponential(float lambda_value)
     if (uniform_value < 0.0000000001f)
         uniform_value = 0.0000000001f;
     result = static_cast<float>(-math_log(uniform_value)) / lambda_value;
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
     {
         this->set_error(ft_errno);
         return (0.0f);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -280,7 +280,7 @@ int rng_stream::random_poisson(double lambda_value)
         return (0);
     }
     limit_value = math_exp(-lambda_value);
-    if (ft_errno != FT_ER_SUCCESSS)
+    if (ft_errno != FT_ERR_SUCCESSS)
     {
         this->set_error(ft_errno);
         return (0);
@@ -299,7 +299,7 @@ int rng_stream::random_poisson(double lambda_value)
             count_value = count_value + 1;
         }
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (count_value - 1);
 }
 
@@ -317,7 +317,7 @@ int rng_stream::random_binomial(int trial_count, double success_probability)
     }
     if (trial_count == 0)
     {
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
     if (success_probability > 1.0)
@@ -328,12 +328,12 @@ int rng_stream::random_binomial(int trial_count, double success_probability)
     const double probability_epsilon = std::numeric_limits<double>::epsilon();
     if (success_probability <= probability_epsilon)
     {
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
     if ((1.0 - success_probability) <= probability_epsilon)
     {
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         return (trial_count);
     }
     int trial_index;
@@ -354,7 +354,7 @@ int rng_stream::random_binomial(int trial_count, double success_probability)
             trial_index = trial_index + 1;
         }
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (success_count);
 }
 
@@ -373,7 +373,7 @@ int rng_stream::random_geometric(double success_probability)
     const double probability_epsilon = std::numeric_limits<double>::epsilon();
     if ((1.0 - success_probability) <= probability_epsilon)
     {
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         return (1);
     }
     int trial_count;
@@ -404,7 +404,7 @@ int rng_stream::random_geometric(double success_probability)
         this->set_error(FT_ERR_INVALID_STATE);
         return (0);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -423,7 +423,7 @@ float   rng_stream::random_gamma(float shape, float scale)
 
         sample_value = distribution(this->_engine);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (sample_value);
 }
 
@@ -458,7 +458,7 @@ float   rng_stream::random_beta(float alpha, float beta)
         result = 0.0f;
     if (result > 1.0f)
         result = 1.0f;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -479,7 +479,7 @@ float   rng_stream::random_chi_squared(float degrees_of_freedom)
     }
     if (sample_value < 0.0f)
         sample_value = 0.0f;
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (sample_value);
 }
 

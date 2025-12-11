@@ -12,11 +12,11 @@ int ft_log_set_syslog(const char *identifier)
     if (ft_log_add_sink(ft_syslog_sink, ft_nullptr) != 0)
     {
         cmp_syslog_close();
-        if (ft_errno == FT_ER_SUCCESSS)
+        if (ft_errno == FT_ERR_SUCCESSS)
             ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 

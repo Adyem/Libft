@@ -237,7 +237,7 @@ int    scma_validate_handle(scma_handle handle, scma_block **out_block)
     }
     if (out_block)
         *out_block = block;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     validation_result = 1;
     return (scma_unlock_and_return_int(validation_result));
 }

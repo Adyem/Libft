@@ -15,13 +15,13 @@ int encryption_secure_wipe(void *buffer, std::size_t buffer_size)
     }
     if (buffer_size == 0)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     secure_error = cmp_secure_memzero(buffer, buffer_size);
     if (secure_error != 0)
         return (-1);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -44,6 +44,6 @@ int encryption_secure_wipe_string(char *string_buffer)
     }
     if (encryption_secure_wipe(string_buffer, wipe_length) != 0)
         return (-1);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }

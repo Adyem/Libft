@@ -40,7 +40,7 @@ void    *scma_snapshot(scma_handle handle, ft_size_t *size)
         scma_track_live_snapshot(handle, static_cast<unsigned char *>(copy), block->size, 1);
     else
         scma_track_live_snapshot(scma_invalid_handle(), ft_nullptr, 0, 0);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     snapshot_result = copy;
     copy = ft_nullptr;
     if (copy)
@@ -78,7 +78,7 @@ int    scma_release_snapshot(void *snapshot_buffer)
             return (scma_unlock_and_return_int(0));
         }
         scma_reset_live_snapshot();
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         release_result = 1;
         return (scma_unlock_and_return_int(release_result));
     }
@@ -88,7 +88,7 @@ int    scma_release_snapshot(void *snapshot_buffer)
         return (scma_unlock_and_return_int(0));
     }
     scma_reset_live_snapshot();
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     release_result = 1;
     return (scma_unlock_and_return_int(release_result));
 }

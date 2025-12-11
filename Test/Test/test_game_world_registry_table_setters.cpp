@@ -21,9 +21,9 @@ FT_TEST(test_world_registry_setters, "world registry setter copies replace maps"
 
     FT_ASSERT_EQ(1, registry.get_regions().size());
     FT_ASSERT_EQ(1, registry.get_world_regions().size());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, registry.fetch_region(2, fetched_region));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, registry.fetch_region(2, fetched_region));
     FT_ASSERT_EQ(ft_string("cave"), fetched_region.get_name());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, registry.fetch_world(5, fetched_world));
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, registry.fetch_world(5, fetched_world));
     FT_ASSERT_EQ(2, fetched_world.get_region_ids()[0]);
 
     registry.get_regions().clear();

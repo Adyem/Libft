@@ -1,7 +1,7 @@
 #ifndef HTTP_CLIENT_HPP
 #define HTTP_CLIENT_HPP
 
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "ssl_wrapper.hpp"
 
 typedef void (*http_response_handler)(int status_code, const ft_string &headers,

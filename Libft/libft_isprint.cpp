@@ -2,7 +2,7 @@
 
 int ft_isprint(int character)
 {
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (character >= 32 && character <= 126)
         return (1);
     return (0);

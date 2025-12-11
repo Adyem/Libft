@@ -1,7 +1,6 @@
 #ifndef CMA_INTERNAL_HPP
 # define CMA_INTERNAL_HPP
 
-#include "../PThread/pthread.hpp"
 #include "../PThread/pthread_lock_tracking.hpp"
 #include "../Libft/libft.hpp"
 #include "cma_guard_vector.hpp"

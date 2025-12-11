@@ -8,7 +8,7 @@
 #include "../Template/function.hpp"
 #include "../Template/vector.hpp"
 #include "../Template/map.hpp"
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 #include "../CPP_class/class_nullptr.hpp"

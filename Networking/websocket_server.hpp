@@ -1,7 +1,7 @@
 #ifndef WEBSOCKET_SERVER_HPP
 #define WEBSOCKET_SERVER_HPP
 
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../PThread/mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 #include <cstdint>

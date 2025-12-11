@@ -101,7 +101,7 @@ FT_TEST(test_websocket_handshake_and_echo, "websocket server echoes message")
     context.result = -1;
     context.client_fd = -1;
     server_thread = ft_thread(websocket_server_worker, &context);
-    if (server_thread.get_error() != FT_ER_SUCCESSS)
+    if (server_thread.get_error() != FT_ERR_SUCCESSS)
         return (0);
     if (client.connect("127.0.0.1", server_port, "/") != 0)
     {
@@ -202,7 +202,7 @@ FT_TEST(test_websocket_server_handles_fragmented_handshake, "websocket server ha
     context.result = -1;
     context.client_fd = -1;
     server_thread = ft_thread(websocket_server_worker, &context);
-    if (server_thread.get_error() != FT_ER_SUCCESSS)
+    if (server_thread.get_error() != FT_ERR_SUCCESSS)
     {
         nw_close(client_socket);
         return (0);
@@ -318,7 +318,7 @@ FT_TEST(test_websocket_client_rejects_invalid_handshake, "websocket client detec
     context.server_socket = server_socket;
     context.result = -1;
     server_thread = ft_thread(websocket_invalid_handshake_server, &context);
-    if (server_thread.get_error() != FT_ER_SUCCESSS)
+    if (server_thread.get_error() != FT_ERR_SUCCESSS)
     {
         nw_close(server_socket);
         return (0);

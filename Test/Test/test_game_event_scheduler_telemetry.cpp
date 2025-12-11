@@ -46,7 +46,7 @@ FT_TEST(test_game_event_scheduler_telemetry_exports_metrics,
     profile.max_ready_batch = 4;
     profile.total_processing_ns = 200000000;
     profile.last_update_processing_ns = 50000000;
-    profile.last_error_code = FT_ER_SUCCESSS;
+    profile.last_error_code = FT_ERR_SUCCESSS;
     game_event_scheduler_telemetry_record(state, profile);
     FT_ASSERT_EQ(4, static_cast<int>(g_scheduler_samples.size()));
     FT_ASSERT(game_event_scheduler_strings_equal("event_scheduler.throughput",
@@ -95,7 +95,7 @@ FT_TEST(test_game_event_scheduler_telemetry_skips_duplicate_snapshots,
     profile.max_ready_batch = 3;
     profile.total_processing_ns = 160000000;
     profile.last_update_processing_ns = 40000000;
-    profile.last_error_code = FT_ER_SUCCESSS;
+    profile.last_error_code = FT_ERR_SUCCESSS;
     game_event_scheduler_telemetry_record(state, profile);
     FT_ASSERT_EQ(4, static_cast<int>(g_scheduler_samples.size()));
     game_event_scheduler_telemetry_record(state, profile);
@@ -138,8 +138,8 @@ FT_TEST(test_game_event_scheduler_telemetry_rejects_null_scheduler_name,
     profile.max_ready_batch = 1;
     profile.total_processing_ns = 1000000;
     profile.last_update_processing_ns = 1000000;
-    profile.last_error_code = FT_ER_SUCCESSS;
-    ft_errno = FT_ER_SUCCESSS;
+    profile.last_error_code = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     game_event_scheduler_telemetry_record(state, profile);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
     FT_ASSERT_EQ(0, static_cast<int>(g_scheduler_samples.size()));

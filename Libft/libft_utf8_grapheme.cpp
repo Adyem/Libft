@@ -35,7 +35,7 @@ int ft_utf8_next_grapheme(const char *string, size_t string_length,
     uint32_t code_point_value;
     size_t sequence_length;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (string == ft_nullptr || index_pointer == ft_nullptr
         || grapheme_length_pointer == ft_nullptr)
     {
@@ -83,7 +83,7 @@ int ft_utf8_duplicate_grapheme(const char *string, size_t string_length,
     char *allocated_grapheme;
     size_t copy_index;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (string == ft_nullptr || index_pointer == ft_nullptr
         || grapheme_pointer == ft_nullptr)
     {

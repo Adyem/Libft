@@ -10,7 +10,7 @@ FT_TEST(test_game_achievement_progress_completion, "Game: achievements track goa
 
     achievement.set_goal(1, 5);
     achievement.set_goal(2, 2);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, achievement.get_error());
     FT_ASSERT_EQ(false, achievement.is_complete());
     achievement.add_progress(1, 3);
     FT_ASSERT_EQ(false, achievement.is_complete());
@@ -19,7 +19,7 @@ FT_TEST(test_game_achievement_progress_completion, "Game: achievements track goa
     FT_ASSERT_EQ(true, achievement.is_goal_complete(1));
     FT_ASSERT_EQ(true, achievement.is_goal_complete(2));
     FT_ASSERT_EQ(true, achievement.is_complete());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, achievement.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, achievement.get_error());
     return (1);
 }
 
@@ -37,9 +37,9 @@ FT_TEST(test_game_reputation_milestone_roundtrip, "Game: reputation milestone in
     ft_reputation reputation;
 
     reputation.set_milestone(3, 50);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, reputation.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, reputation.get_error());
     FT_ASSERT_EQ(50, reputation.get_milestone(3));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, reputation.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, reputation.get_error());
     return (1);
 }
 
@@ -63,7 +63,7 @@ FT_TEST(test_game_currency_rate_move_transfers_values, "Game: currency rate move
     FT_ASSERT_EQ(0, original.get_currency_id());
     FT_ASSERT_EQ(0.0, original.get_rate_to_base());
     FT_ASSERT_EQ(0, original.get_display_precision());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, original.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, moved.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, original.get_error());
     return (1);
 }

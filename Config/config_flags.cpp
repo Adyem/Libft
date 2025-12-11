@@ -7,7 +7,7 @@ char    *cnfg_parse_flags(int argument_count, char **argument_values)
 {
     if (argument_count <= 1)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (ft_nullptr);
     }
     if (!argument_values)
@@ -50,7 +50,7 @@ char    *cnfg_parse_flags(int argument_count, char **argument_values)
         }
         ++argument_index;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (flags);
 }
 
@@ -58,7 +58,7 @@ char    **cnfg_parse_long_flags(int argument_count, char **argument_values)
 {
     if (argument_count <= 1)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (ft_nullptr);
     }
     if (!argument_values)
@@ -125,7 +125,7 @@ char    **cnfg_parse_long_flags(int argument_count, char **argument_values)
         flags[count] = ft_nullptr;
         ++argument_index;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (flags);
 }
 

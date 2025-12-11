@@ -87,7 +87,7 @@ FT_TEST(test_websocket_server_thread_safe_error_queries,
     context.result = -1;
     context.client_fd = -1;
     server_thread = ft_thread(websocket_server_run_once, &context);
-    if (server_thread.get_error() != FT_ER_SUCCESSS)
+    if (server_thread.get_error() != FT_ERR_SUCCESSS)
         return (0);
     inspector_running.store(true);
     inspector_failed.store(false);

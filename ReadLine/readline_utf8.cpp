@@ -68,7 +68,7 @@ static int rl_utf8_measure_grapheme_width(const char *buffer, size_t grapheme_le
                 &code_point, &sequence_length) != FT_SUCCESS)
         {
             total_width = static_cast<int>(grapheme_length);
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             *display_width = total_width;
             return (0);
         }
@@ -76,7 +76,7 @@ static int rl_utf8_measure_grapheme_width(const char *buffer, size_t grapheme_le
         offset = decode_index;
     }
     *display_width = total_width;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -104,7 +104,7 @@ static int rl_utf8_extract_grapheme(const char *buffer, size_t buffer_length,
         *end_index = start_index;
         *byte_length = 0;
         *display_width = 0;
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (1);
     }
     local_index = start_index;
@@ -116,7 +116,7 @@ static int rl_utf8_extract_grapheme(const char *buffer, size_t buffer_length,
         local_index = start_index + 1;
         grapheme_length = 1;
         width = 1;
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
     }
     else
     {
@@ -127,7 +127,7 @@ static int rl_utf8_extract_grapheme(const char *buffer, size_t buffer_length,
     *end_index = local_index;
     *byte_length = grapheme_length;
     *display_width = width;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -176,7 +176,7 @@ static int rl_utf8_compute_columns_range_internal(const char *string,
         }
     }
     *columns = total_columns;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -193,7 +193,7 @@ int rl_utf8_compute_columns(const char *string, int *columns)
     if (rl_utf8_compute_columns_range_internal(string, string_length,
             0, string_length, columns) != 0)
         return (-1);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -211,7 +211,7 @@ int rl_utf8_find_previous_grapheme(const char *buffer, int cursor_pos,
     }
     if (cursor_pos <= 0)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (1);
     }
     buffer_length = ft_strlen_size_t(buffer);
@@ -234,18 +234,18 @@ int rl_utf8_find_previous_grapheme(const char *buffer, int cursor_pos,
                 *start_byte = cursor_pos - 1;
                 *end_byte = cursor_pos;
                 *display_width = 1;
-                ft_errno = FT_ER_SUCCESSS;
+                ft_errno = FT_ERR_SUCCESSS;
                 return (0);
             }
             *start_byte = static_cast<int>(index);
             *end_byte = static_cast<int>(next_index);
             *display_width = width;
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             return (0);
         }
         index = next_index;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (1);
 }
 
@@ -266,7 +266,7 @@ int rl_utf8_find_next_grapheme(const char *buffer, int cursor_pos,
     buffer_length = ft_strlen_size_t(buffer);
     if (static_cast<size_t>(cursor_pos) >= buffer_length)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (1);
     }
     index = 0;
@@ -284,12 +284,12 @@ int rl_utf8_find_next_grapheme(const char *buffer, int cursor_pos,
             *start_byte = static_cast<int>(index);
             *end_byte = static_cast<int>(next_index);
             *display_width = width;
-            ft_errno = FT_ER_SUCCESSS;
+            ft_errno = FT_ERR_SUCCESSS;
             return (0);
         }
         index = next_index;
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (1);
 }
 
@@ -323,7 +323,7 @@ int rl_update_display_metrics(readline_state_t *state)
     state->display_pos = prefix_columns;
     state->prev_display_columns = total_columns;
     state->prev_buffer_length = static_cast<int>(buffer_length);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 

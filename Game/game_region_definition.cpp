@@ -1,5 +1,4 @@
 #include "ft_region_definition.hpp"
-#include "game_narrative_helpers.hpp"
 #include "../Template/move.hpp"
 
 int ft_region_definition::lock_pair(const ft_region_definition &first, const ft_region_definition &second,
@@ -14,15 +13,15 @@ int ft_region_definition::lock_pair(const ft_region_definition &first, const ft_
     {
         ft_unique_lock<pt_mutex> single_guard(first._mutex);
 
-        if (single_guard.get_error() != FT_ER_SUCCESSS)
+        if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = single_guard.get_error();
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
         second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ER_SUCCESSS;
-        return (FT_ER_SUCCESSS);
+        ft_errno = FT_ERR_SUCCESSS;
+        return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
     ordered_second = &second;
@@ -40,13 +39,13 @@ int ft_region_definition::lock_pair(const ft_region_definition &first, const ft_
     {
         ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
 
-        if (lower_guard.get_error() != FT_ER_SUCCESSS)
+        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = lower_guard.get_error();
             return (lower_guard.get_error());
         }
         ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ER_SUCCESSS)
+        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
         {
             if (!swapped)
             {
@@ -58,8 +57,8 @@ int ft_region_definition::lock_pair(const ft_region_definition &first, const ft_
                 first_guard = ft_move(upper_guard);
                 second_guard = ft_move(lower_guard);
             }
-            ft_errno = FT_ER_SUCCESSS;
-            return (FT_ER_SUCCESSS);
+            ft_errno = FT_ERR_SUCCESSS;
+            return (FT_ERR_SUCCESSS);
         }
         if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
         {
@@ -68,20 +67,21 @@ int ft_region_definition::lock_pair(const ft_region_definition &first, const ft_
         }
         if (lower_guard.owns_lock())
             lower_guard.unlock();
-        game_narrative_sleep_backoff();
+        pt_thread_sleep(1);
     }
 }
 
 ft_region_definition::ft_region_definition() noexcept
-    : _region_id(0), _name(), _description(), _recommended_level(0), _error_code(FT_ER_SUCCESSS)
+    : _region_id(0), _name(), _description(), _recommended_level(0),
+    _error_code(FT_ERR_SUCCESSS)
 {
     return ;
 }
 
-ft_region_definition::ft_region_definition(int region_id, const ft_string &name, const ft_string &description,
-        int recommended_level) noexcept
-    : _region_id(region_id), _name(name), _description(description), _recommended_level(recommended_level),
-    _error_code(FT_ER_SUCCESSS)
+ft_region_definition::ft_region_definition(int region_id, const ft_string &name,
+        const ft_string &description, int recommended_level) noexcept
+    : _region_id(region_id), _name(name), _description(description),
+    _recommended_level(recommended_level), _error_code(FT_ERR_SUCCESSS)
 {
     return ;
 }
@@ -92,17 +92,14 @@ ft_region_definition::~ft_region_definition() noexcept
 }
 
 ft_region_definition::ft_region_definition(const ft_region_definition &other) noexcept
-    : _region_id(0), _name(), _description(), _recommended_level(0), _error_code(FT_ER_SUCCESSS)
+    : _region_id(0), _name(), _description(), _recommended_level(0),
+    _error_code(FT_ERR_SUCCESSS)
 {
-    int entry_errno;
-
-    ft_errno = FT_ER_SUCCESSS;
-    entry_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ER_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        game_narrative_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_region_id = other._region_id;
@@ -110,7 +107,6 @@ ft_region_definition::ft_region_definition(const ft_region_definition &other) no
     this->_description = other._description;
     this->_recommended_level = other._recommended_level;
     this->_error_code = other._error_code;
-    game_narrative_restore_errno(other_guard, entry_errno);
     return ;
 }
 
@@ -118,19 +114,15 @@ ft_region_definition &ft_region_definition::operator=(const ft_region_definition
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    ft_errno = FT_ER_SUCCESSS;
-    entry_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     lock_error = ft_region_definition::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        game_narrative_restore_errno(this_guard, entry_errno);
-        game_narrative_restore_errno(other_guard, entry_errno);
         return (*this);
     }
     this->_region_id = other._region_id;
@@ -138,22 +130,16 @@ ft_region_definition &ft_region_definition::operator=(const ft_region_definition
     this->_description = other._description;
     this->_recommended_level = other._recommended_level;
     this->_error_code = other._error_code;
-    game_narrative_restore_errno(this_guard, entry_errno);
-    game_narrative_restore_errno(other_guard, entry_errno);
     return (*this);
 }
 
 ft_region_definition::ft_region_definition(ft_region_definition &&other) noexcept
-    : _region_id(0), _name(), _description(), _recommended_level(0), _error_code(FT_ER_SUCCESSS)
+    : _region_id(0), _name(), _description(), _recommended_level(0), _error_code(FT_ERR_SUCCESSS)
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    if (other_guard.get_error() != FT_ER_SUCCESSS)
+    if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        game_narrative_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_region_id = other._region_id;
@@ -165,8 +151,7 @@ ft_region_definition::ft_region_definition(ft_region_definition &&other) noexcep
     other._name.clear();
     other._description.clear();
     other._recommended_level = 0;
-    other._error_code = FT_ER_SUCCESSS;
-    game_narrative_restore_errno(other_guard, entry_errno);
+    other._error_code = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -174,18 +159,14 @@ ft_region_definition &ft_region_definition::operator=(ft_region_definition &&oth
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_region_definition::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ER_SUCCESSS)
+    if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        game_narrative_restore_errno(this_guard, entry_errno);
-        game_narrative_restore_errno(other_guard, entry_errno);
         return (*this);
     }
     this->_region_id = other._region_id;
@@ -197,180 +178,138 @@ ft_region_definition &ft_region_definition::operator=(ft_region_definition &&oth
     other._name.clear();
     other._description.clear();
     other._recommended_level = 0;
-    other._error_code = FT_ER_SUCCESSS;
-    game_narrative_restore_errno(this_guard, entry_errno);
-    game_narrative_restore_errno(other_guard, entry_errno);
+    other._error_code = FT_ERR_SUCCESSS;
     return (*this);
 }
 
 int ft_region_definition::get_region_id() const noexcept
 {
-    int entry_errno;
     int region_id;
 
-    ft_errno = FT_ER_SUCCESSS;
-    entry_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_narrative_restore_errno(guard, entry_errno);
         return (0);
     }
     region_id = this->_region_id;
-    game_narrative_restore_errno(guard, entry_errno);
     return (region_id);
 }
 
 void ft_region_definition::set_region_id(int region_id) noexcept
 {
-    int entry_errno;
-
-    ft_errno = FT_ER_SUCCESSS;
-    entry_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_narrative_restore_errno(guard, entry_errno);
         return ;
     }
     this->_region_id = region_id;
-    this->_error_code = FT_ER_SUCCESSS;
-    game_narrative_restore_errno(guard, entry_errno);
+    this->_error_code = FT_ERR_SUCCESSS;
     return ;
 }
 
 const ft_string &ft_region_definition::get_name() const noexcept
 {
-    int entry_errno;
     const ft_string *name;
 
-    ft_errno = FT_ER_SUCCESSS;
-    entry_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_narrative_restore_errno(guard, entry_errno);
         return (this->_name);
     }
     name = &this->_name;
-    game_narrative_restore_errno(guard, entry_errno);
     return (*name);
 }
 
 void ft_region_definition::set_name(const ft_string &name) noexcept
 {
-    int entry_errno;
-
-    ft_errno = FT_ER_SUCCESSS;
-    entry_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_narrative_restore_errno(guard, entry_errno);
         return ;
     }
     this->_name = name;
-    this->_error_code = FT_ER_SUCCESSS;
-    game_narrative_restore_errno(guard, entry_errno);
+    this->_error_code = FT_ERR_SUCCESSS;
     return ;
 }
 
 const ft_string &ft_region_definition::get_description() const noexcept
 {
-    int entry_errno;
     const ft_string *description;
 
-    ft_errno = FT_ER_SUCCESSS;
-    entry_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_narrative_restore_errno(guard, entry_errno);
         return (this->_description);
     }
     description = &this->_description;
-    game_narrative_restore_errno(guard, entry_errno);
     return (*description);
 }
 
 void ft_region_definition::set_description(const ft_string &description) noexcept
 {
-    int entry_errno;
-
-    ft_errno = FT_ER_SUCCESSS;
-    entry_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_narrative_restore_errno(guard, entry_errno);
         return ;
     }
     this->_description = description;
-    this->_error_code = FT_ER_SUCCESSS;
-    game_narrative_restore_errno(guard, entry_errno);
+    this->_error_code = FT_ERR_SUCCESSS;
     return ;
 }
 
 int ft_region_definition::get_recommended_level() const noexcept
 {
-    int entry_errno;
     int recommended_level;
 
-    ft_errno = FT_ER_SUCCESSS;
-    entry_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_narrative_restore_errno(guard, entry_errno);
         return (0);
     }
     recommended_level = this->_recommended_level;
-    game_narrative_restore_errno(guard, entry_errno);
     return (recommended_level);
 }
 
 void ft_region_definition::set_recommended_level(int recommended_level) noexcept
 {
-    int entry_errno;
-
-    ft_errno = FT_ER_SUCCESSS;
-    entry_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_narrative_restore_errno(guard, entry_errno);
         return ;
     }
     this->_recommended_level = recommended_level;
-    this->_error_code = FT_ER_SUCCESSS;
-    game_narrative_restore_errno(guard, entry_errno);
+    this->_error_code = FT_ERR_SUCCESSS;
     return ;
 }
 
 int ft_region_definition::get_error() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    ft_errno = FT_ER_SUCCESSS;
-    entry_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_region_definition *>(this)->set_error(guard.get_error());
-        game_narrative_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     error_code = this->_error_code;
-    game_narrative_restore_errno(guard, entry_errno);
     return (error_code);
 }
 

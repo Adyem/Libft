@@ -23,7 +23,7 @@ int ft_utf8_encode(uint32_t code_point, char *buffer, size_t buffer_size,
 {
     size_t required_length;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (buffer == ft_nullptr && buffer_size != 0)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
@@ -86,7 +86,7 @@ int ft_utf8_transform(const char *input, size_t input_length,
     size_t input_index;
     size_t output_index;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (input == ft_nullptr || output_buffer == ft_nullptr
         || case_hook == ft_nullptr)
     {
@@ -149,7 +149,7 @@ int ft_utf8_transform_alloc(const char *input, char **output_pointer,
     size_t allocation_size;
     char *allocated_buffer;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (input == ft_nullptr || output_pointer == ft_nullptr
         || case_hook == ft_nullptr)
     {

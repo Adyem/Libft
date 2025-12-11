@@ -19,7 +19,7 @@ FT_TEST(test_ft_bitset_move_constructor_rebuilds_mutex,
     FT_ASSERT_EQ(false, source_bits.is_thread_safe_enabled());
     FT_ASSERT_EQ(true, moved_bits.test(2));
     FT_ASSERT_EQ(true, moved_bits.test(4));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved_bits.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, moved_bits.get_error());
     return (1);
 }
 
@@ -45,7 +45,7 @@ FT_TEST(test_ft_bitset_move_assignment_rebuilds_mutex,
     FT_ASSERT_EQ(true, destination_bits.test(0));
     FT_ASSERT_EQ(true, destination_bits.test(5));
     FT_ASSERT_EQ(6UL, destination_bits.size());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination_bits.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination_bits.get_error());
     return (1);
 }
 

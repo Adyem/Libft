@@ -6,9 +6,7 @@
 void* cma_memdup(const void* source, size_t size)
 {
     if (size == 0)
-    {
         return (cma_malloc(0));
-    }
     if (source == ft_nullptr)
     {
         ft_errno = FT_ERR_INVALID_ARGUMENT;
@@ -22,5 +20,6 @@ void* cma_memdup(const void* source, size_t size)
         return (ft_nullptr);
     }
     ft_memcpy(duplicate, source, size);
+    ft_errno = FT_ERR_SUCCESSS;
     return (duplicate);
 }

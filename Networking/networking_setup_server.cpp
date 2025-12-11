@@ -98,7 +98,7 @@ int ft_socket::create_socket(const SocketConfig &config)
     bool lock_acquired;
 
     entry_errno = ft_errno;
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (this->_error_code);
@@ -127,9 +127,9 @@ int ft_socket::create_socket(const SocketConfig &config)
         return (this->_error_code);
     }
     socket_config_unlock(mutable_config, lock_acquired);
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     ft_socket::restore_errno(guard, entry_errno);
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 int ft_socket::set_reuse_address(const SocketConfig &config)
@@ -141,7 +141,7 @@ int ft_socket::set_reuse_address(const SocketConfig &config)
     int opt;
 
     entry_errno = ft_errno;
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (this->_error_code);
@@ -163,9 +163,9 @@ int ft_socket::set_reuse_address(const SocketConfig &config)
     if (mutable_config->_reuse_address == false)
     {
         socket_config_unlock(mutable_config, lock_acquired);
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         ft_socket::restore_errno(guard, entry_errno);
-        return (FT_ER_SUCCESSS);
+        return (FT_ERR_SUCCESSS);
     }
     opt = 1;
     if (setsockopt_reuse(this->_socket_fd, opt) < 0)
@@ -178,9 +178,9 @@ int ft_socket::set_reuse_address(const SocketConfig &config)
         return (this->_error_code);
     }
     socket_config_unlock(mutable_config, lock_acquired);
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     ft_socket::restore_errno(guard, entry_errno);
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 int ft_socket::set_non_blocking(const SocketConfig &config)
@@ -191,7 +191,7 @@ int ft_socket::set_non_blocking(const SocketConfig &config)
     bool lock_acquired;
 
     entry_errno = ft_errno;
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (this->_error_code);
@@ -213,9 +213,9 @@ int ft_socket::set_non_blocking(const SocketConfig &config)
     if (mutable_config->_non_blocking == false)
     {
         socket_config_unlock(mutable_config, lock_acquired);
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         ft_socket::restore_errno(guard, entry_errno);
-        return (FT_ER_SUCCESSS);
+        return (FT_ERR_SUCCESSS);
     }
     if (set_nonblocking_platform(this->_socket_fd) != 0)
     {
@@ -227,9 +227,9 @@ int ft_socket::set_non_blocking(const SocketConfig &config)
         return (this->_error_code);
     }
     socket_config_unlock(mutable_config, lock_acquired);
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     ft_socket::restore_errno(guard, entry_errno);
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 int ft_socket::set_timeouts(const SocketConfig &config)
@@ -240,7 +240,7 @@ int ft_socket::set_timeouts(const SocketConfig &config)
     bool lock_acquired;
 
     entry_errno = ft_errno;
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (this->_error_code);
@@ -284,9 +284,9 @@ int ft_socket::set_timeouts(const SocketConfig &config)
         }
     }
     socket_config_unlock(mutable_config, lock_acquired);
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     ft_socket::restore_errno(guard, entry_errno);
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 int ft_socket::configure_address(const SocketConfig &config)
@@ -301,7 +301,7 @@ int ft_socket::configure_address(const SocketConfig &config)
     int protocol_value;
 
     entry_errno = ft_errno;
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (this->_error_code);
@@ -326,7 +326,7 @@ int ft_socket::configure_address(const SocketConfig &config)
     address_family = mutable_config->_address_family;
     protocol_value = mutable_config->_protocol;
     socket_config_unlock(mutable_config, lock_acquired);
-    if (host_copy.get_error() != FT_ER_SUCCESSS)
+    if (host_copy.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(host_copy.get_error());
         nw_close(this->_socket_fd);
@@ -344,15 +344,15 @@ int ft_socket::configure_address(const SocketConfig &config)
         if (host_copy.empty())
         {
             addr_in->sin_addr.s_addr = htonl(INADDR_ANY);
-            this->set_error(FT_ER_SUCCESSS);
+            this->set_error(FT_ERR_SUCCESSS);
             ft_socket::restore_errno(guard, entry_errno);
-            return (FT_ER_SUCCESSS);
+            return (FT_ERR_SUCCESSS);
         }
         if (nw_inet_pton(AF_INET, host_copy.c_str(), &addr_in->sin_addr) > 0)
         {
-            this->set_error(FT_ER_SUCCESSS);
+            this->set_error(FT_ERR_SUCCESSS);
             ft_socket::restore_errno(guard, entry_errno);
-            return (FT_ER_SUCCESSS);
+            return (FT_ERR_SUCCESSS);
         }
     }
     else if (address_family == AF_INET6)
@@ -365,15 +365,15 @@ int ft_socket::configure_address(const SocketConfig &config)
         if (host_copy.empty())
         {
             addr_in6->sin6_addr = in6addr_any;
-            this->set_error(FT_ER_SUCCESSS);
+            this->set_error(FT_ERR_SUCCESSS);
             ft_socket::restore_errno(guard, entry_errno);
-            return (FT_ER_SUCCESSS);
+            return (FT_ERR_SUCCESSS);
         }
         if (nw_inet_pton(AF_INET6, host_copy.c_str(), &addr_in6->sin6_addr) > 0)
         {
-            this->set_error(FT_ER_SUCCESSS);
+            this->set_error(FT_ERR_SUCCESSS);
             ft_socket::restore_errno(guard, entry_errno);
-            return (FT_ER_SUCCESSS);
+            return (FT_ERR_SUCCESSS);
         }
     }
     else
@@ -389,7 +389,7 @@ int ft_socket::configure_address(const SocketConfig &config)
     int resolver_error;
 
     port_string = ft_to_string(static_cast<long>(port_value));
-    if (port_string.get_error() != FT_ER_SUCCESSS)
+    if (port_string.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(port_string.get_error());
         nw_close(this->_socket_fd);
@@ -402,7 +402,7 @@ int ft_socket::configure_address(const SocketConfig &config)
             address_family, SOCK_STREAM, protocol_value, 0, resolved_address))
     {
         resolver_error = ft_errno;
-        if (resolver_error == FT_ER_SUCCESSS)
+        if (resolver_error == FT_ERR_SUCCESSS)
             resolver_error = FT_ERR_SOCKET_RESOLVE_FAILED;
         this->set_error(resolver_error);
         nw_close(this->_socket_fd);
@@ -435,9 +435,9 @@ int ft_socket::configure_address(const SocketConfig &config)
         addr_in6->sin6_family = AF_INET6;
         addr_in6->sin6_port = htons(port_value);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     ft_socket::restore_errno(guard, entry_errno);
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 int ft_socket::bind_socket(const SocketConfig &config)
@@ -447,7 +447,7 @@ int ft_socket::bind_socket(const SocketConfig &config)
     socklen_t addr_len;
 
     entry_errno = ft_errno;
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (this->_error_code);
@@ -473,9 +473,9 @@ int ft_socket::bind_socket(const SocketConfig &config)
         ft_socket::restore_errno(guard, entry_errno);
         return (this->_error_code);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     ft_socket::restore_errno(guard, entry_errno);
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 int ft_socket::listen_socket(const SocketConfig &config)
@@ -487,7 +487,7 @@ int ft_socket::listen_socket(const SocketConfig &config)
     int backlog;
 
     entry_errno = ft_errno;
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (this->_error_code);
@@ -516,9 +516,9 @@ int ft_socket::listen_socket(const SocketConfig &config)
         ft_socket::restore_errno(guard, entry_errno);
         return (this->_error_code);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     ft_socket::restore_errno(guard, entry_errno);
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 void ft_socket::set_error(int error_code) const noexcept
@@ -554,27 +554,27 @@ int ft_socket::setup_server(const SocketConfig &config)
     has_timeout = (mutable_config->_recv_timeout > 0 || mutable_config->_send_timeout > 0);
     has_multicast = (mutable_config->_multicast_group.empty() == false);
     socket_config_unlock(mutable_config, lock_acquired);
-    if (this->create_socket(config) != FT_ER_SUCCESSS)
+    if (this->create_socket(config) != FT_ERR_SUCCESSS)
         return (this->_error_code);
     if (reuse_address)
-        if (this->set_reuse_address(config) != FT_ER_SUCCESSS)
+        if (this->set_reuse_address(config) != FT_ERR_SUCCESSS)
             return (this->_error_code);
     if (non_blocking)
-        if (this->set_non_blocking(config) != FT_ER_SUCCESSS)
+        if (this->set_non_blocking(config) != FT_ERR_SUCCESSS)
             return (this->_error_code);
     if (has_timeout)
-        if (this->set_timeouts(config) != FT_ER_SUCCESSS)
+        if (this->set_timeouts(config) != FT_ERR_SUCCESSS)
             return (this->_error_code);
-    if (this->configure_address(config) != FT_ER_SUCCESSS)
+    if (this->configure_address(config) != FT_ERR_SUCCESSS)
         return (this->_error_code);
-    if (this->bind_socket(config) != FT_ER_SUCCESSS)
+    if (this->bind_socket(config) != FT_ERR_SUCCESSS)
         return (this->_error_code);
-    if (this->listen_socket(config) != FT_ER_SUCCESSS)
+    if (this->listen_socket(config) != FT_ERR_SUCCESSS)
         return (this->_error_code);
     if (has_multicast)
-        if (this->join_multicast_group(config) != FT_ER_SUCCESSS)
+        if (this->join_multicast_group(config) != FT_ERR_SUCCESSS)
             return (this->_error_code);
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     return (this->_error_code);
 }
 
@@ -586,7 +586,7 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
     bool lock_acquired;
 
     entry_errno = ft_errno;
-    if (guard.get_error() != FT_ER_SUCCESSS)
+    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (this->_error_code);
@@ -608,9 +608,9 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
     if (mutable_config->_multicast_group.empty())
     {
         socket_config_unlock(mutable_config, lock_acquired);
-        this->set_error(FT_ER_SUCCESSS);
+        this->set_error(FT_ERR_SUCCESSS);
         ft_socket::restore_errno(guard, entry_errno);
-        return (FT_ER_SUCCESSS);
+        return (FT_ERR_SUCCESSS);
     }
     if (mutable_config->_address_family == AF_INET)
     {
@@ -686,7 +686,7 @@ int ft_socket::join_multicast_group(const SocketConfig &config)
         ft_socket::restore_errno(guard, entry_errno);
         return (this->_error_code);
     }
-    this->set_error(FT_ER_SUCCESSS);
+    this->set_error(FT_ERR_SUCCESSS);
     ft_socket::restore_errno(guard, entry_errno);
-    return (FT_ER_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }

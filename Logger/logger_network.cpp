@@ -23,7 +23,7 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
     socket_fd = nw_socket(AF_INET, socket_type, 0);
     if (socket_fd < 0)
     {
-        if (ft_errno == FT_ER_SUCCESSS)
+        if (ft_errno == FT_ERR_SUCCESSS)
             ft_errno = FT_ERR_SOCKET_CREATION_FAILED;
         return (-1);
     }
@@ -41,7 +41,7 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
         if (nw_connect(socket_fd, reinterpret_cast<struct sockaddr *>(&address), sizeof(address)) != 0)
         {
             su_close(socket_fd);
-            if (ft_errno == FT_ER_SUCCESSS)
+            if (ft_errno == FT_ERR_SUCCESSS)
                 ft_errno = FT_ERR_SOCKET_CONNECT_FAILED;
             return (-1);
         }
@@ -62,7 +62,7 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
     sink->port = port;
     sink->use_tcp = use_tcp;
     sink->host = host;
-    if (sink->host.get_error() != FT_ER_SUCCESSS)
+    if (sink->host.get_error() != FT_ERR_SUCCESSS)
     {
         su_close(socket_fd);
         delete sink;
@@ -84,11 +84,11 @@ int ft_log_set_remote_sink(const char *host, unsigned short port, bool use_tcp)
         su_close(socket_fd);
         network_sink_teardown_thread_safety(sink);
         delete sink;
-        if (ft_errno == FT_ER_SUCCESSS)
+        if (ft_errno == FT_ERR_SUCCESSS)
             ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -106,10 +106,10 @@ void ft_network_sink(const char *message, void *user_data)
     lock_acquired = false;
     if (network_sink_lock(sink, &lock_acquired) != 0)
         return ;
-    final_errno = FT_ER_SUCCESSS;
+    final_errno = FT_ERR_SUCCESSS;
     if (sink->socket_fd < 0)
     {
-        final_errno = FT_ER_SUCCESSS;
+        final_errno = FT_ERR_SUCCESSS;
         goto cleanup;
     }
     if (!sink->send_function)
@@ -137,7 +137,7 @@ void ft_network_sink(const char *message, void *user_data)
         }
         total_bytes_sent += static_cast<size_t>(send_result);
     }
-    final_errno = FT_ER_SUCCESSS;
+    final_errno = FT_ERR_SUCCESSS;
 
 cleanup:
     ft_errno = final_errno;

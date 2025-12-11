@@ -25,7 +25,7 @@ char *cma_strjoin_multiple(int count, ...)
     va_start(args, count);
     size_t total_length = 0;
     int argument_index = 0;
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     while (argument_index < count)
     {
         const char *current_string = va_arg(args, const char *);
@@ -33,7 +33,7 @@ char *cma_strjoin_multiple(int count, ...)
         if (current_string)
         {
             size_t measured_length = ft_strlen_size_t(current_string);
-            if (ft_errno != FT_ER_SUCCESSS)
+            if (ft_errno != FT_ERR_SUCCESSS)
             {
                 va_end(args);
                 cma_free(cached_lengths);

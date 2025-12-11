@@ -73,7 +73,7 @@ int be_saveGame(const char *filename, const char *data, const char *key)
 
         open_errno = ft_errno;
         cma_free(encrypted_data);
-        if (open_errno != FT_ER_SUCCESSS)
+        if (open_errno != FT_ERR_SUCCESSS)
             ft_errno = open_errno;
         return (1);
     }
@@ -83,7 +83,7 @@ int be_saveGame(const char *filename, const char *data, const char *key)
     cma_free(encrypted_data);
     if (bytes_written == static_cast<ssize_t>(data_length))
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     ft_errno = write_errno;
@@ -99,6 +99,6 @@ char **be_DecryptData(char **data, const char *key)
     }
     size_t data_length = ft_strlen(*data);
     be_encrypt(*data, data_length, key);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (data);
 }

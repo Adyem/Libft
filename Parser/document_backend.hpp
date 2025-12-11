@@ -2,8 +2,7 @@
 #define DOCUMENT_BACKEND_HPP
 
 #include <cstddef>
-#include "../CPP_class/class_string_class.hpp"
-#include "../Errno/errno.hpp"
+#include "../CPP_class/class_string.hpp"
 
 class ft_document_source
 {

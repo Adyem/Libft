@@ -17,9 +17,9 @@ FT_TEST(test_map_thread_safety_resets_errno,
     lock_acquired = false;
     FT_ASSERT_EQ(0, map_instance.lock(&lock_acquired));
     FT_ASSERT_EQ(true, lock_acquired);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     map_instance.unlock(lock_acquired);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     map_instance.disable_thread_safety();
     FT_ASSERT_EQ(false, map_instance.is_thread_safe_enabled());
     return (1);

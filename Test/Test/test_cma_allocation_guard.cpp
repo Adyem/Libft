@@ -73,7 +73,7 @@ FT_TEST(test_cma_allocation_guard_destructor_resets_errno,
 
         ft_errno = FT_ERR_INVALID_OPERATION;
     }
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -94,9 +94,9 @@ FT_TEST(test_cma_allocation_guard_reset_resets_errno,
         return (0);
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     allocation_guard.reset(second_pointer);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     allocation_guard.reset(ft_nullptr);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }

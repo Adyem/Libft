@@ -1,10 +1,9 @@
 #ifndef NETWORKING_HPP
 #define NETWORKING_HPP
 
-#include "../CPP_class/class_string_class.hpp"
-#include "../CPP_class/class_nullptr.hpp"
+#include "../CPP_class/class_string.hpp"
 #include "../Template/vector.hpp"
-#include "ssl_wrapper.hpp"
+#include <openssl/ssl.h>
 
 #ifdef _WIN32
 # include <winsock2.h>
@@ -149,9 +148,5 @@ int socket_config_prepare_thread_safety(SocketConfig *config);
 void socket_config_teardown_thread_safety(SocketConfig *config);
 int socket_config_lock(const SocketConfig *config, bool *lock_acquired);
 void socket_config_unlock(const SocketConfig *config, bool lock_acquired);
-
-#include "websocket_client.hpp"
-#include "websocket_server.hpp"
-#include "networking_quic_experimental.hpp"
 
 #endif

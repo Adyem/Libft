@@ -8,7 +8,7 @@ void *ft_memmove(void *destination, const void *source, size_t size)
     const unsigned char *source_pointer = static_cast<const unsigned char *>(source);
     size_t index;
 
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     if (destination == ft_nullptr || source == ft_nullptr)
     {
         if (size > 0)

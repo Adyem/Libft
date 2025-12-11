@@ -19,7 +19,7 @@ t_time  time_now(void)
             ft_errno = FT_ERR_TERMINATED;
         return (static_cast<t_time>(-1));
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (static_cast<t_time>(standard_time));
 }
 

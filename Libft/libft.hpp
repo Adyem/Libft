@@ -14,14 +14,10 @@ typedef unsigned long long ft_size_t;
 #include <string.h>
 #include <stdint.h>
 #include <stdarg.h>
-#include <type_traits>
 #include <wchar.h>
 #include "limits.hpp"
-#include "../CPP_class/class_nullptr.hpp"
 #include "../Errno/errno.hpp"
-#include "../PThread/pthread.hpp"
-#include "../PThread/mutex.hpp"
-#include "../CPP_class/class_string_class.hpp"
+#include "../CPP_class/class_string.hpp"
 
 constexpr bool ft_is_constant_evaluated()
 {
@@ -56,7 +52,7 @@ namespace ft_detail
 constexpr size_t ft_strlen_size_t(const char *string)
 {
     if (!ft_is_constant_evaluated())
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
     if (!string)
     {
         if (!ft_is_constant_evaluated())
@@ -74,7 +70,7 @@ constexpr int ft_strlen(const char *string)
     size_t length = 0;
 
     if (!ft_is_constant_evaluated())
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
     length = ft_strlen_size_t(string);
     if (length > static_cast<size_t>(FT_INT_MAX))
     {
@@ -98,7 +94,6 @@ void            *ft_memmove(void *destination, const void *source, size_t size);
 #if LIBFT_HAS_BOUNDS_CHECKED_HELPERS
 int             ft_memmove_s(void *destination, size_t destination_size, const void *source, size_t number_of_bytes);
 #endif
-void            *ft_memdup(const void *source, size_t size);
 size_t            ft_strlcat(char *destination, const char *source, size_t bufferSize);
 size_t            ft_strlcpy(char *destination, const char *source, size_t bufferSize);
 size_t            ft_strnlen(const char *string, size_t maximum_length);

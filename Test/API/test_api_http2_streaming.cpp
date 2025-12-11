@@ -41,7 +41,7 @@ static void http2_test_server_reset_state(http2_test_server_state *state)
     if (!state)
         return ;
     state->ready.store(false, std::memory_order_relaxed);
-    state->start_error.store(FT_ER_SUCCESSS, std::memory_order_relaxed);
+    state->start_error.store(FT_ERR_SUCCESSS, std::memory_order_relaxed);
     state->result.store(FT_ERR_IO, std::memory_order_relaxed);
     return ;
 }
@@ -138,14 +138,14 @@ static bool http2_test_receive_single_frame(int socket_fd, http2_frame &out_fram
     if (payload_length == 0)
     {
         out_frame.clear_payload();
-        if (out_frame.get_error() != FT_ER_SUCCESSS)
+        if (out_frame.get_error() != FT_ERR_SUCCESSS)
             return (false);
         return (true);
     }
     ft_string payload_buffer;
 
     payload_buffer.clear();
-    if (payload_buffer.get_error() != FT_ER_SUCCESSS)
+    if (payload_buffer.get_error() != FT_ERR_SUCCESSS)
         return (false);
     size_t remaining_length;
 
@@ -164,7 +164,7 @@ static bool http2_test_receive_single_frame(int socket_fd, http2_frame &out_fram
             return (false);
         payload_buffer.append(chunk_buffer,
             static_cast<size_t>(received_bytes));
-        if (payload_buffer.get_error() != FT_ER_SUCCESSS)
+        if (payload_buffer.get_error() != FT_ERR_SUCCESSS)
             return (false);
         remaining_length -= static_cast<size_t>(received_bytes);
     }
@@ -179,7 +179,7 @@ static bool http2_test_drain_client_headers(int socket_fd)
     bool headers_complete;
 
     buffer.clear();
-    if (buffer.get_error() != FT_ER_SUCCESSS)
+    if (buffer.get_error() != FT_ERR_SUCCESSS)
         return (false);
     headers_complete = false;
     while (!headers_complete)
@@ -193,7 +193,7 @@ static bool http2_test_drain_client_headers(int socket_fd)
             return (false);
         buffer.append(receive_buffer,
             static_cast<size_t>(received_bytes));
-        if (buffer.get_error() != FT_ER_SUCCESSS)
+        if (buffer.get_error() != FT_ERR_SUCCESSS)
             return (false);
         size_t parse_offset;
 
@@ -205,7 +205,7 @@ static bool http2_test_drain_client_headers(int socket_fd)
             int decode_error;
 
             previous_offset = parse_offset;
-            decode_error = FT_ER_SUCCESSS;
+            decode_error = FT_ERR_SUCCESSS;
             if (!http2_decode_frame(
                     reinterpret_cast<const unsigned char*>(buffer.c_str()),
                     buffer.size(), parse_offset, incoming_frame, decode_error))
@@ -233,7 +233,7 @@ static bool http2_test_drain_client_headers(int socket_fd)
         if (parse_offset > 0)
         {
             buffer.erase(0, parse_offset);
-            if (buffer.get_error() != FT_ER_SUCCESSS)
+            if (buffer.get_error() != FT_ERR_SUCCESSS)
                 return (false);
         }
     }
@@ -260,14 +260,14 @@ static void http2_test_server(http2_test_server_state *state)
     server_configuration._port = g_http2_test_server_port;
     server_configuration._reuse_address = true;
     server_socket = ft_socket(server_configuration);
-    if (server_socket.get_error() != FT_ER_SUCCESSS)
+    if (server_socket.get_error() != FT_ERR_SUCCESSS)
     {
         state->start_error.store(server_socket.get_error(),
             std::memory_order_relaxed);
         state->ready.store(true, std::memory_order_release);
         return ;
     }
-    state->start_error.store(FT_ER_SUCCESSS, std::memory_order_relaxed);
+    state->start_error.store(FT_ERR_SUCCESSS, std::memory_order_relaxed);
     state->ready.store(true, std::memory_order_release);
     address_length = sizeof(address_storage);
     client_fd = nw_accept(server_socket.get_fd(),
@@ -320,7 +320,7 @@ static void http2_test_server(http2_test_server_state *state)
         return ;
     }
     server_frame.clear_payload();
-    if (server_frame.get_error() != FT_ER_SUCCESSS)
+    if (server_frame.get_error() != FT_ERR_SUCCESSS)
     {
         state->result.store(server_frame.get_error(),
             std::memory_order_relaxed);
@@ -329,7 +329,7 @@ static void http2_test_server(http2_test_server_state *state)
     }
     if (!http2_encode_frame(server_frame, encoded_frame, encode_error))
     {
-        if (encode_error == FT_ER_SUCCESSS)
+        if (encode_error == FT_ERR_SUCCESSS)
             encode_error = FT_ERR_IO;
         state->result.store(encode_error, std::memory_order_relaxed);
         nw_close(client_fd);
@@ -370,7 +370,7 @@ static void http2_test_server(http2_test_server_state *state)
         return ;
     }
     server_frame.clear_payload();
-    if (server_frame.get_error() != FT_ER_SUCCESSS)
+    if (server_frame.get_error() != FT_ERR_SUCCESSS)
     {
         state->result.store(server_frame.get_error(),
             std::memory_order_relaxed);
@@ -379,7 +379,7 @@ static void http2_test_server(http2_test_server_state *state)
     }
     if (!http2_encode_frame(server_frame, encoded_frame, encode_error))
     {
-        if (encode_error == FT_ER_SUCCESSS)
+        if (encode_error == FT_ERR_SUCCESSS)
             encode_error = FT_ERR_IO;
         state->result.store(encode_error, std::memory_order_relaxed);
         nw_close(client_fd);
@@ -403,7 +403,7 @@ static void http2_test_server(http2_test_server_state *state)
     ft_string compressed_headers;
 
     response_headers.clear();
-    if (response_headers.get_error() != FT_ER_SUCCESSS)
+    if (response_headers.get_error() != FT_ERR_SUCCESSS)
     {
         state->result.store(response_headers.get_error(),
             std::memory_order_relaxed);
@@ -418,7 +418,7 @@ static void http2_test_server(http2_test_server_state *state)
         return ;
     }
     response_headers.push_back(header_entry);
-    if (response_headers.get_error() != FT_ER_SUCCESSS)
+    if (response_headers.get_error() != FT_ERR_SUCCESSS)
     {
         state->result.store(response_headers.get_error(),
             std::memory_order_relaxed);
@@ -433,7 +433,7 @@ static void http2_test_server(http2_test_server_state *state)
         return ;
     }
     response_headers.push_back(header_entry);
-    if (response_headers.get_error() != FT_ER_SUCCESSS)
+    if (response_headers.get_error() != FT_ERR_SUCCESSS)
     {
         state->result.store(response_headers.get_error(),
             std::memory_order_relaxed);
@@ -441,7 +441,7 @@ static void http2_test_server(http2_test_server_state *state)
         return ;
     }
     compressed_headers.clear();
-    if (compressed_headers.get_error() != FT_ER_SUCCESSS)
+    if (compressed_headers.get_error() != FT_ERR_SUCCESSS)
     {
         state->result.store(compressed_headers.get_error(),
             std::memory_order_relaxed);
@@ -451,7 +451,7 @@ static void http2_test_server(http2_test_server_state *state)
     if (!http2_compress_headers(response_headers, compressed_headers,
             encode_error))
     {
-        if (encode_error == FT_ER_SUCCESSS)
+        if (encode_error == FT_ERR_SUCCESSS)
             encode_error = FT_ERR_IO;
         state->result.store(encode_error, std::memory_order_relaxed);
         nw_close(client_fd);
@@ -487,7 +487,7 @@ static void http2_test_server(http2_test_server_state *state)
     }
     if (!http2_encode_frame(server_frame, encoded_frame, encode_error))
     {
-        if (encode_error == FT_ER_SUCCESSS)
+        if (encode_error == FT_ERR_SUCCESSS)
             encode_error = FT_ERR_IO;
         state->result.store(encode_error, std::memory_order_relaxed);
         nw_close(client_fd);
@@ -530,7 +530,7 @@ static void http2_test_server(http2_test_server_state *state)
     }
     if (!http2_encode_frame(server_frame, encoded_frame, encode_error))
     {
-        if (encode_error == FT_ER_SUCCESSS)
+        if (encode_error == FT_ERR_SUCCESSS)
             encode_error = FT_ERR_IO;
         state->result.store(encode_error, std::memory_order_relaxed);
         nw_close(client_fd);
@@ -573,7 +573,7 @@ static void http2_test_server(http2_test_server_state *state)
     }
     if (!http2_encode_frame(server_frame, encoded_frame, encode_error))
     {
-        if (encode_error == FT_ER_SUCCESSS)
+        if (encode_error == FT_ERR_SUCCESSS)
             encode_error = FT_ERR_IO;
         state->result.store(encode_error, std::memory_order_relaxed);
         nw_close(client_fd);
@@ -586,7 +586,7 @@ static void http2_test_server(http2_test_server_state *state)
         nw_close(client_fd);
         return ;
     }
-    state->result.store(FT_ER_SUCCESSS, std::memory_order_relaxed);
+    state->result.store(FT_ERR_SUCCESSS, std::memory_order_relaxed);
     nw_close(client_fd);
     return ;
 }
@@ -669,10 +669,10 @@ FT_TEST(test_api_http_plain_http2_streaming_success,
         FT_ASSERT(ready_result);
     }
     start_error = server_state.start_error.load(std::memory_order_acquire);
-    if (start_error != FT_ER_SUCCESSS)
+    if (start_error != FT_ERR_SUCCESSS)
     {
         server_thread.join();
-        FT_ASSERT_EQ(FT_ER_SUCCESSS, start_error);
+        FT_ASSERT_EQ(FT_ERR_SUCCESSS, start_error);
     }
     http2_test_capture_reset(capture);
     streaming_handler.reset();
@@ -680,7 +680,7 @@ FT_TEST(test_api_http_plain_http2_streaming_success,
     streaming_handler.set_body_callback(http2_test_body_callback);
     streaming_handler.set_user_data(&capture);
     used_http2 = false;
-    error_code = FT_ER_SUCCESSS;
+    error_code = FT_ERR_SUCCESSS;
     request_result = api_http_execute_plain_http2_streaming(
         connection_handle, "GET", "/resource", "localhost",
         ft_nullptr, ft_nullptr, 2000, "127.0.0.1",
@@ -689,7 +689,7 @@ FT_TEST(test_api_http_plain_http2_streaming_success,
     server_thread.join();
     FT_ASSERT(request_result);
     FT_ASSERT(used_http2);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, error_code);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, error_code);
     FT_ASSERT_EQ(static_cast<unsigned int>(1), capture.header_calls);
     FT_ASSERT_EQ(200, capture.status_code);
     FT_ASSERT(capture.headers.find("content-type: text/plain")
@@ -697,7 +697,7 @@ FT_TEST(test_api_http_plain_http2_streaming_success,
     FT_ASSERT_EQ(static_cast<unsigned int>(2), capture.body_calls);
     FT_ASSERT(capture.final_chunk_seen);
     FT_ASSERT_EQ(0, ft_strcmp(capture.body.c_str(), "hello world"));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS,
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS,
         server_state.result.load(std::memory_order_acquire));
     return (1);
 }

@@ -14,10 +14,10 @@ FT_TEST(test_behavior_action_default_construction_resets_errno_to_success,
     FT_ASSERT_EQ(0, action.get_action_id());
     FT_ASSERT_DOUBLE_EQ(0.0, action.get_weight());
     FT_ASSERT_DOUBLE_EQ(0.0, action.get_cooldown_seconds());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, action.get_error());
-    FT_ASSERT_STR_EQ("Operation successful", action.get_error_str());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, action_with_error_state.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, action.get_error());
+    FT_ASSERT_STR_EQ("Success", action.get_error_str());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, action_with_error_state.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -30,8 +30,8 @@ FT_TEST(test_behavior_action_parameterized_construction_resets_errno_to_success,
     FT_ASSERT_EQ(12, action.get_action_id());
     FT_ASSERT_DOUBLE_EQ(1.25, action.get_weight());
     FT_ASSERT_DOUBLE_EQ(3.5, action.get_cooldown_seconds());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, action.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, action.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -43,8 +43,8 @@ FT_TEST(test_behavior_action_set_action_id_resets_errno,
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     action.set_action_id(44);
     FT_ASSERT_EQ(44, action.get_action_id());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, action.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, action.get_error());
     return (1);
 }
 
@@ -56,8 +56,8 @@ FT_TEST(test_behavior_action_set_weight_resets_errno,
     ft_errno = FT_ERR_INVALID_POINTER;
     action.set_weight(0.75);
     FT_ASSERT_DOUBLE_EQ(0.75, action.get_weight());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, action.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, action.get_error());
     return (1);
 }
 
@@ -69,8 +69,8 @@ FT_TEST(test_behavior_action_set_cooldown_resets_errno,
     ft_errno = FT_ERR_ALREADY_EXISTS;
     action.set_cooldown_seconds(6.25);
     FT_ASSERT_DOUBLE_EQ(6.25, action.get_cooldown_seconds());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, action.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, action.get_error());
     return (1);
 }
 
@@ -81,8 +81,8 @@ FT_TEST(test_behavior_action_get_action_id_resets_errno,
 
     ft_errno = FT_ERR_OUT_OF_RANGE;
     FT_ASSERT_EQ(8, action.get_action_id());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, action.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, action.get_error());
     return (1);
 }
 
@@ -93,8 +93,8 @@ FT_TEST(test_behavior_action_get_weight_resets_errno,
 
     ft_errno = FT_ERR_EMPTY;
     FT_ASSERT_DOUBLE_EQ(4.5, action.get_weight());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, action.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, action.get_error());
     return (1);
 }
 
@@ -105,8 +105,8 @@ FT_TEST(test_behavior_action_get_cooldown_resets_errno,
 
     ft_errno = FT_ERR_FULL;
     FT_ASSERT_DOUBLE_EQ(9.0, action.get_cooldown_seconds());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, action.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, action.get_error());
     return (1);
 }
 
@@ -123,8 +123,8 @@ FT_TEST(test_behavior_action_move_constructor_resets_errno_to_success,
     FT_ASSERT_EQ(0, source.get_action_id());
     FT_ASSERT_DOUBLE_EQ(0.0, source.get_weight());
     FT_ASSERT_DOUBLE_EQ(0.0, source.get_cooldown_seconds());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, moved.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, moved.get_error());
     return (1);
 }
 
@@ -139,8 +139,8 @@ FT_TEST(test_behavior_action_copy_assignment_resets_errno_to_success,
     FT_ASSERT_EQ(5, destination.get_action_id());
     FT_ASSERT_DOUBLE_EQ(0.9, destination.get_weight());
     FT_ASSERT_DOUBLE_EQ(7.5, destination.get_cooldown_seconds());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination.get_error());
     return (1);
 }
 
@@ -158,8 +158,8 @@ FT_TEST(test_behavior_action_move_assignment_resets_errno,
     FT_ASSERT_EQ(0, source.get_action_id());
     FT_ASSERT_DOUBLE_EQ(0.0, source.get_weight());
     FT_ASSERT_DOUBLE_EQ(0.0, source.get_cooldown_seconds());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination.get_error());
     return (1);
 }
 
@@ -173,8 +173,8 @@ FT_TEST(test_behavior_profile_default_construction_resets_errno_to_success,
     FT_ASSERT_DOUBLE_EQ(0.0, profile.get_aggression_weight());
     FT_ASSERT_DOUBLE_EQ(0.0, profile.get_caution_weight());
     FT_ASSERT_EQ(true, profile.get_actions().empty());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, profile.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, profile.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -191,8 +191,8 @@ FT_TEST(test_behavior_profile_parameterized_construction_resets_errno_to_success
     FT_ASSERT_DOUBLE_EQ(0.8, profile.get_aggression_weight());
     FT_ASSERT_DOUBLE_EQ(0.2, profile.get_caution_weight());
     FT_ASSERT_EQ(2u, profile.get_actions().size());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, profile.get_error());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, profile.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
     return (1);
 }
 
@@ -204,8 +204,8 @@ FT_TEST(test_behavior_profile_set_profile_id_resets_errno,
     ft_errno = FT_ERR_SOCKET_RESOLVE_FAIL;
     profile.set_profile_id(77);
     FT_ASSERT_EQ(77, profile.get_profile_id());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, profile.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, profile.get_error());
     return (1);
 }
 
@@ -217,8 +217,8 @@ FT_TEST(test_behavior_profile_set_aggression_resets_errno,
     ft_errno = FT_ERR_SOCKET_RESOLVE_FAMILY;
     profile.set_aggression_weight(0.35);
     FT_ASSERT_DOUBLE_EQ(0.35, profile.get_aggression_weight());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, profile.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, profile.get_error());
     return (1);
 }
 
@@ -230,8 +230,8 @@ FT_TEST(test_behavior_profile_set_caution_resets_errno,
     ft_errno = FT_ERR_SOCKET_RESOLVE_SERVICE;
     profile.set_caution_weight(0.65);
     FT_ASSERT_DOUBLE_EQ(0.65, profile.get_caution_weight());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, profile.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, profile.get_error());
     return (1);
 }
 
@@ -248,8 +248,8 @@ FT_TEST(test_behavior_profile_set_actions_resets_errno_and_copies,
     FT_ASSERT_EQ(2u, profile.get_actions().size());
     FT_ASSERT_EQ(3, profile.get_actions()[0].get_action_id());
     FT_ASSERT_EQ(4, profile.get_actions()[1].get_action_id());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, profile.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, profile.get_error());
     actions[0].set_action_id(99);
     FT_ASSERT_EQ(3, profile.get_actions()[0].get_action_id());
     return (1);
@@ -271,8 +271,8 @@ FT_TEST(test_behavior_profile_copy_assignment_resets_errno,
     FT_ASSERT_DOUBLE_EQ(0.9, destination.get_aggression_weight());
     FT_ASSERT_DOUBLE_EQ(0.4, destination.get_caution_weight());
     FT_ASSERT_EQ(2u, destination.get_actions().size());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination.get_error());
     source.set_profile_id(8);
     FT_ASSERT_EQ(5, destination.get_profile_id());
     return (1);
@@ -295,7 +295,7 @@ FT_TEST(test_behavior_profile_move_assignment_resets_errno,
     FT_ASSERT_EQ(1u, destination.get_actions().size());
     FT_ASSERT_EQ(0, source.get_profile_id());
     FT_ASSERT_EQ(true, source.get_actions().empty());
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, destination.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, destination.get_error());
     return (1);
 }

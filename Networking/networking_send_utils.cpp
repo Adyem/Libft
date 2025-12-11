@@ -134,7 +134,7 @@ int networking_check_socket_after_send(int socket_fd)
         ft_errno = FT_ERR_SOCKET_SEND_FAILED;
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
@@ -154,7 +154,7 @@ int networking_check_ssl_after_send(SSL *ssl_connection)
     socket_fd = SSL_get_fd(ssl_connection);
     if (socket_fd < 0)
     {
-        ft_errno = FT_ER_SUCCESSS;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     while (attempt_count < attempt_limit)
@@ -252,6 +252,6 @@ int networking_check_ssl_after_send(SSL *ssl_connection)
     }
     if (networking_check_socket_after_send(socket_fd) != 0)
         return (-1);
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }

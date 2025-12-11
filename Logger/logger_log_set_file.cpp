@@ -60,7 +60,7 @@ int ft_log_set_file(const char *path, size_t max_size)
     sink->max_size = max_size;
     sink->retention_count = 1;
     sink->max_age_seconds = 0;
-    if (sink->path.get_error() != FT_ER_SUCCESSS)
+    if (sink->path.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = sink->path.get_error();
         close(file_descriptor);
@@ -82,7 +82,7 @@ int ft_log_set_file(const char *path, size_t max_size)
         int error_code;
 
         error_code = ft_errno;
-        if (error_code == FT_ER_SUCCESSS)
+        if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INVALID_ARGUMENT;
         close(file_descriptor);
         file_sink_teardown_thread_safety(sink);
@@ -90,6 +90,6 @@ int ft_log_set_file(const char *path, size_t max_size)
         ft_errno = error_code;
         return (-1);
     }
-    ft_errno = FT_ER_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }

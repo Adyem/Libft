@@ -17,11 +17,11 @@ FT_TEST(test_json_document_find_item_by_pointer_success, "json document resolves
     document.add_item(group, item);
     json_item *found_item = document.find_item_by_pointer("/config/name");
     FT_ASSERT(found_item == item);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, document.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, document.get_error());
     const char *value = document.get_value_by_pointer("/config/name");
     FT_ASSERT(value != ft_nullptr);
     FT_ASSERT_EQ(std::string("value"), std::string(value));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, document.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, document.get_error());
     return (1);
 }
 
@@ -48,11 +48,11 @@ FT_TEST(test_json_document_pointer_unescapes_tokens, "json document pointer deco
     document.add_item(group, item);
     json_item *found_item = document.find_item_by_pointer("/config~1advanced/name~0value");
     FT_ASSERT(found_item == item);
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, document.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, document.get_error());
     const char *value = document.get_value_by_pointer("/config~1advanced/name~0value");
     FT_ASSERT(value != ft_nullptr);
     FT_ASSERT_EQ(std::string("42"), std::string(value));
-    FT_ASSERT_EQ(FT_ER_SUCCESSS, document.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, document.get_error());
     return (1);
 }
 
