@@ -8,15 +8,6 @@
 #include <utility>
 #include "../Template/move.hpp"
 
-static void geometry_circle_restore_errno(ft_unique_lock<pt_mutex> &guard,
-        int entry_errno)
-{
-    if (guard.owns_lock())
-        guard.unlock();
-    ft_errno = entry_errno;
-    return ;
-}
-
 circle::circle()
 {
     this->_center_x = 0.0;
@@ -138,9 +129,6 @@ circle::~circle()
 
 int circle::set_center(double center_x, double center_y)
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
@@ -150,15 +138,11 @@ int circle::set_center(double center_x, double center_y)
     this->_center_x = center_x;
     this->_center_y = center_y;
     this->set_error(FT_ERR_SUCCESSS);
-    geometry_circle_restore_errno(guard, entry_errno);
     return (FT_ERR_SUCCESSS);
 }
 
 int circle::set_center_x(double center_x)
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
@@ -167,15 +151,11 @@ int circle::set_center_x(double center_x)
     }
     this->_center_x = center_x;
     this->set_error(FT_ERR_SUCCESSS);
-    geometry_circle_restore_errno(guard, entry_errno);
     return (FT_ERR_SUCCESSS);
 }
 
 int circle::set_center_y(double center_y)
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
@@ -184,15 +164,11 @@ int circle::set_center_y(double center_y)
     }
     this->_center_y = center_y;
     this->set_error(FT_ERR_SUCCESSS);
-    geometry_circle_restore_errno(guard, entry_errno);
     return (FT_ERR_SUCCESSS);
 }
 
 int circle::set_radius(double radius)
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
@@ -201,16 +177,13 @@ int circle::set_radius(double radius)
     }
     this->_radius = radius;
     this->set_error(FT_ERR_SUCCESSS);
-    geometry_circle_restore_errno(guard, entry_errno);
     return (FT_ERR_SUCCESSS);
 }
 
 double  circle::get_center_x() const
 {
-    int entry_errno;
     double value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
@@ -219,16 +192,13 @@ double  circle::get_center_x() const
     }
     value = this->_center_x;
     const_cast<circle *>(this)->set_error(FT_ERR_SUCCESSS);
-    geometry_circle_restore_errno(guard, entry_errno);
     return (value);
 }
 
 double  circle::get_center_y() const
 {
-    int entry_errno;
     double value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
@@ -237,16 +207,13 @@ double  circle::get_center_y() const
     }
     value = this->_center_y;
     const_cast<circle *>(this)->set_error(FT_ERR_SUCCESSS);
-    geometry_circle_restore_errno(guard, entry_errno);
     return (value);
 }
 
 double  circle::get_radius() const
 {
-    int entry_errno;
     double value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
@@ -255,16 +222,13 @@ double  circle::get_radius() const
     }
     value = this->_radius;
     const_cast<circle *>(this)->set_error(FT_ERR_SUCCESSS);
-    geometry_circle_restore_errno(guard, entry_errno);
     return (value);
 }
 
 int circle::get_error() const
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
@@ -272,17 +236,14 @@ int circle::get_error() const
         return (guard.get_error());
     }
     error_code = this->_error_code;
-    geometry_circle_restore_errno(guard, entry_errno);
     return (error_code);
 }
 
 const char  *circle::get_error_str() const
 {
-    int entry_errno;
     int error_code;
     const char *error_string;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
@@ -291,7 +252,6 @@ const char  *circle::get_error_str() const
     }
     error_code = this->_error_code;
     error_string = ft_strerror(error_code);
-    geometry_circle_restore_errno(guard, entry_errno);
     return (error_string);
 }
 

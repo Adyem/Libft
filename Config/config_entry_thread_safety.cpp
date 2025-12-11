@@ -85,18 +85,18 @@ int cnfg_entry_lock(cnfg_entry *entry, bool *lock_acquired)
 
 void cnfg_entry_unlock(cnfg_entry *entry, bool lock_acquired)
 {
-    int entry_errno;
-
     if (!entry || !lock_acquired || !entry->mutex)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
-    entry_errno = ft_errno;
+    }
     entry->mutex->unlock(THREAD_ID);
     if (entry->mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = entry->mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
