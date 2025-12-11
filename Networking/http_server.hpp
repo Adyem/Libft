@@ -16,7 +16,6 @@ class ft_http_server
         mutable pt_mutex _mutex;
 
         void set_error(int error_code) const;
-        static void restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept;
         int run_once_locked(ft_unique_lock<pt_mutex> &guard);
 
     public:

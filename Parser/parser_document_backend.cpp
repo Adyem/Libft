@@ -110,9 +110,7 @@ int ft_file_document_source::read_all(ft_string &output)
     char *content_pointer;
     size_t read_count;
     int error_code;
-    int entry_errno;
 
-    entry_errno = ft_errno;
     file_stream = su_fopen(this->_path.c_str());
     if (file_stream == ft_nullptr)
     {
@@ -196,7 +194,6 @@ int ft_file_document_source::read_all(ft_string &output)
     }
     cma_free(content_pointer);
     this->assign_error(FT_ERR_SUCCESSS);
-    ft_errno = entry_errno;
     return (FT_ERR_SUCCESSS);
 }
 
@@ -233,9 +230,7 @@ int ft_file_document_sink::write_all(const char *data_pointer, size_t data_lengt
     su_file *file_stream;
     size_t written_count;
     int error_code;
-    int entry_errno;
 
-    entry_errno = ft_errno;
     if (data_pointer == ft_nullptr && data_length != 0)
     {
         this->assign_error(FT_ERR_INVALID_ARGUMENT);
@@ -274,7 +269,6 @@ int ft_file_document_sink::write_all(const char *data_pointer, size_t data_lengt
         return (error_code);
     }
     this->assign_error(FT_ERR_SUCCESSS);
-    ft_errno = entry_errno;
     return (FT_ERR_SUCCESSS);
 }
 
@@ -314,10 +308,8 @@ size_t ft_memory_document_source::get_length() const noexcept
 
 int ft_memory_document_source::read_all(ft_string &output)
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     if (this->_data_pointer == ft_nullptr && this->_data_length != 0)
     {
         this->assign_error(FT_ERR_INVALID_ARGUMENT);
@@ -331,7 +323,6 @@ int ft_memory_document_source::read_all(ft_string &output)
         return (error_code);
     }
     this->assign_error(FT_ERR_SUCCESSS);
-    ft_errno = entry_errno;
     return (FT_ERR_SUCCESSS);
 }
 
@@ -365,10 +356,8 @@ ft_string *ft_memory_document_sink::get_storage() const noexcept
 
 int ft_memory_document_sink::write_all(const char *data_pointer, size_t data_length)
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     if (this->_storage_pointer == ft_nullptr)
     {
         this->assign_error(FT_ERR_INVALID_STATE);
@@ -387,7 +376,6 @@ int ft_memory_document_sink::write_all(const char *data_pointer, size_t data_len
         return (error_code);
     }
     this->assign_error(FT_ERR_SUCCESSS);
-    ft_errno = entry_errno;
     return (FT_ERR_SUCCESSS);
 }
 
@@ -455,9 +443,7 @@ int ft_http_document_source::read_all(ft_string &output)
     const char *port_pointer;
     int request_status;
     int error_code;
-    int entry_errno;
 
-    entry_errno = ft_errno;
     if (this->_host.size() == 0 || this->_path.size() == 0)
     {
         this->assign_error(FT_ERR_INVALID_STATE);
@@ -483,7 +469,6 @@ int ft_http_document_source::read_all(ft_string &output)
         return (error_code);
     }
     this->assign_error(FT_ERR_SUCCESSS);
-    ft_errno = entry_errno;
     return (FT_ERR_SUCCESSS);
 }
 
@@ -552,9 +537,7 @@ int ft_http_document_sink::write_all(const char *data_pointer, size_t data_lengt
     const char *port_pointer;
     int request_status;
     int error_code;
-    int entry_errno;
 
-    entry_errno = ft_errno;
     if (this->_host.size() == 0 || this->_path.size() == 0)
     {
         this->assign_error(FT_ERR_INVALID_STATE);
@@ -585,6 +568,5 @@ int ft_http_document_sink::write_all(const char *data_pointer, size_t data_lengt
         return (error_code);
     }
     this->assign_error(FT_ERR_SUCCESSS);
-    ft_errno = entry_errno;
     return (FT_ERR_SUCCESSS);
 }

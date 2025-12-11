@@ -21,7 +21,6 @@ class ft_deck : public ft_vector<ElementType*>
         void    set_error_unlocked(int error_code) const noexcept;
         void    set_error(int error_code) const noexcept;
         int     lock_deck(ft_unique_lock<pt_mutex> &guard) const noexcept;
-        static void restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept;
         static void sleep_backoff() noexcept;
         static int lock_pair(const ft_deck<ElementType> &first, const ft_deck<ElementType> &second,
                 ft_unique_lock<pt_mutex> &first_guard,
@@ -61,41 +60,16 @@ void ft_deck<ElementType>::set_error(int error_code) const noexcept
 template<typename ElementType>
 int ft_deck<ElementType>::lock_deck(ft_unique_lock<pt_mutex> &guard) const noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
     if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = entry_errno;
         guard = ft_unique_lock<pt_mutex>();
+        ft_errno = local_guard.get_error();
         return (local_guard.get_error());
     }
-    ft_errno = entry_errno;
     guard = ft_move(local_guard);
+    ft_errno = FT_ERR_SUCCESSS;
     return (FT_ERR_SUCCESSS);
-}
-
-template<typename ElementType>
-void ft_deck<ElementType>::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept
-{
-    int current_errno;
-
-    current_errno = ft_errno;
-    if (guard.owns_lock())
-        guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-        return ;
-    }
-    if (current_errno != FT_ERR_SUCCESSS)
-    {
-        ft_errno = current_errno;
-        return ;
-    }
-    ft_errno = entry_errno;
-    return ;
 }
 
 template<typename ElementType>
@@ -201,45 +175,38 @@ template<typename ElementType>
 ElementType *ft_deck<ElementType>::popRandomElement() noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     size_t deck_size;
     int roll_result;
     size_t index;
     ElementType *element;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_deck(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     deck_size = this->size();
     if (this->get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->get_error());
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     if (deck_size == 0)
     {
         this->set_error(FT_ERR_EMPTY);
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     if (deck_size > static_cast<size_t>(INT_MAX))
     {
         this->set_error(FT_ERR_OUT_OF_RANGE);
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     roll_result = ft_dice_roll(1, static_cast<int>(deck_size));
     if (ft_errno != FT_ERR_SUCCESSS || roll_result < 1)
     {
         this->set_error(ft_errno);
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     index = static_cast<size_t>(roll_result - 1);
@@ -247,11 +214,9 @@ ElementType *ft_deck<ElementType>::popRandomElement() noexcept
     if (this->get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->get_error());
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     this->set_error(FT_ERR_SUCCESSS);
-    ft_deck<ElementType>::restore_errno(guard, entry_errno);
     return (element);
 }
 
@@ -259,45 +224,38 @@ template<typename ElementType>
 ElementType *ft_deck<ElementType>::getRandomElement() const noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     size_t deck_size;
     int roll_result;
     size_t index;
     ElementType *element;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_deck(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         const_cast<ft_deck<ElementType> *>(this)->set_error(lock_error);
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     deck_size = this->size();
     if (this->get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_deck<ElementType> *>(this)->set_error(this->get_error());
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     if (deck_size == 0)
     {
         const_cast<ft_deck<ElementType> *>(this)->set_error(FT_ERR_EMPTY);
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     if (deck_size > static_cast<size_t>(INT_MAX))
     {
         const_cast<ft_deck<ElementType> *>(this)->set_error(FT_ERR_OUT_OF_RANGE);
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     roll_result = ft_dice_roll(1, static_cast<int>(deck_size));
     if (ft_errno != FT_ERR_SUCCESSS || roll_result < 1)
     {
         const_cast<ft_deck<ElementType> *>(this)->set_error(ft_errno);
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     index = static_cast<size_t>(roll_result - 1);
@@ -305,11 +263,9 @@ ElementType *ft_deck<ElementType>::getRandomElement() const noexcept
     if (this->get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_deck<ElementType> *>(this)->set_error(this->get_error());
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     const_cast<ft_deck<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
-    ft_deck<ElementType>::restore_errno(guard, entry_errno);
     return (element);
 }
 
@@ -317,31 +273,26 @@ template<typename ElementType>
 ElementType *ft_deck<ElementType>::drawTopElement() noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     size_t deck_size;
     size_t index;
     ElementType *element;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_deck(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     deck_size = this->size();
     if (this->get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->get_error());
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     if (deck_size == 0)
     {
         this->set_error(FT_ERR_EMPTY);
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     index = deck_size - 1;
@@ -349,11 +300,9 @@ ElementType *ft_deck<ElementType>::drawTopElement() noexcept
     if (this->get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->get_error());
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     this->set_error(FT_ERR_SUCCESSS);
-    ft_deck<ElementType>::restore_errno(guard, entry_errno);
     return (element);
 }
 
@@ -361,31 +310,26 @@ template<typename ElementType>
 ElementType *ft_deck<ElementType>::peekTopElement() const noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     size_t deck_size;
     size_t index;
     ElementType *element;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_deck(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         const_cast<ft_deck<ElementType> *>(this)->set_error(lock_error);
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     deck_size = this->size();
     if (this->get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_deck<ElementType> *>(this)->set_error(this->get_error());
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     if (deck_size == 0)
     {
         const_cast<ft_deck<ElementType> *>(this)->set_error(FT_ERR_EMPTY);
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     index = deck_size - 1;
@@ -393,11 +337,9 @@ ElementType *ft_deck<ElementType>::peekTopElement() const noexcept
     if (this->get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_deck<ElementType> *>(this)->set_error(this->get_error());
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return (ft_nullptr);
     }
     const_cast<ft_deck<ElementType> *>(this)->set_error(FT_ERR_SUCCESSS);
-    ft_deck<ElementType>::restore_errno(guard, entry_errno);
     return (element);
 }
 
@@ -405,36 +347,30 @@ template<typename ElementType>
 void ft_deck<ElementType>::shuffle() noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     size_t deck_size;
     size_t index;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_deck(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return ;
     }
     deck_size = this->size();
     if (this->get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->get_error());
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return ;
     }
     if (deck_size == 0)
     {
         this->set_error(FT_ERR_EMPTY);
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return ;
     }
     if (deck_size > static_cast<size_t>(INT_MAX))
     {
         this->set_error(FT_ERR_OUT_OF_RANGE);
-        ft_deck<ElementType>::restore_errno(guard, entry_errno);
         return ;
     }
     index = deck_size - 1;
@@ -443,14 +379,12 @@ void ft_deck<ElementType>::shuffle() noexcept
         if (index + 1 > static_cast<size_t>(INT_MAX))
         {
             this->set_error(FT_ERR_OUT_OF_RANGE);
-            ft_deck<ElementType>::restore_errno(guard, entry_errno);
             return ;
         }
         int roll_result = ft_dice_roll(1, static_cast<int>(index + 1));
         if (ft_errno != FT_ERR_SUCCESSS || roll_result < 1)
         {
             this->set_error(ft_errno);
-            ft_deck<ElementType>::restore_errno(guard, entry_errno);
             return ;
         }
         size_t random_index = static_cast<size_t>(roll_result - 1);
@@ -458,14 +392,12 @@ void ft_deck<ElementType>::shuffle() noexcept
         if (this->get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(this->get_error());
-            ft_deck<ElementType>::restore_errno(guard, entry_errno);
             return ;
         }
         ElementType *second_element = (*this)[random_index];
         if (this->get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(this->get_error());
-            ft_deck<ElementType>::restore_errno(guard, entry_errno);
             return ;
         }
         ft_swap(first_element, second_element);
@@ -473,20 +405,17 @@ void ft_deck<ElementType>::shuffle() noexcept
         if (this->get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(this->get_error());
-            ft_deck<ElementType>::restore_errno(guard, entry_errno);
             return ;
         }
         (*this)[random_index] = second_element;
         if (this->get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(this->get_error());
-            ft_deck<ElementType>::restore_errno(guard, entry_errno);
             return ;
         }
         index -= 1;
     }
     this->set_error(FT_ERR_SUCCESSS);
-    ft_deck<ElementType>::restore_errno(guard, entry_errno);
     return ;
 }
 

@@ -34,9 +34,6 @@ ft_log_context_guard::ft_log_context_guard(const s_log_field *fields,
 
 ft_log_context_guard::~ft_log_context_guard() noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     if (this->_active)
     {
         logger_context_pop(this->_pushed_count);
@@ -44,28 +41,22 @@ ft_log_context_guard::~ft_log_context_guard() noexcept
         {
             this->_active = false;
             this->set_error(ft_errno);
-            ft_errno = entry_errno;
             return ;
         }
     }
     this->_active = false;
     this->set_error(FT_ERR_SUCCESSS);
-    ft_errno = entry_errno;
     return ;
 }
 
 ft_log_context_guard::ft_log_context_guard(ft_log_context_guard &&other) noexcept
     : _pushed_count(other._pushed_count), _active(other._active), _error_code(other._error_code)
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     other._pushed_count = 0;
     other._active = false;
     other._error_code = FT_ERR_SUCCESSS;
     other.set_error(FT_ERR_SUCCESSS);
     this->set_error(this->_error_code);
-    ft_errno = entry_errno;
     return ;
 }
 
@@ -73,9 +64,6 @@ ft_log_context_guard &ft_log_context_guard::operator=(ft_log_context_guard &&oth
 {
     if (this != &other)
     {
-        int entry_errno;
-
-        entry_errno = ft_errno;
         if (this->_active)
         {
             logger_context_pop(this->_pushed_count);
@@ -83,7 +71,6 @@ ft_log_context_guard &ft_log_context_guard::operator=(ft_log_context_guard &&oth
             {
                 this->_active = false;
                 this->set_error(ft_errno);
-                ft_errno = entry_errno;
                 return (*this);
             }
         }
@@ -95,7 +82,6 @@ ft_log_context_guard &ft_log_context_guard::operator=(ft_log_context_guard &&oth
         other._error_code = FT_ERR_SUCCESSS;
         other.set_error(FT_ERR_SUCCESSS);
         this->set_error(this->_error_code);
-        ft_errno = entry_errno;
     }
     return (*this);
 }
