@@ -11,6 +11,7 @@
 #include <cstring>
 #include <cstdio>
 #include <cerrno>
+#include <new>
 #include <zlib.h>
 
 static char websocket_ascii_lower(char character)
@@ -447,7 +448,7 @@ int ft_websocket_server::start(const char *ip, uint16_t port, int address_family
         delete this->_server_socket;
         this->_server_socket = ft_nullptr;
     }
-    this->_server_socket = new ft_socket(configuration);
+    this->_server_socket = new (std::nothrow) ft_socket(configuration);
     if (!this->_server_socket || this->_server_socket->get_error() != FT_ERR_SUCCESSS)
     {
         int error_code;
@@ -459,7 +460,7 @@ int ft_websocket_server::start(const char *ip, uint16_t port, int address_family
             this->_server_socket = ft_nullptr;
         }
         else
-            error_code = FT_ERR_INVALID_ARGUMENT;
+            error_code = FT_ERR_NO_MEMORY;
         this->set_error(error_code);
         ft_websocket_server::restore_errno(guard, entry_errno);
         return (1);
