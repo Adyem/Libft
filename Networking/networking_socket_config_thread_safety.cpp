@@ -92,7 +92,6 @@ int socket_config_lock(const SocketConfig *config, bool *lock_acquired)
 void socket_config_unlock(const SocketConfig *config, bool lock_acquired)
 {
     SocketConfig *mutable_config;
-    int           entry_errno;
 
     ft_errno = FT_ERR_SUCCESSS;
     if (config == ft_nullptr || lock_acquired == false)
@@ -100,13 +99,12 @@ void socket_config_unlock(const SocketConfig *config, bool lock_acquired)
     mutable_config = const_cast<SocketConfig *>(config);
     if (mutable_config->_mutex == ft_nullptr)
         return ;
-    entry_errno = ft_errno;
     mutable_config->_mutex->unlock(THREAD_ID);
     if (mutable_config->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = mutable_config->_mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }

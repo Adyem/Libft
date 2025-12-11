@@ -78,17 +78,15 @@ void cnfg_flag_parser::free_flags_locked()
 
 void cnfg_flag_parser::free_flags()
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(mutex_guard.get_error());
         return ;
     }
     this->free_flags_locked();
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -141,11 +139,9 @@ bool cnfg_flag_parser::parse(int argument_count, char **argument_values)
 
 bool cnfg_flag_parser::has_short_flag(char flag)
 {
-    int entry_errno;
     bool has_flag;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(mutex_guard.get_error());
@@ -153,21 +149,19 @@ bool cnfg_flag_parser::has_short_flag(char flag)
     }
     if (!this->_short_flags)
     {
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
         return (false);
     }
     has_flag = ft_strchr(this->_short_flags, flag) != ft_nullptr;
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (has_flag);
 }
 
 bool cnfg_flag_parser::has_long_flag(const char *flag)
 {
-    int entry_errno;
     size_t flag_index;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(mutex_guard.get_error());
@@ -175,71 +169,62 @@ bool cnfg_flag_parser::has_long_flag(const char *flag)
     }
     if (!this->_long_flags || !flag)
     {
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
         return (false);
     }
     flag_index = 0;
     while (this->_long_flags[flag_index])
     {
         if (ft_strcmp(this->_long_flags[flag_index], flag) == 0)
-        {
-            ft_errno = entry_errno;
             return (true);
-        }
         ++flag_index;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (false);
 }
 
 size_t cnfg_flag_parser::get_short_flag_count()
 {
-    int entry_errno;
     size_t short_flag_count;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(mutex_guard.get_error());
         return (0);
     }
     short_flag_count = this->_short_flag_count;
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (short_flag_count);
 }
 
 size_t cnfg_flag_parser::get_long_flag_count()
 {
-    int entry_errno;
     size_t long_flag_count;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(mutex_guard.get_error());
         return (0);
     }
     long_flag_count = this->_long_flag_count;
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (long_flag_count);
 }
 
 size_t cnfg_flag_parser::get_total_flag_count()
 {
-    int entry_errno;
     size_t total_flag_count;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(mutex_guard.get_error());
         return (0);
     }
     total_flag_count = this->_short_flag_count + this->_long_flag_count;
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (total_flag_count);
 }
 
@@ -252,29 +237,25 @@ void    cnfg_flag_parser::set_error(int error_code)
 
 int     cnfg_flag_parser::get_error() const
 {
-    int entry_errno;
     int error_code;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<cnfg_flag_parser *>(this)->set_error(mutex_guard.get_error());
         return (mutex_guard.get_error());
     }
     error_code = this->_error_code;
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (error_code);
 }
 
 const char  *cnfg_flag_parser::get_error_str() const
 {
-    int entry_errno;
     int error_code;
     const char *error_string;
     ft_unique_lock<pt_mutex> mutex_guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (mutex_guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<cnfg_flag_parser *>(this)->set_error(mutex_guard.get_error());
@@ -282,7 +263,7 @@ const char  *cnfg_flag_parser::get_error_str() const
     }
     error_code = this->_error_code;
     error_string = ft_strerror(error_code);
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (error_string);
 }
 
@@ -294,7 +275,10 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
     int lock_error;
 
     if (!override_config)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return (base_config);
+    }
     lock_error = cnfg_config_lock_if_enabled(override_config, override_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -319,22 +303,19 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
         const char *override_key;
         const char *override_value;
         bool override_locked;
-        int entry_errno;
         bool replaced = false;
 
-        entry_errno = ft_errno;
         if (cnfg_entry_lock(override_entry, &override_locked) != 0)
         {
             cnfg_config_unlock_guard(base_guard);
             cnfg_config_unlock_guard(override_guard);
-            ft_errno = entry_errno;
             return (ft_nullptr);
         }
         override_section = override_entry->section;
         override_key = override_entry->key;
         override_value = override_entry->value;
         cnfg_entry_unlock(override_entry, override_locked);
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
         size_t base_index = 0;
         if (base_config)
         {
@@ -344,14 +325,10 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
                 bool base_locked;
                 bool same_section;
                 bool same_key;
-                int base_errno;
-
-                base_errno = ft_errno;
                 if (cnfg_entry_lock(base_entry, &base_locked) != 0)
                 {
                     cnfg_config_unlock_guard(base_guard);
                     cnfg_config_unlock_guard(override_guard);
-                    ft_errno = base_errno;
                     return (ft_nullptr);
                 }
                 same_section = (base_entry->section == ft_nullptr
@@ -374,7 +351,7 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
                         if (!base_entry->value)
                         {
                             cnfg_entry_unlock(base_entry, base_locked);
-                            ft_errno = base_errno;
+                            ft_errno = FT_ERR_NO_MEMORY;
                             cnfg_config_unlock_guard(base_guard);
                             cnfg_config_unlock_guard(override_guard);
                             cnfg_free(base_config);
@@ -382,12 +359,12 @@ static cnfg_config *merge_configs(cnfg_config *base_config,
                         }
                     }
                     cnfg_entry_unlock(base_entry, base_locked);
-                    ft_errno = base_errno;
+                    ft_errno = FT_ERR_SUCCESSS;
                     replaced = true;
                     break;
                 }
                 cnfg_entry_unlock(base_entry, base_locked);
-                ft_errno = base_errno;
+                ft_errno = FT_ERR_SUCCESSS;
                 ++base_index;
             }
         }
