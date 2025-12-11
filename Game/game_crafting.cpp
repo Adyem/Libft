@@ -9,15 +9,6 @@ static void game_crafting_sleep_backoff()
     return ;
 }
 
-static void game_crafting_restore_errno(ft_unique_lock<pt_mutex> &guard,
-        int entry_errno)
-{
-    if (guard.owns_lock())
-        guard.unlock();
-    ft_errno = entry_errno;
-    return ;
-}
-
 int ft_crafting_ingredient::lock_pair(const ft_crafting_ingredient &first,
         const ft_crafting_ingredient &second,
         ft_unique_lock<pt_mutex> &first_guard,
@@ -106,14 +97,10 @@ ft_crafting_ingredient::ft_crafting_ingredient(int item_id, int count, int rarit
 ft_crafting_ingredient::ft_crafting_ingredient(const ft_crafting_ingredient &other) noexcept
     : _item_id(0), _count(0), _rarity(-1), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        game_crafting_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_item_id = other._item_id;
@@ -121,7 +108,6 @@ ft_crafting_ingredient::ft_crafting_ingredient(const ft_crafting_ingredient &oth
     this->_rarity = other._rarity;
     this->_error_code = other._error_code;
     this->set_error(other._error_code);
-    game_crafting_restore_errno(other_guard, entry_errno);
     return ;
 }
 
@@ -129,12 +115,10 @@ ft_crafting_ingredient &ft_crafting_ingredient::operator=(const ft_crafting_ingr
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_crafting_ingredient::lock_pair(*this, other,
             this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
@@ -147,22 +131,16 @@ ft_crafting_ingredient &ft_crafting_ingredient::operator=(const ft_crafting_ingr
     this->_rarity = other._rarity;
     this->_error_code = other._error_code;
     this->set_error(other._error_code);
-    game_crafting_restore_errno(this_guard, entry_errno);
-    game_crafting_restore_errno(other_guard, entry_errno);
     return (*this);
 }
 
 ft_crafting_ingredient::ft_crafting_ingredient(ft_crafting_ingredient &&other) noexcept
     : _item_id(0), _count(0), _rarity(-1), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        game_crafting_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_item_id = other._item_id;
@@ -175,7 +153,6 @@ ft_crafting_ingredient::ft_crafting_ingredient(ft_crafting_ingredient &&other) n
     other._error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_error_code);
     other.set_error(FT_ERR_SUCCESSS);
-    game_crafting_restore_errno(other_guard, entry_errno);
     return ;
 }
 
@@ -183,12 +160,10 @@ ft_crafting_ingredient &ft_crafting_ingredient::operator=(ft_crafting_ingredient
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_crafting_ingredient::lock_pair(*this, other,
             this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
@@ -206,169 +181,130 @@ ft_crafting_ingredient &ft_crafting_ingredient::operator=(ft_crafting_ingredient
     other._error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_error_code);
     other.set_error(FT_ERR_SUCCESSS);
-    game_crafting_restore_errno(this_guard, entry_errno);
-    game_crafting_restore_errno(other_guard, entry_errno);
     return (*this);
 }
 
 int ft_crafting_ingredient::get_item_id() const noexcept
 {
-    int entry_errno;
     int identifier;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_crafting_ingredient *>(this)->set_error(guard.get_error());
-        game_crafting_restore_errno(guard, entry_errno);
         return (0);
     }
     identifier = this->_item_id;
     const_cast<ft_crafting_ingredient *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_crafting_restore_errno(guard, entry_errno);
     return (identifier);
 }
 
 void ft_crafting_ingredient::set_item_id(int item_id) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_crafting_restore_errno(guard, entry_errno);
         return ;
     }
     this->_item_id = item_id;
     this->set_error(FT_ERR_SUCCESSS);
-    game_crafting_restore_errno(guard, entry_errno);
     return ;
 }
 
 int ft_crafting_ingredient::get_count() const noexcept
 {
-    int entry_errno;
     int count_value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_crafting_ingredient *>(this)->set_error(guard.get_error());
-        game_crafting_restore_errno(guard, entry_errno);
         return (0);
     }
     count_value = this->_count;
     const_cast<ft_crafting_ingredient *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_crafting_restore_errno(guard, entry_errno);
     return (count_value);
 }
 
 void ft_crafting_ingredient::set_count(int count) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_crafting_restore_errno(guard, entry_errno);
         return ;
     }
     if (count < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
-        game_crafting_restore_errno(guard, entry_errno);
         return ;
     }
     this->_count = count;
     this->set_error(FT_ERR_SUCCESSS);
-    game_crafting_restore_errno(guard, entry_errno);
     return ;
 }
 
 int ft_crafting_ingredient::get_rarity() const noexcept
 {
-    int entry_errno;
     int rarity_value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_crafting_ingredient *>(this)->set_error(guard.get_error());
-        game_crafting_restore_errno(guard, entry_errno);
         return (-1);
     }
     rarity_value = this->_rarity;
     const_cast<ft_crafting_ingredient *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_crafting_restore_errno(guard, entry_errno);
     return (rarity_value);
 }
 
 void ft_crafting_ingredient::set_rarity(int rarity) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_crafting_restore_errno(guard, entry_errno);
         return ;
     }
     if (rarity < -1)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
-        game_crafting_restore_errno(guard, entry_errno);
         return ;
     }
     this->_rarity = rarity;
     this->set_error(FT_ERR_SUCCESSS);
-    game_crafting_restore_errno(guard, entry_errno);
     return ;
 }
 
 int ft_crafting_ingredient::get_error() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_crafting_ingredient *>(this)->set_error(guard.get_error());
-        game_crafting_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     error_code = this->_error_code;
     const_cast<ft_crafting_ingredient *>(this)->set_error(error_code);
-    game_crafting_restore_errno(guard, entry_errno);
     return (error_code);
 }
 
 const char *ft_crafting_ingredient::get_error_str() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_crafting_ingredient *>(this)->set_error(guard.get_error());
-        game_crafting_restore_errno(guard, entry_errno);
         return (ft_strerror(guard.get_error()));
     }
     error_code = this->_error_code;
     const_cast<ft_crafting_ingredient *>(this)->set_error(error_code);
-    game_crafting_restore_errno(guard, entry_errno);
     return (ft_strerror(error_code));
 }
 
@@ -459,16 +395,13 @@ ft_crafting::ft_crafting() noexcept
 ft_crafting::ft_crafting(const ft_crafting &other) noexcept
     : _recipes(), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
     const Pair<int, ft_vector<ft_crafting_ingredient>> *entry;
     const Pair<int, ft_vector<ft_crafting_ingredient>> *end;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        game_crafting_restore_errno(other_guard, entry_errno);
         return ;
     }
     entry = other._recipes.end() - other._recipes.size();
@@ -485,7 +418,6 @@ ft_crafting::ft_crafting(const ft_crafting &other) noexcept
             if (ingredients.get_error() != FT_ERR_SUCCESSS)
             {
                 this->set_error(ingredients.get_error());
-                game_crafting_restore_errno(other_guard, entry_errno);
                 return ;
             }
             ++ingredient_index;
@@ -494,14 +426,12 @@ ft_crafting::ft_crafting(const ft_crafting &other) noexcept
         if (this->_recipes.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(this->_recipes.get_error());
-            game_crafting_restore_errno(other_guard, entry_errno);
             return ;
         }
         ++entry;
     }
     this->_error_code = other._error_code;
     this->set_error(other._error_code);
-    game_crafting_restore_errno(other_guard, entry_errno);
     return ;
 }
 
@@ -509,12 +439,10 @@ ft_crafting &ft_crafting::operator=(const ft_crafting &other) noexcept
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_crafting::lock_pair(*this, other,
             this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
@@ -538,8 +466,6 @@ ft_crafting &ft_crafting::operator=(const ft_crafting &other) noexcept
             if (ingredients.get_error() != FT_ERR_SUCCESSS)
             {
                 this->set_error(ingredients.get_error());
-                game_crafting_restore_errno(this_guard, entry_errno);
-                game_crafting_restore_errno(other_guard, entry_errno);
                 return (*this);
             }
             ++ingredient_index;
@@ -548,30 +474,23 @@ ft_crafting &ft_crafting::operator=(const ft_crafting &other) noexcept
         if (this->_recipes.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(this->_recipes.get_error());
-            game_crafting_restore_errno(this_guard, entry_errno);
-            game_crafting_restore_errno(other_guard, entry_errno);
             return (*this);
         }
         ++entry;
     }
     this->_error_code = other._error_code;
     this->set_error(other._error_code);
-    game_crafting_restore_errno(this_guard, entry_errno);
-    game_crafting_restore_errno(other_guard, entry_errno);
     return (*this);
 }
 
 ft_crafting::ft_crafting(ft_crafting &&other) noexcept
     : _recipes(), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        game_crafting_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_recipes = ft_move(other._recipes);
@@ -583,7 +502,6 @@ ft_crafting::ft_crafting(ft_crafting &&other) noexcept
     other._recipes.clear();
     other._error_code = FT_ERR_SUCCESSS;
     other.set_error(FT_ERR_SUCCESSS);
-    game_crafting_restore_errno(other_guard, entry_errno);
     return ;
 }
 
@@ -591,12 +509,10 @@ ft_crafting &ft_crafting::operator=(ft_crafting &&other) noexcept
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_crafting::lock_pair(*this, other,
             this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
@@ -613,80 +529,62 @@ ft_crafting &ft_crafting::operator=(ft_crafting &&other) noexcept
     other._recipes.clear();
     other._error_code = FT_ERR_SUCCESSS;
     other.set_error(FT_ERR_SUCCESSS);
-    game_crafting_restore_errno(this_guard, entry_errno);
-    game_crafting_restore_errno(other_guard, entry_errno);
     return (*this);
 }
 
 ft_map<int, ft_vector<ft_crafting_ingredient>> &ft_crafting::get_recipes() noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_crafting_restore_errno(guard, entry_errno);
         return (this->_recipes);
     }
     this->set_error(FT_ERR_SUCCESSS);
-    game_crafting_restore_errno(guard, entry_errno);
     return (this->_recipes);
 }
 
 const ft_map<int, ft_vector<ft_crafting_ingredient>> &ft_crafting::get_recipes() const noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_crafting *>(this)->set_error(guard.get_error());
-        game_crafting_restore_errno(guard, entry_errno);
         return (this->_recipes);
     }
     const_cast<ft_crafting *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_crafting_restore_errno(guard, entry_errno);
     return (this->_recipes);
 }
 
 int ft_crafting::get_error() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_crafting *>(this)->set_error(guard.get_error());
-        game_crafting_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     error_code = this->_error_code;
     const_cast<ft_crafting *>(this)->set_error(error_code);
-    game_crafting_restore_errno(guard, entry_errno);
     return (error_code);
 }
 
 const char *ft_crafting::get_error_str() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_crafting *>(this)->set_error(guard.get_error());
-        game_crafting_restore_errno(guard, entry_errno);
         return (ft_strerror(guard.get_error()));
     }
     error_code = this->_error_code;
     const_cast<ft_crafting *>(this)->set_error(error_code);
-    game_crafting_restore_errno(guard, entry_errno);
     return (ft_strerror(error_code));
 }
 
@@ -700,14 +598,11 @@ void ft_crafting::set_error(int error_code) const noexcept
 int ft_crafting::register_recipe(int recipe_id,
         ft_vector<ft_crafting_ingredient> &&ingredients) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_crafting_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     this->set_error(FT_ERR_SUCCESSS);
@@ -715,53 +610,44 @@ int ft_crafting::register_recipe(int recipe_id,
     if (this->_recipes.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_recipes.get_error());
-        game_crafting_restore_errno(guard, entry_errno);
         return (this->_error_code);
     }
-    game_crafting_restore_errno(guard, entry_errno);
     return (FT_ERR_SUCCESSS);
 }
 
 int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id,
         const ft_sharedptr<ft_item> &result) noexcept
 {
-    int entry_errno;
     Pair<int, ft_vector<ft_crafting_ingredient>> *recipe_entry;
     ft_vector<ft_crafting_ingredient> *ingredients;
     size_t index;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_crafting_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     this->set_error(FT_ERR_SUCCESSS);
     if (!result)
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
-        game_crafting_restore_errno(guard, entry_errno);
         return (FT_ERR_GAME_GENERAL_ERROR);
     }
     if (result.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(result.get_error());
-        game_crafting_restore_errno(guard, entry_errno);
         return (this->_error_code);
     }
     if (result->get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(result->get_error());
-        game_crafting_restore_errno(guard, entry_errno);
         return (this->_error_code);
     }
     recipe_entry = this->_recipes.find(recipe_id);
     if (recipe_entry == this->_recipes.end())
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
-        game_crafting_restore_errno(guard, entry_errno);
         return (FT_ERR_GAME_GENERAL_ERROR);
     }
     ingredients = &recipe_entry->value;
@@ -782,21 +668,18 @@ int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id,
         if (ingredient.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(ingredient.get_error());
-            game_crafting_restore_errno(guard, entry_errno);
             return (this->_error_code);
         }
         ingredient_count = ingredient.get_count();
         if (ingredient.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(ingredient.get_error());
-            game_crafting_restore_errno(guard, entry_errno);
             return (this->_error_code);
         }
         ingredient_rarity = ingredient.get_rarity();
         if (ingredient.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(ingredient.get_error());
-            game_crafting_restore_errno(guard, entry_errno);
             return (this->_error_code);
         }
         have_count = 0;
@@ -804,7 +687,6 @@ int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id,
         if (inventory_error != FT_ERR_SUCCESSS)
         {
             this->set_error(inventory_error);
-            game_crafting_restore_errno(guard, entry_errno);
             return (this->_error_code);
         }
         item_ptr = items.end() - items.size();
@@ -816,13 +698,11 @@ int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id,
                 if (item_ptr->value.get_error() != FT_ERR_SUCCESSS)
                 {
                     this->set_error(item_ptr->value.get_error());
-                    game_crafting_restore_errno(guard, entry_errno);
                     return (this->_error_code);
                 }
                 if (item_ptr->value->get_error() != FT_ERR_SUCCESSS)
                 {
                     this->set_error(item_ptr->value->get_error());
-                    game_crafting_restore_errno(guard, entry_errno);
                     return (this->_error_code);
                 }
                 if (item_ptr->value->get_item_id() == ingredient_item_id)
@@ -837,7 +717,6 @@ int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id,
         if (have_count < ingredient_count)
         {
             this->set_error(FT_ERR_GAME_GENERAL_ERROR);
-            game_crafting_restore_errno(guard, entry_errno);
             return (FT_ERR_GAME_GENERAL_ERROR);
         }
         ++index;
@@ -859,21 +738,18 @@ int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id,
         if (ingredient.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(ingredient.get_error());
-            game_crafting_restore_errno(guard, entry_errno);
             return (this->_error_code);
         }
         ingredient_count = ingredient.get_count();
         if (ingredient.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(ingredient.get_error());
-            game_crafting_restore_errno(guard, entry_errno);
             return (this->_error_code);
         }
         ingredient_rarity = ingredient.get_rarity();
         if (ingredient.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(ingredient.get_error());
-            game_crafting_restore_errno(guard, entry_errno);
             return (this->_error_code);
         }
         remaining = ingredient_count;
@@ -881,7 +757,6 @@ int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id,
         if (inventory_error != FT_ERR_SUCCESSS)
         {
             this->set_error(inventory_error);
-            game_crafting_restore_errno(guard, entry_errno);
             return (this->_error_code);
         }
         item_ptr = items.end() - items.size();
@@ -893,13 +768,11 @@ int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id,
                 if (item_ptr->value.get_error() != FT_ERR_SUCCESSS)
                 {
                     this->set_error(item_ptr->value.get_error());
-                    game_crafting_restore_errno(guard, entry_errno);
                     return (this->_error_code);
                 }
                 if (item_ptr->value->get_error() != FT_ERR_SUCCESSS)
                 {
                     this->set_error(item_ptr->value->get_error());
-                    game_crafting_restore_errno(guard, entry_errno);
                     return (this->_error_code);
                 }
                 if (item_ptr->value->get_item_id() == ingredient_item_id)
@@ -929,11 +802,9 @@ int ft_crafting::craft_item(ft_inventory &inventory, int recipe_id,
     if (add_error != FT_ERR_SUCCESSS)
     {
         this->set_error(add_error);
-        game_crafting_restore_errno(guard, entry_errno);
         return (this->_error_code);
     }
     this->set_error(FT_ERR_SUCCESSS);
-    game_crafting_restore_errno(guard, entry_errno);
     return (FT_ERR_SUCCESSS);
 }
 

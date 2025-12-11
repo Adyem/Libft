@@ -89,20 +89,29 @@ int log_sink_lock(const s_log_sink *sink, bool *lock_acquired)
 void log_sink_unlock(const s_log_sink *sink, bool lock_acquired)
 {
     s_log_sink *mutable_sink;
-    int          entry_errno;
 
-    if (!sink || !lock_acquired)
+    if (!sink)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
+    }
+    if (!lock_acquired)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
+        return ;
+    }
     mutable_sink = const_cast<s_log_sink *>(sink);
     if (!mutable_sink->mutex)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
-    entry_errno = ft_errno;
+    }
     mutable_sink->mutex->unlock(THREAD_ID);
     if (mutable_sink->mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = mutable_sink->mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }

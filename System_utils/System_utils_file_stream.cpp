@@ -92,20 +92,26 @@ int su_file_lock(su_file *stream, bool *lock_acquired)
 
 void su_file_unlock(su_file *stream, bool lock_acquired)
 {
-    int entry_errno;
-
     if (stream == ft_nullptr || lock_acquired == false)
+    {
+        if (stream == ft_nullptr)
+            ft_errno = FT_ERR_INVALID_ARGUMENT;
+        else
+            ft_errno = FT_ERR_SUCCESSS;
         return ;
+    }
     if (stream->mutex == ft_nullptr)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
-    entry_errno = ft_errno;
+    }
     stream->mutex->unlock(THREAD_ID);
     if (stream->mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = stream->mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 

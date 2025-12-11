@@ -10,7 +10,6 @@ class ft_nullptr_t
 
         void set_error_internal(int error_code) const noexcept;
         void set_error(int error_code) const noexcept;
-        static void restore_errno(int entry_errno, int operation_errno) noexcept;
 
         void operator&() const;
 
@@ -37,22 +36,16 @@ extern const ft_nullptr_t ft_nullptr_instance;
 template <typename PointerType>
 inline ft_nullptr_t::operator PointerType*() const noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     this->set_error_internal(FT_ERR_SUCCESSS);
-    ft_nullptr_t::restore_errno(entry_errno, FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESSS;
     return (static_cast<PointerType*>(nullptr));
 }
 
 template <typename ClassType, typename MemberType>
 inline ft_nullptr_t::operator MemberType ClassType::*() const noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     this->set_error_internal(FT_ERR_SUCCESSS);
-    ft_nullptr_t::restore_errno(entry_errno, FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESSS;
     return (static_cast<MemberType ClassType::*>(nullptr));
 }
 

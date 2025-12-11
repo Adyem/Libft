@@ -135,18 +135,15 @@ int pt_condition_variable::lock_internal(bool *lock_acquired) const
 
 void pt_condition_variable::unlock_internal(bool lock_acquired) const
 {
-    int entry_errno;
-
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
         return ;
-    entry_errno = ft_errno;
     this->_state_mutex->unlock(THREAD_ID);
     if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_state_mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -225,14 +222,11 @@ int pt_condition_variable::lock_state(bool *lock_acquired) const
 
 void pt_condition_variable::unlock_state(bool lock_acquired) const
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
     if (this->_state_mutex != ft_nullptr && this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
         const_cast<pt_condition_variable *>(this)->set_error(this->_state_mutex->get_error());
     else
-        const_cast<pt_condition_variable *>(this)->set_error(entry_errno);
+        const_cast<pt_condition_variable *>(this)->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 

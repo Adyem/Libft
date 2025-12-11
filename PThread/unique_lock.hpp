@@ -82,10 +82,8 @@ ft_unique_lock<MutexType>::ft_unique_lock(MutexType &mutex)
 template <typename MutexType>
 ft_unique_lock<MutexType>::~ft_unique_lock()
 {
-    int entry_errno;
     bool needs_unlock;
 
-    entry_errno = ft_errno;
     needs_unlock = false;
     this->_state_mutex.lock(THREAD_ID);
     if (this->_state_mutex.get_error() != FT_ERR_SUCCESSS)
@@ -105,11 +103,11 @@ ft_unique_lock<MutexType>::~ft_unique_lock()
     {
         this->unlock();
         if (this->_error_code.load(std::memory_order_relaxed) == FT_ERR_SUCCESSS)
-            ft_errno = entry_errno;
+            ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     this->set_error_no_errno(FT_ERR_SUCCESSS);
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -367,10 +365,8 @@ template <typename MutexType>
 bool ft_unique_lock<MutexType>::owns_lock() const
 {
     bool owns_lock_value;
-    int entry_errno;
 
     owns_lock_value = false;
-    entry_errno = ft_errno;
     this->_state_mutex.lock(THREAD_ID);
     if (this->_state_mutex.get_error() != FT_ERR_SUCCESSS)
     {
@@ -385,7 +381,7 @@ bool ft_unique_lock<MutexType>::owns_lock() const
         return (false);
     }
     this->set_error_no_errno(FT_ERR_SUCCESSS);
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (owns_lock_value);
 }
 

@@ -193,14 +193,8 @@ int api_connection_pool_handle::lock(bool *lock_acquired) const
 
 void api_connection_pool_handle::unlock(bool lock_acquired) const
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
-    if (this->_mutex != ft_nullptr && this->_mutex->get_error() != FT_ERR_SUCCESSS)
-        const_cast<api_connection_pool_handle *>(this)->set_error(this->_mutex->get_error());
-    else
-        const_cast<api_connection_pool_handle *>(this)->set_error(entry_errno);
+    const_cast<api_connection_pool_handle *>(this)->set_error(ft_errno);
     return ;
 }
 
@@ -244,18 +238,18 @@ int api_connection_pool_handle::lock_internal(bool *lock_acquired) const
 
 void api_connection_pool_handle::unlock_internal(bool lock_acquired) const
 {
-    int entry_errno;
-
     if (!lock_acquired || this->_mutex == ft_nullptr)
+    {
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
-    entry_errno = ft_errno;
+    }
     this->_mutex->unlock(THREAD_ID);
     if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
