@@ -3,7 +3,9 @@
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+#include <exception>
 #include <unistd.h>
+#include "../Errno/errno.hpp"
 
 static int *get_test_count(void)
 {
@@ -111,6 +113,47 @@ static int test_is_selected(const s_test_case *test)
     return (1);
 }
 
+static int execute_test_function(const s_test_case *test)
+{
+    int result;
+
+    ft_errno = FT_ERR_SUCCESSS;
+    try
+    {
+        result = test->func();
+    }
+    catch (const std::exception &exception)
+    {
+        FILE *log_file;
+
+        ft_errno = FT_ERR_INTERNAL;
+        log_file = fopen("test_failures.log", "a");
+        if (log_file)
+        {
+            fprintf(log_file, "Exception in %s/%s: %s\n", test->module,
+                test->name, exception.what());
+            fclose(log_file);
+        }
+        return (0);
+    }
+    catch (...)
+    {
+        FILE *log_file;
+
+        ft_errno = FT_ERR_INTERNAL;
+        log_file = fopen("test_failures.log", "a");
+        if (log_file)
+        {
+            fprintf(log_file, "Unknown exception in %s/%s\n", test->module,
+                test->name);
+            fclose(log_file);
+        }
+        return (0);
+    }
+    ft_errno = FT_ERR_SUCCESSS;
+    return (result);
+}
+
 int ft_register_test(t_test_func func, const char *description, const char *module, const char *name)
 {
     s_test_case test_case;
@@ -178,7 +221,7 @@ int ft_run_registered_tests(void)
         else
             printf("Running test %d \"%s\"\n", selected_tests, tests[index].description);
         fflush(stdout);
-        if (tests[index].func())
+        if (execute_test_function(&tests[index]))
         {
             if (output_is_terminal)
                 printf("\r\033[K");
