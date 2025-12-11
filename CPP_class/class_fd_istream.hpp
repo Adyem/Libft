@@ -11,8 +11,6 @@ class ft_fd_istream : public ft_istream
         mutable pt_mutex _mutex;
 
         int lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept;
-        static void restore_errno(ft_unique_lock<pt_mutex> &guard,
-            int entry_errno) noexcept;
 
     public:
         ft_fd_istream(int fd) noexcept;

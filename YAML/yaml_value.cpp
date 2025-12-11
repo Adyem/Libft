@@ -5,13 +5,17 @@
 #include "../PThread/pthread.hpp"
 
 yaml_value::thread_guard::thread_guard(const yaml_value *value) noexcept
-    : _value(value), _lock_acquired(false), _status(0), _entry_errno(ft_errno)
+    : _value(value), _lock_acquired(false), _status(0)
 {
     if (!this->_value)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
+    }
     this->_status = this->_value->lock(&this->_lock_acquired);
-    if (this->_status == 0)
-        ft_errno = this->_entry_errno;
+    if (this->_status != 0)
+        return ;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -373,11 +377,11 @@ int yaml_value::lock(bool *lock_acquired) const noexcept
 
 void yaml_value::unlock(bool lock_acquired) const noexcept
 {
-    int entry_errno;
-
     if (!lock_acquired || !this->_thread_safe_enabled || !this->_mutex)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
-    entry_errno = ft_errno;
+    }
     this->_mutex->unlock(THREAD_ID);
     if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
@@ -388,7 +392,8 @@ void yaml_value::unlock(bool lock_acquired) const noexcept
         const_cast<yaml_value *>(this)->set_error(mutex_error);
         return ;
     }
-    ft_errno = entry_errno;
+    const_cast<yaml_value *>(this)->_error_code = FT_ERR_SUCCESSS;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 

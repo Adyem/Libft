@@ -18,7 +18,6 @@ static void observability_networking_metrics_set_error(int error_code)
 
 int observability_networking_metrics_initialize(ft_networking_observability_exporter exporter)
 {
-    int entry_errno;
     int result;
 
     if (exporter == ft_nullptr)
@@ -26,7 +25,6 @@ int observability_networking_metrics_initialize(ft_networking_observability_expo
         observability_networking_metrics_set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    entry_errno = ft_errno;
     result = 0;
     {
         ft_lock_guard<pt_mutex> guard(g_observability_networking_mutex);
@@ -42,16 +40,13 @@ int observability_networking_metrics_initialize(ft_networking_observability_expo
             observability_networking_metrics_set_error(FT_ERR_SUCCESSS);
         }
     }
-    ft_errno = entry_errno;
     return (result);
 }
 
 int observability_networking_metrics_shutdown(void)
 {
-    int entry_errno;
     int result;
 
-    entry_errno = ft_errno;
     result = 0;
     {
         ft_lock_guard<pt_mutex> guard(g_observability_networking_mutex);
@@ -67,7 +62,6 @@ int observability_networking_metrics_shutdown(void)
             observability_networking_metrics_set_error(FT_ERR_SUCCESSS);
         }
     }
-    ft_errno = entry_errno;
     return (result);
 }
 
@@ -86,13 +80,11 @@ void observability_networking_metrics_record(const ft_networking_observability_s
     ft_networking_observability_sample exported_sample;
     ft_networking_observability_exporter exporter_copy;
     bool should_emit;
-    int entry_errno;
     bool guard_failed;
 
     exported_sample = sample;
     exporter_copy = ft_nullptr;
     should_emit = false;
-    entry_errno = ft_errno;
     guard_failed = false;
     {
         ft_lock_guard<pt_mutex> guard(g_observability_networking_mutex);
@@ -111,7 +103,6 @@ void observability_networking_metrics_record(const ft_networking_observability_s
             observability_networking_metrics_set_error(FT_ERR_SUCCESSS);
         }
     }
-    ft_errno = entry_errno;
     if (guard_failed != false)
         return ;
     if (should_emit == false || exporter_copy == ft_nullptr)
