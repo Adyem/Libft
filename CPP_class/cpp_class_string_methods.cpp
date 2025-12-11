@@ -902,59 +902,75 @@ void ft_string::push_back(char character) noexcept
 char ft_string::back() noexcept
 {
     ft_string::mutex_guard guard;
-    int entry_errno;
     int lock_error;
     char value;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_errno = entry_errno;
+        ft_errno = lock_error;
         return ('\0');
     }
     if (this->_error_code != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(this->_error_code);
+        ft_errno = this->_error_code;
         return ('\0');
     }
     if (this->_length == 0)
     {
         this->set_error_unlocked(FT_ERR_OUT_OF_RANGE);
+        ft_errno = FT_ERR_OUT_OF_RANGE;
         return ('\0');
     }
     value = this->_data[this->_length - 1];
     this->set_error_unlocked(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESSS;
     return (value);
 }
 
 size_t ft_string::find(const char *substring) const noexcept
 {
     ft_string::mutex_guard guard;
-    int entry_errno;
     int lock_error;
     size_t substring_length;
     size_t index;
     size_t match_index;
     size_t result;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = entry_errno;
+        this->set_error_unlocked(lock_error);
+        ft_errno = lock_error;
         return (ft_string::npos);
     }
     if (this->_error_code != FT_ERR_SUCCESSS)
+    {
+        this->set_error_unlocked(this->_error_code);
+        ft_errno = this->_error_code;
         return (ft_string::npos);
+    }
     if (!substring)
+    {
+        this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (ft_string::npos);
+    }
     substring_length = ft_strlen_size_t(substring);
     if (substring_length == 0)
+    {
+        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
+    }
     if (substring_length > this->_length)
+    {
+        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        ft_errno = FT_ERR_SUCCESSS;
         return (ft_string::npos);
+    }
     index = 0;
     result = ft_string::npos;
     while (index + substring_length <= this->_length && result == ft_string::npos)
@@ -971,6 +987,7 @@ size_t ft_string::find(const char *substring) const noexcept
             index++;
     }
     this->set_error(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 
@@ -978,35 +995,48 @@ size_t ft_string::find(const ft_string &substring) const noexcept
 {
     ft_string::mutex_guard self_guard;
     ft_string::mutex_guard other_guard;
-    int entry_errno;
     int lock_error;
     size_t result;
     size_t index;
     size_t match_index;
 
-    entry_errno = ft_errno;
     lock_error = ft_string::lock_pair(*this, substring, self_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = entry_errno;
+        this->set_error_unlocked(lock_error);
+        ft_errno = lock_error;
         return (ft_string::npos);
     }
     if (this->_error_code != FT_ERR_SUCCESSS || substring._error_code != FT_ERR_SUCCESSS)
     {
         if (other_guard.owns_lock())
             other_guard.unlock();
+        if (this->_error_code != FT_ERR_SUCCESSS)
+        {
+            this->set_error_unlocked(this->_error_code);
+            ft_errno = this->_error_code;
+        }
+        else
+        {
+            this->set_error_unlocked(substring._error_code);
+            ft_errno = substring._error_code;
+        }
         return (ft_string::npos);
     }
     if (substring._length == 0)
     {
         if (other_guard.owns_lock())
             other_guard.unlock();
+        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     if (substring._length > this->_length)
     {
         if (other_guard.owns_lock())
             other_guard.unlock();
+        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        ft_errno = FT_ERR_SUCCESSS;
         return (ft_string::npos);
     }
     result = ft_string::npos;
@@ -1027,34 +1057,35 @@ size_t ft_string::find(const ft_string &substring) const noexcept
     if (other_guard.owns_lock())
         other_guard.unlock();
     this->set_error(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 
 ft_string ft_string::substr(size_t index, size_t count) const noexcept
 {
     ft_string::mutex_guard guard;
-    int entry_errno;
     int lock_error;
     ft_string substring;
     size_t available_length;
     size_t copy_length;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         substring.set_error_unlocked(lock_error);
-        ft_errno = entry_errno;
+        ft_errno = lock_error;
         return (substring);
     }
     if (this->_error_code != FT_ERR_SUCCESSS)
     {
         substring.set_error_unlocked(this->_error_code);
+        ft_errno = this->_error_code;
         return (substring);
     }
     if (index > this->_length)
     {
         substring.set_error_unlocked(FT_ERR_OUT_OF_RANGE);
+        ft_errno = FT_ERR_OUT_OF_RANGE;
         return (substring);
     }
     available_length = this->_length - index;
@@ -1064,6 +1095,7 @@ ft_string ft_string::substr(size_t index, size_t count) const noexcept
     if (copy_length > 0)
         substring.assign(this->_data + index, copy_length);
     this->set_error(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESSS;
     return (substring);
 }
 
