@@ -137,12 +137,11 @@ ft_dialogue_script::ft_dialogue_script(const ft_dialogue_script &other) noexcept
 
 ft_dialogue_script &ft_dialogue_script::operator=(const ft_dialogue_script &other) noexcept
 {
+    if (this == &other)
+        return (*this);
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
     int lock_error;
-
-    if (this == &other)
-        return (*this);
     lock_error = ft_dialogue_script::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ER_SUCCESSS)
     {
@@ -191,14 +190,14 @@ ft_dialogue_script::ft_dialogue_script(ft_dialogue_script &&other) noexcept
 
 ft_dialogue_script &ft_dialogue_script::operator=(ft_dialogue_script &&other) noexcept
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
     int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
     entry_errno = ft_errno;
+    ft_unique_lock<pt_mutex> this_guard;
+    ft_unique_lock<pt_mutex> other_guard;
     lock_error = ft_dialogue_script::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ER_SUCCESSS)
     {
