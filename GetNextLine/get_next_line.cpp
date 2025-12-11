@@ -388,7 +388,6 @@ static char* read_stream(gnl_stream *stream, char* readed_string, std::size_t bu
 
 int gnl_clear_stream(int fd)
 {
-    int entry_errno;
     int map_error_before;
     int map_error_after;
     ft_unordered_map<int, char*>::iterator map_it = g_gnl_leftovers.end();
@@ -396,7 +395,6 @@ int gnl_clear_stream(int fd)
     ft_unordered_map<int, gnl_stream*>::iterator stream_it = g_gnl_streams.end();
     gnl_stream *stream_pointer;
 
-    entry_errno = ft_errno;
     map_error_before = g_gnl_leftovers.get_error();
     map_it = g_gnl_leftovers.find(fd);
     if (map_has_new_error(g_gnl_leftovers, map_error_before, &map_error_after))
@@ -406,7 +404,7 @@ int gnl_clear_stream(int fd)
     }
     if (map_it == g_gnl_leftovers.end())
     {
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
         return (FT_ERR_SUCCESSS);
     }
     leftover = map_it->second;
@@ -445,7 +443,7 @@ int gnl_clear_stream(int fd)
             cma_free(stream_pointer);
         }
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (FT_ERR_SUCCESSS);
 }
 

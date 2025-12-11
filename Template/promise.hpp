@@ -97,25 +97,18 @@ ft_promise<ValueType>::ft_promise()
     : _value(), _ready(false), _error_code(FT_ERR_SUCCESSS),
       _mutex(ft_nullptr), _thread_safe_enabled(false)
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     if (this->prepare_thread_safety() != 0)
         return ;
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    ft_errno = entry_errno;
     return ;
 }
 
 template <typename ValueType>
 ft_promise<ValueType>::~ft_promise()
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     this->set_error_unlocked(FT_ERR_SUCCESSS);
     this->teardown_thread_safety();
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -123,24 +116,17 @@ inline ft_promise<void>::ft_promise()
     : _ready(false), _error_code(FT_ERR_SUCCESSS),
       _mutex(ft_nullptr), _thread_safe_enabled(false)
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     if (this->prepare_thread_safety() != 0)
         return ;
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    ft_errno = entry_errno;
     return ;
 }
 
 inline ft_promise<void>::~ft_promise()
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     this->set_error_unlocked(FT_ERR_SUCCESSS);
     this->teardown_thread_safety();
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
