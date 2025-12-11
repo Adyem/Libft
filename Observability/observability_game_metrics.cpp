@@ -19,7 +19,6 @@ static void observability_game_metrics_set_error(int error_code)
 
 int observability_game_metrics_initialize(ft_game_observability_exporter exporter)
 {
-    int entry_errno;
     int result;
 
     if (exporter == ft_nullptr)
@@ -27,7 +26,6 @@ int observability_game_metrics_initialize(ft_game_observability_exporter exporte
         observability_game_metrics_set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    entry_errno = ft_errno;
     result = 0;
     {
         ft_lock_guard<pt_mutex> guard(g_observability_game_mutex);
@@ -43,16 +41,13 @@ int observability_game_metrics_initialize(ft_game_observability_exporter exporte
             observability_game_metrics_set_error(FT_ERR_SUCCESSS);
         }
     }
-    ft_errno = entry_errno;
     return (result);
 }
 
 int observability_game_metrics_shutdown(void)
 {
-    int entry_errno;
     int result;
 
-    entry_errno = ft_errno;
     result = 0;
     {
         ft_lock_guard<pt_mutex> guard(g_observability_game_mutex);
@@ -68,7 +63,6 @@ int observability_game_metrics_shutdown(void)
             observability_game_metrics_set_error(FT_ERR_SUCCESSS);
         }
     }
-    ft_errno = entry_errno;
     return (result);
 }
 
@@ -87,17 +81,14 @@ void observability_game_metrics_record(const ft_game_observability_sample &sampl
     ft_game_observability_sample exported_sample;
     ft_game_observability_exporter exporter_copy;
     bool should_emit;
-    int entry_errno;
     bool guard_failed;
 
-    entry_errno = ft_errno;
     if (sample.labels.event_name == ft_nullptr
         || sample.labels.entity == ft_nullptr
         || sample.labels.attribute == ft_nullptr
         || sample.unit == ft_nullptr)
     {
         observability_game_metrics_set_error(FT_ERR_INVALID_ARGUMENT);
-        ft_errno = entry_errno;
         return ;
     }
     exported_sample = sample;
@@ -121,7 +112,6 @@ void observability_game_metrics_record(const ft_game_observability_sample &sampl
             observability_game_metrics_set_error(FT_ERR_SUCCESSS);
         }
     }
-    ft_errno = entry_errno;
     if (guard_failed != false)
         return ;
     if (should_emit == false || exporter_copy == ft_nullptr)

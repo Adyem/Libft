@@ -33,18 +33,15 @@ void DataBuffer::set_error(int error_code) const noexcept
 
 int DataBuffer::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
     if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = entry_errno;
         guard = ft_unique_lock<pt_mutex>();
+        ft_errno = local_guard.get_error();
         return (local_guard.get_error());
     }
-    ft_errno = entry_errno;
     guard = ft_move(local_guard);
+    ft_errno = FT_ERR_SUCCESSS;
     return (FT_ERR_SUCCESSS);
 }
 
@@ -241,15 +238,12 @@ DataBuffer::~DataBuffer() noexcept
 void DataBuffer::clear() noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_errno = entry_errno;
         return ;
     }
     this->_buffer.clear();
@@ -263,16 +257,13 @@ void DataBuffer::clear() noexcept
 size_t DataBuffer::size() const noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     size_t result;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_errno = entry_errno;
         return (0);
     }
     result = this->_buffer.size();
@@ -284,16 +275,13 @@ size_t DataBuffer::size() const noexcept
 const ft_vector<uint8_t>& DataBuffer::data() const noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     const ft_vector<uint8_t> *buffer_reference;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_errno = entry_errno;
         return (this->_buffer);
     }
     buffer_reference = &this->_buffer;
@@ -305,16 +293,13 @@ const ft_vector<uint8_t>& DataBuffer::data() const noexcept
 size_t DataBuffer::tell() const noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     size_t position;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_errno = entry_errno;
         return (0);
     }
     position = this->_read_pos;
@@ -326,15 +311,12 @@ size_t DataBuffer::tell() const noexcept
 bool DataBuffer::seek(size_t pos) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_errno = entry_errno;
         return (false);
     }
     if (pos <= this->_buffer.size())
@@ -354,16 +336,13 @@ bool DataBuffer::seek(size_t pos) noexcept
 DataBuffer::operator bool() const noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     bool state;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_errno = entry_errno;
         return (false);
     }
     state = this->_ok;
@@ -376,16 +355,13 @@ DataBuffer::operator bool() const noexcept
 bool DataBuffer::good() const noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     bool state;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_errno = entry_errno;
         return (false);
     }
     state = this->_ok;
@@ -398,16 +374,13 @@ bool DataBuffer::good() const noexcept
 bool DataBuffer::bad() const noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     bool is_bad;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_errno = entry_errno;
         return (true);
     }
     if (this->_ok)
@@ -424,16 +397,13 @@ bool DataBuffer::bad() const noexcept
 DataBuffer& DataBuffer::operator<<(size_t len)
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     int write_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_errno = entry_errno;
         return (*this);
     }
     write_error = this->write_length_locked(len);
@@ -453,16 +423,13 @@ DataBuffer& DataBuffer::operator<<(size_t len)
 DataBuffer& DataBuffer::operator>>(size_t& len)
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     int read_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_errno = entry_errno;
         return (*this);
     }
     read_error = this->read_length_locked(len);
@@ -482,16 +449,13 @@ DataBuffer& DataBuffer::operator>>(size_t& len)
 int DataBuffer::get_error() const noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     int error_value;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_errno = entry_errno;
         return (lock_error);
     }
     error_value = this->_error_code;

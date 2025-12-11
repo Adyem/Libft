@@ -42,7 +42,6 @@ class yaml_value
                 const yaml_value *_value;
                 bool _lock_acquired;
                 int _status;
-                int _entry_errno;
 
             public:
                 thread_guard(const yaml_value *value) noexcept;

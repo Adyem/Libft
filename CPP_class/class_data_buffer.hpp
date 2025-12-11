@@ -65,7 +65,6 @@ DataBuffer& DataBuffer::operator<<(const T& value)
 {
     std::ostringstream oss;
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     char *bytes;
     size_t len;
@@ -73,12 +72,10 @@ DataBuffer& DataBuffer::operator<<(const T& value)
     size_t index;
 
     oss << value;
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_errno = entry_errno;
         return (*this);
     }
     bytes = cma_strdup(oss.str().c_str());
@@ -124,18 +121,15 @@ template<typename T>
 DataBuffer& DataBuffer::operator>>(T& value)
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     size_t len;
     int length_error;
     char *bytes;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_errno = entry_errno;
         return (*this);
     }
     length_error = this->read_length_locked(len);

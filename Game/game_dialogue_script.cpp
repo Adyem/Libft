@@ -347,9 +347,6 @@ ft_vector<ft_dialogue_line> &ft_dialogue_script::get_lines() noexcept
 
 void ft_dialogue_script::set_lines(const ft_vector<ft_dialogue_line> &lines) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
@@ -358,23 +355,22 @@ void ft_dialogue_script::set_lines(const ft_vector<ft_dialogue_line> &lines) noe
     }
     game_dialogue_copy_line_vector(lines, this->_lines);
     this->_error_code = FT_ERR_SUCCESSS;
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
 int ft_dialogue_script::get_error() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = entry_errno;
+        ft_errno = guard.get_error();
         return (guard.get_error());
     }
     error_code = this->_error_code;
+    ft_errno = FT_ERR_SUCCESSS;
     return (error_code);
 }
 

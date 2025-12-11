@@ -13,14 +13,12 @@ ft_world_registry::~ft_world_registry() noexcept
 
 void ft_world_registry::copy_registry_unlocked(const ft_world_registry &other) noexcept
 {
-    int entry_errno;
-
-    entry_errno = FT_ERR_SUCCESSS;
     this->_regions = other._regions;
     this->_world_regions = other._world_regions;
     this->_error_code = other._error_code;
     this->set_error(this->_error_code);
-    ft_errno = entry_errno;
+    if (this->_error_code == FT_ERR_SUCCESSS)
+        ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 

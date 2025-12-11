@@ -48,17 +48,15 @@ ft_string::ft_string(const ft_string& other) noexcept
     , _mutex()
 {
     ft_string::mutex_guard other_guard;
-    int entry_errno;
     int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = other.lock_self(other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->_length = 0;
         this->_capacity = 0;
         this->set_error_unlocked(lock_error);
-        ft_errno = entry_errno;
+        ft_errno = lock_error;
         return ;
     }
     this->_length = other._length;
@@ -95,10 +93,8 @@ ft_string::ft_string(ft_string&& other) noexcept
     , _mutex()
 {
     ft_string::mutex_guard other_guard;
-    int entry_errno;
     int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = other.lock_self(other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -106,7 +102,7 @@ ft_string::ft_string(ft_string&& other) noexcept
         this->_length = 0;
         this->_capacity = 0;
         this->_error_code = lock_error;
-        ft_errno = entry_errno;
+        ft_errno = lock_error;
         return ;
     }
     this->_data = ft_nullptr;
@@ -122,7 +118,6 @@ ft_string& ft_string::operator=(const ft_string& other) noexcept
 {
     ft_string::mutex_guard self_guard;
     ft_string::mutex_guard other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
@@ -130,12 +125,11 @@ ft_string& ft_string::operator=(const ft_string& other) noexcept
         this->set_error(other.get_error());
         return (*this);
     }
-    entry_errno = ft_errno;
     lock_error = ft_string::lock_pair(*this, other, self_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_errno = entry_errno;
+        ft_errno = lock_error;
         return (*this);
     }
     cma_free(this->_data);
@@ -183,15 +177,13 @@ ft_string& ft_string::operator=(const ft_string& other) noexcept
 ft_string& ft_string::operator=(const char* other) noexcept
 {
     ft_string::mutex_guard guard;
-    int entry_errno;
     int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_errno = entry_errno;
+        ft_errno = lock_error;
         return (*this);
     }
     cma_free(this->_data);
@@ -221,18 +213,16 @@ ft_string& ft_string::operator=(ft_string&& other) noexcept
 {
     ft_string::mutex_guard self_guard;
     ft_string::mutex_guard other_guard;
-    int entry_errno;
     int lock_error;
 
     this->set_error(FT_ERR_SUCCESSS);
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_string::lock_pair(*this, other, self_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_errno = entry_errno;
+        ft_errno = lock_error;
         return (*this);
     }
     if (this->_error_code != FT_ERR_SUCCESSS)

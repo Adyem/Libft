@@ -5,6 +5,7 @@ ft_fd_istream::ft_fd_istream(int fd) noexcept
     : _fd(fd)
     , _mutex()
 {
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -14,19 +15,22 @@ ft_fd_istream::ft_fd_istream(const ft_fd_istream &other) noexcept
     , _mutex()
 {
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = other.lock_self(other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_fd_istream::restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_fd = other._fd;
-    ft_fd_istream::restore_errno(other_guard, entry_errno);
+    other_guard.unlock();
+    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        this->set_error(other_guard.get_error());
+        return ;
+    }
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -36,173 +40,173 @@ ft_fd_istream::ft_fd_istream(ft_fd_istream &&other) noexcept
     , _mutex()
 {
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = other.lock_self(other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_fd_istream::restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_fd = other._fd;
     other._fd = -1;
-    ft_fd_istream::restore_errno(other_guard, entry_errno);
+    other_guard.unlock();
+    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        this->set_error(other_guard.get_error());
+        return ;
+    }
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
 ft_fd_istream::~ft_fd_istream() noexcept
 {
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
 int ft_fd_istream::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = entry_errno;
         guard = ft_unique_lock<pt_mutex>();
+        ft_errno = local_guard.get_error();
         return (local_guard.get_error());
     }
-    ft_errno = entry_errno;
     guard = ft_move(local_guard);
+    ft_errno = FT_ERR_SUCCESSS;
     return (FT_ERR_SUCCESSS);
-}
-
-void ft_fd_istream::restore_errno(ft_unique_lock<pt_mutex> &guard,
-    int entry_errno) noexcept
-{
-    int operation_errno;
-
-    operation_errno = ft_errno;
-    if (guard.owns_lock())
-        guard.unlock();
-    if (guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = guard.get_error();
-        return ;
-    }
-    if (operation_errno != FT_ERR_SUCCESSS)
-    {
-        ft_errno = operation_errno;
-        return ;
-    }
-    ft_errno = entry_errno;
-    return ;
 }
 
 ft_fd_istream &ft_fd_istream::operator=(const ft_fd_istream &other) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     int descriptor;
 
     if (this == &other)
+    {
+        this->set_error(FT_ERR_SUCCESSS);
         return (*this);
+    }
     ft_istream::operator=(other);
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_fd_istream::restore_errno(guard, entry_errno);
         return (*this);
     }
     descriptor = other.get_fd();
     this->_fd = descriptor;
-    ft_fd_istream::restore_errno(guard, entry_errno);
+    guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        this->set_error(guard.get_error());
+        return (*this);
+    }
+    this->set_error(FT_ERR_SUCCESSS);
     return (*this);
 }
 
 ft_fd_istream &ft_fd_istream::operator=(ft_fd_istream &&other) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     int descriptor;
 
     if (this == &other)
+    {
+        this->set_error(FT_ERR_SUCCESSS);
         return (*this);
+    }
     ft_istream::operator=(ft_move(other));
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_fd_istream::restore_errno(guard, entry_errno);
         return (*this);
     }
     descriptor = other.get_fd();
     this->_fd = descriptor;
     other.set_fd(-1);
-    ft_fd_istream::restore_errno(guard, entry_errno);
+    guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        this->set_error(guard.get_error());
+        return (*this);
+    }
+    this->set_error(FT_ERR_SUCCESSS);
     return (*this);
 }
 
 void ft_fd_istream::set_fd(int fd) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_fd_istream::restore_errno(guard, entry_errno);
         return ;
     }
     this->_fd = fd;
-    ft_fd_istream::restore_errno(guard, entry_errno);
+    guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        this->set_error(guard.get_error());
+        return ;
+    }
+    this->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
 int ft_fd_istream::get_fd() const noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     int descriptor;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_fd_istream::restore_errno(guard, entry_errno);
         return (-1);
     }
     descriptor = this->_fd;
-    ft_fd_istream::restore_errno(guard, entry_errno);
+    guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        this->set_error(guard.get_error());
+        return (-1);
+    }
+    this->set_error(FT_ERR_SUCCESSS);
     return (descriptor);
 }
 
 std::size_t ft_fd_istream::do_read(char *buffer, std::size_t count)
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     int descriptor;
     ssize_t result;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_fd_istream::restore_errno(guard, entry_errno);
         return (0);
     }
     descriptor = this->_fd;
-    ft_fd_istream::restore_errno(guard, entry_errno);
+    guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        this->set_error(guard.get_error());
+        return (0);
+    }
     result = su_read(descriptor, buffer, count);
     if (result < 0)
     {

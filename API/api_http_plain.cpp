@@ -129,7 +129,6 @@ static void api_http_reset_plain_socket(api_connection_pool_handle &connection_h
 static bool api_http_plain_socket_is_connected(int descriptor)
 {
     int result;
-    int entry_errno;
     struct sockaddr_storage peer;
 #ifdef _WIN32
     int peer_length;
@@ -137,10 +136,9 @@ static bool api_http_plain_socket_is_connected(int descriptor)
     socklen_t peer_length;
 #endif
 
-    entry_errno = ft_errno;
     if (descriptor < 0)
     {
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (false);
     }
     ft_bzero(&peer, sizeof(peer));
@@ -151,9 +149,12 @@ static bool api_http_plain_socket_is_connected(int descriptor)
     peer_length = static_cast<socklen_t>(sizeof(peer));
     result = getpeername(descriptor, reinterpret_cast<sockaddr*>(&peer), &peer_length);
 #endif
-    ft_errno = entry_errno;
     if (result == 0)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return (true);
+    }
+    ft_errno = ft_set_errno_from_system_error(errno);
     return (false);
 }
 
@@ -163,35 +164,34 @@ bool api_http_plain_socket_is_alive(api_connection_pool_handle &connection_handl
     int poll_result;
     char peek_byte;
     ssize_t peek_result;
-    int entry_errno;
     int socket_error;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     if (connection_handle.plain_socket_timed_out)
     {
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_INVALID_STATE;
         return (false);
     }
     poll_descriptor = connection_handle.socket.get_fd();
     if (poll_descriptor < 0)
     {
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (false);
     }
     poll_result = nw_poll(&poll_descriptor, 1, ft_nullptr, 0, 50);
     if (poll_result < 0)
     {
-        ft_errno = entry_errno;
+        ft_errno = ft_set_errno_from_system_error(errno);
         return (false);
     }
     if (poll_result == 0)
     {
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
         return (true);
     }
     if (poll_descriptor == -1)
     {
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_INVALID_HANDLE;
         return (false);
     }
     peek_byte = 0;
@@ -203,7 +203,7 @@ bool api_http_plain_socket_is_alive(api_connection_pool_handle &connection_handl
     socket_error = connection_handle.socket.get_error();
     if (peek_result > 0)
     {
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
         return (true);
     }
     if (peek_result == 0)
@@ -213,14 +213,14 @@ bool api_http_plain_socket_is_alive(api_connection_pool_handle &connection_handl
         socket_connected = api_http_plain_socket_is_connected(poll_descriptor);
         if (!socket_connected)
         {
-            ft_errno = entry_errno;
+            ft_errno = FT_ERR_END_OF_FILE;
             return (false);
         }
 #ifdef _WIN32
         if (socket_error == ft_map_system_error(WSAEWOULDBLOCK)
             || socket_error == ft_map_system_error(WSAEINTR))
         {
-            ft_errno = entry_errno;
+            ft_errno = FT_ERR_SUCCESSS;
             return (true);
         }
 #else
@@ -228,18 +228,18 @@ bool api_http_plain_socket_is_alive(api_connection_pool_handle &connection_handl
             || socket_error == ft_map_system_error(EAGAIN)
             || socket_error == ft_map_system_error(EINTR))
         {
-            ft_errno = entry_errno;
+            ft_errno = FT_ERR_SUCCESSS;
             return (true);
         }
 #endif
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_END_OF_FILE;
         return (false);
     }
 #ifdef _WIN32
     if (socket_error == ft_map_system_error(WSAEWOULDBLOCK)
         || socket_error == ft_map_system_error(WSAEINTR))
     {
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
         return (true);
     }
 #else
@@ -247,11 +247,11 @@ bool api_http_plain_socket_is_alive(api_connection_pool_handle &connection_handl
         || socket_error == ft_map_system_error(EAGAIN)
         || socket_error == ft_map_system_error(EINTR))
     {
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
         return (true);
     }
 #endif
-    ft_errno = entry_errno;
+    ft_errno = socket_error;
     return (false);
 }
 

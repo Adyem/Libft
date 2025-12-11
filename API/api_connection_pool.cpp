@@ -134,33 +134,31 @@ static bool api_connection_pool_socket_is_alive(ft_socket &socket)
     int poll_result;
     char peek_byte;
     ssize_t peek_result;
-    int entry_errno;
     int socket_error;
 
-    entry_errno = ft_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     poll_descriptor = socket.get_fd();
     if (poll_descriptor < 0)
     {
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return (false);
     }
     poll_result = nw_poll(&poll_descriptor, 1, ft_nullptr, 0, 50);
     if (poll_result < 0)
     {
-        ft_errno = entry_errno;
+        ft_errno = ft_set_errno_from_system_error(errno);
         return (false);
     }
     if (poll_result == 0)
     {
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
         return (true);
     }
     if (poll_descriptor == -1)
     {
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_INVALID_HANDLE;
         return (false);
     }
-    // Treat descriptors with pending bytes as stale so only drained sockets are reused.
     peek_byte = 0;
 #ifdef _WIN32
     peek_result = socket.receive_data(&peek_byte, 1, MSG_PEEK);
@@ -170,19 +168,19 @@ static bool api_connection_pool_socket_is_alive(ft_socket &socket)
     socket_error = socket.get_error();
     if (peek_result > 0)
     {
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_INVALID_STATE;
         return (false);
     }
     if (peek_result == 0)
     {
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_END_OF_FILE;
         return (false);
     }
 #ifdef _WIN32
     if (socket_error == ft_map_system_error(WSAEWOULDBLOCK)
         || socket_error == ft_map_system_error(WSAEINTR))
     {
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
         return (true);
     }
 #else
@@ -190,11 +188,11 @@ static bool api_connection_pool_socket_is_alive(ft_socket &socket)
         || socket_error == ft_map_system_error(EAGAIN)
         || socket_error == ft_map_system_error(EINTR))
     {
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
         return (true);
     }
 #endif
-    ft_errno = entry_errno;
+    ft_errno = socket_error;
     return (false);
 }
 

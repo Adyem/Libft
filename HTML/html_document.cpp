@@ -539,15 +539,12 @@ int html_document::lock(bool *lock_acquired) const noexcept
 
 void html_document::unlock(bool lock_acquired) const noexcept
 {
-    int entry_errno;
-
     ft_errno = FT_ERR_SUCCESSS;
     if (!lock_acquired || !this->_thread_safe_enabled || !this->_mutex)
     {
         ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
-    entry_errno = FT_ERR_SUCCESSS;
     this->_mutex->unlock(THREAD_ID);
     if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
@@ -558,6 +555,6 @@ void html_document::unlock(bool lock_acquired) const noexcept
         const_cast<html_document *>(this)->set_error(mutex_error);
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
