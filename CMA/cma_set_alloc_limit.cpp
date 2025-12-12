@@ -1,3 +1,4 @@
+#include "CMA.hpp"
 #include "cma_internal.hpp"
 #include "../Errno/errno.hpp"
 

@@ -8,27 +8,27 @@
 
 static ft_vector<ft_game_observability_sample> g_scheduler_samples;
 
-static bool game_event_scheduler_strings_equal(const char *left, const char *right)
+static int game_event_scheduler_strings_equal(const char *left, const char *right)
 {
     if (left == ft_nullptr && right == ft_nullptr)
         return (true);
     if (left == ft_nullptr || right == ft_nullptr)
         return (false);
-    return (ft_strncmp(left, right, ft_strlen(left) + 1) == 0);
+    return (ft_strcmp(left, right) == 0);
 }
 
-static void game_event_scheduler_reset_samples(void)
+static int game_event_scheduler_reset_samples(void)
 {
     g_scheduler_samples.clear();
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, g_scheduler_samples.get_error());
-    return ;
+    return (0);
 }
 
-static void game_event_scheduler_capture_sample(const ft_game_observability_sample &sample)
+static int game_event_scheduler_capture_sample(const ft_game_observability_sample &sample)
 {
     g_scheduler_samples.push_back(sample);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, g_scheduler_samples.get_error());
-    return ;
+    return (0);
 }
 
 FT_TEST(test_game_event_scheduler_telemetry_exports_metrics,
