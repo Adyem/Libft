@@ -1,3 +1,4 @@
+#define PT_LOCK_TRACKING_TESTING
 #include <atomic>
 #include <vector>
 #include "../../Libft/libft.hpp"
@@ -16,6 +17,7 @@ struct s_lock_cycle_shared
     std::atomic<int> first_lock_error;
     std::atomic<int> second_lock_result;
     std::atomic<int> second_lock_error;
+    std::atomic<pt_thread_id_type> worker_thread_identifier;
 };
 
 struct s_unlock_shared_state
@@ -56,6 +58,7 @@ static void initialize_shared_state(s_lock_cycle_shared *shared, pt_mutex *first
     shared->first_lock_error.store(0);
     shared->second_lock_result.store(0);
     shared->second_lock_error.store(0);
+    shared->worker_thread_identifier.store(0);
     return ;
 }
 
@@ -74,11 +77,50 @@ static bool wait_for_stage(std::atomic<int> *stage, int expected_stage)
     return (true);
 }
 
+static bool vector_contains_mutex(const pt_mutex_vector &owned_mutexes, pthread_mutex_t *mutex_pointer)
+{
+    ft_size_t index;
+
+    index = 0;
+    while (index < owned_mutexes.size())
+    {
+        if (owned_mutexes[index] == mutex_pointer)
+            return (true);
+        index += 1;
+    }
+    return (false);
+}
+
+static bool wait_for_thread_state(pt_thread_id_type thread_identifier, pthread_mutex_t *owned_mutex_pointer,
+        pthread_mutex_t *waiting_mutex_pointer, ft_size_t expected_owned_count, long timeout_ms)
+{
+    s_pt_lock_tracking_thread_state state;
+    long attempts;
+    ft_size_t owned_mutex_count;
+
+    attempts = 0;
+    while (attempts <= timeout_ms)
+    {
+        if (pt_lock_tracking::get_thread_state(thread_identifier, state))
+        {
+            owned_mutex_count = state.owned_mutexes.size();
+            if (owned_mutex_count == expected_owned_count
+                && vector_contains_mutex(state.owned_mutexes, owned_mutex_pointer)
+                && state.waiting_mutex == waiting_mutex_pointer)
+                return (true);
+        }
+        pt_thread_sleep(1);
+        attempts += 1;
+    }
+    return (false);
+}
+
 static void *deadlock_worker(void *argument)
 {
     s_lock_cycle_shared *shared;
 
     shared = static_cast<s_lock_cycle_shared *>(argument);
+    shared->worker_thread_identifier.store(THREAD_ID);
     shared->stage.store(1);
     shared->first_lock_result.store(shared->second_mutex->lock(THREAD_ID));
     shared->first_lock_error.store(shared->second_mutex->get_error());
@@ -186,6 +228,9 @@ FT_TEST(test_pt_lock_tracking_detects_cycle, "pt_lock_tracking prevents circular
     pthread_t worker_thread;
     int thread_created;
     int test_failed;
+    int first_mutex_locked;
+    int second_mutex_locked;
+    const long join_timeout_ms;
     const char *failure_expression;
     int failure_line;
 
@@ -200,11 +245,15 @@ FT_TEST(test_pt_lock_tracking_detects_cycle, "pt_lock_tracking prevents circular
 
     thread_created = 0;
     test_failed = 0;
+    first_mutex_locked = 0;
+    second_mutex_locked = 0;
+    join_timeout_ms = 200;
     failure_expression = ft_nullptr;
     failure_line = 0;
     initialize_shared_state(&shared, &first_mutex, &second_mutex);
     RECORD_ASSERT(first_mutex.lock(THREAD_ID) == FT_SUCCESS);
     RECORD_ASSERT(first_mutex.get_error() == FT_ERR_SUCCESSS);
+    first_mutex_locked = 1;
     if (pt_thread_create(&worker_thread, ft_nullptr, deadlock_worker, &shared) != 0)
     {
         RECORD_ASSERT(0);
@@ -212,13 +261,18 @@ FT_TEST(test_pt_lock_tracking_detects_cycle, "pt_lock_tracking prevents circular
     else
         thread_created = 1;
     RECORD_ASSERT(wait_for_stage(&shared.stage, 2));
+    RECORD_ASSERT(shared.worker_thread_identifier.load() != 0);
     RECORD_ASSERT(shared.first_lock_result.load() == FT_SUCCESS);
     RECORD_ASSERT(shared.first_lock_error.load() == FT_ERR_SUCCESSS);
+    RECORD_ASSERT(wait_for_thread_state(THREAD_ID, &first_mutex._mutex, ft_nullptr, 1, 20));
+    RECORD_ASSERT(wait_for_thread_state(shared.worker_thread_identifier.load(), &second_mutex._mutex, &first_mutex._mutex, 1, 100));
     RECORD_ASSERT(second_mutex.lock(THREAD_ID) == FT_SUCCESS);
     RECORD_ASSERT(second_mutex.get_error() == FT_ERR_MUTEX_ALREADY_LOCKED);
     RECORD_ASSERT(second_mutex.lockState());
+    second_mutex_locked = 1;
     RECORD_ASSERT(first_mutex.unlock(THREAD_ID) == FT_SUCCESS);
     RECORD_ASSERT(first_mutex.get_error() == FT_ERR_SUCCESSS);
+    first_mutex_locked = 0;
     RECORD_ASSERT(wait_for_stage(&shared.stage, 5));
     RECORD_ASSERT(shared.second_lock_result.load() == FT_SUCCESS);
     RECORD_ASSERT(shared.second_lock_error.load() == FT_ERR_SUCCESSS);
@@ -226,11 +280,19 @@ FT_TEST(test_pt_lock_tracking_detects_cycle, "pt_lock_tracking prevents circular
     goto cleanup;
 
 cleanup:
+    if (first_mutex_locked == 1)
+    {
+        first_mutex.unlock(THREAD_ID);
+    }
+    if (second_mutex_locked == 1)
+    {
+        second_mutex.unlock(THREAD_ID);
+    }
     if (thread_created == 1)
     {
         int join_result;
 
-        join_result = pt_thread_join(worker_thread, ft_nullptr);
+        join_result = pt_thread_timed_join(worker_thread, ft_nullptr, join_timeout_ms);
         if (join_result != 0 && test_failed == 0)
         {
             test_failed = 1;
