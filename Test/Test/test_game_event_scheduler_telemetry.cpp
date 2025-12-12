@@ -17,17 +17,47 @@ static bool game_event_scheduler_strings_equal(const char *left, const char *rig
     return (ft_strncmp(left, right, ft_strlen(left) + 1) == 0);
 }
 
+static int game_event_scheduler_reset_samples_state(void)
+{
+    int error;
+
+    g_scheduler_samples.clear();
+    error = g_scheduler_samples.get_error();
+    if (error != FT_ERR_SUCCESSS)
+        return (-1);
+    ft_errno = FT_ERR_SUCCESSS;
+    return (0);
+}
+
 static void game_event_scheduler_reset_samples(void)
 {
-    g_scheduler_samples.clear();
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, g_scheduler_samples.get_error());
+    if (game_event_scheduler_reset_samples_state() != 0)
+    {
+        ft_test_fail("game_event_scheduler_reset_samples_state() == 0", __FILE__, __LINE__);
+        return ;
+    }
     return ;
+}
+
+static int game_event_scheduler_capture_sample_state(const ft_game_observability_sample &sample)
+{
+    int error;
+
+    g_scheduler_samples.push_back(sample);
+    error = g_scheduler_samples.get_error();
+    if (error != FT_ERR_SUCCESSS)
+        return (-1);
+    ft_errno = FT_ERR_SUCCESSS;
+    return (0);
 }
 
 static void game_event_scheduler_capture_sample(const ft_game_observability_sample &sample)
 {
-    g_scheduler_samples.push_back(sample);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, g_scheduler_samples.get_error());
+    if (game_event_scheduler_capture_sample_state(sample) != 0)
+    {
+        ft_test_fail("game_event_scheduler_capture_sample_state(sample) == 0", __FILE__, __LINE__);
+        return ;
+    }
     return ;
 }
 
