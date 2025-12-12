@@ -262,8 +262,8 @@ FT_TEST(test_pt_lock_tracking_detects_cycle, "pt_lock_tracking prevents circular
     RECORD_ASSERT(shared.worker_thread_identifier.load() != 0);
     RECORD_ASSERT(shared.first_lock_result.load() == FT_SUCCESS);
     RECORD_ASSERT(shared.first_lock_error.load() == FT_ERR_SUCCESSS);
-    RECORD_ASSERT(wait_for_thread_state(THREAD_ID, &first_mutex._mutex, ft_nullptr, 1, 20));
-    RECORD_ASSERT(wait_for_thread_state(shared.worker_thread_identifier.load(), &second_mutex._mutex, &first_mutex._mutex, 1, 100));
+    RECORD_ASSERT(wait_for_thread_state(THREAD_ID, first_mutex.get_native_mutex(), ft_nullptr, 1, 20));
+    RECORD_ASSERT(wait_for_thread_state(shared.worker_thread_identifier.load(), second_mutex.get_native_mutex(), first_mutex.get_native_mutex(), 1, 100));
     RECORD_ASSERT(second_mutex.lock(THREAD_ID) == FT_SUCCESS);
     RECORD_ASSERT(second_mutex.get_error() == FT_ERR_MUTEX_ALREADY_LOCKED);
     RECORD_ASSERT(second_mutex.lockState());

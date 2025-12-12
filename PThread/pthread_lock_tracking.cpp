@@ -499,7 +499,6 @@ bool pt_lock_tracking::snapshot_waiters(pt_lock_wait_snapshot_vector &snapshot)
     return (true);
 }
 
-#ifdef PT_LOCK_TRACKING_TESTING
 bool pt_lock_tracking::get_thread_state(pt_thread_id_type thread_identifier, s_pt_lock_tracking_thread_state &state)
 {
     int lock_error;
@@ -558,4 +557,3 @@ bool pt_lock_tracking::get_thread_state(pt_thread_id_type thread_identifier, s_p
     ft_errno = FT_ERR_SUCCESSS;
     return (true);
 }
-#endif

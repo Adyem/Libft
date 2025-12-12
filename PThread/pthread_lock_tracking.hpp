@@ -57,7 +57,6 @@ struct s_pt_thread_lock_info
     long wait_started_ms;
 };
 
-#ifdef PT_LOCK_TRACKING_TESTING
 struct s_pt_lock_tracking_thread_state
 {
     pt_thread_id_type thread_identifier;
@@ -65,7 +64,6 @@ struct s_pt_lock_tracking_thread_state
     pthread_mutex_t *waiting_mutex;
     long wait_started_ms;
 };
-#endif
 
 class pt_lock_tracking
 {
@@ -89,9 +87,7 @@ class pt_lock_tracking
         static void notify_acquired(pt_thread_id_type thread_identifier, pthread_mutex_t *mutex_pointer);
         static void notify_released(pt_thread_id_type thread_identifier, pthread_mutex_t *mutex_pointer);
         static bool snapshot_waiters(pt_lock_wait_snapshot_vector &snapshot);
-#ifdef PT_LOCK_TRACKING_TESTING
         static bool get_thread_state(pt_thread_id_type thread_identifier, s_pt_lock_tracking_thread_state &state);
-#endif
 };
 
 #include "pthread_lock_tracking.tpp"
