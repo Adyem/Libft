@@ -4,9 +4,9 @@
 #include "../../CPP_class/class_nullptr.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../Libft/libft.hpp"
-#include <vector>
+#include "../../Template/vector.hpp"
 
-static std::vector<ft_game_observability_sample> g_scheduler_samples;
+static ft_vector<ft_game_observability_sample> g_scheduler_samples;
 
 static bool game_event_scheduler_strings_equal(const char *left, const char *right)
 {
@@ -20,12 +20,14 @@ static bool game_event_scheduler_strings_equal(const char *left, const char *rig
 static void game_event_scheduler_reset_samples(void)
 {
     g_scheduler_samples.clear();
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, g_scheduler_samples.get_error());
     return ;
 }
 
 static void game_event_scheduler_capture_sample(const ft_game_observability_sample &sample)
 {
     g_scheduler_samples.push_back(sample);
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, g_scheduler_samples.get_error());
     return ;
 }
 
