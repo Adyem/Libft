@@ -17,6 +17,7 @@
 #include "../Template/vector.hpp"
 #include "../Template/function.hpp"
 #include <utility>
+#include <new>
 #include "../Template/move.hpp"
 #include "../Storage/kv_store.hpp"
 
@@ -69,18 +70,68 @@ bool ft_world::propagate_scheduler_state_error() const noexcept
 }
 
 ft_world::ft_world() noexcept
-    : _event_scheduler(new ft_event_scheduler()),
-    _world_registry(new ft_world_registry()),
-    _replay_session(new ft_world_replay_session()),
-    _economy_table(new ft_economy_table()),
-    _crafting(new ft_crafting()),
-    _dialogue_table(new ft_dialogue_table()),
-    _world_region(new ft_world_region()),
-    _quest(new ft_quest()),
-    _vendor_profile(new ft_vendor_profile()),
-    _upgrade(new ft_upgrade()),
+    : _event_scheduler(new (std::nothrow) ft_event_scheduler()),
+    _world_registry(new (std::nothrow) ft_world_registry()),
+    _replay_session(new (std::nothrow) ft_world_replay_session()),
+    _economy_table(new (std::nothrow) ft_economy_table()),
+    _crafting(new (std::nothrow) ft_crafting()),
+    _dialogue_table(new (std::nothrow) ft_dialogue_table()),
+    _world_region(new (std::nothrow) ft_world_region()),
+    _quest(new (std::nothrow) ft_quest()),
+    _vendor_profile(new (std::nothrow) ft_vendor_profile()),
+    _upgrade(new (std::nothrow) ft_upgrade()),
     _error(FT_ERR_SUCCESSS)
 {
+    if (!this->_event_scheduler || this->_event_scheduler.get_error() != FT_ERR_SUCCESSS)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return ;
+    }
+    if (!this->_world_registry || this->_world_registry.get_error() != FT_ERR_SUCCESSS)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return ;
+    }
+    if (!this->_replay_session || this->_replay_session.get_error() != FT_ERR_SUCCESSS)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return ;
+    }
+    if (!this->_economy_table || this->_economy_table.get_error() != FT_ERR_SUCCESSS)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return ;
+    }
+    if (!this->_crafting || this->_crafting.get_error() != FT_ERR_SUCCESSS)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return ;
+    }
+    if (!this->_dialogue_table || this->_dialogue_table.get_error() != FT_ERR_SUCCESSS)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return ;
+    }
+    if (!this->_world_region || this->_world_region.get_error() != FT_ERR_SUCCESSS)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return ;
+    }
+    if (!this->_quest || this->_quest.get_error() != FT_ERR_SUCCESSS)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return ;
+    }
+    if (!this->_vendor_profile || this->_vendor_profile.get_error() != FT_ERR_SUCCESSS)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return ;
+    }
+    if (!this->_upgrade || this->_upgrade.get_error() != FT_ERR_SUCCESSS)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return ;
+    }
     if (this->propagate_scheduler_state_error() == true)
         return ;
     if (this->propagate_registry_state_error() == true)
@@ -215,10 +266,10 @@ ft_world::ft_world(ft_world &&other) noexcept
     if (this->propagate_upgrade_state_error() == true)
         return ;
     this->set_error(this->_error);
-    other._event_scheduler = ft_sharedptr<ft_event_scheduler>(new ft_event_scheduler());
-    if (other._event_scheduler->get_error() != FT_ERR_SUCCESSS)
+    other._event_scheduler = ft_sharedptr<ft_event_scheduler>(new (std::nothrow) ft_event_scheduler());
+    if (!other._event_scheduler || other._event_scheduler.get_error() != FT_ERR_SUCCESSS)
     {
-        other.set_error(other._event_scheduler->get_error());
+        other.set_error(FT_ERR_NO_MEMORY);
         return ;
     }
     other.set_error(FT_ERR_SUCCESSS);
@@ -260,10 +311,10 @@ ft_world &ft_world::operator=(ft_world &&other) noexcept
         if (this->propagate_upgrade_state_error() == true)
             return (*this);
         this->set_error(other._error);
-        other._event_scheduler = ft_sharedptr<ft_event_scheduler>(new ft_event_scheduler());
-        if (other._event_scheduler->get_error() != FT_ERR_SUCCESSS)
+        other._event_scheduler = ft_sharedptr<ft_event_scheduler>(new (std::nothrow) ft_event_scheduler());
+        if (!other._event_scheduler || other._event_scheduler.get_error() != FT_ERR_SUCCESSS)
         {
-            other.set_error(other._event_scheduler->get_error());
+            other.set_error(FT_ERR_NO_MEMORY);
             return (*this);
         }
         other.set_error(FT_ERR_SUCCESSS);
