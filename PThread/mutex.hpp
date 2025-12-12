@@ -44,6 +44,8 @@ class pt_mutex
 
         bool    is_owned_by_thread(pthread_t thread_id) const;
 
+        pthread_mutex_t   *get_native_mutex() const;
+
         int     get_error() const;
         const char *get_error_str() const;
 };

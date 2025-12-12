@@ -210,3 +210,11 @@ const char *pt_mutex::get_error_str() const
     return (ft_strerror(error_value));
 }
 
+pthread_mutex_t   *pt_mutex::get_native_mutex() const
+{
+    if (!this->ensure_native_mutex())
+        return (ft_nullptr);
+    this->set_error(FT_ERR_SUCCESSS);
+    return (&this->_native_mutex);
+}
+
