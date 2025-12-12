@@ -23,6 +23,7 @@ extern thread_local pt_thread_id_type pt_thread_id;
 pt_thread_id_type pt_thread_self();
 
 int pt_thread_join(pthread_t thread, void **retval);
+int pt_thread_timed_join(pthread_t thread, void **retval, long timeout_ms);
 int pt_thread_create(pthread_t *thread, const pthread_attr_t *attr,
                 void *(*start_routine)(void *), void *arg);
 int pt_thread_detach(pthread_t thread);
