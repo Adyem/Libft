@@ -1,6 +1,5 @@
 #define PT_LOCK_TRACKING_TESTING
 #include <atomic>
-#include <vector>
 #include "../../Libft/libft.hpp"
 #include "../../PThread/mutex.hpp"
 #include "../../PThread/pthread_lock_tracking.hpp"
@@ -230,7 +229,7 @@ FT_TEST(test_pt_lock_tracking_detects_cycle, "pt_lock_tracking prevents circular
     int test_failed;
     int first_mutex_locked;
     int second_mutex_locked;
-    const long join_timeout_ms;
+    const long join_timeout_ms = 200;
     const char *failure_expression;
     int failure_line;
 
@@ -247,7 +246,6 @@ FT_TEST(test_pt_lock_tracking_detects_cycle, "pt_lock_tracking prevents circular
     test_failed = 0;
     first_mutex_locked = 0;
     second_mutex_locked = 0;
-    join_timeout_ms = 200;
     failure_expression = ft_nullptr;
     failure_line = 0;
     initialize_shared_state(&shared, &first_mutex, &second_mutex);
