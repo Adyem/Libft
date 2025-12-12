@@ -5,3 +5,8 @@ Test/libft_tests
 test_*.txt
 
 test_failures.log
+
+# Core dumps
+core
+core.*
+*.core
