@@ -10,12 +10,10 @@ static void game_character_sleep_backoff()
     return ;
 }
 
-static void game_character_restore_errno(ft_unique_lock<pt_mutex> &guard,
-    int entry_errno)
+static void game_character_restore_errno(ft_unique_lock<pt_mutex> &guard)
 {
     if (guard.owns_lock())
         guard.unlock();
-    ft_errno = entry_errno;
     return ;
 }
 
@@ -168,12 +166,10 @@ ft_character &ft_character::operator=(const ft_character &other) noexcept
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_character::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -220,13 +216,14 @@ ft_character &ft_character::operator=(const ft_character &other) noexcept
     this->_error = other._error;
     if (this->check_internal_errors() == true)
     {
-        game_character_restore_errno(this_guard, entry_errno);
-        game_character_restore_errno(other_guard, entry_errno);
+        this->set_error(this->_error);
+        game_character_restore_errno(this_guard);
+        game_character_restore_errno(other_guard);
         return (*this);
     }
     this->set_error(other._error);
-    game_character_restore_errno(this_guard, entry_errno);
-    game_character_restore_errno(other_guard, entry_errno);
+    game_character_restore_errno(this_guard);
+    game_character_restore_errno(other_guard);
     return (*this);
 }
 
@@ -241,12 +238,10 @@ ft_character &ft_character::operator=(ft_character &&other) noexcept
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_character::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -293,8 +288,9 @@ ft_character &ft_character::operator=(ft_character &&other) noexcept
     this->_error = other._error;
     if (this->check_internal_errors() == true)
     {
-        game_character_restore_errno(this_guard, entry_errno);
-        game_character_restore_errno(other_guard, entry_errno);
+        this->set_error(this->_error);
+        game_character_restore_errno(this_guard);
+        game_character_restore_errno(other_guard);
         return (*this);
     }
     other._hit_points = 0;
@@ -336,8 +332,8 @@ ft_character &ft_character::operator=(ft_character &&other) noexcept
     other._equipment = ft_equipment();
     this->set_error(this->_error);
     other.set_error(FT_ERR_SUCCESSS);
-    game_character_restore_errno(this_guard, entry_errno);
-    game_character_restore_errno(other_guard, entry_errno);
+    game_character_restore_errno(this_guard);
+    game_character_restore_errno(other_guard);
     return (*this);
 }
 

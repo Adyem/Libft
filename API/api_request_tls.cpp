@@ -88,7 +88,6 @@ char *api_request_https(const char *ip, uint16_t port,
                 hooks->user_data));
     }
     size_t metrics_request_bytes;
-    int metrics_entry_errno;
     char *metrics_payload_string;
 
     metrics_request_bytes = 0;
@@ -102,12 +101,10 @@ char *api_request_https(const char *ip, uint16_t port,
         metrics_request_bytes += ft_strlen(ip);
     if (payload)
     {
-        metrics_entry_errno = ft_errno;
         metrics_payload_string = json_write_to_string(payload);
     }
     else
     {
-        metrics_entry_errno = ft_errno;
         metrics_payload_string = ft_nullptr;
     }
     if (metrics_payload_string)
@@ -115,7 +112,7 @@ char *api_request_https(const char *ip, uint16_t port,
         metrics_request_bytes += ft_strlen(metrics_payload_string);
         cma_free(metrics_payload_string);
     }
-    ft_errno = metrics_entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     int error_code = FT_ERR_SUCCESSS;
     struct api_request_errno_guard
     {
@@ -273,7 +270,6 @@ char *api_request_https_http2(const char *ip, uint16_t port,
                 used_http2, retry_policy, hooks->user_data));
     }
     size_t metrics_request_bytes;
-    int metrics_entry_errno;
     char *metrics_payload_string;
 
     metrics_request_bytes = 0;
@@ -287,12 +283,10 @@ char *api_request_https_http2(const char *ip, uint16_t port,
         metrics_request_bytes += ft_strlen(ip);
     if (payload)
     {
-        metrics_entry_errno = ft_errno;
         metrics_payload_string = json_write_to_string(payload);
     }
     else
     {
-        metrics_entry_errno = ft_errno;
         metrics_payload_string = ft_nullptr;
     }
     if (metrics_payload_string)
@@ -300,7 +294,7 @@ char *api_request_https_http2(const char *ip, uint16_t port,
         metrics_request_bytes += ft_strlen(metrics_payload_string);
         cma_free(metrics_payload_string);
     }
-    ft_errno = metrics_entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     int error_code = FT_ERR_SUCCESSS;
     struct api_request_errno_guard
     {
@@ -781,7 +775,6 @@ char *api_request_string_tls(const char *host, uint16_t port,
     }
 
     size_t metrics_request_bytes;
-    int metrics_entry_errno;
     char *metrics_payload_string;
 
     metrics_request_bytes = 0;
@@ -794,12 +787,10 @@ char *api_request_string_tls(const char *host, uint16_t port,
         metrics_request_bytes += ft_strlen(headers);
     if (payload)
     {
-        metrics_entry_errno = ft_errno;
         metrics_payload_string = json_write_to_string(payload);
     }
     else
     {
-        metrics_entry_errno = ft_errno;
         metrics_payload_string = ft_nullptr;
     }
     if (metrics_payload_string)
@@ -807,7 +798,7 @@ char *api_request_string_tls(const char *host, uint16_t port,
         metrics_request_bytes += ft_strlen(metrics_payload_string);
         cma_free(metrics_payload_string);
     }
-    ft_errno = metrics_entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
 
     SocketConfig config;
     config._type = SocketType::CLIENT;
@@ -943,7 +934,6 @@ char *api_request_string_tls_http2(const char *host, uint16_t port,
     }
 
     size_t metrics_request_bytes;
-    int metrics_entry_errno;
     char *metrics_payload_string;
 
     metrics_request_bytes = 0;
@@ -956,12 +946,10 @@ char *api_request_string_tls_http2(const char *host, uint16_t port,
         metrics_request_bytes += ft_strlen(headers);
     if (payload)
     {
-        metrics_entry_errno = ft_errno;
         metrics_payload_string = json_write_to_string(payload);
     }
     else
     {
-        metrics_entry_errno = ft_errno;
         metrics_payload_string = ft_nullptr;
     }
     if (metrics_payload_string)
@@ -969,7 +957,7 @@ char *api_request_string_tls_http2(const char *host, uint16_t port,
         metrics_request_bytes += ft_strlen(metrics_payload_string);
         cma_free(metrics_payload_string);
     }
-    ft_errno = metrics_entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
 
     SocketConfig config;
     config._type = SocketType::CLIENT;

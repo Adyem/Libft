@@ -274,21 +274,18 @@ int http2_header_field::lock(bool *lock_acquired) const noexcept
 void http2_header_field::unlock(bool lock_acquired) const noexcept
 {
     http2_header_field *mutable_field;
-    int entry_errno;
 
     if (!lock_acquired)
         return ;
     mutable_field = const_cast<http2_header_field *>(this);
     if (mutable_field->_mutex == ft_nullptr)
         return ;
-    entry_errno = ft_errno;
     mutable_field->_mutex->unlock(THREAD_ID);
     if (mutable_field->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         mutable_field->set_error(mutable_field->_mutex->get_error());
         return ;
     }
-    ft_errno = entry_errno;
     mutable_field->set_error(FT_ERR_SUCCESSS);
     return ;
 }
@@ -819,21 +816,18 @@ int http2_frame::lock(bool *lock_acquired) const noexcept
 void http2_frame::unlock(bool lock_acquired) const noexcept
 {
     http2_frame *mutable_frame;
-    int entry_errno;
 
     if (!lock_acquired)
         return ;
     mutable_frame = const_cast<http2_frame *>(this);
     if (mutable_frame->_mutex == ft_nullptr)
         return ;
-    entry_errno = ft_errno;
     mutable_frame->_mutex->unlock(THREAD_ID);
     if (mutable_frame->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         mutable_frame->set_error(mutable_frame->_mutex->get_error());
         return ;
     }
-    ft_errno = entry_errno;
     mutable_frame->set_error(FT_ERR_SUCCESSS);
     return ;
 }
@@ -1046,21 +1040,14 @@ http2_stream_manager::http2_stream_manager() noexcept
       _connection_local_window(65535), _error_code(FT_ERR_SUCCESSS),
       _thread_safe_enabled(false), _mutex(ft_nullptr)
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     if (this->prepare_thread_safety() != 0)
         return ;
     this->set_error(FT_ERR_SUCCESSS);
-    ft_errno = entry_errno;
     return ;
 }
 
 http2_stream_manager::~http2_stream_manager() noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     this->_streams.clear();
     this->_stream_identifiers.clear();
     this->_initial_remote_window = 65535;
@@ -1069,7 +1056,6 @@ http2_stream_manager::~http2_stream_manager() noexcept
     this->_connection_local_window = 65535;
     this->set_error(FT_ERR_SUCCESSS);
     this->teardown_thread_safety();
-    ft_errno = entry_errno;
     return ;
 }
 
@@ -1145,21 +1131,19 @@ int http2_stream_manager::lock(bool *lock_acquired) const noexcept
 void http2_stream_manager::unlock(bool lock_acquired) const noexcept
 {
     http2_stream_manager *mutable_manager;
-    int entry_errno;
 
     if (!lock_acquired)
         return ;
     mutable_manager = const_cast<http2_stream_manager *>(this);
     if (mutable_manager->_mutex == ft_nullptr)
         return ;
-    entry_errno = ft_errno;
     mutable_manager->_mutex->unlock(THREAD_ID);
     if (mutable_manager->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         mutable_manager->set_error(mutable_manager->_mutex->get_error());
         return ;
     }
-    ft_errno = entry_errno;
+    mutable_manager->set_error(FT_ERR_SUCCESSS);
     return ;
 }
 
