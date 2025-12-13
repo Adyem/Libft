@@ -1068,11 +1068,9 @@ bool ft_sharedptr<ManagedType>::hasError() const
 {
     bool lock_acquired;
     bool has_error;
-    int entry_errno;
 
     lock_acquired = false;
     has_error = true;
-    entry_errno = ft_errno;
     if (this->lock_internal(&lock_acquired) != 0)
     {
         const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(ft_errno);
@@ -1080,7 +1078,7 @@ bool ft_sharedptr<ManagedType>::hasError() const
     }
     has_error = (this->_error_code != FT_ERR_SUCCESSS);
     this->unlock_internal(lock_acquired);
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (has_error);
 }
 
@@ -1169,11 +1167,9 @@ ft_sharedptr<ManagedType>::operator bool() const noexcept
 {
     bool lock_acquired;
     bool result;
-    int entry_errno;
 
     lock_acquired = false;
     result = false;
-    entry_errno = ft_errno;
     if (this->lock_internal(&lock_acquired) != 0)
     {
         const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(ft_errno);
@@ -1181,7 +1177,7 @@ ft_sharedptr<ManagedType>::operator bool() const noexcept
     }
     result = (this->_managedPointer != ft_nullptr);
     this->unlock_internal(lock_acquired);
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 
@@ -1497,18 +1493,18 @@ int ft_sharedptr<ManagedType>::lock_internal(bool *lock_acquired) const
 template <typename ManagedType>
 void ft_sharedptr<ManagedType>::unlock_internal(bool lock_acquired) const
 {
-    int entry_errno;
-
     if (!lock_acquired || this->_mutex == ft_nullptr)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
-    entry_errno = ft_errno;
+    }
     this->_mutex->unlock(THREAD_ID);
     if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -1617,15 +1613,11 @@ int ft_sharedptr<ManagedType>::lock(bool *lock_acquired) const
 template <typename ManagedType>
 void ft_sharedptr<ManagedType>::unlock(bool lock_acquired) const
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
     if (this->_mutex != ft_nullptr && this->_mutex->get_error() != FT_ERR_SUCCESSS)
         const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(this->_mutex->get_error());
     else
     {
-        ft_errno = entry_errno;
         const_cast<ft_sharedptr<ManagedType>*>(this)->set_error_unlocked(ft_errno);
     }
     return ;

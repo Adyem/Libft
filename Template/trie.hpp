@@ -31,7 +31,7 @@ class ft_trie
 
         int insert_helper(const char *key, int unset_value, ValueType *value_pointer);
         void set_error(int error) const;
-        void set_success_preserve_errno(int entry_errno) const;
+        void set_success_preserve_errno() const;
         int lock_internal(bool *lock_acquired) const;
         void unlock_internal(bool lock_acquired) const;
         void teardown_thread_safety();
@@ -257,9 +257,8 @@ void ft_trie<ValueType>::set_error(int error) const
 }
 
 template <typename ValueType>
-void ft_trie<ValueType>::set_success_preserve_errno(int entry_errno) const
+void ft_trie<ValueType>::set_success_preserve_errno() const
 {
-    (void)entry_errno;
     this->_last_error = FT_ERR_SUCCESSS;
     this->_error_code = FT_ERR_SUCCESSS;
     ft_errno = FT_ERR_SUCCESSS;
@@ -345,7 +344,7 @@ int ft_trie<ValueType>::lock(bool *lock_acquired) const
         const_cast<ft_trie<ValueType> *>(this)->set_error(ft_errno);
     else
     {
-        this->set_success_preserve_errno(ft_errno);
+        this->set_success_preserve_errno();
     }
     return (result);
 }
@@ -364,7 +363,7 @@ void ft_trie<ValueType>::unlock(bool lock_acquired) const
         const_cast<ft_trie<ValueType> *>(this)->set_error(mutex_error);
     else
     {
-        this->set_success_preserve_errno(ft_errno);
+        this->set_success_preserve_errno();
     }
     return ;
 }

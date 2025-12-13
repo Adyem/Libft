@@ -320,14 +320,11 @@ void ft_unordered_map<Key, MappedType>::iterator::advance_to_valid_index_unlocke
 template <typename Key, typename MappedType>
 int ft_unordered_map<Key, MappedType>::iterator::lock_internal(bool *lock_acquired) const
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
     {
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     this->_mutex->lock(THREAD_ID);
@@ -338,25 +335,25 @@ int ft_unordered_map<Key, MappedType>::iterator::lock_internal(bool *lock_acquir
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
 template <typename Key, typename MappedType>
 void ft_unordered_map<Key, MappedType>::iterator::unlock_internal(bool lock_acquired) const
 {
-    int entry_errno;
-
     if (!lock_acquired || this->_mutex == ft_nullptr)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
-    entry_errno = ft_errno;
+    }
     this->_mutex->unlock(THREAD_ID);
     if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -536,10 +533,8 @@ bool ft_unordered_map<Key, MappedType>::iterator::is_thread_safe() const
 template <typename Key, typename MappedType>
 int ft_unordered_map<Key, MappedType>::iterator::lock(bool *lock_acquired) const
 {
-    int entry_errno;
     int result;
 
-    entry_errno = ft_errno;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
     {
@@ -547,16 +542,13 @@ int ft_unordered_map<Key, MappedType>::iterator::lock(bool *lock_acquired) const
         return (result);
     }
     this->_error_code = FT_ERR_SUCCESSS;
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 
 template <typename Key, typename MappedType>
 void ft_unordered_map<Key, MappedType>::iterator::unlock(bool lock_acquired) const
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
     if (lock_acquired && this->_mutex != ft_nullptr && this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
@@ -564,7 +556,7 @@ void ft_unordered_map<Key, MappedType>::iterator::unlock(bool lock_acquired) con
         return ;
     }
     this->_error_code = FT_ERR_SUCCESSS;
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -733,14 +725,11 @@ void ft_unordered_map<Key, MappedType>::const_iterator::advance_to_valid_index_u
 template <typename Key, typename MappedType>
 int ft_unordered_map<Key, MappedType>::const_iterator::lock_internal(bool *lock_acquired) const
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     if (lock_acquired != ft_nullptr)
         *lock_acquired = false;
     if (!this->_thread_safe_enabled || this->_mutex == ft_nullptr)
     {
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
         return (0);
     }
     this->_mutex->lock(THREAD_ID);
@@ -751,25 +740,25 @@ int ft_unordered_map<Key, MappedType>::const_iterator::lock_internal(bool *lock_
     }
     if (lock_acquired != ft_nullptr)
         *lock_acquired = true;
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
 template <typename Key, typename MappedType>
 void ft_unordered_map<Key, MappedType>::const_iterator::unlock_internal(bool lock_acquired) const
 {
-    int entry_errno;
-
     if (!lock_acquired || this->_mutex == ft_nullptr)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
-    entry_errno = ft_errno;
+    }
     this->_mutex->unlock(THREAD_ID);
     if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -949,10 +938,8 @@ bool ft_unordered_map<Key, MappedType>::const_iterator::is_thread_safe() const
 template <typename Key, typename MappedType>
 int ft_unordered_map<Key, MappedType>::const_iterator::lock(bool *lock_acquired) const
 {
-    int entry_errno;
     int result;
 
-    entry_errno = ft_errno;
     result = this->lock_internal(lock_acquired);
     if (result != 0)
     {
@@ -960,16 +947,13 @@ int ft_unordered_map<Key, MappedType>::const_iterator::lock(bool *lock_acquired)
         return (result);
     }
     this->_error_code = FT_ERR_SUCCESSS;
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 
 template <typename Key, typename MappedType>
 void ft_unordered_map<Key, MappedType>::const_iterator::unlock(bool lock_acquired) const
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
     if (lock_acquired && this->_mutex != ft_nullptr && this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
@@ -977,7 +961,7 @@ void ft_unordered_map<Key, MappedType>::const_iterator::unlock(bool lock_acquire
         return ;
     }
     this->_error_code = FT_ERR_SUCCESSS;
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -1354,17 +1338,12 @@ int ft_unordered_map<Key, MappedType>::lock(bool *lock_acquired) const
 template <typename Key, typename MappedType>
 void ft_unordered_map<Key, MappedType>::unlock(bool lock_acquired) const
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
     if (this->_mutex != ft_nullptr && this->_mutex->get_error() != FT_ERR_SUCCESSS)
         const_cast<ft_unordered_map<Key, MappedType> *>(this)->set_error(this->_mutex->get_error());
     else
-    {
-        ft_errno = entry_errno;
-        const_cast<ft_unordered_map<Key, MappedType> *>(this)->set_error(ft_errno);
-    }
+        const_cast<ft_unordered_map<Key, MappedType> *>(this)->set_error(FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -1421,18 +1400,18 @@ int ft_unordered_map<Key, MappedType>::lock_internal(bool *lock_acquired) const
 template <typename Key, typename MappedType>
 void ft_unordered_map<Key, MappedType>::unlock_internal(bool lock_acquired) const
 {
-    int entry_errno;
-
     if (!lock_acquired || this->_mutex == ft_nullptr)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
-    entry_errno = ft_errno;
+    }
     this->_mutex->unlock(THREAD_ID);
     if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
