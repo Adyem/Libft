@@ -14,8 +14,6 @@ class ft_websocket_client
         mutable int _error_code;
         mutable pt_mutex _mutex;
 
-        static void restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept;
-
         int close_locked(ft_unique_lock<pt_mutex> &guard);
         int perform_handshake_locked(const char *host, const char *path, ft_unique_lock<pt_mutex> &guard);
         int send_pong_locked(const unsigned char *payload, std::size_t length, ft_unique_lock<pt_mutex> &guard);
