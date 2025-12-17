@@ -35,8 +35,6 @@ class ft_socket
                 ft_unique_lock<pt_mutex> &first_guard,
                 ft_unique_lock<pt_mutex> &second_guard);
         static void sleep_backoff();
-        static void restore_errno(ft_unique_lock<pt_mutex> &guard,
-                int entry_errno) noexcept;
         ssize_t send_data_locked(const void *data, size_t size, int flags);
         ssize_t send_all_locked(const void *data, size_t size, int flags);
         ssize_t receive_data_locked(void *buffer, size_t size, int flags);

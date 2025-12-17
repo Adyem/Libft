@@ -247,15 +247,12 @@ int ft_matrix<ElementType>::lock(bool *lock_acquired) const
 template <typename ElementType>
 void ft_matrix<ElementType>::unlock(bool lock_acquired) const
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     this->unlock_internal(lock_acquired);
     if (this->_mutex != ft_nullptr && this->_mutex->get_error() != FT_ERR_SUCCESSS)
         const_cast<ft_matrix<ElementType> *>(this)->set_error(this->_mutex->get_error());
     else
     {
-        ft_errno = entry_errno;
+        ft_errno = FT_ERR_SUCCESSS;
         const_cast<ft_matrix<ElementType> *>(this)->set_error(ft_errno);
     }
     return ;
@@ -740,18 +737,18 @@ int ft_matrix<ElementType>::lock_internal(bool *lock_acquired) const
 template <typename ElementType>
 void ft_matrix<ElementType>::unlock_internal(bool lock_acquired) const
 {
-    int entry_errno;
-
     if (!lock_acquired || this->_mutex == ft_nullptr)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
-    entry_errno = ft_errno;
+    }
     this->_mutex->unlock(THREAD_ID);
     if (this->_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 

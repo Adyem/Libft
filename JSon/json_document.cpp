@@ -60,37 +60,7 @@ static char *json_document_unescape_pointer_token(const char *start, size_t leng
     return (token);
 }
 
-void json_document::set_error_unlocked(int error_code) const noexcept
-{
-    ft_errno = error_code;
-    this->_error_code = error_code;
-    return ;
-}
-
-void json_document::set_error(int error_code) const noexcept
-{
-    this->set_error_unlocked(error_code);
-    return ;
-}
-
-int json_document::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
-{
-    int entry_errno;
-    ft_unique_lock<pt_mutex> local_guard(this->_mutex);
-
-    entry_errno = ft_errno;
-    if (local_guard.get_error() != FT_ERR_SUCCESSS)
-    {
-        ft_errno = entry_errno;
-        guard = ft_unique_lock<pt_mutex>();
-        return (local_guard.get_error());
-    }
-    ft_errno = entry_errno;
-    guard = ft_move(local_guard);
-    return (FT_ERR_SUCCESSS);
-}
-
-void json_document::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept
+static void json_document_finalize_guard(ft_unique_lock<pt_mutex> &guard) noexcept
 {
     int operation_errno;
 
@@ -107,8 +77,36 @@ void json_document::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_err
         ft_errno = operation_errno;
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
+}
+
+void json_document::set_error_unlocked(int error_code) const noexcept
+{
+    ft_errno = error_code;
+    this->_error_code = error_code;
+    return ;
+}
+
+void json_document::set_error(int error_code) const noexcept
+{
+    this->set_error_unlocked(error_code);
+    return ;
+}
+
+int json_document::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
+{
+    ft_unique_lock<pt_mutex> local_guard(this->_mutex);
+
+    if (local_guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = local_guard.get_error();
+        guard = ft_unique_lock<pt_mutex>();
+        return (ft_errno);
+    }
+    ft_errno = FT_ERR_SUCCESSS;
+    guard = ft_move(local_guard);
+    return (FT_ERR_SUCCESSS);
 }
 
 void json_document::clear_unlocked() noexcept
@@ -156,23 +154,21 @@ json_document::~json_document() noexcept
 json_group *json_document::create_group(const char *name) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     json_group *group;
     int current_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     if (!name)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     group = json_create_json_group(name);
@@ -182,34 +178,32 @@ json_group *json_document::create_group(const char *name) noexcept
         if (current_error == FT_ERR_SUCCESSS)
             current_error = FT_ERR_NO_MEMORY;
         this->set_error_unlocked(current_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return (group);
 }
 
 json_item *json_document::create_item(const char *key, const char *value) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     json_item *item;
     int current_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     if (!key || !value)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     item = json_create_item(key, value);
@@ -219,34 +213,32 @@ json_item *json_document::create_item(const char *key, const char *value) noexce
         if (current_error == FT_ERR_SUCCESSS)
             current_error = FT_ERR_NO_MEMORY;
         this->set_error_unlocked(current_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return (item);
 }
 
 json_item *json_document::create_item(const char *key, const ft_big_number &value) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     json_item *item;
     int current_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     if (!key)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     item = json_create_item(key, value);
@@ -256,34 +248,32 @@ json_item *json_document::create_item(const char *key, const ft_big_number &valu
         if (current_error == FT_ERR_SUCCESSS)
             current_error = FT_ERR_NO_MEMORY;
         this->set_error_unlocked(current_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return (item);
 }
 
 json_item *json_document::create_item(const char *key, const int value) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     json_item *item;
     int current_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     if (!key)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     item = json_create_item(key, value);
@@ -293,34 +283,32 @@ json_item *json_document::create_item(const char *key, const int value) noexcept
         if (current_error == FT_ERR_SUCCESSS)
             current_error = FT_ERR_NO_MEMORY;
         this->set_error_unlocked(current_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return (item);
 }
 
 json_item *json_document::create_item(const char *key, const bool value) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     json_item *item;
     int current_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     if (!key)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     item = json_create_item(key, value);
@@ -330,86 +318,80 @@ json_item *json_document::create_item(const char *key, const bool value) noexcep
         if (current_error == FT_ERR_SUCCESSS)
             current_error = FT_ERR_NO_MEMORY;
         this->set_error_unlocked(current_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return (item);
 }
 
 void json_document::add_item(json_group *group, json_item *item) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     if (!group || !item)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     json_add_item_to_group(group, item);
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return ;
 }
 
 void json_document::append_group(json_group *group) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     if (!group)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     json_append_group(&this->_groups, group);
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return ;
 }
 
 int json_document::write_to_file(const char *file_path) const noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     int result;
     int current_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (-1);
     }
     if (!file_path)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (-1);
     }
     result = json_write_to_file(file_path, this->_groups);
@@ -419,36 +401,34 @@ int json_document::write_to_file(const char *file_path) const noexcept
         if (current_error == FT_ERR_SUCCESSS)
             current_error = FT_ERR_INVALID_HANDLE;
         this->set_error_unlocked(current_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (result);
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return (0);
 }
 
 int json_document::write_to_backend(ft_document_sink &sink) const noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     char *serialized_content;
     size_t serialized_length;
     int write_result;
     int sink_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (-1);
     }
     serialized_content = this->write_to_string_unlocked();
     if (!serialized_content)
     {
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (-1);
     }
     serialized_length = ft_strlen(serialized_content);
@@ -460,55 +440,51 @@ int json_document::write_to_backend(ft_document_sink &sink) const noexcept
         if (sink_error != FT_ERR_SUCCESSS)
             write_result = sink_error;
         this->set_error_unlocked(write_result);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (-1);
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return (0);
 }
 
 char *json_document::write_to_string() const noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     char *result;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     result = this->write_to_string_unlocked();
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return (result);
 }
 
 int json_document::read_from_file(const char *file_path) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     json_group *groups;
     int current_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (-1);
     }
     if (!file_path)
     {
         this->clear_unlocked();
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (-1);
     }
     this->clear_unlocked();
@@ -519,29 +495,27 @@ int json_document::read_from_file(const char *file_path) noexcept
         if (current_error == FT_ERR_SUCCESSS)
             current_error = FT_ERR_INVALID_ARGUMENT;
         this->set_error_unlocked(current_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (-1);
     }
     this->_groups = groups;
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return (0);
 }
 
 int json_document::read_from_backend(ft_document_source &source) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     json_group *groups;
     int error_code;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (-1);
     }
     this->clear_unlocked();
@@ -554,37 +528,35 @@ int json_document::read_from_backend(ft_document_source &source) noexcept
         if (error_code == FT_ERR_SUCCESSS)
             error_code = FT_ERR_INVALID_ARGUMENT;
         this->set_error_unlocked(error_code);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (-1);
     }
     this->_groups = groups;
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return (0);
 }
 
 int json_document::read_from_file_streaming(const char *file_path, size_t buffer_capacity) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     FILE *file;
     json_group *groups;
     int current_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (-1);
     }
     if (!file_path || buffer_capacity == 0)
     {
         this->clear_unlocked();
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (-1);
     }
     file = fopen(file_path, "rb");
@@ -592,7 +564,7 @@ int json_document::read_from_file_streaming(const char *file_path, size_t buffer
     {
         this->clear_unlocked();
         this->set_error_unlocked(FT_ERR_IO);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (-1);
     }
     this->clear_unlocked();
@@ -604,36 +576,34 @@ int json_document::read_from_file_streaming(const char *file_path, size_t buffer
         if (current_error == FT_ERR_SUCCESSS)
             current_error = FT_ERR_INVALID_ARGUMENT;
         this->set_error_unlocked(current_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (-1);
     }
     this->_groups = groups;
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return (0);
 }
 
 int json_document::read_from_string(const char *content) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     json_group *groups;
     int current_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (-1);
     }
     if (!content)
     {
         this->clear_unlocked();
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (-1);
     }
     this->clear_unlocked();
@@ -644,66 +614,62 @@ int json_document::read_from_string(const char *content) noexcept
         if (current_error == FT_ERR_SUCCESSS)
             current_error = FT_ERR_INVALID_ARGUMENT;
         this->set_error_unlocked(current_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (-1);
     }
     this->_groups = groups;
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return (0);
 }
 
 json_group *json_document::find_group(const char *name) const noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     json_group *group;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     if (!name)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     group = json_find_group(this->_groups, name);
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return (group);
 }
 
 json_item *json_document::find_item(json_group *group, const char *key) const noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     json_item *item;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     if (!group || !key)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     item = json_find_item(group, key);
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return (item);
 }
 
@@ -809,134 +775,124 @@ json_item *json_document::find_item_by_pointer_unlocked(const char *pointer) con
 json_item *json_document::find_item_by_pointer(const char *pointer) const noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     json_item *item;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     item = this->find_item_by_pointer_unlocked(pointer);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return (item);
 }
 
 const char *json_document::get_value_by_pointer(const char *pointer) const noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     json_item *item;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     item = this->find_item_by_pointer_unlocked(pointer);
     if (!item)
     {
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     if (!item->value)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return (item->value);
 }
 
 void json_document::remove_group(const char *name) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     if (!name)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     json_remove_group(&this->_groups, name);
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return ;
 }
 
 void json_document::remove_item(json_group *group, const char *key) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     if (!group || !key)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     json_remove_item(group, key);
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return ;
 }
 
 void json_document::update_item(json_group *group, const char *key, const char *value) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     json_item *item;
     int current_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     if (!group || !key || !value)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     item = json_find_item(group, key);
     if (!item)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     json_update_item(group, key, value);
@@ -946,41 +902,39 @@ void json_document::update_item(json_group *group, const char *key, const char *
         if (current_error == FT_ERR_SUCCESSS)
             current_error = FT_ERR_NO_MEMORY;
         this->set_error_unlocked(current_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return ;
 }
 
 void json_document::update_item(json_group *group, const char *key, const int value) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     json_item *item;
     int current_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     if (!group || !key)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     item = json_find_item(group, key);
     if (!item)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     json_update_item(group, key, value);
@@ -990,41 +944,39 @@ void json_document::update_item(json_group *group, const char *key, const int va
         if (current_error == FT_ERR_SUCCESSS)
             current_error = FT_ERR_NO_MEMORY;
         this->set_error_unlocked(current_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return ;
 }
 
 void json_document::update_item(json_group *group, const char *key, const bool value) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     json_item *item;
     int current_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     if (!group || !key)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     item = json_find_item(group, key);
     if (!item)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     json_update_item(group, key, value);
@@ -1034,41 +986,39 @@ void json_document::update_item(json_group *group, const char *key, const bool v
         if (current_error == FT_ERR_SUCCESSS)
             current_error = FT_ERR_NO_MEMORY;
         this->set_error_unlocked(current_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return ;
 }
 
 void json_document::update_item(json_group *group, const char *key, const ft_big_number &value) noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     json_item *item;
     int current_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     if (!group || !key)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     item = json_find_item(group, key);
     if (!item)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     json_update_item(group, key, value);
@@ -1078,51 +1028,47 @@ void json_document::update_item(json_group *group, const char *key, const ft_big
         if (current_error == FT_ERR_SUCCESSS)
             current_error = FT_ERR_NO_MEMORY;
         this->set_error_unlocked(current_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return ;
 }
 
 void json_document::clear() noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return ;
     }
     this->clear_unlocked();
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return ;
 }
 
 json_group *json_document::get_groups() const noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     json_group *groups;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_nullptr);
     }
     groups = this->_groups;
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return (groups);
 }
 
@@ -1135,40 +1081,35 @@ void json_document::set_manual_error(int error_code) noexcept
 int json_document::get_error() const noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     int error_value;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (lock_error);
     }
     error_value = this->_error_code;
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return (error_value);
 }
 
 const char *json_document::get_error_str() const noexcept
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     const char *error_string;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        json_document::restore_errno(guard, entry_errno);
+        json_document_finalize_guard(guard);
         return (ft_strerror(lock_error));
     }
     error_string = ft_strerror(this->_error_code);
-    json_document::restore_errno(guard, entry_errno);
+    json_document_finalize_guard(guard);
     return (error_string);
 }
-
