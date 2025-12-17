@@ -290,7 +290,6 @@ ft_future<ValueType> &ft_future<ValueType>::operator=(const ft_future<ValueType>
 template <typename ValueType>
 ft_future<ValueType> &ft_future<ValueType>::operator=(ft_future<ValueType> &&other)
 {
-    int entry_errno;
     bool this_lock_acquired;
     bool other_lock_acquired;
     pt_mutex *previous_mutex;
@@ -304,9 +303,9 @@ ft_future<ValueType> &ft_future<ValueType>::operator=(ft_future<ValueType> &&oth
     if (this == &other)
     {
         this->set_error(FT_ERR_SUCCESSS);
+        ft_errno = FT_ERR_SUCCESSS;
         return (*this);
     }
-    entry_errno = ft_errno;
     this_lock_acquired = false;
     if (this->lock_internal(&this_lock_acquired) != 0)
     {
@@ -354,12 +353,11 @@ ft_future<ValueType> &ft_future<ValueType>::operator=(ft_future<ValueType> &&oth
         if (this->enable_thread_safety() != 0)
         {
             this->_error_code = ft_errno;
-            ft_errno = entry_errno;
             return (*this);
         }
     }
     this->_error_code = transferred_error;
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (*this);
 }
 
@@ -675,7 +673,6 @@ inline ft_future<void> &ft_future<void>::operator=(const ft_future<void> &other)
 
 inline ft_future<void> &ft_future<void>::operator=(ft_future<void> &&other)
 {
-    int entry_errno;
     bool this_lock_acquired;
     bool other_lock_acquired;
     pt_mutex *previous_mutex;
@@ -689,9 +686,9 @@ inline ft_future<void> &ft_future<void>::operator=(ft_future<void> &&other)
     if (this == &other)
     {
         this->set_error(FT_ERR_SUCCESSS);
+        ft_errno = FT_ERR_SUCCESSS;
         return (*this);
     }
-    entry_errno = ft_errno;
     this_lock_acquired = false;
     if (this->lock_internal(&this_lock_acquired) != 0)
     {
@@ -739,12 +736,11 @@ inline ft_future<void> &ft_future<void>::operator=(ft_future<void> &&other)
         if (this->enable_thread_safety() != 0)
         {
             this->_error_code = ft_errno;
-            ft_errno = entry_errno;
             return (*this);
         }
     }
     this->_error_code = transferred_error;
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return (*this);
 }
 
@@ -979,18 +975,18 @@ int ft_future<ValueType>::lock_internal(bool *lock_acquired) const
 template <typename ValueType>
 void ft_future<ValueType>::unlock_internal(bool lock_acquired) const
 {
-    int entry_errno;
-
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
-    entry_errno = ft_errno;
+    }
     this->_state_mutex->unlock(THREAD_ID);
     if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_state_mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -1126,18 +1122,18 @@ inline int ft_future<void>::lock_internal(bool *lock_acquired) const
 
 inline void ft_future<void>::unlock_internal(bool lock_acquired) const
 {
-    int entry_errno;
-
     if (!lock_acquired || this->_state_mutex == ft_nullptr)
+    {
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
-    entry_errno = ft_errno;
+    }
     this->_state_mutex->unlock(THREAD_ID);
     if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_state_mutex->get_error();
         return ;
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 

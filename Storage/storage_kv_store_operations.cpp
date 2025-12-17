@@ -30,17 +30,15 @@ const char *g_kv_store_ttl_prefix = "__ttl__";
 
 int kv_store::lock_replication(ft_unique_lock<pt_mutex> &guard) const noexcept
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> local_guard(this->_replication_mutex);
 
-    entry_errno = ft_errno;
     if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = entry_errno;
+        ft_errno = local_guard.get_error();
         guard = ft_unique_lock<pt_mutex>();
-        return (local_guard.get_error());
+        return (ft_errno);
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     guard = ft_move(local_guard);
     return (FT_ERR_SUCCESSS);
 }
@@ -3754,4 +3752,3 @@ int kv_store::stop_background_compaction()
     kv_store::restore_errno(guard, entry_errno);
     return (0);
 }
-

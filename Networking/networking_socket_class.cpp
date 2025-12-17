@@ -28,11 +28,24 @@ void ft_socket::sleep_backoff()
     return ;
 }
 
-void ft_socket::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept
+static void socket_finalize_guard(ft_unique_lock<pt_mutex> &guard) noexcept
 {
+    int operation_errno;
+
+    operation_errno = ft_errno;
     if (guard.owns_lock())
         guard.unlock();
-    ft_errno = entry_errno;
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = guard.get_error();
+        return ;
+    }
+    if (operation_errno != FT_ERR_SUCCESSS)
+    {
+        ft_errno = operation_errno;
+        return ;
+    }
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -238,13 +251,10 @@ void ft_socket::reset_to_empty_state_locked()
     while (connection_index < this->_connected.size())
     {
         ft_socket &client = this->_connected[connection_index];
-        int client_entry_errno;
-
-        client_entry_errno = ft_errno;
-        ft_unique_lock<pt_mutex> client_guard(client._mutex);
+        client_        ft_unique_lock<pt_mutex> client_guard(client._mutex);
         if (client_guard.get_error() == FT_ERR_SUCCESSS)
             client.close_socket_locked();
-        ft_socket::restore_errno(client_guard, client_entry_errno);
+        socket_finalize_guard(client_guard);
         connection_index++;
     }
     this->_connected.clear();
@@ -258,10 +268,8 @@ void ft_socket::reset_to_empty_state_locked()
 ft_socket::ft_socket()
     : _address(), _connected(), _socket_fd(-1), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
@@ -272,17 +280,15 @@ ft_socket::ft_socket()
     this->_socket_fd = -1;
     this->_error_code = FT_ERR_SUCCESSS;
     this->set_error(FT_ERR_SUCCESSS);
-    ft_socket::restore_errno(guard, entry_errno);
+    socket_finalize_guard(guard);
     return ;
 }
 
 ft_socket::ft_socket(int fd, const sockaddr_storage &addr)
     : _address(), _connected(), _socket_fd(-1), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
@@ -293,17 +299,15 @@ ft_socket::ft_socket(int fd, const sockaddr_storage &addr)
     this->_socket_fd = fd;
     this->_error_code = FT_ERR_SUCCESSS;
     this->set_error(FT_ERR_SUCCESSS);
-    ft_socket::restore_errno(guard, entry_errno);
+    socket_finalize_guard(guard);
     return ;
 }
 
 ft_socket::ft_socket(const SocketConfig &config)
     : _address(), _connected(), _socket_fd(-1), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
@@ -314,7 +318,7 @@ ft_socket::ft_socket(const SocketConfig &config)
     this->_socket_fd = -1;
     this->_error_code = FT_ERR_SUCCESSS;
     this->set_error(FT_ERR_SUCCESSS);
-    ft_socket::restore_errno(guard, entry_errno);
+    socket_finalize_guard(guard);
     this->initialize(config);
     return ;
 }
@@ -328,47 +332,41 @@ ft_socket::~ft_socket()
 
 ssize_t ft_socket::send_data(const void *data, size_t size, int flags)
 {
-    int entry_errno;
     ssize_t bytes_sent;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (-1);
     }
     bytes_sent = this->send_data_locked(data, size, flags);
-    ft_socket::restore_errno(guard, entry_errno);
+    socket_finalize_guard(guard);
     return (bytes_sent);
 }
 
 ssize_t ft_socket::send_all(const void *data, size_t size, int flags)
 {
-    int entry_errno;
     ssize_t result;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (-1);
     }
     result = this->send_all_locked(data, size, flags);
-    ft_socket::restore_errno(guard, entry_errno);
+    socket_finalize_guard(guard);
     return (result);
 }
 
 ssize_t ft_socket::receive_data(void *buffer, size_t size, int flags)
 {
-    int entry_errno;
     int socket_fd;
     int receive_errno;
     ssize_t result;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
@@ -377,7 +375,7 @@ ssize_t ft_socket::receive_data(void *buffer, size_t size, int flags)
     if (this->_socket_fd < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
-        ft_socket::restore_errno(guard, entry_errno);
+        socket_finalize_guard(guard);
         return (-1);
     }
     socket_fd = this->_socket_fd;
@@ -399,13 +397,12 @@ ssize_t ft_socket::receive_data(void *buffer, size_t size, int flags)
         this->set_error(receive_errno);
     else
         this->set_error(FT_ERR_SUCCESSS);
-    ft_socket::restore_errno(guard, entry_errno);
+    socket_finalize_guard(guard);
     return (result);
 }
 
 bool ft_socket::close_socket()
 {
-    int entry_errno;
     int socket_fd;
     int close_errno;
     int shutdown_errno;
@@ -413,7 +410,6 @@ bool ft_socket::close_socket()
     bool shutdown_success;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
@@ -422,7 +418,7 @@ bool ft_socket::close_socket()
     if (this->_socket_fd < 0)
     {
         this->set_error(FT_ERR_SUCCESSS);
-        ft_socket::restore_errno(guard, entry_errno);
+        socket_finalize_guard(guard);
         return (true);
     }
     socket_fd = this->_socket_fd;
@@ -470,22 +466,17 @@ bool ft_socket::close_socket()
     }
     else
         this->set_error(close_errno);
-    ft_socket::restore_errno(guard, entry_errno);
+    socket_finalize_guard(guard);
     if (closed && shutdown_success)
         return (true);
     return (false);
 }
 
 ssize_t ft_socket::send_data(const void *data, size_t size, int flags, int fd)
-{
-    int entry_errno;
-    size_t index;
+{    size_t index;
     bool found;
     ssize_t result;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    entry_errno = ft_errno;
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    ft_unique_lock<pt_mutex> guard(this->_mutex);    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (-1);
@@ -498,16 +489,13 @@ ssize_t ft_socket::send_data(const void *data, size_t size, int flags, int fd)
         ft_socket &client = this->_connected[index];
 
         if (client._socket_fd == fd)
-        {
-            int client_entry_errno;
-            ft_unique_lock<pt_mutex> client_guard(client._mutex);
+        {            ft_unique_lock<pt_mutex> client_guard(client._mutex);
 
-            client_entry_errno = ft_errno;
-            if (client_guard.get_error() != FT_ERR_SUCCESSS)
+            client_            if (client_guard.get_error() != FT_ERR_SUCCESSS)
             {
                 this->set_error(client_guard.get_error());
-                ft_socket::restore_errno(client_guard, client_entry_errno);
-                ft_socket::restore_errno(guard, entry_errno);
+                socket_finalize_guard(client_guard);
+                socket_finalize_guard(guard);
                 return (-1);
             }
             result = client.send_data_locked(data, size, flags);
@@ -515,7 +503,7 @@ ssize_t ft_socket::send_data(const void *data, size_t size, int flags, int fd)
                 this->set_error(ft_errno);
             else
                 this->set_error(FT_ERR_SUCCESSS);
-            ft_socket::restore_errno(client_guard, client_entry_errno);
+            socket_finalize_guard(client_guard);
             found = true;
             break;
         }
@@ -526,20 +514,15 @@ ssize_t ft_socket::send_data(const void *data, size_t size, int flags, int fd)
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         result = -1;
     }
-    ft_socket::restore_errno(guard, entry_errno);
+    socket_finalize_guard(guard);
     return (result);
 }
 
 ssize_t ft_socket::broadcast_data(const void *data, size_t size, int flags, int exception)
-{
-    int entry_errno;
-    ssize_t total_bytes_sent;
+{    ssize_t total_bytes_sent;
     bool send_failed;
     size_t index;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    entry_errno = ft_errno;
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    ft_unique_lock<pt_mutex> guard(this->_mutex);    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (-1);
@@ -555,15 +538,12 @@ ssize_t ft_socket::broadcast_data(const void *data, size_t size, int flags, int 
         {
             index++;
             continue ;
-        }
-        int client_entry_errno;
-        ft_unique_lock<pt_mutex> client_guard(client._mutex);
+        }        ft_unique_lock<pt_mutex> client_guard(client._mutex);
 
-        client_entry_errno = ft_errno;
-        if (client_guard.get_error() != FT_ERR_SUCCESSS)
+        client_        if (client_guard.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(client_guard.get_error());
-            ft_socket::restore_errno(client_guard, client_entry_errno);
+            socket_finalize_guard(client_guard);
             send_failed = true;
             index++;
             continue ;
@@ -578,12 +558,12 @@ ssize_t ft_socket::broadcast_data(const void *data, size_t size, int flags, int 
         }
         else
             total_bytes_sent += bytes_sent;
-        ft_socket::restore_errno(client_guard, client_entry_errno);
+        socket_finalize_guard(client_guard);
         index++;
     }
     if (!send_failed)
         this->set_error(FT_ERR_SUCCESSS);
-    ft_socket::restore_errno(guard, entry_errno);
+    socket_finalize_guard(guard);
     return (total_bytes_sent);
 }
 
@@ -593,12 +573,7 @@ ssize_t ft_socket::broadcast_data(const void *data, size_t size, int flags)
 }
 
 int ft_socket::accept_connection()
-{
-    int entry_errno;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    entry_errno = ft_errno;
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+{    ft_unique_lock<pt_mutex> guard(this->_mutex);    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (-1);
@@ -606,7 +581,7 @@ int ft_socket::accept_connection()
     if (this->_socket_fd < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
-        ft_socket::restore_errno(guard, entry_errno);
+        socket_finalize_guard(guard);
         return (-1);
     }
     struct sockaddr_storage client_addr;
@@ -620,7 +595,7 @@ int ft_socket::accept_connection()
     if (new_fd < 0)
     {
         this->set_error(ft_errno);
-        ft_socket::restore_errno(guard, entry_errno);
+        socket_finalize_guard(guard);
         return (-1);
     }
     ft_socket new_socket(new_fd, client_addr);
@@ -638,22 +613,17 @@ int ft_socket::accept_connection()
         if (push_error == FT_ERR_SUCCESSS)
             push_error = FT_ERR_NO_MEMORY;
         this->set_error(push_error);
-        ft_socket::restore_errno(guard, entry_errno);
+        socket_finalize_guard(guard);
         return (-1);
     }
     this->set_error(FT_ERR_SUCCESSS);
-    ft_socket::restore_errno(guard, entry_errno);
+    socket_finalize_guard(guard);
     return (new_fd);
 }
 
 bool ft_socket::disconnect_client(int fd)
-{
-    int entry_errno;
-    size_t index;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    entry_errno = ft_errno;
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+{    size_t index;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (false);
@@ -670,25 +640,20 @@ bool ft_socket::disconnect_client(int fd)
                 this->_connected[index] = ft_move(this->_connected[last]);
             this->_connected.pop_back();
             this->set_error(FT_ERR_SUCCESSS);
-            ft_socket::restore_errno(guard, entry_errno);
+            socket_finalize_guard(guard);
             return (true);
         }
         index++;
     }
     this->set_error(FT_ERR_INVALID_ARGUMENT);
-    ft_socket::restore_errno(guard, entry_errno);
+    socket_finalize_guard(guard);
     return (false);
 }
 
 void ft_socket::disconnect_all_clients()
-{
-    int entry_errno;
-    ft_vector<ft_socket> owned_clients;
+{    ft_vector<ft_socket> owned_clients;
     size_t index;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    entry_errno = ft_errno;
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    ft_unique_lock<pt_mutex> guard(this->_mutex);    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return ;
@@ -696,18 +661,15 @@ void ft_socket::disconnect_all_clients()
     owned_clients = ft_move(this->_connected);
     this->_connected.clear();
     this->set_error(FT_ERR_SUCCESSS);
-    ft_socket::restore_errno(guard, entry_errno);
+    socket_finalize_guard(guard);
     index = 0;
     while (index < owned_clients.size())
     {
-        ft_socket &client = owned_clients[index];
-        int client_entry_errno;
-        ft_unique_lock<pt_mutex> client_guard(client._mutex);
+        ft_socket &client = owned_clients[index];        ft_unique_lock<pt_mutex> client_guard(client._mutex);
 
-        client_entry_errno = ft_errno;
-        if (client_guard.get_error() == FT_ERR_SUCCESSS)
+        client_        if (client_guard.get_error() == FT_ERR_SUCCESSS)
             client.close_socket_locked();
-        ft_socket::restore_errno(client_guard, client_entry_errno);
+        socket_finalize_guard(client_guard);
         index++;
     }
     owned_clients.clear();
@@ -715,36 +677,26 @@ void ft_socket::disconnect_all_clients()
 }
 
 size_t ft_socket::get_client_count() const
-{
-    int entry_errno;
-    size_t count;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    entry_errno = ft_errno;
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+{    size_t count;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_socket *>(this)->set_error(guard.get_error());
-        ft_socket::restore_errno(guard, entry_errno);
+        socket_finalize_guard(guard);
         return (0);
     }
     count = this->_connected.size();
     const_cast<ft_socket *>(this)->set_error(FT_ERR_SUCCESSS);
-    ft_socket::restore_errno(guard, entry_errno);
+    socket_finalize_guard(guard);
     return (count);
 }
 
 bool ft_socket::is_client_connected(int fd) const
-{
-    int entry_errno;
-    size_t index;
+{    size_t index;
     bool connected;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    entry_errno = ft_errno;
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+    ft_unique_lock<pt_mutex> guard(this->_mutex);    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_socket *>(this)->set_error(guard.get_error());
-        ft_socket::restore_errno(guard, entry_errno);
+        socket_finalize_guard(guard);
         return (false);
     }
     index = 0;
@@ -759,106 +711,76 @@ bool ft_socket::is_client_connected(int fd) const
         index++;
     }
     const_cast<ft_socket *>(this)->set_error(FT_ERR_SUCCESSS);
-    ft_socket::restore_errno(guard, entry_errno);
+    socket_finalize_guard(guard);
     return (connected);
 }
 
 int ft_socket::get_fd() const
-{
-    int entry_errno;
-    int descriptor;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    entry_errno = ft_errno;
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+{    int descriptor;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_socket *>(this)->set_error(guard.get_error());
-        ft_socket::restore_errno(guard, entry_errno);
+        socket_finalize_guard(guard);
         return (-1);
     }
     descriptor = this->_socket_fd;
     const_cast<ft_socket *>(this)->set_error(FT_ERR_SUCCESSS);
-    ft_socket::restore_errno(guard, entry_errno);
+    socket_finalize_guard(guard);
     return (descriptor);
 }
 
 const struct sockaddr_storage &ft_socket::get_address() const
-{
-    int entry_errno;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    entry_errno = ft_errno;
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+{    ft_unique_lock<pt_mutex> guard(this->_mutex);    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_socket *>(this)->set_error(guard.get_error());
-        ft_socket::restore_errno(guard, entry_errno);
+        socket_finalize_guard(guard);
         return (this->_address);
     }
     const_cast<ft_socket *>(this)->set_error(FT_ERR_SUCCESSS);
-    ft_socket::restore_errno(guard, entry_errno);
+    socket_finalize_guard(guard);
     return (this->_address);
 }
 
 int ft_socket::get_error() const
-{
-    int entry_errno;
-    int error_value;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    entry_errno = ft_errno;
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+{    int error_value;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_socket *>(this)->set_error(guard.get_error());
-        ft_socket::restore_errno(guard, entry_errno);
+        socket_finalize_guard(guard);
         return (const_cast<ft_socket *>(this)->_error_code);
     }
     error_value = this->_error_code;
-    ft_socket::restore_errno(guard, entry_errno);
+    socket_finalize_guard(guard);
     return (error_value);
 }
 
 const char* ft_socket::get_error_str() const
-{
-    int entry_errno;
-    int error_value;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    entry_errno = ft_errno;
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+{    int error_value;
+    ft_unique_lock<pt_mutex> guard(this->_mutex);    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_socket *>(this)->set_error(guard.get_error());
-        ft_socket::restore_errno(guard, entry_errno);
+        socket_finalize_guard(guard);
         return (ft_strerror(guard.get_error()));
     }
     error_value = this->_error_code;
-    ft_socket::restore_errno(guard, entry_errno);
+    socket_finalize_guard(guard);
     return (ft_strerror(error_value));
 }
 
 void ft_socket::reset_to_empty_state()
-{
-    int entry_errno;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    entry_errno = ft_errno;
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+{    ft_unique_lock<pt_mutex> guard(this->_mutex);    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return ;
     }
     this->reset_to_empty_state_locked();
-    ft_socket::restore_errno(guard, entry_errno);
+    socket_finalize_guard(guard);
     return ;
 }
 
 ft_socket::ft_socket(ft_socket &&other) noexcept
     : _address(), _connected(), _socket_fd(-1), _error_code(FT_ERR_SUCCESSS), _mutex()
-{
-    int entry_errno;
-    ft_unique_lock<pt_mutex> this_guard(this->_mutex);
-
-    entry_errno = ft_errno;
-    if (this_guard.get_error() != FT_ERR_SUCCESSS)
+{    ft_unique_lock<pt_mutex> this_guard(this->_mutex);    if (this_guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this_guard.get_error();
         return ;
@@ -867,7 +789,7 @@ ft_socket::ft_socket(ft_socket &&other) noexcept
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = other_guard.get_error();
-        ft_socket::restore_errno(this_guard, entry_errno);
+        socket_finalize_guard(this_guard);
         return ;
     }
     this->_address = other._address;
@@ -877,22 +799,17 @@ ft_socket::ft_socket(ft_socket &&other) noexcept
     this->set_error(other._error_code);
     other.reset_to_empty_state_locked();
     other.set_error(FT_ERR_SUCCESSS);
-    ft_socket::restore_errno(other_guard, entry_errno);
-    ft_socket::restore_errno(this_guard, entry_errno);
+    socket_finalize_guard(other_guard);
+    socket_finalize_guard(this_guard);
     return ;
 }
 
 ft_socket &ft_socket::operator=(ft_socket &&other) noexcept
 {
     if (this != &other)
-    {
-        int entry_errno;
-        ft_unique_lock<pt_mutex> this_guard;
+    {        ft_unique_lock<pt_mutex> this_guard;
         ft_unique_lock<pt_mutex> other_guard;
-        int lock_error;
-
-        entry_errno = ft_errno;
-        lock_error = ft_socket::lock_pair(*this, other, this_guard, other_guard);
+        int lock_error;        lock_error = ft_socket::lock_pair(*this, other, this_guard, other_guard);
         if (lock_error != FT_ERR_SUCCESSS)
         {
             this->set_error(lock_error);
@@ -906,19 +823,14 @@ ft_socket &ft_socket::operator=(ft_socket &&other) noexcept
         this->set_error(other._error_code);
         other.reset_to_empty_state_locked();
         other.set_error(FT_ERR_SUCCESSS);
-        ft_socket::restore_errno(other_guard, entry_errno);
-        ft_socket::restore_errno(this_guard, entry_errno);
+        socket_finalize_guard(other_guard);
+        socket_finalize_guard(this_guard);
     }
     return (*this);
 }
 
 int ft_socket::initialize(const SocketConfig &config)
-{
-    int entry_errno;
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-
-    entry_errno = ft_errno;
-    if (guard.get_error() != FT_ERR_SUCCESSS)
+{    ft_unique_lock<pt_mutex> guard(this->_mutex);    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
         return (this->_error_code);
@@ -926,10 +838,10 @@ int ft_socket::initialize(const SocketConfig &config)
     if (this->_socket_fd != -1)
     {
         this->set_error(FT_ERR_ALREADY_INITIALIZED);
-        ft_socket::restore_errno(guard, entry_errno);
+        socket_finalize_guard(guard);
         return (this->_error_code);
     }
-    ft_socket::restore_errno(guard, entry_errno);
+    socket_finalize_guard(guard);
     if (config._type == SocketType::SERVER)
         return (this->setup_server(config));
     if (config._type == SocketType::CLIENT)
