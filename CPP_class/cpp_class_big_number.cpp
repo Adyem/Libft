@@ -83,17 +83,15 @@ void ft_big_number::set_error(int error_code) const noexcept
 
 int ft_big_number::lock_self(ft_big_number_mutex_guard &guard) const noexcept
 {
-    int entry_errno;
     ft_big_number_mutex_guard local_guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = entry_errno;
+        ft_errno = local_guard.get_error();
         guard = ft_big_number_mutex_guard();
         return (local_guard.get_error());
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     guard = ft_move(local_guard);
     return (FT_ERR_SUCCESSS);
 }
