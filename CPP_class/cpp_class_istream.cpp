@@ -19,22 +19,18 @@ ft_istream::ft_istream(const ft_istream &other) noexcept
     , _mutex()
 {
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = other.lock_self(other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_istream::restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_gcount = other._gcount;
     this->_bad = other._bad;
     this->_error_code = other._error_code;
     this->set_error_unlocked(other._error_code);
-    ft_istream::restore_errno(other_guard, entry_errno);
     return ;
 }
 
@@ -45,15 +41,12 @@ ft_istream::ft_istream(ft_istream &&other) noexcept
     , _mutex()
 {
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = other.lock_self(other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_istream::restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_gcount = other._gcount;
@@ -64,7 +57,6 @@ ft_istream::ft_istream(ft_istream &&other) noexcept
     other._bad = false;
     other._error_code = FT_ERR_SUCCESSS;
     other.set_error_unlocked(FT_ERR_SUCCESSS);
-    ft_istream::restore_errno(other_guard, entry_errno);
     return ;
 }
 
@@ -88,17 +80,15 @@ void ft_istream::set_error(int error_code) const noexcept
 
 int ft_istream::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> local_guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (local_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = entry_errno;
+        ft_errno = local_guard.get_error();
         guard = ft_unique_lock<pt_mutex>();
         return (local_guard.get_error());
     }
-    ft_errno = entry_errno;
+    ft_errno = FT_ERR_SUCCESSS;
     guard = ft_move(local_guard);
     return (FT_ERR_SUCCESSS);
 }

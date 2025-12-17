@@ -18,8 +18,6 @@
 class udp_socket
 {
     private:
-        static void restore_errno(ft_unique_lock<pt_mutex> &guard,
-                int entry_errno) noexcept;
         int     create_socket(const SocketConfig &config);
         int     set_non_blocking(const SocketConfig &config);
         int     set_timeouts(const SocketConfig &config);

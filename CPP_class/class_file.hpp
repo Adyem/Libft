@@ -25,9 +25,6 @@ class ft_file
         static int lock_pair(const ft_file &first, const ft_file &second,
                 ft_unique_lock<pt_mutex> &first_guard,
                 ft_unique_lock<pt_mutex> &second_guard);
-        static void restore_errno(ft_unique_lock<pt_mutex> &guard,
-                int entry_errno,
-                bool restore_previous_on_success = false) noexcept;
         static void sleep_backoff();
 
     public:

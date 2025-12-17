@@ -62,7 +62,6 @@ static bool json_string_exceeds_signed_long_long(const char *value)
 void json_item_refresh_numeric_state(json_item *item)
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
     int lock_error;
     int result_code;
     ft_big_number *allocated_number;
@@ -74,10 +73,12 @@ void json_item_refresh_numeric_state(json_item *item)
     }
     if (json_item_enable_thread_safety(item) != 0)
         return ;
-    entry_errno = ft_errno;
     lock_error = json_item_lock(item, guard);
     if (lock_error != FT_ERR_SUCCESSS)
+    {
+        ft_errno = lock_error;
         return ;
+    }
     result_code = FT_ERR_SUCCESSS;
     if (item->big_number)
     {
@@ -111,30 +112,27 @@ void json_item_refresh_numeric_state(json_item *item)
         }
     }
     json_item_set_error_unlocked(item, result_code);
-    json_item_restore_errno(item, guard, entry_errno);
-    if (result_code != FT_ERR_SUCCESSS)
-    {
-        ft_errno = result_code;
-        return ;
-    }
-    if (ft_errno == entry_errno)
-        ft_errno = FT_ERR_SUCCESSS;
+    ft_errno = result_code;
     return ;
 }
 
 void json_add_item_to_group(json_group *group, json_item *item)
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
+    int lock_error;
 
     if (group == ft_nullptr || item == ft_nullptr)
     {
         json_group_set_error(group, FT_ERR_INVALID_ARGUMENT);
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
-    entry_errno = ft_errno;
-    if (json_group_lock(group, guard) != FT_ERR_SUCCESSS)
+    lock_error = json_group_lock(group, guard);
+    if (lock_error != FT_ERR_SUCCESSS)
+    {
+        ft_errno = lock_error;
         return ;
+    }
     if (!group->items)
         group->items = item;
     else
@@ -146,7 +144,7 @@ void json_add_item_to_group(json_group *group, json_item *item)
         current_item->next = item;
     }
     json_group_set_error_unlocked(group, FT_ERR_SUCCESSS);
-    json_group_restore_errno(group, guard, entry_errno);
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -180,16 +178,20 @@ json_group* json_create_json_group(const char *name)
 void json_append_group(json_group **head, json_group *new_group)
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
+    int lock_error;
 
     if (head == ft_nullptr || new_group == ft_nullptr)
     {
         json_group_set_error(new_group, FT_ERR_INVALID_ARGUMENT);
+        ft_errno = FT_ERR_INVALID_ARGUMENT;
         return ;
     }
-    entry_errno = ft_errno;
-    if (json_group_list_lock(guard) != FT_ERR_SUCCESSS)
+    lock_error = json_group_list_lock(guard);
+    if (lock_error != FT_ERR_SUCCESSS)
+    {
+        ft_errno = lock_error;
         return ;
+    }
     if (!(*head))
         *head = new_group;
     else
@@ -200,8 +202,8 @@ void json_append_group(json_group **head, json_group *new_group)
             current_group = current_group->next;
         current_group->next = new_group;
     }
-    json_group_list_restore(guard, entry_errno);
     json_group_set_error(new_group, FT_ERR_SUCCESSS);
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -225,11 +227,14 @@ void json_free_items(json_item *item)
 void json_free_groups(json_group *group)
 {
     ft_unique_lock<pt_mutex> guard;
-    int entry_errno;
+    int lock_error;
 
-    entry_errno = ft_errno;
-    if (json_group_list_lock(guard) != FT_ERR_SUCCESSS)
+    lock_error = json_group_list_lock(guard);
+    if (lock_error != FT_ERR_SUCCESSS)
+    {
+        ft_errno = lock_error;
         return ;
+    }
     while (group)
     {
         json_group *next_group = group->next;
@@ -240,6 +245,6 @@ void json_free_groups(json_group *group)
         delete group;
         group = next_group;
     }
-    json_group_list_restore(guard, entry_errno);
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
