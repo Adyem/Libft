@@ -11,15 +11,6 @@ static void game_state_sleep_backoff()
     return ;
 }
 
-static void game_state_restore_errno(ft_unique_lock<pt_mutex> &guard,
-    int entry_errno)
-{
-    if (guard.owns_lock())
-        guard.unlock();
-    ft_errno = entry_errno;
-    return ;
-}
-
 int ft_game_state::lock_pair(const ft_game_state &first, const ft_game_state &second,
     ft_unique_lock<pt_mutex> &first_guard,
     ft_unique_lock<pt_mutex> &second_guard)
@@ -119,9 +110,6 @@ ft_game_state::~ft_game_state() noexcept
 ft_game_state::ft_game_state(const ft_game_state &other) noexcept
     : _worlds(), _characters(), _variables(), _hooks(), _error_code(other._error_code), _mutex()
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
@@ -129,7 +117,14 @@ ft_game_state::ft_game_state(const ft_game_state &other) noexcept
         this->_characters = ft_vector<ft_sharedptr<ft_character> >();
         this->_error_code = other_guard.get_error();
         this->set_error(other_guard.get_error());
-        game_state_restore_errno(other_guard, entry_errno);
+        if (other_guard.owns_lock())
+            other_guard.unlock();
+        if (other_guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = other_guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     size_t world_index = 0;
@@ -140,20 +135,41 @@ ft_game_state::ft_game_state(const ft_game_state &other) noexcept
         if (temp_world.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(temp_world.get_error());
-            game_state_restore_errno(other_guard, entry_errno);
+            if (other_guard.owns_lock())
+                other_guard.unlock();
+            if (other_guard.get_error() != FT_ERR_SUCCESSS)
+            {
+                ft_errno = other_guard.get_error();
+                return ;
+            }
+            ft_errno = FT_ERR_SUCCESSS;
             return ;
         }
         if (temp_world && temp_world->get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(temp_world->get_error());
-            game_state_restore_errno(other_guard, entry_errno);
+            if (other_guard.owns_lock())
+                other_guard.unlock();
+            if (other_guard.get_error() != FT_ERR_SUCCESSS)
+            {
+                ft_errno = other_guard.get_error();
+                return ;
+            }
+            ft_errno = FT_ERR_SUCCESSS;
             return ;
         }
         this->_worlds.push_back(temp_world);
         if (this->_worlds.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(this->_worlds.get_error());
-            game_state_restore_errno(other_guard, entry_errno);
+            if (other_guard.owns_lock())
+                other_guard.unlock();
+            if (other_guard.get_error() != FT_ERR_SUCCESSS)
+            {
+                ft_errno = other_guard.get_error();
+                return ;
+            }
+            ft_errno = FT_ERR_SUCCESSS;
             return ;
         }
         world_index++;
@@ -166,20 +182,41 @@ ft_game_state::ft_game_state(const ft_game_state &other) noexcept
         if (temp.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(temp.get_error());
-            game_state_restore_errno(other_guard, entry_errno);
+            if (other_guard.owns_lock())
+                other_guard.unlock();
+            if (other_guard.get_error() != FT_ERR_SUCCESSS)
+            {
+                ft_errno = other_guard.get_error();
+                return ;
+            }
+            ft_errno = FT_ERR_SUCCESSS;
             return ;
         }
         if (temp && temp->get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(temp->get_error());
-            game_state_restore_errno(other_guard, entry_errno);
+            if (other_guard.owns_lock())
+                other_guard.unlock();
+            if (other_guard.get_error() != FT_ERR_SUCCESSS)
+            {
+                ft_errno = other_guard.get_error();
+                return ;
+            }
+            ft_errno = FT_ERR_SUCCESSS;
             return ;
         }
         this->_characters.push_back(temp);
         if (this->_characters.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(this->_characters.get_error());
-            game_state_restore_errno(other_guard, entry_errno);
+            if (other_guard.owns_lock())
+                other_guard.unlock();
+            if (other_guard.get_error() != FT_ERR_SUCCESSS)
+            {
+                ft_errno = other_guard.get_error();
+                return ;
+            }
+            ft_errno = FT_ERR_SUCCESSS;
             return ;
         }
         character_index++;
@@ -188,24 +225,52 @@ ft_game_state::ft_game_state(const ft_game_state &other) noexcept
     if (this->_variables.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_variables.get_error());
-        game_state_restore_errno(other_guard, entry_errno);
+        if (other_guard.owns_lock())
+            other_guard.unlock();
+        if (other_guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = other_guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     if (other._hooks.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other._hooks.get_error());
-        game_state_restore_errno(other_guard, entry_errno);
+        if (other_guard.owns_lock())
+            other_guard.unlock();
+        if (other_guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = other_guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     this->_hooks = other._hooks;
     if (this->_hooks.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_hooks.get_error());
-        game_state_restore_errno(other_guard, entry_errno);
+        if (other_guard.owns_lock())
+            other_guard.unlock();
+        if (other_guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = other_guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     this->set_error(this->_error_code);
-    game_state_restore_errno(other_guard, entry_errno);
+    if (other_guard.owns_lock())
+        other_guard.unlock();
+    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = other_guard.get_error();
+        return ;
+    }
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -213,12 +278,10 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_game_state::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -234,23 +297,65 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
         if (temp_world.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(temp_world.get_error());
-            game_state_restore_errno(this_guard, entry_errno);
-            game_state_restore_errno(other_guard, entry_errno);
+            if (this_guard.owns_lock())
+                this_guard.unlock();
+            if (this_guard.get_error() != FT_ERR_SUCCESSS)
+            {
+                ft_errno = this_guard.get_error();
+                return ;
+            }
+            ft_errno = FT_ERR_SUCCESSS;
+            if (other_guard.owns_lock())
+                other_guard.unlock();
+            if (other_guard.get_error() != FT_ERR_SUCCESSS)
+            {
+                ft_errno = other_guard.get_error();
+                return ;
+            }
+            ft_errno = FT_ERR_SUCCESSS;
             return (*this);
         }
         if (temp_world && temp_world->get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(temp_world->get_error());
-            game_state_restore_errno(this_guard, entry_errno);
-            game_state_restore_errno(other_guard, entry_errno);
+            if (this_guard.owns_lock())
+                this_guard.unlock();
+            if (this_guard.get_error() != FT_ERR_SUCCESSS)
+            {
+                ft_errno = this_guard.get_error();
+                return ;
+            }
+            ft_errno = FT_ERR_SUCCESSS;
+            if (other_guard.owns_lock())
+                other_guard.unlock();
+            if (other_guard.get_error() != FT_ERR_SUCCESSS)
+            {
+                ft_errno = other_guard.get_error();
+                return ;
+            }
+            ft_errno = FT_ERR_SUCCESSS;
             return (*this);
         }
         this->_worlds.push_back(temp_world);
         if (this->_worlds.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(this->_worlds.get_error());
-            game_state_restore_errno(this_guard, entry_errno);
-            game_state_restore_errno(other_guard, entry_errno);
+            if (this_guard.owns_lock())
+                this_guard.unlock();
+            if (this_guard.get_error() != FT_ERR_SUCCESSS)
+            {
+                ft_errno = this_guard.get_error();
+                return ;
+            }
+            ft_errno = FT_ERR_SUCCESSS;
+            if (other_guard.owns_lock())
+                other_guard.unlock();
+            if (other_guard.get_error() != FT_ERR_SUCCESSS)
+            {
+                ft_errno = other_guard.get_error();
+                return ;
+            }
+            ft_errno = FT_ERR_SUCCESSS;
             return (*this);
         }
         world_index++;
@@ -264,23 +369,65 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
         if (temp.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(temp.get_error());
-            game_state_restore_errno(this_guard, entry_errno);
-            game_state_restore_errno(other_guard, entry_errno);
+            if (this_guard.owns_lock())
+                this_guard.unlock();
+            if (this_guard.get_error() != FT_ERR_SUCCESSS)
+            {
+                ft_errno = this_guard.get_error();
+                return ;
+            }
+            ft_errno = FT_ERR_SUCCESSS;
+            if (other_guard.owns_lock())
+                other_guard.unlock();
+            if (other_guard.get_error() != FT_ERR_SUCCESSS)
+            {
+                ft_errno = other_guard.get_error();
+                return ;
+            }
+            ft_errno = FT_ERR_SUCCESSS;
             return (*this);
         }
         if (temp && temp->get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(temp->get_error());
-            game_state_restore_errno(this_guard, entry_errno);
-            game_state_restore_errno(other_guard, entry_errno);
+            if (this_guard.owns_lock())
+                this_guard.unlock();
+            if (this_guard.get_error() != FT_ERR_SUCCESSS)
+            {
+                ft_errno = this_guard.get_error();
+                return ;
+            }
+            ft_errno = FT_ERR_SUCCESSS;
+            if (other_guard.owns_lock())
+                other_guard.unlock();
+            if (other_guard.get_error() != FT_ERR_SUCCESSS)
+            {
+                ft_errno = other_guard.get_error();
+                return ;
+            }
+            ft_errno = FT_ERR_SUCCESSS;
             return (*this);
         }
         this->_characters.push_back(temp);
         if (this->_characters.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(this->_characters.get_error());
-            game_state_restore_errno(this_guard, entry_errno);
-            game_state_restore_errno(other_guard, entry_errno);
+            if (this_guard.owns_lock())
+                this_guard.unlock();
+            if (this_guard.get_error() != FT_ERR_SUCCESSS)
+            {
+                ft_errno = this_guard.get_error();
+                return ;
+            }
+            ft_errno = FT_ERR_SUCCESSS;
+            if (other_guard.owns_lock())
+                other_guard.unlock();
+            if (other_guard.get_error() != FT_ERR_SUCCESSS)
+            {
+                ft_errno = other_guard.get_error();
+                return ;
+            }
+            ft_errno = FT_ERR_SUCCESSS;
             return (*this);
         }
         character_index++;
@@ -289,29 +436,85 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
     if (this->_variables.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_variables.get_error());
-        game_state_restore_errno(this_guard, entry_errno);
-        game_state_restore_errno(other_guard, entry_errno);
+        if (this_guard.owns_lock())
+            this_guard.unlock();
+        if (this_guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = this_guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
+        if (other_guard.owns_lock())
+            other_guard.unlock();
+        if (other_guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = other_guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return (*this);
     }
     if (other._hooks.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other._hooks.get_error());
-        game_state_restore_errno(this_guard, entry_errno);
-        game_state_restore_errno(other_guard, entry_errno);
+        if (this_guard.owns_lock())
+            this_guard.unlock();
+        if (this_guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = this_guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
+        if (other_guard.owns_lock())
+            other_guard.unlock();
+        if (other_guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = other_guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return (*this);
     }
     this->_hooks = other._hooks;
     if (this->_hooks.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_hooks.get_error());
-        game_state_restore_errno(this_guard, entry_errno);
-        game_state_restore_errno(other_guard, entry_errno);
+        if (this_guard.owns_lock())
+            this_guard.unlock();
+        if (this_guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = this_guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
+        if (other_guard.owns_lock())
+            other_guard.unlock();
+        if (other_guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = other_guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return (*this);
     }
     this->_error_code = other._error_code;
     this->set_error(this->_error_code);
-    game_state_restore_errno(this_guard, entry_errno);
-    game_state_restore_errno(other_guard, entry_errno);
+    if (this_guard.owns_lock())
+        this_guard.unlock();
+    if (this_guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = this_guard.get_error();
+        return ;
+    }
+    ft_errno = FT_ERR_SUCCESSS;
+    if (other_guard.owns_lock())
+        other_guard.unlock();
+    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = other_guard.get_error();
+        return ;
+    }
+    ft_errno = FT_ERR_SUCCESSS;
     return (*this);
 }
 
@@ -323,9 +526,6 @@ ft_game_state::ft_game_state(ft_game_state &&other) noexcept
     _error_code(FT_ERR_SUCCESSS),
     _mutex()
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
@@ -333,7 +533,14 @@ ft_game_state::ft_game_state(ft_game_state &&other) noexcept
         this->_characters = ft_vector<ft_sharedptr<ft_character> >();
         this->_error_code = other_guard.get_error();
         this->set_error(other_guard.get_error());
-        game_state_restore_errno(other_guard, entry_errno);
+        if (other_guard.owns_lock())
+            other_guard.unlock();
+        if (other_guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = other_guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     this->_worlds = ft_move(other._worlds);
@@ -342,20 +549,41 @@ ft_game_state::ft_game_state(ft_game_state &&other) noexcept
     if (this->_variables.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_variables.get_error());
-        game_state_restore_errno(other_guard, entry_errno);
+        if (other_guard.owns_lock())
+            other_guard.unlock();
+        if (other_guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = other_guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     if (other._hooks.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other._hooks.get_error());
-        game_state_restore_errno(other_guard, entry_errno);
+        if (other_guard.owns_lock())
+            other_guard.unlock();
+        if (other_guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = other_guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     this->_hooks = ft_move(other._hooks);
     if (this->_hooks.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_hooks.get_error());
-        game_state_restore_errno(other_guard, entry_errno);
+        if (other_guard.owns_lock())
+            other_guard.unlock();
+        if (other_guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = other_guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     this->_error_code = other._error_code;
@@ -377,7 +605,14 @@ ft_game_state::ft_game_state(ft_game_state &&other) noexcept
     other._error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_error_code);
     other.set_error(FT_ERR_SUCCESSS);
-    game_state_restore_errno(other_guard, entry_errno);
+    if (other_guard.owns_lock())
+        other_guard.unlock();
+    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = other_guard.get_error();
+        return ;
+    }
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
@@ -385,12 +620,10 @@ ft_game_state &ft_game_state::operator=(ft_game_state &&other) noexcept
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_game_state::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -403,23 +636,65 @@ ft_game_state &ft_game_state::operator=(ft_game_state &&other) noexcept
     if (this->_variables.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_variables.get_error());
-        game_state_restore_errno(this_guard, entry_errno);
-        game_state_restore_errno(other_guard, entry_errno);
+        if (this_guard.owns_lock())
+            this_guard.unlock();
+        if (this_guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = this_guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
+        if (other_guard.owns_lock())
+            other_guard.unlock();
+        if (other_guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = other_guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return (*this);
     }
     if (other._hooks.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other._hooks.get_error());
-        game_state_restore_errno(this_guard, entry_errno);
-        game_state_restore_errno(other_guard, entry_errno);
+        if (this_guard.owns_lock())
+            this_guard.unlock();
+        if (this_guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = this_guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
+        if (other_guard.owns_lock())
+            other_guard.unlock();
+        if (other_guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = other_guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return (*this);
     }
     this->_hooks = ft_move(other._hooks);
     if (this->_hooks.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_hooks.get_error());
-        game_state_restore_errno(this_guard, entry_errno);
-        game_state_restore_errno(other_guard, entry_errno);
+        if (this_guard.owns_lock())
+            this_guard.unlock();
+        if (this_guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = this_guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
+        if (other_guard.owns_lock())
+            other_guard.unlock();
+        if (other_guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = other_guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return (*this);
     }
     this->_error_code = other._error_code;
@@ -441,61 +716,108 @@ ft_game_state &ft_game_state::operator=(ft_game_state &&other) noexcept
     other._error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_error_code);
     other.set_error(FT_ERR_SUCCESSS);
-    game_state_restore_errno(this_guard, entry_errno);
-    game_state_restore_errno(other_guard, entry_errno);
+    if (this_guard.owns_lock())
+        this_guard.unlock();
+    if (this_guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = this_guard.get_error();
+        return ;
+    }
+    ft_errno = FT_ERR_SUCCESSS;
+    if (other_guard.owns_lock())
+        other_guard.unlock();
+    if (other_guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = other_guard.get_error();
+        return ;
+    }
+    ft_errno = FT_ERR_SUCCESSS;
     return (*this);
 }
 
 ft_vector<ft_sharedptr<ft_world> > &ft_game_state::get_worlds() noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return (this->_worlds);
     }
-    game_state_restore_errno(guard, entry_errno);
+    if (guard.owns_lock())
+        guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = guard.get_error();
+        return ;
+    }
+    ft_errno = FT_ERR_SUCCESSS;
     return (this->_worlds);
 }
 
 ft_vector<ft_sharedptr<ft_character> > &ft_game_state::get_characters() noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return (this->_characters);
     }
-    game_state_restore_errno(guard, entry_errno);
+    if (guard.owns_lock())
+        guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = guard.get_error();
+        return ;
+    }
+    ft_errno = FT_ERR_SUCCESSS;
     return (this->_characters);
 }
 
 void ft_game_state::set_variable(const ft_string &key, const ft_string &value) noexcept
 {
-    int entry_errno;
     Pair<ft_string, ft_string> *entry;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     entry = this->_variables.find(key);
     if (this->_variables.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_variables.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     if (entry != this->_variables.end())
@@ -506,56 +828,99 @@ void ft_game_state::set_variable(const ft_string &key, const ft_string &value) n
         if (this->_variables.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(this->_variables.get_error());
-            game_state_restore_errno(guard, entry_errno);
+            if (guard.owns_lock())
+                guard.unlock();
+            if (guard.get_error() != FT_ERR_SUCCESSS)
+            {
+                ft_errno = guard.get_error();
+                return ;
+            }
+            ft_errno = FT_ERR_SUCCESSS;
             return ;
         }
     }
     this->set_error(FT_ERR_SUCCESSS);
-    game_state_restore_errno(guard, entry_errno);
+    if (guard.owns_lock())
+        guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = guard.get_error();
+        return ;
+    }
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
 const ft_string *ft_game_state::get_variable(const ft_string &key) const noexcept
 {
-    int entry_errno;
     const Pair<ft_string, ft_string> *entry;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_state *>(this)->set_error(guard.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return (ft_nullptr);
     }
     entry = this->_variables.find(key);
     if (this->_variables.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_state *>(this)->set_error(this->_variables.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return (ft_nullptr);
     }
     if (entry == this->_variables.end())
     {
         const_cast<ft_game_state *>(this)->set_error(FT_ERR_NOT_FOUND);
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return (ft_nullptr);
     }
     const_cast<ft_game_state *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_state_restore_errno(guard, entry_errno);
+    if (guard.owns_lock())
+        guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = guard.get_error();
+        return ;
+    }
+    ft_errno = FT_ERR_SUCCESSS;
     return (&entry->value);
 }
 
 void ft_game_state::remove_variable(const ft_string &key) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     this->_variables.remove(key);
@@ -563,20 +928,31 @@ void ft_game_state::remove_variable(const ft_string &key) noexcept
         this->set_error(this->_variables.get_error());
     else
         this->set_error(FT_ERR_SUCCESSS);
-    game_state_restore_errno(guard, entry_errno);
+    if (guard.owns_lock())
+        guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = guard.get_error();
+        return ;
+    }
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
 void ft_game_state::clear_variables() noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     this->_variables.clear();
@@ -584,39 +960,71 @@ void ft_game_state::clear_variables() noexcept
         this->set_error(this->_variables.get_error());
     else
         this->set_error(FT_ERR_SUCCESSS);
-    game_state_restore_errno(guard, entry_errno);
+    if (guard.owns_lock())
+        guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = guard.get_error();
+        return ;
+    }
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
 int ft_game_state::add_character(const ft_sharedptr<ft_character> &character) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return (guard.get_error());
     }
     this->set_error(FT_ERR_SUCCESSS);
     if (!character)
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return (this->_error_code);
     }
     if (character.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(character.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return (this->_error_code);
     }
     if (character->get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(character->get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return (this->_error_code);
     }
     this->_characters.push_back(character);
@@ -624,26 +1032,44 @@ int ft_game_state::add_character(const ft_sharedptr<ft_character> &character) no
         this->set_error(this->_characters.get_error());
     else
         this->set_error(FT_ERR_SUCCESSS);
-    game_state_restore_errno(guard, entry_errno);
+    if (guard.owns_lock())
+        guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = guard.get_error();
+        return ;
+    }
+    ft_errno = FT_ERR_SUCCESSS;
     return (this->_error_code);
 }
 
 void ft_game_state::remove_character(size_t index) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     if (index >= this->_characters.size())
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     this->_characters.erase(this->_characters.begin() + index);
@@ -651,91 +1077,157 @@ void ft_game_state::remove_character(size_t index) noexcept
         this->set_error(this->_characters.get_error());
     else
         this->set_error(FT_ERR_SUCCESSS);
-    game_state_restore_errno(guard, entry_errno);
+    if (guard.owns_lock())
+        guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = guard.get_error();
+        return ;
+    }
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
 void ft_game_state::set_hooks(const ft_sharedptr<ft_game_hooks> &hooks) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     if (hooks.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(hooks.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     this->_hooks = hooks;
     if (this->_hooks.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_hooks.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
-    game_state_restore_errno(guard, entry_errno);
+    if (guard.owns_lock())
+        guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = guard.get_error();
+        return ;
+    }
+    ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
 ft_sharedptr<ft_game_hooks> ft_game_state::get_hooks() const noexcept
 {
-    int entry_errno;
     ft_sharedptr<ft_game_hooks> hooks_copy;
-
-    entry_errno = ft_errno;
     hooks_copy = ft_sharedptr<ft_game_hooks>();
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_state *>(this)->set_error(guard.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return (hooks_copy);
     }
     hooks_copy = this->_hooks;
     if (hooks_copy.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_state *>(this)->set_error(hooks_copy.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return (hooks_copy);
     }
     const_cast<ft_game_state *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_state_restore_errno(guard, entry_errno);
+    if (guard.owns_lock())
+        guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = guard.get_error();
+        return ;
+    }
+    ft_errno = FT_ERR_SUCCESSS;
     return (hooks_copy);
 }
 
 void ft_game_state::reset_hooks() noexcept
 {
-    int entry_errno;
     ft_sharedptr<ft_game_hooks> hooks_copy;
-
-    entry_errno = ft_errno;
     hooks_copy = ft_sharedptr<ft_game_hooks>();
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     hooks_copy = this->_hooks;
     if (hooks_copy.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(hooks_copy.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    ft_errno = entry_errno;
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = guard.get_error();
+        return ;
+    }
+    ft_errno = FT_ERR_SUCCESSS;
     if (hooks_copy)
         hooks_copy->reset();
     return ;
@@ -743,29 +1235,45 @@ void ft_game_state::reset_hooks() noexcept
 
 void ft_game_state::dispatch_item_crafted(ft_character &character, ft_item &item) const noexcept
 {
-    int entry_errno;
     ft_sharedptr<ft_game_hooks> hooks_copy;
-
-    entry_errno = ft_errno;
     hooks_copy = ft_sharedptr<ft_game_hooks>();
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_state *>(this)->set_error(guard.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     hooks_copy = this->_hooks;
     if (hooks_copy.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_state *>(this)->set_error(hooks_copy.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     const_cast<ft_game_state *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    ft_errno = entry_errno;
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = guard.get_error();
+        return ;
+    }
+    ft_errno = FT_ERR_SUCCESSS;
     if (hooks_copy)
         hooks_copy->invoke_on_item_crafted(character, item);
     return ;
@@ -773,29 +1281,45 @@ void ft_game_state::dispatch_item_crafted(ft_character &character, ft_item &item
 
 void ft_game_state::dispatch_character_damaged(ft_character &character, int damage, uint8_t type) const noexcept
 {
-    int entry_errno;
     ft_sharedptr<ft_game_hooks> hooks_copy;
-
-    entry_errno = ft_errno;
     hooks_copy = ft_sharedptr<ft_game_hooks>();
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_state *>(this)->set_error(guard.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     hooks_copy = this->_hooks;
     if (hooks_copy.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_state *>(this)->set_error(hooks_copy.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     const_cast<ft_game_state *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    ft_errno = entry_errno;
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = guard.get_error();
+        return ;
+    }
+    ft_errno = FT_ERR_SUCCESSS;
     if (hooks_copy)
         hooks_copy->invoke_on_character_damaged(character, damage, type);
     return ;
@@ -803,29 +1327,45 @@ void ft_game_state::dispatch_character_damaged(ft_character &character, int dama
 
 void ft_game_state::dispatch_event_triggered(ft_world &world, ft_event &event) const noexcept
 {
-    int entry_errno;
     ft_sharedptr<ft_game_hooks> hooks_copy;
-
-    entry_errno = ft_errno;
     hooks_copy = ft_sharedptr<ft_game_hooks>();
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_state *>(this)->set_error(guard.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     hooks_copy = this->_hooks;
     if (hooks_copy.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_state *>(this)->set_error(hooks_copy.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
     const_cast<ft_game_state *>(this)->set_error(FT_ERR_SUCCESSS);
     if (guard.owns_lock())
         guard.unlock();
-    ft_errno = entry_errno;
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = guard.get_error();
+        return ;
+    }
+    ft_errno = FT_ERR_SUCCESSS;
     if (hooks_copy)
         hooks_copy->invoke_on_event_triggered(world, event);
     return ;
@@ -833,39 +1373,61 @@ void ft_game_state::dispatch_event_triggered(ft_world &world, ft_event &event) c
 
 int ft_game_state::get_error() const noexcept
 {
-    int entry_errno;
     int error_code;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_state *>(this)->set_error(guard.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return (guard.get_error());
     }
     error_code = this->_error_code;
     const_cast<ft_game_state *>(this)->set_error(error_code);
-    game_state_restore_errno(guard, entry_errno);
+    if (guard.owns_lock())
+        guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = guard.get_error();
+        return ;
+    }
+    ft_errno = FT_ERR_SUCCESSS;
     return (error_code);
 }
 
 const char *ft_game_state::get_error_str() const noexcept
 {
-    int entry_errno;
     int error_code;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_state *>(this)->set_error(guard.get_error());
-        game_state_restore_errno(guard, entry_errno);
+        if (guard.owns_lock())
+            guard.unlock();
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            ft_errno = guard.get_error();
+            return ;
+        }
+        ft_errno = FT_ERR_SUCCESSS;
         return (ft_strerror(guard.get_error()));
     }
     error_code = this->_error_code;
     const_cast<ft_game_state *>(this)->set_error(error_code);
-    game_state_restore_errno(guard, entry_errno);
+    if (guard.owns_lock())
+        guard.unlock();
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = guard.get_error();
+        return ;
+    }
+    ft_errno = FT_ERR_SUCCESSS;
     return (ft_strerror(error_code));
 }
 
