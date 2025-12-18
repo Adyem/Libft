@@ -21,8 +21,7 @@ class ft_map3d
 
         void    set_error(int err) const noexcept;
 
-        static void restore_errno(ft_unique_lock<pt_mutex> &guard,
-                int entry_errno) noexcept;
+        static void finalize_lock(ft_unique_lock<pt_mutex> &guard) noexcept;
         static void sleep_backoff() noexcept;
         static int lock_pair(const ft_map3d &first, const ft_map3d &second,
                 ft_unique_lock<pt_mutex> &first_guard,

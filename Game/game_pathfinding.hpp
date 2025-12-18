@@ -50,8 +50,7 @@ class ft_pathfinding
         mutable pt_mutex    _mutex;
 
         void    set_error(int error) const noexcept;
-        static void restore_errno(ft_unique_lock<pt_mutex> &guard,
-                int entry_errno) noexcept;
+        static void finalize_lock(ft_unique_lock<pt_mutex> &guard) noexcept;
         static void sleep_backoff() noexcept;
         static int lock_pair(const ft_pathfinding &first, const ft_pathfinding &second,
                 ft_unique_lock<pt_mutex> &first_guard,
