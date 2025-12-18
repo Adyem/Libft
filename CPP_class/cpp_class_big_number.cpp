@@ -316,7 +316,6 @@ ft_big_number::ft_big_number(const ft_big_number& other) noexcept
     ft_big_number_mutex_guard other_guard;
         int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = other.lock_self(other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -356,7 +355,6 @@ ft_big_number::ft_big_number(ft_big_number&& other) noexcept
     ft_big_number_mutex_guard other_guard;
         int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = other.lock_self(other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -393,7 +391,6 @@ ft_big_number& ft_big_number::operator=(const ft_big_number& other) noexcept
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -430,7 +427,6 @@ ft_big_number& ft_big_number::operator=(ft_big_number&& other) noexcept
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -723,7 +719,6 @@ void ft_big_number::assign(const char* number) noexcept
     ft_size_t length;
     ft_size_t index;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -791,7 +786,6 @@ void ft_big_number::assign_base(const char* digits, int base) noexcept
     bool parsed_negative;
     ft_size_t index;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -915,7 +909,6 @@ void ft_big_number::append_digit(char digit) noexcept
     ft_big_number_mutex_guard guard;
         int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -932,7 +925,6 @@ void ft_big_number::append(const char* digits) noexcept
     ft_big_number_mutex_guard guard;
         int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -949,7 +941,6 @@ void ft_big_number::append_unsigned(unsigned long value) noexcept
     ft_big_number_mutex_guard guard;
         int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -966,7 +957,6 @@ void ft_big_number::trim_leading_zeros() noexcept
     ft_big_number_mutex_guard guard;
         int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -983,7 +973,6 @@ void ft_big_number::reduce_to(ft_size_t new_size) noexcept
     ft_big_number_mutex_guard guard;
         int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -1000,7 +989,6 @@ void ft_big_number::clear() noexcept
     ft_big_number_mutex_guard guard;
         int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -1019,7 +1007,6 @@ ft_big_number ft_big_number::operator+(const ft_big_number& other) const noexcep
     ft_big_number result;
         int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -1080,7 +1067,6 @@ ft_big_number ft_big_number::operator-(const ft_big_number& other) const noexcep
     bool lhs_negative;
     bool rhs_negative;
 
-    entry_errno = ft_errno;
     lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -1142,7 +1128,6 @@ ft_big_number ft_big_number::operator*(const ft_big_number& other) const noexcep
     ft_big_number result;
         int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -1240,7 +1225,6 @@ ft_big_number ft_big_number::operator/(const ft_big_number& other) const noexcep
     ft_big_number result;
         int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -1336,7 +1320,6 @@ ft_big_number ft_big_number::operator%(const ft_big_number& other) const noexcep
         int lock_error;
     bool original_negative;
 
-    entry_errno = ft_errno;
     lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -1465,7 +1448,6 @@ bool ft_big_number::operator<(const ft_big_number& other) const noexcept
     bool result;
         int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -1520,7 +1502,6 @@ bool ft_big_number::operator==(const ft_big_number& other) const noexcept
     bool are_equal;
         int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -1564,7 +1545,6 @@ const char* ft_big_number::c_str() const noexcept
     const char* digits_pointer;
         int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -1585,7 +1565,6 @@ ft_size_t ft_big_number::size() const noexcept
     ft_size_t current_size;
         int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -1603,7 +1582,6 @@ bool ft_big_number::empty() const noexcept
     bool is_empty_result;
         int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -1621,7 +1599,6 @@ bool ft_big_number::is_negative() const noexcept
     bool result;
         int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -1642,7 +1619,6 @@ bool ft_big_number::is_positive() const noexcept
     bool result;
         int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -1669,7 +1645,6 @@ ft_string ft_big_number::to_string_base(int base) noexcept
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (ft_string(FT_ERR_INVALID_ARGUMENT));
     }
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -1969,7 +1944,6 @@ const char* ft_big_number::get_error_str() const noexcept
         int lock_error;
     const char* error_string;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {

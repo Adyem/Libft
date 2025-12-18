@@ -28,7 +28,7 @@ class ft_websocket_server
         mutable pt_mutex _mutex;
         std::map<int, s_connection_state> _connection_states;
 
-        static void restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno) noexcept;
+        static void finalize_lock(ft_unique_lock<pt_mutex> &guard) noexcept;
 
         void set_error(int error_code) const;
         void store_connection_state_locked(int client_fd, bool permessage_deflate_enabled);

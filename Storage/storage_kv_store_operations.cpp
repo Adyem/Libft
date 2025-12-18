@@ -28,6 +28,13 @@
 
 const char *g_kv_store_ttl_prefix = "__ttl__";
 
+static void kv_store_finalize_lock(ft_unique_lock<pt_mutex> &guard) noexcept
+{
+    if (guard.owns_lock())
+        guard.unlock();
+    return ;
+}
+
 int kv_store::lock_replication(ft_unique_lock<pt_mutex> &guard) const noexcept
 {
     ft_unique_lock<pt_mutex> local_guard(this->_replication_mutex);
@@ -83,7 +90,6 @@ int kv_store::notify_replication_listeners(const ft_vector<kv_store_operation> &
     ft_vector<kv_store_replication_sink> listeners_copy;
     size_t listener_count;
     size_t listener_index;
-    int entry_errno;
     int lock_error;
 
     mutable_this = const_cast<kv_store *>(this);
@@ -103,26 +109,25 @@ int kv_store::notify_replication_listeners(const ft_vector<kv_store_operation> &
         mutable_this->set_error(FT_ERR_SUCCESSS);
         return (0);
     }
-    entry_errno = ft_errno;
     lock_error = mutable_this->lock_replication(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         mutable_this->set_error_unlocked(lock_error);
-        kv_store::restore_errno(guard, entry_errno);
+        kv_store_finalize_lock(guard);
         return (-1);
     }
     listeners_copy = ft_vector<kv_store_replication_sink>();
     if (listeners_copy.get_error() != FT_ERR_SUCCESSS)
     {
         mutable_this->set_error_unlocked(listeners_copy.get_error());
-        kv_store::restore_errno(guard, entry_errno);
+        kv_store_finalize_lock(guard);
         return (-1);
     }
     listener_count = mutable_this->_replication_sinks.size();
     if (mutable_this->_replication_sinks.get_error() != FT_ERR_SUCCESSS)
     {
         mutable_this->set_error_unlocked(mutable_this->_replication_sinks.get_error());
-        kv_store::restore_errno(guard, entry_errno);
+        kv_store_finalize_lock(guard);
         return (-1);
     }
     listener_index = 0;
@@ -134,20 +139,20 @@ int kv_store::notify_replication_listeners(const ft_vector<kv_store_operation> &
         if (mutable_this->_replication_sinks.get_error() != FT_ERR_SUCCESSS)
         {
             mutable_this->set_error_unlocked(mutable_this->_replication_sinks.get_error());
-            kv_store::restore_errno(guard, entry_errno);
+            kv_store_finalize_lock(guard);
             return (-1);
         }
         listeners_copy.push_back(sink_entry);
         if (listeners_copy.get_error() != FT_ERR_SUCCESSS)
         {
             mutable_this->set_error_unlocked(listeners_copy.get_error());
-            kv_store::restore_errno(guard, entry_errno);
+            kv_store_finalize_lock(guard);
             return (-1);
         }
         listener_index++;
     }
     mutable_this->set_error_unlocked(FT_ERR_SUCCESSS);
-    kv_store::restore_errno(guard, entry_errno);
+    kv_store_finalize_lock(guard);
     listener_count = listeners_copy.size();
     if (listeners_copy.get_error() != FT_ERR_SUCCESSS)
     {
@@ -189,7 +194,6 @@ int kv_store::register_replication_sink(kv_store_replication_operations_callback
     kv_store_replication_sink sink_entry;
     size_t listener_count;
     size_t listener_index;
-    int entry_errno;
     int lock_error;
 
     if (operations_callback == ft_nullptr && snapshot_callback == ft_nullptr)
@@ -197,19 +201,18 @@ int kv_store::register_replication_sink(kv_store_replication_operations_callback
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         return (-1);
     }
-    entry_errno = ft_errno;
     lock_error = this->lock_replication(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        kv_store::restore_errno(guard, entry_errno);
+        kv_store_finalize_lock(guard);
         return (-1);
     }
     listener_count = this->_replication_sinks.size();
     if (this->_replication_sinks.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(this->_replication_sinks.get_error());
-        kv_store::restore_errno(guard, entry_errno);
+        kv_store_finalize_lock(guard);
         return (-1);
     }
     listener_index = 0;
@@ -220,7 +223,7 @@ int kv_store::register_replication_sink(kv_store_replication_operations_callback
         if (this->_replication_sinks.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error_unlocked(this->_replication_sinks.get_error());
-            kv_store::restore_errno(guard, entry_errno);
+            kv_store_finalize_lock(guard);
             return (-1);
         }
         if (existing._operations_callback == operations_callback
@@ -228,7 +231,7 @@ int kv_store::register_replication_sink(kv_store_replication_operations_callback
             && existing._user_data == user_data)
         {
             this->set_error_unlocked(FT_ERR_ALREADY_EXISTS);
-            kv_store::restore_errno(guard, entry_errno);
+            kv_store_finalize_lock(guard);
             return (-1);
         }
         listener_index++;
@@ -240,11 +243,11 @@ int kv_store::register_replication_sink(kv_store_replication_operations_callback
     if (this->_replication_sinks.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(this->_replication_sinks.get_error());
-        kv_store::restore_errno(guard, entry_errno);
+        kv_store_finalize_lock(guard);
         return (-1);
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    kv_store::restore_errno(guard, entry_errno);
+    kv_store_finalize_lock(guard);
     if (ship_initial_snapshot && snapshot_callback != ft_nullptr)
         return (this->dispatch_snapshot_to_sink(snapshot_callback, user_data));
     return (0);
@@ -257,22 +260,20 @@ int kv_store::unregister_replication_sink(kv_store_replication_operations_callba
     size_t listener_count;
     size_t listener_index;
     bool removed;
-    int entry_errno;
     int lock_error;
 
-    entry_errno = ft_errno;
     lock_error = this->lock_replication(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        kv_store::restore_errno(guard, entry_errno);
+        kv_store_finalize_lock(guard);
         return (-1);
     }
     listener_count = this->_replication_sinks.size();
     if (this->_replication_sinks.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(this->_replication_sinks.get_error());
-        kv_store::restore_errno(guard, entry_errno);
+        kv_store_finalize_lock(guard);
         return (-1);
     }
     listener_index = 0;
@@ -284,7 +285,7 @@ int kv_store::unregister_replication_sink(kv_store_replication_operations_callba
         if (this->_replication_sinks.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error_unlocked(this->_replication_sinks.get_error());
-            kv_store::restore_errno(guard, entry_errno);
+            kv_store_finalize_lock(guard);
             return (-1);
         }
         if (existing._operations_callback == operations_callback
@@ -295,7 +296,7 @@ int kv_store::unregister_replication_sink(kv_store_replication_operations_callba
             if (this->_replication_sinks.get_error() != FT_ERR_SUCCESSS)
             {
                 this->set_error_unlocked(this->_replication_sinks.get_error());
-                kv_store::restore_errno(guard, entry_errno);
+                kv_store_finalize_lock(guard);
                 return (-1);
             }
             removed = true;
@@ -307,7 +308,7 @@ int kv_store::unregister_replication_sink(kv_store_replication_operations_callba
         this->set_error_unlocked(FT_ERR_NOT_FOUND);
     else
         this->set_error_unlocked(FT_ERR_SUCCESSS);
-    kv_store::restore_errno(guard, entry_errno);
+    kv_store_finalize_lock(guard);
     if (removed == false)
         return (-1);
     return (0);

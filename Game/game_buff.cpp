@@ -10,12 +10,12 @@ static void game_buff_sleep_backoff()
     return ;
 }
 
-static void game_buff_restore_errno(ft_unique_lock<pt_mutex> &guard,
-        int entry_errno)
+static void game_buff_finalize_lock(ft_unique_lock<pt_mutex> &guard)
 {
     if (guard.owns_lock())
         guard.unlock();
-    (void)entry_errno;
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+        ft_errno = guard.get_error();
     return ;
 }
 
@@ -101,14 +101,12 @@ ft_buff::ft_buff(const ft_buff &other) noexcept
     : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0),
       _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        game_buff_restore_errno(other_guard, entry_errno);
+        game_buff_finalize_lock(other_guard);
         return ;
     }
     this->_id = other._id;
@@ -119,7 +117,7 @@ ft_buff::ft_buff(const ft_buff &other) noexcept
     this->_modifier4 = other._modifier4;
     this->_error = other._error;
     this->set_error(other._error);
-    game_buff_restore_errno(other_guard, entry_errno);
+    game_buff_finalize_lock(other_guard);
     return ;
 }
 
@@ -127,12 +125,10 @@ ft_buff &ft_buff::operator=(const ft_buff &other) noexcept
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_buff::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -147,8 +143,8 @@ ft_buff &ft_buff::operator=(const ft_buff &other) noexcept
     this->_modifier4 = other._modifier4;
     this->_error = other._error;
     this->set_error(other._error);
-    game_buff_restore_errno(this_guard, entry_errno);
-    game_buff_restore_errno(other_guard, entry_errno);
+    game_buff_finalize_lock(this_guard);
+    game_buff_finalize_lock(other_guard);
     return (*this);
 }
 
@@ -156,14 +152,12 @@ ft_buff::ft_buff(ft_buff &&other) noexcept
     : _id(0), _duration(0), _modifier1(0), _modifier2(0), _modifier3(0),
       _modifier4(0), _error(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        game_buff_restore_errno(other_guard, entry_errno);
+        game_buff_finalize_lock(other_guard);
         return ;
     }
     this->_id = other._id;
@@ -182,7 +176,7 @@ ft_buff::ft_buff(ft_buff &&other) noexcept
     other._error = FT_ERR_SUCCESSS;
     this->set_error(this->_error);
     other.set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(other_guard, entry_errno);
+    game_buff_finalize_lock(other_guard);
     return ;
 }
 
@@ -190,12 +184,10 @@ ft_buff &ft_buff::operator=(ft_buff &&other) noexcept
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_buff::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -218,472 +210,424 @@ ft_buff &ft_buff::operator=(ft_buff &&other) noexcept
     other._error = FT_ERR_SUCCESSS;
     this->set_error(this->_error);
     other.set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(this_guard, entry_errno);
-    game_buff_restore_errno(other_guard, entry_errno);
+    game_buff_finalize_lock(this_guard);
+    game_buff_finalize_lock(other_guard);
     return (*this);
 }
 
 int ft_buff::get_id() const noexcept
 {
-    int entry_errno;
     int identifier;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_buff *>(this)->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return (0);
     }
     identifier = this->_id;
     const_cast<ft_buff *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return (identifier);
 }
 
 void ft_buff::set_id(int id) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return ;
     }
     if (id < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return ;
     }
     this->_id = id;
     this->set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return ;
 }
 
 int ft_buff::get_duration() const noexcept
 {
-    int entry_errno;
     int duration_value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_buff *>(this)->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return (0);
     }
     duration_value = this->_duration;
     const_cast<ft_buff *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return (duration_value);
 }
 
 void ft_buff::set_duration(int duration) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return ;
     }
     if (duration < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return ;
     }
     this->_duration = duration;
     this->set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return ;
 }
 
 void ft_buff::add_duration(int duration) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return ;
     }
     if (duration < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return ;
     }
     this->_duration += duration;
     this->set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return ;
 }
 
 void ft_buff::sub_duration(int duration) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return ;
     }
     if (duration < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return ;
     }
     this->_duration -= duration;
     this->set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return ;
 }
 
 int ft_buff::get_modifier1() const noexcept
 {
-    int entry_errno;
     int modifier_value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_buff *>(this)->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return (0);
     }
     modifier_value = this->_modifier1;
     const_cast<ft_buff *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return (modifier_value);
 }
 
 void ft_buff::set_modifier1(int mod) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return ;
     }
     this->_modifier1 = mod;
     this->set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return ;
 }
 
 void ft_buff::add_modifier1(int mod) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return ;
     }
     this->_modifier1 += mod;
     this->set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return ;
 }
 
 void ft_buff::sub_modifier1(int mod) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return ;
     }
     this->_modifier1 -= mod;
     this->set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return ;
 }
 
 int ft_buff::get_modifier2() const noexcept
 {
-    int entry_errno;
     int modifier_value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_buff *>(this)->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return (0);
     }
     modifier_value = this->_modifier2;
     const_cast<ft_buff *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return (modifier_value);
 }
 
 void ft_buff::set_modifier2(int mod) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return ;
     }
     this->_modifier2 = mod;
     this->set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return ;
 }
 
 void ft_buff::add_modifier2(int mod) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return ;
     }
     this->_modifier2 += mod;
     this->set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return ;
 }
 
 void ft_buff::sub_modifier2(int mod) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return ;
     }
     this->_modifier2 -= mod;
     this->set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return ;
 }
 
 int ft_buff::get_modifier3() const noexcept
 {
-    int entry_errno;
     int modifier_value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_buff *>(this)->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return (0);
     }
     modifier_value = this->_modifier3;
     const_cast<ft_buff *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return (modifier_value);
 }
 
 void ft_buff::set_modifier3(int mod) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return ;
     }
     this->_modifier3 = mod;
     this->set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return ;
 }
 
 void ft_buff::add_modifier3(int mod) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return ;
     }
     this->_modifier3 += mod;
     this->set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return ;
 }
 
 void ft_buff::sub_modifier3(int mod) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return ;
     }
     this->_modifier3 -= mod;
     this->set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return ;
 }
 
 int ft_buff::get_modifier4() const noexcept
 {
-    int entry_errno;
     int modifier_value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_buff *>(this)->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return (0);
     }
     modifier_value = this->_modifier4;
     const_cast<ft_buff *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return (modifier_value);
 }
 
 void ft_buff::set_modifier4(int mod) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return ;
     }
     this->_modifier4 = mod;
     this->set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return ;
 }
 
 void ft_buff::add_modifier4(int mod) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return ;
     }
     this->_modifier4 += mod;
     this->set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return ;
 }
 
 void ft_buff::sub_modifier4(int mod) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return ;
     }
     this->_modifier4 -= mod;
     this->set_error(FT_ERR_SUCCESSS);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return ;
 }
 
 int ft_buff::get_error() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_buff *>(this)->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return (guard.get_error());
     }
     error_code = this->_error;
     const_cast<ft_buff *>(this)->set_error(error_code);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return (error_code);
 }
 
 const char *ft_buff::get_error_str() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_buff *>(this)->set_error(guard.get_error());
-        game_buff_restore_errno(guard, entry_errno);
+        game_buff_finalize_lock(guard);
         return (ft_strerror(guard.get_error()));
     }
     error_code = this->_error;
     const_cast<ft_buff *>(this)->set_error(error_code);
-    game_buff_restore_errno(guard, entry_errno);
+    game_buff_finalize_lock(guard);
     return (ft_strerror(error_code));
 }
 
