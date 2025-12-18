@@ -93,11 +93,11 @@ int ft_istream::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
     return (FT_ERR_SUCCESSS);
 }
 
-void ft_istream::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno, bool restore_previous_on_success) noexcept
+void ft_istream::finalize_lock(ft_unique_lock<pt_mutex> &guard) noexcept
 {
-    int operation_errno;
+    int current_errno;
 
-    operation_errno = ft_errno;
+    current_errno = ft_errno;
     if (guard.owns_lock())
         guard.unlock();
     if (guard.get_error() != FT_ERR_SUCCESSS)
@@ -105,14 +105,9 @@ void ft_istream::restore_errno(ft_unique_lock<pt_mutex> &guard, int entry_errno,
         ft_errno = guard.get_error();
         return ;
     }
-    if (operation_errno != FT_ERR_SUCCESSS)
+    if (current_errno != FT_ERR_SUCCESSS)
     {
-        ft_errno = operation_errno;
-        return ;
-    }
-    if (restore_previous_on_success)
-    {
-        ft_errno = entry_errno;
+        ft_errno = current_errno;
         return ;
     }
     ft_errno = FT_ERR_SUCCESSS;
@@ -192,12 +187,10 @@ ft_istream &ft_istream::operator=(const ft_istream &other) noexcept
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_istream::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -208,8 +201,8 @@ ft_istream &ft_istream::operator=(const ft_istream &other) noexcept
     this->_bad = other._bad;
     this->_error_code = other._error_code;
     this->set_error_unlocked(other._error_code);
-    ft_istream::restore_errno(this_guard, entry_errno);
-    ft_istream::restore_errno(other_guard, entry_errno);
+    ft_istream::finalize_lock(this_guard);
+    ft_istream::finalize_lock(other_guard);
     return (*this);
 }
 
@@ -217,12 +210,10 @@ ft_istream &ft_istream::operator=(ft_istream &&other) noexcept
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_istream::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -237,27 +228,24 @@ ft_istream &ft_istream::operator=(ft_istream &&other) noexcept
     other._bad = false;
     other._error_code = FT_ERR_SUCCESSS;
     other.set_error_unlocked(FT_ERR_SUCCESSS);
-    ft_istream::restore_errno(this_guard, entry_errno);
-    ft_istream::restore_errno(other_guard, entry_errno);
+    ft_istream::finalize_lock(this_guard);
+    ft_istream::finalize_lock(other_guard);
     return (*this);
 }
 
 void ft_istream::read(char *buffer, std::size_t count)
 {
-    int entry_errno;
     int lock_error;
     std::size_t readed;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard;
-    ft_errno = entry_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
         this->_bad = true;
         this->_gcount = 0;
-        ft_istream::restore_errno(guard, entry_errno);
+        ft_istream::finalize_lock(guard);
         return ;
     }
     this->_error_code = FT_ERR_SUCCESSS;
@@ -267,97 +255,85 @@ void ft_istream::read(char *buffer, std::size_t count)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
         this->_bad = true;
-        ft_istream::restore_errno(guard, entry_errno);
+        ft_istream::finalize_lock(guard);
         return ;
     }
     readed = this->do_read(buffer, count);
     this->_gcount = readed;
     if (this->_error_code != FT_ERR_SUCCESSS)
         this->_bad = true;
-    ft_istream::restore_errno(guard, entry_errno, false);
+    ft_istream::finalize_lock(guard);
     return ;
 }
 
 std::size_t ft_istream::gcount() const noexcept
 {
-    int entry_errno;
     int lock_error;
     std::size_t count_value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard;
-    ft_errno = entry_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_istream::restore_errno(guard, entry_errno);
+        ft_istream::finalize_lock(guard);
         return (0);
     }
     count_value = this->_gcount;
-    ft_istream::restore_errno(guard, entry_errno);
+    ft_istream::finalize_lock(guard);
     return (count_value);
 }
 
 bool ft_istream::bad() const noexcept
 {
-    int entry_errno;
     int lock_error;
     bool is_bad_result;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard;
-    ft_errno = entry_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_istream::restore_errno(guard, entry_errno);
+        ft_istream::finalize_lock(guard);
         return (true);
     }
     is_bad_result = this->_bad;
-    ft_istream::restore_errno(guard, entry_errno);
+    ft_istream::finalize_lock(guard);
     return (is_bad_result);
 }
 
 int ft_istream::get_error() const noexcept
 {
-    int entry_errno;
     int lock_error;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard;
-    ft_errno = entry_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_istream::restore_errno(guard, entry_errno);
+        ft_istream::finalize_lock(guard);
         return (lock_error);
     }
     error_code = this->_error_code;
-    ft_istream::restore_errno(guard, entry_errno);
+    ft_istream::finalize_lock(guard);
     return (error_code);
 }
 
 const char *ft_istream::get_error_str() const noexcept
 {
-    int entry_errno;
     int lock_error;
     const char *error_string;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard;
-    ft_errno = entry_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_istream::restore_errno(guard, entry_errno);
+        ft_istream::finalize_lock(guard);
         return (ft_strerror(lock_error));
     }
     error_string = ft_strerror(this->_error_code);
-    ft_istream::restore_errno(guard, entry_errno);
+    ft_istream::finalize_lock(guard);
     return (error_string);
 }

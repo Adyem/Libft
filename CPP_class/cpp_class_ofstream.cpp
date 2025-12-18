@@ -42,7 +42,7 @@ int ft_ofstream::lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept
     return (FT_ERR_SUCCESSS);
 }
 
-void ft_ofstream::restore_errno(ft_unique_lock<pt_mutex> &guard) noexcept
+void ft_ofstream::finalize_lock(ft_unique_lock<pt_mutex> &guard) noexcept
 {
     int operation_errno;
 
@@ -73,24 +73,24 @@ int ft_ofstream::open(const char *filename) noexcept
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_ofstream::restore_errno(guard);
+        ft_ofstream::finalize_lock(guard);
         return (1);
     }
     if (filename == ft_nullptr)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        ft_ofstream::restore_errno(guard);
+        ft_ofstream::finalize_lock(guard);
         return (1);
     }
     open_result = this->_file.open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (open_result != 0)
     {
         this->set_error_unlocked(this->_file.get_error());
-        ft_ofstream::restore_errno(guard);
+        ft_ofstream::finalize_lock(guard);
         return (1);
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    ft_ofstream::restore_errno(guard);
+    ft_ofstream::finalize_lock(guard);
     return (0);
 }
 
@@ -104,24 +104,24 @@ ssize_t ft_ofstream::write(const char *string) noexcept
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_ofstream::restore_errno(guard);
+        ft_ofstream::finalize_lock(guard);
         return (-1);
     }
     if (string == ft_nullptr)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        ft_ofstream::restore_errno(guard);
+        ft_ofstream::finalize_lock(guard);
         return (-1);
     }
     result = this->_file.write(string);
     if (result < 0)
     {
         this->set_error_unlocked(this->_file.get_error());
-        ft_ofstream::restore_errno(guard);
+        ft_ofstream::finalize_lock(guard);
         return (-1);
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    ft_ofstream::restore_errno(guard);
+    ft_ofstream::finalize_lock(guard);
     return (result);
 }
 
@@ -137,7 +137,7 @@ void ft_ofstream::close() noexcept
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_ofstream::restore_errno(guard);
+        ft_ofstream::finalize_lock(guard);
         return ;
     }
     previous_fd = this->_file.get_fd();
@@ -147,11 +147,11 @@ void ft_ofstream::close() noexcept
     if (previous_fd >= 0 && current_fd == previous_fd && file_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(file_error);
-        ft_ofstream::restore_errno(guard);
+        ft_ofstream::finalize_lock(guard);
         return ;
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    ft_ofstream::restore_errno(guard);
+    ft_ofstream::finalize_lock(guard);
     return ;
 }
 
@@ -165,11 +165,11 @@ int ft_ofstream::get_error() const noexcept
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_ofstream::restore_errno(guard);
+        ft_ofstream::finalize_lock(guard);
         return (lock_error);
     }
     error_value = this->_error_code;
-    ft_ofstream::restore_errno(guard);
+    ft_ofstream::finalize_lock(guard);
     return (error_value);
 }
 
@@ -183,10 +183,10 @@ const char *ft_ofstream::get_error_str() const noexcept
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_ofstream::restore_errno(guard);
+        ft_ofstream::finalize_lock(guard);
         return (ft_strerror(lock_error));
     }
     error_string = ft_strerror(this->_error_code);
-    ft_ofstream::restore_errno(guard);
+    ft_ofstream::finalize_lock(guard);
     return (error_string);
 }

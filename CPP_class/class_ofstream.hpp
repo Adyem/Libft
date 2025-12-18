@@ -16,7 +16,7 @@ class ft_ofstream
         void set_error_unlocked(int error_code) const noexcept;
         void set_error(int error_code) const noexcept;
         int lock_self(ft_unique_lock<pt_mutex> &guard) const noexcept;
-        static void restore_errno(ft_unique_lock<pt_mutex> &guard) noexcept;
+        static void finalize_lock(ft_unique_lock<pt_mutex> &guard) noexcept;
 
     public:
         ft_ofstream() noexcept;
