@@ -27,7 +27,7 @@ class DataBuffer
                 ft_unique_lock<pt_mutex> &first_guard,
                 ft_unique_lock<pt_mutex> &second_guard) noexcept;
         static void sleep_backoff() noexcept;
-        static void restore_errno(ft_unique_lock<pt_mutex> &guard, int target_errno) noexcept;
+        static void finalize_lock(ft_unique_lock<pt_mutex> &guard, int target_errno) noexcept;
         int write_length_locked(size_t len) noexcept;
         int read_length_locked(size_t &len) noexcept;
 
@@ -83,7 +83,7 @@ DataBuffer& DataBuffer::operator<<(const T& value)
     {
         this->_ok = false;
         this->set_error_unlocked(FT_ERR_NO_MEMORY);
-        DataBuffer::restore_errno(guard, ft_errno);
+        DataBuffer::finalize_lock(guard, ft_errno);
         return (*this);
     }
     len = ft_strlen_size_t(bytes);
@@ -93,7 +93,7 @@ DataBuffer& DataBuffer::operator<<(const T& value)
         this->_ok = false;
         this->set_error_unlocked(length_error);
         cma_free(bytes);
-        DataBuffer::restore_errno(guard, ft_errno);
+        DataBuffer::finalize_lock(guard, ft_errno);
         return (*this);
     }
     index = 0;
@@ -105,7 +105,7 @@ DataBuffer& DataBuffer::operator<<(const T& value)
             this->_ok = false;
             this->set_error_unlocked(this->_buffer.get_error());
             cma_free(bytes);
-            DataBuffer::restore_errno(guard, ft_errno);
+            DataBuffer::finalize_lock(guard, ft_errno);
             return (*this);
         }
         ++index;
@@ -113,7 +113,7 @@ DataBuffer& DataBuffer::operator<<(const T& value)
     cma_free(bytes);
     this->_ok = true;
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    DataBuffer::restore_errno(guard, FT_ERR_SUCCESSS);
+    DataBuffer::finalize_lock(guard, FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -137,14 +137,14 @@ DataBuffer& DataBuffer::operator>>(T& value)
     {
         this->_ok = false;
         this->set_error_unlocked(length_error);
-        DataBuffer::restore_errno(guard, ft_errno);
+        DataBuffer::finalize_lock(guard, ft_errno);
         return (*this);
     }
     if (this->_read_pos + len > this->_buffer.size())
     {
         this->_ok = false;
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        DataBuffer::restore_errno(guard, ft_errno);
+        DataBuffer::finalize_lock(guard, ft_errno);
         return (*this);
     }
     bytes = static_cast<char*>(cma_calloc(len + 1, sizeof(char)));
@@ -152,7 +152,7 @@ DataBuffer& DataBuffer::operator>>(T& value)
     {
         this->_ok = false;
         this->set_error_unlocked(FT_ERR_NO_MEMORY);
-        DataBuffer::restore_errno(guard, ft_errno);
+        DataBuffer::finalize_lock(guard, ft_errno);
         return (*this);
     }
     ft_memcpy(bytes, this->_buffer.begin() + this->_read_pos, len);
@@ -166,7 +166,7 @@ DataBuffer& DataBuffer::operator>>(T& value)
         this->set_error_unlocked(FT_ERR_SUCCESSS);
     else
         this->set_error_unlocked(iss.get_error());
-    DataBuffer::restore_errno(guard, FT_ERR_SUCCESSS);
+    DataBuffer::finalize_lock(guard, FT_ERR_SUCCESSS);
     return (*this);
 }
 
