@@ -302,7 +302,7 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
             if (this_guard.get_error() != FT_ERR_SUCCESSS)
             {
                 ft_errno = this_guard.get_error();
-                return ;
+                return (*this);
             }
             ft_errno = FT_ERR_SUCCESSS;
             if (other_guard.owns_lock())
@@ -310,7 +310,7 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
             if (other_guard.get_error() != FT_ERR_SUCCESSS)
             {
                 ft_errno = other_guard.get_error();
-                return ;
+                return (*this);
             }
             ft_errno = FT_ERR_SUCCESSS;
             return (*this);
@@ -323,7 +323,7 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
             if (this_guard.get_error() != FT_ERR_SUCCESSS)
             {
                 ft_errno = this_guard.get_error();
-                return ;
+                return (*this);
             }
             ft_errno = FT_ERR_SUCCESSS;
             if (other_guard.owns_lock())
@@ -331,7 +331,7 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
             if (other_guard.get_error() != FT_ERR_SUCCESSS)
             {
                 ft_errno = other_guard.get_error();
-                return ;
+                return (*this);
             }
             ft_errno = FT_ERR_SUCCESSS;
             return (*this);
@@ -345,7 +345,7 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
             if (this_guard.get_error() != FT_ERR_SUCCESSS)
             {
                 ft_errno = this_guard.get_error();
-                return ;
+                return (*this);
             }
             ft_errno = FT_ERR_SUCCESSS;
             if (other_guard.owns_lock())
@@ -353,7 +353,7 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
             if (other_guard.get_error() != FT_ERR_SUCCESSS)
             {
                 ft_errno = other_guard.get_error();
-                return ;
+                return (*this);
             }
             ft_errno = FT_ERR_SUCCESSS;
             return (*this);
@@ -374,7 +374,7 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
             if (this_guard.get_error() != FT_ERR_SUCCESSS)
             {
                 ft_errno = this_guard.get_error();
-                return ;
+                return (*this);
             }
             ft_errno = FT_ERR_SUCCESSS;
             if (other_guard.owns_lock())
@@ -382,7 +382,7 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
             if (other_guard.get_error() != FT_ERR_SUCCESSS)
             {
                 ft_errno = other_guard.get_error();
-                return ;
+                return (*this);
             }
             ft_errno = FT_ERR_SUCCESSS;
             return (*this);
@@ -395,7 +395,7 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
             if (this_guard.get_error() != FT_ERR_SUCCESSS)
             {
                 ft_errno = this_guard.get_error();
-                return ;
+                return (*this);
             }
             ft_errno = FT_ERR_SUCCESSS;
             if (other_guard.owns_lock())
@@ -403,7 +403,7 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
             if (other_guard.get_error() != FT_ERR_SUCCESSS)
             {
                 ft_errno = other_guard.get_error();
-                return ;
+                return (*this);
             }
             ft_errno = FT_ERR_SUCCESSS;
             return (*this);
@@ -417,7 +417,7 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
             if (this_guard.get_error() != FT_ERR_SUCCESSS)
             {
                 ft_errno = this_guard.get_error();
-                return ;
+                return (*this);
             }
             ft_errno = FT_ERR_SUCCESSS;
             if (other_guard.owns_lock())
@@ -425,7 +425,7 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
             if (other_guard.get_error() != FT_ERR_SUCCESSS)
             {
                 ft_errno = other_guard.get_error();
-                return ;
+                return (*this);
             }
             ft_errno = FT_ERR_SUCCESSS;
             return (*this);
@@ -441,7 +441,7 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
         if (this_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = this_guard.get_error();
-            return ;
+            return (*this);
         }
         ft_errno = FT_ERR_SUCCESSS;
         if (other_guard.owns_lock())
@@ -449,7 +449,7 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
         if (other_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = other_guard.get_error();
-            return ;
+            return (*this);
         }
         ft_errno = FT_ERR_SUCCESSS;
         return (*this);
@@ -462,7 +462,7 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
         if (this_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = this_guard.get_error();
-            return ;
+            return (*this);
         }
         ft_errno = FT_ERR_SUCCESSS;
         if (other_guard.owns_lock())
@@ -470,7 +470,7 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
         if (other_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = other_guard.get_error();
-            return ;
+            return (*this);
         }
         ft_errno = FT_ERR_SUCCESSS;
         return (*this);
@@ -484,7 +484,7 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
         if (this_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = this_guard.get_error();
-            return ;
+            return (*this);
         }
         ft_errno = FT_ERR_SUCCESSS;
         if (other_guard.owns_lock())
@@ -492,7 +492,7 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
         if (other_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = other_guard.get_error();
-            return ;
+            return (*this);
         }
         ft_errno = FT_ERR_SUCCESSS;
         return (*this);
@@ -504,7 +504,7 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
     if (this_guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this_guard.get_error();
-        return ;
+        return (*this);
     }
     ft_errno = FT_ERR_SUCCESSS;
     if (other_guard.owns_lock())
@@ -512,7 +512,7 @@ ft_game_state &ft_game_state::operator=(const ft_game_state &other) noexcept
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = other_guard.get_error();
-        return ;
+        return (*this);
     }
     ft_errno = FT_ERR_SUCCESSS;
     return (*this);
@@ -641,7 +641,7 @@ ft_game_state &ft_game_state::operator=(ft_game_state &&other) noexcept
         if (this_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = this_guard.get_error();
-            return ;
+            return (*this);
         }
         ft_errno = FT_ERR_SUCCESSS;
         if (other_guard.owns_lock())
@@ -649,7 +649,7 @@ ft_game_state &ft_game_state::operator=(ft_game_state &&other) noexcept
         if (other_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = other_guard.get_error();
-            return ;
+            return (*this);
         }
         ft_errno = FT_ERR_SUCCESSS;
         return (*this);
@@ -662,7 +662,7 @@ ft_game_state &ft_game_state::operator=(ft_game_state &&other) noexcept
         if (this_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = this_guard.get_error();
-            return ;
+            return (*this);
         }
         ft_errno = FT_ERR_SUCCESSS;
         if (other_guard.owns_lock())
@@ -670,7 +670,7 @@ ft_game_state &ft_game_state::operator=(ft_game_state &&other) noexcept
         if (other_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = other_guard.get_error();
-            return ;
+            return (*this);
         }
         ft_errno = FT_ERR_SUCCESSS;
         return (*this);
@@ -684,7 +684,7 @@ ft_game_state &ft_game_state::operator=(ft_game_state &&other) noexcept
         if (this_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = this_guard.get_error();
-            return ;
+            return (*this);
         }
         ft_errno = FT_ERR_SUCCESSS;
         if (other_guard.owns_lock())
@@ -692,7 +692,7 @@ ft_game_state &ft_game_state::operator=(ft_game_state &&other) noexcept
         if (other_guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = other_guard.get_error();
-            return ;
+            return (*this);
         }
         ft_errno = FT_ERR_SUCCESSS;
         return (*this);
@@ -721,7 +721,7 @@ ft_game_state &ft_game_state::operator=(ft_game_state &&other) noexcept
     if (this_guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this_guard.get_error();
-        return ;
+        return (*this);
     }
     ft_errno = FT_ERR_SUCCESSS;
     if (other_guard.owns_lock())
@@ -729,7 +729,7 @@ ft_game_state &ft_game_state::operator=(ft_game_state &&other) noexcept
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = other_guard.get_error();
-        return ;
+        return (*this);
     }
     ft_errno = FT_ERR_SUCCESSS;
     return (*this);
@@ -746,7 +746,7 @@ ft_vector<ft_sharedptr<ft_world> > &ft_game_state::get_worlds() noexcept
         if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = guard.get_error();
-            return ;
+            return (this->_worlds);
         }
         ft_errno = FT_ERR_SUCCESSS;
         return (this->_worlds);
@@ -756,7 +756,7 @@ ft_vector<ft_sharedptr<ft_world> > &ft_game_state::get_worlds() noexcept
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
-        return ;
+        return (this->_worlds);
     }
     ft_errno = FT_ERR_SUCCESSS;
     return (this->_worlds);
@@ -773,7 +773,7 @@ ft_vector<ft_sharedptr<ft_character> > &ft_game_state::get_characters() noexcept
         if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = guard.get_error();
-            return ;
+            return (this->_characters);
         }
         ft_errno = FT_ERR_SUCCESSS;
         return (this->_characters);
@@ -783,7 +783,7 @@ ft_vector<ft_sharedptr<ft_character> > &ft_game_state::get_characters() noexcept
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
-        return ;
+        return (this->_characters);
     }
     ft_errno = FT_ERR_SUCCESSS;
     return (this->_characters);
@@ -863,7 +863,7 @@ const ft_string *ft_game_state::get_variable(const ft_string &key) const noexcep
         if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = guard.get_error();
-            return ;
+            return (ft_nullptr);
         }
         ft_errno = FT_ERR_SUCCESSS;
         return (ft_nullptr);
@@ -877,7 +877,7 @@ const ft_string *ft_game_state::get_variable(const ft_string &key) const noexcep
         if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = guard.get_error();
-            return ;
+            return (ft_nullptr);
         }
         ft_errno = FT_ERR_SUCCESSS;
         return (ft_nullptr);
@@ -890,7 +890,7 @@ const ft_string *ft_game_state::get_variable(const ft_string &key) const noexcep
         if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = guard.get_error();
-            return ;
+            return (ft_nullptr);
         }
         ft_errno = FT_ERR_SUCCESSS;
         return (ft_nullptr);
@@ -901,7 +901,7 @@ const ft_string *ft_game_state::get_variable(const ft_string &key) const noexcep
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
-        return ;
+        return (ft_nullptr);
     }
     ft_errno = FT_ERR_SUCCESSS;
     return (&entry->value);
@@ -982,7 +982,7 @@ int ft_game_state::add_character(const ft_sharedptr<ft_character> &character) no
         if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = guard.get_error();
-            return ;
+            return (hooks_copy);
         }
         ft_errno = FT_ERR_SUCCESSS;
         return (guard.get_error());
@@ -996,7 +996,7 @@ int ft_game_state::add_character(const ft_sharedptr<ft_character> &character) no
         if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = guard.get_error();
-            return ;
+            return (hooks_copy);
         }
         ft_errno = FT_ERR_SUCCESSS;
         return (this->_error_code);
@@ -1009,7 +1009,7 @@ int ft_game_state::add_character(const ft_sharedptr<ft_character> &character) no
         if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = guard.get_error();
-            return ;
+            return (guard.get_error());
         }
         ft_errno = FT_ERR_SUCCESSS;
         return (this->_error_code);
@@ -1022,7 +1022,7 @@ int ft_game_state::add_character(const ft_sharedptr<ft_character> &character) no
         if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = guard.get_error();
-            return ;
+            return (guard.get_error());
         }
         ft_errno = FT_ERR_SUCCESSS;
         return (this->_error_code);
@@ -1037,7 +1037,7 @@ int ft_game_state::add_character(const ft_sharedptr<ft_character> &character) no
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
-        return ;
+        return (guard.get_error());
     }
     ft_errno = FT_ERR_SUCCESSS;
     return (this->_error_code);
@@ -1156,7 +1156,7 @@ ft_sharedptr<ft_game_hooks> ft_game_state::get_hooks() const noexcept
         if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = guard.get_error();
-            return ;
+            return (hooks_copy);
         }
         ft_errno = FT_ERR_SUCCESSS;
         return (hooks_copy);
@@ -1170,7 +1170,7 @@ ft_sharedptr<ft_game_hooks> ft_game_state::get_hooks() const noexcept
         if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = guard.get_error();
-            return ;
+            return (hooks_copy);
         }
         ft_errno = FT_ERR_SUCCESSS;
         return (hooks_copy);
@@ -1181,7 +1181,7 @@ ft_sharedptr<ft_game_hooks> ft_game_state::get_hooks() const noexcept
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
-        return ;
+        return (hooks_copy);
     }
     ft_errno = FT_ERR_SUCCESSS;
     return (hooks_copy);
@@ -1383,7 +1383,7 @@ int ft_game_state::get_error() const noexcept
         if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = guard.get_error();
-            return ;
+            return (guard.get_error());
         }
         ft_errno = FT_ERR_SUCCESSS;
         return (guard.get_error());
@@ -1395,7 +1395,7 @@ int ft_game_state::get_error() const noexcept
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
-        return ;
+        return (guard.get_error());
     }
     ft_errno = FT_ERR_SUCCESSS;
     return (error_code);
@@ -1413,7 +1413,7 @@ const char *ft_game_state::get_error_str() const noexcept
         if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = guard.get_error();
-            return ;
+            return (ft_strerror(guard.get_error()));
         }
         ft_errno = FT_ERR_SUCCESSS;
         return (ft_strerror(guard.get_error()));
@@ -1425,7 +1425,7 @@ const char *ft_game_state::get_error_str() const noexcept
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = guard.get_error();
-        return ;
+        return (ft_strerror(guard.get_error()));
     }
     ft_errno = FT_ERR_SUCCESSS;
     return (ft_strerror(error_code));
