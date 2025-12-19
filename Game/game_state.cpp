@@ -982,7 +982,7 @@ int ft_game_state::add_character(const ft_sharedptr<ft_character> &character) no
         if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = guard.get_error();
-            return (hooks_copy);
+            return (guard.get_error());
         }
         ft_errno = FT_ERR_SUCCESSS;
         return (guard.get_error());
@@ -996,7 +996,7 @@ int ft_game_state::add_character(const ft_sharedptr<ft_character> &character) no
         if (guard.get_error() != FT_ERR_SUCCESSS)
         {
             ft_errno = guard.get_error();
-            return (hooks_copy);
+            return (guard.get_error());
         }
         ft_errno = FT_ERR_SUCCESSS;
         return (this->_error_code);
