@@ -251,7 +251,7 @@ void ft_socket::reset_to_empty_state_locked()
     while (connection_index < this->_connected.size())
     {
         ft_socket &client = this->_connected[connection_index];
-        client_        ft_unique_lock<pt_mutex> client_guard(client._mutex);
+        ft_unique_lock<pt_mutex> client_guard(client._mutex);
         if (client_guard.get_error() == FT_ERR_SUCCESSS)
             client.close_socket_locked();
         socket_finalize_guard(client_guard);
@@ -491,7 +491,7 @@ ssize_t ft_socket::send_data(const void *data, size_t size, int flags, int fd)
         if (client._socket_fd == fd)
         {            ft_unique_lock<pt_mutex> client_guard(client._mutex);
 
-            client_            if (client_guard.get_error() != FT_ERR_SUCCESSS)
+            if (client_guard.get_error() != FT_ERR_SUCCESSS)
             {
                 this->set_error(client_guard.get_error());
                 socket_finalize_guard(client_guard);
@@ -540,7 +540,7 @@ ssize_t ft_socket::broadcast_data(const void *data, size_t size, int flags, int 
             continue ;
         }        ft_unique_lock<pt_mutex> client_guard(client._mutex);
 
-        client_        if (client_guard.get_error() != FT_ERR_SUCCESSS)
+        if (client_guard.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(client_guard.get_error());
             socket_finalize_guard(client_guard);
@@ -667,7 +667,7 @@ void ft_socket::disconnect_all_clients()
     {
         ft_socket &client = owned_clients[index];        ft_unique_lock<pt_mutex> client_guard(client._mutex);
 
-        client_        if (client_guard.get_error() == FT_ERR_SUCCESSS)
+        if (client_guard.get_error() == FT_ERR_SUCCESSS)
             client.close_socket_locked();
         socket_finalize_guard(client_guard);
         index++;

@@ -8,12 +8,10 @@ static void game_data_catalog_sleep_backoff()
     return ;
 }
 
-static void game_data_catalog_restore_errno(ft_unique_lock<pt_mutex> &guard,
-        int entry_errno)
+static void game_data_catalog_unlock_guard(ft_unique_lock<pt_mutex> &guard)
 {
     if (guard.owns_lock())
         guard.unlock();
-    ft_errno = entry_errno;
     return ;
 }
 
@@ -139,14 +137,10 @@ ft_item_definition::ft_item_definition(int item_id, int rarity, int max_stack, i
 ft_item_definition::ft_item_definition(const ft_item_definition &other) noexcept
     : _item_id(0), _rarity(0), _max_stack(0), _width(0), _height(0), _weight(0), _slot_requirement(0), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        game_data_catalog_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_item_id = other._item_id;
@@ -156,9 +150,9 @@ ft_item_definition::ft_item_definition(const ft_item_definition &other) noexcept
     this->_height = other._height;
     this->_weight = other._weight;
     this->_slot_requirement = other._slot_requirement;
-    this->_error_code = other._error_code;
-    this->set_error(other._error_code);
-    game_data_catalog_restore_errno(other_guard, entry_errno);
+    this->_error_code = FT_ERR_SUCCESSS;
+    this->set_error(FT_ERR_SUCCESSS);
+    game_data_catalog_unlock_guard(other_guard);
     return ;
 }
 
@@ -166,12 +160,10 @@ ft_item_definition &ft_item_definition::operator=(const ft_item_definition &othe
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_item_definition::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -185,24 +177,20 @@ ft_item_definition &ft_item_definition::operator=(const ft_item_definition &othe
     this->_height = other._height;
     this->_weight = other._weight;
     this->_slot_requirement = other._slot_requirement;
-    this->_error_code = other._error_code;
-    this->set_error(other._error_code);
-    game_data_catalog_restore_errno(this_guard, entry_errno);
-    game_data_catalog_restore_errno(other_guard, entry_errno);
+    this->_error_code = FT_ERR_SUCCESSS;
+    this->set_error(FT_ERR_SUCCESSS);
+    game_data_catalog_unlock_guard(this_guard);
+    game_data_catalog_unlock_guard(other_guard);
     return (*this);
 }
 
 ft_item_definition::ft_item_definition(ft_item_definition &&other) noexcept
     : _item_id(0), _rarity(0), _max_stack(0), _width(0), _height(0), _weight(0), _slot_requirement(0), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        game_data_catalog_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_item_id = other._item_id;
@@ -221,9 +209,9 @@ ft_item_definition::ft_item_definition(ft_item_definition &&other) noexcept
     other._weight = 0;
     other._slot_requirement = 0;
     other._error_code = FT_ERR_SUCCESSS;
-    this->set_error(this->_error_code);
+    this->set_error(FT_ERR_SUCCESSS);
     other.set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(other_guard, entry_errno);
+    game_data_catalog_unlock_guard(other_guard);
     return ;
 }
 
@@ -231,12 +219,10 @@ ft_item_definition &ft_item_definition::operator=(ft_item_definition &&other) no
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_item_definition::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -259,308 +245,262 @@ ft_item_definition &ft_item_definition::operator=(ft_item_definition &&other) no
     other._weight = 0;
     other._slot_requirement = 0;
     other._error_code = FT_ERR_SUCCESSS;
-    this->set_error(this->_error_code);
+    this->set_error(FT_ERR_SUCCESSS);
     other.set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(this_guard, entry_errno);
-    game_data_catalog_restore_errno(other_guard, entry_errno);
+    game_data_catalog_unlock_guard(this_guard);
+    game_data_catalog_unlock_guard(other_guard);
     return (*this);
 }
 
 int ft_item_definition::get_item_id() const noexcept
 {
-    int entry_errno;
     int identifier;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_item_definition *>(this)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
+        game_data_catalog_unlock_guard(guard);
         return (guard.get_error());
     }
     identifier = this->_item_id;
-    const_cast<ft_item_definition *>(this)->set_error(this->_error_code);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    const_cast<ft_item_definition *>(this)->set_error(FT_ERR_SUCCESSS);
+    game_data_catalog_unlock_guard(guard);
     return (identifier);
 }
 
 void ft_item_definition::set_item_id(int item_id) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return ;
     }
     this->_item_id = item_id;
     this->set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return ;
 }
 
 int ft_item_definition::get_rarity() const noexcept
 {
-    int entry_errno;
     int rarity_value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_item_definition *>(this)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
+        game_data_catalog_unlock_guard(guard);
         return (guard.get_error());
     }
     rarity_value = this->_rarity;
-    const_cast<ft_item_definition *>(this)->set_error(this->_error_code);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    const_cast<ft_item_definition *>(this)->set_error(FT_ERR_SUCCESSS);
+    game_data_catalog_unlock_guard(guard);
     return (rarity_value);
 }
 
 void ft_item_definition::set_rarity(int rarity) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return ;
     }
     this->_rarity = rarity;
     this->set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return ;
 }
 
 int ft_item_definition::get_max_stack() const noexcept
 {
-    int entry_errno;
     int value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_item_definition *>(this)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
+        game_data_catalog_unlock_guard(guard);
         return (guard.get_error());
     }
     value = this->_max_stack;
-    const_cast<ft_item_definition *>(this)->set_error(this->_error_code);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    const_cast<ft_item_definition *>(this)->set_error(FT_ERR_SUCCESSS);
+    game_data_catalog_unlock_guard(guard);
     return (value);
 }
 
 void ft_item_definition::set_max_stack(int max_stack) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return ;
     }
     this->_max_stack = max_stack;
     this->set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return ;
 }
 
 int ft_item_definition::get_width() const noexcept
 {
-    int entry_errno;
     int width_value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_item_definition *>(this)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
+        game_data_catalog_unlock_guard(guard);
         return (guard.get_error());
     }
     width_value = this->_width;
-    const_cast<ft_item_definition *>(this)->set_error(this->_error_code);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    const_cast<ft_item_definition *>(this)->set_error(FT_ERR_SUCCESSS);
+    game_data_catalog_unlock_guard(guard);
     return (width_value);
 }
 
 void ft_item_definition::set_width(int width) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return ;
     }
     this->_width = width;
     this->set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return ;
 }
 
 
 int ft_item_definition::get_height() const noexcept
 {
-    int entry_errno;
     int height_value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_item_definition *>(this)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
+        game_data_catalog_unlock_guard(guard);
         return (guard.get_error());
     }
     height_value = this->_height;
-    const_cast<ft_item_definition *>(this)->set_error(this->_error_code);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    const_cast<ft_item_definition *>(this)->set_error(FT_ERR_SUCCESSS);
+    game_data_catalog_unlock_guard(guard);
     return (height_value);
 }
 
 void ft_item_definition::set_height(int height) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return ;
     }
     this->_height = height;
     this->set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return ;
 }
 
 int ft_item_definition::get_weight() const noexcept
 {
-    int entry_errno;
     int weight_value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_item_definition *>(this)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
+        game_data_catalog_unlock_guard(guard);
         return (guard.get_error());
     }
     weight_value = this->_weight;
-    const_cast<ft_item_definition *>(this)->set_error(this->_error_code);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    const_cast<ft_item_definition *>(this)->set_error(FT_ERR_SUCCESSS);
+    game_data_catalog_unlock_guard(guard);
     return (weight_value);
 }
 
 void ft_item_definition::set_weight(int weight) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return ;
     }
     this->_weight = weight;
     this->set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return ;
 }
 
 int ft_item_definition::get_slot_requirement() const noexcept
 {
-    int entry_errno;
     int slot_value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_item_definition *>(this)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
+        game_data_catalog_unlock_guard(guard);
         return (guard.get_error());
     }
     slot_value = this->_slot_requirement;
-    const_cast<ft_item_definition *>(this)->set_error(this->_error_code);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    const_cast<ft_item_definition *>(this)->set_error(FT_ERR_SUCCESSS);
+    game_data_catalog_unlock_guard(guard);
     return (slot_value);
 }
 
 void ft_item_definition::set_slot_requirement(int slot_requirement) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return ;
     }
     this->_slot_requirement = slot_requirement;
     this->set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return ;
 }
 
 int ft_item_definition::get_error() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_item_definition *>(this)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
+        game_data_catalog_unlock_guard(guard);
         return (guard.get_error());
     }
     error_code = this->_error_code;
-    const_cast<ft_item_definition *>(this)->set_error(error_code);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    const_cast<ft_item_definition *>(this)->set_error(FT_ERR_SUCCESSS);
+    game_data_catalog_unlock_guard(guard);
     return (error_code);
 }
 
 const char *ft_item_definition::get_error_str() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_item_definition *>(this)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
+        game_data_catalog_unlock_guard(guard);
         return (ft_strerror(guard.get_error()));
     }
     error_code = this->_error_code;
-    const_cast<ft_item_definition *>(this)->set_error(error_code);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    const_cast<ft_item_definition *>(this)->set_error(FT_ERR_SUCCESSS);
+    game_data_catalog_unlock_guard(guard);
     return (ft_strerror(error_code));
 }
 
@@ -661,22 +601,18 @@ ft_recipe_blueprint::ft_recipe_blueprint(int recipe_id, int result_item_id, cons
 ft_recipe_blueprint::ft_recipe_blueprint(const ft_recipe_blueprint &other) noexcept
     : _recipe_id(0), _result_item_id(0), _ingredients(), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        game_data_catalog_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_recipe_id = other._recipe_id;
     this->_result_item_id = other._result_item_id;
     game_data_catalog_copy_crafting_vector(other._ingredients, this->_ingredients);
-    this->_error_code = other._error_code;
+    this->_error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_ingredients.get_error());
-    game_data_catalog_restore_errno(other_guard, entry_errno);
+    game_data_catalog_unlock_guard(other_guard);
     return ;
 }
 
@@ -684,12 +620,10 @@ ft_recipe_blueprint &ft_recipe_blueprint::operator=(const ft_recipe_blueprint &o
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_recipe_blueprint::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -699,36 +633,32 @@ ft_recipe_blueprint &ft_recipe_blueprint::operator=(const ft_recipe_blueprint &o
     this->_recipe_id = other._recipe_id;
     this->_result_item_id = other._result_item_id;
     game_data_catalog_copy_crafting_vector(other._ingredients, this->_ingredients);
-    this->_error_code = other._error_code;
+    this->_error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_ingredients.get_error());
-    game_data_catalog_restore_errno(this_guard, entry_errno);
-    game_data_catalog_restore_errno(other_guard, entry_errno);
+    game_data_catalog_unlock_guard(this_guard);
+    game_data_catalog_unlock_guard(other_guard);
     return (*this);
 }
 
 ft_recipe_blueprint::ft_recipe_blueprint(ft_recipe_blueprint &&other) noexcept
     : _recipe_id(0), _result_item_id(0), _ingredients(ft_move(other._ingredients)), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        game_data_catalog_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_recipe_id = other._recipe_id;
     this->_result_item_id = other._result_item_id;
-    this->_error_code = other._error_code;
+    this->_error_code = FT_ERR_SUCCESSS;
     other._recipe_id = 0;
     other._result_item_id = 0;
     other._ingredients.clear();
     other._error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_ingredients.get_error());
     other.set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(other_guard, entry_errno);
+    game_data_catalog_unlock_guard(other_guard);
     return ;
 }
 
@@ -736,12 +666,10 @@ ft_recipe_blueprint &ft_recipe_blueprint::operator=(ft_recipe_blueprint &&other)
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_recipe_blueprint::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -751,156 +679,152 @@ ft_recipe_blueprint &ft_recipe_blueprint::operator=(ft_recipe_blueprint &&other)
     this->_recipe_id = other._recipe_id;
     this->_result_item_id = other._result_item_id;
     this->_ingredients = ft_move(other._ingredients);
-    this->_error_code = other._error_code;
+    this->_error_code = FT_ERR_SUCCESSS;
     other._recipe_id = 0;
     other._result_item_id = 0;
     other._ingredients.clear();
     other._error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_ingredients.get_error());
     other.set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(this_guard, entry_errno);
-    game_data_catalog_restore_errno(other_guard, entry_errno);
+    game_data_catalog_unlock_guard(this_guard);
+    game_data_catalog_unlock_guard(other_guard);
     return (*this);
 }
 
 
 int ft_recipe_blueprint::get_recipe_id() const noexcept
 {
-    int entry_errno;
     int identifier;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_recipe_blueprint *>(this)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
+        game_data_catalog_unlock_guard(guard);
         return (guard.get_error());
     }
     identifier = this->_recipe_id;
-    const_cast<ft_recipe_blueprint *>(this)->set_error(this->_error_code);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    const_cast<ft_recipe_blueprint *>(this)->set_error(FT_ERR_SUCCESSS);
+    game_data_catalog_unlock_guard(guard);
     return (identifier);
 }
 
 void ft_recipe_blueprint::set_recipe_id(int recipe_id) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return ;
     }
     this->_recipe_id = recipe_id;
     this->set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return ;
 }
 
 int ft_recipe_blueprint::get_result_item_id() const noexcept
 {
-    int entry_errno;
     int item_id;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_recipe_blueprint *>(this)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
+        game_data_catalog_unlock_guard(guard);
         return (guard.get_error());
     }
     item_id = this->_result_item_id;
-    const_cast<ft_recipe_blueprint *>(this)->set_error(this->_error_code);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    const_cast<ft_recipe_blueprint *>(this)->set_error(FT_ERR_SUCCESSS);
+    game_data_catalog_unlock_guard(guard);
     return (item_id);
 }
 
 void ft_recipe_blueprint::set_result_item_id(int result_item_id) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return ;
     }
     this->_result_item_id = result_item_id;
     this->set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return ;
 }
 
 ft_vector<ft_crafting_ingredient> &ft_recipe_blueprint::get_ingredients() noexcept
 {
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        this->set_error(guard.get_error());
+        return (this->_ingredients);
+    }
+    this->set_error(this->_ingredients.get_error());
+    game_data_catalog_unlock_guard(guard);
     return (this->_ingredients);
 }
 
 const ft_vector<ft_crafting_ingredient> &ft_recipe_blueprint::get_ingredients() const noexcept
 {
+    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        const_cast<ft_recipe_blueprint *>(this)->set_error(guard.get_error());
+        return (this->_ingredients);
+    }
+    const_cast<ft_recipe_blueprint *>(this)->set_error(this->_ingredients.get_error());
+    game_data_catalog_unlock_guard(guard);
     return (this->_ingredients);
 }
 
 void ft_recipe_blueprint::set_ingredients(const ft_vector<ft_crafting_ingredient> &ingredients) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return ;
     }
     game_data_catalog_copy_crafting_vector(ingredients, this->_ingredients);
     this->set_error(this->_ingredients.get_error());
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return ;
 }
 
 int ft_recipe_blueprint::get_error() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_recipe_blueprint *>(this)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
+        game_data_catalog_unlock_guard(guard);
         return (guard.get_error());
     }
     error_code = this->_error_code;
-    const_cast<ft_recipe_blueprint *>(this)->set_error(error_code);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    const_cast<ft_recipe_blueprint *>(this)->set_error(FT_ERR_SUCCESSS);
+    game_data_catalog_unlock_guard(guard);
     return (error_code);
 }
 
 const char *ft_recipe_blueprint::get_error_str() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_recipe_blueprint *>(this)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
+        game_data_catalog_unlock_guard(guard);
         return (ft_strerror(guard.get_error()));
     }
     error_code = this->_error_code;
-    const_cast<ft_recipe_blueprint *>(this)->set_error(error_code);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    const_cast<ft_recipe_blueprint *>(this)->set_error(FT_ERR_SUCCESSS);
+    game_data_catalog_unlock_guard(guard);
     return (ft_strerror(error_code));
 }
 
@@ -1000,14 +924,10 @@ ft_loadout_entry::ft_loadout_entry(int slot, int item_id, int quantity) noexcept
 ft_loadout_entry::ft_loadout_entry(const ft_loadout_entry &other) noexcept
     : _slot(0), _item_id(0), _quantity(0), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        game_data_catalog_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_slot = other._slot;
@@ -1015,7 +935,7 @@ ft_loadout_entry::ft_loadout_entry(const ft_loadout_entry &other) noexcept
     this->_quantity = other._quantity;
     this->_error_code = other._error_code;
     this->set_error(other._error_code);
-    game_data_catalog_restore_errno(other_guard, entry_errno);
+    game_data_catalog_unlock_guard(other_guard);
     return ;
 }
 
@@ -1023,12 +943,10 @@ ft_loadout_entry &ft_loadout_entry::operator=(const ft_loadout_entry &other) noe
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_loadout_entry::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -1040,22 +958,18 @@ ft_loadout_entry &ft_loadout_entry::operator=(const ft_loadout_entry &other) noe
     this->_quantity = other._quantity;
     this->_error_code = other._error_code;
     this->set_error(other._error_code);
-    game_data_catalog_restore_errno(this_guard, entry_errno);
-    game_data_catalog_restore_errno(other_guard, entry_errno);
+    game_data_catalog_unlock_guard(this_guard);
+    game_data_catalog_unlock_guard(other_guard);
     return (*this);
 }
 
 ft_loadout_entry::ft_loadout_entry(ft_loadout_entry &&other) noexcept
     : _slot(0), _item_id(0), _quantity(0), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        game_data_catalog_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_slot = other._slot;
@@ -1068,7 +982,7 @@ ft_loadout_entry::ft_loadout_entry(ft_loadout_entry &&other) noexcept
     other._error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_error_code);
     other.set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(other_guard, entry_errno);
+    game_data_catalog_unlock_guard(other_guard);
     return ;
 }
 
@@ -1076,12 +990,10 @@ ft_loadout_entry &ft_loadout_entry::operator=(ft_loadout_entry &&other) noexcept
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_loadout_entry::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -1098,158 +1010,131 @@ ft_loadout_entry &ft_loadout_entry::operator=(ft_loadout_entry &&other) noexcept
     other._error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_error_code);
     other.set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(this_guard, entry_errno);
-    game_data_catalog_restore_errno(other_guard, entry_errno);
+    game_data_catalog_unlock_guard(this_guard);
+    game_data_catalog_unlock_guard(other_guard);
     return (*this);
 }
 
 
 int ft_loadout_entry::get_slot() const noexcept
 {
-    int entry_errno;
     int slot_value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_loadout_entry *>(this)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     slot_value = this->_slot;
     const_cast<ft_loadout_entry *>(this)->set_error(this->_error_code);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return (slot_value);
 }
 
 void ft_loadout_entry::set_slot(int slot) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return ;
     }
     this->_slot = slot;
     this->set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return ;
 }
 
 int ft_loadout_entry::get_item_id() const noexcept
 {
-    int entry_errno;
     int item_id;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_loadout_entry *>(this)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     item_id = this->_item_id;
     const_cast<ft_loadout_entry *>(this)->set_error(this->_error_code);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return (item_id);
 }
 
 void ft_loadout_entry::set_item_id(int item_id) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return ;
     }
     this->_item_id = item_id;
     this->set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return ;
 }
 
 int ft_loadout_entry::get_quantity() const noexcept
 {
-    int entry_errno;
     int quantity_value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_loadout_entry *>(this)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     quantity_value = this->_quantity;
     const_cast<ft_loadout_entry *>(this)->set_error(this->_error_code);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return (quantity_value);
 }
 
 void ft_loadout_entry::set_quantity(int quantity) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return ;
     }
     this->_quantity = quantity;
     this->set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return ;
 }
 
 int ft_loadout_entry::get_error() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_loadout_entry *>(this)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     error_code = this->_error_code;
     const_cast<ft_loadout_entry *>(this)->set_error(error_code);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return (error_code);
 }
 
 const char *ft_loadout_entry::get_error_str() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_loadout_entry *>(this)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (ft_strerror(guard.get_error()));
     }
     error_code = this->_error_code;
     const_cast<ft_loadout_entry *>(this)->set_error(error_code);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return (ft_strerror(error_code));
 }
 
@@ -1350,21 +1235,17 @@ ft_loadout_blueprint::ft_loadout_blueprint(int loadout_id, const ft_vector<ft_lo
 ft_loadout_blueprint::ft_loadout_blueprint(const ft_loadout_blueprint &other) noexcept
     : _loadout_id(0), _entries(), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        game_data_catalog_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_loadout_id = other._loadout_id;
     game_data_catalog_copy_loadout_vector(other._entries, this->_entries);
     this->_error_code = other._error_code;
     this->set_error(this->_entries.get_error());
-    game_data_catalog_restore_errno(other_guard, entry_errno);
+    game_data_catalog_unlock_guard(other_guard);
     return ;
 }
 
@@ -1372,12 +1253,10 @@ ft_loadout_blueprint &ft_loadout_blueprint::operator=(const ft_loadout_blueprint
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_loadout_blueprint::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -1388,22 +1267,18 @@ ft_loadout_blueprint &ft_loadout_blueprint::operator=(const ft_loadout_blueprint
     game_data_catalog_copy_loadout_vector(other._entries, this->_entries);
     this->_error_code = other._error_code;
     this->set_error(this->_entries.get_error());
-    game_data_catalog_restore_errno(this_guard, entry_errno);
-    game_data_catalog_restore_errno(other_guard, entry_errno);
+    game_data_catalog_unlock_guard(this_guard);
+    game_data_catalog_unlock_guard(other_guard);
     return (*this);
 }
 
 ft_loadout_blueprint::ft_loadout_blueprint(ft_loadout_blueprint &&other) noexcept
     : _loadout_id(0), _entries(ft_move(other._entries)), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        game_data_catalog_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_loadout_id = other._loadout_id;
@@ -1413,7 +1288,7 @@ ft_loadout_blueprint::ft_loadout_blueprint(ft_loadout_blueprint &&other) noexcep
     other._error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_entries.get_error());
     other.set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(other_guard, entry_errno);
+    game_data_catalog_unlock_guard(other_guard);
     return ;
 }
 
@@ -1421,12 +1296,10 @@ ft_loadout_blueprint &ft_loadout_blueprint::operator=(ft_loadout_blueprint &&oth
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_loadout_blueprint::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -1441,46 +1314,39 @@ ft_loadout_blueprint &ft_loadout_blueprint::operator=(ft_loadout_blueprint &&oth
     other._error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_entries.get_error());
     other.set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(this_guard, entry_errno);
-    game_data_catalog_restore_errno(other_guard, entry_errno);
+    game_data_catalog_unlock_guard(this_guard);
+    game_data_catalog_unlock_guard(other_guard);
     return (*this);
 }
 
 
 int ft_loadout_blueprint::get_loadout_id() const noexcept
 {
-    int entry_errno;
     int identifier;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_loadout_blueprint *>(this)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     identifier = this->_loadout_id;
     const_cast<ft_loadout_blueprint *>(this)->set_error(this->_error_code);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return (identifier);
 }
 
 void ft_loadout_blueprint::set_loadout_id(int loadout_id) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return ;
     }
     this->_loadout_id = loadout_id;
     this->set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return ;
 }
 
@@ -1496,57 +1362,47 @@ const ft_vector<ft_loadout_entry> &ft_loadout_blueprint::get_entries() const noe
 
 void ft_loadout_blueprint::set_entries(const ft_vector<ft_loadout_entry> &entries) noexcept
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return ;
     }
     game_data_catalog_copy_loadout_vector(entries, this->_entries);
     this->set_error(this->_entries.get_error());
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return ;
 }
 
 int ft_loadout_blueprint::get_error() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_loadout_blueprint *>(this)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     error_code = this->_error_code;
     const_cast<ft_loadout_blueprint *>(this)->set_error(error_code);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return (error_code);
 }
 
 const char *ft_loadout_blueprint::get_error_str() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_loadout_blueprint *>(this)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (ft_strerror(guard.get_error()));
     }
     error_code = this->_error_code;
     const_cast<ft_loadout_blueprint *>(this)->set_error(error_code);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return (ft_strerror(error_code));
 }
 
@@ -1645,14 +1501,10 @@ ft_data_catalog::~ft_data_catalog() noexcept
 ft_data_catalog::ft_data_catalog(const ft_data_catalog &other) noexcept
     : _item_definitions(), _recipes(), _loadouts(), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        game_data_catalog_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_item_definitions = other._item_definitions;
@@ -1660,7 +1512,7 @@ ft_data_catalog::ft_data_catalog(const ft_data_catalog &other) noexcept
     this->_loadouts = other._loadouts;
     this->_error_code = other._error_code;
     this->set_error(other._error_code);
-    game_data_catalog_restore_errno(other_guard, entry_errno);
+    game_data_catalog_unlock_guard(other_guard);
     return ;
 }
 
@@ -1668,12 +1520,10 @@ ft_data_catalog &ft_data_catalog::operator=(const ft_data_catalog &other) noexce
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_data_catalog::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -1685,22 +1535,18 @@ ft_data_catalog &ft_data_catalog::operator=(const ft_data_catalog &other) noexce
     this->_loadouts = other._loadouts;
     this->_error_code = other._error_code;
     this->set_error(other._error_code);
-    game_data_catalog_restore_errno(this_guard, entry_errno);
-    game_data_catalog_restore_errno(other_guard, entry_errno);
+    game_data_catalog_unlock_guard(this_guard);
+    game_data_catalog_unlock_guard(other_guard);
     return (*this);
 }
 
 ft_data_catalog::ft_data_catalog(ft_data_catalog &&other) noexcept
     : _item_definitions(), _recipes(), _loadouts(), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        game_data_catalog_restore_errno(other_guard, entry_errno);
         return ;
     }
     this->_item_definitions = other._item_definitions;
@@ -1713,7 +1559,7 @@ ft_data_catalog::ft_data_catalog(ft_data_catalog &&other) noexcept
     other._error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_error_code);
     other.set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(other_guard, entry_errno);
+    game_data_catalog_unlock_guard(other_guard);
     return ;
 }
 
@@ -1721,12 +1567,10 @@ ft_data_catalog &ft_data_catalog::operator=(ft_data_catalog &&other) noexcept
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_data_catalog::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -1743,8 +1587,8 @@ ft_data_catalog &ft_data_catalog::operator=(ft_data_catalog &&other) noexcept
     other._error_code = FT_ERR_SUCCESSS;
     this->set_error(this->_error_code);
     other.set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(this_guard, entry_errno);
-    game_data_catalog_restore_errno(other_guard, entry_errno);
+    game_data_catalog_unlock_guard(this_guard);
+    game_data_catalog_unlock_guard(other_guard);
     return (*this);
 }
 
@@ -1780,21 +1624,17 @@ const ft_map<int, ft_loadout_blueprint> &ft_data_catalog::get_loadouts() const n
 
 int ft_data_catalog::register_item_definition(const ft_item_definition &definition) noexcept
 {
-    int entry_errno;
     int identifier;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     if (definition.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(definition.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (definition.get_error());
     }
     identifier = definition.get_item_id();
@@ -1802,31 +1642,26 @@ int ft_data_catalog::register_item_definition(const ft_item_definition &definiti
     if (this->_item_definitions.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_item_definitions.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (this->_item_definitions.get_error());
     }
     this->set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return (FT_ERR_SUCCESSS);
 }
 
 int ft_data_catalog::register_recipe(const ft_recipe_blueprint &recipe) noexcept
 {
-    int entry_errno;
     int identifier;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     if (recipe.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(recipe.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (recipe.get_error());
     }
     identifier = recipe.get_recipe_id();
@@ -1834,31 +1669,26 @@ int ft_data_catalog::register_recipe(const ft_recipe_blueprint &recipe) noexcept
     if (this->_recipes.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_recipes.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (this->_recipes.get_error());
     }
     this->set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return (FT_ERR_SUCCESSS);
 }
 
 int ft_data_catalog::register_loadout(const ft_loadout_blueprint &loadout) noexcept
 {
-    int entry_errno;
     int identifier;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     if (loadout.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(loadout.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (loadout.get_error());
     }
     identifier = loadout.get_loadout_id();
@@ -1866,133 +1696,114 @@ int ft_data_catalog::register_loadout(const ft_loadout_blueprint &loadout) noexc
     if (this->_loadouts.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_loadouts.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (this->_loadouts.get_error());
     }
     this->set_error(FT_ERR_SUCCESSS);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return (FT_ERR_SUCCESSS);
 }
 
 int ft_data_catalog::fetch_item_definition(int item_id, ft_item_definition &definition) const noexcept
 {
-    int entry_errno;
     const ft_data_catalog *self;
     const Pair<int, ft_item_definition> *entry;
 
     self = this;
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(self->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_data_catalog *>(self)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     entry = self->_item_definitions.find(item_id);
     if (entry == self->_item_definitions.end())
     {
         const_cast<ft_data_catalog *>(self)->set_error(FT_ERR_NOT_FOUND);
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (FT_ERR_NOT_FOUND);
     }
     definition = entry->value;
     const_cast<ft_data_catalog *>(self)->set_error(definition.get_error());
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return (definition.get_error());
 }
 
 int ft_data_catalog::fetch_recipe(int recipe_id, ft_recipe_blueprint &recipe) const noexcept
 {
-    int entry_errno;
     const ft_data_catalog *self;
     const Pair<int, ft_recipe_blueprint> *entry;
 
     self = this;
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(self->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_data_catalog *>(self)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     entry = self->_recipes.find(recipe_id);
     if (entry == self->_recipes.end())
     {
         const_cast<ft_data_catalog *>(self)->set_error(FT_ERR_NOT_FOUND);
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (FT_ERR_NOT_FOUND);
     }
     recipe = entry->value;
     const_cast<ft_data_catalog *>(self)->set_error(recipe.get_error());
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return (recipe.get_error());
 }
 
 int ft_data_catalog::fetch_loadout(int loadout_id, ft_loadout_blueprint &loadout) const noexcept
 {
-    int entry_errno;
     const ft_data_catalog *self;
     const Pair<int, ft_loadout_blueprint> *entry;
 
     self = this;
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(self->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_data_catalog *>(self)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     entry = self->_loadouts.find(loadout_id);
     if (entry == self->_loadouts.end())
     {
         const_cast<ft_data_catalog *>(self)->set_error(FT_ERR_NOT_FOUND);
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (FT_ERR_NOT_FOUND);
     }
     loadout = entry->value;
     const_cast<ft_data_catalog *>(self)->set_error(loadout.get_error());
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return (loadout.get_error());
 }
 
 int ft_data_catalog::get_error() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_data_catalog *>(this)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     error_code = this->_error_code;
     const_cast<ft_data_catalog *>(this)->set_error(error_code);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return (error_code);
 }
 
 const char *ft_data_catalog::get_error_str() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_data_catalog *>(this)->set_error(guard.get_error());
-        game_data_catalog_restore_errno(guard, entry_errno);
         return (ft_strerror(guard.get_error()));
     }
     error_code = this->_error_code;
     const_cast<ft_data_catalog *>(this)->set_error(error_code);
-    game_data_catalog_restore_errno(guard, entry_errno);
+    game_data_catalog_unlock_guard(guard);
     return (ft_strerror(error_code));
 }
 

@@ -14,18 +14,10 @@ static void game_hooks_sleep_backoff()
     return ;
 }
 
-static void game_hooks_restore_errno(ft_unique_lock<pt_mutex> &guard,
-    int entry_errno)
+static void game_hooks_unlock_guard(ft_unique_lock<pt_mutex> &guard)
 {
     if (guard.owns_lock())
         guard.unlock();
-    ft_errno = entry_errno;
-    return ;
-}
-
-static void game_hooks_restore_errno_plain(int entry_errno)
-{
-    ft_errno = entry_errno;
     return ;
 }
 
@@ -171,59 +163,56 @@ ft_game_hooks::ft_game_hooks(const ft_game_hooks &other) noexcept
     : _legacy_item_crafted(), _legacy_character_damaged(), _legacy_event_triggered(),
       _listener_catalog(), _catalog_metadata(), _error_code(other._error_code), _mutex()
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        game_hooks_restore_errno(other_guard, entry_errno);
+        game_hooks_unlock_guard(other_guard);
         return ;
     }
     this->_legacy_item_crafted = other._legacy_item_crafted;
     if (this->_legacy_item_crafted.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_legacy_item_crafted.get_error());
-        game_hooks_restore_errno(other_guard, entry_errno);
+        game_hooks_unlock_guard(other_guard);
         return ;
     }
     this->_legacy_character_damaged = other._legacy_character_damaged;
     if (this->_legacy_character_damaged.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_legacy_character_damaged.get_error());
-        game_hooks_restore_errno(other_guard, entry_errno);
+        game_hooks_unlock_guard(other_guard);
         return ;
     }
     this->_legacy_event_triggered = other._legacy_event_triggered;
     if (this->_legacy_event_triggered.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_legacy_event_triggered.get_error());
-        game_hooks_restore_errno(other_guard, entry_errno);
+        game_hooks_unlock_guard(other_guard);
         return ;
     }
     this->_listener_catalog = ft_map<ft_string, ft_vector<ft_game_hook_listener_entry> >();
     if (this->_listener_catalog.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_listener_catalog.get_error());
-        game_hooks_restore_errno(other_guard, entry_errno);
+        game_hooks_unlock_guard(other_guard);
         return ;
     }
     this->_catalog_metadata = ft_vector<ft_game_hook_metadata>();
     if (this->_catalog_metadata.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_catalog_metadata.get_error());
-        game_hooks_restore_errno(other_guard, entry_errno);
+        game_hooks_unlock_guard(other_guard);
         return ;
     }
     this->clone_catalog_from(other);
     if (this->_error_code != FT_ERR_SUCCESSS)
     {
-        game_hooks_restore_errno(other_guard, entry_errno);
+        game_hooks_unlock_guard(other_guard);
         return ;
     }
-    this->set_error(this->_error_code);
-    game_hooks_restore_errno(other_guard, entry_errno);
+    this->set_error(FT_ERR_SUCCESSS);
+    game_hooks_unlock_guard(other_guard);
     return ;
 }
 
@@ -231,63 +220,51 @@ ft_game_hooks &ft_game_hooks::operator=(const ft_game_hooks &other) noexcept
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_game_hooks::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_errno = entry_errno;
         return (*this);
     }
     this->_legacy_item_crafted = other._legacy_item_crafted;
     if (this->_legacy_item_crafted.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_legacy_item_crafted.get_error());
-        ft_errno = entry_errno;
         return (*this);
     }
     this->_legacy_character_damaged = other._legacy_character_damaged;
     if (this->_legacy_character_damaged.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_legacy_character_damaged.get_error());
-        ft_errno = entry_errno;
         return (*this);
     }
     this->_legacy_event_triggered = other._legacy_event_triggered;
     if (this->_legacy_event_triggered.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_legacy_event_triggered.get_error());
-        ft_errno = entry_errno;
         return (*this);
     }
     this->_listener_catalog.clear();
     if (this->_listener_catalog.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_listener_catalog.get_error());
-        ft_errno = entry_errno;
         return (*this);
     }
     this->_catalog_metadata.clear();
     if (this->_catalog_metadata.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_catalog_metadata.get_error());
-        ft_errno = entry_errno;
         return (*this);
     }
     this->clone_catalog_from(other);
     if (this->_error_code != FT_ERR_SUCCESSS)
-    {
-        ft_errno = entry_errno;
         return (*this);
-    }
     this->_error_code = other._error_code;
-    this->set_error(this->_error_code);
-    ft_errno = entry_errno;
+    this->set_error(FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -295,55 +272,52 @@ ft_game_hooks::ft_game_hooks(ft_game_hooks &&other) noexcept
     : _legacy_item_crafted(), _legacy_character_damaged(), _legacy_event_triggered(),
       _listener_catalog(), _catalog_metadata(), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
-
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        game_hooks_restore_errno(other_guard, entry_errno);
+        game_hooks_unlock_guard(other_guard);
         return ;
     }
     this->_legacy_item_crafted = ft_move(other._legacy_item_crafted);
     if (this->_legacy_item_crafted.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_legacy_item_crafted.get_error());
-        game_hooks_restore_errno(other_guard, entry_errno);
+        game_hooks_unlock_guard(other_guard);
         return ;
     }
     this->_legacy_character_damaged = ft_move(other._legacy_character_damaged);
     if (this->_legacy_character_damaged.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_legacy_character_damaged.get_error());
-        game_hooks_restore_errno(other_guard, entry_errno);
+        game_hooks_unlock_guard(other_guard);
         return ;
     }
     this->_legacy_event_triggered = ft_move(other._legacy_event_triggered);
     if (this->_legacy_event_triggered.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_legacy_event_triggered.get_error());
-        game_hooks_restore_errno(other_guard, entry_errno);
+        game_hooks_unlock_guard(other_guard);
         return ;
     }
     this->_listener_catalog = ft_move(other._listener_catalog);
     if (this->_listener_catalog.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_listener_catalog.get_error());
-        game_hooks_restore_errno(other_guard, entry_errno);
+        game_hooks_unlock_guard(other_guard);
         return ;
     }
     this->_catalog_metadata = ft_move(other._catalog_metadata);
     if (this->_catalog_metadata.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_catalog_metadata.get_error());
-        game_hooks_restore_errno(other_guard, entry_errno);
+        game_hooks_unlock_guard(other_guard);
         return ;
     }
     this->_error_code = other._error_code;
     other._error_code = FT_ERR_SUCCESSS;
-    this->set_error(this->_error_code);
-    game_hooks_restore_errno(other_guard, entry_errno);
+    this->set_error(FT_ERR_SUCCESSS);
+    game_hooks_unlock_guard(other_guard);
     return ;
 }
 
@@ -351,58 +325,49 @@ ft_game_hooks &ft_game_hooks::operator=(ft_game_hooks &&other) noexcept
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_game_hooks::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error(lock_error);
-        ft_errno = entry_errno;
         return (*this);
     }
     this->_legacy_item_crafted = ft_move(other._legacy_item_crafted);
     if (this->_legacy_item_crafted.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_legacy_item_crafted.get_error());
-        ft_errno = entry_errno;
         return (*this);
     }
     this->_legacy_character_damaged = ft_move(other._legacy_character_damaged);
     if (this->_legacy_character_damaged.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_legacy_character_damaged.get_error());
-        ft_errno = entry_errno;
         return (*this);
     }
     this->_legacy_event_triggered = ft_move(other._legacy_event_triggered);
     if (this->_legacy_event_triggered.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_legacy_event_triggered.get_error());
-        ft_errno = entry_errno;
         return (*this);
     }
     this->_listener_catalog = ft_move(other._listener_catalog);
     if (this->_listener_catalog.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_listener_catalog.get_error());
-        ft_errno = entry_errno;
         return (*this);
     }
     this->_catalog_metadata = ft_move(other._catalog_metadata);
     if (this->_catalog_metadata.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_catalog_metadata.get_error());
-        ft_errno = entry_errno;
         return (*this);
     }
     this->_error_code = other._error_code;
     other._error_code = FT_ERR_SUCCESSS;
-    this->set_error(this->_error_code);
-    ft_errno = entry_errno;
+    this->set_error(FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -629,11 +594,9 @@ void ft_game_hooks::clone_catalog_from(const ft_game_hooks &other) noexcept
 
 void ft_game_hooks::set_on_item_crafted(ft_function<void(ft_character&, ft_item&)> &&callback) noexcept
 {
-    int entry_errno;
     ft_game_hook_listener_entry entry;
     ft_function<void(ft_character&, ft_item&)> callback_copy;
 
-    entry_errno = ft_errno;
     entry.metadata = ft_game_hook_metadata();
     entry.priority = 0;
     entry.callback = ft_function<void(ft_game_hook_context&)>();
@@ -642,49 +605,42 @@ void ft_game_hooks::set_on_item_crafted(ft_function<void(ft_character&, ft_item&
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->_legacy_item_crafted = ft_move(callback);
     if (this->_legacy_item_crafted.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_legacy_item_crafted.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     callback_copy = this->_legacy_item_crafted;
     if (callback_copy.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(callback_copy.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     entry.metadata.hook_identifier = ft_game_hook_item_crafted_identifier;
     if (entry.metadata.hook_identifier.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(entry.metadata.hook_identifier.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     entry.metadata.listener_name = "legacy.item_crafted";
     if (entry.metadata.listener_name.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(entry.metadata.listener_name.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     entry.metadata.description = "Legacy callback set via set_on_item_crafted";
     if (entry.metadata.description.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(entry.metadata.description.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     entry.metadata.argument_contract = "ft_character&,ft_item&";
     if (entry.metadata.argument_contract.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(entry.metadata.argument_contract.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     entry.priority = 1000;
@@ -692,39 +648,32 @@ void ft_game_hooks::set_on_item_crafted(ft_function<void(ft_character&, ft_item&
     if (entry.callback.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(entry.callback.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->remove_listener_unlocked(entry.metadata.hook_identifier, entry.metadata.listener_name);
     if (this->_error_code != FT_ERR_SUCCESSS)
     {
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->insert_listener_unlocked(entry);
     if (this->_error_code != FT_ERR_SUCCESSS)
     {
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->append_metadata_unlocked(entry.metadata);
     if (this->_error_code != FT_ERR_SUCCESSS)
     {
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
-    game_hooks_restore_errno(guard, entry_errno);
     return ;
 }
 
 void ft_game_hooks::set_on_character_damaged(ft_function<void(ft_character&, int, uint8_t)> &&callback) noexcept
 {
-    int entry_errno;
     ft_game_hook_listener_entry entry;
     ft_function<void(ft_character&, int, uint8_t)> callback_copy;
 
-    entry_errno = ft_errno;
     entry.metadata = ft_game_hook_metadata();
     entry.priority = 0;
     entry.callback = ft_function<void(ft_game_hook_context&)>();
@@ -733,49 +682,42 @@ void ft_game_hooks::set_on_character_damaged(ft_function<void(ft_character&, int
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->_legacy_character_damaged = ft_move(callback);
     if (this->_legacy_character_damaged.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_legacy_character_damaged.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     callback_copy = this->_legacy_character_damaged;
     if (callback_copy.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(callback_copy.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     entry.metadata.hook_identifier = ft_game_hook_character_damaged_identifier;
     if (entry.metadata.hook_identifier.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(entry.metadata.hook_identifier.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     entry.metadata.listener_name = "legacy.character_damaged";
     if (entry.metadata.listener_name.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(entry.metadata.listener_name.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     entry.metadata.description = "Legacy callback set via set_on_character_damaged";
     if (entry.metadata.description.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(entry.metadata.description.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     entry.metadata.argument_contract = "ft_character&,int,uint8_t";
     if (entry.metadata.argument_contract.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(entry.metadata.argument_contract.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     entry.priority = 1000;
@@ -783,39 +725,32 @@ void ft_game_hooks::set_on_character_damaged(ft_function<void(ft_character&, int
     if (entry.callback.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(entry.callback.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->remove_listener_unlocked(entry.metadata.hook_identifier, entry.metadata.listener_name);
     if (this->_error_code != FT_ERR_SUCCESSS)
     {
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->insert_listener_unlocked(entry);
     if (this->_error_code != FT_ERR_SUCCESSS)
     {
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->append_metadata_unlocked(entry.metadata);
     if (this->_error_code != FT_ERR_SUCCESSS)
     {
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
-    game_hooks_restore_errno(guard, entry_errno);
     return ;
 }
 
 void ft_game_hooks::set_on_event_triggered(ft_function<void(ft_world&, ft_event&)> &&callback) noexcept
 {
-    int entry_errno;
     ft_game_hook_listener_entry entry;
     ft_function<void(ft_world&, ft_event&)> callback_copy;
 
-    entry_errno = ft_errno;
     entry.metadata = ft_game_hook_metadata();
     entry.priority = 0;
     entry.callback = ft_function<void(ft_game_hook_context&)>();
@@ -824,49 +759,42 @@ void ft_game_hooks::set_on_event_triggered(ft_function<void(ft_world&, ft_event&
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->_legacy_event_triggered = ft_move(callback);
     if (this->_legacy_event_triggered.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_legacy_event_triggered.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     callback_copy = this->_legacy_event_triggered;
     if (callback_copy.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(callback_copy.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     entry.metadata.hook_identifier = ft_game_hook_event_triggered_identifier;
     if (entry.metadata.hook_identifier.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(entry.metadata.hook_identifier.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     entry.metadata.listener_name = "legacy.event_triggered";
     if (entry.metadata.listener_name.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(entry.metadata.listener_name.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     entry.metadata.description = "Legacy callback set via set_on_event_triggered";
     if (entry.metadata.description.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(entry.metadata.description.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     entry.metadata.argument_contract = "ft_world&,ft_event&";
     if (entry.metadata.argument_contract.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(entry.metadata.argument_contract.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     entry.priority = 1000;
@@ -874,134 +802,109 @@ void ft_game_hooks::set_on_event_triggered(ft_function<void(ft_world&, ft_event&
     if (entry.callback.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(entry.callback.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->remove_listener_unlocked(entry.metadata.hook_identifier, entry.metadata.listener_name);
     if (this->_error_code != FT_ERR_SUCCESSS)
     {
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->insert_listener_unlocked(entry);
     if (this->_error_code != FT_ERR_SUCCESSS)
     {
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->append_metadata_unlocked(entry.metadata);
     if (this->_error_code != FT_ERR_SUCCESSS)
     {
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
-    game_hooks_restore_errno(guard, entry_errno);
     return ;
 }
 
 ft_function<void(ft_character&, ft_item&)> ft_game_hooks::get_on_item_crafted() const noexcept
 {
-    int entry_errno;
     ft_function<void(ft_character&, ft_item&)> callback;
 
-    entry_errno = ft_errno;
     callback = ft_function<void(ft_character&, ft_item&)>();
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_hooks *>(this)->set_error(guard.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return (callback);
     }
     callback = this->_legacy_item_crafted;
     if (callback.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_hooks *>(this)->set_error(callback.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return (callback);
     }
     const_cast<ft_game_hooks *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_hooks_restore_errno(guard, entry_errno);
     return (callback);
 }
 
 ft_function<void(ft_character&, int, uint8_t)> ft_game_hooks::get_on_character_damaged() const noexcept
 {
-    int entry_errno;
     ft_function<void(ft_character&, int, uint8_t)> callback;
 
-    entry_errno = ft_errno;
     callback = ft_function<void(ft_character&, int, uint8_t)>();
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_hooks *>(this)->set_error(guard.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return (callback);
     }
     callback = this->_legacy_character_damaged;
     if (callback.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_hooks *>(this)->set_error(callback.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return (callback);
     }
     const_cast<ft_game_hooks *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_hooks_restore_errno(guard, entry_errno);
     return (callback);
 }
 
 ft_function<void(ft_world&, ft_event&)> ft_game_hooks::get_on_event_triggered() const noexcept
 {
-    int entry_errno;
     ft_function<void(ft_world&, ft_event&)> callback;
 
-    entry_errno = ft_errno;
     callback = ft_function<void(ft_world&, ft_event&)>();
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_hooks *>(this)->set_error(guard.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return (callback);
     }
     callback = this->_legacy_event_triggered;
     if (callback.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_hooks *>(this)->set_error(callback.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return (callback);
     }
     const_cast<ft_game_hooks *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_hooks_restore_errno(guard, entry_errno);
     return (callback);
 }
 
 void ft_game_hooks::invoke_hook(const ft_string &hook_identifier, ft_game_hook_context &context) const noexcept
 {
-    int entry_errno;
     ft_vector<ft_game_hook_listener_entry> listeners;
     size_t index;
 
-    entry_errno = ft_errno;
     listeners = ft_vector<ft_game_hook_listener_entry>();
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_hooks *>(this)->set_error(guard.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->collect_listeners_unlocked(hook_identifier, listeners);
     if (this->_error_code != FT_ERR_SUCCESSS)
     {
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     if (guard.owns_lock())
         guard.unlock();
-    ft_errno = entry_errno;
     index = 0;
     while (index < listeners.size())
     {
@@ -1010,7 +913,6 @@ void ft_game_hooks::invoke_hook(const ft_string &hook_identifier, ft_game_hook_c
         index++;
     }
     const_cast<ft_game_hooks *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_hooks_restore_errno_plain(entry_errno);
     return ;
 }
 
@@ -1058,10 +960,8 @@ void ft_game_hooks::invoke_on_event_triggered(ft_world &world, ft_event &event) 
 
 void ft_game_hooks::register_listener(const ft_game_hook_metadata &metadata, int priority, ft_function<void(ft_game_hook_context&)> &&callback) noexcept
 {
-    int entry_errno;
     ft_game_hook_listener_entry entry;
 
-    entry_errno = ft_errno;
     entry.metadata = metadata;
     entry.priority = priority;
     entry.callback = ft_move(callback);
@@ -1069,112 +969,91 @@ void ft_game_hooks::register_listener(const ft_game_hook_metadata &metadata, int
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     if (entry.callback.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(entry.callback.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->remove_listener_unlocked(entry.metadata.hook_identifier, entry.metadata.listener_name);
     if (this->_error_code != FT_ERR_SUCCESSS)
     {
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->insert_listener_unlocked(entry);
     if (this->_error_code != FT_ERR_SUCCESSS)
     {
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->append_metadata_unlocked(entry.metadata);
     if (this->_error_code != FT_ERR_SUCCESSS)
     {
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
-    game_hooks_restore_errno(guard, entry_errno);
     return ;
 }
 
 void ft_game_hooks::unregister_listener(const ft_string &hook_identifier, const ft_string &listener_name) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->remove_listener_unlocked(hook_identifier, listener_name);
     if (this->_error_code != FT_ERR_SUCCESSS)
     {
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
-    game_hooks_restore_errno(guard, entry_errno);
     return ;
 }
 
 ft_vector<ft_game_hook_metadata> ft_game_hooks::get_catalog_metadata() const noexcept
 {
-    int entry_errno;
     ft_vector<ft_game_hook_metadata> metadata;
 
-    entry_errno = ft_errno;
     metadata = ft_vector<ft_game_hook_metadata>();
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_hooks *>(this)->set_error(guard.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return (metadata);
     }
     this->collect_metadata_unlocked(metadata);
     if (this->_error_code != FT_ERR_SUCCESSS)
     {
-        game_hooks_restore_errno(guard, entry_errno);
         return (metadata);
     }
     const_cast<ft_game_hooks *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_hooks_restore_errno(guard, entry_errno);
     return (metadata);
 }
 
 ft_vector<ft_game_hook_metadata> ft_game_hooks::get_catalog_metadata_for(const ft_string &hook_identifier) const noexcept
 {
-    int entry_errno;
     ft_vector<ft_game_hook_metadata> metadata;
     ft_vector<ft_game_hook_metadata> full_catalog;
     size_t index;
 
-    entry_errno = ft_errno;
     metadata = ft_vector<ft_game_hook_metadata>();
     full_catalog = ft_vector<ft_game_hook_metadata>();
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_hooks *>(this)->set_error(guard.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return (metadata);
     }
     this->collect_metadata_unlocked(full_catalog);
     if (this->_error_code != FT_ERR_SUCCESSS)
     {
-        game_hooks_restore_errno(guard, entry_errno);
         return (metadata);
     }
     if (guard.owns_lock())
         guard.unlock();
-    ft_errno = entry_errno;
     index = 0;
     while (index < full_catalog.size())
     {
@@ -1190,97 +1069,79 @@ ft_vector<ft_game_hook_metadata> ft_game_hooks::get_catalog_metadata_for(const f
         index++;
     }
     const_cast<ft_game_hooks *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_hooks_restore_errno_plain(entry_errno);
     return (metadata);
 }
 
 void ft_game_hooks::reset() noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->_legacy_item_crafted = ft_function<void(ft_character&, ft_item&)>();
     if (this->_legacy_item_crafted.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_legacy_item_crafted.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->_legacy_character_damaged = ft_function<void(ft_character&, int, uint8_t)>();
     if (this->_legacy_character_damaged.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_legacy_character_damaged.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->_legacy_event_triggered = ft_function<void(ft_world&, ft_event&)>();
     if (this->_legacy_event_triggered.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_legacy_event_triggered.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->_listener_catalog.clear();
     if (this->_listener_catalog.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_listener_catalog.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->_catalog_metadata.clear();
     if (this->_catalog_metadata.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_catalog_metadata.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
-    game_hooks_restore_errno(guard, entry_errno);
     return ;
 }
 
 int ft_game_hooks::get_error() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_hooks *>(this)->set_error(guard.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return (guard.get_error());
     }
     error_code = this->_error_code;
     const_cast<ft_game_hooks *>(this)->set_error(error_code);
-    game_hooks_restore_errno(guard, entry_errno);
     return (error_code);
 }
 
 const char *ft_game_hooks::get_error_str() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_game_hooks *>(this)->set_error(guard.get_error());
-        game_hooks_restore_errno(guard, entry_errno);
         return (ft_strerror(guard.get_error()));
     }
     error_code = this->_error_code;
     const_cast<ft_game_hooks *>(this)->set_error(error_code);
-    game_hooks_restore_errno(guard, entry_errno);
     return (ft_strerror(error_code));
 }
 

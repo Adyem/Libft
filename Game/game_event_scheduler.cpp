@@ -27,12 +27,10 @@ static void event_scheduler_profile_reset_struct(t_event_scheduler_profile &prof
     return ;
 }
 
-static void event_scheduler_restore_errno(ft_unique_lock<pt_mutex> &guard,
-        int entry_errno)
+static void event_scheduler_unlock(ft_unique_lock<pt_mutex> &guard)
 {
     if (guard.owns_lock())
         guard.unlock();
-    ft_errno = entry_errno;
     return ;
 }
 
@@ -145,13 +143,11 @@ void ft_event_scheduler::finalize_update(ft_vector<ft_sharedptr<ft_event> > &eve
         bool start_valid,
         t_high_resolution_time_point start_time) noexcept
 {
-    int entry_errno;
     bool end_valid;
     t_high_resolution_time_point end_time;
     long long duration_ns;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    entry_errno = ft_errno;
     end_valid = false;
     duration_ns = 0;
     if (profiling_active && start_valid)
@@ -167,19 +163,19 @@ void ft_event_scheduler::finalize_update(ft_vector<ft_sharedptr<ft_event> > &eve
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        event_scheduler_restore_errno(guard, entry_errno);
         return ;
     }
     this->_ready_cache = ft_move(events);
     if (this->_ready_cache.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_ready_cache.get_error());
-        event_scheduler_restore_errno(guard, entry_errno);
+        event_scheduler_unlock(guard);
         return ;
     }
     if (profiling_active && start_valid && end_valid && this->_profiling_enabled)
         this->record_profile_locked(ready_count, rescheduled_count, queue_depth, duration_ns);
-    event_scheduler_restore_errno(guard, entry_errno);
+    this->set_error(FT_ERR_SUCCESSS);
+    event_scheduler_unlock(guard);
     return ;
 }
 
@@ -192,7 +188,6 @@ bool ft_event_compare_ptr::operator()(const ft_sharedptr<ft_event> &left,
     ft_event *right_pointer;
     ft_unique_lock<pt_mutex> left_guard;
     ft_unique_lock<pt_mutex> right_guard;
-    int entry_errno;
     int lock_error;
     int left_duration;
     int right_duration;
@@ -208,7 +203,6 @@ bool ft_event_compare_ptr::operator()(const ft_sharedptr<ft_event> &left,
         return (false);
     if (right_pointer == ft_nullptr)
         return (true);
-    entry_errno = ft_errno;
     lock_error = ft_event::lock_pair(*left_pointer, *right_pointer,
             left_guard, right_guard);
     if (lock_error != FT_ERR_SUCCESSS)
@@ -224,11 +218,8 @@ bool ft_event_compare_ptr::operator()(const ft_sharedptr<ft_event> &left,
     right_duration = right_pointer->_duration;
     left_pointer->set_error(FT_ERR_SUCCESSS);
     right_pointer->set_error(FT_ERR_SUCCESSS);
-    if (left_guard.owns_lock())
-        left_guard.unlock();
-    if (right_guard.owns_lock())
-        right_guard.unlock();
-    ft_errno = entry_errno;
+    event_scheduler_unlock(left_guard);
+    event_scheduler_unlock(right_guard);
     comparison_result = (left_duration > right_duration);
     return (comparison_result);
 }
@@ -252,25 +243,22 @@ ft_event_scheduler::~ft_event_scheduler()
 ft_event_scheduler::ft_event_scheduler(const ft_event_scheduler &other) noexcept
     : _events(), _error_code(FT_ERR_SUCCESSS), _mutex(), _profiling_enabled(false), _profile(), _ready_cache()
 {
-    int entry_errno;
     ft_vector<ft_sharedptr<ft_event> > events;
     size_t index;
     size_t count;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
     event_scheduler_profile_reset_struct(this->_profile);
-    entry_errno = ft_errno;
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        event_scheduler_restore_errno(guard, entry_errno);
         return ;
     }
     other.dump_events(events);
     if (other.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other.get_error());
-        event_scheduler_restore_errno(guard, entry_errno);
+        event_scheduler_unlock(guard);
         return ;
     }
     this->_profiling_enabled = other._profiling_enabled;
@@ -281,7 +269,7 @@ ft_event_scheduler::ft_event_scheduler(const ft_event_scheduler &other) noexcept
         if (this->_ready_cache.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(this->_ready_cache.get_error());
-            event_scheduler_restore_errno(guard, entry_errno);
+            event_scheduler_unlock(guard);
             return ;
         }
     }
@@ -293,13 +281,13 @@ ft_event_scheduler::ft_event_scheduler(const ft_event_scheduler &other) noexcept
         if (this->_events.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(this->_events.get_error());
-            event_scheduler_restore_errno(guard, entry_errno);
+            event_scheduler_unlock(guard);
             return ;
         }
         index += 1;
     }
     this->set_error(other.get_error());
-    event_scheduler_restore_errno(guard, entry_errno);
+    event_scheduler_unlock(guard);
     return ;
 }
 
@@ -307,7 +295,6 @@ ft_event_scheduler &ft_event_scheduler::operator=(const ft_event_scheduler &othe
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
     ft_vector<ft_sharedptr<ft_event> > events;
     size_t index;
@@ -315,7 +302,6 @@ ft_event_scheduler &ft_event_scheduler::operator=(const ft_event_scheduler &othe
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     other.dump_events(events);
     if (other.get_error() != FT_ERR_SUCCESSS)
     {
@@ -335,8 +321,8 @@ ft_event_scheduler &ft_event_scheduler::operator=(const ft_event_scheduler &othe
     if (this->_ready_cache.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_ready_cache.get_error());
-        event_scheduler_restore_errno(this_guard, entry_errno);
-        event_scheduler_restore_errno(other_guard, entry_errno);
+        event_scheduler_unlock(this_guard);
+        event_scheduler_unlock(other_guard);
         return (*this);
     }
     if (other._ready_cache.capacity() > 0)
@@ -345,8 +331,8 @@ ft_event_scheduler &ft_event_scheduler::operator=(const ft_event_scheduler &othe
         if (this->_ready_cache.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(this->_ready_cache.get_error());
-            event_scheduler_restore_errno(this_guard, entry_errno);
-            event_scheduler_restore_errno(other_guard, entry_errno);
+            event_scheduler_unlock(this_guard);
+            event_scheduler_unlock(other_guard);
             return (*this);
         }
     }
@@ -354,8 +340,8 @@ ft_event_scheduler &ft_event_scheduler::operator=(const ft_event_scheduler &othe
     if (this->_events.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_events.get_error());
-        event_scheduler_restore_errno(this_guard, entry_errno);
-        event_scheduler_restore_errno(other_guard, entry_errno);
+        event_scheduler_unlock(this_guard);
+        event_scheduler_unlock(other_guard);
         return (*this);
     }
     index = 0;
@@ -366,30 +352,28 @@ ft_event_scheduler &ft_event_scheduler::operator=(const ft_event_scheduler &othe
         if (this->_events.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(this->_events.get_error());
-            event_scheduler_restore_errno(this_guard, entry_errno);
-            event_scheduler_restore_errno(other_guard, entry_errno);
+            event_scheduler_unlock(this_guard);
+            event_scheduler_unlock(other_guard);
             return (*this);
         }
         index += 1;
     }
     this->set_error(other.get_error());
-    event_scheduler_restore_errno(this_guard, entry_errno);
-    event_scheduler_restore_errno(other_guard, entry_errno);
+    event_scheduler_unlock(this_guard);
+    event_scheduler_unlock(other_guard);
     return (*this);
 }
 
 ft_event_scheduler::ft_event_scheduler(ft_event_scheduler &&other) noexcept
     : _events(), _error_code(FT_ERR_SUCCESSS), _mutex(), _profiling_enabled(false), _profile(), _ready_cache()
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
 
     event_scheduler_profile_reset_struct(this->_profile);
-    entry_errno = ft_errno;
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        event_scheduler_restore_errno(other_guard, entry_errno);
+        event_scheduler_unlock(other_guard);
         return ;
     }
     this->_events = ft_move(other._events);
@@ -397,7 +381,7 @@ ft_event_scheduler::ft_event_scheduler(ft_event_scheduler &&other) noexcept
     {
         this->set_error(this->_events.get_error());
         other.set_error(FT_ERR_SUCCESSS);
-        event_scheduler_restore_errno(other_guard, entry_errno);
+        event_scheduler_unlock(other_guard);
         return ;
     }
     this->_ready_cache = ft_move(other._ready_cache);
@@ -405,7 +389,7 @@ ft_event_scheduler::ft_event_scheduler(ft_event_scheduler &&other) noexcept
     {
         this->set_error(this->_ready_cache.get_error());
         other.set_error(FT_ERR_SUCCESSS);
-        event_scheduler_restore_errno(other_guard, entry_errno);
+        event_scheduler_unlock(other_guard);
         return ;
     }
     this->_error_code = other._error_code;
@@ -416,7 +400,7 @@ ft_event_scheduler::ft_event_scheduler(ft_event_scheduler &&other) noexcept
     other._profiling_enabled = false;
     event_scheduler_profile_reset_struct(other._profile);
     other.set_error(FT_ERR_SUCCESSS);
-    event_scheduler_restore_errno(other_guard, entry_errno);
+    event_scheduler_unlock(other_guard);
     return ;
 }
 
@@ -424,12 +408,10 @@ ft_event_scheduler &ft_event_scheduler::operator=(ft_event_scheduler &&other) no
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_event_scheduler::lock_pair(*this, other,
             this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
@@ -442,8 +424,8 @@ ft_event_scheduler &ft_event_scheduler::operator=(ft_event_scheduler &&other) no
     {
         this->set_error(this->_events.get_error());
         other.set_error(FT_ERR_SUCCESSS);
-        event_scheduler_restore_errno(this_guard, entry_errno);
-        event_scheduler_restore_errno(other_guard, entry_errno);
+        event_scheduler_unlock(this_guard);
+        event_scheduler_unlock(other_guard);
         return (*this);
     }
     this->_ready_cache = ft_move(other._ready_cache);
@@ -451,8 +433,8 @@ ft_event_scheduler &ft_event_scheduler::operator=(ft_event_scheduler &&other) no
     {
         this->set_error(this->_ready_cache.get_error());
         other.set_error(FT_ERR_SUCCESSS);
-        event_scheduler_restore_errno(this_guard, entry_errno);
-        event_scheduler_restore_errno(other_guard, entry_errno);
+        event_scheduler_unlock(this_guard);
+        event_scheduler_unlock(other_guard);
         return (*this);
     }
     this->_error_code = other._error_code;
@@ -463,8 +445,8 @@ ft_event_scheduler &ft_event_scheduler::operator=(ft_event_scheduler &&other) no
     other._profiling_enabled = false;
     event_scheduler_profile_reset_struct(other._profile);
     other.set_error(FT_ERR_SUCCESSS);
-    event_scheduler_restore_errno(this_guard, entry_errno);
-    event_scheduler_restore_errno(other_guard, entry_errno);
+    event_scheduler_unlock(this_guard);
+    event_scheduler_unlock(other_guard);
     return (*this);
 }
 
@@ -477,54 +459,50 @@ void ft_event_scheduler::set_error(int error) const noexcept
 
 void ft_event_scheduler::schedule_event(const ft_sharedptr<ft_event> &event) noexcept
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        event_scheduler_restore_errno(guard, entry_errno);
+        event_scheduler_unlock(guard);
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
     if (!event)
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
-        event_scheduler_restore_errno(guard, entry_errno);
+        event_scheduler_unlock(guard);
         return ;
     }
     if (event.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(event.get_error());
-        event_scheduler_restore_errno(guard, entry_errno);
+        event_scheduler_unlock(guard);
         return ;
     }
     this->_events.push(event);
     if (this->_events.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_events.get_error());
-        event_scheduler_restore_errno(guard, entry_errno);
+        event_scheduler_unlock(guard);
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
-    event_scheduler_restore_errno(guard, entry_errno);
+    event_scheduler_unlock(guard);
     return ;
 }
 
 void ft_event_scheduler::cancel_event(int id) noexcept
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     ft_priority_queue<ft_sharedptr<ft_event>, ft_event_compare_ptr> temporary_queue;
     ft_sharedptr<ft_event> current_event;
     bool event_found;
 
-    entry_errno = ft_errno;
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        event_scheduler_restore_errno(guard, entry_errno);
+        event_scheduler_unlock(guard);
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
@@ -535,7 +513,7 @@ void ft_event_scheduler::cancel_event(int id) noexcept
         if (this->_events.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(this->_events.get_error());
-            event_scheduler_restore_errno(guard, entry_errno);
+            event_scheduler_unlock(guard);
             return ;
         }
         if (current_event->get_id() != id)
@@ -544,7 +522,7 @@ void ft_event_scheduler::cancel_event(int id) noexcept
             if (temporary_queue.get_error() != FT_ERR_SUCCESSS)
             {
                 this->set_error(temporary_queue.get_error());
-                event_scheduler_restore_errno(guard, entry_errno);
+                event_scheduler_unlock(guard);
                 return ;
             }
         }
@@ -557,14 +535,14 @@ void ft_event_scheduler::cancel_event(int id) noexcept
         if (temporary_queue.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(temporary_queue.get_error());
-            event_scheduler_restore_errno(guard, entry_errno);
+            event_scheduler_unlock(guard);
             return ;
         }
         this->_events.push(temporary_event);
         if (this->_events.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(this->_events.get_error());
-            event_scheduler_restore_errno(guard, entry_errno);
+            event_scheduler_unlock(guard);
             return ;
         }
     }
@@ -572,23 +550,21 @@ void ft_event_scheduler::cancel_event(int id) noexcept
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
     else
         this->set_error(FT_ERR_SUCCESSS);
-    event_scheduler_restore_errno(guard, entry_errno);
+    event_scheduler_unlock(guard);
     return ;
 }
 
 void ft_event_scheduler::reschedule_event(int id, int new_duration) noexcept
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     ft_priority_queue<ft_sharedptr<ft_event>, ft_event_compare_ptr> temporary_queue;
     ft_sharedptr<ft_event> current_event;
     bool event_found;
 
-    entry_errno = ft_errno;
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        event_scheduler_restore_errno(guard, entry_errno);
+        event_scheduler_unlock(guard);
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
@@ -599,7 +575,7 @@ void ft_event_scheduler::reschedule_event(int id, int new_duration) noexcept
         if (this->_events.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(this->_events.get_error());
-            event_scheduler_restore_errno(guard, entry_errno);
+            event_scheduler_unlock(guard);
             return ;
         }
         if (current_event->get_id() == id)
@@ -608,7 +584,7 @@ void ft_event_scheduler::reschedule_event(int id, int new_duration) noexcept
             if (current_event->get_error() != FT_ERR_SUCCESSS)
             {
                 this->set_error(current_event->get_error());
-                event_scheduler_restore_errno(guard, entry_errno);
+                event_scheduler_unlock(guard);
                 return ;
             }
             event_found = true;
@@ -617,7 +593,7 @@ void ft_event_scheduler::reschedule_event(int id, int new_duration) noexcept
         if (temporary_queue.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(temporary_queue.get_error());
-            event_scheduler_restore_errno(guard, entry_errno);
+            event_scheduler_unlock(guard);
             return ;
         }
     }
@@ -627,14 +603,14 @@ void ft_event_scheduler::reschedule_event(int id, int new_duration) noexcept
         if (temporary_queue.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(temporary_queue.get_error());
-            event_scheduler_restore_errno(guard, entry_errno);
+            event_scheduler_unlock(guard);
             return ;
         }
         this->_events.push(temporary_event);
         if (this->_events.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(this->_events.get_error());
-            event_scheduler_restore_errno(guard, entry_errno);
+            event_scheduler_unlock(guard);
             return ;
         }
     }
@@ -642,7 +618,7 @@ void ft_event_scheduler::reschedule_event(int id, int new_duration) noexcept
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
     else
         this->set_error(FT_ERR_SUCCESSS);
-    event_scheduler_restore_errno(guard, entry_errno);
+    event_scheduler_unlock(guard);
     return ;
 }
 
@@ -650,7 +626,6 @@ void ft_event_scheduler::update_events(ft_sharedptr<ft_world> &world,
         int ticks, const char *log_file_path,
         ft_string *log_buffer) noexcept
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     ft_priority_queue<ft_sharedptr<ft_event>, ft_event_compare_ptr> temporary_queue;
     ft_sharedptr<ft_event> current_event;
@@ -664,25 +639,24 @@ void ft_event_scheduler::update_events(ft_sharedptr<ft_world> &world,
     bool start_valid;
     t_high_resolution_time_point start_time;
 
-    entry_errno = ft_errno;
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        event_scheduler_restore_errno(guard, entry_errno);
+        event_scheduler_unlock(guard);
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
     if (!world)
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
-        event_scheduler_restore_errno(guard, entry_errno);
+        event_scheduler_unlock(guard);
         return ;
     }
     ready_cache.clear();
     if (ready_cache.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(ready_cache.get_error());
-        event_scheduler_restore_errno(guard, entry_errno);
+        event_scheduler_unlock(guard);
         return ;
     }
     profiling_active = this->_profiling_enabled;
@@ -701,20 +675,20 @@ void ft_event_scheduler::update_events(ft_sharedptr<ft_world> &world,
         if (this->_events.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(this->_events.get_error());
-            event_scheduler_restore_errno(guard, entry_errno);
+            event_scheduler_unlock(guard);
             return ;
         }
         if (current_event.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(current_event.get_error());
-            event_scheduler_restore_errno(guard, entry_errno);
+            event_scheduler_unlock(guard);
             return ;
         }
         current_event->sub_duration(ticks);
         if (current_event->get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(current_event->get_error());
-            event_scheduler_restore_errno(guard, entry_errno);
+            event_scheduler_unlock(guard);
             return ;
         }
         if (current_event->get_duration() <= 0)
@@ -723,7 +697,7 @@ void ft_event_scheduler::update_events(ft_sharedptr<ft_world> &world,
             if (ready_cache.get_error() != FT_ERR_SUCCESSS)
             {
                 this->set_error(ready_cache.get_error());
-                event_scheduler_restore_errno(guard, entry_errno);
+                event_scheduler_unlock(guard);
                 return ;
             }
         }
@@ -733,7 +707,7 @@ void ft_event_scheduler::update_events(ft_sharedptr<ft_world> &world,
             if (temporary_queue.get_error() != FT_ERR_SUCCESSS)
             {
                 this->set_error(temporary_queue.get_error());
-                event_scheduler_restore_errno(guard, entry_errno);
+                event_scheduler_unlock(guard);
                 return ;
             }
         }
@@ -744,20 +718,20 @@ void ft_event_scheduler::update_events(ft_sharedptr<ft_world> &world,
         if (temporary_queue.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(temporary_queue.get_error());
-            event_scheduler_restore_errno(guard, entry_errno);
+            event_scheduler_unlock(guard);
             return ;
         }
         if (temporary_event.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(temporary_event.get_error());
-            event_scheduler_restore_errno(guard, entry_errno);
+            event_scheduler_unlock(guard);
             return ;
         }
         this->_events.push(temporary_event);
         if (this->_events.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(this->_events.get_error());
-            event_scheduler_restore_errno(guard, entry_errno);
+            event_scheduler_unlock(guard);
             return ;
         }
         rescheduled_count += 1;
@@ -766,7 +740,7 @@ void ft_event_scheduler::update_events(ft_sharedptr<ft_world> &world,
     events_to_process = ft_move(ready_cache);
     ready_count = events_to_process.size();
     this->set_error(FT_ERR_SUCCESSS);
-    event_scheduler_restore_errno(guard, entry_errno);
+    event_scheduler_unlock(guard);
     ready_index = 0;
     while (ready_index < ready_count)
     {
@@ -777,21 +751,17 @@ void ft_event_scheduler::update_events(ft_sharedptr<ft_world> &world,
         processed_error = processed_event->get_error();
         if (processed_error != FT_ERR_SUCCESSS)
         {
-            int callback_entry_errno;
-
-            callback_entry_errno = ft_errno;
             ft_unique_lock<pt_mutex> error_guard(this->_mutex);
 
             if (error_guard.get_error() == FT_ERR_SUCCESSS)
             {
                 this->set_error(processed_error);
-                event_scheduler_restore_errno(error_guard, callback_entry_errno);
             }
             else
             {
                 this->set_error(error_guard.get_error());
-                event_scheduler_restore_errno(error_guard, callback_entry_errno);
             }
+            event_scheduler_unlock(error_guard);
             this->finalize_update(events_to_process, ready_count, rescheduled_count, queue_depth, profiling_active, start_valid, start_time);
             return ;
         }
@@ -804,21 +774,17 @@ void ft_event_scheduler::update_events(ft_sharedptr<ft_world> &world,
             log_result = log_event_to_file(*processed_event, log_file_path);
             if (log_result != FT_ERR_SUCCESSS)
             {
-                int callback_entry_errno;
-
-                callback_entry_errno = ft_errno;
                 ft_unique_lock<pt_mutex> error_guard(this->_mutex);
 
                 if (error_guard.get_error() == FT_ERR_SUCCESSS)
                 {
                     this->set_error(log_result);
-                    event_scheduler_restore_errno(error_guard, callback_entry_errno);
                 }
                 else
                 {
                     this->set_error(error_guard.get_error());
-                    event_scheduler_restore_errno(error_guard, callback_entry_errno);
                 }
+                event_scheduler_unlock(error_guard);
                 this->finalize_update(events_to_process, ready_count, rescheduled_count, queue_depth, profiling_active, start_valid, start_time);
                 return ;
             }
@@ -828,21 +794,17 @@ void ft_event_scheduler::update_events(ft_sharedptr<ft_world> &world,
             log_event_to_buffer(*processed_event, *log_buffer);
             if (ft_errno != FT_ERR_SUCCESSS)
             {
-                int callback_entry_errno;
-
-                callback_entry_errno = ft_errno;
                 ft_unique_lock<pt_mutex> error_guard(this->_mutex);
 
                 if (error_guard.get_error() == FT_ERR_SUCCESSS)
                 {
-                    this->set_error(callback_entry_errno);
-                    event_scheduler_restore_errno(error_guard, callback_entry_errno);
+                    this->set_error(ft_errno);
                 }
                 else
                 {
                     this->set_error(error_guard.get_error());
-                    event_scheduler_restore_errno(error_guard, callback_entry_errno);
                 }
+                event_scheduler_unlock(error_guard);
                 this->finalize_update(events_to_process, ready_count, rescheduled_count, queue_depth, profiling_active, start_valid, start_time);
                 return ;
             }
@@ -855,83 +817,73 @@ void ft_event_scheduler::update_events(ft_sharedptr<ft_world> &world,
 
 void ft_event_scheduler::enable_profiling(bool enabled) noexcept
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        event_scheduler_restore_errno(guard, entry_errno);
+        event_scheduler_unlock(guard);
         return ;
     }
     this->_profiling_enabled = enabled;
     this->reset_profile_locked();
     this->set_error(FT_ERR_SUCCESSS);
-    event_scheduler_restore_errno(guard, entry_errno);
+    event_scheduler_unlock(guard);
     return ;
 }
 
 bool ft_event_scheduler::profiling_enabled() const noexcept
 {
-    int entry_errno;
     bool enabled;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_event_scheduler *>(this)->set_error(guard.get_error());
-        event_scheduler_restore_errno(guard, entry_errno);
+        event_scheduler_unlock(guard);
         return (false);
     }
     enabled = this->_profiling_enabled;
     const_cast<ft_event_scheduler *>(this)->set_error(this->_error_code);
-    event_scheduler_restore_errno(guard, entry_errno);
+    event_scheduler_unlock(guard);
     return (enabled);
 }
 
 void ft_event_scheduler::reset_profile() noexcept
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        event_scheduler_restore_errno(guard, entry_errno);
+        event_scheduler_unlock(guard);
         return ;
     }
     this->reset_profile_locked();
     this->set_error(FT_ERR_SUCCESSS);
-    event_scheduler_restore_errno(guard, entry_errno);
+    event_scheduler_unlock(guard);
     return ;
 }
 
 void ft_event_scheduler::snapshot_profile(t_event_scheduler_profile &out) const noexcept
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         event_scheduler_profile_reset_struct(out);
         const_cast<ft_event_scheduler *>(this)->set_error(guard.get_error());
-        event_scheduler_restore_errno(guard, entry_errno);
+        event_scheduler_unlock(guard);
         return ;
     }
     out = this->_profile;
     const_cast<ft_event_scheduler *>(this)->set_error(this->_error_code);
-    event_scheduler_restore_errno(guard, entry_errno);
+    event_scheduler_unlock(guard);
     return ;
 }
 
 void ft_event_scheduler::dump_events(ft_vector<ft_sharedptr<ft_event> > &out) const noexcept
 {
-    int entry_errno;
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     ft_priority_queue<ft_sharedptr<ft_event>, ft_event_compare_ptr> temporary_queue;
     ft_sharedptr<ft_event> current_event;
@@ -939,7 +891,7 @@ void ft_event_scheduler::dump_events(ft_vector<ft_sharedptr<ft_event> > &out) co
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_event_scheduler *>(this)->set_error(guard.get_error());
-        event_scheduler_restore_errno(guard, entry_errno);
+        event_scheduler_unlock(guard);
         return ;
     }
     while (!this->_events.empty())
@@ -948,21 +900,21 @@ void ft_event_scheduler::dump_events(ft_vector<ft_sharedptr<ft_event> > &out) co
         if (this->_events.get_error() != FT_ERR_SUCCESSS)
         {
             const_cast<ft_event_scheduler *>(this)->set_error(this->_events.get_error());
-            event_scheduler_restore_errno(guard, entry_errno);
+            event_scheduler_unlock(guard);
             return ;
         }
         out.push_back(current_event);
         if (out.get_error() != FT_ERR_SUCCESSS)
         {
             const_cast<ft_event_scheduler *>(this)->set_error(out.get_error());
-            event_scheduler_restore_errno(guard, entry_errno);
+            event_scheduler_unlock(guard);
             return ;
         }
         temporary_queue.push(current_event);
         if (temporary_queue.get_error() != FT_ERR_SUCCESSS)
         {
             const_cast<ft_event_scheduler *>(this)->set_error(temporary_queue.get_error());
-            event_scheduler_restore_errno(guard, entry_errno);
+            event_scheduler_unlock(guard);
             return ;
         }
     }
@@ -972,97 +924,89 @@ void ft_event_scheduler::dump_events(ft_vector<ft_sharedptr<ft_event> > &out) co
         if (temporary_queue.get_error() != FT_ERR_SUCCESSS)
         {
             const_cast<ft_event_scheduler *>(this)->set_error(temporary_queue.get_error());
-            event_scheduler_restore_errno(guard, entry_errno);
+            event_scheduler_unlock(guard);
             return ;
         }
         if (this->_events.get_error() != FT_ERR_SUCCESSS)
         {
             const_cast<ft_event_scheduler *>(this)->set_error(this->_events.get_error());
-            event_scheduler_restore_errno(guard, entry_errno);
+            event_scheduler_unlock(guard);
             return ;
         }
     }
-    event_scheduler_restore_errno(guard, entry_errno);
+    event_scheduler_unlock(guard);
     return ;
 }
 
 size_t ft_event_scheduler::size() const noexcept
 {
-    int entry_errno;
     size_t event_count;
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_event_scheduler *>(this)->set_error(guard.get_error());
-        event_scheduler_restore_errno(guard, entry_errno);
+        event_scheduler_unlock(guard);
         return (0);
     }
     event_count = this->_events.size();
-    event_scheduler_restore_errno(guard, entry_errno);
+    event_scheduler_unlock(guard);
     return (event_count);
 }
 
 void ft_event_scheduler::clear() noexcept
 {
-    int entry_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
-    entry_errno = ft_errno;
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        event_scheduler_restore_errno(guard, entry_errno);
+        event_scheduler_unlock(guard);
         return ;
     }
     this->_events.clear();
     if (this->_events.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_events.get_error());
-        event_scheduler_restore_errno(guard, entry_errno);
+        event_scheduler_unlock(guard);
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
-    event_scheduler_restore_errno(guard, entry_errno);
+    event_scheduler_unlock(guard);
     return ;
 }
 
 int ft_event_scheduler::get_error() const noexcept
 {
-    int entry_errno;
     int error_code;
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_event_scheduler *>(this)->set_error(guard.get_error());
-        event_scheduler_restore_errno(guard, entry_errno);
+        event_scheduler_unlock(guard);
         return (guard.get_error());
     }
     error_code = this->_error_code;
     const_cast<ft_event_scheduler *>(this)->set_error(error_code);
-    event_scheduler_restore_errno(guard, entry_errno);
+    event_scheduler_unlock(guard);
     return (error_code);
 }
 
 const char *ft_event_scheduler::get_error_str() const noexcept
 {
-    int entry_errno;
     int error_code;
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
 
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_event_scheduler *>(this)->set_error(guard.get_error());
-        event_scheduler_restore_errno(guard, entry_errno);
+        event_scheduler_unlock(guard);
         return (ft_strerror(guard.get_error()));
     }
     error_code = this->_error_code;
     const_cast<ft_event_scheduler *>(this)->set_error(error_code);
-    event_scheduler_restore_errno(guard, entry_errno);
+    event_scheduler_unlock(guard);
     return (ft_strerror(error_code));
 }
 
