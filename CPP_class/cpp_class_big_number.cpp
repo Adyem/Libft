@@ -1246,19 +1246,16 @@ ft_big_number ft_big_number::operator/(const ft_big_number& other) const noexcep
         return (result);
     }
     if (this->is_zero_value())
-    {
         return (result);
-    }
     int magnitude_comparison = this->compare_magnitude(other);
 
     if (magnitude_comparison < 0)
-    {
         return (result);
-    }
     if (magnitude_comparison == 0)
     {
         result.append_digit('1');
-        if (result._error_code == FT_ERR_SUCCESSS && this->_is_negative != other._is_negative)
+        if (result._error_code == FT_ERR_SUCCESSS
+                && this->_is_negative != other._is_negative)
             result._is_negative = true;
         if (result._error_code == FT_ERR_SUCCESSS && result.is_zero_value())
             result._is_negative = false;

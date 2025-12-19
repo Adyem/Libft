@@ -439,6 +439,7 @@ FT_TEST(test_big_number_division_by_zero_error, "ft_big_number division reports 
     ft_big_number zero_number;
 
     ft_errno = 0;
+    zero_number.assign("0");
     numerator_number.assign("12345");
     ft_big_number result_number = numerator_number / zero_number;
     FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, result_number.get_error());
@@ -484,6 +485,7 @@ FT_TEST(test_big_number_modulus_basic, "ft_big_number modulus returns signed rem
     ft_big_number zero_divisor;
 
     ft_errno = 0;
+    zero_divisor.assign("0");
     ft_big_number error_remainder = positive_dividend % zero_divisor;
     FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, error_remainder.get_error());
     FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_errno);

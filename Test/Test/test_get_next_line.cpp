@@ -77,7 +77,7 @@ int test_get_next_line_basic(void)
     line_one = get_next_line(file_descriptor, 2);
     line_two = get_next_line(file_descriptor, 2);
     line_three = get_next_line(file_descriptor, 2);
-    success = line_one && line_two && !line_three
+success = line_one && line_two && !line_three
         && ft_strcmp(line_one, "Hello\n") == 0
         && ft_strcmp(line_two, "World\n") == 0;
     if (line_one)
@@ -235,6 +235,7 @@ FT_TEST(test_get_next_line_hash_map_allocation_failure_is_reported,
         cleanup_index++;
     }
     gnl_reset_all_streams();
+    cma_set_alloc_limit(0);
     return (1);
 }
 

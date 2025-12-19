@@ -98,6 +98,7 @@ FT_TEST(test_ft_string_error_state_copy_move_reset_errno,
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, move_assigned_string.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, move_assignment_source.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    cma_set_alloc_limit(0);
     return (1);
 }
 
