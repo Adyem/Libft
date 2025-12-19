@@ -64,7 +64,8 @@ static char ft_big_number_digit_symbol(int value) noexcept
 
 int ft_big_number::initialize_errno_keeper() noexcept
 {
-    return (ft_errno);
+    ft_errno = FT_ERR_SUCCESSS;
+    return (FT_ERR_SUCCESSS);
 }
 
 void ft_big_number::update_errno_keeper(int &stored_errno, int new_value) noexcept
@@ -1860,6 +1861,7 @@ ft_string ft_big_number::to_string_base(int base) noexcept
             return (ft_string(FT_ERR_NO_MEMORY));
         }
     }
+    ft_errno = FT_ERR_SUCCESSS;
     return (result);
 }
 

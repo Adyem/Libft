@@ -720,7 +720,7 @@ FT_TEST(test_big_number_errno_resets_accessors, "ft_big_number accessors and com
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
 
     ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
-    FT_ASSERT(left_number < ft_big_number());
+    FT_ASSERT(!(left_number < ft_big_number()));
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
 
     ft_errno = FT_ERR_DIVIDE_BY_ZERO;
