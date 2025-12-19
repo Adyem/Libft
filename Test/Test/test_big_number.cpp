@@ -443,8 +443,8 @@ FT_TEST(test_big_number_division_by_zero_error, "ft_big_number division reports 
     zero_number.assign("0");
     numerator_number.assign("12345");
     ft_big_number result_number = numerator_number / zero_number;
-    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, result_number.get_error());
     FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, result_number.get_error());
     ft_errno = 0;
     return (1);
 }
@@ -488,8 +488,8 @@ FT_TEST(test_big_number_modulus_basic, "ft_big_number modulus returns signed rem
     ft_errno = 0;
     zero_divisor.assign("0");
     ft_big_number error_remainder = positive_dividend % zero_divisor;
-    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, error_remainder.get_error());
     FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, error_remainder.get_error());
     ft_errno = 0;
     return (1);
 }
@@ -538,17 +538,18 @@ FT_TEST(test_big_number_modular_exponentiation, "ft_big_number mod_pow performs 
     exponent_one.assign("1");
     ft_errno = 0;
     ft_big_number modulus_error = base_number.mod_pow(exponent_one, zero_modulus);
-    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, modulus_error.get_error());
     FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, modulus_error.get_error());
     ft_errno = 0;
 
     ft_big_number negative_exponent;
 
     negative_exponent.assign("-1");
     ft_errno = 0;
-    ft_big_number exponent_error = base_number.mod_pow(negative_exponent, modulus_number);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, exponent_error.get_error());
+    ft_big_number exponent_error
+        = base_number.mod_pow(negative_exponent, modulus_number);
     FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, exponent_error.get_error());
     ft_errno = 0;
     return (1);
 }
