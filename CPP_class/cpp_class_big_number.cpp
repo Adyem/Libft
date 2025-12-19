@@ -1265,6 +1265,9 @@ ft_big_number ft_big_number::operator/(const ft_big_number& other) const noexcep
     ft_big_number result;
     int lock_error;
     int final_error;
+    ft_big_number remainder;
+    ft_size_t digit_index = 0;
+    int magnitude_comparison = 0;
 
     stored_errno = ft_big_number::initialize_errno_keeper();
     lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
@@ -1298,7 +1301,7 @@ ft_big_number ft_big_number::operator/(const ft_big_number& other) const noexcep
         final_error = result._error_code;
         goto cleanup_division;
     }
-    int magnitude_comparison = this->compare_magnitude(other);
+    magnitude_comparison = this->compare_magnitude(other);
 
     if (magnitude_comparison < 0)
     {
@@ -1318,9 +1321,6 @@ ft_big_number ft_big_number::operator/(const ft_big_number& other) const noexcep
         final_error = result._error_code;
         goto cleanup_division;
     }
-    ft_big_number remainder;
-    ft_size_t digit_index = 0;
-
     while (digit_index < this->_size)
     {
         remainder.append_digit(this->_digits[digit_index]);
@@ -1392,6 +1392,11 @@ ft_big_number ft_big_number::operator%(const ft_big_number& other) const noexcep
     ft_big_number result;
     int lock_error;
     bool original_negative;
+    ft_big_number dividend;
+    ft_size_t dividend_index = 0;
+    ft_big_number divisor;
+    ft_size_t divisor_index = 0;
+    int magnitude_comparison = 0;
 
     stored_errno = ft_big_number::initialize_errno_keeper();
     lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
@@ -1422,9 +1427,6 @@ ft_big_number ft_big_number::operator%(const ft_big_number& other) const noexcep
         goto cleanup_modulus;
     }
     original_negative = this->_is_negative;
-    ft_big_number dividend;
-    ft_size_t dividend_index = 0;
-
     while (dividend_index < this->_size)
     {
         dividend.append_digit_unlocked(this->_digits[dividend_index]);
@@ -1444,9 +1446,6 @@ ft_big_number ft_big_number::operator%(const ft_big_number& other) const noexcep
         ft_big_number::update_errno_keeper(stored_errno, result._error_code);
         goto cleanup_modulus;
     }
-    ft_big_number divisor;
-    ft_size_t divisor_index = 0;
-
     while (divisor_index < other._size)
     {
         divisor.append_digit_unlocked(other._digits[divisor_index]);
@@ -1466,7 +1465,7 @@ ft_big_number ft_big_number::operator%(const ft_big_number& other) const noexcep
         ft_big_number::update_errno_keeper(stored_errno, result._error_code);
         goto cleanup_modulus;
     }
-    int magnitude_comparison = dividend.compare_magnitude(divisor);
+    magnitude_comparison = dividend.compare_magnitude(divisor);
 
     if (magnitude_comparison < 0)
         result = dividend;
