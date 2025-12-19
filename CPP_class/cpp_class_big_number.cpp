@@ -2033,31 +2033,34 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
 
 int ft_big_number::get_error() const noexcept
 {
-    ft_big_number_mutex_guard guard;
     int lock_error;
     int error_value;
 
-    lock_error = this->lock_self(guard);
-    if (lock_error != FT_ERR_SUCCESSS)
-        return (lock_error);
-    error_value = this->_error_code;
+    {
+        ft_big_number_mutex_guard guard;
+
+        lock_error = this->lock_self(guard);
+        if (lock_error != FT_ERR_SUCCESSS)
+            return (lock_error);
+        error_value = this->_error_code;
+    }
     ft_errno = FT_ERR_SUCCESSS;
     return (error_value);
 }
 
 const char* ft_big_number::get_error_str() const noexcept
 {
-    ft_big_number_mutex_guard guard;
-        int lock_error;
+    int lock_error;
     const char* error_string;
 
-    lock_error = this->lock_self(guard);
-    if (lock_error != FT_ERR_SUCCESSS)
     {
-        ft_errno = FT_ERR_SUCCESSS;
-        return (ft_strerror(lock_error));
+        ft_big_number_mutex_guard guard;
+
+        lock_error = this->lock_self(guard);
+        if (lock_error != FT_ERR_SUCCESSS)
+            return (ft_strerror(lock_error));
+        error_string = ft_strerror(this->_error_code);
     }
-    error_string = ft_strerror(this->_error_code);
     ft_errno = FT_ERR_SUCCESSS;
     return (error_string);
 }
