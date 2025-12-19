@@ -1,13 +1,12 @@
 #include <errno.h>
 
-#include <cstdlib>
-
 #include "pthread.hpp"
 #include "mutex.hpp"
 #include "../Logger/logger.hpp"
 #include "pthread_lock_tracking.hpp"
 #include "../Errno/errno.hpp"
 #include "../Libft/libft.hpp"
+#include "../System_utils/system_utils.hpp"
 
 int pt_mutex::unlock(pthread_t thread_id) const
 {
@@ -66,13 +65,13 @@ int pt_mutex::unlock(pthread_t thread_id) const
             if (!tracking_reports_owned)
             {
                 this->set_error(FT_ERR_INVALID_ARGUMENT);
-                std::abort();
+                su_abort();
             }
         }
         else if (!pt_thread_equal(owner, thread_id))
         {
             this->set_error(FT_ERR_INVALID_ARGUMENT);
-            std::abort();
+            su_abort();
         }
         else
         {
@@ -105,7 +104,7 @@ int pt_mutex::unlock(pthread_t thread_id) const
     if (!tracking_reports_owned)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
-        std::abort();
+        su_abort();
     }
     mutex_error = pthread_mutex_unlock(&this->_native_mutex);
     if (mutex_error != 0)
