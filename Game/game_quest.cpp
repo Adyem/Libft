@@ -9,10 +9,8 @@ static void game_quest_sleep_backoff()
     return ;
 }
 
-static void game_quest_restore_errno(ft_unique_lock<pt_mutex> &guard,
-        int entry_errno)
+static void game_quest_unlock_guard(ft_unique_lock<pt_mutex> &guard)
 {
-    (void)entry_errno;
     if (guard.owns_lock())
         guard.unlock();
     return ;
@@ -122,14 +120,12 @@ ft_quest::ft_quest(const ft_quest &other) noexcept
       _objective(), _reward_experience(0), _reward_items(),
       _error(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        game_quest_restore_errno(other_guard, entry_errno);
+        game_quest_unlock_guard(other_guard);
         return ;
     }
     this->_id = other._id;
@@ -139,26 +135,26 @@ ft_quest::ft_quest(const ft_quest &other) noexcept
     if (this->_description.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_description.get_error());
-        game_quest_restore_errno(other_guard, entry_errno);
+        game_quest_unlock_guard(other_guard);
         return ;
     }
     if (other._description.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other._description.get_error());
-        game_quest_restore_errno(other_guard, entry_errno);
+        game_quest_unlock_guard(other_guard);
         return ;
     }
     this->_objective = other._objective;
     if (this->_objective.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_objective.get_error());
-        game_quest_restore_errno(other_guard, entry_errno);
+        game_quest_unlock_guard(other_guard);
         return ;
     }
     if (other._objective.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other._objective.get_error());
-        game_quest_restore_errno(other_guard, entry_errno);
+        game_quest_unlock_guard(other_guard);
         return ;
     }
     this->_reward_experience = other._reward_experience;
@@ -170,14 +166,14 @@ ft_quest::ft_quest(const ft_quest &other) noexcept
     if (temporary_items.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(temporary_items.get_error());
-        game_quest_restore_errno(other_guard, entry_errno);
+        game_quest_unlock_guard(other_guard);
         return ;
     }
     count = other._reward_items.size();
     if (other._reward_items.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other._reward_items.get_error());
-        game_quest_restore_errno(other_guard, entry_errno);
+        game_quest_unlock_guard(other_guard);
         return ;
     }
     index = 0;
@@ -188,32 +184,32 @@ ft_quest::ft_quest(const ft_quest &other) noexcept
         if (other._reward_items.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(other._reward_items.get_error());
-            game_quest_restore_errno(other_guard, entry_errno);
+            game_quest_unlock_guard(other_guard);
             return ;
         }
         if (!item_ptr)
         {
             this->set_error(FT_ERR_INVALID_POINTER);
-            game_quest_restore_errno(other_guard, entry_errno);
+            game_quest_unlock_guard(other_guard);
             return ;
         }
         if (item_ptr.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(item_ptr.get_error());
-            game_quest_restore_errno(other_guard, entry_errno);
+            game_quest_unlock_guard(other_guard);
             return ;
         }
         if (item_ptr->get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(item_ptr->get_error());
-            game_quest_restore_errno(other_guard, entry_errno);
+            game_quest_unlock_guard(other_guard);
             return ;
         }
         temporary_items.push_back(item_ptr);
         if (temporary_items.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(temporary_items.get_error());
-            game_quest_restore_errno(other_guard, entry_errno);
+            game_quest_unlock_guard(other_guard);
             return ;
         }
         index++;
@@ -222,11 +218,11 @@ ft_quest::ft_quest(const ft_quest &other) noexcept
     if (this->_reward_items.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_reward_items.get_error());
-        game_quest_restore_errno(other_guard, entry_errno);
+        game_quest_unlock_guard(other_guard);
         return ;
     }
     this->set_error(other._error);
-    game_quest_restore_errno(other_guard, entry_errno);
+    game_quest_unlock_guard(other_guard);
     return ;
 }
 
@@ -234,12 +230,10 @@ ft_quest &ft_quest::operator=(const ft_quest &other) noexcept
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_quest::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -256,15 +250,15 @@ ft_quest &ft_quest::operator=(const ft_quest &other) noexcept
 
         error_code = this->_description.get_error();
         this->set_error(error_code);
-        game_quest_restore_errno(this_guard, entry_errno);
-        game_quest_restore_errno(other_guard, entry_errno);
+        game_quest_unlock_guard(this_guard);
+        game_quest_unlock_guard(other_guard);
         return (*this);
     }
     if (other._description.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other._description.get_error());
-        game_quest_restore_errno(this_guard, entry_errno);
-        game_quest_restore_errno(other_guard, entry_errno);
+        game_quest_unlock_guard(this_guard);
+        game_quest_unlock_guard(other_guard);
         return (*this);
     }
     this->_objective = other._objective;
@@ -274,15 +268,15 @@ ft_quest &ft_quest::operator=(const ft_quest &other) noexcept
 
         error_code = this->_objective.get_error();
         this->set_error(error_code);
-        game_quest_restore_errno(this_guard, entry_errno);
-        game_quest_restore_errno(other_guard, entry_errno);
+        game_quest_unlock_guard(this_guard);
+        game_quest_unlock_guard(other_guard);
         return (*this);
     }
     if (other._objective.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other._objective.get_error());
-        game_quest_restore_errno(this_guard, entry_errno);
-        game_quest_restore_errno(other_guard, entry_errno);
+        game_quest_unlock_guard(this_guard);
+        game_quest_unlock_guard(other_guard);
         return (*this);
     }
     this->_reward_experience = other._reward_experience;
@@ -294,16 +288,16 @@ ft_quest &ft_quest::operator=(const ft_quest &other) noexcept
     if (temporary_items.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(temporary_items.get_error());
-        game_quest_restore_errno(this_guard, entry_errno);
-        game_quest_restore_errno(other_guard, entry_errno);
+        game_quest_unlock_guard(this_guard);
+        game_quest_unlock_guard(other_guard);
         return (*this);
     }
     count = other._reward_items.size();
     if (other._reward_items.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other._reward_items.get_error());
-        game_quest_restore_errno(this_guard, entry_errno);
-        game_quest_restore_errno(other_guard, entry_errno);
+        game_quest_unlock_guard(this_guard);
+        game_quest_unlock_guard(other_guard);
         return (*this);
     }
     index = 0;
@@ -314,37 +308,37 @@ ft_quest &ft_quest::operator=(const ft_quest &other) noexcept
         if (other._reward_items.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(other._reward_items.get_error());
-            game_quest_restore_errno(this_guard, entry_errno);
-            game_quest_restore_errno(other_guard, entry_errno);
+            game_quest_unlock_guard(this_guard);
+            game_quest_unlock_guard(other_guard);
             return (*this);
         }
         if (!item_ptr)
         {
             this->set_error(FT_ERR_INVALID_POINTER);
-            game_quest_restore_errno(this_guard, entry_errno);
-            game_quest_restore_errno(other_guard, entry_errno);
+            game_quest_unlock_guard(this_guard);
+            game_quest_unlock_guard(other_guard);
             return (*this);
         }
         if (item_ptr.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(item_ptr.get_error());
-            game_quest_restore_errno(this_guard, entry_errno);
-            game_quest_restore_errno(other_guard, entry_errno);
+            game_quest_unlock_guard(this_guard);
+            game_quest_unlock_guard(other_guard);
             return (*this);
         }
         if (item_ptr->get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(item_ptr->get_error());
-            game_quest_restore_errno(this_guard, entry_errno);
-            game_quest_restore_errno(other_guard, entry_errno);
+            game_quest_unlock_guard(this_guard);
+            game_quest_unlock_guard(other_guard);
             return (*this);
         }
         temporary_items.push_back(item_ptr);
         if (temporary_items.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(temporary_items.get_error());
-            game_quest_restore_errno(this_guard, entry_errno);
-            game_quest_restore_errno(other_guard, entry_errno);
+            game_quest_unlock_guard(this_guard);
+            game_quest_unlock_guard(other_guard);
             return (*this);
         }
         index++;
@@ -356,13 +350,13 @@ ft_quest &ft_quest::operator=(const ft_quest &other) noexcept
 
         error_code = this->_reward_items.get_error();
         this->set_error(error_code);
-        game_quest_restore_errno(this_guard, entry_errno);
-        game_quest_restore_errno(other_guard, entry_errno);
+        game_quest_unlock_guard(this_guard);
+        game_quest_unlock_guard(other_guard);
         return (*this);
     }
     this->set_error(other._error);
-    game_quest_restore_errno(this_guard, entry_errno);
-    game_quest_restore_errno(other_guard, entry_errno);
+    game_quest_unlock_guard(this_guard);
+    game_quest_unlock_guard(other_guard);
     return (*this);
 }
 
@@ -371,14 +365,12 @@ ft_quest::ft_quest(ft_quest &&other) noexcept
       _objective(), _reward_experience(0), _reward_items(),
       _error(FT_ERR_SUCCESSS), _mutex()
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(other_guard.get_error());
-        game_quest_restore_errno(other_guard, entry_errno);
+        game_quest_unlock_guard(other_guard);
         return ;
     }
     this->_id = other._id;
@@ -388,14 +380,14 @@ ft_quest::ft_quest(ft_quest &&other) noexcept
     if (this->_description.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_description.get_error());
-        game_quest_restore_errno(other_guard, entry_errno);
+        game_quest_unlock_guard(other_guard);
         return ;
     }
     this->_objective = ft_move(other._objective);
     if (this->_objective.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_objective.get_error());
-        game_quest_restore_errno(other_guard, entry_errno);
+        game_quest_unlock_guard(other_guard);
         return ;
     }
     this->_reward_experience = other._reward_experience;
@@ -403,7 +395,7 @@ ft_quest::ft_quest(ft_quest &&other) noexcept
     if (this->_reward_items.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_reward_items.get_error());
-        game_quest_restore_errno(other_guard, entry_errno);
+        game_quest_unlock_guard(other_guard);
         return ;
     }
     this->set_error(other._error);
@@ -412,7 +404,7 @@ ft_quest::ft_quest(ft_quest &&other) noexcept
     other._current_phase = 0;
     other._reward_experience = 0;
     other.set_error(FT_ERR_SUCCESSS);
-    game_quest_restore_errno(other_guard, entry_errno);
+    game_quest_unlock_guard(other_guard);
     return ;
 }
 
@@ -420,12 +412,10 @@ ft_quest &ft_quest::operator=(ft_quest &&other) noexcept
 {
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
-    int entry_errno;
     int lock_error;
 
     if (this == &other)
         return (*this);
-    entry_errno = ft_errno;
     lock_error = ft_quest::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -442,8 +432,8 @@ ft_quest &ft_quest::operator=(ft_quest &&other) noexcept
 
         error_code = this->_description.get_error();
         this->set_error(error_code);
-        game_quest_restore_errno(this_guard, entry_errno);
-        game_quest_restore_errno(other_guard, entry_errno);
+        game_quest_unlock_guard(this_guard);
+        game_quest_unlock_guard(other_guard);
         return (*this);
     }
     this->_objective = ft_move(other._objective);
@@ -453,8 +443,8 @@ ft_quest &ft_quest::operator=(ft_quest &&other) noexcept
 
         error_code = this->_objective.get_error();
         this->set_error(error_code);
-        game_quest_restore_errno(this_guard, entry_errno);
-        game_quest_restore_errno(other_guard, entry_errno);
+        game_quest_unlock_guard(this_guard);
+        game_quest_unlock_guard(other_guard);
         return (*this);
     }
     this->_reward_experience = other._reward_experience;
@@ -465,8 +455,8 @@ ft_quest &ft_quest::operator=(ft_quest &&other) noexcept
 
         error_code = this->_reward_items.get_error();
         this->set_error(error_code);
-        game_quest_restore_errno(this_guard, entry_errno);
-        game_quest_restore_errno(other_guard, entry_errno);
+        game_quest_unlock_guard(this_guard);
+        game_quest_unlock_guard(other_guard);
         return (*this);
     }
     this->set_error(other._error);
@@ -475,351 +465,321 @@ ft_quest &ft_quest::operator=(ft_quest &&other) noexcept
     other._current_phase = 0;
     other._reward_experience = 0;
     other.set_error(FT_ERR_SUCCESSS);
-    game_quest_restore_errno(this_guard, entry_errno);
-    game_quest_restore_errno(other_guard, entry_errno);
+    game_quest_unlock_guard(this_guard);
+    game_quest_unlock_guard(other_guard);
     return (*this);
 }
 
 int ft_quest::get_id() const noexcept
 {
-    int entry_errno;
     int identifier;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_quest *>(this)->set_error(guard.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return (0);
     }
     identifier = this->_id;
     const_cast<ft_quest *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_quest_restore_errno(guard, entry_errno);
+    game_quest_unlock_guard(guard);
     return (identifier);
 }
 
 void ft_quest::set_id(int id) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return ;
     }
     if (id < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return ;
     }
     this->_id = id;
     this->set_error(FT_ERR_SUCCESSS);
-    game_quest_restore_errno(guard, entry_errno);
+    game_quest_unlock_guard(guard);
     return ;
 }
 
 int ft_quest::get_phases() const noexcept
 {
-    int entry_errno;
     int phases_value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_quest *>(this)->set_error(guard.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return (0);
     }
     phases_value = this->_phases;
     const_cast<ft_quest *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_quest_restore_errno(guard, entry_errno);
+    game_quest_unlock_guard(guard);
     return (phases_value);
 }
 
 void ft_quest::set_phases(int phases) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return ;
     }
     if (phases < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return ;
     }
     this->_phases = phases;
     if (this->_current_phase > this->_phases)
         this->_current_phase = this->_phases;
     this->set_error(FT_ERR_SUCCESSS);
-    game_quest_restore_errno(guard, entry_errno);
+    game_quest_unlock_guard(guard);
     return ;
 }
 
 int ft_quest::get_current_phase() const noexcept
 {
-    int entry_errno;
     int phase_value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_quest *>(this)->set_error(guard.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return (0);
     }
     phase_value = this->_current_phase;
     const_cast<ft_quest *>(this)->set_error(this->_error);
-    game_quest_restore_errno(guard, entry_errno);
+    game_quest_unlock_guard(guard);
     return (phase_value);
 }
 
 void ft_quest::set_current_phase(int phase) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return ;
     }
     if (phase < 0 || phase > this->_phases)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return ;
     }
     this->_current_phase = phase;
     this->set_error(FT_ERR_SUCCESSS);
-    game_quest_restore_errno(guard, entry_errno);
+    game_quest_unlock_guard(guard);
     return ;
 }
 
 const ft_string &ft_quest::get_description() const noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_quest *>(this)->set_error(guard.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return (this->_description);
     }
     if (this->_description.get_error() != FT_ERR_SUCCESSS)
         const_cast<ft_quest *>(this)->set_error(this->_description.get_error());
     else
         const_cast<ft_quest *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_quest_restore_errno(guard, entry_errno);
+    game_quest_unlock_guard(guard);
     return (this->_description);
 }
 
 void ft_quest::set_description(const ft_string &description) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return ;
     }
     if (description.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(description.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return ;
     }
     this->_description = description;
     if (this->_description.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_description.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
-    game_quest_restore_errno(guard, entry_errno);
+    game_quest_unlock_guard(guard);
     return ;
 }
 
 const ft_string &ft_quest::get_objective() const noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_quest *>(this)->set_error(guard.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return (this->_objective);
     }
     if (this->_objective.get_error() != FT_ERR_SUCCESSS)
         const_cast<ft_quest *>(this)->set_error(this->_objective.get_error());
     else
         const_cast<ft_quest *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_quest_restore_errno(guard, entry_errno);
+    game_quest_unlock_guard(guard);
     return (this->_objective);
 }
 
 void ft_quest::set_objective(const ft_string &objective) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return ;
     }
     if (objective.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(objective.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return ;
     }
     this->_objective = objective;
     if (this->_objective.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_objective.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
-    game_quest_restore_errno(guard, entry_errno);
+    game_quest_unlock_guard(guard);
     return ;
 }
 
 int ft_quest::get_reward_experience() const noexcept
 {
-    int entry_errno;
     int reward_value;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_quest *>(this)->set_error(guard.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return (0);
     }
     reward_value = this->_reward_experience;
     const_cast<ft_quest *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_quest_restore_errno(guard, entry_errno);
+    game_quest_unlock_guard(guard);
     return (reward_value);
 }
 
 void ft_quest::set_reward_experience(int experience) noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return ;
     }
     if (experience < 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return ;
     }
     this->_reward_experience = experience;
     this->set_error(FT_ERR_SUCCESSS);
-    game_quest_restore_errno(guard, entry_errno);
+    game_quest_unlock_guard(guard);
     return ;
 }
 
 ft_vector<ft_sharedptr<ft_item> > &ft_quest::get_reward_items() noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return (this->_reward_items);
     }
     if (this->_reward_items.get_error() != FT_ERR_SUCCESSS)
         this->set_error(this->_reward_items.get_error());
     else
         this->set_error(FT_ERR_SUCCESSS);
-    game_quest_restore_errno(guard, entry_errno);
+    game_quest_unlock_guard(guard);
     return (this->_reward_items);
 }
 
 const ft_vector<ft_sharedptr<ft_item> > &ft_quest::get_reward_items() const noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_quest *>(this)->set_error(guard.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return (this->_reward_items);
     }
     if (this->_reward_items.get_error() != FT_ERR_SUCCESSS)
         const_cast<ft_quest *>(this)->set_error(this->_reward_items.get_error());
     else
         const_cast<ft_quest *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_quest_restore_errno(guard, entry_errno);
+    game_quest_unlock_guard(guard);
     return (this->_reward_items);
 }
 
 void ft_quest::set_reward_items(const ft_vector<ft_sharedptr<ft_item> > &items) noexcept
 {
-    int entry_errno;
     size_t index;
     size_t count;
     ft_vector<ft_sharedptr<ft_item> > temporary;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return ;
     }
     if (items.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(items.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return ;
     }
     temporary = ft_vector<ft_sharedptr<ft_item> >();
     if (temporary.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(temporary.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return ;
     }
     index = 0;
@@ -831,32 +791,32 @@ void ft_quest::set_reward_items(const ft_vector<ft_sharedptr<ft_item> > &items) 
         if (items.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(items.get_error());
-            game_quest_restore_errno(guard, entry_errno);
+            game_quest_unlock_guard(guard);
             return ;
         }
         if (!item_ptr)
         {
             this->set_error(FT_ERR_INVALID_POINTER);
-            game_quest_restore_errno(guard, entry_errno);
+            game_quest_unlock_guard(guard);
             return ;
         }
         if (item_ptr.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(item_ptr.get_error());
-            game_quest_restore_errno(guard, entry_errno);
+            game_quest_unlock_guard(guard);
             return ;
         }
         if (item_ptr->get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(item_ptr->get_error());
-            game_quest_restore_errno(guard, entry_errno);
+            game_quest_unlock_guard(guard);
             return ;
         }
         temporary.push_back(item_ptr);
         if (temporary.get_error() != FT_ERR_SUCCESSS)
         {
             this->set_error(temporary.get_error());
-            game_quest_restore_errno(guard, entry_errno);
+            game_quest_unlock_guard(guard);
             return ;
         }
         index++;
@@ -865,99 +825,91 @@ void ft_quest::set_reward_items(const ft_vector<ft_sharedptr<ft_item> > &items) 
     if (this->_reward_items.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(this->_reward_items.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return ;
     }
     this->set_error(FT_ERR_SUCCESSS);
-    game_quest_restore_errno(guard, entry_errno);
+    game_quest_unlock_guard(guard);
     return ;
 }
 
 bool ft_quest::is_complete() const noexcept
 {
-    int entry_errno;
     bool complete;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_quest *>(this)->set_error(guard.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return (false);
     }
     complete = this->_current_phase >= this->_phases;
     const_cast<ft_quest *>(this)->set_error(FT_ERR_SUCCESSS);
-    game_quest_restore_errno(guard, entry_errno);
+    game_quest_unlock_guard(guard);
     return (complete);
 }
 
 void ft_quest::advance_phase() noexcept
 {
-    int entry_errno;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         this->set_error(guard.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return ;
     }
     if (this->_phases <= 0)
     {
         this->set_error(FT_ERR_INVALID_ARGUMENT);
         this->_current_phase = 0;
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return ;
     }
     if (this->_current_phase >= this->_phases)
     {
         this->set_error(FT_ERR_GAME_GENERAL_ERROR);
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return ;
     }
     this->_current_phase += 1;
     this->set_error(FT_ERR_SUCCESSS);
-    game_quest_restore_errno(guard, entry_errno);
+    game_quest_unlock_guard(guard);
     return ;
 }
 
 int ft_quest::get_error() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_quest *>(this)->set_error(guard.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return (guard.get_error());
     }
     error_code = this->_error;
     const_cast<ft_quest *>(this)->set_error(error_code);
-    game_quest_restore_errno(guard, entry_errno);
+    game_quest_unlock_guard(guard);
     return (error_code);
 }
 
 const char *ft_quest::get_error_str() const noexcept
 {
-    int entry_errno;
     int error_code;
 
-    entry_errno = ft_errno;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
         const_cast<ft_quest *>(this)->set_error(guard.get_error());
-        game_quest_restore_errno(guard, entry_errno);
+        game_quest_unlock_guard(guard);
         return (ft_strerror(guard.get_error()));
     }
     error_code = this->_error;
     const_cast<ft_quest *>(this)->set_error(error_code);
-    game_quest_restore_errno(guard, entry_errno);
+    game_quest_unlock_guard(guard);
     return (ft_strerror(error_code));
 }
 
