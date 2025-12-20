@@ -37,12 +37,22 @@ int pt_mutex::try_lock(pthread_t thread_id) const
     mutex_error = pthread_mutex_trylock(&this->_native_mutex);
     if (mutex_error != 0)
     {
-        pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
         if (mutex_error == EBUSY)
         {
+            if (!pt_lock_tracking::notify_wait(thread_id, &this->_native_mutex, owned_mutexes))
+            {
+                int tracker_error;
+
+                tracker_error = ft_errno;
+                pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
+                this->set_error(tracker_error);
+                return (FT_SUCCESS);
+            }
+            pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
             this->set_error(FT_ERR_MUTEX_ALREADY_LOCKED);
             return (FT_SUCCESS);
         }
+        pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
         this->set_error(FT_ERR_INVALID_STATE);
         return (FT_SUCCESS);
     }
