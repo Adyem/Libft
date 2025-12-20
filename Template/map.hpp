@@ -27,6 +27,7 @@ class ft_map
         size_t  find_index_unlocked(const Key& key) const;
         int     lock_internal(bool *lock_acquired) const;
         void    unlock_internal(bool lock_acquired) const;
+        void    unlock_mutex(pt_mutex *mutex, bool lock_acquired) const;
         void    teardown_thread_safety();
         Pair<Key, MappedType>*  get_end_pointer_unlocked();
         const Pair<Key, MappedType>* get_end_pointer_unlocked() const;
@@ -250,6 +251,7 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(ft_map<Key, MappedTy
     Pair<Key, MappedType> *previous_data;
     size_t previous_size;
     pt_mutex *previous_mutex;
+    pt_mutex *this_locked_mutex;
     bool previous_thread_safe;
     bool other_thread_safe;
 
@@ -271,6 +273,7 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(ft_map<Key, MappedTy
     previous_data = this->_data;
     previous_size = this->_size;
     previous_mutex = this->_state_mutex;
+    this_locked_mutex = this->_state_mutex;
     previous_thread_safe = this->_thread_safe_enabled;
     other_thread_safe = (other._thread_safe_enabled && other._state_mutex != ft_nullptr);
     this->_data = other._data;
@@ -280,7 +283,7 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(ft_map<Key, MappedTy
     this->_state_mutex = other._state_mutex;
     this->_thread_safe_enabled = other._thread_safe_enabled;
     other.unlock_internal(other_lock_acquired);
-    this->unlock_internal(this_lock_acquired);
+    this->unlock_mutex(this_locked_mutex, this_lock_acquired);
     other._data = ft_nullptr;
     other._capacity = 0;
     other._size = 0;
@@ -901,6 +904,21 @@ void ft_map<Key, MappedType>::unlock_internal(bool lock_acquired) const
     if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
     {
         ft_errno = this->_state_mutex->get_error();
+        return ;
+    }
+    return ;
+}
+
+template <typename Key, typename MappedType>
+void ft_map<Key, MappedType>::unlock_mutex(pt_mutex *mutex, bool lock_acquired) const
+{
+    if (!lock_acquired || mutex == ft_nullptr)
+        return ;
+    ft_errno = FT_ERR_SUCCESSS;
+    mutex->unlock(THREAD_ID);
+    if (mutex->get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = mutex->get_error();
         return ;
     }
     return ;
