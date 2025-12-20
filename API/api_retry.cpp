@@ -33,10 +33,10 @@ static pt_mutex &api_retry_circuit_get_mutex(void)
 
 static long long api_retry_circuit_now(void)
 {
-    long now_value;
+    long long now_value;
 
     now_value = time_monotonic();
-    return (static_cast<long long>(now_value));
+    return (now_value);
 }
 
 static long long api_retry_circuit_compute_deadline(long long now_ms,

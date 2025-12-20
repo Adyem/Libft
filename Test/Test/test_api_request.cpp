@@ -820,17 +820,27 @@ static void api_request_circuit_success_server(
         return ;
     }
     served_count = 0;
+    long long start_time_ms;
+
+    start_time_ms = time_monotonic();
     context->ready.store(true, std::memory_order_release);
     while (served_count < context->responses)
     {
         int client_fd;
+        long long elapsed_ms;
 
+        elapsed_ms = time_monotonic() - start_time_ms;
+        if (elapsed_ms > 2000)
+            break ;
         address_length = sizeof(address_storage);
         client_fd = nw_accept(server_socket.get_fd(),
                 reinterpret_cast<struct sockaddr*>(&address_storage),
                 &address_length);
         if (client_fd < 0)
+        {
+            time_sleep_ms(1);
             continue ;
+        }
         const char *response;
         size_t response_length;
         size_t total_sent;
