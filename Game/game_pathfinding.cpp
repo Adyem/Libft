@@ -71,40 +71,32 @@ int ft_path_step::lock_pair(const ft_path_step &first,
         ordered_second = temporary;
         swapped = true;
     }
-    while (true)
+    ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
+    if (lower_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
-
-        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = lower_guard.get_error();
-            return (lower_guard.get_error());
-        }
-        ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
-        {
-            if (!swapped)
-            {
-                first_guard = ft_move(lower_guard);
-                second_guard = ft_move(upper_guard);
-            }
-            else
-            {
-                first_guard = ft_move(upper_guard);
-                second_guard = ft_move(lower_guard);
-            }
-            ft_errno = FT_ERR_SUCCESSS;
-            return (FT_ERR_SUCCESSS);
-        }
-        if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
-        {
-            ft_errno = upper_guard.get_error();
-            return (upper_guard.get_error());
-        }
+        ft_errno = lower_guard.get_error();
+        return (lower_guard.get_error());
+    }
+    ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
+    if (upper_guard.get_error() != FT_ERR_SUCCESSS)
+    {
         if (lower_guard.owns_lock())
             lower_guard.unlock();
-        game_pathfinding_sleep_backoff();
+        ft_errno = upper_guard.get_error();
+        return (upper_guard.get_error());
     }
+    if (!swapped)
+    {
+        first_guard = ft_move(lower_guard);
+        second_guard = ft_move(upper_guard);
+    }
+    else
+    {
+        first_guard = ft_move(upper_guard);
+        second_guard = ft_move(lower_guard);
+    }
+    ft_errno = FT_ERR_SUCCESSS;
+    return (FT_ERR_SUCCESSS);
 }
 
 ft_path_step::ft_path_step(const ft_path_step &other) noexcept
@@ -416,40 +408,32 @@ int ft_pathfinding::lock_pair(const ft_pathfinding &first,
         ordered_second = temporary;
         swapped = true;
     }
-    while (true)
+    ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
+    if (lower_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
-
-        if (lower_guard.get_error() != FT_ERR_SUCCESSS)
-        {
-            ft_errno = lower_guard.get_error();
-            return (lower_guard.get_error());
-        }
-        ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
-        if (upper_guard.get_error() == FT_ERR_SUCCESSS)
-        {
-            if (!swapped)
-            {
-                first_guard = ft_move(lower_guard);
-                second_guard = ft_move(upper_guard);
-            }
-            else
-            {
-                first_guard = ft_move(upper_guard);
-                second_guard = ft_move(lower_guard);
-            }
-            ft_errno = FT_ERR_SUCCESSS;
-            return (FT_ERR_SUCCESSS);
-        }
-        if (upper_guard.get_error() != FT_ERR_MUTEX_ALREADY_LOCKED)
-        {
-            ft_errno = upper_guard.get_error();
-            return (upper_guard.get_error());
-        }
+        ft_errno = lower_guard.get_error();
+        return (lower_guard.get_error());
+    }
+    ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
+    if (upper_guard.get_error() != FT_ERR_SUCCESSS)
+    {
         if (lower_guard.owns_lock())
             lower_guard.unlock();
-        ft_pathfinding::sleep_backoff();
+        ft_errno = upper_guard.get_error();
+        return (upper_guard.get_error());
     }
+    if (!swapped)
+    {
+        first_guard = ft_move(lower_guard);
+        second_guard = ft_move(upper_guard);
+    }
+    else
+    {
+        first_guard = ft_move(upper_guard);
+        second_guard = ft_move(lower_guard);
+    }
+    ft_errno = FT_ERR_SUCCESSS;
+    return (FT_ERR_SUCCESSS);
 }
 
 ft_pathfinding::ft_pathfinding(const ft_pathfinding &other) noexcept
