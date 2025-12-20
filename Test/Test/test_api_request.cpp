@@ -15,6 +15,7 @@
 #include <csignal>
 #include <climits>
 #include <atomic>
+#include <chrono>
 
 #ifdef _WIN32
 # include <windows.h>
@@ -861,6 +862,10 @@ static void api_request_retry_timeout_server(void)
     socklen_t address_length;
     int client_fd;
     int accepted_count;
+    std::chrono::steady_clock::time_point start_time;
+    std::chrono::milliseconds accept_timeout;
+    int poll_descriptors[1];
+    int poll_result;
 
     server_configuration._type = SocketType::SERVER;
     server_configuration._ip = "127.0.0.1";
@@ -869,8 +874,28 @@ static void api_request_retry_timeout_server(void)
     if (server_socket.get_error() != FT_ERR_SUCCESSS)
         return ;
     accepted_count = 0;
+    start_time = std::chrono::steady_clock::now();
+    accept_timeout = std::chrono::milliseconds(2000);
+    poll_descriptors[0] = server_socket.get_fd();
     while (accepted_count < 3)
     {
+        std::chrono::steady_clock::time_point current_time;
+        std::chrono::milliseconds elapsed_time;
+        int remaining_timeout;
+
+        current_time = std::chrono::steady_clock::now();
+        elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(
+                current_time - start_time);
+        if (elapsed_time >= accept_timeout)
+            break ;
+        remaining_timeout = static_cast<int>(accept_timeout.count()
+                - elapsed_time.count());
+        if (remaining_timeout <= 0)
+            break ;
+        poll_result = nw_poll(poll_descriptors, 1, ft_nullptr, 0,
+                remaining_timeout);
+        if (poll_result <= 0)
+            continue ;
         address_length = sizeof(address_storage);
         client_fd = nw_accept(server_socket.get_fd(),
                 reinterpret_cast<struct sockaddr*>(&address_storage),
