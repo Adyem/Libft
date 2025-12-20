@@ -57,10 +57,12 @@ pt_mutex_vector pt_lock_tracking::get_owned_mutexes(pt_thread_id_type thread_ide
     ft_size_t index;
     int lock_error;
     bool lock_acquired;
+    ft_size_t required_capacity;
 
     if (!pt_lock_tracking::ensure_registry_mutex_initialized())
         return (owned_mutexes);
     lock_acquired = false;
+    required_capacity = 0;
     if (!g_registry_mutex_owned)
     {
         lock_error = pthread_mutex_lock(pt_lock_tracking::get_registry_mutex());
@@ -71,10 +73,37 @@ pt_mutex_vector pt_lock_tracking::get_owned_mutexes(pt_thread_id_type thread_ide
         }
         g_registry_mutex_owned = true;
         lock_acquired = true;
-        info = pt_lock_tracking::find_thread_info(thread_identifier);
     }
+    if (g_registry_mutex_owned)
+        info = pt_lock_tracking::find_thread_info(thread_identifier);
     else
         info = pt_lock_tracking::lookup_thread_info(thread_identifier);
+    if (info != ft_nullptr)
+        required_capacity = info->owned_mutexes.size();
+    while (lock_acquired && owned_mutexes.capacity() < required_capacity)
+    {
+        if (pthread_mutex_unlock(pt_lock_tracking::get_registry_mutex()) != 0)
+        {
+            ft_errno = FT_ERR_INVALID_STATE;
+            return (owned_mutexes);
+        }
+        g_registry_mutex_owned = false;
+        lock_acquired = false;
+        owned_mutexes.reserve(required_capacity);
+        lock_error = pthread_mutex_lock(pt_lock_tracking::get_registry_mutex());
+        if (lock_error != 0)
+        {
+            ft_errno = FT_ERR_INVALID_STATE;
+            return (owned_mutexes);
+        }
+        g_registry_mutex_owned = true;
+        lock_acquired = true;
+        info = pt_lock_tracking::find_thread_info(thread_identifier);
+        if (info != ft_nullptr)
+            required_capacity = info->owned_mutexes.size();
+        else
+            required_capacity = 0;
+    }
     if (info == ft_nullptr)
     {
         if (lock_acquired)
