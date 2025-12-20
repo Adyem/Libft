@@ -575,8 +575,10 @@ void ft_pathfinding::set_error(int error) const noexcept
 
 void ft_pathfinding::update_obstacle(size_t x, size_t y, size_t z, int value) noexcept
 {
+    bool needs_replan;
     int result_error;
     size_t index;
+    ft_vector<ft_path_step> path_snapshot;
 
     (void)value;
     ft_unique_lock<pt_mutex> guard(this->_mutex);
@@ -589,7 +591,22 @@ void ft_pathfinding::update_obstacle(size_t x, size_t y, size_t z, int value) no
     index = 0;
     while (index < this->_current_path.size())
     {
-        ft_path_step &step = this->_current_path[index];
+        path_snapshot.push_back(this->_current_path[index]);
+        if (path_snapshot.get_error() != FT_ERR_SUCCESSS)
+        {
+            this->set_error(path_snapshot.get_error());
+            ft_pathfinding::finalize_lock(guard);
+            return ;
+        }
+        index += 1;
+    }
+    ft_pathfinding::finalize_lock(guard);
+    index = 0;
+    needs_replan = false;
+    result_error = FT_ERR_SUCCESSS;
+    while (index < path_snapshot.size())
+    {
+        ft_path_step &step = path_snapshot[index];
         size_t step_x;
         size_t step_y;
         size_t step_z;
@@ -597,29 +614,34 @@ void ft_pathfinding::update_obstacle(size_t x, size_t y, size_t z, int value) no
         step_x = step.get_x();
         if (step.get_error() != FT_ERR_SUCCESSS)
         {
-            this->set_error(step.get_error());
-            ft_pathfinding::finalize_lock(guard);
-            return ;
+            result_error = step.get_error();
+            break ;
         }
         step_y = step.get_y();
         if (step.get_error() != FT_ERR_SUCCESSS)
         {
-            this->set_error(step.get_error());
-            ft_pathfinding::finalize_lock(guard);
-            return ;
+            result_error = step.get_error();
+            break ;
         }
         step_z = step.get_z();
         if (step.get_error() != FT_ERR_SUCCESSS)
         {
-            this->set_error(step.get_error());
-            ft_pathfinding::finalize_lock(guard);
-            return ;
+            result_error = step.get_error();
+            break ;
         }
         if (step_x == x && step_y == y && step_z == z)
-            this->_needs_replan = true;
+            needs_replan = true;
         index += 1;
     }
-    result_error = FT_ERR_SUCCESSS;
+    guard = ft_unique_lock<pt_mutex>(this->_mutex);
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        this->set_error(guard.get_error());
+        ft_pathfinding::finalize_lock(guard);
+        return ;
+    }
+    if (needs_replan)
+        this->_needs_replan = true;
     this->set_error(result_error);
     ft_pathfinding::finalize_lock(guard);
     return ;
