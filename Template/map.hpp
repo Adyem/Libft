@@ -254,6 +254,7 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(ft_map<Key, MappedTy
     pt_mutex *this_locked_mutex;
     bool previous_thread_safe;
     bool other_thread_safe;
+    bool new_mutex_locked;
 
     if (this == &other)
         return (*this);
@@ -270,6 +271,7 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(ft_map<Key, MappedTy
         this->set_error(ft_errno);
         return (*this);
     }
+    new_mutex_locked = false;
     previous_data = this->_data;
     previous_size = this->_size;
     previous_mutex = this->_state_mutex;
@@ -311,8 +313,19 @@ ft_map<Key, MappedType>& ft_map<Key, MappedType>::operator=(ft_map<Key, MappedTy
     {
         if (this->enable_thread_safety() != 0)
             return (*this);
+        if (this->_state_mutex != ft_nullptr)
+        {
+            this->_state_mutex->lock(THREAD_ID);
+            if (this->_state_mutex->get_error() != FT_ERR_SUCCESSS)
+            {
+                this->set_error(this->_state_mutex->get_error());
+                return (*this);
+            }
+            new_mutex_locked = true;
+        }
     }
     this->set_error(FT_ERR_SUCCESSS);
+    this->unlock_mutex(this->_state_mutex, new_mutex_locked);
     return (*this);
 }
 
