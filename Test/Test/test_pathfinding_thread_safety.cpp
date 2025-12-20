@@ -275,7 +275,7 @@ FT_TEST(test_path_step_thread_safety, "ft_path_step guards coordinate updates")
     }
     if (create_update_result == 0)
     {
-        join_result = pt_thread_join(update_thread, ft_nullptr);
+        join_result = pt_thread_timed_join(update_thread, ft_nullptr, 30000);
         if (join_result != 0 && test_failed == 0)
         {
             test_failed = 1;
@@ -285,7 +285,7 @@ FT_TEST(test_path_step_thread_safety, "ft_path_step guards coordinate updates")
     }
     if (create_read_result == 0)
     {
-        join_result = pt_thread_join(read_thread, ft_nullptr);
+        join_result = pt_thread_timed_join(read_thread, ft_nullptr, 30000);
         if (join_result != 0 && test_failed == 0)
         {
             test_failed = 1;
