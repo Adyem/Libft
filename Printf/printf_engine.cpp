@@ -584,6 +584,13 @@ static int pf_engine_format_with_snprintf(const ft_string &format_string, t_pf_e
     va_end(args);
     if (required_length < 0)
         return (-1);
+    if (required_length == 0)
+    {
+        if (writer("", 0, context, written_count) != 0)
+            return (-1);
+        ft_errno = FT_ERR_SUCCESSS;
+        return (0);
+    }
     ft_string output;
     output.resize_length(static_cast<size_t>(required_length));
     if (output.get_error() != FT_ERR_SUCCESSS)
@@ -597,6 +604,7 @@ static int pf_engine_format_with_snprintf(const ft_string &format_string, t_pf_e
     output.resize_length(static_cast<size_t>(written_length));
     if (writer(output.c_str(), output.size(), context, written_count) != 0)
         return (-1);
+    ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
 
