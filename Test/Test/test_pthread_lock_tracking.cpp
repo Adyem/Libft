@@ -1,11 +1,26 @@
 #define PT_LOCK_TRACKING_TESTING
 #include <atomic>
+#include <csignal>
+#include <csetjmp>
 #include "../../Libft/libft.hpp"
 #include "../../PThread/mutex.hpp"
 #include "../../PThread/pthread_lock_tracking.hpp"
 #include "../../PThread/pthread.hpp"
 #include "../../Errno/errno.hpp"
 #include "../../System_utils/test_runner.hpp"
+
+static sigjmp_buf g_sigabrt_jump_buffer;
+static std::atomic<int> g_sigabrt_received;
+
+static void handle_sigabrt(int signal_number)
+{
+    if (signal_number == SIGABRT)
+    {
+        g_sigabrt_received.store(1);
+        siglongjmp(g_sigabrt_jump_buffer, 1);
+    }
+    return ;
+}
 
 struct s_lock_cycle_shared
 {
@@ -148,7 +163,15 @@ static void *unlock_worker(void *argument)
     s_unlock_shared_state *shared_state;
 
     shared_state = static_cast<s_unlock_shared_state *>(argument);
+    g_sigabrt_received.store(0);
     shared_state->stage.store(1);
+    if (sigsetjmp(g_sigabrt_jump_buffer, 1) != 0)
+    {
+        shared_state->unlock_result.store(-1);
+        shared_state->unlock_error.store(FT_ERR_INVALID_ARGUMENT);
+        shared_state->stage.store(2);
+        return (ft_nullptr);
+    }
     shared_state->unlock_result.store(shared_state->mutex_pointer->unlock(THREAD_ID));
     shared_state->unlock_error.store(shared_state->mutex_pointer->get_error());
     shared_state->stage.store(2);
@@ -338,6 +361,9 @@ FT_TEST(test_pt_mutex_unlock_requires_ownership, "pt_mutex unlock fails for thre
     pthread_t worker_thread;
     int thread_created;
     int test_failed;
+    struct sigaction sigabrt_action;
+    struct sigaction previous_sigabrt_action;
+    int handler_installed;
     const char *failure_expression;
     int failure_line;
 
@@ -352,8 +378,14 @@ FT_TEST(test_pt_mutex_unlock_requires_ownership, "pt_mutex unlock fails for thre
 
     thread_created = 0;
     test_failed = 0;
+    handler_installed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
+    sigabrt_action.sa_handler = handle_sigabrt;
+    RECORD_ASSERT(sigemptyset(&sigabrt_action.sa_mask) == 0);
+    sigabrt_action.sa_flags = 0;
+    RECORD_ASSERT(sigaction(SIGABRT, &sigabrt_action, &previous_sigabrt_action) == 0);
+    handler_installed = 1;
     initialize_unlock_shared_state(&shared_state, &mutex_object);
     RECORD_ASSERT(mutex_object.lock(THREAD_ID) == FT_SUCCESS);
     RECORD_ASSERT(mutex_object.get_error() == FT_ERR_SUCCESSS);
@@ -364,8 +396,7 @@ FT_TEST(test_pt_mutex_unlock_requires_ownership, "pt_mutex unlock fails for thre
     else
         thread_created = 1;
     RECORD_ASSERT(wait_for_stage(&shared_state.stage, 2));
-    RECORD_ASSERT(shared_state.unlock_result.load() == FT_SUCCESS);
-    RECORD_ASSERT(shared_state.unlock_error.load() == FT_ERR_INVALID_ARGUMENT);
+    RECORD_ASSERT(g_sigabrt_received.load() == 1);
     RECORD_ASSERT(mutex_object.unlock(THREAD_ID) == FT_SUCCESS);
     RECORD_ASSERT(mutex_object.get_error() == FT_ERR_SUCCESSS);
     goto cleanup;
@@ -382,6 +413,10 @@ cleanup:
             failure_expression = "join_result == 0";
             failure_line = __LINE__;
         }
+    }
+    if (handler_installed == 1)
+    {
+        sigaction(SIGABRT, &previous_sigabrt_action, ft_nullptr);
     }
     if (test_failed != 0)
     {
