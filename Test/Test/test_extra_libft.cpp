@@ -489,8 +489,8 @@ int test_su_get_home_directory_windows(void)
 
 int test_time_monotonic_increases(void)
 {
-    long first_time;
-    long second_time;
+    long long first_time;
+    long long second_time;
 
     first_time = time_monotonic();
     time_sleep_ms(1);

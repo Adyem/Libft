@@ -73,7 +73,7 @@ typedef struct s_time_benchmark_snapshot
 
 t_time  time_now(void);
 long    time_now_ms(void);
-long    time_monotonic(void);
+long long   time_monotonic(void);
 t_monotonic_time_point   time_monotonic_point_now(void);
 t_monotonic_time_point   time_monotonic_point_add_ms(t_monotonic_time_point time_point, long long milliseconds);
 long long   time_monotonic_point_diff_ms(t_monotonic_time_point start_point, t_monotonic_time_point end_point);
