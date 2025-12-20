@@ -263,6 +263,11 @@ bool api_http_prepare_plain_socket(
 
     if (connection_handle.has_socket)
     {
+        if (connection_handle.plain_socket_timed_out)
+        {
+            api_connection_pool_evict(connection_handle);
+            api_http_reset_plain_socket(connection_handle);
+        }
         if (!connection_handle.plain_socket_validated)
         {
             connection_handle.plain_socket_validated = true;
@@ -280,6 +285,25 @@ bool api_http_prepare_plain_socket(
             api_connection_security_mode::PLAIN, ft_nullptr);
     if (pooled_connection)
     {
+        if (!api_http_apply_timeouts(connection_handle.socket, timeout))
+        {
+#ifdef _WIN32
+            int last_error;
+
+            last_error = WSAGetLastError();
+            if (last_error != 0)
+                error_code = ft_map_system_error(last_error);
+            else
+                error_code = FT_ERR_CONFIGURATION;
+#else
+            if (errno != 0)
+                error_code = ft_map_system_error(errno);
+            else
+                error_code = FT_ERR_CONFIGURATION;
+#endif
+            api_connection_pool_evict(connection_handle);
+            return (false);
+        }
         connection_handle.plain_socket_timed_out = false;
         connection_handle.plain_socket_validated = true;
         return (true);
