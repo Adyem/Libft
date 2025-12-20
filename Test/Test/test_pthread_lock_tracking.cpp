@@ -566,13 +566,36 @@ FT_TEST(test_pt_mutex_lock_reports_reentrant_lock, "pt_mutex lock reports alread
 FT_TEST(test_pt_mutex_unlock_twice_reports_invalid_argument, "pt_mutex unlock reports invalid argument when invoked twice")
 {
     pt_mutex mutex_object;
+    struct sigaction sigabrt_action;
+    struct sigaction previous_sigabrt_action;
+    int handler_installed;
+    int abort_captured;
 
+    handler_installed = 0;
+    abort_captured = 0;
+    sigabrt_action.sa_handler = handle_sigabrt;
+    FT_ASSERT_EQ(0, sigemptyset(&sigabrt_action.sa_mask));
+    sigabrt_action.sa_flags = 0;
+    FT_ASSERT_EQ(0, sigaction(SIGABRT, &sigabrt_action, &previous_sigabrt_action));
+    handler_installed = 1;
     FT_ASSERT_EQ(FT_SUCCESS, mutex_object.lock(THREAD_ID));
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, mutex_object.get_error());
     FT_ASSERT_EQ(FT_SUCCESS, mutex_object.unlock(THREAD_ID));
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, mutex_object.get_error());
-    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.unlock(THREAD_ID));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, mutex_object.get_error());
+    g_sigabrt_received.store(0);
+    if (sigsetjmp(g_sigabrt_jump_buffer, 1) == 0)
+    {
+        FT_ASSERT_EQ(FT_SUCCESS, mutex_object.unlock(THREAD_ID));
+        FT_ASSERT(false);
+    }
+    else
+        abort_captured = 1;
+    if (handler_installed == 1)
+    {
+        sigaction(SIGABRT, &previous_sigabrt_action, ft_nullptr);
+    }
+    FT_ASSERT_EQ(1, abort_captured);
+    FT_ASSERT_EQ(1, g_sigabrt_received.load());
     FT_ASSERT_EQ(false, mutex_object.lockState());
     return (1);
 }
