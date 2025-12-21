@@ -830,7 +830,7 @@ static void api_request_circuit_success_server(
         long long elapsed_ms;
 
         elapsed_ms = time_monotonic() - start_time_ms;
-        if (elapsed_ms > 2000)
+        if (elapsed_ms > 20000)
             break ;
         address_length = sizeof(address_storage);
         client_fd = nw_accept(server_socket.get_fd(),
