@@ -6,7 +6,7 @@ int ft_map_system_error(int error_code)
     int mapped_error;
 
     mapped_error = cmp_map_system_error_to_ft(error_code);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_sys_errno = mapped_error;
     return (mapped_error);
 }
 

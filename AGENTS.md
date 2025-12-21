@@ -18,6 +18,8 @@ other classes must split declarations into .hpp files and definitions into .cpp 
 Do not define member function bodies inside the class declaration; place all definitions outside the class.
 Every class must declare and define a constructor and destructor, even if they simply contain return ;.
 Classes must track errors with a mutable _error_code member, a private set_error to update ft_errno, and public get_error and get_error_str helpers.
+Use ft_sys_errno for structural or lifecycle failures (allocation, locking, construction, destruction) and reserve ft_errno for user-visible semantic results.
+Internal helpers and constructors must not clear or overwrite ft_errno when they succeed; semantic operations may update ft_errno to reflect their outcomes.
 
 Only .cpp files must be prefixed with the name of the module they belong to.
 For .hpp files, prefix only those meant for internal use with the module name.

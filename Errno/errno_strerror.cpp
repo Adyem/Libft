@@ -11,6 +11,14 @@ typedef struct s_ft_error_string
 static const t_ft_error_string g_error_strings[] =
 {
     {FT_ERR_SUCCESSS, "Success"},
+    {FT_SYS_ERR_SUCCESS, "Success"},
+    {FT_SYS_ERR_NO_MEMORY, "System memory allocation failed"},
+    {FT_SYS_ERR_INVALID_STATE, "Invalid internal state"},
+    {FT_SYS_ERR_MUTEX_LOCK_FAILED, "Mutex lock failed"},
+    {FT_SYS_ERR_MUTEX_ALREADY_LOCKED, "Mutex already locked"},
+    {FT_SYS_ERR_MUTEX_NOT_OWNER, "Thread is not the owner of the mutex"},
+    {FT_SYS_ERR_MUTEX_UNLOCK_FAILED, "Mutex unlock failed"},
+    {FT_SYS_ERR_INTERNAL, "Internal system error"},
     {FT_ERR_NO_MEMORY, "Memory allocation failed"},
     {FT_ERR_FILE_OPEN_FAILED, "File open failed"},
     {FT_ERR_INVALID_ARGUMENT, "Invalid argument"},
