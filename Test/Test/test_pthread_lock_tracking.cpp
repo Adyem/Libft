@@ -600,15 +600,15 @@ FT_TEST(test_pt_mutex_unlock_twice_reports_invalid_argument, "pt_mutex unlock re
     return (1);
 }
 
-FT_TEST(test_pt_mutex_recovers_after_invalid_unlock, "pt_mutex recovers after invalid unlock attempts")
+FT_TEST(test_pt_mutex_recovers_after_already_locked_error, "pt_mutex recovers after already locked errors")
 {
     pt_mutex mutex_object;
 
-    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.unlock(THREAD_ID));
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, mutex_object.get_error());
-    FT_ASSERT_EQ(false, mutex_object.lockState());
     FT_ASSERT_EQ(FT_SUCCESS, mutex_object.lock(THREAD_ID));
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, mutex_object.get_error());
+    FT_ASSERT(mutex_object.lockState());
+    FT_ASSERT_EQ(FT_SUCCESS, mutex_object.lock(THREAD_ID));
+    FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, mutex_object.get_error());
     FT_ASSERT(mutex_object.lockState());
     FT_ASSERT_EQ(FT_SUCCESS, mutex_object.unlock(THREAD_ID));
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, mutex_object.get_error());
