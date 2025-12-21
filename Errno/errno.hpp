@@ -2,13 +2,27 @@
 # define ERRNO_HPP
 
 int &ft_errno_reference(void);
+int &ft_sys_errno_reference(void);
 
 #define ft_errno (ft_errno_reference())
+#define ft_sys_errno (ft_sys_errno_reference())
 
 #define ERRNO_OFFSET 2000
 
 int ft_map_system_error(int error_code);
 int ft_set_errno_from_system_error(int error_code);
+
+enum ft_sys_error_t
+{
+    FT_SYS_ERR_SUCCESS = 0,
+    FT_SYS_ERR_NO_MEMORY,
+    FT_SYS_ERR_INVALID_STATE,
+    FT_SYS_ERR_MUTEX_LOCK_FAILED,
+    FT_SYS_ERR_MUTEX_ALREADY_LOCKED,
+    FT_SYS_ERR_MUTEX_NOT_OWNER,
+    FT_SYS_ERR_MUTEX_UNLOCK_FAILED,
+    FT_SYS_ERR_INTERNAL
+};
 
 enum PTErrorCode
 {

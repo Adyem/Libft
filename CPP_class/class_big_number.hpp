@@ -17,12 +17,15 @@ class ft_big_number
         ft_size_t       _capacity;
         bool            _is_negative;
         mutable int     _error_code;
+        mutable int     _system_error_code;
         mutable pt_mutex    _mutex;
 
         void    reserve(ft_size_t new_capacity) noexcept;
         void    shrink_capacity() noexcept;
         void    set_error_unlocked(int error_code) const noexcept;
         void    set_error(int error_code) const noexcept;
+        void    set_system_error_unlocked(int error_code) const noexcept;
+        void    set_system_error(int error_code) const noexcept;
         int     lock_self(ft_big_number_mutex_guard &guard) const noexcept;
         static int  lock_pair(const ft_big_number &first, const ft_big_number &second,
                 ft_big_number_mutex_guard &first_guard,
