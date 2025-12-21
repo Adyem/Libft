@@ -132,10 +132,17 @@ ft_set<ElementType>& ft_set<ElementType>::operator=(ft_set&& other) noexcept
     pt_mutex *previous_mutex;
     bool previous_thread_safe;
     bool other_thread_safe;
+    pt_mutex *locked_mutex;
+    pt_mutex *new_mutex;
+    bool new_lock_acquired;
+    void *mutex_memory;
 
     if (this == &other)
         return (*this);
     this_lock_acquired = false;
+    new_lock_acquired = false;
+    new_mutex = ft_nullptr;
+    locked_mutex = this->_mutex;
     if (this->lock_internal(&this_lock_acquired) != 0)
     {
         this->set_error(ft_errno);
@@ -153,33 +160,67 @@ ft_set<ElementType>& ft_set<ElementType>::operator=(ft_set&& other) noexcept
     previous_mutex = this->_mutex;
     previous_thread_safe = this->_thread_safe_enabled;
     other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
+    if (other_thread_safe)
+    {
+        mutex_memory = cma_malloc(sizeof(pt_mutex));
+        if (mutex_memory == ft_nullptr)
+        {
+            other.unlock_internal(other_lock_acquired);
+            this->unlock_internal(this_lock_acquired);
+            this->set_error(FT_ERR_NO_MEMORY);
+            return (*this);
+        }
+        new_mutex = new(mutex_memory) pt_mutex();
+        if (new_mutex->get_error() != FT_ERR_SUCCESSS)
+        {
+            int mutex_error;
+
+            mutex_error = new_mutex->get_error();
+            new_mutex->~pt_mutex();
+            cma_free(mutex_memory);
+            other.unlock_internal(other_lock_acquired);
+            this->unlock_internal(this_lock_acquired);
+            this->set_error(mutex_error);
+            return (*this);
+        }
+        new_mutex->lock(THREAD_ID);
+        if (new_mutex->get_error() != FT_ERR_SUCCESSS)
+        {
+            int mutex_error;
+
+            mutex_error = new_mutex->get_error();
+            new_mutex->~pt_mutex();
+            cma_free(mutex_memory);
+            other.unlock_internal(other_lock_acquired);
+            this->unlock_internal(this_lock_acquired);
+            this->set_error(mutex_error);
+            return (*this);
+        }
+        new_lock_acquired = true;
+    }
     this->_data = other._data;
     this->_capacity = other._capacity;
     this->_size = other._size;
     this->_error_code = other._error_code;
-    this->_mutex = ft_nullptr;
-    this->_thread_safe_enabled = false;
+    this->_mutex = new_mutex;
+    this->_thread_safe_enabled = other_thread_safe;
     other._data = ft_nullptr;
     other._capacity = 0;
     other._size = 0;
     other._error_code = FT_ERR_SUCCESSS;
     other.unlock_internal(other_lock_acquired);
     other.teardown_thread_safety();
-    if (other_thread_safe)
+    if (this_lock_acquired && locked_mutex != ft_nullptr)
     {
-        if (this->enable_thread_safety() != 0)
+        locked_mutex->unlock(THREAD_ID);
+        if (locked_mutex->get_error() != FT_ERR_SUCCESSS)
         {
-            if (previous_thread_safe && previous_mutex != ft_nullptr)
-            {
-                previous_mutex->~pt_mutex();
-                cma_free(previous_mutex);
-            }
-            this->set_error(ft_errno);
-            this->unlock_internal(this_lock_acquired);
+            if (new_lock_acquired && new_mutex != ft_nullptr)
+                new_mutex->unlock(THREAD_ID);
+            this->set_error(locked_mutex->get_error());
             return (*this);
         }
     }
-    this->unlock_internal(this_lock_acquired);
     if (previous_data != ft_nullptr && previous_data != this->_data)
     {
         size_t index;
@@ -196,6 +237,15 @@ ft_set<ElementType>& ft_set<ElementType>::operator=(ft_set&& other) noexcept
     {
         previous_mutex->~pt_mutex();
         cma_free(previous_mutex);
+    }
+    if (new_lock_acquired && new_mutex != ft_nullptr)
+    {
+        new_mutex->unlock(THREAD_ID);
+        if (new_mutex->get_error() != FT_ERR_SUCCESSS)
+        {
+            this->set_error(new_mutex->get_error());
+            return (*this);
+        }
     }
     this->set_error(FT_ERR_SUCCESSS);
     return (*this);
