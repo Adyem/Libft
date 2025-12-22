@@ -84,13 +84,8 @@ int pt_mutex::try_lock(pthread_t thread_id) const
                     this->set_error(tracker_error);
                     return (FT_SUCCESS);
                 }
-                pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
-                struct timespec retry_sleep;
-
-                retry_sleep.tv_sec = 0;
-                retry_sleep.tv_nsec = 10000000;
-                nanosleep(&retry_sleep, ft_nullptr);
                 mutex_error = pthread_mutex_trylock(&this->_native_mutex);
+                pt_lock_tracking::notify_released(thread_id, &this->_native_mutex);
                 if (mutex_error == 0)
                 {
                     this->_owner.store(thread_id, std::memory_order_relaxed);
@@ -104,6 +99,11 @@ int pt_mutex::try_lock(pthread_t thread_id) const
                     this->set_error(FT_ERR_INVALID_STATE);
                     return (FT_SUCCESS);
                 }
+                struct timespec retry_sleep;
+
+                retry_sleep.tv_sec = 0;
+                retry_sleep.tv_nsec = 10000000;
+                nanosleep(&retry_sleep, ft_nullptr);
                 retry_count++;
             }
             this->set_error(FT_ERR_MUTEX_ALREADY_LOCKED);
