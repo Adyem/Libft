@@ -845,16 +845,27 @@ operator const char*() const noexcept;
 
 **Error reporting**
 
-- `FT_ERR_NO_MEMORY` – memory allocation failed while growing or
-  shrinking the digit buffer.
-- `FT_ERR_INVALID_ARGUMENT` – parsing encountered a non-numeric digit for the
-  requested base.
-- `FT_ERR_INVALID_STATE` – a magnitude-only subtraction detected the
-  right operand was larger than the left, which would otherwise yield a
-  negative magnitude.
-- `FT_ERR_DIVIDE_BY_ZERO` – division or modulo detected a zero divisor.
+- Semantic operations (`assign()`, `assign_base()`, `append_digit()`,
+  `append()`, `append_unsigned()`, comparisons, and the arithmetic operators)
+  update `ft_errno` with domain errors: invalid digits (`FT_ERR_INVALID_ARGUMENT`),
+  impossible magnitude-only subtraction (`FT_ERR_INVALID_STATE`), or divide-by-zero
+  guards (`FT_ERR_DIVIDE_BY_ZERO`). Success paths clear `ft_errno` back to
+  `FT_ERR_SUCCESSS` so stale values never leak into later checks.
+- Concurrency and allocation helpers (`lock_self()`, `lock_pair()`,
+  constructors, assignments, and `reserve()` calls inside the mutators) set
+  `ft_sys_errno` when mutex acquisition fails or a buffer cannot be allocated
+  (`FT_SYS_ERR_NO_MEMORY`). Semantic paths avoid touching `ft_sys_errno` so the
+  system error channel only captures structural or lifecycle problems.
+- Each instance also caches the latest system error in an internal
+  `_system_error_code` mirror. Success paths leave this latched value untouched,
+  so once a lock or allocation failure occurs the cached `ft_sys_errno` remains
+  available even after later calls succeed. Use the public
+  `reset_system_error()` helper to set the cached system errno back to
+  `FT_SYS_ERR_SUCCESS` once you have handled the underlying lock or allocation
+  issue and want to clear the sticky status.
 - Query errors with `get_error()`/`get_error_str()` after each operation to
-  guard against silent failures.
+  guard against silent failures and surface the appropriate `ft_errno` or
+  `ft_sys_errno` state to callers.
 
 **API reference**
 
@@ -892,6 +903,7 @@ ft_string   to_string_base(int base) noexcept;
 ft_big_number mod_pow(const ft_big_number& exponent, const ft_big_number& modulus) const noexcept;
 int         get_error() const noexcept;
 const char *get_error_str() const noexcept;
+void        reset_system_error() const noexcept;
 ```
 
 The standalone helpers below expose common serialization flows so callers can
