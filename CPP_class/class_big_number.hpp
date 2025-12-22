@@ -85,6 +85,7 @@ class ft_big_number
         ft_big_number mod_pow(const ft_big_number& exponent, const ft_big_number& modulus) const noexcept;
         int         get_error() const noexcept;
         const char* get_error_str() const noexcept;
+        void        reset_system_error() const noexcept;
 };
 
 ft_string   big_number_to_hex_string(const ft_big_number& number) noexcept;
