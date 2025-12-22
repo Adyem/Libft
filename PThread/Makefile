@@ -17,6 +17,11 @@ SRCS := pthread_lock_mutex.cpp \
         pthread_thread_equal.cpp \
         pthread_thread.cpp \
         pthread_mutex.cpp \
+        pthread_recursive_mutex.cpp \
+        pthread_recursive_lock_mutex.cpp \
+        pthread_recursive_try_lock_mutex.cpp \
+        pthread_recursive_timed_lock_mutex.cpp \
+        pthread_recursive_unlock_mutex.cpp \
         pthread_atomic_load.cpp \
         pthread_atomic_store.cpp \
         pthread_atomic_fetch_add.cpp \
@@ -31,7 +36,7 @@ SRCS := pthread_lock_mutex.cpp \
 MODULE_NAME := $(notdir $(CURDIR))
 TOTAL_SRCS := $(words $(SRCS))
 
-HEADERS := pthread.hpp mutex.hpp condition.hpp thread.hpp task_scheduler.hpp unique_lock.hpp pthread_lock_tracking.hpp
+HEADERS := pthread.hpp mutex.hpp condition.hpp thread.hpp task_scheduler.hpp unique_lock.hpp pthread_lock_tracking.hpp recursive_mutex.hpp
 
 ifeq ($(OS),Windows_NT)
     MKDIR   = mkdir

@@ -663,6 +663,12 @@ int pt_rwlock_unlock(pthread_rwlock_t *rwlock);
 int pt_rwlock_destroy(pthread_rwlock_t *rwlock);
 ```
 
+`PThread/recursive_mutex.hpp` layers error-tracked ownership on top of the
+native mutex and allows the owning thread to re-enter the same lock. Depth is
+counted per thread, timed and try-lock variants respect the recursive semantics,
+and `get_error_str` mirrors the rest of the module so classes such as
+`ft_big_number` can nest locking without spinning on already-held mutexes.
+
 ### Thread
 
 `PThread/thread.hpp` provides a lightweight `ft_thread` class built on POSIX threads:

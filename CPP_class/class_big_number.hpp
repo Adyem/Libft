@@ -2,12 +2,12 @@
 #define FT_BIG_NUMBER_HPP
 
 #include "../Libft/libft.hpp"
-#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 #include "../PThread/unique_lock.hpp"
 
 class ft_big_number;
 
-typedef ft_unique_lock<pt_mutex>    ft_big_number_mutex_guard;
+typedef ft_unique_lock<pt_recursive_mutex>    ft_big_number_mutex_guard;
 
 class ft_big_number
 {
@@ -18,7 +18,7 @@ class ft_big_number
         bool            _is_negative;
         mutable int     _error_code;
         mutable int     _system_error_code;
-        mutable pt_mutex    _mutex;
+        mutable pt_recursive_mutex    _mutex;
 
         void    reserve(ft_size_t new_capacity) noexcept;
         void    shrink_capacity() noexcept;
