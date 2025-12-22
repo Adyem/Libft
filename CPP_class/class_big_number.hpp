@@ -86,6 +86,10 @@ class ft_big_number
         int         get_error() const noexcept;
         const char* get_error_str() const noexcept;
         void        reset_system_error() const noexcept;
+
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex    *get_mutex_for_testing() noexcept;
+#endif
 };
 
 ft_string   big_number_to_hex_string(const ft_big_number& number) noexcept;

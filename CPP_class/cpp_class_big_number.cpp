@@ -2171,3 +2171,12 @@ void ft_big_number::reset_system_error() const noexcept
     ft_sys_errno = FT_SYS_ERR_SUCCESS;
     return ;
 }
+
+#ifdef LIBFT_TEST_BUILD
+pt_recursive_mutex* ft_big_number::get_mutex_for_testing() noexcept
+{
+    ft_errno = FT_ERR_SUCCESSS;
+    ft_sys_errno = FT_SYS_ERR_SUCCESS;
+    return (&(this->_mutex));
+}
+#endif
