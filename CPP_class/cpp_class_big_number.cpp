@@ -789,6 +789,8 @@ void ft_big_number::assign(const char* number) noexcept
         ft_errno = FT_ERR_SUCCESSS;
         return ;
     }
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_system_error_unlocked(FT_SYS_ERR_SUCCESS);
     if (!number)
     {
         this->clear_unlocked();
@@ -826,8 +828,11 @@ void ft_big_number::assign(const char* number) noexcept
     if (length + 1 > this->_capacity || !this->_digits)
     {
         this->reserve(length + 1);
-        if (this->_error_code != FT_ERR_SUCCESSS)
+        if (this->_system_error_code != FT_SYS_ERR_SUCCESS || !this->_digits)
+        {
+            this->set_error_unlocked(FT_ERR_NO_MEMORY);
             return ;
+        }
     }
     ft_memcpy(this->_digits, number + start_index, length);
     this->_digits[length] = '\0';
