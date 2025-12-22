@@ -44,7 +44,7 @@ endif
 
 CXX       := g++
 
-COMPILE_FLAGS := -Wall -Wextra -Werror -std=c++17 -Wuseless-cast $(OPT_FLAGS) -pthread -Wno-missing-declarations
+COMPILE_FLAGS := -Wall -Wextra -Werror -std=c++17 -Wuseless-cast $(OPT_FLAGS) -pthread -Wno-missing-declarations -DLIBFT_TEST_BUILD
 CFLAGS := $(COMPILE_FLAGS) -DTEST_MODULE=\"Libft\"
 LDFLAGS := -lz -lssl -lcrypto -ldl -lsqlite3
 export COMPILE_FLAGS
