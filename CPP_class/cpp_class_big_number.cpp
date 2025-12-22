@@ -1373,23 +1373,65 @@ ft_big_number ft_big_number::operator/(const ft_big_number& other) const noexcep
                 final_error = result._error_code;
                 goto cleanup_division;
             }
-            int subtract_count = 0;
+            int best_digit_value = 0;
             int comparison = remainder.compare_magnitude(other);
+            ft_big_number best_product;
 
-            while (comparison >= 0)
+            if (comparison >= 0)
             {
-                remainder = remainder.subtract_magnitude(other);
-                if (remainder._error_code != 0)
+                best_digit_value = 0;
+                best_product = ft_big_number();
+                int candidate_digit = 1;
+
+                while (candidate_digit <= 9)
                 {
-                    result.set_error(remainder._error_code);
-                    ft_big_number::update_errno_keeper(stored_errno, result._error_code);
-                    final_error = result._error_code;
-                    goto cleanup_division;
+                    ft_big_number digit_multiplier;
+
+                    digit_multiplier.append_digit(static_cast<char>('0'
+                            + candidate_digit));
+                    if (digit_multiplier._error_code != FT_ERR_SUCCESSS)
+                    {
+                        result.set_error(digit_multiplier._error_code);
+                        ft_big_number::update_errno_keeper(stored_errno, result._error_code);
+                        final_error = result._error_code;
+                        goto cleanup_division;
+                    }
+                    ft_big_number candidate_product = other * digit_multiplier;
+
+                    if (candidate_product._error_code != FT_ERR_SUCCESSS)
+                    {
+                        result.set_error(candidate_product._error_code);
+                        ft_big_number::update_errno_keeper(stored_errno, result._error_code);
+                        final_error = result._error_code;
+                        goto cleanup_division;
+                    }
+                    int product_comparison = candidate_product.compare_magnitude(remainder);
+
+                    if (product_comparison <= 0)
+                    {
+                        best_digit_value = candidate_digit;
+                        best_product = candidate_product;
+                        if (product_comparison == 0)
+                            candidate_digit = 10;
+                        else
+                            candidate_digit++;
+                    }
+                    else
+                        candidate_digit = 10;
                 }
-                subtract_count++;
-                comparison = remainder.compare_magnitude(other);
+                if (best_digit_value > 0)
+                {
+                    remainder = remainder.subtract_magnitude(best_product);
+                    if (remainder._error_code != FT_ERR_SUCCESSS)
+                    {
+                        result.set_error(remainder._error_code);
+                        ft_big_number::update_errno_keeper(stored_errno, result._error_code);
+                        final_error = result._error_code;
+                        goto cleanup_division;
+                    }
+                }
             }
-            char quotient_digit = static_cast<char>('0' + subtract_count);
+            char quotient_digit = static_cast<char>('0' + best_digit_value);
 
             result.append_digit(quotient_digit);
             if (result._error_code != 0)
