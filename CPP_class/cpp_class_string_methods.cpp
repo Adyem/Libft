@@ -2,6 +2,7 @@
 #include "../CMA/CMA.hpp"
 #include "../Libft/libft.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../Template/move.hpp"
 #include "../PThread/pthread.hpp"
 #include "class_nullptr.hpp"
@@ -93,7 +94,7 @@ int ft_string::mutex_guard::get_error() const noexcept
 void ft_string::set_error_unlocked(int error_code) const noexcept
 {
     this->_error_code = error_code;
-    ft_errno = error_code;
+    ft_set_errno_locked(error_code);
     return ;
 }
 
@@ -106,7 +107,7 @@ void ft_string::set_error(int error_code) const noexcept
 void ft_string::set_system_error_unlocked(int error_code) const noexcept
 {
     this->_system_error_code = error_code;
-    ft_sys_errno = error_code;
+    ft_set_sys_errno_locked(error_code);
     return ;
 }
 
@@ -454,7 +455,7 @@ void ft_string::move_unlocked(ft_string &other) noexcept
 
     if (this == &other)
         return ;
-    other_error_code = other._error_code;
+    other_error_code = other.get_error();
     cma_free(this->_data);
     this->_data = ft_nullptr;
     this->_length = 0;
@@ -466,8 +467,8 @@ void ft_string::move_unlocked(ft_string &other) noexcept
         other._data = ft_nullptr;
         other._length = 0;
         other._capacity = 0;
-        other._error_code = FT_ERR_SUCCESSS;
-        other._system_error_code = FT_SYS_ERR_SUCCESS;
+        other.set_error_unlocked(FT_ERR_SUCCESSS);
+        other.set_system_error_unlocked(FT_SYS_ERR_SUCCESS);
         return ;
     }
     this->_data = other._data;
@@ -478,8 +479,8 @@ void ft_string::move_unlocked(ft_string &other) noexcept
     other._data = ft_nullptr;
     other._length = 0;
     other._capacity = 0;
-    other._error_code = FT_ERR_SUCCESSS;
-    other._system_error_code = FT_SYS_ERR_SUCCESS;
+    other.set_error_unlocked(FT_ERR_SUCCESSS);
+    other.set_system_error_unlocked(FT_SYS_ERR_SUCCESS);
     return ;
 }
 
@@ -525,6 +526,7 @@ void ft_string::append(const ft_string& string) noexcept
     ft_string::mutex_guard self_guard;
     ft_string::mutex_guard other_guard;
     int lock_error;
+    int other_error;
     size_t new_length;
 
     lock_error = ft_string::lock_pair(*this, string, self_guard, other_guard);
@@ -540,9 +542,10 @@ void ft_string::append(const ft_string& string) noexcept
             other_guard.unlock();
         return ;
     }
-    if (string._error_code != FT_ERR_SUCCESSS)
+    other_error = string.get_error();
+    if (other_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(string._error_code);
+        this->set_error_unlocked(other_error);
         if (other_guard.owns_lock())
             other_guard.unlock();
         return ;
@@ -728,15 +731,15 @@ int ft_string::get_error() const noexcept
     system_error = this->_system_error_code;
     if (error_code != FT_ERR_SUCCESSS)
     {
-        ft_errno = error_code;
+        ft_set_errno_locked(error_code);
         return (error_code);
     }
     if (system_error != FT_SYS_ERR_SUCCESS)
     {
-        ft_errno = system_error;
+        ft_set_errno_locked(system_error);
         return (system_error);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_set_errno_locked(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
@@ -759,9 +762,9 @@ const char* ft_string::get_error_str() const noexcept
             error_string = ft_strerror(FT_ERR_SUCCESSS);
     }
     if (this->_error_code != FT_ERR_SUCCESSS)
-        ft_errno = this->_error_code;
+        ft_set_errno_locked(this->_error_code);
     else
-        ft_errno = this->_system_error_code;
+        ft_set_errno_locked(this->_system_error_code);
     return (error_string);
 }
 
@@ -777,7 +780,7 @@ void ft_string::reset_system_error() const noexcept
         return ;
     }
     this->_system_error_code = FT_SYS_ERR_SUCCESS;
-    ft_sys_errno = FT_SYS_ERR_SUCCESS;
+    ft_set_sys_errno_locked(FT_SYS_ERR_SUCCESS);
     return ;
 }
 
@@ -973,24 +976,24 @@ char ft_string::back() noexcept
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_system_error(lock_error);
-        ft_errno = lock_error;
+        ft_set_errno_locked(lock_error);
         return ('\0');
     }
     if (this->_error_code != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(this->_error_code);
-        ft_errno = this->_error_code;
+        ft_set_errno_locked(this->_error_code);
         return ('\0');
     }
     if (this->_length == 0)
     {
         this->set_error_unlocked(FT_ERR_OUT_OF_RANGE);
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        ft_set_errno_locked(FT_ERR_OUT_OF_RANGE);
         return ('\0');
     }
     value = this->_data[this->_length - 1];
     this->set_error_unlocked(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_set_errno_locked(FT_ERR_SUCCESSS);
     return (value);
 }
 
@@ -1007,32 +1010,32 @@ size_t ft_string::find(const char *substring) const noexcept
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_system_error(lock_error);
-        ft_errno = lock_error;
+        ft_set_errno_locked(lock_error);
         return (ft_string::npos);
     }
     if (this->_error_code != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(this->_error_code);
-        ft_errno = this->_error_code;
+        ft_set_errno_locked(this->_error_code);
         return (ft_string::npos);
     }
     if (!substring)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
-        ft_errno = FT_ERR_INVALID_ARGUMENT;
+        ft_set_errno_locked(FT_ERR_INVALID_ARGUMENT);
         return (ft_string::npos);
     }
     substring_length = ft_strlen_size_t(substring);
     if (substring_length == 0)
     {
         this->set_error_unlocked(FT_ERR_SUCCESSS);
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_set_errno_locked(FT_ERR_SUCCESSS);
         return (0);
     }
     if (substring_length > this->_length)
     {
         this->set_error_unlocked(FT_ERR_SUCCESSS);
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_set_errno_locked(FT_ERR_SUCCESSS);
         return (ft_string::npos);
     }
     index = 0;
@@ -1051,7 +1054,7 @@ size_t ft_string::find(const char *substring) const noexcept
             index++;
     }
     this->set_error(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_set_errno_locked(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -1060,6 +1063,7 @@ size_t ft_string::find(const ft_string &substring) const noexcept
     ft_string::mutex_guard self_guard;
     ft_string::mutex_guard other_guard;
     int lock_error;
+    int other_error;
     size_t result;
     size_t index;
     size_t match_index;
@@ -1068,22 +1072,23 @@ size_t ft_string::find(const ft_string &substring) const noexcept
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_system_error(lock_error);
-        ft_errno = lock_error;
+        ft_set_errno_locked(lock_error);
         return (ft_string::npos);
     }
-    if (this->_error_code != FT_ERR_SUCCESSS || substring._error_code != FT_ERR_SUCCESSS)
+    other_error = substring.get_error();
+    if (this->_error_code != FT_ERR_SUCCESSS || other_error != FT_ERR_SUCCESSS)
     {
         if (other_guard.owns_lock())
             other_guard.unlock();
         if (this->_error_code != FT_ERR_SUCCESSS)
         {
             this->set_error_unlocked(this->_error_code);
-            ft_errno = this->_error_code;
+            ft_set_errno_locked(this->_error_code);
         }
         else
         {
-            this->set_error_unlocked(substring._error_code);
-            ft_errno = substring._error_code;
+            this->set_error_unlocked(other_error);
+            ft_set_errno_locked(other_error);
         }
         return (ft_string::npos);
     }
@@ -1092,7 +1097,7 @@ size_t ft_string::find(const ft_string &substring) const noexcept
         if (other_guard.owns_lock())
             other_guard.unlock();
         this->set_error_unlocked(FT_ERR_SUCCESSS);
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_set_errno_locked(FT_ERR_SUCCESSS);
         return (0);
     }
     if (substring._length > this->_length)
@@ -1100,7 +1105,7 @@ size_t ft_string::find(const ft_string &substring) const noexcept
         if (other_guard.owns_lock())
             other_guard.unlock();
         this->set_error_unlocked(FT_ERR_SUCCESSS);
-        ft_errno = FT_ERR_SUCCESSS;
+        ft_set_errno_locked(FT_ERR_SUCCESSS);
         return (ft_string::npos);
     }
     result = ft_string::npos;
@@ -1121,7 +1126,7 @@ size_t ft_string::find(const ft_string &substring) const noexcept
     if (other_guard.owns_lock())
         other_guard.unlock();
     this->set_error(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_set_errno_locked(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -1137,19 +1142,19 @@ ft_string ft_string::substr(size_t index, size_t count) const noexcept
     if (lock_error != FT_ERR_SUCCESSS)
     {
         substring.set_system_error(lock_error);
-        ft_errno = lock_error;
+        ft_set_errno_locked(lock_error);
         return (substring);
     }
     if (this->_error_code != FT_ERR_SUCCESSS)
     {
         substring.set_error_unlocked(this->_error_code);
-        ft_errno = this->_error_code;
+        ft_set_errno_locked(this->_error_code);
         return (substring);
     }
     if (index > this->_length)
     {
         substring.set_error_unlocked(FT_ERR_OUT_OF_RANGE);
-        ft_errno = FT_ERR_OUT_OF_RANGE;
+        ft_set_errno_locked(FT_ERR_OUT_OF_RANGE);
         return (substring);
     }
     available_length = this->_length - index;
@@ -1159,7 +1164,7 @@ ft_string ft_string::substr(size_t index, size_t count) const noexcept
     if (copy_length > 0)
         substring.assign(this->_data + index, copy_length);
     this->set_error(FT_ERR_SUCCESSS);
-    ft_errno = FT_ERR_SUCCESSS;
+    ft_set_errno_locked(FT_ERR_SUCCESSS);
     return (substring);
 }
 
@@ -1291,8 +1296,8 @@ bool operator>(const char* lhs, const ft_string &rhs) noexcept
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex* ft_string::get_mutex_for_testing() noexcept
 {
-    ft_errno = FT_ERR_SUCCESSS;
-    ft_sys_errno = FT_SYS_ERR_SUCCESS;
+    ft_set_errno_locked(FT_ERR_SUCCESSS);
+    ft_set_sys_errno_locked(FT_SYS_ERR_SUCCESS);
     return (&(this->_mutex));
 }
 #endif

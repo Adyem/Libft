@@ -3,6 +3,7 @@
 #include "../Template/move.hpp"
 #include "../Libft/libft.hpp"
 #include "../PThread/pthread.hpp"
+#include "../Errno/errno_internal.hpp"
 
 static size_t distance_component(size_t a, size_t b)
 {
@@ -102,6 +103,9 @@ int ft_path_step::lock_pair(const ft_path_step &first,
 ft_path_step::ft_path_step(const ft_path_step &other) noexcept
     : _x(0), _y(0), _z(0), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
+    int other_error;
+
+    other_error = other.get_error();
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     ft_unique_lock<pt_mutex> this_guard(this->_mutex);
 
@@ -122,8 +126,7 @@ ft_path_step::ft_path_step(const ft_path_step &other) noexcept
     this->_x = other._x;
     this->_y = other._y;
     this->_z = other._z;
-    this->_error_code = other._error_code;
-    this->set_error(other._error_code);
+    this->set_error(other_error);
     game_pathfinding_finalize_lock(other_guard);
     game_pathfinding_finalize_lock(this_guard);
     return ;
@@ -134,9 +137,11 @@ ft_path_step &ft_path_step::operator=(const ft_path_step &other) noexcept
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
     int lock_error;
+    int other_error;
 
     if (this == &other)
         return (*this);
+    other_error = other.get_error();
     lock_error = ft_path_step::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -146,8 +151,7 @@ ft_path_step &ft_path_step::operator=(const ft_path_step &other) noexcept
     this->_x = other._x;
     this->_y = other._y;
     this->_z = other._z;
-    this->_error_code = other._error_code;
-    this->set_error(other._error_code);
+    this->set_error(other_error);
     game_pathfinding_finalize_lock(this_guard);
     game_pathfinding_finalize_lock(other_guard);
     return (*this);
@@ -156,6 +160,9 @@ ft_path_step &ft_path_step::operator=(const ft_path_step &other) noexcept
 ft_path_step::ft_path_step(ft_path_step &&other) noexcept
     : _x(0), _y(0), _z(0), _error_code(FT_ERR_SUCCESSS), _mutex()
 {
+    int other_error;
+
+    other_error = other.get_error();
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     ft_unique_lock<pt_mutex> this_guard(this->_mutex);
 
@@ -176,12 +183,10 @@ ft_path_step::ft_path_step(ft_path_step &&other) noexcept
     this->_x = other._x;
     this->_y = other._y;
     this->_z = other._z;
-    this->_error_code = other._error_code;
+    this->set_error(other_error);
     other._x = 0;
     other._y = 0;
     other._z = 0;
-    other._error_code = FT_ERR_SUCCESSS;
-    this->set_error(this->_error_code);
     other.set_error(FT_ERR_SUCCESSS);
     game_pathfinding_finalize_lock(other_guard);
     game_pathfinding_finalize_lock(this_guard);
@@ -193,9 +198,11 @@ ft_path_step &ft_path_step::operator=(ft_path_step &&other) noexcept
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
     int lock_error;
+    int other_error;
 
     if (this == &other)
         return (*this);
+    other_error = other.get_error();
     lock_error = ft_path_step::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -205,12 +212,10 @@ ft_path_step &ft_path_step::operator=(ft_path_step &&other) noexcept
     this->_x = other._x;
     this->_y = other._y;
     this->_z = other._z;
-    this->_error_code = other._error_code;
+    this->set_error(other_error);
     other._x = 0;
     other._y = 0;
     other._z = 0;
-    other._error_code = FT_ERR_SUCCESSS;
-    this->set_error(this->_error_code);
     other.set_error(FT_ERR_SUCCESSS);
     game_pathfinding_finalize_lock(this_guard);
     game_pathfinding_finalize_lock(other_guard);
@@ -366,6 +371,8 @@ const char *ft_path_step::get_error_str() const noexcept
 
 void ft_path_step::set_error(int error) const noexcept
 {
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     ft_errno = error;
     this->_error_code = error;
     return ;
@@ -461,8 +468,10 @@ int ft_pathfinding::lock_pair(const ft_pathfinding &first,
 ft_pathfinding::ft_pathfinding(const ft_pathfinding &other) noexcept
     : _error_code(FT_ERR_SUCCESSS), _current_path(), _needs_replan(false), _mutex()
 {
+    int other_error;
     size_t index;
 
+    other_error = other.get_error();
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     ft_unique_lock<pt_mutex> this_guard(this->_mutex);
 
@@ -494,8 +503,7 @@ ft_pathfinding::ft_pathfinding(const ft_pathfinding &other) noexcept
         index += 1;
     }
     this->_needs_replan = other._needs_replan;
-    this->_error_code = other._error_code;
-    this->set_error(other._error_code);
+    this->set_error(other_error);
     ft_pathfinding::finalize_lock(other_guard);
     ft_pathfinding::finalize_lock(this_guard);
     return ;
@@ -506,10 +514,12 @@ ft_pathfinding &ft_pathfinding::operator=(const ft_pathfinding &other) noexcept
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
     int lock_error;
+    int other_error;
     size_t index;
 
     if (this == &other)
         return (*this);
+    other_error = other.get_error();
     lock_error = ft_pathfinding::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -530,9 +540,8 @@ ft_pathfinding &ft_pathfinding::operator=(const ft_pathfinding &other) noexcept
         }
         index += 1;
     }
-    this->_error_code = other._error_code;
     this->_needs_replan = other._needs_replan;
-    this->set_error(other._error_code);
+    this->set_error(other_error);
     ft_pathfinding::finalize_lock(this_guard);
     ft_pathfinding::finalize_lock(other_guard);
     return (*this);
@@ -541,6 +550,9 @@ ft_pathfinding &ft_pathfinding::operator=(const ft_pathfinding &other) noexcept
 ft_pathfinding::ft_pathfinding(ft_pathfinding &&other) noexcept
     : _error_code(FT_ERR_SUCCESSS), _current_path(), _needs_replan(false), _mutex()
 {
+    int other_error;
+
+    other_error = other.get_error();
     ft_unique_lock<pt_mutex> other_guard(other._mutex);
     ft_unique_lock<pt_mutex> this_guard(this->_mutex);
 
@@ -567,11 +579,10 @@ ft_pathfinding::ft_pathfinding(ft_pathfinding &&other) noexcept
         ft_pathfinding::finalize_lock(this_guard);
         return ;
     }
-    this->_error_code = other._error_code;
+    this->set_error(other_error);
     this->_needs_replan = other._needs_replan;
-    other._error_code = FT_ERR_SUCCESSS;
+    other.set_error(FT_ERR_SUCCESSS);
     other._needs_replan = false;
-    this->set_error(this->_error_code);
     other.set_error(FT_ERR_SUCCESSS);
     ft_pathfinding::finalize_lock(other_guard);
     ft_pathfinding::finalize_lock(this_guard);
@@ -583,9 +594,11 @@ ft_pathfinding &ft_pathfinding::operator=(ft_pathfinding &&other) noexcept
     ft_unique_lock<pt_mutex> this_guard;
     ft_unique_lock<pt_mutex> other_guard;
     int lock_error;
+    int other_error;
 
     if (this == &other)
         return (*this);
+    other_error = other.get_error();
     lock_error = ft_pathfinding::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -601,11 +614,10 @@ ft_pathfinding &ft_pathfinding::operator=(ft_pathfinding &&other) noexcept
         ft_pathfinding::finalize_lock(other_guard);
         return (*this);
     }
-    this->_error_code = other._error_code;
+    this->set_error(other_error);
     this->_needs_replan = other._needs_replan;
-    other._error_code = FT_ERR_SUCCESSS;
+    other.set_error(FT_ERR_SUCCESSS);
     other._needs_replan = false;
-    this->set_error(this->_error_code);
     other.set_error(FT_ERR_SUCCESSS);
     ft_pathfinding::finalize_lock(this_guard);
     ft_pathfinding::finalize_lock(other_guard);
@@ -614,6 +626,8 @@ ft_pathfinding &ft_pathfinding::operator=(ft_pathfinding &&other) noexcept
 
 void ft_pathfinding::set_error(int error) const noexcept
 {
+    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
+
     ft_errno = error;
     this->_error_code = error;
     return ;
@@ -807,7 +821,7 @@ int ft_pathfinding::astar_grid(const ft_map3d &grid,
         const_cast<ft_pathfinding *>(this)->set_error(FT_ERR_GAME_INVALID_MOVE);
         result_error = FT_ERR_GAME_INVALID_MOVE;
         ft_pathfinding::finalize_lock(guard);
-        return (const_cast<ft_pathfinding *>(this)->_error_code);
+        return (result_error);
     }
     struct node
     {
