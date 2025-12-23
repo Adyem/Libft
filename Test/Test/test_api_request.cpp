@@ -12,6 +12,7 @@
 #include "../../Libft/libft.hpp"
 #include "../../Time/time.hpp"
 #include <cerrno>
+#include <cstdlib>
 #include <csignal>
 #include <climits>
 #include <atomic>
@@ -811,6 +812,28 @@ static void api_request_retry_failure_server(void)
             continue ;
         accepted_count++;
         nw_close(client_fd);
+    }
+    return ;
+}
+
+static void api_request_retry_exhaustion_watchdog(std::atomic<bool> *completed)
+{
+    std::chrono::steady_clock::time_point start_time;
+
+    if (!completed)
+        return ;
+    start_time = std::chrono::steady_clock::now();
+    while (!completed->load(std::memory_order_acquire))
+    {
+        std::chrono::steady_clock::time_point current_time;
+        std::chrono::milliseconds elapsed_time;
+
+        current_time = std::chrono::steady_clock::now();
+        elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(
+                current_time - start_time);
+        if (elapsed_time.count() >= 30000)
+            _Exit(1);
+        time_sleep_ms(10);
     }
     return ;
 }
@@ -1966,16 +1989,28 @@ FT_TEST(test_api_request_retry_policy_success, "api_request_string retries recov
 FT_TEST(test_api_request_retry_policy_exhaustion, "api_request_string stops after retry exhaustion")
 {
     ft_thread server_thread;
+    ft_thread watchdog_thread;
     api_retry_policy retry_policy;
+    std::atomic<bool> test_completed;
     char *body;
     int status_value;
+    int request_errno;
+    int result;
 
 #ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
 #endif
+    test_completed.store(false, std::memory_order_release);
+    watchdog_thread = ft_thread(api_request_retry_exhaustion_watchdog,
+            &test_completed);
+    if (watchdog_thread.get_error() != FT_ERR_SUCCESSS)
+        return (0);
+    body = ft_nullptr;
+    request_errno = FT_ERR_SUCCESSS;
+    result = 0;
     server_thread = ft_thread(api_request_retry_failure_server);
     if (server_thread.get_error() != FT_ERR_SUCCESSS)
-        return (0);
+        goto cleanup;
     api_request_small_delay();
     retry_policy.set_max_attempts(2);
     retry_policy.set_initial_delay_ms(5);
@@ -1984,23 +2019,30 @@ FT_TEST(test_api_request_retry_policy_exhaustion, "api_request_string stops afte
     status_value = 777;
     body = api_request_string("127.0.0.1", 54340, "GET", "/", ft_nullptr,
             ft_nullptr, &status_value, 100, &retry_policy);
-    int request_errno;
-
     request_errno = ft_errno;
-    server_thread.join();
+    if (body)
+        goto cleanup;
+    if (status_value != 777)
+        goto cleanup;
+    if (request_errno != FT_ERR_SOCKET_RECEIVE_FAILED
+        && request_errno != FT_ERR_IO
+        && request_errno != FT_ERR_SOCKET_SEND_FAILED)
+        goto cleanup;
+    result = 1;
+
+cleanup:
+    if (server_thread.joinable())
+        server_thread.join();
     ft_errno = request_errno;
     if (body)
     {
         cma_free(body);
-        return (0);
+        body = ft_nullptr;
     }
-    if (status_value != 777)
-        return (0);
-    if (request_errno != FT_ERR_SOCKET_RECEIVE_FAILED
-        && request_errno != FT_ERR_IO
-        && request_errno != FT_ERR_SOCKET_SEND_FAILED)
-        return (0);
-    return (1);
+    test_completed.store(true, std::memory_order_release);
+    if (watchdog_thread.joinable())
+        watchdog_thread.join();
+    return (result);
 }
 
 FT_TEST(test_api_request_retry_policy_timeout, "api_request_string retries until timeout exhaustion")
