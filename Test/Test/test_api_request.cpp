@@ -794,6 +794,7 @@ static void api_request_retry_failure_server(void)
     socklen_t address_length;
     int client_fd;
     int accepted_count;
+    std::chrono::steady_clock::time_point start_time;
 
     server_configuration._type = SocketType::SERVER;
     server_configuration._ip = "127.0.0.1";
@@ -802,8 +803,17 @@ static void api_request_retry_failure_server(void)
     if (server_socket.get_error() != FT_ERR_SUCCESSS)
         return ;
     accepted_count = 0;
+    start_time = std::chrono::steady_clock::now();
     while (accepted_count < 2)
     {
+        std::chrono::steady_clock::time_point current_time;
+        std::chrono::milliseconds elapsed_time;
+
+        current_time = std::chrono::steady_clock::now();
+        elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(
+                current_time - start_time);
+        if (elapsed_time.count() > 2000)
+            break ;
         address_length = sizeof(address_storage);
         client_fd = nw_accept(server_socket.get_fd(),
                 reinterpret_cast<struct sockaddr*>(&address_storage),
@@ -2037,7 +2047,6 @@ FT_TEST(test_api_request_retry_policy_exhaustion, "api_request_string stops afte
     if (status_value != 777)
         goto cleanup;
     if (request_errno != FT_ERR_SOCKET_RECEIVE_FAILED
-        && request_errno != FT_ERR_IO
         && request_errno != FT_ERR_SOCKET_SEND_FAILED)
         goto cleanup;
     result = 1;
@@ -2278,4 +2287,3 @@ FT_TEST(test_api_request_circuit_breaker_half_open_recovers,
     api_retry_circuit_reset();
     return (1);
 }
-
