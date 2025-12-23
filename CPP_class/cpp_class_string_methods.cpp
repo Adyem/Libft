@@ -212,6 +212,7 @@ void ft_string::resize_unlocked(size_t new_capacity) noexcept
     if (!new_data)
     {
         this->set_system_error(FT_SYS_ERR_NO_MEMORY);
+        this->set_error_unlocked(FT_ERR_SYSTEM);
         return ;
     }
     this->_data = new_data;
