@@ -46,7 +46,7 @@ CLANG_FORMAT   ?= clang-format
 
 MAKEFLAGS      += --no-print-directory
 
-SUBMAKE_OVERRIDES :=
+SUBMAKE_OVERRIDES := -j1
 
 ifeq ($(OS),Windows_NT)
     MKDIR  = mkdir
@@ -64,6 +64,7 @@ SUBDIRS :=  CMA \
             Libft \
             Math \
             Geometry \
+            Game \
             Logger \
             Observability \
             System_utils \
@@ -77,7 +78,7 @@ SUBDIRS :=  CMA \
             API \
             CrossProcess \
             Compatebility \
-            Compression Encryption RNG JSon YAML File HTML Game Time XML Storage Parser
+            Compression Encryption RNG JSon YAML File HTML Time XML Storage Parser
 
 LIB_BASES := \
   CMA/CustomMemoryAllocator \
@@ -86,6 +87,7 @@ LIB_BASES := \
   Libft/LibFT \
   Math/Math \
   Geometry/geometry \
+  Game/Game \
   Logger/Logger \
   Observability/Observability \
   System_utils/System_utils \
@@ -106,7 +108,6 @@ LIB_BASES := \
   YAML/YAML  \
   File/file \
   HTML/HTMLParser \
-  Game/Game \
   Time/time \
   XML/XMLParser \
   Storage/storage \

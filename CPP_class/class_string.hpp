@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <cstring>
 #include <climits>
-#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
 
 class ft_string
 {
@@ -13,12 +13,13 @@ class ft_string
         std::size_t      _length;
         std::size_t      _capacity;
         mutable int       _error_code;
-        mutable pt_mutex  _mutex;
+        mutable int       _system_error_code;
+        mutable pt_recursive_mutex  _mutex;
 
         class mutex_guard
         {
             private:
-                pt_mutex   *_mutex;
+                pt_recursive_mutex   *_mutex;
                 bool        _owns_lock;
                 int         _error_code;
 
@@ -31,7 +32,7 @@ class ft_string
                 mutex_guard(mutex_guard &&other) noexcept;
                 mutex_guard &operator=(mutex_guard &&other) noexcept;
 
-                int lock(pt_mutex &mutex) noexcept;
+                int lock(pt_recursive_mutex &mutex) noexcept;
                 void unlock() noexcept;
                 bool owns_lock() const noexcept;
                 int get_error() const noexcept;
@@ -55,6 +56,8 @@ class ft_string
         void    erase_unlocked(std::size_t index, std::size_t count) noexcept;
         void    resize_length_unlocked(size_t new_length) noexcept;
         void    move_unlocked(ft_string &other) noexcept;
+        void    set_system_error_unlocked(int error_code) const noexcept;
+        void    set_system_error(int error_code) const noexcept;
 
     public:
         ft_string() noexcept;
@@ -93,6 +96,7 @@ class ft_string
         bool        empty() const noexcept;
         int         get_error() const noexcept;
         const char    *get_error_str() const noexcept;
+        void        reset_system_error() const noexcept;
         void        move(ft_string& other) noexcept;
         void        erase(std::size_t index, std::size_t count) noexcept;
         void        push_back(char character) noexcept;
@@ -111,6 +115,10 @@ class ft_string
         friend ft_string operator+(const char *lhs, const ft_string &rhs) noexcept;
         friend ft_string operator+(const ft_string &lhs, char rhs) noexcept;
         friend ft_string operator+(char lhs, const ft_string &rhs) noexcept;
+
+#ifdef LIBFT_TEST_BUILD
+        pt_recursive_mutex    *get_mutex_for_testing() noexcept;
+#endif
 };
 
 bool operator==(const ft_string &lhs, const ft_string &rhs) noexcept;

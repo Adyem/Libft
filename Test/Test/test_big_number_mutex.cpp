@@ -276,3 +276,379 @@ FT_TEST(test_big_number_mutex_modulus_unlocks_on_operand_error, "ft_big_number m
     ft_errno = FT_ERR_SUCCESSS;
     return (1);
 }
+
+FT_TEST(test_big_number_mutex_to_string_invalid_base_unlocks,
+        "ft_big_number to_string_base unlocks mutex on invalid base")
+{
+    ft_big_number number;
+    ft_string result_string;
+    pt_recursive_mutex *number_mutex;
+
+    number.assign("10");
+    result_string = number.to_string_base(1);
+    number_mutex = number.get_mutex_for_testing();
+
+    FT_ASSERT(number_mutex != ft_nullptr);
+
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result_string.get_error());
+    FT_ASSERT_EQ(false, number_mutex->lockState());
+    ft_errno = FT_ERR_SUCCESSS;
+    return (1);
+}
+
+FT_TEST(test_big_number_mutex_assign_base_invalid_digits_unlocks,
+        "ft_big_number assign_base unlocks mutex when digits are invalid")
+{
+    ft_big_number number;
+    pt_recursive_mutex *number_mutex;
+
+    number.assign_base("1Z", 10);
+    number_mutex = number.get_mutex_for_testing();
+
+    FT_ASSERT(number_mutex != ft_nullptr);
+
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, number.get_error());
+    FT_ASSERT_EQ(false, number_mutex->lockState());
+    ft_errno = FT_ERR_SUCCESSS;
+    return (1);
+}
+
+FT_TEST(test_big_number_mutex_append_digit_invalid_unlocks,
+        "ft_big_number append_digit unlocks mutex on invalid character")
+{
+    ft_big_number number;
+    pt_recursive_mutex *number_mutex;
+
+    number.append_digit('x');
+    number_mutex = number.get_mutex_for_testing();
+
+    FT_ASSERT(number_mutex != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, number.get_error());
+    FT_ASSERT_EQ(false, number_mutex->lockState());
+    ft_errno = FT_ERR_SUCCESSS;
+    return (1);
+}
+
+FT_TEST(test_big_number_mutex_append_unsigned_unlocks,
+        "ft_big_number append_unsigned unlocks mutex on success")
+{
+    ft_big_number number;
+    pt_recursive_mutex *number_mutex;
+
+    number.append_unsigned(12345);
+    number_mutex = number.get_mutex_for_testing();
+
+    FT_ASSERT(number_mutex != ft_nullptr);
+    FT_ASSERT_EQ(false, number_mutex->lockState());
+    FT_ASSERT_EQ(false, number.empty());
+    ft_errno = FT_ERR_SUCCESSS;
+    return (1);
+}
+
+FT_TEST(test_big_number_mutex_mod_pow_zero_modulus_unlocks,
+        "ft_big_number mod_pow unlocks mutex when modulus is zero")
+{
+    ft_big_number base_number;
+    ft_big_number exponent_number;
+    ft_big_number modulus_number;
+    ft_big_number result_number;
+    pt_recursive_mutex *base_mutex;
+    pt_recursive_mutex *exponent_mutex;
+    pt_recursive_mutex *modulus_mutex;
+    pt_recursive_mutex *result_mutex;
+
+    base_number.assign("5");
+    exponent_number.assign("3");
+    modulus_number.append_digit('0');
+    result_number = base_number.mod_pow(exponent_number, modulus_number);
+    base_mutex = base_number.get_mutex_for_testing();
+    exponent_mutex = exponent_number.get_mutex_for_testing();
+    modulus_mutex = modulus_number.get_mutex_for_testing();
+    result_mutex = result_number.get_mutex_for_testing();
+
+    FT_ASSERT(base_mutex != ft_nullptr);
+    FT_ASSERT(exponent_mutex != ft_nullptr);
+    FT_ASSERT(modulus_mutex != ft_nullptr);
+    FT_ASSERT(result_mutex != ft_nullptr);
+
+    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, result_number.get_error());
+    FT_ASSERT_EQ(false, base_mutex->lockState());
+    FT_ASSERT_EQ(false, exponent_mutex->lockState());
+    FT_ASSERT_EQ(false, modulus_mutex->lockState());
+    FT_ASSERT_EQ(false, result_mutex->lockState());
+    ft_errno = FT_ERR_SUCCESSS;
+    return (1);
+}
+
+FT_TEST(test_big_number_mutex_addition_with_error_operand_unlocks,
+        "ft_big_number addition unlocks mutex when left operand has error")
+{
+    ft_big_number invalid_number;
+    ft_big_number valid_number;
+    ft_big_number sum_number;
+    pt_recursive_mutex *invalid_mutex;
+    pt_recursive_mutex *valid_mutex;
+    pt_recursive_mutex *sum_mutex;
+
+    invalid_number.append_digit('q');
+    valid_number.assign("9");
+    sum_number = invalid_number + valid_number;
+    invalid_mutex = invalid_number.get_mutex_for_testing();
+    valid_mutex = valid_number.get_mutex_for_testing();
+    sum_mutex = sum_number.get_mutex_for_testing();
+
+    FT_ASSERT(invalid_mutex != ft_nullptr);
+    FT_ASSERT(valid_mutex != ft_nullptr);
+    FT_ASSERT(sum_mutex != ft_nullptr);
+
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, sum_number.get_error());
+    FT_ASSERT_EQ(false, invalid_mutex->lockState());
+    FT_ASSERT_EQ(false, valid_mutex->lockState());
+    FT_ASSERT_EQ(false, sum_mutex->lockState());
+    ft_errno = FT_ERR_SUCCESSS;
+    return (1);
+}
+
+FT_TEST(test_big_number_mutex_clear_after_error_unlocks,
+        "ft_big_number clear unlocks mutex after error state")
+{
+    ft_big_number number;
+    pt_recursive_mutex *number_mutex;
+
+    number.append_digit('m');
+    number.clear();
+    number_mutex = number.get_mutex_for_testing();
+
+    FT_ASSERT(number_mutex != ft_nullptr);
+    FT_ASSERT_EQ(false, number_mutex->lockState());
+    FT_ASSERT_EQ(true, number.empty());
+    ft_errno = FT_ERR_SUCCESSS;
+    return (1);
+}
+
+FT_TEST(test_big_number_mutex_assign_base_zero_unlocks,
+        "ft_big_number assign_base unlocks mutex when base is zero")
+{
+    ft_big_number number;
+    pt_recursive_mutex *number_mutex;
+
+    number.assign_base("10", 0);
+    number_mutex = number.get_mutex_for_testing();
+
+    FT_ASSERT(number_mutex != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, number.get_error());
+    FT_ASSERT_EQ(false, number_mutex->lockState());
+    ft_errno = FT_ERR_SUCCESSS;
+    return (1);
+}
+
+FT_TEST(test_big_number_mutex_multiplication_with_error_operand_unlocks,
+        "ft_big_number multiplication unlocks mutex when operand has error")
+{
+    ft_big_number invalid_number;
+    ft_big_number valid_number;
+    ft_big_number product_number;
+    pt_recursive_mutex *invalid_mutex;
+    pt_recursive_mutex *valid_mutex;
+    pt_recursive_mutex *product_mutex;
+
+    invalid_number.append_digit('Z');
+    valid_number.assign("4");
+    product_number = invalid_number * valid_number;
+    invalid_mutex = invalid_number.get_mutex_for_testing();
+    valid_mutex = valid_number.get_mutex_for_testing();
+    product_mutex = product_number.get_mutex_for_testing();
+
+    FT_ASSERT(invalid_mutex != ft_nullptr);
+    FT_ASSERT(valid_mutex != ft_nullptr);
+    FT_ASSERT(product_mutex != ft_nullptr);
+
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, product_number.get_error());
+    FT_ASSERT_EQ(false, invalid_mutex->lockState());
+    FT_ASSERT_EQ(false, valid_mutex->lockState());
+    FT_ASSERT_EQ(false, product_mutex->lockState());
+    ft_errno = FT_ERR_SUCCESSS;
+    return (1);
+}
+
+FT_TEST(test_big_number_mutex_to_string_valid_unlocks,
+        "ft_big_number to_string_base unlocks mutex on success")
+{
+    ft_big_number number;
+    ft_string decimal_string;
+    pt_recursive_mutex *number_mutex;
+    pt_recursive_mutex *string_mutex;
+
+    number.assign("256");
+    decimal_string = number.to_string_base(10);
+    number_mutex = number.get_mutex_for_testing();
+    string_mutex = decimal_string.get_mutex_for_testing();
+
+    FT_ASSERT(number_mutex != ft_nullptr);
+    FT_ASSERT(string_mutex != ft_nullptr);
+
+    FT_ASSERT_EQ(false, number_mutex->lockState());
+    FT_ASSERT_EQ(false, string_mutex->lockState());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, decimal_string.get_error());
+    FT_ASSERT_EQ(3, decimal_string.size());
+    ft_errno = FT_ERR_SUCCESSS;
+    return (1);
+}
+
+FT_TEST(test_big_number_mutex_mod_pow_with_error_operand_unlocks,
+        "ft_big_number mod_pow unlocks mutex when operands have errors")
+{
+    ft_big_number base_number;
+    ft_big_number exponent_number;
+    ft_big_number modulus_number;
+    ft_big_number result_number;
+    pt_recursive_mutex *base_mutex;
+    pt_recursive_mutex *exponent_mutex;
+    pt_recursive_mutex *modulus_mutex;
+    pt_recursive_mutex *result_mutex;
+
+    base_number.append_digit('x');
+    exponent_number.assign("2");
+    modulus_number.assign("3");
+    result_number = base_number.mod_pow(exponent_number, modulus_number);
+    base_mutex = base_number.get_mutex_for_testing();
+    exponent_mutex = exponent_number.get_mutex_for_testing();
+    modulus_mutex = modulus_number.get_mutex_for_testing();
+    result_mutex = result_number.get_mutex_for_testing();
+
+    FT_ASSERT(base_mutex != ft_nullptr);
+    FT_ASSERT(exponent_mutex != ft_nullptr);
+    FT_ASSERT(modulus_mutex != ft_nullptr);
+    FT_ASSERT(result_mutex != ft_nullptr);
+
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result_number.get_error());
+    FT_ASSERT_EQ(false, base_mutex->lockState());
+    FT_ASSERT_EQ(false, exponent_mutex->lockState());
+    FT_ASSERT_EQ(false, modulus_mutex->lockState());
+    FT_ASSERT_EQ(false, result_mutex->lockState());
+    ft_errno = FT_ERR_SUCCESSS;
+    return (1);
+}
+
+FT_TEST(test_big_number_mutex_trim_leading_zeros_after_error_unlocks,
+        "ft_big_number trim_leading_zeros unlocks mutex after error state")
+{
+    ft_big_number number;
+    pt_recursive_mutex *number_mutex;
+
+    number.append_digit('y');
+    number.trim_leading_zeros();
+    number_mutex = number.get_mutex_for_testing();
+
+    FT_ASSERT(number_mutex != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, number.get_error());
+    FT_ASSERT_EQ(false, number_mutex->lockState());
+    ft_errno = FT_ERR_SUCCESSS;
+    return (1);
+}
+
+FT_TEST(test_big_number_mutex_assign_nullptr_unlocks,
+        "ft_big_number assign unlocks mutex when input is null")
+{
+    ft_big_number number;
+    pt_recursive_mutex *number_mutex;
+
+    number.assign(ft_nullptr);
+    number_mutex = number.get_mutex_for_testing();
+
+    FT_ASSERT(number_mutex != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, number.get_error());
+    FT_ASSERT_EQ(false, number_mutex->lockState());
+    ft_errno = FT_ERR_SUCCESSS;
+    return (1);
+}
+
+FT_TEST(test_big_number_mutex_append_nullptr_unlocks,
+        "ft_big_number append unlocks mutex when input is null")
+{
+    ft_big_number number;
+    pt_recursive_mutex *number_mutex;
+
+    number.append(ft_nullptr);
+    number_mutex = number.get_mutex_for_testing();
+
+    FT_ASSERT(number_mutex != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, number.get_error());
+    FT_ASSERT_EQ(false, number_mutex->lockState());
+    ft_errno = FT_ERR_SUCCESSS;
+    return (1);
+}
+
+FT_TEST(test_big_number_mutex_mod_pow_invalid_exponent_unlocks,
+        "ft_big_number mod_pow unlocks mutex when exponent is invalid")
+{
+    ft_big_number base_number;
+    ft_big_number exponent_number;
+    ft_big_number modulus_number;
+    ft_big_number result_number;
+    pt_recursive_mutex *base_mutex;
+    pt_recursive_mutex *exponent_mutex;
+    pt_recursive_mutex *modulus_mutex;
+    pt_recursive_mutex *result_mutex;
+
+    base_number.assign("2");
+    exponent_number.append_digit('g');
+    modulus_number.assign("5");
+    result_number = base_number.mod_pow(exponent_number, modulus_number);
+    base_mutex = base_number.get_mutex_for_testing();
+    exponent_mutex = exponent_number.get_mutex_for_testing();
+    modulus_mutex = modulus_number.get_mutex_for_testing();
+    result_mutex = result_number.get_mutex_for_testing();
+
+    FT_ASSERT(base_mutex != ft_nullptr);
+    FT_ASSERT(exponent_mutex != ft_nullptr);
+    FT_ASSERT(modulus_mutex != ft_nullptr);
+    FT_ASSERT(result_mutex != ft_nullptr);
+
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result_number.get_error());
+    FT_ASSERT_EQ(false, base_mutex->lockState());
+    FT_ASSERT_EQ(false, exponent_mutex->lockState());
+    FT_ASSERT_EQ(false, modulus_mutex->lockState());
+    FT_ASSERT_EQ(false, result_mutex->lockState());
+    ft_errno = FT_ERR_SUCCESSS;
+    return (1);
+}
+
+FT_TEST(test_big_number_mutex_to_string_negative_base_unlocks,
+        "ft_big_number to_string_base unlocks mutex when base is negative")
+{
+    ft_big_number number;
+    ft_string result_string;
+    pt_recursive_mutex *number_mutex;
+    pt_recursive_mutex *string_mutex;
+
+    number.assign("10");
+    result_string = number.to_string_base(-2);
+    number_mutex = number.get_mutex_for_testing();
+    string_mutex = result_string.get_mutex_for_testing();
+
+    FT_ASSERT(number_mutex != ft_nullptr);
+    FT_ASSERT(string_mutex != ft_nullptr);
+
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result_string.get_error());
+    FT_ASSERT_EQ(false, number_mutex->lockState());
+    FT_ASSERT_EQ(false, string_mutex->lockState());
+    ft_errno = FT_ERR_SUCCESSS;
+    return (1);
+}
+
+FT_TEST(test_big_number_mutex_from_hex_string_null_unlocks,
+        "big_number_from_hex_string unlocks mutex when input is null")
+{
+    ft_big_number result_number;
+    pt_recursive_mutex *result_mutex;
+
+    result_number = big_number_from_hex_string(ft_nullptr);
+    result_mutex = result_number.get_mutex_for_testing();
+
+    FT_ASSERT(result_mutex != ft_nullptr);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, result_number.get_error());
+    FT_ASSERT_EQ(false, result_mutex->lockState());
+    ft_errno = FT_ERR_SUCCESSS;
+    return (1);
+}

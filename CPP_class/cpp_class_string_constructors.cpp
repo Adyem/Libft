@@ -9,9 +9,11 @@ ft_string::ft_string() noexcept
     , _length(0)
     , _capacity(0)
     , _error_code(0)
+    , _system_error_code(FT_SYS_ERR_SUCCESS)
     , _mutex()
 {
     this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_system_error_unlocked(FT_SYS_ERR_SUCCESS);
     return ;
 }
 
@@ -20,9 +22,11 @@ ft_string::ft_string(const char* init_str) noexcept
     , _length(0)
     , _capacity(0)
     , _error_code(0)
+    , _system_error_code(FT_SYS_ERR_SUCCESS)
     , _mutex()
 {
     this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_system_error_unlocked(FT_SYS_ERR_SUCCESS);
     if (init_str)
         this->assign(init_str, ft_strlen_size_t(init_str));
     return ;
@@ -33,9 +37,11 @@ ft_string::ft_string(size_t count, char character) noexcept
     , _length(0)
     , _capacity(0)
     , _error_code(0)
+    , _system_error_code(FT_SYS_ERR_SUCCESS)
     , _mutex()
 {
     this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_system_error_unlocked(FT_SYS_ERR_SUCCESS);
     this->assign(count, character);
     return ;
 }
@@ -45,6 +51,7 @@ ft_string::ft_string(const ft_string& other) noexcept
     , _length(0)
     , _capacity(0)
     , _error_code(0)
+    , _system_error_code(FT_SYS_ERR_SUCCESS)
     , _mutex()
 {
     ft_string::mutex_guard other_guard;
@@ -55,18 +62,19 @@ ft_string::ft_string(const ft_string& other) noexcept
     {
         this->_length = 0;
         this->_capacity = 0;
-        this->set_error_unlocked(lock_error);
-        ft_errno = lock_error;
+        this->set_system_error(lock_error);
         return ;
     }
     this->_length = other._length;
     this->_capacity = other._capacity;
     this->_error_code = other._error_code;
+    this->_system_error_code = other._system_error_code;
     if (other._error_code != FT_ERR_SUCCESSS)
     {
         this->_length = 0;
         this->_capacity = 0;
         this->set_error_unlocked(other._error_code);
+        this->set_system_error_unlocked(FT_SYS_ERR_SUCCESS);
         return ;
     }
     if (other._data)
@@ -76,12 +84,13 @@ ft_string::ft_string(const ft_string& other) noexcept
         {
             this->_length = 0;
             this->_capacity = 0;
-            this->set_error_unlocked(FT_ERR_NO_MEMORY);
+            this->set_system_error(FT_SYS_ERR_NO_MEMORY);
             return ;
         }
         ft_memcpy(this->_data, other._data, this->_length + 1);
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_system_error_unlocked(FT_SYS_ERR_SUCCESS);
     return ;
 }
 
@@ -102,15 +111,17 @@ ft_string::ft_string(ft_string&& other) noexcept
         this->_length = 0;
         this->_capacity = 0;
         this->_error_code = lock_error;
-        ft_errno = lock_error;
+        this->set_system_error(lock_error);
         return ;
     }
     this->_data = ft_nullptr;
     this->_length = 0;
     this->_capacity = 0;
     this->_error_code = FT_ERR_SUCCESSS;
+    this->_system_error_code = FT_SYS_ERR_SUCCESS;
     this->move_unlocked(other);
     this->set_error(FT_ERR_SUCCESSS);
+    this->set_system_error_unlocked(FT_SYS_ERR_SUCCESS);
     return ;
 }
 
@@ -128,8 +139,7 @@ ft_string& ft_string::operator=(const ft_string& other) noexcept
     lock_error = ft_string::lock_pair(*this, other, self_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(lock_error);
-        ft_errno = lock_error;
+        this->set_system_error(lock_error);
         return (*this);
     }
     cma_free(this->_data);
@@ -137,16 +147,14 @@ ft_string& ft_string::operator=(const ft_string& other) noexcept
     this->_length = other._length;
     this->_capacity = other._capacity;
     this->set_error_unlocked(other._error_code);
+    this->_system_error_code = other._system_error_code;
     if (other._error_code != FT_ERR_SUCCESSS)
     {
         this->_length = 0;
         this->_capacity = 0;
         if (other_guard.owns_lock())
             other_guard.unlock();
-        if (this->_error_code != FT_ERR_SUCCESSS)
-        {
-            ft_errno = this->_error_code;
-        }
+        this->set_system_error_unlocked(FT_SYS_ERR_SUCCESS);
         return (*this);
     }
     if (other._data)
@@ -156,21 +164,19 @@ ft_string& ft_string::operator=(const ft_string& other) noexcept
         {
             this->_length = 0;
             this->_capacity = 0;
-            this->set_error_unlocked(FT_ERR_NO_MEMORY);
+            this->set_system_error(FT_SYS_ERR_NO_MEMORY);
             if (other_guard.owns_lock())
                 other_guard.unlock();
-            if (this->_error_code != FT_ERR_SUCCESSS)
-            {
-                ft_errno = this->_error_code;
-            }
             return (*this);
         }
         ft_memcpy(this->_data, other._data, this->_length + 1);
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->_system_error_code = other._system_error_code;
     if (other_guard.owns_lock())
         other_guard.unlock();
     this->set_error(FT_ERR_SUCCESSS);
+    this->set_system_error(FT_SYS_ERR_SUCCESS);
     return (*this);
 }
 
@@ -182,8 +188,7 @@ ft_string& ft_string::operator=(const char* other) noexcept
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(lock_error);
-        ft_errno = lock_error;
+        this->set_system_error(lock_error);
         return (*this);
     }
     cma_free(this->_data);
@@ -191,6 +196,7 @@ ft_string& ft_string::operator=(const char* other) noexcept
     this->_length = 0;
     this->_capacity = 0;
     this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->set_system_error_unlocked(FT_SYS_ERR_SUCCESS);
     if (other)
     {
         this->_length = ft_strlen_size_t(other);
@@ -200,12 +206,13 @@ ft_string& ft_string::operator=(const char* other) noexcept
         {
             this->_length = 0;
             this->_capacity = 0;
-            this->set_error_unlocked(FT_ERR_NO_MEMORY);
+            this->set_system_error(FT_SYS_ERR_NO_MEMORY);
             return (*this);
         }
         ft_memcpy(this->_data, other, this->_length + 1);
     }
     this->set_error(FT_ERR_SUCCESSS);
+    this->set_system_error_unlocked(FT_SYS_ERR_SUCCESS);
     return (*this);
 }
 
@@ -221,8 +228,7 @@ ft_string& ft_string::operator=(ft_string&& other) noexcept
     lock_error = ft_string::lock_pair(*this, other, self_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(lock_error);
-        ft_errno = lock_error;
+        this->set_system_error(lock_error);
         return (*this);
     }
     if (this->_error_code != FT_ERR_SUCCESSS)
@@ -236,6 +242,7 @@ ft_string& ft_string::operator=(ft_string&& other) noexcept
         other_guard.unlock();
     if (this->_error_code != FT_ERR_SUCCESSS)
         ft_errno = this->_error_code;
+    this->set_system_error_unlocked(FT_SYS_ERR_SUCCESS);
     return (*this);
 }
 
@@ -281,8 +288,10 @@ ft_string::ft_string(int error_code) noexcept
     , _length(0)
     , _capacity(0)
     , _error_code(error_code)
+    , _system_error_code(FT_SYS_ERR_SUCCESS)
     , _mutex()
 {
     this->set_error_unlocked(error_code);
+    this->set_system_error_unlocked(FT_SYS_ERR_SUCCESS);
     return ;
 }
