@@ -674,7 +674,12 @@ char *api_request_string_http2(const char *ip, uint16_t port,
     } connection_guard(connection_handle);
     if (downgrade_due_to_connect_failure)
     {
-        bool socket_ready;
+        int max_attempts;
+        int attempt_index;
+        int initial_delay;
+        int current_delay;
+        int max_delay;
+        int multiplier;
 
         if (g_api_request_wait_hook)
         {
@@ -684,38 +689,63 @@ char *api_request_string_http2(const char *ip, uint16_t port,
             if (!wait_ready)
                 return (ft_nullptr);
         }
-        error_code = FT_ERR_SUCCESSS;
-        socket_ready = api_http_prepare_plain_socket(connection_handle, ip,
-                port, timeout, error_code);
-        if (!socket_ready)
+        max_attempts = api_retry_get_max_attempts(retry_policy);
+        initial_delay = api_retry_get_initial_delay(retry_policy);
+        max_delay = api_retry_get_max_delay(retry_policy);
+        multiplier = api_retry_get_multiplier(retry_policy);
+        current_delay = api_retry_prepare_delay(initial_delay, max_delay);
+        attempt_index = 0;
+        while (attempt_index < max_attempts)
         {
-            int remaining_attempts;
-            unsigned int retry_delay_ms;
+            bool socket_ready;
+            bool should_retry;
 
-            remaining_attempts = api_retry_get_max_attempts(retry_policy);
-            if (remaining_attempts > 0)
-                remaining_attempts = remaining_attempts - 1;
-            retry_delay_ms = 50;
-            while (!socket_ready && remaining_attempts > 0)
+            if (!api_retry_circuit_allow(connection_handle, retry_policy,
+                    error_code))
+                return (ft_nullptr);
+            error_code = FT_ERR_SUCCESSS;
+            socket_ready = api_http_prepare_plain_socket(connection_handle, ip,
+                    port, timeout, error_code);
+            if (socket_ready)
             {
-                time_sleep_ms(retry_delay_ms);
-                error_code = FT_ERR_SUCCESSS;
-                socket_ready = api_http_prepare_plain_socket(connection_handle,
-                        ip, port, timeout, error_code);
-                remaining_attempts = remaining_attempts - 1;
+                metrics_result_body = api_http_execute_plain(connection_handle,
+                        method, path, ip, payload, headers, status, timeout,
+                        ip, port, retry_policy, error_code);
+                if (metrics_result_body)
+                {
+                    connection_guard.set_success();
+                    if (used_http2)
+                        *used_http2 = false;
+                    return (metrics_result_body);
+                }
             }
+            should_retry = api_http_should_retry_plain(error_code);
+            if (!should_retry)
+                return (ft_nullptr);
+            api_retry_circuit_record_failure(connection_handle, retry_policy);
+            api_connection_pool_evict(connection_handle);
+            attempt_index = attempt_index + 1;
+            if (attempt_index >= max_attempts)
+                break;
+            if (current_delay > 0)
+            {
+                int sleep_delay;
+
+                sleep_delay = api_retry_prepare_delay(current_delay, max_delay);
+                if (sleep_delay > 0)
+                    time_sleep_ms(static_cast<unsigned int>(sleep_delay));
+            }
+            current_delay = api_retry_next_delay(current_delay, max_delay,
+                    multiplier);
+            if (current_delay <= 0)
+                current_delay = api_retry_prepare_delay(initial_delay,
+                        max_delay);
         }
-        if (!socket_ready)
-            return (ft_nullptr);
-        metrics_result_body = api_http_execute_plain(connection_handle, method,
-                path, ip, payload, headers, status, timeout, ip, port,
-                retry_policy, error_code);
-        if (!metrics_result_body)
-            return (ft_nullptr);
-        connection_guard.set_success();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_IO;
         if (used_http2)
             *used_http2 = false;
-        return (metrics_result_body);
+        return (ft_nullptr);
     }
     if (!connection_handle.has_socket)
     {
