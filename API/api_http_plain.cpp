@@ -75,7 +75,7 @@ static bool api_http_is_recoverable_send_error(int error_code)
     return (false);
 }
 
-static bool api_http_should_retry_plain(int error_code)
+bool api_http_should_retry_plain(int error_code)
 {
     if (api_http_is_recoverable_send_error(error_code))
         return (true);
