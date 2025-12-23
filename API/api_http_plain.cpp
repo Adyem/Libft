@@ -916,7 +916,7 @@ static bool api_http_receive_response(api_connection_pool_handle &connection_han
         {
             if (!headers_complete)
             {
-                error_code = FT_ERR_IO;
+                error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
                 return (false);
             }
             if (!streaming_enabled)
@@ -1152,7 +1152,7 @@ static bool api_http_receive_response(api_connection_pool_handle &connection_han
     }
     if (response.size() == 0)
     {
-        error_code = FT_ERR_IO;
+        error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
         return (false);
     }
     if (streaming_enabled)
@@ -1257,6 +1257,8 @@ static char *api_http_execute_plain_once(
             connection_close, chunked_encoding, has_length, content_length,
             error_code, ft_nullptr, prefetched_response))
     {
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
         if (send_failed)
             error_code = send_error_code;
         return (ft_nullptr);
@@ -1426,6 +1428,8 @@ static bool api_http_execute_plain_streaming_once(
             connection_close, chunked_encoding, has_length, content_length,
             error_code, streaming_handler, ft_nullptr))
     {
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_SOCKET_RECEIVE_FAILED;
         if (send_failed)
             error_code = send_error_code;
         return (false);
