@@ -77,6 +77,7 @@ static const t_ft_error_string g_error_strings[] =
     {FT_ERR_PRIORITY_QUEUE_NO_MEMORY, "Priority queue memory allocation failed"},
     {FT_ERR_CRYPTO_INVALID_PADDING, "Invalid cryptographic padding"},
     {FT_ERR_DATABASE_UNAVAILABLE, "Database unavailable"},
+    {FT_ERR_TIMEOUT, "Operation timed out"},
     {FT_ERR_SSL_SYSCALL_ERROR, "SSL system call error"},
     {FT_ERR_HTTP_PROTOCOL_MISMATCH, "HTTP protocol mismatch"},
     {FT_ERR_API_CIRCUIT_OPEN, "API circuit breaker is open"}
