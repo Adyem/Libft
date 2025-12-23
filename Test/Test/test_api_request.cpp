@@ -816,11 +816,12 @@ static void api_request_retry_failure_server(void)
     return ;
 }
 
-static void api_request_retry_exhaustion_watchdog(std::atomic<bool> *completed)
+static void api_request_retry_exhaustion_watchdog(std::atomic<bool> *completed,
+    std::atomic<bool> *timed_out)
 {
     std::chrono::steady_clock::time_point start_time;
 
-    if (!completed)
+    if (!completed || !timed_out)
         return ;
     start_time = std::chrono::steady_clock::now();
     while (!completed->load(std::memory_order_acquire))
@@ -832,7 +833,11 @@ static void api_request_retry_exhaustion_watchdog(std::atomic<bool> *completed)
         elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(
                 current_time - start_time);
         if (elapsed_time.count() >= 30000)
-            _Exit(1);
+        {
+            timed_out->store(true, std::memory_order_release);
+            completed->store(true, std::memory_order_release);
+            return ;
+        }
         time_sleep_ms(10);
     }
     return ;
@@ -1992,6 +1997,7 @@ FT_TEST(test_api_request_retry_policy_exhaustion, "api_request_string stops afte
     ft_thread watchdog_thread;
     api_retry_policy retry_policy;
     std::atomic<bool> test_completed;
+    std::atomic<bool> test_timed_out;
     char *body;
     int status_value;
     int request_errno;
@@ -2001,8 +2007,9 @@ FT_TEST(test_api_request_retry_policy_exhaustion, "api_request_string stops afte
     signal(SIGPIPE, SIG_IGN);
 #endif
     test_completed.store(false, std::memory_order_release);
+    test_timed_out.store(false, std::memory_order_release);
     watchdog_thread = ft_thread(api_request_retry_exhaustion_watchdog,
-            &test_completed);
+            &test_completed, &test_timed_out);
     if (watchdog_thread.get_error() != FT_ERR_SUCCESSS)
         return (0);
     body = ft_nullptr;
@@ -2020,6 +2027,11 @@ FT_TEST(test_api_request_retry_policy_exhaustion, "api_request_string stops afte
     body = api_request_string("127.0.0.1", 54340, "GET", "/", ft_nullptr,
             ft_nullptr, &status_value, 100, &retry_policy);
     request_errno = ft_errno;
+    if (test_timed_out.load(std::memory_order_acquire))
+    {
+        request_errno = FT_ERR_TIMEOUT;
+        goto cleanup;
+    }
     if (body)
         goto cleanup;
     if (status_value != 777)
