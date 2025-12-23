@@ -16,6 +16,7 @@
 #include <climits>
 #include <atomic>
 #include <chrono>
+#include <thread>
 
 #ifdef _WIN32
 # include <windows.h>
@@ -725,22 +726,35 @@ static void api_request_retry_success_server(void)
     socklen_t address_length;
     int client_fd;
     int accepted_count;
+    std::chrono::steady_clock::time_point start_time;
+    std::chrono::steady_clock::time_point current_time;
+    std::chrono::milliseconds elapsed;
 
     server_configuration._type = SocketType::SERVER;
     server_configuration._ip = "127.0.0.1";
     server_configuration._port = 54339;
+    server_configuration._non_blocking = true;
     server_socket = ft_socket(server_configuration);
     if (server_socket.get_error() != FT_ERR_SUCCESSS)
         return ;
     accepted_count = 0;
+    start_time = std::chrono::steady_clock::now();
     while (accepted_count < 2)
     {
+        current_time = std::chrono::steady_clock::now();
+        elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+            current_time - start_time);
+        if (elapsed.count() > 2000)
+            break ;
         address_length = sizeof(address_storage);
         client_fd = nw_accept(server_socket.get_fd(),
                 reinterpret_cast<struct sockaddr*>(&address_storage),
                 &address_length);
         if (client_fd < 0)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
             continue ;
+        }
         accepted_count++;
         if (accepted_count == 1)
         {
@@ -766,6 +780,8 @@ static void api_request_retry_success_server(void)
         }
         nw_close(client_fd);
     }
+    if (accepted_count == 2)
+        ft_errno = FT_ERR_SUCCESSS;
     return ;
 }
 
