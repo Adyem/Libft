@@ -451,4 +451,3 @@ FT_TEST(test_pathfinding_thread_safety,
     }
     return (1);
 }
-
