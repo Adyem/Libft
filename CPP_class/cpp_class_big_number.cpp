@@ -377,7 +377,6 @@ ft_big_number::ft_big_number(const ft_big_number& other) noexcept
 {
     ft_big_number_mutex_guard other_guard;
     int lock_error;
-    int other_error;
 
     lock_error = other.lock_self(other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
@@ -482,10 +481,8 @@ ft_big_number& ft_big_number::operator=(const ft_big_number& other) noexcept
     this->_size = other._size;
     this->_capacity = other._capacity;
     this->_is_negative = other._is_negative;
-    other_error = other.get_error();
-    this->set_error_unlocked(other_error);
+    this->_error_code = other._error_code;
     this->_system_error_code = other._system_error_code;
-    this->set_system_error(FT_SYS_ERR_SUCCESS);
     return (*this);
 }
 
@@ -494,7 +491,6 @@ ft_big_number& ft_big_number::operator=(ft_big_number&& other) noexcept
     ft_big_number_mutex_guard this_guard;
     ft_big_number_mutex_guard other_guard;
     int lock_error;
-    int other_error;
 
     if (this == &other)
         return (*this);
@@ -509,10 +505,8 @@ ft_big_number& ft_big_number::operator=(ft_big_number&& other) noexcept
     this->_size = other._size;
     this->_capacity = other._capacity;
     this->_is_negative = other._is_negative;
-    other_error = other.get_error();
-    this->set_error_unlocked(other_error);
+    this->_error_code = other._error_code;
     this->_system_error_code = other._system_error_code;
-    this->set_system_error(FT_SYS_ERR_SUCCESS);
     other._digits = ft_nullptr;
     other._size = 0;
     other._capacity = 0;
