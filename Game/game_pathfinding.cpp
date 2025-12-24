@@ -25,8 +25,16 @@ static void game_pathfinding_finalize_lock(ft_unique_lock<pt_mutex> &guard) noex
     return ;
 }
 
+static void game_pathfinding_finalize_lock(ft_unique_lock<pt_recursive_mutex> &guard) noexcept
+{
+    if (guard.owns_lock())
+        guard.unlock();
+    return ;
+}
+
 ft_path_step::ft_path_step() noexcept
-    : _x(0), _y(0), _z(0), _error_code(FT_ERR_SUCCESSS), _mutex()
+    : _x(0), _y(0), _z(0), _error_code(FT_ERR_SUCCESSS),
+    _system_error_code(FT_SYS_ERR_SUCCESS), _mutex()
 {
     this->set_error(FT_ERR_SUCCESSS);
     return ;
@@ -39,8 +47,8 @@ ft_path_step::~ft_path_step() noexcept
 
 int ft_path_step::lock_pair(const ft_path_step &first,
         const ft_path_step &second,
-        ft_unique_lock<pt_mutex> &first_guard,
-        ft_unique_lock<pt_mutex> &second_guard) noexcept
+        ft_unique_lock<pt_recursive_mutex> &first_guard,
+        ft_unique_lock<pt_recursive_mutex> &second_guard) noexcept
 {
     const ft_path_step *ordered_first;
     const ft_path_step *ordered_second;
@@ -48,16 +56,16 @@ int ft_path_step::lock_pair(const ft_path_step &first,
 
     if (&first == &second)
     {
-        ft_unique_lock<pt_mutex> single_guard(first._mutex);
+        ft_unique_lock<pt_recursive_mutex> single_guard(first._mutex);
 
         if (single_guard.get_error() != FT_ERR_SUCCESSS)
         {
-            ft_errno = single_guard.get_error();
+            first.set_system_error(single_guard.get_error());
             return (single_guard.get_error());
         }
         first_guard = ft_move(single_guard);
-        second_guard = ft_unique_lock<pt_mutex>();
-        ft_errno = FT_ERR_SUCCESSS;
+        second_guard = ft_unique_lock<pt_recursive_mutex>();
+        first.set_system_error(FT_SYS_ERR_SUCCESS);
         return (FT_ERR_SUCCESSS);
     }
     ordered_first = &first;
@@ -72,18 +80,18 @@ int ft_path_step::lock_pair(const ft_path_step &first,
         ordered_second = temporary;
         swapped = true;
     }
-    ft_unique_lock<pt_mutex> lower_guard(ordered_first->_mutex);
+    ft_unique_lock<pt_recursive_mutex> lower_guard(ordered_first->_mutex);
     if (lower_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        ft_errno = lower_guard.get_error();
+        ordered_first->set_system_error(lower_guard.get_error());
         return (lower_guard.get_error());
     }
-    ft_unique_lock<pt_mutex> upper_guard(ordered_second->_mutex);
+    ft_unique_lock<pt_recursive_mutex> upper_guard(ordered_second->_mutex);
     if (upper_guard.get_error() != FT_ERR_SUCCESSS)
     {
         if (lower_guard.owns_lock())
             lower_guard.unlock();
-        ft_errno = upper_guard.get_error();
+        ordered_second->set_system_error(upper_guard.get_error());
         return (upper_guard.get_error());
     }
     if (!swapped)
@@ -96,29 +104,32 @@ int ft_path_step::lock_pair(const ft_path_step &first,
         first_guard = ft_move(upper_guard);
         second_guard = ft_move(lower_guard);
     }
-    ft_errno = FT_ERR_SUCCESSS;
+    ordered_first->set_system_error(FT_SYS_ERR_SUCCESS);
+    ordered_second->set_system_error(FT_SYS_ERR_SUCCESS);
     return (FT_ERR_SUCCESSS);
 }
 
 ft_path_step::ft_path_step(const ft_path_step &other) noexcept
-    : _x(0), _y(0), _z(0), _error_code(FT_ERR_SUCCESSS), _mutex()
+    : _x(0), _y(0), _z(0), _error_code(FT_ERR_SUCCESSS),
+    _system_error_code(FT_SYS_ERR_SUCCESS), _mutex()
 {
     int other_error;
+    int other_system_error;
 
     other_error = other.get_error();
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    ft_unique_lock<pt_mutex> this_guard(this->_mutex);
+    ft_unique_lock<pt_recursive_mutex> other_guard(other._mutex);
+    ft_unique_lock<pt_recursive_mutex> this_guard(this->_mutex);
 
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(other_guard.get_error());
+        this->set_system_error(other_guard.get_error());
         game_pathfinding_finalize_lock(other_guard);
         game_pathfinding_finalize_lock(this_guard);
         return ;
     }
     if (this_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(this_guard.get_error());
+        this->set_system_error(this_guard.get_error());
         game_pathfinding_finalize_lock(other_guard);
         game_pathfinding_finalize_lock(this_guard);
         return ;
@@ -126,7 +137,9 @@ ft_path_step::ft_path_step(const ft_path_step &other) noexcept
     this->_x = other._x;
     this->_y = other._y;
     this->_z = other._z;
+    other_system_error = other._system_error_code;
     this->set_error(other_error);
+    this->set_system_error(other_system_error);
     game_pathfinding_finalize_lock(other_guard);
     game_pathfinding_finalize_lock(this_guard);
     return ;
@@ -134,10 +147,11 @@ ft_path_step::ft_path_step(const ft_path_step &other) noexcept
 
 ft_path_step &ft_path_step::operator=(const ft_path_step &other) noexcept
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
+    ft_unique_lock<pt_recursive_mutex> this_guard;
+    ft_unique_lock<pt_recursive_mutex> other_guard;
     int lock_error;
     int other_error;
+    int other_system_error;
 
     if (this == &other)
         return (*this);
@@ -145,37 +159,41 @@ ft_path_step &ft_path_step::operator=(const ft_path_step &other) noexcept
     lock_error = ft_path_step::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(lock_error);
+        this->set_system_error(lock_error);
         return (*this);
     }
     this->_x = other._x;
     this->_y = other._y;
     this->_z = other._z;
+    other_system_error = other._system_error_code;
     this->set_error(other_error);
+    this->set_system_error(other_system_error);
     game_pathfinding_finalize_lock(this_guard);
     game_pathfinding_finalize_lock(other_guard);
     return (*this);
 }
 
 ft_path_step::ft_path_step(ft_path_step &&other) noexcept
-    : _x(0), _y(0), _z(0), _error_code(FT_ERR_SUCCESSS), _mutex()
+    : _x(0), _y(0), _z(0), _error_code(FT_ERR_SUCCESSS),
+    _system_error_code(FT_SYS_ERR_SUCCESS), _mutex()
 {
     int other_error;
+    int other_system_error;
 
     other_error = other.get_error();
-    ft_unique_lock<pt_mutex> other_guard(other._mutex);
-    ft_unique_lock<pt_mutex> this_guard(this->_mutex);
+    ft_unique_lock<pt_recursive_mutex> other_guard(other._mutex);
+    ft_unique_lock<pt_recursive_mutex> this_guard(this->_mutex);
 
     if (other_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(other_guard.get_error());
+        this->set_system_error(other_guard.get_error());
         game_pathfinding_finalize_lock(other_guard);
         game_pathfinding_finalize_lock(this_guard);
         return ;
     }
     if (this_guard.get_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(this_guard.get_error());
+        this->set_system_error(this_guard.get_error());
         game_pathfinding_finalize_lock(other_guard);
         game_pathfinding_finalize_lock(this_guard);
         return ;
@@ -183,11 +201,14 @@ ft_path_step::ft_path_step(ft_path_step &&other) noexcept
     this->_x = other._x;
     this->_y = other._y;
     this->_z = other._z;
+    other_system_error = other._system_error_code;
     this->set_error(other_error);
+    this->set_system_error(other_system_error);
     other._x = 0;
     other._y = 0;
     other._z = 0;
     other.set_error(FT_ERR_SUCCESSS);
+    other.set_system_error(FT_SYS_ERR_SUCCESS);
     game_pathfinding_finalize_lock(other_guard);
     game_pathfinding_finalize_lock(this_guard);
     return ;
@@ -195,10 +216,11 @@ ft_path_step::ft_path_step(ft_path_step &&other) noexcept
 
 ft_path_step &ft_path_step::operator=(ft_path_step &&other) noexcept
 {
-    ft_unique_lock<pt_mutex> this_guard;
-    ft_unique_lock<pt_mutex> other_guard;
+    ft_unique_lock<pt_recursive_mutex> this_guard;
+    ft_unique_lock<pt_recursive_mutex> other_guard;
     int lock_error;
     int other_error;
+    int other_system_error;
 
     if (this == &other)
         return (*this);
@@ -206,17 +228,20 @@ ft_path_step &ft_path_step::operator=(ft_path_step &&other) noexcept
     lock_error = ft_path_step::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        this->set_error(lock_error);
+        this->set_system_error(lock_error);
         return (*this);
     }
     this->_x = other._x;
     this->_y = other._y;
     this->_z = other._z;
+    other_system_error = other._system_error_code;
     this->set_error(other_error);
+    this->set_system_error(other_system_error);
     other._x = 0;
     other._y = 0;
     other._z = 0;
     other.set_error(FT_ERR_SUCCESSS);
+    other.set_system_error(FT_SYS_ERR_SUCCESS);
     game_pathfinding_finalize_lock(this_guard);
     game_pathfinding_finalize_lock(other_guard);
     return (*this);
@@ -224,10 +249,10 @@ ft_path_step &ft_path_step::operator=(ft_path_step &&other) noexcept
 
 int ft_path_step::set_coordinates(size_t x, size_t y, size_t z) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    ft_unique_lock<pt_recursive_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(guard.get_error());
+        this->set_system_error(guard.get_error());
         game_pathfinding_finalize_lock(guard);
         return (guard.get_error());
     }
@@ -241,10 +266,10 @@ int ft_path_step::set_coordinates(size_t x, size_t y, size_t z) noexcept
 
 int ft_path_step::set_x(size_t x) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    ft_unique_lock<pt_recursive_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(guard.get_error());
+        this->set_system_error(guard.get_error());
         game_pathfinding_finalize_lock(guard);
         return (guard.get_error());
     }
@@ -256,10 +281,10 @@ int ft_path_step::set_x(size_t x) noexcept
 
 int ft_path_step::set_y(size_t y) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    ft_unique_lock<pt_recursive_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(guard.get_error());
+        this->set_system_error(guard.get_error());
         game_pathfinding_finalize_lock(guard);
         return (guard.get_error());
     }
@@ -271,10 +296,10 @@ int ft_path_step::set_y(size_t y) noexcept
 
 int ft_path_step::set_z(size_t z) noexcept
 {
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    ft_unique_lock<pt_recursive_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error(guard.get_error());
+        this->set_system_error(guard.get_error());
         game_pathfinding_finalize_lock(guard);
         return (guard.get_error());
     }
@@ -288,10 +313,10 @@ size_t ft_path_step::get_x() const noexcept
 {
     size_t value;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    ft_unique_lock<pt_recursive_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_path_step *>(this)->set_error(guard.get_error());
+        const_cast<ft_path_step *>(this)->set_system_error(guard.get_error());
         game_pathfinding_finalize_lock(guard);
         return (0);
     }
@@ -305,10 +330,10 @@ size_t ft_path_step::get_y() const noexcept
 {
     size_t value;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    ft_unique_lock<pt_recursive_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_path_step *>(this)->set_error(guard.get_error());
+        const_cast<ft_path_step *>(this)->set_system_error(guard.get_error());
         game_pathfinding_finalize_lock(guard);
         return (0);
     }
@@ -322,10 +347,10 @@ size_t ft_path_step::get_z() const noexcept
 {
     size_t value;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    ft_unique_lock<pt_recursive_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_path_step *>(this)->set_error(guard.get_error());
+        const_cast<ft_path_step *>(this)->set_system_error(guard.get_error());
         game_pathfinding_finalize_lock(guard);
         return (0);
     }
@@ -338,43 +363,90 @@ size_t ft_path_step::get_z() const noexcept
 int ft_path_step::get_error() const noexcept
 {
     int error_code;
+    int system_error;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
+    ft_unique_lock<pt_recursive_mutex> guard(this->_mutex);
     if (guard.get_error() != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_path_step *>(this)->set_error(guard.get_error());
+        const_cast<ft_path_step *>(this)->set_system_error(guard.get_error());
         game_pathfinding_finalize_lock(guard);
         return (guard.get_error());
     }
     error_code = this->_error_code;
-    const_cast<ft_path_step *>(this)->set_error(error_code);
+    system_error = this->_system_error_code;
     game_pathfinding_finalize_lock(guard);
-    return (error_code);
+    if (error_code != FT_ERR_SUCCESSS)
+    {
+        ft_set_errno_locked(error_code);
+        return (error_code);
+    }
+    if (system_error != FT_SYS_ERR_SUCCESS)
+    {
+        ft_set_errno_locked(system_error);
+        return (system_error);
+    }
+    ft_set_errno_locked(FT_ERR_SUCCESSS);
+    return (FT_ERR_SUCCESSS);
 }
 
 const char *ft_path_step::get_error_str() const noexcept
 {
     int error_code;
+    int system_error;
+    const char *error_string;
 
-    ft_unique_lock<pt_mutex> guard(this->_mutex);
-    if (guard.get_error() != FT_ERR_SUCCESSS)
     {
-        const_cast<ft_path_step *>(this)->set_error(guard.get_error());
+        ft_unique_lock<pt_recursive_mutex> guard(this->_mutex);
+        if (guard.get_error() != FT_ERR_SUCCESSS)
+        {
+            const_cast<ft_path_step *>(this)->set_system_error(guard.get_error());
+            game_pathfinding_finalize_lock(guard);
+            return (ft_strerror(guard.get_error()));
+        }
+        error_code = this->_error_code;
+        system_error = this->_system_error_code;
         game_pathfinding_finalize_lock(guard);
-        return (ft_strerror(guard.get_error()));
     }
-    error_code = this->_error_code;
-    const_cast<ft_path_step *>(this)->set_error(error_code);
-    game_pathfinding_finalize_lock(guard);
-    return (ft_strerror(error_code));
+    if (error_code != FT_ERR_SUCCESSS)
+        error_string = ft_strerror(error_code);
+    else if (system_error != FT_SYS_ERR_SUCCESS)
+        error_string = ft_strerror(system_error);
+    else
+        error_string = ft_strerror(FT_ERR_SUCCESSS);
+    if (error_code != FT_ERR_SUCCESSS)
+        ft_set_errno_locked(error_code);
+    else
+        ft_set_errno_locked(system_error);
+    return (error_string);
 }
 
 void ft_path_step::set_error(int error) const noexcept
 {
-    std::lock_guard<ft_errno_mutex_wrapper> lock(ft_errno_mutex());
-
-    ft_errno = error;
     this->_error_code = error;
+    ft_set_errno_locked(error);
+    return ;
+}
+
+void ft_path_step::set_system_error(int error) const noexcept
+{
+    this->_system_error_code = error;
+    ft_set_sys_errno_locked(error);
+    return ;
+}
+
+void ft_path_step::reset_system_error() const noexcept
+{
+    ft_unique_lock<pt_recursive_mutex> guard(this->_mutex);
+
+    if (guard.get_error() != FT_ERR_SUCCESSS)
+    {
+        this->set_system_error(guard.get_error());
+        game_pathfinding_finalize_lock(guard);
+        return ;
+    }
+    this->_system_error_code = FT_SYS_ERR_SUCCESS;
+    ft_set_sys_errno_locked(FT_SYS_ERR_SUCCESS);
+    game_pathfinding_finalize_lock(guard);
     return ;
 }
 

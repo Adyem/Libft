@@ -5,7 +5,10 @@
 #include "../Template/vector.hpp"
 #include "../Template/graph.hpp"
 #include "../Errno/errno.hpp"
-#include "../PThread/mutex.hpp"
+#include "../PThread/recursive_mutex.hpp"
+#ifdef LIBFT_TEST_BUILD
+#include "../PThread/pthread.hpp"
+#endif
 #include "../PThread/unique_lock.hpp"
 
 class ft_path_step
@@ -15,12 +18,18 @@ class ft_path_step
         size_t              _y;
         size_t              _z;
         mutable int         _error_code;
-        mutable pt_mutex    _mutex;
+        mutable int         _system_error_code;
+        mutable pt_recursive_mutex    _mutex;
 
         void    set_error(int error) const noexcept;
+        void    set_system_error(int error) const noexcept;
         static int lock_pair(const ft_path_step &first, const ft_path_step &second,
-                ft_unique_lock<pt_mutex> &first_guard,
-                ft_unique_lock<pt_mutex> &second_guard) noexcept;
+                ft_unique_lock<pt_recursive_mutex> &first_guard,
+                ft_unique_lock<pt_recursive_mutex> &second_guard) noexcept;
+
+#ifdef LIBFT_TEST_BUILD
+        friend struct ft_path_step_test_helper;
+#endif
 
     public:
         ft_path_step() noexcept;
@@ -39,7 +48,76 @@ class ft_path_step
         size_t  get_z() const noexcept;
         int     get_error() const noexcept;
         const char *get_error_str() const noexcept;
+        void    reset_system_error() const noexcept;
 };
+
+#ifdef LIBFT_TEST_BUILD
+struct ft_path_step_test_helper
+{
+    static int lock(ft_path_step &step) noexcept;
+    static int unlock(ft_path_step &step) noexcept;
+    static bool is_locked(const ft_path_step &step) noexcept;
+    static bool is_owned_by_thread(const ft_path_step &step, pthread_t thread_id) noexcept;
+    static int get_mutex_error(const ft_path_step &step) noexcept;
+};
+
+inline int ft_path_step_test_helper::lock(ft_path_step &step) noexcept
+{
+    int result;
+
+    result = step._mutex.lock(THREAD_ID);
+    if (step._mutex.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = step._mutex.get_error();
+        return (step._mutex.get_error());
+    }
+    ft_errno = FT_ERR_SUCCESSS;
+    return (result);
+}
+
+inline int ft_path_step_test_helper::unlock(ft_path_step &step) noexcept
+{
+    int result;
+
+    result = step._mutex.unlock(THREAD_ID);
+    if (step._mutex.get_error() != FT_ERR_SUCCESSS)
+    {
+        ft_errno = step._mutex.get_error();
+        return (step._mutex.get_error());
+    }
+    ft_errno = FT_ERR_SUCCESSS;
+    return (result);
+}
+
+inline bool ft_path_step_test_helper::is_locked(const ft_path_step &step) noexcept
+{
+    bool locked;
+
+    locked = step._mutex.lockState();
+    ft_errno = FT_ERR_SUCCESSS;
+    return (locked);
+}
+
+inline bool ft_path_step_test_helper::is_owned_by_thread(const ft_path_step &step, pthread_t thread_id) noexcept
+{
+    bool owned;
+
+    owned = step._mutex.is_owned_by_thread(thread_id);
+    if (ft_errno != FT_ERR_SUCCESSS)
+        return (false);
+    ft_errno = FT_ERR_SUCCESSS;
+    return (owned);
+}
+
+inline int ft_path_step_test_helper::get_mutex_error(const ft_path_step &step) noexcept
+{
+    int error_code;
+
+    error_code = step._mutex.get_error();
+    ft_errno = error_code;
+    return (error_code);
+}
+#endif
 
 class ft_pathfinding
 {
