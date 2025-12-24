@@ -377,6 +377,7 @@ ft_big_number::ft_big_number(const ft_big_number& other) noexcept
 {
     ft_big_number_mutex_guard other_guard;
     int lock_error;
+    int other_error;
 
     lock_error = other.lock_self(other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
@@ -454,7 +455,6 @@ ft_big_number& ft_big_number::operator=(const ft_big_number& other) noexcept
     ft_big_number_mutex_guard this_guard;
     ft_big_number_mutex_guard other_guard;
     int lock_error;
-    int other_error;
     char *new_digits;
 
     if (this == &other)
