@@ -1,6 +1,7 @@
 #include "pthread.hpp"
 #include "recursive_mutex.hpp"
 #include "../Errno/errno.hpp"
+#include "../Errno/errno_internal.hpp"
 #include "../CMA/CMA.hpp"
 #include "../CPP_class/class_nullptr.hpp"
 #include "pthread_lock_tracking.hpp"
@@ -34,17 +35,10 @@ pt_recursive_mutex::~pt_recursive_mutex()
 
 void    pt_recursive_mutex::set_error(int error) const
 {
-    bool lock_acquired;
-
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
-    {
-        ft_errno = error;
-        return ;
-    }
+    ft_errno_mutex().lock();
     this->_error = error;
-    ft_errno = error;
-    this->unlock_internal(lock_acquired);
+    ft_sys_errno = error;
+    ft_errno_mutex().unlock();
     return ;
 }
 
@@ -191,14 +185,11 @@ bool pt_recursive_mutex::is_owned_by_thread(pthread_t thread_id) const
 
 int pt_recursive_mutex::get_error() const
 {
-    bool lock_acquired;
     int error_value;
 
-    lock_acquired = false;
-    if (this->lock_internal(&lock_acquired) != 0)
-        return (this->_error);
+    ft_errno_mutex().lock();
     error_value = this->_error;
-    this->unlock_internal(lock_acquired);
+    ft_errno_mutex().unlock();
     return (error_value);
 }
 
@@ -217,4 +208,3 @@ pthread_mutex_t   *pt_recursive_mutex::get_native_mutex() const
     this->set_error(FT_ERR_SUCCESSS);
     return (&this->_native_mutex);
 }
-
