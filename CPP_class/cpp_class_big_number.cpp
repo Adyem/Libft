@@ -377,7 +377,6 @@ ft_big_number::ft_big_number(const ft_big_number& other) noexcept
 {
     ft_big_number_mutex_guard other_guard;
     int lock_error;
-    int other_error;
 
     lock_error = other.lock_self(other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
@@ -388,8 +387,7 @@ ft_big_number::ft_big_number(const ft_big_number& other) noexcept
     this->_size = other._size;
     this->_capacity = other._capacity;
     this->_is_negative = other._is_negative;
-    other_error = other.get_error();
-    this->set_error_unlocked(other_error);
+    this->_error_code = other._error_code;
     if (other._digits && other._capacity > 0)
     {
         this->_digits = static_cast<char*>(cma_calloc(other._capacity, sizeof(char)));
@@ -404,7 +402,6 @@ ft_big_number::ft_big_number(const ft_big_number& other) noexcept
         ft_memcpy(this->_digits, other._digits, other._size + 1);
     }
     this->_system_error_code = other._system_error_code;
-    this->set_system_error(FT_SYS_ERR_SUCCESS);
     return ;
 }
 
@@ -419,7 +416,6 @@ ft_big_number::ft_big_number(ft_big_number&& other) noexcept
 {
     ft_big_number_mutex_guard other_guard;
     int lock_error;
-    int other_error;
 
     lock_error = other.lock_self(other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
@@ -431,16 +427,14 @@ ft_big_number::ft_big_number(ft_big_number&& other) noexcept
     this->_size = other._size;
     this->_capacity = other._capacity;
     this->_is_negative = other._is_negative;
-    other_error = other.get_error();
-    this->set_error_unlocked(other_error);
+    this->_error_code = other._error_code;
     this->_system_error_code = other._system_error_code;
     other._digits = ft_nullptr;
     other._size = 0;
     other._capacity = 0;
     other._is_negative = false;
-    other.set_error(FT_ERR_SUCCESSS);
+    other._error_code = FT_ERR_SUCCESSS;
     other._system_error_code = FT_SYS_ERR_SUCCESS;
-    other.set_system_error(FT_SYS_ERR_SUCCESS);
     return ;
 }
 
@@ -2110,27 +2104,30 @@ int ft_big_number::get_error() const noexcept
     int lock_error;
     int error_value;
     int system_error;
+    int previous_errno;
+    int previous_sys_errno;
 
+    previous_errno = ft_errno;
+    previous_sys_errno = ft_sys_errno;
     {
         ft_big_number_mutex_guard guard;
 
         lock_error = this->lock_self(guard);
         if (lock_error != FT_ERR_SUCCESSS)
+        {
+            ft_set_errno_locked(previous_errno);
+            ft_set_sys_errno_locked(previous_sys_errno);
             return (lock_error);
+        }
         error_value = this->_error_code;
         system_error = this->_system_error_code;
     }
+    ft_set_errno_locked(previous_errno);
+    ft_set_sys_errno_locked(previous_sys_errno);
     if (error_value != FT_ERR_SUCCESSS)
-    {
-        ft_set_errno_locked(error_value);
         return (error_value);
-    }
     if (system_error != FT_SYS_ERR_SUCCESS)
-    {
-        ft_set_errno_locked(system_error);
         return (system_error);
-    }
-    ft_set_errno_locked(FT_ERR_SUCCESSS);
     return (FT_ERR_SUCCESSS);
 }
 
