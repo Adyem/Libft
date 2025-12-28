@@ -99,7 +99,7 @@ FT_TEST(test_big_number_errno_resets_mutators, "ft_big_number mutators clear sta
     return (1);
 }
 
-FT_TEST(test_big_number_errno_resets_accessors, "ft_big_number accessors and comparisons clear stale ft_errno")
+FT_TEST(test_big_number_errno_resets_accessors, "ft_big_number accessors and comparisons preserve ft_errno and reset ft_sys_errno")
 {
     ft_big_number left_number;
     ft_big_number right_number;
@@ -108,61 +108,90 @@ FT_TEST(test_big_number_errno_resets_accessors, "ft_big_number accessors and com
     right_number.assign("25");
 
     ft_errno = FT_ERR_DIVIDE_BY_ZERO;
+    ft_sys_errno = FT_SYS_ERR_INVALID_STATE;
     FT_ASSERT(left_number == left_number);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_errno);
+    FT_ASSERT_EQ(FT_SYS_ERR_SUCCESS, ft_sys_errno);
 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
+    ft_sys_errno = FT_SYS_ERR_INVALID_STATE;
     FT_ASSERT(left_number != right_number);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(FT_SYS_ERR_SUCCESS, ft_sys_errno);
 
     ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
+    ft_sys_errno = FT_SYS_ERR_INVALID_STATE;
     FT_ASSERT(left_number > right_number);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, ft_errno);
+    FT_ASSERT_EQ(FT_SYS_ERR_SUCCESS, ft_sys_errno);
 
     ft_errno = FT_ERR_DIVIDE_BY_ZERO;
+    ft_sys_errno = FT_SYS_ERR_INVALID_STATE;
     FT_ASSERT(left_number >= right_number);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_errno);
+    FT_ASSERT_EQ(FT_SYS_ERR_SUCCESS, ft_sys_errno);
 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
+    ft_sys_errno = FT_SYS_ERR_INVALID_STATE;
     FT_ASSERT(left_number >= left_number);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(FT_SYS_ERR_SUCCESS, ft_sys_errno);
 
     ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
+    ft_sys_errno = FT_SYS_ERR_INVALID_STATE;
     FT_ASSERT(!(left_number < ft_big_number()));
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, ft_errno);
+    FT_ASSERT_EQ(FT_SYS_ERR_SUCCESS, ft_sys_errno);
 
     ft_errno = FT_ERR_DIVIDE_BY_ZERO;
+    ft_sys_errno = FT_SYS_ERR_INVALID_STATE;
     FT_ASSERT(right_number <= left_number);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_errno);
+    FT_ASSERT_EQ(FT_SYS_ERR_SUCCESS, ft_sys_errno);
 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
+    ft_sys_errno = FT_SYS_ERR_INVALID_STATE;
     FT_ASSERT_EQ(static_cast<ft_size_t>(2), right_number.size());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_SYS_ERR_SUCCESS, ft_sys_errno);
 
     ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
+    ft_sys_errno = FT_SYS_ERR_INVALID_STATE;
     FT_ASSERT(!right_number.empty());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_SYS_ERR_SUCCESS, ft_sys_errno);
 
     ft_errno = FT_ERR_DIVIDE_BY_ZERO;
+    ft_sys_errno = FT_SYS_ERR_INVALID_STATE;
     FT_ASSERT(!right_number.is_negative());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_SYS_ERR_SUCCESS, ft_sys_errno);
 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
+    ft_sys_errno = FT_SYS_ERR_INVALID_STATE;
     FT_ASSERT(right_number.is_positive());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_SYS_ERR_SUCCESS, ft_sys_errno);
 
     ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
+    ft_sys_errno = FT_SYS_ERR_INVALID_STATE;
     FT_ASSERT_EQ(0, std::strcmp(right_number.c_str(), "25"));
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_SYS_ERR_SUCCESS, ft_sys_errno);
 
     ft_errno = FT_ERR_DIVIDE_BY_ZERO;
+    ft_sys_errno = FT_SYS_ERR_INVALID_STATE;
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, right_number.get_error());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_SYS_ERR_SUCCESS, ft_sys_errno);
 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
+    ft_sys_errno = FT_SYS_ERR_INVALID_STATE;
     FT_ASSERT_EQ(0, std::strcmp(right_number.get_error_str(), "Success"));
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_SYS_ERR_SUCCESS, ft_sys_errno);
     ft_errno = 0;
+    ft_sys_errno = FT_SYS_ERR_SUCCESS;
     return (1);
 }
 
