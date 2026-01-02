@@ -812,7 +812,11 @@ void ft_string::move(ft_string& other) noexcept
 
 ft_string& ft_string::operator+=(const ft_string& other) noexcept
 {
+    int previous_errno;
+
+    previous_errno = ft_errno;
     this->append(other);
+    ft_set_errno_locked(previous_errno);
     return (*this);
 }
 
@@ -820,16 +824,20 @@ ft_string& ft_string::operator+=(const char* cstr) noexcept
 {
     ft_string::mutex_guard guard;
     int lock_error;
+    int previous_errno;
 
+    previous_errno = ft_errno;
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_system_error(lock_error);
+        ft_set_errno_locked(previous_errno);
         return (*this);
     }
     if (this->_error_code != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(this->_error_code);
+        ft_set_errno_locked(previous_errno);
         return (*this);
     }
     if (cstr)
@@ -841,17 +849,25 @@ ft_string& ft_string::operator+=(const char* cstr) noexcept
         {
             this->append_char_unlocked(cstr[index]);
             if (this->_error_code != FT_ERR_SUCCESSS)
+            {
+                ft_set_errno_locked(previous_errno);
                 return (*this);
+            }
             index++;
         }
     }
     this->set_error(FT_ERR_SUCCESSS);
+    ft_set_errno_locked(previous_errno);
     return (*this);
 }
 
 ft_string& ft_string::operator+=(char c) noexcept
 {
+    int previous_errno;
+
+    previous_errno = ft_errno;
     this->append(c);
+    ft_set_errno_locked(previous_errno);
     return (*this);
 }
 
