@@ -10,26 +10,35 @@ pt_recursive_mutex::pt_recursive_mutex()
     : _owner(0), _lock(false), _lock_depth(0), _error(FT_ERR_SUCCESSS),
     _native_initialized(false), _state_mutex(ft_nullptr)
 {
+    int previous_errno;
+
+    previous_errno = ft_errno;
     ft_bzero(&this->_native_mutex, sizeof(pthread_mutex_t));
     if (pthread_mutex_init(&this->_native_mutex, ft_nullptr) != 0)
     {
         this->_native_initialized = false;
         this->set_error(FT_ERR_INVALID_STATE);
+        ft_set_errno_locked(previous_errno);
         return ;
     }
     this->_native_initialized = true;
     this->set_error(FT_ERR_SUCCESSS);
+    ft_set_errno_locked(previous_errno);
     return ;
 }
 
 pt_recursive_mutex::~pt_recursive_mutex()
 {
+    int previous_errno;
+
+    previous_errno = ft_errno;
     if (this->_native_initialized)
     {
         pthread_mutex_destroy(&this->_native_mutex);
         this->_native_initialized = false;
     }
     this->teardown_thread_safety();
+    ft_set_errno_locked(previous_errno);
     return ;
 }
 

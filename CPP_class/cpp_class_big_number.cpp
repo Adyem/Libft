@@ -277,7 +277,10 @@ void ft_big_number::append_unlocked(const char* digits) noexcept
     ft_size_t digit_index;
 
     if (!digits)
+    {
+        this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
         return ;
+    }
     digit_index = 0;
     while (digits[digit_index] != '\0')
     {
@@ -791,7 +794,9 @@ void ft_big_number::assign(const char* number) noexcept
     this->set_system_error_unlocked(FT_SYS_ERR_SUCCESS);
     if (!number)
     {
-        this->clear_unlocked();
+        this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
+        guard.unlock();
+        ft_set_errno_locked(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     parsed_negative = false;
@@ -808,6 +813,8 @@ void ft_big_number::assign(const char* number) noexcept
         if (number[index] < '0' || number[index] > '9')
         {
             this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
+            guard.unlock();
+            ft_set_errno_locked(FT_ERR_INVALID_ARGUMENT);
             return ;
         }
         length++;
@@ -818,6 +825,8 @@ void ft_big_number::assign(const char* number) noexcept
         if (parsed_negative)
         {
             this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
+            guard.unlock();
+            ft_set_errno_locked(FT_ERR_INVALID_ARGUMENT);
             return ;
         }
         this->clear_unlocked();
@@ -829,6 +838,8 @@ void ft_big_number::assign(const char* number) noexcept
         if (this->_system_error_code != FT_SYS_ERR_SUCCESS || !this->_digits)
         {
             this->set_error_unlocked(FT_ERR_NO_MEMORY);
+            guard.unlock();
+            ft_set_errno_locked(FT_ERR_NO_MEMORY);
             return ;
         }
     }
@@ -861,7 +872,9 @@ void ft_big_number::assign_base(const char* digits, int base) noexcept
     }
     if (!digits)
     {
-        this->clear_unlocked();
+        this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
+        guard.unlock();
+        ft_set_errno_locked(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
@@ -964,7 +977,12 @@ void ft_big_number::assign_base(const char* digits, int base) noexcept
         }
     }
     if (local_error != 0)
+    {
         this->set_error_unlocked(local_error);
+        guard.unlock();
+        ft_set_errno_locked(local_error);
+        return ;
+    }
     else
         this->set_error_unlocked(FT_ERR_SUCCESSS);
     return ;
@@ -983,6 +1001,15 @@ void ft_big_number::append_digit(char digit) noexcept
         return ;
     }
     this->append_digit_unlocked(digit);
+    if (this->_error_code != FT_ERR_SUCCESSS)
+    {
+        int stored_error;
+
+        stored_error = this->_error_code;
+        guard.unlock();
+        ft_set_errno_locked(stored_error);
+        return ;
+    }
     return ;
 }
 
@@ -998,7 +1025,23 @@ void ft_big_number::append(const char* digits) noexcept
         ft_set_errno_locked(FT_ERR_SUCCESSS);
         return ;
     }
+    if (!digits)
+    {
+        this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
+        guard.unlock();
+        ft_set_errno_locked(FT_ERR_INVALID_ARGUMENT);
+        return ;
+    }
     this->append_unlocked(digits);
+    if (this->_error_code != FT_ERR_SUCCESSS)
+    {
+        int stored_error;
+
+        stored_error = this->_error_code;
+        guard.unlock();
+        ft_set_errno_locked(stored_error);
+        return ;
+    }
     return ;
 }
 
@@ -1015,6 +1058,15 @@ void ft_big_number::append_unsigned(unsigned long value) noexcept
         return ;
     }
     this->append_unsigned_unlocked(value);
+    if (this->_error_code != FT_ERR_SUCCESSS)
+    {
+        int stored_error;
+
+        stored_error = this->_error_code;
+        guard.unlock();
+        ft_set_errno_locked(stored_error);
+        return ;
+    }
     return ;
 }
 
@@ -1624,10 +1676,7 @@ bool ft_big_number::operator<(const ft_big_number& other) const noexcept
 
     lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
-    {
-        ft_set_errno_locked(FT_ERR_SUCCESSS);
         return (false);
-    }
     if (this->_error_code != 0 || other._error_code != 0)
         result = false;
     else if (this->is_zero_value() && other.is_zero_value())
@@ -1678,10 +1727,7 @@ bool ft_big_number::operator==(const ft_big_number& other) const noexcept
 
     lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
-    {
-        ft_set_errno_locked(FT_ERR_SUCCESSS);
         return (false);
-    }
     if (this->_error_code != 0 || other._error_code != 0)
         are_equal = false;
     else if (this->is_zero_value() && other.is_zero_value())
@@ -1709,7 +1755,6 @@ bool ft_big_number::operator==(const ft_big_number& other) const noexcept
             digit_index++;
         }
     }
-    ft_set_errno_locked(FT_ERR_SUCCESSS);
     return (are_equal);
 }
 
