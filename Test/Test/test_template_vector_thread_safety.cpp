@@ -5,14 +5,12 @@
 #include <chrono>
 #include <thread>
 
-FT_TEST(test_ft_vector_enable_thread_safety_installs_mutex,
-        "ft_vector installs optional mutex guards when requested")
+FT_TEST(test_ft_vector_default_thread_safety_installs_mutex,
+        "ft_vector installs mutex guards by default")
 {
     ft_vector<int> vector_instance;
     bool           lock_acquired;
 
-    FT_ASSERT_EQ(0, vector_instance.enable_thread_safety());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, vector_instance.get_error());
     FT_ASSERT(vector_instance.is_thread_safe());
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, vector_instance.get_error());
 
@@ -53,9 +51,6 @@ FT_TEST(test_ft_vector_lock_blocks_until_release,
     std::atomic<bool>               worker_succeeded;
     std::atomic<long long>          wait_duration_ms;
     std::thread                     worker;
-
-    FT_ASSERT_EQ(0, vector_instance.enable_thread_safety());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, vector_instance.get_error());
 
     main_lock_acquired = false;
     FT_ASSERT_EQ(0, vector_instance.lock(&main_lock_acquired));
