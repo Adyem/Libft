@@ -77,7 +77,6 @@ class ft_vector
         ft_vector(ft_vector&& other) noexcept;
         ft_vector& operator=(ft_vector&& other) noexcept;
 
-        int     enable_thread_safety();
         void    disable_thread_safety();
         bool    is_thread_safe() const;
         int     lock(bool *lock_acquired) const;
@@ -117,7 +116,29 @@ ft_vector<ElementType>::ft_vector(size_t initial_capacity)
       _mutex(ft_nullptr),
       _thread_safe_enabled(false)
 {
+    void     *memory;
+    pt_mutex *mutex_pointer;
+
     this->reset_to_small_buffer();
+    memory = cma_malloc(sizeof(pt_mutex));
+    if (memory == ft_nullptr)
+    {
+        this->set_error(FT_ERR_NO_MEMORY);
+        return ;
+    }
+    mutex_pointer = new(memory) pt_mutex();
+    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
+    {
+        int mutex_error;
+
+        mutex_error = mutex_pointer->get_error();
+        mutex_pointer->~pt_mutex();
+        cma_free(memory);
+        this->set_error(mutex_error);
+        return ;
+    }
+    this->_mutex = mutex_pointer;
+    this->_thread_safe_enabled = true;
     if (initial_capacity > SMALL_CAPACITY)
     {
         this->reserve_internal_unlocked(initial_capacity);
@@ -162,11 +183,33 @@ ft_vector<ElementType>::ft_vector(ft_vector<ElementType>&& other) noexcept
       _mutex(ft_nullptr),
       _thread_safe_enabled(false)
 {
-    bool other_thread_safe;
+    bool     other_thread_safe;
+    void     *memory;
+    pt_mutex *mutex_pointer;
 
     other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
-    if (other._thread_safe_enabled && other._mutex != ft_nullptr)
-        other.teardown_thread_safety();
+    if (other_thread_safe)
+    {
+        memory = cma_malloc(sizeof(pt_mutex));
+        if (memory == ft_nullptr)
+        {
+            this->set_error(FT_ERR_NO_MEMORY);
+            return ;
+        }
+        mutex_pointer = new(memory) pt_mutex();
+        if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
+        {
+            int mutex_error;
+
+            mutex_error = mutex_pointer->get_error();
+            mutex_pointer->~pt_mutex();
+            cma_free(memory);
+            this->set_error(mutex_error);
+            return ;
+        }
+        this->_mutex = mutex_pointer;
+        this->_thread_safe_enabled = true;
+    }
     if (other.using_small_buffer() != false)
     {
         this->reset_to_small_buffer();
@@ -186,11 +229,6 @@ ft_vector<ElementType>::ft_vector(ft_vector<ElementType>&& other) noexcept
         this->_capacity = other._capacity;
     }
     this->_error_code = other._error_code;
-    if (other_thread_safe)
-    {
-        if (this->enable_thread_safety() != 0)
-            return ;
-    }
     other._size = 0;
     other.reset_to_small_buffer();
     other._error_code = FT_ERR_SUCCESSS;
@@ -221,8 +259,6 @@ ft_vector<ElementType>& ft_vector<ElementType>::operator=(ft_vector<ElementType>
         this->_mutex = ft_nullptr;
         this->_thread_safe_enabled = false;
         other_thread_safe = (other._thread_safe_enabled && other._mutex != ft_nullptr);
-        if (other_thread_safe)
-            other.teardown_thread_safety();
         if (other.using_small_buffer() != false)
         {
             this->reset_to_small_buffer();
@@ -243,15 +279,36 @@ ft_vector<ElementType>& ft_vector<ElementType>::operator=(ft_vector<ElementType>
             this->_capacity = other._capacity;
         }
         this->_error_code = other._error_code;
-        if (other_thread_safe)
+        if (other_thread_safe && this->_mutex == ft_nullptr)
         {
-            if (this->enable_thread_safety() != 0)
+            void *memory;
+            pt_mutex *mutex_pointer;
+
+            memory = cma_malloc(sizeof(pt_mutex));
+            if (memory == ft_nullptr)
             {
-                other._size = 0;
-                other.reset_to_small_buffer();
-                other._error_code = FT_ERR_SUCCESSS;
+                this->set_error(FT_ERR_NO_MEMORY);
                 return (*this);
             }
+            mutex_pointer = new(memory) pt_mutex();
+            if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
+            {
+                int mutex_error;
+
+                mutex_error = mutex_pointer->get_error();
+                mutex_pointer->~pt_mutex();
+                cma_free(memory);
+                this->set_error(mutex_error);
+                return (*this);
+            }
+            this->_mutex = mutex_pointer;
+            this->_thread_safe_enabled = true;
+        }
+        if (other_thread_safe == false && this->_mutex != ft_nullptr)
+        {
+            this->teardown_thread_safety();
+            this->_mutex = ft_nullptr;
+            this->_thread_safe_enabled = false;
         }
         other._size = 0;
         other.reset_to_small_buffer();
@@ -333,40 +390,6 @@ void ft_vector<ElementType>::set_error(int error_code) const
     this->_error_code = error_code;
     ft_errno = error_code;
     return ;
-}
-
-template <typename ElementType>
-int ft_vector<ElementType>::enable_thread_safety()
-{
-    void     *memory;
-    pt_mutex *mutex_pointer;
-
-    if (this->_thread_safe_enabled && this->_mutex != ft_nullptr)
-    {
-        this->set_error(FT_ERR_SUCCESSS);
-        return (0);
-    }
-    memory = cma_malloc(sizeof(pt_mutex));
-    if (memory == ft_nullptr)
-    {
-        this->set_error(FT_ERR_NO_MEMORY);
-        return (-1);
-    }
-    mutex_pointer = new(memory) pt_mutex();
-    if (mutex_pointer->get_error() != FT_ERR_SUCCESSS)
-    {
-        int mutex_error;
-
-        mutex_error = mutex_pointer->get_error();
-        mutex_pointer->~pt_mutex();
-        cma_free(memory);
-        this->set_error(mutex_error);
-        return (-1);
-    }
-    this->_mutex = mutex_pointer;
-    this->_thread_safe_enabled = true;
-    this->set_error(FT_ERR_SUCCESSS);
-    return (0);
 }
 
 template <typename ElementType>
