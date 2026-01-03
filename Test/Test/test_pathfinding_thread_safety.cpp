@@ -414,7 +414,7 @@ FT_TEST(test_pathfinding_thread_safety,
     }
     if (create_recalc_result == 0)
     {
-        join_result = pt_thread_join(recalc_thread, ft_nullptr);
+        join_result = pt_thread_timed_join(recalc_thread, ft_nullptr, 30000);
         if (join_result != 0 && test_failed == 0)
         {
             test_failed = 1;
@@ -424,7 +424,7 @@ FT_TEST(test_pathfinding_thread_safety,
     }
     if (create_read_result == 0)
     {
-        join_result = pt_thread_join(read_thread, ft_nullptr);
+        join_result = pt_thread_timed_join(read_thread, ft_nullptr, 30000);
         if (join_result != 0 && test_failed == 0)
         {
             test_failed = 1;
