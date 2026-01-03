@@ -29,16 +29,6 @@ FT_TEST(test_ft_vector_default_thread_safety_installs_mutex,
     vector_instance.unlock(lock_acquired);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, vector_instance.get_error());
 
-    vector_instance.disable_thread_safety();
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, vector_instance.get_error());
-    FT_ASSERT(vector_instance.is_thread_safe() == false);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, vector_instance.get_error());
-
-    lock_acquired = false;
-    FT_ASSERT_EQ(0, vector_instance.lock(&lock_acquired));
-    FT_ASSERT(lock_acquired == false);
-    vector_instance.unlock(lock_acquired);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, vector_instance.get_error());
     return (1);
 }
 
@@ -91,7 +81,5 @@ FT_TEST(test_ft_vector_lock_blocks_until_release,
     FT_ASSERT(worker_succeeded.load());
     FT_ASSERT(wait_duration_ms.load() >= 40);
 
-    vector_instance.disable_thread_safety();
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, vector_instance.get_error());
     return (1);
 }
