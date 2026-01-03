@@ -6,6 +6,7 @@
 #include "../Errno/errno_internal.hpp"
 #include "../Template/move.hpp"
 #include "../PThread/pthread.hpp"
+#include "../PThread/pthread_errno_guard.hpp"
 #include <limits>
 
 struct ft_big_number_digit_entry
@@ -1671,6 +1672,7 @@ bool ft_big_number::operator<(const ft_big_number& other) const noexcept
 {
     ft_big_number_mutex_guard this_guard;
     ft_big_number_mutex_guard other_guard;
+    pt_errno_guard<ft_big_number_mutex_guard> errno_guard(this_guard, other_guard);
     bool result;
         int lock_error;
 
@@ -1722,6 +1724,7 @@ bool ft_big_number::operator==(const ft_big_number& other) const noexcept
 {
     ft_big_number_mutex_guard this_guard;
     ft_big_number_mutex_guard other_guard;
+    pt_errno_guard<ft_big_number_mutex_guard> errno_guard(this_guard, other_guard);
     bool are_equal;
         int lock_error;
 
