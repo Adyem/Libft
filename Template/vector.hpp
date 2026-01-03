@@ -111,7 +111,7 @@ ft_vector<ElementType>::ft_vector(size_t initial_capacity)
       _size(0),
       _capacity(0),
       _error_code(FT_ERR_SUCCESSS),
-      _mutex(ft_nullptr),
+      _mutex(ft_nullptr)
 {
     void     *memory;
     pt_mutex *mutex_pointer;
@@ -176,7 +176,7 @@ ft_vector<ElementType>::ft_vector(ft_vector<ElementType>&& other) noexcept
       _size(0),
       _capacity(0),
       _error_code(FT_ERR_SUCCESSS),
-      _mutex(ft_nullptr),
+      _mutex(ft_nullptr)
 {
     bool     other_thread_safe;
     void     *memory;
