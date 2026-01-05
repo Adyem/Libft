@@ -1652,12 +1652,14 @@ ft_big_number ft_big_number::operator%(const ft_big_number& other) const noexcep
     int stored_errno;
     int previous_errno;
     ft_big_number result;
+    ft_big_number quotient;
+    ft_big_number product;
     int operation_error;
 
     previous_errno = ft_errno;
     stored_errno = ft_big_number::initialize_errno_keeper();
     operation_error = FT_ERR_SUCCESSS;
-    ft_big_number quotient = this->operator/(other);
+    quotient = this->operator/(other);
 
     if (quotient._error_code != FT_ERR_SUCCESSS
             || quotient._system_error_code != FT_SYS_ERR_SUCCESS)
@@ -1670,7 +1672,7 @@ ft_big_number ft_big_number::operator%(const ft_big_number& other) const noexcep
         result.set_system_error(operation_error);
         goto cleanup_modulus;
     }
-    ft_big_number product = quotient * other;
+    product = quotient * other;
 
     if (product._error_code != FT_ERR_SUCCESSS
             || product._system_error_code != FT_SYS_ERR_SUCCESS)
