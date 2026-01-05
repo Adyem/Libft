@@ -483,11 +483,6 @@ ft_loot_table<ElementType>::ft_loot_table() noexcept
     : ft_vector<ft_loot_entry<ElementType> >()
     , _mutex()
 {
-    if (this->enable_thread_safety() != 0)
-    {
-        this->set_error_unlocked(ft_errno);
-        return ;
-    }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
