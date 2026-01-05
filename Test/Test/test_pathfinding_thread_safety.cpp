@@ -187,12 +187,12 @@ static void *pathfinding_read_task(void *argument)
 
 FT_TEST(test_path_step_thread_safety, "ft_path_step guards coordinate updates")
 {
-    ft_path_step primary_step;
+    ft_path_step *primary_step;
     ft_path_step copy_target;
     ft_path_step assign_target;
     ft_path_step move_target;
-    path_step_update_args update_arguments;
-    path_step_read_args read_arguments;
+    path_step_update_args *update_arguments;
+    path_step_read_args *read_arguments;
     pthread_t update_thread;
     pthread_t read_thread;
     int create_update_result;
@@ -206,14 +206,19 @@ FT_TEST(test_path_step_thread_safety, "ft_path_step guards coordinate updates")
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
-    update_arguments.step_pointer = &primary_step;
-    update_arguments.iterations = 2048;
-    update_arguments.result_code = FT_ERR_SUCCESSS;
-    read_arguments.step_pointer = &primary_step;
-    read_arguments.iterations = 2048;
-    read_arguments.result_code = FT_ERR_SUCCESSS;
+    create_recalc_result = 1;
+    create_read_result = 1;
+    primary_step = new ft_path_step();
+    update_arguments = new path_step_update_args();
+    read_arguments = new path_step_read_args();
+    update_arguments->step_pointer = primary_step;
+    update_arguments->iterations = 2048;
+    update_arguments->result_code = FT_ERR_SUCCESSS;
+    read_arguments->step_pointer = primary_step;
+    read_arguments->iterations = 2048;
+    read_arguments->result_code = FT_ERR_SUCCESSS;
     create_update_result = pt_thread_create(&update_thread, ft_nullptr,
-            path_step_update_task, &update_arguments);
+            path_step_update_task, update_arguments);
     if (create_update_result != 0)
     {
         test_failed = 1;
@@ -221,7 +226,7 @@ FT_TEST(test_path_step_thread_safety, "ft_path_step guards coordinate updates")
         failure_line = __LINE__;
     }
     create_read_result = pt_thread_create(&read_thread, ft_nullptr,
-            path_step_read_task, &read_arguments);
+            path_step_read_task, read_arguments);
     if (create_read_result != 0)
     {
         test_failed = 1;
@@ -231,7 +236,7 @@ FT_TEST(test_path_step_thread_safety, "ft_path_step guards coordinate updates")
     index = 0;
     while (index < 256 && test_failed == 0)
     {
-        ft_path_step constructed(primary_step);
+        ft_path_step constructed(*primary_step);
         ft_path_step moved_constructed(ft_move(constructed));
 
         copy_target = moved_constructed;
@@ -293,18 +298,21 @@ FT_TEST(test_path_step_thread_safety, "ft_path_step guards coordinate updates")
             failure_line = __LINE__;
         }
     }
-    if (update_arguments.result_code != FT_ERR_SUCCESSS && test_failed == 0)
+    if (update_arguments->result_code != FT_ERR_SUCCESSS && test_failed == 0)
     {
         test_failed = 1;
         failure_expression = "update_arguments.result_code == FT_ERR_SUCCESSS";
         failure_line = __LINE__;
     }
-    if (read_arguments.result_code != FT_ERR_SUCCESSS && test_failed == 0)
+    if (read_arguments->result_code != FT_ERR_SUCCESSS && test_failed == 0)
     {
         test_failed = 1;
         failure_expression = "read_arguments.result_code == FT_ERR_SUCCESSS";
         failure_line = __LINE__;
     }
+    delete primary_step;
+    delete update_arguments;
+    delete read_arguments;
     if (test_failed != 0)
     {
         ft_test_fail(failure_expression, __FILE__, failure_line);
@@ -316,13 +324,13 @@ FT_TEST(test_path_step_thread_safety, "ft_path_step guards coordinate updates")
 FT_TEST(test_pathfinding_thread_safety,
     "ft_pathfinding serializes concurrent planners and readers")
 {
-    ft_map3d grid(5, 5, 1, 0);
-    ft_pathfinding primary_finder;
+    ft_map3d *grid_pointer;
+    ft_pathfinding *primary_finder;
     ft_pathfinding copy_target;
     ft_pathfinding assign_target;
     ft_pathfinding move_target;
-    pathfinding_recalc_args recalc_arguments;
-    pathfinding_read_args read_arguments;
+    pathfinding_recalc_args *recalc_arguments;
+    pathfinding_read_args *read_arguments;
     pthread_t recalc_thread;
     pthread_t read_thread;
     int create_recalc_result;
@@ -337,40 +345,55 @@ FT_TEST(test_pathfinding_thread_safety,
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
-    if (primary_finder.recalculate_path(grid, 0, 0, 0, 4, 4, 0, seed_path) != FT_ERR_SUCCESSS)
-    {
-        ft_test_fail("primary_finder.recalculate_path(...) == FT_ERR_SUCCESSS", __FILE__, __LINE__);
-        return (0);
-    }
-    primary_finder.update_obstacle(0, 0, 0, 1);
-    recalc_arguments.finder_pointer = &primary_finder;
-    recalc_arguments.grid_pointer = &grid;
-    recalc_arguments.iterations = 512;
-    recalc_arguments.result_code = FT_ERR_SUCCESSS;
-    read_arguments.finder_pointer = &primary_finder;
-    read_arguments.grid_pointer = &grid;
-    read_arguments.iterations = 512;
-    read_arguments.result_code = FT_ERR_SUCCESSS;
-    create_recalc_result = pt_thread_create(&recalc_thread, ft_nullptr,
-            pathfinding_recalc_task, &recalc_arguments);
-    if (create_recalc_result != 0)
+    grid_pointer = new ft_map3d(5, 5, 1, 0);
+    primary_finder = new ft_pathfinding();
+    recalc_arguments = new pathfinding_recalc_args();
+    read_arguments = new pathfinding_read_args();
+    if (primary_finder->recalculate_path(*grid_pointer, 0, 0, 0, 4, 4, 0, seed_path)
+        != FT_ERR_SUCCESSS)
     {
         test_failed = 1;
-        failure_expression = "create_recalc_result == 0";
+        failure_expression = "primary_finder.recalculate_path(...) == FT_ERR_SUCCESSS";
         failure_line = __LINE__;
     }
-    create_read_result = pt_thread_create(&read_thread, ft_nullptr,
-            pathfinding_read_task, &read_arguments);
-    if (create_read_result != 0)
+    if (test_failed == 0)
     {
-        test_failed = 1;
-        failure_expression = "create_read_result == 0";
-        failure_line = __LINE__;
+        primary_finder->update_obstacle(0, 0, 0, 1);
+        recalc_arguments->finder_pointer = primary_finder;
+        recalc_arguments->grid_pointer = grid_pointer;
+        recalc_arguments->iterations = 512;
+        recalc_arguments->result_code = FT_ERR_SUCCESSS;
+        read_arguments->finder_pointer = primary_finder;
+        read_arguments->grid_pointer = grid_pointer;
+        read_arguments->iterations = 512;
+        read_arguments->result_code = FT_ERR_SUCCESSS;
+    }
+    if (test_failed == 0)
+    {
+        create_recalc_result = pt_thread_create(&recalc_thread, ft_nullptr,
+                pathfinding_recalc_task, recalc_arguments);
+        if (create_recalc_result != 0)
+        {
+            test_failed = 1;
+            failure_expression = "create_recalc_result == 0";
+            failure_line = __LINE__;
+        }
+    }
+    if (test_failed == 0)
+    {
+        create_read_result = pt_thread_create(&read_thread, ft_nullptr,
+                pathfinding_read_task, read_arguments);
+        if (create_read_result != 0)
+        {
+            test_failed = 1;
+            failure_expression = "create_read_result == 0";
+            failure_line = __LINE__;
+        }
     }
     index = 0;
     while (index < 128 && test_failed == 0)
     {
-        ft_pathfinding constructed(primary_finder);
+        ft_pathfinding constructed(*primary_finder);
         ft_pathfinding moved_constructed(ft_move(constructed));
 
         copy_target = moved_constructed;
@@ -402,8 +425,8 @@ FT_TEST(test_pathfinding_thread_safety,
         }
         if (test_failed == 0)
         {
-            primary_finder = ft_move(move_target);
-            if (primary_finder.get_error() != FT_ERR_SUCCESSS)
+            *primary_finder = ft_move(move_target);
+            if (primary_finder->get_error() != FT_ERR_SUCCESSS)
             {
                 test_failed = 1;
                 failure_expression = "primary_finder.get_error() == FT_ERR_SUCCESSS";
@@ -432,18 +455,22 @@ FT_TEST(test_pathfinding_thread_safety,
             failure_line = __LINE__;
         }
     }
-    if (recalc_arguments.result_code != FT_ERR_SUCCESSS && test_failed == 0)
+    if (recalc_arguments->result_code != FT_ERR_SUCCESSS && test_failed == 0)
     {
         test_failed = 1;
         failure_expression = "recalc_arguments.result_code == FT_ERR_SUCCESSS";
         failure_line = __LINE__;
     }
-    if (read_arguments.result_code != FT_ERR_SUCCESSS && test_failed == 0)
+    if (read_arguments->result_code != FT_ERR_SUCCESSS && test_failed == 0)
     {
         test_failed = 1;
         failure_expression = "read_arguments.result_code == FT_ERR_SUCCESSS";
         failure_line = __LINE__;
     }
+    delete grid_pointer;
+    delete primary_finder;
+    delete recalc_arguments;
+    delete read_arguments;
     if (test_failed != 0)
     {
         ft_test_fail(failure_expression, __FILE__, failure_line);
