@@ -206,7 +206,7 @@ FT_TEST(test_path_step_thread_safety, "ft_path_step guards coordinate updates")
     test_failed = 0;
     failure_expression = ft_nullptr;
     failure_line = 0;
-    create_recalc_result = 1;
+    create_update_result = 1;
     create_read_result = 1;
     primary_step = new ft_path_step();
     update_arguments = new path_step_update_args();
@@ -268,11 +268,11 @@ FT_TEST(test_path_step_thread_safety, "ft_path_step guards coordinate updates")
         }
         if (test_failed == 0)
         {
-            primary_step = ft_move(move_target);
-            if (primary_step.get_error() != FT_ERR_SUCCESSS)
+            *primary_step = ft_move(move_target);
+            if (primary_step->get_error() != FT_ERR_SUCCESSS)
             {
                 test_failed = 1;
-                failure_expression = "primary_step.get_error() == FT_ERR_SUCCESSS";
+                failure_expression = "primary_step->get_error() == FT_ERR_SUCCESSS";
                 failure_line = __LINE__;
             }
         }
