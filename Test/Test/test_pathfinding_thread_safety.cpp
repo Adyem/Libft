@@ -202,6 +202,7 @@ FT_TEST(test_path_step_thread_safety, "ft_path_step guards coordinate updates")
     int test_failed;
     const char *failure_expression;
     int failure_line;
+    const long join_timeout_ms = 30000;
 
     test_failed = 0;
     failure_expression = ft_nullptr;
@@ -280,7 +281,7 @@ FT_TEST(test_path_step_thread_safety, "ft_path_step guards coordinate updates")
     }
     if (create_update_result == 0)
     {
-        join_result = pt_thread_timed_join(update_thread, ft_nullptr, 30000);
+        join_result = pt_thread_timed_join(update_thread, ft_nullptr, join_timeout_ms);
         if (join_result != 0 && test_failed == 0)
         {
             test_failed = 1;
@@ -290,7 +291,7 @@ FT_TEST(test_path_step_thread_safety, "ft_path_step guards coordinate updates")
     }
     if (create_read_result == 0)
     {
-        join_result = pt_thread_timed_join(read_thread, ft_nullptr, 30000);
+        join_result = pt_thread_timed_join(read_thread, ft_nullptr, join_timeout_ms);
         if (join_result != 0 && test_failed == 0)
         {
             test_failed = 1;
@@ -310,9 +311,6 @@ FT_TEST(test_path_step_thread_safety, "ft_path_step guards coordinate updates")
         failure_expression = "read_arguments.result_code == FT_ERR_SUCCESSS";
         failure_line = __LINE__;
     }
-    delete primary_step;
-    delete update_arguments;
-    delete read_arguments;
     if (test_failed != 0)
     {
         ft_test_fail(failure_expression, __FILE__, failure_line);
@@ -341,6 +339,7 @@ FT_TEST(test_pathfinding_thread_safety,
     const char *failure_expression;
     int failure_line;
     ft_vector<ft_path_step> seed_path;
+    const long join_timeout_ms = 30000;
 
     test_failed = 0;
     failure_expression = ft_nullptr;
@@ -437,7 +436,7 @@ FT_TEST(test_pathfinding_thread_safety,
     }
     if (create_recalc_result == 0)
     {
-        join_result = pt_thread_timed_join(recalc_thread, ft_nullptr, 30000);
+        join_result = pt_thread_timed_join(recalc_thread, ft_nullptr, join_timeout_ms);
         if (join_result != 0 && test_failed == 0)
         {
             test_failed = 1;
@@ -447,7 +446,7 @@ FT_TEST(test_pathfinding_thread_safety,
     }
     if (create_read_result == 0)
     {
-        join_result = pt_thread_timed_join(read_thread, ft_nullptr, 30000);
+        join_result = pt_thread_timed_join(read_thread, ft_nullptr, join_timeout_ms);
         if (join_result != 0 && test_failed == 0)
         {
             test_failed = 1;
@@ -467,10 +466,6 @@ FT_TEST(test_pathfinding_thread_safety,
         failure_expression = "read_arguments.result_code == FT_ERR_SUCCESSS";
         failure_line = __LINE__;
     }
-    delete grid_pointer;
-    delete primary_finder;
-    delete recalc_arguments;
-    delete read_arguments;
     if (test_failed != 0)
     {
         ft_test_fail(failure_expression, __FILE__, failure_line);
