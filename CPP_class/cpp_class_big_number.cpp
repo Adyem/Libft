@@ -44,6 +44,83 @@ static const ft_big_number_digit_entry g_big_number_digit_to_value_table[] =
 
 static const char g_big_number_value_to_digit_table[] = "0123456789ABCDEF";
 
+struct ft_big_number_error_frame
+{
+    int             code;
+    unsigned int    op_id;
+};
+
+struct ft_big_number_error_stack
+{
+    ft_big_number_error_frame   frames[32];
+    unsigned int                depth;
+    unsigned int                next_op_id;
+    int                         last_error;
+    unsigned int                last_op_id;
+};
+
+static thread_local ft_big_number_error_stack g_big_number_error_stack = {{}, 0, 1, FT_ERR_SUCCESSS, 0};
+
+class ft_big_number_error_scope
+{
+    private:
+        unsigned int    _index;
+        unsigned int    _op_id;
+        bool            _active;
+
+    public:
+        ft_big_number_error_scope() noexcept;
+        ~ft_big_number_error_scope() noexcept;
+        void            set_error(int error_code) noexcept;
+        unsigned int    get_op_id() const noexcept;
+};
+
+ft_big_number_error_scope::ft_big_number_error_scope() noexcept
+    : _index(0)
+    , _op_id(0)
+    , _active(false)
+{
+    if (g_big_number_error_stack.depth >= 32)
+    {
+        this->_op_id = g_big_number_error_stack.next_op_id;
+        g_big_number_error_stack.next_op_id++;
+        return ;
+    }
+    this->_index = g_big_number_error_stack.depth;
+    g_big_number_error_stack.depth++;
+    this->_op_id = g_big_number_error_stack.next_op_id;
+    g_big_number_error_stack.next_op_id++;
+    g_big_number_error_stack.frames[this->_index].code = FT_ERR_SUCCESSS;
+    g_big_number_error_stack.frames[this->_index].op_id = this->_op_id;
+    this->_active = true;
+    return ;
+}
+
+ft_big_number_error_scope::~ft_big_number_error_scope() noexcept
+{
+    if (!this->_active)
+        return ;
+    if (g_big_number_error_stack.depth == 0)
+        return ;
+    g_big_number_error_stack.last_error = g_big_number_error_stack.frames[this->_index].code;
+    g_big_number_error_stack.last_op_id = g_big_number_error_stack.frames[this->_index].op_id;
+    g_big_number_error_stack.depth--;
+    return ;
+}
+
+void ft_big_number_error_scope::set_error(int error_code) noexcept
+{
+    if (!this->_active)
+        return ;
+    g_big_number_error_stack.frames[this->_index].code = error_code;
+    return ;
+}
+
+unsigned int ft_big_number_error_scope::get_op_id() const noexcept
+{
+    return (this->_op_id);
+}
+
 static int ft_big_number_digit_value(char digit) noexcept
 {
     ft_size_t index = 0;
@@ -83,9 +160,39 @@ void ft_big_number::update_errno_keeper(int &stored_errno, int new_value) noexce
 void ft_big_number::finalize_errno_keeper(int stored_errno) noexcept
 {
     ft_set_sys_errno_locked(stored_errno);
-    if (stored_errno != FT_SYS_ERR_SUCCESS && ft_errno == FT_ERR_SUCCESSS)
-        ft_set_errno_locked(stored_errno);
     return ;
+}
+
+int ft_big_number::last_error() noexcept
+{
+    if (g_big_number_error_stack.depth == 0)
+        return (g_big_number_error_stack.last_error);
+    return (g_big_number_error_stack.frames[g_big_number_error_stack.depth - 1].code);
+}
+
+unsigned int ft_big_number::last_op_id() noexcept
+{
+    if (g_big_number_error_stack.depth == 0)
+        return (g_big_number_error_stack.last_op_id);
+    return (g_big_number_error_stack.frames[g_big_number_error_stack.depth - 1].op_id);
+}
+
+int ft_big_number::error_for(unsigned int op_id) noexcept
+{
+    unsigned int index;
+
+    if (g_big_number_error_stack.depth == 0)
+        return (FT_ERR_SUCCESSS);
+    index = g_big_number_error_stack.depth;
+    while (index > 0)
+    {
+        index--;
+        if (g_big_number_error_stack.frames[index].op_id == op_id)
+            return (g_big_number_error_stack.frames[index].code);
+    }
+    if (g_big_number_error_stack.last_op_id == op_id)
+        return (g_big_number_error_stack.last_error);
+    return (FT_ERR_SUCCESSS);
 }
 
 void ft_big_number::unlock_guard_preserve_errno(ft_big_number_mutex_guard &guard,
@@ -1121,24 +1228,31 @@ void ft_big_number::clear() noexcept
 
 ft_big_number ft_big_number::operator+(const ft_big_number& other) const noexcept
 {
+    ft_big_number_error_scope error_scope;
     ft_big_number_mutex_guard this_guard;
     ft_big_number_mutex_guard other_guard;
     ft_big_number result;
-        int lock_error;
+    int lock_error;
 
     lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        result.set_error(lock_error);
-        ft_set_errno_locked(FT_ERR_SUCCESSS);
+        result._error_code = lock_error;
+        result._system_error_code = FT_SYS_ERR_SUCCESS;
+        error_scope.set_error(lock_error);
         return (result);
     }
     if (this->_error_code != 0 || other._error_code != 0)
     {
+        int error_code;
+
         if (this->_error_code != 0)
-            result.set_error(this->_error_code);
+            error_code = this->_error_code;
         else
-            result.set_error(other._error_code);
+            error_code = other._error_code;
+        result._error_code = error_code;
+        result._system_error_code = FT_SYS_ERR_SUCCESS;
+        error_scope.set_error(error_code);
         return (result);
     }
     if (this->_is_negative == other._is_negative)
@@ -1174,31 +1288,42 @@ ft_big_number ft_big_number::operator+(const ft_big_number& other) const noexcep
         if (result._error_code == FT_ERR_SUCCESSS && result.is_zero_value())
             result._is_negative = false;
     }
+    if (result._error_code != FT_ERR_SUCCESSS)
+        error_scope.set_error(result._error_code);
+    else
+        error_scope.set_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
 ft_big_number ft_big_number::operator-(const ft_big_number& other) const noexcept
 {
+    ft_big_number_error_scope error_scope;
     ft_big_number_mutex_guard this_guard;
     ft_big_number_mutex_guard other_guard;
     ft_big_number result;
-        int lock_error;
+    int lock_error;
     bool lhs_negative;
     bool rhs_negative;
 
     lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        result.set_error(lock_error);
-        ft_set_errno_locked(FT_ERR_SUCCESSS);
+        result._error_code = lock_error;
+        result._system_error_code = FT_SYS_ERR_SUCCESS;
+        error_scope.set_error(lock_error);
         return (result);
     }
     if (this->_error_code != 0 || other._error_code != 0)
     {
+        int error_code;
+
         if (this->_error_code != 0)
-            result.set_error(this->_error_code);
+            error_code = this->_error_code;
         else
-            result.set_error(other._error_code);
+            error_code = other._error_code;
+        result._error_code = error_code;
+        result._system_error_code = FT_SYS_ERR_SUCCESS;
+        error_scope.set_error(error_code);
         return (result);
     }
     lhs_negative = this->_is_negative;
@@ -1236,31 +1361,40 @@ ft_big_number ft_big_number::operator-(const ft_big_number& other) const noexcep
         if (result._error_code == FT_ERR_SUCCESSS && result.is_zero_value())
             result._is_negative = false;
     }
-    ft_set_errno_locked(FT_ERR_SUCCESSS);
+    if (result._error_code != FT_ERR_SUCCESSS)
+        error_scope.set_error(result._error_code);
+    else
+        error_scope.set_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
 ft_big_number ft_big_number::operator*(const ft_big_number& other) const noexcept
 {
+    ft_big_number_error_scope error_scope;
     ft_big_number_mutex_guard this_guard;
     ft_big_number_mutex_guard other_guard;
     ft_big_number result;
-        int lock_error;
+    int lock_error;
 
     lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        result.set_error(lock_error);
-        ft_set_errno_locked(FT_ERR_SUCCESSS);
+        result._error_code = lock_error;
+        result._system_error_code = FT_SYS_ERR_SUCCESS;
+        error_scope.set_error(lock_error);
         return (result);
     }
     if (this->_error_code != 0 || other._error_code != 0)
     {
+        int error_code;
+
         if (this->_error_code != 0)
-            result.set_error(this->_error_code);
+            error_code = this->_error_code;
         else
-            result.set_error(other._error_code);
-        ft_set_errno_locked(FT_ERR_SUCCESSS);
+            error_code = other._error_code;
+        result._error_code = error_code;
+        result._system_error_code = FT_SYS_ERR_SUCCESS;
+        error_scope.set_error(error_code);
         return (result);
     }
     if (!this->is_zero_value() && !other.is_zero_value())
@@ -1333,331 +1467,299 @@ ft_big_number ft_big_number::operator*(const ft_big_number& other) const noexcep
             }
         }
     }
-    ft_set_errno_locked(FT_ERR_SUCCESSS);
+    if (result._error_code != FT_ERR_SUCCESSS)
+        error_scope.set_error(result._error_code);
+    else
+        error_scope.set_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
 ft_big_number ft_big_number::operator/(const ft_big_number& other) const noexcept
 {
-    int stored_errno;
+    ft_big_number_error_scope error_scope;
     ft_big_number result;
+    ft_big_number_mutex_guard this_guard;
+    ft_big_number_mutex_guard other_guard;
+    int lock_error;
+    int operation_error;
+    ft_big_number remainder;
+    ft_size_t digit_index;
+    int magnitude_comparison;
 
-    stored_errno = ft_big_number::initialize_errno_keeper();
+    operation_error = FT_ERR_SUCCESSS;
+    digit_index = 0;
+    magnitude_comparison = 0;
+    lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        ft_big_number_mutex_guard this_guard;
-        ft_big_number_mutex_guard other_guard;
-        int lock_error;
-        int final_error;
-        ft_big_number remainder;
-        ft_size_t digit_index;
-        int magnitude_comparison;
+        operation_error = lock_error;
+        goto cleanup_division;
+    }
+    if (this->_error_code != 0 || other._error_code != 0)
+    {
+        if (this->_error_code != 0)
+            operation_error = this->_error_code;
+        else
+            operation_error = other._error_code;
+        goto cleanup_division;
+    }
+    if (other.is_zero_value())
+    {
+        operation_error = FT_ERR_DIVIDE_BY_ZERO;
+        goto cleanup_division;
+    }
+    if (this->is_zero_value())
+        goto cleanup_division;
+    magnitude_comparison = this->compare_magnitude(other);
 
-        final_error = FT_ERR_SUCCESSS;
-        digit_index = 0;
-        magnitude_comparison = 0;
-        lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
-        if (lock_error != FT_ERR_SUCCESSS)
-        {
-            result.set_error(lock_error);
-            ft_big_number::update_errno_keeper(stored_errno, lock_error);
-            final_error = lock_error;
-            goto cleanup_division;
-        }
-        if (this->_error_code != 0 || other._error_code != 0)
-        {
-            if (this->_error_code != 0)
-                result.set_error(this->_error_code);
-            else
-                result.set_error(other._error_code);
-            ft_big_number::update_errno_keeper(stored_errno, result._error_code);
-            final_error = result._error_code;
-            goto cleanup_division;
-        }
-        if (other.is_zero_value())
-        {
-            result.set_error(FT_ERR_DIVIDE_BY_ZERO);
-            ft_big_number::update_errno_keeper(stored_errno, result._error_code);
-            final_error = result._error_code;
-            goto cleanup_division;
-        }
-        if (this->is_zero_value())
-        {
-            ft_big_number::update_errno_keeper(stored_errno, result._error_code);
-            final_error = result._error_code;
-            goto cleanup_division;
-        }
-        magnitude_comparison = this->compare_magnitude(other);
-
-        if (magnitude_comparison < 0)
-        {
-            ft_big_number::update_errno_keeper(stored_errno, result._error_code);
-            final_error = result._error_code;
-            goto cleanup_division;
-        }
-        if (magnitude_comparison == 0)
-        {
-            result.append_digit('1');
-            if (result._error_code == FT_ERR_SUCCESSS
-                    && this->_is_negative != other._is_negative)
-                result._is_negative = true;
-            if (result._error_code == FT_ERR_SUCCESSS && result.is_zero_value())
-                result._is_negative = false;
-            ft_big_number::update_errno_keeper(stored_errno, result._error_code);
-            final_error = result._error_code;
-            goto cleanup_division;
-        }
-        while (digit_index < this->_size)
-        {
-            remainder.append_digit(this->_digits[digit_index]);
-            if (remainder._error_code != 0)
-            {
-                result.set_error(remainder._error_code);
-                ft_big_number::update_errno_keeper(stored_errno, result._error_code);
-                final_error = result._error_code;
-                goto cleanup_division;
-            }
-            remainder.trim_leading_zeros();
-            if (remainder._error_code != 0)
-            {
-                result.set_error(remainder._error_code);
-                ft_big_number::update_errno_keeper(stored_errno, result._error_code);
-                final_error = result._error_code;
-                goto cleanup_division;
-            }
-            int best_digit_value = 0;
-            int comparison = remainder.compare_magnitude(other);
-            ft_big_number best_product;
-
-            if (comparison >= 0)
-            {
-                best_digit_value = 0;
-                best_product = ft_big_number();
-                int candidate_digit = 1;
-
-                while (candidate_digit <= 9)
-                {
-                    ft_big_number digit_multiplier;
-
-                    digit_multiplier.append_digit(static_cast<char>('0'
-                            + candidate_digit));
-                    if (digit_multiplier._error_code != FT_ERR_SUCCESSS)
-                    {
-                        result.set_error(digit_multiplier._error_code);
-                        ft_big_number::update_errno_keeper(stored_errno, result._error_code);
-                        final_error = result._error_code;
-                        goto cleanup_division;
-                    }
-                    ft_big_number candidate_product = other * digit_multiplier;
-
-                    if (candidate_product._error_code != FT_ERR_SUCCESSS)
-                    {
-                        result.set_error(candidate_product._error_code);
-                        ft_big_number::update_errno_keeper(stored_errno, result._error_code);
-                        final_error = result._error_code;
-                        goto cleanup_division;
-                    }
-                    int product_comparison = candidate_product.compare_magnitude(remainder);
-
-                    if (product_comparison <= 0)
-                    {
-                        best_digit_value = candidate_digit;
-                        best_product = candidate_product;
-                        if (product_comparison == 0)
-                            candidate_digit = 10;
-                        else
-                            candidate_digit++;
-                    }
-                    else
-                        candidate_digit = 10;
-                }
-                if (best_digit_value > 0)
-                {
-                    remainder = remainder.subtract_magnitude(best_product);
-                    if (remainder._error_code != FT_ERR_SUCCESSS)
-                    {
-                        result.set_error(remainder._error_code);
-                        ft_big_number::update_errno_keeper(stored_errno, result._error_code);
-                        final_error = result._error_code;
-                        goto cleanup_division;
-                    }
-                }
-            }
-            char quotient_digit = static_cast<char>('0' + best_digit_value);
-
-            result.append_digit(quotient_digit);
-            if (result._error_code != 0)
-            {
-                ft_big_number::update_errno_keeper(stored_errno, result._error_code);
-                final_error = result._error_code;
-                goto cleanup_division;
-            }
-            digit_index++;
-        }
-        result.trim_leading_zeros();
-        if (result._error_code == FT_ERR_SUCCESSS && this->_is_negative != other._is_negative)
+    if (magnitude_comparison < 0)
+        goto cleanup_division;
+    if (magnitude_comparison == 0)
+    {
+        result.append_digit('1');
+        if (result._error_code == FT_ERR_SUCCESSS
+                && this->_is_negative != other._is_negative)
             result._is_negative = true;
         if (result._error_code == FT_ERR_SUCCESSS && result.is_zero_value())
             result._is_negative = false;
-        ft_big_number::update_errno_keeper(stored_errno, result._error_code);
-        final_error = result._error_code;
-cleanup_division:
-        ft_big_number::unlock_guard_preserve_errno(other_guard, stored_errno);
-        ft_big_number::unlock_guard_preserve_errno(this_guard, stored_errno);
-        if (final_error == FT_ERR_SUCCESSS)
-            ft_big_number::update_errno_keeper(stored_errno, FT_ERR_SUCCESSS);
-        else
-            ft_big_number::update_errno_keeper(stored_errno, final_error);
+        if (result._error_code != FT_ERR_SUCCESSS)
+            operation_error = result._error_code;
+        goto cleanup_division;
     }
-    ft_big_number::finalize_errno_keeper(stored_errno);
+    while (digit_index < this->_size)
+    {
+        remainder.append_digit(this->_digits[digit_index]);
+        if (remainder._error_code != 0)
+        {
+            operation_error = remainder._error_code;
+            goto cleanup_division;
+        }
+        remainder.trim_leading_zeros();
+        if (remainder._error_code != 0)
+        {
+            operation_error = remainder._error_code;
+            goto cleanup_division;
+        }
+        int best_digit_value = 0;
+        int comparison = remainder.compare_magnitude(other);
+        ft_big_number best_product;
+
+        if (comparison >= 0)
+        {
+            best_digit_value = 0;
+            best_product = ft_big_number();
+            int candidate_digit = 1;
+
+            while (candidate_digit <= 9)
+            {
+                ft_big_number digit_multiplier;
+
+                digit_multiplier.append_digit(static_cast<char>('0'
+                        + candidate_digit));
+                if (digit_multiplier._error_code != FT_ERR_SUCCESSS)
+                {
+                    operation_error = digit_multiplier._error_code;
+                    goto cleanup_division;
+                }
+                ft_big_number candidate_product = other * digit_multiplier;
+
+                if (candidate_product._error_code != FT_ERR_SUCCESSS)
+                {
+                    operation_error = candidate_product._error_code;
+                    goto cleanup_division;
+                }
+                int product_comparison = candidate_product.compare_magnitude(remainder);
+
+                if (product_comparison <= 0)
+                {
+                    best_digit_value = candidate_digit;
+                    best_product = candidate_product;
+                    if (product_comparison == 0)
+                        candidate_digit = 10;
+                    else
+                        candidate_digit++;
+                }
+                else
+                    candidate_digit = 10;
+            }
+            if (best_digit_value > 0)
+            {
+                remainder = remainder.subtract_magnitude(best_product);
+                if (remainder._error_code != FT_ERR_SUCCESSS)
+                {
+                    operation_error = remainder._error_code;
+                    goto cleanup_division;
+                }
+            }
+        }
+        char quotient_digit = static_cast<char>('0' + best_digit_value);
+
+        result.append_digit(quotient_digit);
+        if (result._error_code != 0)
+        {
+            operation_error = result._error_code;
+            goto cleanup_division;
+        }
+        digit_index++;
+    }
+    result.trim_leading_zeros();
+    if (result._error_code == FT_ERR_SUCCESSS && this->_is_negative != other._is_negative)
+        result._is_negative = true;
+    if (result._error_code == FT_ERR_SUCCESSS && result.is_zero_value())
+        result._is_negative = false;
+    if (result._error_code != FT_ERR_SUCCESSS)
+        operation_error = result._error_code;
+cleanup_division:
+    if (operation_error != FT_ERR_SUCCESSS)
+    {
+        result._error_code = operation_error;
+        result._system_error_code = FT_SYS_ERR_SUCCESS;
+        error_scope.set_error(operation_error);
+    }
+    else if (result._error_code != FT_ERR_SUCCESSS)
+        error_scope.set_error(result._error_code);
+    else
+        error_scope.set_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
 ft_big_number ft_big_number::operator%(const ft_big_number& other) const noexcept
 {
-    int stored_errno;
+    ft_big_number_error_scope error_scope;
     ft_big_number result;
+    ft_big_number_mutex_guard this_guard;
+    ft_big_number_mutex_guard other_guard;
+    int lock_error;
+    int operation_error;
+    bool original_negative;
+    ft_big_number dividend;
+    ft_size_t dividend_index;
+    ft_big_number divisor;
+    ft_size_t divisor_index;
+    int magnitude_comparison;
 
-    stored_errno = ft_big_number::initialize_errno_keeper();
+    operation_error = FT_ERR_SUCCESSS;
+    dividend_index = 0;
+    divisor_index = 0;
+    magnitude_comparison = 0;
+    lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
+    if (lock_error != FT_ERR_SUCCESSS)
     {
-        ft_big_number_mutex_guard this_guard;
-        ft_big_number_mutex_guard other_guard;
-        int lock_error;
-        bool original_negative;
-        ft_big_number dividend;
-        ft_size_t dividend_index;
-        ft_big_number divisor;
-        ft_size_t divisor_index;
-        int magnitude_comparison;
-
-        dividend_index = 0;
-        divisor_index = 0;
-        magnitude_comparison = 0;
-        lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
-        if (lock_error != FT_ERR_SUCCESSS)
-        {
-            result.set_error(lock_error);
-            ft_big_number::update_errno_keeper(stored_errno, lock_error);
-            goto cleanup_modulus;
-        }
-        if (this->_error_code != 0 || other._error_code != 0)
-        {
-            if (this->_error_code != 0)
-                result.set_error(this->_error_code);
-            else
-                result.set_error(other._error_code);
-            ft_big_number::update_errno_keeper(stored_errno, result._error_code);
-            goto cleanup_modulus;
-        }
-        if (other.is_zero_value())
-        {
-            result.set_error(FT_ERR_DIVIDE_BY_ZERO);
-            ft_big_number::update_errno_keeper(stored_errno, result._error_code);
-            goto cleanup_modulus;
-        }
-        if (this->is_zero_value())
-        {
-            ft_big_number::update_errno_keeper(stored_errno, result._error_code);
-            goto cleanup_modulus;
-        }
-        original_negative = this->_is_negative;
-        while (dividend_index < this->_size)
-        {
-            dividend.append_digit_unlocked(this->_digits[dividend_index]);
-            if (dividend._error_code != FT_ERR_SUCCESSS)
-            {
-                result.set_error(dividend._error_code);
-                ft_big_number::update_errno_keeper(stored_errno, result._error_code);
-                goto cleanup_modulus;
-            }
-            dividend_index++;
-        }
-        dividend._is_negative = false;
-        dividend.trim_leading_zeros_unlocked();
+        operation_error = lock_error;
+        goto cleanup_modulus;
+    }
+    if (this->_error_code != 0 || other._error_code != 0)
+    {
+        if (this->_error_code != 0)
+            operation_error = this->_error_code;
+        else
+            operation_error = other._error_code;
+        goto cleanup_modulus;
+    }
+    if (other.is_zero_value())
+    {
+        operation_error = FT_ERR_DIVIDE_BY_ZERO;
+        goto cleanup_modulus;
+    }
+    if (this->is_zero_value())
+        goto cleanup_modulus;
+    original_negative = this->_is_negative;
+    while (dividend_index < this->_size)
+    {
+        dividend.append_digit_unlocked(this->_digits[dividend_index]);
         if (dividend._error_code != FT_ERR_SUCCESSS)
         {
-            result.set_error(dividend._error_code);
-            ft_big_number::update_errno_keeper(stored_errno, result._error_code);
+            operation_error = dividend._error_code;
             goto cleanup_modulus;
         }
-        while (divisor_index < other._size)
-        {
-            divisor.append_digit_unlocked(other._digits[divisor_index]);
-            if (divisor._error_code != FT_ERR_SUCCESSS)
-            {
-                result.set_error(divisor._error_code);
-                ft_big_number::update_errno_keeper(stored_errno, result._error_code);
-                goto cleanup_modulus;
-            }
-            divisor_index++;
-        }
-        divisor._is_negative = false;
-        divisor.trim_leading_zeros_unlocked();
+        dividend_index++;
+    }
+    dividend._is_negative = false;
+    dividend.trim_leading_zeros_unlocked();
+    if (dividend._error_code != FT_ERR_SUCCESSS)
+    {
+        operation_error = dividend._error_code;
+        goto cleanup_modulus;
+    }
+    while (divisor_index < other._size)
+    {
+        divisor.append_digit_unlocked(other._digits[divisor_index]);
         if (divisor._error_code != FT_ERR_SUCCESSS)
         {
-            result.set_error(divisor._error_code);
-            ft_big_number::update_errno_keeper(stored_errno, result._error_code);
+            operation_error = divisor._error_code;
             goto cleanup_modulus;
         }
-        magnitude_comparison = dividend.compare_magnitude(divisor);
-
-        if (magnitude_comparison < 0)
-            result = dividend;
-        else if (magnitude_comparison > 0)
-        {
-            ft_big_number current_remainder;
-            ft_size_t digit_index = 0;
-
-            while (digit_index < dividend._size)
-            {
-                current_remainder.append_digit(dividend._digits[digit_index]);
-                if (current_remainder._error_code != 0)
-                {
-                    result.set_error(current_remainder._error_code);
-                    ft_big_number::update_errno_keeper(stored_errno, result._error_code);
-                    goto cleanup_modulus;
-                }
-                current_remainder.trim_leading_zeros();
-                if (current_remainder._error_code != 0)
-                {
-                    result.set_error(current_remainder._error_code);
-                    ft_big_number::update_errno_keeper(stored_errno, result._error_code);
-                    goto cleanup_modulus;
-                }
-                int compare_value = current_remainder.compare_magnitude(divisor);
-
-                while (compare_value >= 0)
-                {
-                    current_remainder = current_remainder.subtract_magnitude(divisor);
-                    if (current_remainder._error_code != 0)
-                    {
-                        result.set_error(current_remainder._error_code);
-                        ft_big_number::update_errno_keeper(stored_errno, result._error_code);
-                        goto cleanup_modulus;
-                    }
-                    compare_value = current_remainder.compare_magnitude(divisor);
-                }
-                digit_index++;
-            }
-            result = current_remainder;
-        }
-        result.trim_leading_zeros();
-        if (result._error_code != 0)
-        {
-            ft_big_number::update_errno_keeper(stored_errno, result._error_code);
-            goto cleanup_modulus;
-        }
-        if (original_negative && !result.is_zero_value())
-            result._is_negative = true;
-        else
-            result._is_negative = false;
-        if (result.is_zero_value())
-            result._is_negative = false;
-        ft_big_number::update_errno_keeper(stored_errno, result._error_code);
-cleanup_modulus:
-        ft_big_number::unlock_guard_preserve_errno(other_guard, stored_errno);
-        ft_big_number::unlock_guard_preserve_errno(this_guard, stored_errno);
+        divisor_index++;
     }
-    ft_big_number::finalize_errno_keeper(stored_errno);
+    divisor._is_negative = false;
+    divisor.trim_leading_zeros_unlocked();
+    if (divisor._error_code != FT_ERR_SUCCESSS)
+    {
+        operation_error = divisor._error_code;
+        goto cleanup_modulus;
+    }
+    magnitude_comparison = dividend.compare_magnitude(divisor);
+
+    if (magnitude_comparison < 0)
+        result = dividend;
+    else if (magnitude_comparison > 0)
+    {
+        ft_big_number current_remainder;
+        ft_size_t digit_index = 0;
+
+        while (digit_index < dividend._size)
+        {
+            current_remainder.append_digit(dividend._digits[digit_index]);
+            if (current_remainder._error_code != 0)
+            {
+                operation_error = current_remainder._error_code;
+                goto cleanup_modulus;
+            }
+            current_remainder.trim_leading_zeros();
+            if (current_remainder._error_code != 0)
+            {
+                operation_error = current_remainder._error_code;
+                goto cleanup_modulus;
+            }
+            int compare_value = current_remainder.compare_magnitude(divisor);
+
+            while (compare_value >= 0)
+            {
+                current_remainder = current_remainder.subtract_magnitude(divisor);
+                if (current_remainder._error_code != 0)
+                {
+                    operation_error = current_remainder._error_code;
+                    goto cleanup_modulus;
+                }
+                compare_value = current_remainder.compare_magnitude(divisor);
+            }
+            digit_index++;
+        }
+        result = current_remainder;
+    }
+    result.trim_leading_zeros();
+    if (result._error_code != 0)
+    {
+        operation_error = result._error_code;
+        goto cleanup_modulus;
+    }
+    if (original_negative && !result.is_zero_value())
+        result._is_negative = true;
+    else
+        result._is_negative = false;
+    if (result.is_zero_value())
+        result._is_negative = false;
+cleanup_modulus:
+    if (operation_error != FT_ERR_SUCCESSS)
+    {
+        result._error_code = operation_error;
+        result._system_error_code = FT_SYS_ERR_SUCCESS;
+        error_scope.set_error(operation_error);
+    }
+    else if (result._error_code != FT_ERR_SUCCESSS)
+        error_scope.set_error(result._error_code);
+    else
+        error_scope.set_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -1670,32 +1772,51 @@ bool ft_big_number::operator!=(const ft_big_number& other) const noexcept
 
 bool ft_big_number::operator<(const ft_big_number& other) const noexcept
 {
-    ft_big_number_mutex_guard this_guard;
-    ft_big_number_mutex_guard other_guard;
-    pt_errno_guard<ft_big_number_mutex_guard> errno_guard(this_guard, other_guard);
+    ft_big_number_error_scope error_scope;
     bool result;
+    int operation_error;
+
+    operation_error = FT_ERR_SUCCESSS;
+    {
+        ft_big_number_mutex_guard this_guard;
+        ft_big_number_mutex_guard other_guard;
+        pt_errno_guard<ft_big_number_mutex_guard> errno_guard(this_guard, other_guard);
         int lock_error;
 
-    lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
-        return (false);
-    if (this->_error_code != 0 || other._error_code != 0)
-        result = false;
-    else if (this->is_zero_value() && other.is_zero_value())
-        result = false;
-    else if (this->_is_negative && !other._is_negative)
-        result = true;
-    else if (!this->_is_negative && other._is_negative)
-        result = false;
-    else
-    {
-        int magnitude_comparison = this->compare_magnitude(other);
-
-        if (this->_is_negative && other._is_negative)
-            result = (magnitude_comparison > 0);
+        lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
+        if (lock_error != FT_ERR_SUCCESSS)
+        {
+            operation_error = lock_error;
+            result = false;
+        }
+        else if (this->_error_code != 0 || other._error_code != 0)
+        {
+            if (this->_error_code != 0)
+                operation_error = this->_error_code;
+            else
+                operation_error = other._error_code;
+            result = false;
+        }
+        else if (this->is_zero_value() && other.is_zero_value())
+            result = false;
+        else if (this->_is_negative && !other._is_negative)
+            result = true;
+        else if (!this->_is_negative && other._is_negative)
+            result = false;
         else
-            result = (magnitude_comparison < 0);
+        {
+            int magnitude_comparison = this->compare_magnitude(other);
+
+            if (this->_is_negative && other._is_negative)
+                result = (magnitude_comparison > 0);
+            else
+                result = (magnitude_comparison < 0);
+        }
     }
+    if (operation_error != FT_ERR_SUCCESSS)
+        error_scope.set_error(operation_error);
+    else
+        error_scope.set_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -1722,42 +1843,61 @@ bool ft_big_number::operator>=(const ft_big_number& other) const noexcept
 
 bool ft_big_number::operator==(const ft_big_number& other) const noexcept
 {
-    ft_big_number_mutex_guard this_guard;
-    ft_big_number_mutex_guard other_guard;
-    pt_errno_guard<ft_big_number_mutex_guard> errno_guard(this_guard, other_guard);
+    ft_big_number_error_scope error_scope;
     bool are_equal;
+    int operation_error;
+
+    operation_error = FT_ERR_SUCCESSS;
+    {
+        ft_big_number_mutex_guard this_guard;
+        ft_big_number_mutex_guard other_guard;
+        pt_errno_guard<ft_big_number_mutex_guard> errno_guard(this_guard, other_guard);
         int lock_error;
 
-    lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
-    if (lock_error != FT_ERR_SUCCESSS)
-        return (false);
-    if (this->_error_code != 0 || other._error_code != 0)
-        are_equal = false;
-    else if (this->is_zero_value() && other.is_zero_value())
-        are_equal = true;
-    else if (this->_is_negative != other._is_negative)
-        are_equal = false;
-    else if (this->_size != other._size)
-        are_equal = false;
-    else if (this->_size == 0)
-        are_equal = true;
-    else if (!this->_digits || !other._digits)
-        are_equal = false;
-    else
-    {
-        ft_size_t digit_index = 0;
-
-        are_equal = true;
-        while (digit_index < this->_size)
+        lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
+        if (lock_error != FT_ERR_SUCCESSS)
         {
-            if (this->_digits[digit_index] != other._digits[digit_index])
+            operation_error = lock_error;
+            are_equal = false;
+        }
+        else if (this->_error_code != 0 || other._error_code != 0)
+        {
+            if (this->_error_code != 0)
+                operation_error = this->_error_code;
+            else
+                operation_error = other._error_code;
+            are_equal = false;
+        }
+        else if (this->is_zero_value() && other.is_zero_value())
+            are_equal = true;
+        else if (this->_is_negative != other._is_negative)
+            are_equal = false;
+        else if (this->_size != other._size)
+            are_equal = false;
+        else if (this->_size == 0)
+            are_equal = true;
+        else if (!this->_digits || !other._digits)
+            are_equal = false;
+        else
+        {
+            ft_size_t digit_index = 0;
+
+            are_equal = true;
+            while (digit_index < this->_size)
             {
-                are_equal = false;
-                break;
+                if (this->_digits[digit_index] != other._digits[digit_index])
+                {
+                    are_equal = false;
+                    break;
+                }
+                digit_index++;
             }
-            digit_index++;
         }
     }
+    if (operation_error != FT_ERR_SUCCESSS)
+        error_scope.set_error(operation_error);
+    else
+        error_scope.set_error(FT_ERR_SUCCESSS);
     return (are_equal);
 }
 

@@ -86,6 +86,9 @@ class ft_big_number
         int         get_error() const noexcept;
         const char* get_error_str() const noexcept;
         void        reset_system_error() const noexcept;
+        static int  last_error() noexcept;
+        static unsigned int last_op_id() noexcept;
+        static int  error_for(unsigned int op_id) noexcept;
 
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex    *get_mutex_for_testing() noexcept;
