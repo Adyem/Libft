@@ -210,40 +210,55 @@ FT_TEST(test_big_number_errno_resets_arithmetic, "ft_big_number arithmetic clear
     modulus_number.assign("7");
 
     ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
+    ft_sys_errno = FT_SYS_ERR_INVALID_STATE;
     ft_big_number sum_number = left_number + right_number;
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, ft_errno);
+    FT_ASSERT_EQ(FT_SYS_ERR_SUCCESS, ft_sys_errno);
     FT_ASSERT_EQ(0, std::strcmp(sum_number.c_str(), "25"));
 
     ft_errno = FT_ERR_DIVIDE_BY_ZERO;
+    ft_sys_errno = FT_SYS_ERR_INVALID_STATE;
     ft_big_number difference_number = left_number - right_number;
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_errno);
+    FT_ASSERT_EQ(FT_SYS_ERR_SUCCESS, ft_sys_errno);
     FT_ASSERT_EQ(0, std::strcmp(difference_number.c_str(), "15"));
 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
+    ft_sys_errno = FT_SYS_ERR_INVALID_STATE;
     ft_big_number product_number = left_number * right_number;
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_errno);
+    FT_ASSERT_EQ(FT_SYS_ERR_SUCCESS, ft_sys_errno);
     FT_ASSERT_EQ(0, std::strcmp(product_number.c_str(), "100"));
 
     ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
+    ft_sys_errno = FT_SYS_ERR_INVALID_STATE;
     ft_big_number quotient_number = left_number / right_number;
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_MUTEX_ALREADY_LOCKED, ft_errno);
+    FT_ASSERT_EQ(FT_SYS_ERR_SUCCESS, ft_sys_errno);
     FT_ASSERT_EQ(0, std::strcmp(quotient_number.c_str(), "4"));
 
     ft_errno = FT_ERR_DIVIDE_BY_ZERO;
+    ft_sys_errno = FT_SYS_ERR_INVALID_STATE;
     ft_big_number remainder_number = left_number % right_number;
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_DIVIDE_BY_ZERO, ft_errno);
+    FT_ASSERT_EQ(FT_SYS_ERR_SUCCESS, ft_sys_errno);
     FT_ASSERT_EQ(0, std::strcmp(remainder_number.c_str(), "0"));
 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
+    ft_sys_errno = FT_SYS_ERR_INVALID_STATE;
     ft_big_number power_number = base_number.mod_pow(exponent_number, modulus_number);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_SYS_ERR_SUCCESS, ft_sys_errno);
     FT_ASSERT_EQ(0, std::strcmp(power_number.c_str(), "1"));
 
     ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
+    ft_sys_errno = FT_SYS_ERR_INVALID_STATE;
     ft_string base16_string = left_number.to_string_base(16);
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_SYS_ERR_SUCCESS, ft_sys_errno);
     FT_ASSERT_EQ(0, base16_string.get_error());
     ft_errno = 0;
+    ft_sys_errno = FT_SYS_ERR_SUCCESS;
     return (1);
 }
 
