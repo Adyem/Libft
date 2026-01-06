@@ -1137,6 +1137,7 @@ void ft_big_number::append_digit(char digit) noexcept
         int stored_error;
 
         stored_error = ft_big_number::last_operation_error();
+        this->set_error_unlocked(stored_error);
         guard.unlock();
         return ;
     }
@@ -1166,6 +1167,7 @@ void ft_big_number::append(const char* digits) noexcept
         int stored_error;
 
         stored_error = ft_big_number::last_operation_error();
+        this->set_error_unlocked(stored_error);
         guard.unlock();
         return ;
     }
@@ -1189,6 +1191,7 @@ void ft_big_number::append_unsigned(unsigned long value) noexcept
         int stored_error;
 
         stored_error = ft_big_number::last_operation_error();
+        this->set_error_unlocked(stored_error);
         guard.unlock();
         return ;
     }
@@ -1705,9 +1708,12 @@ bool ft_big_number::operator!=(const ft_big_number& other) const noexcept
 
 bool ft_big_number::operator<(const ft_big_number& other) const noexcept
 {
+    ft_big_number::error_scope error_scope;
+    int stored_errno;
     bool result;
     int operation_error;
 
+    stored_errno = ft_big_number::initialize_errno_keeper();
     operation_error = FT_SYS_ERR_SUCCESS;
     {
         ft_big_number_mutex_guard this_guard;
@@ -1741,6 +1747,15 @@ bool ft_big_number::operator<(const ft_big_number& other) const noexcept
                 result = (magnitude_comparison < 0);
         }
     }
+    if (operation_error != FT_SYS_ERR_SUCCESS)
+    {
+        this->set_error_unlocked(operation_error);
+        ft_big_number::update_errno_keeper(stored_errno, operation_error);
+        error_scope.set_error(operation_error);
+    }
+    else
+        this->set_error_unlocked(FT_ERR_SUCCESSS);
+    ft_big_number::finalize_errno_keeper(stored_errno);
     return (result);
 }
 
@@ -1767,9 +1782,12 @@ bool ft_big_number::operator>=(const ft_big_number& other) const noexcept
 
 bool ft_big_number::operator==(const ft_big_number& other) const noexcept
 {
+    ft_big_number::error_scope error_scope;
+    int stored_errno;
     bool are_equal;
     int operation_error;
 
+    stored_errno = ft_big_number::initialize_errno_keeper();
     operation_error = FT_SYS_ERR_SUCCESS;
     {
         ft_big_number_mutex_guard this_guard;
@@ -1813,6 +1831,15 @@ bool ft_big_number::operator==(const ft_big_number& other) const noexcept
             }
         }
     }
+    if (operation_error != FT_SYS_ERR_SUCCESS)
+    {
+        this->set_error_unlocked(operation_error);
+        ft_big_number::update_errno_keeper(stored_errno, operation_error);
+        error_scope.set_error(operation_error);
+    }
+    else
+        this->set_error_unlocked(FT_ERR_SUCCESSS);
+    ft_big_number::finalize_errno_keeper(stored_errno);
     return (are_equal);
 }
 
