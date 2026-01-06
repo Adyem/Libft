@@ -98,15 +98,15 @@ int ft_string::mutex_guard::get_error() const noexcept
     return (this->_error_code);
 }
 
-void ft_string::set_error_unlocked(int error_code) const noexcept
+void ft_string::push_error_unlocked(int error_code) const noexcept
 {
     ft_string::record_operation_error(error_code);
     return ;
 }
 
-void ft_string::set_error(int error_code) const noexcept
+void ft_string::push_error(int error_code) const noexcept
 {
-    this->set_error_unlocked(error_code);
+    this->push_error_unlocked(error_code);
     return ;
 }
 
@@ -275,19 +275,19 @@ void ft_string::resize_unlocked(size_t new_capacity) noexcept
 {
     if (new_capacity <= this->_capacity)
     {
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        this->push_error_unlocked(FT_ERR_SUCCESSS);
         return ;
     }
     char* new_data = static_cast<char*>(cma_realloc(this->_data, new_capacity + 1));
     if (!new_data)
     {
         this->set_system_error(FT_SYS_ERR_NO_MEMORY);
-        this->set_error_unlocked(FT_ERR_SYSTEM);
+        this->push_error_unlocked(FT_ERR_SYSTEM);
         return ;
     }
     this->_data = new_data;
     this->_capacity = new_capacity;
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->push_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -308,7 +308,7 @@ void ft_string::append_char_unlocked(char c) noexcept
     }
     this->_data[this->_length++] = c;
     this->_data[this->_length] = '\0';
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->push_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -319,7 +319,7 @@ void ft_string::append_unlocked(const char *string, size_t length) noexcept
 
     if (!string || length == 0)
     {
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        this->push_error_unlocked(FT_ERR_SUCCESSS);
         return ;
     }
     if (this->_length + length >= this->_capacity)
@@ -348,7 +348,7 @@ void ft_string::append_unlocked(const char *string, size_t length) noexcept
     }
     this->_length += length;
     this->_data[this->_length] = '\0';
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->push_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -357,7 +357,7 @@ void ft_string::clear_unlocked() noexcept
     this->_length = 0;
     if (this->_data)
         this->_data[0] = '\0';
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->push_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -371,7 +371,7 @@ void ft_string::ensure_empty_buffer_unlocked() noexcept
         if (this->_capacity == 0)
             this->_capacity = 1;
         this->_length = 0;
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        this->push_error_unlocked(FT_ERR_SUCCESSS);
         return ;
     }
     new_data = static_cast<char*>(cma_calloc(1, sizeof(char)));
@@ -384,7 +384,7 @@ void ft_string::ensure_empty_buffer_unlocked() noexcept
     this->_capacity = 1;
     this->_length = 0;
     this->_data[0] = '\0';
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->push_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -411,7 +411,7 @@ void ft_string::assign_unlocked(size_t count, char character) noexcept
     }
     this->_length = count;
     this->_data[this->_length] = '\0';
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->push_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -427,7 +427,7 @@ void ft_string::assign_unlocked(const char *string, size_t length) noexcept
     }
     if (!string)
     {
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        this->push_error_unlocked(FT_ERR_SUCCESSS);
         return ;
     }
     this->clear_unlocked();
@@ -447,7 +447,7 @@ void ft_string::erase_unlocked(std::size_t index, std::size_t count) noexcept
 {
     if (index >= this->_length)
     {
-        this->set_error_unlocked(FT_ERR_OUT_OF_RANGE);
+        this->push_error_unlocked(FT_ERR_OUT_OF_RANGE);
         return ;
     }
     if (index + count > this->_length)
@@ -459,7 +459,7 @@ void ft_string::erase_unlocked(std::size_t index, std::size_t count) noexcept
         this->_length -= count;
         this->_data[this->_length] = '\0';
     }
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->push_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -498,7 +498,7 @@ void ft_string::resize_length_unlocked(size_t new_length) noexcept
     if (!this->_data)
     {
         this->_length = 0;
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        this->push_error_unlocked(FT_ERR_SUCCESSS);
         return ;
     }
     if (new_length > this->_length)
@@ -514,7 +514,7 @@ void ft_string::resize_length_unlocked(size_t new_length) noexcept
     }
     this->_length = new_length;
     this->_data[this->_length] = '\0';
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->push_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -531,22 +531,22 @@ void ft_string::move_unlocked(ft_string &other) noexcept
     this->_capacity = 0;
     if (other_error_code != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(other_error_code);
+        this->push_error_unlocked(other_error_code);
         other._data = ft_nullptr;
         other._length = 0;
         other._capacity = 0;
-        other.set_error_unlocked(FT_ERR_SUCCESSS);
+        other.push_error_unlocked(FT_ERR_SUCCESSS);
         other.set_system_error_unlocked(FT_SYS_ERR_SUCCESS);
         return ;
     }
     this->_data = other._data;
     this->_length = other._length;
     this->_capacity = other._capacity;
-    this->set_error_unlocked(other_error_code);
+    this->push_error_unlocked(other_error_code);
     other._data = ft_nullptr;
     other._length = 0;
     other._capacity = 0;
-    other.set_error_unlocked(FT_ERR_SUCCESSS);
+    other.push_error_unlocked(FT_ERR_SUCCESSS);
     other.set_system_error_unlocked(FT_SYS_ERR_SUCCESS);
     return ;
 }
@@ -563,7 +563,7 @@ void ft_string::resize(size_t new_capacity) noexcept
         return ;
     }
     this->resize_unlocked(new_capacity);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->push_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -580,11 +580,11 @@ void ft_string::append(char c) noexcept
     }
     if (ft_string_current_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_string_current_error());
+        this->push_error_unlocked(ft_string_current_error());
         return ;
     }
     this->append_char_unlocked(c);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->push_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -604,7 +604,7 @@ void ft_string::append(const ft_string& string) noexcept
     }
     if (ft_string_current_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_string_current_error());
+        this->push_error_unlocked(ft_string_current_error());
         if (other_guard.owns_lock())
             other_guard.unlock();
         return ;
@@ -612,14 +612,14 @@ void ft_string::append(const ft_string& string) noexcept
     other_error = ft_string::last_operation_error();
     if (other_error != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(other_error);
+        this->push_error_unlocked(other_error);
         if (other_guard.owns_lock())
             other_guard.unlock();
         return ;
     }
     if (string._length == 0)
     {
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        this->push_error_unlocked(FT_ERR_SUCCESSS);
         if (other_guard.owns_lock())
             other_guard.unlock();
         return ;
@@ -645,10 +645,10 @@ void ft_string::append(const ft_string& string) noexcept
     ft_memcpy(this->_data + this->_length, string._data, string._length);
     this->_length = new_length;
     this->_data[this->_length] = '\0';
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->push_error_unlocked(FT_ERR_SUCCESSS);
     if (other_guard.owns_lock())
         other_guard.unlock();
-    this->set_error(FT_ERR_SUCCESSS);
+    this->push_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -666,17 +666,17 @@ void ft_string::append(const char *string) noexcept
     }
     if (ft_string_current_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_string_current_error());
+        this->push_error_unlocked(ft_string_current_error());
         return ;
     }
     if (!string)
     {
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        this->push_error_unlocked(FT_ERR_SUCCESSS);
         return ;
     }
     string_length = ft_strlen_size_t(string);
     this->append_unlocked(string, string_length);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->push_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -693,11 +693,11 @@ void ft_string::clear() noexcept
     }
     if (ft_string_current_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_string_current_error());
+        this->push_error_unlocked(ft_string_current_error());
         return ;
     }
     this->clear_unlocked();
-    this->set_error(FT_ERR_SUCCESSS);
+    this->push_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -715,7 +715,7 @@ const char* ft_string::at(size_t index) const noexcept
         return (ft_nullptr);
     }
     result = &this->_data[index];
-    this->set_error(FT_ERR_SUCCESSS);
+    this->push_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -732,7 +732,7 @@ const char* ft_string::c_str() const noexcept
         result = this->_data;
     else
         result = const_cast<char *>("");
-    this->set_error(FT_ERR_SUCCESSS);
+    this->push_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -749,7 +749,7 @@ char* ft_string::data() noexcept
         return (ft_nullptr);
     }
     result = this->_data;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->push_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -775,7 +775,7 @@ size_t ft_string::size() const noexcept
         return (0);
     }
     length = this->_length;
-    this->set_error(FT_ERR_SUCCESSS);
+    this->push_error(FT_ERR_SUCCESSS);
     return (length);
 }
 
@@ -833,7 +833,7 @@ void ft_string::move(ft_string& other) noexcept
     }
     if (ft_string_current_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_string_current_error());
+        this->push_error_unlocked(ft_string_current_error());
         if (other_guard.owns_lock())
             other_guard.unlock();
         return ;
@@ -841,7 +841,7 @@ void ft_string::move(ft_string& other) noexcept
     this->move_unlocked(other);
     if (other_guard.owns_lock())
         other_guard.unlock();
-    this->set_error(FT_ERR_SUCCESSS);
+    this->push_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -864,7 +864,7 @@ ft_string& ft_string::operator+=(const char* cstr) noexcept
     }
     if (ft_string_current_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_string_current_error());
+        this->push_error_unlocked(ft_string_current_error());
         return (*this);
     }
     if (cstr)
@@ -880,7 +880,7 @@ ft_string& ft_string::operator+=(const char* cstr) noexcept
             index++;
         }
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->push_error(FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -903,11 +903,11 @@ void ft_string::erase(std::size_t index, std::size_t count) noexcept
     }
     if (ft_string_current_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_string_current_error());
+        this->push_error_unlocked(ft_string_current_error());
         return ;
     }
     this->erase_unlocked(index, count);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->push_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -924,11 +924,11 @@ void ft_string::append(const char *string, size_t length) noexcept
     }
     if (ft_string_current_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_string_current_error());
+        this->push_error_unlocked(ft_string_current_error());
         return ;
     }
     this->append_unlocked(string, length);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->push_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -945,11 +945,11 @@ void ft_string::assign(size_t count, char character) noexcept
     }
     if (ft_string_current_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_string_current_error());
+        this->push_error_unlocked(ft_string_current_error());
         return ;
     }
     this->assign_unlocked(count, character);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->push_error(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -958,7 +958,7 @@ void ft_string::assign(const char *string, size_t length) noexcept
     ft_string::mutex_guard guard;
     int lock_error;
 
-    this->set_error(FT_ERR_SUCCESSS);
+    this->push_error(FT_ERR_SUCCESSS);
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -967,7 +967,7 @@ void ft_string::assign(const char *string, size_t length) noexcept
     }
     if (ft_string_current_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_string_current_error());
+        this->push_error_unlocked(ft_string_current_error());
         return ;
     }
     this->assign_unlocked(string, length);
@@ -979,7 +979,7 @@ void ft_string::resize_length(size_t new_length) noexcept
     ft_string::mutex_guard guard;
     int lock_error;
 
-    this->set_error(FT_ERR_SUCCESSS);
+    this->push_error(FT_ERR_SUCCESSS);
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
@@ -988,7 +988,7 @@ void ft_string::resize_length(size_t new_length) noexcept
     }
     if (ft_string_current_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_string_current_error());
+        this->push_error_unlocked(ft_string_current_error());
         return ;
     }
     this->resize_length_unlocked(new_length);
@@ -1015,16 +1015,16 @@ char ft_string::back() noexcept
     }
     if (ft_string_current_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_string_current_error());
+        this->push_error_unlocked(ft_string_current_error());
         return ('\0');
     }
     if (this->_length == 0)
     {
-        this->set_error_unlocked(FT_ERR_OUT_OF_RANGE);
+        this->push_error_unlocked(FT_ERR_OUT_OF_RANGE);
         return ('\0');
     }
     value = this->_data[this->_length - 1];
-    this->set_error_unlocked(FT_ERR_SUCCESSS);
+    this->push_error_unlocked(FT_ERR_SUCCESSS);
     return (value);
 }
 
@@ -1045,23 +1045,23 @@ size_t ft_string::find(const char *substring) const noexcept
     }
     if (ft_string_current_error() != FT_ERR_SUCCESSS)
     {
-        this->set_error_unlocked(ft_string_current_error());
+        this->push_error_unlocked(ft_string_current_error());
         return (ft_string::npos);
     }
     if (!substring)
     {
-        this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
+        this->push_error_unlocked(FT_ERR_INVALID_ARGUMENT);
         return (ft_string::npos);
     }
     substring_length = ft_strlen_size_t(substring);
     if (substring_length == 0)
     {
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        this->push_error_unlocked(FT_ERR_SUCCESSS);
         return (0);
     }
     if (substring_length > this->_length)
     {
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        this->push_error_unlocked(FT_ERR_SUCCESSS);
         return (ft_string::npos);
     }
     index = 0;
@@ -1079,7 +1079,7 @@ size_t ft_string::find(const char *substring) const noexcept
         else
             index++;
     }
-    this->set_error(FT_ERR_SUCCESSS);
+    this->push_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -1106,11 +1106,11 @@ size_t ft_string::find(const ft_string &substring) const noexcept
             other_guard.unlock();
         if (ft_string_current_error() != FT_ERR_SUCCESSS)
         {
-            this->set_error_unlocked(ft_string_current_error());
+            this->push_error_unlocked(ft_string_current_error());
         }
         else
         {
-            this->set_error_unlocked(other_error);
+            this->push_error_unlocked(other_error);
         }
         return (ft_string::npos);
     }
@@ -1118,14 +1118,14 @@ size_t ft_string::find(const ft_string &substring) const noexcept
     {
         if (other_guard.owns_lock())
             other_guard.unlock();
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        this->push_error_unlocked(FT_ERR_SUCCESSS);
         return (0);
     }
     if (substring._length > this->_length)
     {
         if (other_guard.owns_lock())
             other_guard.unlock();
-        this->set_error_unlocked(FT_ERR_SUCCESSS);
+        this->push_error_unlocked(FT_ERR_SUCCESSS);
         return (ft_string::npos);
     }
     result = ft_string::npos;
@@ -1145,7 +1145,7 @@ size_t ft_string::find(const ft_string &substring) const noexcept
     }
     if (other_guard.owns_lock())
         other_guard.unlock();
-    this->set_error(FT_ERR_SUCCESSS);
+    this->push_error(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -1165,12 +1165,12 @@ ft_string ft_string::substr(size_t index, size_t count) const noexcept
     }
     if (ft_string_current_error() != FT_ERR_SUCCESSS)
     {
-        substring.set_error_unlocked(ft_string_current_error());
+        substring.push_error_unlocked(ft_string_current_error());
         return (substring);
     }
     if (index > this->_length)
     {
-        substring.set_error_unlocked(FT_ERR_OUT_OF_RANGE);
+        substring.push_error_unlocked(FT_ERR_OUT_OF_RANGE);
         return (substring);
     }
     available_length = this->_length - index;
@@ -1179,7 +1179,7 @@ ft_string ft_string::substr(size_t index, size_t count) const noexcept
         copy_length = available_length;
     if (copy_length > 0)
         substring.assign(this->_data + index, copy_length);
-    this->set_error(FT_ERR_SUCCESSS);
+    this->push_error(FT_ERR_SUCCESSS);
     return (substring);
 }
 
