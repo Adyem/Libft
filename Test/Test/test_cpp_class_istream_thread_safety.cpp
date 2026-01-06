@@ -121,7 +121,7 @@ FT_TEST(test_ft_istringstream_concurrent_reads,
         repeated.append(pattern);
         repeat_index++;
     }
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, repeated.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::last_operation_error());
 
     ft_istringstream stream(repeated);
     std::atomic<bool> start_flag(false);
@@ -192,4 +192,3 @@ FT_TEST(test_ft_istringstream_concurrent_reads,
     FT_ASSERT_EQ(FT_ERR_SUCCESSS, stream.get_error());
     return (1);
 }
-
