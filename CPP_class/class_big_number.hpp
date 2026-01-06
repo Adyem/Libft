@@ -12,13 +12,34 @@ typedef ft_unique_lock<pt_recursive_mutex>    ft_big_number_mutex_guard;
 class ft_big_number
 {
     private:
+        struct error_frame
+        {
+            int             code;
+            unsigned int    op_id;
+        };
+
+        struct error_stack
+        {
+            error_frame     frames[32];
+            unsigned int    depth;
+            unsigned int    next_op_id;
+            int             last_error;
+            unsigned int    last_op_id;
+        };
+
+        struct operation_error_stack
+        {
+            int         errors[20];
+            ft_size_t   count;
+        };
+
         char*           _digits;
         ft_size_t       _size;
         ft_size_t       _capacity;
         bool            _is_negative;
-        mutable int     _error_code;
-        mutable int     _system_error_code;
         mutable pt_recursive_mutex    _mutex;
+        static thread_local error_stack _error_stack;
+        static thread_local operation_error_stack _operation_errors;
 
         void    reserve(ft_size_t new_capacity) noexcept;
         void    shrink_capacity() noexcept;
@@ -36,6 +57,7 @@ class ft_big_number
         static void finalize_errno_keeper(int stored_errno) noexcept;
         static void unlock_guard_preserve_errno(ft_big_number_mutex_guard &guard,
                 int &stored_errno) noexcept;
+        static void record_operation_error(int error_code) noexcept;
         void    clear_unlocked() noexcept;
         void    append_digit_unlocked(char digit) noexcept;
         void    append_unlocked(const char* digits) noexcept;
@@ -83,12 +105,17 @@ class ft_big_number
         bool        is_positive() const noexcept;
         ft_string   to_string_base(int base) noexcept;
         ft_big_number mod_pow(const ft_big_number& exponent, const ft_big_number& modulus) const noexcept;
-        int         get_error() const noexcept;
-        const char* get_error_str() const noexcept;
+        static const char *last_operation_error_str() noexcept;
+        static const char *operation_error_str_at(ft_size_t index) noexcept;
         void        reset_system_error() const noexcept;
         static int  last_error() noexcept;
         static unsigned int last_op_id() noexcept;
         static int  error_for(unsigned int op_id) noexcept;
+        static int  last_operation_error() noexcept;
+        static int  operation_error_at(ft_size_t index) noexcept;
+        static void pop_operation_errors() noexcept;
+        static int  pop_oldest_operation_error() noexcept;
+        static int  operation_error_index() noexcept;
 
 #ifdef LIBFT_TEST_BUILD
         pt_recursive_mutex    *get_mutex_for_testing() noexcept;

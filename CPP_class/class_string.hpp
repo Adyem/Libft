@@ -9,12 +9,17 @@
 class ft_string
 {
     private:
+        struct operation_error_stack
+        {
+            int         errors[20];
+            size_t      count;
+        };
+
         char*            _data;
         std::size_t      _length;
         std::size_t      _capacity;
-        mutable int       _error_code;
-        mutable int       _system_error_code;
         mutable pt_recursive_mutex  _mutex;
+        static thread_local operation_error_stack _operation_errors;
 
         class mutex_guard
         {
@@ -58,6 +63,7 @@ class ft_string
         void    move_unlocked(ft_string &other) noexcept;
         void    set_system_error_unlocked(int error_code) const noexcept;
         void    set_system_error(int error_code) const noexcept;
+        static void record_operation_error(int error_code) noexcept;
 
     public:
         ft_string() noexcept;
@@ -94,9 +100,14 @@ class ft_string
         char*       print() noexcept;
         size_t      size() const noexcept;
         bool        empty() const noexcept;
-        int         get_error() const noexcept;
-        const char    *get_error_str() const noexcept;
+        static const char *last_operation_error_str() noexcept;
+        static const char *operation_error_str_at(size_t index) noexcept;
         void        reset_system_error() const noexcept;
+        static int  last_operation_error() noexcept;
+        static int  operation_error_at(size_t index) noexcept;
+        static void pop_operation_errors() noexcept;
+        static int  pop_oldest_operation_error() noexcept;
+        static int  operation_error_index() noexcept;
         void        move(ft_string& other) noexcept;
         void        erase(std::size_t index, std::size_t count) noexcept;
         void        push_back(char character) noexcept;

@@ -68,36 +68,28 @@ FT_TEST(test_ft_string_error_state_copy_move_reset_errno,
     ft_string copy_string(error_string);
     ft_string assigned_string;
 
-    ft_errno = FT_ERR_INVALID_OPERATION;
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, error_string.get_error());
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, copy_string.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
-    ft_errno = FT_ERR_SYSTEM;
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
     assigned_string = error_string;
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, assigned_string.get_error());
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, error_string.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
 
     ft_string move_constructor_source(FT_ERR_INVALID_ARGUMENT);
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, move_constructor_source.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_string::last_operation_error());
 
-    ft_errno = FT_ERR_INVALID_STATE;
     ft_string moved_string(ft_move(move_constructor_source));
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, moved_string.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, move_constructor_source.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::last_operation_error());
 
     ft_string move_assignment_source(FT_ERR_INVALID_ARGUMENT);
     ft_string move_assigned_string;
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, move_assignment_source.get_error());
-    ft_errno = FT_ERR_THREAD_BUSY;
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_string::last_operation_error());
     move_assigned_string = ft_move(move_assignment_source);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, move_assigned_string.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, move_assignment_source.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::last_operation_error());
     cma_set_alloc_limit(0);
     return (1);
 }
@@ -110,42 +102,72 @@ FT_TEST(test_ft_big_number_error_state_copy_move_reset_errno,
     ft_big_number move_assigned_number;
 
     error_number.append_digit('X');
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_number.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::last_operation_error());
 
-    ft_errno = FT_ERR_NETWORK_CONNECT_FAILED;
     ft_big_number copy_number(error_number);
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, copy_number.get_error());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_number.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::last_operation_error());
 
-    ft_errno = FT_ERR_MUTEX_ALREADY_LOCKED;
     assigned_number = error_number;
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, assigned_number.get_error());
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, error_number.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::last_operation_error());
 
     ft_big_number move_constructor_source;
 
     move_constructor_source.append_digit('X');
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, move_constructor_source.get_error());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::last_operation_error());
 
-    ft_errno = FT_ERR_SYSTEM;
     ft_big_number moved_number(std::move(move_constructor_source));
 
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, moved_number.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, move_constructor_source.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_big_number::last_operation_error());
 
     ft_big_number move_assignment_source;
 
     move_assignment_source.append_digit('X');
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, move_assignment_source.get_error());
-    ft_errno = FT_ERR_CRYPTO_INVALID_PADDING;
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::last_operation_error());
     move_assigned_number = std::move(move_assignment_source);
-    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, move_assigned_number.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, move_assignment_source.get_error());
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_big_number::last_operation_error());
+    return (1);
+}
+
+FT_TEST(test_ft_string_operation_error_stack,
+        "ft_string tracks recent operation errors in stack order")
+{
+    ft_string::pop_operation_errors();
+    ft_string string_value("abc");
+
+    ft_string::pop_operation_errors();
+    string_value.erase(5, 1);
+    string_value.append('z');
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::operation_error_at(1));
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_string::operation_error_at(2));
+    FT_ASSERT_EQ(2, ft_string::operation_error_index());
+    FT_ASSERT_EQ(FT_ERR_OUT_OF_RANGE, ft_string::pop_oldest_operation_error());
+    ft_string::pop_operation_errors();
+    FT_ASSERT_EQ(0, ft_string::operation_error_index());
+    return (1);
+}
+
+FT_TEST(test_ft_big_number_operation_error_stack,
+        "ft_big_number tracks recent operation errors in stack order")
+{
+    ft_big_number::pop_operation_errors();
+    ft_big_number number;
+
+    ft_big_number::pop_operation_errors();
+    number.append_digit('X');
+    number.append_digit('1');
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_big_number::last_operation_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_big_number::operation_error_at(1));
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::operation_error_at(2));
+    FT_ASSERT_EQ(2, ft_big_number::operation_error_index());
+    FT_ASSERT_EQ(FT_ERR_INVALID_ARGUMENT, ft_big_number::pop_oldest_operation_error());
+    ft_big_number::pop_operation_errors();
+    FT_ASSERT_EQ(0, ft_big_number::operation_error_index());
     return (1);
 }
 
