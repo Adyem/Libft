@@ -9,6 +9,7 @@ ft_string::ft_string() noexcept
     : _data(ft_nullptr)
     , _length(0)
     , _capacity(0)
+    , _error_code(FT_ERR_SUCCESSS)
     , _mutex()
 {
     this->push_error_unlocked(FT_ERR_SUCCESSS);
@@ -20,6 +21,7 @@ ft_string::ft_string(const char* init_str) noexcept
     : _data(ft_nullptr)
     , _length(0)
     , _capacity(0)
+    , _error_code(FT_ERR_SUCCESSS)
     , _mutex()
 {
     this->push_error_unlocked(FT_ERR_SUCCESSS);
@@ -33,6 +35,7 @@ ft_string::ft_string(size_t count, char character) noexcept
     : _data(ft_nullptr)
     , _length(0)
     , _capacity(0)
+    , _error_code(FT_ERR_SUCCESSS)
     , _mutex()
 {
     this->push_error_unlocked(FT_ERR_SUCCESSS);
@@ -45,6 +48,7 @@ ft_string::ft_string(const ft_string& other) noexcept
     : _data(ft_nullptr)
     , _length(0)
     , _capacity(0)
+    , _error_code(FT_ERR_SUCCESSS)
     , _mutex()
 {
     ft_string::mutex_guard other_guard;
@@ -91,6 +95,7 @@ ft_string::ft_string(ft_string&& other) noexcept
     : _data(ft_nullptr)
     , _length(0)
     , _capacity(0)
+    , _error_code(FT_ERR_SUCCESSS)
     , _mutex()
 {
     ft_string::mutex_guard other_guard;
@@ -272,6 +277,7 @@ ft_string::ft_string(int error_code) noexcept
     : _data(ft_nullptr)
     , _length(0)
     , _capacity(0)
+    , _error_code(FT_ERR_SUCCESSS)
     , _mutex()
 {
     this->push_error_unlocked(error_code);

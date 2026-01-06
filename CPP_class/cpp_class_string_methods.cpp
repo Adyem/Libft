@@ -101,6 +101,7 @@ int ft_string::mutex_guard::get_error() const noexcept
 void ft_string::push_error_unlocked(int error_code) const noexcept
 {
     ft_string::record_operation_error(error_code);
+    this->set_error_unlocked(error_code);
     return ;
 }
 
@@ -112,14 +113,26 @@ void ft_string::push_error(int error_code) const noexcept
 
 void ft_string::set_system_error_unlocked(int error_code) const noexcept
 {
-    if (error_code != FT_SYS_ERR_SUCCESS)
-        ft_string::record_operation_error(error_code);
+    ft_sys_errno = error_code;
     return ;
 }
 
 void ft_string::set_system_error(int error_code) const noexcept
 {
     this->set_system_error_unlocked(error_code);
+    return ;
+}
+
+void ft_string::set_error_unlocked(int error_code) const noexcept
+{
+    this->_error_code = error_code;
+    ft_errno = error_code;
+    return ;
+}
+
+void ft_string::set_error(int error_code) const noexcept
+{
+    this->set_error_unlocked(error_code);
     return ;
 }
 
@@ -782,6 +795,40 @@ size_t ft_string::size() const noexcept
 bool ft_string::empty() const noexcept
 {
     return (this->size() == 0);
+}
+
+int ft_string::get_error() const noexcept
+{
+    ft_string::mutex_guard guard;
+    int lock_error;
+    int error_value;
+
+    lock_error = this->lock_self(guard);
+    if (lock_error != FT_ERR_SUCCESSS)
+    {
+        this->set_error(lock_error);
+        return (lock_error);
+    }
+    error_value = this->_error_code;
+    ft_errno = error_value;
+    return (error_value);
+}
+
+const char *ft_string::get_error_str() const noexcept
+{
+    ft_string::mutex_guard guard;
+    int lock_error;
+    const char *error_string;
+
+    lock_error = this->lock_self(guard);
+    if (lock_error != FT_ERR_SUCCESSS)
+    {
+        this->set_error(lock_error);
+        return (ft_strerror(lock_error));
+    }
+    error_string = ft_strerror(this->_error_code);
+    ft_errno = this->_error_code;
+    return (error_string);
 }
 
 const char* ft_string::last_operation_error_str() noexcept

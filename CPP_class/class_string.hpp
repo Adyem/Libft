@@ -18,6 +18,7 @@ class ft_string
         char*            _data;
         std::size_t      _length;
         std::size_t      _capacity;
+        mutable int      _error_code;
         mutable pt_recursive_mutex  _mutex;
         static thread_local operation_error_stack _operation_errors;
 
@@ -44,6 +45,8 @@ class ft_string
         };
 
         void    resize(size_t new_capacity) noexcept;
+        void    set_error_unlocked(int error_code) const noexcept;
+        void    set_error(int error_code) const noexcept;
         void    push_error_unlocked(int error_code) const noexcept;
         void    push_error(int error_code) const noexcept;
         int     lock_self(mutex_guard &guard) const noexcept;
@@ -100,6 +103,8 @@ class ft_string
         char*       print() noexcept;
         size_t      size() const noexcept;
         bool        empty() const noexcept;
+        int         get_error() const noexcept;
+        const char *get_error_str() const noexcept;
         static const char *last_operation_error_str() noexcept;
         static const char *operation_error_str_at(size_t index) noexcept;
         void        reset_system_error() const noexcept;
