@@ -150,7 +150,7 @@ FT_TEST(test_json_dom_bridge_round_trip, "json dom bridge round trips document d
     enabled_item = source_document.create_item("enabled", "true");
     FT_ASSERT(enabled_item != ft_nullptr);
     big_number_value.assign("12345678901234567890");
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, big_number_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_big_number::last_operation_error());
     big_number_item = source_document.create_item("count", big_number_value);
     FT_ASSERT(big_number_item != ft_nullptr);
     source_document.append_group(settings_group);

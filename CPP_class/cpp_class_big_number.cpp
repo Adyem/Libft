@@ -6,7 +6,6 @@
 #include "../Errno/errno_internal.hpp"
 #include "../Template/move.hpp"
 #include "../PThread/pthread.hpp"
-#include "../PThread/pthread_errno_guard.hpp"
 #include <limits>
 
 struct ft_big_number_digit_entry
@@ -44,22 +43,8 @@ static const ft_big_number_digit_entry g_big_number_digit_to_value_table[] =
 
 static const char g_big_number_value_to_digit_table[] = "0123456789ABCDEF";
 
-struct ft_big_number_error_frame
-{
-    int             code;
-    unsigned int    op_id;
-};
-
-struct ft_big_number_error_stack
-{
-    ft_big_number_error_frame   frames[32];
-    unsigned int                depth;
-    unsigned int                next_op_id;
-    int                         last_error;
-    unsigned int                last_op_id;
-};
-
-static thread_local ft_big_number_error_stack g_big_number_error_stack = {{}, 0, 1, FT_ERR_SUCCESSS, 0};
+thread_local ft_big_number::error_stack ft_big_number::_error_stack = {{}, 0, 1, FT_ERR_SUCCESSS, 0};
+thread_local ft_big_number::operation_error_stack ft_big_number::_operation_errors = {{}, 0};
 
 class ft_big_number_error_scope
 {
@@ -80,18 +65,18 @@ ft_big_number_error_scope::ft_big_number_error_scope() noexcept
     , _op_id(0)
     , _active(false)
 {
-    if (g_big_number_error_stack.depth >= 32)
+    if (ft_big_number::_error_stack.depth >= 32)
     {
-        this->_op_id = g_big_number_error_stack.next_op_id;
-        g_big_number_error_stack.next_op_id++;
+        this->_op_id = ft_big_number::_error_stack.next_op_id;
+        ft_big_number::_error_stack.next_op_id++;
         return ;
     }
-    this->_index = g_big_number_error_stack.depth;
-    g_big_number_error_stack.depth++;
-    this->_op_id = g_big_number_error_stack.next_op_id;
-    g_big_number_error_stack.next_op_id++;
-    g_big_number_error_stack.frames[this->_index].code = FT_ERR_SUCCESSS;
-    g_big_number_error_stack.frames[this->_index].op_id = this->_op_id;
+    this->_index = ft_big_number::_error_stack.depth;
+    ft_big_number::_error_stack.depth++;
+    this->_op_id = ft_big_number::_error_stack.next_op_id;
+    ft_big_number::_error_stack.next_op_id++;
+    ft_big_number::_error_stack.frames[this->_index].code = FT_ERR_SUCCESSS;
+    ft_big_number::_error_stack.frames[this->_index].op_id = this->_op_id;
     this->_active = true;
     return ;
 }
@@ -100,11 +85,11 @@ ft_big_number_error_scope::~ft_big_number_error_scope() noexcept
 {
     if (!this->_active)
         return ;
-    if (g_big_number_error_stack.depth == 0)
+    if (ft_big_number::_error_stack.depth == 0)
         return ;
-    g_big_number_error_stack.last_error = g_big_number_error_stack.frames[this->_index].code;
-    g_big_number_error_stack.last_op_id = g_big_number_error_stack.frames[this->_index].op_id;
-    g_big_number_error_stack.depth--;
+    ft_big_number::_error_stack.last_error = ft_big_number::_error_stack.frames[this->_index].code;
+    ft_big_number::_error_stack.last_op_id = ft_big_number::_error_stack.frames[this->_index].op_id;
+    ft_big_number::_error_stack.depth--;
     return ;
 }
 
@@ -112,7 +97,7 @@ void ft_big_number_error_scope::set_error(int error_code) noexcept
 {
     if (!this->_active)
         return ;
-    g_big_number_error_stack.frames[this->_index].code = error_code;
+    ft_big_number::_error_stack.frames[this->_index].code = error_code;
     return ;
 }
 
@@ -143,11 +128,7 @@ static char ft_big_number_digit_symbol(int value) noexcept
 
 int ft_big_number::initialize_errno_keeper() noexcept
 {
-    int previous_errno;
-
-    previous_errno = ft_sys_errno;
-    ft_set_sys_errno_locked(FT_SYS_ERR_SUCCESS);
-    return (previous_errno);
+    return (FT_SYS_ERR_SUCCESS);
 }
 
 void ft_big_number::update_errno_keeper(int &stored_errno, int new_value) noexcept
@@ -159,40 +140,103 @@ void ft_big_number::update_errno_keeper(int &stored_errno, int new_value) noexce
 
 void ft_big_number::finalize_errno_keeper(int stored_errno) noexcept
 {
-    ft_set_sys_errno_locked(stored_errno);
+    (void)stored_errno;
     return ;
 }
 
 int ft_big_number::last_error() noexcept
 {
-    if (g_big_number_error_stack.depth == 0)
-        return (g_big_number_error_stack.last_error);
-    return (g_big_number_error_stack.frames[g_big_number_error_stack.depth - 1].code);
+    if (ft_big_number::_error_stack.depth == 0)
+        return (ft_big_number::_error_stack.last_error);
+    return (ft_big_number::_error_stack.frames[ft_big_number::_error_stack.depth - 1].code);
 }
 
 unsigned int ft_big_number::last_op_id() noexcept
 {
-    if (g_big_number_error_stack.depth == 0)
-        return (g_big_number_error_stack.last_op_id);
-    return (g_big_number_error_stack.frames[g_big_number_error_stack.depth - 1].op_id);
+    if (ft_big_number::_error_stack.depth == 0)
+        return (ft_big_number::_error_stack.last_op_id);
+    return (ft_big_number::_error_stack.frames[ft_big_number::_error_stack.depth - 1].op_id);
 }
 
 int ft_big_number::error_for(unsigned int op_id) noexcept
 {
     unsigned int index;
 
-    if (g_big_number_error_stack.depth == 0)
+    if (ft_big_number::_error_stack.depth == 0)
         return (FT_ERR_SUCCESSS);
-    index = g_big_number_error_stack.depth;
+    index = ft_big_number::_error_stack.depth;
     while (index > 0)
     {
         index--;
-        if (g_big_number_error_stack.frames[index].op_id == op_id)
-            return (g_big_number_error_stack.frames[index].code);
+        if (ft_big_number::_error_stack.frames[index].op_id == op_id)
+            return (ft_big_number::_error_stack.frames[index].code);
     }
-    if (g_big_number_error_stack.last_op_id == op_id)
-        return (g_big_number_error_stack.last_error);
+    if (ft_big_number::_error_stack.last_op_id == op_id)
+        return (ft_big_number::_error_stack.last_error);
     return (FT_ERR_SUCCESSS);
+}
+
+void ft_big_number::record_operation_error(int error_code) noexcept
+{
+    ft_size_t index;
+
+    if (ft_big_number::_operation_errors.count < 20)
+        ft_big_number::_operation_errors.count++;
+    index = ft_big_number::_operation_errors.count;
+    while (index > 0)
+    {
+        ft_big_number::_operation_errors.errors[index] =
+            ft_big_number::_operation_errors.errors[index - 1];
+        index--;
+    }
+    ft_big_number::_operation_errors.errors[0] = error_code;
+    return ;
+}
+
+int ft_big_number::last_operation_error() noexcept
+{
+    if (ft_big_number::_operation_errors.count == 0)
+        return (FT_ERR_SUCCESSS);
+    return (ft_big_number::_operation_errors.errors[0]);
+}
+
+int ft_big_number::operation_error_at(ft_size_t index) noexcept
+{
+    if (index == 0 || index > ft_big_number::_operation_errors.count)
+        return (FT_ERR_SUCCESSS);
+    return (ft_big_number::_operation_errors.errors[index - 1]);
+}
+
+void ft_big_number::pop_operation_errors() noexcept
+{
+    ft_big_number::_operation_errors.count = 0;
+    return ;
+}
+
+int ft_big_number::pop_oldest_operation_error() noexcept
+{
+    int popped_error;
+
+    if (ft_big_number::_operation_errors.count == 0)
+        return (FT_ERR_SUCCESSS);
+    popped_error = ft_big_number::_operation_errors
+        .errors[ft_big_number::_operation_errors.count - 1];
+    ft_big_number::_operation_errors.count--;
+    return (popped_error);
+}
+
+int ft_big_number::operation_error_index() noexcept
+{
+    ft_size_t index;
+
+    index = 0;
+    while (index < ft_big_number::_operation_errors.count)
+    {
+        if (ft_big_number::_operation_errors.errors[index] != FT_ERR_SUCCESSS)
+            return (static_cast<int>(index + 1));
+        index++;
+    }
+    return (0);
 }
 
 void ft_big_number::unlock_guard_preserve_errno(ft_big_number_mutex_guard &guard,
@@ -224,8 +268,7 @@ void ft_big_number::sleep_backoff() noexcept
 
 void ft_big_number::set_error_unlocked(int error_code) const noexcept
 {
-    this->_error_code = error_code;
-    ft_set_errno_locked(error_code);
+    ft_big_number::record_operation_error(error_code);
     return ;
 }
 
@@ -238,8 +281,7 @@ void ft_big_number::set_error(int error_code) const noexcept
 void ft_big_number::set_system_error_unlocked(int error_code) const noexcept
 {
     if (error_code != FT_SYS_ERR_SUCCESS)
-        this->_system_error_code = error_code;
-    ft_set_sys_errno_locked(error_code);
+        ft_big_number::record_operation_error(error_code);
     return ;
 }
 
@@ -362,13 +404,13 @@ void ft_big_number::append_digit_unlocked(char digit) noexcept
         if (new_capacity < required_capacity)
             new_capacity = required_capacity;
         this->reserve(new_capacity);
-        if (this->_error_code)
+        if (ft_big_number::last_operation_error())
             return ;
     }
     if (!this->_digits)
     {
         this->reserve(required_capacity);
-        if (this->_error_code)
+        if (ft_big_number::last_operation_error())
             return ;
     }
     if (this->_size == 1 && this->_digits[0] == '0')
@@ -393,7 +435,7 @@ void ft_big_number::append_unlocked(const char* digits) noexcept
     while (digits[digit_index] != '\0')
     {
         this->append_digit_unlocked(digits[digit_index]);
-        if (this->_error_code != FT_ERR_SUCCESSS)
+        if (ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
             return ;
         digit_index++;
     }
@@ -424,7 +466,7 @@ void ft_big_number::append_unsigned_unlocked(unsigned long value) noexcept
     {
         buffer_index--;
         this->append_digit_unlocked(digit_buffer[buffer_index]);
-        if (this->_error_code != FT_ERR_SUCCESSS)
+        if (ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
             return ;
     }
     return ;
@@ -470,10 +512,9 @@ ft_big_number::ft_big_number() noexcept
     , _size(0)
     , _capacity(0)
     , _is_negative(false)
-    , _error_code(FT_ERR_SUCCESSS)
-    , _system_error_code(FT_SYS_ERR_SUCCESS)
     , _mutex()
 {
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -482,8 +523,6 @@ ft_big_number::ft_big_number(const ft_big_number& other) noexcept
     , _size(0)
     , _capacity(0)
     , _is_negative(false)
-    , _error_code(FT_ERR_SUCCESSS)
-    , _system_error_code(FT_SYS_ERR_SUCCESS)
     , _mutex()
 {
     ft_big_number_mutex_guard other_guard;
@@ -498,7 +537,6 @@ ft_big_number::ft_big_number(const ft_big_number& other) noexcept
     this->_size = other._size;
     this->_capacity = other._capacity;
     this->_is_negative = other._is_negative;
-    this->_error_code = other._error_code;
     if (other._digits && other._capacity > 0)
     {
         this->_digits = static_cast<char*>(cma_calloc(other._capacity, sizeof(char)));
@@ -512,7 +550,7 @@ ft_big_number::ft_big_number(const ft_big_number& other) noexcept
         }
         ft_memcpy(this->_digits, other._digits, other._size + 1);
     }
-    this->_system_error_code = other._system_error_code;
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -521,8 +559,6 @@ ft_big_number::ft_big_number(ft_big_number&& other) noexcept
     , _size(0)
     , _capacity(0)
     , _is_negative(false)
-    , _error_code(FT_ERR_SUCCESSS)
-    , _system_error_code(FT_SYS_ERR_SUCCESS)
     , _mutex()
 {
     ft_big_number_mutex_guard other_guard;
@@ -538,14 +574,13 @@ ft_big_number::ft_big_number(ft_big_number&& other) noexcept
     this->_size = other._size;
     this->_capacity = other._capacity;
     this->_is_negative = other._is_negative;
-    this->_error_code = other._error_code;
-    this->_system_error_code = other._system_error_code;
     other._digits = ft_nullptr;
     other._size = 0;
     other._capacity = 0;
     other._is_negative = false;
-    other._error_code = FT_ERR_SUCCESSS;
-    other._system_error_code = FT_SYS_ERR_SUCCESS;
+    other.set_error(FT_ERR_SUCCESSS);
+    other.set_system_error(FT_SYS_ERR_SUCCESS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     return ;
 }
 
@@ -586,8 +621,7 @@ ft_big_number& ft_big_number::operator=(const ft_big_number& other) noexcept
     this->_size = other._size;
     this->_capacity = other._capacity;
     this->_is_negative = other._is_negative;
-    this->_error_code = other._error_code;
-    this->_system_error_code = other._system_error_code;
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -610,15 +644,13 @@ ft_big_number& ft_big_number::operator=(ft_big_number&& other) noexcept
     this->_size = other._size;
     this->_capacity = other._capacity;
     this->_is_negative = other._is_negative;
-    this->_error_code = other._error_code;
-    this->_system_error_code = other._system_error_code;
     other._digits = ft_nullptr;
     other._size = 0;
     other._capacity = 0;
     other._is_negative = false;
     other.set_error(FT_ERR_SUCCESSS);
-    other._system_error_code = FT_SYS_ERR_SUCCESS;
     other.set_system_error(FT_SYS_ERR_SUCCESS);
+    this->set_error_unlocked(FT_ERR_SUCCESSS);
     return (*this);
 }
 
@@ -672,7 +704,7 @@ ft_big_number ft_big_number::add_magnitude(const ft_big_number& other) const noe
         if (other._size > 0 && other._digits)
         {
             result.reserve(other._size + 1);
-            if (result._error_code != FT_ERR_SUCCESSS)
+            if (ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
                 return (result);
             ft_memcpy(result._digits, other._digits, other._size + 1);
             result._size = other._size;
@@ -693,7 +725,7 @@ ft_big_number ft_big_number::add_magnitude(const ft_big_number& other) const noe
         if (this->_size > 0 && this->_digits)
         {
             result.reserve(this->_size + 1);
-            if (result._error_code != FT_ERR_SUCCESSS)
+            if (ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
                 return (result);
             ft_memcpy(result._digits, this->_digits, this->_size + 1);
             result._size = this->_size;
@@ -716,7 +748,7 @@ ft_big_number ft_big_number::add_magnitude(const ft_big_number& other) const noe
         max_length = right_length;
     max_length++;
     result.reserve(max_length + 1);
-    if (result._error_code != 0)
+    if (ft_big_number::last_operation_error() != 0)
         return (result);
     result._size = max_length;
     result._digits[max_length] = '\0';
@@ -775,7 +807,7 @@ ft_big_number ft_big_number::subtract_magnitude(const ft_big_number& other) cons
         if (this->_size > 0 && this->_digits)
         {
             result.reserve(this->_size + 1);
-            if (result._error_code != FT_ERR_SUCCESSS)
+            if (ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
                 return (result);
             ft_memcpy(result._digits, this->_digits, this->_size + 1);
             result._size = this->_size;
@@ -792,7 +824,7 @@ ft_big_number ft_big_number::subtract_magnitude(const ft_big_number& other) cons
         return (result);
     }
     result.reserve(this->_size + 1);
-    if (result._error_code != 0)
+    if (ft_big_number::last_operation_error() != 0)
         return (result);
     result._size = this->_size;
     result._digits[this->_size] = '\0';
@@ -895,7 +927,6 @@ void ft_big_number::assign(const char* number) noexcept
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_set_errno_locked(FT_ERR_SUCCESSS);
         return ;
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
@@ -904,7 +935,6 @@ void ft_big_number::assign(const char* number) noexcept
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
         guard.unlock();
-        ft_set_errno_locked(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     parsed_negative = false;
@@ -922,7 +952,6 @@ void ft_big_number::assign(const char* number) noexcept
         {
             this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
             guard.unlock();
-            ft_set_errno_locked(FT_ERR_INVALID_ARGUMENT);
             return ;
         }
         length++;
@@ -934,7 +963,6 @@ void ft_big_number::assign(const char* number) noexcept
         {
             this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
             guard.unlock();
-            ft_set_errno_locked(FT_ERR_INVALID_ARGUMENT);
             return ;
         }
         this->clear_unlocked();
@@ -943,11 +971,10 @@ void ft_big_number::assign(const char* number) noexcept
     if (length + 1 > this->_capacity || !this->_digits)
     {
         this->reserve(length + 1);
-        if (this->_system_error_code != FT_SYS_ERR_SUCCESS || !this->_digits)
+        if (!this->_digits)
         {
             this->set_error_unlocked(FT_ERR_NO_MEMORY);
             guard.unlock();
-            ft_set_errno_locked(FT_ERR_NO_MEMORY);
             return ;
         }
     }
@@ -958,7 +985,7 @@ void ft_big_number::assign(const char* number) noexcept
     this->trim_leading_zeros_unlocked();
     if (this->is_zero_value())
         this->_is_negative = false;
-    if (this->_error_code == FT_ERR_SUCCESSS)
+    if (ft_big_number::last_operation_error() == FT_ERR_SUCCESSS)
         this->shrink_capacity();
     return ;
 }
@@ -975,14 +1002,12 @@ void ft_big_number::assign_base(const char* digits, int base) noexcept
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_set_errno_locked(FT_ERR_SUCCESSS);
         return ;
     }
     if (!digits)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
         guard.unlock();
-        ft_set_errno_locked(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->set_error_unlocked(FT_ERR_SUCCESSS);
@@ -1005,8 +1030,8 @@ void ft_big_number::assign_base(const char* digits, int base) noexcept
             ft_big_number base_number;
 
             base_number.append_unsigned(static_cast<unsigned long>(base));
-            if (base_number.get_error() != 0)
-                local_error = base_number.get_error();
+            if (ft_big_number::last_operation_error() != 0)
+                local_error = ft_big_number::last_operation_error();
             else
             {
                 ft_big_number result;
@@ -1021,35 +1046,35 @@ void ft_big_number::assign_base(const char* digits, int base) noexcept
                         break;
                     }
                     ft_big_number product = result * base_number;
-                    if (product.get_error() != 0)
+                    if (ft_big_number::last_operation_error() != 0)
                     {
-                        local_error = product.get_error();
+                        local_error = ft_big_number::last_operation_error();
                         break;
                     }
                     result = product;
-                    if (result.get_error() != 0)
+                    if (ft_big_number::last_operation_error() != 0)
                     {
-                        local_error = result.get_error();
+                        local_error = ft_big_number::last_operation_error();
                         break;
                     }
                     ft_big_number addend;
 
                     addend.append_unsigned(static_cast<unsigned long>(digit_value));
-                    if (addend.get_error() != 0)
+                    if (ft_big_number::last_operation_error() != 0)
                     {
-                        local_error = addend.get_error();
+                        local_error = ft_big_number::last_operation_error();
                         break;
                     }
                     ft_big_number sum = result + addend;
-                    if (sum.get_error() != 0)
+                    if (ft_big_number::last_operation_error() != 0)
                     {
-                        local_error = sum.get_error();
+                        local_error = ft_big_number::last_operation_error();
                         break;
                     }
                     result = sum;
-                    if (result.get_error() != 0)
+                    if (ft_big_number::last_operation_error() != 0)
                     {
-                        local_error = result.get_error();
+                        local_error = ft_big_number::last_operation_error();
                         break;
                     }
                     index++;
@@ -1061,9 +1086,9 @@ void ft_big_number::assign_base(const char* digits, int base) noexcept
                     if (result._size + 1 > this->_capacity || !this->_digits)
                     {
                         this->reserve(result._size + 1);
-                        if (this->_error_code != FT_ERR_SUCCESSS)
+                        if (ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
                         {
-                            local_error = this->_error_code;
+                            local_error = ft_big_number::last_operation_error();
                         }
                     }
                     if (local_error == 0)
@@ -1088,7 +1113,6 @@ void ft_big_number::assign_base(const char* digits, int base) noexcept
     {
         this->set_error_unlocked(local_error);
         guard.unlock();
-        ft_set_errno_locked(local_error);
         return ;
     }
     else
@@ -1105,17 +1129,15 @@ void ft_big_number::append_digit(char digit) noexcept
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_set_errno_locked(FT_ERR_SUCCESSS);
         return ;
     }
     this->append_digit_unlocked(digit);
-    if (this->_error_code != FT_ERR_SUCCESSS)
+    if (ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
     {
         int stored_error;
 
-        stored_error = this->_error_code;
+        stored_error = ft_big_number::last_operation_error();
         guard.unlock();
-        ft_set_errno_locked(stored_error);
         return ;
     }
     return ;
@@ -1130,24 +1152,21 @@ void ft_big_number::append(const char* digits) noexcept
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_set_errno_locked(FT_ERR_SUCCESSS);
         return ;
     }
     if (!digits)
     {
         this->set_error_unlocked(FT_ERR_INVALID_ARGUMENT);
         guard.unlock();
-        ft_set_errno_locked(FT_ERR_INVALID_ARGUMENT);
         return ;
     }
     this->append_unlocked(digits);
-    if (this->_error_code != FT_ERR_SUCCESSS)
+    if (ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
     {
         int stored_error;
 
-        stored_error = this->_error_code;
+        stored_error = ft_big_number::last_operation_error();
         guard.unlock();
-        ft_set_errno_locked(stored_error);
         return ;
     }
     return ;
@@ -1162,17 +1181,15 @@ void ft_big_number::append_unsigned(unsigned long value) noexcept
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_set_errno_locked(FT_ERR_SUCCESSS);
         return ;
     }
     this->append_unsigned_unlocked(value);
-    if (this->_error_code != FT_ERR_SUCCESSS)
+    if (ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
     {
         int stored_error;
 
-        stored_error = this->_error_code;
+        stored_error = ft_big_number::last_operation_error();
         guard.unlock();
-        ft_set_errno_locked(stored_error);
         return ;
     }
     return ;
@@ -1187,7 +1204,6 @@ void ft_big_number::trim_leading_zeros() noexcept
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_set_errno_locked(FT_ERR_SUCCESSS);
         return ;
     }
     this->trim_leading_zeros_unlocked();
@@ -1203,7 +1219,6 @@ void ft_big_number::reduce_to(ft_size_t new_size) noexcept
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_set_errno_locked(FT_ERR_SUCCESSS);
         return ;
     }
     this->reduce_to_unlocked(new_size);
@@ -1219,7 +1234,6 @@ void ft_big_number::clear() noexcept
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_set_errno_locked(FT_ERR_SUCCESSS);
         return ;
     }
     this->clear_unlocked();
@@ -1232,34 +1246,29 @@ ft_big_number ft_big_number::operator+(const ft_big_number& other) const noexcep
     ft_big_number_mutex_guard this_guard;
     ft_big_number_mutex_guard other_guard;
     ft_big_number result;
-    int previous_errno;
     int lock_error;
     int operation_error;
 
-    previous_errno = ft_errno;
     operation_error = FT_SYS_ERR_SUCCESS;
     lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         operation_error = lock_error;
-        result._error_code = operation_error;
+        result.set_error_unlocked(operation_error);
         result.set_system_error(operation_error);
         goto finalize_add;
     }
-    if (this->_error_code != 0 || other._error_code != 0)
+    if (ft_big_number::last_operation_error() != 0)
     {
-        if (this->_error_code != 0)
-            operation_error = this->_error_code;
-        else
-            operation_error = other._error_code;
-        result._error_code = operation_error;
+        operation_error = ft_big_number::last_operation_error();
+        result.set_error_unlocked(operation_error);
         result.set_system_error(operation_error);
         goto finalize_add;
     }
     if (this->_is_negative == other._is_negative)
     {
         result = this->add_magnitude(other);
-        if (result._error_code == FT_ERR_SUCCESSS)
+        if (ft_big_number::last_operation_error() == FT_ERR_SUCCESSS)
         {
             result._is_negative = this->_is_negative;
             if (result.is_zero_value())
@@ -1277,26 +1286,26 @@ ft_big_number ft_big_number::operator+(const ft_big_number& other) const noexcep
         if (comparison > 0)
         {
             result = this->subtract_magnitude(other);
-            if (result._error_code == FT_ERR_SUCCESSS)
+            if (ft_big_number::last_operation_error() == FT_ERR_SUCCESSS)
                 result._is_negative = this->_is_negative;
         }
         else
         {
             result = other.subtract_magnitude(*this);
-            if (result._error_code == FT_ERR_SUCCESSS)
+            if (ft_big_number::last_operation_error() == FT_ERR_SUCCESSS)
                 result._is_negative = other._is_negative;
         }
-        if (result._error_code == FT_ERR_SUCCESSS && result.is_zero_value())
+        if (ft_big_number::last_operation_error() == FT_ERR_SUCCESSS
+                && result.is_zero_value())
             result._is_negative = false;
     }
 finalize_add:
-    if (operation_error == FT_SYS_ERR_SUCCESS && result._error_code != FT_ERR_SUCCESSS)
+    if (operation_error == FT_SYS_ERR_SUCCESS
+            && ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        operation_error = result._error_code;
+        operation_error = ft_big_number::last_operation_error();
         result.set_system_error(operation_error);
     }
-    ft_set_sys_errno_locked(operation_error);
-    ft_set_errno_locked(previous_errno);
     return (result);
 }
 
@@ -1306,29 +1315,24 @@ ft_big_number ft_big_number::operator-(const ft_big_number& other) const noexcep
     ft_big_number_mutex_guard this_guard;
     ft_big_number_mutex_guard other_guard;
     ft_big_number result;
-    int previous_errno;
     int lock_error;
     int operation_error;
     bool lhs_negative;
     bool rhs_negative;
 
-    previous_errno = ft_errno;
     operation_error = FT_SYS_ERR_SUCCESS;
     lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         operation_error = lock_error;
-        result._error_code = operation_error;
+        result.set_error_unlocked(operation_error);
         result.set_system_error(operation_error);
         goto finalize_subtract;
     }
-    if (this->_error_code != 0 || other._error_code != 0)
+    if (ft_big_number::last_operation_error() != 0)
     {
-        if (this->_error_code != 0)
-            operation_error = this->_error_code;
-        else
-            operation_error = other._error_code;
-        result._error_code = operation_error;
+        operation_error = ft_big_number::last_operation_error();
+        result.set_error_unlocked(operation_error);
         result.set_system_error(operation_error);
         goto finalize_subtract;
     }
@@ -1339,7 +1343,7 @@ ft_big_number ft_big_number::operator-(const ft_big_number& other) const noexcep
     if (lhs_negative == rhs_negative)
     {
         result = this->add_magnitude(other);
-        if (result._error_code == FT_ERR_SUCCESSS)
+        if (ft_big_number::last_operation_error() == FT_ERR_SUCCESSS)
         {
             result._is_negative = lhs_negative;
             if (result.is_zero_value())
@@ -1355,26 +1359,26 @@ ft_big_number ft_big_number::operator-(const ft_big_number& other) const noexcep
         if (comparison > 0)
         {
             result = this->subtract_magnitude(other);
-            if (result._error_code == FT_ERR_SUCCESSS)
+            if (ft_big_number::last_operation_error() == FT_ERR_SUCCESSS)
                 result._is_negative = lhs_negative;
         }
         else
         {
             result = other.subtract_magnitude(*this);
-            if (result._error_code == FT_ERR_SUCCESSS)
+            if (ft_big_number::last_operation_error() == FT_ERR_SUCCESSS)
                 result._is_negative = rhs_negative;
         }
-        if (result._error_code == FT_ERR_SUCCESSS && result.is_zero_value())
+        if (ft_big_number::last_operation_error() == FT_ERR_SUCCESSS
+                && result.is_zero_value())
             result._is_negative = false;
     }
 finalize_subtract:
-    if (operation_error == FT_SYS_ERR_SUCCESS && result._error_code != FT_ERR_SUCCESSS)
+    if (operation_error == FT_SYS_ERR_SUCCESS
+            && ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        operation_error = result._error_code;
+        operation_error = ft_big_number::last_operation_error();
         result.set_system_error(operation_error);
     }
-    ft_set_sys_errno_locked(operation_error);
-    ft_set_errno_locked(previous_errno);
     return (result);
 }
 
@@ -1384,27 +1388,22 @@ ft_big_number ft_big_number::operator*(const ft_big_number& other) const noexcep
     ft_big_number_mutex_guard this_guard;
     ft_big_number_mutex_guard other_guard;
     ft_big_number result;
-    int previous_errno;
     int lock_error;
     int operation_error;
 
-    previous_errno = ft_errno;
     operation_error = FT_SYS_ERR_SUCCESS;
     lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
         operation_error = lock_error;
-        result._error_code = operation_error;
+        result.set_error_unlocked(operation_error);
         result.set_system_error(operation_error);
         goto finalize_multiply;
     }
-    if (this->_error_code != 0 || other._error_code != 0)
+    if (ft_big_number::last_operation_error() != 0)
     {
-        if (this->_error_code != 0)
-            operation_error = this->_error_code;
-        else
-            operation_error = other._error_code;
-        result._error_code = operation_error;
+        operation_error = ft_big_number::last_operation_error();
+        result.set_error_unlocked(operation_error);
         result.set_system_error(operation_error);
         goto finalize_multiply;
     }
@@ -1415,7 +1414,7 @@ ft_big_number ft_big_number::operator*(const ft_big_number& other) const noexcep
         ft_size_t result_length = left_length + right_length;
 
         result.reserve(result_length + 1);
-        if (result._error_code == FT_ERR_SUCCESSS)
+        if (ft_big_number::last_operation_error() == FT_ERR_SUCCESSS)
         {
             ft_size_t fill_index = 0;
 
@@ -1428,7 +1427,8 @@ ft_big_number ft_big_number::operator*(const ft_big_number& other) const noexcep
             result._size = result_length;
             ft_size_t left_offset = 0;
 
-            while (left_offset < left_length && result._error_code == FT_ERR_SUCCESSS)
+            while (left_offset < left_length
+                    && ft_big_number::last_operation_error() == FT_ERR_SUCCESSS)
             {
                 ft_size_t left_index = left_length - 1 - left_offset;
                 int left_digit_value = this->_digits[left_index] - '0';
@@ -1467,25 +1467,25 @@ ft_big_number ft_big_number::operator*(const ft_big_number& other) const noexcep
                 }
                 left_offset++;
             }
-            if (result._error_code == FT_ERR_SUCCESSS)
+            if (ft_big_number::last_operation_error() == FT_ERR_SUCCESSS)
             {
                 result.trim_leading_zeros();
-                if (result._error_code == FT_ERR_SUCCESSS
+                if (ft_big_number::last_operation_error() == FT_ERR_SUCCESSS
                         && this->_is_negative != other._is_negative)
                     result._is_negative = true;
-                if (result._error_code == FT_ERR_SUCCESSS && result.is_zero_value())
+                if (ft_big_number::last_operation_error() == FT_ERR_SUCCESSS
+                        && result.is_zero_value())
                     result._is_negative = false;
             }
         }
     }
 finalize_multiply:
-    if (operation_error == FT_SYS_ERR_SUCCESS && result._error_code != FT_ERR_SUCCESSS)
+    if (operation_error == FT_SYS_ERR_SUCCESS
+            && ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        operation_error = result._error_code;
+        operation_error = ft_big_number::last_operation_error();
         result.set_system_error(operation_error);
     }
-    ft_set_sys_errno_locked(operation_error);
-    ft_set_errno_locked(previous_errno);
     return (result);
 }
 
@@ -1493,7 +1493,6 @@ ft_big_number ft_big_number::operator/(const ft_big_number& other) const noexcep
 {
     ft_big_number_error_scope error_scope;
     int stored_errno;
-    int previous_errno;
     ft_big_number result;
     ft_big_number_mutex_guard this_guard;
     ft_big_number_mutex_guard other_guard;
@@ -1505,7 +1504,6 @@ ft_big_number ft_big_number::operator/(const ft_big_number& other) const noexcep
     int best_digit_value;
     int candidate_digit;
 
-    previous_errno = ft_errno;
     stored_errno = ft_big_number::initialize_errno_keeper();
     operation_error = FT_ERR_SUCCESSS;
     digit_index = 0;
@@ -1514,24 +1512,21 @@ ft_big_number ft_big_number::operator/(const ft_big_number& other) const noexcep
     if (lock_error != FT_ERR_SUCCESSS)
     {
         operation_error = lock_error;
-        result._error_code = operation_error;
+        result.set_error_unlocked(operation_error);
         result.set_system_error(operation_error);
         goto cleanup_division;
     }
-    if (this->_error_code != 0 || other._error_code != 0)
+    if (ft_big_number::last_operation_error() != 0)
     {
-        if (this->_error_code != 0)
-            operation_error = this->_error_code;
-        else
-            operation_error = other._error_code;
-        result._error_code = operation_error;
+        operation_error = ft_big_number::last_operation_error();
+        result.set_error_unlocked(operation_error);
         result.set_system_error(operation_error);
         goto cleanup_division;
     }
     if (other.is_zero_value())
     {
         operation_error = FT_ERR_DIVIDE_BY_ZERO;
-        result._error_code = operation_error;
+        result.set_error_unlocked(operation_error);
         result.set_system_error(operation_error);
         goto cleanup_division;
     }
@@ -1543,27 +1538,28 @@ ft_big_number ft_big_number::operator/(const ft_big_number& other) const noexcep
     if (magnitude_comparison == 0)
     {
         result.append_digit('1');
-        if (result._error_code == FT_ERR_SUCCESSS
+        if (ft_big_number::last_operation_error() == FT_ERR_SUCCESSS
                 && this->_is_negative != other._is_negative)
             result._is_negative = true;
-        if (result._error_code == FT_ERR_SUCCESSS && result.is_zero_value())
+        if (ft_big_number::last_operation_error() == FT_ERR_SUCCESSS
+                && result.is_zero_value())
             result._is_negative = false;
-        if (result._error_code != FT_ERR_SUCCESSS)
-            operation_error = result._error_code;
+        if (ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
+            operation_error = ft_big_number::last_operation_error();
         goto cleanup_division;
     }
     while (digit_index < this->_size)
     {
         remainder.append_digit(this->_digits[digit_index]);
-        if (remainder._error_code != FT_ERR_SUCCESSS)
+        if (ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
         {
-            operation_error = remainder._error_code;
+            operation_error = ft_big_number::last_operation_error();
             goto cleanup_division;
         }
         remainder.trim_leading_zeros();
-        if (remainder._error_code != FT_ERR_SUCCESSS)
+        if (ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
         {
-            operation_error = remainder._error_code;
+            operation_error = ft_big_number::last_operation_error();
             goto cleanup_division;
         }
         best_digit_value = 0;
@@ -1577,16 +1573,16 @@ ft_big_number ft_big_number::operator/(const ft_big_number& other) const noexcep
                 ft_big_number digit_multiplier;
 
                 digit_multiplier.append_digit(static_cast<char>('0' + candidate_digit));
-                if (digit_multiplier._error_code != FT_ERR_SUCCESSS)
+                if (ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
                 {
-                    operation_error = digit_multiplier._error_code;
+                    operation_error = ft_big_number::last_operation_error();
                     goto cleanup_division;
                 }
                 ft_big_number candidate_product = other * digit_multiplier;
 
-                if (candidate_product._error_code != FT_ERR_SUCCESSS)
+                if (ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
                 {
-                    operation_error = candidate_product._error_code;
+                    operation_error = ft_big_number::last_operation_error();
                     goto cleanup_division;
                 }
                 int product_comparison = candidate_product.compare_magnitude(remainder);
@@ -1606,9 +1602,9 @@ ft_big_number ft_big_number::operator/(const ft_big_number& other) const noexcep
             if (best_digit_value > 0)
             {
                 remainder = remainder.subtract_magnitude(best_product);
-                if (remainder._error_code != FT_ERR_SUCCESSS)
+                if (ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
                 {
-                    operation_error = remainder._error_code;
+                    operation_error = ft_big_number::last_operation_error();
                     goto cleanup_division;
                 }
             }
@@ -1616,16 +1612,16 @@ ft_big_number ft_big_number::operator/(const ft_big_number& other) const noexcep
         char quotient_digit = static_cast<char>('0' + best_digit_value);
 
         result.append_digit(quotient_digit);
-        if (result._error_code != FT_ERR_SUCCESSS)
+        if (ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
         {
-            operation_error = result._error_code;
+            operation_error = ft_big_number::last_operation_error();
             goto cleanup_division;
         }
         digit_index++;
     }
     result.trim_leading_zeros();
-    if (result._error_code != FT_ERR_SUCCESSS)
-        operation_error = result._error_code;
+    if (ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
+        operation_error = ft_big_number::last_operation_error();
     if (operation_error == FT_ERR_SUCCESSS)
     {
         if (this->_is_negative != other._is_negative)
@@ -1636,13 +1632,11 @@ ft_big_number ft_big_number::operator/(const ft_big_number& other) const noexcep
 cleanup_division:
     if (operation_error != FT_ERR_SUCCESSS)
     {
-        result._error_code = operation_error;
-        result._system_error_code = FT_SYS_ERR_SUCCESS;
+        result.set_error_unlocked(operation_error);
         ft_big_number::update_errno_keeper(stored_errno, operation_error);
         error_scope.set_error(operation_error);
     }
     ft_big_number::finalize_errno_keeper(stored_errno);
-    ft_set_errno_locked(previous_errno);
     return (result);
 }
 
@@ -1650,57 +1644,43 @@ ft_big_number ft_big_number::operator%(const ft_big_number& other) const noexcep
 {
     ft_big_number_error_scope error_scope;
     int stored_errno;
-    int previous_errno;
     ft_big_number result;
     ft_big_number quotient;
     ft_big_number product;
     int operation_error;
 
-    previous_errno = ft_errno;
     stored_errno = ft_big_number::initialize_errno_keeper();
     operation_error = FT_ERR_SUCCESSS;
     quotient = this->operator/(other);
 
-    if (quotient._error_code != FT_ERR_SUCCESSS
-            || quotient._system_error_code != FT_SYS_ERR_SUCCESS)
+    if (ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        if (quotient._error_code != FT_ERR_SUCCESSS)
-            operation_error = quotient._error_code;
-        else
-            operation_error = quotient._system_error_code;
-        result._error_code = operation_error;
+        operation_error = ft_big_number::last_operation_error();
+        result.set_error_unlocked(operation_error);
         result.set_system_error(operation_error);
         goto cleanup_modulus;
     }
     product = quotient * other;
 
-    if (product._error_code != FT_ERR_SUCCESSS
-            || product._system_error_code != FT_SYS_ERR_SUCCESS)
+    if (ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        if (product._error_code != FT_ERR_SUCCESSS)
-            operation_error = product._error_code;
-        else
-            operation_error = product._system_error_code;
-        result._error_code = operation_error;
+        operation_error = ft_big_number::last_operation_error();
+        result.set_error_unlocked(operation_error);
         result.set_system_error(operation_error);
         goto cleanup_modulus;
     }
     result = this->operator-(product);
-    if (result._error_code != FT_ERR_SUCCESSS
-            || result._system_error_code != FT_SYS_ERR_SUCCESS)
+    if (ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        if (result._error_code != FT_ERR_SUCCESSS)
-            operation_error = result._error_code;
-        else
-            operation_error = result._system_error_code;
-        result._error_code = operation_error;
+        operation_error = ft_big_number::last_operation_error();
+        result.set_error_unlocked(operation_error);
         result.set_system_error(operation_error);
         goto cleanup_modulus;
     }
     result.trim_leading_zeros();
-    if (result._error_code != FT_ERR_SUCCESSS)
+    if (ft_big_number::last_operation_error() != FT_ERR_SUCCESSS)
     {
-        operation_error = result._error_code;
+        operation_error = ft_big_number::last_operation_error();
         goto cleanup_modulus;
     }
     if (result.is_zero_value())
@@ -1708,13 +1688,11 @@ ft_big_number ft_big_number::operator%(const ft_big_number& other) const noexcep
 cleanup_modulus:
     if (operation_error != FT_ERR_SUCCESSS)
     {
-        result._error_code = operation_error;
-        result._system_error_code = FT_SYS_ERR_SUCCESS;
+        result.set_error_unlocked(operation_error);
         ft_big_number::update_errno_keeper(stored_errno, operation_error);
         error_scope.set_error(operation_error);
     }
     ft_big_number::finalize_errno_keeper(stored_errno);
-    ft_set_errno_locked(previous_errno);
     return (result);
 }
 
@@ -1728,15 +1706,12 @@ bool ft_big_number::operator!=(const ft_big_number& other) const noexcept
 bool ft_big_number::operator<(const ft_big_number& other) const noexcept
 {
     bool result;
-    int previous_errno;
     int operation_error;
 
-    previous_errno = ft_errno;
     operation_error = FT_SYS_ERR_SUCCESS;
     {
         ft_big_number_mutex_guard this_guard;
         ft_big_number_mutex_guard other_guard;
-        pt_errno_guard<ft_big_number_mutex_guard> errno_guard(this_guard, other_guard);
         int lock_error;
 
         lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
@@ -1745,12 +1720,9 @@ bool ft_big_number::operator<(const ft_big_number& other) const noexcept
             operation_error = lock_error;
             result = false;
         }
-        else if (this->_error_code != 0 || other._error_code != 0)
+        else if (ft_big_number::last_operation_error() != 0)
         {
-            if (this->_error_code != 0)
-                operation_error = this->_error_code;
-            else
-                operation_error = other._error_code;
+            operation_error = ft_big_number::last_operation_error();
             result = false;
         }
         else if (this->is_zero_value() && other.is_zero_value())
@@ -1769,8 +1741,6 @@ bool ft_big_number::operator<(const ft_big_number& other) const noexcept
                 result = (magnitude_comparison < 0);
         }
     }
-    ft_set_sys_errno_locked(operation_error);
-    ft_set_errno_locked(previous_errno);
     return (result);
 }
 
@@ -1798,15 +1768,12 @@ bool ft_big_number::operator>=(const ft_big_number& other) const noexcept
 bool ft_big_number::operator==(const ft_big_number& other) const noexcept
 {
     bool are_equal;
-    int previous_errno;
     int operation_error;
 
-    previous_errno = ft_errno;
     operation_error = FT_SYS_ERR_SUCCESS;
     {
         ft_big_number_mutex_guard this_guard;
         ft_big_number_mutex_guard other_guard;
-        pt_errno_guard<ft_big_number_mutex_guard> errno_guard(this_guard, other_guard);
         int lock_error;
 
         lock_error = ft_big_number::lock_pair(*this, other, this_guard, other_guard);
@@ -1815,12 +1782,9 @@ bool ft_big_number::operator==(const ft_big_number& other) const noexcept
             operation_error = lock_error;
             are_equal = false;
         }
-        else if (this->_error_code != 0 || other._error_code != 0)
+        else if (ft_big_number::last_operation_error() != 0)
         {
-            if (this->_error_code != 0)
-                operation_error = this->_error_code;
-            else
-                operation_error = other._error_code;
+            operation_error = ft_big_number::last_operation_error();
             are_equal = false;
         }
         else if (this->is_zero_value() && other.is_zero_value())
@@ -1849,8 +1813,6 @@ bool ft_big_number::operator==(const ft_big_number& other) const noexcept
             }
         }
     }
-    ft_set_sys_errno_locked(operation_error);
-    ft_set_errno_locked(previous_errno);
     return (are_equal);
 }
 
@@ -1863,14 +1825,12 @@ const char* ft_big_number::c_str() const noexcept
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        ft_set_errno_locked(FT_ERR_SUCCESSS);
         return ("0");
     }
     if (this->_digits && this->_size > 0)
         digits_pointer = this->_digits;
     else
         digits_pointer = "0";
-    ft_set_errno_locked(FT_ERR_SUCCESSS);
     return (digits_pointer);
 }
 
@@ -1883,11 +1843,9 @@ ft_size_t ft_big_number::size() const noexcept
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        ft_set_errno_locked(FT_ERR_SUCCESSS);
         return (0);
     }
     current_size = this->_size;
-    ft_set_errno_locked(FT_ERR_SUCCESSS);
     return (current_size);
 }
 
@@ -1900,11 +1858,9 @@ bool ft_big_number::empty() const noexcept
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        ft_set_errno_locked(FT_ERR_SUCCESSS);
         return (true);
     }
     is_empty_result = (this->_size == 0);
-    ft_set_errno_locked(FT_ERR_SUCCESSS);
     return (is_empty_result);
 }
 
@@ -1917,14 +1873,12 @@ bool ft_big_number::is_negative() const noexcept
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        ft_set_errno_locked(FT_ERR_SUCCESSS);
         return (false);
     }
     if (this->is_zero_value())
         result = false;
     else
         result = this->_is_negative;
-    ft_set_errno_locked(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -1937,14 +1891,12 @@ bool ft_big_number::is_positive() const noexcept
     lock_error = this->lock_self(guard);
     if (lock_error != FT_ERR_SUCCESSS)
     {
-        ft_set_errno_locked(FT_ERR_SUCCESSS);
         return (false);
     }
     if (this->is_zero_value())
         result = false;
     else
         result = !this->_is_negative;
-    ft_set_errno_locked(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -1964,12 +1916,11 @@ ft_string ft_big_number::to_string_base(int base) noexcept
     if (lock_error != FT_ERR_SUCCESSS)
     {
         this->set_error_unlocked(lock_error);
-        ft_set_errno_locked(FT_ERR_SUCCESSS);
         return (ft_string(lock_error));
     }
-    if (this->_error_code != 0)
+    if (ft_big_number::last_operation_error() != 0)
     {
-        int stored_error = this->_error_code;
+        int stored_error = ft_big_number::last_operation_error();
 
         return (ft_string(stored_error));
     }
@@ -1980,7 +1931,7 @@ ft_string ft_big_number::to_string_base(int base) noexcept
         ft_string zero_result;
 
         zero_result.append('0');
-        if (zero_result.get_error() != 0)
+        if (ft_big_number::last_operation_error() != 0)
         {
             this->set_error(FT_ERR_NO_MEMORY);
             return (ft_string(FT_ERR_NO_MEMORY));
@@ -1989,19 +1940,19 @@ ft_string ft_big_number::to_string_base(int base) noexcept
     }
     ft_big_number magnitude(*this);
 
-    if (magnitude.get_error() != 0)
+    if (ft_big_number::last_operation_error() != 0)
     {
-        this->set_error(magnitude.get_error());
-        return (ft_string(magnitude.get_error()));
+        this->set_error(ft_big_number::last_operation_error());
+        return (ft_string(ft_big_number::last_operation_error()));
     }
     magnitude._is_negative = false;
     ft_big_number base_value;
 
     base_value.append_unsigned(static_cast<unsigned long>(base));
-    if (base_value.get_error() != 0)
+    if (ft_big_number::last_operation_error() != 0)
     {
-        this->set_error(base_value.get_error());
-        return (ft_string(base_value.get_error()));
+        this->set_error(ft_big_number::last_operation_error());
+        return (ft_string(ft_big_number::last_operation_error()));
     }
     ft_string digits;
 
@@ -2009,24 +1960,24 @@ ft_string ft_big_number::to_string_base(int base) noexcept
     {
         ft_big_number quotient = magnitude / base_value;
 
-        if (quotient.get_error() != 0)
+        if (ft_big_number::last_operation_error() != 0)
         {
-            this->set_error(quotient.get_error());
-            return (ft_string(quotient.get_error()));
+            this->set_error(ft_big_number::last_operation_error());
+            return (ft_string(ft_big_number::last_operation_error()));
         }
         ft_big_number product = quotient * base_value;
 
-        if (product.get_error() != 0)
+        if (ft_big_number::last_operation_error() != 0)
         {
-            this->set_error(product.get_error());
-            return (ft_string(product.get_error()));
+            this->set_error(ft_big_number::last_operation_error());
+            return (ft_string(ft_big_number::last_operation_error()));
         }
         ft_big_number remainder_number = magnitude - product;
 
-        if (remainder_number.get_error() != 0)
+        if (ft_big_number::last_operation_error() != 0)
         {
-            this->set_error(remainder_number.get_error());
-            return (ft_string(remainder_number.get_error()));
+            this->set_error(ft_big_number::last_operation_error());
+            return (ft_string(ft_big_number::last_operation_error()));
         }
         const char* remainder_digits = remainder_number.c_str();
         ft_size_t remainder_index = 0;
@@ -2045,16 +1996,16 @@ ft_string ft_big_number::to_string_base(int base) noexcept
             return (ft_string(FT_ERR_INVALID_ARGUMENT));
         }
         digits.append(digit_symbol);
-        if (digits.get_error() != 0)
+        if (ft_big_number::last_operation_error() != 0)
         {
             this->set_error(FT_ERR_NO_MEMORY);
             return (ft_string(FT_ERR_NO_MEMORY));
         }
         magnitude = quotient;
-        if (magnitude.get_error() != 0)
+        if (ft_big_number::last_operation_error() != 0)
         {
-            this->set_error(magnitude.get_error());
-            return (ft_string(magnitude.get_error()));
+            this->set_error(ft_big_number::last_operation_error());
+            return (ft_string(ft_big_number::last_operation_error()));
         }
         magnitude._is_negative = false;
     }
@@ -2063,7 +2014,7 @@ ft_string ft_big_number::to_string_base(int base) noexcept
     if (original_negative)
     {
         result.append('-');
-        if (result.get_error() != 0)
+        if (ft_big_number::last_operation_error() != 0)
         {
             this->set_error(FT_ERR_NO_MEMORY);
             return (ft_string(FT_ERR_NO_MEMORY));
@@ -2076,13 +2027,12 @@ ft_string ft_big_number::to_string_base(int base) noexcept
     {
         digits_length--;
         result.append(digits_buffer[digits_length]);
-        if (result.get_error() != 0)
+        if (ft_big_number::last_operation_error() != 0)
         {
             this->set_error(FT_ERR_NO_MEMORY);
             return (ft_string(FT_ERR_NO_MEMORY));
         }
     }
-    ft_set_errno_locked(FT_ERR_SUCCESSS);
     return (result);
 }
 
@@ -2090,29 +2040,29 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
 {
     ft_big_number base_value(*this);
 
-    if (base_value.get_error() != 0)
+    if (ft_big_number::last_operation_error() != 0)
     {
         ft_big_number error_result;
 
-        error_result.set_error(base_value.get_error());
+        error_result.set_error(ft_big_number::last_operation_error());
         return (error_result);
     }
     ft_big_number exponent_value(exponent);
 
-    if (exponent_value.get_error() != 0)
+    if (ft_big_number::last_operation_error() != 0)
     {
         ft_big_number error_result;
 
-        error_result.set_error(exponent_value.get_error());
+        error_result.set_error(ft_big_number::last_operation_error());
         return (error_result);
     }
     ft_big_number modulus_value(modulus);
 
-    if (modulus_value.get_error() != 0)
+    if (ft_big_number::last_operation_error() != 0)
     {
         ft_big_number error_result;
 
-        error_result.set_error(modulus_value.get_error());
+        error_result.set_error(ft_big_number::last_operation_error());
         return (error_result);
     }
     if (modulus_value.is_zero_value())
@@ -2140,22 +2090,22 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
     modulus_value.trim_leading_zeros();
     ft_big_number base_remainder = base_value % modulus_value;
 
-    if (base_remainder.get_error() != 0)
+    if (ft_big_number::last_operation_error() != 0)
     {
         ft_big_number error_result;
 
-        error_result.set_error(base_remainder.get_error());
+        error_result.set_error(ft_big_number::last_operation_error());
         return (error_result);
     }
     while (base_remainder.is_negative())
     {
         ft_big_number adjusted_base = base_remainder + modulus_value;
 
-        if (adjusted_base.get_error() != 0)
+        if (ft_big_number::last_operation_error() != 0)
         {
             ft_big_number error_result;
 
-            error_result.set_error(adjusted_base.get_error());
+            error_result.set_error(ft_big_number::last_operation_error());
             return (error_result);
         }
         base_remainder = adjusted_base;
@@ -2166,22 +2116,22 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
     ft_big_number one;
 
     one.append_digit('1');
-    if (one.get_error() != 0)
+    if (ft_big_number::last_operation_error() != 0)
     {
         ft_big_number error_result;
 
-        error_result.set_error(one.get_error());
+        error_result.set_error(ft_big_number::last_operation_error());
         return (error_result);
     }
     if (exponent_value.is_zero_value())
     {
         ft_big_number identity_result = one % modulus_value;
 
-        if (identity_result.get_error() != 0)
+        if (ft_big_number::last_operation_error() != 0)
         {
             ft_big_number error_result;
 
-            error_result.set_error(identity_result.get_error());
+            error_result.set_error(ft_big_number::last_operation_error());
             return (error_result);
         }
         identity_result._is_negative = false;
@@ -2192,41 +2142,41 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
     }
     ft_big_number accumulator(one);
 
-    if (accumulator.get_error() != 0)
+    if (ft_big_number::last_operation_error() != 0)
     {
         ft_big_number error_result;
 
-        error_result.set_error(accumulator.get_error());
+        error_result.set_error(ft_big_number::last_operation_error());
         return (error_result);
     }
     while (!exponent_value.is_zero_value())
     {
         ft_big_number product_value = accumulator * base_remainder;
 
-        if (product_value.get_error() != 0)
+        if (ft_big_number::last_operation_error() != 0)
         {
             ft_big_number error_result;
 
-            error_result.set_error(product_value.get_error());
+            error_result.set_error(ft_big_number::last_operation_error());
             return (error_result);
         }
         ft_big_number reduced_value = product_value % modulus_value;
 
-        if (reduced_value.get_error() != 0)
+        if (ft_big_number::last_operation_error() != 0)
         {
             ft_big_number error_result;
 
-            error_result.set_error(reduced_value.get_error());
+            error_result.set_error(ft_big_number::last_operation_error());
             return (error_result);
         }
         accumulator = reduced_value;
         ft_big_number next_exponent = exponent_value - one;
 
-        if (next_exponent.get_error() != 0)
+        if (ft_big_number::last_operation_error() != 0)
         {
             ft_big_number error_result;
 
-            error_result.set_error(next_exponent.get_error());
+            error_result.set_error(ft_big_number::last_operation_error());
             return (error_result);
         }
         exponent_value = next_exponent;
@@ -2240,60 +2190,23 @@ ft_big_number ft_big_number::mod_pow(const ft_big_number& exponent, const ft_big
     return (accumulator);
 }
 
-int ft_big_number::get_error() const noexcept
+const char* ft_big_number::last_operation_error_str() noexcept
 {
-    int lock_error;
-    int error_value;
-    int system_error;
-    int previous_errno;
-    int previous_sys_errno;
-
-    previous_errno = ft_errno;
-    previous_sys_errno = ft_sys_errno;
-    {
-        ft_big_number_mutex_guard guard;
-
-        lock_error = this->lock_self(guard);
-        if (lock_error != FT_ERR_SUCCESSS)
-        {
-            ft_set_errno_locked(previous_errno);
-            ft_set_sys_errno_locked(previous_sys_errno);
-            return (lock_error);
-        }
-        error_value = this->_error_code;
-        system_error = this->_system_error_code;
-    }
-    ft_set_errno_locked(previous_errno);
-    ft_set_sys_errno_locked(previous_sys_errno);
-    if (error_value != FT_ERR_SUCCESSS)
-        return (error_value);
-    if (system_error != FT_SYS_ERR_SUCCESS)
-        return (system_error);
-    return (FT_ERR_SUCCESSS);
-}
-
-const char* ft_big_number::get_error_str() const noexcept
-{
-    int lock_error;
     const char* error_string;
 
-    {
-        ft_big_number_mutex_guard guard;
+    error_string = ft_strerror(ft_big_number::last_operation_error());
+    if (!error_string)
+        error_string = "unknown error";
+    return (error_string);
+}
 
-        lock_error = this->lock_self(guard);
-        if (lock_error != FT_ERR_SUCCESSS)
-            return (ft_strerror(lock_error));
-        if (this->_error_code != FT_ERR_SUCCESSS)
-            error_string = ft_strerror(this->_error_code);
-        else if (this->_system_error_code != FT_SYS_ERR_SUCCESS)
-            error_string = ft_strerror(this->_system_error_code);
-        else
-            error_string = ft_strerror(FT_ERR_SUCCESSS);
-    }
-    if (this->_error_code != FT_ERR_SUCCESSS)
-        ft_set_errno_locked(this->_error_code);
-    else
-        ft_set_errno_locked(this->_system_error_code);
+const char* ft_big_number::operation_error_str_at(ft_size_t index) noexcept
+{
+    const char* error_string;
+
+    error_string = ft_strerror(ft_big_number::operation_error_at(index));
+    if (!error_string)
+        error_string = "unknown error";
     return (error_string);
 }
 
@@ -2308,16 +2221,13 @@ void ft_big_number::reset_system_error() const noexcept
         this->set_system_error(lock_error);
         return ;
     }
-    this->_system_error_code = FT_SYS_ERR_SUCCESS;
-    ft_set_sys_errno_locked(FT_SYS_ERR_SUCCESS);
+    this->set_system_error_unlocked(FT_SYS_ERR_SUCCESS);
     return ;
 }
 
 #ifdef LIBFT_TEST_BUILD
 pt_recursive_mutex* ft_big_number::get_mutex_for_testing() noexcept
 {
-    ft_set_errno_locked(FT_ERR_SUCCESSS);
-    ft_set_sys_errno_locked(FT_SYS_ERR_SUCCESS);
     return (&(this->_mutex));
 }
 #endif

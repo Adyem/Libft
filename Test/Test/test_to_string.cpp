@@ -161,7 +161,7 @@ FT_TEST(test_ft_to_string_recovers_after_allocation_failure,
     failed_result = ft_to_string(321L);
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, failed_result.get_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
 
     ft_errno = FT_ERR_INVALID_ARGUMENT;
     recovered_result = ft_to_string(-321L);
@@ -181,7 +181,7 @@ FT_TEST(test_ft_to_string_allocation_failure,
     failed_result = ft_to_string(12345L);
     cma_set_alloc_limit(0);
     FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_errno);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, failed_result.get_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
     return (1);
 }
 

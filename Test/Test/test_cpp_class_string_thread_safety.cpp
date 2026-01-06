@@ -7,13 +7,11 @@
 #include <thread>
 
 FT_TEST(test_ft_string_append_resets_errno,
-        "ft_string append sets ft_errno to success after completing")
+        "ft_string append sets error state to success after completing")
 {
     ft_string string_value;
-    ft_errno = FT_ERR_INVALID_ARGUMENT;
     string_value.append('x');
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_errno);
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, string_value.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::last_operation_error());
     FT_ASSERT_EQ(1u, string_value.size());
     return (1);
 }
@@ -58,7 +56,7 @@ FT_TEST(test_ft_string_concurrent_appends_are_serialized,
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     worker.join();
 
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, shared_string.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::last_operation_error());
     FT_ASSERT_EQ(1000u, shared_string.size());
 
     const char *contents;
@@ -87,13 +85,11 @@ FT_TEST(test_ft_string_append_of_error_string_propagates_code,
         "ft_string append propagates source error state")
 {
     ft_string healthy_string("ok");
-    FT_ASSERT_EQ(healthy_string.get_error(), FT_ERR_SUCCESSS);
-    FT_ASSERT_EQ(ft_errno, FT_ERR_SUCCESSS);
+    FT_ASSERT_EQ(ft_string::last_operation_error(), FT_ERR_SUCCESSS);
     cma_set_alloc_limit(1);
     ft_string failing_string("hello world");
     healthy_string.append(failing_string);
-    FT_ASSERT_EQ(ft_errno, FT_ERR_NO_MEMORY);
-    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, healthy_string.get_error());
+    FT_ASSERT_EQ(FT_ERR_NO_MEMORY, ft_string::last_operation_error());
     cma_set_alloc_limit(0);
     return (1);
 }
