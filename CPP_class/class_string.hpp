@@ -44,8 +44,8 @@ class ft_string
         };
 
         void    resize(size_t new_capacity) noexcept;
-        void    set_error_unlocked(int error_code) const noexcept;
-        void    set_error(int error_code) const noexcept;
+        void    push_error_unlocked(int error_code) const noexcept;
+        void    push_error(int error_code) const noexcept;
         int     lock_self(mutex_guard &guard) const noexcept;
         static int  lock_pair(const ft_string &first, const ft_string &second,
                 mutex_guard &first_guard,
