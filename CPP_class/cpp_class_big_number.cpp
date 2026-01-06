@@ -268,6 +268,8 @@ void ft_big_number::sleep_backoff() noexcept
 
 void ft_big_number::set_error_unlocked(int error_code) const noexcept
 {
+    this->_error_code = error_code;
+    ft_errno = error_code;
     ft_big_number::record_operation_error(error_code);
     return ;
 }
@@ -280,8 +282,7 @@ void ft_big_number::set_error(int error_code) const noexcept
 
 void ft_big_number::set_system_error_unlocked(int error_code) const noexcept
 {
-    if (error_code != FT_SYS_ERR_SUCCESS)
-        ft_big_number::record_operation_error(error_code);
+    ft_sys_errno = error_code;
     return ;
 }
 
@@ -512,6 +513,7 @@ ft_big_number::ft_big_number() noexcept
     , _size(0)
     , _capacity(0)
     , _is_negative(false)
+    , _error_code(FT_ERR_SUCCESSS)
     , _mutex()
 {
     this->set_error_unlocked(FT_ERR_SUCCESSS);
@@ -523,6 +525,7 @@ ft_big_number::ft_big_number(const ft_big_number& other) noexcept
     , _size(0)
     , _capacity(0)
     , _is_negative(false)
+    , _error_code(FT_ERR_SUCCESSS)
     , _mutex()
 {
     ft_big_number_mutex_guard other_guard;
@@ -559,6 +562,7 @@ ft_big_number::ft_big_number(ft_big_number&& other) noexcept
     , _size(0)
     , _capacity(0)
     , _is_negative(false)
+    , _error_code(FT_ERR_SUCCESSS)
     , _mutex()
 {
     ft_big_number_mutex_guard other_guard;
@@ -1898,6 +1902,31 @@ bool ft_big_number::is_positive() const noexcept
     else
         result = !this->_is_negative;
     return (result);
+}
+
+int ft_big_number::get_error() const noexcept
+{
+    ft_big_number_mutex_guard guard;
+    int lock_error;
+    int error_value;
+
+    lock_error = this->lock_self(guard);
+    if (lock_error != FT_ERR_SUCCESSS)
+    {
+        this->set_error_unlocked(lock_error);
+        return (lock_error);
+    }
+    error_value = this->_error_code;
+    ft_errno = error_value;
+    return (error_value);
+}
+
+const char* ft_big_number::get_error_str() const noexcept
+{
+    int error_value;
+
+    error_value = this->get_error();
+    return (ft_strerror(error_value));
 }
 
 ft_string ft_big_number::to_string_base(int base) noexcept

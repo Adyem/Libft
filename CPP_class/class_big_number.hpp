@@ -37,6 +37,7 @@ class ft_big_number
         ft_size_t       _size;
         ft_size_t       _capacity;
         bool            _is_negative;
+        mutable int     _error_code;
         mutable pt_recursive_mutex    _mutex;
         static thread_local error_stack _error_stack;
         static thread_local operation_error_stack _operation_errors;
@@ -103,6 +104,8 @@ class ft_big_number
         bool        empty() const noexcept;
         bool        is_negative() const noexcept;
         bool        is_positive() const noexcept;
+        int         get_error() const noexcept;
+        const char* get_error_str() const noexcept;
         ft_string   to_string_base(int base) noexcept;
         ft_big_number mod_pow(const ft_big_number& exponent, const ft_big_number& modulus) const noexcept;
         static const char *last_operation_error_str() noexcept;
