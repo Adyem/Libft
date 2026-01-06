@@ -56,21 +56,51 @@ static int ft_entry_serializer(const ft_serialized_entry &entry, ft_string &outp
 {
     output = entry.name;
     if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    {
+        int error_code = ft_string::last_operation_error();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_NO_MEMORY;
+        ft_errno = error_code;
         return (-1);
+    }
     ft_string separator("#");
 
     if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    {
+        int error_code = ft_string::last_operation_error();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_NO_MEMORY;
+        ft_errno = error_code;
         return (-1);
+    }
     output += separator;
     if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    {
+        int error_code = ft_string::last_operation_error();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_NO_MEMORY;
+        ft_errno = error_code;
         return (-1);
+    }
     ft_string quantity_string = ft_to_string(static_cast<long>(entry.quantity));
 
     if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    {
+        int error_code = ft_string::last_operation_error();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_NO_MEMORY;
+        ft_errno = error_code;
         return (-1);
+    }
     output += quantity_string;
     if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    {
+        int error_code = ft_string::last_operation_error();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_NO_MEMORY;
+        ft_errno = error_code;
         return (-1);
+    }
     ft_errno = FT_ERR_SUCCESSS;
     return (0);
 }
@@ -93,11 +123,23 @@ static int ft_entry_deserializer(const char *value_string, ft_serialized_entry &
     ft_string name_buffer;
 
     name_buffer.assign(value_string, name_length);
-    if (name_buffer.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    {
+        int error_code = ft_string::last_operation_error();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_NO_MEMORY;
+        ft_errno = error_code;
         return (-1);
+    }
     entry.name = name_buffer;
-    if (entry.name.get_error() != FT_ERR_SUCCESSS)
+    if (ft_string::last_operation_error() != FT_ERR_SUCCESSS)
+    {
+        int error_code = ft_string::last_operation_error();
+        if (error_code == FT_ERR_SUCCESSS)
+            error_code = FT_ERR_NO_MEMORY;
+        ft_errno = error_code;
         return (-1);
+    }
     const char *quantity_part = separator + 1;
 
     entry.quantity = ft_atol(quantity_part);
@@ -114,10 +156,10 @@ FT_TEST(test_vector_json_serialization_custom_type,
     ft_serialized_entry second;
 
     first.name = "apples";
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, first.name.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::last_operation_error());
     first.quantity = 5;
     second.name = "oranges";
-    FT_ASSERT_EQ(FT_ERR_SUCCESSS, second.name.get_error());
+    FT_ASSERT_EQ(FT_ERR_SUCCESSS, ft_string::last_operation_error());
     second.quantity = 9;
     ft_vector<ft_serialized_entry> entries;
 
